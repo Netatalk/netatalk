@@ -1,0 +1,34 @@
+.TH "timeout" "1" "19 Jul 2001" "netatalk 1.5pre7" "The Netatalk Project"
+
+.SH "NAME"
+.LP 
+timeout \- Send a signal to a program after a certain time
+
+.SH "SYNTAX"
+.LP 
+timeout [\-s \fIsignal\fP] \fIseconds\fP \fIprogram\fP [\fIargs\fP]
+
+.SH "DESCRIPTION"
+.LP 
+\fBtimeout\fR executes a \fIprogram\fP (with arguments \fIargs\fP) and sends a
+\fIsignal\fP to it after a certain amount of \fIseconds\fP.
+
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-s\fR \fIsignal\fP
+Signal to send to the spawned process. This can be a numerical or symbolic ID.
+This defaults to \fBTERM\fR.
+
+.SH "EXAMPLES"
+.LP
+.TP
+timeout 10 pap foo.ps
+Execute "pap foo.ps" and send a \fBSIGTERM\fR if \fBpap\fR doesn't return
+after 10 seconds.
+.TP
+timeout -s HUP 60 sh
+Spawn a shell and send a hangup signal after one minute.
+.TP
+timeout -s 9 10 evilprog
+Execute a program and \fBKILL\fR it if it doesn't quit after 10 seconds.
