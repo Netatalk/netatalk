@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.8 2001-09-28 14:51:47 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.9 2001-10-10 02:27:08 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,6 +34,9 @@ void cnid_close(void *CNID)
   /* flush the transaction log and delete the log file if we can. */
   if ((db->lockfd > -1) && ((db->flags & CNIDFLAG_DB_RO) == 0)) {
     struct flock lock;
+    char wd[MAXPATHLEN+1];
+
+	getcwd(wd, MAXPATHLEN);
 
     lock.l_type = F_WRLCK;
     lock.l_whence = SEEK_SET;
@@ -63,6 +66,9 @@ void cnid_close(void *CNID)
 	free(first); 
       }
     }
+	/* Change directory back to the old cwd so we don't get the problem where the contents
+	 * of .AppleDB show up in the current share window. */
+	chdir( wd );
   }
 
   db->db_didname->close(db->db_didname, 0);

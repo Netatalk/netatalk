@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.8 2001-09-21 15:08:37 jmarcus Exp $
+ * $Id: cnid_update.c,v 1.9 2001-10-10 02:27:08 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -58,7 +58,9 @@ retry:
     goto update_err;
   }
 
+
   /* delete the old dev/ino mapping */
+  memset(&key, 0, sizeof(key));
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
   if ((rc = db->db_devino->del(db->db_devino, tid, &key, 0))) {
@@ -74,7 +76,9 @@ retry:
     }
   }
 
+
   /* delete the old did/name mapping */
+  memset(&key, 0, sizeof(key));
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
   if ((rc = db->db_didname->del(db->db_didname, tid, &key, 0))) {
@@ -94,10 +98,12 @@ retry:
 
 
   /* make a new entry */
+  memset(&data, 0, sizeof(data));
   data.data = make_cnid_data(st, did, name, len);
   data.size = CNID_HEADER_LEN + len + 1;
 
   /* put a new dev/ino mapping in */
+  memset(&key, 0, sizeof(key));
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
   altdata.data = (cnid_t *) &id;
@@ -111,6 +117,7 @@ retry:
   }
 
   /* put a new did/name mapping in */
+  memset(&key, 0, sizeof(key));
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
   if ((rc = db->db_didname->put(db->db_didname, tid, &key, &altdata, 0))) {
@@ -122,6 +129,7 @@ retry:
   }
 
   /* update the old CNID with the new info */
+  memset(&key, 0, sizeof(key));
   key.data = (cnid_t *) &id;
   key.size = sizeof(id);
   if ((rc = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0))) {
@@ -136,7 +144,7 @@ retry:
   return txn_commit(tid, 0);
 
 update_err:
-  syslog(LOG_ERR, "cnid_update: can't update CNID(%x)", id);
+  syslog(LOG_ERR, "cnid_update: can't update CNID(%x) (%d)", id, errno);
   return -1;
 }
 #endif /* CNID_DB */

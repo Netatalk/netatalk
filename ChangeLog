@@ -4,6 +4,9 @@
 	* configure.in: Fix problem with forced PAM
 	* etc/afpd/unix.c: Fix a problem setting directory perms on FreeBSD (thanks
 	to Glenn Trewitt <glenn@trewitt.org>)
+	* libatalk/cnid/cnid_close.c: Fix problem with .AppleDB contents showing
+	up in share window
+	* libatalk/cnid/cnid_update.c: memset more for cleanliness sake
 
 2001-10-04  jeff b  <jeff@univrel.pr.uconn.edu>
 
