@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.18 2001-11-04 22:13:50 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.19 2001-11-05 16:06:32 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -212,7 +212,7 @@ void *cnid_open(const char *dir) {
 
 	strcpy(path + len, DBHOME);
 	if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777) < 0)) {
-		syslog(LOG_ERR, "cnid_open: DBHOME mkdir failed");
+		syslog(LOG_ERR, "cnid_open: DBHOME mkdir failed for %s", path);
 		goto fail_adouble;
 	}
 
@@ -227,7 +227,7 @@ void *cnid_open(const char *dir) {
 		lock.l_len = 1;
 		while (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
 			if (++lock.l_start > MAXITER) {
-				syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock (lock failed)");
+				syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup for database environment %s lock (lock failed)", path);
 				close(db->lockfd);
 				db->lockfd = -1;
 				break;
@@ -235,7 +235,7 @@ void *cnid_open(const char *dir) {
 		}
 	}
 	else {
-		syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock (open() failed)");
+		syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
 	}
 	
 	if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
@@ -243,7 +243,7 @@ void *cnid_open(const char *dir) {
 		 * will open the database with the DB_RECOVER flag.
 		 */
 #ifdef DEBUG
-		syslog(LOG_INFO, "cnid_open: Opening database with DB_RECOVER flag");
+		syslog(LOG_INFO, "cnid_open: Opening database environment %s with DB_RECOVER flag", path);	
 #endif
 		DBEXTRAS |= DB_RECOVER;
 		have_lock = 1;
@@ -279,7 +279,7 @@ void *cnid_open(const char *dir) {
 	if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS | DBEXTRAS, 0666)) != 0) {
 		if (rc == DB_RUNRECOVERY) {
 			/* This is the mother of all errors.  We _must_ fail here. */
-			syslog(LOG_ERR, "cnid_open: CATASTROPHIC ERROR opening database environment.  Run db_recovery -c immediately");
+			syslog(LOG_ERR, "cnid_open: CATASTROPHIC ERROR opening database environment %s.  Run db_recovery -c immediately", path);
 			goto fail_lock;
 		}
 
@@ -297,7 +297,7 @@ void *cnid_open(const char *dir) {
 		}
 		db->flags |= CNIDFLAG_DB_RO;
 		open_flag = DB_RDONLY;
-		syslog(LOG_INFO, "cnid_open: Obtained read-only database environment");
+		syslog(LOG_INFO, "cnid_open: Obtained read-only database environment %s", path);
 	}
 
 	/* did/name reverse mapping.  We use a BTree for this one. */
