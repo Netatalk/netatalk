@@ -9,6 +9,11 @@
 #include <pwd.h>
 #include <stdarg.h>
 
+#ifdef TRU64
+#include <sia.h>
+#include <siad.h>
+#endif /* TRU64 */
+
 /* just a label for exported bits */
 #define UAM_MODULE_EXPORT
 
@@ -64,6 +69,9 @@ extern int uam_afp_read __P((void *, char *, int *,
 extern int uam_afpserver_option __P((void *, const int, void *, int *));
 #ifdef TRU64
 extern void uam_afp_getcmdline __P((int *, char ***));
+extern int uam_sia_validate_user __P((sia_collect_func_t *, int, char **,
+                                     char *, char *, char *, int, char *,
+                                     char *));
 #endif /* TRU64 */
 
 /* switch.c */

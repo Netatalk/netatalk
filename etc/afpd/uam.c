@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.19 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: uam.c,v 1.20 2002-02-13 16:44:59 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -58,6 +58,9 @@ char *strchr (), *strrchr ();
 
 #ifdef TRU64
 #include <netdb.h>
+#include <sia.h>
+#include <siad.h>
+#include <signal.h>
 #endif /* TRU64 */
 
 /* --- server uam functions -- */
@@ -426,6 +429,50 @@ uam_afp_read_err:
 void uam_afp_getcmdline( int *ac, char ***av )
 {
     afp_get_cmdline( ac, av );
+}
+
+int uam_sia_validate_user(sia_collect_func_t * collect, int argc, char **argv,
+                         char *hostname, char *username, char *tty,
+                         int colinput, char *gssapi, char *passphrase)
+/* A clone of the Tru64 system function sia_validate_user() that calls
+ * sia_ses_authent() rather than sia_ses_reauthent()   
+ * Added extra code to take into account suspected SIA bug whereby it clobbers
+ * the signal handler on SIGALRM (tickle) installed by Netatalk/afpd
+ */
+{
+       SIAENTITY *entity = NULL;
+       struct sigaction act;
+       int rc;
+
+       if ((rc=sia_ses_init(&entity, argc, argv, hostname, username, tty,
+                            colinput, gssapi)) != SIASUCCESS) {
+               LOG(log_error, logtype_default, "cannot initialise SIA");
+               return SIAFAIL;
+       }
+
+       /* save old action for restoration later */
+       if (sigaction(SIGALRM, NULL, &act))
+               LOG(log_error, logtype_default, "cannot save SIGALRM handler");
+
+       if ((rc=sia_ses_authent(collect, passphrase, entity)) != SIASUCCESS) {
+               /* restore old action after clobbering by sia_ses_authent() */
+               if (sigaction(SIGALRM, &act, NULL))
+                       LOG(log_error, logtype_default, "cannot restore SIGALRM handler");
+
+               LOG(log_info, logtype_default, "unsuccessful login for %s",
+(hostname?hostname:"(null)"));
+               return SIAFAIL;
+       }
+       LOG(log_info, logtype_default, "successful login for %s",
+(hostname?hostname:"(null)"));
+
+       /* restore old action after clobbering by sia_ses_authent() */   
+       if (sigaction(SIGALRM, &act, NULL))
+               LOG(log_error, logtype_default, "cannot restore SIGALRM handler");
+
+       sia_ses_release(&entity);
+
+       return SIASUCCESS;
 }
 #endif /* TRU64 */
 
