@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.123 2001-11-13 19:06:09 srittau Exp $
+dnl $Id: configure.in,v 1.124 2001-11-13 19:10:47 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -491,8 +491,6 @@ if test x"$this_os" = "xfreebsd"; then
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(SENDFILE_FLAVOR_BSD)
 
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-shared"
 	AC_DEFINE(NO_CRYPT_H, 1)
 fi
 
@@ -514,9 +512,6 @@ fi
 dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then 
 	AC_MSG_RESULT([ * Linux specific configuration])
-
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-shared"
 
 	dnl ----- check if we need the quotactl wrapper
 	AC_CHECK_HEADERS(sys/quota.h linux/quota.h)
@@ -561,9 +556,6 @@ if test x"$this_os" = "xmacosx"; then
 	AC_DEFINE(HAVE_2ARG_DBTOB)
 	dnl AC_DEFINE(NO_DLFCN_H)
 	AC_DEFINE(MACOSX_SERVER)
-
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-shared"
 fi
 
 dnl ----- NetBSD specific -----
@@ -573,9 +565,6 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
 	need_dash_r=yes 
-
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-shared"
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1)
@@ -587,9 +576,6 @@ if test x"$this_os" = "xopenbsd"; then
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
-
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-Bforcearchive -shared"
 
 	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1)
@@ -606,9 +592,6 @@ if test x"$this_os" = "xsolaris"; then
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
 
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-G"
-
 	AC_MSG_RESULT([enabling Solaris kernel module build])
 	solaris_module=yes
 fi
@@ -624,12 +607,8 @@ if test x"$this_os" = "xtru64"; then
 	AC_DEFINE(TRU64)
 	AC_CHECK_LIB(security,set_auth_parameters)
 	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
-	LDSHAREDFLAGS="-shared -expect_unresolved \*"
 	need_dash_r=no
 	sysv_style=tru64
-
-	dnl ----- Set -shared flag
-	LDSHAREDFLAGS="-shared"
 fi
 
 dnl -- look for openssl
@@ -674,7 +653,6 @@ AC_SUBST(LIBS)
 AC_SUBST(AFPD_LIBS)
 AC_SUBST(PAPD_LIBS)
 AC_SUBST(CFLAGS)
-AC_SUBST(LDSHAREDFLAGS)
 AC_SUBST(PKGCONFDIR)
 AC_SUBST(OVERWRITE_CONFIG)
 
