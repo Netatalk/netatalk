@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.2 2001-01-27 17:54:26 itlm019 Exp $
+ * $Id: uid.c,v 1.3 2001-02-23 22:16:15 rufustfirefly Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -7,12 +7,12 @@
  * across the package).
  */
 
-/* don't compile this file at all unless FORCE_UIDGID is set */
-#ifdef FORCE_UIDGID
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+/* don't compile this file at all unless FORCE_UIDGID is set */
+#ifdef FORCE_UIDGID
 
 #include <stdio.h>
 #include <string.h>
