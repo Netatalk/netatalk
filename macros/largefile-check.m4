@@ -30,7 +30,7 @@ define(WX_SYS_LARGEFILE_MACRO_VALUE,
 
     if test "$$3" != no; then
         wx_largefile=yes
-        AC_DEFINE_UNQUOTED([$1], [$$3])
+        AC_DEFINE_UNQUOTED([$1], [$$3], [$1 (for LARGEFILE support)])
     fi
 ])
 
@@ -54,7 +54,7 @@ if test "$enable_largefile" != no; then
 
     AC_MSG_CHECKING(if large file support is available)
     if test "x$wx_largefile" = "xyes"; then
-        AC_DEFINE(HAVE_LARGEFILE_SUPPORT)
+        AC_DEFINE(HAVE_LARGEFILE_SUPPORT, [], [LARGEFILE support])
     fi
     AC_MSG_RESULT($wx_largefile)
 fi
