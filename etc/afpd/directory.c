@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.51 2002-11-05 18:47:43 pooba53 Exp $
+ * $Id: directory.c,v 1.52 2002-11-26 08:22:38 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -839,7 +839,7 @@ char	**cpath;
            len = ntohs(len16);
            data += 2;
            size = 7;
-           sep = '/';
+           sep = 0; /* '/';*/
            break;
         }
         /* else it's an error */
@@ -889,13 +889,13 @@ char	**cpath;
             return &ret;
         }
 
-        if (!*data || *data == sep ) {
+        if (*data == sep ) {
             data++;
             len--;
         }
     	u = NULL;
 
-        while ( *data && *data == sep && len > 0 ) {
+        while (*data == sep && len > 0 ) {
             if ( dir->d_parent == NULL ) {
                 return NULL;
             }
@@ -909,8 +909,8 @@ char	**cpath;
         if (len > 0) {
         	u = data;
         	olen = len;
-		}        
-        while ( *data && *data != sep && len > 0 ) {
+        }        
+        while ( *data != sep && len > 0 ) {
             *p++ = *data++;
             len--;
         }
