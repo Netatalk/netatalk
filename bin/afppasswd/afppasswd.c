@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.15 2003-06-07 01:39:05 srittau Exp $
+ * $Id: afppasswd.c,v 1.16 2003-06-07 03:07:27 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -96,10 +96,10 @@ static void retrieve_passwd(char *buf, int keyfd)
   int i, j;
 
   /* convert to binary */
-  for (i = j = 0; i < sizeof(key); i += 2, j++)
+  for (i = j = 0; i < HEXPASSWDLEN; i += 2, j++)
     buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
   if (j <= DES_KEY_SZ)
-    memset(buf + j, 0, sizeof(key) - j);
+    memset(buf + j, 0, HEXPASSWDLEN - j);
 
   key = retrieve_key(keyfd);
   DES_key_sched((DES_cblock *) key, &schedule);
@@ -197,8 +197,8 @@ static int update_passwd(const char *path, const char *name, int flags)
       err = 1;
       goto update_done;
     }
+    memset(passwd, 0, strlen(passwd));
   }
-  memset(passwd, 0, strlen(passwd));
 
   /* new password */
   passwd = getpass(_("Enter NEW AFP password: "));
