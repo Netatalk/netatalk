@@ -1,7 +1,8 @@
 This is the Debian GNU/Linux prepackaged version of netatalk.
 
 This package was originally put together by Joel 'epsy' Klecker.
-Current maintainer is Sebastian Rittau <srittau@jroger.in-berlin.de>.
+Current maintainer is Sebastian Rittau <srittau@debian.org>.
+
 The sources were obtained from CVS: cvs.netatalk.sourceforge.net.
 See the Netatalk homepage at <http://netatalk.sourceforge.net/> for
 anonymous CVS instructions.
