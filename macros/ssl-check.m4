@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.1 2001-10-27 13:13:59 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.2 2001-10-28 12:09:17 srittau Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_PATH_SSL], [
@@ -35,13 +35,6 @@ AC_DEFUN([AC_PATH_SSL], [
 				AC_CHECK_LIB(crypto, main)
 				dnl Check for "DES" library (for SSLeay, not openssl):
 				AC_CHECK_LIB(des, main)
-
-				dnl FIXME: do that temporarily
-				LDFLAGS="$LDFLAGS -L$ssldir/lib -L$ssldir"
-				CFLAGS="$CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
-				if test "$need_dash_r" = "yes"; then
-					LIBS="$LIBS -R$ssldir/lib -R$ssldir"
-				fi
 
 		 		AC_DEFINE(OPENSSL_DHX,	1)
 				AC_DEFINE(UAM_DHX,	1)
