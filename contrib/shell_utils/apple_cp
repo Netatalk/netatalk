@@ -1,9 +1,20 @@
 #! /usr/bin/perl
 # 
-# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_cp,v 1.2 2000-08-09 14:12:06 rufustfirefly Exp $
+# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_cp,v 1.3 2001-10-16 18:27:27 lancel Exp $
 #
 # $Log: apple_cp,v $
-# Revision 1.2  2000-08-09 14:12:06  rufustfirefly
+# Revision 1.3  2001-10-16 18:27:27  lancel
+# Updated perl.
+#
+# Fixed a failing test where $to wasn't a directory, but
+# didn't check that $from was only a single file, result file to file
+# always failed.
+#
+# Fixed the .AppleDouble variable being sent to the split_dir_file
+# function, it was mistakenly sending $from instead of $to, result cp
+# $from $from, same file.
+#
+# Revision 1.2  2000/08/09 14:12:06  rufustfirefly
 # /usr/local/bin/perl -> /usr/bin/perl and portability fixes
 #
 # Revision 1.1  2000/08/09 14:08:06  rufustfirefly
@@ -29,7 +40,7 @@ USAGE
 die $USAGE if @ARGV < 2;
 
 @from = @ARGV; pop(@from);
-$to = $ARGV[$#ARGV];
+$to = $ARGV[-1];
 
 if (-f $to && @from > 1) { die $USAGE; }
 
@@ -39,8 +50,8 @@ foreach $from (@from) {
 	die $USAGE;
     }
     
-    if (!-d $to) {
-	print STDERR "directory $to does not exist\n";
+    if (!-d $to && @from >1) {
+	print STDERR "directory $to does not exist\nCan't copy multiple files into one file.\n";
 	die $USAGE;
     }
     
@@ -55,7 +66,7 @@ foreach $from (@from) {
 	}	
 	$cmd = "cp '$from_dir/.AppleDouble/$from_file' '$to/.AppleDouble/$from_file'";
     } else {
-	($to_dir, $to_file) = split_dir_file($from);
+	($to_dir, $to_file) = split_dir_file($to);
 	if (!-d "$to_dir/.AppleDouble") {
 	    mkdir("$to_dir/.AppleDouble", 0777);
 	}	
