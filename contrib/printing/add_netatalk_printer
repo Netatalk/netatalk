@@ -1,4 +1,4 @@
-#!/bin/sh
+#! /bin/sh
 #
 # A lovely script to add netatalk printers 
 #
