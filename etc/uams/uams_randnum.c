@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.13 2003-06-11 06:29:30 srittau Exp $
+ * $Id: uams_randnum.c,v 1.14 2003-06-11 07:14:12 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -62,7 +62,6 @@ char *strchr (), *strrchr ();
 #define PASSWDLEN 8
 
 static C_Block		seskey;
-static Key_schedule	seskeysched;
 static struct passwd	*randpwd;
 static u_int8_t         randbuf[8];
 
@@ -189,7 +188,7 @@ static int afppasswd(const struct passwd *pwd,
 
 afppasswd_found:
   if (!set)
-    unhexify(p, sizeof(key), p, sizeof(key));
+    atalk_unhexify(p, sizeof(key), p, sizeof(key));
 
   if (keyfd > -1) {
       size_t len;
@@ -199,14 +198,14 @@ afppasswd_found:
 
       /* convert to binary key */
       len = strlen((char *) key);
-      unhexify(key, len, key, len);
+      atalk_unhexify(key, len, key, len);
 
       if (set) {
 	/* NOTE: this takes advantage of the fact that passwd doesn't
 	 *       get used after this call if it's being set. */
-	err = encrypt(key, passwd, passwd);
+	err = atalk_encrypt(key, passwd, passwd);
       } else {
-	err = decrypt(key, p, p);
+	err = atalk_decrypt(key, p, p);
       }
       memset(key, 0, sizeof(key));
 
@@ -219,7 +218,7 @@ afppasswd_found:
     int fd = fileno(fp);
 
     /* convert to hex password */
-    hexify(key, sizeof(key), passwd, DES_KEY_SZ);
+    atalk_hexify(key, sizeof(key), passwd, DES_KEY_SZ);
     memcpy(p, key, sizeof(key));
 
     /* get exclusive access to the user's password entry. we don't
@@ -368,7 +367,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 
   ibuf += sizeof(sessid);
 
-  err = encrypt(seskey, randbuf, randbuf);
+  err = atalk_encrypt(seskey, randbuf, randbuf);
   memset(seskey, 0, sizeof(seskey));
   if (err)
     return err;
@@ -413,21 +412,20 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     seskey[i] <<= 1;
 
   /* encrypt randbuf */
-  err = encrypt_start(&crypt_handle, seskey);
-  encrypt_do(crypt_handle, randbuf, randbuf);
+  err = atalk_encrypt_start(&crypt_handle, seskey);
+  atalk_encrypt_do(crypt_handle, randbuf, randbuf);
 
   /* test against client's reply */
   if (memcmp(randbuf, ibuf, sizeof(randbuf))) { /* != */
     memset(randbuf, 0, sizeof(randbuf));
-    memset(&seskeysched, 0, sizeof(seskeysched));
     return AFPERR_NOTAUTH;
   }
   ibuf += sizeof(randbuf);
   memset(randbuf, 0, sizeof(randbuf));
 
   /* encrypt client's challenge and send back */
-  encrypt_do(crypt_handle, rbuf, ibuf);
-  encrypt_end(crypt_handle);
+  atalk_encrypt_do(crypt_handle, rbuf, ibuf);
+  atalk_encrypt_end(crypt_handle);
   memset(seskey, 0, sizeof(seskey));
 
   *rbuflen = sizeof(randbuf);
@@ -462,15 +460,17 @@ static int randnum_changepw(void *obj, const char *username,
       return err;
 
     /* use old passwd to decrypt new passwd */
-    key_sched((C_Block *) seskey, seskeysched);
     ibuf += PASSWDLEN; /* new passwd */
     ibuf[PASSWDLEN] = '\0';
-    ecb_encrypt( (C_Block *) ibuf, (C_Block *) ibuf, seskeysched, DES_DECRYPT);
+    err = atalk_decrypt(seskey, ibuf, ibuf);
+    if (err)
+      return err;
 
     /* now use new passwd to decrypt old passwd */
-    key_sched((C_Block *) ibuf, seskeysched);
     ibuf -= PASSWDLEN; /* old passwd */
-    ecb_encrypt((C_Block *) ibuf, (C_Block *) ibuf, seskeysched, DES_DECRYPT);
+    err = atalk_decrypt(ibuf, ibuf, ibuf);
+    if (err)
+      return err;
     if (memcmp(seskey, ibuf, sizeof(seskey))) 
 	err = AFPERR_NOTAUTH;
     else if (memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0)
@@ -484,7 +484,6 @@ static int randnum_changepw(void *obj, const char *username,
       err = randpass(pwd, passwdfile, ibuf + PASSWDLEN, sizeof(seskey), 1);
 
     /* zero out some fields */
-    memset(&seskeysched, 0, sizeof(seskeysched));
     memset(seskey, 0, sizeof(seskey));
     memset(ibuf, 0, sizeof(seskey)); /* old passwd */
     memset(ibuf + PASSWDLEN, 0, sizeof(seskey)); /* new passwd */

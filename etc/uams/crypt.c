@@ -1,5 +1,5 @@
 /*
- * $Id: crypt.c,v 1.1 2003-06-11 06:29:30 srittau Exp $
+ * $Id: crypt.c,v 1.2 2003-06-11 07:14:09 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -19,7 +19,7 @@
 #include "crypt.h"
 
 /* Cannot perform in-place operation. dstlen must be at least srclen*2. */
-void hexify(u_int8_t *dst, size_t dstlen, const u_int8_t *src, size_t srclen)
+void atalk_hexify(u_int8_t *dst, size_t dstlen, const u_int8_t *src, size_t srclen)
 {
 	static const unsigned char hextable[] = "0123456789ABCDEF";
 
@@ -35,7 +35,7 @@ void hexify(u_int8_t *dst, size_t dstlen, const u_int8_t *src, size_t srclen)
 
 /* Can perform in-place operation. dstlen must be at least srclen/2. */
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
-void unhexify(u_int8_t *dst, size_t dstlen, const u_int8_t *src, size_t srclen)
+void atalk_unhexify(u_int8_t *dst, size_t dstlen, const u_int8_t *src, size_t srclen)
 {
 	assert(srclen % 2 == 0);
 	assert(dstlen >= srclen / 2);
@@ -46,7 +46,7 @@ void unhexify(u_int8_t *dst, size_t dstlen, const u_int8_t *src, size_t srclen)
 	memset(dst, 0, dstlen);
 }
 
-int encrypt_start(CryptHandle *handle, u_int8_t *key)
+int atalk_encrypt_start(CryptHandle *handle, u_int8_t *key)
 {
 	DES_key_schedule *sched = malloc(sizeof(DES_key_schedule));
 	DES_set_key_unchecked((DES_cblock *) key, sched);
@@ -56,7 +56,7 @@ int encrypt_start(CryptHandle *handle, u_int8_t *key)
 	return AFP_OK;
 }
 
-int encrypt_do(CryptHandle handle, u_int8_t *dst, u_int8_t *src)
+int atalk_encrypt_do(CryptHandle handle, u_int8_t *dst, u_int8_t *src)
 {
 	DES_ecb_encrypt((DES_cblock *) src, (DES_cblock *) dst,
 			(DES_key_schedule *) handle, DES_ENCRYPT);
@@ -64,13 +64,13 @@ int encrypt_do(CryptHandle handle, u_int8_t *dst, u_int8_t *src)
 	return AFP_OK;
 }
 
-void encrypt_end(CryptHandle handle)
+void atalk_encrypt_end(CryptHandle handle)
 {
 	memset(handle, 0, sizeof(DES_key_schedule));
 	free(handle);
 }
 
-int encrypt(u_int8_t *key, u_int8_t *dst, u_int8_t *src)
+int atalk_encrypt(u_int8_t *key, u_int8_t *dst, u_int8_t *src)
 {
 	DES_key_schedule sched;
 
@@ -83,7 +83,7 @@ int encrypt(u_int8_t *key, u_int8_t *dst, u_int8_t *src)
 	return AFP_OK;
 }
 
-int decrypt(u_int8_t *key, u_int8_t *dst, u_int8_t *src)
+int atalk_decrypt(u_int8_t *key, u_int8_t *dst, u_int8_t *src)
 {
 	DES_key_schedule sched;
 
