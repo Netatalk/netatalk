@@ -23,7 +23,7 @@ Sourceforge Administration:
 	Jeffrey Buchbinder <jeff@univrel.pr.uconn.edu>
 	Matthew Keller <kellermg@potsdam.edu>
 
-Developers: Version 1.4.99 - 1.5
+Developers: Version 1.4.99 - 1.6
 	Alain Richard <alain.richard@equation.fr>	
 	David R Bosso <dbosso@ltsc.ucsb.edu>
 	Joe Clarke <marcus@marcuscom.com>
@@ -47,19 +47,20 @@ Developers: Version 1.4.99 - 1.5
 	Robert Stickel <rstickel@connex.com>
  	Sumit Bose <sbose@hbv.de>
 	Brandon Warren <bwarren@u.washington.edu>
+	Dan Wilga <dwilga@mtholyoke.edu>
 
 Webmin Module:
 	Matthew Keller <kellermg@potsdam.edu>
 
 Package Maintainers and Contributors:
 	Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
-	Joe Clarke <marcus@marcuscom.com> (FreeBSD)
+	Joe Clarke <marcus@FreeBSD.org> (FreeBSD)
 	David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)
 
 Sourceforge Website Maintainers:
 	Andrew Morgan <morgan@orst.edu>	
 
-Documentation: Version 1.4.99 - 1.5
+Documentation: Version 1.4.99 - 1.6
 	Steve Freitas <sflist@ihonk.com>
 	Karen A Swanberg <swanberg@tc.umn.edu>
 	Lance Levsen <l.levsen@printwest.com>
