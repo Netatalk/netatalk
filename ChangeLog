@@ -1,4 +1,8 @@
 
+2001-04-12  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	Released 1.5pre6
+
 2001-04-10  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* configure.in, acconfig.h, etc/afpd/uam.c: patch submitted by Jason
