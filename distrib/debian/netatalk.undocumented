@@ -2,9 +2,11 @@ add_netatalk_printer.1
 apple_cp.1
 apple_mv.1
 apple_rm.1
+binheader.1
 cleanappledouble.pl.1
 lp2pap.sh.1
 makecode.1
+nadheader.1
 nu.1
 parsecode.1
 psa.8
