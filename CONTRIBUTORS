@@ -33,7 +33,7 @@ Developers: Version 1.4.99 - 1.5
 	Jeffrey Buchbinder <jeff@univrel.pr.uconn.edu>
 	Sam Noble <ns@shadow.org>
 	Simon Bazley <sibaz@sibaz.com>
-	Sebastian Rittau <srittau@jroger.in-berlin.de>
+	Sebastian Rittau <srittau@debian.org>
 	Steve Freitas <sflist@ihonk.com>
 	Uwe Hees <uwe.hees@rz-online.de>
 	Benjamin Heitmann <bheitman@ebios.de>
@@ -43,7 +43,7 @@ Developers: Version 1.4.99 - 1.5
 	Olaf Hering <olh@suse.de>
 	Robert Cohen <robert.cohen@anu.edu.au>
 	Robert Stickel <rstickel@connex.com>
- 	Sumit Bose <sbose@hbv.de>
+ 	Sumit <sbose@hbv.de>
 	Brandon Warren <bwarren@u.washington.edu>
 
 Webmin Module:
@@ -70,7 +70,7 @@ Documentation: Version 1.4.99 - 1.5
 	Rob Lineweaver <rbline@wm.edu>
 	Alistair Riddell <ali@gwc.org.uk>
 	Edmund Lam <epl@unimelb.edu.au>
-	Sebastian Rittau <srittau@jroger.in-berlin.de>
+	Sebastian Rittau <srittau@debian.org>
 	Chris Blake <Chris.Blake@anu.edu.au>
 
 Bug Reports: Version 1.4.99 - 1.5
