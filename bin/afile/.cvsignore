@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+achfile
+afile
+.deps
+.libs

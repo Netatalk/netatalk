@@ -1,0 +1,7 @@
+Makefile
+Makefile.in
+nbplkup
+nbprgstr
+nbpunrgstr
+.deps
+.libs
