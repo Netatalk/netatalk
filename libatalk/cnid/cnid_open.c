@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.21 2001-12-07 16:58:45 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.22 2001-12-07 17:29:06 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -215,6 +215,10 @@ void *cnid_open(const char *dir) {
         syslog(LOG_ERR, "cnid_open: DBHOME mkdir failed for %s", path);
         goto fail_adouble;
     }
+
+	/* Make sure cnid.lock goes in .AppleDB. */
+	strcat(path, "/");
+	len++;
 
     /* Search for a byte lock.  This allows us to cleanup the log files
      * at cnid_close() in a clean fashion.
