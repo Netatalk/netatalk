@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.23 2002-01-18 04:46:19 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.24 2002-01-18 04:51:27 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -259,7 +259,7 @@ retry:
     /* Now we need to add the CNID data to the databases. */
     rc = add_cnid(db, &key, &data);
     if (rc) {
-        LOG(log_error, logtype_default, "cnid_add: Failed to add CNID for %s to database using hint %u", name, ntohl(hint));
+        LOG(log_error, logtype_default, "cnid_add: Failed to add CNID for %s to database using hint %u: %s", name, ntohl(hint), db_strerror(rc));
         return CNID_ERR_DB;
     }
 
