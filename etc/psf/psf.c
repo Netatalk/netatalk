@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.7 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: psf.c,v 1.8 2002-05-23 15:58:55 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -536,12 +536,24 @@ int textps()
 		state |= ST_PAGE;
 	    }
 	    if ( state & ST_CONTROL && *p != '\001' ) {
+		/* It is a very bad thing to toss a job because it contains
+		 * unprintable characters.  Instead, we will convert them to
+		 * question marks.  This is adapted from a solution described
+		 * by Werner Eugster <eugster@giub.unibe.ch> on his ApplePrint
+		 * webpage (http://www.giub.unibe.ch/~eugster/appleprint.html).
+		 *
+		 * Note that this is rather ugly code.  The same change is
+		 * applied identically at two different locations in this file.
+		 * It would be better someday to combine the two.
+                */
 		if ( !literal ) {
-		    fprintf( stderr, "unprintable character (0x%x)!\n",
-			    (unsigned char)031 );
-		    return( 2 );	/* Toss job */
+			fprintf( stderr,
+				"unprintable character (0x%x) converted to ?!\n",
+				(unsigned char)*p );
+			putchar( '?' ); /* Replace unprintable char with a question mark. */
+		} else {
+			printf( "\\%o", (unsigned char)031 );
 		}
-		printf( "\\%o", (unsigned char)031 );
 		state &= ~ST_CONTROL;
 		col++;
 	    }
@@ -631,11 +643,13 @@ int textps()
 		}
 		if ( !isascii( *p ) || !isprint( *p )) {
 		    if ( !literal ) {
-			fprintf( stderr, "unprintable character (0x%x)!\n",
-				(unsigned char)*p );
-			return( 2 );	/* Toss job */
+                        fprintf( stderr,
+			    "unprintable character (0x%x) converted to ?!\n",
+			    (unsigned char)*p );
+			putchar( '?' ); /* Replace unprintable char with a question mark. */
+		    } else {
+		        printf( "\\%o", (unsigned char)*p );
 		    }
-		    printf( "\\%o", (unsigned char)*p );
 		} else {
 		    putchar( *p );
 		}
