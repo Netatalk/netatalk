@@ -1,8 +1,19 @@
+/* $Id: ioc.c,v 1.2 2002-01-17 07:11:13 srittau Exp $
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <sys/types.h>
 #include <sys/stream.h>
 #include <sys/cmn_err.h>
 
+#ifdef STDC_HEADERS
+#include <strings.h>
+#else
 #include <string.h>
+#endif
 
 #include "ioc.h"
 

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.150 2002-01-17 05:59:25 srittau Exp $
+dnl $Id: configure.in,v 1.151 2002-01-17 07:11:12 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -694,6 +694,7 @@ AC_OUTPUT([Makefile
 	sys/netbsd/Makefile
 	sys/netbsd/netatalk/Makefile
 	sys/solaris/Makefile
+	sys/solaris/Makefile.kernel
 	sys/sunos/Makefile
 	sys/ultrix/Makefile
 	],

@@ -1,5 +1,8 @@
 # Solaris specific defines, passed to subdirectories.
 # To use Sun CC, uncomment the CC and KFLAGS variables.
+#
+# $Id: Makefile.kernel.in,v 1.1 2002-01-17 07:11:13 srittau Exp $
+
 
 # uncomment for 64-bit sparc kernel
 #SPARC64=true
@@ -8,17 +11,20 @@
 # for solaris 2.5.1
 USE_CRYPTLIB=no
 
-# use gcc (gcc-2.95 on 64-bit sparc)
-CC=		gcc
-LD=		ld
-KCFLAGS=	-D_KERNEL -Wall -Wstrict-prototypes ${KGCCFLAGS} # -mcpu=ultrasparc
-OPTOPTS=	-O
-CSHAREDFLAGS=   -fPIC
-LDSHARED=	${CC}
-LDSHAREDFLAGS=  -shared
+INSTALL = @INSTALL@
+
+CC		= @CC@
+LD		= @LD@
+
+# use gcc
+KCFLAGS		= -D_KERNEL -Wall -Wstrict-prototypes ${KGCCFLAGS} # -mcpu=ultrasparc
+OPTOPTS		= -O
+CSHAREDFLAGS	= -fPIC
+LDSHARED	= ${CC}
+LDSHAREDFLAGS	= -shared
+# LDSHAREDFLAGS	= -shared -64
 
 # use Sun CC (for a 64-bit kernel, uncomment " -xarch=v9 -xregs=no%appl ") 
-#CC=		cc
 #KCFLAGS=	-D_KERNEL # -xarch=v9 -xregs=no%appl 
 #OPTOPTS=	-fast -xO5 -xstrconst
 #CSHAREDFLAGS=   -KPIC
@@ -31,9 +37,8 @@ LIBSHARED=      -ldl
 # -D_ISOC9X_SOURCE is handled by OSVERSION. basically, it's not needed
 # with 2.5.1.
 # add -DHAVE_IFNAMEINDEX if you're using solaris 8.
-DEFS=	-DNO_STRUCT_TM_GMTOFF -D__svr4__ -DSOLARIS -I../../sys/generic \
+DEFS=	-DNO_STRUCT_TM_GMTOFF -DHAVE_IFNAMEINDEX -D__svr4__ -DSOLARIS -I../../sys/generic \
 	-I.. ${OSDEFS} ${MACHINEDEFS}
-INSTALL=	/usr/ucb/install
 AFPLIBS=
 ADDLIBS=	-lsocket -lnsl
 
