@@ -1199,10 +1199,20 @@ void setvoltime(obj, vol )
 {
     struct timeval	tv;
 
-    /* fail w/out dying */
+    /* just looking at vol->v_time is broken seriously since updates
+     * from other users afpd processes never are seen.
+     * This is not the most elegant solution (a shared memory between
+     * the afpd processes would come closer)
+     * [RS] */
+
     if ( gettimeofday( &tv, 0 ) < 0 ) {
 	syslog( LOG_ERR, "setvoltime: gettimeofday: %m" );
 	return;
+    }
+    if( utime( vol->v_path, NULL ) < 0 ) {
+        /* write of time failed ... probably a read only filesys,
+         * where no other users can interfere, so there's no issue here
+         */
     }
     
     /* a little granularity */
