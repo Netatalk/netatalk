@@ -83,8 +83,8 @@ install-exec-hook:
 	)
 else
 install-exec-hook:
-	(cd $(DESTDIR)$(uamsdir) &&					\
-		rm -f uams_clrtxt.so					\
-		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so		\
+	(cd $(DESTDIR)$(uamsdir)					&& \
+		rm -f uams_clrtxt.so					&& \
+		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so		   \
 	)
 endif
