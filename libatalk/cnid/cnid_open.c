@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.49 2003-01-04 21:41:49 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.50 2003-01-29 20:31:45 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -330,7 +330,7 @@ char path[MAXPATHLEN + 1];
     /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
     if ((rc = db->db_didname->open(db->db_didname, NULL, DBDIDNAME, NULL,
-                                   DB_HASH, open_flag | DB_AUTO_COMMIT, 0666 & ~mask))) {
+                                   DB_HASH, open_flag, 0666 & ~mask))) {
 #else
     if ((rc = db->db_didname->open(db->db_didname, DBDIDNAME, NULL,
                                    DB_HASH, open_flag, 0666 & ~mask))) {
@@ -449,7 +449,7 @@ dbversion_retry:
 
     db->db_macname->set_bt_compare(db->db_macname, &compare_mac);
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_macname->open(db->db_macname, NULL, DBMACNAME, NULL, DB_BTREE, open_flag | DB_AUTO_COMMIT, 0666 & ~mask)) != 0) {
+    if ((rc = db->db_macname->open(db->db_macname, NULL, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
 #else
     if ((rc = db->db_macname->open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
 #endif /* DB_VERSION_MAJOR >= 4 */
@@ -470,7 +470,7 @@ dbversion_retry:
 
     db->db_shortname->set_bt_compare(db->db_shortname, &compare_mac);
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_shortname->open(db->db_shortname, NULL, DBSHORTNAME, NULL, DB_BTREE, open_flag | DB_AUTO_COMMIT, 0666 & ~mask)) != 0) {
+    if ((rc = db->db_shortname->open(db->db_shortname, NULL, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
 #else
     if ((rc = db->db_shortname->open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
 #endif /* DB_VERSION_MAJOR >= 4 */
@@ -493,7 +493,7 @@ dbversion_retry:
 
     db->db_longname->set_bt_compare(db->db_longname, &compare_unicode);
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_longname->open(db->db_longname, NULL, DBLONGNAME, NULL, DB_BTREE, open_flag | DB_AUTO_COMMIT, 0666 & ~mask)) != 0) {
+    if ((rc = db->db_longname->open(db->db_longname, NULL, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
 #else
     if ((rc = db->db_longname->open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
 #endif /* DB_VERSION_MAJOR >= 4 */
@@ -520,7 +520,7 @@ dbversion_retry:
     }
 
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_devino->open(db->db_devino, NULL, DBDEVINO, NULL, DB_HASH, open_flag | DB_AUTO_COMMIT, 0666 & ~mask)) != 0) {
+    if ((rc = db->db_devino->open(db->db_devino, NULL, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
 #else
     if ((rc = db->db_devino->open(db->db_devino, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
 #endif /* DB_VERSION_MAJOR >= 4 */
@@ -551,7 +551,7 @@ dbversion_retry:
 
 
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_cnid->open(db->db_cnid, NULL, DBCNID, NULL, DB_HASH, open_flag | DB_AUTO_COMMIT, 0666 & ~mask)) != 0) {
+    if ((rc = db->db_cnid->open(db->db_cnid, NULL, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
 #else
     if ((rc = db->db_cnid->open(db->db_cnid, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
 #endif /* DB_VERSION_MAJOR >= 4 */
@@ -583,7 +583,7 @@ dbversion_retry:
     }
 
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_mangle->open(db->db_mangle, NULL, DBMANGLE, NULL, DB_HASH, open_flag | DB_AUTO_COMMIT, 0666 & ~mask)) != 0) {
+    if ((rc = db->db_mangle->open(db->db_mangle, NULL, DBMANGLE, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
 #else
     if ((rc = db->db_mangle->open(db->db_mangle, DBMANGLE, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
 #endif /* DB_VERSION_MAJOR >= 4 */
