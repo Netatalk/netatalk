@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.8 2001-09-05 21:57:32 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.9 2001-09-18 22:21:47 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -83,8 +83,13 @@
 #define DBVERSION1       0x00000001U
 #define DBVERSION        DBVERSION1
 
+#if DB_VERSION_MINOR > 1
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER)
+#else
+#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
+DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC | DB_RECOVER)
+#endif
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 			    * databases. */
@@ -101,7 +106,11 @@ static __inline__ int compare_did(const DBT *a, const DBT *b)
 
 /* sort did's and then names. this is for unix paths.
  * i.e., did/unixname lookups. */
-static int compare_unix(DB* db, const DBT *a, const DBT *b)
+#if DB_VERSION_MINOR > 1
+static int compare_unix(DB *db, const DBT *a, const DBT *b)
+#else
+static int compare_unix(const DBT *a, const DBT *b)
+#endif
 {
   u_int8_t *sa, *sb;
   int len, ret;
@@ -123,7 +132,11 @@ static int compare_unix(DB* db, const DBT *a, const DBT *b)
  * did/macname, and did/shortname. i think did/longname needs a
  * unicode table to work. also, we can't use strdiacasecmp as that
  * returns a match if a < b. */
+#if DB_VERSION_MINOR > 1
+static int compare_mac(DB *db, const DBT *a, const DBT *b)
+#else
 static int compare_mac(const DBT *a, const DBT *b)
+#endif
 {
   u_int8_t *sa, *sb;
   int len, ret;
@@ -143,9 +156,17 @@ static int compare_mac(const DBT *a, const DBT *b)
 
 
 /* for unicode names -- right now it's the same as compare_mac. */
+#if DB_VERSION_MINOR > 1
+static int compare_unicode(DB *db, const DBT *a, const DBT *b)
+#else
 static int compare_unicode(const DBT *a, const DBT *b)
+#endif
 {
+#if DB_VERSION_MINOR > 1
+	return compare_mac(db,a,b);
+#else
 	return compare_mac(a,b);
+#endif
 }
 
 void *cnid_open(const char *dir)
@@ -216,11 +237,9 @@ mkdir_appledb:
   }
 
   /* Check to see if a DBENV already exists.  If it does, join it. */
-  /* XXX DB_JOINENV does not appear valid in db3 3.1.17.  Since this is
-   * most Linux users are using, I'm taking this out.  Until proper version
-   * checking code is added, if you're using db3 3.2 or later, uncomment this
-   * line, and the associated } below. */
-/*  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {*/
+#if DB_VERSION_MINOR > 1
+  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {
+#endif
   if (db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) {
 
     /* try with a shared memory pool */
@@ -236,8 +255,13 @@ mkdir_appledb:
     open_flag = DB_RDONLY;
     syslog(LOG_INFO, "cnid_open: read-only CNID database");
   }
-  /* Uncomment this } if you're using db3 3.2 or later. */
-/*  }*/
+#if DB_VERSION_MINOR > 1
+  }
+#endif
+
+#if DB_VERSION_MINOR > 1
+  db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1);
+#endif
 
   /* did/name reverse mapping. we use a btree for this one. */
   if (db_create(&db->db_didname, db->dbenv, 0))
@@ -292,7 +316,7 @@ dbversion_retry:
   if (db_create(&db->db_macname, db->dbenv, 0))
     goto fail_appinit;
 
-  db->db_macname->set_bt_compare(db->db_macname, compare_mac);
+  db->db_macname->set_bt_compare(db->db_macname, &compare_mac);
   if (db->db_macname->open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666)) {
     db->db_didname->close(db->db_didname, 0);
     goto fail_appinit;
@@ -302,7 +326,7 @@ dbversion_retry:
   if (db_create(&db->db_shortname, db->dbenv, 0))
     goto fail_appinit;
 
-  db->db_shortname->set_bt_compare(db->db_shortname, compare_mac);
+  db->db_shortname->set_bt_compare(db->db_shortname, &compare_mac);
   if (db->db_shortname->open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666)) {
     db->db_didname->close(db->db_didname, 0);
     db->db_macname->close(db->db_macname, 0);
@@ -313,7 +337,7 @@ dbversion_retry:
   if (db_create(&db->db_longname, db->dbenv, 0))
     goto fail_appinit;
 
-  db->db_longname->set_bt_compare(db->db_longname, compare_unicode);
+  db->db_longname->set_bt_compare(db->db_longname, &compare_unicode);
   if (db->db_longname->open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666)) {
     db->db_didname->close(db->db_didname, 0);
     db->db_macname->close(db->db_macname, 0);

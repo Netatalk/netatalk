@@ -1,6 +1,10 @@
 
 2001-09-18  joe c   <marcus@marcuscom.com>
 
+	* libatalk/cnid/cnid_open.c: Added db3 version checking code
+
+2001-09-18  joe c   <marcus@marcuscom.com>
+
 	* config/afpd.conf.tmpl: Removed uams_guest.so from the default UAMs
 	list
 
