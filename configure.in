@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.96 2001-08-14 14:00:08 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.97 2001-08-21 20:56:43 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -42,8 +42,6 @@ dnl Replace `main' with a function in -lcrypt:
 AC_CHECK_LIB(crypt, main)
 dnl Replace `main' with a function in -ld:
 AC_CHECK_LIB(d, main)
-dnl Replace `main' with a function in -ldb:
-AC_CHECK_LIB(db, main)
 dnl Replace `main' with a function in -ldl:
 AC_CHECK_LIB(dl, main)
 dnl Replace `main' with a function in -lkauth:
@@ -237,13 +235,60 @@ AC_ARG_ENABLE(force-uidgid,
 	fi
 )
 
+dnl Don't use DB3 unless it's needed
+db3_required=no
+
+dnl Check for CNID DB support
 AC_ARG_ENABLE(cnid-db,
 	[  --enable-cnid-db   use persistent cnid database per volume (EXPERIMENTAL) ],
-	if test "$enableval" = "yes"; then
-		AC_DEFINE(CNID_DB, 1)
-		AC_MSG_RESULT([using persistent cnid database per volume])
+	if test "x$enableval" = "xyes"; then
+		dnl Now we need DB3
+		db3_required="yes"
+
+		dnl Note that we don't AC_DEFINE(CNID_DB, 1) here...
+		dnl we have to check for the library first.
+		dnl AC_MSG_RESULT([db3 check enabled])
 	fi
 )
+
+dnl Check for Berkeley DB3 library
+AC_ARG_WITH(db3,
+	[  --with-db3=PATH         specify path to Berkeley DB3 installation],
+	if test "x$withval" != "xno"; then
+		trydb3dir="$withval"
+	fi
+)
+
+db3_found=no
+for db3dir in "" $trydb3dir /usr /usr /usr/local ; do
+	if test -f "$db3dir/include/db3/db.h" ; then
+		LDFLAGS="$LDFLAGS -L$db3dir/lib -L$db3dir"
+		CFLAGS="$CFLAGS -I$db3dir/include"
+
+		dnl If we require DB3, die if we don't have it
+		if test "x$db3_required" != "xno"; then
+			AC_CHECK_LIB(db, main,
+				dnl AC_MSG_RESULT([enabling db3 support])
+				db3_found=yes
+				dnl -- also enable CNID DB when this is found
+				AC_DEFINE(CNID_DB, 1)
+				AC_MSG_RESULT([using persistent cnid database per volume])
+				LIBS="$LIBS -ldb",
+				dnl Not Found
+				AC_MSG_ERROR([Berkeley DB3 library not found!])
+			)
+		fi
+		break
+	fi
+done
+
+dnl Die if the library is required, but not found
+if test "x$db3_required" != "xno"; then
+	if test "x$db3_found" = "xno"; then
+		dnl Not Found
+		AC_MSG_ERROR([Berkeley DB3 library not found!])
+	fi
+fi
 
 AC_ARG_WITH(did,
 	[  --with-did=[scheme]     set DID scheme (last,mtab)],
