@@ -295,25 +295,27 @@
 # Kazuhiko Okudaira the Nursery Teacher
 # kokudaira@hotmail.com
 
-.bld  "BLD"   "GKON"  BLD                            GraphicConverter
+.bld  "BLD "  "GKON"  BLD                            GraphicConverter
 .bum  ".bMp"  "GKON"  QuickTime Importer(QuickDraw)  GraphicConverter
-.cel  "CEL"   "GKON"  KISS CEL                       GraphicConverter
-.cur  "CUR"   "GKON"  Windows Cursor                 GraphicConverter
-.cwj  "CWSS"  "cwkj"  ClarisWorks Document            ClarisWorks 4.0
+.cel  "CEL "  "GKON"  KISS CEL                       GraphicConverter
+.cur  "CUR "  "GKON"  Windows Cursor                 GraphicConverter
+.cwj  "CWSS"  "cwkj"  ClarisWorks Document           ClarisWorks 4.0
 .dat  "TCLl"  "GKON"  TCL image                      GraphicConverter
 .hr   "TR80"  "GKON"  TSR-80 HR                      GraphicConverter
-.iss  "ISS"   "GKON"  ISS                            GraphicConverter
+.iss  "ISS "  "GKON"  ISS                            GraphicConverter
 .jif  "JIFf"  "GKON"  JIF99a                         GraphicConverter
 .lwf  "lwfF"  "GKON"  LuraWave(LWF)                  GraphicConverter
-.mbm  "MBM"   "GKON"  PSION 5(MBM)                   GraphicConverter
+.mbm  "MBM "  "GKON"  PSION 5(MBM)                   GraphicConverter
 .ngg  "NGGC"  "GKON"  Mobile Phone(Nokia)Format      GraphicConverter
-.nol  "NOL"   "GKON"  Mobile Phone(Nokia)Format      GraphicConverter
+.nol  "NOL "  "GKON"  Mobile Phone(Nokia)Format      GraphicConverter
 .pal  "8BCT"  "8BIM"  Color Table                    GraphicConverter
 .pgc  "PGCF"  "GKON"  PGC/PGF  Atari Portfolio PCG   GraphicConverter
 .pics "PICS"  "GKON"  PICS-PICT Sequence             GraphicConverter
 .swf  "SWFL"  "SWF2"  Flash                          Macromedia Flash
-.vpb  "VPB"   "GKON"  VPB QUANTEL                    GraphicConverter
+.vpb  "VPB "  "GKON"  VPB QUANTEL                    GraphicConverter
 .wbmp "WBMP"  "GKON"  WBMP                           GraphicConverter
 .x-face  "TEXT"  "GKON"  X-Face                      GraphicConverter
 
+# Nov 29, 2002
+.fla  "SPA "  "MFL2"  Flash source                   Macromedia Flash
 
