@@ -16,9 +16,15 @@
 
 #include <security/pam_appl.h>
 
+#ifdef OPENSSL_DHX
+#include <openssl/bn.h>
+#include <openssl/dh.h>
+#include <openssl/cast.h>
+#else
 #include <bn.h>
 #include <dh.h>
 #include <cast.h>
+#endif
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>

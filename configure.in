@@ -81,6 +81,14 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h limits.h strings.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
 
+dnl --- check for openssl headers ... if so, add proper flags
+AC_CHECK_HEADER(openssl/cast.h,
+	AC_DEFINE(OPENSSL_DHX,	1)
+	AC_DEFINE(UAM_DHX,	1)
+	AC_MSG_RESULT([including openssl libraries])
+	compile_dhx=yes
+)
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_UID_T
@@ -225,22 +233,85 @@ dnl drop in includes for top level directory structures here...
 dnl --------------------------------------------------------------------------
 LIBS="$LIBS -L\$(top_srcdir)/libatalk/"
 CFLAGS="$CFLAGS -I\$(top_srcdir)/include -I\$(top_srcdir)/sys"
-AC_SUBST(LIBS)
-AC_SUBST(CFLAGS)
 
 dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
 dnl --------------------------------------------------------------------------
 
 dnl --------------------- determine operating system from "target"
-case "$target" in
-*linux*)   this_os=linux ;;
-*solaris*) this_os=solaris ;;
+case "$ac_cv_target_os" in
+	*freebsd*) 			this_os=freebsd ;;
+	*linux*)   			this_os=linux ;;
+	*openbsd*) 			this_os=openbsd ;;
+	*netbsd*) 			this_os=netbsd ;;
+	*solaris*) 			this_os=solaris ;;
 esac
 
-dnl --------------------- conditional libraries, etc from "target"
+case "$ac_cv_target_cpu" in
+	i386|i486|i586|i686|k7)		this_cpu=x86 ;;
+	alpha)				this_cpu=alpha ;;
+	mips)				this_cpu=mips ;;
+	powerpc|ppc)			this_cpu=ppc ;;
+esac
 
-dnl List of Makefiles to generate
+dnl --------------------- operating system specific flags (port from sys/*)
+
+dnl ----- FreeBSD specific -----
+if test x"$this_os" = "xfreebsd"; then 
+	AC_MSG_RESULT([ * FreeBSD specific configuration])
+	AC_DEFINE(BSD4_4)
+	AC_DEFINE(SENDFILE_FLAVOR_BSD)
+fi
+
+dnl ----- Linux specific -----
+if test x"$this_os" = "xlinux"; then 
+	AC_MSG_RESULT([ * Linux specific configuration])
+	AC_DEFINE(SENDFILE_FLAVOR_LINUX)
+
+	dnl ----- check if we need the quotactl wrapper
+	AC_CHECK_HEADER(sys/quota.h,,
+		AC_MSG_RESULT([enabling quotactl wrapper])
+		AC_DEFINE(NEED_QUOTACTL_WRAPPER)
+	)
+
+	dnl ----- Linux/alpha specific -----
+	if test x"$this_cpu" = "xalpha"; then 
+		AC_MSG_RESULT([enabling gcc memcpy bug workaround])
+		AC_DEFINE(HAVE_GCC_MEMCPY_BUG)
+	fi
+fi
+
+dnl ----- NetBSD specific -----
+if test x"$this_os" = "xnetbsd"; then 
+	AC_MSG_RESULT([ * NetBSD specific configuration])
+	AC_DEFINE(BSD4_4)
+	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
+fi
+
+dnl ----- OpenBSD specific -----
+if test x"$this_os" = "xopenbsd"; then 
+	AC_MSG_RESULT([ * OpenBSD specific configuration])
+	AC_DEFINE(BSD4_4)
+fi
+
+dnl ----- Solaris specific -----
+if test x"$this_os" = "xsolaris"; then 
+	AC_MSG_RESULT([ * Solaris specific configuration])
+	AC_DEFINE(__svr4__)
+	AC_DEFINE(_ISOC9X_SOURCE)
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
+	AC_DEFINE(SOLARIS)
+fi
+
+
+dnl --------------------- last minute substitutions
+
+AC_SUBST(LIBS)
+AC_SUBST(CFLAGS)
+AM_CONDITIONAL(USE_DHX, test x$compile_dhx = xyes)
+
+dnl --------------------- generate files
 
 AC_OUTPUT([Makefile
 	bin/Makefile
