@@ -1,3 +1,8 @@
+2001-04-25  morgan a <morgan@orst.edu>
+
+	* etc/afpd/unix.c: in setdirowner(), changed some of the syslog
+	statements from LOG_ERR to LOG_DEBUG.  Some common "soft errors"
+	were being logged and scaring users.  :)
 
 2001-04-24  jeff b  <jeff@univrel.pr.uconn.edu>  
 
