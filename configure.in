@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.173 2002-12-04 18:33:39 srittau Exp $
+dnl $Id: configure.in,v 1.174 2002-12-05 11:16:33 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -188,7 +188,7 @@ AC_ARG_ENABLE(debug,
 
 afp3=no
 AC_ARG_ENABLE(afp3,
-	[  --enable-afp3          enable AFP 3.x calls],
+	[  --enable-afp3           enable AFP 3.x calls],
 	if test "$enableval" = "yes"; then
 		afp3=yes
 		AC_DEFINE(AFP3x, 1)
@@ -281,7 +281,7 @@ fi
 dnl Determine whether or not to use CDB or transactional DB store
 AC_MSG_CHECKING([whether or not to use CNID with Concurrent Data Store])
 AC_ARG_WITH(cdb,
-	[ --with-cdb		enable CNID with Concurrent Data Store],
+	[  --with-cdb              enable CNID with Concurrent Data Store],
 	if test "$withval" = "no"; then
 	    if test "x$did_scheme" != "xcnid"; then
 		USE_CDB="no"

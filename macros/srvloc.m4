@@ -1,6 +1,6 @@
 dnl Check for optional server location protocol support (used by MacOS X)
 
-dnl $Id: srvloc.m4,v 1.5 2002-02-16 17:10:07 srittau Exp $
+dnl $Id: srvloc.m4,v 1.6 2002-12-05 11:16:34 srittau Exp $
 
 AC_DEFUN([NETATALK_SRVLOC], [
 
@@ -8,7 +8,7 @@ AC_DEFUN([NETATALK_SRVLOC], [
 	SLP_CFLAGS=""
 
 	AC_ARG_ENABLE(srvloc,
-		[  --enable-srvloc[=DIR]   turn on Server Location Protocol support],
+		[  --enable-srvloc[=DIR]     turn on Server Location Protocol support],
 		[srvloc=$enableval],
 		[srvloc=no]
 	)
