@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.11 2003-04-16 22:45:10 samnoble Exp $
+ * $Id: status.c,v 1.12 2003-04-21 21:58:41 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -232,10 +232,10 @@ static int status_netaddress(char *data, int *servoffset,
     /* number of addresses. this currently screws up if we have a dsi
        connection, but we don't have the ip address. to get around this,
        we turn off the status flag for tcp/ip. */
-    *data++ = (fqdn ? 1 : 0) + (dsi ? 1 : 0) + (asp ? 1 : 0);
+    *data++ = ((fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) + (asp ? 1 : 0);
 
     /* handle DNS names */
-    if (fqdn) {
+    if (fqdn && dsi) {
         int len = strlen(fqdn);
         *data++ = len +2;
         *data++ = 0x04;
