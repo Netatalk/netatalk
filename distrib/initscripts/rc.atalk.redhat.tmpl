@@ -39,7 +39,7 @@ fi
 . ${ATALK_CONF_DIR}/netatalk.conf
 
 # Check that networking is up.
-if [ ${NETWORKING} = "no" ] 
+if [ ${NETWORKING} = "no" ]; then
      echo "[Network isn't started]"; 
      exit 0;
 fi
