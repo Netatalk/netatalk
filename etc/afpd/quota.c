@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.21 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: quota.c,v 1.22 2002-08-29 17:22:06 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -139,8 +139,14 @@ int         *nfs;
         return( NULL );
     }
 
+#ifdef TRU64
+    /* Digital UNIX: The struct sfs contains a field sfs.f_type,
+     * the MOUNT_* constants are defined in <sys/mount.h> */
+    if ((sfs.f_type == MOUNT_NFS)||(sfs.f_type == MOUNT_NFS3))
+#else /* TRU64 */
     /* XXX: make sure this really detects an nfs mounted fs */
     if (strchr(sfs.f_mntfromname, ':'))
+#endif /* TRU64 */
         *nfs = 1;
     return( sfs.f_mntfromname );
 }
@@ -345,8 +351,43 @@ const u_int32_t     bsize;
     }
 #endif
 
+#ifdef TRU64
+    /* Digital UNIX: Two forms of specifying an NFS filesystem are possible,
+       either 'hostname:path' or 'path@hostname' (Ultrix heritage) */
+    if (vol->v_nfs) {
+	char *hostpath;
+	char pathstring[MNAMELEN];
+	/* MNAMELEN ist defined in <sys/mount.h> */
+	int result;
+	
+	if ((hostpath = strchr(vol->v_gvs,'@')) != NULL ) {
+	    /* convert 'path@hostname' to 'hostname:path',
+	     * call getnfsquota(),
+	     * convert 'hostname:path' back to 'path@hostname' */
+	    *hostpath = '\0';
+	    sprintf(pathstring,"%s:%s",hostpath+1,vol->v_gvs);
+	    strcpy(vol->v_gvs,pathstring);
+	    
+	    result = getnfsquota(vol, uuid, bsize, dq);
+	    
+	    hostpath = strchr(vol->v_gvs,':');
+	    *hostpath = '\0';
+	    sprintf(pathstring,"%s@%s",hostpath+1,vol->v_gvs);
+	    strcpy(vol->v_gvs,pathstring);
+	    
+	    return result;
+	}
+	else
+	    /* vol->v_gvs is of the form 'hostname:path' */
+	    return getnfsquota(vol, uuid, bsize, dq);
+    } else
+	/* local filesystem */
+	return getfsquota(vol, uuid, dq);
+	   
+#else /* TRU64 */
     return vol->v_nfs ? getnfsquota(vol, uuid, bsize, dq) :
            getfsquota(vol, uuid, dq);
+#endif /* TRU64 */
 }
 
 static int overquota( dqblk )
