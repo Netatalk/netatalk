@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.15 2002-01-13 07:22:02 jmarcus Exp $
+ * $Id: quota.c,v 1.16 2002-01-18 22:42:24 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -414,8 +414,7 @@ const u_int32_t bsize;
         *btotal = *bfree = ~((VolSpace) 0);
     } else if ( overquota( &dqblk )) {
         *btotal = tobytes( dqblk.dqb_bhardlimit, bsize );
-        *bfree = tobytes( dqblk.dqb_bhardlimit, bsize ) -
-                 tobytes( dqblk.dqb_curblocks, bsize );
+		*bfree = 0; /* Report 0 bytes left when over soft quota. */
     } else {
         *btotal = tobytes( dqblk.dqb_bsoftlimit, bsize );
         *bfree = tobytes( dqblk.dqb_bsoftlimit, bsize  ) -
