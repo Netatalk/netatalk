@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.42 2002-10-11 14:18:27 didg Exp $
+ * $Id: directory.c,v 1.43 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -814,14 +814,36 @@ char	**cpath;
     char        *u;
     int			extend = 0;
     int			len;
-	int			olen = 0;
-	
+    int			olen = 0;
+    u_int32_t   hint;
+    int         size = 0;
+    char        sep;
+       	
     data = *cpath;
-    if ( *data++ != 2 ) {			/* path type */
+    switch (*data) { /* path type */
+    case 2:
+       data++;
+       len = (unsigned char) *data++;
+       size = 2;
+       sep = 0;
+       break;
+    case 3:
+       if (afp_version >= 30) {
+           data++;
+           hint = ntohl(*data);
+           data += 4;
+           len = ntohs(*data);
+           data += 2;
+           size = 7;
+           sep = '/';
+           break;
+        }
+        /* else it's an error */
+    default:
         return( NULL );
+    
     }
-    len = (unsigned char) *data++;
-    *cpath += len + 2;
+    *cpath += len + size;
     *path = '\0';
     u = NULL;
     ret.m_name = path;
@@ -869,7 +891,7 @@ char	**cpath;
         }
     	u = NULL;
 
-        while ( *data == '\0' && len > 0 ) {
+        while ( *data && *data == sep && len > 0 ) {
             if ( dir->d_parent == NULL ) {
                 return NULL;
             }
@@ -884,7 +906,7 @@ char	**cpath;
         	u = data;
         	olen = len;
 		}        
-        while ( *data != '\0' && len > 0 ) {
+        while ( *data && *data != sep && len > 0 ) {
             *p++ = *data++;
             len--;
         }
@@ -1012,6 +1034,7 @@ char *p;
    (".", curdir)
    (name, dir) with curdir:name == dir, from afp_enumerate
 */
+
 int getdirparams(const struct vol *vol,
                  u_int16_t bitmap, struct path *s_path,
                  struct dir *dir, 
@@ -1023,7 +1046,8 @@ int getdirparams(const struct vol *vol,
     int			bit = 0, isad = 0;
     u_int32_t           aint;
     u_int16_t		ashort;
-    int             ret;
+    int                 ret;
+    u_int32_t           utf8 = 0;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
     
@@ -1170,14 +1194,24 @@ int getdirparams(const struct vol *vol,
             /* Client has requested the ProDOS information block.
                Just pass back the same basic block for all
                directories. <shirsch@ibm.net> */
-        case DIRPBIT_PDINFO :			  /* ProDOS Info Block */
-            *data++ = 0x0f;
-            *data++ = 0;
-            ashort = htons( 0x0200 );
-            memcpy( data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
-            memset( data, 0, sizeof( ashort ));
-            data += sizeof( ashort );
+        case DIRPBIT_PDINFO :			  
+            if (afp_version >= 30) { /* UTF8 name */
+                utf8 = kTextEncodingUTF8;
+                if (dir->d_m_name) /* root of parent can have a null name */
+                    nameoff = data;
+                else
+                    memset(data, 0, sizeof(u_int16_t));
+                data += sizeof( u_int16_t );
+            }
+            else { /* ProDOS Info Block */
+                *data++ = 0x0f;
+                *data++ = 0;
+                ashort = htons( 0x0200 );
+                memcpy( data, &ashort, sizeof( ashort ));
+                data += sizeof( ashort );
+                memset( data, 0, sizeof( ashort ));
+                data += sizeof( ashort );
+            }
             break;
 
         default :
@@ -1192,13 +1226,7 @@ int getdirparams(const struct vol *vol,
     if ( nameoff ) {
         ashort = htons( data - buf );
         memcpy( nameoff, &ashort, sizeof( ashort ));
-
-        if ((aint = strlen( dir->d_m_name )) > MACFILELEN)
-            aint = MACFILELEN;
-
-        *data++ = aint;
-        memcpy( data, dir->d_m_name, aint );
-        data += aint;
+        data = set_name(data, dir->d_m_name, utf8);
     }
     if ( isad ) {
         ad_close( &ad, ADFLAGS_HF );
@@ -1535,9 +1563,10 @@ int setdirparams(const struct vol *vol,
            ProDOS information block.  Skip over the data and
            report nothing amiss. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
-            buf += 6;
-            break;
-
+            if (afp_version < 30) {
+                buf += 6;
+                break;
+            }
         default :
             err = AFPERR_BITMAP;
             goto setdirparam_done;
@@ -1937,7 +1966,8 @@ int		ibuflen, *rbuflen;
     char		*name;
     u_int32_t           id;
     int			len, sfunc;
-
+    int         utf8 = 0;
+    
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     memcpy( &id, ibuf, sizeof( id ));
@@ -1947,6 +1977,7 @@ int		ibuflen, *rbuflen;
     if ( id != 0 ) {
         switch ( sfunc ) {
         case 1 :
+        case 3 :/* unicode */
             if (( pw = getpwuid( id )) == NULL ) {
                 *rbuflen = 0;
                 return( AFPERR_NOITEM );
@@ -1955,6 +1986,7 @@ int		ibuflen, *rbuflen;
             break;
 
         case 2 :
+        case 4 : /* unicode */
             if (( gr = (struct group *)getgrgid( id )) == NULL ) {
                 *rbuflen = 0;
                 return( AFPERR_NOITEM );
@@ -1966,19 +1998,37 @@ int		ibuflen, *rbuflen;
             *rbuflen = 0;
             return( AFPERR_PARAM );
         }
-
+        switch ( sfunc ) {
+        case 3:
+        case 4:
+            if (afp_version < 30) {
+                *rbuflen = 0;
+                return( AFPERR_PARAM );
+            }
+            utf8 = 1;
+            /* map to unicode */
+            break;            
+        }
         len = strlen( name );
 
     } else {
         len = 0;
         name = NULL;
     }
-
-    *rbuf++ = len;
+    if (utf8) {
+        u_int16_t tp = htons(len);
+        memcpy(rbuf, &tp, sizeof(tp));
+        rbuf += sizeof(tp);
+        *rbuflen += 2;
+    }
+    else {
+        *rbuf++ = len;
+        *rbuflen++;
+    }
     if ( len > 0 ) {
         memcpy( rbuf, name, len );
     }
-    *rbuflen = len + 1;
+    *rbuflen += len;
     return( AFP_OK );
 }
 
@@ -1989,16 +2039,33 @@ int		ibuflen, *rbuflen;
 {
     struct passwd	*pw;
     struct group	*gr;
-    int			len, sfunc;
-    u_int32_t           id;
+    int             len, sfunc;
+    u_int32_t       id;
+    u_int16_t       ulen;
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
-    len = (unsigned char) *ibuf++;
+    switch ( sfunc ) {
+    case 1 : 
+    case 2 : /* unicode */
+        memcpy(&ulen, ibuf, sizeof(ulen));
+        len = ntohs(ulen);
+        ibuf += 2;
+        break;
+    case 3 :
+    case 4 :
+        len = (unsigned char) *ibuf++;
+        break;
+    default :
+        *rbuflen = 0;
+        return( AFPERR_PARAM );
+    }
+
     ibuf[ len ] = '\0';
 
     if ( len != 0 ) {
         switch ( sfunc ) {
+        case 1 : /* unicode */
         case 3 :
             if (( pw = (struct passwd *)getpwnam( ibuf )) == NULL ) {
                 *rbuflen = 0;
@@ -2007,6 +2074,7 @@ int		ibuflen, *rbuflen;
             id = pw->pw_uid;
             break;
 
+        case 2 : /* unicode */
         case 4 :
             if (( gr = (struct group *)getgrnam( ibuf )) == NULL ) {
                 *rbuflen = 0;
@@ -2014,9 +2082,6 @@ int		ibuflen, *rbuflen;
             }
             id = gr->gr_gid;
             break;
-        default :
-            *rbuflen = 0;
-            return( AFPERR_PARAM );
         }
     } else {
         id = 0;

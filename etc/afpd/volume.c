@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.38 2002-10-11 14:18:35 didg Exp $
+ * $Id: volume.c,v 1.39 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -986,11 +986,15 @@ int		*buflen;
              *       it's passed in that way as it's possible to mount
              *       a read-write filesystem under a read-only one. */
             if ((vol->v_flags & AFPVOL_RO) ||
-                    ((utime(vol->v_path, NULL) < 0) && (errno == EROFS)))
+                    ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
                 ashort |= VOLPBIT_ATTR_RO;
+            }
 #ifdef WITH_CATSEARCH
-                ashort |= VOLPBIT_ATTR_CATSEARCH;
+            ashort |= VOLPBIT_ATTR_CATSEARCH;
 #endif
+            if (afp_version >= 30) {
+                ashort |= VOLPBIT_ATTR_UTF8;
+            }
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );

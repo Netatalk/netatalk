@@ -1,5 +1,5 @@
 /*
- * $Id: auth.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: auth.h,v 1.3 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -41,9 +41,12 @@ extern int	ngroups;
 
 /* FP functions */
 extern int	afp_login __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_login_ext __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_logincont __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_changepw __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_logout __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_getuserinfo __P((AFPObj *, char *, int, char *, int *));
+extern int      afp_getsession __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
+extern int      afp_disconnect __P((AFPObj *, char *, int, char *, int *));
 
 #endif /* auth.h */

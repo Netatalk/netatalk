@@ -192,6 +192,7 @@ typedef enum {
 #define AFP_ENUMERATE_EXT       66
 #define AFP_READ_EXT            60
 #define AFP_WRITE_EXT           61
+#define AFP_LOGIN_EXT       	63
 #define AFP_GETSESSTOKEN        64
 #define AFP_DISCTOLDSESS        65
 

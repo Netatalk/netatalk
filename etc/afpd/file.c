@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.63 2002-10-11 14:18:29 didg Exp $
+ * $Id: file.c,v 1.64 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -106,6 +106,9 @@ void *get_finderinfo(const char *mpath, struct adouble *adp, void *data)
     return data;
 }
 
+/*
+ * FIXME: PDINFO is UTF8 and doesn't need adp
+*/
 #define PARAM_NEED_ADP(b) ((b) & ((1 << FILPBIT_ATTR)  |\
 				  (1 << FILPBIT_CDATE) |\
 				  (1 << FILPBIT_MDATE) |\
@@ -116,6 +119,39 @@ void *get_finderinfo(const char *mpath, struct adouble *adp, void *data)
 				  (1 << FILPBIT_PDINFO)))
 
 
+char *set_name(char *data, const char *name, u_int32_t utf8) 
+{
+    u_int32_t           aint;
+
+    aint = strlen( name );
+
+    if (!utf8) {
+        if (aint > MACFILELEN)
+            aint = MACFILELEN;
+        *data++ = aint;
+    }
+    else {
+        u_int16_t temp;
+
+        if (aint > 255)  /* FIXME safeguard, anyway if no ascii char it's game over*/
+           aint = 255;
+
+        utf8 = htonl(utf8);
+        memcpy(data, &utf8, sizeof(utf8));
+        data += sizeof(utf8);
+        
+        temp = htons(aint);
+        memcpy(data, &temp, sizeof(temp));
+        data += sizeof(temp);
+    }
+
+    memcpy( data, name, aint );
+    data += aint;
+
+    return data;
+}
+
+/* -------------------------- */
 int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
                  char *path, struct dir *dir, struct stat *st,
@@ -129,6 +165,7 @@ int getmetadata(struct vol *vol,
     u_int32_t		aint;
     u_int16_t		ashort;
     u_char              achar, fdType[4];
+    u_int32_t           utf8 = 0;
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin getmetadata:");
@@ -316,45 +353,51 @@ int getmetadata(struct vol *vol,
                to "pXYZ" when we created it.  See IA, Ver 2.
                <shirsch@ibm.net> */
         case FILPBIT_PDINFO :
-            if ( adp ) {
-                memcpy(fdType, ad_entry( adp, ADEID_FINDERI ), 4 );
+            if (afp_version >= 30) { /* UTF8 name */
+                utf8 = kTextEncodingUTF8;
+                data += sizeof( u_int16_t );
+            }
+            else {
+                if ( adp ) {
+                    memcpy(fdType, ad_entry( adp, ADEID_FINDERI ), 4 );
 
-                if ( memcmp( fdType, "TEXT", 4 ) == 0 ) {
-                    achar = '\x04';
-                    ashort = 0x0000;
-                }
-                else if ( memcmp( fdType, "PSYS", 4 ) == 0 ) {
-                    achar = '\xff';
-                    ashort = 0x0000;
-                }
-                else if ( memcmp( fdType, "PS16", 4 ) == 0 ) {
-                    achar = '\xb3';
-                    ashort = 0x0000;
-                }
-                else if ( memcmp( fdType, "BINA", 4 ) == 0 ) {
-                    achar = '\x00';
-                    ashort = 0x0000;
-                }
-                else if ( fdType[0] == 'p' ) {
-                    achar = fdType[1];
-                    ashort = (fdType[2] * 256) + fdType[3];
+                    if ( memcmp( fdType, "TEXT", 4 ) == 0 ) {
+                        achar = '\x04';
+                        ashort = 0x0000;
+                    }
+                    else if ( memcmp( fdType, "PSYS", 4 ) == 0 ) {
+                        achar = '\xff';
+                        ashort = 0x0000;
+                    }
+                    else if ( memcmp( fdType, "PS16", 4 ) == 0 ) {
+                        achar = '\xb3';
+                        ashort = 0x0000;
+                    }
+                    else if ( memcmp( fdType, "BINA", 4 ) == 0 ) {
+                        achar = '\x00';
+                        ashort = 0x0000;
+                    }
+                    else if ( fdType[0] == 'p' ) {
+                        achar = fdType[1];
+                        ashort = (fdType[2] * 256) + fdType[3];
+                    }
+                    else {
+                        achar = '\x00';
+                        ashort = 0x0000;
+                    }
                 }
                 else {
                     achar = '\x00';
                     ashort = 0x0000;
                 }
-            }
-            else {
-                achar = '\x00';
-                ashort = 0x0000;
-            }
 
-            *data++ = achar;
-            *data++ = 0;
-            memcpy(data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
-            memset(data, 0, sizeof( ashort ));
-            data += sizeof( ashort );
+                *data++ = achar;
+                *data++ = 0;
+                memcpy(data, &ashort, sizeof( ashort ));
+                data += sizeof( ashort );
+                memset(data, 0, sizeof( ashort ));
+                data += sizeof( ashort );
+            }
             break;
         case FILPBIT_EXTDFLEN:
             aint = htonl(st->st_size >> 32);
@@ -384,11 +427,7 @@ int getmetadata(struct vol *vol,
     if ( nameoff ) {
         ashort = htons( data - buf );
         memcpy(nameoff, &ashort, sizeof( ashort ));
-        if ((aint = strlen( path )) > MACFILELEN)
-            aint = MACFILELEN;
-        *data++ = aint;
-        memcpy(data, path, aint );
-        data += aint;
+        data = set_name(data, path, utf8);
     }
     *buflen = data - buf;
     return (AFP_OK);

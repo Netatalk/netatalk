@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.12 2002-10-11 14:18:31 didg Exp $
+ * $Id: file.h,v 1.13 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -72,6 +72,9 @@ struct extmap {
     char		em_creator[ 4 ];
     char		em_type[ 4 ];
 };
+
+#define kTextEncodingUTF8 0x08000103
+extern char *set_name   __P((char *, const char *, u_int32_t ) );
 
 extern struct extmap	*getextmap __P((const char *));
 extern struct extmap	*getdefextmap __P((void));

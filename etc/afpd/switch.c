@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.8 2002-08-25 13:26:20 rlewczuk Exp $
+ * $Id: switch.c,v 1.9 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -79,7 +79,7 @@ int	(*preauth_switch[])() = {
     NULL, NULL, NULL, NULL,					/*  48 -  55 */
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL,					/*  56 -  63 */
-    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, afp_login_ext,
     NULL, NULL, NULL, NULL,					/*  64 -  71 */
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL,					/*  72 -  79 */

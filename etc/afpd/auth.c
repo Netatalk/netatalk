@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.31 2002-10-11 17:07:19 didg Exp $
+ * $Id: auth.c,v 1.32 2002-10-12 04:02:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -303,6 +303,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #ifdef WITH_CATSEARCH
 	uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH, afp_catsearch, NULL); 
 #endif
+	uam_afpserver_action(AFP_GETSESSTOKEN,  UAM_AFPSERVER_POSTAUTH, afp_getsession, NULL); 
+	uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect, NULL); 
 	uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate, NULL); 
 	uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext, NULL); 
 	uam_afpserver_action(AFP_WRITE_EXT,     UAM_AFPSERVER_POSTAUTH, afp_write_ext, NULL); 
@@ -318,29 +320,104 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     return( AFP_OK );
 }
 
-int afp_login(obj, ibuf, ibuflen, rbuf, rbuflen )
+/* ---------------------- */
+int afp_getsession(obj, ibuf, ibuflen, rbuf, rbuflen )
+AFPObj       *obj;
+char	     *ibuf, *rbuf;
+unsigned int ibuflen, *rbuflen;
+{
+    u_int16_t           type;
+    u_int32_t           idlen;
+
+    u_int32_t           tklen;
+    pid_t               token;
+
+    *rbuflen = 0;
+
+    ibuf++;
+    ibuflen--;
+
+    memcpy(&type, ibuf, sizeof(type));    
+    type = ntohs(type);
+    ibuf += sizeof(type);
+    ibuflen -= sizeof(type);
+    /*
+     * 
+    */
+    switch (type) {
+    case 0: /* old version ?*/
+        break;
+    case 1: /* disconnect */
+    case 2: /* reconnect update id */
+        if (ibuflen >= sizeof(idlen)) {
+            memcpy(&idlen, ibuf, sizeof(idlen));
+            idlen = ntohl(idlen);
+            ibuf += sizeof(idlen);
+            ibuflen -= sizeof(idlen);
+            if (ibuflen < idlen) {
+                return AFPERR_PARAM;
+            }
+            /* memcpy (id, ibuf, idlen) */
+        }
+        break;
+    }
+    *rbuflen = sizeof(type);
+    type = htons(type);
+    memcpy(rbuf, &type, sizeof(type));
+    rbuf += sizeof(type);
+
+    *rbuflen += sizeof(tklen);
+    tklen = htonl(sizeof(pid_t));
+    memcpy(rbuf, &tklen, sizeof(tklen));
+    rbuf += sizeof(tklen);
+    
+    *rbuflen += sizeof(pid_t);
+    token = getpid();
+    memcpy(rbuf, &token, sizeof(pid_t));
+    return AFP_OK;
+}
+
+/* ---------------------- */
+int afp_disconnect(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
-    struct passwd *pwd = NULL;
-    int		len, i, num;
+    u_int16_t           type;
+
+    u_int32_t           tklen;
+    pid_t               token;
 
     *rbuflen = 0;
-
-
-    if ( nologin & 1)
-        return send_reply(obj, AFPERR_SHUTDOWN );
-
-    if (ibuflen <= 1)
-        return send_reply(obj, AFPERR_BADVERS );
-
     ibuf++;
-    len = (unsigned char) *ibuf++;
 
-    ibuflen -= 2;
+    memcpy(&type, ibuf, sizeof(type));
+    type = ntohs(type);
+    ibuf += sizeof(type);
+
+    memcpy(&tklen, ibuf, sizeof(tklen));
+    tklen = ntohl(tklen);
+    ibuf += sizeof(tklen);
+
+    if (tklen != sizeof(pid_t)) {
+        return AFPERR_MISC;
+    }   
+    memcpy(&token, ibuf, tklen);
+    /* killed old session, not easy */
+    return AFP_OK;
+}
+
+/* ---------------------- */
+static int get_version(obj, ibuf, ibuflen, len)
+AFPObj  *obj;
+char    *ibuf;
+int  	ibuflen;
+int  	len;
+{
+    int num,i;
+
     if (!len || len > ibuflen)
-        return send_reply(obj, AFPERR_BADVERS );
+        return AFPERR_BADVERS;
 
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ]);
     for ( i = 0; i < num; i++ ) {
@@ -351,10 +428,38 @@ int		ibuflen, *rbuflen;
         }
     }
     if ( i == num ) 				/* An inappropo version */
-        return send_reply(obj, AFPERR_BADVERS );
+        return AFPERR_BADVERS ;
 
     if (afp_version >= 30 && obj->proto != AFPPROTO_DSI)
+        return AFPERR_BADVERS ;
+
+    return 0;
+}
+
+/* ---------------------- */
+int afp_login(obj, ibuf, ibuflen, rbuf, rbuflen )
+AFPObj      *obj;
+char	*ibuf, *rbuf;
+int		ibuflen, *rbuflen;
+{
+    struct passwd *pwd = NULL;
+    int		len, i;
+
+    *rbuflen = 0;
+
+    if ( nologin & 1)
+        return send_reply(obj, AFPERR_SHUTDOWN );
+
+    if (ibuflen <= 1)
         return send_reply(obj, AFPERR_BADVERS );
+
+    ibuf++;
+    len = (unsigned char) *ibuf++;
+    ibuflen -= 2;
+
+    i = get_version(obj, ibuf, ibuflen, len);
+    if (i) 
+        return send_reply(obj, i );
 
     ibuf += len;
     ibuflen -= len;
@@ -380,7 +485,67 @@ int		ibuflen, *rbuflen;
     return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout));
 }
 
+/* ---------------------- */
+int afp_login_ext(obj, ibuf, ibuflen, rbuf, rbuflen )
+AFPObj  *obj;
+char	*ibuf, *rbuf;
+int	ibuflen, *rbuflen;
+{
+    struct passwd *pwd = NULL;
+    int		len, i;
+    char        type;
+/*
+    u_int16_t   h;
+*/    
+    *rbuflen = 0;
 
+    if ( nologin & 1)
+        return send_reply(obj, AFPERR_SHUTDOWN );
+
+    if (ibuflen <= 2)
+        return send_reply(obj, AFPERR_BADVERS );
+
+    ibuf++;
+    ibuf++; /* flag */
+    len = (unsigned char) *ibuf++;
+    ibuflen -= 3;
+    
+    i = get_version(obj, ibuf, ibuflen, len);
+    if (i) 
+        return send_reply(obj, i );
+
+    ibuf    += len;
+    ibuflen -= len;
+
+    if (ibuflen <= 1)
+        return send_reply(obj, AFPERR_BADUAM);
+
+    len = (unsigned char) *ibuf++;
+    ibuflen--;
+
+    if (!len || len > ibuflen)
+        return send_reply(obj, AFPERR_BADUAM);
+
+    if ((afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len)) == NULL)
+        return send_reply(obj, AFPERR_BADUAM);
+    ibuf += len;
+    ibuflen -= len;
+
+    /* FIXME user name */
+    if (len <= 1) 
+        return send_reply(obj, AFPERR_PARAM);
+    type = *ibuf;
+    ibuf++;
+    ibuflen--;
+    
+    i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
+    if (i || !pwd)
+        return send_reply(obj, i);
+
+    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout));
+}
+
+/* ---------------------- */
 int afp_logincont(obj, ibuf, ibuflen, rbuf, rbuflen)
 AFPObj      *obj;
 char	*ibuf, *rbuf;
