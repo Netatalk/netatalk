@@ -1,4 +1,21 @@
-($Id: ChangeLog,v 1.45 2001-06-07 17:18:26 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.46 2001-06-13 15:44:45 rufustfirefly Exp $)
+
+2001-06-11  jeff b  <jeff@univrel.pr.uconn.edu>
+	* configure.in, include/atalk/adouble.h, libatalk/compat/flock.c:
+	patch #431859 to avoid ucbinclude on Solaris, with flock support,
+	thanks to Russ Allbery (rra@users.sourceforge.net)
+
+	* acconfig.h, configure.in, libatalk/util/server_child.c,
+	libatalk/util/server_lock.c, sys/netatalk/endian.h: patch #432052
+	for portability to IRIX, HP-UX, and AIX (Russ Allbery)
+
+	* etc/afpd/nls/makecode.c: patch #432137 to add codepage mapping
+	support for (C), (TM) and other characters to avoid losing them,
+	submitted by Andre Schild (aschild@users.sourceforge.net)
+
+	* configure.in: set sysconfdir as /etc/netatalk by default, and
+	uams path now pulls from sysconfdir instead of config_dir
+	(Sam Noble)
 
 2001-06-07  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, bin/afppasswd/Makefile.am,
