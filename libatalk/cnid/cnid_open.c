@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.39 2002-05-29 18:02:59 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.40 2002-05-30 06:41:52 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -506,6 +506,7 @@ dbversion_retry:
         db->db_shortname->close(db->db_shortname, 0);
         db->db_longname->close(db->db_longname, 0);
 #endif /* EXTENDED_DB */
+	db->db_devino->close(db->db_devino, 0);
         goto fail_appinit;
     }
 
