@@ -7,12 +7,12 @@ TMPLFILES = $(foreach file,$(GENFILES),$(file).tmpl)
 CONFFILES = AppleVolumes.default AppleVolumes.system \
 	atalkd.conf netatalk.conf papd.conf
 PAMFILES = netatalk.pamd
+OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
 EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 
-CLEANFILES += $(GENFILES)
+CLEANFILES = $(GENFILES)
 
-pkgconf_DATA = @OVERWRITE@
 pkgconfdir = @PKGCONFDIR@
 
 #
@@ -26,19 +26,34 @@ pkgconfdir = @PKGCONFDIR@
 	    <$< >$@
 
 #
+# install configuration files
+#
+
+install-config-files: $(CONFFILES) $(GENFILES)
+	$(mkinstalldirs) $(DESTDIR)$(pkgconfdir)
+	for f in $(CONFFILES) $(GENFILES); do \
+		if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -e $(DESTDIR)$(pkgconfdir)/$$f; then \
+			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir)"; \
+			$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir); \
+		else \
+			echo "not overwriting $$f"; \
+		fi; \
+	done
+
+#
 # pluggable authentication modules support
 #
 
 if USE_PAM
 
-pamdir   = $(sysconfdir)/pam.d
+pamdir = $(sysconfdir)/pam.d
 
-install-data-local:
+install-data-local: install-config-files
 	$(mkinstalldirs) $(DESTDIR)$(pamdir)
 	$(INSTALL_DATA) netatalk.pamd $(DESTDIR)$(pamdir)/netatalk
 
 else
 
-install-data-local:
+install-data-local: install-config-files
 
 endif 

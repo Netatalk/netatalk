@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.107 2001-10-03 22:02:16 jmarcus Exp $
+dnl $Id: configure.in,v 1.108 2001-10-06 15:57:26 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -727,26 +727,14 @@ AC_ARG_ENABLE(krb4-uam,
 )
 dnl --------------------- overwrite the config files . . . or not.
 
-files="AppleVolumes.default AppleVolumes.system atalkd.conf netatalk.conf netatalk.pamd papd.conf afpd.conf"
-
+AC_MSG_CHECKING([whether configuration files should be overwritten])
 AC_ARG_ENABLE(overwrite,
 	[  --enable-overwrite      Overwrite configuration files
 				   default=PKGCONFDIR],
-	[ 
-	OVERWRITE="$files"
-	AC_MSG_RESULT([Overwrite configuration files])
-	],
-	
-	[	
-	for f in $files ; do
-		if test -f "${PKGCONFDIR}/$f" ; 
-		then :;
-		else OVERWRITE="${OVERWRITE} $f";
-		fi
-	done
-	AC_MSG_RESULT([Don't overwrite existing configuration files])
-	]	
+	[OVERWRITE_CONFIG="${enable_overwrite}"],
+	[OVERWRITE_CONFIG="no"]
 )
+AC_MSG_RESULT([$OVERWRITE_CONFIG])
 
 dnl --------------------- last minute substitutions
 
@@ -756,7 +744,7 @@ AC_SUBST(PAPD_LIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDSHAREDFLAGS)
 AC_SUBST(PKGCONFDIR)
-AC_SUBST(OVERWRITE)
+AC_SUBST(OVERWRITE_CONFIG)
 
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
