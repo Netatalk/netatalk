@@ -93,7 +93,7 @@ extern int uquota_getvolspace __P((const struct vol *, VolSpace *, VolSpace *,
 
 extern int gmem         __P((const gid_t));
 extern int setdeskmode  __P((const mode_t));
-extern int setdirmode   __P((const mode_t, const int));
+extern int setdirmode   __P((const mode_t, const int, const int));
 extern int setdeskowner __P((const uid_t, const gid_t));
 extern int setdirowner  __P((const uid_t, const gid_t, const int));
 

@@ -1,4 +1,6 @@
 /*
+ * $Id: volume.h,v 1.3 2001-02-28 16:53:24 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -83,6 +85,7 @@ typedef u_int64_t VolSpace;
 #define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */
 #define AFPVOL_LIMITSIZE (1 << 12)  /* limit size for older macs */
 #define AFPVOL_MAPASCII  (1 << 13)  /* map the ascii range as well */
+#define AFPVOL_DROPBOX   (1 << 14)  /* dropkludge dropbox support */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)

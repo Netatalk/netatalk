@@ -1,4 +1,4 @@
-.\" $Id: AppleVolumes.default.5.tmpl,v 1.1 2000-09-22 15:18:44 arichard Exp $
+.\" $Id: AppleVolumes.default.5.tmpl,v 1.2 2001-02-28 16:53:24 rufustfirefly Exp $
 .TH AppleVolumes.default 5 "20 September 2000" "netatalk 1.5"
 .UC 4
 .SH NAME
@@ -75,6 +75,10 @@ This allows multiple options to be specified in a comma delimited format.
 The available options are:
 
 \fBcrlf\fR - Enables crlf translation for TEXT files.
+
+\fBdropbox\fR - Allows a volume to be declared as being a "dropbox." Note
+that netatalk must be compiled with dropkludge support for this to
+function.
 
 \fBlimitsize\fR - Hack for older Macintoshes using newer Appleshare
 clients to limit the disk size reporting to 2 GB.

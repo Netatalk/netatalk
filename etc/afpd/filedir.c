@@ -674,8 +674,11 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
 #ifdef DROPKLUDGE
-    if (retvalue=matchfile2dirperms (newname, vol, did) != AFP_OK)
-	return retvalue;
+    if (vol->v_flags & AFPVOL_DROPBOX) {
+        if (retvalue=matchfile2dirperms (newname, vol, did) != AFP_OK) {
+	    return retvalue;
+        }
+    }
 #endif DROPKLUDGE
 
     if ( rc == AFP_OK ) {

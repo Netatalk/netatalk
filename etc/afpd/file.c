@@ -445,7 +445,9 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 createfile_done:
 
 #ifdef DROPKLUDGE
-    retvalue=matchfile2dirperms(upath, vol, did);
+    if (vol->v_flags & AFPVOL_DROPBOX) {
+         retvalue=matchfile2dirperms(upath, vol, did);
+    }
 #endif DROPKLUDGE
 
     setvoltime(obj, vol );
@@ -885,7 +887,9 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     setvoltime(obj, vol );
 
 #ifdef DROPKLUDGE
-    retvalue=matchfile2dirperms(newname, vol, sdid);
+    if (vol->v_flags & AFPVOL_DROPBOX) {
+         retvalue=matchfile2dirperms(newname, vol, sdid);
+    }
 #endif DROPKLUDGE
 
 #ifdef DEBUG

@@ -208,39 +208,43 @@ mode_t mtoumode( ma )
     return( mode );
 }
 
-inline int stickydirmode(name, mode)
-char * name;
-const mode_t mode;
+inline int stickydirmode(name, mode, dropbox)
+    char * name;
+    const mode_t mode;
+    const int dropbox;
 {
   int uid, retval;
 
 /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
    retval=0;
 #ifdef DROPKLUDGE
-   if (mode & S_IWOTH) 
+   if (dropbox) {
+    if (mode & S_IWOTH) { 
       if (mode & S_IROTH); 
-      else /* if S_IWOTH and not S_IROTH */
-      {
+      else { /* if S_IWOTH and not S_IROTH */
         uid=geteuid();
-        if ( seteuid(0) < 0)
+        if ( seteuid(0) < 0) {
 	   syslog( LOG_ERR, "stickydirmode: unable to seteuid root: %m");
-        if ( retval=chmod( name, ( DIRBITS | mode | S_ISVTX) ) < 0)
-        {
+        }
+        if ( retval=chmod( name, ( DIRBITS | mode | S_ISVTX) ) < 0) {
            syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
            return(AFPERR_ACCESS);
-        }
-        else
-        {
+        } else {
 #ifdef DEBUG
            syslog( LOG_INFO, "stickydirmode: (debug) chmod \"%s\": %m", name );
 #endif
            seteuid(uid);
-        }
-      }
-   else 
+        } /* end getting retval */
+      } /* end if not & S_IROTH */
+   } else { /* end if S_IWOTH and not S_IROTH */
 #endif DROPKLUDGE
-       if ( retval=chmod( name, DIRBITS | mode ) < 0 ) 
+       if ( retval=chmod( name, DIRBITS | mode ) < 0 )  {
           syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
+       }
+#ifdef DROPKLUDGE
+     } /* end if not mode */
+   } /* end checking for "dropbox" */
+#endif /* DROPKLUDGE */
    return retval;
 }
 
@@ -316,9 +320,10 @@ int setdeskmode( mode )
     return( 0 );
 }
 
-int setdirmode( mode, noadouble )
+int setdirmode( mode, noadouble, dropbox )
     const mode_t mode;
     const int noadouble;
+    const int dropbox;
 {
     char		buf[ MAXPATHLEN + 1];
     struct stat		st;
@@ -343,9 +348,9 @@ int setdirmode( mode, noadouble )
 	if (S_ISREG(st.st_mode)) {
 	    /* XXX: need to preserve special modes */
 	    if (S_ISDIR(st.st_mode)) {
-              if (stickydirmode(dirp->d_name, DIRBITS | mode) < 0)
+              if (stickydirmode(dirp->d_name, DIRBITS | mode, dropbox) < 0)
 		return (-1);
-	    } else if (stickydirmode(dirp->d_name, mode) < 0)
+	    } else if (stickydirmode(dirp->d_name, mode, dropbox) < 0)
 		return (-1);
 	}
     }
@@ -373,21 +378,21 @@ int setdirmode( mode, noadouble )
 	}
 
 	if (S_ISDIR(st.st_mode)) {
-           stickydirmode( buf, DIRBITS | mode );
+           stickydirmode( buf, DIRBITS | mode, dropbox );
 	} else 
-           stickydirmode( buf, mode );
+           stickydirmode( buf, mode, dropbox );
     } /* end for */
     closedir( dir );
 
     /* XXX: use special bits to tag directory permissions */
       
     /* XXX: need to preserve special modes */
-    if ( stickydirmode(".AppleDouble", DIRBITS | mode) < 0 )
+    if ( stickydirmode(".AppleDouble", DIRBITS | mode, dropbox) < 0 )
 	return( -1 );
 
 setdirmode_noadouble:
     /* XXX: need to preserve special modes */
-    if ( stickydirmode(".", DIRBITS | mode) < 0 )
+    if ( stickydirmode(".", DIRBITS | mode, dropbox) < 0 )
 	return( -1 );
     return( 0 );
 }

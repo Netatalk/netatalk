@@ -1297,7 +1297,8 @@ int setdirparams(vol, path, bitmap, buf )
 	    }
 #endif
 
-	    if ( setdirmode( mtoumode( &ma ), vol_noadouble(vol)) < 0 ) {
+	    if ( setdirmode( mtoumode( &ma ), vol_noadouble(vol),
+                             (vol->v_flags & AFPVOL_DROPBOX)) < 0 ) {
 		switch ( errno ) {
 		case EPERM :
 		case EACCES :
