@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.27 2001-12-13 03:31:34 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.28 2001-12-14 03:10:37 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -72,6 +72,7 @@
 #define DBLONGNAME   "longname.db"  /* did/unicode mapping */
 #define DBLOCKFILE   "cnid.lock"
 #define DBRECOVERFILE "cnid.dbrecover"
+#define DBCLOSEFILE  "cnid.close"
 
 #define DBHOMELEN    8
 #define DBLEN        10
@@ -187,7 +188,7 @@ static int compare_unicode(const DBT *a, const DBT *b)
 static int have_lock = 0;
 
 void *cnid_open(const char *dir) {
-    struct stat st, rsb;
+    struct stat st, rsb, csb;
     struct flock lock;
     char path[MAXPATHLEN + 1];
     char recover_file[MAXPATHLEN + 1];
@@ -233,6 +234,15 @@ void *cnid_open(const char *dir) {
     /* Make sure cnid.lock goes in .AppleDB. */
     strcat(path, "/");
     len++;
+
+    strcpy(db->close_file, path);
+    strcat(db->close_file, DBCLOSEFILE);
+
+    /* Check to make sure that a client isn't in the process of closing
+     * the database environment.  To do this, sleep on the close file. */
+    while(stat(db->close_file, &csb) == 0) {
+        sleep(1);
+    }
 
     strcpy(recover_file, path);
     strcat(recover_file, DBRECOVERFILE);
@@ -554,6 +564,10 @@ fail_appinit:
 fail_lock:
     if (db->lockfd > -1) {
         close(db->lockfd);
+    }
+    if (rfd > -1) {
+        (void)remove(recover_file);
+        close(rfd);
     }
 
 fail_adouble:

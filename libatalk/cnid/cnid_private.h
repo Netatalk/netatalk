@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_private.h,v 1.4 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_private.h,v 1.5 2001-12-14 03:10:37 jmarcus Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -46,6 +46,7 @@ typedef struct CNID_private {
 #endif /* EXTENDED_DB */
     DB_ENV* dbenv;
     int lockfd, flags;
+    char close_file[MAXPATHLEN + 1];
 } CNID_private;
 
 /* on-disk data format (in network byte order where appropriate) --
