@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.6 2002-10-05 13:20:13 didg Exp $
+ * $Id: server_child.c,v 1.7 2002-10-07 19:14:41 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -40,7 +40,7 @@
 #ifndef WIFSTOPPED
 #define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
 #endif
-#ifndef WIFSIGNAL
+#ifndef WIFSIGNALED
 #define WIFSIGNALED(status) (!WIFSTOPPED(status) && !WIFEXITED(status)) 
 #endif
 
