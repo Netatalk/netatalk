@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.47 2003-01-04 20:51:11 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.48 2003-01-04 20:52:15 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -330,7 +330,7 @@ char path[MAXPATHLEN + 1];
     /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
     if ((rc = db->db_didname->open(db->db_didname, NULL, DBDIDNAME, NULL,
-                                   DB_HASH, open_flag DB_AUTO_COMMIT, 0666 & ~mask))) {
+                                   DB_HASH, open_flag | DB_AUTO_COMMIT, 0666 & ~mask))) {
 #else
     if ((rc = db->db_didname->open(db->db_didname, DBDIDNAME, NULL,
                                    DB_HASH, open_flag, 0666 & ~mask))) {
