@@ -214,7 +214,7 @@ const mode_t mode;
 {
   int uid, retval;
 
-/* Turn on the sticky bit if this is a drop box */
+/* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
    retval=0;
 #ifdef DROPKLUDGE
    if (mode & S_IWOTH) 
@@ -224,7 +224,7 @@ const mode_t mode;
         uid=geteuid();
         if ( seteuid(0) < 0)
 	   syslog( LOG_ERR, "stickydirmode: unable to seteuid root: %m");
-        if ( retval=chmod( name, (DIRBITS | mode | S_ISVTX)) < 0)
+        if ( retval=chmod( name, ( DIRBITS | mode | S_ISVTX) ) < 0)
         {
            syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
            return(AFPERR_ACCESS);
@@ -484,6 +484,7 @@ int setdirowner( uid, gid, noadouble )
 	if (( st.st_mode & S_IFMT ) == S_IFREG ) {
 	    if ( chown( dirp->d_name, uid, gid ) < 0 ) {
 		syslog( LOG_ERR, "setdirowner: chown %s: %m", dirp->d_name );
+		/* return ( -1 ); Sometimes this is okay */
 	    }
 	}
     }
@@ -506,6 +507,7 @@ int setdirowner( uid, gid, noadouble )
 	if ( chown( buf, uid, gid ) < 0 ) {
 	    syslog( LOG_ERR, "setdirowner: chown %d/%d %s: %m",
 		    uid, gid, buf );
+	    /* return ( -1 ); Sometimes this is okay */
 	}
     }
     closedir( dir );
@@ -520,6 +522,7 @@ int setdirowner( uid, gid, noadouble )
     if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 ) {
  	syslog( LOG_ERR, "setdirowner: chown %d/%d .AppleDouble: %m",
  		uid, gid);
+	/* return ( -1 ); Sometimes this is okay */
     }
 
 setdirowner_noadouble:
