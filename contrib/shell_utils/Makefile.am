@@ -10,6 +10,6 @@ SUFFIXES = .tmpl .
 
 CLEANFILES = lp2pap.sh
 
-bin_SCRIPTS = apple_cp apple_mv apple_rm lp2pap.sh
+bin_SCRIPTS = apple_cp apple_mv apple_rm cleanappledouble.pl lp2pap.sh
 
 EXTRA_DIST = $(bin_SCRIPTS)

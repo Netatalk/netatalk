@@ -1,3 +1,19 @@
+
+2001-04-02  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* contrib/shell_utils/Makefile.am, contrib/shell_utils/cleanappledouble.pl:
+	added cleanappledouble.pl script from Heath Kehoe <hakehoe@avalon.net>
+
+2001-03-26  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* etc/afpd/quota.c: fix compile dbtob problem on Linux from Sam
+	Noble <ns@shadow.org>
+
+	* configure.in, etc/uams/Makefile.am, etc/uams/uams_krb4/Makefile.am:
+	moved -shared into LDSHAREDFLAGS to fix Solaris build problems
+	from Bob Rogers <rogers-netatalk-devel@rgrjr.dyndns.org> and
+	Akop Pogosian <akopps@csua.berkeley.edu>
+
 2001-03-22  Lance Levsen  <lance.l@dontspam.home.com>
 
 	* etc/uams/Makefile.am: Added $LDFLAGS to fix broken compile due
