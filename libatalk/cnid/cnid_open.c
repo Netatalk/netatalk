@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.28 2001-12-14 03:10:37 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.29 2001-12-14 19:55:20 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -50,6 +50,9 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <syslog.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif /* HAVE_SYS_TIME_H */
 
 #include <db.h>
 
@@ -63,16 +66,16 @@
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
 #endif /* ! MIN */
 
-#define DBHOME       ".AppleDB"
-#define DBCNID       "cnid.db"
-#define DBDEVINO     "devino.db"
-#define DBDIDNAME    "didname.db"   /* did/full name mapping */
-#define DBSHORTNAME  "shortname.db" /* did/8+3 mapping */
-#define DBMACNAME    "macname.db"   /* did/31 mapping */
-#define DBLONGNAME   "longname.db"  /* did/unicode mapping */
-#define DBLOCKFILE   "cnid.lock"
+#define DBHOME        ".AppleDB"
+#define DBCNID        "cnid.db"
+#define DBDEVINO      "devino.db"
+#define DBDIDNAME     "didname.db"   /* did/full name mapping */
+#define DBSHORTNAME   "shortname.db" /* did/8+3 mapping */
+#define DBMACNAME     "macname.db"   /* did/31 mapping */
+#define DBLONGNAME    "longname.db"  /* did/unicode mapping */
+#define DBLOCKFILE    "cnid.lock"
 #define DBRECOVERFILE "cnid.dbrecover"
-#define DBCLOSEFILE  "cnid.close"
+#define DBCLOSEFILE   "cnid.close"
 
 #define DBHOMELEN    8
 #define DBLEN        10
@@ -239,9 +242,12 @@ void *cnid_open(const char *dir) {
     strcat(db->close_file, DBCLOSEFILE);
 
     /* Check to make sure that a client isn't in the process of closing
-     * the database environment.  To do this, sleep on the close file. */
+     * the database environment.  To do this, select on the close file. */
     while(stat(db->close_file, &csb) == 0) {
-        sleep(1);
+        struct timeval ct;
+        ct.tv_sec = 1;
+        ct.tv_usec = 0;
+        (void)select(0, NULL, NULL, NULL, &ct);
     }
 
     strcpy(recover_file, path);
@@ -271,7 +277,7 @@ void *cnid_open(const char *dir) {
 
     /* Create a file to represent database recovery.  While this file
      * exists, the database is being recovered, and all other clients will
-     * sleep until recovery is complete, and this file goes away. */
+     * select until recovery is complete, and this file goes away. */
     if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
         if (stat(recover_file, &rsb) == 0) {
             (void)remove(recover_file);
@@ -283,7 +289,10 @@ void *cnid_open(const char *dir) {
     }
     else if (!have_lock) {
         while (stat(recover_file, &rsb) == 0) {
-            sleep(1);
+            struct timeval rt;
+            rt.tv_sec = 1;
+            rt.tv_usec = 0;
+            (void)select(0, NULL, NULL, NULL, &rt);
         }
     }
 
