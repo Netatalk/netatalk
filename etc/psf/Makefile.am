@@ -35,5 +35,4 @@ install-exec-local:
 # cleanup
 #
 
-CLEANFILES += $(psf_LINKS)
-
+CLEANFILES = $(psf_LINKS)

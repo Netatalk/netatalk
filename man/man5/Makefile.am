@@ -16,6 +16,6 @@ man_MANS = AppleVolumes.default.5 afpd.conf.5 \
 
 TEMPLATE_FILES = $(foreach f,$(man_MANS),$(f).tmpl)
 
-CLEANFILES += $(man_MANS)
+CLEANFILES = $(man_MANS)
 
 EXTRA_DIST = $(TEMPLATE_FILES) 
