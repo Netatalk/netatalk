@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.16 2003-06-05 09:17:11 didg Exp $
+ * $Id: directory.h,v 1.17 2003-06-06 20:36:59 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -69,20 +69,15 @@ struct path {
     struct stat st;
 };
 
-#ifndef ATACC
-static __inline__ int path_isadir(struct path *o_path)
-{
-    return o_path->dir != NULL;
+#define path_isadir(o_path) \
+	((o_path)->dir != NULL)
 #if 0
-    return o_path->m_name == '\0' || /* we are in a it */
-           !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
-           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
+	((o_path)->m_name == '\0' || /* we are in a it */ \
+	 !(o_path)->st_valid ||      /* in cache but we can't chdir in it */ \
+	 (!(o_path)->st_errno && S_ISDIR((o_path)->st.st_mode)) /* not in cache an can't chdir */ \
+	)
 #endif
-}
-#else
-extern int path_isadir(struct path *o_path);
-#endif
-
+	   
 /* child addition/removal macros */
 #define dirchildadd(a, b) do { \
 	if (!(a)->d_child) \
