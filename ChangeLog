@@ -1,3 +1,8 @@
+2001-12-14  joe c   <marcus@marcuscom.com>
+	* etc/afpd/afp_options.c, etc/afpd/afp_dsi.c, etc/afpd/globals.h:
+	Add a new option to afpd called -timeout to specify the number of
+	server tickles to send before killing a AFPoTCP session.
+
 2001-12-10  joe c   <marcus@marcuscom.com>
 	* bin/cnid/cnid_didname_verify,c: Add a utility to verify the consistency
 	of didname.db.  Using the stock db_verify utility will fail as the sort

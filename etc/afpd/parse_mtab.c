@@ -1,5 +1,5 @@
 /*
- * $Id: parse_mtab.c,v 1.6 2001-12-10 20:16:54 srittau Exp $
+ * $Id: parse_mtab.c,v 1.7 2001-12-15 06:25:44 jmarcus Exp $
  *
  * afpd_mtab_parse & support.  -- rgr, 9-Apr-01.
  */
@@ -42,7 +42,7 @@ char *strchr (), *strrchr ();
 
 /* global mount table; afpd_st_cnid uses this to lookup the right entry.  */
 static struct afpd_mount_table *afpd_mount_table;
-	
+
 static int
 ceil_log_2 __P((int n))
 /* Return the number of bits required to represent n.  Only works for

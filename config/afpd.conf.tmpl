@@ -111,7 +111,13 @@
 #     -loginmesg "Message"  Client will display "Message" upon logging in
 #                         (no default, same as -l "Message" on commandline)
 #     -nodebug            Switch off debugging
-#     -tickleval <number> Specify the tickle timeout interval (in seconds)
+#     -tickleval <number> Specify the tickle timeout interval (in seconds).
+#                         Note, this defaults to 30 seconds, and really 
+#                         shouldn't be changed.  If you want to control
+#                         the server idle timeout, use the -timeout option.
+#     -timeout <number>   Specify the number of tickles to send before
+#                         timing out a connection.  The default is 4, therefore
+#                         a connection will timeout in 2 minutes.
 #     -icon               Use the platform-specific icon.
 #		
 # Some examples:

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.11 2001-12-10 20:16:53 srittau Exp $
+ * $Id: afp_dsi.c,v 1.12 2001-12-15 06:25:44 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -45,7 +45,8 @@ extern struct oforks	*writtenfork;
 
 static struct {
     AFPObj *obj;
-    unsigned char tickle, flags;
+    unsigned char flags;
+    int tickle;
 } child;
 
 
@@ -70,7 +71,7 @@ static void afp_dsi_die(int sig)
     dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN);
     afp_dsi_close(child.obj);
     if (sig) /* if no signal, assume dieing because logins are disabled &
-        don't log it (maintenance mode)*/
+            don't log it (maintenance mode)*/
         syslog (LOG_INFO, "Connection terminated");
     if (sig == SIGTERM || sig == SIGALRM) {
         exit( 0 );
@@ -124,7 +125,8 @@ static void alarm_handler()
 {
     /* if we're in the midst of processing something,
        don't die. we'll allow 3 missed tickles before we die (2 minutes) */
-    if ((child.flags & CHILD_RUNNING) || (child.tickle++ < 4)) {
+    if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
+        syslog(LOG_INFO, "afp_dsi: alarm_handler: tickling client...");
         dsi_tickle(child.obj->handle);
     } else { /* didn't receive a tickle. close connection */
         syslog(LOG_ERR, "afp_alarm: child timed out");

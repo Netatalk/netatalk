@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.14 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: afp_options.c,v 1.15 2001-12-15 06:25:44 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -141,6 +141,7 @@ void afp_options_init(struct afp_options *options)
     options->transports = AFPTRANS_ALL;
     options->passwdfile = _PATH_AFPDPWFILE;
     options->tickleval = 30;
+    options->timeout = 4;
     options->authprintdir = NULL;
     options->umask = 0;
 #ifdef ADMIN_GRP
@@ -223,8 +224,18 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->passwdminlen = MIN(1, atoi(c));
     if ((c = getoption(buf, "-loginmaxfail")))
         options->loginmaxfail = atoi(c);
-    if ((c = getoption(buf, "-tickleval")))
+    if ((c = getoption(buf, "-tickleval"))) {
         options->tickleval = atoi(c);
+		if (options->tickleval <= 0) {
+			options->tickleval = 30;
+		}
+	}
+    if ((c = getoption(buf, "-timeout"))) {
+        options->timeout = atoi(c);
+		if (options->timeout <= 0) {
+			options->timeout = 4;
+		}
+	}
 
     if ((c = getoption(buf, "-server_quantum")))
         options->server_quantum = strtoul(c, NULL, 0);

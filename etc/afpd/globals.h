@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.7 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: globals.h,v 1.8 2001-12-15 06:25:44 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -40,7 +40,7 @@
 /* a couple of these options could get stuck in unions to save
  * space. */
 struct afp_options {
-    int connections, port, transports, tickleval, flags;
+    int connections, port, transports, tickleval, timeout, flags;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *configfile;
