@@ -1,3 +1,4 @@
+#undef DEBUG
 #undef SHADOWPW
 #undef TCPWRAP
 #undef USE_CRACKLIB

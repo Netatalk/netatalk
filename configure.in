@@ -118,12 +118,17 @@ AC_DEFINE_UNQUOTED(CONFIG_DIR, "$config_dir",
 CONFIG_DIR="$config_dir"
 AC_SUBST(CONFIG_DIR)
 
-AC_ARG_ENABLE(cracklib,
+AC_ARG_WITH(cracklib,
 	[  --with-cracklib         enable cracklib checking support],
 	AC_CHECK_LIB(crack, main, AC_DEFINE(USE_CRACKLIB))
 )
 
-AC_ARG_ENABLE(pam,
+AC_ARG_ENABLE(debug,
+	[  --enable-debug          enable debug code],
+	AC_DEFINE(DEBUG)
+)
+
+AC_ARG_WITH(pam,
 	[  --with-pam              enable password authentication modules support],
 	AC_CHECK_LIB(pam, main, AC_DEFINE(USE_PAM))
 )
