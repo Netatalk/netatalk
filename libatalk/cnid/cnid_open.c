@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.20 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.21 2001-12-07 16:58:45 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -87,10 +87,10 @@
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
 #else /* DB_VERSION_MINOR < 1 */
-/*#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)*/
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN)
+DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)
+/*#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
+DB_INIT_LOG | DB_INIT_TXN)*/
 #endif /* DB_VERSION_MINOR */
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
@@ -269,10 +269,10 @@ void *cnid_open(const char *dir) {
 
 #if DB_VERSION_MINOR > 1
     /* Take care of setting the DB_TXN_NOSYNC flag in db3 > 3.1.x. */
-    /*	if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
-    		syslog(LOG_ERR, "cnid_open: set_flags: %s", db_strerror(rc));
-    		goto fail_lock;
-    	}*/
+    if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
+        syslog(LOG_ERR, "cnid_open: set_flags: %s", db_strerror(rc));
+        goto fail_lock;
+    }
 #endif /* DB_VERSION_MINOR > 1 */
 
     /* Open the database environment. */
