@@ -1,4 +1,9 @@
 
+2001-04-03  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* etc/afpd/file.c: merged patch from Soren Spies <sspies@apple.com>
+	at Apple, fixing server disconnect problem upon afp_createid() call
+
 2001-04-02  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* contrib/shell_utils/Makefile.am, contrib/shell_utils/cleanappledouble.pl:

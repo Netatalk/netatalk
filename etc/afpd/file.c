@@ -1,4 +1,6 @@
 /*
+ * $Id: file.c,v 1.19 2001-04-03 13:20:44 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -1309,7 +1311,7 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
       id = 0;
     else {
       memcpy(&id, ad_entry(&ad, ADEID_DID), sizeof(id));
-      ad_close(upath, ADFLAGS_HF);
+      ad_close(&ad, ADFLAGS_HF);
     }
 
     if (id = cnid_add(vol->v_db, &st, did, upath, len, id)) {
