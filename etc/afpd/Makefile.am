@@ -31,4 +31,5 @@ CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	 -D_PATH_AFPDNLSPATH=\"$(nlsdir)/\" \
 	 -DAFPD_MTAB_FILE=\"$(pkgconfdir)/afpd.mtab\" \
-	 -DAPPLCNAME
+	 -DAPPLCNAME \
+	 -DSERVERTEXT=\"$(SERVERTEXT)/\"
