@@ -7,7 +7,7 @@ megatron_LDADD = ../../libatalk/libatalk.a
 
 noinst_HEADERS = megatron.h
 
-CFLAGS = @CFLAGS@ -I../../include
+CFLAGS = @CFLAGS@ -I../../include -I../../sys
 
 # ************************************************
 # FIXME! FIXME! Links need to work for:

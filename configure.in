@@ -117,6 +117,43 @@ AC_ARG_ENABLE(shadow,
 	AC_DEFINE(SHADOWPW)
 )
 
+AC_ARG_ENABLE(tcp-wrappers,
+	[  --with-tcp-wrappers     enable TCP wrappers support],
+	AC_DEFINE(TCPWRAP)
+)
+
 dnl List of Makefiles to generate
 
-AC_OUTPUT(libatalk/nbp/Makefile etc/psf/Makefile sys/ultrix/Makefile libatalk/compat/Makefile sys/openbsd/Makefile bin/Makefile man/man4/Makefile etc/atalkd/Makefile etc/Makefile sys/linux/Makefile man/man8/Makefile etc/uams/Makefile etc/afpd/nls/Makefile libatalk/Makefile bin/megatron/Makefile sys/sunos/Makefile bin/psorder/Makefile sys/osx/Makefile bin/aecho/Makefile sys/freebsd/Makefile sys/solaris/Makefile etc/papd/Makefile libatalk/util/Makefile bin/afppasswd/Makefile Makefile libatalk/dsi/Makefile bin/getzones/Makefile libatalk/asp/Makefile libatalk/atp/Makefile man/man1/Makefile man/man3/Makefile man/Makefile bin/adv1tov2/Makefile include/Makefile etc/afpd/Makefile bin/nbp/Makefile bin/pap/Makefile sys/generic/Makefile sys/netbsd/Makefile libatalk/adouble/Makefile libatalk/cnid/Makefile libatalk/netddp/Makefile)
+AC_OUTPUT([Makefile
+	bin/Makefile
+	bin/adv1tov2/Makefile
+	bin/aecho/Makefile
+	bin/afppasswd/Makefile
+	bin/getzones/Makefile
+	bin/megatron/Makefile
+	bin/nbp/Makefile
+	bin/pap/Makefile
+	bin/psorder/Makefile
+	etc/Makefile
+	etc/afpd/Makefile
+	etc/afpd/nls/Makefile
+	etc/atalkd/Makefile
+	etc/uams/Makefile
+	etc/papd/Makefile
+	etc/psf/Makefile
+	libatalk/Makefile
+	libatalk/adouble/Makefile
+	libatalk/asp/Makefile
+	libatalk/atp/Makefile
+	libatalk/compat/Makefile
+	libatalk/dsi/Makefile
+	libatalk/nbp/Makefile
+	libatalk/netddp/Makefile
+	libatalk/util/Makefile
+	man/Makefile
+	man/man1/Makefile
+	man/man3/Makefile
+	man/man4/Makefile
+	man/man8/Makefile
+])
+

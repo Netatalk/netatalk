@@ -1,8 +1,8 @@
 # Makefile.am for libatalk/nbp/
 
-noinst_LIBRARIES = libnbp.a
+noinst_LTLIBRARIES = libnbp.la
 
-libnbp_a_SOURCES = nbp_util.c nbp_lkup.c nbp_rgstr.c nbp_unrgstr.c
+libnbp_la_SOURCES = nbp_util.c nbp_lkup.c nbp_rgstr.c nbp_unrgstr.c
 
 noinst_HEADERS = nbp_conf.h
 

@@ -7,4 +7,4 @@ psorder_LDADD = ../../libatalk/libatalk.a
 
 noinst_HEADERS = psorder.h pa.h
 
-CFLAGS = @CFLAGS@ -I../../include
+CFLAGS = @CFLAGS@ -I../../include -I../../sys

@@ -1,7 +1,7 @@
 # Makefile.am for libatalk/netddp/
 
-noinst_LIBRARIES = libnetddp.a
+noinst_LTLIBRARIES = libnetddp.la
 
-libnetddp_a_SOURCES = netddp_open.c netddp_sendto.c netddp_recvfrom.c
+libnetddp_la_SOURCES = netddp_open.c netddp_sendto.c netddp_recvfrom.c
 
 CFLAGS = @CFLAGS@ -I../../include -I../../sys

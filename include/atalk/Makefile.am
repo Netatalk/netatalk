@@ -1,3 +1,5 @@
 # Makefile.am for include/atalk/
 
+bin_PROGRAMS = 
+
 include_HEADERS = adouble.h aep.h afp.h asp.h atp.h cnid.h compat.h ddp.h dsi.h nbp.h netddp.h pap.h paths.h rtmp.h server_child.h uam.h util.h zip.h

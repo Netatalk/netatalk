@@ -1,8 +1,13 @@
 # Makefile.am for libatalk/
 
-SUBDIRS = adouble asp atp cnid compat dsi nbp netddp pap util
+SUBDIRS = adouble asp atp compat dsi nbp netddp util
 
 lib_LIBRARIES = libatalk.a
 
+LIBATALK_DEPS = asp/libasp.la atp/libatp.la nbp/libnbp.la adouble/libadouble.la dsi/libdsi.la util/libutil.la compat/libcompat.la netddp/libnetddp.la
+
 libatalk_a_SOURCES =
-libatalk_a_LIBADD = asp/libasp.a atp/libatp.a nbp/libnbp.a adouble/libadouble.a dsi/libdsi.a util/libutil.a compat/libcompat.a netddp/libnetddp.a
+libatalk_a_LIBADD = ${LIBATALK_DEPS}
+
+libatalk.a: ${LIBATALK_DEPS}
+	${LIBTOOL} --mode=link ${LIBATALK_DEPS} -o libatalk.a

@@ -11,4 +11,4 @@ nbprgstr_LDADD = ../../libatalk/libatalk.a
 nbpunrgstr_SOURCES = nbpunrgstr.c
 nbpunrgstr_LDADD = ../../libatalk/libatalk.a
 
-CFLAGS = @CFLAGS@ -I../../include
+CFLAGS = @CFLAGS@ -I../../include -I../../sys

@@ -5,4 +5,4 @@ bin_PROGRAMS = adv1tov2
 adv1tov2_SOURCES = adv1tov2.c
 adv1tov2_LDADD = ../../libatalk/libatalk.a
 
-CFLAGS = @CFLAGS@ -I../../include
+CFLAGS = @CFLAGS@ -I../../include -I../../sys
