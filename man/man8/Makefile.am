@@ -9,6 +9,7 @@ SUFFIXES = .tmpl .
 	    -e s@:BINDIR:@${bindir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:LIBDIR:@${libdir}@ \
+	    -e s@:LIBEXECDIR:@${libexecdir}@ \
 	    <$< >$@
 
 NONGENERATED_MANS = timelord.8
