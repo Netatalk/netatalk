@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.8 2001-07-31 19:50:14 srittau Exp $
+ * $Id: main.c,v 1.9 2001-08-03 22:13:28 srittau Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -313,7 +313,7 @@ int main( ac, av )
 	    if ( FD_ISSET( atp_fileno( pr->p_atp ), &fdset )) {
 		int		err = 0;
 
-		bzero( &sat, sizeof( struct sockaddr_at ));
+		memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
 		sat.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */
@@ -531,7 +531,7 @@ void getprinters( cf )
 	    perror( "malloc" );
 	    exit( 1 );
 	}
-	bzero( pr, sizeof( struct printer ));
+	memset( pr, 0, sizeof( struct printer ));
 
 	name = defprinter.p_name;
 	type = defprinter.p_type;

@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.9 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: lp.c,v 1.10 2001-08-03 22:13:28 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -553,7 +553,7 @@ int lp_conn_unix()
 	syslog( LOG_ERR, "lp_conn_unix socket: %m" );
 	return( -1 );
     }
-    bzero( &saun, sizeof( struct sockaddr_un ));
+    memset( &saun, 0, sizeof( struct sockaddr_un ));
     saun.sun_family = AF_UNIX;
     strcpy( saun.sun_path, _PATH_DEVPRINTER );
     if ( connect( s, (struct sockaddr *)&saun,
@@ -599,10 +599,10 @@ int lp_conn_inet()
 	return( -1 );
     }
 
-    bzero( &sin, sizeof( struct sockaddr_in ));
+    memset( &sin, 0, sizeof( struct sockaddr_in ));
     sin.sin_family = AF_INET;
 /*    sin.sin_addr.s_addr = htonl( INADDR_LOOPBACK ); */
-    bcopy( hp->h_addr, &sin.sin_addr, hp->h_length );
+    memcpy( &sin.sin_addr, hp->h_addr, hp->h_length );
     sin.sin_port = sp->s_port;
 
     if ( connect( privfd, (struct sockaddr *)&sin,

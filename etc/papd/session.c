@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: session.c,v 1.8 2001-08-03 22:13:28 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -88,7 +88,7 @@ int session( atp, sat )
     cbuf[ 1 ] = PAP_READ;
     if (++seq == 0) seq = 1;
     netseq = htons( seq );
-    bcopy( &netseq, &cbuf[ 2 ], sizeof( netseq ));
+    memcpy( &cbuf[ 2 ], &netseq, sizeof( netseq ));
     atpb.atp_saddr = sat;
     atpb.atp_sreqdata = cbuf;
     atpb.atp_sreqdlen = 4;		/* bytes in SendData request */
@@ -164,7 +164,7 @@ int session( atp, sat )
 		/*
 		 * Other side is ready for some data.
 		 */
-		bcopy( &cbuf[ 2 ], &netseq, sizeof( netseq ));
+		memcpy( &netseq, &cbuf[ 2 ], sizeof( netseq ));
 		if ( netseq != 0 ) {
 		    if ( rseq != ntohs( netseq )) {
 			break;
