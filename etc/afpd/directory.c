@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.14 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: directory.c,v 1.15 2001-08-15 01:21:01 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1779,6 +1779,8 @@ int afp_mapid(obj, ibuf, ibuflen, rbuf, rbuflen )
     sfunc = (unsigned char) *ibuf++;
     memcpy( &id, ibuf, sizeof( id ));
 
+    id = ntohl(id);
+
     if ( id != 0 ) {
 	switch ( sfunc ) {
 	case 1 :
@@ -1856,7 +1858,7 @@ int afp_mapname(obj, ibuf, ibuflen, rbuf, rbuflen )
     } else {
 	id = 0;
     }
-
+    id = htonl(id);
     memcpy( rbuf, &id, sizeof( id ));
     *rbuflen = sizeof( id );
     return( AFP_OK );
