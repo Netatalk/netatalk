@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.156 2002-02-13 16:48:10 srittau Exp $
+dnl $Id: configure.in,v 1.157 2002-04-29 06:23:57 morgana Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -241,19 +241,6 @@ fi
 
 dnl Check for quota support
 AC_CHECK_QUOTA
-
-msg_dir=""
-AC_ARG_WITH(message-dir,
-	[  --with-message-dir=PATH path to message files [[PKGCONF/msg]]],
-		msg_dir="$withval"
-		if test x"$msg_dir" = "x"; then
-			msg_dir="${PKGCONFDIR}/msg"
-		fi
-		AC_DEFINE_UNQUOTED(SERVERTEXT, "$msg_dir",
-			[path to message dir [[PKGCONF/msg]]])
-		SERVERTEXT="$msg_dir"
-		AC_SUBST(SERVERTEXT)
-)
 
 dnl Check for optional server location protocol support (used by MacOS X)
 NETATALK_SRVLOC
