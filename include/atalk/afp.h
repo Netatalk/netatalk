@@ -180,4 +180,16 @@ typedef enum {
 #define AFP_GETCMT          58
 #define AFP_ADDICON        192
 
+/* version 3.0 */
+#define AFP_BYTELOCK_EXT        59
+#define AFP_CATSEARCH_EXT       67
+#define AFP_ENUMERATE_EXT       66
+#define AFP_READ_EXT            60
+#define AFP_WRITE_EXT           61
+#define AFP_GETSESSTOKEN        64
+#define AFP_DISCTOLDSESS        65
+
+/* version 3.1 */
+#define AFP_ENUMERATE_EXT2      68
+
 #endif

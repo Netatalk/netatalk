@@ -7,7 +7,7 @@
 #define BROKEN_ECHO(a)    a
 #define ATALKPATHCAT(a,b) BROKEN_ECHO(a)##BROKEN_ECHO(b)
 #else
-#define ATALKPATHCAT(a,b) a##b
+#define ATALKPATHCAT(a,b) a b
 #endif
 #else
 #define ATALKPATHCAT(a,b) a/**/b
