@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.42 2003-03-12 15:07:02 didg Exp $
+ * $Id: auth.c,v 1.43 2003-04-14 18:11:06 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -462,6 +462,12 @@ int  	len;
 
     if (afp_version >= 30 && obj->proto != AFPPROTO_DSI)
         return AFPERR_BADVERS ;
+
+    /* FIXME Hack */
+    if (afp_version >= 30 && sizeof(off_t) != 8) {
+        LOG(log_error, logtype_afpd, "get_version: no LARGE_FILE support recompile!" );
+        return AFPERR_BADVERS ;
+    }
 
     return 0;
 }
