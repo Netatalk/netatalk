@@ -51,8 +51,6 @@ rm -r "$DISTDIR/debian/CVS"
 rm -r "$DISTDIR/debian/patches"
 rm -r "$DISTDIR/debian/split-init"
 rm    "$DISTDIR/debian/cvs2deb.sh"
-rm    "$DISTDIR/debian/TODO"
-rm    "$DISTDIR/debian/VERSION"
 
 cd $DISTDIR
 
