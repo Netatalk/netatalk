@@ -2,3 +2,4 @@
 #undef TCPWRAP
 #undef USE_CRACKLIB
 #undef USE_FLOCK_LOCKS
+#undef USE_PAM

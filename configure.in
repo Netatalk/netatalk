@@ -5,6 +5,7 @@ AC_INIT(bin/adv1tov2/adv1tov2.c)
 NETATALK_VERSION=`cat VERSION`
 AC_SUBST(NETATALK_VERSION)
 
+AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE(netatalk, ${NETATALK_VERSION})
 AM_CONFIG_HEADER(config.h)
 
@@ -37,8 +38,6 @@ dnl Replace `main' with a function in -lcmd:
 AC_CHECK_LIB(cmd, main)
 dnl Replace `main' with a function in -lcom_err:
 AC_CHECK_LIB(com_err, main)
-dnl Replace `main' with a function in -lcrack:
-AC_CHECK_LIB(crack, main)
 dnl Replace `main' with a function in -lcrypt:
 AC_CHECK_LIB(crypt, main)
 dnl Replace `main' with a function in -lcrypto:
@@ -61,8 +60,6 @@ dnl Replace `main' with a function in -ln:
 AC_CHECK_LIB(n, main)
 dnl Replace `main' with a function in -lnsl:
 AC_CHECK_LIB(nsl, main)
-dnl Replace `main' with a function in -lpam:
-AC_CHECK_LIB(pam, main)
 dnl Replace `main' with a function in -lprot:
 AC_CHECK_LIB(prot, main)
 dnl Replace `main' with a function in -lresolv:
@@ -79,8 +76,6 @@ dnl Replace `main' with a function in -lsys:
 AC_CHECK_LIB(sys, main)
 dnl Replace `main' with a function in -lubik:
 AC_CHECK_LIB(ubik, main)
-dnl Replace `main' with a function in -lwrap:
-AC_CHECK_LIB(wrap, main)
 
 dnl Checks for header files.
 AC_HEADER_DIRENT
@@ -125,31 +120,50 @@ AC_SUBST(CONFIG_DIR)
 
 AC_ARG_ENABLE(cracklib,
 	[  --with-cracklib         enable cracklib checking support],
-	AC_DEFINE(USE_CRACKLIB)
+	AC_CHECK_LIB(crack, main, AC_DEFINE(USE_CRACKLIB))
 )
 
-AC_ARG_ENABLE(shadow,
+AC_ARG_ENABLE(pam,
+	[  --with-pam              enable password authentication modules support],
+	AC_CHECK_LIB(pam, main, AC_DEFINE(USE_PAM))
+)
+
+AC_ARG_WITH(shadow,
 	[  --with-shadow           enable shadow password support],
+	AC_MSG_RESULT([Enabling shadow password support.])
 	AC_DEFINE(SHADOWPW)
 )
 
-AC_ARG_ENABLE(flock-locks,
+AC_ARG_WITH(flock-locks,
 	[  --with-flock-locks      enable flock locks support],
+	AC_MSG_RESULT([Enabling flock locks.])
 	AC_DEFINE(USE_FLOCK_LOCKS)
 )
 
-AC_ARG_ENABLE(tcp-wrappers,
+AC_ARG_WITH(tcp-wrappers,
 	[  --with-tcp-wrappers     enable TCP wrappers support],
-	AC_DEFINE(TCPWRAP)
+	AC_CHECK_LIB(wrap, main, AC_DEFINE(TCPWRAP))
 )
 
-AC_ARG_ENABLE(uams-path,
+AC_ARG_WITH(uams-path,
 	[  --with-uams-path=path   path to UAMs (default is /etc/atalk/uams)],
 		uams_path="$withval", uams_path="/etc/atalk/uams")
 AC_DEFINE_UNQUOTED(UAMS_PATH, "$uams_path",
 	[path to UAMs (default is /etc/atalk/uams)])
 UAMS_PATH="$uams_path"
 AC_SUBST(UAMS_PATH)
+
+dnl --------------------------------------------------------------------------
+dnl specific configuration comes in here:
+dnl --------------------------------------------------------------------------
+
+dnl --------------------- determine operating system from "target"
+case "$target" in
+*linux*)   this_os=linux ;;
+*solaris*) this_os=solaris ;;
+esac
+
+dnl --------------------- conditional libraries, etc from "target"
 
 dnl List of Makefiles to generate
 
