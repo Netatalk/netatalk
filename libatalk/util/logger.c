@@ -873,6 +873,7 @@ int get_syslog_equivalent(enum loglevels loglevel)
 
 void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
 {
+#ifndef DISABLE_LOGGER 
   /* -setuplogtype <syslog|filelog> <logtype> <loglevel>*/
   /*
     This should be rewritten so that somehow logsource is assumed and everything
@@ -974,6 +975,7 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
 	      (*logs)[0].display_options);
   };  
   return;
+#endif /* DISABLE_LOGGER */
 }
 
 
