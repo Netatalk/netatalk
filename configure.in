@@ -262,10 +262,12 @@ AC_ARG_WITH(pam,
 	fi
 )
 
+shadowpw=no
 AC_ARG_WITH(shadow,
 	[  --with-shadow           enable shadow password support],
 	AC_MSG_RESULT([enabling shadow password support])
 	AC_DEFINE(SHADOWPW)
+	shadowpw=yes
 )
 
 AC_ARG_WITH(flock-locks,
@@ -292,7 +294,7 @@ AC_ARG_ENABLE(redhat,
 )
 
 AC_ARG_ENABLE(suse,
-	[  --enable-suse       use suse-style sysv configuration ],
+	[  --enable-suse           use suse-style sysv configuration ],
     if test "$enableval" = "yes"; then
 		sysv_style=suse
 	fi
@@ -506,6 +508,7 @@ AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(USE_COBALT, test x$sysv_style = xcobalt)
 AM_CONDITIONAL(USE_REDHAT, test x$sysv_style = xredhat)
 AM_CONDITIONAL(USE_SUSE, test x$sysv_style = xsuse)
+AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
 AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
 
 dnl --------------------- generate files
