@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.16 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: filedir.c,v 1.17 2002-01-02 21:14:10 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -379,8 +379,7 @@ int		ibuflen, *rbuflen;
         return AFP_OK;
 
     /* check for illegal characters */
-    if ((vol->v_flags & AFPVOL_MSWINDOWS) &&
-            strpbrk(ibuf, MSWINDOWS_BADCHARS))
+    if (!wincheck(vol, ibuf))
         return AFPERR_PARAM;
 
     newpath = obj->oldtmp;
@@ -674,8 +673,7 @@ int		ibuflen, *rbuflen;
     }
 
     /* check for illegal characters */
-    if ((vol->v_flags & AFPVOL_MSWINDOWS) &&
-            strpbrk(newname, MSWINDOWS_BADCHARS))
+    if (!wincheck(vol, newname))
         return AFPERR_PARAM;
 
     upath = mtoupath(vol, newname);

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.15 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: volume.c,v 1.16 2002-01-02 21:14:10 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1394,4 +1394,28 @@ int		ibuflen, *rbuflen;
     ad_flush(&ad, ADFLAGS_HF);
     ad_close(&ad, ADFLAGS_HF);
     return( AFP_OK );
+}
+
+
+int wincheck(struct vol *vol, const char *path)
+{
+        int len;
+
+        if (!(vol->v_flags & AFPVOL_MSWINDOWS))
+                return 1;
+
+        /* empty paths are not allowed */
+        if ((len = strlen(path)) == 0)
+                return 0;
+
+        /* leading or trailing whitespaces are not allowed */
+        if ((*path == ' ') || (path[len-1] == ' '))
+                return 0;
+
+        /* certain characters are not allowed */
+        if (strpbrk(path, MSWINDOWS_BADCHARS))
+                return 0;
+
+        /* everything else is okay */
+        return 1;
 }

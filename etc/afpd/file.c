@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.31 2001-12-29 08:16:21 jmarcus Exp $
+ * $Id: file.c,v 1.32 2002-01-02 21:14:10 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -409,8 +409,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
-    if ((vol->v_flags & AFPVOL_MSWINDOWS) &&
-            strpbrk(path, MSWINDOWS_BADCHARS))
+    if (!wincheck(vol, path))
         return AFPERR_PARAM;
 
     upath = mtoupath(vol, path);
