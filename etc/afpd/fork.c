@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.39 2002-10-13 06:18:14 didg Exp $
+ * $Id: fork.c,v 1.40 2002-11-14 17:13:45 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -135,13 +135,6 @@ static int getforkmode(struct adouble *adp, int eid, int what)
 {
     return ad_testlock(adp, eid,  what);
 }
-
-/* -------------------------- 
-   a lot of races, some can be remove. but I try first to get the semantic right
-*/
-#ifdef USE_FLOCK_LOCKS 
-#error sorry, for now configure --with-flock-locks is broken...
-#endif
 
 static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
 {
