@@ -1,5 +1,5 @@
 /*
- * $Id: afile.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: afile.c,v 1.5 2001-09-05 18:38:23 srittau Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -52,9 +52,6 @@
 
 #include "common.h"
 
-/* Please change this whenever you change this file. */
-#define AFILE_VERSION "1.0.0"
-
 /* Possible return types. These are taken from the original afile for
  * compatibility.
  */
@@ -97,7 +94,7 @@ void help(char *prog)
 /* Print the version. */
 void version()
 {
-  fprintf(stderr, "afile " AFILE_VERSION " (netatalk " VERSION ")\n");
+  fprintf(stderr, "afile (netatalk " VERSION ")\n");
 }
 
 /* Argument Handling

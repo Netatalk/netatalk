@@ -1,5 +1,5 @@
 /*
- * $Id: achfile.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: achfile.c,v 1.4 2001-09-05 18:38:23 srittau Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -55,9 +55,6 @@
 
 #include "common.h"
 
-/* Please change this whenever you change this file. */
-#define ACHFILE_VERSION "1.0.0"
-
 /* Global Variables */
 const char *type    = NULL;
 const char *creator = NULL;
@@ -86,7 +83,7 @@ void help(char *prog)
 /* Print the version. */
 void version()
 {
-  fprintf(stderr, "achfile " ACHFILE_VERSION " (netatalk " VERSION ")\n");
+  fprintf(stderr, "achfile (netatalk " VERSION ")\n");
 }
 
 /* Argument Handling
