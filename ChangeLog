@@ -1,3 +1,7 @@
+2002-02-14  andy m <morgan@orst.edu>
+	* etc/papd/queries.c: Added support for "ADOIsBinaryOK?" printer query
+	to papd.  We now respond with "True" instead of "unknown".
+
 2002-02-09  joe c  <marcus@marcuscom.com>
 	* etc/afpd/afp_options.c: Redo the -server_notif flag.  Now, server
 	notifications are enabled by default, and specifying the -client_polling
@@ -9,7 +13,7 @@
 	a server supports server notifications.  If this flag is not specified
 	the client will poll the server every 10 seconds for directory changes.
 
-2002-02-03  and m  <morgan@orst.edu>
+2002-02-03  andy m <morgan@orst.edu>
 	* bin/afppasswd/Makefile.am
 	Added an install-exec-hook to make the afppasswd binary suid root
 	after it is installed.  This lets local users change their afppasswd
