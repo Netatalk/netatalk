@@ -6,6 +6,9 @@
 
 	* CONTRIBUTORS (Developers): Thanks for the patch Brandon.
 
+	* configure.in: Fix db3 detection for db3 3.3.x users.  Thanks to
+	  Jonathan Newman <jnewman@mudpup.com>
+
 2001-10-18  joe c <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_add.c: Fix dancing icon problem
