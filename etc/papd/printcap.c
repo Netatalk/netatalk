@@ -36,6 +36,10 @@
  * SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef lint
 static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
 #endif /* not lint */

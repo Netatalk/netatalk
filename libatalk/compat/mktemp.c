@@ -17,6 +17,10 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)mktemp.c	5.9 (Berkeley) 6/1/90";
 #endif /* LIBC_SCCS and not lint */

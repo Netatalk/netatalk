@@ -21,6 +21,10 @@
  *	netatalk@itd.umich.edu
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>  /* to pick up NULL */
 #include <sys/stat.h> /* works around a bug */
 #include <syslog.h>

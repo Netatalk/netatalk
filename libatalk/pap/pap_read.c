@@ -1,5 +1,9 @@
 /* taken from bin/pap/pap.c */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 int pap_read(PAP pap)
 {
     struct atp_block atpb;

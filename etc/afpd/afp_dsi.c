@@ -6,6 +6,10 @@
  * modified from main.c. this handles afp over tcp.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>

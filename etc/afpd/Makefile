@@ -3,12 +3,12 @@
 
 SRC = unix.c ofork.c main.c switch.c auth.c volume.c directory.c file.c \
 	enumerate.c desktop.c filedir.c fork.c appl.c gettok.c \
-	status.c afp_options.c afp_asp.c afp_dsi.c messages.c config.c \
+	status.c afp_options.c afp_asp.c afp_dsi.c messages.c afp_config.c \
 	nfsquota.c codepage.c quota.c uam.c afs.c
 
 OBJ = unix.o ofork.o main.o switch.o auth.o volume.o directory.o file.o \
 	enumerate.o desktop.o filedir.o fork.o appl.o gettok.o \
-	status.o afp_options.o afp_asp.o afp_dsi.o messages.o config.o \
+	status.o afp_options.o afp_asp.o afp_dsi.o messages.o afp_config.o \
 	nfsquota.o codepage.o quota.o uam.o afs.o
 
 INCPATH=	-I../../include ${AFSINCPATH}
@@ -89,7 +89,7 @@ afp_options.o : afp_options.c
 	    -D_PATH_AFPDNLSPATH=\"${RESDIR}/nls/\" \
 	    ${CPPFLAGS} -c $<
 
-config.o: config.c
+afp_config.o: afp_config.c
 	${CC} ${CFLAGS} \
 	    -DVERSION=\"`cat ../../VERSION`\" \
 	    ${CPPFLAGS} -c $< 

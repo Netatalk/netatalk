@@ -6,6 +6,10 @@
  * protocol specific initialization and shutdown procedures. all the
  * read/write stuff is done in dsi_stream.c.  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define USE_TCP_NODELAY
 
 #include <stdio.h>

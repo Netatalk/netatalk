@@ -17,6 +17,10 @@
  * a troff or dvi to PostScript converter.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define FUCKED
 
 #include <sys/time.h>

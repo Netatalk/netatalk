@@ -3,6 +3,11 @@
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if defined(USE_PAM) && defined(UAM_DHX)
 #include <stdio.h>
 #include <stdlib.h>

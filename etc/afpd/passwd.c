@@ -21,6 +21,10 @@
  *	netatalk@itd.umich.edu
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <itc.h>
 #include <stdio.h>
 #include <string.h>

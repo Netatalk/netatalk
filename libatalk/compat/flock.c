@@ -3,6 +3,10 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 static int	_flock_dummy;
 
 # if defined( sun ) && defined( __svr4__ )

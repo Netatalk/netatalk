@@ -3,6 +3,10 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/syslog.h>
 #include <sys/param.h>
 #include <stdio.h>

@@ -21,6 +21,10 @@
  *	netatalk@itd.umich.edu
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define BPLEN	48
 #include <stdio.h>
 #include <ctype.h>

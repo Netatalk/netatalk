@@ -3,6 +3,10 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +37,7 @@
 #include <atalk/server_child.h>
 
 #include "globals.h"
-#include "config.h"
+#include "afp_config.h"
 #include "status.h"
 #include "fork.h"
 #include "uam_auth.h"

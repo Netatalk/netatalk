@@ -1,5 +1,9 @@
 /* close the connection */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 int pap_close(PAP pap)
 {
   struct atp_block atpb;

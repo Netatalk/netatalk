@@ -21,6 +21,10 @@
  *	netatalk@itd.umich.edu
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>

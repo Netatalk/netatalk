@@ -7,6 +7,10 @@
  * The University of Melbourne.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h> /* to get __GNU_LIBRARY__ */
 
 static int _xdr_rquota_dummy;

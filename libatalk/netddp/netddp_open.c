@@ -7,6 +7,10 @@
  * various address info if requested as well.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 static int _netddp_open_dummy;
 
 #include <stdio.h>

@@ -1,5 +1,9 @@
 /* moved over from bin/pap/pap.c */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 static struct {
   PAP pap;
   int tickle;

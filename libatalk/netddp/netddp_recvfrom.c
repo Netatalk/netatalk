@@ -6,6 +6,10 @@
  * receive data.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 static int _netddp_recvfrom_dummy;
 
 #ifndef NO_DDP

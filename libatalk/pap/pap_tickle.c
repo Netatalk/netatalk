@@ -1,4 +1,9 @@
 /* send a tickle */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 void pap_tickle(PAP pap, const u_int8_t connid, struct sockaddr_at *sat)
 {
   struct atp_block atpb; 

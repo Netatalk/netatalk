@@ -9,6 +9,10 @@
  * dsi_stream_receive:  read a DSI header + data.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define USE_WRITEV
 
 #include <stdio.h>

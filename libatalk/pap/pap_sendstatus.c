@@ -1,4 +1,6 @@
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 int pap_sendstatus(PAP pap)
 {

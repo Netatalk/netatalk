@@ -6,6 +6,10 @@
  * (asun@cobalt.com).
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>

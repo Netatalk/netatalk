@@ -5,7 +5,7 @@
 #include <atalk/dsi.h>
 #include <atalk/asp.h>
 #include "globals.h"
-#include "config.h"
+#include "afp_config.h"
 
 /* we use these to prevent whacky alignment problems */
 #define AFPSTATUS_MACHOFF     0

@@ -2,6 +2,11 @@
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -24,7 +29,7 @@
 
 #include "globals.h"  /* includes <netdb.h> */
 #include "status.h"
-#include "config.h"
+#include "afp_config.h"
 #include "icon.h"
 
 static void status_flags(char *data, const int ipok,

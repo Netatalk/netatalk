@@ -39,6 +39,10 @@
  * Interface to lpr system.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/param.h>
 #include <sys/syslog.h>
 #include <sys/time.h>
@@ -181,7 +185,7 @@ lp_init( out, sat )
     char	cost[ 22 ];
     char	balance[ 22 ];
 #endif ABS_PRINT
-#ifdef CAPDIR
+#if defined( CAPDIR ) || defined( USE_CAP )
     char	username[32];
     int		addr_net, addr_node;
     FILE	*cap_file;

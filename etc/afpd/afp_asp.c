@@ -6,6 +6,10 @@
  * modified from main.c. this handles afp over asp. 
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef NO_DDP
 
 #include <stdio.h>

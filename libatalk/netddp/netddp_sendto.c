@@ -6,6 +6,10 @@
  * send data.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 static int _netddp_sendto_dummy;
 
 #ifndef NO_DDP
