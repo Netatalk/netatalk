@@ -135,7 +135,7 @@ static int afppasswd(const struct passwd *pwd,
   int i, j, keyfd = -1, err = 0;
   off_t pos;
   
-  if ((fp = fopen(path, (set) ? "r+" : "r")) < 0) {
+  if ((fp = fopen(path, (set) ? "r+" : "r")) <= 0) {
     syslog( LOG_ERR, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }
