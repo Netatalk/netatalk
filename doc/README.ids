@@ -75,10 +75,26 @@ to use IDs much, things break.
 
 DID = cnid. 
 
-This uses a Berkeley database to store and maintain a directory of IDs
-similar to that of a catalogue file on a mac.  Consequently it is the most
-reliable method.  Unfortunately there seem to be heavy multi user problems 
-that lead to database corruption.  These are being worked on, but cnid remains
-the safest and most reliable DID scheme.  See README.cnid for more details.
+The CNID scheme in Netatalk attempts to assign unique IDs to each file and
+directory, then keep those IDs persistent across mounts of the volume.  This
+way, cross-volume aliases will work, and users are less likely to encounter
+duplicate CNID errors.  Prior to Netatalk 1.6.0, the CNID calculation
+scheme was not persistent, and IDs were assigned based on the UNIX device and
+inode number of a given file or directory (see DID = last above).  This was 
+fine for the most part, but due to limitations, not all available CNIDs could 
+be used.  As well, these IDs could change independently from Netatalk, and 
+thus were not persistent.  As of Netatalk 1.6.0, the CNID scheme is now the 
+default. On top of that, Netatalk uses the Concurrent Datastore method to 
+avoid the need for database locking and transactions.
 
+As stated above, CNID requires Berkeley DB.  Currently, Netatalk supports
+BDB 3.1.17, 3.2.9, 3.3.11, 4.0.14, and 4.1.25.  The recommended version is
+3.3.11 as that is the version on which most testing has been done.  
 
+CNID has seen many contributors over the years.  It was conceived by
+Adrian Sun <asun@zoology.washington.edu>.  His developer notes can be found
+libatalk/cnid/README file.  It was later picked up and modernized by Uwe Hees
+<uwe.hees@rz-online.de>.  Then, Joe Marcus Clarke <marcus@marcuscom.com>
+started fixing bugs and adding additional features.  The Concurrent
+Datastore support was subsequently added by Dan Wilga <dwilga@mtholyoke.edu>.
+The CNID code is currently maintained by Joe Marcus Clarke.

@@ -1,3 +1,7 @@
+2003-01-16  Joe Marcus Clarke <marcus@marcuscom.com>
+	* Merge the relevant bits of README.cnid into Simon's README.ids, and
+	  remove README.cnid.
+
 2003-01-15  Steven N. Hirsch <shirsch@adelphia.net>
 	* Fix the a2boot code on 64-bit platforms.
 
