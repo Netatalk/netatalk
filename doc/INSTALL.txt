@@ -1,5 +1,4 @@
 Installation and Configuration of Netatalk 1.5
-Lance Levsen, l.levsen@printwest.com
 
 Prerequisites
 =============
