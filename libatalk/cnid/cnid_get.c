@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_get.c,v 1.12 2002-01-19 21:42:08 jmarcus Exp $
+ * $Id: cnid_get.c,v 1.13 2002-08-30 03:12:52 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,9 +47,11 @@ cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
     key.size = CNID_DID_LEN + len + 1;
 
     while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &data, 0))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             continue;
         }
+#endif /* CNID_DB_CDB */
 
         if (rc != DB_NOTFOUND) {
             LOG(log_error, logtype_default, "cnid_get: Unable to get CNID %u, name %s: %s",

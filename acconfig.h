@@ -6,6 +6,7 @@
 #undef BSD4_4
 #undef CNID_DB
 #undef FILE_MANGLING
+#undef CNID_DB_CDB
 #undef DISABLE_LOGGER
 #undef LOGFILEPATH
 #undef DEBUG

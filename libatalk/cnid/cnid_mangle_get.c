@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_get.c,v 1.5 2002-06-09 07:15:58 jmarcus Exp $
+ * $Id: cnid_mangle_get.c,v 1.6 2002-08-30 03:12:52 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,7 +28,6 @@ cnid_mangle_get(void *CNID, char *mfilename)
 {
     CNID_private *db;
     DBT key, data;
-    DB_TXN *tid;
     cnid_t id;
     struct stat st;
     char *filename;

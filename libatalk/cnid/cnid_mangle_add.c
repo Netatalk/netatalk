@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_add.c,v 1.3 2002-06-03 22:55:31 jmarcus Exp $
+ * $Id: cnid_mangle_add.c,v 1.4 2002-08-30 03:12:52 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,13 +22,19 @@
 
 #include "cnid_private.h"
 
+#ifdef CNID_DB_CDB
+    #define tid    NULL
+#endif /* CNID_DB_CDB */
+
 /* Add a mangled filename. */
 int
 cnid_mangle_add(void *CNID, char *mfilename, char *filename)
 {
     CNID_private *db;
     DBT key, data;
+#ifndef CNID_DB_CDB
     DB_TXN *tid;
+#endif /* CNID_DB_CDB */
     cnid_t id;
     int rc, ret;
 
@@ -44,30 +50,38 @@ cnid_mangle_add(void *CNID, char *mfilename, char *filename)
     data.data = filename;
     data.size = strlen(filename) + 1;
 
+#ifndef CNID_DB_CDB
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
-	LOG(log_error, logtype_default, "cnid_mangle_add: Failed to begin transaction: %s", db_strerror(rc));
-	return -1;
+        LOG(log_error, logtype_default, "cnid_mangle_add: Failed to begin transaction: %s", db_strerror(rc));
+        return -1;
     }
+#endif /* CNID_DB_CDB */
 
     if ((rc = db->db_mangle->put(db->db_mangle, tid, &key, &data, 0))) {
-	if ((ret = txn_abort(tid)) != 0) {
-	    LOG(log_error, logtype_default, "cnid_mangle_add: txn_abort: %s", db_strerror(ret));
-	    return -1;
-	}
-	switch (rc) {
-	    case DB_LOCK_DEADLOCK:
-	    	goto retry;
-	    default:
-	    	LOG(log_error, logtype_default, "cnid_mangle_add: Failed to add mangled filename to the database: %s", db_strerror(rc));
-		return -1;
-	}
+#ifndef CNID_DB_CDB
+        if ((ret = txn_abort(tid)) != 0) {
+            LOG(log_error, logtype_default, "cnid_mangle_add: txn_abort: %s", db_strerror(ret));
+            return -1;
+        }
+#endif /* CNID_DB_CDB */
+        switch (rc) {
+#ifndef CNID_DB_CDB
+            case DB_LOCK_DEADLOCK:
+                goto retry;
+#endif /* CNID_DB_CDB */
+            default:
+                LOG(log_error, logtype_default, "cnid_mangle_add: Failed to add mangled filename to the database: %s", db_strerror(rc));
+                return -1;
+        }
     }
 
+#ifndef CNID_DB_CDB
     if ((rc = txn_commit(tid, 0)) != 0) {
-	LOG(log_error, logtype_default, "cnid_mangle_add: Unable to commit transaction: %s", db_strerror(rc));
-	return -1;
+        LOG(log_error, logtype_default, "cnid_mangle_add: Unable to commit transaction: %s", db_strerror(rc));
+        return -1;
     }
+#endif /* CNID_DB_CDB */
 
     return 0;
 }

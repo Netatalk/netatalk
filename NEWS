@@ -7,6 +7,8 @@ Changes from 1.5.3
 * NEW: Add a -noslp option to disable SLP per afpd instance.
 * NEW: Added -d option for pap to enable debugging at runtime rather than
        compile time.
+* NEW: Add the ability to use Concurrent Data Store instead of full
+       transactional data store with the CNID DID calculation scheme.
 * FIX: Cleaned up pap man page, eliminating duplicate pap man page (8).
 * FIX: Print out pap status in postscript (%%[..]%%) format for LPRng
        compatibility.

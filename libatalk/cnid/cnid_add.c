@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.29 2002-02-02 19:11:37 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.30 2002-08-30 03:12:52 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -39,29 +39,39 @@
 
 #include "cnid_private.h"
 
+#ifdef CNID_DB_CDB
+    #define tid    NULL
+#endif /* CNID_DB_CDB */
+
 /* add an entry to the CNID databases. we do this as a transaction
  * to prevent messiness. */
 static int add_cnid(CNID_private *db, DBT *key, DBT *data) {
     DBT altkey, altdata;
+#ifndef CNID_DB_CDB
     DB_TXN *tid;
+#endif /* CNID_DB_CDB */
     int rc, ret;
 
     memset(&altkey, 0, sizeof(altkey));
     memset(&altdata, 0, sizeof(altdata));
 
+#ifndef CNID_DB_CDB
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         return rc;
     }
+#endif /* CNID_DB_CDB */
 
     /* main database */
     if ((rc = db->db_cnid->put(db->db_cnid, tid, key, data, DB_NOOVERWRITE))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             if ((ret = txn_abort(tid)) != 0) {
                 return ret;
             }
             goto retry;
         }
+#endif /* CNID_DB_CDB */
         goto abort;
     }
 
@@ -71,12 +81,14 @@ retry:
     altdata.data = key->data;
     altdata.size = key->size;
     if ((rc = db->db_devino->put(db->db_devino, tid, &altkey, &altdata, 0))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             if ((ret = txn_abort(tid)) != 0) {
                 return ret;
             }
             goto retry;
         }
+#endif /* CNID_DB_CDB */
         goto abort;
     }
 
@@ -84,19 +96,23 @@ retry:
     altkey.data = (char *) data->data + CNID_DEVINO_LEN;
     altkey.size = data->size - CNID_DEVINO_LEN;
     if ((rc = db->db_didname->put(db->db_didname, tid, &altkey, &altdata, 0))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             if ((ret = txn_abort(tid)) != 0) {
                 return ret;
             }
             goto retry;
         }
+#endif /* CNID_DB_CDB */
         goto abort;
     }
 
+#ifndef CNID_DB_CDB
     if ((rc = txn_commit(tid, 0)) != 0) {
         LOG(log_error, logtype_default, "add_cnid: Failed to commit transaction: %s", db_strerror(rc));
         return rc;
     }
+#endif /* CNID_DB_CDB */
 
     return 0;
 
@@ -113,7 +129,9 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
 {
     CNID_private *db;
     DBT key, data, rootinfo_key, rootinfo_data;
+#ifndef CNID_DB_CDB
     DB_TXN *tid;
+#endif /* CNID_DB_CDB */
     struct timeval t;
     cnid_t id, save;
     int rc;
@@ -175,14 +193,20 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
     rootinfo_key.data = ROOTINFO_KEY;
     rootinfo_key.size = ROOTINFO_KEYLEN;
 
+#ifndef CNID_DB_CDB
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_add: Failed to begin transaction: %s", db_strerror(rc));
         errno = CNID_ERR_DB;
         return CNID_INVALID;
     }
+#endif /* CNID_DB_CDB */
 
     /* Get the key. */
+#ifdef CNID_DB_CDB
+    switch (rc = db->db_didname->get(db->db_didname, NULL, &rootinfo_key,
+                                     &rootinfo_data, 0)) {
+#else /* CNID_DB_CDB */
     switch (rc = db->db_didname->get(db->db_didname, tid, &rootinfo_key,
                                      &rootinfo_data, DB_RMW)) {
     case DB_LOCK_DEADLOCK:
@@ -192,13 +216,16 @@ retry:
             return CNID_INVALID;
         }
         goto retry;
+#endif /* CNID_DB_CDB */
     case 0:
         memcpy(&hint, rootinfo_data.data, sizeof(hint));
         id = ntohl(hint);
         /* If we've hit the max CNID allowed, we return a fatal error.  CNID
          * needs to be recycled before proceding. */
         if (++id == CNID_INVALID) {
+#ifndef CNID_DB_CDB
             txn_abort(tid);
+#endif /* CNID_DB_CDB */
             LOG(log_error, logtype_default, "cnid_add: FATAL: Cannot add CNID for %s.  CNID database has reached its limit.", name);
             errno = CNID_ERR_MAX;
             return CNID_INVALID;
@@ -223,6 +250,7 @@ retry:
     rootinfo_data.size = sizeof(hint);
 
     switch (rc = db->db_didname->put(db->db_didname, tid, &rootinfo_key, &rootinfo_data, 0)) {
+#ifndef CNID_DB_CDB
     case DB_LOCK_DEADLOCK:
         if ((rc = txn_abort(tid)) != 0) {
             LOG(log_error, logtype_default, "cnid_add: txn_abort: %s", db_strerror(rc));
@@ -230,13 +258,16 @@ retry:
             return CNID_INVALID; 
         }
         goto retry;
+#endif /* CNID_DB_CDB */
     case 0:
+#ifndef CNID_DB_CDB
         /* The transaction finished, commit it. */
         if ((rc = txn_commit(tid, 0)) != 0) {
             LOG(log_error, logtype_default, "cnid_add: Unable to commit transaction: %s", db_strerror(rc));
             errno = CNID_ERR_DB;
             return CNID_INVALID;
         }
+#endif /* CNID_DB_CDB */
         break;
     default:
         LOG(log_error, logtype_default, "cnid_add: Unable to update rootinfo: %s", db_strerror(rc));
@@ -258,7 +289,9 @@ retry:
     return hint;
 
 cleanup_abort:
+#ifndef CNID_DB_CDB
     txn_abort(tid);
+#endif /* CNID_DB_CDB */
 
     errno = CNID_ERR_DB;
     return CNID_INVALID;

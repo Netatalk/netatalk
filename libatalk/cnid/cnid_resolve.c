@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_resolve.c,v 1.12 2002-03-24 17:43:42 jmarcus Exp $
+ * $Id: cnid_resolve.c,v 1.13 2002-08-30 03:12:52 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,9 +41,11 @@ char *cnid_resolve(void *CNID, cnid_t *id, void *buffer, u_int32_t len) {
     key.data = id;
     key.size = sizeof(cnid_t);
     while ((rc = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             continue;
         }
+#endif /* CNID_DB_CDB */
 
         if (rc != DB_NOTFOUND) {
             LOG(log_error, logtype_default, "cnid_resolve: Unable to get did/name: %s",

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.41 2002-06-03 22:58:10 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.42 2002-08-30 03:12:52 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -33,7 +33,7 @@
  * CNIDs 4-16 are reserved according to page 31 of the AFP 3.0 spec so, 
  * CNID_START begins at 17.
  */
-
+ 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -90,6 +90,9 @@
 #define DBVERSION1       0x00000001U
 #define DBVERSION        DBVERSION1
 
+#ifdef CNID_DB_CDB
+#define DBOPTIONS    (DB_CREATE | DB_INIT_CDB | DB_INIT_MPOOL)
+#else /* !CNID_DB_CDB */
 #if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
@@ -99,7 +102,9 @@ DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)*/
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
 #endif /* DB_VERSION_MINOR */
+#endif /* CNID_DB_CDB */
 
+#ifndef CNID_DB_CDB
 /* Let's try and use the youngest lock detector if present.
  * If we can't do that, then let DB3 use its default deadlock detector. */
 #if defined DB_LOCK_YOUNGEST
@@ -107,6 +112,7 @@ DB_INIT_LOG | DB_INIT_TXN)
 #else /* DB_LOCK_YOUNGEST */
 #define DEAD_LOCK_DETECT DB_LOCK_DEFAULT
 #endif /* DB_LOCK_YOUNGEST */
+#endif /* CNID_DB_CDB */
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 * databases. */
@@ -188,7 +194,9 @@ static int compare_unicode(const DBT *a, const DBT *b)
 
 void *cnid_open(const char *dir) {
     struct stat st, rsb, lsb, csb;
+#ifndef CNID_DB_CDB
     struct flock lock;
+#endif /* CNID_DB_CDB */
     char path[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
@@ -219,15 +227,15 @@ void *cnid_open(const char *dir) {
         len++;
     }
 
-    lock.l_type = F_WRLCK;
-    lock.l_whence = SEEK_SET;
-
     strcpy(path + len, DBHOME);
     if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777) < 0)) {
         LOG(log_error, logtype_default, "cnid_open: DBHOME mkdir failed for %s", path);
         goto fail_adouble;
     }
 
+#ifndef CNID_DB_CDB
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
     /* Make sure cnid.lock goes in .AppleDB. */
     strcat(path, "/");
     len++;
@@ -254,6 +262,7 @@ void *cnid_open(const char *dir) {
     else {
         LOG(log_error, logtype_default, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
     }
+#endif /* CNID_DB_CDB */
 
     path[len + DBHOMELEN] = '\0';
     open_flag = DB_CREATE;
@@ -266,12 +275,15 @@ void *cnid_open(const char *dir) {
         goto fail_lock;
     }
 
+#ifndef CNID_DB_CDB
     /* Setup internal deadlock detection. */
     if ((rc = db->dbenv->set_lk_detect(db->dbenv, DEAD_LOCK_DETECT)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: set_lk_detect: %s", db_strerror(rc));
         goto fail_lock;
     }
+#endif /* CNID_DB_CDB */
 
+#ifndef CNID_DB_CDB
 #if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 #if 0
     /* Take care of setting the DB_TXN_NOSYNC flag in db3 > 3.1.x. */
@@ -281,6 +293,7 @@ void *cnid_open(const char *dir) {
     }
 #endif
 #endif /* DB_VERSION_MINOR > 1 */
+#endif /* CNID_DB_CDB */
 
     /* Open the database environment. */
     if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) != 0) {
@@ -329,6 +342,24 @@ void *cnid_open(const char *dir) {
     key.data = DBVERSION_KEY;
     key.size = DBVERSION_KEYLEN;
 
+#ifdef CNID_DB_CDB
+    if ((rc = db->db_didname->get(db->db_didname, NULL, &key, &data, 0)) != 0) {
+        int ret;
+        {
+            u_int32_t version = htonl(DBVERSION);
+
+            data.data = &version;
+            data.size = sizeof(version);
+        }
+        if ((ret = db->db_didname->put(db->db_didname, NULL, &key, &data,
+                                       DB_NOOVERWRITE))) {
+            LOG(log_error, logtype_default, "cnid_open: Error putting new version: %s",
+                db_strerror(ret));
+            db->db_didname->close(db->db_didname, 0);
+            goto fail_appinit;
+        }
+    }
+#else /* CNID_DB_CDB */
 dbversion_retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: txn_begin: failed to check db version: %s",
@@ -392,6 +423,7 @@ dbversion_retry:
         db->db_didname->close(db->db_didname, 0);
         goto fail_appinit;
     }
+#endif /* CNID_DB_CDB */
 
     /* TODO In the future we might check for version number here. */
 #if 0
@@ -506,7 +538,7 @@ dbversion_retry:
         db->db_shortname->close(db->db_shortname, 0);
         db->db_longname->close(db->db_longname, 0);
 #endif /* EXTENDED_DB */
-	db->db_devino->close(db->db_devino, 0);
+        db->db_devino->close(db->db_devino, 0);
         goto fail_appinit;
     }
 
@@ -550,10 +582,12 @@ fail_appinit:
     db->dbenv->close(db->dbenv, 0);
 
 fail_lock:
+#ifndef CNID_DB_CDB
     if (db->lockfd > -1) {
         close(db->lockfd);
         (void)remove(db->lock_file);
     }
+#endif /* CNID_DB_CDB */
 
 fail_adouble:
 

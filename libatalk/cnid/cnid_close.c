@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.24 2002-06-03 22:58:10 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.25 2002-08-30 03:12:52 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,6 +31,7 @@ void cnid_close(void *CNID) {
         return;
     }
 
+#ifndef CNID_DB_CDB
     /* Flush the transaction log and delete the log file if we can. */
     if ((db->lockfd > -1) && ((db->flags & CNIDFLAG_DB_RO) == 0)) {
         struct flock lock;
@@ -81,6 +82,7 @@ void cnid_close(void *CNID) {
         }
         (void)remove(db->lock_file);
     }
+#endif /* CNID_DB_CDB */
 
     db->db_didname->close(db->db_didname, 0);
     db->db_devino->close(db->db_devino, 0);
@@ -90,9 +92,11 @@ void cnid_close(void *CNID) {
 #endif /* FILE_MANGLING */
     db->dbenv->close(db->dbenv, 0);
 
+#ifndef CNID_DB_CDB
     if (db->lockfd > -1) {
         close(db->lockfd); /* This will also release any locks we have. */
     }
+#endif /* CNID_DB_CDB */
 
     free(db);
 }

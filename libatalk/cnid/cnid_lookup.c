@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.13 2002-06-03 22:58:10 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.14 2002-08-30 03:12:52 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -40,6 +40,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
         return 0;
     }
 
+#ifndef CNID_DB_CDB
     /* Do a little checkpointing if necessary.  I stuck it here as cnid_lookup
      * gets called when we do directory lookups.  Only do this if we're using
      * a read-write database. */
@@ -61,6 +62,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
             return 0;
         }
     }
+#endif /* CNID_DB_CDB */
 
     if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_lookup: Pathname is too long");
@@ -76,9 +78,11 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
     key.data = buf;
     key.size = CNID_DEVINO_LEN;
     while ((rc = db->db_devino->get(db->db_devino, NULL, &key, &devdata, 0))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             continue;
         }
+#endif /* CNID_DB_CDB */
 
         if (rc == DB_NOTFOUND) {
             devino = 0;
@@ -94,9 +98,11 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
     key.data = buf + CNID_DEVINO_LEN;
     key.size = CNID_DID_LEN + len + 1;
     while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &diddata, 0))) {
+#ifndef CNID_DB_CDB
         if (rc == DB_LOCK_DEADLOCK) {
             continue;
         }
+#endif /* CNID_DB_CDB */
 
         if (rc == DB_NOTFOUND) {
             didname = 0;
