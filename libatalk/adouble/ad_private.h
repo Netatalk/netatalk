@@ -1,5 +1,5 @@
 /*
- * $Id: ad_private.h,v 1.3 2002-08-16 08:07:57 didg Exp $
+ * $Id: ad_private.h,v 1.4 2002-11-14 17:15:23 srittau Exp $
  */
 
 #ifndef LIBATALK_ADOUBLE_AD_PRIVATE_H
@@ -18,10 +18,6 @@
 /* this is so that we can keep lists of fds referencing the same file
  * around. that way, we can honor locks created by the same process
  * with the same file. */
-#ifdef USE_FLOCK_LOCKS
-#define adf_lock_init(a)
-#define adf_lock_free(a)
-#else /* USE_FLOCK_LOCKS */
 
 #define adf_lock_init(a) do { \
 	(a)->adf_lockmax = (a)->adf_lockcount = 0; \
@@ -39,6 +35,5 @@
 	free((a)->adf_lock); \
 	adf_lock_init(a); \
 } while (0)
-#endif /* USE_FLOCK_LOCKS */
 
 #endif /* libatalk/adouble/ad_private.h */

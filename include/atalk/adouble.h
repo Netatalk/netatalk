@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.11 2002-10-11 14:18:35 didg Exp $
+ * $Id: adouble.h,v 1.12 2002-11-14 17:15:22 srittau Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -51,16 +51,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif 
-
-#ifdef HAVE_FLOCK
-#include <sys/file.h>
-#else
-#define LOCK_SH 1
-#define LOCK_EX 2
-#define LOCK_NB 4
-#define LOCK_UN 8
-extern int flock (int /*fd*/, int /*operation*/);
-#endif
 
 #ifdef HAVE_FCNTL_H  
 #include <fcntl.h>
@@ -316,30 +306,18 @@ extern int ad_flush           __P((struct adouble *, int));
 extern int ad_close           __P((struct adouble *, int));
 
 /* ad_lock.c */
-extern int ad_flock_lock __P((struct adouble *, const u_int32_t /*eid*/,
-			      const int /*type*/, const off_t /*offset*/,
-			      const size_t /*len*/, const int /*user*/));
 extern int ad_fcntl_lock __P((struct adouble *, const u_int32_t /*eid*/,
 			      const int /*type*/, const off_t /*offset*/,
 			      const size_t /*len*/, const int /*user*/));
 extern void ad_fcntl_unlock __P((struct adouble *, const int /*user*/));
 
-extern int ad_flock_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
-				 const int /*type*/, const off_t /*offset*/,
-				 const size_t /*len*/));
 extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 				 const int /*type*/, const off_t /*offset*/,
 				 const size_t /*len*/));
 
-#ifdef USE_FLOCK_LOCKS
-#define ad_lock ad_flock_lock
-#define ad_tmplock ad_flock_tmplock
-#define ad_unlock(a,b) 
-#else
 #define ad_lock ad_fcntl_lock
 #define ad_tmplock ad_fcntl_tmplock
 #define ad_unlock ad_fcntl_unlock
-#endif
 
 /* ad_open.c */
 extern char *ad_dir   __P((const char *));
@@ -354,7 +332,6 @@ extern int ad_refresh __P((struct adouble *));
 #ifndef ATACC
 static __inline__ mode_t ad_hf_mode (mode_t mode)
 {
-#ifndef USE_FLOCK_LOCKS
     /* fnctl lock need write access */
     if ((mode & S_IRUSR))
         mode |= S_IWUSR;
@@ -362,7 +339,7 @@ static __inline__ mode_t ad_hf_mode (mode_t mode)
         mode |= S_IWGRP;
     if ((mode & S_IROTH))
         mode |= S_IWOTH;
-#endif
+
     /* if write mode set add read mode */
     if ((mode & S_IWUSR))
         mode |= S_IRUSR;
