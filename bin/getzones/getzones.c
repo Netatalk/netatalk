@@ -1,5 +1,5 @@
 /*
- * $Id: getzones.c,v 1.5 2001-07-31 19:49:02 srittau Exp $
+ * $Id: getzones.c,v 1.6 2001-08-11 11:47:22 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -145,9 +145,11 @@ int main( argc, argv )
 }
 
 
-void print_zones( n, buf )
-    short	n;	/* number of zones in this packet */
-    char	*buf;	/* zone length/name pairs */
+/*
+ * n:   number of zones in this packet
+ * buf: zone length/name pairs
+ */
+void print_zones( short n, char *buf )
 {
     for ( ; n--; buf += (*buf) + 1 ) {
 	printf( "%.*s\n", *buf, buf+1 );
