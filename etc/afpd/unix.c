@@ -184,19 +184,19 @@ const mode_t mode;
         seteuid(0);
         if ( retval=chmod( name, (DIRBITS | mode | S_ISVTX)) < 0)
         {
-           syslog( LOG_ERR, "stickydirmode::setdirmode error: chmod %s: %m", name );
-           return(-1);
+           syslog( LOG_ERR, "stickydirmode: chmod %s: %m", name );
+           return(AFP_ACCESS);
         }
         else
         {
-           syslog( LOG_DEBUG, "stickydirmode::setdirmode: chmod %s: %m", name );
+           syslog( LOG_DEBUG, "stickydirmode: chmod \"%s\": %m", name );
            seteuid(uid);
         }
       }
    else 
 #endif DROPKLUDGE
        if ( retval=chmod( name, DIRBITS | mode ) < 0 ) 
-          syslog( LOG_DEBUG, "stickydirmode::setdirmode: chmod %s: %m", name );
+          syslog( LOG_DEBUG, "stickydirmode: chmod \"%s\": %m", name );
    return retval;
 }
 
@@ -299,9 +299,10 @@ int setdirmode( mode, noadouble )
 	if (S_ISREG(st.st_mode)) {
 	    /* XXX: need to preserve special modes */
 	    if (S_ISDIR(st.st_mode)) {
-              stickydirmode(dirp->d_name, DIRBITS | mode);
-	    } else
-              stickydirmode(dirp->d_name, mode);
+              if (stickydirmode(dirp->d_name, DIRBITS | mode) < 0)
+		return (-1);
+	    } else if (stickydirmode(dirp->d_name, mode) < 0)
+		return (-1);
 	}
     }
     closedir( dir );

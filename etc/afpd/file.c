@@ -81,6 +81,10 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
     u_int16_t		ashort;
     u_char              achar, fdType[4];
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin getfilparams:");
+#endif DEBUG
+
     upath = mtoupath(vol, path);
     if ((of = of_findname(vol, curdir, path))) {
       adp = of->of_ad;
@@ -308,6 +312,11 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
         ad_close( adp, ADFLAGS_HF );
     }
     *buflen = data - buf;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end getfilparams:");
+#endif DEBUG
+
     return( AFP_OK );
 }
 
@@ -317,18 +326,17 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     int		ibuflen, *rbuflen;
 {
     struct stat         st;
-#ifdef DROPKLUDGE
-    struct stat		sb;
-    char		adpath[50];
-    int			uid;
-#endif DROPKLUDGE
     struct adouble	ad, *adp;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
     char		*path, *upath;
-    int			creatf, did, openf;
+    int			creatf, did, openf, retvalue = AFP_OK;
     u_int16_t		vid;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_createfile:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf++;
@@ -408,56 +416,16 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 createfile_done:
 
 #ifdef DROPKLUDGE
-
-/* The below code changes the way file ownership is determined in the name of
-fixing dropboxes.  It has known security problem.  See the netatalk FAQ for
-more information */
-    if (stat(".", &sb) < 0) {
-      syslog (LOG_ERR, "afp_createfile:  Error checking directory \"%s\": %m", dir->d_name);
-      return(-1);
-    }
-    else {
-      uid=geteuid();
-      if ( uid != sb.st_uid )
-      {
-	strcpy (adpath, "./.AppleDouble/");
-	strcat (adpath, upath);
-	seteuid(0); /* Become root to change the owner of the file */
-	if (lchown(upath, sb.st_uid, sb.st_gid) < 0) 
-        {
-	  syslog (LOG_ERR, "afp_createfile:  Error changing owner/gid: %m");
-          return (-1);
-        }
-        /* In order to write information to the file, the Mac client needs
-        to be able to read from it too, so read bits have to be turned on.
-        Directory permissions remain unchanged */
-        stat(upath, &st);
-        if (chmod(upath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
-        {
-          syslog (LOG_ERR, "afp_createfile:  Error adding file read permissions: %m");
-          return (-1);
-        }
-        else syslog (LOG_DEBUG, "afp_createfile:  Added S_IRGRP and S_IROTH: %m");
-	if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
-        {
-	  syslog (LOG_ERR, "afp_createfile:  Error changing AppleDouble owner/gid: %m");
-          return (-1);
-        }
-        if (chmod(adpath, (st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
-        {
-          syslog (LOG_ERR, "afp_createfile:  Error adding AD file read permissions: %m");
-          return (-1);
-        }
-        else syslog (LOG_DEBUG, "afp_createfile:  Added S_IRGRP and S_IROTH to AD: %m");
-	syslog (LOG_DEBUG, "afp_createfile:  Changing afpd owner back to %d", uid);
-	seteuid(uid); /* Restore process ownership to normal */
-      }
-    }
-
+    retvalue=matchfile2dirperms(upath, vol, did);
 #endif DROPKLUDGE
 
     setvoltime(obj, vol );
-    return AFP_OK;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_createfile");
+#endif DEBUG
+
+    return (retvalue);
 }
 
 int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
@@ -470,6 +438,10 @@ int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     char	*path;
     int		did, rc;
     u_int16_t	vid, bitmap;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_setfilparams:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -505,6 +477,10 @@ int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 	setvoltime(obj, vol );
     }
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_setfilparams:");
+#endif DEBUG
+
     return( rc );
 }
 
@@ -523,6 +499,10 @@ int setfilparams(vol, path, bitmap, buf )
     u_int16_t		ashort, bshort;
     u_int32_t		aint;
     struct utimbuf	ut;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin setfilparams:");
+#endif DEBUG
 
     upath = mtoupath(vol, path);
     if ((of = of_findname(vol, curdir, path))) {
@@ -653,6 +633,11 @@ setfilparam_done:
       ad_flush( adp, ADFLAGS_HF );
       ad_close( adp, ADFLAGS_HF );
     }
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end setfilparams:");
+#endif DEBUG
+
     return err;
 }
 
@@ -678,6 +663,10 @@ int renamefile(src, dst, newname, noadouble )
      */
 
     /* existence check moved to afp_moveandrename */
+
+#ifdef DEBUG
+    syslog (LOG_INFO, "begin renamefile:");
+#endif DEBUG
 
     if ( rename( src, dst ) < 0 ) {
 	switch ( errno ) {
@@ -746,6 +735,10 @@ rename_retry:
     ad_flush( &ad, ADFLAGS_HF );
     ad_close( &ad, ADFLAGS_HF );
 
+#ifdef DEBUG
+    syslog (LOG_INFO, "end renamefile:");
+#endif DEBUG
+
     return( AFP_OK );
 }
 
@@ -758,8 +751,12 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     struct dir	*dir;
     char	*newname, *path, *p;
     u_int32_t	sdid, ddid;
-    int		plen, err;
+    int		plen, err, did, retvalue = AFP_OK;
     u_int16_t	svid, dvid;
+
+#ifdef DEBUG
+    syslog (LOG_INFO, "begin afp_copyfile:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -834,7 +831,16 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
     setvoltime(obj, vol );
-    return( AFP_OK );
+
+#ifdef DROPKLUDGE
+    retvalue=matchfile2dirperms(newname, vol, sdid);
+#endif DROPKLUDGE
+
+#ifdef DEBUG
+    syslog (LOG_INFO, "end afp_copyfile:");
+#endif DEBUG
+
+    return( retvalue );
 }
 
 
@@ -842,6 +848,10 @@ static __inline__ int copy_all(const int dfd, const void *buf,
 			       size_t buflen)
 {
   ssize_t cc;
+
+#ifdef DEBUG
+  syslog(LOG_INFO, "begin copy_all:");
+#endif DEBUG
 
   while (buflen > 0) {
     if ((cc = write(dfd, buf, buflen)) < 0) {
@@ -861,7 +871,11 @@ static __inline__ int copy_all(const int dfd, const void *buf,
     buflen -= cc;
   }
 
-  return 0;
+#ifdef DEBUG
+  syslog(LOG_INFO, "end copy_all:");
+#endif DEBUG
+
+  return AFP_OK;
 }
 
 /* XXX: this needs to use ad_open and ad_lock. so, we need to
@@ -876,6 +890,9 @@ int copyfile(src, dst, newname, noadouble )
     int			sfd, dfd, len, err = AFP_OK;
     ssize_t             cc;
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin copyfile:");
+#endif DEBUG
 
     if (newname) { 
       if ((sfd = open( ad_path( src, ADFLAGS_HF ), O_RDONLY, 0 )) < 0 ) {
@@ -1034,6 +1051,10 @@ copydata_done:
       ad_close( &ad, ADFLAGS_HF );
     }
     
+#ifdef DEBUG
+    syslog(LOG_INFO, "end copyfile:");
+#endif DEBUG
+
     return( AFP_OK );
 }
 
@@ -1043,6 +1064,10 @@ int deletefile( file )
 {
     struct adouble	ad;
     int			adflags, err = AFP_OK;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin deletefile:");
+#endif DEBUG
 
     /* try to open both at once */
     adflags = ADFLAGS_DF|ADFLAGS_HF;
@@ -1124,6 +1149,11 @@ delete_unlock:
       ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
     ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
     ad_close( &ad, adflags );
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end deletefile:");
+#endif DEBUG
+
     return err;
 }
 
@@ -1143,6 +1173,10 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
     int                 len;
     cnid_t		did, id;
     u_short		vid;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_createid:");
+#endif DEBUG
     
     *rbuflen = 0;
     ibuf += 2;
@@ -1205,6 +1239,10 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
       return AFP_OK;
     }
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "ending afp_createid...:");
+#endif DEBUG
+
     switch (errno) {
     case EROFS:
       return AFPERR_VLOCK;
@@ -1232,6 +1270,10 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
     int                 err, buflen;
     cnid_t		id;
     u_int16_t		vid, bitmap;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_resolveid:");
+#endif DEBUG
     
     *rbuflen = 0;
     ibuf += 2;
@@ -1279,6 +1321,11 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     *rbuflen = buflen + sizeof(bitmap);
     memcpy(rbuf, ibuf, sizeof(bitmap));
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_resolveid:");
+#endif DEBUG
+    
     return AFP_OK;
 }
 
@@ -1294,7 +1341,11 @@ int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
     int                 err;
     cnid_t		id;
     u_short		vid;
-    
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_deleteid:");
+#endif DEBUG
+
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1350,6 +1401,10 @@ int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
       }
     }
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_deleteid:");
+#endif DEBUG
+
     return err;
 }
 #endif
@@ -1371,7 +1426,11 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
 #endif
     cnid_t		sid, did;
     u_int16_t		vid;
-    
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_exchangefiles:");
+#endif DEBUG
+
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1519,6 +1578,11 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
       goto err_temp_to_dest;
     }
 #endif
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "ending afp_exchangefiles:");
+#endif DEBUG
+
     return AFP_OK;
 
 

@@ -22,9 +22,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <string.h>
-#ifdef DROPKLUDGE
 #include <unistd.h>
-#endif DROPKLUDGE
 
 #include "directory.h"
 #include "desktop.h"
@@ -33,6 +31,96 @@
 #include "file.h"
 #include "globals.h"
 #include "filedir.h"
+
+int matchfile2dirperms(upath, vol, did)
+                              /* Since it's kinda' big; I decided against an
+                              inline function */
+    char	*upath;
+    struct vol  *vol;
+    int		did;
+  /* The below code changes the way file ownership is determined in the name of
+  fixing dropboxes.  It has known security problem.  See the netatalk FAQ for
+  more information */
+{
+    struct stat	st, sb;
+    struct dir	*dir;
+    char	adpath[50];
+    int		uid;
+
+#ifdef DEBUG
+    syslog (LOG_INFO, "begin matchfile2dirperms:");
+#endif DEBUG
+
+    if (stat(upath, &st ) < 0)
+      syslog(LOG_ERR, "Could not stat %s: %m", upath);
+    strcpy (adpath, "./.AppleDouble/");
+    strcat (adpath, upath);
+    if (( dir = dirsearch( vol, did )) == NULL ) {
+      syslog (LOG_ERR, "matchfile2dirperms: Unable to get directory info.");
+      return( AFPERR_NOOBJ );
+    }
+    else if (stat(".", &sb) < 0) {
+        syslog (LOG_ERR, 
+	   "matchfile2dirperms: Error checking directory \"%s\": %m", 
+	   dir->d_name);
+        return(AFPERR_NOOBJ );
+      }
+    else {
+	uid=geteuid();
+	if ( uid != sb.st_uid )
+        {
+	  seteuid(0);
+	  if (lchown(upath, sb.st_uid, sb.st_gid) < 0)
+          {
+            syslog (LOG_ERR, 
+	      "matchfile2dirperms: Error changing owner/gid of %s: %m", upath);
+            return (AFPERR_ACCESS);
+          }
+          if (chmod(upath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+          {
+            syslog (LOG_ERR, 
+	      "matchfile2dirperms:  Error adding file read permissions: %m");
+            return (AFPERR_ACCESS);
+          }
+#ifdef DEBUG
+          else 
+	    syslog (LOG_INFO, 
+	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %m");
+#endif DEBUG
+          if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
+          {
+	    syslog (LOG_ERR, 
+	      "matchfile2dirperms: Error changing AppleDouble owner/gid %s: %m",
+	      adpath);
+            return (AFPERR_ACCESS);
+	  }
+          if (chmod(adpath, (st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+          {
+            syslog (LOG_ERR, 
+	      "matchfile2dirperms:  Error adding AD file read permissions: %m");
+            return (AFPERR_ACCESS);
+          }
+#ifdef DEBUG
+          else 
+	    syslog (LOG_INFO, 
+	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %m");
+#endif DEBUG
+	}
+#ifdef DEBUG
+        else
+	  syslog (LOG_INFO, 
+	    "matchfile2dirperms: No ownership change necessary.");
+#endif DEBUG
+    } /* end else if stat success */
+    seteuid(uid); /* Restore process ownership to normal */
+#ifdef DEBUG
+    syslog (LOG_INFO, "end matchfile2dirperms:");
+#endif DEBUG
+
+    return (AFP_OK);
+
+}
+    
 
 int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     AFPObj      *obj;
@@ -46,6 +134,10 @@ int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     int			buflen, ret;
     char		*path;
     u_int16_t		fbitmap, dbitmap, vid;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_getfildirparams:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -103,6 +195,10 @@ int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     rbuf += sizeof( dbitmap ) + sizeof( u_char );
     *rbuf = 0;
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_getfildirparams:");
+#endif DEBUG
+
     return( AFP_OK );
 }
 
@@ -117,6 +213,10 @@ int afp_setfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     char	*path;
     u_int16_t	vid, bitmap;
     int		did, rc;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_setfildirparams:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -164,6 +264,11 @@ int afp_setfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ( rc == AFP_OK ) {
 	setvoltime(obj, vol );
     }
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_setfildirparams:");
+#endif DEBUG
+
     return( rc );
 }
 
@@ -184,6 +289,10 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1
     cnid_t              id;
 #endif
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_rename:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -335,6 +444,10 @@ out:
     if (of_rename(vol, curdir, path, curdir, ibuf) < 0)
 	return AFPERR_MISC;
 
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_rename:");
+#endif DEBUG
+
     return( AFP_OK );
 }
 
@@ -349,6 +462,10 @@ int afp_delete(obj, ibuf, ibuflen, rbuf, rbuflen )
     char		*path, *upath;
     int			did, rc;
     u_int16_t		vid;
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_delete:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -385,6 +502,11 @@ int afp_delete(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ( rc == AFP_OK ) {
 	setvoltime(obj, vol );
     }
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_delete:");
+#endif DEBUG
+
     return( rc );
 }
 
@@ -431,17 +553,15 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     char	*oldname, *newname;
     char        *path, *p, *upath; 
     int		did, rc;
-    int		plen;
+    int		plen, retvalue;
     u_int16_t	vid;
 #if AD_VERSION > AD_VERSION1
     cnid_t      id;
 #endif
-#ifdef DROPKLUDGE
-    struct stat	sb;
-    struct dir	*dir;
-    char	adpath[50];
-    int		uid;
-#endif DROPKLUDGE
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "begin afp_moveandrename:");
+#endif DEBUG
 
     *rbuflen = 0;
     ibuf += 2;
@@ -552,38 +672,10 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     } else {
 	rc = renamedir(p, upath, odir, curdir, newname, vol_noadouble(vol));
     }
+
 #ifdef DROPKLUDGE
-        strcpy (adpath, "./.AppleDouble/");
-	strcat (adpath, newname);
-        if (( dir = dirsearch( vol, did )) == NULL ) {
-	  syslog (LOG_ERR, "afp_moveandrename: Unable to get directory info.");
-	  return( AFPERR_NOOBJ );
-	}
-        else
-	if (stat(".", &sb) < 0) {
-	  syslog (LOG_ERR, "afp_moveandrename: Error checking directory \"%s\": %m", dir->d_name);
-          return(-1);
-        }
-        else {
-	  uid=geteuid();
-          if ( uid != sb.st_uid )
-          {
-	    seteuid(0);
-	    if (lchown(newname, sb.st_uid, sb.st_gid) < 0)
-            {
-              syslog (LOG_ERR, "afp_moveandrename: Error changing owner/gid of %s: %m", p);
-              return (-1);
-            }
-            if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
-            {
-	      syslog (LOG_ERR, "afp_moveandrename: Error changing AppleDouble owner/gid %s: %m", adpath);
-              return (-1);
-	    }
-	  }
-          else
-	    syslog (LOG_DEBUG, "No ownership change necessary.");
-	}
-        seteuid(uid); /* Restore process ownership to normal */
+    if (retvalue=matchfile2dirperms (newname, vol, did) != AFP_OK)
+	return retvalue;
 #endif DROPKLUDGE
 
     if ( rc == AFP_OK ) {
@@ -597,6 +689,11 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 #endif      
 	setvoltime(obj, vol );
     }
+
+#ifdef DEBUG
+    syslog(LOG_INFO, "end afp_moveandrename:");
+#endif DEBUG
+
     return( rc );
 }
 
