@@ -47,3 +47,4 @@
 #undef USE_MOUNT_H
 #undef USE_OLD_RQUOTA
 #undef USE_UFS_QUOTA_H
+#undef WITH_CATSEARCH

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.31 2002-08-21 07:52:03 didg Exp $
+ * $Id: volume.c,v 1.32 2002-08-25 13:26:20 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -930,7 +930,11 @@ int		*buflen;
              *       a read-write filesystem under a read-only one. */
             if ((vol->v_flags & AFPVOL_RO) ||
                     ((utime(vol->v_path, NULL) < 0) && (errno == EROFS)))
+#ifdef WITH_CATSEARCH
+                ashort |= VOLPBIT_ATTR_RO | VOLPBIT_ATTR_CATSEARCH;
+#else
                 ashort |= VOLPBIT_ATTR_RO;
+#endif
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );

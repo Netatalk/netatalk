@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.20 2002-03-24 07:46:11 jmarcus Exp $
+ * $Id: enumerate.c,v 1.21 2002-08-25 13:26:20 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -446,35 +446,3 @@ int		ibuflen, *rbuflen;
 }
 
 
-/* why is this here? well, FPCatSearch is essentially an FPEnumerate
- * with filters. */
-int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
-                  char *rbuf, int *rbuflen)
-{
-    struct vol *vol;
-    u_int16_t   vid;
-
-    ibuf += 2;
-    memcpy(&vid, ibuf, sizeof(vid));
-    ibuf += sizeof(vid);
-
-    *rbuflen = 0;
-    if ((vol = getvolbyvid(vid)) == NULL)
-        return AFPERR_PARAM;
-
-    /* the ritual:
-     * do a breadth-first search of directories:
-     *   lookup did/name info.
-     *   add to result if match
-     *   check to see if we've exceeded our timelimit
-     *     if yes, return current position
-     *     if not, continue
-     * 
-     *   we keep a copy of our current position in struct vol.
-     *   if the next catsearch request for that volume isn't at
-     *   at the current position, bail and return catchanged.
-     */
-
-    /* eof when done */
-    return AFPERR_EOF;
-}
