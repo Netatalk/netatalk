@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.25 2002-10-11 14:18:23 didg Exp $
+ * $Id: afp_dsi.c,v 1.26 2002-12-04 10:59:36 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -117,6 +117,16 @@ static void afp_dsi_timedown()
         LOG(log_error, logtype_afpd, "afp_timedown: sigaction: %s", strerror(errno) );
         afp_dsi_die(1);
     }
+
+    /* ignore SIGHUP */
+    sv.sa_handler = SIG_IGN;
+    sigemptyset( &sv.sa_mask );
+    sv.sa_flags = SA_RESTART;
+    if ( sigaction( SIGHUP, &sv, 0 ) < 0 ) {
+        LOG(log_error, logtype_afpd, "afp_timedown: sigaction SIGHUP: %s", strerror(errno) );
+        afp_dsi_die(1);
+    }
+
 }
 
 #ifdef SERVERTEXT
@@ -129,11 +139,15 @@ static void afp_dsi_getmesg (int sig)
 
 static void alarm_handler()
 {
+int err;
     /* if we're in the midst of processing something,
        don't die. */
     if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
-        if (!pollvoltime(child.obj))
-            dsi_tickle(child.obj->handle);
+        if (!(err = pollvoltime(child.obj)))
+            err = dsi_tickle(child.obj->handle);
+        if (err <= 0) 
+            afp_dsi_die(1);
+        
     } else { /* didn't receive a tickle. close connection */
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out");
         afp_dsi_die(1);

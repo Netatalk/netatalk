@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tickle.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_tickle.c,v 1.4 2002-12-04 10:59:37 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -20,12 +20,13 @@
 /* server generated tickles. as this is only called by the tickle handler,
  * we don't need to block signals. well, actually, we might get it during
  * a SIGHUP. */
-void dsi_tickle(DSI *dsi)
+int dsi_tickle(DSI *dsi)
 {
   char block[DSI_BLOCKSIZ];
   sigset_t oldset;
   u_int16_t id;
-
+  int ret;
+  
   id = htons(dsi_serverID(dsi));
 
   memset(block, 0, sizeof(block));
@@ -35,7 +36,8 @@ void dsi_tickle(DSI *dsi)
   /* code = len = reserved = 0 */
 
   sigprocmask(SIG_BLOCK, &dsi->sigblockset, &oldset);
-  dsi_stream_write(dsi, block, DSI_BLOCKSIZ);
+  ret = dsi_stream_write(dsi, block, DSI_BLOCKSIZ) == DSI_BLOCKSIZ;
   sigprocmask(SIG_SETMASK, &oldset, NULL);
+  return ret;
 }
 

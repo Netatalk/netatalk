@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.43 2002-11-15 10:59:11 srittau Exp $
+ * $Id: volume.c,v 1.44 2002-12-04 10:59:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1217,11 +1217,12 @@ int		ibuflen, *rbuflen;
     }
     /* FIXME 
     */
-    if (afp_version >= 30)
+    if (afp_version >= 30) {
         volume->max_filename = 255;
-    else 
+    }
+    else {
         volume->max_filename = MACFILELEN;
-
+    }
     if (( volume->v_flags & AFPVOL_OPEN  ) == 0 ) {
         /* FIXME unix name != mac name */
         if ((dir = dirnew(volume->v_name, volume->v_name) ) == NULL) {
@@ -1311,7 +1312,6 @@ int		ibuflen, *rbuflen;
             curdir = ovol->v_dir;
         }
     }
-
     dirfree( vol->v_root );
     vol->v_dir = NULL;
 #ifdef CNID_DB
@@ -1393,7 +1393,8 @@ AFPObj *obj;
         if ( (vol->v_flags & AFPVOL_OPEN)  && vol->v_time + 30 < tv.tv_sec) {
             if ( !stat( vol->v_path, &st ) && vol->v_time != st.st_mtime ) {
                 vol->v_time = st.st_mtime;
-                obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+                if (!obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED))
+                    return -1;
                 return 1;
             }
         }

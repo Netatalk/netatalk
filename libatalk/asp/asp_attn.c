@@ -1,5 +1,5 @@
 /*
- * $Id: asp_attn.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: asp_attn.c,v 1.7 2002-12-04 10:59:37 didg Exp $
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */
@@ -44,7 +44,7 @@ int asp_attention(ASP asp, AFPUserBytes flags)
 
     if ( atp_sreq( asp->asp_atp, &atpb, 1, 0 ) < 0 ) {
 	LOG(log_error, logtype_default, "atp_sreq: %s", strerror(errno) );
-	return -1;
+	return 0;
     }
 
     iov[ 0 ].iov_base = data;
@@ -53,8 +53,8 @@ int asp_attention(ASP asp, AFPUserBytes flags)
     atpb.atp_rresiovcnt = sizeof( iov )/sizeof( iov[ 0 ] );
     if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
 	LOG(log_error, logtype_default, "atp_rresp: %s", strerror(errno) );
-	return -1;
+	return 0;
     }
 
-    return 0;
+    return 1;
 }

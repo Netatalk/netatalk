@@ -98,6 +98,6 @@ extern int asp_cmdreply     __P((ASP, int));
 extern int asp_wrtcont      __P((ASP, char *, int *));
 #define asp_wrtreply(a,b)   asp_cmdreply((a), (b))
 extern void asp_kill        __P((int));
-extern void asp_tickle      __P((ASP, const u_int8_t, struct sockaddr_at *));
+extern int asp_tickle      __P((ASP, const u_int8_t, struct sockaddr_at *));
 
 #endif

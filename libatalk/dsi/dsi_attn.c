@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_attn.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_attn.c,v 1.4 2002-12-04 10:59:37 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -23,7 +23,10 @@
 #endif /* MIN */
 
 /* send an attention. this may get called at any time, so we can't use
- * DSI buffers to send one. */
+ * DSI buffers to send one. 
+   return 0 on error
+ 
+ */
 int dsi_attention(DSI *dsi, AFPUserBytes flags)
 {
   /* header + AFPUserBytes */

@@ -1,5 +1,5 @@
 /*
- * $Id: asp_tickle.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: asp_tickle.c,v 1.7 2002-12-04 10:59:37 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,7 +18,7 @@
 #include <atalk/asp.h>
 
 /* send off a tickle */
-void asp_tickle(ASP asp, const u_int8_t sid, struct sockaddr_at *sat)
+int asp_tickle(ASP asp, const u_int8_t sid, struct sockaddr_at *sat)
 {
   struct atp_block atpb;
   char buf[ASP_HDRSIZ];
@@ -34,5 +34,7 @@ void asp_tickle(ASP asp, const u_int8_t sid, struct sockaddr_at *sat)
   atpb.atp_sreqtries = 1;
   if ( atp_sreq( asp->asp_atp, &atpb, 0, 0 ) < 0 ) {
     LOG(log_error, logtype_default, "atp_sreq: %s", strerror(errno) );
+    return 0;
   }
+  return 1;
 }

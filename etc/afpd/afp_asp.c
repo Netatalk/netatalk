@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.17 2002-08-30 19:32:40 didg Exp $
+ * $Id: afp_asp.c,v 1.18 2002-12-04 10:59:36 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -162,6 +162,15 @@ static void afp_asp_timedown()
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, 0 ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_timedown: sigaction: %s", strerror(errno) );
+        afp_asp_die(1);
+    }
+
+    /* ignore SIGHUP */
+    sv.sa_handler = SIG_IGN;
+    sigemptyset( &sv.sa_mask );
+    sv.sa_flags = SA_RESTART;
+    if ( sigaction( SIGHUP, &sv, 0 ) < 0 ) {
+        LOG(log_error, logtype_afpd, "afp_timedown: sigaction SIGHUP: %s", strerror(errno) );
         afp_asp_die(1);
     }
 }

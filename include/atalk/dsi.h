@@ -135,7 +135,7 @@ extern void dsi_kill __P((int));
 extern void dsi_opensession __P((DSI *));
 extern int  dsi_attention __P((DSI *, AFPUserBytes));
 extern int  dsi_cmdreply __P((DSI *, const int));
-extern void dsi_tickle __P((DSI *));
+extern int dsi_tickle __P((DSI *));
 extern void dsi_getstatus __P((DSI *));
 extern void dsi_close __P((DSI *));
 
