@@ -7,6 +7,9 @@ megatron_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 noinst_HEADERS = megatron.h
 
-# ************************************************
-# FIXME! FIXME! Links need to work for:
-# LINKS = unbin unhex unsingle hqx2bin single2bin macbinary binheader nadheader
+LINKS = unbin unhex unsingle hqx2bin single2bin macbinary binheader nadheader
+
+install-exec-hook:
+	for LINK in $(LINKS); do
+		ln -s $(bindir)/megatron $(bindir)/$(LINK)
+	done
