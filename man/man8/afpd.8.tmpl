@@ -246,6 +246,51 @@ parses the files with either end of line character.
 .LP
 Unix filenames that are longer than 31 characters are inaccessible from
 the Macintosh.
+
+.SH SIGNALS
+Signals that are sent to the main
+.B afpd
+process are propagated to the children, so all will be affected.
+.TP 13
+.B SIGHUP
+The
+.B afpd
+process will send the message "The server is going down for maintenance."
+to the client and shut itself down in 5 minutes.  New connections are not
+allowed.  If this is sent to a child
+.BR afpd ,
+the other children are not affected.  However, the main process will still
+exit, disabling all new connections.
+.TP 13
+.B SIGUSR1
+If the
+.B --with-message-dir
+configure option was used, the
+.B afpd
+process will set the
+.B debug
+option and redirect the messages to
+.RI /var/tmp/afpd-debug- pid .
+This should only be sent to a child
+.BR afpd .
+.B Warning:
+If the
+.B --with-message-dir
+option was not used, this will kill the
+.B afpd
+process.
+
+.TP 13
+.B SIGUSR2
+The
+.B afpd
+process will look in the
+.I msg
+directory for a file named
+.RI message. pid .
+For each one found, a the contents will be sent as a message to the
+associated AFP client.  The file is removed after the message is sent.
+
 .SH FILES
 .TP 20
 .B :ETCDIR:/AppleVolumes.default
@@ -256,6 +301,12 @@ list of volumes to offer all users
 .TP 20
 .B ~/AppleVolumes
 user's list of volumes to mount
+.TP 20
+.BI :ETCDIR:/msg/message. pid
+contains messages to be sent to users.
+.TP 20
+.BI /var/tmp/afpd-debug- pid
+contains debug output, if triggered.
 .SH BUGS
 A few calls from the AFP specification are not implemented, because the
 Macintosh does not use them.

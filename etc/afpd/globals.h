@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.11 2002-03-16 20:38:09 jmarcus Exp $
+ * $Id: globals.h,v 1.12 2002-05-03 22:51:34 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,6 +36,7 @@
 #define OPTION_NOUSERVOL     (1 << 2)
 #define OPTION_PROXY         (1 << 3)
 #define OPTION_CUSTOMICON    (1 << 4)
+#define OPTION_NOSLP         (1 << 5)
 
 /* a couple of these options could get stuck in unions to save
  * space. */

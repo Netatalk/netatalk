@@ -1,4 +1,4 @@
-.\" $Id: afpd.conf.5.tmpl,v 1.2 2001-06-26 23:58:32 srittau Exp $
+.\" $Id: afpd.conf.5.tmpl,v 1.3 2002-05-03 22:51:34 jmarcus Exp $
 .TH afpd.conf 5 "28 September 2000" "netatalk 1.5"
 .UC 4
 .SH NAME
@@ -163,6 +163,12 @@ DDP server as well, set \fB-uamlist ""\fR.
 This specifoes the DSI server quantum. The minimum value is 1 MB. The
 maximum value is 0xFFFFFFFFF. If you specify a value that is out of
 range, the default value will be set (which is the minimum).
+
+.TP
+.B -noslp
+Do not register this server using the Service Location Protocol (if SLP
+support was compiled in).  This is useful if you are running multiple
+servers and want one to be hidden, perhaps because it is advertised elsewhere.
 
 .TP
 .I Miscellaneous Options

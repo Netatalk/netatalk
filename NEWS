@@ -1,3 +1,10 @@
+Changes from 1.5.3
+==================
+
+* NEW: Add the ability to enable debugging at runtime by sending afpd a
+       SIGUSR1.
+* NEW: Add a -noslp option to disable SLP per afpd instance.
+      
 Changes from 1.5.2
 ==================
 
