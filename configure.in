@@ -131,7 +131,7 @@ AC_DEFINE(ADMIN_GRP, 1)
 AC_ARG_WITH(admin-group,
  	[  --disable-admin-group  disable admin group],
         if test "$enableval" = "no"; then
-		AC_DEFINE (ADMIN_GRP, 0)
+		AC_DEFINE(ADMIN_GRP, 0)
 		AC_MSG_RESULT([disabling administrative group support]),
         fi
  )
