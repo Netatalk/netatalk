@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.34 2002-06-17 18:23:02 didg Exp $
+ * $Id: directory.c,v 1.35 2002-08-15 06:20:10 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1451,56 +1451,54 @@ int setdirparams(const struct vol *vol,
                 err = AFPERR_PARAM;
                 goto setdirparam_done;
             }
-        }
 #endif /* 0 */
 
-        if ( setdirmode( mtoumode( &ma ), vol_noadouble(vol),
+            if ( setdirmode( mtoumode( &ma ), vol_noadouble(vol),
                          (vol->v_flags & AFPVOL_DROPBOX)) < 0 ) {
-            switch ( errno ) {
-            case EPERM :
-            case EACCES :
-                err = AFPERR_ACCESS;
-                goto setdirparam_done;
-            case EROFS :
-                err = AFPERR_VLOCK;
-                goto setdirparam_done;
-            default :
-                LOG(log_error, logtype_afpd, "setdirparam: setdirmode: %s",
-                    strerror(errno) );
-                err = AFPERR_PARAM;
-                goto setdirparam_done;
+                switch ( errno ) {
+                case EPERM :
+                case EACCES :
+                    err = AFPERR_ACCESS;
+                    goto setdirparam_done;
+                case EROFS :
+                    err = AFPERR_VLOCK;
+                    goto setdirparam_done;
+                default :
+                    LOG(log_error, logtype_afpd, "setdirparam: setdirmode: %s",
+                        strerror(errno) );
+                    err = AFPERR_PARAM;
+                    goto setdirparam_done;
+                }
             }
-        }
-        break;
+            break;
 
         /* Ignore what the client thinks we should do to the
            ProDOS information block.  Skip over the data and
            report nothing amiss. <shirsch@ibm.net> */
-    case DIRPBIT_PDINFO :
-        buf += 6;
-        break;
+        case DIRPBIT_PDINFO :
+            buf += 6;
+            break;
 
-    default :
-        err = AFPERR_BITMAP;
-        goto setdirparam_done;
-        break;
+        default :
+            err = AFPERR_BITMAP;
+            goto setdirparam_done;
+            break;
+        }
+
+        bitmap = bitmap>>1;
+        bit++;
     }
 
-    bitmap = bitmap>>1;
-    bit++;
-}
-
-
 setdirparam_done:
-if ( isad ) {
-    ad_flush( &ad, ADFLAGS_HF );
-    ad_close( &ad, ADFLAGS_HF );
-}
+    if ( isad ) {
+        ad_flush( &ad, ADFLAGS_HF );
+        ad_close( &ad, ADFLAGS_HF );
+    }
 
 #ifdef FORCE_UIDGID
-restore_uidgid ( &uidgid );
+    restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
-return err;
+    return err;
 }
 
 int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
