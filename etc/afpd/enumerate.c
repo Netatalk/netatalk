@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.7 2001-08-15 01:37:34 srittau Exp $
+ * $Id: enumerate.c,v 1.8 2001-08-27 15:26:16 uhees Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -62,24 +62,15 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
     strcpy( cdir->d_name, name );
     cdir->d_name[namlen] = '\0';
 
-	cdir->d_did = 0;
+    cdir->d_did = 0;
 
-#ifdef CNID_DB
-    /* find out if we have a fixed did already */
-    cdir->d_did = cnid_lookup(vol->v_db, st, dir->d_did, upath,
-				    upathlen);
-#endif /* CNID_DB */
-
-	if (cdir->d_did == 0) {
 #if AD_VERSION > AD_VERSION1
-	  memset(&ad, 0, sizeof(ad));
-      if (ad_open(upath, ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY, 0, &ad) < 0) {
-        /* if we can't parse the AppleDouble header, return 0 for the DID */
-	cdir->d_did = 0;
-      } else {
-        /* ... else retrieve the DID entry into cdir->d_did */
-	memcpy(&cdir->d_did, ad_entry(&ad, ADEID_DID), sizeof(cdir->d_did));
-	ad_close(&ad, ADFLAGS_HF);
+    /* look in AD v2 header */
+    memset(&ad, 0, sizeof(ad));
+    if (ad_open(upath, ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY, 0, &ad) >= 0) {
+        /* if we can parse the AppleDouble header, retrieve the DID entry into cdir->d_did */
+	    memcpy(&cdir->d_did, ad_entry(&ad, ADEID_DID), sizeof(cdir->d_did));
+	    ad_close(&ad, ADFLAGS_HF);
 	}
 #endif /* AD_VERSION */
 
@@ -88,7 +79,6 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
     cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath,
 				   upathlen, cdir->d_did);
 #endif /* CNID_DB */
-	}
 
 	if (cdir->d_did == 0) {
 #ifdef USE_LASTDID

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.7 2001-08-15 01:37:34 srittau Exp $
+ * $Id: fork.c,v 1.8 2001-08-27 15:26:16 uhees Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -176,27 +176,17 @@ static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
 
 	case FILPBIT_FNUM :
 		aint = 0;
-#ifdef CNID_DB
-		/* find out if we have a fixed did already */
-		aint = cnid_lookup(ofork->of_vol->v_db, &st,
-				  ofork->of_dir->d_did,
-				  upath, strlen(upath));
-#endif /* CNID_DB */
-
-	  /* look in AD v2 header */
-	    if (aint == 0)
-		{
 #if AD_VERSION > AD_VERSION1
-          if (isad)
+        /* look in AD v2 header */
+        if (isad)
 	        memcpy(&aint, ad_entry(ofork->of_ad, ADEID_DID), sizeof(aint));
 #endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef CNID_DB
-	      aint = cnid_add(ofork->of_vol->v_db, &st,
+        aint = cnid_add(ofork->of_vol->v_db, &st,
 				  ofork->of_dir->d_did,
 				  upath, strlen(upath), aint);
 #endif /* CNID_DB */
-		}
 
 		if (aint == 0) {
 #ifdef AFS

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.26 2001-08-15 01:37:34 srittau Exp $
+ * $Id: file.c,v 1.27 2001-08-27 15:26:16 uhees Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -200,25 +200,16 @@ int getfilparams(struct vol *vol,
 
 	case FILPBIT_FNUM :
 		aint = 0;
-#ifdef CNID_DB
-		/* find out if we have a fixed did already */
-		aint = cnid_lookup(vol->v_db, st, dir->d_did, upath,
-						    strlen(upath));
-#endif /* CNID_DB */
-
-	  /* look in AD v2 header */
-	    if (aint == 0)
-		{
 #if AD_VERSION > AD_VERSION1
-          if (isad)
+        /* look in AD v2 header */
+        if (isad)
 		  	memcpy(&aint, ad_entry(adp, ADEID_DID), sizeof(aint));
 #endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef CNID_DB
-	      aint = cnid_add(vol->v_db, st, dir->d_did, upath,
+        aint = cnid_add(vol->v_db, st, dir->d_did, upath,
 				  			strlen(upath), aint);
 #endif /* CNID_DB */
-		}
 
 		if (aint == 0) {
 	    /*
@@ -1339,19 +1330,17 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #if AD_VERSION > AD_VERSION1
     memset(&ad, 0, sizeof(ad));
-    if (ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, &ad ) < 0)
-      id = 0;
-    else {
+    if (ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, &ad ) >= 0) {
       memcpy(&id, ad_entry(&ad, ADEID_DID), sizeof(id));
       ad_close(&ad, ADFLAGS_HF);
     }
+#endif /* AD_VERSION > AD_VERSION1 */
 
     if (id = cnid_add(vol->v_db, &st, did, upath, len, id)) {
       memcpy(rbuf, &id, sizeof(id));
       *rbuflen = sizeof(id);
       return AFP_OK;
     }
-#endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "ending afp_createid...:");
