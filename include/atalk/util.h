@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.5 2001-08-30 13:17:25 srittau Exp $
+ * $Id: util.h,v 1.6 2001-12-10 20:15:13 srittau Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -17,8 +17,8 @@ extern const int _diacasemap[], _dialowermap[];
 extern char **getifacelist(void);
 extern void freeifacelist(char **);
 
-#define diatolower(x)     _dialowermap[(x)]
-#define diatoupper(x)     _diacasemap[(x)]
+#define diatolower(x)     _dialowermap[(unsigned char) (x)]
+#define diatoupper(x)     _diacasemap[(unsigned char) (x)]
 extern int atalk_aton     __P((char *, struct at_addr *));
 extern void bprint        __P((char *, int));
 extern int strdiacasecmp  __P((const char *, const char *));
