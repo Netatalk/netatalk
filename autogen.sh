@@ -7,7 +7,11 @@ rm -Rvf INSTALL
 touch README
 
 # build it all.
-libtoolize --force --copy && aclocal $ACLOCAL_FLAGS && autoheader && automake --add-missing && autoconf
+libtoolize --force --copy && \
+	aclocal $ACLOCAL_FLAGS && \
+	autoheader && \
+	automake --include-deps --add-missing && \
+	autoconf
 
 # just in case automake generated errors...
 autoconf

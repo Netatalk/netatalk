@@ -1,4 +1,9 @@
-($Id: ChangeLog,v 1.34 2001-05-08 18:03:18 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.35 2001-05-09 13:35:40 rufustfirefly Exp $)
+
+2001-05-09  jeff b  <jeff@univrel.pr.uconn.edu>
+	* autogen.sh: added automake --include-deps to autogen.sh to
+	promote more portable Makefiles (thanks to Christian
+	Weisgerber <naddy@mips.inka.de> from OpenBSD)
 
 2001-05-08  jeff b  <jeff@univrel.pr.uconn.edu>
 
