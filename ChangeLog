@@ -1,4 +1,10 @@
 
+2001-09-23  joe c   <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_close.c, libatalk/cnid/cnid_resolve.c,
+	libatalk/cnid/cnid_open.c: More s/errno/rc fixes and some code
+	cleanup
+
 2001-09-22  joe c   <marcus@marcuscom.com>
 
 	* configure.in: Fix db3 compilation on Linux

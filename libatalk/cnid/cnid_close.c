@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_close.c,v 1.7 2001-09-23 19:08:23 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +26,7 @@
 void cnid_close(void *CNID)
 {
   CNID_private *db;
+  int rc = 0;
 
   if (!(db = CNID))
     return;
@@ -40,9 +41,9 @@ void cnid_close(void *CNID)
     if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
       char **list, **first;
 
-      errno = txn_checkpoint(db->dbenv, 0, 0, 0);
-      while (errno == DB_INCOMPLETE)
-		errno = txn_checkpoint(db->dbenv, 0, 0, 0);
+      rc = txn_checkpoint(db->dbenv, 0, 0, 0);
+      while (rc == DB_INCOMPLETE)
+		rc = txn_checkpoint(db->dbenv, 0, 0, 0);
 
       /* we've checkpointed, so clean up the log files.
        * NOTE: any real problems will make log_archive return an error. */

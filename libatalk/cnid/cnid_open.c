@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.11 2001-09-23 18:43:44 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.12 2001-09-23 19:08:23 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -177,6 +177,7 @@ void *cnid_open(const char *dir)
   CNID_private *db;
   DBT key, data;
   int open_flag, len;
+  int rc = 0;
 
   if (!dir)
     return NULL;
@@ -275,8 +276,8 @@ mkdir_appledb:
   memset(&data, 0, sizeof(data));
   key.data = DBVERSION_KEY;
   key.size = DBVERSION_KEYLEN;
-  while ((errno = db->db_didname->get(db->db_didname, NULL, &key, &data, 0))) {
-    switch (errno) {
+  while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &data, 0))) {
+    switch (rc) {
 	case DB_LOCK_DEADLOCK:
       continue;
 
@@ -288,10 +289,10 @@ mkdir_appledb:
       data.size = sizeof(version);
 	}
 dbversion_retry:
-      if (db->db_didname->put(db->db_didname, NULL, &key, &data,
-			      DB_NOOVERWRITE))
-	if (errno == DB_LOCK_DEADLOCK)
-	  goto dbversion_retry;
+      if ((rc = db->db_didname->put(db->db_didname, NULL, &key, &data,
+			      DB_NOOVERWRITE)))
+	  	if (rc == DB_LOCK_DEADLOCK)
+	  		goto dbversion_retry;
       break;
     default:
       /* uh oh. something bad happened. bail. */

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_resolve.c,v 1.5 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_resolve.c,v 1.6 2001-09-23 19:08:23 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +26,7 @@ char *cnid_resolve(void *CNID, cnid_t *id)
 {
   CNID_private *db;
   DBT key, data;
+  int rc = 0;
 
   if (!(db = CNID) || !id || !(*id))
     return NULL;
@@ -34,19 +35,19 @@ char *cnid_resolve(void *CNID, cnid_t *id)
   memset(&data, 0, sizeof(data));
 
   key.data = id;
-  key.size = sizeof(*id);
-  while ((errno = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0))) {
-    if (errno == DB_LOCK_DEADLOCK)
+  key.size = sizeof(cnid_t);
+  while ((rc = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0))) {
+    if (rc == DB_LOCK_DEADLOCK)
       continue;
 
-    if (errno != DB_NOTFOUND) 
-      syslog(LOG_ERR, "cnid_resolve: can't get did/name");
+    if (rc != DB_NOTFOUND) 
+      syslog(LOG_ERR, "cnid_resolve: can't get did/name (%d)", rc);
 
     *id = 0;
     return NULL;
   }
   
-  memcpy(id, (char *) data.data + CNID_DEVINO_LEN, sizeof(*id));
+  memcpy(id, (char *) data.data + CNID_DEVINO_LEN, sizeof(cnid_t));
   return (char *) data.data + CNID_HEADER_LEN;
 }
 #endif /* CNID_DB */
