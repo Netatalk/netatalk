@@ -487,7 +487,7 @@ static int pam_changepw(void *obj, char *username,
     /* check out the session id */
     if (sessid != dhxhash(obj))
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Session ID not Equal to DHX Hash -- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Session ID not Equal to DHX Hash -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
 
@@ -495,7 +495,7 @@ static int pam_changepw(void *obj, char *username,
     if (uam_afpserver_option(obj, UAM_OPTION_HOSTNAME,
 			     (void *) &hostname, NULL) < 0)
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Hostname Null?? -- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Hostname Null?? -- %m");
     /* Log Entry */
       return AFPERR_MISC;
 
@@ -508,14 +508,14 @@ static int pam_changepw(void *obj, char *username,
      * get sent back an incremented random number. */
     if (!(bn1 = BN_bin2bn(ibuf, KEYSIZE, NULL)))
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented-- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented-- %m");
     /* Log Entry */
       return AFPERR_PARAM;
 
     if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {
       BN_free(bn1);
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented -- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
     }
@@ -528,7 +528,7 @@ static int pam_changepw(void *obj, char *username,
       BN_free(bn2);
       BN_free(bn1);
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number did not Zero -- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number did not Zero -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
     }
@@ -542,7 +542,7 @@ static int pam_changepw(void *obj, char *username,
     if (!BN_is_one(bn3)) {
       BN_free(bn3);
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: After Random Number not Zero, is it one more? -- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: After Random Number not Zero, is it one more? -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
     }
@@ -559,7 +559,7 @@ static int pam_changepw(void *obj, char *username,
 			  &lpamh);
     if (PAM_error != PAM_SUCCESS)
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Needless to say, PAM_error is != to PAM_SUCCESS -- %m",);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Needless to say, PAM_error is != to PAM_SUCCESS -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
     pam_set_item(lpamh, PAM_TTY, "afpd");
@@ -628,4 +628,4 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx = {
 };
 
 #endif /* USE_PAM && UAM_DHX */
- 
+
