@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.18 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: main.c,v 1.19 2002-08-31 08:09:06 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -163,7 +163,9 @@ char	**av;
     if (!afp_options_parse(ac, av, &default_options))
         exit(1);
 
-    umask( default_options.umask );
+    /* Save the user's current umask for use with CNID (and maybe some 
+     * other things, too). */
+    default_options.save_mask = umask( default_options.umask );
 
     switch(server_lock("afpd", default_options.pidfile,
                        default_options.flags & OPTION_DEBUG)) {
