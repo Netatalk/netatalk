@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.78 2001-05-25 16:18:08 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.79 2001-05-31 18:42:58 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -9,7 +9,6 @@ AC_SUBST(NETATALK_VERSION)
 AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE(netatalk, ${NETATALK_VERSION})
 AM_CONFIG_HEADER(config.h)
-AM_PROG_LIBTOOL
 
 dnl Reset locations to proper places
 AC_PREFIX_DEFAULT(/usr/local)
@@ -20,7 +19,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_LIBTOOL
+AM_PROG_LIBTOOL
 
 dnl *********************************************************************
 dnl FIXME! FIXME! These should be selectable properly, and should produce
