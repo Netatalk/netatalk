@@ -23,7 +23,6 @@
 #include <netatalk/endian.h>
 #include "megatron.h"
 
-#define	DEBUG		0
 #define HEXOUTPUT	0
 
 /*	String used to indicate standard input instead of a disk

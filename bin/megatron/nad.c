@@ -19,8 +19,6 @@
 #include <netatalk/endian.h>
 #include "megatron.h"
 
-#define	DEBUG		0
-
 static char		hexdig[] = "0123456789abcdef";
 
 char *mtoupath( mpath )

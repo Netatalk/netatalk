@@ -43,8 +43,6 @@
 
 #include <atalk/paths.h>
 
-#define	DEBUG		0
-
 /*
  *			Global Variables
  */

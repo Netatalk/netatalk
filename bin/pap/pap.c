@@ -27,6 +27,13 @@
 #define _PATH_PAPRC	".paprc"
 char	*nbpfailure = "AppleTalk printer offline";
 
+/* if there is a less hacky way to do this, please do it... */
+#ifdef DEBUG
+#define EBUG
+#endif
+
+#undef DEBUG
+
 #ifdef EBUG
 #define DEBUG(x,y)	(x,y)
 #else /*EBUG*/

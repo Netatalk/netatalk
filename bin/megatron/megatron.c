@@ -14,8 +14,6 @@
 #include <netatalk/endian.h>
 #include "megatron.h"
 
-#define	DEBUG		0
-
 char		forkbuf[8192];
 char		*forkname[] = { "data", "resource" };
 char		*name[] = { "unhex",

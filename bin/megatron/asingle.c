@@ -16,8 +16,6 @@
 #include <netatalk/endian.h>
 #include "megatron.h"
 
-#define	DEBUG		0
-
 /*	String used to indicate standard input instead of a disk
 	file.  Should be a string not normally used for a file
  */
