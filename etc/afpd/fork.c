@@ -1,4 +1,6 @@
 /*
+ * $Id: fork.c,v 1.4 2001-06-04 19:06:15 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -966,9 +968,10 @@ int flushfork( ofork )
 	}
 
 
-	/* flush the header. */
-	if (doflush && (ad_flush(ofork->of_ad, ADFLAGS_HF) < 0)) 
-	  err = -1;
+	/* flush the header (if it is a resource fork) */
+	if (ofork->of_flags & AFPFORK_RSRC)
+	  if (doflush && (ad_flush(ofork->of_ad, ADFLAGS_HF) < 0)) 
+	    err = -1;
 	  
 	if (fsync( ad_hfileno( ofork->of_ad )) < 0)
 	  err = -1;
