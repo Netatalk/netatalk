@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.130 2001-11-23 22:45:23 srittau Exp $
+dnl $Id: configure.in,v 1.131 2001-11-24 18:32:31 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -305,20 +305,19 @@ AC_ARG_WITH(pam,
     [PAM_MSG="yes"]
 )
 AC_MSG_RESULT($PAM_MSG)
+
 use_pam_so=no
 compile_pam=no
-
 if test "x$PAM_MSG" = "xyes"; then
 	if test "x$ac_cv_header_security_pam_appl_h" = "xyes" ; then
-        
-		AC_CHECK_LIB(pam, pam_set_item, 
-				[PAPD_LIBS="$PAPD_LIBS -lpam"; AFPD_LIBS="$AFPD_LIBS -lpam"; use_pam_so=yes; compile_pam=yes; AC_DEFINE(USE_PAM)],
-			[use_pam_so=no; compile_pam=no]
-		)
+		AC_CHECK_LIB(pam, pam_set_item, [
+			PAPD_LIBS="$PAPD_LIBS -lpam"
+			AFPD_LIBS="$AFPD_LIBS -lpam"
+			use_pam_so=yes
+			compile_pam=yes
+			AC_DEFINE(USE_PAM)
+		])
 	fi
-else
-	use_pam_so=no
-	compile_pam=no
 fi
 
 AC_MSG_CHECKING([whether shadow support should be enabled])
@@ -659,7 +658,6 @@ AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(USE_COBALT, test x$sysv_style = xcobalt)
 AM_CONDITIONAL(USE_REDHAT, test x$sysv_style = xredhat)
 AM_CONDITIONAL(USE_SUSE, test x$sysv_style = xsuse)
-AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
 AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
 
 dnl --------------------- generate files
