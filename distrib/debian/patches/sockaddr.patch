@@ -1,0 +1,105 @@
+--- netatalk.cvs/etc/afpd/status.c	2000/08/02 19:28:05	1.2
++++ netatalk.debian/etc/afpd/status.c	2001/05/05 16:17:42
+@@ -13,6 +13,8 @@
+ #include <string.h>
+ #include <sys/types.h>
+ 
++#include <bits/sockaddr.h>
++
+ #ifdef BSD4_4
+ #include <sys/param.h>
+ #ifndef USE_GETHOSTID
+--- netatalk.cvs/etc/papd/ppd.c	2000/08/02 19:28:06	1.4
++++ netatalk.debian/etc/papd/ppd.c	2001/05/05 16:17:42
+@@ -14,6 +14,7 @@
+ #include <sys/types.h>
+ #include <sys/param.h>
+ #include <sys/time.h>
++#include <bits/sockaddr.h>
+ #include <netatalk/at.h>
+ #include <atalk/atp.h>
+ 
+--- netatalk.cvs/include/atalk/atp.h	2000/07/25 21:09:02	1.1.1.1
++++ netatalk.debian/include/atalk/atp.h	2001/05/05 16:17:43
+@@ -27,6 +27,7 @@
+ #include <sys/cdefs.h>
+ #include <sys/types.h>
+ #include <sys/time.h>
++#include <bits/sockaddr.h>
+ #include <netatalk/at.h>
+ #include <netatalk/endian.h>
+ 
+--- netatalk.cvs/include/atalk/util.h	2000/07/25 21:09:02	1.1.1.1
++++ netatalk.debian/include/atalk/util.h	2001/05/05 16:17:43
+@@ -4,6 +4,7 @@
+ #include <sys/cdefs.h>
+ #include <sys/types.h>
+ #include <unistd.h>
++#include <bits/sockaddr.h>
+ #include <netatalk/at.h>
+ 
+ extern unsigned const char _diacasemap[], _dialowermap[];
+--- netatalk.cvs/libatalk/asp/asp_close.c	2000/08/02 19:28:06	1.2
++++ netatalk.debian/libatalk/asp/asp_close.c	2001/05/05 16:17:43
+@@ -30,6 +30,7 @@
+ #include <sys/types.h>
+ #include <sys/time.h>
+ #include <sys/uio.h>
++#include <bits/sockaddr.h>
+ #include <netatalk/at.h>
+ #include <atalk/atp.h>
+ #include <atalk/asp.h>
+--- netatalk.cvs/libatalk/atp/atp_bufs.c	2000/08/02 19:28:06	1.2
++++ netatalk.debian/libatalk/atp/atp_bufs.c	2001/05/05 16:17:44
+@@ -36,6 +36,8 @@
+ #include <sys/types.h>
+ #include <sys/time.h>
+ 
++#include <bits/sockaddr.h>
++
+ #include <netatalk/at.h>
+ #include <atalk/atp.h>
+ #include "atp_internals.h"
+--- netatalk.cvs/libatalk/atp/atp_open.c	2000/08/02 19:28:06	1.2
++++ netatalk.debian/libatalk/atp/atp_open.c	2001/05/05 16:17:44
+@@ -31,6 +31,8 @@
+ #include <sys/time.h>
+ #include <sys/param.h>
+ 
++#include <bits/sockaddr.h>
++
+ #include <netatalk/at.h>
+ #include <netatalk/endian.h>
+ 
+--- netatalk.cvs/libatalk/atp/atp_rresp.c	2000/08/02 19:28:06	1.2
++++ netatalk.debian/libatalk/atp/atp_rresp.c	2001/05/05 16:17:44
+@@ -32,6 +32,8 @@
+ #include <errno.h>
+ #include <sys/uio.h>
+ 
++#include <bits/sockaddr.h>
++
+ #include <netatalk/at.h>
+ #include <atalk/atp.h>
+ #include <atalk/util.h>
+--- netatalk.cvs/libatalk/atp/atp_sresp.c	2000/08/02 19:28:06	1.2
++++ netatalk.debian/libatalk/atp/atp_sresp.c	2001/05/05 16:17:44
+@@ -32,6 +32,8 @@
+ #include <sys/uio.h>
+ #include <sys/time.h>
+ 
++#include <bits/sockaddr.h>
++
+ #include <netatalk/at.h>
+ #include <netatalk/endian.h>
+ 
+--- netatalk.cvs/libatalk/util/atalk_addr.c	2000/08/02 19:28:20	1.2
++++ netatalk.debian/libatalk/util/atalk_addr.c	2001/05/05 16:17:44
+@@ -3,6 +3,7 @@
+ #endif
+ 
+ #include <sys/types.h>
++#include <bits/sockaddr.h>
+ #include <netatalk/at.h>
+ #include <netatalk/endian.h>
+ #include <atalk/util.h>
