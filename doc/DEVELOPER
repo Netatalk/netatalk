@@ -129,8 +129,8 @@ Netatalk uses TCP Wrappers to authorize host access when using
 afpovertcp. It should be noted that if DDP is in use, the connection
 will still be allowed as TCP Wrappers do not impact DDP connections.
 
-7. PAM (Pluggable Authentication Modules for Linux) 
-Linux-PAM provides a flexible mechanism for authenticating
+7. PAM (Pluggable Authentication Modules) 
+PAM provides a flexible mechanism for authenticating
 users. PAM was invented by SUN Microsystems.
 
 Author: Andrew Morgan <morgan@linux.kernel.org>
@@ -141,9 +141,14 @@ administrator to choose how applications authenticate users.
 You can get the Linux PAM documentation and sources from
 http://www.kernel.org/pub/linux/libs/pam/
 
-8 Berkeley DB version 3
+Netatalk also supports other standard PAM implementations such as OpenPAM.
+
+8 Berkeley DB
 Berkeley DB is a programmatic toolkit that provides fast, reliable,
 scalable, and mission-critical database support to software
-developers. BDB 3 can downloaded from
+developers. BDB can downloaded from
 http://www.sleepycat.com/download.html
 Netatalk's CNID database uses the library and header files from BDB.
+Currently, Netatalk supports BDB 3.0.17, 3.2.9, 3.3.11, 4.0.14, and 4.1.25.
+The recommended version is 3.3.11 as that is the version on which most
+testing has been done.
