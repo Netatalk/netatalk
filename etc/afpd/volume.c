@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.47 2003-01-31 17:38:02 didg Exp $
+ * $Id: volume.c,v 1.48 2003-03-05 09:41:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -980,7 +980,7 @@ int		*buflen;
         case VOLPBIT_ATTR :
             ashort = 0;
 #ifdef CNID_DB
-            if (0 == (vol->v_flags & AFPVOL_NOFILEID)) {
+            if (0 == (vol->v_flags & AFPVOL_NOFILEID) && vol->v_db != NULL) {
                 ashort = VOLPBIT_ATTR_FILEID;
             }
 #endif /* CNID_DB */
@@ -1179,6 +1179,7 @@ int		ibuflen, *rbuflen;
     struct dir	*dir;
     int		len, ret, buflen;
     u_int16_t	bitmap;
+    int         opened = 0;
 
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
@@ -1236,7 +1237,10 @@ int		ibuflen, *rbuflen;
         dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
         volume->v_dir = volume->v_root = dir;
         volume->v_flags |= AFPVOL_OPEN;
+        volume->v_db = NULL;
+        opened = 1;
     }
+    
 #ifdef FORCE_UIDGID
     set_uidgid ( volume );
 #endif /* FORCE_UIDGID */
@@ -1246,6 +1250,28 @@ int		ibuflen, *rbuflen;
         goto openvol_err;
     }
 
+    if ( chdir( volume->v_path ) < 0 ) {
+        ret = AFPERR_PARAM;
+        goto openvol_err;
+    }
+    curdir = volume->v_dir;
+
+#ifdef CNID_DB
+    if (opened) {
+        if (volume->v_dbpath)
+            volume->v_db = cnid_open (volume->v_dbpath, volume->v_umask);
+        if (volume->v_db == NULL)
+            volume->v_db = cnid_open (volume->v_path, volume->v_umask);
+        if (volume->v_db == NULL) {
+           /* config option? 
+            * - mount the volume readonly
+            * - return an error
+            * - read/write with other scheme
+            */
+        }
+    }
+#endif /* CNID_DB */
+
     buflen = *rbuflen - sizeof( bitmap );
     if (( ret = getvolparams( bitmap, volume, &st,
                               rbuf + sizeof(bitmap), &buflen )) != AFP_OK ) {
@@ -1254,19 +1280,6 @@ int		ibuflen, *rbuflen;
     *rbuflen = buflen + sizeof( bitmap );
     bitmap = htons( bitmap );
     memcpy(rbuf, &bitmap, sizeof( bitmap ));
-
-    if ( chdir( volume->v_path ) < 0 ) {
-        ret = AFPERR_PARAM;
-        goto openvol_err;
-    }
-    curdir = volume->v_dir;
-
-#ifdef CNID_DB
-    if (volume->v_dbpath)
-        volume->v_db = cnid_open (volume->v_dbpath, volume->v_umask);
-    if (volume->v_db == NULL)
-        volume->v_db = cnid_open (volume->v_path, volume->v_umask);
-#endif /* CNID_DB */
 
 #ifndef CNID_DB
     /*
@@ -1283,6 +1296,12 @@ int		ibuflen, *rbuflen;
     return( AFP_OK );
 
 openvol_err:
+#ifdef CNID_DB
+    if (opened && volume->v_db != NULL) {
+        cnid_close(volume->v_db);
+        volume->v_db = NULL;
+    }
+#endif
     *rbuflen = 0;
     return ret;
 }
