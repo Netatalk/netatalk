@@ -1,5 +1,16 @@
-# Makefile.am for man/man5/
+## Makefile.am for man/man5/
+
+SUFFIXES = .tmpl .
+
+.tmpl:
+	sed -e s@:SBINDIR:@${sbindir}@ \
+	    -e s@:BINDIR:@${bindir}@ \
+	    -e s@:ETCDIR:@${CONFIG_DIR}@ \
+	    -e s@:LIBDIR:@${libdir}@ \
+	    <$^ >$@
 
 man_MANS = AppleVolumes.default.5 netatalk.conf.5 
+
+CLEANFILES = AppleVolumes.default.5 netatalk.conf.5
 
 EXTRA_DIST = $(man_MANS) 
