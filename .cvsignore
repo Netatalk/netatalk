@@ -1,0 +1,14 @@
+Makefile
+Makefile.in
+stamp-h
+stamp-h.in
+config.*
+configure
+aclocal.m4
+libtool
+*.rpm
+*.deb
+*.dsc
+*.changes
+*.tar.gz
+*.diff.gz
