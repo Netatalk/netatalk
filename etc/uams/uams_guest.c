@@ -1,12 +1,12 @@
 /*
- * $Id: uams_guest.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: uams_guest.c,v 1.6 2001-06-27 18:22:20 uhees Exp $
  *
  * (c) 2001 (see COPYING)
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif /* HAVE_CONFIG_H &/
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
