@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.23 2001-07-10 13:38:13 rufustfirefly Exp $
+ * $Id: file.c,v 1.24 2001-07-12 23:18:12 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -139,8 +139,8 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 	    break;
 
 	case FILPBIT_PDID :
-	    memcpy(data, &dir->d_did, sizeof( int ));
-	    data += sizeof( int );
+	    memcpy(data, &dir->d_did, sizeof( u_int32_t ));
+	    data += sizeof( u_int32_t );
 	    break;
 
 	case FILPBIT_CDATE :
