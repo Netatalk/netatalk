@@ -46,12 +46,13 @@
 #define OPT_CREATE  (1 << 1)
 #define OPT_FORCE   (1 << 2)
 #define OPT_ADDUSER (1 << 3)
+#define OPT_NOCRACK (1 << 4)
 
 #define PASSWD_ILLEGAL '*'
 
 #define FORMAT  ":****************:****************:********\n"
 #define FORMAT_LEN 44
-#define OPTIONS "cafu:p:"
+#define OPTIONS "cafun:p:"
 #define UID_START 100
 
 #define HEXPASSWDLEN 16
@@ -173,7 +174,8 @@ found_entry:
   memcpy(password, passwd, sizeof(password));
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
-  if ((passwd = FascistCheck(password, _PATH_CRACKLIB))) {
+  if ( (!(flags & OPT_NOCRACK)) and 
+       (passwd = FascistCheck(password, _PATH_CRACKLIB)) ) {
       fprintf(stderr, "Error: %s\n", passwd);
       err = -1;
       goto update_done;
@@ -259,7 +261,15 @@ int main(int argc, char **argv)
   flags = ((uid = getuid()) == 0) ? OPT_ISROOT : 0;
 
   if (((flags & OPT_ISROOT) == 0) && (argc > 1)) {
-    fprintf(stderr, "Usage: afppasswd\n");
+    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
+    fprintf(stderr, "  -a        add a new user\n");
+    fprintf(stderr, "  -c        create and initialize password file or specific user\n");
+    fprintf(stderr, "  -f        force an action\n");
+#ifdef USE_CRACKLIB
+    fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
+#endif
+    fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
+    fprintf(stderr, "  -p path   path to afppasswd file\n");
     return -1;
   }
 
@@ -276,6 +286,11 @@ int main(int argc, char **argv)
     case 'u':  /* minimum uid to use. default is 100 */
       uid_min = atoi(optarg);
       break;
+#ifdef USE_CRACKLIB
+    case 'n': /* disable CRACKLIB check */
+      flags |= OPT_NOCRACK;
+      break;
+#endif
     case 'p': /* path to afppasswd file */
       path = optarg;
       break;
@@ -287,7 +302,11 @@ int main(int argc, char **argv)
 
   if (err || (optind + ((flags & OPT_CREATE) ? 0 : 
 			(flags & OPT_ISROOT)) != argc)) {
+#ifdef USE_CRACKLIB
+    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
+#else
     fprintf(stderr, "Usage: afppasswd [-acf] [-u minuid] [-p path] [username]\n");
+#endif
     return -1;
   }
 
