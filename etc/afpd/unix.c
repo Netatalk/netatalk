@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.22 2001-10-09 04:03:33 jmarcus Exp $
+ * $Id: unix.c,v 1.23 2001-10-10 16:05:37 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -89,7 +89,7 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
       ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail ));
 #endif /* ultrix */
 
-    // see similar block above comments
+    /* see similar block above comments */
     if ( *btotal > maxVolSpace / *bsize ) {
         *btotal = maxVolSpace;
     } else {
