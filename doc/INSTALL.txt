@@ -47,10 +47,6 @@ This is required to enable DHX login support.
 
 Get everything at http://www.openssl.org/ 
 
-
-You can get the Linux PAM documentation and sources from
-http://www.kernel.org/pub/linux/libs/pam/
-
 6. TCP Wrappers 
 Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
 programs log the client host name of incoming telnet, ftp, rsh,
@@ -64,8 +60,9 @@ TCP Wrappers can be gotten at ftp://ftp.porcupine.org/pub/security/
 Linux-PAM is a suite of shared libraries that enable the local system
 administrator to choose how applications authenticate users.
 
-Information on Linux-PAM can be retrieved from
-http://kernel.stuph.org/pub/linux/libs/pam/
+You can get the Linux PAM documentation and sources from
+http://www.kernel.org/pub/linux/libs/pam/
+
 
 Installing Netatalk
 ===================
@@ -309,7 +306,7 @@ holding 254 nodes. Don't use this.
 
 Phase 2 is the new version. It allows a configurable network range
 between the numbers 1 and 65279, each network capable of hosting 253
-nodes for a total of 16, 515, 587 Appletalk interfaces. That's a lot
+nodes for a total of 16,515,587 Appletalk interfaces. That's a lot
 of iMacs. :-)
 
 Within an Appletalk network addressing is a Network:Node:Socket
@@ -317,7 +314,7 @@ triplet. The socket number is general dropped because nothing uses the
 information. 
 
 Using ethernet and phase 2 the network number can be singular, '1' or
-a range 1-20. Node assignment is the responsibility of the clients so
+a range, '1-20'. Node assignment is the responsibility of the clients so
 you don't have to worry about it. The range of 65280-65534 is called
 the startup range and is used by the Mac when it is on a network
 without any routers, you probably shouldn't publish a network withing
