@@ -27,9 +27,9 @@ $START_CMD = '/usr/local/etc/rc.d/netatalk.sh start';
 # /bin/ps -eflouid,pid,ppid,comm
 $PS_CMD             = '@PS@ -axouser,pid,ppid,command';
 $GREP               = '@GREP@';
-$DB_STAT            = '@DB3_PATH@db3_stat';
-$DB_RECOVER         = '@DB3_PATH@bin/db3_recover';
-$DB_VERIFY          = '@DB3_PATH@db3_verify';
+$DB_STAT            = '@DB3_PATH@bin/db_stat';
+$DB_RECOVER         = '@DB3_PATH@bin/db_recover';
+$DB_VERIFY          = '@DB3_PATH@bin/db_verify';
 $APPLE_VOLUMES_FILE = '@PKGCONFDIR@/AppleVolumes.default';
 ## End edit section
 
