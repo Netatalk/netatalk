@@ -23,14 +23,26 @@ SUFFIXES = .c .so
 	$(LD) -shared -o $@ $*.o $(LIBS)
 
 #
-# create symbolic links:
+# create symbolic links (conditionally, depending on when PAM is used):
 #
+
+if USE_PAM
 
 uams_clrtxt.so:
 	$(LN_S) uams_pam.so uams_clrtxt.so
 
 uams_dhx.so:
 	$(LN_S) uams_dhx_pam.so uams_dhx.so
+
+else
+
+uams_clrtxt.so:
+	$(LN_S) uams_passwd.so uams_clrtxt.so
+
+uams_dhx.so:
+	$(LN_S) uams_dhx_passwd.so uams_dhx.so
+
+endif
 
 #
 # install/install-strip:
