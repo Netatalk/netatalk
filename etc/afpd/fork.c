@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.17 2002-01-20 01:32:45 jmarcus Exp $
+ * $Id: fork.c,v 1.18 2002-01-20 01:34:40 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -209,7 +209,7 @@ const u_int16_t     attrbits;
 #ifdef USE_LASTDID
                 aint = htonl(( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff ));
 #else /* USE_LASTDID */
-                lstp = lstat(upath, &lst) < 0 ? st : &lst;
+                lstp = lstat(upath, &lst) < 0 ? &st : &lst;
 #ifdef DID_MTAB
                 aint = htonl( afpd_st_cnid ( lstp ) );
 #else /* DID_MTAB */
