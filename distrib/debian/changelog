@@ -12,8 +12,9 @@ netatalk (1.5pre4-1) unstable; urgency=low
   * Removed comment about Debian specific changes from debian/copyright.
   * Build with libssl support. (Closes: #48871)
   * Added libssl096-dev to Build-Depends.
+  * Ship FAQ in /usr/share/doc/netatalk
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Thu, 22 Feb 2001 10:22:30 +0100
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Thu, 22 Feb 2001 20:44:41 +0100
 
 netatalk (1.5pre3-1) unstable; urgency=low
 
