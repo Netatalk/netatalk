@@ -32,12 +32,7 @@
 #include <sys/file.h>
 #endif
 #include <fcntl.h>
-#ifdef HAVE_CDEFS_H
-#include <cdefs.h>
-#endif
-#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
-#endif
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <netatalk/endian.h>
