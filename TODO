@@ -33,9 +33,11 @@ desired features (in no particular order):
         utmp/wtmp support
 		
     papd:
-	DHX authenticated printing logins
-	update man pages for authentication options
-	 
+	DHX authenticated printing logins (does a real Appleshare server
+		do this?)
+	Better binary transparency.  Papd barfs on some binary postscript
+		files right now.
+	Change to samba-style config file.	 
         
 things to fix:
         cleaner separation of layers.
