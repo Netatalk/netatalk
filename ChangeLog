@@ -1,5 +1,30 @@
-($Id: ChangeLog,v 1.13 2001-02-28 16:53:23 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.14 2001-03-06 23:08:01 lancel Exp $)
 
+2001-03-06 13:40  Lance Levsen <l.levsen@printwest.com>
+
+	* FAQ, README, README.ASUN: Moved FAQ, AND READMEs to ./INSTALL
+
+	* INSTALL/INSTALL.txt: Added ./INSTALL/INSTALL.txt
+
+	* INSTALL/FAQ, README, README.ASUN: Moved README.ASUN, README,
+	FAQ to ./INSTALL
+
+2001-03-06 11:47  Andrew Morgan <morgan@orst.edu>
+
+	* TODO: A few updates to papd entry.
+
+	* README.MORGAN: Removed README.MORGAN because that information in
+	now in papd's man page.
+
+	* man/man8/papd.8.tmpl: Updated papd man page to match current
+	code.  Added descriptions of authenticated printing and other new
+	papd options.
+
+2001-02-28 15:43  Marc J. Millar <itlm019@mailbox.ucdavis.edu>
+
+	* libatalk/adouble/ad_open.c: AppleDouble directory creation
+	debugging
+	
 2001-02-28  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* etc/afpd/directory.c, etc/afpd/file.c, etc/afpd/filedir.c,
