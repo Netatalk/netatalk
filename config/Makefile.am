@@ -5,14 +5,14 @@ SUFFIXES = .tmpl .
 GENFILES = afpd.conf
 TMPLFILES = $(foreach file,$(GENFILES),$(file).tmpl)
 CONFFILES = AppleVolumes.default AppleVolumes.system \
-	atalkd.conf netatalk.conf netatalk.pamd papd.conf
+	atalkd.conf netatalk.conf papd.conf
 PAMFILES = netatalk.pamd
 
 EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 
 CLEANFILES += $(GENFILES)
 
-pkgconf_DATA= @OVERWRITE@
+pkgconf_DATA = @OVERWRITE@
 pkgconfdir = @PKGCONFDIR@
 
 #
@@ -36,5 +36,9 @@ pamdir   = $(sysconfdir)/pam.d
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pamdir)
 	$(INSTALL_DATA) netatalk.pamd $(DESTDIR)$(pamdir)/netatalk
+
+else
+
+install-data-local:
 
 endif 
