@@ -67,8 +67,10 @@ Libtool encapsulates the platform specific dependencies for the
 creation of libraries. It determines if the local platform can support
 shared libraries or if it only supports static libraries.
 
+Netatalk currently requires libtool 1.4 or higher (1.4b for OpenBSD).
+
 Documentation: http://www.gnu.org/software/libtool/
-Program: (see the GNU mirrors) /gnu/libtool/libtool-1.3.5.tar.gz
+Program: (see the GNU mirrors) /gnu/libtool/libtool-1.4.tar.gz
 
 2. GNU m4
 GNU m4 is an implementation of the Unix macro processor. It reads
@@ -83,13 +85,13 @@ Autoconf is a package of m4 macros that produce shell scripts to
 configure source code packages.
 
 Documentation: http://www.gnu.org/software/autoconf/
-Program: (see the GNU mirrors) /gnu/autoconf/autoconf-2.13.tar.gz
+Program: (see the GNU mirrors) /gnu/autoconf/autoconf-2.52.tar.gz
 
 4. Automake
 Automake is a tool that generates  'Makefile.in' files.
 
 Documentation: http://www.gnu.org/software/automake/
-Program: (see the GNU mirrors) /gnu/automake/automake-1.4.tar.gz
+Program: (see the GNU mirrors) /gnu/automake/automake-1.5.tar.gz
 
 Optional
 ========

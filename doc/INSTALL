@@ -8,9 +8,13 @@ Netatalk is known to run on at least five operating systems:
 	Solaris	2.5-8		Sparc
 	Linux	1.3.x,2.x	PC
 	FreeBSD	2.2-current	PC		after 12 Sept 96
+	NetBSD	1.3		PC
+	OpenBSD	2.2		PC
 	SunOS	4.1+		Sparc		kernel must have VDDRV
 						option installed
 	Ultrix	4.[1-4]		3100,5000
+	Tru64	4.0		Alpha		afpd only
+
 
 
 For generic installation instructions see the file INSTALL in the main
@@ -61,7 +65,7 @@ These are:
      This is required to enable DHX login support.
      Get everything at http://www.openssl.org/ 
 
---enable-lastdid: Recreate version 37b behaviour where
+--with-lastdid: Recreate version 37b behaviour where
      directory id's are incrementally calculated versus the new
      hash method. Unfortunately for machines that have a lot of
      devices, and/or a lot of inodes the hash can fail with
