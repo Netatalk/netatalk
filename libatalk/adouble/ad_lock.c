@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.7 2003-01-16 20:06:33 didg Exp $
+ * $Id: ad_lock.c,v 1.8 2003-01-16 21:18:15 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.

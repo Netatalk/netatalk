@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.5 2003-01-16 20:06:33 didg Exp $
+ * $Id: ad_write.c,v 1.6 2003-01-16 21:18:15 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.

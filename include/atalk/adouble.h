@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.13 2003-01-16 20:06:33 didg Exp $
+ * $Id: adouble.h,v 1.14 2003-01-16 21:18:15 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
