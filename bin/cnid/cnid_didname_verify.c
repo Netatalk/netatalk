@@ -7,7 +7,7 @@
  * Modified to check the consistency of didname.db by
  * Joe Clarke <marcus@marcuscom.com>
  *
- * $Id: cnid_didname_verify.c,v 1.5 2001-12-10 21:04:46 jmarcus Exp $
+ * $Id: cnid_didname_verify.c,v 1.6 2001-12-10 23:45:53 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -136,7 +136,7 @@ char *argv[];
         dbenv->set_errpfx(dbenv, progname);
     }
 
-#ifdef DB_VERSION_MINOR > 1
+#if DB_VERSION_MINOR > 1
     if (nflag && (ret = dbenv->set_mutexlocks(dbenv, 0)) != 0) {
         dbenv->err(dbenv, ret, "set_mutexlocks");
         goto shutdown;
