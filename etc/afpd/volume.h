@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.13 2002-08-31 05:35:10 jmarcus Exp $
+ * $Id: volume.h,v 1.14 2002-09-29 18:44:16 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -42,7 +42,7 @@ struct vol {
     int			v_qfd;
 #endif /*__svr4__*/
     char		*v_gvs;
-    u_int32_t		v_time;
+    time_t		v_time;
     int			v_lastdid;
     u_int16_t		v_vid;
     void                *v_nfsclient;
@@ -148,6 +148,7 @@ extern int              codepage_init __P((struct vol *, const int,
 extern int              codepage_read __P((struct vol *, const char *));
 extern union codepage_val codepage_find __P(());
 extern void             setvoltime __P((AFPObj *, struct vol *));
+extern int              pollvoltime __P((AFPObj *));
 
 /* FP functions */
 extern int	afp_openvol      __P((AFPObj *, char *, int, char *, int *));

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.34 2002-08-31 05:35:10 jmarcus Exp $
+ * $Id: volume.c,v 1.35 2002-09-29 18:44:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -81,6 +81,7 @@ static int		lastvid = 0;
 static char		*Trash = "\02\024Network Trash Folder";
 #endif /* CNID_DB */
 static struct extmap	*extmap = NULL, *defextmap = NULL;
+static int              extmap_cnt;
 
 #define VOLOPT_ALLOW      0  /* user allow list */
 #define VOLOPT_DENY       1  /* user deny list */
@@ -591,26 +592,39 @@ char		*ext, *type, *creator;
 int			user;
 {
     struct extmap	*em;
+    int                 cnt;
 
-    for ( em = extmap; em; em = em->em_next ) {
-        if ( strdiacasecmp( em->em_ext, ext ) == 0 ) {
+    if (extmap == NULL) {
+        if (( extmap = calloc(1, sizeof( struct extmap ))) == NULL ) {
+            LOG(log_error, logtype_afpd, "setextmap: calloc: %s", strerror(errno) );
+            return;
+        }
+
+    }
+    ext++;
+    for ( em = extmap, cnt = 0; em->em_ext; em++, cnt++) {
+        if ( (strdiacasecmp( em->em_ext, ext )) == 0 ) {
             break;
         }
     }
 
-    if ( em == NULL ) {
-        if (( em =
-                    (struct extmap *)malloc( sizeof( struct extmap ))) == NULL ) {
-            LOG(log_error, logtype_afpd, "setextmap: malloc: %s", strerror(errno) );
+    if ( em->em_ext == NULL ) {
+        if (!(extmap  = realloc( extmap, sizeof( struct extmap ) * (cnt +2))) ) {
+            LOG(log_error, logtype_afpd, "setextmap: realloc: %s", strerror(errno) );
             return;
         }
-        em->em_next = extmap;
-        extmap = em;
+        (extmap +cnt +1)->em_ext = NULL;
+        em = extmap +cnt;
     } else if ( !user ) {
         return;
     }
+    if (em->em_ext)
+    	free(em->em_ext);
 
-    strcpy( em->em_ext, ext );
+    if (!(em->em_ext = strdup(  ext))) {
+        LOG(log_error, logtype_afpd, "setextmap: strdup: %s", strerror(errno) );
+        return;
+    }
 
     if ( *type == '\0' ) {
         memcpy(em->em_type, "????", sizeof( em->em_type ));
@@ -623,10 +637,36 @@ int			user;
         memcpy(em->em_creator, creator, sizeof( em->em_creator ));
     }
 
-    if ( strcmp( ext, "." ) == 0 ) {
+    if ( !*ext ) {
         defextmap = em;
     }
 }
+
+/* -------------------------- */
+static int extmap_cmp(const void *map1, const void *map2)
+{
+    const struct extmap *em1 = map1;
+    const struct extmap *em2 = map2;
+    return strdiacasecmp(em1->em_ext, em2->em_ext);
+}
+
+static void sortextmap( void)
+{
+    struct extmap	*em;
+
+    if ((em = extmap) == NULL) {
+        return;
+    }
+    extmap_cnt = 0;
+    while (em->em_ext) {
+        em++;
+        extmap_cnt++;
+    }
+    if (extmap_cnt) {
+        qsort(extmap, extmap_cnt, sizeof(struct extmap), extmap_cmp);
+    }
+}
+
 
 /*
  * Read a volume configuration file and add the volumes contained within to
@@ -785,6 +825,7 @@ struct passwd *pwent;
         }
     }
     volfree(save_options, NULL);
+    sortextmap();
     if ( fclose( fp ) != 0 ) {
         LOG(log_error, logtype_afpd, "readvolfile: fclose: %s", strerror(errno) );
     }
@@ -1289,30 +1330,64 @@ struct vol *getvolbyvid(const u_int16_t vid )
     return( vol );
 }
 
+/* ------------------------ */
+static int ext_cmp_key(const void *key, const void *obj)
+{
+    const char          *p = key;
+    const struct extmap *em = obj;
+    return strdiacasecmp(p, em->em_ext);
+}
 struct extmap *getextmap(const char *path)
 {
-    char	*p;
-    struct extmap	*em;
+    char	  *p;
+    struct extmap *em;
 
     if (( p = strrchr( path, '.' )) == NULL ) {
         return( defextmap );
     }
-
-    for ( em = extmap; em; em = em->em_next ) {
-        if ( strdiacasecmp( em->em_ext, p ) == 0 ) {
-            break;
-        }
-    }
-    if ( em == NULL ) {
+    p++;
+    if (!*p || !extmap_cnt) {
         return( defextmap );
-    } else {
+    }
+    em = bsearch(p, extmap, extmap_cnt, sizeof(struct extmap), ext_cmp_key);
+    if (em) {
         return( em );
+    } else {
+        return( defextmap );
     }
 }
 
 struct extmap *getdefextmap(void)
 {
     return( defextmap );
+}
+
+/*
+   poll if a volume is changed by other processes.
+*/
+int  pollvoltime(obj)
+AFPObj *obj;
+{
+    struct vol	     *vol;
+    struct timeval   tv;
+    struct stat      st;
+    
+    if (!(afp_version > 21 && obj->options.server_notif)) 
+         return 0;
+
+    if ( gettimeofday( &tv, 0 ) < 0 ) 
+         return 0;
+
+    for ( vol = volumes; vol; vol = vol->v_next ) {
+        if ( (vol->v_flags & AFPVOL_OPEN)  && vol->v_time + 30 < tv.tv_sec) {
+            if ( !stat( vol->v_path, &st ) && vol->v_time != st.st_mtime ) {
+                vol->v_time = st.st_mtime;
+                obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 void setvoltime(obj, vol )

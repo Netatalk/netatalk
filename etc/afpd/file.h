@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.9 2002-08-21 07:52:03 didg Exp $
+ * $Id: file.h,v 1.10 2002-09-29 18:44:16 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -66,8 +66,7 @@ extern const u_char	ufinderi[];
 #define ATTRBIT_SETCLR	  (1<<15) /* set/clear bits (d) */
 
 struct extmap {
-    struct extmap	*em_next;
-    char		em_ext[ MAXPATHLEN + 1];
+    char		*em_ext;
     char		em_creator[ 4 ];
     char		em_type[ 4 ];
 };
