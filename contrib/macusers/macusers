@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+
+# Written for linux; may have to be modified for your brand of Unix.
+
+$MAC_PROCESS="afpd";
+$PS_STR="-ef";
+$ASIP_PORT="afpovertcp";
+
+# Change to 0 if you don't have lsof
+$LSOF=1;
+
+if ($LSOF == 1 )
+{
+  open(LSOF,"lsof -i | grep $ASIP_PORT |");
+
+  while(<LSOF>)
+  {
+    if ($_ !~ /$ASIP_PORT/)
+    {
+      next;
+    }
+    $_=~/\w+\s+(\d+).*->([\w-]+).*/;
+    $pid=$1; $host=$2;
+    $mac{$pid}=$host;
+  }
+
+  close(LSOF);
+  print "PID      UID      Usercode Name                 Logintime Mac\n";
+}
+else
+{
+  print "PID      UID      Usercode Name                 Logintime\n";
+}
+
+open(PS," ps $PS_STR |") || die "cannot do ps";
+
+while(<PS>)
+{
+  if ($_ !~ /$MAC_PROCESS/ )
+  {
+    next;
+  }
+  $_=~ /\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)/;
+  $user=$1; $pid=$2; $ppid=$3; $time=$4;
+  if ($ppid != 1)
+  {
+    ($t,$t,$uid,$t,$t,$t,$name,$t,$t)=getpwnam($user);
+    printf "%-8d %-8d %-8s %-20s %-9s %s\n",$pid,$uid,$user,$name,$time,$mac{$pid};
+  }
+}
+
+close(PS);  
