@@ -1,4 +1,6 @@
 /*
+ * $Id: ofork.c,v 1.3 2001-03-21 14:36:36 rufustfirefly Exp $
+ *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -168,11 +170,23 @@ of_alloc(vol, dir, path, ofrefnum, eid, ad)
     of = oforks[of_refnum];
 
     /* see if we need to allocate space for the adouble struct */
-    if ((of->of_ad = ad ? ad : 
-	 calloc(1, sizeof(struct adouble))) == NULL) {
-	syslog( LOG_ERR, "of_alloc: malloc: %m" );
-	return NULL;
+    if (!ad) {
+        ad = malloc( sizeof( struct adouble ) );
+        if (!ad) {
+            syslog( LOG_ERR, "of_alloc: malloc: %m" );
+            return NULL;
+        }
+
+        /* initialize to zero. This is important to ensure that
+           ad_open really does reinitialize the structure. */
+        memset( ad, 0, sizeof( struct adouble ) );
+    } else {
+        /* Increase the refcount on this struct adouble. This is
+           decremented again in oforc_dealloc. */
+        ad->ad_refcount++;
     }
+
+    of->of_ad = ad;
 
     of->of_vol = vol;
     of->of_dir = dir;
@@ -252,9 +266,11 @@ void of_dealloc( of )
 
     oforks[ of->of_refnum ] = NULL;
     free( of->of_name );
-    /* free of_ad */
-    if ((of->of_ad->ad_hf.adf_fd == -1) && 
-	(of->of_ad->ad_df.adf_fd == -1)) {
+
+    /* decrease refcount */
+    of->of_ad->ad_refcount--;
+
+    if ( of->of_ad->ad_refcount <= 0) {
       free( of->of_ad);
     } else {/* someone's still using it. just free this user's locks */
       ad_unlock(of->of_ad, of->of_refnum);

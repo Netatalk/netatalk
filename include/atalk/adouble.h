@@ -1,4 +1,5 @@
 /*
+ * $Id: adouble.h,v 1.5 2001-03-21 14:36:36 rufustfirefly Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -181,6 +182,7 @@ struct adouble {
     struct ad_entry	ad_eid[ ADEID_MAX ];
     struct ad_fd	ad_df, ad_hf;
     int                 ad_flags, ad_inited;
+    int             ad_refcount; /* used in afpd/ofork.c */
 #ifdef USE_MMAPPED_HEADERS
     char                *ad_data;
 #else

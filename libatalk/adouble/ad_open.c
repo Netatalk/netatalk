@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.6 2001-03-14 15:57:45 rufustfirefly Exp $
+ * $Id: ad_open.c,v 1.7 2001-03-21 14:36:36 rufustfirefly Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -602,6 +602,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	ad->ad_data = MAP_FAILED;
 #endif
         ad->ad_inited = AD_INITED;
+        ad->ad_refcount = 1;
     }
 
     if (adflags & ADFLAGS_DF) { 
