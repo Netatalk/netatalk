@@ -1,7 +1,7 @@
 Basic Installation
 ==================
 
-Netatalk is known to run on at least five operating systems:
+Netatalk is known to run on these operating systems:
 
 	OS	Versions	Hardware	Notes
 	--	--------	--------	-----
@@ -15,10 +15,9 @@ Netatalk is known to run on at least five operating systems:
 	Ultrix	4.[1-4]		3100,5000
 	Tru64	4.0		Alpha		afpd only
 
-See ./doc/README.platforms for more information.
+See README.platforms for more information.
 
 Quickly:
-$> ./autogen.sh   (only needed for installs from CVS)
 $> ./configure [options]
 $> make
 $> make install
@@ -84,10 +83,9 @@ run for you.
 2. ./configure 
 This step reads the options to the ./configure program and checks your
 system against the requirements of those options. It generally fails
-if your system doesn't meet the requirements. You should read check
-the DEVELOPER file because some of these options require external
-sources to function correctly. (PAM, SSL, Berkeley DB3, TCP Wrappers,
-etc).
+if your system doesn't meet the requirements. You should read the
+DEVELOPER file because some of these options require external sources
+to function correctly. (PAM, OpenSSL, Berkeley DB3, TCP Wrappers, etc).
 
 Netatalk options to the ./configure script: Use ./configure --help for
 a complete list.
@@ -181,5 +179,5 @@ Note: GNU make is required to build netatalk.
 
 ----------------------------------------------------------------
 
-4. make install
-Install the programs in the places specified by the ./configure process.
+4. make install Install the programs, scripts and man pages in the
+places specified by the ./configure process.
