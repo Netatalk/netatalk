@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.20 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: uams_dhx_pam.c,v 1.21 2002-02-05 20:42:04 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -345,8 +345,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
     if (( dhxpwd = uam_getname(buf, i)) == NULL ) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: User entered a null value -- %s",
-		  strerror(errno));
+           LOG(log_info, logtype_default, "uams_dhx_pam.c: unknown username");
     /* Log Entry */
 	return AFPERR_PARAM;
     }
@@ -431,8 +430,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 			  &pamh);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %s",
-		  pam_strerror(pamh,PAM_error), strerror(errno));
+           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+		  pam_strerror(pamh,PAM_error));
     /* Log Entry */
       goto logincont_err;
     }
@@ -445,8 +444,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
       if (PAM_error == PAM_MAXTRIES) 
 	err = AFPERR_PWDEXPR;
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %s",
-		  pam_strerror(pamh, PAM_error), strerror(errno));
+           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
     }      
@@ -460,8 +459,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 	err = AFPERR_PWDCHNG;
 #endif
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %s",
-		  pam_strerror(pamh, PAM_error), strerror(errno));
+           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
     }
@@ -472,8 +471,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %s",
-		  pam_strerror(pamh, PAM_error), strerror(errno));
+           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
     }
@@ -481,8 +480,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_error = pam_open_session(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %s",
-		  pam_strerror(pamh, PAM_error), strerror(errno));
+           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
     }
