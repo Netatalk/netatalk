@@ -2,8 +2,8 @@ Source: netatalk
 Section: net
 Priority: extra
 Maintainer: Sebastian Rittau <srittau@jroger.in-berlin.de>
-Standards-Version: 3.2.1.0
-Build-Depends: debhelper (>= 3.0.0), libwrap0-dev, libpam0g-dev, libssl096-dev
+Standards-Version: 3.5.2.0
+Build-Depends: debhelper (>= 3.0.0), libdb2-dev, libwrap0-dev, libpam0g-dev, libssl096-dev
 
 Package: netatalk
 Architecture: any
