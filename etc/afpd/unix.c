@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.33 2002-04-14 10:53:37 srittau Exp $
+ * $Id: unix.c,v 1.34 2002-05-10 21:35:41 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -114,6 +114,9 @@ mode_t	bits;
     return( mbits );
 }
 
+/* --------------------------------
+    cf AFP 3.0 page 63
+*/
 void utommode( stat, ma )
 struct stat		*stat;
 struct maccess	*ma;
@@ -142,10 +145,14 @@ struct maccess	*ma;
      * There are certain things the mac won't try if you don't have
      * the "owner" bit set, even tho you can do these things on unix wiht
      * only write permission.  What were the things?
+     * 
+     * FIXME and so what ?
      */
+#if 0
     if ( ma->ma_user & AR_UWRITE ) {
         ma->ma_user |= AR_UOWN;
     }
+#endif    
 }
 
 
@@ -196,16 +203,21 @@ u_char	bits;
     return( mode );
 }
 
+/* ----------------------------------
+   from the finder's share windows (menu--> File--> sharing...)
+   and from AFP 3.0 spec page 63 
+   the mac mode should be save somewhere 
+*/
 mode_t mtoumode( ma )
 struct maccess	*ma;
 {
     mode_t		mode;
 
     mode = 0;
-    mode |= mtoubits( ma->ma_owner );
+    mode |= mtoubits( ma->ma_owner |ma->ma_world);
     mode = mode << 3;
 
-    mode |= mtoubits( ma->ma_group );
+    mode |= mtoubits( ma->ma_group |ma->ma_world);
     mode = mode << 3;
 
     mode |= mtoubits( ma->ma_world );
