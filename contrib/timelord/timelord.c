@@ -148,6 +148,9 @@ main( ac, av )
     openlog( p, LOG_NDELAY|LOG_PID, LOG_DAEMON );
 #endif ultrix
 
+    /* allocate memory */
+    memset (&sat.sat_addr, 0, sizeof (sat.sat_addr));
+
     if (( atp = atp_open( ATADDR_ANYPORT, &sat.sat_addr )) == NULL ) {
 	syslog( LOG_ERR, "main: atp_open: %m" );
 	exit( 1 );
