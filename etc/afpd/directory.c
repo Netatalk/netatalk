@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.47 2002-10-13 16:12:31 didg Exp $
+ * $Id: directory.c,v 1.48 2002-10-14 06:30:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -943,7 +943,8 @@ char	**cpath;
                     	/* dir is not valid anymore 
                     	   we delete dir from the cache and abort.
                     	*/
-                    	dir_invalidate(vol, dir);
+                    	if ( dir->d_did != DIRDID_ROOT_PARENT) 
+                    	    dir_invalidate(vol, dir);
                         return NULL;
                     }
                     cdir = extenddir( vol, dir, &ret );
