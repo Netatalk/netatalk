@@ -13,6 +13,8 @@ SUFFIXES = .tmpl .
 
 man_MANS = afpd.8 atalkd.8 pap.8 papd.8 papstatus.8 psf.8
 
-CLEANFILES = afpd.8 atalkd.8 pap.8 papd.8 papstatus.8 psf.8
+TEMPLATE_FILES = $(foreach f,$(man_MANS),$(f).tmpl)
 
-EXTRA_DIST = $(man_MANS)
+CLEANFILES += $(man_MANS)
+
+EXTRA_DIST = $(TEMPLATE_FILES)
