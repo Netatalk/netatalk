@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.7 2002-01-10 01:36:23 jmarcus Exp $
+ * $Id: dsi_tcp.c,v 1.8 2002-01-17 06:13:44 srittau Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -131,8 +131,11 @@ static int dsi_tcp_open(DSI *dsi)
     signal(SIGHUP, SIG_DFL);
 
     /* install an alarm to deal with non-responsive connections */
-    memset(&newact, 0, sizeof(newact));
     newact.sa_handler = timeout_handler;
+    sigemptyset(&newact.sa_mask);
+    newact.sa_flags = 0;
+    sigemptyset(&oldact.sa_mask);
+    oldact.sa_flags = 0;
     if ((sigaction(SIGALRM, &newact, &oldact) < 0) ||
         (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
 	LOG(log_error, logtype_default, "dsi_tcp_open: %s", strerror(errno));
