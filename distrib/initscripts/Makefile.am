@@ -15,10 +15,14 @@ pkgconfdir = @PKGCONFDIR@
 	    <$< >$@
 
 GENERATED_FILES = \
+	rc.afpd.netbsd		\
 	rc.atalk.redhat		\
 	rc.atalk.tru64		\
 	rc.atalk.bsd		\
-	rc.atalk.suse
+	rc.atalkd.netbsd	\
+	rc.atalk.suse		\
+	rc.papd.netbsd		\
+	rc.timelord.netbsd
 TEMPLATES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
 
 CLEANFILES = $(GENERATED_FILES)
@@ -86,3 +90,30 @@ atalk: rc.atalk.tru64
 	chmod a+x atalk
 
 endif
+
+#
+# checking for NetBSD init scripts
+#
+
+if USE_NETBSD
+
+sysvdir = /etc/rc.d
+sysv_SCRIPTS = afp atalk pap timelord
+
+afpd: rc.afpd.netbsd
+	cp -f $< $@
+
+atalkd: rc.atalkd.netbsd
+	cp -f $< $@
+	chmod a+x $@
+
+papd: rc.papd.netbsd
+	cp -f $< $@
+	chmod a+x $@
+
+timelord: rc.timelord.netbsd
+	cp -f $< $@
+	chmod a+x $@
+
+endif
+

@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# PROVIDE: afpd
+# REQUIRE: atalkd
+#
+# AppleTalk daemons. Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+. /etc/rc.subr
+
+name="afpd"
+rcvar=$name
+command=":SBINDIR:/afpd"
+etcdir=":ETCDIR:"
+pidfile="/var/run/${name}.pid"
+required_files="$etcdir/papd.conf $etcdir/AppleVolumes.default $etcdir/AppleVolumes.system"
+
+load_rc_config $name
+run_rc_command "$1"
+

@@ -1,0 +1,20 @@
+#!/bin/sh
+#
+# PROVIDE: timelord
+# REQUIRE: atalkd
+#
+# AppleTalk daemons. Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+. /etc/rc.subr
+
+name="timelord"
+rcvar=$name
+command=":SBINDIR:/timelord"
+pidfile="/var/run/${name}.pid"
+
+load_rc_config $name
+run_rc_command "$1"
+
