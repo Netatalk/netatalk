@@ -6,6 +6,7 @@ EXTRA_DIST = \
 	DEVELOPER	\
 	INSTALL		\
 	FAQ		\
+	README.hidden-items		\
 	README.mtab		\
 	README.mtab.distribution \
 	README.platforms	\
