@@ -1,5 +1,5 @@
 /*
- * $Id: asingle.c,v 1.7 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: asingle.c,v 1.8 2002-02-16 17:12:53 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -15,7 +15,6 @@
 #endif /* HAVE_FCNTL_H */
 #include <time.h>
 #include <string.h>
-#include <atalk/logger.h>
 #include <ctype.h>
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H

@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.c,v 1.7 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: megatron.c,v 1.8 2002-02-16 17:12:53 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,7 +17,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include <atalk/logger.h>
 #include <netatalk/endian.h>
 #include "asingle.h"
 #include "megatron.h"
