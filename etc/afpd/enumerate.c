@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.32 2003-01-21 07:55:07 didg Exp $
+ * $Id: enumerate.c,v 1.33 2003-01-24 07:08:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -98,7 +98,7 @@ struct path     *path;
            - someone else have moved the directory.
            - it's a symlink inside the share.
            - it's an ID reused, the old directory was deleted but not
-             the cnid record and the server reused the inode for 
+             the cnid record and the server've reused the inode for 
              the new dir.
            for HASH (we should get ride of HASH) 
            - someone else have moved the directory.
@@ -270,7 +270,7 @@ int     ext;
 
     if (NULL == ( dir = dirlookup( vol, did )) ) {
         *rbuflen = 0;
-        return( AFPERR_NODIR );
+        return (afp_errno == AFPERR_NOOBJ)?AFPERR_NODIR:afp_errno;
     }
 
     memcpy( &fbitmap, ibuf, sizeof( fbitmap ));
@@ -325,15 +325,18 @@ int     ext;
     header *=sizeof( u_char );
     
     maxsz = min(maxsz, *rbuflen);
+    o_path = cname( vol, dir, &ibuf );
 
-    if (NULL == ( o_path = cname( vol, dir, &ibuf )) ) {
-        *rbuflen = 0;
-        return( AFPERR_NODIR );
+    if (afp_errno == AFPERR_NOOBJ) 
+        afp_errno = AFPERR_NODIR;
+
+    *rbuflen = 0;
+    if (NULL == o_path ) {
+        return afp_errno;
     }
-
     if ( *o_path->m_name != '\0') {
-        *rbuflen = 0;
-        return( AFPERR_BADTYPE );
+        /* it's a file or it's a dir and extendir() was unable to chdir in it */
+        return (path_isadir(o_path))? afp_errno:AFPERR_BADTYPE ;
     }
 
     data = rbuf + 3 * sizeof( u_int16_t );
@@ -346,7 +349,10 @@ int     ext;
      */
     if ( sindex == 1 || curdir->d_did != sd.sd_did || vid != sd.sd_vid ) {
         sd.sd_last = sd.sd_buf;
-        if ( !o_path->st_valid && stat( ".", &o_path->st ) < 0 ) {
+        /* if dir was in the cache we don't have the inode */
+        if (( !o_path->st_valid && stat( ".", &o_path->st ) < 0 ) ||
+              (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
+        {
             switch (errno) {
             case EACCES:
 		return AFPERR_ACCESS;
@@ -359,19 +365,6 @@ int     ext;
             }
         }
         curdir->ctime  = o_path->st.st_ctime; /* play safe */
-        if ((ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) {
-            *rbuflen = 0;
-            switch (errno) {
-            case EACCES:
-		return AFPERR_ACCESS;
-            case ENOTDIR:
-                return AFPERR_BADTYPE;
-            case ENOMEM:
-                return AFPERR_MISC;
-            default:
-                return AFPERR_NODIR;
-            }
-        }
         curdir->offcnt = ret;
         *sd.sd_last = 0;
 
@@ -393,7 +386,6 @@ int     ext;
         len = *(sd.sd_last)++;
         if ( len == 0 ) {
             sd.sd_did = 0;	/* invalidate sd struct to force re-read */
-            *rbuflen = 0;
             return( AFPERR_NOOBJ );
         }
         sd.sd_last += len + 1;
@@ -447,25 +439,18 @@ int     ext;
                 sd.sd_last += len + 1;
                 continue;
             }
-            dir = curdir->d_child;
-            s_path.m_name = NULL;
-            while (dir) {
-                if ( strcmp( dir->d_u_name, s_path.u_name ) == 0 ) {
-                    break;
-                }
-                dir = (dir == curdir->d_child->d_prev) ? NULL : dir->d_next;
-            }
+            dir = dirsearch_byname(curdir, s_path.u_name);
             if (!dir) {
                 s_path.m_name = utompath(vol, s_path.u_name);
                 if ((dir = adddir( vol, curdir, &s_path)) == NULL) {
-                    *rbuflen = 0;
                     return AFPERR_MISC;
                 }
             }
-
+            else {
+                s_path.m_name = NULL;
+            }
             if (( ret = getdirparams(vol, dbitmap, &s_path, dir,
                                      data + header , &esz )) != AFP_OK ) {
-                *rbuflen = 0;
                 return( ret );
             }
 
@@ -477,7 +462,6 @@ int     ext;
             s_path.m_name = utompath(vol, s_path.u_name);
             if (( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
                                      data + header , &esz )) != AFP_OK ) {
-                *rbuflen = 0;
                 return( ret );
             }
         }
@@ -496,7 +480,6 @@ int     ext;
          */
         if ( maxsz < sz + esz + header) {
             if (first) { /* maxsz can't hold a single reply */
-                *rbuflen = 0;
                 return AFPERR_PARAM;
             }
             sd.sd_last = start;
@@ -526,7 +509,6 @@ int     ext;
     }
 
     if ( actcnt == 0 ) {
-        *rbuflen = 0;
         sd.sd_did = 0;		/* invalidate sd struct to force re-read */
         return( AFPERR_NOOBJ );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.57 2003-01-21 09:58:58 didg Exp $
+ * $Id: directory.c,v 1.58 2003-01-24 07:08:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -121,6 +121,36 @@ u_int32_t	did;
     return NULL;
 }
 
+/* ------------------- */
+#ifdef ATACC
+int path_isadir(struct path *o_path)
+{
+    return o_path->m_name == '\0' || /* we are in a it */
+           !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
+           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
+}
+#endif
+
+/* ------------------- */
+struct dir *
+            dirsearch_byname( cdir, name )
+            struct dir *cdir;
+            const char	*name;
+{
+struct dir *dir;
+
+    if (!strcmp(name, "."))
+        return cdir;
+    dir = cdir->d_child;
+    while (dir) {
+        if ( strcmp( dir->d_u_name, name ) == 0 ) {
+            break;
+        }
+        dir = (dir == curdir->d_child->d_prev) ? NULL : dir->d_next;
+    }
+    return dir;
+}            
+
 /* -----------------------------------------
  * if did is not in the cache resolve it with cnid 
  * 
@@ -143,7 +173,7 @@ u_int32_t	did;
     char *mpath;
     
     ret = dirsearch(vol, did);
-    if (ret != NULL)
+    if (ret != NULL || afp_errno == AFPERR_PARAM)
         return ret;
 
     id = did;
@@ -450,8 +480,9 @@ struct dir *dir;
 {
 	if (curdir == dir) {
 	    /* v_root can't be deleted */
-		if (movecwd(vol, vol->v_root) < 0) 
-			printf("Yuup cant change dir to v_root\n");
+		if (movecwd(vol, vol->v_root) < 0) {
+            LOG(log_error, logtype_afpd, "cname can't chdir to : %s", vol->v_root);
+        }
 	}
 	/* FIXME */
     dirchildremove(dir->d_parent, dir);
@@ -788,24 +819,37 @@ struct dir *dirnew(const char *m_name, const char *u_name)
 }
 
 /* -------------------------------------------------- */
-/* XXX: this needs to be changed to handle path types 
+/* cname 
  return
  if it's a filename:
       in extenddir:
          compute unix name
-         stat the file
-      return mac name
+         stat the file or errno 
+      return 
+         filename
+         curdir: filename parent directory
+         
  if it's a dirname:
       not in the cache
           in extenddir
               compute unix name
-              stat the dir
+              stat the dir or errno
+          return
+              if chdir error 
+                 dirname 
+                 curdir: dir parent directory
+              sinon
+                 dirname: ""
+                 curdir: dir   
       in the cache 
-
-  u_name can be
-  XXXX u_name can be an alias on m_name if the m_name is
-  a valid unix name.
-  
+          return
+              if chdir error
+                 dirname
+                 curdir: dir parent directory 
+              else
+                 dirname: ""
+                 curdir: dir   
+                 
 */
 struct path *
 cname( vol, dir, cpath )
@@ -861,16 +905,22 @@ char	**cpath;
     ret.st_valid = 0;
     for ( ;; ) {
         if ( len == 0 ) {
-            if ( !extend && movecwd( vol, dir ) < 0 ) {
+            if (movecwd( vol, dir ) < 0 ) {
             	/* it's tricky:
             	   movecwd failed some of dir path are not there anymore.
             	   FIXME Is it true with other errors?
             	   so we remove dir from the cache 
             	*/
-            	if (dir->d_did == DIRDID_ROOT_PARENT) 
-    		    return NULL;
-            	if (afp_errno == AFPERR_ACCESS)
-            	    return NULL;    		
+            	if (dir->d_did == DIRDID_ROOT_PARENT)
+            	    return NULL;
+            	if (afp_errno == AFPERR_ACCESS) {
+                    if ( movecwd( vol, dir->d_parent ) < 0 ) {
+            	         return NULL;    		
+            	    }
+            	    ret.m_name = dir->d_m_name;
+            	    ret.u_name = dir->d_u_name;
+            	    return &ret;
+            	}
 
             	dir_invalidate(vol, dir);
             	return NULL;
@@ -929,10 +979,11 @@ char	**cpath;
                     	/* dir is not valid anymore 
                     	   we delete dir from the cache and abort.
                     	*/
-                    	if ( dir->d_did != DIRDID_ROOT_PARENT && 
-                    	      (afp_errno != AFPERR_ACCESS)) {
-                    	    dir_invalidate(vol, dir);
-                    	}
+                    	if ( dir->d_did == DIRDID_ROOT_PARENT)
+                    	    return NULL;
+                    	if (afp_errno == AFPERR_ACCESS)
+                    	    return NULL;
+                    	dir_invalidate(vol, dir);
                         return NULL;
                     }
                     cdir = extenddir( vol, dir, &ret );
@@ -1295,8 +1346,9 @@ int		ibuflen, *rbuflen;
         return afp_errno;
     }
 
+    /* FIXME access error or not a file */
     if ( *path->m_name != '\0' ) {
-        return( AFPERR_BADTYPE ); /* not a directory */
+        return (path_isadir( path))? afp_errno:AFPERR_BADTYPE ;
     }
 
     /*
@@ -1655,13 +1707,13 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno; /* was AFPERR_NOOBJ */
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
-    /* FIXME check done elswhere? cname was able to move curdir to it! */
+    /* cname was able to move curdir to it! */
     if (*s_path->m_name == '\0')
         return AFPERR_EXIST;
 
@@ -2169,7 +2221,7 @@ int		ibuflen, *rbuflen;
     }
 
     if ( *path->m_name != '\0' ) {
-        return( AFPERR_BADTYPE ); /* not a directory */
+        return (path_isadir(path))? afp_errno:AFPERR_BADTYPE ;
     }
 
     if ( !path->st_valid && of_stat(path ) < 0 ) {

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.21 2003-01-12 14:39:58 didg Exp $
+ * $Id: desktop.c,v 1.22 2003-01-24 07:08:42 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -762,6 +762,7 @@ int		ibuflen, *rbuflen;
     int			clen;
     u_int32_t           did;
     u_int16_t		vid;
+    int                 isadir;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -794,14 +795,15 @@ int		ibuflen, *rbuflen;
         return AFPERR_ACCESS;
     }
 
-    if (*path->m_name == '\0' || !(of = of_findname(path))) {
+    isadir = path_isadir(path);
+    if (isadir || !(of = of_findname(path))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
 
     if (ad_open( upath , vol_noadouble(vol) |
-                 (( *path->m_name == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
+                 (( isadir) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
                  O_RDWR|O_CREAT, 0666, adp) < 0 ) {
         return( AFPERR_ACCESS );
     }
@@ -834,10 +836,11 @@ int		ibuflen, *rbuflen;
     struct dir		*dir;
     struct ofork        *of;
     struct path         *s_path;
-    char		*path, *upath;
+    char		*upath;
     u_int32_t		did;
     u_int16_t		vid;
-
+    int                 isadir;
+    
     *rbuflen = 0;
     ibuf += 2;
 
@@ -858,15 +861,14 @@ int		ibuflen, *rbuflen;
     }
 
     upath = s_path->u_name;
-    path  = s_path->m_name;
-
-    if (*path == '\0' || !(of = of_findname(s_path))) {
+    isadir = path_isadir(s_path);
+    if (isadir || !(of = of_findname(s_path))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
     if ( ad_open( upath,
-                  (( *path == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
+                  ( isadir) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF,
                   O_RDONLY, 0666, adp) < 0 ) {
         return( AFPERR_NOITEM );
     }
@@ -900,9 +902,10 @@ int		ibuflen, *rbuflen;
     struct dir		*dir;
     struct ofork        *of;
     struct path         *s_path;
-    char		*path, *upath;
+    char		*upath;
     u_int32_t		did;
     u_int16_t		vid;
+    int                 isadir;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -924,19 +927,19 @@ int		ibuflen, *rbuflen;
     }
 
     upath = s_path->u_name;
-    path  = s_path->m_name;
     if (check_access(upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
 
-    if (path == '\0' || !(of = of_findname(s_path))) {
+    isadir = path_isadir(s_path);
+    if (isadir || !(of = of_findname(s_path))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
 
     if ( ad_open( upath,
-                  (( *path == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
+                   (isadir) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF,
                   O_RDWR, 0, adp) < 0 ) {
         switch ( errno ) {
         case ENOENT :

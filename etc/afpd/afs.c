@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.14 2003-01-08 15:01:32 didg Exp $
+ * $Id: afs.c,v 1.15 2003-01-24 07:08:42 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -103,7 +103,7 @@ int		ibuflen, *rbuflen;
     }
     if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
-        return( AFPERR_BITMAP );
+        return (path_isadir( path))? afp_errno: AFPERR_BITMAP;
     }
 
     vi.in_size = 0;
@@ -196,7 +196,7 @@ int		ibuflen, *rbuflen;
     }
     if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
-        return afp_errno;
+        return (path_isadir( path))? afp_errno: AFPERR_BITMAP;
     }
 
     if ((int)ibuf & 1 ) {

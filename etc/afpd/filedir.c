@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.39 2003-01-21 09:58:58 didg Exp $
+ * $Id: filedir.c,v 1.40 2003-01-24 07:08:43 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -197,12 +197,11 @@ int		ibuflen, *rbuflen;
     buflen = 0;
     if (S_ISDIR(st->st_mode)) {
         if (dbitmap) {
-            if (*s_path->m_name != '\0') {
-                /* the dir wasn't in the cache and we weren't able to chdir in it.
-                */
-                return AFPERR_ACCESS;
-            }
-            ret = getdirparams(vol, dbitmap, s_path, curdir,
+            dir = dirsearch_byname(curdir, s_path->u_name);
+            if (!dir) 
+                return AFPERR_NOOBJ;
+
+            ret = getdirparams(vol, dbitmap, s_path, dir,
                                  rbuf + 3 * sizeof( u_int16_t ), &buflen );
             if (ret != AFP_OK )
                 return( ret );
@@ -366,6 +365,9 @@ int         isdir;
         id = cnid_get(vol->v_db, sdir->d_did, p, strlen(p));
 #endif /* CNID_DB */
         p = ctoupath( vol, sdir, oldname );
+        if (!p) { 
+            return AFPERR_PARAM; /* pathname too long */
+        }
         path.st_valid = 0;
         path.u_name = p;
         if ((opened = of_findname(&path))) {
@@ -378,6 +380,9 @@ int         isdir;
         id = sdir->d_did; /* we already have the CNID */
 #endif /* CNID_DB */
         p = ctoupath( vol, sdir->d_parent, oldname );
+        if (!p) {
+            return AFPERR_PARAM;
+        }
         adflags = ADFLAGS_DIR;
     }
     /*
@@ -486,8 +491,17 @@ int		ibuflen, *rbuflen;
     sdir = curdir;
     newname = obj->newtmp;
     oldname = obj->oldtmp;
+    isdir = path_isadir(path);
     if ( *path->m_name != '\0' ) {
         strcpy(oldname, path->m_name); /* an extra copy for of_rename */
+        if (isdir) {
+            /* curdir parent dir, need to move sdir back 
+             * FIXME search by unix name or mac name?
+            */
+            sdir = dirsearch_byname(curdir, path->u_name);
+            if (!sdir)
+                return AFPERR_NOOBJ;           
+        }
     }
     else {
         if ( sdir->d_parent == NULL ) { /* root directory */
@@ -497,7 +511,6 @@ int		ibuflen, *rbuflen;
         if ( movecwd( vol, sdir->d_parent ) < 0 ) {
             return afp_errno;
         }
-        isdir = 1;
         strcpy(oldname, sdir->d_m_name);
     }
 
@@ -563,8 +576,13 @@ int		ibuflen, *rbuflen;
     }
 
     upath = s_path->u_name;
-    if ( *s_path->m_name == '\0' ) {
-        rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
+    if ( path_isadir( s_path) ) {
+    	if (*s_path->m_name != '\0') {
+    	    rc = AFPERR_ACCESS; 
+    	}
+    	else {
+            rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
+        }
     } else if (of_findname(s_path)) {
         rc = AFPERR_BUSY;
     } else if (AFP_OK == (rc = deletefile( upath, 1))) {
@@ -599,15 +617,24 @@ char	*u;
     len = strlen( u );
     p -= len;
     strncpy( p, u, len );
-    for ( d = dir; d->d_parent; d = d->d_parent ) {
-        *--p = '/';
+    if (dir) for ( d = dir; d->d_parent; d = d->d_parent ) {
         u = d->d_u_name;
         len = strlen( u );
+        if (p -len -1 < path) {
+            /* FIXME 
+               rather rare so LOG error and/or client message ?
+            */
+            return NULL;
+        }
+        *--p = '/';
         p -= len;
         strncpy( p, u, len );
     }
-    *--p = '/';
     len = strlen( vol->v_path );
+    if (p -len -1 < path) {
+        return NULL;
+    }
+    *--p = '/';
     p -= len;
     strncpy( p, vol->v_path, len );
 
@@ -630,7 +657,7 @@ int		ibuflen, *rbuflen;
 {
     struct vol	*vol;
     struct dir	*sdir, *ddir;
-    int         isdir = 0;
+    int         isdir;
     char	*oldname, *newname;
     struct path *path;
     int		did;
@@ -669,17 +696,22 @@ int		ibuflen, *rbuflen;
 
     /* source pathname */
     if (NULL == ( path = cname( vol, sdir, &ibuf )) ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     sdir = curdir;
     newname = obj->newtmp;
     oldname = obj->oldtmp;
+    
+    isdir = path_isadir(path);
     if ( *path->m_name != '\0' ) {
-        /* not a directory */
+        if (isdir) {
+            sdir = dirsearch_byname(curdir, path->u_name);
+            if (!sdir)
+                return AFPERR_NOOBJ;           
+	}
         strcpy(oldname, path->m_name); /* an extra copy for of_rename */
     } else {
-        isdir = 1;
         strcpy(oldname, sdir->d_m_name);
     }
 
@@ -691,7 +723,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
     if ( *path->m_name != '\0' ) {
-        return( AFPERR_BADTYPE );
+        return (path_isadir(path))?afp_errno:AFPERR_BADTYPE;
     }
 
     /* one more place where we know about path type */

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.76 2003-01-21 10:09:13 didg Exp $
+ * $Id: file.c,v 1.77 2003-01-24 07:08:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -655,7 +655,7 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno; /* was AFPERR_NOOBJ */
     }
 
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
@@ -666,7 +666,7 @@ int		ibuflen, *rbuflen;
         return afp_errno;
     }
 
-    if ( *s_path->m_name == '\0' ) {
+    if (path_isadir(s_path)) {
         return( AFPERR_BADTYPE ); /* it's a directory */
     }
 
@@ -1052,7 +1052,7 @@ int		ibuflen, *rbuflen;
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
-    if ( *s_path->m_name == '\0' ) {
+    if ( path_isadir(s_path) ) {
         return( AFPERR_BADTYPE );
     }
 
@@ -1069,6 +1069,10 @@ int		ibuflen, *rbuflen;
         return AFPERR_DENYCONF;
 
     p = ctoupath( vol, curdir, newname );
+    if (!p) {
+        return AFPERR_PARAM;
+    
+    }
 #ifdef FORCE_UIDGID
     /* FIXME svid != dvid && dvid's user can't read svid */
 #endif
@@ -1087,7 +1091,7 @@ int		ibuflen, *rbuflen;
         return afp_errno;
     }
     if ( *s_path->m_name != '\0' ) {
-        return( AFPERR_BADTYPE ); /* not a directory. AFPERR_PARAM? */
+        return (path_isadir( s_path))? AFPERR_PARAM:AFPERR_BADTYPE ;
     }
 
     /* one of the handful of places that knows about the path type */
@@ -1532,10 +1536,10 @@ int		ibuflen, *rbuflen;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /* was AFPERR_PARAM */
     }
 
-    if ( *s_path->m_name == '\0' ) {
+    if ( path_isadir(s_path) ) {
         return( AFPERR_BADTYPE );
     }
 
@@ -1806,10 +1810,10 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /* was AFPERR_PARAM */
     }
 
-    if ( *path->m_name == '\0' ) {
+    if ( path_isadir(path) ) {
         return( AFPERR_BADTYPE );   /* it's a dir */
     }
 
@@ -1839,6 +1843,10 @@ int		ibuflen, *rbuflen;
     strcpy(spath, path->m_name);
     strcpy(supath, upath); /* this is for the cnid changing */
     p = absupath( vol, sdir, upath);
+    if (!p) {
+        /* pathname too long */
+        return AFPERR_PARAM ;
+    }
 
     /* look for the source cnid. if it doesn't exist, don't worry about
      * it. */
@@ -1855,7 +1863,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_PARAM );
     }
 
-    if ( *path->m_name == '\0' ) {
+    if ( path_isadir(path) ) {
         return( AFPERR_BADTYPE );
     }
 

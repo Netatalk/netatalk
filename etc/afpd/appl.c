@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.10 2003-01-12 14:39:58 didg Exp $
+ * $Id: appl.c,v 1.11 2003-01-24 07:08:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -200,7 +200,7 @@ int		ibuflen, *rbuflen;
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         return afp_errno;
     }
-    if ( *path->m_name == '\0' ) {
+    if ( path_isadir(path) ) {
         return( AFPERR_BADTYPE );
     }
 
@@ -283,7 +283,7 @@ int		ibuflen, *rbuflen;
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         return afp_errno;
     }
-    if ( *path->m_name == '\0' ) {
+    if ( path_isadir(path) ) {
         return( AFPERR_BADTYPE );
     }
 
@@ -441,7 +441,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOITEM );
     }
 
-    if ( *path->m_name == '\0' || path->st_errno ) {
+    if ( path_isadir(path) || path->st_errno ) {
         *rbuflen = 0;
         return( AFPERR_NOITEM );
     }
