@@ -1,13 +1,50 @@
-Changes from 1.5.5
+Changes in 1.6.1
+================
+
+* UPD: Improve --enable-fhs. [Olaf Hering]
+* UPD: Add BDB 4.1.x support.
+* UPD: Add more documentation on CNID, as well as list which versions
+       of Berkeley DB are supported.
+* FIX: Codepage file maccode.koi8-r is now correctly cleaned.
+* FIX: Fix init script location on SuSE. [Olaf]
+* FIX: Build fixes. [Olaf, Steven N. Hirsch]
+* FIX: Various bugs when a user doesn't have access permission to a folder.
+       (Fixes an OSX kernel panic.)
+* FIX: CNID, folders' DID handling with concurrent access or symlinks.
+       (Fixes an endless loop in afpd.)
+
+Changes in 1.6.0
+================
+
+* FIX: pap looks at the STDOUT file descriptor to see if it's connected to
+       a tty, instead of STDIN.
+
+Changes in 1.6pre2
 ==================
 
+* UPD: Removed --with-catsearch option from configure and enable FPCatSearch
+       by default.
+* UPD: The dbpath argument does now support variable substitution.
+* FIX: Build fix for non-GNU-C compilers in libatalk/util/logger.c.
+* FIX: Two directories with the same name but different case confused the
+       Mac Finder.
+* FIX: The ROOT_PARENT directory could get invalidated.
+
+Changes in 1.6pre1
+====================
+
+* NEW: Long file name mangling support.
+* NEW: Improved log file support.
+* NEW: Server-side find capability ("FPCatSearch")
 * NEW: Concurrent datastore (CDB) is now the default CNID datastore.  This
        should be heavily tested in a multiuser environment.
-* NEW: Variable substitution support has been added fro the dbpath AppleVolume
+* NEW: Variable substitution support has been added for the dbpath AppleVolume
        option.
+* UPD: CNID DID handling is now enabled by default.
+* FIX: Various bug and build fixes as well as code cleanups.
 
-Changes from 1.5.4
-==================
+Changes in 1.5.5
+================
 
 * NEW: Allow afpd debugging to be enabled by sending the afpd process
        a SIGUSR1.
@@ -16,16 +53,16 @@ Changes from 1.5.4
 * FIX: Use server name (if not NULL) for the SLP URL.
 * FIX: papd: buffer overflow during config file read (Olaf Hering)
 
-Changes from 1.5.3
-==================
+Changes in 1.5.4
+================
 
 * FIX: File open read only and then read write (aka pb with Illustrator).
 * FIX: Problems with unexpected EOF when reading files on a ddp connection
        Photoshop, old finder.
 * FIX: --with-nls-dir option does now work
 
-Changes from 1.5.2
-==================
+Changes in 1.5.3
+================
 
 * UPD: Extend the --disable-shell-check functionality to ignore users
        with _no_ shell.  Also, send a log message if a user is refused login
@@ -45,8 +82,8 @@ Changes from 1.5.2
 * FIX: megatron does now compile even if compiled with -DDEBUG.
 * FIX: Clean up some syslog messages.
 
-Changes from 1.5.1
-==================
+Changes in 1.5.2
+================
 
 * NEW: NetBSD support contributed by David Rankin and NetBSD contributors.
        This includes a new configure option --enable-netbsd.
@@ -71,8 +108,8 @@ Changes from 1.5.1
 * FIX: Some problems with wrongly assigned DIDs were fixed.
 * FIX: Various bug fixes and code cleanups.
 
-Changes from 1.5.0
-==================
+Changes in 1.5.1
+================
 
 * NEW: Added a program called cnid_didname_verify that can be used to
        verify the consistency of the CNID database.
@@ -88,16 +125,16 @@ Changes from 1.5.0
 * FIX: Minor code cleanups and warning fixes.
 * FIX: Make quota support work on FreeBSD.
 
-Changes from 1.5rc2
-===================
+Changes in 1.5.0
+================
 
 * FIX: Compilation on Tru64 systems was broken, since libtool's acinclude.m4
        file on the packagers system did not contain the necessary patch.
 * FIX: On some systems, atalkd refuses to start, since it couldn't detect
        any interfaces. This was caused by an overzealous validity check.
 
-Changes from 1.5rc1
-===================
+Changes in 1.5rc2
+=================
 
 * FIX: contrib/shell_utils/lp2pap.sh was erased when "make clean" was called.
        Now we distribute lp2pap.sh.tmpl instead, and lp2pap.sh is automatically
