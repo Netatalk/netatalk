@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.14 2002-03-20 20:53:57 morgana Exp $
+ * $Id: afp_asp.c,v 1.15 2002-03-23 17:43:10 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -88,31 +88,31 @@ static __inline__ void afp_authprint_remove(AFPObj *obj)
 		    file_pid = atoi(p_filepid);
 		    if (file_pid == (int)getpid()) {
 			if(unlink(addr_filename) == 0) {
-			    syslog(LOG_INFO, "removed %s", addr_filename);
+			    LOG(log_info, logtype_default, "removed %s", addr_filename);
 			} else {
-			    syslog(LOG_INFO, "error removing %s: %s",
+			    LOG(log_info, logtype_default, "error removing %s: %s",
 				    addr_filename, strerror(errno));
 			}
 		    } else {
-			syslog( LOG_INFO, "%s belongs to another pid %d",
+			LOG(log_info, logtype_default, "%s belongs to another pid %d",
 			     addr_filename, file_pid );
 		    }
 		} else { /* no pid info */
 		    if (unlink(addr_filename) == 0) {
-			syslog( LOG_INFO, "removed %s", addr_filename );
+			LOG(log_info, logtype_default, "removed %s", addr_filename );
 		    } else {
-			syslog(LOG_INFO, "error removing %s: %s",
+			LOG(log_info, logtype_default, "error removing %s: %s",
 				addr_filename, strerror(errno));
 		    }
 		}
 	    } else {
-		syslog( LOG_INFO, "couldn't read data from %s", addr_filename );
+		LOG(log_info, logtype_default, "couldn't read data from %s", addr_filename );
 	    }
 	} else {
-	    syslog( LOG_INFO, "%s is not a regular file", addr_filename );
+	    LOG(log_info, logtype_default, "%s is not a regular file", addr_filename );
 	}
     } else {
-        syslog(LOG_INFO, "error stat'ing %s: %s",
+        LOG(log_info, logtype_default, "error stat'ing %s: %s",
                    addr_filename, strerror(errno));
     }
 }
