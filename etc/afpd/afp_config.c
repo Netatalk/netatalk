@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.15 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: afp_config.c,v 1.16 2002-02-13 15:09:40 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -280,6 +280,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     SLPError callbackerr;
     SLPHandle hslp;
     struct servent *afpovertcp;
+    int afp_port = 548;
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
@@ -318,11 +319,14 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
      * use a non-default port, they can, but be aware, this server might not
      * show up int the Network Browser. */
     afpovertcp = getservbyname("afpovertcp", "tcp");
+    if (afpovertcp != NULL) {
+        afp_port = afpovertcp->s_port;
+    }
     if (strlen(options->hostname) > (sizeof(srvloc_url) - strlen(inet_ntoa(dsi->server.sin_addr)) - 21)) {
         LOG(log_error, logtype_default, "DSIConfigInit: Hostname is too long for SRVLOC");
         goto srvloc_reg_err;
     }
-    if (dsi->server.sin_port == afpovertcp->s_port) {
+    if (dsi->server.sin_port == afp_port) {
         sprintf(srvloc_url, "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), options->hostname);
     }
     else {
