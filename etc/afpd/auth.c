@@ -75,6 +75,10 @@ extern int addr_net, addr_node, addr_uid;
 extern char addr_name[32];
 #endif /* CAPDIR */
 
+void forcedlogout() {
+    syslog (LOG_INFO, "Connection terminated");
+}
+
 void status_versions( data )
     char	*data;
 {
@@ -150,7 +154,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #endif ADMIN_GRP
 
     /* UAM had syslog control; afpd needs to reassert itself */
-    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_LOCAL0);
+    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
 
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
 	syslog( LOG_ERR, "login: root login denied!" );
@@ -218,6 +222,13 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
     afp_switch = postauth_switch;
     obj->logout = logout;
+
+    /* Run logout if the process is terminated */
+    if (atexit((void *) forcedlogout))
+	syslog (LOG_INFO, "Unable to set up logout on kill: %m");
+	/* This is a non-critical error, so afpd doesn't need to abort
+	or return an error value */
+
     return( AFP_OK );
 }
 
@@ -255,7 +266,7 @@ int afp_login(obj, ibuf, ibuflen, rbuf, rbuflen )
     i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
     if (i || !pwd) 
       return send_reply(obj, i);
-      
+
     return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout));
 }
 
