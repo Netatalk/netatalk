@@ -1,35 +1,6 @@
-#! /usr/bin/perl
+#!@PERL@
 # 
-# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_cp,v 1.3 2001-10-16 18:27:27 lancel Exp $
-#
-# $Log: apple_cp,v $
-# Revision 1.3  2001-10-16 18:27:27  lancel
-# Updated perl.
-#
-# Fixed a failing test where $to wasn't a directory, but
-# didn't check that $from was only a single file, result file to file
-# always failed.
-#
-# Fixed the .AppleDouble variable being sent to the split_dir_file
-# function, it was mistakenly sending $from instead of $to, result cp
-# $from $from, same file.
-#
-# Revision 1.2  2000/08/09 14:12:06  rufustfirefly
-# /usr/local/bin/perl -> /usr/bin/perl and portability fixes
-#
-# Revision 1.1  2000/08/09 14:08:06  rufustfirefly
-# Shell utils from http://www.-genome.wi.mit.edu/ftp/distribution/software/Bass/bass-1.29/apple_util/ (initial import)
-#
-# Revision 1.1  1996/04/03 02:13:12  lstein
-# Added all these files because they're essential utilities.
-#
-# Revision 1.2  1996/02/09  18:44:44  will
-# fix to usage string
-#
-# Revision 1.1  1996/02/09  18:21:35  will
-# Initial revision
-#
-#
+# $Id: apple_cp.in,v 1.1 2002-01-17 05:59:25 srittau Exp $
 
 $USAGE = <<USAGE;
 Usage: $0 filename1 filename2

@@ -1,5 +1,5 @@
 # Makefile for contrib/macusers/
 
-bin_SCRIPTS = macusers
+EXTRA_DIST = macusers.in README.macusers
 
-EXTRA_DIST = $(bin_SCRIPTS) README.macusers
+bin_SCRIPTS = macusers

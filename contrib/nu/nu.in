@@ -1,6 +1,6 @@
-#! /usr/bin/perl
+#!@PERL@
 #
-# $Id: nu,v 1.2 2001-05-07 12:49:19 rufustfirefly Exp $
+# $Id: nu.in,v 1.1 2002-01-17 05:59:25 srittau Exp $
 #
 # nu - by Anders Brownworth   anders@thehamptons.com
 #      modified by Ambrose Li <acli@mail.mingpaoxpress.com>

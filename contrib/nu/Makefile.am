@@ -2,4 +2,4 @@
 
 bin_SCRIPTS = nu
 
-EXTRA_DIST = nu
+EXTRA_DIST = nu.in
