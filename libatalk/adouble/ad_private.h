@@ -1,5 +1,5 @@
 /*
- * $Id: ad_private.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_private.h,v 1.3 2002-08-16 08:07:57 didg Exp $
  */
 
 #ifndef LIBATALK_ADOUBLE_AD_PRIVATE_H
@@ -29,8 +29,13 @@
 } while (0)
 
 #define adf_lock_free(a) do { \
+    int i;\
 	if (!(a)->adf_lock) \
 		break; \
+        for (i = 0; i < (a)->adf_lockcount; i++) {\
+            adf_lock_t *lock = (a)->adf_lock + i;\
+            if (--(*lock->refcount) < 1)free(lock->refcount); \
+        }\
 	free((a)->adf_lock); \
 	adf_lock_init(a); \
 } while (0)
