@@ -412,8 +412,10 @@ createfile_done:
 /* The below code changes the way file ownership is determined in the name of
 fixing dropboxes.  It has known security problem.  See the netatalk FAQ for
 more information */
-    if (stat(".", &sb) == -1) 
-      syslog (LOG_ERR, "Error checking directory %s: %m", dir->d_name);
+    if (stat(".", &sb) < 0) {
+      syslog (LOG_ERR, "afp_createfile:  Error checking directory \"%s\": %m", dir->d_name);
+      return(-1);
+    }
     else {
       uid=geteuid();
       if ( uid != sb.st_uid )
@@ -421,9 +423,9 @@ more information */
 	strcpy (adpath, "./.AppleDouble/");
 	strcat (adpath, upath);
 	seteuid(0); /* Become root to change the owner of the file */
-	if (chown(upath, sb.st_uid, sb.st_gid) < 0) 
+	if (lchown(upath, sb.st_uid, sb.st_gid) < 0) 
         {
-	  syslog (LOG_ERR, "Error changing owner/gid: %m");
+	  syslog (LOG_ERR, "afp_createfile:  Error changing owner/gid: %m");
           return (-1);
         }
         /* In order to write information to the file, the Mac client needs
@@ -432,22 +434,22 @@ more information */
         stat(upath, &st);
         if (chmod(upath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
         {
-          syslog (LOG_ERR, "Error adding file read permissions: %m");
+          syslog (LOG_ERR, "afp_createfile:  Error adding file read permissions: %m");
           return (-1);
         }
-        else syslog (LOG_DEBUG, "Added S_IRGRP and S_IROTH: %m");
-	if (chown(adpath, sb.st_uid, sb.st_gid) < 0)
+        else syslog (LOG_DEBUG, "afp_createfile:  Added S_IRGRP and S_IROTH: %m");
+	if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
         {
-	  syslog (LOG_ERR, "Error changing AppleDouble owner/gid: %m");
+	  syslog (LOG_ERR, "afp_createfile:  Error changing AppleDouble owner/gid: %m");
           return (-1);
         }
         if (chmod(adpath, (st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
         {
-          syslog (LOG_ERR, "Error adding AD file read permissions: %m");
+          syslog (LOG_ERR, "afp_createfile:  Error adding AD file read permissions: %m");
           return (-1);
         }
-        else syslog (LOG_DEBUG, "Added S_IRGRP and S_IROTH to AD: %m");
-	syslog (LOG_DEBUG, "Changing afpd owner back to %d", uid);
+        else syslog (LOG_DEBUG, "afp_createfile:  Added S_IRGRP and S_IROTH to AD: %m");
+	syslog (LOG_DEBUG, "afp_createfile:  Changing afpd owner back to %d", uid);
 	seteuid(uid); /* Restore process ownership to normal */
       }
     }

@@ -22,6 +22,9 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <string.h>
+#ifdef DROPKLUDGE
+#include <unistd.h>
+#endif DROPKLUDGE
 
 #include "directory.h"
 #include "desktop.h"
@@ -433,6 +436,12 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1
     cnid_t      id;
 #endif
+#ifdef DROPKLUDGE
+    struct stat	sb;
+    struct dir	*dir;
+    char	adpath[50];
+    int		uid;
+#endif DROPKLUDGE
 
     *rbuflen = 0;
     ibuf += 2;
@@ -543,15 +552,48 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     } else {
 	rc = renamedir(p, upath, odir, curdir, newname, vol_noadouble(vol));
     }
+#ifdef DROPKLUDGE
+        strcpy (adpath, "./.AppleDouble/");
+	strcat (adpath, newname);
+        if (( dir = dirsearch( vol, did )) == NULL ) {
+	  syslog (LOG_ERR, "afp_moveandrename: Unable to get directory info.");
+	  return( AFPERR_NOOBJ );
+	}
+        else
+	if (stat(".", &sb) < 0) {
+	  syslog (LOG_ERR, "afp_moveandrename: Error checking directory \"%s\": %m", dir->d_name);
+          return(-1);
+        }
+        else {
+	  uid=geteuid();
+          if ( uid != sb.st_uid )
+          {
+	    seteuid(0);
+	    if (lchown(newname, sb.st_uid, sb.st_gid) < 0)
+            {
+              syslog (LOG_ERR, "afp_moveandrename: Error changing owner/gid of %s: %m", p);
+              return (-1);
+            }
+            if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
+            {
+	      syslog (LOG_ERR, "afp_moveandrename: Error changing AppleDouble owner/gid %s: %m", adpath);
+              return (-1);
+	    }
+	  }
+          else
+	    syslog (LOG_DEBUG, "No ownership change necessary.");
+	}
+        seteuid(uid); /* Restore process ownership to normal */
+#endif DROPKLUDGE
 
     if ( rc == AFP_OK ) {
 #if AD_VERSION > AD_VERSION1
         /* renaming may have moved the file/dir across a filesystem */
-        if (stat(upath, &st) < 0) 
+        if (stat(newname, &st) < 0) 
 	  return AFPERR_MISC;
 	
 	/* fix up the catalog entry */
-	cnid_update(vol->v_db, id, &st, curdir->d_did, upath, strlen(upath));
+	cnid_update(vol->v_db, id, &st, curdir->d_did, newname, strlen(newname));
 #endif      
 	setvoltime(obj, vol );
     }
