@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.7 2003-01-26 16:51:22 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.8 2003-01-29 00:16:31 srittau Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_PATH_SSL], [
@@ -39,8 +39,8 @@ dnl FIXME: The following looks crude and probably doesn't work properly.
 				dnl Check for "DES" library (for SSLeay, not openssl):
 				AC_CHECK_LIB(des, main)
 
-		 		AC_DEFINE(OPENSSL_DHX,	1)
-				AC_DEFINE(UAM_DHX,	1)
+		 		AC_DEFINE(OPENSSL_DHX,	1, [Define if the OpenSSL DHX modules should be built])
+				AC_DEFINE(UAM_DHX,	1, [Define if the DHX UAM modules should be compiled])
 				compile_ssl=yes
 				break
 			fi

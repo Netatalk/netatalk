@@ -1,4 +1,4 @@
-dnl $Id: afs-check.m4,v 1.1 2002-01-17 05:48:51 srittau Exp $
+dnl $Id: afs-check.m4,v 1.2 2003-01-29 00:16:30 srittau Exp $
 dnl Autoconf macro to check whether AFS support should be enabled
 
 AC_DEFUN([NETATALK_AFS_CHECK], [
@@ -13,7 +13,7 @@ AC_DEFUN([NETATALK_AFS_CHECK], [
 					AC_MSG_ERROR([AFS installation not found])
 				)
 				AFS_LIBS=-lafsauthent
-				AC_DEFINE(AFS, 1)
+				AC_DEFINE(AFS, 1, [Define if AFS should be used])
 			fi
 		]
 	)

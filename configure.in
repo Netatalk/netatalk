@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.177 2003-01-21 16:22:59 srittau Exp $
+dnl $Id: configure.in,v 1.178 2003-01-29 00:16:23 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -116,12 +116,12 @@ dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
 dnl --------------------------------------------------------------------------
 
-AC_DEFINE(ADMIN_GRP, 1)
+AC_DEFINE(ADMIN_GRP, 1, [Define if the admin group should be enabled])
 
 AC_ARG_WITH(admin-group,
  	[  --disable-admin-group   disable admin group],
         if test "$enableval" = "no"; then
-		AC_DEFINE(ADMIN_GRP, 0)
+		AC_DEFINE(ADMIN_GRP, 0, [Define if the admin group should be enabled])
 		AC_MSG_RESULT([disabling administrative group support])
         fi
 )
@@ -134,16 +134,16 @@ AC_ARG_WITH(logfile,
 	[  --with-logfile=PATH     path for file used by logger [/var/log/netatalk.log]
                           use --without-logfile to disable logger],
         if test "$withval" = "no"; then
-		AC_DEFINE(DISABLE_LOGGER, 1)
+		AC_DEFINE(DISABLE_LOGGER, 1, [Define if the logger should not be used])
 		AC_MSG_RESULT([logger disabled])
 	elif test "$withval" != "yes"; then
-		AC_DEFINE_UNQUOTED(LOGFILEPATH, "$withval")
+		AC_DEFINE_UNQUOTED(LOGFILEPATH, "$withval", [Path to the log file])
 		AC_MSG_RESULT([logfile set to $withval])
 	else
-                AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log")
+                AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log", [Path to the log file])
                 AC_MSG_RESULT([logfile set to default]) 
 	fi,
-		AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log")
+		AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log", [Path to the log file])
 		AC_MSG_RESULT([logfile set to default])
 )
 
@@ -152,7 +152,7 @@ AC_ARG_WITH(cracklib,
 	if test "x$withval" != "xno" ; then
 		cracklib="$withval"
 		AC_CHECK_LIB(crack, main,
-			AC_DEFINE(USE_CRACKLIB) 
+			AC_DEFINE(USE_CRACKLIB, 1, [Define if cracklib should be used])
 			LIBS="$LIBS -lcrack"
 			AC_MSG_RESULT([enabling cracklib support])
 			if test "$cracklib" = "yes"; then
@@ -169,7 +169,7 @@ AC_ARG_WITH(cracklib,
 AC_ARG_ENABLE(ddp,
 	[  --disable-ddp           disable DDP],
 	if test "$enableval" = "no"; then 
-		AC_DEFINE(NO_DDP, 1)
+		AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 		AC_MSG_RESULT([disabling DDP])
 	fi
 )
@@ -178,9 +178,9 @@ AC_ARG_ENABLE(debug,
 	[  --enable-debug          enable debug code],
 	if test "$enableval" != "no"; then
 		if test "$enableval" = "yes"; then
-			AC_DEFINE(DEBUG, 1)
+			AC_DEFINE(DEBUG, 1, [Define if debugging information should be included])
 		else
-			AC_DEFINE_UNQUOTED(DEBUG, $enableval)
+			AC_DEFINE_UNQUOTED(DEBUG, $enableval, [Define if debugging information should be included])
 		fi 
 		AC_MSG_RESULT([enabling debugging code])
 	fi
@@ -191,7 +191,7 @@ AC_ARG_ENABLE(afp3,
 	[  --enable-afp3           enable AFP 3.x calls],
 	if test "$enableval" = "yes"; then
 		afp3=yes
-		AC_DEFINE(AFP3x, 1)
+		AC_DEFINE(AFP3x, 1, [Define to enable AFP 3.x support])
 		AC_MSG_RESULT([enabling AFP 3.x calls])
 	fi
 )
@@ -211,7 +211,7 @@ dnl -----------
 AC_ARG_ENABLE(dropkludge,
 	[  --enable-dropkludge     enable the experimental dropbox fix (INSECURE!) ],
 	if test "$enableval" = "yes"; then 
-		AC_DEFINE(DROPKLUDGE, 1)
+		AC_DEFINE(DROPKLUDGE, 1, [Define if you want to use the experimental dropkludge support])
 		AC_MSG_RESULT([enabling experimental dropbox support])
 	fi
 )
@@ -219,7 +219,7 @@ AC_ARG_ENABLE(dropkludge,
 AC_ARG_ENABLE(force-uidgid,
 	[  --enable-force-uidgid   allow forcing of uid/gid per volume (BROKEN) ],
 	if test "$enableval" = "yes"; then
-		AC_DEFINE(FORCE_UIDGID, 1)
+		AC_DEFINE(FORCE_UIDGID, 1, [Define if you want forcing of uid/gid per volume])
 		AC_MSG_RESULT([enabling forcing of uid/gid per volume])
 	fi
 )
@@ -236,11 +236,11 @@ AC_ARG_WITH(did,
 )
 
 if test "x$did_scheme" = "xlast"; then
-	AC_DEFINE(USE_LASTDID, 1)
+	AC_DEFINE(USE_LASTDID, 1, [Define if the last DID scheme should be used])
 	AC_MSG_RESULT([last])
 elif test "x$did_scheme" = "xcnid"; then
 	bdb_required="yes"
-	AC_DEFINE(CNID_DB, 1)
+	AC_DEFINE(CNID_DB, 1, [Define if the CNID DB DID scheme should be used])
 	AC_MSG_RESULT([enabling build with CNID DB support])
 else
 	AC_MSG_ERROR([unknown DID scheme])
@@ -256,7 +256,7 @@ AC_ARG_WITH(mangling,
 			if test "x$did_scheme" != "xcnid"; then
 				AC_MSG_ERROR([DID scheme must be CNID to use filename mangling])
 			else
-				AC_DEFINE(FILE_MANGLING, 1)
+				AC_DEFINE(FILE_MANGLING, 1, [Define if file name mangling should be used])
 				AC_MSG_RESULT([yes])
 			fi
 		else
@@ -264,7 +264,7 @@ AC_ARG_WITH(mangling,
 		fi
 	], [
 		if test "x$did_scheme" = "xcnid"; then
-			AC_DEFINE(FILE_MANGLING, 1)
+			AC_DEFINE(FILE_MANGLING, 1, [Define if file name mangling should be used])
 			AC_MSG_RESULT([yes])
 		else
 			AC_MSG_RESULT([no])
@@ -298,7 +298,7 @@ AC_ARG_WITH(cdb,
 )
 
 if test "$USE_CDB" = "yes"; then
-    AC_DEFINE(CNID_DB_CDB, 1)
+    AC_DEFINE(CNID_DB_CDB, 1, [Define if CNID should be used with Concurrent Data Store])
 fi
 
 dnl Check for Berkeley DB library
@@ -318,7 +318,7 @@ AC_PATH_PAM([
 	AFPD_LIBS="$AFPD_LIBS $PAM_LIBS"
 	use_pam_so=yes
 	compile_pam=yes
-	AC_DEFINE(USE_PAM)
+	AC_DEFINE(USE_PAM, 1, [Define to enable PAM support])
 ])
 
 AC_MSG_CHECKING([whether shadow support should be enabled])
@@ -328,14 +328,14 @@ AC_ARG_WITH(shadow,
 	[shadowpw=no]
 )
 if test "x$shadowpw" = "xyes"; then
-	AC_DEFINE(SHADOWPW)
+	AC_DEFINE(SHADOWPW, 1, [Define if shadow passwords should be used])
 fi
 AC_MSG_RESULT([$shadowpw])
 
 AC_ARG_ENABLE(shell-check,
 	[  --disable-shell-check   disable checking for a valid shell],
 	if test "$enableval" = "no"; then 
-		AC_DEFINE(DISABLE_SHELLCHECK, 1)
+		AC_DEFINE(DISABLE_SHELLCHECK, 1, [Define if shell check should be disabled])
 		AC_MSG_RESULT([disabling valid shell check])
 	fi
 )
@@ -343,7 +343,7 @@ AC_ARG_ENABLE(shell-check,
 AC_ARG_WITH(tcp-wrappers,
 	[  --with-tcp-wrappers     enable TCP wrappers support],
 	AC_CHECK_LIB(wrap, tcpd_warn,
-		AC_DEFINE(TCPWRAP)
+		AC_DEFINE(TCPWRAP, 1, [Define if TCP wrappers should be used])
 		AFPD_LIBS="$AFPD_LIBS -lwrap"
 		AC_MSG_RESULT([enabling TCP wrappers support])
 	)
@@ -421,7 +421,7 @@ AC_ARG_ENABLE(fhs,
 		NLSDIR="${PKGCONFDIR}/nls"
 		use_pam_so=yes
 		mandir="/usr/share/man"
-		AC_DEFINE(FHS_COMPATIBILITY)
+		AC_DEFINE(FHS_COMPATIBILITY, 1, [Define if you want compatibily with the FHS])
 	fi
 	AC_MSG_RESULT([enabling Filesystem Hierarchy Standard (FHS) compatibility])
 )
@@ -479,36 +479,36 @@ dnl --------------------- operating system specific flags (port from sys/*)
 dnl ----- AIX specific -----
 if test x"$this_os" = "xaix"; then
 	AC_MSG_RESULT([ * AIX specific configuration])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 
 	dnl This is probably a lie; AIX 4.3 supports a 64-bit long
 	dnl compilation environment.  It's enough to get things defined
 	dnl right in endian.h provided that long long is supported, though.
-	AC_DEFINE(HAVE_32BIT_LONGS)
+	AC_DEFINE(HAVE_32BIT_LONGS, 1, [Define if the data type long has 32 bit])
 fi
 
 dnl ----- FreeBSD specific -----
 if test x"$this_os" = "xfreebsd"; then 
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
-	AC_DEFINE(BSD4_4)
-	AC_DEFINE(SENDFILE_FLAVOR_BSD)
+	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
+	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
 
-	AC_DEFINE(NO_CRYPT_H, 1)
+	AC_DEFINE(NO_CRYPT_H, 1, [Define if crypt.h does not exist])
 fi
 
 dnl ----- HP-UX 11 specific -----
 if test x"$this_os" = "xhpux11"; then
 	AC_MSG_RESULT([ * HP-UX 11 specific configuration])
 
-	AC_DEFINE(_ISOC9X_SOURCE)
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
+	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 fi
 
 dnl ----- IRIX specific -----
 if test x"$this_os" = "xirix"; then
 	AC_MSG_RESULT([ * IRIX specific configuration])
 
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 fi
 
 dnl ----- Linux specific -----
@@ -518,14 +518,14 @@ if test x"$this_os" = "xlinux"; then
 	dnl ----- check if we need the quotactl wrapper
 	AC_CHECK_HEADERS(sys/quota.h linux/quota.h)
 	AC_CHECK_FUNC(quotactl,,
-		AC_DEFINE(NEED_QUOTACTL_WRAPPER)
+		AC_DEFINE(NEED_QUOTACTL_WRAPPER, 1, [Define if the quotactl wrapper is needed])
 		AC_MSG_RESULT([enabling quotactl wrapper])
 	)
 
 	dnl ----- as far as I can tell, dbtob always does the wrong thing
 	dnl ----- on every single version of linux I've ever played with.
 	dnl ----- see etc/afpd/quota.c
-	AC_DEFINE(HAVE_BROKEN_DBTOB)
+	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
 
 	dnl --- added by Yoshinobu Ishizaki (2001.03.13) ---
 	dnl ----- check if version is newer than 2.2.x
@@ -536,7 +536,7 @@ if test x"$this_os" = "xlinux"; then
 		if [ $minorvers -ge 2 ]; then
 			changequote([,])
 			AC_MSG_RESULT([ * found Linux 2.2.x or higher])
-			AC_DEFINE(SENDFILE_FLAVOR_LINUX)
+			AC_DEFINE(SENDFILE_FLAVOR_LINUX, 1, [Define if the sendfile() function uses Linux semantics])
 		else
 			AC_MSG_RESULT([ * found Linux 2.0.x ]) 
 		fi
@@ -545,7 +545,7 @@ if test x"$this_os" = "xlinux"; then
 	dnl ----- Linux/alpha specific -----
 	if test x"$this_cpu" = "xalpha"; then 
 		AC_MSG_RESULT([enabling gcc memcpy bug workaround])
-		AC_DEFINE(HAVE_GCC_MEMCPY_BUG)
+		AC_DEFINE(HAVE_GCC_MEMCPY_BUG, 1, [Define if memcpy is buggy])
 	fi
 	need_dash_r=no
 fi
@@ -553,49 +553,49 @@ fi
 dnl ----- Mac OSX specific -----
 if test x"$this_os" = "xmacosx"; then 
 	AC_MSG_RESULT([ * Mac OSX specific configuration])
-	AC_DEFINE(BSD4_4)
-	AC_DEFINE(HAVE_BROKEN_CPP)
-	AC_DEFINE(HAVE_2ARG_DBTOB)
+	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
+	AC_DEFINE(HAVE_BROKEN_CPP, 1, [Define if cpp is broken])
+	AC_DEFINE(HAVE_2ARG_DBTOB, 1, [Define if dbtob takes two arguments])
 	dnl AC_DEFINE(NO_DLFCN_H)
-	AC_DEFINE(MACOSX_SERVER)
+	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
 fi
 
 dnl ----- NetBSD specific -----
 if test x"$this_os" = "xnetbsd"; then 
 	AC_MSG_RESULT([ * NetBSD specific configuration])
-	AC_DEFINE(BSD4_4)
+	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	if echo __ELF__ | $CC -E - | grep __ELF__ > /dev/null; then
 		# NetBSD ELF machines don't have to have DLSYM_PREPEND_UNDERSCORE.
 		# If this test is true, it's not an ELF box.
 		# This REALLY should be a configure test.
-		AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+		AC_DEFINE(DLSYM_PREPEND_UNDERSCORE, 1, [BSD compatibility macro])
 	fi
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
 	need_dash_r=yes 
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
-	AC_DEFINE(UAM_DHX, 1)
-	AC_DEFINE(NO_CRYPT_H, 1)
+	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
+	AC_DEFINE(NO_CRYPT_H, 1, [Define if crypt.h does not exist])
 fi
 
 dnl ----- OpenBSD specific -----
 if test x"$this_os" = "xopenbsd"; then 
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
-	AC_DEFINE(BSD4_4)
-	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
+	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE, 1, [BSD compatibility macro])
 
 	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
-	AC_DEFINE(UAM_DHX, 1)
-	AC_DEFINE(NO_CRYPT_H, 1)
+	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
+	AC_DEFINE(NO_CRYPT_H, 1, [Define if crypt.h does not exist])
 fi
 
 dnl ----- Solaris specific -----
 if test x"$this_os" = "xsolaris"; then 
 	AC_MSG_RESULT([ * Solaris specific configuration])
-	AC_DEFINE(__svr4__)
-	AC_DEFINE(_ISOC9X_SOURCE)
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
-	AC_DEFINE(SOLARIS)
+	AC_DEFINE(__svr4__, 1, [Solaris compatibility macro])
+	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
+	AC_DEFINE(SOLARIS, 1, [Solaris compatibility macro])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
 
@@ -606,12 +606,12 @@ fi
 dnl ----- Tru64 specific -----
 if test x"$this_os" = "xtru64"; then 
 	AC_MSG_RESULT([ * Tru64 specific configuration])
-	AC_DEFINE(NO_DDP)
-	AC_DEFINE(HAVE_64BIT_LONGS)
+	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
+	AC_DEFINE(HAVE_64BIT_LONGS, 1, [Define if the data type long has 64 bit])
 	dnl AC_DEFINE(USE_MOUNT_H)
-	AC_DEFINE(USE_OLD_RQUOTA)
+	AC_DEFINE(USE_OLD_RQUOTA, 1, [Define to use old rquota])
 	dnl AC_DEFINE(USE_UFS_QUOTA_H)
-	AC_DEFINE(TRU64)
+	AC_DEFINE(TRU64, 1, [Define on Tru64 platforms])
 	AC_CHECK_LIB(security,set_auth_parameters)
 	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
 	need_dash_r=no
@@ -627,7 +627,7 @@ AC_ARG_ENABLE(pgp-uam,
 	[  --enable-pgp-uam        enable build of PGP UAM module],
 	if test "$enableval" = "yes"; then 
 		if test "$compile_ssl" = "yes"; then 
-			AC_DEFINE(UAM_PGP, 1)
+			AC_DEFINE(UAM_PGP, 1, [Define if the PGP UAM module should be compiled])
 			compile_pgp=yes
 			AC_MSG_RESULT([enabling build with PGP UAM module])
 		fi
@@ -639,7 +639,7 @@ dnl --------------------- check for building Kerberos v4 UAM module
 AC_ARG_ENABLE(krb4-uam,
 	[  --enable-krb4-uam       enable build of Kerberos v4 UAM module],
 	if test "$enableval" = "yes"; then
-		AC_DEFINE(UAM_KRB4, 1)
+		AC_DEFINE(UAM_KRB4, 1, [Define if the Kerberos 4 UAM module should be compiled])
 		compile_kerberos=yes
 		AC_MSG_RESULT([enabling build with Kerberos v4 UAM module])
 	fi
