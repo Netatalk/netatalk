@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.56 2003-06-26 02:15:21 didg Exp $
+ * $Id: volume.c,v 1.57 2003-09-03 21:25:38 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -355,7 +355,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
             if (strcasecmp(p, "prodos") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_A2VOL;
             else if (strcasecmp(p, "mswindows") == 0) {
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_MSWINDOWS;
+                options[VOLOPT_FLAGS].i_value |= (AFPVOL_MSWINDOWS | AFPVOL_USEDOTS);
                 if (!options[VOLOPT_CODEPAGE].c_value)
                     options[VOLOPT_CODEPAGE].c_value =
                         get_codepage_path(nlspath, MSWINDOWS_CODEPAGE);
