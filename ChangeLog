@@ -14,6 +14,9 @@
 	* VERSION: bumped up version to 1.5pre5, since 1.5pre4 was kind of
 	paperbag-ish
 
+	* autogen.sh: make libtoolize copy instead of linking files to
+	avoid problems, thanks to Wes Hardaker <hardaker@users.sourceforge.net>
+
 2001-02-20  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	Released 1.5pre4
