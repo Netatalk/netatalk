@@ -1,8 +1,11 @@
 netatalk (1.5pre6-2cvs) unstable; urgency=medium
 
   * Non-DSFG free code was removed. Copyright notice was changed accordingly.
+  * Use ./configure --sysconfdir instead of --with-config-dir.
+  * Upstream package does now install PAM file in the correct directory.
+    Removed rule, correcting this from Debian rules file.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Sat,  5 May 2001 18:13:50 +0200
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Thu, 10 May 2001 01:52:47 +0200
 
 netatalk (1.5pre6-2) unstable; urgency=low
 

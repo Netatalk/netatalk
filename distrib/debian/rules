@@ -7,7 +7,7 @@ build-stamp:
 	dh_testdir
 
 	./configure --with-cflags=-O2 --with-shadow \
-		--enable-fhs --with-config-dir=/etc/netatalk \
+		--enable-fhs --sysconfdir=/etc/netatalk \
 		--with-tcp-wrappers --mandir=/usr/share/man --prefix=/usr
 	$(MAKE)
 
@@ -36,9 +36,6 @@ binary-arch: build
 	dh_installman
 	dh_undocumented
 	dh_installchangelogs ChangeLog
-
-	# Move PAM config file to PAM directory.
-	mv debian/tmp/etc/netatalk/netatalk.pamd debian/tmp/etc/pam.d/netatalk
 
 	# Manually remove a header file that is shipped with glibc and
 	# the Linux Kernel.
