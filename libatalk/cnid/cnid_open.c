@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.17 2001-11-04 17:34:15 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.18 2001-11-04 22:13:50 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -171,6 +171,8 @@ static int compare_unicode(const DBT *a, const DBT *b)
 #endif /* DB_VERSION_MINOR */
 }
 
+static int have_lock = 0;
+
 void *cnid_open(const char *dir) {
 	struct stat st;
 	struct flock lock;
@@ -236,7 +238,7 @@ void *cnid_open(const char *dir) {
 		syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock (open() failed)");
 	}
 	
-	if (db->lockfd > -1 && lock.l_start == 0) {
+	if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
 		/* We test to see if we have exclusive database access.  If we do, we
 		 * will open the database with the DB_RECOVER flag.
 		 */
@@ -244,6 +246,7 @@ void *cnid_open(const char *dir) {
 		syslog(LOG_INFO, "cnid_open: Opening database with DB_RECOVER flag");
 #endif
 		DBEXTRAS |= DB_RECOVER;
+		have_lock = 1;
 	}
 
 
