@@ -1,3 +1,29 @@
+Changes from 1.5.1
+==================
+
+* NEW: NetBSD support contributed by David Rankin and NetBSD contributors.
+       This includes a new configure option --enable-netbsd.
+* NEW: Add the -client_polling afpd.conf flag to allow for clients to poll
+       the server every 10 seconds for open window updates.  Currently
+       this is the only way to get asynchronous directory updates.
+* UPD: Use separate macro for AFS configure check.
+* UPD: Some Perl scripts are now (partially) auto-generated. This improves
+       out-of-the-box usage of Netatalk.
+* UPD: Solaris Kernel Makefile is now auto-generated. This fixes some path
+       issues, but isn't perfect, yet. Added some Solaris compatibility
+       fixes to the Kernel sources, too.
+* UPD: CNID DB code sync'd with the current CVS version.  NOTE: Using this
+       code requires you to delete _all_ existing .AppleDB directories in
+       order to avoid database corruption!
+* FIX: The file AppleVolumes.system contained wrong line breaks so that
+       not all file types were properly recognized.
+* FIX: AFS compilation would fail due to a misnamed variable.
+* FIX: SLP configure check was wrong so SLP did not compile.
+* FIX: Fix the way quotas are handled under certain situations.
+* FIX: Do not enable debugging code if debugging option is not set.
+* FIX: Some problems with wrongly assigned DIDs were fixed.
+* FIX: Various bug fixes and code cleanups.
+
 Changes from 1.5.0
 ==================
 
