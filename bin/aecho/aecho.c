@@ -1,5 +1,5 @@
 /*
- * $Id: aecho.c,v 1.5 2001-08-03 22:07:22 srittau Exp $
+ * $Id: aecho.c,v 1.6 2003-06-06 19:35:15 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -139,6 +139,8 @@ int main( ac, av )
 	        fprintf(stderr, "Bad address.\n");
 		exit(1);
 	    }
+	    break;
+
 	  case 'c' :
 	    pings = atoi( optarg );
 	    break;
