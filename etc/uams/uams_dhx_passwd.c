@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.12 2001-10-24 16:21:33 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.13 2001-10-24 16:25:24 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -9,8 +9,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
-#ifdef UAM_DHX
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -315,5 +313,3 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
-
-#endif /* UAM_DHX */
