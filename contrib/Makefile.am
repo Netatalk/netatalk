@@ -1,5 +1,5 @@
 # Makefile.am for contrib/
 
-SUBDIRS = nu printing
+SUBDIRS = nu printing timelord
 
 EXTRA_DIST = ICDumpSuffixMap
