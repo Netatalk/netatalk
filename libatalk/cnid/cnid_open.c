@@ -1,4 +1,37 @@
-
+/*
+ * $Id: cnid_open.c,v 1.16 2001-10-21 08:38:30 jmarcus Exp $
+ *
+ * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
+ * All Rights Reserved. See COPYRIGHT.
+ *
+ * CNID database support. 
+ *
+ * here's the deal:
+ *  1) afpd already caches did's. 
+ *  2) the database stores cnid's as both did/name and dev/ino pairs. 
+ *  3) RootInfo holds the value of the NextID.
+ *  4) the cnid database gets called in the following manner --
+ *     start a database:
+ *     cnid = cnid_open(root_dir);
+ *
+ *     allocate a new id: 
+ *     newid = cnid_add(cnid, dev, ino, parent did,
+ *     name, id); id is a hint for a specific id. pass 0 if you don't
+ *     care. if the id is already assigned, you won't get what you
+ *     requested.
+ *
+ *     given an id, get a did/name and dev/ino pair.
+ *     name = cnid_get(cnid, &id); given an id, return the corresponding
+ *     info.
+ *     return code = cnid_delete(cnid, id); delete an entry. 
+ *
+ * with AFP, CNIDs 0-2 have special meanings. here they are:
+ * 0 -- invalid cnid
+ * 1 -- parent of root directory (handled by afpd) 
+ * 2 -- root directory (handled by afpd)
+ *
+ * so, CNID_START begins at 3.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
