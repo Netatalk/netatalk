@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.35 2002-01-23 02:31:32 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.36 2002-01-24 16:22:16 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -348,14 +348,13 @@ void *cnid_open(const char *dir) {
     /* If we have the recovery lock, close the file, remove it, so other
      * clients can proceed opening the DB environment. */
     if (rfd > -1) {
-        (void)remove(recover_file);
-        switch(errno) {
-        case 0:
-        case ENOENT:
-            break;
-        default:
-            LOG(log_error, logtype_default, "cnid_open: Unable to remove %s: %s",
-                recover_file, strerror(errno));
+        if (remove(recover_file) < 0) {
+            switch(errno) {
+            case ENOENT:
+                break;
+            default:
+                LOG(log_error, logtype_default, "cnid_open: Unable to remove %s: %s", recover_file, strerror(errno));
+            }
         }
         close(rfd);
         rfd = -1;
