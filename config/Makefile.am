@@ -23,7 +23,7 @@ pkgconfdir = @PKGCONFDIR@
 	sed -e s@:UAMS_PATH:@${UAMS_PATH}@ \
 	    -e s@:NLS_PATH:@${pkgconfdir}/nls@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
-	    <$^ >$@
+	    <$< >$@
 
 #
 # pluggable authentication modules support

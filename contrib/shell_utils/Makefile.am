@@ -8,7 +8,7 @@ SUFFIXES = .tmpl .
 	sed -e s@:BINDIR:@${bindir}@ \
 		-e s@:SBINDIR:@${sbindir}@ \
 		-e s@:ETCDIR:@${pkgconfdir}@ \
-		<$^ >$@
+		<$< >$@
 
 CLEANFILES = lp2pap.sh
 
