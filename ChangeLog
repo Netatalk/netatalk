@@ -1,3 +1,10 @@
+2001-10-16  Lance Levsen  <l.levsen@printwest.com>
+
+	* man/man1/Makefile.am: Modified to allow variable subs in man pages.
+
+	* contrib/shell_utils/apple_cp: Updated. Fixed file to file
+	copy.
+
 2001-10-15  Lance Levsen  <l.levsen@printwest.com>
 
 	* CONTRIBUTORS: Now up to date.
