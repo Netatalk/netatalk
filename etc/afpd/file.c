@@ -319,13 +319,15 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     struct stat         st;
 #ifdef DROPKLUDGE
     struct stat		sb;
+    char		adpath[50];
+    int			uid;
 #endif DROPKLUDGE
     struct adouble	ad, *adp;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path, *upath, adpath[50];
-    int			creatf, did, openf, uid;
+    char		*path, *upath;
+    int			creatf, did, openf;
     u_int16_t		vid;
 
     *rbuflen = 0;
@@ -404,7 +406,6 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:
-    setvoltime(obj, vol );
 
 #ifdef DROPKLUDGE
 
@@ -429,6 +430,7 @@ you are a developer who wants to try it out and fix it. */
 
 #endif DROPKLUDGE
 
+    setvoltime(obj, vol );
     return AFP_OK;
 }
 
