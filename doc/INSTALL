@@ -18,7 +18,7 @@ Netatalk is known to run on at least five operating systems:
 See ./doc/README.platforms for more information.
 
 Quickly:
-$> ./autogen.sh
+$> ./autogen.sh   (only needed for installs from CVS)
 $> ./configure [options]
 $> make
 $> make install
