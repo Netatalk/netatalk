@@ -75,10 +75,6 @@ extern int addr_net, addr_node, addr_uid;
 extern char addr_name[32];
 #endif /* CAPDIR */
 
-void forcedlogout() {
-    syslog (LOG_INFO, "Connection terminated");
-}
-
 void status_versions( data )
     char	*data;
 {
@@ -222,12 +218,6 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
     afp_switch = postauth_switch;
     obj->logout = logout;
-
-    /* Run logout if the process is terminated */
-    if (atexit((void *) forcedlogout))
-	syslog (LOG_INFO, "Unable to set up logout on kill: %m");
-	/* This is a non-critical error, so afpd doesn't need to abort
-	or return an error value */
 
     return( AFP_OK );
 }

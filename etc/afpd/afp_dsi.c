@@ -50,6 +50,9 @@ static __inline__ void afp_dsi_close(AFPObj *obj)
       (*obj->logout)();
 		      
     dsi_close(dsi);
+
+    /* UAM had syslog control; afpd needs to reassert itself */
+    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
     syslog(LOG_INFO, "%.2fKB read, %.2fKB written",
 	   dsi->read_count/1024.0, dsi->write_count/1024.0);
 }
@@ -59,10 +62,15 @@ static void afp_dsi_die(int sig)
 {
     dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN);
     afp_dsi_close(child.obj);
-    if (sig == SIGTERM || sig == SIGALRM)
+    if (sig) /* if no signal, assume dieing because logins are disabled &
+	don't log it (maintenance mode)*/
+      syslog (LOG_INFO, "Connection terminated");
+    if (sig == SIGTERM || sig == SIGALRM) {
       exit( 0 );
-    else
+    }
+    else {
       exit(sig);
+    }
 }
 
 static void afp_dsi_timedown()
@@ -98,7 +106,7 @@ static void afp_dsi_timedown()
 }
 
 #ifdef SERVERTEXT
-static void afp_dsi_getmesg (void)
+static void afp_dsi_getmesg (int sig)
 {
       readmessage();
       dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5));
