@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.18 2002-01-19 17:27:20 jmarcus Exp $
+ * $Id: quota.c,v 1.19 2002-02-03 05:01:09 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -366,7 +366,7 @@ struct dqblk	*dqblk;
         LOG(log_error, logtype_default, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
     }
-    if ( !dqblk->dqb_btimelimit || dqblk->dqb_btimelimit > tv.tv_sec ) {
+    if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
 #endif /* ultrix */
