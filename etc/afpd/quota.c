@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.5 2001-05-07 20:05:32 rufustfirefly Exp $
+ * $Id: quota.c,v 1.6 2001-05-22 19:13:36 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -105,7 +105,7 @@ special( file, nfs )
 }
 
 #else /* ultrix */
-#if defined(HAVE_MOUNT_H) || defined(BSD4_4) || defined(_IBMR2)
+#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || defined(_IBMR2)
 
 static char *
 special( file, nfs )

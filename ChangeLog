@@ -1,8 +1,14 @@
-($Id: ChangeLog,v 1.36 2001-05-22 13:35:26 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.37 2001-05-22 19:13:36 rufustfirefly Exp $)
 
 2001-05-22  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, etc/afpd/unix.h: more portability fixes, and
 	integration of Tru64 build fix from Edmund Lam <epl@unimelb.edu.au>
+
+	* configure.in, bin/megatron/Makefile.am,
+	distrib/initscripts/Makefile.am, etc/afpd/main.c,
+	etc/afpd/quota.c, etc/afpd/unix.h,
+	etc/uams/uams_dhx_passwd.c, etc/uams/uams_passwd.c: Another
+	round of Tru64 patches from Burkhard Schmidt <bs@cpfs.mpg.de>
 
 2001-05-09  jeff b  <jeff@univrel.pr.uconn.edu>
 	* autogen.sh: added automake --include-deps to autogen.sh to

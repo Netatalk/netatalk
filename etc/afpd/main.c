@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.5 2001-05-03 13:57:44 rufustfirefly Exp $
+ * $Id: main.c,v 1.6 2001-05-22 19:13:36 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -43,6 +43,12 @@
 #include "status.h"
 #include "fork.h"
 #include "uam_auth.h"
+
+#ifdef TRU64
+#include <sys/security.h>
+#include <prot.h>
+#include <sia.h>
+#endif /* TRU64 */
 
 unsigned char	nologin = 0;
 
@@ -128,9 +134,9 @@ int main( ac, av )
     struct sigaction	sv;
     sigset_t            sigs;
 
-#ifdef DIGITAL_UNIX_SECURITY
-	set_auth_parameters( ac, av );
-#endif /* DIGITAL_UNIX_SECURITY */
+#ifdef TRU64
+    set_auth_parameters( ac, av );
+#endif /* TRU64 */
 
     umask( 0 );		/* so inherited file permissions work right */
 

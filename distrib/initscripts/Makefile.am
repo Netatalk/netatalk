@@ -62,7 +62,7 @@ endif
 
 if USE_TRU64
 
-sysvdir	= /etc/rc.d/init.d
+sysvdir	= /sbin/init.d
 sysv_SCRIPTS = atalk
 
 atalk: rc.atalk.tru64

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.7 2001-05-08 18:03:19 rufustfirefly Exp $
+ * $Id: uams_dhx_passwd.c,v 1.8 2001-05-22 19:13:36 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -56,11 +56,14 @@ static CAST_KEY castkey;
 static struct passwd *dhxpwd;
 static u_int8_t randbuf[16];
 
-#ifdef DIGITAL_UNIX_SECURITY
+#ifdef TRU64
 #include <sys/types.h>
 #include <sys/security.h>
 #include <prot.h>
-#endif /* DIGITAL_UNIX_SECURITY */
+#include <sia.h>
+
+static int c2security = 0;
+#endif /* TRU64 */
 
 /* dhx passwd */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
@@ -81,9 +84,9 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     DH *dh;
 
 #ifdef TRU64
-	static const char rnd_seed[] = "string to make the random number generator think it has entropy";
-	RAND_seed(rnd_seed, sizeof rnd_seed);
-#endif
+    static const char rnd_seed[] = "string to make the random number generator think it has entropy";
+    RAND_seed(rnd_seed, sizeof rnd_seed);
+#endif /* TRU64 */
 
     *rbuflen = 0;
 
@@ -212,11 +215,6 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     u_int16_t sessid;
     char *p;
 
-#ifdef DIGITAL_UNIX_SECURITY
-	char *bigcrypt();
-	struct pr_passwd *pr;
-#endif /* DIGITAL_UNIX_SECURITY */
-
     *rbuflen = 0;
 
     /* check for session id */
@@ -262,23 +260,32 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     BN_free(bn3);
 
     rbuf[PASSWDLEN] = '\0';
-#ifdef DIGITAL_UNIX_SECURITY
-	pr = getprpwnam( dhxpwd->pw_name );
+#ifdef TRU64
+    if ( c2security == 1 ) {
+        struct pr_passwd *pr = getprpwnam( dhxpwd->pw_name );
 	if ( pr == NULL )
-		return AFPERR_NOTAUTH;
-	if ( strcmp ( bigcrypt ( rbuf, pr->ufld.fd_encrypt ),
-		pr->ufld.fd_encrypt ) == 0 ) {
-		*uam_pwd = dhxpwd;
-		return AFP_OK;
+	    return AFPERR_NOTAUTH;
+	if ( strcmp( dispcrypt( rbuf, pr->ufld.fd_encrypt,
+            pr->ufld.fd_oldcrypt ), pr->ufld.fd_encrypt ) == 0 ) {
+            *uam_pwd = dhxpwd;
+            return AFP_OK;
 	}
-#else /* DIGITAL_UNIX_SECURITY */
+    } else {
+        p = crypt( rbuf, dhxpwd->pw_passwd );
+        memset(rbuf, 0, PASSWDLEN);
+        if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
+            *uam_pwd = dhxpwd;
+            return AFP_OK;
+        }
+    }
+#else /* TRU64 */
     p = crypt( rbuf, dhxpwd->pw_passwd );
     memset(rbuf, 0, PASSWDLEN);
     if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
       *uam_pwd = dhxpwd;
       return AFP_OK;
     }
-#endif /* DIGITAL_UNIX_SECURITY */
+#endif /* TRU64 */
 
     return AFPERR_NOTAUTH;
 }
@@ -286,6 +293,37 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 
 static int uam_setup(const char *path)
 {
+#ifdef TRU64
+    FILE *f;
+    char buf[256];
+    char siad[] = "siad_ses_init=";
+
+    if ( access( SIAIGOODFILE, F_OK ) == -1 ) {
+        syslog( LOG_ERR, "dhx uam_setup: %s does not exist",
+            SIAIGOODFILE);
+        return -1;
+    }
+
+    if ( ( f = fopen(MATRIX_CONF, "r" ) ) == NULL ) {
+        syslog( LOG_ERR, "dhx uam_setup: %s is unreadable",
+            MATRIX_CONF );
+        return -1;
+    }
+
+    while ( fgets( buf, sizeof(buf), f ) != NULL ) {
+        if ( strncmp( buf, siad, sizeof(siad) - 1 ) == 0 ) {
+            if ( strstr( buf, "OSFC2" ) != NULL )
+                c2security = 1;
+            break;
+        }
+    }
+
+    fclose(f);
+
+    syslog( LOG_INFO, "dhx uam_setup: security level %s",
+        c2security == 0 ? "BSD" : "OSFC2" );
+#endif /* TRU64 */
+
   if (uam_register(UAM_SERVER_LOGIN, path, "DHCAST128",
 		   passwd_login, passwd_logincont, NULL) < 0)
     return -1;

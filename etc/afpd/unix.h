@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.5 2001-05-22 13:35:27 rufustfirefly Exp $
+ * $Id: unix.h,v 1.6 2001-05-22 19:13:36 rufustfirefly Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -50,10 +50,10 @@ typedef int	mode_t;
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-#if defined(HAVE_MOUNT_H) || defined(BSD4_4) || \
+#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
     defined(linux) || defined(ultrix)
 #include <sys/mount.h>
-#endif /* HAVE_MOUNT_H || BSD4_4 || linux || ultrix */
+#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || linux || ultrix */
 
 #if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
