@@ -50,13 +50,14 @@
 
 #define COUNT_ARRAY(array) (sizeof((array))/sizeof((array)[0]))
 #define NUMOF COUNT_ARRAY
-#undef  KEEP_LOGFILES_OPEN
+#define KEEP_LOGFILES_OPEN
 #define DO_SYSLOG
 #define DO_FILELOG
 
 #undef  DEBUG_OUTPUT_TO_SCREEN
 #undef  CHECK_STAT_ON_NEW_FILES 
 #undef  CHECK_ACCESS_ON_NEW_FILES 
+#define OPEN_LOGS_AS_UID 0
 
 /* =========================================================================
     External function declarations
@@ -372,6 +373,7 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
   }
 #endif /* CHECK_ACCESS_ON_NEW_FILES */
 #endif /* CHECK_STAT_ON_NEW_FILES */
+/*
 #ifdef KEEP_LOGFILES_OPEN
   if ((*logs)[1].log_file!=NULL)
     fclose((*logs)[1].log_file);
@@ -385,6 +387,7 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
     return false;
   }
 #endif
+*/
 
   LOG(log_debug7, logtype_logger, "log_file_arr[%d] now contains: "
 	                          "{log_filename:%s, log_file:%p, log_level: %d}", logtype,
@@ -520,7 +523,9 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
   char log_buffer[MAXLOGSIZE];
 #ifndef DISABLE_LOGGER
   char log_details_buffer[MAXLOGSIZE];
-
+#ifdef OPEN_LOGS_AS_UID
+  uid_t process_uid;
+#endif
   log_file_data_pair *logs;
 
   log_init();
@@ -586,7 +591,14 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 #ifdef DEBUG_OUTPUT_TO_SCREEN
       printf("Opening the Log, filename is %s\n", (*logs)[1].log_filename);
 #endif
+#ifdef OPEN_LOGS_AS_UID
+   process_uid = getuid();
+   setuid(OPEN_LOGS_AS_UID);
+#endif
       (*logs)[1].log_file     = fopen((*logs)[1].log_filename, "at");
+#ifdef OPEN_LOGS_AS_UID
+   setuid(process_uid);
+#endif
       if ((*logs)[1].log_file == NULL)
       {
         (*logs)[1].log_file = stdout;
@@ -619,7 +631,9 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
       printf("Closed\n");
 #endif
     }
-#endif 
+#else // KEEP_LOGFILES_OPEN
+    fflush((*logs)[1].log_file);
+#endif // KEEP_LOGFILES_OPEN
   }
 #endif
 
