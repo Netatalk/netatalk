@@ -1,5 +1,5 @@
 /*
- * $Id: nfsquota.c,v 1.10 2002-08-29 17:22:06 jmarcus Exp $
+ * $Id: nfsquota.c,v 1.11 2003-12-28 13:51:12 srittau Exp $
  *
  * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:
@@ -38,7 +38,7 @@ char *strchr (), *strrchr ();
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/param.h> /* for DEV_BSIZE */
-#include <sys/time.h>  /* <rpc/rpc.h> on ultrix doesn't include this */
+#include <sys/time.h>
 #include <atalk/logger.h>
 
 #ifdef HAVE_NETDB_H
@@ -163,15 +163,15 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
             gq_rslt.GQR_RQUOTA.rq_bhardlimit*NFS_BSIZE;
         dqp->dqb_bsoftlimit =
             gq_rslt.GQR_RQUOTA.rq_bsoftlimit*NFS_BSIZE;
+#ifdef HAVE_STRUCT_IF_DQBLK
+	dqp->dqb_curspace =
+#else
         dqp->dqb_curblocks =
+#endif
             gq_rslt.GQR_RQUOTA.rq_curblocks*NFS_BSIZE;
 
-#ifdef ultrix
-        dqp->dqb_bwarn = gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#else /* ultrix */
         dqp->dqb_btimelimit =
             tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#endif /* ultrix */
 
         *hostpath = ':';
         return AFP_OK;

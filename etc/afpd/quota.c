@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.23 2003-12-15 04:49:56 srittau Exp $
+ * $Id: quota.c,v 1.24 2003-12-28 13:51:12 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -95,31 +95,6 @@ int         *nfs;
 }
 
 #else /* __svr4__ */
-#ifdef ultrix
-/*
-* Return the block-special device name associated with the filesystem
-* on which "file" resides.  Returns NULL on failure.
-*/
-
-static char *
-special( file, nfs )
-char *file;
-int  *nfs;
-{
-    static struct fs_data	fsd;
-
-    if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
-        return( NULL );
-    }
-
-    /* XXX: does this really detect an nfs mounted fs? */
-    if (strchr(fsd.fd_req.devname, ':'))
-        *nfs = 1;
-    return( fsd.fd_req.devname );
-}
-
-#else /* ultrix */
 #if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
 
 static char *
@@ -188,7 +163,6 @@ int *nfs;
 }
 
 #endif /* BSD4_4 */
-#endif /* ultrix */
 #endif /* __svr4__ */
 
 
@@ -208,11 +182,6 @@ struct dqblk        *dq;
     }
 
 #else /* __svr4__ */
-#ifdef ultrix
-    if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
-        return( AFPERR_PARAM );
-    }
-#else /* ultrix */
 
 #ifndef USRQUOTA
 #define USRQUOTA   0
@@ -271,8 +240,13 @@ struct dqblk        *dq;
     /* set stuff up for group quotas if necessary */
 
     /* max(user blocks, group blocks) */
+#ifdef HAVE_STRUCT_IF_DQBLK
+    if (dqg.dqb_curspace && (dq->dqb_curspace < dqg.dqb_curspace))
+        dq->dqb_curspace = dqg.dqb_curspace;
+#else
     if (dqg.dqb_curblocks && (dq->dqb_curblocks < dqg.dqb_curblocks))
         dq->dqb_curblocks = dqg.dqb_curblocks;
+#endif
 
     /* min(user limit, group limit) */
     if (dqg.dqb_bhardlimit && (!dq->dqb_bhardlimit ||
@@ -291,7 +265,6 @@ struct dqblk        *dq;
 
 #endif /* TRU64 */
 
-#endif /* ultrix */
 #endif /* __svr4__ */
 
     return AFP_OK;
@@ -389,14 +362,13 @@ struct dqblk	*dqblk;
 {
     struct timeval	tv;
 
+#ifdef HAVE_STRUCT_IF_DQBLK
+    if ( dqblk->dqb_curspace < dqblk->dqb_bsoftlimit ) {
+#else
     if ( dqblk->dqb_curblocks < dqblk->dqb_bsoftlimit ) {
-        return( 0 );
+#endif
+        return 0 ;
     }
-#ifdef ultrix
-    if ( dqblk->dqb_bwarn ) {
-        return( 0 );
-    }
-#else /* ultrix */
     if ( gettimeofday( &tv, 0 ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
@@ -404,7 +376,6 @@ struct dqblk	*dqblk;
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
-#endif /* ultrix */
     return( 1 );
 }
 
@@ -448,14 +419,23 @@ const u_int32_t bsize;
     if (dqblk.dqb_bsoftlimit == 0 && dqblk.dqb_bhardlimit == 0) {
         *btotal = *bfree = ~((VolSpace) 0);
     } else if ( overquota( &dqblk )) {
+#ifdef HAVE_STRUCT_IF_DQBLK
+        if ( tobytes( dqblk.dqb_curspace, bsize ) > tobytes( dqblk.dqb_bhardlimit, bsize ) ) {
+            *btotal = tobytes( dqblk.dqb_curspace, bsize );
+#else
         if ( tobytes( dqblk.dqb_curblocks, bsize ) > tobytes( dqblk.dqb_bhardlimit, bsize ) ) {
             *btotal = tobytes( dqblk.dqb_curblocks, bsize );
+#endif
             *bfree = 0;
         }
         else {
             *btotal = tobytes( dqblk.dqb_bhardlimit, bsize );
             *bfree = tobytes( dqblk.dqb_bhardlimit, bsize ) -
+#ifdef HAVE_STRUCT_IF_DQBLK
+                     tobytes( dqblk.dqb_curspace, bsize );
+#else
                      tobytes( dqblk.dqb_curblocks, bsize );
+#endif
         }
     } else {
         *btotal = tobytes( dqblk.dqb_bsoftlimit, bsize );

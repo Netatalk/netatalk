@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.15 2003-12-15 04:59:45 srittau Exp $
+ * $Id: unix.h,v 1.16 2003-12-28 13:51:12 srittau Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -42,10 +42,9 @@ typedef int	mode_t;
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-#if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
-    defined(linux) || defined(ultrix)
+#ifdef HAVE_SYS_MOUNT_H
 #include <sys/mount.h>
-#endif /* HAVE_SYS_MOUNT_H || BSD4_4 || linux || ultrix */
+#endif /* HAVE_SYS_MOUNT_H */
 
 #if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
@@ -78,6 +77,11 @@ typedef int	mode_t;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "directory.h"
+
+#ifdef HAVE_STRUCT_IF_DQBLK
+#undef dqblk
+#define dqblk if_dqblk
+#endif
 
 extern int getnfsquota __P((const struct vol *, const int, const u_int32_t,
                                 struct dqblk *));
