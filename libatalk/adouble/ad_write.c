@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.6 2003-01-16 21:18:15 didg Exp $
+ * $Id: ad_write.c,v 1.7 2003-02-09 15:36:13 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,7 +29,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
     ssize_t		cc;
 
 #ifndef  HAVE_PWRITE
-    if ( ad_fd->adf_off != off ) {
+    if ( ad_fd->adf_off != offset ) {
 	if ( lseek( ad_fd->adf_fd, offset, SEEK_SET ) < 0 ) {
 	    return -1;
 	}

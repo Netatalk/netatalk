@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.4 2002-10-11 14:18:37 didg Exp $
+ * $Id: ad_read.c,v 1.5 2003-02-09 15:36:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -46,7 +46,7 @@ ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 	}
 	ad_fd->adf_off = offset;
     }
-    if (( cc = read( ad_fd.adf_fd, buf, count )) < 0 ) {
+    if (( cc = read( ad_fd->adf_fd, buf, count )) < 0 ) {
         return -1;
     }
     ad_fd->adf_off += cc;
