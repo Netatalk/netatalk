@@ -7,7 +7,7 @@
  * Modified to check the consistency of didname.db by
  * Joe Clarke <marcus@marcuscom.com>
  *
- * $Id: cnid_didname_verify.c,v 1.3 2001-12-10 07:29:09 jmarcus Exp $
+ * $Id: cnid_didname_verify.c,v 1.4 2001-12-10 07:34:39 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,6 +31,8 @@
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
 #endif /* ! MIN */
+
+#define DBDIDNAME "didname.db"
 
 int	main __P((int, char *[]));
 void	usage __P((void));
@@ -78,7 +80,6 @@ char *argv[];
     DB_ENV *dbenv;
     int ch, e_close, exitval, nflag, quiet, ret, t_ret;
     char *home;
-    char *dbname = "didname.db";
 
     version_check();
 
@@ -167,10 +168,10 @@ char *argv[];
         dbp->set_errfile(dbp, stderr);
         dbp->set_errpfx(dbp, progname);
     }
-    if ((ret = dbp->verify(dbp, dbname, NULL, NULL, 0)) != 0)
-        dbp->err(dbp, ret, "DB->verify: %s", dbname);
+    if ((ret = dbp->verify(dbp, DBDIDNAME, NULL, NULL, 0)) != 0)
+        dbp->err(dbp, ret, "DB->verify: %s", DBDIDNAME);
     if ((t_ret = dbp->close(dbp, 0)) != 0 && ret == 0) {
-        dbp->err(dbp, ret, "DB->close: %s", dbname);
+        dbp->err(dbp, ret, "DB->close: %s", DBDIDNAME);
         ret = t_ret;
     }
     if (ret != 0)
