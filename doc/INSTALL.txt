@@ -57,6 +57,11 @@ address spoofing; booby traps to implement an early-warning system.
 TCP Wrappers can be gotten at ftp://ftp.porcupine.org/pub/security/
 
 7. PAM (Pluggable Authentication Modules for Linux) 
+Linux-PAM provides a flexible mechanism for authenticating
+users. PAM was invented by SUN Microsystems.
+
+Author: Andrew Morgan <morgan@linux.kernel.org>
+
 Linux-PAM is a suite of shared libraries that enable the local system
 administrator to choose how applications authenticate users.
 
