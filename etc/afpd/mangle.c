@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.3 2002-05-30 20:48:29 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.4 2002-05-31 02:19:41 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,7 +20,7 @@ char *
 demangle(const struct vol *vol, char *mfilename) {
 	char *filename = NULL;
 	char *ext = NULL;
-	char dir[MAXPATHLEN+1];
+	char dir[MAXPATHLEN + 1];
 	char *mangle;
 
 	/* Is this really a mangled file? */
@@ -30,7 +30,7 @@ demangle(const struct vol *vol, char *mfilename) {
 	}
 
 	ext = strrchr(mfilename, '.');
-	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + (ext != NULL)?strlen(ext):0) {
+	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ((ext != NULL)?strlen(ext):0)) {
 	    return mfilename;
 	}
 
@@ -58,11 +58,12 @@ demangle(const struct vol *vol, char *mfilename) {
 char *
 mangle(const struct vol *vol, char *filename) {
     char *ext = NULL;
-    char *mfilename = NULL;
     char *tf = NULL;
-    char mangle_suffix[MANGLE_LENGTH+1];
-    char dir[MAXPATHLEN+1];
-    char tmp[MAXPATHLEN+1];
+    char *m = NULL;
+    static char mfilename[MAX_LENGTH + 1];
+    char mangle_suffix[MANGLE_LENGTH + 1];
+    char dir[MAXPATHLEN + 1];
+    char tmp[MAXPATHLEN + 1];
     int mangle_suffix_int = 0;
 
     /* Do we really need to mangle this filename? */
@@ -80,28 +81,30 @@ mangle(const struct vol *vol, char *filename) {
 	return filename;
     }
 
-    if ((mfilename = malloc(MAX_LENGTH + 1)) == NULL) {
+/*    if ((mfilename = malloc(MAX_LENGTH + 1)) == NULL) {
 	LOG(log_error, logtype_default, "mangle: Failed to allocate memory to hold the mangled filename");
 	return filename;
-    }
+    }*/
+
+    m = mfilename;
 
     /* Check to see if we already have a mangled filename by this name. */
     while (1) {
     	strcpy(tmp, dir);
 
-    	strncpy(mfilename, filename, MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ((ext != NULL)?strlen(ext):0));
-	mfilename[MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ((ext != NULL)?strlen(ext):0)] = '\0';
+    	strncpy(m, filename, MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ((ext != NULL)?strlen(ext):0));
+	m[MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ((ext != NULL)?strlen(ext):0)] = '\0';
 
-    	strcat(mfilename, MANGLE_CHAR);
+    	strcat(m, MANGLE_CHAR);
     	(void)sprintf(mangle_suffix, "%03d", mangle_suffix_int);
-    	strcat(mfilename, mangle_suffix);
+    	strcat(m, mangle_suffix);
 
     	if (ext) {
-		strcat(mfilename, ext);
+		strcat(m, ext);
     	}
 
 	strcat(tmp, "/");
-	strcat(tmp, mfilename);
+	strcat(tmp, m);
 
 	tf = cnid_mangle_get(vol->v_db, tmp);
 	if (tf == NULL || (strcmp(tf, filename)) == 0) {
