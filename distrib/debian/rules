@@ -7,7 +7,7 @@ build-stamp:
 	dh_testdir
 
 	./configure --with-cflags=-O2 --with-shadow \
-		--enable-fhs --sysconfdir=/etc/netatalk \
+		--enable-fhs --sysconfdir=/etc \
 		--with-tcp-wrappers --mandir=/usr/share/man --prefix=/usr
 	$(MAKE)
 
