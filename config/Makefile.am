@@ -46,7 +46,7 @@ install-config-files: $(CONFFILES) $(GENFILES)
 
 if USE_PAM
 
-pamdir = $(sysconfdir)/pam.d
+pamdir = @PAMDIR@/etc/pam.d
 
 install-data-local: install-config-files $(PAMFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pamdir)

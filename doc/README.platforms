@@ -126,8 +126,8 @@ C. SOLARIS
     gcc.  It should also work with cc. At the present time only cc
     v5.0 and above can build the 64-bit kernel module.
 
-1a. SELECT KERNEL TYPE.  Edit sys/solaris/Makefile and set KCFLAGS to
-     include sparcv9 support if you run a 64-bit kernel, or leave it
+1a. SELECT KERNEL TYPE.  Edit sys/solaris/Makefile.kernel and set KCFLAGS
+     to include sparcv9 support if you run a 64-bit kernel, or leave it
      commented out for a 32-bit kernel. Only UltraSPARC systems
      running Solaris 7 and above support a 64-bit kernel. If you're
      not sure what kernel you use, run "isainfo -v". You're running a
@@ -149,7 +149,7 @@ C. SOLARIS
 3.  INSTALL DRIVER.  Since the STREAMS ddp driver must be installed as
     root, we've separated that portion of the build.  Type
 
-	make kinstall
+	make -f Makefile.kernel kinstall
 
     to install the driver.  This copies the driver and its config file
     into /usr/kernel/drv and /usr/kernel/strmod, runs "add_drv ddp" to
@@ -158,7 +158,8 @@ C. SOLARIS
     If you see something like
       devfsadm: driver failed to attach: ddp
       Warning: Driver (ddp) successfully added to system but failed to attach
-    then recheck sys/solaris/Makefile and/or try a different compiler.
+    then recheck sys/solaris/Makefile.kernel and/or try a different
+    compiler.
 
 4.  ATALKD.CONF.  Under Solaris, you must create atalkd.conf, since
     Solaris provides no method for determining the names of the

@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_open.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: netddp_open.c,v 1.4 2001-11-25 21:55:10 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -21,8 +21,8 @@ static int _netddp_open_dummy;
 #include <sys/socket.h>
 
 #ifdef MACOSX_SERVER
-#include <at/appletalk.h>
-#include <at/ddp.h>
+#include <netat/appletalk.h>
+#include <netat/ddp.h>
 #endif /* MACOSX_SERVER */
 
 #include <netatalk/at.h>
