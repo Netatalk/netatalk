@@ -48,9 +48,11 @@ if USE_PAM
 
 pamdir = $(sysconfdir)/pam.d
 
-install-data-local: install-config-files
+install-data-local: install-config-files $(PAMFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pamdir)
-	$(INSTALL_DATA) netatalk.pamd $(DESTDIR)$(pamdir)/netatalk
+	for f in $(PAMFILES); do \
+		$(INSTALL_DATA) $(f) $(DESTDIR)$(pamdir)/netatalk; \
+	done
 
 else
 
