@@ -16,7 +16,8 @@ enum loglevels {
   log_warning  = 20,
   log_note     = 30,
   log_info     = 40,
-  log_debug    = 50
+  log_debug    = 50,
+  log_extradebug= 60
 };
 #define LOGLEVEL_STRING_IDENTIFIERS { \
   "LOG_SEVERE",                       \
@@ -24,7 +25,8 @@ enum loglevels {
   "LOG_WARN",                         \
   "LOG_NOTE",                         \
   "LOG_INFO",                         \
-  "LOG_DEBUG"}                        
+  "LOG_DEBUG",                        \
+  "LOG_EXTRADEBUG"}                        
 
 /* this is the enum specifying all availiable logtypes */
 enum logtypes {
