@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.20 2001-05-31 18:48:32 srittau Exp $
+ * $Id: file.c,v 1.21 2001-06-19 18:04:39 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,7 +7,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +38,11 @@
 #include "file.h"
 #include "filedir.h"
 #include "globals.h"
+
+/* check for mtab DID code */
+#ifdef DID_MTAB
+#include "parse_mtab.h"
+#endif /* DID_MTAB */
 
 #ifdef FORCE_UIDGID
 #include "uid.h"
@@ -78,7 +83,11 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
     char	*buf;
     int		*buflen;
 {
+#ifndef USE_LASTDID
     struct stat		hst, lst, *lstp;
+#else /* USE_LASTDID */
+    struct stat		hst;
+#endif /* USE_LASTDID */
     struct adouble	ad, *adp;
     struct ofork        *of;
     struct extmap	*em;
@@ -89,7 +98,7 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin getfilparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     upath = mtoupath(vol, path);
     if ((of = of_findname(vol, curdir, path))) {
@@ -196,7 +205,7 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 
 	    if (!(aint = cnid_add(vol->v_db, st, dir->d_did, upath, 
 				  strlen(upath), aint))) {
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 	    /*
 	     * What a fucking mess.  First thing:  DID and FNUMs are
 	     * in the same space for purposes of enumerate (and several
@@ -223,11 +232,20 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 	     *
 	     * it should be okay to use lstat to deal with symlinks.
 	     */
-	      lstp = (lstat(upath, &lst) < 0) ? st : &lst;
+#ifdef USE_LASTDID
+	      aint = htonl(( st->st_dev << 16 ) | (st->st_ino & 0x0000ffff));
+#else /* USE_LASTDID */
+	      lstp = lstat(upath, &lst) < 0 ? st : &lst;
+#ifdef DID_MTAB
+	      aint = htonl( afpd_st_cnid ( lstp ) );
+#else /* DID_MTAB */
 	      aint = htonl(CNID(lstp, 1));
+#endif /* DID_MTAB */
+#endif /* USE_LASTDID */
+
 #if AD_VERSION > AD_VERSION1
 	    }
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 	    memcpy(data, &aint, sizeof( aint ));
 	    data += sizeof( aint );
 	    break;
@@ -321,7 +339,7 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end getfilparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( AFP_OK );
 }
@@ -341,11 +359,11 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     u_int16_t		vid;
 #ifdef FORCE_UIDGID
 	uidgidset		*uidgid;
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_createfile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf++;
@@ -407,7 +425,7 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 	/* perform all switching of users */
 	set_uidgid ( vol );
 
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF,
 		  openf, 0666, adp) < 0 ) {
@@ -416,13 +434,13 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef FORCE_UIDGID
 		/* bring everything back to old euid, egid */
 		restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 	    return( AFPERR_EXIST );
 	case EACCES :
 #ifdef FORCE_UIDGID
 		/* bring everything back to old euid, egid */
 		restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 	    return( AFPERR_ACCESS );
         case ENOENT:
 	    /* on noadouble volumes, just creating the data fork is ok */
@@ -433,7 +451,7 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef FORCE_UIDGID
 		/* bring everything back to old euid, egid */
 		restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 	    return( AFPERR_PARAM );
 	}
     }
@@ -448,20 +466,20 @@ createfile_done:
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {
-         retvalue=matchfile2dirperms(upath, vol, did);
+         retvalue = matchfile2dirperms(upath, vol, did);
     }
-#endif DROPKLUDGE
+#endif /* DROPKLUDGE */
 
     setvoltime(obj, vol );
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_createfile");
-#endif DEBUG
+#endif /* DEBUG */
 
 #ifdef FORCE_UIDGID
 	/* bring everything back to old euid, egid */
 	restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     return (retvalue);
 }
@@ -479,7 +497,7 @@ int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_setfilparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -517,7 +535,7 @@ int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_setfilparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( rc );
 }
@@ -540,11 +558,11 @@ int setfilparams(vol, path, bitmap, buf )
 
 #ifdef FORCE_UIDGID
 	uidgidset		*uidgid;
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin setfilparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     upath = mtoupath(vol, path);
     if ((of = of_findname(vol, curdir, path))) {
@@ -557,7 +575,7 @@ int setfilparams(vol, path, bitmap, buf )
 #ifdef FORCE_UIDGID
 	save_uidgid ( uidgid );
 	set_uidgid ( vol );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     if (ad_open( upath, vol_noadouble(vol) | ADFLAGS_HF, 
 		 O_RDWR|O_CREAT, 0666, adp) < 0) {
@@ -565,7 +583,7 @@ int setfilparams(vol, path, bitmap, buf )
       if (bitmap & ~(1<<FILPBIT_MDATE)) {
 #ifdef FORCE_UIDGID
 	restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 	return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
       }
       isad = 0;
@@ -686,13 +704,13 @@ setfilparam_done:
 
 #ifdef FORCE_UIDGID
 	restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     }
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end setfilparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return err;
 }
@@ -722,7 +740,7 @@ int renamefile(src, dst, newname, noadouble )
 
 #ifdef DEBUG
     syslog (LOG_INFO, "begin renamefile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     if ( rename( src, dst ) < 0 ) {
 	switch ( errno ) {
@@ -793,7 +811,7 @@ rename_retry:
 
 #ifdef DEBUG
     syslog (LOG_INFO, "end renamefile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( AFP_OK );
 }
@@ -812,7 +830,7 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog (LOG_INFO, "begin afp_copyfile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -892,11 +910,11 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     if (vol->v_flags & AFPVOL_DROPBOX) {
          retvalue=matchfile2dirperms(newname, vol, sdid);
     }
-#endif DROPKLUDGE
+#endif /* DROPKLUDGE */
 
 #ifdef DEBUG
     syslog (LOG_INFO, "end afp_copyfile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( retvalue );
 }
@@ -909,7 +927,7 @@ static __inline__ int copy_all(const int dfd, const void *buf,
 
 #ifdef DEBUG
   syslog(LOG_INFO, "begin copy_all:");
-#endif DEBUG
+#endif /* DEBUG */
 
   while (buflen > 0) {
     if ((cc = write(dfd, buf, buflen)) < 0) {
@@ -931,7 +949,7 @@ static __inline__ int copy_all(const int dfd, const void *buf,
 
 #ifdef DEBUG
   syslog(LOG_INFO, "end copy_all:");
-#endif DEBUG
+#endif /* DEBUG */
 
   return AFP_OK;
 }
@@ -950,7 +968,7 @@ int copyfile(src, dst, newname, noadouble )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin copyfile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     if (newname) { 
       if ((sfd = open( ad_path( src, ADFLAGS_HF ), O_RDONLY, 0 )) < 0 ) {
@@ -997,7 +1015,7 @@ int copyfile(src, dst, newname, noadouble )
 	  }
 	  goto copyheader_done;
 	}
-#endif
+#endif /* SENDFILE_FLAVOR_LINUX */
 	while (1) {
 	  if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
 	    if (errno == EINTR) 
@@ -1061,7 +1079,7 @@ copyheader_done:
       }
       goto copydata_done;
     }
-#endif
+#endif /* SENDFILE_FLAVOR_LINUX */
 
     while (1) {
       if ((cc = read( sfd, filebuf, sizeof( filebuf ))) < 0) {
@@ -1111,7 +1129,7 @@ copydata_done:
     
 #ifdef DEBUG
     syslog(LOG_INFO, "end copyfile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( AFP_OK );
 }
@@ -1127,7 +1145,7 @@ int deletefile( file )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin deletefile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     while(1) {
 	/*
@@ -1233,7 +1251,7 @@ delete_unlock:
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end deletefile:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return err;
 }
@@ -1257,7 +1275,7 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_createid:");
-#endif DEBUG
+#endif /* DEBUG */
     
     *rbuflen = 0;
     ibuf += 2;
@@ -1322,7 +1340,7 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "ending afp_createid...:");
-#endif DEBUG
+#endif /* DEBUG */
 
     switch (errno) {
     case EROFS:
@@ -1354,7 +1372,7 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_resolveid:");
-#endif DEBUG
+#endif /* DEBUG */
     
     *rbuflen = 0;
     ibuf += 2;
@@ -1405,7 +1423,7 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_resolveid:");
-#endif DEBUG
+#endif /* DEBUG */
     
     return AFP_OK;
 }
@@ -1425,7 +1443,7 @@ int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_deleteid:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1484,13 +1502,14 @@ int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_deleteid:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return err;
 }
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #define APPLETEMP ".AppleTempXXXXXX"
+
 int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     AFPObj      *obj;
     char	*ibuf, *rbuf;
@@ -1504,13 +1523,13 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     int                 err;
 #if AD_VERSION > AD_VERSION1
     int                 slen, dlen;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
     cnid_t		sid, did;
     u_int16_t		vid;
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_exchangefiles:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1570,7 +1589,7 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1
     sid = cnid_lookup(vol->v_db, &srcst, sdir->d_did, supath, 
 		      slen = strlen(supath));
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
     if (( dir = dirsearch( vol, did )) == NULL ) {
 	return( AFPERR_PARAM );
@@ -1606,7 +1625,7 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     /* look for destination id. */
     did = cnid_lookup(vol->v_db, &destst, curdir->d_did, upath, 
 		      dlen = strlen(upath));
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
     /* construct a temp name. 
      * NOTE: the temp file will be in the dest file's directory. it
@@ -1658,11 +1677,11 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
 	cnid_update(vol->v_db, sid, &srcst, sdir->d_did, supath, slen);
       goto err_temp_to_dest;
     }
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "ending afp_exchangefiles:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return AFP_OK;
 

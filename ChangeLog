@@ -1,4 +1,14 @@
-($Id: ChangeLog,v 1.48 2001-06-18 13:50:06 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.49 2001-06-19 18:04:39 rufustfirefly Exp $)
+
+2001-06-19  jeff b  <jeff@univrel.pr.uconn.edu>
+	* etc/afpd/file.c, etc/afpd/parse_mtab.c, etc/afpd/parse_mtab.h,
+	etc/atalkd/route.h, etc/atalkd/rtmp.c, etc/papd/headers.c,
+	etc/papd/magics.c, libatalk/asp/asp_tickle.c: patch for
+	fixed DID calculation in etc/afpd/file.c, FreeBSD errors and
+	other miscellany (Joe Clarke) 
+
+	* minor patches and fixes to the aforementioned files, warning
+	fixes with GCC, etc (Jeff)
 
 2001-06-18  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, etc/uams/Makefile.am,

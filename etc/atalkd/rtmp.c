@@ -1,11 +1,13 @@
 /*
+ * $Id: rtmp.c,v 1.5 2001-06-19 18:04:39 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +23,7 @@
 
 #ifdef __svr4__
 #include <sys/sockio.h>
-#endif __svr4__
+#endif /* __svr4__ */
 
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
@@ -539,10 +541,10 @@ int rtmp_packet( ap, from, data, len )
 		return 1;
 	    }
 	     */
-#else PHASE1NET
+#else /* PHASE1NET */
 	    syslog( LOG_INFO, "rtmp_packet bad first tuple" );
 	    return 1;
-#endif PHASE1NET
+#endif /* PHASE1NET */
 	}
 
 	/*
@@ -789,7 +791,7 @@ int rtmp_packet( ap, from, data, len )
 	    printf( "rtmp_packet rdr (%d) from %u.%u\n",
 		    *data, ntohs( from->sat_addr.s_net ),
 		    from->sat_addr.s_node );
-#endif DEBUG
+#endif /* DEBUG */
 	} else {
 	    syslog( LOG_INFO, "rtmp_packet unknown request from %u.%u\n",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
@@ -834,7 +836,7 @@ int rtmp_request( iface )
     memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     sat.sat_family = AF_APPLETALK;
     sat.sat_addr.s_net = iface->i_addr.sat_addr.s_net;
     sat.sat_addr.s_node = ATADDR_BCAST;
@@ -867,24 +869,33 @@ int looproute( iface, cmd )
     memset( &dst, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     dst.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     dst.sat_family = AF_APPLETALK;
     dst.sat_addr.s_net = iface->i_addr.sat_addr.s_net;
     dst.sat_addr.s_node = iface->i_addr.sat_addr.s_node;
     memset( &loop, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     loop.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     loop.sat_family = AF_APPLETALK;
     loop.sat_addr.s_net = htons( ATADDR_ANYNET );
     loop.sat_addr.s_node = ATADDR_ANYNODE;
 
+#ifndef BSD4_4
     if ( route( cmd,
 		(struct sockaddr *) &dst,
 		(struct sockaddr *) &loop,
 		RTF_UP | RTF_HOST ) ) {
 	return( 1 );
     }
+#else /* BSD4_4 */
+    if ( route( cmd,
+	    	(struct sockaddr_at *) &dst,
+		(struct sockaddr_at *) &loop,
+		RTF_UP | RTF_HOST ) ) {
+	return ( 1);
+    }
+#endif /* BSD4_4 */
     if ( cmd == RTMP_ADD ) {
 	iface->i_flags |= IFACE_LOOP;
     }
@@ -918,7 +929,7 @@ int gateroute( command, rtmp )
     memset( &gate, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     gate.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     gate.sat_family = AF_APPLETALK;
     gate.sat_addr.s_net = rtmp->rt_gate->g_sat.sat_addr.s_net;
     gate.sat_addr.s_node = rtmp->rt_gate->g_sat.sat_addr.s_node;
@@ -929,12 +940,13 @@ int gateroute( command, rtmp )
     memset( &dst, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     dst.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     dst.sat_family = AF_APPLETALK;
     dst.sat_addr.s_node = ATADDR_ANYNODE;
 
     do {
 	dst.sat_addr.s_net = htons( net );
+#ifndef BSD4_4
 	if ( route( command,
 		    (struct sockaddr *) &dst,
 		    (struct sockaddr *) &gate,
@@ -943,6 +955,16 @@ int gateroute( command, rtmp )
 		    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node );
 	    continue;
 	}
+#else /* BSD4_4 */
+	if ( route( command,
+		    (struct sockaddr_at *) &dst,
+		    (struct sockaddr_at *) &gate,
+		    RTF_UP | RTF_GATEWAY )) {
+	    syslog( LOG_ERR, "route: %u -> %u.%u: %m", net,
+	    	    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node );
+	    continue;
+	}
+#endif /* BSD4_4 */
     } while ( net++ < ntohs( rtmp->rt_lastnet ));
 
     if ( command == RTMP_ADD ) {

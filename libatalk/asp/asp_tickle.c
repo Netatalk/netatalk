@@ -1,10 +1,17 @@
+/*
+ * $Id: asp_tickle.c,v 1.4 2001-06-19 18:04:40 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <syslog.h>
-#include <sys/socket.h>
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
 
+#include <sys/socket.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 

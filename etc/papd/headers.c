@@ -1,15 +1,19 @@
 /*
+ * $Id: headers.c,v 1.7 2001-06-19 18:04:40 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/syslog.h>
 #include <sys/param.h>
 #include <stdio.h>
+
+#include <netatalk/at.h>
 
 #include "file.h"
 #include "comment.h"
