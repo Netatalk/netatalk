@@ -1,11 +1,15 @@
 # Makefile.am for contrib/a2boot/
 
+if COMPILE_A2BOOT
 sbin_PROGRAMS = a2boot
+EXTRA_DIST = COPYRIGHT VERSION
+else
+sbin_PROGRAMS =
+EXTRA_DIST =
+endif
 
 a2boot_SOURCES = a2boot.c
 a2boot_LDADD = $(top_builddir)/libatalk/libatalk.la
-
-EXTRA_DIST = COPYRIGHT VERSION
 
 INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @SLP_CFLAGS@ \
