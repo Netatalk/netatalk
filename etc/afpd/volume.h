@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.7 2001-09-04 13:52:45 rufustfirefly Exp $
+ * $Id: volume.h,v 1.8 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -16,18 +16,18 @@
 #define AFPVOL_NAMELEN   27
 
 struct codepage_hash {
-  unsigned char *from, *to;
-  struct codepage_hash *next, *prev;
+    unsigned char *from, *to;
+    struct codepage_hash *next, *prev;
 };
 
 union codepage_val {
-  struct codepage_hash hash; /* hash for multibyte values */
-  unsigned char value; /* single byte value/rule */
+    struct codepage_hash hash; /* hash for multibyte values */
+    unsigned char value; /* single byte value/rule */
 };
 
 struct codepage {
-  union codepage_val *map;
-  int quantum;
+    union codepage_val *map;
+    int quantum;
 };
 
 #define CP_HASH(a)    (*(a))
@@ -55,8 +55,8 @@ struct vol {
     char                *v_dbpath;
 #endif /* CNID_DB */
 #ifdef FORCE_UIDGID
-	char				*v_forceuid;
-	char				*v_forcegid;
+    char				*v_forceuid;
+    char				*v_forcegid;
 #endif /* FORCE_UIDGID */
 };
 
@@ -81,7 +81,7 @@ typedef u_int64_t VolSpace;
 #define AFPVOL_NOADOUBLE (1 << 7)   /* don't create .AppleDouble by default */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
 #define AFPVOL_MSWINDOWS (1 << 9)   /* deal with ms-windows yuckiness.
-				       this is going away. */
+this is going away. */
 #define AFPVOL_NOHEX     (1 << 10)  /* don't do :hex translation */
 #define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */
 #define AFPVOL_LIMITSIZE (1 << 12)  /* limit size for older macs */
@@ -101,7 +101,7 @@ typedef u_int64_t VolSpace;
 #define AFPVOL_UMUPPER         (AFPVOL_MTOUUPPER | AFPVOL_UTOMUPPER)
 #define AFPVOL_UUPPERMLOWER    (AFPVOL_MTOUUPPER | AFPVOL_UTOMLOWER)
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
- 
+
 #define MSWINDOWS_BADCHARS "\\/<>*?|\""
 #define MSWINDOWS_CODEPAGE "maccode.iso8859-1"
 
@@ -137,10 +137,10 @@ typedef u_int64_t VolSpace;
 
 extern struct vol	*getvolbyvid __P((const u_int16_t));
 extern int              ustatfs_getvolspace __P((const struct vol *,
-						 VolSpace *, VolSpace *,
-						 u_int32_t *));
-extern int              codepage_init __P((struct vol *, const int, 
-					   const int));
+            VolSpace *, VolSpace *,
+            u_int32_t *));
+extern int              codepage_init __P((struct vol *, const int,
+            const int));
 extern int              codepage_read __P((struct vol *, const char *));
 extern union codepage_val codepage_find __P(());
 extern void             setvoltime __P((AFPObj *, struct vol *));

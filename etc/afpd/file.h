@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: file.h,v 1.4 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -74,9 +74,9 @@ struct extmap {
 extern struct extmap	*extmap;
 extern struct extmap	*getextmap __P((const char *));
 
-extern int getfilparams __P((struct vol *, u_int16_t, char *, 
-			     struct dir *, struct stat *, char *buf, 
-			     int *));
+extern int getfilparams __P((struct vol *, u_int16_t, char *,
+                                 struct dir *, struct stat *, char *buf,
+                                 int *));
 extern int setfilparams __P((struct vol *, char *, u_int16_t, char *));
 extern int renamefile   __P((char *, char *, char *, const int));
 extern int copyfile     __P((char *, char *, char *, const int));

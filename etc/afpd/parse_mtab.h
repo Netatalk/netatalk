@@ -1,5 +1,5 @@
 /*
- * $Id: parse_mtab.h,v 1.3 2001-06-19 18:04:39 rufustfirefly Exp $
+ * $Id: parse_mtab.h,v 1.4 2001-12-03 05:03:38 jmarcus Exp $
  *
  * header for afpd_mtab_parse, afpd_st_cnid
  */
@@ -14,32 +14,32 @@
 #define AFPD_MTAB_MIN_DEV_BITS 3
 
 struct afpd_mtab_entry {
-  /* Description of one partition.  */
-  int id;		/* unique index (a small integer) */
-  int dev_major, dev_minor;	/* device numbers */
-  int bit_value;	/* preshifted device index field */
-  char *device;		/* device name string (for debugging) */
-  char *mount_point;	/* mounted directory (for debugging) */
+    /* Description of one partition.  */
+    int id;		/* unique index (a small integer) */
+    int dev_major, dev_minor;	/* device numbers */
+    int bit_value;	/* preshifted device index field */
+    char *device;		/* device name string (for debugging) */
+    char *mount_point;	/* mounted directory (for debugging) */
 };
 
 struct afpd_mount_table {
-  /* Description of all partitions.  */
-  int size;		/* length of entries array, a power of 2 */
-  int bits;		/* number of bits, log2(size) */
-  unsigned int shift;	/* amount by which to shift into CNID device field */
-  struct afpd_mtab_entry **table;	/* index -> entry map vector, some
-					   entries may be null */
+    /* Description of all partitions.  */
+    int size;		/* length of entries array, a power of 2 */
+    int bits;		/* number of bits, log2(size) */
+    unsigned int shift;	/* amount by which to shift into CNID device field */
+    struct afpd_mtab_entry **table;	/* index -> entry map vector, some
+    			   entries may be null */
 };
 
 /* global mount table; afpd_st_cnid uses this to lookup the right entry.  */
 static struct afpd_mount_table *afpd_mount_table = NULL;
 
 extern
-unsigned int
-afpd_st_cnid __P((struct stat *st));
+    unsigned int
+    afpd_st_cnid __P((struct stat *st));
 
 extern
-struct afpd_mount_table *
-afpd_mtab_parse __P((char *file_name));
+    struct afpd_mount_table *
+                afpd_mtab_parse __P((char *file_name));
 
 #endif /* not _parse_mtab_h */

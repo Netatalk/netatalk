@@ -1,5 +1,5 @@
-/* 
- * $Id: messages.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
+/*
+ * $Id: messages.c,v 1.10 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,116 +26,116 @@ static char servermesg[MAXMESGSIZE] = "";
 
 void setmessage(const char *message)
 {
-  strncpy(servermesg, message, MAXMESGSIZE);
+    strncpy(servermesg, message, MAXMESGSIZE);
 }
 
 void readmessage(void)
 {
-/* Read server message from file defined as SERVERTEXT */
+    /* Read server message from file defined as SERVERTEXT */
 #ifdef SERVERTEXT
-  FILE *message;
-  char * filename;
-  int i, rc;
-  static int c;
-  uid_t euid;
+    FILE *message;
+    char * filename;
+    int i, rc;
+    static int c;
+    uid_t euid;
 
-  i=0;
-  // Construct file name SERVERTEXT/message.[pid]
-  filename=malloc(sizeof(SERVERTEXT)+15);
-  sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
+    i=0;
+    // Construct file name SERVERTEXT/message.[pid]
+    filename=malloc(sizeof(SERVERTEXT)+15);
+    sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
 #ifdef DEBUG
-  syslog (LOG_DEBUG, "Reading file %s ", filename);
+    syslog (LOG_DEBUG, "Reading file %s ", filename);
 #endif /* DEBUG */
-  
-  message=fopen(filename, "r");
-  if (message==NULL) {
-    syslog (LOG_INFO, "Unable to open file %s", filename);
-    sprintf(filename, "%s/message", SERVERTEXT);
+
     message=fopen(filename, "r");
-  }
-
-  /* if either message.pid or message exists */
-  if (message!=NULL) {
-    /* added while loop to get characters and put in servermesg */
-    while ((( c=fgetc(message)) != EOF) && (i < (MAXMESGSIZE - 1))) {
-      if ( c == '\n')  c = ' ';
-      servermesg[i++] = c;
-      }
-    servermesg[i] = 0;
-
-    /* cleanup */
-    fclose(message);
-
-    /* Save effective uid and switch to root to delete file. */
-    /* Delete will probably fail otherwise, but let's try anyways */
-    euid = geteuid();
-    if (seteuid(0) < 0) {
-      syslog(LOG_ERR, "Could not switch back to root: %m");
+    if (message==NULL) {
+        syslog (LOG_INFO, "Unable to open file %s", filename);
+        sprintf(filename, "%s/message", SERVERTEXT);
+        message=fopen(filename, "r");
     }
 
-    rc = unlink(filename);
+    /* if either message.pid or message exists */
+    if (message!=NULL) {
+        /* added while loop to get characters and put in servermesg */
+        while ((( c=fgetc(message)) != EOF) && (i < (MAXMESGSIZE - 1))) {
+            if ( c == '\n')  c = ' ';
+            servermesg[i++] = c;
+        }
+        servermesg[i] = 0;
 
-    /* Drop privs again, failing this is very bad */
-    if (seteuid(euid) < 0) {
-      syslog(LOG_ERR, "Could not switch back to uid %d: %m", euid);
-    }
+        /* cleanup */
+        fclose(message);
 
-    if (rc < 0) {
-      syslog (LOG_ERR, "Error deleting %s: %m", filename);
-    }
+        /* Save effective uid and switch to root to delete file. */
+        /* Delete will probably fail otherwise, but let's try anyways */
+        euid = geteuid();
+        if (seteuid(0) < 0) {
+            syslog(LOG_ERR, "Could not switch back to root: %m");
+        }
+
+        rc = unlink(filename);
+
+        /* Drop privs again, failing this is very bad */
+        if (seteuid(euid) < 0) {
+            syslog(LOG_ERR, "Could not switch back to uid %d: %m", euid);
+        }
+
+        if (rc < 0) {
+            syslog (LOG_ERR, "Error deleting %s: %m", filename);
+        }
 #ifdef DEBUG
-    else {
-      syslog (LOG_INFO, "Deleted %s", filename);
-    }
+        else {
+            syslog (LOG_INFO, "Deleted %s", filename);
+        }
 
-    syslog (LOG_INFO, "Set server message to \"%s\"", servermesg);
+        syslog (LOG_INFO, "Set server message to \"%s\"", servermesg);
 #endif /* DEBUG */
-  }
-  free(filename);
+    }
+    free(filename);
 #endif /* SERVERTEXT */
 }
 
 int afp_getsrvrmesg(obj, ibuf, ibuflen, rbuf, rbuflen)
-     AFPObj *obj;
-     char *ibuf, *rbuf;
-     int ibuflen, *rbuflen;
+AFPObj *obj;
+char *ibuf, *rbuf;
+int ibuflen, *rbuflen;
 {
-  char *message;
-  u_int16_t type, bitmap;
+    char *message;
+    u_int16_t type, bitmap;
 
-  memcpy(&type, ibuf + 2, sizeof(type));
-  memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
+    memcpy(&type, ibuf + 2, sizeof(type));
+    memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
 
-  switch (ntohs(type)) {
-  case AFPMESG_LOGIN: /* login */
-    message = obj->options.loginmesg;
-    break;
-  case AFPMESG_SERVER: /* server */
-    message = servermesg;
-    break;
-  default:
-    *rbuflen = 0;
-    return AFPERR_BITMAP;
-  }
+    switch (ntohs(type)) {
+    case AFPMESG_LOGIN: /* login */
+        message = obj->options.loginmesg;
+        break;
+    case AFPMESG_SERVER: /* server */
+        message = servermesg;
+        break;
+    default:
+        *rbuflen = 0;
+        return AFPERR_BITMAP;
+    }
 
-  /* output format:
-   * message type:   2 bytes
-   * bitmap:         2 bytes
-   * message length: 1 byte
-   * message:        up to 199 bytes
-   */
-  memcpy(rbuf, &type, sizeof(type));
-  rbuf += sizeof(type);
-  memcpy(rbuf, &bitmap, sizeof(bitmap));
-  rbuf += sizeof(bitmap);
-  *rbuflen = strlen(message);
-  if (*rbuflen > MAXMESGSIZE)
-    *rbuflen = MAXMESGSIZE;
-  *rbuf++ = *rbuflen;
-  memcpy(rbuf, message, *rbuflen);
+    /* output format:
+     * message type:   2 bytes
+     * bitmap:         2 bytes
+     * message length: 1 byte
+     * message:        up to 199 bytes
+     */
+    memcpy(rbuf, &type, sizeof(type));
+    rbuf += sizeof(type);
+    memcpy(rbuf, &bitmap, sizeof(bitmap));
+    rbuf += sizeof(bitmap);
+    *rbuflen = strlen(message);
+    if (*rbuflen > MAXMESGSIZE)
+        *rbuflen = MAXMESGSIZE;
+    *rbuf++ = *rbuflen;
+    memcpy(rbuf, message, *rbuflen);
 
-  *rbuflen += 5;
+    *rbuflen += 5;
 
-  return AFP_OK;
+    return AFP_OK;
 }

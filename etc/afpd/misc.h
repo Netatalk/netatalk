@@ -1,5 +1,5 @@
-/* 
- * $Id: misc.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+/*
+ * $Id: misc.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
  */
 
 #ifndef AFPD_MISC_H

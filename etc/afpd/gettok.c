@@ -1,5 +1,5 @@
 /*
- * $Id: gettok.c,v 1.4 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: gettok.c,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -35,8 +35,8 @@ static char	*l_curr;
 static char	*l_end;
 
 void initline( len, line )
-    int		len;
-    char	*line;
+int		len;
+char	*line;
 {
     l_curr = line;
     l_end = line + len;
@@ -46,10 +46,10 @@ void initline( len, line )
 #define ST_WORD		1
 #define ST_BEGIN	2
 
-    int
+int
 parseline( len, token )
-    int		len;
-    char	*token;
+int		len;
+char	*token;
 {
     char	*p, *e;
     int		state;
@@ -59,59 +59,59 @@ parseline( len, token )
     e = token + len;
 
     for (;;) {
-	if ( l_curr > l_end ) {			/* end of line */
-	    *token = '\0';
-	    return( -1 );
-	}
+        if ( l_curr > l_end ) {			/* end of line */
+            *token = '\0';
+            return( -1 );
+        }
 
-	switch ( *l_curr ) {
-	case '"' :
-	    if ( state == ST_QUOTE ) {
-		state = ST_WORD;
-	    } else {
-		state = ST_QUOTE;
-	    }
-	    break;
+        switch ( *l_curr ) {
+        case '"' :
+            if ( state == ST_QUOTE ) {
+                state = ST_WORD;
+            } else {
+                state = ST_QUOTE;
+            }
+            break;
 
-	case '\0' :
-	case '\t' :
-	case '\n' :
-	case ' ' :
-	    if ( state == ST_WORD ) {
-		*p = '\0';
-		return( p - token );
-	    }
-	    if ( state != ST_QUOTE ) {
-		break;
-	    }
-	    /* FALL THROUGH */
+        case '\0' :
+        case '\t' :
+        case '\n' :
+        case ' ' :
+            if ( state == ST_WORD ) {
+                *p = '\0';
+                return( p - token );
+            }
+            if ( state != ST_QUOTE ) {
+                break;
+            }
+            /* FALL THROUGH */
 
-	default :
-	    if ( state == ST_BEGIN ) {
-		state = ST_WORD;
-	    }
-	    if ( p > e ) {			/* end of token */
-		*token = '\0';
-		return( -1 );
-	    }
-	    *p++ = *l_curr;
-	    break;
-	}
+        default :
+            if ( state == ST_BEGIN ) {
+                state = ST_WORD;
+            }
+            if ( p > e ) {			/* end of token */
+                *token = '\0';
+                return( -1 );
+            }
+            *p++ = *l_curr;
+            break;
+        }
 
-	l_curr++;
+        l_curr++;
     }
 }
 
 #ifdef notdef
 void parseline( token, user )
-    char	*token, *user;
+char	*token, *user;
 {
     char		*p = pos, *t = token, *u, *q, buf[ MAXPATHLEN ];
     struct passwd	*pwent;
     int			quoted = 0;
 
     while ( isspace( *p )) {
-	p++;
+        p++;
     }
 
     /*
@@ -119,25 +119,25 @@ void parseline( token, user )
      * don't return any more tokens.
      */
     if ( *p == '\0' || *p == '#' ) {
-	*token = '\0';
-	return;
+        *token = '\0';
+        return;
     }
 
     if ( *p == '"' ) {
-	p++;
-	quoted = 1;
+        p++;
+        quoted = 1;
     }
     while ( *p != '\0' && ( quoted || !isspace( *p ))) {
-	if ( *p == '"' ) {
-	    if ( quoted ) {
-		*t = '\0';
-		break;
-	    }
-	    quoted = 1;
-	    p++;
-	} else {
-	    *t++ = *p++;
-	}
+        if ( *p == '"' ) {
+            if ( quoted ) {
+                *t = '\0';
+                break;
+            }
+            quoted = 1;
+            p++;
+        } else {
+            *t++ = *p++;
+        }
     }
     pos = p;
     *t = '\0';
@@ -146,37 +146,37 @@ void parseline( token, user )
      * We got to the end of the line without closing an open quote
      */
     if ( *p == '\0' && quoted ) {
-	*token = '\0';
-	return;
+        *token = '\0';
+        return;
     }
 
     t = token;
     if ( *t == '~' ) {
-	t++;
-	if ( *t == '\0' || *t == '/' ) {
-	    u = user;
-	    if ( *t == '/' ) {
-		t++;
-	    }
-	} else {
-	    u = t;
-	    if (( q = strchr( t, '/' )) == NULL ) {
-		t = "";
-	    } else {
-		*q = '\0';
-		t = q + 1;
-	    }
-	}
-	if ( u == NULL || ( pwent = getpwnam( u )) == NULL ) {
-	    *token = '\0';
-	    return;
-	}
-	strcpy( buf, pwent->pw_dir );
-	if ( *t != '\0' ) {
-	    strcat( buf, "/" );
-	    strcat( buf, t );
-	}
-	strcpy( token, buf );
+        t++;
+        if ( *t == '\0' || *t == '/' ) {
+            u = user;
+            if ( *t == '/' ) {
+                t++;
+            }
+        } else {
+            u = t;
+            if (( q = strchr( t, '/' )) == NULL ) {
+                t = "";
+            } else {
+                *q = '\0';
+                t = q + 1;
+            }
+        }
+        if ( u == NULL || ( pwent = getpwnam( u )) == NULL ) {
+            *token = '\0';
+            return;
+        }
+        strcpy( buf, pwent->pw_dir );
+        if ( *t != '\0' ) {
+            strcat( buf, "/" );
+            strcat( buf, t );
+        }
+        strcpy( token, buf );
     }
     return;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: switch.c,v 1.4 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -48,9 +48,9 @@
 #include "misc.h"
 
 static int afp_null(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj      *obj;
-    char	*ibuf, *rbuf;
-    int		ibuflen, *rbuflen;
+AFPObj      *obj;
+char	*ibuf, *rbuf;
+int		ibuflen, *rbuflen;
 {
     syslog( LOG_INFO, "afp_null handle %d", *ibuf );
     *rbuflen = 0;
@@ -140,7 +140,7 @@ int	(*postauth_switch[])() = {
     afp_logout, afp_mapid, afp_mapname, afp_moveandrename,	/*  16 -  23 */
     afp_openvol, afp_opendir, afp_openfork, afp_read,
     afp_rename, afp_setdirparams, afp_setfilparams, afp_setforkparams,
-								/*  24 -  31 */
+    /*  24 -  31 */
     afp_setvolparams, afp_write, afp_getfildirparams, afp_setfildirparams,
     afp_changepw, afp_getuserinfo, afp_getsrvrmesg, afp_createid, /*  32 -  39 */
     afp_deleteid, afp_resolveid, afp_exchangefiles, afp_null /*afp_catsearch*/,
@@ -203,26 +203,26 @@ int	(*postauth_switch[])() = {
 /* add a new function if it's specified. return the old function in
  * "old" if there's a pointer there. */
 int uam_afpserver_action(const int id, const int which,
-			int (**new)(), int (**old)())
+                         int (**new)(), int (**old)())
 {
-  switch (which) {
-  case UAM_AFPSERVER_PREAUTH:
-    if (old)
-      *old = preauth_switch[id];
-    if (new)
-      preauth_switch[id] = *new;
-    break;
-  case UAM_AFPSERVER_POSTAUTH:
-    if (old)
-      *old = postauth_switch[id];
-    if (new)
-      postauth_switch[id] = *new;
-    break;
-  default:
-    syslog(LOG_DEBUG, "uam_afpserver_action: unknown switch %d[%d]", 
-	   which, id);
-    return -1;
-  }
+    switch (which) {
+    case UAM_AFPSERVER_PREAUTH:
+        if (old)
+            *old = preauth_switch[id];
+        if (new)
+            preauth_switch[id] = *new;
+        break;
+    case UAM_AFPSERVER_POSTAUTH:
+        if (old)
+            *old = postauth_switch[id];
+        if (new)
+            postauth_switch[id] = *new;
+        break;
+    default:
+        syslog(LOG_DEBUG, "uam_afpserver_action: unknown switch %d[%d]",
+               which, id);
+        return -1;
+    }
 
-  return 0;
+    return 0;
 }

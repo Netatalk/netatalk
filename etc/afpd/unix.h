@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.8 2001-10-23 13:44:37 rufustfirefly Exp $
+ * $Id: unix.h,v 1.9 2001-12-03 05:03:38 jmarcus Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -85,10 +85,10 @@ typedef int	mode_t;
 #endif /* _IBMR2 */
 
 extern int getnfsquota __P((const struct vol *, const int, const u_int32_t,
-		            struct dqblk *));
+                                struct dqblk *));
 
 extern int uquota_getvolspace __P((const struct vol *, VolSpace *, VolSpace *,
-			           const u_int32_t));
+                                       const u_int32_t));
 #endif /* NO_QUOTA_SUPPORT */
 
 extern struct afp_options default_options;

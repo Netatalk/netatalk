@@ -1,5 +1,5 @@
 /*
- * $Id: uam_auth.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: uam_auth.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -17,27 +17,27 @@
 #include "globals.h"
 
 struct uam_mod {
-  void *uam_module;
-  struct uam_export *uam_fcn;
-  struct uam_mod *uam_prev, *uam_next;
+    void *uam_module;
+    struct uam_export *uam_fcn;
+    struct uam_mod *uam_prev, *uam_next;
 };
 
 struct uam_obj {
-  const char *uam_name; /* authentication method */
-  char *uam_path; /* where it's located */
-  int uam_count;
-  union {
-    struct {
-      int (*login) __P((void *, struct passwd **, 
-			char *, int, char *, int *));
-      int (*logincont) __P((void *, struct passwd **, char *,
-			    int, char *, int *));
-      void (*logout) __P((void));
-    } uam_login;
-    int (*uam_changepw) __P((void *, char *, struct passwd *, char *,
-			     int, char *, int *));
-  } u;
-  struct uam_obj *uam_prev, *uam_next;
+    const char *uam_name; /* authentication method */
+    char *uam_path; /* where it's located */
+    int uam_count;
+    union {
+        struct {
+            int (*login) __P((void *, struct passwd **,
+                              char *, int, char *, int *));
+            int (*logincont) __P((void *, struct passwd **, char *,
+                                  int, char *, int *));
+            void (*logout) __P((void));
+        } uam_login;
+        int (*uam_changepw) __P((void *, char *, struct passwd *, char *,
+                                 int, char *, int *));
+    } u;
+    struct uam_obj *uam_prev, *uam_next;
 };
 
 #define uam_attach(a, b) do { \

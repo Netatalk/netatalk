@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: afp_config.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
  */
 
 #ifndef AFPD_CONFIG_H
@@ -14,15 +14,15 @@
 #include "globals.h"
 
 typedef struct AFPConfig {
-  AFPObj obj;
-  int fd, statuslen;
-  unsigned char *optcount;
-  char status[ATP_MAXDATA];
-  const void *defoptions, *signature;
-  int (*server_start) __P((struct AFPConfig *, struct AFPConfig *,
-			   server_child *));
-  void (*server_cleanup) __P((const struct AFPConfig *));
-  struct AFPConfig *next;
+    AFPObj obj;
+    int fd, statuslen;
+    unsigned char *optcount;
+    char status[ATP_MAXDATA];
+    const void *defoptions, *signature;
+    int (*server_start) __P((struct AFPConfig *, struct AFPConfig *,
+                             server_child *));
+    void (*server_cleanup) __P((const struct AFPConfig *));
+    struct AFPConfig *next;
 } AFPConfig;
 
 extern AFPConfig *configinit __P((struct afp_options *));

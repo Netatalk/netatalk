@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: fork.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -45,16 +45,16 @@ struct ofork {
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
 
 /* in ofork.c */
-extern struct ofork *of_alloc    __P((struct vol *, struct dir *, 
-				      char *, u_int16_t *, const int, 
-				      struct adouble *));
+extern struct ofork *of_alloc    __P((struct vol *, struct dir *,
+                                                      char *, u_int16_t *, const int,
+                                                      struct adouble *));
 extern void         of_dealloc   __P((struct ofork *));
 extern struct ofork *of_find     __P((const u_int16_t));
 extern struct ofork *of_findname __P((const struct vol *, const struct dir *,
-				      const char *));
-extern int          of_rename    __P((const struct vol *, 
-				      struct dir *, const char *,
-				      struct dir *, const char *));
+                                                      const char *));
+extern int          of_rename    __P((const struct vol *,
+                                          struct dir *, const char *,
+                                          struct dir *, const char *));
 extern int          of_flush     __P((const struct vol *));
 extern void         of_pforkdesc __P((FILE *));
 

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: directory.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -147,19 +147,19 @@ extern struct dir       *dirnew __P((const int));
 extern void             dirfree __P((struct dir *));
 extern struct dir	*dirsearch __P((const struct vol *, u_int32_t));
 extern struct dir	*adddir __P((struct vol *, struct dir *, char *,
-				     int, char *, int, struct stat *));
+                                               int, char *, int, struct stat *));
 extern struct dir       *dirinsert __P((struct vol *, struct dir *));
-extern int              movecwd __P((const struct vol *, struct dir *)); 
+extern int              movecwd __P((const struct vol *, struct dir *));
 extern int              deletecurdir __P((const struct vol *, char *, int));
 extern char		*cname __P((const struct vol *, struct dir *,
-				    char **));
+                             char **));
 extern mode_t           mtoumode __P((struct maccess *));
 extern void             utommode __P((struct stat *, struct maccess *));
 extern int getdirparams __P((const struct vol *, u_int16_t, char *,
-			     struct dir *, struct stat *, char *, int *));
+                                 struct dir *, struct stat *, char *, int *));
 extern int setdirparams __P((const struct vol *, char *, u_int16_t, char *));
-extern int renamedir __P((char *, char *, struct dir *, 
-			  struct dir *, char *, const int));
+extern int renamedir __P((char *, char *, struct dir *,
+                              struct dir *, char *, const int));
 
 
 /* FP functions */

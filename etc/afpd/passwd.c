@@ -1,5 +1,5 @@
 /*
- * $Id: passwd.c,v 1.4 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: passwd.c,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -57,8 +57,8 @@ char *strchr (), *strrchr ();
 extern int r_errno;
 
 afs_changepw( ibuf, ibuflen, rbuf, rbuflen )
-    char	*ibuf, *rbuf;
-    int		ibuflen, *rbuflen;
+char	*ibuf, *rbuf;
+int		ibuflen, *rbuflen;
 {
     char	cell[ MAXCELLCHARS ], name[ 20 ], oldpw[ 10 ], newpw[ 10 ];
     char	*p;
@@ -68,61 +68,61 @@ afs_changepw( ibuf, ibuflen, rbuf, rbuflen )
     len = (unsigned char )*ibuf++;
     ibuf[ len ] = '\0';
     if (( p = strchr( ibuf, '@' )) != NULL ) {
-	*p++ = '\0';
-	strcpy( cell, p );
-	ucase( cell );
+        *p++ = '\0';
+        strcpy( cell, p );
+        ucase( cell );
     } else {
-	if ( GetLocalCellName() != CCONF_SUCCESS ) {
-	    *rbuflen = 0;
-	    return( AFPERR_BADUAM );
-	}
-	strcpy( cell, LclCellName );
+        if ( GetLocalCellName() != CCONF_SUCCESS ) {
+            *rbuflen = 0;
+            return( AFPERR_BADUAM );
+        }
+        strcpy( cell, LclCellName );
     }
 
     if ( strlen( ibuf ) > 20 ) {
-	*rbuflen = 0;
-	return( AFPERR_PARAM );
+        *rbuflen = 0;
+        return( AFPERR_PARAM );
     }
     strcpy( name, ibuf );
     ibuf += len;
 
 
     if (U_InitRPC() != 0) {
-	*rbuflen = 0;
-	return( AFPERR_BADUAM );
+        *rbuflen = 0;
+        return( AFPERR_BADUAM );
     }
 
     memcpy( &clen, ibuf, sizeof( clen ));
     ibuf += sizeof( short );
     pcbc_encrypt((C_Block *)ibuf, (C_Block *)ibuf,
-	    clen, seskeysched, seskey, 0 );
+                 clen, seskeysched, seskey, 0 );
 
     len = (unsigned char) *ibuf++;
     if ( len > 9 ) {
-	*rbuflen = 0;
-	return( AFPERR_PARAM );
+        *rbuflen = 0;
+        return( AFPERR_PARAM );
     }
     memcpy( oldpw, ibuf, len );
     oldpw[ len ] = '\0';
 
     len = (unsigned char) *ibuf++;
     if ( len > 9 ) {
-	*rbuflen = 0;
-	return( AFPERR_PARAM );
+        *rbuflen = 0;
+        return( AFPERR_PARAM );
     }
     memcpy( newpw, ibuf, len );
     newpw[ len ] = '\0';
 
     rc = U_CellChangePassword( name, newpw, name, oldpw, cell ) != 0 ) {
 
-    if ( rc != 0 ) {
-	*rbuflen = 0;
-	if ( rc < 0 && r_errno = R_ERROR ) {
-	    return( AFPERR_NOTAUTH );
-	} else {
-	    return( AFPERR_BADUAM );
-	}
-    }
+        if ( rc != 0 ) {
+            *rbuflen = 0;
+            if ( rc < 0 && r_errno = R_ERROR ) {
+                return( AFPERR_NOTAUTH );
+            } else {
+                return( AFPERR_BADUAM );
+            }
+        }
 
-    return( AFP_OK );
-}
+        return( AFP_OK );
+    }
