@@ -33,7 +33,7 @@ if USE_PAM
 
 pamdir   = $(sysconfdir)/pam.d
 
-install-data-local: netatalk
-	$(INSTALL_DATA) netatalk $(DESTDIR)$(pamdir)/
+install-data-local:
+	$(INSTALL_DATA) netatalk.pamd $(DESTDIR)$(pamdir)/netatalk
 
 endif 
