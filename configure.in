@@ -273,8 +273,9 @@ dnl --------------------- determine operating system from "target"
 case "$ac_cv_target_os" in
 	*freebsd*) 			this_os=freebsd ;;
 	*linux*)   			this_os=linux ;;
-	*openbsd*) 			this_os=openbsd ;;
+	*osx*)				this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
+	*openbsd*) 			this_os=openbsd ;;
 	*solaris*) 			this_os=solaris ;;
 esac
 
@@ -311,6 +312,16 @@ if test x"$this_os" = "xlinux"; then
 		AC_DEFINE(HAVE_GCC_MEMCPY_BUG)
 	fi
 	need_dash_r=no
+fi
+
+dnl ----- Mac OSX specific -----
+if test x"$this_os" = "xmacosx"; then 
+	AC_MSG_RESULT([ * Mac OSX specific configuration])
+	AC_DEFINE(BSD4_4)
+	AC_DEFINE(HAVE_BROKEN_CPP)
+	AC_DEFINE(HAVE_2ARG_DBTOB)
+	AC_DEFINE(NO_DLFCN_H)
+	AC_DEFINE(MACOSX_SERVER)
 fi
 
 dnl ----- NetBSD specific -----
