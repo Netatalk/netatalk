@@ -5,24 +5,28 @@ netatalk (1.5pre3cvs-1) unstable; urgency=low
   * Debian packaging is now included in upstream CVS.
   * Modified debian/copyright to include CVS instructions.
   * Call ./configure with --with-fhs and removed --with-uams-path option.
-  * Removed patches/paths.h.patch as this is now supported by
-    --with-fhs.
+  * Removed patches/paths.h.patch as this is now supported by --with-fhs.
+  * Removed various build patches now included upstream.
+  * Use dh_installman from debhelper v3. Updated build dependencies
+    accordingly.
+  * Removed comment about Debian specific changes from debian/copyright.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Mon, 19 Feb 2001 19:22:20 +0100
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Mon, 19 Feb 2001 22:19:27 +0100
 
 netatalk (1.5pre3-0.1) unstable; urgency=low
 
   * This is a pre-release not for upload to Debian.
   * New upstream version from netatalk.sourceforge.net.
     (Closes: #69232, #78781)
-  * Essentially repackaged with debhelper.
+  * Repackaged using debhelper.
+  * Conforms to policy version 3.5.1.0.
   * Removed some Debian specific patches integrated upstream.
   * Updated debian/copyright.
   * Build with libssl support. (Closes: #48871)
   * Added libssl096-dev to Build-Depends.
   * Changed priority from optional to extra.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Thu, 15 Feb 2001 23:40:18 +0100
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Mon, 19 Feb 2001 22:03:35 +0100
 
 netatalk (1.4b2+asun2.1.3-7) unstable; urgency=low
 
