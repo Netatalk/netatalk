@@ -3,7 +3,7 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.14 2003-02-16 02:13:05 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.15 2003-02-17 02:32:45 jmarcus Exp $
 #
 
 use strict;
@@ -32,9 +32,9 @@ $START_CMD = '/usr/local/etc/rc.d/netatalk.sh start';
 # Below is the example of a BSD ps.  A SYSV example is:
 # /bin/ps -eflouid,pid,ppid,comm
 $PS_CMD             = '@PS@ -axouser,pid,ppid,command';
-$DB_STAT            = '@BDB_BIN@bin/db_stat';
-$DB_RECOVER         = '@BDB_BIN@bin/db_recover';
-$DB_VERIFY          = '@BDB_BIN@bin/db_verify';
+$DB_STAT            = '@BDB_BIN@/db_stat';
+$DB_RECOVER         = '@BDB_BIN@/db_recover';
+$DB_VERIFY          = '@BDB_BIN@/db_verify';
 $APPLE_VOLUMES_FILE = '@PKGCONFDIR@/AppleVolumes.default';
 ## End edit section
 
