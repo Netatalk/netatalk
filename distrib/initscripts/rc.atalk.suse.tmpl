@@ -55,7 +55,7 @@ atalk_startup() {
             echo ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
                -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
             startproc :SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
-               -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
+               -c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
     fi
         
         touch /var/lock/subsys/atalk
