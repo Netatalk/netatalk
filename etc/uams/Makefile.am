@@ -48,12 +48,13 @@ uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c
 # flags
 #
 
-uams_pgp_la_CFLAGS    = @SSL_CFLAGS@
+uams_randnum_la_CFLAGS    = @SSL_CFLAGS@
+uams_pgp_la_CFLAGS        = @SSL_CFLAGS@
 uams_dhx_passwd_la_CFLAGS = @SSL_CFLAGS@
 uams_dhx_pam_la_CFLAGS    = @SSL_CFLAGS@
 
 uams_guest_la_LDFLAGS      = -module -avoid-version
-uams_randnum_la_LDFLAGS    = -module -avoid-version
+uams_randnum_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@
 uams_passwd_la_LDFLAGS     = -module -avoid-version
 uams_pam_la_LDFLAGS        = -module -avoid-version -lpam
 uams_pgp_la_LDFLAGS        = -module -avoid-version @SSL_LIBS@
