@@ -73,8 +73,8 @@ kernel :	FRC
 	fi; \
 	echo "Making $@ for $$PROCESSOR..."; \
 	${MAKE} ${MFLAGS} \
-	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}"\
-	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
+	    SBINDIR="${sbindir}" BINDIR="${bindir}" RESDIR="${RESDIR}"\
+	    ETCDIR="${sysconfdir}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 	    MANDIR="${MANDIR}" DESTDIR="${DESTDIR}" AFSDIR="${AFSDIR}" \
 	    KRBDIR="${KRBDIR}" OSDEFS="$${OSDEFS}" \
 	    MACHINEDEFS="$${MACHINEDEFS}" \
@@ -97,8 +97,8 @@ ${ALL}:	FRC
 	cd $@; ${MAKE} ${MFLAGS} CC="${CC}" \
 	    ADDLIBS="${ADDLIBS}" DEFS="${DEFS} $${OSDEFS}" \
 	    OPTOPTS="${OPTOPTS}" \
-	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}" \
-	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
+	    SBINDIR="${sbindir}" BINDIR="${bindir}" RESDIR="${RESDIR}" \
+	    ETCDIR="${sysconfdir}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 	    DESTDIR="${DESTDIR}" AFSDIR="${AFSDIR}" KRBDIR="${KRBDIR}" \
 	    AFPLIBS="${AFPLIBS}" LDSHARED="${LDSHARED}" \
 	    LDFLAGS_EXPORT="${LDFLAGS_EXPORT}" \
@@ -136,9 +136,9 @@ kinstall : kernel kuninstall
 	if [ -f /etc/init.d/atalk ]; then \
 		echo "Preserving existing /etc/init.d/atalk settings."; \
 	else \
-	sed -e s@:DESTDIR:@${DESTDIR}@ -e s@:SBINDIR:@${SBINDIR}@ \
-		-e s@:BINDIR:@${BINDIR}@ -e s@:RESDIR:@${RESDIR}@ \
-		-e s@:ETCDIR:@${ETCDIR}@ -e s@:LIBDIR:@${LIBDIR}@ \
+	sed -e s@:DESTDIR:@${DESTDIR}@ -e s@:SBINDIR:@${sbindir}@ \
+		-e s@:BINDIR:@${bindir}@ -e s@:RESDIR:@${RESDIR}@ \
+		-e s@:ETCDIR:@${sysconfdir}@ -e s@:LIBDIR:@${LIBDIR}@ \
 		-e s@:INCDIR:@${INCDIR}@ \
 	    < ../../distrib/initscripts/rc.atalk.sysv > /etc/init.d/atalk; \
 	fi
@@ -147,14 +147,14 @@ kinstall : kernel kuninstall
 	-ln -s ../init.d/atalk /etc/rc0.d/K79atalk
 
 install :
-	-mkdir ${DESTDIR}${sbindir} ${DESTDIR}${bindir} ${DESTDIR}${CONFIG_DIR} \
+	-mkdir ${DESTDIR}${sbindir} ${DESTDIR}${bindir} ${DESTDIR}${sysconfdir} \
 		${DESTDIR}${libdir}
 	sed -e s@:BINDIR:@${prefix}/bin@ < ../../contrib/shell_utils/lp2pap.sh > ${DESTDIR}${RESDIR}/lp2pap.sh
-	chmod 744 ${DESTDIR}${CONFIG_DIR}/lp2pap.sh
+	chmod 744 ${DESTDIR}${sysconfdir}/lp2pap.sh
 	for i in ${ALL}; \
 	    do (cd $$i; ${MAKE} ${MFLAGS} CC="${CC}" \
 		ADDLIBS="${ADDLIBS}" DEFS="${DEFS}" OPTOPTS="${OPTOPTS}" \
-	        SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}" \
+	        SBINDIR="${sbindir}" BINDIR="${bindir}" RESDIR="${RESDIR}" \
 	        ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 		AFSDIR="${AFSDIR}" KRBDIR="${KRBDIR}" \
 		AFPLIBS="${AFPLIBS}" \
@@ -164,14 +164,14 @@ install :
 		OSDEFS="$${OSDEFS}" MACHINEDEFS="$${MACHINEDEFS}" \
 		INSTALL="${INSTALL}" $@); \
 	done
-	if [ -f ${DESTDIR}${CONFIG_DIR}/afpd.conf ]; then \
+	if [ -f ${DESTDIR}${sysconfdir}/afpd.conf ]; then \
 		echo "Retaining old afpd.conf file.";  \
 	else \
-		sed -e s@:DESTDIR:@${DESTDIR}@ -e s@:SBINDIR:@${SBINDIR}@ \
-			-e s@:BINDIR:@${BINDIR}@ -e s@:RESDIR:@${RESDIR}@ \
-			-e s@:ETCDIR:@${ETCDIR}@ -e s@:LIBDIR:@${LIBDIR}@ \
+		sed -e s@:DESTDIR:@${DESTDIR}@ -e s@:SBINDIR:@${sbindir}@ \
+			-e s@:BINDIR:@${bindir}@ -e s@:RESDIR:@${RESDIR}@ \
+			-e s@:ETCDIR:@${sysconfdir}@ -e s@:LIBDIR:@${LIBDIR}@ \
 			-e s@:INCDIR:@${INCDIR}@ \
-			< ../../config/afpd.conf > ${ETCDIR}/afpd.conf; \
+			< ../../config/afpd.conf > ${sysconfdir}/afpd.conf; \
 	fi
 	@echo
 	@echo "Install is done.  Don't forget to add lines from"

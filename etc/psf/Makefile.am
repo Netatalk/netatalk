@@ -10,7 +10,7 @@ CFLAGS = @CFLAGS@ -DZEROWIDTH \
 	-D_PATH_PSORDER=\"$(bindir)/psorder\" \
 	-D_PATH_PSA=\"$(sbindir)/psa\" \
 	-D_PATH_PSFILTER=\"$(bindir)/etc2ps.sh\" \
-	-D_PATH_PAGECOUNT=\"$(CONFIG_DIR)/pagecount.ps\"
+	-D_PATH_PAGECOUNT=\"$(sysconfdir)/pagecount.ps\"
 
 EXTRA_DIST = etc2ps.sh
 
