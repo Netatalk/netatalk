@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.6 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: uams_randnum.c,v 1.7 2001-10-24 14:34:33 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -156,7 +156,7 @@ static int afppasswd(const struct passwd *pwd,
   int i, j, keyfd = -1, err = 0;
   off_t pos;
   
-  if ((fp = fopen(path, (set) ? "r+" : "r")) <= 0) {
+  if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
     syslog( LOG_ERR, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.7 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: uams_guest.c,v 1.8 2001-10-24 14:34:33 srittau Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 /* STDC check */
 #if STDC_HEADERS
@@ -52,13 +53,14 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 
     strcpy(username, guest);
     if ((pwent = getpwnam(guest)) == NULL) {
-	syslog( LOG_ERR, "noauth_login: getpwnam( %s ): %m", guest);
+	syslog( LOG_ERR, "noauth_login: getpwnam( %s ): %s",
+		guest, strerror(errno) );
 	return( AFPERR_BADUAM );
     }
 
 #ifdef AFS
     if ( setpag() < 0 ) {
-	syslog( LOG_ERR, "noauth_login: setpag: %m" );
+	syslog( LOG_ERR, "noauth_login: setpag: %s", strerror(errno) );
 	return( AFPERR_BADUAM );
     }
 #endif /* AFS */
@@ -102,7 +104,8 @@ int noauth_printer(start, stop, username, out)
     free(data);
 
     if (getpwnam(username) == NULL) {
-	syslog(LOG_INFO, "Bad Login NoAuthUAM: %s: %m", username);
+	syslog(LOG_INFO, "Bad Login NoAuthUAM: %s: %s",
+	       username, strerror(errno) );
 	return(-1);
     }
 
