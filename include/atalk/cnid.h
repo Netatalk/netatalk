@@ -23,7 +23,7 @@
 typedef u_int32_t cnid_t;
 
 /* cnid_open.c */
-extern void *cnid_open __P((const char *));
+extern void *cnid_open __P((const char *, mode_t));
 
 /* cnid_close.c */
 extern void cnid_close __P((void *));

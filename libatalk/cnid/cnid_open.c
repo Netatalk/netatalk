@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.42 2002-08-30 03:12:52 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.43 2002-08-31 05:35:10 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -192,7 +192,7 @@ static int compare_unicode(const DBT *a, const DBT *b)
 #endif /* DB_VERSION_MINOR */
 }
 
-void *cnid_open(const char *dir) {
+void *cnid_open(const char *dir, mode_t mask) {
     struct stat st, rsb, lsb, csb;
 #ifndef CNID_DB_CDB
     struct flock lock;
@@ -228,7 +228,7 @@ void *cnid_open(const char *dir) {
     }
 
     strcpy(path + len, DBHOME);
-    if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777) < 0)) {
+    if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777 & ~mask) < 0)) {
         LOG(log_error, logtype_default, "cnid_open: DBHOME mkdir failed for %s", path);
         goto fail_adouble;
     }
@@ -247,7 +247,7 @@ void *cnid_open(const char *dir) {
      * to the sahe directory. */
     strcat(path, DBLOCKFILE);
     strcpy(db->lock_file, path);
-    if ((db->lockfd = open(path, O_RDWR | O_CREAT, 0666)) > -1) {
+    if ((db->lockfd = open(path, O_RDWR | O_CREAT, 0666 & ~mask)) > -1) {
         lock.l_start = 0;
         lock.l_len = 1;
         while (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
@@ -296,7 +296,7 @@ void *cnid_open(const char *dir) {
 #endif /* CNID_DB_CDB */
 
     /* Open the database environment. */
-    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) != 0) {
+    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666 & ~mask)) != 0) {
         if (rc == DB_RUNRECOVERY) {
             /* This is the mother of all errors.  We _must_ fail here. */
             LOG(log_error, logtype_default, "cnid_open: CATASTROPHIC ERROR opening database environment %s.  Run db_recovery -c immediately", path);
@@ -306,10 +306,10 @@ void *cnid_open(const char *dir) {
         /* We can't get a full transactional environment, so multi-access
          * is out of the question.  Let's assume a read-only environment,
          * and try to at least get a shared memory pool. */
-        if ((rc = db->dbenv->open(db->dbenv, path, DB_INIT_MPOOL, 0666)) != 0) {
+        if ((rc = db->dbenv->open(db->dbenv, path, DB_INIT_MPOOL, 0666 & ~mask)) != 0) {
             /* Nope, not a MPOOL, either.  Last-ditch effort: we'll try to
              * open the environment with no flags. */
-            if ((rc = db->dbenv->open(db->dbenv, path, 0, 0666)) != 0) {
+            if ((rc = db->dbenv->open(db->dbenv, path, 0, 0666 & ~mask)) != 0) {
                 LOG(log_error, logtype_default, "cnid_open: dbenv->open of %s failed: %s",
                     path, db_strerror(rc));
                 goto fail_lock;
@@ -329,7 +329,7 @@ void *cnid_open(const char *dir) {
 
     /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
     if ((rc = db->db_didname->open(db->db_didname, DBDIDNAME, NULL,
-                                   DB_HASH, open_flag, 0666))) {
+                                   DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/name database: %s",
             db_strerror(rc));
         goto fail_appinit;
@@ -443,7 +443,7 @@ dbversion_retry:
     }
 
     db->db_macname->set_bt_compare(db->db_macname, &compare_mac);
-    if ((rc = db->db_macname->open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666)) != 0) {
+    if ((rc = db->db_macname->open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/macname database: %s",
             db_strerror(rc));
         db->db_didname->close(db->db_didname, 0);
@@ -460,7 +460,7 @@ dbversion_retry:
     }
 
     db->db_shortname->set_bt_compare(db->db_shortname, &compare_mac);
-    if ((rc = db->db_shortname->open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666)) != 0) {
+    if ((rc = db->db_shortname->open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/shortname database: %s",
             db_strerror(rc));
         db->db_didname->close(db->db_didname, 0);
@@ -479,7 +479,7 @@ dbversion_retry:
     }
 
     db->db_longname->set_bt_compare(db->db_longname, &compare_unicode);
-    if ((rc = db->db_longname->open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666)) != 0) {
+    if ((rc = db->db_longname->open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/longname database: %s",
             db_strerror(rc));
         db->db_didname->close(db->db_didname, 0);
@@ -502,7 +502,7 @@ dbversion_retry:
         goto fail_appinit;
     }
 
-    if ((rc = db->db_devino->open(db->db_devino, DBDEVINO, NULL, DB_HASH, open_flag, 0666)) != 0) {
+    if ((rc = db->db_devino->open(db->db_devino, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open devino database: %s",
             db_strerror(rc));
         db->db_didname->close(db->db_didname, 0);
@@ -529,7 +529,7 @@ dbversion_retry:
     }
 
 
-    if ((rc = db->db_cnid->open(db->db_cnid, DBCNID, NULL, DB_HASH, open_flag, 0666)) != 0) {
+    if ((rc = db->db_cnid->open(db->db_cnid, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open dev/ino database: %s",
             db_strerror(rc));
         db->db_didname->close(db->db_didname, 0);
@@ -557,7 +557,7 @@ dbversion_retry:
         goto fail_appinit;
     }
 
-    if ((rc = db->db_mangle->open(db->db_mangle, DBMANGLE, NULL, DB_HASH, open_flag, 0666)) != 0) {
+    if ((rc = db->db_mangle->open(db->db_mangle, DBMANGLE, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open mangle database: %s", db_strerror(rc));
         db->db_didname->close(db->db_didname, 0);
         db->db_devino->close(db->db_devino, 0);

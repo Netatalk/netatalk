@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.33 2002-08-30 19:32:41 didg Exp $
+ * $Id: volume.c,v 1.34 2002-08-31 05:35:10 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -109,9 +109,11 @@ m=u -> map both ways
 
 #define VOLOPT_FORCEUID  11  /* force uid for username x */
 #define VOLOPT_FORCEGID  12  /* force gid for group x */
-#define VOLOPT_MAX       12
+#define VOLOPT_UMASK     13
+#define VOLOPT_MAX       13
 #else /* normally, there are only 9 possible options */
-#define VOLOPT_MAX       10
+#define VOLOPT_UMASK     11
+#define VOLOPT_MAX       11
 #endif /* FORCE_UIDGID */
 
 #define VOLOPT_NUM        (VOLOPT_MAX + 1)
@@ -380,6 +382,8 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 
         options[VOLOPT_DBPATH].c_value = strdup(val + 1);
 #endif /* CNID_DB */
+    } else if (optionok(tmp, "umask:", val)) {
+	options[VOLOPT_UMASK].i_value = (int)strtol(val, (char **)NULL, 8);
     } else if (optionok(tmp, "mapchars:",val)) {
         if (options[VOLOPT_MAPCHARS].c_value)
             free(options[VOLOPT_MAPCHARS].c_value);
@@ -491,6 +495,9 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
         if (options[VOLOPT_DBPATH].c_value)
             volume->v_dbpath = strdup(options[VOLOPT_DBPATH].c_value);
 #endif /* CNID_DB */
+
+	if (options[VOLOPT_UMASK].i_value)
+	    volume->v_umask = (mode_t)options[VOLOPT_UMASK].i_value;
 
 #ifdef FORCE_UIDGID
 
@@ -700,6 +707,10 @@ struct passwd *pwent;
                 strcat( tmp, "/" );
                 strcat( tmp, p );
             }
+	    /* Tag a user's home directory with their umask.  Note, this will
+	     * be overwritten if the user actually specifies a umask: option
+	     * for a '~' volume. */
+	    save_options[VOLOPT_UMASK].i_value = obj->options.save_mask;
             /* fall through */
 
         case '/' :
@@ -1197,9 +1208,9 @@ int		ibuflen, *rbuflen;
 
 #ifdef CNID_DB
     if (volume->v_dbpath)
-        volume->v_db = cnid_open (volume->v_dbpath);
+        volume->v_db = cnid_open (volume->v_dbpath, volume->v_umask);
     if (volume->v_db == NULL)
-        volume->v_db = cnid_open (volume->v_path);
+        volume->v_db = cnid_open (volume->v_path, volume->v_umask);
 #endif /* CNID_DB */
 
 #ifndef CNID_DB

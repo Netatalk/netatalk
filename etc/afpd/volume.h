@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.12 2002-08-20 19:40:45 srittau Exp $
+ * $Id: volume.h,v 1.13 2002-08-31 05:35:10 jmarcus Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -54,6 +54,7 @@ struct vol {
     void                *v_db;
     char                *v_dbpath;
 #endif /* CNID_DB */
+    mode_t		v_umask;
 #ifdef FORCE_UIDGID
     char				*v_forceuid;
     char				*v_forcegid;
