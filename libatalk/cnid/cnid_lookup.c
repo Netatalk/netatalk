@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.9 2001-10-21 08:33:33 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.10 2001-11-27 23:38:18 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,107 +27,107 @@
 /* This returns the CNID corresponding to a particular file.  It will
  * also fix up the various databases if there's a problem. */
 cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
-        const char *name, const int len)
+                   const char *name, const int len)
 {
-	char *buf;
-	CNID_private *db;
-	DBT key, devdata, diddata;
-	int devino = 1, didname = 1;
-	cnid_t id = 0;
-	int rc;
+    char *buf;
+    CNID_private *db;
+    DBT key, devdata, diddata;
+    int devino = 1, didname = 1;
+    cnid_t id = 0;
+    int rc;
 
-	if (!(db = CNID) || !st || !name) {
-		return 0;
-	}
+    if (!(db = CNID) || !st || !name) {
+        return 0;
+    }
 
-	/* Do a little checkpointing if necessary.  I stuck it here as cnid_lookup
-	 * gets called when we do directory lookups.  Only do this if we're using
-	 * a read-write database. */
-	if ((db->flags & CNIDFLAG_DB_RO) == 0) {
+    /* Do a little checkpointing if necessary.  I stuck it here as cnid_lookup
+     * gets called when we do directory lookups.  Only do this if we're using
+     * a read-write database. */
+    if ((db->flags & CNIDFLAG_DB_RO) == 0) {
 #ifdef DEBUG
-		syslog(LOG_INFO, "cnid_lookup: Running database checkpoint");
+        syslog(LOG_INFO, "cnid_lookup: Running database checkpoint");
 #endif
-		switch (rc = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)) {
-			case 0:
-			case DB_INCOMPLETE:
-				break;
-			default:
-				syslog(LOG_ERR, "cnid_lookup: txn_checkpoint: %s", 
-				       db_strerror(rc));
-				return 0;
-		}
-	}
+        switch (rc = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)) {
+        case 0:
+        case DB_INCOMPLETE:
+            break;
+        default:
+            syslog(LOG_ERR, "cnid_lookup: txn_checkpoint: %s",
+                   db_strerror(rc));
+            return 0;
+        }
+    }
 
-	if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
-		syslog(LOG_ERR, "cnid_lookup: Pathname is too long");
-		return 0;
-	}
+    if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
+        syslog(LOG_ERR, "cnid_lookup: Pathname is too long");
+        return 0;
+    }
 
-	memset(&key, 0, sizeof(key));
-	memset(&devdata, 0, sizeof(devdata));
-	memset(&diddata, 0, sizeof(diddata));
+    memset(&key, 0, sizeof(key));
+    memset(&devdata, 0, sizeof(devdata));
+    memset(&diddata, 0, sizeof(diddata));
 
-	/* Look for a CNID.  We have two options: dev/ino or did/name.  If we
-	 * only get a match in one of them, that means a file has moved. */
-	key.data = buf;
-	key.size = CNID_DEVINO_LEN;
-	while ((rc = db->db_devino->get(db->db_devino, NULL, &key, &devdata, 0))) {
-		if (rc == DB_LOCK_DEADLOCK) {
-			continue;
-		}
+    /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
+     * only get a match in one of them, that means a file has moved. */
+    key.data = buf;
+    key.size = CNID_DEVINO_LEN;
+    while ((rc = db->db_devino->get(db->db_devino, NULL, &key, &devdata, 0))) {
+        if (rc == DB_LOCK_DEADLOCK) {
+            continue;
+        }
 
-		if (rc == DB_NOTFOUND) {
-			devino = 0;
-			break;
-		}
+        if (rc == DB_NOTFOUND) {
+            devino = 0;
+            break;
+        }
 
-		syslog(LOG_ERR, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
-		       st->st_dev, st->st_ino, db_strerror(rc));
-		return 0;
-	}
+        syslog(LOG_ERR, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
+               st->st_dev, st->st_ino, db_strerror(rc));
+        return 0;
+    }
 
-	/* did/name now */
-	key.data = buf + CNID_DEVINO_LEN;
-	key.size = CNID_DID_LEN + len + 1;
-	while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &diddata, 0))) {
-		if (rc == DB_LOCK_DEADLOCK) {
-			continue;
-		}
+    /* did/name now */
+    key.data = buf + CNID_DEVINO_LEN;
+    key.size = CNID_DID_LEN + len + 1;
+    while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &diddata, 0))) {
+        if (rc == DB_LOCK_DEADLOCK) {
+            continue;
+        }
 
-		if (rc == DB_NOTFOUND) {
-			didname = 0;
-			break;
-		}
+        if (rc == DB_NOTFOUND) {
+            didname = 0;
+            break;
+        }
 
-		syslog(LOG_ERR, "cnid_lookup: Unable to get CNID %u, name %s: %s",
-		       ntohl(did), name, db_strerror(rc));
-		return 0;
-	}
+        syslog(LOG_ERR, "cnid_lookup: Unable to get CNID %u, name %s: %s",
+               ntohl(did), name, db_strerror(rc));
+        return 0;
+    }
 
-	/* Set id.  Honor did/name over dev/ino as dev/ino isn't necessarily
-	 * 1-1. */
-	if (didname) {
-		memcpy(&id, diddata.data, sizeof(id));
-	}
-	else if (devino) {
-		memcpy(&id, devdata.data, sizeof(id));
-	}
+    /* Set id.  Honor did/name over dev/ino as dev/ino isn't necessarily
+     * 1-1. */
+    if (didname) {
+        memcpy(&id, diddata.data, sizeof(id));
+    }
+    else if (devino) {
+        memcpy(&id, devdata.data, sizeof(id));
+    }
 
-	/* Either entries are in both databases or neither of them. */
-	if ((devino && didname) || !(devino || didname)) {
+    /* Either entries are in both databases or neither of them. */
+    if ((devino && didname) || !(devino || didname)) {
 #ifdef DEBUG
-		syslog(LOG_INFO, "cnid_lookup: Looked up did %u, name %s, as %u",
-		       ntohl(did), name, ntohl(id));
+        syslog(LOG_INFO, "cnid_lookup: Looked up did %u, name %s, as %u",
+               ntohl(did), name, ntohl(id));
 #endif
-		return id;
-	}
+        return id;
+    }
 
-	/* Fix up the database. */
-	cnid_update(db, id, st, did, name, len);
+    /* Fix up the database. */
+    cnid_update(db, id, st, did, name, len);
 #ifdef DEBUG
-	syslog(LOG_INFO, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
+    syslog(LOG_INFO, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
 #endif
-	return id;
+    return id;
 }
 #endif /* CNID_DB */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_nextid.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_nextid.c,v 1.7 2001-11-27 23:38:18 jmarcus Exp $
  */
 #ifdef unused
 
@@ -21,14 +21,14 @@
  * mapped. */
 cnid_t cnid_nextid(void *CNID)
 {
-  CNID_private *db;
-  cnid_t id;
+    CNID_private *db;
+    cnid_t id;
 
-  if (!(db = CNID)) 
-    return 0;
+    if (!(db = CNID))
+        return 0;
 
-  memcpy(&id, ad_entry(&db->rootinfo, ADEID_DID), sizeof(id));
-  return id;
+    memcpy(&id, ad_entry(&db->rootinfo, ADEID_DID), sizeof(id));
+    return id;
 }
 #endif /* CNID_DB */
 #endif
