@@ -7,7 +7,7 @@
  * Modified to check the consistency of didname.db by
  * Joe Clarke <marcus@marcuscom.com>
  *
- * $Id: cnid_didname_verify.c,v 1.6 2001-12-10 23:45:53 jmarcus Exp $
+ * $Id: cnid_didname_verify.c,v 1.7 2001-12-16 18:39:34 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,7 +22,6 @@
 #endif /* HAVE_UNISTD_H */
 #include <sys/param.h>
 
-#ifdef CNID_DB
 #include <db.h>
 
 #include <atalk/cnid.h>
@@ -219,14 +218,3 @@ version_check()
         exit (1);
     }
 }
-#else /* CNID_DB */
-int
-main(argc, argv)
-int argc;
-char *argv[];
-{
-    printf("Netatalk must be compiled with Berkeley DB to use this program.\n");
-
-    return 0;
-}
-#endif /* CNID_DB */
