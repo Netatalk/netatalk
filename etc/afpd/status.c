@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.12 2003-04-21 21:58:41 samnoble Exp $
+ * $Id: status.c,v 1.13 2003-04-21 22:39:40 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -310,7 +310,11 @@ static int status_directorynames(char *data, int *diroffset,
      */
     if (options->k5service && options->k5realm && options->fqdn) {
 	/* should k5princ be utf8 encoded? */
-	u_int8_t len = strlen( options->k5service ) 
+	u_int8_t len;
+	char *p = strchr( options->fqdn, ':' );
+	if (p) 
+	    *p = '\0';
+	len = strlen( options->k5service ) 
 			+ strlen( options->fqdn )
 			+ strlen( options->k5realm );
 	len+=2; /* '/' and '@' */
@@ -319,6 +323,8 @@ static int status_directorynames(char *data, int *diroffset,
 	snprintf( data, len + 1, "%s/%s@%s", options->k5service,
 				options->fqdn, options->k5realm );
 	data += len;
+	if (p)
+	    *p = ':';
     } else {
 	memset(begin + *diroffset, 0, sizeof(offset));
     }
