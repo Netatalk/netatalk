@@ -141,7 +141,7 @@ AC_DEFINE_UNQUOTED(CONFIG_DIR, "$config_dir",
 	[path to config dir [default=/etc/atalk]])
 CONFIG_DIR="$config_dir"
 AC_SUBST(CONFIG_DIR)
-AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR]),
+AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR])
 
 AC_ARG_WITH(cracklib,
 	[  --with-cracklib=dict    enable/set location of cracklib dictionary],
