@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.8 2001-08-27 15:26:16 uhees Exp $
+ * $Id: fork.c,v 1.9 2001-10-24 04:13:22 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -306,68 +306,101 @@ int afp_openfork(obj, ibuf, ibuflen, rbuf, rbuflen )
 			   adsame)) == NULL ) {
 	return( AFPERR_NFILE );
     }
+	if (access & OPENACC_WR) {
+		/* try opening in read-write mode */
+		upath = mtoupath(vol, path);
+		ret = AFPERR_NOOBJ;
+		if (ad_open(upath, adflags, O_RDWR, 0, ofork->of_ad) < 0) {
+	switch ( errno ) {
+	case EROFS:
+	  ret = AFPERR_VLOCK;
+	case EACCES:
+	  goto openfork_err;
 
-    /* try opening in read-write mode with a fallback to read-only 
-     * if we don't need write access. */
-    upath = mtoupath(vol, path);
-    ret = AFPERR_NOOBJ;
-    if (ad_open(upath, adflags, O_RDWR, 0, ofork->of_ad) < 0) {
-       switch ( errno ) {
-       case EROFS:
-	 ret = AFPERR_VLOCK;
-       case EACCES: 
-	 if (access & OPENACC_WR)
-	   goto openfork_err;
-	 
-	 if (ad_open(upath, adflags, O_RDONLY, 0, ofork->of_ad) < 0) {
+	  break;
+	case ENOENT:
+	  {
+	    struct stat st;
+
+		/* see if client asked for the data fork */
+		if (fork == OPENFORK_DATA) {
+		  if (ad_open(upath, ADFLAGS_DF, O_RDWR, 0, ofork->of_ad) < 0) {
+	    goto openfork_err;
+		  }
+		  adflags = ADFLAGS_DF;
+
+		} else if (stat(upath, &st) == 0) {
+		  /* here's the deal. we only try to create the resource 
+		   * fork if the user wants to open it for write acess. */
+		  if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
+	    goto openfork_err;
+		} else 
+		  goto openfork_err;
+	  }
+	  break;
+    case EMFILE :
+	case ENFILE :
+	  ret = AFPERR_NFILE;
+	  goto openfork_err;
+	  break;
+	case EISDIR :
+	  ret = AFPERR_BADTYPE;
+	  goto openfork_err;
+	  break;
+	default:
+	  syslog( LOG_ERR, "afp_openfork: ad_open: %s", strerror(errno) );
+	  ret = AFPERR_PARAM;
+	  goto openfork_err;
+	  break;
+	}
+	   }
+	 } else {
+	   /* try opening in read-only mode */
+	   upath = mtoupath(vol, path);
+	   ret = AFPERR_NOOBJ;
+	   if (ad_open(upath, adflags, O_RDONLY, 0, ofork->of_ad) < 0) {
+	 switch ( errno ) {
+	 case EROFS:
+	   ret = AFPERR_VLOCK;
+	 case EACCES:
 	   /* check for a read-only data fork */
 	   if ((adflags != ADFLAGS_HF) &&
-	       (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0))
-	     goto openfork_err;
+		   (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0))
+		 goto openfork_err;
 
-	   adflags = ADFLAGS_DF;	       
-	 }
-	 break;
-       case ENOENT:
-	 { 
-	   struct stat st;
-	   
-	   /* see if client asked for the data fork */
-	   if (fork == OPENFORK_DATA) {
-	     if (((access & OPENACC_WR) && 
-		  (ad_open(upath, ADFLAGS_DF, O_RDWR, 0, ofork->of_ad) < 0)) 
-		 || (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, 
-			     ofork->of_ad) < 0)) {
-	       goto openfork_err;
-	     }
-	     adflags = ADFLAGS_DF;
-	     
-	   } else if (stat(upath, &st) == 0) {
-	     /* here's the deal. we only try to create the resource
-	      * fork if the user wants to open it for write access. */
-	     if ((access & OPENACC_WR) && 
-		 (ad_open(upath, adflags, O_RDWR | O_CREAT, 
-			  0666, ofork->of_ad) < 0))
-	       goto openfork_err;
-	   } else 
+	   adflags = ADFLAGS_DF;
+	   break;
+	 case ENOENT:
+	   {
+	     struct stat st;
+
+		 /* see if client asked for the data fork */
+		 if (fork == OPENFORK_DATA) {
+		   if (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0) {
 	     goto openfork_err;
+		   }
+		   adflags = ADFLAGS_DF;
+
+		 } else if (stat(upath, &st) != 0) {
+		   goto openfork_err;
+		 }
+	   }
+	   break;
+	 case EMFILE :
+	 case ENFILE :
+	   ret = AFPERR_NFILE;
+	   goto openfork_err;
+	   break;
+	 case EISDIR :
+	   ret = AFPERR_BADTYPE;
+	   goto openfork_err;
+	   break;
+	 default:
+	   syslog( LOG_ERR, "afp_openfork: ad_open: %s", strerror(errno) );
+	   goto openfork_err;
+	   break;
 	 }
-	 break;
-       case EMFILE :
-       case ENFILE :
-	 ret = AFPERR_NFILE;
-	 goto openfork_err;
-	 break;
-       case EISDIR :
-	 ret = AFPERR_BADTYPE;
-	 goto openfork_err;
-	 break;
-       default:
-	 syslog( LOG_ERR, "afp_openfork: ad_open: %s", strerror(errno) );
-	 ret = AFPERR_PARAM;
-	 goto openfork_err;
-	 break;
-       }
+	    }
     }
 
     if ((adflags & ADFLAGS_HF) &&
