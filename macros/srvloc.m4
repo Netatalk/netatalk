@@ -1,6 +1,6 @@
 dnl Check for optional server location protocol support (used by MacOS X)
 
-dnl $Id: srvloc.m4,v 1.2 2001-12-19 06:02:19 srittau Exp $
+dnl $Id: srvloc.m4,v 1.3 2002-01-15 16:33:25 jmarcus Exp $
 
 AC_DEFUN([NETATALK_SRVLOC], [
 
@@ -31,8 +31,8 @@ AC_DEFUN([NETATALK_SRVLOC], [
 		)
 		AC_CHECK_LIB(slp, SLPOpen, , AC_MSG_ERROR([SLP installation not found]))
 
-		SLP_LIBS="-L$slpdir/lib -lslp"
-		SLP_CFLAGS="-I$slpdir/include"
+		SLP_LIBS="-L$srvloc/lib -lslp"
+		SLP_CFLAGS="-I$srvloc/include"
 		AC_DEFINE(USE_SRVLOC, 1)
 
 		CPPFLAGS="$savedcppflags"
