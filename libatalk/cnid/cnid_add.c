@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.8 2001-09-05 21:53:29 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.9 2001-09-19 17:44:39 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -170,8 +170,8 @@ retry:    if ((rc = txn_abort(tid)) != 0)
     goto cleanup_err;
   }
 
-  memset(&rootinfo_key, 0, sizeof(&rootinfo_key));
-  memset(&rootinfo_data, 0, sizeof(&rootinfo_data));
+  memset(&rootinfo_key, 0, sizeof(rootinfo_key));
+  memset(&rootinfo_data, 0, sizeof(rootinfo_data));
 
   /* just set hint, and the key will change. */
   rootinfo_key.data = ROOTINFO_KEY;
