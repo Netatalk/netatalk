@@ -1,5 +1,5 @@
 /*
- * $Id: uid.h,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: uid.h,v 1.6 2002-08-30 19:32:41 didg Exp $
  * code: jeff@univrel.pr.uconn.edu
  */
 
@@ -11,15 +11,9 @@
 /* have to make sure struct vol is defined */
 #include "volume.h"
 
-/* set up a structure for this */
-typedef struct uidgidset_t {
-    uid_t uid;
-    gid_t gid;
-} uidgidset;
-
 /* functions to save and restore uid/gid pairs */
-extern void save_uidgid    ( uidgidset ** );
-extern void restore_uidgid ( uidgidset ** );
+extern void save_uidgid    ( uidgidset * );
+extern void restore_uidgid ( uidgidset * );
 extern void set_uidgid     ( const struct vol * );
 
 /* internal functions to convert user and group names to ids */

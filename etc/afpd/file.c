@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.52 2002-08-29 18:57:26 didg Exp $
+ * $Id: file.c,v 1.53 2002-08-30 19:32:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -63,11 +63,6 @@ char *strchr (), *strrchr ();
 #ifdef DID_MTAB
 #include "parse_mtab.h"
 #endif /* DID_MTAB */
-
-#ifdef FORCE_UIDGID
-#warning UIDGID
-#include "uid.h"
-#endif /* FORCE_UIDGID */
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
@@ -433,9 +428,6 @@ int		ibuflen, *rbuflen;
     char		*path, *upath;
     int			creatf, did, openf, retvalue = AFP_OK;
     u_int16_t		vid;
-#ifdef FORCE_UIDGID
-    uidgidset		*uidgid;
-#endif /* FORCE_UIDGID */
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin afp_createfile:");
@@ -494,30 +486,12 @@ int		ibuflen, *rbuflen;
         openf = O_RDWR|O_CREAT|O_EXCL;
     }
 
-#ifdef FORCE_UIDGID
-
-    /* preserve current euid, egid */
-    save_uidgid ( uidgid );
-
-    /* perform all switching of users */
-    set_uidgid ( vol );
-
-#endif /* FORCE_UIDGID */
-
     if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF,
                   openf, 0666, adp) < 0 ) {
         switch ( errno ) {
         case EEXIST :
-#ifdef FORCE_UIDGID
-            /* bring everything back to old euid, egid */
-            restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
             return( AFPERR_EXIST );
         case EACCES :
-#ifdef FORCE_UIDGID
-            /* bring everything back to old euid, egid */
-            restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
             return( AFPERR_ACCESS );
         case ENOENT:
             /* on noadouble volumes, just creating the data fork is ok */
@@ -525,10 +499,6 @@ int		ibuflen, *rbuflen;
                 goto createfile_done;
             /* fallthrough */
         default :
-#ifdef FORCE_UIDGID
-            /* bring everything back to old euid, egid */
-            restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
             return( AFPERR_PARAM );
         }
     }
@@ -552,11 +522,6 @@ createfile_done:
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end afp_createfile");
 #endif /* DEBUG */
-
-#ifdef FORCE_UIDGID
-    /* bring everything back to old euid, egid */
-    restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
 
     return (retvalue);
 }
@@ -644,11 +609,6 @@ int setfilparams(struct vol *vol,
     int                 newdate = 0;
     struct timeval      tv;
 
-#ifdef FORCE_UIDGID
-    uidgidset		*uidgid;
-
-    uidgid = malloc(sizeof(uidgidset));
-#endif /* FORCE_UIDGID */
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin setfilparams:");
@@ -662,15 +622,7 @@ int setfilparams(struct vol *vol,
         adp = &ad;
     }
 
-#ifdef FORCE_UIDGID
-    save_uidgid ( uidgid );
-    set_uidgid ( vol );
-#endif /* FORCE_UIDGID */
-
     if (check_access(upath, OPENACC_WR ) < 0) {
-#ifdef FORCE_UIDGID
-            restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
         return AFPERR_ACCESS;
     }
 
@@ -678,9 +630,6 @@ int setfilparams(struct vol *vol,
                  O_RDWR|O_CREAT, 0666, adp) < 0) {
         /* for some things, we don't need an adouble header */
         if (bitmap & ~(1<<FILPBIT_MDATE)) {
-#ifdef FORCE_UIDGID
-            restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
             return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
         }
         isad = 0;
@@ -816,10 +765,6 @@ setfilparam_done:
     if (isad) {
         ad_flush( adp, ADFLAGS_HF );
         ad_close( adp, ADFLAGS_HF );
-
-#ifdef FORCE_UIDGID
-        restore_uidgid ( uidgid );
-#endif /* FORCE_UIDGID */
 
     }
 
@@ -995,7 +940,9 @@ int		ibuflen, *rbuflen;
     strcpy( newname, path );
 
     p = ctoupath( vol, curdir, newname );
-
+#ifdef FORCE_UIDGID
+    /* FIXME svid != dvid && dvid's user can't read svid */
+#endif
     if (( vol = getvolbyvid( dvid )) == NULL ) {
         return( AFPERR_PARAM );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.27 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: auth.c,v 1.28 2002-08-30 19:32:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -287,6 +287,11 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
     afp_switch = postauth_switch;
     obj->logout = logout;
+
+#ifdef FORCE_UIDGID
+    obj->force_uid = 1;
+    save_uidgid ( &obj->uidgid );
+#endif    		
 
     return( AFP_OK );
 }

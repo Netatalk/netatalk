@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.12 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: uid.c,v 1.13 2002-08-30 19:32:41 didg Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -28,27 +28,41 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-void save_uidgid ( pair )
-uidgidset **pair;
-{
-    /* allocate the memory */
-    pair = malloc ( sizeof ( uidgidset ) );
+extern uid_t    uuid; 
 
-    /* then assign the values */
-    (*pair)->uid = geteuid ();
-    (*pair)->gid = getegid ();
-} /* end function void save_uidgid ( pair ) */
+void save_uidgid ( pair )
+uidgidset *pair;
+{
+    pair->uid = geteuid ();
+    pair->gid = getegid ();
+} 
 
 void restore_uidgid ( pair )
-uidgidset **pair;
+uidgidset *pair;
 {
-    if ( seteuid ( (*pair)->uid ) < 0 )
-        LOG(log_error, logtype_afpd, "restore_uidgid: unable to seteuid '%s': %s",
-            (*pair)->uid, strerror(errno) );
-    if ( setegid ( (*pair)->gid ) < 0 )
+    int		uid, gid;   
+    
+    uid = geteuid ();
+    gid = getegid ();
+
+    if (uid == pair->uid && gid == pair->gid)
+       return;
+
+    if (seteuid(0) < 0) {
+        LOG(log_error, logtype_afpd, "set_uidgid: Could not switch back to root: %s",
+				strerror(errno));
+    }
+
+    if ( setegid ( pair->gid ) < 0 )
         LOG(log_error, logtype_afpd, "restore_uidgid: unable to setegid '%s': %s",
-            (*pair)->gid, strerror(errno) );
-} /* end function void restore_uidgid ( pair ) */
+            pair->gid, strerror(errno) );
+
+    if ( seteuid ( pair->uid ) < 0 )
+        LOG(log_error, logtype_afpd, "restore_uidgid: unable to seteuid '%s': %s",
+            pair->uid, strerror(errno) );
+    else
+    	uuid = pair->uid;	/* ugly hack for utommode */
+}
 
 void set_uidgid ( this_volume )
 const struct vol	*this_volume;
@@ -56,18 +70,33 @@ const struct vol	*this_volume;
     int		uid, gid;   /* derived ones go in here */
 
     /* check to see if we have to switch users */
-    if ( uid = user_to_uid ( (this_volume)->v_forceuid ) ) {
-        if ( seteuid ( uid ) < 0 )
-            LOG(log_error, logtype_afpd, "set_uidgid: unable to seteuid '%s': %s",
-                (this_volume)->v_forceuid, strerror(errno) );
-    } /* end of checking for (this_volume)->v_forceuid */
+    uid = user_to_uid ( (this_volume)->v_forceuid);
+    gid = group_to_gid ( (this_volume)->v_forcegid);
+
+    if ((!uid || uid == geteuid()) && (!gid || gid == getegid()))
+       return;
+
+    if ( seteuid(0) < 0) {
+        LOG(log_error, logtype_afpd, "set_uidgid: Could not switch back to root: %s",
+				strerror(errno));
+	return;
+    }
 
     /* check to see if we have to switch groups */
-    if ( gid = group_to_gid ( (this_volume)->v_forcegid ) ) {
-        if ( seteuid ( gid ) < 0 )
+    if ( gid ) {
+        if ( setegid ( gid ) < 0 )
             LOG(log_error, logtype_afpd, "set_uidgid: unable to setegid '%s': %s",
                 (this_volume)->v_forcegid, strerror(errno) );
     } /* end of checking for (this_volume)->v_forcegid */
+
+    if ( uid) {
+        if ( seteuid ( uid ) < 0 )
+            LOG(log_error, logtype_afpd, "set_uidgid: unable to seteuid '%s': %s",
+                (this_volume)->v_forceuid, strerror(errno) );
+    	else
+    	    uuid = uid;	/* ugly hack for utommode */
+
+    } /* end of checking for (this_volume)->v_forceuid */
 
 } /* end function void set_uidgid ( username, group ) */
 
@@ -76,11 +105,8 @@ char	*username;
 {
     struct passwd *this_passwd;
 
-    /* free memory for pointer */
-    this_passwd = malloc ( sizeof ( struct passwd ) );
-
     /* check for anything */
-    if ( strlen ( username ) < 1 ) return 0;
+    if ( !username || strlen ( username ) < 1 ) return 0;
 
     /* grab the /etc/passwd record relating to username */
     this_passwd = getpwnam ( username );
@@ -98,11 +124,8 @@ char	*group;
 {
     struct group *this_group;
 
-    /* free memory for pointer */
-    this_group = malloc ( sizeof ( struct group ) );
-
     /* check for anything */
-    if ( strlen ( group ) < 1 ) return 0;
+    if ( !group || strlen ( group ) < 1 ) return 0;
 
     /* grab the /etc/groups record relating to group */
     this_group = getgrnam ( group );

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.32 2002-08-25 13:26:20 rlewczuk Exp $
+ * $Id: volume.c,v 1.33 2002-08-30 19:32:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -104,6 +104,9 @@ m=u -> map both ways
 #define VOLOPT_VETO      10  /* list of veto filespec */
 
 #ifdef FORCE_UIDGID
+#warning UIDGID
+#include "uid.h"
+
 #define VOLOPT_FORCEUID  11  /* force uid for username x */
 #define VOLOPT_FORCEGID  12  /* force gid for group x */
 #define VOLOPT_MAX       12
@@ -930,10 +933,9 @@ int		*buflen;
              *       a read-write filesystem under a read-only one. */
             if ((vol->v_flags & AFPVOL_RO) ||
                     ((utime(vol->v_path, NULL) < 0) && (errno == EROFS)))
-#ifdef WITH_CATSEARCH
-                ashort |= VOLPBIT_ATTR_RO | VOLPBIT_ATTR_CATSEARCH;
-#else
                 ashort |= VOLPBIT_ATTR_RO;
+#ifdef WITH_CATSEARCH
+                ashort |= VOLPBIT_ATTR_CATSEARCH;
 #endif
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));
@@ -1169,6 +1171,9 @@ int		ibuflen, *rbuflen;
         volume->v_dir = volume->v_root = dir;
         volume->v_flags |= AFPVOL_OPEN;
     }
+#ifdef FORCE_UIDGID
+    set_uidgid ( volume );
+#endif /* FORCE_UIDGID */
 
     if ( stat( volume->v_path, &st ) < 0 ) {
         ret = AFPERR_PARAM;
@@ -1265,6 +1270,10 @@ struct vol *getvolbyvid(const u_int16_t vid )
     if ( vol == NULL || ( vol->v_flags & AFPVOL_OPEN ) == 0 ) {
         return( NULL );
     }
+
+#ifdef FORCE_UIDGID
+    set_uidgid ( vol );
+#endif /* FORCE_UIDGID */
 
     return( vol );
 }

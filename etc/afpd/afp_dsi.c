@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.23 2002-08-22 13:19:58 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.24 2002-08-30 19:32:40 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -37,6 +37,11 @@
 #include "switch.h"
 #include "auth.h"
 #include "fork.h"
+
+#ifdef FORCE_UIDGID
+#warning UIDGID
+#include "uid.h"
+#endif /* FORCE_UIDGID */
 
 extern struct oforks	*writtenfork;
 
@@ -263,9 +268,15 @@ void afp_over_dsi(AFPObj *obj)
             if (afp_switch[function]) {
                 dsi->datalen = DSI_DATASIZ;
                 child.flags |= CHILD_RUNNING;
+
                 err = (*afp_switch[function])(obj,
                                               dsi->commands, dsi->cmdlen,
                                               dsi->data, &dsi->datalen);
+#ifdef FORCE_UIDGID
+            	/* bring everything back to old euid, egid */
+		if (obj->force_uid)
+            	    restore_uidgid ( &obj->uidgid );
+#endif /* FORCE_UIDGID */
                 child.flags &= ~CHILD_RUNNING;
             } else {
                 LOG(log_error, logtype_afpd, "bad function %X", function);
@@ -303,6 +314,11 @@ void afp_over_dsi(AFPObj *obj)
                 err = (*afp_switch[function])(obj, dsi->commands, dsi->cmdlen,
                                               dsi->data, &dsi->datalen);
                 child.flags &= ~CHILD_RUNNING;
+#ifdef FORCE_UIDGID
+            	/* bring everything back to old euid, egid */
+		if (obj->force_uid)
+            	    restore_uidgid ( &obj->uidgid );
+#endif /* FORCE_UIDGID */
             } else {
                 LOG(log_error, logtype_afpd, "(write) bad function %x", function);
                 dsi->datalen = 0;

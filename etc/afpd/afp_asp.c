@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.16 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: afp_asp.c,v 1.17 2002-08-30 19:32:40 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -37,6 +37,11 @@
 #include "switch.h"
 #include "auth.h"
 #include "fork.h"
+
+#ifdef FORCE_UIDGID
+#warning UIDGID
+#include "uid.h"
+#endif /* FORCE_UIDGID */
 
 extern struct oforks	*writtenfork;
 
@@ -236,6 +241,11 @@ void afp_over_asp(AFPObj *obj)
                 reply = (*afp_switch[ func ])(obj,
                                               asp->commands, asp->cmdlen,
                                               asp->data, &asp->datalen);
+#ifdef FORCE_UIDGID
+            	/* bring everything back to old euid, egid */
+		if (obj->force_uid)
+            	    restore_uidgid ( &obj->uidgid );
+#endif /* FORCE_UIDGID */
             } else {
                 LOG(log_error, logtype_afpd, "bad function %X", func );
                 asp->datalen = 0;
@@ -263,6 +273,11 @@ void afp_over_asp(AFPObj *obj)
                 reply = (*afp_switch[ func ])(obj,
                                               asp->commands, asp->cmdlen,
                                               asp->data, &asp->datalen);
+#ifdef FORCE_UIDGID
+            	/* bring everything back to old euid, egid */
+		if (obj->force_uid)
+            	    restore_uidgid ( &obj->uidgid );
+#endif /* FORCE_UIDGID */
             } else {
                 LOG(log_error, logtype_afpd, "(write) bad function %X", func );
                 asp->datalen = 0;
