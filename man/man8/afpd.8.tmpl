@@ -3,9 +3,9 @@
 .SH NAME
 afpd \- AppleTalk Filing Protocol daemon
 .SH SYNOPSIS
-.B :SBINDIR:/afpd
+.B afpd
 [
-.B -d
+.B -duptDTvI
 ]
 [
 .B -f
@@ -14,9 +14,6 @@ afpd \- AppleTalk Filing Protocol daemon
 [
 .B -s
 .I systemvolumes
-]
-[
-.B -u
 ]
 [
 .B -n
@@ -31,16 +28,28 @@ afpd \- AppleTalk Filing Protocol daemon
 .I guest
 ]
 [
-.B -G
+.B -P
+.I pidfile
 ]
 [
-.B -K
+.B -S
+.I port
 ]
 [
-.B -C
+.B -L
+.I message
 ]
 [
-.B -A
+.B -F
+.I config
+]
+[
+.B -U
+.I uams
+]
+[
+.B -m
+.I umask
 ]
 .SH DESCRIPTION
 .B afpd
@@ -138,20 +147,71 @@ The default is 5.
 .BI \-g " guest"
 Specifies the name of the guest account.  The default is ``nobody''.
 .TP
-.B \-G
+.BI \-P " pidfile"
+Specifies the file in which
+.B afpd
+stores its process id.
 .TP
-.B \-K
+.B \-p
+Prevents clients from saving their passwords. (Equivalent to
+.I \-nosavepasswd
+in
+.BR afpd.conf .)
 .TP
-.B \-C
+.B \-t
+Allows clients to change their passwords. (Equivalent to
+.I \-setpasswd
+in
+.BR afpd.conf .)
 .TP
-.B \-A
-Causes the server to not offer
-.BR NoUserAuthent ,
-.BR "Kerberos IV" ,
-.BR "Cleartxt Passwrd" ,
-and
-.B AFS Kerberos
-logins, respectively.  The default is to enable all available login methods.
+.B \-D
+Use DDP (AppleTalk) as transport protocol. (Equivalent to
+.I \-ddp
+in
+.BR afpd.cond .)
+.TP
+.B \-T
+Use TCP/IP as transport protocol. (Equivalent to
+.I \-tcp
+in
+.BR afpd.conf .)
+.TP
+.BI \-S " port"
+Specifies the port to register with when doing AFPoverTCP. Defaults to
+.IR 548 .
+(Equivalent to
+.I -port
+in
+.BR afpd.conf .)
+.TP
+.BI \-L " message"
+Specifies the login message that will be sent to clients. (Equivalent to
+.I \-loginmsg
+in
+.BR afpd.conf .)
+.TP
+.BI \-F " config"
+Specifies the configuration file to use. (Defaults to
+.IR :ETCDIR:/afpd.conf .)
+.TP
+.BI \-U " uams"
+Comma-separated list of UAMs to use for the authentication process.
+(Equivalent to
+.I -uamlist
+in
+.BR afpd.conf .)
+.TP
+.B \-I
+Use a platform specific icon. (Equivalent to
+.I \-icon
+in
+.BR afpd.conf .)
+.TP
+.BR \-m " umask"
+Use this umask for the creation of folders in Netatalk.
+.TP
+.B \-v
+Print version information and exit.
 .SH AUTHENTICATION
 .B afpd
 currently understands three User Authentication Methods (UAMs):
