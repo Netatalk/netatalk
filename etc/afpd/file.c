@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.67 2002-10-13 21:30:55 didg Exp $
+ * $Id: file.c,v 1.68 2002-10-25 11:10:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -160,7 +160,8 @@ int getmetadata(struct vol *vol,
 #ifndef USE_LASTDID
     struct stat		lst, *lstp;
 #endif /* USE_LASTDID */
-    char		*data, *nameoff = NULL, *upath;
+    char		*data, *l_nameoff = NULL, *upath;
+    char                *utf_nameoff = NULL;
     int			bit = 0;
     u_int32_t		aint;
     u_int16_t		ashort;
@@ -250,7 +251,7 @@ int getmetadata(struct vol *vol,
             break;
 
         case FILPBIT_LNAME :
-            nameoff = data;
+            l_nameoff = data;
             data += sizeof( u_int16_t );
             break;
 
@@ -355,7 +356,7 @@ int getmetadata(struct vol *vol,
         case FILPBIT_PDINFO :
             if (afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
-                nameoff = data;
+                utf_nameoff = data;
                 data += sizeof( u_int16_t );
                 aint = 0;
                 memcpy(data, &aint, sizeof( aint ));
@@ -428,9 +429,14 @@ int getmetadata(struct vol *vol,
         bitmap = bitmap>>1;
         bit++;
     }
-    if ( nameoff ) {
+    if ( l_nameoff ) {
         ashort = htons( data - buf );
-        memcpy(nameoff, &ashort, sizeof( ashort ));
+        memcpy(l_nameoff, &ashort, sizeof( ashort ));
+        data = set_name(data, path, 0);
+    }
+    if ( utf_nameoff ) {
+        ashort = htons( data - buf );
+        memcpy(utf_nameoff, &ashort, sizeof( ashort ));
         data = set_name(data, path, utf8);
     }
     *buflen = data - buf;
@@ -597,6 +603,7 @@ int		ibuflen, *rbuflen;
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:
+    curdir->offcnt++;
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {
@@ -1105,6 +1112,7 @@ int		ibuflen, *rbuflen;
     if ( (err = copyfile(p, upath , newname, vol_noadouble(vol))) < 0 ) {
         return err;
     }
+    curdir->offcnt++;
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {

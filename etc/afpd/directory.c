@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.48 2002-10-14 06:30:49 didg Exp $
+ * $Id: directory.c,v 1.49 2002-10-25 11:10:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1047,7 +1047,7 @@ int getdirparams(const struct vol *vol,
 {
     struct maccess	ma;
     struct adouble	ad;
-    char		*data, *nameoff = NULL;
+    char		*data, *l_nameoff = NULL, *utf_nameoff = NULL;
     int			bit = 0, isad = 0;
     u_int32_t           aint;
     u_int16_t		ashort;
@@ -1143,7 +1143,7 @@ int getdirparams(const struct vol *vol,
 
         case DIRPBIT_LNAME :
             if (dir->d_m_name) /* root of parent can have a null name */
-                nameoff = data;
+                l_nameoff = data;
             else
                 memset(data, 0, sizeof(u_int16_t));
             data += sizeof( u_int16_t );
@@ -1203,7 +1203,7 @@ int getdirparams(const struct vol *vol,
             if (afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
                 if (dir->d_m_name) /* root of parent can have a null name */
-                    nameoff = data;
+                    utf_nameoff = data;
                 else
                     memset(data, 0, sizeof(u_int16_t));
                 data += sizeof( u_int16_t );
@@ -1231,9 +1231,14 @@ int getdirparams(const struct vol *vol,
         bitmap = bitmap>>1;
         bit++;
     }
-    if ( nameoff ) {
+    if ( l_nameoff ) {
         ashort = htons( data - buf );
-        memcpy( nameoff, &ashort, sizeof( ashort ));
+        memcpy( l_nameoff, &ashort, sizeof( ashort ));
+        data = set_name(data, dir->d_m_name, 0);
+    }
+    if ( utf_nameoff ) {
+        ashort = htons( data - buf );
+        memcpy( utf_nameoff, &ashort, sizeof( ashort ));
         data = set_name(data, dir->d_m_name, utf8);
     }
     if ( isad ) {
@@ -1688,6 +1693,7 @@ int		ibuflen, *rbuflen;
     if (of_stat(s_path) < 0) {
         return AFPERR_MISC;
     }
+    curdir->offcnt++;
     if ((dir = adddir( vol, curdir, s_path)) == NULL) {
         return AFPERR_MISC;
     }
