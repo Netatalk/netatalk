@@ -32,7 +32,12 @@
 #include <sys/file.h>
 #endif
 #include <fcntl.h>
+#ifdef HAVE_CDEFS_H
+#include <cdefs.h>
+#endif
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#endif
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <netatalk/endian.h>
@@ -133,8 +138,10 @@ static inline int sendfile(int fdout, int fdin, off_t *off, size_t count)
 #define ADEDOFF_RFORK	589
 #define ADEDOFF_NAME	86
 #define ADEDOFF_COMMENT	341
-#define ADEDOFF_FILEI	541
 #define ADEDOFF_FINDERI	557
+#ifndef ADEDOFF_FILEI
+#define ADEDOFF_FILEI	541
+#endif
 
 /*
  * The header of the AppleDouble Header File looks like this:
