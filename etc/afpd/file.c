@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.79 2003-01-26 10:42:40 didg Exp $
+ * $Id: file.c,v 1.80 2003-01-30 17:32:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1353,7 +1353,6 @@ int         checkAttrib;
 {
     struct adouble	ad;
     int			adflags, err = AFP_OK;
-    int			locktype = ADLOCK_WR;
     int			openmode = O_RDWR;
 
 #ifdef DEBUG
@@ -1381,7 +1380,6 @@ int         checkAttrib;
                     case EACCES:
                         if(openmode == O_RDWR) {
                             openmode = O_RDONLY;
-                            locktype = ADLOCK_RD;
                             continue;
                         } else {
                             return AFPERR_ACCESS;
@@ -1397,7 +1395,6 @@ int         checkAttrib;
             case EACCES:
                 if(openmode == O_RDWR) {
                     openmode = O_RDONLY;
-                    locktype = ADLOCK_RD;
                     continue;
                 } else {
                     return AFPERR_ACCESS;
@@ -1433,13 +1430,13 @@ int         checkAttrib;
          *
          * FIXME it doesn't for RFORK open read only and fork open without deny mode
          */
-        if (ad_tmplock(&ad, ADEID_RFORK, locktype |ADLOCK_FILELOCK, 0, 0, 0) < 0 ) {
+        if (ad_tmplock(&ad, ADEID_RFORK, ADLOCK_WR |ADLOCK_FILELOCK, 0, 0, 0) < 0 ) {
             ad_close( &ad, adflags );
             return( AFPERR_BUSY );
         }
     }
 
-    if (ad_tmplock( &ad, ADEID_DFORK, locktype, 0, 0, 0 ) < 0) {
+    if (ad_tmplock( &ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 0 ) < 0) {
         err = AFPERR_BUSY;
     }
     else if ( 0 == (err = netatalk_unlink( ad_path( file, ADFLAGS_HF )) )) {

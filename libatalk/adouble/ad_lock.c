@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.8 2003-01-16 21:18:15 didg Exp $
+ * $Id: ad_lock.c,v 1.9 2003-01-30 17:32:45 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -446,6 +446,11 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int type,
     if (!(type & ADLOCK_FILELOCK))
         lock.l_start += ad_getentryoff(ad, eid);
   }
+
+  if (!(adf->adf_flags & O_RDWR) && (type & ADLOCK_WR)) {
+      type = (type & ~ADLOCK_WR) | ADLOCK_RD;
+  }
+  
   lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
   lock.l_whence = SEEK_SET;
   lock.l_len = len;
