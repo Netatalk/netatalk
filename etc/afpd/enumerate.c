@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.26 2002-10-17 18:01:54 didg Exp $
+ * $Id: enumerate.c,v 1.27 2002-10-29 00:28:45 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -267,7 +267,7 @@ int     ext;
 
     if (ext == 2) {
         memcpy( &sindex, ibuf, sizeof( sindex ));
-        sindex = ntohs( sindex );
+        sindex = ntohl( sindex );
         ibuf += sizeof( sindex );
     }
     else {
@@ -278,7 +278,7 @@ int     ext;
     
     if (ext == 2) {
         memcpy( &maxsz, ibuf, sizeof( maxsz ));
-        maxsz = ntohs( maxsz );
+        maxsz = ntohl( maxsz );
         ibuf += sizeof( maxsz );
     }
     else {
