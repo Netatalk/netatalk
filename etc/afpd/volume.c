@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.25 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: volume.c,v 1.26 2002-03-24 17:45:29 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -364,6 +364,8 @@ static void volset(struct vol_option *options, char *volname, int vlen,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
             else if (strcasecmp(p, "dropkludge") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
+            else if (strcasecmp(p, "nofileid") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
 
             p = strtok(NULL, ",");
         }
@@ -917,7 +919,9 @@ int		*buflen;
         switch ( bit ) {
         case VOLPBIT_ATTR :
 #ifdef CNID_DB
-            ashort = VOLPBIT_ATTR_FILEID;
+            if (0 == (vol->v_flags & AFPVOL_NOFILEID)) {
+                ashort = VOLPBIT_ATTR_FILEID;
+            }
 #else /* CNID_DB */
             ashort = 0;
 #endif /* CNID_DB */

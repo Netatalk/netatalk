@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.10 2002-03-13 19:29:17 srittau Exp $
+ * $Id: volume.h,v 1.11 2002-03-24 17:45:29 jmarcus Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -87,6 +87,7 @@ this is going away. */
 #define AFPVOL_LIMITSIZE (1 << 12)  /* limit size for older macs */
 #define AFPVOL_MAPASCII  (1 << 13)  /* map the ascii range as well */
 #define AFPVOL_DROPBOX   (1 << 14)  /* dropkludge dropbox support */
+#define AFPVOL_NOFILEID  (1 << 15)  /* don't advertise createid resolveid and deleteid calls */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)

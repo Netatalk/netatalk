@@ -68,6 +68,8 @@
 # codepage:filename   -> load filename from nls directory.
 # dbpath:path         -> store the database stuff in the following path.
 # password:password   -> set a volume password (8 characters max)
+# nofileid            -> don't advertise createfileid, resolveid, deleteid 
+#                        calls
 #
 # The "~" below indicates that Home directories are visible by default.
 # If you do not wish to have people accessing their Home directories,
