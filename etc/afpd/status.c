@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.13 2003-04-21 22:39:40 samnoble Exp $
+ * $Id: status.c,v 1.14 2003-06-09 14:25:51 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -85,14 +85,14 @@ static int status_server(char *data, const char *server)
         len++;
     data += len;
 
-    /* make room for signature and net address offset. save location of
-     * signature offset. we're also making room for directory names offset
+    /* Make room for signature and net address offset. Save location of
+     * signature offset. We're also making room for directory names offset
      * and the utf-8 server name offset.
      *
-     * NOTE: technically, we don't need to reserve space for the
+     * NOTE: Technically, we don't need to reserve space for the
      * signature and net address offsets if they're not going to be
-     * used. as there are no offsets after them, it doesn't hurt to
-     * have them specified though. so, we just do that to simplify
+     * used. As there are no offsets after them, it doesn't hurt to
+     * have them specified though. So, we just do that to simplify
      * things.  
      *
      * NOTE2: AFP3.1 Documentation states that the directory names offset
@@ -437,7 +437,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     status_flags(status, options->server_notif, options->fqdn ||
                  (dsiconfig && dsi->server.sin_addr.s_addr),
                  options->passwdbits, 
-		 (options->k5service && options->k5realm && options->fqdn));
+                 (options->k5service && options->k5realm && options->fqdn));
     /* returns offset to signature offset */
     c = status_server(status, options->server ? options->server :
                       options->hostname);
