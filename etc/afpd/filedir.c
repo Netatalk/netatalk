@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.35 2002-10-25 11:10:48 didg Exp $
+ * $Id: filedir.c,v 1.36 2002-10-25 11:26:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -698,10 +698,10 @@ int		ibuflen, *rbuflen;
     rc = moveandrename(vol, sdir, oldname, newname, isdir);
 
     if ( rc == AFP_OK ) {
+        char *upath = mtoupath(vol, newname);
+
         curdir->offcnt++;
         sdir->offcnt--;
-
-        char *upath = mtoupath(vol, newname);
 #ifdef DROPKLUDGE
         if (vol->v_flags & AFPVOL_DROPBOX) {
             if ((retvalue=matchfile2dirperms (upath, vol, did)) != AFP_OK) {
