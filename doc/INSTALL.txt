@@ -27,13 +27,13 @@ Autoconf is a package of m4 macros that produce shell scripts to
 configure source code packages.
 
 Documentation: http://www.gnu.org/software/autoconf/
-Program: (see the GNU mirrors) /gnu/autoconf/autoconf-2-13.tar.gz
+Program: (see the GNU mirrors) /gnu/autoconf/autoconf-2.13.tar.gz
 
 4. Automake
 Automake is a tool that generates  'Makefile.in' files.
 
 Documentation: http://www.gnu.org/software/automake/
-Program: (see the GNU mirrors) /gnu/automake/auto-1.4.tar.gz
+Program: (see the GNU mirrors) /gnu/automake/automake-1.4.tar.gz
 
 Optional
 ========
