@@ -6,11 +6,6 @@ The sources were obtained from CVS: cvs.netatalk.sourceforge.net.
 See the Netatalk homepage at <http://netatalk.sourceforge.net/> for
 anonymous CVS instructions.
 
-Changes:
- * Added Debian GNU/Linux package maintenance system files.
- * Fixed some build problems.
- * Added patch for megatron.
-
 The following copyrights/licenses apply to this software:
 
 Copyright (c) 1990,1996 Regents of The University of Michigan.
