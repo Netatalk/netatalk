@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.201 2003-12-15 06:56:33 srittau Exp $
+dnl $Id: configure.in,v 1.202 2004-01-14 16:10:29 bfernhomberg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -21,7 +21,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_LIBTOOL_DLOPEN
-AM_PROG_LIBTOOL
+AC_PROG_LIBTOOL
 AC_PROG_PERL
 AC_PROG_GREP
 AC_PROG_PS
@@ -42,10 +42,21 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_TIME
 AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h unistd.h termios.h sys/termios.h netdb.h sgtty.h sys/mount.h statfs.h sys/types.h dlfcn.h errno.h sys/errno.h)
+AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h ufs/quota.h mount.h  statfs.h sys/types.h dlfcn.h errno.h sys/errno.h crypt.h)
+
 AC_CHECK_HEADER(sys/cdefs.h,,
 	AC_MSG_RESULT([enabling generic cdefs.h from tree])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 )
+
+AC_CHECK_HEADERS([sys/param.h])
+AC_CHECK_HEADERS([sys/mount.h], [], [],
+[
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+])
+
 
 dnl
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -80,7 +91,7 @@ AC_MSG_CHECKING([for logfile path])
 AC_ARG_WITH(logfile,
 	[  --with-logfile=PATH     path for file used by logger [/var/log/netatalk.log]
                           use --without-logfile to disable logger], [
-        if test "x$withval" == "xno"; then
+        if test "x$withval" = "xno"; then
 		AC_DEFINE(DISABLE_LOGGER, 1, [Define if the logger should not be used])
 		AC_MSG_RESULT([syslog])
 	elif test "$withval" != "yes"; then
@@ -418,8 +429,6 @@ if test x"$this_os" = "xfreebsd"; then
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
-
-	AC_DEFINE(NO_CRYPT_H, 1, [Define if crypt.h does not exist])
 fi
 
 dnl ----- HP-UX 11 specific -----
@@ -505,12 +514,8 @@ if test x"$this_os" = "xnetbsd"; then
 		# This REALLY should be a configure test.
 		AC_DEFINE(DLSYM_PREPEND_UNDERSCORE, 1, [BSD compatibility macro])
 	fi
-	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
+	CFLAGS="-I\$(top_srcdir)/sys/netbsd $CFLAGS"
 	need_dash_r=yes 
-
-	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
-	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
-	AC_DEFINE(NO_CRYPT_H, 1, [Define if crypt.h does not exist])
 fi
 
 dnl ----- OpenBSD specific -----
@@ -518,10 +523,6 @@ if test x"$this_os" = "xopenbsd"; then
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE, 1, [BSD compatibility macro])
-
-	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
-	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
-	AC_DEFINE(NO_CRYPT_H, 1, [Define if crypt.h does not exist])
 fi
 
 dnl ----- Solaris specific -----

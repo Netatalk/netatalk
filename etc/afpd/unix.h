@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.16 2003-12-28 13:51:12 srittau Exp $
+ * $Id: unix.h,v 1.17 2004-01-14 16:10:29 bfernhomberg Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -43,6 +43,9 @@ typedef int	mode_t;
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
 #ifdef HAVE_SYS_MOUNT_H
+#ifdef HAVE_SYS_PARM_H
+#include <sys/parm.h>
+#endif /* HAVE_SYS_PARM_H */
 #include <sys/mount.h>
 #endif /* HAVE_SYS_MOUNT_H */
 

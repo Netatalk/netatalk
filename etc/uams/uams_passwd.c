@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.21 2003-06-11 07:16:14 srittau Exp $
+ * $Id: uams_passwd.c,v 1.22 2004-01-14 16:10:29 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -33,9 +33,9 @@ char *strchr (), *strrchr ();
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-#ifndef NO_CRYPT_H
+#ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif /* ! NO_CRYPT_H */
+#endif /* HAVE_CRYPT_H */
 #include <pwd.h>
 #include <atalk/logger.h>
 

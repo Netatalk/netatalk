@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.11 2003-06-09 02:50:45 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.12 2004-01-14 16:10:29 bfernhomberg Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_PATH_GCRYPT], [
@@ -34,7 +34,7 @@ AC_DEFUN([AC_PATH_GCRYPT], [
 
 	AC_SUBST(GCRYPT_CFLAGS)
 	AC_SUBST(GCRYPT_LIBS)
-	AM_CONDITIONAL(HAVE_GCRYPT, test -n "$GCRYPT_CONFIG")
+	AM_CONDITIONAL(HAVE_GCRYPT, test "x$GCRYPT_CONFIG" != "xno")
 ])
 
 AC_DEFUN([AC_PATH_SSL], [
