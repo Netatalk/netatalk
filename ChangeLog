@@ -1,6 +1,11 @@
 
 2001-09-18  joe c   <marcus@marcuscom.com>
 
+	* etc/afpd/afp_options.c: Fix a bug in the custom icon code (thanks to
+	Edmund Lam <epl@unimelb.edu.au> for finding this)
+
+2001-09-18  joe c   <marcus@marcuscom.com>
+
 	* libatalk/cnid/cnid_open.c: Added db3 version checking code
 
 2001-09-18  joe c   <marcus@marcuscom.com>
