@@ -8,6 +8,7 @@ sbin_PROGRAMS = papd
 papd_SOURCES = main.c printcap.c session.c file.c comment.c lp.c ppd.c \
 	magics.c headers.c queries.c auth.c uam.c
 papd_LDADD = $(top_builddir)/libatalk/libatalk.la
+papd_LDFLAGS = -rdynamic
 
 #showppd_SOURCES = showppd.c ppd.c
 #showppd_LDADD = $(top_builddir)/libatalk/libatalk.la
