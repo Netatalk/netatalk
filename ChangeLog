@@ -1,6 +1,11 @@
 
 2001-09-21  joe c   <marcus@marcuscom.com>
 
+	* etc/afpd/desktop.c: Re-enable codepage translations (thanks to
+	Egon Niederacher <niederacher@fh-vorarlberg.ac.at>)
+
+2001-09-21  joe c   <marcus@marcuscom.com>
+
 	* libatalk/cnid/cnid_add.c, libatalk/cnid/cnid_get.c,
 	libatalk/cnid/cnid_lookup.c, libatalk/cnid/cnid_close.c,
 	libatalk/cnid/cnid_open.c, libatalk/cnid/cnid_update.c: Fixed bugs with

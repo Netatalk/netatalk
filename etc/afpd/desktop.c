@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.6 2001-08-15 01:37:34 srittau Exp $
+ * $Id: desktop.c,v 1.7 2001-09-21 17:39:22 jmarcus Exp $
  *
  * See COPYRIGHT.
  */
@@ -603,8 +603,8 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 
 char *mtoupath(const struct vol *vol, char *mpath)
 {
-    static char	 upath[ MAXPATHLEN + 1];
-    char	*m, *u;
+    static unsigned char	 upath[ MAXPATHLEN + 1];
+    unsigned char	*m, *u;
     int		 i = 0;
 
     if ( *mpath == '\0' ) {
@@ -660,7 +660,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
 char *utompath(const struct vol *vol, char *upath)
 {
     static unsigned char mpath[ MAXPATHLEN + 1];
-    char		*m, *u;
+    unsigned char		*m, *u;
     int			 h;
 
     /* do the hex conversion */
