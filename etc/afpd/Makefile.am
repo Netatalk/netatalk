@@ -1,6 +1,7 @@
 # Makefile.am for etc/afpd/
 
 pkgconfdir = @PKGCONFDIR@
+nlsdir = @NLSDIR@
 
 SUBDIRS = nls
 
@@ -32,6 +33,6 @@ CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
 	 -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	 -D_PATH_AFPDNLSPATH=\"$(pkgconfdir)/nls/\" \
+	 -D_PATH_AFPDNLSPATH=\"$(nlsdir)/\" \
 	 -DAFPD_MTAB_FILE=\"$(pkgconfdir)/afpd.mtab\" \
 	 -DAPPLCNAME

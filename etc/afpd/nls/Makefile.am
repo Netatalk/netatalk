@@ -1,7 +1,7 @@
 # Makefile.am for etc/afpd/nls/
 
 pkgconfdir = @PKGCONFDIR@
-nlsdir = $(pkgconfdir)/nls
+nlsdir = @NLSDIR@
 
 bin_PROGRAMS = makecode parsecode
 

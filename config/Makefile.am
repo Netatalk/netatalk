@@ -14,6 +14,7 @@ EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 CLEANFILES = $(GENFILES)
 
 pkgconfdir = @PKGCONFDIR@
+nlsdir = @NLSDIR@
 
 #
 # rule to parse template files
@@ -21,7 +22,7 @@ pkgconfdir = @PKGCONFDIR@
 
 .tmpl:
 	sed -e s@:UAMS_PATH:@${UAMS_PATH}@ \
-	    -e s@:NLS_PATH:@${pkgconfdir}/nls@ \
+	    -e s@:NLS_PATH:@${nlsdir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    <$< >$@
 
