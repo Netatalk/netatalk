@@ -18,6 +18,11 @@
 #include <netatalk/endian.h>
 #include "megatron.h"
 
+/* This allows megatron to generate .bin files that won't choke other
+   well-known converter apps. It also makes sure that checksums
+   always match. (RLB) */
+#define MACBINARY_PLAY_NICE_WITH_OTHERS
+
 /*	String used to indicate standard input instead of a disk
 	file.  Should be a string not normally used for a file
  */
@@ -237,7 +242,9 @@ bin_write( fork, buffer, length )
     int			writelen;
     int			cc = 0;
     off_t		pos;
-    u_char		padchar = 0;
+    u_char		padchar = 0x7f;
+		/* Not sure why, but it seems this must be 0x7f to match
+		   other converters, not 0. (RLB) */
 
 #if DEBUG >= 3
     fprintf( stderr, "bin_write: fork is %s\n", forkname[ fork ] );
@@ -352,8 +359,14 @@ bin_header_read( fh, revision )
     fh->mod_date = AD_DATE_FROM_UNIX(fh->mod_date);
     fh->backup_date = AD_DATE_START;
     memcpy( &fh->finder_info, head_buf +  65, 8 );
+
+#ifndef MACBINARY_PLAY_NICE_WITH_OTHERS /* (RLB) */
     memcpy( &fh->finder_info.fdFlags, head_buf + 73, 1 );
     fh->finder_info.fdFlags &= mask;
+#else
+	memcpy( &fh->finder_info.fdFlags, head_buf + 73, 2 );
+#endif /* ! MACBINARY_PLAY_NICE_WITH_OTHERS */
+
     memcpy(&fh->finder_info.fdLocation, head_buf + 75, 4 );
     memcpy(&fh->finder_info.fdFldr, head_buf +  79, 2 );
     memcpy(&fh->forklen[ DATA ],  head_buf + 83, 4 );
@@ -370,6 +383,7 @@ bin_header_read( fh, revision )
 #if DEBUG >= 5
     {
 	short		flags;
+	long		flags_long;
 
 	fprintf( stderr, "Values read by bin_header_read\n" );
 	fprintf( stderr, "name length\t\t%d\n", head_buf[ 1 ] );
@@ -383,6 +397,13 @@ bin_header_read( fh, revision )
 	memcpy( &flags, &fh->finder_info.fdFlags, sizeof( flags ));
 	flags = ntohs( flags );
 	fprintf( stderr, "flags\t\t\t%x\n", flags );
+
+	/* Show fdLocation too (RLB) */
+	memcpy( &flags_long, &fh->finder_info.fdLocation,
+		sizeof( flags_long ));
+	flags_long = ntohl( flags_long );
+	fprintf( stderr, "location flags\t\t%lx\n", flags_long );
+
 	fprintf( stderr, "data fork length\t%ld\n", bin.forklen[DATA] );
 	fprintf( stderr, "resource fork length\t%ld\n", bin.forklen[RESOURCE] );
 	fprintf( stderr, "\n" );
@@ -411,7 +432,13 @@ bin_header_write( fh )
     head_buf[ 1 ] = (u_char)strlen( fh->name );
     memcpy( head_buf + 2, fh->name, head_buf[ 1 ] );
     memcpy( head_buf + 65, &fh->finder_info, 8 );
-    memcpy( head_buf + 73, &fh->finder_info.fdFlags, 1);
+
+#ifndef MACBINARY_PLAY_NICE_WITH_OTHERS /* (RLB) */
+    memcpy( head_buf + 73, &fh->finder_info.fdFlags, 1 );
+#else
+    memcpy( head_buf + 73, &fh->finder_info.fdFlags, 2 );
+#endif /* ! MACBINARY_PLAY_NICE_WITH_OTHERS */
+
     memcpy( head_buf + 75, &fh->finder_info.fdLocation, 4 );
     memcpy( head_buf + 79, &fh->finder_info.fdFldr, 2 );
     memcpy( head_buf + 83, &fh->forklen[ DATA ], 4 );
@@ -440,11 +467,25 @@ bin_header_write( fh )
 
 #if DEBUG >= 5
     {
+	short	flags;
+	long	flags_long;
+
 	fprintf( stderr, "Values written by bin_header_write\n" );
 	fprintf( stderr, "name length\t\t%d\n", head_buf[ 1 ] );
 	fprintf( stderr, "file name\t\t%s\n", (char *)&head_buf[ 2 ] );
 	fprintf( stderr, "type\t\t\t%.4s\n", (char *)&head_buf[ 65 ] );
 	fprintf( stderr, "creator\t\t\t%.4s\n", (char *)&head_buf[ 69 ] );
+
+	memcpy( &flags, &fh->finder_info.fdFlags, sizeof( flags ));
+	flags = ntohs( flags );
+	fprintf( stderr, "flags\t\t\t%x\n", flags );
+
+	/* Show fdLocation too (RLB) */
+	memcpy( &flags_long, &fh->finder_info.fdLocation,
+		sizeof( flags_long ));
+	flags_long = ntohl( flags_long );
+	fprintf( stderr, "location flags\t\t%ldx\n", flags_long );
+
 	fprintf( stderr, "data fork length\t%ld\n", bin.forklen[DATA] );
 	fprintf( stderr, "resource fork length\t%ld\n", bin.forklen[RESOURCE] );
 	fprintf( stderr, "\n" );
