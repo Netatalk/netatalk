@@ -125,6 +125,18 @@ static inline int sendfile(int fdout, int fdin, off_t *off, size_t count)
 #endif
 
 /*
+ * some legacy defines from netatalk-990130
+ * (to keep from breaking certain packages)
+ *
+ */
+
+#define ADEDOFF_RFORK	589
+#define ADEDOFF_NAME	86
+#define ADEDOFF_COMMENT	341
+#define ADEDOFF_FILEI	541
+#define ADEDOFF_FINDERI	557
+
+/*
  * The header of the AppleDouble Header File looks like this:
  *
  *	NAME			SIZE
