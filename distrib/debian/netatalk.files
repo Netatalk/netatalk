@@ -9,7 +9,6 @@ usr/bin/achfile
 usr/bin/adv1tov2
 usr/bin/aecho
 usr/bin/afile
-usr/bin/afppasswd
 usr/bin/apple_cp
 usr/bin/apple_mv
 usr/bin/apple_rm
@@ -64,7 +63,6 @@ usr/sbin/psa
 usr/sbin/timelord
 usr/share/man/man1/aecho.1
 usr/share/man/man1/afile.1
-usr/share/man/man1/afppasswd.1
 usr/share/man/man1/getzones.1
 usr/share/man/man1/megatron.1
 usr/share/man/man1/nbp.1

@@ -5,8 +5,10 @@ netatalk (1.5pre8cvs-0) unstable; urgency=low
   * Upstream does now have manpages for apple_cp(1), apple_mv(1), and
     apple_rm(1), written by Lance Levsen <l.levsen@printwest.com>.
     Removed the links to undocumented(7).
+  * Removed afppasswd and afppasswd(1) from Debian distribution, since
+    they are of no use when SSL support is not compiled in.
 
- -- Sebastian Rittau <srittau@debian.org>  Wed, 17 Oct 2001 11:59:53 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 25 Oct 2001 23:00:02 +0200
 
 netatalk (1.5pre8-2) unstable; urgency=low
 
