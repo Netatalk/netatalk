@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.13 2002-02-13 16:56:20 srittau Exp $
+ * $Id: main.c,v 1.14 2002-02-19 15:17:23 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -275,12 +275,12 @@ void as_timer(void)
 		    LOG(log_info, logtype_default, "config for no router" );
 		      
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
-			iface->i_rt->rt_firstnet = htons(1);
+			iface->i_rt->rt_firstnet = 0;
 			iface->i_rt->rt_lastnet = htons( STARTUP_LASTNET );
 			setaddr( iface, IFACE_PHASE2,
 				iface->i_addr.sat_addr.s_net,
 				iface->i_addr.sat_addr.s_node,
-				htons(1), htons( STARTUP_LASTNET ));
+				0, htons( STARTUP_LASTNET ));
 		    }
 		    if ( looproute( iface, RTMP_ADD ) ) { /* -1 or 1 */
 			LOG(log_error, logtype_default,
