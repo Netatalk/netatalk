@@ -9,10 +9,11 @@ This is the Tru64 README file for netatalk.
     is, the program afpd. papd and atalkd compile, but doesn't really
     work. Anything that requires AppleTalk doesn't work.
 
-2.  Netatalk compiles on various versions of Tru64 V4.x . However, the
-    Tru64 C compiler does not seem to work. However, Netatalk has been
-    successfully compiled, linked and runned with gcc-2.95.3 . GNU Make
-    might also be required.
+2.  Netatalk compiles on Tru64 V4.0D or higher using either the built-in
+    DEC C compiler or GCC V2.95.3. Also, either the Tru64 make command or
+    GNU make can be used. Netatalk supports Tru64's Security Integration
+    Architecture (SIA) and runs on machines configured for Base (BSD) or
+    Enhanced (OSFC2) Security without recompilation.
 
 3.  A peculiar bug in Netatalk has been noticed on a single Tru64
     machine. However, because other Tru64 machines have not affected, a
