@@ -84,6 +84,10 @@ make it writeable then users will get a message "That item cannot be put
 in the Trash. Do you want to delete it immediately?" if they try to put
 something in the Trash.
 
+Unfortunately networked trash handling is broken in current versions of Mac
+OS X even if this directory is writeable. Apple is aware of this problem
+and is working on a solution.
+
 
 Temporary\ Items/
 
