@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.26 2001-12-13 02:39:37 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.27 2001-12-13 03:31:34 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -190,7 +190,7 @@ void *cnid_open(const char *dir) {
     struct stat st, rsb;
     struct flock lock;
     char path[MAXPATHLEN + 1];
-	char recover_file[MAXPATHLEN + 1];
+    char recover_file[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
     DB_TXN *tid;
@@ -230,12 +230,12 @@ void *cnid_open(const char *dir) {
         goto fail_adouble;
     }
 
-	/* Make sure cnid.lock goes in .AppleDB. */
-	strcat(path, "/");
-	len++;
+    /* Make sure cnid.lock goes in .AppleDB. */
+    strcat(path, "/");
+    len++;
 
-	strcpy(recover_file, path);
-	strcat(recover_file, DBRECOVERFILE);
+    strcpy(recover_file, path);
+    strcat(recover_file, DBRECOVERFILE);
 
     /* Search for a byte lock.  This allows us to cleanup the log files
      * at cnid_close() in a clean fashion.
@@ -247,35 +247,35 @@ void *cnid_open(const char *dir) {
         lock.l_start = 0;
         lock.l_len = 1;
         while (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
-           	if (++lock.l_start > MAXITER) {
-               	syslog(LOG_ERR, "cnid_open: Cannot establish logfile cleanup for database environment %s lock (lock failed)", path);
-               	close(db->lockfd);
-               	db->lockfd = -1;
-               	break;
-           	}
-    	}
-	}
+            if (++lock.l_start > MAXITER) {
+                syslog(LOG_ERR, "cnid_open: Cannot establish logfile cleanup for database environment %s lock (lock failed)", path);
+                close(db->lockfd);
+                db->lockfd = -1;
+                break;
+            }
+        }
+    }
     else {
         syslog(LOG_ERR, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
     }
 
-	/* Create a file to represent database recovery.  While this file
-	 * exists, the database is being recovered, and all other clients will
-	 * sleep until recovery is complete, and this file goes away. */
-	if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
-		if (stat(recover_file, &rsb) == 0) {
-			(void)remove(recover_file);
-		}
-		if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
-        	DBEXTRAS |= DB_RECOVER;
-			have_lock = 1;
-		}
-	}
-	else if (!have_lock) {
-		while (stat(recover_file, &rsb) == 0) {
-			sleep(1);
-		}
-	}
+    /* Create a file to represent database recovery.  While this file
+     * exists, the database is being recovered, and all other clients will
+     * sleep until recovery is complete, and this file goes away. */
+    if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
+        if (stat(recover_file, &rsb) == 0) {
+            (void)remove(recover_file);
+        }
+        if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
+            DBEXTRAS |= DB_RECOVER;
+            have_lock = 1;
+        }
+    }
+    else if (!have_lock) {
+        while (stat(recover_file, &rsb) == 0) {
+            sleep(1);
+        }
+    }
 
     path[len + DBHOMELEN] = '\0';
     open_flag = DB_CREATE;
@@ -327,21 +327,21 @@ void *cnid_open(const char *dir) {
         syslog(LOG_INFO, "cnid_open: Obtained read-only database environment %s", path);
     }
 
-	/* If we have the recovery lock, close the file, remove it, so other
-	 * clients can proceed opening the DB environment. */
-	if (rfd > -1) {
-		(void)remove(recover_file);
-		switch(errno) {
-			case 0:
-			case ENOENT:
-				break;
-			default:
-				syslog(LOG_ERR, "cnid_open: Unable to remove %s: %s",
-					recover_file, strerror(errno));
-		}
-		close(rfd);
-		rfd = -1;
-	}
+    /* If we have the recovery lock, close the file, remove it, so other
+     * clients can proceed opening the DB environment. */
+    if (rfd > -1) {
+        (void)remove(recover_file);
+        switch(errno) {
+        case 0:
+        case ENOENT:
+            break;
+        default:
+            syslog(LOG_ERR, "cnid_open: Unable to remove %s: %s",
+                   recover_file, strerror(errno));
+        }
+        close(rfd);
+        rfd = -1;
+    }
 
     /* did/name reverse mapping.  We use a BTree for this one. */
     if ((rc = db_create(&db->db_didname, db->dbenv, 0)) != 0) {

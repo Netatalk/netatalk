@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.15 2001-12-13 02:39:37 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.16 2001-12-13 03:31:34 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -45,14 +45,14 @@ void cnid_close(void *CNID) {
         lock.l_start = lock.l_len = 0;
         if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
             char **list, **first;
-			
-			/* Checkpoint the databases until we can checkpoint no
-			 * more. */
-			rc = txn_checkpoint(db->dbenv, 0, 0, 0);
-			while (rc == DB_INCOMPLETE) {
-				rc = txn_checkpoint(db->dbenv, 0, 0, 0);
-			}
-			
+
+            /* Checkpoint the databases until we can checkpoint no
+             * more. */
+            rc = txn_checkpoint(db->dbenv, 0, 0, 0);
+            while (rc == DB_INCOMPLETE) {
+                rc = txn_checkpoint(db->dbenv, 0, 0, 0);
+            }
+
             chdir(db->dbenv->db_log_dir ? db->dbenv->db_log_dir : db->dbenv->db_home);
 #if DB_VERSION_MINOR > 2
             if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG)) != 0) {
