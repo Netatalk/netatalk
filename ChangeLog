@@ -1,8 +1,9 @@
-($Id: ChangeLog,v 1.14 2001-03-06 23:08:01 lancel Exp $)
+($Id: ChangeLog,v 1.15 2001-03-06 23:26:10 lancel Exp $)
 
 2001-03-06 13:40  Lance Levsen <l.levsen@printwest.com>
 
-	* FAQ, README, README.ASUN: Moved FAQ, AND READMEs to ./INSTALL
+	* FAQ, README, README.ASUN, INSTALL.txt: Moved FAQ, AND READMEs to
+	docs/, where they should be.
 
 	* INSTALL/INSTALL.txt: Added ./INSTALL/INSTALL.txt
 
