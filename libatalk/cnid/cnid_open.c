@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.24 2001-12-10 18:39:00 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.25 2001-12-10 22:55:13 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -269,10 +269,10 @@ void *cnid_open(const char *dir) {
 				have_lock = 1;
 			}
 		}
-		else {
-			while(stat(recover_file, &rsb) == 0) {
-				sleep(1);
-			}
+	}
+	else if (!have_lock) {
+		while (stat(recover_file, &rsb) == 0) {
+			sleep(1);
 		}
 	}
 
