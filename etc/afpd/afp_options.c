@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.19 2002-02-09 17:13:53 jmarcus Exp $
+ * $Id: afp_options.c,v 1.20 2002-02-16 11:04:50 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -376,7 +376,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
             options->flags |= OPTION_CUSTOMICON;
             break;
         case 'm':
-            options->umask = strtol(optarg, &tmp, 8);
+            options->umask = strtoul(optarg, &tmp, 8);
             if ((options->umask > 0777)) {
                 fprintf(stderr, "%s: out of range umask setting provided\n", p);
                 err++;
