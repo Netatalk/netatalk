@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.21 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: unix.c,v 1.22 2001-10-09 04:03:33 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -259,9 +259,15 @@ inline int stickydirmode(name, mode, dropbox)
       } /* end if not & S_IROTH */
    } else { /* end if S_IWOTH and not S_IROTH */
 #endif /* DROPKLUDGE */
-       if ( (retval=chmod( name, DIRBITS | mode )) < 0 )  {
+
+       /*
+	*  Ignore EPERM errors:  We may be dealing with a directory that is
+	*  group writable, in which case chmod will fail.
+	*/
+       if ( chmod( name, DIRBITS | mode ) < 0 && errno != EPERM)  {
           syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %s",
 		  name, strerror(errno) );
+	  retval = -1;
        }
 #ifdef DROPKLUDGE
      } /* end if not mode */
@@ -317,11 +323,11 @@ int setdeskmode( mode )
 	    }	    
 
 	    if (S_ISDIR(st.st_mode)) {
-	      if ( chmod( modbuf,  DIRBITS | mode ) < 0 ) {
+	      if ( chmod( modbuf,  DIRBITS | mode ) < 0 && errno != EPERM ) {
 		syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
 			modbuf, strerror(errno) );
 	      }
-	    } else if ( chmod( modbuf,  mode ) < 0 ) {
+	    } else if ( chmod( modbuf,  mode ) < 0 && errno != EPERM ) {
 	        syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
 			modbuf, strerror(errno) );
 	    }
@@ -329,7 +335,7 @@ int setdeskmode( mode )
 	}
 	closedir( sub );
 	/* XXX: need to preserve special modes */
-	if ( chmod( deskp->d_name,  DIRBITS | mode ) < 0 ) {
+	if ( chmod( deskp->d_name,  DIRBITS | mode ) < 0 && errno != EPERM ) {
 	    syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
 		    deskp->d_name, strerror(errno) );
 	}
@@ -340,7 +346,7 @@ int setdeskmode( mode )
 	return -1;
     }
     /* XXX: need to preserve special modes */
-    if ( chmod( ".AppleDesktop",  DIRBITS | mode ) < 0 ) {
+    if ( chmod( ".AppleDesktop",  DIRBITS | mode ) < 0 && errno != EPERM ) {
 	syslog( LOG_ERR, "setdeskmode: chmod .AppleDesktop: %s", strerror(errno) );
     }
     return( 0 );
@@ -465,14 +471,14 @@ int setdeskowner( uid, gid )
 	    *m = '\0';
 	    strcat( modbuf, subp->d_name );
 	    /* XXX: add special any uid, ignore group bits */
-	    if ( chown( modbuf, uid, gid ) < 0 ) {
+	    if ( chown( modbuf, uid, gid ) < 0 && errno != EPERM ) {
 		syslog( LOG_ERR, "setdeskown: chown %s: %s",
 			modbuf, strerror(errno) );
 	    }
 	}
 	closedir( sub );
 	/* XXX: add special any uid, ignore group bits */
-	if ( chown( deskp->d_name, uid, gid ) < 0 ) {
+	if ( chown( deskp->d_name, uid, gid ) < 0 && errno != EPERM ) {
 	    syslog( LOG_ERR, "setdeskowner: chown %s: %s",
 		    deskp->d_name, strerror(errno) );
 	}
@@ -482,7 +488,7 @@ int setdeskowner( uid, gid )
 	syslog( LOG_ERR, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
 	return -1;
     }
-    if ( chown( ".AppleDesktop", uid, gid ) < 0 ) {
+    if ( chown( ".AppleDesktop", uid, gid ) < 0 && errno != EPERM ) {
 	syslog( LOG_ERR, "setdeskowner: chown .AppleDesktop: %s",
 		strerror(errno) );
     }
@@ -518,7 +524,7 @@ int setdirowner( uid, gid, noadouble )
 	    continue;
 	}
 	if (( st.st_mode & S_IFMT ) == S_IFREG ) {
-	    if ( chown( dirp->d_name, uid, gid ) < 0 ) {
+	    if ( chown( dirp->d_name, uid, gid ) < 0 && errno != EPERM ) {
 		syslog( LOG_DEBUG, "setdirowner: chown %s: %s",
 			dirp->d_name, strerror(errno) );
 		/* return ( -1 ); Sometimes this is okay */
@@ -541,7 +547,7 @@ int setdirowner( uid, gid, noadouble )
 	}
 	*m = '\0';
 	strcat( buf, dirp->d_name );
-	if ( chown( buf, uid, gid ) < 0 ) {
+	if ( chown( buf, uid, gid ) < 0 && errno != EPERM ) {
 	    syslog( LOG_DEBUG, "setdirowner: chown %d/%d %s: %s",
 		    uid, gid, buf, strerror(errno) );
 	    /* return ( -1 ); Sometimes this is okay */
@@ -556,7 +562,8 @@ int setdirowner( uid, gid, noadouble )
 	syslog( LOG_ERR, "setdirowner: stat .AppleDouble: %s", strerror(errno) );
 	return( -1 );
     }
-    if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 ) {
+    if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 &&
+	 errno != EPERM ) {
  	syslog( LOG_DEBUG, "setdirowner: chown %d/%d .AppleDouble: %s",
  		uid, gid, strerror(errno) );
 	/* return ( -1 ); Sometimes this is okay */
@@ -566,7 +573,8 @@ setdirowner_noadouble:
     if ( stat( ".", &st ) < 0 ) {
 	return( -1 );
     }
-    if ( gid && gid != st.st_gid && chown( ".", uid, gid ) < 0 ) {
+    if ( gid && gid != st.st_gid && chown( ".", uid, gid ) < 0 &&
+	 errno != EPERM ) {
         syslog( LOG_DEBUG, "setdirowner: chown %d/%d .: %s",
 		uid, gid, strerror(errno) );
     }
