@@ -83,6 +83,11 @@
 /* initial lengths of some of the fields */
 #define ADEDLEN_INIT     0
 
+/* make sure we don't redefine ADEDOFF_FILEI */
+#ifdef ADEDOFF_FILEI
+#undef ADEDOFF_FILEI
+#endif
+
 #define ADEID_NUM_V1         5
 #define ADEDOFF_NAME_V1	     (AD_HEADER_LEN + ADEID_NUM_V1*AD_ENTRY_LEN)
 #define ADEDOFF_COMMENT_V1   (ADEDOFF_NAME_V1 + ADEDLEN_NAME)
