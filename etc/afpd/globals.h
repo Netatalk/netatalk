@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.12 2002-05-03 22:51:34 jmarcus Exp $
+ * $Id: globals.h,v 1.13 2002-08-30 19:35:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -38,6 +38,14 @@
 #define OPTION_CUSTOMICON    (1 << 4)
 #define OPTION_NOSLP         (1 << 5)
 
+#ifdef FORCE_UIDGID
+/* set up a structure for this */
+typedef struct uidgidset_t {
+    uid_t uid;
+    gid_t gid;
+} uidgidset;
+#endif /* FORCE_UIDGID */
+
 /* a couple of these options could get stuck in unions to save
  * space. */
 struct afp_options {
@@ -71,6 +79,11 @@ typedef struct AFPObj {
     /* to prevent confusion, only use these in afp_* calls */
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */
+
+#ifdef FORCE_UIDGID
+    int                 force_uid;
+    uidgidset		uidgid;
+#endif
 } AFPObj;
 
 extern int		afp_version;
