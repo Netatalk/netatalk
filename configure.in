@@ -306,7 +306,7 @@ AC_SUBST(UAMS_PATH)
 dnl --------------------------------------------------------------------------
 dnl drop in includes for top level directory structures here...
 dnl --------------------------------------------------------------------------
-LIBS="$LIBS -L\$(top_srcdir)/libatalk/"
+LDFLAGS="$LDFLAGS -L\$(top_srcdir)/libatalk/"
 CFLAGS="$CFLAGS -I\$(top_srcdir)/include -I\$(top_srcdir)/sys"
 
 dnl --------------------------------------------------------------------------
@@ -425,7 +425,7 @@ AC_ARG_WITH(ssl-dir,
 
 for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl ; do
 	if test -f "$ssldir/include/openssl/cast.h" ; then
-		LIBS="$LIBS -L$ssldir/lib -L$ssldir"
+		LDFLAGS="$LDFLAGS -L$ssldir/lib -L$ssldir"
 		CFLAGS="$CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
 		if test "$need_dash_r" = "yes"; then
 			LIBS="$LIBS -R$ssldir/lib -R$ssldir"
