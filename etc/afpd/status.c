@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: status.c,v 1.4 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -274,8 +274,8 @@ static void status_icon(char *data, const char *icondata,
       memcpy(sigdata, &ret, sizeof(ret));
 }
 
-const void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
-			const struct afp_options *options)
+void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
+		 const struct afp_options *options)
 {
   ASP asp;
   DSI *dsi;

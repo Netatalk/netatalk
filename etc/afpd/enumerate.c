@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.6 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: enumerate.c,v 1.7 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,7 +56,7 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
 #endif /* USE_LASTDID */
 
     if ((cdir = dirnew(namlen + 1)) == NULL) {
-	syslog( LOG_ERR, "adddir: malloc: %m" );
+	syslog( LOG_ERR, "adddir: malloc: %s", strerror(errno) );
 	return NULL;
     }
     strcpy( cdir->d_name, name );
@@ -158,7 +158,7 @@ int afp_enumerate(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     if ( sd.sd_buflen == 0 ) {
 	if (( sd.sd_buf = (char *)malloc( SDBUFBRK )) == NULL ) {
-	    syslog( LOG_ERR, "afp_enumerate: malloc: %m" );
+	    syslog( LOG_ERR, "afp_enumerate: malloc: %s", strerror(errno) );
 	    *rbuflen = 0;
 	    return AFPERR_MISC;
 	}
@@ -253,7 +253,8 @@ int afp_enumerate(obj, ibuf, ibuflen, rbuf, rbuflen )
 		start = sd.sd_buf;
 		if ((buf = (char *) realloc( sd.sd_buf, sd.sd_buflen + 
 					     SDBUFBRK )) == NULL ) {
-		    syslog( LOG_ERR, "afp_enumerate: realloc: %m" );
+		    syslog( LOG_ERR, "afp_enumerate: realloc: %s",
+			    strerror(errno) );
 		    closedir(dp);
 		    *rbuflen = 0;
 		    return AFPERR_MISC;
@@ -311,7 +312,8 @@ int afp_enumerate(obj, ibuf, ibuflen, rbuf, rbuflen )
 	sd.sd_last++;
 
 	if ( stat( sd.sd_last, &st ) < 0 ) {
-	    syslog( LOG_DEBUG, "afp_enumerate: stat %s: %m", sd.sd_last );
+	    syslog( LOG_DEBUG, "afp_enumerate: stat %s: %s",
+		    sd.sd_last, strerror(errno) );
 	    sd.sd_last += len + 1;
 	    continue;
 	}

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.25 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: file.c,v 1.26 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,14 +80,10 @@ const u_char ufinderi[] = {
     0, 0, 0, 0, 0, 0, 0, 0
 };
 
-int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
-    struct vol  *vol;
-    u_int16_t	bitmap;
-    char	*path;
-    struct dir	*dir;
-    struct stat	*st;
-    char	*buf;
-    int		*buflen;
+int getfilparams(struct vol *vol,
+		 u_int16_t bitmap,
+		 char *path, struct dir *dir, struct stat *st,
+		 char *buf, int *buflen )
 {
 #ifndef USE_LASTDID
     struct stat		hst, lst, *lstp;
@@ -98,7 +94,8 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
     struct ofork        *of;
     struct extmap	*em;
     char		*data, *nameoff = NULL, *upath;
-    int			bit = 0, isad = 1, aint;
+    int			bit = 0, isad = 1;
+    u_int32_t		aint;
     u_int16_t		ashort;
     u_char              achar, fdType[4];
 
@@ -117,7 +114,7 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
     if ( ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, adp) < 0 ) {
 	isad = 0;
     } else if ( fstat( ad_hfileno( adp ), &hst ) < 0 ) {
-	    syslog( LOG_ERR, "getfilparams fstat: %m" );
+	    syslog( LOG_ERR, "getfilparams fstat: %s", strerror(errno) );
     }
 
     data = buf;
@@ -557,10 +554,8 @@ int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 }
 
 
-int setfilparams(vol, path, bitmap, buf )
-    struct vol  *vol;
-    char	*path, *buf;
-    u_int16_t	bitmap;
+int setfilparams(struct vol *vol,
+		 char *path, u_int16_t bitmap, char *buf )
 {
     struct adouble	ad, *adp;
     struct ofork        *of;

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.9 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: volume.c,v 1.10 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -417,18 +417,18 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 
     if (( volume =
 	    (struct vol *)calloc(1, sizeof( struct vol ))) == NULL ) {
-	syslog( LOG_ERR, "creatvol: malloc: %m" );
+	syslog( LOG_ERR, "creatvol: malloc: %s", strerror(errno) );
 	return -1;
     }
     if (( volume->v_name =
 	    (char *)malloc( vlen + 1 )) == NULL ) {
-	syslog( LOG_ERR, "creatvol: malloc: %m" );
+	syslog( LOG_ERR, "creatvol: malloc: %s", strerror(errno) );
 	free(volume);
 	return -1;
     }
     if (( volume->v_path =
 	    (char *)malloc( strlen( path ) + 1 )) == NULL ) {
-	syslog( LOG_ERR, "creatvol: malloc: %m" );
+	syslog( LOG_ERR, "creatvol: malloc: %s", strerror(errno) );
 	free(volume->v_name);
 	free(volume);
 	return -1;
@@ -565,7 +565,7 @@ static void setextmap( ext, type, creator, user)
     if ( em == NULL ) {
 	if (( em =
 		(struct extmap *)malloc( sizeof( struct extmap ))) == NULL ) {
-	    syslog( LOG_ERR, "setextmap: malloc: %m" );
+	    syslog( LOG_ERR, "setextmap: malloc: %s", strerror(errno) );
 	    return;
 	}
 	em->em_next = extmap;
@@ -746,7 +746,7 @@ static int readvolfile(obj, p1, p2, user, pwent)
     }
     volfree(save_options, NULL);
     if ( fclose( fp ) != 0 ) {
-	syslog( LOG_ERR, "readvolfile: fclose: %m" );
+	syslog( LOG_ERR, "readvolfile: fclose: %s", strerror(errno) );
     }
     return( 0 );
 }
@@ -840,7 +840,8 @@ static int getvolparams( bitmap, vol, st, buf, buflen )
     int		*buflen;
 {
     struct adouble	ad;
-    int			bit = 0, aint, isad = 1;
+    int			bit = 0, isad = 1;
+    u_int32_t		aint;
     u_short		ashort;
     u_int32_t		bfree, btotal, bsize;
     VolSpace            xbfree, xbtotal; /* extended bytes */
@@ -1033,8 +1034,8 @@ int afp_getsrvrparms(obj, ibuf, ibuflen, rbuf, rbuflen )
     data = rbuf + 5;
     for ( vcnt = 0, volume = volumes; volume; volume = volume->v_next ) {
 	if ( stat( volume->v_path, &st ) < 0 ) {
-	    syslog( LOG_INFO, "afp_getsrvrparms: stat %s: %m", 
-		    volume->v_path );
+	    syslog( LOG_INFO, "afp_getsrvrparms: stat %s: %s",
+		    volume->v_path, strerror(errno) );
 	    continue;		/* can't access directory */
 	}
 	if (!S_ISDIR(st.st_mode)) {
@@ -1061,7 +1062,7 @@ int afp_getsrvrparms(obj, ibuf, ibuflen, rbuf, rbuflen )
     *rbuflen = data - rbuf;
     data = rbuf;
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "afp_getsrvrparms: gettimeofday: %m" );
+	syslog( LOG_ERR, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
 	*rbuflen = 0;
 	return AFPERR_PARAM;
     }
@@ -1127,7 +1128,7 @@ int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     if (( volume->v_flags & AFPVOL_OPEN  ) == 0 ) {
         if ((dir = dirnew(strlen(volume->v_name) + 1)) == NULL) {
-	    syslog( LOG_ERR, "afp_openvol: malloc: %m" );
+	    syslog( LOG_ERR, "afp_openvol: malloc: %s", strerror(errno) );
 	    ret = AFPERR_MISC;
 	    goto openvol_err;
 	}
@@ -1271,7 +1272,7 @@ void setvoltime(obj, vol )
      * [RS] */
 
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "setvoltime: gettimeofday: %m" );
+	syslog( LOG_ERR, "setvoltime: gettimeofday: %s", strerror(errno) );
 	return;
     }
     if( utime( vol->v_path, NULL ) < 0 ) {

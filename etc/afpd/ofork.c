@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: ofork.c,v 1.5 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,6 +15,7 @@
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include <atalk/adouble.h>
 
@@ -89,7 +90,7 @@ int of_flush(const struct vol *vol)
     for ( refnum = 0; refnum < nforks; refnum++ ) {
 	if (oforks[ refnum ] != NULL && (oforks[refnum]->of_vol == vol) &&
 	     flushfork( oforks[ refnum ] ) < 0 ) {
-	    syslog( LOG_ERR, "of_flush: %m" );
+	    syslog( LOG_ERR, "of_flush: %s", strerror(errno) );
 	}
     }
     return( 0 );
@@ -164,7 +165,7 @@ of_alloc(vol, dir, path, ofrefnum, eid, ad)
     of_refnum = refnum % nforks;
     if (( oforks[ of_refnum ] =
 	    (struct ofork *)malloc( sizeof( struct ofork ))) == NULL ) {
-	syslog( LOG_ERR, "of_alloc: malloc: %m" );
+	syslog( LOG_ERR, "of_alloc: malloc: %s", strerror(errno) );
 	return NULL;
     }
     of = oforks[of_refnum];
@@ -173,7 +174,7 @@ of_alloc(vol, dir, path, ofrefnum, eid, ad)
     if (!ad) {
         ad = malloc( sizeof( struct adouble ) );
         if (!ad) {
-            syslog( LOG_ERR, "of_alloc: malloc: %m" );
+            syslog( LOG_ERR, "of_alloc: malloc: %s", strerror(errno) );
             return NULL;
         }
 
@@ -206,7 +207,7 @@ of_alloc(vol, dir, path, ofrefnum, eid, ad)
      * of long unicode names */
     if (( of->of_name =(char *)malloc(MACFILELEN + 1)) ==
 	NULL ) {
-	syslog( LOG_ERR, "of_alloc: malloc: %m" );
+	syslog( LOG_ERR, "of_alloc: malloc: %s", strerror(errno) );
 	if (!ad)
 	  free(of->of_ad);
 	free(of);

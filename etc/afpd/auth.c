@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.17 2001-07-31 19:50:14 srittau Exp $
+ * $Id: auth.c,v 1.18 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -204,7 +205,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #ifdef RUN_AS_USER
       syslog(LOG_INFO, "running with uid %d", geteuid());
 #else /* RUN_AS_USER */
-      syslog(LOG_ERR, "login: %m");
+      syslog(LOG_ERR, "login: %s", strerror(errno));
       return AFPERR_BADUAM;
 #endif /* RUN_AS_USER */
 
@@ -213,7 +214,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     /* Basically if the user is in the admin group, we stay root */
 
     if (( ngroups = getgroups( NGROUPS, groups )) < 0 ) {
-	syslog( LOG_ERR, "login: getgroups: %m" );
+	syslog( LOG_ERR, "login: getgroups: %s", strerror(errno) );
 	return AFPERR_BADUAM;
     }
 #ifdef ADMIN_GRP
@@ -266,7 +267,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     }
 #else /* TRU64 */
 	if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-	    syslog( LOG_ERR, "login: %m" );
+	    syslog( LOG_ERR, "login: %s", strerror(errno) );
 	    return AFPERR_BADUAM;
 	}
 #endif /* TRU64 */

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.11 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: filedir.c,v 1.12 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -60,7 +60,7 @@ int matchfile2dirperms(upath, vol, did)
 #endif /* DEBUG */
 
     if (stat(upath, &st ) < 0)
-      syslog(LOG_ERR, "Could not stat %s: %m", upath);
+      syslog(LOG_ERR, "Could not stat %s: %s", upath, strerror(errno));
     strcpy (adpath, "./.AppleDouble/");
     strcat (adpath, upath);
     if (( dir = dirsearch( vol, did )) == NULL ) {
@@ -69,8 +69,8 @@ int matchfile2dirperms(upath, vol, did)
     }
     else if (stat(".", &sb) < 0) {
         syslog (LOG_ERR, 
-	   "matchfile2dirperms: Error checking directory \"%s\": %m", 
-	   dir->d_name);
+	   "matchfile2dirperms: Error checking directory \"%s\": %s", 
+	   dir->d_name, strerror(errno));
         return(AFPERR_NOOBJ );
       }
     else {
@@ -81,37 +81,42 @@ int matchfile2dirperms(upath, vol, did)
 	  if (lchown(upath, sb.st_uid, sb.st_gid) < 0)
           {
             syslog (LOG_ERR, 
-	      "matchfile2dirperms: Error changing owner/gid of %s: %m", upath);
+	      "matchfile2dirperms: Error changing owner/gid of %s: %s",
+		    upath, strerror(errno));
             return (AFPERR_ACCESS);
           }
           if (chmod(upath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
           {
             syslog (LOG_ERR, 
-	      "matchfile2dirperms:  Error adding file read permissions: %m");
+	      "matchfile2dirperms:  Error adding file read permissions: %s",
+		    strerror(errno));
             return (AFPERR_ACCESS);
           }
 #ifdef DEBUG
           else 
 	    syslog (LOG_INFO, 
-	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %m");
+	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %s",
+		    strerror(errno));
 #endif /* DEBUG */
           if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
           {
 	    syslog (LOG_ERR, 
-	      "matchfile2dirperms: Error changing AppleDouble owner/gid %s: %m",
-	      adpath);
+	      "matchfile2dirperms: Error changing AppleDouble owner/gid %s: %s",
+	      adpath, strerror(errno));
             return (AFPERR_ACCESS);
 	  }
           if (chmod(adpath, (st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
           {
             syslog (LOG_ERR, 
-	      "matchfile2dirperms:  Error adding AD file read permissions: %m");
+	      "matchfile2dirperms:  Error adding AD file read permissions: %s",
+		    strerror(errno));
             return (AFPERR_ACCESS);
           }
 #ifdef DEBUG
           else 
 	    syslog (LOG_INFO, 
-	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %m");
+	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %s",
+		    strerror(errno));
 #endif /* DEBUG */
 	}
 #ifdef DEBUG
@@ -180,12 +185,14 @@ int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     buflen = 0;
     if (S_ISDIR(st.st_mode)) {
-	if (dbitmap && ( ret = getdirparams(vol, dbitmap, ".", curdir,
-		&st, rbuf + 3 * sizeof( u_int16_t ), &buflen )) != AFP_OK ) {
-	    return( ret );
+	if (dbitmap) {
+	    ret = getdirparams(vol, dbitmap, ".", curdir,
+			       &st, rbuf + 3 * sizeof( u_int16_t ), &buflen );
+	    if (ret != AFP_OK )
+		return( ret );
 	}
         /* this is a directory */
-	*(rbuf + 2 * sizeof( u_int16_t )) = FILDIRBIT_ISDIR; 
+	*(rbuf + 2 * sizeof( u_int16_t )) = (char) FILDIRBIT_ISDIR; 
     } else {
 	if (fbitmap && ( ret = getfilparams(vol, fbitmap, path, curdir, &st,
 		rbuf + 3 * sizeof( u_int16_t ), &buflen )) != AFP_OK ) {
@@ -427,7 +434,7 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
 	    isad = 0;
 	}
 	if ((buf = realloc( odir->d_name, plen + 1 )) == NULL ) {
-	    syslog( LOG_ERR, "afp_rename: realloc: %m" );
+	    syslog( LOG_ERR, "afp_rename: realloc: %s", strerror(errno) );
 	    if (isad) {
 	      ad_flush(&ad, ADFLAGS_HF); /* in case of create */
 	      ad_close(&ad, ADFLAGS_HF);

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: desktop.c,v 1.6 2001-08-15 01:37:34 srittau Exp $
  *
  * See COPYRIGHT.
  */
@@ -106,7 +106,7 @@ static int iconopen( vol, creator, flags, mode )
 	    *adts = '/';
 
 	    if (( si.sdt_fd = open( dtf, flags, ad_mode( dtf, mode ))) < 0 ) {
-		syslog( LOG_ERR, "iconopen: open %s: %m", dtf );
+		syslog( LOG_ERR, "iconopen: open %s: %s", dtf, strerror(errno) );
 		return -1;
 	    }
 	} else {
@@ -171,7 +171,7 @@ int afp_addicon(obj, ibuf, ibuflen, rbuf, rbuflen)
     if (lseek( si.sdt_fd, (off_t) 0L, SEEK_SET ) < 0) {
         close(si.sdt_fd);
 	si.sdt_fd = -1;
-	syslog( LOG_ERR, "afp_addicon: lseek: %m" );
+	syslog( LOG_ERR, "afp_addicon: lseek: %s", strerror(errno) );
 	cc = AFPERR_PARAM;
 	goto addicon_err;
     }
@@ -206,7 +206,7 @@ int afp_addicon(obj, ibuf, ibuflen, rbuf, rbuflen)
       }
 
       if ( lseek( si.sdt_fd, (off_t) rsize, SEEK_CUR ) < 0 ) {
-	syslog( LOG_ERR, "afp_addicon: lseek: %m" );
+	syslog( LOG_ERR, "afp_addicon: lseek: %s", strerror(errno) );
 	cc = AFPERR_PARAM;
       }
     }
@@ -216,7 +216,7 @@ int afp_addicon(obj, ibuf, ibuflen, rbuf, rbuflen)
      */
 addicon_err:
     if ( cc < 0 ) {
-      syslog( LOG_ERR, "afp_addicon: %m" );
+      syslog( LOG_ERR, "afp_addicon: %s", strerror(errno) );
       if (obj->proto == AFPPROTO_DSI) {
 	dsi_writeinit(obj->handle, rbuf, buflen);
 	dsi_writeflush(obj->handle);
@@ -257,7 +257,7 @@ addicon_err:
       }
       
       if ( writev( si.sdt_fd, iov, iovcnt ) < 0 ) {
-	syslog( LOG_ERR, "afp_addicon: writev: %m" );
+	syslog( LOG_ERR, "afp_addicon: writev: %s", strerror(errno) );
 	return( AFPERR_PARAM );
       }
       break;
@@ -270,13 +270,13 @@ addicon_err:
 
 	/* add headers at end of file */
 	if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-	  syslog(LOG_ERR, "afp_addicon: write: %m");
+	  syslog(LOG_ERR, "afp_addicon: write: %s", strerror(errno));
 	  dsi_writeflush(dsi);
 	  return AFPERR_PARAM;
 	}
 	
 	if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-	  syslog(LOG_ERR, "afp_addicon: write: %m");
+	  syslog(LOG_ERR, "afp_addicon: write: %s", strerror(errno));
 	  dsi_writeflush(dsi);
 	  return AFPERR_PARAM;
 	}
@@ -288,7 +288,7 @@ addicon_err:
 	  }
 	  
 	  if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-	    syslog(LOG_ERR, "afp_addicon: write: %m");
+	    syslog(LOG_ERR, "afp_addicon: write: %s", strerror(errno));
 	    dsi_writeflush(dsi);
 	    return AFPERR_PARAM;
 	  }
@@ -402,7 +402,7 @@ int afp_geticoninfo(obj, ibuf, ibuflen, rbuf, rbuflen )
 	memcpy( &bsize, ih + 10, sizeof( bsize ));
 	bsize = ntohs(bsize);
 	if ( lseek( si.sdt_fd, (off_t) bsize, SEEK_CUR ) < 0 ) {
-	    syslog( LOG_ERR, "afp_iconinfo: lseek: %m" );
+	    syslog( LOG_ERR, "afp_iconinfo: lseek: %s", strerror(errno) );
 	    return( AFPERR_PARAM );
 	}
 	if ( si.sdt_index == iindex ) {
@@ -461,7 +461,7 @@ int afp_geticon(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ( lseek( si.sdt_fd, (off_t) 0L, SEEK_SET ) < 0 ) {
 	close(si.sdt_fd);
 	si.sdt_fd = -1;
-	syslog(LOG_ERR, "afp_geticon: lseek: %m");
+	syslog(LOG_ERR, "afp_geticon: lseek: %s", strerror(errno));
 	return( AFPERR_PARAM );
     }
 
@@ -477,14 +477,14 @@ int afp_geticon(obj, ibuf, ibuflen, rbuf, rbuflen )
 	memcpy( &rsize, ih + 10, sizeof( rsize ));
 	rsize = ntohs( rsize );
 	if ( lseek( si.sdt_fd, (off_t) rsize, SEEK_CUR ) < 0 ) {
-	    syslog( LOG_ERR, "afp_geticon: lseek: %m" );
+	    syslog( LOG_ERR, "afp_geticon: lseek: %s", strerror(errno) );
  	    return( AFPERR_PARAM );
 	}
 	offset += rsize;
     }
 
     if ( rc < 0 ) {
-        syslog(LOG_ERR, "afp_geticon: read: %m");
+        syslog(LOG_ERR, "afp_geticon: read: %s", strerror(errno));
 	return( AFPERR_PARAM );
     }
 
@@ -551,7 +551,7 @@ geticon_done:
       return AFP_OK;
       
 geticon_exit:
-      syslog(LOG_INFO, "afp_geticon: %m");
+      syslog(LOG_INFO, "afp_geticon: %s", strerror(errno));
       dsi_readdone(dsi);
       obj->exit(1);
       return AFP_OK;
@@ -603,9 +603,9 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 
 char *mtoupath(const struct vol *vol, char *mpath)
 {
-    static unsigned char upath[ MAXPATHLEN + 1];
-    unsigned char *m, *u;
-    int		i = 0;
+    static char	 upath[ MAXPATHLEN + 1];
+    char	*m, *u;
+    int		 i = 0;
 
     if ( *mpath == '\0' ) {
 	return( "." );
@@ -623,7 +623,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
 	/* we have a code page. we only use the ascii range
 	 * if we have map ascii specified. */
 #if 1
-	if (vol->v_mtoupage && ((*m > 0x7F) ||
+	if (vol->v_mtoupage && ((*m & 0x80) ||
 				vol->v_flags & AFPVOL_MAPASCII)) {
 	    *u = vol->v_mtoupage->map[*m].value;
 	} else
@@ -660,8 +660,8 @@ char *mtoupath(const struct vol *vol, char *mpath)
 char *utompath(const struct vol *vol, char *upath)
 {
     static unsigned char mpath[ MAXPATHLEN + 1];
-    unsigned char	*m, *u;
-    int		h;
+    char		*m, *u;
+    int			 h;
 
     /* do the hex conversion */
     u = upath;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.10 2001-06-25 15:18:01 rufustfirefly Exp $
+ * $Id: main.c,v 1.11 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -180,7 +180,7 @@ int main( ac, av )
      * XXX: this should really be setup after the initial connections. */
     if (!(server_children = server_child_alloc(default_options.connections,
 					       CHILD_NFORKS))) {
-      syslog(LOG_ERR, "main: server_child alloc: %m");
+      syslog( LOG_ERR, "main: server_child alloc: %s", strerror(errno) );
       afp_exit(1);
     }
       
@@ -189,7 +189,7 @@ int main( ac, av )
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "main: sigaction: %m" );
+	syslog( LOG_ERR, "main: sigaction: %s", strerror(errno) );
 	afp_exit(1);
     }
 
@@ -199,11 +199,11 @@ int main( ac, av )
     sigaddset(&sv.sa_mask, SIGTERM);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "main: sigaction: %m" );
+	syslog( LOG_ERR, "main: sigaction: %s", strerror(errno) );
 	afp_exit(1);
     }
     if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "main: sigaction: %m" );
+	syslog( LOG_ERR, "main: sigaction: %s", strerror(errno) );
 	afp_exit(1);
     }
     
@@ -220,7 +220,7 @@ int main( ac, av )
     sigaddset(&sigs, SIGTERM);
     sigprocmask(SIG_BLOCK, &sigs, NULL);
     if (!(configs = configinit(&default_options))) {
-      syslog(LOG_ERR, "main: no servers configured: %m\n");
+      syslog(LOG_ERR, "main: no servers configured: %s\n", strerror(errno));
       afp_exit(1);
     }
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
@@ -244,7 +244,7 @@ int main( ac, av )
       if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
 	if (errno == EINTR)
 	  continue;
-	syslog(LOG_ERR, "main: can't wait for input: %m");
+	syslog(LOG_ERR, "main: can't wait for input: %s", strerror(errno));
 	break;
       }
       

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.15 2001-08-15 01:21:01 samnoble Exp $
+ * $Id: directory.c,v 1.16 2001-08-15 01:37:34 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -805,14 +805,10 @@ int movecwd( vol, dir)
     return( 0 );
 }
 
-int getdirparams(vol, bitmap, upath, dir, st, buf, buflen )
-    const struct vol          *vol;
-    u_int16_t		bitmap;
-    char		*upath;
-    struct dir		*dir;
-    struct stat		*st;
-    char		*buf;
-    int			*buflen;
+int getdirparams(const struct vol *vol,
+		 u_int16_t bitmap,
+		 char *upath, struct dir *dir, struct stat *st,
+		 char *buf, int *buflen )
 {
     struct maccess	ma;
     struct adouble	ad;
@@ -1076,10 +1072,8 @@ int afp_setdirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     return( rc );
 }
 
-int setdirparams(vol, path, bitmap, buf )
-    const struct vol          *vol;
-    char		*path, *buf;
-    u_int16_t		bitmap;
+int setdirparams(const struct vol *vol,
+		 char *path, u_int16_t bitmap, char *buf )
 {
     struct maccess	ma;
     struct adouble	ad;
@@ -1213,7 +1207,8 @@ int setdirparams(vol, path, bitmap, buf )
 		    goto setdirparam_done;
 		    break;
 		default :
-		    syslog( LOG_ERR, "setdirparam: setdeskowner: %m" );
+		    syslog( LOG_ERR, "setdirparam: setdeskowner: %s",
+			    strerror(errno) );
 		    if (!isad) {
 		    err = AFPERR_PARAM;
 		    goto setdirparam_done;
@@ -1233,7 +1228,8 @@ int setdirparams(vol, path, bitmap, buf )
 		    goto setdirparam_done;
 		    break;
 		default :
-		    syslog( LOG_ERR, "setdirparam: setdirowner: %m" );
+		    syslog( LOG_ERR, "setdirparam: setdirowner: %s",
+			    strerror(errno) );
 		    break;
 		}
 	    }
@@ -1277,7 +1273,8 @@ int setdirparams(vol, path, bitmap, buf )
 		    goto setdirparam_done;
 		    break;
 		default :
-		    syslog( LOG_ERR, "setdirparam: setdirowner: %m" );
+		    syslog( LOG_ERR, "setdirparam: setdirowner: %s",
+			    strerror(errno) );
 		    break;
 		}
 	    }
@@ -1301,7 +1298,8 @@ int setdirparams(vol, path, bitmap, buf )
 		    err = AFPERR_VLOCK;
 		    goto setdirparam_done;
 		default :
-		    syslog( LOG_ERR, "setdirparam: setdeskmode: %m" );
+		    syslog( LOG_ERR, "setdirparam: setdeskmode: %s",
+			    strerror(errno) );
 		    break;
 		    err = AFPERR_PARAM;
 		    goto setdirparam_done;
@@ -1320,7 +1318,8 @@ int setdirparams(vol, path, bitmap, buf )
 		    err = AFPERR_VLOCK;
 		    goto setdirparam_done;
 		default :
-		    syslog( LOG_ERR, "setdirparam: setdirmode: %m" );
+		    syslog( LOG_ERR, "setdirparam: setdirmode: %s",
+			    strerror(errno) );
 		    err = AFPERR_PARAM;
 		    goto setdirparam_done;
 		}
@@ -1546,7 +1545,7 @@ int renamedir(src, dst, dir, newparent, newname, noadouble)
 
 renamedir_done:
     if ((buf = (char *) realloc( dir->d_name, len + 1 )) == NULL ) {
-	syslog( LOG_ERR, "renamedir: realloc: %m" );
+	syslog( LOG_ERR, "renamedir: realloc: %s", strerror(errno) );
 	return AFPERR_MISC;
     }
     dir->d_name = buf;
