@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.27 2002-10-29 00:28:45 didg Exp $
+ * $Id: enumerate.c,v 1.28 2002-12-23 00:21:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -149,7 +149,20 @@ static int enumerate_loop(struct dirent *de, char *mname, void *data)
     return 0;
 }
 
-/* ----------------------------- */
+/* ----------------------------- 
+ * FIXME: 
+ * Doesn't work with dangling symlink
+ * ie: 
+ * - Move a folder with a dangling symlink in the trash
+ * - empty the trash
+ * afp_enumerate return an empty listing but offspring count != 0 in afp_getdirparams 
+ * and the Mac doesn't try to call afp_delete!
+ *
+ * Another option for symlink
+ * cf:
+ * http://sourceforge.net/tracker/index.php?func=detail&aid=461938&group_id=8642&atid=108642
+ * 
+*/
 char *check_dirent(const struct vol *vol, char *name)
 {
     char *m_name = NULL;
@@ -399,6 +412,7 @@ int     ext;
              */
             *sd.sd_last = 0;
             sd.sd_last += len + 1;
+            curdir->offcnt--;		/* a little lie */
             continue;
         }
 
