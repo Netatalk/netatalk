@@ -39,31 +39,7 @@ struct ppdent {
     char	*pe_value;
 };
 
-#ifdef notdef
-main( ac, av )
-    int		ac;
-    char	**av;
-{
-    struct ppd_feature	*pfe;
-    struct ppd_font	*pfo;
-
-    if ( ac != 2 ) {
-	fprintf( stderr, "Usage:\t%s ppdfile\n", av[ 0 ] );
-	exit( 1 );
-    }
-
-    read_ppd( av[ 1 ], 0 );
-    for ( pfo = ppd_fonts; pfo; pfo = pfo->pd_next ) {
-	printf( "Font: %s\n", pfo->pd_font );
-    }
-    for ( pfe = ppd_features; pfe->pd_name; pfe++ ) {
-	printf( "Feature: %s %s\n", pfe->pd_name, pfe->pd_value );
-    }
-
-    exit( 0 );
-}
-#endif notdef
-
+#ifndef SHOWPPD
 int ppd_inited = 0;
 
 ppd_init()
@@ -75,6 +51,7 @@ ppd_init()
 
     read_ppd( printer->p_ppdfile, 0 );
 }
+#endif SHOWPPD
 
     struct ppdent *
 getppdent( stream )
@@ -258,9 +235,11 @@ ppd_font( font )
 {
     struct ppd_font	*pfo;
 
+#ifndef SHOWPPD
     if ( ! ppd_inited ) {
 	ppd_init();
     }
+#endif SHOWPPD
 
     for ( pfo = ppd_fonts; pfo; pfo = pfo->pd_next ) {
 	if ( strcmp( pfo->pd_font, font ) == 0 ) {
@@ -279,9 +258,11 @@ ppd_feature( feature, len )
     char		main[ 256 ];
     char		*end, *p, *q;
 
+#ifndef SHOWPPD
     if ( ! ppd_inited ) {
 	ppd_init();
     }
+#endif SHOWPPD
 
     for ( end = feature + len, p = feature, q = main;
 	    p <= end && *p != '\n' && *p != '\r'; p++, q++ ) {

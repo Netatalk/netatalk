@@ -23,7 +23,7 @@ all :
 	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}" \
 	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 	    KRBLIBS="$${KRBLIBS}" KRBLIBDIRS="$${KRBLIBDIRS}" \
-	    KRBINCPATH="$${KRBINCPATH}" KRBDEFS="$${KRBDEFS}" papd
+	    KRBINCPATH="$${KRBINCPATH}" KRBDEFS="$${KRBDEFS}" papd showppd
 
 # UMICH stuff.  Don't ask, I'm not telling.
 CRAP=/afs/umich.edu/group/itd/software/packages
@@ -47,6 +47,9 @@ papd.abs: FRC
 
 FRC:
 
+showppd: showppd.c ppd.c
+	${CC} ${CFLAGS} -DSHOWPPD -o showppd showppd.c ppd.c
+
 papd : ${OBJ} ../../libatalk/libatalk.a
 	${CC} ${CFLAGS} ${LDFLAGS} -o papd ${OBJ} ${LIBDIRS} ${LIBS}
 
@@ -57,10 +60,12 @@ main.o : main.c
 
 install : all
 	${INSTALL} -c papd ${SBINDIR}
+	${INSTALL} -c showppd ${BINDIR}
 
 clean :
 	rm -f a.out core* *.o *.bak *[Ee]rrs tags
 	rm -f papd
+	rm -f showppd
 
 tags : ${SRC}
 	cwd=`pwd`; \
