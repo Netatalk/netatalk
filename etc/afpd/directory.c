@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.18 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: directory.c,v 1.19 2001-10-03 19:51:04 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1411,7 +1411,14 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
-	return( AFPERR_NOOBJ );
+	switch( errno ) {
+		case EACCES:
+			return( AFPERR_ACCESS );
+		case EEXIST:
+			return( AFPERR_EXIST );
+		default:
+			return( AFPERR_NOOBJ );
+	}
     }
 
     /* check for illegal bits */
@@ -1958,7 +1965,12 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
     if (( path = cname( vol, parentdir, &ibuf )) == NULL ) {
-	return( AFPERR_NOOBJ );
+	switch( errno ) {
+		case EACCES:
+			return( AFPERR_ACCESS );
+		default:
+			return( AFPERR_NOOBJ );
+	}
     }
 
     /* see if we already have the directory. */

@@ -2,6 +2,8 @@
 2001-10-03  joe c   <marcus@marcuscom.com>
 	
 	* configure.in: Fix bug with PAM configuration
+	* etc/afpd/directory.c: Fix bug with unaccessible directories causing
+	afpd to erroneously return AFPERR_NOOBJ
 
 2001-09-28  joe c   <marcus@marcuscom.com>
 
