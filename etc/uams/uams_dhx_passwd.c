@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.16 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_dhx_passwd.c,v 1.17 2003-01-26 16:40:44 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -26,7 +26,9 @@
 #include <shadow.h>
 #endif /* SHADOWPW */
 
-#ifdef OPENSSL_DHX
+#if defined(GNUTLS_DHX)
+#include <gnutls/openssl.h>
+#elif defined(OPENSSL_DHX)
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>

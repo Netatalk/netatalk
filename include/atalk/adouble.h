@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.15 2003-01-24 06:58:25 didg Exp $
+ * $Id: adouble.h,v 1.16 2003-01-26 16:40:45 srittau Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -25,6 +25,10 @@
 #ifndef _ATALK_ADOUBLE_H
 #define _ATALK_ADOUBLE_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /* ------------------- 
  * need pread() and pwrite()
 */
@@ -49,6 +53,7 @@
 #endif
 
 #ifdef HAVE_UNISTD_H
+#define __USE_MISC
 #include <unistd.h>
 #endif 
 
@@ -72,29 +77,26 @@
 
 #undef SENDFILE_FLAVOR_LINUX
 
-#else
+#else /* _FILE_OFFSET_BITS != 64 */
+
 #define HAVE_SENDFILE_READ
 #define HAVE_SENDFILE_WRITE
 #include <asm/unistd.h>
 
 #ifdef __NR_sendfile
-#ifndef ATACC
+#ifdef ATACC
+extern int sendfile __P((int , int , off_t *, size_t ));
+#else /* !ATACC */
 static __inline__ int sendfile(int fdout, int fdin, off_t *off, size_t count)
 {
-#if _FILE_OFFSET_BITS == 64 
-  return syscall(__NR_sendfile64, fdout, fdin, off, count);
-#else
   return syscall(__NR_sendfile, fdout, fdin, off, count);
-#endif
 }
-#else
-extern int sendfile __P((int , int , off_t *, size_t ));
 #endif /* ATACC */
 
-#else
+#else /* !__NR_sendfile */
 #include <sys/sendfile.h>
-#endif
-#endif
+#endif /* __NR_sendfile */
+#endif /* _FILE_OFFSET_BITS */
 #endif /* SENDFILE_FLAVOR_LINUX */
 
 #ifdef SENDFILE_FLAVOR_BSD

@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.40 2003-01-24 06:58:23 didg Exp $
+ * $Id: auth.c,v 1.41 2003-01-26 16:40:44 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -172,7 +172,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     }
 
     LOG(log_info, logtype_afpd, "login %s (uid %d, gid %d) %s", pwd->pw_name,
-        pwd->pw_uid, pwd->pw_gid , afp_versions[afp_version_index]);
+        pwd->pw_uid, pwd->pw_gid , afp_versions[afp_version_index].av_name);
 
     if (obj->proto == AFPPROTO_ASP) {
         ASP asp = obj->handle;

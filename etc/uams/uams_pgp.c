@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pgp.c,v 1.7 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_pgp.c,v 1.8 2003-01-26 16:40:45 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -21,7 +21,9 @@
 #include <pwd.h>
 #include <atalk/logger.h>
 
-#ifdef OPENSSL_DHX
+#if defined(GNUTLS_DHX)
+#include <gnutls/openssl.h>
+#elif defined(OPENSSL_DHX)
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
