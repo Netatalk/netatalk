@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.166 2002-09-28 03:43:37 jmarcus Exp $
+dnl $Id: configure.in,v 1.167 2002-09-28 03:56:44 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
