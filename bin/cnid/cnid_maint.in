@@ -3,7 +3,7 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.8 2002-02-11 21:10:00 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.9 2002-02-11 21:14:33 jmarcus Exp $
 #
 
 use strict;
@@ -72,6 +72,10 @@ if ( $opts->{'V'} ) {
 }
 if ( $opts->{'l'} ) {
     $remove_logs = 1;
+}
+
+if ( $< != 0 ) {
+    die "You must be root to run this script.\n";
 }
 
 print "Beginning run of CNID DB Maintanence script at "
