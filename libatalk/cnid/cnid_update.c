@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.10 2001-10-10 02:52:15 jmarcus Exp $
+ * $Id: cnid_update.c,v 1.11 2001-10-18 02:30:45 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,8 +53,9 @@ retry:
   key.size = sizeof(id);
   if ((rc = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
-    if (rc == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
+	}
     goto update_err;
   }
 

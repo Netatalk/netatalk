@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.7 2001-09-21 15:08:37 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.8 2001-10-18 02:30:45 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -69,8 +69,9 @@ cnid_t cnid_lookup(void *CNID,
   key.size = CNID_DEVINO_LEN;
   while ((rc = db->db_devino->get(db->db_devino, NULL,
 				    &key, &devdata, 0))) {
-    if (rc == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK) {
       continue;
+	}
 
     if (rc == DB_NOTFOUND) {
       devino = 0;
@@ -88,8 +89,9 @@ cnid_t cnid_lookup(void *CNID,
   memset(&diddata, 0, sizeof(diddata));
   while ((rc = db->db_didname->get(db->db_didname, NULL,
 				       &key, &diddata, 0))) {
-    if (rc == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK) {
       continue;
+	}
 
     if (rc == DB_NOTFOUND) {
       didname = 0;
@@ -112,13 +114,13 @@ cnid_t cnid_lookup(void *CNID,
   /* either entries in both databases exist or neither of them do. */
   if ((devino && didname) || !(devino || didname)) {
     if (debug)
-      syslog(LOG_ERR, "cnid_lookup: looked up did %d, name %s as %d", did, name, id);
+      syslog(LOG_ERR, "cnid_lookup: looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
     return id;
   }
   /* fix up the databases */
   cnid_update(db, id, st, did, name, len);
   if (debug)
-    syslog(LOG_ERR, "cnid_lookup: looked up did %d, name %s as %d (needed update)", did, name, id);
+    syslog(LOG_ERR, "cnid_lookup: looked up did %u, name %s as %u (needed update)", ntohl(did), name, ntohl(id));
   return id;
 }
 #endif /* CNID_DB */

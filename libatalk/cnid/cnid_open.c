@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.13 2001-09-27 15:51:27 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.14 2001-10-18 02:30:45 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -301,8 +301,9 @@ mkdir_appledb:
 dbversion_retry:
       if ((rc = db->db_didname->put(db->db_didname, NULL, &key, &data,
 			      DB_NOOVERWRITE)))
-	  	if (rc == DB_LOCK_DEADLOCK)
+	  	if (rc == DB_LOCK_DEADLOCK) {
 	  		goto dbversion_retry;
+		}
       break;
     default:
       /* uh oh. something bad happened. bail. */
