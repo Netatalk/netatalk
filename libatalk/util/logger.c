@@ -935,6 +935,7 @@ void setuplog(char *logtype, char *loglevel, char *filename)
   if (logtype==NULL)
   {
     LOG(log_note, logtype_logger, "no logsource given");
+    typenum=0;
   }
   else
   {
@@ -952,6 +953,7 @@ void setuplog(char *logtype, char *loglevel, char *filename)
   if (loglevel==NULL)
   {
     LOG(log_note, logtype_logger, "no loglevel given");
+    levelnum=0;
   }
   else
   {

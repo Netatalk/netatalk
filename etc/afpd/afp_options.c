@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.25 2002-08-24 01:32:19 sibaz Exp $
+ * $Id: afp_options.c,v 1.26 2002-08-24 02:12:48 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -249,8 +249,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
 #ifndef DISABLE_LOGGER
     /* -setuplogtype <syslog|filelog> <logtype> <loglevel> <filename>*/
-    /* -setuplogtype <logtype> <loglevel> [<filename>]*/
-    if ((c = getoption(buf, "-setuplogtype")))
+    /* -[no]setuplog <logtype> <loglevel> [<filename>]*/
+    if ((c = getoption(buf, "-setuplog")))
     {
       char *ptr, *logsource, *logtype, *loglevel, *filename;
 
@@ -316,6 +316,55 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
       /* setuplog(logsource, logtype, loglevel, filename); */
       setuplog(logtype, loglevel, filename);
+    }
+
+    if ((c = getoption(buf, "-nosetuplog")))
+    {
+      char *ptr, *logtype, *loglevel, *filename;
+
+      LOG(log_extradebug, logtype_afpd, "un setting up logtype, c is %s", c);
+
+      ptr = c;
+      logtype = ptr;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr)
+        {
+          *ptr++ = 0;
+          while (*ptr && isspace(*ptr))
+            ptr++;
+        }
+      }
+
+      loglevel = ptr;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr)
+        {
+          *ptr++ = 0;
+           while (*ptr && isspace(*ptr))
+             ptr++;
+        }
+      }
+
+      filename = ptr;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr)
+        {
+          *ptr++ = 0;
+          while (*ptr && isspace(*ptr))
+            ptr++;
+        }
+      }
+      
+      LOG(log_extradebug, logtype_afpd, "Doing setuplog %s %s %s",
+              logtype, NULL, filename);
+
+      setuplog(logtype, NULL, filename);
     }
 #endif /* DISABLE_LOGGER */
 #ifdef ADMIN_GRP

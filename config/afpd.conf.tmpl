@@ -129,6 +129,18 @@
 #                         timing out a connection.  The default is 4, therefore
 #                         a connection will timeout in 2 minutes.
 #     -icon               Use the platform-specific icon.
+#
+#   OPTIONS IN DEVELOPMENT:
+#     -[un]setuplog <logtype> <loglevel> [<filename>]
+#                         Specify that the given loglevel should be applied
+#                         to log messages of the given logtype and that 
+#                         these messages should be logged to the given file.
+#                         If the filename is ommited the loglevel applies to 
+#                         messages passed to syslog.  
+#                         Each logtype may have a loglevel applied to syslog 
+#                         and a loglevel applied to a single file.  Latter
+#                         -setuplog settings will override earlier ones of
+#                         the same logtype (file or syslog).
 #		
 # Some examples:
 #
