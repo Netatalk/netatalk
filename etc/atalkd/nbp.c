@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.5 2001-08-15 01:39:39 srittau Exp $
+ * $Id: nbp.c,v 1.6 2001-12-10 20:16:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -63,7 +64,7 @@ void nbp_ack( fd, nh_op, nh_id, to )
     data += SZ_NBPHDR;
     if ( sendto( fd, packet, data - packet, 0, (struct sockaddr *)to,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	syslog( LOG_ERR, "sendto: %m" );
+	syslog( LOG_ERR, "sendto: %s", strerror(errno) );
     }
 }
 
@@ -217,7 +218,8 @@ int nbp_packet( ap, from, data, len )
 		    if ( zt == (struct ziptab *)l->l_data ) {
 		        /* add multicast */
 		        if (addmulti(iface->i_name, zt->zt_bcast) < 0) {
-			    syslog( LOG_ERR, "nbp_packet: addmulti: %m" );
+			    syslog( LOG_ERR, "nbp_packet: addmulti: %s",
+				    strerror(errno) );
 			    return -1;
 			}
 		    }
@@ -227,7 +229,7 @@ int nbp_packet( ap, from, data, len )
 
 	if (( ntab = (struct nbptab *)malloc( sizeof( struct nbptab )))
 		== 0 ) {
-	    syslog( LOG_ERR, "nbp_packet: malloc: %m" );
+	    syslog( LOG_ERR, "nbp_packet: malloc: %s", strerror(errno) );
 	    return -1;
 	}
 	memcpy( &ntab->nt_nve, &nn, sizeof( struct nbpnve ));
@@ -402,7 +404,7 @@ int nbp_packet( ap, from, data, len )
 
 	    if ( sendto( ap->ap_fd, data - len, len, 0, (struct sockaddr *)&sat,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "nbp brrq sendto: %m" );
+		syslog( LOG_ERR, "nbp brrq sendto: %s", strerror(errno) );
 	    }
 
 	    locallkup = 1;
@@ -468,8 +470,9 @@ Can't find route's interface!" );
 		if ( sendto( ap->ap_fd, data - len, len, 0,
 			(struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    syslog( LOG_ERR, "nbp brrq sendto %u.%u: %m",
-			    ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node );
+		    syslog( LOG_ERR, "nbp brrq sendto %u.%u: %s",
+			    ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node,
+			    strerror(errno) );
 		    continue;
 		}
 	    }
@@ -489,8 +492,9 @@ Can't find route's interface!" );
 	    from->sat_addr.s_node = ATADDR_BCAST;
 	    if ( sendto( ap->ap_fd, data - len, len, 0, (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "nbp fwd sendto %u.%u: %m",
-			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
+		syslog( LOG_ERR, "nbp fwd sendto %u.%u: %s",
+			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
+			strerror(errno) );
 		return 0;
 	    }
 	}
@@ -564,9 +568,10 @@ Can't find route's interface!" );
 		if ( sendto( ap->ap_fd, packet, cc, 0,
 			(struct sockaddr *)&nn.nn_sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    syslog( LOG_ERR, "nbp lkup sendto %u.%u: %m",
+		    syslog( LOG_ERR, "nbp lkup sendto %u.%u: %s",
 			    ntohs( nn.nn_sat.sat_addr.s_net ),
-			    nn.nn_sat.sat_addr.s_node );
+			    nn.nn_sat.sat_addr.s_node,
+			    strerror(errno) );
 		    return 0;
 		}
 
@@ -626,9 +631,10 @@ Can't find route's interface!" );
 	    if ( sendto( ap->ap_fd, packet, cc, 0,
 		    (struct sockaddr *)&nn.nn_sat,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "nbp lkup sendto %u.%u: %m",
+		syslog( LOG_ERR, "nbp lkup sendto %u.%u: %s",
 			ntohs( nn.nn_sat.sat_addr.s_net ),
-			nn.nn_sat.sat_addr.s_node );
+			nn.nn_sat.sat_addr.s_node,
+			strerror(errno) );
 		return 0;
 	    }
 	}

@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.12 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: quota.c,v 1.13 2001-12-10 20:16:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,6 +11,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 /* STDC check */
 #if STDC_HEADERS
@@ -330,7 +332,7 @@ const u_int32_t     bsize;
         }
 
         if (( vol->v_gvs = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-            syslog( LOG_ERR, "getquota: malloc: %m" );
+            syslog( LOG_ERR, "getquota: malloc: %s", strerror(errno) );
             return AFPERR_MISC;
         }
         strcpy( vol->v_gvs, p );
@@ -355,7 +357,7 @@ struct dqblk	*dqblk;
     }
 #else /* ultrix */
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "overquota: gettimeofday: %m" );
+        syslog( LOG_ERR, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
     }
     if ( !dqblk->dqb_btimelimit || dqblk->dqb_btimelimit > tv.tv_sec ) {

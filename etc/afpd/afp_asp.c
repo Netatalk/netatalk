@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.7 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: afp_asp.c,v 1.8 2001-12-10 20:16:53 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -19,6 +19,7 @@
 #include <string.h>
 #include <signal.h>
 #include <syslog.h>
+#include <errno.h>
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif /* HAVE_SYS_TIME_H */
@@ -59,7 +60,7 @@ static void afp_asp_die(const int sig)
 
     asp_attention(asp, AFPATTN_SHUTDOWN);
     if ( asp_shutdown( asp ) < 0 ) {
-        syslog( LOG_ERR, "afp_die: asp_shutdown: %m" );
+        syslog( LOG_ERR, "afp_die: asp_shutdown: %s", strerror(errno) );
     }
 
     afp_asp_close(child);
@@ -83,7 +84,7 @@ static void afp_asp_timedown()
     it.it_value.tv_sec = 300;
     it.it_value.tv_usec = 0;
     if ( setitimer( ITIMER_REAL, &it, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_timedown: setitimer: %m" );
+        syslog( LOG_ERR, "afp_timedown: setitimer: %s", strerror(errno) );
         afp_asp_die(1);
     }
 
@@ -92,7 +93,7 @@ static void afp_asp_timedown()
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_timedown: sigaction: %m" );
+        syslog( LOG_ERR, "afp_timedown: sigaction: %s", strerror(errno) );
         afp_asp_die(1);
     }
 }
@@ -115,7 +116,7 @@ void afp_over_asp(AFPObj *obj)
     sigemptyset( &action.sa_mask );
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &action, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_over_asp: sigaction: %m" );
+        syslog( LOG_ERR, "afp_over_asp: sigaction: %s", strerror(errno) );
         afp_asp_die(1);
     }
 
@@ -123,7 +124,7 @@ void afp_over_asp(AFPObj *obj)
     sigemptyset( &action.sa_mask );
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &action, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_over_asp: sigaction: %m" );
+        syslog( LOG_ERR, "afp_over_asp: sigaction: %s", strerror(errno) );
         afp_asp_die(1);
     }
 
@@ -150,10 +151,12 @@ void afp_over_asp(AFPObj *obj)
                     if(unlink(addr_filename) == 0) {
                         syslog(LOG_INFO, "removed %s", addr_filename);
                     } else {
-                        syslog(LOG_INFO, "error removing %s: %m", addr_filename);
+                        syslog(LOG_INFO, "error removing %s: %s",
+                               addr_filename, strerror(errno));
                     }
                 } else {
-                    syslog(LOG_INFO, "error stat'ing %s: %m", addr_filename);
+                    syslog(LOG_INFO, "error stat'ing %s: %s",
+                           addr_filename, strerror(errno));
                 }
             }
 
@@ -202,7 +205,7 @@ void afp_over_asp(AFPObj *obj)
             }
 
             if ( asp_cmdreply( asp, reply ) < 0 ) {
-                syslog( LOG_ERR, "asp_cmdreply: %m" );
+                syslog( LOG_ERR, "asp_cmdreply: %s", strerror(errno) );
                 afp_asp_die(1);
             }
             break;
@@ -228,7 +231,7 @@ void afp_over_asp(AFPObj *obj)
                 bprint( asp->data, asp->datalen );
             }
             if ( asp_wrtreply( asp, reply ) < 0 ) {
-                syslog( LOG_ERR, "asp_wrtreply: %m" );
+                syslog( LOG_ERR, "asp_wrtreply: %s", strerror(errno) );
                 afp_asp_die(1);
             }
             break;

@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.8 2001-08-15 01:39:39 srittau Exp $
+ * $Id: rtmp.c,v 1.9 2001-12-10 20:16:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -141,9 +142,10 @@ static int rtmp_config( rh, iface )
       return -1;
 
     if (cc) {
-	syslog( LOG_ERR, "rtmp_config: can't route %u.%u to loopback: %m",
+	syslog( LOG_ERR, "rtmp_config: can't route %u.%u to loopback: %s",
 		ntohs( iface->i_addr.sat_addr.s_net ),
-		iface->i_addr.sat_addr.s_node );
+		iface->i_addr.sat_addr.s_node,
+		strerror(errno) );
     }
 
     syslog( LOG_INFO, "rtmp_config configured %s", iface->i_name );
@@ -463,7 +465,8 @@ int rtmp_packet( ap, from, data, len )
 	        } 
 
 		if (cc)
-		  syslog( LOG_ERR, "rtmp_packet: can't remove loopback: %m" );
+		  syslog( LOG_ERR, "rtmp_packet: can't remove loopback: %s",
+			  strerror(errno) );
 
 		iface->i_flags &= ~IFACE_NOROUTER;
 		iface->i_time = 0;
@@ -562,7 +565,7 @@ int rtmp_packet( ap, from, data, len )
 	}
 	if ( !gate ) {	/* new gateway */
 	    if (( gate = (struct gate *)malloc( sizeof( struct gate ))) == 0 ) {
-		syslog( LOG_ERR, "rtmp_packet: malloc: %m" );
+		syslog( LOG_ERR, "rtmp_packet: malloc: %s", strerror(errno) );
 		return -1;
 	    }
 	    gate->g_next = iface->i_gate;
@@ -701,7 +704,7 @@ int rtmp_packet( ap, from, data, len )
 			ntohs( rt.rt_net ));
 	    } else {		/* new for router */
 		if (( rtmp = newrt(iface)) == NULL ) {
-		    syslog( LOG_ERR, "rtmp_packet: newrt: %m" );
+		    syslog( LOG_ERR, "rtmp_packet: newrt: %s", strerror(errno) );
 		    return -1;
 		}
 		rtmp->rt_firstnet = rt.rt_net;
@@ -788,7 +791,7 @@ int rtmp_packet( ap, from, data, len )
 	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
 		    (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "as_timer sendto: %m" );
+		syslog( LOG_ERR, "as_timer sendto: %s", strerror(errno) );
 	    }
 	} else if ( *data == 2 || *data == 3 ) {
 #ifdef DEBUG
@@ -847,7 +850,7 @@ int rtmp_request( iface )
     sat.sat_port = ap->ap_port;
     if ( sendto( ap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	syslog( LOG_ERR, "rtmp_request sendto: %m" );
+	syslog( LOG_ERR, "rtmp_request sendto: %s", strerror(errno) );
 	return -1;
     }
     return 0;
@@ -955,8 +958,9 @@ int gateroute( command, rtmp )
 		    (struct sockaddr *) &dst,
 		    (struct sockaddr *) &gate,
 		    RTF_UP | RTF_GATEWAY )) {
-	    syslog( LOG_ERR, "route: %u -> %u.%u: %m", net,
-		    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node );
+	    syslog( LOG_ERR, "route: %u -> %u.%u: %s", net,
+		    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node,
+		    strerror(errno) );
 	    continue;
 	}
 #else /* ! BSD4_4 */

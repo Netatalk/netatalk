@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.8 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: afp_config.c,v 1.9 2001-12-10 20:16:53 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,6 +11,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 /* STDC check */
 #if STDC_HEADERS
@@ -146,7 +148,7 @@ static int asp_start(AFPConfig *config, AFPConfig *configs,
 
     if (!(asp = asp_getsession(config->obj.handle, server_children,
                                config->obj.options.tickleval))) {
-        syslog( LOG_ERR, "main: asp_getsession: %m" );
+        syslog( LOG_ERR, "main: asp_getsession: %s", strerror(errno) );
         exit( 1 );
     }
 
@@ -167,7 +169,7 @@ static int dsi_start(AFPConfig *config, AFPConfig *configs,
 
     if (!(dsi = dsi_getsession(config->obj.handle, server_children,
                                config->obj.options.tickleval))) {
-        syslog( LOG_ERR, "main: dsi_getsession: %m" );
+        syslog( LOG_ERR, "main: dsi_getsession: %s", strerror(errno) );
         exit( 1 );
     }
 
@@ -194,13 +196,13 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
         return NULL;
 
     if ((atp = atp_open(ATADDR_ANYPORT, &options->ddpaddr)) == NULL)  {
-        syslog( LOG_ERR, "main: atp_open: %m");
+        syslog( LOG_ERR, "main: atp_open: %s", strerror(errno) );
         free(config);
         return NULL;
     }
 
     if ((asp = asp_init( atp )) == NULL) {
-        syslog( LOG_ERR, "main: asp_init: %m" );
+        syslog( LOG_ERR, "main: asp_init: %s", strerror(errno) );
         atp_close(atp);
         free(config);
         return NULL;
@@ -281,7 +283,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
-        syslog( LOG_ERR, "DSIConfigInit: malloc(config): %m" );
+        syslog( LOG_ERR, "DSIConfigInit: malloc(config): %s", strerror(errno) );
         return NULL;
     }
 
@@ -289,7 +291,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
                         options->ipaddr, options->port,
                         options->flags & OPTION_PROXY,
                         options->server_quantum)) == NULL) {
-        syslog( LOG_ERR, "main: dsi_init: %m" );
+        syslog( LOG_ERR, "main: dsi_init: %s", strerror(errno) );
         free(config);
         return NULL;
     }
@@ -381,7 +383,7 @@ static AFPConfig *AFPConfigInit(const struct afp_options *options,
 
     if ((refcount = (unsigned char *)
                     calloc(1, sizeof(unsigned char))) == NULL) {
-        syslog( LOG_ERR, "AFPConfigInit: calloc(refcount): %m" );
+        syslog( LOG_ERR, "AFPConfigInit: calloc(refcount): %s", strerror(errno) );
         return NULL;
     }
 

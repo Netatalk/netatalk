@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.20 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: directory.c,v 1.21 2001-12-10 20:16:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -55,6 +55,7 @@ char *strchr (), *strrchr ();
 #include "volume.h"
 #include "fork.h"
 #include "file.h"
+#include "filedir.h"
 #include "globals.h"
 #include "unix.h"
 

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.8 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: desktop.c,v 1.9 2001-12-10 20:16:54 srittau Exp $
  *
  * See COPYRIGHT.
  */
@@ -603,8 +603,8 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 
 char *mtoupath(const struct vol *vol, char *mpath)
 {
-    static unsigned char	 upath[ MAXPATHLEN + 1];
-    unsigned char	*m, *u;
+    static char  upath[ MAXPATHLEN + 1];
+    char	*m, *u;
     int		 i = 0;
 
     if ( *mpath == '\0' ) {
@@ -625,7 +625,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
 #if 1
         if (vol->v_mtoupage && ((*m & 0x80) ||
                                 vol->v_flags & AFPVOL_MAPASCII)) {
-            *u = vol->v_mtoupage->map[*m].value;
+            *u = vol->v_mtoupage->map[(unsigned char) *m].value;
         } else
 #endif /* 1 */
 #if AD_VERSION == AD_VERSION1
@@ -659,9 +659,9 @@ char *mtoupath(const struct vol *vol, char *mpath)
 
 char *utompath(const struct vol *vol, char *upath)
 {
-    static unsigned char mpath[ MAXPATHLEN + 1];
-    unsigned char		*m, *u;
-    int			 h;
+    static char  mpath[ MAXPATHLEN + 1];
+    char        *m, *u;
+    int          h;
 
     /* do the hex conversion */
     u = upath;
@@ -669,9 +669,9 @@ char *utompath(const struct vol *vol, char *upath)
     while ( *u != '\0' ) {
         /* we have a code page */
 #if 1
-        if (vol->v_utompage && ((*u > 0x7F) ||
+        if (vol->v_utompage && ((*u & 0x80) ||
                                 (vol->v_flags & AFPVOL_MAPASCII))) {
-            *m = vol->v_utompage->map[*u].value;
+            *m = vol->v_utompage->map[(unsigned char) *u].value;
         } else
 #endif /* 1 */
             if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&

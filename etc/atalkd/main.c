@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.10 2001-09-12 19:13:17 uhees Exp $
+ * $Id: main.c,v 1.11 2001-12-10 20:16:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -147,9 +147,9 @@ static void atalkd_exit(const int i)
 	continue;
 #endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
 #endif /* SIOCATALKIFADDR */
-      syslog( LOG_ERR, "difaddr(%u.%u): %m", 
+      syslog( LOG_ERR, "difaddr(%u.%u): %s", 
 	      ntohs(iface->i_addr.sat_addr.s_net), 
-	      iface->i_addr.sat_addr.s_node);
+	      iface->i_addr.sat_addr.s_node, strerror(errno));
     }
   }
 #endif /* SOPCDOFADDR */
@@ -196,13 +196,13 @@ as_timer()
 	    if ( iface->i_time < 3 ) {
 		if ( iface->i_flags & IFACE_PHASE1 ) {
 		  if (rtmp_request( iface ) < 0) {
-		      syslog(LOG_ERR, "rtmp_request: %m");
+		      syslog(LOG_ERR, "rtmp_request: %s", strerror(errno));
 		      atalkd_exit(1);
 		  }
 		    newrtmpdata = 1;
 		} else {
 		  if (zip_getnetinfo( iface ) < 0) {
-		    syslog(LOG_ERR, "zip_getnetinfo: %m");
+		    syslog(LOG_ERR, "zip_getnetinfo: %s", strerror(errno));
 		    atalkd_exit(1);
 		  }
 		  sentzipq = 1;
@@ -232,7 +232,7 @@ as_timer()
 			for ( zt = iface->i_czt; zt; zt = zt->zt_next ) {
 			    if (addzone( iface->i_rt, zt->zt_len, 
 					 zt->zt_name) < 0) {
-			      syslog(LOG_ERR, "addzone: %m");
+			      syslog(LOG_ERR, "addzone: %s", strerror(errno));
 			      atalkd_exit(1);
 			    }
 			}
@@ -257,9 +257,10 @@ as_timer()
 
 			if ( looproute( iface, RTMP_ADD )) { /* -1 or 1 */
 			    syslog( LOG_ERR,
-				    "as_timer: can't route %u.%u to loop: %m",
+				    "as_timer: can't route %u.%u to loop: %s",
 				    ntohs( iface->i_addr.sat_addr.s_net ),
-				    iface->i_addr.sat_addr.s_node );
+				    iface->i_addr.sat_addr.s_node,
+				    strerror(errno) );
 			    atalkd_exit( 1 );
 			}
 			if ( iface == ciface ) {
@@ -284,9 +285,10 @@ as_timer()
 		    }
 		    if ( looproute( iface, RTMP_ADD ) ) { /* -1 or 1 */
 			syslog( LOG_ERR,
-				"as_timer: can't route %u.%u to loopback: %m",
+				"as_timer: can't route %u.%u to loopback: %s",
 				ntohs( iface->i_addr.sat_addr.s_net ),
-				iface->i_addr.sat_addr.s_node );
+				iface->i_addr.sat_addr.s_node,
+				strerror(errno) );
 			atalkd_exit( 1 );
 		    }
 
@@ -329,7 +331,7 @@ as_timer()
 		    } else {
 			rtmp->rt_hops = RTMPHOPS_POISON;
 			if ((cc = rtmp_replace( rtmp )) < 0) {
-			  syslog(LOG_ERR, "rtmp_replace: %m");
+			  syslog(LOG_ERR, "rtmp_replace: %s", strerror(errno));
 			  atalkd_exit(1);
 			}
 			if (cc) {
@@ -425,7 +427,7 @@ as_timer()
 			} else {
 			    rtmp->rt_hops = RTMPHOPS_POISON;
 			    if ((cc = rtmp_replace( rtmp )) < 0) {
-			    	syslog(LOG_ERR, "rtmp_replace: %m");
+			    	syslog(LOG_ERR, "rtmp_replace: %s", strerror(errno));
 			    	atalkd_exit(1);
 			    }
 		            if (cc)
@@ -453,7 +455,7 @@ as_timer()
 			if ( sendto( zap->ap_fd, packet, cc, 0,
 				(struct sockaddr *)&sat,
 				sizeof( struct sockaddr_at )) < 0 ) {
-			    syslog( LOG_ERR, "as_timer sendto: %m" );
+			    syslog( LOG_ERR, "as_timer sendto: %s", strerror(errno) );
 			}
 			sentzipq = 1;
 
@@ -502,7 +504,7 @@ as_timer()
 
 		if ( sendto( zap->ap_fd, packet, cc, 0, (struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    syslog( LOG_ERR, "as_timer sendto: %m" );
+		    syslog( LOG_ERR, "as_timer sendto: %s", strerror(errno) );
 		}
 	    }
 	}
@@ -581,10 +583,11 @@ as_timer()
 			if ( sendto( rap->ap_fd, packet, data - packet, 0,
 				(struct sockaddr *)&sat,
 				sizeof( struct sockaddr_at )) < 0 ) {
-			    syslog( LOG_ERR, "as_timer sendto %u.%u (%u): %m",
+			    syslog( LOG_ERR, "as_timer sendto %u.%u (%u): %s",
 				    ntohs( sat.sat_addr.s_net ),
 				    sat.sat_addr.s_node,
-				    ntohs( iface->i_rt->rt_firstnet ));
+				    ntohs( iface->i_rt->rt_firstnet ),
+				    strerror(errno) );
 			}
 
 			if ( iface->i_flags & IFACE_PHASE2 ) {
@@ -620,10 +623,11 @@ as_timer()
 		if ( sendto( rap->ap_fd, packet, data - packet, 0,
 			(struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    syslog( LOG_ERR, "as_timer sendto %u.%u (%u): %m",
+		    syslog( LOG_ERR, "as_timer sendto %u.%u (%u): %s",
 			    ntohs( sat.sat_addr.s_net ),
 			    sat.sat_addr.s_node,
-			    ntohs( iface->i_rt->rt_firstnet ));
+			    ntohs( iface->i_rt->rt_firstnet ),
+			    strerror(errno) );
 		}
 	    }
 	}
@@ -718,7 +722,7 @@ as_debug()
     FILE		*rtmpdebug;
 
     if (( rtmpdebug = fopen( _PATH_ATALKDEBUG, "w" )) == NULL ) {
-	syslog( LOG_ERR, "rtmp: %m" );
+	syslog( LOG_ERR, "rtmp: %s", strerror(errno) );
     }
 
     for ( iface = interfaces; iface; iface = iface->i_next ) {
@@ -823,18 +827,20 @@ as_down()
 	    for ( rt = gate->g_rt; rt; rt = rt->rt_next ) {
 		if ( rt->rt_iprev ) {
 		    if ( gateroute( RTMP_DEL, rt ) < 0 ) {
-			syslog( LOG_ERR, "as_down remove %u-%u failed: %m",
+			syslog( LOG_ERR, "as_down remove %u-%u failed: %s",
 				ntohs( rt->rt_firstnet ),
-				ntohs( rt->rt_lastnet ));
+				ntohs( rt->rt_lastnet ),
+				strerror(errno) );
 		    }
 		}
 	    }
 	}
 	if ( iface->i_flags & IFACE_LOOP ) {
 	  if (looproute( iface, RTMP_DEL )) {
-	    syslog( LOG_ERR, "as_down remove %s %u.%u failed: %m",
+	    syslog( LOG_ERR, "as_down remove %s %u.%u failed: %s",
 		    iface->i_name, ntohs( iface->i_addr.sat_addr.s_net ),
-		    iface->i_addr.sat_addr.s_node );
+		    iface->i_addr.sat_addr.s_node,
+		    strerror(errno) );
 	  }
 	}
     }
@@ -1086,16 +1092,16 @@ int main( ac, av )
      */
 #ifdef BSD4_4
     if (( rtfd = socket( PF_ROUTE, SOCK_RAW, AF_APPLETALK )) < 0 ) {
-	syslog( LOG_ERR, "route socket: %m" );
+	syslog( LOG_ERR, "route socket: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
     if ( shutdown( rtfd, 0 ) < 0 ) {
-	syslog( LOG_ERR, "route shutdown: %m" );
+	syslog( LOG_ERR, "route shutdown: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 #else /* BSD4_4 */
     if (( rtfd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
-	syslog( LOG_ERR, "route socket: %m" );
+	syslog( LOG_ERR, "route socket: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 #endif /* BSD4_4 */
@@ -1108,7 +1114,7 @@ int main( ac, av )
     sigaddset( &sv.sa_mask, SIGTERM );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, NULL) < 0 ) {
-	syslog( LOG_ERR, "sigterm: %m" );
+	syslog( LOG_ERR, "sigterm: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1119,7 +1125,7 @@ int main( ac, av )
     sigaddset( &sv.sa_mask, SIGTERM );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &sv, NULL) < 0 ) {
-	syslog( LOG_ERR, "sigusr1: %m" );
+	syslog( LOG_ERR, "sigusr1: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1130,7 +1136,7 @@ int main( ac, av )
     sigaddset( &sv.sa_mask, SIGTERM );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, NULL) < 0 ) {
-	syslog( LOG_ERR, "sigalrm: %m" );
+	syslog( LOG_ERR, "sigalrm: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1139,7 +1145,7 @@ int main( ac, av )
     it.it_value.tv_sec = 10L;
     it.it_value.tv_usec = 0L;
     if ( setitimer( ITIMER_REAL, &it, NULL) < 0 ) {
-	syslog( LOG_ERR, "setitimer: %m" );
+	syslog( LOG_ERR, "setitimer: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1152,7 +1158,7 @@ int main( ac, av )
 		errno = 0;
 		continue;
 	    } else {
-		syslog( LOG_ERR, "select: %m" );
+		syslog( LOG_ERR, "select: %s", strerror(errno) );
 		atalkd_exit( 1 );
 	    }
 	}
@@ -1164,7 +1170,7 @@ int main( ac, av )
 			fromlen = sizeof( struct sockaddr_at );
 			if (( c = recvfrom( ap->ap_fd, Packet, sizeof( Packet ),
 				0, (struct sockaddr *)&sat, &fromlen )) < 0 ) {
-			    syslog( LOG_ERR, "recvfrom: %m" );
+			    syslog( LOG_ERR, "recvfrom: %s", strerror(errno) );
 			    continue;
 			}
 #ifdef DEBUG
@@ -1178,7 +1184,7 @@ int main( ac, av )
 #endif /* DEBUG */
 #ifdef __svr4__
 			if ( sighold( SIGALRM ) || sighold( SIGUSR1 )) {
-			    syslog( LOG_ERR, "sighold: %m" );
+			    syslog( LOG_ERR, "sighold: %s", strerror(errno) );
 			    atalkd_exit( 1 );
 			}
 #else /* __svr4__ */
@@ -1186,7 +1192,7 @@ int main( ac, av )
 				sigmask( SIGUSR1 ));
 #endif /* __svr4__ */
 			if (( *ap->ap_packet )( ap, &sat, Packet, c ) < 0) {
-			  syslog(LOG_ERR, "ap->ap_packet: %m");
+			  syslog(LOG_ERR, "ap->ap_packet: %s", strerror(errno));
 			  atalkd_exit(1);
 			}
 
@@ -1195,7 +1201,7 @@ int main( ac, av )
 #endif /* DEBUG */
 #ifdef __svr4__
 			if ( sigrelse( SIGUSR1 ) || sigrelse( SIGALRM )) {
-			    syslog( LOG_ERR, "sigrelse: %m" );
+			    syslog( LOG_ERR, "sigrelse: %s", strerror(errno) );
 			    atalkd_exit( 1 );
 			}
 #else /* __svr4__ */
@@ -1238,7 +1244,7 @@ void bootaddr( iface )
 	    }
 
 	} else if (rtmp_request( iface ) < 0) {
-	  syslog(LOG_ERR, "bootaddr (rtmp_request): %m");
+	  syslog(LOG_ERR, "bootaddr (rtmp_request): %s", strerror(errno));
 	  atalkd_exit(1);
 	}
 
@@ -1255,7 +1261,7 @@ void bootaddr( iface )
 	    }
 	    
 	} else if (zip_getnetinfo( iface ) < 0) {
-	  syslog(LOG_ERR, "bootaddr (zip_getnetinfo): %m");
+	  syslog(LOG_ERR, "bootaddr (zip_getnetinfo): %s", strerror(errno));
 	  atalkd_exit(1);
 	}
     }
@@ -1269,12 +1275,9 @@ void bootaddr( iface )
  * Change setaddr()
  * to manage the i_ports field and the fds for select().
  */
-void setaddr( iface, phase, net, node, first, last )
-    struct interface	*iface;
-    u_int8_t		phase;
-    u_int16_t	        net;
-    u_int8_t		node;
-    u_int16_t		first, last;
+void setaddr(struct interface *iface,
+             u_int8_t  phase, u_int16_t net, u_int8_t node,
+	     u_int16_t first, u_int16_t last)
 {
     int			i;
     struct atserv	*as;
@@ -1292,7 +1295,7 @@ void setaddr( iface, phase, net, node, first, last )
 	    }
 	    if (( ap = (struct atport *)malloc( sizeof( struct atport ))) ==
 		    NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		syslog( LOG_ERR, "malloc: %s", strerror(errno) );
 		atalkd_exit( 1 );
 	    }
 	    ap->ap_fd = 0;
@@ -1322,12 +1325,12 @@ void setaddr( iface, phase, net, node, first, last )
     memcpy( iface->i_addr.sat_zero, &nr, sizeof( struct netrange ));
 
     if ( ifconfig( iface->i_name, SIOCSIFADDR, &iface->i_addr )) {
-      syslog( LOG_ERR, "setifaddr: %s (%u-%u): %m. try specifying a \
-smaller net range.", iface->i_name, ntohs(first), ntohs(last));
+      syslog( LOG_ERR, "setifaddr: %s (%u-%u): %s. try specifying a \
+smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 	atalkd_exit( 1 );
     }
     if ( ifconfig( iface->i_name, SIOCGIFADDR, &iface->i_addr )) {
-	syslog( LOG_ERR, "getifaddr: %s: %m", iface->i_name );
+	syslog( LOG_ERR, "getifaddr: %s: %s", iface->i_name, strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1338,7 +1341,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last));
 #endif /* __svr4__ */
     for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
 	if (( ap->ap_fd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
-	    syslog( LOG_ERR, "socket: %m" );
+	    syslog( LOG_ERR, "socket: %s", strerror(errno) );
 	    atalkd_exit( 1 );
 	}
 #ifndef __svr4__
@@ -1356,9 +1359,9 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last));
 
 	if ( bind( ap->ap_fd, (struct sockaddr *)&sat,
 		sizeof( struct sockaddr_at )) < 0 ) {
-	    syslog( LOG_ERR, "bind %u.%u:%u: %m",
+	    syslog( LOG_ERR, "bind %u.%u:%u: %s",
 		    ntohs( sat.sat_addr.s_net ),
-		    sat.sat_addr.s_node, sat.sat_port );
+		    sat.sat_addr.s_node, sat.sat_port, strerror(errno) );
 #ifdef SIOCDIFADDR
 	    /* remove all interfaces if we have a problem with bind */
 	    for (iface = interfaces; iface; iface = iface->i_next) {

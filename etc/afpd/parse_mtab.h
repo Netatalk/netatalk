@@ -1,5 +1,5 @@
 /*
- * $Id: parse_mtab.h,v 1.4 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: parse_mtab.h,v 1.5 2001-12-10 20:16:54 srittau Exp $
  *
  * header for afpd_mtab_parse, afpd_st_cnid
  */
@@ -30,9 +30,6 @@ struct afpd_mount_table {
     struct afpd_mtab_entry **table;	/* index -> entry map vector, some
     			   entries may be null */
 };
-
-/* global mount table; afpd_st_cnid uses this to lookup the right entry.  */
-static struct afpd_mount_table *afpd_mount_table = NULL;
 
 extern
     unsigned int

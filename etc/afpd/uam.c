@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.16 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: uam.c,v 1.17 2001-12-10 20:16:54 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,14 +36,14 @@ char *strchr (), *strrchr ();
 #include <ctype.h>
 #include <syslog.h>
 #include <sys/param.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif /* HAVE_DLFCN_H */
 
-#ifdef SHADOWPW
-#include <shadow.h>
-#endif /* SHADOWPW */
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <netatalk/endian.h>
 #include <atalk/asp.h>
@@ -58,7 +58,6 @@ char *strchr (), *strrchr ();
 
 #ifdef TRU64
 #include <netdb.h>
-#include <arpa/inet.h>
 #endif /* TRU64 */
 
 /* --- server uam functions -- */

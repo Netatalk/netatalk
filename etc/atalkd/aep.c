@@ -1,5 +1,5 @@
 /*
- * $Id: aep.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: aep.c,v 1.5 2001-12-10 20:16:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -8,6 +8,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
+
+#include <string.h>
+#include <errno.h>
 
 #include <sys/syslog.h>
 #include <sys/types.h>
@@ -36,7 +39,7 @@ int aep_packet( ap, from, data, len )
     *( data + 1 ) = AEPOP_REPLY;
     if ( sendto( ap->ap_fd, data, len, 0, (struct sockaddr *)from,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	syslog( LOG_ERR, "aep sendto: %m" );
+	syslog( LOG_ERR, "aep sendto: %s", strerror(errno) );
 	return 1;
     }
 

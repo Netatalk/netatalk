@@ -1,5 +1,5 @@
 /*
- * $Id: zip.c,v 1.7 2001-08-15 01:39:39 srittau Exp $
+ * $Id: zip.c,v 1.8 2001-12-10 20:16:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/syslog.h>
@@ -181,7 +182,8 @@ int zip_packet( ap, from, data, len )
 			if ( sendto( ap->ap_fd, packet, reply - packet, 0,
 				(struct sockaddr *)from,
 				sizeof( struct sockaddr_at )) < 0 ) {
-			    syslog( LOG_ERR, "zip reply sendto: %m" );
+			    syslog( LOG_ERR, "zip reply sendto: %s",
+				    strerror(errno) );
 			}
 
 			reply = packet + 3;
@@ -200,7 +202,8 @@ int zip_packet( ap, from, data, len )
 				if ( sendto( ap->ap_fd, packet, reply - packet,
 					0, (struct sockaddr *)from,
 					sizeof( struct sockaddr_at )) < 0 ) {
-				    syslog( LOG_ERR, "zip reply sendto: %m" );
+				    syslog( LOG_ERR, "zip reply sendto: %s",
+					    strerror(errno) );
 				}
 
 				reply = packet + 3;
@@ -221,7 +224,8 @@ int zip_packet( ap, from, data, len )
 			    if ( sendto( ap->ap_fd, packet, reply - packet, 0,
 				    (struct sockaddr *)from,
 				    sizeof( struct sockaddr_at )) < 0 ) {
-				syslog( LOG_ERR, "zip reply sendto: %m" );
+				syslog( LOG_ERR, "zip reply sendto: %s",
+					strerror(errno) );
 			    }
 
 			    reply = packet + 3;
@@ -248,7 +252,8 @@ int zip_packet( ap, from, data, len )
 		if ( sendto( ap->ap_fd, packet, reply - packet, 0,
 			(struct sockaddr *)from,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    syslog( LOG_ERR, "zip reply sendto: %m" );
+		    syslog( LOG_ERR, "zip reply sendto: %s",
+			    strerror(errno) );
 		}
 	    }
 	    break;
@@ -598,8 +603,9 @@ int zip_packet( ap, from, data, len )
 	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
 		    (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "zip gni sendto %u.%u: %m",
-			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
+		syslog( LOG_ERR, "zip gni sendto %u.%u: %s",
+			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
+			strerror(errno) );
 		return 1;
 	    }
 	    break;
@@ -722,9 +728,10 @@ int zip_packet( ap, from, data, len )
 	    /* add addr to loopback route */
 	    if ( looproute( iface, RTMP_ADD )) { /* -1 or 1 */
 		syslog( LOG_ERR,
-			"zip_packet: can't route %u.%u to loopback: %m",
+			"zip_packet: can't route %u.%u to loopback: %s",
 			ntohs( iface->i_addr.sat_addr.s_net ),
-			iface->i_addr.sat_addr.s_node );
+			iface->i_addr.sat_addr.s_node,
+			strerror(errno) );
 		return -1;
 	    }
 
@@ -874,8 +881,9 @@ int zip_packet( ap, from, data, len )
 	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
 		    (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "zip atp sendto %u.%u: %m",
-			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
+		syslog( LOG_ERR, "zip atp sendto %u.%u: %s",
+			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
+			strerror(errno) );
 		return 1;
 	    }
 	}
@@ -941,7 +949,7 @@ int zip_getnetinfo( iface )
 
     if ( sendto( ap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	syslog( LOG_ERR, "zip_getnetinfo sendto: %m" );
+	syslog( LOG_ERR, "zip_getnetinfo sendto: %s", strerror(errno) );
 	return -1;
     }
     return 0;
@@ -985,7 +993,7 @@ static int add_list( head, data )
 	}
     }
     if (( l = (struct list *)malloc( sizeof( struct list ))) == NULL ) {
-	syslog( LOG_ERR, "add_list malloc: %m" );
+	syslog( LOG_ERR, "add_list malloc: %s", strerror(errno) );
 	return -1;
     }
 
@@ -1020,7 +1028,7 @@ int addzone( rt, len, zone )
     }
     if ( zt == NULL ) {
 	if (( zt = newzt( len, zone )) == NULL ) {
-	    syslog( LOG_ERR, "addzone newzt: %m" );
+	    syslog( LOG_ERR, "addzone newzt: %s", strerror(errno) );
 	    return -1;
 	}
 	if ( ziptab == NULL ) {

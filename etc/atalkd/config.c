@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.6 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: config.c,v 1.7 2001-12-10 20:16:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -26,6 +26,9 @@
 #include <atalk/util.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <ctype.h>
 
 /* STDC check */
 #if STDC_HEADERS
@@ -42,11 +45,9 @@ char *strchr (), *strrchr ();
 #endif /* ! HAVE_MEMCPY */
 #endif /* STDC_HEADERS */
 
-#include <ctype.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
-#include <errno.h>
 
 #ifdef __svr4__
 #include <sys/sockio.h>
@@ -160,16 +161,16 @@ int writeconf( cf )
 	sprintf( newpath, "%.*s/%s", (int)(p - path), path, _PATH_ATALKDTMP );
     }
     if (( fd = open( newpath, O_WRONLY|O_CREAT|O_TRUNC, mode )) < 0 ) {
-	syslog( LOG_ERR, "%s: %m", newpath );
+	syslog( LOG_ERR, "%s: %s", newpath, strerror(errno) );
 	return( -1 );
     }
     if (( newconf = fdopen( fd, "w" )) == NULL ) {
-	syslog( LOG_ERR, "fdreopen %s: %m", newpath );
+	syslog( LOG_ERR, "fdreopen %s: %s", newpath, strerror(errno) );
 	return( -1 );
     }
 
     if (( conf = fopen( path, "r" )) == NULL && cf ) {
-	syslog( LOG_ERR, "%s: %m", path );
+	syslog( LOG_ERR, "%s: %s", path, strerror(errno) );
 	return( -1 );
     }
 
@@ -178,7 +179,7 @@ int writeconf( cf )
     while ( conf == NULL || fgets( line, sizeof( line ), conf ) != NULL ) {
 	if ( conf != NULL && ( argv = parseline( line )) == NULL ) {
 	    if ( fputs( line, newconf ) == EOF ) {
-		syslog( LOG_ERR, "fputs: %m" );
+		syslog( LOG_ERR, "fputs: %s", strerror(errno) );
 		return( -1 );
 	    }
 	    continue;
@@ -224,7 +225,7 @@ int writeconf( cf )
     fclose( newconf );
 
     if ( rename( newpath, path ) < 0 ) {
-	syslog( LOG_ERR, "rename %s to %s: %m", newpath, path );
+	syslog( LOG_ERR, "rename %s to %s: %s", newpath, path, strerror(errno) );
 	return( -1 );
     }
     return( 0 );

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.10 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.11 2001-12-10 20:16:53 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -226,7 +226,7 @@ void afp_over_dsi(AFPObj *obj)
             function = (u_char) dsi->commands[0];
             if (obj->options.flags & OPTION_DEBUG ) {
                 printf("command: %d\n", function);
-                bprint(dsi->commands, dsi->cmdlen);
+                bprint((char *) dsi->commands, dsi->cmdlen);
             }
 
             /* send off an afp command. in a couple cases, we take advantage
@@ -252,7 +252,7 @@ void afp_over_dsi(AFPObj *obj)
 
             if (obj->options.flags & OPTION_DEBUG ) {
                 printf( "reply: %d, %d\n", err, dsi->clientID);
-                bprint(dsi->data, dsi->datalen);
+                bprint((char *) dsi->data, dsi->datalen);
             }
 
             if (!dsi_cmdreply(dsi, err)) {
@@ -265,7 +265,7 @@ void afp_over_dsi(AFPObj *obj)
             function = (u_char) dsi->commands[0];
             if ( obj->options.flags & OPTION_DEBUG ) {
                 printf("(write) command: %d, %d\n", function, dsi->cmdlen);
-                bprint(dsi->commands, dsi->cmdlen);
+                bprint((char *) dsi->commands, dsi->cmdlen);
             }
 
             if ( afp_switch[ function ] != NULL ) {
@@ -282,7 +282,7 @@ void afp_over_dsi(AFPObj *obj)
 
             if (obj->options.flags & OPTION_DEBUG ) {
                 printf( "(write) reply code: %d, %d\n", err, dsi->clientID);
-                bprint(dsi->data, dsi->datalen);
+                bprint((char *) dsi->data, dsi->datalen);
             }
 
             if (!dsi_wrtreply(dsi, err)) {

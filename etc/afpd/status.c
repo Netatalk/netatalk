@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: status.c,v 1.6 2001-12-10 20:16:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -251,7 +251,7 @@ static int status_netaddress(char *data, const int servoffset,
 }
 
 /* returns actual offset to signature */
-static void status_icon(char *data, const char *icondata,
+static void status_icon(char *data, const unsigned char *icondata,
                         const int iconlen, const int sigoffset)
 {
     char                *start = data;

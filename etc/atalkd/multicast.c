@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.c,v 1.7 2001-08-15 01:39:39 srittau Exp $
+ * $Id: multicast.c,v 1.8 2001-12-10 20:16:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -393,7 +394,7 @@ zone_bcast( zt )
 
     if (!zt->zt_bcast &&
 	(zt->zt_bcast = (u_char *) malloc(sizeof( ethermulti ))) == NULL) {
-       syslog( LOG_ERR, "zone_bcast malloc: %m" );
+       syslog( LOG_ERR, "zone_bcast malloc: %s", strerror(errno) );
        return -1;
      }
 
