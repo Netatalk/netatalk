@@ -40,7 +40,7 @@ uams_guest_la_SOURCES      = uams_guest.c
 uams_randnum_la_SOURCES    = uams_randnum.c crypt.c crypt.h
 uams_passwd_la_SOURCES     = uams_passwd.c
 uams_pam_la_SOURCES        = uams_pam.c
-uams_pgp_la_SOURCES        = uams_pgp.c crypt.c crypt.h
+uams_pgp_la_SOURCES        = uams_pgp.c
 uams_dhx_passwd_la_SOURCES = uams_dhx_passwd.c crypt.c crypt.h
 uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c crypt.c crypt.h
 
