@@ -538,15 +538,16 @@ int strdiacasecmp( const char *s1, const char *s2 )
 
 int strndiacasecmp( const char *s1, const char *s2, size_t n )
 {
-    while ( --n >= 0 &&
+    while ( n > 0 &&
 	    _diacasemap[ (unsigned char) *s1 ] ==
 	    _diacasemap[ (unsigned char) *s2++ ] ) {
 	if ( *s1++ == '\0' ) {
 	    return( 0 );
 	}
+	n--;
     }
 
-    if (n < 0)
+    if (n == 0)
 	return 0;
     return _diacasemap[ (unsigned char) *s1 ] -
 	   _diacasemap[ (unsigned char) *--s2 ];
