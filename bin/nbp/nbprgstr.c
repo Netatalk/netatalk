@@ -8,6 +8,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -15,9 +16,10 @@
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/netddp.h>
+#include <atalk/nbp.h>
 #include <atalk/util.h>
 
-Usage( av0 )
+void Usage( av0 )
     char	*av0;
 {
     char	*p;
@@ -32,7 +34,7 @@ Usage( av0 )
     exit( 1 );
 }
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -90,4 +92,6 @@ main( ac, av )
 	exit( 1 );
     }
     netddp_close(s);
+
+    return 0;
 }

@@ -40,7 +40,7 @@ char *Obj = "=";
 char *Type = "=";
 char *Zone = "*";
 
-Usage( av0 )
+void Usage( av0 )
     char	*av0;
 {
     char	*p;
@@ -55,7 +55,7 @@ Usage( av0 )
     exit( 1 );
 }
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -154,4 +154,5 @@ main( ac, av )
 		nn[ i ].nn_sat.sat_port );
     }
 
+    return 0;
 }

@@ -25,13 +25,16 @@
 #include "config.h"
 #endif
 
-#include  <sys/types.h>
-#include  <netatalk/endian.h>
-#include  <netatalk/at.h>
-#include  <stdio.h>
-#include  <string.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <netatalk/endian.h>
+#include <netatalk/at.h>
+#include <atalk/util.h>
+#include <atalk/nbp.h>
 
-Usage( av0 )
+void Usage( av0 )
     char	*av0;
 {
     char	*p;
@@ -46,7 +49,7 @@ Usage( av0 )
     exit( 1 );
 }
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -88,4 +91,6 @@ main( ac, av )
 		Zone ? Zone : "*" );
 	exit( 1 );
     }
+
+    return 0;
 }
