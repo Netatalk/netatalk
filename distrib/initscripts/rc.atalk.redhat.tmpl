@@ -19,8 +19,8 @@ ATALK_SBIN=:SBINDIR:
 # Source networking configuration.
 . /etc/sysconfig/network
 
-# Quickly probe for appletalk and exit if we can't find it
-/sbin/modprobe appletalk || exit 0
+# Quickly probe for appletalk and warn if we can't find it
+/sbin/modprobe appletalk || echo "[could not load appletalk module]"
 
 # Check for IP Encapsulation support
 #/sbin/modprobe ipddp || echo "[could not load IP encapsulation]"

@@ -1,4 +1,6 @@
 /*
+ * $Id: timelord.c,v 1.4 2001-02-26 15:39:00 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -14,6 +16,10 @@
  *	Copyright (c) 1990, The University of Melbourne.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -24,11 +30,30 @@
 #include <atalk/atp.h>
 
 #include <time.h>
+#ifdef HAVE_SGTTY_H
 #include <sgtty.h>
+#endif /* HAVE_SGTTY_H */
 #include <signal.h>
 #include <syslog.h>
 #include <stdio.h>
 #include <strings.h>
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif /* HAVE_NETDB_H */
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_SYS_FCNTL_H
+#include <sys/fcntl.h>
+#endif /* HAVE_SYS_FCNTL_H */
+
+#ifdef HAVE_TERMIOS_H
+#include <termios.h>
+#endif /* HAVE_TERMIOS_H */
+#ifdef HAVE_SYS_TERMIOS_H
+#include <sys/termios.h>
+#endif /* HAVE_SYS_TERMIOS_H */
 
 #define	TL_GETTIME	0
 #define	TL_OK		12
@@ -58,7 +83,7 @@ usage( p )
  * Unregister ourself on signal.
  */
 void
-goaway()
+goaway(int signal)
 {
     if ( nbp_unrgstr( server, "TimeLord", "*" ) < 0 ) {
 	syslog( LOG_ERR, "Can't unregister %s", server );
@@ -73,7 +98,6 @@ main( ac, av )
     char	**av;
 {
     ATP			atp;
-    struct sigvec	sv;
     struct sockaddr_at	sat;
     struct atp_block	atpb;
     struct timeval	tv;
@@ -162,17 +186,8 @@ main( ac, av )
     }
     syslog( LOG_INFO, "%s:TimeLord started", server );
 
-    sv.sv_handler = goaway;
-    sv.sv_mask = 0;
-    sv.sv_flags = 0;
-    if ( sigvec( SIGHUP, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "main: sigvec: %m" );
-	exit( 1 );
-    }
-    if ( sigvec( SIGTERM, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "main: sigvec: %m" );
-	exit( 1 );
-    }
+	signal(SIGHUP, goaway);
+	signal(SIGTERM, goaway);
 
     for (;;) {
 	/*
@@ -210,12 +225,12 @@ main( ac, av )
 		syslog( LOG_ERR, "main: gettimeofday: %m" );
 		exit( 1 );
 	    }
-	    if (( tm = localtime( &tv.tv_sec )) == 0 ) {
+	    if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
 		perror( "localtime" );
 		exit( 1 );
 	    }
 
-	    mtime = tv.tv_sec + tm->tm_gmtoff + EPOCH;
+	    mtime = tv.tv_sec + EPOCH;
 	    mtime = htonl( mtime );
 
 	    resp = TL_OK;

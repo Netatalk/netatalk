@@ -1,3 +1,17 @@
+($Id)
+
+2001-02-26  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* configure.in: added /usr/local/ssl to list of SSL paths to check, to
+	help kludge compilation on Mac OS X from Marcel <lammerse@xs4all.nl>
+
+	* distrib/initscripts/rc.atalk.redhat.tmpl: adjusted to echo warning
+	instead of dumping out if appletalk module not present, from
+	Steven Karen <karelsf@users.sourceforge.net> (Bug #404087)
+
+	* configure.in, contrib/timelord/timelord.c: applied patch from Wes
+	Hardaker <hardaker@users.sourceforge.net> (Patch #402245), with
+	suitable configure.in fixes
 
 2001-02-23  jeff b  <jeff@univrel.pr.uconn.edu>  
 
