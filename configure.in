@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.99 2001-08-30 00:44:47 srittau Exp $
+dnl $Id: configure.in,v 1.100 2001-08-30 13:13:30 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -646,7 +646,7 @@ AC_ARG_WITH(ssl-dir,
 	]
 )
 
-if test "$tryssl" == "yes"; then
+if test "$tryssl" = "yes"; then
 	for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl /usr/local/ssl ; do
 		if test -f "$ssldir/include/openssl/cast.h" ; then
 			LDFLAGS="$LDFLAGS -L$ssldir/lib -L$ssldir"
