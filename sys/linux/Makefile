@@ -92,7 +92,7 @@ install-bsd:
 	fi
 
 install : ${ETCDIR} install-sysv install-bsd
-	-mkdir ${DESTDIR} ${SBINDIR} ${BINDIR} ${LIBDIR}
+	-mkdir ${DESTDIR} ${SBINDIR} ${BINDIR} ${LIBDIR} ${MSGDIR}
 	for i in ${ALL}; \
 	    do (cd $$i; ${MAKE} ${MFLAGS} CC="${CC}" \
 		ADDLIBS="${ADDLIBS}" DEFS="${DEFS}" OPTOPTS="${OPTOPTS}" \
