@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
+ * $Id: cnid_add.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -13,6 +13,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -239,3 +240,4 @@ cleanup_abort:
 cleanup_err:
   return 0;
 }
+#endif /* CNID_DB */

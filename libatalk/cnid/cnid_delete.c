@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_delete.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
+ * $Id: cnid_delete.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -11,6 +11,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -111,3 +112,4 @@ abort_err:
   syslog(LOG_ERR, "cnid_del: unable to delete CNID(%x)", id);
   return errno;
 }
+#endif /* CNID_DB */

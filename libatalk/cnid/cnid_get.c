@@ -1,11 +1,12 @@
 /*
- * $Id: cnid_get.c,v 1.3 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_get.c,v 1.4 2001-08-31 14:58:48 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -57,3 +58,4 @@ cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
   memcpy(&id, data.data, sizeof(id));
   return id;
 }
+#endif /* CNID_DB */

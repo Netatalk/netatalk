@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_nextid.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
+ * $Id: cnid_nextid.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
  */
 #ifdef unused
 
@@ -7,6 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #include <db.h>
 
 #include <atalk/adouble.h>
@@ -29,5 +30,6 @@ cnid_t cnid_nextid(void *CNID)
   memcpy(&id, ad_entry(&db->rootinfo, ADEID_DID), sizeof(id));
   return id;
 }
+#endif /* CNID_DB */
 #endif
 

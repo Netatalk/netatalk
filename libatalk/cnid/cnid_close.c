@@ -1,11 +1,12 @@
 /*
- * $Id: cnid_close.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
+ * $Id: cnid_close.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -69,3 +70,4 @@ void cnid_close(void *CNID)
 
   free(db);
 }
+#endif /* CNID_DB */

@@ -1,11 +1,12 @@
 /*
- * $Id: cnid_resolve.c,v 1.4 2001-08-16 14:30:29 uhees Exp $
+ * $Id: cnid_resolve.c,v 1.5 2001-08-31 14:58:48 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -48,3 +49,4 @@ char *cnid_resolve(void *CNID, cnid_t *id)
   memcpy(id, (char *) data.data + CNID_DEVINO_LEN, sizeof(*id));
   return (char *) data.data + CNID_HEADER_LEN;
 }
+#endif /* CNID_DB */

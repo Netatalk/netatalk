@@ -1,3 +1,8 @@
+2001-08-31  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* libatalk/cnid/cnid_*.c: compilation fixes for those who don't
+	want to compile with CNID support (Edmund Lam)
+
 2001-08-28  Lance Levsen  <l.levsen@printwest.com>
 
 	* config/Makefile.am: Added a variable substitution from

@@ -1,11 +1,12 @@
 /*
- * $Id: cnid_update.c,v 1.5 2001-08-16 14:30:30 uhees Exp $
+ * $Id: cnid_update.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef CNID_DB
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -136,3 +137,4 @@ update_err:
   syslog(LOG_ERR, "cnid_update: can't update CNID(%x)", id);
   return -1;
 }
+#endif /* CNID_DB */
