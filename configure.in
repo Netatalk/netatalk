@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.126 2001-11-16 15:44:31 srittau Exp $
+dnl $Id: configure.in,v 1.127 2001-11-20 16:04:23 pooba53 Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -137,6 +137,12 @@ dnl --------------------------------------------------------------------------
 
 AC_DEFINE(ADMIN_GRP, 1)
 
+AC_ARG_WITH(prefix,
+        [  --prefix=DIR    architecture-independant files alternative location],
+        prefix = "$withval"
+)
+
+
 AC_ARG_WITH(admin-group,
  	[  --disable-admin-group   disable admin group],
         if test "$enableval" = "no"; then
@@ -153,21 +159,16 @@ AC_ARG_ENABLE(afs,
 	fi
 )
 
-AC_ARG_WITH(config-dir,
-	[  --with-config-dir=DIR   obsolete - use --with-pkgconfdir],
+AC_ARG_WITH(sysconfdir,
+	[  --sysconfdir=DIR   system specific configuration files],
 		sysconfdir="$withval",
-		if test "x$prefix" = "xNONE"; then
-			sysconfdir="$ac_default_prefix/etc"
-		else
-			sysconfdir="${prefix}/etc"
-		fi
+		sysconfdir="${ac_prefix_default}/etc"
 )
 
 AC_ARG_WITH(pkgconfdir,
-	[  --with-pkgconfdir=DIR   package specific configuration in DIR
-                          [[SYSCONF/netatalk]]],
+	[  --with-pkgconfdir=DIR   package specific configuration in DIR],
 		PKGCONFDIR="$withval",
-		PKGCONFDIR="${sysconfdir}/netatalk"
+		PKGCONFDIR="${ac_prefix_default}/netatalk"
 )
 
 AC_ARG_WITH(cracklib,
