@@ -23,6 +23,7 @@
 #undef SOLARIS
 #undef TCPWRAP
 #undef UAM_DHX
+#undef UAM_PGP
 #undef UAM_RNDNUM
 #undef USE_CAP
 #undef USE_CRACKLIB

@@ -1,7 +1,7 @@
 # Makefile.am for etc/uams/
 
 if USE_DHX
-DHX_UAMS = uams_dhx_pam.so uams_dhx_passwd.so uams_dhx.so
+DHX_UAMS = uams_dhx_pam.so uams_dhx_passwd.so uams_dhx.so uams_pgp.so
 endif
 
 uamsdir = $(CONFIG_DIR)/uams
@@ -9,7 +9,7 @@ uams_DATA = $(DHX_UAMS) uams_guest.so \
 	uams_pam.so uams_passwd.so \
 	uams_randnum.so uams_clrtxt.so
 
-EXTRA_DIST = uams_dhx_pam.c uams_dhx_passwd.c \
+EXTRA_DIST = uams_dhx_pam.c uams_dhx_passwd.c uams_pgp.c \
 	uams_guest.c uams_pam.c uams_passwd.c uams_randnum.c
 
 #

@@ -399,7 +399,8 @@ for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local
 		AC_CHECK_LIB(des, main)
 
  		AC_DEFINE(OPENSSL_DHX,	1)
-		AC_DEFINE(UAM_DHX,	1)
+		AC_DEFINE(UAM_DHX,		1)
+		AC_DEFINE(UAM_PGP,		1)
 		AC_DEFINE(UAM_RNDNUM,	1)
 		compile_dhx=yes
 		AC_MSG_RESULT([Found ssl and enabling RANDNUM and DHX support "$ssldir"])

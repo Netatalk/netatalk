@@ -15,7 +15,15 @@
 #include <pwd.h>
 #include <syslog.h>
 
+#ifdef OPENSSL_DHX
+#include <openssl/bn.h>
+#include <openssl/dh.h>
+#include <openssl/cast.h>
+#else
 #include <bn.h>
+#include <dh.h>
+#include <cast.h>
+#endif
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
@@ -31,7 +39,8 @@
 
 /* the secret key */
 static struct passwd *pgppwd;
-
+static CAST_KEY castkey;
+static u_int8_t randbuf[16];
 
 /* pgp passwd */
 static int pgp_login(void *obj, struct passwd **uam_pwd,
@@ -75,7 +84,7 @@ static int pgp_login(void *obj, struct passwd **uam_pwd,
     if (uam_afpserver_option(obj, UAM_OPTION_SIGNATURE, 
 			     (void *) &name, NULL) < 0) {
       *rbuflen = 0;
-      goto passwd_fail;
+      goto pgp_fail;
     }
     memcpy(rbuf + KEYSIZE, name, KEYSIZE); 
 
@@ -87,6 +96,7 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
 			 char *ibuf, int ibuflen, 
 			 char *rbuf, int *rbuflen)
 {
+	unsigned char iv[] = "RJscorat";
     BIGNUM *bn1, *bn2, *bn3;
     u_int16_t sessid;
     char *p;
