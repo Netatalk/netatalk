@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.11 2001-10-18 02:28:56 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.12 2001-10-19 02:35:47 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -38,7 +38,7 @@
 
 /* add an entry to the CNID databases. we do this as a transaction
  * to prevent messiness. */
-static int add_cnid(CNID_private *db, DB_TXN *ptid, DBT *key, DBT *data)
+static int add_cnid(CNID_private *db, DBT *key, DBT *data)
 {
   DBT altkey, altdata;
   DB_TXN *tid;
@@ -51,31 +51,22 @@ static int add_cnid(CNID_private *db, DB_TXN *ptid, DBT *key, DBT *data)
   memset(&altdata, 0, sizeof(altdata));
   
 retry:
-  if ((rc = txn_begin(db->dbenv, ptid, &tid,0))) {
+  if ((rc = txn_begin(db->dbenv, NULL, &tid,0))) {
     return rc;
   }
+
 
   /* main database */
   if ((rc = db->db_cnid->put(db->db_cnid, tid,
 			        key, data, DB_NOOVERWRITE))) {
     txn_abort(tid);
-    if (rc == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
+	}
 
     return rc;
   }
 
-  /* did/name database */
-  altkey.data = (char *) data->data + CNID_DEVINO_LEN;
-  altkey.size = data->size - CNID_DEVINO_LEN;
-  if ((rc = db->db_didname->put(db->db_didname, tid,
-				   &altkey, &altdata, 0))) {
-    txn_abort(tid);
-    if (rc == DB_LOCK_DEADLOCK)
-      goto retry;
-
-    return rc;
-  }
 
   /* dev/ino database */
   altkey.data = data->data;
@@ -85,12 +76,26 @@ retry:
   if ((rc = db->db_devino->put(db->db_devino, tid,
 				  &altkey, &altdata, 0))) {
     txn_abort(tid);
-    if (rc == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
+	}
 
     return rc;
   }
 
+
+  /* did/name database */
+  altkey.data = (char *) data->data + CNID_DEVINO_LEN;
+  altkey.size = data->size - CNID_DEVINO_LEN;
+  if ((rc = db->db_didname->put(db->db_didname, tid,
+				   &altkey, &altdata, 0))) {
+    txn_abort(tid);
+    if (rc == DB_LOCK_DEADLOCK) {
+      goto retry;
+	}
+
+    return rc;
+  }
 
   return txn_commit(tid, 0);
 }
@@ -144,12 +149,12 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
    * cnid's to the database. */
   if (ntohl(hint) >= CNID_START) {
     /* if the key doesn't exist, add it in. don't fiddle with nextID. */
-    rc = add_cnid(db, NULL, &key, &data);
+    rc = add_cnid(db, &key, &data);
     switch (rc) {
     case DB_KEYEXIST: /* need to use RootInfo after all. */
       break;
     default:
-      syslog(LOG_ERR, "cnid_add: unable to add CNID %u (%d)", ntohl(hint), rc);
+      syslog(LOG_ERR, "cnid_add: unable to add CNID(%u)", ntohl(hint));
       goto cleanup_err;
     case 0:
       if (debug)
@@ -167,9 +172,10 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
   rootinfo_key.size = ROOTINFO_KEYLEN;
 
   /* Get the key. */
+getretry:
   switch (rc = db->db_didname->get(db->db_didname, NULL, &rootinfo_key, &rootinfo_data, 0)) {
   case DB_LOCK_DEADLOCK:
-          goto retry;
+          goto getretry;
   case 0:
           memcpy (&hint, rootinfo_data.data, sizeof(hint));
           if (debug)
@@ -185,6 +191,27 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
 		  goto cleanup_err;
  }
 
+  /* search for a new id. we keep the first id around to check for
+   * wrap-around. NOTE: i do it this way so that we can go back and
+   * fill in holes. */
+  save = id = ntohl(hint);
+  while ((rc = add_cnid(db, &key, &data))) {
+    /* don't use any of the special CNIDs */
+    if (++id < CNID_START)
+      id = CNID_START;
+
+    if ((rc != DB_KEYEXIST) || (save == id)) {
+      syslog(LOG_ERR, "cnid_add: unable to add CNID(%u)", ntohl(hint));
+      hint = 0;
+      goto cleanup_err;
+    }
+    hint = htonl(id);
+  }
+
+  /* update RootInfo with the next id. */
+  rootinfo_data.data = &hint;
+  rootinfo_data.size = sizeof(hint);
+
   /* Abort and retry the modification. */
   if (0) {
 retry:    if ((rc = txn_abort(tid)) != 0)
@@ -197,28 +224,6 @@ retry:    if ((rc = txn_abort(tid)) != 0)
     syslog(LOG_ERR, "cnid_add: txn_begin failed (%d)", rc);
     goto cleanup_err;
   }
-
-
-  /* search for a new id. we keep the first id around to check for
-   * wrap-around. NOTE: i do it this way so that we can go back and
-   * fill in holes. */
-  save = id = ntohl(hint);
-  while ((rc = add_cnid(db, tid, &key, &data))) {
-    /* don't use any of the special CNIDs */
-    if (++id < CNID_START)
-      id = CNID_START;
-
-    if ((rc != DB_KEYEXIST) || (save == id)) {
-      syslog(LOG_ERR, "cnid_add: unable to add CNID %u (%d)", ntohl(hint), rc);
-      hint = 0;
-      goto cleanup_abort;
-    }
-    hint = htonl(id);
-  }
-
-  /* update RootInfo with the next id. */
-  rootinfo_data.data = &hint;
-  rootinfo_data.size = sizeof(hint);
 
   switch (rc = db->db_didname->put(db->db_didname, tid, &rootinfo_key, &rootinfo_data, 0)) {
   case DB_LOCK_DEADLOCK:
