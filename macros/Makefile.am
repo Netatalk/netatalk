@@ -1,5 +1,6 @@
 EXTRA_DIST = \
 	afs-check.m4		\
+	config-checks.m4	\
 	db3-check.m4		\
 	pam-check.m4		\
 	perl-check.m4		\

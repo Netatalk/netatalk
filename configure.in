@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.154 2002-02-08 17:43:15 jmarcus Exp $
+dnl $Id: configure.in,v 1.155 2002-02-13 16:44:02 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -123,15 +123,7 @@ AC_ARG_WITH(admin-group,
 
 NETATALK_AFS_CHECK
 
-AC_ARG_WITH(pkgconfdir,
-        [  --with-pkgconfdir=DIR   package specific configuration in DIR
-                          [[SYSCONF/netatalk]]],
-                PKGCONFDIR="$withval",
-                PKGCONFDIR="${sysconfdir}/netatalk"
-)
-
-dnl FIXME: make this an extra check
-NLSDIR="${PKGCONFDIR}/nls"
+NETATALK_CONFIG_DIRS
 
 AC_ARG_WITH(logfile,
 	[  --with-logfile=PATH     path for file used by logger [/var/log/netatalk.log]
@@ -608,8 +600,6 @@ AC_SUBST(LIBS)
 AC_SUBST(AFPD_LIBS)
 AC_SUBST(PAPD_LIBS)
 AC_SUBST(CFLAGS)
-AC_SUBST(PKGCONFDIR)
-AC_SUBST(NLSDIR)
 AC_SUBST(OVERWRITE_CONFIG)
 
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
