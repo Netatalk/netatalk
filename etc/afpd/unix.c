@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.32 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: unix.c,v 1.33 2002-04-14 10:53:37 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -213,7 +213,7 @@ struct maccess	*ma;
     return( mode );
 }
 
-inline int stickydirmode(name, mode, dropbox)
+int stickydirmode(name, mode, dropbox)
 char * name;
 const mode_t mode;
 const int dropbox;
