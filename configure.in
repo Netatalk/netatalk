@@ -254,6 +254,7 @@ AC_OUTPUT([Makefile
 	contrib/Makefile
 	contrib/nu/Makefile
 	contrib/printing/Makefile
+	contrib/timelord/Makefile
 	distrib/Makefile
 	distrib/config/Makefile
 	distrib/config/netatalk-config
