@@ -1,8 +1,9 @@
 netatalk (1.5pre5-2) unstable; urgency=low
 
   * Added copyright of University of Newcastle upon Tyne to debian/copyright.
+  * Removed patches/uams_dhx_pam.c.patch as it was applied upstream.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Tue, 27 Feb 2001 21:42:50 +0100
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Wed,  7 Mar 2001 21:56:36 +0100
 
 netatalk (1.5pre5-1) unstable; urgency=low
 
