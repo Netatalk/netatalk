@@ -1,0 +1,193 @@
+.\" $Id: afpd.conf.5.tmpl,v 1.1 2000-09-28 16:49:47 rufustfirefly Exp $
+.TH afpd.conf 5 "28 September 2000" "netatalk 1.5"
+.UC 4
+.SH NAME
+afpd.conf \- Configuration file used by \fBafpd\fR(8)
+to determine the setup of its file sharing services
+
+.SH DESCRIPTION
+\fB:ETCDIR:/afpd.conf\fR is the configuration file used
+by afpd to determine the behavior and configuration of the different
+virtual file servers that it provides.
+
+Any line not prefixed with \fB#\fR is interpreted. The configuration lines
+are composed like:
+
+.RS
+.sp
+.I server name
+.B [
+.I options
+.B ]
+
+.sp
+.RE
+If a \fB-\fR is used instead of a server name, the default server is
+specified. Server names must be quoted if they contain spaces.
+
+The path name must be a fully qualified path name, or a path name using
+either the \fB~\fR shell shorthand or any of the substitution variables,
+which are listed below.
+
+The possible options and their meanings are:
+
+.TP
+.I AppleVolumes Files
+
+.TP
+.B -defaultvol [path]
+Specifies path to AppleVolumes.default file (default is 
+\fB:RESDIR:/AppleVolumes.default\fR).
+
+.TP
+.B -nlspath [path]
+Specifies the path to the code pages (default is \fB:RESDIR:/nls\fR).
+
+.TP
+.B -systemvol [path]
+Specifies path to AppleVolumes.system file (default is 
+\fB:RESDIR:/AppleVolumes.system\fR).
+
+.TP
+.B -[no]uservol
+Enables or disables reading of the users' individual volumes file
+entirely.
+
+.TP
+.B -[no]uservolfirst
+Enables or disables reading of the users' individual volumes file
+before processing the global \fBAppleVolumes.default\fR file.
+
+.TP
+.I Authentication Methods
+
+.TP
+.B -uamlist [uams list]
+Comma separated list of UAMs. (The default is
+\fBuams_guest.so,uams_passwd.so,uams_dhx_passwd.so\fR).
+The most commonly used UAMs are:
+
+\fBuams_dhx_passwd.so or uams_dhx_pam.so\fR - allows logins
+using Diffie-Hellman eXchange (DHX)
+
+\fBuams_guest.so\fR - allows guest logins
+
+\fBuams_passwd.so or uams_pam.so\fR - allows logins with clear
+text passwords
+
+\fBuams_randum.so\fR - allows Random Number and Two-Way Random
+Number Exchange for authentication (requires \fB:RESDIR:/afppaswd\fR
+file)
+
+.TP
+.B -uampath [path]
+Sets the default path for UAMs for this server (default is 
+:RESDIR:/uams).
+
+.TP
+.I Password Options
+
+.TP
+.B -loginmaxmail [number]
+Sets the maximum number of failed logins, if supported by the UAM
+
+.TP
+.B -passwdfile [path]
+Sets the path to the Randnum passwd file for this server (default is
+\fB:ETCDIR:/afppasswd\fR).
+
+.TP
+.B -passwdminlen [number]
+Sets the minimum password length, if supported by the UAM
+
+.TP
+.B -[no]savepassword
+Enables or disables the ability of clients to save passwords locally
+
+.TP
+.B -[no]setpassword
+Enables or disables the ability of clients to change their passwords
+
+
+.TP
+.I Transport Protocols
+
+.TP
+.B -[no]ddp
+Enables or disables AFP-over-Appletalk. If \fB-proxy\fR is specified, you must
+instead use \fB-uamlist ""\fR to prevent DDP connections from working.
+
+.TP
+.B -[no]tcp
+Enables or disables AFP-over-TCP
+
+.TP
+.I Transport Options
+
+.TP
+.B -admingroup [group]
+Allows users of a certain group to be seen as the superuser when they
+log in. This option is disabled, by default.
+
+.TP
+.B -ddpaddr [ddp address]
+Specifies the DDP address of the server. The default is to auto-assign an
+address (0.0). This is only useful if you are running on a multihomed host.
+
+.TP
+.B -fqdn [name:port]
+Specifies a fully-qualified domain name, with an optional port. This is
+discarded if the server cannot resolve it. This option is not honored by
+AppleShare clients <= 3.8.3. This option is disabled by default.
+
+.TP
+.B -ipaddr [ip address]
+Specifies the IP that the server should respond to (the default is the
+first IP address of the system). This option also allows one machine to
+advertise TCP/IP for another machine.
+
+.TP
+.B -port [port number]
+Allows a different TCP port to be specified for AFP-over-TCP. The default
+is 548.
+
+.TP
+.B -proxy
+Runs an AppleTalk proxy server for the specified AFP-over-TCP server. If
+the address and port aren't given, then the first IP address of the system
+and port 548 will be used. If you don't want the proxy server to act as a
+DDP server as well, set \fB-uamlist ""\fR.
+
+.TP
+.B -server_quantum [number]
+This specifoes the DSI server quantum. The minimum value is 1 MB. The
+maximum value is 0xFFFFFFFFF. If you specify a value that is out of
+range, the default value will be set (which is the minimum).
+
+.TP
+.I Miscellaneous Options
+
+.TP
+.B -guestname [name]
+Specifies the user that guests should use (default is \fB"nobody"\fR). The
+name should be quoted.
+
+.TP
+.B -icon
+Use the platform-specific icon
+
+.TP
+.B -loginmsg [message]
+Sets a message to be displayed when clients logon to the server. The
+message should be quoted.
+
+.TP
+.B -nodebug
+Disables debugging
+
+.TP
+.B -tickleval [number]
+Sets the tickle timeout interval (in seconds).
+
+.SH SEE ALSO
+afpd(8), AppleVolumes.default(5)

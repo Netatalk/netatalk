@@ -9,7 +9,8 @@ SUFFIXES = .tmpl .
 	    -e s@:LIBDIR:@${libdir}@ \
 	    <$^ >$@
 
-man_MANS = AppleVolumes.default.5 atalkd.conf.5 netatalk.conf.5 papd.conf.5 
+man_MANS = AppleVolumes.default.5 afpd.conf.5 \
+	atalkd.conf.5 netatalk.conf.5 papd.conf.5 
 
 CLEANFILES = $(man_MANS)
 
