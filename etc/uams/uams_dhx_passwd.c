@@ -271,7 +271,7 @@ static void uam_cleanup(void)
   /*uam_unregister(UAM_SERVER_PRINTAUTH, "DHCAST128"); */
 }
 
-UAM_MODULE_EXPORT struct uam_export uams_dhx_passwd = {
+UAM_MODULE_EXPORT struct uam_export uams_dhx = {
   UAM_MODULE_SERVER,
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
