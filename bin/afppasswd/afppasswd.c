@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.14 2003-06-06 22:43:39 srittau Exp $
+ * $Id: afppasswd.c,v 1.15 2003-06-07 01:39:05 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -71,52 +71,66 @@ static char buf[MAXPATHLEN + 1];
 #define _(x) (x)
 #endif
 
-/* if newpwd is null, convert buf from hex to binary. if newpwd isn't
- * null, convert newpwd to hex and save it in buf. */
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
-static void convert_passwd(char *buf, char *newpwd, const int keyfd)
+
+static u_int8_t *retrieve_key(int keyfd)
 {
-  u_int8_t key[HEXPASSWDLEN];
-  DES_key_schedule schedule;
+  static u_int8_t key[HEXPASSWDLEN];
   int i, j;
 
-  if (!newpwd) {
-    /* convert to binary */
-    for (i = j = 0; i < sizeof(key); i += 2, j++)
-      buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
-    if (j <= DES_KEY_SZ)
-      memset(buf + j, 0, sizeof(key) - j);
-  }
+  lseek(keyfd, 0, SEEK_SET);
+  read(keyfd, key, sizeof(key));
+  /* convert to binary */
+  for (i = j = 0; i < sizeof(key); i += 2, j++)
+    key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
+  if (j <= DES_KEY_SZ)
+    memset(key + j, 0, sizeof(key) - j);
 
-  if (keyfd > -1) {
-    lseek(keyfd, 0, SEEK_SET);
-    read(keyfd, key, sizeof(key));
-    /* convert to binary */
-    for (i = j = 0; i < sizeof(key); i += 2, j++)
-      key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-    if (j <= DES_KEY_SZ)
-      memset(key + j, 0, sizeof(key) - j);
-    DES_key_sched((DES_cblock *) key, &schedule);
-    memset(key, 0, sizeof(key));   
-    if (newpwd) {
-	DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd,
-			&schedule, DES_ENCRYPT);
-    } else {
-      /* decrypt the password */
-      DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf,
-		      &schedule, DES_DECRYPT);
-    }
-    memset(&schedule, 0, sizeof(schedule));      
-  }
+  return key;
+}
 
-  if (newpwd) {
-    const unsigned char hextable[] = "0123456789ABCDEF";
+static void retrieve_passwd(char *buf, int keyfd)
+{
+  DES_key_schedule schedule;
+  u_int8_t *key;
+  int i, j;
 
-    /* convert to hex */
-    for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
-      buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
-      buf[j + 1] = hextable[newpwd[i] & 0x0F];
-    }
+  /* convert to binary */
+  for (i = j = 0; i < sizeof(key); i += 2, j++)
+    buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
+  if (j <= DES_KEY_SZ)
+    memset(buf + j, 0, sizeof(key) - j);
+
+  key = retrieve_key(keyfd);
+  DES_key_sched((DES_cblock *) key, &schedule);
+
+  /* decrypt the password */
+  DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf,
+                  &schedule, DES_DECRYPT);
+
+  memset(key, 0, HEXPASSWDLEN);
+  memset(&schedule, 0, sizeof(schedule));      
+}
+
+static void set_passwd(char *buf, char *newpwd, const int keyfd)
+{
+  static const unsigned char hextable[] = "0123456789ABCDEF";
+  DES_key_schedule schedule;
+  u_int8_t *key;
+  int i, j;
+
+  key = retrieve_key(keyfd);
+  DES_key_sched((DES_cblock *) key, &schedule);
+
+  DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd,
+                  &schedule, DES_ENCRYPT);
+
+  memset(&schedule, 0, sizeof(schedule));      
+
+  /* convert to hex */
+  for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
+    buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
+    buf[j + 1] = hextable[newpwd[i] & 0x0F];
   }
 }
 
@@ -176,7 +190,7 @@ static int update_passwd(const char *path, const char *name, int flags)
   /* need to verify against old password */
   if ((flags & OPT_ISROOT) == 0) {
     passwd = getpass(_("Enter OLD AFP password: "));
-    convert_passwd(p, NULL, keyfd);
+    retrieve_passwd(p, keyfd);
     if (strncmp(passwd, p, PASSWDLEN)) {
       memset(passwd, 0, strlen(passwd));
       fprintf(stderr, _("Wrong password.\n"));
@@ -210,7 +224,7 @@ static int update_passwd(const char *path, const char *name, int flags)
 
     memset(passwd, 0, strlen(passwd));
 
-    convert_passwd(p, password, keyfd);
+    set_passwd(p, password, keyfd);
     lock.l_type = F_WRLCK;
     lock.l_start = pos;
     lock.l_len = 1;
