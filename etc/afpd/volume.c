@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.40 2002-10-16 16:19:34 jmarcus Exp $
+ * $Id: volume.c,v 1.41 2002-10-17 18:01:54 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1220,6 +1220,12 @@ int		ibuflen, *rbuflen;
         ret = AFPERR_ACCESS;
         goto openvol_err;
     }
+    /* FIXME 
+    */
+    if (afp_version >= 30)
+        volume->max_filename = 255;
+    else 
+        volume->max_filename = MACFILELEN;
 
     if (( volume->v_flags & AFPVOL_OPEN  ) == 0 ) {
         /* FIXME unix name != mac name */

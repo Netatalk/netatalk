@@ -1,5 +1,5 @@
 /*
- * $Id: uam_auth.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: uam_auth.h,v 1.4 2002-10-17 18:01:54 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,6 +33,8 @@ struct uam_obj {
             int (*logincont) __P((void *, struct passwd **, char *,
                                   int, char *, int *));
             void (*logout) __P((void));
+            int (*login_ext) __P((void *, char *, struct passwd **,
+                              char *, int, char *, int *));
         } uam_login;
         int (*uam_changepw) __P((void *, char *, struct passwd *, char *,
                                  int, char *, int *));

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.18 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_passwd.c,v 1.19 2002-10-17 18:01:55 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -57,23 +57,15 @@ char *strchr (), *strrchr ();
 static char *clientname;
 #endif /* TRU64 */
 
-/* cleartxt login */
-static int passwd_login(void *obj, struct passwd **uam_pwd,
+static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
                         char *ibuf, int ibuflen,
                         char *rbuf, int *rbuflen)
 {
+    char  *p;
     struct passwd *pwd;
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
-    char *username, *p;
-    int len, ulen;
-
-    *rbuflen = 0;
-
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
-                             (void *) &username, &ulen) < 0)
-        return AFPERR_MISC;
 
 #ifdef TRU64
     if( uam_afpserver_option( obj, UAM_OPTION_CLIENTNAME,
@@ -81,25 +73,6 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
 #endif /* TRU64 */
 
-    if (ibuflen <= 1) {
-        return( AFPERR_PARAM );
-    }
-
-    len = (unsigned char) *ibuf++;
-    ibuflen--;
-    if (!len || len > ibuflen || len > ulen ) {
-        return( AFPERR_PARAM );
-    }
-
-    memcpy(username, ibuf, len );
-    ibuf += len;
-    ibuflen -=len;
-    username[ len ] = '\0';
-
-    if ((unsigned long) ibuf & 1) { /* pad character */
-        ++ibuf;
-        ibuflen--;
-    }
     if (ibuflen < PASSWDLEN) {
         return( AFPERR_PARAM );
     }
@@ -110,6 +83,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     }
 
     LOG(log_info, logtype_uams, "cleartext login: %s", username);
+
     if (uam_checkuser(pwd) < 0) {
         LOG(log_info, logtype_uams, "not a valid user");
         return AFPERR_NOTAUTH;
@@ -151,8 +125,78 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 #endif /* TRU64 */
 
     return AFPERR_NOTAUTH;
+
 }
 
+/* cleartxt login */
+static int passwd_login(void *obj, struct passwd **uam_pwd,
+                        char *ibuf, int ibuflen,
+                        char *rbuf, int *rbuflen)
+{
+    char *username;
+    int len, ulen;
+
+    *rbuflen = 0;
+
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
+                             (void *) &username, &ulen) < 0)
+        return AFPERR_MISC;
+
+    if (ibuflen <= 1) {
+        return( AFPERR_PARAM );
+    }
+
+    len = (unsigned char) *ibuf++;
+    ibuflen--;
+    if (!len || len > ibuflen || len > ulen ) {
+        return( AFPERR_PARAM );
+    }
+    memcpy(username, ibuf, len );
+    ibuf += len;
+    ibuflen -=len;
+    username[ len ] = '\0';
+
+    if ((unsigned long) ibuf & 1) { /* pad character */
+        ++ibuf;
+        ibuflen--;
+    }
+    return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    
+}
+
+/* cleartxt login ext 
+ * uname format :
+    byte      3
+    2 bytes   len (network order)
+    len bytes unicode name
+*/
+static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
+                        char *ibuf, int ibuflen,
+                        char *rbuf, int *rbuflen)
+{
+    char       *username;
+    int        len, ulen;
+    u_int16_t  temp16;
+
+    *rbuflen = 0;
+
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
+                             (void *) &username, &ulen) < 0)
+        return AFPERR_MISC;
+
+    if (*uname != 3)
+        return AFPERR_PARAM;
+    uname++;
+    memcpy(&temp16, uname, sizeof(temp16));
+    len = ntohs(temp16);
+    if (!len || len > ulen ) {
+        return( AFPERR_PARAM );
+    }
+    memcpy(username, uname +2, len );
+    username[ len ] = '\0';
+    return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+}
+                        
 
 #if 0
 /* change passwd */
@@ -294,11 +338,23 @@ struct papfile	*out;
     return(0);
 }
 
+#ifdef ATACC
+int uam_setup(const char *path)
+{
+    if (uam_register_fn(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
+                     passwd_login, NULL, NULL, passwd_login_ext) < 0)
+        return -1;
+    if (uam_register_fn(UAM_SERVER_PRINTAUTH, path, "ClearTxtUAM",
+                     passwd_printer) < 0)
+        return -1;
 
+    return 0;
+}
+#else 
 static int uam_setup(const char *path)
 {
-    if (uam_register(UAM_SERVER_LOGIN, path, "Cleartxt Passwrd",
-                     passwd_login, NULL, NULL) < 0)
+    if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
+                     passwd_login, NULL, NULL, passwd_login_ext) < 0)
         return -1;
     if (uam_register(UAM_SERVER_PRINTAUTH, path, "ClearTxtUAM",
                      passwd_printer) < 0)
@@ -306,6 +362,8 @@ static int uam_setup(const char *path)
 
     return 0;
 }
+
+#endif
 
 static void uam_cleanup(void)
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.25 2002-10-15 19:34:34 didg Exp $
+ * $Id: enumerate.c,v 1.26 2002-10-17 18:01:54 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -165,7 +165,7 @@ char *check_dirent(const struct vol *vol, char *name)
         return NULL;
 
     /* now check against too big a file */
-    if (strlen(m_name = utompath(vol, name)) > MACFILELEN)
+    if (strlen(m_name = utompath(vol, name)) > vol->max_filename)
         return NULL;
 
     return m_name;

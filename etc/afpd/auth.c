@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.35 2002-10-16 02:20:41 didg Exp $
+ * $Id: auth.c,v 1.36 2002-10-17 18:01:54 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -497,6 +497,8 @@ unsigned int	ibuflen, *rbuflen;
     int		i;
     char        type;
     u_int16_t   len16;
+    char        *username;
+    
     *rbuflen = 0;
 
     if ( nologin & 1)
@@ -535,10 +537,15 @@ unsigned int	ibuflen, *rbuflen;
     ibuf    += len;
     ibuflen -= len;
 
+    if (!afp_uam->u.uam_login.login_ext) {
+        LOG(log_error, logtype_afpd, "login_ext: uam %s not AFP 3 ready!", afp_uam->uam_name );
+        return send_reply(obj, AFPERR_BADUAM);
+    }
     /* user name */
     if (len <= 1 +sizeof(len16)) 
         return send_reply(obj, AFPERR_PARAM);
     type = *ibuf;
+    username = ibuf;
     ibuf++;
     ibuflen--;
     if (type != 3) 
@@ -596,7 +603,7 @@ unsigned int	ibuflen, *rbuflen;
     ibuflen--;
 
     /* FIXME user name are in unicode */    
-    i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
+    i = afp_uam->u.uam_login.login_ext(obj, username, &pwd, ibuf, ibuflen, rbuf, rbuflen);
     if (i || !pwd)
         return send_reply(obj, i);
 
@@ -741,7 +748,7 @@ int		ibuflen, *rbuflen;
     return AFP_OK;
 }
 
-#define UAM_LIST(type) (((type) == UAM_SERVER_LOGIN) ? &uam_login : \
+#define UAM_LIST(type) (((type) == UAM_SERVER_LOGIN || (type) == UAM_SERVER_LOGIN_EXT) ? &uam_login : \
 			(((type) == UAM_SERVER_CHANGEPW) ? \
 			 &uam_changepw : NULL))
 

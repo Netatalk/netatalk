@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.15 2002-10-09 18:46:32 didg Exp $
+ * $Id: volume.h,v 1.16 2002-10-17 18:01:54 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,8 +46,12 @@ struct vol {
     int			v_lastdid;
     u_int16_t		v_vid;
     void                *v_nfsclient;
-    int                 v_nfs, v_casefold;
+    int                 v_nfs;
+    
+    int                 v_casefold;
     struct codepage     *v_mtoupage, *v_utompage, *v_badumap;
+    int                 max_filename;
+
     char                *v_password;
     char                *v_veto;
 #ifdef CNID_DB

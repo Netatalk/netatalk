@@ -28,6 +28,7 @@
 #define UAM_SERVER_LOGIN         (1 << 0)
 #define UAM_SERVER_CHANGEPW      (1 << 1)
 #define UAM_SERVER_PRINTAUTH     (1 << 2) 
+#define UAM_SERVER_LOGIN_EXT     (1 << 3)
 
 /* options */
 #define UAM_OPTION_USERNAME     (1 << 0) /* get space for username */

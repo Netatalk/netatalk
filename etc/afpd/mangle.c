@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.11 2002-10-05 20:13:31 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.12 2002-10-17 18:01:54 didg Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -59,7 +59,7 @@ mangle(const struct vol *vol, char *filename) {
     int mangle_suffix_int = 0;
 
     /* Do we really need to mangle this filename? */
-    if (strlen(filename) <= MAX_LENGTH) {
+    if (strlen(filename) <= vol->max_filename) {
 	return filename;
     }
 

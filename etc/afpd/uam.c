@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.22 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: uam.c,v 1.23 2002-10-17 18:01:54 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -64,6 +64,9 @@ char *strchr (), *strrchr ();
 #endif /* TRU64 */
 
 /* --- server uam functions -- */
+#ifndef NO_LOAD_UAM
+extern  int uam_setup(const char *path);
+#endif
 
 /* uam_load. uams must have a uam_setup function. */
 struct uam_mod *uam_load(const char *path, const char *name)
@@ -72,10 +75,12 @@ struct uam_mod *uam_load(const char *path, const char *name)
     struct uam_mod *mod;
     void *module;
 
+#ifndef NO_LOAD_UAM
     if ((module = mod_open(path)) == NULL) {
         LOG(log_error, logtype_afpd, "uam_load(%s): failed to load: %s", name, mod_error());
         return NULL;
     }
+#endif
 
     if ((mod = (struct uam_mod *) malloc(sizeof(struct uam_mod))) == NULL) {
         LOG(log_error, logtype_afpd, "uam_load(%s): malloc failed", name);
@@ -86,6 +91,8 @@ struct uam_mod *uam_load(const char *path, const char *name)
     buf[sizeof(buf) - 1] = '\0';
     if ((p = strchr(buf, '.')))
         *p = '\0';
+
+#ifndef NO_LOAD_UAM
     if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
         LOG(log_error, logtype_afpd, "uam_load(%s): mod_symbol error for symbol %s",
             name,
@@ -106,6 +113,9 @@ struct uam_mod *uam_load(const char *path, const char *name)
         LOG(log_error, logtype_afpd, "uam_load(%s): uam_setup failed", name);
         goto uam_load_err;
     }
+#else
+   uam_setup(name);
+#endif
 
     mod->uam_module = module;
     return mod;
@@ -124,12 +134,15 @@ void uam_unload(struct uam_mod *mod)
 {
     if (mod->uam_fcn->uam_cleanup)
         (*mod->uam_fcn->uam_cleanup)();
+
+#ifndef NO_LOAD_UAM
     mod_close(mod->uam_module);
+#endif    
     free(mod);
 }
 
 /* -- client-side uam functions -- */
-
+#ifndef ATACC
 /* set up stuff for this uam. */
 int uam_register(const int type, const char *path, const char *name, ...)
 {
@@ -161,7 +174,15 @@ int uam_register(const int type, const char *path, const char *name, ...)
 
     va_start(ap, name);
     switch (type) {
+    case UAM_SERVER_LOGIN_EXT: /* expect four arguments */
+        uam->u.uam_login.login = va_arg(ap, void *);
+        uam->u.uam_login.logincont = va_arg(ap, void *);
+        uam->u.uam_login.logout = va_arg(ap, void *);
+        uam->u.uam_login.login_ext = va_arg(ap, void *);
+        break;
+    
     case UAM_SERVER_LOGIN: /* expect three arguments */
+        uam->u.uam_login.login_ext = NULL;
         uam->u.uam_login.login = va_arg(ap, void *);
         uam->u.uam_login.logincont = va_arg(ap, void *);
         uam->u.uam_login.logout = va_arg(ap, void *);
@@ -184,6 +205,69 @@ int uam_register(const int type, const char *path, const char *name, ...)
 
     return 0;
 }
+#endif
+
+#ifdef ATACC
+int uam_register_fn(const int type, const char *path, const char *name, void *fn1, void *fn2, 
+                     void *fn3, void *fn4)
+{
+    va_list ap;
+    struct uam_obj *uam;
+
+    if (!name)
+        return -1;
+
+    /* see if it already exists. */
+    if ((uam = auth_uamfind(type, name, strlen(name)))) {
+        if (strcmp(uam->uam_path, path)) {
+            /* it exists, but it's not the same module. */
+            LOG(log_error, logtype_afpd, "uam_register: \"%s\" already loaded by %s",
+                name, path);
+            return -1;
+        }
+        uam->uam_count++;
+        return 0;
+    }
+
+    /* allocate space for uam */
+    if ((uam = calloc(1, sizeof(struct uam_obj))) == NULL)
+        return -1;
+
+    uam->uam_name = name;
+    uam->uam_path = strdup(path);
+    uam->uam_count++;
+
+    switch (type) {
+    case UAM_SERVER_LOGIN_EXT: /* expect four arguments */
+        uam->u.uam_login.login_ext = fn4;
+        uam->u.uam_login.login = fn1;
+        uam->u.uam_login.logincont = fn2;
+        uam->u.uam_login.logout = fn3;
+        break;
+    case UAM_SERVER_LOGIN: /* expect three arguments */
+        uam->u.uam_login.login_ext = NULL;
+        uam->u.uam_login.login = fn1;
+        uam->u.uam_login.logincont = fn2;
+        uam->u.uam_login.logout = fn3;
+        break;
+    case UAM_SERVER_CHANGEPW: /* one argument */
+        uam->u.uam_changepw = fn1;
+        break;
+    case UAM_SERVER_PRINTAUTH: /* x arguments */
+    default:
+        break;
+    }
+
+    /* attach to other uams */
+    if (auth_register(type, uam) < 0) {
+        free(uam->uam_path);
+        free(uam);
+        return -1;
+    }
+
+    return 0;
+}
+#endif
 
 void uam_unregister(const int type, const char *name)
 {
