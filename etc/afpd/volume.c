@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.27 2002-06-06 10:14:26 didg Exp $
+ * $Id: volume.c,v 1.28 2002-06-14 09:20:29 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -918,12 +918,11 @@ int		*buflen;
 
         switch ( bit ) {
         case VOLPBIT_ATTR :
+            ashort = 0;
 #ifdef CNID_DB
             if (0 == (vol->v_flags & AFPVOL_NOFILEID)) {
                 ashort = VOLPBIT_ATTR_FILEID;
             }
-#else /* CNID_DB */
-            ashort = 0;
 #endif /* CNID_DB */
             /* check for read-only.
              * NOTE: we don't actually set the read-only flag unless
