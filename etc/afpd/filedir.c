@@ -589,11 +589,11 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ( rc == AFP_OK ) {
 #if AD_VERSION > AD_VERSION1
         /* renaming may have moved the file/dir across a filesystem */
-        if (stat(newname, &st) < 0) 
+        if (stat(upath, &st) < 0) 
 	  return AFPERR_MISC;
 	
 	/* fix up the catalog entry */
-	cnid_update(vol->v_db, id, &st, curdir->d_did, newname, strlen(newname));
+	cnid_update(vol->v_db, id, &st, curdir->d_did, upath, strlen(newname));
 #endif      
 	setvoltime(obj, vol );
     }
