@@ -2,6 +2,7 @@
 #undef _ISOC9X_SOURCE
 #undef _PATH_CRACKLIB
 #undef ADMIN_GRP
+#undef AFS
 #undef BSD4_4
 #undef CAPDIR
 #undef DEBUG
@@ -29,7 +30,6 @@
 #undef UAM_DHX
 #undef UAM_PGP
 #undef UAM_RNDNUM
-#undef USE_AFS
 #undef USE_CAP
 #undef USE_CRACKLIB
 #undef USE_FLOCK_LOCKS
