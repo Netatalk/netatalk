@@ -614,7 +614,7 @@ int ad_open( path, adflags, oflags, mode, ad )
     if (adflags & ADFLAGS_HF) {
         if (ad_hfileno(ad) == -1) {
 	  ad_p = ad_path( path, adflags );
-	  admode = ad_mode( ad_p, mode );
+	  admode = ad_mode( ad_p, O_RDWR );
 	  
 	  hoflags = oflags & ~O_CREAT;
 	  if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, admode )) < 0 ) {
