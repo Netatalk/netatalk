@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.54 2003-06-14 16:45:21 srittau Exp $
+ * $Id: volume.c,v 1.55 2003-06-14 16:56:56 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -394,7 +394,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
             free(options[VOLOPT_DBPATH].c_value);
 
 	volxlate(obj, t, MAXPATHLEN, val, pwd, NULL);
-        options[VOLOPT_DBPATH].c_value = strdup(t + 1);
+	options[VOLOPT_DBPATH].c_value = strdup(t + 1);
 #endif /* CNID_DB */
     } else if (optionok(tmp, "umask:", val)) {
 	options[VOLOPT_UMASK].i_value = (int)strtol(val, (char **)NULL, 8);
@@ -731,7 +731,7 @@ struct passwd *pwent;
                                    path + VOLOPT_DEFAULT_LEN) < 0)
                         break;
                     volset(save_options, tmp, sizeof(tmp) - 1,
-                           obj->options.nlspath, path + VOLOPT_DEFAULT_LEN,
+			   obj->options.nlspath, path + VOLOPT_DEFAULT_LEN,
 			   obj, pwent);
                 }
             }
@@ -794,7 +794,7 @@ struct passwd *pwent;
                     break;
 
                 volset(options, volname, sizeof(volname) - 1,
-                       obj->options.nlspath, tmp, obj, pwent);
+		       obj->options.nlspath, tmp, obj, pwent);
             }
 
             /* check allow/deny lists:
@@ -956,7 +956,7 @@ int		*buflen;
         ad_setentrylen( &ad, ADEID_NAME, strlen( slash ));
         memcpy(ad_entry( &ad, ADEID_NAME ), slash,
                ad_getentrylen( &ad, ADEID_NAME ));
-	ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st->st_mtime);
+        ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st->st_mtime);
         ad_flush(&ad, ADFLAGS_HF);
     }
 
