@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.12 2002-10-17 18:01:54 didg Exp $ 
+ * $Id: mangle.c,v 1.13 2002-12-18 00:17:03 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,7 +33,6 @@ demangle(const struct vol *vol, char *mfilename) {
 	    ext_len = strlen(ext);
 	}
 	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ext_len) {
-	    LOG(log_error, logtype_afpd, "demangle: %s is not long enough to be a mangled filename", mfilename);
 	    return mfilename;
 	}
 
