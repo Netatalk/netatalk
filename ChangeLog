@@ -1,4 +1,6 @@
 2003-01-04  Joe Marcus Clarke <marcus@marcuscom.com>
+	* Change all references to db3/DB3 to BDB since we now support
+	  Berkeley DB3 and DB4.
 	* Add DB 4.1.x support.
 
 2002-09-26  Andrew Morgan <morgan@orst.edu>

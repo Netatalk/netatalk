@@ -1,5 +1,5 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.9 2002-10-04 23:38:44 srittau Exp $)
+($Id: FAQ,v 1.10 2003-01-04 21:41:48 jmarcus Exp $)
 
 -----------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ Q28a: How can I set Samba to hide the netatalk specific files (e.g.
 Q29: I compiled Samba with the --with-netatalk flag. What did that do?
 Q30: What about the differences in naming schemes, and legal/illegal
      characters between Windows, Macs (and unix?)
-Q31: Where can I get the cnid-db (berkely db3) software? (needed for
+Q31: Where can I get the cnid-db (Berkely DB) software? (needed for
      --with-did=cnid)
 Q32: What about security in Netatalk?
 
@@ -209,8 +209,8 @@ Q7: I'm getting this message in my logs:
 A:  Compile with the --with-did=last flag set. This activates a different
     method of calculating inodes in the software, and will hopefully fix some
     of these problems. This code, along with the CNID code, was still being
-    worked out in Pre7. The cnid/db3 flags also go along with this:
-      --with-db3=PATH         specify path to Berkeley DB3 installation
+    worked out in Pre7. The cnid/bdb flags also go along with this:
+      --with-bdb=PATH         specify path to Berkeley DB installation
       --with-did=[scheme]     set DID scheme (cnid,last) 
     
     (For more information on CNID, see the README.cnid file [may not exist yet], 
@@ -559,7 +559,7 @@ A:   Check out the documentation about the 'mswindows' flag in afpd.conf (?).
      respectively). Educating the end user is important for this problem.
 
 
-Q31: Where can I get the cnid-db (berkely db3) software? (needed for
+Q31: Where can I get the cnid-db (Berkely DB) software? (needed for
      --with-did=cnid)
 
 A:   First check to see if your unix has a port or package. If not, 

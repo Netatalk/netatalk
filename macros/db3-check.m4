@@ -1,30 +1,30 @@
-dnl $Id: db3-check.m4,v 1.7 2002-02-07 05:08:36 jmarcus Exp $
-dnl Autoconf macro to check for the Berkeley DB3 library
+dnl $Id: db3-check.m4,v 1.8 2003-01-04 21:41:49 jmarcus Exp $
+dnl Autoconf macro to check for the Berkeley DB library
 
-AC_DEFUN([AC_PATH_DB3], [
-	trydb3dir=""
-	AC_ARG_WITH(db3,
-		[  --with-db3=PATH         specify path to Berkeley DB3 installation],
+AC_DEFUN([AC_PATH_BDB], [
+	trybdbdir=""
+	AC_ARG_WITH(bdb,
+		[  --with-bdb=PATH         specify path to Berkeley DB installation],
 		if test "x$withval" != "xno"; then
-			trydb3dir="$withval"
+			trybdbdir="$withval"
 		fi
 	)
 
-	db3found=no
-	for db3dir in "" "$trydb3dir" "$trydb3dir/include" "$trydb3dir/include/db3" "/usr/local/BerkeleyDB.3.3/include" "/usr/local/include/db3" "/usr/local/include" "/usr/include/db3" "/usr/include" ; do
-		if test -f "$db3dir/db.h" ; then
-			db3libdir="`echo $db3dir | sed 's/include\/db3$/lib/'`"
-			db3libdir="`echo $db3libdir | sed 's/include$/lib/'`"
+	bdbfound=no
+	for bdbdir in "" "$trybdbdir" "$trybdbdir/include" "$trybdbdir/include/db3" "/usr/local/BerkeleyDB.3.3/include" "/usr/local/include/db3" "/usr/local/include" "/usr/include/db3" "/usr/include" ; do
+		if test -f "$bdbdir/db.h" ; then
+			bdblibdir="`echo $bdbdir | sed 's/include\/db3$/lib/'`"
+			bdblibdir="`echo $bdblibdir | sed 's/include$/lib/'`"
 
 			savedcflags="$CFLAGS"
 			savedldflags="$LDFLAGS"
-			CFLAGS="$CFLAGS -I$db3dir"
-			LDFLAGS="-L$db3libdir $LDFLAGS"
+			CFLAGS="$CFLAGS -I$bdbdir"
+			LDFLAGS="-L$bdblibdir $LDFLAGS"
 			AC_CHECK_LIB(db, main, [
-				db3found=yes
-				DB3_CFLAGS="-I$db3dir"
-				DB3_LIBS="-L$db3libdir -ldb"
-				DB3_PATH="`echo $db3dir | sed 's,include/db3$,,'`"
+				bdbfound=yes
+				BDB_CFLAGS="-I$bdbdir"
+				BDB_LIBS="-L$bdblibdir -ldb"
+				BDB_PATH="`echo $bdbdir | sed 's,include/db3$,,'`"
 			])
 			CFLAGS="$savedcflags"
 			LDFLAGS="$savedldflags"
@@ -32,13 +32,13 @@ AC_DEFUN([AC_PATH_DB3], [
 		fi
 	done
 
-	if test "x$db3found" = "xyes"; then
+	if test "x$bdbfound" = "xyes"; then
 		ifelse([$1], , :, [$1])
 	else
 		ifelse([$2], , :, [$2])     
 	fi
 
-	AC_SUBST(DB3_CFLAGS)
-	AC_SUBST(DB3_LIBS)
-	AC_SUBST(DB3_PATH)
+	AC_SUBST(BDB_CFLAGS)
+	AC_SUBST(BDB_LIBS)
+	AC_SUBST(BDB_PATH)
 ])

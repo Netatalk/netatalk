@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.48 2003-01-04 20:52:15 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.49 2003-01-04 21:41:49 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -106,7 +106,7 @@ DB_INIT_LOG | DB_INIT_TXN)
 
 #ifndef CNID_DB_CDB
 /* Let's try and use the youngest lock detector if present.
- * If we can't do that, then let DB3 use its default deadlock detector. */
+ * If we can't do that, then let BDB use its default deadlock detector. */
 #if defined DB_LOCK_YOUNGEST
 #define DEAD_LOCK_DETECT DB_LOCK_YOUNGEST
 #else /* DB_LOCK_YOUNGEST */

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.174 2002-12-05 11:16:33 srittau Exp $
+dnl $Id: configure.in,v 1.175 2003-01-04 21:41:48 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -224,8 +224,8 @@ AC_ARG_ENABLE(force-uidgid,
 	fi
 )
 
-dnl Don't use DB3 unless it's needed
-db3_required=no
+dnl Don't use BDB unless it's needed
+bdb_required=no
 
 dnl Determine DID scheme
 AC_MSG_CHECKING([for DID scheme to use])
@@ -239,7 +239,7 @@ if test "x$did_scheme" = "xlast"; then
 	AC_DEFINE(USE_LASTDID, 1)
 	AC_MSG_RESULT([last])
 elif test "x$did_scheme" = "xcnid"; then
-	db3_required="yes"
+	bdb_required="yes"
 	AC_DEFINE(CNID_DB, 1)
 	AC_MSG_RESULT([enabling build with CNID DB support])
 else
@@ -301,9 +301,9 @@ if test "$USE_CDB" = "yes"; then
     AC_DEFINE(CNID_DB_CDB, 1)
 fi
 
-dnl Check for Berkeley DB3 library
-if test "x$db3_required" = "xyes"; then
-	AC_PATH_DB3(, [AC_MSG_ERROR([Berkeley DB3 library not found!])])
+dnl Check for Berkeley DB library
+if test "x$bdb_required" = "xyes"; then
+	AC_PATH_BDB(, [AC_MSG_ERROR([Berkeley DB library not found!])])
 fi
 
 dnl Check for quota support

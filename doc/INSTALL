@@ -85,7 +85,7 @@ This step reads the options to the ./configure program and checks your
 system against the requirements of those options. It generally fails
 if your system doesn't meet the requirements. You should read the
 DEVELOPER file because some of these options require external sources
-to function correctly. (PAM, OpenSSL, Berkeley DB3, TCP Wrappers, etc).
+to function correctly. (PAM, OpenSSL, Berkeley DB, TCP Wrappers, etc).
 
 Netatalk options to the ./configure script: Use ./configure --help for
 a complete list.
@@ -99,10 +99,10 @@ a complete list.
 --enable-dropkludge: enable the experimental dropbox fix
 	(INSECURE!),
 
---with-db3=PATH: specify path to Berkeley DB3 installation,
+--with-bdb=PATH: specify path to Berkeley DB installation,
 
 --with-did=[scheme]: set DID scheme (cnid,last),
-	CNID is a new scheme using Berkeley DB3 files to store a
+	CNID is a new scheme using Berkeley DB files to store a
 	per-volume cnid database persistently.
 
 	The last DID scheme recreates version 37b behaviour where

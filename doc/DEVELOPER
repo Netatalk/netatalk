@@ -146,4 +146,4 @@ Berkeley DB is a programmatic toolkit that provides fast, reliable,
 scalable, and mission-critical database support to software
 developers. BDB 3 can downloaded from
 http://www.sleepycat.com/download.html
-Netatalk's CNID database uses the library and header files from BDB3.
+Netatalk's CNID database uses the library and header files from BDB.
