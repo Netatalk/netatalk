@@ -33,52 +33,48 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
     VolSpace    *bfree, *btotal;
     u_int32_t   *bsize;
 {
+  VolSpace maxVolSpace = (~(VolSpace)0);
+  
 #ifdef ultrix
     struct fs_data	sfs;
 #else /*ultrix*/
     struct statfs	sfs;
 #endif /*ultrix*/
 
+   
     if ( statfs( vol->v_path, &sfs ) < 0 ) {
-	return( AFPERR_PARAM );
+	 syslog(LOG_ERR, "ustatfs_getvolspace unable to stat %s", vol->v_path);
+	 return( AFPERR_PARAM );
     }
 
 #ifdef ultrix
-    *bfree = (VolSpace) sfs.fd_req.bfreen * 1024;
+    *bfree = (VolSpace) sfs.fd_req.bfreen;
     *bsize = 1024;
 #else
-    *bfree = (VolSpace) sfs.f_bavail * sfs.f_frsize;
+    *bfree = (VolSpace) sfs.f_bavail;
     *bsize = sfs.f_frsize;
 #endif ultrix
 
-#if FORCE_2GB
-    // if the volume is over 2GB in size, report
-    // the size as 2GB.
-    // this doesn't seem to work correctly for
-    // 64 bit size descriptors.  
-    if ( *bfree > 0x7fffffff / *bsize ) {
-        *bfree = 0x7fffffff;
+    if ( *bfree > maxVolSpace / *bsize ) {
+        *bfree = maxVolSpace;
     } else {
         *bfree *= *bsize;
     }
-#endif
 
 #ifdef ultrix
     *btotal = (VolSpace) 
-      ( sfs.fd_req.btot - ( sfs.fd_req.bfree - sfs.fd_req.bfreen )) * 1024;
+      ( sfs.fd_req.btot - ( sfs.fd_req.bfree - sfs.fd_req.bfreen ));
 #else ultrix
     *btotal = (VolSpace) 
-      ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail )) * sfs.f_frsize;
+      ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail ));
 #endif ultrix
 
-#if FORCE_2GB
     // see similar block above comments
-    if ( *bfree > 0x7fffffff / *bsize ) {
-        *bfree = 0x7fffffff;
+    if ( *btotal > maxVolSpace / *bsize ) {
+        *btotal = maxVolSpace;
     } else {
-        *bfree *= *bsize;
+        *btotal *= *bsize;
     }
-#endif
 
     return( AFP_OK );
 }
