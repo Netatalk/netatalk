@@ -16,6 +16,6 @@ LIBATALK_DEPS = \
 	util/libutil.la
 
 libatalk_la_SOURCES = dummy.c
-libatalk_la_LIBADD  = ${LIBATALK_DEPS}
+libatalk_la_LIBADD  = $(LIBATALK_DEPS)
 libatalk_la_LDFLAGS = -static
 
