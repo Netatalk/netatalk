@@ -1,7 +1,0 @@
-* warning message if appletalk support is not in the kernel
-* debconf interface to ask which daemons to start
-* Move filters to /usr/lib/netatalk/filters.
-* don't install at.h <-> include upstream
-* generic rc.atalk file
-* security audit
-* use dh_autotools when this is available
