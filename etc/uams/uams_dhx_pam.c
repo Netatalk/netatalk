@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.18 2001-11-16 15:45:15 srittau Exp $
+ * $Id: uams_dhx_pam.c,v 1.19 2001-11-20 17:07:18 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -685,6 +685,12 @@ static void uam_cleanup(void)
 }
 
 UAM_MODULE_EXPORT struct uam_export uams_dhx = {
+  UAM_MODULE_SERVER,
+  UAM_MODULE_VERSION,
+  uam_setup, uam_cleanup
+};
+
+UAM_MODULE_EXPORT struct uam_export uams_dhx_pam = {
   UAM_MODULE_SERVER,
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
