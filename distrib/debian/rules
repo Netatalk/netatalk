@@ -1,0 +1,63 @@
+#! /usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+
+	./configure --prefix=/usr --with-config-dir=/etc/netatalk \
+		--with-pam --with-tcp-wrappers --mandir=/usr/share/man \
+		--with-uams-path=/usr/lib/netatalk \
+		--with-cflags=-O2
+	$(MAKE)
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	rm -f build-stamp
+	-$(MAKE) distclean
+	dh_clean
+
+binary: binary-arch binary-indep
+
+binary-indep: build
+
+binary-arch: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	$(MAKE) install DESTDIR="`pwd`/debian/tmp" # CFLAGS="-Wall -O2"
+
+	dh_installdocs
+	dh_installinit --update-rcd-params="defaults 50 50"
+	dh_installmanpages -pnetatalk man/man5/*.tmpl man/man8/*.tmpl
+	dh_undocumented
+	dh_installchangelogs ChangeLog
+
+	# Move PAM config file to PAM directory.
+	mv debian/tmp/etc/netatalk/netatalk.pamd debian/tmp/etc/pam.d/netatalk
+
+	# Manually remove a header file that is shipped with glibc and
+	# the Linux Kernel.
+	rm debian/tmp/usr/include/netatalk/at.h
+
+	dh_movefiles
+	rmdir debian/tmp/usr/include/atalk debian/tmp/usr/include/netatalk
+	rmdir debian/tmp/usr/include
+	rmdir debian/tmp/usr/share/aclocal
+	rmdir debian/tmp/usr/share/man/man3 debian/tmp/usr/share/man/man4
+
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+.PHONY: clean binary binary-arch binary-indep

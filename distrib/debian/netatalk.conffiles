@@ -1,0 +1,8 @@
+/etc/netatalk/papd.conf
+/etc/netatalk/afpd.conf
+/etc/netatalk/atalkd.conf
+/etc/netatalk/netatalk.conf
+/etc/netatalk/AppleVolumes.system
+/etc/netatalk/AppleVolumes.default
+/etc/init.d/netatalk
+/etc/pam.d/netatalk

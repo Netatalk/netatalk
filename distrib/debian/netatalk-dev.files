@@ -1,0 +1,7 @@
+usr/bin/netatalk-config
+usr/include
+usr/lib/libatalk.a
+usr/lib/libatalk.la
+usr/share/aclocal
+usr/share/man/man3
+usr/share/man/man4

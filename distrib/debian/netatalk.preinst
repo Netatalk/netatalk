@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+if [ $1 = "upgrade" ];
+then
+    if dpkg --compare-versions $2 lt 1.4b2-5
+    then 
+	if [ ! -d /etc/netatalk ]; then
+		mkdir /etc/netatalk
+		cd /etc
+		for file in AppleVolumes.* atalkd.conf* papd.conf*
+		do
+			if [ -f $i ]; then
+				mv $file netatalk > /dev/null 2>&1; cd $OLDPWD
+			fi
+		done
+	fi
+    fi
+    if dpkg --compare-versions "$2" lt 1.4b2+asun2.1.3-1
+    then
+	cat <<EOF
+WARNING: The handling of CRLF translation of text files has changed.
+It is now off by default and must be explicitly enabled on a per volume basis.
+If you wish to use CRLF translation, you must edit /etc/netatalk/AppleVolumes.default and add
+\`options=crlf' where appropriate (e.g. \`~ "Home Directory" options=crlf')."
+If users have AppleVolumes files in their home directories, you should advise them of the change.
+EOF
+	echo -n "Press [enter] to continue."
+	read nl
+    fi
+fi

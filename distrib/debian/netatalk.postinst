@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+    if [ -d /usr/doc -a ! -e /usr/doc/netatalk -a -d /usr/share/doc/netatalk ]; then
+	ln -sf ../share/doc/netatalk /usr/doc/netatalk
+    fi
+    update-rc.d netatalk defaults 50 >/dev/null
+#   update-rc.d afpd defaults 51 >/dev/null
+#   update-rc.d papd defaults 52 >/dev/null
+    /etc/init.d/netatalk start
+#    /etc/init.d/afpd start
+#    /etc/init.d/papd start
+fi
+exit 0
+

@@ -1,0 +1,29 @@
+Source: netatalk
+Section: net
+Priority: extra
+Maintainer: Sebastian Rittau <srittau@jroger.in-berlin.de>
+Standards-Version: 3.2.1.0
+Build-Depends: debhelper, libwrap0-dev, libpam0g-dev, libssl096-dev
+
+Package: netatalk
+Architecture: any
+Depends: netbase, libpam-modules, ${shlibs:Depends}
+Conflicts: netatalk-asun, libatalk14g, libatalk1
+Replaces: netatalk-asun, libatalk14, libatalk1
+Description: Appletalk user binaries
+ Netatalk is an implementation of the AppleTalk Protocol Suite for
+ BSD-derived systems.  The current release contains support for
+ EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and
+ AFP.
+
+Package: netatalk-dev
+Architecture: any
+Section: devel
+Conflicts: libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
+Replaces: libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
+Description: Appletalk library and development files
+ Netatalk is an implementation of the AppleTalk Protocol Suite for
+ BSD-derived systems.  The current release contains support for
+ EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and
+ AFP.
+

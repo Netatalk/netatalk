@@ -1,0 +1,15 @@
+Package: netatalk-dev
+Version: 1.5pre3-1
+Section: devel
+Priority: optional
+Architecture: i386
+Conflicts: libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
+Replaces: libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
+Installed-Size: 334
+Maintainer: Sebastian Rittau <srittau@jroger.in-berlin.de>
+Source: netatalk
+Description: Appletalk library and development files
+ Netatalk is an implementation of the AppleTalk Protocol Suite for
+ BSD-derived systems.  The current release contains support for
+ EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and
+ AFP.

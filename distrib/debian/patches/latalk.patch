@@ -1,0 +1,46 @@
+--- netatalk.cvs/bin/afile/Makefile.am
++++ netatalk.debian/bin/afile/Makefile.am
+@@ -8,6 +8,4 @@
+ afile_SOURCES	= afile.c
+ afile_LDADD = $(top_builddir)/libatalk/libatalk.la
+ 
+-LIBS = @LIBS@ -L$(top_builddir)/libatalk/ -latalk
+-
+ EXTRA_DIST = README acleandir.rc
+--- netatalk.cvs/contrib/timelord/Makefile.am
++++ netatalk.debian/contrib/timelord/Makefile.am
+@@ -5,6 +5,4 @@
+ timelord_SOURCES = timelord.c
+ timelord_LDADD = $(top_builddir)/libatalk/libatalk.la
+ 
+-LIBS = @LIBS@ -latalk
+-
+ EXTRA_DIST = COPYRIGHT README VERSION
+diff -u -r1.11 Makefile.am
+--- netatalk.cvs/etc/afpd/Makefile.am
++++ netatalk.debian/etc/afpd/Makefile.am
+@@ -9,7 +9,7 @@
+ 	 afp_options.c afp_asp.c afp_dsi.c messages.c afp_config.c nfsquota.c \
+ 	 codepage.c quota.c uam.c afs.c uid.c
+ 
+-afpd_LDADD = $(top_builddir)/libatalk/libatalk.a -latalk
++afpd_LDADD = $(top_builddir)/libatalk/libatalk.la
+ afpd_LDFLAGS = -rdynamic
+ 
+ noinst_HEADERS = auth.h codepage.h afp_config.h desktop.h directory.h file.h \
+--- netatalk.cvs/etc/papd/Makefile.am
++++ netatalk.debian/etc/papd/Makefile.am
+@@ -4,11 +4,11 @@
+ #bin_PROGRAMS = showppd
+ 
+ papd_SOURCES = main.c printcap.c session.c file.c comment.c lp.c ppd.c magics.c headers.c queries.c auth.c uam.c
+-papd_LDADD = $(top_builddir)/libatalk/libatalk.la -latalk
++papd_LDADD = $(top_builddir)/libatalk/libatalk.la
+ papd_LDFLAGS = -rdynamic
+ 
+ #showppd_SOURCES = showppd.c ppd.c
+-#showppd_LDADD = $(top_builddir)/libatalk/libatalk.la -latalk
++#showppd_LDADD = $(top_builddir)/libatalk/libatalk.la
+ 
+ noinst_HEADERS = comment.h file.h ppd.h printer.h uam_auth.h
+ 

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Create /usr/doc symlinks if needed
+if [ "$1" = "configure" ]; then
+    if [ -d /usr/doc -a ! -e /usr/doc/netatalk-dev \
+	 -a -d /usr/share/doc/netatalk-dev ]; then
+	ln -sf ../share/doc/netatalk-dev /usr/doc/netatalk-dev
+    fi
+fi

@@ -1,0 +1,50 @@
+#!/bin/sh
+
+test -x /usr/sbin/atalkd || exit 0
+
+servername=$(hostname)
+
+case "$1" in
+start)
+	echo -n "Starting AppleTalk daemon: "
+	if modprobe -r appletalk > /dev/null 2>&1; then
+	    sleep 5
+	fi
+	if modprobe appletalk.o > /dev/null 2>&1; then
+	    sleep 5
+	fi
+	/usr/sbin/atalkd
+	echo -n "atalkd."
+	
+	/usr/bin/nbprgstr -p 4 "$servername:Workstation"
+	/usr/bin/nbprgstr -p 4 "$servername:netatalk"
+    ;;
+
+stop)
+	echo -n "Stopping AppleTalk Daemon: "
+	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/atalkd
+	echo "atalkd."
+	sleep 5
+	modprobe -r appletalk > /dev/null 2>&1
+    ;;
+    
+restart)
+	$0 force-reload
+    ;;
+
+force-reload)
+	echo -n "Restarting AppleTalk Daemon: "
+	$0 stop > /dev/null 2>&1
+	echo -n "."
+	sleep 2
+	echo -n "."
+	$0 start > /dev/null 2>&1
+	echo "afpd."
+    ;;
+  
+*)
+    echo "Usage: /etc/init.d/netatalk {start|stop|restart|force-reload}" >&2
+    exit 1
+    ;;
+esac
+

@@ -1,0 +1,68 @@
+#!/bin/sh
+
+test -x /usr/sbin/atalkd || exit 0
+
+servername=$(/bin/hostname --short)
+
+# Enable PAP (AppleTalk Printer Access Protocol) daemon
+# (default yes)
+ENABLE_PAP=yes
+
+case "$1" in
+    start)
+	echo -n "Starting AppleTalk Daemons (this will take a while):"
+	/usr/sbin/atalkd
+	echo -n " atalkd"
+
+	/usr/bin/nbprgstr -p 4 "$servername:Workstation"
+	/usr/bin/nbprgstr -p 4 "$servername:netatalk"
+
+	/usr/sbin/afpd -n "$servername"
+	echo -n " afpd"
+	
+	if [ "$ENABLE_PAP" = "yes" ]; then
+	    /usr/sbin/papd
+	    echo -n " papd"
+	fi
+	
+	echo "."
+    ;;
+
+    stop)
+	echo -n "Stopping AppleTalk Daemons:"
+	echo -n " afpd"; \
+	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/afpd
+
+	if [ -f /var/run/papd.pid ]; then
+	    echo -n " papd"; \
+	    start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/papd
+	fi
+
+	echo -n " atalkd"; \
+	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/atalkd
+
+	echo "."
+    ;;
+    
+    restart)
+	$0 force-reload
+    ;;
+
+    force-reload)
+	echo -n "Restarting AppleTalk Daemons (this will take a while)"
+	/etc/init.d/netatalk stop > /dev/null 2>&1
+	echo -n "."
+	sleep 2
+	echo -n "."
+	if /etc/init.d/netatalk start > /dev/null 2>&1
+	then
+	    echo "done."
+	fi
+    ;;
+  
+    *)
+	echo "Usage: /etc/init.d/netatalk {start|stop|restart|force-reload}" >&2
+	exit 1
+    ;;
+esac
+

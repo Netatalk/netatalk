@@ -1,0 +1,23 @@
+--- netatalk.cvs/man/man8/psf.8
++++ netatalk.debian/man/man8/psf.8
+@@ -90,13 +90,13 @@
+ .RS
+ .nf
+ laser|lp|LaserWriter Plus on AppleTalk:\\
+-    :sd=/usr/spool/lpd/laser:\\
+-    :lp=/usr/spool/lpd/laser/null:\\
+-    :lf=/var/adm/lpd-errs:pw#80:hl:\\
+-    :of=/usr/lib/filters/ofpap:\\
+-    :if=/usr/lib/filters/ifpaprev:\\
+-    :tf=/usr/lib/filters/tfpaprev:\\
+-    :df=/usr/lib/filters/dfpaprev:
++    :sd=/var/spool/lpd/laser:\\
++    :lp=/var/spool/lpd/laser/null:\\
++    :lf=/var/log/lpd-errs:pw#80:hl:\\
++    :of=/usr/lib/atalk/filters/ofpap:\\
++    :if=/usr/lib/atalk/filters/ifpaprev:\\
++    :tf=/usr/lib/atalk/filters/tfpaprev:\\
++    :df=/usr/lib/atalk/filters/dfpaprev:
+ .fi
+ .RE
+ .sp
