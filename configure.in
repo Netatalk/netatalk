@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.182 2003-06-07 12:01:03 srittau Exp $
+dnl $Id: configure.in,v 1.183 2003-06-07 12:04:51 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -397,7 +397,7 @@ dnl ----- a2boot compilation (disabled by default)
 AC_MSG_CHECKING([whether a2boot should be compiled])
 compile_a2boot=no
 AC_ARG_ENABLE(a2boot,
-	[  --enable-a2boot       enable compilation of Apple2 boot server],
+	[  --enable-a2boot         enable compilation of Apple2 boot server],
 	[compile_a2boot="$enableval"],
 	[compile_a2boot="no"]
 )
