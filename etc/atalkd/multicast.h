@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.h,v 1.2 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: multicast.h,v 1.3 2003-03-18 23:34:51 srittau Exp $
  *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -12,7 +12,6 @@
 #include "zip.h"
 
 extern unsigned char	ethermultitab[ 253 ][ 6 ];
-extern unsigned char	tokenmultitab[ 19 ][ 6 ];
 extern unsigned char	ethermulti[ 6 ];
 
 int addmulti __P((const char *, const unsigned char *));
