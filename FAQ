@@ -1,0 +1,24 @@
+Netatalk Frequently Asked Questions
+($Id: FAQ,v 1.1 2001-02-09 16:08:10 rufustfirefly Exp $)
+
+Compilation -----------------------------------------------------------------
+
+Installation ----------------------------------------------------------------
+
+Execution -------------------------------------------------------------------
+
+Q: I get a "socket: Invalid argument" error when trying to start netatalk
+   under Linux. What is causing this?
+A: The "appletalk" and "ipddp" kernel modules have to be installed under
+   linux for netatalk to function. The appletalk module can be automatically
+   loaded by adding the line "alias net-pf-5 appletalk" to the
+   /etc/modules.conf file. Issuing the command "modprobe (module)" will
+   load the module for the current session.
+
+Q: netatalk works over Appletalk, but my IP connections are refused, even
+   though I have enabled them in the configuration files.
+A: If tcp_wrappers support is compiled into netatalk, access has to be
+   granted in /etc/hosts.allow for netatalk to successfully accept IP
+   connections. This can be done by the addition of the line:
+     afpd:  127. xxx.xxx.xxx. (whatever other subnets)
+
