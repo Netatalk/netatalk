@@ -1,4 +1,8 @@
 
+2001-10-10  joe  c  <marcus@marcuscom.com>
+
+	* configure.in: More PAM fixes
+
 2001-10-09  joe  c  <marcus@marcuscom.com>
 
 	* configure.in: Fix problem with forced PAM
