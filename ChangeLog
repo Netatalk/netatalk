@@ -3,6 +3,9 @@
 
 	* configure.in: Fix db3 compilation on Linux
 
+	* libatalk/cnid/cnid_get.c: Fix another potential deadlock problem by
+	replacing EAGAIN with DB_LOCK_DEADLOCK
+
 2001-09-21  joe c   <marcus@marcuscom.com>
 
 	* etc/afpd/desktop.c: Re-enable codepage translations (thanks to
