@@ -1,0 +1,68 @@
+.\" $Id: atalkd.conf.5.tmpl,v 1.1 2000-09-22 20:01:39 rufustfirefly Exp $
+.TH atalkd.conf 5 "22 September 2000" "netatalk 1.5"
+.UC 4
+.SH NAME
+atalkd.conf \- Configuration file used by \fBatalkd\fR(8)
+to determine the interfaces used by the master Netatalk daemon
+
+.SH DESCRIPTION
+\fB:ETCDIR:/atalkd.conf\fR is the configuration file used
+by atalkd to configure the Appletalk interfaces and their behavior
+
+Any line not prefixed with \fB#\fR is interpreted. The configuration lines
+are composed like:
+
+.RS
+.sp
+.I interface
+.B [
+.I options
+.B ]
+
+.sp
+.RE
+The simplest case is to have either no atalkd.conf, or to have one that
+has no active lines. In this case, atalkd should auto-discover the local
+interfaces on the machine. Please note that you cannot split lines.
+
+The interface is the network interface that this to work over, such as
+\fBeth0\fR for Linux, or \fBle0\fR for Sun.
+
+The possible options and their meanings are:
+
+.TP
+.B -addr net.node
+Allows specification of the net and node numbers for this interface,
+specified in Appletalk numbering format (example: \fI-addr 66.6\fR).
+
+.TP
+.B -dontroute
+Disables Appletalk routing. It is the opposite of \fB-router\fR.
+
+.TP
+.B -net first[-last]
+Allows the available net to be set, optionally as a range.
+
+.TP
+.B -phase ( 1 | 2 )
+Specifies the Appletalk phase that this interface is to use (either Phase
+1 or Phase 2).
+
+.TP
+.B -router
+Like \fB-seed\fR, but allows single interface routing. It is the opposite
+of \fB-dontroute\fR.
+
+.TP
+.B -seed
+The seed option only works if you have multiple interfaces. It also causes
+all missing arguments to be automagically configured from the network.
+
+.TP
+.B -zone zonename
+Specifies a specific zone that this interface should appear on (example:
+\fI-zone "Parking Lot"\fR). Please note that zones with spaces and other
+special characters should be enclosed in parentheses.
+
+.SH SEE ALSO
+atalkd(8)
