@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.9 2001-10-10 02:27:08 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.10 2001-10-14 03:14:41 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -44,6 +44,7 @@ void cnid_close(void *CNID)
     if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
       char **list, **first;
 
+	  syslog(LOG_ERR, "cnid_close: Closing database");
       rc = txn_checkpoint(db->dbenv, 0, 0, 0);
       while (rc == DB_INCOMPLETE)
 		rc = txn_checkpoint(db->dbenv, 0, 0, 0);
@@ -58,16 +59,16 @@ void cnid_close(void *CNID)
 #endif /* DB_VERSION_MINOR */
 	list = first;
 	while (*list) {
-	  if (truncate(*list, 0) < 0)
-	    syslog(LOG_INFO, "cnid_close: failed to truncate %s: %s",
-		   *list, strerror(errno));
+	  if ((rc = remove(*list)) != 0)
+	    syslog(LOG_INFO, "cnid_close: failed to remove %s: %s",
+		   *list, strerror(rc));
 	  list++;
 	}
 	free(first); 
       }
     }
-	/* Change directory back to the old cwd so we don't get the problem where the contents
-	 * of .AppleDB show up in the current share window. */
+	/* Change directory back to the old cwd so we don't get the problem where 
+	 * the contents of .AppleDB show up in the current share window. */
 	chdir( wd );
   }
 
