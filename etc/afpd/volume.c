@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.5 2001-02-28 16:53:24 rufustfirefly Exp $
+ * $Id: volume.c,v 1.6 2001-03-07 15:36:54 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -83,9 +83,11 @@ static struct extmap	*extmap = NULL, *defextmap = NULL;
 #ifdef FORCE_UIDGID
 #define VOLOPT_FORCEUID  10  /* force uid for username x */
 #define VOLOPT_FORCEGID  11  /* force gid for group x */
-#endif FORCE_UIDGID
-
 #define VOLOPT_MAX        11
+#else /* normally, there are only 9 possible options */
+#define VOLOPT_MAX        9
+#endif /* FORCE_UIDGID */
+
 #define VOLOPT_NUM        (VOLOPT_MAX + 1)
 
 #define VOLPASSLEN  8

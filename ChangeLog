@@ -1,4 +1,9 @@
-($Id: ChangeLog,v 1.16 2001-03-07 15:19:20 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.17 2001-03-07 15:36:54 rufustfirefly Exp $)
+
+2001-03-07 10:34 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* etc/afpd/volume.c: changed VOLOPT_MAX to be 9 if FORCE_UIDGID is not
+	defined (thanks to Axel Bringenberg <A.Bringenberg@srz-berlin.de>)
 
 2001-03-07 10:14 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
 
