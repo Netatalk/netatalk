@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.7 2001-10-24 14:34:33 srittau Exp $
+ * $Id: uams_randnum.c,v 1.8 2001-10-25 20:52:55 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -47,7 +47,6 @@ char *strchr (), *strrchr ();
 #include <atalk/uam.h>
 
 
-#ifdef UAM_RNDNUM
 #include <des.h>
 
 #ifdef USE_CRACKLIB
@@ -543,5 +542,3 @@ UAM_MODULE_EXPORT struct uam_export uams_randnum = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
-
-#endif /* UAM_RNDNUM */
