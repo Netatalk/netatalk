@@ -1,3 +1,7 @@
+2001-08-27  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	Released 1.5pre7
+
 2001-08-21  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* configure.in: now does rudimentary check for DB3 library
