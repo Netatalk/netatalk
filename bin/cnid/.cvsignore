@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
 cnid_didname_verify
+cnid_maint
 .deps
 .libs
