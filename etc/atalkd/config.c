@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.7 2001-12-10 20:16:55 srittau Exp $
+ * $Id: config.c,v 1.8 2001-12-30 18:30:52 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -24,6 +24,7 @@
 #include <netatalk/endian.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,54 +80,98 @@ static struct param {
     { "zone",	zone },
 };
 
-static char **
-parseline( line )
-    char	*line;
+#define ARGV_CHUNK_SIZE 128
+const char **parseline(const char *line)
 {
-    char	*p;
-    int		argc = 0;
-    static char	*argv[ 128 ];
-    static char	buf[ 1024 ];
+    const char	 *p;
+    int		  argc = 0;
+    char	 *buffer;
+    char	**argv;
 
-    if ( *line == '#' ) {
-	return( NULL );
+    /* Ignore empty lines and lines with leading hash marks. */
+    p = line;
+    while ( isspace( *p ) ) {
+	p++;
     }
-    argc = 0;
+    if ( *p == '#' || *p == '\0' ) {
+	return NULL;
+    }
 
-    memset(argv, 0, sizeof(argv));
-    strcpy( buf, line );
-    p = buf;
+    buffer = (char *) malloc( strlen( p ) + 1 );
+    if ( !buffer ) {
+	/* FIXME: error handling */
+	return NULL;
+    }
+    strcpy( buffer, p );
+    p = buffer;
+
+    argv = (char **) malloc( ARGV_CHUNK_SIZE * sizeof( char * ) );
+    if ( !argv ) {
+	/* FIXME: error handling */
+	free( buffer );
+	return NULL;
+    }
 
     /*
      * This parser should be made more powerful -- it should
      * handle various escapes, e.g. \" and \031.
      */
-    while ( *p != '\0' ) {
-	while ( *p != '\0' && *p != '"' && isspace( *p )) {
-	    p++;
-	}
-	if ( *p == '\0' ) {
-	    argv[ argc ] = 0;
-	    break;
-	}
+    do {
 	if ( *p == '"' ) {
-	    argv[ argc ] = ++p;
+	    argv[ argc++ ] = ++p;
 	    while ( *p != '\0' && *p != '"' ) {
 		p++;
 	    }
+	    if ( *p == '"' ) {
+		/* FIXME: error handling */
+	    }
 	} else {
-	    argv[ argc ] = p;
+	    argv[ argc++ ] = p;
 	    while ( *p != '\0' && !isspace( *p )) {
 		p++;
 	    }
 	}
 	*p++ = '\0';
-	argc++;
+
+	/* Make room for a NULL pointer and our special pointer (s.b.) */
+	if ( (argc + 1) % ARGV_CHUNK_SIZE == 0 ) {
+	    char **tmp;
+	    tmp = (char **) realloc( argv, argc + 1 + ARGV_CHUNK_SIZE );
+	    if ( !tmp ) {
+		/* FIXME: error handling */
+		free( argv );
+		free( buffer );
+		return NULL;
+	    }
+	    argv = tmp;
+	}
+
+	/* Skip white spaces. */
+        while ( isspace( *p ) ) {
+            p++;
+        }
+    } while ( *p != '\0' );
+
+    argv[ argc++ ] = NULL;
+    /* We store our buffer pointer in argv, too, so we can free it later.
+     * (But don't tell anyone.)
+     */
+    argv[ argv ] = buffer;
+
+    return argv;
+}
+
+void freeline( char **argv )
+{
+    char **tmp = argv;
+
+    if ( argv ) {
+	while ( *tmp ) {
+	    tmp++;
+	}
+	free( *++tmp );
+	free( argv );
     }
-    if ( argv[ 0 ] == '\0' || *argv[ 0 ] == '#' ) {
-	return( NULL );
-    }
-    return( argv );
 }
 
 int writeconf( cf )
@@ -182,6 +227,7 @@ int writeconf( cf )
 		syslog( LOG_ERR, "fputs: %s", strerror(errno) );
 		return( -1 );
 	    }
+	    freeline( argv );
 	    continue;
 	}
 
@@ -289,7 +335,8 @@ int readconf( cf )
 	 * Check that av[ 0 ] is a valid interface.
 	 * Not possible under sysV.
 	 */
-	strcpy( ifr.ifr_name, argv[ 0 ] );
+	strncpy( ifr.ifr_name, argv[ 0 ], sizeof(ifr.ifr_name) );
+	ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = '\0';
 
 	/* for devices that don't support appletalk */
 	if ((ioctl(s, SIOCGIFADDR, &ifr) < 0) && (errno == ENODEV)) {
