@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.2 2002-05-30 06:41:16 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.3 2002-05-30 20:48:29 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -30,7 +30,7 @@ demangle(const struct vol *vol, char *mfilename) {
 	}
 
 	ext = strrchr(mfilename, '.');
-	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + strlen(ext)) {
+	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + (ext != NULL)?strlen(ext):0) {
 	    return mfilename;
 	}
 
