@@ -52,7 +52,7 @@ Name	Type	Default	Descripton
 pd	str	`.ppd'	Pathname to PPD file
 pr	str	`lp'	LPD printer name (or print command)
 op	str	`operator'	Operator name for LPD spooling
-ca	bool	false	CAP-style authentication
+ca	str	NULL	Pathname used for CAP-style authentication
 sp	bool	false	PSSP-style authentication
 am	str	NULL	UAMS to use for authentication
 pa	str	NULL	Printer's AppleTalk address?
@@ -112,7 +112,7 @@ HP Printer:\\
 HP 8100:\\
 	:pr=|/usr/bin/lpr -Plp:\\
 	:sp:\\
-	:ca:\\
+	:ca=/tmp/print:\\
 	:am=uams_guest.so,uams_pam.so:\\
 	:pd=/etc/atalk/ppds/hp8100.ppd:
 .fi
