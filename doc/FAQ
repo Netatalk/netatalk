@@ -1,841 +1,434 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.4 2001-10-15 23:05:05 lancel Exp $)
+($Id: FAQ,v 1.5 2001-10-17 07:08:28 lancel Exp $)
+
+-----------------------------------------------------------------------------
+
+Q1: Where can I get more information on Netatalk?
+Q2: What is this I keep seeing about asun?
+Q3: How do I get the most recent version of Netatalk?
+Q4: Can I get an almost current version of Netatalk without having to learn CVS?
+Q5: I'm having massive file deletion problems!
+Q6: I am having lots of file locking problems!
+Q7: I'm getting this message in my logs:
+     WARNING: DID conflict for ...  Are these the same file?
+Q8: I can't seem to use passwords longer than 8 characters for my netatalk
+    accounts. How can I fix that? 
+Q9: I would like to use encrypted passwords to authenticate to the Netatalk
+    server. How do I do that?
+Q10: How can I set who has access to certain directories?
+Q11: What are the .AppleDouble and .Parent directories which are created in
+     the netatalk locations?
+Q12: Hidden files - what's up with that?
+Q13: I get a "socket: Invalid argument" error when trying to start netatalk
+     under Linux. What is causing this?
+Q14: netatalk works over Appletalk, but my IP connections are refused, even
+     though I have enabled them in the configuration files.
+Q15: I'm having Quark Express file locking problems, is there information on that?
+Q16: I'm getting this error in Quark Express when trying to save a file to
+     the server: 'Error Type -50'
+Q17: Does netatalk work with Mac OSX?
+Q18: I'm getting an 'Application for this document not found' error on OS X.
+Q19: I'm getting an 'Error Type -43' error on OS X.
+Q20: How do I get the directories that are created by Netatalk to have the
+     correct permissions by default?
+Q21:  What does this error mean:
+     'afpd[#####]: setdirmode: chmod .AppleDouble Operation not permitted'
+Q22: I'm having problems with the Trash folder: either when someone drags
+     files into it, the system want's them todelete them immeidately, or files
+     get stuck in there and won't delete.
+Q23: The daemons aren't starting, things aren't showing up in the Chooser,
+     and I get a message like this in the logs: afpd[####]: Can't register
+     Tests:AFPServer@*
+Q24: I want to be able to allow users to change their passwords?  How do
+     I enable this feature.  Every time I try I get an error that it was
+     unable to save the password.
+
+
+-----------------------------------------------------------------------------
+
+
+Q1: Where can I get more information on Netatalk?
+
+A:  The current location of the actively developed netatalk project can be
+    found on SourceForge, at: http:/www.sourceforge.net/projects/netatalk.
+
+    There are (at least) two very active e-mail lists to which you can
+    subscribe, the first, netatalk-admins, is for usage and basic
+    setup/compile questions. It is NOT maintained at sourceforge, but rather
+    at the University of Michigan, which was involved with a good deal of the
+    early development.  
+    
+    Subscribe by sending an e-mail to netatalk-admins-request@umich.edu with a
+    subject of "subscribe" and a blank body. This can be very high volume, but
+    usually a few messages a day.
+    
+    The archive is available at:  
+    ftp://terminator.rs.itd.umich.edu/unix/netatalk/ and is called
+    netatalk-admins.mail.  This is a ~6M mbox file. Previous archives are
+    available there as well.
+    
+    Netatalk-devel list is more specific to coding and testing. It can be
+    browsed at: http://www.geocrawler.com/redir-sf.php3?list=netatalk-devel,
+    and subscribed to at:  
+    http://lists.sourceforge.net/lists/listinfo/netatalk-devel This varies in
+    volume, but is usually moderately active.
+    
+    netatalk-docs is specific to documentation. It can be browsed at:
+    http://www.geocrawler.com/redir-sf.php3?list=netatalk-docs
+    and subscribed to at:
+    http://lists.sourceforge.net/lists/listinfo/netatalk-docs
+    As far as I can tell, this list is completely dead.
+    
+    There are older netatlk information sites at:
+    http://www.umich.edu/~rsug/netatalk/index.html
+    http://www.anders.com/projects/netatalk/ and many unices have their own
+    sites and distributions (tarballs, rpm's, packages, etc.)
+    
+Q2: What is this I keep seeing about asun?
+
+A:  Before netatalk moved to SourceForge, Adrian Sun (asun) had written
+    some patches to netatalk which helped significantly with it's usability,
+    especially using appleshareIP. These patches are still provided by many
+    unix vendors. I believe all of these patches are included in the current
+    Sourceforge versions.
+
+
+Q3: How do I get the most recent version of Netatalk?
+
+A:  Via CVS from Sourceforge.net. This is the actively maintained version
+    of netatalk, changes are being made constantly, and therefore it is not
+    suitable for production environments. The netatalk at Sourceforge is in
+    Beta, so keep that in mind.
+    
+    To create the CVS tree - from the directory you want to use as your CVS
+    root, run:
+
+    % cvs -d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk login
+
+    hit <enter> at the Password: prompt
+
+    % cvs -z3
+    -d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk co
+    netatalk
+
+    this will create a netatalk subdirectory, and check out all of the files.
+    If you run this same command subsequently, you will update any files which
+    have changed (on the CVS server) since your last checkout.
+    
+    Once you've done that, read the INSTALL file in the netatalk/ directory,
+
+    plus the CONFIGURE file. You'll need to have some supplementary software
+    installed, such as gmake. Additional information can be found in docs/.
+    
+    The main things to know, though, are this: you must run
+    
+    % ./autogen.sh in the netatalk/ directory first, in order to create your
+    configure file. 
+    
+    Then run % ./configure --help | more in order to get a
+    feel for which compile flags are available. Some of these flags are
+    summarized below.
+    
+    To learn more about CVS, a good place to start is: http://www.cvshome.org,
+    or http://www.cvshome.org/docs/manual, or
+    http://www.cvshome.org/form/form.cgi (this is the FAQ).
+
+
+Q4: Can I get an almost current version of Netatalk without having to learn CVS?
+
+A:  Yes.  Weekly (or thereabouts) snapshots of the CVS tree should be
+    posted for the benefit of those that don't want to / can't use CVS. As of
+    10/3/01, these were being put up at:
+    
+    ftp://ftp.marcuscom.com/pub/netatalk/nightly
+    
+    From the mail archives:
+    I have started an archive of nightly CVS snap shots that build a tar.gz of
+    netatalk ready to configure and build.  The images can be downloaded from:
+    
+    ftp://ftp.marcuscom.com/pub/netatalk/nightly
+    This site only allows active FTP, so the snaps are also available at:
+    http://www.marcuscom.com/netatalk/nightly
+    
+    You should be able to treat these images as you would a release.  Just
+    configure as you normally work, then run make (or gmake as the case may
+    be).  There is no need to run autogen.sh on these images.  Please let me
+    know if you have any problems with these images.  Thanks. -Joe
+
+
+Q5: I'm having massive file deletion problems!
+Q6: I am having lots of file locking problems!
+Q7: I'm getting this message in my logs:
+    WARNING: DID conflict for ...  Are these the same file?
+
+A:  Compile with the --with-did=last flag set. This activates a different
+    method of calculating inodes in the software, and will hopefully fix some
+    of these problems. This code, along with the CNID code, was still being
+    worked out in Pre7. The cnid/db3 flags also go along with this:
+      --enable-cnid-db   use persistent cnid database per volume (EXPERIMENTAL)
+      --with-db3=PATH         specify path to Berkeley DB3 installation
+      --with-did=[scheme]     set DID scheme (last,mtab) 
+    
+    (For more information on CNID, see the README.cnid file, into which I just
+    copied wholesale Joe's comments on what he did with cnid and lastdid.)
+    
+    --with-did=last reverted things back to the old 1.4b2 directory ID
+    calculation algorithm.  This also solved the problem of the syslog
+    messages and the users complaining of file deletions.  It's also been
+    found that by disabling *BSD's SOFTUPDATES feature on Netatalk volumes (on
+    FreeBSD), multi-user interaction seemed to work better.  This was back in
+    a late 4.2-BETA, so it's not clear if this still holds true in 4.4-RELEASE
+    or not.
+
+
+Q8: I can't seem to use passwords longer than 8 characters for my netatalk
+    accounts. How can I fix that? 
+
+Q9: I would like to use encrypted passwords to authenticate to the Netatalk
+    server. How do I do that?
+
+A:  Update to a newer version of AppleShare Client (I think the most
+    recent is 3.8.8). This allows longer passwords, and will allow you to
+    use encrypted passwords. Set which way you would like to authenticate
+    in either afpd.conf or netatalk.conf, depending on your set up.
+
+
+Q10: How can I set who has access to certain directories?
+    
+A:  You can certainly do this with your unix permissions, but also explore the 
+    allow/deny/rwlist/rolist options in the AppleVolumes.default file:
+    
+    # allow/deny/rwlist/rolist format [syntax: allow:user1,@group]:
+    # user1,@group,user2  -> allows/denies access from listed users/groups
+    #                        rwlist/rolist control whether or not the
+    #                        volume is ro for those users.
+    
+    Also, some unices, specically FreeBSD, have other options:
+    (By Joe Clark)
+    
+    "What about file and directory permissions?  Since I didn't use the FORCE
+    UID/GID code, I decided to use a feature of FreeBSD called SUIDDIR. From
+    the LINT kernel config file:
+    
+    # If you are running a machine just as a fileserver for PC and MAC
+    # users, using SAMBA or Netatalk, you may consider setting this option
+    # and keeping all those users' directories on a filesystem that is
+    # mounted with the suiddir option. This gives new files the same
+    # ownership as the directory (similar to group). It's a security hole
+    # if you let these users run programs, so confine it to file-servers
+    # (but it'll save you lots of headaches in those cases). Root owned
+    # directories are exempt and X bits are cleared. The suid bit must be
+    # set on the directory as well; see chmod(1) PC owners can't see/set
+    # ownerships so they keep getting their toes trodden on. This saves
+    # you all the support calls as the filesystem it's used on will act as
+    # they expect: "It's my dir so it must be my file".
+    
+     FORCE UID/GID code, I decided to use a feature of FreeBSD called
+     SUIDDIR.  From the LINT kernel config file:
+    
+    # If you are running a machine just as a fileserver for PC and MAC
+    # users, using SAMBA or Netatalk, you may consider setting this option
+    # and keeping all those users' directories on a filesystem that is
+    # mounted with the suiddir option. This gives new files the same
+    # ownership as the directory (similar to group). It's a security hole
+    # if you let these users run programs, so confine it to file-servers
+    # (but it'll save you lots of headaches in those cases). Root owned
+    # directories are exempt and X bits are cleared. The suid bit must be
+    # set on the directory as well; see chmod(1) PC owners can't see/set
+    # ownerships so they keep getting their toes trodden on. This saves
+    # you all the support calls as the filesystem it's used on will act as
+    # they expect: "It's my dir so it must be my file".
+    
+    And the associated mount command:
+    
+    mount -o suiddir /dev/da2s1e /macvol/artfiles
+    
+    This was used on my dedicated Netatalk/Samba filesystems.  On
+    filesystems that were also used for interactive shell access, I chmod'd
+    my Netatalk shares 2770.  The reason for this is that I set up a UNIX
+    group for each department in the ad agency.  I had an art group, a media
+    group, an accounting group, and then, or course, a general staff group.
+    Each share was only allowed access by the group that needed to access
+    the share.  So, the Artfiles share allowed access only to the art group:
+    
+    /macvol/artfiles "Art Files" allow:@art
+    
+    And the others followed in kind.  Therefore, the 2770 mask allowed only
+    owners and people in the associated group access to read and write
+    files.  The leading 2 set the setgid bit so that all child files and
+    directories would retain the same group permissions.  I found this to
+    work well.
+    
+    This was used on my dedicated Netatalk/Samba filesystems.  On
+    filesystems that were also used for interactive shell access, I chmod'd
+    my Netatalk shares 2770.  The reason for this is that I set up a UNIX
+    group for each department in the ad agency.  I had an art group, a media
+    group, an accounting group, and then, or course, a general staff group.
+    Each share was only allowed access by the group that needed to access
+    the share.  So, the Artfiles share allowed access only to the art group:
+    
+    /macvol/artfiles "Art Files" allow:@art
+    
+    And the others followed in kind.  Therefore, the 2770 mask allowed only
+    owners and people in the associated group access to read and write
+    files.  The leading 2 set the setgid bit so that all child files and
+    directories would retain the same group permissions.  I found this to
+    work well."
+
+
+Q11: What are the .AppleDouble and .Parent directories which are created in
+     the netatalk locations?
+
+A:  (also mention samba veto files, and the appledouble/MSwindows options
+    in AppleVolumes.default
+    
+    The .AppleDouble folders hold the resource fork information for the mac
+    files, plus other attributes which are not normally stored by Unix. For
+    this reason, when you want to move files around in your mac volumes, it's
+    a good idea to do it from the Mac side (as opposed to from the unix side,
+    or Samba), unless you make absolutely sure you get the .AppleDouble
+    directories. These directories are often hidden from the Samba side, via
+    the veto files configuration.
+    
+    You can also set netatalk to not create an .AppleDouble directory unless
+    it absolutely needs it, by setting the noadouble setting in
+    AppleVolumes.default.
+    
+    
+Q12: Hidden files - what's up with that?
+    
+A:  If you set the noadouble flag in AppleVolumes.default, you won't see
+    the .Apple* or .Parent directories on the Mac side. If you use the veto
+    files option in Samba, they may be hidden from the windows side as well.
+
+
+Q13: I get a "socket: Invalid argument" error when trying to start netatalk
+     under Linux. What is causing this?
+
+A:  The "appletalk" and "ipddp" kernel modules have to be installed under
+    linux for netatalk to function. The appletalk module can be automatically
+    loaded by adding the line "alias net-pf-5 appletalk" to the
+    /etc/modules.conf file. Issuing the command "modprobe (module)" will
+    load the module for the current session.
+
+
+Q14: netatalk works over Appletalk, but my IP connections are refused, even
+     though I have enabled them in the configuration files.
+
+A:  If tcp_wrappers support is compiled into netatalk, access has to be
+    granted in /etc/hosts.allow for netatalk to successfully accept IP
+    connections. This can be done by the addition of the line:
+    afpd:  127. xxx.xxx.xxx. (whatever other subnets)    
+    
+
+Q15: I'm having Quark Express file locking problems, is there information on that?
+
+A:  Yes, see below about the --enable-did= flag. Also, try using the
+    --flock-locks flag. Enabling this code disabled the new byte locking
+    feature.  With FLOCK locks, the whole file would be locked.  With byte
+    locks, a byte range could be locked without locking the whole file.
+
+
+Q16: I'm getting this error in Quark Express when trying to save a file to
+     the server: 'Error Type -50'
+
+A:  Turn off the document preview feature off in Quark.
+
+
+Q17: Does netatalk work with Mac OSX?
+
+A:  Yes, but only the most recent versions, and it's still being finalized.
+    Versions prior to 1.5Pre7 did NOT work with OS X, although some really
+    early versions did (netatalk 1.4+asun?).
+
+
+Q18: I'm getting an 'Application for this document not found' error on OS X.
+
+Q19: I'm getting an 'Error Type -43' error on OS X.
+
+A:  Configure with --with-did=last. More info on this flag is below.
+
+
+Q20: How do I get the directories that are created by Netatalk to have the
+     correct permissions by default?
+
+A:  Investigate the SetGid bit on your unix platform. It's a good idea to
+    set this on your shared directories, and your .AppleDouble directories.
+    From the mail archives: "Usually directories designated for use with
+    AppleShare have the setgid (g+s) bit set.  It forces inheritance of
+    permissions.  Without it, the .AppleDouble subdirectory can't be created
+    since the new folder doesn't necessarily have the same write privileges."
+    
+    Also: Evi Nemeth's "Unix System Administration Handbook" which is chock
+    full of useful advice (and one or two pieces of not-so good advice, but
+    even those are debatable). Here's what it says about setguid (3rd. ed,
+    chap 5.5, pg. 69):
+    
+    "The bits with octal values 4000 and 2000 are the setuid and setgid bits.
+    These bits allow programs to acess files and processes that would
+    otherwise be off-limits to the users that run them. ... When set on a
+    directory, the setgid bit causes newly created files within the directory
+    to take on the group membership of the directory rather than the defualt
+    group of the user that created the file. This convention makes it easier
+    to share a directory of files among several users, as long as they all
+    belong to a common group. Check your system before relying on this
+    feature, since not all version of UNIX provide it. ... This interpretation
+    of the setgid bit is unrelated to it's meaning when set on an executable
+    file, but there is never any ambiguity as to which meaning is
+    appropriate." (any typos are mine)
+    
+    NOTE: The SETUID is usually discussed along with the SetGID bit. The
+    SetUID bit is VERY dangerous. If you set it on an executable, and the
+    executable is owned by root, anyone who runs that executable is root for
+    the duration of that executable's run, so a clever person can leverage
+    that into a full-scale compromise. The SETGID bit also has implications
+    that way, so be careful where you set it.
+    
+    You set it by doing a chmod 2777 or 2775, or whatever. It's that first 2 bit.
+    
+
+Q21:  What does this error mean:
+     'afpd[#####]: setdirmode: chmod .AppleDouble Operation not permitted'
+
+A:  This can be due to a few things.
+
+    1) The SetGid bit might not be set on either your directory, or on the
+    .AppleDouble directory. I think the bit has to be set recursively on the
+    .AppleDouble folder.
+    
+    2) You may not be member of the group set on the directory you're trying
+    to write to.
+    
+    3) This was a persistant bug in 1.5pre6 for awhile, upgrading might help.
+    
+    
+Q22: I'm having problems with the Trash folder: either when someone drags
+     files into it, the system want's them todelete them immeidately, or files
+     get stuck in there and won't delete.
+    
+A:  chmod the Network Trash folder to 2775 (/home/public/Network Trash
+    Folder for instance).
+
+
+Q23: The daemons aren't starting, things aren't showing up in the Chooser,
+     and I get a message like this in the logs: afpd[####]: Can't register
+     Tests:AFPServer@*
+
+    This is sometimes a result of missing NIC information in the atalkd.conf
+    file. Put your network interface (something like le0, eth0, fxp0, lo0)
+    alone on a line in atalkd.conf, and reboot. When atalkd starts, it will
+    populate the file with a line like: le1 -seed -phase 2 -addr 66.6 -net
+    66-67 -zone "No Parking"
+
+    To find your network interface, run
+
+    % ifconfig -a | more
+    and see which interface has your IP address. Use that one.
+
+Q24: I want to be able to allow users to change their passwords?  How do
+     I enable this feature.  Every time I try I get an error that it was
+     unable to save the password.
+
+A:  Use  -[no]setpassword in afpd.conf. This  enables? disables  the
+    ability  of clients  to change their passwords 
 
-Compilation -----------------------------------------------------------------
-
-Installation ----------------------------------------------------------------
-
-Execution -------------------------------------------------------------------
-
-Q: I get a "socket: Invalid argument" error when trying to start netatalk
-   under Linux. What is causing this?
-A: The "appletalk" and "ipddp" kernel modules have to be installed under
-   linux for netatalk to function. The appletalk module can be automatically
-   loaded by adding the line "alias net-pf-5 appletalk" to the
-   /etc/modules.conf file. Issuing the command "modprobe (module)" will
-   load the module for the current session.
-
-Q: netatalk works over Appletalk, but my IP connections are refused, even
-   though I have enabled them in the configuration files.
-A: If tcp_wrappers support is compiled into netatalk, access has to be
-   granted in /etc/hosts.allow for netatalk to successfully accept IP
-   connections. This can be done by the addition of the line:
-   afpd:  127. xxx.xxx.xxx. (whatever other subnets)
-
-Q: Where can I get more information on Netatalk?
-
-A: The current location of the actively developed netatalk project can be
-found on SourceForge, at: http:/www.sourceforge.net/projects/netatalk.
-
-There are (at least) two very active e-mail lists to which you can
-subscribe, the first, netatalk-admins, is for usage and basic
-setup/compile questions. It is NOT maintained at sourceforge, but rather
-at the University of Michigan, which was involved with a good deal of the
-early development.  
-
-Subscribe by sending an e-mail to netatalk-admins-request@umich.edu with a
-subject of "subscribe" and a blank body. This can be very high volume, but
-usually a few messages a day.
-
-The archive is available at:  
-ftp://terminator.rs.itd.umich.edu/unix/netatalk/ and is called
-netatalk-admins.mail.  This is a ~6M mbox file. Previous archives are
-available there as well.
-
-Netatalk-devel list is more specific to coding and testing. It can be
-browsed at: http://www.geocrawler.com/redir-sf.php3?list=netatalk-devel,
-and subscribed to at:  
-http://lists.sourceforge.net/lists/listinfo/netatalk-devel This varies in
-volume, but is usually moderately active.
-
-netatalk-docs is specific to documentation. It can be browsed at:
-http://www.geocrawler.com/redir-sf.php3?list=netatalk-docs
-and subscribed to at:
-http://lists.sourceforge.net/lists/listinfo/netatalk-docs
-As far as I can tell, this list is completely dead.
-
-There are older netatlk information sites at:
-http://www.umich.edu/~rsug/netatalk/index.html
-http://www.anders.com/projects/netatalk/ and many unices have their own
-sites and distributions (tarballs, rpm's, packages, etc.)
-
-
-Q: How do I get the most recent version of Netatalk?
-
-A: Via CVS from Sourceforge.net. This is the actively maintained version
-of netatalk, changes are being made constantly, and therefore it is not
-suitable for production environments. The netatalk at Sourceforge is in
-Beta, so keep that in mind.
-
-To create the CVS tree - from the directory you want to use as your CVS
-root, run:
-
-% cvs -d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk login
-
-hit <enter> at the Password: prompt
-
-% cvs -z3
--d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk co
-netatalk
-
-this will create a netatalk subdirectory, and check out all of the files.
-If you run this same command subsequently, you will update any files which
-have changed (on the CVS server) since your last checkout.
-
-Once you've done that, read the INSTALL file in the netatalk/ directory,
-plus the CONFIGURE file. You'll need to have some supplementary software
-installed, such as gmake. Additional information can be found in docs/.
-
-The main things to know, though, are this: you must run
-
-% ./autogen.sh in the netatalk/ directory first, in order to create your
-configure file. 
-
-Then run % ./configure --help | more in order to get a
-feel for which compile flags are available. Some of these flags are
-summarized below.
-
-To learn more about CVS, a good place to start is: http://www.cvshome.org,
-or http://www.cvshome.org/docs/manual, or
-http://www.cvshome.org/form/form.cgi (this is the FAQ).
-
-
-Q: Can I get an almost current version of Netatalk without having to learn CVS?
-
-A: Yes.  Weekly (or thereabouts) snapshots of the CVS tree should be
-posted for the benefit of those that don't want to / can't use CVS. As of
-10/3/01, these were being put up at:
-
-ftp://ftp.marcuscom.com/pub/netatalk/nightly
-
-From the mail archives:
-I have started an archive of nightly CVS snap shots that build a tar.gz of
-netatalk ready to configure and build.  The images can be downloaded from:
-
-ftp://ftp.marcuscom.com/pub/netatalk/nightly
-This site only allows active FTP, so the snaps are also available at:
-http://www.marcuscom.com/netatalk/nightly
-
-You should be able to treat these images as you would a release.  Just
-configure as you normally work, then run make (or gmake as the case may
-be).  There is no need to run autogen.sh on these images.  Please let me
-know if you have any problems with these images.  Thanks. -Joe
-
-
-Q: What is this I keep seeing about asun?
-
-A: Before netatalk moved to SourceForge, Adrian Sun (asun) had written
-some patches to netatalk which helped significantly with it's usability,
-especially using appleshareIP. These patches are still provided by many
-unix vendors. I believe all of these patches are included in the current
-Sourceforge versions.
-
-
-Q: I'm having Quark Express file locking problems, is there information on that?
-
-A: Yes, see below about the --enable-did= flag. Also, try using the
---flock-locks flag. Enabling this code disabled the new byte locking
-feature.  With FLOCK locks, the whole file would be locked.  With byte
-locks, a byte range could be locked without locking the whole file.
-
-
-Q: I'm getting this error in Quark Express when trying to save a file to
-the server: 'Error Type -50'
-
-A: Turn off the document preview feature off in Quark.
-
-
-Q: Does netatalk work with Mac OSX?
-
-A: Yes, but only the most recent versions, and it's still being finalized.
-Versions prior to 1.5Pre7 did NOT work with OS X, although some really
-early versions did (netatalk 1.4+asun?).
-
-
-Q: I'm getting an 'Application for this document not found' error on OS X.
-
-Q: I'm getting an 'Error Type -43' error on OS X.
-
-A: Configure with --with-did=last. More info on this flag is below.
-
-
-Q: What are the .AppleDouble and .Parent directories which are created in
-the netatalk locations?
-
-A: (also mention samba veto files, and the appledouble/MSwindows options
-in AppleVolumes.default
-
-The .AppleDouble folders hold the resource fork information for the mac
-files, plus other attributes which are not normally stored by Unix. For
-this reason, when you want to move files around in your mac volumes, it's
-a good idea to do it from the Mac side (as opposed to from the unix side,
-or Samba), unless you make absolutely sure you get the .AppleDouble
-directories. These directories are often hidden from the Samba side, via
-the veto files configuration.
-
-You can also set netatalk to not create an .AppleDouble directory unless
-it absolutely needs it, by setting the noadouble setting in
-AppleVolumes.default.
-
-
-Q: Hidden files - what's up with that?
-
-A: If you set the noadouble flag in AppleVolumes.default, you won't see
-the .Apple* or .Parent directories on the Mac side. If you use the veto
-files option in Samba, they may be hidden from the windows side as well.
-
-
-Q: How do I get the directories that are created by Netatalk to have the
-correct permissions by default?
-
-A: Investigate the SetGid bit on your unix platform. It's a good idea to
-set this on your shared directories, and your .AppleDouble directories.
-From the mail archives: "Usually directories designated for use with
-AppleShare have the setgid (g+s) bit set.  It forces inheritance of
-permissions.  Without it, the .AppleDouble subdirectory can't be created
-since the new folder doesn't necessarily have the same write privileges."
-
-Also: Evi Nemeth's "Unix System Administration Handbook" which is chock
-full of useful advice (and one or two pieces of not-so good advice, but
-even those are debatable). Here's what it says about setguid (3rd. ed,
-chap 5.5, pg. 69):
-
-"The bits with octal values 4000 and 2000 are the setuid and setgid bits.
-These bits allow programs to acess files and processes that would
-otherwise be off-limits to the users that run them. ... When set on a
-directory, the setgid bit causes newly created files within the directory
-to take on the group membership of the directory rather than the defualt
-group of the user that created the file. This convention makes it easier
-to share a directory of files among several users, as long as they all
-belong to a common group. Check your system before relying on this
-feature, since not all version of UNIX provide it. ... This interpretation
-of the setgid bit is unrelated to it's meaning when set on an executable
-file, but there is never any ambiguity as to which meaning is
-appropriate." (any typos are mine)
-
-NOTE: The SETUID is usually discussed along with the SetGID bit. The
-SetUID bit is VERY dangerous. If you set it on an executable, and the
-executable is owned by root, anyone who runs that executable is root for
-the duration of that executable's run, so a clever person can leverage
-that into a full-scale compromise. The SETGID bit also has implications
-that way, so be careful where you set it.
-
-You set it by doing a chmod 2777 or 2775, or whatever. It's that first 2 bit.
-
-
-Q: How can I set who has access to certain directories?
-
-A: You can certainly do this with your unix permissions, but also explore the 
-allow/deny/rwlist/rolist options in the AppleVolumes.default file:
-
-# allow/deny/rwlist/rolist format [syntax: allow:user1,@group]:
-# user1,@group,user2  -> allows/denies access from listed users/groups
-#                        rwlist/rolist control whether or not the
-#                        volume is ro for those users.
-
-Also, some unices, specically FreeBSD, have other options:
-(By Joe Clark)
-
-"What about file and directory permissions?  Since I didn't use the FORCE
-UID/GID code, I decided to use a feature of FreeBSD called SUIDDIR. From
-the LINT kernel config file:
-
-# If you are running a machine just as a fileserver for PC and MAC
-# users, using SAMBA or Netatalk, you may consider setting this option
-# and keeping all those users' directories on a filesystem that is
-# mounted with the suiddir option. This gives new files the same
-# ownership as the directory (similar to group). It's a security hole
-# if you let these users run programs, so confine it to file-servers
-# (but it'll save you lots of headaches in those cases). Root owned
-# directories are exempt and X bits are cleared. The suid bit must be
-# set on the directory as well; see chmod(1) PC owners can't see/set
-# ownerships so they keep getting their toes trodden on. This saves
-# you all the support calls as the filesystem it's used on will act as
-# they expect: "It's my dir so it must be my file".
-
- FORCE UID/GID code, I decided to use a feature of FreeBSD called
- SUIDDIR.  From the LINT kernel config file:
-
-# If you are running a machine just as a fileserver for PC and MAC
-# users, using SAMBA or Netatalk, you may consider setting this option
-# and keeping all those users' directories on a filesystem that is
-# mounted with the suiddir option. This gives new files the same
-# ownership as the directory (similar to group). It's a security hole
-# if you let these users run programs, so confine it to file-servers
-# (but it'll save you lots of headaches in those cases). Root owned
-# directories are exempt and X bits are cleared. The suid bit must be
-# set on the directory as well; see chmod(1) PC owners can't see/set
-# ownerships so they keep getting their toes trodden on. This saves
-# you all the support calls as the filesystem it's used on will act as
-# they expect: "It's my dir so it must be my file".
-
-And the associated mount command:
-
-mount -o suiddir /dev/da2s1e /macvol/artfiles
-
-This was used on my dedicated Netatalk/Samba filesystems.  On
-filesystems that were also used for interactive shell access, I chmod'd
-my Netatalk shares 2770.  The reason for this is that I set up a UNIX
-group for each department in the ad agency.  I had an art group, a media
-group, an accounting group, and then, or course, a general staff group.
-Each share was only allowed access by the group that needed to access
-the share.  So, the Artfiles share allowed access only to the art group:
-
-/macvol/artfiles "Art Files" allow:@art
-
-And the others followed in kind.  Therefore, the 2770 mask allowed only
-owners and people in the associated group access to read and write
-files.  The leading 2 set the setgid bit so that all child files and
-directories would retain the same group permissions.  I found this to
-work well.
-
-This was used on my dedicated Netatalk/Samba filesystems.  On
-filesystems that were also used for interactive shell access, I chmod'd
-my Netatalk shares 2770.  The reason for this is that I set up a UNIX
-group for each department in the ad agency.  I had an art group, a media
-group, an accounting group, and then, or course, a general staff group.
-Each share was only allowed access by the group that needed to access
-the share.  So, the Artfiles share allowed access only to the art group:
-
-/macvol/artfiles "Art Files" allow:@art
-
-And the others followed in kind.  Therefore, the 2770 mask allowed only
-owners and people in the associated group access to read and write
-files.  The leading 2 set the setgid bit so that all child files and
-directories would retain the same group permissions.  I found this to
-work well."
-
-
-
-Q: I can't seem to use passwords longer than 8 characters for my netatalk
-accounts. How can I fix that? 
-
-Q: I would like to use encrypted passwords to authenticate to the Netatalk
-server. How do I do that?
-
-A: Update to a newer version of AppleShare Client (I think the most recent is 3.8.8). This allows longer passwords, and will allow you to use encrypted passwords. Set which way you would like to authenticate in either afpd.conf or netatalk.conf, depending on your set up.
-
-
-Q: I'm having massive file deletion problems!
-Q: I am having lots of file locking problems!
-Q: I'm getting this message in my logs:
-WARNING: DID conflict for ...  Are these the same file?
-
-A: Compile with the --with-did=last flag set. This activates a different
-method of calculating inodes in the software, and will hopefully fix some
-of these problems. This code, along with the CNID code, was still being
-worked out in Pre7. The cnid/db3 flags also go along with this:
-  --enable-cnid-db   use persistent cnid database per volume (EXPERIMENTAL)
-  --with-db3=PATH         specify path to Berkeley DB3 installation
-  --with-did=[scheme]     set DID scheme (last,mtab) 
-
-(For more information on CNID, see the README.cnid file, into which I just
-copied wholesale Joe's comments on what he did with cnid and lastdid.)
-
---with-did=last reverted things back to the old 1.4b2 directory ID
-calculation algorithm.  This also solved the problem of the syslog
-messages and the users complaining of file deletions.  It's also been
-found that by disabling *BSD's SOFTUPDATES feature on Netatalk volumes (on
-FreeBSD), multi-user interaction seemed to work better.  This was back in
-a late 4.2-BETA, so it's not clear if this still holds true in 4.4-RELEASE
-or not.
-
-
-Q: What does this error mean:
-'afpd[#####]: setdirmode: chmod .AppleDouble Operation not permitted'
-
-A: This can be due to a few things.
-
-1) The SetGid bit might not be set on either your directory, or on the
-.AppleDouble directory. I think the bit has to be set recursively on the
-.AppleDouble folder.
-
-2) You may not be member of the group set on the directory you're trying
-to write to.
-
-3) This was a persistant bug in 1.5pre6 for awhile, upgrading might help.
-
-
-Q: I'm having problems with the Trash folder: either when someone drags
-files into it, the system want's them todelete them immeidately, or files
-get stuck in there and won't delete.
-
-A: chmod the Network Trash folder to 2775 (/home/public/Network Trash
-Folder for instance).
-
-
-Q: The daemons aren't starting, things aren't showing up in the Chooser,
-and I get a message like this in the logs: afpd[####]: Can't register
-Tests:AFPServer@*
-
-This is sometimes a result of missing NIC information in the atalkd.conf
-file. Put your network interface (something like le0, eth0, fxp0, lo0)
-alone on a line in atalkd.conf, and reboot. When atalkd starts, it will
-populate the file with a line like: le1 -seed -phase 2 -addr 66.6 -net
-66-67 -zone "No Parking"
-
-To find your network interface, run
-
-% ifconfig -a | more
-and see which interface has your IP address. Use that one.
-
-(much of this stuff has been pulled out of the mail archives, and from
-informational files sent by Joe Clark.)
-
-
--                                                                  -
-    Karen Swanberg | Sys Admin | Dept. of Geology and Geophysics    
-206 Pillsbury Hall | 310 Pillsbury Ave. SE | University of Minnesota
-     Minneapolis, MN 55455  (612) 624-6541  (612) 625-3819 (f)
-
-              * <---- Tribble   . <--- Tribble.tgz
-
-
-_______________________________________________
-Netatalk-devel mailing list
-Netatalk-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/netatalk-devel
-
-From netatalk-devel-admin@lists.sourceforge.net  Thu Oct  4 18:31:07 2001
-Return-Path: <netatalk-devel-admin@lists.sourceforge.net>
-Delivered-To: lance@cossette.dante.ca
-Received: from localhost (localhost [127.0.0.1])
-	by cossette.dante.ca (Postfix) with ESMTP id 236EF7B71
-	for <lance@cossette.dante.ca>; Thu,  4 Oct 2001 18:31:07 -0600 (CST)
-Received: from mail.printwest.com [142.165.62.112]
-	by localhost with POP3 (fetchmail-5.9.3)
-	for lance@cossette.dante.ca (single-drop); Thu, 04 Oct 2001 18:31:07 -0600 (CST)
-Received: from pathfinder (192.168.10.10)
-          by pathfinder with MERCUR-SMTP/POP3/IMAP4-Server (v3.30.09 AS-0098315)
-          for <l.levsen@printwest.com>; Thu, 4 Oct 2001  19:03:44 -0600
-Received: from usw-sf-list1.sourceforge.net ([192.168.10.1])
- by pathfinder (NAVIEG 2.1 bld 63) with SMTP id M2001100419034222100
- for <l.levsen@printwest.com>; Thu, 04 Oct 2001 19:03:43 -0600
-Received: from SMTP agent by mail gateway 
- Thu, 04 Oct 2001 18:57:03 -0600
-Received: from localhost ([127.0.0.1] helo=usw-sf-list1.sourceforge.net)
-	by usw-sf-list1.sourceforge.net with esmtp (Exim 3.31-VA-mm2 #1 (Debian))
-	id 15pJ22-0003Gx-00; Thu, 04 Oct 2001 17:40:02 -0700
-Received: from mhub-w4.tc.umn.edu ([160.94.160.49])
-	by usw-sf-list1.sourceforge.net with esmtp (Exim 3.31-VA-mm2 #1 (Debian))
-	id 15pJ15-00035w-00
-	for <netatalk-devel@lists.sourceforge.net>; Thu, 04 Oct 2001 17:39:03 -0700
-Received: from garnet.tc.umn.edu by mhub-w4.tc.umn.edu with ESMTP for netatalk-devel@lists.sourceforge.net; Thu, 4 Oct 2001 19:39:01 -0500
-Received: from localhost by garnet.tc.umn.edu with ESMTP; Thu, 4 Oct 2001 19:39:00 -0500
-From: Karen A Swanberg <swanberg@tc.umn.edu>
-To: netatalk-admins@umich.edu, netatalk-devel@lists.sourceforge.net
-Message-Id: <Pine.SOL.4.20.0110041930430.16268-100000@garnet.tc.umn.edu>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Subject: [Netatalk-devel] new FAQ, pt. 1 (long)
-Sender: netatalk-devel-admin@lists.sourceforge.net
-Errors-To: netatalk-devel-admin@lists.sourceforge.net
-X-BeenThere: netatalk-devel@lists.sourceforge.net
-X-Mailman-Version: 2.0.5
-Precedence: bulk
-List-Help: <mailto:netatalk-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:netatalk-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/netatalk-devel>,
-	<mailto:netatalk-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Id: <netatalk-devel.lists.sourceforge.net>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/netatalk-devel>,
-	<mailto:netatalk-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <https://lists.sourceforge.net/archives//netatalk-devel/>
-X-Original-Date: Thu, 4 Oct 2001 19:39:00 -0500 (CDT)
-Date: Thu, 4 Oct 2001 19:39:00 -0500 (CDT)
-
-
-Here's my first version of a FAQ, to be added to the current, or whatever
-else the maintainers want to do with it. I'm posting it to see of there
-are any glaring errors, if people want me to answer other questions, or
-any other comments. It hasn't been spell-checked, don't worry about the
-any typos.
-
-Notes - I'm writing this for a newbie reader; as one person once said to
-me the target audience for this software is an overworked high-school
-admin who is maintaining a lab in her spare time, not a *bsd god.
-Nevertheless, if there are any simplications which I have done which
-confuse things, please let me know. I intend on putting in a "how to make
-netatalk play nice(r) with samba" section too, if anyone has any
-suggestions for it, PLEASE, let me know.
-
-Three main questions I still have: 
-
-Where does netatalk.conf fit into all of this? It seems that it's
-redundant in a lot of ways. Is this a file that is staring to be used like
-smb.conf, it's just not there yet?
-
-What's the final solution (or has it been solved) for the trash problems?
-Both the "delete files immediately" and the files getting stuck in there
-with permission problems?
-
-Has the folder refresh problem been fixed? If not, what should I put in
-here about it? Having people view their folders as lists, and open and
-close the triangle?
-
---FAQ--
-
-
-Q: Where can I get more information on Netatalk?
-
-A: The current location of the actively developed netatalk project can be
-found on SourceForge, at: http:/www.sourceforge.net/projects/netatalk.
-
-There are (at least) two very active e-mail lists to which you can
-subscribe, the first, netatalk-admins, is for usage and basic
-setup/compile questions. It is NOT maintained at sourceforge, but rather
-at the University of Michigan, which was involved with a good deal of the
-early development.  
-
-Subscribe by sending an e-mail to netatalk-admins-request@umich.edu with a
-subject of "subscribe" and a blank body. This can be very high volume, but
-usually a few messages a day.
-
-The archive is available at:  
-ftp://terminator.rs.itd.umich.edu/unix/netatalk/ and is called
-netatalk-admins.mail.  This is a ~6M mbox file. Previous archives are
-available there as well.
-
-Netatalk-devel list is more specific to coding and testing. It can be
-browsed at: http://www.geocrawler.com/redir-sf.php3?list=netatalk-devel,
-and subscribed to at:  
-http://lists.sourceforge.net/lists/listinfo/netatalk-devel This varies in
-volume, but is usually moderately active.
-
-netatalk-docs is specific to documentation. It can be browsed at:
-http://www.geocrawler.com/redir-sf.php3?list=netatalk-docs
-and subscribed to at:
-http://lists.sourceforge.net/lists/listinfo/netatalk-docs
-As far as I can tell, this list is completely dead.
-
-There are older netatlk information sites at:
-http://www.umich.edu/~rsug/netatalk/index.html
-http://www.anders.com/projects/netatalk/ and many unices have their own
-sites and distributions (tarballs, rpm's, packages, etc.)
-
-
-Q: How do I get the most recent version of Netatalk?
-
-A: Via CVS from Sourceforge.net. This is the actively maintained version
-of netatalk, changes are being made constantly, and therefore it is not
-suitable for production environments. The netatalk at Sourceforge is in
-Beta, so keep that in mind.
-
-To create the CVS tree - from the directory you want to use as your CVS
-root, run:
-
-% cvs -d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk login
-
-hit <enter> at the Password: prompt
-
-% cvs -z3
--d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk co
-netatalk
-
-this will create a netatalk subdirectory, and check out all of the files.
-If you run this same command subsequently, you will update any files which
-have changed (on the CVS server) since your last checkout.
-
-Once you've done that, read the INSTALL file in the netatalk/ directory,
-plus the CONFIGURE file. You'll need to have some supplementary software
-installed, such as gmake. Additional information can be found in docs/.
-
-The main things to know, though, are this: you must run
-
-% ./autogen.sh in the netatalk/ directory first, in order to create your
-configure file. 
-
-Then run % ./configure --help | more in order to get a
-feel for which compile flags are available. Some of these flags are
-summarized below.
-
-To learn more about CVS, a good place to start is: http://www.cvshome.org,
-or http://www.cvshome.org/docs/manual, or
-http://www.cvshome.org/form/form.cgi (this is the FAQ).
-
-
-Q: Can I get an almost current version of Netatalk without having to learn CVS?
-
-A: Yes.  Weekly (or thereabouts) snapshots of the CVS tree should be
-posted for the benefit of those that don't want to / can't use CVS. As of
-10/3/01, these were being put up at:
-
-ftp://ftp.marcuscom.com/pub/netatalk/nightly
-
-From the mail archives:
-I have started an archive of nightly CVS snap shots that build a tar.gz of
-netatalk ready to configure and build.  The images can be downloaded from:
-
-ftp://ftp.marcuscom.com/pub/netatalk/nightly
-This site only allows active FTP, so the snaps are also available at:
-http://www.marcuscom.com/netatalk/nightly
-
-You should be able to treat these images as you would a release.  Just
-configure as you normally work, then run make (or gmake as the case may
-be).  There is no need to run autogen.sh on these images.  Please let me
-know if you have any problems with these images.  Thanks. -Joe
-
-
-Q: What is this I keep seeing about asun?
-
-A: Before netatalk moved to SourceForge, Adrian Sun (asun) had written
-some patches to netatalk which helped significantly with it's usability,
-especially using appleshareIP. These patches are still provided by many
-unix vendors. I believe all of these patches are included in the current
-Sourceforge versions.
-
-
-Q: I'm having Quark Express file locking problems, is there information on that?
-
-A: Yes, see below about the --enable-did= flag. Also, try using the
---flock-locks flag. Enabling this code disabled the new byte locking
-feature.  With FLOCK locks, the whole file would be locked.  With byte
-locks, a byte range could be locked without locking the whole file.
-
-
-Q: I'm getting this error in Quark Express when trying to save a file to
-the server: 'Error Type -50'
-
-A: Turn off the document preview feature off in Quark.
-
-
-Q: Does netatalk work with Mac OSX?
-
-A: Yes, but only the most recent versions, and it's still being finalized.
-Versions prior to 1.5Pre7 did NOT work with OS X, although some really
-early versions did (netatalk 1.4+asun?).
-
-
-Q: I'm getting an 'Application for this document not found' error on OS X.
-
-Q: I'm getting an 'Error Type -43' error on OS X.
-
-A: Configure with --with-did=last. More info on this flag is below.
-
-
-Q: What are the .AppleDouble and .Parent directories which are created in
-the netatalk locations?
-
-A: (also mention samba veto files, and the appledouble/MSwindows options
-in AppleVolumes.default
-
-The .AppleDouble folders hold the resource fork information for the mac
-files, plus other attributes which are not normally stored by Unix. For
-this reason, when you want to move files around in your mac volumes, it's
-a good idea to do it from the Mac side (as opposed to from the unix side,
-or Samba), unless you make absolutely sure you get the .AppleDouble
-directories. These directories are often hidden from the Samba side, via
-the veto files configuration.
-
-You can also set netatalk to not create an .AppleDouble directory unless
-it absolutely needs it, by setting the noadouble setting in
-AppleVolumes.default.
-
-
-Q: Hidden files - what's up with that?
-
-A: If you set the noadouble flag in AppleVolumes.default, you won't see
-the .Apple* or .Parent directories on the Mac side. If you use the veto
-files option in Samba, they may be hidden from the windows side as well.
-
-
-Q: How do I get the directories that are created by Netatalk to have the
-correct permissions by default?
-
-A: Investigate the SetGid bit on your unix platform. It's a good idea to
-set this on your shared directories, and your .AppleDouble directories.
-From the mail archives: "Usually directories designated for use with
-AppleShare have the setgid (g+s) bit set.  It forces inheritance of
-permissions.  Without it, the .AppleDouble subdirectory can't be created
-since the new folder doesn't necessarily have the same write privileges."
-
-Also: Evi Nemeth's "Unix System Administration Handbook" which is chock
-full of useful advice (and one or two pieces of not-so good advice, but
-even those are debatable). Here's what it says about setguid (3rd. ed,
-chap 5.5, pg. 69):
-
-"The bits with octal values 4000 and 2000 are the setuid and setgid bits.
-These bits allow programs to acess files and processes that would
-otherwise be off-limits to the users that run them. ... When set on a
-directory, the setgid bit causes newly created files within the directory
-to take on the group membership of the directory rather than the defualt
-group of the user that created the file. This convention makes it easier
-to share a directory of files among several users, as long as they all
-belong to a common group. Check your system before relying on this
-feature, since not all version of UNIX provide it. ... This interpretation
-of the setgid bit is unrelated to it's meaning when set on an executable
-file, but there is never any ambiguity as to which meaning is
-appropriate." (any typos are mine)
-
-NOTE: The SETUID is usually discussed along with the SetGID bit. The
-SetUID bit is VERY dangerous. If you set it on an executable, and the
-executable is owned by root, anyone who runs that executable is root for
-the duration of that executable's run, so a clever person can leverage
-that into a full-scale compromise. The SETGID bit also has implications
-that way, so be careful where you set it.
-
-You set it by doing a chmod 2777 or 2775, or whatever. It's that first 2 bit.
-
-
-Q: How can I set who has access to certain directories?
-
-A: You can certainly do this with your unix permissions, but also explore the 
-allow/deny/rwlist/rolist options in the AppleVolumes.default file:
-
-# allow/deny/rwlist/rolist format [syntax: allow:user1,@group]:
-# user1,@group,user2  -> allows/denies access from listed users/groups
-#                        rwlist/rolist control whether or not the
-#                        volume is ro for those users.
-
-Also, some unices, specically FreeBSD, have other options:
-(By Joe Clark)
-
-"What about file and directory permissions?  Since I didn't use the FORCE
-UID/GID code, I decided to use a feature of FreeBSD called SUIDDIR. From
-the LINT kernel config file:
-
-# If you are running a machine just as a fileserver for PC and MAC
-# users, using SAMBA or Netatalk, you may consider setting this option
-# and keeping all those users' directories on a filesystem that is
-# mounted with the suiddir option. This gives new files the same
-# ownership as the directory (similar to group). It's a security hole
-# if you let these users run programs, so confine it to file-servers
-# (but it'll save you lots of headaches in those cases). Root owned
-# directories are exempt and X bits are cleared. The suid bit must be
-# set on the directory as well; see chmod(1) PC owners can't see/set
-# ownerships so they keep getting their toes trodden on. This saves
-# you all the support calls as the filesystem it's used on will act as
-# they expect: "It's my dir so it must be my file".
-
- FORCE UID/GID code, I decided to use a feature of FreeBSD called
- SUIDDIR.  From the LINT kernel config file:
-
-# If you are running a machine just as a fileserver for PC and MAC
-# users, using SAMBA or Netatalk, you may consider setting this option
-# and keeping all those users' directories on a filesystem that is
-# mounted with the suiddir option. This gives new files the same
-# ownership as the directory (similar to group). It's a security hole
-# if you let these users run programs, so confine it to file-servers
-# (but it'll save you lots of headaches in those cases). Root owned
-# directories are exempt and X bits are cleared. The suid bit must be
-# set on the directory as well; see chmod(1) PC owners can't see/set
-# ownerships so they keep getting their toes trodden on. This saves
-# you all the support calls as the filesystem it's used on will act as
-# they expect: "It's my dir so it must be my file".
-
-And the associated mount command:
-
-mount -o suiddir /dev/da2s1e /macvol/artfiles
-
-This was used on my dedicated Netatalk/Samba filesystems.  On
-filesystems that were also used for interactive shell access, I chmod'd
-my Netatalk shares 2770.  The reason for this is that I set up a UNIX
-group for each department in the ad agency.  I had an art group, a media
-group, an accounting group, and then, or course, a general staff group.
-Each share was only allowed access by the group that needed to access
-the share.  So, the Artfiles share allowed access only to the art group:
-
-/macvol/artfiles "Art Files" allow:@art
-
-And the others followed in kind.  Therefore, the 2770 mask allowed only
-owners and people in the associated group access to read and write
-files.  The leading 2 set the setgid bit so that all child files and
-directories would retain the same group permissions.  I found this to
-work well.
-
-This was used on my dedicated Netatalk/Samba filesystems.  On
-filesystems that were also used for interactive shell access, I chmod'd
-my Netatalk shares 2770.  The reason for this is that I set up a UNIX
-group for each department in the ad agency.  I had an art group, a media
-group, an accounting group, and then, or course, a general staff group.
-Each share was only allowed access by the group that needed to access
-the share.  So, the Artfiles share allowed access only to the art group:
-
-/macvol/artfiles "Art Files" allow:@art
-
-And the others followed in kind.  Therefore, the 2770 mask allowed only
-owners and people in the associated group access to read and write
-files.  The leading 2 set the setgid bit so that all child files and
-directories would retain the same group permissions.  I found this to
-work well."
-
-
-
-Q: I can't seem to use passwords longer than 8 characters for my netatalk
-accounts. How can I fix that? 
-
-Q: I would like to use encrypted passwords to authenticate to the Netatalk
-server. How do I do that?
-
-A: Update to a newer version of AppleShare Client (I think the most recent is 3.8.8). This allows longer passwords, and will allow you to use encrypted passwords. Set which way you would like to authenticate in either afpd.conf or netatalk.conf, depending on your set up.
-
-
-Q: I'm having massive file deletion problems!
-Q: I am having lots of file locking problems!
-Q: I'm getting this message in my logs:
-WARNING: DID conflict for ...  Are these the same file?
-
-A: Compile with the --with-did=last flag set. This activates a different
-method of calculating inodes in the software, and will hopefully fix some
-of these problems. This code, along with the CNID code, was still being
-worked out in Pre7. The cnid/db3 flags also go along with this:
-  --enable-cnid-db   use persistent cnid database per volume (EXPERIMENTAL)
-  --with-db3=PATH         specify path to Berkeley DB3 installation
-  --with-did=[scheme]     set DID scheme (last,mtab) 
-
-(For more information on CNID, see the README.cnid file, into which I just
-copied wholesale Joe's comments on what he did with cnid and lastdid.)
-
---with-did=last reverted things back to the old 1.4b2 directory ID
-calculation algorithm.  This also solved the problem of the syslog
-messages and the users complaining of file deletions.  It's also been
-found that by disabling *BSD's SOFTUPDATES feature on Netatalk volumes (on
-FreeBSD), multi-user interaction seemed to work better.  This was back in
-a late 4.2-BETA, so it's not clear if this still holds true in 4.4-RELEASE
-or not.
-
-
-Q: What does this error mean:
-'afpd[#####]: setdirmode: chmod .AppleDouble Operation not permitted'
-
-A: This can be due to a few things.
-
-1) The SetGid bit might not be set on either your directory, or on the
-.AppleDouble directory. I think the bit has to be set recursively on the
-.AppleDouble folder.
-
-2) You may not be member of the group set on the directory you're trying
-to write to.
-
-3) This was a persistant bug in 1.5pre6 for awhile, upgrading might help.
-
-
-Q: I'm having problems with the Trash folder: either when someone drags
-files into it, the system want's them todelete them immeidately, or files
-get stuck in there and won't delete.
-
-A: chmod the Network Trash folder to 2775 (/home/public/Network Trash
-Folder for instance).
-
-
-Q: The daemons aren't starting, things aren't showing up in the Chooser,
-and I get a message like this in the logs: afpd[####]: Can't register
-Tests:AFPServer@*
-
-This is sometimes a result of missing NIC information in the atalkd.conf
-file. Put your network interface (something like le0, eth0, fxp0, lo0)
-alone on a line in atalkd.conf, and reboot. When atalkd starts, it will
-populate the file with a line like: le1 -seed -phase 2 -addr 66.6 -net
-66-67 -zone "No Parking"
-
-To find your network interface, run
-
-% ifconfig -a | more
-and see which interface has your IP address. Use that one.
-
-Q: I want to be able to allow users to change their passwords?  How do
-I enable this feature.  Every time I try I get an error that it was
-unable to save the password.
-
-A: Use  -[no]setpassword in afpd.conf. This  enables? disables  the
-ability  of clients  to change their passwords 
