@@ -126,13 +126,15 @@ dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
 dnl --------------------------------------------------------------------------
 
-dnl Left in here for now just in case we need to debug it, but it can be 
-dnl controlled from afpd.conf now.
-dnl AC_ARG_WITH(admin-group,
-dnl 	[  --with-admin-group  enable administrative group (set in afpd.conf)],
-	AC_DEFINE (ADMIN_GRP)
-dnl	AC_MSG_RESULT([enabling administrative group support]),
-dnl )
+AC_DEFINE(ADMIN_GRP, 1)
+
+AC_ARG_WITH(admin-group,
+ 	[  --disable-admin-group  disable admin group],
+        if test "$enableval" = "no"; then
+		AC_DEFINE (ADMIN_GRP, 0)
+		AC_MSG_RESULT([disabling administrative group support]),
+        fi
+ )
 
 AC_ARG_WITH(auth-printing-dir,
 	[  --with-auth-printing-dir=path
