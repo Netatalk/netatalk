@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
+rc.atalk.bsd
 rc.atalk.cobalt
 rc.atalk.redhat
 rc.atalk.suse
