@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.19 2002-10-17 18:01:55 didg Exp $
+ * $Id: uams_passwd.c,v 1.20 2003-05-14 15:13:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -49,6 +49,11 @@ char *strchr (), *strrchr ();
 #include <atalk/uam.h>
 
 #define PASSWDLEN 8
+
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif /* MIN */
+
 
 #ifdef TRU64
 #include <sia.h>
@@ -258,8 +263,13 @@ struct papfile	*out;
     static const char *loginok = "0\r";
     int ulen;
 
-    data = (char *)malloc(stop - start + 1);
+    data = (char *)malloc(stop - start + 2);
+    if (!data) {
+	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc");
+	return(-1);
+    }
     strncpy(data, start, stop - start + 1);
+    data[stop - start + 2] = 0;
 
     /* We are looking for the following format in data:
      * (username) (password)
@@ -279,7 +289,9 @@ struct papfile	*out;
         free(data);
         return(-1);
     }
-    strncpy(username, p, q - p);
+    strncpy(username, p, MIN( UAM_USERNAMELEN, (q - p)) );
+    username[ UAM_USERNAMELEN+1] = '\0';
+
 
     /* Parse input for password in next () */
     p = q + 3;
@@ -288,7 +300,9 @@ struct papfile	*out;
         free(data);
         return(-1);
     }
-    strncpy(password, p, q - p);
+    strncpy(password, p, MIN(PASSWDLEN, q - p) );
+    password[ PASSWDLEN+1] = '\0';
+
 
     /* Done copying username and password, clean up */
     free(data);

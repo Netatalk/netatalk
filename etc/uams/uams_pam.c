@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.15 2003-01-08 22:16:25 didg Exp $
+ * $Id: uams_pam.c,v 1.16 2003-05-14 15:13:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -40,6 +40,11 @@ char *strchr (), *strrchr ();
 #include <atalk/uam.h>
 
 #define PASSWDLEN 8
+
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif /* MIN */
+
 
 /* Static variables used to communicate between the conversation function
  * and the server_login function
@@ -331,9 +336,16 @@ int pam_printer(start, stop, username, out)
     char	*data, *p, *q;
     char	password[PASSWDLEN + 1] = "\0";
     static const char *loginok = "0\r";
+    struct passwd *pwd;
 
-    data = (char *)malloc(stop - start + 1);
+    data = (char *)malloc(stop - start + 2);
+    if (!data) {
+	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc");
+	return(-1);
+    }
+
     strncpy(data, start, stop - start + 1);
+    data[stop - start + 2] = 0;
 
     /* We are looking for the following format in data:
      * (username) (password)
@@ -348,24 +360,37 @@ int pam_printer(start, stop, username, out)
 	return(-1);
     }
     p++;
-    if ((q = strstr(data, ") (" )) == NULL) {
+    if ((q = strstr(p, ") (" )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: username not found in string");
 	free(data);
 	return(-1);
     }
-    strncpy(username, p, q - p);
+    strncpy(username, p, MIN(UAM_USERNAMELEN, q - p) );
+    username[ UAM_USERNAMELEN +1] = '\0';
 
     /* Parse input for password in next () */
     p = q + 3;
-    if ((q = strrchr(data, ')' )) == NULL) {
+    if ((q = strrchr(p, ')' )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: password not found in string");
 	free(data);
 	return(-1);
     }
-    strncpy(password, p, q - p);
+    strncpy(password, p, MIN(PASSWDLEN, (q - p)) );
+    password[ PASSWDLEN + 1] = '\0';
 
     /* Done copying username and password, clean up */
     free(data);
+
+    if (( pwd = uam_getname(username, strlen(username))) == NULL ) {
+        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
+            username);
+        return(-1);
+    }
+
+    if (uam_checkuser(pwd) < 0) {
+        /* syslog of error happens in uam_checkuser */
+        return(-1);
+    }
 
     PAM_username = username;
     PAM_password = password;

@@ -49,6 +49,9 @@
 #define UAM_PASSWD_MAXFAIL      (1 << 2) /* not implemented yet. */
 #define UAM_PASSWD_EXPIRETIME   (1 << 3) /* not implemented yet. */
 
+/* max lenght of username  */
+#define UAM_USERNAMELEN 	255
+
 /* i'm doing things this way because os x server's dynamic linker
  * support is braindead. it also allows me to do a little versioning. */
 struct uam_export {

@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.16 2003-02-17 01:35:18 srittau Exp $
+ * $Id: queries.c,v 1.17 2003-05-14 15:13:50 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -255,7 +255,7 @@ int gq_balance( out )
  * Handler for RBISpoolerID
  */
 
-static const char *spoolerid = "(PAPD Spooler) " VERSION "\n";
+static const char *spoolerid = "(PAPD Spooler) 1.0 (" VERSION ")\n";
 
 int gq_rbispoolerid( out )
     struct papfile	*out;
@@ -673,7 +673,7 @@ int cq_listq( in, out )
  */
 
 static struct uam_obj *papd_uam = NULL;
-/*static const char *rbiloginok = "0\r";*/
+static const char *rbiloginok = "0\r";
 static const char *rbiloginbad = "-1\r";
 static const char *rbiloginerrstr = "%%[Error: SecurityError; \
 SecurityViolation: Unknown user, incorrect password or log on is \
@@ -685,7 +685,7 @@ int cq_rbilogin( in, out )
 {
     char        	*start, *stop, *p, *begin;
     int			linelength, crlflength;
-    char        	username[9] = "\0";
+    char        	username[UAM_USERNAMELEN + 1] = "\0";
     struct papd_comment	*comment = compeek();
     char		uamtype[20] = "\0";
 
@@ -718,6 +718,8 @@ int cq_rbilogin( in, out )
 	    } else {
                 if ( (papd_uam->u.uam_printer(p,stop,username,out)) == 0 ) {
                     lp_person( username );
+                   append(out, rbiloginok, strlen( rbiloginok ));
+                   LOG(log_info, logtype_papd, "RBILogin: Logged in '%s'", username);
                 } else {
                     append(out, rbiloginbad, strlen( rbiloginbad));
                     append(out, rbiloginerrstr, strlen(rbiloginerrstr));
