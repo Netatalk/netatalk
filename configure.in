@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.172 2002-11-15 10:59:11 srittau Exp $
+dnl $Id: configure.in,v 1.173 2002-12-04 18:33:39 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -251,17 +251,25 @@ dnl Determine whether or not to use filename mangling
 AC_MSG_CHECKING([whether or not to use filename mangling])
 AC_ARG_WITH(mangling,
 	[  --with-mangling         enable filename mangling],
-	if test "$withval" = "yes"; then
-	    if test "x$did_scheme" != "xcnid"; then
-		AC_MSG_ERROR([DID scheme must be CNID to use filename mangling])
-	    else
-		AC_DEFINE(FILE_MANGLING, 1)
-		AC_MSG_RESULT([yes])
-	    fi
-	else
-	    AC_MSG_RESULT([no])
-	fi
-	, AC_MSG_RESULT([no])
+	[
+		if test "x$withval" = "xyes"; then
+			if test "x$did_scheme" != "xcnid"; then
+				AC_MSG_ERROR([DID scheme must be CNID to use filename mangling])
+			else
+				AC_DEFINE(FILE_MANGLING, 1)
+				AC_MSG_RESULT([yes])
+			fi
+		else
+			AC_MSG_RESULT([no])
+		fi
+	], [
+		if test "x$did_scheme" = "xcnid"; then
+			AC_DEFINE(FILE_MANGLING, 1)
+			AC_MSG_RESULT([yes])
+		else
+			AC_MSG_RESULT([no])
+		fi
+	]
 )
 
 if test "$did_scheme" = "cnid"; then
