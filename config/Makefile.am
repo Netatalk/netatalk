@@ -38,4 +38,7 @@ pam_DATA = netatalk
 netatalk:
 	$(CP) -f $(PAMD) netatalk
 
+install-data-local: netatalk
+	$(INSTALL) netatalk $(DESTDIR)$(pamdir)/
+
 endif 
