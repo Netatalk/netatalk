@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.50 2003-03-19 00:13:23 didg Exp $
+ * $Id: volume.c,v 1.51 2003-04-22 04:19:55 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1559,7 +1559,7 @@ int		ibuflen, *rbuflen;
         return AFPERR_VLOCK;
 
     /* we can only set the backup date. */
-    if (bitmap != VOLPBIT_BDATE)
+    if (bitmap != (1 << VOLPBIT_BDATE))
         return AFPERR_BITMAP;
 
     memset(&ad, 0, sizeof(ad));
