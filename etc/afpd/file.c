@@ -39,7 +39,7 @@
 
 #ifdef FORCE_UIDGID
 #include "uid.h"
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
