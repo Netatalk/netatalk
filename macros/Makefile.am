@@ -9,4 +9,5 @@ EXTRA_DIST = \
 	quota-check.m4		\
 	srvloc.m4		\
 	ssl-check.m4		\
+	largefile-check.m4	\
 	snprintf-check.m4
