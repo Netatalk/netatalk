@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.84 2003-02-16 12:35:04 didg Exp $
+ * $Id: file.c,v 1.85 2003-02-17 02:12:04 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1687,6 +1687,7 @@ int		ibuflen, *rbuflen;
     struct ofork	*s_of;
     struct ofork	*d_of;
     int                 crossdev;
+    int			tmpfd;
     
 #ifdef CNID_DB
     int                 slen, dlen;
@@ -1821,8 +1822,9 @@ int		ibuflen, *rbuflen;
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
-    if (!mktemp(temp))
+    if ((tmpfd = mkstemp(temp)) == -1)
         return AFPERR_MISC;
+    close(tmpfd);
 
     /* now, quickly rename the file. we error if we can't. */
     if ((err = renamefile(p, temp, temp, vol_noadouble(vol), adsp)) < 0)
