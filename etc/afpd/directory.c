@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.44 2002-10-12 17:27:18 didg Exp $
+ * $Id: directory.c,v 1.45 2002-10-12 18:20:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1972,8 +1972,8 @@ int		ibuflen, *rbuflen;
     sfunc = (unsigned char) *ibuf++;
     memcpy( &id, ibuf, sizeof( id ));
 
-    *rbuflen = 0;
     id = ntohl(id);
+    *rbuflen = 0;
 
     if ( id != 0 ) {
         switch ( sfunc ) {
@@ -1994,7 +1994,6 @@ int		ibuflen, *rbuflen;
             break;
 
         default :
-            *rbuflen = 0;
             return( AFPERR_PARAM );
         }
         switch ( sfunc ) {
@@ -2021,7 +2020,7 @@ int		ibuflen, *rbuflen;
     }
     else {
         *rbuf++ = len;
-        *rbuflen++;
+        *rbuflen += 1;
     }
     if ( len > 0 ) {
         memcpy( rbuf, name, len );
