@@ -174,11 +174,12 @@ found_entry:
   memcpy(password, passwd, sizeof(password));
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
-  if ( (!(flags & OPT_NOCRACK)) and 
-       (passwd = FascistCheck(password, _PATH_CRACKLIB)) ) {
-      fprintf(stderr, "Error: %s\n", passwd);
-      err = -1;
-      goto update_done;
+  if (!(flags & OPT_NOCRACK)) {
+    if (passwd = FascistCheck(password, _PATH_CRACKLIB)) { 
+        fprintf(stderr, "Error: %s\n", passwd);
+        err = -1;
+        goto update_done;
+    } 
   }
 #endif
 
