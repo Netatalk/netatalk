@@ -16,6 +16,11 @@
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
+
+#ifdef SHADOWPW
+#include <shadow.h>
+#endif
+
 #include <pwd.h>
 #include <grp.h>
 #include <syslog.h>

@@ -12,6 +12,10 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
+#ifdef SHADOWPW
+#include <shadow.h>
+#endif SHADOWPW
+
 #include <netatalk/endian.h>
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
