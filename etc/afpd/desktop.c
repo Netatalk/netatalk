@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.27 2003-05-03 20:03:13 didg Exp $
+ * $Id: desktop.c,v 1.28 2003-05-07 13:23:53 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -629,6 +629,9 @@ static char *old_mtoupath(const struct vol *vol, char *mpath)
         
     m = mpath;
     u = upath;
+    if ((vol->v_casefold & (AFPVOL_MTOUUPPER| AFPVOL_MTOULOWER))) {
+        changed = 1;
+    }
     while ( *m != '\0' ) {
         /* handle case conversion first */
         if (vol->v_casefold & AFPVOL_MTOUUPPER)
@@ -699,6 +702,9 @@ static char *old_utompath(const struct vol *vol, char *upath)
     /* do the hex conversion */
     u = upath;
     m = mpath;
+    if ((vol->v_casefold & (AFPVOL_MTOUUPPER| AFPVOL_MTOULOWER))) {
+        changed = 1;
+    }
     while ( *u != '\0' ) {
         /* we have a code page */
         if (vol->v_utompage && ((*u & 0x80) ||
