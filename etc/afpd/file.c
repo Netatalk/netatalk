@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.45 2002-05-20 15:03:19 jmarcus Exp $
+ * $Id: file.c,v 1.46 2002-06-17 18:23:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -366,6 +366,7 @@ int getfilparams(struct vol *vol,
     struct adouble	ad, *adp;
     struct ofork        *of;
     char		    *upath;
+    u_int16_t		attrbits = 0;
     int rc;    
 #ifdef DEBUG
     LOG(log_info, logtype_default, "begin getfilparams:");
@@ -374,6 +375,9 @@ int getfilparams(struct vol *vol,
     upath = mtoupath(vol, path);
     if ((of = of_findname(vol, dir, path))) {
         adp = of->of_ad;
+    	attrbits = ((of->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
+    	attrbits |= ((of->of_ad->ad_hf.adf_refcount > of->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
+
     } else {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
@@ -382,7 +386,23 @@ int getfilparams(struct vol *vol,
     if ( ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, adp) < 0 ) {
         adp = NULL;
     }
-    rc = getmetadata(vol, bitmap, path, dir, st, buf, buflen, adp, 0);    
+    else {
+#if 0
+    	/* FIXME 
+    	   we need to check if the file is open by another process.
+    	   it's slow so we only do it if we have to:
+    	   - bitmap is requested.
+    	   - we don't already have the answer!
+    	*/
+    	if ((bitmap & (1 << FILPBIT_ATTR))) {
+	    	if (!(attrbits & ATTRBIT_ROPEN)) {
+	    	}
+    		if (!(attrbits & ATTRBIT_DOPEN)) {
+	    	}
+    	}
+#endif    	
+    }
+    rc = getmetadata(vol, bitmap, path, dir, st, buf, buflen, adp, attrbits);
     if ( adp ) {
         ad_close( adp, ADFLAGS_HF );
     }

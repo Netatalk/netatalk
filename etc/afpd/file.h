@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.7 2002-05-13 04:59:36 jmarcus Exp $
+ * $Id: file.h,v 1.8 2002-06-17 18:23:03 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -57,6 +57,7 @@ extern const u_char	ufinderi[];
 #define ATTRBIT_SYSTEM    (1<<2)  /* system (d) */
 #define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
 #define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
+#define ATTRBIT_SHARED    (1<<4)  /* shared area (d) */
 #define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit */
 #define ATTRBIT_BACKUP    (1<<6)  /* backup needed (d) */
 #define ATTRBIT_NORENAME  (1<<7)  /* rename inhibit (d) */

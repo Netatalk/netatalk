@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.29 2002-06-01 05:10:24 didg Exp $
+ * $Id: fork.c,v 1.30 2002-06-17 18:23:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -232,6 +232,7 @@ int		ibuflen, *rbuflen;
     u_int32_t           did;
     u_int16_t		vid, bitmap, access, ofrefnum, attrbits = 0;
     char		fork, *path, *upath;
+    u_int16_t bshort;
 
     ibuf++;
     fork = *ibuf++;
@@ -277,10 +278,13 @@ int		ibuflen, *rbuflen;
        open bits should really be set if the fork is opened by any
        program, not just this one. however, that's problematic to do
        if we can't write lock files somewhere. opened is also passed to 
-       ad_open so that we can keep file locks together. */
+       ad_open so that we can keep file locks together.
+       FIXME: add the fork we are opening? 
+    */
     if ((opened = of_findname(vol, curdir, path))) {
-        attrbits = ((opened->of_flags & AFPFORK_RSRC) ? ATTRBIT_ROPEN : 0) |
-                   ((opened->of_flags & AFPFORK_DATA) ? ATTRBIT_DOPEN : 0);
+        attrbits = ((opened->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
+        attrbits |= ((opened->of_ad->ad_hf.adf_refcount > opened->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
+                   
         adsame = opened->of_ad;
     }
 
@@ -403,6 +407,16 @@ int		ibuflen, *rbuflen;
     bitmap = htons( bitmap );
     memcpy(rbuf, &bitmap, sizeof( u_int16_t ));
     rbuf += sizeof( u_int16_t );
+
+    /* check  WriteInhibit bit, the test is done here, after some Mac trafic capture */
+    ad_getattr(ofork->of_ad, &bshort);
+    if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
+        ad_close( ofork->of_ad, adflags );
+        of_dealloc( ofork );
+        ofrefnum = 0;
+        memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
+        return(AFPERR_OLOCK);
+    }
 
     /*
      * synchronization locks:
@@ -1275,6 +1289,7 @@ int		ibuflen, *rbuflen;
     struct ofork	*ofork;
     int			buflen, ret;
     u_int16_t		ofrefnum, bitmap;
+    u_int16_t		attrbits = 0;
 
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
@@ -1288,9 +1303,11 @@ int		ibuflen, *rbuflen;
         LOG(log_error, logtype_afpd, "afp_getforkparams: of_find");
         return( AFPERR_PARAM );
     }
+    attrbits = ((ofork->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
+    attrbits |= ((ofork->of_ad->ad_hf.adf_refcount > ofork->of_ad->ad_df.adf_refcount) ? ATTRBIT_ROPEN : 0);
 
     if (( ret = getforkparams( ofork, bitmap,
-                               rbuf + sizeof( u_short ), &buflen, 0 )) != AFP_OK ) {
+                               rbuf + sizeof( u_short ), &buflen, attrbits )) != AFP_OK ) {
         return( ret );
     }
 

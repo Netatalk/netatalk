@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.33 2002-05-27 04:47:00 didg Exp $
+ * $Id: directory.c,v 1.34 2002-06-17 18:23:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -993,6 +993,7 @@ int getdirparams(const struct vol *vol,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+            ashort |= htons(ATTRBIT_SHARED);
             memcpy( data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
             break;
