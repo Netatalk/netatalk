@@ -109,7 +109,7 @@ This is the Tru64 README file for netatalk.
     and is enough to stop the bug from occurring. This is the easiest
     workaround and would merely alter the standard compilation steps to
 
-    ./configure --with-cflags="-DHAVE_GCC_MEMCPY_BUG"
+    CFLAGS="-DHAVE_GCC_MEMCPY_BUG" ./configure [...]
     make
     make install
 
