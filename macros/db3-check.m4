@@ -1,4 +1,4 @@
-dnl $Id: db3-check.m4,v 1.9 2003-02-16 02:13:05 jmarcus Exp $
+dnl $Id: db3-check.m4,v 1.10 2003-02-23 16:09:28 jmarcus Exp $
 dnl Autoconf macro to check for the Berkeley DB library
 
 AC_DEFUN([AC_PATH_BDB], [
@@ -24,8 +24,13 @@ AC_DEFUN([AC_PATH_BDB], [
 			LDFLAGS="-L$bdblibdir $LDFLAGS"
 			AC_CHECK_LIB(db, main, [
 				bdbfound=yes
-				BDB_CFLAGS="-I$bdbdir"
-				BDB_LIBS="-L$bdblibdir -ldb"
+				if test "$bdbdir" != "/usr/include"; then
+				    BDB_CFLAGS="-I$bdbdir"
+				fi
+				if test "$bdblibdir" != "/usr/lib"; then
+				    BDB_LIBS="-L$bdblibdir"
+				fi
+				BDB_LIBS="$DBD_LIBS -ldb"
 				BDB_BIN=$bdbbindir
 				BDB_PATH="`echo $bdbdir | sed 's,include/db3$,,'`"
 			])
