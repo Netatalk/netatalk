@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.3 2001-05-03 13:57:44 rufustfirefly Exp $
+ * $Id: unix.h,v 1.4 2001-05-11 12:17:45 rufustfirefly Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -35,7 +35,7 @@ typedef int	mode_t;
 #define f_mntfromname f_fname
 #endif
 
-#if defined(USE_STATVFS_H) || defined(__svr4__)
+#if defined(HAVE_SYS_STATVFS_H) || defined(__svr4__)
 #include <sys/statvfs.h>
 #define statfs statvfs
 #else
@@ -46,16 +46,16 @@ typedef int	mode_t;
 #endif /* TRU64 */
 #endif /* USE_STATVFS_H */
 
-#if defined(__svr4__) || defined(USE_MNTTAB_H)
+#if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
 #include <sys/mnttab.h>
 #endif
 
-#if defined(USE_MOUNT_H) || defined(BSD4_4) || \
+#if defined(HAVE_MOUNT_H) || defined(BSD4_4) || \
     defined(linux) || defined(ultrix)
 #include <sys/mount.h>
 #endif
 
-#if defined(linux) || defined(USE_MNTENT_H)
+#if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
 #endif
 
@@ -66,27 +66,27 @@ typedef int	mode_t;
 #define dqb_btimelimit  dqb_btime
 #endif
 
-#if defined(linux) || defined(ultrix) || defined(USE_QUOTA_H)
+#if defined(linux) || defined(ultrix) || defined(HAVE_QUOTA_H)
 #ifndef NEED_QUOTACTL_WRAPPER
 #include <sys/quota.h>
-#else
+#else /* ! NEED_QUOTACTL_WRAPPER */
 #include <asm/types.h>
 #include <asm/unistd.h>
 #include <linux/quota.h>
-#endif
-#endif
+#endif /* ! NEED_QUOTACTL_WRAPPER */
+#endif /* linux || ultrix || HAVE_QUOTA_H */
 
 #ifdef __svr4__ 
 #include <sys/fs/ufs_quota.h>
-#endif
+#endif /* __svr4__ */
 
 #ifdef BSD4_4
 #include <ufs/ufs/quota.h>
 #endif
 
-#ifdef USE_UFS_QUOTA_H
+#ifdef HAVE_UFS_QUOTA_H
 #include <ufs/quota.h>
-#endif
+#endif /* HAVE_UFS_QUOTA_H */
 
 #ifdef _IBMR2
 #include <jfs/quota.h>
