@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.167 2002-09-28 03:56:44 jmarcus Exp $
+dnl $Id: configure.in,v 1.168 2002-10-04 15:11:57 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -214,19 +214,14 @@ db3_required=no
 dnl Determine DID scheme
 AC_MSG_CHECKING([for DID scheme to use])
 AC_ARG_WITH(did,
-	[  --with-did=SCHEME       set DID scheme (last,hash,mtab,cnid)],
+	[  --with-did=SCHEME       set DID scheme (cnid,last)],
 	[ did_scheme="$withval" ],
-	[ did_scheme="last" ]
+	[ did_scheme="cnid" ]
 )
 
 if test "x$did_scheme" = "xlast"; then
 	AC_DEFINE(USE_LASTDID, 1)
 	AC_MSG_RESULT([last])
-elif test "x$did_scheme" = "xhash"; then
-	AC_MSG_RESULT([device/inode-based hashing])
-elif test "x$did_scheme" = "xmtab"; then
-	AC_DEFINE(DID_MTAB, 1)
-	AC_MSG_RESULT([mtab-based DID creation support])
 elif test "x$did_scheme" = "xcnid"; then
 	db3_required="yes"
 	AC_DEFINE(CNID_DB, 1)
@@ -239,7 +234,7 @@ AM_CONDITIONAL(COMPILE_CNID, test "x$did_scheme" = "xcnid")
 dnl Determine whether or not to use filename mangling
 AC_MSG_CHECKING([whether or not to use filename mangling])
 AC_ARG_WITH(mangling,
-	[ --with-mangling	enable filename mangling],
+	[  --with-mangling         enable filename mangling],
 	if test "$withval" = "yes"; then
 	    if test "x$did_scheme" != "xcnid"; then
 		AC_MSG_ERROR([DID scheme must be CNID to use filename mangling])
