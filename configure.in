@@ -8,6 +8,7 @@ AC_SUBST(NETATALK_VERSION)
 AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE(netatalk, ${NETATALK_VERSION})
 AM_CONFIG_HEADER(config.h)
+AM_PROG_LIBTOOL
 
 dnl Reset locations to proper places
 AC_PREFIX_DEFAULT(/usr)
@@ -132,7 +133,7 @@ AC_ARG_WITH(admin-group,
  	[  --disable-admin-group  disable admin group],
         if test "$enableval" = "no"; then
 		AC_DEFINE(ADMIN_GRP, 0)
-		AC_MSG_RESULT([disabling administrative group support]),
+		AC_MSG_RESULT([disabling administrative group support])
         fi
  )
 
