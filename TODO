@@ -30,14 +30,8 @@ desired features (in no particular order):
 		3) change lookup algorithms where appropriate. 
 	ability to interact with hfs desktop databases (either by
 	        changing hfs or changing afpd).
-        support for system-wide messages; send the main afpd process SIGUSR2
-                and each of the children should send out the same message.
-        replacement of a linefeed with the appropriate Macintosh character in
-                server messaging (currently replaces with a space)
         a way to find out not only who is logged in, but where they're logged
                 in from.  utmp/wtmp support would be best
-        support picking up items from dropboxes without linux-side superuser
-                intervention
 		
     papd: implementing uams would be a good idea
 	 
@@ -62,6 +56,12 @@ things to fix:
                 bad. i just have to implement Open/CloseDir and fiddle
                 a little with did assignment. argh. apple's appleshare
 		client doesn't like non-fixed directory ids. 
+        support picking up items from dropboxes without linux-side superuser
+                intervention
+        support for system-wide messages; send the main afpd process SIGUSR2
+                and each of the children should send out the same message.
+        replacement of a linefeed with the appropriate Macintosh character in
+                server messaging (currently replaces with a space)
 
 added features:
 	more of AFP 2.0!
