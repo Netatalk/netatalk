@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.91 2003-04-20 06:53:40 didg Exp $
+ * $Id: file.c,v 1.92 2003-04-26 16:53:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -617,6 +617,8 @@ int		ibuflen, *rbuflen;
     if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF,
                   openf, 0666, adp) < 0 ) {
         switch ( errno ) {
+        case EROFS:
+            return AFPERR_VLOCK;
         case ENOENT : /* we were already in 'did folder' so chdir() didn't fail */
             return ( AFPERR_NOOBJ );
         case EEXIST :
