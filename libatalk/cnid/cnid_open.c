@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.51 2003-03-07 14:51:51 didg Exp $
+ * $Id: cnid_open.c,v 1.52 2003-06-06 20:25:32 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -117,6 +117,7 @@ DB_INIT_LOG | DB_INIT_TXN)
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 * databases. */
 
+#if 0
 /* -----------------------
  * bandaid for LanTest performance pb. for now not used, cf. ifdef 0 below
 */
@@ -130,6 +131,7 @@ static int my_yield(void)
     ret = select(0, NULL, NULL, NULL, &t);
     return 0;
 }
+#endif
 
 /* --------------- */
 static int  my_open(DB *p, const char *f, const char *d, DBTYPE t, u_int32_t flags, int mode)
@@ -142,6 +144,7 @@ static int  my_open(DB *p, const char *f, const char *d, DBTYPE t, u_int32_t fla
 }
 
 /* --------------- */
+#ifdef EXTENDED_DB
 /* the first compare that's always done. */
 static __inline__ int compare_did(const DBT *a, const DBT *b)
 {
@@ -152,6 +155,7 @@ static __inline__ int compare_did(const DBT *a, const DBT *b)
     return dida - didb;
 }
 
+#if 0
 /* sort did's and then names. this is for unix paths.
  * i.e., did/unixname lookups. */
 #if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
@@ -175,6 +179,7 @@ static int compare_unix(const DBT *a, const DBT *b)
 
     return a->size - b->size; /* sort by length */
 }
+#endif
 
 /* sort did's and then names. this is for macified paths (i.e.,
  * did/macname, and did/shortname. i think did/longname needs a
@@ -216,6 +221,7 @@ static int compare_unicode(const DBT *a, const DBT *b)
     return compare_mac(a,b);
 #endif /* DB_VERSION_MINOR */
 }
+#endif /* EXTENDED_DB */
 
 void *cnid_open(const char *dir, mode_t mask) {
     struct stat st;
@@ -225,7 +231,6 @@ void *cnid_open(const char *dir, mode_t mask) {
 char path[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
-    DB_TXN *tid;
     int open_flag, len;
     int rc;
 
@@ -562,7 +567,6 @@ fail_lock:
 
 fail_adouble:
 
-fail_db:
     free(db);
     return NULL;
 }
