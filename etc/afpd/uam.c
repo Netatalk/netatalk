@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.20 2002-02-13 16:44:59 srittau Exp $
+ * $Id: uam.c,v 1.21 2002-03-07 15:59:53 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -242,8 +242,15 @@ int uam_checkuser(const struct passwd *pwd)
 {
     const char *p;
 
-    if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0'))
+    if (!pwd)
         return -1;
+
+#ifndef DISABLE_SHELLCHECK
+	if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
+		LOG(log_info, logtype_default, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
+		return -1;
+	}
+#endif
 
     while ((p = getusershell())) {
         if ( strcmp( p, pwd->pw_shell ) == 0 )
