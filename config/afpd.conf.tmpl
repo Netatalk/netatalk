@@ -53,7 +53,7 @@
 #
 #   Authentication Methods:
 #     -uampath <path>  Use this path to look for User Authentication Modules.
-#		       (default: :RESDIR:/uams)
+#		       (default: :UAMS_PATH:)
 #     -uamlist <a,b,c> Comma-separated list of UAMs. (default:
 #		       uams_guest.so,uams_clrtxt.so,uams_dhx.so) 
 #
@@ -76,7 +76,7 @@
 #     -[no]savepassword   [Don't] Allow clients to save password locally
 #     -passwdfile <path>  Use this path to store Randnum
 #			  passwords. (default: ~/.passwd. the only other
-#                         userful value is :RESDIR:/etc/afppasswd.)
+#                         userful value is :ETCDIR:/afppasswd.)
 #     -passwdminlen <#>   minimum password length. may be ignored.
 #     -[no]setpassword    [Don't] Allow clients to change their passwords.
 #     -loginmaxfail <#>   maximum number of failed logins. this may be
@@ -96,7 +96,7 @@
 #     -[no]uservol        [Don't] Read the user's volume file
 #
 #     -nlspath <path>     Prepend this path to each code page filename
-#                         in volume options (default: :RESDIR:/nls).
+#                         in volume options (default: :NLS_PATH:).
 #
 #   Miscellaneous:
 #     -guestname "user"   Specifies the user name for the guest login

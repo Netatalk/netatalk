@@ -47,6 +47,12 @@ atalk_startup() {
 	    RETVAL_PAPD=$?
 	fi
 
+	# check for timelord in bin directory
+	if [ -x :BINDIR:/timelord ]; then
+	    daemon :BINDIR:/timelord
+	fi
+
+	# check for timelord in sbin directory
 	if [ -x :SBINDIR:/timelord ]; then
 	    daemon :SBINDIR:/timelord
 	fi
@@ -84,6 +90,12 @@ case "$1" in
 		RETVAL_PAPD=$?
 	    fi
 
+            # checking for timelord in bin directory
+	    if [ -x :BINDIR:/timelord ]; then
+		killproc timelord
+	    fi
+
+            # checking for timelord in sbin directory
 	    if [ -x :SBINDIR:/timelord ]; then
 		killproc timelord
 	    fi
@@ -96,7 +108,7 @@ case "$1" in
 		killproc atalkd
 		RETVAL_ATALKD=$?
 	    fi
-	fi	    
+	fi
 
 	# kill this separately as we also do AFP/tcp
 	if [ x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ]; then

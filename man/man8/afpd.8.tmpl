@@ -52,9 +52,9 @@ The list of volumes offered to the user is generated from
 .B :ETCDIR:/AppleVolumes.system
 and one of
 .BR :ETCDIR:/AppleVolumes.default ,
-.BR $HOME/AppleVolumes ,
+.BR ~/AppleVolumes ,
 or
-.BR $HOME/.AppleVolumes .
+.BR ~/.AppleVolumes .
 .LP
 The
 .B AppleVolumes
@@ -176,7 +176,7 @@ and
 .BR IV ,
 .B afpd
 offers the user all volumes listed in
-.BR $HOME/AppleVolumes .
+.BR ~/AppleVolumes .
 The user may also read and write all files that s/he normally could.
 .B Cleartxt passwd
 is not recommended for AFS use.
@@ -218,10 +218,10 @@ bit set will be generated in the parent volume as the applications are
 seen by the Finder.
 .LP
 If a user edits his
-.B $HOME/AppleVolumes
+.B ~/AppleVolumes
 so that his home directory is no longer offered, he will no longer be able
 to edit his
-.B $HOME/AppleVolumes
+.B ~/AppleVolumes
 from the Macintosh.
 .LP
 Unix files beginning with `.' are not accessible from the mac.
@@ -229,7 +229,7 @@ Unix files beginning with `.' are not accessible from the mac.
 If the
 .I pathname
 in an
-.B $HOME/AppleVolumes
+.B ~/AppleVolumes
 file does not exist, the volume will not be offered in the Chooser.
 .LP
 Microsoft Word
@@ -240,7 +240,7 @@ because MS Word uses a type other than
 while writing the document, then changes the type to
 .BR TEXT .
 To allow users to edit their
-.BR $HOME/AppleVolumes ,
+.BR ~/AppleVolumes ,
 .B afpd
 parses the files with either end of line character.
 .LP
@@ -254,7 +254,7 @@ list of default volumes to mount
 .B :ETCDIR:/AppleVolumes.system
 list of volumes to offer all users
 .TP 20
-.B $HOME/AppleVolumes
+.B ~/AppleVolumes
 user's list of volumes to mount
 .SH BUGS
 A few calls from the AFP specification are not implemented, because the
