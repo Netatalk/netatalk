@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.18 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: enumerate.c,v 1.19 2002-03-24 07:38:23 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -324,9 +324,23 @@ int		ibuflen, *rbuflen;
         start = sd.sd_last;
         sd.sd_last++;
 
-        if ( stat( sd.sd_last, &st ) < 0 ) {
-            LOG(log_debug, logtype_afpd, "afp_enumerate: stat %s: %s",
-                sd.sd_last, strerror(errno) );
+        if (*sd.sd_last == 0) {
+            /* stat() already failed on this one */
+            sd.sd_last += len + 1;
+            continue;
+        }
+
+        if (stat( sd.sd_last, &st ) < 0 ) {
+            /* 
+             * Somebody else plays with the dir, well it can be us with 
+			 * "Empty Trash..."
+			 */
+
+            /* so the next time it won't try to stat it again 
+             * another solution would be to invalidate the cache with 
+             * sd.sd_did = -1 but if it's not ENOENT error it will start again
+             */
+            *sd.sd_last = 0;
             sd.sd_last += len + 1;
             continue;
         }
