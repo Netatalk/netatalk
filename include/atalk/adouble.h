@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.21 2003-03-09 19:55:35 didg Exp $
+ * $Id: adouble.h,v 1.22 2003-06-06 20:43:14 srittau Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -68,7 +68,7 @@
 #include <sys/mman.h>
 #include <netatalk/endian.h>
 
-/* XXX: this is the wrong place to put this. 
+/* FIXME: this is the wrong place to put this. 
  * NOTE: as of 2.2.1, linux can't do a sendfile from a socket. 
  * and it doesn't have 64 bits sendfile
  */
@@ -85,14 +85,16 @@
 #include <asm/unistd.h>
 
 #ifdef __NR_sendfile
-#ifdef ATACC
-extern int sendfile __P((int , int , off_t *, size_t ));
-#else /* !ATACC */
-static __inline__ int sendfile(int fdout, int fdin, off_t *off, size_t count)
-{
-  return syscall(__NR_sendfile, fdout, fdin, off, count);
-}
-#endif /* ATACC */
+
+extern long int syscall (long int __sysno, ...) __THROW;
+#if _FILE_OFFSET_BITS == 64
+#  error sendfile
+#  define sendfile(fdout, fdin, off, count) \
+	syscall(__NR_sendfile64, (fdout), (fdin), (off), (count))
+#else /* _FILE_OFFSET_BITS == 64 */
+#  define sendfile(fdout, fdin, off, count) \
+	syscall(__NR_sendfile, (fdout), (fdin), (off), (count))
+#endif /* _FILE_OFFSET_BITS == 64 */
 
 #else /* !__NR_sendfile */
 #include <sys/sendfile.h>

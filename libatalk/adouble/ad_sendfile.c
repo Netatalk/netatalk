@@ -1,5 +1,5 @@
 /*
- * $Id: ad_sendfile.c,v 1.6 2003-02-17 01:51:07 srittau Exp $
+ * $Id: ad_sendfile.c,v 1.7 2003-06-06 20:43:14 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -28,23 +28,6 @@
 #include <atalk/logger.h>
 
 #include "ad_private.h"
-
-#ifdef ATACC
-
-#if defined(HAVE_SENDFILE_READ)
-#ifdef __NR_sendfile
-int sendfile(int fdout, int fdin, off_t *off, size_t count)
-{
-#if _FILE_OFFSET_BITS == 64 
-#error sendfile
-  return syscall(__NR_sendfile64, fdout, fdin, off, count);
-#else
-  return syscall(__NR_sendfile, fdout, fdin, off, count);
-#endif
-}
-#endif
-#endif
-#endif
 
 #if defined(HAVE_SENDFILE_READ) || defined(HAVE_SENDFILE_WRITE)
 static __inline__ int ad_sendfile_init(const struct adouble *ad, 
