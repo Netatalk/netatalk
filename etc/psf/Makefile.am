@@ -12,5 +12,24 @@ CFLAGS = @CFLAGS@ -DZEROWIDTH \
 	-D_PATH_PSFILTER=\"$(bindir)/etc2ps.sh\" \
 	-D_PATH_PAGECOUNT=\"$(CONFIG_DIR)/pagecount.ps\"
 
-# how to do symbolic links to psf???
-# LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap tfwpap ifwpaprev tfwpaprev ofmpap ifmpap tfmpap ifmpaprev tfmpaprev ofwmpap ifwmpap tfwmpap ifwmpaprev tfwmpaprev
+# declare links
+psf_LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap \
+	 tfwpap ifwpaprev tfwpaprev ofmpap ifmpap tfmpap ifmpaprev \
+	 tfmpaprev ofwmpap ifwmpap tfwmpap ifwmpaprev tfwmpaprev
+
+
+#
+# install sections for links
+#
+
+install-data-local:
+	@list='$(psf_LINKS)'; for l in $$list; do \
+		$(LN_S) -f psf $(DESTDIR)$(sbindir)/$$l;  \
+	done
+
+#
+# cleanup
+#
+
+clean distclean clean-recursive distclean-recursive:
+	$(RM) $(psf_LINKS) *.o core .libs .deps
