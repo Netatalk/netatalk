@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.23 2002-11-14 17:18:32 srittau Exp $
+ * $Id: ad_open.c,v 1.24 2002-11-26 18:48:23 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -707,6 +707,7 @@ int ad_open( path, adflags, oflags, mode, ad )
     AD_SET(ad->ad_hf.adf_off);
 	  
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
+    ad->ad_hf.adf_refcount++;
     if ((ad->ad_hf.adf_flags & ( O_TRUNC | O_CREAT ))) {
         /*
          * This is a new adouble header file. Initialize the structure,
@@ -727,7 +728,6 @@ int ad_open( path, adflags, oflags, mode, ad )
 	    return( -1 );
 	}
     }
-    ad->ad_hf.adf_refcount++;
     return 0 ;
 }
 
