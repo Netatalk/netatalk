@@ -1,0 +1,5 @@
+Makefile
+Makefile.in
+cnid_didname_verify
+.deps
+.libs
