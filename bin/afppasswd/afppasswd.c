@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.17 2003-06-09 02:51:34 srittau Exp $
+ * $Id: afppasswd.c,v 1.18 2003-06-09 02:55:25 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -43,7 +43,12 @@
 
 #include <netatalk/endian.h>
 
+#if HAVE_GCRYPT
+#include <gcrypt.h>
+#define DES_KEY_SZ 8
+#else
 #include <des.h>
+#endif
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
@@ -122,6 +127,27 @@ static int decrypt_passwd(u_int8_t *dst, const u_int8_t *src, int keyfd)
     return 0;
 
   {
+#if HAVE_GCRYPT
+    GcryCipherHd handle;
+
+    handle = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    if (handle) {
+      int ret;
+
+      ret = gcry_cipher_setkey(handle, key, DES_KEY_SZ);
+      if (!ret)
+        ret = gcry_cipher_decrypt(handle, dst, 8, src, 8);
+      gcry_cipher_close(handle);
+      if (ret) {
+        fprintf(stderr, _("Decryption error: %s\n"), gcry_strerror(ret));
+        err = 1;
+      }
+      printf("pw: %s\n", buf); /* FIXME */
+    } else {
+      fprintf(stderr, _("Could not create crypt handle.\n"));
+      err = 1;
+    }
+#else
     DES_key_schedule schedule;
 
     DES_set_key_unchecked((DES_cblock *) key, &schedule);
@@ -129,6 +155,7 @@ static int decrypt_passwd(u_int8_t *dst, const u_int8_t *src, int keyfd)
                     &schedule, DES_DECRYPT);
 
     memset(&schedule, 0, sizeof(schedule));
+#endif
   }
 
   memset(key, 0, HEXPASSWDLEN);
@@ -146,6 +173,25 @@ static int encrypt_passwd(u_int8_t *dst, const u_int8_t *src, int keyfd)
     return 0;
 
   {
+#if HAVE_GCRYPT
+    GcryCipherHd handle;
+    int ret;
+                                                                                
+    handle = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+    if (handle) {
+      ret = gcry_cipher_setkey(handle, key, DES_KEY_SZ);
+      if (!ret)
+        ret = gcry_cipher_encrypt(handle, dst, 8, src, 0);
+      gcry_cipher_close(handle);
+      if (ret) {
+        fprintf(stderr, _("Encryption error: %s\n"), gcry_strerror(ret));
+        err = 1;
+      }
+    } else {
+      fprintf(stderr, _("Could not create crypt handle.\n"));
+      err = 1;
+    }
+#else
     DES_key_schedule schedule;
 
     DES_set_key_unchecked((DES_cblock *) key, &schedule);
@@ -153,6 +199,7 @@ static int encrypt_passwd(u_int8_t *dst, const u_int8_t *src, int keyfd)
                     &schedule, DES_ENCRYPT);
 
     memset(&schedule, 0, sizeof(schedule));      
+#endif
   }
 
   return err;
