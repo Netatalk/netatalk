@@ -79,6 +79,6 @@ extern int uam_sia_validate_user __P((sia_collect_func_t *, int, char **,
 #define UAM_AFPSERVER_POSTAUTH (1 << 0)
 
 extern int uam_afpserver_action __P((const int /*id*/, const int /*switch*/, 
-				     int (**)(), int (**)()));
+				     int (*)(), int (**)()));
 
 #endif

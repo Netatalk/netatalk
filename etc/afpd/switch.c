@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.10 2002-10-12 13:46:09 didg Exp $
+ * $Id: switch.c,v 1.11 2002-10-12 16:42:31 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -207,20 +207,20 @@ int	(*postauth_switch[])() = {
 /* add a new function if it's specified. return the old function in
  * "old" if there's a pointer there. */
 int uam_afpserver_action(const int id, const int which,
-                         int (**new)(), int (**old)())
+                         int (*new)(), int (**old)())
 {
     switch (which) {
     case UAM_AFPSERVER_PREAUTH:
         if (old)
             *old = preauth_switch[id];
         if (new)
-            preauth_switch[id] = *new;
+            preauth_switch[id] = new;
         break;
     case UAM_AFPSERVER_POSTAUTH:
         if (old)
             *old = postauth_switch[id];
         if (new)
-            postauth_switch[id] = *new;
+            postauth_switch[id] = new;
         break;
     default:
         LOG(log_debug, logtype_afpd, "uam_afpserver_action: unknown switch %d[%d]",

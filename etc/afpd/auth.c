@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.32 2002-10-12 04:02:46 didg Exp $
+ * $Id: auth.c,v 1.33 2002-10-12 16:42:31 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -334,8 +334,8 @@ unsigned int ibuflen, *rbuflen;
 
     *rbuflen = 0;
 
-    ibuf++;
-    ibuflen--;
+    ibuf += 2;
+    ibuflen -= 2;
 
     memcpy(&type, ibuf, sizeof(type));    
     type = ntohs(type);
@@ -389,7 +389,7 @@ int		ibuflen, *rbuflen;
     pid_t               token;
 
     *rbuflen = 0;
-    ibuf++;
+    ibuf += 2;
 
     memcpy(&type, ibuf, sizeof(type));
     type = ntohs(type);
