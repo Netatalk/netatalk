@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.14 2002-01-16 19:46:52 jmarcus Exp $
+ * $Id: fork.c,v 1.15 2002-01-16 19:55:15 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -58,6 +58,11 @@ char		*buf;
 int			*buflen;
 const u_int16_t     attrbits;
 {
+#ifndef USE_LASTDID
+	struct stat		hst, lst, *lstp;
+#else /* USE_LASTDID */
+	struct stat     hst;
+#endif
     struct stat		st;
     struct extmap	*em;
     char		*data, *nameoff = NULL, *upath;
@@ -189,11 +194,16 @@ const u_int16_t     attrbits;
 #endif /* CNID_DB */
 
             if (aint == 0) {
-#ifdef AFS
-                aint = htonl(st.st_ino);
-#else /* AFS */
+#ifdef USE_LASTDID
                 aint = htonl(( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff ));
-#endif /* AFS */
+#else /* USE_LASTDID */
+				lstp = lstat(upath, &lst) < 0 ? st : &lst;
+#ifdef DID_MTAB
+				aint = htonl( afpd_st_cnid ( lstp ) );
+#else /* DID_MTAB */
+				aint = htonl(CNID(lstp, 1));
+#endif /* DID_MTAB */
+#endif /* USE_LASTDID */
             }
 
             memcpy(data, &aint, sizeof( aint ));
