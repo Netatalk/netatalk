@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.12 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: main.c,v 1.13 2002-02-13 16:56:20 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -39,6 +39,8 @@
 #endif /* TRU64 */
 #include <net/if.h>
 #include <net/route.h>
+
+#include <netinet/in.h>
 
 #include <signal.h>
 #include <atalk/logger.h>
@@ -159,10 +161,7 @@ static void atalkd_exit(const int i)
 }
 
 
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif /* ibm032 _IBMR2 */
-as_timer()
+void as_timer(void)
 {
     struct sockaddr_at	sat;
     struct ziphdr	zh;
@@ -276,12 +275,12 @@ as_timer()
 		    LOG(log_info, logtype_default, "config for no router" );
 		      
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
-			iface->i_rt->rt_firstnet = 0;
+			iface->i_rt->rt_firstnet = htons(1);
 			iface->i_rt->rt_lastnet = htons( STARTUP_LASTNET );
 			setaddr( iface, IFACE_PHASE2,
 				iface->i_addr.sat_addr.s_net,
 				iface->i_addr.sat_addr.s_node,
-				0, htons( STARTUP_LASTNET ));
+				htons(1), htons( STARTUP_LASTNET ));
 		    }
 		    if ( looproute( iface, RTMP_ADD ) ) { /* -1 or 1 */
 			LOG(log_error, logtype_default,
