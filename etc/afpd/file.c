@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.81 2003-01-31 17:38:01 didg Exp $
+ * $Id: file.c,v 1.82 2003-02-01 19:34:55 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -865,8 +865,6 @@ setfilparam_done:
 /*
  * renamefile and copyfile take the old and new unix pathnames
  * and the new mac name.
- * NOTE: if we have to copy a file instead of renaming it, locks
- *       will break. Anyway it's an error because then we have 2 files.
  *
  * src         the source path 
  * dst         the dest filename in current dir
@@ -879,17 +877,9 @@ char	*src, *dst, *newname;
 const int         noadouble;
 struct adouble    *adp;
 {
-    char		adsrc[ MAXPATHLEN + 1];
-    int			len, rc;
-
-    /*
-     * Note that this is only checking the existance of the data file,
-     * not the header file.  The thinking is that if the data file doesn't
-     * exist, but the header file does, the right thing to do is remove
-     * the data file silently.
-     */
-
-    /* existence check moved to afp_moveandrename */
+    char	adsrc[ MAXPATHLEN + 1];
+    int		len;
+    int		rc;
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin renamefile:");
@@ -905,6 +895,14 @@ struct adouble    *adp;
         case EROFS:
             return AFPERR_VLOCK;
         case EXDEV :			/* Cross device move -- try copy */
+           /* NOTE: with open file it's an error because after the copy we will 
+            * get two files, it's fixable for our process (eg reopen the new file, get the
+            * locks, and so on. But it doesn't solve the case with a second process
+            */
+    	    if (adp->ad_df.adf_refcount || adp->ad_hf.adf_refcount) {
+    	        /* FIXME  warning in syslog so admin'd know there's a conflict ?*/
+    	        return AFPERR_OLOCK; /* little lie */
+    	    }
             if (( rc = copyfile(src, dst, newname, noadouble )) != AFP_OK ) {
                 deletefile( dst, 0 );
                 return( rc );
@@ -916,50 +914,66 @@ struct adouble    *adp;
     }
 
     strcpy( adsrc, ad_path( src, 0 ));
-    rc = 0;
-rename_retry:
+
     if (unix_rename( adsrc, ad_path( dst, 0 )) < 0 ) {
         struct stat st;
+        int err;
+        
+        err = errno;        
+	if (errno == ENOENT) {
+	    struct adouble    ad;
 
-        switch ( errno ) {
-        case ENOENT :
-            /* check for a source appledouble header. if it exists, make
-             * a dest appledouble directory and do the rename again. */
-            if (rc || stat(adsrc, &st) ||
-                    (ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, adp) < 0))
+            if (stat(adsrc, &st)) /* source has no ressource fork, */
                 return AFP_OK;
-            rc++;
-            ad_close(adp, ADFLAGS_HF);
-            goto rename_retry;
-        case EPERM:
-        case EACCES :
-            return( AFPERR_ACCESS );
-        case EROFS:
-            return AFPERR_VLOCK;
-        default :
-            return( AFPERR_PARAM );
+            
+            /* We are here  because :
+             * -there's no dest folder. 
+             * -there's no .AppleDouble in the dest folder.
+             * if we use the struct adouble passed in parameter it will not
+             * create .AppleDouble if the file is already opened, so we
+             * use a diff one, it's not a pb,ie it's not the same file, yet.
+             */
+            memset(&ad, 0, sizeof(ad));
+            if (!ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) {
+            	ad_close(adp, ADFLAGS_HF);
+    	        if (!unix_rename( adsrc, ad_path( dst, 0 )) ) 
+                   err = 0;
+                else 
+                   err = errno;
+            }
+            else { /* it's something else, bail out */
+	        err = errno;
+	    }
+	}
+	/* try to undo the data fork rename,
+	 * we know we are on the same device 
+	*/
+	if (err) {
+    	    unix_rename( dst, src ); 
+    	    /* return the first error */
+    	    switch ( err) {
+            case ENOENT :
+                return AFPERR_NOOBJ;
+            case EPERM:
+            case EACCES :
+                return AFPERR_ACCESS ;
+            case EROFS:
+                return AFPERR_VLOCK;
+            default :
+                return AFPERR_PARAM ;
+            }
         }
     }
 
-    if ( ad_open( dst, ADFLAGS_HF, O_RDWR, 0666, adp) < 0 ) {
-        switch ( errno ) {
-        case ENOENT :
-            return( AFPERR_NOOBJ );
-        case EACCES :
-            return( AFPERR_ACCESS );
-        case EROFS:
-            return AFPERR_VLOCK;
-        default :
-            return( AFPERR_PARAM );
-        }
+    /* don't care if we can't open the newly renamed ressource fork
+     */
+    if ( !ad_open( dst, ADFLAGS_HF, O_RDWR, 0666, adp)) {
+        len = strlen( newname );
+        ad_setentrylen( adp, ADEID_NAME, len );
+        memcpy(ad_entry( adp, ADEID_NAME ), newname, len );
+        ad_flush( adp, ADFLAGS_HF );
+        ad_close( adp, ADFLAGS_HF );
     }
-
-    len = strlen( newname );
-    ad_setentrylen( adp, ADEID_NAME, len );
-    memcpy(ad_entry( adp, ADEID_NAME ), newname, len );
-    ad_flush( adp, ADFLAGS_HF );
-    ad_close( adp, ADFLAGS_HF );
-
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end renamefile:");
 #endif /* DEBUG */
@@ -1001,7 +1015,7 @@ u_int32_t   hint;
         if (plen) {
             strncpy( newname, ibuf, plen );
             newname[ plen ] = '\0';
-            if (strchr(newname,'/')) {
+            if (strlen(newname) != plen) {
             	return -1;
             }
         }
@@ -1346,6 +1360,9 @@ copydata_done:
 
    when deletefile is called we don't have lock on it, file is closed (for us)
    untrue if called by renamefile
+   
+   ad_open always try to open file RDWR first and ad_lock takes care of
+   WRITE lock on read only file.
 */
 int deletefile( file, checkAttrib )
 char		*file;
@@ -1353,17 +1370,16 @@ int         checkAttrib;
 {
     struct adouble	ad;
     int			adflags, err = AFP_OK;
-    int			openmode = O_RDWR;
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin deletefile:");
 #endif /* DEBUG */
 
-    /* try to open both at once */
+    /* try to open both forks at once */
     adflags = ADFLAGS_DF|ADFLAGS_HF;
     while(1) {
         memset(&ad, 0, sizeof(ad));
-        if ( ad_open( file, adflags, openmode, 0, &ad ) < 0 ) {
+        if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
             switch (errno) {
             case ENOENT:
                 if (adflags == ADFLAGS_DF)
@@ -1374,11 +1390,6 @@ int         checkAttrib;
                 continue;
 
             case EACCES:
-                /* If can't open read/write then try again read-only. */
-                if(openmode == O_RDWR) {
-                    openmode = O_RDONLY;
-                    continue;
-                } 
                 return AFPERR_ACCESS;
             case EROFS:
                 return AFPERR_VLOCK;
@@ -1409,7 +1420,7 @@ int         checkAttrib;
          * ADLOCK_FILELOCK means the whole ressource fork, not only after the 
          * metadatas
          *
-         * FIXME it doesn't for RFORK open read only and fork open without deny mode
+         * FIXME it doesn't work for RFORK open read only and fork open without deny mode
          */
         if (ad_tmplock(&ad, ADEID_RFORK, ADLOCK_WR |ADLOCK_FILELOCK, 0, 0, 0) < 0 ) {
             ad_close( &ad, adflags );
@@ -1423,7 +1434,6 @@ int         checkAttrib;
     else if ( 0 == (err = netatalk_unlink( ad_path( file, ADFLAGS_HF )) )) {
         err = netatalk_unlink( file );
     }
-
     ad_close( &ad, adflags );  /* ad_close removes locks if any */
 
 #ifdef DEBUG
