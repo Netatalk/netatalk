@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.67 2003-04-15 07:18:45 didg Exp $
+ * $Id: directory.c,v 1.68 2003-04-16 06:55:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -407,10 +407,7 @@ struct dir	*dir;
 
     /* i'm not sure if it really helps to delete stuff. */
 #ifndef REMOVE_NODES 
-    if (dir->d_u_name != dir->d_m_name) {
-        free(dir->d_u_name);
-    }
-    free(dir->d_m_name);
+    dirfreename(dir);
     dir->d_m_name = NULL;
     dir->d_u_name = NULL;
 #else /* ! REMOVE_NODES */

@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.37 2003-03-15 01:34:35 didg Exp $
+ * $Id: enumerate.c,v 1.38 2003-04-16 06:55:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -48,6 +48,7 @@ struct path     *path;
     char        *name;
     char        *upath;
     struct stat *st;
+    int         deleted;
 
     upath = path->u_name;
     name  = path->m_name;    
@@ -75,15 +76,17 @@ struct path     *path;
            - it's an ID reused as above
            - it's a hash duplicate and we are in big trouble
         */
+        deleted = (edir->d_m_name == NULL);
         dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
         free(cdir);
         cdir = edir;
-        if (!cdir->d_parent || cdir->d_parent == dir)
+        if (!cdir->d_parent || (cdir->d_parent == dir && !deleted))
             return cdir;
         /* the old was not in the same folder */
-    	dirchildremove(cdir->d_parent, cdir);
+        if (!deleted)
+            dirchildremove(cdir->d_parent, cdir);
     }
 
     /* parent/child directories */
