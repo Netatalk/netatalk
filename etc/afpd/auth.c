@@ -199,7 +199,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
            if (groups[i] == options->admingid) admin = 1;
         }
     }
-    if (admin) syslog( LOG_INFO, "login: admin -- %s", pwd->pw_name );
+    if (admin) syslog( LOG_INFO, "admin login -- %s", pwd->pw_name );
     if (!admin)
 #endif
 	if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
