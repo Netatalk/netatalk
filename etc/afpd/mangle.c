@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.7 2002-06-09 07:15:44 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.8 2002-07-04 18:14:38 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -67,6 +67,10 @@ mangle(const struct vol *vol, char *filename) {
     /* First, attmept to locate a file extension. */
     if ((ext = strrchr(filename, '.')) != NULL) {
 	ext_len = strlen(ext);
+	if (ext_len > MAX_EXT_LENGTH) {
+	    /* Do some bounds checking to prevent an extension overflow. */
+	    ext_len = MAX_EXT_LENGTH;
+	}
     }
 
     /* Check to see if we already have a mangled filename by this name. */
@@ -80,7 +84,7 @@ mangle(const struct vol *vol, char *filename) {
     	strcat(m, mangle_suffix);
 
     	if (ext) {
-		strcat(m, ext);
+		strncat(m, ext, ext_len);
     	}
 
 	tf = cnid_mangle_get(vol->v_db, m);

@@ -1,5 +1,5 @@
 /*
- * $Id: mangle.h,v 1.1 2002-05-29 18:02:59 jmarcus Exp $
+ * $Id: mangle.h,v 1.2 2002-07-04 18:14:38 jmarcus Exp $
  *
  */
 
@@ -21,6 +21,7 @@
 #define MANGLE_CHAR "~"
 #define MANGLE_LENGTH 3 /* XXX This really can't be changed. */
 #define MAX_MANGLE_SUFFIX_LENGTH 999
+#define MAX_EXT_LENGTH 4 /* XXX This cannot be greater than 27 */
 #define MAX_LENGTH 31
 
 extern char *mangle __P((const struct vol *, char *));
