@@ -6,4 +6,4 @@ libadouble_a_SOURCES = ad_open.c ad_flush.c ad_read.c ad_write.c ad_size.c ad_mm
 
 noinst_HEADERS = ad_private.h
 
-CFLAGS = @CFLAGS@ -I../../include
+CFLAGS = @CFLAGS@ -I../../include -I../../sys

@@ -6,4 +6,4 @@ libpap_a_SOURCES = pap_close.c pap_init.c pap_open.c pap_read.c pap_sendstatus.c
 
 noinst_HEADERS = pap_child.h
 
-CFLAGS = @CFLAGS@ -I../../include
+CFLAGS = @CFLAGS@ -I../../include -I../../sys
