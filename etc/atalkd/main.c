@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.14 2002-02-19 15:17:23 srittau Exp $
+ * $Id: main.c,v 1.15 2002-09-12 17:21:15 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -161,7 +161,7 @@ static void atalkd_exit(const int i)
 }
 
 
-void as_timer(void)
+static void as_timer(int sig)
 {
     struct sockaddr_at	sat;
     struct ziphdr	zh;
