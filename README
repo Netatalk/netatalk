@@ -1,11 +1,19 @@
 The documentation for netatalk-1.5 is arranged as follows:
 
-INSTALL - generic instructions for compiling and installing programs.
-doc/INSTALL - netatalk specific installation instructions.
-doc/CONFIGURE - how to set up the configuration files
-doc/DEVELOPER - Information for developers and additional requirements for compiling.
-doc/FAQ - FAQ in progress
-doc/README.platforms - additional instructions for various operating systems.
+* INSTALL
+  generic instructions for compiling and installing programs
+* doc/INSTALL
+  netatalk specific installation instructions
+* doc/CONFIGURE
+  how to set up the configuration files
+* doc/DEVELOPER 
+  information for developers and additional requirements for compiling
+* doc/FAQ
+  FAQ in progress
+* doc/README.platforms
+  additional instructions for various operating systems.
+* doc/README.hidden-items
+  documents the various special files created by netatalk in file shares
 
 This should be all you need to get netatalk running.
 
