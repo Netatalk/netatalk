@@ -174,11 +174,12 @@ a complete list.
 
 ----------------------------------------------------------------
 
-3. ./make
+3. make
 
-Compile all of the programs
+Compile all of the programs.  
+Note: GNU make is required to build netatalk.
 
 ----------------------------------------------------------------
 
-4. ./make install
+4. make install
 Install the programs in the places specified by the ./configure process.
