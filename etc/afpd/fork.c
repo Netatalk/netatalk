@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.52 2003-06-05 09:17:11 didg Exp $
+ * $Id: fork.c,v 1.53 2003-09-03 17:40:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1413,8 +1413,9 @@ afp_write_err:
         dsi_writeinit(obj->handle, rbuf, *rbuflen);
         dsi_writeflush(obj->handle);
     }
-
-    *rbuflen = (err == AFP_OK) ? sizeof(offset) : 0;
+    if (err != AFP_OK) {
+        *rbuflen = 0;
+    }
     return err;
 }
 
