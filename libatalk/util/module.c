@@ -1,5 +1,5 @@
 /*
- * $Id: module.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: module.c,v 1.5 2003-02-17 02:03:12 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -9,8 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <atalk/util.h>
-
-static int _mod_dummy;
 
 #ifndef HAVE_DLFCN_H
 #ifdef MACOSX_SERVER
