@@ -1,8 +1,10 @@
+$Id: README,v 1.2 2001-02-07 14:42:55 rufustfirefly Exp $
+
 This is the README file for netatalk.
 
 Contents:
 	    o A Brief Description
-	    o BUILDING & INSTALLING
+	    o Building & Installing
 	    o Getting Help
 
 netatalk is an implementation of the AppleTalk Protocol Suite.  The
@@ -52,7 +54,7 @@ Instructions for installing the kernel portions of netatalk and system
 dependent FAQs are in the README file for your system, e.g.
 INSTALL/README.SUNOS, INSTALL/README.ULTRIX.
 
-Building netatalk:
+Building netatalk (versions up to 1.4b2+asun2.1.4):
 
 0.  To build afpd for use with an AFS filesystem, first follow the
     instructions in INSTALL/README.AFS, then complete these
@@ -68,7 +70,17 @@ Building netatalk:
 2.  When you've completed the configuration, type "make" at the root of
     the source.  This will make all binaries.
 
-Installing netatalk:
+Building netatalk (1.5 and up):
+
+1.	Run "./configure --help" to give a list of all of the available
+	configuration options. You can then use "./configure (options)" to
+	generate the build structure for netatalk. This system will
+	automatically determine many things about your system to aid in the
+	build process.
+
+2.	Type "make all" at the root of the source to build everything.
+
+Installing netatalk (versions up to 1.4b2+asun2.1.4):
 
 1.  To install the binaries, type "make install" at the root of the
     source tree.  This will install all of the binaries.
@@ -93,14 +105,22 @@ Installing netatalk:
     information on what this script does, read the man pages for the
     appropriate commands.
 
-You might be interested in looking at the netatalk home page at
-http://www.umich.edu/~rsug/netatalk.  It has an archive of patches,
-trouble shooting hints, and some links to other netatalk and file
-service related sites.
+Installing netatalk (1.5 and up):
 
-You may report bugs and get help by sending mail to the developers at
-netatalk@umich.edu.  If you're reporting bugs, you MUST use the format
-provided in the BUGS file!  We will do our best to help you.
+1.	Type "make install" or "make install-strip" to install binaries on
+	the system. To install in a "fake" tree (like installing all /etc
+	files in /var/tmp/tree/etc and all /usr files in /var/tmp/tree/usr),
+	use "make DESTDIR=(path) install" or "make DESTDIR=(path) install-strip".
+
+You might be interested in looking at the netatalk home page at
+http://www.umich.edu/~rsug/netatalk, which contains netatalk information
+up to version 1.4b2.  It has an archive of patches, trouble shooting
+hints, and some links to other netatalk and file service related sites.
+For more recent information on netatalk, visit the homepage at
+http://netatalk.sourceforge.net/
+
+Development is currently carried out on the netatalk-devel list on
+sourceforge (netatalk-devel@lists.sourceforge.net).
 
 You may wish to join the netatalk-admins@umich.edu (moderated) mailing
 list.  It carries announcements of new releases and general
@@ -114,3 +134,5 @@ c/o Wesley Craig			+1-313-764-2278
 535 W. William St.
 Ann Arbor, Michigan
 48103-4943
+
+Amended 07 Feb 2001 jeff b <jefF@univrel.pr.uconn.edu>
