@@ -1,4 +1,4 @@
-$Id: README,v 1.4 2001-02-27 14:23:24 rufustfirefly Exp $
+$Id: README,v 1.5 2001-02-27 21:32:10 rufustfirefly Exp $
 
 This is the README file for netatalk.
 
@@ -121,12 +121,17 @@ Installing netatalk (1.5 and up):
 	files in /var/tmp/tree/etc and all /usr files in /var/tmp/tree/usr),
 	use "make DESTDIR=(path) install" or "make DESTDIR=(path) install-strip".
 
+2.  Add the contents of services.atalk to your /etc/services database.
+    If you're using NIS (YP), add the contents of services.atalk to the
+    NIS master's maps and push them.
+
 Please read the FAQ for netatalk if you are having problems
 
 You might be interested in looking at the netatalk home page at
 http://www.umich.edu/~rsug/netatalk, which contains netatalk information
 up to version 1.4b2.  It has an archive of patches, trouble shooting
 hints, and some links to other netatalk and file service related sites.
+
 For more recent information on netatalk, visit the homepage at
 http://netatalk.sourceforge.net/
 
