@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.15 2003-03-09 19:55:35 didg Exp $ 
+ * $Id: mangle.c,v 1.16 2003-03-09 20:37:27 didg Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,7 +20,7 @@ char *
 demangle(const struct vol *vol, char *mfilename) {
 	char *filename = NULL;
 	char *ext = NULL;
-	int ext_len = 0;
+	size_t ext_len = 0;
 	char *mangle;
 
 	/* Is this really a mangled file? */
@@ -60,7 +60,7 @@ mangle(const struct vol *vol, char *filename, char *uname, int flags) {
     char *m = NULL;
     static char mfilename[MAX_LENGTH + 1];
     char mangle_suffix[MANGLE_LENGTH + 1];
-    int ext_len = 0;
+    size_t ext_len = 0;
     int mangle_suffix_int = 0;
 
     /* Do we really need to mangle this filename? */

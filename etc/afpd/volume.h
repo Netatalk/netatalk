@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.18 2003-03-09 19:55:35 didg Exp $
+ * $Id: volume.h,v 1.19 2003-03-09 20:37:27 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -55,7 +55,7 @@ struct vol {
     
     int                 v_casefold;
     struct codepage     *v_mtoupage, *v_utompage, *v_badumap;
-    int                 max_filename;
+    size_t              max_filename;
     
     char                *v_password;
     char                *v_veto;
