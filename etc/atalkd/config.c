@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.8 2001-12-30 18:30:52 srittau Exp $
+ * $Id: config.c,v 1.9 2001-12-31 18:40:08 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -81,9 +81,9 @@ static struct param {
 };
 
 #define ARGV_CHUNK_SIZE 128
-const char **parseline(const char *line)
+char **parseline(char *line)
 {
-    const char	 *p;
+    char	 *p;
     int		  argc = 0;
     char	 *buffer;
     char	**argv;
@@ -156,7 +156,7 @@ const char **parseline(const char *line)
     /* We store our buffer pointer in argv, too, so we can free it later.
      * (But don't tell anyone.)
      */
-    argv[ argv ] = buffer;
+    argv[ argc ] = buffer;
 
     return argv;
 }
