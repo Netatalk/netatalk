@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: uid.c,v 1.5 2001-06-27 14:53:16 rufustfirefly Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -28,29 +28,29 @@
 #endif /* HAVE_UNISTD_H */
 
 void save_uidgid ( pair )
-	uidgidset *pair;
+	uidgidset **pair;
 {
 	/* allocate the memory */
 	pair = malloc ( sizeof ( uidgidset ) );
 
 	/* then assign the values */
-	(pair)->uid = geteuid ();
-	(pair)->gid = getegid ();
+	(*pair)->uid = geteuid ();
+	(*pair)->gid = getegid ();
 } /* end function void save_uidgid ( pair ) */
 
 void restore_uidgid ( pair )
-	uidgidset *pair;
+	uidgidset **pair;
 {
-	if ( seteuid ( (pair)->uid ) < 0 )
+	if ( seteuid ( (*pair)->uid ) < 0 )
 		syslog ( LOG_ERR, "restore_uidgid: unable to seteuid '%s': %m",
-			(pair)->uid );
-	if ( setegid ( (pair)->gid ) < 0 )
+			(*pair)->uid );
+	if ( setegid ( (*pair)->gid ) < 0 )
 		syslog ( LOG_ERR, "restore_uidgid: unable to setegid '%s': %m",
-			(pair)->gid );
+			(*pair)->gid );
 } /* end function void restore_uidgid ( pair ) */
 
 void set_uidgid ( this_volume )
-	struct vol	*this_volume;
+	const struct vol	*this_volume;
 {
 	int		uid, gid;   /* derived ones go in here */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: uid.h,v 1.2 2001-02-27 16:27:19 rufustfirefly Exp $
+ * $Id: uid.h,v 1.3 2001-06-27 14:53:16 rufustfirefly Exp $
  * code: jeff@univrel.pr.uconn.edu
  */
 
@@ -18,9 +18,9 @@ typedef struct uidgidset_t {
 } uidgidset;
 
 /* functions to save and restore uid/gid pairs */
-extern void save_uidgid    ( uidgidset * );
-extern void restore_uidgid ( uidgidset * );
-extern void set_uidgid     ( struct vol * );
+extern void save_uidgid    ( uidgidset ** );
+extern void restore_uidgid ( uidgidset ** );
+extern void set_uidgid     ( const struct vol * );
 
 /* internal functions to convert user and group names to ids */
 extern int  user_to_uid  ( char * );

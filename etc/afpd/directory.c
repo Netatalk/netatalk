@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.12 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: directory.c,v 1.13 2001-06-27 14:53:16 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -821,14 +821,15 @@ int getdirparams(vol, bitmap, upath, dir, st, buf, buflen )
     u_int32_t           aint;
     u_int16_t		ashort;
 #ifdef FORCE_UIDGID
-	uidgidset		*uidgid;
+    uidgidset		*uidgid;
+    memset(&uidgid, 0, sizeof(uidgid));
 #endif /* FORCE_UIDGID */
 
     memset(&ad, 0, sizeof(ad));
 
 #ifdef FORCE_UIDGID
-	save_uidgid ( uidgid );
-	set_uidgid ( vol );
+    save_uidgid ( &uidgid );
+    set_uidgid ( vol );
 #endif /* FORCE_UIDGID */
 
     if ( ad_open( upath, ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY, 
@@ -996,7 +997,7 @@ int getdirparams(vol, bitmap, upath, dir, st, buf, buflen )
 	      ad_close( &ad, ADFLAGS_HF );
 	    }
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_BITMAP );
 	}
@@ -1086,13 +1087,15 @@ int setdirparams(vol, path, bitmap, buf )
     u_int16_t		ashort, bshort;
     int                 err = AFP_OK;
 #ifdef FORCE_UIDGID
-	uidgidset		*uidgid;
+    uidgidset		*uidgid;
+
+    memset(&uidgid, 0, sizeof(uidgid));
 #endif /* FORCE_UIDGID */
 
     upath = mtoupath(vol, path);
     memset(&ad, 0, sizeof(ad));
 #ifdef FORCE_UIDGID
-	save_uidgid ( uidgid );
+    save_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
     if (ad_open( upath, vol_noadouble(vol)|ADFLAGS_HF|ADFLAGS_DIR, 
 		 O_RDWR|O_CREAT, 0666, &ad) < 0) {
@@ -1108,7 +1111,7 @@ int setdirparams(vol, path, bitmap, buf )
 		~((1<<DIRPBIT_ACCESS)|(1<<DIRPBIT_UID)|(1<<DIRPBIT_GID)|
 		  (1<<DIRPBIT_MDATE)|(1<<DIRPBIT_PDINFO)))) {
 #ifdef FORCE_UIDGID
-	  restore_uidgid ( uidgid );
+          restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	  return AFPERR_ACCESS;
 	}
@@ -1347,7 +1350,7 @@ setdirparam_done:
     }
 
 #ifdef FORCE_UIDGID
-	restore_uidgid ( uidgid );
+    restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
     return err;
 }
@@ -1365,10 +1368,9 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
     u_int32_t		did;
     u_int16_t		vid;
 #ifdef FORCE_UIDGID
-	uidgidset		*uidgid;
+    uidgidset		*uidgid;
 
-	/* allocate memory */
-	uidgidset = malloc(sizeof(uidgidset));
+    memset(&uidgid, 0, sizeof(uidgid));
 #endif /* FORCE_UIDGID */
 
     *rbuflen = 0;
@@ -1407,13 +1409,13 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
       return AFPERR_EXIST;
 
 #ifdef FORCE_UIDGID
-	save_uidgid ( uidgid );
-	set_uidgid  ( vol );
+    save_uidgid ( &uidgid );
+    set_uidgid  ( vol );
 #endif /* FORCE_UIDGID */
 
     if ( ad_mkdir( upath, DIRBITS | 0777 ) < 0 ) {
 #ifdef FORCE_UIDGID
-	restore_uidgid ( uidgid );
+        restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	switch ( errno ) {
 	case ENOENT :
@@ -1434,7 +1436,7 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     if (stat(upath, &st) < 0) {
 #ifdef FORCE_UIDGID
-	  restore_uidgid ( uidgid );
+      restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
       return AFPERR_MISC;
 	}
@@ -1442,14 +1444,14 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ((dir = adddir( vol, curdir, path, strlen( path ), upath,
 		       strlen(upath), &st)) == NULL) {
 #ifdef FORCE_UIDGID
-	  restore_uidgid ( uidgid );
+      restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
       return AFPERR_MISC;
 	}
 
     if ( movecwd( vol, dir ) < 0 ) {
 #ifdef FORCE_UIDGID
-	  restore_uidgid ( uidgid );
+      restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	return( AFPERR_PARAM );
     }
@@ -1460,7 +1462,7 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
       if (vol_noadouble(vol))
 	  goto createdir_done;
 #ifdef FORCE_UIDGID
-	  restore_uidgid ( uidgid );
+      restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
       return( AFPERR_ACCESS );
     }
@@ -1476,7 +1478,7 @@ createdir_done:
     *rbuflen = sizeof( u_int32_t );
     setvoltime(obj, vol );
 #ifdef FORCE_UIDGID
-	restore_uidgid ( uidgid );
+    restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
     return( AFP_OK );
 }
@@ -1574,9 +1576,9 @@ int deletecurdir( vol, path, pathlen )
     struct dir	*fdir;
     DIR *dp;
 #ifdef FORCE_UIDGID
-	uidgidset		*uidgid;
+    uidgidset		*uidgid;
 
-	uidgid = malloc(sizeof(uidgidset));
+    memset(&uidgid, 0, sizeof(uidgid));
 #endif /* FORCE_UIDGID */
 
     if ( curdir->d_parent == NULL ) {
@@ -1590,8 +1592,8 @@ int deletecurdir( vol, path, pathlen )
     fdir = curdir;
 
 #ifdef FORCE_UIDGID
-	save_uidgid ( uidgid );
-	set_uidgid  ( vol );
+    save_uidgid ( &uidgid );
+    set_uidgid  ( vol );
 #endif /* FORCE_UIDGID */
 
     /* delete stray .AppleDouble files. this happens to get .Parent files
@@ -1608,7 +1610,7 @@ int deletecurdir( vol, path, pathlen )
 	if (stat(de->d_name, &st) == 0) {
 	  closedir(dp);
 #ifdef FORCE_UIDGID
-	restore_uidgid ( uidgid );
+        restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	  return AFPERR_DIRNEMPT;
 	}
@@ -1620,19 +1622,19 @@ int deletecurdir( vol, path, pathlen )
 	  case EPERM:
 	  case EACCES :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_ACCESS );
 	  case EROFS:
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return AFPERR_VLOCK;
 	  case ENOENT :
 	    continue;
 	  default :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_PARAM );
 	  }
@@ -1647,23 +1649,23 @@ int deletecurdir( vol, path, pathlen )
 	    break;
 	case ENOTEMPTY :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_DIRNEMPT );
 	case EROFS:
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return AFPERR_VLOCK;
 	case EPERM:
 	case EACCES :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_ACCESS );
 	default :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_PARAM );
 	}
@@ -1679,7 +1681,7 @@ int deletecurdir( vol, path, pathlen )
 	/* bail if it's not a symlink */
 	if ((lstat(de->d_name, &st) == 0) && !S_ISLNK(st.st_mode)) {
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+          restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	  return AFPERR_DIRNEMPT;
 	}
@@ -1689,19 +1691,19 @@ int deletecurdir( vol, path, pathlen )
 	  case EPERM:
 	  case EACCES :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_ACCESS );
 	  case EROFS:
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return AFPERR_VLOCK;
 	  case ENOENT :
 	    continue;
 	  default :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_PARAM );
 	  }
@@ -1712,7 +1714,7 @@ int deletecurdir( vol, path, pathlen )
 
     if ( movecwd( vol, curdir->d_parent ) < 0 ) {
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+        restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	return( AFPERR_NOOBJ );
     }
@@ -1721,28 +1723,28 @@ int deletecurdir( vol, path, pathlen )
 	switch ( errno ) {
 	case ENOENT :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_NOOBJ );
 	case ENOTEMPTY :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_DIRNEMPT );
 	case EPERM:
 	case EACCES :
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_ACCESS );
 	case EROFS:
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return AFPERR_VLOCK;
 	default : 
 #ifdef FORCE_UIDGID
-		restore_uidgid ( uidgid );
+            restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
 	    return( AFPERR_PARAM );
 	}
@@ -1755,7 +1757,7 @@ int deletecurdir( vol, path, pathlen )
     dir_remove( vol, fdir );
 
 #ifdef FORCE_UIDGID
-	restore_uidgid ( uidgid );
+    restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
     return( AFP_OK );
 }
@@ -1908,9 +1910,9 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
     u_int32_t		did;
     u_int16_t		vid;
 #ifdef FORCE_UIDGID
-	uidgidset		*uidgid;
+    uidgidset		*uidgid;
 
-	uidgid = malloc(sizeof(uidgidset));
+    memset(&uidgid, 0, sizeof(uidgid));
 #endif /* FORCE_UIDGID */
 
     *rbuflen = 0;
@@ -1951,15 +1953,15 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
 #ifdef FORCE_UIDGID
-	save_uidgid ( uidgid );
-	set_uidgid  ( vol );
+    save_uidgid ( &uidgid );
+    set_uidgid  ( vol );
 #endif /* FORCE_UIDGID */
 
     /* we don't already have a did. add one in. */
     if ((dir = adddir(vol, parentdir, path, strlen(path), 
 		      upath, strlen(upath), &st)) == NULL) {
 #ifdef FORCE_UIDGID
-	  restore_uidgid ( uidgid );
+      restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
       return AFPERR_MISC;
 	}
@@ -1967,7 +1969,7 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
     memcpy(rbuf, &dir->d_did, sizeof(dir->d_did));
     *rbuflen = sizeof(dir->d_did);
 #ifdef FORCE_UIDGID
-	restore_uidgid ( uidgid );
+    restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
     return AFP_OK;
 }
