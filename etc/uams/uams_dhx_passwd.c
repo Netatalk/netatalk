@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.17 2003-01-26 16:40:44 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.18 2003-02-11 16:41:56 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -63,7 +63,7 @@ static char *clientname;
 #endif /* TRU64 */
 
 /* dhx passwd */
-static int passwd_login(void *obj, struct passwd **uam_pwd,
+static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
 			char *ibuf, int ibuflen,
 			char *rbuf, int *rbuflen)
 {
@@ -87,37 +87,23 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 
     *rbuflen = 0;
 
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &name, &i) < 0)
-      return AFPERR_PARAM;
-
 #ifdef TRU64
     if( uam_afpserver_option( obj, UAM_OPTION_CLIENTNAME,
                               (void *) &clientname, NULL ) < 0 )
         return AFPERR_PARAM;
 #endif /* TRU64 */
 
-    len = (unsigned char) *ibuf++;
-    if ( len + 1 > i ) {
-	return( AFPERR_PARAM );
+    if (( dhxpwd = uam_getname(username, ulen)) == NULL ) {
+	return AFPERR_PARAM;
     }
-
-    memcpy(name, ibuf, len );
-    ibuf += len;
-    name[ len ] = '\0';
-    if ((unsigned long) ibuf & 1) /* padding */
-      ++ibuf;
-
-    if (( dhxpwd = uam_getname(name, i)) == NULL ) {
-      return AFPERR_PARAM;
-    }
-
-    LOG(log_info, logtype_uams, "dhx login: %s", name);
+    
+    LOG(log_info, logtype_uams, "dhx login: %s", username);
     if (uam_checkuser(dhxpwd) < 0)
       return AFPERR_NOTAUTH;
 
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
-	LOG(log_info, logtype_uams, "no shadow passwd entry for %s", name);
+	LOG(log_info, logtype_uams, "no shadow passwd entry for %s", username);
 	return AFPERR_NOTAUTH;
     }
     dhxpwd->pw_passwd = sp->sp_pwdp;
@@ -209,6 +195,75 @@ passwd_fail:
     return AFPERR_PARAM;
 }
 
+/* cleartxt login */
+static int passwd_login(void *obj, struct passwd **uam_pwd,
+			char *ibuf, int ibuflen,
+			char *rbuf, int *rbuflen)
+{
+    char *username;
+    int len, ulen;
+
+    *rbuflen = 0;
+
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
+			     (void *) &username, &ulen) < 0)
+	return AFPERR_MISC;
+
+    if (ibuflen <= 1) {
+	return( AFPERR_PARAM );
+    }
+
+    len = (unsigned char) *ibuf++;
+    ibuflen--;
+    if (!len || len > ibuflen || len > ulen ) {
+	return( AFPERR_PARAM );
+    }
+    memcpy(username, ibuf, len );
+    ibuf += len;
+    ibuflen -=len;
+    username[ len ] = '\0';
+
+    if ((unsigned long) ibuf & 1) { /* pad character */
+	++ibuf;
+	ibuflen--;
+    }
+    return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    
+}
+
+/* cleartxt login ext 
+ * uname format :
+    byte      3
+    2 bytes   len (network order)
+    len bytes unicode name
+*/
+static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
+			char *ibuf, int ibuflen,
+			char *rbuf, int *rbuflen)
+{
+    char       *username;
+    int        len, ulen;
+    u_int16_t  temp16;
+
+    *rbuflen = 0;
+    
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
+			     (void *) &username, &ulen) < 0)
+	return AFPERR_MISC;
+
+    if (*uname != 3)
+	return AFPERR_PARAM;
+    uname++;
+    memcpy(&temp16, uname, sizeof(temp16));
+    len = ntohs(temp16);
+    if (!len || len > ulen ) {
+	return( AFPERR_PARAM );
+    }
+    memcpy(username, uname +2, len );
+    username[ len ] = '\0';
+    return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+}
+			
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 			    char *ibuf, int ibuflen, 
 			    char *rbuf, int *rbuflen)
@@ -295,8 +350,8 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 
 static int uam_setup(const char *path)
 {
-  if (uam_register(UAM_SERVER_LOGIN, path, "DHCAST128",
-		   passwd_login, passwd_logincont, NULL) < 0)
+  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128",
+		   passwd_login, passwd_logincont, NULL, passwd_login_ext) < 0)
     return -1;
   /*uam_register(UAM_SERVER_PRINTAUTH, path, "DHCAST128",
     passwd_printer);*/
