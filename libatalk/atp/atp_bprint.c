@@ -31,7 +31,7 @@
 #include <string.h>
 char	hexdig[] = "0123456789abcdef";
 
-bprint( data, len )
+void bprint( data, len )
     char	*data;
     int		len;
 {

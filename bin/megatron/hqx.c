@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.4 2001-03-29 16:40:35 rufustfirefly Exp $
+ * $Id: hqx.c,v 1.5 2001-05-01 13:21:22 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,6 +18,7 @@
 # include <netinet/in.h>
 #endif
 #endif notdef
+#include <time.h>
 #include <fcntl.h>
 #include <string.h>
 #include <syslog.h>
@@ -53,13 +54,13 @@
 /*	These are field sizes in bytes of various pieces of the
 	binhex header
  */
-#define	BVERSION	1
-#define	TCSIZ		8
-#define	FLAGSIZ		2
-#define	DATASIZ		4
-#define	RESSIZ		4
-#define CRCSIZ		2
-#define HEADSIZ		21
+#define	BHH_VERSION		1
+#define	BHH_TCSIZ		8
+#define	BHH_FLAGSIZ		2
+#define	BHH_DATASIZ		4
+#define	BHH_RESSIZ		4
+#define BHH_CRCSIZ		2
+#define BHH_HEADSIZ		21
 
 u_short		updcrc();
 
@@ -88,7 +89,7 @@ somewhat initialized; hqx_fd is set.  skip_junk is called from
 here; skip_junk leaves hqx7_first and hqx7_last set.
  */
 
-hqx_open( hqxfile, flags, fh, options )
+int hqx_open( hqxfile, flags, fh, options )
     char		*hqxfile;
     int			flags, options;
     struct FHeader	*fh;
@@ -152,7 +153,7 @@ hqx_open( hqxfile, flags, fh, options )
  * Otherwise, a value of -1 is returned.
  */
 
-hqx_close( keepflag )
+int hqx_close( keepflag )
     int			keepflag;
 {
     if ( keepflag == KEEP ) {
@@ -174,7 +175,7 @@ hqx_close( keepflag )
  * return zero and no more than that.
  */
 
-hqx_read( fork, buffer, length )
+int hqx_read( fork, buffer, length )
     int			fork;
     char		*buffer;
     int			length;
@@ -244,7 +245,7 @@ hqx_read( fork, buffer, length )
  * to fill the hqx_header fields.
  */
 
-hqx_header_read( fh )
+int hqx_header_read( fh )
     struct FHeader	*fh;
 {
     char		*headerbuf, *headerptr;
@@ -273,20 +274,20 @@ hqx_header_read( fh )
 #endif
 
     if (( headerbuf = 
-	    (char *)malloc( (unsigned int)( namelen + HEADSIZ ))) == 0 ) {
+	    (char *)malloc( (unsigned int)( namelen + BHH_HEADSIZ ))) == 0 ) {
 	return( -1 );
     }
-    if ( hqx_7tobin( headerbuf, ( namelen + HEADSIZ )) == 0 ) {
+    if ( hqx_7tobin( headerbuf, ( namelen + BHH_HEADSIZ )) == 0 ) {
 	free( headerbuf );
 	fprintf( stderr, "Premature end of file :" );
 	return( -2 );
     }
     headerptr = headerbuf;
     hqx.headercrc = updcrc( hqx.headercrc, 
-	    (u_char *)headerbuf, ( namelen + HEADSIZ - CRCSIZ ));
+	    (u_char *)headerbuf, ( namelen + BHH_HEADSIZ - BHH_CRCSIZ ));
 
 #if HEXOUTPUT
-    write( headerfork, headerbuf, ( namelen + HEADSIZ ));
+    write( headerfork, headerbuf, ( namelen + BHH_HEADSIZ ));
 #endif
 
 /*
@@ -300,15 +301,15 @@ hqx_header_read( fh )
     headerptr += TCSIZ;
     memcpy(&fh->finder_info.fdFlags,  headerptr, FLAGSIZ );
     fh->finder_info.fdFlags = fh->finder_info.fdFlags & mask;
-    headerptr += FLAGSIZ;
-    memcpy(&fh->forklen[ DATA ],  headerptr, DATASIZ );
+    headerptr += BHH_FLAGSIZ;
+    memcpy(&fh->forklen[ DATA ],  headerptr, BHH_DATASIZ );
     hqx.forklen[ DATA ] = ntohl( fh->forklen[ DATA ] );
-    headerptr += DATASIZ;
-    memcpy( &fh->forklen[ RESOURCE ], headerptr, RESSIZ );
+    headerptr += BHH_DATASIZ;
+    memcpy( &fh->forklen[ RESOURCE ], headerptr, BHH_RESSIZ );
     hqx.forklen[ RESOURCE ] = ntohl( fh->forklen[ RESOURCE ] );
-    headerptr += RESSIZ;
-    memcpy(&header_crc,  headerptr, CRCSIZ );
-    headerptr += CRCSIZ;
+    headerptr += BHH_RESSIZ;
+    memcpy(&header_crc,  headerptr, BHH_CRCSIZ );
+    headerptr += BHH_CRCSIZ;
     header_crc = ntohs( header_crc );
 
 /*
@@ -378,7 +379,7 @@ hqx_header_read( fh )
  * hqx_header_write.
  */
 
-hqx_header_write( fh )
+int hqx_header_write( fh )
     struct FHeader	*fh;
 {
     return( -1 );
@@ -391,7 +392,7 @@ hqx_header_write( fh )
  * it sets the pointers to the hqx7 buffer up to point to the valid data.
  */
 
-hqx7_fill( hqx7_ptr )
+int hqx7_fill( hqx7_ptr )
     u_char		*hqx7_ptr;
 {
     int			cc;
@@ -462,7 +463,7 @@ u_char hqxlookup[] = {
  * OTHER when looking for any subsequent line.
  */
 
-skip_junk( line )
+int skip_junk( line )
 int			line;
 {
     int			found = NOWAY;
@@ -564,18 +565,18 @@ int			line;
  * file is reached.
  */
 
-hqx_7tobin( outbuf, datalen ) 
+int hqx_7tobin( outbuf, datalen ) 
     char		*outbuf;
     int			datalen;
 {
     static u_char	hqx8[3];
-    static char		hqx8i;
+    static int		hqx8i;
     static u_char	prev_hqx8;
     static u_char	prev_out;
     static u_char	prev_hqx7;
     static int		eofflag;
     u_char		hqx7[4];
-    char		hqx7i = 0;
+    int			hqx7i = 0;
     char		*out_first;
     char		*out_last;
 

@@ -7,22 +7,26 @@
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>
+#include <atalk/util.h>
 #include <atalk/zip.h>
 
-usage( s )
+void print_zones(short n, char *buf);
+
+void usage( s )
     char *s;
 {
     fprintf( stderr, "usage:\t%s [-m | -l] [address]\n", s );
     exit( 1 );
 }
 
-main( argc, argv )
+int main( argc, argv )
     int		argc;
     char	*argv[];
 {
@@ -132,7 +136,7 @@ main( argc, argv )
 }
 
 
-print_zones( n, buf )
+void print_zones( n, buf )
     short	n;	/* number of zones in this packet */
     char	*buf;	/* zone length/name pairs */
 {

@@ -99,7 +99,7 @@ struct nad_file_data {
     struct adouble	ad;
 } nad;
 
-nad_open( path, openflags, fh, options )
+int nad_open( path, openflags, fh, options )
     char		*path;
     int			openflags, options;
     struct FHeader	*fh;
@@ -163,7 +163,7 @@ nad_open( path, openflags, fh, options )
     }
 }
 
-nad_header_read( fh )
+int nad_header_read( fh )
     struct FHeader	*fh;
 {
     u_int32_t		temptime;
@@ -265,7 +265,7 @@ nad_header_read( fh )
 
 }
 
-nad_header_write( fh )
+int nad_header_write( fh )
     struct FHeader	*fh;
 {
     u_int32_t		temptime;
@@ -352,7 +352,7 @@ nad_header_write( fh )
 
 int			forkeid[] = { ADEID_DFORK, ADEID_RFORK };
 
-nad_read( fork, forkbuf, bufc )
+int nad_read( fork, forkbuf, bufc )
     int			fork;
     char		*forkbuf;
     int			bufc;
@@ -377,7 +377,7 @@ nad_read( fork, forkbuf, bufc )
     return( cc );
 }
 
-nad_write( fork, forkbuf, bufc )
+int nad_write( fork, forkbuf, bufc )
     int			fork;
     char		*forkbuf;
     int			bufc;
@@ -412,7 +412,7 @@ nad_write( fork, forkbuf, bufc )
     return( bufc );
 }
 
-nad_close( status )
+int nad_close( status )
 int			status;
 {
     int			rv;
@@ -434,4 +434,5 @@ int			status;
 	}
 	return( 0 );
     } else return( -1 );
+    return( 0 );
 }

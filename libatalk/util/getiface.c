@@ -151,7 +151,7 @@ void freeifacelist(char **ifacelist)
   if (!ifacelist)
     return;
 
-  while (value = *list++) {
+  while ((value = *list++)) {
     free(value);
   }
 

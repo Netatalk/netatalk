@@ -8,6 +8,7 @@
 #include <sys/param.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include <strings.h>
 #include <syslog.h>
 #include <ctype.h>
@@ -62,7 +63,7 @@ u_char		head_buf[HEADBUFSIZ];
  * somewhat initialized; bin_filed is set.
  */
 
-bin_open( binfile, flags, fh, options )
+int bin_open( binfile, flags, fh, options )
     char		*binfile;
     int			flags, options;
     struct FHeader	*fh;
@@ -80,7 +81,8 @@ bin_open( binfile, flags, fh, options )
     bin.gmtoff = 0;
 #ifndef NO_STRUCT_TM_GMTOFF
     time(&t);
-    if (tp = localtime(&t))
+    tp = localtime(&t);
+    if (tp)
         bin.gmtoff = tp->tm_gmtoff;
 #endif
 
@@ -137,7 +139,7 @@ bin_open( binfile, flags, fh, options )
  * Otherwise, a value of -1 is returned.
  */
 
-bin_close( keepflag )
+int bin_close( keepflag )
     int			keepflag;
 {
 #if DEBUG
@@ -162,7 +164,7 @@ bin_close( keepflag )
  * return zero and no more than that.
  */
 
-bin_read( fork, buffer, length )
+int bin_read( fork, buffer, length )
     int			fork;
     char		*buffer;
     int			length;
@@ -188,7 +190,8 @@ bin_read( fork, buffer, length )
 #if DEBUG
 	    fprintf( stderr, "current position is %ld\n", pos );
 #endif
-	    if (pos = pos % HEADBUFSIZ) {
+	    pos %= HEADBUFSIZ;
+	    if (pos != 0) {
 	      pos = lseek( bin.filed, HEADBUFSIZ - pos, SEEK_CUR );
 	    }
 #if DEBUG
@@ -233,7 +236,7 @@ bin_read( fork, buffer, length )
  * bin_write 
  */
 
-bin_write( fork, buffer, length )
+int bin_write( fork, buffer, length )
     int			fork;
     char		*buffer;
     int			length;
@@ -293,7 +296,8 @@ bin_write( fork, buffer, length )
 #if DEBUG
 	fprintf( stderr, "current position is %ld\n", pos );
 #endif
-	if (pos = pos % HEADBUFSIZ) { /* pad only if we need to */
+	pos %= HEADBUFSIZ;
+	if (pos != 0) { /* pad only if we need to */
 	  pos = lseek( bin.filed, HEADBUFSIZ - pos - 1, SEEK_CUR );
 	  if ( write( bin.filed, &padchar, 1 ) != 1 ) {
 	    perror( "Couldn't write to macbinary file:" );
@@ -318,7 +322,7 @@ bin_write( fork, buffer, length )
  * of the bytes of the other two forks can be read, as well.
  */
 
-bin_header_read( fh, revision )
+int bin_header_read( fh, revision )
     struct FHeader	*fh;
     int			revision;
 {
@@ -420,7 +424,7 @@ bin_header_read( fh, revision )
  * bin_header_write and bin_header_read are opposites.
  */
 
-bin_header_write( fh )
+int bin_header_write( fh )
     struct FHeader	*fh;
 {
     char		*write_ptr;
@@ -526,7 +530,7 @@ bin_header_write( fh )
  * so, the check for byte 74 isn't very useful.
  */
 
-test_header()
+int test_header()
 {
     const char          zeros[25] = "";
     u_int32_t		cc;

@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <fcntl.h>
+#include <time.h>
 #include <string.h>
 #include <syslog.h>
 #include <ctype.h>
@@ -15,6 +16,10 @@
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "megatron.h"
+
+int single_header_read(struct FHeader *fh, int version);
+int single_close(int readflag);
+int single_header_test(void);
 
 /*	String used to indicate standard input instead of a disk
 	file.  Should be a string not normally used for a file
@@ -53,7 +58,7 @@ u_char		header_buf[ AD_HEADER_LEN ];
  * somewhat initialized; single_filed is set.
  */
 
-single_open( singlefile, flags, fh, options )
+int single_open( singlefile, flags, fh, options )
     char		*singlefile;
     int			flags, options;
     struct FHeader	*fh;
@@ -78,6 +83,7 @@ single_open( singlefile, flags, fh, options )
 	single_close( KEEP );
 	return( -1 );
     }
+    return( 0 );
 }
 
 /* 
@@ -86,7 +92,7 @@ single_open( singlefile, flags, fh, options )
  * Otherwise, a value of -1 is returned.
  */
 
-single_close( keepflag )
+int single_close( keepflag )
     int			keepflag;
 {
     if ( keepflag == KEEP ) {
@@ -106,7 +112,7 @@ single_close( keepflag )
  * bytes of the other two forks can be read, as well.
  */
 
-single_header_read( fh, version )
+int single_header_read( fh, version )
     struct FHeader	*fh;
     int			version;
 {
@@ -338,7 +344,7 @@ single_header_read( fh, version )
 u_char		sixteennulls[] = { 0, 0, 0, 0, 0, 0, 0, 0,
 				    0, 0, 0, 0, 0, 0, 0, 0 };
 
-single_header_test()
+int single_header_test(void)
 {
     int			cc;
     u_int32_t		templong;
@@ -391,7 +397,7 @@ single_header_test()
  *
  */
 
-single_read( fork, buffer, length )
+int single_read( fork, buffer, length )
     int			fork;
     char		*buffer;
     int			length;

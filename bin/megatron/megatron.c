@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <fcntl.h>
+#include <time.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
@@ -332,7 +333,8 @@ int main( argc, argv )
 	  continue;
 	}
 	  
-	if ( rc = megatron( argv[ c ], module, newname, flags) != 0 ) {
+	rc = megatron( argv[ c ], module, newname, flags);
+	if ( rc != 0 ) {
 	    rv = rc;
 	}
 	*newname = '\0';

@@ -37,6 +37,7 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
 
@@ -47,6 +48,7 @@
 #include <atalk/nbp.h>
 #include <atalk/netddp.h>
 #include <atalk/ddp.h>
+#include <atalk/util.h>
 
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
 #ifndef SOCKLEN_T
@@ -58,10 +60,9 @@ int			s, nsent = 0, nrecv = 0;
 time_t			totalms = 0, minms = -1, maxms = -1;
 static unsigned int     pings = 0;
 
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif ibm032 _IBMR2
-done()
+void usage(char *);
+
+void done()
 {
     if ( nsent > 0 ) {
 	printf( "\n----%d.%d AEP Statistics----\n",
@@ -69,17 +70,14 @@ done()
 	printf( "%d packets sent, %d packets received, %d%% packet loss\n",
 		nsent, nrecv, (( nsent - nrecv ) * 100 ) / nsent );
 	if ( nrecv > 0 ) {
-	    printf( "round-trip (ms)  min/avg/max = %d/%d/%d\n",
+	    printf( "round-trip (ms)  min/avg/max = %ld/%ld/%ld\n",
 		    minms, totalms / nrecv, maxms );
 	}	
     }
     exit( 0 );
 }
   
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif ibm032 _IBMR2
-aep_send()
+void aep_send()
 {
     struct timeval	tv;
     char		*p, buf[ 1024 ];
@@ -108,7 +106,7 @@ aep_send()
     if (pings && nsent > pings) done();
 }
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -247,14 +245,14 @@ main( ac, av )
 	if ( ms < minms || minms == -1 ) {
 	    minms = ms;
 	}
-	printf( "%d bytes from %u.%u: aep_seq=%d. time=%d. ms\n",
+	printf( "%d bytes from %u.%u: aep_seq=%d. time=%ld. ms\n",
 		cc, ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node,
 		seq, ms );
         if (pings && seq + 1 >= pings) done();
     }
 }
 
-usage( av0 )
+void usage( char * av0 )
 {
     fprintf( stderr, "usage:\t%s [-A source address ] [-c count] ( addr | nbpname )\n", av0 );
     exit( 1 );
