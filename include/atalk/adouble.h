@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.16 2003-01-26 16:40:45 srittau Exp $
+ * $Id: adouble.h,v 1.17 2003-01-28 15:19:55 srittau Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -53,6 +53,7 @@
 #endif
 
 #ifdef HAVE_UNISTD_H
+#undef __USE_MISC
 #define __USE_MISC
 #include <unistd.h>
 #endif 
