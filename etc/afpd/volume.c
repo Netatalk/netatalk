@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.13 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: volume.c,v 1.14 2001-11-14 21:34:37 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -781,7 +781,7 @@ static void load_volumes(AFPObj *obj)
   struct passwd	*pwent = getpwnam(obj->username);
 
   if ( (obj->options.flags & OPTION_USERVOLFIRST) == 0 ) {
-    readvolfile(obj, obj->options.systemvol, 0, pwent);
+    readvolfile(obj, obj->options.systemvol, NULL, 0, pwent);
   }
 
   if ((*obj->username == '\0') || (obj->options.flags & OPTION_NOUSERVOL)) {
