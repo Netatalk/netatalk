@@ -244,6 +244,7 @@ AC_OUTPUT([Makefile
 	bin/Makefile
 	bin/adv1tov2/Makefile
 	bin/aecho/Makefile
+	bin/afile/Makefile
 	bin/afppasswd/Makefile
 	bin/getzones/Makefile
 	bin/megatron/Makefile
