@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.11 2001-06-25 18:17:49 rufustfirefly Exp $
+ * $Id: uam.c,v 1.12 2001-08-03 22:09:57 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -221,7 +221,7 @@ struct passwd *uam_getname(char *name, const int len)
 
 int uam_checkuser(const struct passwd *pwd)
 {
-  char *p;
+  const char *p;
 
   if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0')) 
     return -1;
