@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.9 2001-08-08 18:12:48 rufustfirefly Exp $
+ * $Id: session.c,v 1.10 2001-08-09 13:29:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -116,7 +116,7 @@ int session( atp, sat )
 	do { /* do list until success or an unrecoverable error occurs */
 	  if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 )
 	      syslog( LOG_ERR, "select: %m" ); /* log all errors */
-`	} while (( cc < 0 ) && (errno == 4));
+	} while (( cc < 0 ) && (errno == 4));
 
 	if ( cc < 0 ) {
 	  syslog( LOG_ERR, "select: Error is unrecoverable" );
