@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.93 2003-06-02 06:54:22 didg Exp $
+ * $Id: file.c,v 1.94 2003-06-05 09:17:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -143,7 +143,7 @@ char *set_name(const struct vol *vol, char *data, char *name, u_int32_t utf8)
         if (aint > 255)  /* FIXME safeguard, anyway if no ascii char it's game over*/
            aint = 255;
 
-        utf8 = htonl(utf8);
+        utf8 = 0;         /* htonl(utf8) */
         memcpy(data, &utf8, sizeof(utf8));
         data += sizeof(utf8);
         
@@ -263,6 +263,7 @@ int getmetadata(struct vol *vol,
     u_char              achar, fdType[4];
     u_int32_t           utf8 = 0;
     struct stat         *st;
+    struct maccess	ma;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin getmetadata:");
 #endif /* DEBUG */
@@ -461,6 +462,26 @@ int getmetadata(struct vol *vol,
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             break;
+        case FILPBIT_UNIXPR :
+            aint = htonl(st->st_uid);
+            memcpy( data, &aint, sizeof( aint ));
+            data += sizeof( aint );
+            aint = htonl(st->st_gid);
+            memcpy( data, &aint, sizeof( aint ));
+            data += sizeof( aint );
+
+            aint = htonl(st->st_mode);
+            memcpy( data, &aint, sizeof( aint ));
+            data += sizeof( aint );
+
+            accessmode( upath, &ma, dir , st);
+
+            *data++ = ma.ma_user;
+            *data++ = ma.ma_world;
+            *data++ = ma.ma_group;
+            *data++ = ma.ma_owner;
+            break;
+
         default :
             return( AFPERR_BITMAP );
         }
@@ -770,7 +791,7 @@ int setfilparams(struct vol *vol,
         adp = &ad;
     }
 
-    if (check_access(upath, OPENACC_WR ) < 0) {
+    if (!vol_unix_priv(vol) && check_access(upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
 
@@ -872,6 +893,19 @@ int setfilparams(struct vol *vol,
                 break;
             }
             /* fallthrough */
+        case FILPBIT_UNIXPR :
+	    /* Skip the UIG/GID, no way to set them from OSX clients */
+            buf += sizeof( aint );
+            buf += sizeof( aint );
+
+            change_mdate = 1;
+            change_parent_mdate = 1;
+            memcpy( &aint, buf, sizeof( aint ));
+            buf += sizeof( aint );
+            aint = ntohl (aint);
+
+            setfilemode(path, aint);
+            break;
         default :
             err = AFPERR_BITMAP;
             goto setfilparam_done;

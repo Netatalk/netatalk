@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.12 2003-01-07 15:55:22 rlewczuk Exp $
+ * $Id: unix.h,v 1.13 2003-06-05 09:17:12 didg Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -98,15 +98,17 @@ extern int uquota_getvolspace __P((const struct vol *, VolSpace *, VolSpace *,
 
 extern struct afp_options default_options;
 
-extern int gmem         __P((const gid_t));
-extern int setdeskmode  __P((const mode_t));
-extern int setdirmode   __P((const mode_t, const int, const int));
-extern int setdeskowner __P((const uid_t, const gid_t));
-extern int setdirowner  __P((const uid_t, const gid_t, const int));
-extern int setfilmode   __P((char *, mode_t , struct stat *));
-extern int unix_rename  __P((const char *oldpath, const char *newpath));
+extern int gmem            __P((const gid_t));
+extern int setdeskmode      __P((const mode_t));
+extern int setdirunixmode   __P((const mode_t, const int, const int));
+extern int setdirmode       __P((const mode_t, const int, const int));
+extern int setdeskowner     __P((const uid_t, const gid_t));
+extern int setdirowner      __P((const uid_t, const gid_t, const int));
+extern int setfilmode       __P((char *, mode_t , struct stat *));
+extern int setfilemode      __P((struct path*, const mode_t));
+extern int unix_rename      __P((const char *oldpath, const char *newpath));
 
-extern void accessmode  __P((char *, struct maccess *, struct dir *, struct stat *));
+extern void accessmode      __P((char *, struct maccess *, struct dir *, struct stat *));
 
 #ifdef AFS	
     #define accessmode afsmode

@@ -65,12 +65,13 @@
 # limitsize           -> limit disk size reporting to 2GB. this is
 #                        here for older macintoshes using newer
 #                        appleshare clients. yucko.
+# nofileid            -> don't advertise createfileid, resolveid, deleteid 
+#                        calls
+# upriv               -> use unix privilege.
 #
 # codepage:filename   -> load filename from nls directory.
 # dbpath:path         -> store the database stuff in the following path.
 # password:password   -> set a volume password (8 characters max)
-# nofileid            -> don't advertise createfileid, resolveid, deleteid 
-#                        calls
 #
 # The "~" below indicates that Home directories are visible by default.
 # If you do not wish to have people accessing their Home directories,

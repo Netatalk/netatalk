@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.52 2003-05-21 01:32:47 didg Exp $
+ * $Id: volume.c,v 1.53 2003-06-05 09:17:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -381,6 +381,8 @@ static void volset(struct vol_option *options, char *volname, int vlen,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
             else if (strcasecmp(p, "utf8") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_UTF8;
+            else if (strcasecmp(p, "upriv") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
 
             p = strtok(NULL, ",");
         }
@@ -996,6 +998,8 @@ int		*buflen;
             ashort |= VOLPBIT_ATTR_CATSEARCH;
             if (afp_version >= 30) {
                 ashort |= VOLPBIT_ATTR_UTF8;
+	        if (vol->v_flags & AFPVOL_UNIX_PRIV)
+		    ashort |= VOLPBIT_ATTR_UNIXPRIV;
             }
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));
@@ -1144,7 +1148,8 @@ int 	ibuflen, *rbuflen;
            completely worked this out, but it's related to booting
            from the server.  Support for that function is a ways
            off.. <shirsch@ibm.net> */
-        *data++ |= (volume->v_flags & AFPVOL_A2VOL) ? AFPSRVR_CONFIGINFO : 0;
+        *data |= (volume->v_flags & AFPVOL_A2VOL) ? AFPSRVR_CONFIGINFO : 0;
+        *data++ |= 0; /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
         len = strlen( volume->v_name );
         *data++ = len;
         memcpy(data, volume->v_name, len );

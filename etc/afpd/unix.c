@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.43 2003-03-09 19:55:35 didg Exp $
+ * $Id: unix.c,v 1.44 2003-06-05 09:17:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,7 +22,6 @@
 #include <limits.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-
 /* STDC check */
 #if STDC_HEADERS
 #include <string.h>
@@ -45,6 +44,7 @@ char *strchr (), *strrchr ();
 #include "directory.h"
 #include "volume.h"
 #include "unix.h"
+#include "fork.h"
 
 /*
  * Get the free space on a partition.
@@ -107,10 +107,10 @@ mode_t	bits;
 
     mbits = 0;
 
-    mbits |= ( bits & ( S_IREAD >> 6 )) ? (AR_UREAD | AR_USEARCH) : 0;
+    mbits |= ( bits & ( S_IREAD >> 6 ))  ? AR_UREAD  : 0;
     mbits |= ( bits & ( S_IWRITE >> 6 )) ? AR_UWRITE : 0;
-    /* Do we really need this?
-        mbits |= ( bits & ( S_IEXEC >> 6) ) ? AR_USEARCH : 0; */
+    /* Do we really need this? */
+    mbits |= ( bits & ( S_IEXEC >> 6) ) ? AR_USEARCH : 0;
 
     return( mbits );
 }
@@ -363,6 +363,26 @@ const mode_t	mode;
     return( 0 );
 }
 
+/* --------------------- */
+int setfilemode (path, mode)
+struct path* path;
+mode_t mode;
+{
+    if (!path->st_valid) {
+        of_stat(path);
+    }
+
+    if (path->st_errno) {
+        return -1;
+    }
+        
+    if (setfilmode( path->u_name, mode, &path->st) < 0)
+        return -1;
+    /* we need to set write perm if read set for resource fork */
+    return setfilmode(ad_path( path->u_name, ADFLAGS_HF ), ad_hf_mode(mode), &path->st);
+}
+
+/* --------------------- */
 int setfilmode(name, mode, st)
 char * name;
 mode_t mode;
@@ -384,6 +404,21 @@ mode_t mask = S_IRUSR |S_IWUSR | S_IRGRP | S_IWGRP |S_IROTH | S_IWOTH;
    return 0;
 }
 
+/* --------------------- */
+int setdirunixmode( mode, noadouble, dropbox )
+const mode_t mode;
+const int noadouble;
+const int dropbox;
+{
+    if ( stickydirmode(".AppleDouble", DIRBITS | mode, dropbox) < 0 && !noadouble)
+        return  -1 ;
+
+    if ( stickydirmode(".", DIRBITS | mode, dropbox) < 0 )
+        return -1;
+    return 0;
+}
+
+/* --------------------- */
 int setdirmode( mode, noadouble, dropbox )
 const mode_t mode;
 const int noadouble;

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.74 2003-05-20 14:46:50 didg Exp $
+ * $Id: directory.c,v 1.75 2003-06-05 09:17:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -164,6 +164,9 @@ struct dir *dir;
 /* -----------------------------------------
  * if did is not in the cache resolve it with cnid 
  * 
+ * FIXME
+ * OSX call it with bogus id, ie file ID not folder ID,
+ * and we are really bad in this case.
  */
 struct dir *
             dirlookup( vol, did )
@@ -1216,6 +1219,20 @@ char *p;
     return 0;
 }
 
+/* --------------------- */
+int file_access(struct path *path, int mode)
+{
+struct maccess ma;
+
+    accessmode(path->u_name, &ma, curdir, &path->st);
+    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
+        return -1;
+    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
+        return -1;
+    return 0;
+
+}
+
 /* ------------------------------ 
    (".", curdir)
    (name, dir) with curdir:name == dir, from afp_enumerate
@@ -1402,6 +1419,28 @@ int getdirparams(const struct vol *vol,
                 data += sizeof( ashort );
             }
             break;
+
+        case DIRPBIT_UNIXPR :
+            aint = htonl(st->st_uid);
+            memcpy( data, &aint, sizeof( aint ));
+            data += sizeof( aint );
+            aint = htonl(st->st_gid);
+            memcpy( data, &aint, sizeof( aint ));
+            data += sizeof( aint );
+	
+	    aint = st->st_mode;
+	    aint = htonl ( aint & ~S_ISGID );  /* Remove SGID, OSX doesn't like it ... */
+	    memcpy( data, &aint, sizeof( aint ));
+	    data += sizeof( aint );
+
+            accessmode( upath, &ma, dir , st);
+
+            *data++ = ma.ma_user;
+            *data++ = ma.ma_world;
+            *data++ = ma.ma_group;
+            *data++ = ma.ma_owner;
+            break;
+
 
         default :
             if ( isad ) {
@@ -1776,6 +1815,56 @@ int setdirparams(const struct vol *vol,
                 buf += 6;
                 break;
             }
+
+	case DIRPBIT_UNIXPR :
+	    /* Skip UID and GID for now, there seems to be now way to set them from an OSX client anyway */
+            buf += sizeof( aint );
+            buf += sizeof( aint );
+
+            change_mdate = 1;
+            change_parent_mdate = 1;
+            memcpy( &aint, buf, sizeof( aint ));
+            buf += sizeof( aint );
+	    aint = ntohl (aint);
+            if (curdir->d_did == DIRDID_ROOT)
+                setdeskmode( aint );
+#if 0 /* don't error if we can't set the desktop mode */
+            switch ( errno ) {
+            case EPERM :
+            case EACCES :
+                err = AFPERR_ACCESS;
+                goto setdirparam_done;
+            case EROFS :
+                err = AFPERR_VLOCK;
+                goto setdirparam_done;
+            default :
+                LOG(log_error, logtype_afpd, "setdirparam: setdeskmode: %s",
+                    strerror(errno) );
+                break;
+                err = AFPERR_PARAM;
+                goto setdirparam_done;
+            }
+#endif /* 0 */
+
+            if ( setdirunixmode( aint, vol_noadouble(vol),
+                         (vol->v_flags & AFPVOL_DROPBOX)) < 0 ) {
+                switch ( errno ) {
+                case EPERM :
+                case EACCES :
+                    err = AFPERR_ACCESS;
+                    goto setdirparam_done;
+                case EROFS :
+                    err = AFPERR_VLOCK;
+                    goto setdirparam_done;
+                default :
+                    LOG(log_error, logtype_afpd, "setdirparam: setdirmode: %s",
+                        strerror(errno) );
+                    err = AFPERR_PARAM;
+                    goto setdirparam_done;
+                }
+            }
+            break;
+
         default :
             err = AFPERR_BITMAP;
             goto setdirparam_done;

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.51 2003-03-15 01:34:35 didg Exp $
+ * $Id: fork.c,v 1.52 2003-06-05 09:17:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -329,8 +329,15 @@ int		ibuflen, *rbuflen;
     }
     /* FIXME should we check it first ? */
     upath = s_path->u_name;
-    if (check_access(upath, access ) < 0) {
-        return AFPERR_ACCESS;
+    if (!vol_unix_priv(vol)) {
+        if (check_access(upath, access ) < 0) {
+            return AFPERR_ACCESS;
+        }
+    }
+    else {
+        if (file_access(s_path, access ) < 0) {
+            return AFPERR_ACCESS;
+        }
     }
 
     st   = &s_path->st;
