@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.86 2001-06-18 13:50:06 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.87 2001-06-18 13:57:11 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -235,7 +235,7 @@ AC_ARG_ENABLE(force-uidgid,
 AC_ARG_WITH(did,
 	[  --with-did=[scheme]      set DID scheme (last,mtab)],
 	if test "x$withval" != "xno" ; then
-		if test "$withval" = "lastdid"; then 
+		if test "$withval" = "last"; then 
 			AC_DEFINE(USE_LASTDID, 1)
 			AC_MSG_RESULT([enabling build without DID dev/inode mapping kludge])
 		fi
