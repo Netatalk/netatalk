@@ -1,7 +1,10 @@
 # Makefile.am for INSTALL/
 
 EXTRA_DIST = \
+	INSTALL.txt \
 	FAQ	\
+	README \
+	README.ASUN \
 	README.AFS	\
 	README.FREEBSD	\
 	README.GENERIC	\
