@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.12 2003-03-15 01:34:35 didg Exp $
+ * $Id: appl.c,v 1.13 2003-05-03 20:03:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -187,7 +187,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return afp_errno;
     }
 
@@ -197,7 +197,7 @@ int		ibuflen, *rbuflen;
     memcpy( appltag, ibuf, sizeof( appltag ));
     ibuf += sizeof( appltag );
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
         return get_afp_errno(AFPERR_PARAM);
     }
     if ( path_isadir(path) ) {
@@ -273,14 +273,14 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return afp_errno;
     }
 
     memcpy( creator, ibuf, sizeof( creator ));
     ibuf += sizeof( creator );
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
         return get_afp_errno(AFPERR_PARAM);
     }
     if ( path_isadir(path) ) {

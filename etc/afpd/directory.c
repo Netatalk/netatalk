@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.71 2003-04-24 17:05:38 didg Exp $
+ * $Id: directory.c,v 1.72 2003-05-03 20:03:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2135,7 +2135,7 @@ int		ibuflen, *rbuflen;
 
         case 2 :
         case 4 : /* unicode */
-            if (( gr = (struct group *)getgrgid( id )) == NULL ) {
+            if (NULL == ( gr = (struct group *)getgrgid( id ))) {
                 return( AFPERR_NOITEM );
             }
             name = gr->gr_name;
@@ -2205,7 +2205,7 @@ int		ibuflen, *rbuflen;
         switch ( sfunc ) {
         case 1 : /* unicode */
         case 3 :
-            if (( pw = (struct passwd *)getpwnam( ibuf )) == NULL ) {
+            if (NULL == ( pw = (struct passwd *)getpwnam( ibuf )) ) {
                 return( AFPERR_NOITEM );
             }
             id = pw->pw_uid;
@@ -2213,7 +2213,7 @@ int		ibuflen, *rbuflen;
 
         case 2 : /* unicode */
         case 4 :
-            if (( gr = (struct group *)getgrnam( ibuf )) == NULL ) {
+            if (NULL == ( gr = (struct group *)getgrnam( ibuf ))) {
                 return( AFPERR_NOITEM );
             }
             id = gr->gr_gid;

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.26 2003-04-09 06:05:24 didg Exp $
+ * $Id: desktop.c,v 1.27 2003-05-03 20:03:13 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -151,7 +151,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         cc = AFPERR_PARAM;
         goto addicon_err;
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.45 2003-04-20 06:53:40 didg Exp $
+ * $Id: filedir.c,v 1.46 2003-05-03 20:03:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -718,7 +718,7 @@ int		ibuflen, *rbuflen;
     if (NULL == ( ddir = dirlookup( vol, did )) ) {
         return afp_errno; /*  was AFPERR_PARAM */
     }
-    if (( path = cname( vol, ddir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, ddir, &ibuf ))) {
         return( AFPERR_NOOBJ );
     }
     if ( *path->m_name != '\0' ) {
