@@ -1,6 +1,8 @@
 2001-10-18  joe c <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_add.c: Fix dancing icon problem
+	* bin/afile/achfile.c: Fix resource fork problem on littleendian
+	  platforms.  Thanks to Brandon Warren <bwarren@u.washington.edu>.
 
 2001-10-17  joe c <marcus@marcuscom.com>
 
