@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.10 2001-08-15 01:37:34 srittau Exp $
+ * $Id: volume.c,v 1.11 2001-08-18 13:20:30 uhees Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1218,7 +1218,7 @@ int afp_closevol(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef CNID_DB
     cnid_close(vol->v_db);
     vol->v_db = NULL;
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
     return( AFP_OK );
 }
 
