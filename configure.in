@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.195 2003-12-15 05:05:19 srittau Exp $
+dnl $Id: configure.in,v 1.196 2003-12-15 05:27:24 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -10,7 +10,10 @@ AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE(netatalk, ${NETATALK_VERSION})
 AM_CONFIG_HEADER(config.h)
 
+dnl
 dnl Checks for programs.
+dnl
+
 AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -24,12 +27,15 @@ AC_PROG_PS
 AC_PROG_DVIPS
 AC_PROG_TROFF2PS
 
+dnl
+dnl Checks for libraries.
+dnl
+
 dnl *********************************************************************
 dnl FIXME! FIXME! These should be selectable properly, and should produce
 dnl the proper flags and defines...
 dnl *********************************************************************
 
-dnl Checks for libraries.
 dnl Replace `main' with a function in -labs:
 AC_CHECK_LIB(abs, main)
 dnl Replace `main' with a function in -laudit:
@@ -67,17 +73,20 @@ AC_CHECK_LIB(sys, main)
 dnl Replace `main' with a function in -lubik:
 AC_CHECK_LIB(ubik, main)
 
-#
-# Check presence of some functions
-#
-# Check for XPG4 access() function
-# Be sure to test before adding AFS libs in LIBS path as AFS lib
-# has such a function that works only on AFS filesystems.
+dnl
+dnl Checks for presence of some functions.
+dnl
+
+dnl Check for XPG4 access() function
+dnl Be sure to test before adding AFS libs in LIBS path as AFS lib
+dnl has such a function that works only on AFS filesystems.
 AC_CHECK_FUNCS(access)
-# 
 AC_CHECK_FUNCS(pread pwrite)
 
+dnl
 dnl Checks for header files.
+dnl
+
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
@@ -87,7 +96,10 @@ AC_CHECK_HEADER(sys/cdefs.h,,
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 )
 
+dnl
 dnl Checks for typedefs, structures, and compiler characteristics.
+dnl
+
 AC_C_CONST
 AC_TYPE_UID_T
 AC_C_INLINE
@@ -98,8 +110,12 @@ AC_TYPE_SIZE_T
 AC_STRUCT_ST_RDEV
 AC_HEADER_TIME
 AC_STRUCT_TM
+AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 
+dnl
 dnl Checks for library functions.
+dnl
+
 AC_TYPE_GETGROUPS
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
@@ -111,7 +127,10 @@ AC_FUNC_WAIT3
 AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strcasestr strstr strtoul setpgrp strchr memcpy)
 AC_FUNC_SETPGRP
 
+dnl
 dnl Checks for (v)snprintf
+dnl
+
 NETATALK_SNPRINTF_CHECK
 
 dnl --------------------------------------------------------------------------
@@ -467,7 +486,6 @@ dnl --------------------- operating system specific flags (port from sys/*)
 dnl ----- AIX specific -----
 if test x"$this_os" = "xaix"; then
 	AC_MSG_RESULT([ * AIX specific configuration])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 
 	dnl This is probably a lie; AIX 4.3 supports a 64-bit long
 	dnl compilation environment.  It's enough to get things defined
@@ -489,14 +507,6 @@ if test x"$this_os" = "xhpux11"; then
 	AC_MSG_RESULT([ * HP-UX 11 specific configuration])
 
 	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
-fi
-
-dnl ----- IRIX specific -----
-if test x"$this_os" = "xirix"; then
-	AC_MSG_RESULT([ * IRIX specific configuration])
-
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 fi
 
 dnl ----- Linux specific -----
@@ -599,7 +609,6 @@ if test x"$this_os" = "xsolaris"; then
 	AC_MSG_RESULT([ * Solaris specific configuration])
 	AC_DEFINE(__svr4__, 1, [Solaris compatibility macro])
 	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
-	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 	AC_DEFINE(SOLARIS, 1, [Solaris compatibility macro])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes

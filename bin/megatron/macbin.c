@@ -1,5 +1,5 @@
 /*
- * $Id: macbin.c,v 1.10 2002-02-16 17:12:53 srittau Exp $
+ * $Id: macbin.c,v 1.11 2003-12-15 05:27:24 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -85,12 +85,12 @@ int bin_open( binfile, flags, fh, options )
 
     /* call localtime so that we get the timezone offset */
     bin.gmtoff = 0;
-#ifndef NO_STRUCT_TM_GMTOFF
+#ifdef HAVE_STRUCT_TM_TM_GMTOFF
     time(&t);
     tp = localtime(&t);
     if (tp)
         bin.gmtoff = tp->tm_gmtoff;
-#endif /* ! NO_STRUCT_TM_GMTOFF */
+#endif /* HAVE_STRUCT_TM_TM_GMTOFF */
 
     if ( flags == O_RDONLY ) { /* input */
 	if ( strcmp( binfile, STDIN ) == 0 ) {

@@ -1,7 +1,7 @@
 # Solaris specific defines, passed to subdirectories.
 # To use Sun CC, uncomment the CC and KFLAGS variables.
 #
-# $Id: Makefile.kernel.in,v 1.4 2003-06-17 06:39:37 srittau Exp $
+# $Id: Makefile.kernel.in,v 1.5 2003-12-15 05:27:24 srittau Exp $
 
 
 # uncomment for 64-bit sparc kernel
@@ -38,7 +38,7 @@ LIBSHARED=      -ldl
 # -D_ISOC9X_SOURCE is handled by OSVERSION. basically, it's not needed
 # with 2.5.1.
 # add -DHAVE_IFNAMEINDEX if you're using solaris 8.
-DEFS=	-DNO_STRUCT_TM_GMTOFF -DHAVE_IFNAMEINDEX -D__svr4__ -DSOLARIS -I../../sys/generic \
+DEFS=	-DHAVE_IFNAMEINDEX -D__svr4__ -DSOLARIS -I../../sys/generic \
 	-I.. ${OSDEFS} ${MACHINEDEFS}
 AFPLIBS=
 ADDLIBS=	-lsocket -lnsl
