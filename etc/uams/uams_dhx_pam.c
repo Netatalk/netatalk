@@ -166,17 +166,26 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
 
     /* get the client's public key */
     if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL)))
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM No Public Key -- %m");
+    /* Log Entry */
       return AFPERR_PARAM;
 
     /* get our primes */
     if (!(gbn = BN_bin2bn(&g, sizeof(g), NULL))) {
       BN_clear_free(bn);
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM No Primes: GBN -- %m");
+    /* Log Entry */
       return AFPERR_PARAM;
     }
 
     if (!(pbn = BN_bin2bn(p, sizeof(p), NULL))) {
       BN_free(gbn);
       BN_clear_free(bn);
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM No Primes: PBN -- %m");
+    /* Log Entry */
       return AFPERR_PARAM;
     }
 
@@ -185,6 +194,9 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
       BN_free(pbn);
       BN_free(gbn);
       BN_clear_free(bn);
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM DH was equal to DH_New... Go figure... -- %m");
+    /* Log Entry */
       return AFPERR_PARAM;
     }
 
@@ -320,6 +332,9 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
     if (sessid != dhxhash(obj))
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM Session ID - DHXHash Mismatch -- %m");
+    /* Log Entry */
       return AFPERR_PARAM;
     ibuf += sizeof(sessid);
     
