@@ -1,5 +1,40 @@
-dnl $Id: ssl-check.m4,v 1.8 2003-01-29 00:16:31 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.9 2003-06-08 16:04:49 srittau Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
+
+AC_DEFUN([AC_PATH_GCRYPT], [
+
+	GCRYPT_CFLAGS=""
+	GCRYPT_LIBS=""
+
+	search="yes"
+	errifnotfound="no"
+
+	AC_ARG_ENABLE(libgcrypt, [  --disable-gcrypt        disable compilation with libgcrypt], [
+		if test "x$enableval" != "xdisable"; then
+			errifnotfound="yes"
+		else
+			search="no"
+		fi
+	])
+
+	GCRYPT_CONFIG=""
+	if test "x$search" == "xyes"; then
+		AC_PATH_PROG([GCRYPT_CONFIG], [libgcrypt-config], [no])
+
+		if test "x$GCRYPT_CONFIG" == "xno"; then
+			if test "x$errifnotfound" == "xyes"; then
+				AC_MSG_ERROR([libgcrypt-config not found])
+			fi
+		else
+			GCRYPT_CFLAGS="`$GCRYPT_CONFIG --cflags`"
+			GCRYPT_LIBS="`$GCRYPT_CONFIG --libs`"
+		fi
+	fi
+
+	AC_SUBST(GCRYPT_CFLAGS)
+	AC_SUBST(GCRYPT_LIBS)
+	AM_CONDITIONAL(HAVE_GCRYPT, test -n "$GCRYPT_CONFIG")
+])
 
 AC_DEFUN([AC_PATH_SSL], [
 	AC_ARG_WITH(ssl-dir, [  --with-ssl-dir=PATH     specify path to OpenSSL installation (must contain

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.186 2003-06-08 15:21:40 srittau Exp $
+dnl $Id: configure.in,v 1.187 2003-06-08 16:04:49 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -611,7 +611,8 @@ if test x"$this_os" = "xtru64"; then
 	sysv_style=tru64
 fi
 
-dnl -- look for openssl
+dnl -- look for OpenSSL and other crypt libraries
+AC_PATH_GCRYPT
 AC_PATH_SSL
 
 dnl --------------------- check for building PGP UAM module
