@@ -173,6 +173,38 @@ mode_t mtoumode( ma )
     return( mode );
 }
 
+inline int stickydirmode(name, mode)
+char * name;
+const mode_t mode;
+{
+  int uid, retval;
+
+/* Turn on the sticky bit if this is a drop box */
+   retval=0;
+#ifdef DROPKLUDGE
+   if (mode & S_IWOTH) 
+      if (mode & S_IROTH); 
+      else /* if S_IWOTH and not S_IROTH */
+      {
+        uid=geteuid();
+        seteuid(0);
+        if ( retval=chmod( name, (DIRBITS | mode | S_ISVTX)) < 0)
+        {
+           syslog( LOG_ERR, "stickydirmode::setdirmode error: chmod %s: %m", name );
+           return(-1);
+        }
+        else
+        {
+           syslog( LOG_DEBUG, "stickydirmode::setdirmode: chmod %s: %m", name );
+           seteuid(uid);
+        }
+      }
+   else 
+#endif DROPKLUDGE
+       if ( retval=chmod( name, DIRBITS | mode ) < 0 ) 
+          syslog( LOG_DEBUG, "stickydirmode::setdirmode: chmod %s: %m", name );
+   return retval;
+}
 
 int setdeskmode( mode )
     const mode_t	mode;
@@ -273,12 +305,9 @@ int setdirmode( mode, noadouble )
 	if (S_ISREG(st.st_mode)) {
 	    /* XXX: need to preserve special modes */
 	    if (S_ISDIR(st.st_mode)) {
-	      if ( chmod( dirp->d_name, DIRBITS | mode ) < 0 ) {
-		syslog( LOG_DEBUG, "setdirmode: chmod %s: %m", dirp->d_name );
-	      }
-	    } else if ( chmod( dirp->d_name, mode ) < 0 ) {
-		syslog( LOG_DEBUG, "setdirmode: chmod %s: %m", dirp->d_name );
-	    }
+              stickydirmode(dirp->d_name, DIRBITS | mode);
+	    } else
+              stickydirmode(dirp->d_name, mode);
 	}
     }
     closedir( dir );
@@ -305,29 +334,22 @@ int setdirmode( mode, noadouble )
 	}
 
 	if (S_ISDIR(st.st_mode)) {
-	  if ( chmod(buf,  DIRBITS | mode) < 0 ) {
-	    syslog( LOG_DEBUG, "setdirmode: chmod %s: %m", buf );
-	  }
-	} else if ( chmod(buf, mode) < 0 ) {
-	    syslog( LOG_DEBUG, "setdirmode: chmod %s: %m", buf );
-	}
-    }
+           stickydirmode( buf, DIRBITS | mode );
+	} else 
+           stickydirmode( buf, mode );
+    } /* end for */
     closedir( dir );
 
     /* XXX: use special bits to tag directory permissions */
       
     /* XXX: need to preserve special modes */
-    if ( chmod( ".AppleDouble",  DIRBITS | mode ) < 0 ) {
-	syslog( LOG_ERR, "setdirmode: chmod .AppleDouble: %m" );
+    if ( stickydirmode(".AppleDouble", DIRBITS | mode) < 0 )
 	return( -1 );
-    }
 
 setdirmode_noadouble:
     /* XXX: need to preserve special modes */
-    if ( chmod( ".",  DIRBITS | mode ) < 0 ) {
-	syslog( LOG_ERR, "setdirmode: chmod .: %m" );
+    if ( stickydirmode(".", DIRBITS | mode) < 0 )
 	return( -1 );
-    }
     return( 0 );
 }
 

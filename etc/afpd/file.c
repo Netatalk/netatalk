@@ -330,7 +330,6 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     int			creatf, did, openf;
     u_int16_t		vid;
 
-    syslog(LOG_INFO, "afp_createfile");
     *rbuflen = 0;
     ibuf++;
     creatf = (unsigned char) *ibuf++;
@@ -422,16 +421,33 @@ you are a developer who wants to try it out and fix it. */
 	strcpy (adpath, "./.AppleDouble/");
 	strcat (adpath, path);
 	seteuid(0); /* Become root to change the owner of the file */
-	syslog (LOG_INFO, "Changing %s to uid=%d gid=%d", path, sb.st_uid, sb.st_gid);
-	if (chown(path, sb.st_uid, sb.st_gid)==-1)
-	  syslog (LOG_ERR, "Error changing permissions: %m");
+	if (chown(path, sb.st_uid, sb.st_gid) < 0) 
+        {
+	  syslog (LOG_ERR, "Error changing owner/gid: %m");
+          return (-1);
+        }
         /* In order to write information to the file, the Mac client needs
         to be able to read from it too, so read bits have to be turned on.
         Directory permissions remain unchanged */
-        chmod(path,(sb.st_mode&0x0FFFF)| S_IRGRP| S_IROTH);
-	if (chown(adpath, sb.st_uid, sb.st_gid)==-1)
-	  syslog (LOG_ERR, "Error changing AppleDouble permissions: %m");
-	syslog (LOG_INFO, "Changing afpd owner back to %d", uid);
+        stat(upath, &st);
+        if (chmod(path,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+        {
+          syslog (LOG_ERR, "Error adding file read permissions: %m");
+          return (-1);
+        }
+        else syslog (LOG_DEBUG, "Added S_IRGRP and S_IROTH: %m");
+	if (chown(adpath, sb.st_uid, sb.st_gid) < 0)
+        {
+	  syslog (LOG_ERR, "Error changing AppleDouble owner/gid: %m");
+          return (-1);
+        }
+        if (chmod(adpath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+        {
+          syslog (LOG_ERR, "Error adding AD file read permissions: %m");
+          return (-1);
+        }
+        else syslog (LOG_DEBUG, "Added S_IRGRP and S_IROTH to AD: %m");
+	syslog (LOG_DEBUG, "Changing afpd owner back to %d", uid);
 	seteuid(uid); /* Restore process ownership to normal */
       }
     }
@@ -453,7 +469,6 @@ int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     int		did, rc;
     u_int16_t	vid, bitmap;
 
-    syslog (LOG_INFO, "afp_setfilparams");
     *rbuflen = 0;
     ibuf += 2;
 
@@ -744,7 +759,6 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     int		plen, err;
     u_int16_t	svid, dvid;
 
-    syslog(LOG_INFO, "afp_copyfile");
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1128,7 +1142,6 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
     cnid_t		did, id;
     u_short		vid;
     
-    syslog(LOG_INFO, "afp_createid");
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1218,7 +1231,6 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
     cnid_t		id;
     u_int16_t		vid, bitmap;
     
-    syslog(LOG_INFO, "afp_resolveid");
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1281,7 +1293,6 @@ int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
     cnid_t		id;
     u_short		vid;
     
-    syslog(LOG_INFO, "afp_deleteid");
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1359,7 +1370,6 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     cnid_t		sid, did;
     u_int16_t		vid;
     
-    syslog(LOG_INFO, "afp_exchangefiles");
     *rbuflen = 0;
     ibuf += 2;
 
