@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.9 2001-09-10 18:27:14 rufustfirefly Exp $
+ * $Id: main.c,v 1.10 2001-09-12 19:13:17 uhees Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -897,7 +897,7 @@ int main( ac, av )
 	    break;
 
 	case 'v' :	/* version */
-	    printf( 'atalkd (version %s)\n', version );
+	    printf( "atalkd (version %s)\n", version );
 	    exit ( 1 );
 	    break;
 

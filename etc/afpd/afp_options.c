@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_options.c,v 1.10 2001-09-10 18:27:14 rufustfirefly Exp $
+ * $Id: afp_options.c,v 1.11 2001-09-12 19:13:16 uhees Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -353,7 +353,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 	    options->uamlist = optarg;
 	    break;
 	case 'v':	/* version */
-	    printf( 'afpd (version %s)\n', VERSION );
+	    printf( "afpd (version %s)\n", VERSION );
 	    exit ( 1 );
 	    break;
 	case 'I':
