@@ -14,6 +14,8 @@ Thanks a bunch folks, wherever you are.
 	iNOUE Koichi: RPM for RedHat systems
 	Stefan Bethke: FreeBSD
 	Leland Wallace
+	Gerry Tomlinson <Gerry.Tomlinson@newcastle.ac.uk>:
+	  original afile/achfile/acleandir implementation
 
 Recent Contributors since Sourceforge
 
@@ -33,7 +35,7 @@ Developers: Version 1.4.99 - 1.5
 	Jeffrey Buchbinder <jeff@univrel.pr.uconn.edu>
 	Sam Noble <ns@shadow.org>
 	Simon Bazley <sibaz@sibaz.com>
-	Sebastian Rittau <srittau@debian.org>
+	Sebastian Rittau <srittau@jroger.in-berlin.de>
 	Steve Freitas <sflist@ihonk.com>
 	Uwe Hees <uwe.hees@rz-online.de>
 	Benjamin Heitmann <bheitman@ebios.de>
@@ -43,7 +45,7 @@ Developers: Version 1.4.99 - 1.5
 	Olaf Hering <olh@suse.de>
 	Robert Cohen <robert.cohen@anu.edu.au>
 	Robert Stickel <rstickel@connex.com>
- 	Sumit <sbose@hbv.de>
+ 	Sumit Bose <sbose@hbv.de>
 	Brandon Warren <bwarren@u.washington.edu>
 
 Webmin Module:
@@ -70,7 +72,7 @@ Documentation: Version 1.4.99 - 1.5
 	Rob Lineweaver <rbline@wm.edu>
 	Alistair Riddell <ali@gwc.org.uk>
 	Edmund Lam <epl@unimelb.edu.au>
-	Sebastian Rittau <srittau@debian.org>
+	Sebastian Rittau <srittau@jroger.in-berlin.de>
 	Chris Blake <Chris.Blake@anu.edu.au>
 
 Bug Reports: Version 1.4.99 - 1.5
