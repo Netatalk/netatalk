@@ -1,11 +1,11 @@
 /*
- * $Id: cdefs.h,v 1.3 2001-08-15 01:45:00 srittau Exp $
+ * $Id: cdefs.h,v 1.4 2001-08-15 15:29:14 srittau Exp $
  */
 
 #ifndef _SYS_CDEFS_H
 #define _SYS_CDEFS_H 1
 
-#ifdef __STDC__ || __DECC
+#if defined(__STDC__) || defined(__DECC)
 /* Note that there must be exactly one space between __P(args) and args,
  * otherwise DEC C chokes.
  */
