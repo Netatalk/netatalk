@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.6 2001-05-22 19:13:36 rufustfirefly Exp $
+ * $Id: main.c,v 1.7 2001-05-23 23:55:23 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,11 +56,6 @@ struct afp_options default_options;
 static AFPConfig *configs;
 static server_child *server_children;
 static fd_set save_rfds;
-
-#ifdef CAPDIR
-int addr_net, addr_node, addr_uid;
-char addr_name[32];
-#endif CAPDIR
 
 static void afp_exit(const int i)
 {

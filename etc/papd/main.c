@@ -592,10 +592,16 @@ getprinters( cf )
 	/*
 	 * Do we want authenticated printing?
 	 */
-	if ( pgetflag( "ca", &a ) == 1 ) {
+	if ((p = pgetstr( "ca", &a )) != NULL ) {
+	    if ((pr->p_authprintdir = (char *)malloc(strlen(p)+1)) == NULL) {
+		perror( "malloc" );
+		exit(1);
+	    }
+	    strcpy( pr->p_authprintdir, p );
 	    pr->p_flags |= P_AUTH;
 	    pr->p_flags |= P_AUTH_CAP;
-	}
+	} else { pr->p_authprintdir = NULL; }
+
 	if ( pgetflag( "sp", &a ) == 1 ) {
 	    pr->p_flags |= P_AUTH;
 	    pr->p_flags |= P_AUTH_PSSP;

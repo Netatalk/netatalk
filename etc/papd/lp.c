@@ -185,21 +185,23 @@ lp_init( out, sat )
     char	cost[ 22 ];
     char	balance[ 22 ];
 #endif ABS_PRINT
-#if defined( CAPDIR ) || defined( USE_CAP )
-    char	username[32];
-    int		addr_net, addr_node;
-    FILE	*cap_file;
-    struct stat	cap_st;
-    char	addr_filename[256];
-#endif /* CAPDIR */
 
     if ( printer->p_flags & P_AUTH ) {
 	authenticated = 0;
-#ifdef CAPDIR
-	if ( printer->p_flags & P_AUTH_CAP ) {
-	    addr_net = ntohs( sat->sat_addr.s_net );
-	    addr_node  = sat->sat_addr.s_node;
-	    sprintf(addr_filename, "%s/net%d.%dnode%d", CAPDIR, addr_net/256, addr_net%256, addr_node);
+
+	/* cap style "log on to afp server before printing" authentication */
+
+	if ( printer->p_authprintdir && (printer->p_flags & P_AUTH_CAP) ) {
+	    int addr_net = ntohs( sat->sat_addr.s_net );
+	    int addr_node  = sat->sat_addr.s_node;
+	    char addr_filename[256];
+	    char username[32];
+	    struct stat cap_st;
+	    FILE *cap_file;
+
+	    sprintf(addr_filename, "%s/net%d.%dnode%d", 
+		printer->p_authprintdir, addr_net/256, addr_net%256, 
+		addr_node);
 	    if (stat(addr_filename, &cap_st) == 0) {
 		if ((cap_file = fopen(addr_filename, "r")) != NULL) {
 		    if (fscanf(cap_file, "%s", username) != EOF) {
@@ -220,7 +222,6 @@ lp_init( out, sat )
 		syslog(LOG_INFO, "CAP error: %m");
 	    }
 	}
-#endif /* CAPDIR */
 
 	if ( printer->p_flags & P_AUTH_PSSP ) {
 	    if ( lp.lp_person != NULL ) {

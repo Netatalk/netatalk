@@ -69,12 +69,6 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL}}, &uam_changepw,
 static struct uam_obj *afp_uam = NULL;
 
 
-/* Variables for CAP style printer authentication */
-#ifdef CAPDIR
-extern int addr_net, addr_node, addr_uid;
-extern char addr_name[32];
-#endif /* CAPDIR */
-
 void status_versions( data )
     char	*data;
 {
@@ -140,13 +134,8 @@ static int send_reply(const AFPObj *obj, const int err)
 
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 {
-#ifdef CAPDIR
-    char nodename[256];
-    FILE *fp;
-#endif /* CAPDIR */
 #ifdef ADMIN_GRP
     int admin = 0;
-    struct afp_options *options = &obj->options;
 #endif ADMIN_GRP
 
     /* UAM had syslog control; afpd needs to reassert itself */
@@ -160,18 +149,41 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     syslog( LOG_INFO, "login %s (uid %d, gid %d)", pwd->pw_name,
 	    pwd->pw_uid, pwd->pw_gid );
 
-#ifdef CAPDIR
-    if(addr_net && addr_node) { /* Do we have a valid Appletalk address? */
-	addr_uid = pwd->pw_uid;
-	strncpy(addr_name, pwd->pw_name, 32);
-	sprintf(nodename, "%s/net%d.%dnode%d", CAPDIR, addr_net / 256, addr_net % 256, addr_node);
-	syslog (LOG_INFO, "registering %s (uid %d) on %u.%u as %s",
-			addr_name, addr_uid, addr_net, addr_node, nodename);
-	fp = fopen(nodename, "w");
-	fprintf(fp, "%s\n", addr_name);
-	fclose(fp);
-    }
-#endif /* CAPDIR */
+    if (obj->proto == AFPPROTO_ASP) {
+      ASP asp = obj->handle;
+      int addr_net = ntohs( asp->asp_sat.sat_addr.s_net );
+      int addr_node  = asp->asp_sat.sat_addr.s_node;
+
+      if (obj->options.authprintdir) {
+	if(addr_net && addr_node) { /* Do we have a valid Appletalk address? */
+	  char nodename[256];
+	  FILE *fp;
+	  struct stat stat_buf;
+
+	  sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir, 
+		addr_net / 256, addr_net % 256, addr_node);
+	  syslog (LOG_INFO, "registering %s (uid %d) on %u.%u as %s",
+			pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
+
+	  if (stat(nodename, &stat_buf) == 0) { /* file exists */
+	    if (S_ISREG(stat_buf.st_mode)) { /* normal file */
+		unlink(nodename);
+		fp = fopen(nodename, "w");
+		fprintf(fp, "%s\n", pwd->pw_name);
+		fclose(fp);
+		chown( nodename, pwd->pw_uid, -1 );
+	    } else { /* somebody is messing with us */
+		syslog( LOG_ERR, "print authfile %s is not a normal file, it will not be modified", nodename );
+	    }
+	  } else { /* file 'nodename' does not exist */
+	    fp = fopen(nodename, "w");
+	    fprintf(fp, "%s\n", pwd->pw_name);
+	    fclose(fp);
+	    chown( nodename, pwd->pw_uid, -1 );
+	  }
+	} /* if (addr_net && addr_node ) */
+      } /* if (options->authprintdir) */
+    } /* if (obj->proto == AFPPROTO_ASP) */
 
     if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
 #ifdef RUN_AS_USER
@@ -191,12 +203,12 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     }
 #ifdef ADMIN_GRP
 #ifdef DEBUG
-    syslog(LOG_INFO, "options->admingid == %d", options->admingid);
+    syslog(LOG_INFO, "obj->options.admingid == %d", obj->options.admingid);
 #endif DEBUG
-    if (options->admingid != 0) {
+    if (obj->options.admingid != 0) {
 	int i;
 	for (i = 0; i < ngroups; i++) {
-           if (groups[i] == options->admingid) admin = 1;
+           if (groups[i] == obj->options.admingid) admin = 1;
         }
     }
     if (admin) syslog( LOG_INFO, "admin login -- %s", pwd->pw_name );

@@ -45,6 +45,7 @@ struct afp_options {
   char *pidfile, *defaultvol, *systemvol;
   char *guest, *loginmesg, *keyfile, *passwdfile;
   char *uamlist;
+  char *authprintdir;
 #ifdef ADMIN_GRP
   gid_t admingid;
 #endif ADMIN_GRP

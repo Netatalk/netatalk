@@ -12,6 +12,7 @@ struct printer {
     char		*p_psetdir;
 #endif notdef
     char		*p_ppdfile;
+    char		*p_authprintdir;
     int			p_flags;
     struct at_addr      p_addr;
     union {

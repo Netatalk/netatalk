@@ -119,6 +119,7 @@ void afp_options_init(struct afp_options *options)
   options->transports = AFPTRANS_ALL;
   options->passwdfile = _PATH_AFPDPWFILE;
   options->tickleval = 30;
+  options->authprintdir = NULL;
 #ifdef ADMIN_GRP
   options->admingid = 0;
 #endif ADMIN_GRP
@@ -214,6 +215,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     }
   } 
 #endif
+
+  if ((c = getoption(buf, "-authprintdir")) && (opt = strdup(c)))
+    options->authprintdir = opt;
   if ((c = getoption(buf, "-uampath")) && (opt = strdup(c)))
     options->uampath = opt;
   if ((c = getoption(buf, "-uamlist")) && (opt = strdup(c)))
