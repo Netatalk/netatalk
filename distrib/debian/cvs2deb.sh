@@ -12,11 +12,7 @@ if test ! -d libatalk; then
 fi
 
 VERSION=`cat VERSION`
-if test -e "$debiandir/VERSION"; then
-  DEBVERSION=`cat "$debiandir/VERSION"`
-else
-  DEBVERSION="$VERSION"
-fi
+DEBVERSION="${VERSION}cvs"
 DISTDIR="netatalk-$VERSION"
 DISTTGZ="netatalk_$DEBVERSION.orig.tar.gz"
 
