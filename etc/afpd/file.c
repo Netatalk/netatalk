@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.82 2003-02-01 19:34:55 didg Exp $
+ * $Id: file.c,v 1.83 2003-02-04 18:26:20 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -935,7 +935,7 @@ struct adouble    *adp;
              */
             memset(&ad, 0, sizeof(ad));
             if (!ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) {
-            	ad_close(adp, ADFLAGS_HF);
+            	ad_close(&ad, ADFLAGS_HF);
     	        if (!unix_rename( adsrc, ad_path( dst, 0 )) ) 
                    err = 0;
                 else 
