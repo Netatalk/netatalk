@@ -3,11 +3,11 @@
 bin_PROGRAMS = achfile afile
 
 achfile_SOURCES = achfile.c
-achfile_LDADD = $(top_srcdir)/libatalk/libatalk.a
+achfile_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 afile_SOURCES	= afile.c
-afile_LDADD = $(top_srcdir)/libatalk/libatalk.a
+afile_LDADD = $(top_builddir)/libatalk/libatalk.la
 
-LIBS = @LIBS@ -L$(top_srcdir)/libatalk/ -latalk
+LIBS = @LIBS@ -L$(top_builddir)/libatalk/ -latalk
 
 EXTRA_DIST = README acleandir.rc

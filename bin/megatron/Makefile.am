@@ -3,7 +3,7 @@
 bin_PROGRAMS = megatron
 
 megatron_SOURCES = asingle.c hqx.c macbin.c megatron.c nad.c updcrc.c
-megatron_LDADD = $(top_srcdir)/libatalk/libatalk.a
+megatron_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 noinst_HEADERS = megatron.h
 

@@ -3,7 +3,7 @@
 bin_PROGRAMS = pap papstatus
 
 pap_SOURCES = pap.c
-pap_LDADD = $(top_srcdir)/libatalk/libatalk.a
+pap_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 papstatus_SOURCES = papstatus.c
-papstatus_LDADD = $(top_srcdir)/libatalk/libatalk.a
+papstatus_LDADD = $(top_builddir)/libatalk/libatalk.la

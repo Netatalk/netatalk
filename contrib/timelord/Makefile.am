@@ -3,7 +3,7 @@
 sbin_PROGRAMS = timelord
 
 timelord_SOURCES = timelord.c
-timelord_LDADD = ../../libatalk/libatalk.a
+timelord_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 LIBS = @LIBS@ -latalk
 

@@ -3,4 +3,4 @@
 bin_PROGRAMS = aecho
 
 aecho_SOURCES = aecho.c
-aecho_LDADD = $(top_srcdir)/libatalk/libatalk.a
+aecho_LDADD = $(top_builddir)/libatalk/libatalk.la

@@ -4,11 +4,11 @@ sbin_PROGRAMS = papd
 #bin_PROGRAMS = showppd
 
 papd_SOURCES = main.c printcap.c session.c file.c comment.c lp.c ppd.c magics.c headers.c queries.c auth.c uam.c
-papd_LDADD = $(top_srcdir)/libatalk/libatalk.a -latalk
+papd_LDADD = $(top_builddir)/libatalk/libatalk.la -latalk
 papd_LDFLAGS = -rdynamic
 
 #showppd_SOURCES = showppd.c ppd.c
-#showppd_LDADD = $(top_srcdir)/libatalk/libatalk.a -latalk
+#showppd_LDADD = $(top_builddir)/libatalk/libatalk.la -latalk
 
 noinst_HEADERS = comment.h file.h ppd.h printer.h uam_auth.h
 

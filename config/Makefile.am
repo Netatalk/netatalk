@@ -8,7 +8,7 @@ SUFFIXES = .tmpl .
 	    -e s@:ETCDIR:@${CONFIG_DIR}@ \
 	    <$^ >$@
 
-CLEANFILES = afpd.conf
+CLEANFILES = afpd.conf netatalk
 
 configdir = $(CONFIG_DIR)
 
