@@ -1,4 +1,8 @@
-($Id: ChangeLog,v 1.57 2001-06-29 14:14:46 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.58 2001-06-30 17:42:51 morgana Exp $)
+
+2001-06-30  andy m  <morgan@orst.edu>
+	* etc/papd/ppd.c: "unquote" ppd values by removing leading
+	and trailing quote character. This should fix bug #426141.
 
 2001-06-27  jeff b  <jeff@univrel.pr.uconn.edu>
 	* many, many, files: more malformed ifdef correction, nicer
