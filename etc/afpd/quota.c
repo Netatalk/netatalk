@@ -329,6 +329,19 @@ static int overquota( dqblk )
     return( 1 );
 }
 
+/*
+ * This next bit is basically for linux -- everything is fine
+ * if you use 1k blocks... but if you try (for example) to mount
+ * a volume via nfs from a netapp (which might use 4k blocks) everything
+ * gets reported improperly.  I have no idea about dbtob on other
+ * platforms.
+ */
+
+#ifdef HAVE_BROKEN_DBTOB
+#undef dbtob
+#define dbtob(a, b)	((VolSpace)((VolSpace)(a) * (VolSpace)(b)))
+#define HAVE_2ARG_DBTOB
+#endif
 
 #ifndef dbtob
 #define dbtob(a)       ((a) << 10)
