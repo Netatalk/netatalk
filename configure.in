@@ -153,7 +153,7 @@ AC_ARG_WITH(cracklib,
 )
 
 AC_ARG_ENABLE(ddp,
-	[  --disable-ddp           disable DDP],,
+	[  --disable-ddp           disable DDP],
 	AC_DEFINE(NO_DDP, 1)
 	AC_MSG_RESULT([disabling DDP])
 )
