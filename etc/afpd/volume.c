@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.28 2002-06-14 09:20:29 didg Exp $
+ * $Id: volume.c,v 1.29 2002-08-20 05:36:08 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1189,7 +1189,7 @@ int		ibuflen, *rbuflen;
 #ifdef CNID_DB
     if (volume->v_dbpath)
         volume->v_db = cnid_open (volume->v_dbpath);
-    if (volume->v_db == 0)
+    if (volume->v_db == NULL)
         volume->v_db = cnid_open (volume->v_path);
 #endif /* CNID_DB */
 
