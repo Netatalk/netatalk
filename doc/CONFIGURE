@@ -1,164 +1,21 @@
-Installation and Configuration of Netatalk 1.5
-
-Prerequisites
-=============
-1. Libtool (only needed by developers)
-Libtool encapsulates the platform specific dependencies for the
-creation of libraries. It determines if the local platform can support
-shared libraries or if it only supports static libraries.
-
-Documentation: http://www.gnu.org/software/libtool/
-Program: (see the GNU mirrors) /gnu/libtool/libtool-1.3.5.tar.gz
-
-2. GNU m4 (only needed by developers)
-GNU m4 is an implementation of the Unix macro processor. It reads
-stdin and copies to stdout expanding defined macros as it processes
-the text.
-
-Documentation: http://www.gnu.org/software/m4/
-Program: (see the GNU mirrors) /gnu/m4/m4-1.4.tar.gz
-
-3. Autoconf
-Autoconf is a package of m4 macros that produce shell scripts to
-configure source code packages.
-
-Documentation: http://www.gnu.org/software/autoconf/
-Program: (see the GNU mirrors) /gnu/autoconf/autoconf-2.13.tar.gz
-
-4. Automake
-Automake is a tool that generates  'Makefile.in' files.
-
-Documentation: http://www.gnu.org/software/automake/
-Program: (see the GNU mirrors) /gnu/automake/automake-1.4.tar.gz
-
-Optional
-========
-5. OpenSSL
-The OpenSSL Project is a collaborative effort to develop a robust,
-commercial-grade, full-featured, and Open Source toolkit implementing
-the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
-v1) protocols as well as a full-strength general purpose cryptography
-library.
-This is required to enable DHX login support.
-
-Get everything at http://www.openssl.org/ 
-
-6. TCP Wrappers 
-Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
-programs log the client host name of incoming telnet, ftp, rsh,
-rlogin, finger etc. requests. Security options are: access control per
-host, domain and/or service; detection of host name spoofing or host
-address spoofing; booby traps to implement an early-warning system.
-
-TCP Wrappers can be gotten at ftp://ftp.porcupine.org/pub/security/
-
-7. PAM (Pluggable Authentication Modules for Linux) 
-Linux-PAM provides a flexible mechanism for authenticating
-users. PAM was invented by SUN Microsystems.
-
-Author: Andrew Morgan <morgan@linux.kernel.org>
-
-Linux-PAM is a suite of shared libraries that enable the local system
-administrator to choose how applications authenticate users.
-
-You can get the Linux PAM documentation and sources from
-http://www.kernel.org/pub/linux/libs/pam/
-
-
-Installing Netatalk
-===================
-
-1. Read the configure options.
-$> ./configure --help
-
-This prints a listing of the command line options for configure to
-use. Notables are:
-
---prefix: top level src directory for ./bin, ./etc, ./include, ./lib,
-./man, ./sbin, ./share.
-
---disable-admin-group: disable admin group (default on),
-
---disable-ddp: disable DDP support,
-
---enable-dropkludge: enable the experimental dropbox fix (INSECURE!)
-
- --with-pam: enable password authentication modules support,
-
---with-shadow: enable shadow password support,
-
---with-tcp-wrappers: enable TCP wrappers support
-
---with-ssl-dirs=[PATH]: specify path to OpenSSL installation. 
-NOTE: This is dependent on the same directory layout as the source
-distribution of Openssl. That is: ./include/ and ./lib/ to be on the
-same level. Many .rpm formats do not have their files laid out in this
-format.
-
---enable-lastdid: Recreate version 37b behaviour where directory id's
-are incrementally calculated versus the new hash method. Unfortunately
-for machines that have a lot of devices, and/or a lot of inodes the
-hash can fail with multiple directories resolving to the same DID.
-
-Enable/Disable the desired options, make, and make install.
-
-$>./configure --option1 --option2 ....
-$> make  (as root or sudo)
-$> make install  (as root or sudo)
-
-Assuming you haven't changed the install directories, this will
-install the configutation files in /etc/atalk. The uams in
-/etc/atalk/uams. The binaries will be in /usr/sbin/.
-
-4. Configure Netatalk (See below 'Configuring Netatalk')
-The default location for the configuration files is /etc/atalk/.
-
-5. Setup your rc script so that Netatalk is started on boot.
-You can find sample initscripts in ./distrib/initscripts/ from the
-source directory.
-
-6. If you enabled PAM, then copy the ./config/netatalk PAM file to
-/etc/pam.d/ or where ever your system puts the PAM configuration
-files.
-
-
 Configuring Netatalk
 ====================
 
+These files should have been copied into the configuration directory
+(default: /usr/local/etc)  by the `make install' in step 4 of
+the INSTALL file.
+
+
 Netatalk supplies two different types of Appletalk servers and both
 can run at the same time. Classic Appletalk requires afpd and
-atalkd. Appletalk over IP only requires afpd. Classic Appletalk on
-GNU/LInux requires that CONFIG_ATALK is compiled into the kernel or as
-a kernel module. To check to see if the kernel has Appletalk
-installed:
-
-$> dmesg | grep Apple
-This just parses the boot messages for any line containing
-'Apple'.
-
-To see all the  loaded modules (as root):
-$> lsmod
-
-If you don't find it, you may have to compile a kernel and turn on
-Appletalk in Networking options -> Appletalk DDP. You have an option
-to install as a module or directly into the kernel.
-
-Some default distribution kernels have already compiled Appletalk DDP
-as a module, you may have to edit your /etc/modules.conf to include:
-"alias net-pf-5 appletalk ".
-
-Note: check your distribution documentation about editing
-/etc/modules.conf.
-
-For more complete information about the Linux kernel see the
-Kernel-HOWTO:
-http://www.linuxdoc.org/HOWTO/Kernel-HOWTO.html
+atalkd. Appletalk over IP only requires afpd.
 
 
-1. /etc/atalk/afpd.conf
-======================
 
-Edit /etc/atalk/afpd.conf as required. Some options:
+1. /usr/local/etc/afpd.conf
+===========================
+
+Edit /usr/local/etc/afpd.conf as required. Some options:
 
 Format:
 - [options]		to specify options for the default server
@@ -177,13 +34,14 @@ Transport Protocols:
 Transport Options:
      -ipaddr <w.x.y.z>	
 		Specifies the IP address the server should
-		respond to (default is the first IP address of the system). This
-		option also allows one machine to advertise TCP/IP for another machine.
+		respond to (default is the first IP address of the system).
+		This option also allows one machine to advertise TCP/IP for
+		another machine.
      -server_quantum <number> 
 		Specifies the DSI server quantum. The minimum
-		value is 1MB. The max value is 0xFFFFFFFF. If you specify a value that
-		is out of range, you'll get the default value (currently the
-		minimum). 
+		value is 1MB. The max value is 0xFFFFFFFF. If you specify a
+		value that is out of range, you'll get the default value
+		(currently the minimum). 
      -admingroup <groupname>
                          Specifies the group of administrators who should all
                          be seen as the superuser when they log in.  Default
@@ -273,8 +131,11 @@ No server name, allow afp over tcp and afp over AppleTalk , allow
 guest access, logins in clear text and DHX, don't allow the user to
 save the password.
 
-2. /etc/atalk/atalkd.conf
-=========================
+Try   man afpd  and  man afpd.conf  for further details.
+
+
+2. /usr/local/etc/atalkd.conf
+=============================
 
 Classic Appletalk is configured in atalkd.conf. For detailed
 information please reference 
@@ -292,7 +153,7 @@ nonseed and soft seed.
 
 Seed publishes the network and zone information to the network. In the
 case of a conflict, this router takes precedence. Nonseed acts as a
-forwarder in that all network and zone information for it's network
+forwarder in that all network and zone information for its network
 segment is pulled from an upstream router. A soft seed router is
 configured like a seed router, but will defer and use upstream seeded
 zone information if there is a conflict.
@@ -326,7 +187,7 @@ this range. If you're publishing to a LocalTalk network segment
 (Hello? Welcome to Y2K. :) your maximum network range is _one_
 network.
 
-Zone's must be less then 32 characters long.
+Zones must be less then 32 characters long.
 
 Format of lines in this file:
 	interface [ -seed ] [ -router | -dontroute ] 
@@ -361,8 +222,11 @@ eth1 -seed -phase 2 -addr 100.10 -net 100-110 -zone "Upstairs"
 for eth1 this server acts as a soft seed router of a phase 2 network
 segment of 100-110 where this machine is 100.10
 
-3. /etc/atalk/netatalk.conf
-===========================
+Try   man atalkd  and  man atalkd.conf  for further details.
+
+
+3. /usr/local/etc/netatalk.conf
+===============================
 
 Set the options as appropriate:
 
@@ -381,10 +245,29 @@ for the guest client.
 ATALKD_RUN, PAPD_RUN, AFPD_RUN - Run these daemons, 'yes/no'.
 
 
-4. /etc/atalk/papd.conf
-=======================
+4. /usr/local/etc/papd.conf	for the Printer Access Protocol (PAP) daemon.
+===========================
 
-To be written by someone who actully uses the print server. :)
+See the config/papd.conf file for some examples.
+A configuration file that works under Solaris 8 is:
+MacLaserJet:\
+        :pr=|/usr/bin/lp -d fred:\
+        :op=nobody:\
+        :pd=/usr/local/etc/HPLJ46_1.PPD:
 
+where
+  MacLaserJet is some name you have chosen by which Macintoshes will
+     refer to the printer. This is the name that appears in the Chooser.
+  pr gives the printer name on the Unix system ('fred' in this example).
+     On some operating systems you can just specify something like :pr=fred:
+     while on others (including Solaris) it is necessary to pipe the print
+     command into lp or lpr as shown above.
+  op gives the operator name for LPD spooling
+  pd gives the pathname to the PostScript Printer Description (PPD) file.
+     PPD files are available from Adobe Inc,  via anonymous ftp
+     (ftp://ftp.adobe.com//pub/adobe/printerdrivers/mac/all/ppdfiles
+               or        //pub/adobe/printerdrivers/win/all/ppdfiles)
+     or http://download.sourceforge.net/lpr/hp-ppd-0.2.tar.gz
+     or from the printer's manufacturer.
 
-
+Try   man papd  and  man papd.conf  for further options.
