@@ -1,3 +1,7 @@
+/*
+ * $Id: at_sun.c,v 1.2 2001-08-06 13:39:30 rufustfirefly Exp $
+ */
+
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -217,7 +221,7 @@ atef_input( ifp, m, header )
      */
 #if defined( sun ) && defined( i386 )
     header->ether_type = ntohs( header->ether_type );
-#endif sun i386
+#endif /* sun i386 */
 
     if ( header->ether_type <= ETHERMTU ) {	/* IEEE802 */
 	/*
