@@ -1,12 +1,19 @@
-.TH PAP 1 "3 Jun 1994" "netatalk 1.3"
+.TH PAP 1 "6 May 2002" "netatalk 1.5"
 .SH NAME
 pap, papstatus \- client interface to remote printers using Printer Access Protocol
 .SH SYNOPSIS
 .B pap
 [
+.B -A
+.I address
+] [
 .B -c
 ] [
+.B -d
+] [
 .B -e
+] [
+.B -E
 ] [
 .B -p
 .I nbpname
@@ -14,7 +21,11 @@ pap, papstatus \- client interface to remote printers using Printer Access Proto
 .B -s
 .I statusfile
 ] [
-.I files
+.B -w
+] [
+.B -W
+] [
+.I FILES
 ]
 .sp
 .B papstatus
@@ -66,15 +77,28 @@ spooled print jobs to AppleTalk connected printers.  See
 .BR psf (8)
 for hints on how to use it this way.
 .SH OPTIONS
+.HP
+.B -A
+.I address
+.br
+Connect to the printer with Appletalk address
+.I address
+and do not consult the
+.B .paprc
+file to find a printer name.  See
+.BR atalk_aton (3)
+for the syntax of
+.IR address .
 .TP
 .B -c
-Take cuts.  Normally
+Take cuts.  The PAP protocol specified a simple queuing
+procedure, such that the clients tell the printer how long
+they have been waiting to print.  This option causes
 .B pap
-tells the printer how long it has been waiting.  When
-.B -c
-is specified,
-.B pap
-claims to have been waiting forever.
+to lie about how long it has been waiting.
+.TP
+.B -d
+Enable debug output.
 .TP
 .B -e
 Send any message from the printer to stderr instead of stdout.
@@ -82,6 +106,14 @@ Send any message from the printer to stderr instead of stdout.
 invokes
 .B pap
 with this option.
+.TP
+.B -E
+Don't wait for EOF from the printer.  This option is useful
+for printers which don't implement PAP correctly.  In a correct
+implementation, the client side should wait for the printer to
+return EOF before closing the connection.  Some clients don't
+wait, and hence some printers have related bugs in their
+implementation.
 .HP
 .B -p
 .I nbpname
@@ -113,11 +145,22 @@ is invoked by
 within
 .BR lpd 's
 spool directory.
+.TP
+.B -w
+Wait for the printer status to contain the word "waiting" before
+sending the job.  This is to defeat printer-side spool available
+on HP IV and V printers.
+.TP
+.B -W
+Wait for the printer status to contain the word "idle" before
+sending the job.  This is to defeat printer-side spool available
+on HP IV and V printers.
 .SH FILES
 .TP 20
 .B .paprc
-file that contains printer name
+file read to obtain printer name if not specified on command line
 .SH SEE ALSO
 .BR nbp_name (3),
+.BR atalk_aton (3),
 .BR lpd (8),
 .BR psf (8).
