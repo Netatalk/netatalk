@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.51 2003-04-22 04:19:55 didg Exp $
+ * $Id: volume.c,v 1.52 2003-05-21 01:32:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -298,10 +298,14 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 {
     char *val;
 
-    val = strchr(tmp, ':');
-    LOG(log_debug, logtype_afpd, "Parsing volset %s", val);
+    LOG(log_debug, logtype_afpd, "Parsing volset %s", tmp);
 
-    if (optionok(tmp, "allow:", val)) {
+    val = strchr(tmp, ':');
+    if (!val) {
+        /* we'll assume it's a volume name. */
+        strncpy(volname, tmp, vlen);
+
+    } else if (optionok(tmp, "allow:", val)) {
         if (options[VOLOPT_ALLOW].c_value)
             free(options[VOLOPT_ALLOW].c_value);
         options[VOLOPT_ALLOW].c_value = strdup(val + 1);
@@ -416,13 +420,10 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 
 #endif /* FORCE_UIDGID */
 
-    } else if (val) {
+    } else {
         /* ignore unknown options */
         LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
 
-    } else {
-        /* we'll assume it's a volume name. */
-        strncpy(volname, tmp, vlen);
     }
 }
 
