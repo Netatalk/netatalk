@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.40 2003-05-16 14:38:20 didg Exp $
+ * $Id: enumerate.c,v 1.41 2003-05-20 14:46:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -495,6 +495,7 @@ int     ext;
         }
         data += esz;
         actcnt++;
+        /* FIXME if we rollover 16 bits and it's not FPEnumerateExt2 */
     }
 
     if ( actcnt == 0 ) {

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.73 2003-05-12 09:43:11 didg Exp $
+ * $Id: directory.c,v 1.74 2003-05-20 14:46:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1344,12 +1344,12 @@ int getdirparams(const struct vol *vol,
             ashort = 0;
             /* this needs to handle current directory access rights */
             if (st->st_ctime == dir->ctime) {
-               ashort = dir->offcnt;
+                ashort = (dir->offcnt > 0xffff)?0xffff:dir->offcnt;
             }
             else if ((ret = for_each_dirent(vol, upath, NULL,NULL)) >= 0) {
-                ashort = ret;
-                dir->offcnt = ashort;
+                dir->offcnt = ret;
                 dir->ctime = st->st_ctime;
+                ashort = (dir->offcnt > 0xffff)?0xffff:dir->offcnt;
             }
             ashort = htons( ashort );
             memcpy( data, &ashort, sizeof( ashort ));
