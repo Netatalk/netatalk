@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.55 2002-09-05 14:52:05 didg Exp $
+ * $Id: file.c,v 1.56 2002-09-06 02:57:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -977,18 +977,18 @@ int		ibuflen, *rbuflen;
         }
     }
 
-    if ( (err = copyfile(p, upath, newname,
-                         vol_noadouble(vol))) < 0 ) {
+    if ( (err = copyfile(p, mtoupath(vol, newname), 
+                            newname, vol_noadouble(vol))) < 0 ) {
         return err;
     }
-
-    setvoltime(obj, vol );
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {
         retvalue=matchfile2dirperms(newname, vol, sdid);
     }
 #endif /* DROPKLUDGE */
+
+    setvoltime(obj, vol );
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end afp_copyfile:");

@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.18 2002-09-05 14:52:07 didg Exp $
+ * $Id: ofork.c,v 1.19 2002-09-06 02:57:49 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -37,8 +37,8 @@ static u_short		lastrefnum = 0;
 /* OR some of each character for the hash*/
 static __inline__ unsigned long hashfn(const struct file_key *key)
 {
-    unsigned long i = 0;
 #if 0
+    unsigned long i = 0;
     while (*name) {
         i = ((i << 4) | (8*sizeof(i) - 4)) ^ *name++;
     }
@@ -115,24 +115,24 @@ const char *oldpath, *newpath;
         if (vol == of->of_vol && olddir == of->of_dir &&
 	         s_of->key.dev == of->key.dev && 
 	         s_of->key.inode == of->key.inode ) {
-            of_unhash(of);
             strncpy( of->of_name, newpath, of->of_namelen);
-            of->of_d_prev->of_d_next = of->of_d_next;
-            of->of_d_next->of_d_prev = of->of_d_prev;
-            if (of->of_dir->d_ofork == of) {
-                of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
-            }	    
-            of->of_dir = newdir;
-            if (!(d_ofork = newdir->d_ofork)) {
-                newdir->d_ofork = of;
-                of->of_d_next = of->of_d_prev = of;
-            } else {
-                of->of_d_next = d_ofork;
-                of->of_d_prev = d_ofork->of_d_prev;
-                of->of_d_prev->of_d_next = of;
-                d_ofork->of_d_prev = of;
+            if (newdir != olddir) {
+                of->of_d_prev->of_d_next = of->of_d_next;
+                of->of_d_next->of_d_prev = of->of_d_prev;
+                if (of->of_dir->d_ofork == of) {
+                    of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
+                }	    
+                of->of_dir = newdir;
+                if (!(d_ofork = newdir->d_ofork)) {
+                    newdir->d_ofork = of;
+                    of->of_d_next = of->of_d_prev = of;
+                } else {
+                    of->of_d_next = d_ofork;
+                    of->of_d_prev = d_ofork->of_d_prev;
+                    of->of_d_prev->of_d_next = of;
+                    d_ofork->of_d_prev = of;
+                }
             }
-            of_hash(of);
         }
     }
 
