@@ -4,7 +4,7 @@ pkgconfdir = @PKGCONFDIR@
 
 GENERATED_FILES = lp2pap.sh
 TEMPLATE_FILES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
-SCRIPTS = \
+PERLSCRIPTS = \
 	afpd-mtab.pl			\
 	apple_cp apple_mv apple_rm	\
 	cleanappledouble.pl		\
@@ -20,6 +20,6 @@ SUFFIXES = .tmpl .
 
 CLEANFILES = $(GENERATED_FILES)
 
-bin_SCRIPTS = $(SCRIPTS) $(GENERATED_FILES)
+bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES)
 
-EXTRA_DIST = $(SCRIPTS) $(TEMPLATE_FILES)
+EXTRA_DIST = $(PERLSCRIPTS) $(TEMPLATE_FILES)
