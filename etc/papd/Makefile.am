@@ -1,13 +1,16 @@
 # Makefile.am for etc/papd/
 
 sbin_PROGRAMS = papd
+#bin_PROGRAMS = showppd
 
 papd_SOURCES = main.c printcap.c session.c file.c comment.c lp.c ppd.c magics.c headers.c queries.c auth.c uam.c
 papd_LDADD = $(top_srcdir)/libatalk/libatalk.a -latalk
 
+#showppd_SOURCES = showppd.c ppd.c
+#showppd_LDADD = $(top_srcdir)/libatalk/libatalk.a -latalk
+
 noinst_HEADERS = comment.h file.h ppd.h printer.h uam_auth.h
 
-CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys \
+CFLAGS = @CFLAGS@ \
 	-D_PATH_PAPDCONF=\"$(CONFIG_DIR)/papd.conf\" \
-	-D_PATH_PAPDUAMPATH=\"$(UAMS_PATH)/\" \
-	-DVERSION=\"$(NETATALK_VERSION)\"
+	-D_PATH_PAPDUAMPATH=\"$(UAMS_PATH)/\"

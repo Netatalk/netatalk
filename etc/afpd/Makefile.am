@@ -9,7 +9,7 @@ afpd_LDADD = $(top_srcdir)/libatalk/libatalk.a -latalk
 
 noinst_HEADERS = auth.h codepage.h afp_config.h desktop.h directory.h file.h filedir.h fork.h globals.h icon.h misc.h status.h switch.h uam_auth.h unix.h volume.h
 
-CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys \
+CFLAGS = @CFLAGS@ \
 	 -D_PATH_AFPDDEFVOL=\"$(CONFIG_DIR)/AppleVolumes.default\" \
 	 -D_PATH_AFPDSYSVOL=\"$(CONFIG_DIR)/AppleVolumes.system\" \
 	 -D_PATH_AFPDPWFILE=\"$(CONFIG_DIR)/afppasswd\" \

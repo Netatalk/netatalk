@@ -7,6 +7,4 @@ atalkd_LDADD = -L$(top_srcdir)/libatalk -latalk
 
 noinst_HEADERS = atserv.h gate.h interface.h list.h multicast.h nbp.h rtmp.h zip.h
 
-CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys \
-	-D_PATH_ATALKDCONF=\"$(CONFIG_DIR)/atalkd.conf\" \
-	-DVERSION=\"$(NETATALK_VERSION)\"
+CFLAGS = @CFLAGS@ -D_PATH_ATALKDCONF=\"$(CONFIG_DIR)/atalkd.conf\"
