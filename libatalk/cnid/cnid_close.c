@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.16 2001-12-13 03:31:34 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.17 2001-12-13 15:15:05 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,11 +34,6 @@ void cnid_close(void *CNID) {
     /* Flush the transaction log and delete the log file if we can. */
     if ((db->lockfd > -1) && ((db->flags & CNIDFLAG_DB_RO) == 0)) {
         struct flock lock;
-        char wd[MAXPATHLEN + 1];
-
-        /* Save the current working directory so we can restore it
-         * when we're done. */
-        getcwd(wd, MAXPATHLEN);
 
         lock.l_type = F_WRLCK;
         lock.l_whence = SEEK_SET;
@@ -53,11 +48,10 @@ void cnid_close(void *CNID) {
                 rc = txn_checkpoint(db->dbenv, 0, 0, 0);
             }
 
-            chdir(db->dbenv->db_log_dir ? db->dbenv->db_log_dir : db->dbenv->db_home);
 #if DB_VERSION_MINOR > 2
-            if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG)) != 0) {
+            if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG | DB_ARCH_ABS)) != 0) {
 #else /* DB_VERSION_MINOR < 2 */
-            if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG, NULL)) != 0) {
+            if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG | DB_ARCH_ABS, NULL)) != 0) {
 #endif /* DB_VERSION_MINOR */
                 syslog(LOG_ERR, "cnid_close: Unable to archive logfiles: %s",
                        db_strerror(rc));
@@ -74,7 +68,6 @@ void cnid_close(void *CNID) {
                 }
                 free(first);
             }
-            chdir(wd);
         }
     }
 
