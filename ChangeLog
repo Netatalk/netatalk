@@ -1,3 +1,7 @@
+2011-11-19  pooba53 <bobo@bocklabs.wisc.edu>
+            * Modified distrib/initscripts/Makefile.am so
+              that SuSE init script ends up in the correct directory.
+
 2001-11-19  pooba53 <bobo@bocklabs.wisc.edu>
 	* modified config/AppleVolumes.default to not 
           have the "/Home Directory" text in it as this is not the
