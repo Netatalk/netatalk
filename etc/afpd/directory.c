@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.61 2003-01-31 17:47:06 didg Exp $
+ * $Id: directory.c,v 1.62 2003-02-16 12:35:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -193,7 +193,7 @@ u_int32_t	did;
         if (ret != NULL) {
             break;
         }
-        if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL) {
+        if (NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, buflen))) {
             afp_errno = AFPERR_NOOBJ;
             return NULL;
         }
@@ -817,6 +817,14 @@ struct dir	*dir;
 
 /* free everything down. we don't bother to recolor as this is only
  * called to free the entire tree */
+void dirfreename(struct dir *dir)
+{
+    if (dir->d_u_name != dir->d_m_name) {
+        free(dir->d_u_name);
+    }
+    free(dir->d_m_name);
+}
+
 void dirfree( dir )
 struct dir	*dir;
 {
@@ -831,10 +839,7 @@ struct dir	*dir;
     }
 
     if (dir != SENTINEL) {
-        if (dir->d_u_name != dir->d_m_name) {
-            free(dir->d_u_name);
-        }
-        free(dir->d_m_name);
+        dirfreename(dir);
         free( dir );
     }
 }
@@ -1983,24 +1988,30 @@ int pathlen;
             	return err;
             }
         }
-        closedir(dp);
     }
 
     if ( movecwd( vol, curdir->d_parent ) < 0 ) {
-        return afp_errno;
+        err = afp_errno;
+        goto delete_done;
     }
 
-    if ( (err = netatalk_rmdir(fdir->d_u_name))) {
-        return err;
-    }
-
-    dirchildremove(curdir, fdir);
+    if ( !(err = netatalk_rmdir(fdir->d_u_name))) {
+        dirchildremove(curdir, fdir);
 #ifdef CNID_DB
-    cnid_delete(vol->v_db, fdir->d_did);
+        cnid_delete(vol->v_db, fdir->d_did);
 #endif /* CNID_DB */
-    dir_remove( vol, fdir );
-
-    return( AFP_OK );
+        dir_remove( vol, fdir );
+        err = AFP_OK;
+    }
+delete_done:
+    if (dp) {
+        /* inode is used as key for cnid.
+         * Close the descriptor only after cnid_delete
+         * has been called. 
+        */
+        closedir(dp);
+    }
+    return err;
 }
 
 int afp_mapid(obj, ibuf, ibuflen, rbuf, rbuflen )

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.40 2003-01-24 07:08:43 didg Exp $
+ * $Id: filedir.c,v 1.41 2003-02-16 12:35:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -209,8 +209,8 @@ int		ibuflen, *rbuflen;
         /* this is a directory */
         *(rbuf + 2 * sizeof( u_int16_t )) = (char) FILDIRBIT_ISDIR;
     } else {
-        if (fbitmap && ( ret = getfilparams(vol, fbitmap, s_path, curdir, 
-                                            rbuf + 3 * sizeof( u_int16_t ), &buflen )) != AFP_OK ) {
+        if (fbitmap && AFP_OK != (ret = getfilparams(vol, fbitmap, s_path, curdir, 
+                                            rbuf + 3 * sizeof( u_int16_t ), &buflen )) ) {
             return( ret );
         }
         /* this is a file */
@@ -263,7 +263,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did));
     ibuf += sizeof( did);
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
 	return afp_errno;    
     }
 
@@ -271,7 +271,7 @@ int		ibuflen, *rbuflen;
     bitmap = ntohs( bitmap );
     ibuf += sizeof( bitmap );
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf ))) {
 	return afp_errno;    
     }
 
@@ -484,7 +484,7 @@ int		ibuflen, *rbuflen;
     }
 
     /* source pathname */
-    if (( path = cname( vol, sdir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, sdir, &ibuf )) ) {
 	return afp_errno;    
     }
 
@@ -585,11 +585,8 @@ int		ibuflen, *rbuflen;
         }
     } else if (of_findname(s_path)) {
         rc = AFPERR_BUSY;
-    } else if (AFP_OK == (rc = deletefile( upath, 1))) {
-#ifdef CNID_DB /* get rid of entry */
-        cnid_t id = cnid_get(vol->v_db, curdir->d_did, upath, strlen(upath));
-        cnid_delete(vol->v_db, id);
-#endif /* CNID_DB */
+    } else {
+        rc = deletefile(vol, upath, 1);
     }
     if ( rc == AFP_OK ) {
 	curdir->offcnt--;

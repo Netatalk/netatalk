@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.33 2003-01-24 07:08:42 didg Exp $
+ * $Id: enumerate.c,v 1.34 2003-02-16 12:35:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -70,6 +70,8 @@ struct path     *path;
     /* Fail out if things go bad with CNID. */
     if (cdir->d_did == CNID_INVALID) {
         switch (errno) {
+        case CNID_ERR_CLOSE: /* the db is closed */
+            break;
         case CNID_ERR_PARAM:
             LOG(log_error, logtype_afpd, "adddir: Incorrect parameters passed to cnid_add");
             return NULL;
@@ -105,6 +107,7 @@ struct path     *path;
            - it's an ID reused as above
            - it's a hash duplicate and we are in big trouble
         */
+        dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
         free(cdir);
@@ -449,8 +452,8 @@ int     ext;
             else {
                 s_path.m_name = NULL;
             }
-            if (( ret = getdirparams(vol, dbitmap, &s_path, dir,
-                                     data + header , &esz )) != AFP_OK ) {
+            if (AFP_OK != ( ret = getdirparams(vol, dbitmap, &s_path, dir,
+                                     data + header , &esz ))) {
                 return( ret );
             }
 
@@ -460,8 +463,8 @@ int     ext;
                 continue;
             }
             s_path.m_name = utompath(vol, s_path.u_name);
-            if (( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
-                                     data + header , &esz )) != AFP_OK ) {
+            if (AFP_OK != ( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
+                                     data + header , &esz )) ) {
                 return( ret );
             }
         }

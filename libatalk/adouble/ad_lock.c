@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.10 2003-01-31 11:26:36 didg Exp $
+ * $Id: ad_lock.c,v 1.11 2003-02-16 12:35:05 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -55,14 +55,12 @@ static int XLATE_FCNTL_LOCK(int type)
 }
 
 /* ----------------------- */
-
 static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen) 
 {
  return (!alen && a <= b) || 
 	(!blen && b <= a) || 
 	( (a + alen > b) && (b + blen > a) );
 }
-
 
 /* allocation for lock regions. we allocate aggressively and shrink
  * only in large chunks. */
@@ -214,7 +212,7 @@ static __inline__  int adf_findxlock(struct ad_fd *ad,
 	translate a data fork lock to an offset
 */
 
-static int df2off(int off)
+static off_t df2off(int off)
 {
 int start = off;
 	if (off == AD_FILELOCK_OPEN_WR)
@@ -234,7 +232,7 @@ int start = off;
 	translate a resource fork lock to an offset
 */
 
-static int hf2off(int off)
+static off_t hf2off(int off)
 {
 int start = off;
 	if (off == AD_FILELOCK_OPEN_WR)
@@ -256,7 +254,8 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
 {
   struct flock lock;
   struct ad_fd *adf;
-  adf_lock_t *adflock, *oldlock;
+  adf_lock_t *adflock;
+  int oldlock;
   int i;
   int type;  
 
@@ -340,10 +339,9 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   } 
 
   /* it wasn't an upgrade */
-  oldlock = NULL;
-  if ((lock.l_type == F_RDLCK) &&
-      ((i = adf_findxlock(adf, user, ADLOCK_RD, lock.l_start, lock.l_len)) > -1)) {
-    oldlock = adf->adf_lock + i;
+  oldlock = -1;
+  if (lock.l_type == F_RDLCK) {
+    oldlock = adf_findxlock(adf, user, ADLOCK_RD, lock.l_start, lock.l_len);
   } 
     
   /* no more space. this will also happen if lockmax == lockcount == 0 */
@@ -361,9 +359,9 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   /* fill in fields */
   memcpy(&adflock->lock, &lock, sizeof(lock));
   adflock->user = user;
-  if (oldlock)
-    adflock->refcount = oldlock->refcount;
-  else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
+  if (oldlock > -1) {
+    adflock->refcount = (adf->adf_lock + oldlock)->refcount;
+  } else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
     goto fcntl_lock_err;
   }
   

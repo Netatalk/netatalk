@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.19 2003-01-31 17:38:02 didg Exp $
+ * $Id: adouble.h,v 1.20 2003-02-16 12:35:05 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -248,6 +248,7 @@ struct adouble {
 #define ADFLAGS_DIR	  (1<<2)
 #define ADFLAGS_NOADOUBLE (1<<3)
 #define ADFLAGS_V1COMPAT  (1<<4)
+#define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
 
 /* lock flags */
 #define ADLOCK_CLR      (0)
@@ -331,6 +332,7 @@ extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 				 const int /*type*/, const off_t /*offset*/,
 				 const off_t /*len*/, const int /*user*/));
 
+extern int ad_testlock      __P((struct adouble * /*adp*/, int /*eid*/, off_t /*off*/));
 extern int ad_excl_lock     __P((struct adouble * /*adp*/, const u_int32_t /*eid*/));
 
 #define ad_lock ad_fcntl_lock

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.83 2003-02-04 18:26:20 didg Exp $
+ * $Id: file.c,v 1.84 2003-02-16 12:35:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -159,7 +159,7 @@ char *set_name(char *data, const char *name, u_int32_t utf8)
 /* -------------------------- */
 int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
-                 char *path, struct dir *dir, struct stat *st,
+                 struct path *path, struct dir *dir, 
                  char *buf, int *buflen, struct adouble *adp, int attrbits )
 {
 #ifndef USE_LASTDID
@@ -172,12 +172,13 @@ int getmetadata(struct vol *vol,
     u_int16_t		ashort;
     u_char              achar, fdType[4];
     u_int32_t           utf8 = 0;
-
+    struct stat         *st;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin getmetadata:");
 #endif /* DEBUG */
 
-    upath = mtoupath(vol, path);
+    upath = path->u_name;
+    st = &path->st;
 
     data = buf;
     while ( bitmap != 0 ) {
@@ -244,7 +245,7 @@ int getmetadata(struct vol *vol,
             break;
 
         case FILPBIT_FINFO :
-	    get_finderinfo(path, adp, (char *)data);
+	    get_finderinfo(path->m_name, adp, (char *)data);
             if (!adp) {
                 if (*upath == '.') { /* make it invisible */
                     ashort = htons(FINDERINFO_INVISIBLE);
@@ -437,12 +438,12 @@ int getmetadata(struct vol *vol,
     if ( l_nameoff ) {
         ashort = htons( data - buf );
         memcpy(l_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(data, path, 0);
+        data = set_name(data, path->m_name, 0);
     }
     if ( utf_nameoff ) {
         ashort = htons( data - buf );
         memcpy(utf_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(data, path, utf8);
+        data = set_name(data, path->m_name, utf8);
     }
     *buflen = data - buf;
     return (AFP_OK);
@@ -496,7 +497,7 @@ int getfilparams(struct vol *vol,
     	    }
     	}
     }
-    rc = getmetadata(vol, bitmap, path->m_name, dir, &path->st, buf, buflen, adp, attrbits);
+    rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp, attrbits);
     if ( adp ) {
         ad_close( adp, ADFLAGS_HF );
     }
@@ -513,7 +514,6 @@ AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
-    struct stat         *st;
     struct adouble	ad, *adp;
     struct vol		*vol;
     struct dir		*dir;
@@ -583,23 +583,29 @@ int		ibuflen, *rbuflen;
         openf = O_RDWR|O_CREAT|O_EXCL;
     }
 
-    if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF,
+    if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF,
                   openf, 0666, adp) < 0 ) {
         switch ( errno ) {
         case EEXIST :
             return( AFPERR_EXIST );
         case EACCES :
             return( AFPERR_ACCESS );
-        case ENOENT:
-            /* on noadouble volumes, just creating the data fork is ok */
-            st = &s_path->st;
-            if (vol_noadouble(vol) && (stat(upath, st) == 0))
-                goto createfile_done;
-            /* fallthrough */
         default :
             return( AFPERR_PARAM );
         }
     }
+    if ( ad_hfileno( adp ) == -1 ) {
+         /* on noadouble volumes, just creating the data fork is ok */
+         if (vol_noadouble(vol))
+             goto createfile_done;
+         /* FIXME with hard create on an existing file, we already
+          * corrupted the data file.
+          */
+         netatalk_unlink( upath );
+         ad_close( adp, ADFLAGS_DF );
+         return AFPERR_ACCESS;
+    }
+
     path = s_path->m_name;
     ad_setentrylen( adp, ADEID_NAME, strlen( path ));
     memcpy(ad_entry( adp, ADEID_NAME ), path,
@@ -903,11 +909,11 @@ struct adouble    *adp;
     	        /* FIXME  warning in syslog so admin'd know there's a conflict ?*/
     	        return AFPERR_OLOCK; /* little lie */
     	    }
-            if (( rc = copyfile(src, dst, newname, noadouble )) != AFP_OK ) {
-                deletefile( dst, 0 );
+            if (AFP_OK != ( rc = copyfile(src, dst, newname, noadouble )) ) {
+                /* on error copyfile delete dest */
                 return( rc );
             }
-            return deletefile( src, 0);
+            return deletefile(NULL, src, 0);
         default :
             return( AFPERR_PARAM );
         }
@@ -1169,96 +1175,75 @@ static __inline__ int copy_all(const int dfd, const void *buf,
     return AFP_OK;
 }
 
-/* XXX: this needs to use ad_open and ad_lock. so, we need to
- * pass in vol and path */
+/* -------------------------- */
+static int copy_fd(int dfd, int sfd)
+{
+    ssize_t cc;
+    int     err = AFP_OK;
+    char    filebuf[8192];
+
+#ifdef SENDFILE_FLAVOR_LINUX
+    struct stat         st;
+
+    if (fstat(sfd, &st) == 0) {
+        if ((cc = sendfile(dfd, sfd, NULL, st.st_size)) < 0) {
+            switch (errno) {
+            case EINVAL:  /* there's no guarantee that all fs support sendfile */
+                break;
+            case EDQUOT:
+            case EFBIG:
+            case ENOSPC:
+                return AFPERR_DFULL;
+            case EROFS:
+                return AFPERR_VLOCK;
+            default:
+                return AFPERR_PARAM;
+            }
+        }
+        else {
+           return AFP_OK;
+        }
+    }
+#endif /* SENDFILE_FLAVOR_LINUX */
+
+    while (1) {
+        if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
+            if (errno == EINTR)
+                continue;
+            err = AFPERR_PARAM;
+            break;
+        }
+
+        if (!cc || ((err = copy_all(dfd, filebuf, cc)) < 0))
+            break;
+    }
+    return err;
+}
+
+/* ----------------------------------
+ * if newname is NULL (from directory.c) we don't want to copy ressource fork.
+ * because we are doing it elsewhere.
+ */
 int copyfile(src, dst, newname, noadouble )
 char	*src, *dst, *newname;
 const int   noadouble;
 {
-    struct adouble	ad;
-#ifdef SENDFILE_FLAVOR_LINUX
-    struct stat         st;
-#endif
-    char		filebuf[8192];
-    int			sfd, dfd, len, err = AFP_OK;
-    ssize_t             cc;
-    char                dpath[ MAXPATHLEN + 1];
-    int                 admode;
+    struct adouble	ads, add;
+    int			len, err = AFP_OK;
+    int                 adflags;
+    
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin copyfile:");
 #endif /* DEBUG */
 
-    strcpy(dpath, ad_path( dst, ADFLAGS_HF ));
-    admode = ad_mode( dst, 0666 );
+    memset(&ads, 0, sizeof(ads));
+    memset(&add, 0, sizeof(add));
+    adflags = ADFLAGS_DF;
     if (newname) {
-        if ((sfd = open( ad_path( src, ADFLAGS_HF ), O_RDONLY, 0 )) < 0 ) {
-            switch ( errno ) {
-            case ENOENT :
-                break; /* just copy the data fork */
-            case EACCES :
-                return( AFPERR_ACCESS );
-            default :
-                return( AFPERR_PARAM );
-            }
-        } else {
-            if (( dfd = open( dpath, O_WRONLY|O_CREAT,ad_hf_mode(admode))) < 0 ) {
-                close( sfd );
-                switch ( errno ) {
-                case ENOENT :
-                    return( AFPERR_NOOBJ );
-                case EACCES :
-                    return( AFPERR_ACCESS );
-                case EROFS:
-                    return AFPERR_VLOCK;
-                default :
-                    return( AFPERR_PARAM );
-                }
-            }
-
-            /* copy the file */
-#ifdef SENDFILE_FLAVOR_LINUX
-            if (fstat(sfd, &st) == 0) {
-                if ((cc = sendfile(dfd, sfd, NULL, st.st_size)) < 0) {
-                    switch (errno) {
-                    case EDQUOT:
-                    case EFBIG:
-                    case ENOSPC:
-                        err = AFPERR_DFULL;
-                        break;
-                    case EROFS:
-                        err = AFPERR_VLOCK;
-                        break;
-                    default:
-                        err = AFPERR_PARAM;
-                    }
-                }
-                goto copyheader_done;
-            }
-#endif /* SENDFILE_FLAVOR_LINUX */
-            while (1) {
-                if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
-                    if (errno == EINTR)
-                        continue;
-                    err = AFPERR_PARAM;
-                    break;
-                }
-
-                if (!cc || ((err = copy_all(dfd, filebuf, cc)) < 0))
-                    break;
-            }
-
-copyheader_done:
-            close(sfd);
-            close(dfd);
-            if (err < 0) {
-                unlink(dpath);
-                return err;
-            }
-        }
+        adflags |= ADFLAGS_HF;
     }
 
-    /* data fork copying */
-    if (( sfd = open( src, O_RDONLY, 0 )) < 0 ) {
+    if (ad_open(src , adflags | ADFLAGS_NOHF, O_RDONLY, 0, &ads) < 0) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
@@ -1268,10 +1253,14 @@ copyheader_done:
             return( AFPERR_PARAM );
         }
     }
-
-    if (( dfd = open( dst, O_WRONLY|O_CREAT, admode)) < 0 ) {
-        close( sfd );
-        switch ( errno ) {
+    if (ad_open(dst , adflags | noadouble, O_RDWR|O_CREAT|O_EXCL, 0666, &add) < 0) {
+        ad_close( &ads, adflags );
+        if (EEXIST != (err = errno)) {
+            deletefile(NULL, dst, 0);
+        }
+        switch ( err ) {
+        case EEXIST :
+            return AFPERR_EXIST;
         case ENOENT :
             return( AFPERR_NOOBJ );
         case EACCES :
@@ -1282,68 +1271,32 @@ copyheader_done:
             return( AFPERR_PARAM );
         }
     }
-
-#ifdef SENDFILE_FLAVOR_LINUX
-    if (fstat(sfd, &st) == 0) {
-        if ((cc = sendfile(dfd, sfd, NULL, st.st_size)) < 0) {
-            switch (errno) {
-            case EDQUOT:
-            case EFBIG:
-            case ENOSPC:
-                err = AFPERR_DFULL;
-                break;
-            default:
-                err = AFPERR_PARAM;
-            }
-        }
-        goto copydata_done;
-    }
-#endif /* SENDFILE_FLAVOR_LINUX */
-
-    while (1) {
-        if ((cc = read( sfd, filebuf, sizeof( filebuf ))) < 0) {
-            if (errno == EINTR)
-                continue;
-
-            err = AFPERR_PARAM;
-            break;
-        }
-
-        if (!cc || ((err = copy_all(dfd, filebuf, cc)) < 0)) {
-            break;
-        }
-    }
-
-copydata_done:
-    close(sfd);
-    close(dfd);
-    if (err < 0) {
-        unlink(dpath);
-        unlink(dst);
-        return err;
+    if (ad_hfileno(&ads) == -1 || AFP_OK == (err = copy_fd(ad_hfileno(&add), ad_hfileno(&ads)))){
+        /* copy the data fork */
+	err = copy_fd(ad_dfileno(&add), ad_dfileno(&ads));
     }
 
     if (newname) {
-        memset(&ad, 0, sizeof(ad));
-        if ( ad_open( dst, noadouble | ADFLAGS_HF, O_RDWR|O_CREAT,
-                      0666, &ad) < 0 ) {
-            switch ( errno ) {
-            case ENOENT :
-                return noadouble ? AFP_OK : AFPERR_NOOBJ;
-            case EACCES :
-                return( AFPERR_ACCESS );
-            case EROFS:
-                return AFPERR_VLOCK;
-            default :
-                return( AFPERR_PARAM );
-            }
-        }
-
         len = strlen( newname );
-        ad_setentrylen( &ad, ADEID_NAME, len );
-        memcpy(ad_entry( &ad, ADEID_NAME ), newname, len );
-        ad_flush( &ad, ADFLAGS_HF );
-        ad_close( &ad, ADFLAGS_HF );
+        ad_setentrylen( &add, ADEID_NAME, len );
+        memcpy(ad_entry( &add, ADEID_NAME ), newname, len );
+    }
+
+    ad_close( &ads, adflags );
+    ad_flush( &add, adflags );
+    if (ad_close( &add, adflags ) <0) {
+       err = errno;
+    }
+    if (err != AFP_OK) {
+        deletefile(NULL, dst, 0);
+        switch ( err ) {
+        case ENOENT :
+            return( AFPERR_NOOBJ );
+        case EACCES :
+            return( AFPERR_ACCESS );
+        default :
+            return( AFPERR_PARAM );
+        }
     }
 
 #ifdef DEBUG
@@ -1355,8 +1308,8 @@ copydata_done:
 
 
 /* -----------------------------------
-   checkAttrib:   1 check kFPDeleteInhibitBit 
-   ie deletfile called by afp_delete
+   vol: not NULL delete cnid entry. then we are in curdir and file is a only filename
+   checkAttrib:   1 check kFPDeleteInhibitBit (deletfile called by afp_delete)
 
    when deletefile is called we don't have lock on it, file is closed (for us)
    untrue if called by renamefile
@@ -1364,7 +1317,8 @@ copydata_done:
    ad_open always try to open file RDWR first and ad_lock takes care of
    WRITE lock on read only file.
 */
-int deletefile( file, checkAttrib )
+int deletefile( vol, file, checkAttrib )
+struct vol      *vol;
 char		*file;
 int         checkAttrib;
 {
@@ -1431,8 +1385,16 @@ int         checkAttrib;
     if (ad_tmplock( &ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 0 ) < 0) {
         err = AFPERR_BUSY;
     }
-    else if ( 0 == (err = netatalk_unlink( ad_path( file, ADFLAGS_HF )) )) {
-        err = netatalk_unlink( file );
+    else if (!(err = netatalk_unlink( ad_path( file, ADFLAGS_HF)) ) &&
+             !(err = netatalk_unlink( file )) ) {
+#ifdef CNID_DB /* get rid of entry */
+        cnid_t id;
+        if (vol && (id = cnid_get(vol->v_db, curdir->d_did, file, strlen(file)))) 
+        {
+            cnid_delete(vol->v_db, id);
+        }
+#endif /* CNID_DB */
+
     }
     ad_close( &ad, adflags );  /* ad_close removes locks if any */
 
@@ -1487,7 +1449,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_PARAM );
     }
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno; /* was AFPERR_PARAM */
     }
 
@@ -1585,7 +1547,7 @@ int		ibuflen, *rbuflen;
         return AFPERR_NOID; /* was AFPERR_BADID, but help older Macs */
     }
 
-    if (( dir = dirlookup( vol, id )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, id )) ) {
         return AFPERR_NOID; /* idem AFPERR_PARAM */
     }
     path.u_name = upath;
@@ -1607,8 +1569,8 @@ int		ibuflen, *rbuflen;
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
     path.m_name = utompath(vol, upath);
-    if ((err = getfilparams(vol, bitmap, &path , curdir, 
-                            rbuf + sizeof(bitmap), &buflen)) != AFP_OK) {
+    if (AFP_OK != (err = getfilparams(vol, bitmap, &path , curdir, 
+                            rbuf + sizeof(bitmap), &buflen))) {
         return err;
     }
     *rbuflen = buflen + sizeof(bitmap);
@@ -1663,7 +1625,7 @@ int		ibuflen, *rbuflen;
         return AFPERR_NOID;
     }
 
-    if (( dir = dirlookup( vol, id )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, id )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1681,9 +1643,7 @@ int		ibuflen, *rbuflen;
             return AFPERR_PARAM;
         }
     }
-
-    /* directories are bad */
-    if (S_ISDIR(st.st_mode))
+    else if (S_ISDIR(st.st_mode)) /* directories are bad */
         return AFPERR_BADTYPE;
 
     if (cnid_delete(vol->v_db, fileid)) {

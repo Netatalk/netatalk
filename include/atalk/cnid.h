@@ -18,7 +18,8 @@
 #define CNID_ERR_PARAM 0x80000001
 #define CNID_ERR_PATH  0x80000002
 #define CNID_ERR_DB    0x80000003
-#define CNID_ERR_MAX   0x80000004
+#define CNID_ERR_CLOSE 0x80000004   /* the db was not open */
+#define CNID_ERR_MAX   0x80000005
 
 typedef u_int32_t cnid_t;
 
@@ -51,5 +52,8 @@ extern cnid_t cnid_nextid __P((void *));
 /* cnid_mangle_* */
 extern int cnid_mangle_add __P((void *, char *, char *));
 extern char *cnid_mangle_get __P((void *, char *));
+
+extern int cnid_lock   __P((void *));
+extern int cnid_unlock __P((void *));
 
 #endif /* include/atalk/cnid.h */

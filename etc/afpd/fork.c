@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.48 2003-01-31 17:38:01 didg Exp $
+ * $Id: fork.c,v 1.49 2003-02-16 12:35:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,8 +50,8 @@
 struct ofork		*writtenfork;
 extern int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
-                 char *path, struct dir *dir, struct stat *st,
-                 char *buf, int *buflen, struct adouble *adp, int attrbits );
+                 struct path *path, struct dir *dir, char *buf, 
+                 int *buflen, struct adouble *adp, int attrbits );
 
 static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
 struct ofork	*ofork;
@@ -60,8 +60,8 @@ char		*buf;
 int			*buflen;
 const u_int16_t     attrbits;
 {
-    struct stat		st;
-    char		*upath;
+    struct path         path;
+    struct stat		*st;
 
     struct adouble	*adp;
     struct dir		*dir;
@@ -86,22 +86,24 @@ const u_int16_t     attrbits;
     vol = ofork->of_vol;
     dir = ofork->of_dir;
 
+    path.u_name = mtoupath(vol, ofork->of_name);
+    path.m_name = ofork->of_name;
+    st = &path.st;
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) | 
                     (1<<FILPBIT_FNUM) | (1 << FILPBIT_CDATE) | 
                     (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE))) {
         if ( ad_dfileno( ofork->of_ad ) == -1 ) {
-            upath = mtoupath(vol, ofork->of_name);
             if (movecwd(vol, dir) < 0)
                 return( AFPERR_NOOBJ );
-            if ( stat( upath, &st ) < 0 )
+            if ( stat( path.u_name, st ) < 0 )
                 return( AFPERR_NOOBJ );
         } else {
-            if ( fstat( ad_dfileno( ofork->of_ad ), &st ) < 0 ) {
+            if ( fstat( ad_dfileno( ofork->of_ad ), st ) < 0 ) {
                 return( AFPERR_BITMAP );
             }
         }
     }
-    return getmetadata(vol, bitmap, ofork->of_name, dir, &st, buf, buflen, adp, attrbits );    
+    return getmetadata(vol, bitmap, &path, dir, buf, buflen, adp, attrbits );    
 }
 
 /* ---------------------------- */
@@ -177,8 +179,6 @@ static int setforkmode(struct adouble *adp, int eid, int ofrefnum, int what)
 
 /* -------------------------
 */
-extern int ad_testlock(struct adouble *adp, int eid, int off);
-
 static int getforkmode(struct adouble *adp, int eid, int what)
 {
     return ad_testlock(adp, eid,  what);
@@ -383,6 +383,7 @@ int		ibuflen, *rbuflen;
                     * fork if the user wants to open it for write acess. */
                     if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
                         goto openfork_err;
+                    ofork->of_flags |= AFPFORK_OPEN;
                 }
                 break;
             case EMFILE :
@@ -401,8 +402,10 @@ int		ibuflen, *rbuflen;
                 break;
             }
         }
-        /* the fork is open */
-        ofork->of_flags |= AFPFORK_OPEN;
+        else {
+            /* the ressource fork is open too */
+            ofork->of_flags |= AFPFORK_OPEN;
+        }
     } else {
         /* try opening in read-only mode */
         ret = AFPERR_NOOBJ;
@@ -420,7 +423,6 @@ int		ibuflen, *rbuflen;
                         goto openfork_err;
                     }
                     adflags = ADFLAGS_DF;
-                    ofork->of_flags |= AFPFORK_OPEN;
                 }
                 /* else we don't set AFPFORK_OPEN because there's no ressource fork file 
                  * We need to check AFPFORK_OPEN in afp_closefork(). eg fork open read-only
@@ -443,7 +445,7 @@ int		ibuflen, *rbuflen;
             }
         }
         else {
-            /* the fork is open */
+            /* the ressource fork is open too */
             ofork->of_flags |= AFPFORK_OPEN;
         }
     }
@@ -503,7 +505,7 @@ int		ibuflen, *rbuflen;
                 break;
             default:
                 *rbuflen = 0;
-                LOG(log_error, logtype_afpd, "afp_openfork: ad_lock: %s", strerror(errno) );
+                LOG(log_error, logtype_afpd, "afp_openfork: ad_lock: %s", strerror(ret) );
                 return( AFPERR_PARAM );
             }
         }
@@ -775,7 +777,7 @@ struct ofork	*of;
     if ( ad_hfileno( of->of_ad ) == -1 ||
             memcmp( ufinderi, ad_entry( of->of_ad, ADEID_FINDERI ),
                     8) == 0 ) {
-        if (( em = getextmap( of->of_name )) == NULL ||
+        if (NULL == ( em = getextmap( of->of_name )) ||
                 memcmp( "TEXT", em->em_type, sizeof( em->em_type )) == 0 ) {
             return( 1 );
         } else {
@@ -1153,31 +1155,29 @@ int		ibuflen, *rbuflen;
     }
 
     adflags = 0;
-    if ((ofork->of_flags & AFPFORK_OPEN)) {
-        if ((ofork->of_flags & AFPFORK_DATA) && (ad_dfileno( ofork->of_ad ) != -1)) {
+    if ((ofork->of_flags & AFPFORK_DATA) && (ad_dfileno( ofork->of_ad ) != -1)) {
             adflags |= ADFLAGS_DF;
-        }
-        if ( ad_hfileno( ofork->of_ad ) != -1 ) {
-            adflags |= ADFLAGS_HF;
-            /*
-             * Only set the rfork's length if we're closing the rfork.
-             */
-            if ((ofork->of_flags & AFPFORK_RSRC)) {
-                ad_refresh( ofork->of_ad );
-                if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
-                    ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
-            	    doflush++;
-                }
-                if ( doflush ) {
-                    ad_flush( ofork->of_ad, adflags );
-                }
+    }
+    if ( (ofork->of_flags & AFPFORK_OPEN) && ad_hfileno( ofork->of_ad ) != -1 ) {
+        adflags |= ADFLAGS_HF;
+        /*
+         * Only set the rfork's length if we're closing the rfork.
+         */
+        if ((ofork->of_flags & AFPFORK_RSRC)) {
+            ad_refresh( ofork->of_ad );
+            if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
+                ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
+            	doflush++;
+            }
+            if ( doflush ) {
+                 ad_flush( ofork->of_ad, adflags );
             }
         }
+    }
 
-        if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
-            LOG(log_error, logtype_afpd, "afp_closefork: ad_close: %s", strerror(errno) );
-            return( AFPERR_PARAM );
-        }
+    if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+        LOG(log_error, logtype_afpd, "afp_closefork: ad_close: %s", strerror(errno) );
+        return( AFPERR_PARAM );
     }
 
     of_dealloc( ofork );

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.22 2003-01-24 07:08:42 didg Exp $
+ * $Id: desktop.c,v 1.23 2003-02-16 12:35:04 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -363,7 +363,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -440,7 +440,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 

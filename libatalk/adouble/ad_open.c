@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.26 2003-01-24 06:58:25 didg Exp $
+ * $Id: ad_open.c,v 1.27 2003-02-16 12:35:05 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -646,6 +646,18 @@ struct stat stbuf;
     return ret;    
 }
 
+/* ----------------- */
+static int ad_error(struct adouble *ad, int adflags)
+{
+    if ((adflags & ADFLAGS_NOHF)) {
+        /* FIXME double check : set header offset ?*/
+        return 0;
+    }
+    if ((adflags & ADFLAGS_DF)) {
+	ad_close( ad, ADFLAGS_DF );
+    }
+    return -1 ;
+}
 
 static int new_rfork(const char *path, struct adouble *ad, int adflags);
 
@@ -769,14 +781,12 @@ int ad_open( path, adflags, oflags, mode, ad )
 		 */
 		if (errno == ENOENT && (adflags & ADFLAGS_NOADOUBLE) == 0) {
 		    if (NULL == ( slash = strrchr( ad_p, '/' )) ) {
-		        ad_close( ad, open_df );
-		        return( -1 );
+		        return ad_error(ad, adflags);
 		    }
 		    *slash = '\0';
 		    errno = 0;
 		    if ( ad_mkdir( ad_p, 0777 ) < 0 ) {
-		        ad_close( ad, adflags );
-		        return( -1 );
+		        return ad_error(ad, adflags);
 		    }
 		    *slash = '/';
 		    admode = mode;
@@ -784,12 +794,10 @@ int ad_open( path, adflags, oflags, mode, ad )
 		    admode = ad_hf_mode(admode); 
 		    ad->ad_hf.adf_fd = open( ad_p, oflags, admode);
 		    if ( ad->ad_hf.adf_fd < 0 ) {
-		        ad_close( ad, open_df );
-		        return( -1 );
+		        return ad_error(ad, adflags);
 		    }
 		} else {
-		  ad_close( ad, open_df );
-		  return( -1 );
+		     return ad_error(ad, adflags);
 		}
 	    }
 	    ad->ad_hf.adf_flags = oflags;
@@ -797,9 +805,9 @@ int ad_open( path, adflags, oflags, mode, ad )
 	    if (!st_invalid) {
 	        ad_chown(path, &st);
 	    }
-	  } else {
-	    ad_close( ad, open_df );
-	    return( -1 );
+	}
+	else {
+	    return ad_error(ad, adflags);
 	}
     } else if (fstat(ad->ad_hf.adf_fd, &st) == 0 && st.st_size == 0) {
 	/* for 0 length files, treat them as new. */
@@ -817,6 +825,7 @@ int ad_open( path, adflags, oflags, mode, ad )
          * instead of reading it.
         */
         if (new_rfork(path, ad, adflags) < 0) {
+            /* the file is already deleted, perm, whatever, so return an error*/
             ad_close(ad, adflags);
 	    return -1;
 	}
