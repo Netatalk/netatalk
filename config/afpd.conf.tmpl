@@ -149,7 +149,26 @@
 #                    -setuplog "afpdaemon log_maxdebug /var/log/netatalk-afp.log"
 #                    -unsetuplog "default level file" 
 #                    -setuplog "default log_maxdebug"
-
+#
+#     -signature { user:<text> | host }
+#                         Specify a server signature. This option is useful while
+#                         running multiple independent instances of afpd on one 
+#                         machine (eg. in clustered environments, to provide fault
+#                         isolation etc.). "host" signature type allows afpd generating
+#                         signature automatically (based on machine primary IP address).
+#                         "user" signature type allows administrator to set up a signature
+#                         string manually. Examples: three servers running on one machine:
+#           first       -signature user:USERS
+#           second      -signature user:USERS
+#           third       -signature user:ADMINS
+#                First two servers will act as one logical AFP service - if user logs in to 
+#                first one and then  connects to second one, session will be automatically 
+#                redirected to the first one. But if client connects to first and then to third, 
+#                will be asked for password twice and will see  resources of both servers. 
+#                Traditional method of signature generation causes two independent afpd instances
+#                to have the same signature and thus cause clients to be redirected automatically
+#                to server (s)he logged in first.
+ 
 #		
 # Some examples:
 #

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.27 2002-08-24 05:00:07 sibaz Exp $
+ * $Id: afp_options.c,v 1.28 2002-12-07 02:39:57 rlewczuk Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -122,6 +122,8 @@ void afp_options_free(struct afp_options *opt,
         free(opt->nlspath);
     if (opt->passwdfile && (opt->passwdfile != save->passwdfile))
         free(opt->passwdfile);
+    if (opt->signature && (opt->signature != save->signature))
+	free(opt->signature);
 }
 
 /* initialize options */
@@ -144,6 +146,7 @@ void afp_options_init(struct afp_options *options)
     options->timeout = 4;
     options->server_notif = 1;
     options->authprintdir = NULL;
+    options->signature = "host";
     options->umask = 0;
 #ifdef ADMIN_GRP
     options->admingid = 0;
@@ -393,6 +396,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->port = atoi(c);
     if ((c = getoption(buf, "-ddpaddr")))
         atalk_aton(c, &options->ddpaddr);
+    if ((c = getoption(buf, "-signature")) && (opt = strdup(c)))
+        options->signature = opt;
 
     /* do a little checking for the domain name. */
     if ((c = getoption(buf, "-fqdn"))) {

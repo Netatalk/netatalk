@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.7 2002-02-06 21:58:50 jmarcus Exp $
+ * $Id: status.c,v 1.8 2002-12-07 02:39:57 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <syslog.h>
 
 #ifdef BSD4_4
 #include <sys/param.h>
@@ -121,9 +122,10 @@ static void status_machine(char *data)
 
 /* server signature is a 16-byte quantity */
 static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
-                                  const char *hostname)
+                                  const char *hostname, const struct afp_options *options)
 {
     char                 *status;
+    char		 *usersign, *ifaddr;
     int                  i;
     u_int16_t            offset, sigoff;
     long                 hostid;
@@ -142,6 +144,25 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
     /* jump to server signature offset */
     data += offset;
 
+    /* Signature type is user string */
+    if (strncmp(options->signature, "user", 4) == 0) {
+        if (strlen(options->signature) <= 5) {
+	    syslog( LOG_ERR, "Signature %s id not valid. Switching back to hostid.", 
+				    options->signature);
+	    goto server_signature_hostid;
+    }
+    usersign = options->signature + 5;
+        if (strlen(usersign) < 3) 
+	    syslog( LOG_WARNING, "Signature %s is very short !", options->signature);
+    
+        memset(data, 0, 16);
+        strncpy(data, usersign, 16);
+	data += 16;
+        goto server_signature_done;
+    } /* signature = user */
+
+    /* If signature type is a standard hostid... */
+server_signature_hostid:
     /* 16-byte signature consists of copies of the hostid */
 #if defined(BSD4_4) && defined(USE_GETHOSTID)
     mib[0] = CTL_KERN;
@@ -170,8 +191,9 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
     for (i = 0; i < 16; i += sizeof(hostid)) {
         memcpy(data, &hostid, sizeof(hostid));
         data += sizeof(hostid);
-    }
+     }
 
+server_signature_done:
     /* calculate net address offset */
     *servoffset += sizeof(offset);
     offset = htons(data - status);
@@ -339,7 +361,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     else
         status_icon(status, apple_atalk_icon, sizeof(apple_atalk_icon), c);
 
-    sigoff = status_signature(status, &c, dsi, options->hostname);
+    sigoff = status_signature(status, &c, dsi, options->hostname, options);
 
     /* returns length */
     c = status_netaddress(status, c, asp, dsi, options->fqdn);

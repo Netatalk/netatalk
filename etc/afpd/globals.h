@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.14 2002-08-31 05:35:10 jmarcus Exp $
+ * $Id: globals.h,v 1.15 2002-12-07 02:39:57 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -59,6 +59,7 @@ struct afp_options {
     char *guest, *loginmesg, *keyfile, *passwdfile;
     char *uamlist;
     char *authprintdir;
+    char *signature;
     mode_t umask;
     mode_t save_mask;
 #ifdef ADMIN_GRP
