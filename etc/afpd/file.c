@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.88 2003-03-15 01:34:35 didg Exp $
+ * $Id: file.c,v 1.89 2003-04-09 06:06:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -629,8 +629,10 @@ int		ibuflen, *rbuflen;
     }
     if ( ad_hfileno( adp ) == -1 ) {
          /* on noadouble volumes, just creating the data fork is ok */
-         if (vol_noadouble(vol))
+         if (vol_noadouble(vol)) {
+             ad_close( adp, ADFLAGS_DF );
              goto createfile_done;
+         }
          /* FIXME with hard create on an existing file, we already
           * corrupted the data file.
           */
