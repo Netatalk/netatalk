@@ -1,6 +1,9 @@
 
 2001-04-10  jeff b  <jeff@univrel.pr.uconn.edu>  
 
+	* configure.in, acconfig.h, etc/afpd/uam.c: patch submitted by Jason
+	Kelitz (jkeltz) to allow disabling of shell checking
+
 	* configure.in, contrib/Makefile.am: made timelord compilation
 	optional, disabled by default
 
