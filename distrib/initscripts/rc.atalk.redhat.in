@@ -38,8 +38,8 @@ atalk_startup() {
 	RETVAL_ATALKD=$?
 
 	if [ -x @bindir@/nbprgstr ]; then	
-	    @bindir@/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
-	    @bindir@/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+	    @prefix@/bin/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    @prefix@/bin/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 	fi	
 
 	if [ x"${PAPD_RUN}" = x"yes"  -a -x @prefix@/sbin/papd ]; then
@@ -48,8 +48,8 @@ atalk_startup() {
 	fi
 
 	# check for timelord in bin directory
-	if [ -x @bindir@/timelord ]; then
-	    daemon @bindir@/timelord
+	if [ -x @prefix@/bin/timelord ]; then
+	    daemon @prefix@/bin/timelord
 	fi
 
 	# check for timelord in sbin directory
@@ -91,7 +91,7 @@ case "$1" in
 	    fi
 
             # checking for timelord in bin directory
-	    if [ -x @bindir@/timelord ]; then
+	    if [ -x @prefix@/bin/timelord ]; then
 		killproc timelord
 	    fi
 
@@ -100,8 +100,8 @@ case "$1" in
 		killproc timelord
 	    fi
 
-	    @bindir@/nbpunrgstr "${ATALK_NAME}:Workstation${ATALK_ZONE}"
-	    @bindir@/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+	    @prefix@/bin/nbpunrgstr "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    @prefix@/bin/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 
 	    # kill atalkd last, since without it the plumbing goes away.
 	    if [ -x @prefix@/sbin/atalkd ]; then
