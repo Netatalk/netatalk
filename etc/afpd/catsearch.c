@@ -181,7 +181,7 @@ static int reducestack()
 			/* Check if we need to free (or release) dir structures */
 		} else
 			return dsidx - 1;
-	} // while
+	} 
 	return -1;
 } /* reducestack() */
 
