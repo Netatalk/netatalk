@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 3.0.0), libdb3-dev, libwrap0-dev, libpam0g-dev, lib
 
 Package: netatalk
 Architecture: any
-Depends: netbase, libpam-modules, ${shlibs:Depends}
+Depends: netbase, timeout, libpam-modules, ${shlibs:Depends}
 Conflicts: netatalk-asun, libatalk14g, libatalk1
 Replaces: netatalk-asun, libatalk14, libatalk1
 Description: Appletalk user binaries
