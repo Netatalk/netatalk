@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.141 2001-12-14 22:53:33 srittau Exp $
+dnl $Id: configure.in,v 1.142 2001-12-14 23:01:47 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -228,6 +228,7 @@ elif test "x$did_scheme" = "xcnid"; then
 else
 	AC_MSG_ERROR([unknown DID scheme])
 fi
+AM_CONDITIONAL(COMPILE_CNID, test "x$did_scheme" = "xcnid")
 
 dnl Check for Berkeley DB3 library
 if test "x$db3_required" = "xyes"; then
