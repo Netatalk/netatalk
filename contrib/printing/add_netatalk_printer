@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Id: add_netatalk_printer,v 1.4 2001-07-27 17:28:03 srittau Exp $
+# $Id: add_netatalk_printer,v 1.5 2001-08-09 20:42:19 srittau Exp $
 #
 # A lovely script to add netatalk printers 
 #
@@ -49,11 +49,11 @@ export NETATALKHOME
 PATH=/bin:${PATH}:${NETATALKHOME}/bin:${NETATALKHOME}/etc:${NETATALKHOME}/etc/filters:/usr/lib:/usr/sbin
 
 if [ ! -x ${NETATALKHOME}/bin/pap ]; then
-	echo "OPPS:	I don't see ${NETATALKHOME}/bin/pap ,"
+	echo "OOPS:	I don't see ${NETATALKHOME}/bin/pap ,"
 	echo '	Check that it is executable or set ${NETATALKHOME}'
 	echo '	so i can find pap at ${NETATALKHOME}/bin/pap'
 	echo '[We are guessing the location of the binary from the'
-	echo 'path that was used to run this sctipt or $NETATALKHOME]'
+	echo 'path that was used to run this script or $NETATALKHOME]'
 	exit 1
 fi
 
@@ -74,7 +74,7 @@ echo "Enter AppleTalk printer name: \c"
 read DEST
 
 if [ "$DEST" = "" ]; then
-	echo "OPPS: you need to tell me a printer name"
+	echo "OOPS: you need to tell me a printer name"
 	exit 1
 fi
 
@@ -129,12 +129,12 @@ if [ "${UNIXPRINT1}" = "" ]; then
 	UNIXPRINT1="${UNIXPRINT}"
 else
 #if [ "${UNIXPRINT1}" != "${UNIXPRINT}" ]; then
-    echo "Opps, that name was too long...  Truncating to 14 chars."
+    echo "Oops, that name was too long...  Truncating to 14 chars."
     echo "setting printer name to '${UNIXPRINT}'"
     UNIXPRINT="${UNIXPRINT1}"
 fi
 
-echo "Enter a Description for this printer.  [The Appletalk name will"
+echo "Enter a description for this printer.  [The Appletalk name will"
 echo "be included by default, and must be included for the printing"
 echo "filters to work.] : \c"
 read DESC
@@ -142,7 +142,7 @@ read DESC
 DESC="${DESC} [${NBPNAME}]"
 
 echo ""
-echo "Do you want all printjobs to print out in reversed page order?"
+echo "Do you want all print jobs to print out in reversed page order?"
 echo "This is usually only desired if this printer stacks jobs"
 echo "face up in the output bin. [N/y] \c"
 read REV
@@ -153,7 +153,7 @@ export REV
 
 if lpstat -p ${UNIXPRINT} >/dev/null 2>&1 ; then
 	echo ''
-	echo "OPPS:	There already exists a printer named '${UNIXPRINT}'"
+	echo "OOPS:	There already exists a printer named '${UNIXPRINT}'"
 	echo "		here are the comments from /etc/lp/printers/${UNIXPRINT}/comment"
 	cat /etc/lp/printers/${UNIXPRINT}/comment
 	echo ""
@@ -176,7 +176,7 @@ fi
 
 if [ "`uname -r`" -lt "5.6" ]; then
     echo ""
-    echo "Do you want to share this printer w/ other machines [Y/n]?\c"
+    echo "Do you want to share this printer with other machines [Y/n]?\c"
     read SHARE
 else
     echo "You're running SunOS 5.6 or higher... skipping 'sacadm' and 'pmadm'"
@@ -184,7 +184,7 @@ fi
 
 if nistest printers.org_dir; then
     echo "Do you want to add this printer to your NIS printer map? [y/N]"
-    echo "(You will need to share this printer w/ other machines)"
+    echo "(You will need to share this printer with other machines)"
     read NIS
     case ${NIS} in 	[Yy]*)    ADD_NIS=1 ;;
 			    *)              ;;
