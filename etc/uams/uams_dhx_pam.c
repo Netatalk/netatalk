@@ -127,6 +127,9 @@ static int PAM_conv (int num_msg,
   }
 
   *resp = reply;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM Success -- %m");
+    /* Log Entry */
   return PAM_SUCCESS;
 
 pam_fail_conv:
@@ -189,7 +192,10 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     dh->p = pbn;
     dh->g = gbn;
     if (!DH_generate_key(dh) || (BN_num_bytes(dh->pub_key) > KEYSIZE)) {
-      goto pam_fail;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Err Generating Key -- Not enough Space? -- %m");
+    /* Log Entry */
+    goto pam_fail;
     }
 
     /* figure out the key. store the key in rbuf for now. */
@@ -214,6 +220,9 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     if (uam_afpserver_option(obj, UAM_OPTION_RANDNUM, (void *) randbuf,
 			     &i) < 0) {
       *rbuflen = 0;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Buffer Encryption Err. -- %m");
+    /* Log Entry */
       goto pam_fail;
     }    
     memcpy(rbuf, &randbuf, sizeof(randbuf));
@@ -223,6 +232,9 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     if (uam_afpserver_option(obj, UAM_OPTION_SIGNATURE, 
 			     (void *) &buf, NULL) < 0) {
       *rbuflen = 0;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %m");
+    /* Log Entry */
       goto pam_fail;
     }
     memcpy(rbuf + KEYSIZE, buf, KEYSIZE); 
@@ -347,6 +359,9 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation,
 			  &pamh);
     if (PAM_error != PAM_SUCCESS)
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+    /* Log Entry */
       goto logincont_err;
 
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
@@ -356,6 +371,9 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     if (PAM_error != PAM_SUCCESS) {
       if (PAM_error == PAM_MAXTRIES) 
 	err = AFPERR_PWDEXPR;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+    /* Log Entry */
       goto logincont_err;
     }      
 
@@ -367,6 +385,9 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
       else if (PAM_error == PAM_AUTHTOKEN_REQD) 
 	err = AFPERR_PWDCHNG;
 #endif
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+    /* Log Entry */
       goto logincont_err;
     }
 
@@ -375,14 +396,23 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 #endif
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
     if (PAM_error != PAM_SUCCESS)
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+    /* Log Entry */
       goto logincont_err;
 
     PAM_error = pam_open_session(pamh, 0);
     if (PAM_error != PAM_SUCCESS)
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+    /* Log Entry */
       goto logincont_err;
 
     memset(rbuf, 0, PASSWDLEN); /* zero out the password */
     *uam_pwd = dhxpwd;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM Auth OK!: %s -- %m", AFP_OK);
+    /* Log Entry */
     return AFP_OK;
 
 logincont_err:
