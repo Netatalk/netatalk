@@ -69,6 +69,7 @@ extern int afp_options_parseline __P((char *, struct afp_options *));
 extern void afp_options_free __P((struct afp_options *, 
 				  const struct afp_options *));
 extern void setmessage __P((const char *));
+extern void readmessage __P((void));
 
 /* gettok.c */
 extern void initline   __P((int, char *));
