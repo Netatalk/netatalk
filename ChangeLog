@@ -1,4 +1,11 @@
-($Id: ChangeLog,v 1.54 2001-06-25 20:13:45 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.55 2001-06-27 03:38:05 morgana Exp $)
+
+2001-06-26  andy m  <morgan@orst.edu
+	* etc/papd/file.c: modified markline() to return 1 instead
+	of *linelength for successful completion. This should fix
+	the remaining binary printing problems in papd.  Thanks go
+	out to Dave Arnold <darn0ld@home.com> for getting me thinking
+	about the markline function.
 
 2001-06-25  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/auth.c, etc/afpd/main.c, etc/afpd/uam.c,
