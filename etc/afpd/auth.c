@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.39 2002-11-26 08:22:37 didg Exp $
+ * $Id: auth.c,v 1.40 2003-01-24 06:58:23 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -237,7 +237,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
             if (groups[i] == obj->options.admingid) admin = 1;
         }
     }
-    if (admin) LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name );
+    if (admin) {
+        ad_setfuid(0);
+        LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name );
+    }
     if (!admin)
 #endif /* DEBUG */
 #ifdef TRU64

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.14 2003-01-16 21:18:15 didg Exp $
+ * $Id: adouble.h,v 1.15 2003-01-24 06:58:25 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -330,6 +330,9 @@ extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 #define ad_unlock ad_fcntl_unlock
 
 /* ad_open.c */
+extern int ad_setfuid __P((const uid_t ));
+extern uid_t ad_getfuid __P((void ));
+
 extern char *ad_dir   __P((const char *));
 extern char *ad_path  __P((const char *, int));
 extern int ad_mode    __P((const char *, int));

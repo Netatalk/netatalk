@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.25 2003-01-12 14:40:04 didg Exp $
+ * $Id: ad_open.c,v 1.26 2003-01-24 06:58:25 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -22,6 +22,9 @@
  *	Ann Arbor, Michigan
  *	+1-313-763-0525
  *	netatalk@itd.umich.edu
+ * 
+ * NOTE: I don't use inline because a good compiler should be
+ * able to optimize all the static below. Didier
  */
 
 #ifdef HAVE_CONFIG_H
@@ -515,6 +518,7 @@ char
     char 		*slash;
 
     if ( strlen( path ) >= MAXPATHLEN ) {
+        errno = ENAMETOOLONG;
 	return NULL;  /* can't do it */
     }
 
@@ -533,27 +537,88 @@ char
     return modebuf;
 }
 
+/* ---------------- */
+static uid_t default_uid = -1;
+
+int ad_setfuid(const uid_t id)
+{
+    default_uid = id;
+    return 0;
+}
+
+/* ---------------- */
+uid_t ad_getfuid(void) 
+{
+    return default_uid;
+}
+
+/* ---------------- 
+   return inode of path parent directory
+*/
+static int ad_stat(const char *path, struct stat *stbuf)
+{
+    char                *p;
+
+    p = ad_dir(path);
+    if (!p) {
+        return -1;
+    }
+
+    return stat( p, stbuf );
+}
+
+/* ---------------- 
+   if we are root change path user/ group
+   It can be a native function for BSD cf. FAQ.Q10
+   path:  pathname to chown 
+   stbuf: parent directory inode
+   
+   use fstat and fchown or lchown with linux?
+*/
+#define EMULATE_SUIDDIR
+ 
+static int ad_chown(const char *path, struct stat *stbuf)
+{
+int ret = 0;
+#ifdef EMULATE_SUIDDIR
+uid_t id;
+
+    if (default_uid != -1) {  
+        /* we are root (admin) */
+        id = (default_uid)?default_uid:stbuf->st_uid;
+	ret = chown( path, id, stbuf->st_gid );
+    }
+#endif    
+    return ret;
+}
+
+/* ---------------- 
+   return access right and inode of path parent directory
+*/
+static int ad_mode_st(const char *path, int *mode, struct stat *stbuf)
+{
+    if (*mode == 0) {
+       return -1;
+    }
+    if (ad_stat(path, stbuf) != 0) {
+	*mode &= DEFMASK;
+	return -1;
+    }
+    *mode &= stbuf->st_mode;
+    return 0;    
+}
+
+/* ---------------- 
+   return access right of path parent directory
+*/
 int
 ad_mode( path, mode )
     const char		*path;
     int			mode;
 {
     struct stat		stbuf;
-    char                *p;
-    
-    if ( mode == 0 ) {
-	return( mode );		/* save on syscalls */
-    }
-    p = ad_dir(path);
-    if (!p) {
-	return( mode & DEFMASK );  /* can't do it */
-    }
-
-    if ( stat( p, &stbuf ) != 0 ) {
-	return( mode & DEFMASK );	/* bail out... can't stat dir? */
-    }
-
-    return( mode & stbuf.st_mode );
+    ad_mode_st(path, &mode, &stbuf);
+    return mode;
 }
 
 /*
@@ -564,10 +629,21 @@ ad_mkdir( path, mode )
     const char		*path;
     int			mode;
 {
+int ret;
+int st_invalid;
+struct stat stbuf;
+
 #ifdef DEBUG
     LOG(log_info, logtype_default, "ad_mkdir: Creating directory with mode %d", mode);
 #endif /* DEBUG */
-    return mkdir( path, ad_mode( path, mode ) );
+
+    st_invalid = ad_mode_st(path, &mode, &stbuf);
+    ret = mkdir( path, mode );
+    if (ret || st_invalid)
+    	return ret;
+    ad_chown(path, &stbuf);
+
+    return ret;    
 }
 
 
@@ -590,7 +666,9 @@ int ad_open( path, adflags, oflags, mode, ad )
     struct stat         st;
     char		*slash, *ad_p;
     int			hoflags, admode;
-
+    int                 st_invalid;
+    int                 open_df = 0;
+    
     if (ad->ad_inited != AD_INITED) {
         ad_dfileno(ad) = -1;
         ad_hfileno(ad) = -1;
@@ -603,8 +681,10 @@ int ad_open( path, adflags, oflags, mode, ad )
     if ((adflags & ADFLAGS_DF)) { 
         if (ad_dfileno(ad) == -1) {
 	  hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-	  admode = ad_mode( path, mode ); 
-	  if (( ad->ad_df.adf_fd = open( path, hoflags, admode )) < 0 ) {
+	  admode = mode;
+	  st_invalid = ad_mode_st(path, &admode, &st);
+          ad->ad_df.adf_fd =open( path, hoflags, admode );
+	  if (ad->ad_df.adf_fd < 0 ) {
              if (errno == EACCES && !(oflags & O_RDWR)) {
                 hoflags = oflags;
                 ad->ad_df.adf_fd =open( path, hoflags, admode );
@@ -615,6 +695,10 @@ int ad_open( path, adflags, oflags, mode, ad )
 
 	  AD_SET(ad->ad_df.adf_off);
 	  ad->ad_df.adf_flags = hoflags;
+	  if ((oflags & O_CREAT) && !st_invalid) {
+	      /* just created, set owner if admin (root) */
+	      ad_chown(path, &st);
+	  }
 	} 
         else {
             /* the file is already open... but */
@@ -624,7 +708,15 @@ int ad_open( path, adflags, oflags, mode, ad )
                  errno = EACCES;
                  return -1;
             }
+	    /* FIXME 
+	     * for now ad_open is never called with O_TRUNC or O_EXCL if the file is
+	     * already open. Should we check for it? ie
+	     * O_EXCL --> error 
+	     * O_TRUNC --> truncate the fork.
+	     * idem for ressource fork.
+	     */
 	}
+	open_df = ADFLAGS_DF;
 	ad->ad_df.adf_refcount++;
     }
 
@@ -634,9 +726,9 @@ int ad_open( path, adflags, oflags, mode, ad )
     if (ad_hfileno(ad) != -1) { /* the file is already open */
         if ((oflags & ( O_RDWR | O_WRONLY)) &&             
             	!(ad->ad_hf.adf_flags & ( O_RDWR | O_WRONLY))) {
-	    if (adflags & ADFLAGS_DF) {
+	    if (open_df) {
                 /* don't call with ADFLAGS_HF because we didn't open ressource fork */
-	        ad_close( ad, ADFLAGS_DF );
+	        ad_close( ad, open_df );
 	    }
             errno = EACCES;
 	    return -1;
@@ -650,7 +742,8 @@ int ad_open( path, adflags, oflags, mode, ad )
 
     hoflags = oflags & ~O_CREAT;
     hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-    if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 )) < 0 ) {
+    ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 );
+    if (ad->ad_hf.adf_fd < 0 ) {
         if (errno == EACCES && !(oflags & O_RDWR)) {
             hoflags = oflags & ~O_CREAT;
             ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 );
@@ -664,16 +757,19 @@ int ad_open( path, adflags, oflags, mode, ad )
 	     * here.
 	     * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
 	     */
-	    admode = ad_hf_mode(ad_mode( ad_p, mode )); 
+	    admode = mode;
+	    st_invalid = ad_mode_st(ad_p, &admode, &st);
+	    admode = ad_hf_mode(admode); 
 	    errno = 0;
-	    if (( ad->ad_hf.adf_fd = open( ad_p, oflags,admode )) < 0 ) {
+	    ad->ad_hf.adf_fd = open( ad_p, oflags,admode );
+	    if ( ad->ad_hf.adf_fd < 0 ) {
 		/*
 		 * Probably .AppleDouble doesn't exist, try to
 		 * mkdir it.
 		 */
 		if (errno == ENOENT && (adflags & ADFLAGS_NOADOUBLE) == 0) {
 		    if (NULL == ( slash = strrchr( ad_p, '/' )) ) {
-		        ad_close( ad, adflags );
+		        ad_close( ad, open_df );
 		        return( -1 );
 		    }
 		    *slash = '\0';
@@ -683,19 +779,26 @@ int ad_open( path, adflags, oflags, mode, ad )
 		        return( -1 );
 		    }
 		    *slash = '/';
-		    if (( ad->ad_hf.adf_fd = 
-		                   open( ad_p, oflags, ad_mode( ad_p, mode) )) < 0 ) {
-		        ad_close( ad, adflags );
+		    admode = mode;
+		    st_invalid = ad_mode_st(ad_p, &admode, &st);
+		    admode = ad_hf_mode(admode); 
+		    ad->ad_hf.adf_fd = open( ad_p, oflags, admode);
+		    if ( ad->ad_hf.adf_fd < 0 ) {
+		        ad_close( ad, open_df );
 		        return( -1 );
 		    }
 		} else {
-		  ad_close( ad, adflags );
+		  ad_close( ad, open_df );
 		  return( -1 );
 		}
 	    }
 	    ad->ad_hf.adf_flags = oflags;
-	} else {
-	    ad_close( ad, adflags );
+	    /* just created, set owner if admin owner (root) */
+	    if (!st_invalid) {
+	        ad_chown(path, &st);
+	    }
+	  } else {
+	    ad_close( ad, open_df );
 	    return( -1 );
 	}
     } else if (fstat(ad->ad_hf.adf_fd, &st) == 0 && st.st_size == 0) {
