@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.12 2001-12-16 18:52:46 jmarcus Exp $
+ * $Id: afp_config.c,v 1.13 2001-12-16 19:45:17 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -323,10 +323,10 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
         goto srvloc_reg_err;
     }
     if (dsi->server.sin_port == afpovertcp->s_port) {
-        sprintf(srvloc_url, sizeof(srvloc_url), "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), options->hostname);
+        sprintf(srvloc_url, "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), options->hostname);
     }
     else {
-        sprintf(srvloc_url, sizeof(srvloc_url), "afp://%s:%d/?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), options->hostname);
+        sprintf(srvloc_url, "afp://%s:%d/?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), options->hostname);
     }
 
     err = SLPReg(hslp,
