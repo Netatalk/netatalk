@@ -22,7 +22,11 @@ route( message, dst, gate, flags )
     struct sockaddr	*dst, *gate;
     int			flags;
 {
+#ifdef TRU64
+    struct ortentry	rtent;
+#else
     struct rtentry	rtent;
+#endif
 
     bzero( &rtent, sizeof( struct rtentry ));
     rtent.rt_dst = *dst;

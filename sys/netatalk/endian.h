@@ -11,6 +11,10 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef _IBMR2
 #include <sys/machine.h>
 #endif /*_IBMR2*/

@@ -943,7 +943,10 @@ int getdirparams(vol, bitmap, upath, dir, st, buf, buflen )
 
 	case DIRPBIT_ACCESS :
 	    utommode( st, &ma );
-#ifdef AFS
+#ifdef HAVE_ACCESS
+	    accessmode( upath, &ma, dir );
+#endif HAVE_ACCESS
+#ifdef AFS	/* If only AFS defined, access() works only for AFS filesystems */ 
 	    afsmode( upath, &ma, dir );
 #endif AFS
 	    *data++ = ma.ma_user;

@@ -8,6 +8,7 @@
 #undef DLSYM_PREPEND_UNDERSCORE
 #undef DROPKLUDGE
 #undef HAVE_2ARG_DBTOB
+#undef HAVE_64BIT_LONGS
 #undef HAVE_BROKEN_CPP
 #undef HAVE_GCC_MEMCPY_BUG
 #undef MACOSX_SERVER
@@ -22,6 +23,7 @@
 #undef SHADOWPW
 #undef SOLARIS
 #undef TCPWRAP
+#undef TRU64
 #undef UAM_DHX
 #undef UAM_PGP
 #undef UAM_RNDNUM
@@ -30,4 +32,6 @@
 #undef USE_FLOCK_LOCKS
 #undef USE_LASTDID
 #undef USE_PAM
-
+#undef USE_MOUNT_H
+#undef USE_OLD_RQUOTA
+#undef USE_UFS_QUOTA_H

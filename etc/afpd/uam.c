@@ -54,6 +54,9 @@ struct uam_mod *uam_load(const char *path, const char *name)
   if ((p = strchr(buf, '.')))
     *p = '\0';
   if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
+    syslog(LOG_ERR, "uam_load(%s): mod_symbol error for symbol %s",
+	   name,
+	   buf);
     goto uam_load_err;
   }
 

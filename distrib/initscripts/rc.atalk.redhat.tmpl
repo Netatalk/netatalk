@@ -9,18 +9,22 @@
 # its data structures must have time to stablize before running the
 # other processes.
 
+ATALK_BIN=:BINDIR:
+ATALK_CONF_DIR=:ETCDIR:
+ATALK_SBIN=:SBINDIR:
+
 # Source function library.
 . /etc/rc.d/init.d/functions
 
 # Source networking configuration.
 . /etc/sysconfig/network
 
-test -x :SBINDIR:/atalkd || exit 0
+test -x ${ATALK_SBIN}/atalkd || exit 0
 
-test -f :ETCDIR:/netatalk.conf || exit 0
+test -f ${ATALK_CONF_DIR}/netatalk.conf || exit 0
 
 # read in netatalk configuration
-. :ETCDIR:/netatalk.conf
+. ${ATALK_CONF_DIR}/netatalk.conf
 
 # Check that networking is up.
 [ ${NETWORKING} = "no" ] && exit 0
@@ -34,33 +38,33 @@ RETVAL_AFPD=0
 # startup code for everything
 atalk_startup() {
     if [ x"${ATALKD_RUN}" != x"no" ]; then 
-	daemon :SBINDIR:/atalkd
+	daemon ${ATALK_SBIN}/atalkd
 	RETVAL_ATALKD=$?
 
-	if [ -x :BINDIR:/nbprgstr ]; then	
-	    :BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
-	    :BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+	if [ -x ${ATALK_BIN}/nbprgstr ]; then	
+	    ${ATALK_BIN}/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    ${ATALK_BIN}/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 	fi	
 
-	if [ x"${PAPD_RUN}" = x"yes"  -a -x :SBINDIR:/papd ]; then
-	    daemon :SBINDIR:/papd
+	if [ x"${PAPD_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/papd ]; then
+	    daemon ${ATALK_SBIN}/papd
 	    RETVAL_PAPD=$?
 	fi
 
 	# check for timelord in bin directory
-	if [ -x :BINDIR:/timelord ]; then
-	    daemon :BINDIR:/timelord
+	if [ -x ${ATALK_BIN}/timelord ]; then
+	    daemon ${ATALK_BIN}/timelord
 	fi
 
 	# check for timelord in sbin directory
-	if [ -x :SBINDIR:/timelord ]; then
-	    daemon :SBINDIR:/timelord
+	if [ -x ${ATALK_SBIN}/timelord ]; then
+	    daemon ${ATALK_SBIN}/timelord
 	fi
 
     fi
 
-    if [ x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ] ; then
-	    daemon :SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+    if [ x"${AFPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/afpd ] ; then
+	    daemon ${ATALK_SBIN}/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
 		-c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
 	    RETVAL_AFPD=$?
     fi
@@ -85,33 +89,33 @@ case "$1" in
 'stop')
 	echo -n 'Shutting down AppleTalk services: '
 	if [ x"${ATALKD_RUN}" != x"no" ]; then
-	    if [ x"${PAPD_RUN}" = x"yes" -a -x :SBINDIR:/papd ]; then
+	    if [ x"${PAPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/papd ]; then
 		killproc papd
 		RETVAL_PAPD=$?
 	    fi
 
             # checking for timelord in bin directory
-	    if [ -x :BINDIR:/timelord ]; then
+	    if [ -x ${ATALK_BIN}/timelord ]; then
 		killproc timelord
 	    fi
 
             # checking for timelord in sbin directory
-	    if [ -x :SBINDIR:/timelord ]; then
+	    if [ -x ${ATALK_SBIN}/timelord ]; then
 		killproc timelord
 	    fi
 
-	    :BINDIR:/nbpunrgstr "${ATALK_NAME}:Workstation${ATALK_ZONE}"
-	    :BINDIR:/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+	    ${ATALK_BIN}/nbpunrgstr "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    ${ATALK_BIN}/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 
 	    # kill atalkd last, since without it the plumbing goes away.
-	    if [ -x :SBINDIR:/atalkd ]; then
+	    if [ -x ${ATALK_SBIN}/atalkd ]; then
 		killproc atalkd
 		RETVAL_ATALKD=$?
 	    fi
 	fi
 
 	# kill this separately as we also do AFP/tcp
-	if [ x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ]; then
+	if [ x"${AFPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/afpd ]; then
 	    killproc afpd
 	    RETVAL_AFPD=$?
 	fi

@@ -455,9 +455,19 @@ int auth_load(const char *path, const char *list)
 
   while (p) {
     strncpy(name + len, p, sizeof(name) - len);
+    syslog(LOG_DEBUG, "uam : Loading (%s)", name);
+    /*
     if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
-      uam_attach(&uam_modules, mod);
-      syslog(LOG_INFO, "uam: %s loaded", p);
+    */
+    if (stat(name, &st) == 0) {
+      if (mod = uam_load(name, p)) {
+	uam_attach(&uam_modules, mod);
+	syslog(LOG_INFO, "uam: %s loaded", p);
+      } else {
+	syslog(LOG_INFO, "uam: %s load failure",p);
+      }
+    } else {
+      syslog(LOG_INFO, "uam: uam not found (status=%d)", stat(name, &st));
     }
     p = strtok(NULL, ",");
   }

@@ -39,3 +39,17 @@ atalk: rc.atalk.cobalt
 	chmod a+x atalk
 
 endif
+
+#
+# checking for "tru64" style sysv scripts:
+#
+
+if USE_TRU64
+
+sysv_SCRIPTS = atalk
+
+atalk: rc.atalk.tru64
+	cp -f rc.atalk.tru64 atalk
+	chmod a+x atalk
+
+endif
