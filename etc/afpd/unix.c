@@ -91,6 +91,12 @@ void utommode( stat, ma )
 
     ma->ma_owner = utombits( mode );
 
+#ifdef ADMIN_GRP
+    if ( uuid == 0 )
+        ma->ma_user = AR_UWRITE | AR_UREAD | AR_USEARCH | AR_UOWN;
+    else
+#endif
+
     if ( uuid == stat->st_uid ) {
 	ma->ma_user = ma->ma_owner | AR_UOWN;
     } else if ( gmem( stat->st_gid )) {
