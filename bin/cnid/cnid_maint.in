@@ -3,7 +3,7 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.10 2002-06-20 02:15:09 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.11 2002-06-20 02:16:05 jmarcus Exp $
 #
 
 use strict;
@@ -118,7 +118,7 @@ while (<PS>) {
 
 close(PS);
 
-if ( $children >= 1 ) {
+if ($children) {
 
     # We have some children.  We cannot run recovery.
     error( 1,
