@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_delete.c,v 1.12 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: cnid_delete.c,v 1.13 2002-01-19 21:42:08 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -51,12 +51,12 @@ int cnid_delete(void *CNID, const cnid_t id) {
         case DB_NOTFOUND:
 #ifdef DEBUG
             LOG(log_info, logtype_default, "cnid_delete: CNID %u not in database",
-                   ntohl(id));
+                ntohl(id));
 #endif
             return 0;
         default:
             LOG(log_error, logtype_default, "cnid_delete: Unable to delete entry: %s",
-                   db_strerror(rc));
+                db_strerror(rc));
             return rc;
         }
     }
@@ -64,7 +64,7 @@ int cnid_delete(void *CNID, const cnid_t id) {
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_delete: Failed to begin transaction: %s",
-               db_strerror(rc));
+            db_strerror(rc));
         return rc;
     }
 
@@ -93,7 +93,7 @@ retry:
         case DB_LOCK_DEADLOCK:
             if ((rc = txn_abort(tid)) != 0) {
                 LOG(log_error, logtype_default, "cnid_delete: txn_abort: %s",
-                       db_strerror(rc));
+                    db_strerror(rc));
                 return rc;
             }
             goto retry;
@@ -103,7 +103,7 @@ retry:
         default:
             if ((rc = txn_abort(tid)) != 0) {
                 LOG(log_error, logtype_default, "cnid_delete: txn_abort: %s",
-                       db_strerror(rc));
+                    db_strerror(rc));
                 return rc;
             }
             goto abort_err;
@@ -119,7 +119,7 @@ retry:
         case DB_LOCK_DEADLOCK:
             if ((rc = txn_abort(tid)) != 0) {
                 LOG(log_error, logtype_default, "cnid_delete: txn_abort: %s",
-                       db_strerror(rc));
+                    db_strerror(rc));
                 return rc;
             }
             goto retry;
@@ -128,7 +128,7 @@ retry:
         default:
             if ((rc = txn_abort(tid)) != 0) {
                 LOG(log_error, logtype_default, "cnid_delete: txn_abort: %s",
-                       db_strerror(rc));
+                    db_strerror(rc));
                 return rc;
             }
             goto abort_err;
@@ -140,14 +140,14 @@ retry:
 #endif
     if ((rc = txn_commit(tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_delete: Failed to commit transaction: %s",
-               db_strerror(rc));
+            db_strerror(rc));
         return rc;
     }
     return 0;
 
 abort_err:
     LOG(log_error, logtype_default, "cnid_delete: Unable to delete CNID %u: %s",
-           ntohl(id), db_strerror(rc));
+        ntohl(id), db_strerror(rc));
     return rc;
 }
 #endif /*CNID_DB */

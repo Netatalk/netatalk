@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.19 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: cnid_close.c,v 1.20 2002-01-19 21:42:08 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +57,7 @@ void cnid_close(void *CNID) {
                 if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG | DB_ARCH_ABS, NULL)) != 0) {
 #endif /* DB_VERSION_MINOR */
                     LOG(log_error, logtype_default, "cnid_close: Unable to archive logfiles: %s",
-                           db_strerror(rc));
+                        db_strerror(rc));
                 }
 
                 if (list != NULL) {
@@ -65,7 +65,7 @@ void cnid_close(void *CNID) {
                         if ((rc = remove(*list)) != 0) {
 #ifdef DEBUG
                             LOG(log_info, logtype_default, "cnid_close: failed to remove %s: %s",
-                                   *list, strerror(rc));
+                                *list, strerror(rc));
 #endif
                         }
                     }

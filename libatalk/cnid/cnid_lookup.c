@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.11 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: cnid_lookup.c,v 1.12 2002-01-19 21:42:08 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,7 +53,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
             break;
         default:
             LOG(log_error, logtype_default, "cnid_lookup: txn_checkpoint: %s",
-                   db_strerror(rc));
+                db_strerror(rc));
             return 0;
         }
     }
@@ -82,7 +82,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
         }
 
         LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
-               st->st_dev, st->st_ino, db_strerror(rc));
+            st->st_dev, st->st_ino, db_strerror(rc));
         return 0;
     }
 
@@ -100,7 +100,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
         }
 
         LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID %u, name %s: %s",
-               ntohl(did), name, db_strerror(rc));
+            ntohl(did), name, db_strerror(rc));
         return 0;
     }
 
@@ -117,7 +117,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
     if ((devino && didname) || !(devino || didname)) {
 #ifdef DEBUG
         LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u",
-               ntohl(did), name, ntohl(id));
+            ntohl(did), name, ntohl(id));
 #endif
         return id;
     }

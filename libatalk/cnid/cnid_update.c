@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.16 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: cnid_update.c,v 1.17 2002-01-19 21:42:08 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -43,7 +43,7 @@ int cnid_update(void *CNID, const cnid_t id, const struct stat *st,
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0))) {
         LOG(log_error, logtype_default, "cnid_update: Failed to begin transaction: %s",
-               db_strerror(rc));
+            db_strerror(rc));
         return rc;
     }
 
@@ -148,7 +148,7 @@ retry:
 
 update_err:
     LOG(log_error, logtype_default, "cnid_update: Unable to update CNID %u: %s",
-           ntohl(id), db_strerror(rc));
+        ntohl(id), db_strerror(rc));
     return -1;
 }
 #endif /* CNID_DB */
