@@ -280,7 +280,7 @@ AC_ARG_WITH(shadow,
 
 AC_ARG_ENABLE(shell-check,
 	[  --disable-shell-check   disable checking for a valid shell]
-	if test "$disableval" = "yes"; then 
+	if test "$enableval" = "no"; then 
 		AC_DEFINE(DISABLE_SHELLCHECK, 1)
 		AC_MSG_RESULT([disabling valid shell check])
 	fi
