@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.16 2003-06-07 03:07:27 srittau Exp $
+ * $Id: afppasswd.c,v 1.17 2003-06-09 02:51:34 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -24,6 +24,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,8 +62,8 @@
 #define OPTIONS "cafnu:p:"
 #define UID_START 100
 
-#define HEXPASSWDLEN 16
-#define PASSWDLEN 8
+#define PASSWDLEN DES_KEY_SZ
+#define HEXPASSWDLEN (PASSWDLEN * 2)
 
 static char buf[MAXPATHLEN + 1];
 
@@ -71,67 +72,90 @@ static char buf[MAXPATHLEN + 1];
 #define _(x) (x)
 #endif
 
-#define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
-
-static u_int8_t *retrieve_key(int keyfd)
+/* SRC and DST must not overlap. */
+static void hexify(u_int8_t *dst, const u_int8_t *src)
 {
-  static u_int8_t key[HEXPASSWDLEN];
   int i, j;
 
-  lseek(keyfd, 0, SEEK_SET);
-  read(keyfd, key, sizeof(key));
-  /* convert to binary */
-  for (i = j = 0; i < sizeof(key); i += 2, j++)
-    key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-  if (j <= DES_KEY_SZ)
-    memset(key + j, 0, sizeof(key) - j);
+  for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
+    static const unsigned char hextable[] = "0123456789ABCDEF";
 
-  return key;
+    dst[j]     = hextable[(src[i] & 0xF0) >> 4];
+    dst[j + 1] = hextable[(src[i] & 0x0F)];
+  }
 }
 
-static void retrieve_passwd(char *buf, int keyfd)
+/* SRC and DST can overlap. */
+#define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
+static void unhexify(u_int8_t *dst, const u_int8_t *src)
 {
-  DES_key_schedule schedule;
-  u_int8_t *key;
   int i, j;
 
   /* convert to binary */
   for (i = j = 0; i < HEXPASSWDLEN; i += 2, j++)
-    buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
+    dst[j] = (unhex(src[i]) << 4) | unhex(src[i + 1]);
   if (j <= DES_KEY_SZ)
-    memset(buf + j, 0, HEXPASSWDLEN - j);
-
-  key = retrieve_key(keyfd);
-  DES_key_sched((DES_cblock *) key, &schedule);
-
-  /* decrypt the password */
-  DES_ecb_encrypt((DES_cblock *) buf, (DES_cblock *) buf,
-                  &schedule, DES_DECRYPT);
-
-  memset(key, 0, HEXPASSWDLEN);
-  memset(&schedule, 0, sizeof(schedule));      
+    memset(dst + j, 0, HEXPASSWDLEN - j);
 }
 
-static void set_passwd(char *buf, char *newpwd, const int keyfd)
+static u_int8_t *retrieve_key(int keyfd)
 {
-  static const unsigned char hextable[] = "0123456789ABCDEF";
-  DES_key_schedule schedule;
+  static u_int8_t key[HEXPASSWDLEN];
+
+  if (lseek(keyfd, 0, SEEK_SET) == -1)
+    return NULL;
+  if (read(keyfd, key, sizeof(key)) < sizeof(key))
+    return NULL;
+
+  unhexify(key, key);
+
+  return key;
+}
+
+static int decrypt_passwd(u_int8_t *dst, const u_int8_t *src, int keyfd)
+{
   u_int8_t *key;
-  int i, j;
+  int err = 0;
 
   key = retrieve_key(keyfd);
-  DES_key_sched((DES_cblock *) key, &schedule);
+  if (!key)
+    return 0;
 
-  DES_ecb_encrypt((DES_cblock *) newpwd, (DES_cblock *) newpwd,
-                  &schedule, DES_ENCRYPT);
+  {
+    DES_key_schedule schedule;
 
-  memset(&schedule, 0, sizeof(schedule));      
+    DES_set_key_unchecked((DES_cblock *) key, &schedule);
+    DES_ecb_encrypt((DES_cblock *) src, (DES_cblock *) dst,
+                    &schedule, DES_DECRYPT);
 
-  /* convert to hex */
-  for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
-    buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
-    buf[j + 1] = hextable[newpwd[i] & 0x0F];
+    memset(&schedule, 0, sizeof(schedule));
   }
+
+  memset(key, 0, HEXPASSWDLEN);
+
+  return err;
+}
+
+static int encrypt_passwd(u_int8_t *dst, const u_int8_t *src, int keyfd)
+{
+  const u_int8_t *key;
+  int err = 0;
+
+  key = retrieve_key(keyfd);
+  if (!key)
+    return 0;
+
+  {
+    DES_key_schedule schedule;
+
+    DES_set_key_unchecked((DES_cblock *) key, &schedule);
+    DES_ecb_encrypt((DES_cblock *) src, (DES_cblock *) dst,
+                    &schedule, DES_ENCRYPT);
+
+    memset(&schedule, 0, sizeof(schedule));      
+  }
+
+  return err;
 }
 
 /* this matches the code in uam_randnum.c */
@@ -153,6 +177,11 @@ static int update_passwd(const char *path, const char *name, int flags)
   if (strlen(path) < sizeof(buf) - 5) {
     strcat(buf, ".key");
     keyfd = open(buf, O_RDONLY);
+    if (keyfd == -1 && errno != ENOENT) {
+      fprintf(stderr, _("Can't open key file %s: %s\n"), buf, strerror(errno));
+      err = 1;
+      goto update_done;
+    }
   } 
 
   pos = ftell(fp);
@@ -190,7 +219,12 @@ static int update_passwd(const char *path, const char *name, int flags)
   /* need to verify against old password */
   if ((flags & OPT_ISROOT) == 0) {
     passwd = getpass(_("Enter OLD AFP password: "));
-    retrieve_passwd(p, keyfd);
+    unhexify(p, p);
+    err = decrypt_passwd(p, p, keyfd);
+    if (err) {
+      memset(passwd, 0, strlen(passwd));
+      goto update_done;
+    }
     if (strncmp(passwd, p, PASSWDLEN)) {
       memset(passwd, 0, strlen(passwd));
       fprintf(stderr, _("Wrong password.\n"));
@@ -224,7 +258,11 @@ static int update_passwd(const char *path, const char *name, int flags)
 
     memset(passwd, 0, strlen(passwd));
 
-    set_passwd(p, password, keyfd);
+    err = encrypt_passwd(password, password, keyfd);
+    if (err)
+      goto update_done;
+    hexify(p, password);
+
     lock.l_type = F_WRLCK;
     lock.l_start = pos;
     lock.l_len = 1;
