@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: rtmp.c,v 1.7 2001-08-03 22:12:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -852,7 +852,7 @@ int rtmp_request( iface )
 
 int looproute( iface, cmd )
     struct interface	*iface;
-    int			cmd;
+    unsigned int	cmd;
 {
     struct sockaddr_at	dst, loop;
 
@@ -906,7 +906,7 @@ int looproute( iface, cmd )
 }
 
 int gateroute( command, rtmp )
-    int			command;
+    unsigned int	command;
     struct rtmptab	*rtmp;
 {
     struct sockaddr_at	dst, gate;

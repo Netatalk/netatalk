@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: rtmp.h,v 1.4 2001-08-03 22:12:54 srittau Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -84,7 +84,7 @@ void rtmp_delzonemap  __P((struct rtmptab *));
 int rtmp_request __P(( struct interface * ));
 void rtmp_free __P(( struct rtmptab * ));
 int rtmp_replace __P(( struct rtmptab * ));
-int looproute __P(( struct interface *, int ));
-int gateroute __P(( int, struct rtmptab * ));
+int looproute __P(( struct interface *, unsigned int ));
+int gateroute __P(( unsigned int, struct rtmptab * ));
 
 #endif /* atalkd/rtmp.h */
