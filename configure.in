@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.155 2002-02-13 16:44:02 srittau Exp $
+dnl $Id: configure.in,v 1.156 2002-02-13 16:48:10 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -509,7 +509,12 @@ dnl ----- NetBSD specific -----
 if test x"$this_os" = "xnetbsd"; then 
 	AC_MSG_RESULT([ * NetBSD specific configuration])
 	AC_DEFINE(BSD4_4)
-	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+	if echo __ELF__ | $CC -E - | grep __ELF__ > /dev/null; then
+		# NetBSD ELF machines don't have to have DLSYM_PREPEND_UNDERSCORE.
+		# If this test is true, it's not an ELF box.
+		# This REALLY should be a configure test.
+		AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+	fi
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
 	need_dash_r=yes 
 
