@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.90 2001-06-19 18:04:39 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.91 2001-06-20 14:51:12 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -455,10 +455,19 @@ if test x"$this_os" = "xlinux"; then
 	LDSHAREDFLAGS="-shared"
 
 	dnl ----- check if we need the quotactl wrapper
-	AC_CHECK_HEADER(sys/quota.h,,
+	AC_CHECK_HEADER(sys/quota.h,
+		sys_quota=yes,
+		sys_quota=no
+	)
+	AC_CHECK_HEADER(linux/quota.h,
+		linux_quota=yes,
+		linux_quota=no
+	)
+
+	if test "x$linux_quota" = "xno" -a "x$sys_quota" = "xno"; then
 		AC_MSG_RESULT([enabling quotactl wrapper])
 		AC_DEFINE(NEED_QUOTACTL_WRAPPER)
-	)
+	fi
 
 	dnl ----- as far as I can tell, dbtob always does the wrong thing
 	dnl ----- on every single version of linux I've ever played with.
@@ -494,7 +503,7 @@ if test x"$this_os" = "xmacosx"; then
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(HAVE_BROKEN_CPP)
 	AC_DEFINE(HAVE_2ARG_DBTOB)
-	AC_DEFINE(NO_DLFCN_H)
+	dnl AC_DEFINE(NO_DLFCN_H)
 	AC_DEFINE(MACOSX_SERVER)
 
 	dnl ----- Set -shared flag

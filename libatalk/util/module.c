@@ -1,6 +1,10 @@
+/*
+ * $Id: module.c,v 1.3 2001-06-20 14:51:13 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +12,7 @@
 
 static int _mod_dummy;
 
-#ifdef NO_DLFCN_H
+#ifndef HAVE_DLFCN_H
 #ifdef MACOSX_SERVER
 #include <mach-o/dyld.h>
 
@@ -41,9 +45,9 @@ void mod_close(void *module)
 {
   NSUnLinkModule(module, FALSE);
 }
-#endif
+#endif /* MACOSX_SERVER */
 
-#else
+#else /* HAVE_DLFCN_H */
 
 #ifdef DLSYM_PREPEND_UNDERSCORE
 #include <dlfcn.h>
@@ -67,4 +71,4 @@ void *mod_symbol(void *module, const char *name)
    return symbol;
 }
 #endif /* DLSYM_PREPEND_UNDERSCORE */
-#endif /* NO_DLFCN */
+#endif /* HAVE_DLFCN_H */

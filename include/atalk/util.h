@@ -1,3 +1,7 @@
+/*
+ * $Id: util.h,v 1.2 2001-06-20 14:51:13 rufustfirefly Exp $
+ */
+
 #ifndef _ATALK_UTIL_H
 #define _ATALK_UTIL_H 1
 
@@ -11,7 +15,6 @@ extern unsigned const char _diacasemap[], _dialowermap[];
 extern char **getifacelist(void);
 extern void freeifacelist(char **);
 
-
 #define diatolower(x)     _dialowermap[(x)]
 #define diatoupper(x)     _diacasemap[(x)]
 extern int atalk_aton     __P((char *, struct at_addr *));
@@ -23,24 +26,26 @@ extern pid_t server_lock  __P((char * /*program*/, char * /*file*/,
 			       int /*debug*/));
 #define server_unlock(x)  (unlink(x))
 
-#ifdef NO_DLFCN_H
+#ifndef HAVE_DLFCN_H
 extern void *mod_open    __P((const char *));
 extern void *mod_symbol  __P((void *, const char *));
 extern void mod_close    __P((void *));
 #define mod_error()      ""
-#else
+#else /* ! HAVE_DLFCN_H */
 #include <dlfcn.h>
 #ifndef RTLD_NOW
 #define RTLD_NOW 1
-#endif
+#endif /* ! RTLD_NOW */
+
 #define mod_open(a)      dlopen(a, RTLD_NOW)
+
 #ifndef DLSYM_PREPEND_UNDERSCORE
 #define mod_symbol(a, b) dlsym(a, b)
-#else
+#else /* ! DLSYM_PREPEND_UNDERSCORE */
 extern void *mod_symbol  __P((void *, const char *));
-#endif
+#endif /* ! DLSYM_PREPEND_UNDERSCORE */
 #define mod_error()      dlerror()
 #define mod_close(a)     dlclose(a)
-#endif
+#endif /* ! HAVE_DLFCN_H */
 
 #endif

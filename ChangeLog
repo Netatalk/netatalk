@@ -1,4 +1,12 @@
-($Id: ChangeLog,v 1.49 2001-06-19 18:04:39 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.50 2001-06-20 14:51:12 rufustfirefly Exp $)
+
+2001-06-20  jeff b  <jeff@univrel.pr.uconn.edu>
+	* configure.in: check for linux/quota.h before enabling
+	QUOTACTL_WRAPPER (Joe Clarke) 
+
+	* acconfig.h, configure.in, include/atalk/util.h,
+	libatalk/util/module.c: removed NO_DLFCN_H in favor of
+	ifndef HAVE_DLFCN_H (Jeff)
 
 2001-06-19  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/file.c, etc/afpd/parse_mtab.c, etc/afpd/parse_mtab.h,

@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.7 2001-06-01 13:59:46 rufustfirefly Exp $
+ * $Id: quota.c,v 1.8 2001-06-20 14:51:13 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,7 +7,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +31,7 @@ int quotactl(int cmd, const char *special, int id, caddr_t addr)
 {
   return syscall(__NR_quotactl, cmd, special, id, addr);
 }
-#endif
+#endif /* NEED_QUOTACTL_WRAPPER */
 
 
 #if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
