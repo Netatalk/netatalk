@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.15 2002-05-29 18:02:59 jmarcus Exp $
+ * $Id: ofork.c,v 1.16 2002-06-17 11:40:11 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -68,7 +68,7 @@ static __inline__ void of_unhash(struct ofork *of)
 void of_pforkdesc( f )
 FILE	*f;
 {
-    u_short	ofrefnum;
+    int	ofrefnum;
 
     if (!oforks)
         return;
@@ -82,7 +82,7 @@ FILE	*f;
 
 int of_flush(const struct vol *vol)
 {
-    u_int16_t	refnum;
+    int	refnum;
 
     if (!oforks)
         return 0;
@@ -134,6 +134,8 @@ const char *oldpath, *newpath;
     return AFP_OK;
 }
 
+#define min(a,b)	((a)<(b)?(a):(b))
+
 struct ofork *
             of_alloc(vol, dir, path, ofrefnum, eid, ad)
             struct vol          *vol;
@@ -150,6 +152,8 @@ struct adouble      *ad;
 
     if (!oforks) {
         nforks = (getdtablesize() - 10) / 2;
+	/* protect against insane ulimit -n */
+        nforks = min(nforks, 0xffff);
         oforks = (struct ofork **) calloc(nforks, sizeof(struct ofork *));
         if (!oforks)
             return NULL;
@@ -261,7 +265,7 @@ struct ofork *of_find(const u_int16_t ofrefnum )
 }
 
 /* --------------------------
-   it doesn't work :-(
+   FIXME it doesn't work :-(
    mac1 open file "test" with simple text 
    mac2 rename "test" ==> "test1"
    
