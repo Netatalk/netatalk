@@ -68,9 +68,10 @@ static __inline__ int utombits( bits )
 
     mbits = 0;
 
-    mbits |= ( bits & ( S_IREAD >> 6 )) ? AR_UREAD : 0;
+    mbits |= ( bits & ( S_IREAD >> 6 )) ? (AR_UREAD | AR_USEARCH) : 0;
     mbits |= ( bits & ( S_IWRITE >> 6 )) ? AR_UWRITE : 0;
-    mbits |= ( bits & ( S_IEXEC >> 6) ) ? AR_USEARCH : 0;
+/* Do we really need this?
+    mbits |= ( bits & ( S_IEXEC >> 6) ) ? AR_USEARCH : 0; */
 
     return( mbits );
 }
@@ -136,9 +137,10 @@ static __inline__ mode_t mtoubits( bits )
 
     mode = 0;
 
-    mode |= ( bits & AR_UREAD ) ? ( S_IREAD >> 6 ) : 0;
-    mode |= ( bits & AR_UWRITE ) ? ( S_IWRITE >> 6 ) : 0;
-    mode |= ( bits & AR_USEARCH ) ? ( S_IEXEC >> 6 ) : 0;
+    mode |= ( bits & AR_UREAD ) ? ( (S_IREAD | S_IEXEC) >> 6 ) : 0;
+    mode |= ( bits & AR_UWRITE ) ? ( (S_IWRITE | S_IEXEC) >> 6 ) : 0;
+/* I don't think there's a way to set the SEARCH bit by itself on a Mac
+    mode |= ( bits & AR_USEARCH ) ? ( S_IEXEC >> 6 ) : 0; */
 
     return( mode );
 }
