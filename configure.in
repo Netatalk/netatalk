@@ -112,7 +112,7 @@ AC_ARG_WITH(admin-group,
 	[  --with-admin-group=grp  enable and set administrative group],
 	admin_grp="$withval"
 	AC_DEFINE_UNQUOTED(ADMIN_GRP, "$admin_grp")
-	AC_MSG_RESULT([enabling administrative group "$admin_grp".]),
+	AC_MSG_RESULT([enabling administrative group "$admin_grp"]),
 )
 
 AC_ARG_WITH(auth-printing-dir,
@@ -121,7 +121,7 @@ AC_ARG_WITH(auth-printing-dir,
 		cap_dir="$withval"
 		AC_DEFINE_UNQUOTED(CAPDIR, "$cap_dir")
 		AC_DEFINE(USE_CAP)
-		AC_MSG_RESULT([enabling authenticated printing support.]),
+		AC_MSG_RESULT([enabling authenticated printing support]),
 )
 
 AC_ARG_WITH(config-dir,
@@ -141,7 +141,7 @@ AC_ARG_WITH(crackdict,
 	AC_CHECK_LIB(crack, main,
 		AC_DEFINE(USE_CRACKLIB) 
 		LIBS="$LIBS -lcrack"
-		AC_MSG_RESULT([enabling cracklib support.])
+		AC_MSG_RESULT([enabling cracklib support])
 		if test x"$crackdict" = "x"; then
 			crackdict="$prefix/lib/cracklib_dict"
 		fi
@@ -155,12 +155,13 @@ AC_ARG_WITH(crackdict,
 AC_ARG_ENABLE(ddp,
 	[  --disable-ddp           disable DDP],,
 	AC_DEFINE(NO_DDP, 1)
+	AC_MSG_RESULT([disabling DDP])
 )
 
 AC_ARG_ENABLE(debug,
 	[  --enable-debug          enable debug code],
 	AC_DEFINE(DEBUG, 1)
-	AC_MSG_RESULT([Enabling debugging code.]),
+	AC_MSG_RESULT([enabling debugging code]),
 	AC_DEFINE(DEBUG, 0)
 )
 
@@ -182,19 +183,19 @@ AC_ARG_WITH(pam,
 	AC_CHECK_LIB(pam, main,
 		AC_DEFINE(USE_PAM)
 		LIBS="$LIBS -lpam"
-		AC_MSG_RESULT([Enabling shadow password support.])
+		AC_MSG_RESULT([enabling pam modules support])
 	)
 )
 
 AC_ARG_WITH(shadow,
 	[  --with-shadow           enable shadow password support],
-	AC_MSG_RESULT([Enabling shadow password support.])
+	AC_MSG_RESULT([enabling shadow password support])
 	AC_DEFINE(SHADOWPW)
 )
 
 AC_ARG_WITH(flock-locks,
 	[  --with-flock-locks      enable flock locks support],
-	AC_MSG_RESULT([Enabling flock locks.])
+	AC_MSG_RESULT([enabling flock locks])
 	AC_DEFINE(USE_FLOCK_LOCKS)
 )
 
@@ -203,7 +204,7 @@ AC_ARG_WITH(tcp-wrappers,
 	AC_CHECK_LIB(wrap, main,
 		AC_DEFINE(TCPWRAP)
 		LIBS="$LIBS -lwrap"
-		AC_MSG_RESULT([Enabling TCP wrappers support.])
+		AC_MSG_RESULT([enabling TCP wrappers support])
 	)
 )
 
@@ -216,6 +217,14 @@ AC_DEFINE_UNQUOTED(UAMS_PATH, "$uams_path",
 	[path to UAMs [default=/etc/atalk/uams]])
 UAMS_PATH="$uams_path"
 AC_SUBST(UAMS_PATH)
+
+dnl --------------------------------------------------------------------------
+dnl drop in includes for top level directory structures here...
+dnl --------------------------------------------------------------------------
+LIBS="$LIBS -L\$(top_srcdir)/libatalk/"
+CFLAGS="$CFLAGS -I\$(top_srcdir)/include -I\$(top_srcdir)/sys"
+AC_SUBST(LIBS)
+AC_SUBST(CFLAGS)
 
 dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
@@ -245,6 +254,12 @@ AC_OUTPUT([Makefile
 	contrib/Makefile
 	contrib/nu/Makefile
 	contrib/printing/Makefile
+	distrib/Makefile
+	distrib/config/Makefile
+	distrib/config/netatalk-config
+	distrib/initscripts/Makefile
+	distrib/initscripts/rc.atalk.redhat
+	distrib/m4/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/afpd/nls/Makefile
@@ -270,5 +285,7 @@ AC_OUTPUT([Makefile
 	man/man8/Makefile
 	sys/Makefile
 	sys/netatalk/Makefile
-])
+	],
+	[chmod a+x distrib/config/netatalk-config]
+)
 
