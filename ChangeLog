@@ -1,9 +1,12 @@
-($Id: ChangeLog,v 1.33 2001-05-08 15:43:30 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.34 2001-05-08 18:03:18 rufustfirefly Exp $)
 
 2001-05-08  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* bin/megatron/Makefile.am, etc/uams/Makefile.am: small Makefile fixes
 	from Olaf Hering <olh@suse.de>
+
+	* etc/uams/uams_dhx_passwd.c: Tru64 fixes from Burkhard Schmidt
+	<bs@cpfs.mpg.de>
 
 2001-05-07  jeff b  <jeff@univrel.pr.uconn.edu>
 

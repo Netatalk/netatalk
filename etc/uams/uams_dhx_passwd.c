@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.6 2001-02-27 17:07:43 rufustfirefly Exp $
+ * $Id: uams_dhx_passwd.c,v 1.7 2001-05-08 18:03:19 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -56,6 +56,12 @@ static CAST_KEY castkey;
 static struct passwd *dhxpwd;
 static u_int8_t randbuf[16];
 
+#ifdef DIGITAL_UNIX_SECURITY
+#include <sys/types.h>
+#include <sys/security.h>
+#include <prot.h>
+#endif /* DIGITAL_UNIX_SECURITY */
+
 /* dhx passwd */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
 			char *ibuf, int ibuflen,
@@ -73,6 +79,11 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     int len, i;
     char *name;
     DH *dh;
+
+#ifdef TRU64
+	static const char rnd_seed[] = "string to make the random number generator think it has entropy";
+	RAND_seed(rnd_seed, sizeof rnd_seed);
+#endif
 
     *rbuflen = 0;
 
@@ -201,6 +212,11 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     u_int16_t sessid;
     char *p;
 
+#ifdef DIGITAL_UNIX_SECURITY
+	char *bigcrypt();
+	struct pr_passwd *pr;
+#endif /* DIGITAL_UNIX_SECURITY */
+
     *rbuflen = 0;
 
     /* check for session id */
@@ -246,12 +262,23 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     BN_free(bn3);
 
     rbuf[PASSWDLEN] = '\0';
+#ifdef DIGITAL_UNIX_SECURITY
+	pr = getprpwnam( dhxpwd->pw_name );
+	if ( pr == NULL )
+		return AFPERR_NOTAUTH;
+	if ( strcmp ( bigcrypt ( rbuf, pr->ufld.fd_encrypt ),
+		pr->ufld.fd_encrypt ) == 0 ) {
+		*uam_pwd = dhxpwd;
+		return AFP_OK;
+	}
+#else /* DIGITAL_UNIX_SECURITY */
     p = crypt( rbuf, dhxpwd->pw_passwd );
     memset(rbuf, 0, PASSWDLEN);
     if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
       *uam_pwd = dhxpwd;
       return AFP_OK;
     }
+#endif /* DIGITAL_UNIX_SECURITY */
 
     return AFPERR_NOTAUTH;
 }
