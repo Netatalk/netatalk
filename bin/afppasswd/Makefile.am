@@ -13,3 +13,6 @@ afppasswd_LDADD = $(top_builddir)/libatalk/libatalk.la @SSL_LIBS@
 
 CFLAGS = @CFLAGS@ @SSL_CFLAGS@ -I$(top_srcdir)/sys \
     -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"
+
+install-exec-hook:
+	chmod u+s $(bindir)/afppasswd
