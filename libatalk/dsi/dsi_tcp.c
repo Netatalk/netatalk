@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.8 2002-01-17 06:13:44 srittau Exp $
+ * $Id: dsi_tcp.c,v 1.9 2002-01-24 16:27:31 jmarcus Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -147,8 +147,8 @@ static int dsi_tcp_open(DSI *dsi)
      * delinquent connections from causing mischief. */
     
     /* read in the first two bytes */
-    dsi_stream_read(dsi, block, 2);
-    if ((block[0] > DSIFL_MAX) || (block[1] > DSIFUNC_MAX)) {
+    len = dsi_stream_read(dsi, block, 2);
+    if (len <= 0 || (block[0] > DSIFL_MAX) || (block[1] > DSIFUNC_MAX)) {
       LOG(log_error, logtype_default, "dsi_tcp_open: invalid header");
       exit(1);
     }      
