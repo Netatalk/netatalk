@@ -1,5 +1,5 @@
 /*
- * $Id: asingle.c,v 1.8 2002-02-16 17:12:53 srittau Exp $
+ * $Id: asingle.c,v 1.9 2003-08-09 14:28:36 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -131,7 +131,7 @@ int single_header_read( fh, version )
     u_short		num_entries;
     int			n;
     int			readlen;
-    int			date_entry;
+    int			date_entry = 0;
     off_t		pos;
 
 /*
@@ -180,17 +180,11 @@ int single_header_read( fh, version )
  */
 
     if ( version == 1 ) {
-	if ( single.entry[ ADEID_FILEI ].ade_len > 0 ) {
+	if ( single.entry[ ADEID_FILEI ].ade_len > 0 )
 	    date_entry = ADEID_FILEI;
-	} else {
-	    date_entry = 0;
-	}
     } else if ( version == 2 ) {
-	if ( single.entry[ ADEID_FILEDATESI ].ade_len > 0 ) {
+	if ( single.entry[ ADEID_FILEDATESI ].ade_len > 0 )
 	    date_entry = ADEID_FILEDATESI;
-	} else {
-	    date_entry = 0;
-	}
     }
 #if DEBUG
     fprintf( stderr, "date_entry = %d\n", date_entry );
