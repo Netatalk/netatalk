@@ -1,24 +1,24 @@
 # Set DESTDIR to the root of the netatalk installation:
-DESTDIR=/usr/local/atalk
+PREFIX=/usr
 
 SRC = timelord.c
 OBJ = timelord.o
 
-INCPATH=	-I${DESTDIR}/include
+INCPATH=	-I../../include -I../../sys
 CFLAGS=	${DEFS} ${OPTOPTS} ${INCPATH}
 LIBS=	${ADDLIBS} -latalk
 TAGSFILE=	tags
 CC=	cc
 INSTALL=	install
-LIBDIRS=	-L${DESTDIR}/lib
+LIBDIRS=	-L../../libatalk/
 
 all : timelord
 
-timelord : ${OBJ} ${DESTDIR}/lib/libatalk.a
+timelord : ${OBJ} ../../libatalk/libatalk.a
 	${CC} ${CFLAGS} -o timelord ${OBJ} ${LIBDIRS} ${LIBS}
 
 install : all
-	${INSTALL} -c timelord ${DESTDIR}/etc
+	${INSTALL} -c timelord ${PREFIX}/sbin
 
 clean :
 	rm -f a.out core* *.o *.bak *[Ee]rrs tags
