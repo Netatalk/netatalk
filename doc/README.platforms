@@ -237,17 +237,6 @@ D.I OpenBSD
 
     and copy netatalk/distrib/initscripts/rc.atalk.bsd to /etc/rc.atalk.
 
-
-    Don't forget to change the 
-
-    if [ -x :SBINDIR:/atalkd ]; then
-
-    lines to
-
-    if [ -x /usr/local/sbin/atalkd ]; then
-
-    or to whichever locations you configured in netatalk.
-
 D.II Other BSDs
 
 1.  KERNEL SUPPORT. Note that kernel support for netatalk appears in
