@@ -1,6 +1,8 @@
 #ifndef PAPD_PRINTCAP_H
 #define PAPD_PRINTCAP_H 1
 
+#include <sys/cdefs.h>
+
 int getprent __P(( register char *, register char * ));
 int pnchktc __P(( char * ));
 int pgetflag __P(( char * ));

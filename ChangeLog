@@ -1,4 +1,9 @@
-($Id: ChangeLog,v 1.46 2001-06-13 15:44:45 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.47 2001-06-13 17:41:44 samnoble Exp $)
+
+2001-06-13  Sam Noble <ns@shadow.org>
+	* etc/papd/{printcap,ppd,lp,file,comment}.h:
+	added #include <sys/cdefs.h> to these headers so that __P gets
+	properly defined on platforms like TRU64
 
 2001-06-11  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, include/atalk/adouble.h, libatalk/compat/flock.c:

@@ -2,6 +2,7 @@
 #define PAPD_LP_H 1
 
 #include <sys/socket.h>
+#include <sys/cdefs.h>
 #include "file.h"
 
 void lp_person __P(( char * ));

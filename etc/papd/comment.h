@@ -6,6 +6,8 @@
 #ifndef PAPD_COMMENT_H
 #define PAPD_COMMENT_H 1
 
+#include <sys/cdefs.h>
+
 struct papd_comment {
     char		*c_begin;
     char		*c_end;
