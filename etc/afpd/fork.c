@@ -944,21 +944,27 @@ int flushfork( ofork )
     }
 
     if ( ad_hfileno( ofork->of_ad ) != -1 ) {
-        if (ofork->of_flags & AFPFORK_RSRC) {
-	  len = ad_getentrylen(ofork->of_ad, ADEID_RFORK);
-	  ad_refresh(ofork->of_ad);
-	  if (len != ad_getentrylen(ofork->of_ad, ADEID_RFORK)) {
-	    ad_setentrylen(ofork->of_ad, ADEID_RFORK, len);
-	    doflush++;
-	  }
-	}
 
+        /* read in the rfork length */
+	len = ad_getentrylen(ofork->of_ad, ADEID_RFORK);
+	ad_refresh(ofork->of_ad);
+
+	/* set the date if we're dirty */
         if ((ofork->of_flags & AFPFORK_DIRTY) &&
 	    (gettimeofday(&tv, NULL) == 0)) {
 	  ad_setdate(ofork->of_ad, AD_DATE_MODIFY|AD_DATE_UNIX, tv.tv_sec);
 	  ofork->of_flags &= ~AFPFORK_DIRTY;
 	  doflush++;
 	}
+
+	/* if we're actually flushing this fork, make sure to set the
+	 * length. otherwise, just use the stored length */
+        if ((ofork->of_flags & AFPFORK_RSRC) && 
+	    (len != ad_getentrylen(ofork->of_ad, ADEID_RFORK))) {
+	    ad_setentrylen(ofork->of_ad, ADEID_RFORK, len);
+	    doflush++;
+	}
+
 
 	/* flush the header. */
 	if (doflush && (ad_flush(ofork->of_ad, ADFLAGS_HF) < 0)) 
