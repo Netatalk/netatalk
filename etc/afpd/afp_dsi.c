@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.12 2001-12-15 06:25:44 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.13 2001-12-19 01:21:31 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -124,7 +124,7 @@ static void afp_dsi_getmesg (int sig)
 static void alarm_handler()
 {
     /* if we're in the midst of processing something,
-       don't die. we'll allow 3 missed tickles before we die (2 minutes) */
+       don't die. */
     if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
         syslog(LOG_INFO, "afp_dsi: alarm_handler: tickling client...");
         dsi_tickle(child.obj->handle);
