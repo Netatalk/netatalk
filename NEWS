@@ -1,3 +1,20 @@
+Changes from 1.5.0
+==================
+
+* NEW: Added a program called cnid_didname_verify that can be used to
+       verify the consistency of the CNID database.
+* NEW: New afpd option: -timeout. Warning: This still doesn't do what it's
+       supposed to!
+* UPD: Code cleanups and compatibility fixes to macusers.
+* UPD: AppleVolumes.system was cleaned up.
+* FIX: Really fix Tru64 compilation (see last entry).
+* FIX: Hand correct error value back to AFP client when deleting files or
+       directories fails.
+* FIX: Leading or trailing spaces are now forbidden on volumes that have
+       the AFPVOL_MSWINDOWS flag set.
+* FIX: Minor code cleanups and warning fixes.
+* FIX: Make quota support work on FreeBSD.
+
 Changes from 1.5rc2
 ===================
 
