@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.36 2002-09-29 23:31:24 sibaz Exp $
+ * $Id: volume.c,v 1.37 2002-10-10 20:27:36 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -951,6 +951,7 @@ int		*buflen;
         ad_setentrylen( &ad, ADEID_NAME, strlen( slash ));
         memcpy(ad_entry( &ad, ADEID_NAME ), slash,
                ad_getentrylen( &ad, ADEID_NAME ));
+	ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st->st_mtime);
         ad_flush(&ad, ADFLAGS_HF);
     }
 

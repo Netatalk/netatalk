@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.19 2002-08-29 18:57:37 didg Exp $
+ * $Id: ad_open.c,v 1.20 2002-10-10 20:27:36 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -176,7 +176,6 @@ static const struct entry entry_order[] = {
 static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
 {
   struct stat st;
-  struct timeval tv;
   u_int16_t attr;
   char *buf;
   int fd, off;
@@ -201,9 +200,6 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
     goto bail_err;
   
   if ((fd = open(path, O_RDWR)) < 0) 
-    goto bail_lock;
-  
-  if (gettimeofday(&tv, NULL) < 0) 
     goto bail_lock;
   
   if (fstat(fd, &st) ||
@@ -266,7 +262,7 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
   
   /* now, fill in the space with appropriate stuff. we're
      operating as a v2 file now. */
-  ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, tv.tv_sec);
+  ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
   memset(ad_entry(ad, ADEID_DID), 0, ADEDLEN_DID);
   memset(ad_entry(ad, ADEID_AFPFILEI), 0, ADEDLEN_AFPFILEI);
   ad_setattr(ad, attr);
@@ -718,7 +714,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	   */
 	  memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
 	  if ( ad->ad_hf.adf_flags & ( O_TRUNC | O_CREAT )) {
-	    struct timeval tv;
+	    struct stat st;
 
 	    ad->ad_magic = AD_MAGIC;
 	    ad->ad_version = AD_VERSION;
@@ -767,15 +763,20 @@ int ad_open( path, adflags, oflags, mode, ad )
 		     &ashort, sizeof(ashort));
 	    }
 
-	    if (gettimeofday(&tv, NULL) < 0) {
+	    /*if (gettimeofday(&tv, NULL) < 0) {
 	      ad_close(ad, adflags);
 	      return -1;
+	    }*/
+
+	    if (stat(path, &st) < 0) {
+		ad_close(ad, adflags);
+		return -1;
 	    }
 	    
 	    /* put something sane in the date fields */
-	    ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, tv.tv_sec);
-	    ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, tv.tv_sec);
-	    ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, tv.tv_sec);
+	    ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
+	    ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
+	    ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
 	    ad_setdate(ad, AD_DATE_BACKUP, AD_DATE_START);
 
 	  } else {
