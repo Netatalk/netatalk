@@ -97,11 +97,13 @@ static void afp_dsi_timedown()
     }
 }
 
+#ifdef SERVERTEXT
 static void afp_dsi_getmesg (void)
 {
       readmessage();
       dsi_attention(child.dsi, AFPATTN_MESG | AFPATTN_TIME(5));
 }
+#endif
 
 static void alarm_handler()
 {

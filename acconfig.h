@@ -1,7 +1,9 @@
 #undef _PATH_CRACKLIB
+#undef ADMIN_GRP
 #undef CAPDIR
 #undef DEBUG
 #undef NO_DDP
+#undef SERVERTEXT
 #undef SHADOWPW
 #undef TCPWRAP
 #undef USE_CAP

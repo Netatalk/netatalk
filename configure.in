@@ -108,7 +108,14 @@ dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
 dnl --------------------------------------------------------------------------
 
-AC_ARG_ENABLE(auth-printing-dir,
+AC_ARG_WITH(admin-group,
+	[  --with-admin-group=grp  enable and set administrative group],
+	admin_grp="$withval"
+	AC_DEFINE_UNQUOTED(ADMIN_GRP, "$admin_grp")
+	AC_MSG_RESULT([enabling administrative group "$admin_grp".]),
+)
+
+AC_ARG_WITH(auth-printing-dir,
 	[  --with-auth-printing-dir=path
               path to authenticated printing directory],
 		cap_dir="$withval"
@@ -117,7 +124,7 @@ AC_ARG_ENABLE(auth-printing-dir,
 		AC_MSG_RESULT([enabling authenticated printing support.]),
 )
 
-AC_ARG_ENABLE(config-dir,
+AC_ARG_WITH(config-dir,
 	[  --with-config-dir=path  path to config files [default=/etc/atalk]],
 		config_dir="$withval",
 		config_dir="/etc/atalk"
@@ -126,31 +133,24 @@ AC_DEFINE_UNQUOTED(CONFIG_DIR, "$config_dir",
 	[path to config dir [default=/etc/atalk]])
 CONFIG_DIR="$config_dir"
 AC_SUBST(CONFIG_DIR)
+AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR]),
 
-AC_ARG_WITH(cracklib,
-	[  --with-cracklib         enable cracklib checking support],
-	with_cracklib="yes"
+AC_ARG_WITH(crackdict,
+	[  --with-cracklib=dict    enable/set location of cracklib dictionary],
+	crackdict="$withval"
 	AC_CHECK_LIB(crack, main,
 		AC_DEFINE(USE_CRACKLIB) 
 		LIBS="$LIBS -lcrack"
-		AC_MSG_RESULT([Enabling cracklib support.]),
-	),
-	with_cracklib="no"
-)
-
-crackdict="/usr/lib/cracklib_dict"
-AC_ARG_WITH(crackdict,
-	[  --with-crackdict=path   set location of cracklib dictionary],
-	crackdict="$withval"
-)
-
-if test x"$with_cracklib" = "xyes"; then
-	AC_CHECK_FILE("$crackdict.pwd",
+		AC_MSG_RESULT([enabling cracklib support.])
+		if test x"$crackdict" = "x"; then
+			crackdict="$prefix/lib/cracklib_dict"
+		fi
 		AC_DEFINE_UNQUOTED(_PATH_CRACKLIB, "$crackdict",
-			[path to cracklib dictionary]),
-		AC_MSG_ERROR([$crackdict does not contain the dictionary])
+			[path to cracklib dictionary])
+		AC_MSG_RESULT([setting cracklib dictionary to $crackdict]),
+		AC_MSG_ERROR([cracklib not found!])
 	)
-fi
+)
 
 AC_ARG_ENABLE(ddp,
 	[  --disable-ddp           disable DDP],,
@@ -162,6 +162,19 @@ AC_ARG_ENABLE(debug,
 	AC_DEFINE(DEBUG, 1)
 	AC_MSG_RESULT([Enabling debugging code.]),
 	AC_DEFINE(DEBUG, 0)
+)
+
+msg_dir=""
+AC_ARG_WITH(message-dir,
+	[  --with-msg-dir=path     path to message files [default=/etc/atalk/msg]],
+		msg_dir="$withval"
+		if test x"$msg_dir" = "x"; then
+			msg_dir="$CONFIG_DIR/msg"
+		fi
+		AC_DEFINE_UNQUOTED(SERVERTEXT, "$msg_dir",
+			[path to message dir [default=$CONFIG_DIR/msg]])
+		SERVERTEXT="$msg_dir"
+		AC_SUBST(SERVERTEXT)
 )
 
 AC_ARG_WITH(pam,
