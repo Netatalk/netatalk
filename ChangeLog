@@ -1,4 +1,10 @@
 
+2001-04-20  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* configure.in, etc/afpd/Makefile.am, etc/papd/Makefile.am: added
+	AFPD_LIBS and PAPD_LIBS to cope with libraries that don't need to
+	be used for everything
+
 2001-04-16  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* etc/afpd/directory.c, etc/afpd/messages.c, etc/uams/uams_dhx_pam.c:
