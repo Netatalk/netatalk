@@ -488,7 +488,7 @@ int setdirowner( uid, gid, noadouble )
 	}
 	if (( st.st_mode & S_IFMT ) == S_IFREG ) {
 	    if ( chown( dirp->d_name, uid, gid ) < 0 ) {
-		syslog( LOG_ERR, "setdirowner: chown %s: %m", dirp->d_name );
+		syslog( LOG_DEBUG, "setdirowner: chown %s: %m", dirp->d_name );
 		/* return ( -1 ); Sometimes this is okay */
 	    }
 	}
@@ -510,7 +510,7 @@ int setdirowner( uid, gid, noadouble )
 	*m = '\0';
 	strcat( buf, dirp->d_name );
 	if ( chown( buf, uid, gid ) < 0 ) {
-	    syslog( LOG_ERR, "setdirowner: chown %d/%d %s: %m",
+	    syslog( LOG_DEBUG, "setdirowner: chown %d/%d %s: %m",
 		    uid, gid, buf );
 	    /* return ( -1 ); Sometimes this is okay */
 	}
@@ -525,7 +525,7 @@ int setdirowner( uid, gid, noadouble )
 	return( -1 );
     }
     if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 ) {
- 	syslog( LOG_ERR, "setdirowner: chown %d/%d .AppleDouble: %m",
+ 	syslog( LOG_DEBUG, "setdirowner: chown %d/%d .AppleDouble: %m",
  		uid, gid);
 	/* return ( -1 ); Sometimes this is okay */
     }
@@ -535,7 +535,7 @@ setdirowner_noadouble:
 	return( -1 );
     }
     if ( gid && gid != st.st_gid && chown( ".", uid, gid ) < 0 ) {
-        syslog( LOG_ERR, "setdirowner: chown %d/%d .: %m",
+        syslog( LOG_DEBUG, "setdirowner: chown %d/%d .: %m",
 		uid, gid);
     }
 
