@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.197 2003-12-15 06:03:33 srittau Exp $
+dnl $Id: configure.in,v 1.198 2003-12-15 06:13:38 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -31,10 +31,6 @@ dnl
 dnl Checks for presence of some functions.
 dnl
 
-dnl Check for XPG4 access() function
-dnl Be sure to test before adding AFS libs in LIBS path as AFS lib
-dnl has such a function that works only on AFS filesystems.
-AC_CHECK_FUNCS(access)
 AC_CHECK_FUNCS(pread pwrite)
 
 dnl
