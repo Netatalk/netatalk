@@ -1,3 +1,7 @@
 # Makefile.am for sys/
 
-SUBDIRS = netatalk
+if SOLARIS_MODULE
+solaris_directory = solaris
+endif
+
+SUBDIRS = netatalk $(solaris_directory)

@@ -414,6 +414,8 @@ if test x"$this_os" = "xsolaris"; then
 	AC_DEFINE(SOLARIS)
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
+	AC_MSG_RESULT([enabling Solaris kernel module build])
+	solaris_module=yes
 fi
 
 dnl ----- Tru64 specific -----
@@ -472,6 +474,7 @@ dnl --------------------- last minute substitutions
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDSHAREDFLAGS)
+AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(USE_DHX, test x$compile_dhx = xyes)
 AM_CONDITIONAL(USE_PAM_SO, test x$use_pam_so = xyes)
 AM_CONDITIONAL(USE_PAM, test x$compile_pam = xyes)
