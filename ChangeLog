@@ -1,3 +1,23 @@
+
+2001-09-04  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/afpd/filedir.h: define veto_file() prototype (Edmund Lam)
+
+	* etc/uams/uams_dhx_pam.c: added quick Sun hack to seed openssl,
+	but it *really* needs something more elegant (#458433)
+
+2001-09-04  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* libatalk/cnid/cnid_add.c, libatalk/cnid/cnid_open.c: fixed
+	duplicate DID's being generated and FreeBSD db3 fix (Joe Clarke)
+
+	* doc/README.veto, etc/afpd/directory.c, etc/afpd/enumerate.c,
+	etc/afpd/file.c, etc/afpd/filedir.c, etc/afpd/volume.c,
+	etc/afpd/volume.h: adds Samba-style "veto file" support
+	(Edmund Lam)
+
+	* configure.in: properly checks for db3 headers (Joe Clarke)
+
 2001-08-31  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* libatalk/cnid/cnid_*.c: compilation fixes for those who don't
