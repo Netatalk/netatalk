@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.12 2001-09-23 19:08:23 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.13 2001-09-27 15:51:27 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -237,8 +237,18 @@ mkdir_appledb:
     goto fail_lock;
   }
 
+  /* Setup internal deadlock detection. */
+  if ((rc = db->dbenv->set_lk_detect(db->dbenv, DB_LOCK_DEFAULT)) != 0) {
+    syslog(LOG_ERR, "cnid_open: set_lk_detect failed (%d)", rc);
+    goto fail_lock;
+  }
+
 #if DB_VERSION_MINOR > 1
-  db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1);
+  /* Take care of setting the NOSYNC flag in db3 > 3.1.x. */
+  if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0 ) {
+	  syslog(LOG_ERR, "cnid_open: set_flags failed (%d)", rc);
+	  goto fail_lock;
+  }
 #endif /* DB_VERSION_MINOR > 1 */
 
   /* Check to see if a DBENV already exists.  If it does, join it. */

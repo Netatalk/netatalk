@@ -1,4 +1,8 @@
 
+2001-09-27  joe c   <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_open.c: Set internal deadlock detection
+
 2001-09-23  joe c   <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_close.c, libatalk/cnid/cnid_resolve.c,
