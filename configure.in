@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.100 2001-08-30 13:13:30 srittau Exp $
+dnl $Id: configure.in,v 1.101 2001-09-04 13:55:00 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -262,8 +262,8 @@ AC_ARG_WITH(db3,
 db3_found=no
 for db3dir in "" $trydb3dir /usr /usr /usr/local ; do
 	if test -f "$db3dir/include/db3/db.h" ; then
-		LDFLAGS="$LDFLAGS -L$db3dir/lib -L$db3dir"
-		CFLAGS="$CFLAGS -I$db3dir/include"
+		LDFLAGS="$LDFLAGS -L$db3dir/lib -ldb3"
+		CFLAGS="$CFLAGS -I$db3dir/include/db3"
 
 		dnl If we require DB3, die if we don't have it
 		if test "x$db3_required" != "xno"; then
