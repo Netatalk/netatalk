@@ -1,3 +1,3 @@
 # Makefile.am for distrib/
 
-# currently nothing...
+SUBDIRS = config initscripts m4

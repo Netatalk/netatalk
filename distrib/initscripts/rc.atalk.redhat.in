@@ -1,0 +1,139 @@
+#! /bin/sh
+# chkconfig: 345 91 35
+# description: This package enables Linux to talk to Macintosh
+#              computers via the AppleTalk networking protocol and 
+#              provides printer, file sharing, and AppleTalk routing 
+#              services.   
+#
+# AppleTalk daemons. Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+test -x @sbindir@/atalkd || exit 0
+
+test -f @CONFIG_DIR@/netatalk.conf || exit 0
+
+# read in netatalk configuration
+. @CONFIG_DIR@/netatalk.conf
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+# initialize return values
+RETVAL=1
+RETVAL_ATALKD=0
+RETVAL_PAPD=0
+RETVAL_AFPD=0
+
+# startup code for everything
+atalk_startup() {
+    if [ x"${ATALKD_RUN}" != x"no" ]; then 
+	daemon @sbindir@/atalkd
+	RETVAL_ATALKD=$?
+
+	if [ -x @bindir@/nbprgstr ]; then	
+	    @bindir@/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    @bindir@/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+	fi	
+
+	if [ x"${PAPD_RUN}" = x"yes"  -a -x @sbindir@/papd ]; then
+	    daemon @sbindir@/papd
+	    RETVAL_PAPD=$?
+	fi
+
+	# check for timelord in bin directory
+	if [ -x @bindir@/timelord ]; then
+	    daemon @bindir@/timelord
+	fi
+
+	# check for timelord in sbin directory
+	if [ -x @sbindir@/timelord ]; then
+	    daemon @sbindir@/timelord
+	fi
+
+    fi
+
+    if [ x"${AFPD_RUN}" = x"yes" -a -x @sbindir@/afpd ] ; then
+	    daemon @sbindir@/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+		-c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
+	    RETVAL_AFPD=$?
+    fi
+
+    if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ]; then
+        RETVAL=0
+	touch /var/lock/subsys/atalk || RETVAL=1
+    fi
+}
+
+case "$1" in
+'start')
+	echo -n 'Starting AppleTalk services: '
+	if [ x"${ATALK_BGROUND}" = x"yes" ]; then 
+	    echo -n "(backgrounded)"
+	    atalk_startup >& /dev/null &
+	else
+	    atalk_startup
+	fi
+	echo 
+	;;
+'stop')
+	echo -n 'Shutting down AppleTalk services: '
+	if [ x"${ATALKD_RUN}" != x"no" ]; then
+	    if [ x"${PAPD_RUN}" = x"yes" -a -x @sbindir@/papd ]; then
+		killproc papd
+		RETVAL_PAPD=$?
+	    fi
+
+            # checking for timelord in bin directory
+	    if [ -x @bindir@/timelord ]; then
+		killproc timelord
+	    fi
+
+            # checking for timelord in sbin directory
+	    if [ -x @sbindir@/timelord ]; then
+		killproc timelord
+	    fi
+
+	    @bindir@/nbpunrgstr "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    @bindir@/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+
+	    # kill atalkd last, since without it the plumbing goes away.
+	    if [ -x @sbindir@/atalkd ]; then
+		killproc atalkd
+		RETVAL_ATALKD=$?
+	    fi
+	fi	    
+
+	# kill this separately as we also do AFP/tcp
+	if [ x"${AFPD_RUN}" = x"yes" -a -x @sbindir@/afpd ]; then
+	    killproc afpd
+	    RETVAL_AFPD=$?
+	fi
+
+	if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ] ; then
+	    RETVAL=0
+	    rm -f /var/lock/subsys/atalk || RETVAL=1
+	fi
+	echo ""
+	;;
+  'restart'|'reload')
+	$0 stop
+	$0 start
+	RETVAL=$?
+	;;
+  'status')
+	status atalkd
+	RETVAL=$?
+	;;
+  *)
+	echo "Usage: atalk {start|stop|restart|status}"
+	exit 1
+esac
+
+exit $RETVAL
