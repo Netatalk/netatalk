@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.8 2002-12-07 02:39:57 rlewczuk Exp $
+ * $Id: status.c,v 1.9 2002-12-07 02:55:00 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #ifdef BSD4_4
 #include <sys/param.h>
@@ -122,7 +122,7 @@ static void status_machine(char *data)
 
 /* server signature is a 16-byte quantity */
 static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
-                                  const char *hostname, const struct afp_options *options)
+                                  const struct afp_options *options)
 {
     char                 *status;
     char		 *usersign, *ifaddr;
@@ -147,13 +147,14 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
     /* Signature type is user string */
     if (strncmp(options->signature, "user", 4) == 0) {
         if (strlen(options->signature) <= 5) {
-	    syslog( LOG_ERR, "Signature %s id not valid. Switching back to hostid.", 
-				    options->signature);
+	    LOG(log_warning, logtype_afpd, "Signature %s id not valid. Switching back to hostid.",
+			    options->signature);
 	    goto server_signature_hostid;
     }
     usersign = options->signature + 5;
         if (strlen(usersign) < 3) 
-	    syslog( LOG_WARNING, "Signature %s is very short !", options->signature);
+	    LOG(log_warning, logtype_afpd, "Signature %s is very short !", 
+			    options->signature);
     
         memset(data, 0, 16);
         strncpy(data, usersign, 16);
@@ -178,7 +179,7 @@ server_signature_hostid:
         else {
             struct hostent *host;
 
-            if ((host = gethostbyname(hostname)))
+            if ((host = gethostbyname(options->hostname)))
                 hostid = ((struct in_addr *) host->h_addr)->s_addr;
         }
     }
@@ -361,7 +362,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     else
         status_icon(status, apple_atalk_icon, sizeof(apple_atalk_icon), c);
 
-    sigoff = status_signature(status, &c, dsi, options->hostname, options);
+    sigoff = status_signature(status, &c, dsi, options);
 
     /* returns length */
     c = status_netaddress(status, c, asp, dsi, options->fqdn);
