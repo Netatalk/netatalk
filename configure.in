@@ -135,19 +135,19 @@ CONFIG_DIR="$config_dir"
 AC_SUBST(CONFIG_DIR)
 AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR]),
 
-AC_ARG_WITH(crackdict,
+AC_ARG_WITH(cracklib,
 	[  --with-cracklib=dict    enable/set location of cracklib dictionary],
-	crackdict="$withval"
+	cracklib="$withval"
 	AC_CHECK_LIB(crack, main,
 		AC_DEFINE(USE_CRACKLIB) 
 		LIBS="$LIBS -lcrack"
 		AC_MSG_RESULT([enabling cracklib support])
-		if test x"$crackdict" = "x"; then
+		if test x"$cracklib" = "x"; then
 			crackdict="$prefix/lib/cracklib_dict"
 		fi
-		AC_DEFINE_UNQUOTED(_PATH_CRACKLIB, "$crackdict",
+		AC_DEFINE_UNQUOTED(_PATH_CRACKLIB, "$cracklib",
 			[path to cracklib dictionary])
-		AC_MSG_RESULT([setting cracklib dictionary to $crackdict]),
+		AC_MSG_RESULT([setting cracklib dictionary to $cracklib]),
 		AC_MSG_ERROR([cracklib not found!])
 	)
 )
