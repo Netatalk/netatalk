@@ -1,4 +1,6 @@
 /*
+ * $Id: main.c,v 1.5 2001-05-03 13:57:44 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -125,6 +127,10 @@ int main( ac, av )
     fd_set              rfds;
     struct sigaction	sv;
     sigset_t            sigs;
+
+#ifdef DIGITAL_UNIX_SECURITY
+	set_auth_parameters( ac, av );
+#endif /* DIGITAL_UNIX_SECURITY */
 
     umask( 0 );		/* so inherited file permissions work right */
 

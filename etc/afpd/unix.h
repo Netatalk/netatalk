@@ -1,3 +1,7 @@
+/*
+ * $Id: unix.h,v 1.3 2001-05-03 13:57:44 rufustfirefly Exp $
+ */
+
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 
@@ -35,8 +39,12 @@ typedef int	mode_t;
 #include <sys/statvfs.h>
 #define statfs statvfs
 #else
+#if defined(TRU64)
+#define f_frsize f_fsize
+#else /* TRU64 */
 #define	f_frsize f_bsize
-#endif
+#endif /* TRU64 */
+#endif /* USE_STATVFS_H */
 
 #if defined(__svr4__) || defined(USE_MNTTAB_H)
 #include <sys/mnttab.h>

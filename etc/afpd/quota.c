@@ -1,4 +1,6 @@
 /*
+ * $Id: quota.c,v 1.4 2001-05-03 13:57:44 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -199,11 +201,13 @@ static int getfsquota(vol, uid, dq)
 #define QCMD(a,b)  (a)
 #endif
 
+#ifndef TRU64
     /* for group quotas. we only use these if the user belongs
      * to one group. */
     struct dqblk        dqg;
 
     memset(&dqg, 0, sizeof(dqg));
+#endif /* TRU64 */
 
 #ifdef BSD4_4
     if ( quotactl( vol->v_gvs, QCMD(Q_GETQUOTA,USRQUOTA), 
@@ -215,6 +219,15 @@ static int getfsquota(vol, uid, dq)
       quotactl(vol->v_gvs, QCMD(Q_GETQUOTA, GRPQUOTA),
 		   groups[0], (char *) &dqg);
       
+#elif defined(TRU64)
+	if ( seteuid( getuid() ) == 0 ) {
+		if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA, USRQUOTA),
+				uid, (char *)dq ) != 0 ) {
+			seteuid( uid );
+			return ( AFPERR_PARAM );
+		}
+	}
+
 #else /* BSD4_4 */
     if ( quotactl(QCMD(Q_GETQUOTA, USRQUOTA), vol->v_gvs, uid,
 		  (caddr_t) dq ) != 0 ) {
@@ -226,6 +239,7 @@ static int getfsquota(vol, uid, dq)
 	       groups[0], (char *) &dqg);
 #endif  /* BSD4_4 */
 
+#ifndef TRU64
     /* set stuff up for group quotas if necessary */
 
     /* max(user blocks, group blocks) */
@@ -246,6 +260,8 @@ static int getfsquota(vol, uid, dq)
     if (dqg.dqb_btimelimit && (!dq->dqb_btimelimit ||
 	 (dq->dqb_btimelimit > dqg.dqb_btimelimit)))
       dq->dqb_btimelimit = dqg.dqb_btimelimit;
+
+#endif /* TRU64 */
 
 #endif /* ultrix */
 #endif /* __svr4__ */

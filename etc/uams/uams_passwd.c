@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.6 2001-02-27 17:07:43 rufustfirefly Exp $
+ * $Id: uams_passwd.c,v 1.7 2001-05-03 13:57:44 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -33,6 +33,12 @@
 
 #define PASSWDLEN 8
 
+#ifdef DIGITAL_UNIX_SECURITY
+#include <sys/types.h>
+#include <sys/security.h>
+#include <prot.h>
+#endif /* DIGITAL_UNIX_SECURITY */
+
 /* cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
 			char *ibuf, int ibuflen,
@@ -41,9 +47,13 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     struct passwd *pwd;
 #ifdef SHADOWPW
     struct spwd *sp;
-#endif
+#endif /* SHADOWPW */
     char *username, *p;
     int len, ulen;
+#ifdef DIGITAL_UNIX_SECURITY
+	char *bigcrypt();
+	struct pr_passwd *pr;
+#endif /* DIGITAL_UNIX_SECURITY */
 
     *rbuflen = 0;
 
@@ -84,9 +94,18 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 
     *uam_pwd = pwd;
 
+#ifdef DIGITAL_UNIX_SECURITY
+	pr = getprpwnam( username );
+	if ( pr == NULL )
+		return AFPERR_NOTAUTH;
+	if ( strcmp ( bigcrypt ( ibuf, pr->ufld.fd_encrypt ),
+		pr->ufld.fd_encrypt == 0 )
+      return AFP_OK;
+#else /* DIGITAL_UNIX_SECURITY */
     p = crypt( ibuf, pwd->pw_passwd );
     if ( strcmp( p, pwd->pw_passwd ) == 0 ) 
       return AFP_OK;
+#endif /* DIGITAL_UNIX_SECURITY */
 
     return AFPERR_NOTAUTH;
 }
