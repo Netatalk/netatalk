@@ -1,3 +1,8 @@
+2001-10-21  joe c <marcus@marcuscom.com>
+
+	* libatalk/cnid*.c: Big patch to improve transaction throughput
+	  and database resiliency
+
 2001-10-19  Lance Levsen  <l.levsen@printwest.com>
 
 	* doc/FAQ: Thanks for the Patch Karen.
