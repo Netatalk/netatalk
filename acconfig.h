@@ -4,7 +4,6 @@
 #undef ADMIN_GRP
 #undef AFS
 #undef BSD4_4
-#undef CAPDIR
 #undef DEBUG
 #undef DLSYM_PREPEND_UNDERSCORE
 #undef DISABLE_SHELLCHECK
