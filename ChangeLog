@@ -1,3 +1,7 @@
+2001-08-09  Sam Noble <ns@shadow.org>
+
+	* configure.in, acconfig.h: Merged a patch from meeroh@mit.edu
+	to fix the kerberos uam build process.
 
 2001-08-08  jeff b  <jeff@univrel.pr.uconn.edu>
 

@@ -32,6 +32,7 @@
 #undef TRU64
 #undef UAM_DHX
 #undef UAM_PGP
+#undef UAM_KRB4
 #undef UAM_RNDNUM
 #undef USE_CAP
 #undef USE_CRACKLIB
