@@ -122,4 +122,62 @@ typedef enum {
   AFPMESG_SERVER = 1
 } afpmessage_t;
 
+/* AFP functions */
+#define AFP_BYTELOCK	     1
+#define AFP_CLOSEVOL     	 2
+#define AFP_CLOSEDIR     	 3
+#define AFP_CLOSEFORK	 	 4
+#define AFP_COPYFILE 	 	 5
+#define AFP_CREATEDIR		 6
+#define AFP_CREATEFILE		 7
+#define AFP_DELETE	 	     8
+#define AFP_ENUMERATE	 	 9
+#define AFP_FLUSH		    10
+#define AFP_FLUSHFORK		11
+
+#define AFP_GETFORKPARAM	14
+#define AFP_GETSRVINFO  	15
+#define AFP_GETSRVPARAM 	16
+#define AFP_GETVOLPARAM		17
+#define AFP_LOGIN       	18
+#define AFP_LOGINCONT		19
+#define AFP_LOGOUT      	20
+#define AFP_MAPID		    21
+#define AFP_MAPNAME		    22
+#define AFP_MOVE		    23
+#define AFP_OPENVOL     	24
+#define AFP_OPENDIR		    25
+#define AFP_OPENFORK		26
+#define AFP_READ		    27
+#define AFP_RENAME		    28
+#define AFP_SETDIRPARAM		29
+#define AFP_SETFILEPARAM	30
+#define AFP_SETFORKPARAM	31
+#define AFP_SETVOLPARAM		32
+#define AFP_WRITE		    33
+#define AFP_GETFLDRPARAM	34
+#define AFP_SETFLDRPARAM	35
+#define AFP_CHANGEPW    	36
+
+#define AFP_GETSRVRMSG		38
+#define AFP_CREATEID		39
+#define AFP_DELETEID		40
+#define AFP_RESOLVEID		41
+#define AFP_EXCHANGEFILE	42
+#define AFP_CATSEARCH		43
+
+#define AFP_OPENDT		    48
+#define AFP_CLOSEDT		    49
+
+#define AFP_GETICON         51
+#define AFP_GTICNINFO       52
+#define AFP_ADDAPPL         53
+#define AFP_RMVAPPL         54
+
+#define AFP_GETAPPL         55
+#define AFP_ADDCMT          56
+#define AFP_RMVCMT          57
+#define AFP_GETCMT          58
+#define AFP_ADDICON        192
+
 #endif
