@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.25 2003-03-15 01:34:35 didg Exp $
+ * $Id: desktop.c,v 1.26 2003-04-09 06:05:24 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -983,6 +983,10 @@ char *utompath(const struct vol *vol, char *upath, int utf8)
 #endif
 #ifdef FILE_MANGLING
     m = mangle(vol, mpath, upath, mangleflag);
+#else
+    if (mangleflag)
+        return NULL;
+    m = mpath;
 #endif /* FILE_MANGLING */
 
     return(m);
