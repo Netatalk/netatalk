@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.39 2002-08-30 19:32:40 didg Exp $
+ * $Id: directory.c,v 1.40 2002-09-27 11:34:22 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -135,7 +135,8 @@ u_int32_t	did;
     char *ptr;
     static char buffer[12 + MAXPATHLEN + 1];
     int buflen = 12 + MAXPATHLEN + 1;
-
+    char *mpath;
+    
     ret = dirsearch(vol, did);
     if (ret != NULL)
         return ret;
@@ -145,10 +146,11 @@ u_int32_t	did;
         return NULL;
     }
     ptr = path + MAXPATHLEN;
-    len = strlen(upath);
+    mpath = utompath(vol, upath);
+    len = strlen(mpath);
     pathlen = len;          /* no 0 in the last part */
     len++;
-    strcpy(ptr - len, upath);
+    strcpy(ptr - len, mpath);
     ptr -= len;
     while (1) {
         ret = dirsearch(vol,id);
@@ -157,11 +159,12 @@ u_int32_t	did;
         }
         if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL)
             return NULL;
-        len = strlen(upath) + 1;
+        mpath = utompath(vol, upath);
+        len = strlen(mpath) + 1;
         pathlen += len;
         if (pathlen > 255)
             return NULL;
-        strcpy(ptr - len, upath);
+        strcpy(ptr - len, mpath);
         ptr -= len;
     }
     /* fill the cache */
