@@ -10,5 +10,5 @@ endif
 
 afppasswd_SOURCES = afppasswd.c
 afppasswd_LDADD = $(top_builddir)/libatalk/libatalk.la @SSL_LIBS@
-
-CFLAGS = @SSL_CFLAGS@ -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"
+CFLAGS = -I$(top_srcdir)/sys \
+    @SSL_CFLAGS@ -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"
