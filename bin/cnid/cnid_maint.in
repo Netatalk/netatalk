@@ -3,24 +3,24 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.11 2002-06-20 02:16:05 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.12 2002-08-31 08:05:40 jmarcus Exp $
 #
 
 use strict;
 use Getopt::Std;
 use vars qw(
-  $APPLE_VOLUMES_FILE
-  $STOP_CMD
-  $START_CMD
-  $PS_CMD
-  $GREP
-  $DB_STAT
-  $DB_RECOVER
-  $DB_VERIFY
-  $VERSION
-  $START_NETATALK
-  $LOCK_FILE
-  $HOLDING_LOCK
+    $APPLE_VOLUMES_FILE
+    $STOP_CMD
+    $START_CMD
+    $PS_CMD
+    $GREP
+    $DB_STAT
+    $DB_RECOVER
+    $DB_VERIFY
+    $VERSION
+    $START_NETATALK
+    $LOCK_FILE
+    $HOLDING_LOCK
 );
 
 ## Edit ME
@@ -38,7 +38,7 @@ $DB_VERIFY          = '@DB3_PATH@bin/db_verify';
 $APPLE_VOLUMES_FILE = '@PKGCONFDIR@/AppleVolumes.default';
 ## End edit section
 
-$VERSION = '1.0';
+$VERSION        = '1.0';
 $GREP           = '@GREP@';
 $START_NETATALK = 0;
 $LOCK_FILE      = tmpdir() . '/cnid_maint.LOCK';
@@ -54,269 +54,285 @@ my $extra_safe  = 0;
 my $do_verify   = 0;
 my $remove_logs = 0;
 
-getopts( 'hsvVl', $opts );
+getopts('hsvVl', $opts);
 
-if ( $opts->{'v'} ) {
-    version();
-    exit(0);
+if ($opts->{'v'}) {
+        version();
+        exit(0);
 }
-if ( $opts->{'h'} ) {
-    help();
-    exit(0);
+if ($opts->{'h'}) {
+        help();
+        exit(0);
 }
-if ( $opts->{'s'} ) {
-    $extra_safe = 1;
+if ($opts->{'s'}) {
+        $extra_safe = 1;
 }
-if ( $opts->{'V'} ) {
-    $do_verify = 1;
+if ($opts->{'V'}) {
+        $do_verify = 1;
 }
-if ( $opts->{'l'} ) {
-    $remove_logs = 1;
+if ($opts->{'l'}) {
+        $remove_logs = 1;
 }
 
-if ( $< != 0 ) {
-    die "You must be root to run this script.\n";
+if ($< != 0) {
+        die "You must be root to run this script.\n";
 }
 
 print "Beginning run of CNID DB Maintanence script at "
-  . scalar(localtime) . ".\n\n";
+    . scalar(localtime) . ".\n\n";
 
-if ( -f $LOCK_FILE ) {
-    error( 1, "Lock file $LOCK_FILE exists." );
-    end();
+if (-f $LOCK_FILE) {
+        error(1, "Lock file $LOCK_FILE exists.");
+        end();
 }
 
-unless ( open( LOCK, ">" . $LOCK_FILE ) ) {
-    error( 2, "Unable to create $LOCK_FILE: $!" );
+unless (open(LOCK, ">" . $LOCK_FILE)) {
+        error(2, "Unable to create $LOCK_FILE: $!");
 }
-flock( LOCK, LOCK_EX );
+flock(LOCK, LOCK_EX);
 $HOLDING_LOCK = 1;
 
 # Check to see if the AppleVolumes.default file exists.  We will use this file
 # to get a list of database environments to recover.  We will ignore users'
 # home directories since that could be a monumental under taking.
-if ( !-f $APPLE_VOLUMES_FILE ) {
-    error( 2, "Unable to locate $APPLE_VOLUMES_FILE" );
+if (!-f $APPLE_VOLUMES_FILE) {
+        error(2, "Unable to locate $APPLE_VOLUMES_FILE");
 }
 
 # Use ps to get a list of running afpds.  We will track all afpd PIDs that are
 # running as root.
-unless ( open( PS, $PS_CMD . " | $GREP afpd | $GREP -v grep |" ) ) {
-    error( 2, "Unable to open a pipe to ps: $!" );
+unless (open(PS, $PS_CMD . " | $GREP afpd | $GREP -v grep |")) {
+        error(2, "Unable to open a pipe to ps: $!");
 }
 
 my $children  = 0;
 my $processes = 0;
 while (<PS>) {
-    chomp;
-    $processes++;
-    my ( $user, $pid, $ppid, $command ) = split (/\s+/);
-    if ( ( $user eq "root" && $ppid != 1 ) || ( $user ne "root" ) ) {
-        $children++;
-    }
+        chomp;
+        $processes++;
+        my ($user, $pid, $ppid, $command) = split (/\s+/);
+        if (($user eq "root" && $ppid != 1) || ($user ne "root")) {
+                $children++;
+        }
 }
 
 close(PS);
 
 if ($children) {
 
-    # We have some children.  We cannot run recovery.
-    error( 1,
-"Clients are still connected.  Database recovery will not be run at this time."
-    );
-    end();
+        # We have some children.  We cannot run recovery.
+        error(1,
+                "Clients are still connected.  Database recovery will not be run at this time."
+        );
+        end();
 }
 
 if ($processes) {
 
-    # Shutdown the running afpds.
-    $START_NETATALK = 1;
-    error( 0, "Shutting down afpd process..." );
-    error( 2, "Failed to shutdown afpd" )
-      if system( $STOP_CMD . ">/dev/null 2>&1" );
+        # Shutdown the running afpds.
+        $START_NETATALK = 1;
+        error(0, "Shutting down afpd process...");
+        error(2, "Failed to shutdown afpd")
+            if system($STOP_CMD . ">/dev/null 2>&1");
 }
 
 # Now, we parse AppleVolumes.default to get a list of volumes to run recovery
 # on.
-unless ( open( VOLS, $APPLE_VOLUMES_FILE ) ) {
-    error( 2, "Unable to open $APPLE_VOLUMES_FILE: $!" );
+unless (open(VOLS, $APPLE_VOLUMES_FILE)) {
+        error(2, "Unable to open $APPLE_VOLUMES_FILE: $!");
 }
+flock(VOLS, LOCK_SH);
 
 my @paths = ();
 while (<VOLS>) {
-    s/#.*//;
-    s/^\s+//;
-    s/\s+$//;
-    next unless length;
-    my ( $path, @options ) = split ( /\s+/, $_ );
-    next if ( $path =~ /^~/ );
-    my $option = "";
-    foreach $option (@options) {
+        s/#.*//;
+        s/^\s+//;
+        s/\s+$//;
+        next unless length;
+        my ($path, @options) = split (/\s+/, $_);
+        next if ($path =~ /^~/);
+        my $option = "";
+        foreach $option (@options) {
 
-        # We need to check for the dbpath option on each volume.  If that
-        # option is present, we should use its path instead of the actual
-        # volume path.
-        if ( $option =~ /^dbpath:/ ) {
-            push @paths, $';
+                # We need to check for the dbpath option on each volume.  If 
+                # that option is present, we should use its path instead of 
+                # the actual volume path.
+                if ($option =~ /^dbpath:/) {
+                        push @paths, $';
+                } else {
+                        push @paths, $path;
+                }
         }
-        else {
-            push @paths, $path;
-        }
-    }
 }
 
 close(VOLS);
 
 my $path = "";
 foreach $path (@paths) {
-    my $dbpath = $path . "/.AppleDB";
-    if ( !-d $dbpath ) {
-        error( 1, "Database environment $dbpath does not exist" );
-        next;
-    }
-    if ($extra_safe) {
-        error( 0,
-            "Checking database environment $dbpath for open connections..." );
-        unless ( open( STAT, $DB_STAT . " -h $dbpath -e |" ) ) {
-            error( 1, "Failed to open a pipe to $DB_STAT: $!" );
-            next;
+        my $dbpath = $path . "/.AppleDB";
+        if (!-d $dbpath) {
+                error(1, "Database environment $dbpath does not exist");
+                next;
         }
-
-        # Now, check each DB environment for any open connections (db_stat calls 
-        # them as references).  If a volume has no references, we can do
-        # recovery on it.  Only check this option if the user wants to play 
-        # things extra safe.
-        my $connections = 0;
-        while (<STAT>) {
-            chomp;
-            s/\s//g;
-            if (/References\.$/) {
-                $connections = $`;
-                last;
-            }
-        }
-
-        close(STAT);
-
-        # Print out two different skip messages.  This is just for anality.
-        if ( $connections == 1 ) {
-            error( 1, "Skipping $dbpath since it has one active connection" );
-            next;
-        }
-
-        if ( $connections > 0 ) {
-            error( 1,
-                "Skipping $dbpath since it has $connections active connections"
-            );
-            next;
-        }
-    }
-
-    # Run the db_recover command on the environment.
-    error( 0, "Running db_recover on $dbpath" );
-    if ( system( $DB_RECOVER . " -h $dbpath >/dev/null 2>&1" ) ) {
-        error( 1, "Failed to run db_recover on $dbpath" );
-        next;
-    }
-
-    if ($do_verify) {
-        error( 0, "Verifying $dbpath/cnid.db" );
-        if ( system( $DB_VERIFY . " -q -h $dbpath cnid.db" ) ) {
-            error( 1, "Verification of $dbpath/cnid.db failed" );
-            next;
-        }
-
-        error( 0, "Verifying $dbpath/devino.db" );
-        if ( system( $DB_VERIFY . " -q -h $dbpath devino.db" ) ) {
-            error( 1, "Verification of $dbpath/devino.db failed" );
-            next;
-        }
-
-        error( 0, "Verifying $dbpath/didname.db" );
-        if ( system( $DB_VERIFY . " -q -h $dbpath didname.db" ) ) {
-            error( 1, "Verification of $dbpath/didname.db failed" );
-            next;
-        }
-    }
-
-    if ($remove_logs) {
-
-        # Remove the log files if told to do so.
-        unless ( opendir( DIR, $dbpath ) ) {
-            error( 1, "Failed to open $dbpath for browsing: $!" );
-            next;
-        }
-
-        my $file = "";
-        while ( defined( $file = readdir(DIR) ) ) {
-            if ( $file =~ /^log\.\d+$/ ) {
-                error( 0, "Removing $dbpath/$file" );
-                unless ( unlink( $dbpath . "/" . $file ) ) {
-                    error( 1, "Failed to remove $dbpath/$file: $!" );
-                    next;
+        if ($extra_safe) {
+                error(0,
+                        "Checking database environment $dbpath for open connections..."
+                );
+                unless (open(STAT, $DB_STAT . " -h $dbpath -e |")) {
+                        error(1, "Failed to open a pipe to $DB_STAT: $!");
+                        next;
                 }
-            }
+
+                # Now, check each DB environment for any open connections 
+		# (db_stat calls them as references).  If a volume has no 
+		# references, we can do recovery on it.  Only check this option
+		# if the user wants to play things extra safe.
+                my $connections = 0;
+                while (<STAT>) {
+                        chomp;
+                        s/\s//g;
+                        if (/References\.$/) {
+                                $connections = $`;
+                                last;
+                        }
+                }
+
+                close(STAT);
+
+                # Print out two different skip messages.  This is just for 
+		# anality.
+                if ($connections == 1) {
+                        error(1,
+                                "Skipping $dbpath since it has one active connection"
+                        );
+                        next;
+                }
+
+                if ($connections > 0) {
+                        error(1,
+                                "Skipping $dbpath since it has $connections active connections"
+                        );
+                        next;
+                }
         }
 
-        closedir(DIR);
-    }
+        # Run the db_recover command on the environment.
+        error(0, "Running db_recover on $dbpath");
+        if (system($DB_RECOVER . " -h $dbpath >/dev/null 2>&1")) {
+                error(1, "Failed to run db_recover on $dbpath");
+                next;
+        }
+
+        if ($do_verify) {
+                error(0, "Verifying $dbpath/cnid.db");
+                if (system($DB_VERIFY . " -q -h $dbpath cnid.db")) {
+                        error(1, "Verification of $dbpath/cnid.db failed");
+                        next;
+                }
+
+                error(0, "Verifying $dbpath/devino.db");
+                if (system($DB_VERIFY . " -q -h $dbpath devino.db")) {
+                        error(1, "Verification of $dbpath/devino.db failed");
+                        next;
+                }
+
+                error(0, "Verifying $dbpath/didname.db");
+                if (system($DB_VERIFY . " -q -h $dbpath didname.db")) {
+                        error(1, "Verification of $dbpath/didname.db failed");
+                        next;
+                }
+                if (-f "$dbpath/mangle.db") {
+                        error(0, "Verifying $dbpath/mangle.db");
+                        if (system($DB_VERIFY . " -q -h $dbpath mangle.db")) {
+                                error(1,
+                                        "Verification of $dbpath/mangle.db failed"
+                                );
+                                next;
+                        }
+                }
+        }
+
+        if ($remove_logs) {
+
+                # Remove the log files if told to do so.
+                unless (opendir(DIR, $dbpath)) {
+                        error(1, "Failed to open $dbpath for browsing: $!");
+                        next;
+                }
+
+                my $file = "";
+                while (defined($file = readdir(DIR))) {
+                        if ($file =~ /^log\.\d+$/) {
+                                error(0, "Removing $dbpath/$file");
+                                unless (unlink($dbpath . "/" . $file)) {
+                                        error(1,
+                                                "Failed to remove $dbpath/$file: $!"
+                                        );
+                                        next;
+                                }
+                        }
+                }
+
+                closedir(DIR);
+        }
 
 }
 
 end();
 
 sub tmpdir {
-    my $tmpdir;
+        my $tmpdir;
 
-    foreach ( $ENV{TMPDIR}, "/tmp" ) {
-        next unless defined && -d && -w _;
-        $tmpdir = $_;
-        last;
-    }
-    $tmpdir = '' unless defined $tmpdir;
-    return $tmpdir;
+        foreach ($ENV{TMPDIR}, "/tmp") {
+                next unless defined && -d && -w _;
+                $tmpdir = $_;
+                last;
+        }
+        $tmpdir = '' unless defined $tmpdir;
+        return $tmpdir;
 }
 
 sub error {
-    my ( $code, $msg ) = @_;
+        my ($code, $msg) = @_;
 
-    my $err_types = {
-        0 => "INFO",
-        1 => "WARNING",
-        2 => "ERROR",
-    };
+        my $err_types = {
+                0 => "INFO",
+                1 => "WARNING",
+                2 => "ERROR",
+        };
 
-    print $err_types->{$code} . ": " . $msg . "\n";
+        print $err_types->{$code} . ": " . $msg . "\n";
 
-    end() if ( $code == 2 );
+        end() if ($code == 2);
 }
 
 sub end {
-    if ($START_NETATALK) {
-        error( 0, "Restarting Netatalk" );
-        if ( system( $START_CMD . " >/dev/null 2>&1" ) ) {
-            print "ERROR: Failed to restart Netatalk\n";
+        if ($START_NETATALK) {
+                error(0, "Restarting Netatalk");
+                if (system($START_CMD . " >/dev/null 2>&1")) {
+                        print "ERROR: Failed to restart Netatalk\n";
+                }
         }
-    }
-    if ($HOLDING_LOCK) {
-        close(LOCK);
-        unlink($LOCK_FILE);
-    }
-    print "\nRun of CNID DB Maintenance script ended at "
-      . scalar(localtime) . ".\n";
-    exit(0);
+        if ($HOLDING_LOCK) {
+                close(LOCK);
+                unlink($LOCK_FILE);
+        }
+        print "\nRun of CNID DB Maintenance script ended at "
+            . scalar(localtime) . ".\n";
+        exit(0);
 }
 
 sub version {
-    print "$0 version $VERSION\n";
+        print "$0 version $VERSION\n";
 }
 
 sub help {
-    print "usage: $0 [-hlsvV]\n";
-    print "\t-h   view this message\n";
-    print "\t-l   remove transaction logs after running recovery\n";
-    print
-      "\t-s   be extra safe in verifying there are no open DB connections\n";
-    print "\t-v   print version and exit\n";
-    print "\t-V   run a verification on all database files after recovery\n";
+        print "usage: $0 [-hlsvV]\n";
+        print "\t-h   view this message\n";
+        print "\t-l   remove transaction logs after running recovery\n";
+        print
+            "\t-s   be extra safe in verifying there are no open DB connections\n";
+        print "\t-v   print version and exit\n";
+        print
+            "\t-V   run a verification on all database files after recovery\n";
 }
