@@ -51,7 +51,7 @@ endif
 
 if USE_SUSE
 
-sysvdir	= /etc/rc.d
+sysvdir	= /etc/init.d
 sysv_SCRIPTS = atalk
 
 atalk: rc.atalk.suse
