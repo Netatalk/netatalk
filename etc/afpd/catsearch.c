@@ -257,7 +257,7 @@ static struct adouble *adl_lkup(struct path *path)
 		adp = &ad;
 	} 
 
-    	if ( ad_open( path->u_name, ADFLAGS_HF | (isdir)?ADFLAGS_DIR:0, O_RDONLY, 0, adp) < 0 ) {
+    	if ( ad_open( path->u_name, ADFLAGS_HF | ((isdir)?ADFLAGS_DIR:0), O_RDONLY, 0, adp) < 0 ) {
         	return NULL;
     	} 
 	return adp;	
@@ -684,6 +684,7 @@ int catsearch_afp(AFPObj *obj, char *ibuf, int ibuflen,
 {
     struct vol *vol;
     u_int16_t   vid;
+    u_int16_t   spec_len;
     u_int32_t   rmatches, reserved;
     u_int32_t	catpos[4];
     u_int32_t   pdid = 0;
@@ -729,32 +730,29 @@ int catsearch_afp(AFPObj *obj, char *ibuf, int ibuflen,
 	    return AFPERR_BITMAP;
     }
 
-    if ( ext)
-	    ibuf++;
+    if ( ext) {
+        memcpy(&spec_len, ibuf, sizeof(spec_len));
+        spec_len = ntohs(spec_len);
+    }
+    else {
+        spec_len = *(unsigned char*)ibuf;
+    }
 
     /* Parse file specifications */
     spec1 = ibuf;
-    spec2 = ibuf + ibuf[0] + 2;
-    
-    if (ext)
-    {
-	spec1++; bspec1 = spec1;
-    	spec2++; bspec2 = spec2;
-    }
-    else
-    {
-	spec1 += 2; bspec1 = spec1;
-    	spec2 += 2; bspec2 = spec2;
-    }
+    spec2 = ibuf + spec_len + 2;
 
+    spec1 += 2; 
+    spec2 += 2; 
+
+    bspec1 = spec1;
+    bspec2 = spec2;
     /* File attribute bits... */
     if (c1.rbitmap & (1 << FILPBIT_ATTR)) {
-	    memcpy(&c1.attr, ibuf, sizeof(c1.attr));
+	    memcpy(&c1.attr, spec1, sizeof(c1.attr));
 	    spec1 += sizeof(c1.attr);
-	    c1.attr = ntohs(c1.attr);
-	    memcpy(&c2.attr, ibuf, sizeof(c2.attr));
+	    memcpy(&c2.attr, spec2, sizeof(c2.attr));
 	    spec2 += sizeof(c1.attr);
-	    c2.attr = ntohs(c2.attr);
     }
 
     /* Parent DID */
@@ -797,7 +795,7 @@ int catsearch_afp(AFPObj *obj, char *ibuf, int ibuflen,
     }
 
     /* Finder info */
-    if (c1.rbitmap * (1 << FILPBIT_FINFO)) {
+    if (c1.rbitmap & (1 << FILPBIT_FINFO)) {
 	    memcpy(&c1.finfo, spec1, sizeof(c1.finfo));
 	    spec1 += sizeof(c1.finfo);
 	    memcpy(&c2.finfo, spec2, sizeof(c2.finfo));
