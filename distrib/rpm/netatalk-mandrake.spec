@@ -1,6 +1,6 @@
 #################################################### VERSIONING INFORMATION
 %define name    netatalk
-%define version 1.5pre3
+%define version 1.5pre5
 %define release 1mdk
 
 ################################################# BASIC PACKAGE INFORMATION
@@ -43,6 +43,11 @@ This package is required for developing appletalk-based applications.
 
 %changelog
 
+* Wed Mar 07 2000 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
+  - v1.5pre5-1mdk
+  - pre-release 5 for sourceforge
+  - sync with redhat package
+
 * Mon Dec 18 2000 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
   - v1.5pre3-1mdk
   - pre-release 3 for sourceforge
@@ -57,7 +62,7 @@ This package is required for developing appletalk-based applications.
   - pre-release 1 for sourceforge
 
 %prep
-%setup -q -n netatalk-release/
+%setup -q -n netatalk-%{version}/
 
 %build
 ./autogen.sh
@@ -78,36 +83,10 @@ make all
 mkdir -p $RPM_BUILD_ROOT/usr
 make DESTDIR=$RPM_BUILD_ROOT install-strip
 
-# HACK HACK HACK HACK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# manually install headers
-mkdir -p $RPM_BUILD_ROOT/usr/include/{netatalk,atalk}/
-install -m 644 -o 0 -g 0  include/atalk/*.h \
-  $RPM_BUILD_ROOT/usr/include/atalk/
-install -m 644 -o 0 -g 0  sys/netatalk/*.h \
-  $RPM_BUILD_ROOT/usr/include/netatalk/
-
 # bzip2 man pages
-#for i in 1 3 4 5 8; do
-#	bzip2 -v $RPM_BUILD_ROOT/usr/man/man$i/*.$i
-#done
-
-# install /etc/rc.d/init.d/atalk
-# (depreciated in favor of --enable-redhat)
-#mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d/
-#install -m 755 -o 0 -g 0  distrib/initscripts/rc.atalk.redhat \
-#  $RPM_BUILD_ROOT/etc/rc.d/init.d/atalk
-
-# make NLS
-( \
-  mkdir -p $RPM_BUILD_ROOT/etc/atalk/nls/; \
-  cd $RPM_BUILD_ROOT/etc/atalk/nls;        \
-  $RPM_BUILD_ROOT/usr/bin/makecode \
-)
-
-# install pam file
-mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
-install -m 644 -o 0 -g 0  config/netatalk.pamd \
-  $RPM_BUILD_ROOT/etc/pam.d/netatalk
+for i in 1 3 4 5 8; do
+	bzip2 -v $RPM_BUILD_ROOT/usr/man/man$i/*.$i
+done
 
 %post
 ### RUN CHKCONFIG ###
@@ -169,17 +148,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS BUGS CHANGES CONTRIBUTORS COPYRIGHT ChangeLog NEWS README* TODO
-%doc VERSION doc/
+%doc [A-Z][A-Z]* ChangeLog doc/[A-Z][A-Z]*
+%dir /etc/atalk
 %config /etc/atalk/Apple*
 %config /etc/atalk/*.conf
 %config /etc/pam.d/netatalk
+%dir /etc/atalk/nls
 /etc/atalk/nls/*
+%dir /etc/atalk/uams
 /etc/atalk/uams/*.so
 /etc/rc.d/init.d/atalk
-%dir /etc/atalk
-%dir /etc/atalk/nls
-%dir /etc/atalk/uams
 %{prefix}/bin/*
 %{prefix}/sbin/*
 %{prefix}/man/man*/*

@@ -1,4 +1,11 @@
-($Id: ChangeLog,v 1.17 2001-03-07 15:36:54 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.18 2001-03-07 20:39:24 rufustfirefly Exp $)
+
+2001-03-07 15:30 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	Released 1.5pre5
+
+	* distrib/rpm/netatalk-redhat.spec, distrib/rpm/netatalk-mandrake.spec:
+	updated for 1.5pre5 release
 
 2001-03-07 10:34 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
 

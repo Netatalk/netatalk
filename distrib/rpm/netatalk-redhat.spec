@@ -1,7 +1,7 @@
 #################################################### VERSIONING INFORMATION
 %define name    netatalk
 %define version 1.5pre5
-%define release 0
+%define release 1
 
 ################################################# BASIC PACKAGE INFORMATION
 Summary: Appletalk and Appleshare/IP services for Linux
@@ -42,6 +42,10 @@ Ultrix 4. It also supports AFP 2.1 and 2.2 (Appleshare IP).
 This package is required for developing appletalk-based applications.
 
 %changelog
+
+* Wed Mar 07 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
+  - v1.5pre5-1
+  - pre-release 5 for sourceforge
 
 * Fri Feb 23 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
   - v1.5pre5-0
@@ -158,9 +162,8 @@ rm -rf $RPM_BUILD_DIR/%{name}/
 
 %files
 %defattr(-,root,root)
-%doc AUTHORS BUGS CHANGES CONTRIBUTORS COPYRIGHT ChangeLog NEWS README* TODO
-%doc VERSION doc/
-%config /etc/atalk/Apple*
+%doc doc/[A-L,N-Z]*
+wconfig /etc/atalk/Apple*
 %config /etc/atalk/*.conf
 %config /etc/pam.d/netatalk
 /etc/atalk/nls/*
