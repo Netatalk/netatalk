@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.75 2003-01-21 09:58:58 didg Exp $
+ * $Id: file.c,v 1.76 2003-01-21 10:09:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -805,24 +805,25 @@ int setfilparams(struct vol *vol,
                Appletalk.  Always set the creator as "pdos".  Changes
                from original by Marsha Jackson. */
         case FILPBIT_PDINFO :
-            achar = *buf;
-            buf += 2;
-            /* Keep special case to support crlf translations */
-            if ((unsigned int) achar == 0x04) {
-	    	fdType = (u_char *)"TEXT";
-		buf += 2;
-            } else {
-            	xyy[0] = ( u_char ) 'p';
-            	xyy[1] = achar;
-            	xyy[3] = *buf++;
-            	xyy[2] = *buf++;
-            	fdType = xyy;
-	    }
-            memcpy(ad_entry( adp, ADEID_FINDERI ), fdType, 4 );
-            memcpy(ad_entry( adp, ADEID_FINDERI ) + 4, "pdos", 4 );
-            break;
-
-
+            if (afp_version < 30) { /* else it's UTF8 name */
+                achar = *buf;
+                buf += 2;
+                /* Keep special case to support crlf translations */
+                if ((unsigned int) achar == 0x04) {
+	       	    fdType = (u_char *)"TEXT";
+		    buf += 2;
+                } else {
+            	    xyy[0] = ( u_char ) 'p';
+            	    xyy[1] = achar;
+            	    xyy[3] = *buf++;
+            	    xyy[2] = *buf++;
+            	    fdType = xyy;
+	        }
+                memcpy(ad_entry( adp, ADEID_FINDERI ), fdType, 4 );
+                memcpy(ad_entry( adp, ADEID_FINDERI ) + 4, "pdos", 4 );
+                break;
+            }
+            /* fallthrough */
         default :
             err = AFPERR_BITMAP;
             goto setfilparam_done;
