@@ -1,3 +1,9 @@
+netatalk (1.5pre6-2cvs) unstable; urgency=medium
+
+  * Non-DSFG free code was removed. Copyright notice was changed accordingly.
+
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Sat,  5 May 2001 18:13:50 +0200
+
 netatalk (1.5pre6-2) unstable; urgency=low
 
   * This version will hopefully clean up the version mess, I created.
