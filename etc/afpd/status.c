@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.9 2002-12-07 02:55:00 rlewczuk Exp $
+ * $Id: status.c,v 1.10 2003-03-11 09:35:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -230,8 +230,8 @@ static int status_netaddress(char *data, const int servoffset,
 
     /* handle DNS names */
     if (fqdn) {
-        int len = strlen(fqdn) + 2;
-        *data++ = len;
+        int len = strlen(fqdn);
+        *data++ = len +2;
         *data++ = 0x04;
         memcpy(data, fqdn, len);
         data += len;
