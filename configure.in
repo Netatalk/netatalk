@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.188 2003-06-11 07:18:04 srittau Exp $
+dnl $Id: configure.in,v 1.189 2003-06-11 21:45:43 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -509,7 +509,6 @@ if test x"$this_os" = "xlinux"; then
 	AC_MSG_RESULT([ * Linux specific configuration])
 
 	dnl ----- check if we need the quotactl wrapper
-	AC_CHECK_HEADERS(sys/quota.h linux/quota.h)
 	AC_CHECK_FUNC(quotactl,,
 		AC_DEFINE(NEED_QUOTACTL_WRAPPER, 1, [Define if the quotactl wrapper is needed])
 		AC_MSG_RESULT([enabling quotactl wrapper])
