@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.31 2002-01-17 16:19:07 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.32 2002-01-18 04:53:48 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -92,10 +92,10 @@
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
 #else /* DB_VERSION_MINOR < 1 */
-#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)
 /*#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN)*/
+DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)*/
+#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
+DB_INIT_LOG | DB_INIT_TXN)
 #endif /* DB_VERSION_MINOR */
 
 /* Let's try and use the youngest lock detector if present.
@@ -310,11 +310,13 @@ void *cnid_open(const char *dir) {
     }
 
 #if DB_VERSION_MINOR > 1
+#if 0
     /* Take care of setting the DB_TXN_NOSYNC flag in db3 > 3.1.x. */
     if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: set_flags: %s", db_strerror(rc));
         goto fail_lock;
     }
+#endif
 #endif /* DB_VERSION_MINOR > 1 */
 
     /* Open the database environment. */
