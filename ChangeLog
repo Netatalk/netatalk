@@ -1,3 +1,8 @@
+2001-12-10  joe c   <marcus@marcuscom.com>
+	* bin/cnid/cnid_didname_verify,c: Add a utility to verify the consistency
+	of didname.db.  Using the stock db_verify utility will fail as the sort
+	routine is unknown.
+
 2001-12-07  joe c   <marcus@marcuscom.com>
 	* libatalk/cnid/cnid_open.c: Re-enable synchronous transaction support
 	to try improve performance.
