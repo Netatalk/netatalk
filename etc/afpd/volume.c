@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.46 2003-01-12 14:40:04 didg Exp $
+ * $Id: volume.c,v 1.47 2003-01-31 17:38:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -943,7 +943,7 @@ int		*buflen;
                   0666, &ad) < 0 ) {
         isad = 0;
 
-    } else if (ad_getoflags( &ad, ADFLAGS_HF ) & O_CREAT) {
+    } else if (ad_get_HF_flags( &ad ) & O_CREAT) {
         slash = strrchr( vol->v_path, '/' );
         if(slash)
             slash++;

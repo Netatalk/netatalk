@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.47 2003-01-31 11:26:35 didg Exp $
+ * $Id: fork.c,v 1.48 2003-01-31 17:38:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -191,7 +191,6 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
     int writeset;
     int denyreadset;
     int denywriteset;
-    int mode;    
 
     if (! (access & (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD))) {
         return setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_NONE);
@@ -269,7 +268,7 @@ int		ibuflen, *rbuflen;
     struct dir		*dir;
     struct ofork	*ofork, *opened;
     struct adouble      *adsame = NULL;
-    int			buflen, ret, adflags, eid, lockop;
+    int			buflen, ret, adflags, eid;
     u_int32_t           did;
     u_int16_t		vid, bitmap, access, ofrefnum, attrbits = 0;
     char		fork, *path, *upath;
@@ -449,8 +448,7 @@ int		ibuflen, *rbuflen;
         }
     }
 
-    if ((adflags & ADFLAGS_HF) &&
-            (ad_getoflags( ofork->of_ad, ADFLAGS_HF ) & O_CREAT)) {
+    if ((adflags & ADFLAGS_HF) && (ad_get_HF_flags( ofork->of_ad) & O_CREAT)) {
         ad_setentrylen( ofork->of_ad, ADEID_NAME, strlen( path ));
         memcpy(ad_entry( ofork->of_ad, ADEID_NAME ), path,
                ad_getentrylen( ofork->of_ad, ADEID_NAME ));

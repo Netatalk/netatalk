@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.59 2003-01-26 10:42:40 didg Exp $
+ * $Id: directory.c,v 1.60 2003-01-31 17:38:00 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1470,7 +1470,7 @@ int setdirparams(const struct vol *vol,
          * Check to see if a create was necessary. If it was, we'll want
          * to set our name, etc.
          */
-        if ( ad_getoflags( &ad, ADFLAGS_HF ) & O_CREAT ) {
+        if ( ad_get_HF_flags( &ad ) & O_CREAT ) {
             ad_setentrylen( &ad, ADEID_NAME, strlen( curdir->d_m_name ));
             memcpy( ad_entry( &ad, ADEID_NAME ), curdir->d_m_name,
                     ad_getentrylen( &ad, ADEID_NAME ));

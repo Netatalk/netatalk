@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.80 2003-01-30 17:32:46 didg Exp $
+ * $Id: file.c,v 1.81 2003-01-31 17:38:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -733,7 +733,7 @@ int setfilparams(struct vol *vol,
             return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
         }
         isad = 0;
-    } else if ((ad_getoflags( adp, ADFLAGS_HF ) & O_CREAT) ) {
+    } else if ((ad_get_HF_flags( adp ) & O_CREAT) ) {
         ad_setentrylen( adp, ADEID_NAME, strlen( path->m_name ));
         memcpy(ad_entry( adp, ADEID_NAME ), path->m_name,
                ad_getentrylen( adp, ADEID_NAME ));
@@ -1359,46 +1359,27 @@ int         checkAttrib;
     LOG(log_info, logtype_afpd, "begin deletefile:");
 #endif /* DEBUG */
 
+    /* try to open both at once */
+    adflags = ADFLAGS_DF|ADFLAGS_HF;
     while(1) {
-        /*
-         * If can't open read/write then try again read-only.  If it's open
-         * read-only, we must do a read lock instead of a write lock.
-         */
-        /* try to open both at once */
-        adflags = ADFLAGS_DF|ADFLAGS_HF;
         memset(&ad, 0, sizeof(ad));
         if ( ad_open( file, adflags, openmode, 0, &ad ) < 0 ) {
             switch (errno) {
             case ENOENT:
-                adflags = ADFLAGS_DF;
+                if (adflags == ADFLAGS_DF)
+                    return AFPERR_NOOBJ;
+                   
                 /* that failed. now try to open just the data fork */
-                memset(&ad, 0, sizeof(ad));
-                if ( ad_open( file, adflags, openmode, 0, &ad ) < 0 ) {
-                    switch (errno) {
-                    case ENOENT:
-                        return AFPERR_NOOBJ;
-                    case EACCES:
-                        if(openmode == O_RDWR) {
-                            openmode = O_RDONLY;
-                            continue;
-                        } else {
-                            return AFPERR_ACCESS;
-                        }
-                    case EROFS:
-                        return AFPERR_VLOCK;
-                    default:
-                        return AFPERR_PARAM;
-                    }
-                }
-                break;
+                adflags = ADFLAGS_DF;
+                continue;
 
             case EACCES:
+                /* If can't open read/write then try again read-only. */
                 if(openmode == O_RDWR) {
                     openmode = O_RDONLY;
                     continue;
-                } else {
-                    return AFPERR_ACCESS;
-                }
+                } 
+                return AFPERR_ACCESS;
             case EROFS:
                 return AFPERR_VLOCK;
             default:
@@ -1443,10 +1424,7 @@ int         checkAttrib;
         err = netatalk_unlink( file );
     }
 
-    if (adflags & ADFLAGS_HF)
-        ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR |ADLOCK_FILELOCK, 0, 0, 0);
-    ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0, 0);
-    ad_close( &ad, adflags );
+    ad_close( &ad, adflags );  /* ad_close removes locks if any */
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end deletefile:");

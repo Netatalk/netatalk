@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.18 2003-01-31 11:26:36 didg Exp $
+ * $Id: adouble.h,v 1.19 2003-01-31 17:38:02 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -313,6 +313,8 @@ struct adouble {
 				 (ad)->ad_eid[(eid)].ade_off)     
 #define ad_getoflags(ad,adf)	(((adf)&ADFLAGS_HF) ? \
 	(ad)->ad_hf.adf_flags : (ad)->ad_df.adf_flags)
+
+#define ad_get_HF_flags(ad)	((ad)->ad_hf.adf_flags)
 
 /* ad_flush.c */
 extern void ad_rebuild_header __P((struct adouble *));
