@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.12 2002-04-20 19:05:12 rlewczuk Exp $
+ * $Id: ofork.c,v 1.13 2002-04-22 07:46:00 rlewczuk Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -112,8 +112,11 @@ const char *oldpath, *newpath;
                 (strcmp(of->of_name, oldpath) == 0)) {
             of_unhash(of);
             strncpy( of->of_name, newpath, of->of_namelen);
-            of->of_d_prev->of_d_next = of->of_d_prev;
-            of->of_d_next->of_d_prev = of->of_d_next;
+            of->of_d_prev->of_d_next = of->of_d_next;
+            of->of_d_next->of_d_prev = of->of_d_prev;
+            if (of->of_dir->d_ofork == of) {
+                of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
+            }	    
             of->of_dir = newdir;
             if (!(d_ofork = newdir->d_ofork)) {
                 newdir->d_ofork = of;
