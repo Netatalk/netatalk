@@ -12,7 +12,7 @@ Recommends: lsof, libpam-cracklib
 Suggests: tetex-base, quota
 Conflicts: netatalk-asun, libatalk14g, libatalk1
 Replaces: netatalk-asun, libatalk14, libatalk1
-Description: Appletalk user binaries
+Description: AppleTalk user binaries
  Netatalk is an implementation of the AppleTalk Protocol Suite for
  BSD-derived systems.  The current release contains support for
  EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and
@@ -23,7 +23,7 @@ Architecture: any
 Depends: netatalk (>= 1.5)
 Conflicts: netatalk (<< 1.5pre7-2), libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
 Replaces: netatalk (<< 1.5pre7-2), libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
-Description: Appletalk library and development files
+Description: AppleTalk library and development files
  Netatalk is an implementation of the AppleTalk Protocol Suite for
  BSD-derived systems.  The current release contains support for
  EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and

@@ -20,7 +20,7 @@ afpd\[.*\]: session from [\.:[:digit:]]+ on [\.:[:digit:]]+
 afpd\[.*\]: uams_dhx_pam.c :PAM: PAM (Auth OK!|Success -- Success)
 afpd\[.*\]: using codepage directory: /etc/netatalk/nls/maccode\.[\.[:alnum:]-]+
 atalkd\[.*\]: .*: Network is unreachable
-atalkd\[.*\]: zip gnireply from [\.[:digit:] \(.* [[:digit:]]\)
+atalkd\[.*\]: zip gnireply from [\.[:digit:]]+ \(.* [[:digit:]]\)
 atalkd\[.*\]: zip ignoring gnireply
-papd\[.*\]: child [[:digit:]]+ for ".+" from [\.[:digit:]+]]
+papd\[.*\]: child [[:digit:]]+ for ".+" from [\.[:digit:]]+
 papd\[.*\]: child [[:digit:]]+ done

@@ -5,10 +5,40 @@ netatalk (1.5pre8cvs-0) unstable; urgency=low
   * Upstream does now have manpages for apple_cp(1), apple_mv(1), and
     apple_rm(1), written by Lance Levsen <l.levsen@printwest.com>.
     Removed the links to undocumented(7).
+
+ -- Sebastian Rittau <srittau@debian.org>  Sun, 18 Nov 2001 15:14:40 +0100
+
+netatalk (1.5pre8-5) unstable; urgency=low
+
+  * Appletalk -> AppleTalk in package short descriptions. Thanks to Matt
+    Zimmerman and his spell checking effort for pointing this out.
+  * Really install README.Debian this time.
   * Removed afppasswd and afppasswd(1) from Debian distribution, since
     they are of no use when SSL support is not compiled in.
 
- -- Sebastian Rittau <srittau@debian.org>  Thu, 25 Oct 2001 23:00:02 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Sun, 18 Nov 2001 15:13:53 +0100
+
+netatalk (1.5pre8-4) unstable; urgency=low
+
+  * Fixed uams_pam.so. (Closes: #118889)
+  * Explain why we don't link against OpenSSL in README.Debian.
+  * Modified debian/rules so that setting a variable called USE_SSL to
+    "yes" enables SSL support. This should ease the local compilation of
+    SSL-enabled netatalk packages.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sat, 10 Nov 2001 19:05:12 +0100
+
+netatalk (1.5pre8-3) unstable; urgency=low
+
+  * Corrected upstream version number (pre8 instead of pre7). This corrects
+    afpd -v and similar commands.
+  * Raised default number of allowed afpd clients. Suggestion by Jonas
+    Smedegaard.
+  * Small logcheck fix by Jonas.
+  * Removed ATALK_BACKGROUND description from netatalk.conf(5).
+  * Removed obsolete --with-config-dir configure option.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sat, 27 Oct 2001 15:36:30 +0200
 
 netatalk (1.5pre8-2) unstable; urgency=low
 

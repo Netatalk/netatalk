@@ -1,5 +1,8 @@
 #! /usr/bin/make -f
 
+# Uncomment the following line to enable OpenSSL support. (If it's installed.)
+#USE_SSL=yes
+
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
@@ -16,15 +19,20 @@ endif
 export CFLAGS
 export LDFLAGS
 
+CONFIGURE_FLAGS = \
+	--with-shadow --enable-fhs --sysconfdir=/etc/netatalk		\
+	--with-tcp-wrappers --mandir=/usr/share/man --prefix=/usr	\
+	--enable-timelord --with-did=last --enable-overwrite		\
+	--with-cracklib=/var/cache/cracklib/cracklib_dict
+ifneq "x$(USE_SSL)" "xyes"
+CONFIGURE_FLAGS += --without-ssl-dir
+endif
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	./configure --with-shadow --enable-fhs \
-		--sysconfdir=/etc/netatalk --with-config-dir=/etc/netatalk \
-	        --with-tcp-wrappers --mandir=/usr/share/man --prefix=/usr \
-	        --enable-timelord --with-did=last --without-ssl-dir \
-		--with-cracklib=/var/cache/cracklib/cracklib_dict \
-		--enable-overwrite
+
+	./configure $(CONFIGURE_FLAGS)
 
 	touch configure-stamp
 

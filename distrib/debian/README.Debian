@@ -1,0 +1,42 @@
+This is the pre-packaged Debian version of the Netatalk protocol suite.
+To find out more about netatalk, visit http://netatalk.sourceforge.net/
+
+This package was originally put together by Klee Dienes <klee@debian.org>
+and was later maintained by late Joel Klecker <espy@debian.org> and
+David Huggins-Daines <dhd@debian.org>. It was repackaged by its current
+maintainer Sebastian Rittau <srittau@debian.org>.
+
+                                 OpenSSL
+                                 =======
+
+Netatalk supports OpenSSL to provide a secure means for authentication.
+Unfortunately it's currently not possible for Debian to distribute
+Netatalk with SSL support enabled, since OpenSSL's license is incompatible
+with the GPL used by Netatalk.
+
+But it's possible to build Netatalk with SSL support locally:
+
+1. Make sure that the package libssl-dev is installed:
+
+  apt-get install libssl-dev
+
+2. Make sure all other build dependencies are fulfilled:
+
+  apt-get build-dep netatalk
+
+3. Download the Netatalk sources:
+
+  apt-get source netatalk
+
+4. Edit the rules file to enable SSL compilation:
+
+  cd netatalk-1.5pre8 && \
+  cp debian/rules debian/rules.bak && \
+  sed -e 's/^#USE_SSL=yes/USE_SSL=yes/' debian/rules.bak >debian/rules
+
+  (You may need to substitute the directory name netatalk-1.5pre8 with the
+  proper one.)
+
+5. Build the package:
+
+  dpkg-buildpackage -rfakeroot
