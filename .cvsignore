@@ -2,6 +2,7 @@ Makefile
 Makefile.in
 stamp-h
 stamp-h.in
+confdefs.h
 config.*
 configure
 aclocal.m4
