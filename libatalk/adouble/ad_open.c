@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.27 2003-02-16 12:35:05 didg Exp $
+ * $Id: ad_open.c,v 1.28 2003-02-17 06:26:53 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -314,7 +314,8 @@ mode_t ad_hf_mode (mode_t mode)
 static void parse_entries(struct adouble *ad, char *buf,
 				    u_int16_t nentries)
 {
-    u_int32_t		eid, len, off;
+    u_int32_t	eid, len, off;
+    int         warning = 0;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
@@ -331,7 +332,8 @@ static void parse_entries(struct adouble *ad, char *buf,
 	if ( 0 < eid && eid < ADEID_MAX ) {
 	    ad->ad_eid[ eid ].ade_off = off;
 	    ad->ad_eid[ eid ].ade_len = len;
-	} else {
+	} else if (!warning) {
+	    warning = 1;
 	    LOG(log_debug, logtype_default, "ad_refresh: nentries %hd  eid %d\n",
 		    nentries, eid );
 	}
@@ -421,6 +423,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 
     /* figure out all of the entry offsets and lengths. if we aren't
      * able to read a resource fork entry, bail. */
+    nentries = len / AD_ENTRY_LEN;
     parse_entries(ad, buf, nentries);
     if (!ad_getentryoff(ad, ADEID_RFORK)
 	|| (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
