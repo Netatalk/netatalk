@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.106 2001-10-03 18:22:28 jmarcus Exp $
+dnl $Id: configure.in,v 1.107 2001-10-03 22:02:16 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -457,7 +457,7 @@ dnl --------------------------------------------------------------------------
 dnl post-FHS substitutions, etc
 dnl --------------------------------------------------------------------------
 
-***** UAMS_PATH
+dnl ***** UAMS_PATH
 AC_DEFINE_UNQUOTED(UAMS_PATH, "${uams_path}",
 	[path to UAMs [default=PKGCONF/uams]])
 UAMS_PATH="${uams_path}"
