@@ -141,8 +141,8 @@ AC_DEFINE(ADMIN_GRP, 1)
 AC_ARG_WITH(admin-group,
  	[  --disable-admin-group  disable admin group],
         if test "$enableval" = "no"; then
-		AC_DEFINE(ADMIN_GRP, 0)
-		AC_MSG_RESULT([disabling administrative group support])
+			AC_DEFINE(ADMIN_GRP, 0)
+			AC_MSG_RESULT([disabling administrative group support])
         fi
  )
 
@@ -243,7 +243,8 @@ AC_ARG_WITH(message-dir,
 AC_CHECK_LIB(pam, pam_start,
 	AC_DEFINE(USE_PAM, 1)
 	LIBS="$LIBS -lpam"
-	compile_pam=yes)
+	compile_pam=yes
+)
 AM_CONDITIONAL(BUILD_PAM, test x$compile_pam = xyes)
 
 AC_ARG_WITH(pam,
@@ -254,7 +255,7 @@ AC_ARG_WITH(pam,
 	else
 		AC_MSG_RESULT([pam libraries not found. Disabling pam modules support])
 	fi
-	)
+)
 
 AC_ARG_WITH(shadow,
 	[  --with-shadow           enable shadow password support],
@@ -328,9 +329,9 @@ esac
 
 case "$host_cpu" in
 	i386|i486|i586|i686|k7)		this_cpu=x86 ;;
-	alpha)				this_cpu=alpha ;;
-	mips)				this_cpu=mips ;;
-	powerpc|ppc)			this_cpu=ppc ;;
+	alpha)						this_cpu=alpha ;;
+	mips)						this_cpu=mips ;;
+	powerpc|ppc)				this_cpu=ppc ;;
 esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
