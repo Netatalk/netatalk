@@ -1,5 +1,7 @@
 #! /usr/bin/perl
-
+#
+# $Id: nu,v 1.2 2001-05-07 12:49:19 rufustfirefly Exp $
+#
 # nu - by Anders Brownworth   anders@thehamptons.com
 #      modified by Ambrose Li <acli@mail.mingpaoxpress.com>
 #

@@ -6,6 +6,6 @@ else
 TIMELORD =
 endif
 
-SUBDIRS = nu printing shell_utils ${TIMELORD}
+SUBDIRS = macusers nu printing shell_utils ${TIMELORD}
 
 EXTRA_DIST = ICDumpSuffixMap

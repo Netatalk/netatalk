@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+#! /usr/bin/perl
+# $Id: macusers,v 1.2 2001-05-07 12:49:19 rufustfirefly Exp $
 
 # Written for linux; may have to be modified for your brand of Unix.
 

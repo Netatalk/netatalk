@@ -1,3 +1,7 @@
+/*
+ * $Id: timeout.c,v 1.2 2001-05-07 12:49:19 rufustfirefly Exp $
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
