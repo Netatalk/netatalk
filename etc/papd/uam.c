@@ -217,10 +217,12 @@ int uam_checkuser(const struct passwd *pwd)
   }
   endusershell();
 
+#ifndef DISABLE_SHELLCHECK
   if (!p) {
     syslog( LOG_INFO, "illegal shell %s for %s",pwd->pw_shell,pwd->pw_name);
     return -1;
   }
+#endif /* DISABLE_SHELLCHECK */
 
   return 0;
 }

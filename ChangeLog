@@ -1,4 +1,4 @@
-($Id: ChangeLog,v 1.52 2001-06-25 15:18:00 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.53 2001-06-25 18:17:49 rufustfirefly Exp $)
 
 2001-06-25  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/auth.c, etc/afpd/main.c, etc/afpd/uam.c,
@@ -6,6 +6,9 @@
 	include/atalk/uam.h: TRU64 authentication patch to allow
 	any security scheme to be used on the TRU64 side (Burkhard
 	Schmidt)
+
+	* etc/afpd/uam.c, etc/papd/uam.c: fixed DISABLE_SHELLCHECK
+	support in both afpd and papd (Jason Keltz <jas@cs.yorku.ca>)
 
 2001-06-20  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in: check for linux/quota.h before enabling

@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.10 2001-06-25 15:18:01 rufustfirefly Exp $
+ * $Id: uam.c,v 1.11 2001-06-25 18:17:49 rufustfirefly Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -232,7 +232,7 @@ int uam_checkuser(const struct passwd *pwd)
   }
   endusershell();
 
-#ifdef DISABLE_SHELLCHECK
+#ifndef DISABLE_SHELLCHECK
   if (!p) {
     syslog( LOG_INFO, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
     return -1;
