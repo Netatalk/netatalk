@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_flush.c,v 1.4 2002-09-29 17:39:59 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -49,6 +49,8 @@
 void ad_rebuild_header(struct adouble *ad)
 {
     u_int32_t		eid;
+    u_int32_t 		temp;
+    
     u_int16_t		nent;
     char		*buf, *nentp;
 
@@ -56,15 +58,15 @@ void ad_rebuild_header(struct adouble *ad)
      * Rebuild any header information that might have changed.
      */
     buf = ad->ad_data;
-    ad->ad_magic = htonl( ad->ad_magic );
-    memcpy(buf, &ad->ad_magic, sizeof( ad->ad_magic ));
-    ad->ad_magic = ntohl( ad->ad_magic );
-    buf += sizeof( ad->ad_magic );
+
+    temp = htonl( ad->ad_magic );
+    memcpy(buf, &temp, sizeof( temp ));
+    buf += sizeof( temp );
     
-    ad->ad_version = htonl( ad->ad_version );
-    memcpy(buf, &ad->ad_version, sizeof( ad->ad_version ));
-    ad->ad_version = ntohl( ad->ad_version );
-    buf += sizeof( ad->ad_version );
+    temp = htonl( ad->ad_version );
+    memcpy(buf, &temp, sizeof( temp ));
+    buf += sizeof( temp );
+
     memcpy(buf, ad->ad_filler, sizeof( ad->ad_filler ));
     buf += sizeof( ad->ad_filler );
     
@@ -74,20 +76,17 @@ void ad_rebuild_header(struct adouble *ad)
       if ( ad->ad_eid[ eid ].ade_off == 0 ) {
 	continue;
       }
-      eid = htonl( eid );
-      memcpy(buf, &eid, sizeof( eid ));
-      eid = ntohl( eid );
-      buf += sizeof( eid );
-      ad->ad_eid[ eid ].ade_off = htonl( ad->ad_eid[ eid ].ade_off );
-      memcpy(buf, &ad->ad_eid[ eid ].ade_off,
-	     sizeof( ad->ad_eid[ eid ].ade_off ));
-      ad->ad_eid[ eid ].ade_off = ntohl( ad->ad_eid[ eid ].ade_off );
-      buf += sizeof( ad->ad_eid[ eid ].ade_off );
-      ad->ad_eid[ eid ].ade_len = htonl( ad->ad_eid[ eid ].ade_len );
-      memcpy(buf, &ad->ad_eid[ eid ].ade_len, 
-	     sizeof( ad->ad_eid[ eid ].ade_len ));
-      ad->ad_eid[ eid ].ade_len = ntohl( ad->ad_eid[ eid ].ade_len );
-      buf += sizeof( ad->ad_eid[ eid ].ade_len );
+      temp = htonl( eid );
+      memcpy(buf, &temp, sizeof( temp ));
+      buf += sizeof( temp );
+
+      temp = htonl( ad->ad_eid[ eid ].ade_off );
+      memcpy(buf, &temp, sizeof( temp ));
+      buf += sizeof( temp );
+
+      temp = htonl( ad->ad_eid[ eid ].ade_len );
+      memcpy(buf, &temp, sizeof( temp ));
+      buf += sizeof( temp );
       nent++;
     }
     nent = htons( nent );
