@@ -1,0 +1,63 @@
+.\" $Id: papd.conf.5.tmpl,v 1.1 2000-09-26 19:09:25 rufustfirefly Exp $
+.TH papd.conf 5 "26 September 2000" "netatalk 1.5"
+.UC 4
+.SH NAME
+papd.conf \- Configuration file used by \fBpapd\fR(8)
+to determine the configuration of printers used by the Netatalk printing
+daemon
+
+.SH DESCRIPTION
+\fB:ETCDIR:/papd.conf\fR is the configuration file used
+by papd to configure the printing services offered by netatalk. Please note
+that papd must be enabled in \fB:ETCDIR:/netatalk.conf\fR for this to take
+any effect. \fBpapd\fR shares the same defaults as lpd on many systems, but not
+Solaris.
+
+Any line not prefixed with \fB#\fR is interpreted. The configuration lines
+are composed like:
+
+.RS
+.sp
+.I printername:[options]
+
+.sp
+.RE
+The simplest case is to have either no papd.conf, or to have one that
+has no active lines. In this case, atalkd should auto-discover the local
+printers on the machine. Please note that you can split lines by using
+\fB\\\fR.
+
+The possible options are colon delimited (\fB:\fR), and lines must be
+terminated with colons. The possible options and flags are:
+
+.TP
+.B am=(uams list)
+The \fBam\fR option allows specific UAMs to be specified for a particular
+printer. It has no effect if the \fBau\fR flag is not present or if papd
+authentication was not built into netatalk.
+
+.TP
+.B au
+If present, this flag enables authentication for the printer. Please note
+that papd authentication must be built into netatalk for this to take
+effect.
+
+.TP
+.B op=(operator)
+This specifies the operator name, for lpd spooling.
+
+.TP
+.B pa=(appletalk address)
+Allows specification of Appletalk addresses. Usually not needed.
+
+.TP
+.B pd=(path to ppd file)
+Specifies a particular PPD (printer description file) to associate with
+the selected printer.
+
+.TP
+.B pr=(lpd printer name)
+Sets the \fBlpd\fR printer that this is spooled to.
+
+.SH SEE ALSO
+papd(8), atalkd.conf(5), lpd(8)
