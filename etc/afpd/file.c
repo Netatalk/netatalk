@@ -324,7 +324,7 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path, *upath;
+    char		*path, *upath, *adpath;
     int			creatf, did, openf, uid;
     u_int16_t		vid;
 
@@ -411,16 +411,20 @@ createfile_done:
 /* The below code is an experimental, untested, incomplete kludge which 
 provides better dropbox support.  It should NOT be turned on yet unless
 you are a developer who wants to try it out and fix it. */
-    if (stat(upath, &sb) == -1) /****** Directory path only -- FIX! *****/
-      syslog (LOG_ERR, "Error checking directory %s: %m", upath);
+    if (stat(".", &sb) == -1) 
+      syslog (LOG_ERR, "Error checking directory %s: %m", dir->d_name);
     else {
       uid=geteuid();
+      strcpy (adpath, "./.AppleDouble/");
+      strcat (adpath, path);
       seteuid(0); /* Become root to change the owner of the file */
       syslog (LOG_INFO, "Changing %s to uid=%d gid=%d", path, sb.st_uid, sb.st_gid);
       if (chown(path, sb.st_uid, sb.st_gid)==-1)
         syslog (LOG_ERR, "Error changing permissions: %m");
+      if (chown(adpath, sb.st_uid, sb.st_gid)==-1)
+        syslog (LOG_ERR, "Error changing AppleDouble permissions: %m");
       syslog (LOG_INFO, "Changing afpd owner back to %d", uid);
-      seteuid(uid); /* Restore ownership to normal */
+      seteuid(uid); /* Restore process ownership to normal */
     }
 
 #endif DROPKLUDGE
