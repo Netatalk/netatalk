@@ -1,3 +1,7 @@
+2001-12-07  joe c   <marcus@marcuscom.com>
+	* libatalk/cnid/cnid_open.c: Re-enable synchronous transaction support
+	to try improve performance.
+
 2001-12-04  joe c   <marcus@marcuscom.com>
 	* etc/afpd/unix.c: Fix afpd sharing NFSv3 mounts (thanks to 
 	Pierre Beyssac <beyssac@enst.fr>)
