@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Execute this script from the main 
+# Execute this script from the main netatalk source directory.
 
 set -e
 
@@ -12,7 +12,11 @@ if test ! -e README.ASUN; then
 fi
 
 VERSION=`cat VERSION`
-DEBVERSION=`cat "$debiandir/VERSION"`
+if test -e "$debiandir/VERSION"; then
+  DEBVERSION=`cat "$debiandir/VERSION"`
+else
+  DEBVERSION="$VERSION"
+fi
 DISTDIR="netatalk-$VERSION"
 DISTTGZ="netatalk_$DEBVERSION.orig.tar.gz"
 
