@@ -1,0 +1,64 @@
+#! /bin/sh
+# Copyright (c) 1996 S.u.S.E. GmbH Fuerth, Germany.  All rights reserved.
+#
+# Author: 
+#       Reinhold Sojer, <reinhold@suse.de>
+# 
+# adapted to 1.4.99 (at 00-11-15) : Thomas Schierle, <ts@visual-s.de>
+# template changes 2001-02-14     : jeff <jeff@univrel.pr.uconn.edu>
+
+. /etc/rc.config
+
+test -f :ETCDIR:/netatalk.conf || exit 0
+
+. :ETCDIR:/netatalk.conf
+
+# Determine the base and follow a runlevel link name.
+base=${0##*/}
+link=${base#*[SK][0-9][0-9]}
+
+# Force execution if not called by a runlevel directory.
+test $link = $base && START_ATALK=yes
+test "$START_ATALK" = "yes" || exit 0
+
+# The echo return value for success (defined in /etc/rc.config).
+return=$rc_done
+case "$1" in
+    start)
+        echo -n "Starting netatalk:"
+        :SBINDIR:/atalkd
+        :BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+        :BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+        startproc :SBINDIR:/papd || return=$rc_failed
+        startproc :SBINDIR:/timelord || return=$rc_failed
+        startproc :SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+          -c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}" || \
+          return=$rc_failed
+        echo -e "$return"
+        ;;
+    stop)
+        echo -n "Shutting down netatalk:"
+        killproc -TERM :SBINDIR:/papd || return=$rc_failed
+        killproc -TERM :SBINDIR:/timelord || return=$rc_failed
+        killproc -TERM :SBINDIR:/afpd || return=$rc_failed
+        killproc -TERM :SBINDIR:/atalkd || return=$rc_failed
+        echo -e "$return"
+        ;;
+    restart|reload)
+        $0 stop && $0 start || return=$rc_failed
+        ;;
+    status)
+        echo -n "Checking for service atalk:"
+        checkproc :SBINDIR:/papd && echo -n "OK" || echo -n "No process"
+        checkproc :SBINDIR:/afpd && echo -n "OK" || echo "No process"
+        checkproc :SBINDIR:/atalkd && echo "OK" || echo "No process"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+# Inform the caller not only verbosely and set an exit status.
+test "$return" = "$rc_done" || exit 1
+exit 0
