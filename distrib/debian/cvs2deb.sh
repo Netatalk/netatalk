@@ -43,7 +43,7 @@ fi
 make dist
 
 mv "netatalk-$VERSION.tar.gz" "$DISTTGZ"
-rm -rf "netatalk-$VERSION" || true
+rm -rf "$DISTDIR" || true
 tar xzf "$DISTTGZ"
 
 for FILE in `find $debiandir/patches/*.patch`; do
@@ -53,10 +53,14 @@ done
 cp -a "$debiandir" "$DISTDIR"
 rm -r "$DISTDIR/debian/CVS"
 rm -r "$DISTDIR/debian/patches"
+rm -r "$DISTDIR/debian/split-init"
 rm    "$DISTDIR/debian/cvs2deb.sh"
+rm    "$DISTDIR/debian/TODO"
 rm    "$DISTDIR/debian/VERSION"
 
 cd $DISTDIR
+
+touch INSTALL
 
 automake
 
