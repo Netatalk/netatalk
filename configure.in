@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.109 2001-10-07 10:51:27 srittau Exp $
+dnl $Id: configure.in,v 1.110 2001-10-09 04:00:04 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -348,17 +348,13 @@ AC_ARG_WITH(pam,
 AC_MSG_RESULT($PAM_MSG)
 
 if test "x$PAM_MSG" = "xyes"; then
-	if test "x$ac_cv_header_security_pam_appl_h" != "xyes" ; then
-		AC_MSG_ERROR([PAM headers not found]) 
-	fi
+	if test "x$ac_cv_header_security_pam_appl_h" = "xyes" ; then
         
-	AC_CHECK_LIB(dl, dlopen, , )
-	AC_CHECK_LIB(pam, pam_set_item, , AC_MSG_ERROR([libpam missing]))
-	AC_CHECK_FUNCS(pam_getenvlist, , AC_MSG_ERROR([invalid libpam]))
-
-	AC_DEFINE(USE_PAM)
-	use_pam_so=yes
-	compile_pam=yes
+		AC_CHECK_LIB(pam, pam_set_item, 
+				[use_pam_so=yes; compile_pam=yes; AC_DEFINE(USE_PAM)],
+			[use_pam_so=no; compile_pam=no]
+		)
+	fi
 else
 	use_pam_so=no
 	compile_pam=no
