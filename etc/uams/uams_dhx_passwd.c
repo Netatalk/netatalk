@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.11 2001-10-24 16:19:12 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.12 2001-10-24 16:21:33 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -23,10 +23,6 @@
 #endif /* ! NO_CRYPT_H */
 #include <pwd.h>
 #include <syslog.h>
-
-#ifdef SOLARIS
-#define SHADOWPW
-#endif /* SOLARIS */
 
 #ifdef SHADOWPW
 #include <shadow.h>
