@@ -4,6 +4,14 @@ netatalk (1.5pre8cvs-0) unstable; urgency=low
 
  -- Sebastian Rittau <srittau@debian.org>  Sun,  7 Oct 2001 13:07:23 +0200
 
+netatalk (1.5pre8-2) unstable; urgency=low
+
+  * Work around the fact that upstream includes sym-links to mkinstalldirs and
+    missing instead of verbatim copies. We do that by including our own copies
+    in debian and copy them before running the build. (Closes: #114915)
+
+ -- Sebastian Rittau <srittau@debian.org>  Wed, 10 Oct 2001 14:03:34 +0200
+
 netatalk (1.5pre8-1) unstable; urgency=low
 
   * New upstream version, containing most Debian patches.
