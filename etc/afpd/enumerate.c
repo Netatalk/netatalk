@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.35 2003-03-09 19:55:34 didg Exp $
+ * $Id: enumerate.c,v 1.36 2003-03-09 21:14:19 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -103,19 +103,20 @@ struct savedir {
     char	 *sd_last;
     unsigned int sd_sindex;
 };
-#define SDBUFBRK	1024
+#define SDBUFBRK	2048
 
 static int enumerate_loop(struct dirent *de, char *mname, void *data)
 {
     struct savedir *sd = data; 
     char *start, *end;
-    int  len;
+    int  len,lenm;
     
     end = sd->sd_buf + sd->sd_buflen;
     len = strlen(de->d_name);
     *(sd->sd_last)++ = len;
+    lenm = strlen(mname);
 
-    if ( sd->sd_last + len + 2 > end ) {
+    if ( sd->sd_last + len +lenm + 4 > end ) {
         char *buf;
 
         start = sd->sd_buf;
@@ -133,6 +134,11 @@ static int enumerate_loop(struct dirent *de, char *mname, void *data)
 
     memcpy( sd->sd_last, de->d_name, len + 1 );
     sd->sd_last += len + 1;
+
+    *(sd->sd_last)++ = lenm;
+    memcpy( sd->sd_last, mname, lenm + 1 );
+    sd->sd_last += lenm + 1;
+    
     return 0;
 }
 
@@ -362,6 +368,8 @@ int     ext;
             return( AFPERR_NOOBJ );
         }
         sd.sd_last += len + 1;
+        len = *(sd.sd_last)++;
+        sd.sd_last += len + 1;
         sd.sd_sindex++;
     }
 
@@ -383,6 +391,8 @@ int     ext;
         if (*sd.sd_last == 0) {
             /* stat() already failed on this one */
             sd.sd_last += len + 1;
+            len = *(sd.sd_last)++;
+            sd.sd_last += len + 1;
             continue;
         }
         s_path.u_name = sd.sd_last;
@@ -398,10 +408,16 @@ int     ext;
              */
             *sd.sd_last = 0;
             sd.sd_last += len + 1;
+            len = *(sd.sd_last)++;
+            sd.sd_last += len + 1;
             curdir->offcnt--;		/* a little lie */
             continue;
         }
 
+        sd.sd_last += len + 1;
+        len = *(sd.sd_last)++;
+        s_path.m_name = sd.sd_last;
+        sd.sd_last += len + 1;
         /*
          * If a fil/dir is not a dir, it's a file. This is slightly
          * inaccurate, since that means /dev/null is a file, /dev/printer
@@ -409,12 +425,10 @@ int     ext;
          */
         if ( S_ISDIR(s_path.st.st_mode)) {
             if ( dbitmap == 0 ) {
-                sd.sd_last += len + 1;
                 continue;
             }
             dir = dirsearch_byname(curdir, s_path.u_name);
             if (!dir) {
-                s_path.m_name = utompath(vol, s_path.u_name, utf8_encoding() );
                 if (s_path.m_name == NULL || (dir = adddir( vol, curdir, &s_path)) == NULL) {
                     return AFPERR_MISC;
                 }
@@ -429,10 +443,8 @@ int     ext;
 
         } else {
             if ( fbitmap == 0 ) {
-                sd.sd_last += len + 1;
                 continue;
             }
-            s_path.m_name = utompath(vol, s_path.u_name, utf8_encoding());
             if (s_path.m_name == NULL ) {
                 return AFPERR_MISC;
             }
@@ -481,7 +493,6 @@ int     ext;
         }
         data += esz;
         actcnt++;
-        sd.sd_last += len + 1;
     }
 
     if ( actcnt == 0 ) {
