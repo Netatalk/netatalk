@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.24 2002-03-16 20:38:09 jmarcus Exp $
+ * $Id: volume.c,v 1.25 2002-03-24 01:23:41 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -280,7 +280,7 @@ static __inline__ char *get_codepage_path(const char *path, const char *name)
     }
 
     /* debug: show which codepage directory we are using */
-    LOG(log_debug, logtype_default, "using codepage directory: %s", page);
+    LOG(log_debug, logtype_afpd, "using codepage directory: %s", page);
 
     return page;
 }
@@ -401,7 +401,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 
     } else if (val) {
         /* ignore unknown options */
-        LOG(log_debug, logtype_default, "ignoring unknown volume option: %s", tmp);
+        LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
 
     } else {
         /* we'll assume it's a volume name. */
@@ -438,18 +438,18 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 
     if (( volume =
                 (struct vol *)calloc(1, sizeof( struct vol ))) == NULL ) {
-        LOG(log_error, logtype_default, "creatvol: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
         return -1;
     }
     if (( volume->v_name =
                 (char *)malloc( vlen + 1 )) == NULL ) {
-        LOG(log_error, logtype_default, "creatvol: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
         free(volume);
         return -1;
     }
     if (( volume->v_path =
                 (char *)malloc( strlen( path ) + 1 )) == NULL ) {
-        LOG(log_error, logtype_default, "creatvol: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
         free(volume->v_name);
         free(volume);
         return -1;
@@ -589,7 +589,7 @@ int			user;
     if ( em == NULL ) {
         if (( em =
                     (struct extmap *)malloc( sizeof( struct extmap ))) == NULL ) {
-            LOG(log_error, logtype_default, "setextmap: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_afpd, "setextmap: malloc: %s", strerror(errno) );
             return;
         }
         em->em_next = extmap;
@@ -770,7 +770,7 @@ struct passwd *pwent;
     }
     volfree(save_options, NULL);
     if ( fclose( fp ) != 0 ) {
-        LOG(log_error, logtype_default, "readvolfile: fclose: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "readvolfile: fclose: %s", strerror(errno) );
     }
     return( 0 );
 }
@@ -1058,7 +1058,7 @@ int 	ibuflen, *rbuflen;
     data = rbuf + 5;
     for ( vcnt = 0, volume = volumes; volume; volume = volume->v_next ) {
         if ( stat( volume->v_path, &st ) < 0 ) {
-            LOG(log_info, logtype_default, "afp_getsrvrparms: stat %s: %s",
+            LOG(log_info, logtype_afpd, "afp_getsrvrparms: stat %s: %s",
                 volume->v_path, strerror(errno) );
             continue;		/* can't access directory */
         }
@@ -1086,7 +1086,7 @@ int 	ibuflen, *rbuflen;
     *rbuflen = data - rbuf;
     data = rbuf;
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
@@ -1152,7 +1152,7 @@ int		ibuflen, *rbuflen;
 
     if (( volume->v_flags & AFPVOL_OPEN  ) == 0 ) {
         if ((dir = dirnew(strlen(volume->v_name) + 1)) == NULL) {
-            LOG(log_error, logtype_default, "afp_openvol: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_afpd, "afp_openvol: malloc: %s", strerror(errno) );
             ret = AFPERR_MISC;
             goto openvol_err;
         }
@@ -1296,7 +1296,7 @@ struct vol	*vol;
      * [RS] */
 
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "setvoltime: gettimeofday: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "setvoltime: gettimeofday: %s", strerror(errno) );
         return;
     }
     if( utime( vol->v_path, NULL ) < 0 ) {

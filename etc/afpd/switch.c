@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.6 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: switch.c,v 1.7 2002-03-24 01:23:41 sibaz Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -52,7 +52,7 @@ AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
-    LOG(log_info, logtype_default, "afp_null handle %d", *ibuf );
+    LOG(log_info, logtype_afpd, "afp_null handle %d", *ibuf );
     *rbuflen = 0;
     return( AFPERR_NOOP );
 }
@@ -219,7 +219,7 @@ int uam_afpserver_action(const int id, const int which,
             postauth_switch[id] = *new;
         break;
     default:
-        LOG(log_debug, logtype_default, "uam_afpserver_action: unknown switch %d[%d]",
+        LOG(log_debug, logtype_afpd, "uam_afpserver_action: unknown switch %d[%d]",
             which, id);
         return -1;
     }

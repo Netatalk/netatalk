@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.10 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: ofork.c,v 1.11 2002-03-24 01:23:41 sibaz Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -90,7 +90,7 @@ int of_flush(const struct vol *vol)
     for ( refnum = 0; refnum < nforks; refnum++ ) {
         if (oforks[ refnum ] != NULL && (oforks[refnum]->of_vol == vol) &&
                 flushfork( oforks[ refnum ] ) < 0 ) {
-            LOG(log_error, logtype_default, "of_flush: %s", strerror(errno) );
+            LOG(log_error, logtype_afpd, "of_flush: %s", strerror(errno) );
         }
     }
     return( 0 );
@@ -180,14 +180,14 @@ struct adouble      *ad;
     */
     lastrefnum = refnum;
     if ( i == nforks ) {
-        LOG(log_error, logtype_default, "of_alloc: maximum number of forks exceeded.");
+        LOG(log_error, logtype_afpd, "of_alloc: maximum number of forks exceeded.");
         return( NULL );
     }
 
     of_refnum = refnum % nforks;
     if (( oforks[ of_refnum ] =
                 (struct ofork *)malloc( sizeof( struct ofork ))) == NULL ) {
-        LOG(log_error, logtype_default, "of_alloc: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
         return NULL;
     }
     of = oforks[of_refnum];
@@ -196,7 +196,7 @@ struct adouble      *ad;
     if (!ad) {
         ad = malloc( sizeof( struct adouble ) );
         if (!ad) {
-            LOG(log_error, logtype_default, "of_alloc: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
             return NULL;
         }
 
@@ -229,7 +229,7 @@ struct adouble      *ad;
      * of long unicode names */
     if (( of->of_name =(char *)malloc(MACFILELEN + 1)) ==
             NULL ) {
-        LOG(log_error, logtype_default, "of_alloc: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
         if (!ad)
             free(of->of_ad);
         free(of);

@@ -1,5 +1,5 @@
 /*
- * $Id: nfsquota.c,v 1.7 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: nfsquota.c,v 1.8 2002-03-24 01:23:41 sibaz Exp $
  *
  * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:
@@ -115,7 +115,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
 
     /* figure out the host and path */
     if ((hostpath = strchr(vol->v_gvs, ':')) == NULL) {
-        LOG(log_error, logtype_default, "can't find hostname for %s", vol->v_gvs);
+        LOG(log_error, logtype_afpd, "can't find hostname for %s", vol->v_gvs);
         return AFPERR_PARAM;
     }
 
@@ -131,7 +131,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
     if(callaurpc(vol, RQUOTAPROG, RQUOTAVERS, RQUOTAPROC_GETQUOTA,
                  (xdrproc_t) xdr_getquota_args, (char *) &gq_args,
                  (xdrproc_t) xdr_getquota_rslt, (char *) &gq_rslt) != 0) {
-        LOG(log_info, logtype_default, "nfsquota: can't retrieve nfs quota information. \
+        LOG(log_info, logtype_afpd, "nfsquota: can't retrieve nfs quota information. \
             make sure that rpc.rquotad is running on %s.", vol->v_gvs);
         *hostpath = ':';
         return AFPERR_PARAM;
@@ -142,7 +142,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
         break;
 
     case Q_EPERM:
-        LOG(log_error, logtype_default, "nfsquota: quota permission error, host: %s\n",
+        LOG(log_error, logtype_afpd, "nfsquota: quota permission error, host: %s\n",
             vol->v_gvs);
         break;
 
@@ -177,7 +177,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
         break;
 
     default:
-        LOG(log_info, logtype_default, "bad rpc result, host: %s\n", vol->v_gvs);
+        LOG(log_info, logtype_afpd, "bad rpc result, host: %s\n", vol->v_gvs);
         break;
     }
 

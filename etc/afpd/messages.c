@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.15 2002-03-17 23:50:36 jmarcus Exp $
+ * $Id: messages.c,v 1.16 2002-03-24 01:23:41 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,12 +46,12 @@ void readmessage(void)
     sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_default, "Reading file %s ", filename);
+    LOG(log_debug, logtype_afpd, "Reading file %s ", filename);
 #endif /* DEBUG */
 
     message=fopen(filename, "r");
     if (message==NULL) {
-        LOG(log_info, logtype_default, "Unable to open file %s", filename);
+        LOG(log_info, logtype_afpd, "Unable to open file %s", filename);
         sprintf(filename, "%s/message", SERVERTEXT);
         message=fopen(filename, "r");
     }
@@ -72,7 +72,7 @@ void readmessage(void)
         /* Delete will probably fail otherwise, but let's try anyways */
         euid = geteuid();
         if (seteuid(0) < 0) {
-            LOG(log_error, logtype_default, "Could not switch back to root: %s",
+            LOG(log_error, logtype_afpd, "Could not switch back to root: %s",
 				strerror(errno));
         }
 
@@ -80,18 +80,18 @@ void readmessage(void)
 
         /* Drop privs again, failing this is very bad */
         if (seteuid(euid) < 0) {
-            LOG(log_error, logtype_default, "Could not switch back to uid %d: %s", euid, strerror(errno));
+            LOG(log_error, logtype_afpd, "Could not switch back to uid %d: %s", euid, strerror(errno));
         }
 
         if (rc < 0) {
-            LOG(log_error, logtype_default, "Error deleting %s: %s", filename, strerror(rc));
+            LOG(log_error, logtype_afpd, "Error deleting %s: %s", filename, strerror(rc));
         }
 #ifdef DEBUG
         else {
-            LOG(log_info, logtype_default, "Deleted %s", filename);
+            LOG(log_info, logtype_afpd, "Deleted %s", filename);
         }
 
-        LOG(log_info, logtype_default, "Set server message to \"%s\"", servermesg);
+        LOG(log_info, logtype_afpd, "Set server message to \"%s\"", servermesg);
 #endif /* DEBUG */
     }
     free(filename);

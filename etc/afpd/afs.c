@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.9 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: afs.c,v 1.10 2002-03-24 01:23:40 sibaz Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -247,7 +247,7 @@ int		ibuflen, *rbuflen;
     ucase( realm );
     if ( *realm == '\0' ) {
         if ( krb_get_lrealm( realm, 1 ) != KSUCCESS ) {
-            LOG(log_error, logtype_default, "krb_get_lrealm failed" );
+            LOG(log_error, logtype_afpd, "krb_get_lrealm failed" );
             return( AFPERR_BADUAM );
         }
     }
@@ -285,7 +285,7 @@ int		ibuflen, *rbuflen;
     ibuf += len;
     newpw[ len ] = '\0';
 
-    LOG(log_info, logtype_default,
+    LOG(log_info, logtype_afpd,
         "changing password for <%s>.<%s>@<%s>", name, instance, realm );
 
     ka_StringToKey( oldpw, realm, &oldkey );
@@ -317,7 +317,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_BADUAM );
     }
 
-    LOG(log_debug, logtype_default, "password changed succeeded" );
+    LOG(log_debug, logtype_afpd, "password changed succeeded" );
     return( AFP_OK );
 }
 

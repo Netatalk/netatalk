@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.24 2002-03-13 19:29:17 srittau Exp $
+ * $Id: filedir.c,v 1.25 2002-03-24 01:23:40 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -71,19 +71,19 @@ more information */
     int		uid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin matchfile2dirperms:");
+    LOG(log_info, logtype_afpd, "begin matchfile2dirperms:");
 #endif /* DEBUG */
 
     if (stat(upath, &st ) < 0)
-        LOG(log_error, logtype_default, "Could not stat %s: %s", upath, strerror(errno));
+        LOG(log_error, logtype_afpd, "Could not stat %s: %s", upath, strerror(errno));
     strcpy (adpath, "./.AppleDouble/");
     strcat (adpath, upath);
     if (( dir = dirsearch( vol, did )) == NULL ) {
-        LOG(log_error, logtype_default, "matchfile2dirperms: Unable to get directory info.");
+        LOG(log_error, logtype_afpd, "matchfile2dirperms: Unable to get directory info.");
         return( AFPERR_NOOBJ );
     }
     else if (stat(".", &sb) < 0) {
-        LOG(log_error, logtype_default,
+        LOG(log_error, logtype_afpd,
             "matchfile2dirperms: Error checking directory \"%s\": %s",
             dir->d_name, strerror(errno));
         return(AFPERR_NOOBJ );
@@ -95,54 +95,54 @@ more information */
             seteuid(0);
             if (lchown(upath, sb.st_uid, sb.st_gid) < 0)
             {
-                LOG(log_error, logtype_default,
+                LOG(log_error, logtype_afpd,
                     "matchfile2dirperms: Error changing owner/gid of %s: %s",
                     upath, strerror(errno));
                 return (AFPERR_ACCESS);
             }
             if (chmod(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
-                LOG(log_error, logtype_default,
+                LOG(log_error, logtype_afpd,
                     "matchfile2dirperms:  Error adding file read permissions: %s",
                     strerror(errno));
                 return (AFPERR_ACCESS);
             }
 #ifdef DEBUG
             else
-                LOG(log_info, logtype_default,
+                LOG(log_info, logtype_afpd,
                     "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %s",
                     strerror(errno));
 #endif /* DEBUG */
             if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
             {
-                LOG(log_error, logtype_default,
+                LOG(log_error, logtype_afpd,
                     "matchfile2dirperms: Error changing AppleDouble owner/gid %s: %s",
                     adpath, strerror(errno));
                 return (AFPERR_ACCESS);
             }
             if (chmod(adpath, (st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
-                LOG(log_error, logtype_default,
+                LOG(log_error, logtype_afpd,
                     "matchfile2dirperms:  Error adding AD file read permissions: %s",
                     strerror(errno));
                 return (AFPERR_ACCESS);
             }
 #ifdef DEBUG
             else
-                LOG(log_info, logtype_default,
+                LOG(log_info, logtype_afpd,
                     "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %s",
                     strerror(errno));
 #endif /* DEBUG */
         }
 #ifdef DEBUG
         else
-            LOG(log_info, logtype_default,
+            LOG(log_info, logtype_afpd,
                 "matchfile2dirperms: No ownership change necessary.");
 #endif /* DEBUG */
     } /* end else if stat success */
     seteuid(uid); /* Restore process ownership to normal */
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end matchfile2dirperms:");
+    LOG(log_info, logtype_afpd, "end matchfile2dirperms:");
 #endif /* DEBUG */
 
     return (AFP_OK);
@@ -164,7 +164,7 @@ int		ibuflen, *rbuflen;
     u_int16_t		fbitmap, dbitmap, vid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_getfildirparams:");
+    LOG(log_info, logtype_afpd, "begin afp_getfildirparams:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -226,7 +226,7 @@ int		ibuflen, *rbuflen;
     *rbuf = 0;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_getfildirparams:");
+    LOG(log_info, logtype_afpd, "end afp_getfildirparams:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -245,7 +245,7 @@ int		ibuflen, *rbuflen;
     int		did, rc;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_setfildirparams:");
+    LOG(log_info, logtype_afpd, "begin afp_setfildirparams:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -296,7 +296,7 @@ int		ibuflen, *rbuflen;
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_setfildirparams:");
+    LOG(log_info, logtype_afpd, "end afp_setfildirparams:");
 #endif /* DEBUG */
 
     return( rc );
@@ -321,7 +321,7 @@ int		ibuflen, *rbuflen;
 #endif /* CNID_DB */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_rename:");
+    LOG(log_info, logtype_afpd, "begin afp_rename:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -452,7 +452,7 @@ int		ibuflen, *rbuflen;
             isad = 0;
         }
         if ((buf = realloc( odir->d_name, plen + 1 )) == NULL ) {
-            LOG(log_error, logtype_default, "afp_rename: realloc: %s", strerror(errno) );
+            LOG(log_error, logtype_afpd, "afp_rename: realloc: %s", strerror(errno) );
             if (isad) {
                 ad_flush(&ad, ADFLAGS_HF); /* in case of create */
                 ad_close(&ad, ADFLAGS_HF);
@@ -478,7 +478,7 @@ out:
         return AFPERR_MISC;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_rename:");
+    LOG(log_info, logtype_afpd, "end afp_rename:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -497,7 +497,7 @@ int		ibuflen, *rbuflen;
     u_int16_t		vid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_delete:");
+    LOG(log_info, logtype_afpd, "begin afp_delete:");
 #endif /* DEBUG */ 
 
     *rbuflen = 0;
@@ -537,7 +537,7 @@ int		ibuflen, *rbuflen;
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_delete:");
+    LOG(log_info, logtype_afpd, "end afp_delete:");
 #endif /* DEBUG */
 
     return( rc );
@@ -596,7 +596,7 @@ int		ibuflen, *rbuflen;
 #endif /* DROPKLUDGE */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_moveandrename:");
+    LOG(log_info, logtype_afpd, "begin afp_moveandrename:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -733,7 +733,7 @@ int		ibuflen, *rbuflen;
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_moveandrename:");
+    LOG(log_info, logtype_afpd, "end afp_moveandrename:");
 #endif /* DEBUG */
 
     return( rc );
@@ -753,7 +753,7 @@ int veto_file(const char*veto_str, const char*path)
         return 0;
     /*
     #ifdef DEBUG
-    	LOG(log_debug, logtype_default, "veto_file \"%s\", \"%s\"", veto_str, path);
+    	LOG(log_debug, logtype_afpd, "veto_file \"%s\", \"%s\"", veto_str, path);
     #endif
     */
     for(i=0, j=0; veto_str[i] != '\0'; i++) {

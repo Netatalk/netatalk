@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.21 2002-03-07 15:59:53 jmarcus Exp $
+ * $Id: uam.c,v 1.22 2002-03-24 01:23:41 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -73,12 +73,12 @@ struct uam_mod *uam_load(const char *path, const char *name)
     void *module;
 
     if ((module = mod_open(path)) == NULL) {
-        LOG(log_error, logtype_default, "uam_load(%s): failed to load: %s", name, mod_error());
+        LOG(log_error, logtype_afpd, "uam_load(%s): failed to load: %s", name, mod_error());
         return NULL;
     }
 
     if ((mod = (struct uam_mod *) malloc(sizeof(struct uam_mod))) == NULL) {
-        LOG(log_error, logtype_default, "uam_load(%s): malloc failed", name);
+        LOG(log_error, logtype_afpd, "uam_load(%s): malloc failed", name);
         goto uam_load_fail;
     }
 
@@ -87,14 +87,14 @@ struct uam_mod *uam_load(const char *path, const char *name)
     if ((p = strchr(buf, '.')))
         *p = '\0';
     if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
-        LOG(log_error, logtype_default, "uam_load(%s): mod_symbol error for symbol %s",
+        LOG(log_error, logtype_afpd, "uam_load(%s): mod_symbol error for symbol %s",
             name,
             buf);
         goto uam_load_err;
     }
 
     if (mod->uam_fcn->uam_type != UAM_MODULE_SERVER) {
-        LOG(log_error, logtype_default, "uam_load(%s): attempted to load a non-server module",
+        LOG(log_error, logtype_afpd, "uam_load(%s): attempted to load a non-server module",
             name);
         goto uam_load_err;
     }
@@ -103,7 +103,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
 
     if (!mod->uam_fcn->uam_setup ||
             ((*mod->uam_fcn->uam_setup)(name) < 0)) {
-        LOG(log_error, logtype_default, "uam_load(%s): uam_setup failed", name);
+        LOG(log_error, logtype_afpd, "uam_load(%s): uam_setup failed", name);
         goto uam_load_err;
     }
 
@@ -143,7 +143,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
     if ((uam = auth_uamfind(type, name, strlen(name)))) {
         if (strcmp(uam->uam_path, path)) {
             /* it exists, but it's not the same module. */
-            LOG(log_error, logtype_default, "uam_register: \"%s\" already loaded by %s",
+            LOG(log_error, logtype_afpd, "uam_register: \"%s\" already loaded by %s",
                 name, path);
             return -1;
         }
@@ -247,7 +247,7 @@ int uam_checkuser(const struct passwd *pwd)
 
 #ifndef DISABLE_SHELLCHECK
 	if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
-		LOG(log_info, logtype_default, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
+		LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
 		return -1;
 	}
 #endif
@@ -260,7 +260,7 @@ int uam_checkuser(const struct passwd *pwd)
 
 #ifndef DISABLE_SHELLCHECK
     if (!p) {
-        LOG(log_info, logtype_default, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
+        LOG(log_info, logtype_afpd, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
         return -1;
     }
 #endif /* DISABLE_SHELLCHECK */
@@ -453,29 +453,29 @@ int uam_sia_validate_user(sia_collect_func_t * collect, int argc, char **argv,
 
        if ((rc=sia_ses_init(&entity, argc, argv, hostname, username, tty,
                             colinput, gssapi)) != SIASUCCESS) {
-               LOG(log_error, logtype_default, "cannot initialise SIA");
+               LOG(log_error, logtype_afpd, "cannot initialise SIA");
                return SIAFAIL;
        }
 
        /* save old action for restoration later */
        if (sigaction(SIGALRM, NULL, &act))
-               LOG(log_error, logtype_default, "cannot save SIGALRM handler");
+               LOG(log_error, logtype_afpd, "cannot save SIGALRM handler");
 
        if ((rc=sia_ses_authent(collect, passphrase, entity)) != SIASUCCESS) {
                /* restore old action after clobbering by sia_ses_authent() */
                if (sigaction(SIGALRM, &act, NULL))
-                       LOG(log_error, logtype_default, "cannot restore SIGALRM handler");
+                       LOG(log_error, logtype_afpd, "cannot restore SIGALRM handler");
 
-               LOG(log_info, logtype_default, "unsuccessful login for %s",
+               LOG(log_info, logtype_afpd, "unsuccessful login for %s",
 (hostname?hostname:"(null)"));
                return SIAFAIL;
        }
-       LOG(log_info, logtype_default, "successful login for %s",
+       LOG(log_info, logtype_afpd, "successful login for %s",
 (hostname?hostname:"(null)"));
 
        /* restore old action after clobbering by sia_ses_authent() */   
        if (sigaction(SIGALRM, &act, NULL))
-               LOG(log_error, logtype_default, "cannot restore SIGALRM handler");
+               LOG(log_error, logtype_afpd, "cannot restore SIGALRM handler");
 
        sia_ses_release(&entity);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.20 2002-02-28 21:20:39 jmarcus Exp $
+ * $Id: quota.c,v 1.21 2002-03-24 01:23:41 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -115,7 +115,7 @@ int  *nfs;
     static struct fs_data	fsd;
 
     if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_default, "special: getmnt %s: %s", file, strerror(errno) );
+        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
         return( NULL );
     }
 
@@ -310,13 +310,13 @@ const u_int32_t     bsize;
 
     if ( vol->v_qfd == -1 && vol->v_gvs == NULL) {
         if (( p = mountp( vol->v_path, &vol->v_nfs)) == NULL ) {
-            LOG(log_info, logtype_default, "getquota: mountp %s fails", vol->v_path );
+            LOG(log_info, logtype_afpd, "getquota: mountp %s fails", vol->v_path );
             return( AFPERR_PARAM );
         }
 
         if (vol->v_nfs) {
             if (( vol->v_gvs = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-                LOG(log_error, logtype_default, "getquota: malloc: %s", strerror(errno) );
+                LOG(log_error, logtype_afpd, "getquota: malloc: %s", strerror(errno) );
                 return AFPERR_MISC;
             }
             strcpy( vol->v_gvs, p );
@@ -324,7 +324,7 @@ const u_int32_t     bsize;
         } else {
             sprintf( buf, "%s/quotas", p );
             if (( vol->v_qfd = open( buf, O_RDONLY, 0 )) < 0 ) {
-                LOG(log_info, logtype_default, "open %s: %s", buf, strerror(errno) );
+                LOG(log_info, logtype_afpd, "open %s: %s", buf, strerror(errno) );
                 return( AFPERR_PARAM );
             }
         }
@@ -333,12 +333,12 @@ const u_int32_t     bsize;
 #else
     if ( vol->v_gvs == NULL ) {
         if (( p = special( vol->v_path, &vol->v_nfs )) == NULL ) {
-            LOG(log_info, logtype_default, "getquota: special %s fails", vol->v_path );
+            LOG(log_info, logtype_afpd, "getquota: special %s fails", vol->v_path );
             return( AFPERR_PARAM );
         }
 
         if (( vol->v_gvs = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-            LOG(log_error, logtype_default, "getquota: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_afpd, "getquota: malloc: %s", strerror(errno) );
             return AFPERR_MISC;
         }
         strcpy( vol->v_gvs, p );
@@ -363,7 +363,7 @@ struct dqblk	*dqblk;
     }
 #else /* ultrix */
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "overquota: gettimeofday: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
     }
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {

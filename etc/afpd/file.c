@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.41 2002-03-13 19:29:17 srittau Exp $
+ * $Id: file.c,v 1.42 2002-03-24 01:23:40 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -115,7 +115,7 @@ int getfilparams(struct vol *vol,
     u_char              achar, fdType[4];
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin getfilparams:");
+    LOG(log_info, logtype_afpd, "begin getfilparams:");
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
@@ -129,7 +129,7 @@ int getfilparams(struct vol *vol,
     if ( ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, adp) < 0 ) {
         isad = 0;
     } else if ( fstat( ad_hfileno( adp ), &hst ) < 0 ) {
-        LOG(log_error, logtype_default, "getfilparams fstat: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "getfilparams fstat: %s", strerror(errno) );
     }
 
     data = buf;
@@ -228,7 +228,7 @@ int getfilparams(struct vol *vol,
             if (aint == CNID_INVALID) {
                 switch (errno) {
                 case CNID_ERR_PARAM:
-                    LOG(log_error, logtype_default, "getfilparams: Incorrect parameters passed to cnid_add");
+                    LOG(log_error, logtype_afpd, "getfilparams: Incorrect parameters passed to cnid_add");
                     return(AFPERR_PARAM);
                 case CNID_ERR_PATH:
                     return(AFPERR_PARAM);
@@ -370,7 +370,7 @@ int getfilparams(struct vol *vol,
     *buflen = data - buf;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end getfilparams:");
+    LOG(log_info, logtype_afpd, "end getfilparams:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -394,7 +394,7 @@ int		ibuflen, *rbuflen;
 #endif /* FORCE_UIDGID */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_createfile:");
+    LOG(log_info, logtype_afpd, "begin afp_createfile:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -509,7 +509,7 @@ createfile_done:
     setvoltime(obj, vol );
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_createfile");
+    LOG(log_info, logtype_afpd, "end afp_createfile");
 #endif /* DEBUG */
 
 #ifdef FORCE_UIDGID
@@ -532,7 +532,7 @@ int		ibuflen, *rbuflen;
     u_int16_t	vid, bitmap;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_setfilparams:");
+    LOG(log_info, logtype_afpd, "begin afp_setfilparams:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -570,7 +570,7 @@ int		ibuflen, *rbuflen;
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_setfilparams:");
+    LOG(log_info, logtype_afpd, "end afp_setfilparams:");
 #endif /* DEBUG */
 
     return( rc );
@@ -597,7 +597,7 @@ int setfilparams(struct vol *vol,
 #endif /* FORCE_UIDGID */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin setfilparams:");
+    LOG(log_info, logtype_afpd, "begin setfilparams:");
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
@@ -745,7 +745,7 @@ setfilparam_done:
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end setfilparams:");
+    LOG(log_info, logtype_afpd, "end setfilparams:");
 #endif /* DEBUG */
 
     return err;
@@ -775,7 +775,7 @@ const int         noadouble;
     /* existence check moved to afp_moveandrename */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin renamefile:");
+    LOG(log_info, logtype_afpd, "begin renamefile:");
 #endif /* DEBUG */
 
     if ( rename( src, dst ) < 0 ) {
@@ -846,7 +846,7 @@ rename_retry:
     ad_close( &ad, ADFLAGS_HF );
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end renamefile:");
+    LOG(log_info, logtype_afpd, "end renamefile:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -865,7 +865,7 @@ int		ibuflen, *rbuflen;
     u_int16_t	svid, dvid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_copyfile:");
+    LOG(log_info, logtype_afpd, "begin afp_copyfile:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -949,7 +949,7 @@ int		ibuflen, *rbuflen;
 #endif /* DROPKLUDGE */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_copyfile:");
+    LOG(log_info, logtype_afpd, "end afp_copyfile:");
 #endif /* DEBUG */
 
     return( retvalue );
@@ -962,7 +962,7 @@ static __inline__ int copy_all(const int dfd, const void *buf,
     ssize_t cc;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin copy_all:");
+    LOG(log_info, logtype_afpd, "begin copy_all:");
 #endif /* DEBUG */
 
     while (buflen > 0) {
@@ -984,7 +984,7 @@ static __inline__ int copy_all(const int dfd, const void *buf,
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end copy_all:");
+    LOG(log_info, logtype_afpd, "end copy_all:");
 #endif /* DEBUG */
 
     return AFP_OK;
@@ -1003,7 +1003,7 @@ const int   noadouble;
     ssize_t             cc;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin copyfile:");
+    LOG(log_info, logtype_afpd, "begin copyfile:");
 #endif /* DEBUG */
 
     if (newname) {
@@ -1164,7 +1164,7 @@ copydata_done:
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end copyfile:");
+    LOG(log_info, logtype_afpd, "end copyfile:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -1180,7 +1180,7 @@ char		*file;
     int			openmode = O_RDWR;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin deletefile:");
+    LOG(log_info, logtype_afpd, "begin deletefile:");
 #endif /* DEBUG */
 
     while(1) {
@@ -1286,7 +1286,7 @@ delete_unlock:
     ad_close( &ad, adflags );
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end deletefile:");
+    LOG(log_info, logtype_afpd, "end deletefile:");
 #endif /* DEBUG */
 
     return err;
@@ -1310,7 +1310,7 @@ int		ibuflen, *rbuflen;
     u_short		vid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_createid:");
+    LOG(log_info, logtype_afpd, "begin afp_createid:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -1375,7 +1375,7 @@ int		ibuflen, *rbuflen;
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "ending afp_createid...:");
+    LOG(log_info, logtype_afpd, "ending afp_createid...:");
 #endif /* DEBUG */
 
     switch (errno) {
@@ -1387,7 +1387,7 @@ int		ibuflen, *rbuflen;
         return AFPERR_ACCESS;
         break;
     default:
-        LOG(log_error, logtype_default, "afp_createid: cnid_add: %s", strerror(errno));
+        LOG(log_error, logtype_afpd, "afp_createid: cnid_add: %s", strerror(errno));
         return AFPERR_PARAM;
     }
 }
@@ -1407,7 +1407,7 @@ int		ibuflen, *rbuflen;
     u_int16_t		vid, bitmap;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_resolveid:");
+    LOG(log_info, logtype_afpd, "begin afp_resolveid:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -1458,7 +1458,7 @@ int		ibuflen, *rbuflen;
     memcpy(rbuf, ibuf, sizeof(bitmap));
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_resolveid:");
+    LOG(log_info, logtype_afpd, "end afp_resolveid:");
 #endif /* DEBUG */
 
     return AFP_OK;
@@ -1479,7 +1479,7 @@ int		ibuflen, *rbuflen;
     u_short		vid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_deleteid:");
+    LOG(log_info, logtype_afpd, "begin afp_deleteid:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -1539,7 +1539,7 @@ int		ibuflen, *rbuflen;
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "end afp_deleteid:");
+    LOG(log_info, logtype_afpd, "end afp_deleteid:");
 #endif /* DEBUG */
 
     return err;
@@ -1566,7 +1566,7 @@ int		ibuflen, *rbuflen;
     u_int16_t		vid;
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin afp_exchangefiles:");
+    LOG(log_info, logtype_afpd, "begin afp_exchangefiles:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -1720,7 +1720,7 @@ int		ibuflen, *rbuflen;
 #endif /* CNID_DB */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "ending afp_exchangefiles:");
+    LOG(log_info, logtype_afpd, "ending afp_exchangefiles:");
 #endif /* DEBUG */
 
     return AFP_OK;

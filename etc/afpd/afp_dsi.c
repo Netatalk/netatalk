@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.19 2002-03-16 20:38:09 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.20 2002-03-24 01:23:40 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -60,7 +60,7 @@ static __inline__ void afp_dsi_close(AFPObj *obj)
     /* UAM had syslog control; afpd needs to reassert itself */
     set_processname("afpd");
     syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid, logfacility_daemon);
-    LOG(log_info, logtype_default, "%.2fKB read, %.2fKB written",
+    LOG(log_info, logtype_afpd, "%.2fKB read, %.2fKB written",
         dsi->read_count/1024.0, dsi->write_count/1024.0);
 
     dsi_close(dsi);
@@ -73,7 +73,7 @@ static void afp_dsi_die(int sig)
     afp_dsi_close(child.obj);
     if (sig) /* if no signal, assume dieing because logins are disabled &
                 don't log it (maintenance mode)*/
-        LOG(log_info, logtype_default, "Connection terminated");
+        LOG(log_info, logtype_afpd, "Connection terminated");
     if (sig == SIGTERM || sig == SIGALRM) {
         exit( 0 );
     }
@@ -98,7 +98,7 @@ static void afp_dsi_timedown()
     it.it_value.tv_sec = 300;
     it.it_value.tv_usec = 0;
     if ( setitimer( ITIMER_REAL, &it, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "afp_timedown: setitimer: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_timedown: setitimer: %s", strerror(errno) );
         afp_dsi_die(1);
     }
 
@@ -109,7 +109,7 @@ static void afp_dsi_timedown()
     sigaddset(&sv.sa_mask, SIGTERM);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "afp_timedown: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_timedown: sigaction: %s", strerror(errno) );
         afp_dsi_die(1);
     }
 }
@@ -129,7 +129,7 @@ static void alarm_handler()
     if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
         dsi_tickle(child.obj->handle);
     } else { /* didn't receive a tickle. close connection */
-        LOG(log_error, logtype_default, "afp_alarm: child timed out");
+        LOG(log_error, logtype_afpd, "afp_alarm: child timed out");
         afp_dsi_die(1);
     }
 }
@@ -157,7 +157,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGTERM);
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &action, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "afp_over_dsi: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(1);
     }
 
@@ -167,7 +167,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGHUP);
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &action, 0 ) < 0 ) {
-        LOG(log_error, logtype_default, "afp_over_dsi: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(1);
     }
 
@@ -178,7 +178,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR2);
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR2, &action, 0) < 0 ) {
-        LOG(log_error, logtype_default, "afp_over_dsi: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(1);
     }
 #endif /* SERVERTEXT */
@@ -209,7 +209,7 @@ void afp_over_dsi(AFPObj *obj)
         switch(cmd) {
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
-            LOG(log_info, logtype_default, "done");
+            LOG(log_info, logtype_afpd, "done");
             if (obj->options.flags & OPTION_DEBUG )
                 printf("done\n");
             return;
@@ -219,7 +219,7 @@ void afp_over_dsi(AFPObj *obj)
 #ifdef AFS
             if ( writtenfork ) {
                 if ( flushfork( writtenfork ) < 0 ) {
-                    LOG(log_error, logtype_default, "main flushfork: %s", strerror(errno) );
+                    LOG(log_error, logtype_afpd, "main flushfork: %s", strerror(errno) );
                 }
                 writtenfork = NULL;
             }
@@ -241,7 +241,7 @@ void afp_over_dsi(AFPObj *obj)
                                               dsi->data, &dsi->datalen);
                 child.flags &= ~CHILD_RUNNING;
             } else {
-                LOG(log_error, logtype_default, "bad function %X", function);
+                LOG(log_error, logtype_afpd, "bad function %X", function);
                 dsi->datalen = 0;
                 err = AFPERR_NOOP;
             }
@@ -258,7 +258,7 @@ void afp_over_dsi(AFPObj *obj)
             }
 
             if (!dsi_cmdreply(dsi, err)) {
-                LOG(log_error, logtype_default, "dsi_cmdreply(%d): %s", dsi->socket, strerror(errno) );
+                LOG(log_error, logtype_afpd, "dsi_cmdreply(%d): %s", dsi->socket, strerror(errno) );
                 afp_dsi_die(1);
             }
             break;
@@ -277,7 +277,7 @@ void afp_over_dsi(AFPObj *obj)
                                               dsi->data, &dsi->datalen);
                 child.flags &= ~CHILD_RUNNING;
             } else {
-                LOG(log_error, logtype_default, "(write) bad function %x", function);
+                LOG(log_error, logtype_afpd, "(write) bad function %x", function);
                 dsi->datalen = 0;
                 err = AFPERR_NOOP;
             }
@@ -288,7 +288,7 @@ void afp_over_dsi(AFPObj *obj)
             }
 
             if (!dsi_wrtreply(dsi, err)) {
-                LOG(log_error, logtype_default, "dsi_wrtreply: %s", strerror(errno) );
+                LOG(log_error, logtype_afpd, "dsi_wrtreply: %s", strerror(errno) );
                 afp_dsi_die(1);
             }
             break;
@@ -301,7 +301,7 @@ void afp_over_dsi(AFPObj *obj)
              * between server and client. if things are correct,
              * we need to flush the rest of the packet if necessary. */
         default:
-            LOG(log_info, logtype_default,"afp_dsi: spurious command %d", cmd);
+            LOG(log_info, logtype_afpd,"afp_dsi: spurious command %d", cmd);
             dsi_writeinit(dsi, dsi->data, DSI_DATASIZ);
             dsi_writeflush(dsi);
             break;
