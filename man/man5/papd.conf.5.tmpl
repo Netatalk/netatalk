@@ -1,4 +1,4 @@
-.\" $Id: papd.conf.5.tmpl,v 1.1 2000-09-26 19:09:25 rufustfirefly Exp $
+.\" $Id: papd.conf.5.tmpl,v 1.2 2002-03-19 23:23:53 morgana Exp $
 .TH papd.conf 5 "26 September 2000" "netatalk 1.5"
 .UC 4
 .SH NAME
@@ -26,6 +26,11 @@ The simplest case is to have either no papd.conf, or to have one that
 has no active lines. In this case, atalkd should auto-discover the local
 printers on the machine. Please note that you can split lines by using
 \fB\\\fR.
+
+printername may be just a name (\fBPrinter 1\fR), or it may be a full name
+in nbp_name format (\fBPrinter 1:LaserWriter@My Zone\fR).  If more than 15
+printers are defined, you should explicitly define the zone for each printer.
+Otherwise, the Mac Chooser not show all the printers.
 
 The possible options are colon delimited (\fB:\fR), and lines must be
 terminated with colons. The possible options and flags are:
