@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.36 2002-08-16 00:42:56 didg Exp $
+ * $Id: directory.c,v 1.37 2002-08-22 13:41:19 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1223,16 +1223,26 @@ int		ibuflen, *rbuflen;
     return( rc );
 }
 
-int setdirparams(const struct vol *vol,
+/*
+ * cf AFP3.0.pdf page 244 for change_mdate and change_parent_mdate logic  
+ *
+ * assume path == '\0' eg. it's a directory in canonical form
+*/
+int setdirparams(const struct vol *vol, 
                  char *path, u_int16_t bitmap, char *buf )
 {
     struct maccess	ma;
     struct adouble	ad;
     struct utimbuf      ut;
+    struct timeval      tv;
+
     char                *upath;
     int			bit = 0, aint, isad = 1;
     u_int16_t		ashort, bshort;
     int                 err = AFP_OK;
+    int                 change_mdate = 0;
+    int                 change_parent_mdate = 0;
+    int                 newdate = 0;
 #ifdef FORCE_UIDGID
     uidgidset		*uidgid;
 
@@ -1244,6 +1254,7 @@ int setdirparams(const struct vol *vol,
 #ifdef FORCE_UIDGID
     save_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
+
     if (ad_open( upath, vol_noadouble(vol)|ADFLAGS_HF|ADFLAGS_DIR,
                  O_RDWR|O_CREAT, 0666, &ad) < 0) {
         /*
@@ -1284,6 +1295,7 @@ int setdirparams(const struct vol *vol,
 
         switch( bit ) {
         case DIRPBIT_ATTR :
+            change_mdate = 1;
             if (isad) {
                 memcpy( &ashort, buf, sizeof( ashort ));
                 ad_getattr(&ad, &bshort);
@@ -1293,11 +1305,14 @@ int setdirparams(const struct vol *vol,
                     bshort &= ~ashort;
                 }
                 ad_setattr(&ad, bshort);
+                if ((ashort & htons(ATTRBIT_INVISIBLE)))
+		   change_parent_mdate = 1;
             }
             buf += sizeof( ashort );
             break;
 
         case DIRPBIT_CDATE :
+            change_mdate = 1;
             if (isad) {
                 memcpy(&aint, buf, sizeof(aint));
                 ad_setdate(&ad, AD_DATE_CREATE, aint);
@@ -1306,15 +1321,12 @@ int setdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_MDATE :
-            memcpy(&aint, buf, sizeof(aint));
-            if (isad)
-                ad_setdate(&ad, AD_DATE_MODIFY, aint);
-            ut.actime = ut.modtime = AD_DATE_TO_UNIX(aint);
-            utime(upath, &ut);
-            buf += sizeof( aint );
+            memcpy(&newdate, buf, sizeof(newdate));
+            buf += sizeof( newdate );
             break;
 
         case DIRPBIT_BDATE :
+            change_mdate = 1;
             if (isad) {
                 memcpy(&aint, buf, sizeof(aint));
                 ad_setdate(&ad, AD_DATE_BACKUP, aint);
@@ -1323,6 +1335,7 @@ int setdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_FINFO :
+            change_mdate = 1;
             /*
              * Alright, we admit it, this is *really* sick!
              * The 4 bytes that we don't copy, when we're dealing
@@ -1343,6 +1356,7 @@ int setdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_UID :	/* What kind of loser mounts as root? */
+            change_parent_mdate = 1;
             memcpy( &aint, buf, sizeof(aint));
             buf += sizeof( aint );
             if ( (curdir->d_did == DIRDID_ROOT) &&
@@ -1386,6 +1400,7 @@ int setdirparams(const struct vol *vol,
             }
             break;
         case DIRPBIT_GID :
+            change_parent_mdate = 1;
             memcpy( &aint, buf, sizeof( aint ));
             buf += sizeof( aint );
             if (curdir->d_did == DIRDID_ROOT)
@@ -1432,6 +1447,8 @@ int setdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_ACCESS :
+            change_mdate = 1;
+            change_parent_mdate = 1;
             ma.ma_user = *buf++;
             ma.ma_world = *buf++;
             ma.ma_group = *buf++;
@@ -1494,6 +1511,16 @@ int setdirparams(const struct vol *vol,
     }
 
 setdirparam_done:
+    if (change_mdate && newdate == 0 && gettimeofday(&tv, NULL) == 0) {
+       newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
+    }
+    if (newdate) {
+       if (isad)
+          ad_setdate(&ad, AD_DATE_MODIFY, newdate);
+       ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
+       utime(upath, &ut);
+    }
+
     if ( isad ) {
         ad_flush( &ad, ADFLAGS_HF );
         ad_close( &ad, ADFLAGS_HF );
@@ -1502,6 +1529,17 @@ setdirparam_done:
 #ifdef FORCE_UIDGID
     restore_uidgid ( &uidgid );
 #endif /* FORCE_UIDGID */
+
+    if (change_parent_mdate && curdir->d_did != DIRDID_ROOT
+            && gettimeofday(&tv, NULL) == 0) {
+       if (!movecwd(vol, curdir->d_parent)) {
+           newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
+           bitmap = 1<<DIRPBIT_MDATE;
+           setdirparams(vol, "", bitmap, (char *)&newdate);
+           /* should we reset curdir ?*/
+       }
+    }
+
     return err;
 }
 

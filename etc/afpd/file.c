@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.49 2002-08-21 07:52:04 didg Exp $
+ * $Id: file.c,v 1.50 2002-08-22 13:41:20 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -153,13 +153,7 @@ int getmetadata(struct vol *vol,
         case FILPBIT_MDATE :
             if ( adp && (ad_getdate(adp, AD_DATE_MODIFY, &aint) == 0)) {
                 if ((st->st_mtime > AD_DATE_TO_UNIX(aint))) {
-                        if ( fstat( ad_hfileno( adp ), &hst ) < 0 ) {
-                            LOG(log_error, logtype_default, "getfilparams fstat: %s", strerror(errno) );
-                        }
-                        else if (hst.st_mtime < st->st_mtime) 
-                            aint = AD_DATE_FROM_UNIX(st->st_mtime);
-                        else 
-                            aint = AD_DATE_FROM_UNIX(hst.st_mtime);
+                   aint = AD_DATE_FROM_UNIX(st->st_mtime);
                 }
             } else {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
@@ -615,6 +609,10 @@ int		ibuflen, *rbuflen;
     return( rc );
 }
 
+/*
+ * cf AFP3.0.pdf page 252 for change_mdate and change_parent_mdate logic  
+ *
+*/
 
 int setfilparams(struct vol *vol,
                  char *path, u_int16_t bitmap, char *buf )
@@ -628,6 +626,11 @@ int setfilparams(struct vol *vol,
     u_int16_t		ashort, bshort;
     u_int32_t		aint;
     struct utimbuf	ut;
+
+    int                 change_mdate = 0;
+    int                 change_parent_mdate = 0;
+    int                 newdate = 0;
+    struct timeval      tv;
 
 #ifdef FORCE_UIDGID
     uidgidset		*uidgid;
@@ -676,6 +679,7 @@ int setfilparams(struct vol *vol,
 
         switch(  bit ) {
         case FILPBIT_ATTR :
+            change_mdate = 1;
             memcpy(&ashort, buf, sizeof( ashort ));
             ad_getattr(adp, &bshort);
             if ( ntohs( ashort ) & ATTRBIT_SETCLR ) {
@@ -683,32 +687,34 @@ int setfilparams(struct vol *vol,
             } else {
                 bshort &= ~ashort;
             }
+            if ((ashort & htons(ATTRBIT_INVISIBLE)))
+                change_parent_mdate = 1;
             ad_setattr(adp, bshort);
             buf += sizeof( ashort );
             break;
 
         case FILPBIT_CDATE :
+            change_mdate = 1;
             memcpy(&aint, buf, sizeof(aint));
             ad_setdate(adp, AD_DATE_CREATE, aint);
             buf += sizeof( aint );
             break;
 
         case FILPBIT_MDATE :
-            memcpy(&aint, buf, sizeof( aint ));
-            if (isad)
-                ad_setdate(adp, AD_DATE_MODIFY, aint);
-            ut.actime = ut.modtime = AD_DATE_TO_UNIX(aint);
-            utime(upath, &ut);
-            buf += sizeof( aint );
+            memcpy(&newdate, buf, sizeof( newdate ));
+            buf += sizeof( newdate );
             break;
 
         case FILPBIT_BDATE :
+            change_mdate = 1;
             memcpy(&aint, buf, sizeof(aint));
             ad_setdate(adp, AD_DATE_BACKUP, aint);
             buf += sizeof( aint );
             break;
 
         case FILPBIT_FINFO :
+            change_mdate = 1;
+
             if (!memcmp( ad_entry( adp, ADEID_FINDERI ), ufinderi, 8 )
                     && ( 
                      ((em = getextmap( path )) &&
@@ -778,6 +784,16 @@ int setfilparams(struct vol *vol,
     }
 
 setfilparam_done:
+    if (change_mdate && newdate == 0 && gettimeofday(&tv, NULL) == 0) {
+       newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
+    }
+    if (newdate) {
+       if (isad)
+          ad_setdate(adp, AD_DATE_MODIFY, newdate);
+       ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
+       utime(upath, &ut);
+    }
+
     if (isad) {
         ad_flush( adp, ADFLAGS_HF );
         ad_close( adp, ADFLAGS_HF );
@@ -788,10 +804,15 @@ setfilparam_done:
 
     }
 
+    if (change_parent_mdate && gettimeofday(&tv, NULL) == 0) {
+        newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
+        bitmap = 1<<FILPBIT_MDATE;
+        setdirparams(vol, "", bitmap, (char *)&newdate);
+    }
+
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end setfilparams:");
 #endif /* DEBUG */
-
     return err;
 }
 
@@ -799,7 +820,7 @@ setfilparam_done:
  * renamefile and copyfile take the old and new unix pathnames
  * and the new mac name.
  * NOTE: if we have to copy a file instead of renaming it, locks
- *       will break.
+ *       will break. Anyway it's an error because then we have 2 files.
  * FIXME: locks on ressource fork will always break thanks to ad_close, done ?
  *
  * src         the full source absolute path 
@@ -839,6 +860,7 @@ struct adouble    *adp;
         case EROFS:
             return AFPERR_VLOCK;
         case EXDEV :			/* Cross device move -- try copy */
+            /* if source is open bail out */
             if (( rc = copyfile(src, dst, newname, noadouble )) != AFP_OK ) {
                 deletefile( dst, 0 );
                 return( rc );
