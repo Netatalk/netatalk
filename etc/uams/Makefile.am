@@ -12,7 +12,7 @@ EXTRA_DIST = uams_dhx_pam.c uams_dhx_passwd.c \
 
 SUFFIXES = .c .so
 .c.so:
-	$(COMPILE) -DHAVE_CONFIG_H -DUAM_RNDNUM -fPIC -DPIC \
+	$(COMPILE) -DHAVE_CONFIG_H -fPIC -DPIC \
 	  -I$(top_srcdir) -fomit-frame-pointer -c $< ; \
 	$(LD) -shared -o $@ $*.o $(LIBS)
 
