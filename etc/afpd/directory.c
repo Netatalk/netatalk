@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.21 2001-12-10 20:16:54 srittau Exp $
+ * $Id: directory.c,v 1.22 2001-12-29 08:22:23 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -456,9 +456,11 @@ static int deletedir(char *dir)
                     continue; /* somebody went and deleted it behind our backs. */
                 case EROFS:
                     err = AFPERR_VLOCK;
+					break;
                 case EPERM:
                 case EACCES :
                     err = AFPERR_ACCESS;
+					break;
                 default :
                     err = AFPERR_PARAM;
                 }
