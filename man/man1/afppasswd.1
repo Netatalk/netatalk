@@ -1,0 +1,69 @@
+.TH AFPPASSWD 1 "03 Aug 2000" "netatalk 1.5"
+.SH NAME
+afppasswd \- netatalk password maintenance utility
+.SH SYNOPSIS
+.B afppasswd
+[
+.B \-acfn
+]
+[
+.B \-p\fI passwd file
+]
+[
+.B \-u\fI minimum uid
+]
+.SH DESCRIPTION
+.B afppasswd
+allows the maintenance of afppasswd files created by netatalk for
+use by some User Authentication Modules (UAMs)
+.LP
+.B afppasswd
+can either be called by root with parameters, or can be called by
+local system users with no parameters to change their passwords.
+.SH EXAMPLE
+Local user changing their own password:
+.sp
+.RS
+.nf
+	example% afppasswd
+	Enter NEW AFP password: (hidden)
+	Enter NEW AFP password again: (hidden)
+	afppasswd: updated password.
+.fi
+.RE
+.SH OPTIONS
+.TP
+.B \-a
+Add a new user to the
+.B afppasswd
+file.
+.TP
+.B \-c
+Create and/or initialize
+.B afppasswd
+file or specific user.
+.TP
+.B \-f
+Force the current action.
+.TP
+.B \-p\fI path
+Path to
+.B afppasswd
+file.
+.TP
+.B \-n
+If cracklib support is built into
+.B netatalk
+this option will cause cracklib checking to be disabled, if the
+superuser does not want to have the password run against the
+cracklib dictionary.
+.TP
+.B \-u\fI minimum uid
+This is the minimum
+.I user id
+(uid) that
+.B afppasswd
+will use when creating users.
+.SH SEE ALSO
+.BR afpd (8),
+.BR atalkd (8).
