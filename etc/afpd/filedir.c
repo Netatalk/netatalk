@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.12 2001-08-15 01:37:34 srittau Exp $
+ * $Id: filedir.c,v 1.13 2001-09-04 13:52:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -377,6 +377,10 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
     if (!validupath(vol, newpath))
       return AFPERR_EXIST;
 
+    /* check for vetoed filenames */
+    if (veto_file(vol->v_veto, newpath))
+        return AFPERR_EXIST;
+
     /* the strdiacasecmp deals with case-insensitive, case preserving
        filesystems */
     if (stat( newpath, &st ) == 0 && strdiacasecmp(path, ibuf))
@@ -667,6 +671,10 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     if (!validupath(vol, upath))
       return AFPERR_EXIST;
 
+    /* check for vetoed filenames */
+    if (veto_file(vol->v_veto, upath))
+        return AFPERR_EXIST;
+
     /* source == destination. we just silently accept this. */
     if (curdir == sdir) {
       if (strcmp(oldname, newname) == 0)
@@ -716,5 +724,41 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 #endif /* DEBUG */
 
     return( rc );
+}
+
+int veto_file(const char*veto_str, const char*path)
+/* given a veto_str like "abc/zxc/" and path "abc", return 1
+ * veto_str should be '/' delimited
+ * if path matches any one of the veto_str elements exactly, then 1 is returned
+ * otherwise, 0 is returned.
+ */
+{
+	int i;	/* index to veto_str */
+	int j;	/* index to path */
+
+	if ((veto_str == NULL) || (path == NULL))
+		return 0;
+/*
+#ifdef DEBUG
+	syslog(LOG_DEBUG, "veto_file \"%s\", \"%s\"", veto_str, path);
+#endif
+*/
+	for(i=0, j=0; veto_str[i] != '\0'; i++) {
+		if (veto_str[i] == '/') {
+			if ((j>0) && (path[j] == '\0'))
+				return 1;
+			j = 0;
+		} else {
+			if (veto_str[i] != path[j]) {
+				while ((veto_str[i] != '/')
+				    && (veto_str[i] != '\0'))
+					i++;
+				j = 0;
+				continue;
+			}
+			j++;
+		}
+	}
+	return 0;
 }
 

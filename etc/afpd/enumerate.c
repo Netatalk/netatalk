@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.8 2001-08-27 15:26:16 uhees Exp $
+ * $Id: enumerate.c,v 1.9 2001-09-04 13:52:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -228,6 +228,10 @@ int afp_enumerate(obj, ibuf, ibuflen, rbuf, rbuflen )
 	      continue;
 
 	    if (!(validupath(vol, de->d_name)))
+	      continue;
+
+	    /* check for vetoed filenames */
+	    if (veto_file(vol->v_veto, de->d_name))
 	      continue;
 
 	    /* now check against too big a file */

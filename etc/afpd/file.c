@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.27 2001-08-27 15:26:16 uhees Exp $
+ * $Id: file.c,v 1.28 2001-09-04 13:52:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -405,6 +405,10 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     if (!validupath(vol, upath))
       return AFPERR_EXIST;
+
+    /* check for vetoed filenames */
+    if (veto_file(vol->v_veto, upath))
+        return AFPERR_EXIST;
 
     if ((of = of_findname(vol, curdir, path))) {
       adp = of->of_ad;

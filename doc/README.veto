@@ -1,0 +1,66 @@
+Veto Options Patch for Netatalk
+===============================
+
+   The patch at the below address adds a function similar to Samba's
+"veto files" option to Netatalk. It is not derived from Samba is anyway
+so GPL'ing Netatalk wasn't a factor. :-)
+
+http://ariel.ucs.unimelb.edu.au/~epl/netatalk/veto/netatalk-veto.diff
+
+   For those people who do not use Samba, it allows the server to hide
+files which the user could otherwise access. Hopefully, if this patch
+works, clients will not be able to see any veto'ed files/directories.
+Nor will they be able to create, rename or move files/directories
+matching the veto'ed filespecs (on the Unix side).
+
+   For example, if you use Samba and Netatalk, you would commonly have
+the following line in Samba's configuration files. That line hides the
+files on the filesystem which Netatalk/Mac client creates, but the
+Mac-user never sees. By hiding it, users cannot fiddle with these
+directories and nor will they confuse themselves by files appear in
+Windows which doesn't appear under Macs.
+
+veto files = /.AppleDouble/.AppleDesktop/Network Trash Folder/TheVolumeSettingsFolder/
+
+   Likewise, Windows often create some "special" files which you may
+wish to hide from mac users. Hence, the following line might be useful.
+
+veto:recycled/desktop.ini/Folder.htt/Folder Settings/
+
+   The option as implemented is case sensitive, so YMMV.
+
+Limitations and other notes
+===========================
+- This patch may have a memory leak as a result of strdup()'ing v_veto,
+  but not freeing it anywhere. I'm not sure if this is a practical
+  problem, as presumably v_veto should be free()'ed when the user
+  disconnects. Upon which the fork()'ed ``afpd'' will die and its
+  memory resources reclaimed by the operating system.
+- This patch does not deal with wildcards at all. Once I've worked out
+  a good design and algorithm, I might add it. It currently fulfills
+  all my requirements. But if there is a demand for wildcard support,
+  I'd be happy to spend additional time on this problem. Until then, I
+  want to make sure that the rest of the code is correct.
+- In theory, (with the veto option of veto:foobar/) it would be able to
+  create a filename named ":66oobar" on the unix side which will then
+  appear to the mac client as "foobar". Due to other code in Netatalk
+  (not related to this patch), this won't actually work. However, there
+  is no fundamental reason why the mac client would not be able to
+  read files which seemingly matched the veto filespec (from the mac).
+
+How was the patch made
+======================
+I did things in the following steps.
+1) I added per-volume support for the "veto:string" option to
+   ``volume.{c,h}''.
+2) I determined that the veto option was functionally most similar to
+   the "validupath()" function. Therefore, after every "validupath()"
+   call, I added a "veto_file()".
+3) I placed the "veto_file()" function in the ``etc/afpd/filedir.c''
+   source file. It could also be in any of the other files, but I
+   figured that filedir.c was the best spot. The "veto_file()" function
+   takes the "veto_str" parameter directly from value "string" in point
+   1) above.
+4) Inside "veto_file()", uncomment the DEBUG code if you want.
+
+   If you want more information, contact me at <epl@unimelb.edu.au>.

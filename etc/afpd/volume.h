@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.6 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: volume.h,v 1.7 2001-09-04 13:52:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,6 +49,7 @@ struct vol {
     int                 v_nfs, v_casefold;
     struct codepage     *v_mtoupage, *v_utompage, *v_badumap;
     char                *v_password;
+    char                *v_veto;
 #ifdef CNID_DB
     void                *v_db;
     char                *v_dbpath;

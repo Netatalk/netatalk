@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.11 2001-08-18 13:20:30 uhees Exp $
+ * $Id: volume.c,v 1.12 2001-09-04 13:52:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -86,13 +86,14 @@ static struct extmap	*extmap = NULL, *defextmap = NULL;
 				~u  -> make u illegal only as the first
 				       part of a double-byte character.
 			     */
+#define VOLOPT_VETO      10  /* list of veto filespec */
 
 #ifdef FORCE_UIDGID
-#define VOLOPT_FORCEUID  10  /* force uid for username x */
-#define VOLOPT_FORCEGID  11  /* force gid for group x */
-#define VOLOPT_MAX        11
+#define VOLOPT_FORCEUID  11  /* force uid for username x */
+#define VOLOPT_FORCEGID  12  /* force gid for group x */
+#define VOLOPT_MAX       12
 #else /* normally, there are only 9 possible options */
-#define VOLOPT_MAX        9
+#define VOLOPT_MAX       10
 #endif /* FORCE_UIDGID */
 
 #define VOLOPT_NUM        (VOLOPT_MAX + 1)
@@ -301,6 +302,11 @@ static void volset(struct vol_option *options, char *volname, int vlen,
       free(options[VOLOPT_CODEPAGE].c_value);
     options[VOLOPT_CODEPAGE].c_value = get_codepage_path(nlspath, val + 1);
 
+  } else if (optionok(tmp, "veto:", val)) {
+    if (options[VOLOPT_VETO].c_value)
+      free(options[VOLOPT_VETO].c_value);
+    options[VOLOPT_VETO].c_value = strdup(val + 1);
+
   } else if (optionok(tmp, "casefold:", val)) {
     if (strcasecmp(val + 1, "tolower") == 0)
       options[VOLOPT_CASEFOLD].i_value = AFPVOL_UMLOWER;
@@ -457,6 +463,9 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 
       if (options[VOLOPT_PASSWORD].c_value) 
 	volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);
+
+      if (options[VOLOPT_VETO].c_value) 
+	volume->v_veto = strdup(options[VOLOPT_VETO].c_value);
 
 #ifdef CNID_DB
       if (options[VOLOPT_DBPATH].c_value)

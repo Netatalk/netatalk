@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.16 2001-08-15 01:37:34 srittau Exp $
+ * $Id: directory.c,v 1.17 2001-09-04 13:52:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -936,6 +936,10 @@ int getdirparams(const struct vol *vol,
 		  if (!validupath(vol, de->d_name)) 
 		    continue;
 
+		  /* check for vetoed filenames */
+		  if (veto_file(vol->v_veto, de->d_name))
+		    continue;
+
 		  /* now check against too long a filename */
 		  if (strlen(utompath(vol, de->d_name)) > MACFILELEN)
 		    continue;
@@ -1408,6 +1412,10 @@ int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     if (!validupath(vol, upath))
       return AFPERR_EXIST;
+
+    /* check for vetoed filenames */
+    if (veto_file(vol->v_veto, upath))
+        return AFPERR_EXIST;
 
 #ifdef FORCE_UIDGID
     save_uidgid ( &uidgid );
