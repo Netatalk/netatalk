@@ -2,8 +2,11 @@ netatalk (1.5pre8cvs-0) unstable; urgency=low
 
   * Unofficial CVS release.
   * Correct included docs, since all platform specific docs were merged.
+  * Upstream does now have manpages for apple_cp(1), apple_mv(1), and
+    apple_rm(1), written by Lance Levsen <l.levsen@printwest.com>.
+    Removed the links to undocumented(7).
 
- -- Sebastian Rittau <srittau@debian.org>  Tue, 16 Oct 2001 04:08:27 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Wed, 17 Oct 2001 11:59:53 +0200
 
 netatalk (1.5pre8-2) unstable; urgency=low
 
