@@ -25,15 +25,24 @@ ATALK_SBIN=:SBINDIR:
 # Check for IP Encapsulation support
 #/sbin/modprobe ipddp || echo "[could not load IP encapsulation]"
 
-test -x ${ATALK_SBIN}/atalkd || exit 0
+if [ ! -x ${ATALK_SBIN}/atalkd ]; then
+     echo "[${ATALK_SBIN}/atalkd not found.  Did it compile?]";
+     exit 0;
+fi
 
-test -f ${ATALK_CONF_DIR}/netatalk.conf || exit 0
+if [ ! -f ${ATALK_CONF_DIR}/netatalk.conf ]; then
+     echo "[${ATALK_CONF_DIR}/netatalk.conf not found]";
+     exit 0;
+fi
 
 # read in netatalk configuration
 . ${ATALK_CONF_DIR}/netatalk.conf
 
 # Check that networking is up.
-[ ${NETWORKING} = "no" ] && exit 0
+if [ ${NETWORKING} = "no" ] 
+     echo "[Network isn't started]"; 
+     exit 0;
+fi
 
 # initialize return values
 RETVAL=1
