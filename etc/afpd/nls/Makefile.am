@@ -9,6 +9,7 @@ makecode_SOURCES = makecode.c
 parsecode_SOURCES = parsecode.c
 
 MACCODES = 				\
+	maccode.identity		\
 	maccode.437			\
 	maccode.850			\
 	maccode.iso8859-1		\
