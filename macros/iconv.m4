@@ -17,7 +17,7 @@ dnl	# check for libiconv support
 	    CFLAGS="$CFLAGS -I$withval/include"
 	    LDFLAGS="$LDFLAGS -L$withval/lib"
 	    AC_CHECK_LIB(iconv, iconv_open, [
-                                if test "$withval" != "/usr" && "$withval" != ""; then
+                                if test "$withval" != "/usr" && test "$withval" != ""; then
                                     ICONV_CFLAGS="-I$withval/include"
                                     ICONV_LIBS ="-L$withval/lib"
                                 fi
