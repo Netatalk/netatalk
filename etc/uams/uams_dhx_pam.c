@@ -1,4 +1,6 @@
 /*
+ * $Id: uams_dhx_pam.c,v 1.13 2001-02-27 17:07:43 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
@@ -13,6 +15,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include <security/pam_appl.h>
 
@@ -72,38 +78,42 @@ static int PAM_conv (int num_msg,
   
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
   
-  if (num_msg < 1)
+  if (num_msg < 1) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM DHX Conversation Err -- %m");
     /* Log Entry */
     return PAM_CONV_ERR;
+  }
 
   reply = (struct pam_response *) 
     calloc(num_msg, sizeof(struct pam_response));
 
-  if (!reply)
+  if (!reply) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM DHX Conversation Err -- %m");
     /* Log Entry */
     return PAM_CONV_ERR;
+  }
 
   for (count = 0; count < num_msg; count++) {
     char *string = NULL;
 
     switch (msg[count]->msg_style) {
     case PAM_PROMPT_ECHO_ON:
-      if (!(string = COPY_STRING(PAM_username)))
+      if (!(string = COPY_STRING(PAM_username))) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: username failure -- %m");
     /* Log Entry */
 	goto pam_fail_conv;
+      }
       break;
     case PAM_PROMPT_ECHO_OFF:
-      if (!(string = COPY_STRING(PAM_password)))
+      if (!(string = COPY_STRING(PAM_password))) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: passwd failure: --: %m");
     /* Log Entry */
 	goto pam_fail_conv;
+      }
       break;
     case PAM_TEXT_INFO:
 #ifdef PAM_BINARY_PROMPT
@@ -165,11 +175,12 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     DH *dh;
 
     /* get the client's public key */
-    if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL)))
+    if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM No Public Key -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
+    }
 
     /* get our primes */
     if (!(gbn = BN_bin2bn(&g, sizeof(g), NULL))) {
@@ -285,11 +296,12 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
     /* grab some of the options */
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &buf,
-			     &i) < 0)
+			     &i) < 0) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
+    }
 
     len = (unsigned char) *ibuf++;
     if ( len > i ) {
@@ -331,11 +343,12 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
-    if (sessid != dhxhash(obj))
+    if (sessid != dhxhash(obj)) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM Session ID - DHXHash Mismatch -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
+    }
     ibuf += sizeof(sessid);
     
     if (uam_afpserver_option(obj, UAM_OPTION_HOSTNAME,
@@ -385,11 +398,12 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     err = AFPERR_NOTAUTH;
     PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation,
 			  &pamh);
-    if (PAM_error != PAM_SUCCESS)
+    if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", pam_strerror(pamh,PAM_error));
     /* Log Entry */
       goto logincont_err;
+    }
 
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
@@ -399,7 +413,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
       if (PAM_error == PAM_MAXTRIES) 
 	err = AFPERR_PWDEXPR;
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
     }      
@@ -413,7 +427,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 	err = AFPERR_PWDCHNG;
 #endif
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
     }
@@ -422,18 +436,20 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 #define PAM_CRED_ESTABLISH PAM_ESTABLISH_CRED
 #endif
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
-    if (PAM_error != PAM_SUCCESS)
+    if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
+    }
 
     PAM_error = pam_open_session(pamh, 0);
-    if (PAM_error != PAM_SUCCESS)
+    if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", PAM_error);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM_Error: %s -- %m", pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
+    }
 
     memset(rbuf, 0, PASSWDLEN); /* zero out the password */
     *uam_pwd = dhxpwd;
@@ -485,19 +501,21 @@ static int pam_changepw(void *obj, char *username,
     /* otherwise, it's like logincont but different. */
 
     /* check out the session id */
-    if (sessid != dhxhash(obj))
+    if (sessid != dhxhash(obj)) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Session ID not Equal to DHX Hash -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
+    }
 
     /* we need this for pam */
     if (uam_afpserver_option(obj, UAM_OPTION_HOSTNAME,
-			     (void *) &hostname, NULL) < 0)
+			     (void *) &hostname, NULL) < 0) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Hostname Null?? -- %m");
     /* Log Entry */
       return AFPERR_MISC;
+    }
 
     /* grab the client's nonce, old password, and new password. */
     CAST_cbc_encrypt(ibuf, ibuf, CHANGEPWBUFLEN, &castkey,
@@ -506,11 +524,12 @@ static int pam_changepw(void *obj, char *username,
 
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
-    if (!(bn1 = BN_bin2bn(ibuf, KEYSIZE, NULL)))
+    if (!(bn1 = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented-- %m");
     /* Log Entry */
       return AFPERR_PARAM;
+    }
 
     if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {
       BN_free(bn1);
@@ -557,11 +576,12 @@ static int pam_changepw(void *obj, char *username,
 
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
 			  &lpamh);
-    if (PAM_error != PAM_SUCCESS)
+    if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Needless to say, PAM_error is != to PAM_SUCCESS -- %m");
     /* Log Entry */
       return AFPERR_PARAM;
+    }
     pam_set_item(lpamh, PAM_TTY, "afpd");
     pam_set_item(lpamh, PAM_RHOST, hostname);
 

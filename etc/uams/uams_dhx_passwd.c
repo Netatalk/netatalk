@@ -1,4 +1,7 @@
-/* Copyright (c) 1990,1993 Regents of The University of Michigan.
+/*
+ * $Id: uams_dhx_passwd.c,v 1.6 2001-02-27 17:07:43 rufustfirefly Exp $
+ *
+ * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -24,7 +27,7 @@
 
 #ifdef SHADOWPW
 #include <shadow.h>
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
 #ifdef OPENSSL_DHX
 #include <openssl/bn.h>
@@ -34,7 +37,7 @@
 #include <bn.h>
 #include <dh.h>
 #include <cast.h>
-#endif
+#endif /* OPENSSL_DHX */
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>

@@ -5,6 +5,17 @@
 	* README: updated 1.5+ install instructions to include list of
 	required and recommended packages
 
+	* etc/uams/uam_*.c: cleanups, addition of CVS Id tag to C source
+
+	* configure.in, acconfig.h: change USE_AFS to AFS to be the same as
+	all of the defines in the codebase
+
+	* etc/uams/uam_dhx_pam.c: fixed DHX login using this module (last
+	patch made with syslog()'s didn't include any brackets) 
+	(Bug #233756)
+
+	* distrib/initscripts/.cvsignore: removed pulling of atalk
+
 2001-02-26  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* configure.in: added /usr/local/ssl to list of SSL paths to check, to

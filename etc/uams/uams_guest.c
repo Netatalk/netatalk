@@ -1,3 +1,9 @@
+/*
+ * $Id: uams_guest.c,v 1.4 2001-02-27 17:07:43 rufustfirefly Exp $
+ *
+ * (c) 2001 (see COPYING)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

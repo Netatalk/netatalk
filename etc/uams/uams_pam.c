@@ -1,4 +1,6 @@
 /*
+ * $Id: uams_pam.c,v 1.6 2001-02-27 17:07:43 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
