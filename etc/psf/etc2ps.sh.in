@@ -9,14 +9,11 @@
 # tag in the case.
 #
 
-DVIPSPATH=/usr/local/tex/bin
-DVIPS=/usr/local/tex/bin/dvips
+DVIPS=@DVIPS@
 DVIPSARGS="-f -q"
 
-TROFF2PS=/usr/local/psroff/troff2/troff2ps
+TROFF2PS=@TROFF2PS@
 TROFF2PSARGS="-Z -O-.10"
-
-PATH=/usr/bin:$DVIPSPATH; export PATH
 
 case $1 in
 

@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
+etc2ps.sh
 psf
 psa
 .deps
