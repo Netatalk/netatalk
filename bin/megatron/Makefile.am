@@ -10,6 +10,6 @@ noinst_HEADERS = megatron.h
 LINKS = unbin unhex unsingle hqx2bin single2bin macbinary binheader nadheader
 
 install-exec-hook:
-	for LINK in $(LINKS); do
-		ln -s $(bindir)/megatron $(bindir)/$(LINK)
+	@for LINK in $(LINKS); do \
+		$(LN_S) -vn $(bindir)/megatron $(DESTDIR)$(bindir)/$(LINK); \
 	done

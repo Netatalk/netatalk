@@ -1,4 +1,25 @@
-($Id: ChangeLog,v 1.32 2001-05-01 13:45:34 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.33 2001-05-08 15:43:30 rufustfirefly Exp $)
+
+2001-05-08  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* bin/megatron/Makefile.am, etc/uams/Makefile.am: small Makefile fixes
+	from Olaf Hering <olh@suse.de>
+
+2001-05-07  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* contrib/shell_utils/netatalkshorternamelinks.pl: added script to
+	shorten names
+
+	* etc/afpd/quota.c, etc/uams/uams_passwd.c: patches from Burkhard
+	Schmidt <bs@cpfs.mpg.de> to fix typos
+
+2001-05-03  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/afpd/quota.c, etc/afpd/unix.h, etc/afpd/main.c,
+	etc/uams/uams_passwd.c: Tru64 patch from Burkhard Schmidt <bs@cpfs.mpg.de>
+
+	* configure.in, etc/afpd/quota.c, etc/afpd/unix.h: fixes for USE_*_H
+	moving to autodetected HAVE_*_H from autoconf script
 
 2001-05-01  jeff b  <jeff@univrel.pr.uconn.edu>
 

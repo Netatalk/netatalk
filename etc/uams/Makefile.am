@@ -47,7 +47,7 @@ SUFFIXES = .c .so
 .c.so:
 	$(COMPILE) -DHAVE_CONFIG_H -fPIC -DPIC \
 	  -I$(top_srcdir) -fomit-frame-pointer -c $< ; \
-	$(LD) $(LDSHAREDFLAGS) -o $@ $*.o $(LDFLAGS) $(LIBS)
+	$(CC) $(LDSHAREDFLAGS) -o $@ $*.o $(LDFLAGS) $(LIBS)
 
 #
 # create symbolic links:
