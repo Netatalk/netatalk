@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.16 2002-02-13 16:44:59 srittau Exp $
+ * $Id: uams_passwd.c,v 1.17 2002-02-13 18:26:31 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -138,8 +138,8 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         uam_afp_getcmdline( &ac, &av );
         sprintf( hostname, "%s@%s", username, clientname );
 
-        if( uams_sia_validate_user( NULL, ac, av, hostname, username,
-                                    NULL, FALSE, NULL, ibuf ) != SIASUCCESS )
+        if( uam_sia_validate_user( NULL, ac, av, hostname, username,
+                                   NULL, FALSE, NULL, ibuf ) != SIASUCCESS )
             return AFPERR_NOTAUTH;
 
         return AFP_OK;
