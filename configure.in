@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.87 2001-06-18 13:57:11 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.88 2001-06-19 16:55:23 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -155,16 +155,16 @@ AC_ARG_ENABLE(afs,
 	fi
 )
 
-AC_ARG_WITH(config-dir,
-	[  --with-config-dir=DIR   obsolete - use --pkgconfdir],
-		sysconfdir="$withval",
-		sysconfdir="${prefix}/etc"
-)
+#AC_ARG_WITH(config-dir,
+#	[  --with-config-dir=DIR   obsolete - use --pkgconfdir],
+#		sysconfdir="$withval",
+#		sysconfdir="${prefix}/etc"
+#)
 
 AC_ARG_WITH(pkgconfdir,
 	[  --with-pkgconfdir=DIR   package specific configuration in DIR [default=SYSCONF/netatalk]],
-		pkgconfdir="$withval",
-		pkgconfdir="${sysconfdir}/netatalk"
+		PKGCONFDIR="$withval",
+		PKGCONFDIR="${sysconfdir}/netatalk"
 )
 
 AC_ARG_WITH(cracklib,
@@ -344,7 +344,7 @@ AC_ARG_ENABLE(timelord,
 AC_ARG_WITH(uams-path,
 	[  --with-uams-path=path   path to UAMs [default=PKGCONF/uams]],
 	uams_path="$withval",
-	uams_path="${pkgconfdir}/uams"
+	uams_path="${PKGCONFDIR}/uams"
 )
 
 dnl --------------------------------------------------------------------------
@@ -356,7 +356,7 @@ AC_ARG_ENABLE(fhs,
 	if test "$enableval" = "yes"; then
 		uams_path="/usr/lib/netatalk"
 		sysconfdir="/etc"
-		pkgconfdir=${sysconfdir}/netatalk
+		PKGCONFDIR=${sysconfdir}/netatalk
 		use_pam_so=yes
 		dnl FIXME: NEED TO HAVE --mandir=/usr/share/man AT SOME POINT...
 		AC_DEFINE(FHS_COMPATIBILITY)
@@ -627,6 +627,8 @@ AC_SUBST(PAPD_LIBS)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(LDSHAREDFLAGS)
+
+AC_SUBST(PKGCONFDIR)
 
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
