@@ -51,9 +51,12 @@ pamdir = @PAMDIR@/etc/pam.d
 
 install-data-local: install-config-files $(PAMFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pamdir)
-	for f in $(PAMFILES); do					\
-		$(INSTALL_DATA) $$f $(DESTDIR)$(pamdir)/netatalk || echo "WARNING: Can't install PAM files";		\
-	done
+	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pamdir)/netatalk; then \
+	    echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pamdir)/netatalk"; \
+	    $(INSTALL_DATA) netatalk.pamd $(DESTDIR)$(pamdir)/netatalk || echo "WARNING: Can't install PAM files";		\
+	else \
+	    echo "not overwriting $(DESTDIR)$(pamdir)/netatalk"; \
+	fi; 
 
 else
 
