@@ -15,20 +15,20 @@
 
 
 /* lock file path. this should be re-organized a bit. */
-#ifndef _PATH_LOCKDIR
-#ifdef BSD4_4
-#ifdef MACOSX_SERVER
-#define _PATH_LOCKDIR		"/var/run/"
-#else
-#define _PATH_LOCKDIR           "/var/spool/lock/"
-#endif
-#else
-#ifdef linux
-#define _PATH_LOCKDIR           "/var/lock/"
-#else
-#define _PATH_LOCKDIR           "/var/spool/locks/"
-#endif /* linux */
-#endif /* BSD4_4 */
+#if ! defined (_PATH_LOCKDIR)
+#  if defined (FHS_COMPATIBILITY)
+#    define _PATH_LOCKDIR	"/var/run/"
+#  elif defined (BSD4_4)
+#    ifdef MACOSX_SERVER
+#      define _PATH_LOCKDIR	"/var/run/"
+#    else
+#      define _PATH_LOCKDIR	"/var/spool/lock/"
+#    endif
+#  elif defined (linux)
+#    define _PATH_LOCKDIR	"/var/lock/"
+#  else
+#    define _PATH_LOCKDIR	"/var/spool/locks/"
+#  endif
 #endif
 
 /*
@@ -51,18 +51,30 @@
  */
 #define _PATH_ATALKDEBUG	"/tmp/atalkd.debug"
 #define _PATH_ATALKDTMP		"atalkd.tmp"
-#define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd")
+#ifdef FHS_COMPATIBILITY
+#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd.pid")
+#else
+#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd")
+#endif
 
 /*
  * psorder paths
  */
 #define _PATH_TMPPAGEORDER	"/tmp/psorderXXXXXX"
-#define _PATH_PAPDLOCK		ATALKPATHCAT(_PATH_LOCKDIR,"papd")
+#ifdef FHS_COMPATIBILITY
+#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd.pid")
+#else
+#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd")
+#endif
 
 /*
  * afpd paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
-#define _PATH_AFPDLOCK		ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
+#ifdef FHS_COMPATIBILITY
+#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
+#else
+#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
+#endif
 
 #endif /* atalk/paths.h */
