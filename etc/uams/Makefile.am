@@ -9,11 +9,7 @@ SUBDIRS = uams_krb4
 UAMS_GENERIC = uams_guest.la uams_passwd.la
 
 if USE_DHX
-UAMS_DHX_GENERIC = uams_randnum.la uams_dhx_passwd.la
-endif
-
-if USE_PGP
-UAMS_PGP = uams_pgp.la
+UAMS_DHX_GENERIC = uams_randnum.la uams_pgp.la uams_dhx_passwd.la
 endif
 
 if BUILD_PAM
@@ -73,7 +69,6 @@ uams_dhx_pam_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@ -lpam
 uamsdir = @UAMS_PATH@
 uams_LTLIBRARIES =		\
 	$(UAMS_GENERIC)		\
-	$(UAMS_PGP)		\
 	$(UAMS_PAM)		\
 	$(UAMS_DHX_GENERIC)	\
 	$(UAMS_DHX_PAM)
