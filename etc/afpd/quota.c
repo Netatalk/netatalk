@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.4 2001-05-03 13:57:44 rufustfirefly Exp $
+ * $Id: quota.c,v 1.5 2001-05-07 20:05:32 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -34,7 +34,7 @@ int quotactl(int cmd, const char *special, int id, caddr_t addr)
 #endif
 
 
-#if defined(USE_MNTTAB_H) || defined(__svr4__)
+#if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
 /*
  * Return the mount point associated with the filesystem
  * on which "file" resides.  Returns NULL on failure.
@@ -105,7 +105,7 @@ special( file, nfs )
 }
 
 #else /* ultrix */
-#if defined(USE_MOUNT_H) || defined(BSD4_4) || defined(_IBMR2)
+#if defined(HAVE_MOUNT_H) || defined(BSD4_4) || defined(_IBMR2)
 
 static char *
 special( file, nfs )
@@ -226,6 +226,7 @@ static int getfsquota(vol, uid, dq)
 			seteuid( uid );
 			return ( AFPERR_PARAM );
 		}
+		seteuid( uid );
 	}
 
 #else /* BSD4_4 */
