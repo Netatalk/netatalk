@@ -324,7 +324,7 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path, *upath, *adpath;
+    char		*path, *upath, adpath[50];
     int			creatf, did, openf, uid;
     u_int16_t		vid;
 
@@ -419,9 +419,9 @@ you are a developer who wants to try it out and fix it. */
       strcat (adpath, path);
       seteuid(0); /* Become root to change the owner of the file */
       syslog (LOG_INFO, "Changing %s to uid=%d gid=%d", path, sb.st_uid, sb.st_gid);
-      if (chown(path, sb.st_uid, sb.st_gid)==-1)
+      if (chown(path, sb.st_uid, -1)==-1)
         syslog (LOG_ERR, "Error changing permissions: %m");
-      if (chown(adpath, sb.st_uid, sb.st_gid)==-1)
+      if (chown(adpath, sb.st_uid, -1)==-1)
         syslog (LOG_ERR, "Error changing AppleDouble permissions: %m");
       syslog (LOG_INFO, "Changing afpd owner back to %d", uid);
       seteuid(uid); /* Restore process ownership to normal */
