@@ -1,9 +1,9 @@
 Source: netatalk
-Section: net
+Section: non-US
 Priority: extra
-Maintainer: Sebastian Rittau <srittau@jroger.in-berlin.de>
-Standards-Version: 3.5.3.0
-Build-Depends: debhelper (>= 3.0.0), libdb2-dev, libwrap0-dev, libpam0g-dev, libssl096-dev
+Maintainer: Sebastian Rittau <srittau@debian.org>
+Standards-Version: 3.5.5.0
+Build-Depends: debhelper (>= 3.0.0), libdb3-dev, libwrap0-dev, libpam0g-dev, libssl-dev
 
 Package: netatalk
 Architecture: any
@@ -18,7 +18,7 @@ Description: Appletalk user binaries
 
 Package: netatalk-dev
 Architecture: any
-Section: devel
+Depends: netatalk (>= 1.5)
 Conflicts: libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
 Replaces: libatalk14g-dev, libatalk14-dev, netatalk-asun, libatalk1-dev
 Description: Appletalk library and development files
@@ -26,4 +26,3 @@ Description: Appletalk library and development files
  BSD-derived systems.  The current release contains support for
  EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and
  AFP.
-
