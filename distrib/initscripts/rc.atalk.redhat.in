@@ -15,7 +15,7 @@
 # Source networking configuration.
 . /etc/sysconfig/network
 
-test -x @sbindir@/atalkd || exit 0
+test -x @prefix@/sbin/atalkd || exit 0
 
 test -f @CONFIG_DIR@/netatalk.conf || exit 0
 
@@ -34,7 +34,7 @@ RETVAL_AFPD=0
 # startup code for everything
 atalk_startup() {
     if [ x"${ATALKD_RUN}" != x"no" ]; then 
-	daemon @sbindir@/atalkd
+	daemon @prefix@/sbin/atalkd
 	RETVAL_ATALKD=$?
 
 	if [ -x @bindir@/nbprgstr ]; then	
@@ -42,8 +42,8 @@ atalk_startup() {
 	    @bindir@/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 	fi	
 
-	if [ x"${PAPD_RUN}" = x"yes"  -a -x @sbindir@/papd ]; then
-	    daemon @sbindir@/papd
+	if [ x"${PAPD_RUN}" = x"yes"  -a -x @prefix@/sbin/papd ]; then
+	    daemon @prefix@/sbin/papd
 	    RETVAL_PAPD=$?
 	fi
 
@@ -53,14 +53,14 @@ atalk_startup() {
 	fi
 
 	# check for timelord in sbin directory
-	if [ -x @sbindir@/timelord ]; then
-	    daemon @sbindir@/timelord
+	if [ -x @prefix@/sbin/timelord ]; then
+	    daemon @prefix@/sbin/timelord
 	fi
 
     fi
 
-    if [ x"${AFPD_RUN}" = x"yes" -a -x @sbindir@/afpd ] ; then
-	    daemon @sbindir@/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+    if [ x"${AFPD_RUN}" = x"yes" -a -x @prefix@/sbin/afpd ] ; then
+	    daemon @prefix@/sbin/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
 		-c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
 	    RETVAL_AFPD=$?
     fi
@@ -85,7 +85,7 @@ case "$1" in
 'stop')
 	echo -n 'Shutting down AppleTalk services: '
 	if [ x"${ATALKD_RUN}" != x"no" ]; then
-	    if [ x"${PAPD_RUN}" = x"yes" -a -x @sbindir@/papd ]; then
+	    if [ x"${PAPD_RUN}" = x"yes" -a -x @prefix@/sbin/papd ]; then
 		killproc papd
 		RETVAL_PAPD=$?
 	    fi
@@ -96,7 +96,7 @@ case "$1" in
 	    fi
 
             # checking for timelord in sbin directory
-	    if [ -x @sbindir@/timelord ]; then
+	    if [ -x @prefix@/sbin/timelord ]; then
 		killproc timelord
 	    fi
 
@@ -104,14 +104,14 @@ case "$1" in
 	    @bindir@/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 
 	    # kill atalkd last, since without it the plumbing goes away.
-	    if [ -x @sbindir@/atalkd ]; then
+	    if [ -x @prefix@/sbin/atalkd ]; then
 		killproc atalkd
 		RETVAL_ATALKD=$?
 	    fi
 	fi	    
 
 	# kill this separately as we also do AFP/tcp
-	if [ x"${AFPD_RUN}" = x"yes" -a -x @sbindir@/afpd ]; then
+	if [ x"${AFPD_RUN}" = x"yes" -a -x @prefix@/sbin/afpd ]; then
 	    killproc afpd
 	    RETVAL_AFPD=$?
 	fi
