@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.18 2003-04-16 22:45:10 samnoble Exp $
+ * $Id: globals.h,v 1.19 2003-05-16 15:29:27 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -63,6 +63,7 @@ struct afp_options {
     char *k5service, *k5realm;
     mode_t umask;
     mode_t save_mask;
+    int    sleep;
 #ifdef ADMIN_GRP
     gid_t admingid;
 #endif /* ADMIN_GRP */
@@ -79,6 +80,7 @@ typedef struct AFPObj {
     void (*logout)(void), (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);
+    void (*sleep)(void);
     /* to prevent confusion, only use these in afp_* calls */
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */

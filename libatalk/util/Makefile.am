@@ -12,5 +12,6 @@ libutil_la_SOURCES = \
 	module.c	\
 	server_child.c	\
 	server_lock.c	\
+	server_ipc.c	\
 	strcasestr.c    \
 	strdicasecmp.c

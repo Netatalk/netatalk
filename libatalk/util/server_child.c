@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.7 2002-10-07 19:14:41 didg Exp $
+ * $Id: server_child.c,v 1.8 2003-05-16 15:29:27 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -43,6 +43,9 @@
 #ifndef WIFSIGNALED
 #define WIFSIGNALED(status) (!WIFSTOPPED(status) && !WIFEXITED(status)) 
 #endif
+#ifndef WTERMSIG
+#define WTERMSIG(status)      ((status) & 0x7f)
+#endif
 
 #include <atalk/server_child.h>
 
@@ -56,6 +59,10 @@
 
 struct server_child_data {
   pid_t pid; 
+  u_int32_t  time;
+  u_int32_t idlen;
+  
+  char *clientid;
   struct server_child_data **prevp, *next;
 };
 
@@ -176,6 +183,9 @@ int server_child_remove(server_child *children, const int forkid,
     return 0;
   
   unhash_child(child);
+  if (child->clientid) {
+      free(child->clientid);
+  }
   free(child);
   children->count--;
   return 1;
@@ -195,6 +205,9 @@ void server_child_free(server_child *children)
       child = fork->table[j]; /* start at the beginning */
       while (child) {
 	tmp = child->next;
+        if (child->clientid) {
+            free(child->clientid);
+        }
 	free(child);
 	child = tmp;
       }
@@ -219,6 +232,72 @@ void server_child_kill(server_child *children, const int forkid,
     while (child) {
       tmp = child->next;
       kill(child->pid, sig);
+      child = tmp;
+    }
+  }
+}
+
+/* send kill to a child processes.
+ * a plain-old linked list 
+ * FIXME use resolve_child ?
+ */
+void server_child_kill_one(server_child *children, const int forkid, const pid_t pid)
+{
+  server_child_fork *fork;
+  struct server_child_data *child, *tmp;
+  int i;
+
+  fork = (server_child_fork *) children->fork + forkid;
+  for (i = 0; i < CHILD_HASHSIZE; i++) {
+    child = fork->table[i];
+    while (child) {
+      tmp = child->next;
+      if (child->pid == pid) {
+          kill(child->pid, SIGTERM);
+      }
+      child = tmp;
+    }
+  }
+}
+
+
+/* see if there is a process for the same mac     */
+/* if the times don't match mac has been rebooted */
+void server_child_kill_one_by_id(server_child *children, const int forkid, const pid_t pid, 
+          const u_int32_t idlen, char *id, u_int32_t boottime)
+{
+  server_child_fork *fork;
+  struct server_child_data *child, *tmp;
+  int i;
+
+  fork = (server_child_fork *) children->fork + forkid;
+  for (i = 0; i < CHILD_HASHSIZE; i++) {
+    child = fork->table[i];
+    while (child) {
+      tmp = child->next;
+      if ( child->pid != pid) {
+          if ( child->idlen == idlen && !memcmp(child->clientid, id, idlen)) {
+	     if ( child->time != boottime ) {
+	          kill(child->pid, SIGTERM);
+		  LOG(log_info, logtype_default, "Disconnecting old session %d, client rebooted.",  child->pid);
+	     }
+	     else {
+		  LOG(log_info, logtype_default, "WARNING: 2 connections (%d, %d), boottime identical, don't know if one needs to be disconnected.");
+	     } 
+		
+	  }
+      }
+      else 
+      {
+	  child->time = boottime;
+	  /* free old token if any */
+	  if (child->clientid) {
+	      free(child->clientid);
+	  }
+	  child->idlen = idlen;
+          child->clientid = id;
+	  LOG(log_info, logtype_default, "Setting clientid (len %d) for %d, boottime %X", idlen, child->pid, boottime);
+      }
       child = tmp;
     }
   }
@@ -266,7 +345,8 @@ void server_child_handler(server_child *children)
     } else {
       if (WIFSIGNALED(status))
       { 
-	LOG(log_info, logtype_default, "server_child[%d] %d killed", i, pid);
+	LOG(log_info, logtype_default, "server_child[%d] %d killed by signal %d", i, pid,  
+	       WTERMSIG (status));
       }
       else
       {
