@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.16 2002-09-09 01:21:59 didg Exp $
+ * $Id: desktop.c,v 1.17 2002-10-04 23:51:22 srittau Exp $
  *
  * See COPYRIGHT.
  */
@@ -633,6 +633,17 @@ char *mtoupath(const struct vol *vol, char *mpath)
         if (vol->v_mtoupage && ((*m & 0x80) ||
                                 vol->v_flags & AFPVOL_MAPASCII)) {
             *u = vol->v_mtoupage->map[(unsigned char) *m].value;
+            if (!*u && *m) {
+                /* if conversion failed, encode in hex
+                 * to prevent silly truncation
+                 * H.P. Jansen <hpj@urpla.net> */
+#ifdef DEBUG
+                LOG(log_debug, logtype_afpd, "mtoupath: hex encode: 0x%x", (unsigned char) *m);
+#endif /* DEBUG */
+                *u++ = ':';
+                *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
+                *u = hexdig[ *m & 0x0f ];
+            }
         } else
 #endif /* 1 */
 #if AD_VERSION == AD_VERSION1
@@ -657,6 +668,10 @@ char *mtoupath(const struct vol *vol, char *mpath)
         m++;
     }
     *u = '\0';
+
+#ifdef DEBUG
+    LOG(log_debug, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
+#endif /* DEBUG */
 
     return( upath );
 }
@@ -705,6 +720,10 @@ char *utompath(const struct vol *vol, char *upath)
 #ifdef FILE_MANGLING
     strcpy(mpath,mangle(vol, mpath));
 #endif /* FILE_MANGLING */
+
+#ifdef DEBUG
+    LOG(log_debug, logtype_afpd, "utompath: '%s':'%s'", upath, mpath);
+#endif /* DEBUG */
 
     return( mpath );
 }
