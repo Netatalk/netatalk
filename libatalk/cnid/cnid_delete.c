@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_delete.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_delete.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -47,7 +47,7 @@ retry:
   if ((errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
     switch (errno) {
-    case EAGAIN:
+	case DB_LOCK_DEADLOCK:
       goto retry;
       
     case DB_NOTFOUND:
@@ -63,7 +63,7 @@ retry:
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
   if ((errno = db->db_devino->del(db->db_devino, tid, &key, 0))) {
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
@@ -82,7 +82,7 @@ retry:
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
   if ((errno = db->db_didname->del(db->db_didname, tid, &key, 0))) {
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
@@ -99,7 +99,7 @@ retry:
   key.size = sizeof(id);
   if ((errno = db->db_cnid->del(db->db_cnid, tid, &key, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto abort_err;

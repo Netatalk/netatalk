@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_close.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,11 +62,10 @@ void cnid_close(void *CNID)
   db->db_didname->close(db->db_didname, 0);
   db->db_devino->close(db->db_devino, 0);
   db->db_cnid->close(db->db_cnid, 0);
-
   db->dbenv->close(db->dbenv, 0);
-  /* db->dbenv->remove(db->dbenv, db->dbenv->db_home, 0); */
-
+  
   if (db->lockfd > -1)
     close(db->lockfd); /* this will also close any lock we have. */
+
   free(db);
 }

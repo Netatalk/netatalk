@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_open.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -247,7 +247,7 @@ mkdir_appledb:
   key.size = DBVERSION_KEYLEN;
   while ((errno = db->db_didname->get(db->db_didname, NULL, &key, &data, 0))) {
     switch (errno) {
-    case EAGAIN:
+	case DB_LOCK_DEADLOCK:
       continue;
 
     case DB_NOTFOUND:
@@ -260,7 +260,7 @@ mkdir_appledb:
 dbversion_retry:
       if (db->db_didname->put(db->db_didname, NULL, &key, &data,
 			      DB_NOOVERWRITE))
-	if (errno == EAGAIN)
+	if (errno == DB_LOCK_DEADLOCK)
 	  goto dbversion_retry;
       break;
     default:
@@ -347,7 +347,6 @@ dbversion_retry:
 fail_appinit:
   syslog(LOG_ERR, "cnid_open: db_open failed");
   db->dbenv->close(db->dbenv, 0);
-  /* db->dbenv->remove(db->dbenv, db->dbenv->db_home, 0); */
 
 fail_lock:
   if (db->lockfd > -1)

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_update.c,v 1.5 2001-08-16 14:30:30 uhees Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +50,7 @@ retry:
   key.size = sizeof(id);
   if ((errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN)
+    if (errno == DB_LOCK_DEADLOCK)
       goto retry;
     goto update_err;
   }
@@ -59,7 +59,7 @@ retry:
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
   if ((errno = db->db_devino->del(db->db_devino, tid, &key, 0))) {
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
@@ -75,7 +75,7 @@ retry:
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
   if ((errno = db->db_didname->del(db->db_didname, tid, &key, 0))) {
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
@@ -101,7 +101,7 @@ retry:
   altdata.size = sizeof(id);
   if ((errno = db->db_devino->put(db->db_devino, tid, &key, &altdata, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto update_err;
@@ -112,7 +112,7 @@ retry:
   key.size = data.size - CNID_DEVINO_LEN;
   if ((errno = db->db_didname->put(db->db_didname, tid, &key, &altdata, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto update_err;
@@ -123,7 +123,7 @@ retry:
   key.size = sizeof(id);
   if ((errno = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN) {
+    if (errno == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto update_err;

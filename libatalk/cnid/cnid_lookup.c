@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_lookup.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,8 +62,8 @@ cnid_t cnid_lookup(void *CNID,
   key.data = buf; /* dev/ino is the first part of the buffer */
   key.size = CNID_DEVINO_LEN;
   while ((errno = db->db_devino->get(db->db_devino, NULL,
-				     &key, &devdata, 0))) {
-    if (errno == EAGAIN)
+				    &key, &devdata, 0))) {
+    if (errno == DB_LOCK_DEADLOCK)
       continue;
 
     if (errno == DB_NOTFOUND) {
@@ -81,8 +81,8 @@ cnid_t cnid_lookup(void *CNID,
   key.size = CNID_DID_LEN + len + 1;
   memset(&diddata, 0, sizeof(diddata));
   while ((errno = db->db_didname->get(db->db_didname, NULL,
-				      &key, &diddata, 0))) {
-    if (errno == EAGAIN)
+				       &key, &diddata, 0))) {
+    if (errno == DB_LOCK_DEADLOCK)
       continue;
 
     if (errno == DB_NOTFOUND) {

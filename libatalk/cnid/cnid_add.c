@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_add.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -54,7 +54,7 @@ retry:
   if ((errno = db->db_cnid->put(db->db_cnid, tid,
 			        key, data, DB_NOOVERWRITE))) {
     txn_abort(tid);
-    if (errno == EAGAIN)
+    if (errno == DB_LOCK_DEADLOCK)
       goto retry;
 
     return errno;
@@ -68,7 +68,7 @@ retry:
   if ((errno = db->db_devino->put(db->db_devino, tid,
 				  &altkey, &altdata, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN)
+    if (errno == DB_LOCK_DEADLOCK)
       goto retry;
 
     return errno;
@@ -80,7 +80,7 @@ retry:
   if ((errno = db->db_didname->put(db->db_didname, tid,
 				   &altkey, &altdata, 0))) {
     txn_abort(tid);
-    if (errno == EAGAIN)
+    if (errno == DB_LOCK_DEADLOCK)
       goto retry;
 
     return errno;
@@ -132,6 +132,25 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
   }
   data.size = CNID_HEADER_LEN + len + 1;
 
+  /* start off with the hint. it should be in network byte order.
+   * we need to make sure that somebody doesn't add in restricted
+   * cnid's to the database. */
+  if (ntohl(hint) >= CNID_START) {
+    /* if the key doesn't exist, add it in. don't fiddle with nextID. */
+    errno = add_cnid(db, NULL, &key, &data);
+    switch (errno) {
+    case DB_KEYEXIST: /* need to use RootInfo after all. */
+      break;
+    default:
+      syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint);
+      goto cleanup_err;
+    case 0:
+      if (debug)
+        syslog(LOG_ERR, "cnid_add: used hint for did %d, name %s as %d", did, name, hint);
+      return hint;
+    }
+  }
+
   /* Abort and retry the modification. */
   if (0) {
 retry:    if ((errno = txn_abort(tid)) != 0)
@@ -143,26 +162,6 @@ retry:    if ((errno = txn_abort(tid)) != 0)
   if ((errno = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
     syslog(LOG_ERR, "cnid_add: txn_begin failed (%d)", errno);
     goto cleanup_err;
-  }
-
-  /* start off with the hint. it should be in network byte order.
-   * we need to make sure that somebody doesn't add in restricted
-   * cnid's to the database. */
-  if (ntohl(hint) >= CNID_START) {
-    /* if the key doesn't exist, add it in. don't fiddle with nextID. */
-    errno = add_cnid(db, tid, &key, &data);
-    switch (errno) {
-    case DB_KEYEXIST: /* need to use RootInfo after all. */
-      break;
-    default:
-      syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint);
-      hint = 0;
-      goto cleanup_abort;
-    case 0:
-      if (debug)
-        syslog(LOG_ERR, "cnid_add: used hint for did %d, name %s as %d", did, name, hint);
-      goto cleanup_commit;
-    }
   }
 
   memset(&rootinfo_key, 0, sizeof(&rootinfo_key));

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_nextid.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_nextid.c,v 1.5 2001-08-16 14:30:29 uhees Exp $
  */
 #ifdef unused
 
@@ -30,3 +30,4 @@ cnid_t cnid_nextid(void *CNID)
   return id;
 }
 #endif
+

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_resolve.c,v 1.3 2001-08-15 02:16:25 srittau Exp $
+ * $Id: cnid_resolve.c,v 1.4 2001-08-16 14:30:29 uhees Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,7 +35,7 @@ char *cnid_resolve(void *CNID, cnid_t *id)
   key.data = id;
   key.size = sizeof(*id);
   while ((errno = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0))) {
-    if (errno == EAGAIN)
+    if (errno == DB_LOCK_DEADLOCK)
       continue;
 
     if (errno != DB_NOTFOUND) 
