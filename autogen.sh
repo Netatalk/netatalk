@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # build it all.
-libtoolize --copy && \
+libtoolize --copy --force && \
 	aclocal $ACLOCAL_FLAGS && \
 	autoheader && \
 	automake --include-deps --add-missing --foreign && \
