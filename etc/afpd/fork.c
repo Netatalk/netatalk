@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.24 2002-03-07 16:06:01 jmarcus Exp $
+ * $Id: fork.c,v 1.25 2002-03-13 19:28:22 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -59,10 +59,8 @@ int			*buflen;
 const u_int16_t     attrbits;
 {
 #ifndef USE_LASTDID
-    struct stat		hst, lst, *lstp;
-#else /* USE_LASTDID */
-    struct stat     hst;
-#endif
+    struct stat		lst, *lstp;
+#endif /* !USE_LASTDID */
     struct stat		st;
     struct extmap	*em;
     char		*data, *nameoff = NULL, *upath;
@@ -1298,7 +1296,6 @@ int                 ibuflen, *rbuflen;
 
             /* loop until everything gets written. currently
                     * dsi_write handles the end case by itself. */
-afp_write_loop:
             while ((cc = dsi_write(dsi, rbuf, *rbuflen))) {
                 if ( obj->options.flags & OPTION_DEBUG ) {
                     printf("(write) command cont'd: %d\n", cc);
@@ -1318,7 +1315,6 @@ afp_write_loop:
         break;
     }
 
-afp_write_done:
     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount);
     if ( ad_hfileno( ofork->of_ad ) != -1 )
         ofork->of_flags |= AFPFORK_DIRTY;
