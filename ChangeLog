@@ -1,5 +1,7 @@
-($Id: ChangeLog,v 1.59 2001-07-10 13:38:13 rufustfirefly Exp $)
+2001-07-10  Lance Levsen  <lance@iworks.pwgroup.ca>
 
+	* man/man8/papd.8.tmpl: Fixed ftp URI for Adobe's PPD files.
+	
 2001-06-30  andy m  <morgan@orst.edu>
 
 	* etc/papd/ppd.c: "unquote" ppd values by removing leading
