@@ -1,5 +1,5 @@
 /*
- * $Id: atp_packet.c,v 1.4 2001-08-15 02:17:57 srittau Exp $
+ * $Id: atp_packet.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -121,7 +121,7 @@ void atp_build_req_packet( struct atpbuf *pktbuf,
 
     /* set length
     */
-    pktbuf->atpbuf_dlen = ATP_HDRSIZE + atpb->atp_sreqdlen;
+    pktbuf->atpbuf_dlen = ATP_HDRSIZE + (size_t) atpb->atp_sreqdlen;
 }
 
 void atp_build_resp_packet( struct atpbuf *pktbuf,
@@ -145,7 +145,7 @@ void atp_build_resp_packet( struct atpbuf *pktbuf,
 
     /* set length
     */
-    pktbuf->atpbuf_dlen = ATP_HDRSIZE + atpb->atp_sresiov[ seqnum ].iov_len;
+    pktbuf->atpbuf_dlen = ATP_HDRSIZE + (size_t) atpb->atp_sresiov[ seqnum ].iov_len;
 }
 
 
@@ -205,7 +205,7 @@ atp_recv_atp( ATP ah,
     if ( cq != NULL ) {
 	/* we found one in the queue -- copy to rbuf
 	*/
-	dlen = cq->atpbuf_dlen;
+	dlen = (int) cq->atpbuf_dlen;
 	*func = rfunc;
 	memcpy( fromaddr, &cq->atpbuf_addr, sizeof( struct sockaddr_at ));
 	memcpy( rbuf, cq->atpbuf_info.atpbuf_data, cq->atpbuf_dlen );
@@ -301,7 +301,7 @@ atp_recv_atp( ATP ah,
 		memcpy( &inbuf->atpbuf_addr, &faddr, 
 			sizeof( struct sockaddr_at ));
 		inbuf->atpbuf_next = ah->atph_queue;
-		inbuf->atpbuf_dlen = recvlen;
+		inbuf->atpbuf_dlen = (size_t) recvlen;
 		memcpy( inbuf->atpbuf_info.atpbuf_data, rbuf, recvlen );
 	    }
 	}

@@ -1,5 +1,5 @@
 /*
- * $Id: atp_rresp.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_rresp.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -50,7 +50,8 @@ atp_rresp( ah, atpb )
     ATP			ah;		/* open atp handle */
     struct atp_block	*atpb;		/* parameter block */
 {
-    int		len, i, rc;
+    int		i, rc;
+    size_t	len;
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_rresp" );
@@ -81,7 +82,7 @@ atp_rresp( ah, atpb )
 	    return( -1 );
 	}
 #ifdef EBUG
-	fprintf( stderr, "atp_rresp copying %d bytes packet %d\n",
+	fprintf( stderr, "atp_rresp copying %ld bytes packet %d\n",
 		len, i );
 	bprint( (char *)ah->atph_resppkt[ i ]->atpbuf_info.atpbuf_data,
 		len + ATP_HDRSIZE );

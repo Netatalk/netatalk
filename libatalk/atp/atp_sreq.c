@@ -1,5 +1,5 @@
 /*
- * $Id: atp_sreq.c,v 1.4 2001-08-15 02:17:57 srittau Exp $
+ * $Id: atp_sreq.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -95,7 +95,7 @@ atp_sreq( ATP ah, struct atp_block *atpb, int respcount, u_int8_t flags )
     /* send the initial request
     */
 #ifdef EBUG
-    printf( "\n<%d> atp_sreq: sending a %d byte packet ", getpid(),
+    printf( "\n<%d> atp_sreq: sending a %ld byte packet ", getpid(),
 	    req_buf->atpbuf_dlen );
     atp_print_addr( " to", atpb->atp_saddr );
     putchar( '\n' );

@@ -86,7 +86,7 @@ struct atpxobuf {
 
 struct atpbuf {
     struct atpbuf	*atpbuf_next;		/* next buffer in chain */
-    short		atpbuf_dlen;		/* data length <= ATP_BUFSIZ */
+    size_t		atpbuf_dlen;		/* data length <= ATP_BUFSIZ */
     struct sockaddr_at	atpbuf_addr;		/* net address sent/recvd */
     union {
 	char		atpbuf_data[ ATP_BUFSIZ ];	/* the data */

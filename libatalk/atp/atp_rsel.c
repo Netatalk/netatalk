@@ -1,5 +1,5 @@
 /*
- * $Id: atp_rsel.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_rsel.c,v 1.4 2002-01-17 06:08:55 srittau Exp $
  *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -41,7 +41,7 @@ resend_request( ah )
     struct atphdr	req_hdr;
 
 #ifdef EBUG
-    printf( "\n<%d> resend_request: resending %d byte request packet",
+    printf( "\n<%d> resend_request: resending %ld byte request packet",
 	    getpid(), ah->atph_reqpkt->atpbuf_dlen );
     atp_print_addr( " to", &ah->atph_reqpkt->atpbuf_addr );
     putchar( '\n' );
@@ -178,7 +178,7 @@ timeout :
     bprint( abuf->atpbuf_info.atpbuf_data, recvlen );
 #endif /* EBUG */
 
-    abuf->atpbuf_dlen = recvlen;
+    abuf->atpbuf_dlen = (size_t) recvlen;
     memcpy( &resp_hdr, abuf->atpbuf_info.atpbuf_data + 1,
 	    sizeof( struct atphdr ));
 

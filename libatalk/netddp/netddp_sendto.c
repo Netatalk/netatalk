@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_sendto.c,v 1.4 2001-11-25 21:55:10 srittau Exp $
+ * $Id: netddp_sendto.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -39,7 +39,7 @@ static int _netddp_sendto_dummy;
 #endif /* ! MAX */
 
 #ifdef MACOSX_SERVER
-int netddp_sendto(int fd, void *buf, int buflen, unsigned int dummy, 
+int netddp_sendto(int fd, void *buf, size_t buflen, unsigned int dummy, 
 		  const struct sockaddr *addr, unsigned int addrlen)
 {
     ssize_t i;
@@ -56,7 +56,7 @@ int netddp_sendto(int fd, void *buf, int buflen, unsigned int dummy,
       return -1;
 
     memset(&ddphdr, 0, sizeof(ddphdr));
-    ddphdr.deh_len = htons(sizeof(ddphdr) + buflen);
+    ddphdr.deh_len = htons(sizeof(ddphdr) + (uint16_t) buflen);
     ddphdr.deh_dnet = sat->sat_addr.s_net;
     ddphdr.deh_dnode = sat->sat_addr.s_node;
     ddphdr.deh_dport = sat->sat_port;

@@ -11,6 +11,7 @@
 #ifndef _ATALK_NETDDP_H
 #define _ATALK_NETDDP_H 1
 
+#include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/socket.h>
 #include <netatalk/at.h>
@@ -18,7 +19,7 @@
 extern int netddp_open   __P((struct sockaddr_at *, struct sockaddr_at *));
 
 #if !defined(NO_DDP) && defined(MACOSX_SERVER)
-extern int netddp_sendto __P((int, void *, int, unsigned int, 
+extern int netddp_sendto __P((int, void *, size_t, unsigned int, 
 			   const struct sockaddr *, unsigned int));
 extern int netddp_recvfrom __P((int, void *, int, unsigned int, 
 			     struct sockaddr *, unsigned int *));

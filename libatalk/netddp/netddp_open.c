@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_open.c,v 1.6 2002-01-15 13:42:58 srittau Exp $
+ * $Id: netddp_open.c,v 1.7 2002-01-17 06:08:55 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -30,6 +30,11 @@ static int _netddp_open_dummy;
 
 int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
 {
+
+#ifdef NO_DDP
+    return -1;
+#else /* !NO_DDP */
+
     int s;
 
 #ifdef MACOSX_SERVER
@@ -80,4 +85,5 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
 #endif /* MACOSX_SERVER */
 
     return s;
+#endif /* NO_DDP */
 }
