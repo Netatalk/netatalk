@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.9 2001-05-22 19:13:36 rufustfirefly Exp $
+ * $Id: uams_passwd.c,v 1.10 2001-05-25 13:23:56 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -98,16 +98,14 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         struct pr_passwd *pr = getprpwnam( pwd->pw_name );
         if ( pr == NULL )
             return AFPERR_NOTAUTH;
-        if ( strcmp( dispcrypt( rbuf, pr->ufld.fd_encrypt,
+        if ( strcmp( dispcrypt( ibuf, pr->ufld.fd_encrypt,
             pr->ufld.fd_oldcrypt ), pr->ufld.fd_encrypt ) == 0 ) {
             return AFP_OK;
         }
     } else {
-        p = crypt( rbuf, pwd->pw_passwd );
-        memset(rbuf, 0, PASSWDLEN);
-        if ( strcmp( p, pwd->pw_passwd ) == 0 ) {
+        p = crypt( ibuf, pwd->pw_passwd );
+        if ( strcmp( p, pwd->pw_passwd ) == 0 )
             return AFP_OK;
-        }
     }
 #else /* TRU64 */
     p = crypt( ibuf, pwd->pw_passwd );

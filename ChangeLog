@@ -1,4 +1,8 @@
-($Id: ChangeLog,v 1.37 2001-05-22 19:13:36 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.38 2001-05-25 13:23:55 rufustfirefly Exp $)
+
+2001-05-25  jeff b  <jeff@univrel.pr.uconn.edu>
+	* etc/uams/uams_passwd.c: another Tru64 fix from Burkhard
+	Schmidt <bs@cpfs.mpg.de>
 
 2001-05-22  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, etc/afpd/unix.h: more portability fixes, and
