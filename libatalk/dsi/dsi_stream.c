@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: dsi_stream.c,v 1.6 2002-01-24 16:24:26 jmarcus Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -79,7 +79,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     if (len > 0)
       stored += len;
     else {/* eof or error */
-      LOG(log_error, logtype_default, "dsi_stream_read(%d): %s", len, strerror(errno));
+      LOG(log_error, logtype_default, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
       break;
     }
   }
