@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.8 2001-07-31 19:50:14 srittau Exp $
+ * $Id: queries.c,v 1.9 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>

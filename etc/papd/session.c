@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.11 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: session.c,v 1.12 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <netatalk/endian.h>

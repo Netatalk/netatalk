@@ -1,5 +1,5 @@
 /*
- * $Id: ddp_output.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ * $Id: ddp_output.c,v 1.3 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -14,7 +14,7 @@
 #include <sys/mbuf.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 
 #include <net/if.h>
 #include <net/route.h>

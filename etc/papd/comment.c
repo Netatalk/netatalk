@@ -1,5 +1,5 @@
 /*
- * $Id: comment.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: comment.c,v 1.6 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,7 +9,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: zip.c,v 1.8 2001-12-10 20:16:55 srittau Exp $
+ * $Id: zip.c,v 1.9 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <sys/param.h>
 #include <sys/types.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>

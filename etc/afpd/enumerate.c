@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.11 2001-12-10 20:16:54 srittau Exp $
+ * $Id: enumerate.c,v 1.12 2002-01-03 17:49:38 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,7 +15,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.9 2001-12-10 20:16:54 srittau Exp $
+ * $Id: desktop.c,v 1.10 2002-01-03 17:49:38 sibaz Exp $
  *
  * See COPYRIGHT.
  */
@@ -8,7 +8,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/time.h>

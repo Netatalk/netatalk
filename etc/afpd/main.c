@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.14 2001-12-10 20:16:54 srittau Exp $
+ * $Id: main.c,v 1.15 2002-01-03 17:49:38 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <sys/uio.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 

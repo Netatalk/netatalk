@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.6 2001-12-10 20:16:55 srittau Exp $
+ * $Id: nbp.c,v 1.7 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>

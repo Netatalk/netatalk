@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.13 2001-09-12 19:13:17 uhees Exp $
+ * $Id: main.c,v 1.14 2002-01-03 17:49:39 sibaz Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -18,7 +18,7 @@
 #include <sys/file.h>
 #endif /* sun && __svr4__ */
 #include <sys/socket.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 
 /* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
