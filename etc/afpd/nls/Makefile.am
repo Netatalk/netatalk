@@ -15,8 +15,7 @@ MACCODES = 				\
 	maccode.iso8859-1.adapted	\
 	maccode.koi8-r
 
-CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys -I$(top_srcdir)/etc/afpd \
-	@CFLAGS@
+CFLAGS = -I$(top_srcdir)/sys -I$(top_srcdir)/etc/afpd @CFLAGS@
 
 $(MACCODES): makecode
 	./makecode $@
