@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.h,v 1.4 2001-09-05 13:30:16 rufustfirefly Exp $
+ * $Id: filedir.h,v 1.5 2001-10-23 13:44:37 rufustfirefly Exp $
  */
 
 #ifndef AFPD_FILEDIR_H
@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include "globals.h"
 #include "volume.h"
+
+extern struct afp_options default_options;
 
 extern char		*ctoupath __P((const struct vol *, struct dir *, 
 				       char *));

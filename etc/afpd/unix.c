@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.23 2001-10-10 16:05:37 srittau Exp $
+ * $Id: unix.c,v 1.24 2001-10-23 13:44:37 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -247,7 +247,7 @@ inline int stickydirmode(name, mode, dropbox)
         if ( seteuid(0) < 0) {
 	   syslog( LOG_ERR, "stickydirmode: unable to seteuid root: %m");
         }
-        if ( retval=chmod( name, ( DIRBITS | mode | S_ISVTX) ) < 0) {
+        if ( retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & 0777 & ~default_options.umask) ) < 0) {
            syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
            return(AFPERR_ACCESS);
         } else {
@@ -264,7 +264,7 @@ inline int stickydirmode(name, mode, dropbox)
 	*  Ignore EPERM errors:  We may be dealing with a directory that is
 	*  group writable, in which case chmod will fail.
 	*/
-       if ( chmod( name, DIRBITS | mode ) < 0 && errno != EPERM)  {
+       if ( (chmod( name, (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0) && errno != EPERM)  {
           syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %s",
 		  name, strerror(errno) );
 	  retval = -1;
@@ -323,11 +323,11 @@ int setdeskmode( mode )
 	    }	    
 
 	    if (S_ISDIR(st.st_mode)) {
-	      if ( chmod( modbuf,  DIRBITS | mode ) < 0 && errno != EPERM ) {
+	      if ( chmod( modbuf,  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
 		syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
 			modbuf, strerror(errno) );
 	      }
-	    } else if ( chmod( modbuf,  mode ) < 0 && errno != EPERM ) {
+	    } else if ( chmod( modbuf,  mode & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
 	        syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
 			modbuf, strerror(errno) );
 	    }
@@ -335,7 +335,7 @@ int setdeskmode( mode )
 	}
 	closedir( sub );
 	/* XXX: need to preserve special modes */
-	if ( chmod( deskp->d_name,  DIRBITS | mode ) < 0 && errno != EPERM ) {
+	if ( chmod( deskp->d_name,  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
 	    syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
 		    deskp->d_name, strerror(errno) );
 	}
@@ -346,7 +346,7 @@ int setdeskmode( mode )
 	return -1;
     }
     /* XXX: need to preserve special modes */
-    if ( chmod( ".AppleDesktop",  DIRBITS | mode ) < 0 && errno != EPERM ) {
+    if ( chmod( ".AppleDesktop",  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
 	syslog( LOG_ERR, "setdeskmode: chmod .AppleDesktop: %s", strerror(errno) );
     }
     return( 0 );

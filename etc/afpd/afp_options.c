@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_options.c,v 1.12 2001-09-19 03:08:40 jmarcus Exp $
+ * $Id: afp_options.c,v 1.13 2001-10-23 13:44:37 rufustfirefly Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -61,7 +61,7 @@ char *strchr (), *strrchr ();
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
 #endif /* MIN */
 
-#define OPTIONS "dn:f:s:uc:g:P:ptDS:TL:F:U:Iv"
+#define OPTIONS "dn:f:s:uc:g:P:ptDS:TL:F:U:Ivm:"
 #define LENGTH 512
 
 /* return an option. this uses an internal array, so it's necessary
@@ -142,6 +142,7 @@ void afp_options_init(struct afp_options *options)
   options->passwdfile = _PATH_AFPDPWFILE;
   options->tickleval = 30;
   options->authprintdir = NULL;
+  options->umask = 0;
 #ifdef ADMIN_GRP
   options->admingid = 0;
 #endif /* ADMIN_GRP */
@@ -283,6 +284,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
   extern int optind;
   
   char *p;
+  char *tmp;	/* Used for error checking the result of strtol */
   int c, err = 0;
 
   if (gethostname(options->hostname, sizeof(options->hostname )) < 0 ) {
@@ -359,6 +361,17 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 	case 'I':
   	    options->flags |= OPTION_CUSTOMICON;
 		break;
+	case 'm':
+  	    options->umask = strtol(optarg, &tmp, 8);
+	    if ((options->umask < 0) || (options->umask > 0777)) {
+	    	fprintf(stderr, "%s: out of range umask setting provided\n", p);
+		err++;
+	    }
+	    if (tmp[0] != '\0') {
+	    	fprintf(stderr, "%s: invalid characters in umask setting provided\n", p);
+		err++;
+	    }
+	    break;
 	default :
 	    err++;
 	}

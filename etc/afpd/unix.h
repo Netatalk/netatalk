@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.7 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: unix.h,v 1.8 2001-10-23 13:44:37 rufustfirefly Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -90,6 +90,8 @@ extern int getnfsquota __P((const struct vol *, const int, const u_int32_t,
 extern int uquota_getvolspace __P((const struct vol *, VolSpace *, VolSpace *,
 			           const u_int32_t));
 #endif /* NO_QUOTA_SUPPORT */
+
+extern struct afp_options default_options;
 
 extern int gmem         __P((const gid_t));
 extern int setdeskmode  __P((const mode_t));

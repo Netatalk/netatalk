@@ -1,3 +1,9 @@
+2001-10-23  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/afpd/{{afpd_options,filedir,main,unix}.c,
+	{filedir,globals,unix}.h}: patch from Edmund Lam to allow
+	perms masks
+
 2001-10-21  joe c <marcus@marcuscom.com>
 
 	* libatalk/cnid*.c: Big patch to improve transaction throughput

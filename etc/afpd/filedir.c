@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.14 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: filedir.c,v 1.15 2001-10-23 13:44:37 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -100,7 +100,7 @@ int matchfile2dirperms(upath, vol, did)
 		    upath, strerror(errno));
             return (AFPERR_ACCESS);
           }
-          if (chmod(upath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+          if (chmod(upath,(st.st_mode&0777&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
           {
             syslog (LOG_ERR, 
 	      "matchfile2dirperms:  Error adding file read permissions: %s",
@@ -120,7 +120,7 @@ int matchfile2dirperms(upath, vol, did)
 	      adpath, strerror(errno));
             return (AFPERR_ACCESS);
 	  }
-          if (chmod(adpath, (st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+          if (chmod(adpath, (st.st_mode&0777&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
           {
             syslog (LOG_ERR, 
 	      "matchfile2dirperms:  Error adding AD file read permissions: %s",

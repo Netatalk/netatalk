@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.11 2001-08-15 01:37:34 srittau Exp $
+ * $Id: main.c,v 1.12 2001-10-23 13:44:37 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -154,11 +154,13 @@ int main( ac, av )
     set_auth_parameters( ac, av );
 #endif /* TRU64 */
 
-    umask( 0 );		/* so inherited file permissions work right */
+    umask( 022 );	/* so inherited file permissions work right */
 
     afp_options_init(&default_options);
     if (!afp_options_parse(ac, av, &default_options))
       exit(1);
+
+    umask( default_options.umask );
     
     switch(server_lock("afpd", default_options.pidfile, 
 		       default_options.flags & OPTION_DEBUG)) {
