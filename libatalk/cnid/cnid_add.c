@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.7 2001-09-04 13:49:54 rufustfirefly Exp $
+ * $Id: cnid_add.c,v 1.8 2001-09-05 21:53:29 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -42,8 +42,8 @@ static int add_cnid(CNID_private *db, DB_TXN *ptid, DBT *key, DBT *data)
 {
   DBT altkey, altdata;
   DB_TXN *tid;
-  /* We create rc here because using rc is bad.  Why?  Well, if you 
-   * use rc once, then call another function which resets it, you're
+  /* We create rc here because using errno is bad.  Why?  Well, if you 
+   * use errno once, then call another function which resets it, you're
    * screwed. */
   int rc = 0;
 
