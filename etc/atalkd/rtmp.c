@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.7 2001-08-03 22:12:54 srittau Exp $
+ * $Id: rtmp.c,v 1.8 2001-08-15 01:39:39 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -16,6 +16,10 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#ifdef TRU64
+#include <sys/mbuf.h>
+#include <net/route.h>
+#endif /* TRU64 */
 #include <net/if.h>
 #include <net/route.h>
 #include <netatalk/endian.h>

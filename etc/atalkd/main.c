@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: main.c,v 1.7 2001-08-15 01:39:39 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -22,6 +22,10 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <errno.h>
+#ifdef TRU64
+#include <sys/mbuf.h>
+#include <net/route.h>
+#endif /* TRU64 */
 #include <net/if.h>
 #include <net/route.h>
 

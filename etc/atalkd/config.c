@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: config.c,v 1.5 2001-08-15 01:39:39 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -15,6 +15,10 @@
 #include <sys/ioctl.h>
 #include <syslog.h>
 #include <sys/param.h>
+#ifdef TRU64
+#include <sys/mbuf.h>
+#include <net/route.h>
+#endif /* TRU64 */
 #include <net/if.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>

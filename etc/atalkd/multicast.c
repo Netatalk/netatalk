@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.c,v 1.6 2001-07-31 19:50:14 srittau Exp $
+ * $Id: multicast.c,v 1.7 2001-08-15 01:39:39 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -15,6 +15,10 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#ifdef TRU64
+#include <sys/mbuf.h>
+#include <net/route.h>
+#endif /* TRU64 */
 #include <net/if.h>
 #include <syslog.h>
 
