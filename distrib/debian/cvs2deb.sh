@@ -56,7 +56,11 @@ rm -r "$DISTDIR/debian/patches"
 rm    "$DISTDIR/debian/cvs2deb.sh"
 rm    "$DISTDIR/debian/VERSION"
 
-cd "$DISTDIR" && dpkg-buildpackage -rfakeroot
+cd $DISTDIR
+
+automake
+
+dpkg-buildpackage -rfakeroot
 
 cd ..
 rm -r "$DISTDIR"
