@@ -1,4 +1,8 @@
 
+2001-09-28  joe c   <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_close.c: Add more db3 3.3.x compatibility to CNID DB
+
 2001-09-27  joe c   <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_open.c: Set internal deadlock detection

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.7 2001-09-23 19:08:23 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.8 2001-09-28 14:51:47 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -48,7 +48,11 @@ void cnid_close(void *CNID)
       /* we've checkpointed, so clean up the log files.
        * NOTE: any real problems will make log_archive return an error. */
       chdir(db->dbenv->db_log_dir ? db->dbenv->db_log_dir : db->dbenv->db_home);
+#if DB_VERSION_MINOR > 2
+      if (!log_archive(db->dbenv, &first, DB_ARCH_LOG)) {
+#else /* DB_VERSION_MINOR < 2 */
       if (!log_archive(db->dbenv, &first, DB_ARCH_LOG, NULL)) {
+#endif /* DB_VERSION_MINOR */
 	list = first;
 	while (*list) {
 	  if (truncate(*list, 0) < 0)
