@@ -1,0 +1,23 @@
+# Appletalk configuration
+# Change this to increase the maximum number of clients that can connect:
+AFPD_MAX_CLIENTS=100
+
+# Change this to set the machine's atalk name:
+#ATALK_ZONE=@zone
+ATALK_NAME=`hostname|sed 's/\..*$//'`
+
+# specify this if you don't want guest, clrtxt, and dhx
+# available options: uams_guest.so, uams_clrtxt.so, uams_dhx.so, 
+# 		     uams_randnum.so
+AFPD_UAMLIST="-U uams_clrtxt.so,uams_dhx.so"
+
+# Change this to set the id of the guest user
+AFPD_GUEST=nobody
+
+# Set which daemons to run:
+PAPD_RUN=no
+AFPD_RUN=yes
+
+# Control whether the daemons are started in the background
+ATALK_BGROUND=yes
+

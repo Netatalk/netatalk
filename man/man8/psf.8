@@ -1,0 +1,124 @@
+.TH PSF 8 "17 Dec 1991" "netatalk 1.2"
+.SH NAME
+psf \- PostScript filter
+.SH SYNOPSIS
+.B psf
+[
+.B -n
+.I name
+] [
+.B -h
+.I host
+] [
+.B -w
+.I width
+] [
+.B -l
+.I length
+] [
+.B -i
+.I indent
+] [
+.B -c
+]
+.SH DESCRIPTION
+.B psf
+is an
+.B lpd
+filter for PostScript printing.
+.B psf
+interprets the name it was called with to determine what filters to
+invoke. First, if the string ``pap'' appears anywhere in the name,
+.B psf
+invokes
+.B pap
+to talk to a printer via AppleTalk. Next, if the string ``rev'' appears,
+.B psf
+invokes
+.B psorder
+to reverse the pages of the job. Finally, if
+.B psf
+was called with a filter's name as the leading string, it invokes that
+filter. If there is no filter to run,
+.B psf
+examines the magic number of the input, and if the input is not
+PostScript, converts it to PostScript.
+.SH KLUDGE
+In the default configuration,
+.B psf
+supports two kludges.  The first causes
+.B psf
+to check its name for the letter `m'.  If this letter is found and accounting
+is turned on,
+.B psf
+calls
+.B pap
+twice, once to get an initial page count and to print the job, and
+another time to get a final page count.  This is a work-around for bugs
+in a variety of PAP implementions that cause printers to never properly
+close the PAP output file.  A notable example is any printer by
+Hewlett-Packard.
+.LP
+The second kludge causes
+.B psf
+to examine its name for the letter `w'.  If this letter is found and
+accounting is turned on,
+.B psf
+calls
+.B pap
+with the
+.B \-w
+flag.  This flag causes
+.B pap
+to wait until the printer's status contains the string `idle'.  Once
+this string is found, the job is printed as normal.  This kludge is a
+work-around for printers, notably Hewlett-Packard's LaserJet IV, which
+will report a page count while a previous jobs is still printing.
+.SH EXAMPLE
+The sample
+.B printcap
+entry below invokes
+.B psf
+to print text files, PostScript files,
+.BR troff 's
+C/A/T output, and
+.BR TeX 's
+DVI output, to an AppleTalk connected LaserWriter Plus. Since the
+LaserWriter Plus stacks pages in descending order, we reverse the pages
+and print the burst page last.
+.sp
+.RS
+.nf
+laser|lp|LaserWriter Plus on AppleTalk:\\
+    :sd=/usr/spool/lpd/laser:\\
+    :lp=/usr/spool/lpd/laser/null:\\
+    :lf=/var/adm/lpd-errs:pw#80:hl:\\
+    :of=:LIBDIR:/filters/ofpap:\\
+    :if=:LIBDIR:/filters/ifpaprev:\\
+    :tf=:LIBDIR:/filters/tfpaprev:\\
+    :df=:LIBDIR:/filters/dfpaprev:
+.fi
+.RE
+.sp
+Note that if the host in question spools to more than one AppleTalk
+printer,
+.B /dev/null
+should not be used for the
+.B lp
+capability. Instead, a null device should be created with
+.B mknod
+for each printer, as has been done above.
+.LP
+Finally, there is a file in the spool directory,
+.BR /var/spool/lpd/laser ,
+called
+.BR .paprc ,
+which
+.B pap
+reads for the AppleTalk name of the printer.
+.SH SEE ALSO
+.BR psorder (1),
+.BR printcap (5),
+.BR lpd (8),
+.BR mknod (8),
+.BR pap (8).

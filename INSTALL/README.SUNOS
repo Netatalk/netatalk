@@ -1,0 +1,18 @@
+This is the SunOS README file for netatalk.
+
+1.  KERNEL MODULE. This version of netatalk requires that your kernel
+    be configured with
+
+	options VDDRV
+
+    The loadable kernel module is made and installed during the normal
+    make and make install.  NOTE:  Unloading the kernel module may not
+    work correctly and may cause your kernel to panic, hang, or do
+    other nasty things.
+
+Research Systems Unix Group
+The University of Michigan		netatalk@umich.edu
+c/o Wesley Craig			+1-313-764-2278
+535 W. William St.
+Ann Arbor, Michigan
+48103-4943

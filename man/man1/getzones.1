@@ -1,0 +1,39 @@
+.TH GETZONES 1 "17 Dec 1991" "netatalk 1.2"
+.SH NAME
+getzones \- list AppleTalk zone names
+.SH SYNOPSIS
+.B getzones
+[
+.B -m
+|
+.B -l
+] [
+.I address
+]
+.SH DESCRIPTION
+.B Getzones
+is used to obtain a list of AppleTalk zone names using the Zone
+Information Protocol (ZIP).  It sends a GetZoneList request to an
+AppleTalk router.  By default, it sends the request to the locally
+running
+.BR atalkd (8).
+.SH OPTIONS
+.TP
+.B -m
+List the name of the local zone only; this is accomplished by sending a
+ZIP GetMyZone request.
+.TP
+.B -l
+List the local zones; this is accomplished by sending a GetLocalZones
+request.
+.TP
+.I address
+Contact the AppleTalk router at
+.I address.
+.I address
+is parsed by
+.BR atalk_aton (3).
+.SH SEE ALSO
+.BR atalk_aton (3),
+.\" .BR zip (4),
+.BR atalkd (8).

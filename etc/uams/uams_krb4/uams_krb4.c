@@ -1,0 +1,590 @@
+/*
+ * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
+
+#if defined( KRB ) || defined( UAM_AFSKRB )
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <limits.h>
+#include <string.h>
+#include <ctype.h>
+#include <pwd.h>
+#include <syslog.h>
+#include <netinet/in.h>
+#include <des.h>
+#include <krb.h>
+#include <prot.h>
+
+#include <netatalk/endian.h>
+#include <atalk/afp.h>
+#include <atalk/compat.h>
+#include <atalk/util.h>
+
+static C_Block			seskey;
+static Key_schedule		seskeysched;
+
+static char		realm[ REALM_SZ ];
+
+#ifdef UAM_AFSKRB
+static int		validseskey = 0;
+static int		logged = 0;
+static char		*tktfile;
+static char		instance[ INST_SZ ], name[ ANAME_SZ ];
+#endif /*UAM_AFSKRB*/
+
+#ifdef AFS
+#include <afs/stds.h>
+#include <rx/rxkad.h>
+#include <afs/afs.h>
+#include <afs/venus.h>
+#include <afs/afsint.h>
+
+char *ka_LocalCell();
+
+struct ClearToken {
+    int32_t AuthHandle;
+    char HandShakeKey[8];
+    int32_t ViceId;
+    int32_t BeginTimestamp;
+    int32_t EndTimestamp;
+};
+#endif /*AFS*/
+
+
+#ifdef KRB
+
+static __inline__ void lcase( p )
+    char	*p;
+{
+    for (; *p; p++ ) {
+	if ( isupper( *p )) {
+	    *p = tolower( *p );
+	}
+    }
+    return;
+}
+
+static __inline__ void ucase( p )
+    char	*p;
+{
+    for (; *p; p++ ) {
+	if ( islower( *p )) {
+	    *p = toupper( *p );
+	}
+    }
+    return;
+}
+
+#define KRB4CMD_HELO	1
+#define KRB4RPL_REALM	2
+#define KRB4WRT_SESS	3
+#define KRB4RPL_DONE	4
+#define KRB4RPL_PRINC	5
+#define KRB4WRT_TOKEN	6
+#define KRB4WRT_SKIP	7
+#define KRB4RPL_DONEMUT	8
+
+
+static int krb4_login(void *obj, struct passwd **uam_pwd,
+		      char *ibuf, int ibuflen,
+		      char *rbuf, int *rbuflen )
+{
+    char		*p;
+    int			len;
+
+    *rbuflen = 0;
+    if ( *ibuf != KRB4CMD_HELO ) {
+	syslog( LOG_INFO, "krb4_login: bad command %d", *ibuf );
+	return( AFPERR_NOTAUTH );
+    }
+
+    p = rbuf;
+    if ( krb_get_lrealm( realm, 1 ) != KSUCCESS ) {
+	syslog( LOG_ERR, "krb4_login: can't get local realm!" );
+	return( AFPERR_NOTAUTH );
+    }
+
+    *p++ = KRB4RPL_REALM;
+    *p++ = 1;
+    len = strlen( realm );
+    *p++ = len;
+    strcpy( p, realm );
+    p += len + 1;
+
+#ifdef AFS
+    if ( setpag() < 0 ) {
+	syslog( LOG_ERR, "krb_login: setpag: %m" );
+	return( AFPERR_BADUAM );
+    }
+#endif /*AFS*/
+
+    *rbuflen = p - rbuf;
+    return( AFPERR_AUTHCONT );
+}
+
+static int krb4_logincont(void *obj, struct passwd **uam_pwd,
+			  char *ibuf, int ibuflen,
+			  char *rbuf, int *rbuflen)
+{
+    static struct passwd	*pwd;
+    KTEXT_ST		tkt;
+    static AUTH_DAT	ad;
+    int			rc;
+    u_int16_t	        len;
+    char		*p, *username;
+    CREDENTIALS		cr;
+#ifdef AFS
+    struct ViceIoctl	vi;
+    struct ClearToken	ct;
+#endif /*AFS*/
+    char		buf[ 1024 ];
+    int			aint, ulen;
+
+    if (uam_afp_read(obj, rbuf, rbuflen) < 0) /* read in the rest. */
+      return AFPERR_PARAM;
+
+    *rbuflen = 0;
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, &username) < 0)
+      return AFPERR_MISC;
+    
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAMELEN, &ulen) < 0)
+      return AFPERR_MISC;
+
+    p = rbuf;
+
+    switch ( rc = *p++ ) {
+    case KRB4WRT_SESS :
+	memcpy( &len, p, sizeof( len ));
+	tkt.length = ntohs( len );
+	p += sizeof( short );
+
+	if ( tkt.length <= 0 || tkt.length > MAX_KTXT_LEN ) {
+	    return( AFPERR_BADUAM );
+	}
+	memcpy( tkt.dat, p, tkt.length );
+	p += tkt.length;
+
+	if (( rc = krb_rd_req( &tkt, "afpserver", obj->Obj, 0, &ad, "" ))
+		!= RD_AP_OK ) {
+	    syslog( LOG_ERR, "krb4_logincont: krb_rd_req: %s",
+		    krb_err_txt[ rc ] );
+	    return( AFPERR_BADUAM );
+	}
+
+	syslog( LOG_INFO, "krb4_login: %s.%s@%s", ad.pname, ad.pinst,
+		ad.prealm );
+	memcpy(realm, ad.prealm, sizeof(realm));
+	memcpy(seskey, ad.session, sizeof( C_Block ));
+	key_sched((C_Block *) seskey, seskeysched );
+
+	strncpy(username, ad.pname, ulen);
+
+	p = rbuf;
+#ifndef AFS
+	*p = KRB4RPL_DONE;	/* XXX */
+	*rbuflen = 1;
+
+	if (( pwd = uam_getname( ad.pname, strlen(ad.pname) )) == NULL ) {
+	    return( AFPERR_PARAM );
+	}
+	*uam_pwd = pwd;
+	return AFP_OK;
+#else AFS
+	/* get principals */
+	*p++ = KRB4RPL_PRINC;
+	len = strlen( realm );
+	*p++ = len + 1;
+	*p++ = '@';
+	strcpy( p, realm );
+	p += len + 1;
+	*rbuflen = p - rbuf;
+	return( AFPERR_AUTHCONT );
+
+    case KRB4WRT_TOKEN :
+	memcpy( &len, p, sizeof( len ));
+	len = ntohs( len );
+	p += sizeof( len );
+	memcpy( &cr, p, len );
+
+	pcbc_encrypt((C_Block *)&cr, (C_Block *)&cr, len, seskeysched,
+		seskey, DES_DECRYPT );
+
+	p = buf;
+	cr.ticket_st.length = ntohl( cr.ticket_st.length );
+	memcpy( p, &cr.ticket_st.length, sizeof( int ));
+	p += sizeof( int );
+	memcpy( p, cr.ticket_st.dat, cr.ticket_st.length );
+	p += cr.ticket_st.length;
+
+	ct.AuthHandle = ntohl( cr.kvno );
+	memcpy( ct.HandShakeKey, cr.session, sizeof( cr.session ));
+	ct.ViceId = 0;
+	ct.BeginTimestamp = ntohl( cr.issue_date );
+	ct.EndTimestamp = krb_life_to_time( ntohl( cr.issue_date ),
+		ntohl( cr.lifetime ));
+
+	aint = sizeof( struct ClearToken );
+	memcpy( p, &aint, sizeof( int ));
+	p += sizeof( int );
+	memcpy( p, &ct, sizeof( struct ClearToken ));
+	p += sizeof( struct ClearToken );
+
+	aint = 0;
+	memcpy( p, &aint, sizeof( int ));
+	p += sizeof( int );
+
+	lcase( realm );
+	strcpy( p, realm );
+	p += strlen( realm ) + 1;
+
+	vi.in = buf;
+	vi.in_size = p - buf;
+	vi.out = buf;
+	vi.out_size = sizeof( buf );
+	if ( pioctl( 0, VIOCSETTOK, &vi, 0 ) < 0 ) {
+	    syslog( LOG_ERR, "krb4_logincont: pioctl: %m" );
+	    return( AFPERR_BADUAM );
+	}
+	/* FALL THROUGH */
+
+    case KRB4WRT_SKIP :
+	p = rbuf;
+	*p = KRB4RPL_DONE;	/* XXX */
+	*rbuflen = 1;
+
+	if (( pwd = uam_getname( ad.pname, strlen(ad.pname) )) == NULL ) {
+	    return( AFPERR_PARAM );
+	}
+	*uam_pwd = pwd;
+	return AFP_OK;
+#endif /*AFS*/
+
+    default :
+	syslog( LOG_INFO, "krb4_logincont: bad command %d", rc );
+	return( AFPERR_NOTAUTH );
+	break;
+    }
+}
+
+#endif /*KRB*/
+
+
+#ifdef AFS
+#include <rx/rxkad.h>
+#include <afs/afsint.h>
+
+char *ka_LocalCell();
+
+static void
+addrealm(realm,cells)
+    char *realm;
+	char ***cells;
+{
+    char **ptr;
+	int temp;
+
+	ptr= *cells;
+
+    for(;*ptr != 0 ;ptr++)
+        if(!strcmp(realm,*ptr))
+            return;
+
+	temp=ptr- *cells;
+	*cells=(char**)realloc(*cells,((2+temp)*sizeof(char*)));
+	ptr= *cells+temp;
+
+    *ptr=(char*)malloc(strlen(realm)+1);
+    strcpy(*ptr++,realm);
+	*ptr=0;
+    return;
+}
+
+static int kcheckuser(pwd,passwd)
+	struct passwd *pwd;
+	char *passwd;
+{
+	int32_t code;
+	char *instance="";
+	char realm[MAXKTCREALMLEN];
+	char lorealm[MAXKTCREALMLEN];
+	char *cell;
+	Date lifetime=MAXKTCTICKETLIFETIME;
+	int rval;
+	char **cells=(char **)malloc(sizeof(char*));
+	char *temp;
+	int rc,cellNum;
+	struct ktc_principal serviceName;
+
+	*cells=0;
+
+	code = ka_Init(0);
+
+	{
+		char *temp,*temp1;
+		temp=(char*)malloc(strlen(pwd->pw_dir)+1);
+		strcpy(temp,pwd->pw_dir);
+		temp1=temp;
+		temp=strtok(temp,"/");
+		temp=strtok('\0',"/");
+		ka_CellToRealm(temp,realm,0);
+		addrealm(realm,&cells);
+		free(temp1);
+	}
+
+	setpag();
+	authenticate(cells,pwd->pw_name,passwd);
+	cellNum=0;
+	rc=ktc_ListTokens(cellNum,&cellNum,&serviceName);
+	if(rc)
+		rval=1;
+	else{
+		rval=0;
+	}
+
+	return(rval);
+}
+
+static void authenticate(cells,name,passwd)
+	char **cells;
+	char *name;
+	char *passwd;
+{
+	char **ptr=cells;
+	char *errorstring;
+
+	while(*ptr){
+	    ka_UserAuthenticate(name,/*instance*/"",/*cell*/*ptr++,
+		    passwd,/*setpag*/0,&errorstring);
+	}
+}
+#endif /*AFS*/
+
+#if defined( UAM_AFSKRB ) && defined( AFS )
+static int afskrb_login(void *obj, struct passwd *uam_pwd,
+			char *ibuf, int ibuflen, 
+			char *rbuf, int *rbuflen )
+{
+    KTEXT_ST	authent, rpkt;
+    CREDENTIALS	cr;
+    char	*p, *q, *username;
+    int		len, rc, whoserealm, ulen;
+    short	slen;
+
+    *rbuflen = 0;
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, &username) < 0)
+      return AFPERR_MISC;
+    
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAMELEN, &ulen) < 0)
+      return AFPERR_MISC;
+
+    len = (unsigned char) *ibuf++;
+    ibuf[ len ] = '\0';
+    if (( p = strchr( ibuf, '@' )) != NULL ) {
+	*p++ = '\0';
+	strcpy( realm, p );
+	ucase( realm );
+	whoserealm = 0;
+    } else {
+	if ( krb_get_lrealm( realm, 1 ) != KSUCCESS ) {
+	    return AFPERR_BADUAM;
+	}
+	whoserealm = 1;
+    }
+    if (( p = strchr( ibuf, '.' )) != NULL ) {
+	*p++ = '\0';
+	strcpy( instance, p );
+    } else {
+	*instance = '\0';
+    }
+    strcpy( name, ibuf );
+    /*
+     * We don't have the session key, yet. Get one.
+     */
+    p = rbuf;
+    if ( validseskey == 0 ) {
+	if ( setpag() < 0 ) {
+	    syslog( LOG_ERR, "krb_login: setpag: %m" );
+	    return AFPERR_BADUAM;
+	}
+	krb_set_tkt_string(( tktfile = mktemp( _PATH_AFPTKT )));
+	if (( rc =  krb_get_svc_in_tkt( "afpserver", Obj, realm,
+		TICKET_GRANTING_TICKET, realm, 255, KEYFILE )) != INTK_OK ) {
+	    syslog( LOG_ERR, "krb_login: can't get ticket-granting-ticket" );
+	    return (( whoserealm ) ? AFPERR_BADUAM : AFPERR_PARAM );
+	}
+	if ( krb_mk_req( &authent, name, instance, realm, 0 ) != KSUCCESS ) {
+	    return ( AFPERR_PARAM );
+	}
+	if ( krb_get_cred( name, instance, realm, &cr ) != KSUCCESS ) {
+	    return ( AFPERR_BADUAM );
+	}
+
+	if ( unlink( tktfile ) < 0 ) {
+	    syslog( LOG_ERR, "krb_login: unlink %s: %m", tktfile );
+	    return ( AFPERR_BADUAM );
+	}
+
+	memcpy( seskey, cr.session, sizeof( C_Block ));
+	key_sched((C_Block *) seskey, seskeysched );
+	validseskey = 1;
+	strncpy(username, name, ulen);
+
+	memcpy( p, authent.dat, authent.length );
+	p += authent.length;
+    }
+
+    if ( kuam_get_in_tkt( name, instance, realm, TICKET_GRANTING_TICKET,
+	    realm, 255, &rpkt ) != INTK_OK ) {
+	return ( AFPERR_PARAM );
+    }
+
+
+    q = (char *)rpkt.dat;
+    *p++ = *q++;
+    *p++ = *q++;
+    while ( *q++ )
+	;
+    while ( *q++ )
+	;
+    while ( *q++ )
+	;
+    q += 10;
+
+    len = strlen( realm );
+    strcpy( p, realm );
+    p += len + 1;
+    memcpy( &slen, q, sizeof( short ));
+    memcpy( p, &slen, sizeof( short ));
+    p += sizeof( short );
+    q += sizeof( short );
+    memcpy( p, q, slen );
+    p += slen;
+
+    *rbuflen = p - rbuf;
+    return( AFPERR_AUTHCONT );
+}
+
+static int afskrb_logincont(void *obj, struct passwd *uam_pwd,
+			    char *ibuf, int ibuflen, 
+			    char *rbuf, int *rbuflen )
+{
+    CREDENTIALS		cr;
+    struct ViceIoctl	vi;
+    struct ClearToken	ct;
+    struct passwd	*pwd;
+    char		buf[ 1024 ], *p;
+    int			aint;
+    short		clen;
+
+    *rbuflen = 0;
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, &username) < 0)
+      return AFPERR_MISC;
+    
+    ibuf += 2;
+    memcpy( &clen, ibuf, sizeof( short ));
+    clen = ntohs( clen );
+    ibuf += sizeof( short );
+
+    pcbc_encrypt((C_Block *)ibuf, (C_Block *)ibuf,
+	    clen, seskeysched, seskey, DES_DECRYPT );
+    if ( kuam_set_in_tkt( name, instance, realm, TICKET_GRANTING_TICKET,
+	    realm, ibuf ) != INTK_OK ) {
+	return ( AFPERR_PARAM );
+    }
+
+    if ( get_ad_tkt( "afs", "", realm, 255 ) != KSUCCESS ) {
+	return ( AFPERR_PARAM );
+    }
+    if ( krb_get_cred( "afs", "", realm, &cr ) != KSUCCESS ) {
+	return ( AFPERR_PARAM );
+    }
+
+    p = buf;
+    memcpy( p, &cr.ticket_st.length, sizeof( int ));
+    p += sizeof( int );
+    memcpy( p, cr.ticket_st.dat, cr.ticket_st.length );
+    p += cr.ticket_st.length;
+
+    ct.AuthHandle = cr.kvno;
+    memcpy( ct.HandShakeKey, cr.session, sizeof( cr.session ));
+    ct.ViceId = 0;
+    ct.BeginTimestamp = cr.issue_date;
+    /* ct.EndTimestamp = cr.issue_date + ( cr.lifetime * 5 * 60 ); */
+    ct.EndTimestamp = krb_life_to_time( cr.issue_date, cr.lifetime );
+
+    aint = sizeof( struct ClearToken );
+    memcpy( p, &aint, sizeof( int ));
+    p += sizeof( int );
+    memcpy( p, &ct, sizeof( struct ClearToken ));
+    p += sizeof( struct ClearToken );
+
+    aint = 0;
+    memcpy( p, &aint, sizeof( int ));
+    p += sizeof( int );
+
+    lcase( realm );
+    strcpy( p, realm );
+    p += strlen( realm ) + 1;
+
+    vi.in = buf;
+    vi.in_size = p - buf;
+    vi.out = buf;
+    vi.out_size = sizeof( buf );
+    if ( pioctl( 0, VIOCSETTOK, &vi, 0 ) < 0 ) {
+	syslog( LOG_ERR, "krb_logincont: pioctl: %m" );
+	return ( AFPERR_BADUAM );
+    }
+
+    if ( unlink( tktfile ) < 0 ) {
+	syslog( LOG_ERR, "krb_logincont: %s: %m", tktfile );
+	return ( AFPERR_BADUAM );
+    }
+
+    if (( pwd = uam_getname( username )) == NULL ) {
+	return ( AFPERR_PARAM );
+    }
+
+    if ( logged == 0 ) {
+	logged = 1;
+	syslog( LOG_INFO, "authenticated %s.%s@%s", name, instance, realm );
+	*uam_pwd = pwd;
+	return AFP_OK;
+    }
+    syslog( LOG_INFO, "re-authenticated %s.%s@%s", name, instance, realm );
+    return( AFP_OK );
+}
+#endif /* UAM_AFSKRB AFS */
+
+int uam_setup()
+{
+#ifdef KRB
+   uam_register(UAM_SERVER_LOGIN, "Kerberos IV", krb4_login, 
+		krb4_logincont, NULL);
+   /* uam_afpserver_action(); */
+#endif
+#ifdef UAM_AFSKRB
+   uam_register(UAM_SERVER_LOGIN, "AFS Kerberos", afskrb_login, 
+		afskrb_logincont, NULL);
+   /* uam_afpserver_action(); */
+#endif
+}
+
+int uam_cleanup()
+{
+#ifdef KRB
+   /* uam_afpserver_action(); */
+   uam_unregister(UAM_SERVER_LOGIN, "Kerberos IV");
+#endif
+#ifdef UAM_AFSKRB
+   /* uam_afpserver_action(); */
+   uam_unregister(UAM_SERVER_LOGIN, "AFS Kerberos");
+#endif
+}
+
+#endif /* KRB or UAM_AFSKRB */

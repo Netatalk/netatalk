@@ -1,0 +1,32 @@
+#ifndef AFPD_STATUS_H
+#define AFPD_STATUS_H 1
+
+#include <sys/cdefs.h>
+#include <atalk/dsi.h>
+#include <atalk/asp.h>
+#include "globals.h"
+#include "config.h"
+
+/* we use these to prevent whacky alignment problems */
+#define AFPSTATUS_MACHOFF     0
+#define AFPSTATUS_VERSOFF     2
+#define AFPSTATUS_UAMSOFF     4
+#define AFPSTATUS_ICONOFF     6
+#define AFPSTATUS_FLAGOFF     8
+#define AFPSTATUS_PRELEN     10
+#define AFPSTATUS_POSTLEN     4
+#define AFPSTATUS_LEN        (AFPSTATUS_PRELEN + AFPSTATUS_POSTLEN)
+
+
+#define PASSWD_NONE     0
+#define PASSWD_SET     (1 << 0)
+#define PASSWD_NOSAVE  (1 << 1)
+#define PASSWD_ALL     (PASSWD_SET | PASSWD_NOSAVE)
+
+extern void status_versions __P((char * /*status*/));
+extern void status_uams __P((char * /*status*/, const char * /*authlist*/));
+extern const void status_init __P((AFPConfig *, AFPConfig *,
+				   const struct afp_options *));
+extern int      afp_getsrvrinfo __P((AFPObj *, char *, int, char *, int *));
+
+#endif

@@ -1,0 +1,142 @@
+'\" t
+.TH PAPD 8 "17 Apr 1995" "netatalk 1.3.3"
+.SH NAME
+papd \- AppleTalk print server daemon
+.SH SYNOPSIS
+.B :SBINDIR:/papd
+[
+.B -d
+] [
+.B -f
+.I configfile
+] [
+.B -p
+.I printcap
+]
+.SH DESCRIPTION
+.B papd
+is the AppleTalk printer daemon.  This daemon accepts print jobs from
+AppleTalk clients (typically Macintosh computers) using the Printer
+Access Protocol (PAP).
+.B papd
+spools jobs directly into an
+.BR lpd (8)
+spool directory and wakes up
+.B lpd
+after accepting a job from the network to have it re-examine the
+appropriate spool directory.  The actual printing and spooling is
+handled entirely by
+.B lpd.
+.LP
+.B papd
+is typically started at boot time, out of
+.B /etc/rc.
+It first reads from its configuration file,
+.BR :ETCDIR:/papd.conf .
+The file is in the same format as
+.BR /etc/printcap .
+See
+.BR printcap (5)
+for details.  The name of the entry is registered with
+.BR NBP .
+There are currently three supported capabilities.
+.LP
+.TS
+c c l l
+cfB l l l .
+Name	Type	Default	Descripton
+.sp .5
+pd	str	``.ppd''	Pathname to PPD file
+pr	str	``lp''	LPD printer name (or pipe to print command)
+op	str	``operator''	Operator name for LPD spooling
+.TE
+.LP
+If no configuration file is given, the hostname of the machine is used
+as the NBP name and all options take their default value.
+.SH OPTIONS
+.TP
+.B -d
+Do not fork or disassociate from the terminal.  Write some
+debugging information to stderr.
+.HP
+.B -f
+.I configfile
+.br
+Consult
+.I configfile
+instead of
+.B :ETCDIR:/papd.conf
+for the configuration information.
+.HP
+.B -p
+.I printcap
+.br
+Consult
+.I printcap
+instead of
+.B /etc/printcap
+for LPD configuration information.
+.SH EXAMPLE
+The following papd configuration file sets up two print spoolers for the
+.B lpd
+printers named
+.B ps
+and
+.BR lp .
+The first spooler is known by the NBP name
+.B Mac Printer Spooler,
+and uses a PPD file located in
+.B /usr/share/lib/ppd.
+In addition, the user
+.B mcs
+will be the owner of all jobs that are spooled.
+The second spooler is known as
+.B HP Printer
+and all options are the default. The third spooler is known as
+.B Other Printer
+which prints with lpr.
+.sp
+.RS
+.nf
+Mac Printer Spooler:\\ 
+	:pr=ps:pd=/usr/share/lib/ppd/HPLJ_4M.PPD:op=mcs:
+
+HP Printer:\\ 
+	:
+
+Other Printer:\\
+	:pr=|/usr/bin/lpr -P Otherprinter -h:
+.fi
+.RE
+.SH FILES
+.TP 16
+.B :ETCDIR:/papd.conf
+Default configuration file.
+.TP 16
+.B /etc/printcap
+Printer capabilities database.
+.TP 16
+.B .ppd
+PostScript Printer Description file.
+.B papd
+answers configuration and font queries from printing clients by
+consulting the configured PPD file.  Such files are available from
+Adobe, Inc, via anonymous ftp from ftp.adobe.com in /pub/adobe/PPDfiles
+(ftp://ftp.adobe.com/pub/adobe/PPDfiles), or from the printer's
+manufacturer.  If no PPD file is configured,
+.B papd
+will return the default answer, possibly causing the client to send
+excessively large jobs.
+.SH SEE ALSO
+.BR lpr (1),
+.BR lprm (1),
+\." .BR pap (4),
+.BR printcap (5).
+.BR lpc (8),
+.BR lpd (8).
+.SH CAVEATS
+.I papd
+accepts characters with the high bit set (a full 8-bits) from the clients,
+but some PostScript printers (including Apple Computer's LaserWriter family)
+only accept 7-bit characters on their serial interface by default.  You will
+need to configure your printer to accept a full 8 bits.

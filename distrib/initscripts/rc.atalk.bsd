@@ -1,0 +1,39 @@
+#
+# AppleTalk daemons. Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+#
+# SUNOS: UNCOMMENT THESE LINES TO LOAD THE KERNEL MODULE.  Note that
+# modunload-ing netatalk may cause your machine to panic or hang.
+#
+##echo -n 'loading netatalk: '
+##if [ -f :ETCDIR:/netatalk.o ]; then
+##	/usr/etc/modload -sym :ETCDIR:/netatalk.o;
+##fi
+
+echo -n 'starting appletalk daemons:'
+if [ -x :SBINDIR:/atalkd ]; then
+	:SBINDIR:/atalkd;		echo -n ' atalkd'
+fi
+
+if [ -x :BINDIR:/nbprgstr ]; then
+	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:Workstation
+	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
+					echo -n ' nbprgstr'
+fi
+
+if [ -x :SBINDIR:/papd ]; then
+	:SBINDIR:/papd;		echo -n ' papd'
+fi
+
+if [ -x :SBINDIR:/afpd ]; then
+	:SBINDIR:/afpd;		echo -n ' afpd'
+fi
+
+if [ -x :SBINDIR:/timelord ]; then
+	:SBINDIR:/timelord;		echo -n ' timelord'
+fi
+
+					echo '.'

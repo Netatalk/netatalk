@@ -1,0 +1,165 @@
+.TH PAP 8 "13 Dec 1991" "netatalk 1.2"
+.SH NAME
+.B pap
+\- download files to or communicate interactively with an
+AppleTalk network connected printer
+.SH SYNOPSIS
+.B :SBINDIR:/pap
+[
+.BI -d
+] [
+.B -p
+.I printer
+] [
+.B -s
+.I statusfile
+] [
+.I files
+]
+.SH DESCRIPTION
+.B pap
+is used to connect and send files to an AppleTalk connected printer using
+the Apple Printer Access Protocol (PAP).
+.B pap
+can also be used to conduct an interactive session with a PostScript
+printer.  When
+.B pap
+starts execution, it first tries obtain the status of the printer.  It
+then tries to open a session with the printer using PAP, and
+then downloads the
+.I files
+to the printer.
+.LP
+If no
+.I files
+are given on the command line,
+.B pap
+begins reading from standard input.
+.LP
+If no printer is specified on the command line,
+.B pap
+looks for a file called
+.B .paprc
+in the current directory and reads it to obtain the name of a printer.  The
+.B .paprc
+file should contain a single line of the form
+.IB object : \c
+.IB type @ \c
+.I zone
+where each of
+.IR object ,
+.BI : type ,
+and
+.BI @ zone
+are optional.
+.I type
+and
+.I zone
+must be proceeded by
+.RB ` : '
+and
+.RB ` @ '
+respectively.  Lines the begin with a
+.RB ` # '
+are ignored.
+.I type
+and
+.I zone
+default to
+.B LaserWriter
+and the zone of the local host, respectively.
+.LP
+Note that
+.B pap
+is designed to be useful as a communication filter for sending
+.BR lpd (8)
+spooled print jobs to AppleTalk connected printers.  See
+.BR psf (8)
+for hints on how to use it this way.
+.SH OPTIONS
+.HP
+.B -p
+.I printer
+.br
+Connect to the printer named
+.I printer
+(do not consult the
+.B .paprc
+file to find a printer name).  The syntax for
+.I printer
+is the same as discussed above for the
+.B .paprc
+file.
+.HP
+.B -s
+.I statusfile
+.br
+Update the file called
+.I statusfile
+to contain the most recent status message from the printer.
+.B pap
+gets the status from the printer when it is waiting for the printer to
+process input.  The
+.I statusfile
+will contain a single line terminated with a newline.  This is useful
+when
+.B pap
+is invoked by
+.BR lpd (8)
+within
+.BR lpd 's
+spool directory.
+.HP
+.B -c
+.br
+Take cuts.  The PAP protocol specified a simple queuing procedure, such
+that the clients tell the printer how long they've been waiting to
+print.  This option causes
+.B pap
+to lie about how long it's been waiting.
+.HP
+.B -e
+.br
+Send stdout to stderr.  This causes information that the printer
+returns to be recorded as error output for lpd.
+.HP
+.B -E
+.br
+Don't wait for EOF from the printer.  This option is useful for
+printers which don't implement PAP correctly.  In a correct
+implementation, the client side should wait for the printer to return
+EOF before closing the connection.  Some clients don't wait, and hence
+some printers have related bugs in their implementation.
+.HP
+.B -w
+.br
+Wait for the printer's status to contain the word "waiting" before
+sending the job.  This is to defeat printer-side spool available on HP
+IV and V printers.
+.SH FILES
+.TP 20
+.B .paprc
+file that contains printer name
+.TP 20
+.B $HOME/.paprc
+secondary file to look in for printer name
+.SH SEE ALSO
+.BR nbp (1),
+.BR pap (4),
+.BR lpd (8),
+.BR papstatus (8),
+.BR psf (8).
+.SH BUGS
+.B pap
+will send a
+.B quit
+command to exit interactive mode when it gets an end-of-file
+on a tty.  If the user has already typed
+.B quit
+themselves, the
+.B quit
+that
+.B pap
+sends is spurious and will cause a PostScript error.  The fix would be for
+.B pap
+to watch what the user types and look for quit, but this is impractical.

@@ -1,0 +1,51 @@
+This is the AFS README file for netatalk.
+
+NOTE:  You'll need to have the AFS server libraries and include files.
+These are different than the client libraries and include files.  Also,
+you will need the Kerberos v4 (patch level 10) libraries and include
+files.
+
+1.  CONFIGURE FOR AFS.  Edit the root Makefile to include the pathname
+    to both the AFS and Kerberos libraries and include files.  There
+    are brief instructions at the top of the Makefile.
+
+2.  ADD AFP PRINCIPAL TO YOUR SRVTAB.  afpd requires an entry in your
+    /etc/srvtab to do Kerberos authentication.  This entry is of the
+    form
+
+	afpserver.NBPNAME@REALM
+
+    So, if you want your afp server to be called "bob" and your realm
+    is "camelot", you would need a principal
+
+	afpserver.bob@camelot
+
+    If you don't have an incorrect /etc/srvtab, Macs attempting to
+    authenticate with "Kerberos IV UAM"/"AuthMan UAM" will get a
+    "remote configuration" error and afpd will log "krb4_logincont:
+    krb_rd_req:  Can't decode authenticator".  NOTE: nbpname MUST match
+    the kerberos principal name in order for authentication to
+    succeed.  If afpd's default nbpname (see the afpd man page) does
+    not match your site's method for generating principal names, then
+    you must use the "-n" option when starting afpd.
+
+3.  CLIENT SOFTWARE.  There are several pieces of Mac software that you
+    will need.  The first, "AuthMan UAM", is an alternate UAM which
+    does authentication with afpd for AFS.  AuthMan UAM requires the
+    second, AuthMan.  AuthMan requires MacTCP.  The third, AFS
+    Privileges, allows the Mac user to display the AFS acls on afp
+    mounted directories.  "AuthMan UAM" and "AFS Privileges" are
+    available via anonymous ftp from terminator.rs.itd.umich.edu in
+    ~ftp/unix/netatalk/kerberos-AFS.sit.hqx.  AuthMan is available via
+    anonymous ftp from monet.ccs.itd.umich.edu in ~ftp/pub.  The
+    revision as of this writing is 1.0.9A.
+
+4.  AFS HELP.  For more information about AFS, you should contact
+    afs-sales@transarc.com.
+
+Research Systems Unix Group
+The University of Michigan		netatalk@umich.edu
+c/o Wesley Craig			+1-313-764-2278
+535 W. William St.
+Ann Arbor, Michigan
+48103-4943

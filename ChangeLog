@@ -1,0 +1,1823 @@
+2000-02-28  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/directory.h (CNID_INODE): xor the inode a little
+	differently. 
+
+2000-02-23  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/volume.c (creatvol): / is a special case. you can't
+	share it unless you give it a name.
+
+2000-02-21  a sun  <asun@asun.cobalt.com>
+
+	* distrib/initscripts/rc.atalk.redhat/cobalt: added changes to
+	make redhat 6.x happier.
+
+2000-02-17  a sun  <asun@asun.cobalt.com>
+
+	* libatalk/adouble/ad_lock.c (adf_unlock): off-by-one error with
+	lock removal. this + the log right below fix ragtime.
+
+2000-02-16  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/fork.c (afp_bytelock): only error on bytelocks
+	positioned at 0x7FFFFFFF if there's no resource fork.
+
+2000-02-14  a sun  <asun@asun.cobalt.com>
+
+	* libatalk/adouble/ad_lock.c: re-wrote locking bits so that
+	allocations happen in blocks. added missing case that omnis
+	database triggers.
+
+2000-02-07  a sun  <asun@asun.cobalt.com>
+
+	* bin/nbp/Makefile (install): make nbprgstr/nbpunrgstr with 700
+	permissions. 
+
+	* include/atalk/adouble.h (sendfile): change to deal with
+	<sys/sendfile.h> 
+
+2000-01-25  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/ofork.c: keep track of oforks being used for each
+	directory so that we can update them if the directory tree gets
+	modified. 
+
+	* etc/afpd/directory.c (deletecurdir): remove dangling symlinks on
+	delete. 
+
+2000-01-24  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/directory.h (CNID): moved cnid assignment here along
+	with helpful macros.
+
+	* etc/afpd/directory.c: changed directory search to use red-black
+	trees to improve balance. parent-child tree changed to circular
+	doubly-linked list to speed up insert/remove times.  there's still
+	one obstacle to actually freeing red-black tree entries. i need to
+	add an ofork list to struct dir to minimize search times.
+
+2000-01-18  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/directory.c (dirinsert): detect attempts to add
+	pre-existing entries as just symbolic links. 
+
+	* etc/afpd/filedir.h (CNID): moved inode-cnid assignment here and
+	extended to directories.
+
+2000-01-03  a sun  <asun@asun.cobalt.com>
+
+	* etc/uams/uams_pam.c (PAM_conv): surround PAM_BINARY_PROMPT with
+	an #ifdef.
+
+	* etc/afpd/status.c (status_init): fixed a bunch of problems here
+	that manifested under solaris 7.
+
+	* etc/afpd/main.c (main): use FD_SETSIZE instead of FD_SETSIZE +
+	1.
+	
+
+1999-12-27  a sun  <asun@asun.cobalt.com>
+
+	* libatalk/util/getiface.c: moved interface detection code to here
+	so that i can use if_nameindex() or getifconf() depending upon
+	what's available.
+
+1999-12-13  a sun  <asun@asun.cobalt.com>
+
+	* libatalk/dsi/dsi_tcp.c (dsi_tcp_init): added if_nameindex()
+	based interface code.
+
+	* etc/afpd/afp_options.c (afp_options_parseline): added
+	-server_quantum as an option. using hex would be a good idea.
+
+	* libatalk/dsi/dsi_opensess.c (dsi_opensession): added bits to set
+	the server quantum. by default, the server quantum is limited to
+	1MB due to a bug in the os 9 appleshare client.
+
+	* distrib/initscripts/rc.atalk.{cobalt,redhat}: surround nbp stuff
+	with double quotes.
+
+	* etc/uams/uams_dhx_pam.c (pam_changepw): added dhx-based password
+	changing for pam.
+
+1999-12-06  a sun  <asun@asun.cobalt.com>
+
+	* etc/afpd/directory.c (setdirparams): don't error if we can't set
+	the desktop owner/permisssions.
+
+1999-11-04  a sun  <asun@asun.cobaltnet.com>
+
+	* etc/afpd/fork.c (afp_openfork): had the ordering wrong on an
+	openfork. 
+
+1999-11-02  a sun  <asun@asun.cobaltnet.com>
+
+	* etc/afpd/afp_dsi.c (afp_over_dsi): flush data for unknown dsi
+	commands. 
+
+1999-10-28  a sun  <asun@asun.cobaltnet.com>
+
+	* etc/uams/*.c: return FPError_PARAM if the user is unknown. 
+
+1999-10-27  a sun  <asun@asun.cobaltnet.com>
+
+	* etc/afpd/fork.c (afp_read): if sendfile isn't supported, use the
+	old looping method.
+
+1999-10-25  a sun  <asun@asun.cobaltnet.com>
+
+	* libatalk/nbp/nbp_unrgstr.c (nbp_unrgstr): fix nbp unregisters.
+
+1999-10-21  a sun  <asun@asun.cobaltnet.com>
+
+	* etc/afpd/Makefile (install): moved install of afpd earlier per
+	suggestion by steven michaud.
+
+1999-10-05  a sun  <asun@asun.cobaltnet.com>
+
+	* etc/uams/uams_randnum.c (afppasswd): for ~/.passwd's, turn
+	ourselves into the user so that nfs is happy.
+
+1999-09-19  a sun  <asun@adrian5>
+
+	* libatalk/netddp/netddp_open.c, nbp/*.c: only use the bcast stuff
+	if it's on an os x server machine.
+
+1999-09-15  a sun  <asun@adrian5>
+
+	* libatalk/nbp/nbp_unrgstr.c,nbp_lkup.c,nbp_rgstr.c: os x server
+	wants ATADDR_BCAST. that probably means that i need to do
+	multihoming appletalk a little differently. bleah.
+
+1999-09-09    <asun@asun.cobaltnet.com>
+
+	* etc/afpd/directory.c (getdirparams), libatalk/adouble/ad_open.c
+	(ad_open): mondo lameness. i forgot that directory lookups can be
+	done with "." as the directory name. that was auto-hiding
+	them. bleah. i also figured out which bit was the invisible bit
+	for finderinfo information.
+
+1999-09-06  Adrian Sun  <asun@glazed.cobaltnet.com>
+
+	* etc/afpd/desktop.c (mtoupath): fixed a bug in codepage support
+	that accidentally crept in.
+
+1999-08-31  Adrian Sun  <asun@glazed.cobaltnet.com>
+
+	* etc/afpd/quota.c (getfsquota): use group quotas in quota
+	calculations if the user belongs to a single group. just use the
+	user quotas if the user belongs to multiple groups.
+
+	* etc/afpd/volume.c (getvolspace): added an options:limitsize to
+	restrict the available space to 2GB. this is for macs running
+	older versions of the operating system with newer versions of the
+	appleshare client. weird huh?
+
+	* etc/afpd/quota.c (uquota_getvolspace): bleah. 64-bit shifts
+	don't get promoted in the same way as arithmetic operations. added
+	some more casts to deal with that issue.
+
+1999-08-24  Adrian Sun  <asun@glazed.cobaltnet.com>
+
+	* man/man?/Makefile: don't re-build .tmp files if they already
+	exist. this gets the install phase to work correctly.
+
+1999-08-13  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/directory.c, file.c, filedir.c: illegal characters get
+	AFPERR_PARAM. also, reject names with /'s in them if the nohex
+	option is used.
+
+1999-08-12  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/filedir.c,file.c,directory.c: changed error for
+	illegal filenames to AFPERR_EXIST.
+
+1999-08-11  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/desktop.h (validupath): if usedots is set, .Apple* and
+	.Parent files are no longer valid file names.
+
+	* etc/afpd/volume.c (volset): added usedots and nohex as
+	options. usedots stops :hex translation of . files while nohex
+	stops :hex translation of everything but . files. in addition,
+	. files created on the unix side are by default hidden.
+
+	* libatalk/adouble/ad_open.c: initialize more bits.
+
+1999-08-10  a sun  <asun@hecate.darksunrising.blah>
+
+	* distrib/initscripts/rc.atalk.redhat (WORKSTATION): use the
+	actual name for nbp registration rather than ATALK_NAME.
+
+	* sys/solaris/Makefile (kernel): make sure osdefs and machinedefs
+	get used when building the kernel module.
+
+	* sys/solaris: changed strings.h to string.h
+
+1999-08-08  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (readvolfile): changed volume options into an
+	array of structs to ease maintenance.
+
+1999-08-05  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/status.c (status_init): change the default icon
+	depending upon whether or not it's an ASIP or an AppleTalk
+	connection. 
+
+1999-08-04  Adrian Sun  <asun@glazed.cobaltnet.com>
+
+	* etc/atalkd/main.c (setaddr): made a failure with setaddr a 
+	little more informative.
+
+1999-08-03  Adrian Sun  <asun@glazed.cobaltnet.com>
+
+	* yippee. someone figured what was happening with the installation
+	of the man pages. i got rid of a duplicate entry.
+
+1999-08-02  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (readvolfile): added a per-file way of setting
+	default options. it keys in on a :DEFAULT: label.
+
+1999-07-30  a sun  <asun@hecate.darksunrising.blah>
+
+	* moved rc.atalk.* scripts to distrib/initscripts.
+
+1999-07-27  a sun  <asun@hecate.darksunrising.blah>
+
+	* contrib/printing: added patch from job@uchicago.edu
+
+	* etc/afpd/file.c: forgot to initialize struct ad in
+	some places.
+
+	* etc/afpd/nls/makecode.c: added an empty mapping.
+
+	* etc/psf/Makefile (install): well cp -d didn't work either. just
+	use tar.
+
+1999-07-26  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/solaris/tpi.c (tpi_attach): changed DDI_NT_NET to DDI_PSEUDO
+	(from denny@geekworld.com).
+
+	* distrib/rpm/netatalk-asun.spec (Summary): incorporated new spec
+	and patch files from inoue.
+
+	* sys/linux/Makefile (install-sysv): fixed up a bit.
+
+	* etc/psf/Makefile (install): use cp -d instead of cp -a to make
+	*bsd happier.
+
+	* etc/afpd/afp_options.c (afp_options_parseline): reversed meaning
+	of -icon. now it means to use the yucky bitmap instead of the
+	apple icon.
+
+	* bin/afppasswd/Makefile (all): add -Iinclude/openssl for
+	afppasswd as well. 
+
+1999-07-18  a sun  <asun@hecate.darksunrising.blah>
+
+	* create links/mangle files in the compile rather than the install
+	phase so that rpm will be happier.
+
+1999-07-17  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/file.c (afp_createfile), directory (afp_createdir),
+	  filedir.c (afp_rename, afp_moveandrename): don't allow the
+	  creation/renaming of names with certain characters if mswindows
+	  compatibility is enabled.
+
+1999-07-16  a sun  <asun@hecate.darksunrising.blah>
+
+	* rc.atalk.redhat: incorporated chkconfig from inoue.
+
+1999-07-15  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/config.c (getifconf): wrap check against
+	IFF_MULTICAST behind an #ifdef IFF_MULTICAST.
+
+	* sys/netbsd/Makefile (LDSHAREDFLAGS): key in on machine type.
+
+1999-07-11  a sun  <asun@hecate.darksunrising.blah>
+
+	* contrib/ICDumpSuffixMap: added internet config perl script from
+	inoue. 
+
+	* contrib/printing: added contributed solaris printing scripts
+	from job@uchicago.edu.
+
+1999-07-10  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/interface.h, rtmp.h: prototyped functions.
+
+	* etc/atalkd/zip.c: converted bcopy's to memcpy's.
+
+	* etc/atalkd/nbp.c,rtmp.c: added checks for the interface for
+	dontroute cases.
+
+	* etc/atalkd/main.c: converted bzero/bcopy to memset/memcpy.
+
+1999-07-08  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/nbp/nbp_rgstr.c (nbp_rgstr): return EADDRINUSE if the
+	address already exists.
+
+1999-07-06  a sun  <asun@hecate.darksunrising.blah>
+
+	* rc.atalk.redhat: changed netatalk.config to netatalk.conf
+
+1999-07-05  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/nbp.c (nbp_packet): add interface to nbp struct. this
+	is so that we can filter by interface in the future. however, it
+	doesn't seem to work that well right now. bleah. 
+
+	* etc/atalkd/main.c: fixed up dontroute option so that it doesn't
+	screw up atalkd.conf. also, we need to do a bootaddr if dontroute
+	is set. 
+
+	* libatalk/atp,nbp,netddp; bin/aecho,nbp,getzones,pap;
+	etc/papd,afpd: accept -A <ddp address> as an option so that you
+	can specify the address to be used on a multihomed server. for
+	papd, you use the 'pa' option in papd.conf.
+
+1999-07-04  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/config.c (parseline): initialize parseline properly
+	so that we don't get extraneous junk.
+
+	* etc/afpd/afp_options.c (afp_options_parseline): do
+	gethostbyaddr/gethostbyname's for -ipaddr and -fqdn.
+
+	* etc/atalkd/config.c (getifconf/readconf): check to see if the
+	supported device can support appletalk addresses. either continue
+	or exit depending upon whether or not it's auto-configed.
+
+1999-07-03  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/afp_options.c (afp_options_parse): -I (-[no]icon) will
+	toggle the volume icon so that it uses the apple icon instead.
+
+	* etc/afpd/config.c (AFPConfigInit): added more logic for the
+	-proxy option. here are the rules: -proxy will always try to
+	create a DDP server instance. by default, the proxy server will
+	still allow you to login with an appletalk connection. to prevent
+	that, just set the uamlist to an empty string.
+
+1999-07-02  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/status.c (status_netaddress): added support for fqdn
+	(not available in the appleshare client yet).
+
+1999-07-01  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/config.c (DSIConfigInit): application code for proxy
+	setup. it's the -proxy option.
+
+	* libatalk/dsi/dsi_init/tcp.c (dsi_init/dsi_tcp_init): added
+	support for proxy setup.
+
+1999-06-30  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/filedir.c (afp_rename): fixed up some error
+	codes. quark express should be happier.
+
+	* etc/afpd/uam.c (uam_afpserver_option): added
+	UAM_OPTION_HOSTNAME. use this to set PAM_RHOST. i just got a
+	report that setting that fixes pam on solaris machines.
+
+1999-06-28  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/ofork.c (of_alloc): report out of forks in syslog..
+
+	* etc/afpd/enumerate.c (afp_enumerate): close an opendir leak. 
+
+	* include/atalk/{dsi,asp}.h: make cmdlen and datalen ints.
+
+	* etc/afpd/fork.c (afp_write): fixed up error condition.
+
+1999-06-26  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/uams/Makefile (install): changed install location of uams.
+
+	* sys/linux/Makefile (install-sysv): always install redhat
+	script. netatalk.config script only gets installed if it's not
+	there already.
+
+1999-06-23  a sun  <asun@hecate.darksunrising.blah>
+
+	* rc.atalk.redhat: merged in redhat contrib rpm rc.atalk script.
+
+	* etc/afpd/afp_options.c (afp_options_init): changed default
+	maxusers to 20.
+
+1999-06-22  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/config.c (DSIConfigInit): truncate options->server to
+	just the server name here.
+
+	* etc/afpd/volume.c (volxlate): made $s return something
+	meaningful no matter what.
+
+	* libatalk/adouble/ad_sendfile.c (ad_readfile): freebsd sendfile
+	wants an off_t.
+
+1999-06-20  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (volxlate): added variable substitution. if it
+	doesn't understand the variable, it just spits it back out.
+	
+	(creatvol): display truncated volume name if it's too long.
+
+	* sys/{generic,solaris}/Makefile: added NO_CRYPTLIB option to deal
+	with oses that have -lcrypt but shouldn't use it.
+
+1999-06-11  a sun  <asun@hecate.darksunrising.blah>
+
+	* include/atalk/afp.h: added comments to FPErrors.
+
+	* etc/afpd/enumerate.c (afp_enumerate): make FPEnumerate do some
+	more error checking.
+
+	* include/atalk/util.h: server_lock() returns pid_t. 
+
+1999-06-10  a sun  <asun@hecate.darksunrising.blah>
+
+	* README.ASUN: added location for both ssleay and openssl.
+
+	* etc/uams: moved install to LIBDIR/uams. "uams_*" now means "uam
+	server." in the future, there will be "uamc_*." changed the shared
+	library names to match.
+
+	* include/atalk/atp.h,nbp.h: forgot to include <sys/cdefs.h>
+
+	* etc/uams/Makefile: openssl-0.9.3c uses <openssl/*.h> so add that
+	to the include path.
+
+	* sys/{solaris,ultrix}/Makefile: just use -I../sys/generic instead
+	of doing a link.
+
+	* include/atalk/uam.h, etc/uams/uam_*.c, etc/afpd/uam.c: added uam
+	type field. do type check.
+
+	* etc/uams/uam_*pam.c: added a couple more error codes. 
+
+1999-06-08  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/nls/Makefile (codepage.h): make sure that a link to
+	codepage.h gets made.
+
+	* libatalk/*/Makefile: make sure that the profiled directory gets
+	created.
+	
+	* etc/afpd/directory.c (afp_mapname): removed an extraneous line
+	that was causing mapname to fail.
+
+1999-06-07  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/main.c (main): added a note to check the syslog if
+	atalkd can't be setup.
+
+	* sys/linux/Makefile: added -DNEED_QUOTACTL_WRAPPER to the list of
+	auto-detected #defines.
+
+1999-06-06  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (afp_write): argh. i moved things around a
+	little too much and ended up with an uninitialized eid. strangely,
+	the compiler didn't complain. simplified bits a little as
+	well. also, FPWrite was returning the wrong error messages. on
+	64-bit filesystems, the offset can wraparound. so, report a disk
+	full error if that's going to happen. egcs-19990602 gets one
+	memcpy right and another wrong on my udb. bleah.
+	
+	(afp_read): fixed the error messages here as well.
+
+1999-06-05  a sun  <asun@hecate.darksunrising.blah>
+
+	* Makefile, sys/generic, sys/{ultrix,solaris}/Makefile: create
+	some links on the fly if they're missing.
+
+	* etc/afpd/directory.c (copydir): fixed a leaking opendir and
+	re-arranged a little.
+
+1999-06-04  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd: prototyped everything here and moved the FP functions
+	into include files.
+
+	* libatalk/util/bprint.c: moved all of the bprints to here.
+
+	* libatalk/asp, include/atalk/asp.h: prototyped asp functions.
+
+	* include/atalk/atp.h, libatalk/atp: prototyped atp functions. 
+
+	* libatalk/nbp, include/atalk/nbp.h: added prototypes for nbp
+	functions. 
+
+	* bin/afppasswd/Makefile (afppasswd): fixed a misspelling in the
+	install phase.
+
+	* bin/afppasswd/afppasswd.c: added -a option so that root can add
+	new users. turned all of the options into bits. added newlines to
+        each entry.
+
+1999-06-03  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/freebsd/Makefile: turn on sendfile support if running on a
+	FreeBSD 3+ machine.
+
+1999-06-02  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/uams/uam_dhx_pam.c: fixed memory freeing part of pam
+	conversation function.
+
+	* sys/*/Makefile: check at make time to see if -lrpcsvc and
+	-lcrypt should be included in the appropriate places. 
+
+1999-05-28  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/file.c (deletefile): added more error checking here as
+	well. 
+
+	* etc/afpd/directory.c (renamedir): added a couple a few more
+	error bits. 
+
+	* sys/sunos/Makefile: sunos should really work now. 
+
+1999-05-27  a sun  <asun@hecate.darksunrising.blah>
+
+	* include/atalk/afp.h: added in a couple new error codes (one
+	deals with password setting policy, the other with maximum logins
+	by any user).
+
+	* etc/afpd/fork.c (afp_openfork): try to re-open files on
+	read-only volumes as read-only.
+
+1999-05-26  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/solaris/Makefile: fixed a few bobbles here. solaris uses
+	uname -p. other oses seem to use uname -m for the same information.
+
+	* etc/uams/uam_pam.c (pam_changepw): added check for same
+	password. 
+
+	* etc/uams/uam_randnum.c (randnum_changepw): added in cracklib and
+	same password checks.
+
+	* sys/osx/Makefile: moved the os x server stuff into its own build
+	directory. 
+
+	* sys/linux/Makefile, sys/solaris/Makefile: key in on OSVERSION
+	and MACHINETYPE for some stuff.  
+
+1999-05-25  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/sunos/Makefile: various bits to make stuff work with sunos
+	again. 
+
+1999-05-25  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/file.c (copyfile): only copy the header file if newname
+	is specified. 
+
+	* etc/afpd/directory.c (copydir): make sure to balk if the
+	directory already exists. in addition, make sure to preserve the
+	timestamps. 
+
+1999-05-24  a sun  <asun@hecate.darksunrising.blah>
+
+	* bin/afppasswd/afppasswd.c: global password updating utility for
+	the randnum authentication method. 
+
+1999-05-22  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/uams/uam_randnum.c (afppasswd): added in global password
+	file for the randnum authentication method. it looks for a .key
+	file as well to handle encryption.
+
+	* etc/afpd/afp_options.c (afp_options_parseline): added
+	-passwdfile as an option so that you can specify a global randnum
+	password file if desired.
+
+	* etc/afpd/volume.c (readvolfile): we now have rwlist and rolist
+	as an AppleVolumes.* option. if the user is in the rolist, the
+	volume gets set as readonly. if there's a rwlist, and the user
+	isn't in it, the volume also gets set as readonly.
+
+1999-05-21  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_lock.c (ad_fcntl_lock): plug a leak if we
+	can't allocate the reference counting variable.
+
+	* etc/uams/uam_*.c: make sure that uam_setup returns an error
+	code. 
+
+1999-05-19  a sun  <asun@hecate.darksunrising.blah>
+
+	* include/atalk/paths.h (_PATH_LOCKDIR): added os x server's
+	/var/run as the lock file directory.
+
+	* etc/afpd/fork.c (afp_write): kanehara@tpk.toppan.co.jp reported
+	a problem with FPWrite getting a request count of 0. that's
+	fixed. 
+
+	* etc/afpd/Makefile: bleah. for some reason, pam doesn't like to
+	load itself from a shared library. i've compensated by linking it
+	into afpd again.
+
+	* etc/uams/uam_dhx_passwd.c: okay. DHX now works. something's
+	still screwy with the dhx_pam stuff though.
+
+1999-05-18  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/uam.c (uam_getname): i forgot that getname modified the
+	username to fit what's in pw->pw_name if necessary.
+
+1999-05-16  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/uams/uam_dhx_passwd/pam.c: almost ready versions of the DHX
+	authentication method. i'm still missing a little info to get it
+	all right.
+
+	* bin/megatron/nad.c (nad_header_read): if there isn't a mac name,
+        create it from the unix name. 
+
+	* bin/megatron/megatron.c (megatron): oops. need to turn fdCreator
+	and fdType into strings.
+
+1999-05-16  a sun  <asun@pelvetia>
+
+	* etc/afpd/uam.c (uam_afpserver_option): changed the interface a
+	little. now, you pass in an int * if you want to either get/set
+	the size of the option. added in UAM_OPTION_RANDNUM for generic 
+        (4-byte granularity) random number generation.
+
+	* etc/afpd/switch.c: added afp_logout to preauth_switch.
+
+1999-05-15  a sun  <asun@hecate.darksunrising.blah>
+
+	* bin/megatron/macbin.c (bin_open): make error message for
+	macbinary files more informative.
+	
+	(test_header): added more macbinary tests. it now has a workaround
+	for apple's incorrectly generated macbinary files.
+
+1999-05-14  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/solaris/Makefile: added shared library generation bits.
+
+	* etc/uams: moved server-side uams here. 
+
+	* include/netatalk/endian.h: fixed some solaris bits. 
+
+	* etc/afpd/config.c (configfree): don't do an asp_close. instead,
+	do an atp_close and free the asp object. oh yeah, as afpd needs
+        to export symbols to its modules, make sure you don't do anything
+        more exciting than strip --strip-debug with it.
+
+1999-05-12  a sun  <asun@hecate.darksunrising.blah>
+
+	* various places that use sigaction: zero out struct sigaction so
+        that we don't send something confusing. also make sure that we
+        don't set a timer unless we already have a sigaction set.
+
+	* etc/afpd/fork.c (afp_openfork): don't error on trying to open an
+	empty resource fork read-only. also, added back in the bit of code
+	that prevented locks from being attempted on non-existent resource
+	forks.
+
+	* etc/afpd/afp_options.c (getoption): added a uamlist commandline
+	option (-U list). 
+
+	* libatalk/netddp/netddp_open.c: don't bind if nothing was passed
+	in. 
+
+	* libatalk/nbp/nbp_unrgstr.c (nbp_unrgstr): oops. forgot to
+	convert this over to use by the netddp interface.
+
+1999-05-12  a sun  <asun@pelvetia>
+
+	* etc/afpd/uam.c: os x server's runtime library loader is
+	braindead. as a result, i've switched to using an exported struct
+	with the uam's name.
+
+	* bin/aecho,getzones: changed these to use the netddp interface.
+
+	* libatalk/nbp/nbp_rgstr.c,unrgstr.c: fixed more leaky bits.
+
+	* libatalk/netddp: abstracted the ddp interface to netddp. besides
+	the prior socket-driven interface, there's now an os x server
+	interface. so, instead of calling socket/sendto/recvfrom, you call
+	netddp_open/netddp_sendto/netddp_recvfrom.
+
+1999-05-11  a sun  <asun@pelvetia>
+
+	* libatalk/nbp/nbp_lkup.c: oh my. nbp_lookup was fd leaky if there
+	was a problem.
+
+	* etc/atalkd/main.c (main): make sure that if -dontroute is
+	selected for all but one interface, that interface also gets
+	-dontroute set.
+
+1999-05-10  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/auth.c: re-wrote to deal with plug-in uams. it's much
+	smaller than it used to be.
+
+1999-05-09  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/uams/uam_guest.c, uam_pam.c, uam_passwd.c,
+	uam_randnum.c: uam modules. these should probably be moved out of
+	afpd (and into something like etc/uam_server) when the printing
+	stuff gets uam support.
+
+1999-05-08  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/uam.c: interface to user authentication modules.
+	it should eventually be moved to libatalk, but that's not
+	necessary until the printing uam stuff is done. everything is from
+	the server-side perspective, but that's only because there aren't
+	any client-side uses right now.
+
+	* libatalk/util/module.c: generic interface to run-time library
+	loading functions. right now, the dlfcn family and os x server's
+	NS-style way of doing things are the ones understood. in addition,
+	there's a DLSYM_PREPEND_UNDERSCORE for those systems that need it.
+
+	* libatalk/asp/asp_write.c (asp_wrtcont): log both the read and
+	write part of write continuations.
+
+1999-05-07  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd: added the ability to turn off routing for particular
+	interfaces. specify -dontroute for each interface that you don't
+	want to route.
+
+1999-05-06  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/auth.c: got rid of global clrtxtname and switched to
+	using obj->username.
+
+1999-05-04  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/dsi/dsi_write.c (dsi_write): dsi_write could loop
+	forever if there's a problem while it's being used. that's fixed.
+
+1999-05-01  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/directory.c (renamedir,copydir,deletedir): added bits
+	so that renaming a directory works across filesystems.
+
+1999-04-27  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (getforkparams): report mtime if it's > than
+	what's stored in the header file.
+
+	* config/afpd.conf: incorporated a patch by Stefan Bethke to make
+	afpd.conf more understandable.
+
+	* sys/solaris/if.c: many of the firstnet/lastnet bits weren't
+	endian converted. that's fixed.
+
+	* libatalk/adouble/ad_lock.c (adf_find(x)lock): F_RD/WRLCK aren't
+	necessarily ORable, so use ADLOCK_RD/WR instead.
+	
+	(ad_fcntl_unlock): erk. fixed a typo that had the resource fork
+	unlock accidentally getting the data fork locks.
+
+1999-04-24  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (afp_openfork): always try to create a resource
+	fork if asked.
+
+1999-04-21  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_open.c, ad_read.c/ad_write.c, ad_flush.c:
+	turned the mmapped header stuff into and #ifdef
+	USE_MMAPPED_HEADERS option.
+
+	* libatalk/adouble/ad_open.c (ad_header_read): darn. i forgot that
+	the hfs fs doesn't currently have mmappable header files. rather
+	than implement that, i just reverted back to a modified version
+	of the old way of reading headers.
+
+1999-04-15  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (afp_bytelock): byte locks become read locks on
+	read-only files.
+	
+	(afp_openfork): deal with read-only data forks that don't have
+	corresponding .AppleDouble files. we can't really do anything with
+	deny locks in this case. just make sure that read locks are set.
+
+	* etc/afpd/file.c (getfilparams): oops. got the parentheses wrong
+	around FILPBIT_FINFO. 
+
+	* etc/afpd/fork.c (afp_read): as we share open files now, check
+	for fork type against of_flags instead of just checking to see if
+	the file is open. this fixes a bug that caused resource forks to
+	get filled with data fork information.
+
+1999-04-09  a sun  <asun@porifera.zoology.washington.edu>
+
+	* sys/generic/Makefile: AFP/tcp now compiles on irix with quota
+	support.
+
+1999-04-09  a sun  <asun@mead1.u.washington.edu>
+
+	* sys/generic/Makefile: AFP/tcp now compiles on aix with quota
+	support.
+
+1999-04-09  a sun  <asun@saul6.u.washington.edu>
+
+	* sys/generic/Makefile: AFP/tcp part now compiles on digital unix
+	with quota support enabled.
+
+1999-04-08  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c, fork.c, file.c, directory.c, filedir.c,
+	config/AppleVolumes.default: added read-only volume option.
+
+	* etc/afpd/quota.c (uquota_getvolspace): modified for os x
+	server. 
+
+1999-04-03  a sun  <asun@hecate.darksunrising.blah>
+
+	* bin/megatron/macbin.c (bin_write): only pad if we need to do so 
+	(from <jk@espy.org>).	
+	(bin_header_write/read): fixed up screwed up file date
+	generation/reading with macbinary files. 
+
+	* bin/megatron: changed all of the bcopy/bzero/bcmp's to 
+	memcpy/memset/memcmp's. added macbinary III support.
+
+	* bin/megatron/macbin.c (bin_open): added --stdout as an option so
+	that we can stream macbinary file creation to stdout.
+
+	* bin/megatron/megatron.c: incorporated information patch (--header
+          and --macheader) from <fmorton@base2inc.com>.
+
+
+1999-04-02  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd: whee! there are no more bcopy/bcmp's in this
+	directory. 
+
+	* libatalk: changed the bcopy/bzero's to memcpy/memset's. added in
+	dummy ints for some of the files that can get compiled to empty
+	objects. check for the type of msync() available as well.
+
+1999-03-31  a sun  <asun@hecate.darksunrising.blah>
+
+	* INSTALL/README.GENERIC: added information for a generic
+	architecture. It includes the information needed to get netatalk
+	to compile on a random unix platform.
+
+	* etc/afpd/quota.c: moved the quota stuff here so that we can
+	#ifdef it out on a machine without quota support.
+
+1999-03-30  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_lock.c: reference count the locked ranges as
+	well. this prevents multiple read locks on the same byte range
+	from disappearing if one user disappears.
+	
+	(ad_fcntl_lock): here are the current rules for file
+	synchronization:
+	   1) if there's a appledouble header, we use the beginning
+	      of that for both data and resource forks.
+	   2) if there isn't, we use the end of the data fork (or past the
+	      end on 64-bit machines)
+	
+1999-03-28  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_open.c (ad_refresh): okay. mmapping the
+	appledouble entry parts is done. 
+
+	* libatalk/cnid/cnid_add.c (cnid_add): prevent anyone from adding
+	in an illegal cnid.
+
+1999-03-27  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_open.c (ad_refresh): started making the
+	appledouble header parsing more generic so that we can read in
+	arbitrary appledouble header files. i just mmap the parts that we
+	need. 
+
+1999-03-22  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/file.c (afp_copyfile): return the correct error
+	response on a failed copy. also, error if the file is already open
+	to prevent problems with locks. we really need to ad_lock
+        this during the copy
+
+1999-03-21  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (readvolfile): switched volume options to
+	using ':' as a delimiter as that's one of the characters that's
+	not allowed as part of a mac filename.
+	(volset): changed access to allow/deny
+
+	* etc/afpd/auth.c (noauth_login): make sure that the username gets
+	set. 
+
+1999-03-17  a sun  <asun@hecate.darksunrising.blah>
+
+	* NOTE to myself: jeremy allison said that samba uses refcounts to
+	prevent close() from killing all the byte locks. so, i've started
+	converting afpd to using refcounting as well. luckily, we already
+	have of_findname, so we know when files are open. in cases where
+	files are already open, this will replace an ad_open with a lookup
+	into a hash table.
+
+	* etc/afpd/directory.c (getdirparams/getfilparams): check for
+	NULL names when getting directory/file names.
+
+	* etc/afpd/directory.{c,h} (DIRDID_ROOT/DIRDID_ROOT_PARENT): make
+	sure these are always in network byte order.
+
+1999-03-15  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (afp_openfork): okay, fixed the file
+	synchronization bits. now, we use two bytes to do the read/write
+	stuff. when access is needed, a read lock is attempted. if a deny
+	lock is needed, a write lock is attempted. we even handle the
+	access None mode now by saving the access modes.
+
+	* etc/afpd/fork.h (AFPFORK_ACCMASK): started adding bits so that
+	we can obey all of the file synchronization rules.
+
+	* etc/afpd/fork.c (afp_bytelock): got the meaning of the clearbit
+	reversed. with helios lantest's lock/unlock 4000 times test, it
+	looks like i get <1 second overhead on my machine when using byte
+	locks. NOTE: this will get a little worse when serialization gets
+	added. in addition, 0x80000000 only works for 64-bit machines. i
+	reserve the last allowable bit for 32-bit machines. 
+
+	actually, both 64-bit machines and 32-bit machines use 0x7FFFFFFF
+	now as i'm able to trigger a kernel oops in linux with the 64-bit
+	code. 
+	
+	(afp_read/afp_write): make sure to use the same offset when doing
+	a tmplock.
+
+1999-03-14  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_lock.c: i went and implemented a bunch of
+	stuff to get byte locks to work correctly (except for the
+	serialization) only to discover that files that use byte locks
+	also request a deny write mode. luckily, byte locks only cover up
+	to 0x7FFFFFFF. so, i'll just use 0x80000000 for the
+	synchronization locks.
+
+1999-03-08  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/{*bsd,ultrix,solaris,linux}/Makefile (depend): surround 
+	DEPS with double quotes so that multiple defines work.
+
+1999-03-06  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_write.c, ad_read.c: make off off_t in size. 
+
+	* libatalk/adouble/ad_flush.c (adf_fcntl_relock), ad_lock.c
+	(adf_fcntl_locked): okay. fcntl locks now check against multiple
+	programs on the same machine opening the same file. current
+	problems with the mechanism that i don't want to fix unless
+	necessary: 
+		1) there's a race during the relock phase. serialization
+		   would solve that.
+		2) it assumes that each fd only locks a single contiguous
+	   	   range at a time. keeping a list of locked ranges would
+		   solve that. 
+	
+	also, i changed the default to using fcntl locks. if the above two
+	are really necessary, i'll probably switch to something a little
+	more featureful like the berkeley db's lock manager.
+
+	(note to myself: stuff new from asun2.1.3 from 1999-03-03)
+	
+1999-03-05  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_lock.c: got rid of the endflag checks to
+	reduce system calls a little. 
+
+	* etc/afpd/auth.c (getname): do a case-insensitive compare on the
+	login name as well.
+
+	* sys/solaris/Makefile: added 64-bit solaris patch from
+	<jason@pattosoft.com.au>.
+
+1999-03-03  a sun  <asun@hecate.darksunrising.blah>
+
+	* include/netatalk/endian.h: make solaris 2.5 complain less.
+
+	* bin/adv1tov2/adv1tov2.c, libatalk/adouble/ad_open.c (ad_v1tov2):
+	fixed a couple problems with the adv1tov2 stuff.
+
+1999-02-26  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (afp_openvol): erk. the volume password gets
+	aligned along an even boundary.
+
+1999-02-23  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (readvolfile): added volume password support. 
+
+1999-02-14  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/multicast.c (addmulti): added FreeBSD's data-link
+	layer multicast setting bits.
+
+	* libatalk/adouble/ad_open.c (ad_v1tov2): make sure to stick in
+	prodos field info when converting.
+
+	* rc.atalk.redhat: added pidof checking in case the machine
+	crashes. also added rc.atalk.wrapper to the redhat rc script
+	installation. 
+
+1999-02-07  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (afp_setforkparams): make sure to do better
+	error detection here and more fully report error conditions.
+	
+	(flushfork): make sure to flush the header if necessary (rfork
+	length changed or modification date needs to be set).
+
+	(afp_write): ugh. this wasn't returning the right values for the
+	last byte written if the endflag was set. in addition, it was
+	setting the modification date. that should be left to FPCloseFork
+	and FPFlush(Fork). this fixes a problem that shows up with
+	QuarkXPress. 
+
+	NOTE: as of now, changes to the rfork info are the only things
+	that aren't flushed immediately when altered. 
+
+	* etc/afpd/fork.c (get/setforkparams), ofork.c: what ugliness. we
+	need to report bitmap errors if we try to fiddle with the wrong
+	fork. i added an of_flags field to keep things sorted.
+
+	* libatalk/adouble/ad_open.c (ad_v1tov2): oops. in all of the
+	movement, i forgot to make sure that the pre-asun2.2.0 features
+	still compile.
+
+1999-02-06  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/filedir.c (afp_moveandrename): make sure to save the
+	old name even when it's a directory.
+
+	* globals.h: added oldtmp and newtmp to AFPObj to reduce the
+	number of buffers used. use these when needed in afp_* calls.
+
+	* etc/afpd/directory.c (deletecurdir): delete stray .AppleDouble
+	files when deleting a directory.
+
+1999-02-05  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/file.c (afp_createfile): fixed a hard create error
+	check bug. 
+
+	* fixed up a few bobbles in the netatalk-990130 merge.
+
+	* the noadouble option should be pretty much implemented. here's
+	how it goes:
+		when a directory is created, the corresponding
+		.AppleDouble directory is not.
+		
+		comments, dates, and other file attributes will get
+		silently ignored and not result in the creation of a new
+		.AppleDouble directory.
+
+		however, if anything possessing a resource fork is copied
+		into that directory, the corresponding .AppleDouble
+		directory will be created. once this happens, any
+		other file in the directory can acquire an AppleDouble
+		header file in the future.
+		
+1999-02-03  a sun  <asun@hecate.darksunrising.blah>
+
+	* merged in the rest of netatalk-990130.
+
+	* sys/solaris: merged in netatalk-990130 changes.
+
+	* etc/afpd/file.c,fork.c,desktop.c libatalk/adouble/ad_sendfile.c:
+	tested and fixed the sendfile bits on linux. it looks like linux
+	doesn't permit socket -> file sendfiles yet.
+
+	* etc/afpd/fork.c (afp_read): we can't stream FPRead's with
+	newline character checking on.
+
+1999-02-02  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (afp_flush), ofork.c (of_flush): FPFlush
+	operates on a per-volume basis.
+
+1999-01-31  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/file.c (copyfile): sendfile bits added here also.
+
+	* etc/afpd/desktop.c (afp_geticon): added sendfile bits here as
+	well. 
+
+	* libatalk/adouble/ad_sendfile.c (ad_writefile/ad_readfile):
+	implemented sendfile bits. currently, there's support for linux
+	and freebsd. unfortunately, freebsd's implementation doesn't allow
+	file->file or socket->file copies. bleah.
+
+1999-01-30  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/file.c (setfilparams), directory (setdirparams),
+	volume.c (volset): added in the beginnings of a NOADOUBLE option
+	for those that don't want AppleDouble headers to be created by
+	default. it doesn't really work that well right now.
+
+1999-01-29  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_open.c (ad_v1tov2): separated v1tov2 bits
+	from ad_refresh. made broken v1 header checking the default. fixed
+	broken v1 date checking. now, it just checks to see if the v1
+	MDATE is > than st_mtime by 5 years.
+
+	* etc/afpd/directory.c: make date setting alter directory dates as
+	well. 
+
+1999-01-24  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/afp_dsi.c (alarm_handler,afp_over_dsi): added a
+	CHILD_RUNNING flag to prevent afpd from timing out on long copies.
+
+1999-01-21  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (afp_openvol), libatalk/cnid/cnid_nextid.c:
+	shift the beginning of the fake did's if necessary.
+
+	* libatalk/adouble/ad_open.c (ad_refresh): fixed screwed-up date
+	detection code.
+
+	* libatalk/cnid/cnid_add.c,cnid_open.c,cnid_close.c: made some
+	changes so that the CNIDs will still work even when the .AppleDB
+	directory is read-only. if you're still allowed to create files on
+	these volumes, you'll get a temporary id for those.
+
+1999-01-20  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/cnid/{cnid_close.c,cnid_open.c}: added bits so that log
+	files get cleared out on cnid_close() if it's the last user for a
+	volume.
+
+1999-01-18  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (afp_setvolparams): added FPSetVolParms. this
+	allows us to set the backup date on the server.
+
+	* etc/afpd/file.c (afp_exchangefiles): whee! we now have
+	FPExchangeFiles. we also have FPDeleteID, so that only leaves us
+	with FPCatSearch to do.
+
+1999-01-16  a sun  <asun@hecate.darksunrising.blah>
+
+	* sys/solaris/ddp.c (ddp_rput): added a couple htons()'s for the
+	net addresses.
+
+1999-01-11  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (volset, afp_openvol): you can now specify a
+	dbpath= in AppleVolumes.* for the CNID database.
+
+	* libatalk/adouble/ad_open.c (ad_refresh): if we build in an
+	appledouble v1 environment, turn on v1compat by default.
+
+1999-01-10  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_open.c (ad_refresh): added v1compat option
+	to handle broken ad headers.
+
+	* etc/afpd/file.c (setfilparams): we need to make sure that we
+	flush the file if we've created it even if there's an error.  the
+	magic number/version don't get saved if we don't.
+
+	* etc/afpd/appl.c, etc/afpd/directory.c, etc/afpd/desktop.c: added
+	DIRBITS to mkdirs.
+
+1998-12-30  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (afp_openvol): got rid of unnecessary v_did.
+
+	* etc/afpd/file.c (afp_resolveid, afp_createid): added these two
+	in. 
+
+	* well, what do you know? the cnid stuff compiles in. 
+
+1998-12-29  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c, directory.c, file.c, filedir.c, volume.c,
+	enumerate.c: added in stubs for CNID database conditional on
+	AD_VERSION > AD_VERSION1.
+
+	* etc/afpd/nls/makecode.c: added iso8859-1 mapping.
+
+1998-12-27  a sun  <asun@hecate.darksunrising.blah>
+
+	* bin/adv1tov2/adv1tov2.c: turn non-printable ascii characters
+	into hex code as well.
+
+1998-12-21  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/auth.c: fixed FPChangePW for 2-way randnums.
+
+1998-12-15  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/fork.c (read_file/write_file): do crlf translation in
+	both directions so that we can recover from problems if
+	necessary. 
+
+1998-12-14  a sun  <asun@hecate.darksunrising.blah>
+
+	* bin/adv1tov2/adv1tov2.c: small utility program that recursively
+	descends a directory and converts everything it sees into
+	AppleDouble v2.
+
+1998-12-13  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_flush.c (ad_rebuild_header): moved the
+	header rebuilding here so that ad_refresh can use it.
+
+	* libatalk/adouble/ad_open.c (ad_refresh): added locking to v1->v2
+	conversion.
+
+	* bin/megatron/asingle.c: yuk. removed all of
+	the duplicate stuff here and had it use the #defines in adouble.h.  
+
+	* libatalk/adouble/ad_open.c (ad_refresh): finished v1 -> v2
+	conversion routine. we still need a shortname creator and a cnid
+	database for the v2 features to be useful. 
+
+1998-12-11  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/adouble/ad_open.c (ad_refresh): punt if we get a file
+	that we don't understand.
+
+1998-12-10  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/desktop.c (utompath,mtoupath): simplified the codepage
+	stuff. also made sure to lower/upper the 8-bit characters as
+	well. 
+
+	* libatalk/util/strdicasecmp.c: the casemapping had a few wrong
+	characters. 
+
+	* etc/afpd/fork.c (getforkparams): make sure that the ROpen/DOpen
+	attribute bits are in the correct byte ordering.
+
+1998-12-09  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (volset): made prodos an option to options=
+	flag. also added crlf as an option.
+
+	* libatalk/adouble/ad_open.c (ad_refresh): fix up times if
+	necessary. 
+	(ad_open): deal correctly with 0-length files by treating them as
+	newly created. 
+
+	* etc/afpd/volume.c (getvolparams), file.c (get/setfilparams),
+	fork.c (getforkparams), directory.c (get/setdirparams): finished
+	adding appledouble version 1 and 2 date conversion. also added
+	attribute setting. 
+	
+	* etc/afpd/volume.c (getvolparams): make sure to flush the header
+	file if we needed to fiddle with it. 
+
+	* libatalk/adouble/ad_date.c, ad_attr.c: date/attribute
+	setting/retrieval code. 
+
+	* libatalk/adouble/ad_open.c (ad_open): initialize date
+	structures here instead of elsewhere. 
+
+1998-12-07  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/directory.c, fork.c, volume.c, file.c: added unix<->afp
+	time conversion code. 
+
+1998-12-05  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (volset): changed prodos setting to
+	prodos=true. 
+
+1998-12-04  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/volume.c (volset): okay. you now have the following
+	options to casefold: lowercase,uppercase,xlatelower,xlateupper
+		tolower    -> lowercases everything in both directions
+		toupper    -> uppercases everything in both directions
+		xlatelower -> client sees lowercase, server sees uppercase
+		xlateupper -> client sees uppercase, server sees lowercase
+
+	NOTE: you only should use this if you really need to do so. this
+	and the codepage option can cause mass confusion if applied
+	blindly to pre-existing directories.
+	
+1998-12-03  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/desktop.c (utompath,mtoupath), etc/afpd/volume.h: added
+	multiple options to casefold. bits 0 and 1 deal with MTOU, and
+	bits 2 and 3 deal with UTOM. i did it that way so that you can
+	casefold in one direction only or in both directions if
+	desired. needless to say, setting both bits for UTOM or MTOU
+	doesn't make any sense. right now, toupper takes precedence in
+	MTOU, and tolower takes precedence in UTOM.
+
+1998-12-02  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/afp_options.c (afp_options_*): added -uampath and
+	-codepagepath to the list of available options. they specify the
+	directories to look for uam modules and codepages,
+	respectively. currently, -uampath doesn't do anything.
+
+	* etc/afpd/volume.c (readvolfile): spruced up options to
+	AppleVolumes files. now you can have mtoufile=<codepage.x>,
+	utomfile=<codepage.y>, casefold=<num> for volumes.
+
+	* etc/afpd/desktop.c (utompath,mtoupath): added
+	codepage/casefolding support. casefold is currently an int that
+	could have multiple actions. right now, i just lowercase in
+	mtoupath and uppercase in utompath.
+
+	* etc/afpd/ofork.c (of_alloc, of_findname, of_rename): added vol
+	as an additional specifier so that we don't have problems with
+	the same path names on multiple volumes. 
+
+1998-11-29  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/volume.c (getvolparams): added AFP2.1 volume attribute
+	bits. 
+
+1998-11-24  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/atalkd/config.c (readconf, getifconf): added IFF_SLAVE to
+	prevent atalkd from trying to use a slave channel.
+
+1998-11-23  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/volume.c (getvolparams): we shouldn't set the custom
+	icon bit by default on the root directory. that screws up pre-OS 8
+	systems.
+
+1998-11-19  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* libatalk/dsi/dsi_getsess.c (dsi_getsession): ignore SIGPIPE's
+	so that we can gracefully shut down the server side.
+
+	* etc/afpd/afp_dsi.c (afp_over_dsi), etc/afpd/afp_options.c,
+	libatalk/dsi/dsi_getsess.c (dsi_getsession),
+	libatalk/asp/asp_getsess.c (asp_getsession): made the tickle timer
+	interval an option (-tickleval <sec>).
+	
+	* etc/afpd/afp_dsi.c (afp_dsi_timedown): added child.die so that
+	we don't stomp on a shutdown timer. libatalk/dsi/dsi_read.c,
+	dsi_write.c both save/restore the old timer, so they don't really
+	care what the actual value is. 
+	
+1998-11-18  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* due to the recent obsession with bug fixing and low-level dsi
+	cleanups, i've decided that this should really be asun2.1.1
+	instead of asun2.1.0a.
+
+1998-11-17  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* libatalk/dsi/dsi_tcp.c (dsi_tcp_open): moved the afpd connection
+	announcement here from etc/afpd/afp_dsi.c. 
+	
+	* libatalk/dsi/dsi_stream.c: moved all of the read/write functions
+	into here as they're pretty generic. now, the protocol specific
+	stuff only handles open and close. 
+
+	* etc/afpd/fork.c (afp_read/write), desktop.c (afp_geticon),
+	file.c (copyfile), include/atalk/dsi.h (dsi_writefile/readfile):
+	added initial stubs for sendfile support. i still need to go
+	through and calculate the appropriate offsets to use. 
+
+	* libatalk/dsi/dsi_read.c, dsi_write.c: disable the interval timer
+	instead of just ignoring it.
+
+	* etc/afpd/desktop.c (afp_geticon), etc/afpd/fork.c (afp_read),
+	libatalk/dsi/dsi_read.c (dsi_readinit, dsi_readinit): modified the
+	dsi_read interface to return errors so that i can kill things
+	gracefully. 
+
+1998-11-16  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* libatalk/dsi/dsi_tcp.c (dsi_tcp_send/dsi_tcp_write): erk. read()
+	and write() treat a return of 0 differently. 
+
+1998-11-16  a sun  <asun@hecate.darksunrising.blah>
+
+	* libatalk/dsi/dsi_read.c (dsi_readinit): make sure to stick in
+	the error code.
+
+1998-11-15  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/fork.c (afp_read): re-ordered some of the checks here
+	to return earlier on 0-sized files.
+
+1998-11-13  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/afp_dsi.c (afp_over_dsi): moved the dsi->noreply toggle
+	check to here from dsi_cmdreply.
+
+1998-11-11  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/atalkd/zip.c (zip_packet): make sure to copy multicast zone
+	back out. (reported by Michael Zuelsdorff <micha@dolbyco.han.de>)
+
+1998-11-09  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/directory.c (getdirparams): changed unknown bit reply
+	code to AFPERR_BITMAP instead of AFPERR_PARAM.
+
+1998-11-06  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/enumerate.c (afp_enumerate), directory.c (renamedir):
+	fixed a couple of failed realloc leaks.
+
+	* etc/afpd/filedir.c (afp_moveandrename, afp_rename): added bits
+	to deal with case-insensitive, case-preserving filesystems.
+
+1998-10-30  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/auth.c: fixed randnum password changing check. 
+
+1998-10-27  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/atalkd/main.c: add a check for SIOCATALKDIFADDR if
+	SIOCDIFADDR fails.
+	
+	* etc/afpd/volume.c (getvolparams): ad_open had the wrong
+	parameters. 
+
+	* etc/afpd/unix.c (setdeskowner): added a little extra space to
+	prevent buffer overflows here.
+
+1998-10-26  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* sys/linux/Makefile: fixed PAM message.
+
+	* sys/solaris/Makefile: make failure to ln -s a non-fatal error. 
+
+	* etc/papd/session.c, bin/pap/pap.c: changed sequence count to
+	wrap from 0 -> 1 instead of from 0xFFFF -> 1.
+
+	* etc/afpd/filedir.c (afp_rename, afp_moveandrename): actually, we
+	should check against the entire unix name.
+	
+1998-10-21  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/filedir.c (afp_rename, afp_moveandrename): make sure
+	to check against mac name.
+
+1998-10-19  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/auth.c (afp_changepw): make password changing deal
+	correctly with "real" user names. also, moved seteuid() to before
+	the pam_authenticate() bit as shadow passwords need that.
+
+	* etc/afpd/enumerate.c (afp_enumerate): make sure to check the mac
+	name against MACFILELEN.
+
+1998-10-16  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/file.c (renamefile), filedir.c (afp_rename),
+	directory.c (renamedir): use strndiacasecmp() for AFPERR_SAMEOBJ
+	checks. also make sure test occurs before checking to see if the
+	destination exists.
+
+1998-10-15  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/auth.c (afp_changepw): fixed a bit of brain damage. i
+	forgot that password changing needs root privileges to work.
+
+	* etc/afpd/auth.c (PAM_conversation): the supplied code was
+	incorrect. i cleaned it up a bit.
+
+	* sys/linux/Makefile: fixed the installation bits.
+
+1998-10-14  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/auth.c (afp_changepw): don't kill the connection here
+	if there's a problem.
+
+1998-10-10  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/enumerate.c, fork.c, ofork.c, file.c,
+	globals.h, directory.c, auth.c: #defined MACFILELEN and used
+	that. also made sure that files > MACFILELEN never show up.
+
+1998-09-25  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/{afpd,papd,atalkd}/bprint.c (bprint): got rid of the
+	spurious pointer dereference.
+
+	* etc/afpd/ofork.c (of_alloc/of_rename): allocate the max mac file
+	length so that we don't need to realloc.
+
+	* etc/afpd/filedir.c (afp_rename, afp_moveandrename): make sure to
+	return AFPERR_BUSY if the dest has an ofork open.
+
+	* etc/afpd/file.c (renamefile), directory.c (renamedir), filedir.c
+	(afp_rename): return AFPERR_SAMEOBJ if source == dest
+
+1998-09-21  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd: went through and looked for places that needed to use
+	curdir instead of dir. i think i have them all right now.
+
+	* etc/afpd/filedir.c (afp_moveandrename): wasn't keeping track of
+	curdir correctly. what this really means is that cname should be
+	fixed to return everything it changes as opposed to changing a
+	global variable. 
+
+1998-09-19  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/config.c (configinit): do the right thing if
+	AFPConfigInit fails.
+
+1998-09-18  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/config.c (ASP/DSIConfigInit, configfree): how 
+	embarrassing. i wasn't doing refcounts correctly.
+
+1998-09-17  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/nfsquota.c (getnfsquota): ultrix uses dqb_bwarn instead
+	of dqb_btimelimit.
+
+	* sys/ultrix/Makefile: ultrix understands the old rquota format. 
+
+	* etc/afpd/ofork.c (of_findname): erk. forgot to only search in
+	the current directory. 
+	(of_rename): erk. changed it to handle renaming a file that has
+	been opened multiple times.
+
+	* etc/atalkd: made sure that if you don't specify -router, things
+	are as they were before. 
+
+1998-09-13  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/status.c (status_flags): forgot to turn on password
+	setting if randnum passwords are being used.
+
+1998-09-11  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/unix.c (setdirmode): erk. make sure only to setgid on
+	directories. 
+
+	* bin/aecho/aecho.c (main): incorporated -c <num> (ala ping) patch
+	from "Fred Lindberg" <lindberg@id.wustl.edu>.
+
+1998-09-03  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/directory.c (afp_closedir, afp_opendir): added these in
+	for more AFP 2.0 compliance. unfortunately, apple's appleshare
+	client doesn't like non-fixed directory ids.
+
+1998-08-31  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/volume.c (accessvol): the accessible volume list can
+	now be controlled by groups and usernames. just use something of
+	the following form: @group,name,name2,@group2,name3
+
+	NOTE: you can't have any spaces, and the parser forces you to
+	include all options. in this case, there are some apple II options
+	that need to be entered. they need to go away soon anyway.
+
+	* etc/afpd/auth.c (getname): oops. i forgot to copy the gecos
+	field into a temporary buffer before calling strtok.
+
+1998-08-29  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/main.c (as_timer), rtmp.c (rtmp_delzones): when the 
+	last router on an interface goes down, we need to delete the
+	interface's zone table.
+
+1998-08-28  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/status.c (afp_getsrvrinfo): although it's never used,
+	i've added this in to increase AFP compliance.
+
+	* etc/afpd/auth.c (afp_getuserinfo): added FPGetUserInfo -- this
+	should make afpd compatible with OS 8.5's Nav Services.
+
+	* etc/atalkd/config.c,main.c: -router now specifies router mode
+	with any number of interfaces.
+
+1998-08-27  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/atalkd/main.c (as_timer): well, i figured out how to set up
+	atalkd as a single-interface router. now, you can get zones with
+	only single interfaces! i'm only waiting on wes for the approved
+	configuration toggle.
+
+1998-08-26  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* libatalk/adouble/ad_lock.c, include/atalk/adouble.h: turned the
+	ADLOCK_* into real #defines and added translations in the
+	lock-type specific functions. this should make it easier to
+	recompile things without screwing up.
+
+1998-08-26  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/atalkd/nbp.c (nbp_packet): forgot to handle another local
+	zone case.
+
+1998-08-25  a sun  <asun@hecate.darksunrising.blah>
+
+	* etc/afpd/status.c (status_server): changed status_server to
+	use only the obj part of obj:type@zone-style names.
+
+	* etc/atalkd/nbp.c (nbp_packet): unregistering wasn't handling
+	zones properly. it was matching on anything but the actual zone.
+
+1998-08-18  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/auth.c (clrtxt_login): added pam_set_time(PAM_TTY) so
+	that solaris' pam session setup doesn't crap out.
+
+1998-08-17  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/atalkd/multicast.c (zone_bcast): fixed to do the right thing
+	with zip multicast info.
+
+1998-08-15  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/nfsquota.c: made the old-style rquota fields dependent
+	upon -DUSE_OLD_RQUOTA and defined that for sunos. also included
+	<sys/time.h> for ultrix breakage.
+
+1998-08-13  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/filedir.c (afp_rename), etc/afpd/ofork.c (of_rename): i
+	knew that speeding up of_findname would be useful. in any case, i
+	discovered the source of yet another small AFP non-compliance that
+	was confusing WordPerfect. on an afp_rename, we also need to
+	rename the corresponding ofork. i've added an of_rename() to do
+	this.
+
+1998-08-13  a sun  <asun@hecate>
+
+	* etc/afpd/ofork.c (of_dealloc,of_alloc): sped up dealloc by
+	sticking refnum in ofork.
+
+1998-08-12  a sun  <asun@hecate>
+
+	* etc/afpd/fork.c (afp_openfork): added already open attribute
+	bits.
+
+	* etc/afpd/ofork.c: added a hashed of_findname.
+
+1998-08-06  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/fork.c (afp_openfork): fixed a problem with opening
+	forks from read-only non-appledouble media.
+
+1998-07-23  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/afs.c (afs_getvolspace), etc/afpd/volume.c
+	(getvolspace): modified them to treak afs like the other
+	getvolspaces w.r.t. VolSpace.
+
+1998-07-21  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/unix.c (mountp): erk. i forgot that symlinks are often
+	used for filesystems. nfs quotas sometimes failed as a
+	result. that's fixed now.
+
+1998-07-20  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/auth.c (login): added a -DRUN_AS_USER #define so that
+	it's simple to run the server process as a non-root user.
+
+1998-07-17  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/nfsquota.c (callaurpc, getnfsquota), volume.h: it turns
+	out that i was opening lots of sockets with callaurpc. now, the
+	socket gets saved and reused.
+
+	NOTE: quota-1.55-9 from redhat 5.x doesn't return the correct size
+	for rquota's bsize. unless fixed, rquota will report incorrect
+	values. 
+	
+1998-07-08  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/uam/README: added some preliminary ideas on a
+	plug-in uam architecture. in addition, this should allow arbitrary
+	afp function replacement. eventually, auth.c should get a
+	bit cleaner.
+
+1998-07-07  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/nfsquota.c: added headers and redefined a couple
+	structure fields so that sunos4 compiles.
+
+	* libatalk/compat/rquota_xdr.c: compile if we're using glibc <
+	2. this should get redhat 4.2 machines. NOTE: they're still
+	missing librpcsvc.a, so they'll need to remove that from the
+	etc/afpd/Makefile. 
+
+1998-07-06  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* libatalk/compat/rquota_xdr.c: it turns out that solaris is
+	missing a couple functions needed for rquota support. here they
+	are. 
+
+	* etc/afpd/unix.c (mountp): fixed the nfs detection for
+	solaris. we still need bsd and ultrix.
+
+1998-07-05  a sun  <asun@hecate>
+
+	* include/atalk/adouble.h: marked out space for appledouble v2. 
+
+1998-07-04  a sun  <asun@hecate>
+
+	* etc/afpd: plugged up some ad_open leaks. made sure that we don't
+	get negative numbers for length fields and such.
+	
+1998-07-04  a sun  <asun@hecate>
+
+	* etc/afpd/nfsquota.c (getnfsquota): added nfs rquota
+	support. Robert J. Marinchick <rjm8m@majink1.itc.virginia.edu>
+	provided the initial bits from the bsd quota program. 
+
+	* etc/afpd/unix.c (getquota): made getquota call getfsquota or
+	getnfsquota depending upon the type of fs. 
+
+	* etc/afpd/unix.c (mountp/special): munged mountp and
+	special to return either the nfs mount point or the fs
+	device. set the vol->v_nfs flag if it's nfs.
+
+	* etc/afpd/volume.c (getvolspace): xbfree and xbtotal will now
+	honor results returned from uquota_getvolspace.
+	
+1998-06-29  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* etc/afpd/file.c (copyfile): mmapping the file copy only helps on
+	multiple copies. as that's not the case here, i've reverted to
+	just doing read + write.
+	
+1998-06-28  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* sys/linux/Makefile: fixed the redhat-style atalk
+	installation. also, it doesn't over-write an existing
+	/etc/rc.d/init.d/atalk file.
+
+	* etc/afpd, libatalk/adouble/ad_write.c: removed <sys/file.h> and
+	</usr/ucbinclude/sys/file.h> so that we rely upon adouble.h.
+
+1998-06-19  a sun  <asun@purgatorius.zoology.washington.edu>
+
+	* changed sys/linux/Makefile to install a redhat-style sysv atalk
+	script instead of the bsd one.
+
+	* include/atalk/adouble.h: moved same-name list stub to struct
+	ad_adf. 
+	
+Thu Jun 18 18:20:28 1998  a sun  <asun@purgatorius>
+
+	* changed to asunx.y.z notation as i was getting tired of
+ 	increasing numbers. as this version is undergoing a fairly
+ 	substantial overhaul, i bumped it to 2.1.0. don't ask why asun1.0
+ 	never existed. i just started at 2.0.
+
+	* ofork (etc/afpd/{ofork.c,ofork.h,fork.c}: put in skeleton code
+ 	for hashed-by-name oforks and oforks which group by name to help
+ 	with byte locks and of_findname.
+
+	* adouble (include/atalk/adouble.h): started implementing
+ 	appledouble v2. mostly, i added bits to headers. v2 has wonderful
+ 	bits that should make prodos support much less clunky, allow
+ 	persistent dids, and allow msdos support.
+
+	* finder info: added bits to directory.c and file.c describing the
+ 	actual contents of finder info (from IM: Toolbox
+ 	Essentials). also, set default directory view to an allowed value
+ 	thanks to a suggestion from the appledouble v2 specs. that should
+ 	help with read-only media.
+
+	* etc/afpd/{directory.c,volume.c,afs.c,directory.h}: added
+	DIRDID_ROOT and DIRDID_ROOT_PARENT so people know that these did's
+	are reserved.
+	
+Wed Jun 17 11:54:49 1998  a sun  <asun@purgatorius>
+
+	* well, i'm starting a changelog as i keep forgetting what i've
+	done. 
+
+	* locks: revamped them to be more in line with what should
+	happen. currently, i've reverted back to flock-style locks as i'll
+	need to stick in more code to get fcntl-style locks to work
+	properly. specifically, i think modifying of_alloc/of_dealloc to
+	keep track of locks, fds, and names should solve the problem with
+	fcntl locks being process-specific and not fd specific.
+

@@ -1,0 +1,82 @@
+.TH NBP 1 "17 Dec 1991" "netatalk 1.2"
+.SH NAME
+nbplkup, nbprgstr, nbpunrgstr \- access NBP database
+.SH SYNOPSIS
+.B nbplkup
+[
+.B -r
+.I nresp
+]
+[
+.I nbpname
+]
+.sp
+.B nbprgstr
+[
+.B -p
+.I port
+]
+.I nbpname
+.sp
+.B nbpunrgstr
+.I nbpname
+.SH DESCRIPTION
+.B nbprgstr
+registers
+.I nbpname
+with
+.BR atalkd (8),
+at the given
+.IR port .
+.B nbpunrgstr
+informs
+.B atalkd
+that
+.I nbpname
+is no longer to be advertised.
+.LP
+.B nbplkup
+displays up to
+.I nresp
+(default 1000) entities registered on the AppleTalk internet.
+.I nbpname
+is parsed by
+.BR nbp_name (3).
+An
+.RB ` = '
+for the
+.I object
+or
+.I type
+matches anything, and an
+.RB ` * '
+for
+.I zone
+means the local zone. The default values are taken from the
+.B NBPLKUP
+environment variable, parsed as an
+.IR nbpname .
+.SH EXAMPLE
+Find all devices of type
+.B LaserWriter
+in the local zone.
+.sp
+.RS
+.nf
+example% nbplkup :LaserWriter
+               Petoskey:LaserWriter        7942.129:218
+             Gloucester:LaserWriter        8200.188:186
+                 Rahway:LaserWriter        7942.2:138
+             517 Center:LaserWriter        7942.2:132
+                  ionia:LaserWriter        7942.2:136
+     Evil DEC from Hell:LaserWriter        7942.2:130
+              Hamtramck:LaserWriter        7942.2:134
+         Iron Mountain :LaserWriter        7942.128:250
+example%
+.fi
+.RE
+.SH SEE ALSO
+.BR nbp_name (3),
+.\" .BR nbp (4),
+.\" .BR zip (4),
+.BR atalkd (8).

@@ -1,0 +1,37 @@
+GENERAL:
+-------
+Name:  Wesley Craig 
+Email: wesley.craig@umich.edu
+
+Name:  Adrian Sun
+Email: asun@cobaltnet.com
+
+
+MISCELLANEOUS PATCHES:
+---------------
+Name:    Steve Hirsch
+What:    ProDOS II support/initial Randnum support
+
+Name:    Robert Marinchick
+What:    initial rquota patch
+
+Name:    Frank Morton
+What:    megatron information patch
+
+TESTING:
+-------
+Name:    Tim Carlson
+What:    Solaris 
+
+
+DISTRIBUTIONS:
+-------------
+Name:    iNOUE Koichi
+What:    RPM for RedHat systems
+
+Name:	 Stefan Bethke
+What:    FreeBSD
+
+ADVICE:
+------
+Name: Leland Wallace

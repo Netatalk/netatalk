@@ -1,0 +1,72 @@
+# This file looks empty when viewed with "vi".  In fact, there is one
+# '~', so users with no AppleVolumes file in their home directory get
+# their home directory by default.
+# 
+# volume format:
+# :DEFAULT: [all of the default options except volume name]
+# path [name] [casefold:x] [codepage:y] [options:z,l,j] \
+#   [allow:a,@b,c,d] [deny:a,@b,c,d] [dbpath:path] [password:p] \
+#   [rwlist:a,@b,c,d] [rolist:a,@b,c,d] [limitsize:value in bytes]
+#
+#
+# name:      volume name. it can't include the ':' character and is limited
+#            to 27 characters in length.
+#
+# variable substitutions:
+# you can use variables for both <path> and <name> now. here are the
+# rules:
+#     1) if you specify an unknown variable, it will not get converted. 
+#     2) if you specify a known variable, but that variable doesn't have
+#        a value, it will get ignored.
+#
+# the variables:
+# $c   -> client's ip or appletalk address
+# $f   -> full name (whatever's in the gecos field)
+# $g   -> group
+# $h   -> hostname 
+# $s   -> server name (can be the hostname)
+# $u   -> username (if guest, it's whatever user guest is running as)
+# $v   -> volume name (either ADEID_NAME or basename of path)
+# $z   -> zone (may not exist)
+# $$   -> $
+#
+# casefold options [syntax: casefold:option]:
+# tolower    -> lowercases names in both directions
+# toupper    -> uppercases names in both directions
+# xlatelower -> client sees lowercase, server sees uppercase
+# xlateupper -> client sees uppercase, server sees lowercase
+#
+# allow/deny/rwlist/rolist format [syntax: allow:user1,@group]:
+# user1,@group,user2  -> allows/denies access from listed users/groups
+#                        rwlist/rolist control whether or not the
+#			 volume is ro for those users.
+#
+# miscellaneous options [syntax: options:option1,option2]:
+# prodos              -> make compatible with appleII clients.
+# crlf                -> enable crlf translation for TEXT files.
+# noadouble           -> don't create .AppleDouble unless a resource
+#                        fork needs to be created.
+# ro                  -> mount the volume as read-only.
+# mswindows           -> enforce filename restrictions imposed by MS
+#                        Windows. this will also invoke a default
+#			 codepage (iso8859-1) if one isn't already 
+#			 specified.
+# nohex		      -> don't do :hex translations for anything
+#		         except dot files. specify usedots as well if
+#			 you want that turned off. note: this option
+#			 makes the / character illegal.
+# usedots             -> don't do :hex translation for dot files. note: when 
+#                        this option gets set, certain file names
+#			 become illegal. these are .Parent and
+#			 anything that starts with .Apple. also, dot
+#			 files created on the unix side are marked
+#			 invisible. 
+# limitsize           -> limit disk size reporting to 2GB. this is
+#                        here for older macintoshes using newer
+#                        appleshare clients. yucko.
+#
+# codepage:filename   -> load filename from nls directory.
+# dbpath:path         -> store the database stuff in the following path.
+# password:password   -> set a volume password (8 characters max)
+#
+~

@@ -1,0 +1,261 @@
+.TH AFPD 8 "23 Feb 1999" "netatalk 1.4b2/asun 2.1.3"
+
+.SH NAME
+afpd \- AppleTalk Filing Protocol daemon
+.SH SYNOPSIS
+.B :SBINDIR:/afpd
+[
+.B -d
+]
+[
+.B -f
+.I defaultvolumes
+]
+[
+.B -s
+.I systemvolumes
+]
+[
+.B -u
+]
+[
+.B -n
+.I nbpname
+]
+[
+.B -c
+.I maxconnections
+]
+[
+.B -g
+.I guest
+]
+[
+.B -G
+]
+[
+.B -K
+]
+[
+.B -C
+]
+[
+.B -A
+]
+.SH DESCRIPTION
+.B afpd
+provides an AppleTalk Filing Protocol (AFP)
+interface to the Unix file system.  It is normally started at boot time
+from
+.BR /etc/rc .
+The list of volumes offered to the user is generated from
+.B :ETCDIR:/AppleVolumes.system
+and one of
+.BR :ETCDIR:/AppleVolumes.default ,
+.BR $HOME/AppleVolumes ,
+or
+.BR $HOME/.AppleVolumes .
+.LP
+The
+.B AppleVolumes
+files is used to specify volumes to mount and file name extension mappings.
+It is formatted as follows, one specification per line:
+.RS
+.sp
+.I pathname
+[
+.I volumename
+]
+.br
+.RI . extension
+[
+.I type
+[
+.I creator
+]
+]
+.sp
+.RE
+If
+.I volumename
+is unspecified, the last component of
+.I pathname
+is used.  No two volumes may have the same name.  If
+.I type
+is unspecified
+.RB ' ???? '
+is used.  If
+.I creator
+is unspecified
+.RB ' UNIX '
+is used.  The extension
+.RB ' . '
+sets the default creator and type for otherwise untyped Unix files.
+Blank lines and lines beginning with `#' are ignored.
+.SH OPTIONS
+.TP
+.B \-d
+Specifies that the daemon not fork, and that a trace of all AFP
+commands be written to stdout.
+.TP
+.BI \-f " defaultvolumes"
+Specifies that
+.I defaultvolumes
+should be read for a list of default volumes to offer, instead of
+.BR :ETCDIR:/AppleVolumes.default .
+.TP
+.BI \-s " systemvolumes"
+Specifies that
+.I systemvolumes
+should be read for a list of volume that all users will be offered,
+instead of
+.BR :ETCDIR:/AppleVolumes.system .
+.TP
+.B \-u
+Read the user's
+.B AppleVolumes
+file first.  This option causes volume names in the user's
+.B AppleVolumes
+file to override volume names in the system's
+.B AppleVolumes
+file.  The default is to read the system
+.B AppleVolumes
+file first.  Note that this option doesn't effect the precendence of
+filename extension mappings: the user's AppleVolumes file always has
+precedence.
+.TP
+.BI \-n " nbpname"
+Specifies that
+.I nbpname
+should be used for NBP registration, instead of the first component of
+the hostname in the local zone.
+.TP
+.BI \-c " maxconnections"
+Specifies the maximum number of connections to allow for this
+.BR afpd .
+The default is 5.
+.TP
+.BI \-g " guest"
+Specifies the name of the guest account.  The default is ``nobody''.
+.TP
+.B \-G
+.TP
+.B \-K
+.TP
+.B \-C
+.TP
+.B \-A
+Causes the server to not offer
+.BR NoUserAuthent ,
+.BR "Kerberos IV" ,
+.BR "Cleartxt Passwrd" ,
+and
+.B AFS Kerberos
+logins, respectively.  The default is to enable all available login methods.
+.SH AUTHENTICATION
+.B afpd
+currently understands three User Authentication Methods (UAMs):
+.BR NoUserAuthent ,
+or guest,
+.B Cleartxt
+.BR passwrd ,
+and
+.B Kerberos
+.BR IV .
+If a user uses
+.BR NoUserAuthent ,
+s/he will only be offered default volumes to mount, and will only be able
+to read and write files that are permitted to the guest user.  The
+.B -G
+option disables
+.BR NoUserAuthent .
+With
+.B Cleartxt passwd
+and
+.B Kerberos
+.BR IV ,
+.B afpd
+offers the user all volumes listed in
+.BR $HOME/AppleVolumes .
+The user may also read and write all files that s/he normally could.
+.B Cleartxt passwd
+is not recommended for AFS use.
+.B Kerberos IV
+is recommended for AFS use.
+A forth, depricated UAM is also included in the distribution,
+.B AFS
+.BR Kerberos .
+.SH CAVEATS
+.BR afpd 's
+Directory IDs are only fixed for the duration of a session.  This means
+that Mac aliases won't work correctly in all cases.
+.LP
+If a user renames a folder that has an application as its progeny, the
+.B APPL
+mapping for the application will not longer be available. This implies
+that double-clicking on one of the application's documents will no
+longer launch the application. The
+.B APPL
+mapping will be rebuilt by the mac, the next time the Finder see the
+application.
+.LP
+If
+.B afpd
+is configured to downcase Macintosh filenames, Unix filenames with
+mixed case will be unavailable.
+.LP
+If carriage return/line feed translation is enabled, it is not
+safe to copy Unix binaries to a Macintosh.
+.LP
+It is not possible to move directories between devices.
+.LP
+When mounting the parent of an existing volume, the desktop database of
+the existing volume will not be available to the parent volume.  The
+.B APPL
+mappings and icons of applications with the
+.B BNDL
+bit set will be generated in the parent volume as the applications are
+seen by the Finder.
+.LP
+If a user edits his
+.B $HOME/AppleVolumes
+so that his home directory is no longer offered, he will no longer be able
+to edit his
+.B $HOME/AppleVolumes
+from the Macintosh.
+.LP
+Unix files beginning with `.' are not accessible from the mac.
+.LP
+If the
+.I pathname
+in an
+.B $HOME/AppleVolumes
+file does not exist, the volume will not be offered in the Chooser.
+.LP
+Microsoft Word
+.B TEXT
+documents do not get carriage return/line feed translation.  This is
+because MS Word uses a type other than
+.B TEXT
+while writing the document, then changes the type to
+.BR TEXT .
+To allow users to edit their
+.BR $HOME/AppleVolumes ,
+.B afpd
+parses the files with either end of line character.
+.LP
+Unix filenames that are longer than 31 characters are inaccessible from
+the Macintosh.
+.SH FILES
+.TP 20
+.B :ETCDIR:/AppleVolumes.default
+list of default volumes to mount
+.TP 20
+.B :ETCDIR:/AppleVolumes.system
+list of volumes to offer all users
+.TP 20
+.B $HOME/AppleVolumes
+user's list of volumes to mount
+.SH BUGS
+A few calls from the AFP specification are not implemented, because the
+Macintosh does not use them.

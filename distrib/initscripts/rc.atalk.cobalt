@@ -1,0 +1,148 @@
+#!/bin/sh
+#
+# chkconfig: 345 91 35
+# description: Starts and stops the atalk, afpd & papd daemons for
+#              providing AppleTalk networking services.
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# set lcd stuff up if necessary
+if [ x"$LCD_STOP" = x"" ]; then
+        LCD_STOP="/sbin/stoplcd"
+fi
+if [ x"$LCD_SWRITE" = x"" ]; then
+        LCD_SWRITE="/sbin/swritelcd"
+fi
+
+# set up i18n stuff if necessary
+if [ -x /usr/local/sbin/getmsg ]; then
+	GETMSG=/usr/local/sbin/getmsg
+	START_MSG1=atalkStart1
+	START_MSG2=atalkStart2
+	STOP_MSG1=atalkStop1
+	STOP_MSG2=atalkStop2
+else
+	GETMSG=getmsg
+	START_MSG1=atalk_start_1
+	START_MSG2=atalk_start_2
+	STOP_MSG1=atalk_stop_1
+	STOP_MSG2=atalk_stop_2
+fi
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+test -x /usr/sbin/atalkd || exit 0
+
+test -f /etc/atalk/netatalk.conf || exit 0
+
+# read in netatalk configuration
+. /etc/atalk/netatalk.conf
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+# initialize return values
+RETVAL=1
+RETVAL_ATALKD=0
+RETVAL_PAPD=0
+RETVAL_AFPD=0
+
+# startup code for everything
+atalk_startup() {
+    if [ x"${ATALKD_RUN}" != x"no" ]; then 
+	daemon /usr/sbin/atalkd
+	RETVAL_ATALKD=$?
+
+	if [ -x /usr/bin/nbprgstr ]; then	
+	    /usr/bin/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    /usr/bin/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+	fi	
+	    
+	if [ x"${PAPD_RUN}" = x"yes"  -a -x /usr/sbin/papd ]; then
+	    daemon /usr/sbin/papd
+	    RETVAL_PAPD=$?
+	fi
+
+	if [ -x /usr/sbin/timelord ]; then
+	    daemon /usr/sbin/timelord
+	fi
+    fi
+
+    if [ x"${AFPD_RUN}" = x"yes" -a -x /usr/sbin/afpd ] ; then
+	    daemon /usr/sbin/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+		-c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
+	    RETVAL_AFPD=$?
+    fi
+
+    if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ]; then
+        RETVAL=0
+	touch /var/lock/subsys/atalk || RETVAL=1
+    fi
+}
+
+case "$1" in
+'start')
+	LINE1=`$GETMSG $START_MSG1`
+        LINE2=`$GETMSG $START_MSG2`
+        $LCD_STOP
+        $LCD_SWRITE "$LINE1" "$LINE2" &>/dev/null &
+	echo -n 'Starting AppleTalk services: '
+	if [ x"${ATALK_BGROUND}" = x"yes" ]; then 
+	    echo -n "(backgrounded)"
+	    atalk_startup >& /dev/null &
+	else
+	    atalk_startup
+	fi
+	echo 
+	touch /var/lock/subsys/atalk
+	;;
+'stop')
+	LINE1=`$GETMSG $STOP_MSG1`
+        LINE2=`$GETMSG $STOP_MSG2`
+        $LCD_STOP
+        $LCD_SWRITE "$LINE1" "$LINE2" &>/dev/null &
+	echo -n 'Shutting down AppleTalk services: '
+	if [ x"${ATALKD_RUN}" != x"no" ]; then
+	    if [ x"${PAPD_RUN}" = x"yes" -a -x /usr/sbin/papd ]; then
+		killproc papd
+		RETVAL_PAPD=$?
+	    fi
+
+	    /usr/bin/nbpunrgstr "${ATALK_NAME}:Workstation${ATALK_ZONE}"
+	    /usr/bin/nbpunrgstr "${ATALK_NAME}:netatalk${ATALK_ZONE}"
+
+	    # kill atalkd last, since without it the plumbing goes away.
+	    if [ -x /usr/sbin/atalkd ]; then
+		killproc atalkd
+		RETVAL_ATALKD=$?
+	    fi
+	fi	    
+
+	# kill this separately as we also do AFP/tcp
+	if [ x"${AFPD_RUN}" = x"yes" -a -x /usr/sbin/afpd ]; then
+	    killproc afpd
+	    RETVAL_AFPD=$?
+	fi
+
+	if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ] ; then
+	    RETVAL=0
+	    rm -f /var/lock/subsys/atalk || RETVAL=1
+	fi
+	echo ""
+	;;
+  restart|reload)
+	$0 stop
+	$0 start
+	;;
+  status)
+	status atalkd
+	;;
+  *)
+	echo "Usage: atalk {start|stop|restart|status}"
+	exit 1
+esac
+
+exit $RETVAL

@@ -1,0 +1,91 @@
+#! /bin/sh
+#
+# Start/stop the AppleTalk daemons.
+#
+# AppleTalk daemons. Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+#
+# kill the named process(es)
+#
+killproc() {
+	pid=`/usr/bin/ps -e |
+	     /usr/bin/grep $1 |
+	     /usr/bin/sed -e 's/^  *//' -e 's/ .*//'`
+	[ "$pid" != "" ] && kill $pid
+}
+
+case "$1" in
+
+#
+# Start the appletalk server processes.
+#
+
+'start')
+
+	echo 'starting appletalk daemons: \c'
+	if [ -x :SBINDIR:/atalkd ]; then
+		:SBINDIR:/atalkd;		echo ' atalkd\c'
+	fi
+
+	if [ -x :BINDIR:/nbprgstr ]; then
+		:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:Workstation
+		:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
+						echo ' nbprgstr\c'
+	fi
+
+	if [ -x :SBINDIR:/papd ]; then
+		:SBINDIR:/papd;			echo ' papd\c'
+	fi
+
+	if [ -x :SBINDIR:/afpd ]; then
+		:SBINDIR:/afpd;			echo ' afpd\c'
+	fi
+
+	if [ -x :SBINDIR:/timelord ]; then
+		:SBINDIR:/timelord;		echo ' timelord\c'
+	fi
+
+	echo '.'
+
+	;;
+
+#
+# Stop the appletalk server processes.
+#
+
+'stop')
+
+	echo 'stopping appletalk daemons:\c'
+
+	if [ -x :SBINDIR:/papd ]; then
+		killproc papd;			echo ' papd\c'
+	fi
+
+	if [ -x :SBINDIR:/afpd ]; then
+		killproc afpd;			echo ' afpd\c'
+	fi
+
+	if [ -x :SBINDIR:/timelord ]; then
+		killproc timelord;		echo ' timelord\c'
+	fi
+
+	# kill atalkd last, since without it the plumbing goes away.
+	if [ -x :SBINDIR:/atalkd ]; then
+		killproc atalkd;		echo ' atalkd\c'
+	fi
+
+	echo '.'
+	;;
+
+#
+# Usage statement.
+#
+
+*)
+	echo "usage: $0 {start|stop}"
+	exit 1
+	;;
+esac

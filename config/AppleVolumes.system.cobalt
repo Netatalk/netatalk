@@ -1,0 +1,285 @@
+# Last Updated July 8, 1999
+# Use at your own risk.  No guarantees express or implied.
+#
+# Try to use MacPerl script 'ICDumpSuffixMap' included in /usr/doc 
+# to download file mapping list from your Internet Config Preference.
+#
+# inoue@ma.ns.musashi-tech.ac.jp.
+#
+
+:DEFAULT: options:nohex,usedots
+# Cobalt config start (do not remove this line!)
+# Cobalt config stop (do not remove this line!)
+
+.         "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+
+.mf       "TEXT"  "*MF*"      Metafont                       Metafont
+.sty      "TEXT"  "*TEX"      TeX Style                      Textures
+.psd      "8BPS"  "8BIM"      PhotoShop Document             Photoshop
+.pxr      "PXR "  "8BIM"      Pixar Image                    Photoshop
+.sea      "APPL"  "????"      Self-Extracting Archive        Self Extracting Archive
+.apd      "TEXT"  "ALD3"      Aldus Printer Description      Aldus PageMaker
+.pm3      "ALB3"  "ALD3"      PageMaker 3 Document           PageMaker
+.pm4      "ALB4"  "ALD4"      PageMaker 4 Document           PageMaker
+.pt4      "ALT4"  "ALD4"      PageMaker 4 Template           PageMaker
+.pm5      "ALB5"  "ALD5"      PageMaker 5 Document           PageMaker
+.pt5      "ALT5"  "ALD5"      PageMaker 5 Template           PageMaker
+.pdx      "TEXT"  "ALD5"      Printer Description            PageMaker
+.ppd      "TEXT"  "ALD5"      Printer Description            PageMaker
+.dl       "DL  "  "AnVw"      DL Animation                   MacAnim Viewer
+.gl       "GL  "  "AnVw"      GL Animation                   MacAnim Viewer
+.url      "AURL"  "Arch"      URL Bookmark                   Anarchie                  message/external-body
+.zoo      "Zoo "  "Booz"      Zoo Archive                    MacBooz
+.pdf      "PDF "  "CARO"      Portable Document Format       Acrobat Reader            application/pdf
+.h        "TEXT"  "CWIE"      C Include File                 CodeWarrior
+.hp       "TEXT"  "CWIE"      C Include File                 CodeWarrior
+.hpp      "TEXT"  "CWIE"      C Include File                 CodeWarrior
+.c        "TEXT"  "CWIE"      C Source                       CodeWarrior
+.cp       "TEXT"  "CWIE"      C++ Source                     CodeWarrior
+.cpp      "TEXT"  "CWIE"      C++ Source                     CodeWarrior
+.class    "Clss"  "CWIE"      Java Class File                CodeWarrior
+.java     "TEXT"  "CWIE"      Java Source File               CodeWarrior
+.p        "TEXT"  "CWIE"      Pascal Source                  CodeWarrior
+.pas      "TEXT"  "CWIE"      Pascal Source                  CodeWarrior
+.cvs      "drw2"  "DAD2"      Canvas Drawing                 Canvas
+.arj      "BINA"  "DArj"      ARJ Archive                    DeArj
+.evy      "EVYD"  "ENVY"      Envoy Document                 Envoy
+.fm       "FMPR"  "FMPR"      FileMaker Pro Database         FileMaker Pro
+.dbf      "COMP"  "FOX+"      DBase Document                 FoxBase+
+.mif      "TEXT"  "Fram"      FrameMaker MIF                 FrameMaker                application/x-framemaker
+.arr      "ARR "  "GKON"      Amber ARR image                GraphicConverter
+.iff      "ILBM"  "GKON"      Amiga IFF Image                GraphicConverter
+.lbm      "ILBM"  "GKON"      Amiga IFF Image                GraphicConverter
+.ilbm     "ILBM"  "GKON"      Amiga ILBM Image               GraphicConverter
+.ani      "ANIi"  "GKON"      Animated NeoChrome             GraphicConverter
+.pcs      "PICS"  "GKON"      Animated PICTs                 GraphicConverter
+.pc1      "Dega"  "GKON"      Atari Degas Image              GraphicConverter
+.pc2      "Dega"  "GKON"      Atari Degas Image              GraphicConverter
+.pc3      "Dega"  "GKON"      Atari Degas Image              GraphicConverter
+.pi1      "Dega"  "GKON"      Atari Degas Image              GraphicConverter
+.pi2      "Dega"  "GKON"      Atari Degas Image              GraphicConverter
+.pi3      "Dega"  "GKON"      Atari Degas Image              GraphicConverter
+.ic1      "IMAG"  "GKON"      Atari Image                    GraphicConverter
+.ic2      "IMAG"  "GKON"      Atari Image                    GraphicConverter
+.ic3      "IMAG"  "GKON"      Atari Image                    GraphicConverter
+.neo      "NeoC"  "GKON"      Atari NeoChrome                GraphicConverter
+.pac      "STAD"  "GKON"      Atari STAD Image               GraphicConverter
+.spc      "Spec"  "GKON"      Atari Spectrum 512             GraphicConverter
+.tny      "TINY"  "GKON"      Atari TINY Bitmap              GraphicConverter
+.pm       "PMpm"  "GKON"      Bitmap from xv                 GraphicConverter
+.scg      "RIX3"  "GKON"      ColoRIX                        GraphicConverter
+.sci      "RIX3"  "GKON"      ColoRIX                        GraphicConverter
+.scp      "RIX3"  "GKON"      ColoRIX                        GraphicConverter
+.scr      "RIX3"  "GKON"      ColoRIX                        GraphicConverter
+.scu      "RIX3"  "GKON"      ColoRIX                        GraphicConverter
+.cgm      "CGMm"  "GKON"      Computer Graphics Meta         GraphicConverter
+.vff      "VFFf"  "GKON"      DESR VFF Greyscale Image       GraphicConverter
+.cut      "Halo"  "GKON"      Dr Halo Image                  GraphicConverter
+.art      "ART "  "GKON"      First Publisher                GraphicConverter
+.fts      "FITS"  "GKON"      Flexible Image Transport       GraphicConverter
+.fit      "FITS"  "GKON"      Flexible Image Transport       GraphicConverter          image/x-fits
+.gem      "GEM-"  "GKON"      GEM Metafile                   GraphicConverter
+.img      "IMGg"  "GKON"      GEM bit image/XIMG             GraphicConverter
+.grp      "GRPp"  "GKON"      GRP Image                      GraphicConverter
+.hpgl     "HPGL"  "GKON"      HP GL/2                        GraphicConverter
+.plt      "HPGL"  "GKON"      HP GL/2                        GraphicConverter
+.ief      "IEF "  "GKON"      IEF image                      GraphicConverter          image/ief
+.scc      "MSX "  "GKON"      MSX pitcure                    GraphicConverter
+.msp      "MSPp"  "GKON"      Microsoft Paint                GraphicConverter
+.pcx      "PCXx"  "GKON"      PC PaintBrush                  GraphicConverter
+.pbm      "PPGM"  "GKON"      Portable Bitmap                GraphicConverter          image/x-portable-bitmap
+.pgm      "PPGM"  "GKON"      Portable Graymap               GraphicConverter          image/x-portable-graymap
+.ppm      "PPGM"  "GKON"      Portable Pixmap                GraphicConverter          image/x-portable-pixmap
+.shp      "SHPp"  "GKON"      Printmaster Icon Library       GraphicConverter
+.qdv      "QDVf"  "GKON"      QDV image                      GraphicConverter
+.rif      "RIFF"  "GKON"      RIFF Graphic                   GraphicConverter
+.rle      "RLE "  "GKON"      RLE image                      GraphicConverter
+.raw      "BINA"  "GKON"      Raw Image                      GraphicConverter
+.bw       "SGI "  "GKON"      SGI Image                      GraphicConverter
+.rgb      "SGI "  "GKON"      SGI Image                      GraphicConverter          image/x-rgb
+.rgba     "SGI "  "GKON"      SGI Image                      GraphicConverter          image/x-rgb
+.six      "SIXE"  "GKON"      SIXEL image                    GraphicConverter
+.ct       "..CT"  "GKON"      Scitex-CT                      GraphicConverter
+.dcx      "DCXx"  "GKON"      Some PCX Images                GraphicConverter
+.sup      "SCRN"  "GKON"      StartupScreen                  GraphicConverter
+.sr       "SUNn"  "GKON"      Sun Raster Image               GraphicConverter
+.sun      "SUNn"  "GKON"      Sun Raster Image               GraphicConverter
+.targa    "TPIC"  "GKON"      Truevision Image               GraphicConverter
+.tga      "TPIC"  "GKON"      Truevision Image               GraphicConverter
+.clp      "CLPp"  "GKON"      Windows Clipboard              GraphicConverter
+.icn      "ICO "  "GKON"      Windows Icon                   GraphicConverter
+.ico      "ICO "  "GKON"      Windows Icon                   GraphicConverter
+.wmf      "WMF "  "GKON"      Windows Metafile               GraphicConverter
+.wpg      "WPGf"  "GKON"      WordPerfect Graphic            GraphicConverter
+.xbm      "XBM "  "GKON"      X-Windows Bitmap               GraphicConverter          image/x-xbm
+.x10      "XWDd"  "GKON"      X-Windows Dump                 GraphicConverter          image/x-xwd
+.x11      "XWDd"  "GKON"      X-Windows Dump                 GraphicConverter          image/x-xwd
+.xwd      "XWDd"  "GKON"      X-Windows Dump                 GraphicConverter          image/x-xwd
+.xpm      "XPM "  "GKON"      X-Windows Pixmap               GraphicConverter          image/x-xpm
+.htm      "TEXT"  "MOSS"      HyperText                      Netscape Communicator     text/html
+.html     "TEXT"  "MOSS"      HyperText                      Netscape Communicator     text/html
+.m2v      "MPG2"  "MPG2"      MPEG-2 IPB videostream         MPEG2decoder
+.for      "TEXT"  "MPS "      Fortran Source                 MPW Shell
+.wri      "WDBN"  "MSWD"      MS Write/Windows               Microsoft Word
+.mcw      "WDBN"  "MSWD"      Mac Word Document              Microsoft Word
+.rtf      "TEXT"  "MSWD"      Rich Text Format               Microsoft Word            application/rtf
+.doc      "WDBN"  "MSWD"      Word Document                  Microsoft Word            application/msword
+.dot      "sDBN"  "MSWD"      Word for Windows Template      Microsoft Word
+.mw       "MW2D"  "MWII"      MacWrite Document              MacWrite II               application/macwriteii
+.mwii     "MW2D"  "MWII"      MacWrite Document              MacWrite II               application/macwriteii
+.pl       "TEXT"  "McPL"      Perl Source                    MacPerl
+.asf      "ASF_"  "Ms01"      Netshow Player                 Netshow Server            video/x-ms-asf
+.asx      "ASX_"  "Ms01"      Netshow Player                 Netshow Server            video/x-ms-asf
+.oda      "ODIF"  "ODA "      ODA Document                   MacODA XTND Translator    application/oda
+.latex    "TEXT"  "OTEX"      Latex                          OzTex                     application/x-latex
+.texi     "TEXT"  "OTEX"      TeX Document                   OzTeX
+.tex      "TEXT"  "OTEX"      TeX Document                   OzTeX                     application/x-tex
+.texinfo  "TEXT"  "OTEX"      TeX Document                   OzTeX                     application/x-texinfo
+.diz      "TEXT"  "R*Ch"      BBS Descriptive Text           BBEdit
+.ml       "TEXT"  "R*ch"      ML Source                      BBEdit
+.mak      "TEXT"  "R*ch"      Makefile                       BBEdit
+.m2       "TEXT"  "R*ch"      Modula 2 Source                BBEdit
+.i3       "TEXT"  "R*ch"      Modula 3 Interface             BBEdit
+.m3       "TEXT"  "R*ch"      Modula 3 Source                BBEdit
+.prn      "TEXT"  "R*ch"      Printer Output File            BBEdit
+.rtx      "TEXT"  "R*ch"      Rich Text                      BBEdit                    text/richtext
+.rpl      "FRL!"  "REP!"      Replica Document               Replica
+.rib      "TEXT"  "RINI"      Renderman 3D Data              Renderman
+.rsc      "rsrc"  "RSED"      Resource File                  ResEdit
+.rsrc     "rsrc"  "RSED"      Resource File                  ResEdit
+.pdb      "TEXT"  "RSML"      Brookhaven PDB file            RasMac
+.mol      "TEXT"  "RSML"      MDL Molfile                    RasMac
+.bar      "BARF"  "S691"      Unix BAR Archive               SunTar
+.aif      "AIFF"  "SCPL"      AIFF Sound                     SoundApp                  audio/x-aiff
+.aiff     "AIFF"  "SCPL"      AIFF Sound                     SoundApp                  audio/x-aiff
+.aifc     "AIFC"  "SCPL"      AIFF Sound Compressed          SoundApp                  audio/x-aiff
+.al       "ALAW"  "SCPL"      ALAW Sound                     SoundApp
+.8svx     "8SVX"  "SCPL"      Amiga 8-bit sound              SoundApp
+.svx      "8SVX"  "SCPL"      Amiga IFF Sound                SoundApp
+.med      "STrk"  "SCPL"      Amiga MED Sound                SoundApp
+.8med     "STrk"  "SCPL"      Amiga OctaMed music            SoundApp
+.mod      "STrk"  "SCPL"      MOD Music                      SoundApp
+.nst      "STrk"  "SCPL"      MOD Music                      SoundApp
+.okt      "OKTA"  "SCPL"      Oktalyser MOD Music            SoundApp
+.wve      "BINA"  "SCPL"      PSION sound                    SoundApp
+.snd      "BINA"  "SCPL"      Sound of various types         SoundApp
+.hcom     "FSSD"  "SCPL"      SoundEdit Sound ex SOX         SoundApp
+.voc      "VOC "  "SCPL"      VOC Sound                      SoundApp
+.sf       "IRCM"  "SDHK"      IRCAM Sound                    SoundHack
+.pkg      "HBSF"  "SITx"      AppleLink Package              StuffIt Expander
+.hqx      "TEXT"  "SITx"      BinHex                         StuffIt Expanderª         application/mac-binhex40
+.sithqx   "TEXT"  "SITx"      BinHexed StuffIt Archive       StuffIt Expander          application/mac-binhex40
+.cpt      "PACT"  "SITx"      Compact Pro Archive            StuffIt Expander
+.taz      "ZIVU"  "SITx"      Compressed Tape ARchive        StuffIt Expander          application/x-compress
+.gz       "SIT!"  "SITx"      Gnu ZIP Archive                StuffIt Expander          application/x-gzip
+.tgz      "Gzip"  "SITx"      Gnu ZIPed Tape ARchive         StuffIt Expander          application/x-gzip
+.lha      "LHA "  "SITx"      LHArc Archive                  StuffIt Expander
+.lzh      "LHA "  "SITx"      LHArc Archive                  StuffIt Expander
+.mime     "TEXT"  "SITx"      MIME Message                   StuffIt Expander          message/rfc822
+.bin      "SIT!"  "SITx"      MacBinary                      StuffIt Expander          application/macbinary
+.arc      "mArc"  "SITx"      PC ARChive                     StuffIt Expander
+.zip      "ZIP "  "SITx"      PC ZIP Archive                 StuffIt Expander          application/zip
+.pit      "PIT "  "SITx"      PackIt Archive                 StuffIt Expander
+.pf       "CSIT"  "SITx"      Private File                   StuffIt Expander 
+.sit      "SIT!"  "SITx"      StuffIt 1.5.1 Archive          StuffIt Expander          application/x-stuffit
+.uu       "TEXT"  "SITx"      UUEncode                       StuffIt Expander
+.uue      "TEXT"  "SITx"      UUEncode                       StuffIt Expander
+.Z        "ZIVU"  "SITx"      Unix Compress Archive          StuffIt Expander          application/x-compress
+.tar      "TARF"  "SITx"      Unix Tape ARchive              StuffIt Expander          application/x-tar
+.669      "6669"  "SNPL"      669 MOD Music                  PlayerPro
+.xm       "XM  "  "SNPL"      FastTracker MOD Music          PlayerPro
+.mtm      "MTM "  "SNPL"      MultiMOD Music                 PlayerPro
+.s3m      "S3M "  "SNPL"      ScreamTracker 3 MOD            PlayerPro
+.com      "PCFA"  "SWIN"      MS-DOS Executable              SoftWindows
+.exe      "PCFA"  "SWIN"      MS-DOS Executable              SoftWindows
+.obj      "PCFL"  "SWIN"      Object (DOS/Windows)           SoftWindows
+.ovl      "PCFL"  "SWIN"      Overlay (DOS/Windows)          SoftWindows
+.dll      "PCFL"  "SWIN"      Windows DLL                    SoftWindows
+.dxf      "TEXT"  "SWVL"      AutoCAD 3D Data                Swivel Pro
+.avi      "VfW "  "TVOD"      AVI Movie                      QuickTime Player          video/avi
+.fli      "FLI "  "TVOD"      FLI Animation                  QuickTime Player
+.flc      "FLI "  "TVOD"      FLIC Animation                 QuickTime Player
+.mid      "Midi"  "TVOD"      MIDI Music                     MoviePlayer
+.midi     "Midi"  "TVOD"      MIDI Music                     MoviePlayer
+.mpe      "MPEG"  "TVOD"      MPEG Movie of some sort        MoviePlayer               video/mpeg
+.mpeg     "MPEG"  "TVOD"      MPEG Movie of some sort        MoviePlayer               video/mpeg
+.mpg      "MPEG"  "TVOD"      MPEG Movie of some sort        MoviePlayer               video/mpeg
+.m1v      "M1V "  "TVOD"      MPEG-1 IPB videostream         MoviePlayer               video/mpeg
+.m1a      "MPEG"  "TVOD"      MPEG-1 audiostream             MoviePlayer               audio/x-mpeg
+.mp2      "MPEG"  "TVOD"      MPEG-1 audiostream             MoviePlayer               audio/x-mpeg
+.mpa      "MPEG"  "TVOD"      MPEG-1 audiostream             MoviePlayer               audio/x-mpeg
+.m1s      "MPEG"  "TVOD"      MPEG-1 systemstream            MoviePlayer
+.ul       "ULAW"  "TVOD"      Mu-Law Sound                   MoviePlayer               audio/basic
+.moov     "MooV"  "TVOD"      QuickTime Movie                MoviePlayer               video/quicktime
+.mov      "MooV"  "TVOD"      QuickTime Movie                MoviePlayer               video/quicktime
+.qt       "MooV"  "TVOD"      QuickTime Movie                MoviePlayer               video/quicktime
+.au       "ULAW"  "TVOD"      Sun Sound                      QuickTime Player          audio/basic
+.wav      "WAVE"  "TVOD"      Windows WAV Sound              MoviePlayer               audio/x-wav
+.sha      "TEXT"  "UnSh"      Unix Shell Archive             UnShar                    application/x-shar
+.shar     "TEXT"  "UnSh"      Unix Shell Archive             UnShar                    application/x-shar
+.wpm      "WPD1"  "WPC2"      WordPerfect Mac                WordPerfect
+.wp4      ".WP4"  "WPC2"      WordPerfect PC 4.2 Doc         WordPerfect
+.w51      ".WP5"  "WPC2"      WordPerfect PC 5.1 Doc         WordPerfect               application/wordperfect5.1
+.wp       ".WP5"  "WPC2"      WordPerfect PC 5.1 Doc         WordPerfect               application/wordperfect5.1
+.wp5      ".WP5"  "WPC2"      WordPerfect PC 5.x Doc         WordPerfect               application/wordperfect5.1
+.wp6      ".WP6"  "WPC2"      WordPerfect PC 6.x Doc         WordPerfect
+.csv      "TEXT"  "XCEL"      Comma Separated Vars           Excel
+.dif      "TEXT"  "XCEL"      Data Interchange Format        Excel
+.xlc      "XLC "  "XCEL"      Excel Chart                    Excel
+.xlm      "XLM "  "XCEL"      Excel Macro                    Excel
+.xl       "XLS "  "XCEL"      Excel Spreadsheet              Excel
+.xls      "XLS "  "XCEL"      Excel Spreadsheet              Excel
+.xlw      "XLW "  "XCEL"      Excel Workspace                Excel
+.wks      "XLBN"  "XCEL"      Lotus Spreadsheet r1.x         Excel
+.wk1      "XLBN"  "XCEL"      Lotus Spreadsheet r2.1         Excel
+.slk      "TEXT"  "XCEL"      SYLK Spreadsheet               Excel
+.syk      "TEXT"  "XCEL"      SYLK Spreadsheet               Excel
+.sylk     "TEXT"  "XCEL"      SYLK Spreadsheet               Excel
+.tsv      "TEXT"  "XCEL"      Tab Separated Values           Excel                     text/tab-separated-values
+.qxd      "XDOC"  "XPR3"      QuarkXpress Document           QuarkXpress
+.qxt      "XTMP"  "XPR3"      QuarkXpress Template           QuarkXpress
+.image    "dImg"  "ddsk"      Apple DiskCopy Image           Disk Copy
+.etx      "TEXT"  "ezVu"      SEText                         Easy View                 text/x-setext
+.out      "BINA"  "hDmp"      Output File                    HexEdit
+.binary   "BINA"  "hDmp"      Untyped Binary Data            HexEdit                   application/octet-stream
+.gif      "GIFf"  "ogle"      GIF Picture                    PictureViewer             image/gif
+.jfif     "JPEG"  "ogle"      JFIF Image                     PictureViewer
+.jpe      "JPEG"  "ogle"      JPEG Picture                   PictureViewer             image/jpeg
+.jpeg     "JPEG"  "ogle"      JPEG Picture                   PictureViewer             image/jpeg
+.jpg      "JPEG"  "ogle"      JPEG Picture                   PictureViewer             image/jpeg
+.pntg     "PNTG"  "ogle"      Macintosh Painting             PictureViewer
+.bga      "BMPp"  "ogle"      OS/2 Bitmap                    PictureViewer
+.vga      "BMPp"  "ogle"      OS/2 Bitmap                    PictureViewer
+.pict     "PICT"  "ogle"      PICT Picture                   PictureViewer             image/x-macpict
+.mac      "PICT"  "ogle"      PICT Picture                   PictureViewer             image/x-pict
+.pct      "PICT"  "ogle"      PICT Picture                   PictureViewer             image/x-pict
+.pic      "PICT"  "ogle"      PICT Picture                   PictureViewer             image/x-pict
+.png      "PNG "  "ogle"      Portable Network Graphic       PictureViewer
+.sgi      ".SGI"  "ogle"      SGI Image                      PictureViewer
+.tif      "TIFF"  "ogle"      TIFF Picture                   PictureViewer             image/tiff
+.tiff     "TIFF"  "ogle"      TIFF Picture                   PictureViewer             image/tiff
+.bmp      "BMPp"  "ogle"      Windows Bitmap                 PictureViewer
+.tx8      "TEXT"  "ttxt"      8-bit ASCII Text               SimpleText
+.asc      "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+.ascii    "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+.text     "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+.txt      "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+.faq      "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/x-usenet-faq
+.a        "TEXT"  "ttxt"      Assembly Source                SimpleText
+.asm      "TEXT"  "ttxt"      Assembly Source                SimpleText
+.bas      "TEXT"  "ttxt"      BASIC Source                   SimpleText
+.boo      "TEXT"  "ttxt"      BOO encoded                    SimpleText
+.bib      "TEXT"  "ttxt"      BibTex Bibliography            SimpleText
+.bst      "TEXT"  "ttxt"      BibTex Style                   SimpleText
+.nfo      "TEXT"  "ttxt"      Info Text                      SimpleText                application/text
+.bat      "TEXT"  "ttxt"      MS-DOS Batch File              SimpleText
+.cmd      "TEXT"  "ttxt"      OS/2 Batch File                SimpleText
+.me       "TEXT"  "ttxt"      Text Readme                    SimpleText
+.rme      "TEXT"  "ttxt"      Text Readme                    SimpleText
+.1st      "TEXT"  "ttxt"      Text Readme                    SimpleText                application/text
+.readme   "TEXT"  "ttxt"      Text Readme                    SimpleText                application/text
+.ini      "TEXT"  "ttxt"      Windows INI File               SimpleText
+.ps       "TEXT"  "vgrd"      PostScript                     LaserWriter 8             application/postscript
+.eps      "EPSF"  "vgrd"      Postscript                     LaserWriter 8             application/postscript
+.epsf     "EPSF"  "vgrd"      Postscript                     LaserWriter 8             application/postscript
+.dvi      "ODVI"  "xdvi"      TeX DVI Document               xdvi                      application/x-dvi

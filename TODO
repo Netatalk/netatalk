@@ -1,0 +1,82 @@
+desired features (in no particular order):
+    afpd:
+        return the right version-specific error codes
+        honor the readonly/deleteinhibit/renameinhibit/copyprotect bits.
+        via a database (that handles ro media, -db <path>):
+        	Add afp_fileid capabilities - done
+        	Add afp_catalogue
+		afp_enumerate optimization
+		cname expansion to handle 8+3 and 255-unicode.
+        server messages in useful places 
+        Other useful bits of AFP 2.0/2.1. are there any?
+	change afp/ddp child handling to be in line w/ generic?
+        administrative control program (using asip API?)
+	appledouble v2 (gets us persistent DIDs). we'll need a did
+	        database for non-hfs volumes. i think mmapping a
+	        bitmap with dids at the root level should work.
+		also, v2 gets us much better prodos support and
+		provides for shortname support. - done 
+	various toggles to afpd.conf (-timeout, etc.)
+	figure out more ways of optimizing things. current places
+	        of interest:
+		1) reading/writing. currently there's character 
+		   replacement. we should have a better way of doing
+		   it that speeds things up the no-replacement case.
+		   i've already done that for the crlf case.
+		2) use of mmap where appropriate. NOTE: this will only
+                   be a win if we mmap heavily used files. likely
+		   candidates include file-based databases. mmapping 
+		   header files is actually pretty slow under linux.
+		3) change lookup algorithms where appropriate. 
+	ability to interact with hfs desktop databases (either by
+	        changing hfs or changing afpd).
+		
+    papd: implementing uams would be a good idea
+	 
+        
+things to fix:
+        cleaner separation of layers.
+	fcntl-style byte locks - almost done. it just needs to do a
+        little sorting to get around a race condition.
+	AFP <-> Unix permissions. there are a couple cases where they 
+		don't map perfectly. in particular, gid == 0 means
+		ignore group permissions while uid == 0 means anybody
+                can fiddle with this file. in addition, we need to be
+		able to still change permissions on a directory with u-a
+		set. finally, we need to adjust the offspring count
+		for directories based upon what permissions they
+		have. i.e., search -> can see directories. 
+		            read -> can see files.
+		we need to map permissions so that these semantics get
+                followed.
+        real variable DIDs for now: it turns out that afpd lies about
+                this and says that it's doing fixed dids. bad bad
+                bad. i just have to implement Open/CloseDir and fiddle
+                a little with did assignment. argh. apple's appleshare
+		client doesn't like non-fixed directory ids. 
+
+added features:
+	more of AFP 2.0!
+	sped up of_findname and of_dealloc.
+	increased AFP compliance w.r.t. open forks and renames:
+	        wordperfect and simpletext now both work!
+        nfs quota support
+	solaris beta STREAMS driver added.
+	64-bit cleanup
+	cleaner startup/takedown
+        added debug messages to dsi_write areas.
+	fixed server info unexpected disconnects (due to OT bug).
+        afp/ddp and afp/tcp cohabitation. afp/ddp and afp/tcp can
+	operate separately now (-T turns off tcp, -D turns off ddp).
+	incorporated the netbsd patches 
+		[source: wrstuden@loki.stanford.edu (Bill Studenmund)]
+	added/fixed quota support for linux/bsd4.4
+	codepage support/casefolding on a per volume basis.
+	expanded per-volume options
+	added "generic" platform support for AFP/tcp.
+	dynamically loaded uams	
+	:ETCDIR:/afppasswd file for randnum passwds
+	can turn off .AppleDouble generation.
+	AppleVolumes variable substitions
+    	atalkd: zones on single interfaces and the ability to control
+		which interfaces get routes between them.

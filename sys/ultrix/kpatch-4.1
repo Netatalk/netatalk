@@ -1,0 +1,151 @@
+*** ../sys.old/conf/files	Fri Jul  6 10:19:49 1990
+--- ./conf/files	Thu Mar 12 17:33:58 1992
+***************
+*** 75,80 ****
+--- 75,87 ----
+  net/netinet/tcp_timer.c	optional inet Binary
+  net/netinet/tcp_usrreq.c	optional inet Binary
+  net/netinet/udp_usrreq.c	optional inet Binary
++ net/netatalk/aarp.c	optional atalk
++ net/netatalk/at_control.c	optional atalk
++ net/netatalk/at_proto.c	optional atalk
++ net/netatalk/at_ultrix.c	optional atalk
++ net/netatalk/ddp_input.c	optional atalk
++ net/netatalk/ddp_output.c	optional atalk
++ net/netatalk/ddp_usrreq.c	optional atalk
+  net/netbsc/bsc_pcb.c	optional bsc Binary
+  net/netbsc/bsc_proto.c	optional bsc 
+  net/netbsc/bsc_states.c	optional bsc Binary
+*** ../sys.old/data/af_data.c	Fri Jul  6 09:40:50 1990
+--- ./data/af_data.c	Thu Mar 12 17:34:03 1992
+***************
+*** 69,74 ****
+--- 69,82 ----
+  #define AFNS	AFNULL
+  #endif NS
+  
++ #ifdef ATALK
++ extern int atalk_hash(), atalk_netmatch();
++ #define AFATALK \
++ 	{ atalk_hash,	atalk_netmatch }
++ #else
++ #define AFATALK	AFNULL
++ #endif
++ 
+  #ifdef BINARY
+  
+  extern	struct afswitch afswitch[];
+***************
+*** 78,83 ****
+  struct afswitch afswitch[AF_MAX] = {
+  	AFNULL,	AFNULL,	AFINET,	AFINET,	AFPUP,
+  	AFNULL,	AFNS,	AFNULL,	AFNULL,	AFNULL,
+! 	AFNULL
+  };
+  #endif
+--- 86,92 ----
+  struct afswitch afswitch[AF_MAX] = {
+  	AFNULL,	AFNULL,	AFINET,	AFINET,	AFPUP,
+  	AFNULL,	AFNS,	AFNULL,	AFNULL,	AFNULL,
+! 	AFNULL, AFNULL, AFNULL, AFNULL, AFNULL,
+! 	AFNULL, AFATALK, AFNULL, AFNULL, AFNULL,
+  };
+  #endif
+*** ../sys.old/data/if_to_proto_data.c	Fri Jul  6 09:40:26 1990
+--- ./data/if_to_proto_data.c	Thu Jun  3 11:53:44 1993
+***************
+*** 135,140 ****
+--- 135,156 ----
+          { ETHERTYPE_RC,         AF_DLI,         0,              0 }
+  #endif
+  
++ /*
++  * Hook for netatalk.  We receive all packets.  If we're not interested
++  * in the packet, we do a normal search on if_family for someone else
++  * who might want the packet.
++  * (Not yet. XXX)
++  */
++ #ifdef ATALK
++ #include "atalk.h"
++ #undef s_net
++ #include "../net/netatalk/at.h"
++ #define ETHER_ATALK \
++ 	{ -1,			AF_APPLETALK,	ATPROTO_DDP,	0 }
++ #else ATALK
++ #define ETHER_ATALK	IFNULL
++ #endif ATALK
++ 
+  #ifdef	BINARY
+  
+  extern struct if_family if_family[];
+***************
+*** 145,151 ****
+  
+  struct if_family if_family[] = {
+! 	ETHER_DECNET,	ETHER_LAT,	ETHER_APPLE, ETHER_APPLEARP,
+  	ETHER_NS,	ETHER_DLI,	IFEND
+  };
+  
+  #endif
+--- 162,168 ----
+  
+  struct if_family if_family[] = {
+! 	ETHER_ATALK,	ETHER_DECNET,	ETHER_LAT,	ETHER_APPLE, ETHER_APPLEARP,
+  	ETHER_NS,	ETHER_DLI,	IFEND
+  };
+  
+  #endif
+*** ../sys.old/data/uipc_domain_data.c	Fri Jul  6 09:40:44 1990
+--- ./data/uipc_domain_data.c	Thu Mar 12 17:38:18 1992
+***************
+*** 107,112 ****
+--- 107,116 ----
+  	ADDDOMAIN(ccitt);
+  #endif CCITT
+  #endif
++ #ifdef ATALK
++ #include "atalk.h"
++ 	ADDDOMAIN(atalk);
++ #endif ATALK
+  
+  	for (dp = domains; dp; dp = dp->dom_next)
+  		for (pr = dp->dom_protosw; pr < dp->dom_protoswNPROTOSW; pr++)
+*** ../sys.old/net/net/conf_net.c	Fri Jul  6 10:03:25 1990
+--- ./net/net/conf_net.c	Thu Mar 12 17:39:11 1992
+***************
+*** 236,241 ****
+--- 236,245 ----
+  extern int ddpintr();
+  #endif
+  
++ #ifdef ATALK
++ extern int atintr();
++ #endif
++ 
+  #include "../net/net/netisr.h" 
+  /*
+   * table of interrupt vectors - scanned in locore when sofware 
+***************
+*** 280,285 ****
+--- 284,292 ----
+  #ifdef OSI
+          {NETISR_OSI,osiintr},
+  #endif OSI
++ #ifdef ATALK
++ 	{NETISR_AT,atintr},
++ #endif ATALK
+  	{-1	,0}
+  };
+  
+*** ../sys.old/net/net/netisr.h	Fri Jul  6 10:03:28 1990
+--- ./net/net/netisr.h	Thu Mar 12 17:39:45 1992
+***************
+*** 66,71 ****
+--- 66,72 ----
+  #define NETISR_DLI	13		/* same as AF_DLI */
+  #define NETISR_LAT	14		/* same as AF_LAT */
+  #define NETISR_BSC	15		/* same as AF_BSC */
++ #define NETISR_AT	16		/* same as AF_APPLETALK */
+  #define NETISR_OSI      19              /* same as AF_OSI */
+  
+  #define	schednetisr(anisr)	{ set_bit_atomic(anisr,&netisr); setsoftnet(); }

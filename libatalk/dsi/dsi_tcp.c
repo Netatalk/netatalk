@@ -1,0 +1,298 @@
+/*
+ * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
+ * All rights reserved. See COPYRIGHT.
+ *
+ * this provides both proto_open() and proto_close() to account for
+ * protocol specific initialization and shutdown procedures. all the
+ * read/write stuff is done in dsi_stream.c.  */
+
+#define USE_TCP_NODELAY
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/tcp.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#include <signal.h>
+#include <syslog.h>
+
+#ifdef __svr4__
+#include <sys/sockio.h>
+#endif
+
+#ifdef TCPWRAP
+#include <tcpd.h>
+int allow_severity = LOG_INFO;
+int deny_severity = LOG_WARNING;
+#endif
+
+#include <atalk/dsi.h>
+#include <atalk/compat.h>
+#include <atalk/util.h>
+#include <netatalk/endian.h>
+#include "dsi_private.h"
+
+#define min(a,b)  ((a) < (b) ? (a) : (b))
+
+#ifndef DSI_TCPMAXPEND
+#define DSI_TCPMAXPEND      20       /* max # of pending connections */
+#endif
+
+#ifndef DSI_TCPTIMEOUT
+#define DSI_TCPTIMEOUT      120     /* timeout in seconds for connections */
+#endif
+
+
+/* FIXME/SOCKLEN_T: socklen_t is a unix98 feature. */
+#ifndef SOCKLEN_T
+#define SOCKLEN_T unsigned int
+#endif
+
+static void dsi_tcp_close(DSI *dsi)
+{
+  if (dsi->socket == -1)
+    return;
+
+  close(dsi->socket);
+  dsi->socket = -1;
+}
+
+/* alarm handler for tcp_open */
+static void timeout_handler()
+{
+  syslog(LOG_ERR, "dsi_tcp_open: connection timed out");
+  exit(1);
+}
+
+/* accept the socket and do a little sanity checking */
+static int dsi_tcp_open(DSI *dsi)
+{
+  pid_t pid;
+  SOCKLEN_T len;
+
+  len = sizeof(dsi->client);
+  dsi->socket = accept(dsi->serversock, (struct sockaddr *) &dsi->client,
+		       &len);
+
+#ifdef TCPWRAP
+  {
+    struct request_info req;
+    request_init(&req, RQ_DAEMON, dsi->program, RQ_FILE, dsi->socket, NULL);
+    fromhost(&req);
+    if (!hosts_access(&req)) {
+      syslog(deny_severity, "refused connect from %s", eval_client(&req));
+      close(dsi->socket);
+      errno = ECONNREFUSED;
+      dsi->socket = -1;
+    }
+  }
+#endif
+
+  if (dsi->socket < 0)
+    return -1;
+
+  if ((pid = fork()) == 0) { /* child */
+    static const struct itimerval timer = {{0, 0}, {DSI_TCPTIMEOUT, 0}};
+    struct sigaction newact, oldact;
+    u_int8_t block[DSI_BLOCKSIZ];
+    size_t stored;
+    
+    /* reset a couple signals */
+    signal(SIGTERM, SIG_DFL); 
+    signal(SIGHUP, SIG_DFL);
+
+    /* install an alarm to deal with non-responsive connections */
+    memset(&newact, 0, sizeof(newact));
+    newact.sa_handler = timeout_handler;
+    if ((sigaction(SIGALRM, &newact, &oldact) < 0) ||
+        (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
+	syslog(LOG_ERR, "dsi_tcp_open: %m");
+	exit(1);
+    }
+    
+    /* read in commands. this is similar to dsi_receive except
+     * for the fact that we do some sanity checking to prevent
+     * delinquent connections from causing mischief. */
+    
+    /* read in the first two bytes */
+    dsi_stream_read(dsi, block, 2);
+    if ((block[0] > DSIFL_MAX) || (block[1] > DSIFUNC_MAX)) {
+      syslog(LOG_ERR, "dsi_tcp_open: invalid header");
+      exit(1);
+    }      
+    
+    /* read in the rest of the header */
+    stored = 2;
+    while (stored < DSI_BLOCKSIZ) {
+      len = dsi_stream_read(dsi, block + stored, sizeof(block) - stored);
+      if (len > 0)
+	stored += len;
+      else {
+	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %m");
+	exit(1);
+      }
+    }
+    
+    dsi->header.dsi_flags = block[0];
+    dsi->header.dsi_command = block[1];
+    memcpy(&dsi->header.dsi_requestID, block + 2, 
+	   sizeof(dsi->header.dsi_requestID));
+    memcpy(&dsi->header.dsi_code, block + 4, sizeof(dsi->header.dsi_code));
+    memcpy(&dsi->header.dsi_len, block + 8, sizeof(dsi->header.dsi_len));
+    memcpy(&dsi->header.dsi_reserved, block + 12,
+	   sizeof(dsi->header.dsi_reserved));
+    dsi->clientID = ntohs(dsi->header.dsi_requestID);
+    
+    /* make sure we don't over-write our buffers. */
+    dsi->cmdlen = min(ntohl(dsi->header.dsi_len), DSI_CMDSIZ);
+    
+    stored = 0;
+    while (stored < dsi->cmdlen) {
+      len = dsi_stream_read(dsi, dsi->commands + stored, dsi->cmdlen - stored);
+      if (len > 0)
+	stored += len;
+      else {
+	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %m");
+	exit(1);
+      }
+    }
+    
+    /* restore signal */
+    sigaction(SIGALRM, &oldact, NULL);
+
+    syslog(LOG_INFO,"ASIP session:%u(%d) from %s:%u(%d)", 
+	   ntohs(dsi->server.sin_port), dsi->serversock, 
+	   inet_ntoa(dsi->client.sin_addr), ntohs(dsi->client.sin_port),
+	   dsi->socket);
+  }
+  
+  /* send back our pid */
+  return pid;
+}
+
+/* this needs to accept passed in addresses */
+int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
+		 const u_int16_t ipport, const int proxy)
+{
+  struct servent     *service;
+  struct hostent     *host;
+  int                port;
+
+  dsi->protocol = DSI_TCPIP;
+
+  /* create a socket */
+  if (proxy)
+    dsi->serversock = -1;
+  else if ((dsi->serversock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    return 0;
+      
+  /* find port */
+  if (ipport)
+    port = htons(ipport);
+  else if ((service = getservbyname("afpovertcp", "tcp")))
+    port = service->s_port;
+  else
+    port = htons(DSI_AFPOVERTCP_PORT);
+
+  /* find address */
+  if (!address) 
+    dsi->server.sin_addr.s_addr = htonl(INADDR_ANY);
+  else if (inet_aton(address, &dsi->server.sin_addr) == 0) {
+    syslog(LOG_INFO, "dsi_tcp: invalid address (%s)", address);
+    return 0;
+  }
+
+  dsi->server.sin_family = AF_INET;
+  dsi->server.sin_port = port;
+
+  if (!proxy) {
+    /* this deals w/ quick close/opens */    
+#ifdef SO_REUSEADDR
+    port = 1;
+    setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &port, sizeof(port));
+#endif
+
+#ifdef USE_TCP_NODELAY 
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+    port = 1;
+    setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &port, sizeof(port));
+#endif
+
+    /* now, bind the socket and set it up for listening */
+    if ((bind(dsi->serversock, (struct sockaddr *) &dsi->server, 
+	      sizeof(dsi->server)) < 0) || 
+	(listen(dsi->serversock, DSI_TCPMAXPEND) < 0)) {
+      close(dsi->serversock);
+      return 0;
+    }
+  }
+
+  /* get real address for GetStatus. we'll go through the list of 
+   * interfaces if necessary. */
+  if (!address) {
+    if ((host = gethostbyname(hostname))) /* we can resolve the name */
+      dsi->server.sin_addr.s_addr = ((struct in_addr *) host->h_addr)->s_addr;
+    else {
+      char **start, **list;
+      struct ifreq ifr;
+
+      /* get it from the interface list */
+      start = list = getifacelist();
+      while (list && *list) {
+	strncpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
+	list++;
+
+#ifndef IFF_SLAVE
+#define IFF_SLAVE 0
+#endif
+	if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
+	  continue;
+
+	if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
+	  continue;
+
+	if ((ifr.ifr_flags & IFF_UP) == 0)
+	  continue;
+
+	if (ioctl(dsi->serversock, SIOCGIFADDR, &ifr) < 0)
+	  continue;
+	
+	dsi->server.sin_addr.s_addr = 
+	  ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr;
+	syslog(LOG_INFO, "dsi_tcp: Can't resolve hostname (%s).\n"
+	       "%s on interface %s will be used instead.", hostname,
+	       inet_ntoa(dsi->server.sin_addr), ifr.ifr_name);
+	goto iflist_done;
+
+      }
+      syslog(LOG_INFO, "dsi_tcp (Chooser will not select afp/tcp)\n\
+Check to make sure %s is in /etc/hosts and the correct domain is in\n\
+/etc/resolv.conf: %m", hostname);
+
+iflist_done:
+      if (start)
+	freeifacelist(start);
+    }
+  }
+
+  /* everything's set up. now point protocol specific functions to 
+   * tcp versions */
+  dsi->proto_open = dsi_tcp_open;
+  dsi->proto_close = dsi_tcp_close;
+  return 1;
+
+}
+

@@ -1,0 +1,51 @@
+#include <stdio.h>
+#include <string.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <syslog.h>
+#include <errno.h>
+
+#include <db.h>
+#include <netatalk/endian.h>
+#include <atalk/adouble.h>
+#include <atalk/cnid.h>
+
+#include "cnid_private.h"
+
+/* return CNID for a given did/name */
+cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
+		const int len) 
+{
+  char start[CNID_DID_LEN + MAXPATHLEN + 1], *buf;
+  CNID_private *db;
+  DBT key, data;
+  cnid_t id;
+
+  if (!(db = CNID) || (len > MAXPATHLEN))
+    return 0;
+
+  memset(&key, 0, sizeof(key));
+  memset(&data, 0, sizeof(data));
+
+  buf = start;
+  memcpy(buf, &did, sizeof(did));
+  buf += sizeof(did);
+  memcpy(buf, name, len);
+  *(buf + len) = '\0'; /* make sure to nul terminate. */
+  key.data = start;
+  key.size = CNID_DID_LEN + len + 1;
+
+  while (errno = db->db_didname->get(db->db_didname, NULL,
+				     &key, &data, 0)) {
+    if (errno == EAGAIN) 
+      continue;
+
+    if (errno != DB_NOTFOUND)
+      syslog(LOG_ERR, "cnid_get: can't get CNID(%u:%s)", did, name);
+
+    return 0;
+  }
+
+  memcpy(&id, data.data, sizeof(id));
+  return id;
+}

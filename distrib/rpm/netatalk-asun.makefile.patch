@@ -1,0 +1,65 @@
+--- netatalk-1.4b2+asun2.1.4.orig/Makefile.base	Fri Jul 30 09:43:38 1999
++++ netatalk-1.4b2+asun2.1.4.orig/Makefile	Fri Jul 30 09:44:29 1999
+@@ -1,31 +1,31 @@
+ # Root of installation. Subdirectories will be ${DESTDIR}/etc,
+ # ${DESTDIR}/bin, and ${DESTDIR}/lib.
+-DESTDIR=/usr/local/atalk
++#DESTDIR=/usr/local/atalk
+ 
+ # for system-level binaries
+-SBINDIR=$(DESTDIR)/sbin
++#SBINDIR=$(DESTDIR)/sbin
+ # for user-level binaries
+-BINDIR=$(DESTDIR)/bin
++#BINDIR=$(DESTDIR)/bin
+ # for program libraries (*.a)
+-LIBDIR=$(DESTDIR)/lib
++#LIBDIR=$(DESTDIR)/lib
+ # for machine-independent resources (pagecount.ps, etc.)
+-RESDIR=$(DESTDIR)/etc
++#RESDIR=$(DESTDIR)/etc
+ # for configuration files (AppleVolumes.system, etc.)
+-ETCDIR=$(DESTDIR)/etc
++#ETCDIR=$(DESTDIR)/etc
+ # for include files
+-INCDIR=$(DESTDIR)/include
++#INCDIR=$(DESTDIR)/include
+ # Root of man pages.  Subdirectories will be
+ # ${MANDIR}/man1, ${MANDIR}/man4, and ${MANDIR}/man8.
+-MANDIR=$(DESTDIR)/man
++#MANDIR=$(DESTDIR)/man
+ 
+-#INSTALL_PREFIX=
+-#SBINDIR=${INSTALL_PREFIX}/usr/sbin
+-#BINDIR=${INSTALL_PREFIX}/usr/bin
+-#LIBDIR=${INSTALL_PREFIX}/usr/lib
+-#RESDIR=${INSTALL_PREFIX}/usr/lib/atalk
+-#ETCDIR=${INSTALL_PREFIX}/etc/atalk
+-#INCDIR=${INSTALL_PREFIX}/usr/include
+-#MANDIR=${INSTALL_PREFIX}/usr/man
++INSTALL_PREFIX=
++SBINDIR=${INSTALL_PREFIX}/usr/sbin
++BINDIR=${INSTALL_PREFIX}/usr/bin
++LIBDIR=${INSTALL_PREFIX}/usr/lib
++RESDIR=${INSTALL_PREFIX}/usr/lib/atalk
++ETCDIR=${INSTALL_PREFIX}/etc/atalk
++INCDIR=${INSTALL_PREFIX}/usr/include
++MANDIR=${INSTALL_PREFIX}/usr/man
+ 
+ # Location of the Berkeley v2 db library and include files. 
+ # NOTE: leave this commented out for now. it's a placeholder for a future
+@@ -55,12 +55,12 @@
+ 
+ # Location of PAM support library and include files. Uncomment this if
+ # you want to enable PAM support.
+-#PAMDIR=/usr
++PAMDIR=/usr
+ 
+ # Location of cracklib support library and include files. This is used
+ # in the password changing routines. Uncomment this out if you want to
+ # enable support.
+-#CRACKDIR=/usr
++CRACKDIR=/usr
+ 
+  
+ # Location of the AFS and Kerberos libraries and include files.  Uncomment

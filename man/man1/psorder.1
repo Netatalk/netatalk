@@ -1,0 +1,48 @@
+.TH PSORDER 1 "17 Dec 1991" "netatalk 1.2"
+.SH NAME
+psorder \- PostScript pageorder filter
+.SH SYNOPSIS
+.B psorder
+[
+.B -duf
+]
+.I sourcefile
+.SH DESCRIPTION
+.B psorder
+is a filter that re-orders the pages of a PostScript document.
+The result is written to the standard output.  By default,
+documents are processed into ascending order (the lowest numbered page
+is printed first).  Some PostScript documents specify that the order of
+their pages should never be changed; the default action of
+.B psorder
+is to follow this specification.
+.LP
+If no source file is given, or if 
+.I sourcefile
+is
+.RB ` - ',
+.B psorder
+reads from the standard input file.
+.br
+.SH OPTIONS
+.TP
+.B \-d
+Re-order the pages of the document in downward or descending
+order.  This is typically used to change the order of a document to
+be printed by a printer that stacks pages face-up,
+such as an Apple LaserWriter or LaserWriter Plus.
+.TP
+.B \-u
+Specifies forward order, and is the default.  It is used to
+try and ensure the correct ordering when a document will be printed
+by a printer that stacks the pages face-down.
+.TP
+.B \-f
+Force
+.B psorder
+to re-order the pages, even if the document claims that its page
+order is not to be trifled with.  This option should only be used 
+experimentally, as it may cause documents to print incorrectly.
+.SH SEE ALSO
+.BR psf (8),
+.BR lpr (1).

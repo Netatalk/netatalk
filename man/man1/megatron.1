@@ -1,0 +1,104 @@
+.TH MEGATRON 1 "8 Jan 1992" "netatalk 1.2"
+.SH NAME
+megatron, unhex, unbin, unsingle, hqx2bin, single2bin, macbinary \- Macintosh file format transformer
+.SH SYNOPSIS
+.B megatron
+[
+.I sourcefile...
+]
+.LP
+.B unbin
+[
+.I sourcefile...
+]
+.LP
+.B unhex
+[
+.I sourcefile...
+]
+.LP
+.B unsingle
+[
+.I sourcefile...
+]
+.LP
+.B hqx2bin
+[
+.I sourcefile...
+]
+.LP
+.B single2bin
+[
+.I sourcefile...
+]
+.LP
+.B macbinary
+[
+.I sourcefile...
+]
+.SH DESCRIPTION
+.B megatron
+is used to transform files from BinHex, MacBinary, AppleSingle, or 
+.B netatalk
+style AppleDouble formats into MacBinary or
+.B netatalk 
+style AppleDouble formats.  The
+.B netatalk
+style AppleDouble format is the file format used by
+.B afpd,
+the
+.B netatalk
+Apple Filing Protocol (AppleShare) server.  BinHex, MacBinary, and
+AppleSingle are commonly used formats for transferring Macintosh files
+between machines via email or file transfer protocols.
+.B megatron
+uses its name to determine what type of tranformation is being asked of
+it.
+.LP
+If
+.B megatron
+is called as
+.B unhex, unbin,
+or
+.B unsingle,
+it tries to convert file(s) from BinHex, MacBinary, or AppleSingle into
+AppleDouble format.  BinHex is the format most often used to send
+Macintosh files by e-mail.  Usually these files have an extension of
+".hqx".  MacBinary is the format most often used by terminal emulators
+"on the fly" when transferring Macintosh files in binary mode.
+MacBinary files often have an extension of ".bin".  Some Macintosh
+LAN-based email packages use uuencoded AppleSingle format to "attach"
+or "enclose" files in email.  AppleSingle files don't have a standard
+filename extension.
+.LP
+If
+.B megatron
+is called as
+.B hqx2bin, single2bin,
+or
+.B macbinary,
+it will try to convert the file(s) from BinHex, AppleSingle, or
+AppleDouble into MacBinary.  This last translation may be useful in
+moving Macintosh files from your
+.B afpd
+server to some other machine when you can't copy them from the server
+using a Macintosh for some reason.
+.LP
+If
+.B megatron
+is called with any other name, it uses the default translation, namely
+.B unhex.
+.LP
+If no source file is given, or if
+.I sourcefile
+is
+.RB ` - ',
+and if the conversion is from a BinHex or MacBinary file,
+.B megatron
+will read from standard input.
+.LP
+The filename used to store any output file is the filename that is
+encoded in the source file.  MacBinary files are created with a ".bin"
+extension.  In the case of conflicts, the old file is overwritten!
+.SH SEE ALSO
+.BR afpd (8)

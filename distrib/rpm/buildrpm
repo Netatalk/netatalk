@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# buildrpm
+# $Id: buildrpm,v 1.1 2000-07-25 21:08:59 rufustfirefly Exp $
+#
+# automates the process of building the netatalk rpm
+
+REDHAT_DIR=/usr/src/redhat
+CVSNAME=netatalk+asun
+
+# copy spec and patch into place
+cp netatalk-asun-cobalt.spec ${REDHAT_DIR}/SPECS
+cp netatalk-asun.makefile.patch ${REDHAT_DIR}/SOURCES
+
+# clean out any object files
+cd ../../
+make clean
+
+# tar up the archive
+cd ../
+tar cvfz ${REDHAT_DIR}/SOURCES/netatalk+asun.tar.gz \
+	--exclude="*/CVS" --exclude="*~" $CVSNAME
+
+# build the rpm
+rpm -ba ${REDHAT_DIR}/SPECS/netatalk-asun-cobalt.spec
+
