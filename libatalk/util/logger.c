@@ -107,6 +107,7 @@ struct tag_global_log_data {
   int   temp_src_linenumber;
   char  processname[16];
   
+  int   facility;
   char *log_file_directory;  /* Path of directory containing log files */
   log_file_data_pair **logs;
 };
@@ -142,16 +143,16 @@ static char *get_command_name(char *commandpath);
 
 static log_file_data_pair default_log_file_data_pair = {
 {
-  /* log_filename */ "\0\0\0\0\0\0\0\0",
-  /* log_file     */ NULL,
-  /* log_level    */ log_debug,
-  /* display_options */ logoption_pid
+  log_filename:    "\0\0\0\0\0\0\0\0",
+  log_file:        NULL,
+  log_level:       log_debug,
+  display_options: logoption_pid
 },
 {
-  /* log_filename */ LOGFILEPATH,
-  /* log_file     */ NULL,
-  /* log_level    */ log_debug,
-  /* display_options */ logoption_pid
+  log_filename:     LOGFILEPATH,
+  log_file:         NULL,
+  log_level:        log_debug,
+  display_options:  logoption_pid
 }};
 
 static log_file_data_pair *log_file_data_array[logtype_end_of_list_marker] = 
@@ -159,12 +160,13 @@ static log_file_data_pair *log_file_data_array[logtype_end_of_list_marker] =
 
 /* The class (populated) */
 static struct tag_global_log_data global_log_data = {
-  /* struct_size  */ sizeof(struct tag_global_log_data),
-  /* temp_src_filename */ NULL,
-  /* temp_src_linenumber */ 0,
-  /* processname */ "",
-  /* log_file_directory */ "",
-  /* logs */  NULL
+  struct_size:         sizeof(struct tag_global_log_data),
+  temp_src_filename:   NULL,
+  temp_src_linenumber: 0,
+  processname:         "",
+  facility:            logfacility_daemon,
+  log_file_directory:  "",
+  logs:                NULL,
 };
 
 /* macro to get access to the array */
@@ -396,8 +398,10 @@ void syslog_setup(enum loglevels loglevel, enum logtypes logtype,
   (*logs)[0].log_filename[0] = 0;
   (*logs)[0].log_level       = loglevel;
   (*logs)[0].display_options = display_options;
+  global_log_data.facility   = facility;
 
-  openlog(global_log_data.processname, (*logs)[0].display_options, facility);
+  openlog(global_log_data.processname, (*logs)[0].display_options, 
+	  global_log_data.facility);
 
   LOG(log_info, logtype_logger, "SysLog setup complete");
 #else /* DISABLE_LOGGER */
@@ -870,26 +874,26 @@ int get_syslog_equivalent(enum loglevels loglevel)
 void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
 {
   /* -setuplogtype <syslog|filelog> <logtype> <loglevel>*/
+  /*
+    This should be rewritten so that somehow logsource is assumed and everything
+    can be taken from default if needs be.  
+   */
   const char* sources[] = {"syslog", "filelog"};
-  char sourcebuf[64], typebuf[64], levelbuf[32], *ptr;
   int sourcenum, typenum, levelnum;
-
-  ptr = strpbrk(logsource, " \t");
-  strncpy(sourcebuf, logsource, ptr-logsource);
-  sourcebuf[ptr-logsource]=0;
-
-  ptr = strpbrk(logtype, " \t");
-  strncpy(typebuf, logtype, ptr-logtype);
-  typebuf[ptr-logtype]=0;
-
-  ptr = strpbrk(loglevel, " \t");
-  strncpy(levelbuf, loglevel, ptr-loglevel);
-  levelbuf[ptr-loglevel]=0;
 
   for(sourcenum=0;sourcenum<NUMOF(sources);sourcenum++)
   {
     if (strcasecmp(sourcebuf, sources[sourcenum])==0)
       break;
+  }
+  if (sourcenum>=NUMOF(sources))
+  {
+    LOG(log_warning, logtype_logger, "%s is not a valid log source", logsource);
+  }
+  if ((sourcenum>0) && (filename==NULL))
+  {
+    LOG(log_warning, logtype_logger, 
+	"when specifying a filelog, you must specify a valid filename");
   }
 
   for(typenum=0;typenum<num_logtype_strings;typenum++)
@@ -897,68 +901,38 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
     if (strcasecmp(typebuf, arr_logtype_strings[typenum])==0)
       break;
   }
+  if (typenum>=num_logtype_strings)
+  {
+    LOG(log_warning, logtype_logger, "%s is not a valid log type", logtype);
+  }
 
   for(levelnum=0;levelnum<num_loglevel_strings;levelnum++)
   {
     if (strcasecmp(levelbuf, arr_loglevel_strings[levelnum])==0)
       break;
   }
-
-/*
-  for(logtype=logtype_default;logtype<logtype_end_of_list_marker;logtype++)
+  if (levelnum>=num_loglevel_strings)
   {
-    if (strcasecmp(buffer,
+    LOG(log_warning, logtype_logger, "%s is not a valid log level", loglevel);
+  }
 
-  
+  /* check validity */
+  if ((sourcenum>=NUMOF(sources)) || (typenum>=num_logtype_strings) ||
+      (levelnum>=num_loglevel_strings))
+    return;
 
-
-
-    if ((c = getoption(buf, "-setuplogtype")))
-    {
-      int logsource, logtype;
-      char buffer[64], *ptr;
-
-      ptr = strpbrk(c, " \t");
-      strncpy(buffer, c, ptr-c);
-      buffer[ptr-c]=0;
-
-      if (strcasecmp(buffer, "syslog")==0)
-        logsource=1;
-      else if (strcasecmp(buffer, "filelog")==0)
-        logsource=2;
-      else
-        logsource=0;
-
-      if (logsource>0)
-      {
-        opt = strpbrk(c, " \t");
-        while (opt ** isspace(*opt))
-          opt++;
-
-        ptr = strpbrk(opt, " \t");
-        strncpy(buffer, opt, ptr-opt);
-        buffer[ptr-opt]=0;
-
-        for(logtype=logtype_default;
-	    logtype<logtype_end_of_list_marker;
-	    logtype++)
-        {
-          if (strcasecmp(buffer,
-
-
-   buf = strpbrk(buf, " \t");
-
-    while (buf && isspace(*buf))
-        buf++;
-
-      if (opt = getoption(c, "syslog"))
-      {
-      }
-      else if (opt = getoption(c, "filelog"))
-      {
-      }
-    }
-*/
+  switch(sourcenum)
+  {
+  case 0: /* syslog */
+    syslog_setup(levelnum, typenum, 
+		 log_file_arr[logtype_default][0].display_options,
+		 global_log_data.facility);
+    break;
+  default: /* filelog */
+    log_setup(filename, levelnum, typenum, 
+	      log_file_arr[logtype_default][0].display_options);
+  };  
+  return;
 }
 
 
