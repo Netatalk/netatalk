@@ -12,7 +12,8 @@ CLEANFILES = afpd.conf netatalk
 
 configdir = $(CONFIG_DIR)
 
-config_DATA = AppleVolumes.default AppleVolumes.system afpd.conf atalkd.conf netatalk.conf netatalk.pamd papd.conf
+config_DATA = AppleVolumes.default AppleVolumes.system afpd.conf \
+	atalkd.conf netatalk.conf netatalk.pamd papd.conf
 
 EXTRA_DIST = $(config_DATA)
 
@@ -36,7 +37,7 @@ pamdir    = /etc/pam.d
 pam_DATA = netatalk
 
 netatalk:
-	$(CP) -f $(PAMD) netatalk
+	cp -f $(PAMD) netatalk
 
 install-data-local: netatalk
 	$(INSTALL) netatalk $(DESTDIR)$(pamdir)/
