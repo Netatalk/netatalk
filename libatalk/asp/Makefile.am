@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/asp/
 
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
 
 noinst_LTLIBRARIES = libasp.la
 

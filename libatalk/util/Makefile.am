@@ -1,8 +1,8 @@
 # Makefile.am for libatalk/util/
 
-noinst_LTLIBRARIES = libutil.la
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
 
-INCLUDES = -I$(top_srcdir)/sys
+noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
 	atalk_addr.c	\

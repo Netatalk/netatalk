@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/cnid/
 
-INCLUDES = @BDB_CFLAGS@
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys @BDB_CFLAGS@
 
 noinst_LTLIBRARIES = libcnid.la
 
