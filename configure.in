@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.191 2003-09-03 18:27:13 samnoble Exp $
+dnl $Id: configure.in,v 1.192 2003-12-15 04:33:28 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -500,8 +500,32 @@ if test x"$this_os" = "xirix"; then
 fi
 
 dnl ----- Linux specific -----
+ac_have_atalk_addr=no
 if test x"$this_os" = "xlinux"; then 
 	AC_MSG_RESULT([ * Linux specific configuration])
+
+	dnl ----- kernel 2.6 changed struct at_addr to atalk_addr
+	AC_MSG_CHECKING([for struct atalk_addr])
+	AC_COMPILE_IFELSE([
+#include <sys/socket.h>
+#include <asm/types.h>
+#include <linux/atalk.h>
+
+int main() {
+       struct atalk_addr foo;
+
+       return 0;
+}
+	], [
+		ac_have_atalk_addr=yes
+		AC_MSG_RESULT([yes])
+	], [
+		AC_MSG_RESULT([no])
+	])
+
+if test "x$ac_have_atalk_addr" = "xyes"; then
+	AC_DEFINE(HAVE_ATALK_ADDR, 1, [set if struct at_addr is called atalk_addr])
+fi
 
 	dnl ----- check if we need the quotactl wrapper
 	AC_CHECK_FUNC(quotactl,,
