@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.169 2002-10-11 14:18:22 didg Exp $
+dnl $Id: configure.in,v 1.170 2002-10-16 16:55:55 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -264,22 +264,34 @@ AC_ARG_WITH(mangling,
 	, AC_MSG_RESULT([no])
 )
 
+if test "$did_scheme" = "cnid"; then
+    USE_CDB="yes"
+else
+    USE_CDB="no"
+fi
+
 dnl Determine whether or not to use CDB or transactional DB store
 AC_MSG_CHECKING([whether or not to use CNID with Concurrent Data Store])
 AC_ARG_WITH(cdb,
 	[ --with-cdb		enable CNID with Concurrent Data Store],
-	if test "$withval" = "yes"; then
+	if test "$withval" = "no"; then
 	    if test "x$did_scheme" != "xcnid"; then
+		USE_CDB="no"
 		AC_MSG_ERROR([DID scheme must be CNID to use CDB])
 	    else
-		AC_DEFINE(CNID_DB_CDB, 1)
-		AC_MSG_RESULT([yes])
+		USE_CDB="no"
+	        AC_MSG_RESULT([no])
 	    fi
 	else
-	    AC_MSG_RESULT([no])
+	    USE_CDB="yes"
+	    AC_MSG_RESULT([yes])
 	fi
-	, AC_MSG_RESULT([no])
+	, AC_MSG_RESULT([yes])
 )
+
+if test "$USE_CDB" = "yes"; then
+    AC_DEFINE(CNID_DB_CDB, 1)
+fi
 
 dnl Check for Berkeley DB3 library
 if test "x$db3_required" = "xyes"; then
