@@ -8,6 +8,8 @@
 #endif
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/syslog.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -27,9 +29,31 @@
 #include "comment.h"
 #include "printer.h"
 #include "ppd.h"
+#include "lp.h"
 #include "uam_auth.h"
 
-cq_default( in, out )
+int cq_default( struct papfile *, struct papfile * );
+int cq_k4login( struct papfile *, struct papfile * );
+int cq_uameth( struct papfile *, struct papfile * );
+
+int gq_balance( struct papfile * );
+int gq_pagecost( struct papfile * );
+int gq_true( struct papfile * );
+int gq_rbispoolerid( struct papfile * );
+int gq_rbiuamlist( struct papfile * );
+
+int cq_query( struct papfile *, struct papfile * );
+void cq_font_answer( char *, char *, struct papfile * );
+int cq_font( struct papfile *, struct papfile * );
+int cq_feature( struct papfile *, struct papfile * );
+int cq_printer( struct papfile *, struct papfile * );
+int cq_rmjob( struct papfile *, struct papfile * );
+int cq_listq( struct papfile *, struct papfile * );
+int cq_rbilogin( struct papfile *, struct papfile * );
+
+
+
+int cq_default( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
@@ -85,7 +109,7 @@ char	*LoginFailed = "LoginFailed\n";
 
 #define h2b(x)	(isdigit((x))?(x)-'0':(isupper((x))?(x)-'A':(x)-'a')+10)
 
-cq_k4login( in, out )
+int cq_k4login( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *p;
@@ -138,7 +162,7 @@ cq_k4login( in, out )
 
 char	*uameth = "UMICHKerberosIV\n*\n";
 
-cq_uameth( in, out )
+int cq_uameth( in, out )
     struct papfile	*in, *out;
 {
     char		*start;
@@ -176,7 +200,7 @@ cq_uameth( in, out )
 }
 #endif KRB
 
-gq_true( out )
+int gq_true( out )
     struct papfile	*out;
 {
     if ( printer->p_flags & P_SPOOLED ) {
@@ -187,7 +211,7 @@ gq_true( out )
     }
 }
 
-gq_pagecost( out )
+int gq_pagecost( out )
     struct papfile	*out;
 {
     char		cost[ 60 ];
@@ -210,7 +234,7 @@ gq_pagecost( out )
 }
 
 #ifdef ABS_PRINT
-gq_balance( out )
+int gq_balance( out )
     struct papfile	*out;
 {
     char		balance[ 60 ];
@@ -231,7 +255,7 @@ gq_balance( out )
 
 static const char *spoolerid = "(PAPD Spooler) 2.1 (2.1.4 pre-release)\n";
 
-gq_rbispoolerid( out )
+int gq_rbispoolerid( out )
     struct papfile	*out;
 {
     append( out, spoolerid, strlen( spoolerid ));
@@ -246,7 +270,7 @@ gq_rbispoolerid( out )
 
 static const char *nouams = "*\n";
 
-gq_rbiuamlist( out )
+int gq_rbiuamlist( out )
     struct papfile      *out;
 {
     char uamnames[128] = "\0";
@@ -281,7 +305,7 @@ struct genquery {
     { NULL },
 };
 
-cq_query( in, out )
+int cq_query( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p, *q;
@@ -348,7 +372,7 @@ cq_query( in, out )
     }
 }
 
-cq_font_answer( start, stop, out )
+void cq_font_answer( start, stop, out )
     char		*start, *stop;
     struct papfile	*out;
 {
@@ -385,7 +409,7 @@ cq_font_answer( start, stop, out )
     return;
 }
 
-cq_font( in, out )
+int cq_font( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
@@ -442,7 +466,7 @@ cq_font( in, out )
     }
 }
 
-cq_feature( in, out )
+int cq_feature( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
@@ -500,7 +524,7 @@ cq_feature( in, out )
 static const char	*psver = "*PSVersion\n";
 static const char	*prod = "*Product\n";
 
-cq_printer( in, out )
+int cq_printer( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *p;
@@ -576,7 +600,7 @@ cq_printer( in, out )
 static const char	*rmjobfailed = "Failed\n";
 static const char	*rmjobok = "Ok\n";
 
-cq_rmjob( in, out )
+int cq_rmjob( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
@@ -617,7 +641,7 @@ cq_rmjob( in, out )
     return( CH_DONE );
 }
 
-cq_listq( in, out )
+int cq_listq( in, out )
     struct papfile	*in, *out;
 {
     char		*start;
@@ -653,7 +677,7 @@ SecurityViolation: Unknown user, incorrect password or log on is \
 disabled ]%%\r%%Flushing: rest of job (to end-of-file) will be \
 ignored ]%%\r";
 
-cq_rbilogin( in, out )
+int cq_rbilogin( in, out )
     struct papfile      *in, *out;
 {
     char        	*start, *stop, *p, *begin;

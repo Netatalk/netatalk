@@ -36,8 +36,12 @@
 #include <atalk/pap.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
+#include <atalk/nbp.h>
 
 #include "printer.h"
+#include "printcap.h"
+#include "session.h"
+#include "uam_auth.h"
 
 #define _PATH_PAPDPPDFILE	".ppd"
 
@@ -58,6 +62,12 @@ static char      *pidfile = _PATH_PAPDLOCK;
 char		*uamlist;
 char		*uampath = _PATH_PAPDUAMPATH;
 
+/* Prototypes for locally used functions */
+int getstatus( struct printer *pr, char *buf );
+int rprintcap( struct printer *pr );
+void getprinters( char *cf );
+
+
 /* this only needs to be used by the server process */
 static void papd_exit(const int i)
 {
@@ -73,10 +83,13 @@ die( n )
     int			n;
 {
     struct printer	*pr;
+    struct at_addr	addr;
+
+    memset(&addr, 0, sizeof(addr));
 
     for ( pr = printers; pr; pr = pr->p_next ) {
 	if ( pr->p_flags & P_REGISTERED ) {
-	    if ( nbp_unrgstr( pr->p_name, pr->p_type, pr->p_zone ) < 0 ) {
+	    if ( nbp_unrgstr( pr->p_name, pr->p_type, pr->p_zone, &addr ) < 0 ) {
 		syslog( LOG_ERR, "can't unregister %s:%s@%s\n", pr->p_name,
 			pr->p_type, pr->p_zone );
 		papd_exit( n + 1 );
@@ -118,7 +131,7 @@ reap()
 
 char		rbuf[ 255 + 1 + 8 ];
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -453,13 +466,14 @@ main( ac, av )
 	    }
 	}
     }
+    return 0;
 }
 
 /*
  * We assume buf is big enough for 255 bytes of data and a length byte.
  */
-    int
-getstatus( pr, buf )
+
+int getstatus( pr, buf )
     struct printer	*pr;
     char		*buf;
 {
@@ -492,7 +506,7 @@ getstatus( pr, buf )
 char	*pgetstr();
 char	*getpname();
 
-getprinters( cf )
+void getprinters( cf )
     char	*cf;
 {
     char		buf[ 1024 ], area[ 1024 ], *a, *p, *name, *type, *zone;
@@ -602,7 +616,7 @@ getprinters( cf )
 	    pr->p_flags |= P_AUTH_CAP;
 	} else { pr->p_authprintdir = NULL; }
 
-	if ( pgetflag( "sp", &a ) == 1 ) {
+	if ( pgetflag( "sp" ) == 1 ) {
 	    pr->p_flags |= P_AUTH;
 	    pr->p_flags |= P_AUTH_PSSP;
 	}
@@ -647,7 +661,7 @@ getprinters( cf )
     }
 }
 
-rprintcap( pr )
+int rprintcap( pr )
     struct printer	*pr;
 {
     char		buf[ 1024 ], area[ 1024 ], *a, *p;

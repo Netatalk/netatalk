@@ -185,8 +185,7 @@ struct passwd *uam_getname(char *name, const int len)
 
   setpwent();
   while ((pwent = getpwent())) {
-    if (user = strchr(pwent->pw_gecos, ','))
-      *user = '\0';
+    if ((user = strchr(pwent->pw_gecos, ','))) *user = '\0';
     user = pwent->pw_gecos;
 
     /* check against both the gecos and the name fields. the user

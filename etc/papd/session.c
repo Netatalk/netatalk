@@ -7,6 +7,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/syslog.h>
@@ -18,6 +19,8 @@
 #include <atalk/pap.h>
 
 #include "file.h"
+#include "lp.h"
+#include "session.h"
 
 extern unsigned char	connid, quantum, oquantum;
 
@@ -48,7 +51,7 @@ struct iovec	iov[ PAP_MAXQUANTUM ] = {
  * Read lines of a file, until the client sends eof, after
  * which we'll send eof also.
  */
-session( atp, sat )
+int session( atp, sat )
     ATP			atp;
     struct sockaddr_at	*sat;
 {
@@ -89,7 +92,7 @@ session( atp, sat )
     atpb.atp_sreqtries = -1;		/* infinite retries */
     if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
 	syslog( LOG_ERR, "atp_sreq: %m" );
-	exit( 1 );
+	return( -1 );
     }
 
     for (;;) {
@@ -107,13 +110,13 @@ session( atp, sat )
 
 	if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 ) {
 	    syslog( LOG_ERR, "select: %m" );
-	    exit( 1 );
+	    return( -1 );
 	}
 	if ( cc == 0 ) {
 	    if ( timeout++ > 2 ) {
 		syslog( LOG_ERR, "connection timed out" );
 		lp_cancel();
-		exit( 1 );
+		return( -1 );
 	    }
 
 	    /*
@@ -129,14 +132,14 @@ session( atp, sat )
 	    atpb.atp_sreqtries = 1;		/* try once */
 	    if ( atp_sreq( atp, &atpb, 0, 0 )) {
 		syslog( LOG_ERR, "atp_sreq: %m" );
-		exit( 1 );
+		return( -1 );
 	    }
 	    continue;
 	} else {
 	    timeout = 0;
 	}
 
-	bzero( &ssat, sizeof( struct sockaddr_at ));
+	memset( &ssat, 0, sizeof( struct sockaddr_at ));
 	switch( atp_rsel( atp, &ssat, ATP_TRESP | ATP_TREQ )) {
 	case ATP_TREQ :
 	    atpb.atp_saddr = &ssat;
@@ -144,7 +147,7 @@ session( atp, sat )
 	    atpb.atp_rreqdlen = sizeof( cbuf );
 	    if ( atp_rreq( atp, &atpb ) < 0 ) {
 		syslog( LOG_ERR, "atp_rreq: %m" );
-		exit( 1 );
+		return( -1 );
 	    }
 	    /* sanity */
 	    if ( (unsigned char)cbuf[ 0 ] != connid ) {
@@ -192,7 +195,7 @@ session( atp, sat )
 		    syslog( LOG_ERR, "atp_sresp: %m" );
 		    exit( 1 );
 		}
-		exit( 0 );
+		return( 0 );
 		break;
 
 	    case PAP_TICKLE :
@@ -212,7 +215,7 @@ session( atp, sat )
 	    atpb.atp_rresiovcnt = oquantum;
 	    if ( atp_rresp( atp, &atpb ) < 0 ) {
 		syslog( LOG_ERR, "atp_rresp: %m" );
-		exit( 1 );
+		return( -1 );
 	    }
 
 	    /* sanity */
@@ -234,7 +237,7 @@ session( atp, sat )
 	    /* move data */
 	    if ( ps( &infile, &outfile, sat ) < 0 ) {
 		syslog( LOG_ERR, "parse: bad return" );
-		exit( 1 );	/* really?  close? */
+		return( -1 );	/* really?  close? */
 	    }
 
 	    /*
@@ -244,7 +247,7 @@ session( atp, sat )
 	    cbuf[ 1 ] = PAP_READ;
 	    if ( ++seq == 0 ) seq = 1;
 	    netseq = htons( seq );
-	    bcopy( &netseq, &cbuf[ 2 ], sizeof( netseq ));
+	    memcpy( &cbuf[ 2 ], &netseq, sizeof( netseq ));
 	    atpb.atp_saddr = sat;
 	    atpb.atp_sreqdata = cbuf;
 	    atpb.atp_sreqdlen = 4;		/* bytes in SendData request */
@@ -252,7 +255,7 @@ session( atp, sat )
 	    atpb.atp_sreqtries = -1;		/* infinite retries */
 	    if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
 		syslog( LOG_ERR, "atp_sreq: %m" );
-		exit( 1 );
+		return( -1 );
 	    }
 	    break;
 
@@ -261,7 +264,7 @@ session( atp, sat )
 
 	default :
 	    syslog( LOG_ERR, "atp_rsel: %m" );
-	    exit( 1 );
+	    return( -1 );
 	}
 
 	/* send any data that we have */
@@ -285,7 +288,7 @@ session( atp, sat )
 		}
 
 		niov[ i ].iov_len = 4 + cc;
-		bcopy( outfile.pf_data, niov[ i ].iov_base + 4, cc );
+		memcpy( niov[ i ].iov_base + 4, outfile.pf_data, cc );
 		CONSUME( &outfile, cc );
 		if ( outfile.pf_datalen == 0 ) {
 		    i++;
@@ -298,7 +301,7 @@ session( atp, sat )
 	    atpb.atp_sresiovcnt = i;	/* reported by stevebn@pc1.eos.co.uk */
 	    if ( atp_sresp( atp, &atpb ) < 0 ) {
 		syslog( LOG_ERR, "atp_sresp: %m" );
-		exit( 1 );
+		return( -1 );
 	    }
 	    readpending = 0;
 	}

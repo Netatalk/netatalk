@@ -47,7 +47,13 @@ static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <atalk/paths.h>
+
+#include "printcap.h"
 
 #ifndef BUFSIZ
 #define	BUFSIZ	1024
@@ -98,7 +104,7 @@ char	*getenv();
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-getprent( cap, bp)
+int getprent( cap, bp)
 	register char *cap;
 	register char *bp;
 {
@@ -140,7 +146,7 @@ getprent( cap, bp)
 	}
 }
 
-endprent()
+void endprent()
 {
 	if (pfp != NULL)
 		fclose(pfp);
@@ -154,7 +160,7 @@ endprent()
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-tgetent( cap, bp, name)
+int tgetent( cap, bp, name)
 	char *cap, *bp, *name;
 {
 	register char *cp;
@@ -226,7 +232,7 @@ tgetent( cap, bp, name)
 		 */
 		if (tnamatch(name)) {
 			close(tf);
-			return(tnchktc());
+			return(tnchktc(cap));
 		}
 	}
 }
@@ -241,7 +247,7 @@ tgetent( cap, bp, name)
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-tnchktc( cap )
+int tnchktc( cap )
     char *cap;
 {
 	register char *p, *q;
@@ -289,7 +295,7 @@ tnchktc( cap )
  * against each such name.  The normal : terminator after the last
  * name (before the first field) stops us.
  */
-tnamatch(np)
+int tnamatch(np)
 	char *np;
 {
 	register char *Np, *Bp;
@@ -335,7 +341,7 @@ tskip(bp)
  * a # character.  If the option is not found we return -1.
  * Note that we handle octal numbers beginning with 0.
  */
-tgetnum(id)
+int tgetnum(id)
 	char *id;
 {
 	register int i, base;
@@ -368,7 +374,7 @@ tgetnum(id)
  * of the buffer.  Return 1 if we find the option, or 0 if it is
  * not given.
  */
-tgetflag(id)
+int tgetflag(id)
 	char *id;
 {
 	register char *bp = tbuf;

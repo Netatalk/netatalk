@@ -15,7 +15,7 @@
 
 #include "file.h"
 
-markline( pf, start, linelength, crlflength )
+int markline( pf, start, linelength, crlflength )
     char		**start;
     int			*linelength, *crlflength;
     struct papfile	*pf;
@@ -55,7 +55,7 @@ markline( pf, start, linelength, crlflength )
     return *linelength;
 }
 
-morespace( pf, data, len )
+void morespace( pf, data, len )
     struct papfile	*pf;
     char		*data;
     int			len;
@@ -90,22 +90,22 @@ morespace( pf, data, len )
 }
 
 
-append(pf, data, len)
+void append(pf, data, len)
     struct papfile	*pf;
-    char		*data;
+    const char		*data;
     int			len;
 {
     if ((pf->pf_data + pf->pf_datalen + len) >
 	(pf->pf_buf + pf->pf_bufsize)) {
 		morespace(pf, data, len);
     } else {
-	bcopy(data, pf->pf_data + pf->pf_datalen, len);
+	memcpy(pf->pf_data + pf->pf_datalen, data, len);
 	pf->pf_datalen += len;
     }
 }
 
 
-spoolerror( out, str )
+void spoolerror( out, str )
     struct papfile	*out;
     char		*str;
 {

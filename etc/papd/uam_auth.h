@@ -12,6 +12,8 @@
 
 #include <atalk/uam.h>
 
+#include "file.h"
+
 struct uam_mod {
   void *uam_module;
   struct uam_export *uam_fcn;
@@ -63,5 +65,6 @@ int auth_register __P((const int, struct uam_obj *));
 #define auth_unregister(a) uam_detach(a)
 struct uam_obj *auth_uamfind __P((const int, const char *, const int));
 void auth_unload __P((void));
+int getuamnames __P((const int, char *));
 
 #endif /* uam_auth.h */

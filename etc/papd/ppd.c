@@ -46,19 +46,18 @@ struct ppdent {
 #ifndef SHOWPPD
 int ppd_inited = 0;
 
-ppd_init()
+int ppd_init()
 {
     if ( ppd_inited ) {
 	return( -1 );
     }
     ppd_inited++;
 
-    read_ppd( printer->p_ppdfile, 0 );
+    return read_ppd( printer->p_ppdfile, 0 );
 }
 #endif SHOWPPD
 
-    struct ppdent *
-getppdent( stream )
+struct ppdent *getppdent( stream )
     FILE	*stream;
 {
     static char			buf[ 1024 ];
@@ -78,10 +77,10 @@ getppdent( stream )
 	}
 
 	q = p;
-	while ( *p != ' ' && *p != '\t' && *p != ':' && *p != '\n' ) {
+	while ( (*p != ' ') && (*p != '\t') && (*p != ':') && (*p != '\n') ) {
 	    p++;
 	}
-	if ( *( q + 1 ) == '%' || *( q + 1 ) == '?' ) {	/* comments & queries */
+	if ( (*( q + 1 ) == '%') || (*( q + 1 ) == '?') ) {	/* comments & queries */
 	    continue;
 	}
 	ppdent.pe_main = q;
@@ -94,12 +93,12 @@ getppdent( stream )
 	if ( *p != ':' ) {	/* option key word */
 	    *p++ = '\0';
 
-	    while ( *p == ' ' || *p == '\t' ) {
+	    while ( (*p == ' ') || (*p == '\t') ) {
 		p++;
 	    }
 
 	    q = p;
-	    while ( *p != ':' && *p != '/' && *p != '\n' ) {
+	    while ( (*p != ':') && (*p != '/') && (*p != '\n') ) {
 		p++;
 	    }
 
@@ -125,7 +124,7 @@ getppdent( stream )
 	}
 	*p++ = '\0';
 
-	while ( *p == ' ' || *p == '\t' ) {
+	while ( (*p == ' ') || (*p == '\t') ) {
 	    p++;
 	}
 
@@ -143,7 +142,7 @@ getppdent( stream )
     return( NULL );
 }
 
-read_ppd( file, fcnt )
+int read_ppd( file, fcnt )
     char	*file;
     int		fcnt;
 {
@@ -203,7 +202,7 @@ read_ppd( file, fcnt )
 		break;
 	    }
 	}
-	if ( pfe->pd_name && pfe->pd_value == NULL ) {
+	if ( pfe->pd_name && (pfe->pd_value == NULL) ) {
 	    if (( pfe->pd_value =
 		    (char *)malloc( strlen( pe->pe_value ) + 1 )) == NULL ) {
 		syslog( LOG_ERR, "malloc: %m" );
@@ -219,8 +218,7 @@ read_ppd( file, fcnt )
     return( 0 );
 }
 
-    struct ppd_font *
-ppd_font( font )
+struct ppd_font *ppd_font( font )
     char	*font;
 {
     struct ppd_font	*pfo;
@@ -239,14 +237,14 @@ ppd_font( font )
     return( NULL );
 }
 
-    struct ppd_feature *
-ppd_feature( feature, len )
-    char	*feature;
+struct ppd_feature *ppd_feature( feature, len )
+    const char	*feature;
     int		len;
 {
     struct ppd_feature	*pfe;
-    char		main[ 256 ];
-    char		*end, *p, *q;
+    char		ppd_feature_main[ 256 ];
+    const char		*end, *p;
+    char 		*q;
 
 #ifndef SHOWPPD
     if ( ! ppd_inited ) {
@@ -254,8 +252,8 @@ ppd_feature( feature, len )
     }
 #endif SHOWPPD
 
-    for ( end = feature + len, p = feature, q = main;
-	    p <= end && *p != '\n' && *p != '\r'; p++, q++ ) {
+    for ( end = feature + len, p = feature, q = ppd_feature_main;
+	    (p <= end) && (*p != '\n') && (*p != '\r'); p++, q++ ) {
 	*q = *p;
     }
     if ( p > end ) {
@@ -264,7 +262,7 @@ ppd_feature( feature, len )
     *q = '\0';
 
     for ( pfe = ppd_features; pfe->pd_name; pfe++ ) {
-	if ( strcmp( pfe->pd_name, main ) == 0 && pfe->pd_value ) {
+	if ( (strcmp( pfe->pd_name, ppd_feature_main ) == 0) && pfe->pd_value ) {
 	    return( pfe );
 	}
     }

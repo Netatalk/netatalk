@@ -3,6 +3,9 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#ifndef PAPD_COMMENT_H
+#define PAPD_COMMENT_H 1
+
 struct papd_comment {
     char		*c_begin;
     char		*c_end;
@@ -46,3 +49,12 @@ extern char			*comcont;
  * Magic "number" subtypes.
  */
 #define CM_NOPRINT	(1<<16)				/* or print */
+
+void compop __P(( void ));
+void compush __P(( struct papd_comment * ));
+int comswitch __P(( struct papd_comment *, int (*)() ));
+int comcmp __P(( char *, char *, char *, int ));
+struct papd_comment *commatch __P(( char *, char *, struct papd_comment * ));
+char *comtoken __P(( char *, char *, char *, char * ));
+
+#endif /* PAPD_COMMENT_H */

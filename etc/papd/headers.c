@@ -13,8 +13,11 @@
 
 #include "file.h"
 #include "comment.h"
+#include "lp.h"
 
-ch_title( in, out )
+int ch_title( struct papfile *, struct papfile * );
+
+int ch_title( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p, *q, c;

@@ -19,7 +19,7 @@ struct comstate	*comstate;
 
 char	*comcont = "%%+";
 
-compop()
+void compop( void )
 {
     struct comstate	*cs;
 
@@ -28,7 +28,7 @@ compop()
     free( cs );
 }
 
-compush( comment )
+void compush( comment )
     struct papd_comment	*comment;
 {
     struct comstate	*cs;
@@ -45,7 +45,7 @@ compush( comment )
     comstate = cs;
 }
 
-comswitch( comments, handler )
+int comswitch( comments, handler )
     struct papd_comment	*comments;
     int			(*handler)();
 {
@@ -65,7 +65,7 @@ comswitch( comments, handler )
     return( 0 );
 }
 
-comcmp( start, stop, str, how )
+int comcmp( start, stop, str, how )
     char	*start, *stop, *str;
     int		how;
 {
@@ -74,11 +74,11 @@ comcmp( start, stop, str, how )
     len = stop - start;
     cc = strlen( str );
     if ( how & C_FULL ) {
-	if ( cc == len & strncmp( str, start, cc ) == 0 ) {
+	if ( (cc == len) && (strncmp( str, start, cc ) == 0) ) {
 	    return( 0 );
 	}
     } else {
-	if ( cc <= len && strncmp( str, start, cc ) == 0 ) {
+	if ( (cc <= len) && (strncmp( str, start, cc ) == 0) ) {
 	    return( 0 );
 	}
     }
@@ -86,8 +86,7 @@ comcmp( start, stop, str, how )
     return( 1 );
 }
 
-    struct papd_comment *
-commatch( start, stop, comments )
+struct papd_comment *commatch( start, stop, comments )
     char		*start, *stop;
     struct papd_comment	comments[];
 {
@@ -105,8 +104,7 @@ commatch( start, stop, comments )
     }
 }
 
-    char *
-comtoken( start, stop, pos, delim )
+char *comtoken( start, stop, pos, delim )
     char	*start, *stop, *pos, *delim;
 {
     if ( pos < start || pos > stop ) {

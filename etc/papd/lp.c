@@ -48,6 +48,9 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <ctype.h>
+#include <unistd.h>
+
 #if defined( sun ) && defined( __svr4__ )
 #include </usr/ucbinclude/sys/file.h>
 #else sun __svr4__
@@ -73,24 +76,17 @@
 
 #include "printer.h"
 #include "file.h"
+#include "lp.h"
+
+/* These functions aren't used outside of lp.c */
+int lp_conn_inet();
+int lp_disconn_inet( int );
+int lp_conn_unix();
+int lp_disconn_unix( int );
 
 char	hostname[ MAXHOSTNAMELEN ];
 
 extern struct sockaddr_at *sat;
-
-/* initialize printing interface */
-int	lp_init();
-/* cancel current job */
-int	lp_cancel();
-/* print current job */
-int	lp_print();
-
-/* open a file for spooling */
-int	lp_open();
-/* open a buffer to the current open file */
-int	lp_write();
-/* close current spooling file */
-int	lp_close();
 
 struct lp {
     int			lp_flags;
@@ -107,7 +103,7 @@ struct lp {
 #define LP_CONNECT	(1<<3)
 #define LP_QUEUE	(1<<4)
 
-lp_person( person )
+void lp_person( person )
     char	*person;
 {
     if ( lp.lp_person != NULL ) {
@@ -121,7 +117,7 @@ lp_person( person )
 }
 
 #ifdef ABS_PRINT
-lp_pagecost()
+int lp_pagecost()
 {
     char	cost[ 22 ];
     char	balance[ 22 ];
@@ -138,7 +134,7 @@ lp_pagecost()
 }
 #endif ABS_PRINT
 
-lp_host( host )
+void lp_host( host )
     char	*host;
 {
     if ( lp.lp_host != NULL ) {
@@ -151,7 +147,7 @@ lp_host( host )
     strcpy( lp.lp_host, host );
 }
 
-lp_job( job )
+void lp_job( job )
     char	*job;
 {
     char	*p, *q;
@@ -173,7 +169,7 @@ lp_job( job )
     *q = '\0';
 }
 
-lp_init( out, sat )
+int lp_init( out, sat )
     struct papfile	*out;
     struct sockaddr_at	*sat;
 {
@@ -315,7 +311,7 @@ lp_init( out, sat )
     return( 0 );
 }
 
-lp_open( out, sat )
+int lp_open( out, sat )
     struct papfile	*out;
     struct sockaddr_at	*sat;
 {
@@ -387,18 +383,18 @@ lp_open( out, sat )
     return( 0 );
 }
 
-lp_close()
+int lp_close()
 {
     if (( lp.lp_flags & LP_INIT ) == 0 || ( lp.lp_flags & LP_OPEN ) == 0 ) {
-	return;
+	return 0;
     }
     fclose( lp.lp_stream );
     lp.lp_stream = NULL;
     lp.lp_flags &= ~LP_OPEN;
-    return;
+    return 0;
 }
 
-lp_write( buf, len )
+int lp_write( buf, len )
     char	*buf;
     int		len;
 {
@@ -413,13 +409,13 @@ lp_write( buf, len )
     return( 0 );
 }
 
-lp_cancel()
+int lp_cancel()
 {
     char	name[ MAXPATHLEN ];
     char	letter;
 
     if (( lp.lp_flags & LP_INIT ) == 0 || lp.lp_letter == 'A' ) {
-	return;
+	return 0;
     }
 
     if ( lp.lp_flags & LP_OPEN ) {
@@ -433,7 +429,7 @@ lp_cancel()
 	}
     }
 
-    return;
+    return 0;
 }
 
 /*
@@ -442,7 +438,7 @@ lp_cancel()
  *
  * XXX piped?
  */
-lp_print()
+int lp_print()
 {
     char		buf[ MAXPATHLEN ];
     char		tfname[ MAXPATHLEN ];
@@ -452,7 +448,7 @@ lp_print()
     FILE		*cfile;
 
     if (( lp.lp_flags & LP_INIT ) == 0 || lp.lp_letter == 'A' ) {
-	return;
+	return 0;
     }
     lp_close();
 
@@ -460,11 +456,11 @@ lp_print()
 	sprintf( tfname, "tfA%03d%s", lp.lp_seq, hostname );
 	if (( fd = open( tfname, O_WRONLY|O_EXCL|O_CREAT, 0660 )) < 0 ) {
 	    syslog( LOG_ERR, "lp_print %s: %m", tfname );
-	    return;
+	    return 0;
 	}
 	if (( cfile = fdopen( fd, "w" )) == NULL ) {
 	    syslog( LOG_ERR, "lp_print %s: %m", tfname );
-	    return;
+	    return 0;
 	}
 	fprintf( cfile, "H%s\n", hostname );	/* XXX lp_host? */
 
@@ -506,43 +502,43 @@ lp_print()
 	if ( link( tfname, cfname ) < 0 ) {
 	    syslog( LOG_ERR, "lp_print can't link %s to %s: %m", cfname,
 		    tfname );
-	    return;
+	    return 0;
 	}
 	unlink( tfname );
 
 	if (( s = lp_conn_unix()) < 0 ) {
 	    syslog( LOG_ERR, "lp_print: lp_conn_unix: %m" );
-	    return;
+	    return 0;
 	}
 
 	sprintf( buf, "\1%s\n", printer->p_printer );
 	n = strlen( buf );
 	if ( write( s, buf, n ) != n ) {
 	    syslog( LOG_ERR, "lp_print write: %m" );
-	    return;
+	    return 0;
 	}
 	if ( read( s, buf, 1 ) != 1 ) {
 	    syslog( LOG_ERR, "lp_print read: %m" );
-	    return;
+	    return 0;
 	}
 
 	lp_disconn_unix( s );
 
 	if ( buf[ 0 ] != '\0' ) {
 	    syslog( LOG_ERR, "lp_print lpd said %c: %m", buf[ 0 ] );
-	    return;
+	    return 0;
 	}
     }
     syslog( LOG_INFO, "lp_print queued" );
-    return;
+    return 0;
 }
 
-lp_disconn_unix( fd )
+int lp_disconn_unix( fd )
 {
     return( close( fd ));
 }
 
-lp_conn_unix()
+int lp_conn_unix()
 {
     int			s;
     struct sockaddr_un	saun;
@@ -564,12 +560,12 @@ lp_conn_unix()
     return( s );
 }
 
-lp_disconn_inet( fd )
+int lp_disconn_inet( int fd )
 {
     return( close( fd ));
 }
 
-lp_conn_inet()
+int lp_conn_inet()
 {
     int			privfd, port = IPPORT_RESERVED - 1;
     struct sockaddr_in	sin;
@@ -613,7 +609,7 @@ lp_conn_inet()
     return( privfd );
 }
 
-lp_rmjob( job )
+int lp_rmjob( job )
     int		job;
 {
     char	buf[ 1024 ];
@@ -653,7 +649,7 @@ char	*tag_files = "files: ";
 char	*tag_size = "size: ";
 char	*tag_status = "status: ";
 
-lp_queue( out )
+int lp_queue( out )
     struct papfile	*out;
 {
     char			buf[ 1024 ], *start, *stop, *p, *q;

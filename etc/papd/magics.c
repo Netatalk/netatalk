@@ -11,11 +11,13 @@
 #include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "file.h"
 #include "comment.h"
+#include "lp.h"
 
-ps( infile, outfile, sat )
+int ps( infile, outfile, sat )
     struct papfile	*infile, *outfile;
     struct sockaddr_at	*sat;
 {
@@ -24,7 +26,7 @@ ps( infile, outfile, sat )
     struct papd_comment		*comment;
 
     for (;;) {
-	if ( comment = compeek()) {
+	if ( (comment = compeek()) ) {
 	    switch( (*comment->c_handler)( infile, outfile, sat )) {
 	    case CH_DONE :
 		continue;
@@ -69,7 +71,7 @@ ps( infile, outfile, sat )
     }
 }
 
-cm_psquery( in, out, sat )
+int cm_psquery( in, out, sat )
     struct papfile	*in, *out;
     struct sockaddr_at	*sat;
 {
@@ -102,13 +104,13 @@ cm_psquery( in, out, sat )
     }
 }
 
-cm_psadobe( in, out, sat )
+int cm_psadobe( in, out, sat )
     struct papfile	*in, *out;
     struct sockaddr_at	*sat;
 {
     char		*start;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
 
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -142,7 +144,7 @@ cm_psadobe( in, out, sat )
 
 char	*Query = "Query";
 
-cm_psswitch( in, out, sat )
+int cm_psswitch( in, out, sat )
     struct papfile	*in, *out;
     struct sockaddr_at	*sat;
 {

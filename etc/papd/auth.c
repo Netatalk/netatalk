@@ -118,6 +118,7 @@ int auth_load(const char *path, const char *list)
     }
     p = strtok(NULL, ",");
   }
+  return 0;
 }
 
 /* get rid of all of the uams */

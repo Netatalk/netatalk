@@ -3,6 +3,9 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#ifndef PAPD_FILE_H
+#define PAPD_FILE_H 1
+
 struct papfile {
     int			pf_state;
     struct state	*pf_xstate;
@@ -25,3 +28,10 @@ struct papfile {
 			    }
 
 #define PF_MORESPACE	1024
+
+int markline __P(( struct papfile *, char **, int *, int * ));
+void morespace __P(( struct papfile *, char *, int ));
+void append __P(( struct papfile *, const char *, int ));
+void spoolerror __P(( struct papfile *, char * ));
+
+#endif /* PAPD_FILE_H */
