@@ -46,10 +46,9 @@ void readmessage(void)
     syslog (LOG_INFO, "Unable to open file %s", filename);
     sprintf(filename, "%s/message", SERVERTEXT);
     message=fopen(filename, "r");
-    /* sprintf (servermesg, "Server error:  unable to open %s.", filename);
-    */
   }
-  else
+
+  if (message!=NULL) /* if either message.pid or message exists */
   {
     /* added while loop to get characters and put in servermesg */
     while ((( c=fgetc(message)) != EOF) && (i < (MAXMESGSIZE - 1))) {
@@ -60,14 +59,17 @@ void readmessage(void)
 
     /* cleanup */
     fclose(message);
-    i=unlink (filename);
+/* Below code can be uncommented if you want to experiment with getting afpd
+to delete the text file when it's done.  Currently, it doesn't work.  If you 
+can get it to work, delete this comment and enable the code!  */
+/*    i=unlink (filename);
     if (i)
-      syslog (LOG_INFO, "Error deleting %s", filename);
+      syslog (LOG_INFO, "Error deleting %s: %m", filename);
     else
       syslog (LOG_DEBUG, "Deleted %s", filename);
     free (filename);
  
-    syslog (LOG_DEBUG, "Set server message to \"%s\"", servermesg);
+    syslog (LOG_DEBUG, "Set server message to \"%s\"", servermesg); */
   }
   free(filename);
 #endif
