@@ -97,6 +97,12 @@ static void afp_dsi_timedown()
     }
 }
 
+static void afp_dsi_getmesg (void)
+{
+      readmessage();
+      dsi_attention(child.dsi, AFPATTN_MESG | AFPATTN_TIME(5));
+}
+
 static void alarm_handler()
 {
   /* if we're in the midst of processing something,
@@ -145,6 +151,18 @@ void afp_over_dsi(AFPObj *obj)
     syslog( LOG_ERR, "afp_over_dsi: sigaction: %m" );
     afp_dsi_die(1);
   }
+
+#ifdef SERVERTEXT
+  /* Added for server message support */
+  action.sa_handler = afp_dsi_getmesg;
+  sigemptyset( &action.sa_mask );
+  sigaddset(&action.sa_mask, SIGUSR2);
+  action.sa_flags = SA_RESTART;
+  if ( sigaction( SIGUSR2, &action, 0) < 0 ) {
+    syslog( LOG_ERR, "afp_over_dsi: sigaction: %m" );
+    afp_dsi_die(1);
+  }
+#endif
 
   /* tickle handler */
   action.sa_handler = alarm_handler;

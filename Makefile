@@ -2,6 +2,8 @@
 # ${DESTDIR}/bin, and ${DESTDIR}/lib.
 DESTDIR=/usr/local/atalk
 
+# for storing server message files
+MSGDIR=$(DESTDIR)/svrmessage
 # for system-level binaries
 SBINDIR=$(DESTDIR)/sbin
 # for user-level binaries
@@ -108,6 +110,7 @@ all install depend clean tags kernel kinstall kpatch:	FRC
 	echo "Making $@ for $$ARCH..."; \
 	cd sys/$$ARCH && ${MAKE} ${MFLAGS} \
             ADMIN_GRP="${ADMIN_GRP}" \
+            MSGDIR="${MSGDIR}" \
 	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}"\
 	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 	    DESTDIR="${DESTDIR}" MANDIR="${MANDIR}" \
