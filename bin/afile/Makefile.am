@@ -1,13 +1,8 @@
 # Makefile.am for bin/afile/
 
-bin_PROGRAMS = achfile afile
+bin_PROGRAMS = afile achfile
 
-achfile_SOURCES = achfile.c
-achfile_LDADD = $(top_builddir)/libatalk/libatalk.la
+afile_SOURCES = afile.c common.c
+achfile_SOURCES = achfile.c common.c
 
-afile_SOURCES	= afile.c
-afile_LDADD = $(top_builddir)/libatalk/libatalk.la
-
-LIBS = @LIBS@ -L$(top_builddir)/libatalk/
-
-EXTRA_DIST = README acleandir.rc
+EXTRA_DIST = acleandir.rc

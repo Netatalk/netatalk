@@ -1,228 +1,257 @@
-/*
- * Copyright 1998 The University of Newcastle upon Tyne
- * 
- * Permission to use, copy, modify and distribute this software and its
- * documentation for any purpose other than its commercial exploitation
- * is hereby granted without fee, provided that the above copyright
- * notice appear in all copies and that both that copyright notice and
- * this permission notice appear in supporting documentation, and that
- * the name of The University of Newcastle upon Tyne not be used in
- * advertising or publicity pertaining to distribution of the software
- * without specific, written prior permission. The University of
- * Newcastle upon Tyne makes no representations about the suitability of
- * this software for any purpose. It is provided "as is" without express
- * or implied warranty.
- * 
- * THE UNIVERSITY OF NEWCASTLE UPON TYNE DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF
- * NEWCASTLE UPON TYNE BE LIABLE FOR ANY SPECIAL, INDIRECT OR
- * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
- * USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- * 
- * Author:  Gerry Tomlinson (gerry.tomlinson@newcastle.ac.uk)
- *          Computing Science Department, University of Newcastle upon Tyne, UK
- */
+/*  afile - determine the MacOS creator/type of files
 
-/*
- *
- * program afile
- *
- *
- * show creator/type of netatalk file
- *  
- * usage  afile [-a] file ....
- * 
- * looks for MAGIC at start to see if an AppleDouble else assumes it's a
- * data fork and only reports if corresponding  .AppleDouble exists unless -a option set
- * in which case report unknown if not a directory (does not look for
- * extension mappings)
- *
- * returns exit status 0 if all files have corresponding readable  valid .AppleDouble or data fork
- *
- * if both parts of file don't exist in correct form it returns (for last file): 
- *
- *	1  file doesn't exist
- *	2  file is unreadable
- *	3  file is directory
- *	4  file is AppleDouble without data fork
- *      5  file is AppleDouble with unreadable data fork
- * 	6  file is data fork without AppleDouble
- * 	7  file is data fork with unreadable AppleDouble
- *	8  file is data for with short  AppleDouble
- * 	9  bad magic in AppleDouble
- *     99  bad command line options
- *	
- * by gerry.tomlinson@ncl.ac.uk
- * last update 26/2/98
- *
- */
+    Copyright (C) 2001 Sebastian Rittau.
+    All rights reserved.
+
+    This file may be distributed and/or modfied under the terms of the
+    following license:
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+    3. Neither the name of the author nor the names of its contributors
+       may be used to endorse or promote products derived from this software
+       without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    SUCH DAMAGE.
+*/
+
+#include <config.h>
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <atalk/adouble.h>
 
+#include "common.h"
 
-extern char *optarg;
-extern int optind, opterr;
+/* Please change this whenever you change this file. */
+#define AFILE_VERSION "1.0.0"
 
-#define AD  ".AppleDouble"
+/* Possible return types. These are taken from the original afile for
+ * compatibility.
+ */
+#define RET_OK                0 /* everything went fine */
+#define RET_NO_SUCH_FILE      1 /* file doesn't exist */
+#define RET_UNREADABLE        2 /* file is unreadable */
+#define RET_IS_DIR            3 /* file is a directory */
+#define RET_NO_DF             4 /* there is no corresponding data fork */
+#define RET_INVALID_DF        5 /* data fork exists but can't be read */
+#define RET_NO_AD             6 /* AppleDouble file doesn't exist */
+#define RET_INVALID_AD        7 /* AppleDouble file exists but can't be read */
+#define RET_SHORT_AD          8 /* AppleDouble file is too short */
+#define RET_BAD_MAGIC         9 /* AppleDouble file has a bad magic value */
+#define RET_BAD_ARGS         99 /* bad command line options */
 
-main(int argc, char *argv[])
 
+/* Global Variables */
+int showall = 0;
+
+
+/* Print usage information. */
+void usage(char *prog)
 {
-    int fdata, fres;
-    struct stat statbuf;
-    int n,i;
-    char adbuf [AD_DATASZ];
-    struct adouble  *ad;
-    int datafork;
-    char *dname;
-    char *rname;
-    mode_t dmode;
-    mode_t rmode;
-    char *slash;
-    char c;
-    char *type = 0;
-    char *creator = 0;
-    char *p;
-    int errflag = 0;
-    int aflag = 0;
-    int status = 0;
-    int gotdata;
-
-    while ((c = getopt(argc, argv, "a")) != -1)
-    switch (c) {
-	case 'a':
-		aflag = 1; break;
-	case '?' :
-		errflag = 1; break;
-    }
-
-    if (errflag ||  argc == optind) { 
-	  fprintf(stderr,"usage: afile [-a] file ...\n");
-	   exit(99);
-    }
-
-    
-    for (; optind < argc; optind++) {
-        close (fdata);
-        close (fres);
-
-	dname = argv[optind];
-	rname = 0;
-	datafork = 1;	/* assume file is a data fork */
-	gotdata = 1;    /* assume data fork ok */
-
-	if (stat(dname, &statbuf)) {
-	    fprintf(stderr,"afile: %s does not exist\n",dname);
-	    status = 1;
-	    continue;
-	}
-
-        if ((fdata = open(dname,O_RDONLY,0)) == -1) {
-	    fprintf(stderr,"afile: cannot open %s\n",dname);
-	    status = 2;
-            continue;
- 	}
-	 
-	fstat(fdata, &statbuf);
-        if (S_ISDIR(statbuf.st_mode)) { 
-	     if (aflag) 
-		  printf("directory %s\n",dname);
-	     status = 3; 
-	     continue;
-	}
-	
-	if ( read(fdata,adbuf,AD_DATASZ)  == AD_DATASZ) {
-            ad = (struct adouble*)adbuf;
-	    if  (ad->ad_magic == ntohl(AD_MAGIC)) {  /*  AppleDouble Header */
-		datafork = 0;
-		rmode = statbuf.st_mode;
-		rname = dname;
-		dname = calloc(strlen(rname)+4,1);
-		slash = rindex(rname,'/');
-		if (!slash) {
-		    strcpy(dname,"../");
-		    strcat(dname,rname);
-		}
-		else {
-		    strncpy(dname, rname, slash + 1 - rname);
-	            strcat(dname,"../");
-		    strcat(dname,slash+1);
-		}
-	        if (stat(dname, &statbuf)) {
-		    status = 4;		/* data fork doesn't exist */
-		    gotdata = 0;		    
-		} else if ((fdata = open(dname,O_RDONLY,0)) == -1) { 	    
-		    status = 5; 	/* can't open data fork for reading */
-		    gotdata = 0;
-		}
-		dmode = statbuf.st_mode;	       
-	    }	 
-        }
-
-	if (datafork)	{
-	    dmode = statbuf.st_mode;
-	    rname = calloc(strlen(dname)+strlen(AD)+2, 1);
-	    slash = rindex(dname,'/');
-	    strncpy(rname,dname,slash ? slash + 1 - dname : 0);
-	    strcat(rname,AD);
-	    strcat(rname,"/");
-	    strcat(rname,slash ? slash+1 : dname);
-        
-	    if (stat(rname, &statbuf)) {
-		if (aflag)
-		     printf("unknown %s\n",dname); 
-		else
-		    status = 6;
-		continue;
-	    }
-	    rmode = statbuf.st_mode;
-	    if ((fres = open(rname, O_RDONLY,0)) == -1) {
-		    fprintf(stderr,"afile: cannot read   %s\n",rname);
-		status = 7;
-		continue;
-	     }
-	    if (read(fres,adbuf,AD_DATASZ)  != AD_DATASZ) {
-		 fprintf(stderr,"afile: %s too small\n",rname);
-		 status = 8;
-		 continue;
-	    }
-	  
-	    ad = (struct adouble*)adbuf;
- 	}
-	
-	if  (ad->ad_magic != ntohl(AD_MAGIC)) {
-	    fprintf(stderr,"afile: bad MAGIC in %s\n",rname);
-	    status = 9;
-	    continue;
-	}
-
-	printf("%4.4s %4.4s %s\n",adbuf+ADEDOFF_FINDERI, adbuf+ADEDOFF_FINDERI+4, 
-		datafork ? dname : rname);
-
-	if (!gotdata) {
-	    if (status == 4)
-		fprintf(stderr,"afile: %s does not exist\n",dname);			   
-	    if (status == 5)	     
-		fprintf(stderr,"afile: cannot read %s\n",dname);
-	} else if (dmode != rmode) {
-	    fprintf(stderr,"afile: %s mode does not match\n",datafork ? rname : dname);
-	    status = 0;
-	} 
-
-    }
-    exit (status);
+  fprintf(stderr, "Usage: %s [-a] FILE ...\n", prog);
 }
 
-/* end of program afile */
+/* Print extensive help. */
+void help(char *prog)
+{
+  usage(prog);
+  fprintf(stderr,
+	  "\n"
+	  "Determine the MacOS creator/type of FILEs.\n"
+	  "\n"
+	  "  -a, --show-all    also show unknown files and directories\n"
+	  "  -h, --help        show this help and exit\n"
+	  "  -v, --version     show version information and exit\n");
+}
+
+/* Print the version. */
+void version()
+{
+  fprintf(stderr, "afile " AFILE_VERSION " (netatalk " VERSION ")\n");
+}
+
+/* Argument Handling
+ * known options: -a, -h, -v
+ * known long options: --show-all, --help, --version
+ */
+#define OPTSTRING "ahv-:"
+int parse_args(int argc, char *argv[])
+{
+  int c;
+
+  /* iterate through the command line */
+  while ((c = getopt(argc, argv, OPTSTRING)) != -1) {
+    switch (c) {
+    case 'h':
+      help(argv[0]);
+      exit(0);
+    case 'v':
+      version();
+      exit(0);
+    case 'a':
+      showall = 1;
+      break;
+    case '-':
+      if (strcmp(optarg, "help") == 0) {
+	help(argv[0]);
+	exit(0);
+      }
+      if (strcmp(optarg, "version") == 0) {
+	version();
+	exit(0);
+      }
+      if (strcmp(optarg, "show-all") == 0)
+	showall = 1;
+      break;
+    default:
+      usage(argv[0]);
+      return -1;
+    }
+  }
+
+  /* At least one file argument is required. */
+  if (argc == optind) {
+    usage(argv[0]);
+    return -1;
+  }
+
+  return 0;
+}
+
+
+/* Print the creator/type as taken from the supplied character stream, which
+ * must be a AppleDouble file header.
+ */
+void print_type(const char *filename, const char *creator, const char *type)
+{
+  printf("%4.4s %4.4s %s\n", creator, type, filename);
+}
+
+
+int handle_ad(struct AFile *rfile)
+{
+  int fd;
+  char *dataname;
+
+  dataname = adname_to_dataname(afile_filename(rfile));
+
+  /* Try to open data file. */
+  fd = open(dataname, O_RDONLY);
+  free(dataname);
+  if (fd == -1) {
+    if (errno == ENOENT)
+      return RET_NO_DF;      /* There is no data fork. */
+    else
+      return RET_INVALID_DF; /* The data fork can't be read. */
+  }
+  /* FIXME: stat */
+
+  close(fd);
+
+  return RET_OK;
+}
+
+
+int handle_datafile(struct AFile *datafile)
+{
+  int ret;
+  char *adname;
+  struct AFile *rfile;
+
+  /* Try to load AppleDouble file. */
+  adname = dataname_to_adname(afile_filename(datafile));
+  rfile = afile_new(adname);
+  free(adname);
+  if (!rfile) {
+    if (errno == ENOENT) {
+      free(adname);
+      if (showall)
+	printf("unknown %s\n", afile_filename(datafile));
+      return RET_NO_AD;
+    }
+    fprintf(stderr, "afile:%s: %s\n", adname, strerror(errno));
+    free(adname);
+    return RET_INVALID_AD;
+  }
+  free(adname);
+
+  /* Check if this is really an AppleDouble file. */
+  if (afile_is_ad(rfile)) {
+    print_type(afile_filename(datafile),
+	       afile_creator(rfile), afile_type(rfile));
+    if (afile_mode(datafile) != afile_mode(rfile))
+      fprintf(stderr, "afile:%s: mode does not match", afile_filename(datafile));
+    ret = RET_OK;
+  } else
+    ret = RET_INVALID_AD;
+
+  afile_delete(rfile);
+
+  return ret;
+}
+
+
+/* Parse a file and its resource fork. Output the file's creator/type. */
+int parse_file(char *filename)
+{
+  int ret;
+  struct AFile *afile;
+
+  afile = afile_new(filename);
+  if (!afile) {
+    fprintf(stderr, "afile:%s: %s\n", filename, strerror(errno));
+    return errno == ENOENT ? RET_NO_SUCH_FILE : RET_UNREADABLE;
+  }
+
+  if (afile_is_dir(afile)) {
+    if (showall)
+      printf("directory %s\n", filename);
+    ret = RET_IS_DIR;
+  } else if (afile_is_ad(afile))
+    ret = handle_ad(afile);
+  else
+    ret = handle_datafile(afile);
+
+  afile_delete(afile);
+
+  return ret;
+}
+
+
+int main(int argc, char *argv[])
+{
+  int ret = RET_OK;
+
+  /* argument handling */
+  if (parse_args(argc, argv) == -1)
+    return RET_BAD_ARGS;
+
+  /* iterate through all files specified as arguments */
+  while (optind < argc)
+    ret = parse_file(argv[optind++]);
+
+  return ret;
+}
