@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.46 2002-10-13 06:18:13 didg Exp $
+ * $Id: directory.c,v 1.47 2002-10-13 16:12:31 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1206,6 +1206,9 @@ int getdirparams(const struct vol *vol,
                 else
                     memset(data, 0, sizeof(u_int16_t));
                 data += sizeof( u_int16_t );
+                aint = 0;
+                memcpy(data, &aint, sizeof( aint ));
+                data += sizeof( aint );
             }
             else { /* ProDOS Info Block */
                 *data++ = 0x0f;

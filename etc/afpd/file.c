@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.65 2002-10-13 06:18:13 didg Exp $
+ * $Id: file.c,v 1.66 2002-10-13 16:12:31 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -357,6 +357,9 @@ int getmetadata(struct vol *vol,
                 utf8 = kTextEncodingUTF8;
                 nameoff = data;
                 data += sizeof( u_int16_t );
+                aint = 0;
+                memcpy(data, &aint, sizeof( aint ));
+                data += sizeof( aint );
             }
             else {
                 if ( adp ) {
