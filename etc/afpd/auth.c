@@ -150,7 +150,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #endif ADMIN_GRP
 
     /* UAM had syslog control; afpd needs to reassert itself */
-    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
+    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_LOCAL0);
 
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
 	syslog( LOG_ERR, "login: root login denied!" );
@@ -190,7 +190,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 	return AFPERR_BADUAM;
     }
 #ifdef ADMIN_GRP
-    syslog(LOG_DEBUG, "options->admingid == %d", options->admingid);
+#ifdef DEBUG
+    syslog(LOG_INFO, "options->admingid == %d", options->admingid);
+#endif DEBUG
     if (options->admingid != 0) {
 	int i;
 	for (i = 0; i < ngroups; i++) {
