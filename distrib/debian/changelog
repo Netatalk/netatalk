@@ -1,8 +1,91 @@
-netatalk (1.5pre7cvs-0) unstable; urgency=medium
+netatalk (1.5pre8cvs-0) unstable; urgency=low
 
-  * Inofficial CVS release.
+  * Unofficial CVS release.
 
- -- Sebastian Rittau <srittau@debian.org>  Thu, 30 Aug 2001 02:41:07 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Sun,  7 Oct 2001 13:07:23 +0200
+
+netatalk (1.5pre8-1) unstable; urgency=low
+
+  * New upstream version, containing most Debian patches.
+  * Added a patch to configure.in that fixes PAM detection and compilation.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sun,  7 Oct 2001 12:46:15 +0200
+
+netatalk (1.5pre7-5) unstable; urgency=low
+
+  * More patches by Jonas Smedegaard <dr@jones.dk>:
+    + 001_logcheck_fix_typo_and_optimize...
+      Logcheck fixes and improvements. (Closes: #114448)
+    + 005_visible_home_dir_in_config_(again!)
+      Name user home directories "Home Directory" by default to make them
+      appear in the MacOS chooser. (Patch had already been applied in
+      1.5pre7-2, but had been lost since.)
+    + Jonas made more patches, which I haven't applied yet, but either
+      committed upstream or sent upstream for discussion.
+      
+ -- Sebastian Rittau <srittau@debian.org>  Thu,  4 Oct 2001 22:31:50 +0200
+
+netatalk (1.5pre7-4) unstable; urgency=low
+
+  * Fixed Build-Dependencies. (pam-cracklib -> cracklib2-dev) (Closes: #113356)
+  * Restored symlinks in /usr/lib/atalk/filters and other directories.
+    (Closes: #113746)
+  * Patches by Jonas Smedegaard <dr@jones.dk>:
+    + 002_correctly_calculate_perl_depends
+    + 003_remove_cap_line_from_logcheck
+      Small logcheck change.
+    + 004_add_misc_logcheck_lines
+      Another logcheck change.
+    + 011_strip_pam_paths
+      Not applied, but patched config/netatalk.pamd to strip /lib/security
+      from its path.
+
+ -- Sebastian Rittau <srittau@debian.org>  Mon,  1 Oct 2001 08:30:17 +0200
+
+netatalk (1.5pre7-3) unstable; urgency=low
+
+  * Fixed a stupid typo I made in the new init script.
+  * Put add_netatalk_printer and netatalkshorternamelinks.pl in the
+    examples directory instead of /usr/bin. Suggestion from Jonas
+    Smedegaard.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sun, 23 Sep 2001 19:08:43 +0200
+
+netatalk (1.5pre7-2) unstable; urgency=low
+
+  * Integrated a lot of patches by Jonas Smedegaard <dr@jones.dk>:
+    + 001_etc2ps paths
+      Correct paths in etc2ps and suggest tetex-base.
+    + 005_visible_home_dir_in_config
+      Name user home directories "Home Directory" by default to make them
+      appear in the MacOS chooser.
+    + 007_logcheck
+      Support for the logcheck log file checking package.
+    + 011_avoid_symlinks_and_force_using_autoconf_2.50
+      Partly applied: Patch configure.in so that the use of autoconf 2.50
+      is forced. (Debian autoconf hack workaround.)
+    + 012_netatalk.conf
+      Improved init script. Also, make use of netatalk.conf again.
+      I patched the patch so that netatalk.conf is placed in /etc/default.
+    + 015_recommend_lsof_(for_macusers)_and_suggest_quota
+      Recommend lsof and suggest quota.
+    + 021_enable_ssl_and_cracklib_and_correct_pam_paths
+      Partly applied: Enable cracklib support.
+  * Fixed paths in add_netatalk_printer.
+  * Removed lp2pap.sh since it's of no use on Debian systems.
+  * Removed test_parse_mtab and afpd-mtab.pl because we are not using
+    the mtab DID scheme.
+  * Comparison operator is '=', not '==' in the 'test' command. Fixed
+    my patch.
+  * Removed netatalk.conf.5 as well, since we don't install netatalk.conf
+    anymore.
+  * Removed superfluous file /etc/netatalk/netatalk.pamd.
+  * Moved all *.la and *.a files to netatalk-dev. Added appropriate
+    conflicts and replaces.
+  * debian/rules: Do not copy files to package build directories instead of
+    removing them afterwards.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sun, 23 Sep 2001 14:04:06 +0200
 
 netatalk (1.5pre7-1) unstable; urgency=medium
 

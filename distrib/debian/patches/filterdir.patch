@@ -1,26 +1,27 @@
---- netatalk.cvs/etc/psf/Makefile.am	Sat May  5 18:54:03 2001
-+++ netatalk.debian/etc/psf/Makefile.am	Sat May  5 18:56:09 2001
-@@ -2,7 +2,10 @@
- 
- sbin_PROGRAMS = psf psa
+--- netatalk.cvs/etc/psf/Makefile.am
++++ netatalk.debian/etc/psf/Makefile.am
+@@ -1,8 +1,11 @@
+ # Makefile.am for etc/psf/
  
 +filterdir = $(libdir)/atalk/filters
 +
+ sbin_PROGRAMS = psf psa
+ 
  pkgdata_DATA = pagecount.ps
 +filter_SCRIPTS = etc2ps.sh
  
  psf_SOURCES = psf.c
  psa_SOURCES = psa.c
-@@ -26,9 +29,11 @@
+@@ -26,14 +29,16 @@
  # install sections for links
  #
  
 +# srittau: We do some dirty hard-coding for Debian to maintain compability.
  install-exec-local:
-+	mkdir -p $(DESTDIR)$(filterdir)
- 	@list='$(psf_LINKS)'; for l in $$list; do \
--		$(LN_S) -f psf $(DESTDIR)$(sbindir)/$$l;  \
-+		$(LN_S) -f ../../../sbin/psf $(DESTDIR)$(filterdir)/$$l;  \
- 	done
++       $(mkinstalldirs) $(DESTDIR)$(filterdir)
+        @list='$(psf_LINKS)'; for l in $$list; do \
+-               $(LN_S) -f psf $(DESTDIR)$(sbindir)/$$l;  \
++               $(LN_S) -f ../../../sbin/psf $(DESTDIR)$(filterdir)/$$l;  \
+        done
  
  #

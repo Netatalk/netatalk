@@ -1,0 +1,4 @@
+etc/default
+etc/logcheck/ignore.d.server
+etc/logcheck/ignore.d.workstation
+etc/logcheck/violations.ignore.d

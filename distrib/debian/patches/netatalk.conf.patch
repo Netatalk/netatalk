@@ -1,0 +1,18 @@
+--- netatalk.cvs/config/netatalk.conf
++++ netatalk.debian/config/netatalk.conf
+@@ -6,7 +6,7 @@
+ # NOTE: if you're zone has spaces in it, you're better off specifying
+ #       it in afpd.conf
+ #ATALK_ZONE=@zone
+-ATALK_NAME=`echo ${HOSTNAME}|cut -d. -f1`
++ATALK_NAME=`/bin/hostname --short`
+ 
+ # specify this if you don't want guest, clrtxt, and dhx
+ # available options: uams_guest.so, uams_clrtxt.so, uams_dhx.so, 
+@@ -21,6 +21,3 @@
+ PAPD_RUN=yes
+ AFPD_RUN=yes
+ TIMELORD_RUN=no
+-
+-# Control whether the daemons are started in the background
+-ATALK_BGROUND=no

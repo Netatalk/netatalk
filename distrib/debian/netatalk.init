@@ -2,29 +2,50 @@
 
 test -x /usr/sbin/atalkd || exit 0
 
-servername=$(/bin/hostname --short)
+# Set defaults. Please change these options in /etc/default/netatalk.
+AFPD_UAMLIST="-U uams_clrtxt.so,uams_randnum.so"
+AFPD_GUEST=nobody
+AFPD_MAX_CLIENTS=20
+ATALK_NAME=`/bin/hostname --short`
 
-# Enable PAP (AppleTalk Printer Access Protocol) daemon
-# (default yes)
-ENABLE_PAP=yes
+# Read in netatalk configuration.
+if [ -f /etc/default/netatalk ]; then
+  . /etc/default/netatalk
+fi
+
+OPTIONS_AFP="$AFPD_UAMLIST -g $AFPD_GUEST -c $AFPD_MAX_CLIENTS -n $ATALK_NAME"
 
 case "$1" in
     start)
-	echo -n "Starting AppleTalk Daemons (this will take a while):"
-	/usr/sbin/atalkd
-	echo -n " atalkd"
+	if [ "$ATALKD_RUN" = "yes" ]; then
+		# Quickly probe for appletalk if it was supposed to be loaded
+		if grep '^appletalk$' /etc/modules; then
+			/sbin/modprobe appletalk || echo "[could not load appletalk module]"
+		fi
 
-	/usr/bin/nbprgstr -p 4 "$servername:Workstation"
-	/usr/bin/nbprgstr -p 4 "$servername:netatalk"
+		echo -n "Starting AppleTalk Daemons (this will take a while):"
+		/usr/sbin/atalkd
+		echo -n " atalkd"
 
-	/usr/sbin/afpd -n "$servername"
-	echo -n " afpd"
-	
-	if [ "$ENABLE_PAP" = "yes" ]; then
-	    /usr/sbin/papd
-	    echo -n " papd"
+		/usr/bin/nbprgstr -p 4 "$ATALK_NAME:Workstation"
+		/usr/bin/nbprgstr -p 4 "$ATALK_NAME:netatalk"
 	fi
-	
+
+	if [ "$AFPD_RUN" = "yes" ]; then
+		/usr/sbin/afpd $OPTIONS_AFP
+		echo -n " afpd"
+	fi
+
+	if [ "$ATALKD_RUN" = "yes" -a "$PAPD_RUN" = "yes" ]; then
+		/usr/sbin/papd
+		echo -n " papd"
+	fi
+
+	if [ "$TIMELORD_RUN" = "yes" ]; then
+		/usr/sbin/timelord
+		echo -n " timelord"
+	fi
+
 	echo "."
     ;;
 
@@ -33,10 +54,11 @@ case "$1" in
 	echo -n " afpd"; \
 	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/afpd
 
-	if [ -f /var/run/papd.pid ]; then
-	    echo -n " papd"; \
-	    start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/papd
-	fi
+	echo -n " papd"; \
+	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/papd
+
+	echo -n " timelord"; \
+	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/timelord
 
 	echo -n " atalkd"; \
 	start-stop-daemon --stop --quiet --oknodo --exec /usr/sbin/atalkd
@@ -54,9 +76,8 @@ case "$1" in
 	echo -n "."
 	sleep 2
 	echo -n "."
-	if /etc/init.d/netatalk start > /dev/null 2>&1
-	then
-	    echo "done."
+	if /etc/init.d/netatalk start > /dev/null 2>&1; then
+		echo "done."
 	fi
     ;;
   
