@@ -5,8 +5,19 @@ netatalk (1.5pre7cvs-0) unstable; urgency=medium
   * Use ./configure --sysconfdir instead of --with-config-dir.
   * Upstream package does now install PAM file in the correct directory.
     Removed rule, correcting this from Debian rules file.
+  * Newer versions of config.{sub,guess} were now added to upstream
+    sources. No need to patch them.
 
- -- Sebastian Rittau <srittau@debian.org>  Sat, 23 Jun 2001 17:37:57 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 19 Jul 2001 17:58:19 +0200
+
+netatalk (1.5pre6-5) unstable; urgency=low
+
+  * Removed --without-ssl option from ./configure invocation. Not
+    that it had any effect before.
+  * Updated config.{sub,guess} (manually for now). I will switch to
+    dh_autotools if and when this is available. (Closes: #102861)
+
+ -- Sebastian Rittau <srittau@debian.org>  Fri,  6 Jul 2001 00:46:18 +0200
 
 netatalk (1.5pre6-4) unstable; urgency=low
 
