@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.41 2002-10-17 18:01:54 didg Exp $
+ * $Id: volume.c,v 1.42 2002-10-26 16:39:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -640,10 +640,6 @@ int			user;
     } else {
         memcpy(em->em_creator, creator, sizeof( em->em_creator ));
     }
-
-    if ( !*ext ) {
-        defextmap = em;
-    }
 }
 
 /* -------------------------- */
@@ -658,16 +654,17 @@ static void sortextmap( void)
 {
     struct extmap	*em;
 
+    extmap_cnt = 0;
     if ((em = extmap) == NULL) {
         return;
     }
-    extmap_cnt = 0;
     while (em->em_ext) {
         em++;
         extmap_cnt++;
     }
     if (extmap_cnt) {
         qsort(extmap, extmap_cnt, sizeof(struct extmap), extmap_cmp);
+        defextmap = extmap;
     }
 }
 
