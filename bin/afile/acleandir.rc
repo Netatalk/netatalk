@@ -1,4 +1,4 @@
-#!/usr/local/bin/rc
+#! /usr/bin/rc
 #
 # acleandir  [-rvnid] dir 
 #
