@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.34 2002-10-15 19:34:34 didg Exp $
+ * $Id: auth.c,v 1.35 2002-10-16 02:20:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -330,7 +330,7 @@ unsigned int ibuflen, *rbuflen;
     u_int16_t           type;
     u_int32_t           idlen;
 
-    u_int32_t           tklen;
+    u_int32_t           tklen; /* FIXME: u_int16_t? */
     pid_t               token;
 
     *rbuflen = 0;
@@ -490,26 +490,28 @@ int		ibuflen, *rbuflen;
 int afp_login_ext(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj  *obj;
 char	*ibuf, *rbuf;
-int	ibuflen, *rbuflen;
+unsigned int	ibuflen, *rbuflen;
 {
     struct passwd *pwd = NULL;
-    int		len, i;
+    unsigned int  len;
+    int		i;
     char        type;
-/*
-    u_int16_t   h;
-*/    
+    u_int16_t   len16;
     *rbuflen = 0;
 
     if ( nologin & 1)
         return send_reply(obj, AFPERR_SHUTDOWN );
 
-    if (ibuflen <= 2)
+    if (ibuflen <= 4)
         return send_reply(obj, AFPERR_BADVERS );
 
+    ibuf++; 
+    ibuf++;     /* pad  */
+    ibuf +=2;   /* flag */
+
+    len = (unsigned char) *ibuf;
     ibuf++;
-    ibuf++; /* flag */
-    len = (unsigned char) *ibuf++;
-    ibuflen -= 3;
+    ibuflen -= 5;
     
     i = get_version(obj, ibuf, ibuflen, len);
     if (i) 
@@ -521,7 +523,8 @@ int	ibuflen, *rbuflen;
     if (ibuflen <= 1)
         return send_reply(obj, AFPERR_BADUAM);
 
-    len = (unsigned char) *ibuf++;
+    len = (unsigned char) *ibuf;
+    ibuf++;
     ibuflen--;
 
     if (!len || len > ibuflen)
@@ -529,16 +532,70 @@ int	ibuflen, *rbuflen;
 
     if ((afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len)) == NULL)
         return send_reply(obj, AFPERR_BADUAM);
-    ibuf += len;
+    ibuf    += len;
     ibuflen -= len;
 
-    /* FIXME user name */
-    if (len <= 1) 
+    /* user name */
+    if (len <= 1 +sizeof(len16)) 
+        return send_reply(obj, AFPERR_PARAM);
+    type = *ibuf;
+    ibuf++;
+    ibuflen--;
+    if (type != 3) 
+        return send_reply(obj, AFPERR_PARAM);
+
+    memcpy(&len16, ibuf, sizeof(len16));
+    ibuf += sizeof(len16);
+    ibuflen -= sizeof(len16);
+    len = ntohs(len16);
+    if (len > ibuflen) 
+        return send_reply(obj, AFPERR_PARAM);
+    ibuf += len;
+    ibuflen -= len;    
+
+    /* directory service name */
+    if (!ibuflen)
         return send_reply(obj, AFPERR_PARAM);
     type = *ibuf;
     ibuf++;
     ibuflen--;
     
+    switch(type) {
+    case 1:
+    case 2:
+        if (!ibuflen)
+            return send_reply(obj, AFPERR_PARAM);
+        len = (unsigned char) *ibuf;
+        ibuf++;
+        ibuflen--;
+        break;
+    case 3:
+        if (ibuflen <= sizeof(len16))
+            return send_reply(obj, AFPERR_PARAM);
+    
+        memcpy(&len16, ibuf, sizeof(len16));
+        ibuf += sizeof(len16);
+        ibuflen -= sizeof(len16);
+        len = ntohs(len16);
+        break;
+    default:
+        return send_reply(obj, AFPERR_PARAM);
+    }    
+    if (len != 0) {
+        LOG(log_error, logtype_afpd, "login_ext: directory service path not null!" );
+        return send_reply(obj, AFPERR_PARAM);
+    }
+    ibuf += len;
+    ibuflen -= len;
+    
+    if (!ibuflen )
+        return send_reply(obj, AFPERR_PARAM);
+
+    /* Pad */
+    ibuf++;
+    ibuflen--;
+
+    /* FIXME user name are in unicode */    
     i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
     if (i || !pwd)
         return send_reply(obj, i);
