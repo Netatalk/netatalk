@@ -19,7 +19,7 @@ CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys -I$(top_srcdir)/etc/afpd \
 	@CFLAGS@
 
 $(MACCODES): makecode
-	./makecode
+	./makecode $@
 
 #
 # install/install-strip:

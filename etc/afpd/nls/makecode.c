@@ -1,5 +1,5 @@
 /*
- * $Id: makecode.c,v 1.6 2002-05-23 15:54:27 rufustfirefly Exp $
+ * $Id: makecode.c,v 1.7 2002-12-01 00:44:12 srittau Exp $
  *
  * quick-and-dirty way of creating code pages
  */
@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <netatalk/endian.h>
 #include "codepage.h"
@@ -142,50 +143,66 @@ int main(int argc, char **argv)
     int i, j;
     FILE *fp;
 
-    for (i = 0; names[i].m_name; i++) {
-        if ((fp = fopen(names[i].m_name, "w")) == NULL) {
-            fprintf(stderr, "can't open %s\n", names[i].m_name);
-            continue;
-        }
-
-        memset(buf, 0, CODEPAGE_FILE_HEADER_SIZE);
-
-        id = htons(CODEPAGE_FILE_ID); /* file id */
-        memcpy(buf, &id, sizeof(id));
-        *(buf + 2) = CODEPAGE_FILE_VERSION; /* version */
-        if ((j = strlen(names[i].m_id)) & 1) /* pad to even boundary */
-            j++;
-        *(buf + 3) = j; /* length of name */
-
-        *(buf + 4) = 1; /* default quantum. this should be modified to
-           * deal with multibyte characters */
-
-        /* rules */
-        *(buf + 5) = CODEPAGE_RULE_MTOU | CODEPAGE_RULE_UTOM;
-
-        /* offset to data */
-        id = htons(CODEPAGE_FILE_HEADER_SIZE + j);
-        memcpy(buf + 6, &id, sizeof(id));
-
-        /* size of data */
-        id = htons(names[i].m_len);
-        memcpy(buf + 8, &id, sizeof(id));
-
-        /* write it out */
-        fwrite(buf, CODEPAGE_FILE_HEADER_SIZE, 1, fp);
-
-        /* we either keep or drop the null byte to keep the name on an
-           even boundary */
-        fwrite(names[i].m_id, j, 1, fp);
-
-        /* we typically only map characters > 0x7F */
-        for (j = 0; j < names[i].m_len; j++) {
-            buf[0] = CODEPAGE_RULE_MTOU | CODEPAGE_RULE_UTOM;
-            buf[1] = j + 0x80;
-            buf[2] = names[i].m_map[j];
-            fwrite(buf, 3, 1, fp);
-        }
-        fclose(fp);
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s MACCODE\n", argv[0]);
+        return 1;
     }
+
+    for (i = 0; names[i].m_name; i++) {
+        if (!strcmp(names[i].m_name, argv[1]))
+            break;
+    }
+
+    if (!names[i].m_name) {
+        fprintf(stderr, "unknown codepage\n");
+        return 1;
+    }
+
+
+    if ((fp = fopen(names[i].m_name, "w")) == NULL) {
+        fprintf(stderr, "can't open %s: %s\n",
+                names[i].m_name, strerror(errno));
+        return 1;
+    }
+
+    memset(buf, 0, CODEPAGE_FILE_HEADER_SIZE);
+
+    id = htons(CODEPAGE_FILE_ID); /* file id */
+    memcpy(buf, &id, sizeof(id));
+    *(buf + 2) = CODEPAGE_FILE_VERSION; /* version */
+    if ((j = strlen(names[i].m_id)) & 1) /* pad to even boundary */
+        j++;
+    *(buf + 3) = j; /* length of name */
+
+    *(buf + 4) = 1; /* default quantum. this should be modified to
+                     * deal with multibyte characters */
+
+    /* rules */
+    *(buf + 5) = CODEPAGE_RULE_MTOU | CODEPAGE_RULE_UTOM;
+
+    /* offset to data */
+    id = htons(CODEPAGE_FILE_HEADER_SIZE + j);
+    memcpy(buf + 6, &id, sizeof(id));
+
+    /* size of data */
+    id = htons(names[i].m_len);
+    memcpy(buf + 8, &id, sizeof(id));
+
+    /* write it out */
+    fwrite(buf, CODEPAGE_FILE_HEADER_SIZE, 1, fp);
+
+    /* we either keep or drop the null byte to keep the name on an
+     * even boundary */
+    fwrite(names[i].m_id, j, 1, fp);
+
+    /* we typically only map characters > 0x7F */
+    for (j = 0; j < names[i].m_len; j++) {
+        buf[0] = CODEPAGE_RULE_MTOU | CODEPAGE_RULE_UTOM;
+        buf[1] = j + 0x80;
+        buf[2] = names[i].m_map[j];
+        fwrite(buf, 3, 1, fp);
+    }
+    fclose(fp);
+
     return 0;
 }
