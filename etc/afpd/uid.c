@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.3 2001-02-23 22:16:15 rufustfirefly Exp $
+ * $Id: uid.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -9,7 +9,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 /* don't compile this file at all unless FORCE_UIDGID is set */
 #ifdef FORCE_UIDGID
@@ -25,11 +25,15 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
+#endif /* HAVE_UNISTD_H */
 
 void save_uidgid ( pair )
 	uidgidset *pair;
 {
+	/* allocate the memory */
+	pair = malloc ( sizeof ( uidgidset ) );
+
+	/* then assign the values */
 	(pair)->uid = geteuid ();
 	(pair)->gid = getegid ();
 } /* end function void save_uidgid ( pair ) */
@@ -71,6 +75,9 @@ int user_to_uid ( username )
 {
 	struct passwd *this_passwd;
 
+	/* free memory for pointer */
+	this_passwd = malloc ( sizeof ( struct passwd ) );
+
 	/* check for anything */
 	if ( strlen ( username ) < 1 ) return 0;
 
@@ -90,6 +97,9 @@ int group_to_gid ( group )
 {
 	struct group *this_group;
 
+	/* free memory for pointer */
+	this_group = malloc ( sizeof ( struct group ) );
+
 	/* check for anything */
 	if ( strlen ( group ) < 1 ) return 0;
 
@@ -104,4 +114,4 @@ int group_to_gid ( group )
 
 } /* end function int group_to_gid ( group ) */
 
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */

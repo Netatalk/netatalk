@@ -1,11 +1,13 @@
 /*
+ * $Id: status.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,8 +19,8 @@
 #include <sys/param.h>
 #ifndef USE_GETHOSTID
 #include <sys/sysctl.h>
-#endif
-#endif
+#endif /* USE_GETHOSTID */
+#endif /* BSD4_4 */
 
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
@@ -95,9 +97,9 @@ static void status_machine(char *data)
     int			len;
 #ifdef AFS
     const char		*machine = "afs";
-#else !AFS
+#else /* !AFS */
     const char		*machine = "unix";
-#endif
+#endif /* AFS */
 
     memcpy(&status, start + AFPSTATUS_MACHOFF, sizeof(status));
     data += ntohs( status );
@@ -122,7 +124,7 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
 #ifdef BSD4_4
   int                  mib[2];
   size_t               len;
-#endif
+#endif /* BSD4_4 */
 
   status = data;
 
@@ -139,9 +141,9 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
   mib[1] = KERN_HOSTID;
   len = sizeof(hostid);
   sysctl(mib, 2, &hostid, &len, NULL, 0);
-#else
+#else /* BSD4_4 && USE_GETHOSTID */
   hostid = gethostid();
-#endif
+#endif /* BSD4_4 && USE_GETHOSTID */
   if (!hostid) {
     if (dsi)
       hostid = dsi->server.sin_addr.s_addr;
@@ -242,7 +244,7 @@ static int status_netaddress(char *data, const int servoffset,
       memcpy(data, &ddpaddr->sat_port, sizeof(ddpaddr->sat_port));
       data += sizeof(ddpaddr->sat_port);
     }
-#endif
+#endif /* ! NO_DDP */
 
     /* return length of buffer */
     return (data - begin);
@@ -342,7 +344,7 @@ const void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     aspconfig->signature = status + sigoff;
     aspconfig->statuslen = c;
   }
-#endif
+#endif /* ! NO_DDP */
 
   if (dsiconfig) {
     if (aspconfig) { /* copy to dsiconfig */

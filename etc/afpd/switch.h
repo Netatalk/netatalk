@@ -1,4 +1,6 @@
 /*
+ * $Id: switch.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -26,4 +28,5 @@
 
 extern int	(**afp_switch)();
 extern int	(*postauth_switch[])();
+
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.4 2001-05-31 18:48:32 srittau Exp $
+ * $Id: volume.h,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -52,18 +52,18 @@ struct vol {
 #if AD_VERSION > AD_VERSION1
     void                *v_db;
     char                *v_dbpath;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 #ifdef FORCE_UIDGID
 	char				*v_forceuid;
 	char				*v_forcegid;
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 };
 
 #ifdef NO_LARGE_VOL_SUPPORT
 typedef u_int32_t VolSpace;
-#else
+#else /* NO_LARGE_VOL_SUPPORT */
 typedef u_int64_t VolSpace;
-#endif
+#endif /* NO_LARGE_VOL_SUPPORT */
 
 #define AFPVOL_OPEN	(1<<0)
 #define AFPVOL_DT	(1<<1)
@@ -150,4 +150,5 @@ extern int	afp_getvolparams __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_setvolparams __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_getsrvrparms __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_closevol     __P((AFPObj *, char *, int, char *, int *));
+
 #endif

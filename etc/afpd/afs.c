@@ -1,11 +1,12 @@
 /*
+ * $Id: afs.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifdef AFS
 
@@ -17,7 +18,9 @@
 #include <afs/venus.h>
 #include <afs/afsint.h>
 #include <atalk/afp.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include "globals.h"
 #include "directory.h"
@@ -318,5 +321,5 @@ afp_afschangepw(obj, ibuf, ibuflen, rbuf, rbuflen )
     return( AFP_OK );
 }
 
-#endif UAM_AFSKRB
-#endif AFS
+#endif /* UAM_AFSKRB */
+#endif /* AFS */

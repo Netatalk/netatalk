@@ -1,4 +1,6 @@
 /*
+ * $Id: auth.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -6,8 +8,14 @@
 #ifndef AFPD_AUTH_H
 #define AFPD_AUTH_H 1
 
+#ifdef HAVE_LIMITS_H
 #include <limits.h>
+#endif /* HAVE_LIMITS_H */
+
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#endif /* HAVE_SYS_CDEFS_H */
+
 #include "globals.h"
 
 struct afp_versions {
@@ -37,4 +45,5 @@ extern int	afp_logincont __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_changepw __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_logout __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_getuserinfo __P((AFPObj *, char *, int, char *, int *));
+
 #endif /* auth.h */

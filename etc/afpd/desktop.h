@@ -1,4 +1,6 @@
 /*
+ * $Id: desktop.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -64,4 +66,5 @@ extern int      afp_closedt __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_addicon __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_geticoninfo __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_geticon __P((AFPObj *, char *, int, char *, int *));
+
 #endif

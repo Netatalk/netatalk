@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.7 2001-05-31 18:48:32 srittau Exp $
+ * $Id: volume.c,v 1.8 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,7 +7,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/time.h>
 #include <sys/syslog.h>
@@ -25,7 +25,9 @@
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <dirent.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -43,24 +45,24 @@
 
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
+#endif /* ! MIN */
 
 #ifndef NO_LARGE_VOL_SUPPORT
 #if BYTE_ORDER == BIG_ENDIAN
 #define hton64(x)       (x)
 #define ntoh64(x)       (x)
-#else
+#else /* BYTE_ORDER == BIG_ENDIAN */
 #define hton64(x)       ((u_int64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
                          (u_int64_t) ((htonl(x) & 0xffffffffLL) << 32))
 #define ntoh64(x)       (hton64(x))
-#endif
-#endif
+#endif /* BYTE_ORDER == BIG_ENDIAN */
+#endif /* ! NO_LARGE_VOL_SUPPORT */
 
 static struct vol *volumes = NULL;
 static int		lastvid = 0;
 #if AD_VERSION == AD_VERSION1
 static char		*Trash = "\02\024Network Trash Folder";
-#endif
+#endif /* AD_VERSION == AD_VERSION1 */
 static struct extmap	*extmap = NULL, *defextmap = NULL;
 
 #define VOLOPT_ALLOW      0  /* user allow list */
@@ -349,7 +351,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
       free(options[VOLOPT_DBPATH].c_value);
     
     options[VOLOPT_DBPATH].c_value = strdup(val + 1);
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
   } else if (optionok(tmp, "mapchars:",val)) {
     if (options[VOLOPT_MAPCHARS].c_value)
       free(options[VOLOPT_MAPCHARS].c_value);
@@ -372,7 +374,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
       free(options[VOLOPT_FORCEGID].c_value);
     options[VOLOPT_FORCEGID].c_value = strdup(val + 1);
 
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
   } else if (val) {
     /* ignore unknown options */
@@ -435,7 +437,7 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 
 #ifdef __svr4__
     volume->v_qfd = -1;
-#endif
+#endif /* __svr4__ */
     volume->v_vid = lastvid++;
     volume->v_lastdid = 3;
 
@@ -457,7 +459,7 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 #if AD_VERSION > AD_VERSION1
       if (options[VOLOPT_DBPATH].c_value)
 	volume->v_dbpath = strdup(options[VOLOPT_DBPATH].c_value);
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef FORCE_UIDGID
 
@@ -473,7 +475,7 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 	volume->v_forcegid = NULL; /* set as null so as to return 0 later on */
 	  }
 
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     }
 
@@ -787,7 +789,7 @@ static int getvolspace( vol, bfree, btotal, xbfree, xbtotal, bsize )
     u_int32_t   maxsize;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace	qfree, qtotal;
-#endif
+#endif /* ! NO_QUOTA_SUPPORT */
 
     spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
@@ -802,7 +804,7 @@ static int getvolspace( vol, bfree, btotal, xbfree, xbtotal, bsize )
 	    goto getvolspace_done;
 	}
     }
-#endif AFS
+#endif /* AFS */
 
     if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal,
 				    bsize)) != AFP_OK ) {
@@ -819,7 +821,7 @@ static int getvolspace( vol, bfree, btotal, xbfree, xbtotal, bsize )
 	    goto getvolspace_done;
 	}
     }
-#endif
+#endif /* ! NO_QUOTA_SUPPORT */
     vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_USTATFS;
 
 getvolspace_done:
@@ -889,9 +891,9 @@ static int getvolparams( bitmap, vol, st, buf, buflen )
 	case VOLPBIT_ATTR :
 #if AD_VERSION > AD_VERSION1
 	    ashort = VOLPBIT_ATTR_FILEID;
-#else
+#else /* AD_VERSION > AD_VERSION1 */
 	    ashort = 0;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 	    /* check for read-only.
 	     * NOTE: we don't actually set the read-only flag unless
 	     *       it's passed in that way as it's possible to mount
@@ -957,9 +959,9 @@ static int getvolparams( bitmap, vol, st, buf, buflen )
 	    xbfree = hton64( xbfree );
 #if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
 	    bcopy(&xbfree, data, sizeof(xbfree));
-#else
+#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
 	    memcpy(data, &xbfree, sizeof( xbfree ));
-#endif
+#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
 	    data += sizeof( xbfree );
 	    break;
 
@@ -967,12 +969,12 @@ static int getvolparams( bitmap, vol, st, buf, buflen )
 	    xbtotal = hton64( xbtotal );
 #if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
 	    bcopy(&xbtotal, data, sizeof(xbtotal));
-#else
+#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
 	    memcpy(data, &xbtotal, sizeof( xbtotal ));
-#endif
+#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
 	    data += sizeof( xbfree );
 	    break;
-#endif
+#endif /* ! NO_LARGE_VOL_SUPPORT */
 
 	case VOLPBIT_NAME :
 	    nameoff = data;
@@ -1077,7 +1079,7 @@ int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
     char	*volname;
 #if AD_VERSION == AD_VERSION1
     char *p;
-#endif
+#endif /* AD_VERSION == AD_VERSION1 */
     struct vol	*volume;
     struct dir	*dir;
     int		len, ret, buflen;
@@ -1163,7 +1165,7 @@ int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
      */
     p = Trash;
     cname( volume, volume->v_dir, &p );
-#endif
+#endif /* AD_VERSION == AD_VERSION1 */
 
     return( AFP_OK );
 
@@ -1205,7 +1207,7 @@ int afp_closevol(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1
     cnid_close(vol->v_db);
     vol->v_db = NULL;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
     return( AFP_OK );
 }
 

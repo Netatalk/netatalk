@@ -1,4 +1,6 @@
 /*
+ * $Id: passwd.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <itc.h>
 #include <stdio.h>

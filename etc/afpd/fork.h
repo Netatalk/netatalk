@@ -1,4 +1,6 @@
 /*
+ * $Id: fork.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -69,4 +71,5 @@ extern int	afp_write __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_flushfork __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_flush __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_closefork __P((AFPObj *, char *, int, char *, int *));
+
 #endif

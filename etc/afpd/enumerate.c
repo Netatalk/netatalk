@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.4 2001-06-06 13:36:36 rufustfirefly Exp $
+ * $Id: enumerate.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,7 +7,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +48,7 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
     struct dir	*cdir, *edir;
 #if AD_VERSION > AD_VERSION1
     struct adouble ad;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #ifndef USE_LASTDID
     struct stat lst, *lstp;

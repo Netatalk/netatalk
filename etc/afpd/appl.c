@@ -1,18 +1,24 @@
 /*
+ * $Id: appl.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -418,7 +424,7 @@ int afp_getappl(obj, ibuf, ibuflen, rbuf, rbuflen )
 	    len--;
 	}
     }
-#endif APPLCNAME
+#endif /* APPLCNAME */
 
     /* fake up a cname */
     cbuf = obj->newtmp;
@@ -452,5 +458,4 @@ int afp_getappl(obj, ibuf, ibuflen, rbuf, rbuflen )
     rbuf += sizeof( appltag );
     return( AFP_OK );
 }
-
 

@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.8 2001-06-20 14:51:13 rufustfirefly Exp $
+ * $Id: quota.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,8 +15,12 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/param.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <syslog.h>
 
 #include <atalk/afp.h>

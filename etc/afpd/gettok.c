@@ -1,11 +1,13 @@
 /*
+ * $Id: gettok.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
 #include <string.h>
@@ -163,4 +165,4 @@ void parseline( token, user )
     }
     return;
 }
-#endif notdef
+#endif /* notdef */

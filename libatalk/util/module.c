@@ -1,5 +1,5 @@
 /*
- * $Id: module.c,v 1.3 2001-06-20 14:51:13 rufustfirefly Exp $
+ * $Id: module.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -49,9 +49,9 @@ void mod_close(void *module)
 
 #else /* HAVE_DLFCN_H */
 
-#ifdef DLSYM_PREPEND_UNDERSCORE
 #include <dlfcn.h>
 
+#ifdef DLSYM_PREPEND_UNDERSCORE
 void *mod_symbol(void *module, const char *name)
 {
    void *symbol;

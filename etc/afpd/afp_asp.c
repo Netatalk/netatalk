@@ -1,4 +1,6 @@
 /* 
+ * $Id: afp_asp.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -8,7 +10,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifndef NO_DDP
 
@@ -17,8 +19,12 @@
 #include <string.h>
 #include <signal.h>
 #include <syslog.h>
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif /* HAVE_SYS_TIME_H */
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
 
 #include <netatalk/endian.h>
 #include <atalk/atp.h>
@@ -238,7 +244,7 @@ void afp_over_asp(AFPObj *obj)
       if ( obj->options.flags & OPTION_DEBUG ) {
 #ifdef notdef
 	pdesc( stdout );
-#endif notdef
+#endif /* notdef */
 	of_pforkdesc( stdout );
 	fflush( stdout );
       }

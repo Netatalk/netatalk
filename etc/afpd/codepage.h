@@ -1,3 +1,7 @@
+/*
+ * $Id: codepage.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ */
+
 #ifndef AFPD_CODEPAGE_H
 #define AFPD_CODEPAGE_H 1
 
@@ -44,4 +48,5 @@
 #define CODEPAGE_BADCHAR_SET      (1 << 0) 
 #define CODEPAGE_BADCHAR_ANYWHERE (1 << 1)  
 #define CODEPAGE_BADCHAR_QUANTUM  (1 << 2) 
+
 #endif

@@ -1,15 +1,19 @@
 /*
+ * $Id: auth.c,v 1.15 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -23,7 +27,7 @@
 
 #ifdef SHADOWPW
 #include <shadow.h>
-#endif
+#endif /* SHADOWPW */
 
 #include <pwd.h>
 #include <grp.h>
@@ -190,10 +194,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
 #ifdef RUN_AS_USER
       syslog(LOG_INFO, "running with uid %d", geteuid());
-#else
+#else /* RUN_AS_USER */
       syslog(LOG_ERR, "login: %m");
       return AFPERR_BADUAM;
-#endif
+#endif /* RUN_AS_USER */
 
     }
 
@@ -206,7 +210,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #ifdef ADMIN_GRP
 #ifdef DEBUG
     syslog(LOG_INFO, "obj->options.admingid == %d", obj->options.admingid);
-#endif DEBUG
+#endif /* DEBUG */
     if (obj->options.admingid != 0) {
 	int i;
 	for (i = 0; i < ngroups; i++) {
@@ -215,7 +219,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     }
     if (admin) syslog( LOG_INFO, "admin login -- %s", pwd->pw_name );
     if (!admin)
-#endif
+#endif /* DEBUG */
 	if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
 	    syslog( LOG_ERR, "login: %m" );
 	    return AFPERR_BADUAM;
@@ -227,7 +231,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #ifdef ADMIN_GRP
     if (admin) uuid = 0;
     else
-#endif ADMIN_GRP
+#endif /* ADMIN_GRP */
     uuid = pwd->pw_uid;
 
     afp_switch = postauth_switch;

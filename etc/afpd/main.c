@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.8 2001-06-07 17:18:26 rufustfirefly Exp $
+ * $Id: main.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,13 +7,17 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <signal.h>
 
 #include <sys/types.h>
@@ -71,7 +75,7 @@ static void afp_goaway(int sig)
 {
 #ifndef NO_DDP
     asp_kill(sig);
-#endif
+#endif /* ! NO_DDP */
     dsi_kill(sig);
     switch( sig ) {
     case SIGTERM :

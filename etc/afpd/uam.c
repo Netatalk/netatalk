@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.8 2001-05-31 18:48:32 srittau Exp $
+ * $Id: uam.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,21 +7,28 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <ctype.h>
 #include <syslog.h>
 #include <sys/param.h>
 #include <sys/time.h>
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif /* HAVE_DLFCN_H */
 
 #ifdef SHADOWPW
 #include <shadow.h>
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
 #include <netatalk/endian.h>
 #include <atalk/asp.h>
@@ -201,7 +208,7 @@ struct passwd *uam_getname(char *name, const int len)
     }
   }
   endpwent();
-#endif
+#endif /* ! NO_REAL_USER_NAME */
 
   /* os x server doesn't keep anything useful if we do getpwent */
   return pwent ? getpwnam(name) : NULL;

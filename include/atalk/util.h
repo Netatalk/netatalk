@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.2 2001-06-20 14:51:13 rufustfirefly Exp $
+ * $Id: util.h,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -7,7 +7,9 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <netatalk/at.h>
 
 extern unsigned const char _diacasemap[], _dialowermap[];
@@ -33,6 +35,7 @@ extern void mod_close    __P((void *));
 #define mod_error()      ""
 #else /* ! HAVE_DLFCN_H */
 #include <dlfcn.h>
+
 #ifndef RTLD_NOW
 #define RTLD_NOW 1
 #endif /* ! RTLD_NOW */

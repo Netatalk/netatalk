@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.9 2001-06-06 19:04:25 rufustfirefly Exp $
+ * $Id: filedir.c,v 1.10 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -21,10 +21,14 @@
 #include <atalk/cnid.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <dirent.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include "directory.h"
 #include "desktop.h"
@@ -290,7 +294,7 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
     u_int16_t		vid;
 #if AD_VERSION > AD_VERSION1
     cnid_t              id;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_rename:");
@@ -373,7 +377,7 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #if AD_VERSION > AD_VERSION1
     id = cnid_get(vol->v_db, curdir->d_did, upath, strlen(upath));
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
     if ( rename( upath, newpath ) < 0 ) {
 	switch ( errno ) {
@@ -390,7 +394,7 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
     if (stat(newpath, &st) < 0) /* this shouldn't fail */
       return AFPERR_MISC;
     cnid_update(vol->v_db, id, &st, curdir->d_did, newpath, strlen(newpath));
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
     if ( !odir ) {
         newadpath = obj->newtmp;
@@ -499,7 +503,7 @@ int afp_delete(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1 /* get rid of entry */
         cnid_t id = cnid_get(vol->v_db, curdir->d_did, upath, strlen(upath));
 	cnid_delete(vol->v_db, id);
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
     }
     if ( rc == AFP_OK ) {
 	setvoltime(obj, vol );
@@ -559,7 +563,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     u_int16_t	vid;
 #if AD_VERSION > AD_VERSION1
     cnid_t      id;
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 #ifdef DROPKLUDGE
     int		retvalue;
 #endif /* DROPKLUDGE */
@@ -605,7 +609,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1
 	p = mtoupath(vol, path);
 	id = cnid_get(vol->v_db, sdir->d_did, p, strlen(p));
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 	p = ctoupath( vol, sdir, newname );
     } else {
 	odir = curdir;
@@ -614,7 +618,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 	p = ctoupath( vol, odir->d_parent, newname );
 #if AD_VERSION > AD_VERSION1
 	id = curdir->d_did; /* we already have the CNID */
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
     }
     /*
      * p now points to the full pathname of the source fs object.
@@ -694,7 +698,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 	
 	/* fix up the catalog entry */
 	cnid_update(vol->v_db, id, &st, curdir->d_did, upath, strlen(upath));
-#endif      
+#endif /* AD_VERSION > AD_VERSION1 */
 	setvoltime(obj, vol );
     }
 

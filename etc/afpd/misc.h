@@ -1,3 +1,7 @@
+/* 
+ * $Id: misc.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ */
+
 #ifndef AFPD_MISC_H
 #define AFPD_MISC_H 1
 
@@ -9,18 +13,18 @@
 extern int	afp_getsrvrmesg __P((AFPObj *, char *, int, char *, int *));
 
 /* afs.c */
-# ifdef AFS
+#ifdef AFS
 extern int	afp_getdiracl __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_setdiracl __P((AFPObj *, char *, int, char *, int *));
-# else AFS
+#else /* AFS */
 #define afp_getdiracl	NULL
 #define afp_setdiracl	NULL
-# endif AFS
+#endif /* AFS */
 
-# if defined( AFS ) && defined( UAM_AFSKRB )
+#if defined( AFS ) && defined( UAM_AFSKRB )
 extern int	afp_afschangepw __P((AFPObj *, char *, int, char *, int *));
-# else AFS UAM_AFSKRB
+#else /* AFS && UAM_AFSKRB */
 #define afp_afschangepw	NULL
-# endif AFS UAM_AFSKRB
+#endif /* AFS && UAM_AFSKRB */
 
 #endif

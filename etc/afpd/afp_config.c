@@ -1,16 +1,20 @@
 /* 
+ * $Id: afp_config.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <ctype.h>
 #include <syslog.h>
 
@@ -277,7 +281,7 @@ static AFPConfig *AFPConfigInit(const struct afp_options *options,
   if ((options->transports & AFPTRANS_DDP) && 
       (config = ASPConfigInit(options, refcount)))
     config->defoptions = defoptions;
-#endif
+#endif /* NO_DDP */
 
   /* handle dsi transports and dsi proxies. we only proxy
    * for DSI connections. */

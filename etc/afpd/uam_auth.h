@@ -1,4 +1,7 @@
-/* Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
+/*
+ * $Id: uam_auth.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
+ * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  *
  * interface between uam.c and auth.c
@@ -48,7 +51,6 @@ struct uam_obj {
     (a)->uam_prev->uam_next = (a)->uam_next; \
     (a)->uam_next->uam_prev = (a)->uam_prev; \
 } while (0)
-
 
 extern struct uam_mod *uam_load __P((const char *, const char *));
 extern void uam_unload __P((struct uam_mod *));

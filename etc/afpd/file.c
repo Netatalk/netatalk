@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.21 2001-06-19 18:04:39 rufustfirefly Exp $
+ * $Id: file.c,v 1.22 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,10 +11,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <string.h>
 #include <utime.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <dirent.h>
 #include <sys/mman.h>
 #include <errno.h>
@@ -558,6 +562,8 @@ int setfilparams(vol, path, bitmap, buf )
 
 #ifdef FORCE_UIDGID
 	uidgidset		*uidgid;
+
+	uidgid = malloc(sizeof(uidgidset));
 #endif /* FORCE_UIDGID */
 
 #ifdef DEBUG

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.4 2001-06-04 19:06:15 rufustfirefly Exp $
+ * $Id: fork.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,11 +7,15 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <dirent.h>
 #include <string.h>
 #include <errno.h>
@@ -182,15 +186,15 @@ static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
 	    if (!(aint = cnid_add(ofork->of_vol->v_db, &st, 
 				  ofork->of_dir->d_did, 
 				  upath, strlen(upath), aint))) {
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 #ifdef AFS
 	      aint = st.st_ino;
-#else AFS
+#else /* AFS */
 	      aint = ( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff );
-#endif AFS
+#endif /* AFS */
 #if AD_VERSION > AD_VERSION1
 	    }
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 	    memcpy(data, &aint, sizeof( aint ));
 	    data += sizeof( aint );
 	    break;
@@ -525,7 +529,7 @@ int afp_setforkparams(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ( flushfork( ofork ) < 0 ) {
 	syslog( LOG_ERR, "afp_setforkparams: flushfork: %m" );
     }
-#endif AFS
+#endif /* AFS */
 
     return( AFP_OK );
 
@@ -847,7 +851,7 @@ int afp_read(obj, ibuf, ibuflen, rbuf, rbuflen)
       }
 
 afp_read_loop:
-#endif
+#endif /* HAVE_SENDFILE_READ */
 
       /* fill up our buffer. */
       while (*rbuflen > 0) {
@@ -1120,7 +1124,7 @@ int afp_write(obj, ibuf, ibuflen, rbuf, rbuflen)
 
 #ifdef AFS
     writtenfork = ofork;
-#endif AFS
+#endif /* AFS */
 
     if ( ofork->of_flags & AFPFORK_DATA) {
 	eid = ADEID_DFORK;
@@ -1226,7 +1230,7 @@ int afp_write(obj, ibuf, ibuflen, rbuf, rbuflen)
 	  offset += cc;
 	  goto afp_write_done;
 	}
-#endif
+#endif /* 0, was HAVE_SENDFILE_WRITE */
 
 	/* loop until everything gets written. currently
          * dsi_write handles the end case by itself. */
@@ -1258,9 +1262,9 @@ afp_write_done:
     offset = htonl( offset );
 #if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
     bcopy(&offset, rbuf, sizeof(offset));
-#else
+#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
     memcpy(rbuf, &offset, sizeof(offset));
-#endif
+#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
     *rbuflen = sizeof(offset);
     return( AFP_OK );
 

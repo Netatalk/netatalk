@@ -1,5 +1,5 @@
 /*
- * $Id: codepage.c,v 1.4 2001-05-31 18:48:32 srittau Exp $
+ * $Id: codepage.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 2000 Adrian Sun
  * All Rights Reserved. See COPYRIGHT.
@@ -22,15 +22,19 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <syslog.h>
 
 #include <netatalk/endian.h>
@@ -66,7 +70,7 @@ static int add_code(struct codepage *page, unsigned char *from,
 {
 #if 0
   union codepage_val *ptr;
-#endif
+#endif /* 0 */
 
   if (page->quantum < 1) /* no quantum given. don't do anything */
     return 1;
@@ -90,7 +94,7 @@ static int add_code(struct codepage *page, unsigned char *from,
     
     map[*from].hash
   }
-#endif
+#endif /* 0 */
   return 0;
 }
 

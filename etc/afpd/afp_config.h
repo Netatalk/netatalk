@@ -1,7 +1,14 @@
+/*
+ * $Id: afp_config.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ */
+
 #ifndef AFPD_CONFIG_H
 #define AFPD_CONFIG_H 1
 
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#endif /* HAVE_SYS_CDEFS_H */
+
 #include <atalk/server_child.h>
 #include <atalk/atp.h>
 #include "globals.h"
@@ -20,4 +27,5 @@ typedef struct AFPConfig {
 
 extern AFPConfig *configinit __P((struct afp_options *));
 extern void configfree __P((AFPConfig *, const AFPConfig *));
+
 #endif

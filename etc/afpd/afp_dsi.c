@@ -1,4 +1,6 @@
 /* 
+ * $Id: afp_dsi.c,v 1.8 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -8,16 +10,20 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/socket.h>
 #include <sys/time.h>
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <syslog.h>
@@ -111,7 +117,7 @@ static void afp_dsi_getmesg (int sig)
       readmessage();
       dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5));
 }
-#endif
+#endif /* SERVERTEXT */
 
 static void alarm_handler()
 {
@@ -172,7 +178,7 @@ void afp_over_dsi(AFPObj *obj)
     syslog( LOG_ERR, "afp_over_dsi: sigaction: %m" );
     afp_dsi_die(1);
   }
-#endif
+#endif /* SERVERTEXT */
 
   /* tickle handler */
   action.sa_handler = alarm_handler;
@@ -214,7 +220,7 @@ void afp_over_dsi(AFPObj *obj)
 	}
 	writtenfork = NULL;
       }
-#endif AFS
+#endif /* AFS */
 
       function = (u_char) dsi->commands[0];
       if (obj->options.flags & OPTION_DEBUG ) {
@@ -301,7 +307,7 @@ void afp_over_dsi(AFPObj *obj)
     if ( obj->options.flags & OPTION_DEBUG ) {
 #ifdef notdef
       pdesc( stdout );
-#endif notdef
+#endif /* notdef */
       of_pforkdesc( stdout );
       fflush( stdout );
     }

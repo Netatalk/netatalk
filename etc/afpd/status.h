@@ -1,3 +1,7 @@
+/*
+ * $Id: status.h,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ */
+
 #ifndef AFPD_STATUS_H
 #define AFPD_STATUS_H 1
 

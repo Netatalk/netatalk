@@ -1,4 +1,6 @@
 /*
+ * $Id: file.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -89,10 +91,10 @@ extern int	afp_createfile __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_createid __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_resolveid __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_deleteid __P((AFPObj *, char *, int, char *, int *));
-#else
+#else /* AD_VERSION > AD_VERSION1 */
 #define afp_createid      afp_null
 #define afp_resolveid     afp_null
 #define afp_deleteid      afp_null
-#endif
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #endif

@@ -1,4 +1,6 @@
 /* 
+ * $Id: afp_options.c,v 1.7 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -8,20 +10,24 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <syslog.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 
 #include <atalk/paths.h>
 #include <atalk/util.h>
@@ -34,11 +40,11 @@
 #ifdef ADMIN_GRP
 #include <grp.h>
 #include <sys/types.h>
-#endif
+#endif /* ADMIN_GRP */
 
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
-#endif
+#endif /* MIN */
 
 #define OPTIONS "dn:f:s:uc:g:P:ptDS:TL:F:U:I"
 #define LENGTH 512
@@ -123,7 +129,7 @@ void afp_options_init(struct afp_options *options)
   options->authprintdir = NULL;
 #ifdef ADMIN_GRP
   options->admingid = 0;
-#endif ADMIN_GRP
+#endif /* ADMIN_GRP */
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -215,7 +221,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
       options->admingid = gr->gr_gid;
     }
   } 
-#endif
+#endif /* ADMIN_GRP */
 
   if ((c = getoption(buf, "-authprintdir")) && (opt = strdup(c)))
     options->authprintdir = opt;
@@ -349,9 +355,9 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 
 #ifdef ultrix
     openlog( p, LOG_PID );
-#else ultrix
+#else /* ultrix */
     openlog( p, LOG_NDELAY|LOG_PID, LOG_DAEMON);
-#endif ultrix
+#endif /* ultrix */
 
     return 1;
 }

@@ -1,11 +1,12 @@
 /*
- * $Id: desktop.c,v 1.4 2001-05-31 18:48:32 srittau Exp $
+ * $Id: desktop.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/syslog.h>
 #include <errno.h>
@@ -24,11 +25,15 @@
 #include <atalk/adouble.h>
 #include <atalk/util.h>
 #include <dirent.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef HAVE_FCNTL_H
 #include <unistd.h>
+#endif /* HAVE_FCNTL_H */
 
 #include "volume.h"
 #include "directory.h"
@@ -513,16 +518,16 @@ int afp_geticon(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef SENDFILE_FLAVOR_LINUX
 	  if (sendfile(dsi->socket, si.sdt_fd, &offset, dsi->datasize) < 0)
 	    goto geticon_exit;
-#endif
+#endif /* SENDFILE_FLAVOR_LINUX */
 	  
 #ifdef SENDFILE_FLAVOR_BSD
 	  if (sendfile(si.sdt_fd, dsi->socket, offset, rc, NULL, NULL, 0) < 0)
 	    goto geticon_exit;
-#endif
+#endif /* SENDFILE_FLAVOR_BSD */
 	  
 	  goto geticon_done;
 	}
-#endif
+#endif /* SENDFILE_FLAVOR_LINUX || SENDFILE_FLAVOR_BSD */
 
 	buflen = read(si.sdt_fd, rbuf, *rbuflen);
 	if (buflen < 0) 
@@ -622,18 +627,18 @@ char *mtoupath(const struct vol *vol, char *mpath)
 				vol->v_flags & AFPVOL_MAPASCII)) {
 	    *u = vol->v_mtoupage->map[*m].value;
 	} else
-#endif
+#endif /* 1 */
 #if AD_VERSION == AD_VERSION1
 	  if ((((vol->v_flags & AFPVOL_NOHEX) == 0) && 
 		   (!isascii(*m) || *m == '/')) || 
 		   (((vol->v_flags & AFPVOL_USEDOTS) == 0) &&
 		    ( i == 0 && (*m == '.' )))) {
-#else
+#else /* AD_VERSION == AD_VERSION1 */
           if ((((vol->v_flags & AFPVOL_NOHEX) == 0) && 
 		   (!isprint(*m) || *m == '/')) || 
 		   (((vol->v_flags & AFPVOL_USEDOTS) == 0) &&
 		    ( i == 0 && (*m == '.' )))) {
-#endif
+#endif /* AD_VERSION == AD_VERSION1 */
 	    /* do hex conversion. */ 
 	    *u++ = ':';
 	    *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
@@ -668,7 +673,7 @@ char *utompath(const struct vol *vol, char *upath)
 				(vol->v_flags & AFPVOL_MAPASCII))) {
 	    *m = vol->v_utompage->map[*u].value;
 	} else 
-#endif
+#endif /* 1 */
 	  if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
 		  *(u+2) != '\0' && islxdigit( *(u+2))) {
 	    ++u;

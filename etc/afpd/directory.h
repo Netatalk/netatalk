@@ -1,4 +1,6 @@
 /*
+ * $Id: directory.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -77,7 +79,7 @@ struct dir {
 /* setgid directories */
 #ifndef DIRBITS
 #define DIRBITS S_ISGID
-#endif
+#endif /* DIRBITS */
 
 #define DIRF_FSMASK	(3<<0)
 #define DIRF_NOFS	(0<<0)
@@ -124,9 +126,9 @@ struct dir {
 				       & 0x00ffffff)
 #define CNID_FILE(a)  (((a) & 0x1) << 31)
 #define CNID(a,b)     (CNID_DEV(a) | CNID_INODE(a) | CNID_FILE(b))
-#else
+#else /* AFS */
 #define CNID(a,b)     (((a)->st_ino & 0x7fffffff) | CNID_FILE(b))
-#endif
+#endif /* AFS */
 
 
 struct maccess {

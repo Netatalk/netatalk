@@ -1,4 +1,6 @@
 /*
+ * $Id: icon.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -265,4 +267,5 @@ const u_char	icon[] = {	/* globe */
 #endif /*sun*/
 #endif /*vax*/
 #endif /*ultrix*/
+
 #endif

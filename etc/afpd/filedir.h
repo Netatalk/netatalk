@@ -1,3 +1,7 @@
+/*
+ * $Id: filedir.h,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ */
+
 #ifndef AFPD_FILEDIR_H
 #define AFPD_FILEDIR_H 1
 
@@ -18,4 +22,5 @@ extern int	afp_getfildirparams __P((AFPObj *, char *, int, char *,
 					 int *));
 extern int	afp_setfildirparams __P((AFPObj *, char *, int, char *, 
 					 int *));
+
 #endif

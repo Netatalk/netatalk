@@ -1,4 +1,6 @@
 /*
+ * $Id: globals.h,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -12,9 +14,12 @@
 #ifdef ADMIN_GRP
 #include <grp.h>
 #include <sys/types.h>
-#endif
+#endif /* ADMIN_GRP */
 
+#ifdef HAVE_NETDB_H
 #include <netdb.h>  /* this isn't header-protected under ultrix */
+#endif /* HAVE_NETDB_H */
+
 #include <netatalk/at.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
@@ -25,7 +30,6 @@
 #endif
 
 #define MACFILELEN 31
-
 
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_USERVOLFIRST  (1 << 1)
@@ -48,7 +52,7 @@ struct afp_options {
   char *authprintdir;
 #ifdef ADMIN_GRP
   gid_t admingid;
-#endif ADMIN_GRP
+#endif /* ADMIN_GRP */
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
@@ -87,7 +91,7 @@ extern int  parseline  __P((int, char *));
 
 #ifndef NO_DDP
 extern void afp_over_asp __P((AFPObj *));
-#endif
+#endif /* NO_DDP */
 extern void afp_over_dsi __P((AFPObj *));
 
 #endif /* globals.h */

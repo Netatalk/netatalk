@@ -1,4 +1,7 @@
-/* parts of this are lifted from the bsd quota program and are
+/*
+ * $Id: nfsquota.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
+ * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:
  *
  * Copyright (c) 1980, 1990, 1993
@@ -13,7 +16,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <string.h>
@@ -23,7 +26,9 @@
 #include <sys/time.h>  /* <rpc/rpc.h> on ultrix doesn't include this */
 #include <syslog.h>
 
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 #include <netinet/in.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_prot.h>
@@ -79,10 +84,10 @@ callaurpc(vol, prognum, versnum, procnum, inproc, in, outproc, out)
 #ifdef USE_OLD_RQUOTA
 #define GQR_STATUS gqr_status
 #define GQR_RQUOTA gqr_rquota
-#else
+#else /* USE_OLD_RQUOTA */
 #define GQR_STATUS status
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
-#endif
+#endif /* USE_OLD_RQUOTA */
 
 int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
 		struct dqblk *dqp)
@@ -132,11 +137,11 @@ make sure that rpc.rquotad is running on %s.", vol->v_gvs);
 #ifdef __svr4__
     /* why doesn't using bsize work? */
 #define NFS_BSIZE (gq_rslt.GQR_RQUOTA.rq_bsize / DEV_BSIZE)
-#else
+#else /* __svr4__ */
     /* NOTE: linux' rquotad program doesn't currently report the
      * correct rq_bsize. */
 #define NFS_BSIZE (gq_rslt.GQR_RQUOTA.rq_bsize / bsize)
-#endif
+#endif /* __svr4__ */
 
     dqp->dqb_bhardlimit =
       gq_rslt.GQR_RQUOTA.rq_bhardlimit*NFS_BSIZE;
@@ -147,10 +152,10 @@ make sure that rpc.rquotad is running on %s.", vol->v_gvs);
 
 #ifdef ultrix
     dqp->dqb_bwarn = gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#else
+#else /* ultrix */
     dqp->dqb_btimelimit =
       tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
-#endif
+#endif /* ultrix */
 
     *hostpath = ':';
     return AFP_OK;
@@ -164,4 +169,4 @@ make sure that rpc.rquotad is running on %s.", vol->v_gvs);
   *hostpath = ':';
   return AFPERR_PARAM;
 }
-#endif
+#endif /* ! NO_QUOTA_SUPPORT */

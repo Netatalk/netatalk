@@ -1,17 +1,21 @@
 /* 
+ * $Id: messages.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
+ *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <string.h>
 #include <atalk/afp.h>
 #include <syslog.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include "globals.h"
 #include "misc.h"
 
@@ -42,7 +46,7 @@ void readmessage(void)
 
 #ifdef DEBUG
   syslog (LOG_DEBUG, "Reading file %s ", filename);
-#endif
+#endif /* DEBUG */
   
   message=fopen(filename, "r");
   if (message==NULL) {
@@ -86,10 +90,10 @@ void readmessage(void)
     }
 
     syslog (LOG_INFO, "Set server message to \"%s\"", servermesg);
-#endif
+#endif /* DEBUG */
   }
   free(filename);
-#endif
+#endif /* SERVERTEXT */
 }
 
 int afp_getsrvrmesg(obj, ibuf, ibuflen, rbuf, rbuflen)

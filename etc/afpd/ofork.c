@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.3 2001-03-21 14:36:36 rufustfirefly Exp $
+ * $Id: ofork.c,v 1.4 2001-06-20 18:33:04 rufustfirefly Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -7,7 +7,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>

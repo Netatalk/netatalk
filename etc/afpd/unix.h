@@ -1,11 +1,13 @@
 /*
- * $Id: unix.h,v 1.6 2001-05-22 19:13:36 rufustfirefly Exp $
+ * $Id: unix.h,v 1.7 2001-06-20 18:33:04 rufustfirefly Exp $
  */
 
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#endif /* HAVE_SYS_CDEFS_H */
 #include <netatalk/endian.h>
 #include "volume.h"
 
@@ -14,16 +16,6 @@
 typedef int	mode_t;
 #endif /*i386*/
 #endif /*sun __svr4__*/
-
-
-/* some GLIBC/old-libc-isms */
-#if defined(__GNU_LIBRARY__) 
-#if __GNU_LIBRARY__ < 6
-#define HAVE_SYS_VFS_H
-#else
-#define HAVE_STATFS_H
-#endif
-#endif
 
 #if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 ) 
 #include <sys/vfs.h>
