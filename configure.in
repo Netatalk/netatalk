@@ -43,8 +43,6 @@ dnl Replace `main' with a function in -ld:
 AC_CHECK_LIB(d, main)
 dnl Replace `main' with a function in -ldb:
 AC_CHECK_LIB(db, main)
-dnl Replace `main' with a function in -ldes:
-AC_CHECK_LIB(des, main)
 dnl Replace `main' with a function in -ldl:
 AC_CHECK_LIB(dl, main)
 dnl Replace `main' with a function in -lkauth:
@@ -78,7 +76,7 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
+AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h termios.h netdb.h)
 AC_CHECK_HEADER(sys/cdefs.h,,
 	AC_MSG_RESULT([enabling generic cdefs.h from tree])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
@@ -123,7 +121,8 @@ AC_FUNC_MMAP
 AC_TYPE_SIGNAL
 AC_FUNC_UTIME_NULL
 AC_FUNC_WAIT3
-AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strstr strtoul)
+AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strstr strtoul setpgrp)
+AC_FUNC_SETPGRP
 
 dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
@@ -370,6 +369,7 @@ if test x"$this_os" = "xsolaris"; then
 	AC_DEFINE(_ISOC9X_SOURCE)
 	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
 	AC_DEFINE(SOLARIS)
+	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
 fi
 
@@ -391,10 +391,13 @@ for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local
 		if test "$need_dash_r" = "yes"; then
 			LIBS="$LIBS -R$ssldir/lib -R$ssldir"
 		fi
-		dnl Replace `main' with a function in -lcrypto:
-		AC_CHECK_LIB(crypto, main)
 
+		dnl Check for the crypto library:
+		AC_CHECK_LIB(crypto, main)
 		LIBS="$LIBS -lcrypto"
+		dnl Check for "DES" library (for SSLeay, not openssl):
+		AC_CHECK_LIB(des, main)
+
  		AC_DEFINE(OPENSSL_DHX,	1)
 		AC_DEFINE(UAM_DHX,	1)
 		AC_DEFINE(UAM_RNDNUM,	1)
