@@ -1,6 +1,6 @@
 # Makefile.am for top level of netatalk package
 
-SUBDIRS = libatalk bin config etc man contrib distrib include sys
+SUBDIRS = libatalk bin config etc man contrib distrib include sys doc
 
-EXTRA_DIST = BUGS CHANGES CONTRIBUTORS COPYRIGHT ChangeLog FAQ \
+EXTRA_DIST = BUGS CHANGES CONTRIBUTORS COPYRIGHT ChangeLog \
 	TODO VERSION services.atalk
