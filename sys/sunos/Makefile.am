@@ -1,1 +1,1 @@
-EXTRA_DIST = at_sun.c
+EXTRA_DIST = Makefile.kernel at_sun.c

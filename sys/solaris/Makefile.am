@@ -1,4 +1,5 @@
 EXTRA_DIST = \
+	Makefile.kernel	\
 	aarp.c		\
 	ddp.c		\
 	ddp.conf	\
