@@ -3,27 +3,13 @@ This is the Linux README file for netatalk.
 We no longer include linux kernel code with netatalk, since Linux now
 includes AppleTalk support.
 
-1.  UIO.H.  On older versions of Linux, you may need to make a link from
-    /usr/include/sys/uio.h to ../linux/uio.h.  In particular, this file
-    changed from linux 1.2.x to 1.3.x, so if, for instance, you've
-    installed Slackware 3.0.0, and upgraded your kernel to 1.3.x,
-    you'll need to fix this.
-
-2.  MAKE CONFIG.  Configure your kernel with "make config".  Answer yes
+1.  MAKE CONFIG.  Configure your kernel with "make config".  Answer yes
     to "AppleTalk DDP" support.
 
-3.  INSTALL KERNEL.  Make and install your kernel.  Be sure to update
+2.  INSTALL KERNEL.  Make and install your kernel.  Be sure to update
     your boot blocks!
 
-4.  If you are using libc.so.5, you will need to comment out the
-    -lcrypt and the -lrpcsvc in sys/linux/Makefile. If you're using PAM, 
-    make sure you declare -DUSE_PAM and have -lpam -ldl.  
- 
-5.  Quota support should work under linux now. If you're using glibc
-    2.x or libc > 5.4.34, you can comment out the
-    -DNEED_QUOTACTL_WRAPPER in sys/linux/Makefile.
-
-6.  Linux 2.2.x provides the sendfile() call. This reduces overhead
+3.  Linux 2.2.x provides the sendfile() call. This reduces overhead
     when sending/copying files. This option will be autoconfigured on
     compile. NOTE: you might run into problems if you have this option
     compiled in and you switch to a machine running an os < 2.2.x.
@@ -32,6 +18,7 @@ includes AppleTalk support.
 Netatalk supplies two different types of Appletalk servers and both
 can run at the same time. Classic Appletalk requires afpd and
 atalkd. Appletalk over IP only requires afpd.
+
 Classic Appletalk on GNU/Linux requires that CONFIG_ATALK is compiled
 into the kernel or as a kernel module. To check to see if the kernel
 has Appletalk installed:
