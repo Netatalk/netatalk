@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.84 2001-06-11 17:31:46 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.85 2001-06-11 20:36:10 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -157,7 +157,7 @@ AC_ARG_ENABLE(afs,
 AC_ARG_WITH(config-dir,
 	[  --with-config-dir=path  path to config files [default=$ac_prefix_default/etc]],
 		sysconfdir="$withval",
-		sysconfdir="${prefix}/etc"
+		sysconfdir="${prefix}/etc/netatalk"
 )
 
 AC_ARG_WITH(cracklib,
@@ -337,7 +337,7 @@ AC_ARG_ENABLE(timelord,
 AC_ARG_WITH(uams-path,
 	[  --with-uams-path=path   path to UAMs [default=$ac_prefix_default/etc/uams]],
 	uams_path="$withval",
-	uams_path="${config_dir}/uams"
+	uams_path="${sysconfdir}/uams"
 )
 
 dnl --------------------------------------------------------------------------
