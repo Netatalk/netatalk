@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.14 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: quota.c,v 1.15 2002-01-13 07:22:02 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -231,14 +231,20 @@ struct dqblk        *dq;
 #endif /* TRU64 */
 
 #ifdef BSD4_4
-    if ( quotactl( vol->v_gvs, QCMD(Q_GETQUOTA,USRQUOTA),
-                   uid, (char *)dq ) != 0 ) {
-        return( AFPERR_PARAM );
+    if ( seteuid( getuid() ) == 0 ) {
+        if ( quotactl( vol->v_path, QCMD(Q_GETQUOTA,USRQUOTA),
+                       uid, (char *)dq ) != 0 ) {
+            /* try group quotas */
+            if (ngroups >= 1) {
+                if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
+                              groups[0], (char *) &dqg) != 0 ) {
+                    seteuid( uid );
+                    return( AFPERR_PARAM );
+                }
+            }
+        }
+        seteuid( uid );
     }
-
-    if (ngroups == 1)
-        quotactl(vol->v_gvs, QCMD(Q_GETQUOTA, GRPQUOTA),
-                 groups[0], (char *) &dqg);
 
 #elif defined(TRU64)
     if ( seteuid( getuid() ) == 0 ) {
@@ -256,7 +262,7 @@ struct dqblk        *dq;
         return( AFPERR_PARAM );
     }
 
-    if (ngroups == 1)
+    if (ngroups >= 1)
         quotactl(QCMD(Q_GETQUOTA, GRPQUOTA), vol->v_gvs,
                  groups[0], (char *) &dqg);
 #endif  /* BSD4_4 */
