@@ -1,5 +1,11 @@
 #!@PERL@
 
+#
+# cnid_maint: A script to maintain the consistency of CNID databases.
+#
+# $Id: cnid_maint.in,v 1.3 2002-02-07 16:10:29 jmarcus Exp $
+#
+
 use strict;
 use Getopt::Std;
 use vars qw(
@@ -26,7 +32,6 @@ $START_CMD = '/usr/local/etc/rc.d/netatalk.sh start';
 # Below is the example of a BSD ps.  A SYSV example is:
 # /bin/ps -eflouid,pid,ppid,comm
 $PS_CMD             = '@PS@ -axouser,pid,ppid,command';
-$GREP               = '@GREP@';
 $DB_STAT            = '@DB3_PATH@bin/db_stat';
 $DB_RECOVER         = '@DB3_PATH@bin/db_recover';
 $DB_VERIFY          = '@DB3_PATH@bin/db_verify';
@@ -34,6 +39,7 @@ $APPLE_VOLUMES_FILE = '@PKGCONFDIR@/AppleVolumes.default';
 ## End edit section
 
 $VERSION = '1.0';
+$GREP           = '@GREP@';
 $START_NETATALK = 0;
 $LOCK_FILE      = '/tmp/cnid_maint.LOCK';
 $HOLDING_LOCK   = 0;
@@ -78,7 +84,7 @@ if ( -f $LOCK_FILE ) {
 
 unless ( open( LOCK, ">" . $LOCK_FILE ) ) {
     error( 2, "Unable to create $LOCK_FILE: $!" );
-}  
+}
 flock( LOCK, LOCK_EX );
 $HOLDING_LOCK = 1;
 
