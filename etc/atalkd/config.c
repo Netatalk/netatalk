@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.12 2002-09-29 23:24:47 sibaz Exp $
+ * $Id: config.c,v 1.13 2003-03-18 23:32:17 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -81,6 +81,7 @@ static struct param {
 };
 
 #define ARGV_CHUNK_SIZE 128
+#define MAXLINELEN 2048
 char **parseline(const char *line)
 {
     const char	 *p;
@@ -136,7 +137,7 @@ char **parseline(const char *line)
 	/* Make room for a NULL pointer and our special pointer (s.b.) */
 	if ( (argc + 1) % ARGV_CHUNK_SIZE == 0 ) {
 	    char **tmp;
-	    tmp = (char **) realloc( argv, argc + 1 + ARGV_CHUNK_SIZE );
+	    tmp = (char **) realloc( argv, argc + 1 + ARGV_CHUNK_SIZE * sizeof( char * ) );
 	    if ( !tmp ) {
 		/* FIXME: error handling */
 		free( argv );
@@ -178,7 +179,7 @@ int writeconf( cf )
     char	*cf;
 {
     struct stat		st;
-    char		*path, *p, newpath[ MAXPATHLEN ], line[ 1024 ];
+    char		*path, *p, newpath[ MAXPATHLEN ], line[ MAXLINELEN ];
     char		**argv;
     FILE		*conf, *newconf;
     struct interface	*iface;
@@ -304,7 +305,7 @@ int readconf( cf )
 {
     struct ifreq	ifr;
     struct interface	*iface, *niface;
-    char		line[ 1024 ], **argv, *p;
+    char		line[ MAXLINELEN ], **argv, *p;
     int			i, j, s, cc;
     FILE		*conf;
 
