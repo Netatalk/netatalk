@@ -73,12 +73,18 @@ static int PAM_conv (int num_msg,
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
   
   if (num_msg < 1)
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM DHX Conversation Err -- %m");
+    /* Log Entry */
     return PAM_CONV_ERR;
 
   reply = (struct pam_response *) 
     calloc(num_msg, sizeof(struct pam_response));
 
   if (!reply)
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM DHX Conversation Err -- %m");
+    /* Log Entry */
     return PAM_CONV_ERR;
 
   for (count = 0; count < num_msg; count++) {
@@ -87,10 +93,16 @@ static int PAM_conv (int num_msg,
     switch (msg[count]->msg_style) {
     case PAM_PROMPT_ECHO_ON:
       if (!(string = COPY_STRING(PAM_username)))
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: username failure -- %m");
+    /* Log Entry */
 	goto pam_fail_conv;
       break;
     case PAM_PROMPT_ECHO_OFF:
       if (!(string = COPY_STRING(PAM_password)))
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: passwd failure: --: %m");
+    /* Log Entry */
 	goto pam_fail_conv;
       break;
     case PAM_TEXT_INFO:
@@ -101,6 +113,9 @@ static int PAM_conv (int num_msg,
       break;
     case PAM_ERROR_MSG:
     default:
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Binary_Prompt -- %m");
+    /* Log Entry */
       goto pam_fail_conv;
     }
 
@@ -126,7 +141,10 @@ pam_fail_conv:
     }
   }
   free(reply);
-  return PAM_CONV_ERR;
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM DHX Conversation Err -- %m");
+    /* Log Entry */
+    return PAM_CONV_ERR;
 }
 
 static struct pam_conv PAM_conversation = {
@@ -532,3 +550,4 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx = {
 };
 
 #endif /* USE_PAM && UAM_DHX */
+ 
