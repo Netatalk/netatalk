@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.14 2002-09-29 18:44:16 didg Exp $
+ * $Id: volume.h,v 1.15 2002-10-09 18:46:32 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -120,6 +120,9 @@ int wincheck(const struct vol *vol, const char *path);
 #define VOLPBIT_ATTR_FILEID       (1 << 2)
 #define VOLPBIT_ATTR_CATSEARCH    (1 << 3)
 #define VOLPBIT_ATTR_BLANKACCESS  (1 << 4)
+#define VOLPBIT_ATTR_UNIXPRIV     (1 << 5)
+#define VOLPBIT_ATTR_UTF8         (1 << 6)
+#define VOLPBIT_ATTR_NONETUID     (1 << 7)
 
 #define VOLPBIT_ATTR	0
 #define VOLPBIT_SIG	1

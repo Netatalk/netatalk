@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.10 2002-09-29 18:44:16 didg Exp $
+ * $Id: file.h,v 1.11 2002-10-09 18:46:31 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -38,18 +38,20 @@
 
 extern const u_char	ufinderi[];
 
-#define FILPBIT_ATTR	0
-#define FILPBIT_PDID	1
-#define FILPBIT_CDATE	2
-#define FILPBIT_MDATE	3
-#define FILPBIT_BDATE	4
-#define FILPBIT_FINFO	5
-#define FILPBIT_LNAME	6
-#define FILPBIT_SNAME	7
-#define FILPBIT_FNUM	8
-#define FILPBIT_DFLEN	9
-#define FILPBIT_RFLEN	10
-#define FILPBIT_PDINFO  13    /* ProDOS Info */
+#define FILPBIT_ATTR	 0
+#define FILPBIT_PDID	 1
+#define FILPBIT_CDATE	 2
+#define FILPBIT_MDATE	 3
+#define FILPBIT_BDATE	 4
+#define FILPBIT_FINFO	 5
+#define FILPBIT_LNAME	 6
+#define FILPBIT_SNAME	 7
+#define FILPBIT_FNUM	 8
+#define FILPBIT_DFLEN	 9
+#define FILPBIT_RFLEN	 10
+#define FILPBIT_EXTDFLEN 11
+#define FILPBIT_PDINFO   13    /* ProDOS Info */
+#define FILPBIT_EXTRFLEN 14
 
 /* attribute bits. (d) = directory attribute bit as well. */
 #define ATTRBIT_INVISIBLE (1<<0)  /* invisible (d) */

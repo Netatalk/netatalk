@@ -50,6 +50,12 @@ typedef u_int16_t AFPUserBytes;
 #define AFPSRVRINFO_SRVSIGNATURE (1<<4)  /* supports server signature */
 #define AFPSRVRINFO_TCPIP        (1<<5)  /* supports tcpip */
 #define AFPSRVRINFO_SRVNOTIFY    (1<<6)  /* supports server notifications */ 
+
+#define AFPSRVRINFO_SRVRECONNECT (1<<7)  /* supports server reconnect */ 
+#define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */ 
+
+#define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */ 
+
 #define AFPSRVRINFO_FASTBOZO	 (1<<15) /* fast copying */
 
 #define AFP_OK		0
