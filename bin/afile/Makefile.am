@@ -1,5 +1,7 @@
 # Makefile.am for bin/afile/
 
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
+
 bin_PROGRAMS = afile achfile
 bin_SCRIPTS = acleandir.rc
 

@@ -1,5 +1,7 @@
 # Makefile.am for bin/megatron/
 
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
+
 bin_PROGRAMS = megatron
 
 megatron_SOURCES = asingle.c hqx.c macbin.c megatron.c nad.c updcrc.c

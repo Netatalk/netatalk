@@ -1,5 +1,7 @@
 # Makefile.am for bin/pap/
 
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
+
 bin_PROGRAMS = pap papstatus
 
 pap_SOURCES = pap.c
