@@ -35,11 +35,9 @@ desired features (in no particular order):
     papd:
 	DHX authenticated printing logins (does a real Appleshare server
 		do this?)
-	Better binary transparency.  Papd barfs on some binary postscript
-		files right now.
 	Change to samba-style config file.	 
 
-	autoconf/automake system:
+    autoconf/automake system:
 	Need to separate out the flags and libraries for different
 		applications, so that we aren't having them all linked with
 		every library, etc.
