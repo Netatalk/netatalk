@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.c,v 1.8 2002-02-16 17:12:53 srittau Exp $
+ * $Id: megatron.c,v 1.9 2002-04-29 01:52:49 morgana Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -214,7 +214,7 @@ int megatron( path, module, newname, flags )
  */
 
     memset( &fh, 0, sizeof( fh ));
-    if ( from_open( module, path, &fh ) < 0 ) {
+    if ( from_open( module, path, &fh, flags ) < 0 ) {
 	return( -1 );
     }
 
@@ -341,7 +341,14 @@ int main( argc, argv )
 	  flags |= OPTION_STDOUT;
 	  continue;
 	}
-	  
+	if (strcmp(argv[c], "--euc") == 0) {
+	  flags |= OPTION_EUCJP;
+	  continue;
+	}  
+	if (strcmp(argv[c], "--sjis") == 0) {
+	  flags |= OPTION_SJIS;
+	  continue;
+	}  
 	rc = megatron( argv[ c ], module, newname, flags);
 	if ( rc != 0 ) {
 	    rv = rc;

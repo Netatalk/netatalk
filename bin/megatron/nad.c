@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.10 2002-02-16 17:12:53 srittau Exp $
+ * $Id: nad.c,v 1.11 2002-04-29 01:52:50 morgana Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,16 +27,17 @@
 
 static char		hexdig[] = "0123456789abcdef";
 
-char *mtoupath( mpath )
+static char mtou_buf[MAXPATHLEN + 1], utom_buf[MAXPATHLEN + 1];
+static char *mtoupathcap( mpath )
     char	*mpath;
 {
-    static char	upath[ MAXNAMLEN  + 1];
-    char	*m, *u;
+    char	*m, *u, *umax;
     int		i = 0;
 
     m = mpath;
-    u = upath;
-    while ( *m != '\0' ) {
+    u = mtou_buf;
+    umax = u + sizeof(mtou_buf) - 4;
+    while ( *m != '\0' && u < umax) {
 #if AD_VERSION == AD_VERSION1
 	if ( !isascii( *m ) || *m == '/' || ( i == 0 && *m == '.' )) {
 #else /* AD_VERSION == AD_VERSION1 */
@@ -56,21 +57,20 @@ char *mtoupath( mpath )
 	m++;
     }
     *u = '\0';
-    return( upath );
+    return( mtou_buf );
 }
 
 
 #define hextoint( c )	( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 #define islxdigit(x)	(!isupper(x)&&isxdigit(x))
 
-char *utompath( upath )
+static char *utompathcap( upath )
     char	*upath;
 {
-    static char	mpath[ MAXNAMLEN  + 1];
     char	*m, *u;
     int h;
 
-    m = mpath;
+    m = utom_buf;
     u = upath;
     while ( *u != '\0' ) {
         if (*u == ':' && *(u + 1) != '\0' && islxdigit(*(u+1)) &&
@@ -91,8 +91,243 @@ char *utompath( upath )
 	m++;
     }
     *m = '\0';
-    return( mpath );
+    return( utom_buf );
 }
+
+static void euc2sjis( int *p1, int *p2) /* agrees w/ Samba on valid codes */
+{
+    int row_offset, cell_offset;
+    unsigned char c1, c2;
+
+    /* first convert EUC to ISO-2022 */
+    c1 = *p1 & 0x7F;
+    c2 = *p2 & 0x7F;
+
+    /* now convert ISO-2022 to Shift-JIS */
+    row_offset = c1 < 95 ? 112 : 176;
+    cell_offset = c1 % 2 ? (c2 > 95 ? 32 : 31) : 126;
+
+    *p1 = ((c1 + 1) >> 1) + row_offset;
+    *p2 = c2 + cell_offset;
+}
+
+static void sjis2euc( int *p1, int *p2)  /* agrees w/ Samba on valid codes */
+{
+    int row_offset, cell_offset, adjust;
+    unsigned char c1, c2;
+
+    c1 = *p1;
+    c2 = *p2;
+
+    /* first convert Shift-JIS to ISO-2022 */
+    adjust = c2 < 159;
+    row_offset = c1 < 160 ? 112 : 176;
+    cell_offset = adjust ? (c2 > 127 ? 32 : 31) : 126;
+
+    c1 = ((c1 - row_offset) << 1) - adjust;
+    c2 -= cell_offset;
+
+    /* now convert ISO-2022 to EUC */
+    *p1 = c1 | 0x80;
+    *p2 = c2 | 0x80;
+}
+
+static char *mtoupatheuc( char *from)
+{
+    unsigned char *in, *out, *maxout;
+    int p, p2, i = 0;
+
+    in = (unsigned char *) from;
+    out = (unsigned char *) mtou_buf;
+
+    if( *in ) {
+        maxout = out + sizeof( mtou_buf) - 3;
+
+        while( out < maxout ) {
+            p = *in++;
+
+            if( ((0x81 <= p) && (p <= 0x9F))
+             || ((0xE0 <= p) && (p <= 0xEF)) ) {
+                /* JIS X 0208 */
+                p2 = *in++;
+                if( ((0x40 <= p2) && (p2 <= 0x7E))
+                 || ((0x80 <= p2) && (p2 <= 0xFC)) )
+                    sjis2euc( &p, &p2);
+                *out++ = p;
+                p = p2;
+
+            } else if( (0xA1 <= p) && (p <= 0xDF) ) {
+                *out++ = 0x8E;	/* halfwidth katakana */
+            } else if( p < 0x80 ) {
+#ifdef DOWNCASE
+                p = ( isupper( p )) ? tolower( p ) : p;
+#endif /* DOWNCASE */
+            }
+            if( ( p == '/') || ( i == 0 && p == '.' ) ) {
+                *out++ = ':';
+                *out++ = hexdig[ ( p & 0xf0 ) >> 4 ];
+                p = hexdig[ p & 0x0f ];
+            }
+            i++;
+            *out++ = p;
+            if( p )
+                continue;
+            break;
+        }
+    } else {
+        *out++ = '.';
+        *out = 0;
+    }
+
+    return mtou_buf;
+}
+
+static char *utompatheuc( char *from)
+{
+    unsigned char *in, *out, *maxout;
+    int p, p2;
+
+    in = (unsigned char *) from;
+    out = (unsigned char *) utom_buf;
+    maxout = out + sizeof( utom_buf) - 3;
+
+    while( out < maxout ) {
+        p = *in++;
+
+        if( (0xA1 <= p) && (p <= 0xFE) ) {	/* JIS X 0208 */
+            p2 = *in++;
+            if( (0xA1 <= p2) && (p2 <= 0xFE) )
+                euc2sjis( &p, &p2);
+            *out++ = p;
+            p = p2;
+        } else if( p == 0x8E ) {		/* halfwidth katakana */
+            p = *in++;
+        } else if( p < 0x80 ) {
+#ifdef DOWNCASE
+            p = ( isupper( p )) ? tolower( p ) : p;
+#endif /* DOWNCASE */
+        }
+        if ( p == ':' && *(in) != '\0' && islxdigit( *(in)) &&
+                *(in+1) != '\0' && islxdigit( *(in+1))) {
+           p = hextoint( *in ) << 4;
+           in++;
+           p |= hextoint( *in );
+           in++;
+	}
+        *out++ = p;
+        if( p )
+            continue;
+        break;
+    }
+
+    return utom_buf;
+}
+
+static char *mtoupathsjis( char *from)
+{
+    unsigned char *in, *out, *maxout;
+    int p, p2, i = 0;
+
+    in = (unsigned char *) from;
+    out = (unsigned char *) mtou_buf;
+
+    if( *in ) {
+        maxout = out + sizeof( mtou_buf) - 3;
+
+        while( out < maxout ) {
+            p = *in++;
+
+            if( ((0x81 <= p) && (p <= 0x9F))
+             || ((0xE0 <= p) && (p <= 0xEF)) ) {
+                /* JIS X 0208 */
+                p2 = *in++;
+                *out++ = p;
+                p = p2;
+
+            } else if( (0xA1 <= p) && (p <= 0xDF) ) {
+                ;	/* halfwidth katakana */
+            } else if(p < 0x80 ) {
+#ifdef DOWNCASE
+                p = ( isupper( p )) ? tolower( p ) : p;
+#endif /* DOWNCASE */
+	    }
+            if( ( p == '/') || ( i == 0 && p == '.' ) ) {
+                *out++ = ':';
+                *out++ = hexdig[ ( p & 0xf0 ) >> 4 ];
+                p = hexdig[ p & 0x0f ];
+            }
+            i++;
+            *out++ = p;
+            if( p )
+                continue;
+            break;
+        }
+    } else {
+        *out++ = '.';
+        *out = 0;
+    }
+
+    return mtou_buf;
+}
+
+static char *utompathsjis( char *from)
+{
+    unsigned char *in, *out, *maxout;
+    int p, p2;
+
+    in = (unsigned char *) from;
+    out = (unsigned char *) utom_buf;
+    maxout = out + sizeof( utom_buf) - 3;
+
+    while( out < maxout ) {
+        p = *in++;
+
+        if( (0xA1 <= p) && (p <= 0xFE) ) {	/* JIS X 0208 */
+            p2 = *in++;
+            *out++ = p;
+            p = p2;
+        } else if( p == 0x8E ) {		/* do nothing */
+            ;
+        } else if( p < 0x80 ) {
+#ifdef DOWNCASE
+           p = ( isupper( p )) ? tolower( p ) : p;
+#endif /* DOWNCASE */
+        }
+        if ( p == ':' && *(in) != '\0' && islxdigit( *(in)) &&
+                *(in+1) != '\0' && islxdigit( *(in+1))) {
+           p = hextoint( *in ) << 4;
+           in++;
+           p |= hextoint( *in );
+           in++;
+	}
+        *out++ = p;
+        if( p )
+            continue;
+        break;
+    }
+
+    return utom_buf;
+ }
+ 
+char * (*_mtoupath) ( char *mpath) = mtoupathcap;
+char * (*_utompath) ( char *upath) = utompathcap;
+
+/* choose translators for optional character set */
+void select_charset( int options)
+{
+
+    if( options & OPTION_EUCJP ) {
+        _mtoupath = mtoupatheuc;
+        _utompath = utompatheuc;
+    } else if( options & OPTION_SJIS ) {
+        _mtoupath = mtoupathsjis;
+        _utompath = utompathsjis;
+    } else {
+        _mtoupath = mtoupathcap;
+        _utompath = utompathcap;
+    }
+}
+
 
 #if HEXOUTPUT
     int			hexfork[ NUMFORKS ];
@@ -118,6 +353,7 @@ int nad_open( path, openflags, fh, options )
  * is for write, then stat the current directory to get its mode.
  * Open the file.  Either fill or grab the adouble information.
  */
+    select_charset( options);
     memset(&nad.ad, 0, sizeof(nad.ad));
     if ( openflags == O_RDONLY ) {
 	strcpy( nad.adpath[0], path );

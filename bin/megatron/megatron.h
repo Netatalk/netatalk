@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: megatron.h,v 1.3 2002-04-29 01:52:50 morgana Exp $
  */
 
 #ifndef _MEGATRON_H
@@ -37,6 +37,8 @@
 #define OPTION_NONE       (0)
 #define OPTION_HEADERONLY (1 << 0)
 #define OPTION_STDOUT     (1 << 2)
+#define OPTION_EUCJP      (1 << 3)
+#define OPTION_SJIS       (1 << 4)
 
 struct FInfo {
     u_int32_t		fdType;
@@ -90,6 +92,9 @@ struct FHeader {
 #	define S_ISDIR(s)	(( s & S_IFMT ) == S_IFDIR )
 #endif /* ! S_ISDIR */
 
-extern char *mtoupath( char *);
+extern char     *(*_mtoupath) __P(( char *));
+extern char     *(*_utompath) __P(( char *));
+#define mtoupath(s) (*_mtoupath)(s)
+#define utompath(s) (*_utompath)(s)
 
 #endif /* _MEGATRON_H */

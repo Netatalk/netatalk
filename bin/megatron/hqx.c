@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.11 2002-02-19 16:32:17 srittau Exp $
+ * $Id: hqx.c,v 1.12 2002-04-29 01:52:49 morgana Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -110,6 +110,7 @@ int hqx_open( hqxfile, flags, fh, options )
 #if DEBUG
     fprintf( stderr, "megatron: entering hqx_open\n" );
 #endif /* DEBUG */
+    select_charset( options);
     if ( flags == O_RDONLY ) {
 
 #if HEXOUTPUT
