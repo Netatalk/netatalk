@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.22 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_dhx_pam.c,v 1.23 2003-01-01 13:19:24 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -23,7 +23,9 @@
 
 #include <security/pam_appl.h>
 
-#ifdef OPENSSL_DHX
+#if defined(GNUTLS_DHX)
+#include <gnutls/openssl.h>
+#elif defined(OPENSSL_DHX)
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
@@ -146,8 +148,7 @@ static int PAM_conv (int num_msg,
 
   *resp = reply;
     /* Log Entry */
-           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Success -- %s",
-		  strerror(errno));
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Success");
     /* Log Entry */
   return PAM_SUCCESS;
 
