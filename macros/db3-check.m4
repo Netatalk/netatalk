@@ -1,4 +1,4 @@
-dnl $Id: db3-check.m4,v 1.2 2001-11-14 16:03:28 srittau Exp $
+dnl $Id: db3-check.m4,v 1.3 2001-11-14 22:36:35 jmarcus Exp $
 dnl Autoconf macro to check for the Berkeley DB3 library
 
 AC_DEFUN([AC_PATH_DB3], [
@@ -11,7 +11,7 @@ AC_DEFUN([AC_PATH_DB3], [
 	)
 
 	db3found=no
-	for db3dir in "" "$trydb3dir" "$trydb3dir/include" "/usr/include" "/usr/local/BerkeleyDB.3.3/include" "/usr/include/db3" "/usr/local/include/db3" ; do
+	for db3dir in "" "$trydb3dir" "$trydb3dir/include" "$trydb3dir/include/db3" "/usr/include" "/usr/local/BerkeleyDB.3.3/include" "/usr/include/db3" "/usr/local/include" "/usr/local/include/db3" ; do
 		if test -f "$db3dir/db.h" ; then
 			db3libdir="`echo $db3dir | sed 's/include\/db3$/lib/'`"
 			db3libdir="`echo $db3libdir | sed 's/include$/lib/'`"
@@ -20,10 +20,10 @@ AC_DEFUN([AC_PATH_DB3], [
 			savedldflags="$LDFLAGS"
 			CFLAGS="$CFLAGS -I$db3dir"
 			LDFLAGS="$LDFLAGS -L$db3libdir"
-			AC_CHECK_LIB(db, main, [
+			AC_CHECK_LIB(db3, main, [
 				db3found=yes
 				DB3_CFLAGS="-I$db3dir"
-				DB3_LIBS="-L$db3libdir -ldb"
+				DB3_LIBS="-L$db3libdir -ldb3"
 			])
 			CFLAGS="$savedcflags"
 			LDFLAGS="$savedldflags"
