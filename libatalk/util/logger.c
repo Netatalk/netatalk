@@ -37,9 +37,12 @@
 #include <stdio.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <time.h>
 
 #include <atalk/boolean.h>
@@ -457,7 +460,6 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype, char *messag
   char log_buffer[MAXLOGSIZE];
 #ifndef DISABLE_LOGGER
   char log_details_buffer[MAXLOGSIZE];
-  bool message_overran_log_buffer = false;
 
   log_file_data_pair *logs;
 
@@ -646,7 +648,6 @@ void generate_message_details(char *message_details_buffer,
   const char *logtype_string;
 
   char loglevel_string[12]; /* max int size is 2 billion, or 10 digits */
-  bool message_overran_log_buffer = false;
 
   struct what_to_print_array what_to_print;
 
