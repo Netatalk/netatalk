@@ -1,3 +1,9 @@
 Makefile
 Makefile.in
+afpd-mtab.pl
+apple_cp
+apple_mv
+apple_rm
+cleanappledouble.pl
+netatalkshorternamelinks.pl
 lp2pap.sh
