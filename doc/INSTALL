@@ -15,7 +15,7 @@ Netatalk is known to run on at least five operating systems:
 	Ultrix	4.[1-4]		3100,5000
 	Tru64	4.0		Alpha		afpd only
 
-
+See ./doc/README.platforms for more information.
 
 Quickly:
 $> ./autogen.sh
