@@ -69,4 +69,4 @@
 # dbpath:path         -> store the database stuff in the following path.
 # password:password   -> set a volume password (8 characters max)
 #
-~
+~/			"Home Directory"
