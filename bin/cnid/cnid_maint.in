@@ -3,7 +3,7 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.7 2002-02-11 21:04:16 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.8 2002-02-11 21:10:00 jmarcus Exp $
 #
 
 use strict;
@@ -308,7 +308,7 @@ sub version {
 }
 
 sub help {
-    print "usage: cnid_maint.pl [-hlsvV]\n";
+    print "usage: $0 [-hlsvV]\n";
     print "\t-h   view this message\n";
     print "\t-l   remove transaction logs after running recovery\n";
     print
