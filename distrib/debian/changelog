@@ -7,9 +7,9 @@ netatalk (1.5pre7cvs-0) unstable; urgency=medium
     Removed rule, correcting this from Debian rules file.
   * Newer versions of config.{sub,guess} were now added to upstream
     sources. No need to patch them.
-  * netatalk-config(1) does now have a man page.
+  * netatalk-config(1) and timelord(8) do now have a man page.
 
- -- Sebastian Rittau <srittau@debian.org>  Thu, 19 Jul 2001 18:11:45 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 19 Jul 2001 18:15:53 +0200
 
 netatalk (1.5pre6-5) unstable; urgency=low
 
