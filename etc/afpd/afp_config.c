@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_config.c,v 1.4 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: afp_config.c,v 1.5 2001-09-17 13:41:26 rufustfirefly Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -44,6 +44,10 @@ char *strchr (), *strrchr ();
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/server_child.h>
+#ifdef USE_SRVLOC
+#include <slp.h>
+static char srvloc_url[512];
+#endif
 
 #include "globals.h"
 #include "afp_config.h"
@@ -88,6 +92,43 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
     free(p);
   }
 }
+
+#ifdef USE_SRVLOC
+static void SRVLOC_callback(SLPHandle hslp, SLPError errcode, void *cookie) {
+	*(SLPError*)cookie = errcode;
+}
+#endif
+
+#ifdef USE_SRVLOC
+static void dsi_cleanup(const AFPConfig *config)
+{
+  SLPError err;
+  SLPError callbackerr;
+  SLPHandle hslp;
+  err = SLPOpen("en", SLP_FALSE, &hslp);
+  if (err != SLP_OK) {
+    syslog(LOG_ERR, "Error opening SRVLOC handle");
+    goto srvloc_dereg_err;
+  } 
+
+  err = SLPDereg(hslp,
+                 srvloc_url,
+                 SRVLOC_callback,
+				 &callbackerr);
+  if (err != SLP_OK) {
+	  syslog(LOG_ERR, "Error unregistering %s from SRVLOC", srvloc_url);
+	  goto srvloc_dereg_err;
+  }
+
+  if (callbackerr != SLP_OK) {
+    syslog(LOG_ERR, "Error in callback while trying to unregister %s from SRVLOC (%i)", srvloc_url, callbackerr);
+	goto srvloc_dereg_err;
+  }
+
+  srvloc_dereg_err:
+    SLPClose(hslp);
+}
+#endif
 
 #ifndef NO_DDP
 static void asp_cleanup(const AFPConfig *config)
@@ -232,6 +273,11 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
   AFPConfig *config;
   DSI *dsi;
   char *p, *q;
+#ifdef USE_SRVLOC
+  SLPError err;
+  SLPError callbackerr;
+  SLPHandle hslp;
+#endif
 
   if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
     syslog( LOG_ERR, "DSIConfigInit: malloc(config): %m" );
@@ -257,6 +303,40 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	   dsi->serversock, VERSION);
   }
 
+#ifdef USE_SRVLOC
+  err = SLPOpen("en", SLP_FALSE, &hslp);
+  if (err != SLP_OK) {
+	  syslog(LOG_ERR, "Error opening SRVLOC handle");
+	  goto srvloc_reg_err;
+  }
+
+  snprintf(srvloc_url, sizeof(srvloc_url), "afp://%s:%d?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), options->hostname);
+
+  err = SLPReg(hslp,
+               srvloc_url,
+			   SLP_LIFETIME_MAXIMUM,
+			   "afp:",
+			   "",
+			   SLP_TRUE,
+			   SRVLOC_callback,
+			   &callbackerr);
+  if (err != SLP_OK) {
+	  syslog(LOG_ERR, "Error registering %s with SRVLOC", srvloc_url);
+	  goto srvloc_reg_err;
+  }
+
+  if (callbackerr != SLP_OK) {
+	  syslog(LOG_ERR, "Error in callback trying to register %s with SRVLOC", srvloc_url);
+	  goto srvloc_reg_err;
+  }
+
+  syslog(LOG_INFO, "Sucessfully registered %s with SRVLOC", srvloc_url);
+
+  srvloc_reg_err:
+    SLPClose(hslp);
+#endif
+
+
   config->fd = dsi->serversock;
   config->obj.handle = dsi;
   config->obj.config = config;
@@ -273,6 +353,9 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
   (*refcount)++;
 
   config->server_start = dsi_start;
+#ifdef USE_SRVLOC
+  config->server_cleanup = dsi_cleanup;
+#endif
   return config;
 }
 

@@ -1,4 +1,9 @@
 
+2001-09-17  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* acconfig.h, configure.in, etc/afpd/afp_config.c: SLP
+	support added (Joe Clarke)
+
 2001-09-14  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* sys/netatalk/endian.h: fix from Robert Cohen
@@ -11,8 +16,8 @@
 
 2001-09-10  joe c   <marcus@marcuscom.com>
 
-    * libatalk/util/getiface.c:
-	up the new interface by one each time instead of IFACE_NUM
+	* libatalk/util/getiface.c: up the new interface by one
+	each time instead of IFACE_NUM
 
 2001-09-10  jeff b  <jeff@univrel.pr.uconn.edu>
 
