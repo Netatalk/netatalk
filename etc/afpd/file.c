@@ -409,9 +409,9 @@ createfile_done:
 
 #ifdef DROPKLUDGE
 
-/* The below code is an experimental, untested, incomplete kludge which 
-provides better dropbox support.  It should NOT be turned on yet unless
-you are a developer who wants to try it out and fix it. */
+/* The below code changes the way file ownership is determined in the name of
+fixing dropboxes.  It has known security problem.  See the netatalk FAQ for
+more information */
     if (stat(".", &sb) == -1) 
       syslog (LOG_ERR, "Error checking directory %s: %m", dir->d_name);
     else {
@@ -419,9 +419,9 @@ you are a developer who wants to try it out and fix it. */
       if ( uid != sb.st_uid )
       {
 	strcpy (adpath, "./.AppleDouble/");
-	strcat (adpath, path);
+	strcat (adpath, mtoupath(vol, path));
 	seteuid(0); /* Become root to change the owner of the file */
-	if (chown(path, sb.st_uid, sb.st_gid) < 0) 
+	if (chown(mtoupath(vol, path), sb.st_uid, sb.st_gid) < 0) 
         {
 	  syslog (LOG_ERR, "Error changing owner/gid: %m");
           return (-1);
@@ -430,7 +430,7 @@ you are a developer who wants to try it out and fix it. */
         to be able to read from it too, so read bits have to be turned on.
         Directory permissions remain unchanged */
         stat(upath, &st);
-        if (chmod(path,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+        if (chmod(mtoupath(vol,path),(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
         {
           syslog (LOG_ERR, "Error adding file read permissions: %m");
           return (-1);
@@ -441,7 +441,7 @@ you are a developer who wants to try it out and fix it. */
 	  syslog (LOG_ERR, "Error changing AppleDouble owner/gid: %m");
           return (-1);
         }
-        if (chmod(adpath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+        if (chmod(adpath, (st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
         {
           syslog (LOG_ERR, "Error adding AD file read permissions: %m");
           return (-1);
