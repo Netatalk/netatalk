@@ -31,8 +31,9 @@ void readmessage(void)
 #ifdef SERVERTEXT
   FILE *message;
   char * filename;
-  int i;
+  int i, rc;
   static int c;
+  uid_t euid;
 
   i=0;
   // Construct file name SERVERTEXT/message.[pid]
@@ -50,8 +51,8 @@ void readmessage(void)
     message=fopen(filename, "r");
   }
 
-  if (message!=NULL) /* if either message.pid or message exists */
-  {
+  /* if either message.pid or message exists */
+  if (message!=NULL) {
     /* added while loop to get characters and put in servermesg */
     while ((( c=fgetc(message)) != EOF) && (i < (MAXMESGSIZE - 1))) {
       if ( c == '\n')  c = ' ';
@@ -61,18 +62,29 @@ void readmessage(void)
 
     /* cleanup */
     fclose(message);
-/* Below code can be uncommented if you want to experiment with getting afpd
-to delete the text file when it's done.  Currently, it doesn't work.  If you 
-can get it to work, delete this comment and enable the code!  */
-    i=unlink (filename);
-    if (i)
-      syslog (LOG_INFO, "Error deleting %s: %m", filename);
+
+    /* Save effective uid and switch to root to delete file. */
+    /* Delete will probably fail otherwise, but let's try anyways */
+    euid = geteuid();
+    if (seteuid(0) < 0) {
+      syslog(LOG_ERR, "Could not switch back to root: %m");
+    }
+
+    rc = unlink(filename);
+
+    /* Drop privs again, failing this is very bad */
+    if (seteuid(euid) < 0) {
+      syslog(LOG_ERR, "Could not switch back to uid %d: %m", euid);
+    }
+
+    if (rc < 0) {
+      syslog (LOG_ERR, "Error deleting %s: %m", filename);
+    }
 #ifdef DEBUG
-    else
+    else {
       syslog (LOG_INFO, "Deleted %s", filename);
-#endif DEBUG
-    free (filename);
-#ifdef DEBUG
+    }
+
     syslog (LOG_INFO, "Set server message to \"%s\"", servermesg);
 #endif
   }
