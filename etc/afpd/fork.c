@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.13 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: fork.c,v 1.14 2002-01-16 19:46:52 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -190,9 +190,9 @@ const u_int16_t     attrbits;
 
             if (aint == 0) {
 #ifdef AFS
-                aint = st.st_ino;
+                aint = htonl(st.st_ino);
 #else /* AFS */
-                aint = ( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff );
+                aint = htonl(( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff ));
 #endif /* AFS */
             }
 
