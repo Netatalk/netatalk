@@ -80,7 +80,7 @@ static int getifaces(const int sockfd, char ***list, int *length)
     int			ifrsize, i = 0;
 	char **new;
 
-    if (!list || *length < 1)
+    if (!list)
       return 0;
 
     memset( &ifc, 0, sizeof( struct ifconf ));
