@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.21 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: filedir.c,v 1.22 2002-02-28 21:20:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -100,7 +100,7 @@ more information */
                     upath, strerror(errno));
                 return (AFPERR_ACCESS);
             }
-            if (chmod(upath,(st.st_mode&0777&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
+            if (chmod(upath,(st.st_mode&0xFFFF&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
                 LOG(log_error, logtype_default,
                     "matchfile2dirperms:  Error adding file read permissions: %s",
@@ -120,7 +120,7 @@ more information */
                     adpath, strerror(errno));
                 return (AFPERR_ACCESS);
             }
-            if (chmod(adpath, (st.st_mode&0777&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
+            if (chmod(adpath, (st.st_mode&0xFFFF&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
                 LOG(log_error, logtype_default,
                     "matchfile2dirperms:  Error adding AD file read permissions: %s",

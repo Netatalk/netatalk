@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.19 2002-02-03 05:01:09 jmarcus Exp $
+ * $Id: quota.c,v 1.20 2002-02-28 21:20:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -115,7 +115,7 @@ int  *nfs;
     static struct fs_data	fsd;
 
     if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
-        LOG(log_info, logtype_default, "special: getmnt %s: %m", file );
+        LOG(log_info, logtype_default, "special: getmnt %s: %s", file, strerror(errno) );
         return( NULL );
     }
 
@@ -316,7 +316,7 @@ const u_int32_t     bsize;
 
         if (vol->v_nfs) {
             if (( vol->v_gvs = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-                LOG(log_error, logtype_default, "getquota: malloc: %m" );
+                LOG(log_error, logtype_default, "getquota: malloc: %s", strerror(errno) );
                 return AFPERR_MISC;
             }
             strcpy( vol->v_gvs, p );
@@ -324,7 +324,7 @@ const u_int32_t     bsize;
         } else {
             sprintf( buf, "%s/quotas", p );
             if (( vol->v_qfd = open( buf, O_RDONLY, 0 )) < 0 ) {
-                LOG(log_info, logtype_default, "open %s: %m", buf );
+                LOG(log_info, logtype_default, "open %s: %s", buf, strerror(errno) );
                 return( AFPERR_PARAM );
             }
         }
