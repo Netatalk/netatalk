@@ -43,18 +43,6 @@ static int addname(char **list, int *i, int *length, const char *name)
 {
     /* if we've run out of room, allocate some more. just return
      * the present list if we can't. */
-     if (*i >= *length) {
-      char **new = realloc(list, sizeof(char **)*(*length + 1));
-       
-      if (!new) /* just break if we can't allocate anything */
-	return -1;
-
-      /* copy the old list */
-      memcpy(new, list, *length);
-      list = new;
-      
-      *length += 1;
-    }
      
     if ((list[*i] = strdup(name)) == NULL)
       return -1;
@@ -65,30 +53,32 @@ static int addname(char **list, int *i, int *length, const char *name)
 }
 
 
-static int getifaces(const int sockfd, char **list, int *length)
+static int getifaces(const int sockfd, char ***list, int *length)
 {
 #ifdef HAVE_IFNAMEINDEX
       struct if_nameindex *ifstart, *ifs;
       int i = 0;
+	  char **new;
   
-      if (!list || *length < 1) 
-	return 0;
-
       ifs = ifstart = if_nameindex();
+
+	  new = (char **) malloc((sizeof(ifs)/sizeof(struct if_nameindex) + 1) * sizeof(char *));
       while (ifs && ifs->if_name) {
 	/* just bail if there's a problem */
-	if (addname(list, &i, length, ifs->if_name) < 0)
+	if (addname(new, &i, length, ifs->if_name) < 0)
 	  break;
 	ifs++;
       }
 
       if_freenameindex(ifstart);
+	  *list = new;
       return i;
 
 #else
     struct ifconf	ifc;
     struct ifreq	ifrs[ 64 ], *ifr, *nextifr;
     int			ifrsize, i = 0;
+	char **new;
 
     if (!list || *length < 1)
       return 0;
@@ -101,6 +91,7 @@ static int getifaces(const int sockfd, char **list, int *length)
 	return 0;
     }
 
+	new = (char **) malloc((ifc.ifc_len/sizeof(struct ifreq) + 1) * sizeof(char *));
     for ( ifr = ifc.ifc_req; ifc.ifc_len >= sizeof( struct ifreq );
 	    ifc.ifc_len -= ifrsize, ifr = nextifr ) {
 #ifdef BSD4_4
@@ -113,9 +104,10 @@ static int getifaces(const int sockfd, char **list, int *length)
 	nextifr = (struct ifreq *)((caddr_t)ifr + ifrsize );
 
 	/* just bail if there's a problem */
-	if (addname(list, &i, length, ifr->ifr_name) < 0)
+	if (addname(new, &i, length, ifr->ifr_name) < 0)
 	  break;
     }
+	*list = new;
     return i;
 #endif
 }
@@ -127,17 +119,14 @@ static int getifaces(const int sockfd, char **list, int *length)
  */
 char **getifacelist()
 {
-  char **list = (char **) malloc(sizeof(char **)*(IFACE_NUM + 1));
+  char **list;
   char **new;
-  int length = IFACE_NUM, i, fd;
+  int  length, i, fd;
 
-  if (!list)
-    return NULL;
-      
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
     return NULL;
 
-  if ((i = getifaces(fd, list, &length)) == 0) {
+  if ((i = getifaces(fd, &list, &length)) == 0) {
     free(list);
     close(fd);
     return NULL;
@@ -145,7 +134,7 @@ char **getifacelist()
   close(fd);
 
   if ((i < length) && 
-      (new = (char **) realloc(list, sizeof(char **)*(i + 1))))
+      (new = (char **) realloc(list, (i + 1) *  sizeof(char *))))
     return new;
 
   return list;

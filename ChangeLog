@@ -1,4 +1,9 @@
 
+2001-09-13  joe c   <marcus@marcuscom.com>
+
+	* libatalk/util/getiface.c:
+	fix some malloc problems when no atalkd.conf file exists
+
 2001-09-10  joe c   <marcus@marcuscom.com>
 
     * libatalk/util/getiface.c:
