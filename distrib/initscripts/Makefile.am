@@ -2,15 +2,29 @@
 
 SUFFIXES = .tmpl .
 
+pkgconfdir = @PKGCONFDIR@
+
+#
+# Template Generation
+#
+
 .tmpl:
 	sed -e s@:BINDIR:@${bindir}@ \
 	    -e s@:SBINDIR:@${sbindir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    <$< >$@
 
-CLEANFILES = rc.atalk.redhat rc.atalk.suse rc.atalk.tru64 atalk
+GENERATED_FILES = \
+	rc.atalk.redhat.tmpl		\
+	rc.atalk.tru64.tmpl		\
+	rc.atalk.bsd.tmpl		\
+	rc.atalk.suse.tmpl
+TEMPLATES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
 
-pkgconfdir = @PKGCONFDIR@
+CLEANFILES = rc.atalk.bsd rc.atalk.redhat rc.atalk.suse rc.atalk.tru64 atalk
+EXTRA_DIST = $(TEMPLATES) rc.atalk.cobalt rc.atalk.sysv
+
+install-data-hook: $(TEMPLATES)
 
 #
 # checking for "redhat" style sysv scripts:
