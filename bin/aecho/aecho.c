@@ -1,5 +1,5 @@
 /*
- * $Id: aecho.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: aecho.c,v 1.5 2001-08-03 22:07:22 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -90,7 +90,7 @@ void aep_send()
     p = buf;
     *p++ = DDPTYPE_AEP;
     *p++ = AEPOP_REQUEST;
-    bcopy( &seq, p, sizeof( unsigned int ));
+    memcpy( p, &seq, sizeof( unsigned int ));
     p += sizeof( unsigned int );
     seq++;
 
@@ -98,7 +98,7 @@ void aep_send()
 	perror( "gettimeofday" );
 	exit( 1 );
     }
-    bcopy( &tv, p, sizeof( struct timeval ));
+    memcpy( p, &tv, sizeof( struct timeval ));
     p += sizeof( struct timeval );
 
     if ( netddp_sendto( s, buf, p - buf, 0, (struct sockaddr *) &target,
@@ -236,9 +236,9 @@ int main( ac, av )
 	    perror( "gettimeofday" );
 	    exit( 1 );
 	}
-	bcopy( p, &seq, sizeof( unsigned int ));
+	memcpy( &seq, p, sizeof( unsigned int ));
 	p += sizeof( unsigned int );
-	bcopy( p, &atv, sizeof( struct timeval ));
+	memcpy( &atv, p, sizeof( struct timeval ));
 	nrecv++;
 	ms = ( tv.tv_sec - atv.tv_sec ) * 1000 +
 		( tv.tv_usec - atv.tv_usec ) / 1000;

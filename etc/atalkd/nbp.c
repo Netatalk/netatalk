@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: nbp.c,v 1.4 2001-08-03 22:11:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -55,7 +55,7 @@ void nbp_ack( fd, nh_op, nh_id, to )
     nh.nh_id = nh_id;
     data = packet;
     *data++ = DDPTYPE_NBP;
-    bcopy( &nh, data, SZ_NBPHDR );
+    memcpy( data, &nh, SZ_NBPHDR );
     data += SZ_NBPHDR;
     if ( sendto( fd, packet, data - packet, 0, (struct sockaddr *)to,
 	    sizeof( struct sockaddr_at )) < 0 ) {
@@ -443,19 +443,19 @@ Can't find route's interface!" );
 			locallkup = 1;
 		    }
 		    nh.nh_op = NBPOP_LKUP;
-		    bcopy( &nh, nbpop, SZ_NBPHDR );
+		    memcpy( nbpop, &nh, SZ_NBPHDR );
 		    sat.sat_addr.s_net = rtmp->rt_firstnet;
 		    sat.sat_addr.s_node = ATADDR_BCAST;
 		} else {
 		    if ( rtmp->rt_gate == 0 ) {
 			nh.nh_op = NBPOP_LKUP;
-			bcopy( &nh, nbpop, SZ_NBPHDR );
+			memcpy( nbpop, &nh, SZ_NBPHDR );
 			sat.sat_addr.s_net = 0;
 			sat.sat_addr.s_node = ATADDR_BCAST;
 			locallkup = 1;
 		    } else {
 			nh.nh_op = NBPOP_FWD;
-			bcopy( &nh, nbpop, SZ_NBPHDR );
+			memcpy( nbpop, &nh, SZ_NBPHDR );
 			sat.sat_addr.s_net = rtmp->rt_firstnet;
 			sat.sat_addr.s_node = 0;
 		    }
@@ -480,7 +480,7 @@ Can't find route's interface!" );
         /* send lkup on net. we need to make sure we're a router. */
         if ( !locallkup && (ap->ap_iface->i_flags & IFACE_ISROUTER)) {
 	    nh.nh_op = NBPOP_LKUP;
-	    bcopy( &nh, nbpop, SZ_NBPHDR );
+	    memcpy( nbpop, &nh, SZ_NBPHDR );
 	    from->sat_addr.s_net = 0;
 	    from->sat_addr.s_node = ATADDR_BCAST;
 	    if ( sendto( ap->ap_fd, data - len, len, 0, (struct sockaddr *)from,
@@ -555,7 +555,7 @@ Can't find route's interface!" );
 		cc = data - packet;
 		data = packet;
 		*data++ = DDPTYPE_NBP;
-		bcopy( &nh, data, SZ_NBPHDR );
+		memcpy( data, &nh, SZ_NBPHDR );
 
 		if ( sendto( ap->ap_fd, packet, cc, 0,
 			(struct sockaddr *)&nn.nn_sat,
@@ -601,7 +601,7 @@ Can't find route's interface!" );
 	     */
 	    if ( ntab->nt_nve.nn_zonelen ) {
 		*data++ = ntab->nt_nve.nn_zonelen;
-		bcopy( ntab->nt_nve.nn_zone, data, ntab->nt_nve.nn_zonelen );
+		memcpy( data, ntab->nt_nve.nn_zone, ntab->nt_nve.nn_zonelen );
 		data += ntab->nt_nve.nn_zonelen;
 	    } else {
 		*data++ = 1;
@@ -617,7 +617,7 @@ Can't find route's interface!" );
 	    cc = data - packet;
 	    data = packet;
 	    *data++ = DDPTYPE_NBP;
-	    bcopy( &nh, data, SZ_NBPHDR );
+	    memcpy( data, &nh, SZ_NBPHDR );
 
 	    if ( sendto( ap->ap_fd, packet, cc, 0,
 		    (struct sockaddr *)&nn.nn_sat,
