@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.30 2003-01-12 14:39:59 didg Exp $
+ * $Id: enumerate.c,v 1.31 2003-01-19 00:04:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -93,10 +93,26 @@ struct path     *path;
     }
 
     if ((edir = dirinsert( vol, cdir ))) {
+        /* it's not possible with LASTDID
+           for CNID:
+           - someone else have moved the directory.
+           - it's a symlink inside the share.
+           - it's an ID reused, the old directory was deleted but not
+             the cnid record and the server reused the inode for 
+             the new dir.
+           for HASH (we should get ride of HASH) 
+           - someone else have moved the directory.
+           - it's an ID reused as above
+           - it's a hash duplicate and we are in big trouble
+        */
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
         free(cdir);
         cdir = edir;
+        if (cdir->d_parent && cdir->d_parent != dir) {
+            /* the old was not in the same folder */
+    	    dirchildremove(cdir->d_parent, cdir);
+        }
     }
 
     /* parent/child directories */
@@ -193,7 +209,7 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
     char            *m_name;
     int             ret;
     
-    if (( dp = opendir( name)) == NULL ) {
+    if (NULL == ( dp = opendir( name)) ) {
         return -1;
     }
     ret = 0;
