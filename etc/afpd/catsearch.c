@@ -1,5 +1,4 @@
 /* 
- * Copyright (C) 2002 Rafal Lewczuk (rlewczuk@pronet.pl) 
  * Copyright (C) 1990, 1993 Regents of The University of Michigan
  * All Rights Reserved. See COPYRIGHT
  */
@@ -15,6 +14,8 @@
  * possible and does a standard filesystem search. It calls higher-level
  * libatalk/afpd functions only when it is really needed, mainly while
  * returning some non-UNIX information or filtering by non-UNIX criteria.
+ *
+ * Initial version written by Rafal Lewczuk <rlewczuk@pronet.pl>
  *
  */
 
