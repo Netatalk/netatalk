@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: dsi_tcp.c,v 1.7 2002-01-10 01:36:23 jmarcus Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -109,7 +109,7 @@ static int dsi_tcp_open(DSI *dsi)
     request_init(&req, RQ_DAEMON, dsi->program, RQ_FILE, dsi->socket, NULL);
     fromhost(&req);
     if (!hosts_access(&req)) {
-      LOG(deny_severity, "refused connect from %s", eval_client(&req));
+      LOG(deny_severity, logtype_default, "refused connect from %s", eval_client(&req));
       close(dsi->socket);
       errno = ECONNREFUSED;
       dsi->socket = -1;
