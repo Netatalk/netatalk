@@ -1,4 +1,8 @@
-($Id: ChangeLog,v 1.39 2001-05-25 16:18:08 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.40 2001-06-01 13:59:45 rufustfirefly Exp $)
+
+2001-06-01  jeff b  <jeff@univrel.pr.uconn.edu>
+	* etc/afpd/quota.c: fix for Linux compile by Sam Noble
+	<ns@shadow.org>
 
 2001-05-25  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/uams/uams_passwd.c: another Tru64 fix from Burkhard
