@@ -51,10 +51,10 @@ uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c
 uams_guest_la_LDFLAGS      = -module -avoid-version
 uams_randnum_la_LDFLAGS    = -module -avoid-version
 uams_passwd_la_LDFLAGS     = -module -avoid-version
-uams_pam_la_LDFLAGS        = -module -avoid-version
+uams_pam_la_LDFLAGS        = -lpam -module -avoid-version
 uams_pgp_la_LDFLAGS        = -module -avoid-version
 uams_dhx_passwd_la_LDFLAGS = -module -avoid-version
-uams_dhx_pam_la_LDFLAGS    = -module -avoid-version
+uams_dhx_pam_la_LDFLAGS    = -lpam -module -avoid-version
 
 #
 # module compilation
