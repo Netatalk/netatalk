@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.14 2003-12-15 04:49:56 srittau Exp $
+ * $Id: unix.h,v 1.15 2003-12-15 04:59:45 srittau Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -58,9 +58,9 @@ typedef int	mode_t;
 #define dqb_btimelimit  dqb_btime
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
-#if defined(linux) || defined(ultrix) || defined(HAVE_QUOTA_H)
+#if defined(HAVE_SYS_QUOTA_H)
 #include <sys/quota.h>
-#endif /* linux || ultrix || HAVE_QUOTA_H */
+#endif /* HAVE_SYS_QUOTA_H */
 
 #ifdef __svr4__ 
 #include <sys/fs/ufs_quota.h>
@@ -73,10 +73,6 @@ typedef int	mode_t;
 #ifdef HAVE_UFS_QUOTA_H
 #include <ufs/quota.h>
 #endif /* HAVE_UFS_QUOTA_H */
-
-#ifdef _IBMR2
-#include <jfs/quota.h>
-#endif /* _IBMR2 */
 
 #include <unistd.h>
 #include <sys/types.h>
