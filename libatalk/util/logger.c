@@ -871,21 +871,27 @@ int get_syslog_equivalent(enum loglevels loglevel)
   }
 }
 
-void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
+/* void setuplog(char *logsource, char *logtype, char *loglevel, char *filename) */
+void setuplog(char *logtype, char *loglevel, char *filename)
 {
 #ifndef DISABLE_LOGGER 
   /* -setuplogtype <syslog|filelog> <logtype> <loglevel>*/
+  /* -setuplogtype <logtype> <loglevel> [<filename>]*/
   /*
     This should be rewritten so that somehow logsource is assumed and everything
     can be taken from default if needs be.  
    */
-  const char* sources[] = {"syslog", "filelog"};
+  /* const char* sources[] = {"syslog", "filelog"}; */
   const char *null = "";
   int sourcenum, typenum, levelnum;
   log_file_data_pair *logs = log_file_arr[logtype_default];
 
+  /*
   LOG(log_extradebug, logtype_logger, "Attempting setuplog: %s %s %s %s", 
       logsource, logtype, loglevel, filename);
+  */
+  LOG(log_extradebug, logtype_logger, "Attempting setuplog: %s %s %s", 
+      logtype, loglevel, filename);
 
   /*
    Do I need these?
@@ -900,6 +906,9 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
     filename=null;
   */
 
+  /*
+   * We'll just use filename, if its NULL we know its a syslog thing
+   * 
   if (logsource==NULL)
   {
     LOG(log_note, logtype_logger, "no logsource given");
@@ -921,6 +930,7 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
           "when specifying a filelog, you must specify a valid filename");
     }
   }
+  */
 
   if (logtype==NULL)
   {
@@ -941,7 +951,7 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
 
   if (loglevel==NULL)
   {
-    LOG(log_note, logtype_logger, "no logsource given");
+    LOG(log_note, logtype_logger, "no loglevel given");
   }
   else
   {
@@ -956,20 +966,24 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
     }
   }
 
-  /* check validity */
-  if ((sourcenum>=NUMOF(sources)) || (typenum>=num_logtype_strings) ||
-      (levelnum>=num_loglevel_strings))
-    return;
-
-  switch(sourcenum)
+  /* sanity check */
+  if ((typenum>=num_logtype_strings) || (levelnum>=num_loglevel_strings))
   {
-  case 0: /* syslog */
+    LOG(log_warning, logtype_logger, "sanity check failed: (%s:%d), (%s:%d)", 
+		    logtype, typenum, loglevel, levelnum);
+    return;
+  }
+
+  /* is this a syslog setup or a filelog setup */
+  if (filename==NULL) /* must be syslog */
+  {
     LOG(log_note, logtype_logger, "Doing syslog_setup(%d, %d, ...)", levelnum, typenum);
     syslog_setup(levelnum, typenum, 
 		 (*logs)[0].display_options,
 		 global_log_data.facility);
-    break;
-  default: /* filelog */
+  }
+  else /* this must be a filelog */
+  {
     LOG(log_note, logtype_logger, "Doing log_setup(%s, %d, %d, ...)", filename, levelnum, typenum);
     log_setup(filename, levelnum, typenum, 
 	      (*logs)[0].display_options);

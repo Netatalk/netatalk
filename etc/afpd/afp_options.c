@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.24 2002-05-03 22:51:34 jmarcus Exp $
+ * $Id: afp_options.c,v 1.25 2002-08-24 01:32:19 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -247,12 +247,17 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if ((c = getoption(buf, "-server_quantum")))
         options->server_quantum = strtoul(c, NULL, 0);
 
+#ifndef DISABLE_LOGGER
     /* -setuplogtype <syslog|filelog> <logtype> <loglevel> <filename>*/
+    /* -setuplogtype <logtype> <loglevel> [<filename>]*/
     if ((c = getoption(buf, "-setuplogtype")))
     {
       char *ptr, *logsource, *logtype, *loglevel, *filename;
 
       LOG(log_extradebug, logtype_afpd, "setting up logtype, c is %s", c);
+      ptr = c;
+      
+      /* 
       logsource = ptr = c;
       if (ptr)
       {
@@ -264,8 +269,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
             ptr++;
         }
       }
+      */
 
-      logtype = ptr;
+      logtype = ptr; 
       if (ptr)
       {
         ptr = strpbrk(ptr, " \t");
@@ -301,12 +307,17 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         }
       }
 
+      /*
       LOG(log_extradebug, logtype_afpd, "Doing setuplog %s %s %s %s", 
           logsource, logtype, loglevel, filename);
+      */
+      LOG(log_extradebug, logtype_afpd, "Doing setuplog %s %s %s", 
+          logtype, loglevel, filename);
 
-      setuplog(logsource, logtype, loglevel, filename);
+      /* setuplog(logsource, logtype, loglevel, filename); */
+      setuplog(logtype, loglevel, filename);
     }
-
+#endif /* DISABLE_LOGGER */
 #ifdef ADMIN_GRP
     if ((c = getoption(buf, "-admingroup"))) {
         struct group *gr = getgrnam(c);

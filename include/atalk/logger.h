@@ -81,7 +81,8 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
 void syslog_setup(enum loglevels loglevel, enum logtypes logtype, 
 		  int display_options, int facility);
 
-void setuplog(char *logsource, char *logtype, char *loglevel, char *filename);
+/* void setuplog(char *logsource, char *logtype, char *loglevel, char *filename); */
+void setuplog(char *logtype, char *loglevel, char *filename);
 
 /* finish up and close the logs */
 void log_close();
