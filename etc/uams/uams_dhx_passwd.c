@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.10 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: uams_dhx_passwd.c,v 1.11 2001-10-24 16:19:12 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -101,7 +101,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 #endif /* TRU64 */
 
     len = (unsigned char) *ibuf++;
-    if ( len > i ) {
+    if ( len + 1 > i ) {
 	return( AFPERR_PARAM );
     }
 
