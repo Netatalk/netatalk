@@ -52,5 +52,7 @@ struct printer {
 #define P_ACCOUNT	(1<<3)
 #define P_KRB		(1<<4)
 #define P_AUTH		(1<<5)
+#define P_AUTH_PSSP	(1<<6)
+#define P_AUTH_CAP	(1<<7)
 
 extern struct printer	*printer;

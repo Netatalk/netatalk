@@ -588,10 +588,13 @@ getprinters( cf )
 	/*
 	 * Do we want authenticated printing?
 	 */
-	if ( pgetflag( "au", &a ) == 1 ) {
+	if ( pgetflag( "ca", &a ) == 1 ) {
 	    pr->p_flags |= P_AUTH;
-	} else {
-	    pr->p_flags &= ~P_AUTH;
+	    pr->p_flags |= P_AUTH_CAP;
+	}
+	if ( pgetflag( "sp", &a ) == 1 ) {
+	    pr->p_flags |= P_AUTH;
+	    pr->p_flags |= P_AUTH_PSSP;
 	}
 
 	if ((p = pgetstr("am", &a)) != NULL ) {

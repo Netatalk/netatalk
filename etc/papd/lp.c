@@ -71,6 +71,8 @@
 
 char	hostname[ MAXHOSTNAMELEN ];
 
+extern struct sockaddr_at *sat;
+
 /* initialize printing interface */
 int	lp_init();
 /* cancel current job */
@@ -166,23 +168,67 @@ lp_job( job )
     *q = '\0';
 }
 
-lp_init( out )
+lp_init( out, sat )
     struct papfile	*out;
+    struct sockaddr_at	*sat;
 {
     int		fd, n, len;
     char	*cp, buf[ BUFSIZ ];
     struct stat	st;
+    int		authenticated = 0;
 #ifdef ABS_PRINT
     char	cost[ 22 ];
     char	balance[ 22 ];
 #endif ABS_PRINT
+#ifdef CAPDIR
+    char	username[32];
+    int		addr_net, addr_node;
+    FILE	*cap_file;
+    struct stat	cap_st;
+    char	addr_filename[256];
+#endif /* CAPDIR */
 
     if ( printer->p_flags & P_AUTH ) {
-	if ( lp.lp_person == NULL ) {
+	authenticated = 0;
+#ifdef CAPDIR
+	if ( printer->p_flags & P_AUTH_CAP ) {
+	    addr_net = ntohs( sat->sat_addr.s_net );
+	    addr_node  = sat->sat_addr.s_node;
+	    sprintf(addr_filename, "%s/net%d.%dnode%d", CAPDIR, addr_net/256, addr_net%256, addr_node);
+	    if (stat(addr_filename, &cap_st) == 0) {
+		if ((cap_file = fopen(addr_filename, "r")) != NULL) {
+		    if (fscanf(cap_file, "%s", username) != EOF) {
+			if (getpwnam(username) != NULL ) {
+			    syslog(LOG_INFO, "CAP authenticated %s", username);
+			    lp_person(username);
+			    authenticated = 1;
+			} else {
+			    syslog(LOG_INFO, "CAP error: invalid username: '%s'", username);
+			}
+		    } else {
+			syslog(LOG_INFO, "CAP error: could not read username");
+		    }
+		} else {
+		    syslog(LOG_INFO, "CAP error: %m");
+		}
+	    } else {
+		syslog(LOG_INFO, "CAP error: %m");
+	    }
+	}
+#endif /* CAPDIR */
+
+	if ( printer->p_flags & P_AUTH_PSSP ) {
+	    if ( lp.lp_person != NULL ) {
+		authenticated = 1;
+	    }
+	}
+
+	if ( authenticated == 0 ) {
 	    syslog( LOG_ERR, "lp_init: must authenticate" );
 	    spoolerror( out, "Authentication required." );
 	    return( -1 );
 	}
+
 #ifdef ABS_PRINT
 	if (( printer->p_flags & P_ACCOUNT ) && printer->p_pagecost > 0 &&
 		! ABS_canprint( lp.lp_person, printer->p_role,
@@ -263,13 +309,14 @@ lp_init( out )
     return( 0 );
 }
 
-lp_open( out )
+lp_open( out, sat )
     struct papfile	*out;
+    struct sockaddr_at	*sat;
 {
     char	name[ MAXPATHLEN ];
     int		fd;
 
-    if (( lp.lp_flags & LP_INIT ) == 0 && lp_init( out ) != 0 ) {
+    if (( lp.lp_flags & LP_INIT ) == 0 && lp_init( out, sat ) != 0 ) {
 	return( -1 );
     }
     if ( lp.lp_flags & LP_OPEN ) {

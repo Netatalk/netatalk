@@ -11,8 +11,9 @@
 #include "file.h"
 #include "comment.h"
 
-ps( infile, outfile )
+ps( infile, outfile, sat )
     struct papfile	*infile, *outfile;
+    struct sockaddr_at	*sat;
 {
     char			*start;
     int				linelength, crlflength;
@@ -20,7 +21,7 @@ ps( infile, outfile )
 
     for (;;) {
 	if ( comment = compeek()) {
-	    switch( (*comment->c_handler)( infile, outfile )) {
+	    switch( (*comment->c_handler)( infile, outfile, sat )) {
 	    case CH_DONE :
 		continue;
 
@@ -51,7 +52,7 @@ ps( infile, outfile )
 		infile->pf_state &= ~PF_BOT;
 
 		/* set up spool file */
-		if ( lp_open( outfile ) < 0 ) {
+		if ( lp_open( outfile, sat ) < 0 ) {
 		    syslog( LOG_ERR, "lp_open failed" );
 		    spoolerror( outfile, "Ignoring job." );
 		}
@@ -64,8 +65,9 @@ ps( infile, outfile )
     }
 }
 
-cm_psquery( in, out )
+cm_psquery( in, out, sat )
     struct papfile	*in, *out;
+    struct sockaddr_at	*sat;
 {
     struct comment	*comment;
     char		*start;
@@ -96,8 +98,9 @@ cm_psquery( in, out )
     }
 }
 
-cm_psadobe( in, out )
+cm_psadobe( in, out, sat )
     struct papfile	*in, *out;
+    struct sockaddr_at	*sat;
 {
     char		*start;
     int			linelength, crlflength;
@@ -117,7 +120,7 @@ cm_psadobe( in, out )
 
 	if ( in->pf_state & PF_BOT ) {
 	    in->pf_state &= ~PF_BOT;
-	    if ( lp_open( out ) < 0 ) {
+	    if ( lp_open( out, sat ) < 0 ) {
 		syslog( LOG_ERR, "lp_open failed" );
 		spoolerror( out, "Ignoring job." );
 	    }
@@ -135,8 +138,9 @@ cm_psadobe( in, out )
 
 char	*Query = "Query";
 
-cm_psswitch( in, out )
+cm_psswitch( in, out, sat )
     struct papfile	*in, *out;
+    struct sockaddr_at	*sat;
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;

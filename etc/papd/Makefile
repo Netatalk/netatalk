@@ -4,7 +4,7 @@ OBJ=	main.o printcap.o session.o file.o comment.o lp.o ppd.o \
 	magics.o headers.o queries.o auth.o uam.o
 
 INCPATH = -I../../include ${KRBINCPATH} ${ABSINCPATH}
-CFLAGS=	${DEFS} ${KRBDEFS} ${ABSDEFS} ${OPTOPTS} ${INCPATH}
+CFLAGS=	${DEFS} ${KRBDEFS} ${ABSDEFS} ${CAPDEFS} ${OPTOPTS} ${INCPATH}
 TAGSFILE=	tags
 LIBDIRS=	-L../../libatalk ${KRBLIBDIRS} ${ABSLIBDIRS} ${PAMLIBDIRS}
 LIBS=	-latalk ${ABSLIBS} ${KRBLIBS} ${ADDLIBS} ${PAMLIBS} ${LIBSHARED}
@@ -26,6 +26,9 @@ all :
 	    fi; \
 	    PAMDEFS="-DUSE_PAM"; \
 	fi; \
+	if [ x"${CAPDIR}" != x ]; then \
+	     CAPDEFS="-DCAPDIR='\"${CAPDIR}\"'"; \
+	fi; \
         ${MAKE} ${MFLAGS} CC="${CC}" ADDLIBS="${ADDLIBS}" DEFS="${DEFS}" \
 	    OPTOPTS="${OPTOPTS}" DESTDIR="${DESTDIR}" \
 	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}" \
@@ -33,7 +36,8 @@ all :
 	    PAMLIBS="$${PAMLIBS}" PAMLIBDIRS="$${PAMLIBDIRS}" \
 	    PAMINCPATH="$${PAMINCPATH}" PAMDEFS="$${PAMDEFS}" \
 	    KRBLIBS="$${KRBLIBS}" KRBLIBDIRS="$${KRBLIBDIRS}" \
-	    KRBINCPATH="$${KRBINCPATH}" KRBDEFS="$${KRBDEFS}" papd showppd
+	    KRBINCPATH="$${KRBINCPATH}" KRBDEFS="$${KRBDEFS}" \
+	    CAPDEFS="$${CAPDEFS}" papd showppd
 
 # UMICH stuff.  Don't ask, I'm not telling.
 CRAP=/afs/umich.edu/group/itd/software/packages

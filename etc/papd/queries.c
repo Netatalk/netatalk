@@ -247,7 +247,7 @@ gq_rbiuamlist( out )
 {
     char uamnames[128] = "\0";
 
-    if (printer->p_flags & P_AUTH) {
+    if (printer->p_flags & P_AUTH_PSSP) {
 	if (getuamnames(UAM_SERVER_PRINTAUTH, uamnames) < 0) {
 	    append(out, nouams, strlen(nouams));
 	    return(0);

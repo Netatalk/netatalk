@@ -228,7 +228,7 @@ session( atp, sat )
 	    }
 
 	    /* move data */
-	    if ( ps( &infile, &outfile ) < 0 ) {
+	    if ( ps( &infile, &outfile, sat ) < 0 ) {
 		syslog( LOG_ERR, "parse: bad return" );
 		exit( 1 );	/* really?  close? */
 	    }
