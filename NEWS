@@ -1,3 +1,17 @@
+Changes from 1.5.2
+==================
+
+* UPD: Extend the --disable-shell-check functionality to ignore users
+       with _no_ shell.  Also, send a log message if a user is refused login
+       based on the fact that they have no shell.
+* FIX: Problems with Photoshop trying to open image files has been
+       corrected.
+* FIX: Preserve special permission bits when creating or modifying
+       directories.
+* FIX: afp_deleteid() now deletes the specified file and not the parent
+       directory.
+* FIX: Clean up some syslog messages.
+
 Changes from 1.5.1
 ==================
 
