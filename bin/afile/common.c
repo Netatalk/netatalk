@@ -202,5 +202,5 @@ const char *afile_creator(const struct AFile *afile)
 
 const char *afile_type(const struct AFile *afile)
 {
-  return afile->creator;
+  return afile->type;
 }

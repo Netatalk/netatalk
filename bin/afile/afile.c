@@ -184,7 +184,6 @@ int handle_datafile(struct AFile *datafile)
   /* Try to load AppleDouble file. */
   adname = dataname_to_adname(afile_filename(datafile));
   rfile = afile_new(adname);
-  free(adname);
   if (!rfile) {
     if (errno == ENOENT) {
       free(adname);
