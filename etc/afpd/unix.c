@@ -192,13 +192,13 @@ const mode_t mode;
 	   syslog( LOG_ERR, "stickydirmode: unable to seteuid root: %m");
         if ( retval=chmod( name, (DIRBITS | mode | S_ISVTX)) < 0)
         {
-           syslog( LOG_ERR, "stickydirmode: chmod %s: %m", name );
+           syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
            return(AFPERR_ACCESS);
         }
         else
         {
 #ifdef DEBUG
-           syslog( LOG_INFO, "stickydirmode: chmod \"%s\": %m", name );
+           syslog( LOG_INFO, "stickydirmode: (debug) chmod \"%s\": %m", name );
 #endif
            seteuid(uid);
         }
