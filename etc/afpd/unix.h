@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.10 2002-08-29 18:57:26 didg Exp $
+ * $Id: unix.h,v 1.11 2002-08-30 10:19:19 didg Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -83,6 +83,11 @@ typedef int	mode_t;
 #ifdef _IBMR2
 #include <jfs/quota.h>
 #endif /* _IBMR2 */
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include "directory.h"
 
 extern int getnfsquota __P((const struct vol *, const int, const u_int32_t,
                                 struct dqblk *));
