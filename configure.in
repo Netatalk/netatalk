@@ -1,3 +1,4 @@
+dnl $Id: configure.in,v 1.74 2001-05-08 13:52:38 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -84,7 +85,7 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h)
+AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h mntent.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h ufs/quota.h mount.h)
 AC_CHECK_HEADER(sys/cdefs.h,,
 	AC_MSG_RESULT([enabling generic cdefs.h from tree])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
@@ -528,9 +529,9 @@ if test x"$this_os" = "xtru64"; then
 	AC_MSG_RESULT([ * Tru64 specific configuration])
 	AC_DEFINE(NO_DDP)
 	AC_DEFINE(HAVE_64BIT_LONGS)
-	AC_DEFINE(USE_MOUNT_H)
+	dnl AC_DEFINE(USE_MOUNT_H)
 	AC_DEFINE(USE_OLD_RQUOTA)
-	AC_DEFINE(USE_UFS_QUOTA_H)
+	dnl AC_DEFINE(USE_UFS_QUOTA_H)
 	AC_DEFINE(TRU64)
 	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
 	LDSHAREDFLAGS="-shared -expect_unresolved \*"
@@ -626,6 +627,7 @@ AC_OUTPUT([Makefile
 	bin/psorder/Makefile
 	config/Makefile
 	contrib/Makefile
+	contrib/macusers/Makefile
 	contrib/nu/Makefile
 	contrib/printing/Makefile
 	contrib/shell_utils/Makefile
