@@ -33,6 +33,9 @@
 #define UAM_OPTION_HOSTNAME     (1 << 5) /* get host name */
 #define UAM_OPTION_COOKIE       (1 << 6) /* cookie handle */
 #define UAM_OPTION_PROTOCOL	(1 << 7) /* DSI or ASP */
+#ifdef TRU64
+#define UAM_OPTION_CLIENTNAME   (1 << 8) /* get client IP address */
+#endif /* TRU64 */
 
 /* some password options. you pass these in the length parameter and
  * get back the corresponding option. not all of these are implemented. */
@@ -61,6 +64,9 @@ extern int uam_checkuser __P((const struct passwd *));
 extern int uam_afp_read __P((void *, char *, int *,
 			     int (*)(void *, void *, const int)));
 extern int uam_afpserver_option __P((void *, const int, void *, int *));
+#ifdef TRU64
+extern void uam_afp_getcmdline __P((int *, char ***));
+#endif /* TRU64 */
 
 /* switch.c */
 #define UAM_AFPSERVER_PREAUTH  (0)

@@ -1,4 +1,11 @@
-($Id: ChangeLog,v 1.51 2001-06-20 18:33:03 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.52 2001-06-25 15:18:00 rufustfirefly Exp $)
+
+2001-06-25  jeff b  <jeff@univrel.pr.uconn.edu>
+	* etc/afpd/auth.c, etc/afpd/main.c, etc/afpd/uam.c,
+	etc/uams/uams_dhx_passwd.c, etc/uams/uams_passwd.c,
+	include/atalk/uam.h: TRU64 authentication patch to allow
+	any security scheme to be used on the TRU64 side (Burkhard
+	Schmidt)
 
 2001-06-20  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in: check for linux/quota.h before enabling

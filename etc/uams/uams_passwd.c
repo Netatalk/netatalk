@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.10 2001-05-25 13:23:56 rufustfirefly Exp $
+ * $Id: uams_passwd.c,v 1.11 2001-06-25 15:18:01 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -34,12 +34,10 @@
 #define PASSWDLEN 8
 
 #ifdef TRU64
-#include <sys/types.h>
-#include <sys/security.h>
-#include <prot.h>
 #include <sia.h>
+#include <siad.h>
 
-static int c2security = 0;
+static char *clientname;
 #endif /* TRU64 */
 
 /* cleartxt login */
@@ -59,6 +57,12 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
 			     (void *) &username, &ulen) < 0)
       return AFPERR_MISC;
+
+#ifdef TRU64
+    if( uam_afpserver_option( obj, UAM_OPTION_CLIENTNAME,
+                              (void *) &clientname, NULL ) < 0 )
+        return AFPERR_MISC;
+#endif /* TRU64 */
 
     len = (unsigned char) *ibuf++;
     if ( len > ulen ) {
@@ -94,18 +98,19 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     *uam_pwd = pwd;
 
 #ifdef TRU64
-    if ( c2security == 1 ) {
-        struct pr_passwd *pr = getprpwnam( pwd->pw_name );
-        if ( pr == NULL )
+    {
+        int ac;
+        char **av;
+        char hostname[256];
+
+        uam_afp_getcmdline( &ac, &av );
+        sprintf( hostname, "%s@%s", username, clientname );
+
+        if( sia_validate_user( NULL, ac, av, hostname, username,
+                               NULL, FALSE, NULL, ibuf ) != SIASUCCESS )
             return AFPERR_NOTAUTH;
-        if ( strcmp( dispcrypt( ibuf, pr->ufld.fd_encrypt,
-            pr->ufld.fd_oldcrypt ), pr->ufld.fd_encrypt ) == 0 ) {
-            return AFP_OK;
-        }
-    } else {
-        p = crypt( ibuf, pwd->pw_passwd );
-        if ( strcmp( p, pwd->pw_passwd ) == 0 )
-            return AFP_OK;
+
+        return AFP_OK;
     }
 #else /* TRU64 */
     p = crypt( ibuf, pwd->pw_passwd );
@@ -260,37 +265,6 @@ static int passwd_printer(start, stop, username, out)
 
 static int uam_setup(const char *path)
 {
-#ifdef TRU64
-    FILE *f;
-    char buf[256];
-    char siad[] = "siad_ses_init=";
-
-    if ( access( SIAIGOODFILE, F_OK ) == -1 ) {
-        syslog( LOG_ERR, "clrtxt uam_setup: %s does not exist",
-            SIAIGOODFILE);
-        return -1;
-    }
-
-    if ( ( f = fopen(MATRIX_CONF, "r" ) ) == NULL ) {
-        syslog( LOG_ERR, "clrtxt uam_setup: %s is unreadable",
-            MATRIX_CONF );
-        return -1;
-    }
-
-    while ( fgets( buf, sizeof(buf), f ) != NULL ) {
-        if ( strncmp( buf, siad, sizeof(siad) - 1 ) == 0 ) {
-            if ( strstr( buf, "OSFC2" ) != NULL )
-                c2security = 1;
-            break;
-        }
-    }
-
-    fclose(f);
-
-    syslog( LOG_INFO, "clrtxt uam_setup: security level %s",
-        c2security == 0 ? "BSD" : "OSFC2" );
-#endif /* TRU64 */
-
   if (uam_register(UAM_SERVER_LOGIN, path, "Cleartxt Passwrd", 
 		passwd_login, NULL, NULL) < 0)
 	return -1;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: main.c,v 1.10 2001-06-25 15:18:01 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -52,6 +52,9 @@
 #include <sys/security.h>
 #include <prot.h>
 #include <sia.h>
+
+static int argc = 0;
+static char **argv = NULL;
 #endif /* TRU64 */
 
 #ifdef DID_MTAB
@@ -64,6 +67,14 @@ struct afp_options default_options;
 static AFPConfig *configs;
 static server_child *server_children;
 static fd_set save_rfds;
+
+#ifdef TRU64
+void afp_get_cmdline( int *ac, char ***av)
+{
+  *ac = argc;
+  *av = argv;
+}
+#endif /* TRU64 */
 
 static void afp_exit(const int i)
 {
@@ -138,6 +149,8 @@ int main( ac, av )
     sigset_t            sigs;
 
 #ifdef TRU64
+    argc = ac;
+    argv = av;
     set_auth_parameters( ac, av );
 #endif /* TRU64 */
 

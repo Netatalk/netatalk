@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.15 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: auth.c,v 1.16 2001-06-25 15:18:01 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -32,6 +32,15 @@
 #include <pwd.h>
 #include <grp.h>
 #include <syslog.h>
+
+#ifdef TRU64
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sia.h>
+#include <siad.h>
+
+extern void afp_get_cmdline( int *ac, char ***av );
+#endif /* TRU64 */
 
 #include "globals.h"
 #include "auth.h"
@@ -220,10 +229,47 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     if (admin) syslog( LOG_INFO, "admin login -- %s", pwd->pw_name );
     if (!admin)
 #endif /* DEBUG */
+#ifdef TRU64
+    {
+        struct DSI *dsi = obj->handle;
+        struct hostent *hp;
+        char *clientname;
+        int argc;
+        char **argv;
+        char hostname[256];
+
+        afp_get_cmdline( &argc, &argv );
+
+        hp = gethostbyaddr( (char *) &dsi->client.sin_addr,
+                            sizeof( struct in_addr ),
+                            dsi->client.sin_family );
+
+        if( hp )
+            clientname = hp->h_name;
+        else
+            clientname = inet_ntoa( dsi->client.sin_addr );
+
+        sprintf( hostname, "%s@%s", pwd->pw_name, clientname );
+
+        if( sia_become_user( NULL, argc, argv, hostname, pwd->pw_name,
+                             NULL, FALSE, NULL, NULL,
+                             SIA_BEU_REALLOGIN ) != SIASUCCESS )
+            return AFPERR_BADUAM;
+
+        syslog( LOG_INFO, "session from %s (%s)", hostname,
+                inet_ntoa( dsi->client.sin_addr ) );
+
+        if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
+            syslog( LOG_ERR, "login: %m" );
+            return AFPERR_BADUAM;
+        }
+    }
+#else /* TRU64 */
 	if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
 	    syslog( LOG_ERR, "login: %m" );
 	    return AFPERR_BADUAM;
 	}
+#endif /* TRU64 */
 
     /* There's probably a better way to do this, but for now, we just 
 	play root */

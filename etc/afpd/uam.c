@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: uam.c,v 1.10 2001-06-25 15:18:01 rufustfirefly Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -40,6 +40,11 @@
 #include "afp_config.h"
 #include "auth.h"
 #include "uam_auth.h"
+
+#ifdef TRU64
+#include <netdb.h>
+#include <arpa/inet.h>
+#endif /* TRU64 */
 
 /* --- server uam functions -- */
 
@@ -330,7 +335,22 @@ int uam_afpserver_option(void *private, const int what, void *option,
   case UAM_OPTION_PROTOCOL:
     *buf = (void *) obj->proto;
     break;
+#ifdef TRU64
+  case UAM_OPTION_CLIENTNAME:
+    {
+      struct DSI *dsi = obj->handle;
+      struct hostent *hp;
 
+      hp = gethostbyaddr( (char *) &dsi->client.sin_addr,
+                          sizeof( struct in_addr ),
+                          dsi->client.sin_family );
+      if( hp )
+          *buf = (void *) hp->h_name;
+      else
+          *buf = (void *) inet_ntoa( dsi->client.sin_addr );
+    }
+    break;
+#endif /* TRU64 */
   case UAM_OPTION_COOKIE: 
     /* it's up to the uam to actually store something useful here.
      * this just passes back a handle to the cookie. the uam side
@@ -387,6 +407,13 @@ uam_afp_read_err:
   *buflen = 0;
   return len;
 }
+
+#ifdef TRU64
+void uam_afp_getcmdline( int *ac, char ***av )
+{
+    afp_get_cmdline( ac, av );
+}
+#endif /* TRU64 */
 
 /* --- papd-specific functions (just placeholders) --- */
 void append(void *pf, char *data, int len)
