@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.7 2001-07-31 19:49:02 srittau Exp $
+ * $Id: pap.c,v 1.8 2002-05-07 04:55:26 morgana Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,19 +36,6 @@ char	*nbpfailure = "AppleTalk printer offline";
 void updatestatus(char *s, int len);
 int send_file(int fd, ATP atp, int lastfile);
 
-/* if there is a less hacky way to do this, please do it... */
-#ifdef DEBUG
-#define EBUG
-#endif /* DEBUG */
-
-#undef DEBUG
-
-#ifdef EBUG
-#define DEBUG(x,y)	(x,y)
-#else /*EBUG*/
-#define DEBUG(x,y)
-#endif /*EBUG*/
-
 void usage( path )
     char	*path;
 {
@@ -60,7 +47,19 @@ void usage( path )
 	p++;
     }
     fprintf( stderr,
-	"Usage:\t%s [ -A address ] [ -p printername ] [ -s statusfile ] [ file ] ...\n", p );
+	"Usage:\t%s [ -A address ] [ -c ] [ -d ] [ -e ] [ -E ] [ -p printer ]\n"
+	"    [ -s statusfile ] [ -w ] [ -W ] [ FILES ]\n"
+	"  -A address    - printer Appletalk address\n"
+	"  -c            - take cuts (lie about wait time)\n"
+	"  -d            - enable debug\n"
+	"  -e            - send stdout to stderr\n"
+	"  -E            - don't wait for EOF from printer\n"
+	"  -p printer    - printer name\n"
+	"  -s statusfile - put current printer status in statusfile\n"
+	"  -w            - wait for printer status = 'waiting'\n"
+	"  -W            - wait for printer status = 'idle'\n"
+	"  FILES         - send FILES to printer\n"
+	, p );
     exit( 2 );
 }
 
@@ -147,6 +146,8 @@ struct iovec	sfiov[ PAP_MAXQUANTUM ] = {
     { nbuf[ 7 ] + 4,	0 },
 };
 
+int debug;
+
 int main( ac, av )
     int		ac;
     char	**av;
@@ -167,7 +168,7 @@ int main( ac, av )
     extern int		optind;
 
     memset(&addr, 0, sizeof(addr));
-    while (( c = getopt( ac, av, "Wwcep:s:EA:" )) != EOF ) {
+    while (( c = getopt( ac, av, "dWwcep:s:EA:" )) != EOF ) {
 	switch ( c ) {
 #ifdef FUCKED
 	case 'w' :
@@ -178,6 +179,11 @@ int main( ac, av )
 	    waitforidle = 1;
 	    break;
 #endif /* FUCKED */
+
+	/* enable debugging */
+	case 'd' :
+	    debug++;
+	    break;
 
 	case 'c' :
 	    cuts++;
@@ -269,7 +275,7 @@ int main( ac, av )
 	    exit( 1 );
 	}
 
-DEBUG( printf( "SENDSTATUS >\n" ), fflush( stdout ));
+	if(debug){ printf( "SENDSTATUS >\n" ), fflush( stdout );}
 
 	atpb.atp_saddr = &nn.nn_sat;
 	rniov[ 0 ].iov_len = PAP_MAXDATA + 4;
@@ -297,7 +303,7 @@ DEBUG( printf( "SENDSTATUS >\n" ), fflush( stdout ));
 	    exit( 1 );
 	}
 
-DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
+	if(debug){ printf( "< STATUS\n" ), fflush( stdout );}
 
 	memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9, 
 		((char *)rniov[ 0 ].iov_base)[ 8 ] );
@@ -342,7 +348,7 @@ DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
 	    exit( 1 );
 	}
 
-DEBUG( printf( "OPEN >\n" ), fflush( stdout ));
+	if(debug){ printf( "OPEN >\n" ), fflush( stdout );}
 
 	iov.iov_base = rbuf;
 	iov.iov_len = sizeof( rbuf );
@@ -364,7 +370,7 @@ DEBUG( printf( "OPEN >\n" ), fflush( stdout ));
 	    continue;	/* This is weird, since TIDs must match... */
 	}
 
-DEBUG( printf( "< OPENREPLY\n" ), fflush( stdout ));
+	if(debug){ printf( "< OPENREPLY\n" ), fflush( stdout );}
 
 	if ( isatty( 1 )) {
 	    printf( "%.*s\n", (int)iov.iov_len - 9, (char *) iov.iov_base + 9 );
@@ -423,7 +429,7 @@ DEBUG( printf( "< OPENREPLY\n" ), fflush( stdout ));
 	exit( 1 );
     }
 
-DEBUG( printf( "CLOSE >\n" ), fflush( stdout ));
+	if(debug){ printf( "CLOSE >\n" ), fflush( stdout );}
 
     iov.iov_base = rbuf;
     iov.iov_len = sizeof( rbuf );
@@ -450,7 +456,7 @@ DEBUG( printf( "CLOSE >\n" ), fflush( stdout ));
     }
 #endif /* ZEROCONNID */
 
-DEBUG( printf( "< CLOSEREPLY\n" ), fflush( stdout ));
+	if(debug){ printf( "< CLOSEREPLY\n" ), fflush( stdout );}
 
     if ( isatty( 1 )) {
 	printf( "Connection closed.\n" );
@@ -498,7 +504,7 @@ int send_file( fd, atp, lastfile )
 	exit( 1 );
     }
 
-DEBUG( printf( "READ %d >\n", seq ), fflush( stdout ));
+	if(debug){ printf( "READ %d >\n", seq ), fflush( stdout );}
 
     for (;;) {
 	if ( gettimeofday( &tv, 0 ) < 0 ) {
@@ -525,7 +531,7 @@ DEBUG( printf( "READ %d >\n", seq ), fflush( stdout ));
 		exit( 1 );
 	    }
 
-DEBUG( printf( "TICKLE >\n" ), fflush( stdout ));
+	if(debug){ printf( "TICKLE >\n" ), fflush( stdout );}
 	}
 
 	tv.tv_sec = stv.tv_sec + 60 - tv.tv_sec;
@@ -597,11 +603,11 @@ DEBUG( printf( "TICKLE >\n" ), fflush( stdout ));
 		switch ( cbuf[ 1 ] ) {
 		case PAP_READ :
 		    memcpy( cbuf +  2, &netseq, sizeof( netseq ));
-DEBUG( printf( "< READ %d\n", ntohs( netseq )), fflush( stdout ));
+	if(debug){ printf( "< READ %d\n", ntohs( netseq )), fflush( stdout );}
 #ifdef notdef
 		    if ( netseq != 0 ) {
 			if ( rseq != ntohs( netseq )) {
-DEBUG( printf( "| DUP %d\n", rseq ), fflush( stdout ));
+	if(debug){ printf( "| DUP %d\n", rseq ), fflush( stdout );}
 			    break;
 			}
 			if ( rseq++ == 0xffff ) rseq = 1;
@@ -614,7 +620,7 @@ DEBUG( printf( "| DUP %d\n", rseq ), fflush( stdout ));
 
 		case PAP_CLOSE :
 
-DEBUG( printf( "< CLOSE\n" ), fflush( stdout ));
+	if(debug){ printf( "< CLOSE\n" ), fflush( stdout );}
 
 		    /*
 		     * Respond to the close request, and fail.
@@ -631,14 +637,14 @@ DEBUG( printf( "< CLOSE\n" ), fflush( stdout ));
 			exit( 1 );
 		    }
 
-DEBUG( printf( "CLOSEREPLY >\n" ), fflush( stdout ));
+	if(debug){ printf( "CLOSEREPLY >\n" ), fflush( stdout );}
 
 		    fprintf( stderr, "Connection closed by foreign host.\n" );
 		    exit( 1 );
 
 		case PAP_TICKLE :
 
-DEBUG( printf( "< TICKLE\n" ), fflush( stdout ));
+	if(debug){ printf( "< TICKLE\n" ), fflush( stdout );}
 
 		    break;
 		default :
@@ -689,12 +695,12 @@ DEBUG( printf( "< TICKLE\n" ), fflush( stdout ));
 		/* eof */
 		if ( ((char *)rniov[ 0 ].iov_base)[ 2 ] ) {
 
-DEBUG( printf( "< DATA (eof)\n" ), fflush( stdout ));
+	if(debug){ printf( "< DATA (eof)\n" ), fflush( stdout );}
 
 		    return( 0 );
 		}
 
-DEBUG( printf( "< DATA\n" ), fflush( stdout ));
+	if(debug){ printf( "< DATA\n" ), fflush( stdout );}
 
 
 		/*
@@ -715,13 +721,13 @@ DEBUG( printf( "< DATA\n" ), fflush( stdout ));
 		    exit( 1 );
 		}
 
-DEBUG( printf( "READ %d >\n", seq ), fflush( stdout ));
+	if(debug){ printf( "READ %d >\n", seq ), fflush( stdout );}
 
 		break;
 
 	    case 0:
 
-DEBUG( printf( "| RETRANS\n" ), fflush( stdout ));
+	if(debug){ printf( "| RETRANS\n" ), fflush( stdout );}
 
 		break;
 
@@ -760,7 +766,7 @@ DEBUG( printf( "| RETRANS\n" ), fflush( stdout ));
 	    }
 	    data = fiovcnt = 0;
 
-DEBUG( printf( "DATA %s\n", eof ? "(eof) >" : ">" ), fflush( stdout ));
+	if(debug){ printf( "DATA %s\n", eof ? "(eof) >" : ">" ), fflush( stdout );}
 
 	    /*
 	     * The Apple LaserWriter IIf, the HP LWIIISi, and IV, don't
@@ -790,7 +796,7 @@ DEBUG( printf( "DATA %s\n", eof ? "(eof) >" : ">" ), fflush( stdout ));
 		exit( 1 );
 	    }
 
-DEBUG( printf( "SENDSTATUS >\n" ), fflush( stdout ));
+	if(debug){ printf( "SENDSTATUS >\n" ), fflush( stdout );}
 
 	    atpb.atp_saddr = &nn.nn_sat;
 	    rniov[ 0 ].iov_len = PAP_MAXDATA + 4;
@@ -818,7 +824,7 @@ DEBUG( printf( "SENDSTATUS >\n" ), fflush( stdout ));
 		exit( 1 );
 	    }
 
-DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
+	if(debug){ printf( "< STATUS\n" ), fflush( stdout );}
 
 #ifdef FUCKED
 	    if ( waitforprinter ) {
@@ -843,22 +849,29 @@ void updatestatus( s, len )
     char	*s;
     int		len;
 {
-    int			fd;
-    struct iovec	iov[ 2 ];
+    int			fd = -1;
+    struct iovec	iov[ 3 ];
 
-    if ( !status ) {
-	return;
+    if ( status ) {
+	if (( fd = open( status, O_WRONLY|O_TRUNC )) < 0 ) {
+	    perror( status );
+	    status = NULL;
+	}
     }
 
-    if (( fd = open( status, O_WRONLY|O_TRUNC )) < 0 ) {
-	perror( status );
-	status = NULL;
-	return;
+    if ( fd < 0 ) {
+	fd = 2;
     }
-    iov[ 0 ].iov_base = s;
-    iov[ 0 ].iov_len = len;
-    iov[ 1 ].iov_base = "\n";
-    iov[ 1 ].iov_len = 1;
-    writev( fd, iov, 2 );
-    close( fd );
+
+    iov[ 0 ].iov_base = "%%[ ";
+    iov[ 0 ].iov_len = 4;
+    iov[ 1 ].iov_base = s;
+    iov[ 1 ].iov_len = len;
+    iov[ 2 ].iov_base = " ]%%\n";
+    iov[ 2 ].iov_len = 5;
+
+    writev( fd, iov, 3 );
+    if ( status ) {
+	close( fd );
+    }
 }
