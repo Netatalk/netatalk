@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.21 2002-09-12 17:33:03 srittau Exp $
+ * $Id: afp_config.c,v 1.22 2003-02-09 20:34:38 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -286,7 +286,8 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     SLPHandle hslp;
     struct servent *afpovertcp;
     int afp_port = 548;
-    const char *srvloc_hostname;
+    const char *srvloc_hostname, *hostname;
+    struct hostent *h;
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
@@ -329,20 +330,24 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	 * not show up int the Network Browser.
 	 */
 	afpovertcp = getservbyname("afpovertcp", "tcp");
-	srvloc_hostname = (options->server ? options->server : options->hostname);
 	if (afpovertcp != NULL) {
 	    afp_port = afpovertcp->s_port;
 	}
-	if (strlen(srvloc_hostname) > (sizeof(srvloc_url) - strlen(inet_ntoa(dsi->server.sin_addr)) - 21)) {
+	/* Try to use the FQDN to register with srvloc. */
+	h = gethostbyaddr((char*)&dsi->server.sin_addr, sizeof(dsi->server.sin_addr), AF_INET);
+	if (h) hostname = h->h_name;
+	else hostname = inet_ntoa(dsi->server.sin_addr);
+	srvloc_hostname = (options->server ? options->server : options->hostname);
+	if (strlen(srvloc_hostname) > (sizeof(srvloc_url) - strlen(hostname) - 21)) {
 	    LOG(log_error, logtype_afpd, "DSIConfigInit: Hostname is too long for SRVLOC");
 	    srvloc_url[0] = '\0';
 	    goto srvloc_reg_err;
 	}
 	if (dsi->server.sin_port == afp_port) {
-	    sprintf(srvloc_url, "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), srvloc_hostname);
+	    sprintf(srvloc_url, "afp://%s/?NAME=%s", hostname, srvloc_hostname);
 	}
 	else {
-	    sprintf(srvloc_url, "afp://%s:%d/?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), srvloc_hostname);
+	    sprintf(srvloc_url, "afp://%s:%d/?NAME=%s", hostname, ntohs(dsi->server.sin_port), srvloc_hostname);
 	}
 
 	err = SLPReg(hslp,
