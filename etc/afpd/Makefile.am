@@ -5,7 +5,7 @@ nlsdir = @NLSDIR@
 
 SUBDIRS = nls
 
-sbin_PROGRAMS = afpd cnid_dump
+sbin_PROGRAMS = afpd
 
 afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 	 file.c enumerate.c desktop.c filedir.c fork.c appl.c gettok.c \
@@ -15,8 +15,6 @@ afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 
 afpd_LDADD = $(top_builddir)/libatalk/libatalk.la
 afpd_LDFLAGS = -export-dynamic
-
-cnid_dump_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 noinst_HEADERS = auth.h codepage.h afp_config.h desktop.h directory.h file.h \
 	 filedir.h fork.h globals.h icon.h mangle.h misc.h status.h switch.h \
