@@ -1,5 +1,10 @@
 ($Id)
 
+2001-02-27  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* README: updated 1.5+ install instructions to include list of
+	required and recommended packages
+
 2001-02-26  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* configure.in: added /usr/local/ssl to list of SSL paths to check, to
