@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.11 2002-10-12 16:42:31 didg Exp $
+ * $Id: switch.c,v 1.12 2002-11-15 10:59:11 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -143,11 +143,7 @@ int	(*postauth_switch[])() = {
     /*  24 -  31 */
     afp_setvolparams, afp_write, afp_getfildirparams, afp_setfildirparams,
     afp_changepw, afp_getuserinfo, afp_getsrvrmesg, afp_createid, /*  32 -  39 */
-#ifdef WITH_CATSEARCH
     afp_deleteid, afp_resolveid, afp_exchangefiles, afp_catsearch,
-#else
-    afp_deleteid, afp_resolveid, afp_exchangefiles, afp_null,
-#endif
     afp_null, afp_null, afp_null, afp_null,			/*  40 -  47 */
     afp_opendt, afp_closedt, afp_null, afp_geticon,
     afp_geticoninfo, afp_addappl, afp_rmvappl, afp_getappl,	/*  48 -  55 */

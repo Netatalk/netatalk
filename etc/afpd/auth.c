@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.36 2002-10-17 18:01:54 didg Exp $
+ * $Id: auth.c,v 1.37 2002-11-15 10:59:11 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -302,9 +302,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 	uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL); 
         /* catsearch_ext uses the same packet as catsearch FIXME double check this, it wasn't true for enue
            enumerate_ext */
-#ifdef WITH_CATSEARCH
 	uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH, afp_catsearch, NULL); 
-#endif
 	uam_afpserver_action(AFP_GETSESSTOKEN,  UAM_AFPSERVER_POSTAUTH, afp_getsession, NULL); 
 	uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect, NULL); 
 	uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext, NULL); 

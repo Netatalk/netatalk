@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.42 2002-10-26 16:39:42 didg Exp $
+ * $Id: volume.c,v 1.43 2002-11-15 10:59:11 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -990,9 +990,7 @@ int		*buflen;
                     ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
                 ashort |= VOLPBIT_ATTR_RO;
             }
-#ifdef WITH_CATSEARCH
             ashort |= VOLPBIT_ATTR_CATSEARCH;
-#endif
             if (afp_version >= 30) {
                 ashort |= VOLPBIT_ATTR_UTF8;
             }

@@ -60,7 +60,6 @@
 #include "filedir.h"
 #include "fork.h"
 
-#ifdef WITH_CATSEARCH
 
 struct finderinfo {
 	u_int32_t f_type;
@@ -772,6 +771,3 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
 /* FIXME: we need a clean separation between afp stubs and 'real' implementation */
 /* (so, all buffer packing/unpacking should be done in stub, everything else 
    should be done in other functions) */
-
-#endif
-/* WITH_CATSEARCH */

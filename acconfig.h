@@ -46,7 +46,6 @@
 #undef USE_MOUNT_H
 #undef USE_OLD_RQUOTA
 #undef USE_UFS_QUOTA_H
-#undef WITH_CATSEARCH
 #undef AFP3x
 #undef HAVE_DECL_ERRNO
 #undef HAVE_DECL_SYS_ERRLIST
