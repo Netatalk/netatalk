@@ -65,11 +65,15 @@ pid_t server_lock(char *program, char *pidfile, int debug)
       fclose(stdout);
       fclose(stderr);
 
+#ifdef TIOCNOTTY
       if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
 	(void)ioctl( i, TIOCNOTTY, 0 );
 	setpgid( 0, getpid());
 	(void) close(i);
       }
+#else
+      setpgid( 0, getpid());
+#endif
       break;
     case -1 :  /* error */
       perror( "fork" );

@@ -20,7 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/syslog.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 

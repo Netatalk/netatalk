@@ -91,7 +91,7 @@ typedef unsigned long long  u_int64_t;
 #define BYTE_ORDER	BIG_ENDIAN
 #endif /*i386*/
 #else
-#ifdef MIPSEB
+#if defined(MIPSEB) || defined(__hppa)
 #define BYTE_ORDER	BIG_ENDIAN
 #else
 #ifdef MIPSEL

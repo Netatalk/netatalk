@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.83 2001-06-11 17:27:29 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.84 2001-06-11 17:31:46 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -380,7 +380,10 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
+	*aix*)				this_os=aix ;;
 	*freebsd*) 			this_os=freebsd ;;
+	*hpux11*)			this_os=hpux11 ;;
+	*irix*)				this_os=irix ;;
 	*linux*)   			this_os=linux ;;
 	*osx*)				this_os=macosx ;;
 	*netbsd*) 			this_os=netbsd ;;
@@ -398,6 +401,17 @@ esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
 
+dnl ----- AIX specific -----
+if test x"$this_os" = "xaix"; then
+	AC_MSG_RESULT([ * AIX specific configuration])
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
+
+	dnl This is probably a lie; AIX 4.3 supports a 64-bit long
+	dnl compilation environment.  It's enough to get things defined
+	dnl right in endian.h provided that long long is supported, though.
+	AC_DEFINE(HAVE_32BIT_LONGS)
+fi
+
 dnl ----- FreeBSD specific -----
 if test x"$this_os" = "xfreebsd"; then 
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
@@ -406,6 +420,21 @@ if test x"$this_os" = "xfreebsd"; then
 
 	dnl ----- Set -shared flag
 	LDSHAREDFLAGS="-shared"
+fi
+
+dnl ----- HP-UX 11 specific -----
+if test x"$this_os" = "xhpux11"; then
+	AC_MSG_RESULT([ * HP-UX 11 specific configuration])
+
+	AC_DEFINE(_ISOC9X_SOURCE)
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
+fi
+
+dnl ----- IRIX specific -----
+if test x"$this_os" = "xirix"; then
+	AC_MSG_RESULT([ * IRIX specific configuration])
+
+	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
 fi
 
 dnl ----- Linux specific -----
