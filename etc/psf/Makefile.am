@@ -34,4 +34,4 @@ install-data-local:
 #
 
 clean distclean clean-recursive distclean-recursive:
-	$(RM) $(psf_LINKS) *.o core .libs .deps
+	$(RM) -r $(psf_LINKS) *.o core .libs .deps

@@ -17,16 +17,25 @@ config_DATA = AppleVolumes.default AppleVolumes.system afpd.conf atalkd.conf net
 EXTRA_DIST = $(config_DATA)
 
 #
+# pluggable authentication modules check for shadow password support
+#
+
+if USE_SHADOWPW
+PAMD = netatalk.pamd.shadow
+else
+PAMD = netatalk.pamd
+endif
+
+#
 # pluggable authentication modules support?
 #
 
 if USE_PAM
 
 pamdir    = /etc/pam.d
-
 pam_DATA = netatalk
 
 netatalk:
-	cp -f netatalk.pamd netatalk
+	$(CP) -f $(PAMD) netatalk
 
 endif 
