@@ -52,7 +52,7 @@
 
 #define FORMAT  ":****************:****************:********\n"
 #define FORMAT_LEN 44
-#define OPTIONS "cafun:p:"
+#define OPTIONS "cafnu:p:"
 #define UID_START 100
 
 #define HEXPASSWDLEN 16
@@ -281,6 +281,7 @@ int main(int argc, char **argv)
       break;
     case 'a': /* add a new user */
       flags |= OPT_ADDUSER;
+      break;
     case 'f': /* force an action */
       flags |= OPT_FORCE;
       break;
@@ -300,14 +301,22 @@ int main(int argc, char **argv)
       break;
     }
   }
-
+  
   if (err || (optind + ((flags & OPT_CREATE) ? 0 : 
 			(flags & OPT_ISROOT)) != argc)) {
 #ifdef USE_CRACKLIB
     fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
-#else
+#else if !(defined(USE_CRACKLIB))
     fprintf(stderr, "Usage: afppasswd [-acf] [-u minuid] [-p path] [username]\n");
 #endif
+    fprintf(stderr, "  -a        add a new user\n");
+    fprintf(stderr, "  -c        create and initialize password file or specific user\n");
+    fprintf(stderr, "  -f        force an action\n");
+#ifdef USE_CRACKLIB
+    fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
+#endif
+    fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
+    fprintf(stderr, "  -p path   path to afppasswd file\n");
     return -1;
   }
 
