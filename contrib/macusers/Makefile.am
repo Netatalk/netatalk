@@ -2,4 +2,4 @@
 
 bin_SCRIPTS = macusers
 
-EXTRA_DIST = README.macusers
+EXTRA_DIST = $(bin_SCRIPTS) README.macusers
