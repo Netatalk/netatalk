@@ -880,10 +880,11 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
    */
   const char* sources[] = {"syslog", "filelog"};
   int sourcenum, typenum, levelnum;
+  log_file_data_pair *logs = log_file_arr[logtype_default];
 
   for(sourcenum=0;sourcenum<NUMOF(sources);sourcenum++)
   {
-    if (strcasecmp(sourcebuf, sources[sourcenum])==0)
+    if (strcasecmp(logsource, sources[sourcenum])==0)
       break;
   }
   if (sourcenum>=NUMOF(sources))
@@ -898,7 +899,7 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
 
   for(typenum=0;typenum<num_logtype_strings;typenum++)
   {
-    if (strcasecmp(typebuf, arr_logtype_strings[typenum])==0)
+    if (strcasecmp(logtype, arr_logtype_strings[typenum])==0)
       break;
   }
   if (typenum>=num_logtype_strings)
@@ -908,7 +909,7 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
 
   for(levelnum=0;levelnum<num_loglevel_strings;levelnum++)
   {
-    if (strcasecmp(levelbuf, arr_loglevel_strings[levelnum])==0)
+    if (strcasecmp(loglevel, arr_loglevel_strings[levelnum])==0)
       break;
   }
   if (levelnum>=num_loglevel_strings)
@@ -925,12 +926,12 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
   {
   case 0: /* syslog */
     syslog_setup(levelnum, typenum, 
-		 log_file_arr[logtype_default][0].display_options,
+		 (*logs)[0].display_options,
 		 global_log_data.facility);
     break;
   default: /* filelog */
     log_setup(filename, levelnum, typenum, 
-	      log_file_arr[logtype_default][0].display_options);
+	      (*logs)[0].display_options);
   };  
   return;
 }
