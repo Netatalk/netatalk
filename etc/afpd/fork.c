@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.10 2001-11-14 21:45:12 srittau Exp $
+ * $Id: fork.c,v 1.11 2001-11-16 11:11:00 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1038,7 +1038,7 @@ int afp_closefork(obj, ibuf, ibuflen, rbuf, rbuflen )
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-	syslog( LOG_ERR, "afp_closefork: of_find: %s", strerrro(errno) );
+	syslog( LOG_ERR, "afp_closefork: of_find: %s", strerror(errno) );
 	return( AFPERR_PARAM );
     }
 
