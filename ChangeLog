@@ -1,3 +1,7 @@
+2001-10-18  joe c <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_add.c: Fix dancing icon problem
+
 2001-10-17  joe c <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_add.c: Fix deadlock problem when copying files to
