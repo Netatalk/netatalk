@@ -107,6 +107,11 @@ a complete list.
 --with-db3=PATH: specify path to Berkeley DB3 installation,
 
 --with-did=[scheme]: set DID scheme (last,mtab),
+	The last DID scheme recreates version 37b behaviour where
+	directory id's are incrementally calculated versus the new
+	hash method. Unfortunately for machines that have a lot of
+	devices, and/or a lot of inodes the hash can fail with
+	multiple directories resolving to the same DID.
 
 --with-msg-dir=path: path to message files [default=/etc/msg],
 
@@ -148,18 +153,11 @@ a complete list.
 	and Transport Layer Security (TLS v1) protocols as well as a
 	full-strength general purpose cryptography library.
 	This is required to enable DHX login support, which
-      will encrypt all of the passwords being sent across the 
-      connection. (Some old mac clients don't support this, check
-      the FAQ for the section on AppleShare clients.)
-      Check to see if your unix has OpenSSL already, or
+	will encrypt all of the passwords being sent across the 
+	connection. (Some old mac clients don't support this, check
+	the FAQ for the section on AppleShare clients.)
+	Check to see if your unix has OpenSSL already, or
 	get everything at http://www.openssl.org/ 
-
-
---with-lastdid: Recreate version 37b behaviour where
-	directory id's are incrementally calculated versus the new
-	hash method. Unfortunately for machines that have a lot of
-	devices, and/or a lot of inodes the hash can fail with
-	multiple directories resolving to the same DID.
 
 --with-uams-path=path: path to UAMs [default=PKGCONF/uams]
 
