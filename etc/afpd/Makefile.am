@@ -17,6 +17,7 @@ test_parse_mtab_SOURCES = test_parse_mtab.c parse_mtab.c
 test_parse_mtab_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 afpd_LDADD = $(top_builddir)/libatalk/libatalk.la
+afpd_LDFLAGS = -export-dynamic
 
 noinst_HEADERS = auth.h codepage.h afp_config.h desktop.h directory.h file.h \
 	 filedir.h fork.h globals.h icon.h misc.h status.h switch.h uam_auth.h \
