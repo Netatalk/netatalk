@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.50 2002-08-22 13:41:20 didg Exp $
+ * $Id: file.c,v 1.51 2002-08-28 15:08:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1799,7 +1799,7 @@ int		ibuflen, *rbuflen;
     of_rename(vol, sdir, spath, curdir, temp);
 
     /* rename destination to source */
-    if ((err = renamefile(path, p, spath, vol_noadouble(vol), addp)) < 0)
+    if ((err = renamefile(upath, p, spath, vol_noadouble(vol), addp)) < 0)
         goto err_src_to_tmp;
     of_rename(vol, curdir, path, sdir, spath);
 
