@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.10 2002-03-13 19:28:23 srittau Exp $
+ * $Id: globals.h,v 1.11 2002-03-16 20:38:09 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -88,6 +88,9 @@ extern void readmessage __P((void));
 /* gettok.c */
 extern void initline   __P((int, char *));
 extern int  parseline  __P((int, char *));
+
+/* afp_util.c */
+const char *AfpNum2name __P((int ));
 
 #ifndef NO_DDP
 extern void afp_over_asp __P((AFPObj *));

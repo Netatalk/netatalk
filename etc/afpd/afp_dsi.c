@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.18 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.19 2002-03-16 20:38:09 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -227,7 +227,7 @@ void afp_over_dsi(AFPObj *obj)
 
             function = (u_char) dsi->commands[0];
             if (obj->options.flags & OPTION_DEBUG ) {
-                printf("command: %d\n", function);
+                printf("command: %d (%s)\n", function, AfpNum2name(function));
                 bprint((char *) dsi->commands, dsi->cmdlen);
             }
 

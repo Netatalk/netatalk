@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.12 2002-02-28 21:20:39 jmarcus Exp $
+ * $Id: afp_asp.c,v 1.13 2002-03-16 20:38:09 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -181,7 +181,7 @@ void afp_over_asp(AFPObj *obj)
 #endif /* AFS */
             func = (u_char) asp->commands[0];
             if ( obj->options.flags & OPTION_DEBUG ) {
-                printf( "command: %d\n", func );
+                printf("command: %d (%s)\n", func, AfpNum2name(func));
                 bprint( asp->commands, asp->cmdlen );
             }
             if ( afp_switch[ func ] != NULL ) {
