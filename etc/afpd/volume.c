@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.53 2003-06-05 09:17:12 didg Exp $
+ * $Id: volume.c,v 1.54 2003-06-14 16:45:21 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -293,7 +293,7 @@ static __inline__ char *get_codepage_path(const char *path, const char *name)
 
 /* handle all the options. tmp can't be NULL. */
 static void volset(struct vol_option *options, char *volname, int vlen,
-                   const char *nlspath, const char *tmp, AFPObj *obj,
+		   const char *nlspath, const char *tmp, AFPObj *obj,
 		   struct passwd *pwd)
 {
     char *val;
