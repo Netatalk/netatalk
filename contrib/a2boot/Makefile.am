@@ -7,7 +7,7 @@ a2boot_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 LIBS = @LIBS@
 
-EXTRA_DIST = COPYRIGHT README VERSION
+EXTRA_DIST = COPYRIGHT VERSION
 
 CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @CFLAGS@ @SLP_CFLAGS@ \
