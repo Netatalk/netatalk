@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.50 2003-01-29 20:31:45 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.51 2003-03-07 14:51:51 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -117,6 +117,31 @@ DB_INIT_LOG | DB_INIT_TXN)
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 * databases. */
 
+/* -----------------------
+ * bandaid for LanTest performance pb. for now not used, cf. ifdef 0 below
+*/
+static int my_yield(void) 
+{
+    struct timeval t;
+    int ret;
+
+    t.tv_sec = 0;
+    t.tv_usec = 1000;
+    ret = select(0, NULL, NULL, NULL, &t);
+    return 0;
+}
+
+/* --------------- */
+static int  my_open(DB *p, const char *f, const char *d, DBTYPE t, u_int32_t flags, int mode)
+{
+#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
+    return p->open(p, NULL, f, d, t, flags, mode);
+#else
+    return p->open(p,       f, d, t, flags, mode);
+#endif
+}
+
+/* --------------- */
 /* the first compare that's always done. */
 static __inline__ int compare_did(const DBT *a, const DBT *b)
 {
@@ -328,13 +353,7 @@ char path[MAXPATHLEN + 1];
     }
 
     /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_didname->open(db->db_didname, NULL, DBDIDNAME, NULL,
-                                   DB_HASH, open_flag, 0666 & ~mask))) {
-#else
-    if ((rc = db->db_didname->open(db->db_didname, DBDIDNAME, NULL,
-                                   DB_HASH, open_flag, 0666 & ~mask))) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_didname, DBDIDNAME, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/name database: %s",
             db_strerror(rc));
         goto fail_appinit;
@@ -360,7 +379,6 @@ char path[MAXPATHLEN + 1];
                                        DB_NOOVERWRITE))) {
             LOG(log_error, logtype_default, "cnid_open: Error putting new version: %s",
                 db_strerror(ret));
-            db->db_didname->close(db->db_didname, 0);
             goto fail_appinit;
         }
     }
@@ -369,7 +387,6 @@ dbversion_retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: txn_begin: failed to check db version: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
         goto fail_appinit;
     }
 
@@ -379,7 +396,6 @@ dbversion_retry:
         case DB_LOCK_DEADLOCK:
             if ((ret = txn_abort(tid)) != 0) {
                 LOG(log_error, logtype_default, "cnid_open: txn_abort: %s", db_strerror(ret));
-                db->db_didname->close(db->db_didname, 0);
                 goto fail_appinit;
             }
             goto dbversion_retry;
@@ -397,7 +413,6 @@ dbversion_retry:
                     if ((ret = txn_abort(tid)) != 0) {
                         LOG(log_error, logtype_default, "cnid_open: txn_abort: %s",
                             db_strerror(ret));
-                        db->db_didname->close(db->db_didname, 0);
                         goto fail_appinit;
                     }
                     goto dbversion_retry;
@@ -408,7 +423,6 @@ dbversion_retry:
                     txn_abort(tid);
                     LOG(log_error, logtype_default, "cnid_open: Error putting new version: %s",
                         db_strerror(ret));
-                    db->db_didname->close(db->db_didname, 0);
                     goto fail_appinit;
                 }
             }
@@ -417,7 +431,6 @@ dbversion_retry:
             txn_abort(tid);
             LOG(log_error, logtype_default, "cnid_open: Failed to check db version: %s",
                 db_strerror(rc));
-            db->db_didname->close(db->db_didname, 0);
             goto fail_appinit;
         }
     }
@@ -425,7 +438,6 @@ dbversion_retry:
     if ((rc = txn_commit(tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to commit db version: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
         goto fail_appinit;
     }
 #endif /* CNID_DB_CDB */
@@ -443,19 +455,13 @@ dbversion_retry:
     if ((rc = db_create(&db->db_macname, db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to create did/macname database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
         goto fail_appinit;
     }
 
     db->db_macname->set_bt_compare(db->db_macname, &compare_mac);
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_macname->open(db->db_macname, NULL, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
-#else
-    if ((rc = db->db_macname->open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/macname database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
         goto fail_appinit;
     }
 
@@ -463,21 +469,13 @@ dbversion_retry:
     if ((rc = db_create(&db->db_shortname, db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to create did/shortname database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-        db->db_macname->close(db->db_macname, 0);
         goto fail_appinit;
     }
 
     db->db_shortname->set_bt_compare(db->db_shortname, &compare_mac);
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_shortname->open(db->db_shortname, NULL, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
-#else
-    if ((rc = db->db_shortname->open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/shortname database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-        db->db_macname->close(db->db_macname, 0);
         goto fail_appinit;
     }
 
@@ -485,23 +483,13 @@ dbversion_retry:
     if ((rc = db_create(&db->db_longname, db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to create did/longname database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
         goto fail_appinit;
     }
 
     db->db_longname->set_bt_compare(db->db_longname, &compare_unicode);
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_longname->open(db->db_longname, NULL, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
-#else
-    if ((rc = db->db_longname->open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask)) != 0) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/longname database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
         goto fail_appinit;
     }
 #endif /* EXTENDED_DB */
@@ -510,28 +498,12 @@ dbversion_retry:
     if ((rc = db_create(&db->db_devino, db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to create dev/ino database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-#ifdef EXTENDED_DB
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
-        db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
         goto fail_appinit;
     }
 
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_devino->open(db->db_devino, NULL, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
-#else
-    if ((rc = db->db_devino->open(db->db_devino, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_devino, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open devino database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-#ifdef EXTENDED_DB
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
-        db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
         goto fail_appinit;
     }
 
@@ -539,31 +511,12 @@ dbversion_retry:
     if ((rc = db_create(&db->db_cnid, db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to create cnid database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-#ifdef EXTENDED_DB
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
-        db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
-        db->db_devino->close(db->db_devino, 0);
         goto fail_appinit;
     }
 
-
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_cnid->open(db->db_cnid, NULL, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
-#else
-    if ((rc = db->db_cnid->open(db->db_cnid, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_cnid, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open dev/ino database: %s",
             db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-#ifdef EXTENDED_DB
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
-        db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
-        db->db_devino->close(db->db_devino, 0);
         goto fail_appinit;
     }
 
@@ -571,42 +524,31 @@ dbversion_retry:
     /* filename mangling database.  Use a hash for this one. */
     if ((rc = db_create(&db->db_mangle, db->dbenv, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_open: Failed to create mangle database: %s", db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-        db->db_devino->close(db->db_devino, 0);
-        db->db_cnid->close(db->db_cnid, 0);
-#ifdef EXTENDED_DB
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
-        db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
         goto fail_appinit;
     }
 
-#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-    if ((rc = db->db_mangle->open(db->db_mangle, NULL, DBMANGLE, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
-#else
-    if ((rc = db->db_mangle->open(db->db_mangle, DBMANGLE, NULL, DB_HASH, open_flag, 0666 & ~mask)) != 0) {
-#endif /* DB_VERSION_MAJOR >= 4 */
+    if ((rc = my_open(db->db_mangle, DBMANGLE, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open mangle database: %s", db_strerror(rc));
-        db->db_didname->close(db->db_didname, 0);
-        db->db_devino->close(db->db_devino, 0);
-        db->db_cnid->close(db->db_cnid, 0);
-#ifdef EXTENDED_DB
-        db->db_macname->close(db->db_macname, 0);
-        db->db_shortname->close(db->db_shortname, 0);
-        db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
         goto fail_appinit;
     }
 #endif /* FILE_MANGLING */
 
     /* Print out the version of BDB we're linked against. */
-    LOG(log_info, logtype_default, "CNID DB initialized using %s",
-        db_version(NULL, NULL, NULL));
-
+    LOG(log_info, logtype_default, "CNID DB initialized using %s", db_version(NULL, NULL, NULL));
+#if 0
+    db_env_set_func_yield(my_yield);
+#endif
     return db;
 
 fail_appinit:
+    if (db->db_didname) db->db_didname->close(db->db_didname, 0);
+    if (db->db_devino)  db->db_devino->close(db->db_devino, 0);
+    if (db->db_cnid)    db->db_cnid->close(db->db_cnid, 0);
+#ifdef EXTENDED_DB
+    if (db->db_macname)   db->db_macname->close(db->db_macname, 0);
+    if (db->db_shortname) db->db_shortname->close(db->db_shortname, 0);
+    if (db->db_longname)  db->db_longname->close(db->db_longname, 0);
+#endif /* EXTENDED_DB */
     LOG(log_error, logtype_default, "cnid_open: Failed to setup CNID DB environment");
     db->dbenv->close(db->dbenv, 0);
 
