@@ -1,5 +1,5 @@
 /*
- * $Id: asp_getsess.c,v 1.6 2002-01-17 06:12:02 srittau Exp $
+ * $Id: asp_getsess.c,v 1.7 2002-06-18 23:45:16 didg Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -106,6 +106,8 @@ void asp_kill(int sig)
  * It returns an ASP to the child and parent and NULL if there is
  * an error.
  */
+static void set_asp_ac(int sid, struct asp_child *tmp);
+
 ASP asp_getsession(ASP asp, server_child *server_children, 
 		   const int tickleval)
 {
@@ -192,6 +194,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
     case ASPFUNC_OPEN :
       if (children->count < children->nsessions) {
+      struct asp_child    *asp_ac_tmp;
 
 	/* find a slot */
 	for (sid = 0; sid < children->nsessions; sid++) {
@@ -240,17 +243,20 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	  break;
 	  
 	default : /* parent process */
+	  /* we need atomic setting or pb with tickle_handler 
+	  */ 
 	  switch (server_child_add(children, CHILD_ASPFORK, pid)) {
 	  case 0: /* added child */
-	    if ((asp_ac[sid] = (struct asp_child *) 
+	    if ((asp_ac_tmp = (struct asp_child *) 
 		 malloc(sizeof(struct asp_child)))) {
-	      asp_ac[sid]->ac_pid = pid;
-	      asp_ac[sid]->ac_state = ACSTATE_OK;
-	      asp_ac[sid]->ac_sat = sat;
-	      asp_ac[sid]->ac_sat.sat_port = asp->cmdbuf[1];
+	      asp_ac_tmp->ac_pid = pid;
+	      asp_ac_tmp->ac_state = ACSTATE_OK;
+	      asp_ac_tmp->ac_sat = sat;
+	      asp_ac_tmp->ac_sat.sat_port = asp->cmdbuf[1];
 	      
 	      asp->cmdbuf[0] = atp_sockaddr(atp)->sat_port;
 	      asp->cmdbuf[1] = sid;
+	      set_asp_ac(sid, asp_ac_tmp);
 	      asperr = ASPERR_OK;
 	      break;
 	    } /* fall through if malloc fails */
@@ -283,4 +289,10 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     }
 
     return asp;
+}
+
+/* with fn defined after use, assume it's not optimized by the compiler */
+static void set_asp_ac(int sid, struct asp_child *tmp)
+{
+    asp_ac[sid] = tmp;
 }
