@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.23 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: auth.c,v 1.24 2002-01-24 16:31:20 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,6 +50,8 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "status.h"
 
 int	afp_version = 11;
+static int afp_version_index;
+
 uid_t	uuid;
 #if defined( __svr4__ ) && !defined( NGROUPS )
 #define NGROUPS NGROUPS_MAX
@@ -163,8 +165,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
         return AFPERR_NOTAUTH;
     }
 
-    LOG(log_info, logtype_default, "login %s (uid %d, gid %d)", pwd->pw_name,
-        pwd->pw_uid, pwd->pw_gid );
+    LOG(log_info, logtype_default, "login %s (uid %d, gid %d) %s", pwd->pw_name,
+        pwd->pw_uid, pwd->pw_gid , afp_versions[afp_version_index]);
 
     if (obj->proto == AFPPROTO_ASP) {
         ASP asp = obj->handle;
@@ -298,26 +300,46 @@ int		ibuflen, *rbuflen;
 
     *rbuflen = 0;
 
+
     if ( nologin & 1)
         return send_reply(obj, AFPERR_SHUTDOWN );
 
+    if (ibuflen <= 1)
+        return send_reply(obj, AFPERR_BADVERS );
+
     ibuf++;
     len = (unsigned char) *ibuf++;
+
+    ibuflen -= 2;
+    if (!len || len > ibuflen)
+        return send_reply(obj, AFPERR_BADVERS );
+
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ]);
     for ( i = 0; i < num; i++ ) {
         if ( strncmp( ibuf, afp_versions[ i ].av_name , len ) == 0 ) {
             afp_version = afp_versions[ i ].av_number;
+            afp_version_index = i;
             break;
         }
     }
     if ( i == num ) 				/* An inappropo version */
         return send_reply(obj, AFPERR_BADVERS );
     ibuf += len;
+    ibuflen -= len;
+
+    if (ibuflen <= 1)
+        return send_reply(obj, AFPERR_BADUAM);
 
     len = (unsigned char) *ibuf++;
+    ibuflen--;
+
+    if (!len || len > ibuflen)
+        return send_reply(obj, AFPERR_BADUAM);
+
     if ((afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len)) == NULL)
         return send_reply(obj, AFPERR_BADUAM);
     ibuf += len;
+    ibuflen -= len;
 
     i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
     if (i || !pwd)

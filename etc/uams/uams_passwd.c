@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.14 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: uams_passwd.c,v 1.15 2002-01-24 16:31:20 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -59,8 +59,8 @@ static char *clientname;
 
 /* cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
-			char *ibuf, int ibuflen,
-			char *rbuf, int *rbuflen)
+                        char *ibuf, int ibuflen,
+                        char *rbuf, int *rbuflen)
 {
     struct passwd *pwd;
 #ifdef SHADOWPW
@@ -72,8 +72,8 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
-			     (void *) &username, &ulen) < 0)
-      return AFPERR_MISC;
+                             (void *) &username, &ulen) < 0)
+        return AFPERR_MISC;
 
 #ifdef TRU64
     if( uam_afpserver_option( obj, UAM_OPTION_CLIENTNAME,
@@ -81,36 +81,51 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
 #endif /* TRU64 */
 
+    if (ibuflen <= 1) {
+        return( AFPERR_PARAM );
+    }
+
     len = (unsigned char) *ibuf++;
-    if ( len > ulen ) {
-	return( AFPERR_PARAM );
+    ibuflen--;
+    if (!len || len > ibuflen || len > ulen ) {
+        return( AFPERR_PARAM );
     }
 
     memcpy(username, ibuf, len );
     ibuf += len;
+    ibuflen -=len;
     username[ len ] = '\0';
-    if ((unsigned long) ibuf & 1) /* pad character */
-      ++ibuf;
+
+    if ((unsigned long) ibuf & 1) { /* pad character */
+        ++ibuf;
+        ibuflen--;
+    }
+    if (ibuflen < PASSWDLEN) {
+        return( AFPERR_PARAM );
+    }
     ibuf[ PASSWDLEN ] = '\0';
 
     if (( pwd = uam_getname(username, ulen)) == NULL ) {
-	return AFPERR_PARAM;
+        return AFPERR_PARAM;
     }
 
     LOG(log_info, logtype_default, "cleartext login: %s", username);
-    if (uam_checkuser(pwd) < 0)
-      return AFPERR_NOTAUTH;
+    if (uam_checkuser(pwd) < 0) {
+        LOG(log_info, logtype_default, "not a valid user");
+        return AFPERR_NOTAUTH;
+    }
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-	LOG(log_info, logtype_default, "no shadow passwd entry for %s", username);
-	return AFPERR_NOTAUTH;
+        LOG(log_info, logtype_default, "no shadow passwd entry for %s", username);
+        return AFPERR_NOTAUTH;
     }
     pwd->pw_passwd = sp->sp_pwdp;
 #endif /* SHADOWPW */
 
-    if (!pwd->pw_passwd)
-      return AFPERR_NOTAUTH;
+    if (!pwd->pw_passwd) {
+        return AFPERR_NOTAUTH;
+    }
 
     *uam_pwd = pwd;
 
@@ -131,8 +146,8 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     }
 #else /* TRU64 */
     p = crypt( ibuf, pwd->pw_passwd );
-    if ( strcmp( p, pwd->pw_passwd ) == 0 ) 
-      return AFP_OK;
+    if ( strcmp( p, pwd->pw_passwd ) == 0 )
+        return AFP_OK;
 #endif /* TRU64 */
 
     return AFPERR_NOTAUTH;
@@ -142,8 +157,8 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 #if 0
 /* change passwd */
 static int passwd_changepw(void *obj, char *username,
-			   struct passwd *pwd, char *ibuf,
-			   int ibuflen, char *rbuf, int *rbuflen)
+                           struct passwd *pwd, char *ibuf,
+                           int ibuflen, char *rbuf, int *rbuflen)
 {
 #ifdef SHADOWPW
     struct spwd *sp;
@@ -152,7 +167,7 @@ static int passwd_changepw(void *obj, char *username,
     uid_t uid = geteuid();
 
     if (uam_checkuser(pwd) < 0)
-      return AFPERR_ACCESS;
+        return AFPERR_ACCESS;
 
     /* old password */
     memcpy(pw, ibuf, PASSWDLEN);
@@ -161,34 +176,34 @@ static int passwd_changepw(void *obj, char *username,
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-	LOG(log_info, logtype_default, "no shadow passwd entry for %s", username);
-	return AFPERR_PARAM;
+        LOG(log_info, logtype_default, "no shadow passwd entry for %s", username);
+        return AFPERR_PARAM;
     }
     pwd->pw_passwd = sp->sp_pwdp;
 #endif /* SHADOWPW */
 
     p = crypt(pw, pwd->pw_passwd );
     if (strcmp( p, pwd->pw_passwd )) {
-      memset(pw, 0, sizeof(pw));
-      return AFPERR_NOTAUTH;
+        memset(pw, 0, sizeof(pw));
+        return AFPERR_NOTAUTH;
     }
 
     /* new password */
     ibuf += PASSWDLEN;
     ibuf[PASSWDLEN] = '\0';
-    
+
 #ifdef SHADOWPW
 #else /* SHADOWPW */
 #endif /* SHADOWPW */
     return AFP_OK;
-} 
+}
 #endif /* 0 */
 
 
 /* Printer ClearTxtUAM login */
 static int passwd_printer(start, stop, username, out)
-	char	*start, *stop, *username;
-	struct papfile	*out;
+char	*start, *stop, *username;
+struct papfile	*out;
 {
     struct passwd *pwd;
 #ifdef SHADOWPW
@@ -226,7 +241,7 @@ static int passwd_printer(start, stop, username, out)
     p = q + 3;
     if ((q = strrchr(data, ')' )) == NULL) {
         LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: password not found in string");
-	free(data);
+        free(data);
         return(-1);
     }
     strncpy(password, p, q - p);
@@ -237,40 +252,40 @@ static int passwd_printer(start, stop, username, out)
     ulen = strlen(username);
 
     if (( pwd = uam_getname(username, ulen)) == NULL ) {
-	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: ( %s ) not found ",
-			username);
-	return(-1);
+        LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: ( %s ) not found ",
+            username);
+        return(-1);
     }
 
     if (uam_checkuser(pwd) < 0) {
-	/* syslog of error happens in uam_checkuser */
-	return(-1);
+        /* syslog of error happens in uam_checkuser */
+        return(-1);
     }
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: no shadow passwd entry for %s", 
-			username);
-	return(-1);
+        LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: no shadow passwd entry for %s",
+            username);
+        return(-1);
     }
     pwd->pw_passwd = sp->sp_pwdp;
 #endif /* SHADOWPW */
 
     if (!pwd->pw_passwd) {
-	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: no password for %s",
-			username);
-	return(-1);
+        LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: no password for %s",
+            username);
+        return(-1);
     }
 
 #ifdef AFS
-    if ( kcheckuser( pwd, password) == 0) 
-      return(0);
+    if ( kcheckuser( pwd, password) == 0)
+        return(0);
 #endif /* AFS */
 
     p = crypt(password, pwd->pw_passwd);
     if (strcmp(p, pwd->pw_passwd) != 0) {
-	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: bad password", username);
-	return(-1);
+        LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: bad password", username);
+        return(-1);
     }
 
     /* Login successful */
@@ -282,24 +297,24 @@ static int passwd_printer(start, stop, username, out)
 
 static int uam_setup(const char *path)
 {
-  if (uam_register(UAM_SERVER_LOGIN, path, "Cleartxt Passwrd", 
-		passwd_login, NULL, NULL) < 0)
-	return -1;
-  if (uam_register(UAM_SERVER_PRINTAUTH, path, "ClearTxtUAM",
-		passwd_printer) < 0)
-	return -1;
+    if (uam_register(UAM_SERVER_LOGIN, path, "Cleartxt Passwrd",
+                     passwd_login, NULL, NULL) < 0)
+        return -1;
+    if (uam_register(UAM_SERVER_PRINTAUTH, path, "ClearTxtUAM",
+                     passwd_printer) < 0)
+        return -1;
 
-  return 0;
+    return 0;
 }
 
 static void uam_cleanup(void)
 {
-  uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
-  uam_unregister(UAM_SERVER_PRINTAUTH, "ClearTxtUAM");
+    uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
+    uam_unregister(UAM_SERVER_PRINTAUTH, "ClearTxtUAM");
 }
 
 UAM_MODULE_EXPORT struct uam_export uams_clrtxt = {
-  UAM_MODULE_SERVER,
-  UAM_MODULE_VERSION,
-  uam_setup, uam_cleanup
-};
+            UAM_MODULE_SERVER,
+            UAM_MODULE_VERSION,
+            uam_setup, uam_cleanup
+        };
