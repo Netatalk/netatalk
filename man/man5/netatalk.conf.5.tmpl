@@ -1,12 +1,12 @@
-.\" $Id: netatalk.conf.5.tmpl,v 1.1 2000-09-22 15:18:44 arichard Exp $
-.TH AppleVolumes.default 5 "20 September 2000" "netatalk 1.5"
+.\" $Id: netatalk.conf.5.tmpl,v 1.2 2000-09-28 16:49:21 rufustfirefly Exp $
+.TH netatalk.conf 5 "28 September 2000" "netatalk 1.5"
 .UC 4
 .SH NAME
-AppleVolumes.default \- Configuration file used by \fBafpd\fR(8)
-to determine the shares made available through Appletalk
+netatalk.conf \- Configuration file used by \fBnetatalk\fR(8)
+to determine its general configuration
 
 .SH DESCRIPTION
-\fB:ETCDIR:/AppleVolumes.default\fR is the configuration file used
+\fB:ETCDIR:/netatalk.conf\fR is the configuration file used
 by afpd to determine what portions of the file system will be shared via
 Appletalk, as well as their behaviors.
 
@@ -15,141 +15,58 @@ are composed like:
 
 .RS
 .sp
-.I path
-.B [
-.I chooser name
-.B ] [
-.I options
-.B ]
+.I option
+.B =
+.I value
 
 .sp
 .RE
-The path name must be a fully qualified path name, or a path name using
-either the \fB~\fR shell shorthand or any of the substitution variables,
-which are listed below.
-
-The chooser name is the name that appears in the Chooser on Macintoshes
-to represent the appropriate share. If there are spaces in the name, it
-should be in quotes (i.e. \fB"File Share"\fR). The chooser name may not
-exceed 27 characters in length, and cannot contain the \fB:\fR character.
-
 The possible options and their meanings are:
 
 .TP
-.B allow:[users/groups]
-The allow option allows the users and groups that access a share to
-be specified. Users and groups are specified, delimited by commas. Groups
-are designated by a \fB@\fR prefix.
-
-\fIExample:\fR \fBallow:user1,user2,@group\fR
+.B AFPD_GUEST
+Sets the id of the guest user to a local user on the system.
 
 .TP
-.B casefold:[option]
-The casefold option handles how casenames should be mangled. The available
-options are:
-
-\fBtolower\fR - Lowercases names in both directions.
-
-\fBtoupper\fR - Uppercases names in both directions.
-
-\fBxlatelower\fR - Client sees lowercase, server sees uppercase.
-
-\fBxlateupper\fR - Client sees uppercase, server sees lowercase.
+.B AFPD_MAX_CLIENTS
+Sets the maximum number of clients that can simultaneously connect to
+the server.
 
 .TP
-.B codepage:[nls file]
-The codepage option loads a specific codepage from the nls directory.
+.B AFPD_RUN
+Enables the afpd daemon if set to "yes". This should be enabled if you
+are planning on using netatalk as a file server.
 
 .TP
-.B dbpath:[path]
-Sets the database information to be stored in \fBpath\fR.
+.B AFPD_UAM_LIST
+Sets the default UAMs for afpd (and papd, if printer authentication is
+compiled in) to use.
+
+\fIExample:\fR
+\fBAFPD_UAMLIST\fR=\fB"-U uams_guest.so,uams_randnum.so"\fR
 
 .TP
-.B deny:[users/groups]
-The deny option specifies users and groups who are not allowed access
-to the share. It follows the same format as the \fBallow\fR option.
+.B ATALK_BGROUND
+"yes" will set netatalk to initialize in the background, and "no" will
+cause normal initialization.
 
 .TP
-.B options:[option]
-This allows multiple options to be specified in a comma delimited format.
-The available options are:
-
-\fBcrlf\fR - Enables crlf translation for TEXT files.
-
-\fBlimitsize\fR - Hack for older Macintoshes using newer Appleshare
-clients to limit the disk size reporting to 2 GB.
-
-\fBmswindows\fR - Forces filename restrictions imposed by MS WinXX, and
-invokes the MS default codepage (iso8859-1) if one is not already
-specified.
-
-\fBnoadouble\fR - Forces afpd to not create .AppleDouble unless a resource
-fork needs to be created.
-
-\fBnohex\fR - Disables :hex translations for anything except dot files.
-This option makes the \fB/\fR character illegal.
-
-\fBprodos\fR - Provides compatibility with Apple II clients.
-
-\fBro\fR - Specifies the share as being read only for all users.
-
-\fBusedots\fR - Don't do :hex translation for dot files. This makes all
-files such as .Parent, .Apple* illegal. Dot files created on the server
-side will be invisible to the client.
+.B ATALK_NAME
+Sets the machines' Appletalk name.
 
 .TP
-.B password:[password]
-This option allows you to set a volume password, which can be a maximum
-of 8 characters long.
+.B ATALK_ZONE
+Sets the machines' Appletalk zone.
 
 .TP
-.B rolist:[users/groups]
-Allows certain users and groups to have read-only access to a share.
-This follows the \fBallow\fR option format.
+.B ATALKD_RUN
+Enables the atalkd daemon if set to "yes". This should be enabled if
+you are planning on providing Appletalk services.
 
 .TP
-.B rwlist:[users/groups]
-Allows certain users and groups to have read/write access to a share.
-This follows the \fBallow\fR option format.
-
-.P
-The variables which can be used for subsitutions are:
-
-.TP
-.B $c
-client's ip or appletalk address
-
-.TP
-.B $f
-full name (contents of the gecos field in the passwd file)
-
-.TP
-.B $g
-group name
-
-.TP
-.B $h
-hostname
-
-.TP
-.B $s
-server name (this can be the hostname)
-
-.TP
-.B $u
-user name (if guest, it is the user that guest is running as)
-
-.TP
-.B $v
-volume name (either ADEID_NAME or basename of path)
-
-.TP
-.B $z
-appletalk zone (may not exist)
-
-.TP
-.B $$
-prints dollar sign (\fb$\fR)
+.B PAPD_RUN
+Enables the papd daemon if set to "yes". This should be enabled if you
+are planning on using netatalk as a print server.
 
 .SH SEE ALSO
-afpd(8)
+atalkd(8), atalkd.conf(5)
