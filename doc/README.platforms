@@ -58,6 +58,9 @@ For more complete information about the Linux kernel see the
 Kernel-HOWTO:
 http://www.linuxdoc.org/HOWTO/Kernel-HOWTO.html
 
+A note for RedHat users: You may need to install the glibc-devel
+package to be able to compile Netatalk correctly.
+
 ----------------------------------------------------------------
 
 B. TRU64
