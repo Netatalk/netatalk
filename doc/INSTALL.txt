@@ -138,7 +138,7 @@ $> dmesg | grep Apple
 This just parses the boot messages for any line containing
 'Apple'.
 
-To loaded as a module:
+To see all the  loaded modules (as root):
 $> lsmod
 
 If you don't find it, you may have to compile a kernel and turn on
