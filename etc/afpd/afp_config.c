@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.20 2002-05-03 22:51:33 jmarcus Exp $
+ * $Id: afp_config.c,v 1.21 2002-09-12 17:33:03 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -286,7 +286,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     SLPHandle hslp;
     struct servent *afpovertcp;
     int afp_port = 548;
-	char *srvloc_hostname;
+    const char *srvloc_hostname;
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
