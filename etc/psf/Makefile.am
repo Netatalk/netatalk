@@ -28,7 +28,7 @@ psf_LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap \
 
 install-exec-local:
 	@list='$(psf_LINKS)'; for l in $$list; do \
-		rm $(DESTDIR)$(sbindir)/$$l || true; \
+		rm $(DESTDIR)$(sbindir)/$$l 2>/dev/null || true; \
 		$(LN_S) psf $(DESTDIR)$(sbindir)/$$l;  \
 	done
 
