@@ -8,8 +8,10 @@ netatalk (1.5pre7cvs-0) unstable; urgency=medium
   * Newer versions of config.{sub,guess} were now added to upstream
     sources. No need to patch them.
   * netatalk-config(1), timelord(8), and timeout(1) do now have a man page.
+  * Some doc files were removed, others were added.
+  * Use debhelper compatibility level 3.
 
- -- Sebastian Rittau <srittau@debian.org>  Thu, 19 Jul 2001 18:46:08 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 16 Aug 2001 19:13:43 +0200
 
 netatalk (1.5pre6-6) unstable; urgency=medium
 

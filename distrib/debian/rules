@@ -2,6 +2,8 @@
 
 #export DH_VERBOSE=1
 
+export DH_COMPAT=3
+
 # support the DEB_BUILD_OPTIONS variable (partly stolen from gnome-utils)
 CFLAGS :=
 LDFLAGS :=
