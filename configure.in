@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.157 2002-04-29 06:23:57 morgana Exp $
+dnl $Id: configure.in,v 1.158 2002-05-29 18:02:57 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -208,7 +208,6 @@ AC_ARG_ENABLE(force-uidgid,
 dnl Don't use DB3 unless it's needed
 db3_required=no
 
-
 dnl Determine DID scheme
 AC_MSG_CHECKING([for DID scheme to use])
 AC_ARG_WITH(did,
@@ -233,6 +232,20 @@ else
 	AC_MSG_ERROR([unknown DID scheme])
 fi
 AM_CONDITIONAL(COMPILE_CNID, test "x$did_scheme" = "xcnid")
+
+dnl Determine whether or not to use filename mangling
+AC_MSG_CHECKING([whether or not to use filename mangling])
+AC_ARG_WITH(mangling,
+	[ --with-mangling	enable filename mangling],
+	if test "$withval" = "yes"; then
+	    if test "x$did_scheme" != "xcnid"; then
+		AC_MSG_ERROR([DID scheme must be CNID to use filename mangling])
+	    else
+		AC_DEFINE(FILE_MANGLING, 1)
+		AC_MSG_RESULT([yes])
+	    fi
+	fi
+)
 
 dnl Check for Berkeley DB3 library
 if test "x$db3_required" = "xyes"; then

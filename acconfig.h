@@ -5,6 +5,7 @@
 #undef AFS
 #undef BSD4_4
 #undef CNID_DB
+#undef FILE_MANGLING
 #undef DISABLE_LOGGER
 #undef LOGFILEPATH
 #undef DEBUG

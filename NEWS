@@ -3,6 +3,7 @@ Changes from 1.5.3
 
 * NEW: Add the ability to enable debugging at runtime by sending afpd a
        SIGUSR1.
+* NEW: Add support for long filename mangling.
 * NEW: Add a -noslp option to disable SLP per afpd instance.
 * NEW: Added -d option for pap to enable debugging at runtime rather than
        compile time.

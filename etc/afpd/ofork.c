@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.14 2002-05-13 04:59:36 jmarcus Exp $
+ * $Id: ofork.c,v 1.15 2002-05-29 18:02:59 jmarcus Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -230,7 +230,7 @@ struct adouble      *ad;
     /* here's the deal: we allocate enough for the standard mac file length.
      * in the future, we'll reallocate in fairly large jumps in case
      * of long unicode names */
-    if (( of->of_name =(char *)malloc(MACFILELEN + 1)) ==
+    if (( of->of_name =(char *)malloc(255 + 1)) ==
             NULL ) {
         LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
         if (!ad)
@@ -239,7 +239,7 @@ struct adouble      *ad;
         oforks[ of_refnum ] = NULL;
         return NULL;
     }
-    strncpy( of->of_name, path, of->of_namelen = MACFILELEN + 1);
+    strncpy( of->of_name, path, of->of_namelen = 255 + 1);
     *ofrefnum = refnum;
     of->of_refnum = refnum;
     of_hash(of);

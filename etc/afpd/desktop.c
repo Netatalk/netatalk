@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.12 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: desktop.c,v 1.13 2002-05-29 18:02:59 jmarcus Exp $
  *
  * See COPYRIGHT.
  */
@@ -40,6 +40,9 @@
 #include "fork.h"
 #include "globals.h"
 #include "desktop.h"
+#ifdef FILE_MANGLING
+#include "mangle.h"
+#endif /* CNID_DB */
 
 int afp_opendt(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
@@ -611,6 +614,10 @@ char *mtoupath(const struct vol *vol, char *mpath)
         return( "." );
     }
 
+#ifdef FILE_MANGLING
+    mpath = demangle(vol, mpath);
+#endif /* FILE_MANGLING */
+
     m = mpath;
     u = upath;
     while ( *m != '\0' ) {
@@ -662,6 +669,10 @@ char *utompath(const struct vol *vol, char *upath)
     static char  mpath[ MAXPATHLEN + 1];
     char        *m, *u;
     int          h;
+
+#ifdef FILE_MANGLING
+    upath = mangle(vol, upath);
+#endif /* FILE_MANGLING */
 
     /* do the hex conversion */
     u = upath;

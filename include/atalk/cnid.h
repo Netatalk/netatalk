@@ -48,4 +48,8 @@ extern int cnid_delete __P((void *, const cnid_t));
 /* cnid_nextid.c */
 extern cnid_t cnid_nextid __P((void *));
 
+/* cnid_mangle_* */
+extern int cnid_mangle_add __P((void *, char *, char *));
+extern char *cnid_mangle_get __P((void *, char *));
+
 #endif /* include/atalk/cnid.h */

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.38 2002-02-01 19:51:09 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.39 2002-05-29 18:02:59 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -73,6 +73,7 @@
 #define DBDIDNAME     "didname.db"   /* did/full name mapping */
 #define DBSHORTNAME   "shortname.db" /* did/8+3 mapping */
 #define DBMACNAME     "macname.db"   /* did/31 mapping */
+#define DBMANGLE      "mangle.db"    /* filename mangling */
 #define DBLONGNAME    "longname.db"  /* did/unicode mapping */
 #define DBLOCKFILE    "cnid.lock"
 #define DBRECOVERFILE "cnid.dbrecover"
@@ -507,6 +508,35 @@ dbversion_retry:
 #endif /* EXTENDED_DB */
         goto fail_appinit;
     }
+
+#ifdef FILE_MANGLING
+    /* filename mangling database.  Use a hash for this one. */
+    if ((rc = db_create(&db->db_mangle, db->dbenv, 0)) != 0) {
+        LOG(log_error, logtype_default, "cnid_open: Failed to create mangle database: %s", db_strerror(rc));
+        db->db_didname->close(db->db_didname, 0);
+        db->db_devino->close(db->db_devino, 0);
+        db->db_cnid->close(db->db_cnid, 0);
+#ifdef EXTENDED_DB
+        db->db_macname->close(db->db_macname, 0);
+        db->db_shortname->close(db->db_shortname, 0);
+        db->db_longname->close(db->db_longname, 0);
+#endif /* EXTENDED_DB */
+        goto fail_appinit;
+    }
+
+    if ((rc = db->db_mangle->open(db->db_mangle, DBMANGLE, NULL, DB_HASH, open_flag, 0666)) != 0) {
+        LOG(log_error, logtype_default, "cnid_open: Failed to open mangle database: %s", db_strerror(rc));
+        db->db_didname->close(db->db_didname, 0);
+        db->db_devino->close(db->db_devino, 0);
+        db->db_cnid->close(db->db_cnid, 0);
+#ifdef EXTENDED_DB
+        db->db_macname->close(db->db_macname, 0);
+        db->db_shortname->close(db->db_shortname, 0);
+        db->db_longname->close(db->db_longname, 0);
+#endif /* EXTENDED_DB */
+        goto fail_appinit;
+    }
+#endif /* FILE_MANGLING */
 
     /* Print out the version of DB3 we're linked against. */
     LOG(log_info, logtype_default, "CNID DB initialized using %s",

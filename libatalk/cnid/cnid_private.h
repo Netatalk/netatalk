@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_private.h,v 1.9 2002-02-02 19:12:31 jmarcus Exp $
+ * $Id: cnid_private.h,v 1.10 2002-05-29 18:02:59 jmarcus Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -39,6 +39,7 @@ typedef struct CNID_private {
     DB *db_cnid;
     DB *db_didname;
     DB *db_devino;
+    DB *db_mangle;
 #ifdef EXTENDED_DB
     DB *db_shortname;
     DB *db_macname;
