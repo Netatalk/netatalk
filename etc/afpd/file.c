@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.77 2003-01-24 07:08:42 didg Exp $
+ * $Id: file.c,v 1.78 2003-01-24 12:42:31 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1774,6 +1774,7 @@ int		ibuflen, *rbuflen;
     struct adouble	*addp;
     struct ofork	*s_of;
     struct ofork	*d_of;
+    int                 crossdev;
     
 #ifdef CNID_DB
     int                 slen, dlen;
@@ -1871,9 +1872,8 @@ int		ibuflen, *rbuflen;
      * error */
     if ((curdir == sdir) && strcmp(spath, path->m_name) == 0)
         return AFPERR_SAMEOBJ;
-    memcpy(&srcst, &path->st, sizeof(struct stat));
 
-    switch (errno) {
+    switch (path->st_errno) {
         case 0:
              break;
         case ENOENT:
@@ -1894,7 +1894,8 @@ int		ibuflen, *rbuflen;
 
     /* they are not on the same device and at least one is open
     */
-    if ((d_of || s_of)  && srcst.st_dev != destst.st_dev)
+    crossdev = (srcst.st_dev != destst.st_dev);
+    if ((d_of || s_of)  && crossdev)
         return AFPERR_MISC;
     
     upath = path->u_name;
@@ -1927,22 +1928,21 @@ int		ibuflen, *rbuflen;
     of_rename(vol, s_of, curdir, temp, curdir, path->m_name);
 
 #ifdef CNID_DB
-    /* id's need switching. src -> dest and dest -> src. */
-    if (sid && (cnid_update(vol->v_db, sid, &destst, curdir->d_did,
-                            upath, dlen) < 0)) {
-        switch (errno) {
-        case EPERM:
-        case EACCES:
-            err = AFPERR_ACCESS;
-            break;
-        default:
-            err = AFPERR_PARAM;
-        }
-        goto err_temp_to_dest;
+    /* id's need switching. src -> dest and dest -> src. 
+     * we need to re-stat() if it was a cross device copy.
+    */
+    if (sid) {
+	cnid_delete(vol->v_db, sid);
     }
-
-    if (did && (cnid_update(vol->v_db, did, &srcst, sdir->d_did,
-                            supath, slen) < 0)) {
+    if (did) {
+	cnid_delete(vol->v_db, did);
+    }
+    if ((did && ( (crossdev && stat( upath, &srcst) < 0) || 
+                cnid_update(vol->v_db, did, &srcst, curdir->d_did,upath, dlen) < 0))
+       ||
+       (sid && ( (crossdev && stat(p, &destst) < 0) ||
+                cnid_update(vol->v_db, sid, &destst, sdir->d_did,supath, slen) < 0))
+    ) {
         switch (errno) {
         case EPERM:
         case EACCES:
@@ -1951,9 +1951,6 @@ int		ibuflen, *rbuflen;
         default:
             err = AFPERR_PARAM;
         }
-
-        if (sid)
-            cnid_update(vol->v_db, sid, &srcst, sdir->d_did, supath, slen);
         goto err_temp_to_dest;
     }
 #endif /* CNID_DB */
