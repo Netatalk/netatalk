@@ -569,6 +569,9 @@ ad_mkdir( path, mode )
     char		*path;
     int			mode;
 {
+#ifdef DEBUG
+    syslog (LOG_INFO, "ad_mkdir: Creating directory with mode %d", mode);
+#endif
     return mkdir( path, ad_mode( path, mode ) );
 }
 
