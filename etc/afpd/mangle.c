@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.4 2002-05-31 02:19:41 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.5 2002-06-02 22:34:36 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,38 +20,36 @@ char *
 demangle(const struct vol *vol, char *mfilename) {
 	char *filename = NULL;
 	char *ext = NULL;
-	char dir[MAXPATHLEN + 1];
+	int ext_len = 0;
+	int isPath = 0;
 	char *mangle;
+
+	LOG(log_error, logtype_default, "demangle: Calling demangle on %s", mfilename);
 
 	/* Is this really a mangled file? */
 	mangle = strstr(mfilename, MANGLE_CHAR);
 	if (!mangle) {
+	    LOG(log_error, logtype_default, "demangle: %s is not a mangled filename", mfilename);
 	    return mfilename;
 	}
 
-	ext = strrchr(mfilename, '.');
-	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ((ext != NULL)?strlen(ext):0)) {
+	if ((ext = strrchr(mfilename, '.')) != NULL) {
+	    ext_len = strlen(ext);
+	}
+	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ext_len) {
+	    LOG(log_error, logtype_default, "demangle: %s is lon long enough to be a mangled filename", mfilename);
 	    return mfilename;
 	}
 
-	getcwd(dir, MAXPATHLEN);
-
-	if (strlen(dir) > MAXPATHLEN - strlen(mfilename) - 1) {
-	    LOG(log_error, logtype_default, "demangle: Path is too large");
-	    return mfilename;
-	}
-
-	strcat(dir, "/");
-	strcat(dir, mfilename);
-
-	filename = cnid_mangle_get(vol->v_db, dir);
+	filename = cnid_mangle_get(vol->v_db, mfilename);
 
 	/* No unmangled filename was found. */
 	if (filename == NULL) {
-	    LOG(log_debug, logtype_default, "demangle: Unable to lookup %s in the mangle database", dir);
+	    LOG(log_error, logtype_default, "demangle: Unable to lookup %s in the mangle database", mfilename);
 	    return mfilename;
 	}
 
+	LOG(log_error, logtype_default, "demangle: Returning %s as the unmangled filename for %s", filename, mfilename);
 	return filename;
 }
 
@@ -62,8 +60,7 @@ mangle(const struct vol *vol, char *filename) {
     char *m = NULL;
     static char mfilename[MAX_LENGTH + 1];
     char mangle_suffix[MANGLE_LENGTH + 1];
-    char dir[MAXPATHLEN + 1];
-    char tmp[MAXPATHLEN + 1];
+    int ext_len = 0;
     int mangle_suffix_int = 0;
 
     /* Do we really need to mangle this filename? */
@@ -72,28 +69,16 @@ mangle(const struct vol *vol, char *filename) {
     }
 
     /* First, attmept to locate a file extension. */
-    ext = strrchr(filename, '.');
-
-    getcwd(dir, MAXPATHLEN);
-
-    if (strlen(dir) > MAXPATHLEN - strlen(filename) - 1) {
-	LOG(log_error, logtype_default, "mangle: path is too large");
-	return filename;
+    if ((ext = strrchr(filename, '.')) != NULL) {
+	ext_len = strlen(ext);
     }
-
-/*    if ((mfilename = malloc(MAX_LENGTH + 1)) == NULL) {
-	LOG(log_error, logtype_default, "mangle: Failed to allocate memory to hold the mangled filename");
-	return filename;
-    }*/
 
     m = mfilename;
 
     /* Check to see if we already have a mangled filename by this name. */
     while (1) {
-    	strcpy(tmp, dir);
-
-    	strncpy(m, filename, MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ((ext != NULL)?strlen(ext):0));
-	m[MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ((ext != NULL)?strlen(ext):0)] = '\0';
+    	strncpy(m, filename, MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ext_len);
+	m[MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ext_len] = '\0';
 
     	strcat(m, MANGLE_CHAR);
     	(void)sprintf(mangle_suffix, "%03d", mangle_suffix_int);
@@ -103,10 +88,7 @@ mangle(const struct vol *vol, char *filename) {
 		strcat(m, ext);
     	}
 
-	strcat(tmp, "/");
-	strcat(tmp, m);
-
-	tf = cnid_mangle_get(vol->v_db, tmp);
+	tf = cnid_mangle_get(vol->v_db, m);
 	if (tf == NULL || (strcmp(tf, filename)) == 0) {
 	    break;
 	}
@@ -118,10 +100,7 @@ mangle(const struct vol *vol, char *filename) {
 	}
     }
 
-    strcat(dir, "/");
-    strcat(dir, filename);
-
-    if (cnid_mangle_add(vol->v_db, tmp, dir) < 0) {
+    if (cnid_mangle_add(vol->v_db, m, filename) < 0) {
 	return filename;
     }
 

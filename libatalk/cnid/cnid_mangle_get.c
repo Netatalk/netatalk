@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_get.c,v 1.2 2002-05-30 06:41:19 jmarcus Exp $
+ * $Id: cnid_mangle_get.c,v 1.3 2002-06-02 22:34:43 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +50,7 @@ cnid_mangle_get(void *CNID, char *mfilename)
         }
 
         if (rc == DB_NOTFOUND) {
-	    LOG(log_error, logtype_default, "cnid_mangle_get: Failed to find mangled entry for %s", mfilename);
+	    LOG(log_debug, logtype_default, "cnid_mangle_get: Failed to find mangled entry for %s", mfilename);
 	    return NULL;
 
         }
@@ -58,35 +58,7 @@ cnid_mangle_get(void *CNID, char *mfilename)
         return NULL;
     }
 
-    filename = strrchr((char *)data.data, '/');
-    filename++; /* Skip the leading '/' */
-
-    if (stat((char *)data.data, &st) < 0) {
-	if (errno == ENOENT) {
-	    /* The file no longer exists.  Purge it from the database. */
-/*retry:
-	    if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
-		LOG(log_error, logtype_default, "cnid_mangle_get: Failed to begin transaction: %s", db_strerror(rc));
-		return filename;
-	    }
-
-	    if ((rc = db->db_mangle->del(db->db_mangle, tid, &key, 0))) {
-		int ret;
-		if ((ret = txn_abort(tid)) != 0) {
-		    LOG(log_error, logtype_default, "cnid_mangle_get: txn_abort: %s", db_strerror(ret));
-		    return filename;
-		}
-		switch (rc) {
-		    case DB_LOCK_DEADLOCK:
-		    	goto retry;
-		    default:
-		    	LOG(log_error, logtype_default, "cnid_mangle_get: Unable to delete mangled file entry: %s", mfilename);
-			return filename;
-		}
-	    }*/
-	    return NULL;
-	}
-    }
+    filename = (char *)data.data;
 
     return filename;
 }
