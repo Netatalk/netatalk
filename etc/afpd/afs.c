@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.10 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: afs.c,v 1.11 2002-08-29 18:57:26 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -123,10 +123,15 @@ int		ibuflen, *rbuflen;
  * VIOCGETAL.  If the directory is on AFS, use access() calls to
  * estimate permission, a la mdw.
  */
-afsmode( path, ma, dir )
+#ifdef accessmode
+    #undef accessmode
+#endif
+
+afsmode( path, ma, dir, st )
 char		*path;
 struct maccess	*ma;
-struct dir		*dir;
+struct dir      *dir;
+struct stat     *st;
 {
     struct ViceIoctl	vi;
     char		buf[ 1024 ];
@@ -146,7 +151,7 @@ struct dir		*dir;
         return;
     }
 
-    accessmode( path, &ma, dir );
+    accessmode( path, &ma, dir, st );
 
     return;
 }

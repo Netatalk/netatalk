@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.27 2002-05-13 04:59:36 jmarcus Exp $
+ * $Id: filedir.c,v 1.28 2002-08-29 18:57:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -232,6 +232,32 @@ int		ibuflen, *rbuflen;
     return( AFP_OK );
 }
 
+/*
+ * We can't use unix file's perm to support Apple's inherited protection modes.
+ * If we aren't the file's owner we can't change its perms when moving it and smb
+ * nfs,... don't even try.
+*/
+#define AFP_CHECK_ACCESS 
+
+int check_access(char *path, int mode)
+{
+#ifdef AFP_CHECK_ACCESS
+struct maccess ma;
+char *p;
+
+    p = ad_dir(path);
+    if (!p)
+       return -1;
+
+    accessmode(p, &ma, curdir, NULL);
+    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
+        return -1;
+    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
+        return -1;
+#endif
+    return 0;
+}
+
 int afp_setfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
@@ -409,6 +435,7 @@ int         isdir;
                                      vol_noadouble(vol), adp )) == AFP_OK) {
             /* if it's still open, rename the ofork as well. */
             rc = of_rename(vol, sdir, oldname, curdir, newname);
+
         }
     } else {
         rc = renamedir(p, upath, sdir, curdir, newname, vol_noadouble(vol));
@@ -494,6 +521,9 @@ int		ibuflen, *rbuflen;
     if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
         strncpy( newname, ibuf, plen );
         newname[ plen ] = '\0';
+        if (strlen(newname) != plen) {
+            return( AFPERR_PARAM );
+        }
     }
     else {
         return AFP_OK; /* newname == oldname same dir */
@@ -682,6 +712,9 @@ int		ibuflen, *rbuflen;
     if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
         strncpy( newname, ibuf, plen );
         newname[ plen ] = '\0';
+        if (strlen(newname) != plen) {
+            return( AFPERR_PARAM );
+        }
     }
     else {
         strcpy(newname, oldname);
@@ -696,7 +729,15 @@ int		ibuflen, *rbuflen;
                 return retvalue;
             }
         }
+        else
 #endif /* DROPKLUDGE */
+            if (!isdir) {
+                char *upath = mtoupath(vol, newname);
+                int  admode = ad_mode("", 0777);
+
+                setfilmode(upath, admode, NULL);
+                setfilmode(ad_path( upath, ADFLAGS_HF ), ad_hf_mode(admode), NULL);
+            }
         setvoltime(obj, vol );
     }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.8 2002-05-13 07:21:55 jmarcus Exp $
+ * $Id: adouble.h,v 1.9 2002-08-29 18:57:36 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -39,6 +39,7 @@ extern int flock (int /*fd*/, int /*operation*/);
 #include <fcntl.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/mman.h>
 #include <netatalk/endian.h>
 
@@ -287,11 +288,27 @@ extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 #endif
 
 /* ad_open.c */
+extern char *ad_dir   __P((char *));
 extern char *ad_path  __P((char *, int));
 extern int ad_mode    __P((char *, int));
 extern int ad_mkdir   __P((char *, int));
 extern int ad_open    __P((char *, int, int, int, struct adouble *)); 
 extern int ad_refresh __P((struct adouble *));
+
+/* extend to RW if R for locking */ 
+static inline mode_t ad_hf_mode (mode_t mode)
+{
+#ifndef USE_FLOCK_LOCKS
+    /* fnctl lock need write access */
+    if ((mode & S_IRUSR))
+        mode |= S_IWUSR;
+    if ((mode & S_IRGRP))
+        mode |= S_IWGRP;
+    if ((mode & S_IROTH))
+        mode |= S_IWOTH;
+#endif
+    return mode;
+}
 
 /* ad_read.c/ad_write.c */
 extern ssize_t ad_read __P((struct adouble *, const u_int32_t, 

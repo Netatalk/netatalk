@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.51 2002-08-28 15:08:16 didg Exp $
+ * $Id: file.c,v 1.52 2002-08-29 18:57:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -110,6 +110,7 @@ int getmetadata(struct vol *vol,
     u_int32_t		aint;
     u_int16_t		ashort;
     u_char              achar, fdType[4];
+    struct maccess	ma;
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin getmetadata:");
@@ -132,6 +133,17 @@ int getmetadata(struct vol *vol,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+#if 0
+            /* FIXME do we want a visual clue if the file is read only
+             */
+            accessmode( ".", &ma, dir , NULL);
+            if ((ma.ma_user & AR_UWRITE)) {
+            	accessmode( upath, &ma, dir , st);
+            	if (!(ma.ma_user & AR_UWRITE)) {
+                	attrbits |= ATTRBIT_NOWRITE;
+                }
+            }
+#endif
             if (attrbits)
                 ashort = htons(ntohs(ashort) | attrbits);
             memcpy(data, &ashort, sizeof( ashort ));
@@ -655,6 +667,13 @@ int setfilparams(struct vol *vol,
     set_uidgid ( vol );
 #endif /* FORCE_UIDGID */
 
+    if (check_access(upath, OPENACC_WR ) < 0) {
+#ifdef FORCE_UIDGID
+            restore_uidgid ( uidgid );
+#endif /* FORCE_UIDGID */
+        return AFPERR_ACCESS;
+    }
+
     if (ad_open( upath, vol_noadouble(vol) | ADFLAGS_HF,
                  O_RDWR|O_CREAT, 0666, adp) < 0) {
         /* for some things, we don't need an adouble header */
@@ -821,9 +840,8 @@ setfilparam_done:
  * and the new mac name.
  * NOTE: if we have to copy a file instead of renaming it, locks
  *       will break. Anyway it's an error because then we have 2 files.
- * FIXME: locks on ressource fork will always break thanks to ad_close, done ?
  *
- * src         the full source absolute path 
+ * src         the source path 
  * dst         the dest filename in current dir
  * newname     the dest mac name
  * adp         adouble struct of src file, if open, or & zeroed one
@@ -860,7 +878,6 @@ struct adouble    *adp;
         case EROFS:
             return AFPERR_VLOCK;
         case EXDEV :			/* Cross device move -- try copy */
-            /* if source is open bail out */
             if (( rc = copyfile(src, dst, newname, noadouble )) != AFP_OK ) {
                 deletefile( dst, 0 );
                 return( rc );
@@ -994,7 +1011,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
     if ( *path != '\0' ) {
-        return( AFPERR_BADTYPE );
+        return( AFPERR_BADTYPE ); /* not a directory. AFPERR_PARAM? */
     }
 
     /* one of the handful of places that knows about the path type */
@@ -1004,6 +1021,12 @@ int		ibuflen, *rbuflen;
     if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
         strncpy( newname, ibuf, plen );
         newname[ plen ] = '\0';
+        if (strlen(newname) != plen) {
+            /* there's \0 in newname, e.g. it's a pathname not
+             * only a filename. 
+            */
+            return( AFPERR_PARAM );
+        }
     }
 
     if ( (err = copyfile(p, mtoupath(vol, newname ), newname,
@@ -1072,11 +1095,14 @@ const int   noadouble;
     char		filebuf[8192];
     int			sfd, dfd, len, err = AFP_OK;
     ssize_t             cc;
-
+    char                *dpath;
+    int                 admode;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin copyfile:");
 #endif /* DEBUG */
 
+    dpath = ad_path( dst, ADFLAGS_HF );
+    admode = ad_mode( dst, 0666 );
     if (newname) {
         if ((sfd = open( ad_path( src, ADFLAGS_HF ), O_RDONLY, 0 )) < 0 ) {
             switch ( errno ) {
@@ -1088,8 +1114,7 @@ const int   noadouble;
                 return( AFPERR_PARAM );
             }
         } else {
-            if (( dfd = open( ad_path( dst, ADFLAGS_HF ), O_WRONLY|O_CREAT,
-                              ad_mode( ad_path( dst, ADFLAGS_HF ), 0666 ))) < 0 ) {
+            if (( dfd = open( dpath, O_WRONLY|O_CREAT,ad_hf_mode(admode))) < 0 ) {
                 close( sfd );
                 switch ( errno ) {
                 case ENOENT :
@@ -1139,7 +1164,7 @@ copyheader_done:
             close(sfd);
             close(dfd);
             if (err < 0) {
-                unlink(ad_path(dst, ADFLAGS_HF));
+                unlink(dpath);
                 return err;
             }
         }
@@ -1157,7 +1182,7 @@ copyheader_done:
         }
     }
 
-    if (( dfd = open( dst, O_WRONLY|O_CREAT, ad_mode( dst, 0666 ))) < 0 ) {
+    if (( dfd = open( dst, O_WRONLY|O_CREAT, admode)) < 0 ) {
         close( sfd );
         switch ( errno ) {
         case ENOENT :
@@ -1206,7 +1231,7 @@ copydata_done:
     close(sfd);
     close(dfd);
     if (err < 0) {
-        unlink(ad_path(dst, ADFLAGS_HF));
+        unlink(dpath);
         unlink(dst);
         return err;
     }
@@ -1247,6 +1272,7 @@ copydata_done:
    ie deletfile called by afp_delete
 
    when deletefile is called we don't have lock on it, file is closed (for us)
+   untrue if called by renamefile
 */
 int deletefile( file, checkAttrib )
 char		*file;
@@ -1527,11 +1553,11 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(id);
 
     if ((upath = cnid_resolve(vol->v_db, &id, buffer, len)) == NULL) {
-        return AFPERR_BADID;
+        return AFPERR_NOID; /* was AFPERR_BADID, but help older Macs */
     }
 
     if (( dir = dirlookup( vol, id )) == NULL ) {
-        return( AFPERR_PARAM );
+        return AFPERR_NOID; /* idem AFPERR_PARAM */
     }
 
     if ((movecwd(vol, dir) < 0) || (stat(upath, &st) < 0)) {

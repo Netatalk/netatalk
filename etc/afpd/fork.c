@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.33 2002-08-26 08:57:50 didg Exp $
+ * $Id: fork.c,v 1.34 2002-08-29 18:57:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -277,6 +277,10 @@ int		ibuflen, *rbuflen;
         adflags = ADFLAGS_HF;
     }
 
+    upath = mtoupath(vol, path);
+    if (check_access(upath, access ) < 0) {
+        return AFPERR_ACCESS;
+    }
     /* XXX: this probably isn't the best way to do this. the already
        open bits should really be set if the fork is opened by any
        program, not just this one. however, that's problematic to do
@@ -295,9 +299,9 @@ int		ibuflen, *rbuflen;
                            adsame)) == NULL ) {
         return( AFPERR_NFILE );
     }
+
     if (access & OPENACC_WR) {
         /* try opening in read-write mode */
-        upath = mtoupath(vol, path);
         ret = AFPERR_NOOBJ;
         if (ad_open(upath, adflags, O_RDWR, 0, ofork->of_ad) < 0) {
             switch ( errno ) {
@@ -345,7 +349,6 @@ int		ibuflen, *rbuflen;
         }
     } else {
         /* try opening in read-only mode */
-        upath = mtoupath(vol, path);
         ret = AFPERR_NOOBJ;
         if (ad_open(upath, adflags, O_RDONLY, 0, ofork->of_ad) < 0) {
             switch ( errno ) {

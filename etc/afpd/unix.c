@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.35 2002-06-06 10:14:26 didg Exp $
+ * $Id: unix.c,v 1.36 2002-08-29 18:57:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,6 +20,7 @@
 #include <netatalk/endian.h>
 #include <dirent.h>
 #include <limits.h>
+#include <atalk/adouble.h>
 #include <atalk/afp.h>
 
 /* STDC check */
@@ -121,10 +122,9 @@ void utommode( stat, ma )
 struct stat		*stat;
 struct maccess	*ma;
 {
-    mode_t		mode;
+mode_t mode;
 
     mode = stat->st_mode;
-
     ma->ma_world = utombits( mode );
     mode = mode >> 3;
 
@@ -134,7 +134,7 @@ struct maccess	*ma;
     ma->ma_owner = utombits( mode );
 
     /* ma_user is a union of all permissions */
-
+    ma->ma_user = 0;
     if ( (uuid == stat->st_uid) || (uuid == 0)) {
         ma->ma_user = ma->ma_owner | AR_UOWN;
     }
@@ -165,15 +165,22 @@ struct maccess	*ma;
  * Note: the previous method, using access(), does not work correctly
  * over NFS.
  */
-void accessmode( path, ma, dir )
+void accessmode( path, ma, dir, st )
 char		*path;
 struct maccess	*ma;
-struct dir		*dir;
+struct dir	*dir;
+struct stat     *st;
+
 {
-    struct stat sb;
-    ma->ma_user = ma->ma_owner = 0;
-    if ( stat( path, &sb ) == 0 )
-        utommode( &sb, ma );
+struct stat     sb;
+
+    ma->ma_user = ma->ma_owner = ma->ma_world = ma->ma_group = 0;
+    if (!st) {
+        if (stat(path, &sb) != 0)
+            return;
+        st = &sb;
+    }
+    utommode( st, ma );
     return;
 }
 
@@ -353,6 +360,27 @@ const mode_t	mode;
     return( 0 );
 }
 
+int setfilmode(name, mode, st)
+char * name;
+mode_t mode;
+struct stat *st;
+{
+struct stat sb;
+mode_t mask = S_IRUSR |S_IWUSR | S_IRGRP | S_IWGRP |S_IROTH | S_IWOTH;
+
+    if (!st) {
+        if (stat(name, &sb) != 0)
+            return;
+        st = &sb;
+    }
+   mode &= mask;	/* keep only rw-rw-rw in mode */
+   mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
+   if ( chmod( name,  mode & ~default_options.umask ) < 0 && errno != EPERM ) {
+       return -1;
+   }
+   return 0;
+}
+
 int setdirmode( mode, noadouble, dropbox )
 const mode_t mode;
 const int noadouble;
@@ -363,7 +391,7 @@ const int dropbox;
     char		*m;
     struct dirent	*dirp;
     DIR			*dir;
-
+    
     if (( dir = opendir( "." )) == NULL ) {
         LOG(log_error, logtype_afpd, "setdirmode: opendir .: %s", strerror(errno) );
         return( -1 );
@@ -380,15 +408,26 @@ const int dropbox;
         }
 
         if (S_ISREG(st.st_mode)) {
+           if (setfilmode(dirp->d_name, mode, &st) < 0) {
+                LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",
+                    dirp->d_name, strerror(errno) );
+                return -1;
+           }
+        }
+#if 0
             /* XXX: need to preserve special modes */
-            if (S_ISDIR(st.st_mode)) {
+        else if (S_ISDIR(st.st_mode)) {
                 if (stickydirmode(dirp->d_name, DIRBITS | mode, dropbox) < 0)
                     return (-1);
             } else if (stickydirmode(dirp->d_name, mode, dropbox) < 0)
                 return (-1);
         }
+#endif
     }
     closedir( dir );
+
+    /* change perm of .AppleDouble's files
+    */
     if (( dir = opendir( ".AppleDouble" )) == NULL ) {
         if (noadouble)
             goto setdirmode_noadouble;
@@ -410,11 +449,11 @@ const int dropbox;
             LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s", buf, strerror(errno) );
             continue;
         }
-
-        if (S_ISDIR(st.st_mode)) {
-            stickydirmode( buf, DIRBITS | mode, dropbox );
-        } else
-            stickydirmode( buf, mode, dropbox );
+        if (S_ISREG(st.st_mode)) {
+           if (setfilmode(dirp->d_name, ad_hf_mode(mode), &st) < 0) {
+               /* FIXME what do we do then? */
+           }
+        }
     } /* end for */
     closedir( dir );
 

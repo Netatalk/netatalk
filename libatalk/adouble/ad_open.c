@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.18 2002-08-14 10:35:46 didg Exp $
+ * $Id: ad_open.c,v 1.19 2002-08-29 18:57:37 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -530,21 +530,15 @@ ad_path( path, adflags )
 
 #define DEFMASK 07700	/* be conservative */
 
-int
-ad_mode( path, mode )
+char 
+*ad_dir(path)
     char		*path;
-    int			mode;
 {
     static char		modebuf[ MAXPATHLEN + 1];
-    struct stat		stbuf;
     char 		*slash;
 
-    if ( mode == 0 ) {
-	return( mode );		/* save on syscalls */
-    }
-
     if ( strlen( path ) >= MAXPATHLEN ) {
-	return( mode & DEFMASK );  /* can't do it */
+	return NULL;  /* can't do it */
     }
 
     /*
@@ -559,8 +553,26 @@ ad_mode( path, mode )
 	modebuf[0] = '.';	/* use current directory */
 	modebuf[1] = '\0';
     }
+    return modebuf;
+}
 
-    if ( stat( modebuf, &stbuf ) != 0 ) {
+int
+ad_mode( path, mode )
+    char		*path;
+    int			mode;
+{
+    struct stat		stbuf;
+    char                *p;
+    
+    if ( mode == 0 ) {
+	return( mode );		/* save on syscalls */
+    }
+    p = ad_dir(path);
+    if (!p) {
+	return( mode & DEFMASK );  /* can't do it */
+    }
+
+    if ( stat( p, &stbuf ) != 0 ) {
 	return( mode & DEFMASK );	/* bail out... can't stat dir? */
     }
 
@@ -612,11 +624,11 @@ int ad_open( path, adflags, oflags, mode, ad )
     if (adflags & ADFLAGS_DF) { 
         if (ad_dfileno(ad) == -1) {
 	  hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-	  if (( ad->ad_df.adf_fd =
-		open( path, hoflags, ad_mode( path, mode ) )) < 0 ) {
+	  admode = ad_mode( path, mode ); 
+	  if (( ad->ad_df.adf_fd = open( path, hoflags, admode )) < 0 ) {
              if (errno == EACCES && !(oflags & O_RDWR)) {
                 hoflags = oflags;
-                ad->ad_df.adf_fd =open( path, hoflags, ad_mode( path, mode ) );
+                ad->ad_df.adf_fd =open( path, hoflags, admode );
              }
 	  }
 	  if ( ad->ad_df.adf_fd < 0)
@@ -639,15 +651,13 @@ int ad_open( path, adflags, oflags, mode, ad )
     if (adflags & ADFLAGS_HF) {
         if (ad_hfileno(ad) == -1) {
 	  ad_p = ad_path( path, adflags );
-	  admode = ad_mode( ad_p, mode ); /* FIXME? */
+
 	  hoflags = oflags & ~O_CREAT;
 	  hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-	  if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, admode )) < 0 ) {
-            if (errno == EACCES) {
-                if (!(oflags & O_RDWR)) {
-        	  hoflags = oflags & ~O_CREAT;
-                  ad->ad_hf.adf_fd = open( ad_p, hoflags, admode );
-                }
+	  if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 )) < 0 ) {
+            if (errno == EACCES && !(oflags & O_RDWR)) {
+                hoflags = oflags & ~O_CREAT;
+                ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 );
             }    
           }
 	  if ( ad->ad_hf.adf_fd < 0 ) {
@@ -657,6 +667,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	       * here.
 	       * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
 	       */
+	      admode = ad_hf_mode(ad_mode( ad_p, mode )); 
 	      errno = 0;
 	      if (( ad->ad_hf.adf_fd = open( ad_p, oflags,
 					     admode )) < 0 ) {

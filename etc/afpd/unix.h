@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.9 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: unix.h,v 1.10 2002-08-29 18:57:26 didg Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -98,5 +98,12 @@ extern int setdeskmode  __P((const mode_t));
 extern int setdirmode   __P((const mode_t, const int, const int));
 extern int setdeskowner __P((const uid_t, const gid_t));
 extern int setdirowner  __P((const uid_t, const gid_t, const int));
+extern int setfilmode   __P((char *, mode_t , struct stat *));
+
+extern void accessmode  __P((char *, struct maccess *, struct dir *, struct stat *));
+
+#ifdef AFS	
+    #define accessmode afsmode
+#endif 
 
 #endif /* UNIX_H */

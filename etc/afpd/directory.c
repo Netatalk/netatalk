@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.37 2002-08-22 13:41:19 didg Exp $
+ * $Id: directory.c,v 1.38 2002-08-29 18:57:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1109,15 +1109,8 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_ACCESS :
-            utommode( st, &ma );
-#ifndef SENDFILE_FLAVOR_LINUX /* ignore this section if it's linux */
-#ifdef HAVE_ACCESS
-            accessmode( upath, &ma, dir );
-#endif /* HAVE_ACCESS */
-#endif /* SENDFILE_FLAVOR_LINUX */
-#ifdef AFS	/* If only AFS defined, access() works only for AFS filesystems */ 
-            afsmode( upath, &ma, dir );
-#endif /* AFS */
+            accessmode( upath, &ma, dir , st);
+
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
             *data++ = ma.ma_group;
