@@ -5,16 +5,19 @@
 	* README: updated 1.5+ install instructions to include list of
 	required and recommended packages
 
-	* etc/uams/uam_*.c: cleanups, addition of CVS Id tag to C source
+	* etc/uams/uams_*.c: cleanups, addition of CVS Id tag to C source
 
 	* configure.in, acconfig.h: change USE_AFS to AFS to be the same as
 	all of the defines in the codebase
 
-	* etc/uams/uam_dhx_pam.c: fixed DHX login using this module (last
+	* etc/uams/uams_dhx_pam.c: fixed DHX login using this module (last
 	patch made with syslog()'s didn't include any brackets) 
 	(Bug #233756)
 
 	* distrib/initscripts/.cvsignore: removed pulling of atalk
+
+	* configure.in, etc/uams/Makefile.am: conditional compilation support
+	for PGP UAM module using --enable-pgp-uam
 
 2001-02-26  jeff b  <jeff@univrel.pr.uconn.edu>  
 
