@@ -62,14 +62,14 @@ void readmessage(void)
 /* Below code can be uncommented if you want to experiment with getting afpd
 to delete the text file when it's done.  Currently, it doesn't work.  If you 
 can get it to work, delete this comment and enable the code!  */
-/*    i=unlink (filename);
+    i=unlink (filename);
     if (i)
       syslog (LOG_INFO, "Error deleting %s: %m", filename);
     else
       syslog (LOG_DEBUG, "Deleted %s", filename);
     free (filename);
  
-    syslog (LOG_DEBUG, "Set server message to \"%s\"", servermesg); */
+    syslog (LOG_DEBUG, "Set server message to \"%s\"", servermesg);
   }
   free(filename);
 #endif
