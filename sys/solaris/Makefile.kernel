@@ -72,7 +72,7 @@ kernel :	FRC
 		OSDEFS=-D_ISOC9X_SOURCE; \
 	fi; \
 	echo "Making $@ for $$PROCESSOR..."; \
-	${MAKE} ${MFLAGS} \
+	${MAKE} -f Makefile.kernel ${MFLAGS} \
 	    SBINDIR="${sbindir}" BINDIR="${bindir}" RESDIR="${RESDIR}"\
 	    ETCDIR="${sysconfdir}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 	    MANDIR="${MANDIR}" DESTDIR="${DESTDIR}" AFSDIR="${AFSDIR}" \
