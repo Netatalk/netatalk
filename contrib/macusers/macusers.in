@@ -31,7 +31,7 @@ $ASIP_PORT_NO = 548;
 $LSOF = 1;
 my %mac = ();
 
-if ($^O eq "freebsd" || $^O eq "openbsd") {
+if ($^O eq "freebsd") {
         open(SOCKSTAT, "sockstat -4 | grep $MAC_PROCESS | grep -v grep |");
 
         while (<SOCKSTAT>) {
