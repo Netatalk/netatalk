@@ -101,17 +101,17 @@ a complete list.
 --enable-dropkludge: enable the experimental dropbox fix
 	(INSECURE!),
 
---enable-cnid-db: use persistent cnid database per volume 
-	(EXPERIMENTAL),
-
 --with-db3=PATH: specify path to Berkeley DB3 installation,
 
---with-did=[scheme]: set DID scheme (last,mtab),
+--with-did=[scheme]: set DID scheme (last,mtab,cnid),
 	The last DID scheme recreates version 37b behaviour where
 	directory id's are incrementally calculated versus the new
 	hash method. Unfortunately for machines that have a lot of
 	devices, and/or a lot of inodes the hash can fail with
 	multiple directories resolving to the same DID.
+
+	cnid is a new and experimental scheme using Berkeley DB3 files
+	to store a per-volume cnid database persistently.
 
 --with-msg-dir=path: path to message files [default=/etc/msg],
 
