@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.13 2003-06-05 09:17:12 didg Exp $
+ * $Id: unix.h,v 1.14 2003-12-15 04:49:56 srittau Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -59,13 +59,7 @@ typedef int	mode_t;
 #endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
 #if defined(linux) || defined(ultrix) || defined(HAVE_QUOTA_H)
-#ifndef NEED_QUOTACTL_WRAPPER
 #include <sys/quota.h>
-#else /* ! NEED_QUOTACTL_WRAPPER */
-#include <asm/types.h>
-#include <asm/unistd.h>
-#include <linux/quota.h>
-#endif /* ! NEED_QUOTACTL_WRAPPER */
 #endif /* linux || ultrix || HAVE_QUOTA_H */
 
 #ifdef __svr4__ 

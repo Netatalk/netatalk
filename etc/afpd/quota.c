@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.22 2002-08-29 17:22:06 jmarcus Exp $
+ * $Id: quota.c,v 1.23 2003-12-15 04:49:56 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -47,12 +47,6 @@ char *strchr (), *strrchr ();
 #include "unix.h"
 
 #ifndef NO_QUOTA_SUPPORT
-#ifdef NEED_QUOTACTL_WRAPPER
-int quotactl(int cmd, const char *special, int id, caddr_t addr)
-{
-    return syscall(__NR_quotactl, cmd, special, id, addr);
-}
-#endif /* NEED_QUOTACTL_WRAPPER */
 
 
 #if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
