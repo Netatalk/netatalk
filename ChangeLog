@@ -1,4 +1,10 @@
 
+2001-10-09  joe  c  <marcus@marcuscom.com>
+
+	* configure.in: Fix problem with forced PAM
+	* etc/afpd/unix.c: Fix a problem setting directory perms on FreeBSD (thanks
+	to Glenn Trewitt <glenn@trewitt.org>)
+
 2001-10-04  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	Released 1.5pre8
