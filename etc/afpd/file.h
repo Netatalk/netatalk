@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.6 2002-03-24 17:43:39 jmarcus Exp $
+ * $Id: file.h,v 1.7 2002-05-13 04:59:36 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -77,7 +77,7 @@ extern int getfilparams __P((struct vol *, u_int16_t, char *,
                                  struct dir *, struct stat *, char *buf,
                                  int *));
 extern int setfilparams __P((struct vol *, char *, u_int16_t, char *));
-extern int renamefile   __P((char *, char *, char *, const int));
+extern int renamefile   __P((char *, char *, char *, const int, struct adouble *));
 extern int copyfile     __P((char *, char *, char *, const int));
 extern int deletefile   __P((char *, int));
 

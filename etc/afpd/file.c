@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.43 2002-03-24 17:43:39 jmarcus Exp $
+ * $Id: file.c,v 1.44 2002-05-13 04:59:36 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -95,42 +95,27 @@ const u_char ufinderi[] = {
                               0, 0, 0, 0, 0, 0, 0, 0
                           };
 
-int getfilparams(struct vol *vol,
+int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
                  char *path, struct dir *dir, struct stat *st,
-                 char *buf, int *buflen )
+                 char *buf, int *buflen, struct adouble *adp, int attrbits )
 {
 #ifndef USE_LASTDID
-    struct stat		hst, lst, *lstp;
-#else /* USE_LASTDID */
-    struct stat		hst;
+    struct stat		lst, *lstp;
 #endif /* USE_LASTDID */
-    struct adouble	ad, *adp;
-    struct ofork        *of;
+    struct stat		hst;
     struct extmap	*em;
     char		*data, *nameoff = NULL, *upath;
-    int			bit = 0, isad = 1;
+    int			bit = 0;
     u_int32_t		aint;
     u_int16_t		ashort;
     u_char              achar, fdType[4];
 
 #ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin getfilparams:");
+    LOG(log_info, logtype_afpd, "begin getmetadata:");
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
-    if ((of = of_findname(vol, curdir, path))) {
-        adp = of->of_ad;
-    } else {
-        memset(&ad, 0, sizeof(ad));
-        adp = &ad;
-    }
-
-    if ( ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, adp) < 0 ) {
-        isad = 0;
-    } else if ( fstat( ad_hfileno( adp ), &hst ) < 0 ) {
-        LOG(log_error, logtype_afpd, "getfilparams fstat: %s", strerror(errno) );
-    }
 
     data = buf;
     while ( bitmap != 0 ) {
@@ -141,14 +126,16 @@ int getfilparams(struct vol *vol,
 
         switch ( bit ) {
         case FILPBIT_ATTR :
-            if ( isad ) {
+            if ( adp ) {
                 ad_getattr(adp, &ashort);
             } else if (*upath == '.') {
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
+            if (attrbits)
+                ashort = htons(ntohs(ashort) | attrbits);
             memcpy(data, &ashort, sizeof( ashort ));
-            data += sizeof( u_short );
+            data += sizeof( ashort );
             break;
 
         case FILPBIT_PDID :
@@ -157,17 +144,22 @@ int getfilparams(struct vol *vol,
             break;
 
         case FILPBIT_CDATE :
-            if (!isad || (ad_getdate(adp, AD_DATE_CREATE, &aint) < 0))
+            if (!adp || (ad_getdate(adp, AD_DATE_CREATE, &aint) < 0))
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             break;
 
         case FILPBIT_MDATE :
-            if ( isad && (ad_getdate(adp, AD_DATE_MODIFY, &aint) == 0)) {
-                if ((st->st_mtime > AD_DATE_TO_UNIX(aint)) &&
-                        (hst.st_mtime < st->st_mtime)) {
-                    aint = AD_DATE_FROM_UNIX(st->st_mtime);
+            if ( adp && (ad_getdate(adp, AD_DATE_MODIFY, &aint) == 0)) {
+                if ((st->st_mtime > AD_DATE_TO_UNIX(aint))) {
+                        if ( fstat( ad_hfileno( adp ), &hst ) < 0 ) {
+                            LOG(log_error, logtype_default, "getfilparams fstat: %s", strerror(errno) );
+                        }
+                        else if (hst.st_mtime < st->st_mtime) 
+                            aint = AD_DATE_FROM_UNIX(st->st_mtime);
+                        else 
+                            aint = AD_DATE_FROM_UNIX(hst.st_mtime);
                 }
             } else {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
@@ -177,14 +169,14 @@ int getfilparams(struct vol *vol,
             break;
 
         case FILPBIT_BDATE :
-            if (!isad || (ad_getdate(adp, AD_DATE_BACKUP, &aint) < 0))
+            if (!adp || (ad_getdate(adp, AD_DATE_BACKUP, &aint) < 0))
                 aint = AD_DATE_START;
             memcpy(data, &aint, sizeof( int ));
             data += sizeof( int );
             break;
 
         case FILPBIT_FINFO :
-            if (isad)
+            if (adp)
                 memcpy(data, ad_entry(adp, ADEID_FINDERI), 32);
             else {
                 memcpy(data, ufinderi, 32);
@@ -194,7 +186,7 @@ int getfilparams(struct vol *vol,
                 }
             }
 
-            if ((!isad || (memcmp(ad_entry(adp, ADEID_FINDERI),
+            if ((!adp || (memcmp(ad_entry(adp, ADEID_FINDERI),
                                   ufinderi, 8 ) == 0)) &&
                     (em = getextmap( path ))) {
                 memcpy(data, em->em_type, sizeof( em->em_type ));
@@ -217,7 +209,7 @@ int getfilparams(struct vol *vol,
             aint = 0;
 #if AD_VERSION > AD_VERSION1
             /* look in AD v2 header */
-            if (isad)
+            if (adp)
                 memcpy(&aint, ad_entry(adp, ADEID_DID), sizeof(aint));
 #endif /* AD_VERSION > AD_VERSION1 */
 
@@ -289,7 +281,7 @@ int getfilparams(struct vol *vol,
             break;
 
         case FILPBIT_RFLEN :
-            if ( isad ) {
+            if ( adp ) {
                 aint = htonl( ad_getentrylen( adp, ADEID_RFORK ));
             } else {
                 aint = 0;
@@ -305,7 +297,7 @@ int getfilparams(struct vol *vol,
                to "pXYZ" when we created it.  See IA, Ver 2.
                <shirsch@ibm.net> */
         case FILPBIT_PDINFO :
-            if ( isad ) {
+            if ( adp ) {
                 memcpy(fdType, ad_entry( adp, ADEID_FINDERI ), 4 );
 
                 if ( memcmp( fdType, "TEXT", 4 ) == 0 ) {
@@ -347,9 +339,6 @@ int getfilparams(struct vol *vol,
             break;
 
         default :
-            if ( isad ) {
-                ad_close( adp, ADFLAGS_HF );
-            }
             return( AFPERR_BITMAP );
         }
         bitmap = bitmap>>1;
@@ -364,18 +353,47 @@ int getfilparams(struct vol *vol,
         memcpy(data, path, aint );
         data += aint;
     }
-    if ( isad ) {
+    *buflen = data - buf;
+    return (AFP_OK);
+}
+                
+/* ----------------------- */
+int getfilparams(struct vol *vol,
+                 u_int16_t bitmap,
+                 char *path, struct dir *dir, struct stat *st,
+                 char *buf, int *buflen )
+{
+    struct adouble	ad, *adp;
+    struct ofork        *of;
+    char		    *upath;
+    int rc;    
+#ifdef DEBUG
+    LOG(log_info, logtype_default, "begin getfilparams:");
+#endif /* DEBUG */
+
+    upath = mtoupath(vol, path);
+    if ((of = of_findname(vol, dir, path))) {
+        adp = of->of_ad;
+    } else {
+        memset(&ad, 0, sizeof(ad));
+        adp = &ad;
+    }
+
+    if ( ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, adp) < 0 ) {
+        adp = NULL;
+    }
+    rc = getmetadata(vol, bitmap, path, dir, st, buf, buflen, adp, 0);    
+    if ( adp ) {
         ad_close( adp, ADFLAGS_HF );
     }
-    *buflen = data - buf;
-
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end getfilparams:");
 #endif /* DEBUG */
 
-    return( AFP_OK );
+    return( rc );
 }
 
+/* ----------------------------- */
 int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
@@ -423,20 +441,11 @@ int		ibuflen, *rbuflen;
     }
 
     upath = mtoupath(vol, path);
-
-    /* check for illegal bits in the unix filename */
-    if (!wincheck(vol, upath))
-        return AFPERR_PARAM;
-
-    if ((vol->v_flags & AFPVOL_NOHEX) && strchr(upath, '/'))
-        return AFPERR_PARAM;
-
-    if (!validupath(vol, upath))
-        return AFPERR_EXIST;
-
-    /* check for vetoed filenames */
-    if (veto_file(vol->v_veto, upath))
-        return AFPERR_EXIST;
+    {
+    int ret;
+        if (0 != (ret = check_name(vol, upath))) 
+            return  ret;
+    }
 
     if ((of = of_findname(vol, curdir, path))) {
         adp = of->of_ad;
@@ -756,12 +765,20 @@ setfilparam_done:
  * and the new mac name.
  * NOTE: if we have to copy a file instead of renaming it, locks
  *       will break.
+ * FIXME: locks on ressource fork will always break thanks to ad_close, done ?
+ *
+ * src         the full source absolute path 
+ * dst         the dest filename in current dir
+ * newname     the dest mac name
+ * adp         adouble struct of src file, if open, or & zeroed one
+ *
  */
-int renamefile(src, dst, newname, noadouble )
+int renamefile(src, dst, newname, noadouble, adp )
 char	*src, *dst, *newname;
 const int         noadouble;
+struct adouble    *adp;
 {
-    struct adouble	ad;
+    struct ofork	*opened;
     char		adsrc[ MAXPATHLEN + 1];
     int			len, rc;
 
@@ -808,12 +825,11 @@ rename_retry:
         case ENOENT :
             /* check for a source appledouble header. if it exists, make
              * a dest appledouble directory and do the rename again. */
-            memset(&ad, 0, sizeof(ad));
             if (rc || stat(adsrc, &st) ||
-                    (ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad) < 0))
+                    (ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, adp) < 0))
                 return AFP_OK;
             rc++;
-            ad_close(&ad, ADFLAGS_HF);
+            ad_close(adp, ADFLAGS_HF);
             goto rename_retry;
         case EPERM:
         case EACCES :
@@ -825,8 +841,7 @@ rename_retry:
         }
     }
 
-    memset(&ad, 0, sizeof(ad));
-    if ( ad_open( dst, ADFLAGS_HF, O_RDWR, 0666, &ad) < 0 ) {
+    if ( ad_open( dst, ADFLAGS_HF, O_RDWR, 0666, adp) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
@@ -840,10 +855,10 @@ rename_retry:
     }
 
     len = strlen( newname );
-    ad_setentrylen( &ad, ADEID_NAME, len );
-    memcpy(ad_entry( &ad, ADEID_NAME ), newname, len );
-    ad_flush( &ad, ADFLAGS_HF );
-    ad_close( &ad, ADFLAGS_HF );
+    ad_setentrylen( adp, ADEID_NAME, len );
+    memcpy(ad_entry( adp, ADEID_NAME ), newname, len );
+    ad_flush( adp, ADFLAGS_HF );
+    ad_close( adp, ADFLAGS_HF );
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end renamefile:");
@@ -1173,8 +1188,9 @@ copydata_done:
 
 /* -----------------------------------
    checkAttrib:   1 check kFPDeleteInhibitBit 
-   ie deletfile called from afp_delete
-   
+   ie deletfile called by afp_delete
+
+   when deletefile is called we don't have lock on it, file is closed (for us)
 */
 int deletefile( file, checkAttrib )
 char		*file;
@@ -1251,11 +1267,21 @@ int         checkAttrib;
             return(AFPERR_OLOCK);
         }
     }
-
-    if ((adflags & ADFLAGS_HF) &&
-            (ad_tmplock(&ad, ADEID_RFORK, locktype, 0, 0) < 0 )) {
-        ad_close( &ad, adflags );
-        return( AFPERR_BUSY );
+    
+    if ((adflags & ADFLAGS_HF) ) {
+        /* FIXME we have a pb here because we want to know if a file is open 
+         * there's a 'priority inversion' if you can't open the ressource fork RW
+         * you can delete it if it's open because you can't get a write lock.
+         * 
+         * ADLOCK_FILELOCK means the whole ressource fork, not only after the 
+         * metadatas
+         *
+         * FIXME it doesn't for RFORK open read only and fork open without deny mode
+         */
+        if (ad_tmplock(&ad, ADEID_RFORK, locktype |ADLOCK_FILELOCK, 0, 0) < 0 ) {
+            ad_close( &ad, adflags );
+            return( AFPERR_BUSY );
+        }
     }
 
     if (ad_tmplock( &ad, ADEID_DFORK, locktype, 0, 0 ) < 0) {
@@ -1299,7 +1325,7 @@ int         checkAttrib;
 
 delete_unlock:
     if (adflags & ADFLAGS_HF)
-        ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
+        ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR |ADLOCK_FILELOCK, 0, 0);
     ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
     ad_close( &ad, adflags );
 
@@ -1582,6 +1608,12 @@ int		ibuflen, *rbuflen;
     char		*spath, temp[17], *path, *p;
     char                *supath, *upath;
     int                 err;
+    struct adouble	ads;
+    struct adouble	add;
+    struct adouble	*adsp;
+    struct adouble	*addp;
+    struct ofork	*opened;
+    
 #ifdef CNID_DB
     int                 slen, dlen;
 #endif /* CNID_DB */
@@ -1621,7 +1653,7 @@ int		ibuflen, *rbuflen;
     }
 
     if ( *path == '\0' ) {
-        return( AFPERR_BADTYPE );
+        return( AFPERR_BADTYPE );   /* it's a dir */
     }
 
     upath = mtoupath(vol, path);
@@ -1636,7 +1668,12 @@ int		ibuflen, *rbuflen;
             return AFPERR_PARAM;
         }
     }
-
+    memset(&ads, 0, sizeof(ads));
+    adsp = &ads;
+    if ((opened = of_findname(vol, curdir, path))) {
+            /* reuse struct adouble so it won't break locks */
+            adsp = opened->of_ad;
+    }
     /* save some stuff */
     sdir = curdir;
     spath = obj->oldtmp;
@@ -1681,7 +1718,12 @@ int		ibuflen, *rbuflen;
             return AFPERR_PARAM;
         }
     }
-
+    memset(&add, 0, sizeof(add));
+    addp = &add;
+    if ((opened = of_findname(vol, curdir, path))) {
+            /* reuse struct adouble so it won't break locks */
+            addp = opened->of_ad;
+    }
 #ifdef CNID_DB
     /* look for destination id. */
     did = cnid_lookup(vol->v_db, &destst, curdir->d_did, upath,
@@ -1696,17 +1738,17 @@ int		ibuflen, *rbuflen;
         return AFPERR_MISC;
 
     /* now, quickly rename the file. we error if we can't. */
-    if ((err = renamefile(p, temp, temp, vol_noadouble(vol))) < 0)
+    if ((err = renamefile(p, temp, temp, vol_noadouble(vol), adsp)) < 0)
         goto err_exchangefile;
     of_rename(vol, sdir, spath, curdir, temp);
 
     /* rename destination to source */
-    if ((err = renamefile(path, p, spath, vol_noadouble(vol))) < 0)
+    if ((err = renamefile(path, p, spath, vol_noadouble(vol), addp)) < 0)
         goto err_src_to_tmp;
     of_rename(vol, curdir, path, sdir, spath);
 
     /* rename temp to destination */
-    if ((err = renamefile(temp, upath, path, vol_noadouble(vol))) < 0)
+    if ((err = renamefile(temp, upath, path, vol_noadouble(vol), adsp)) < 0)
         goto err_dest_to_src;
     of_rename(vol, curdir, temp, curdir, path);
 
@@ -1753,17 +1795,17 @@ int		ibuflen, *rbuflen;
      * properly. */
 err_temp_to_dest:
     /* rename dest to temp */
-    renamefile(upath, temp, temp, vol_noadouble(vol));
+    renamefile(upath, temp, temp, vol_noadouble(vol), adsp);
     of_rename(vol, curdir, upath, curdir, temp);
 
 err_dest_to_src:
     /* rename source back to dest */
-    renamefile(p, upath, path, vol_noadouble(vol));
+    renamefile(p, upath, path, vol_noadouble(vol), addp);
     of_rename(vol, sdir, spath, curdir, path);
 
 err_src_to_tmp:
     /* rename temp back to source */
-    renamefile(temp, p, spath, vol_noadouble(vol));
+    renamefile(temp, p, spath, vol_noadouble(vol), adsp);
     of_rename(vol, curdir, temp, sdir, spath);
 
 err_exchangefile:

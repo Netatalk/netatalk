@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.26 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: fork.c,v 1.27 2002-05-13 04:59:36 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,6 +50,10 @@
 #define BYTELOCK_MAX 0x7FFFFFFFU
 
 struct ofork		*writtenfork;
+extern int getmetadata(struct vol *vol,
+                 u_int16_t bitmap,
+                 char *path, struct dir *dir, struct stat *st,
+                 char *buf, int *buflen, struct adouble *adp, int attrbits );
 
 static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
 struct ofork	*ofork;
@@ -63,13 +67,17 @@ const u_int16_t     attrbits;
 #endif /* !USE_LASTDID */
     struct stat		st;
     struct extmap	*em;
-    char		*data, *nameoff = NULL, *upath;
-    int			bit = 0, isad = 1;
-    u_int32_t           aint;
+    char		    *data, *nameoff = NULL, *upath;
+    int			    bit = 0;
+    u_int32_t       aint;
     u_int16_t		ashort;
 
+    struct adouble	*adp;
+    struct dir      *dir;
+    struct vol      *vol;
+    
     if ( ad_hfileno( ofork->of_ad ) == -1 ) {
-        isad = 0;
+        adp = NULL;
     } else {
         aint = ad_getentrylen( ofork->of_ad, ADEID_RFORK );
         if ( ad_refresh( ofork->of_ad ) < 0 ) {
@@ -78,6 +86,7 @@ const u_int16_t     attrbits;
         }
         /* See afp_closefork() for why this is bad */
         ad_setentrylen( ofork->of_ad, ADEID_RFORK, aint );
+        adp = ofork->of_ad;
     }
 
     /* can only get the length of the opened fork */
@@ -99,164 +108,117 @@ const u_int16_t     attrbits;
             }
         }
     }
-
-    data = buf;
-    while ( bitmap != 0 ) {
-        while (( bitmap & 1 ) == 0 ) {
-            bitmap = bitmap>>1;
-            bit++;
-        }
-
-        switch ( bit ) {
-        case FILPBIT_ATTR :
-            if ( isad ) {
-                ad_getattr(ofork->of_ad, &ashort);
-            } else {
-                ashort = 0;
-            }
-            if (attrbits)
-                ashort = htons(ntohs(ashort) | attrbits);
-            memcpy(data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
-            break;
-
-        case FILPBIT_PDID :
-            memcpy(data, &ofork->of_dir->d_did, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        case FILPBIT_CDATE :
-            if (!isad ||
-                    (ad_getdate(ofork->of_ad, AD_DATE_CREATE, &aint) < 0))
-                aint = AD_DATE_FROM_UNIX(st.st_mtime);
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        case FILPBIT_MDATE :
-            if (!isad ||
-                    (ad_getdate(ofork->of_ad, AD_DATE_MODIFY, &aint) < 0) ||
-                    (AD_DATE_TO_UNIX(aint) < st.st_mtime))
-                aint = AD_DATE_FROM_UNIX(st.st_mtime);
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        case FILPBIT_BDATE :
-            if (!isad ||
-                    (ad_getdate(ofork->of_ad, AD_DATE_BACKUP, &aint) < 0))
-                aint = AD_DATE_START;
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        case FILPBIT_FINFO :
-            memcpy(data, isad ?
-                   (void *) ad_entry(ofork->of_ad, ADEID_FINDERI) :
-                   (void *) ufinderi, 32);
-            if ( !isad ||
-                    memcmp( ad_entry( ofork->of_ad, ADEID_FINDERI ),
-                            ufinderi, 8 ) == 0 ) {
-                memcpy(data, ufinderi, 8 );
-                if (( em = getextmap( ofork->of_name )) != NULL ) {
-                    memcpy(data, em->em_type, sizeof( em->em_type ));
-                    memcpy(data + 4, em->em_creator,
-                           sizeof( em->em_creator ));
-                }
-            }
-            data += 32;
-            break;
-
-        case FILPBIT_LNAME :
-            nameoff = data;
-            data += sizeof(u_int16_t);
-            break;
-
-        case FILPBIT_SNAME :
-            memset(data, 0, sizeof(u_int16_t));
-            data += sizeof(u_int16_t);
-            break;
-
-        case FILPBIT_FNUM :
-            aint = 0;
-#if AD_VERSION > AD_VERSION1
-            /* look in AD v2 header */
-            if (isad)
-                memcpy(&aint, ad_entry(ofork->of_ad, ADEID_DID), sizeof(aint));
-#endif /* AD_VERSION > AD_VERSION1 */
-
-#ifdef CNID_DB
-            aint = cnid_add(ofork->of_vol->v_db, &st,
-                            ofork->of_dir->d_did,
-                            upath, strlen(upath), aint);
-            if (aint == CNID_INVALID) {
-                switch (errno) {
-                case CNID_ERR_PARAM:
-                    LOG(log_error, logtype_afpd, "getforkparams: Incorrect parameters passed to cnid_add");
-                    return(AFPERR_PARAM);
-                case CNID_ERR_PATH:
-                    return(AFPERR_PARAM);
-                case CNID_ERR_DB:
-                case CNID_ERR_MAX:
-                    return(AFPERR_MISC);
-                }
-            }
-#endif /* CNID_DB */
-
-            if (aint == 0) {
-#ifdef USE_LASTDID
-                aint = htonl(( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff ));
-#else /* USE_LASTDID */
-                lstp = lstat(upath, &lst) < 0 ? &st : &lst;
-#ifdef DID_MTAB
-                aint = htonl( afpd_st_cnid ( lstp ) );
-#else /* DID_MTAB */
-                aint = htonl(CNID(lstp, 1));
-#endif /* DID_MTAB */
-#endif /* USE_LASTDID */
-            }
-
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        case FILPBIT_DFLEN :
-            aint = htonl( st.st_size );
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        case FILPBIT_RFLEN :
-            if ( isad ) {
-                aint = htonl( ad_getentrylen( ofork->of_ad, ADEID_RFORK ));
-            } else {
-                aint = 0;
-            }
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-            break;
-
-        default :
-            return( AFPERR_BITMAP );
-        }
-        bitmap = bitmap>>1;
-        bit++;
-    }
-
-    if ( nameoff ) {
-        ashort = htons( data - buf );
-        memcpy(nameoff, &ashort, sizeof( ashort ));
-        aint = strlen( ofork->of_name );
-        aint = ( aint > MACFILELEN ) ? MACFILELEN : aint;
-        *data++ = aint;
-        memcpy(data, ofork->of_name, aint );
-        data += aint;
-    }
-
-    *buflen = data - buf;
-    return( AFP_OK );
+    dir = ofork->of_dir;
+    vol = ofork->of_vol;
+    return getmetadata(vol, bitmap, ofork->of_name, dir, &st, buf, buflen, adp, attrbits );    
 }
 
+/* -------------------------
+*/
+#define SHARE 0
+#define EXCL  1
+static int setforkmode(struct adouble *adp, int eid, int ofrefnum, int what, int mode)
+{
+    int lockmode;
+    int lockop;
+    
+    /* NOTE: we can't write lock a read-only file. on those, we just
+     * make sure that we have a read lock set. that way, we at least prevent
+     * someone else from really setting a deny read/write on the file. 
+     */
+    lockmode = (ad_getoflags(adp, eid) & O_RDWR) ?ADLOCK_WR : ADLOCK_RD;
+    lockop = (mode == EXCL)?lockmode:ADLOCK_RD;
+    
+    return ad_lock(adp, eid, lockop | ADLOCK_FILELOCK | ADLOCK_UPGRADE,
+                        what, 1, ofrefnum);
+}
+
+/* -------------------------
+*/
+extern int ad_testlock(struct adouble *adp, int eid, int off);
+
+static int getforkmode(struct adouble *adp, int eid, int what)
+{
+    return ad_testlock(adp, eid,  what);
+}
+
+/* -------------------------- 
+   a lot of races, some can be remove. but I try first to get the semantic right
+*/
+
+static int setmode(struct adouble *adp, int eid, int access, int ofrefnum)
+{
+    int ret;
+    int readset;
+    int writeset;
+    int denyreadset;
+    int denywriteset;
+    int mode;    
+
+    if (! (access & (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD))) {
+        return setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_NONE, SHARE);
+    }
+
+    if ((access & (OPENACC_RD | OPENACC_DRD))) {
+        if ((readset = getforkmode(adp, eid, AD_FILELOCK_OPEN_RD)) <0)
+            return readset;
+        if ((denyreadset = getforkmode(adp, eid, AD_FILELOCK_DENY_RD)) <0)
+            return denyreadset;
+
+        if ((access & OPENACC_RD) && denyreadset) {
+            errno = EACCES;
+            return -1;
+        }
+        if ((access & OPENACC_DRD) && readset) {
+            errno = EACCES;
+            return -1;
+        }   
+        /* boolean logic is not enough, because getforkmode is not always telling the
+         * true 
+         */
+        mode = ((access & OPENACC_DRD))?EXCL: SHARE;
+        if ((access & OPENACC_RD)) {
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_RD, mode);
+            if (ret)
+                return ret;
+        }
+        if ((access & OPENACC_DRD)) {
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_RD, SHARE);
+            if (ret)
+                return ret;
+        }
+    }
+    /* ------------same for writing -------------- */
+    if ((access & (OPENACC_WR | OPENACC_DWR))) {
+        if ((writeset = getforkmode(adp, eid, AD_FILELOCK_OPEN_WR)) <0)
+            return writeset;
+        if ((denywriteset = getforkmode(adp, eid, AD_FILELOCK_DENY_WR)) <0)
+            return denywriteset;
+
+        if ((access & OPENACC_WR) && denywriteset) {
+            errno = EACCES;
+            return -1;
+        }
+        if ((access & OPENACC_DWR) && writeset) {
+            errno = EACCES;
+            return -1;
+        }   
+        mode = ((access & OPENACC_DWR))?EXCL: SHARE;
+        if ((access & OPENACC_WR)) {
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_WR, mode);
+            if (ret)
+                return ret;
+        }
+        if ((access & OPENACC_DWR)) {
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_WR, SHARE);
+            if (ret)
+                return ret;
+        }
+    }
+    return 0;
+}
+
+/* ----------------------- */    
 int afp_openfork(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
@@ -444,59 +406,13 @@ int		ibuflen, *rbuflen;
 
     /*
      * synchronization locks:
-     *
-     * here's the ritual:
-     *  1) attempt a read lock to see if we have read or write
-     *     privileges.
-     *  2) if that succeeds, set a write lock to correspond to the
-     *     deny mode requested.
-     *  3) whenever a file is read/written, locks get set which
-     *     prevent conflicts.
      */
 
     /* don't try to lock non-existent rforks. */
     if ((eid == ADEID_DFORK) || (ad_hfileno(ofork->of_ad) != -1)) {
 
-        /* try to see if we have access. */
-        ret = 0;
-        if (access & OPENACC_WR) {
-            ofork->of_flags |= AFPFORK_ACCWR;
-            ret = ad_lock(ofork->of_ad, eid, ADLOCK_RD | ADLOCK_FILELOCK,
-                          AD_FILELOCK_WR, 1, ofrefnum);
-        }
-
-        if (!ret && (access & OPENACC_RD)) {
-            ofork->of_flags |= AFPFORK_ACCRD;
-            ret = ad_lock(ofork->of_ad, eid, ADLOCK_RD | ADLOCK_FILELOCK,
-                          AD_FILELOCK_RD, 1, ofrefnum);
-        }
-
+        ret = setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
-        if (ret < 0) {
-            ad_close( ofork->of_ad, adflags );
-            of_dealloc( ofork );
-            ofrefnum = 0;
-            memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
-            return (AFPERR_DENYCONF);
-        }
-
-        /* now try to set the deny lock. if the fork is open for read or
-         * write, a read lock will already have been set. otherwise, we upgrade
-         * our lock to a write lock. 
-         *
-         * NOTE: we can't write lock a read-only file. on those, we just
-         * make sure that we have a read lock set. that way, we at least prevent
-         * someone else from really setting a deny read/write on the file. */
-        lockop = (ad_getoflags(ofork->of_ad, eid) & O_RDWR) ?
-                 ADLOCK_WR : ADLOCK_RD;
-        ret = (access & OPENACC_DWR) ? ad_lock(ofork->of_ad, eid,
-                                               lockop | ADLOCK_FILELOCK |
-                                               ADLOCK_UPGRADE, AD_FILELOCK_WR, 1,
-                                               ofrefnum) : 0;
-        if (!ret && (access & OPENACC_DRD))
-            ret = ad_lock(ofork->of_ad, eid, lockop | ADLOCK_FILELOCK |
-                          ADLOCK_UPGRADE, AD_FILELOCK_RD, 1, ofrefnum);
-
         if (ret < 0) {
             ret = errno;
             ad_close( ofork->of_ad, adflags );
@@ -515,6 +431,10 @@ int		ibuflen, *rbuflen;
                 return( AFPERR_PARAM );
             }
         }
+        if ((access & OPENACC_WR))
+            ofork->of_flags |= AFPFORK_ACCWR;
+        if ((access & OPENACC_RD))
+            ofork->of_flags |= AFPFORK_ACCRD;
     }
 
     memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));

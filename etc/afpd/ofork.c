@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.13 2002-04-22 07:46:00 rlewczuk Exp $
+ * $Id: ofork.c,v 1.14 2002-05-13 04:59:36 jmarcus Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -260,6 +260,15 @@ struct ofork *of_find(const u_int16_t ofrefnum )
     return( oforks[ ofrefnum % nforks ] );
 }
 
+/* --------------------------
+   it doesn't work :-(
+   mac1 open file "test" with simple text 
+   mac2 rename "test" ==> "test1"
+   
+   now of_findname return NULL 
+   
+   
+*/
 struct ofork *
             of_findname(const struct vol *vol, const struct dir *dir, const char *name)
 {

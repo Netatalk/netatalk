@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.31 2002-04-29 06:56:02 morgana Exp $
+ * $Id: directory.c,v 1.32 2002-05-13 04:59:36 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -417,7 +417,31 @@ struct dir	*dir;
 #endif /* ! REMOVE_NODES */
 }
 
+/* ---------------------------------------
+ * remove the node and its childs from the tree
+ *
+ * FIXME what about opened forks with refs to it?
+ * it's an afp specs violation because you can't delete
+ * an opened forks. Now afpd doesn't care about forks opened by other 
+ * process. It's fixable within afpd if fnctl_lock, doable with smb and
+ * next to impossible for nfs and local filesystem access.
+ */
+ 
+static void dir_invalidate( vol, dir )
+const struct vol *vol;
+struct dir *dir;
+{
+	if (curdir == dir) {
+	    /* v_root can't be deleted */
+		if (movecwd(vol, vol->v_root) < 0) 
+			printf("Yuup cant change dir to v_root\n");
+	}
+	/* FIXME */
+    dirchildremove(dir->d_parent, dir);
+	dir_remove( vol, dir );
+}
 
+/* ------------------------------------ */
 static struct dir *dir_insert(vol, dir)
             const struct vol *vol;
 struct dir *dir;
@@ -743,9 +767,11 @@ char	**cpath;
     struct dir		*cdir;
     static char		path[ MAXPATHLEN + 1];
     char		*data, *p;
+    char        *u;
     int			extend = 0;
     int			len;
-
+	int			olen = 0;
+	
     data = *cpath;
     if ( *data++ != 2 ) {			/* path type */
         return( NULL );
@@ -753,11 +779,37 @@ char	**cpath;
     len = (unsigned char) *data++;
     *cpath += len + 2;
     *path = '\0';
+    u = NULL;
 
     for ( ;; ) {
         if ( len == 0 ) {
             if ( !extend && movecwd( vol, dir ) < 0 ) {
-                return( NULL );
+            	/* it's tricky:
+            	   movecwd failed so dir is not there anymore.
+            	   FIXME Is it true with other errors?
+            	   if path == '\0' ==> the cpath parameter is that dir,
+            	   and maybe we are trying to recreate it! So we can't 
+            	   fail here.
+            	   
+            	*/
+    		    if ( dir->d_did == DIRDID_ROOT_PARENT) 
+			        return NULL;    		
+            	cdir = dir->d_parent;
+            	dir_invalidate(vol, dir);
+            	if (*path != '\0' || u == NULL) {
+            		/* FIXME: if path != '\0' then extend != 0 ?
+            		 * u == NUL ==> cpath is something like:
+            		 * toto\0\0\0
+            		*/
+            		return NULL;
+            	}
+            	if (movecwd(vol, cdir) < 0) {
+            		printf("can't change to parent\n");
+            		return NULL; /* give up the whole tree is out of synch*/
+            	}
+				/* restore the previous token */
+        		strncpy(path, u, olen);
+        		path[olen] = '\0';
             }
             return( path );
         }
@@ -766,6 +818,7 @@ char	**cpath;
             data++;
             len--;
         }
+    	u = NULL;
 
         while ( *data == '\0' && len > 0 ) {
             if ( dir->d_parent == NULL ) {
@@ -778,6 +831,10 @@ char	**cpath;
 
         /* would this be faster with strlen + strncpy? */
         p = path;
+        if (len > 0) {
+        	u = data;
+        	olen = len;
+		}        
         while ( *data != '\0' && len > 0 ) {
             *p++ = *data++;
             len--;
@@ -817,7 +874,15 @@ char	**cpath;
                 }
                 if ( cdir == NULL ) {
                     ++extend;
+                    /* if dir == curdir it always succeed,
+                       even if curdir is deleted. 
+                       it's not a pb because it will failed in extenddir
+                    */
                     if ( movecwd( vol, dir ) < 0 ) {
+                    	/* dir is not valid anymore 
+                    	   we delete dir from the cache and abort.
+                    	*/
+                    	dir_invalidate(vol, dir);
                         return( NULL );
                     }
                     cdir = extenddir( vol, dir, path );
@@ -833,7 +898,7 @@ char	**cpath;
                 }
 
             } else {
-                dir = cdir;
+                dir = cdir;	
                 *path = '\0';
             }
         }
@@ -1477,28 +1542,22 @@ int		ibuflen, *rbuflen;
         switch( errno ) {
         case EACCES:
             return( AFPERR_ACCESS );
-        case EEXIST:
+        case EEXIST:				/* FIXME this on is impossible? */
             return( AFPERR_EXIST );
         default:
             return( AFPERR_NOOBJ );
         }
     }
-
+    /* FIXME check done elswhere? cname was able to move curdir to it! */
+	if (*path == '\0')
+		return AFPERR_EXIST;
     upath = mtoupath(vol, path);
-
-    /* check for illegal bits in the unix filename */
-    if (!wincheck(vol, upath))
-        return AFPERR_PARAM;
-
-    if ((vol->v_flags & AFPVOL_NOHEX) && strchr(upath, '/'))
-        return AFPERR_PARAM;
-
-    if (!validupath(vol, upath))
-        return AFPERR_EXIST;
-
-    /* check for vetoed filenames */
-    if (veto_file(vol->v_veto, upath))
-        return AFPERR_EXIST;
+    {
+    int ret;
+        if (0 != (ret = check_name(vol, upath))) {
+            return  ret;
+        }
+    }
 
 #ifdef FORCE_UIDGID
     save_uidgid ( &uidgid );
