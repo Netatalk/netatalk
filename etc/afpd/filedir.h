@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.h,v 1.8 2002-08-29 18:57:26 didg Exp $
+ * $Id: filedir.h,v 1.9 2002-10-11 14:18:32 didg Exp $
  */
 
 #ifndef AFPD_FILEDIR_H
@@ -14,9 +14,10 @@ extern struct afp_options default_options;
 
 extern char		*ctoupath __P((const struct vol *, struct dir *,
                                 char *));
+extern char		*absupath __P((const struct vol *, struct dir *,
+                                char *));
 extern int		veto_file __P((const char *veto_str, const char *path));
 extern int 		check_name __P((const struct vol *vol, char *name));
-extern int 		check_access __P((char *name , int mode));
 
 /* FP functions */
 extern int	matchfile2dirperms __P((char *, struct vol *, int));

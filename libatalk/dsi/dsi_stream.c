@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.8 2002-02-02 21:09:13 jmarcus Exp $
+ * $Id: dsi_stream.c,v 1.9 2002-10-11 14:18:39 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -96,7 +96,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   sigset_t oldset;
 #ifdef USE_WRITEV
   struct iovec iov[2];
-  size_t  towrite;
+  size_t towrite;
   ssize_t len;
 #endif /* USE_WRITEV */
 
@@ -170,8 +170,8 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 /* read data. function on success. 0 on failure. data length gets
  * stored in length variable. this should really use size_t's, but
  * that would require changes elsewhere. */
-int dsi_stream_receive(DSI *dsi, void *buf, const int ilength,
-		       int *rlength)
+int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
+		       size_t *rlength)
 {
   char block[DSI_BLOCKSIZ];
 

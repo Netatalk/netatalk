@@ -1,7 +1,12 @@
 /*
- * $Id: desktop.c,v 1.18 2002-10-05 14:04:47 didg Exp $
+ * $Id: desktop.c,v 1.19 2002-10-11 14:18:26 didg Exp $
  *
  * See COPYRIGHT.
+ *
+ * bug:
+ * afp_XXXcomment are (the only) functions able to open
+ * a ressource fork when there's no data fork, eg after
+ * it was removed with samba.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -574,7 +579,7 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 {
     static char	path[ MAXPATHLEN + 1];
     char	*p;
-    int		i;
+    unsigned int i;
 
     strcpy( path, vol->v_path );
     strcat( path, "/.AppleDesktop/" );
@@ -604,18 +609,26 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
     return( path );
 }
 
+/* 
+ * mpath is only a filename 
+*/
 char *mtoupath(const struct vol *vol, char *mpath)
 {
     static char  upath[ MAXPATHLEN + 1];
     char	*m, *u;
     int		 i = 0;
-
+    int          changed = 0;
+    
     if ( *mpath == '\0' ) {
         return( "." );
     }
 
 #ifdef FILE_MANGLING
-    mpath = demangle(vol, mpath);
+    m = demangle(vol, mpath);
+    if (m != mpath) {
+        changed = 1;
+        mpath = m;
+    }
 #endif /* FILE_MANGLING */
 
     m = mpath;
@@ -633,6 +646,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
         if (vol->v_mtoupage && ((*m & 0x80) ||
                                 vol->v_flags & AFPVOL_MAPASCII)) {
             *u = vol->v_mtoupage->map[(unsigned char) *m].value;
+            changed = 1;
             if (!*u && *m) {
                 /* if conversion failed, encode in hex
                  * to prevent silly truncation
@@ -661,6 +675,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
                 *u++ = ':';
                 *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
                 *u = hexdig[ *m & 0x0f ];
+                changed = 1;
             } else
                 *u = *m;
         u++;
@@ -673,7 +688,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
     LOG(log_debug, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
 #endif /* DEBUG */
 
-    return( upath );
+    return( (changed)?upath:mpath );
 }
 
 #define hextoint( c )	( isdigit( c ) ? c - '0' : c + 10 - 'a' )
@@ -737,7 +752,8 @@ int		ibuflen, *rbuflen;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path, *name, *upath;
+    struct path         *path;
+    char                *name, *upath;
     int			clen;
     u_int32_t           did;
     u_int16_t		vid;
@@ -767,23 +783,29 @@ int		ibuflen, *rbuflen;
 
     clen = (u_char)*ibuf++;
     clen = min( clen, 199 );
-    upath = mtoupath( vol, path );
-    if ((*path == '\0') || !(of = of_findname(upath, NULL))) {
+
+    upath = path->u_name;
+    if (check_access(upath, OPENACC_WR ) < 0) {
+        return AFPERR_ACCESS;
+    }
+
+    if (*path->m_name == '\0' || !(of = of_findname(path))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
+
     if (ad_open( upath , vol_noadouble(vol) |
-                 (( *path == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
+                 (( *path->m_name == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
                  O_RDWR|O_CREAT, 0666, adp) < 0 ) {
         return( AFPERR_ACCESS );
     }
 
-    if ( ad_getoflags( adp, ADFLAGS_HF ) & O_CREAT ) {
-        if ( *path == '\0' ) {
-            name = curdir->d_name;
+    if ( (ad_getoflags( adp, ADFLAGS_HF ) & O_CREAT) ) {
+        if ( *path->m_name == '\0' ) {
+            name = curdir->d_m_name;
         } else {
-            name = path;
+            name = path->m_name;
         }
         ad_setentrylen( adp, ADEID_NAME, strlen( name ));
         memcpy( ad_entry( adp, ADEID_NAME ), name,
@@ -806,6 +828,7 @@ int		ibuflen, *rbuflen;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
+    struct path         *s_path;
     char		*path, *upath;
     u_int32_t		did;
     u_int16_t		vid;
@@ -825,13 +848,14 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
+    upath = s_path->u_name;
+    path  = s_path->m_name;
 
-    upath = mtoupath( vol, path );
-    if ((*path == '\0') || !(of = of_findname(upath, NULL))) {
+    if (*path == '\0' || !(of = of_findname(s_path))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
@@ -856,6 +880,8 @@ int		ibuflen, *rbuflen;
             ad_getentrylen( adp, ADEID_COMMENT ));
     *rbuflen = ad_getentrylen( adp, ADEID_COMMENT ) + 1;
     ad_close( adp, ADFLAGS_HF );
+
+    /* return AFPERR_NOITEM if len == 0 ? */
     return( AFP_OK );
 }
 
@@ -868,6 +894,7 @@ int		ibuflen, *rbuflen;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
+    struct path         *s_path;
     char		*path, *upath;
     u_int32_t		did;
     u_int16_t		vid;
@@ -887,12 +914,17 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
-    upath = mtoupath( vol, path );
-    if ((*path == '\0') || !(of = of_findname(upath, NULL))) {
+    upath = s_path->u_name;
+    path  = s_path->m_name;
+    if (check_access(upath, OPENACC_WR ) < 0) {
+        return AFPERR_ACCESS;
+    }
+
+    if (path == '\0' || !(of = of_findname(s_path))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else

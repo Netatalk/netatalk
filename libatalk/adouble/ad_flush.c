@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.4 2002-09-29 17:39:59 didg Exp $
+ * $Id: ad_flush.c,v 1.5 2002-10-11 14:18:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -27,21 +27,12 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <atalk/adouble.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#include <sys/types.h>
-#include <sys/mman.h>
 #include <errno.h>
-
-#include <netatalk/endian.h>
-#include <atalk/adouble.h>
 
 #include "ad_private.h"
 
@@ -98,41 +89,25 @@ int ad_flush( ad, adflags )
     struct adouble	*ad;
     int			adflags;
 {
-#ifndef USE_MMAPPED_HEADERS
     int len;
-#endif /* ! USE_MMAPPED_HEADERS */
 
     if (( adflags & ADFLAGS_HF ) && ( ad->ad_hf.adf_flags & O_RDWR )) {
 	/* sync our header */
+        if (ad->ad_rlen > 0xffffffff) {
+            ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
+        }
+        else {
+            ad_setentrylen(ad, ADEID_RFORK, ad->ad_rlen);
+        }
         ad_rebuild_header(ad);
-
-#ifdef USE_MMAPPED_HEADERS
-	/* now sync it */
-#ifdef MS_SYNC
-	msync(ad->ad_data, ad_getentryoff(ad, ADEID_RFORK),
-	      MS_SYNC | MS_INVALIDATE);
-#else
-	msync(ad->ad_data, ad_getentryoff(ad, ADEID_RFORK));
-#endif /* MS_SYNC */
-
-#else /* USE_MMAPPED_HEADERS */
-	if ( ad->ad_hf.adf_off != 0 ) {
-	    if ( lseek( ad->ad_hf.adf_fd, 0L, SEEK_SET ) < 0L ) {
-		return( -1 );
-	    }
-	    ad->ad_hf.adf_off = 0;
-	}
-
-	/* now flush it out */
 	len = ad_getentryoff(ad, ADEID_RFORK);
-	if (write( ad->ad_hf.adf_fd, ad->ad_data, len) != len) {
+	/* now flush it out */
+        if (adf_pwrite(&ad->ad_hf, ad->ad_data, len, 0) != len) {
 	    if ( errno == 0 ) {
 		errno = EIO;
 	    }
 	    return( -1 );
 	}
-	ad->ad_hf.adf_off = len;
-#endif /* USE_MMAPPED_HEADERS */
     }
 
     return( 0 );
@@ -146,7 +121,7 @@ int ad_close( ad, adflags )
     int			err = 0;
 
     if (( adflags & ADFLAGS_DF ) && ad->ad_df.adf_fd != -1 &&
-	!(--ad->ad_df.adf_refcount)) {
+	    !(--ad->ad_df.adf_refcount)) {
 	if ( close( ad->ad_df.adf_fd ) < 0 ) {
 	    err = -1;
 	}
@@ -155,11 +130,7 @@ int ad_close( ad, adflags )
     }
 
     if (( adflags & ADFLAGS_HF ) && ad->ad_hf.adf_fd != -1 &&
-	!(--ad->ad_hf.adf_refcount)) {
-#ifdef USE_MMAPPED_HEADERS
-        if (ad->ad_data != MAP_FAILED)
-	  munmap(ad->ad_data, ad_getentryoff(ad, ADEID_RFORK));
-#endif /* USE_MMAPPED_HEADERS */
+	    !(--ad->ad_hf.adf_refcount)) {
 	if ( close( ad->ad_hf.adf_fd ) < 0 ) {
 	    err = -1;
 	}

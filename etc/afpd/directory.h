@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.5 2002-07-15 14:19:09 srittau Exp $
+ * $Id: directory.h,v 1.6 2002-10-11 14:18:28 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -30,6 +30,7 @@
 #include <sys/types.h>
 /*#include <sys/stat.h>*/ /* including it here causes some confusion */
 #include <netatalk/endian.h>
+#include <dirent.h>
 
 /* sys/types.h usually snarfs in major/minor macros. if they don't
  * try this file. */
@@ -50,7 +51,21 @@ struct dir {
     void        *d_ofork;            /* oforks using this directory. */
     u_int32_t   d_did;
     int	        d_flags;
-    char	*d_name;
+
+    time_t      ctime;                /* inode ctime */
+    int         offcnt;               /* offspring count */
+
+    char	*d_m_name;             /* mac name */
+    char        *d_u_name;            /* unix name */
+};
+
+struct path {
+    char	*m_name;             /* mac name */
+    char        *u_name;            /* unix name */
+
+    int         st_valid;
+    int         st_errno;
+    struct stat st;
 };
 
 /* child addition/removal macros */
@@ -147,25 +162,35 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
-extern struct dir       *dirnew __P((const int));
+extern struct dir       *dirnew __P((const char *, const char *));
 extern void             dirfree __P((struct dir *));
 extern struct dir	*dirsearch __P((const struct vol *, u_int32_t));
 extern struct dir	*dirlookup __P((const struct vol *, u_int32_t));
-extern struct dir	*adddir __P((struct vol *, struct dir *, char *,
-                                               int, char *, int, struct stat *));
+
+extern struct dir	*adddir __P((struct vol *, struct dir *, 
+                                               struct path *));
+
 extern struct dir       *dirinsert __P((struct vol *, struct dir *));
 extern int              movecwd __P((const struct vol *, struct dir *));
 extern int              deletecurdir __P((const struct vol *, char *, int));
-extern char		*cname __P((const struct vol *, struct dir *,
+extern struct path      *cname __P((const struct vol *, struct dir *,
                              char **));
 extern mode_t           mtoumode __P((struct maccess *));
 extern void             utommode __P((struct stat *, struct maccess *));
-extern int getdirparams __P((const struct vol *, u_int16_t, char *,
-                                 struct dir *, struct stat *, char *, int *));
-extern int setdirparams __P((const struct vol *, char *, u_int16_t, char *));
+extern int getdirparams __P((const struct vol *, u_int16_t, struct path *,
+                                 struct dir *, char *, int *));
+extern int setdirparams __P((const struct vol *, struct path *, u_int16_t, char *));
 extern int renamedir __P((char *, char *, struct dir *,
                               struct dir *, char *, const int));
 
+typedef int (*dir_loop)(struct dirent *, char *, void *);
+
+extern int  for_each_dirent __P((const struct vol *, char *, dir_loop , void *));
+
+extern int  check_access __P((char *name , int mode));
+
+/* from enumerate.c */
+extern char *check_dirent __P((const struct vol *, char *));
 
 /* FP functions */
 extern int	afp_createdir __P((AFPObj *, char *, int, char *, int *));
@@ -176,7 +201,8 @@ extern int	afp_mapid __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_mapname __P((AFPObj *, char *, int, char *, int *));
 
 /* from enumerate.c */
-extern int	afp_enumerate __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_enumerate __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
+extern int	afp_enumerate_ext2 __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
 extern int	afp_catsearch __P((AFPObj *, char *, int, char *, int *));
 
 #endif

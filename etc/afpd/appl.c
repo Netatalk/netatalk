@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.7 2002-10-05 14:04:47 didg Exp $
+ * $Id: appl.c,v 1.8 2002-10-11 14:18:25 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -152,8 +152,8 @@ char	*path;
     strncpy( p, path, strlen( path ));
 
     while ( dir->d_parent != NULL ) {
-        p -= strlen( dir->d_name ) + 1;
-        strcpy( p, dir->d_name );
+        p -= strlen( dir->d_m_name ) + 1;
+        strcpy( p, dir->d_m_name );
         dir = dir->d_parent;
     }
     return( p );
@@ -170,7 +170,8 @@ int		ibuflen, *rbuflen;
     int			tfd, cc;
     u_int32_t           did;
     u_int16_t		vid, mplen;
-    char		*path, *dtf, *p, *mp;
+    struct path         *path;
+    char                *dtf, *p, *mp;
     u_char		creator[ 4 ];
     u_char		appltag[ 4 ];
     char		*mpath, *tempfile;
@@ -199,7 +200,7 @@ int		ibuflen, *rbuflen;
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
-    if ( *path == '\0' ) {
+    if ( *path->m_name == '\0' ) {
         return( AFPERR_BADTYPE );
     }
 
@@ -216,7 +217,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_PARAM );
     }
     mpath = obj->newtmp;
-    mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path );
+    mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
 
     /* write the new appl entry at start of temporary file */
@@ -256,7 +257,8 @@ int		ibuflen, *rbuflen;
     int			tfd, cc;
     u_int32_t           did;
     u_int16_t		vid, mplen;
-    char		*path, *dtf, *mp;
+    struct path    	*path;
+    char                *dtf, *mp;
     u_char		creator[ 4 ];
     char                *tempfile, *mpath;
 
@@ -281,7 +283,7 @@ int		ibuflen, *rbuflen;
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
-    if ( *path == '.' ) {
+    if ( *path->m_name == '\0' ) {
         return( AFPERR_BADTYPE );
     }
 
@@ -298,7 +300,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_PARAM );
     }
     mpath = obj->newtmp;
-    mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path );
+    mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
     close( tfd );
@@ -320,7 +322,6 @@ AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
-    struct stat		st;
     struct vol		*vol;
     char		*p, *q;
     int			cc, buflen;
@@ -328,7 +329,8 @@ int		ibuflen, *rbuflen;
     u_char		creator[ 4 ];
     u_char		appltag[ 4 ];
     char                *buf, *cbuf;
-
+    struct path         *path;
+    
     ibuf += 2;
 
     memcpy( &vid, ibuf, sizeof( vid ));
@@ -434,17 +436,17 @@ int		ibuflen, *rbuflen;
     memcpy( q, p, len );
     q = cbuf;
 
-    if (( p = cname( vol, vol->v_dir, &q )) == NULL ) {
+    if (( path = cname( vol, vol->v_dir, &q )) == NULL ) {
         *rbuflen = 0;
         return( AFPERR_NOITEM );
     }
 
-    if ( stat( mtoupath(vol, p), &st ) < 0 ) {
+    if ( *path->m_name == '\0' || path->st_errno ) {
         *rbuflen = 0;
         return( AFPERR_NOITEM );
     }
     buflen = *rbuflen - sizeof( bitmap ) - sizeof( appltag );
-    if ( getfilparams(vol, bitmap, p, curdir, &st, rbuf + sizeof( bitmap ) +
+    if ( getfilparams(vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
                       sizeof( appltag ), &buflen ) != AFP_OK ) {
         *rbuflen = 0;
         return( AFPERR_BITMAP );

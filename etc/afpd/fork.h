@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.5 2002-09-05 14:52:07 didg Exp $
+ * $Id: fork.h,v 1.6 2002-10-11 14:18:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -59,14 +59,14 @@ extern struct ofork *of_alloc    __P((struct vol *, struct dir *,
                                                       struct stat *));
 extern void         of_dealloc   __P((struct ofork *));
 extern struct ofork *of_find     __P((const u_int16_t));
-extern struct ofork *of_findname __P((const char *, struct stat *));
+extern struct ofork *of_findname __P((struct path *));
 extern int          of_rename    __P((const struct vol *,
                                           struct ofork *,
                                           struct dir *, const char *,
                                           struct dir *, const char *));
 extern int          of_flush     __P((const struct vol *));
 extern void         of_pforkdesc __P((FILE *));
-
+extern int          of_stat      __P((struct path *));
 /* in fork.c */
 extern int          flushfork    __P((struct ofork *));
 
@@ -81,4 +81,7 @@ extern int	afp_flushfork __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_flush __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_closefork __P((AFPObj *, char *, int, char *, int *));
 
+extern int	afp_bytelock_ext __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_read_ext __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_write_ext __P((AFPObj *, char *, int, char *, int *));
 #endif

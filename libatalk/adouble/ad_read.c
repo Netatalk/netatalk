@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_read.c,v 1.4 2002-10-11 14:18:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -27,20 +27,36 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
-#include <sys/types.h>
-#include <sys/param.h>
 #include <atalk/adouble.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
+#include <string.h>
+#include <sys/param.h>
 
 #ifndef MIN
 #define MIN(a,b)	((a)<(b)?(a):(b))
 #endif /* ! MIN */
 
-/* XXX: this would probably benefit from pread. 
- *      locks have to be checked before each stream of consecutive 
+ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
+{
+    ssize_t		cc;
+
+#ifndef  HAVE_PREAD
+    if ( ad_fd->adf_off != offset ) {
+        if ( lseek( ad_fd->adf_fd, offset, SEEK_SET ) < 0 ) {
+		return -1;
+	}
+	ad_fd->adf_off = offset;
+    }
+    if (( cc = read( ad_fd.adf_fd, buf, count )) < 0 ) {
+        return -1;
+    }
+    ad_fd->adf_off += cc;
+#else
+   cc = pread(ad_fd->adf_fd, buf, count, offset );
+#endif
+    return cc;
+}
+
+/* XXX: locks have to be checked before each stream of consecutive 
  *      ad_reads to prevent a denial in the middle from causing
  *      problems. */
 ssize_t ad_read( ad, eid, off, buf, buflen)
@@ -55,56 +71,30 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
     if ( eid == ADEID_DFORK ) {
-	if ( ad->ad_df.adf_off != off ) {
-	    if ( lseek( ad->ad_df.adf_fd, (off_t) off, SEEK_SET ) < 0 ) {
-		return( -1 );
-	    }
-	    ad->ad_df.adf_off = off;
-	}
-	if (( cc = read( ad->ad_df.adf_fd, buf, buflen )) < 0 ) {
-	    return( -1 );
-	}
-	ad->ad_df.adf_off += cc;
+        cc = adf_pread(&ad->ad_df, buf, buflen, off);
     } else {
-        cc = ad->ad_eid[eid].ade_off + off;
-
-#ifdef USE_MMAPPED_HEADERS
-	if (eid != ADEID_RFORK) {
-	  memcpy(buf, ad->ad_data + cc, buflen);
-	  cc = buflen;
-	  goto ad_read_done;
-	}
-#endif /* USE_MMAPPED_HEADERS */	
-	if ( ad->ad_hf.adf_off != cc ) {
-	  if ( lseek( ad->ad_hf.adf_fd, (off_t) cc, SEEK_SET ) < 0 ) {
-	      return( -1 );
-	  }
-	  ad->ad_hf.adf_off = cc;
-	}
-	  
-	if (( cc = read( ad->ad_hf.adf_fd, buf, buflen )) < 0 ) {
+        off_t r_off;
+        
+        r_off = ad_getentryoff(ad, eid) + off;
+	
+	if (( cc = adf_pread( &ad->ad_hf, buf, buflen, r_off )) < 0 ) {
 	  return( -1 );
 	}
-	  
-#ifndef USE_MMAPPED_HEADERS
 	/*
 	 * We've just read in bytes from the disk that we read earlier
 	 * into ad_data. If we're going to write this buffer out later,
 	 * we need to update ad_data.
+	 * FIXME : always false?
 	 */
-	if (ad->ad_hf.adf_off < ad_getentryoff(ad, ADEID_RFORK)) {
+	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
 	    if ( ad->ad_hf.adf_flags & O_RDWR ) {
-	      memcpy(buf, ad->ad_data + ad->ad_hf.adf_off,
-		     MIN(sizeof( ad->ad_data ) - ad->ad_hf.adf_off, cc));
+	      memcpy(buf, ad->ad_data + r_off,
+		     MIN(sizeof( ad->ad_data ) - r_off, cc));
 	    } else {
-	      memcpy(ad->ad_data + ad->ad_hf.adf_off, buf,
-		     MIN(sizeof( ad->ad_data ) - ad->ad_hf.adf_off, cc));
+	      memcpy(ad->ad_data + r_off, buf,
+		     MIN(sizeof( ad->ad_data ) - r_off, cc));
 	    }
 	}
-	ad->ad_hf.adf_off += cc;
-#else /* ! USE_MMAPPED_HEADERS */
-ad_read_done:
-#endif /* ! USE_MMAPPED_HEADERS */
     }
 
     return( cc );

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_size.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: ad_size.c,v 1.5 2002-10-11 14:18:38 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -30,6 +30,8 @@ off_t ad_size(const struct adouble *ad, const u_int32_t eid)
       return 0;
     return st.st_size;
   }  
-
+#if 0
   return ad_getentrylen(ad, eid);
+#endif
+  return ad->ad_rlen;  
 } 

@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.19 2002-09-06 02:57:49 didg Exp $
+ * $Id: ofork.c,v 1.20 2002-10-11 14:18:34 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -270,23 +270,34 @@ struct ofork *of_find(const u_int16_t ofrefnum )
     return( oforks[ ofrefnum % nforks ] );
 }
 
-/* --------------------------
-*/
+/* -------------------------- */
+int of_stat  (struct path *path)
+{
+int ret;
+    path->st_errno = 0;
+    path->st_valid = 1;
+    if ((ret = stat(path->u_name, &path->st)) < 0)
+    	path->st_errno = errno;
+   return ret;
+}
+
+
+/* -------------------------- */
 struct ofork *
-            of_findname(const char *name, struct stat *st)
+            of_findname(struct path *path)
 {
     struct ofork *of;
     struct file_key key;
-    struct stat buffer;
-    char   *p;
     
-    if (st == NULL) {
-        st = &buffer;
-        if (stat(name, st) < 0)
-            return NULL;
+    if (!path->st_valid) {
+       of_stat(path);
     }
-    key.dev = st->st_dev;
-    key.inode = st->st_ino;
+    	
+    if (path->st_errno)
+        return NULL;
+
+    key.dev = path->st.st_dev;
+    key.inode = path->st.st_ino;
 
     for (of = ofork_table[hashfn(&key)]; of; of = of->next) {
         if (key.dev == of->key.dev && key.inode == of->key.inode ) {

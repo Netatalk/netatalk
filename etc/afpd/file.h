@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.11 2002-10-09 18:46:31 didg Exp $
+ * $Id: file.h,v 1.12 2002-10-11 14:18:31 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -76,13 +76,15 @@ struct extmap {
 extern struct extmap	*getextmap __P((const char *));
 extern struct extmap	*getdefextmap __P((void));
 
-extern int getfilparams __P((struct vol *, u_int16_t, char *,
-                                 struct dir *, struct stat *, char *buf,
-                                 int *));
-extern int setfilparams __P((struct vol *, char *, u_int16_t, char *));
+extern int getfilparams __P((struct vol *, u_int16_t, struct path *,
+                                 struct dir *, char *buf, int *));
+
+extern int setfilparams __P((struct vol *, struct path *, u_int16_t, char *));
 extern int renamefile   __P((char *, char *, char *, const int, struct adouble *));
 extern int copyfile     __P((char *, char *, char *, const int));
 extern int deletefile   __P((char *, int));
+
+extern void *get_finderinfo __P((const char *, struct adouble *, void *));
 
 /* FP functions */
 extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));

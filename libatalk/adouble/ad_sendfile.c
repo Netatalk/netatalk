@@ -1,5 +1,5 @@
 /*
- * $Id: ad_sendfile.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: ad_sendfile.c,v 1.5 2002-10-11 14:18:38 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -30,6 +30,23 @@
 #include "ad_private.h"
 
 static int _ad_sendfile_dummy;
+
+#ifdef ATACC
+
+#if defined(HAVE_SENDFILE_READ)
+#ifdef __NR_sendfile
+int sendfile(int fdout, int fdin, off_t *off, size_t count)
+{
+#if _FILE_OFFSET_BITS == 64 
+#error sendfile
+  return syscall(__NR_sendfile64, fdout, fdin, off, count);
+#else
+  return syscall(__NR_sendfile, fdout, fdin, off, count);
+#endif
+}
+#endif
+#endif
+#endif
 
 #if defined(HAVE_SENDFILE_READ) || defined(HAVE_SENDFILE_WRITE)
 static __inline__ int ad_sendfile_init(const struct adouble *ad, 

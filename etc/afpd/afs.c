@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.12 2002-10-05 14:04:47 didg Exp $
+ * $Id: afs.c,v 1.13 2002-10-11 14:18:24 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -78,7 +78,7 @@ int		ibuflen, *rbuflen;
     struct ViceIoctl	vi;
     struct vol		*vol;
     struct dir		*dir;
-    char		*path;
+    struct path		*path;
     u_int32_t		did;
     u_int16_t		vid;
 
@@ -101,7 +101,7 @@ int		ibuflen, *rbuflen;
         *rbuflen = 0;
         return( AFPERR_NOOBJ );
     }
-    if ( *path != '\0' ) {
+    if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
         return( AFPERR_BITMAP );
     }
@@ -168,7 +168,8 @@ int		ibuflen, *rbuflen;
     struct ViceIoctl	vi;
     struct vol		*vol;
     struct dir		*dir;
-    char		*path, *iend;
+    char		*iend;
+    struct path		*path;
     u_int32_t		did;
     u_int16_t		vid;
 
@@ -193,7 +194,7 @@ int		ibuflen, *rbuflen;
         *rbuflen = 0;
         return( AFPERR_NOOBJ );
     }
-    if ( *path != '\0' ) {
+    if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
         return( AFPERR_BITMAP );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_write.c,v 1.4 2002-10-11 14:18:39 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,28 +9,44 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <atalk/adouble.h>
+
 #include <string.h>
-#include <sys/types.h>
 #include <sys/param.h>
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 
-#include <atalk/adouble.h>
 
 #ifndef MIN
 #define MIN(a,b)	((a)<(b)?(a):(b))
 #endif /* ! MIN */
 
-/* XXX: this would benefit from pwrite. 
- *      locking has to be checked before each stream of consecutive
+/* XXX: locking has to be checked before each stream of consecutive
  *      ad_writes to prevent a lock in the middle from causing problems. 
  */
+
+ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t offset)
+{
+    ssize_t		cc;
+
+#ifndef  HAVE_PWRITE
+    if ( ad_fd->adf_off != off ) {
+	if ( lseek( ad_fd->adf_fd, offset, SEEK_SET ) < 0 ) {
+	    return -1;
+	}
+	ad_fd->adf_off = offset;
+    }
+    cc = write( ad_fd->adf_fd, buf, count );
+    if ( cc < 0 ) {
+        return -1;
+    }
+    ad_fd->adf_off += cc;
+#else
+   cc = pwrite(ad_fd->adf_fd, buf, count, offset );
+#endif
+    return cc;
+}
+
+
 ssize_t ad_write( ad, eid, off, end, buf, buflen )
     struct adouble	*ad;
     const u_int32_t	eid;
@@ -41,7 +57,7 @@ ssize_t ad_write( ad, eid, off, end, buf, buflen )
 {
     struct stat		st;
     ssize_t		cc;
-
+    
     if ( eid == ADEID_DFORK ) {
 	if ( end ) {
 	    if ( fstat( ad->ad_df.adf_fd, &st ) < 0 ) {
@@ -49,56 +65,30 @@ ssize_t ad_write( ad, eid, off, end, buf, buflen )
 	    }
 	    off = st.st_size - off;
 	}
+	cc = adf_pwrite(&ad->ad_df, buf, buflen, off);
+    } else if ( eid == ADEID_RFORK ) {
+        off_t    r_off;
 
-	if ( ad->ad_df.adf_off != off ) {
-	    if ( lseek( ad->ad_df.adf_fd, (off_t) off, SEEK_SET ) < 0 ) {
+	if ( end ) {
+	    if ( fstat( ad->ad_df.adf_fd, &st ) < 0 ) {
 		return( -1 );
 	    }
-	    ad->ad_df.adf_off = off;
+	    off = st.st_size - off -ad_getentryoff(ad, eid);
 	}
-	cc = write( ad->ad_df.adf_fd, buf, buflen );
-	if ( cc < 0 ) {
-	    return( -1 );
-	}
-	ad->ad_df.adf_off += cc;
-    } else {
-	if ( end ) {
-	    off = ad->ad_eid[ eid ].ade_len - off;
-	}
-	cc = ad->ad_eid[eid].ade_off + off;
+	r_off = ad_getentryoff(ad, eid) + off;
+	cc = adf_pwrite(&ad->ad_hf, buf, buflen, r_off);
 
-#ifdef USE_MMAPPED_HEADERS
-	if (eid != ADEID_RFORK) {
-	  memcpy(ad->ad_data + cc, buf, buflen);
-	  cc = buflen;
-	  goto ad_write_done;
-	}	  
-#endif /* ! USE_MMAPPED_HEADERS */
-
-	if ( ad->ad_hf.adf_off != cc ) {
-	  if ( lseek( ad->ad_hf.adf_fd, (off_t) cc, SEEK_SET ) < 0 ) {
-	      return( -1 );
-	  }
-	  ad->ad_hf.adf_off = cc;
-	}
-	  
-	if ((cc = write( ad->ad_hf.adf_fd, buf, buflen )) < 0)
-	  return( -1 );
-	ad->ad_hf.adf_off += cc;
-	
-#ifndef USE_MMAPPED_HEADERS
-	/* sync up our internal buffer */
-	if (ad->ad_hf.adf_off < ad_getentryoff(ad, ADEID_RFORK))
-	  memcpy(ad->ad_data + ad->ad_hf.adf_off, buf,
-		 MIN(sizeof(ad->ad_data) - ad->ad_hf.adf_off, cc));
-#else /* ! USE_MMAPPED_HEADERS */  
-ad_write_done:
-#endif /* ! USE_MMAPPED_HEADERS */
-	  if ( ad->ad_eid[ eid ].ade_len < off + cc ) {
-	    ad->ad_eid[ eid ].ade_len = off + cc;
-	  }
+	/* sync up our internal buffer  FIXME always false? */
+	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
+	    memcpy(ad->ad_data + r_off, buf, MIN(sizeof(ad->ad_data) -r_off, cc));
+        }
+        if ( ad->ad_rlen  < r_off + cc ) {
+             ad->ad_rlen = r_off + cc;
+        }
     }
-
+    else {
+        return -1; /* we don't know how to write if it's not a ressource or data fork */
+    }
     return( cc );
 }
 
@@ -119,7 +109,9 @@ int ad_rtruncate( ad, size )
 	errno = err;
 	return( -1 );
     }
+    ad->ad_rlen = size;    
 
+#if 0
     ad->ad_eid[ ADEID_RFORK ].ade_len = size;
     if ( lseek( ad->ad_hf.adf_fd, ad->ad_eid[ADEID_RFORK].ade_off, 
 		SEEK_SET ) < 0 ) {
@@ -130,6 +122,7 @@ int ad_rtruncate( ad, size )
     }
 
     ad->ad_hf.adf_off = ad->ad_eid[ADEID_RFORK].ade_off;
+#endif
     ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
     return( 0 );
 }
@@ -147,6 +140,7 @@ int ad_dtruncate(ad, size)
       err = errno;
       ad_tmplock(ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
       errno = err;
+      return -1;
     } else 
       ad_tmplock(ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
 

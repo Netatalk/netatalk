@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.37 2002-10-10 20:27:36 jmarcus Exp $
+ * $Id: volume.c,v 1.38 2002-10-11 14:18:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -601,7 +601,6 @@ int			user;
             LOG(log_error, logtype_afpd, "setextmap: calloc: %s", strerror(errno) );
             return;
         }
-
     }
     ext++;
     for ( em = extmap, cnt = 0; em->em_ext; em++, cnt++) {
@@ -1215,14 +1214,14 @@ int		ibuflen, *rbuflen;
     }
 
     if (( volume->v_flags & AFPVOL_OPEN  ) == 0 ) {
-        if ((dir = dirnew(strlen(volume->v_name) + 1)) == NULL) {
+        /* FIXME unix name != mac name */
+        if ((dir = dirnew(volume->v_name, volume->v_name) ) == NULL) {
             LOG(log_error, logtype_afpd, "afp_openvol: malloc: %s", strerror(errno) );
             ret = AFPERR_MISC;
             goto openvol_err;
         }
         dir->d_did = DIRDID_ROOT;
         dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
-        strcpy( dir->d_name, volume->v_name );
         volume->v_dir = volume->v_root = dir;
         volume->v_flags |= AFPVOL_OPEN;
     }

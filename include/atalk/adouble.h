@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.10 2002-09-07 19:19:00 didg Exp $
+ * $Id: adouble.h,v 1.11 2002-10-11 14:18:35 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -25,7 +25,32 @@
 #ifndef _ATALK_ADOUBLE_H
 #define _ATALK_ADOUBLE_H
 
+/* ------------------- 
+ * need pread() and pwrite()
+*/
+#ifdef HAVE_PREAD
+
+#ifndef HAVE_PWRITE
+#undef HAVE_PREAD
+#endif
+
+#endif
+
+#ifdef HAVE_PWRITE
+
+#ifndef HAVE_PREAD
+#undef HAVE_PWRITE
+#endif
+
+#endif
+
+#ifdef  HAVE_PREAD
+#define _XOPEN_SOURCE 500
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif 
 
 #ifdef HAVE_FLOCK
 #include <sys/file.h>
@@ -36,29 +61,51 @@
 #define LOCK_UN 8
 extern int flock (int /*fd*/, int /*operation*/);
 #endif
+
+#ifdef HAVE_FCNTL_H  
 #include <fcntl.h>
+#endif
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <netatalk/endian.h>
 
-
 /* XXX: this is the wrong place to put this. 
- * NOTE: as of 2.2.1, linux can't do a sendfile from a socket. */
+ * NOTE: as of 2.2.1, linux can't do a sendfile from a socket. 
+ * and it doesn't have 64 bits sendfile
+ */
 #ifdef SENDFILE_FLAVOR_LINUX
+
+#if _FILE_OFFSET_BITS == 64 
+
+#undef SENDFILE_FLAVOR_LINUX
+
+#else
 #define HAVE_SENDFILE_READ
 #define HAVE_SENDFILE_WRITE
 #include <asm/unistd.h>
+
 #ifdef __NR_sendfile
-static inline int sendfile(int fdout, int fdin, off_t *off, size_t count)
+#ifndef ATACC
+static __inline__ int sendfile(int fdout, int fdin, off_t *off, size_t count)
 {
+#if _FILE_OFFSET_BITS == 64 
+  return syscall(__NR_sendfile64, fdout, fdin, off, count);
+#else
   return syscall(__NR_sendfile, fdout, fdin, off, count);
+#endif
 }
+#else
+extern int sendfile __P((int , int , off_t *, size_t ));
+#endif /* ATACC */
+
 #else
 #include <sys/sendfile.h>
 #endif
 #endif
+#endif /* SENDFILE_FLAVOR_LINUX */
 
 #ifdef SENDFILE_FLAVOR_BSD
 #define HAVE_SENDFILE_READ
@@ -172,7 +219,11 @@ typedef struct adf_lock_t {
 
 struct ad_fd {
     int		 adf_fd;
+
+#ifndef HAVE_PREAD
     off_t	 adf_off;
+#endif
+
     int		 adf_flags;
     adf_lock_t   *adf_lock;
     int          adf_refcount, adf_lockcount, adf_lockmax;
@@ -187,7 +238,10 @@ struct adouble {
     struct ad_entry	ad_eid[ ADEID_MAX ];
     struct ad_fd	ad_df, ad_hf;
     int                 ad_flags, ad_inited;
-    int             ad_refcount; /* used in afpd/ofork.c */
+    int                 ad_refcount; /* used in afpd/ofork.c */
+    off_t               ad_rlen;     /* ressource fork len with AFP 3.0
+                                        the header parameter size is too small.
+                                     */
 #ifdef USE_MMAPPED_HEADERS
     char                *ad_data;
 #else
@@ -288,16 +342,17 @@ extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 #endif
 
 /* ad_open.c */
-extern char *ad_dir   __P((char *));
-extern char *ad_path  __P((char *, int));
-extern int ad_mode    __P((char *, int));
-extern int ad_mkdir   __P((char *, int));
-extern int ad_open    __P((char *, int, int, int, struct adouble *)); 
+extern char *ad_dir   __P((const char *));
+extern char *ad_path  __P((const char *, int));
+extern int ad_mode    __P((const char *, int));
+extern int ad_mkdir   __P((const char *, int));
+extern int ad_open    __P((const char *, int, int, int, struct adouble *)); 
 extern int ad_refresh __P((struct adouble *));
 
 /* extend header to RW if R or W (W if R for locking),
  */ 
-static inline mode_t ad_hf_mode (mode_t mode)
+#ifndef ATACC
+static __inline__ mode_t ad_hf_mode (mode_t mode)
 {
 #ifndef USE_FLOCK_LOCKS
     /* fnctl lock need write access */
@@ -318,12 +373,21 @@ static inline mode_t ad_hf_mode (mode_t mode)
 
     return mode;
 }
+#else
+extern mode_t ad_hf_mode __P((mode_t ));
+#endif
 
 /* ad_read.c/ad_write.c */
 extern ssize_t ad_read __P((struct adouble *, const u_int32_t, 
 			    const off_t, char *, const size_t));
+extern ssize_t ad_pread __P((struct ad_fd *, void *, size_t, off_t));
+
 extern ssize_t ad_write __P((struct adouble *, const u_int32_t, off_t,
 			     const int, const char *, const size_t));
+
+extern ssize_t adf_pread  __P((struct ad_fd *, void *, size_t, off_t));
+extern ssize_t adf_pwrite __P((struct ad_fd *, const void *, size_t, off_t));
+
 extern int ad_dtruncate __P((struct adouble *, const size_t));
 extern int ad_rtruncate __P((struct adouble *, const size_t));
 

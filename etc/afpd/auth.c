@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.29 2002-09-26 00:02:47 didg Exp $
+ * $Id: auth.c,v 1.30 2002-10-11 14:18:25 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,6 +49,8 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "switch.h"
 #include "status.h"
 
+#include "fork.h"
+
 int	afp_version = 11;
 static int afp_version_index;
 
@@ -73,7 +75,11 @@ static struct afp_versions	afp_versions[] = {
             { "AFPVersion 1.1",	11 },
             { "AFPVersion 2.0",	20 },
             { "AFPVersion 2.1",	21 },
-            { "AFP2.2",	22 }
+            { "AFP2.2",	22 },
+#ifdef AFP3x
+            { "AFP3.0", 30 },
+            { "AFP3.1", 31 }
+#endif            
         };
 
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
@@ -286,6 +292,20 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
         uuid = pwd->pw_uid;
 
     afp_switch = postauth_switch;
+    switch (afp_version) {
+    case 31:
+	uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL); 
+    case 30:
+	uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL); 
+        /* enumerate_ext and catsearch_ext are using the same packet as no ext calls */
+#ifdef WITH_CATSEARCH
+	uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH, afp_catsearch, NULL); 
+#endif
+	uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate, NULL); 
+	uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext, NULL); 
+	uam_afpserver_action(AFP_WRITE_EXT,     UAM_AFPSERVER_POSTAUTH, afp_write_ext, NULL); 
+	break;
+    }
     obj->logout = logout;
 
 #ifdef FORCE_UIDGID
@@ -330,6 +350,10 @@ int		ibuflen, *rbuflen;
     }
     if ( i == num ) 				/* An inappropo version */
         return send_reply(obj, AFPERR_BADVERS );
+
+    if (afp_version >= 30 && obj->proto != AFPPROTO_DSI)
+        return send_reply(obj, AFPERR_BADVERS );
+
     ibuf += len;
     ibuflen -= len;
 
@@ -403,7 +427,8 @@ int		ibuflen, *rbuflen;
     char username[MACFILELEN + 1], *start = ibuf;
     struct uam_obj *uam;
     struct passwd *pwd;
-    int len;
+    size_t len;
+    int    ret;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -434,12 +459,12 @@ int		ibuflen, *rbuflen;
 
     /* send it off to the uam. we really don't use ibuflen right now. */
     ibuflen -= (ibuf - start);
-    len = uam->u.uam_changepw(obj, username, pwd, ibuf, ibuflen,
+    ret = uam->u.uam_changepw(obj, username, pwd, ibuf, ibuflen,
                               rbuf, rbuflen);
     LOG(log_info, logtype_afpd, "password change %s.",
-        (len == AFPERR_AUTHCONT) ? "continued" :
-        (len ? "failed" : "succeeded"));
-    return len;
+        (ret == AFPERR_AUTHCONT) ? "continued" :
+        (ret ? "failed" : "succeeded"));
+    return ret;
 }
 
 
