@@ -1,3 +1,8 @@
+2001-10-17  joe c <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_add.c: Fix deadlock problem when copying files to
+	  netatalk server from multiple clients
+
 2001-10-16  Lance Levsen  <l.levsen@printwest.com>
 
 	* man/man1/apple_mv.1.tmpl: Added apple_mv man page.
