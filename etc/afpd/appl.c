@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.13 2003-05-03 20:03:12 didg Exp $
+ * $Id: appl.c,v 1.14 2003-06-09 15:09:19 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -330,7 +330,7 @@ int		ibuflen, *rbuflen;
     u_char		appltag[ 4 ];
     char                *buf, *cbuf;
     struct path         *path;
-    
+
     ibuf += 2;
 
     memcpy( &vid, ibuf, sizeof( vid ));

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.31 2003-05-16 15:29:26 didg Exp $
+ * $Id: afp_options.c,v 1.32 2003-06-09 15:09:19 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -123,11 +123,11 @@ void afp_options_free(struct afp_options *opt,
     if (opt->passwdfile && (opt->passwdfile != save->passwdfile))
         free(opt->passwdfile);
     if (opt->signature && (opt->signature != save->signature))
-	free(opt->signature);
+        free(opt->signature);
     if (opt->k5service && (opt->k5service != save->k5service))
-	free(opt->k5service);
+        free(opt->k5service);
     if (opt->k5realm && (opt->k5realm != save->k5realm))
-	free(opt->k5realm);
+        free(opt->k5realm);
 }
 
 /* initialize options */
@@ -269,12 +269,15 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     /* -[no]setuplog <logtype> <loglevel> [<filename>]*/
     if ((c = getoption(buf, "-setuplog")))
     {
-      char *ptr, *logsource, *logtype, *loglevel, *filename;
+      char *ptr, *logtype, *loglevel, *filename;
+#if 0
+      char *logsource;
+#endif
 
       LOG(log_debug6, logtype_afpd, "setting up logtype, c is %s", c);
       ptr = c;
-      
-      /* 
+
+#if 0
       logsource = ptr = c;
       if (ptr)
       {
@@ -286,7 +289,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
             ptr++;
         }
       }
-      */
+#endif
 
       logtype = ptr; 
       if (ptr)
@@ -389,11 +392,11 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 #endif /* ADMIN_GRP */
 
     if ((c = getoption(buf, "-k5service")) && (opt = strdup(c)))
-	options->k5service = opt;
+        options->k5service = opt;
     if ((c = getoption(buf, "-k5realm")) && (opt = strdup(c)))
-	options->k5realm = opt;
+        options->k5realm = opt;
     if ((c = getoption(buf, "-k5keytab")))
-	setenv( "KRB5_KTNAME", c, 1 );
+        setenv( "KRB5_KTNAME", c, 1 );
     if ((c = getoption(buf, "-authprintdir")) && (opt = strdup(c)))
         options->authprintdir = opt;
     if ((c = getoption(buf, "-uampath")) && (opt = strdup(c)))

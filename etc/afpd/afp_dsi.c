@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.29 2003-06-06 19:41:48 srittau Exp $
+ * $Id: afp_dsi.c,v 1.30 2003-06-09 15:09:19 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -116,6 +116,7 @@ static void afp_dsi_timedown()
         LOG(log_error, logtype_afpd, "afp_timedown: setitimer: %s", strerror(errno) );
         afp_dsi_die(1);
     }
+
     memset(&sv, 0, sizeof(sv));
     sv.sa_handler = afp_dsi_die;
     sigemptyset( &sv.sa_mask );
@@ -148,7 +149,8 @@ static void afp_dsi_getmesg (int sig)
 
 static void alarm_handler()
 {
-int err;
+    int err;
+
     /* if we're in the midst of processing something,
        don't die. */
     if ((child.flags & CHILD_SLEEPING) && child.tickle++ < child.obj->options.sleep) {
@@ -266,6 +268,7 @@ void afp_over_dsi(AFPObj *obj)
         } else if (!(child.flags & CHILD_DIE)) { /* reset tickle timer */
             setitimer(ITIMER_REAL, &dsi->timer, NULL);
         }
+
         switch(cmd) {
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
