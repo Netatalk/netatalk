@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.39 2002-02-02 19:11:33 jmarcus Exp $
+ * $Id: file.c,v 1.40 2002-03-05 02:04:46 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1474,6 +1474,7 @@ int		ibuflen, *rbuflen;
     char                *upath;
     int                 err;
     cnid_t		id;
+    cnid_t		fileid;
     u_short		vid;
 
 #ifdef DEBUG
@@ -1495,7 +1496,8 @@ int		ibuflen, *rbuflen;
 
     memcpy(&id, ibuf, sizeof( id ));
     ibuf += sizeof(id);
-
+    fileid = id;
+    
     if ((upath = cnid_resolve(vol->v_db, &id)) == NULL) {
         return AFPERR_NOID;
     }
@@ -1523,7 +1525,7 @@ int		ibuflen, *rbuflen;
     if (S_ISDIR(st.st_mode))
         return AFPERR_BADTYPE;
 
-    if (cnid_delete(vol->v_db, id)) {
+    if (cnid_delete(vol->v_db, fileid)) {
         switch (errno) {
         case EROFS:
             return AFPERR_VLOCK;
