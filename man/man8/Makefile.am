@@ -1,5 +1,7 @@
 ## Makefile.am for man/man8/
 
+pkgconfdir = @PKGCONFDIR@
+
 SUFFIXES = .tmpl .
 
 .tmpl:

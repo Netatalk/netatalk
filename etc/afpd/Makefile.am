@@ -1,5 +1,7 @@
 # Makefile.am for etc/afpd/
 
+pkgconfdir = @PKGCONFDIR@
+
 SUBDIRS = nls
 
 sbin_PROGRAMS = afpd

@@ -1,5 +1,7 @@
 # Makefile.am for bin/afppasswd/
 
+pkgconfdir = @PKGCONFDIR@
+
 bin_PROGRAMS = afppasswd
 
 afppasswd_SOURCES = afppasswd.c

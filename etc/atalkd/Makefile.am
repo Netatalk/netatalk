@@ -1,5 +1,7 @@
 # Makefile.am for etc/atalkd/
 
+pkgconfdir = @PKGCONFDIR@
+
 sbin_PROGRAMS = atalkd
 
 atalkd_SOURCES = aep.c config.c main.c multicast.c nbp.c route.c rtmp.c zip.c 

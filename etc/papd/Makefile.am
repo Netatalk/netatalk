@@ -1,5 +1,7 @@
 # Makefile.am for etc/papd/
 
+pkgconfdir = @PKGCONFDIR@
+
 sbin_PROGRAMS = papd
 #bin_PROGRAMS = showppd
 

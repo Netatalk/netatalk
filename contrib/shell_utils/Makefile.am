@@ -1,5 +1,7 @@
 # Makefile for contrib/shell_utils/
 
+pkgconfdir = @PKGCONFDIR@
+
 SUFFIXES = .tmpl .
 
 .tmpl:

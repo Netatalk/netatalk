@@ -12,7 +12,7 @@ EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 
 CLEANFILES += $(GENFILES)
 
-pkgconfdir = #$(pkgconfdir)/ # shut-up automake
+pkgconfdir = @PKGCONFDIR@
 pkgconf_DATA = $(CONFFILES) $(GENFILES)
 
 #

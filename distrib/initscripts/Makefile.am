@@ -10,6 +10,8 @@ SUFFIXES = .tmpl .
 
 CLEANFILES = rc.atalk.redhat rc.atalk.suse rc.atalk.tru64 atalk
 
+pkgconfdir = @PKGCONFDIR@
+
 #
 # checking for "redhat" style sysv scripts:
 #
