@@ -20,18 +20,6 @@ INCLUDES = -I$(top_srcdir)/sys -I$(top_srcdir)/etc/afpd
 $(MACCODES): makecode
 	./makecode $@
 
-#
-# install/install-strip:
-#
-
-install-data-local: $(MACCODES)
-	mkdir -p $(DESTDIR)$(nlsdir); \
-	for f in $(MACCODES); do \
-		$(INSTALL_DATA) $$f $(DESTDIR)$(nlsdir)/; \
-	done
-
-#
-# cleanup
-#
+nls_DATA = $(MACCODES)
 
 CLEANFILES = $(MACCODES)
