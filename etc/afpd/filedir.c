@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.36 2002-10-25 11:26:49 didg Exp $
+ * $Id: filedir.c,v 1.37 2003-01-08 15:01:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,6 +56,7 @@ char *strchr (), *strrchr ();
 #include "filedir.h"
 #include "unix.h"
 
+#ifdef DROPKLUDGE
 int matchfile2dirperms(upath, vol, did)
 /* Since it's kinda' big; I decided against an
 inline function */
@@ -134,7 +135,7 @@ more information */
 #endif /* DEBUG */
     return ret;
 }
-
+#endif
 
 int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
@@ -166,7 +167,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( did );
 
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     memcpy( &fbitmap, ibuf, sizeof( fbitmap ));
@@ -177,13 +178,15 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( dbitmap );
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     st   = &s_path->st;
     if (!s_path->st_valid) {
         /* it's a dir and it should be there
-         * because we chdir in it in cname
+         * because we chdir in it in cname or
+         * it's curdir (maybe deleted, but then we can't know)
+         * 
          */
         of_stat(s_path);
     }
@@ -194,6 +197,11 @@ int		ibuflen, *rbuflen;
     buflen = 0;
     if (S_ISDIR(st->st_mode)) {
         if (dbitmap) {
+            if (*s_path->m_name != '\0') {
+                /* the dir wasn't in the cache and we weren't able to chdir in it.
+                */
+                return AFPERR_ACCESS;
+            }
             ret = getdirparams(vol, dbitmap, s_path, curdir,
                                  rbuf + 3 * sizeof( u_int16_t ), &buflen );
             if (ret != AFP_OK )
@@ -257,7 +265,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( did);
 
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;    
     }
 
     memcpy( &bitmap, ibuf, sizeof( bitmap ));
@@ -265,7 +273,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;    
     }
 
     st   = &path->st;
@@ -467,12 +475,12 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (( sdir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;    
     }
 
     /* source pathname */
     if (( path = cname( vol, sdir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;    
     }
 
     sdir = curdir;
@@ -487,7 +495,7 @@ int		ibuflen, *rbuflen;
         }
         /* move to destination dir */
         if ( movecwd( vol, sdir->d_parent ) < 0 ) {
-            return( AFPERR_NOOBJ );
+            return afp_errno;
         }
         isdir = 1;
         strcpy(oldname, sdir->d_m_name);
@@ -547,11 +555,11 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;    
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     upath = s_path->u_name;

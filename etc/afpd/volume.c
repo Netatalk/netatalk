@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.44 2002-12-04 10:59:36 didg Exp $
+ * $Id: volume.c,v 1.45 2003-01-08 15:01:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -375,6 +375,8 @@ static void volset(struct vol_option *options, char *volname, int vlen,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
             else if (strcasecmp(p, "nofileid") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
+            else if (strcasecmp(p, "utf8") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_UTF8;
 
             p = strtok(NULL, ",");
         }

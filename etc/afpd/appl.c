@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.8 2002-10-11 14:18:25 didg Exp $
+ * $Id: appl.c,v 1.9 2003-01-08 15:01:33 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -188,7 +188,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     memcpy( creator, ibuf, sizeof( creator ));
@@ -198,7 +198,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( appltag );
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
     if ( *path->m_name == '\0' ) {
         return( AFPERR_BADTYPE );
@@ -274,14 +274,14 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     memcpy( creator, ibuf, sizeof( creator ));
     ibuf += sizeof( creator );
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
     if ( *path->m_name == '\0' ) {
         return( AFPERR_BADTYPE );

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.69 2003-01-07 15:55:21 rlewczuk Exp $
+ * $Id: file.c,v 1.70 2003-01-08 15:01:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -106,19 +106,8 @@ void *get_finderinfo(const char *mpath, struct adouble *adp, void *data)
     return data;
 }
 
-/*
- * FIXME: PDINFO is UTF8 and doesn't need adp
+/* ---------------------
 */
-#define PARAM_NEED_ADP(b) ((b) & ((1 << FILPBIT_ATTR)  |\
-				  (1 << FILPBIT_CDATE) |\
-				  (1 << FILPBIT_MDATE) |\
-				  (1 << FILPBIT_BDATE) |\
-				  (1 << FILPBIT_FINFO) |\
-				  (1 << FILPBIT_RFLEN) |\
-				  (1 << FILPBIT_EXTRFLEN) |\
-				  (1 << FILPBIT_PDINFO)))
-
-
 char *set_name(char *data, const char *name, u_int32_t utf8) 
 {
     u_int32_t           aint;
@@ -126,6 +115,9 @@ char *set_name(char *data, const char *name, u_int32_t utf8)
     aint = strlen( name );
 
     if (!utf8) {
+        if (afp_version >= 30) {
+            /* the name is in utf8 */
+        }
         if (aint > MACFILELEN)
             aint = MACFILELEN;
         *data++ = aint;
@@ -150,6 +142,19 @@ char *set_name(char *data, const char *name, u_int32_t utf8)
 
     return data;
 }
+
+/*
+ * FIXME: PDINFO is UTF8 and doesn't need adp
+*/
+#define PARAM_NEED_ADP(b) ((b) & ((1 << FILPBIT_ATTR)  |\
+				  (1 << FILPBIT_CDATE) |\
+				  (1 << FILPBIT_MDATE) |\
+				  (1 << FILPBIT_BDATE) |\
+				  (1 << FILPBIT_FINFO) |\
+				  (1 << FILPBIT_RFLEN) |\
+				  (1 << FILPBIT_EXTRFLEN) |\
+				  (1 << FILPBIT_PDINFO)))
+
 
 /* -------------------------- */
 int getmetadata(struct vol *vol,
@@ -541,11 +546,11 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( did );
 
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if ( *s_path->m_name == '\0' ) {
@@ -658,7 +663,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if ( *s_path->m_name == '\0' ) {
@@ -1054,7 +1059,7 @@ int		ibuflen, *rbuflen;
     memcpy(&sdid, ibuf, sizeof( sdid ));
     ibuf += sizeof( sdid );
     if (( dir = dirlookup( vol, sdid )) == NULL ) {
-        return( AFPERR_PARAM );
+        return afp_errno;
     }
 
     memcpy(&dvid, ibuf, sizeof( dvid ));
@@ -1063,7 +1068,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( ddid );
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
     if ( *s_path->m_name == '\0' ) {
         return( AFPERR_BADTYPE );
@@ -1093,11 +1098,11 @@ int		ibuflen, *rbuflen;
         return AFPERR_VLOCK;
 
     if (( dir = dirlookup( vol, ddid )) == NULL ) {
-        return( AFPERR_PARAM );
+        return afp_errno;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
     if ( *s_path->m_name != '\0' ) {
         return( AFPERR_BADTYPE ); /* not a directory. AFPERR_PARAM? */

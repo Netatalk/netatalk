@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.7 2002-10-15 19:34:34 didg Exp $
+ * $Id: directory.h,v 1.8 2003-01-08 15:01:34 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -60,6 +60,7 @@ struct dir {
 };
 
 struct path {
+    int         m_type;
     char	*m_name;             /* mac name */
     char        *u_name;            /* unix name */
 

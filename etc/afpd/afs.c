@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.13 2002-10-11 14:18:24 didg Exp $
+ * $Id: afs.c,v 1.14 2003-01-08 15:01:32 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -94,12 +94,12 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( int );
     if (( dir = dirlookup( vol, did )) == NULL ) {
         *rbuflen = 0;
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         *rbuflen = 0;
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
     if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
@@ -187,16 +187,16 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( int );
     if (( dir = dirlookup( vol, did )) == NULL ) {
         *rbuflen = 0;
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         *rbuflen = 0;
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
     if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
-        return( AFPERR_BITMAP );
+        return afp_errno;
     }
 
     if ((int)ibuf & 1 ) {

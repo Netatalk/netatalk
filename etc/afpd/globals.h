@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.15 2002-12-07 02:39:57 rlewczuk Exp $
+ * $Id: globals.h,v 1.16 2003-01-08 15:01:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -89,6 +89,7 @@ typedef struct AFPObj {
 } AFPObj;
 
 extern int		afp_version;
+extern int		afp_errno;
 extern unsigned char	nologin;
 extern struct dir	*curdir;
 extern char		getwdbuf[];

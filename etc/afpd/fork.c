@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.40 2002-11-14 17:13:45 srittau Exp $
+ * $Id: fork.c,v 1.41 2003-01-08 15:01:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -240,7 +240,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( int );
 
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;    
     }
 
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
@@ -255,7 +255,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return AFPERR_NOOBJ;
+	return afp_errno;    
     }
 
     if (*s_path->m_name == '\0') {

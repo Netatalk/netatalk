@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.19 2002-10-11 14:18:26 didg Exp $
+ * $Id: desktop.c,v 1.20 2003-01-08 15:01:33 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -618,7 +618,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
     char	*m, *u;
     int		 i = 0;
     int          changed = 0;
-    
+        
     if ( *mpath == '\0' ) {
         return( "." );
     }
@@ -630,7 +630,6 @@ char *mtoupath(const struct vol *vol, char *mpath)
         mpath = m;
     }
 #endif /* FILE_MANGLING */
-
     m = mpath;
     u = upath;
     while ( *m != '\0' ) {
@@ -642,7 +641,6 @@ char *mtoupath(const struct vol *vol, char *mpath)
 
         /* we have a code page. we only use the ascii range
          * if we have map ascii specified. */
-#if 1
         if (vol->v_mtoupage && ((*m & 0x80) ||
                                 vol->v_flags & AFPVOL_MAPASCII)) {
             *u = vol->v_mtoupage->map[(unsigned char) *m].value;
@@ -658,8 +656,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
                 *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
                 *u = hexdig[ *m & 0x0f ];
             }
-        } else
-#endif /* 1 */
+        } else {
 #if AD_VERSION == AD_VERSION1
             if ((((vol->v_flags & AFPVOL_NOHEX) == 0) &&
                     (!isascii(*m) || *m == '/')) ||
@@ -678,6 +675,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
                 changed = 1;
             } else
                 *u = *m;
+        }
         u++;
         i++;
         m++;
@@ -699,6 +697,7 @@ char *utompath(const struct vol *vol, char *upath)
     static char  mpath[ MAXPATHLEN + 1];
     char        *m, *u;
     int          h;
+    int          changed = 0;
 
     /* do the hex conversion */
     u = upath;
@@ -709,6 +708,7 @@ char *utompath(const struct vol *vol, char *upath)
         if (vol->v_utompage && ((*u & 0x80) ||
                                 (vol->v_flags & AFPVOL_MAPASCII))) {
             *m = vol->v_utompage->map[(unsigned char) *u].value;
+            changed = 1;
         } else
 #endif /* 1 */
             if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
@@ -718,6 +718,7 @@ char *utompath(const struct vol *vol, char *upath)
                 ++u;
                 h |= hextoint( *u );
                 *m = h;
+                changed = 1;
             } else
                 *m = *u;
 
@@ -731,16 +732,20 @@ char *utompath(const struct vol *vol, char *upath)
         m++;
     }
     *m = '\0';
+    m = mpath;
 
 #ifdef FILE_MANGLING
-    strcpy(mpath,mangle(vol, mpath));
+    m = mangle(vol, mpath);
+    if (m != mpath) {
+        changed = 1;
+    }
 #endif /* FILE_MANGLING */
 
 #ifdef DEBUG
     LOG(log_debug, logtype_afpd, "utompath: '%s':'%s'", upath, mpath);
 #endif /* DEBUG */
 
-    return( mpath );
+    return((changed)? m:upath );
 }
 
 int afp_addcomment(obj, ibuf, ibuflen, rbuf, rbuflen )
@@ -770,11 +775,11 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;
     }
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;
     }
 
     if ((u_long)ibuf & 1 ) {
@@ -845,11 +850,11 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;
     }
 
     upath = s_path->u_name;
@@ -911,11 +916,11 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+	return afp_errno;
     }
 
     upath = s_path->u_name;

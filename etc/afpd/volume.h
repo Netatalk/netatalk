@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.16 2002-10-17 18:01:54 didg Exp $
+ * $Id: volume.h,v 1.17 2003-01-08 15:01:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,6 +11,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
+
 #include "globals.h"
 
 #define AFPVOL_NAMELEN   27
@@ -51,7 +52,7 @@ struct vol {
     int                 v_casefold;
     struct codepage     *v_mtoupage, *v_utompage, *v_badumap;
     int                 max_filename;
-
+    
     char                *v_password;
     char                *v_veto;
 #ifdef CNID_DB
@@ -93,6 +94,7 @@ this is going away. */
 #define AFPVOL_MAPASCII  (1 << 13)  /* map the ascii range as well */
 #define AFPVOL_DROPBOX   (1 << 14)  /* dropkludge dropbox support */
 #define AFPVOL_NOFILEID  (1 << 15)  /* don't advertise createid resolveid and deleteid calls */
+#define AFPVOL_UTF8      (1 << 16)  /* unix name are in UTF8 */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)

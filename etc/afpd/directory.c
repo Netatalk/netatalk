@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.54 2003-01-07 15:55:21 rlewczuk Exp $
+ * $Id: directory.c,v 1.55 2003-01-08 15:01:33 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -60,6 +60,7 @@ char *strchr (), *strrchr ();
 #include "unix.h"
 
 struct dir	*curdir;
+int             afp_errno;
 
 #define SENTINEL (&sentinel)
 static struct dir sentinel = { SENTINEL, SENTINEL, NULL, DIRTREE_COLOR_BLACK,
@@ -99,9 +100,10 @@ u_int32_t	did;
 
 
     /* check for 0 did */
-    if (!did)
+    if (!did) {
+        afp_errno = AFPERR_PARAM;
         return NULL;
-
+    }
     if ( did == DIRDID_ROOT_PARENT ) {
         if (!rootpar.d_did)
             rootpar.d_did = DIRDID_ROOT_PARENT;
@@ -110,6 +112,7 @@ u_int32_t	did;
     }
 
     dir = vol->v_root;
+    afp_errno = AFPERR_NOOBJ;
     while ( dir != SENTINEL ) {
         if (dir->d_did == did)
             return dir->d_m_name ? dir : NULL;
@@ -145,6 +148,7 @@ u_int32_t	did;
 
     id = did;
     if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL) {
+        afp_errno = AFPERR_NOOBJ;
         return NULL;
     }
     ptr = path + MAXPATHLEN;
@@ -159,13 +163,17 @@ u_int32_t	did;
         if (ret != NULL) {
             break;
         }
-        if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL)
+        if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL) {
+            afp_errno = AFPERR_NOOBJ;
             return NULL;
+        }
         mpath = utompath(vol, upath);
         len = strlen(mpath) + 1;
         pathlen += len;
-        if (pathlen > 255)
+        if (pathlen > 255) {
+            afp_errno = AFPERR_PARAM;
             return NULL;
+        }
         strcpy(ptr - len, mpath);
         ptr -= len;
     }
@@ -436,7 +444,6 @@ struct dir	*dir;
  * process. It's fixable within afpd if fnctl_lock, doable with smb and
  * next to impossible for nfs and local filesystem access.
  */
- 
 static void dir_invalidate( vol, dir )
 const struct vol *vol;
 struct dir *dir;
@@ -811,17 +818,16 @@ char	**cpath;
     static struct path ret;
 
     char		*data, *p;
-    char        *u;
     int			extend = 0;
     int			len;
-    int			olen = 0;
     u_int32_t   hint;
     u_int16_t   len16;
     int         size = 0;
     char        sep;
        	
     data = *cpath;
-    switch (*data) { /* path type */
+    afp_errno = AFPERR_NOOBJ;
+    switch (ret.m_type = *data) { /* path type */
     case 2:
        data++;
        len = (unsigned char) *data++;
@@ -844,12 +850,12 @@ char	**cpath;
         }
         /* else it's an error */
     default:
+        afp_errno = AFPERR_PARAM;
         return( NULL );
     
     }
     *cpath += len + size;
     *path = '\0';
-    u = NULL;
     ret.m_name = path;
     ret.st_errno = 0;
     ret.st_valid = 0;
@@ -857,36 +863,19 @@ char	**cpath;
         if ( len == 0 ) {
             if ( !extend && movecwd( vol, dir ) < 0 ) {
             	/* it's tricky:
-            	   movecwd failed some of dir path is not there anymore.
+            	   movecwd failed some of dir path are not there anymore.
             	   FIXME Is it true with other errors?
-            	   if path == '\0' ==> the cpath parameter is that dir,
-            	   and maybe we are trying to recreate it! So we can't 
-            	   fail here.
-            	   
+            	   so we remove dir from the cache 
             	*/
             	if (dir->d_did == DIRDID_ROOT_PARENT) 
-    		        return NULL;
-            	if (errno != ENOENT && errno != ENOTDIR)
+    		    return NULL;
+            	if (afp_errno == AFPERR_ACCESS)
             	    return NULL;    		
 
-            	cdir = dir->d_parent;
             	dir_invalidate(vol, dir);
-            	if (*path != '\0' || u == NULL) {
-            		/* FIXME: if path != '\0' then extend != 0 ?
-            		 * u == NUL ==> cpath is something like:
-            		 * toto\0\0\0
-            		*/
-            		return NULL;
-            	}
-            	if (movecwd(vol, cdir) < 0) {
-            		printf("can't change to parent\n");
-            		return NULL; /* give up the whole tree is out of synch*/
-            	}
-				/* restore the previous token */
-        		strncpy(path, u, olen);
-        		path[olen] = '\0';
+            	return NULL;
             }
-            if (!ret.st_valid || *path == '\0') {
+            if (*path == '\0') {
                ret.u_name = ".";
             }               
             return &ret;
@@ -896,8 +885,6 @@ char	**cpath;
             data++;
             len--;
         }
-    	u = NULL;
-
         while (*data == sep && len > 0 ) {
             if ( dir->d_parent == NULL ) {
                 return NULL;
@@ -909,10 +896,6 @@ char	**cpath;
 
         /* would this be faster with strlen + strncpy? */
         p = path;
-        if (len > 0) {
-        	u = data;
-        	olen = len;
-        }        
         while ( *data != sep && len > 0 ) {
             *p++ = *data++;
             len--;
@@ -947,7 +930,7 @@ char	**cpath;
                     	   we delete dir from the cache and abort.
                     	*/
                     	if ( dir->d_did != DIRDID_ROOT_PARENT && 
-                    	      (errno == ENOENT || errno == ENOTDIR)) {
+                    	      (afp_errno != AFPERR_ACCESS)) {
                     	    dir_invalidate(vol, dir);
                     	}
                         return NULL;
@@ -989,7 +972,7 @@ struct dir	*dir;
         return( 0 );
     }
     if ( dir->d_did == DIRDID_ROOT_PARENT) {
-        errno = 0;     /* errno is checked in file.c */
+        afp_errno = AFPERR_PARAM;
         return( -1 );
     }
 
@@ -997,19 +980,36 @@ struct dir	*dir;
     *p-- = '\0';
     *p = '.';
     for ( d = dir; d->d_parent != NULL && d != curdir; d = d->d_parent ) {
-        *--p = '/';
         u = d->d_u_name;
         n = strlen( u );
+        if (p -n -1 < path) {
+            afp_errno = AFPERR_PARAM;
+            return -1;
+        }
+        *--p = '/';
         p -= n;
         strncpy( p, u, n );
     }
     if ( d != curdir ) {
-        *--p = '/';
         n = strlen( vol->v_path );
+        if (p -n -1 < path) {
+            afp_errno = AFPERR_PARAM;
+            return -1;
+        }
+        *--p = '/';
         p -= n;
         strncpy( p, vol->v_path, n );
     }
     if ( chdir( p ) < 0 ) {
+        switch (errno) {
+        case EACCES:
+        case EPERM:
+            afp_errno = AFPERR_ACCESS;
+            break;
+        default:
+            afp_errno = AFPERR_NOOBJ;
+        
+        }
         return( -1 );
     }
     curdir = dir;
@@ -1284,7 +1284,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( int );
 
     if (( dir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     memcpy( &bitmap, ibuf, sizeof( bitmap ));
@@ -1292,7 +1292,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if ( *path->m_name != '\0' ) {
@@ -1319,6 +1319,7 @@ int		ibuflen, *rbuflen;
 */
 
 struct path Cur_Path = {
+    0,
     "",  /* mac name */
     ".", /* unix name */
     0,  /* stat is not set */
@@ -1658,14 +1659,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        switch( errno ) {
-        case EACCES:
-            return( AFPERR_ACCESS );
-        case EEXIST:				/* FIXME this one is impossible? */
-            return( AFPERR_EXIST );
-        default:
-            return( AFPERR_NOOBJ );
-        }
+        return afp_errno;
     }
     /* FIXME check done elswhere? cname was able to move curdir to it! */
     if (*s_path->m_name == '\0')
@@ -1939,7 +1933,7 @@ int pathlen;
     }
 
     if ( movecwd( vol, curdir->d_parent ) < 0 ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if ( rmdir(fdir->d_u_name) < 0 ) {
@@ -2167,16 +2161,11 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(did);
 
     if (( parentdir = dirlookup( vol, did )) == NULL ) {
-        return( AFPERR_NOOBJ );
+        return afp_errno;
     }
 
     if (( path = cname( vol, parentdir, &ibuf )) == NULL ) {
-        switch( errno ) {
-        case EACCES:
-            return( AFPERR_ACCESS );
-        default:
-            return( AFPERR_NOOBJ );
-        }
+        return afp_errno;
     }
 
     if ( *path->m_name != '\0' ) {
