@@ -233,7 +233,7 @@ static int resolve_dir(struct vol *vol, int cidx)
 } /* resolve_dir */
 
 /* Looks up for an opened adouble structure, opens resource fork of selected file. */
-static struct adouble *adl_lkup(struct vol *vol, char *upath, int cidx)
+static struct adouble *adl_lkup(struct vol *vol, char *upath, int cidx, int isdir)
 {
 	static struct adouble ad;
 	struct adouble *adp;
@@ -252,7 +252,7 @@ static struct adouble *adl_lkup(struct vol *vol, char *upath, int cidx)
 		adp = &ad;
 	/* } */
 
-    	if ( ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, adp) < 0 ) {
+    	if ( ad_open( upath, ADFLAGS_HF | (isdir)?ADFLAGS_DIR:0, O_RDONLY, 0, adp) < 0 ) {
         	return NULL;
     	} 
 	return adp;	
@@ -277,9 +277,14 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 	if (stat(uname, &sbuf) < 0)
 		return 0;
 	
-	if (S_ISDIR(sbuf.st_mode))
+	if (S_ISDIR(sbuf.st_mode)) {
 		r = 2;
-
+		if (!c1.dbitmap)
+			return r;
+	}
+	else if (!c1.fbitmap)
+		return 0;
+		
 	/* Kind of optimization: 
 	 * -- first check things we've already have - filename
 	 * -- last check things we get from ad_open()
@@ -311,7 +316,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check for creation date... */
 	if (c1.rbitmap & (1<<DIRPBIT_CDATE)) {
-		if (adp || (adp = adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
 			if (ad_getdate(adp, AD_DATE_CREATE, (u_int32_t*)&c_date) >= 0)
 				c_date = AD_DATE_TO_UNIX(c_date);
 			else c_date = sbuf.st_mtime;
@@ -322,7 +327,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check for backup date... */
 	if (c1.rbitmap & (1<<DIRPBIT_BDATE)) {
-		if (adp || (adp == adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp == adl_lkup(vol, uname, cidx, r))) {
 			if (ad_getdate(adp, AD_DATE_BACKUP, (u_int32_t*)&b_date) >= 0)
 				b_date = AD_DATE_TO_UNIX(b_date);
 			else b_date = sbuf.st_mtime;
@@ -333,7 +338,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 				
 	/* Check attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_ATTR)) && c2.attr != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
 			ad_getattr(adp, &attr);
 			if ((attr & c2.attr) != c1.attr)
 				goto crit_check_ret;
@@ -342,7 +347,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
         /* Check file type ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if (finfo->f_type != c1.finfo.f_type)
 				goto crit_check_ret;
@@ -350,7 +355,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check creator ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if (finfo->creator != c1.finfo.creator)
 				goto crit_check_ret;
@@ -358,7 +363,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 	
 	/* Check finder info attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if ((finfo->attrs & c2.finfo.attrs) != c1.finfo.attrs)
 				goto crit_check_ret;
@@ -366,7 +371,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check label */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx))) {
+		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if ((finfo->label & c2.finfo.label) != c1.finfo.label)
 				goto crit_check_ret;
@@ -406,7 +411,7 @@ static int rslt_add(struct vol *vol, struct stat *statbuf, char *fname, short ci
 	/* Fill offset of returned file name */
 	if (fname != NULL) {
 		*p++ = 0;
-		*p++ = (int)(p - *rbuf) + 1;
+		*p++ = (int)(p - *rbuf) - 1;
 		p[0] = l;
 		strcpy(p+1, fname);
 		p += l + 1;
@@ -618,7 +623,7 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
     ibuf += sizeof(c1.fbitmap);
 
     memcpy(&c1.dbitmap, ibuf, sizeof(c1.dbitmap));
-    c1.dbitmap = c2.dbitmap = ntohl(c1.dbitmap);
+    c1.dbitmap = c2.dbitmap = ntohs(c1.dbitmap);
     ibuf += sizeof(c1.dbitmap);
 
     memcpy(&c1.rbitmap, ibuf, sizeof(c1.rbitmap));
@@ -694,15 +699,23 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
 	    spec2 += sizeof(c2.finfo);
     } /* Finder info */
 
-    /* Offspring count - only directories */
-    if (c1.dbitmap != 0 && (c1.rbitmap & (1 << DIRPBIT_OFFCNT)) != 0) {
+    if ((c1.rbitmap & (1 << DIRPBIT_OFFCNT)) != 0) {
+        /* Offspring count - only directories */
+	if (c1.fbitmap == 0) {
 	    memcpy(&c1.offcnt, spec1, sizeof(c1.offcnt));
 	    spec1 += sizeof(c1.offcnt);
 	    c1.offcnt = ntohs(c1.offcnt);
 	    memcpy(&c2.offcnt, spec2, sizeof(c2.offcnt));
 	    spec2 += sizeof(c2.offcnt);
 	    c2.offcnt = ntohs(c2.offcnt);
-    } /* Offspring count */
+	}
+	else if (c1.dbitmap == 0) {
+		/* ressource fork length */
+	}
+	else {
+		/* error */
+	}
+    } /* Offspring count/ressource fork length */
 
     /* Long name */
     if (c1.rbitmap & (1 << FILPBIT_LNAME)) {
@@ -729,7 +742,7 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
     rbuf += sizeof(c1.fbitmap);
     c1.dbitmap = htons(c1.dbitmap);
     memcpy(rbuf, &c1.dbitmap, sizeof(c1.dbitmap));
-    rbuf += sizeof(c2.dbitmap);
+    rbuf += sizeof(c1.dbitmap);
     nrecs = htonl(nrecs);
     memcpy(rbuf, &nrecs, sizeof(nrecs));
     rbuf += sizeof(nrecs);
