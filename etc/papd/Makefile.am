@@ -14,5 +14,5 @@ papd_LDFLAGS = -rdynamic
 noinst_HEADERS = comment.h file.h ppd.h printer.h uam_auth.h
 
 CFLAGS = @CFLAGS@ \
-	-D_PATH_PAPDCONF=\"$(CONFIG_DIR)/papd.conf\" \
+	-D_PATH_PAPDCONF=\"$(sysconfdir)/papd.conf\" \
 	-D_PATH_PAPDUAMPATH=\"$(UAMS_PATH)/\"

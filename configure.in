@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.81 2001-06-06 13:36:36 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.82 2001-06-07 15:39:27 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -156,8 +156,8 @@ AC_ARG_ENABLE(afs,
 
 AC_ARG_WITH(config-dir,
 	[  --with-config-dir=path  path to config files [default=$ac_prefix_default/etc]],
-		config_dir="$withval",
-		config_dir="${prefix}/etc"
+		sysconfdir="$withval",
+		sysconfdir="${prefix}/etc"
 )
 
 AC_ARG_WITH(cracklib,
@@ -348,7 +348,7 @@ AC_ARG_ENABLE(fhs,
 	[  --enable-fhs            use Filesystem Hierarchy Standard (FHS) compatibility],
 	if test "$enableval" = "yes"; then
 		uams_path="/usr/lib/netatalk"
-		config_dir="/etc/netatalk"
+		sysconfdir="/etc/netatalk"
 		use_pam_so=yes
 		dnl FIXME: NEED TO HAVE --mandir=/usr/share/man AT SOME POINT...
 		AC_DEFINE(FHS_COMPATIBILITY)
@@ -359,13 +359,6 @@ AC_ARG_ENABLE(fhs,
 dnl --------------------------------------------------------------------------
 dnl post-FHS substitutions, etc
 dnl --------------------------------------------------------------------------
-
-dnl ***** CONFIG_DIR
-AC_DEFINE_UNQUOTED(CONFIG_DIR, "${config_dir}",
-	[path to config dir [default=$ac_prefix_default/etc]])
-CONFIG_DIR="${config_dir}"
-AC_SUBST(CONFIG_DIR)
-AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR])
 
 ***** UAMS_PATH
 AC_DEFINE_UNQUOTED(UAMS_PATH, "${uams_path}",

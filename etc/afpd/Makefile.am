@@ -24,10 +24,10 @@ noinst_HEADERS = auth.h codepage.h afp_config.h desktop.h directory.h file.h \
 LIBS = @LIBS@ @AFPD_LIBS@
 
 CFLAGS = @CFLAGS@ \
-	 -D_PATH_AFPDDEFVOL=\"$(CONFIG_DIR)/AppleVolumes.default\" \
-	 -D_PATH_AFPDSYSVOL=\"$(CONFIG_DIR)/AppleVolumes.system\" \
-	 -D_PATH_AFPDPWFILE=\"$(CONFIG_DIR)/afppasswd\" \
-	 -D_PATH_AFPDCONF=\"$(CONFIG_DIR)/afpd.conf\" \
+	 -D_PATH_AFPDDEFVOL=\"$(sysconfdir)/AppleVolumes.default\" \
+	 -D_PATH_AFPDSYSVOL=\"$(sysconfdir)/AppleVolumes.system\" \
+	 -D_PATH_AFPDPWFILE=\"$(sysconfdir)/afppasswd\" \
+	 -D_PATH_AFPDCONF=\"$(sysconfdir)/afpd.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	 -D_PATH_AFPDNLSPATH=\"$(CONFIG_DIR)/nls/\" \
+	 -D_PATH_AFPDNLSPATH=\"$(sysconfdir)/nls/\" \
 	 -DAPPLCNAME

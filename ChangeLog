@@ -1,4 +1,12 @@
-($Id: ChangeLog,v 1.43 2001-06-06 19:04:24 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.44 2001-06-07 15:39:27 rufustfirefly Exp $)
+
+2001-06-07  jeff b  <jeff@univrel.pr.uconn.edu>
+	* configure.in, bin/afppasswd/Makefile.am,
+	contrib/shell_utils/Makefile.am, distrib/initscripts/Makefile.am,
+	etc/afpd/Makefile.am, etc/afpd/nls/Makefile.am,
+	etc/atalkd/Makefile.am, etc/papd/Makefile.am,
+	man/man5/Makefile, man/man8/Makefile.am: patch #422872 from
+	Sebastian Rittau to move from CONFIG_DIR to sysconfdir
 
 2001-06-06  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/filedir.c, etc/afpd/unix.c: fixed dropkludge code

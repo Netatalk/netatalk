@@ -5,7 +5,7 @@ SUFFIXES = .tmpl .
 .tmpl:
 	sed -e s@:BINDIR:@${bindir}@ \
 		-e s@:SBINDIR:@${sbindir}@ \
-		-e s@:ETCDIR:@${CONFIG_DIR}@ \
+		-e s@:ETCDIR:@${sysconfdir}@ \
 		<$^ >$@
 
 CLEANFILES = lp2pap.sh
