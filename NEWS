@@ -1,3 +1,11 @@
+Changes from 1.5.5
+==================
+
+* NEW: Concurrent datastore (CDB) is now the default CNID datastore.  This
+       should be heavily tested in a multiuser environment.
+* NEW: Variable substitution support has been added fro the dbpath AppleVolume
+       option.
+
 Changes from 1.5.4
 ==================
 
