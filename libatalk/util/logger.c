@@ -49,6 +49,7 @@
 #include <atalk/logger.h>
 
 #define COUNT_ARRAY(array) (sizeof((array))/sizeof((array)[0]))
+#define NUMOF COUNT_ARRAY
 #undef  KEEP_LOGFILES_OPEN
 #define DO_SYSLOG
 #define DO_FILELOG
@@ -173,6 +174,9 @@ static const int num_logtype_strings = COUNT_ARRAY(arr_logtype_strings);
 /* Array for charachters representing log severity in the log file */
 static const char arr_loglevel_chars[] = {'S', 'E', 'W', 'N', 'I', 'D'};
 static const int num_loglevel_chars = COUNT_ARRAY(arr_loglevel_chars);
+
+static const char * arr_loglevel_strings[] = LOGLEVEL_STRING_IDENTIFIERS;
+static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
 
 #else /* #ifndef DISABLE_LOGGER */
   char *disabled_logger_processname=NULL;
@@ -833,7 +837,97 @@ int get_syslog_equivalent(enum loglevels loglevel)
   }
 }
 
+void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
+{
+  /* -setuplogtype <syslog|filelog> <logtype> <loglevel>*/
+  const char* sources[] = {"syslog", "filelog"};
+  char sourcebuf[64], typebuf[64], levelbuf[32], *ptr;
+  int sourcenum, typenum, levelnum;
 
+  ptr = strpbrk(logsource, " \t");
+  strncpy(sourcebuf, logsource, ptr-logsource);
+  sourcebuf[ptr-logsource]=0;
+
+  ptr = strpbrk(logtype, " \t");
+  strncpy(typebuf, logtype, ptr-logtype);
+  typebuf[ptr-logtype]=0;
+
+  ptr = strpbrk(loglevel, " \t");
+  strncpy(levelbuf, loglevel, ptr-loglevel);
+  levelbuf[ptr-loglevel]=0;
+
+  for(sourcenum=0;sourcenum<NUMOF(sources);sourcenum++)
+  {
+    if (strcasecmp(sourcebuf, sources[sourcenum])==0)
+      break;
+  }
+
+  for(typenum=0;typenum<num_logtype_strings;typenum++)
+  {
+    if (strcasecmp(typebuf, arr_logtype_strings[typenum])==0)
+      break;
+  }
+
+  for(levelnum=0;levelnum<num_loglevel_strings;levelnum++)
+  {
+    if (strcasecmp(levelbuf, arr_loglevel_strings[levelnum])==0)
+      break;
+  }
+
+/*
+  for(logtype=logtype_default;logtype<logtype_end_of_list_marker;logtype++)
+  {
+    if (strcasecmp(buffer,
+
+  
+
+
+
+    if ((c = getoption(buf, "-setuplogtype")))
+    {
+      int logsource, logtype;
+      char buffer[64], *ptr;
+
+      ptr = strpbrk(c, " \t");
+      strncpy(buffer, c, ptr-c);
+      buffer[ptr-c]=0;
+
+      if (strcasecmp(buffer, "syslog")==0)
+        logsource=1;
+      else if (strcasecmp(buffer, "filelog")==0)
+        logsource=2;
+      else
+        logsource=0;
+
+      if (logsource>0)
+      {
+        opt = strpbrk(c, " \t");
+        while (opt ** isspace(*opt))
+          opt++;
+
+        ptr = strpbrk(opt, " \t");
+        strncpy(buffer, opt, ptr-opt);
+        buffer[ptr-opt]=0;
+
+        for(logtype=logtype_default;logtype<logtype_end_of_list_marker;logtype++)
+        {
+          if (strcasecmp(buffer,
+
+
+   buf = strpbrk(buf, " \t");
+
+    while (buf && isspace(*buf))
+        buf++;
+
+      if (opt = getoption(c, "syslog"))
+      {
+      }
+      else if (opt = getoption(c, "filelog"))
+      {
+      }
+    }
+*/
+}
 
 
 
