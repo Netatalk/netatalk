@@ -4,6 +4,8 @@ AC_DEFUN([AM_ICONV],
 dnl	#################################################
 dnl	# check for libiconv support
 	AC_MSG_CHECKING(whether to use libiconv)
+        savedcflags="$CFLAGS"
+        savedldflags="$LDFLAGS"
 	AC_ARG_WITH(libiconv,
 	[  --with-libiconv=BASEDIR Use libiconv in BASEDIR/lib and BASEDIR/include (default=auto) ],
 	[ case "$withval" in
@@ -12,8 +14,6 @@ dnl	# check for libiconv support
 	    ;;
 	  *)
 	    AC_MSG_RESULT(yes)
-            savedcflags="$CFLAGS"
-            savedldflags="$LDFLAGS"
 	    CFLAGS="$CFLAGS -I$withval/include"
 	    LDFLAGS="$LDFLAGS -L$withval/lib"
 	    AC_CHECK_LIB(iconv, iconv_open, [
