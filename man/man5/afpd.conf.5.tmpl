@@ -1,4 +1,4 @@
-.\" $Id: afpd.conf.5.tmpl,v 1.1 2000-09-28 16:49:47 rufustfirefly Exp $
+.\" $Id: afpd.conf.5.tmpl,v 1.2 2001-06-26 23:58:32 srittau Exp $
 .TH afpd.conf 5 "28 September 2000" "netatalk 1.5"
 .UC 4
 .SH NAME
@@ -37,16 +37,16 @@ The possible options and their meanings are:
 .TP
 .B -defaultvol [path]
 Specifies path to AppleVolumes.default file (default is 
-\fB:RESDIR:/AppleVolumes.default\fR).
+\fB:ETCDIR:/AppleVolumes.default\fR).
 
 .TP
 .B -nlspath [path]
-Specifies the path to the code pages (default is \fB:RESDIR:/nls\fR).
+Specifies the path to the code pages (default is \fB:ETCDIR:/nls\fR).
 
 .TP
 .B -systemvol [path]
 Specifies path to AppleVolumes.system file (default is 
-\fB:RESDIR:/AppleVolumes.system\fR).
+\fB:ETCDIR:/AppleVolumes.system\fR).
 
 .TP
 .B -[no]uservol
@@ -76,13 +76,13 @@ using Diffie-Hellman eXchange (DHX)
 text passwords
 
 \fBuams_randum.so\fR - allows Random Number and Two-Way Random
-Number Exchange for authentication (requires \fB:RESDIR:/afppaswd\fR
+Number Exchange for authentication (requires \fB:ETCDIR:/afppaswd\fR
 file)
 
 .TP
 .B -uampath [path]
 Sets the default path for UAMs for this server (default is 
-:RESDIR:/uams).
+:ETCDIR:/uams).
 
 .TP
 .I Password Options
