@@ -47,6 +47,7 @@ if ( $^O eq "freebsd" ) {
     }
     print
       "PID      UID      Username         Name                 Logintime Mac\n";
+	close(SOCKSTAT);
 }
 elsif ( $LSOF == 1 ) {
     open( LSOF, "lsof -i :$ASIP_PORT |" );
