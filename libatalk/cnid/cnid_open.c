@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.22 2001-12-07 17:29:06 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.23 2001-12-10 03:51:56 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -71,6 +71,7 @@
 #define DBMACNAME    "macname.db"   /* did/31 mapping */
 #define DBLONGNAME   "longname.db"  /* did/unicode mapping */
 #define DBLOCKFILE   "cnid.lock"
+#define DBRECOVERFILE "cnid.dbrecover"
 
 #define DBHOMELEN    8
 #define DBLEN        10
@@ -92,6 +93,18 @@ DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)
 /*#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)*/
 #endif /* DB_VERSION_MINOR */
+
+/* Let's try and use the random deadlock decider if available.  This adds
+ * a bit of entropy to the mix that might be beneficial.  If random isn't
+ * available, we'll decide deadlocks by kicking off the youngest process.
+ * If we can't do that, then let DB3 use its default deadlock detector. */
+#ifdef DB_LOCK_RANDOM
+#define DEAD_LOCK_DETECT DB_LOCK_RANDOM
+#elif defined DB_LOCK_YOUNGEST
+#define DEAD_LOCK_DETECT DB_LOCK_YOUNGEST
+#else /* DB_LOCK_RANDOM */
+#define DEAD_LOCK_DETECT DB_LOCK_DEFAULT
+#endif /* DB_LOCK_RANDOM */
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 * databases. */
@@ -174,15 +187,16 @@ static int compare_unicode(const DBT *a, const DBT *b)
 static int have_lock = 0;
 
 void *cnid_open(const char *dir) {
-    struct stat st;
+    struct stat st, rsb;
     struct flock lock;
     char path[MAXPATHLEN + 1];
+	char recover_file[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
     DB_TXN *tid;
     u_int32_t DBEXTRAS = 0;
     int open_flag, len;
-    int rc;
+    int rc, rfd = -1;
 
     if (!dir) {
         return NULL;
@@ -220,6 +234,25 @@ void *cnid_open(const char *dir) {
 	strcat(path, "/");
 	len++;
 
+	/* Create a file to represent database recovery.  While this file
+	 * exists, the database is being recovered, and all other clients will
+	 * sleep until recovery is complete, and this file goes away. */
+	strcpy(recover_file, path);
+	strcat(recover_file, DBRECOVERFILE);
+	if (!have_lock) {
+		if (stat(recover_file, &rsb) < 0) {
+			if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
+        		DBEXTRAS |= DB_RECOVER;
+				have_lock = 1;
+			}
+		}
+		else {
+			while(stat(recover_file, &rsb) == 0) {
+				sleep(1);
+			}
+		}
+	}
+
     /* Search for a byte lock.  This allows us to cleanup the log files
      * at cnid_close() in a clean fashion.
      *
@@ -230,29 +263,17 @@ void *cnid_open(const char *dir) {
         lock.l_start = 0;
         lock.l_len = 1;
         while (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
-            if (++lock.l_start > MAXITER) {
-                syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup for database environment %s lock (lock failed)", path);
-                close(db->lockfd);
-                db->lockfd = -1;
-                break;
-            }
-        }
-    }
+           	if (++lock.l_start > MAXITER) {
+               	syslog(LOG_ERR, "cnid_open: Cannot establish logfile cleanup for database environment %s lock (lock failed)", path);
+               	close(db->lockfd);
+               	db->lockfd = -1;
+               	break;
+           	}
+    	}
+	}
     else {
-        syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
+        syslog(LOG_ERR, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
     }
-
-    if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
-        /* We test to see if we have exclusive database access.  If we do, we
-         * will open the database with the DB_RECOVER flag.
-         */
-#ifdef DEBUG
-        syslog(LOG_INFO, "cnid_open: Opening database environment %s with DB_RECOVER flag", path);
-#endif
-        DBEXTRAS |= DB_RECOVER;
-        have_lock = 1;
-    }
-
 
     path[len + DBHOMELEN] = '\0';
     open_flag = DB_CREATE;
@@ -266,7 +287,7 @@ void *cnid_open(const char *dir) {
     }
 
     /* Setup internal deadlock detection. */
-    if ((rc = db->dbenv->set_lk_detect(db->dbenv, DB_LOCK_DEFAULT)) != 0) {
+    if ((rc = db->dbenv->set_lk_detect(db->dbenv, DEAD_LOCK_DETECT)) != 0) {
         syslog(LOG_ERR, "cnid_open: set_lk_detect: %s", db_strerror(rc));
         goto fail_lock;
     }
@@ -303,6 +324,14 @@ void *cnid_open(const char *dir) {
         open_flag = DB_RDONLY;
         syslog(LOG_INFO, "cnid_open: Obtained read-only database environment %s", path);
     }
+
+	/* If we have the recovery lock, close the file, remove it, so other
+	 * clients can proceed opening the DB environment. */
+	if (rfd > -1) {
+		close(rfd);
+		(void)remove(recover_file);
+		rfd = -1;
+	}
 
     /* did/name reverse mapping.  We use a BTree for this one. */
     if ((rc = db_create(&db->db_didname, db->dbenv, 0)) != 0) {

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.13 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.14 2001-12-10 03:51:56 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -59,8 +59,10 @@ void cnid_close(void *CNID) {
             if (list != NULL) {
                 for (first = list; *list != NULL; ++list) {
                     if ((rc = remove(*list)) != 0) {
+#ifdef DEBUG
                         syslog(LOG_INFO, "cnid_close: failed to remove %s: %s",
                                *list, strerror(rc));
+#endif
                     }
                 }
                 free(first);
