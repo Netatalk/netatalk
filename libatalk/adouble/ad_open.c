@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.22 2002-11-14 17:11:54 srittau Exp $
+ * $Id: ad_open.c,v 1.23 2002-11-14 17:18:32 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -285,7 +285,6 @@ bail_err:
 #ifdef ATACC
 mode_t ad_hf_mode (mode_t mode)
 {
-#ifndef USE_FLOCK_LOCKS
     /* fnctl lock need write access */
     if ((mode & S_IRUSR))
         mode |= S_IWUSR;
@@ -293,7 +292,6 @@ mode_t ad_hf_mode (mode_t mode)
         mode |= S_IWGRP;
     if ((mode & S_IROTH))
         mode |= S_IWOTH;
-#endif
     /* if write mode set add read mode */
     if ((mode & S_IWUSR))
         mode |= S_IRUSR;
