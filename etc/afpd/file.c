@@ -1120,48 +1120,71 @@ int deletefile( file )
 {
     struct adouble	ad;
     int			adflags, err = AFP_OK;
+    int			locktype = ADLOCK_WR;
+    int			openmode = O_RDWR;
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin deletefile:");
 #endif DEBUG
 
-    /* try to open both at once */
-    adflags = ADFLAGS_DF|ADFLAGS_HF;
-    memset(&ad, 0, sizeof(ad));
-    if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
-	  switch (errno) {
-	  case ENOENT:
-	    adflags = ADFLAGS_DF;
-	    /* that failed. now try to open just the data fork */
-	    memset(&ad, 0, sizeof(ad));
-	    if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
+    while(1) {
+	/*
+	 * If can't open read/write then try again read-only.  If it's open
+	 * read-only, we must do a read lock instead of a write lock.
+	 */
+	/* try to open both at once */
+	adflags = ADFLAGS_DF|ADFLAGS_HF;
+	memset(&ad, 0, sizeof(ad));
+	if ( ad_open( file, adflags, openmode, 0, &ad ) < 0 ) {
 	      switch (errno) {
 	      case ENOENT:
-		return AFPERR_NOOBJ;
-	      case EACCES:
-		return AFPERR_ACCESS;
-	      default:
-		return AFPERR_PARAM;
-	      }
-	    }
-	    break;
+		adflags = ADFLAGS_DF;
+		/* that failed. now try to open just the data fork */
+		memset(&ad, 0, sizeof(ad));
+		if ( ad_open( file, adflags, openmode, 0, &ad ) < 0 ) {
+		  switch (errno) {
+		  case ENOENT:
+		    return AFPERR_NOOBJ;
+		  case EACCES:
+		    if(openmode == O_RDWR) {
+			openmode = O_RDONLY;
+			locktype = ADLOCK_RD;
+			continue;
+		    } else {
+			return AFPERR_ACCESS;
+		    }
+		  case EROFS:
+		    return AFPERR_VLOCK;
+		  default:
+		    return AFPERR_PARAM;
+		  }
+		}
+		break;
 
-	  case EACCES:
-	    return( AFPERR_ACCESS );
-	  case EROFS:
-	    return AFPERR_VLOCK;
-	  default:
-	    return( AFPERR_PARAM );
-	  }
+	      case EACCES:
+		if(openmode == O_RDWR) {
+		    openmode = O_RDONLY;
+		    locktype = ADLOCK_RD;
+		    continue;
+		} else {
+		    return AFPERR_ACCESS;
+		}
+	      case EROFS:
+		return AFPERR_VLOCK;
+	      default:
+		return( AFPERR_PARAM );
+	      }
+	}
+	break;	/* from the while */
     }
 
     if ((adflags & ADFLAGS_HF) &&
-	(ad_tmplock(&ad, ADEID_RFORK, ADLOCK_WR, 0, 0) < 0 )) {
+	(ad_tmplock(&ad, ADEID_RFORK, locktype, 0, 0) < 0 )) {
       ad_close( &ad, adflags );
       return( AFPERR_BUSY );
     }
 
-    if (ad_tmplock( &ad, ADEID_DFORK, ADLOCK_WR, 0, 0 ) < 0) {
+    if (ad_tmplock( &ad, ADEID_DFORK, locktype, 0, 0 ) < 0) {
       err = AFPERR_BUSY;
       goto delete_unlock;
     }
