@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.17 2002-10-04 23:51:22 srittau Exp $
+ * $Id: desktop.c,v 1.18 2002-10-05 14:04:47 didg Exp $
  *
  * See COPYRIGHT.
  */
@@ -753,7 +753,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -821,7 +821,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -883,7 +883,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 

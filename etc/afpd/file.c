@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.61 2002-10-04 15:15:05 srittau Exp $
+ * $Id: file.c,v 1.62 2002-10-05 14:04:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -441,7 +441,7 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof( did));
     ibuf += sizeof( did );
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -545,7 +545,7 @@ int		ibuflen, *rbuflen;
 
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -902,7 +902,7 @@ int		ibuflen, *rbuflen;
 
     memcpy(&sdid, ibuf, sizeof( sdid ));
     ibuf += sizeof( sdid );
-    if (( dir = dirsearch( vol, sdid )) == NULL ) {
+    if (( dir = dirlookup( vol, sdid )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -942,7 +942,7 @@ int		ibuflen, *rbuflen;
     if (vol->v_flags & AFPVOL_RO)
         return AFPERR_VLOCK;
 
-    if (( dir = dirsearch( vol, ddid )) == NULL ) {
+    if (( dir = dirlookup( vol, ddid )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -1393,7 +1393,7 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof(did);
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -1665,7 +1665,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(did);
 
     /* source file */
-    if ((dir = dirsearch( vol, sid )) == NULL ) {
+    if ((dir = dirlookup( vol, sid )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -1710,7 +1710,7 @@ int		ibuflen, *rbuflen;
                       slen = strlen(supath));
 #endif /* CNID_DB */
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_PARAM );
     }
 

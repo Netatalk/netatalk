@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.31 2002-09-07 19:18:59 didg Exp $
+ * $Id: filedir.c,v 1.32 2002-10-05 14:04:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -81,7 +81,7 @@ more information */
 
     adpath = ad_path( upath, ADFLAGS_HF );
     /* FIXME dirsearch doesn't move cwd to did ! */
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         LOG(log_error, logtype_afpd, "matchfile2dirperms: Unable to get directory info.");
         ret = AFPERR_NOOBJ;
     }
@@ -274,7 +274,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did));
     ibuf += sizeof( did);
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -470,7 +470,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( sdir = dirsearch( vol, did )) == NULL ) {
+    if (( sdir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -556,7 +556,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -655,7 +655,7 @@ int		ibuflen, *rbuflen;
     /* source did followed by dest did */
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
-    if (( sdir = dirsearch( vol, did )) == NULL ) {
+    if (( sdir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -679,7 +679,7 @@ int		ibuflen, *rbuflen;
     }
 
     /* get the destination directory */
-    if (( ddir = dirsearch( vol, did )) == NULL ) {
+    if (( ddir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_PARAM );
     }
     if (( path = cname( vol, ddir, &ibuf )) == NULL ) {

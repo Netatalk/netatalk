@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.22 2002-10-04 15:15:05 srittau Exp $
+ * $Id: enumerate.c,v 1.23 2002-10-05 14:04:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -175,7 +175,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         *rbuflen = 0;
         return( AFPERR_NODIR );
     }

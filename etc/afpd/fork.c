@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.36 2002-09-05 14:52:06 didg Exp $
+ * $Id: fork.c,v 1.37 2002-10-05 14:04:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -251,7 +251,7 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 

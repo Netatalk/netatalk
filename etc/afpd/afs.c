@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.11 2002-08-29 18:57:26 didg Exp $
+ * $Id: afs.c,v 1.12 2002-10-05 14:04:47 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -92,7 +92,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         *rbuflen = 0;
         return( AFPERR_NOOBJ );
     }
@@ -184,7 +184,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         *rbuflen = 0;
         return( AFPERR_NOOBJ );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.40 2002-09-27 11:34:22 didg Exp $
+ * $Id: directory.c,v 1.41 2002-10-05 14:04:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1174,7 +1174,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -1535,7 +1535,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -1964,7 +1964,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -2000,7 +2000,7 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (( parentdir = dirsearch( vol, did )) == NULL ) {
+    if (( parentdir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
