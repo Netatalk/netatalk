@@ -1,5 +1,5 @@
 /*
- * $Id: nfsquota.c,v 1.8 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: nfsquota.c,v 1.9 2002-08-05 04:38:50 jmarcus Exp $
  *
  * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:
@@ -151,11 +151,12 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
 
 #ifdef __svr4__
         /* why doesn't using bsize work? */
-#define NFS_BSIZE (gq_rslt.GQR_RQUOTA.rq_bsize / DEV_BSIZE)
+#define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / DEV_BSIZE
 #else /* __svr4__ */
         /* NOTE: linux' rquotad program doesn't currently report the
         * correct rq_bsize. */
-#define NFS_BSIZE (gq_rslt.GQR_RQUOTA.rq_bsize / bsize)
+	/* NOTE: This is integer division and can introduce rounding errors */
+#define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / bsize
 #endif /* __svr4__ */
 
         dqp->dqb_bhardlimit =
