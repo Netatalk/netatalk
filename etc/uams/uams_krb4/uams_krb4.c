@@ -1,5 +1,5 @@
 /*
- * $Id: uams_krb4.c,v 1.5 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: uams_krb4.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -39,7 +39,7 @@ char *strchr (), *strrchr ();
 
 #include <ctype.h>
 #include <pwd.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <netinet/in.h>
 #include <des.h>
 #include <krb.h>
@@ -141,7 +141,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 
     switch( *ibuf ) {
 	case KRB4CMD_SESS:
-	    syslog( LOG_INFO, "krb4_login: KRB4CMD_SESS" );
+	    LOG(log_info, logtype_default, "krb4_login: KRB4CMD_SESS" );
 	    ++ibuf;
 	    p = ibuf;
 	    memcpy( &len, p, sizeof( u_int16_t ));
@@ -150,7 +150,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 
 	    if ( tkt.length <= 0 || tkt.length > MAX_KTXT_LEN ) {
 		*rbuflen = 0;
-		syslog( LOG_INFO, "krb4_login: tkt.length = %d", tkt.length );
+		LOG(log_info, logtype_default, "krb4_login: tkt.length = %d", tkt.length );
 		return( AFPERR_BADUAM );
 	    }
 
@@ -170,13 +170,13 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 
 	    if( (rc = krb_rd_req( &tkt, princ, inst, 0, &ad, "" )) 
 		!= RD_AP_OK ) {
-		syslog( LOG_ERR, 
+		LOG(log_error, logtype_default, 
 			"krb4_login: krb_rd_req(): %s", krb_err_txt[ rc ] );
 		*rbuflen = 0;
 		return( AFPERR_BADUAM );
 	    }
 
-	    syslog( LOG_INFO, "krb4_login: %s.%s@%s", ad.pname, ad.pinst, 
+	    LOG(log_info, logtype_default, "krb4_login: %s.%s@%s", ad.pname, ad.pinst, 
 		ad.prealm );
 	    strcpy( realm, ad.prealm );
 	    memcpy( seskey, ad.session, sizeof( C_Block ) );
@@ -213,7 +213,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 	case KRB4CMD_HELO:
 	    p = rbuf;
 	    if (krb_get_lrealm( realm, 1 ) != KSUCCESS ) {
-		syslog( LOG_ERR, "krb4_login: can't get local realm!" );
+		LOG(log_error, logtype_default, "krb4_login: can't get local realm!" );
 		return( AFPERR_NOTAUTH );
 	    }
 	    *p++ = KRB4RPL_REALM;
@@ -226,14 +226,14 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 
 	default:
 	    *rbuflen = 0;
-	    syslog( LOG_INFO, "krb4_login: bad command %d", *ibuf );
+	    LOG(log_info, logtype_default, "krb4_login: bad command %d", *ibuf );
 	    return( AFPERR_NOTAUTH );
     }
 
 #ifdef AFS
     if ( setpag() < 0 ) {
 	*rbuflen = 0;
-	syslog( LOG_ERR, "krb_login: setpag: %m" );
+	LOG(log_error, logtype_default, "krb_login: setpag: %m" );
 	return( AFPERR_BADUAM );
     }
 #endif /*AFS*/
@@ -297,7 +297,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 	    len = ntohs( len );
 
 	    if ( len != sizeof( struct ClearToken ) ) {
-		syslog( LOG_ERR, "krb4_logincont: token too short" );
+		LOG(log_error, logtype_default, "krb4_logincont: token too short" );
 		*rbuflen = 0;
 		return( AFPERR_BADUAM );
 	    }
@@ -326,7 +326,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 	    vi.out_size = sizeof( buf );
 
 	    if ( pioctl( 0, VIOCSETTOK, &vi, 0 ) < 0 ) {
-		syslog( LOG_ERR, "krb4_logincont: pioctl: %m" );
+		LOG(log_error, logtype_default, "krb4_logincont: pioctl: %m" );
 		*rbuflen = 0;
 		return( AFPERR_BADUAM );
 	    }
@@ -368,11 +368,11 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 
 		    if (( rc = krb_rd_req( &tkt, "afpserver", servername, 
 			0, &ad, "" )) != RD_AP_OK ) {
-			syslog( LOG_ERR, "krb4_logincont: krb_rd_req(): %s", krb_err_txt[ rc ] );
+			LOG(log_error, logtype_default, "krb4_logincont: krb_rd_req(): %s", krb_err_txt[ rc ] );
 			return( AFPERR_BADUAM );
 		    }
 
-		    syslog( LOG_INFO, "krb4_login: %s.%s@%s", ad.pname, 
+		    LOG(log_info, logtype_default, "krb4_login: %s.%s@%s", ad.pname, 
 			ad.pinst, ad.prealm );
 		    memcpy(realm, ad.prealm, sizeof(realm));
 		    memcpy(seskey, ad.session, sizeof( C_Block ));
@@ -444,7 +444,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 		    vi.out = buf;
 		    vi.out_size = sizeof( buf );
 		    if ( pioctl( 0, VIOCSETTOK, &vi, 0 ) < 0 ) {
-			syslog( LOG_ERR, "krb4_logincont: pioctl: %m" );
+			LOG(log_error, logtype_default, "krb4_logincont: pioctl: %m" );
 			return( AFPERR_BADUAM );
 		    }
 		    /* FALL THROUGH */
@@ -463,7 +463,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 #endif /*AFS*/
 
 		default:
-		    syslog( LOG_INFO, "krb4_logincont: bad command %d", rc );
+		    LOG(log_info, logtype_default, "krb4_logincont: bad command %d", rc );
 		    *rbuflen = 0;
 		    return( AFPERR_NOTAUTH );
 		    break;
@@ -609,13 +609,13 @@ static int afskrb_login(void *obj, struct passwd *uam_pwd,
     p = rbuf;
     if ( validseskey == 0 ) {
 	if ( setpag() < 0 ) {
-	    syslog( LOG_ERR, "krb_login: setpag: %m" );
+	    LOG(log_error, logtype_default, "krb_login: setpag: %m" );
 	    return AFPERR_BADUAM;
 	}
 	krb_set_tkt_string(( tktfile = mktemp( _PATH_AFPTKT )));
 	if (( rc =  krb_get_svc_in_tkt( "afpserver", servername, realm,
 		TICKET_GRANTING_TICKET, realm, 255, KEYFILE )) != INTK_OK ) {
-	    syslog( LOG_ERR, "krb_login: can't get ticket-granting-ticket" );
+	    LOG(log_error, logtype_default, "krb_login: can't get ticket-granting-ticket" );
 	    return (( whoserealm ) ? AFPERR_BADUAM : AFPERR_PARAM );
 	}
 	if ( krb_mk_req( &authent, name, instance, realm, 0 ) != KSUCCESS ) {
@@ -626,7 +626,7 @@ static int afskrb_login(void *obj, struct passwd *uam_pwd,
 	}
 
 	if ( unlink( tktfile ) < 0 ) {
-	    syslog( LOG_ERR, "krb_login: unlink %s: %m", tktfile );
+	    LOG(log_error, logtype_default, "krb_login: unlink %s: %m", tktfile );
 	    return ( AFPERR_BADUAM );
 	}
 
@@ -737,12 +737,12 @@ static int afskrb_logincont(void *obj, struct passwd *uam_pwd,
     vi.out = buf;
     vi.out_size = sizeof( buf );
     if ( pioctl( 0, VIOCSETTOK, &vi, 0 ) < 0 ) {
-	syslog( LOG_ERR, "krb_logincont: pioctl: %m" );
+	LOG(log_error, logtype_default, "krb_logincont: pioctl: %m" );
 	return ( AFPERR_BADUAM );
     }
 
     if ( unlink( tktfile ) < 0 ) {
-	syslog( LOG_ERR, "krb_logincont: %s: %m", tktfile );
+	LOG(log_error, logtype_default, "krb_logincont: %s: %m", tktfile );
 	return ( AFPERR_BADUAM );
     }
 
@@ -752,11 +752,11 @@ static int afskrb_logincont(void *obj, struct passwd *uam_pwd,
 
     if ( logged == 0 ) {
 	logged = 1;
-	syslog( LOG_INFO, "authenticated %s.%s@%s", name, instance, realm );
+	LOG(log_info, logtype_default, "authenticated %s.%s@%s", name, instance, realm );
 	*uam_pwd = pwd;
 	return AFP_OK;
     }
-    syslog( LOG_INFO, "re-authenticated %s.%s@%s", name, instance, realm );
+    LOG(log_info, logtype_default, "re-authenticated %s.%s@%s", name, instance, realm );
     return( AFP_OK );
 }
 #endif /* UAM_AFSKRB AFS */

@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.27 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: unix.c,v 1.28 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <netatalk/endian.h>
 #include <dirent.h>
 #include <limits.h>
@@ -63,7 +63,7 @@ u_int32_t   *bsize;
 
 
     if ( statfs( vol->v_path, &sfs ) < 0 ) {
-        syslog(LOG_ERR, "ustatfs_getvolspace unable to stat %s", vol->v_path);
+        LOG(log_error, logtype_default, "ustatfs_getvolspace unable to stat %s", vol->v_path);
         return( AFPERR_PARAM );
     }
 
@@ -232,14 +232,14 @@ const int dropbox;
             else { /* if S_IWOTH and not S_IROTH */
                 uid=geteuid();
                 if ( seteuid(0) < 0) {
-                    syslog( LOG_ERR, "stickydirmode: unable to seteuid root: %m");
+                    LOG(log_error, logtype_default, "stickydirmode: unable to seteuid root: %m");
                 }
                 if ( retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & 0777 & ~default_options.umask) ) < 0) {
-                    syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
+                    LOG(log_error, logtype_default, "stickydirmode: chmod \"%s\": %m", name );
                     return(AFPERR_ACCESS);
                 } else {
 #ifdef DEBUG
-                    syslog( LOG_INFO, "stickydirmode: (debug) chmod \"%s\": %m", name );
+                    LOG(log_info, logtype_default, "stickydirmode: (debug) chmod \"%s\": %m", name );
 #endif /* DEBUG */
                     seteuid(uid);
                 } /* end getting retval */
@@ -252,7 +252,7 @@ const int dropbox;
             *  group writable, in which case chmod will fail.
             */
             if ( (chmod( name, (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0) && errno != EPERM)  {
-                syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %s",
+                LOG(log_error, logtype_default, "stickydirmode: chmod \"%s\": %s",
                         name, strerror(errno) );
                 retval = -1;
             }
@@ -280,7 +280,7 @@ const mode_t	mode;
     }
     if (( desk = opendir( "." )) == NULL ) {
         if ( chdir( wd ) < 0 ) {
-            syslog( LOG_ERR, "setdeskmode: chdir %s: %s", wd, strerror(errno) );
+            LOG(log_error, logtype_default, "setdeskmode: chdir %s: %s", wd, strerror(errno) );
         }
         return( -1 );
     }
@@ -304,18 +304,18 @@ const mode_t	mode;
             strcat( modbuf, subp->d_name );
             /* XXX: need to preserve special modes */
             if (stat(modbuf, &st) < 0) {
-                syslog( LOG_ERR, "setdeskmode: stat %s: %s",
+                LOG(log_error, logtype_default, "setdeskmode: stat %s: %s",
                         modbuf, strerror(errno) );
                 continue;
             }
 
             if (S_ISDIR(st.st_mode)) {
                 if ( chmod( modbuf,  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
-                    syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
+                    LOG(log_error, logtype_default, "setdeskmode: chmod %s: %s",
                             modbuf, strerror(errno) );
                 }
             } else if ( chmod( modbuf,  mode & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
-                syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
+                LOG(log_error, logtype_default, "setdeskmode: chmod %s: %s",
                         modbuf, strerror(errno) );
             }
 
@@ -323,18 +323,18 @@ const mode_t	mode;
         closedir( sub );
         /* XXX: need to preserve special modes */
         if ( chmod( deskp->d_name,  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
-            syslog( LOG_ERR, "setdeskmode: chmod %s: %s",
+            LOG(log_error, logtype_default, "setdeskmode: chmod %s: %s",
                     deskp->d_name, strerror(errno) );
         }
     }
     closedir( desk );
     if ( chdir( wd ) < 0 ) {
-        syslog( LOG_ERR, "setdeskmode: chdir %s: %s", wd, strerror(errno) );
+        LOG(log_error, logtype_default, "setdeskmode: chdir %s: %s", wd, strerror(errno) );
         return -1;
     }
     /* XXX: need to preserve special modes */
     if ( chmod( ".AppleDesktop",  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
-        syslog( LOG_ERR, "setdeskmode: chmod .AppleDesktop: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "setdeskmode: chmod .AppleDesktop: %s", strerror(errno) );
     }
     return( 0 );
 }
@@ -351,7 +351,7 @@ const int dropbox;
     DIR			*dir;
 
     if (( dir = opendir( "." )) == NULL ) {
-        syslog( LOG_ERR, "setdirmode: opendir .: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "setdirmode: opendir .: %s", strerror(errno) );
         return( -1 );
     }
 
@@ -360,7 +360,7 @@ const int dropbox;
             continue;
         }
         if ( stat( dirp->d_name, &st ) < 0 ) {
-            syslog( LOG_ERR, "setdirmode: stat %s: %s",
+            LOG(log_error, logtype_default, "setdirmode: stat %s: %s",
                     dirp->d_name, strerror(errno) );
             continue;
         }
@@ -378,7 +378,7 @@ const int dropbox;
     if (( dir = opendir( ".AppleDouble" )) == NULL ) {
         if (noadouble)
             goto setdirmode_noadouble;
-        syslog( LOG_ERR, "setdirmode: opendir .AppleDouble: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "setdirmode: opendir .AppleDouble: %s", strerror(errno) );
         return( -1 );
     }
     strcpy( buf, ".AppleDouble" );
@@ -393,7 +393,7 @@ const int dropbox;
         strcat( buf, dirp->d_name );
 
         if ( stat( buf, &st ) < 0 ) {
-            syslog( LOG_ERR, "setdirmode: stat %s: %s", buf, strerror(errno) );
+            LOG(log_error, logtype_default, "setdirmode: stat %s: %s", buf, strerror(errno) );
             continue;
         }
 
@@ -434,7 +434,7 @@ const gid_t	gid;
     }
     if (( desk = opendir( "." )) == NULL ) {
         if ( chdir( wd ) < 0 ) {
-            syslog( LOG_ERR, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
+            LOG(log_error, logtype_default, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
         }
         return( -1 );
     }
@@ -459,24 +459,24 @@ const gid_t	gid;
             strcat( modbuf, subp->d_name );
             /* XXX: add special any uid, ignore group bits */
             if ( chown( modbuf, uid, gid ) < 0 && errno != EPERM ) {
-                syslog( LOG_ERR, "setdeskown: chown %s: %s",
+                LOG(log_error, logtype_default, "setdeskown: chown %s: %s",
                         modbuf, strerror(errno) );
             }
         }
         closedir( sub );
         /* XXX: add special any uid, ignore group bits */
         if ( chown( deskp->d_name, uid, gid ) < 0 && errno != EPERM ) {
-            syslog( LOG_ERR, "setdeskowner: chown %s: %s",
+            LOG(log_error, logtype_default, "setdeskowner: chown %s: %s",
                     deskp->d_name, strerror(errno) );
         }
     }
     closedir( desk );
     if ( chdir( wd ) < 0 ) {
-        syslog( LOG_ERR, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
+        LOG(log_error, logtype_default, "setdeskowner: chdir %s: %s", wd, strerror(errno) );
         return -1;
     }
     if ( chown( ".AppleDesktop", uid, gid ) < 0 && errno != EPERM ) {
-        syslog( LOG_ERR, "setdeskowner: chown .AppleDesktop: %s",
+        LOG(log_error, logtype_default, "setdeskowner: chown .AppleDesktop: %s",
                 strerror(errno) );
     }
     return( 0 );
@@ -506,13 +506,13 @@ const int   noadouble;
             continue;
         };
         if ( stat( dirp->d_name, &st ) < 0 ) {
-            syslog( LOG_ERR, "setdirowner: stat %s: %s",
+            LOG(log_error, logtype_default, "setdirowner: stat %s: %s",
                     dirp->d_name, strerror(errno) );
             continue;
         }
         if (( st.st_mode & S_IFMT ) == S_IFREG ) {
             if ( chown( dirp->d_name, uid, gid ) < 0 && errno != EPERM ) {
-                syslog( LOG_DEBUG, "setdirowner: chown %s: %s",
+                LOG(log_debug, logtype_default, "setdirowner: chown %s: %s",
                         dirp->d_name, strerror(errno) );
                 /* return ( -1 ); Sometimes this is okay */
             }
@@ -535,7 +535,7 @@ const int   noadouble;
         *m = '\0';
         strcat( buf, dirp->d_name );
         if ( chown( buf, uid, gid ) < 0 && errno != EPERM ) {
-            syslog( LOG_DEBUG, "setdirowner: chown %d/%d %s: %s",
+            LOG(log_debug, logtype_default, "setdirowner: chown %d/%d %s: %s",
                     uid, gid, buf, strerror(errno) );
             /* return ( -1 ); Sometimes this is okay */
         }
@@ -546,12 +546,12 @@ const int   noadouble;
      * We cheat: we know that chown doesn't do anything.
      */
     if ( stat( ".AppleDouble", &st ) < 0 ) {
-        syslog( LOG_ERR, "setdirowner: stat .AppleDouble: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "setdirowner: stat .AppleDouble: %s", strerror(errno) );
         return( -1 );
     }
     if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 &&
             errno != EPERM ) {
-        syslog( LOG_DEBUG, "setdirowner: chown %d/%d .AppleDouble: %s",
+        LOG(log_debug, logtype_default, "setdirowner: chown %d/%d .AppleDouble: %s",
                 uid, gid, strerror(errno) );
         /* return ( -1 ); Sometimes this is okay */
     }
@@ -562,7 +562,7 @@ setdirowner_noadouble:
     }
     if ( gid && gid != st.st_gid && chown( ".", uid, gid ) < 0 &&
             errno != EPERM ) {
-        syslog( LOG_DEBUG, "setdirowner: chown %d/%d .: %s",
+        LOG(log_debug, logtype_default, "setdirowner: chown %d/%d .: %s",
                 uid, gid, strerror(errno) );
     }
 

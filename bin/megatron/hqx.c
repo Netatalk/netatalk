@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: hqx.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #include <string.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <atalk/adouble.h>

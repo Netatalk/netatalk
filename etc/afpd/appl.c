@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.5 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: appl.c,v 1.6 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 
 #include <netatalk/endian.h>

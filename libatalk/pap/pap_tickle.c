@@ -1,5 +1,5 @@
 /*
- * $Id: pap_tickle.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ * $Id: pap_tickle.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
  *
  * send a tickle
  */
@@ -23,6 +23,6 @@ void pap_tickle(PAP pap, const u_int8_t connid, struct sockaddr_at *sat)
   atpb.atp_sreqto = 0;		/* retry timer */
   atpb.atp_sreqtries = 1;	/* retry count */
   if ( atp_sreq( pap->pap_atp, &atpb, 0, 0 ) < 0 ) {
-    syslog(LOG_ERR, "atp_sreq: %m");
+    LOG(log_error, logtype_default, "atp_sreq: %m");
   }
 }

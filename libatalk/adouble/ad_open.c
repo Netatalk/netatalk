@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.11 2002-01-03 17:29:12 sibaz Exp $
+ * $Id: ad_open.c,v 1.12 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -36,7 +36,7 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <errno.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -324,7 +324,7 @@ static __inline__ void parse_entries(struct adouble *ad, char *buf,
 	    ad->ad_eid[ eid ].ade_off = off;
 	    ad->ad_eid[ eid ].ade_len = len;
 	} else {
-	    syslog( LOG_DEBUG, "ad_refresh: nentries %hd  eid %d\n",
+	    LOG(log_debug, logtype_default, "ad_refresh: nentries %hd  eid %d\n",
 		    nentries, eid );
 	}
     }
@@ -376,7 +376,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
      * (ad->ad_flags & ADFLAGS_V1COMPAT) */
     if (!ad->ad_magic && !ad->ad_version) {
       if (!warning) {
-	syslog(LOG_DEBUG, "notice: fixing up null v1 magic/version.");
+	LOG(log_debug, logtype_default, "notice: fixing up null v1 magic/version.");
 	warning++;
       }
       ad->ad_magic = AD_MAGIC;
@@ -385,7 +385,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
     } else if ((ad->ad_magic == AD_MAGIC) && 
 	       (ad->ad_version == AD_VERSION1)) {
       if (!warning) {
-	syslog(LOG_DEBUG, "notice: fixing up byte-swapped v1 magic/version.");
+	LOG(log_debug, logtype_default, "notice: fixing up byte-swapped v1 magic/version.");
 	warning++;
       }
 
@@ -400,7 +400,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
 #endif /* AD_VERSION == AD_VERSION2 */
 				       )) {
       errno = EIO;
-      syslog(LOG_DEBUG, "ad_open: can't parse AppleDouble header.");
+      LOG(log_debug, logtype_default, "ad_open: can't parse AppleDouble header.");
       return -1;
     }
 
@@ -422,7 +422,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
     if (read(ad->ad_hf.adf_fd, buf, len) != len) {
         if (errno == 0)
 	    errno = EIO;
-	syslog(LOG_DEBUG, "ad_header_read: can't read entry info.");
+	LOG(log_debug, logtype_default, "ad_header_read: can't read entry info.");
 	return -1;
     }
     ad->ad_hf.adf_off += len;
@@ -435,7 +435,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
 	|| (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
 #endif /* ! USE_MMAPPED_HEADERS */
 	) {
-      syslog(LOG_DEBUG, "ad_header_read: problem with rfork entry offset."); 
+      LOG(log_debug, logtype_default, "ad_header_read: problem with rfork entry offset."); 
       return -1;
     }
 
@@ -453,7 +453,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
     if (read(ad->ad_hf.adf_fd, buf, len) != len) {
         if (errno == 0)
 	    errno = EIO;
-	syslog(LOG_DEBUG, "ad_header_read: can't read in entries.");
+	LOG(log_debug, logtype_default, "ad_header_read: can't read in entries.");
 	return -1;
     }
 #endif /* USE_MMAPPED_HEADERS */
@@ -576,7 +576,7 @@ ad_mkdir( path, mode )
     int			mode;
 {
 #ifdef DEBUG
-    syslog(LOG_INFO, "ad_mkdir: Creating directory with mode %d", mode);
+    LOG(log_info, logtype_default, "ad_mkdir: Creating directory with mode %d", mode);
 #endif /* DEBUG */
     return mkdir( path, ad_mode( path, mode ) );
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.13 2001-10-24 16:25:24 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.14 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -20,7 +20,7 @@
 #include <crypt.h>
 #endif /* ! NO_CRYPT_H */
 #include <pwd.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #ifdef SHADOWPW
 #include <shadow.h>
@@ -109,13 +109,13 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
       return AFPERR_PARAM;
     }
 
-    syslog( LOG_INFO, "dhx login: %s", name);
+    LOG(log_info, logtype_default, "dhx login: %s", name);
     if (uam_checkuser(dhxpwd) < 0)
       return AFPERR_NOTAUTH;
 
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
-	syslog( LOG_INFO, "no shadow passwd entry for %s", name);
+	LOG(log_info, logtype_default, "no shadow passwd entry for %s", name);
 	return AFPERR_NOTAUTH;
     }
     dhxpwd->pw_passwd = sp->sp_pwdp;

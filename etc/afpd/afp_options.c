@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.15 2001-12-15 06:25:44 jmarcus Exp $
+ * $Id: afp_options.c,v 1.16 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -36,7 +36,7 @@ char *strchr (), *strrchr ();
 #endif /* HAVE_UNISTD_H */
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -263,7 +263,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         struct in_addr inaddr;
         if (inet_aton(c, &inaddr) && (opt = strdup(c))) {
             if (!gethostbyaddr((const char *) &inaddr, sizeof(inaddr), AF_INET))
-                syslog(LOG_INFO, "WARNING: can't find %s\n", opt);
+                LOG(log_info, logtype_default, "WARNING: can't find %s\n", opt);
             options->ipaddr = opt;
         }
     }
@@ -398,9 +398,10 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
     }
 
 #ifdef ultrix
-    openlog( p, LOG_PID );
+    openlog( p, LOG_PID ); /* ultrix only */
 #else /* ultrix */
-    openlog( p, LOG_NDELAY|LOG_PID, LOG_DAEMON);
+    set_processname(p);
+    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon);
 #endif /* ultrix */
 
     return 1;

@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.21 2002-01-03 17:29:10 sibaz Exp $
+ * $Id: auth.c,v 1.22 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -32,7 +32,7 @@
 
 #include <pwd.h>
 #include <grp.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #ifdef TRU64
 #include <netdb.h>
@@ -122,7 +122,7 @@ void status_uams(char *data, const char *authlist)
     *data++ = num;
     while ((uams = uams->uam_prev) != &uam_login) {
         if (strstr(authlist, uams->uam_path)) {
-            syslog(LOG_INFO, "uam: \"%s\" available", uams->uam_name);
+            LOG(log_info, logtype_default, "uam: \"%s\" available", uams->uam_name);
             len = strlen( uams->uam_name);
             *data++ = len;
             memcpy( data, uams->uam_name, len );
@@ -155,14 +155,15 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 #endif /* ADMIN_GRP */
 
     /* UAM had syslog control; afpd needs to reassert itself */
-    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
+    set_processname("afpd");
+    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon);
 
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
-        syslog( LOG_ERR, "login: root login denied!" );
+        LOG(log_error, logtype_default, "login: root login denied!" );
         return AFPERR_NOTAUTH;
     }
 
-    syslog( LOG_INFO, "login %s (uid %d, gid %d)", pwd->pw_name,
+    LOG(log_info, logtype_default, "login %s (uid %d, gid %d)", pwd->pw_name,
             pwd->pw_uid, pwd->pw_gid );
 
     if (obj->proto == AFPPROTO_ASP) {
@@ -178,7 +179,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
                 sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir,
                         addr_net / 256, addr_net % 256, addr_node);
-                syslog(LOG_INFO, "registering %s (uid %d) on %u.%u as %s",
+                LOG(log_info, logtype_default, "registering %s (uid %d) on %u.%u as %s",
                         pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
 
                 if (stat(nodename, &stat_buf) == 0) { /* file exists */
@@ -189,7 +190,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
                         fclose(fp);
                         chown( nodename, pwd->pw_uid, -1 );
                     } else { /* somebody is messing with us */
-                        syslog( LOG_ERR, "print authfile %s is not a normal file, it will not be modified", nodename );
+                        LOG(log_error, logtype_default, "print authfile %s is not a normal file, it will not be modified", nodename );
                     }
                 } else { /* file 'nodename' does not exist */
                     fp = fopen(nodename, "w");
@@ -203,9 +204,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
     if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
 #ifdef RUN_AS_USER
-        syslog(LOG_INFO, "running with uid %d", geteuid());
+        LOG(log_info, logtype_default, "running with uid %d", geteuid());
 #else /* RUN_AS_USER */
-        syslog(LOG_ERR, "login: %s", strerror(errno));
+        LOG(log_error, logtype_default, "login: %s", strerror(errno));
         return AFPERR_BADUAM;
 #endif /* RUN_AS_USER */
 
@@ -214,12 +215,12 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     /* Basically if the user is in the admin group, we stay root */
 
     if (( ngroups = getgroups( NGROUPS, groups )) < 0 ) {
-        syslog( LOG_ERR, "login: getgroups: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "login: getgroups: %s", strerror(errno) );
         return AFPERR_BADUAM;
     }
 #ifdef ADMIN_GRP
 #ifdef DEBUG
-    syslog(LOG_INFO, "obj->options.admingid == %d", obj->options.admingid);
+    LOG(log_info, logtype_default, "obj->options.admingid == %d", obj->options.admingid);
 #endif /* DEBUG */
     if (obj->options.admingid != 0) {
         int i;
@@ -227,7 +228,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
             if (groups[i] == obj->options.admingid) admin = 1;
         }
     }
-    if (admin) syslog( LOG_INFO, "admin login -- %s", pwd->pw_name );
+    if (admin) LOG(log_info, logtype_default, "admin login -- %s", pwd->pw_name );
     if (!admin)
 #endif /* DEBUG */
 #ifdef TRU64
@@ -257,17 +258,17 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
                              SIA_BEU_REALLOGIN ) != SIASUCCESS )
             return AFPERR_BADUAM;
 
-        syslog( LOG_INFO, "session from %s (%s)", hostname,
+        LOG(log_info, logtype_default, "session from %s (%s)", hostname,
                 inet_ntoa( dsi->client.sin_addr ) );
 
         if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-            syslog( LOG_ERR, "login: %m" );
+            LOG(log_error, logtype_default, "login: %m" );
             return AFPERR_BADUAM;
         }
     }
 #else /* TRU64 */
         if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-            syslog( LOG_ERR, "login: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "login: %s", strerror(errno) );
             return AFPERR_BADUAM;
         }
 #endif /* TRU64 */
@@ -354,7 +355,7 @@ AFPObj     *obj;
 char       *ibuf, *rbuf;
 int        ibuflen, *rbuflen;
 {
-    syslog(LOG_INFO, "logout %s", obj->username);
+    LOG(log_info, logtype_default, "logout %s", obj->username);
     obj->exit(0);
     return AFP_OK;
 }
@@ -398,7 +399,7 @@ int		ibuflen, *rbuflen;
     if ((len + 1) & 1) /* pad byte */
         ibuf++;
 
-    syslog(LOG_INFO, "changing password for <%s>", username);
+    LOG(log_info, logtype_default, "changing password for <%s>", username);
 
     if (( pwd = uam_getname( username, sizeof(username))) == NULL )
         return AFPERR_PARAM;
@@ -407,7 +408,7 @@ int		ibuflen, *rbuflen;
     ibuflen -= (ibuf - start);
     len = uam->u.uam_changepw(obj, username, pwd, ibuf, ibuflen,
                               rbuf, rbuflen);
-    syslog(LOG_INFO, "password change %s.",
+    LOG(log_info, logtype_default, "password change %s.",
            (len == AFPERR_AUTHCONT) ? "continued" :
            (len ? "failed" : "succeeded"));
     return len;
@@ -521,19 +522,19 @@ int auth_load(const char *path, const char *list)
 
     while (p) {
         strncpy(name + len, p, sizeof(name) - len);
-        syslog(LOG_DEBUG, "uam: loading (%s)", name);
+        LOG(log_debug, logtype_default, "uam: loading (%s)", name);
         /*
         if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
         */
         if (stat(name, &st) == 0) {
             if ((mod = uam_load(name, p))) {
                 uam_attach(&uam_modules, mod);
-                syslog(LOG_INFO, "uam: %s loaded", p);
+                LOG(log_info, logtype_default, "uam: %s loaded", p);
             } else {
-                syslog(LOG_INFO, "uam: %s load failure",p);
+                LOG(log_info, logtype_default, "uam: %s load failure",p);
             }
         } else {
-            syslog(LOG_INFO, "uam: uam not found (status=%d)", stat(name, &st));
+            LOG(log_info, logtype_default, "uam: uam not found (status=%d)", stat(name, &st));
         }
         p = strtok(NULL, ",");
     }

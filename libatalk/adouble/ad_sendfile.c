@@ -1,5 +1,5 @@
 /*
- * $Id: ad_sendfile.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_sendfile.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -25,7 +25,7 @@
 
 #include <atalk/adouble.h>
 
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include "ad_private.h"
 

@@ -1,5 +1,5 @@
 /*
- * $Id: asp_getsess.c,v 1.4 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: asp_getsess.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 #include <sys/signal.h>
 #include <sys/time.h>
@@ -68,7 +68,7 @@ static void tickle_handler()
     if (++asp_ac[sid]->ac_state >= ACSTATE_BAD) {
       /* kill. if already dead, just continue */
       if (kill( asp_ac[ sid ]->ac_pid, SIGTERM) == 0)
-	syslog( LOG_INFO, "asp_alrm: %d timed out",
+	LOG(log_info, logtype_default, "asp_alrm: %d timed out",
 		asp_ac[ sid ]->ac_pid );
 
       asp_ac[ sid ]->ac_state = ACSTATE_DEAD;
@@ -278,7 +278,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       break;
 
     default:
-      syslog(LOG_INFO, "ASPUnknown %d", asp->cmdbuf[0]);
+      LOG(log_info, logtype_default, "ASPUnknown %d", asp->cmdbuf[0]);
       break;
     }
 

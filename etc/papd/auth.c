@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: auth.c,v 1.5 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,7 +26,7 @@
 #include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include "uam_auth.h"
 
@@ -118,7 +118,7 @@ int auth_load(const char *path, const char *list)
     strncpy(name + len, p, sizeof(name) - len);
     if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
       uam_attach(&uam_modules, mod);
-      syslog(LOG_INFO, "uam: %s loaded", p);
+      LOG(log_info, logtype_default, "uam: %s loaded", p);
     }
     p = strtok(NULL, ",");
   }

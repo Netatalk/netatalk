@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_nextid.c,v 1.7 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_nextid.c,v 1.8 2002-01-04 04:45:48 sibaz Exp $
  */
 #ifdef unused
 
@@ -13,7 +13,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include "cnid_private.h"
 

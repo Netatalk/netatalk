@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.144 2001-12-16 18:37:57 srittau Exp $
+dnl $Id: configure.in,v 1.145 2002-01-04 04:45:46 sibaz Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -127,10 +127,27 @@ AC_ARG_ENABLE(afs,
 )
 
 AC_ARG_WITH(pkgconfdir,
-	[  --with-pkgconfdir=DIR   package specific configuration in DIR
+        [  --with-pkgconfdir=DIR   package specific configuration in DIR
                           [[SYSCONF/netatalk]]],
-		PKGCONFDIR="$withval",
-		PKGCONFDIR="${sysconfdir}/netatalk"
+                PKGCONFDIR="$withval",
+                PKGCONFDIR="${sysconfdir}/netatalk"
+)
+
+AC_ARG_WITH(logfile,
+	[  --with-logfile=PATH     path for file used by logger [/var/log/netatalk.log]
+                          use --without-logfile to disable logger],
+        if test "$withval" = "no"; then
+		AC_DEFINE(DISABLE_LOGGER, 1)
+		AC_MSG_RESULT([logger disabled])
+	elif test "$withval" != "yes"; then
+		AC_DEFINE_UNQUOTED(LOGFILEPATH, $withval)
+		AC_MSG_RESULT([logfile set to $withval])
+	else
+                AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log")
+                AC_MSG_RESULT([logfile set to default]) 
+	fi,
+		AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log")
+		AC_MSG_RESULT([logfile set to default])
 )
 
 AC_ARG_WITH(cracklib,

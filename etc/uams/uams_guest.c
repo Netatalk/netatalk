@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.8 2001-10-24 14:34:33 srittau Exp $
+ * $Id: uams_guest.c,v 1.9 2002-01-04 04:45:48 sibaz Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -28,7 +28,7 @@ char *strchr (), *strrchr ();
 #endif /* STDC_HEADERS */
 
 #include <pwd.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
@@ -41,7 +41,7 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
     char *guest, *username;
 
     *rbuflen = 0;
-    syslog( LOG_INFO, "login noauth" );
+    LOG(log_info, logtype_default, "login noauth" );
 
     if (uam_afpserver_option(obj, UAM_OPTION_GUEST, (void *) &guest,
 			     NULL) < 0)
@@ -53,14 +53,14 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 
     strcpy(username, guest);
     if ((pwent = getpwnam(guest)) == NULL) {
-	syslog( LOG_ERR, "noauth_login: getpwnam( %s ): %s",
+	LOG(log_error, logtype_default, "noauth_login: getpwnam( %s ): %s",
 		guest, strerror(errno) );
 	return( AFPERR_BADUAM );
     }
 
 #ifdef AFS
     if ( setpag() < 0 ) {
-	syslog( LOG_ERR, "noauth_login: setpag: %s", strerror(errno) );
+	LOG(log_error, logtype_default, "noauth_login: setpag: %s", strerror(errno) );
 	return( AFPERR_BADUAM );
     }
 #endif /* AFS */
@@ -88,13 +88,13 @@ int noauth_printer(start, stop, username, out)
      */
 
     if ((p = strchr(data, '(' )) == NULL) {
-	syslog(LOG_INFO,"Bad Login NoAuthUAM: username not found in string");
+	LOG(log_info, logtype_default,"Bad Login NoAuthUAM: username not found in string");
 	free(data);
 	return(-1);
     }
     p++;
     if ((q = strchr(data, ')' )) == NULL) {
-	syslog(LOG_INFO,"Bad Login NoAuthUAM: username not found in string");
+	LOG(log_info, logtype_default,"Bad Login NoAuthUAM: username not found in string");
 	free(data);
 	return(-1);
     }
@@ -104,14 +104,14 @@ int noauth_printer(start, stop, username, out)
     free(data);
 
     if (getpwnam(username) == NULL) {
-	syslog(LOG_INFO, "Bad Login NoAuthUAM: %s: %s",
+	LOG(log_info, logtype_default, "Bad Login NoAuthUAM: %s: %s",
 	       username, strerror(errno) );
 	return(-1);
     }
 
     /* Login successful */
     append(out, loginok, strlen(loginok));
-    syslog(LOG_INFO, "Login NoAuthUAM: %s", username);
+    LOG(log_info, logtype_default, "Login NoAuthUAM: %s", username);
     return(0);
 }
 

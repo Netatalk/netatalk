@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.24 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: directory.c,v 1.25 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,7 +12,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -1228,7 +1228,7 @@ int setdirparams(const struct vol *vol,
                     goto setdirparam_done;
                     break;
                 default :
-                    syslog( LOG_ERR, "setdirparam: setdeskowner: %s",
+                    LOG(log_error, logtype_default, "setdirparam: setdeskowner: %s",
                             strerror(errno) );
                     if (!isad) {
                         err = AFPERR_PARAM;
@@ -1249,7 +1249,7 @@ int setdirparams(const struct vol *vol,
                     goto setdirparam_done;
                     break;
                 default :
-                    syslog( LOG_ERR, "setdirparam: setdirowner: %s",
+                    LOG(log_error, logtype_default, "setdirparam: setdirowner: %s",
                             strerror(errno) );
                     break;
                 }
@@ -1273,7 +1273,7 @@ int setdirparams(const struct vol *vol,
                 goto setdirparam_done;
                 break;
             default :
-                syslog( LOG_ERR, "setdirparam: setdeskowner: %m" );
+                LOG(log_error, logtype_default, "setdirparam: setdeskowner: %m" );
                 if (!isad) {
                     err = AFPERR_PARAM;
                     goto setdirparam_done;
@@ -1294,7 +1294,7 @@ int setdirparams(const struct vol *vol,
                     goto setdirparam_done;
                     break;
                 default :
-                    syslog( LOG_ERR, "setdirparam: setdirowner: %s",
+                    LOG(log_error, logtype_default, "setdirparam: setdirowner: %s",
                             strerror(errno) );
                     break;
                 }
@@ -1319,7 +1319,7 @@ int setdirparams(const struct vol *vol,
                 err = AFPERR_VLOCK;
                 goto setdirparam_done;
             default :
-                syslog( LOG_ERR, "setdirparam: setdeskmode: %s",
+                LOG(log_error, logtype_default, "setdirparam: setdeskmode: %s",
                         strerror(errno) );
                 break;
                 err = AFPERR_PARAM;
@@ -1339,7 +1339,7 @@ int setdirparams(const struct vol *vol,
                 err = AFPERR_VLOCK;
                 goto setdirparam_done;
             default :
-                syslog( LOG_ERR, "setdirparam: setdirmode: %s",
+                LOG(log_error, logtype_default, "setdirparam: setdirmode: %s",
                         strerror(errno) );
                 err = AFPERR_PARAM;
                 goto setdirparam_done;
@@ -1576,7 +1576,7 @@ const int noadouble;
 
 renamedir_done:
     if ((buf = (char *) realloc( dir->d_name, len + 1 )) == NULL ) {
-        syslog( LOG_ERR, "renamedir: realloc: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "renamedir: realloc: %s", strerror(errno) );
         return AFPERR_MISC;
     }
     dir->d_name = buf;

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.18 2001-12-14 03:10:37 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.19 2002-01-04 04:45:48 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #include <stdlib.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <db.h>
 #include <errno.h>
 #include <string.h>
@@ -56,7 +56,7 @@ void cnid_close(void *CNID) {
 #else /* DB_VERSION_MINOR < 2 */
                 if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG | DB_ARCH_ABS, NULL)) != 0) {
 #endif /* DB_VERSION_MINOR */
-                    syslog(LOG_ERR, "cnid_close: Unable to archive logfiles: %s",
+                    LOG(log_error, logtype_default, "cnid_close: Unable to archive logfiles: %s",
                            db_strerror(rc));
                 }
 
@@ -64,7 +64,7 @@ void cnid_close(void *CNID) {
                     for (first = list; *list != NULL; ++list) {
                         if ((rc = remove(*list)) != 0) {
 #ifdef DEBUG
-                            syslog(LOG_INFO, "cnid_close: failed to remove %s: %s",
+                            LOG(log_info, logtype_default, "cnid_close: failed to remove %s: %s",
                                    *list, strerror(rc));
 #endif
                         }
@@ -75,7 +75,7 @@ void cnid_close(void *CNID) {
                 close(cfd);
             }
             else {
-                syslog(LOG_ERR, "cnid_close: Failed to open database closing lock file: %s", strerror(errno));
+                LOG(log_error, logtype_default, "cnid_close: Failed to open database closing lock file: %s", strerror(errno));
             }
         }
     }

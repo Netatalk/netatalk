@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.17 2001-12-10 20:16:54 srittau Exp $
+ * $Id: uam.c,v 1.18 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -34,7 +34,7 @@ char *strchr (), *strrchr ();
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #include <ctype.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -70,12 +70,12 @@ struct uam_mod *uam_load(const char *path, const char *name)
     void *module;
 
     if ((module = mod_open(path)) == NULL) {
-        syslog(LOG_ERR, "uam_load(%s): failed to load: %s", name, mod_error());
+        LOG(log_error, logtype_default, "uam_load(%s): failed to load: %s", name, mod_error());
         return NULL;
     }
 
     if ((mod = (struct uam_mod *) malloc(sizeof(struct uam_mod))) == NULL) {
-        syslog(LOG_ERR, "uam_load(%s): malloc failed", name);
+        LOG(log_error, logtype_default, "uam_load(%s): malloc failed", name);
         goto uam_load_fail;
     }
 
@@ -84,14 +84,14 @@ struct uam_mod *uam_load(const char *path, const char *name)
     if ((p = strchr(buf, '.')))
         *p = '\0';
     if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
-        syslog(LOG_ERR, "uam_load(%s): mod_symbol error for symbol %s",
+        LOG(log_error, logtype_default, "uam_load(%s): mod_symbol error for symbol %s",
                name,
                buf);
         goto uam_load_err;
     }
 
     if (mod->uam_fcn->uam_type != UAM_MODULE_SERVER) {
-        syslog(LOG_ERR, "uam_load(%s): attempted to load a non-server module",
+        LOG(log_error, logtype_default, "uam_load(%s): attempted to load a non-server module",
                name);
         goto uam_load_err;
     }
@@ -100,7 +100,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
 
     if (!mod->uam_fcn->uam_setup ||
             ((*mod->uam_fcn->uam_setup)(name) < 0)) {
-        syslog(LOG_ERR, "uam_load(%s): uam_setup failed", name);
+        LOG(log_error, logtype_default, "uam_load(%s): uam_setup failed", name);
         goto uam_load_err;
     }
 
@@ -140,7 +140,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
     if ((uam = auth_uamfind(type, name, strlen(name)))) {
         if (strcmp(uam->uam_path, path)) {
             /* it exists, but it's not the same module. */
-            syslog(LOG_ERR, "uam_register: \"%s\" already loaded by %s",
+            LOG(log_error, logtype_default, "uam_register: \"%s\" already loaded by %s",
                    name, path);
             return -1;
         }
@@ -250,7 +250,7 @@ int uam_checkuser(const struct passwd *pwd)
 
 #ifndef DISABLE_SHELLCHECK
     if (!p) {
-        syslog( LOG_INFO, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
+        LOG(log_info, logtype_default, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
         return -1;
     }
 #endif /* DISABLE_SHELLCHECK */

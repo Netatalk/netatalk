@@ -1,5 +1,5 @@
 /*
- * $Id: pap_open.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ * $Id: pap_open.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
  *
  * moved over from bin/pap/pap.c
  */
@@ -20,7 +20,7 @@ static void tickle_handler()
     pap_tickle(client.pap, client.pap->pap_connid, &client.pap->pap_sat);
   else {
     kill(client.pid, SIGTERM);
-    syslog(LOG_ERR, "pap_alarm: connection timed out.");
+    LOG(log_error, logtype_default, "pap_alarm: connection timed out.");
     exit(1);
   }
 }

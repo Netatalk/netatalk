@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.15 2001-12-13 03:31:34 jmarcus Exp $
+ * $Id: cnid_update.c,v 1.16 2002-01-04 04:45:48 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -12,7 +12,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <db.h>
 #include <netatalk/endian.h>
@@ -42,7 +42,7 @@ int cnid_update(void *CNID, const cnid_t id, const struct stat *st,
 
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0))) {
-        syslog(LOG_ERR, "cnid_update: Failed to begin transaction: %s",
+        LOG(log_error, logtype_default, "cnid_update: Failed to begin transaction: %s",
                db_strerror(rc));
         return rc;
     }
@@ -147,7 +147,7 @@ retry:
     return txn_commit(tid, 0);
 
 update_err:
-    syslog(LOG_ERR, "cnid_update: Unable to update CNID %u: %s",
+    LOG(log_error, logtype_default, "cnid_update: Unable to update CNID %u: %s",
            ntohl(id), db_strerror(rc));
     return -1;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.6 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: afs.c,v 1.7 2002-01-04 04:45:47 sibaz Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -12,7 +12,7 @@
 
 #include <string.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <netatalk/endian.h>
 #include <netinet/in.h>
 #include <afs/venus.h>
@@ -247,7 +247,7 @@ int		ibuflen, *rbuflen;
     ucase( realm );
     if ( *realm == '\0' ) {
         if ( krb_get_lrealm( realm, 1 ) != KSUCCESS ) {
-            syslog( LOG_ERR, "krb_get_lrealm failed" );
+            LOG(log_error, logtype_default, "krb_get_lrealm failed" );
             return( AFPERR_BADUAM );
         }
     }
@@ -285,7 +285,7 @@ int		ibuflen, *rbuflen;
     ibuf += len;
     newpw[ len ] = '\0';
 
-    syslog( LOG_INFO,
+    LOG(log_info, logtype_default,
             "changing password for <%s>.<%s>@<%s>", name, instance, realm );
 
     ka_StringToKey( oldpw, realm, &oldkey );
@@ -317,7 +317,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_BADUAM );
     }
 
-    syslog( LOG_DEBUG, "password changed succeeded" );
+    LOG(log_debug, logtype_default, "password changed succeeded" );
     return( AFP_OK );
 }
 

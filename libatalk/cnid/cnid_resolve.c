@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_resolve.c,v 1.9 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_resolve.c,v 1.10 2002-01-04 04:45:48 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,7 +11,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 
 #include <db.h>
@@ -42,7 +42,7 @@ char *cnid_resolve(void *CNID, cnid_t *id) {
         }
 
         if (rc != DB_NOTFOUND) {
-            syslog(LOG_ERR, "cnid_resolve: Unable to get did/name: %s",
+            LOG(log_error, logtype_default, "cnid_resolve: Unable to get did/name: %s",
                    db_strerror(rc));
         }
 
@@ -52,7 +52,7 @@ char *cnid_resolve(void *CNID, cnid_t *id) {
 
     memcpy(id, (char *)data.data + CNID_DEVINO_LEN, sizeof(cnid_t));
 #ifdef DEBUG
-    syslog(LOG_INFO, "cnid_resolve: Returning id = %u, did/name = %s",
+    LOG(log_info, logtype_default, "cnid_resolve: Returning id = %u, did/name = %s",
            ntohl(*id), (char *)data.data + CNID_HEADER_LEN);
 #endif
     return (char *)data.data + CNID_HEADER_LEN;

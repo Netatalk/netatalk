@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.12 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: session.c,v 1.13 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <netatalk/endian.h>
@@ -102,7 +102,7 @@ int session( atp, sat )
     atpb.atp_sreqto = 5;		/* retry timer */
     atpb.atp_sreqtries = -1;		/* infinite retries */
     if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
-	syslog( LOG_ERR, "atp_sreq: %m" );
+	LOG(log_error, logtype_default, "atp_sreq: %m" );
 	return( -1 );
     }
 
@@ -121,16 +121,16 @@ int session( atp, sat )
 
 	do { /* do list until success or an unrecoverable error occurs */
 	  if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 )
-	      syslog( LOG_ERR, "select: %m" ); /* log all errors */
+	      LOG(log_error, logtype_default, "select: %m" ); /* log all errors */
 	} while (( cc < 0 ) && (errno == 4));
 
 	if ( cc < 0 ) {
-	  syslog( LOG_ERR, "select: Error is unrecoverable" );
+	  LOG(log_error, logtype_default, "select: Error is unrecoverable" );
 	  return( -1 );
 	}
 	if ( cc == 0 ) {
 	    if ( timeout++ > 2 ) {
-		syslog( LOG_ERR, "connection timed out" );
+		LOG(log_error, logtype_default, "connection timed out" );
 		lp_cancel();
 		return( -1 );
 	    }
@@ -147,7 +147,7 @@ int session( atp, sat )
 	    atpb.atp_sreqto = 0;		/* best effort */
 	    atpb.atp_sreqtries = 1;		/* try once */
 	    if ( atp_sreq( atp, &atpb, 0, 0 )) {
-		syslog( LOG_ERR, "atp_sreq: %m" );
+		LOG(log_error, logtype_default, "atp_sreq: %m" );
 		return( -1 );
 	    }
 	    continue;
@@ -162,12 +162,12 @@ int session( atp, sat )
 	    atpb.atp_rreqdata = cbuf;
 	    atpb.atp_rreqdlen = sizeof( cbuf );
 	    if ( atp_rreq( atp, &atpb ) < 0 ) {
-		syslog( LOG_ERR, "atp_rreq: %m" );
+		LOG(log_error, logtype_default, "atp_rreq: %m" );
 		return( -1 );
 	    }
 	    /* sanity */
 	    if ( (unsigned char)cbuf[ 0 ] != connid ) {
-		syslog( LOG_ERR, "Bad ATP request!" );
+		LOG(log_error, logtype_default, "Bad ATP request!" );
 		continue;
 	    }
 
@@ -208,7 +208,7 @@ int session( atp, sat )
 		atpb.atp_sresiov = niov;
 		atpb.atp_sresiovcnt = 1;
 		if ( atp_sresp( atp, &atpb ) < 0 ) {
-		    syslog( LOG_ERR, "atp_sresp: %m" );
+		    LOG(log_error, logtype_default, "atp_sresp: %m" );
 		    exit( 1 );
 		}
 		return( 0 );
@@ -217,7 +217,7 @@ int session( atp, sat )
 	    case PAP_TICKLE :
 		break;
 	    default :
-		syslog( LOG_ERR, "Bad PAP request!" );
+		LOG(log_error, logtype_default, "Bad PAP request!" );
 	    }
 
 	    break;
@@ -230,14 +230,14 @@ int session( atp, sat )
 	    atpb.atp_rresiov = niov;
 	    atpb.atp_rresiovcnt = oquantum;
 	    if ( atp_rresp( atp, &atpb ) < 0 ) {
-		syslog( LOG_ERR, "atp_rresp: %m" );
+		LOG(log_error, logtype_default, "atp_rresp: %m" );
 		return( -1 );
 	    }
 
 	    /* sanity */
 	    if ( ((unsigned char *)niov[ 0 ].iov_base)[ 0 ] != connid ||
 		    ((char *)niov[ 0 ].iov_base)[ 1 ] != PAP_DATA ) {
-		syslog( LOG_ERR, "Bad data response!" );
+		LOG(log_error, logtype_default, "Bad data response!" );
 		continue;
 	    }
 
@@ -252,7 +252,7 @@ int session( atp, sat )
 
 	    /* move data */
 	    if ( ps( &infile, &outfile, sat ) < 0 ) {
-		syslog( LOG_ERR, "parse: bad return" );
+		LOG(log_error, logtype_default, "parse: bad return" );
 		return( -1 );	/* really?  close? */
 	    }
 
@@ -270,7 +270,7 @@ int session( atp, sat )
 	    atpb.atp_sreqto = 5;		/* retry timer */
 	    atpb.atp_sreqtries = -1;		/* infinite retries */
 	    if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
-		syslog( LOG_ERR, "atp_sreq: %m" );
+		LOG(log_error, logtype_default, "atp_sreq: %m" );
 		return( -1 );
 	    }
 	    break;
@@ -279,7 +279,7 @@ int session( atp, sat )
 	    break;
 
 	default :
-	    syslog( LOG_ERR, "atp_rsel: %m" );
+	    LOG(log_error, logtype_default, "atp_rsel: %m" );
 	    return( -1 );
 	}
 
@@ -316,7 +316,7 @@ int session( atp, sat )
 	    atpb.atp_sresiov = niov;
 	    atpb.atp_sresiovcnt = i;	/* reported by stevebn@pc1.eos.co.uk */
 	    if ( atp_sresp( atp, &atpb ) < 0 ) {
-		syslog( LOG_ERR, "atp_sresp: %m" );
+		LOG(log_error, logtype_default, "atp_sresp: %m" );
 		return( -1 );
 	    }
 	    readpending = 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: macbin.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: macbin.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,7 +18,7 @@
 #endif /* HAVE_UNISTD_H */
 #include <string.h>
 #include <strings.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <time.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.5 2001-08-15 02:18:57 srittau Exp $
+ * $Id: dsi_tcp.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -43,7 +43,7 @@
 #include <arpa/inet.h>
 
 #include <signal.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #ifdef __svr4__
 #include <sys/sockio.h>
@@ -51,8 +51,8 @@
 
 #ifdef TCPWRAP
 #include <tcpd.h>
-int allow_severity = LOG_INFO;
-int deny_severity = LOG_WARNING;
+int allow_severity = log_info;
+int deny_severity = log_warning;
 #endif /* TCPWRAP */
 
 #include <atalk/dsi.h>
@@ -89,7 +89,7 @@ static void dsi_tcp_close(DSI *dsi)
 /* alarm handler for tcp_open */
 static void timeout_handler()
 {
-  syslog(LOG_ERR, "dsi_tcp_open: connection timed out");
+  LOG(log_error, logtype_default, "dsi_tcp_open: connection timed out");
   exit(1);
 }
 
@@ -109,7 +109,7 @@ static int dsi_tcp_open(DSI *dsi)
     request_init(&req, RQ_DAEMON, dsi->program, RQ_FILE, dsi->socket, NULL);
     fromhost(&req);
     if (!hosts_access(&req)) {
-      syslog(deny_severity, "refused connect from %s", eval_client(&req));
+      LOG(deny_severity, "refused connect from %s", eval_client(&req));
       close(dsi->socket);
       errno = ECONNREFUSED;
       dsi->socket = -1;
@@ -135,7 +135,7 @@ static int dsi_tcp_open(DSI *dsi)
     newact.sa_handler = timeout_handler;
     if ((sigaction(SIGALRM, &newact, &oldact) < 0) ||
         (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
-	syslog(LOG_ERR, "dsi_tcp_open: %s", strerror(errno));
+	LOG(log_error, logtype_default, "dsi_tcp_open: %s", strerror(errno));
 	exit(1);
     }
     
@@ -146,7 +146,7 @@ static int dsi_tcp_open(DSI *dsi)
     /* read in the first two bytes */
     dsi_stream_read(dsi, block, 2);
     if ((block[0] > DSIFL_MAX) || (block[1] > DSIFUNC_MAX)) {
-      syslog(LOG_ERR, "dsi_tcp_open: invalid header");
+      LOG(log_error, logtype_default, "dsi_tcp_open: invalid header");
       exit(1);
     }      
     
@@ -157,7 +157,7 @@ static int dsi_tcp_open(DSI *dsi)
       if (len > 0)
 	stored += len;
       else {
-	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %s", strerror(errno));
+	LOG(log_error, logtype_default, "dsi_tcp_open: stream_read: %s", strerror(errno));
 	exit(1);
       }
     }
@@ -181,7 +181,7 @@ static int dsi_tcp_open(DSI *dsi)
       if (len > 0)
 	stored += len;
       else {
-	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %s", strerror(errno));
+	LOG(log_error, logtype_default, "dsi_tcp_open: stream_read: %s", strerror(errno));
 	exit(1);
       }
     }
@@ -189,7 +189,7 @@ static int dsi_tcp_open(DSI *dsi)
     /* restore signal */
     sigaction(SIGALRM, &oldact, NULL);
 
-    syslog(LOG_INFO,"ASIP session:%u(%d) from %s:%u(%d)", 
+    LOG(log_info, logtype_default,"ASIP session:%u(%d) from %s:%u(%d)", 
 	   ntohs(dsi->server.sin_port), dsi->serversock, 
 	   inet_ntoa(dsi->client.sin_addr), ntohs(dsi->client.sin_port),
 	   dsi->socket);
@@ -227,7 +227,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
   if (!address) 
     dsi->server.sin_addr.s_addr = htonl(INADDR_ANY);
   else if (inet_aton(address, &dsi->server.sin_addr) == 0) {
-    syslog(LOG_INFO, "dsi_tcp: invalid address (%s)", address);
+    LOG(log_info, logtype_default, "dsi_tcp: invalid address (%s)", address);
     return 0;
   }
 
@@ -290,13 +290,13 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 	
 	dsi->server.sin_addr.s_addr = 
 	  ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr;
-	syslog(LOG_INFO, "dsi_tcp: Can't resolve hostname (%s).\n"
+	LOG(log_info, logtype_default, "dsi_tcp: Can't resolve hostname (%s).\n"
 	       "%s on interface %s will be used instead.", hostname,
 	       inet_ntoa(dsi->server.sin_addr), ifr.ifr_name);
 	goto iflist_done;
 
       }
-      syslog(LOG_INFO, "dsi_tcp (Chooser will not select afp/tcp)\n\
+      LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp)\n\
 Check to make sure %s is in /etc/hosts and the correct domain is in\n\
 /etc/resolv.conf: %s", hostname, strerror(errno));
 

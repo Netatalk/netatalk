@@ -1,5 +1,5 @@
 /*
- * $Id: ad_size.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_size.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -17,7 +17,7 @@
 #endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <atalk/adouble.h>
 

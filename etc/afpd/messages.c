@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.12 2002-01-03 17:29:10 sibaz Exp $
+ * $Id: messages.c,v 1.13 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <atalk/afp.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -45,12 +45,12 @@ void readmessage(void)
     sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
 #ifdef DEBUG
-    syslog(LOG_DEBUG, "Reading file %s ", filename);
+    LOG(log_debug, logtype_default, "Reading file %s ", filename);
 #endif /* DEBUG */
 
     message=fopen(filename, "r");
     if (message==NULL) {
-        syslog(LOG_INFO, "Unable to open file %s", filename);
+        LOG(log_info, logtype_default, "Unable to open file %s", filename);
         sprintf(filename, "%s/message", SERVERTEXT);
         message=fopen(filename, "r");
     }
@@ -71,25 +71,25 @@ void readmessage(void)
         /* Delete will probably fail otherwise, but let's try anyways */
         euid = geteuid();
         if (seteuid(0) < 0) {
-            syslog(LOG_ERR, "Could not switch back to root: %m");
+            LOG(log_error, logtype_default, "Could not switch back to root: %m");
         }
 
         rc = unlink(filename);
 
         /* Drop privs again, failing this is very bad */
         if (seteuid(euid) < 0) {
-            syslog(LOG_ERR, "Could not switch back to uid %d: %m", euid);
+            LOG(log_error, logtype_default, "Could not switch back to uid %d: %m", euid);
         }
 
         if (rc < 0) {
-            syslog(LOG_ERR, "Error deleting %s: %m", filename);
+            LOG(log_error, logtype_default, "Error deleting %s: %m", filename);
         }
 #ifdef DEBUG
         else {
-            syslog(LOG_INFO, "Deleted %s", filename);
+            LOG(log_info, logtype_default, "Deleted %s", filename);
         }
 
-        syslog(LOG_INFO, "Set server message to \"%s\"", servermesg);
+        LOG(log_info, logtype_default, "Set server message to \"%s\"", servermesg);
 #endif /* DEBUG */
     }
     free(filename);

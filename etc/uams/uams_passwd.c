@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.13 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: uams_passwd.c,v 1.14 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -35,7 +35,7 @@ char *strchr (), *strrchr ();
 #include <crypt.h>
 #endif /* ! NO_CRYPT_H */
 #include <pwd.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #ifdef SOLARIS
 #define SHADOWPW
@@ -97,13 +97,13 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 	return AFPERR_PARAM;
     }
 
-    syslog(LOG_INFO, "cleartext login: %s", username);
+    LOG(log_info, logtype_default, "cleartext login: %s", username);
     if (uam_checkuser(pwd) < 0)
       return AFPERR_NOTAUTH;
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-	syslog( LOG_INFO, "no shadow passwd entry for %s", username);
+	LOG(log_info, logtype_default, "no shadow passwd entry for %s", username);
 	return AFPERR_NOTAUTH;
     }
     pwd->pw_passwd = sp->sp_pwdp;
@@ -161,7 +161,7 @@ static int passwd_changepw(void *obj, char *username,
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-	syslog( LOG_INFO, "no shadow passwd entry for %s", username);
+	LOG(log_info, logtype_default, "no shadow passwd entry for %s", username);
 	return AFPERR_PARAM;
     }
     pwd->pw_passwd = sp->sp_pwdp;
@@ -210,13 +210,13 @@ static int passwd_printer(start, stop, username, out)
 
     /* Parse input for username in () */
     if ((p = strchr(data, '(' )) == NULL) {
-        syslog(LOG_INFO,"Bad Login ClearTxtUAM: username not found in string");
+        LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: username not found in string");
         free(data);
         return(-1);
     }
     p++;
     if ((q = strstr(data, ") (" )) == NULL) {
-        syslog(LOG_INFO,"Bad Login ClearTxtUAM: username not found in string");
+        LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: username not found in string");
         free(data);
         return(-1);
     }
@@ -225,7 +225,7 @@ static int passwd_printer(start, stop, username, out)
     /* Parse input for password in next () */
     p = q + 3;
     if ((q = strrchr(data, ')' )) == NULL) {
-        syslog(LOG_INFO,"Bad Login ClearTxtUAM: password not found in string");
+        LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: password not found in string");
 	free(data);
         return(-1);
     }
@@ -237,7 +237,7 @@ static int passwd_printer(start, stop, username, out)
     ulen = strlen(username);
 
     if (( pwd = uam_getname(username, ulen)) == NULL ) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: ( %s ) not found ",
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: ( %s ) not found ",
 			username);
 	return(-1);
     }
@@ -249,7 +249,7 @@ static int passwd_printer(start, stop, username, out)
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: no shadow passwd entry for %s", 
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: no shadow passwd entry for %s", 
 			username);
 	return(-1);
     }
@@ -257,7 +257,7 @@ static int passwd_printer(start, stop, username, out)
 #endif /* SHADOWPW */
 
     if (!pwd->pw_passwd) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: no password for %s",
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: no password for %s",
 			username);
 	return(-1);
     }
@@ -269,13 +269,13 @@ static int passwd_printer(start, stop, username, out)
 
     p = crypt(password, pwd->pw_passwd);
     if (strcmp(p, pwd->pw_passwd) != 0) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: bad password", username);
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: bad password", username);
 	return(-1);
     }
 
     /* Login successful */
     append(out, loginok, strlen(loginok));
-    syslog(LOG_INFO, "Login ClearTxtUAM: %s", username);
+    LOG(log_info, logtype_default, "Login ClearTxtUAM: %s", username);
     return(0);
 }
 

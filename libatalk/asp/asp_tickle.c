@@ -1,5 +1,5 @@
 /*
- * $Id: asp_tickle.c,v 1.5 2001-08-15 02:17:21 srittau Exp $
+ * $Id: asp_tickle.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -7,7 +7,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif /* HAVE_SYS_TYPES_H */
@@ -33,6 +33,6 @@ void asp_tickle(ASP asp, const u_int8_t sid, struct sockaddr_at *sat)
   atpb.atp_sreqto = 0;
   atpb.atp_sreqtries = 1;
   if ( atp_sreq( asp->asp_atp, &atpb, 0, 0 ) < 0 ) {
-    syslog( LOG_ERR, "atp_sreq: %s", strerror(errno) );
+    LOG(log_error, logtype_default, "atp_sreq: %s", strerror(errno) );
   }
 }

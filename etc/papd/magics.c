@@ -1,5 +1,5 @@
 /*
- * $Id: magics.c,v 1.8 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: magics.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,7 +9,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/param.h>
 #include <stdio.h>
 #include <string.h>
@@ -63,7 +63,7 @@ int ps( infile, outfile, sat )
 
 		/* set up spool file */
 		if ( lp_open( outfile, sat ) < 0 ) {
-		    syslog( LOG_ERR, "lp_open failed" );
+		    LOG(log_error, logtype_default, "lp_open failed" );
 		    spoolerror( outfile, "Ignoring job." );
 		}
 	    }
@@ -131,7 +131,7 @@ int cm_psadobe( in, out, sat )
 	if ( in->pf_state & PF_BOT ) {
 	    in->pf_state &= ~PF_BOT;
 	    if ( lp_open( out, sat ) < 0 ) {
-		syslog( LOG_ERR, "lp_open failed" );
+		LOG(log_error, logtype_default, "lp_open failed" );
 		spoolerror( out, "Ignoring job." );
 	    }
 	} else {
@@ -182,12 +182,12 @@ int cm_psswitch( in, out, sat )
     if ( stop - p >= strlen( Query ) &&
 	    strncmp( p, Query, strlen( Query )) == 0 ) {
 	if ( comswitch( magics, cm_psquery ) < 0 ) {
-	    syslog( LOG_ERR, "cm_psswitch: can't find psquery!" );
+	    LOG(log_error, logtype_default, "cm_psswitch: can't find psquery!" );
 	    exit( 1 );
 	}
     } else {
 	if ( comswitch( magics, cm_psadobe ) < 0 ) {
-	    syslog( LOG_ERR, "cm_psswitch: can't find psadobe!" );
+	    LOG(log_error, logtype_default, "cm_psswitch: can't find psadobe!" );
 	    exit( 1 );
 	}
     }

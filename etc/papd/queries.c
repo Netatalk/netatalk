@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.9 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: queries.c,v 1.10 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -145,13 +145,13 @@ int cq_k4login( in, out )
 
     if (( rc = krb_rd_req( &tkt, "LaserWriter", printer->p_name,
 	    0, &ad, "" )) != RD_AP_OK ) {
-	syslog( LOG_ERR, "cq_k4login: %s", krb_err_txt[ rc ] );
+	LOG(log_error, logtype_default, "cq_k4login: %s", krb_err_txt[ rc ] );
 	append( out, LoginFailed, strlen( LoginFailed ));
 	compop();
 	CONSUME( in, linelength + crlflength );
 	return( CH_DONE );
     }
-    syslog( LOG_INFO, "cq_k4login: %s.%s@%s", ad.pname, ad.pinst,
+    LOG(log_info, logtype_default, "cq_k4login: %s.%s@%s", ad.pname, ad.pinst,
 	    ad.prealm );
     lp_person( ad.pname );
     lp_host( ad.prealm );
@@ -183,7 +183,7 @@ int cq_uameth( in, out )
 	if ( comgetflags() == 0 ) {	/* start */
 	    if (( printer->p_flags & P_KRB ) == 0 ) {	/* no kerberos */
 		if ( comswitch( queries, cq_default ) < 0 ) {
-		    syslog( LOG_ERR, "cq_uameth: can't find default!" );
+		    LOG(log_error, logtype_default, "cq_uameth: can't find default!" );
 		    exit( 1 );
 		}
 		return( CH_DONE );
@@ -357,7 +357,7 @@ int cq_query( in, out )
 	    if ( gq->gq_name == NULL || gq->gq_handler == NULL ||
 		    (gq->gq_handler)( out ) < 0 ) {
 		if ( comswitch( queries, cq_default ) < 0 ) {
-		    syslog( LOG_ERR, "cq_feature: can't find default!" );
+		    LOG(log_error, logtype_default, "cq_feature: can't find default!" );
 		    exit( 1 );
 		}
 		return( CH_DONE );
@@ -503,7 +503,7 @@ int cq_feature( in, out )
 
 	    if (( pfe = ppd_feature( p, stop - p )) == NULL ) {
 		if ( comswitch( queries, cq_default ) < 0 ) {
-		    syslog( LOG_ERR, "cq_feature: can't find default!" );
+		    LOG(log_error, logtype_default, "cq_feature: can't find default!" );
 		    exit( 1 );
 		}
 		return( CH_DONE );
@@ -548,7 +548,7 @@ int cq_printer( in, out )
 
 	    if (( pdpsver = ppd_feature( psver, strlen( psver ))) == NULL ) {
 		if ( comswitch( queries, cq_default ) < 0 ) {
-		    syslog( LOG_ERR, "cq_printer: can't find default!" );
+		    LOG(log_error, logtype_default, "cq_printer: can't find default!" );
 		    exit( 1 );
 		}
 		return( CH_DONE );
@@ -560,9 +560,9 @@ int cq_printer( in, out )
 		}
 	    }
 	    if ( *p == '\0' ) {
-		syslog( LOG_ERR, "cq_printer: can't parse PSVersion!" );
+		LOG(log_error, logtype_default, "cq_printer: can't parse PSVersion!" );
 		if ( comswitch( queries, cq_default ) < 0 ) {
-		    syslog( LOG_ERR, "cq_printer: can't find default!" );
+		    LOG(log_error, logtype_default, "cq_printer: can't find default!" );
 		    exit( 1 );
 		}
 		return( CH_DONE );
@@ -570,7 +570,7 @@ int cq_printer( in, out )
 
 	    if (( pdprod = ppd_feature( prod, strlen( prod ))) == NULL ) {
 		if ( comswitch( queries, cq_default ) < 0 ) {
-		    syslog( LOG_ERR, "cq_printer: can't find default!" );
+		    LOG(log_error, logtype_default, "cq_printer: can't find default!" );
 		    exit( 1 );
 		}
 		return( CH_DONE );
@@ -658,7 +658,7 @@ int cq_listq( in, out )
     }
 
     if ( lp_queue( out )) {
-	syslog( LOG_ERR, "cq_listq: lp_queue failed" );
+	LOG(log_error, logtype_default, "cq_listq: lp_queue failed" );
     }
 
     compop();
@@ -711,7 +711,7 @@ int cq_rbilogin( in, out )
 
 	    if ((papd_uam = auth_uamfind(UAM_SERVER_PRINTAUTH,
 				uamtype, strlen(uamtype))) == NULL) {
-		syslog(LOG_INFO, "Could not find uam: %s", uamtype);
+		LOG(log_info, logtype_default, "Could not find uam: %s", uamtype);
 		append(out, rbiloginbad, strlen(rbiloginbad));
 		append(out, rbiloginerrstr, strlen(rbiloginerrstr));
 	    } else {

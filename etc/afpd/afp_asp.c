@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.8 2001-12-10 20:16:53 srittau Exp $
+ * $Id: afp_asp.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -50,7 +50,7 @@ static __inline__ void afp_asp_close(AFPObj *obj)
         (*obj->logout)();
 
     asp_close( asp );
-    syslog(LOG_INFO, "%.2fKB read, %.2fKB written",
+    LOG(log_info, logtype_default, "%.2fKB read, %.2fKB written",
            asp->read_count / 1024.0, asp->write_count / 1024.0);
 }
 
@@ -60,7 +60,7 @@ static void afp_asp_die(const int sig)
 
     asp_attention(asp, AFPATTN_SHUTDOWN);
     if ( asp_shutdown( asp ) < 0 ) {
-        syslog( LOG_ERR, "afp_die: asp_shutdown: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_die: asp_shutdown: %s", strerror(errno) );
     }
 
     afp_asp_close(child);
@@ -84,7 +84,7 @@ static void afp_asp_timedown()
     it.it_value.tv_sec = 300;
     it.it_value.tv_usec = 0;
     if ( setitimer( ITIMER_REAL, &it, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_timedown: setitimer: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_timedown: setitimer: %s", strerror(errno) );
         afp_asp_die(1);
     }
 
@@ -93,7 +93,7 @@ static void afp_asp_timedown()
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_timedown: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_timedown: sigaction: %s", strerror(errno) );
         afp_asp_die(1);
     }
 }
@@ -116,7 +116,7 @@ void afp_over_asp(AFPObj *obj)
     sigemptyset( &action.sa_mask );
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &action, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_over_asp: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_over_asp: sigaction: %s", strerror(errno) );
         afp_asp_die(1);
     }
 
@@ -124,11 +124,11 @@ void afp_over_asp(AFPObj *obj)
     sigemptyset( &action.sa_mask );
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &action, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_over_asp: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_over_asp: sigaction: %s", strerror(errno) );
         afp_asp_die(1);
     }
 
-    syslog( LOG_INFO, "session from %u.%u:%u on %u.%u:%u",
+    LOG(log_info, logtype_default, "session from %u.%u:%u on %u.%u:%u",
             ntohs( asp->asp_sat.sat_addr.s_net ),
             asp->asp_sat.sat_addr.s_node, asp->asp_sat.sat_port,
             ntohs( atp_sockaddr( asp->asp_atp )->sat_addr.s_net ),
@@ -149,19 +149,19 @@ void afp_over_asp(AFPObj *obj)
 
                 if(stat(addr_filename, &cap_st) == 0) {
                     if(unlink(addr_filename) == 0) {
-                        syslog(LOG_INFO, "removed %s", addr_filename);
+                        LOG(log_info, logtype_default, "removed %s", addr_filename);
                     } else {
-                        syslog(LOG_INFO, "error removing %s: %s",
+                        LOG(log_info, logtype_default, "error removing %s: %s",
                                addr_filename, strerror(errno));
                     }
                 } else {
-                    syslog(LOG_INFO, "error stat'ing %s: %s",
+                    LOG(log_info, logtype_default, "error stat'ing %s: %s",
                            addr_filename, strerror(errno));
                 }
             }
 
             afp_asp_close(obj);
-            syslog( LOG_INFO, "done" );
+            LOG(log_info, logtype_default, "done" );
 
             if ( obj->options.flags & OPTION_DEBUG ) {
                 printf( "done\n" );
@@ -173,7 +173,7 @@ void afp_over_asp(AFPObj *obj)
 #ifdef AFS
             if ( writtenfork ) {
                 if ( flushfork( writtenfork ) < 0 ) {
-                    syslog( LOG_ERR, "main flushfork: %m" );
+                    LOG(log_error, logtype_default, "main flushfork: %m" );
                 }
                 writtenfork = NULL;
             }
@@ -195,7 +195,7 @@ void afp_over_asp(AFPObj *obj)
                                               asp->commands, asp->cmdlen,
                                               asp->data, &asp->datalen);
             } else {
-                syslog( LOG_ERR, "bad function %X", func );
+                LOG(log_error, logtype_default, "bad function %X", func );
                 asp->datalen = 0;
                 reply = AFPERR_NOOP;
             }
@@ -205,7 +205,7 @@ void afp_over_asp(AFPObj *obj)
             }
 
             if ( asp_cmdreply( asp, reply ) < 0 ) {
-                syslog( LOG_ERR, "asp_cmdreply: %s", strerror(errno) );
+                LOG(log_error, logtype_default, "asp_cmdreply: %s", strerror(errno) );
                 afp_asp_die(1);
             }
             break;
@@ -222,7 +222,7 @@ void afp_over_asp(AFPObj *obj)
                                               asp->commands, asp->cmdlen,
                                               asp->data, &asp->datalen);
             } else {
-                syslog( LOG_ERR, "(write) bad function %X", func );
+                LOG(log_error, logtype_default, "(write) bad function %X", func );
                 asp->datalen = 0;
                 reply = AFPERR_NOOP;
             }
@@ -231,7 +231,7 @@ void afp_over_asp(AFPObj *obj)
                 bprint( asp->data, asp->datalen );
             }
             if ( asp_wrtreply( asp, reply ) < 0 ) {
-                syslog( LOG_ERR, "asp_wrtreply: %s", strerror(errno) );
+                LOG(log_error, logtype_default, "asp_wrtreply: %s", strerror(errno) );
                 afp_asp_die(1);
             }
             break;
@@ -240,7 +240,7 @@ void afp_over_asp(AFPObj *obj)
                * Bad asp packet.  Probably should have asp filter them,
                * since they are typically things like out-of-order packet.
                */
-            syslog( LOG_INFO, "main: asp_getrequest: %d", reply );
+            LOG(log_info, logtype_default, "main: asp_getrequest: %d", reply );
             break;
         }
 

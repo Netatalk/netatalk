@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.15 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: main.c,v 1.16 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <sys/uio.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
@@ -95,7 +95,7 @@ static void afp_goaway(int sig)
     dsi_kill(sig);
     switch( sig ) {
     case SIGTERM :
-        syslog( LOG_INFO, "shutting down on signal %d", sig );
+        LOG(log_info, logtype_default, "shutting down on signal %d", sig );
         break;
     case SIGHUP :
         /* w/ a configuration file, we can force a re-read if we want */
@@ -103,14 +103,14 @@ static void afp_goaway(int sig)
         if ((nologin + 1) & 1) {
             AFPConfig *config;
 
-            syslog(LOG_INFO, "re-reading configuration file");
+            LOG(log_info, logtype_default, "re-reading configuration file");
             for (config = configs; config; config = config->next)
                 if (config->server_cleanup)
                     config->server_cleanup(config);
 
             configfree(configs, NULL);
             if (!(configs = configinit(&default_options))) {
-                syslog(LOG_ERR, "config re-read: no servers configured");
+                LOG(log_error, logtype_default, "config re-read: no servers configured");
                 afp_exit(1);
             }
             FD_ZERO(&save_rfds);
@@ -120,12 +120,12 @@ static void afp_goaway(int sig)
                 FD_SET(config->fd, &save_rfds);
             }
         } else {
-            syslog(LOG_INFO, "disallowing logins");
+            LOG(log_info, logtype_default, "disallowing logins");
             auth_unload();
         }
         break;
     default :
-        syslog( LOG_ERR, "afp_goaway: bad signal" );
+        LOG(log_error, logtype_default, "afp_goaway: bad signal" );
     }
     if ( sig == SIGTERM ) {
         AFPConfig *config;
@@ -187,7 +187,7 @@ char	**av;
      * XXX: this should really be setup after the initial connections. */
     if (!(server_children = server_child_alloc(default_options.connections,
                             CHILD_NFORKS))) {
-        syslog( LOG_ERR, "main: server_child alloc: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: server_child alloc: %s", strerror(errno) );
         afp_exit(1);
     }
 
@@ -196,7 +196,7 @@ char	**av;
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "main: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: sigaction: %s", strerror(errno) );
         afp_exit(1);
     }
 
@@ -206,11 +206,11 @@ char	**av;
     sigaddset(&sv.sa_mask, SIGTERM);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &sv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "main: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: sigaction: %s", strerror(errno) );
         afp_exit(1);
     }
     if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "main: sigaction: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: sigaction: %s", strerror(errno) );
         afp_exit(1);
     }
 
@@ -227,7 +227,7 @@ char	**av;
     sigaddset(&sigs, SIGTERM);
     sigprocmask(SIG_BLOCK, &sigs, NULL);
     if (!(configs = configinit(&default_options))) {
-        syslog(LOG_ERR, "main: no servers configured: %s\n", strerror(errno));
+        LOG(log_error, logtype_default, "main: no servers configured: %s\n", strerror(errno));
         afp_exit(1);
     }
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
@@ -251,7 +251,7 @@ char	**av;
         if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
             if (errno == EINTR)
                 continue;
-            syslog(LOG_ERR, "main: can't wait for input: %s", strerror(errno));
+            LOG(log_error, logtype_default, "main: can't wait for input: %s", strerror(errno));
             break;
         }
 

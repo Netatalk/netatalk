@@ -1,5 +1,5 @@
 /*
- * $Id: zip.c,v 1.9 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: zip.c,v 1.10 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <sys/param.h>
 #include <sys/types.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
@@ -69,7 +69,7 @@ static int zonecheck( rtmp, iface )
 	    }
 	}
 	if ( l == 0 ) {
-	    syslog( LOG_ERR, "zonecheck: %.*s not in zone list", czt->zt_len,
+	    LOG(log_error, logtype_default, "zonecheck: %.*s not in zone list", czt->zt_len,
 		    czt->zt_name );
 	    return( -1 );	/* configured zone not found in net zones */
 	}
@@ -79,7 +79,7 @@ static int zonecheck( rtmp, iface )
 	;
 
     if ( cztcnt != ztcnt ) {
-	syslog( LOG_ERR, "zonecheck: %d configured zones, %d zones found",
+	LOG(log_error, logtype_default, "zonecheck: %d configured zones, %d zones found",
 		cztcnt, ztcnt );
 	return( -1 );		/* more net zones than configured zones */
     }
@@ -110,7 +110,7 @@ int zip_packet( ap, from, data, len )
     end = data + len;
 
     if ( data >= end ) {
-	syslog( LOG_INFO, "zip_packet malformed packet" );
+	LOG(log_info, logtype_default, "zip_packet malformed packet" );
 	return 1;
     }
 
@@ -120,7 +120,7 @@ int zip_packet( ap, from, data, len )
     switch( *data++ ) {
     case DDPTYPE_ZIP :
 	if ( data + sizeof( struct ziphdr ) > end ) {
-	    syslog( LOG_INFO, "zip_packet malformed packet" );
+	    LOG(log_info, logtype_default, "zip_packet malformed packet" );
 	    return 1;
 	}
 	memcpy( &zh, data, sizeof( struct ziphdr ));
@@ -182,7 +182,7 @@ int zip_packet( ap, from, data, len )
 			if ( sendto( ap->ap_fd, packet, reply - packet, 0,
 				(struct sockaddr *)from,
 				sizeof( struct sockaddr_at )) < 0 ) {
-			    syslog( LOG_ERR, "zip reply sendto: %s",
+			    LOG(log_error, logtype_default, "zip reply sendto: %s",
 				    strerror(errno) );
 			}
 
@@ -202,7 +202,7 @@ int zip_packet( ap, from, data, len )
 				if ( sendto( ap->ap_fd, packet, reply - packet,
 					0, (struct sockaddr *)from,
 					sizeof( struct sockaddr_at )) < 0 ) {
-				    syslog( LOG_ERR, "zip reply sendto: %s",
+				    LOG(log_error, logtype_default, "zip reply sendto: %s",
 					    strerror(errno) );
 				}
 
@@ -224,7 +224,7 @@ int zip_packet( ap, from, data, len )
 			    if ( sendto( ap->ap_fd, packet, reply - packet, 0,
 				    (struct sockaddr *)from,
 				    sizeof( struct sockaddr_at )) < 0 ) {
-				syslog( LOG_ERR, "zip reply sendto: %s",
+				LOG(log_error, logtype_default, "zip reply sendto: %s",
 					strerror(errno) );
 			    }
 
@@ -252,7 +252,7 @@ int zip_packet( ap, from, data, len )
 		if ( sendto( ap->ap_fd, packet, reply - packet, 0,
 			(struct sockaddr *)from,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    syslog( LOG_ERR, "zip reply sendto: %s",
+		    LOG(log_error, logtype_default, "zip reply sendto: %s",
 			    strerror(errno) );
 		}
 	    }
@@ -267,7 +267,7 @@ int zip_packet( ap, from, data, len )
 		}
 	    }
 	    if ( gate == NULL ) {
-		syslog( LOG_INFO, "zip reply from non-gateway %u.%u", 
+		LOG(log_info, logtype_default, "zip reply from non-gateway %u.%u", 
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 		return 1;
 	    }
@@ -276,7 +276,7 @@ int zip_packet( ap, from, data, len )
 
 	    do {
 		if ( data + sizeof( u_short ) + 1 > end ) {	/* + strlen */
-		    syslog( LOG_INFO, "zip reply short (%d)", len );
+		    LOG(log_info, logtype_default, "zip reply short (%d)", len );
 		    return 1;
 		}
 		memcpy( &firstnet, data, sizeof( u_short ));
@@ -286,7 +286,7 @@ int zip_packet( ap, from, data, len )
 		    /* XXX */
 		    if ( rtmp->rt_gate == NULL &&
 			    zonecheck( rtmp, gate->g_iface ) != 0 ) {
-			syslog( LOG_ERR, "zip_packet seed zonelist mismatch" );
+			LOG(log_error, logtype_default, "zip_packet seed zonelist mismatch" );
 			return -1;
 		    }
 		    rtmp->rt_flags &= ~RTMPTAB_ZIPQUERY;
@@ -314,11 +314,11 @@ int zip_packet( ap, from, data, len )
 
 		zlen = *data++;
 		if ( zlen > 32 || zlen <= 0 ) {
-		    syslog( LOG_INFO, "zip reply bad packet" );
+		    LOG(log_info, logtype_default, "zip reply bad packet" );
 		    return 1;
 		}
 		if ( data + zlen > end ) {
-		    syslog( LOG_INFO, "zip reply short (%d)", len );
+		    LOG(log_info, logtype_default, "zip reply short (%d)", len );
 		    return 1;
 		}
 		memcpy( zname, data, zlen );
@@ -329,7 +329,7 @@ int zip_packet( ap, from, data, len )
 		 * telling us about the entry.
 		 */
 		if ( rtmp == 0 ) {
-		    syslog( LOG_INFO, "zip skip reply %u from %u.%u (no rtmp)",
+		    LOG(log_info, logtype_default, "zip skip reply %u from %u.%u (no rtmp)",
 			    ntohs( firstnet ), ntohs( from->sat_addr.s_net ),
 			    from->sat_addr.s_node );
 		/*
@@ -337,7 +337,7 @@ int zip_packet( ap, from, data, len )
 		 * no good if rtmp is the interface's route).
 		 */
 		} else if ( rtmp->rt_iprev == NULL && rtmp->rt_prev != NULL ) {
-		    syslog( LOG_INFO,
+		    LOG(log_info, logtype_default,
 			    "zip skip reply %u-%u from %u.%u (rtmp not in use)",
 			    ntohs( rtmp->rt_firstnet ),
 			    ntohs( rtmp->rt_lastnet ),
@@ -349,7 +349,7 @@ int zip_packet( ap, from, data, len )
 		 * net to verify our interface's zone(s).
 		 */
 		} else if (( rtmp->rt_flags & RTMPTAB_ZIPQUERY ) == 0 ) {
-		    syslog( LOG_INFO,
+		    LOG(log_info, logtype_default,
 			    "zip skip reply %u-%u from %u.%u (no query)",
 			    ntohs( rtmp->rt_firstnet ),
 			    ntohs( rtmp->rt_lastnet ),
@@ -357,7 +357,7 @@ int zip_packet( ap, from, data, len )
 			    from->sat_addr.s_node );
 		} else {
 		    if (addzone( rtmp, zlen, zname ) < 0) {
-		        syslog(LOG_ERR, "zip_packet: addzone");
+		        LOG(log_error, logtype_default, "zip_packet: addzone");
 			return -1;
 		    }
 		    rtmp->rt_flags |= RTMPTAB_HASZONES;
@@ -368,7 +368,7 @@ int zip_packet( ap, from, data, len )
 		/* XXX */
 		if ( rtmp->rt_gate == 0 &&
 			zonecheck( rtmp, gate->g_iface ) != 0 ) {
-		    syslog( LOG_ERR, "zip_packet seed zonelist mismatch" );
+		    LOG(log_error, logtype_default, "zip_packet seed zonelist mismatch" );
 		    return -1;
 		}
 		rtmp->rt_flags &= ~RTMPTAB_ZIPQUERY;
@@ -384,7 +384,7 @@ int zip_packet( ap, from, data, len )
 		}
 	    }
 	    if ( gate == NULL ) {
-		syslog( LOG_INFO, "zip ereply from non-gateway %u.%u", 
+		LOG(log_info, logtype_default, "zip ereply from non-gateway %u.%u", 
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 		return 1;
 	    }
@@ -394,7 +394,7 @@ int zip_packet( ap, from, data, len )
 	     * at the top of the do-while loop, below.
 	     */
 	    if ( data + sizeof( u_short ) + 1 > end ) {	/* + strlen */
-		syslog( LOG_INFO, "zip ereply short (%d)", len );
+		LOG(log_info, logtype_default, "zip ereply short (%d)", len );
 		return 1;
 	    }
 	    memcpy( &firstnet, data, sizeof( u_short ));
@@ -409,13 +409,13 @@ int zip_packet( ap, from, data, len )
 		    }
 		}
 		if ( rtmp == NULL ) {
-		    syslog( LOG_INFO, "zip ereply %u from %u.%u (no rtmp)",
+		    LOG(log_info, logtype_default, "zip ereply %u from %u.%u (no rtmp)",
 			    ntohs( firstnet ), ntohs( from->sat_addr.s_net ),
 			    from->sat_addr.s_node );
 		    return 1;
 		}
 		if ( rtmp->rt_iprev == 0 ) {
-		    syslog( LOG_INFO,
+		    LOG(log_info, logtype_default,
 			    "zip ereply %u-%u from %u.%u (rtmp not in use)",
 			    ntohs( rtmp->rt_firstnet ),
 			    ntohs( rtmp->rt_lastnet ),
@@ -432,7 +432,7 @@ int zip_packet( ap, from, data, len )
 	    }
 
 	    if (( rtmp->rt_flags & RTMPTAB_ZIPQUERY ) == 0 ) {
-		syslog( LOG_INFO, "zip ereply %u-%u from %u.%u (no query)",
+		LOG(log_info, logtype_default, "zip ereply %u-%u from %u.%u (no query)",
 			ntohs( rtmp->rt_firstnet ),
 			ntohs( rtmp->rt_lastnet ),
 			ntohs( from->sat_addr.s_net ),
@@ -446,7 +446,7 @@ int zip_packet( ap, from, data, len )
 		 * a big deal, and it makes the end condition cleaner.
 		 */
 		if ( data + sizeof( u_short ) + 1 > end ) {	/* + strlen */
-		    syslog( LOG_INFO, "zip ereply short (%d)", len );
+		    LOG(log_info, logtype_default, "zip ereply short (%d)", len );
 		    return 1;
 		}
 		memcpy( &firstnet, data, sizeof( u_short ));
@@ -454,23 +454,23 @@ int zip_packet( ap, from, data, len )
 
 		/* check route */
 		if ( firstnet != rtmp->rt_firstnet ) {
-		    syslog( LOG_INFO, "zip ereply with multiple nets" );
+		    LOG(log_info, logtype_default, "zip ereply with multiple nets" );
 		    return 1;
 		}
 
 		zlen = *data++;
 		if ( zlen > 32 || zlen <= 0 ) {
-		    syslog( LOG_INFO, "zip ereply bad zone length (%d)", zlen );
+		    LOG(log_info, logtype_default, "zip ereply bad zone length (%d)", zlen );
 		    return 1;
 		}
 		if ( data + zlen > end ) {
-		    syslog( LOG_INFO, "zip ereply short (%d)", len );
+		    LOG(log_info, logtype_default, "zip ereply short (%d)", len );
 		    return 1;
 		}
 		memcpy( zname, data, zlen );
 		data += zlen;
 		if (addzone( rtmp, zlen, zname ) < 0) {
-		    syslog(LOG_ERR, "zip_packet: addzone");
+		    LOG(log_error, logtype_default, "zip_packet: addzone");
 		    return -1;
 		}
 	    } while ( data < end );
@@ -486,7 +486,7 @@ int zip_packet( ap, from, data, len )
 		    /* XXX */
 		    if ( rtmp->rt_gate == 0 &&
 			    zonecheck( rtmp, gate->g_iface ) != 0 ) {
-			syslog( LOG_ERR, "zip_packet seed zonelist mismatch" );
+			LOG(log_error, logtype_default, "zip_packet seed zonelist mismatch" );
 			return -1;
 		    }
 		    rtmp->rt_flags &= ~RTMPTAB_ZIPQUERY;
@@ -505,7 +505,7 @@ int zip_packet( ap, from, data, len )
 	    }
 
 	    if ( zh.zh_zero != 0 || data + 2 * sizeof( u_short ) > end ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 
@@ -514,13 +514,13 @@ int zip_packet( ap, from, data, len )
 	    memcpy( &lastnet, data, sizeof( u_short ));
 	    data += sizeof( u_short );
 	    if ( firstnet != 0 || lastnet != 0 || data >= end ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 
 	    zlen = *data++;
 	    if ( zlen < 0 || zlen > 32 ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 	    memcpy( zname, data, zlen );
@@ -569,7 +569,7 @@ int zip_packet( ap, from, data, len )
 	    /* multicast */
 	    *data++ = 6;	/* sizeof ??? */
 	    if (zone_bcast(zt) < 0) {
-	      syslog(LOG_ERR, "zip_packet: zone_bcast");
+	      LOG(log_error, logtype_default, "zip_packet: zone_bcast");
 	      return -1;
 	    }
 	    memcpy(data, zt->zt_bcast, 6);
@@ -603,7 +603,7 @@ int zip_packet( ap, from, data, len )
 	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
 		    (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "zip gni sendto %u.%u: %s",
+		LOG(log_error, logtype_default, "zip gni sendto %u.%u: %s",
 			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
 			strerror(errno) );
 		return 1;
@@ -614,18 +614,18 @@ int zip_packet( ap, from, data, len )
 	    /*
 	     * Ignore ZIP GNIReplys which are either late or unsolicited.
 	     */
-	    syslog( LOG_DEBUG, "zip gnireply from %u.%u (%s %x)",
+	    LOG(log_debug, logtype_default, "zip gnireply from %u.%u (%s %x)",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
 		    iface->i_name, iface->i_flags );
 
 	    if (( iface->i_flags & ( IFACE_CONFIG|IFACE_PHASE1 )) ||
 		    ( iface->i_flags & IFACE_ADDR ) == 0 ) {
-		syslog( LOG_DEBUG, "zip ignoring gnireply" );
+		LOG(log_debug, logtype_default, "zip ignoring gnireply" );
 		return 1;
 	    }
 
 	    if ( data + 2 * sizeof( u_short ) > end ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 	    memcpy( &firstnet, data, sizeof( u_short ));
@@ -638,23 +638,23 @@ int zip_packet( ap, from, data, len )
 	     * default zone is.
 	     */
 	    if ( data >= end || data + *data > end ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 	    if ( *data++ != 0 ) {
-		syslog( LOG_INFO, "zip_packet unsolicited zone" );
+		LOG(log_info, logtype_default, "zip_packet unsolicited zone" );
 		return 1;
 	    }
 
 	    /* skip multicast (should really check it) */
 	    if ( data >= end || data + *data > end ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 	    data += *data + 1;
 
 	    if ( data >= end || data + *data > end ) {
-		syslog( LOG_INFO, "zip_packet malformed packet" );
+		LOG(log_info, logtype_default, "zip_packet malformed packet" );
 		return 1;
 	    }
 
@@ -669,18 +669,18 @@ int zip_packet( ap, from, data, len )
 		if ( iface->i_czt->zt_len != *data ||
 			strndiacasecmp( iface->i_czt->zt_name,
 			data + 1, *data ) != 0 ) {
-		    syslog( LOG_ERR, "default zone mismatch on %s",
+		    LOG(log_error, logtype_default, "default zone mismatch on %s",
 			    iface->i_name );
-		    syslog( LOG_ERR, "%.*s != %.*s",
+		    LOG(log_error, logtype_default, "%.*s != %.*s",
 			    iface->i_czt->zt_len, iface->i_czt->zt_name,
 			    *data, data + 1 );
-		    syslog( LOG_ERR, "Seed error! Exiting!" );
+		    LOG(log_error, logtype_default, "Seed error! Exiting!" );
 		    return -1;
 		}
 	    }
 
 	    if (addzone( iface->i_rt, *data, data + 1 ) < 0) {
-	        syslog(LOG_ERR, "zip_packet: addzone");
+	        LOG(log_error, logtype_default, "zip_packet: addzone");
 	        return -1;
 	    }
 	    
@@ -692,13 +692,13 @@ int zip_packet( ap, from, data, len )
 	    if ( firstnet != iface->i_rt->rt_firstnet ||
 		    lastnet != iface->i_rt->rt_lastnet ) {
 		if ( iface->i_flags & IFACE_SEED ) {
-		    syslog( LOG_ERR, "netrange mismatch on %s",
+		    LOG(log_error, logtype_default, "netrange mismatch on %s",
 			    iface->i_name );
-		    syslog( LOG_ERR, "%u-%u != %u-%u",
+		    LOG(log_error, logtype_default, "%u-%u != %u-%u",
 			    ntohs( firstnet ), ntohs( lastnet ),
 			    ntohs( iface->i_rt->rt_firstnet ),
 			    ntohs( iface->i_rt->rt_lastnet ));
-		    syslog( LOG_ERR, "Seed error! Exiting!" );
+		    LOG(log_error, logtype_default, "Seed error! Exiting!" );
 		    return -1;
 		}
 
@@ -727,7 +727,7 @@ int zip_packet( ap, from, data, len )
 
 	    /* add addr to loopback route */
 	    if ( looproute( iface, RTMP_ADD )) { /* -1 or 1 */
-		syslog( LOG_ERR,
+		LOG(log_error, logtype_default,
 			"zip_packet: can't route %u.%u to loopback: %s",
 			ntohs( iface->i_addr.sat_addr.s_net ),
 			iface->i_addr.sat_addr.s_node,
@@ -735,7 +735,7 @@ int zip_packet( ap, from, data, len )
 		return -1;
 	    }
 
-	    syslog( LOG_INFO, "zip_packet configured %s from %u.%u",
+	    LOG(log_info, logtype_default, "zip_packet configured %s from %u.%u",
 		    iface->i_name, ntohs( from->sat_addr.s_net ),
 		    from->sat_addr.s_node );
 	    iface->i_flags |= IFACE_CONFIG;
@@ -753,25 +753,25 @@ int zip_packet( ap, from, data, len )
 	    break;
 
 	default :
-	    syslog( LOG_INFO, "zip_packet bad zip op from %u.%u\n",
+	    LOG(log_info, logtype_default, "zip_packet bad zip op from %u.%u\n",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 	}
 	break;
 
     case DDPTYPE_ATP :
 	if ( data + sizeof( struct atphdr ) > end ) {
-	    syslog( LOG_INFO, "zip atp malformed packet" );
+	    LOG(log_info, logtype_default, "zip atp malformed packet" );
 	    return 1;
 	}
 	memcpy( &ah, data, sizeof( struct atphdr ));
 	data += sizeof( struct atphdr );
 	if ( ah.atphd_ctrlinfo != ATP_TREQ ) {
-	    syslog( LOG_INFO, "zip atp bad control" );
+	    LOG(log_info, logtype_default, "zip atp bad control" );
 	    return 1;
 	}
 	ah.atphd_ctrlinfo = ATP_TRESP | ATP_EOM;
 	if ( ah.atphd_bitmap != 1 ) {
-	    syslog( LOG_ERR, "zip atp bad bitmap" );
+	    LOG(log_error, logtype_default, "zip atp bad bitmap" );
 	    return 1;
 	}
 	ah.atphd_bitmap = 0;
@@ -782,7 +782,7 @@ int zip_packet( ap, from, data, len )
 	data += sizeof( u_short );
 	index = ntohs( index );
 	if ( data != end ) {
-	    syslog( LOG_INFO, "zip atp malformed packet" );
+	    LOG(log_info, logtype_default, "zip atp malformed packet" );
 	    return 1;
 	}
 
@@ -799,7 +799,7 @@ int zip_packet( ap, from, data, len )
 	switch ( zipop ) {
 	case ZIPOP_GETMYZONE :
 	    if ( index != 0 ) {
-		syslog( LOG_INFO, "zip atp gmz bad index" );
+		LOG(log_info, logtype_default, "zip atp gmz bad index" );
 		return 1;
 	    }
 
@@ -817,7 +817,7 @@ int zip_packet( ap, from, data, len )
 	    }
 	    zt = (struct ziptab *)iface->i_rt->rt_zt->l_data;
 	    if ( data + 1 + zt->zt_len > end ) {
-		syslog( LOG_INFO, "zip atp gmz reply too long" );
+		LOG(log_info, logtype_default, "zip atp gmz reply too long" );
 		return 1;
 	    }
 	    *data++ = zt->zt_len;
@@ -870,7 +870,7 @@ int zip_packet( ap, from, data, len )
 	    break;
 
 	default :
-	    syslog( LOG_INFO, "zip atp bad option" );
+	    LOG(log_info, logtype_default, "zip atp bad option" );
 	    return 1;
 	}
 
@@ -881,7 +881,7 @@ int zip_packet( ap, from, data, len )
 	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
 		    (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		syslog( LOG_ERR, "zip atp sendto %u.%u: %s",
+		LOG(log_error, logtype_default, "zip atp sendto %u.%u: %s",
 			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
 			strerror(errno) );
 		return 1;
@@ -890,7 +890,7 @@ int zip_packet( ap, from, data, len )
 	break;
 
     default :
-	syslog( LOG_INFO, "zip_packet bad ddp type from %u.%u\n",
+	LOG(log_info, logtype_default, "zip_packet bad ddp type from %u.%u\n",
 		ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 	return 1;
     }
@@ -907,7 +907,7 @@ int zip_getnetinfo( iface )
     char		*data, packet[ 40 ];
     u_short		net;
 
-    syslog( LOG_INFO, "zip_getnetinfo for %s", iface->i_name );
+    LOG(log_info, logtype_default, "zip_getnetinfo for %s", iface->i_name );
 
     for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
 	if ( ap->ap_packet == zip_packet ) {
@@ -915,7 +915,7 @@ int zip_getnetinfo( iface )
 	}
     }
     if ( ap == 0 ) {
-	syslog( LOG_ERR, "zip_getnetinfo can't find zip socket!" );
+	LOG(log_error, logtype_default, "zip_getnetinfo can't find zip socket!" );
 	return -1;
     }
 
@@ -949,7 +949,7 @@ int zip_getnetinfo( iface )
 
     if ( sendto( ap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	syslog( LOG_ERR, "zip_getnetinfo sendto: %s", strerror(errno) );
+	LOG(log_error, logtype_default, "zip_getnetinfo sendto: %s", strerror(errno) );
 	return -1;
     }
     return 0;
@@ -993,7 +993,7 @@ static int add_list( head, data )
 	}
     }
     if (( l = (struct list *)malloc( sizeof( struct list ))) == NULL ) {
-	syslog( LOG_ERR, "add_list malloc: %s", strerror(errno) );
+	LOG(log_error, logtype_default, "add_list malloc: %s", strerror(errno) );
 	return -1;
     }
 
@@ -1028,7 +1028,7 @@ int addzone( rt, len, zone )
     }
     if ( zt == NULL ) {
 	if (( zt = newzt( len, zone )) == NULL ) {
-	    syslog( LOG_ERR, "addzone newzt: %s", strerror(errno) );
+	    LOG(log_error, logtype_default, "addzone newzt: %s", strerror(errno) );
 	    return -1;
 	}
 	if ( ziptab == NULL ) {
@@ -1052,7 +1052,7 @@ int addzone( rt, len, zone )
 
     if (cc) {
         if ( !exists ) {
-	    syslog( LOG_ERR, "addzone corrupted route/zone mapping" );
+	    LOG(log_error, logtype_default, "addzone corrupted route/zone mapping" );
 	    return -1;
 	}
 	/*
@@ -1063,7 +1063,7 @@ int addzone( rt, len, zone )
 	return 0;
     }
     if ( exists ) {
-	syslog( LOG_ERR, "addzone corrupted zone/route mapping" );
+	LOG(log_error, logtype_default, "addzone corrupted zone/route mapping" );
 	return -1;
     }
     return 0;

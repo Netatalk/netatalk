@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_getsess.c,v 1.5 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: dsi_getsess.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -31,7 +31,7 @@
 #endif /* ! WIFEXITED */
 
 #include <sys/time.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <atalk/dsi.h>
 #include <atalk/server_child.h>
@@ -60,7 +60,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
   switch (pid = dsi->proto_open(dsi)) {
   case -1:
     /* if we fail, just return. it might work later */
-    syslog(LOG_ERR, "dsi_getsess: %s", strerror(errno));
+    LOG(log_error, logtype_default, "dsi_getsess: %s", strerror(errno));
     return dsi;
 
   case 0: /* child. mostly handled below. */
@@ -71,7 +71,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     /* using SIGQUIT is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
     if (server_child_add(children, CHILD_DSIFORK, pid) < 0) {
-      syslog(LOG_ERR, "dsi_getsess: %s", strerror(errno));
+      LOG(log_error, logtype_default, "dsi_getsess: %s", strerror(errno));
       dsi->header.dsi_flags = DSIFL_REPLY;
       dsi->header.dsi_code = DSIERR_SERVBUSY;
       dsi_send(dsi);
@@ -87,7 +87,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
    * actual count. */
   if ((children->count >= children->nsessions) &&
       (dsi->header.dsi_command == DSIFUNC_OPEN)) {
-    syslog(LOG_INFO, "dsi_getsess: too many connections");
+    LOG(log_info, logtype_default, "dsi_getsess: too many connections");
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_code = DSIERR_TOOMANY;
     dsi_send(dsi);
@@ -132,7 +132,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     break;
 
   default: /* just close */
-    syslog(LOG_INFO, "DSIUnknown %d", dsi->header.dsi_command);
+    LOG(log_info, logtype_default, "DSIUnknown %d", dsi->header.dsi_command);
     dsi->proto_close(dsi);
     exit(1);
   }

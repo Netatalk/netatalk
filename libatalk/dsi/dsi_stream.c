@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.4 2001-08-15 02:18:57 srittau Exp $
+ * $Id: dsi_stream.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -28,7 +28,7 @@
 #ifdef USE_WRITEV
 #include <sys/uio.h>
 #endif /* USE_WRITEV */
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <atalk/dsi.h>
 #include <netatalk/endian.h>
@@ -52,7 +52,7 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length)
       continue;
 
     if (len < 0) {
-      syslog(LOG_ERR, "dsi_stream_write: %s", strerror(errno));
+      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
       break;
     }
     
@@ -79,7 +79,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     if (len > 0)
       stored += len;
     else {/* eof or error */
-      syslog(LOG_ERR, "dsi_stream_read(%d): %s", len, strerror(errno));
+      LOG(log_error, logtype_default, "dsi_stream_read(%d): %s", len, strerror(errno));
       break;
     }
   }
@@ -135,7 +135,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
     if (len == towrite) /* wrote everything out */
       break;
     else if (len < 0) { /* error */
-      syslog(LOG_ERR, "dsi_stream_send: %s", strerror(errno));
+      LOG(log_error, logtype_default, "dsi_stream_send: %s", strerror(errno));
       sigprocmask(SIG_SETMASK, &oldset, NULL);
       return 0;
     }

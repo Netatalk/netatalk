@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.4 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: server_child.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -24,7 +24,7 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <signal.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 /* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
@@ -252,16 +252,20 @@ void server_child_handler(server_child *children)
     
     if (WIFEXITED(status)) {
       if (WEXITSTATUS(status)) {
-	syslog(LOG_INFO, "server_child[%d] %d exited %d", i, pid, 
+	LOG(log_info, logtype_default, "server_child[%d] %d exited %d", i, pid, 
 	       WEXITSTATUS(status));
       } else {
-	syslog(LOG_INFO, "server_child[%d] %d done", i, pid);
+	LOG(log_info, logtype_default, "server_child[%d] %d done", i, pid);
       }
     } else {
-      if (WIFSIGNALED(status)) 
-	syslog(LOG_INFO, "server_child[%d] %d killed", i, pid);
+      if (WIFSIGNALED(status))
+      { 
+	LOG(log_info, logtype_default, "server_child[%d] %d killed", i, pid);
+      }
       else
-	syslog(LOG_INFO, "server_child[%d] %d died", i, pid);
+      {
+	LOG(log_info, logtype_default, "server_child[%d] %d died", i, pid);
+      }
     }
   }
 }

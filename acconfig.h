@@ -5,6 +5,8 @@
 #undef AFS
 #undef BSD4_4
 #undef CNID_DB
+#undef DISABLE_LOGGER
+#undef LOGFILEPATH
 #undef DEBUG
 #undef DLSYM_PREPEND_UNDERSCORE
 #undef DID_MTAB

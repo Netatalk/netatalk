@@ -1,5 +1,5 @@
 /*
- * $Id: codepage.c,v 1.6 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: codepage.c,v 1.7 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 2000 Adrian Sun
  * All Rights Reserved. See COPYRIGHT.
@@ -35,7 +35,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <netatalk/endian.h>
 
@@ -208,13 +208,13 @@ int codepage_read(struct vol *vol, const char *path)
     int fd, i, quantum, rules;
 
     if ((fd = open(path, O_RDONLY)) < 0) {
-        syslog(LOG_ERR, "%s: failed to open codepage", path);
+        LOG(log_error, logtype_default, "%s: failed to open codepage", path);
         return -1;
     }
 
     /* Read the codepage file header. */
     if(read(fd, buf, sizeof(buf)) != sizeof(buf)) {
-        syslog( LOG_ERR, "%s: failed to read codepage header", path);
+        LOG(log_error, logtype_default, "%s: failed to read codepage header", path);
         goto codepage_fail;
     }
 
@@ -224,13 +224,13 @@ int codepage_read(struct vol *vol, const char *path)
     cur += sizeof(id);
     id = ntohs(id);
     if (id != CODEPAGE_FILE_ID) {
-        syslog( LOG_ERR, "%s: not a codepage", path);
+        LOG(log_error, logtype_default, "%s: not a codepage", path);
         goto codepage_fail;
     }
 
     /* check the version number */
     if (*cur++ != CODEPAGE_FILE_VERSION) {
-        syslog( LOG_ERR, "%s: codepage version not supported", path);
+        LOG(log_error, logtype_default, "%s: codepage version not supported", path);
         goto codepage_fail;
     }
 
@@ -245,7 +245,7 @@ int codepage_read(struct vol *vol, const char *path)
     rules = *cur++;
 
     if (codepage_init(vol, rules, quantum) < 0) {
-        syslog( LOG_ERR, "%s: Unable to allocate memory", path);
+        LOG(log_error, logtype_default, "%s: Unable to allocate memory", path);
         goto codepage_fail;
     }
 
@@ -265,14 +265,14 @@ int codepage_read(struct vol *vol, const char *path)
     while (read(fd, buf, i) == i) {
         if (*buf & CODEPAGE_RULE_MTOU) {
             if (add_code(vol->v_mtoupage, buf + 1, buf + 1 + quantum) < 0) {
-                syslog(LOG_ERR, "unable to allocate memory for mtoupage");
+                LOG(log_error, logtype_default, "unable to allocate memory for mtoupage");
                 break;
             }
         }
 
         if (*buf & CODEPAGE_RULE_UTOM) {
             if (add_code(vol->v_utompage, buf + 1 + quantum, buf + 1) < 0) {
-                syslog(LOG_ERR, "unable to allocate memory for utompage");
+                LOG(log_error, logtype_default, "unable to allocate memory for utompage");
                 break;
             }
         }

@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.c,v 1.7 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: ppd.c,v 1.8 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
@@ -74,7 +74,7 @@ struct ppdent *getppdent( stream )
 	    continue;
 	}
 	if ( p[ strlen( p ) - 1 ] != '\n' ) {
-	    syslog( LOG_ERR, "getppdent: line too long" );
+	    LOG(log_error, logtype_default, "getppdent: line too long" );
 	    continue;
 	}
 
@@ -154,12 +154,12 @@ int read_ppd( file, fcnt )
     struct ppd_font	*pfo;
 
     if ( fcnt > 20 ) {
-	syslog( LOG_ERR, "read_ppd: %s: Too many files!", file );
+	LOG(log_error, logtype_default, "read_ppd: %s: Too many files!", file );
 	return( -1 );
     }
 
     if (( ppdfile = fopen( file, "r" )) == NULL ) {
-	syslog( LOG_ERR, "read_ppd %s: %m", file );
+	LOG(log_error, logtype_default, "read_ppd %s: %m", file );
 	return( -1 );
     }
 
@@ -183,12 +183,12 @@ int read_ppd( file, fcnt )
 
 	    if (( pfo = (struct ppd_font *)malloc( sizeof( struct ppd_font )))
 		    == NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		LOG(log_error, logtype_default, "malloc: %m" );
 		exit( 1 );
 	    }
 	    if (( pfo->pd_font =
 		    (char *)malloc( strlen( pe->pe_option ) + 1 )) == NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		LOG(log_error, logtype_default, "malloc: %m" );
 		exit( 1 );
 	    }
 	    strcpy( pfo->pd_font, pe->pe_option );
@@ -207,7 +207,7 @@ int read_ppd( file, fcnt )
 	if ( pfe->pd_name && (pfe->pd_value == NULL) ) {
 	    if (( pfe->pd_value =
 		    (char *)malloc( strlen( pe->pe_value ) + 1 )) == NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		LOG(log_error, logtype_default, "malloc: %m" );
 		exit( 1 );
 	    }
 

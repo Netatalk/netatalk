@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.10 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: desktop.c,v 1.11 2002-01-04 04:45:47 sibaz Exp $
  *
  * See COPYRIGHT.
  */
@@ -8,7 +8,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -106,7 +106,7 @@ u_char	creator[ 4 ];
             *adts = '/';
 
             if (( si.sdt_fd = open( dtf, flags, ad_mode( dtf, mode ))) < 0 ) {
-                syslog( LOG_ERR, "iconopen: open %s: %s", dtf, strerror(errno) );
+                LOG(log_error, logtype_default, "iconopen: open %s: %s", dtf, strerror(errno) );
                 return -1;
             }
         } else {
@@ -171,7 +171,7 @@ int		ibuflen, *rbuflen;
     if (lseek( si.sdt_fd, (off_t) 0L, SEEK_SET ) < 0) {
         close(si.sdt_fd);
         si.sdt_fd = -1;
-        syslog( LOG_ERR, "afp_addicon: lseek: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_addicon: lseek: %s", strerror(errno) );
         cc = AFPERR_PARAM;
         goto addicon_err;
     }
@@ -206,7 +206,7 @@ int		ibuflen, *rbuflen;
         }
 
         if ( lseek( si.sdt_fd, (off_t) rsize, SEEK_CUR ) < 0 ) {
-            syslog( LOG_ERR, "afp_addicon: lseek: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "afp_addicon: lseek: %s", strerror(errno) );
             cc = AFPERR_PARAM;
         }
     }
@@ -216,7 +216,7 @@ int		ibuflen, *rbuflen;
      */
 addicon_err:
     if ( cc < 0 ) {
-        syslog( LOG_ERR, "afp_addicon: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_addicon: %s", strerror(errno) );
         if (obj->proto == AFPPROTO_DSI) {
             dsi_writeinit(obj->handle, rbuf, buflen);
             dsi_writeflush(obj->handle);
@@ -257,7 +257,7 @@ addicon_err:
         }
 
         if ( writev( si.sdt_fd, iov, iovcnt ) < 0 ) {
-            syslog( LOG_ERR, "afp_addicon: writev: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "afp_addicon: writev: %s", strerror(errno) );
             return( AFPERR_PARAM );
         }
         break;
@@ -270,13 +270,13 @@ addicon_err:
 
             /* add headers at end of file */
             if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-                syslog(LOG_ERR, "afp_addicon: write: %s", strerror(errno));
+                LOG(log_error, logtype_default, "afp_addicon: write: %s", strerror(errno));
                 dsi_writeflush(dsi);
                 return AFPERR_PARAM;
             }
 
             if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                syslog(LOG_ERR, "afp_addicon: write: %s", strerror(errno));
+                LOG(log_error, logtype_default, "afp_addicon: write: %s", strerror(errno));
                 dsi_writeflush(dsi);
                 return AFPERR_PARAM;
             }
@@ -288,7 +288,7 @@ addicon_err:
                 }
 
                 if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                    syslog(LOG_ERR, "afp_addicon: write: %s", strerror(errno));
+                    LOG(log_error, logtype_default, "afp_addicon: write: %s", strerror(errno));
                     dsi_writeflush(dsi);
                     return AFPERR_PARAM;
                 }
@@ -402,7 +402,7 @@ int		ibuflen, *rbuflen;
         memcpy( &bsize, ih + 10, sizeof( bsize ));
         bsize = ntohs(bsize);
         if ( lseek( si.sdt_fd, (off_t) bsize, SEEK_CUR ) < 0 ) {
-            syslog( LOG_ERR, "afp_iconinfo: lseek: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "afp_iconinfo: lseek: %s", strerror(errno) );
             return( AFPERR_PARAM );
         }
         if ( si.sdt_index == iindex ) {
@@ -461,7 +461,7 @@ int		ibuflen, *rbuflen;
     if ( lseek( si.sdt_fd, (off_t) 0L, SEEK_SET ) < 0 ) {
         close(si.sdt_fd);
         si.sdt_fd = -1;
-        syslog(LOG_ERR, "afp_geticon: lseek: %s", strerror(errno));
+        LOG(log_error, logtype_default, "afp_geticon: lseek: %s", strerror(errno));
         return( AFPERR_PARAM );
     }
 
@@ -477,14 +477,14 @@ int		ibuflen, *rbuflen;
         memcpy( &rsize, ih + 10, sizeof( rsize ));
         rsize = ntohs( rsize );
         if ( lseek( si.sdt_fd, (off_t) rsize, SEEK_CUR ) < 0 ) {
-            syslog( LOG_ERR, "afp_geticon: lseek: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "afp_geticon: lseek: %s", strerror(errno) );
             return( AFPERR_PARAM );
         }
         offset += rsize;
     }
 
     if ( rc < 0 ) {
-        syslog(LOG_ERR, "afp_geticon: read: %s", strerror(errno));
+        LOG(log_error, logtype_default, "afp_geticon: read: %s", strerror(errno));
         return( AFPERR_PARAM );
     }
 
@@ -551,7 +551,7 @@ geticon_done:
         return AFP_OK;
 
 geticon_exit:
-        syslog(LOG_INFO, "afp_geticon: %s", strerror(errno));
+        LOG(log_info, logtype_default, "afp_geticon: %s", strerror(errno));
         dsi_readdone(dsi);
         obj->exit(1);
         return AFP_OK;

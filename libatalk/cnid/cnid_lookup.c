@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.10 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.11 2002-01-04 04:45:48 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,7 +11,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 
 #include <db.h>
@@ -45,21 +45,21 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
      * a read-write database. */
     if ((db->flags & CNIDFLAG_DB_RO) == 0) {
 #ifdef DEBUG
-        syslog(LOG_INFO, "cnid_lookup: Running database checkpoint");
+        LOG(log_info, logtype_default, "cnid_lookup: Running database checkpoint");
 #endif
         switch (rc = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)) {
         case 0:
         case DB_INCOMPLETE:
             break;
         default:
-            syslog(LOG_ERR, "cnid_lookup: txn_checkpoint: %s",
+            LOG(log_error, logtype_default, "cnid_lookup: txn_checkpoint: %s",
                    db_strerror(rc));
             return 0;
         }
     }
 
     if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
-        syslog(LOG_ERR, "cnid_lookup: Pathname is too long");
+        LOG(log_error, logtype_default, "cnid_lookup: Pathname is too long");
         return 0;
     }
 
@@ -81,7 +81,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
             break;
         }
 
-        syslog(LOG_ERR, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
+        LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
                st->st_dev, st->st_ino, db_strerror(rc));
         return 0;
     }
@@ -99,7 +99,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
             break;
         }
 
-        syslog(LOG_ERR, "cnid_lookup: Unable to get CNID %u, name %s: %s",
+        LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID %u, name %s: %s",
                ntohl(did), name, db_strerror(rc));
         return 0;
     }
@@ -116,7 +116,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
     /* Either entries are in both databases or neither of them. */
     if ((devino && didname) || !(devino || didname)) {
 #ifdef DEBUG
-        syslog(LOG_INFO, "cnid_lookup: Looked up did %u, name %s, as %u",
+        LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u",
                ntohl(did), name, ntohl(id));
 #endif
         return id;
@@ -125,7 +125,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
     /* Fix up the database. */
     cnid_update(db, id, st, did, name, len);
 #ifdef DEBUG
-    syslog(LOG_INFO, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
+    LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
 #endif
     return id;
 }

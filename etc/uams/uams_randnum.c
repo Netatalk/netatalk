@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.9 2001-11-17 12:56:11 srittau Exp $
+ * $Id: uams_randnum.c,v 1.10 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -39,7 +39,7 @@ char *strchr (), *strrchr ();
 #include <sys/stat.h>
 #include <sys/param.h>
 
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <netatalk/endian.h>
 
@@ -80,7 +80,7 @@ static  __inline__ int home_passwd(const struct passwd *pwd,
   int fd, i;
   
   if ( (fd = open(path, (set) ? O_WRONLY : O_RDONLY)) < 0 ) {
-    syslog( LOG_ERR, "Failed to open %s", path);
+    LOG(log_error, logtype_default, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }
 
@@ -95,19 +95,19 @@ static  __inline__ int home_passwd(const struct passwd *pwd,
   if (!S_ISREG(st.st_mode) || (pwd->pw_uid != st.st_uid) ||
       (pwd->pw_gid != st.st_gid) ||
       (st.st_mode & ( S_IRWXG | S_IRWXO )) ) {
-    syslog( LOG_INFO, "Insecure permissions found for %s.", path);
+    LOG(log_info, logtype_default, "Insecure permissions found for %s.", path);
     goto home_passwd_fail;
   }
 
   /* get the password */
   if (set) {
     if (write(fd, passwd, len) < 0) {
-      syslog( LOG_ERR, "Failed to write to %s", path );
+      LOG(log_error, logtype_default, "Failed to write to %s", path );
       goto home_passwd_fail;
     }
   } else {
     if (read(fd, passwd, len) < 0) {
-      syslog( LOG_ERR, "Failed to read from %s", path );
+      LOG(log_error, logtype_default, "Failed to read from %s", path );
       goto home_passwd_fail;
     }
   
@@ -156,7 +156,7 @@ static int afppasswd(const struct passwd *pwd,
   off_t pos;
   
   if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
-    syslog( LOG_ERR, "Failed to open %s", path);
+    LOG(log_error, logtype_default, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }
   
@@ -174,7 +174,7 @@ static int afppasswd(const struct passwd *pwd,
       if (strncmp(buf, pwd->pw_name, p - buf) == 0) {
 	p++;
 	if (*p == PASSWD_ILLEGAL) {
-	  syslog(LOG_INFO, "invalid password entry for %s", pwd->pw_name);
+	  LOG(log_info, logtype_default, "invalid password entry for %s", pwd->pw_name);
 	  err = AFPERR_ACCESS;
 	  goto afppasswd_done;
 	}
@@ -334,7 +334,7 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
   if (( randpwd = uam_getname(username, ulen)) == NULL )
     return AFPERR_PARAM; /* unknown user */
   
-  syslog( LOG_INFO, "randnum/rand2num login: %s", username);
+  LOG(log_info, logtype_default, "randnum/rand2num login: %s", username);
   if (uam_checkuser(randpwd) < 0)
     return AFPERR_NOTAUTH;
 

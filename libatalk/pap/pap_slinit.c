@@ -1,5 +1,5 @@
 /*
- * $Id: pap_slinit.c,v 1.4 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: pap_slinit.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 #include <sys/signal.h>
 #include <sys/time.h>
@@ -56,7 +56,7 @@ static void tickle_handler()
     if (++pap_ac[sid]->ac_state >= ACSTATE_BAD) {
       /* kill. if already dead, just continue */
       if (kill( pap_ac[ sid ]->ac_pid, SIGTERM) == 0)
-	syslog( LOG_INFO, "pap_alrm: %d timed out",
+	LOG(log_info, logtype_default, "pap_alrm: %d timed out",
 		pap_ac[ sid ]->ac_pid );
 
       pap_ac[ sid ]->ac_state = ACSTATE_DEAD;
@@ -263,7 +263,7 @@ PAP pap_slinit(PAP pap, server_child *server_children,
       break;
 
     default:
-      syslog(LOG_INFO, "PAPUnknown %d", pap->cmdbuf[0]);
+      LOG(log_info, logtype_default, "PAPUnknown %d", pap->cmdbuf[0]);
       break;
     }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.12 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: enumerate.c,v 1.13 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,7 +15,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -57,7 +57,7 @@ struct stat *st;
 #endif /* USE_LASTDID */
 
     if ((cdir = dirnew(namlen + 1)) == NULL) {
-        syslog( LOG_ERR, "adddir: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "adddir: malloc: %s", strerror(errno) );
         return NULL;
     }
     strcpy( cdir->d_name, name );
@@ -101,7 +101,7 @@ struct stat *st;
 #ifndef CNID_DB
         if (edir->d_name) {
             if (strcmp(edir->d_name, cdir->d_name)) {
-                syslog(LOG_INFO, "WARNING: DID conflict for '%s' and '%s'. Are these the same file?", edir->d_name, cdir->d_name);
+                LOG(log_info, logtype_default, "WARNING: DID conflict for '%s' and '%s'. Are these the same file?", edir->d_name, cdir->d_name);
             }
             free(cdir->d_name);
             free(cdir);
@@ -151,7 +151,7 @@ int		ibuflen, *rbuflen;
 
     if ( sd.sd_buflen == 0 ) {
         if (( sd.sd_buf = (char *)malloc( SDBUFBRK )) == NULL ) {
-            syslog( LOG_ERR, "afp_enumerate: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "afp_enumerate: malloc: %s", strerror(errno) );
             *rbuflen = 0;
             return AFPERR_MISC;
         }
@@ -250,7 +250,7 @@ int		ibuflen, *rbuflen;
                 start = sd.sd_buf;
                 if ((buf = (char *) realloc( sd.sd_buf, sd.sd_buflen +
                                              SDBUFBRK )) == NULL ) {
-                    syslog( LOG_ERR, "afp_enumerate: realloc: %s",
+                    LOG(log_error, logtype_default, "afp_enumerate: realloc: %s",
                             strerror(errno) );
                     closedir(dp);
                     *rbuflen = 0;
@@ -309,7 +309,7 @@ int		ibuflen, *rbuflen;
         sd.sd_last++;
 
         if ( stat( sd.sd_last, &st ) < 0 ) {
-            syslog( LOG_DEBUG, "afp_enumerate: stat %s: %s",
+            LOG(log_debug, logtype_default, "afp_enumerate: stat %s: %s",
                     sd.sd_last, strerror(errno) );
             sd.sd_last += len + 1;
             continue;

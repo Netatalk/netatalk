@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.8 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: file.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,7 +9,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.17 2002-01-03 17:49:38 sibaz Exp $
+ * $Id: volume.c,v 1.18 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -10,7 +10,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/time.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -280,7 +280,7 @@ static __inline__ char *get_codepage_path(const char *path, const char *name)
     }
 
     /* debug: show which codepage directory we are using */
-    syslog(LOG_DEBUG, "using codepage directory: %s", page);
+    LOG(log_debug, logtype_default, "using codepage directory: %s", page);
 
     return page;
 }
@@ -401,7 +401,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 
     } else if (val) {
         /* ignore unknown options */
-        syslog(LOG_DEBUG, "ignoring unknown volume option: %s", tmp);
+        LOG(log_debug, logtype_default, "ignoring unknown volume option: %s", tmp);
 
     } else {
         /* we'll assume it's a volume name. */
@@ -438,18 +438,18 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
 
     if (( volume =
                 (struct vol *)calloc(1, sizeof( struct vol ))) == NULL ) {
-        syslog( LOG_ERR, "creatvol: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "creatvol: malloc: %s", strerror(errno) );
         return -1;
     }
     if (( volume->v_name =
                 (char *)malloc( vlen + 1 )) == NULL ) {
-        syslog( LOG_ERR, "creatvol: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "creatvol: malloc: %s", strerror(errno) );
         free(volume);
         return -1;
     }
     if (( volume->v_path =
                 (char *)malloc( strlen( path ) + 1 )) == NULL ) {
-        syslog( LOG_ERR, "creatvol: malloc: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "creatvol: malloc: %s", strerror(errno) );
         free(volume->v_name);
         free(volume);
         return -1;
@@ -589,7 +589,7 @@ int			user;
     if ( em == NULL ) {
         if (( em =
                     (struct extmap *)malloc( sizeof( struct extmap ))) == NULL ) {
-            syslog( LOG_ERR, "setextmap: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "setextmap: malloc: %s", strerror(errno) );
             return;
         }
         em->em_next = extmap;
@@ -770,7 +770,7 @@ struct passwd *pwent;
     }
     volfree(save_options, NULL);
     if ( fclose( fp ) != 0 ) {
-        syslog( LOG_ERR, "readvolfile: fclose: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "readvolfile: fclose: %s", strerror(errno) );
     }
     return( 0 );
 }
@@ -1058,7 +1058,7 @@ int 	ibuflen, *rbuflen;
     data = rbuf + 5;
     for ( vcnt = 0, volume = volumes; volume; volume = volume->v_next ) {
         if ( stat( volume->v_path, &st ) < 0 ) {
-            syslog( LOG_INFO, "afp_getsrvrparms: stat %s: %s",
+            LOG(log_info, logtype_default, "afp_getsrvrparms: stat %s: %s",
                     volume->v_path, strerror(errno) );
             continue;		/* can't access directory */
         }
@@ -1086,7 +1086,7 @@ int 	ibuflen, *rbuflen;
     *rbuflen = data - rbuf;
     data = rbuf;
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
@@ -1152,7 +1152,7 @@ int		ibuflen, *rbuflen;
 
     if (( volume->v_flags & AFPVOL_OPEN  ) == 0 ) {
         if ((dir = dirnew(strlen(volume->v_name) + 1)) == NULL) {
-            syslog( LOG_ERR, "afp_openvol: malloc: %s", strerror(errno) );
+            LOG(log_error, logtype_default, "afp_openvol: malloc: %s", strerror(errno) );
             ret = AFPERR_MISC;
             goto openvol_err;
         }
@@ -1296,7 +1296,7 @@ struct vol	*vol;
      * [RS] */
 
     if ( gettimeofday( &tv, 0 ) < 0 ) {
-        syslog( LOG_ERR, "setvoltime: gettimeofday: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "setvoltime: gettimeofday: %s", strerror(errno) );
         return;
     }
     if( utime( vol->v_path, NULL ) < 0 ) {

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pgp.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: uams_pgp.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -19,7 +19,7 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <pwd.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #ifdef OPENSSL_DHX
 #include <openssl/bn.h>
@@ -78,7 +78,7 @@ static int pgp_login(void *obj, struct passwd **uam_pwd,
       return AFPERR_PARAM;
     }
 
-    syslog( LOG_INFO, "pgp login: %s", name);
+    LOG(log_info, logtype_default, "pgp login: %s", name);
     if (uam_checkuser(pgppwd) < 0)
       return AFPERR_NOTAUTH;
 

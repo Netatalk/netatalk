@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.c,v 1.8 2001-12-10 20:16:55 srittau Exp $
+ * $Id: multicast.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -21,7 +21,7 @@
 #include <net/route.h>
 #endif /* TRU64 */
 #include <net/if.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 /* work around for FreeBSD */
 #if defined(__FreeBSD__) && (__FreeBSD__ >= 2)
@@ -394,7 +394,7 @@ zone_bcast( zt )
 
     if (!zt->zt_bcast &&
 	(zt->zt_bcast = (u_char *) malloc(sizeof( ethermulti ))) == NULL) {
-       syslog( LOG_ERR, "zone_bcast malloc: %s", strerror(errno) );
+       LOG(log_error, logtype_default, "zone_bcast malloc: %s", strerror(errno) );
        return -1;
      }
 

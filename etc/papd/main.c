@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.14 2002-01-03 17:49:39 sibaz Exp $
+ * $Id: main.c,v 1.15 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -18,7 +18,7 @@
 #include <sys/file.h>
 #endif /* sun && __svr4__ */
 #include <sys/socket.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 /* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
@@ -119,11 +119,11 @@ die( n )
     for ( pr = printers; pr; pr = pr->p_next ) {
 	if ( pr->p_flags & P_REGISTERED ) {
 	    if ( nbp_unrgstr( pr->p_name, pr->p_type, pr->p_zone, &addr ) < 0 ) {
-		syslog( LOG_ERR, "can't unregister %s:%s@%s\n", pr->p_name,
+		LOG(log_error, logtype_default, "can't unregister %s:%s@%s\n", pr->p_name,
 			pr->p_type, pr->p_zone );
 		papd_exit( n + 1 );
 	    }
-	    syslog( LOG_ERR, "unregister %s:%s@%s\n", pr->p_name, pr->p_type,
+	    LOG(log_error, logtype_default, "unregister %s:%s@%s\n", pr->p_name, pr->p_type,
 		    pr->p_zone );
 	}
     }
@@ -141,17 +141,17 @@ reap()
     while (( pid = wait3( &status, WNOHANG, 0 )) > 0 ) {
 	if ( WIFEXITED( status )) {
 	    if ( WEXITSTATUS( status )) {
-		syslog( LOG_ERR, "child %d exited with %d", pid,
+		LOG(log_error, logtype_default, "child %d exited with %d", pid,
 			WEXITSTATUS( status ));
 	    } else {
-		syslog( LOG_INFO, "child %d done", pid );
+		LOG(log_info, logtype_default, "child %d done", pid );
 	    }
 	} else {
 	    if ( WIFSIGNALED( status )) {
-		syslog( LOG_ERR, "child %d killed with %d", pid,
+		LOG(log_error, logtype_default, "child %d killed with %d", pid,
 			WTERMSIG( status ));
 	    } else {
-		syslog( LOG_ERR, "child %d died", pid );
+		LOG(log_error, logtype_default, "child %d died", pid );
 	    }
 	}
     }
@@ -271,32 +271,33 @@ int main( ac, av )
 #ifdef ultrix
     openlog( p, LOG_PID );
 #else /* ultrix */
-    openlog( p, LOG_NDELAY|LOG_PID, LOG_LPR );
+    set_processname(p);
+    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_lpr );
 #endif /* ultrix */
 
-    syslog( LOG_INFO, "restart (%s)", version );
+    LOG(log_info, logtype_default, "restart (%s)", version );
 
     for ( pr = printers; pr; pr = pr->p_next ) {
 	if (( pr->p_flags & P_SPOOLED ) && rprintcap( pr ) < 0 ) {
-	    syslog( LOG_ERR, "printcap problem: %s", pr->p_printer );
+	    LOG(log_error, logtype_default, "printcap problem: %s", pr->p_printer );
 	}
 	if (( pr->p_atp = atp_open( ATADDR_ANYPORT, &pr->p_addr )) == NULL ) {
-	    syslog( LOG_ERR, "atp_open: %m" );
+	    LOG(log_error, logtype_default, "atp_open: %m" );
 	    papd_exit( 1 );
 	}
 	if ( nbp_rgstr( atp_sockaddr( pr->p_atp ), pr->p_name, pr->p_type,
 		pr->p_zone ) < 0 ) {
-	    syslog( LOG_ERR, "can't register %s:%s@%s", pr->p_name, pr->p_type,
+	    LOG(log_error, logtype_default, "can't register %s:%s@%s", pr->p_name, pr->p_type,
 		    pr->p_zone );
 	    die( 1 );
 	}
 	if ( pr->p_flags & P_AUTH ) {
-		syslog( LOG_INFO, "Authentication enabled: %s", pr->p_name );
+		LOG(log_info, logtype_default, "Authentication enabled: %s", pr->p_name );
 	}
 	else {
-		syslog( LOG_INFO, "Authentication disabled: %s", pr->p_name );
+		LOG(log_info, logtype_default, "Authentication disabled: %s", pr->p_name );
 	}
-	syslog( LOG_INFO, "register %s:%s@%s", pr->p_name, pr->p_type,
+	LOG(log_info, logtype_default, "register %s:%s@%s", pr->p_name, pr->p_type,
 		pr->p_zone );
 	pr->p_flags |= P_REGISTERED;
     }
@@ -306,7 +307,7 @@ int main( ac, av )
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "sigaction: %m" );
+	LOG(log_error, logtype_default, "sigaction: %m" );
 	papd_exit( 1 );
     }
 
@@ -314,7 +315,7 @@ int main( ac, av )
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "sigaction: %m" );
+	LOG(log_error, logtype_default, "sigaction: %m" );
 	papd_exit( 1 );
     }
 
@@ -335,7 +336,7 @@ int main( ac, av )
 	    if ( errno == EINTR ) {
 		continue;
 	    }
-	    syslog( LOG_ERR, "select: %m" );
+	    LOG(log_error, logtype_default, "select: %m" );
 	    papd_exit( 1 );
 	}
 
@@ -359,7 +360,7 @@ int main( ac, av )
 		atpb.atp_rreqdata = cbuf;
 		atpb.atp_rreqdlen = sizeof( cbuf );
 		if ( atp_rreq( pr->p_atp, &atpb ) < 0 ) {
-		    syslog( LOG_ERR, "atp_rreq: %m" );
+		    LOG(log_error, logtype_default, "atp_rreq: %m" );
 		    continue;
 		}
 
@@ -375,7 +376,7 @@ int main( ac, av )
 		    rbuf[ 2 ] = rbuf[ 3 ] = 0;
 
 		    if (( pr->p_flags & P_SPOOLED ) && rprintcap( pr ) != 0 ) {
-			syslog( LOG_ERR, "printcap problem: %s",
+			LOG(log_error, logtype_default, "printcap problem: %s",
 				pr->p_printer );
 			rbuf[ 2 ] = rbuf[ 3 ] = 0xff;
 			err = 1;
@@ -388,7 +389,7 @@ int main( ac, av )
 		     */
 		    if (( atp = atp_open( ATADDR_ANYPORT, 
 					  &pr->p_addr)) == NULL ) {
-			syslog( LOG_ERR, "atp_open: %m" );
+			LOG(log_error, logtype_default, "atp_open: %m" );
 			rbuf[ 2 ] = rbuf[ 3 ] = 0xff;
 			err = 1;
 		    }
@@ -404,7 +405,7 @@ int main( ac, av )
 		     * This may error out if we lose a route, so we won't die().
 		     */
 		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-			syslog( LOG_ERR, "atp_sresp: %m" );
+			LOG(log_error, logtype_default, "atp_sresp: %m" );
 			continue;
 		    }
 
@@ -414,7 +415,7 @@ int main( ac, av )
 
 		    switch ( c = fork()) {
 		    case -1 :
-			syslog( LOG_ERR, "fork: %m" );
+			LOG(log_error, logtype_default, "fork: %m" );
 			continue;
 
 		    case 0 : /* child */
@@ -422,7 +423,7 @@ int main( ac, av )
 
 			if (( printer->p_flags & P_SPOOLED ) &&
 				chdir( printer->p_spool ) < 0 ) {
-			    syslog( LOG_ERR, "chdir %s: %m", printer->p_spool );
+			    LOG(log_error, logtype_default, "chdir %s: %m", printer->p_spool );
 			    exit( 1 );
 			}
 
@@ -430,7 +431,7 @@ int main( ac, av )
 			sigemptyset( &sv.sa_mask );
 			sv.sa_flags = SA_RESTART;
 			if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-			    syslog( LOG_ERR, "sigaction: %m" );
+			    LOG(log_error, logtype_default, "sigaction: %m" );
 			    exit( 1 );
 			}
 
@@ -439,14 +440,14 @@ int main( ac, av )
 			}
 			sat.sat_port = sock;
 			if ( session( atp, &sat ) < 0 ) {
-			    syslog( LOG_ERR, "bad session" );
+			    LOG(log_error, logtype_default, "bad session" );
 			    exit( 1 );
 			}
 			exit( 0 );
 			break;
 
 		    default : /* parent */
-			syslog( LOG_INFO, "child %d for \"%s\" from %u.%u",
+			LOG(log_info, logtype_default, "child %d for \"%s\" from %u.%u",
 				c, pr->p_name, ntohs( sat.sat_addr.s_net ),
 				sat.sat_addr.s_node);
 			atp_close( atp );
@@ -468,12 +469,12 @@ int main( ac, av )
 		     * This may error out if we lose a route, so we won't die().
 		     */
 		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-			syslog( LOG_ERR, "atp_sresp: %m" );
+			LOG(log_error, logtype_default, "atp_sresp: %m" );
 		    }
 		    break;
 
 		default :
-		    syslog( LOG_ERR, "Bad request from %u.%u!",
+		    LOG(log_error, logtype_default, "Bad request from %u.%u!",
 			    ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node );
 		    continue;
 		    break;
@@ -493,7 +494,7 @@ int main( ac, av )
 		 * This may error out if we lose a route, so we won't die().
 		 */
 		if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-		    syslog( LOG_ERR, "atp_sresp: %m" );
+		    LOG(log_error, logtype_default, "atp_sresp: %m" );
 		}
 #endif /* notdef */
 	    }
@@ -705,7 +706,7 @@ int rprintcap( pr )
      */
     if ( pr->p_flags & P_SPOOLED ) {
 	if ( pgetent( printcap, buf, pr->p_printer ) != 1 ) {
-	    syslog( LOG_ERR, "No such printer: %s", pr->p_printer );
+	    LOG(log_error, logtype_default, "No such printer: %s", pr->p_printer );
 	    return( -1 );
 	}
 
@@ -720,7 +721,7 @@ int rprintcap( pr )
 	    pr->p_spool = defprinter.p_spool;
 	} else {
 	    if (( pr->p_spool = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		LOG(log_error, logtype_default, "malloc: %m" );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_spool, p );
@@ -744,7 +745,7 @@ int rprintcap( pr )
 	    } else {
 		if (( pr->p_role =
 			(char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		    syslog( LOG_ERR, "malloc: %m" );
+		    LOG(log_error, logtype_default, "malloc: %m" );
 		    exit( 1 );
 		}
 		strcpy( pr->p_role, p );
@@ -770,7 +771,7 @@ int rprintcap( pr )
 	if (( p = pgetstr( "pc", &a )) != NULL ) {
 	    if (( pr->p_pagecost_msg =
 		    (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		LOG(log_error, logtype_default, "malloc: %m" );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_pagecost_msg, p );
@@ -795,7 +796,7 @@ int rprintcap( pr )
 	    pr->p_lock = defprinter.p_lock;
 	} else {
 	    if (( pr->p_lock = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		syslog( LOG_ERR, "malloc: %m" );
+		LOG(log_error, logtype_default, "malloc: %m" );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_lock, p );

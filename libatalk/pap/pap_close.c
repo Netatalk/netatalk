@@ -1,5 +1,5 @@
 /*
- * $Id: pap_close.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ * $Id: pap_close.c,v 1.4 2002-01-04 04:45:48 sibaz Exp $
  *
  * close the connection
  */
@@ -40,7 +40,7 @@ int pap_close(PAP pap)
   /* sanity */
   if ( iov.iov_len != 4 || pap->pap_data[ 0 ] != pap->pap_connid ||
        pap->pap_data[ 1 ] != PAP_CLOSEREPLY ) {
-    syslog(LOG_ERR, "pap_close: Bad response!");
+    LOG(log_error, logtype_default, "pap_close: Bad response!");
     goto close_done;
   }
   err = 0;

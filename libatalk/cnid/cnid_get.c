@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_get.c,v 1.10 2001-11-27 23:38:18 jmarcus Exp $
+ * $Id: cnid_get.c,v 1.11 2002-01-04 04:45:48 sibaz Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,7 +11,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 #include <errno.h>
 
 #include <db.h>
@@ -52,7 +52,7 @@ cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
         }
 
         if (rc != DB_NOTFOUND) {
-            syslog(LOG_ERR, "cnid_get: Unable to get CNID %u, name %s: %s",
+            LOG(log_error, logtype_default, "cnid_get: Unable to get CNID %u, name %s: %s",
                    ntohl(did), name, db_strerror(rc));
         }
 
@@ -61,7 +61,7 @@ cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
 
     memcpy(&id, data.data, sizeof(id));
 #ifdef DEBUG
-    syslog(LOG_INFO, "cnid_get: Returning CNID for %u, name %s as %u",
+    LOG(log_info, logtype_default, "cnid_get: Returning CNID for %u, name %s as %u",
            ntohl(did), name, ntohl(id));
 #endif
     return id;

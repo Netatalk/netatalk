@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.10 2001-11-13 15:01:38 rufustfirefly Exp $
+ * $Id: uams_pam.c,v 1.11 2002-01-04 04:45:48 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -31,7 +31,7 @@ char *strchr (), *strrchr ();
 #endif /* ! HAVE_MEMCPY */
 #endif /* STDC_HEADERS */
 
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <security/pam_appl.h>
 
@@ -143,7 +143,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     if (uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME,
 			     (void *) &hostname, NULL) < 0)
 	{
-	syslog(LOG_INFO, "uams_pam.c :PAM: unable to retrieve client hostname");
+	LOG(log_info, logtype_default, "uams_pam.c :PAM: unable to retrieve client hostname");
 	hostname = NULL;
 	}
 
@@ -164,7 +164,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 	return AFPERR_PARAM;
     }
 
-    syslog(LOG_INFO, "cleartext login: %s", username);
+    LOG(log_info, logtype_default, "cleartext login: %s", username);
     PAM_username = username;
     PAM_password = ibuf; /* Set these things up for the conv function */
 
@@ -303,13 +303,13 @@ int pam_printer(start, stop, username, out)
 
     /* Parse input for username in () */
     if ((p = strchr(data, '(' )) == NULL) {
-	syslog(LOG_INFO,"Bad Login ClearTxtUAM: username not found in string");
+	LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: username not found in string");
 	free(data);
 	return(-1);
     }
     p++;
     if ((q = strstr(data, ") (" )) == NULL) {
-	syslog(LOG_INFO,"Bad Login ClearTxtUAM: username not found in string");
+	LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: username not found in string");
 	free(data);
 	return(-1);
     }
@@ -318,7 +318,7 @@ int pam_printer(start, stop, username, out)
     /* Parse input for password in next () */
     p = q + 3;
     if ((q = strrchr(data, ')' )) == NULL) {
-	syslog(LOG_INFO,"Bad Login ClearTxtUAM: password not found in string");
+	LOG(log_info, logtype_default,"Bad Login ClearTxtUAM: password not found in string");
 	free(data);
 	return(-1);
     }
@@ -333,7 +333,7 @@ int pam_printer(start, stop, username, out)
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
                           &pamh);
     if (PAM_error != PAM_SUCCESS) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: %s", 
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -344,7 +344,7 @@ int pam_printer(start, stop, username, out)
     pam_set_item(pamh, PAM_RHOST, hostname);
     PAM_error = pam_authenticate(pamh,0);
     if (PAM_error != PAM_SUCCESS) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: %s", 
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -353,7 +353,7 @@ int pam_printer(start, stop, username, out)
 
     PAM_error = pam_acct_mgmt(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: %s", 
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -362,7 +362,7 @@ int pam_printer(start, stop, username, out)
 
     PAM_error = pam_open_session(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+	LOG(log_info, logtype_default, "Bad Login ClearTxtUAM: %s: %s", 
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -372,7 +372,7 @@ int pam_printer(start, stop, username, out)
     /* Login successful, but no need to hang onto it,
        so logout immediately */
     append(out, loginok, strlen(loginok));
-    syslog(LOG_INFO, "Login ClearTxtUAM: %s", username);
+    LOG(log_info, logtype_default, "Login ClearTxtUAM: %s", username);
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;

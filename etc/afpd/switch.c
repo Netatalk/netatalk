@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.4 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: switch.c,v 1.5 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -29,7 +29,7 @@
 
 #include <stdio.h>  /* to pick up NULL */
 #include <sys/stat.h> /* works around a bug */
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
@@ -52,7 +52,7 @@ AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
-    syslog( LOG_INFO, "afp_null handle %d", *ibuf );
+    LOG(log_info, logtype_default, "afp_null handle %d", *ibuf );
     *rbuflen = 0;
     return( AFPERR_NOOP );
 }
@@ -219,7 +219,7 @@ int uam_afpserver_action(const int id, const int which,
             postauth_switch[id] = *new;
         break;
     default:
-        syslog(LOG_DEBUG, "uam_afpserver_action: unknown switch %d[%d]",
+        LOG(log_debug, logtype_default, "uam_afpserver_action: unknown switch %d[%d]",
                which, id);
         return -1;
     }

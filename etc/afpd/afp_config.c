@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.13 2001-12-16 19:45:17 jmarcus Exp $
+ * $Id: afp_config.c,v 1.14 2002-01-04 04:45:47 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,7 +33,7 @@ char *strchr (), *strrchr ();
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <ctype.h>
-#include <syslog.h>
+#include <atalk/logger.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -109,7 +109,7 @@ static void dsi_cleanup(const AFPConfig *config)
     SLPHandle hslp;
     err = SLPOpen("en", SLP_FALSE, &hslp);
     if (err != SLP_OK) {
-        syslog(LOG_ERR, "dsi_cleanup: Error opening SRVLOC handle");
+        LOG(log_error, logtype_default, "dsi_cleanup: Error opening SRVLOC handle");
         goto srvloc_dereg_err;
     }
 
@@ -118,12 +118,12 @@ static void dsi_cleanup(const AFPConfig *config)
                    SRVLOC_callback,
                    &callbackerr);
     if (err != SLP_OK) {
-        syslog(LOG_ERR, "dsi_cleanup: Error unregistering %s from SRVLOC", srvloc_url);
+        LOG(log_error, logtype_default, "dsi_cleanup: Error unregistering %s from SRVLOC", srvloc_url);
         goto srvloc_dereg_err;
     }
 
     if (callbackerr != SLP_OK) {
-        syslog(LOG_ERR, "dsi_cleanup: Error in callback while trying to unregister %s from SRVLOC (%d)", srvloc_url, callbackerr);
+        LOG(log_error, logtype_default, "dsi_cleanup: Error in callback while trying to unregister %s from SRVLOC (%d)", srvloc_url, callbackerr);
         goto srvloc_dereg_err;
     }
 
@@ -148,7 +148,7 @@ static int asp_start(AFPConfig *config, AFPConfig *configs,
 
     if (!(asp = asp_getsession(config->obj.handle, server_children,
                                config->obj.options.tickleval))) {
-        syslog( LOG_ERR, "main: asp_getsession: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: asp_getsession: %s", strerror(errno) );
         exit( 1 );
     }
 
@@ -169,7 +169,7 @@ static int dsi_start(AFPConfig *config, AFPConfig *configs,
 
     if (!(dsi = dsi_getsession(config->obj.handle, server_children,
                                config->obj.options.tickleval))) {
-        syslog( LOG_ERR, "main: dsi_getsession: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: dsi_getsession: %s", strerror(errno) );
         exit( 1 );
     }
 
@@ -196,13 +196,13 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
         return NULL;
 
     if ((atp = atp_open(ATADDR_ANYPORT, &options->ddpaddr)) == NULL)  {
-        syslog( LOG_ERR, "main: atp_open: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: atp_open: %s", strerror(errno) );
         free(config);
         return NULL;
     }
 
     if ((asp = asp_init( atp )) == NULL) {
-        syslog( LOG_ERR, "main: asp_init: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: asp_init: %s", strerror(errno) );
         atp_close(atp);
         free(config);
         return NULL;
@@ -211,7 +211,7 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
     /* register asp server */
     Obj = (char *) options->hostname;
     if (nbp_name(options->server, &Obj, &Type, &Zone )) {
-        syslog( LOG_ERR, "main: can't parse %s", options->server );
+        LOG(log_error, logtype_default, "main: can't parse %s", options->server );
         goto serv_free_return;
     }
 
@@ -234,14 +234,14 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
     /* make sure we're not registered */
     nbp_unrgstr(Obj, Type, Zone, &options->ddpaddr);
     if (nbp_rgstr( atp_sockaddr( atp ), Obj, Type, Zone ) < 0 ) {
-        syslog( LOG_ERR, "Can't register %s:%s@%s", Obj, Type, Zone );
+        LOG(log_error, logtype_default, "Can't register %s:%s@%s", Obj, Type, Zone );
         free(config->obj.Obj);
         free(config->obj.Type);
         free(config->obj.Zone);
         goto serv_free_return;
     }
 
-    syslog( LOG_INFO, "%s:%s@%s started on %u.%u:%u (%s)", Obj, Type, Zone,
+    LOG(log_info, logtype_default, "%s:%s@%s started on %u.%u:%u (%s)", Obj, Type, Zone,
             ntohs( atp_sockaddr( atp )->sat_addr.s_net ),
             atp_sockaddr( atp )->sat_addr.s_node,
             atp_sockaddr( atp )->sat_port, VERSION );
@@ -283,7 +283,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
-        syslog( LOG_ERR, "DSIConfigInit: malloc(config): %s", strerror(errno) );
+        LOG(log_error, logtype_default, "DSIConfigInit: malloc(config): %s", strerror(errno) );
         return NULL;
     }
 
@@ -291,17 +291,17 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
                         options->ipaddr, options->port,
                         options->flags & OPTION_PROXY,
                         options->server_quantum)) == NULL) {
-        syslog( LOG_ERR, "main: dsi_init: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "main: dsi_init: %s", strerror(errno) );
         free(config);
         return NULL;
     }
 
     if (options->flags & OPTION_PROXY) {
-        syslog(LOG_INFO, "ASIP proxy initialized for %s:%d (%s)",
+        LOG(log_info, logtype_default, "ASIP proxy initialized for %s:%d (%s)",
                inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
                VERSION);
     } else {
-        syslog(LOG_INFO, "ASIP started on %s:%d(%d) (%s)",
+        LOG(log_info, logtype_default, "ASIP started on %s:%d(%d) (%s)",
                inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
                dsi->serversock, VERSION);
     }
@@ -309,7 +309,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 #ifdef USE_SRVLOC
     err = SLPOpen("en", SLP_FALSE, &hslp);
     if (err != SLP_OK) {
-        syslog(LOG_ERR, "DSIConfigInit: Error opening SRVLOC handle");
+        LOG(log_error, logtype_default, "DSIConfigInit: Error opening SRVLOC handle");
         goto srvloc_reg_err;
     }
 
@@ -319,7 +319,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
      * show up int the Network Browser. */
     afpovertcp = getservbyname("afpovertcp", "tcp");
     if (strlen(options->hostname) > (sizeof(srvloc_url) - strlen(inet_ntoa(dsi->server.sin_addr)) - 21)) {
-        syslog(LOG_ERR, "DSIConfigInit: Hostname is too long for SRVLOC");
+        LOG(log_error, logtype_default, "DSIConfigInit: Hostname is too long for SRVLOC");
         goto srvloc_reg_err;
     }
     if (dsi->server.sin_port == afpovertcp->s_port) {
@@ -338,16 +338,16 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
                  SRVLOC_callback,
                  &callbackerr);
     if (err != SLP_OK) {
-        syslog(LOG_ERR, "DSIConfigInit: Error registering %s with SRVLOC", srvloc_url);
+        LOG(log_error, logtype_default, "DSIConfigInit: Error registering %s with SRVLOC", srvloc_url);
         goto srvloc_reg_err;
     }
 
     if (callbackerr != SLP_OK) {
-        syslog(LOG_ERR, "DSIConfigInit: Error in callback trying to register %s with SRVLOC", srvloc_url);
+        LOG(log_error, logtype_default, "DSIConfigInit: Error in callback trying to register %s with SRVLOC", srvloc_url);
         goto srvloc_reg_err;
     }
 
-    syslog(LOG_INFO, "Sucessfully registered %s with SRVLOC", srvloc_url);
+    LOG(log_info, logtype_default, "Sucessfully registered %s with SRVLOC", srvloc_url);
 
 srvloc_reg_err:
     SLPClose(hslp);
@@ -387,7 +387,7 @@ static AFPConfig *AFPConfigInit(const struct afp_options *options,
 
     if ((refcount = (unsigned char *)
                     calloc(1, sizeof(unsigned char))) == NULL) {
-        syslog( LOG_ERR, "AFPConfigInit: calloc(refcount): %s", strerror(errno) );
+        LOG(log_error, logtype_default, "AFPConfigInit: calloc(refcount): %s", strerror(errno) );
         return NULL;
     }
 
