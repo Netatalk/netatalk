@@ -327,7 +327,7 @@ nad_header_write( fh )
 #if DEBUG
     {
 	short		flags;
-	memcpy(&flags, ( ad_entry( &nad.ad, ADEID_FINDERI ) + FINDERIOFF_FLAGS,
+	memcpy(&flags, ( ad_entry( &nad.ad, ADEID_FINDERI ) + FINDERIOFF_FLAGS),
 		sizeof( flags ));
 	fprintf( stderr, "nad.ad flags\t\t\t%x\n", flags );
 	fprintf( stderr, "fh flags\t\t\t%x\n", fh->finder_info.fdFlags );
