@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.7 2001-09-04 13:49:54 rufustfirefly Exp $
+ * $Id: cnid_open.c,v 1.8 2001-09-05 21:57:32 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -216,7 +216,11 @@ mkdir_appledb:
   }
 
   /* Check to see if a DBENV already exists.  If it does, join it. */
-  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {
+  /* XXX DB_JOINENV does not appear valid in db3 3.1.17.  Since this is
+   * most Linux users are using, I'm taking this out.  Until proper version
+   * checking code is added, if you're using db3 3.2 or later, uncomment this
+   * line, and the associated } below. */
+/*  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {*/
   if (db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) {
 
     /* try with a shared memory pool */
@@ -232,7 +236,8 @@ mkdir_appledb:
     open_flag = DB_RDONLY;
     syslog(LOG_INFO, "cnid_open: read-only CNID database");
   }
-  }
+  /* Uncomment this } if you're using db3 3.2 or later. */
+/*  }*/
 
   /* did/name reverse mapping. we use a btree for this one. */
   if (db_create(&db->db_didname, db->dbenv, 0))
