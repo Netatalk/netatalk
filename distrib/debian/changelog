@@ -1,11 +1,37 @@
-netatalk (1.5pre6-2cvs) unstable; urgency=medium
+netatalk (1.5pre6-4cvs) unstable; urgency=medium
 
   * Non-DSFG free code was removed. Copyright notice was changed accordingly.
   * Use ./configure --sysconfdir instead of --with-config-dir.
   * Upstream package does now install PAM file in the correct directory.
     Removed rule, correcting this from Debian rules file.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Thu, 10 May 2001 01:52:47 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Sat, 23 Jun 2001 15:42:46 +0200
+
+netatalk (1.5pre6-4) unstable; urgency=low
+
+  * Changed section of netatalk-dev to non-US, too.
+  * Make netatalk-dev depend on netatalk.
+
+ -- Sebastian Rittau <srittau@debian.org>  Tue, 19 Jun 2001 01:40:07 +0200
+
+netatalk (1.5pre6-3) unstable; urgency=low
+
+  * Thanks to my former sponsor Michael 'grisu' Bramer for his efforts.
+  * Changed maintainer address to <srittau@debian.org>.
+  * Moved to section non-US and link against libssl. Changed Build-Depends
+    accordingly.
+  * Link against libdb3 instead of libdb2. Changed Build-Depends
+    accordingly.
+  * Sources were not obtained from CVS, and are available by HTTP.
+  * Removed patch to contrib/Makefile.* to enable compilation of timelord.
+    Instead, use configure option --with-timelord.
+  * Added symlinks to megatron. Use patch from upstream CVS. (Closes: #95944)
+  * Clean up patch for etc/psf/Makefile.am.
+  * Added DEB_BUILD_OPTIONS handling. (Closes: #99705)
+  * Added links to undocumented(7) from binheader(1) and nadheader(1).
+  * Standards-Version: 3.5.5.0.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sun, 17 Jun 2001 15:50:13 +0200
 
 netatalk (1.5pre6-2) unstable; urgency=low
 
