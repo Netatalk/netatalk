@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.110 2001-10-09 04:00:04 jmarcus Exp $
+dnl $Id: configure.in,v 1.111 2001-10-10 15:26:05 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -381,7 +381,7 @@ AC_ARG_ENABLE(shell-check,
 
 AC_MSG_CHECKING([whether flock locks should be enabled])
 AC_ARG_WITH(flock-locks,
-	[  --with-flock-locks      enable flock locks support],a
+	[  --with-flock-locks      enable flock locks support],
 	[flock_locks="$withval"],
 	[flock_locks="no"]
 )
