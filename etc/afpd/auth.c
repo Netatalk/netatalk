@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.43 2003-04-14 18:11:06 didg Exp $
+ * $Id: auth.c,v 1.44 2003-04-16 22:45:10 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -623,10 +623,12 @@ unsigned int	ibuflen, *rbuflen;
     default:
         return send_reply(obj, AFPERR_PARAM);
     }    
+#if 0
     if (len != 0) {
         LOG(log_error, logtype_afpd, "login_ext: directory service path not null!" );
         return send_reply(obj, AFPERR_PARAM);
     }
+#endif
     ibuf += len;
     ibuflen -= len;
     
@@ -636,7 +638,7 @@ unsigned int	ibuflen, *rbuflen;
         ibuflen--;
     }
 
-    /* FIXME user name are in unicode */    
+    /* FIXME user name are in UTF8 */    
     i = afp_uam->u.uam_login.login_ext(obj, username, &pwd, ibuf, ibuflen, rbuf, rbuflen);
     if (i || !pwd)
         return send_reply(obj, i);

@@ -1,5 +1,5 @@
 /*
- * $Id: status.h,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: status.h,v 1.6 2003-04-16 22:45:10 samnoble Exp $
  */
 
 #ifndef AFPD_STATUS_H
@@ -17,8 +17,20 @@
 #define AFPSTATUS_UAMSOFF     4
 #define AFPSTATUS_ICONOFF     6
 #define AFPSTATUS_FLAGOFF     8
+/* AFPSTATUS_PRELEN is the number of bytes for status data prior to 
+ * the ServerName field.
+ *
+ * This is two bytes of offset space for the MachineType, AFPVersionCount,
+ * UAMCount, VolumeIconAndMask, and the 16-bit "Fixed" status flags.
+ */
 #define AFPSTATUS_PRELEN     10
-#define AFPSTATUS_POSTLEN     4
+/* AFPSTATUS_POSTLEN is the number of bytes for offset records
+ * after the ServerName field.
+ *
+ * Right now, this is 2 bytes each for ServerSignature, networkAddressCount,
+ * DirectoryNameCount, and UTF-8 ServerName
+ */
+#define AFPSTATUS_POSTLEN     8
 #define AFPSTATUS_LEN        (AFPSTATUS_PRELEN + AFPSTATUS_POSTLEN)
 
 

@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.23 2002-10-17 18:01:54 didg Exp $
+ * $Id: uam.c,v 1.24 2003-04-16 22:45:11 samnoble Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -466,7 +466,11 @@ AFPObj *obj = private;
          * the cookie. */
         *buf = (void *) &obj->uam_cookie;
         break;
-
+    case UAM_OPTION_KRB5SERVICE:
+	*buf = obj->options.k5service;
+        if (len)
+            *len = strlen(obj->options.k5service);
+	break;
     default:
         return -1;
         break;
