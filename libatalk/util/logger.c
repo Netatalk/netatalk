@@ -608,7 +608,7 @@ static char *get_command_name(char *commandpath)
 void  workout_what_to_print(struct what_to_print_array *what_to_print, struct tag_log_file_data *log_struct)
 {
   /* is this a syslog entry? */
-  if (log_struct->log_filename[0]==NULL)
+  if (log_struct->log_filename[0]==0)
   {
     what_to_print->print_datetime = false;
     what_to_print->print_processname = false;
