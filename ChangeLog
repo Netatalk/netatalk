@@ -1,4 +1,9 @@
 
+2001-09-19  joe c   <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_add.c: Fix a bug where some DBT data structures were
+	not being memset to NULL correctly.
+
 2001-09-18  joe c   <marcus@marcuscom.com>
 
 	* etc/afpd/afp_options.c: Fix a bug in the custom icon code (thanks to
