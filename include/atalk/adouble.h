@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.17 2003-01-28 15:19:55 srittau Exp $
+ * $Id: adouble.h,v 1.18 2003-01-31 11:26:36 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -218,6 +218,7 @@ struct ad_fd {
 #endif
 
     int		 adf_flags;
+    int          adf_excl;
     adf_lock_t   *adf_lock;
     int          adf_refcount, adf_lockcount, adf_lockmax;
 };
@@ -327,6 +328,8 @@ extern void ad_fcntl_unlock __P((struct adouble *, const int /*user*/));
 extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 				 const int /*type*/, const off_t /*offset*/,
 				 const off_t /*len*/, const int /*user*/));
+
+extern int ad_excl_lock     __P((struct adouble * /*adp*/, const u_int32_t /*eid*/));
 
 #define ad_lock ad_fcntl_lock
 #define ad_tmplock ad_fcntl_tmplock

@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.9 2003-01-30 17:32:45 didg Exp $
+ * $Id: ad_lock.c,v 1.10 2003-01-31 11:26:36 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -76,8 +76,10 @@ static __inline__ void adf_freelock(struct ad_fd *ad, const int i)
 
     if (--(*lock->refcount) < 1) {
 	free(lock->refcount); 
-	lock->lock.l_type = F_UNLCK;
-	fcntl(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
+	if (!ad->adf_excl) {
+	    lock->lock.l_type = F_UNLCK;
+	    fcntl(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
+	}
     }
 
     ad->adf_lockcount--;
@@ -135,7 +137,7 @@ static __inline__ void adf_relockrange(struct ad_fd *ad, int fd,
     adf_lock_t *lock = ad->adf_lock;
     int i;
     
-    for (i = 0; i < ad->adf_lockcount; i++) {
+    if (!ad->adf_excl) for (i = 0; i < ad->adf_lockcount; i++) {
       if (OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
 	fcntl(fd, F_SETLK, &lock[i].lock);
     }
@@ -328,7 +330,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   }
 
   /* attempt to lock the file. */
-  if (fcntl(adf->adf_fd, F_SETLK, &lock) < 0) 
+  if (!adf->adf_excl && fcntl(adf->adf_fd, F_SETLK, &lock) < 0) 
     return -1;
 
   /* we upgraded this lock. */
@@ -371,7 +373,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
 
 fcntl_lock_err:
   lock.l_type = F_UNLCK;
-  fcntl(adf->adf_fd, F_SETLK, &lock);
+  if (!adf->adf_excl) fcntl(adf->adf_fd, F_SETLK, &lock);
   return -1;
 }
 
@@ -425,14 +427,16 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 
 /* -------------------------
 */
-int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int type,
+int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype,
 	             const off_t off, const off_t len, const int user)
 {
   struct flock lock;
   struct ad_fd *adf;
   int err;
+  int type;  
 
   lock.l_start = off;
+  type = locktype;
   if (eid == ADEID_DFORK) {
     adf = &ad->ad_df;
   } else {
@@ -469,14 +473,45 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int type,
    * XXX: in the future, all the byte locks will be sorted and contiguous.
    *      we just want to upgrade all the locks and then downgrade them
    *      here. */
-  err = fcntl(adf->adf_fd, F_SETLK, &lock);
+  if (!adf->adf_excl) {
+       err = fcntl(adf->adf_fd, F_SETLK, &lock);
+  }
+  else {
+      err = 0;
+  }
   if (!err && (lock.l_type == F_UNLCK))
     adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
 
   return err;
 }
 
+/* -------------------------
+   the fork is opened in Read Write, Deny Read, Deny Write mode
+   lock the whole file once   
+*/
+int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
+{
+  struct ad_fd *adf;
+  struct flock lock;
+  int    err;
+  
+  if (eid == ADEID_DFORK) {
+    adf = &ad->ad_df;
+  } else {
+    adf = &ad->ad_hf;
+  }
+  lock.l_start = 0;
+  lock.l_type = F_WRLCK;
+  lock.l_whence = SEEK_SET;
+  lock.l_len = 0;
+  
+  err = fcntl(adf->adf_fd, F_SETLK, &lock);
+  if (!err)
+      adf->adf_excl = 1;
+  return err;
+}
 
+/* --------------------- */
 void ad_fcntl_unlock(struct adouble *ad, const int user)
 {
   if (ad->ad_df.adf_fd != -1) {

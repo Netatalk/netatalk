@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.46 2003-01-26 10:42:40 didg Exp $
+ * $Id: fork.c,v 1.47 2003-01-31 11:26:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -251,6 +251,11 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
                 return ret;
         }
     }
+
+    if ( access == (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD)) {
+        return ad_excl_lock(adp, eid);
+    }
+
     return 0;
 }
 
