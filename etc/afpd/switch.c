@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.5 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: switch.c,v 1.6 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -220,7 +220,7 @@ int uam_afpserver_action(const int id, const int which,
         break;
     default:
         LOG(log_debug, logtype_default, "uam_afpserver_action: unknown switch %d[%d]",
-               which, id);
+            which, id);
         return -1;
     }
 

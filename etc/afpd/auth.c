@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.22 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: auth.c,v 1.23 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -164,7 +164,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     }
 
     LOG(log_info, logtype_default, "login %s (uid %d, gid %d)", pwd->pw_name,
-            pwd->pw_uid, pwd->pw_gid );
+        pwd->pw_uid, pwd->pw_gid );
 
     if (obj->proto == AFPPROTO_ASP) {
         ASP asp = obj->handle;
@@ -180,7 +180,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
                 sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir,
                         addr_net / 256, addr_net % 256, addr_node);
                 LOG(log_info, logtype_default, "registering %s (uid %d) on %u.%u as %s",
-                        pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
+                    pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
 
                 if (stat(nodename, &stat_buf) == 0) { /* file exists */
                     if (S_ISREG(stat_buf.st_mode)) { /* normal file */
@@ -259,7 +259,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
             return AFPERR_BADUAM;
 
         LOG(log_info, logtype_default, "session from %s (%s)", hostname,
-                inet_ntoa( dsi->client.sin_addr ) );
+            inet_ntoa( dsi->client.sin_addr ) );
 
         if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
             LOG(log_error, logtype_default, "login: %m" );
@@ -409,8 +409,8 @@ int		ibuflen, *rbuflen;
     len = uam->u.uam_changepw(obj, username, pwd, ibuf, ibuflen,
                               rbuf, rbuflen);
     LOG(log_info, logtype_default, "password change %s.",
-           (len == AFPERR_AUTHCONT) ? "continued" :
-           (len ? "failed" : "succeeded"));
+        (len == AFPERR_AUTHCONT) ? "continued" :
+        (len ? "failed" : "succeeded"));
     return len;
 }
 

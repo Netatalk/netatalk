@@ -1,5 +1,5 @@
 /*
- * $Id: nfsquota.c,v 1.6 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: nfsquota.c,v 1.7 2002-01-19 21:29:55 jmarcus Exp $
  *
  * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:
@@ -132,7 +132,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
                  (xdrproc_t) xdr_getquota_args, (char *) &gq_args,
                  (xdrproc_t) xdr_getquota_rslt, (char *) &gq_rslt) != 0) {
         LOG(log_info, logtype_default, "nfsquota: can't retrieve nfs quota information. \
-               make sure that rpc.rquotad is running on %s.", vol->v_gvs);
+            make sure that rpc.rquotad is running on %s.", vol->v_gvs);
         *hostpath = ':';
         return AFPERR_PARAM;
     }
@@ -143,7 +143,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
 
     case Q_EPERM:
         LOG(log_error, logtype_default, "nfsquota: quota permission error, host: %s\n",
-               vol->v_gvs);
+            vol->v_gvs);
         break;
 
     case Q_OK: /* we only copy the bits that we need. */

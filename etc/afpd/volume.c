@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.20 2002-01-18 05:23:25 jmarcus Exp $
+ * $Id: volume.c,v 1.21 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1059,7 +1059,7 @@ int 	ibuflen, *rbuflen;
     for ( vcnt = 0, volume = volumes; volume; volume = volume->v_next ) {
         if ( stat( volume->v_path, &st ) < 0 ) {
             LOG(log_info, logtype_default, "afp_getsrvrparms: stat %s: %s",
-                    volume->v_path, strerror(errno) );
+                volume->v_path, strerror(errno) );
             continue;		/* can't access directory */
         }
         if (!S_ISDIR(st.st_mode)) {
@@ -1399,23 +1399,23 @@ int		ibuflen, *rbuflen;
 
 int wincheck(struct vol *vol, const char *path)
 {
-        int len;
+    int len;
 
-        if (!(vol->v_flags & AFPVOL_MSWINDOWS))
-                return 1;
-
-        /* empty paths are not allowed */
-        if ((len = strlen(path)) == 0)
-                return 0;
-
-        /* leading or trailing whitespaces are not allowed */
-        if ((*path == ' ') || (path[len-1] == ' '))
-                return 0;
-
-        /* certain characters are not allowed */
-        if (strpbrk(path, MSWINDOWS_BADCHARS))
-                return 0;
-
-        /* everything else is okay */
+    if (!(vol->v_flags & AFPVOL_MSWINDOWS))
         return 1;
+
+    /* empty paths are not allowed */
+    if ((len = strlen(path)) == 0)
+        return 0;
+
+    /* leading or trailing whitespaces are not allowed */
+    if ((*path == ' ') || (path[len-1] == ' '))
+        return 0;
+
+    /* certain characters are not allowed */
+    if (strpbrk(path, MSWINDOWS_BADCHARS))
+        return 0;
+
+    /* everything else is okay */
+    return 1;
 }

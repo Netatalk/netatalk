@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: afp_asp.c,v 1.10 2002-01-19 21:29:54 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -51,7 +51,7 @@ static __inline__ void afp_asp_close(AFPObj *obj)
 
     asp_close( asp );
     LOG(log_info, logtype_default, "%.2fKB read, %.2fKB written",
-           asp->read_count / 1024.0, asp->write_count / 1024.0);
+        asp->read_count / 1024.0, asp->write_count / 1024.0);
 }
 
 static void afp_asp_die(const int sig)
@@ -129,11 +129,11 @@ void afp_over_asp(AFPObj *obj)
     }
 
     LOG(log_info, logtype_default, "session from %u.%u:%u on %u.%u:%u",
-            ntohs( asp->asp_sat.sat_addr.s_net ),
-            asp->asp_sat.sat_addr.s_node, asp->asp_sat.sat_port,
-            ntohs( atp_sockaddr( asp->asp_atp )->sat_addr.s_net ),
-            atp_sockaddr( asp->asp_atp )->sat_addr.s_node,
-            atp_sockaddr( asp->asp_atp )->sat_port );
+        ntohs( asp->asp_sat.sat_addr.s_net ),
+        asp->asp_sat.sat_addr.s_node, asp->asp_sat.sat_port,
+        ntohs( atp_sockaddr( asp->asp_atp )->sat_addr.s_net ),
+        atp_sockaddr( asp->asp_atp )->sat_addr.s_node,
+        atp_sockaddr( asp->asp_atp )->sat_port );
 
     while ((reply = asp_getrequest(asp))) {
         switch (reply) {
@@ -152,11 +152,11 @@ void afp_over_asp(AFPObj *obj)
                         LOG(log_info, logtype_default, "removed %s", addr_filename);
                     } else {
                         LOG(log_info, logtype_default, "error removing %s: %s",
-                               addr_filename, strerror(errno));
+                            addr_filename, strerror(errno));
                     }
                 } else {
                     LOG(log_info, logtype_default, "error stat'ing %s: %s",
-                           addr_filename, strerror(errno));
+                        addr_filename, strerror(errno));
                 }
             }
 

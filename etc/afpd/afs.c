@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.8 2002-01-17 06:05:41 srittau Exp $
+ * $Id: afs.c,v 1.9 2002-01-19 21:29:55 jmarcus Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -286,7 +286,7 @@ int		ibuflen, *rbuflen;
     newpw[ len ] = '\0';
 
     LOG(log_info, logtype_default,
-            "changing password for <%s>.<%s>@<%s>", name, instance, realm );
+        "changing password for <%s>.<%s>@<%s>", name, instance, realm );
 
     ka_StringToKey( oldpw, realm, &oldkey );
     memset( oldpw, 0, sizeof( oldpw ));

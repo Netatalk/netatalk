@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.9 2002-01-17 16:13:34 jmarcus Exp $
+ * $Id: ofork.c,v 1.10 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -155,12 +155,12 @@ struct adouble      *ad;
     for ( refnum = ++lastrefnum, i = 0; i < nforks; i++, refnum++ ) {
         /* cf AFP3.0.pdf, File fork page 40 */
         if (!refnum)
-           refnum++;
+            refnum++;
         if ( oforks[ refnum % nforks ] == NULL ) {
             break;
         }
     }
-    /* grr, Apple and their 'uniquely identifies' 
+    /* grr, Apple and their 'uniquely identifies'
           the next line is a protection against 
           of_alloc()
              refnum % nforks = 3 

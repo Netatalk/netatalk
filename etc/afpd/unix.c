@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.28 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: unix.c,v 1.29 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -253,7 +253,7 @@ const int dropbox;
             */
             if ( (chmod( name, (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0) && errno != EPERM)  {
                 LOG(log_error, logtype_default, "stickydirmode: chmod \"%s\": %s",
-                        name, strerror(errno) );
+                    name, strerror(errno) );
                 retval = -1;
             }
 #ifdef DROPKLUDGE
@@ -305,18 +305,18 @@ const mode_t	mode;
             /* XXX: need to preserve special modes */
             if (stat(modbuf, &st) < 0) {
                 LOG(log_error, logtype_default, "setdeskmode: stat %s: %s",
-                        modbuf, strerror(errno) );
+                    modbuf, strerror(errno) );
                 continue;
             }
 
             if (S_ISDIR(st.st_mode)) {
                 if ( chmod( modbuf,  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
                     LOG(log_error, logtype_default, "setdeskmode: chmod %s: %s",
-                            modbuf, strerror(errno) );
+                        modbuf, strerror(errno) );
                 }
             } else if ( chmod( modbuf,  mode & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
                 LOG(log_error, logtype_default, "setdeskmode: chmod %s: %s",
-                        modbuf, strerror(errno) );
+                    modbuf, strerror(errno) );
             }
 
         }
@@ -324,7 +324,7 @@ const mode_t	mode;
         /* XXX: need to preserve special modes */
         if ( chmod( deskp->d_name,  (DIRBITS | mode) & 0777 & ~default_options.umask ) < 0 && errno != EPERM ) {
             LOG(log_error, logtype_default, "setdeskmode: chmod %s: %s",
-                    deskp->d_name, strerror(errno) );
+                deskp->d_name, strerror(errno) );
         }
     }
     closedir( desk );
@@ -361,7 +361,7 @@ const int dropbox;
         }
         if ( stat( dirp->d_name, &st ) < 0 ) {
             LOG(log_error, logtype_default, "setdirmode: stat %s: %s",
-                    dirp->d_name, strerror(errno) );
+                dirp->d_name, strerror(errno) );
             continue;
         }
 
@@ -460,14 +460,14 @@ const gid_t	gid;
             /* XXX: add special any uid, ignore group bits */
             if ( chown( modbuf, uid, gid ) < 0 && errno != EPERM ) {
                 LOG(log_error, logtype_default, "setdeskown: chown %s: %s",
-                        modbuf, strerror(errno) );
+                    modbuf, strerror(errno) );
             }
         }
         closedir( sub );
         /* XXX: add special any uid, ignore group bits */
         if ( chown( deskp->d_name, uid, gid ) < 0 && errno != EPERM ) {
             LOG(log_error, logtype_default, "setdeskowner: chown %s: %s",
-                    deskp->d_name, strerror(errno) );
+                deskp->d_name, strerror(errno) );
         }
     }
     closedir( desk );
@@ -477,7 +477,7 @@ const gid_t	gid;
     }
     if ( chown( ".AppleDesktop", uid, gid ) < 0 && errno != EPERM ) {
         LOG(log_error, logtype_default, "setdeskowner: chown .AppleDesktop: %s",
-                strerror(errno) );
+            strerror(errno) );
     }
     return( 0 );
 }
@@ -507,13 +507,13 @@ const int   noadouble;
         };
         if ( stat( dirp->d_name, &st ) < 0 ) {
             LOG(log_error, logtype_default, "setdirowner: stat %s: %s",
-                    dirp->d_name, strerror(errno) );
+                dirp->d_name, strerror(errno) );
             continue;
         }
         if (( st.st_mode & S_IFMT ) == S_IFREG ) {
             if ( chown( dirp->d_name, uid, gid ) < 0 && errno != EPERM ) {
                 LOG(log_debug, logtype_default, "setdirowner: chown %s: %s",
-                        dirp->d_name, strerror(errno) );
+                    dirp->d_name, strerror(errno) );
                 /* return ( -1 ); Sometimes this is okay */
             }
         }
@@ -536,7 +536,7 @@ const int   noadouble;
         strcat( buf, dirp->d_name );
         if ( chown( buf, uid, gid ) < 0 && errno != EPERM ) {
             LOG(log_debug, logtype_default, "setdirowner: chown %d/%d %s: %s",
-                    uid, gid, buf, strerror(errno) );
+                uid, gid, buf, strerror(errno) );
             /* return ( -1 ); Sometimes this is okay */
         }
     }
@@ -552,7 +552,7 @@ const int   noadouble;
     if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 &&
             errno != EPERM ) {
         LOG(log_debug, logtype_default, "setdirowner: chown %d/%d .AppleDouble: %s",
-                uid, gid, strerror(errno) );
+            uid, gid, strerror(errno) );
         /* return ( -1 ); Sometimes this is okay */
     }
 
@@ -563,7 +563,7 @@ setdirowner_noadouble:
     if ( gid && gid != st.st_gid && chown( ".", uid, gid ) < 0 &&
             errno != EPERM ) {
         LOG(log_debug, logtype_default, "setdirowner: chown %d/%d .: %s",
-                uid, gid, strerror(errno) );
+            uid, gid, strerror(errno) );
     }
 
     return( 0 );

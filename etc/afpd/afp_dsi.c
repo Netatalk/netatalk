@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.17 2002-01-17 16:13:34 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.18 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -61,7 +61,7 @@ static __inline__ void afp_dsi_close(AFPObj *obj)
     set_processname("afpd");
     syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid, logfacility_daemon);
     LOG(log_info, logtype_default, "%.2fKB read, %.2fKB written",
-           dsi->read_count/1024.0, dsi->write_count/1024.0);
+        dsi->read_count/1024.0, dsi->write_count/1024.0);
 
     dsi_close(dsi);
 }
@@ -72,7 +72,7 @@ static void afp_dsi_die(int sig)
     dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN);
     afp_dsi_close(child.obj);
     if (sig) /* if no signal, assume dieing because logins are disabled &
-            don't log it (maintenance mode)*/
+                don't log it (maintenance mode)*/
         LOG(log_info, logtype_default, "Connection terminated");
     if (sig == SIGTERM || sig == SIGALRM) {
         exit( 0 );

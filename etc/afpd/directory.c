@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.25 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: directory.c,v 1.26 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -456,11 +456,11 @@ static int deletedir(char *dir)
                     continue; /* somebody went and deleted it behind our backs. */
                 case EROFS:
                     err = AFPERR_VLOCK;
-					break;
+                    break;
                 case EPERM:
                 case EACCES :
                     err = AFPERR_ACCESS;
-					break;
+                    break;
                 default :
                     err = AFPERR_PARAM;
                 }
@@ -1229,7 +1229,7 @@ int setdirparams(const struct vol *vol,
                     break;
                 default :
                     LOG(log_error, logtype_default, "setdirparam: setdeskowner: %s",
-                            strerror(errno) );
+                        strerror(errno) );
                     if (!isad) {
                         err = AFPERR_PARAM;
                         goto setdirparam_done;
@@ -1250,7 +1250,7 @@ int setdirparams(const struct vol *vol,
                     break;
                 default :
                     LOG(log_error, logtype_default, "setdirparam: setdirowner: %s",
-                            strerror(errno) );
+                        strerror(errno) );
                     break;
                 }
             }
@@ -1295,7 +1295,7 @@ int setdirparams(const struct vol *vol,
                     break;
                 default :
                     LOG(log_error, logtype_default, "setdirparam: setdirowner: %s",
-                            strerror(errno) );
+                        strerror(errno) );
                     break;
                 }
             }
@@ -1320,7 +1320,7 @@ int setdirparams(const struct vol *vol,
                 goto setdirparam_done;
             default :
                 LOG(log_error, logtype_default, "setdirparam: setdeskmode: %s",
-                        strerror(errno) );
+                    strerror(errno) );
                 break;
                 err = AFPERR_PARAM;
                 goto setdirparam_done;
@@ -1340,7 +1340,7 @@ int setdirparams(const struct vol *vol,
                 goto setdirparam_done;
             default :
                 LOG(log_error, logtype_default, "setdirparam: setdirmode: %s",
-                        strerror(errno) );
+                    strerror(errno) );
                 err = AFPERR_PARAM;
                 goto setdirparam_done;
             }

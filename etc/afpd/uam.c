@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.18 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: uam.c,v 1.19 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -85,14 +85,14 @@ struct uam_mod *uam_load(const char *path, const char *name)
         *p = '\0';
     if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
         LOG(log_error, logtype_default, "uam_load(%s): mod_symbol error for symbol %s",
-               name,
-               buf);
+            name,
+            buf);
         goto uam_load_err;
     }
 
     if (mod->uam_fcn->uam_type != UAM_MODULE_SERVER) {
         LOG(log_error, logtype_default, "uam_load(%s): attempted to load a non-server module",
-               name);
+            name);
         goto uam_load_err;
     }
 
@@ -141,7 +141,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
         if (strcmp(uam->uam_path, path)) {
             /* it exists, but it's not the same module. */
             LOG(log_error, logtype_default, "uam_register: \"%s\" already loaded by %s",
-                   name, path);
+                name, path);
             return -1;
         }
         uam->uam_count++;

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.14 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: afp_config.c,v 1.15 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -242,9 +242,9 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
     }
 
     LOG(log_info, logtype_default, "%s:%s@%s started on %u.%u:%u (%s)", Obj, Type, Zone,
-            ntohs( atp_sockaddr( atp )->sat_addr.s_net ),
-            atp_sockaddr( atp )->sat_addr.s_node,
-            atp_sockaddr( atp )->sat_port, VERSION );
+        ntohs( atp_sockaddr( atp )->sat_addr.s_net ),
+        atp_sockaddr( atp )->sat_addr.s_node,
+        atp_sockaddr( atp )->sat_port, VERSION );
 
     config->fd = atp_fileno(atp);
     config->obj.handle = asp;
@@ -298,12 +298,12 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 
     if (options->flags & OPTION_PROXY) {
         LOG(log_info, logtype_default, "ASIP proxy initialized for %s:%d (%s)",
-               inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
-               VERSION);
+            inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
+            VERSION);
     } else {
         LOG(log_info, logtype_default, "ASIP started on %s:%d(%d) (%s)",
-               inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
-               dsi->serversock, VERSION);
+            inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
+            dsi->serversock, VERSION);
     }
 
 #ifdef USE_SRVLOC

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.16 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: afp_options.c,v 1.17 2002-01-19 21:29:55 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -226,16 +226,16 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->loginmaxfail = atoi(c);
     if ((c = getoption(buf, "-tickleval"))) {
         options->tickleval = atoi(c);
-		if (options->tickleval <= 0) {
-			options->tickleval = 30;
-		}
-	}
+        if (options->tickleval <= 0) {
+            options->tickleval = 30;
+        }
+    }
     if ((c = getoption(buf, "-timeout"))) {
         options->timeout = atoi(c);
-		if (options->timeout <= 0) {
-			options->timeout = 4;
-		}
-	}
+        if (options->timeout <= 0) {
+            options->timeout = 4;
+        }
+    }
 
     if ((c = getoption(buf, "-server_quantum")))
         options->server_quantum = strtoul(c, NULL, 0);
