@@ -1,4 +1,7 @@
 
+2001-11-15  pooba53 <bobo@bocklabs.wisc.edu>
+        * Modified SuSE initscript, distrib/initscripts/rc.atalk.suse.tmpl
+
 2001-11-08  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* etc/afpd/uam.c, etc/uams/uams_pam.c, etc/uams/uams_dhx_pam.c,
