@@ -1,4 +1,6 @@
 /*
+ * $Id: codepage.c,v 1.3 2001-02-23 15:35:37 rufustfirefly Exp $
+ *
  * Copyright (c) 2000 Adrian Sun
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -14,7 +16,6 @@
  * the badumap specifies illegal characters. these are 8-bit values
  * with an associated rule field. here are the rules:
  *   
- *
  * illegal values: 0 is the only illegal value. no translation will
  * occur in those cases.  
  */
@@ -144,16 +145,16 @@ static void free_codepage(struct codepage *cp)
 int codepage_init(struct vol *vol, const int rules, 
 		  const int quantum)
 {
-  if ((rules & CODEPAGE_RULE_MTOU) && !vol->v_utompage) {
+  if ((rules & CODEPAGE_RULE_UTOM) && !vol->v_utompage) {
     vol->v_utompage = init_codepage(quantum);
     if (!vol->v_utompage)
-      return -1;
+      goto err_utompage;
   }
 
-  if ((rules & CODEPAGE_RULE_UTOM) && !vol->v_mtoupage) {
+  if ((rules & CODEPAGE_RULE_MTOU) && !vol->v_mtoupage) {
     vol->v_mtoupage = init_codepage(quantum);
     if (!vol->v_mtoupage) {
-      goto err_utompage;
+      goto err_mtoupage;
     }
   }
 
@@ -225,6 +226,9 @@ int codepage_read(struct vol *vol, const char *path)
       syslog( LOG_ERR, "%s: codepage version not supported", path);
       goto codepage_fail;
   } 
+
+  /* ignore namelen */
+  cur++;
 
   /* find out the data quantum size. default to 1 if nothing's given. */
   quantum = *cur ? *cur : 1;

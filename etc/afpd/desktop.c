@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * All Rights Reserved.  See COPYRIGHT.
+ * $Id: desktop.c,v 1.3 2001-02-23 15:35:37 rufustfirefly Exp $
+ * See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -616,10 +616,10 @@ char *mtoupath(const struct vol *vol, char *mpath)
 	
 	/* we have a code page. we only use the ascii range
 	 * if we have map ascii specified. */
-#if 0
+#if 1
 	if (vol->v_mtoupage && ((*m > 0x7F) ||
 				vol->v_flags & AFPVOL_MAPASCII)) {
-	    *u = vol->v_mtoupage[*m];
+	    *u = vol->v_mtoupage->map[*m].value;
 	} else
 #endif
 #if AD_VERSION == AD_VERSION1
@@ -662,10 +662,10 @@ char *utompath(const struct vol *vol, char *upath)
     m = mpath;
     while ( *u != '\0' ) {
         /* we have a code page */
-#if 0
+#if 1
         if (vol->v_utompage && ((*u > 0x7F) ||
 				(vol->v_flags & AFPVOL_MAPASCII))) {
-	    *m = vol->v_utompage[*u];
+	    *m = vol->v_utompage->map[*u].value;
 	} else 
 #endif
 	  if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&

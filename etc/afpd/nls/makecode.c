@@ -1,4 +1,12 @@
-/* quick-and-dirty way of creating code pages */
+/*
+ * $Id: makecode.c,v 1.3 2001-02-23 15:35:37 rufustfirefly Exp $
+ *
+ * quick-and-dirty way of creating code pages
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,6 +104,8 @@ int main(int argc, char **argv)
       continue;
     }
 
+    memset(buf, 0, CODEPAGE_FILE_HEADER_SIZE);
+
     id = htons(CODEPAGE_FILE_ID); /* file id */
     memcpy(buf, &id, sizeof(id));
     *(buf + 2) = CODEPAGE_FILE_VERSION; /* version */
@@ -115,7 +125,7 @@ int main(int argc, char **argv)
 
     /* size of data */
     id = htons(names[i].m_len); 
-    memcpy(buf + 7, &id, sizeof(id));
+    memcpy(buf + 8, &id, sizeof(id));
 
     /* write it out */
     fwrite(buf, CODEPAGE_FILE_HEADER_SIZE, 1, fp);
@@ -133,6 +143,5 @@ int main(int argc, char **argv)
     }
     fclose(fp);
   }
-
   return 0;
 }

@@ -1,3 +1,21 @@
+
+2001-02-23  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* etc/afpd/desktop.c, etc/afpd/codepage.c, etc/afpd/nls/makecode.c:
+	patch from Axel Barnitzek <barney@users.sourceforge.net> to fix
+	broken codepage support.
+
+	* ChangeLog: started updaing ChangeLog with important patch/fix
+	information, as it is *never* up to date.
+
+2001-02-20  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	Released 1.5pre3
+	- Debian packaging in tree
+	- Numerous Makefile/build fixes
+	- .cvsignore implemented
+	- Solaris build fixes
+
 2001-01-02  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* etc/afpd/uid.c, etc/afpd/uid.h, ...: added support for forcing
