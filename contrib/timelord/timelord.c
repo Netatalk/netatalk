@@ -1,5 +1,5 @@
 /*
- * $Id: timelord.c,v 1.5 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: timelord.c,v 1.6 2001-08-30 13:14:53 srittau Exp $
  *
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -25,18 +25,23 @@
 #include <sys/time.h>
 #include <sys/file.h>
 #include <sys/uio.h>
+
+#include <unistd.h>
+
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
 #include <atalk/atp.h>
+#include <atalk/nbp.h>
 
 #include <time.h>
 #ifdef HAVE_SGTTY_H
 #include <sgtty.h>
 #endif /* HAVE_SGTTY_H */
+#include <errno.h>
 #include <signal.h>
 #include <syslog.h>
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
@@ -65,8 +70,7 @@ char	*bad = "Bad request!";
 char	buf[ 4624 ];
 char	*server;
 
-usage( p )
-    char	*p;
+void usage( char *p )
 {
     char	*s;
 
@@ -85,7 +89,7 @@ usage( p )
 void
 goaway(int signal)
 {
-    if ( nbp_unrgstr( server, "TimeLord", "*" ) < 0 ) {
+    if ( nbp_unrgstr( server, "TimeLord", "*", NULL ) < 0 ) {
 	syslog( LOG_ERR, "Can't unregister %s", server );
 	exit( 1 );
     }
@@ -93,9 +97,7 @@ goaway(int signal)
     exit( 0 );
 }
 
-main( ac, av )
-    int		ac;
-    char	**av;
+int main( int ac, char **av )
 {
     ATP			atp;
     struct sockaddr_at	sat;
@@ -148,7 +150,7 @@ main( ac, av )
 	    }
 	    if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
 		(void)ioctl( i, TIOCNOTTY, 0 );
-		setpgrp( 0, getpid());
+		setpgid( 0, getpid());
 		(void)close( i );
 	    }
 	    break;
@@ -176,7 +178,7 @@ main( ac, av )
     memset (&sat.sat_addr, 0, sizeof (sat.sat_addr));
 
     if (( atp = atp_open( ATADDR_ANYPORT, &sat.sat_addr )) == NULL ) {
-	syslog( LOG_ERR, "main: atp_open: %m" );
+	syslog( LOG_ERR, "main: atp_open: %s", strerror( errno ) );
 	exit( 1 );
     }
 
@@ -199,7 +201,7 @@ main( ac, av )
 	bzero( &sat, sizeof( struct sockaddr_at ));
 	atpb.atp_rreqdlen = sizeof( buf );
 	if ( atp_rreq( atp, &atpb ) < 0 ) {
-	    syslog( LOG_ERR, "main: atp_rreq: %m" );
+	    syslog( LOG_ERR, "main: atp_rreq: %s", strerror( errno ) );
 	    exit( 1 );
 	}
 
@@ -213,7 +215,7 @@ main( ac, av )
 	    if ( atpb.atp_rreqdlen > 5 ) {
 		    bcopy( p + 1, &mtime, sizeof( long ));
 		    mtime = ntohl( mtime );
-		    syslog( LOG_INFO, "gettime from %s %s was %u",
+		    syslog( LOG_INFO, "gettime from %s %s was %lu",
 			    (*( p + 5 ) == '\0' ) ? "<unknown>" : p + 5,
 			    ( *p == 0 ) ? "at boot" : "in chooser",
 			    mtime );
@@ -222,7 +224,7 @@ main( ac, av )
 	    }
 
 	    if ( gettimeofday( &tv, &tz ) < 0 ) {
-		syslog( LOG_ERR, "main: gettimeofday: %m" );
+		syslog( LOG_ERR, "main: gettimeofday: %s", strerror( errno ) );
 		exit( 1 );
 	    }
 	    if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
@@ -254,7 +256,7 @@ main( ac, av )
 	atpb.atp_sresiov = &iov;
 	atpb.atp_sresiovcnt = 1;
 	if ( atp_sresp( atp, &atpb ) < 0 ) {
-	    syslog( LOG_ERR, "main: atp_sresp: %m" );
+	    syslog( LOG_ERR, "main: atp_sresp: %s", strerror( errno ) );
 	    exit( 1 );
 	}
     }
