@@ -6,6 +6,8 @@ config.*
 configure
 aclocal.m4
 libtool
+ltconfig
+ltmain.sh
 *.rpm
 *.deb
 *.dsc
