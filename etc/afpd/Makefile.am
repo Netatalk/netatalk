@@ -11,7 +11,7 @@ afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 	 status.c afp_options.c afp_asp.c afp_dsi.c messages.c afp_config.c \
 	 nfsquota.c codepage.c quota.c uam.c afs.c uid.c parse_mtab.c
 
-test_parse_mtab_SOURCES = test_parse_mtab.c
+test_parse_mtab_SOURCES = test_parse_mtab.c parse_mtab.c
 test_parse_mtab_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 afpd_LDADD = $(top_builddir)/libatalk/libatalk.la
