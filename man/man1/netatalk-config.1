@@ -1,0 +1,62 @@
+.TH netatalk 1 "09 June 2001" "netatalk 1.5pre6" "The Netatalk Project"
+.SH NAME
+netatalk-config - script to get information about the installed version of netatalk
+.SH SYNOPSIS
+.B netatalk-config
+[\-\-prefix\fI[=DIR]\fP] [\-\-exec_prefix\fI[=DIR]\fP] [\-\-help] [\-\-version]
+[\-\-libs] [\-\-libs\-dirs] [\-\-libs\-names] [\-\-cflags] [\-\-macros]
+.SH DESCRIPTION
+.PP
+\fInetatalk-config\fP is a tool that is used to configure to determine
+the compiler and linker flags that should be used to compile
+and link programs that use the \fInetatalk\fP run-time libraries.
+.
+.SH OPTIONS
+.l
+\fInetatalk-config\fP accepts the following options:
+.TP 8
+.B  \-\-help
+Print a short help for this command and exit.
+.TP 8
+.B  \-\-version
+Print the currently installed version of \fInetatalk\fP on the standard output.
+.TP 8
+.B  \-\-libs
+Print the linker flags that are necessary to link against the \fInetatalk\fP
+run-time libraries.
+.TP 8
+.B  \-\-libs-dirs
+Print only the \-l/\-R part of \-\-libs.
+.TP 8
+.B  \-\-libs-names
+Print only the \-l part of \-\-libs.
+.TP 8
+.B  \-\-cflags
+Print the compiler flags that are necessary to compile a program linked
+against the \fInetatalk\fP run-time libraries.
+.TP 8
+.B  \-\-macros
+Print the \fInetatalk\fP m4 directory.
+.TP 8
+.B  \-\-prefix=PREFIX
+If specified, use PREFIX instead of the installation prefix that \fInetatalk\fP
+was built with when computing the output for the \-\-cflags and
+\-\-libs options. This option is also used for the exec prefix
+if \-\-exec\-prefix was not specified. This option must be specified
+before any \-\-libs or \-\-cflags options.
+.TP 8
+.B  \-\-exec\_prefix=PREFIX
+If specified, use PREFIX instead of the installation exec prefix that
+\fInetatalk\fP was built with when computing the output for the \-\-cflags
+and \-\-libs options.  This option must be specified before any
+\-\-libs or \-\-cflags options.
+.SH COPYRIGHT
+Copyright \(co  1998 Owen Taylor
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation.
+
+Man page adapted for \fInetatalk-config\fP by Sebastian Rittau in 2001.
