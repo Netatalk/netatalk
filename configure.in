@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.162 2002-08-30 03:12:45 jmarcus Exp $
+dnl $Id: configure.in,v 1.163 2002-08-30 16:56:50 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -106,6 +106,9 @@ AC_FUNC_UTIME_NULL
 AC_FUNC_WAIT3
 AC_CHECK_FUNCS(flock getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strstr strtoul setpgrp strchr memcpy)
 AC_FUNC_SETPGRP
+
+dnl Checks for (v)snprintf
+NETATALK_SNPRINTF_CHECK
 
 dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:

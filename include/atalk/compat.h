@@ -79,3 +79,16 @@ extern int inet_aton __P((const char *, struct in_addr *));
 #if defined(ultrix) || defined(_IBMR2) || defined(NEED_GETUSERSHELL)
 extern char *getusershell __P((void));
 #endif
+
+#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
+#include <stdio.h>
+#include <stdarg.h>
+#endif
+
+#ifndef HAVE_SNPRINTF
+int snprintf (char *str,size_t count,const char *fmt,...);
+#endif
+
+#ifndef HAVE_VSNPRINTF
+int vsnprintf(char *str, size_t count, const char *fmt, va_list args);
+#endif

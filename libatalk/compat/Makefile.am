@@ -10,4 +10,5 @@ libcompat_la_SOURCES =	\
 	strdup.c	\
 	inet_aton.c	\
 	rquota_xdr.c	\
-	flock.c
+	flock.c		\
+	snprintf.c

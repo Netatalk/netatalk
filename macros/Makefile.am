@@ -8,4 +8,5 @@ EXTRA_DIST = \
 	ps-check.m4		\
 	quota-check.m4		\
 	srvloc.m4		\
-	ssl-check.m4
+	ssl-check.m4		\
+	snprintf-check.m4
