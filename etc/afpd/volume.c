@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.49 2003-03-09 19:55:35 didg Exp $
+ * $Id: volume.c,v 1.50 2003-03-19 00:13:23 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1173,13 +1173,14 @@ int		ibuflen, *rbuflen;
     struct stat	st;
     char	*volname;
 #ifndef CNID_DB
-    char *p;
+    char        *p;
+#else
+    int         opened = 0;
 #endif /* CNID_DB */
     struct vol	*volume;
     struct dir	*dir;
     int		len, ret, buflen;
     u_int16_t	bitmap;
-    int         opened = 0;
 
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
@@ -1237,8 +1238,10 @@ int		ibuflen, *rbuflen;
         dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
         volume->v_dir = volume->v_root = dir;
         volume->v_flags |= AFPVOL_OPEN;
+#ifdef CNID_DB
         volume->v_db = NULL;
         opened = 1;
+#endif
     }
     else {
        /* FIXME */
