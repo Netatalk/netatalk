@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.153 2002-02-08 16:42:31 jmarcus Exp $
+dnl $Id: configure.in,v 1.154 2002-02-08 17:43:15 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -561,7 +561,6 @@ if test x"$this_os" = "xtru64"; then
 	dnl AC_DEFINE(USE_UFS_QUOTA_H)
 	AC_DEFINE(TRU64)
 	AC_CHECK_LIB(security,set_auth_parameters)
-	AC_CHECK_LIB(db,main)
 	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
 	need_dash_r=no
 	sysv_style=tru64
