@@ -1,4 +1,5 @@
-# Last Updated July 8, 1999
+# ($Id)
+#
 # Use at your own risk.  No guarantees express or implied.
 #
 # Try to use MacPerl script 'ICDumpSuffixMap' included in /usr/doc 
@@ -280,3 +281,4 @@
 .eps      "EPSF"  "vgrd"      Postscript                     LaserWriter 8             application/postscript
 .epsf     "EPSF"  "vgrd"      Postscript                     LaserWriter 8             application/postscript
 .dvi      "ODVI"  "xdvi"      TeX DVI Document               xdvi                      application/x-dvi
+.dwt      "TEXT"  "DmWr"      Dreamweaver Template           Dreamweaver
