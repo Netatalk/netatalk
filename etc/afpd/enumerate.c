@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.38 2003-04-16 06:55:44 didg Exp $
+ * $Id: enumerate.c,v 1.39 2003-04-20 06:53:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -318,7 +318,7 @@ int     ext;
     }
     if ( *o_path->m_name != '\0') {
         /* it's a file or it's a dir and extendir() was unable to chdir in it */
-        return (path_isadir(o_path))? afp_errno:AFPERR_BADTYPE ;
+        return path_error(o_path, AFPERR_NODIR );
     }
 
     data = rbuf + 3 * sizeof( u_int16_t );

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.69 2003-04-20 06:13:40 didg Exp $
+ * $Id: directory.c,v 1.70 2003-04-20 06:53:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1430,6 +1430,20 @@ int getdirparams(const struct vol *vol,
 }
 
 /* ----------------------------- */
+int path_error(struct path *path, int error)
+{
+/* - a dir with access error
+ * - no error it's a file
+ * - file not found
+ */
+    if (path_isadir(path))
+        return afp_errno;
+    if (path->st_errno)
+        return error;
+    return AFPERR_BADTYPE ;
+}
+
+/* ----------------------------- */
 int afp_setdirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
@@ -1469,9 +1483,8 @@ int		ibuflen, *rbuflen;
         return get_afp_errno(AFPERR_NOOBJ); 
     }
 
-    /* FIXME access error or not a file */
     if ( *path->m_name != '\0' ) {
-        return (path_isadir( path))? afp_errno:AFPERR_BADTYPE ;
+    	return path_error(path, AFPERR_NOOBJ);
     }
 
     /*
@@ -2293,7 +2306,7 @@ int		ibuflen, *rbuflen;
     }
 
     if ( *path->m_name != '\0' ) {
-        return (path_isadir(path))? afp_errno:AFPERR_BADTYPE ;
+    	return path_error(path, AFPERR_NOOBJ);
     }
 
     if ( !path->st_valid && of_stat(path ) < 0 ) {

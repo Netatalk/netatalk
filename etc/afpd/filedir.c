@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.44 2003-04-14 18:03:49 didg Exp $
+ * $Id: filedir.c,v 1.45 2003-04-20 06:53:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -579,7 +579,7 @@ int		ibuflen, *rbuflen;
     upath = s_path->u_name;
     if ( path_isadir( s_path) ) {
     	if (*s_path->m_name != '\0') {
-    	    rc = AFPERR_ACCESS; 
+    	    rc = AFPERR_ACCESS;
     	}
     	else {
             rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
@@ -722,7 +722,7 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
     if ( *path->m_name != '\0' ) {
-        return (path_isadir(path))?afp_errno:AFPERR_BADTYPE;
+        return path_error(path, AFPERR_NOOBJ);
     }
 
     /* one more place where we know about path type */

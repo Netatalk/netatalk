@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.90 2003-04-20 06:13:41 didg Exp $
+ * $Id: file.c,v 1.91 2003-04-20 06:53:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -711,6 +711,10 @@ int		ibuflen, *rbuflen;
         return( AFPERR_BADTYPE ); /* it's a directory */
     }
 
+    if ( s_path->st_errno != 0 ) {
+        return( AFPERR_NOOBJ );
+    }
+
     if ((u_long)ibuf & 1 ) {
         ibuf++;
     }
@@ -1150,7 +1154,10 @@ int		ibuflen, *rbuflen;
         return get_afp_errno(AFPERR_NOOBJ); 
     }
     if ( *s_path->m_name != '\0' ) {
+#if 0
         return (path_isadir( s_path))? AFPERR_PARAM:AFPERR_BADTYPE ;
+#endif        
+	path_error(s_path, AFPERR_PARAM);
     }
 
     /* one of the handful of places that knows about the path type */
