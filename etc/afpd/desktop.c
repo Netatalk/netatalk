@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.15 2002-09-05 14:52:05 didg Exp $
+ * $Id: desktop.c,v 1.16 2002-09-09 01:21:59 didg Exp $
  *
  * See COPYRIGHT.
  */
@@ -670,10 +670,6 @@ char *utompath(const struct vol *vol, char *upath)
     char        *m, *u;
     int          h;
 
-#ifdef FILE_MANGLING
-    upath = mangle(vol, upath);
-#endif /* FILE_MANGLING */
-
     /* do the hex conversion */
     u = upath;
     m = mpath;
@@ -705,6 +701,11 @@ char *utompath(const struct vol *vol, char *upath)
         m++;
     }
     *m = '\0';
+
+#ifdef FILE_MANGLING
+    strcpy(mpath,mangle(vol, mpath));
+#endif /* FILE_MANGLING */
+
     return( mpath );
 }
 
