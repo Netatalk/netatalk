@@ -6,7 +6,7 @@ set -e
 
 debiandir=distrib/debian
 
-if test ! -e README.ASUN; then
+if test ! -d libatalk; then
   echo "Not in netatalk directory"
   exit 1
 fi
