@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.21 2002-02-03 04:57:38 jmarcus Exp $
+ * $Id: fork.c,v 1.22 2002-02-14 05:59:51 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -550,7 +550,7 @@ int		ibuflen, *rbuflen;
 
     *rbuflen = 0;
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_setforkparams: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_setforkparams: of_find could not locate open fork refnum: %u", ofrefnum );
         return( AFPERR_PARAM );
     }
 
