@@ -3,6 +3,9 @@
 # quick fix to remove old INSTALL/ directory
 rm -Rvf INSTALL
 
+# another fix to hack move of README
+touch README
+
 # build it all.
 libtoolize --force --copy && aclocal $ACLOCAL_FLAGS && autoheader && automake --add-missing && autoconf
 
