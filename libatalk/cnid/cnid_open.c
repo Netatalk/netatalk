@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.37 2002-01-29 21:12:18 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.38 2002-02-01 19:51:09 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -185,20 +185,15 @@ static int compare_unicode(const DBT *a, const DBT *b)
 #endif /* DB_VERSION_MINOR */
 }
 
-static int have_lock = 0;
-
 void *cnid_open(const char *dir) {
     struct stat st, rsb, lsb, csb;
     struct flock lock;
     char path[MAXPATHLEN + 1];
-    char recover_file[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
     DB_TXN *tid;
-    u_int32_t DBEXTRAS = 0;
     int open_flag, len;
-	int no_recover_flag = 0;
-    int rc, rfd = -1;
+    int rc;
 
     if (!dir) {
         return NULL;
@@ -236,31 +231,13 @@ void *cnid_open(const char *dir) {
     strcat(path, "/");
     len++;
 
-    strcpy(db->close_file, path);
-    strcat(db->close_file, DBCLOSEFILE);
-
-    /* Check to make sure that a client isn't in the process of closing
-     * the database environment.  To do this, select on the close file. */
-    while(stat(db->close_file, &csb) == 0) {
-        struct timeval ct;
-        ct.tv_sec = 1;
-        ct.tv_usec = 0;
-        (void)select(0, NULL, NULL, NULL, &ct);
-    }
-
-    strcpy(recover_file, path);
-    strcat(recover_file, DBRECOVERFILE);
-
     /* Search for a byte lock.  This allows us to cleanup the log files
      * at cnid_close() in a clean fashion.
      *
      * NOTE: This won't work if multiple volumes for the same user refer
      * to the sahe directory. */
     strcat(path, DBLOCKFILE);
-	strcpy(db->lock_file, path);
-	if (stat(path, &lsb) == 0) {
-		no_recover_flag = 1;
-	}
+    strcpy(db->lock_file, path);
     if ((db->lockfd = open(path, O_RDWR | O_CREAT, 0666)) > -1) {
         lock.l_start = 0;
         lock.l_len = 1;
@@ -275,28 +252,6 @@ void *cnid_open(const char *dir) {
     }
     else {
         LOG(log_error, logtype_default, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
-    }
-
-    /* Create a file to represent database recovery.  While this file
-     * exists, the database is being recovered, and all other clients will
-     * select until recovery is complete, and this file goes away. */
-    if (!have_lock && db->lockfd > -1 && lock.l_start == 0 &&
-		no_recover_flag == 0) {
-        if (stat(recover_file, &rsb) == 0) {
-            (void)remove(recover_file);
-        }
-        if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
-            DBEXTRAS |= DB_RECOVER;
-            have_lock = 1;
-        }
-    }
-    else if (!have_lock) {
-        while (stat(recover_file, &rsb) == 0) {
-            struct timeval rt;
-            rt.tv_sec = 1;
-            rt.tv_usec = 0;
-            (void)select(0, NULL, NULL, NULL, &rt);
-        }
     }
 
     path[len + DBHOMELEN] = '\0';
@@ -327,7 +282,7 @@ void *cnid_open(const char *dir) {
 #endif /* DB_VERSION_MINOR > 1 */
 
     /* Open the database environment. */
-    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS | DBEXTRAS, 0666)) != 0) {
+    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) != 0) {
         if (rc == DB_RUNRECOVERY) {
             /* This is the mother of all errors.  We _must_ fail here. */
             LOG(log_error, logtype_default, "cnid_open: CATASTROPHIC ERROR opening database environment %s.  Run db_recovery -c immediately", path);
@@ -349,21 +304,6 @@ void *cnid_open(const char *dir) {
         db->flags |= CNIDFLAG_DB_RO;
         open_flag = DB_RDONLY;
         LOG(log_info, logtype_default, "cnid_open: Obtained read-only database environment %s", path);
-    }
-
-    /* If we have the recovery lock, close the file, remove it, so other
-     * clients can proceed opening the DB environment. */
-    if (rfd > -1) {
-        if (remove(recover_file) < 0) {
-            switch(errno) {
-            case ENOENT:
-                break;
-            default:
-                LOG(log_error, logtype_default, "cnid_open: Unable to remove %s: %s", recover_file, strerror(errno));
-            }
-        }
-        close(rfd);
-        rfd = -1;
     }
 
     /* did/name reverse mapping.  We use a BTree for this one. */
@@ -581,10 +521,7 @@ fail_appinit:
 fail_lock:
     if (db->lockfd > -1) {
         close(db->lockfd);
-    }
-    if (rfd > -1) {
-        (void)remove(recover_file);
-        close(rfd);
+        (void)remove(db->lock_file);
     }
 
 fail_adouble:

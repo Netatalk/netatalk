@@ -32,6 +32,4 @@ here's the ritual:
 		NOTE: cnid_add calls this before adding a new CNID. 
 	4) when you delete a file or directory, you need to call
 	   cnid_delete with the CNID for that file/directory.
-	5) if you're just moving a CNID, call cnid_move with the CNID
-	   and the new dev/ino,did/name pairs.
-	6) call cnid_close when closing the volume.
+	5) call cnid_close when closing the volume.
