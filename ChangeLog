@@ -1,3 +1,26 @@
+($Id: ChangeLog,v 1.32 2001-05-01 13:45:34 rufustfirefly Exp $)
+
+2001-05-01  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* bin/aecho/aecho.c, bin/getzones/getzones.c, bin/megatron/asingle.c,
+	bin/megatron/hqx.c, bin/megatron/macbin.c, bin/megatron/megatron.c,
+	bin/megatron/nad.c, bin/megatron/updcrc.c, libatalk/atp/atp_bprint.c,
+	libatalk/util/getiface.c: warnings patch from Sebastian Rittau
+	<srittau@users.sourceforge.net> (#420300)
+
+	* bin/afile/*: replacement for old restrictive afile from Sebastian
+	Rittau <srittau@users.sourceforge.net> (#420302)
+
+	* distrib/initscripts/rc.atalk.redhat.tmpl: daemon-specific start and
+	stop messages to the redhat initscript. nbpregister and unregister
+	messages are also displayed. This patch also permits spaces in zone
+	and machine names to be used in the variables. From Ryan Cleary
+	<tryanc@users.sourceforge.net> (#418094)
+
+	* bin/megatron/Makefile.am: patch to properly create links for
+	megatron, from Sebastian Rittau <srittau@users.sourceforge.net>
+	(#420446)
+
 2001-04-25  morgan a <morgan@orst.edu>
 
 	* etc/afpd/unix.c: in setdirowner(), changed some of the syslog
