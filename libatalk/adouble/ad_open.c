@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.29 2003-03-09 19:55:35 didg Exp $
+ * $Id: ad_open.c,v 1.30 2003-04-10 22:58:42 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -701,7 +701,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	  st_invalid = ad_mode_st(path, &admode, &st);
           ad->ad_df.adf_fd =open( path, hoflags, admode );
 	  if (ad->ad_df.adf_fd < 0 ) {
-             if (errno == EACCES && !(oflags & O_RDWR)) {
+             if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
                 hoflags = oflags;
                 ad->ad_df.adf_fd =open( path, hoflags, admode );
              }
@@ -760,7 +760,7 @@ int ad_open( path, adflags, oflags, mode, ad )
     hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
     ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 );
     if (ad->ad_hf.adf_fd < 0 ) {
-        if (errno == EACCES && !(oflags & O_RDWR)) {
+        if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
             hoflags = oflags & ~O_CREAT;
             ad->ad_hf.adf_fd = open( ad_p, hoflags, 0 );
         }    
