@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.13 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: enumerate.c,v 1.14 2002-01-17 16:19:07 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -79,6 +79,18 @@ struct stat *st;
     /* add to cnid db */
     cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath,
                            upathlen, cdir->d_did);
+    /* Fail out if things go bad with CNID. */
+    if (cdir->d_did > CNID_MAX) {
+        switch (cdir->d_did) {
+        case CNID_ERR_PARAM:
+            LOG(log_error, logtype_default, "adddir: Incorrect parameters passed to cnid_add");
+            return NULL;
+        case CNID_ERR_PATH:
+        case CNID_ERR_DB:
+        case CNID_ERR_MAX:
+            return NULL;
+        }
+    }
 #endif /* CNID_DB */
 
     if (cdir->d_did == 0) {
@@ -251,7 +263,7 @@ int		ibuflen, *rbuflen;
                 if ((buf = (char *) realloc( sd.sd_buf, sd.sd_buflen +
                                              SDBUFBRK )) == NULL ) {
                     LOG(log_error, logtype_default, "afp_enumerate: realloc: %s",
-                            strerror(errno) );
+                        strerror(errno) );
                     closedir(dp);
                     *rbuflen = 0;
                     return AFPERR_MISC;
@@ -310,7 +322,7 @@ int		ibuflen, *rbuflen;
 
         if ( stat( sd.sd_last, &st ) < 0 ) {
             LOG(log_debug, logtype_default, "afp_enumerate: stat %s: %s",
-                    sd.sd_last, strerror(errno) );
+                sd.sd_last, strerror(errno) );
             sd.sd_last += len + 1;
             continue;
         }
