@@ -18,7 +18,7 @@ SUFFIXES = .tmpl .
 		-e s@:ETCDIR:@${pkgconfdir}@ \
 		<$< >$@
 
-CLEANFILES = lp2pap.sh
+CLEANFILES = $(GENERATED_FILES)
 
 bin_SCRIPTS = $(SCRIPTS) $(GENERATED_FILES)
 
