@@ -178,7 +178,7 @@ struct atp_block {
 #define ATP_TRESP	(2<<6)		/* Trans. RESPonse */
 #define ATP_TREL	(3<<6)		/* Trans. RELease */
 
-extern ATP		atp_open  __P((const u_int8_t, 
+extern ATP		atp_open  __P((u_int8_t, 
 				       const struct at_addr *));
 extern int		atp_close __P((ATP));
 extern int		atp_sreq  __P((ATP, struct atp_block *, int, 
