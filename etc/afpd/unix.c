@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.41 2003-01-08 15:01:36 didg Exp $
+ * $Id: unix.c,v 1.42 2003-01-12 14:40:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -651,7 +651,7 @@ static int recursive_chown(const char *path, uid_t uid, gid_t gid) {
 	    LOG(log_error, logtype_afpd, "cannot opendir() [%s] (uid = %d): %s\n", path, uid, strerror(errno));
 	    goto recursive_chown_end;
 	}
-	while ((entry=readdir(odir)) != NULL) {
+	while (NULL != (entry=readdir(odir)) ) {
 	    name = entry->d_name;
 	    if (name[0] == '.' && name[1] == '\0')
 		continue;

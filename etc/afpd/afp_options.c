@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.28 2002-12-07 02:39:57 rlewczuk Exp $
+ * $Id: afp_options.c,v 1.29 2003-01-12 14:39:57 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -428,17 +428,17 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
         perror( "gethostname" );
         return 0;
     }
-    if (( p = strchr(options->hostname, '.' )) != 0 ) {
+    if (NULL != ( p = strchr(options->hostname, '.' )) ) {
         *p = '\0';
     }
 
-    if (( p = strrchr( av[ 0 ], '/' )) == NULL ) {
+    if (NULL == ( p = strrchr( av[ 0 ], '/' )) ) {
         p = av[ 0 ];
     } else {
         p++;
     }
 
-    while (( c = getopt( ac, av, OPTIONS )) != EOF ) {
+    while (EOF != ( c = getopt( ac, av, OPTIONS )) ) {
         switch ( c ) {
         case 'd' :
             options->flags |= OPTION_DEBUG;

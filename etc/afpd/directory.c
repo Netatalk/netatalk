@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.55 2003-01-08 15:01:33 didg Exp $
+ * $Id: directory.c,v 1.56 2003-01-12 14:39:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -147,7 +147,7 @@ u_int32_t	did;
         return ret;
 
     id = did;
-    if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL) {
+    if (NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) ) {
         afp_errno = AFPERR_NOOBJ;
         return NULL;
     }
@@ -1273,7 +1273,7 @@ int		ibuflen, *rbuflen;
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1645,7 +1645,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1654,11 +1654,11 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return( AFPERR_NOOBJ );
     }
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
     /* FIXME check done elswhere? cname was able to move curdir to it! */
@@ -2153,18 +2153,18 @@ int		ibuflen, *rbuflen;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof( vid );
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (( parentdir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( parentdir = dirlookup( vol, did )) ) {
         return afp_errno;
     }
 
-    if (( path = cname( vol, parentdir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, parentdir, &ibuf )) ) {
         return afp_errno;
     }
 

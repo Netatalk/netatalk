@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.24 2002-11-26 18:48:23 didg Exp $
+ * $Id: ad_open.c,v 1.25 2003-01-12 14:40:04 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -483,7 +483,7 @@ ad_path( path, adflags )
 	}
 	slash = ".Parent";
     } else {
-	if (( slash = strrchr( buf, '/' )) != NULL ) {
+	if (NULL != ( slash = strrchr( buf, '/' )) ) {
 	    c = *++slash;
 	    *slash = '\0';
 	    strncpy( pathbuf, buf, MAXPATHLEN);
@@ -524,7 +524,7 @@ char
      * For a path which is just a filename, use "." instead.
      */
     strcpy( modebuf, path );
-    if (( slash = strrchr( modebuf, '/' )) != NULL ) {
+    if (NULL != ( slash = strrchr( modebuf, '/' )) ) {
 	*slash = '\0';		/* remove pathname component */
     } else {
 	modebuf[0] = '.';	/* use current directory */
@@ -672,7 +672,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 		 * mkdir it.
 		 */
 		if (errno == ENOENT && (adflags & ADFLAGS_NOADOUBLE) == 0) {
-		    if (( slash = strrchr( ad_p, '/' )) == NULL ) {
+		    if (NULL == ( slash = strrchr( ad_p, '/' )) ) {
 		        ad_close( ad, adflags );
 		        return( -1 );
 		    }

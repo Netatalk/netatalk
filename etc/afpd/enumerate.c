@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.29 2003-01-07 22:13:39 didg Exp $
+ * $Id: enumerate.c,v 1.30 2003-01-12 14:39:59 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -244,7 +244,7 @@ int     ext;
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
@@ -252,7 +252,7 @@ int     ext;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         *rbuflen = 0;
         return( AFPERR_NODIR );
     }
@@ -310,7 +310,7 @@ int     ext;
     
     maxsz = min(maxsz, *rbuflen);
 
-    if (( o_path = cname( vol, dir, &ibuf )) == NULL) {
+    if (NULL == ( o_path = cname( vol, dir, &ibuf )) ) {
         *rbuflen = 0;
         return( AFPERR_NODIR );
     }

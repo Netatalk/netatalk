@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.9 2002-10-11 14:18:39 didg Exp $
+ * $Id: dsi_stream.c,v 1.10 2003-01-12 14:40:05 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -46,8 +46,8 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length)
 
   written = 0;
   while (written < length) {
-    if (((len = write(dsi->socket, (u_int8_t *) data + written,
-		      length - written)) == -1 && errno == EINTR) ||
+    if ((-1 == (len = write(dsi->socket, (u_int8_t *) data + written,
+		      length - written)) && errno == EINTR) ||
 	!len)
       continue;
 

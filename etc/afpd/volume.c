@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.45 2003-01-08 15:01:37 didg Exp $
+ * $Id: volume.c,v 1.46 2003-01-12 14:40:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -539,7 +539,7 @@ FILE	*fp;
     int		c;
 
     p = buf;
-    while ((( c = getc( fp )) != EOF ) && ( size > 0 )) {
+    while ((EOF != ( c = getc( fp )) ) && ( size > 0 )) {
         if ( c == '\n' || c == '\r' ) {
             *p++ = '\n';
             break;
@@ -706,7 +706,7 @@ struct passwd *pwent;
         strcat( path, p2 );
     }
 
-    if (( fp = fopen( path, "r" )) == NULL ) {
+    if (NULL == ( fp = fopen( path, "r" )) ) {
         return( -1 );
     }
 
@@ -1298,7 +1298,7 @@ int		ibuflen, *rbuflen;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof( vid ));
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1355,7 +1355,7 @@ struct extmap *getextmap(const char *path)
     char	  *p;
     struct extmap *em;
 
-    if (( p = strrchr( path, '.' )) == NULL ) {
+    if (NULL == ( p = strrchr( path, '.' )) ) {
         return( defextmap );
     }
     p++;
@@ -1451,7 +1451,7 @@ int		ibuflen, *rbuflen;
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
     bitmap = ntohs( bitmap );
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.37 2003-01-08 15:01:34 didg Exp $
+ * $Id: filedir.c,v 1.38 2003-01-12 14:40:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -159,14 +159,14 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return afp_errno;
     }
 
@@ -177,7 +177,7 @@ int		ibuflen, *rbuflen;
     dbitmap = ntohs( dbitmap );
     ibuf += sizeof( dbitmap );
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
 
@@ -254,7 +254,7 @@ int		ibuflen, *rbuflen;
     memcpy( &vid, ibuf, sizeof(vid));
     ibuf += sizeof( vid );
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -465,7 +465,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -474,7 +474,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( sdir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( sdir = dirlookup( vol, did )) ) {
 	return afp_errno;    
     }
 
@@ -545,7 +545,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -554,7 +554,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
 	return afp_errno;    
     }
 
@@ -567,7 +567,7 @@ int		ibuflen, *rbuflen;
         rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
     } else if (of_findname(s_path)) {
         rc = AFPERR_BUSY;
-    } else if ((rc = deletefile( upath, 1)) == AFP_OK) {
+    } else if (AFP_OK == (rc = deletefile( upath, 1))) {
 #ifdef CNID_DB /* get rid of entry */
         cnid_t id = cnid_get(vol->v_db, curdir->d_did, upath, strlen(upath));
         cnid_delete(vol->v_db, id);
@@ -650,7 +650,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -660,7 +660,7 @@ int		ibuflen, *rbuflen;
     /* source did followed by dest did */
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
-    if (( sdir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( sdir = dirlookup( vol, did )) ) {
         return( AFPERR_PARAM );
     }
 

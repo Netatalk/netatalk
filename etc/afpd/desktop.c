@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.20 2003-01-08 15:01:33 didg Exp $
+ * $Id: desktop.c,v 1.21 2003-01-12 14:39:58 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -60,7 +60,7 @@ int		ibuflen, *rbuflen;
     ibuf += 2;
 
     memcpy( &vid, ibuf, sizeof(vid));
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
@@ -768,17 +768,17 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
 	return afp_errno;
     }
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
 	return afp_errno;
     }
 
@@ -843,17 +843,17 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
 	return afp_errno;
     }
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
 	return afp_errno;
     }
 
@@ -909,17 +909,17 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
 	return afp_errno;
     }
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf ))) {
 	return afp_errno;
     }
 

@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.13 2002-12-18 00:17:03 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.14 2003-01-12 14:40:02 didg Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,7 +29,7 @@ demangle(const struct vol *vol, char *mfilename) {
 	    return mfilename;
 	}
 
-	if ((ext = strrchr(mfilename, '.')) != NULL) {
+	if (NULL != (ext = strrchr(mfilename, '.')) ) {
 	    ext_len = strlen(ext);
 	}
 	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ext_len) {
@@ -63,7 +63,7 @@ mangle(const struct vol *vol, char *filename) {
     }
 
     /* First, attmept to locate a file extension. */
-    if ((ext = strrchr(filename, '.')) != NULL) {
+    if (NULL != (ext = strrchr(filename, '.')) ) {
 	ext_len = strlen(ext);
 	if (ext_len > MAX_EXT_LENGTH) {
 	    /* Do some bounds checking to prevent an extension overflow. */

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.42 2003-01-10 05:29:01 didg Exp $
+ * $Id: fork.c,v 1.43 2003-01-12 14:40:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -831,7 +831,7 @@ int is64;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
     ibuf += sizeof( u_short );
 
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_read: of_find");
         err = AFPERR_PARAM;
         goto afp_read_err;
@@ -1012,7 +1012,7 @@ int		ibuflen, *rbuflen;
     ibuf += 2;
 
     memcpy(&vid, ibuf, sizeof(vid));
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1411,8 +1411,8 @@ int		ibuflen, *rbuflen;
         }
     }
 
-    if (( ret = getforkparams( ofork, bitmap,
-                               rbuf + sizeof( u_short ), &buflen, attrbits )) != AFP_OK ) {
+    if (AFP_OK != ( ret = getforkparams( ofork, bitmap,
+                               rbuf + sizeof( u_short ), &buflen, attrbits ))) {
         return( ret );
     }
 

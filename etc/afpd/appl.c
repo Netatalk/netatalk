@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.9 2003-01-08 15:01:33 didg Exp $
+ * $Id: appl.c,v 1.10 2003-01-12 14:39:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -181,7 +181,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid ))) {
         return( AFPERR_PARAM );
     }
 
@@ -267,7 +267,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid ))) {
         return( AFPERR_PARAM );
     }
 
@@ -335,7 +335,7 @@ int		ibuflen, *rbuflen;
 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.71 2003-01-11 17:26:06 jmarcus Exp $
+ * $Id: file.c,v 1.72 2003-01-12 14:39:59 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -535,7 +535,7 @@ int		ibuflen, *rbuflen;
     memcpy(&vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -545,11 +545,11 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof( did));
     ibuf += sizeof( did );
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return afp_errno;
     }
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
 
@@ -645,7 +645,7 @@ int		ibuflen, *rbuflen;
 
     memcpy(&vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1033,13 +1033,13 @@ int		ibuflen, *rbuflen;
 
     memcpy(&svid, ibuf, sizeof( svid ));
     ibuf += sizeof( svid );
-    if (( vol = getvolbyvid( svid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( svid )) ) {
         return( AFPERR_PARAM );
     }
 
     memcpy(&sdid, ibuf, sizeof( sdid ));
     ibuf += sizeof( sdid );
-    if (( dir = dirlookup( vol, sdid )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, sdid )) ) {
         return afp_errno;
     }
 
@@ -1516,7 +1516,7 @@ int		ibuflen, *rbuflen;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM);
     }
 
@@ -1786,7 +1786,7 @@ int		ibuflen, *rbuflen;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM);
     }
 
