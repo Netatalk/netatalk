@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.34 2002-05-10 21:35:41 jmarcus Exp $
+ * $Id: unix.c,v 1.35 2002-06-06 10:14:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -133,13 +133,15 @@ struct maccess	*ma;
 
     ma->ma_owner = utombits( mode );
 
+    /* ma_user is a union of all permissions */
+
     if ( (uuid == stat->st_uid) || (uuid == 0)) {
         ma->ma_user = ma->ma_owner | AR_UOWN;
-    } else if ( gmem( stat->st_gid )) {
-        ma->ma_user = ma->ma_group;
-    } else {
-        ma->ma_user = ma->ma_world;
     }
+    if ( gmem( stat->st_gid )) {
+        ma->ma_user |= ma->ma_group;
+    } 
+    ma->ma_user |= ma->ma_world;
 
     /*
      * There are certain things the mac won't try if you don't have

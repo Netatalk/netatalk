@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.26 2002-03-24 17:45:29 jmarcus Exp $
+ * $Id: volume.c,v 1.27 2002-06-06 10:14:26 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1181,11 +1181,11 @@ int		ibuflen, *rbuflen;
     bitmap = htons( bitmap );
     memcpy(rbuf, &bitmap, sizeof( bitmap ));
 
-    curdir = volume->v_dir;
     if ( chdir( volume->v_path ) < 0 ) {
         ret = AFPERR_PARAM;
         goto openvol_err;
     }
+    curdir = volume->v_dir;
 
 #ifdef CNID_DB
     if (volume->v_dbpath)
@@ -1235,9 +1235,9 @@ int		ibuflen, *rbuflen;
         }
     }
     if ( ovol != NULL ) {
-        curdir = ovol->v_dir;
-        if ( chdir( ovol->v_path ) < 0 ) {
-            return( AFPERR_PARAM );
+        /* Even if chdir fails, we can't say afp_closevol fails. */
+        if ( chdir( ovol->v_path ) == 0 ) {
+            curdir = ovol->v_dir;
         }
     }
 
