@@ -1,3 +1,8 @@
+2000-09-22  Roland Schulz <rdschulz@abarrach.franken.de>
+
+	* etc/afpd/volume.c (setvoltime): fix for multiple clients
+	writing to same volume.
+
 2000-02-28  a sun  <asun@asun.cobalt.com>
 
 	* etc/afpd/directory.h (CNID_INODE): xor the inode a little
