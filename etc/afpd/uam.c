@@ -315,6 +315,10 @@ int uam_afpserver_option(void *private, const int what, void *option,
       *len = strlen(obj->options.hostname);
     break;
 
+  case UAM_OPTION_PROTOCOL:
+    *buf = obj->proto;
+    break;
+
   case UAM_OPTION_COOKIE: 
     /* it's up to the uam to actually store something useful here.
      * this just passes back a handle to the cookie. the uam side

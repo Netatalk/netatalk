@@ -32,6 +32,7 @@
 #define UAM_OPTION_RANDNUM      (1 << 4) /* request a random number */
 #define UAM_OPTION_HOSTNAME     (1 << 5) /* get host name */
 #define UAM_OPTION_COOKIE       (1 << 6) /* cookie handle */
+#define UAM_OPTION_PROTOCOL	(1 << 7) /* DSI or ASP */
 
 /* some password options. you pass these in the length parameter and
  * get back the corresponding option. not all of these are implemented. */
