@@ -6,10 +6,10 @@ SUBDIRS = uams_krb4
 # conditionally build some modules
 #
 
-UAMS_GENERIC = uams_guest.la uams_randnum.la uams_passwd.la
+UAMS_GENERIC = uams_guest.la uams_passwd.la
 
 if USE_DHX
-UAMS_DHX_PW = uams_dhx_passwd.la
+UAMS_DHX_GENERIC = uams_randnum.la uams_dhx_passwd.la
 endif
 
 if USE_PGP
@@ -48,25 +48,29 @@ uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c
 # flags
 #
 
+uams_randnum_la_CFLAGS    = @SSL_CFLAGS@
+uams_dhx_passwd_la_CFLAGS = @SSL_CFLAGS@
+uams_dhx_pam_la_CFLAGS    = @SSL_CFLAGS@
+
 uams_guest_la_LDFLAGS      = -module -avoid-version
-uams_randnum_la_LDFLAGS    = -module -avoid-version
+uams_randnum_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@
 uams_passwd_la_LDFLAGS     = -module -avoid-version
-uams_pam_la_LDFLAGS        = -lpam -module -avoid-version
+uams_pam_la_LDFLAGS        = -module -avoid-version -lpam
 uams_pgp_la_LDFLAGS        = -module -avoid-version
-uams_dhx_passwd_la_LDFLAGS = -module -avoid-version
-uams_dhx_pam_la_LDFLAGS    = -lpam -module -avoid-version
+uams_dhx_passwd_la_LDFLAGS = -module -avoid-version @SSL_LIBS@
+uams_dhx_pam_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@ -lpam
 
 #
 # module compilation
 #
 
 uamsdir = @UAMS_PATH@
-uams_LTLIBRARIES = \
-	$(UAMS_GENERIC)	\
-	$(UAMS_PGP)	\
-	$(UAMS_PAM)	\
-	$(UAMS_DHX_PAM)	\
-	$(UAMS_DHX_PW)
+uams_LTLIBRARIES =		\
+	$(UAMS_GENERIC)		\
+	$(UAMS_PGP)		\
+	$(UAMS_PAM)		\
+	$(UAMS_DHX_GENERIC)	\
+	$(UAMS_DHX_PAM)
 
 #
 # link creation
