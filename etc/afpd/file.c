@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.22 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: file.c,v 1.23 2001-07-10 13:38:13 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,6 +49,7 @@
 #endif /* DID_MTAB */
 
 #ifdef FORCE_UIDGID
+#warning UIDGID
 #include "uid.h"
 #endif /* FORCE_UIDGID */
 

@@ -1,10 +1,12 @@
-($Id: ChangeLog,v 1.58 2001-06-30 17:42:51 morgana Exp $)
+($Id: ChangeLog,v 1.59 2001-07-10 13:38:13 rufustfirefly Exp $)
 
 2001-06-30  andy m  <morgan@orst.edu>
+
 	* etc/papd/ppd.c: "unquote" ppd values by removing leading
 	and trailing quote character. This should fix bug #426141.
 
 2001-06-27  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* many, many, files: more malformed ifdef correction, nicer
 	comments, etc, etc, etc
 
@@ -13,9 +15,11 @@
 	no more compile errors. (Jeff)
 
 2001-06-27  uwe hees <hees@viva.de>
+
 	* etc/uams/uams_guest.c: fixed a typo.
 
 2001-06-26  andy m  <morgan@orst.edu>
+
 	* etc/papd/file.c: modified markline() to return 1 instead
 	of *linelength for successful completion. This should fix
 	the remaining binary printing problems in papd.  Thanks go
@@ -23,6 +27,7 @@
 	about the markline function.
 
 2001-06-25  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* etc/afpd/auth.c, etc/afpd/main.c, etc/afpd/uam.c,
 	etc/uams/uams_dhx_passwd.c, etc/uams/uams_passwd.c,
 	include/atalk/uam.h: TRU64 authentication patch to allow
@@ -36,6 +41,7 @@
 	CVS Id tags
 
 2001-06-20  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* configure.in: check for linux/quota.h before enabling
 	QUOTACTL_WRAPPER (Joe Clarke) 
 
@@ -47,6 +53,7 @@
 	major autoconf fixes for afpd, nicer commenting, etc (Jeff)
 
 2001-06-19  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* etc/afpd/file.c, etc/afpd/parse_mtab.c, etc/afpd/parse_mtab.h,
 	etc/atalkd/route.h, etc/atalkd/rtmp.c, etc/papd/headers.c,
 	etc/papd/magics.c, libatalk/asp/asp_tickle.c: patch for
@@ -57,6 +64,7 @@
 	fixes with GCC, etc (Jeff)
 
 2001-06-18  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* configure.in, etc/uams/Makefile.am,
 	etc/uams/uams_krb4/Makefile.am: patch #433952 from Sebastian
 	Rittau to move UAM authentication to use libtool
@@ -72,11 +80,13 @@
 	properly
 
 2001-06-13  Sam Noble <ns@shadow.org>
+
 	* etc/papd/{printcap,ppd,lp,file,comment}.h:
 	added #include <sys/cdefs.h> to these headers so that __P gets
 	properly defined on platforms like TRU64
 
 2001-06-11  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* configure.in, include/atalk/adouble.h, libatalk/compat/flock.c:
 	patch #431859 to avoid ucbinclude on Solaris, with flock support,
 	thanks to Russ Allbery (rra@users.sourceforge.net)
@@ -94,6 +104,7 @@
 	(Sam Noble)
 
 2001-06-07  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* configure.in, bin/afppasswd/Makefile.am,
 	contrib/shell_utils/Makefile.am, distrib/initscripts/Makefile.am,
 	etc/afpd/Makefile.am, etc/afpd/nls/Makefile.am,
@@ -113,16 +124,19 @@
 	DID support actually works...
 
 2001-06-06  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* etc/afpd/filedir.c, etc/afpd/unix.c: fixed dropkludge code
 	so that it properly compiles again, along with minor warning
 	fixen
 
 2001-06-05 Dan L. (pooba53)
+
 	* Modified configure.in so references made to $ac_prefix_default
 	listed at the beginning are correct. The previous references were
 	being made to $ac_default_prefix.
 
 2001-06-04  jeff b  <jeff@univrel.pr.uconn.edu>
+
 	* doc/README.TRU64: details about tru64 installations, from
 	Edmund Lam <epl@unimelb.edu.au> 
 
