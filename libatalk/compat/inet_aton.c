@@ -1,5 +1,5 @@
 /*
- * $Id: inet_aton.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: inet_aton.c,v 1.4 2003-02-17 01:51:08 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -9,8 +9,6 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-static int _inet_aton_dummy;
 
 #if defined(ultrix) || (defined(sun) && defined(__svr4__))
 #ifndef INADDR_NONE

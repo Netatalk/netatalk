@@ -1,5 +1,5 @@
 /*
- * $Id: strcasecmp.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: strcasecmp.c,v 1.4 2003-02-17 01:51:08 srittau Exp $
  *
  * Copyright (c) 1987 Regents of the University of California.
  * All rights reserved.
@@ -22,8 +22,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
-static int	_strcasecmp_dummy;
 
 # if defined( ibm032 )
 

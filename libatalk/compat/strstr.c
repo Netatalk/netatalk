@@ -1,5 +1,5 @@
 /*
- * $Id: strstr.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: strstr.c,v 1.4 2003-02-17 01:51:08 srittau Exp $
  *
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
@@ -43,8 +43,6 @@
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)strstr.c	5.2 (Berkeley) 1/26/91";
 #endif /* LIBC_SCCS and not lint */
-
-static int	_strstr_dummy;
 
 # if defined(ibm032) || (defined(sun) && defined(i386))
 #ifdef sun

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_sendfile.c,v 1.5 2002-10-11 14:18:38 didg Exp $
+ * $Id: ad_sendfile.c,v 1.6 2003-02-17 01:51:07 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -28,8 +28,6 @@
 #include <atalk/logger.h>
 
 #include "ad_private.h"
-
-static int _ad_sendfile_dummy;
 
 #ifdef ATACC
 
