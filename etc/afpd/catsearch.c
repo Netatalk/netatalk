@@ -447,7 +447,8 @@ static int rslt_add(struct vol *vol, char *fname, short cidx, int isdir, char **
  * pos - position we've stopped recently
  * rbuf - output buffer
  * rbuflen - output buffer length
-*/
+ */
+#define NUM_ROUNDS 100
 static int catsearch(struct vol *vol, struct dir *dir,  
 		     int rmatches, int *pos, char *rbuf, u_int32_t *nrecs, int *rsize)
 {
@@ -461,6 +462,8 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	int orig_dir_len = 128;
 	char *vpath = vol->v_path;
 	char *rrbuf = rbuf;
+        time_t start_time;
+        int num_rounds = NUM_ROUNDS;
         
 	if (*pos != 0 && *pos != cur_pos) 
 		return AFPERR_CATCHNG;
@@ -468,6 +471,8 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	/* FIXME: Category "offspring count ! */
 
 	/* So we are beginning... */
+        start_time = time(NULL);
+
 	/* We need to initialize all mandatory structures/variables and change working directory appropriate... */
 	if (*pos == 0) {
 		clearstack();
@@ -481,7 +486,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 			goto catsearch_end;
 		}
 		dstack[0].path = strdup(vpath);
-		/* FIXME: Sometimes DID is given by klient ! (correct this one above !) */
+		/* FIXME: Sometimes DID is given by client ! (correct this one above !) */
 	}
 
 	/* Save current path */
@@ -551,8 +556,8 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				} 
 			}
 
-			/* bit 0 means that criteria has ben met */
-			if ((ccr & 1)) {
+			/* bit 0 means that criteria has been met */
+			if (ccr & 1) {
 				r = rslt_add(vol,  
 					     (c1.fbitmap&(1<<FILPBIT_LNAME))|(c1.dbitmap&(1<<DIRPBIT_LNAME)) ? 
 					         fname : NULL,	
@@ -566,11 +571,19 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				*nrecs += r;
 				/* Number of matches limit */
 				if (--rmatches == 0) 
-					goto catsearch_pause; /* FIXME: timelimit checks ! */
+					goto catsearch_pause;
 				/* Block size limit */
 				if (rrbuf - rbuf >= 448)
 					goto catsearch_pause;
-			} 
+			}
+                        /* MacOS 9 doesn't like servers executing commands longer than few seconds */
+			if (--num_rounds <= 0) {
+			    if (start_time != time(NULL)) {
+				result=AFP_OK;
+				goto catsearch_pause;
+			    }
+			    num_rounds = NUM_ROUNDS;
+			}
 		} /* while ((entry=readdir(dirpos)) != NULL) */
 		closedir(dirpos);
 		dirpos = NULL;

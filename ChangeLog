@@ -1,6 +1,7 @@
 2003-01-07  Rafal Marcin Lewczuk <rlewczuk@pronet.pl>
 	* Moving files between different directories on the same volume 
 	  changes group of moved items if necessary (SGID bit set)
+	* Make FPCatSearch a bit more interactive (especially for MacOS 9)
 
 2003-01-04  Joe Marcus Clarke <marcus@marcuscom.com>
 	* Add a doc/README.cnid which talks about the CNID calculation
