@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.32 2002-05-13 04:59:36 jmarcus Exp $
+ * $Id: directory.c,v 1.33 2002-05-27 04:47:00 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1749,6 +1749,7 @@ int pathlen;
     set_uidgid  ( vol );
 #endif /* FORCE_UIDGID */
 
+    memset(&ad, 0, sizeof(ad));
     if ( ad_open( ".", ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY,
                   DIRBITS | 0777, &ad) == 0 ) {
 
