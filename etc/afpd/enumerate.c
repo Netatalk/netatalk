@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.39 2003-04-20 06:53:40 didg Exp $
+ * $Id: enumerate.c,v 1.40 2003-05-16 14:38:20 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -118,7 +118,6 @@ static int enumerate_loop(struct dirent *de, char *mname, void *data)
     len = strlen(de->d_name);
     *(sd->sd_last)++ = len;
     lenm = strlen(mname);
-
     if ( sd->sd_last + len +lenm + 4 > end ) {
         char *buf;
 
@@ -354,7 +353,7 @@ int     ext;
         sd.sd_sindex = 1;
 
         sd.sd_vid = vid;
-        sd.sd_did = did;
+        sd.sd_did = curdir->d_did;
     }
 
     /*
