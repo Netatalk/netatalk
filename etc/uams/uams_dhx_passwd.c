@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.21 2003-06-11 22:07:56 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.22 2003-06-14 16:40:54 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -28,18 +28,6 @@
 #include <shadow.h>
 #endif /* SHADOWPW */
 
-#if defined(GNUTLS_DHX)
-#include <gnutls/openssl.h>
-#elif defined(OPENSSL_DHX)
-#include <openssl/bn.h>
-#include <openssl/dh.h>
-#include <openssl/cast.h>
-#else /* OPENSSL_DHX */
-#include <bn.h>
-#include <dh.h>
-#include <cast.h>
-#endif /* OPENSSL_DHX */
-
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
@@ -53,7 +41,6 @@
 		     (unsigned long) (a)) & 0xffff)
 
 /* the secret key */
-static CAST_KEY castkey;
 static struct passwd *dhxpwd;
 static u_int8_t randbuf[16];
 
@@ -63,6 +50,8 @@ static u_int8_t randbuf[16];
 
 static char *clientname;
 #endif /* TRU64 */
+
+#include "crypt.h"
 
 /* dhx passwd */
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
@@ -76,20 +65,19 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
-    BIGNUM *bn, *gbn, *pbn;
+    CastKey castkey;
     u_int16_t sessid;
     int i;
 #if 0
     char *name;
 #endif
-    DH *dh;
 
-#ifdef TRU64
+#if defined(TRU64) && !defined(HAVE_GCRYPT)
     int rnd_seed[256];
-    for (i = 0; i < sizeof(rnd_seed); i++)
-	rnd_seed[i] = random();
-    RAND_seed(rnd_seed, sizeof rnd_seed);
-#endif /* TRU64 */
+    for (i = 0; i < 256; i++)
+        rnd_seed[i] = random();
+    RAND_seed(rnd_seed, sizeof(rnd_seed));
+#endif /* defined(TRU64) && !defined(HAVE_GCRYPT) */
 
     *rbuflen = 0;
 
@@ -118,44 +106,10 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     if (!dhxpwd->pw_passwd)
       return AFPERR_NOTAUTH;
 
-    /* get the client's public key */
-    if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
+    castkey = atalk_cast_key(ibuf, KEYSIZE);
+    if (!castkey)
       return AFPERR_PARAM;
-    }
 
-    /* get our primes */
-    if (!(gbn = BN_bin2bn(&g, sizeof(g), NULL))) {
-      BN_free(bn);
-      return AFPERR_PARAM;
-    }
-
-    if (!(pbn = BN_bin2bn(p, sizeof(p), NULL))) {
-      BN_free(gbn);
-      BN_free(bn);
-      return AFPERR_PARAM;
-    }
-
-    /* okay, we're ready */
-    if (!(dh = DH_new())) {
-      BN_free(pbn);
-      BN_free(gbn);
-      BN_free(bn);
-      return AFPERR_PARAM;
-    }
-
-    /* generate key and make sure we have enough space */
-    dh->p = pbn;
-    dh->g = gbn;
-    if (!DH_generate_key(dh) || (BN_num_bytes(dh->pub_key) > KEYSIZE)) {
-      goto passwd_fail;
-    }
-
-    /* figure out the key. use rbuf as a temporary buffer. */
-    i = DH_compute_key(rbuf, bn, dh);
-    
-    /* set the key */
-    CAST_set_key(&castkey, i, rbuf);
-    
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
     memcpy(rbuf, &sessid, sizeof(sessid));
