@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.16 2001-12-03 15:46:30 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.17 2001-12-03 15:50:06 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -26,12 +26,9 @@
 #endif /* HAVE_FCNTL_H */
 #include <errno.h>
 #include <syslog.h>
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif /* HAVE_TIME_H */
-#ifdef HAVE_CMA_H
-#include <cma.h>
-#endif /* HAVE_CMA_H */
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif /* HAVE_SYS_TIME_H */
 
 #include <db.h>
 #include <netatalk/endian.h>
