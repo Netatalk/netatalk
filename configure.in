@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.121 2001-10-30 17:53:45 jmarcus Exp $
+dnl $Id: configure.in,v 1.122 2001-10-30 18:38:29 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -341,7 +341,7 @@ if test "x$srvloc" != "xno"; then
 fi
 
 # Check for PAM libs
-AC_MSG_CHECKING([should we even bother with PAM])
+AC_MSG_CHECKING([if we should even bother with PAM])
 AC_ARG_WITH(pam,
     [  --with-pam              enable PAM support],
     [PAM_MSG="$withval"],
