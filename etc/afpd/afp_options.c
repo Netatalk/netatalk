@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.21 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: afp_options.c,v 1.22 2002-03-25 00:04:52 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -243,6 +243,49 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if ((c = getoption(buf, "-server_quantum")))
         options->server_quantum = strtoul(c, NULL, 0);
 
+    /* -setuplogtype <syslog|filelog> <logtype> <loglevel> <filename>*/
+    if ((c = getoption(buf, "-setuplogtype")))
+    {
+      char *ptr, *logsource, *logtype, *loglevel, *filename;
+
+      logsource = ptr = c;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr) *ptr++ = 0;
+        while (*ptr && isspace(*ptr))
+          ptr++;
+      }
+
+      logtype = ptr;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr) *ptr++ = 0;
+        while (*ptr && isspace(*ptr))
+          ptr++;
+      }
+
+      loglevel = ptr;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr) *ptr++ = 0;
+        while (*ptr && isspace(*ptr))
+          ptr++;
+      }
+
+      filename = ptr;
+      if (ptr)
+      {
+        ptr = strpbrk(ptr, " \t");
+        if (ptr) *ptr++ = 0;
+        while (*ptr && isspace(*ptr))
+          ptr++;
+      }
+
+      setuplog(logsource, logtype, loglevel, filename);
+    }
 
 #ifdef ADMIN_GRP
     if ((c = getoption(buf, "-admingroup"))) {
