@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.196 2003-12-15 05:27:24 srittau Exp $
+dnl $Id: configure.in,v 1.197 2003-12-15 06:03:33 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -26,52 +26,6 @@ AC_PROG_GREP
 AC_PROG_PS
 AC_PROG_DVIPS
 AC_PROG_TROFF2PS
-
-dnl
-dnl Checks for libraries.
-dnl
-
-dnl *********************************************************************
-dnl FIXME! FIXME! These should be selectable properly, and should produce
-dnl the proper flags and defines...
-dnl *********************************************************************
-
-dnl Replace `main' with a function in -labs:
-AC_CHECK_LIB(abs, main)
-dnl Replace `main' with a function in -laudit:
-AC_CHECK_LIB(audit, main)
-dnl Replace `main' with a function in -lauth:
-AC_CHECK_LIB(auth, main)
-dnl Replace `main' with a function in -lcmd:
-AC_CHECK_LIB(cmd, main)
-dnl Replace `main' with a function in -lcrypt:
-AC_CHECK_LIB(crypt, main)
-dnl Replace `main' with a function in -ld:
-AC_CHECK_LIB(d, main)
-dnl Replace `main' with a function in -ldl:
-AC_CHECK_LIB(dl, main)
-dnl Replace `main' with a function in -lkauth:
-AC_CHECK_LIB(kauth, main)
-dnl Replace `main' with a function in -lkrb:
-AC_CHECK_LIB(krb, main)
-dnl Replace `main' with a function in -llwp:
-AC_CHECK_LIB(lwp, main)
-dnl Replace `main' with a function in -ln:
-AC_CHECK_LIB(n, main)
-dnl Replace `main' with a function in -lnsl:
-AC_CHECK_LIB(nsl, main)
-dnl Replace `main' with a function in -lprot:
-AC_CHECK_LIB(prot, main)
-dnl Replace `main' with a function in -lrx:
-AC_CHECK_LIB(rx, main)
-dnl Replace `main' with a function in -lrxkad:
-AC_CHECK_LIB(rxkad, main)
-dnl Replace `main' with a function in -lsocket:
-AC_CHECK_LIB(socket, main)
-dnl Replace `main' with a function in -lsys:
-AC_CHECK_LIB(sys, main)
-dnl Replace `main' with a function in -lubik:
-AC_CHECK_LIB(ubik, main)
 
 dnl
 dnl Checks for presence of some functions.
@@ -402,7 +356,7 @@ dnl ----- a2boot compilation (disabled by default)
 AC_MSG_CHECKING([whether a2boot should be compiled])
 compile_a2boot=no
 AC_ARG_ENABLE(a2boot,
-	[  --enable-a2boot       enable compilation of Apple2 boot server],
+	[  --enable-a2boot         enable compilation of Apple2 boot server],
 	[compile_a2boot="$enableval"],
 	[compile_a2boot="no"]
 )

@@ -1,4 +1,4 @@
-dnl $Id: gssapi-check.m4,v 1.1 2003-09-03 18:27:14 samnoble Exp $
+dnl $Id: gssapi-check.m4,v 1.2 2003-12-15 06:03:33 srittau Exp $
 dnl Autoconf macro to check for kerberos/gssapi support
 dnl based on samba3 configure.in
 dnl modified for netatalk use by bfernhomberg
@@ -10,7 +10,7 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 	GSSAPI_CFLAGS=""
 
         AC_ARG_WITH(gssapi,
-                [  --with-gssapi[=DIR]     compile Kerberos V UAM],
+                [  --with-gssapi[=DIR]       compile Kerberos V UAM],
                 [compilegssapi=$withval],
                 [compilegssapi=no]
         )
