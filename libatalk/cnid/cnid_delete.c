@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_delete.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_delete.c,v 1.7 2001-09-20 06:10:42 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -29,6 +29,7 @@ int cnid_delete(void *CNID, const cnid_t id)
   CNID_private *db;
   DBT key, data;
   DB_TXN *tid;
+  int rc = 0;
 
   if (!(db = CNID) || !id || (db->flags & CNIDFLAG_DB_RO))
     return -1;
@@ -38,16 +39,16 @@ int cnid_delete(void *CNID, const cnid_t id)
 
 
 retry:
-  if ((errno = txn_begin(db->dbenv, NULL, &tid, 0))) {
-    return errno;
+  if ((rc = txn_begin(db->dbenv, NULL, &tid, 0))) {
+    return rc;
   }
 
   /* get from main database */
   key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if ((errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
+  if ((rc = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
-    switch (errno) {
+    switch (rc) {
 	case DB_LOCK_DEADLOCK:
       goto retry;
       
@@ -56,21 +57,21 @@ retry:
       return 0;
     default:
       syslog(LOG_ERR, "cnid_delete: can't delete entry");
-      return errno;
+      return rc;
     }
   }
   
   /* now delete from dev/ino database */
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
-  if ((errno = db->db_devino->del(db->db_devino, tid, &key, 0))) {
-    if (errno == DB_LOCK_DEADLOCK) {
+  if ((rc = db->db_devino->del(db->db_devino, tid, &key, 0))) {
+    if (rc == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
 
     /* be silent if there isn't an entry */
-    if (errno != DB_NOTFOUND) {
+    if (rc != DB_NOTFOUND) {
       txn_abort(tid);
       goto abort_err;
     }
@@ -82,14 +83,14 @@ retry:
   /* delete from did/name database */
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
-  if ((errno = db->db_didname->del(db->db_didname, tid, &key, 0))) {
-    if (errno == DB_LOCK_DEADLOCK) {
+  if ((rc = db->db_didname->del(db->db_didname, tid, &key, 0))) {
+    if (rc == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
     
     /* be silent if there isn't an entry */
-    if (errno != DB_NOTFOUND) {
+    if (rc != DB_NOTFOUND) {
       txn_abort(tid);
       goto abort_err;
     }
@@ -98,9 +99,9 @@ retry:
   /* now delete from main database */
   key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if ((errno = db->db_cnid->del(db->db_cnid, tid, &key, 0))) {
+  if ((rc = db->db_cnid->del(db->db_cnid, tid, &key, 0))) {
     txn_abort(tid);
-    if (errno == DB_LOCK_DEADLOCK) {
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto abort_err;
@@ -110,6 +111,6 @@ retry:
 
 abort_err:
   syslog(LOG_ERR, "cnid_del: unable to delete CNID(%x)", id);
-  return errno;
+  return rc;
 }
 #endif /* CNID_DB */

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_update.c,v 1.7 2001-09-20 06:07:12 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,6 +32,7 @@ int cnid_update(void *CNID, const cnid_t id, const struct stat *st,
   CNID_private *db;
   DBT key, data, altdata;
   DB_TXN *tid;
+  int rc = 0;
   
   if (!(db = CNID) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO))
     return -1;
@@ -42,16 +43,16 @@ int cnid_update(void *CNID, const cnid_t id, const struct stat *st,
 
   /* begin a transaction */
 retry:
-  if ((errno = txn_begin(db->dbenv, NULL, &tid, 0))) {
-    return errno;
+  if ((rc = txn_begin(db->dbenv, NULL, &tid, 0))) {
+    return rc;
   }
 
   /* get the old info */
   key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if ((errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
+  if ((rc = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
-    if (errno == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK)
       goto retry;
     goto update_err;
   }
@@ -59,14 +60,14 @@ retry:
   /* delete the old dev/ino mapping */
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
-  if ((errno = db->db_devino->del(db->db_devino, tid, &key, 0))) {
-    if (errno == DB_LOCK_DEADLOCK) {
+  if ((rc = db->db_devino->del(db->db_devino, tid, &key, 0))) {
+    if (rc == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
 
     /* silently fail on a non-existent entry */
-    if (errno != DB_NOTFOUND) {
+    if (rc != DB_NOTFOUND) {
       txn_abort(tid);
       goto update_err;
     }
@@ -75,14 +76,14 @@ retry:
   /* delete the old did/name mapping */
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
-  if ((errno = db->db_didname->del(db->db_didname, tid, &key, 0))) {
-    if (errno == DB_LOCK_DEADLOCK) {
+  if ((rc = db->db_didname->del(db->db_didname, tid, &key, 0))) {
+    if (rc == DB_LOCK_DEADLOCK) {
       txn_abort(tid);
       goto retry;
     }
 
     /* silently fail on a non-existent entry */
-    if (errno != DB_NOTFOUND) {
+    if (rc != DB_NOTFOUND) {
       txn_abort(tid);
       goto update_err;
     }
@@ -100,9 +101,9 @@ retry:
   key.size = CNID_DEVINO_LEN;
   altdata.data = (cnid_t *) &id;
   altdata.size = sizeof(id);
-  if ((errno = db->db_devino->put(db->db_devino, tid, &key, &altdata, 0))) {
+  if ((rc = db->db_devino->put(db->db_devino, tid, &key, &altdata, 0))) {
     txn_abort(tid);
-    if (errno == DB_LOCK_DEADLOCK) {
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto update_err;
@@ -111,9 +112,9 @@ retry:
   /* put a new did/name mapping in */
   key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
-  if ((errno = db->db_didname->put(db->db_didname, tid, &key, &altdata, 0))) {
+  if ((rc = db->db_didname->put(db->db_didname, tid, &key, &altdata, 0))) {
     txn_abort(tid);
-    if (errno == DB_LOCK_DEADLOCK) {
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto update_err;
@@ -122,9 +123,9 @@ retry:
   /* update the old CNID with the new info */
   key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if ((errno = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0))) {
+  if ((rc = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
-    if (errno == DB_LOCK_DEADLOCK) {
+    if (rc == DB_LOCK_DEADLOCK) {
       goto retry;
     }
     goto update_err;
