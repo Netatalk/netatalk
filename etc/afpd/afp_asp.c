@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.20 2003-08-29 23:05:37 bfernhomberg Exp $
+ * $Id: afp_asp.c,v 1.21 2003-08-29 23:35:34 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -180,7 +180,7 @@ static void afp_asp_timedown()
 #ifdef SERVERTEXT
 static void afp_asp_getmesg (int sig)
 {
-    readmessage(child);
+    readmessage();
     asp_attention(child->handle, AFPATTN_MESG | AFPATTN_TIME(5));
 }
 #endif /* SERVERTEXT */
