@@ -593,7 +593,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 	  return AFPERR_MISC;
 	
 	/* fix up the catalog entry */
-	cnid_update(vol->v_db, id, &st, curdir->d_did, upath, strlen(newname));
+	cnid_update(vol->v_db, id, &st, curdir->d_did, upath, strlen(upath));
 #endif      
 	setvoltime(obj, vol );
     }
