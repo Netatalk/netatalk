@@ -13,6 +13,8 @@
 
 #include <netatalk/endian.h>
 
+#define CNID_INVALID   0
+
 #define CNID_ERR_PARAM 0x80000001
 #define CNID_ERR_PATH  0x80000002
 #define CNID_ERR_DB    0x80000003

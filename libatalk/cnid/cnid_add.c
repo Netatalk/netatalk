@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.28 2002-02-01 19:51:09 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.29 2002-02-02 19:11:37 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -120,7 +120,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
 
     if (!(db = CNID) || !st || !name) {
         errno = CNID_ERR_PARAM;
-        return -1;
+        return CNID_INVALID;
     }
 
     /* Do a lookup. */
@@ -144,7 +144,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
     if ((data.data = make_cnid_data(st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_add: Path name is too long");
         errno = CNID_ERR_PATH;
-        return -1;
+        return CNID_INVALID;
     }
 
     data.size = CNID_HEADER_LEN + len + 1;
@@ -161,7 +161,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
         default:
             LOG(log_error, logtype_default, "cnid_add: Unable to add CNID %u: %s", ntohl(hint), db_strerror(rc));
             errno = CNID_ERR_DB;
-            return -1;
+            return CNID_INVALID;
         case 0:
 #ifdef DEBUG
             LOG(log_info, logtype_default, "cnid_add: Used hint for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
@@ -179,7 +179,7 @@ retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_add: Failed to begin transaction: %s", db_strerror(rc));
         errno = CNID_ERR_DB;
-        return -1;
+        return CNID_INVALID;
     }
 
     /* Get the key. */
@@ -189,7 +189,7 @@ retry:
         if ((rc = txn_abort(tid)) != 0) {
             LOG(log_error, logtype_default, "cnid_add: txn_abort: %s", db_strerror(rc));
             errno = CNID_ERR_DB;
-            return -1;
+            return CNID_INVALID;
         }
         goto retry;
     case 0:
@@ -201,7 +201,7 @@ retry:
             txn_abort(tid);
             LOG(log_error, logtype_default, "cnid_add: FATAL: Cannot add CNID for %s.  CNID database has reached its limit.", name);
             errno = CNID_ERR_MAX;
-            return -1;
+            return CNID_INVALID;
         }
         hint = htonl(id);
 #ifdef DEBUG
@@ -227,7 +227,7 @@ retry:
         if ((rc = txn_abort(tid)) != 0) {
             LOG(log_error, logtype_default, "cnid_add: txn_abort: %s", db_strerror(rc));
             errno = CNID_ERR_DB;
-            return -1;
+            return CNID_INVALID; 
         }
         goto retry;
     case 0:
@@ -235,7 +235,7 @@ retry:
         if ((rc = txn_commit(tid, 0)) != 0) {
             LOG(log_error, logtype_default, "cnid_add: Unable to commit transaction: %s", db_strerror(rc));
             errno = CNID_ERR_DB;
-            return -1;
+            return CNID_INVALID;
         }
         break;
     default:
@@ -248,7 +248,7 @@ retry:
     if (rc) {
         LOG(log_error, logtype_default, "cnid_add: Failed to add CNID for %s to database using hint %u: %s", name, ntohl(hint), db_strerror(rc));
         errno = CNID_ERR_DB;
-        return -1;
+        return CNID_INVALID;
     }
 
 #ifdef DEBUG
@@ -261,7 +261,7 @@ cleanup_abort:
     txn_abort(tid);
 
     errno = CNID_ERR_DB;
-    return -1;
+    return CNID_INVALID;
 }
 #endif /* CNID_DB */
 
