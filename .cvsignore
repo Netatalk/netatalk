@@ -6,6 +6,10 @@ stamp-h.in
 confdefs.h
 config.*
 configure
+depcomp
+compile
+missing
+mkinstalldirs
 aclocal.m4
 libtool
 ltconfig
