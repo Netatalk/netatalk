@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_get.c,v 1.1 2002-05-29 18:02:59 jmarcus Exp $
+ * $Id: cnid_mangle_get.c,v 1.2 2002-05-30 06:41:19 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -42,14 +42,15 @@ cnid_mangle_get(void *CNID, char *mfilename)
     memset(&data, 0, sizeof(data));
 
     key.data = mfilename;
-    key.size = strlen(mfilename) + 1;
+    key.size = strlen(mfilename);
 
-    while ((rc = db->db_didname->get(db->db_mangle, NULL, &key, &data, 0))) {
+    while ((rc = db->db_mangle->get(db->db_mangle, NULL, &key, &data, 0))) {
         if (rc == DB_LOCK_DEADLOCK) {
             continue;
         }
 
         if (rc == DB_NOTFOUND) {
+	    LOG(log_error, logtype_default, "cnid_mangle_get: Failed to find mangled entry for %s", mfilename);
 	    return NULL;
 
         }
@@ -57,10 +58,10 @@ cnid_mangle_get(void *CNID, char *mfilename)
         return NULL;
     }
 
-    filename = strrchr(data.data, '/');
+    filename = strrchr((char *)data.data, '/');
     filename++; /* Skip the leading '/' */
 
-    if (stat(data.data, &st) < 0) {
+    if (stat((char *)data.data, &st) < 0) {
 	if (errno == ENOENT) {
 	    /* The file no longer exists.  Purge it from the database. */
 /*retry:

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_add.c,v 1.1 2002-05-29 18:02:59 jmarcus Exp $
+ * $Id: cnid_mangle_add.c,v 1.2 2002-05-30 06:41:19 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,6 @@ cnid_mangle_add(void *CNID, char *mfilename, char *filename)
     DBT key, data;
     DB_TXN *tid;
     cnid_t id;
-    struct stat st;
     int rc, ret;
 
     if (!(db = CNID)) {
@@ -41,9 +40,9 @@ cnid_mangle_add(void *CNID, char *mfilename, char *filename)
     memset(&data, 0, sizeof(data));
 
     key.data = mfilename;
-    key.size = strlen(mfilename) + 1;
+    key.size = strlen(mfilename);
     data.data = filename;
-    data.size = strlen(filename) + 1;
+    data.size = strlen(filename);
 
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
@@ -63,6 +62,11 @@ retry:
 	    	LOG(log_error, logtype_default, "cnid_mangle_add: Failed to add mangled filename to the database: %s", db_strerror(rc));
 		return -1;
 	}
+    }
+
+    if ((rc = txn_commit(tid, 0)) != 0) {
+	LOG(log_error, logtype_default, "cnid_mangle_add: Unable to commit transaction: %s", db_strerror(rc));
+	return -1;
     }
 
     return 0;
