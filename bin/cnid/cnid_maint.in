@@ -3,7 +3,7 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.4 2002-02-07 21:45:07 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.5 2002-02-09 20:29:40 jmarcus Exp $
 #
 
 use strict;
@@ -41,7 +41,7 @@ $APPLE_VOLUMES_FILE = '@PKGCONFDIR@/AppleVolumes.default';
 $VERSION = '1.0';
 $GREP           = '@GREP@';
 $START_NETATALK = 0;
-$LOCK_FILE      = tmpdir() . 'cnid_maint.LOCK';
+$LOCK_FILE      = tmpdir() . '/cnid_maint.LOCK';
 $HOLDING_LOCK   = 0;
 
 sub LOCK_SH { 1 }
