@@ -1,7 +1,5 @@
-The documentation for netatalk-1.5 is arranged as follows:
+The documentation for netatalk-1.6 is arranged as follows:
 
-* INSTALL
-  generic instructions for compiling and installing programs
 * doc/INSTALL
   netatalk specific installation instructions
 * doc/CONFIGURE
