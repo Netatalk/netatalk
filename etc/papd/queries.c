@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.10 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: queries.c,v 1.11 2002-02-15 07:12:41 morgana Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -302,6 +302,7 @@ struct genquery {
 #endif /* notdef */
     { "RBISpoolerID",	gq_rbispoolerid },
     { "RBIUAMListQuery", gq_rbiuamlist },
+    { "ADOIsBinaryOK?", gq_true },
     { "UMICHListQueue", gq_true },
     { "UMICHDeleteJob", gq_true },
     { NULL },
