@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.8 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: afppasswd.c,v 1.9 2001-10-25 20:42:55 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -41,6 +41,7 @@ char *strchr (), *strrchr ();
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -55,7 +56,6 @@ char *strchr (), *strrchr ();
 
 #include <netatalk/endian.h>
 
-#ifdef UAM_RNDNUM
 #include <des.h>
 
 #ifdef USE_CRACKLIB
@@ -256,7 +256,8 @@ static int create_file(const char *path, uid_t minuid)
     strcat(buf, FORMAT);
     len = strlen(buf);
     if (write(fd, buf, len) != len) {
-      fprintf(stderr, "afppasswd: problem writing to %s: %m\n", path);
+      fprintf(stderr, "afppasswd: problem writing to %s: %s\n", path,
+	      strerror(errno));
       err = -1;
       break;
     }
@@ -370,13 +371,3 @@ int main(int argc, char **argv)
     return -1;
   }
 }
-#else /* UAM_RNDNUM */
-
-main(int argc, char **argv)
-{
-  fprintf(stderr, "afppasswd is only useful if you're using centralized passwords\n");
-  fprintf(stderr, "for the Random Number authentication methods.\n");
-  return -1;
-}
-
-#endif /* UAM_RNDNUM */
