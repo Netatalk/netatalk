@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: queries.c,v 1.8 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -743,7 +743,7 @@ struct papd_comment	queries[] = {
 #ifdef KRB
     { "%%Login: UMICHKerberosIV", 0,			cq_k4login,	0 },
     { "%%?BeginUAMethodsQuery",	"%%?EndUAMethodsQuery:", cq_uameth, C_FULL },
-#endif KRB
+#endif /* KRB */
     { "%UMICHListQueue", 0,				cq_listq, C_FULL },
     { "%UMICHDeleteJob", 0,				cq_rmjob,	0 },
     { "%%?BeginQuery: RBILogin ", "%%?EndQuery",	cq_rbilogin,	0 },

@@ -1,5 +1,5 @@
 /*
- * $Id: test_parse_mtab.c,v 1.2 2001-06-10 20:15:00 srittau Exp $
+ * $Id: test_parse_mtab.c,v 1.3 2001-07-31 19:50:14 srittau Exp $
  * test driver for the afpd_mtab_parse fn.  -- rgr, 9-Apr-01.
  */
 
@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>

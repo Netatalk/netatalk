@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_asp.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: afp_asp.c,v 1.6 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -174,7 +174,7 @@ void afp_over_asp(AFPObj *obj)
 	  }
 	  writtenfork = NULL;
 	}
-#endif AFS
+#endif /* AFS */
 	func = (u_char) asp->commands[0];
 	if ( obj->options.flags & OPTION_DEBUG ) {
 	  printf( "command: %d\n", func );

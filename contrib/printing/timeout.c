@@ -1,5 +1,5 @@
 /*
- * $Id: timeout.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: timeout.c,v 1.4 2001-07-31 19:49:37 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,108 +22,108 @@ struct slist {
 	int num;
 } sigs[] = {
 #ifdef SIGHUP
-	"HUP",		SIGHUP,
+	{ "HUP",	SIGHUP },
 #endif
 #ifdef SIGINT
-	"INT",		SIGINT,
+	{ "INT",	SIGINT },
 #endif
 #ifdef SIGQUIT
-	"QUIT",		SIGQUIT,
+	{ "QUIT",	SIGQUIT },
 #endif
 #ifdef SIGILL
-	"ILL",		SIGILL,
+	{ "ILL",	SIGILL },
 #endif
 #ifdef SIGTRAP
-	"TRAP",		SIGTRAP,
+	{ "TRAP",	SIGTRAP },
 #endif
 #ifdef SIGABRT
-	"ABRT",		SIGABRT,
+	{ "ABRT",	SIGABRT },
 #endif
 #ifdef SIGIOT
-	"IOT",		SIGIOT,
+	{ "IOT",	SIGIOT },
 #endif
 #ifdef SIGEMT
-	"EMT",		SIGEMT,
+	{ "EMT",	SIGEMT },
 #endif
 #ifdef SIGFPE
-	"FPE",		SIGFPE,
+	{ "FPE",	SIGFPE },
 #endif
 #ifdef SIGKILL
-	"KILL",		SIGKILL,
+	{ "KILL",	SIGKILL },
 #endif
 #ifdef SIGBUS
-	"BUS",		SIGBUS,
+	{ "BUS",	SIGBUS },
 #endif
 #ifdef SIGSEGV
-	"SEGV",		SIGSEGV,
+	{ "SEGV",	SIGSEGV },
 #endif
 #ifdef SIGSYS
-	"SYS",		SIGSYS,
+	{ "SYS",	SIGSYS },
 #endif
 #ifdef SIGPIPE
-	"PIPE",		SIGPIPE,
+	{ "PIPE",	SIGPIPE },
 #endif
 #ifdef SIGALRM
-	"ALRM",		SIGALRM,
+	{ "ALRM",	SIGALRM },
 #endif
 #ifdef SIGTERM
-	"TERM",		SIGTERM,
+	{ "TERM",	SIGTERM },
 #endif
 #ifdef SIGURG
-	"URG",		SIGURG,
+	{ "URG",	SIGURG },
 #endif
 #ifdef SIGSTOP
-	"STOP",		SIGSTOP,
+	{ "STOP",	SIGSTOP },
 #endif
 #ifdef SIGTSTP
-	"TSTP",		SIGTSTP,
+	{ "TSTP",	SIGTSTP },
 #endif
 #ifdef SIGCONT
-	"CONT",		SIGCONT,
+	{ "CONT",	SIGCONT },
 #endif
 #ifdef SIGCHLD
-	"CHLD",		SIGCHLD,
+	{ "CHLD",	SIGCHLD },
 #endif
 #ifdef SIGCLD
-	"CLD",		SIGCLD,
+	{ "CLD",	SIGCLD },
 #endif
 #ifdef SIGTTIN
-	"TTIN",		SIGTTIN,
+	{ "TTIN",	SIGTTIN },
 #endif
 #ifdef SIGTTOU
-	"TTOU",		SIGTTOU,
+	{ "TTOU",	SIGTTOU },
 #endif
 #ifdef SIGIO
-	"IO",		SIGIO,
+	{ "IO",		SIGIO },
 #endif
 #ifdef SIGXCPU
-	"XCPU",		SIGXCPU,
+	{ "XCPU",	SIGXCPU },
 #endif
 #ifdef SIGXFSZ
-	"XFSZ",		SIGXFSZ,
+	{ "XFSZ",	SIGXFSZ },
 #endif
 #ifdef SIGVTALRM
-	"VTALRM",	SIGVTALRM,
+	{ "VTALRM",	SIGVTALRM },
 #endif
 #ifdef SIGPROF
-	"PROF",		SIGPROF,
+	{ "PROF",	SIGPROF },
 #endif
 #ifdef SIGWINCH
-	"WINCH",	SIGWINCH,
+	{ "WINCH",	SIGWINCH },
 #endif
 #ifdef SIGINFO
-	"INFO",		SIGINFO,
+	{ "INFO",	SIGINFO },
 #endif
 #ifdef SIGUSR1
-	"USR1",		SIGUSR1,
+	{ "USR1",	SIGUSR1 },
 #endif
 #ifdef SIGUSR2
-	"USR2",		SIGUSR2,
+	{ "USR2",	SIGUSR2 },
 #endif
 #ifdef SIGPWR
-	"PWR",		SIGPWR,
+	{ "PWR",	SIGPWR },
 #endif
-	0,		0
+	{ 0,		0 }
 };
 
 void

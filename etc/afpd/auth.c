@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.16 2001-06-25 15:18:01 rufustfirefly Exp $
+ * $Id: auth.c,v 1.17 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -52,15 +52,15 @@ int	afp_version = 11;
 uid_t	uuid;
 #if defined( __svr4__ ) && !defined( NGROUPS )
 #define NGROUPS NGROUPS_MAX
-#endif __svr4__ NGROUPS
+#endif /* __svr4__ NGROUPS */
 #if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
 int	groups[ NGROUPS ];
-#else sun __svr4__ ultrix
+#else /* sun __svr4__ ultrix */
 #if defined( __svr4__ ) && !defined( NGROUPS )
 #define NGROUPS	NGROUPS_MAX
-#endif __svr4__ NGROUPS
+#endif /* __svr4__ NGROUPS */
 gid_t	groups[ NGROUPS ];
-#endif sun ultrix
+#endif /* sun ultrix */
 int	ngroups;
 
 /*
@@ -151,7 +151,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 {
 #ifdef ADMIN_GRP
     int admin = 0;
-#endif ADMIN_GRP
+#endif /* ADMIN_GRP */
 
     /* UAM had syslog control; afpd needs to reassert itself */
     openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_DAEMON);

@@ -1,5 +1,5 @@
 /*
- * $Id: interface.h,v 1.2 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: interface.h,v 1.3 2001-07-31 19:50:14 srittau Exp $
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
@@ -45,9 +45,9 @@ struct interface {
 
 #ifdef linux
 #define LOOPIFACE	"lo"
-#else linux
+#else /* !linux */
 #define LOOPIFACE	"lo0"
-#endif linux
+#endif /* linux */
 
 extern struct interface	*interfaces;
 extern struct interface	*ciface;

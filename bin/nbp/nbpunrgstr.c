@@ -1,5 +1,5 @@
 /*
- * $Id: nbpunrgstr.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: nbpunrgstr.c,v 1.5 2001-07-31 19:49:02 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */

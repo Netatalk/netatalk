@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: multicast.c,v 1.6 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -394,7 +394,7 @@ zone_bcast( zt )
      }
 
     for ( i = 0; i < zt->zt_len; i++ ) {
-	uname[ i ] = diatoupper(zt->zt_name[ i ]);
+	uname[ i ] = diatoupper((int) zt->zt_name[ i ]);
     }
     cksum = atalk_cksum( uname, zt->zt_len );
 #define elements(a)   (sizeof(a)/sizeof((a)[0]))

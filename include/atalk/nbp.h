@@ -35,10 +35,10 @@ struct nbphdr {
 #if BYTE_ORDER == BIG_ENDIAN
     unsigned	nh_op : 4,
 		nh_cnt : 4,
-#else BYTE_ORDER
+#else /* BYTE_ORDER != BIG_ENDIAN */
     unsigned	nh_cnt : 4,
 		nh_op : 4,
-#endif BYTE_ORDER
+#endif /* BYTE_ORDER */
 		nh_id : 8;
 };
 

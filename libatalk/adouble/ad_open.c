@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_open.c,v 1.9 2001-07-31 19:52:25 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -155,7 +155,7 @@ static const struct entry entry_order[] = {
   {ADEID_RFORK, ADEDOFF_RFORK_V1, ADEDLEN_INIT},
   {0, 0, 0}
 };
-#else if AD_VERSION == AD_VERSION2
+#else /* AD_VERSION == AD_VERSION2 */
 static const struct entry entry_order[] = {
   {ADEID_NAME, ADEDOFF_NAME_V2, ADEDLEN_INIT},
   {ADEID_COMMENT, ADEDOFF_COMMENT_V2, ADEDLEN_INIT},

@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: printcap.c,v 1.5 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -47,7 +47,7 @@ static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <sys/types.h>

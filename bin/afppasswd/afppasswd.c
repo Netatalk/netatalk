@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.6 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: afppasswd.c,v 1.7 2001-07-31 19:49:02 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
   int i, err = 0;
 
   extern char *optarg;
-  extern int optind, opterr;
+  extern int optind;
 
   flags = ((uid = getuid()) == 0) ? OPT_ISROOT : 0;
 

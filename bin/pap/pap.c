@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.6 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: pap.c,v 1.7 2001-07-31 19:49:02 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 
 #define FUCKED

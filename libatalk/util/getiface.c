@@ -98,9 +98,9 @@ static int getifaces(const int sockfd, char **list, int *length)
  	ifrsize = sizeof(ifr->ifr_name) +
 	  (ifr->ifr_addr.sa_len > sizeof(struct sockaddr)
 	   ? ifr->ifr_addr.sa_len : sizeof(struct sockaddr));
-#else BSD4_4
+#else /* !BSD4_4 */
 	ifrsize = sizeof( struct ifreq );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	nextifr = (struct ifreq *)((caddr_t)ifr + ifrsize );
 
 	/* just bail if there's a problem */

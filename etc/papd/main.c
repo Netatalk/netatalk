@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: main.c,v 1.8 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -140,7 +140,6 @@ int main( ac, av )
     char	**av;
 {
     extern char         *optarg;
-    extern int          optind;
 
     ATP			atp;
     struct atp_block	atpb;

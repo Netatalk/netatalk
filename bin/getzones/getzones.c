@@ -1,5 +1,5 @@
 /*
- * $Id: getzones.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: getzones.c,v 1.5 2001-07-31 19:49:02 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,6 +19,7 @@
 #endif /* HAVE_NETDB_H */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>

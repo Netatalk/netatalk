@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.18 2001-06-06 19:04:25 rufustfirefly Exp $
+ * $Id: unix.c,v 1.19 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -52,10 +52,10 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
 #ifdef ultrix
     *bfree = (VolSpace) sfs.fd_req.bfreen;
     *bsize = 1024;
-#else
+#else /* !ultrix */
     *bfree = (VolSpace) sfs.f_bavail;
     *bsize = sfs.f_frsize;
-#endif ultrix
+#endif /* ultrix */
 
     if ( *bfree > maxVolSpace / *bsize ) {
         *bfree = maxVolSpace;
@@ -66,10 +66,10 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
 #ifdef ultrix
     *btotal = (VolSpace) 
       ( sfs.fd_req.btot - ( sfs.fd_req.bfree - sfs.fd_req.bfreen ));
-#else ultrix
+#else /* !ultrix */
     *btotal = (VolSpace) 
       ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail ));
-#endif ultrix
+#endif /* ultrix */
 
     // see similar block above comments
     if ( *btotal > maxVolSpace / *bsize ) {

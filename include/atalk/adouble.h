@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.6 2001-06-11 17:27:28 rufustfirefly Exp $
+ * $Id: adouble.h,v 1.7 2001-07-31 19:51:12 srittau Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -125,7 +125,7 @@ static inline int sendfile(int fdout, int fdin, off_t *off, size_t count)
 #define AD_DATASZ_MAX   1024
 #if AD_VERSION == AD_VERSION1
 #define AD_DATASZ	AD_DATASZ1 /* hold enough for the entries */
-#else if AD_VERSION == AD_VERSION2
+#elif AD_VERSION == AD_VERSION2
 #define AD_DATASZ       AD_DATASZ2
 #endif
 

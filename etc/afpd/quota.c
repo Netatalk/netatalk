@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.9 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: quota.c,v 1.10 2001-07-31 19:50:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -195,7 +195,7 @@ static int getfsquota(vol, uid, dq)
     if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
 	return( AFPERR_PARAM );
     }
-#else ultrix
+#else /* ultrix */
 
 #ifndef USRQUOTA
 #define USRQUOTA   0
