@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.93 2001-06-21 17:39:58 jmarcus Exp $
+dnl $Id: configure.in,v 1.94 2001-08-06 22:14:56 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -704,7 +704,14 @@ AC_OUTPUT([Makefile
 	man/man5/Makefile
 	man/man8/Makefile
 	sys/Makefile
+	sys/generic/Makefile
+	sys/generic/sys/Makefile
 	sys/netatalk/Makefile
+	sys/netbsd/Makefile
+	sys/netbsd/netatalk/Makefile
+	sys/solaris/Makefile
+	sys/sunos/Makefile
+	sys/ultrix/Makefile
 	],
 	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
 )
