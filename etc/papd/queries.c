@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.13 2002-02-15 16:15:21 morgana Exp $
+ * $Id: queries.c,v 1.14 2002-03-12 17:06:49 morgana Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -255,7 +255,7 @@ int gq_balance( out )
  * Handler for RBISpoolerID
  */
 
-static const char *spoolerid = "(PAPD Spooler) VERSION\n";
+static const char *spoolerid = "(PAPD Spooler) " VERSION "\n";
 
 int gq_rbispoolerid( out )
     struct papfile	*out;
