@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_delete.c,v 1.8 2001-10-21 08:33:33 jmarcus Exp $
+ * $Id: cnid_delete.c,v 1.9 2001-10-22 03:40:19 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -39,7 +39,7 @@ int cnid_delete(void *CNID, const cnid_t id) {
 
 retry:
 	if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
-		syslog(LOG_ERR, "cnid_delete: Failed to being transaction: %s",
+		syslog(LOG_ERR, "cnid_delete: Failed to begin transaction: %s",
 		       db_strerror(rc));
 		return rc;
 	}
@@ -48,7 +48,11 @@ retry:
 	key.data = (cnid_t *)&id;
 	key.size = sizeof(id);
 	if ((rc = db->db_cnid->get(db->db_cnid, tid, &key, &data, DB_RMW))) {
-		txn_abort(tid);
+		int ret;
+		if ((ret = txn_abort(tid)) != 0) {
+			syslog(LOG_ERR, "cnid_delete: txn_abort: %s", db_strerror(ret));
+			return ret;
+		}
 		switch (rc) {
 			case DB_LOCK_DEADLOCK:
 				goto retry;
@@ -69,13 +73,21 @@ retry:
 	if ((rc = db->db_devino->del(db->db_devino, tid, &key, 0))) {
 		switch (rc) {
 			case DB_LOCK_DEADLOCK:
-				txn_abort(tid);
+				if ((rc = txn_abort(tid)) != 0) {
+					syslog(LOG_ERR, "cnid_delete: txn_abort: %s",
+					       db_strerror(rc));
+					return rc;
+				}
 				goto retry;
 			case DB_NOTFOUND:
 				/* Quietly fall through if the entry isn't found. */
 				break;
 			default:
-				txn_abort(tid);
+				if ((rc = txn_abort(tid)) != 0) {
+					syslog(LOG_ERR, "cnid_delete: txn_abort: %s",
+					       db_strerror(rc));
+					return rc;
+				}
 				goto abort_err;
 		}
 	}
@@ -88,12 +100,20 @@ retry:
 	if ((rc = db->db_didname->del(db->db_didname, tid, &key, 0))) {
 		switch (rc) {
 			case DB_LOCK_DEADLOCK:
-				txn_abort(tid);
+				if ((rc = txn_abort(tid)) != 0) {
+					syslog(LOG_ERR, "cnid_delete: txn_abort: %s",
+					       db_strerror(rc));
+					return rc;
+				}
 				goto retry;
 			case DB_NOTFOUND:
 				break;
 			default:
-				txn_abort(tid);
+				if ((rc = txn_abort(tid)) != 0) {
+					syslog(LOG_ERR, "cnid_delete: txn_abort: %s",
+					       db_strerror(rc));
+					return rc;
+				}
 				goto abort_err;
 		}
 	}
@@ -102,7 +122,11 @@ retry:
 	key.data = (cnid_t *)&id;
 	key.size = sizeof(id);
 	if ((rc = db->db_cnid->del(db->db_cnid, tid, &key, 0))) {
-		txn_abort(tid);
+		int ret;
+		if ((ret = txn_abort(tid)) != 0) {
+			syslog(LOG_ERR, "cnid_delete: txn_abort: %s", db_strerror(ret));
+			return ret;
+		}
 		switch (rc) {
 			case DB_LOCK_DEADLOCK:
 				goto retry;
@@ -111,7 +135,15 @@ retry:
 		}
 	}
 
-	return txn_commit(tid, 0);
+#ifdef DEBUG
+	syslog(LOG_INFO, "cnid_delete: Deleting CNID %u", ntohl(id));
+#endif
+	if ((rc = txn_commit(tid, 0)) != 0) {
+		syslog(LOG_ERR, "cnid_delete: Failed to commit transaction: %s",
+		       db_strerror(rc));
+		return rc;
+	}
+	return 0;
 
 abort_err:
 	syslog(LOG_ERR, "cnid_delete: Unable to delete CNID %u: %s",

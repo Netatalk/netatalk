@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.13 2001-10-21 08:33:33 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.14 2001-10-22 03:40:18 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -102,7 +102,12 @@ retry:
 		return rc;
 	}
 
-	return txn_commit(tid, 0);
+	if ((rc = txn_commit(tid, 0)) != 0) {
+		syslog(LOG_ERR, "add_cnid: Failed to commit transaction: %s",
+		       db_strerror(rc));
+		return rc;
+	}
+	return 0;
 }
 
 cnid_t cnid_add(void *CNID, const struct stat *st,
@@ -210,7 +215,7 @@ retry:
 	 * wrap-around.  NOTE: I do it this way so that we can go back and
 	 * fill in holes. */
 	save = id = ntohl(hint);
-	while ((rc = add_cnid(db, tid, &key, &data))) {
+	while ((rc = add_cnid(db, tid, &key, &data)) != 0) {
 		/* Don't use any special CNIDs. */
 		if (++id < CNID_START) {
 			id = CNID_START;
