@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.27 2002-05-13 04:59:36 jmarcus Exp $
+ * $Id: fork.c,v 1.28 2002-05-29 17:40:36 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -146,7 +146,7 @@ static int getforkmode(struct adouble *adp, int eid, int what)
    a lot of races, some can be remove. but I try first to get the semantic right
 */
 
-static int setmode(struct adouble *adp, int eid, int access, int ofrefnum)
+static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
 {
     int ret;
     int readset;
@@ -411,7 +411,7 @@ int		ibuflen, *rbuflen;
     /* don't try to lock non-existent rforks. */
     if ((eid == ADEID_DFORK) || (ad_hfileno(ofork->of_ad) != -1)) {
 
-        ret = setmode(ofork->of_ad, eid, access, ofrefnum);
+        ret = afp_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
         if (ret < 0) {
             ret = errno;
