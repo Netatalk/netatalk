@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.76 2001-05-22 19:13:36 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.77 2001-05-24 00:12:01 samnoble Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -153,15 +153,6 @@ AC_ARG_ENABLE(afs,
 		AC_DEFINE(AFS, 1)
 		AC_MSG_RESULT([enabling AFS support])
 	fi
-)
-
-AC_ARG_WITH(auth-printing-dir,
-	[  --with-auth-printing-dir=path
-              path to authenticated printing directory],
-		cap_dir="$withval"
-		AC_DEFINE_UNQUOTED(CAPDIR, "$cap_dir")
-		AC_DEFINE(USE_CAP)
-		AC_MSG_RESULT([enabling authenticated printing support]),
 )
 
 AC_ARG_WITH(config-dir,
