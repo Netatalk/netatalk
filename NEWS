@@ -1,0 +1,17 @@
+Changes from 1.5rc2
+===================
+
+* FIX: Compilation on Tru64 systems was broken, since libtool's acinclude.m4
+       file on the packagers system did not contain the necessary patch.
+* FIX: On some systems, atalkd refuses to start, since it couldn't detect
+       any interfaces. This was caused by an overzealous validity check.
+
+Changes from 1.5rc1
+===================
+
+* FIX: contrib/shell_utils/lp2pap.sh was erased when "make clean" was called.
+       Now we distribute lp2pap.sh.tmpl instead, and lp2pap.sh is automatically
+       generated during package build.
+* FIX: Some platforms (notably Tru64) don't have the snprintf() call, which
+       was used in etc/afp/afp_config.c. This call was replaced by sprintf()
+       and prior bounds checking.
