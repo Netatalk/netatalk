@@ -1,2 +1,3 @@
 #undef SHADOWPW
 #undef TCPWRAP
+#undef USE_FLOCK_LOCKS
