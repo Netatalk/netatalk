@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.10 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: main.c,v 1.11 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,7 +33,22 @@
 #endif /* ! WIFEXITED */
 
 #include <errno.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: gettok.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: gettok.c,v 1.4 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -10,7 +10,22 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <ctype.h>
 #include <pwd.h>
 

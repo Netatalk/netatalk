@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.20 2001-08-15 01:37:34 srittau Exp $
+ * $Id: unix.c,v 1.21 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -21,8 +21,25 @@
 #include <dirent.h>
 #include <limits.h>
 #include <atalk/afp.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include "auth.h"
 #include "directory.h"
 #include "volume.h"

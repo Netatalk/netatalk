@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: uams_pam.c,v 1.8 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -17,7 +17,22 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <syslog.h>
 
 #include <security/pam_appl.h>

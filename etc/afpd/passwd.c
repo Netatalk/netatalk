@@ -1,5 +1,5 @@
 /*
- * $Id: passwd.c,v 1.3 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: passwd.c,v 1.4 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -29,7 +29,22 @@
 
 #include <itc.h>
 #include <stdio.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <r/xdr.h>
 #include <r/r.h>
 #include <afs/comauth.h>

@@ -1,13 +1,13 @@
 /*
- * $Id: uams_krb4.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: uams_krb4.c,v 1.5 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
-#if defined(HAVE_CONFIG_H)
+#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #if defined( KRB ) || defined( UAM_AFSKRB )
 #ifdef HAVE_UNISTD_H
@@ -21,7 +21,22 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <limits.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <ctype.h>
 #include <pwd.h>
 #include <syslog.h>

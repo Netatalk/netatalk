@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_options.c,v 1.8 2001-07-31 19:50:14 srittau Exp $
+ * $Id: afp_options.c,v 1.9 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -14,7 +14,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <ctype.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.13 2001-09-04 13:52:45 rufustfirefly Exp $
+ * $Id: filedir.c,v 1.14 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,14 +20,29 @@
 #include <atalk/util.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
-#endif
+#endif /* CNID_DB */
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 #include <dirent.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */

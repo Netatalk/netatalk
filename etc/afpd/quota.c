@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.10 2001-07-31 19:50:14 srittau Exp $
+ * $Id: quota.c,v 1.11 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,7 +11,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+/* STDC check */
+#if STDC_HEADERS
 #include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/param.h>

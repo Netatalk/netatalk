@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.7 2001-07-31 19:49:02 srittau Exp $
+ * $Id: afppasswd.c,v 1.8 2001-09-06 20:00:59 rufustfirefly Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -24,13 +24,27 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+/* STDC check */
+#if STDC_HEADERS
+#include <string.h>
+#else /* STDC_HEADERS */
+#ifndef HAVE_STRCHR
+#define strchr index
+#define strrchr index
+#endif /* HAVE_STRCHR */
+char *strchr (), *strrchr ();
+#ifndef HAVE_MEMCPY
+#define memcpy(d,s,n) bcopy ((s), (d), (n))
+#define memmove(d,s,n) bcopy ((s), (d), (n))
+#endif /* ! HAVE_MEMCPY */
+#endif /* STDC_HEADERS */
+
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <ctype.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
