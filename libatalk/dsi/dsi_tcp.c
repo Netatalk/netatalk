@@ -22,6 +22,10 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <netinet/tcp.h>
