@@ -2,6 +2,8 @@
 
 sbin_PROGRAMS = psf psa
 
+pkgdata_DATA = pagecount.ps
+
 psf_SOURCES = psf.c
 psa_SOURCES = psa.c
 
@@ -10,9 +12,9 @@ CFLAGS = @CFLAGS@ -DZEROWIDTH \
 	-D_PATH_PSORDER=\"$(bindir)/psorder\" \
 	-D_PATH_PSA=\"$(sbindir)/psa\" \
 	-D_PATH_PSFILTER=\"$(bindir)/etc2ps.sh\" \
-	-D_PATH_PAGECOUNT=\"$(sysconfdir)/pagecount.ps\"
+	-D_PATH_PAGECOUNT=\"$(pkgdatadir)/pagecount.ps\"
 
-EXTRA_DIST = etc2ps.sh
+EXTRA_DIST = etc2ps.sh pagecount.ps
 
 # declare links
 psf_LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap \
@@ -24,7 +26,7 @@ psf_LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap \
 # install sections for links
 #
 
-install-data-local:
+install-exec-local:
 	@list='$(psf_LINKS)'; for l in $$list; do \
 		$(LN_S) -f psf $(DESTDIR)$(sbindir)/$$l;  \
 	done
@@ -33,5 +35,5 @@ install-data-local:
 # cleanup
 #
 
-clean distclean clean-recursive distclean-recursive:
-	$(RM) -r $(psf_LINKS) *.o core .libs .deps
+CLEANFILES += $(psf_LINKS)
+
