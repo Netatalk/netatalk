@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.23 2002-02-16 10:46:42 srittau Exp $
+ * $Id: fork.c,v 1.24 2002-03-07 16:06:01 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -876,7 +876,6 @@ int		ibuflen, *rbuflen;
         goto afp_read_done;
     if (saveerr < 0) {
        err = saveerr;
-       goto afp_read_done;
     }
     /* dsi can stream requests. we can only do this if we're not checking
      * for an end-of-line character. oh well. */
