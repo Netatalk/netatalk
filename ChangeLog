@@ -1,4 +1,8 @@
 
+2001-10-03  joe c   <marcus@marcuscom.com>
+	
+	* configure.in: Fix bug with PAM configuration
+
 2001-09-28  joe c   <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_close.c: Add more db3 3.3.x compatibility to CNID DB

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.105 2001-09-22 04:43:19 jmarcus Exp $
+dnl $Id: configure.in,v 1.106 2001-10-03 18:22:28 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -83,7 +83,7 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h ufs/quota.h mount.h sys/mount.h statfs.h sys/types.h dlfcn.h errno.h sys/errno.h)
+AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h mntent.h syslog.h unistd.h termios.h sys/termios.h netdb.h sgtty.h ufs/quota.h mount.h sys/mount.h statfs.h sys/types.h dlfcn.h errno.h sys/errno.h security/pam_appl.h)
 AC_CHECK_HEADER(sys/cdefs.h,,
 	AC_MSG_RESULT([enabling generic cdefs.h from tree])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
@@ -338,22 +338,31 @@ if test "x$srvloc" != "xno"; then
 	done
 fi
 
-AC_CHECK_LIB(pam, pam_start,
-	AC_DEFINE(USE_PAM, 1)
-	LIBS="$LIBS -lpam"
-	compile_pam=yes
+# Check for PAM libs
+PAM_MSG="yes"
+AC_ARG_WITH(pam,
+    [  --with-pam              Enable PAM support ],
+    [
+        if test "x$withval" = "xno" ; then
+			PAM_MSG="no"
+		else 
+            PAM_MSG="yes"
+        fi
+    ]
 )
 
-AC_ARG_WITH(pam,
-	[  --without-pam           disable password authentication modules support],
-	compile_pam=no
-	use_pam_so=no
-	AC_DEFINE(USE_PAM, 0)
-	AC_MSG_RESULT([disabling pam modules support])
-)
-if test "x$compile_pam" = "xyes"; then
-	use_pam_so=yes
+if test "x$PAM_MSG" = "xyes"; then
 	AC_MSG_RESULT([enabling pam modules support])
+	if test "x$ac_cv_header_security_pam_appl_h" != "xyes" ; then
+		AC_MSG_ERROR([PAM headers not found]) 
+	fi
+        
+	AC_CHECK_LIB(dl, dlopen, , )
+	AC_CHECK_LIB(pam, pam_set_item, , AC_MSG_ERROR([*** libpam missing]))
+	AC_CHECK_FUNCS(pam_getenvlist)
+
+	AC_DEFINE(USE_PAM)
+	use_pam_so=yes
 fi
 
 shadowpw=no
