@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.25 2002-08-30 03:12:52 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.26 2002-11-14 17:09:38 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,7 +41,6 @@ void cnid_close(void *CNID) {
         lock.l_start = lock.l_len = 0;
         if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
             char **list, **first;
-            int cfd = -1;
 
 
             /* Checkpoint the databases until we can checkpoint no

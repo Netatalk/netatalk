@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.30 2002-08-30 03:12:52 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.31 2002-11-14 17:09:38 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -132,8 +132,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
 #ifndef CNID_DB_CDB
     DB_TXN *tid;
 #endif /* CNID_DB_CDB */
-    struct timeval t;
-    cnid_t id, save;
+    cnid_t id;
     int rc;
 
     if (!(db = CNID) || !st || !name) {

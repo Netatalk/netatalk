@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.43 2002-08-31 05:35:10 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.44 2002-11-14 17:09:38 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -193,7 +193,7 @@ static int compare_unicode(const DBT *a, const DBT *b)
 }
 
 void *cnid_open(const char *dir, mode_t mask) {
-    struct stat st, rsb, lsb, csb;
+    struct stat st;
 #ifndef CNID_DB_CDB
     struct flock lock;
 #endif /* CNID_DB_CDB */
