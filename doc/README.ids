@@ -62,7 +62,7 @@ their embeded documents.  These can break in the same way as aliases.
 
 So how does netatalk approach the problem?
 
-Netatalk has 4 different methods of allocating IDs: last, hash, mtab or cnid.
+Netatalk has two different methods of allocating IDs: last and cnid.
 
 DID = last.
 
@@ -72,19 +72,6 @@ the server looks up on the table.  When the server is restarted, the table is
 lost.  This is the most simple method, but it is unreliable.  If you stick to
 the mac features which don't rely heavily on IDs it works fine.  If you try
 to use IDs much, things break.  
-
-DID = hash. 
-
-This uses inodes to identify files.  An inode is a unique number which
-is the equivalent to ID on ext2 (and 3) file systems.  However, an inode is
-significanlty bigger than an ID, so the number needs to be hashed to make it
-smaller.  Unfortunately this means it is nolonger unique, so you can get 2
-files with the same ID.  
-
-DID = mtab.
-
-This is similar to hash, but better.  This is not available on all operating 
-systems. See README.mtab for more details.
 
 DID = cnid. 
 

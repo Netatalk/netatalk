@@ -1,5 +1,5 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.8 2002-02-01 06:15:34 srittau Exp $)
+($Id: FAQ,v 1.9 2002-10-04 23:38:44 srittau Exp $)
 
 -----------------------------------------------------------------------------
 
@@ -211,7 +211,7 @@ A:  Compile with the --with-did=last flag set. This activates a different
     of these problems. This code, along with the CNID code, was still being
     worked out in Pre7. The cnid/db3 flags also go along with this:
       --with-db3=PATH         specify path to Berkeley DB3 installation
-      --with-did=[scheme]     set DID scheme (last,mtab,cnid) 
+      --with-did=[scheme]     set DID scheme (cnid,last) 
     
     (For more information on CNID, see the README.cnid file [may not exist yet], 
     into which I just copied wholesale Joe's comments on what he did with 
