@@ -37,7 +37,7 @@ atalk_startup() {
 	daemon @prefix@/sbin/atalkd
 	RETVAL_ATALKD=$?
 
-	if [ -x @bindir@/nbprgstr ]; then	
+	if [ -x @prefix@/bin/nbprgstr ]; then	
 	    @prefix@/bin/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
 	    @prefix@/bin/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
 	fi	
