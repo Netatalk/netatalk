@@ -53,7 +53,7 @@ static int addname(char **list, int *i, int *length, const char *name)
       memcpy(new, list, *length);
       list = new;
       
-      *length += IFACE_NUM;
+      *length += 1;
     }
      
     if ((list[*i] = strdup(name)) == NULL)
