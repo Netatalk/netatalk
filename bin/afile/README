@@ -1,0 +1,33 @@
+This directory contains a couple of C utilities, afile and achfile,
+and a script written in rc, acleandir, to help manipulate netatalk
+files on Unix.
+
+Briefly:
+
+afile file ... 
+
+displays Mac type/creator of a netatalk  file given either data or
+AppleDouble file. Can be used to test whether file has a corresponding
+data or AppleDouble file.
+
+achfile file ...
+
+changes type/creator of a netatalk file given a data file.
+
+acleandir dir
+
+cleans up a netatalk directory e.g. removes "orphan" AppleDouble files.
+
+See the man pages for more details.
+
+I've included a copy of line, used by acleandir,just in case it isn't
+on your system.
+
+acleandir is written is rc. I have used rc as my shell for
+several years. Amongst its virtues is the way it handles the embedded
+spaces you often get in netatalk files. See http://www.star.le.ac.uk/~tjg/rc/
+for more info on rc.
+ 
+Comments, suggestions etc. to gerry.tomlinson@ncl.ac.uk
+
+6/3/98	

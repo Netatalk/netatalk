@@ -1,0 +1,108 @@
+#!/usr/local/bin/rc
+#
+# acleandir  [-rvnid] dir 
+#
+# removes orphan AppleDouble files
+#
+# gerry.tomlinson@ncl.ac.uk 2/3/98
+#
+# note - don't follow symbolic links to directories in recursive option
+
+
+fn emptydir {
+~ $1/* $1/'*'  && return 0
+return 1
+}
+
+fn doit {
+~ $ropt 1  && for (i in $1/*) {
+    [  -d  $i -a ! '(' $testsym $i ')' ] && doit $i
+}
+
+AD=$1/.AppleDouble
+ADT=$1/.AppleDesktop
+
+[ -d $AD ]  || return
+
+#
+# first handle the .AppleDesktop dir
+#
+if (~ $aopt 1 && [ -d $ADT ] ) {
+	if (~ $iopt 1 ) {
+	      echo -n remove $ADT '?' 
+	       ~ `{line} [yY] && rm -r $ADT
+	} else { 
+	    if (~ $nopt 1) {
+		echo $ADT to be removed
+	    } else rm -r $ADT
+       }           
+}
+
+#
+# now look at the .AppleDouble dir
+#
+emptydir $AD  || for (i in $AD/*) {
+    if (~ $aopt 1 || ! afile $i  >/dev/null >[2=1] ) {
+	sizemess = ()
+	size = `{wc -c $i}
+	! ~ $size(1) 589 && sizemess = 'size='^$size(1)
+	if (~ $iopt 1 ) {
+	    size = `{wc -c $i}
+	    echo -n remove '`'$i''''^$sizemess^' ? '
+	    ~ `{line} [yY] && rm  $i
+	} else {
+        if (~ $nopt 1 ) {	     
+	     echo '`'$i''''^' to be removed '^$sizemess
+	} else rm  $i && ~ $vopt 1 && echo $i removed  
+	}  
+    }
+ }
+
+if ( ~ $dopt 1  && emptydir $AD ) {
+    rm -f $AD/.Parent
+    rmdir $AD >/dev/null >[2=1]  && ~ $vopt 1 && echo empty directory $AD removed
+}
+
+
+
+}
+
+#
+# start here
+#
+
+#
+# first cope with different test for symlink options
+#
+testsym = -L
+[ - L . ] >[2] /dev/null 
+~ $status 1 || testsym = -h
+
+~$#* 0 || * =`{getopt darnviR $*}
+
+for (i) {
+    switch ($i) {
+    case -[rR]
+	    shift; ropt = 1
+    case -v
+	    shift; vopt = 1
+    case -n
+	    shift; nopt = 1 
+    case -i
+	    shift; iopt = 1; 
+    case -d
+	    shift; dopt = 1;
+    case -a
+	    shift; aopt = 1; dopt = 1;
+    case --
+	    shift; break;
+    }
+}
+
+~ $#* 0  && {echo usage: acleandir [-rnvia] dir; exit 1}
+
+[  -d  $1 ] || {echo >[1=2] acleandir: $1 not a directory; exit 2}
+
+doit $1
+
+

@@ -1,0 +1,55 @@
+.TH AFILE 1 "26 Feb 1998" 
+.SH NAME
+afile \- display type and creator of Apple Macintosh files (netatalk format)
+.SH SYNOPSIS
+.B afile 
+[
+.B -a
+]
+.I file ...
+
+.SH DESCRIPTION
+.B afile
+displays the name and Macintosh type and creator of the 
+.I file
+arguments. Tests whether the file is an AppleDouble header,
+in which case it checks the corresponding data fork exists, or assumes
+it is a data fork in which case it looks for the corresponding AppleDouble
+to find the type/creator information.
+
+.LP
+.B afile
+does not look at any of the extension mapping files such
+as AppleVolumes.system.
+
+.SH OPTIONS
+.TP
+.B -a
+Include directories and data files of unknown type (i.e. without 
+corresponding AppleDouble) in output.
+
+.SH DIAGNOSTICS
+returns exit status 0 if all files have a corresponding valid  .AppleDouble header or data fork, or 99 for bad command line options. Otherwise it returns the following error code relating to the last invalid file.
+.br
+
+1  file doesn't exist
+.br
+2  file is unreadable
+.br
+3  file is directory
+.br
+4  file is AppleDouble without data fork
+.br
+5  file is AppleDouble with unreadable data fork
+.br
+6  file is data fork without AppleDouble
+.br
+7  file is data fork with unreadable AppleDouble
+.br
+8  file is data fork with short AppleDouble
+.br
+9  bad magic in AppleDouble
+ 
+.SH SEE ALSO
+.BR achfile (1),
+.BR afpd (1)
