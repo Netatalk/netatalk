@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.194 2003-12-15 04:55:20 srittau Exp $
+dnl $Id: configure.in,v 1.195 2003-12-15 05:05:19 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -615,7 +615,6 @@ if test x"$this_os" = "xtru64"; then
 	AC_DEFINE(HAVE_64BIT_LONGS, 1, [Define if the data type long has 64 bit])
 	dnl AC_DEFINE(USE_MOUNT_H)
 	AC_DEFINE(USE_OLD_RQUOTA, 1, [Define to use old rquota])
-	dnl AC_DEFINE(USE_UFS_QUOTA_H)
 	AC_DEFINE(TRU64, 1, [Define on Tru64 platforms])
 	AC_CHECK_LIB(security,set_auth_parameters)
 	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
