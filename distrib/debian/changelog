@@ -7,9 +7,20 @@ netatalk (1.5pre7cvs-0) unstable; urgency=medium
     Removed rule, correcting this from Debian rules file.
   * Newer versions of config.{sub,guess} were now added to upstream
     sources. No need to patch them.
-  * netatalk-config(1) and timelord(8) do now have a man page.
+  * netatalk-config(1), timelord(8), and timeout(1) do now have a man page.
 
- -- Sebastian Rittau <srittau@debian.org>  Thu, 19 Jul 2001 18:15:53 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 19 Jul 2001 18:46:08 +0200
+
+netatalk (1.5pre6-6) unstable; urgency=medium
+
+  * ./configure --with-did=last
+    This should fix errors with MacOS X.
+  * Fixed typo in add_netatalk_printer. (Closes: #104192)
+  * Removed /etc/netatalk/netatalk.conf, since it's not used by Debian's
+    init script. (Closes: #103539)
+  * Disabled pam_guest module by default. (Closes: #106637)
+
+ -- Sebastian Rittau <srittau@debian.org>  Sat, 28 Jul 2001 14:49:15 +0200
 
 netatalk (1.5pre6-5) unstable; urgency=low
 

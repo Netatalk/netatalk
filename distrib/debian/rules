@@ -17,7 +17,8 @@ build-stamp:
 	dh_testdir
 
 	./configure --with-cflags=-O2 --with-shadow \
-		--enable-fhs --with-tcp-wrappers --enable-timelord
+		--enable-fhs --with-tcp-wrappers --enable-timelord \
+		--with-did=last
 	$(MAKE)
 
 	touch build-stamp
