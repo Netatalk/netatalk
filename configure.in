@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.200 2003-12-15 06:40:40 srittau Exp $
+dnl $Id: configure.in,v 1.201 2003-12-15 06:56:33 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -66,34 +66,14 @@ dnl
 
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(strcasestr strchr memcpy)
-
-dnl
-dnl Checks for (v)snprintf
-dnl
-
 NETATALK_SNPRINTF_CHECK
 
-dnl --------------------------------------------------------------------------
-dnl specific configuration comes in here:
-dnl --------------------------------------------------------------------------
+dnl
+dnl Configuration options.
+dnl
 
-AC_DEFINE(ADMIN_GRP, 1, [Define if the admin group should be enabled])
-
-AC_MSG_CHECKING([for administrative group support])
-AC_ARG_WITH(admin-group,
- 	[  --disable-admin-group   disable admin group], [
-        if test "$enableval" = "no"; then
-		AC_DEFINE(ADMIN_GRP, 0, [Define if the admin group should be enabled])
-		AC_MSG_RESULT([no])
-	else
-		AC_MSG_RESULT([yes])
-        fi], [
-		AC_MSG_RESULT([yes])
-	]
-)
-
+NETATALK_ADMINGRP_CHECK
 NETATALK_AFS_CHECK
-
 NETATALK_CONFIG_DIRS
 
 AC_MSG_CHECKING([for logfile path])
