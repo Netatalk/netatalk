@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.18 2001-08-15 01:37:34 srittau Exp $
+ * $Id: auth.c,v 1.19 2001-11-10 17:51:10 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -521,7 +521,7 @@ int auth_load(const char *path, const char *list)
 
   while (p) {
     strncpy(name + len, p, sizeof(name) - len);
-    syslog(LOG_DEBUG, "uam : Loading (%s)", name);
+    syslog(LOG_DEBUG, "uam: loading (%s)", name);
     /*
     if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
     */
