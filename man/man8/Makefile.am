@@ -11,10 +11,12 @@ SUFFIXES = .tmpl .
 	    -e s@:LIBDIR:@${libdir}@ \
 	    <$^ >$@
 
-man_MANS = afpd.8 atalkd.8 pap.8 papd.8 papstatus.8 psf.8
+NONGENERATED_MANS = timelord.8
+GENERATED_MANS    = afpd.8 atalkd.8 pap.8 papd.8 papstatus.8 psf.8
+TEMPLATE_FILES    = $(foreach f,$(GENERATED_MANS),$(f).tmpl)
 
-TEMPLATE_FILES = $(foreach f,$(man_MANS),$(f).tmpl)
+man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
 
-CLEANFILES += $(man_MANS)
+CLEANFILES += $(GENERATED_MANS)
 
-EXTRA_DIST = $(TEMPLATE_FILES)
+EXTRA_DIST = $(TEMPLATE_FILES) $(NONGENERATED_MANS)
