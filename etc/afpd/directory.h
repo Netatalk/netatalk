@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.13 2003-04-20 06:53:40 didg Exp $
+ * $Id: directory.h,v 1.14 2003-05-02 18:22:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -224,6 +224,9 @@ extern int	afp_mapname __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_enumerate __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
 extern int	afp_enumerate_ext __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
 extern int	afp_enumerate_ext2 __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
+
+/* from catsearch.c */
 extern int	afp_catsearch __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_catsearch_ext __P((AFPObj *, char *, int, char *, int *));
 
 #endif

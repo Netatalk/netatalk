@@ -31,6 +31,8 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <string.h>
+#include <time.h>
 
 #if STDC_HEADERS
 #include <string.h>
@@ -49,6 +51,7 @@
 #include <netatalk/endian.h>
 #include <atalk/afp.h>
 #include <atalk/adouble.h>
+#include <atalk/logger.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB */
@@ -97,6 +100,7 @@ struct scrit {
         u_int16_t offcnt;           /* Offspring count */
 	struct finderinfo finfo;    /* Finder info */
 	char lname[32];             /* Long name */
+	char utf8name[256];         /* UTF8 name */
 };
 
 /*
@@ -297,6 +301,16 @@ static int crit_check(struct vol *vol, struct path *path, int cidx) {
 			if (strcasecmp(path->u_name, c1.lname) != 0)
 				goto crit_check_ret;
 	} /* if (c1.rbitmap & ... */
+	
+	if ((c1.rbitmap & (1<<FILPBIT_PDINFO))) { 
+		if (c1.rbitmap & (1<<CATPBIT_PARTIAL)) {
+			if (strcasestr(path->u_name, c1.utf8name) == NULL)
+				goto crit_check_ret;
+		} else
+			if (strcasecmp(path->u_name, c1.utf8name) != 0)
+				goto crit_check_ret;
+	} /* if (c1.rbitmap & ... */
+
 
 
 	/* FIXME */
@@ -436,6 +450,57 @@ static int rslt_add(struct vol *vol, char *fname, short cidx, int isdir, char **
 	return 1;
 } /* rslt_add */
 
+static int rslt_add_ext ( struct vol *vol, struct path *path, char **buf, short cidx)
+{
+
+	char 		*p = *buf;
+	int 		ret, tbuf =0;
+	u_int16_t	resultsize;
+	int 		isdir = S_ISDIR(path->st.st_mode); 
+
+	if (dstack[cidx].dir == NULL && resolve_dir(vol, cidx) == 0)
+		return 0;
+
+	p += sizeof(resultsize); /* Skip resultsize */
+	*p++ = isdir ? FILDIRBIT_ISDIR : FILDIRBIT_ISFILE;    /* IsDir ? */
+	*p++ = 0;                  /* Pad */
+	
+	if ( isdir )
+	{
+		struct dir* dir = NULL;
+
+		dir = dirsearch_byname(dstack[cidx].dir, path->u_name);
+            	if (!dir) {
+                	if ((dir = adddir( vol, dstack[cidx].dir, path)) == NULL) {
+                    		return 0;
+                	}
+            	}
+            	ret = getdirparams(vol, c1.dbitmap, path, dir, p , &tbuf ); 
+	}
+	else
+	{
+		ret = getfilparams ( vol, c1.fbitmap, path, dstack[cidx].dir, p, &tbuf);
+	}
+
+	if ( ret != AFP_OK )
+		return 0;
+
+	/* Make sure entry length is even */
+	if (tbuf & 1) {
+	   *p++ = 0;
+	   tbuf++;
+	}
+
+	resultsize = htons(tbuf);
+	memcpy ( *buf, &resultsize, sizeof(resultsize) );
+	
+	*buf += tbuf + 4;
+
+	return 1;
+} /* rslr_add_ext */
+	
+	
+
 #define VETO_STR \
         "./../.AppleDouble/.AppleDB/Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/.AppleDesktop/.Parent/"
 
@@ -450,7 +515,7 @@ static int rslt_add(struct vol *vol, char *fname, short cidx, int isdir, char **
  */
 #define NUM_ROUNDS 100
 static int catsearch(struct vol *vol, struct dir *dir,  
-		     int rmatches, int *pos, char *rbuf, u_int32_t *nrecs, int *rsize)
+		     int rmatches, int *pos, char *rbuf, u_int32_t *nrecs, int *rsize, int ext)
 {
 	int cidx, r;
 	char *fname = NULL;
@@ -558,12 +623,19 @@ static int catsearch(struct vol *vol, struct dir *dir,
 
 			/* bit 0 means that criteria has been met */
 			if (ccr & 1) {
-				r = rslt_add(vol,  
-					     (c1.fbitmap&(1<<FILPBIT_LNAME))|(c1.dbitmap&(1<<DIRPBIT_LNAME)) ? 
-					         fname : NULL,	
-					     (c1.fbitmap&(1<<FILPBIT_PDID))|(c1.dbitmap&(1<<DIRPBIT_PDID)) ? 
-					         cidx : -1, 
-					     S_ISDIR(path.st.st_mode), &rrbuf); 
+				if ( ext ) { 
+					r = rslt_add_ext ( vol, &path, &rrbuf, cidx);
+				}
+				else
+				{
+					r = rslt_add(vol,  
+						     (c1.fbitmap&(1<<FILPBIT_LNAME))|(c1.dbitmap&(1<<DIRPBIT_LNAME)) ? 
+						         fname : NULL,	
+						     (c1.fbitmap&(1<<FILPBIT_PDID))|(c1.dbitmap&(1<<DIRPBIT_PDID)) ? 
+						         cidx : -1, 
+						     S_ISDIR(path.st.st_mode), &rrbuf); 
+				}
+				
 				if (r == 0) {
 					result = AFPERR_MISC;
 					goto catsearch_end;
@@ -607,9 +679,8 @@ catsearch_end: /* Exiting catsearch: error condition */
 	return result;
 } /* catsearch() */
 
-
-int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
-                  char *rbuf, int *rbuflen)
+int catsearch_afp(AFPObj *obj, char *ibuf, int ibuflen,
+                  char *rbuf, int *rbuflen, int ext)
 {
     struct vol *vol;
     u_int16_t   vid;
@@ -658,12 +729,23 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
 	    return AFPERR_BITMAP;
     }
 
+    if ( ext)
+	    ibuf++;
+
     /* Parse file specifications */
     spec1 = ibuf;
     spec2 = ibuf + ibuf[0] + 2;
-
-    spec1 += 2; bspec1 = spec1;
-    spec2 += 2; bspec2 = spec2;
+    
+    if (ext)
+    {
+	spec1++; bspec1 = spec1;
+    	spec2++; bspec2 = spec2;
+    }
+    else
+    {
+	spec1 += 2; bspec1 = spec1;
+    	spec2 += 2; bspec2 = spec2;
+    }
 
     /* File attribute bits... */
     if (c1.rbitmap & (1 << FILPBIT_ATTR)) {
@@ -757,11 +839,35 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
 		c2.lname[i] = tolower(c2.lname[i]);
 #endif
     }
+        /* UTF8 Name */
+    if (c1.rbitmap & (1 << FILPBIT_PDINFO)) {
+	char * 		tmppath;
+	u_int16_t	namelen;
 
+	/* offset */
+	memcpy(&namelen, spec1, sizeof(namelen));
+	namelen = ntohs (namelen);
 
+	spec1 = bspec1+namelen+4; /* Skip Unicode Hint */
+
+	/* length */
+	memcpy(&namelen, spec1, sizeof(namelen));
+	namelen = ntohs (namelen);
+	if (namelen > 255)  /* Safeguard */
+		namelen = 255;
+
+	memcpy (c1.utf8name, spec1+2, namelen);
+	c1.utf8name[(namelen+1)] =0;
+
+	/* convert charset */	
+	tmppath = mtoupath(vol, c1.utf8name, 1);
+	memset (c1.utf8name, 0, 256);
+	memcpy (c1.utf8name, tmppath, MIN(strlen(tmppath), 255));
+    }
+    
     /* Call search */
     *rbuflen = 24;
-    ret = catsearch(vol, vol->v_dir, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize);
+    ret = catsearch(vol, vol->v_dir, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
     memcpy(rbuf, catpos, sizeof(catpos));
     rbuf += sizeof(catpos);
 
@@ -779,7 +885,20 @@ int afp_catsearch(AFPObj *obj, char *ibuf, int ibuflen,
     *rbuflen += rsize;
 
     return ret;
-} /* afp_catsearch */
+} /* catsearch_afp */
+
+int afp_catsearch (AFPObj *obj, char *ibuf, int ibuflen,
+                  char *rbuf, int *rbuflen)
+{
+	return catsearch_afp( obj, ibuf, ibuflen, rbuf, rbuflen, 0);
+}
+
+
+int afp_catsearch_ext (AFPObj *obj, char *ibuf, int ibuflen,
+                  char *rbuf, int *rbuflen)
+{
+	return catsearch_afp( obj, ibuf, ibuflen, rbuf, rbuflen, 1);
+}
 
 /* FIXME: we need a clean separation between afp stubs and 'real' implementation */
 /* (so, all buffer packing/unpacking should be done in stub, everything else 
