@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.16 2001-10-21 08:38:30 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.17 2001-11-04 17:34:15 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -87,8 +87,10 @@
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
 #else /* DB_VERSION_MINOR < 1 */
+/*#define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
+DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)*/
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)
+DB_INIT_LOG | DB_INIT_TXN)
 #endif /* DB_VERSION_MINOR */
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
@@ -176,6 +178,7 @@ void *cnid_open(const char *dir) {
 	CNID_private *db;
 	DBT key, data;
 	DB_TXN *tid;
+	u_int32_t DBEXTRAS = 0;
 	int open_flag, len;
 	int rc;
 
@@ -222,13 +225,27 @@ void *cnid_open(const char *dir) {
 		lock.l_len = 1;
 		while (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
 			if (++lock.l_start > MAXITER) {
-				syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock.");
+				syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock (lock failed)");
 				close(db->lockfd);
 				db->lockfd = -1;
 				break;
 			}
 		}
 	}
+	else {
+		syslog(LOG_INFO, "cnid_open: Cannot establish logfile cleanup lock (open() failed)");
+	}
+	
+	if (db->lockfd > -1 && lock.l_start == 0) {
+		/* We test to see if we have exclusive database access.  If we do, we
+		 * will open the database with the DB_RECOVER flag.
+		 */
+#ifdef DEBUG
+		syslog(LOG_INFO, "cnid_open: Opening database with DB_RECOVER flag");
+#endif
+		DBEXTRAS |= DB_RECOVER;
+	}
+
 
 	path[len + DBHOMELEN] = '\0';
 	open_flag = DB_CREATE;
@@ -249,17 +266,17 @@ void *cnid_open(const char *dir) {
 
 #if DB_VERSION_MINOR > 1
 	/* Take care of setting the DB_TXN_NOSYNC flag in db3 > 3.1.x. */
-	if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
+/*	if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
 		syslog(LOG_ERR, "cnid_open: set_flags: %s", db_strerror(rc));
 		goto fail_lock;
-	}
+	}*/
 #endif /* DB_VERSION_MINOR > 1 */
 
 	/* Open the database environment. */
-	if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) != 0) {
+	if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS | DBEXTRAS, 0666)) != 0) {
 		if (rc == DB_RUNRECOVERY) {
 			/* This is the mother of all errors.  We _must_ fail here. */
-			syslog(LOG_ERR, "cnid_open: CATASTROPHIC ERROR opening database environment.  Run db_recovery immediately");
+			syslog(LOG_ERR, "cnid_open: CATASTROPHIC ERROR opening database environment.  Run db_recovery -c immediately");
 			goto fail_lock;
 		}
 

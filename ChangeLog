@@ -1,3 +1,8 @@
+2001-11-04  joe c <marcus@marcuscom.com>
+
+	* libatalk/cnid/cnid_open.c: Re-added code to enable on-the-fly database
+	recovery
+
 2001-10-31  Dan <bobo@bocklabs.wisc.edu>
         * Fixed bug in bin/afppasswd/Makefile.am causing compile problems
           with SuSE distro.
