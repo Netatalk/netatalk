@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.48 2002-08-20 19:40:43 srittau Exp $
+ * $Id: file.c,v 1.49 2002-08-21 07:52:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -186,9 +186,9 @@ int getmetadata(struct vol *vol,
                 }
             }
 
-            if ((!adp || (memcmp(ad_entry(adp, ADEID_FINDERI),
-                                  ufinderi, 8 ) == 0)) &&
-                    (em = getextmap( path ))) {
+            if ((!adp  || !memcmp(ad_entry(adp, ADEID_FINDERI),ufinderi , 8 )) 
+            	&& (em = getextmap( path ))
+            ) {
                 memcpy(data, em->em_type, sizeof( em->em_type ));
                 memcpy(data + 4, em->em_creator, sizeof(em->em_creator));
             }
@@ -709,13 +709,18 @@ int setfilparams(struct vol *vol,
             break;
 
         case FILPBIT_FINFO :
-            if ((memcmp( ad_entry( adp, ADEID_FINDERI ), ufinderi, 8 ) == 0)
-                    && (em = getextmap( path )) &&
-                    (memcmp(buf, em->em_type, sizeof( em->em_type )) == 0) &&
-                    (memcmp(buf + 4, em->em_creator,
-                            sizeof( em->em_creator )) == 0)) {
+            if (!memcmp( ad_entry( adp, ADEID_FINDERI ), ufinderi, 8 )
+                    && ( 
+                     ((em = getextmap( path )) &&
+                      !memcmp(buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(buf + 4, em->em_creator,sizeof( em->em_creator)))
+                     || ((em = getdefextmap()) &&
+                      !memcmp(buf, em->em_type, sizeof( em->em_type )) &&
+                      !memcmp(buf + 4, em->em_creator,sizeof( em->em_creator)))
+            )) {
                 memcpy(buf, ufinderi, 8 );
             }
+
             memcpy(ad_entry( adp, ADEID_FINDERI ), buf, 32 );
             buf += 32;
             break;

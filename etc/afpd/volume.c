@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.30 2002-08-20 19:40:44 srittau Exp $
+ * $Id: volume.c,v 1.31 2002-08-21 07:52:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1284,6 +1284,11 @@ struct extmap *getextmap(const char *path)
     } else {
         return( em );
     }
+}
+
+struct extmap *getdefextmap(void)
+{
+    return( defextmap );
 }
 
 void setvoltime(obj, vol )

@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.8 2002-06-17 18:23:03 didg Exp $
+ * $Id: file.h,v 1.9 2002-08-21 07:52:03 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -73,6 +73,7 @@ struct extmap {
 };
 
 extern struct extmap	*getextmap __P((const char *));
+extern struct extmap	*getdefextmap __P((void));
 
 extern int getfilparams __P((struct vol *, u_int16_t, char *,
                                  struct dir *, struct stat *, char *buf,
