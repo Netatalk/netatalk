@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.10 2001-09-21 15:08:32 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.11 2001-10-18 02:28:56 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -65,6 +65,18 @@ retry:
     return rc;
   }
 
+  /* did/name database */
+  altkey.data = (char *) data->data + CNID_DEVINO_LEN;
+  altkey.size = data->size - CNID_DEVINO_LEN;
+  if ((rc = db->db_didname->put(db->db_didname, tid,
+				   &altkey, &altdata, 0))) {
+    txn_abort(tid);
+    if (rc == DB_LOCK_DEADLOCK)
+      goto retry;
+
+    return rc;
+  }
+
   /* dev/ino database */
   altkey.data = data->data;
   altkey.size = CNID_DEVINO_LEN;
@@ -79,17 +91,6 @@ retry:
     return rc;
   }
 
-  /* did/name database */
-  altkey.data = (char *) data->data + CNID_DEVINO_LEN;
-  altkey.size = data->size - CNID_DEVINO_LEN;
-  if ((rc = db->db_didname->put(db->db_didname, tid,
-				   &altkey, &altdata, 0))) {
-    txn_abort(tid);
-    if (rc == DB_LOCK_DEADLOCK)
-      goto retry;
-
-    return rc;
-  }
 
   return txn_commit(tid, 0);
 }
@@ -119,7 +120,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
   /* ...return id if it is valid or if RootInfo is read-only. */
   if (id || (db->flags & CNIDFLAG_DB_RO)) {
     if (debug)
-      syslog(LOG_ERR, "cnid_add: looked up did %d, name %s as %d", did, name, id);
+      syslog(LOG_ERR, "cnid_add: looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
     return id;
   }
 
@@ -148,14 +149,41 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
     case DB_KEYEXIST: /* need to use RootInfo after all. */
       break;
     default:
-      syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint);
+      syslog(LOG_ERR, "cnid_add: unable to add CNID %u (%d)", ntohl(hint), rc);
       goto cleanup_err;
     case 0:
       if (debug)
-        syslog(LOG_ERR, "cnid_add: used hint for did %d, name %s as %d", did, name, hint);
+        syslog(LOG_ERR, "cnid_add: used hint for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
       return hint;
     }
   }
+
+
+  memset(&rootinfo_key, 0, sizeof(rootinfo_key));
+  memset(&rootinfo_data, 0, sizeof(rootinfo_data));
+
+  /* just set hint, and the key will change. */
+  rootinfo_key.data = ROOTINFO_KEY;
+  rootinfo_key.size = ROOTINFO_KEYLEN;
+
+  /* Get the key. */
+  switch (rc = db->db_didname->get(db->db_didname, NULL, &rootinfo_key, &rootinfo_data, 0)) {
+  case DB_LOCK_DEADLOCK:
+          goto retry;
+  case 0:
+          memcpy (&hint, rootinfo_data.data, sizeof(hint));
+          if (debug)
+            syslog(LOG_ERR, "cnid_add: found rootinfo for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
+          break;
+  case DB_NOTFOUND:
+          hint = htonl(CNID_START);
+          if (debug)
+            syslog(LOG_ERR, "cnid_add: using CNID_START for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
+          break;
+  default:
+          syslog(LOG_ERR, "cnid_add: unable to lookup rootinfo (%d)", rc);
+		  goto cleanup_err;
+ }
 
   /* Abort and retry the modification. */
   if (0) {
@@ -170,31 +198,6 @@ retry:    if ((rc = txn_abort(tid)) != 0)
     goto cleanup_err;
   }
 
-  memset(&rootinfo_key, 0, sizeof(rootinfo_key));
-  memset(&rootinfo_data, 0, sizeof(rootinfo_data));
-
-  /* just set hint, and the key will change. */
-  rootinfo_key.data = ROOTINFO_KEY;
-  rootinfo_key.size = ROOTINFO_KEYLEN;
-
-  /* Get the key. */
-  switch (rc = db->db_didname->get(db->db_didname, tid, &rootinfo_key, &rootinfo_data, 0)) {
-  case DB_LOCK_DEADLOCK:
-          goto retry;
-  case 0:
-          memcpy (&hint, rootinfo_data.data, sizeof(hint));
-          if (debug)
-            syslog(LOG_ERR, "cnid_add: found rootinfo for did %d, name %s as %d", did, name, hint);
-          break;
-  case DB_NOTFOUND:
-          hint = htonl(CNID_START);
-          if (debug)
-            syslog(LOG_ERR, "cnid_add: using CNID_START for did %d, name %s as %d", did, name, hint);
-          break;
-  default:
-          syslog(LOG_ERR, "cnid_add: unable to lookup rootinfo (%d)", rc);
-		  goto cleanup_abort;
- }
 
   /* search for a new id. we keep the first id around to check for
    * wrap-around. NOTE: i do it this way so that we can go back and
@@ -206,7 +209,7 @@ retry:    if ((rc = txn_abort(tid)) != 0)
       id = CNID_START;
 
     if ((rc != DB_KEYEXIST) || (save == id)) {
-      syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint);
+      syslog(LOG_ERR, "cnid_add: unable to add CNID %u (%d)", ntohl(hint), rc);
       hint = 0;
       goto cleanup_abort;
     }
@@ -236,7 +239,7 @@ cleanup_commit:
   }
 
   if (debug)
-    syslog(LOG_ERR, "cnid_add: returned cnid for did %d, name %s as %d", did, name, hint);
+    syslog(LOG_ERR, "cnid_add: returned cnid for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
   return hint;
 
 cleanup_abort:
