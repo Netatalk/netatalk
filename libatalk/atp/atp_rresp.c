@@ -31,6 +31,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <sys/uio.h>
+#include <sys/socket.h>
 
 #include <netatalk/at.h>
 #include <atalk/atp.h>

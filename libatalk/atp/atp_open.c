@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/param.h>
+#include <sys/socket.h>
 
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
@@ -50,7 +51,7 @@ ATP atp_open(port, saddr)
     struct timeval	tv;
     int			pid;
 
-#ifdef EBUG
+#ifdef DEBUG
     printf( "<%d> atp_open\n", getpid());
 #endif
 

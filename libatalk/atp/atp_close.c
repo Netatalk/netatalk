@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/socket.h>
+
 #include <netatalk/at.h>
 #include <atalk/netddp.h>
 #include <atalk/atp.h>
