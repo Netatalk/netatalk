@@ -1,14 +1,20 @@
 /*
- * $Id: session.c,v 1.10 2001-08-09 13:29:59 rufustfirefly Exp $
+ * $Id: session.c,v 1.11 2001-09-06 19:04:40 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
-#include <sys/errno.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
+
+#ifdef HAVE_SYS_ERRNO_H
+#include <sys/errno.h>
+#endif /* HAVE_SYS_ERRNO_H */
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif /* HAVE_ERRNO_H */
 
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,6 @@
 /*
+ * $Id: server_child.c,v 1.4 2001-09-06 19:04:40 rufustfirefly Exp $
+ *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -14,21 +16,33 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <signal.h>
 #include <syslog.h>
+
+/* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif /* HAVE_SYS_WAIT_H */
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif /* ! WEXITSTATUS */
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif /* ! WIFEXITED */
 
 #include <atalk/server_child.h>
 
 #ifndef __inline__
 #define __inline__
-#endif
+#endif /* ! __inline__ */
 
 /* hash/child functions: hash OR's pid */
 #define CHILD_HASHSIZE 32
@@ -224,7 +238,7 @@ void server_child_handler(server_child *children)
   
 #ifndef WAIT_ANY
 #define WAIT_ANY (-1)
-#endif
+#endif /* ! WAIT_ANY */
 
   while ((pid = waitpid(WAIT_ANY, &status, WNOHANG)) > 0) {
     for (i = 0; i < children->nforks; i++) {

@@ -1,5 +1,5 @@
 /*
- * $Id: asp_getsess.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: asp_getsess.c,v 1.4 2001-09-06 19:04:40 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,9 +20,20 @@
 #include <errno.h>
 #include <sys/signal.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <sys/uio.h>
+
+/* POSIX.1 sys/wait.h check */
+#include <sys/types.h>
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif /* HAVE_SYS_WAIT_H */
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif /* ! WEXITSTATUS */
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif /* ! WIFEXITED */
+
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <netatalk/at.h>

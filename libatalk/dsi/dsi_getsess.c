@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_getsess.c,v 1.4 2001-08-15 02:18:57 srittau Exp $
+ * $Id: dsi_getsess.c,v 1.5 2001-09-06 19:04:40 rufustfirefly Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -16,9 +16,20 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-#include <sys/types.h>
 #include <signal.h>
+
+/* POSIX.1 sys/wait.h check */
+#include <sys/types.h>
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif /* HAVE_SYS_WAIT_H */
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif /* ! WEXITSTATUS */
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif /* ! WIFEXITED */
+
 #include <sys/time.h>
 #include <syslog.h>
 

@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.7 2001-08-15 01:39:39 srittau Exp $
+ * $Id: main.c,v 1.8 2001-09-06 19:04:39 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -9,7 +9,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #if defined( sun ) && defined( __svr4__ )
@@ -20,7 +19,19 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/ioctl.h>
+
+/* POSIX.1 check */
+#include <sys/types.h>
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif /* HAVE_SYS_WAIT_H */
+#ifndef WEXITSTATUS 
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif /* ! WEXITSTATUS */
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif /* ! WIFEXITED */
+
 #include <errno.h>
 #ifdef TRU64
 #include <sys/mbuf.h>

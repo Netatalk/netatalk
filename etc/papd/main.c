@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.9 2001-08-03 22:13:28 srittau Exp $
+ * $Id: main.c,v 1.10 2001-09-06 19:04:40 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -10,7 +10,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>
 #if defined( sun ) && defined( __svr4__ )
@@ -20,9 +19,20 @@
 #endif /* sun && __svr4__ */
 #include <sys/socket.h>
 #include <sys/syslog.h>
-#include <sys/wait.h>
-#include <errno.h>
 
+/* POSIX.1 sys/wait.h check */
+#include <sys/types.h>
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif /* HAVE_SYS_WAIT_H */
+#ifndef WEXITSTATUS
+#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
+#endif /* ! WEXITSTATUS */
+#ifndef WIFEXITED
+#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif /* ! WIFEXITED */
+
+#include <errno.h>
 #include <string.h>
 #include <signal.h>
 #include <stdio.h>
