@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.8 2001-09-06 19:04:39 rufustfirefly Exp $
+ * $Id: main.c,v 1.9 2001-09-10 18:27:14 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -862,7 +862,7 @@ int main( ac, av )
     char		*prog;
 ;
 
-    while (( c = getopt( ac, av, "12qsdtf:P:" )) != EOF ) {
+    while (( c = getopt( ac, av, "12qsdtf:P:v" )) != EOF ) {
 	switch ( c ) {
 	case '1' :
 	    defphase = IFACE_PHASE1;
@@ -894,6 +894,11 @@ int main( ac, av )
 
 	case 'P' :	/* pid file */
 	    pidfile = optarg;
+	    break;
+
+	case 'v' :	/* version */
+	    printf( 'atalkd (version %s)\n', version );
+	    exit ( 1 );
 	    break;
 
 	default :

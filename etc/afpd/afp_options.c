@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_options.c,v 1.9 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: afp_options.c,v 1.10 2001-09-10 18:27:14 rufustfirefly Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -61,7 +61,7 @@ char *strchr (), *strrchr ();
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
 #endif /* MIN */
 
-#define OPTIONS "dn:f:s:uc:g:P:ptDS:TL:F:U:I"
+#define OPTIONS "dn:f:s:uc:g:P:ptDS:TL:F:U:Iv"
 #define LENGTH 512
 
 /* return an option. this uses an internal array, so it's necessary
@@ -351,6 +351,10 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 	    break;
 	case 'U':
 	    options->uamlist = optarg;
+	    break;
+	case 'v':	/* version */
+	    printf( 'afpd (version %s)\n', VERSION );
+	    exit ( 1 );
 	    break;
 	case 'I':
   	    options->flags |= OPTION_CUSTOMICON;

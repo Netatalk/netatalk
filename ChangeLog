@@ -1,4 +1,23 @@
+
+2001-09-10  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/afpd/afp_options.c, etc/atalkd/main.c, etc/papd/main.c:
+	added version reporting with -v switch
+
+2001-09-06  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/atalkd/main.c, etc/papd/main.c, etc/psf/psf.c,
+	libatalk/asp/asp_getsess.c, libatalk/dsi/dsi_getsess.c,
+	libatalk/pap/pap_slinit.c, libatalk/util/server_child.c:
+	autoconf POSIX.1 sys/wait.h check
+
+	* lots of files: AC_HEADER_STDC autoconf changes
+
+	* sys/netatalk/endian.h: used autoconf endian test instead
+	of manually checking every architecture
+
 2001-09-05  joe c <marcus@marcuscom.com>
+
 	* libatalk/cnid/cnid_open.c: comment out DB_JOINENV as this is not
 	supported in db3 3.1.17
 

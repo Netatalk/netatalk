@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.11 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: main.c,v 1.12 2001-09-10 18:27:14 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -211,7 +211,7 @@ int main( ac, av )
     defprinter.p_pagecost_msg = NULL;
     defprinter.p_lock = "lock";
 
-    while (( c = getopt( ac, av, "adf:p:P:" )) != EOF ) {
+    while (( c = getopt( ac, av, "adf:p:P:v" )) != EOF ) {
 	switch ( c ) {
 	case 'a' :		/* for compatibility with old papd */
 	    break;
@@ -230,6 +230,11 @@ int main( ac, av )
 
 	case 'P' :
 	    pidfile = optarg;
+	    break;
+
+	case 'v' :		/* version */
+	    printf( 'papd (version %s)\n', VERSION );
+	    exit ( 1 );
 	    break;
 
 	default :
