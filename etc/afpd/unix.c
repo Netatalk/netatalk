@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.37 2002-09-07 19:18:59 didg Exp $
+ * $Id: unix.c,v 1.38 2002-09-29 15:42:14 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -258,7 +258,7 @@ const int dropbox;
             if ( seteuid(0) < 0) {
                 LOG(log_error, logtype_afpd, "stickydirmode: unable to seteuid root: %s", strerror(errno));
             }
-            if ( retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~default_options.umask) ) < 0) {
+            if ( (retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~default_options.umask) )) < 0) {
                 LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", name, strerror(errno) );
             } else {
 #ifdef DEBUG
@@ -369,7 +369,7 @@ mode_t mask = S_IRUSR |S_IWUSR | S_IRGRP | S_IWGRP |S_IROTH | S_IWOTH;
 
     if (!st) {
         if (stat(name, &sb) != 0)
-            return;
+            return -1;
         st = &sb;
     }
    mode &= mask;	/* keep only rw-rw-rw in mode */
