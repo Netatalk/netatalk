@@ -23,7 +23,7 @@ noinst_HEADERS = auth.h codepage.h afp_config.h desktop.h directory.h file.h \
 	 filedir.h fork.h globals.h icon.h misc.h status.h switch.h uam_auth.h \
 	 uid.h unix.h volume.h parse_mtab.h
 
-LIBS = @LIBS@ @AFPD_LIBS@
+LIBS = @LIBS@ @AFPD_LIBS@ @QUOTA_LIBS@
 
 CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @CFLAGS@ \

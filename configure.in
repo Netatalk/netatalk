@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.135 2001-11-30 05:52:36 srittau Exp $
+dnl $Id: configure.in,v 1.136 2001-12-01 15:26:41 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -36,8 +36,6 @@ dnl Replace `main' with a function in -lauth:
 AC_CHECK_LIB(auth, main)
 dnl Replace `main' with a function in -lcmd:
 AC_CHECK_LIB(cmd, main)
-dnl Replace `main' with a function in -lcom_err:
-AC_CHECK_LIB(com_err, main)
 dnl Replace `main' with a function in -lcrypt:
 AC_CHECK_LIB(crypt, main)
 dnl Replace `main' with a function in -ld:
@@ -56,10 +54,6 @@ dnl Replace `main' with a function in -lnsl:
 AC_CHECK_LIB(nsl, main)
 dnl Replace `main' with a function in -lprot:
 AC_CHECK_LIB(prot, main)
-dnl Replace `main' with a function in -lresolv:
-AC_CHECK_LIB(resolv, main)
-dnl Replace `main' with a function in -lrpcsvc:
-AC_CHECK_LIB(rpcsvc, main)
 dnl Replace `main' with a function in -lrx:
 AC_CHECK_LIB(rx, main)
 dnl Replace `main' with a function in -lrxkad:
@@ -257,6 +251,9 @@ dnl Check for Berkeley DB3 library
 if test "x$db3_required" = "xyes"; then
 	AC_PATH_DB3(, [AC_MSG_ERROR([Berkeley DB3 library not found!])])
 fi
+
+dnl Check for quota support
+AC_CHECK_QUOTA
 
 msg_dir=""
 AC_ARG_WITH(message-dir,
