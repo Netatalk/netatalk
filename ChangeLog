@@ -1,4 +1,9 @@
 
+2001-09-18  joe c   <marcus@marcuscom.com>
+
+	* config/afpd.conf.tmpl: Removed uams_guest.so from the default UAMs
+	list
+
 2001-09-17  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* acconfig.h, configure.in, etc/afpd/afp_config.c: SLP
