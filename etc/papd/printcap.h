@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: printcap.h,v 1.4 2002-08-20 20:25:54 srittau Exp $
  */
 
 #ifndef PAPD_PRINTCAP_H
@@ -7,7 +7,7 @@
 
 #include <sys/cdefs.h>
 
-int getprent __P(( register char *, register char * ));
+int getprent __P(( register char *, register char *, register int ));
 int pnchktc __P(( char * ));
 int pgetflag __P(( char * ));
 void endprent __P(( void ));

@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.7 2002-02-07 23:35:10 srittau Exp $
+ * $Id: printcap.c,v 1.8 2002-08-20 20:25:54 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -108,15 +108,17 @@ char	*getenv();
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int getprent( cap, bp)
+int getprent( cap, bp, bufsize )
 	register char *cap;
 	register char *bp;
+	register int bufsize;
 {
-	register int c, skip = 0;
+	register int c, skip = 0, i;
 
 	if (pfp == NULL && (pfp = fopen( cap, "r")) == NULL)
 		return(-1);
 	tbuf = bp;
+	i = 0;
 	for (;;) {
 		switch (c = getc(pfp)) {
 		case EOF:
@@ -146,6 +148,13 @@ int getprent( cap, bp)
 				return(1);
 			}
 			*bp++ = c;
+			if (++i >= bufsize) {
+				write(2, "config file too large\n", 22);
+				fclose(pfp);
+				pfp = NULL;
+				*bp = '\0';
+				return(1);
+			}
 		}
 	}
 }
@@ -485,9 +494,10 @@ nextc:
 }
 
 static char *
-decodename(str, area)
+decodename(str, area, bufsize)
 	register char *str;
 	char **area;
+	int bufsize;
 {
 	register char *cp;
 	register int c;
@@ -495,7 +505,7 @@ decodename(str, area)
 	int i;
 
 	cp = *area;
-	while ((c = *str++) && c != ':' && c != '|' ) {
+	while ((c = *str++) && --bufsize && c != ':' && c != '|' ) {
 		switch (c) {
 
 		case '^':
@@ -530,8 +540,9 @@ nextc:
 }
 
 char *
-getpname( area )
-    char	**area;
+getpname( area, bufsize )
+	char	**area;
+	int	bufsize;
 {
-    return( decodename( tbuf, area ));
+	return( decodename( tbuf, area, bufsize));
 }

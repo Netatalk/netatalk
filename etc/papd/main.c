@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.15 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: main.c,v 1.16 2002-08-20 20:25:54 srittau Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,13 +80,13 @@ struct printer	defprinter;
 struct printer	*printers = NULL;
 
 int		debug = 0;
-char		*conffile = _PATH_PAPDCONF;
+static char	*conffile = _PATH_PAPDCONF;
 char		*printcap = _PATH_PAPDPRINTCAP;
 unsigned char	connid, quantum, sock, oquantum = PAP_MAXQUANTUM;
 char		*cannedstatus = PIPED_STATUS;
 struct printer	*printer = NULL;
 char		*version = VERSION;
-static char      *pidfile = _PATH_PAPDLOCK;
+static char	*pidfile = _PATH_PAPDLOCK;
 
 char		*uamlist;
 char		*uampath = _PATH_PAPDUAMPATH;
@@ -94,7 +94,7 @@ char		*uampath = _PATH_PAPDUAMPATH;
 /* Prototypes for locally used functions */
 int getstatus( struct printer *pr, char *buf );
 int rprintcap( struct printer *pr );
-void getprinters( char *cf );
+static void getprinters( char *cf );
 
 
 /* this only needs to be used by the server process */
@@ -538,21 +538,23 @@ int getstatus( pr, buf )
 }
 
 char	*pgetstr();
-char	*getpname();
+char	*getpname(char **area, int bufsize);
 
-void getprinters( cf )
+#define PF_CONFBUFFER	1024
+
+static void getprinters( cf )
     char	*cf;
 {
-    char		buf[ 1024 ], area[ 1024 ], *a, *p, *name, *type, *zone;
+    char		buf[ PF_CONFBUFFER ], area[ PF_CONFBUFFER ], *a, *p, *name, *type, *zone;
     struct printer	*pr;
     int			c;
 
-    while (( c = getprent( cf, buf )) > 0 ) {
+    while (( c = getprent( cf, buf, PF_CONFBUFFER )) > 0 ) {
 	a = area;
 	/*
 	 * Get the printer's nbp name.
 	 */
-	if (( p = getpname( &a )) == NULL ) {
+	if (( p = getpname( &a, PF_CONFBUFFER )) == NULL ) {
 	    fprintf( stderr, "No printer name\n" );
 	    exit( 1 );
 	}
