@@ -1,13 +1,15 @@
 /*
- * $Id: uams_passwd.c,v 1.20 2003-05-14 15:13:50 didg Exp $
+ * $Id: uams_passwd.c,v 1.21 2003-06-11 07:16:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#define _XOPEN_SOURCE /* for crypt() */
+
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>

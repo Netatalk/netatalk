@@ -1,13 +1,15 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.18 2003-02-11 16:41:56 didg Exp $
+ * $Id: uams_dhx_passwd.c,v 1.19 2003-06-11 07:16:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#define _XOPEN_SOURCE /* for crypt() */
+
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
@@ -76,8 +78,10 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* SHADOWPW */
     BIGNUM *bn, *gbn, *pbn;
     u_int16_t sessid;
-    int len, i;
+    int i;
+#if 0
     char *name;
+#endif
     DH *dh;
 
 #ifdef TRU64
