@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.5 2001-09-06 19:04:40 rufustfirefly Exp $
+ * $Id: psf.c,v 1.6 2001-11-20 17:03:30 srittau Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -48,6 +48,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
+#include <errno.h>
 
 /* Forward Declarations */
 int pexecv(char *path, char *argv[]);
@@ -183,7 +184,7 @@ int main( ac, av )
 
 restart:
     if (( inlen = read( 0, inbuf, sizeof( inbuf ))) < 0 ) {
-	syslog( LOG_ERR, "read: %m" );
+	syslog( LOG_ERR, "read: %s", strerror(errno) );
 	exit( 1 );
     }
     if ( inlen == 0 ) {	/* nothing to be done */
@@ -201,7 +202,7 @@ restart:
 	psaargv[ 2 ] = name;
 	psaargv[ 3 ] = host;
 	if (( c = pexecv( psapath, psaargv )) < 0 ) {
-	    syslog( LOG_ERR, "%s: %m", psapath );
+	    syslog( LOG_ERR, "%s: %s", psapath, strerror(errno) );
 	    exit( 2 );
 	}
 	children++;
@@ -258,7 +259,7 @@ restart:
 	}
 
 	if (( c = pexecv( pappath, papargv )) < 0 ) {
-	    syslog( LOG_ERR, "%s: %m", pappath );
+	    syslog( LOG_ERR, "%s: %s", pappath, strerror(errno) );
 	    exit( 2 );
 	}
 	children++;
@@ -271,7 +272,7 @@ restart:
      */
     if ( strstr( prog, "rev" ) != NULL ) {
 	if (( c = pexecv( revpath, revargv )) < 0 ) {
-	    syslog( LOG_ERR, "%s: %m", revpath );
+	    syslog( LOG_ERR, "%s: %s", revpath, strerror(errno) );
 	    exit( 2 );
 	}
 	syslog( LOG_INFO, "sending to rev[%d]", c );
@@ -285,7 +286,7 @@ restart:
     if ( *prog != 'i' && *prog != 'o' && *( prog + 1 ) == 'f' ) {
 	filtargv[ 0 ] = filtargv[ 1 ] = prog;
 	if (( c = pexecv( _PATH_PSFILTER, filtargv )) < 0 ) {
-	    syslog( LOG_ERR, "%s: %m", _PATH_PSFILTER );
+	    syslog( LOG_ERR, "%s: %s", _PATH_PSFILTER, strerror(errno) );
 	    exit( 2 );
 	}
 	syslog( LOG_INFO, "external filter[%d]", c );
@@ -323,7 +324,7 @@ restart:
 	}
 
 	if (( c = pexecv( pappath, papargv )) < 0 ) {
-	    syslog( LOG_ERR, "%s: %m", pappath );
+	    syslog( LOG_ERR, "%s: %s", pappath, strerror(errno) );
 	    exit( 2 );
 	}
 	children++;
@@ -336,7 +337,7 @@ restart:
     }
     while ( children ) {
 	if (( c = wait3( &status, 0, 0 )) < 0 ) {
-	    syslog( LOG_ERR, "wait3: %m" );
+	    syslog( LOG_ERR, "wait3: %s", strerror(errno) );
 	    exit( 1 );
 	}
 	if ( WIFEXITED( status )) {
@@ -395,7 +396,7 @@ notdone:
 		    break;
 		}
 		if ( write( 1, "\031", 1 ) != 1 ) {
-		    syslog( LOG_ERR, "write: %m" );
+		    syslog( LOG_ERR, "write: %s", strerror(errno) );
 		    return( 1 );
 		}
 		ctl = 0;
@@ -408,7 +409,7 @@ notdone:
 	} else {
 	    if ( ctl == 1 ) {
 		if ( write( 1, "\031", 1 ) != 1 ) {
-		    syslog( LOG_ERR, "write: %m" );
+		    syslog( LOG_ERR, "write: %s", strerror(errno) );
 		    return( 1 );
 		}
 	    }
@@ -423,7 +424,7 @@ notdone:
 
 	inlen -= ctl;
 	if (( inlen > 0 ) && ( write( 1, inbuf, inlen ) != inlen )) {
-	    syslog( LOG_ERR, "write: %m" );
+	    syslog( LOG_ERR, "write: %s", strerror(errno) );
 	    return( 1 );
 	}
 	if ( ctl == 2 ) {
@@ -444,13 +445,13 @@ notdone:
     }
 
     if ( inlen < 0 ) {
-	syslog( LOG_ERR, "read: %m" );
+	syslog( LOG_ERR, "read: %s", strerror(errno) );
 	return( 1 );
     }
 
     if ( ctl == 1 ) {
 	if ( write( 1, "\031", 1 ) != 1 ) {
-	    syslog( LOG_ERR, "write: %m" );
+	    syslog( LOG_ERR, "write: %s", strerror(errno) );
 	    return( 1 );
 	}
     } else if ( ctl == 2 ) {
@@ -520,7 +521,7 @@ int textps()
 		    /* output postscript prologue: */
 		    if ( write( 1, pspro, sizeof( pspro ) - 1 ) !=
 			    sizeof( pspro ) - 1 ) {
-			syslog( LOG_ERR, "write prologue: %m" );
+			syslog( LOG_ERR, "write prologue: %s", strerror(errno) );
 			return( 1 );
 		    }
 		    if ( name && host ) {
@@ -645,7 +646,7 @@ int textps()
 	}
     } while (( inlen = read( 0, inbuf, sizeof( inbuf ))) > 0 );
     if ( inlen < 0 ) {
-	syslog( LOG_ERR, "read: %m" );
+	syslog( LOG_ERR, "read: %s", strerror(errno) );
 	return( 1 );
     }
     rc = 0;
