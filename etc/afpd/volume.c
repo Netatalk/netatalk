@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.18 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: volume.c,v 1.19 2002-01-18 05:19:26 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -462,7 +462,7 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
     volume->v_qfd = -1;
 #endif /* __svr4__ */
     volume->v_vid = lastvid++;
-    volume->v_lastdid = 3;
+    volume->v_lastdid = 17;
 
     /* handle options */
     if (options) {
