@@ -1,3 +1,9 @@
+2002-02-03  and m  <morgan@orst.edu>
+	* bin/afppasswd/Makefile.am
+	Added an install-exec-hook to make the afppasswd binary suid root
+	after it is installed.  This lets local users change their afppasswd
+	password.
+
 2001-12-14  joe c   <marcus@marcuscom.com>
 	* etc/afpd/afp_options.c, etc/afpd/afp_dsi.c, etc/afpd/globals.h:
 	Add a new option to afpd called -timeout to specify the number of
