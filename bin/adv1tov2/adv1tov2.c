@@ -1,6 +1,10 @@
 /* v1tov2: given a root directory, run down and convert all the
  * files/directories into appledouble v2.  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>

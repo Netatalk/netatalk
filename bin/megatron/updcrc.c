@@ -25,6 +25,10 @@
  *		UUCP: ihnp4!umn-cs!hyper!mark, GEnie: mgm
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* The CRC polynomial.
  * These 4 values define the crc-polynomial.
  * If you change them, you must change crctab[]'s initial value to what is
