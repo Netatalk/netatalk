@@ -40,7 +40,6 @@
 #undef UAM_RNDNUM
 #undef USE_CAP
 #undef USE_CRACKLIB
-#undef USE_FLOCK_LOCKS
 #undef USE_LASTDID
 #undef USE_PAM
 #undef USE_SRVLOC
