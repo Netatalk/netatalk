@@ -1,3 +1,28 @@
+netatalk (1.5pre6-2) unstable; urgency=low
+
+  * This version will hopefully clean up the version mess, I created.
+  * Conforms to standards-version 3.5.3.0 (no changes needed).
+  * Link cleanappledouble.pl(1) to undocumented(7).
+  * Removed all hand-crafted {pre,post}{inst,rm} files.
+  * Give files in /etc/netatalk/nls a mode of 0644, instead of 0755. Fixes
+    lintian warnings.
+  * Build-Depends on libdb2-dev do exist since -1. (Closes: #92774)
+  * Distribute missing pagecount.ps. (Closes: #95117)
+  * Compile timelord.
+  * Use --enable-fhs instead of --with-fhs. Should fix some paths.
+  * Compile with shadow support. (Closes: #95186)
+  * Use the pam_unix.so module instead of pam_pwdb.so in /etc/pam.d/netatalk.
+
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Tue,  1 May 2001 03:38:57 +0200
+
+netatalk (1.5pre6-1) unstable; urgency=low
+
+  * New upstream release.
+  * Re-added changes made in 1.4b2+asun2.1.3-8.
+  * Added --prefix=/usr to ./configure options.
+
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Fri, 13 Apr 2001 00:27:47 +0200
+
 netatalk (1.5pre5-3) unstable; urgency=low
 
   * Re-added changes made in 1.4b2+asun2.1.3-8.
@@ -10,8 +35,9 @@ netatalk (1.5pre5-2) unstable; urgency=low
   * Removed patches/uams_dhx_pam.c.patch as it was applied upstream.
   * Some documentation files were moved into the doc subdirectory.
   * Added more documentation files.
+  * Added some temporary build fixes.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Wed,  7 Mar 2001 22:52:27 +0100
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Wed,  8 Mar 2001 00:03:30 +0100
 
 netatalk (1.5pre5-1) unstable; urgency=low
 

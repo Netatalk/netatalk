@@ -6,9 +6,9 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 
-	./configure --with-cflags=-O2 \
-		--with-fhs --with-config-dir=/etc/netatalk \
-		--with-tcp-wrappers --mandir=/usr/share/man
+	./configure --with-cflags=-O2 --with-shadow \
+		--enable-fhs --with-config-dir=/etc/netatalk \
+		--with-tcp-wrappers --mandir=/usr/share/man --prefix=/usr
 	$(MAKE)
 
 	touch build-stamp
