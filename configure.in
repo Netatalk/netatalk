@@ -398,13 +398,28 @@ fi
 dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then 
 	AC_MSG_RESULT([ * Linux specific configuration])
-	AC_DEFINE(SENDFILE_FLAVOR_LINUX)
+	dnl AC_DEFINE(SENDFILE_FLAVOR_LINUX)
 
 	dnl ----- check if we need the quotactl wrapper
 	AC_CHECK_HEADER(sys/quota.h,,
 		AC_MSG_RESULT([enabling quotactl wrapper])
 		AC_DEFINE(NEED_QUOTACTL_WRAPPER)
 	)
+
+	dnl --- added by Yoshinobu Ishizaki (2001.03.13) ---
+	dnl ----- check if version is newer than 2.2.x
+	changequote(<<,>>)
+	majorvers="`uname -r | sed 's/\([0-9]\)..*/\1/'`"
+	minorvers="`uname -r | sed 's/[0-9]\.\([0-9]\)\..*/\1/'`"
+	if [ $majorvers -ge 2 ]; then
+		if [ $minorvers -ge 2 ]; then
+			changequote([,])
+			AC_MSG_RESULT([ * found Linux 2.2.x or higher])
+			AC_DEFINE(SENDFILE_FLAVOR_LINUX)
+		else
+			AC_MSG_RESULT([ * found Linux 2.0.x ]) 
+		fi
+	fi
 
 	dnl ----- Linux/alpha specific -----
 	if test x"$this_cpu" = "xalpha"; then 
