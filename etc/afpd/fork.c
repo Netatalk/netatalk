@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.9 2001-10-24 04:13:22 jmarcus Exp $
+ * $Id: fork.c,v 1.10 2001-11-14 21:45:12 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -562,7 +562,7 @@ int afp_setforkparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef AFS
     if ( flushfork( ofork ) < 0 ) {
-	syslog( LOG_ERR, "afp_setforkparams: flushfork: %m" );
+	syslog( LOG_ERR, "afp_setforkparams: flushfork: %s", strerror(errno) );
     }
 #endif /* AFS */
 
@@ -1016,8 +1016,8 @@ int flushfork( ofork )
 	  err = -1;
 
 	if (err < 0)
-	  syslog( LOG_ERR, "flushfork: hfile(%d) %m", 
-		  ad_hfileno(ofork->of_ad) );
+	  syslog( LOG_ERR, "flushfork: hfile(%d) %s", 
+		  ad_hfileno(ofork->of_ad), strerror(errno) );
     }
 
     return( err );
@@ -1038,7 +1038,7 @@ int afp_closefork(obj, ibuf, ibuflen, rbuf, rbuflen )
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-	syslog( LOG_ERR, "afp_closefork: of_find: %m" );
+	syslog( LOG_ERR, "afp_closefork: of_find: %s", strerrro(errno) );
 	return( AFPERR_PARAM );
     }
 
@@ -1074,7 +1074,7 @@ int afp_closefork(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
     if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
-	syslog( LOG_ERR, "afp_closefork: ad_close: %m" );
+	syslog( LOG_ERR, "afp_closefork: ad_close: %s", strerror(errno) );
 	return( AFPERR_PARAM );
     }
 
@@ -1111,7 +1111,7 @@ static __inline__ ssize_t write_file(struct ofork *ofork, int eid,
 	case ENOSPC :
 	    return( AFPERR_DFULL );
 	default :
-	    syslog( LOG_ERR, "afp_write: ad_write: %m" );
+	    syslog( LOG_ERR, "afp_write: ad_write: %s", strerror(errno) );
 	    return( AFPERR_PARAM );
 	}
     }
@@ -1147,7 +1147,7 @@ int afp_write(obj, ibuf, ibuflen, rbuf, rbuflen)
     ibuf += sizeof( reqcount );
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-	syslog( LOG_ERR, "afp_write: of_find: %m" );
+	syslog( LOG_ERR, "afp_write: of_find: %s", strerror(errno) );
 	err = AFPERR_PARAM;
 	goto afp_write_err;
     }
@@ -1207,7 +1207,7 @@ int afp_write(obj, ibuf, ibuflen, rbuf, rbuflen)
     case AFPPROTO_ASP:
       if (asp_wrtcont(obj->handle, rbuf, rbuflen) < 0) {
 	*rbuflen = 0;
-	syslog( LOG_ERR, "afp_write: asp_wrtcont: %m" );
+	syslog( LOG_ERR, "afp_write: asp_wrtcont: %s", strerror(errno) );
 	return( AFPERR_PARAM );
       }
 
@@ -1252,7 +1252,7 @@ int afp_write(obj, ibuf, ibuflen, rbuf, rbuflen)
 	      cc = AFPERR_DFULL;
 	      break;
 	    default :
-	      syslog( LOG_ERR, "afp_write: ad_writefile: %m" );
+	      syslog( LOG_ERR, "afp_write: ad_writefile: %s", strerror(errno) );
 	      goto afp_write_loop;
 	    }
 	    dsi_writeflush(dsi);
@@ -1332,7 +1332,7 @@ int afp_getforkparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     *rbuflen = 0;
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-	syslog( LOG_ERR, "afp_getforkparams: of_find: %m" );
+	syslog( LOG_ERR, "afp_getforkparams: of_find: %s", strerror(errno) );
 	return( AFPERR_PARAM );
     }
 

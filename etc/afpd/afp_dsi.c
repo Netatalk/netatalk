@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_dsi.c,v 1.8 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: afp_dsi.c,v 1.9 2001-11-14 21:45:12 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -95,7 +96,7 @@ static void afp_dsi_timedown()
     it.it_value.tv_sec = 300;
     it.it_value.tv_usec = 0;
     if ( setitimer( ITIMER_REAL, &it, 0 ) < 0 ) {
-	syslog( LOG_ERR, "afp_timedown: setitimer: %m" );
+	syslog( LOG_ERR, "afp_timedown: setitimer: %s", strerror(errno) );
 	afp_dsi_die(1);
     }
 
@@ -106,7 +107,7 @@ static void afp_dsi_timedown()
     sigaddset(&sv.sa_mask, SIGTERM);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, 0 ) < 0 ) {
-	syslog( LOG_ERR, "afp_timedown: sigaction: %m" );
+	syslog( LOG_ERR, "afp_timedown: sigaction: %s", strerror(errno) );
 	afp_dsi_die(1);
     }
 }
@@ -154,7 +155,7 @@ void afp_over_dsi(AFPObj *obj)
   sigaddset(&action.sa_mask, SIGTERM);
   action.sa_flags = SA_RESTART;
   if ( sigaction( SIGHUP, &action, 0 ) < 0 ) {
-    syslog( LOG_ERR, "afp_over_dsi: sigaction: %m" );
+    syslog( LOG_ERR, "afp_over_dsi: sigaction: %s", strerror(errno) );
     afp_dsi_die(1);
   }
 
@@ -164,7 +165,7 @@ void afp_over_dsi(AFPObj *obj)
   sigaddset(&action.sa_mask, SIGHUP);
   action.sa_flags = SA_RESTART;
   if ( sigaction( SIGTERM, &action, 0 ) < 0 ) {
-    syslog( LOG_ERR, "afp_over_dsi: sigaction: %m" );
+    syslog( LOG_ERR, "afp_over_dsi: sigaction: %s", strerror(errno) );
     afp_dsi_die(1);
   }
 
@@ -175,7 +176,7 @@ void afp_over_dsi(AFPObj *obj)
   sigaddset(&action.sa_mask, SIGUSR2);
   action.sa_flags = SA_RESTART;
   if ( sigaction( SIGUSR2, &action, 0) < 0 ) {
-    syslog( LOG_ERR, "afp_over_dsi: sigaction: %m" );
+    syslog( LOG_ERR, "afp_over_dsi: sigaction: %s", strerror(errno) );
     afp_dsi_die(1);
   }
 #endif /* SERVERTEXT */
@@ -216,7 +217,7 @@ void afp_over_dsi(AFPObj *obj)
 #ifdef AFS
       if ( writtenfork ) {
 	if ( flushfork( writtenfork ) < 0 ) {
-	  syslog( LOG_ERR, "main flushfork: %m" );
+	  syslog( LOG_ERR, "main flushfork: %s", strerror(errno) );
 	}
 	writtenfork = NULL;
       }
@@ -255,7 +256,7 @@ void afp_over_dsi(AFPObj *obj)
       }
 
       if (!dsi_cmdreply(dsi, err)) {
-	syslog(LOG_ERR, "dsi_cmdreply(%d): %m", dsi->socket);
+	syslog(LOG_ERR, "dsi_cmdreply(%d): %s", dsi->socket, strerror(errno) );
 	afp_dsi_die(1);
       }
       break;
@@ -285,7 +286,7 @@ void afp_over_dsi(AFPObj *obj)
       }
 
       if (!dsi_wrtreply(dsi, err)) {
-	syslog( LOG_ERR, "dsi_wrtreply: %m" );
+	syslog( LOG_ERR, "dsi_wrtreply: %s", strerror(errno) );
 	afp_dsi_die(1);
       }
       break;
