@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.11 2002-02-15 07:12:41 morgana Exp $
+ * $Id: queries.c,v 1.12 2002-02-15 07:20:13 morgana Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -677,7 +677,7 @@ static const char *rbiloginok = "0\r";
 static const char *rbiloginbad = "-1\r";
 static const char *rbiloginerrstr = "%%[Error: SecurityError; \
 SecurityViolation: Unknown user, incorrect password or log on is \
-disabled ]%%\r%%Flushing: rest of job (to end-of-file) will be \
+disabled ]%%\r%%[Flushing: rest of job (to end-of-file) will be \
 ignored ]%%\r";
 
 int cq_rbilogin( in, out )
