@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.5 2001-05-01 13:21:22 rufustfirefly Exp $
+ * $Id: hqx.c,v 1.6 2001-05-01 13:58:43 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -63,6 +63,15 @@
 #define BHH_HEADSIZ		21
 
 u_short		updcrc();
+
+/*	Forward declarations.
+ */
+int skip_junk(int line);
+int hqx_close(int keepflag);
+int hqx_header_read(struct FHeader *fh);
+int hqx_header_write(struct FHeader *fh);
+int hqx_7tobin(char *outbuf, int datalen);
+int hqx7_fill(u_char *hqx7_ptr);
 
 #if HEXOUTPUT
 FILE		*rawhex, *expandhex;
@@ -296,10 +305,10 @@ int hqx_header_read( fh )
 
     memcpy( fh->name, headerptr, (int)namelen );
     headerptr += namelen;
-    headerptr += BVERSION;
-    memcpy(&fh->finder_info,  headerptr, TCSIZ );
-    headerptr += TCSIZ;
-    memcpy(&fh->finder_info.fdFlags,  headerptr, FLAGSIZ );
+    headerptr += BHH_VERSION;
+    memcpy(&fh->finder_info,  headerptr, BHH_TCSIZ );
+    headerptr += BHH_TCSIZ;
+    memcpy(&fh->finder_info.fdFlags,  headerptr, BHH_FLAGSIZ );
     fh->finder_info.fdFlags = fh->finder_info.fdFlags & mask;
     headerptr += BHH_FLAGSIZ;
     memcpy(&fh->forklen[ DATA ],  headerptr, BHH_DATASIZ );
