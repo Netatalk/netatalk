@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.13 2002-03-20 20:54:05 morgana Exp $
+ * $Id: lp.c,v 1.14 2002-09-29 23:29:13 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -116,7 +116,7 @@ void lp_person( person )
 	free( lp.lp_person );
     }
     if (( lp.lp_person = (char *)malloc( strlen( person ) + 1 )) == NULL ) {
-	LOG(log_error, logtype_default, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %m" );
 	exit( 1 );
     }
     strcpy( lp.lp_person, person );
@@ -147,7 +147,7 @@ void lp_host( host )
 	free( lp.lp_host );
     }
     if (( lp.lp_host = (char *)malloc( strlen( host ) + 1 )) == NULL ) {
-	LOG(log_error, logtype_default, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %m" );
 	exit( 1 );
     }
     strcpy( lp.lp_host, host );
@@ -162,7 +162,7 @@ void lp_job( job )
 	free( lp.lp_job );
     }
     if (( lp.lp_job = (char *)malloc( strlen( job ) + 1 )) == NULL ) {
-	LOG(log_error, logtype_default, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %m" );
 	exit( 1 );
     }
     for ( p = job, q = lp.lp_job; *p != '\0'; p++, q++ ) {
@@ -215,20 +215,20 @@ int lp_init( out, sat )
 			    afpdpid++;
 			}
 			if (getpwnam(username) != NULL ) {
-			    LOG(log_info, logtype_default, "CAP authenticated %s", username);
+			    LOG(log_info, logtype_papd, "CAP authenticated %s", username);
 			    lp_person(username);
 			    authenticated = 1;
 			} else {
-			    LOG(log_info, logtype_default, "CAP error: invalid username: '%s'", username);
+			    LOG(log_info, logtype_papd, "CAP error: invalid username: '%s'", username);
 			}
 		    } else {
-			LOG(log_info, logtype_default, "CAP error: could not read username");
+			LOG(log_info, logtype_papd, "CAP error: could not read username");
 		    }
 		} else {
-		    LOG(log_info, logtype_default, "CAP error: %m");
+		    LOG(log_info, logtype_papd, "CAP error: %m");
 		}
 	    } else {
-		LOG(log_info, logtype_default, "CAP error: %m");
+		LOG(log_info, logtype_papd, "CAP error: %m");
 	    }
 	}
 
@@ -239,7 +239,7 @@ int lp_init( out, sat )
 	}
 
 	if ( authenticated == 0 ) {
-	    LOG(log_error, logtype_default, "lp_init: must authenticate" );
+	    LOG(log_error, logtype_papd, "lp_init: must authenticate" );
 	    spoolerror( out, "Authentication required." );
 	    return( -1 );
 	}
@@ -248,7 +248,7 @@ int lp_init( out, sat )
 	if (( printer->p_flags & P_ACCOUNT ) && printer->p_pagecost > 0 &&
 		! ABS_canprint( lp.lp_person, printer->p_role,
 		printer->p_srvid, cost, balance )) {
-	    LOG(log_error, logtype_default, "lp_init: no ABS funds" );
+	    LOG(log_error, logtype_papd, "lp_init: no ABS funds" );
 	    spoolerror( out, "No ABS funds available." );
 	    return( -1 );
 	}
@@ -256,12 +256,12 @@ int lp_init( out, sat )
     }
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
-	LOG(log_error, logtype_default, "gethostname: %m" );
+	LOG(log_error, logtype_papd, "gethostname: %m" );
 	exit( 1 );
     }
 
     if ( lp.lp_flags & LP_INIT ) {
-	LOG(log_error, logtype_default, "lp_init: already inited, die!" );
+	LOG(log_error, logtype_papd, "lp_init: already inited, die!" );
 	abort();
     }
 
@@ -272,31 +272,31 @@ int lp_init( out, sat )
     if ( printer->p_flags & P_SPOOLED ) {
 	/* check if queuing is enabled: mode & 010 on lock file */
 	if ( stat( printer->p_lock, &st ) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_init: %s: %m", printer->p_lock );
+	    LOG(log_error, logtype_papd, "lp_init: %s: %m", printer->p_lock );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 	if ( st.st_mode & 010 ) {
-	    LOG(log_info, logtype_default, "lp_init: queuing is disabled" );
+	    LOG(log_info, logtype_papd, "lp_init: queuing is disabled" );
 	    spoolerror( out, "Queuing is disabled." );
 	    return( -1 );
 	}
 
 	if (( fd = open( ".seq", O_RDWR|O_CREAT, 0661 )) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_init: can't create .seq" );
+	    LOG(log_error, logtype_papd, "lp_init: can't create .seq" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 
 	if ( flock( fd, LOCK_EX ) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_init: can't lock .seq" );
+	    LOG(log_error, logtype_papd, "lp_init: can't lock .seq" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 
 	n = 0;
 	if (( len = read( fd, buf, sizeof( buf ))) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_init read: %m" );
+	    LOG(log_error, logtype_papd, "lp_init read: %m" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -336,7 +336,7 @@ int lp_open( out, sat )
 	return( -1 );
     }
     if ( lp.lp_flags & LP_OPEN ) {
-	LOG(log_error, logtype_default, "lp_open already open" );
+	LOG(log_error, logtype_papd, "lp_open already open" );
 	abort();
     }
 
@@ -345,14 +345,14 @@ int lp_open( out, sat )
 	if (lp.lp_person != NULL) {
 	    if((pwent = getpwnam(lp.lp_person)) != NULL) {
 		if(setreuid(pwent->pw_uid, pwent->pw_uid) != 0) {
-		    LOG(log_info, logtype_default, "setreuid error: %m");
+		    LOG(log_info, logtype_papd, "setreuid error: %m");
 		}
 	    } else {
-		LOG(log_info, logtype_default, "Error getting username (%s)", lp.lp_person);
+		LOG(log_info, logtype_papd, "Error getting username (%s)", lp.lp_person);
 	    }
 	}
 	if (( lp.lp_stream = popen( printer->p_printer, "w" )) == NULL ) {
-	    LOG(log_error, logtype_default, "lp_open popen %s: %m", printer->p_printer );
+	    LOG(log_error, logtype_papd, "lp_open popen %s: %m", printer->p_printer );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -360,33 +360,33 @@ int lp_open( out, sat )
 	sprintf( name, "df%c%03d%s", lp.lp_letter++, lp.lp_seq, hostname );
 
 	if (( fd = open( name, O_WRONLY|O_CREAT|O_EXCL, 0660 )) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_open %s: %m", name );
+	    LOG(log_error, logtype_papd, "lp_open %s: %m", name );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 
 	if (lp.lp_person != NULL) {
 	    if ((pwent = getpwnam(lp.lp_person)) == NULL) {
-		LOG(log_error, logtype_default, "getpwnam %s: no such user", lp.lp_person);
+		LOG(log_error, logtype_papd, "getpwnam %s: no such user", lp.lp_person);
 		spoolerror( out, NULL );
 		return( -1 );
 	    }
 	} else {
 	    if ((pwent = getpwnam(printer->p_operator)) == NULL) {
-		LOG(log_error, logtype_default, "getpwnam %s: no such user", printer->p_operator);
+		LOG(log_error, logtype_papd, "getpwnam %s: no such user", printer->p_operator);
 		spoolerror( out, NULL );
 		return( -1 );
 	    }
 	}
 
 	if (fchown(fd, pwent->pw_uid, -1) < 0) {
-	    LOG(log_error, logtype_default, "chown %s %s: %m", pwent->pw_name, name);
+	    LOG(log_error, logtype_papd, "chown %s %s: %m", pwent->pw_name, name);
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 
 	if (( lp.lp_stream = fdopen( fd, "w" )) == NULL ) {
-	    LOG(log_error, logtype_default, "lp_open fdopen: %m" );
+	    LOG(log_error, logtype_papd, "lp_open fdopen: %m" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -416,7 +416,7 @@ int lp_write( buf, len )
     }
 
     if ( fwrite( buf, 1, len, lp.lp_stream ) != len ) {
-	LOG(log_error, logtype_default, "lp_write: %m" );
+	LOG(log_error, logtype_papd, "lp_write: %m" );
 	abort();
     }
     return( 0 );
@@ -438,7 +438,7 @@ int lp_cancel()
     for ( letter = 'A'; letter < lp.lp_letter; letter++ ) {
 	sprintf( name, "df%c%03d%s", letter, lp.lp_seq, hostname );
 	if ( unlink( name ) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_cancel unlink %s: %m", name );
+	    LOG(log_error, logtype_papd, "lp_cancel unlink %s: %m", name );
 	}
     }
 
@@ -468,11 +468,11 @@ int lp_print()
     if ( printer->p_flags & P_SPOOLED ) {
 	sprintf( tfname, "tfA%03d%s", lp.lp_seq, hostname );
 	if (( fd = open( tfname, O_WRONLY|O_EXCL|O_CREAT, 0660 )) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_print %s: %m", tfname );
+	    LOG(log_error, logtype_papd, "lp_print %s: %m", tfname );
 	    return 0;
 	}
 	if (( cfile = fdopen( fd, "w" )) == NULL ) {
-	    LOG(log_error, logtype_default, "lp_print %s: %m", tfname );
+	    LOG(log_error, logtype_papd, "lp_print %s: %m", tfname );
 	    return 0;
 	}
 	fprintf( cfile, "H%s\n", hostname );	/* XXX lp_host? */
@@ -513,36 +513,36 @@ int lp_print()
 
 	sprintf( cfname, "cfA%03d%s", lp.lp_seq, hostname );
 	if ( link( tfname, cfname ) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_print can't link %s to %s: %m", cfname,
+	    LOG(log_error, logtype_papd, "lp_print can't link %s to %s: %m", cfname,
 		    tfname );
 	    return 0;
 	}
 	unlink( tfname );
 
 	if (( s = lp_conn_unix()) < 0 ) {
-	    LOG(log_error, logtype_default, "lp_print: lp_conn_unix: %m" );
+	    LOG(log_error, logtype_papd, "lp_print: lp_conn_unix: %m" );
 	    return 0;
 	}
 
 	sprintf( buf, "\1%s\n", printer->p_printer );
 	n = strlen( buf );
 	if ( write( s, buf, n ) != n ) {
-	    LOG(log_error, logtype_default, "lp_print write: %m" );
+	    LOG(log_error, logtype_papd, "lp_print write: %m" );
 	    return 0;
 	}
 	if ( read( s, buf, 1 ) != 1 ) {
-	    LOG(log_error, logtype_default, "lp_print read: %m" );
+	    LOG(log_error, logtype_papd, "lp_print read: %m" );
 	    return 0;
 	}
 
 	lp_disconn_unix( s );
 
 	if ( buf[ 0 ] != '\0' ) {
-	    LOG(log_error, logtype_default, "lp_print lpd said %c: %m", buf[ 0 ] );
+	    LOG(log_error, logtype_papd, "lp_print lpd said %c: %m", buf[ 0 ] );
 	    return 0;
 	}
     }
-    LOG(log_info, logtype_default, "lp_print queued" );
+    LOG(log_info, logtype_papd, "lp_print queued" );
     return 0;
 }
 
@@ -557,7 +557,7 @@ int lp_conn_unix()
     struct sockaddr_un	saun;
 
     if (( s = socket( AF_UNIX, SOCK_STREAM, 0 )) < 0 ) {
-	LOG(log_error, logtype_default, "lp_conn_unix socket: %m" );
+	LOG(log_error, logtype_papd, "lp_conn_unix socket: %m" );
 	return( -1 );
     }
     memset( &saun, 0, sizeof( struct sockaddr_un ));
@@ -565,7 +565,7 @@ int lp_conn_unix()
     strcpy( saun.sun_path, _PATH_DEVPRINTER );
     if ( connect( s, (struct sockaddr *)&saun,
 	    strlen( saun.sun_path ) + 2 ) < 0 ) {
-	LOG(log_error, logtype_default, "lp_conn_unix connect %s: %m", saun.sun_path );
+	LOG(log_error, logtype_papd, "lp_conn_unix connect %s: %m", saun.sun_path );
 	close( s );
 	return( -1 );
     }
@@ -586,22 +586,22 @@ int lp_conn_inet()
     struct hostent	*hp;
 
     if (( sp = getservbyname( "printer", "tcp" )) == NULL ) {
-	LOG(log_error, logtype_default, "printer/tcp: unknown service\n" );
+	LOG(log_error, logtype_papd, "printer/tcp: unknown service\n" );
 	return( -1 );
     }
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
-	LOG(log_error, logtype_default, "gethostname: %m" );
+	LOG(log_error, logtype_papd, "gethostname: %m" );
 	exit( 1 );
     }
 
     if (( hp = gethostbyname( hostname )) == NULL ) {
-	LOG(log_error, logtype_default, "%s: unknown host\n", hostname );
+	LOG(log_error, logtype_papd, "%s: unknown host\n", hostname );
 	return( -1 );
     }
 
     if (( privfd = rresvport( &port )) < 0 ) {
-	LOG(log_error, logtype_default, "lp_connect: socket: %m" );
+	LOG(log_error, logtype_papd, "lp_connect: socket: %m" );
 	close( privfd );
 	return( -1 );
     }
@@ -614,7 +614,7 @@ int lp_conn_inet()
 
     if ( connect( privfd, (struct sockaddr *)&sin,
 	    sizeof( struct sockaddr_in )) < 0 ) {
-	LOG(log_error, logtype_default, "lp_connect: %m" );
+	LOG(log_error, logtype_papd, "lp_connect: %m" );
 	close( privfd );
 	return( -1 );
     }
@@ -629,7 +629,7 @@ int lp_rmjob( job )
     int		n, s;
 
     if (( s = lp_conn_inet()) < 0 ) {
-	LOG(log_error, logtype_default, "lp_rmjob: %m" );
+	LOG(log_error, logtype_papd, "lp_rmjob: %m" );
 	return( -1 );
     }
 
@@ -640,12 +640,12 @@ int lp_rmjob( job )
     sprintf( buf, "\5%s %s %d\n", printer->p_printer, lp.lp_person, job );
     n = strlen( buf );
     if ( write( s, buf, n ) != n ) {
-	LOG(log_error, logtype_default, "lp_rmjob write: %m" );
+	LOG(log_error, logtype_papd, "lp_rmjob write: %m" );
 	lp_disconn_inet( s );
 	return( -1 );
     }
     while (( n = read( s, buf, sizeof( buf ))) > 0 ) {
-	LOG(log_debug, logtype_default, "read %.*s", n, buf );
+	LOG(log_debug, logtype_papd, "read %.*s", n, buf );
     }
 
     lp_disconn_inet( s );
@@ -671,14 +671,14 @@ int lp_queue( out )
     int				n, len, s;
 	
     if (( s = lp_conn_unix()) < 0 ) {
-	LOG(log_error, logtype_default, "lp_queue: %m" );
+	LOG(log_error, logtype_papd, "lp_queue: %m" );
 	return( -1 );
     }
 
     sprintf( buf, "\3%s\n", printer->p_printer );
     n = strlen( buf );
     if ( write( s, buf, n ) != n ) {
-	LOG(log_error, logtype_default, "lp_queue write: %m" );
+	LOG(log_error, logtype_papd, "lp_queue write: %m" );
 	lp_disconn_unix( s );
 	return( -1 );
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.5 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: auth.c,v 1.6 2002-09-29 23:29:13 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -118,7 +118,7 @@ int auth_load(const char *path, const char *list)
     strncpy(name + len, p, sizeof(name) - len);
     if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
       uam_attach(&uam_modules, mod);
-      LOG(log_info, logtype_default, "uam: %s loaded", p);
+      LOG(log_info, logtype_papd, "uam: %s loaded", p);
     }
     p = strtok(NULL, ",");
   }

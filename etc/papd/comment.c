@@ -1,5 +1,5 @@
 /*
- * $Id: comment.c,v 1.7 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: comment.c,v 1.8 2002-09-29 23:29:13 sibaz Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -37,7 +37,7 @@ void compush( comment )
 
     if (( cs = (struct comstate *)malloc( sizeof( struct comstate ))) ==
 	    NULL ) {
-	LOG(log_error, logtype_default, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %m" );
 	exit( 1 );
     }
 
@@ -59,7 +59,7 @@ int comswitch( comments, handler )
 	}
     }
     if ( comment == NULL || comment->c_handler != handler ) {
-	LOG(log_error, logtype_default, "comswitch: can't find handler!" );
+	LOG(log_error, logtype_papd, "comswitch: can't find handler!" );
 	return( -1 );
     }
     compop();
