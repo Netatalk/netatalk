@@ -4,15 +4,5 @@ usr/bin/nadheader
 usr/bin/nb*
 usr/bin/netatalkshorternamelinks.pl
 usr/bin/nu
-pap
-papstatus
-parsecode
-psorder
-single2bin
-test_parse_mtab
-timeout
-unbin
-unhex
-unsingle
 usr/sbin
 usr/share
