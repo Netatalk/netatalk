@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.32 2002-08-21 05:21:38 didg Exp $
+ * $Id: fork.c,v 1.33 2002-08-26 08:57:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -92,11 +92,16 @@ const u_int16_t     attrbits;
         return( AFPERR_BITMAP );
     }
 
+    vol = ofork->of_vol;
+    dir = ofork->of_dir;
+
     if ( bitmap & ( 1<<FILPBIT_DFLEN | 1<<FILPBIT_FNUM |
                     (1 << FILPBIT_CDATE) | (1 << FILPBIT_MDATE) |
                     (1 << FILPBIT_BDATE))) {
-        upath = mtoupath(ofork->of_vol, ofork->of_name);
         if ( ad_dfileno( ofork->of_ad ) == -1 ) {
+            upath = mtoupath(vol, ofork->of_name);
+            if (movecwd(vol, dir) < 0)
+                return( AFPERR_NOOBJ );
             if ( stat( upath, &st ) < 0 )
                 return( AFPERR_NOOBJ );
         } else {
@@ -105,8 +110,6 @@ const u_int16_t     attrbits;
             }
         }
     }
-    dir = ofork->of_dir;
-    vol = ofork->of_vol;
     return getmetadata(vol, bitmap, ofork->of_name, dir, &st, buf, buflen, adp, attrbits );    
 }
 
