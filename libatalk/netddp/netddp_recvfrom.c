@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_recvfrom.c,v 1.4 2001-11-25 21:55:10 srittau Exp $
+ * $Id: netddp_recvfrom.c,v 1.5 2003-02-17 02:02:25 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -11,8 +11,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
-static int _netddp_recvfrom_dummy;
 
 #ifndef NO_DDP
 #ifdef HAVE_UNISTD_H

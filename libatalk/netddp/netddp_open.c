@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_open.c,v 1.7 2002-01-17 06:08:55 srittau Exp $
+ * $Id: netddp_open.c,v 1.8 2003-02-17 02:02:25 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -12,8 +12,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
-static int _netddp_open_dummy;
 
 #include <stdio.h>
 #include <string.h>
