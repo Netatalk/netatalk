@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.9 2001-10-10 02:27:08 jmarcus Exp $
+ * $Id: cnid_update.c,v 1.10 2001-10-10 02:52:15 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -144,7 +144,7 @@ retry:
   return txn_commit(tid, 0);
 
 update_err:
-  syslog(LOG_ERR, "cnid_update: can't update CNID(%x) (%d)", id, errno);
+  syslog(LOG_ERR, "cnid_update: can't update CNID(%x) (%d)", id, rc);
   return -1;
 }
 #endif /* CNID_DB */
