@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.19 2002-03-24 07:38:23 jmarcus Exp $
+ * $Id: enumerate.c,v 1.20 2002-03-24 07:46:11 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -331,12 +331,12 @@ int		ibuflen, *rbuflen;
         }
 
         if (stat( sd.sd_last, &st ) < 0 ) {
-            /* 
+            /*
              * Somebody else plays with the dir, well it can be us with 
-			 * "Empty Trash..."
-			 */
+            * "Empty Trash..."
+            */
 
-            /* so the next time it won't try to stat it again 
+            /* so the next time it won't try to stat it again
              * another solution would be to invalidate the cache with 
              * sd.sd_did = -1 but if it's not ENOENT error it will start again
              */
