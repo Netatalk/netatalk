@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.6 2001-12-10 20:16:54 srittau Exp $
+ * $Id: status.c,v 1.7 2002-02-06 21:58:50 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -34,7 +34,7 @@
 #include "afp_config.h"
 #include "icon.h"
 
-static void status_flags(char *data, const int ipok,
+static void status_flags(char *data, const int notif, const int ipok,
                          const unsigned char passwdbits)
 {
     u_int16_t           status;
@@ -49,7 +49,14 @@ static void status_flags(char *data, const int ipok,
     if (ipok)
         status |= AFPSRVRINFO_TCPIP;
     status |= AFPSRVRINFO_SRVMSGS;
-    status |= AFPSRVRINFO_SRVNOTIFY;
+    /* Allow the user to decide if we should support server notifications.
+     * With this turned off, the clients will poll for directory changes every
+     * 10 seconds.  This might be too costly to network resources, so make
+     * this an optional thing.  Default will be to _not_ support server
+     * notifications. */
+    if (notif) {
+        status |= AFPSRVRINFO_SRVNOTIFY;
+    }
     status |= AFPSRVRINFO_FASTBOZO;
     status = htons(status);
     memcpy(data + AFPSTATUS_FLAGOFF, &status, sizeof(status));
@@ -318,7 +325,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
      * (16-bytes), network addresses, volume icon/mask 
      */
 
-    status_flags(status, options->fqdn ||
+    status_flags(status, options->server_notif, options->fqdn ||
                  (dsiconfig && dsi->server.sin_addr.s_addr),
                  options->passwdbits);
     /* returns offset to signature offset */

@@ -1,3 +1,9 @@
+2002-02-06  joe c  <marcus@marcuscom.com>
+	* etc/afpd/globals.h, etc/afpd/afp_options.c, etc/afpd/status.c
+	etc/afpd/volume.c: Add a new option -server_notif to specify that
+	a server supports server notifications.  If this flag is not specified
+	the client will poll the server every 10 seconds for directory changes.
+
 2002-02-03  and m  <morgan@orst.edu>
 	* bin/afppasswd/Makefile.am
 	Added an install-exec-hook to make the afppasswd binary suid root

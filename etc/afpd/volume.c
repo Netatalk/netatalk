@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.21 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: volume.c,v 1.22 2002-02-06 21:58:50 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1308,7 +1308,9 @@ struct vol	*vol;
     /* a little granularity */
     if (vol->v_time < tv.tv_sec) {
         vol->v_time = tv.tv_sec;
-        obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+        if (obj->options.server_notif) {
+            obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+        }
     }
 }
 
