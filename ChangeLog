@@ -1,5 +1,11 @@
 2001-10-16  Lance Levsen  <l.levsen@printwest.com>
 
+	* man/man1/apple_mv.1.tmpl: Added apple_mv man page.
+
+	* man/man1/apple_rm.1.tmpl: Added apple_rm man page.
+
+	* contrib/shell_utils/apple_mv: Updated perl. Added error check.
+
 	* config/Makefile.am: Change autoconf variable $(f) to shell
 	variable $$f.
 
