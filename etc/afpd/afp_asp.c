@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.18 2002-12-04 10:59:36 didg Exp $
+ * $Id: afp_asp.c,v 1.19 2003-06-26 02:15:21 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -61,6 +61,7 @@ static __inline__ void afp_asp_close(AFPObj *obj)
     LOG(log_info, logtype_afpd, "%.2fKB read, %.2fKB written",
         asp->read_count / 1024.0, asp->write_count / 1024.0);
     asp_close( asp );
+    close_vols();
 }
 
 /* removes the authprint trailing when appropriate */

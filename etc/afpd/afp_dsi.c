@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.30 2003-06-09 15:09:19 srittau Exp $
+ * $Id: afp_dsi.c,v 1.31 2003-06-26 02:15:21 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -70,6 +70,7 @@ static __inline__ void afp_dsi_close(AFPObj *obj)
         dsi->read_count/1024.0, dsi->write_count/1024.0);
 
     dsi_close(dsi);
+    close_vols();
 }
 
 /* a little bit of code duplication. */

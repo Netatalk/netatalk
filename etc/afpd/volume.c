@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.55 2003-06-14 16:56:56 srittau Exp $
+ * $Id: volume.c,v 1.56 2003-06-26 02:15:21 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1609,3 +1609,20 @@ int wincheck(const struct vol *vol, const char *path)
     /* everything else is okay */
     return 1;
 }
+
+
+void close_vols ()
+{
+#ifdef CNID_DB
+    struct vol	*vol;
+
+    for ( vol = volumes; vol; vol = vol->v_next ) {
+    	if ( (vol->v_flags & AFPVOL_OPEN ) == 0 ) 
+		continue;
+	if ( vol->v_db )
+	    cnid_close(vol->v_db);
+    	vol->v_db = NULL;
+    }
+#endif
+}
+

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.52 2003-06-06 20:25:32 srittau Exp $
+ * $Id: cnid_open.c,v 1.53 2003-06-26 02:15:21 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -67,14 +67,16 @@
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
 #endif /* ! MIN */
 
+#ifndef MAX
+#define MAX(a, b)  ((a) > (b) ? (a) : (b))
+#endif /* ! MIN */
+
+
 #define DBHOME        ".AppleDB"
 #define DBCNID        "cnid.db"
 #define DBDEVINO      "devino.db"
 #define DBDIDNAME     "didname.db"   /* did/full name mapping */
-#define DBSHORTNAME   "shortname.db" /* did/8+3 mapping */
-#define DBMACNAME     "macname.db"   /* did/31 mapping */
 #define DBMANGLE      "mangle.db"    /* filename mangling */
-#define DBLONGNAME    "longname.db"  /* did/unicode mapping */
 #define DBLOCKFILE    "cnid.lock"
 #define DBRECOVERFILE "cnid.dbrecover"
 #define DBCLOSEFILE   "cnid.close"
@@ -114,12 +116,14 @@ DB_INIT_LOG | DB_INIT_TXN)
 #endif /* DB_LOCK_YOUNGEST */
 #endif /* CNID_DB_CDB */
 
+static cnid_t cnid_rebuild (CNID_private *, mode_t);
+static int    cnid_recover (char *, mode_t);
+
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 * databases. */
 
-#if 0
 /* -----------------------
- * bandaid for LanTest performance pb. for now not used, cf. ifdef 0 below
+ * bandaid for LanTest performance pb.
 */
 static int my_yield(void) 
 {
@@ -131,7 +135,6 @@ static int my_yield(void)
     ret = select(0, NULL, NULL, NULL, &t);
     return 0;
 }
-#endif
 
 /* --------------- */
 static int  my_open(DB *p, const char *f, const char *d, DBTYPE t, u_int32_t flags, int mode)
@@ -143,96 +146,22 @@ static int  my_open(DB *p, const char *f, const char *d, DBTYPE t, u_int32_t fla
 #endif
 }
 
-/* --------------- */
-#ifdef EXTENDED_DB
-/* the first compare that's always done. */
-static __inline__ int compare_did(const DBT *a, const DBT *b)
-{
-    u_int32_t dida, didb;
-
-    memcpy(&dida, a->data, sizeof(dida));
-    memcpy(&didb, b->data, sizeof(didb));
-    return dida - didb;
-}
-
-#if 0
-/* sort did's and then names. this is for unix paths.
- * i.e., did/unixname lookups. */
-#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-static int compare_unix(DB *db, const DBT *a, const DBT *b)
-#else /* DB_VERSION_MINOR < 1 */
-static int compare_unix(const DBT *a, const DBT *b)
-#endif /* DB_VERSION_MINOR */
-{
-    u_int8_t *sa, *sb;
-    int len, ret;
-
-    /* sort by did */
-    if ((ret = compare_did(a, b)))
-        return ret;
-
-    sa = (u_int8_t *) a->data + 4; /* shift past did */
-    sb = (u_int8_t *) b->data + 4;
-    for (len = MIN(a->size, b->size); len-- > 4; sa++, sb++)
-        if ((ret = (*sa - *sb)))
-            return ret; /* sort by lexical ordering */
-
-    return a->size - b->size; /* sort by length */
-}
-#endif
-
-/* sort did's and then names. this is for macified paths (i.e.,
- * did/macname, and did/shortname. i think did/longname needs a
- * unicode table to work. also, we can't use strdiacasecmp as that
- * returns a match if a < b. */
-#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-static int compare_mac(DB *db, const DBT *a, const DBT *b)
-#else /* DB_VERSION_MINOR < 1 */
-static int compare_mac(const DBT *a, const DBT *b)
-#endif /* DB_VERSION_MINOR */
-{
-    u_int8_t *sa, *sb;
-    int len, ret;
-
-    /* sort by did */
-    if ((ret = compare_did(a, b)))
-        return ret;
-
-    sa = (u_int8_t *) a->data + 4;
-    sb = (u_int8_t *) b->data + 4;
-    for (len = MIN(a->size, b->size); len-- > 4; sa++, sb++)
-        if ((ret = (_diacasemap[*sa] - _diacasemap[*sb])))
-            return ret; /* sort by lexical ordering */
-
-    return a->size - b->size; /* sort by length */
-}
-
-
-/* for unicode names -- right now it's the same as compare_mac. */
-#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-static int compare_unicode(DB *db, const DBT *a, const DBT *b)
-#else /* DB_VERSION_MINOR < 1 */
-static int compare_unicode(const DBT *a, const DBT *b)
-#endif /* DB_VERSION_MINOR */
-{
-#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-    return compare_mac(db,a,b);
-#else /* DB_VERSION_MINOR < 1 */
-    return compare_mac(a,b);
-#endif /* DB_VERSION_MINOR */
-}
-#endif /* EXTENDED_DB */
-
 void *cnid_open(const char *dir, mode_t mask) {
     struct stat st;
-#ifndef CNID_DB_CDB
     struct flock lock;
-#endif /* CNID_DB_CDB */
-char path[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
+    DB_TXN *tid;
     int open_flag, len;
     int rc;
+    int can_check = 0, require_rebuild = 0;
+    u_int32_t ncnid, ndidname, ndevino;
+    DB_HASH_STAT *sp;
+    static int first = 0;
+
+    ncnid = ndidname = ndevino = 0;
+
 
     if (!dir) {
         return NULL;
@@ -263,36 +192,52 @@ char path[MAXPATHLEN + 1];
         goto fail_adouble;
     }
 
-#ifndef CNID_DB_CDB
     lock.l_type = F_WRLCK;
     lock.l_whence = SEEK_SET;
     /* Make sure cnid.lock goes in .AppleDB. */
     strcat(path, "/");
     len++;
 
-    /* Search for a byte lock.  This allows us to cleanup the log files
-     * at cnid_close() in a clean fashion.
-     *
-     * NOTE: This won't work if multiple volumes for the same user refer
-     * to the sahe directory. */
     strcat(path, DBLOCKFILE);
     strcpy(db->lock_file, path);
+    if ( stat (path, &st) == 0)
+	can_check = 1;
+
     if ((db->lockfd = open(path, O_RDWR | O_CREAT, 0666 & ~mask)) > -1) {
         lock.l_start = 0;
         lock.l_len = 1;
-        while (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
-            if (++lock.l_start > MAXITER) {
-                LOG(log_error, logtype_default, "cnid_open: Cannot establish logfile cleanup for database environment %s lock (lock failed)", path);
-                close(db->lockfd);
-                db->lockfd = -1;
-                break;
-            }
-        }
+        if (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
+		/* Now try to get a shared lock */
+		lock.l_type = F_RDLCK;
+
+		while (fcntl(db->lockfd, F_SETLKW, &lock) < 0) {
+			if ( errno != EINTR )
+				goto fail_db;
+		}
+		can_check = 0;
+	}
+	else {
+		/* We got an exclusive lock, so we're the first/only process accessing the database */
+		if ( can_check ) {
+			/* cnid.lock existed but we got an exclusive lock */
+			/* This means the previous afpd probably crashed  */
+			/* or got terminated so we run recovery 	  */
+
+   			path[len + DBHOMELEN] = '\0';
+			if ( cnid_recover( path, mask) != 0)
+				goto fail_lock;
+		}
+		else {
+			/* We're the only process accesing the db, so lets do some constistency checks */
+			can_check = 1; 
+		}
+	}
     }
-    else {
-        LOG(log_error, logtype_default, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
+    else
+    {
+        LOG(log_error, logtype_default, "cnid_open: Cannot open cnid.lock file in %s lock (lock failed)", path);
+        goto fail_db;
     }
-#endif /* CNID_DB_CDB */
 
     path[len + DBHOMELEN] = '\0';
     open_flag = DB_CREATE;
@@ -305,28 +250,8 @@ char path[MAXPATHLEN + 1];
         goto fail_lock;
     }
 
-#ifndef CNID_DB_CDB
-    /* Setup internal deadlock detection. */
-    if ((rc = db->dbenv->set_lk_detect(db->dbenv, DEAD_LOCK_DETECT)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: set_lk_detect: %s", db_strerror(rc));
-        goto fail_lock;
-    }
-#endif /* CNID_DB_CDB */
-
-#ifndef CNID_DB_CDB
-#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-#if 0
-    /* Take care of setting the DB_TXN_NOSYNC flag in db3 > 3.1.x. */
-    if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: set_flags: %s", db_strerror(rc));
-        goto fail_lock;
-    }
-#endif
-#endif /* DB_VERSION_MINOR > 1 */
-#endif /* CNID_DB_CDB */
-
-    /* Open the database environment. */
-    if ((rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666 & ~mask)) != 0) {
+    if ((rc = db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666 & ~mask)) !=0 &&
+        (rc = db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666 & ~mask)) != 0) {
         if (rc == DB_RUNRECOVERY) {
             /* This is the mother of all errors.  We _must_ fail here. */
             LOG(log_error, logtype_default, "cnid_open: CATASTROPHIC ERROR opening database environment %s.  Run db_recovery -c immediately", path);
@@ -357,11 +282,17 @@ char path[MAXPATHLEN + 1];
         goto fail_appinit;
     }
 
-    /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
     if ((rc = my_open(db->db_didname, DBDIDNAME, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/name database: %s",
             db_strerror(rc));
-        goto fail_appinit;
+        /* We leak some memory here, but otherwise sometime we run into a SIGSEGV in close */	
+        db->db_didname = NULL; 
+	if (can_check) {
+		require_rebuild = 1;
+		goto rebuild;
+	}
+	else
+        	goto fail_appinit;
     }
 
     /* Check for version.  This way we can update the database if we need
@@ -371,7 +302,6 @@ char path[MAXPATHLEN + 1];
     key.data = DBVERSION_KEY;
     key.size = DBVERSION_KEYLEN;
 
-#ifdef CNID_DB_CDB
     if ((rc = db->db_didname->get(db->db_didname, NULL, &key, &data, 0)) != 0) {
         int ret;
         {
@@ -387,65 +317,6 @@ char path[MAXPATHLEN + 1];
             goto fail_appinit;
         }
     }
-#else /* CNID_DB_CDB */
-dbversion_retry:
-    if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: txn_begin: failed to check db version: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-
-    while ((rc = db->db_didname->get(db->db_didname, tid, &key, &data, DB_RMW))) {
-        int ret;
-        switch (rc) {
-        case DB_LOCK_DEADLOCK:
-            if ((ret = txn_abort(tid)) != 0) {
-                LOG(log_error, logtype_default, "cnid_open: txn_abort: %s", db_strerror(ret));
-                goto fail_appinit;
-            }
-            goto dbversion_retry;
-        case DB_NOTFOUND:
-            {
-                u_int32_t version = htonl(DBVERSION);
-
-                data.data = &version;
-                data.size = sizeof(version);
-            }
-
-            if ((ret = db->db_didname->put(db->db_didname, tid, &key, &data,
-                                           DB_NOOVERWRITE))) {
-                if (ret == DB_LOCK_DEADLOCK) {
-                    if ((ret = txn_abort(tid)) != 0) {
-                        LOG(log_error, logtype_default, "cnid_open: txn_abort: %s",
-                            db_strerror(ret));
-                        goto fail_appinit;
-                    }
-                    goto dbversion_retry;
-                }
-                else if (ret == DB_RUNRECOVERY) {
-                    /* At this point, we don't care if the transaction aborts
-                    * successfully or not. */
-                    txn_abort(tid);
-                    LOG(log_error, logtype_default, "cnid_open: Error putting new version: %s",
-                        db_strerror(ret));
-                    goto fail_appinit;
-                }
-            }
-            break; /* while loop */
-        default:
-            txn_abort(tid);
-            LOG(log_error, logtype_default, "cnid_open: Failed to check db version: %s",
-                db_strerror(rc));
-            goto fail_appinit;
-        }
-    }
-
-    if ((rc = txn_commit(tid, 0)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to commit db version: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-#endif /* CNID_DB_CDB */
 
     /* TODO In the future we might check for version number here. */
 #if 0
@@ -454,50 +325,6 @@ dbversion_retry:
         /* Do stuff here. */
     }
 #endif /* 0 */
-
-#ifdef EXTENDED_DB
-    /* did/macname (31 character) mapping.  Use a BTree for this one. */
-    if ((rc = db_create(&db->db_macname, db->dbenv, 0)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to create did/macname database: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-
-    db->db_macname->set_bt_compare(db->db_macname, &compare_mac);
-    if ((rc = my_open(db->db_macname, DBMACNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask))) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to open did/macname database: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-
-    /* did/shortname (DOS 8.3) mapping.  Use a BTree for this one. */
-    if ((rc = db_create(&db->db_shortname, db->dbenv, 0)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to create did/shortname database: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-
-    db->db_shortname->set_bt_compare(db->db_shortname, &compare_mac);
-    if ((rc = my_open(db->db_shortname, DBSHORTNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask))) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to open did/shortname database: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-
-    /* did/longname (Unicode) mapping.  Use a BTree for this one. */
-    if ((rc = db_create(&db->db_longname, db->dbenv, 0)) != 0) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to create did/longname database: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-
-    db->db_longname->set_bt_compare(db->db_longname, &compare_unicode);
-    if ((rc = my_open(db->db_longname, DBLONGNAME, NULL, DB_BTREE, open_flag, 0666 & ~mask))) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to open did/longname database: %s",
-            db_strerror(rc));
-        goto fail_appinit;
-    }
-#endif /* EXTENDED_DB */
 
     /* dev/ino reverse mapping.  Use a hash for this one. */
     if ((rc = db_create(&db->db_devino, db->dbenv, 0)) != 0) {
@@ -509,8 +336,16 @@ dbversion_retry:
     if ((rc = my_open(db->db_devino, DBDEVINO, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open devino database: %s",
             db_strerror(rc));
-        goto fail_appinit;
+	db->db_devino = NULL; 
+	if (can_check) {
+		require_rebuild = 1;
+		goto rebuild;
+	}
+	else
+        	goto fail_appinit;
     }
+
+rebuild:
 
     /* Main CNID database.  Use a hash for this one. */
     if ((rc = db_create(&db->db_cnid, db->dbenv, 0)) != 0) {
@@ -520,9 +355,55 @@ dbversion_retry:
     }
 
     if ((rc = my_open(db->db_cnid, DBCNID, NULL, DB_HASH, open_flag, 0666 & ~mask))) {
-        LOG(log_error, logtype_default, "cnid_open: Failed to open dev/ino database: %s",
+        LOG(log_error, logtype_default, "cnid_open: Failed to open cnid database: %s",
             db_strerror(rc));
+	if ( require_rebuild )
+        	LOG(log_error, logtype_default, "cnid_open: CNID Databases are corrupted beyond repair, your probably should delete all files in %s", path);
         goto fail_appinit;
+    }
+
+    /* Check database consistency */
+    if ( can_check ) {
+	if ((db->db_didname) && ((rc = db->db_didname->stat(db->db_didname, &sp, 0)) != 0)) {
+        	LOG(log_error, logtype_default, "cnid_open: Failed to stat did/macname database: %s",
+	            db_strerror(rc));
+		require_rebuild = 1;
+	}
+	if (sp) {
+	    	ndidname = (sp->hash_nkeys > 2) ? sp->hash_nkeys-2 : 0;
+	    	free (sp);
+	}
+
+    	if ((db->db_devino) && ((rc = db->db_devino->stat(db->db_devino, &sp, 0)) != 0)) {
+        	LOG(log_error, logtype_default, "cnid_open: Failed to stat dev/ino database: %s",
+	            db_strerror(rc));
+		require_rebuild = 1;
+	}
+	if (sp) {
+    		ndevino = sp->hash_nkeys;
+	    	free (sp);
+	}
+
+    	if ((rc = db->db_cnid->stat(db->db_cnid, &sp, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_open: Failed to stat cnid database: %s",
+            	    db_strerror(rc));
+        	LOG(log_error, logtype_default, "cnid_open: CNID Databases are corrupted beyond repair, your probably should delete all files in %s", path);
+		goto fail_appinit;
+    	}
+  	ncnid = sp->hash_nkeys;
+
+      	if ( require_rebuild || ndidname != ncnid || ndevino != ncnid ) {
+        	LOG(log_error, logtype_default, "cnid_open: databases corrupt, number of entries mismatch (didname: %u, devino: %u, cnid: %u)", ndidname, ndevino, ncnid);
+		if ( CNID_INVALID == cnid_rebuild(db, mask) ) 
+        		goto fail_appinit;
+    	}
+	/* now downgrade to a shared lock */
+
+	lock.l_type = F_RDLCK;
+	if (fcntl(db->lockfd, F_SETLK, &lock) < 0) {
+		LOG (log_error, logtype_default, "cnid_open: Cannot set shared lock");
+	}
+	can_check = 0;
     }
 
 #ifdef FILE_MANGLING
@@ -538,38 +419,346 @@ dbversion_retry:
     }
 #endif /* FILE_MANGLING */
 
-    /* Print out the version of BDB we're linked against. */
-    LOG(log_info, logtype_default, "CNID DB initialized using %s", db_version(NULL, NULL, NULL));
-#if 0
+    /* Print out the version of BDB we're linked against. only once */
+    if (!first) {
+        first = 1;
+        LOG(log_info, logtype_default, "CNID DB initialized using %s", db_version(NULL, NULL, NULL));
+    }
+
     db_env_set_func_yield(my_yield);
-#endif
     return db;
 
 fail_appinit:
     if (db->db_didname) db->db_didname->close(db->db_didname, 0);
     if (db->db_devino)  db->db_devino->close(db->db_devino, 0);
     if (db->db_cnid)    db->db_cnid->close(db->db_cnid, 0);
-#ifdef EXTENDED_DB
-    if (db->db_macname)   db->db_macname->close(db->db_macname, 0);
-    if (db->db_shortname) db->db_shortname->close(db->db_shortname, 0);
-    if (db->db_longname)  db->db_longname->close(db->db_longname, 0);
-#endif /* EXTENDED_DB */
     LOG(log_error, logtype_default, "cnid_open: Failed to setup CNID DB environment");
     db->dbenv->close(db->dbenv, 0);
 
 fail_lock:
-#ifndef CNID_DB_CDB
-    if (db->lockfd > -1) {
+    if (db->lockfd > -1 && !can_check ) {
         close(db->lockfd);
         (void)remove(db->lock_file);
     }
-#endif /* CNID_DB_CDB */
 
 fail_adouble:
 
+fail_db:
     free(db);
     return NULL;
 }
 #endif /* CNID_DB */
 
 
+/*-------------------------*/
+
+static int cnid_recover(char *path, mode_t mask)
+{
+	DB_ENV * dbenv;
+	int open_flag = 0, rc = 0;
+
+	if ( !path || strlen(path) == 0)
+		return -1;
+
+	LOG (log_info, logtype_default, "cnid_open: running recover on %s", path);
+
+	/* Remove any existing environment */
+
+	if ((rc = db_env_create(&dbenv, 0)) != 0) {
+       		LOG(log_error, logtype_default, "cnid_recover: db_env_create: %s", db_strerror(rc));
+		return rc;
+ 	}
+	if ((rc = dbenv->remove(dbenv, path, DB_FORCE)) != 0) {
+		LOG(log_error, logtype_default, "cnid_recover db_env_remove: %s", db_strerror(rc));
+		return rc;
+	}
+
+	/* Create and open recover environment */
+
+	if ((rc = db_env_create(&dbenv, 0)) != 0) {
+       		LOG(log_error, logtype_default, "cnid_recover: db_env_create: %s", db_strerror(rc));
+		return rc;
+   	}
+
+	open_flag = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN | DB_RECOVER | DB_PRIVATE;		
+    	if ((rc = dbenv->open(dbenv, path, open_flag, 0666 & ~mask)) != 0) {
+		LOG (log_error, logtype_default, "cnid_recover: RECOVERY failed with %s", db_strerror(rc));
+		return rc;
+	}
+
+	if ((rc = dbenv->close(dbenv, 0)) != 0) {
+       		LOG(log_error, logtype_default, "cnid_recover: dbenv->close: %s", db_strerror(rc));
+		return rc;
+   	}
+
+	/* Remove recover environment */
+			
+	if ((rc = db_env_create(&dbenv, 0)) != 0) {
+       		LOG(log_error, logtype_default, "cnid_recover: db_env_create: %s", db_strerror(rc));
+		return rc;
+  	}
+
+	if ((rc = dbenv->remove(dbenv, path, DB_FORCE)) != 0) {
+		LOG(log_error, logtype_default, "cnid_recover: db_env_remove: %s", db_strerror(rc));
+		return rc;
+	}
+
+	return 0;
+}
+
+
+static cnid_t cnid_rebuild (CNID_private *db, mode_t mask)
+{
+
+#ifdef CNID_DB_CDB
+	DB *tmpdb;
+	DBC *cursor;
+	DBT key, data, altkey, altdata, dupkey, dupdata;
+	int rc;
+	cnid_t id, dupid, maxcnid = CNID_START;
+	u_int32_t countp;
+       	u_int32_t version;
+
+	static char buffer[MAXPATHLEN + CNID_HEADER_LEN + 1];
+       	LOG(log_info, logtype_default, "starting rebuild of databases");
+
+    	if ((rc = db->db_cnid->cursor(db->db_cnid, NULL, &cursor, DB_WRITECURSOR) ) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Unable to get a cursor: %s", db_strerror(rc));
+	        return CNID_INVALID;
+    	}
+
+	memset(&key, 0, sizeof(key));
+    	memset(&data, 0, sizeof(data));
+	memset(&altkey, 0, sizeof(key));
+    	memset(&altdata, 0, sizeof(data));
+    	memset(&dupdata, 0, sizeof(dupdata));
+    	memset(&dupkey, 0, sizeof(dupkey));
+
+	/* close didname and devino, then recreate them */
+	if (db->db_didname) db->db_didname->close(db->db_didname, 0);
+	if (db->db_devino) db->db_devino->close(db->db_devino, 0);
+
+    	if ((rc = db_create(&db->db_didname, db->dbenv, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to recreate did/name database: %s",
+            		db_strerror(rc));
+        	goto abort;
+    	}
+
+    	if ((rc = my_open(db->db_didname, DBDIDNAME, NULL, DB_HASH, DB_CREATE|DB_TRUNCATE, 0666 & ~mask))) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to open did/name database: %s",
+            		db_strerror(rc));
+        	goto abort;
+    	}
+
+    	if ((rc = db_create(&db->db_devino, db->dbenv, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to recreate dev/ino database: %s",
+            		db_strerror(rc));
+        	goto abort;
+    	}
+
+    	if ((rc = my_open(db->db_devino, DBDEVINO, NULL, DB_HASH, DB_CREATE|DB_TRUNCATE, 0666 & ~mask))) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to open dev/ino database: %s",
+            		db_strerror(rc));
+        	goto abort;
+    	}
+
+	db->db_devino->sync( db->db_devino, 0);
+	db->db_didname->sync( db->db_didname, 0);
+
+
+	/* now create the temporary cnid database */
+	if ((rc = db_create(&tmpdb, db->dbenv, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to create tmp database: %s",
+            		db_strerror(rc));
+        	goto abort;
+    	}
+
+    	if ((rc = my_open(tmpdb, DBRECOVERFILE, NULL, DB_HASH, DB_CREATE|DB_TRUNCATE, 0666 & ~mask))) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to open recover database: %s",
+            		db_strerror(rc));
+        	goto abort;
+    	}
+
+	/* add rootinfo and version to didname */
+	id = 0;
+    	key.data = ROOTINFO_KEY;
+    	key.size = ROOTINFO_KEYLEN;
+    	data.data = &id;
+    	data.size = sizeof(id);
+
+	if ((rc = db->db_didname->put(db->db_didname, NULL, &key, &data, 0))) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Error adding ROOTINFO: %s", db_strerror(rc));
+	        goto abort;
+    	}
+
+    	memset(&key, 0, sizeof(key));
+	memset(&data, 0, sizeof(data));
+    	key.data = DBVERSION_KEY;
+    	key.size = DBVERSION_KEYLEN;
+       	version = htonl(DBVERSION);
+       	data.data = &version;
+       	data.size = sizeof(version);
+
+       	if ((rc = db->db_didname->put(db->db_didname, NULL, &key, &data, 0))) {
+            	LOG(log_error, logtype_default, "cnid_rebuild: Error putting version: %s",
+                	db_strerror(rc));
+            	goto abort;
+        }
+
+	/* now recover the databases from cnid.db*/
+
+	memset(&key, 0, sizeof(key));
+    	memset(&data, 0, sizeof(data));
+	data.data = buffer;
+	data.ulen = MAXPATHLEN + CNID_HEADER_LEN +1;
+	data.flags = DB_DBT_USERMEM;
+	countp = 0;
+
+	while ((rc = cursor->c_get(cursor, &key, &data, DB_NEXT)) == 0) {
+		memcpy ( &id, key.data, sizeof(id));
+		id = ntohl (id);
+		if ( id < CNID_START ) {
+            		LOG(log_error, logtype_default, "cnid_rebuild: Dropping invalid entry with id: %u", id);
+			continue;
+		}
+			
+		maxcnid = MAX( id, maxcnid);
+
+		/* check for duplicate cnid */
+
+		if ((rc = tmpdb->get(tmpdb, NULL, &key, &dupdata, 0))) {
+			if ( rc != DB_NOTFOUND ) {
+            			LOG(log_error, logtype_default, "cnid_rebuild: Error getting entry from cnid: %s",
+                			db_strerror(rc));
+				goto abort;
+			}
+		}
+		else /* duplicate cnid */
+		{
+			LOG(log_error, logtype_default, "cnid_rebuild: Dropping duplicate file entry: %u", id);
+			continue;
+		}
+
+		
+	   	/* dev/ino database */
+    		altkey.data = data.data;
+    		altkey.size = CNID_DEVINO_LEN;
+    		altdata.data = key.data;
+    		altdata.size = key.size;
+    		if ((rc = db->db_devino->put(db->db_devino, NULL, &altkey, &altdata, DB_NOOVERWRITE))) {
+			if ( rc != DB_KEYEXIST) {
+	            		LOG(log_error, logtype_default, "cnid_rebuild: Error adding entry %u to dev/ino: %s",
+                		id, db_strerror(rc));
+				goto abort;
+			}
+
+			/* handle duplicate (file with 2 ids) */
+
+			dupkey.data = data.data;
+			dupkey.size = CNID_DEVINO_LEN;
+			if (( rc = db->db_devino->get(db->db_devino, NULL, &dupkey, &dupdata, 0))) {
+            			LOG(log_error, logtype_default, "cnid_rebuild: Error getting entry from did/name: %s",
+                			db_strerror(rc));
+				goto abort;
+			}
+			memcpy ( &dupid, dupdata.data, sizeof(id));
+			dupid = ntohl (dupid);
+			LOG(log_error, logtype_default, "cnid_rebuild: Dropping duplicate file entry: %u", MIN(id,dupid));
+			
+			/* Use the entry with a higher cnid */
+			if ( id < dupid)
+				continue;	
+			else
+				if ((rc = db->db_devino->put(db->db_devino, NULL, &altkey, &altdata, 0))) {
+            				LOG(log_error, logtype_default, "cnid_rebuild: Error adding entry %u to dev/ino: %s",
+                			id, db_strerror(rc));
+		            		goto abort;
+				}
+    		}
+
+    		/* did/name database */
+    		altkey.data = (char *) data.data + CNID_DEVINO_LEN;
+    		altkey.size = data.size - CNID_DEVINO_LEN;
+    		if ((rc = db->db_didname->put(db->db_didname, NULL, &altkey, &altdata, 0))) {
+            		LOG(log_error, logtype_default, "cnid_rebuild: Error adding entry to did/name: %s",
+                		db_strerror(rc));
+			goto abort;
+    		}
+
+		/* recover database */
+
+    		if ((rc = tmpdb->put(tmpdb, NULL, &key, &data, 0))) {
+            		LOG(log_error, logtype_default, "cnid_rebuild: Error adding entry to recoverdb: %s",
+                		db_strerror(rc));
+            		goto abort;
+    		}
+		countp++;
+	}
+
+	/* set ROOTINFO to maxcnid */
+	maxcnid = htonl(maxcnid);
+    	key.data = ROOTINFO_KEY;
+    	key.size = ROOTINFO_KEYLEN;
+    	data.data = &maxcnid;
+    	data.size = sizeof(maxcnid);
+
+	if ((rc = db->db_didname->put(db->db_didname, NULL, &key, &data, 0))) {
+		LOG (log_error, logtype_default, "cnid_rebuild: Failed to update ROOTINFO %s", db_strerror(rc));
+		goto abort;
+    	}
+
+	/* delete cnid.db and rename cniddb.recover to cnid.db */
+
+	cursor->c_close(cursor);
+	db->db_cnid->close(db->db_cnid, 0);
+
+    	if ((rc = db_create(&db->db_cnid, db->dbenv, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to create database: %s", db_strerror(rc));
+        	goto fail;
+    	}
+	if ((rc = db->db_cnid->remove(db->db_cnid, DBCNID, NULL, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to remove database: %s", db_strerror(rc));
+		db->db_cnid = NULL;
+        	goto fail;
+    	}
+
+	if ((rc = tmpdb->close(tmpdb, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to close database: %s", db_strerror(rc));
+        	goto fail;
+    	}
+   	if ((rc = db_create(&tmpdb, db->dbenv, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to create database: %s", db_strerror(rc));
+        	goto fail;
+    	}
+	if ((rc = tmpdb->rename(tmpdb, DBRECOVERFILE, NULL, DBCNID, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Rename database failed: %s", db_strerror(rc));
+        	goto fail;
+    	}
+
+    	if ((rc = db_create(&db->db_cnid, db->dbenv, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to recreate cnid database: %s", db_strerror(rc));
+        	goto fail;
+    	}
+
+    	if ((rc = my_open(db->db_cnid, DBCNID, NULL, DB_HASH, 0, 0666 & ~mask))) {
+        	LOG(log_error, logtype_default, "cnid_rebuild: Failed to open cnid database: %s", db_strerror(rc));
+        	goto fail;
+    	}
+
+	db->db_devino->sync( db->db_devino, 0);
+	db->db_didname->sync( db->db_didname, 0);
+	db->db_cnid->sync( db->db_cnid, 0);
+	
+	LOG (log_info, logtype_default, "cnid_rebuild: Recovered %u entries, database rebuild complete", countp);
+	return 1;
+
+abort:
+	cursor->c_close(cursor);
+fail:
+	LOG (log_error, logtype_default, "cnid_rebuild: Database rebuild failed");
+	return CNID_INVALID;
+#else
+	return CNID_INVALID;
+#endif
+
+}

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.30 2003-06-06 21:22:44 srittau Exp $
+ * $Id: cnid_close.c,v 1.31 2003-06-26 02:15:21 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,6 +24,7 @@
 
 void cnid_close(void *CNID) {
     CNID_private *db;
+    int rc;
 
     if (!(db = CNID)) {
         return;
@@ -83,23 +84,36 @@ void cnid_close(void *CNID) {
                 free(first);
             }
         }
-        (void)remove(db->lock_file);
     }
 #endif /* CNID_DB_CDB */
 
+    db->db_didname->sync(db->db_didname, 0);
     db->db_didname->close(db->db_didname, 0);
+    db->db_devino->sync(db->db_devino, 0);
     db->db_devino->close(db->db_devino, 0);
+    db->db_cnid->sync(db->db_cnid, 0);
     db->db_cnid->close(db->db_cnid, 0);
 #ifdef FILE_MANGLING
+    db->db_mangle->sync(db->db_mangle, 0);
     db->db_mangle->close(db->db_mangle, 0);
 #endif /* FILE_MANGLING */
     db->dbenv->close(db->dbenv, 0);
 
-#ifndef CNID_DB_CDB
-    if (db->lockfd > -1) {
+    LOG (log_debug, logtype_default, "Database closed");
+
+    if ((db->lockfd > -1) && ((db->flags & CNIDFLAG_DB_RO) == 0)) {
+        struct flock lock;
+
+    	lock.l_type = F_WRLCK;
+    	lock.l_whence = SEEK_SET;
+    	lock.l_start = lock.l_len = 0;
+    	if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
+        	(void)unlink(db->lock_file);
+    	}
+    }
+    if ((db->lockfd > -1)) {
         close(db->lockfd); /* This will also release any locks we have. */
     }
-#endif /* CNID_DB_CDB */
 
     free(db);
 }
