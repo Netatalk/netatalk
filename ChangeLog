@@ -1,3 +1,11 @@
+2001-10-19  Lance Levsen  <l.levsen@printwest.com>
+
+	* doc/FAQ: Thanks for the Patch Karen.
+
+	* doc/INSTALL: Thanks for the Patch Karen.
+
+	* CONTRIBUTORS (Developers): Thanks for the patch Brandon.
+
 2001-10-18  joe c <marcus@marcuscom.com>
 
 	* libatalk/cnid/cnid_add.c: Fix dancing icon problem

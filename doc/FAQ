@@ -1,5 +1,5 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.5 2001-10-17 07:08:28 lancel Exp $)
+($Id: FAQ,v 1.6 2001-10-19 16:10:40 lancel Exp $)
 
 -----------------------------------------------------------------------------
 
@@ -7,6 +7,7 @@ Q1: Where can I get more information on Netatalk?
 Q2: What is this I keep seeing about asun?
 Q3: How do I get the most recent version of Netatalk?
 Q4: Can I get an almost current version of Netatalk without having to learn CVS?
+Q4a: Is there an RPM, package, or tarball for my platform?
 Q5: I'm having massive file deletion problems!
 Q6: I am having lots of file locking problems!
 Q7: I'm getting this message in my logs:
@@ -21,7 +22,7 @@ Q11: What are the .AppleDouble and .Parent directories which are created in
 Q12: Hidden files - what's up with that?
 Q13: I get a "socket: Invalid argument" error when trying to start netatalk
      under Linux. What is causing this?
-Q14: netatalk works over Appletalk, but my IP connections are refused, even
+Q14: Netatalk works over Appletalk, but my IP connections are refused, even
      though I have enabled them in the configuration files.
 Q15: I'm having Quark Express file locking problems, is there information on that?
 Q16: I'm getting this error in Quark Express when trying to save a file to
@@ -42,6 +43,21 @@ Q23: The daemons aren't starting, things aren't showing up in the Chooser,
 Q24: I want to be able to allow users to change their passwords?  How do
      I enable this feature.  Every time I try I get an error that it was
      unable to save the password.
+Q25: Can a mount a Mac volume on my unix machine?
+Q26: Can I run Samba and Netatalk together to access the same files?
+Q27: Files I create on my Samba shares are invisible on the mac side.
+Q27a: How can I set netatalk to hide some files from the Samba (or
+     unix) sides?
+Q28: Files I create on my netatalk shares are invisible on the PC side.
+Q28a: How can I set Samba to hide the netatalk specific files (e.g.
+     .AppleDouble).
+Q29: I compiled Samba with the --with-netatalk flag. What did that do?
+Q30: What about the differences in naming schemes, and legal/illegal
+     characters between Windows, Macs (and unix?)
+Q31: Where can I get the cnid-db (berkely db3) software? (needed for
+     --enable-cnid)
+Q32: What about security in Netatalk?
+
 
 
 -----------------------------------------------------------------------------
@@ -64,8 +80,8 @@ A:  The current location of the actively developed netatalk project can be
     
     The archive is available at:  
     ftp://terminator.rs.itd.umich.edu/unix/netatalk/ and is called
-    netatalk-admins.mail.  This is a ~6M mbox file. Previous archives are
-    available there as well.
+    netatalk-admins.mail.  This is a ~6M mbox file. Archives from
+    previous years are available there as well.
     
     Netatalk-devel list is more specific to coding and testing. It can be
     browsed at: http://www.geocrawler.com/redir-sf.php3?list=netatalk-devel,
@@ -73,16 +89,19 @@ A:  The current location of the actively developed netatalk project can be
     http://lists.sourceforge.net/lists/listinfo/netatalk-devel This varies in
     volume, but is usually moderately active.
     
-    netatalk-docs is specific to documentation. It can be browsed at:
+    Netatalk-docs is specific to documentation. It can be browsed at:
     http://www.geocrawler.com/redir-sf.php3?list=netatalk-docs
     and subscribed to at:
     http://lists.sourceforge.net/lists/listinfo/netatalk-docs
-    As far as I can tell, this list is completely dead.
+    This list is being revived.
     
-    There are older netatlk information sites at:
+    There are other netatalk information sites. Some of these are no
+    longer actively updated, some are site-specific, but still have
+    good information:
     http://www.umich.edu/~rsug/netatalk/index.html
     http://www.anders.com/projects/netatalk/ and many unices have their own
     sites and distributions (tarballs, rpm's, packages, etc.)
+    http://www.faredge.com.au/netatalk/index.html
     
 Q2: What is this I keep seeing about asun?
 
@@ -111,27 +130,31 @@ A:  Via CVS from Sourceforge.net. This is the actively maintained version
     -d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk co
     netatalk
 
-    this will create a netatalk subdirectory, and check out all of the files.
+    This will create a netatalk subdirectory, and check out all of the files.
     If you run this same command subsequently, you will update any files which
     have changed (on the CVS server) since your last checkout.
     
     Once you've done that, read the INSTALL file in the netatalk/ directory,
-
-    plus the CONFIGURE file. You'll need to have some supplementary software
-    installed, such as gmake. Additional information can be found in docs/.
+    plus the CONFIGURE file. If you're installing from CVS, you'll most likely
+    need have some supplementary software installed, such as gmake. Some
+    systems work fine with make. Additional information can be found in docs/.
     
     The main things to know, though, are this: you must run
     
-    % ./autogen.sh in the netatalk/ directory first, in order to create your
-    configure file. 
+    % ./autogen.sh 
+    in the netatalk/ directory first, in order to create your configure file. 
     
-    Then run % ./configure --help | more in order to get a
-    feel for which compile flags are available. Some of these flags are
-    summarized below.
+    Then run 
+    % ./configure --help | more in order to get a feel for which compile 
+    flags are available. Some of these flags are summarized below, some are 
+    summarized in the INSTALL file, and some have individual README. files.
     
     To learn more about CVS, a good place to start is: http://www.cvshome.org,
     or http://www.cvshome.org/docs/manual, or
     http://www.cvshome.org/form/form.cgi (this is the FAQ).
+
+    There are GUI cvs systems for Windows and Macs. Search on SourceForge for
+    WinCVS or MacCVS.
 
 
 Q4: Can I get an almost current version of Netatalk without having to learn CVS?
@@ -152,8 +175,30 @@ A:  Yes.  Weekly (or thereabouts) snapshots of the CVS tree should be
     
     You should be able to treat these images as you would a release.  Just
     configure as you normally work, then run make (or gmake as the case may
-    be).  There is no need to run autogen.sh on these images.  Please let me
-    know if you have any problems with these images.  Thanks. -Joe
+    be).  There is no need to run autogen.sh on these images.
+
+
+Q4a: Is there an RPM, package, or tarball for my platform?
+
+A:  Perhaps. These vary in how often they're updated:
+
+    FreeBSD - port: /usr/ports/net/netatalk - maintained by Joe Clark
+    SUSE - ftp://ftp.suse.com/pub/suse/i386/7.2/suse/n2/netatalk.rpm
+    OpenBSD - port: /usr/ports/net/netatalk/ 
+    (not actively maintained, as far as I can tell, and it's pretty old.)
+    Debian - http://non-us.debian.org/debian-non-us/pool/non-US/main/n/netatalk/
+    (This is the debian site which includes code which should not be 
+    exported from the US. It may be legally forbidden to export the
+    software in non-us from the U.S., but since non-us.debian.org is located
+    in the Netherlands [and the maintainer of this package is in Germany], 
+    there shouldn't be any problems for anybody downloading and using this. 
+    Also, all this doesn't apply to netatalk, since the Debian version isn't
+    linked against OpenSSL anymore.)
+
+    Redhat - RPMs of various types:
+    ftp://ftp.vircio.com/pub/netatalk/netatalk-1.5pre8-1.i386.rpm
+    ftp://ftp.vircio.com/pub/netatalk/netatalk-devel-1.5pre8-1.i386.rpm
+    ftp://ftp.vircio.com/pub/netatalk/netatalk-1.5pre8-1.src.rpm
 
 
 Q5: I'm having massive file deletion problems!
@@ -169,8 +214,9 @@ A:  Compile with the --with-did=last flag set. This activates a different
       --with-db3=PATH         specify path to Berkeley DB3 installation
       --with-did=[scheme]     set DID scheme (last,mtab) 
     
-    (For more information on CNID, see the README.cnid file, into which I just
-    copied wholesale Joe's comments on what he did with cnid and lastdid.)
+    (For more information on CNID, see the README.cnid file [may not exist yet], 
+    into which I just copied wholesale Joe's comments on what he did with 
+    cnid and lastdid.)
     
     --with-did=last reverted things back to the old 1.4b2 directory ID
     calculation algorithm.  This also solved the problem of the syslog
@@ -191,6 +237,11 @@ A:  Update to a newer version of AppleShare Client (I think the most
     recent is 3.8.8). This allows longer passwords, and will allow you to
     use encrypted passwords. Set which way you would like to authenticate
     in either afpd.conf or netatalk.conf, depending on your set up.
+
+    For more information on the appleshare client from apple, and which clients
+    are needed for which MacOS, see 
+    http://til.info.apple.com/techinfo.nsf/artnum/n60792?OpenDocument&software
+    (this site requires cookies, and a registration and sign-in).
 
 
 Q10: How can I set who has access to certain directories?
@@ -279,8 +330,7 @@ A:  You can certainly do this with your unix permissions, but also explore the
 Q11: What are the .AppleDouble and .Parent directories which are created in
      the netatalk locations?
 
-A:  (also mention samba veto files, and the appledouble/MSwindows options
-    in AppleVolumes.default
+A:  See the README.veto file in this directory.
     
     The .AppleDouble folders hold the resource fork information for the mac
     files, plus other attributes which are not normally stored by Unix. For
@@ -300,6 +350,8 @@ Q12: Hidden files - what's up with that?
 A:  If you set the noadouble flag in AppleVolumes.default, you won't see
     the .Apple* or .Parent directories on the Mac side. If you use the veto
     files option in Samba, they may be hidden from the windows side as well.
+    (More information in the Samba section, and in the README.veto file in
+    this directory.)
 
 
 Q13: I get a "socket: Invalid argument" error when trying to start netatalk
@@ -323,10 +375,10 @@ A:  If tcp_wrappers support is compiled into netatalk, access has to be
 
 Q15: I'm having Quark Express file locking problems, is there information on that?
 
-A:  Yes, see below about the --enable-did= flag. Also, try using the
-    --flock-locks flag. Enabling this code disabled the new byte locking
-    feature.  With FLOCK locks, the whole file would be locked.  With byte
-    locks, a byte range could be locked without locking the whole file.
+A:  Yes, see the question regardng DID conflicts and the --enable-did= flag. 
+    Also, try using the --flock-locks flag. Enabling this code disabled the 
+    new byte locking feature.  With FLOCK locks, the whole file would be locked.  
+    With byte locks, a byte range could be locked without locking the whole file.
 
 
 Q16: I'm getting this error in Quark Express when trying to save a file to
@@ -346,7 +398,8 @@ Q18: I'm getting an 'Application for this document not found' error on OS X.
 
 Q19: I'm getting an 'Error Type -43' error on OS X.
 
-A:  Configure with --with-did=last. More info on this flag is below.
+A:  Configure with --with-did=last. More info on this flag is given in the 
+    DID conflicts question.
 
 
 Q20: How do I get the directories that are created by Netatalk to have the
@@ -359,30 +412,28 @@ A:  Investigate the SetGid bit on your unix platform. It's a good idea to
     permissions.  Without it, the .AppleDouble subdirectory can't be created
     since the new folder doesn't necessarily have the same write privileges."
     
-    Also: Evi Nemeth's "Unix System Administration Handbook" which is chock
-    full of useful advice (and one or two pieces of not-so good advice, but
-    even those are debatable). Here's what it says about setguid (3rd. ed,
-    chap 5.5, pg. 69):
+    Information about the setgid bit can be found in Evi Nemeth's 
+    "Unix System Administration Handbook" (3rd. ed, chap 5.5, pg. 69):
     
     "The bits with octal values 4000 and 2000 are the setuid and setgid bits.
-    These bits allow programs to acess files and processes that would
-    otherwise be off-limits to the users that run them. ... When set on a
+    These bits allow programs to access files and processes that would
+    otherwise be off-limits to the users that run them. [...] When set on a
     directory, the setgid bit causes newly created files within the directory
     to take on the group membership of the directory rather than the defualt
     group of the user that created the file. This convention makes it easier
     to share a directory of files among several users, as long as they all
     belong to a common group. Check your system before relying on this
-    feature, since not all version of UNIX provide it. ... This interpretation
+    feature, since not all version of UNIX provide it. [...] This interpretation
     of the setgid bit is unrelated to it's meaning when set on an executable
     file, but there is never any ambiguity as to which meaning is
-    appropriate." (any typos are mine)
+    appropriate."
     
     NOTE: The SETUID is usually discussed along with the SetGID bit. The
     SetUID bit is VERY dangerous. If you set it on an executable, and the
     executable is owned by root, anyone who runs that executable is root for
     the duration of that executable's run, so a clever person can leverage
-    that into a full-scale compromise. The SETGID bit also has implications
-    that way, so be careful where you set it.
+    that into a full-scale compromise. The SETGID bit also has other security
+    implications, so be careful where you set it.
     
     You set it by doing a chmod 2777 or 2775, or whatever. It's that first 2 bit.
     
@@ -403,12 +454,14 @@ A:  This can be due to a few things.
     
     
 Q22: I'm having problems with the Trash folder: either when someone drags
-     files into it, the system want's them todelete them immeidately, or files
+     files into it, the system wants them to delete them immediately, or files
      get stuck in there and won't delete.
     
-A:  chmod the Network Trash folder to 2775 (/home/public/Network Trash
+A:  Chmod the Network Trash folder to 2775 (/home/public/Network Trash
     Folder for instance).
 
+    As of 10/16/01, Mac OS X trash didn't work properly with afps volumes. 
+    Apple is working on it.
 
 Q23: The daemons aren't starting, things aren't showing up in the Chooser,
      and I get a message like this in the logs: afpd[####]: Can't register
@@ -417,18 +470,159 @@ Q23: The daemons aren't starting, things aren't showing up in the Chooser,
     This is sometimes a result of missing NIC information in the atalkd.conf
     file. Put your network interface (something like le0, eth0, fxp0, lo0)
     alone on a line in atalkd.conf, and reboot. When atalkd starts, it will
-    populate the file with a line like: le1 -seed -phase 2 -addr 66.6 -net
-    66-67 -zone "No Parking"
+    populate the file with a line such as: 
+    le1 -seed -phase 2 -addr 66.6 -net 66-67 -zone "No Parking"
 
     To find your network interface, run
 
     % ifconfig -a | more
     and see which interface has your IP address. Use that one.
 
-Q24: I want to be able to allow users to change their passwords?  How do
-     I enable this feature.  Every time I try I get an error that it was
+Q24: I want to be able to allow users to change their passwords.  How do
+     I enable this feature?  Every time I try I get an error that it was
      unable to save the password.
 
 A:  Use  -[no]setpassword in afpd.conf. This  enables? disables  the
-    ability  of clients  to change their passwords 
+    ability of clients to change their passwords.
 
+
+Q25: Can a mount a Mac volume on my unix machine?
+
+A:  Well, maybe. OS X obviously might be able to do this with NFS. 
+    Also, there is a program called afpfs which was designed to do this, 
+    but is not actively maintained and has been reportedly highly unstable. 
+    It should be available from: http://www.panix.com/~dfoster/afpfs/
+
+Q26: Can I run Samba and Netatalk together to access the same files?
+
+A:  Sure. Lots of us do. But there are some concerns. Quite often it's 
+    useful, for instance, to hide files of one OS from the other. See
+    the AppleVolumes.default file in Netatalk, and investigate the veto
+    files option in Samba. (See the README.veto file.)
+
+    Also, when copying and moving files created on the Mac, it's better
+    to do that from the Mac, rather than from the Unix server or from
+    Samba. This is because the .AppleDouble folders hold the resource fork 
+    information for the mac files, plus other attributes which are not 
+    normally stored by Unix.
+    
+    You can also set netatalk to not create an .AppleDouble directory unless
+    it absolutely needs it, by setting the noadouble setting in
+    AppleVolumes.default.
+
+
+Q27: Files I create on my Samba shares are invisible on the mac side.
+
+A:   Have you checked the AppleVolumes(.default? .sytem? I don't remember
+     which one hides files!) file?
+
+     How long are the file names? Names longer than 31 BYTES (not characters) 
+     are not visible on the Mac side. This is because some old Mac OS's don't 
+     accept long names, and some finders crash when they encounter them. 
+     Therefore netatalk hides long filenames to prevent crashes.
+     There is talk of creating a method to truncate the names, but this
+     code has not yet been written.
+
+     The BYTES distiction is made because there exist doublebyte fonts too, 
+     which limit names to 15 chars.
+
+
+Q27a: How can I set netatalk to hide some files created on the Samba 
+     (or unix) sides?
+
+A:   AppleVolumes(.system or .default?) allows you to hide certain files.
+     This might be a good thing to set on, say, .cshrc, ssh keys, and
+     the like.
+
+
+Q28: Files I create on my netatalk shares are invisible on the PC side.
+Q28a: How can I set Samba to hide the netatalk specific files (e.g.
+     .AppleDouble).
+
+A:   Check your Samba veto files option in smb.conf. It's often useful
+     to hide files like .AppleDouble or the network trash folder here.
+
+     Does the mac file have a \ or / in it? Would this cause Samba to 
+     not see the file?
+
+Q29: I compiled Samba with the --with-netatalk flag. What did that do?
+
+A:   Nothing. Some code was written (by a Samba developer?), but as of 
+     Fall 2001, Samba doesn't utilize it.
+
+Q30: What about the differences in naming schemes, and legal/illegal
+     characters between Windows, Macs (and unix?)
+
+A:   Check out the documentation about the 'mswindows' flag in afpd.conf (?).
+     For instance, having / or \ or : in a name is especially bad, 
+     as they're path seperators on unix and windows and macs, 
+     respectively). Educating the end user is important for this problem.
+
+
+Q31: Where can I get the cnid-db (berkely db3) software? (needed for
+     --enable-cnid)
+
+A:   First check to see if your unix has a port or package. If not, 
+     http://www.sleepycat.com/download.html
+
+Q32: What about security in Netatalk?
+
+A:   Most of the security for netatalk must be derived from the
+     security of the unix server on which it runs. Directory permissions,
+     valid users, firewalls, IP filters, file integrity checkers, etc.
+     are all part of the equation. That said, it is possible to configure
+     netatalk to minimize access, and close potential security holes.
+
+     These two flags are especially important:
+
+--with-tcp-wrappers: enable TCP wrappers support.
+	Wietse Venema's network logger, also known as TCPD or
+	LOG_TCP. These programs log the client host name of incoming
+	telnet, ftp, rsh, rlogin, finger etc. requests. Security
+	options are: access control per host, domain and/or service;
+	detection of host name spoofing or host address spoofing;
+	booby traps to implement an early-warning system.  TCP
+	Wrappers can be gotten at
+	ftp://ftp.porcupine.org/pub/security/
+
+     Note, if you use tcp-wrappers, it would be a good idea to set your
+     afpd.conf file to disable DDP, or accept connections only on TCP.
+     You can also configure afpd to only run on a certain port, which
+     you can then let through your IPFilter.
+     
+     Encrypt your passwords with SSL!
+
+--with-ssl-dirs=[PATH]: specify path to OpenSSL installation. 
+	NOTE: This is dependent on the same directory layout as the
+	source distribution of Openssl. That is: ./include/ and
+	./lib/ to be on the same level. Many .rpm formats do not
+	have their files laid out in this format.
+	The OpenSSL Project is a collaborative effort to develop a
+	robust, commercial-grade, full-featured, and Open Source
+	toolkit implementing the Secure Sockets Layer (SSL v2/v3)
+	and Transport Layer Security (TLS v1) protocols as well as a
+	full-strength general purpose cryptography library.
+	This is required to enable DHX login support, which
+      will encrypt all of the passwords being sent across the 
+      connection. (Some old mac clients don't support this, check
+      this FAQ for the section on AppleShare clients.)
+      Check to see if your unix has OpenSSL already, or
+	get everything at http://www.openssl.org/ 
+
+    Be aware that on the volumes that are shared, some of the 
+    special folders (.AppleDesktop, "Network Trash Folder") get
+    assigned. A lot of these get created as world-writable (because that's
+    what the Mac clients are expecting them to be) which is often quite
+    undesirable from the unix sysadmin's point of view. Documenting this
+    behavior could be a somewhat daunting task, but highly desirable.
+
+    Shares can be set to be read/write only by certain people and groups.
+    (need more documentation here!)
+
+    The netatalk code has not been through a major code audit. However,
+    it's open source, so if you want to do said audit, contact the 
+    netatalk maintainers (which can be done through the sourceforge site).
+
+    Has anyone tried to run netatalk in a chroot jail? If so, please
+    share your experiences with the mailing lists.
+   
