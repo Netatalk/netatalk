@@ -17,6 +17,7 @@
 
 	* etc/afpd/afp_config.c: Fixed a bug where SRVLOC services wouldn't
 	show up in OS 9.x
+
 	* libatalk/cnid/cnid_add.c: Fix a bug where some DBT data structures
 	were not being memset to NULL correctly.
 
@@ -24,7 +25,9 @@
 
 	* etc/afpd/afp_options.c: Fix a bug in the custom icon code (thanks to
 	Edmund Lam <epl@unimelb.edu.au> for finding this)
+
 	* libatalk/cnid/cnid_open.c: Added db3 version checking code
+
 	* config/afpd.conf.tmpl: Removed uams_guest.so from the default UAMs
 	list
 
