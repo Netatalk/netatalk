@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.12 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_pam.c,v 1.13 2002-10-13 06:18:14 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -10,6 +10,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifndef ATACC
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -419,3 +420,4 @@ UAM_MODULE_EXPORT struct uam_export uams_pam = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
+#endif

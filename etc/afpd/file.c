@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.64 2002-10-12 04:02:46 didg Exp $
+ * $Id: file.c,v 1.65 2002-10-13 06:18:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -355,6 +355,7 @@ int getmetadata(struct vol *vol,
         case FILPBIT_PDINFO :
             if (afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
+                nameoff = data;
                 data += sizeof( u_int16_t );
             }
             else {
@@ -969,6 +970,49 @@ rename_retry:
     return( AFP_OK );
 }
 
+int copy_path_name(char *newname, char *ibuf)
+{
+char        type = *ibuf;
+size_t      plen = 0;
+u_int16_t   len16;
+u_int32_t   hint;
+
+    if ( type != 2 || (afp_version >= 30 && type != 3) ) {
+        return -1;
+    }
+    ibuf++;
+    switch (type) {
+    case 2:
+        if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
+            strncpy( newname, ibuf, plen );
+            newname[ plen ] = '\0';
+            if (strlen(newname) != plen) {
+                /* there's \0 in newname, e.g. it's a pathname not
+                 * only a filename. 
+                */
+            	return -1;
+            }
+        }
+        break;
+    case 3:
+        memcpy(&hint, ibuf, sizeof(hint));
+        ibuf += sizeof(hint);
+           
+        memcpy(&len16, ibuf, sizeof(len16));
+        ibuf += sizeof(len16);
+        plen = ntohs(len16);
+        if (plen) {
+            strncpy( newname, ibuf, plen );
+            newname[ plen ] = '\0';
+            if (strchr(newname,'/')) {
+            	return -1;
+            }
+        }
+        break;
+    }
+    return plen;
+}
+
 /* -----------------------------------
 */
 int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
@@ -981,7 +1025,6 @@ int		ibuflen, *rbuflen;
     char	*newname, *p, *upath;
     struct path *s_path;
     u_int32_t	sdid, ddid;
-    size_t      plen;
     int         err, retvalue = AFP_OK;
     u_int16_t	svid, dvid;
 
@@ -1051,19 +1094,10 @@ int		ibuflen, *rbuflen;
     }
 
     /* one of the handful of places that knows about the path type */
-    if ( *ibuf++ != 2 ) {
+    if (copy_path_name(newname, ibuf) < 0) {
         return( AFPERR_PARAM );
     }
-    if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
-        strncpy( newname, ibuf, plen );
-        newname[ plen ] = '\0';
-        if (strlen(newname) != plen) {
-            /* there's \0 in newname, e.g. it's a pathname not
-             * only a filename. 
-            */
-            return( AFPERR_PARAM );
-        }
-    }
+
     upath = mtoupath(vol, newname);
     if ( (err = copyfile(p, upath , newname, vol_noadouble(vol))) < 0 ) {
         return err;

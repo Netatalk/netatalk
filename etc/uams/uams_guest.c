@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.10 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_guest.c,v 1.11 2002-10-13 06:18:14 didg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -8,6 +8,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifndef ATACC
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -139,3 +140,4 @@ UAM_MODULE_EXPORT struct uam_export uams_guest = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
+#endif

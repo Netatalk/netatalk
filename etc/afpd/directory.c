@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.45 2002-10-12 18:20:48 didg Exp $
+ * $Id: directory.c,v 1.46 2002-10-13 06:18:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -816,6 +816,7 @@ char	**cpath;
     int			len;
     int			olen = 0;
     u_int32_t   hint;
+    u_int16_t   len16;
     int         size = 0;
     char        sep;
        	
@@ -830,9 +831,12 @@ char	**cpath;
     case 3:
        if (afp_version >= 30) {
            data++;
-           hint = ntohl(*data);
-           data += 4;
-           len = ntohs(*data);
+           memcpy(&hint, data, sizeof(hint));
+           hint = ntohl(hint);
+           data += sizeof(hint);
+           
+           memcpy(&len16, data, sizeof(len16));
+           len = ntohs(len16);
            data += 2;
            size = 7;
            sep = '/';
@@ -885,7 +889,7 @@ char	**cpath;
             return &ret;
         }
 
-        if ( *data == '\0' ) {
+        if (!*data || *data == sep ) {
             data++;
             len--;
         }
@@ -1689,7 +1693,7 @@ int		ibuflen, *rbuflen;
     }
 
     memset(&ad, 0, sizeof(ad));
-    if (ad_open( "", vol_noadouble(vol)|ADFLAGS_HF|ADFLAGS_DIR,
+    if (ad_open( ".", vol_noadouble(vol)|ADFLAGS_HF|ADFLAGS_DIR,
                  O_RDWR|O_CREAT, 0666, &ad ) < 0)  {
         if (vol_noadouble(vol))
             goto createdir_done;

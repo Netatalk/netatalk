@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.33 2002-10-11 14:18:31 didg Exp $
+ * $Id: filedir.c,v 1.34 2002-10-13 06:18:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -444,7 +444,7 @@ int		ibuflen, *rbuflen;
     char        *oldname, *newname;
     struct path *path;
     u_int32_t	did;
-    size_t      plen;
+    int         plen;
     u_int16_t	vid;
     int         isdir = 0;
     int         rc;
@@ -494,18 +494,11 @@ int		ibuflen, *rbuflen;
     }
 
     /* another place where we know about the path type */
-    if ( *ibuf++ != 2 ) {
+    if ((plen = copy_path_name(newname, ibuf)) < 0) {
         return( AFPERR_PARAM );
     }
 
-    if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
-        strncpy( newname, ibuf, plen );
-        newname[ plen ] = '\0';
-        if (strlen(newname) != plen) {
-            return( AFPERR_PARAM );
-        }
-    }
-    else {
+    if (!plen) {
         return AFP_OK; /* newname == oldname same dir */
     }
     
@@ -632,7 +625,7 @@ int		ibuflen, *rbuflen;
     char	*oldname, *newname;
     struct path *path;
     int		did;
-    size_t      plen;
+    int         plen;
     u_int16_t	vid;
     int         rc;
 #ifdef DROPKLUDGE
@@ -693,21 +686,14 @@ int		ibuflen, *rbuflen;
     }
 
     /* one more place where we know about path type */
-    if ( *ibuf++ != 2 ) {
+    if ((plen = copy_path_name(newname, ibuf)) < 0) {
         return( AFPERR_PARAM );
     }
 
-    if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
-        strncpy( newname, ibuf, plen );
-        newname[ plen ] = '\0';
-        if (strlen(newname) != plen) {
-            return( AFPERR_PARAM );
-        }
-    }
-    else {
+    if (!plen) {
         strcpy(newname, oldname);
     }
-    
+
     rc = moveandrename(vol, sdir, oldname, newname, isdir);
 
     if ( rc == AFP_OK ) {

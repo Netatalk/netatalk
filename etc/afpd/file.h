@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.13 2002-10-12 04:02:46 didg Exp $
+ * $Id: file.h,v 1.14 2002-10-13 06:18:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -50,7 +50,7 @@ extern const u_char	ufinderi[];
 #define FILPBIT_DFLEN	 9
 #define FILPBIT_RFLEN	 10
 #define FILPBIT_EXTDFLEN 11
-#define FILPBIT_PDINFO   13    /* ProDOS Info */
+#define FILPBIT_PDINFO   13    /* ProDOS Info/ UTF8 name */
 #define FILPBIT_EXTRFLEN 14
 
 /* attribute bits. (d) = directory attribute bit as well. */
@@ -88,6 +88,7 @@ extern int copyfile     __P((char *, char *, char *, const int));
 extern int deletefile   __P((char *, int));
 
 extern void *get_finderinfo __P((const char *, struct adouble *, void *));
+extern int  copy_path_name __P((char *, char *i));
 
 /* FP functions */
 extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));

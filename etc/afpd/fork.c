@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.38 2002-10-11 14:18:32 didg Exp $
+ * $Id: fork.c,v 1.39 2002-10-13 06:18:14 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -591,6 +591,7 @@ int     is64;
     if (is64) {
         temp = htonl(offset >> 32);
         memcpy(rbuf, &temp, sizeof( temp ));
+        rbuf += sizeof(temp);
         ret = sizeof( temp );
         offset &= 0xffffffff;
     }
@@ -1361,7 +1362,9 @@ int                 ibuflen, *rbuflen;
     return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
-/* ---------------------------- */
+/* ---------------------------- 
+ * FIXME need to deal with SIGXFSZ signal
+*/
 int afp_write_ext(obj, ibuf, ibuflen, rbuf, rbuflen)
 AFPObj              *obj;
 char                *ibuf, *rbuf;
