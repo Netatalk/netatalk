@@ -58,12 +58,12 @@ atalk_startup() {
 	fi
 
 	# check for timelord in bin directory
-	if [ -x ${ATALK_BIN}/timelord ]; then
+	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x ${ATALK_BIN}/timelord ]; then
 	    daemon ${ATALK_BIN}/timelord
 	fi
 
 	# check for timelord in sbin directory
-	if [ -x ${ATALK_SBIN}/timelord ]; then
+	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/timelord ]; then
 	    daemon ${ATALK_SBIN}/timelord
 	fi
 
@@ -101,12 +101,12 @@ case "$1" in
 	    fi
 
             # checking for timelord in bin directory
-	    if [ -x ${ATALK_BIN}/timelord ]; then
+	    if [ x"${TIMELORD_RUN}" = x"yes" -a -x ${ATALK_BIN}/timelord ]; then
 		killproc timelord
 	    fi
 
             # checking for timelord in sbin directory
-	    if [ -x ${ATALK_SBIN}/timelord ]; then
+	    if [ x"${TIMELORD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/timelord ]; then
 		killproc timelord
 	    fi
 
