@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.15 2002-01-24 16:32:12 jmarcus Exp $
+ * $Id: enumerate.c,v 1.16 2002-01-29 21:12:14 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -82,8 +82,8 @@ struct stat *st;
     cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath,
                            upathlen, cdir->d_did);
     /* Fail out if things go bad with CNID. */
-    if (cdir->d_did > CNID_MAX) {
-        switch (cdir->d_did) {
+    if (cdir->d_did < 0) {
+        switch (errno) {
         case CNID_ERR_PARAM:
             LOG(log_error, logtype_default, "adddir: Incorrect parameters passed to cnid_add");
             return NULL;

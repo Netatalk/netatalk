@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.20 2002-01-19 21:42:08 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.21 2002-01-29 21:12:18 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -78,6 +78,7 @@ void cnid_close(void *CNID) {
                 LOG(log_error, logtype_default, "cnid_close: Failed to open database closing lock file: %s", strerror(errno));
             }
         }
+		(void)remove(db->lock_file);
     }
 
     db->db_didname->close(db->db_didname, 0);

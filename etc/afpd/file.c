@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.37 2002-01-20 01:32:45 jmarcus Exp $
+ * $Id: file.c,v 1.38 2002-01-29 21:12:14 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -225,8 +225,8 @@ int getfilparams(struct vol *vol,
             aint = cnid_add(vol->v_db, st, dir->d_did, upath,
                             strlen(upath), aint);
             /* Throw errors if cnid_add fails. */
-            if (aint > CNID_MAX) {
-                switch (aint) {
+            if (aint < 0) {
+                switch (errno) {
                 case CNID_ERR_PARAM:
                     LOG(log_error, logtype_default, "getfilparams: Incorrect parameters passed to cnid_add");
                     return(AFPERR_PARAM);

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.36 2002-01-24 16:22:16 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.37 2002-01-29 21:12:18 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -188,7 +188,7 @@ static int compare_unicode(const DBT *a, const DBT *b)
 static int have_lock = 0;
 
 void *cnid_open(const char *dir) {
-    struct stat st, rsb, csb;
+    struct stat st, rsb, lsb, csb;
     struct flock lock;
     char path[MAXPATHLEN + 1];
     char recover_file[MAXPATHLEN + 1];
@@ -197,6 +197,7 @@ void *cnid_open(const char *dir) {
     DB_TXN *tid;
     u_int32_t DBEXTRAS = 0;
     int open_flag, len;
+	int no_recover_flag = 0;
     int rc, rfd = -1;
 
     if (!dir) {
@@ -256,6 +257,10 @@ void *cnid_open(const char *dir) {
      * NOTE: This won't work if multiple volumes for the same user refer
      * to the sahe directory. */
     strcat(path, DBLOCKFILE);
+	strcpy(db->lock_file, path);
+	if (stat(path, &lsb) == 0) {
+		no_recover_flag = 1;
+	}
     if ((db->lockfd = open(path, O_RDWR | O_CREAT, 0666)) > -1) {
         lock.l_start = 0;
         lock.l_len = 1;
@@ -275,7 +280,8 @@ void *cnid_open(const char *dir) {
     /* Create a file to represent database recovery.  While this file
      * exists, the database is being recovered, and all other clients will
      * select until recovery is complete, and this file goes away. */
-    if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
+    if (!have_lock && db->lockfd > -1 && lock.l_start == 0 &&
+		no_recover_flag == 0) {
         if (stat(recover_file, &rsb) == 0) {
             (void)remove(recover_file);
         }

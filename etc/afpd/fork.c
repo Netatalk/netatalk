@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.18 2002-01-20 01:34:40 jmarcus Exp $
+ * $Id: fork.c,v 1.19 2002-01-29 21:12:14 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -191,8 +191,8 @@ const u_int16_t     attrbits;
             aint = cnid_add(ofork->of_vol->v_db, &st,
                             ofork->of_dir->d_did,
                             upath, strlen(upath), aint);
-            if (aint > CNID_MAX) {
-                switch (aint) {
+            if (aint < 0) {
+                switch (errno) {
                 case CNID_ERR_PARAM:
                     LOG(log_error, logtype_default, "getforkparams: Incorrect parameters passed to cnid_add");
                     return(AFPERR_PARAM);

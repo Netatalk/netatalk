@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_private.h,v 1.6 2002-01-18 05:19:26 jmarcus Exp $
+ * $Id: cnid_private.h,v 1.7 2002-01-29 21:12:18 jmarcus Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -25,6 +25,7 @@
 #define CNID_HEADER_LEN          (CNID_DEVINO_LEN + CNID_DID_LEN)
 
 #define CNID_START               17
+#define CNID_INVALID             0
 
 #define CNIDFLAG_ROOTINFO_RO     (1 << 0)
 #define CNIDFLAG_DB_RO           (1 << 1)
@@ -47,6 +48,7 @@ typedef struct CNID_private {
     DB_ENV* dbenv;
     int lockfd, flags;
     char close_file[MAXPATHLEN + 1];
+	char lock_file[MAXPATHLEN + 1];
 } CNID_private;
 
 /* on-disk data format (in network byte order where appropriate) --

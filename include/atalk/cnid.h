@@ -18,8 +18,6 @@
 #define CNID_ERR_DB    0x80000003
 #define CNID_ERR_MAX   0x80000004
 
-#define CNID_MAX       0x80000000
-
 typedef u_int32_t cnid_t;
 
 /* cnid_open.c */
