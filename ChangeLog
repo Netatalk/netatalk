@@ -1,3 +1,9 @@
+2002-09-24  Sebastian Rittau  <srittau@jroger.in-berlin.de>
+
+	* NEWS: Catted CHANGES to the end of this file. Updated from the
+	stable branch.
+	* CHANGES: Removed.
+
 2002-02-14  andy m <morgan@orst.edu>
 	* etc/papd/queries.c: Added support for "ADOIsBinaryOK?" printer query
 	to papd.  We now respond with "True" instead of "unknown".
