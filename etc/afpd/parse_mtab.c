@@ -1,5 +1,5 @@
 /*
- * $Id: parse_mtab.c,v 1.1 2001-05-25 16:18:09 rufustfirefly Exp $
+ * $Id: parse_mtab.c,v 1.2 2001-06-10 20:15:00 srittau Exp $
  *
  * afpd_mtab_parse & support.  -- rgr, 9-Apr-01.
  */
@@ -9,6 +9,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -145,7 +146,7 @@ afpd_mtab_parse __P((char *file_name))
     }
   } /* next line */
 
-  close(f);
+  fclose(f);
   if (n_errors) {
     fprintf(stderr, "Got %d errors while reading %s; exiting.\n",
 	    n_errors, file_name);

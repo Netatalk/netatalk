@@ -15,11 +15,8 @@
 #include <unistd.h>
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
+#include "asingle.h"
 #include "megatron.h"
-
-int single_header_read(struct FHeader *fh, int version);
-int single_close(int readflag);
-int single_header_test(void);
 
 /*	String used to indicate standard input instead of a disk
 	file.  Should be a string not normally used for a file

@@ -13,7 +13,11 @@
 #include <string.h>
 #include <syslog.h>
 #include <netatalk/endian.h>
+#include "asingle.h"
 #include "megatron.h"
+#include "hqx.h"
+#include "macbin.h"
+#include "nad.h"
 
 char		forkbuf[8192];
 char		*forkname[] = { "data", "resource" };

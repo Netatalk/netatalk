@@ -21,9 +21,12 @@
 #include "config.h"
 #endif
 
+#include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -95,7 +98,7 @@ main( ac, av )
 	    }
 	}
 	if ( cc != 0 && write( 2, buf, cc ) != cc ) {
-	    fprintf( stderr, "write 1: 2 %X %d\n", buf, cc );
+	    fprintf( stderr, "write 1: 2 %p %d\n", buf, cc );
 	    perror( "write" );
 	    exit( 2 );
 	}

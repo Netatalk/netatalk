@@ -18,16 +18,9 @@
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "megatron.h"
+#include "nad.h"
 
 static char		hexdig[] = "0123456789abcdef";
-
-/* Forward Declarations */
-int nad_open(char *path, int openflags, struct FHeader *fh, int options);
-int nad_header_read(struct FHeader *fh);
-int nad_header_write(struct FHeader *fh);
-int nad_read(int fork, char *forkbuf, int bufc);
-int nad_write(int fork, char *forkbuf, int bufc);
-int nad_close(int status);
 
 char *mtoupath( mpath )
     char	*mpath;

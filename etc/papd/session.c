@@ -22,6 +22,8 @@
 #include "lp.h"
 #include "session.h"
 
+int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat);
+
 extern unsigned char	connid, quantum, oquantum;
 
 char		buf[ PAP_MAXQUANTUM ][ 4 + PAP_MAXDATA ];

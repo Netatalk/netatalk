@@ -30,7 +30,7 @@ struct papfile {
 #define PF_MORESPACE	1024
 
 int markline __P(( struct papfile *, char **, int *, int * ));
-void morespace __P(( struct papfile *, char *, int ));
+void morespace __P(( struct papfile *, const char *, int ));
 void append __P(( struct papfile *, const char *, int ));
 void spoolerror __P(( struct papfile *, char * ));
 

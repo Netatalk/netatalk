@@ -98,7 +98,7 @@ int zip_packet( ap, from, data, len )
     char		*end, zname[ 32 ], packet[ ATP_BUFSIZ ], *nzones, *lastflag;
     char		*reply, *rend, *ziphdr;
     int			zlen, n, zipop, rcnt, qcnt, zcnt, zsz;
-    extern int		debug, stabletimer;
+    extern int		stabletimer;
 
     end = data + len;
 

@@ -18,6 +18,7 @@
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "megatron.h"
+#include "macbin.h"
 
 /* This allows megatron to generate .bin files that won't choke other
    well-known converter apps. It also makes sure that checksums
@@ -39,17 +40,6 @@
 /*	Size of a macbinary file header
  */
 #define HEADBUFSIZ	128
-
-/*      Forward Declarations
- */
-int bin_open(char *binfile, int flags, struct FHeader *fh, int options);
-int bin_close(int keepflag);
-int bin_read(int fork, char *buffer, int length);
-int bin_write(int fork, char *buffer, int length);
-int bin_header_read(struct FHeader *fh, int revision);
-int bin_header_write(struct FHeader *fh);
-int test_header(void);
-u_short updcrc();
 
 /*	Both input and output routines use this struct and the
 	following globals; therefore this module can only be used

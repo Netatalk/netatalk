@@ -1,5 +1,5 @@
 /*
- * $Id: test_parse_mtab.c,v 1.1 2001-05-25 16:18:09 rufustfirefly Exp $
+ * $Id: test_parse_mtab.c,v 1.2 2001-06-10 20:15:00 srittau Exp $
  * test driver for the afpd_mtab_parse fn.  -- rgr, 9-Apr-01.
  */
 
@@ -72,7 +72,7 @@ main(int argc, char **argv)
 		argv[arg], errno);
       }
       else {
-	fprintf(stderr, "File %s, device (%d,%d), inode %d, CNID 0x%08x.\n",
+	fprintf(stderr, "File %s, device (%d,%d), inode %ld, CNID 0x%08x.\n",
 		argv[arg], major(st.st_dev), minor(st.st_dev), st.st_ino,
 		CNID(&st, S_ISDIR(st.st_mode) ? 1 : 0));
       }

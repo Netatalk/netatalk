@@ -879,7 +879,10 @@ int looproute( iface, cmd )
     loop.sat_addr.s_net = htons( ATADDR_ANYNET );
     loop.sat_addr.s_node = ATADDR_ANYNODE;
 
-    if ( route( cmd, &dst, &loop, RTF_UP | RTF_HOST )) {
+    if ( route( cmd,
+		(struct sockaddr *) &dst,
+		(struct sockaddr *) &loop,
+		RTF_UP | RTF_HOST ) ) {
 	return( 1 );
     }
     if ( cmd == RTMP_ADD ) {
@@ -932,7 +935,10 @@ int gateroute( command, rtmp )
 
     do {
 	dst.sat_addr.s_net = htons( net );
-	if ( route( command, &dst, &gate, RTF_UP | RTF_GATEWAY )) {
+	if ( route( command,
+		    (struct sockaddr *) &dst,
+		    (struct sockaddr *) &gate,
+		    RTF_UP | RTF_GATEWAY )) {
 	    syslog( LOG_ERR, "route: %u -> %u.%u: %m", net,
 		    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node );
 	    continue;

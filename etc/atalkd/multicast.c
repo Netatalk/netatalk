@@ -340,9 +340,9 @@ int addmulti(const char *name, const unsigned char *data)
     sa.sdl_alen = sizeof(ethermulti);
     sa.sdl_len = sizeof(sa);
 #else
-    memcpy(sa.sa_data, data ? data : ethermulti, sizeof( ethermulti ));
+    memcpy(sa.sa_data, data ? data : ethermulti, sizeof(ethermulti));
 #endif
-    if (ifconfig(name, SIOCADDMULTI, &sa))
+    if (ifconfig(name, SIOCADDMULTI, (struct sockaddr_at *)&sa))
       return -1;
 
     return 0;

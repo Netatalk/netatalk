@@ -3,7 +3,7 @@
 
 #include <sys/cdefs.h>
 
-int ifconfig __P(( char *, unsigned long, struct sockaddr_at * ));
+int ifconfig __P(( const char *, unsigned long, struct sockaddr_at * ));
 void setaddr __P(( struct interface *, u_int8_t, u_int16_t,
         u_int8_t, u_int16_t, u_int16_t ));
 void bootaddr __P(( struct interface * ));

@@ -22,7 +22,6 @@ int ch_title( in, out )
 {
     char		*start, *stop, *p, *q, c;
     int			linelength, crlflength;
-    struct papd_comment	*comment = compeek();
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :

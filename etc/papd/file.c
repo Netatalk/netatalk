@@ -57,7 +57,7 @@ int markline( pf, start, linelength, crlflength )
 
 void morespace( pf, data, len )
     struct papfile	*pf;
-    char		*data;
+    const char		*data;
     int			len;
 {
     char		*nbuf;

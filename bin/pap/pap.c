@@ -296,7 +296,7 @@ DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
 
 	memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9, 
 		((char *)rniov[ 0 ].iov_base)[ 8 ] );
-	st_buf[ ((char *)rniov[ 0 ].iov_base)[ 8 ]] = '\0';
+	st_buf[ (int) ((char *)rniov[ 0 ].iov_base)[ 8 ]] = '\0';
 	if ( strstr( st_buf, "idle" ) != NULL ) {
 	    waitforidle = 0;
 	} else {
@@ -821,7 +821,7 @@ DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
 
 		memcpy( st_buf, (char *) rniov[ 0 ].iov_base + 9, 
 			((char *)rniov[ 0 ].iov_base)[ 8 ] );
-		st_buf[ ((char *)rniov[ 0 ].iov_base)[ 8 ]] = '\0';
+		st_buf[ (int) ((char *)rniov[ 0 ].iov_base)[ 8 ]] = '\0';
 		if ( strstr( st_buf, "waiting" ) != NULL ) {
 		    waitforprinter = 0;
 		}

@@ -23,6 +23,7 @@
 
 #define FUCKED
 
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -30,9 +31,15 @@
 #include <sys/syslog.h>
 #include <atalk/paths.h>
 #include <stdio.h>
-#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <signal.h>
+
+/* Forward Declarations */
+int pexecv(char *path, char *argv[]);
+int copyio();
+int textps();
 
 char		psapath[] = _PATH_PSA;
 char		*psaargv[] = { "psa", 0, 0, 0, 0 };
@@ -70,7 +77,7 @@ struct papersize {
     { 80, 70, 8.27, 11.69 },			/* A4 */
 };
 
-main( ac, av ) 
+int main( ac, av ) 
     int		ac;
     char	**av;
 {
@@ -347,7 +354,7 @@ restart:
     exit( rc );
 }
 
-copyio()
+int copyio()
 {
     /* implement the FSM needed to do the suspend. Note that
      * the last characters will be \031\001 so don't worry
@@ -357,7 +364,7 @@ copyio()
      */
     struct timeval	tv;
     fd_set		fdset;
-    int			ctl = 0, i;
+    int			ctl = 0;
 
 notdone:
     do {
@@ -461,7 +468,7 @@ char		pspro[] = "\
 /EP { SV restore showpage } bind def\n\
 %%EndProlog\n";
 
-textps()
+int textps()
 {
     struct papersize	papersize;
     int			state = 0, line = 0, col = 0, npages = 0, rc, i;
@@ -655,7 +662,7 @@ out:
  * Manipulates file descriptors 0, 1, and 2, such that the new child
  * is reading from the parent's output.
  */
-pexecv( path, argv )
+int pexecv( path, argv )
     char	*path, *argv[];
 {
     int		fd[ 2 ], c;
