@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.30 2002-09-05 14:52:06 didg Exp $
+ * $Id: filedir.c,v 1.31 2002-09-07 19:18:59 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -67,26 +67,29 @@ more information */
 {
     struct stat	st, sb;
     struct dir	*dir;
-    char	adpath[50];
+    char	*adpath;
     int		uid;
-
+    int         ret = AFP_OK;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin matchfile2dirperms:");
 #endif /* DEBUG */
 
-    if (stat(upath, &st ) < 0)
+    if (stat(upath, &st ) < 0) {
         LOG(log_error, logtype_afpd, "Could not stat %s: %s", upath, strerror(errno));
-    strcpy (adpath, "./.AppleDouble/");
-    strcat (adpath, upath);
+        return AFPERR_NOOBJ ;
+    }
+
+    adpath = ad_path( upath, ADFLAGS_HF );
+    /* FIXME dirsearch doesn't move cwd to did ! */
     if (( dir = dirsearch( vol, did )) == NULL ) {
         LOG(log_error, logtype_afpd, "matchfile2dirperms: Unable to get directory info.");
-        return( AFPERR_NOOBJ );
+        ret = AFPERR_NOOBJ;
     }
     else if (stat(".", &sb) < 0) {
         LOG(log_error, logtype_afpd,
             "matchfile2dirperms: Error checking directory \"%s\": %s",
             dir->d_name, strerror(errno));
-        return(AFPERR_NOOBJ );
+        ret AFPERR_NOOBJ;
     }
     else {
         uid=geteuid();
@@ -98,55 +101,37 @@ more information */
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms: Error changing owner/gid of %s: %s",
                     upath, strerror(errno));
-                return (AFPERR_ACCESS);
+                ret = AFPERR_ACCESS;
             }
-            if (chmod(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
+            else if (chmod(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms:  Error adding file read permissions: %s",
                     strerror(errno));
-                return (AFPERR_ACCESS);
+                ret = AFPERR_ACCESS;
             }
-#ifdef DEBUG
-            else
-                LOG(log_info, logtype_afpd,
-                    "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %s",
-                    strerror(errno));
-#endif /* DEBUG */
-            if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
+            else if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
             {
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms: Error changing AppleDouble owner/gid %s: %s",
                     adpath, strerror(errno));
-                return (AFPERR_ACCESS);
+                ret = AFPERR_ACCESS;
             }
-            if (chmod(adpath, (st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
+            else if (chmod(adpath, (st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms:  Error adding AD file read permissions: %s",
                     strerror(errno));
-                return (AFPERR_ACCESS);
+                ret = AFPERR_ACCESS;
             }
-#ifdef DEBUG
-            else
-                LOG(log_info, logtype_afpd,
-                    "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %s",
-                    strerror(errno));
-#endif /* DEBUG */
+            seteuid(uid); 
         }
-#ifdef DEBUG
-        else
-            LOG(log_info, logtype_afpd,
-                "matchfile2dirperms: No ownership change necessary.");
-#endif /* DEBUG */
     } /* end else if stat success */
-    seteuid(uid); /* Restore process ownership to normal */
+
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end matchfile2dirperms:");
 #endif /* DEBUG */
-
-    return (AFP_OK);
-
+    return ret;
 }
 
 
@@ -723,16 +708,16 @@ int		ibuflen, *rbuflen;
     rc = moveandrename(vol, sdir, oldname, newname, isdir);
 
     if ( rc == AFP_OK ) {
+        char *upath = mtoupath(vol, newname);
 #ifdef DROPKLUDGE
         if (vol->v_flags & AFPVOL_DROPBOX) {
-            if (retvalue=matchfile2dirperms (newname, vol, did) != AFP_OK) {
+            if (retvalue=matchfile2dirperms (upath, vol, did) != AFP_OK) {
                 return retvalue;
             }
         }
         else
 #endif /* DROPKLUDGE */
             if (!isdir) {
-                char *upath = mtoupath(vol, newname);
                 int  admode = ad_mode("", 0777);
 
                 setfilmode(upath, admode, NULL);

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.9 2002-08-29 18:57:36 didg Exp $
+ * $Id: adouble.h,v 1.10 2002-09-07 19:19:00 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -295,7 +295,8 @@ extern int ad_mkdir   __P((char *, int));
 extern int ad_open    __P((char *, int, int, int, struct adouble *)); 
 extern int ad_refresh __P((struct adouble *));
 
-/* extend to RW if R for locking */ 
+/* extend header to RW if R or W (W if R for locking),
+ */ 
 static inline mode_t ad_hf_mode (mode_t mode)
 {
 #ifndef USE_FLOCK_LOCKS
@@ -307,6 +308,14 @@ static inline mode_t ad_hf_mode (mode_t mode)
     if ((mode & S_IROTH))
         mode |= S_IWOTH;
 #endif
+    /* if write mode set add read mode */
+    if ((mode & S_IWUSR))
+        mode |= S_IRUSR;
+    if ((mode & S_IWGRP))
+        mode |= S_IRGRP;
+    if ((mode & S_IWOTH))
+        mode |= S_IROTH;
+
     return mode;
 }
 

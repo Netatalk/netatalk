@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.57 2002-09-06 04:23:45 didg Exp $
+ * $Id: file.c,v 1.58 2002-09-07 19:18:59 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -933,12 +933,12 @@ int		ibuflen, *rbuflen;
      *      and locks need to stay coherent. as a result,
      *      we just balk if the file is opened already. */
 
+    newname = obj->newtmp;
+    strcpy( newname, path );
+
     upath = mtoupath(vol, newname );
     if (of_findname(upath, NULL))
         return AFPERR_DENYCONF;
-
-    newname = obj->newtmp;
-    strcpy( newname, path );
 
     p = ctoupath( vol, curdir, newname );
 #ifdef FORCE_UIDGID
@@ -976,15 +976,14 @@ int		ibuflen, *rbuflen;
             return( AFPERR_PARAM );
         }
     }
-
-    if ( (err = copyfile(p, mtoupath(vol, newname), 
-                            newname, vol_noadouble(vol))) < 0 ) {
+    upath = mtoupath(vol, newname);
+    if ( (err = copyfile(p, upath , newname, vol_noadouble(vol))) < 0 ) {
         return err;
     }
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {
-        retvalue=matchfile2dirperms(newname, vol, sdid);
+        retvalue=matchfile2dirperms(upath, vol, ddid); /* FIXME sdir or ddid */
     }
 #endif /* DROPKLUDGE */
 

@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.36 2002-08-29 18:57:26 didg Exp $
+ * $Id: unix.c,v 1.37 2002-09-07 19:18:59 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -234,53 +234,52 @@ struct maccess	*ma;
     return( mode );
 }
 
-int stickydirmode(name, mode, dropbox)
+/*
+   a dropbox is a folder where w is set but not r eg:
+   rwx-wx-wx or rwx-wx-- 
+   rwx----wx (is not asked by a Mac with OS >= 8.0 ?)
+*/
+static int stickydirmode(name, mode, dropbox)
 char * name;
 const mode_t mode;
 const int dropbox;
 {
-    int retval;
-#ifdef DROPKLUDGE
-    int uid;
-#endif /* DROPKLUDGE */
+    int retval = 0;
 
+#ifdef DROPKLUDGE
     /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
-    retval=0;
-#ifdef DROPKLUDGE
     if (dropbox) {
-        if (mode & S_IWOTH) {
-            if (mode & S_IROTH);
-            else { /* if S_IWOTH and not S_IROTH */
-                uid=geteuid();
-                if ( seteuid(0) < 0) {
-                    LOG(log_error, logtype_afpd, "stickydirmode: unable to seteuid root: %s", strerror(errno));
-                }
-                if ( retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~default_options.umask) ) < 0) {
-                    LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", name, strerror(errno) );
-                    return(AFPERR_ACCESS);
-                } else {
+        int uid;
+
+        if ( ( (mode & S_IWOTH) && !(mode & S_IROTH)) ||
+             ( (mode & S_IWGRP) && !(mode & S_IRGRP)) )
+        {
+            uid=geteuid();
+            if ( seteuid(0) < 0) {
+                LOG(log_error, logtype_afpd, "stickydirmode: unable to seteuid root: %s", strerror(errno));
+            }
+            if ( retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~default_options.umask) ) < 0) {
+                LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", name, strerror(errno) );
+            } else {
 #ifdef DEBUG
-                    LOG(log_info, logtype_afpd, "stickydirmode: (debug) chmod \"%s\": %s", name, strerror(retval) );
+                LOG(log_info, logtype_afpd, "stickydirmode: (debug) chmod \"%s\": %s", name, strerror(retval) );
 #endif /* DEBUG */
-                    seteuid(uid);
-                } /* end getting retval */
-            } /* end if not & S_IROTH */
-        } else { /* end if S_IWOTH and not S_IROTH */
+            }
+            seteuid(uid);
+            return retval;
+        }
+    }
 #endif /* DROPKLUDGE */
 
-            /*
-            *  Ignore EPERM errors:  We may be dealing with a directory that is
-            *  group writable, in which case chmod will fail.
-            */
-            if ( (chmod( name, (DIRBITS | mode) & ~default_options.umask ) < 0) && errno != EPERM)  {
-                LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s",
-                    name, strerror(errno) );
-                retval = -1;
-            }
-#ifdef DROPKLUDGE
-        } /* end if not mode */
-    } /* end checking for "dropbox" */
-#endif /* DROPKLUDGE */
+    /*
+     *  Ignore EPERM errors:  We may be dealing with a directory that is
+     *  group writable, in which case chmod will fail.
+     */
+    if ( (chmod( name, (DIRBITS | mode) & ~default_options.umask ) < 0) && errno != EPERM)  {
+        LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s",name, strerror(errno) );
+        retval = -1;
+    }
+
     return retval;
 }
 
@@ -450,7 +449,7 @@ const int dropbox;
             continue;
         }
         if (S_ISREG(st.st_mode)) {
-           if (setfilmode(dirp->d_name, ad_hf_mode(mode), &st) < 0) {
+           if (setfilmode(buf, ad_hf_mode(mode), &st) < 0) {
                /* FIXME what do we do then? */
            }
         }
