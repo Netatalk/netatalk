@@ -31,7 +31,7 @@ LIBSHARED=      -ldl
 # with 2.5.1.
 # add -DHAVE_IFNAMEINDEX if you're using solaris 8.
 DEFS=	-DNO_STRUCT_TM_GMTOFF -D__svr4__ -DSOLARIS -I../../sys/generic \
-	${OSDEFS} ${MACHINEDEFS}
+	-I.. ${OSDEFS} ${MACHINEDEFS}
 INSTALL=	/usr/ucb/install
 AFPLIBS=
 ADDLIBS=	-lsocket -lnsl
@@ -147,9 +147,10 @@ kinstall : kernel kuninstall
 	-ln -s ../init.d/atalk /etc/rc0.d/K79atalk
 
 install :
-	-mkdir ${DESTDIR} ${SBINDIR} ${BINDIR} ${ETCDIR} ${LIBDIR}
-	sed -e s@:BINDIR:@${BINDIR}@ < ../../lp2pap.sh > ${RESDIR}/lp2pap.sh
-	chmod 744 ${RESDIR}/lp2pap.sh
+	-mkdir ${DESTDIR}${sbindir} ${DESTDIR}${bindir} ${DESTDIR}${CONFIG_DIR} \
+		${DESTDIR}${libdir}
+	sed -e s@:BINDIR:@${prefix}/bin@ < ../../contrib/shell_utils/lp2pap.sh > ${DESTDIR}${RESDIR}/lp2pap.sh
+	chmod 744 ${DESTDIR}${CONFIG_DIR}/lp2pap.sh
 	for i in ${ALL}; \
 	    do (cd $$i; ${MAKE} ${MFLAGS} CC="${CC}" \
 		ADDLIBS="${ADDLIBS}" DEFS="${DEFS}" OPTOPTS="${OPTOPTS}" \
@@ -163,7 +164,7 @@ install :
 		OSDEFS="$${OSDEFS}" MACHINEDEFS="$${MACHINEDEFS}" \
 		INSTALL="${INSTALL}" $@); \
 	done
-	if [ -f ${ETCDIR}/afpd.conf ]; then \
+	if [ -f ${DESTDIR}${CONFIG_DIR}/afpd.conf ]; then \
 		echo "Retaining old afpd.conf file.";  \
 	else \
 		sed -e s@:DESTDIR:@${DESTDIR}@ -e s@:SBINDIR:@${SBINDIR}@ \
