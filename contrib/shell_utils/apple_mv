@@ -1,0 +1,89 @@
+#!/usr/local/bin/perl5
+# 
+# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_mv,v 1.1 2000-08-09 14:08:06 rufustfirefly Exp $
+#
+# $Log: apple_mv,v $
+# Revision 1.1  2000-08-09 14:08:06  rufustfirefly
+# Shell utils from http://www.-genome.wi.mit.edu/ftp/distribution/software/Bass/bass-1.29/apple_util/ (initial import)
+#
+# Revision 1.2  1996/06/14 18:06:58  lstein
+# Fixed bugs in the character escaping routines.
+#
+# Revision 1.2  1996/02/09  18:44:44  will
+# fix to usage string
+#
+# Revision 1.1  1996/02/09  18:21:35  will
+# Initial revision
+#
+#
+
+$USAGE = <<USAGE;
+Usage: $0 filename1 filename2
+       $0 filename ...  directory
+Do an apple move, moving the resource fork as well
+USAGE
+
+@from = @ARGV; pop(@from);
+$to = $ARGV[$#ARGV];
+
+if (-f $to && @from > 1) { die $USAGE; }
+
+foreach $from (@from) {
+    if (!-f $from) {	
+	print STDERR "file $from does not exist\n";
+	die $USAGE;
+    }
+    
+    $from = escape_bad_chars($from);
+    $to = escape_bad_chars($to);
+    $cmd = "mv $from $to";
+    system $cmd || die "error executing $cmd";
+    
+    ($from_dir, $from_file) = split_dir_file($from);
+
+    if (-d $to) {
+	if (!-d "$to/.AppleDouble") {
+	    mkdir("$to/.AppleDouble", 0777);
+	}
+	$cmd = "mv $from_dir/.AppleDouble/$from_file $to/.AppleDouble/$from_file";
+    } else {
+	($to_dir, $to_file) = split_dir_file($to);
+
+	if (!-d $to_dir) {
+	    print STDERR "directory $to does not exist\n";
+	    die $USAGE;
+	}
+    
+	if (!-d "$to_dir/.AppleDouble") {
+	    mkdir("$to_dir/.AppleDouble", 0777);
+	}
+	$cmd = "mv $from_dir/.AppleDouble/$from_file $to_dir/.AppleDouble/$to_file";
+    }
+
+    system $cmd || die "error executing $cmd";
+}
+
+sub escape_bad_chars {
+    my($file) = @_;
+    $file=~s/([^a-zA-Z0-9.-_])/\\$1/;
+    return $file;
+}
+
+# split a file path into a directory and file name.
+sub split_dir_file {
+    my $path = shift;
+
+    @path_elems = split(/\//, $path);
+
+    my $file = pop(@path_elems);
+    my $dir;
+    if (!@path_elems) {
+	$dir = '.';
+    } else {
+	$dir = join('/', @path_elems);
+    }
+
+    $dir, $file;
+}
+
+

@@ -1,0 +1,82 @@
+#!/usr/local/bin/perl
+# 
+# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_cp,v 1.1 2000-08-09 14:08:06 rufustfirefly Exp $
+#
+# $Log: apple_cp,v $
+# Revision 1.1  2000-08-09 14:08:06  rufustfirefly
+# Shell utils from http://www.-genome.wi.mit.edu/ftp/distribution/software/Bass/bass-1.29/apple_util/ (initial import)
+#
+# Revision 1.1  1996/04/03 02:13:12  lstein
+# Added all these files because they're essential utilities.
+#
+# Revision 1.2  1996/02/09  18:44:44  will
+# fix to usage string
+#
+# Revision 1.1  1996/02/09  18:21:35  will
+# Initial revision
+#
+#
+
+$USAGE = <<USAGE;
+Usage: $0 filename1 filename2
+       $0 filename ...  directory
+Do an apple copy, copying the resource fork as well
+USAGE
+
+die $USAGE if @ARGV < 2;
+
+@from = @ARGV; pop(@from);
+$to = $ARGV[$#ARGV];
+
+if (-f $to && @from > 1) { die $USAGE; }
+
+foreach $from (@from) {
+    if (!-f $from) {	
+	print STDERR "file $from does not exist\n";
+	die $USAGE;
+    }
+    
+    if (!-d $to) {
+	print STDERR "directory $to does not exist\n";
+	die $USAGE;
+    }
+    
+    $cmd = "cp '$from' '$to'";
+    system $cmd || die "error executing $cmd";
+    
+    ($from_dir, $from_file) = split_dir_file($from);
+
+    if (-d $to) {
+	if (!-d "$to/.AppleDouble") {
+	    mkdir("$to/.AppleDouble", 0777);
+	}	
+	$cmd = "cp '$from_dir/.AppleDouble/$from_file' '$to/.AppleDouble/$from_file'";
+    } else {
+	($to_dir, $to_file) = split_dir_file($from);
+	if (!-d "$to_dir/.AppleDouble") {
+	    mkdir("$to_dir/.AppleDouble", 0777);
+	}	
+	$cmd = "cp '$from_dir/.AppleDouble/$from_file' '$to_dir/.AppleDouble/$to_file'";
+    }
+
+    system $cmd || die "error executing $cmd";
+}
+
+# split a file path into a directory and file name.
+sub split_dir_file {
+    my $path = shift;
+
+    @path_elems = split(/\//, $path);
+
+    my $file = pop(@path_elems);
+    my $dir;
+    if (!@path_elems) {
+	$dir = '.';
+    } else {
+	$dir = join('/', @path_elems);
+    }
+
+    $dir, $file;
+}
+
+
