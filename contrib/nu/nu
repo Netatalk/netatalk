@@ -1,0 +1,26 @@
+#! /usr/bin/perl
+
+# nu - by Anders Brownworth   anders@thehamptons.com
+#      modified by Ambrose Li <acli@mail.mingpaoxpress.com>
+#
+# shows netatalk users logged on
+#
+# usage: nu
+
+open(USERS, "-|") || exec("/bin/ps", "anucx");
+
+while (<USERS>) {
+   push(@users, $1) if /^\s*(\d+)\s.*\bafpd\b/;
+}
+
+close USERS;
+
+print "Netatalk users:\n---------------\n";
+
+foreach $user (@users)
+{
+  if ($user) {  # not root
+    ($name,$_,$_,$_,$_,$_,$gcos) = getpwuid($user);
+    print(defined $gcos && $gcos =~ /^([^,]+)/? $1: $name, "\n");
+  }
+}

@@ -224,6 +224,9 @@ AC_OUTPUT([Makefile
 	bin/pap/Makefile
 	bin/psorder/Makefile
 	config/Makefile
+	contrib/Makefile
+	contrib/nu/Makefile
+	contrib/printing/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/afpd/nls/Makefile
