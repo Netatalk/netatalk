@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.13 2001-02-27 17:07:43 rufustfirefly Exp $
+ * $Id: uams_dhx_pam.c,v 1.14 2001-04-16 17:49:49 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -19,6 +19,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
+#include <errno.h>
 
 #include <security/pam_appl.h>
 
@@ -78,6 +79,8 @@ static int PAM_conv (int num_msg,
   
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
   
+  errno = 0;
+
   if (num_msg < 1) {
     /* Log Entry */
            syslog(LOG_INFO, "uams_dhx_pam.c :PAM DHX Conversation Err -- %m");
@@ -454,7 +457,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     memset(rbuf, 0, PASSWDLEN); /* zero out the password */
     *uam_pwd = dhxpwd;
     /* Log Entry */
-           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM Auth OK!: %s -- %m", AFP_OK);
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: PAM Auth OK!");
     /* Log Entry */
     return AFP_OK;
 

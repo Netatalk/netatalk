@@ -1,4 +1,12 @@
 
+2001-04-16  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* etc/afpd/directory.c, etc/afpd/messages.c, etc/uams/uams_dhx_pam.c:
+	merged patch from Heath Kehoe <hkehoe@users.sourceforge.net> #416371,
+	fixing an OSX issue, byteorder problems with uid/gid in directory.c,
+	and fixing the syslog()'s in uams_dhx_pam.c to not produce useless
+	errors
+
 2001-04-12  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	Released 1.5pre6

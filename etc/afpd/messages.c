@@ -115,9 +115,6 @@ int afp_getsrvrmesg(obj, ibuf, ibuflen, rbuf, rbuflen)
     return AFPERR_BITMAP;
   }
 
-  if(strlen(message)==0)
-    return AFP_OK;
-
   /* output format:
    * message type:   2 bytes
    * bitmap:         2 bytes

@@ -943,13 +943,13 @@ int getdirparams(vol, bitmap, upath, dir, st, buf, buflen )
 	    break;
 
 	case DIRPBIT_UID :
-	    aint = st->st_uid;
+	    aint = htonl(st->st_uid);
 	    memcpy( data, &aint, sizeof( aint ));
 	    data += sizeof( aint );
 	    break;
 
 	case DIRPBIT_GID :
-	    aint = st->st_gid;
+	    aint = htonl(st->st_gid);
 	    memcpy( data, &aint, sizeof( aint ));
 	    data += sizeof( aint );
 	    break;
@@ -1188,7 +1188,7 @@ int setdirparams(vol, path, bitmap, buf )
 	    memcpy( &aint, buf, sizeof(aint));
 	    buf += sizeof( aint );
 	    if ( (curdir->d_did == DIRDID_ROOT) &&
-		 (setdeskowner( aint, -1 ) < 0)) {
+		 (setdeskowner( ntohl(aint), -1 ) < 0)) {
 		switch ( errno ) {
 		case EPERM :
 		case EACCES :
@@ -1208,7 +1208,7 @@ int setdirparams(vol, path, bitmap, buf )
 		    break;
 		}
 	    }
-	    if ( setdirowner( aint, -1, vol_noadouble(vol) ) < 0 ) {
+	    if ( setdirowner( ntohl(aint), -1, vol_noadouble(vol) ) < 0 ) {
 		switch ( errno ) {
 		case EPERM :
 		case EACCES :
@@ -1225,12 +1225,11 @@ int setdirparams(vol, path, bitmap, buf )
 		}
 	    }
 	    break;
-
 	case DIRPBIT_GID :
 	    memcpy( &aint, buf, sizeof( aint ));
 	    buf += sizeof( aint );
 	    if (curdir->d_did == DIRDID_ROOT)
-	      setdeskowner( -1, aint );
+	      setdeskowner( -1, ntohl(aint) );
 
 #if 0       /* don't error if we can't set the desktop owner. */
 		switch ( errno ) {
@@ -1253,7 +1252,7 @@ int setdirparams(vol, path, bitmap, buf )
 		}
 #endif
 
-	    if ( setdirowner( -1, aint, vol_noadouble(vol) ) < 0 ) {
+	    if ( setdirowner( -1, ntohl(aint), vol_noadouble(vol) ) < 0 ) {
 		switch ( errno ) {
 		case EPERM :
 		case EACCES :
