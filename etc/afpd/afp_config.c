@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.10 2001-12-15 06:25:44 jmarcus Exp $
+ * $Id: afp_config.c,v 1.11 2001-12-15 18:34:39 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -172,8 +172,6 @@ static int dsi_start(AFPConfig *config, AFPConfig *configs,
         syslog( LOG_ERR, "main: dsi_getsession: %s", strerror(errno) );
         exit( 1 );
     }
-
-    config->obj.handle = dsi;
 
     /* we've forked. */
     if (dsi->child) {
