@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.11 2001-06-25 15:18:01 rufustfirefly Exp $
+ * $Id: uams_passwd.c,v 1.12 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -8,25 +8,27 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #ifndef NO_CRYPT_H
 #include <crypt.h>
-#endif
+#endif /* ! NO_CRYPT_H */
 #include <pwd.h>
 #include <syslog.h>
 
 #ifdef SOLARIS
 #define SHADOWPW
-#endif SOLARIS
+#endif /* SOLARIS */
 
 #ifdef SHADOWPW
 #include <shadow.h>
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
@@ -90,7 +92,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 	return AFPERR_NOTAUTH;
     }
     pwd->pw_passwd = sp->sp_pwdp;
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
     if (!pwd->pw_passwd)
       return AFPERR_NOTAUTH;
@@ -130,7 +132,7 @@ static int passwd_changepw(void *obj, char *username,
 {
 #ifdef SHADOWPW
     struct spwd *sp;
-#endif
+#endif /* SHADOWPW */
     char pw[PASSWDLEN + 1], *p;
     uid_t uid = geteuid();
 
@@ -148,7 +150,7 @@ static int passwd_changepw(void *obj, char *username,
 	return AFPERR_PARAM;
     }
     pwd->pw_passwd = sp->sp_pwdp;
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
     p = crypt(pw, pwd->pw_passwd );
     if (strcmp( p, pwd->pw_passwd )) {
@@ -161,11 +163,11 @@ static int passwd_changepw(void *obj, char *username,
     ibuf[PASSWDLEN] = '\0';
     
 #ifdef SHADOWPW
-#else
-#endif
+#else /* SHADOWPW */
+#endif /* SHADOWPW */
     return AFP_OK;
-}
-#endif
+} 
+#endif /* 0 */
 
 
 /* Printer ClearTxtUAM login */
@@ -176,7 +178,7 @@ static int passwd_printer(start, stop, username, out)
     struct passwd *pwd;
 #ifdef SHADOWPW
     struct spwd *sp;
-#endif
+#endif /* SHADOWPW */
     char *data, *p, *q;
     char	password[PASSWDLEN + 1] = "\0";
     static const char *loginok = "0\r";
@@ -237,7 +239,7 @@ static int passwd_printer(start, stop, username, out)
 	return(-1);
     }
     pwd->pw_passwd = sp->sp_pwdp;
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
     if (!pwd->pw_passwd) {
 	syslog(LOG_INFO, "Bad Login ClearTxtUAM: no password for %s",
@@ -248,7 +250,7 @@ static int passwd_printer(start, stop, username, out)
 #ifdef AFS
     if ( kcheckuser( pwd, password) == 0) 
       return(0);
-#endif AFS
+#endif /* AFS */
 
     p = crypt(password, pwd->pw_passwd);
     if (strcmp(p, pwd->pw_passwd) != 0) {

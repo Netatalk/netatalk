@@ -1,5 +1,5 @@
 /*
- * $Id: uams_krb4.c,v 1.3 2001-03-28 22:49:25 samnoble Exp $
+ * $Id: uams_krb4.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -10,8 +10,12 @@
 #endif
 
 #if defined( KRB ) || defined( UAM_AFSKRB )
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -26,7 +30,7 @@
 #include <krb.h>
 #if 0
 #include <prot.h>
-#endif
+#endif /* 0 */
 
 #include <netatalk/endian.h>
 #include <atalk/afp.h>
@@ -44,7 +48,7 @@ static int		validseskey = 0;
 static int		logged = 0;
 static char		*tktfile;
 static char		instance[ INST_SZ ], name[ ANAME_SZ ];
-#endif /*UAM_AFSKRB*/
+#endif /* UAM_AFSKRB */
 
 #ifdef AFS
 #include <afs/stds.h>
@@ -62,7 +66,7 @@ struct ClearToken {
     int32_t BeginTimestamp;
     int32_t EndTimestamp;
 };
-#endif /*AFS*/
+#endif /* AFS */
 
 
 #ifdef KRB
@@ -167,7 +171,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 
 	    p = rbuf;
 
-#if !defined( AFS )
+#ifdef AFS
 	    *p = KRB4RPL_DONE;	/* XXX */
 	    *rbuflen = 1;
 
@@ -211,7 +215,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 	    return( AFPERR_NOTAUTH );
     }
 
-#if defined( AFS )
+#ifdef AFS
     if ( setpag() < 0 ) {
 	*rbuflen = 0;
 	syslog( LOG_ERR, "krb_login: setpag: %m" );
@@ -246,7 +250,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 #ifdef AFS
     struct ViceIoctl	vi;
     struct ClearToken	ct;
-#endif /*AFS*/
+#endif /* AFS */
     char		buf[ 1024 ];
     int			aint, ulen, snlen;
 
@@ -259,7 +263,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
     ibuf++;
     switch ( rc = *ibuf++ ) {
 	case KRB4CMD_TOKEN :
-#if defined (AFS)
+#ifdef AFS
 	    p = buf;
 	    memcpy( &len, ibuf, sizeof( u_int16_t ) );
 	    ibuf += sizeof( len );
@@ -372,7 +376,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 		    }
 		    *uam_pwd = pwd;
 		    return AFP_OK;
-#else AFS
+#else /* ! AFS */
 		    /* get principals */
 		    *p++ = KRB4RPL_PRINC;
 		    len = strlen( realm );
@@ -453,7 +457,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
     }
 }
 
-#endif /*KRB*/
+#endif /* KRB */
 
 
 #ifdef AFS
@@ -544,7 +548,7 @@ static void authenticate(cells,name,passwd)
 		    passwd,/*setpag*/0,&errorstring);
 	}
 }
-#endif /*AFS*/
+#endif /* AFS */
 
 #if defined( UAM_AFSKRB ) && defined( AFS )
 static int afskrb_login(void *obj, struct passwd *uam_pwd,
@@ -748,12 +752,12 @@ static int uam_setup(const char *path)
    uam_register(UAM_SERVER_LOGIN, path, "Kerberos IV", krb4_login, 
 		krb4_logincont, NULL);
    /* uam_afpserver_action(); */
-#endif
+#endif /* KRB */
 #ifdef UAM_AFSKRB
    uam_register(UAM_SERVER_LOGIN, path, "AFS Kerberos", afskrb_login, 
 		afskrb_logincont, NULL);
    /* uam_afpserver_action(); */
-#endif
+#endif /* UAM_AFSKRB */
    return 0;
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.14 2001-04-16 17:49:49 rufustfirefly Exp $
+ * $Id: uams_dhx_pam.c,v 1.15 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -8,7 +8,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #if defined(USE_PAM) && defined(UAM_DHX)
 #include <stdio.h>
@@ -27,11 +27,11 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
-#else
+#else /* OPENSSL_DHX */
 #include <bn.h>
 #include <dh.h>
 #include <cast.h>
-#endif
+#endif /* OPENSSL_DHX */
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
@@ -264,9 +264,9 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
       goto pam_fail;
     }
     memcpy(rbuf + KEYSIZE, buf, KEYSIZE); 
-#else
+#else /* 0 */
     memset(rbuf + KEYSIZE, 0, KEYSIZE); 
-#endif
+#endif /* 0 */
 
     /* encrypt using cast */
     CAST_cbc_encrypt(rbuf, rbuf, CRYPTBUFLEN, &castkey, msg2_iv, 

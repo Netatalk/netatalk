@@ -1,4 +1,7 @@
-/* Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
+/*
+ * $Id: uam_auth.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
+ * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  *
  * interface between uam.c and auth.c

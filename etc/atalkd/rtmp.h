@@ -1,9 +1,8 @@
 /*
+ * $Id: rtmp.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
- */
-
-/*
+ *
  * We have an rtmptab circular linked list for each gateway.  Entries
  * are inserted in the order we get them.  The expectation is that
  * we will get a complexity of N for the stable case.  If we have N
@@ -70,10 +69,10 @@ struct rtmp_tuple {
 #ifndef BSD4_4
 #define RTMP_ADD	SIOCADDRT
 #define RTMP_DEL	SIOCDELRT
-#else BSD4_4
+#else /* BSD4_4 */
 #define RTMP_ADD	RTM_ADD
 #define RTMP_DEL	RTM_DELETE
-#endif BSD4_4
+#endif /* BSD4_4 */
 
 #define STARTUP_FIRSTNET	0xff00
 #define STARTUP_LASTNET		0xfffe

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.6 2001-02-27 17:07:43 rufustfirefly Exp $
+ * $Id: uams_pam.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -8,12 +8,15 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifdef USE_PAM
+
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <string.h>
 #include <syslog.h>
 
@@ -70,7 +73,7 @@ static int PAM_conv (int num_msg,
     case PAM_TEXT_INFO:
 #ifdef PAM_BINARY_PROMPT
     case PAM_BINARY_PROMPT:
-#endif
+#endif /* PAM_BINARY_PROMPT */
       /* ignore it... */
       break;
     case PAM_ERROR_MSG:
@@ -171,13 +174,13 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 #ifdef PAM_AUTHTOKEN_REQD
       else if (PAM_error == PAM_AUTHTOKEN_REQD) 
 	err = AFPERR_PWDCHNG;
-#endif
+#endif /* PAM_AUTHTOKEN_REQD */
       goto login_err;
     }
 
 #ifndef PAM_CRED_ESTABLISH
 #define PAM_CRED_ESTABLISH PAM_ESTABLISH_CRED
-#endif
+#endif /* PAM_CRED_ESTABLISH */
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
     if (PAM_error != PAM_SUCCESS)
       goto login_err;

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pgp.c,v 1.4 2001-02-27 17:07:43 rufustfirefly Exp $
+ * $Id: uams_pgp.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -8,13 +8,16 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifdef UAM_PGP
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <pwd.h>
 #include <syslog.h>
 
@@ -22,7 +25,7 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
-#else
+#else /* OPENSSL_DHX */
 #include <bn.h>
 #include <dh.h>
 #include <cast.h>
@@ -153,7 +156,7 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
       *uam_pwd = pgppwd;
       return AFP_OK;
     }
-#endif AFS
+#endif /* AFS */
 
     rbuf[PASSWDLEN] = '\0';
     p = crypt( rbuf, pgppwd->pw_passwd );
@@ -187,4 +190,4 @@ UAM_MODULE_EXPORT struct uam_export uams_pgp = {
   uam_setup, uam_cleanup
 };
 
-#endif
+#endif /* UAM_PGP */

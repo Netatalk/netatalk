@@ -1,5 +1,5 @@
 /*
- * $Id: lifetime.c,v 1.2 2001-02-27 21:07:20 rufustfirefly Exp $
+ * $Id: lifetime.c,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Ticket lifetime.  This defines the table used to lookup lifetime
  * for the fixed part of rande of the one byte lifetime field.  Values
@@ -13,6 +13,10 @@
  * upperbounds on ticket lifetimes.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <sys/types.h>
 #include <netatalk/endian.h>
 
@@ -23,7 +27,7 @@
 #define MAXTKTLIFETIME	(30*24*3600)	/* 30 days */
 #ifndef NEVERDATE
 #define NEVERDATE ((u_int32_t)-1L)
-#endif
+#endif /* NEVERDATE */
 
 static int tkt_lifetimes[TKTLIFENUMFIXED] = {
     38400,				/* 10.67 hours, 0.44 days */ 

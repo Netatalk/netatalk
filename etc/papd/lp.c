@@ -1,4 +1,6 @@
 /*
+ * $Id: lp.c,v 1.9 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  *
@@ -41,7 +43,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
 #include <sys/syslog.h>
@@ -49,13 +51,15 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #if defined( sun ) && defined( __svr4__ )
 #include </usr/ucbinclude/sys/file.h>
-#else sun __svr4__
+#else /* sun && __svr4__ */
 #include <sys/file.h>
-#endif sun __svr4__
+#endif /* sun && __svr4__ */
 #include <sys/un.h>
 #include <netinet/in.h>
 #undef s_net
@@ -65,13 +69,15 @@
 
 #ifdef ABS_PRINT
 #include <math.h>
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <pwd.h>
 
 #include "printer.h"
@@ -132,7 +138,7 @@ int lp_pagecost()
     printer->p_balance = atof( balance ) + atof( cost );
     return( err < 0 ? -1 : 0 );
 }
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 
 void lp_host( host )
     char	*host;
@@ -180,7 +186,7 @@ int lp_init( out, sat )
 #ifdef ABS_PRINT
     char	cost[ 22 ];
     char	balance[ 22 ];
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 
     if ( printer->p_flags & P_AUTH ) {
 	authenticated = 0;
@@ -239,7 +245,7 @@ int lp_init( out, sat )
 	    spoolerror( out, "No ABS funds available." );
 	    return( -1 );
 	}
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
     }
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {

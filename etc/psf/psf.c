@@ -1,9 +1,9 @@
 /*
+ * $Id: psf.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
- */
-
-/*
+ *
  * PostScript Filter, psf.
  *
  * Handles both PostScript files and text files.  Files with the
@@ -19,11 +19,13 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #define FUCKED
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -84,7 +86,7 @@ int main( ac, av )
     int			c, rc, children = 0;
 #ifdef FUCKED
     int			psafileno, multiconn = 0, waitidle = 0, waitidle2 = 0;
-#endif FUCKED
+#endif /* FUCKED */
     int			status;
     extern char		*optarg;
     extern int		optind, opterr;
@@ -97,9 +99,9 @@ int main( ac, av )
     }
 #ifdef ultrix
     openlog( prog, LOG_PID );
-#else ultrix
+#else /* ultrix */
     openlog( prog, LOG_PID, LOG_LPR );
-#endif ultrix
+#endif /* ultrix */
 
     while (( c = getopt( ac, av, "P:C:D:F:L:J:x:y:n:h:w:l:i:c" )) != EOF ) {
 	switch ( c ) {
@@ -120,7 +122,7 @@ int main( ac, av )
 	    if ( width == 0 ) {
 		width = 80;
 	    }
-#endif ZEROWIDTH
+#endif /* ZEROWIDTH */
 	    break;
 
 	case 'l' :
@@ -147,7 +149,7 @@ int main( ac, av )
 	default :
 	    syslog( LOG_ERR, "bad option: %c", c );
 	    exit( 2 );
-#endif notdef
+#endif /* notdef */
 	}
     }
     if ( ac - optind > 1 ) {
@@ -164,7 +166,7 @@ int main( ac, av )
     if ( index( prog, 'm' )) {
 	multiconn++;
     }
-#endif FUCKED
+#endif /* FUCKED */
 
     syslog( LOG_INFO, "starting for %s", name ? name : "?" );
 
@@ -237,7 +239,7 @@ restart:
 		papargv[ 5 ] = _PATH_PAGECOUNT;
 		papargv[ 6 ] = 0;
 	    }
-#endif FUCKED
+#endif /* FUCKED */
 	} else {
 	    papargv[ 2 ] = "-c";
 	    papargv[ 3 ] = "-E";
@@ -316,7 +318,7 @@ restart:
 	children++;
 	syslog( LOG_INFO, "pagecount with pap[%d]", c );
     }
-#endif FUCKED
+#endif /* FUCKED */
 
     if ( children ) {
 	close( 1 );
@@ -329,7 +331,7 @@ restart:
 	if ( WIFEXITED( status )) {
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(x)	((x).w_status)
-#endif WEXITSTATUS
+#endif /* WEXITSTATUS */
 	    if ( WEXITSTATUS( status ) != 0 ) {
 		syslog( LOG_ERR, "%d died with %d", c, WEXITSTATUS( status ));
 		exit( WEXITSTATUS( status ));

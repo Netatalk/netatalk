@@ -1,11 +1,13 @@
 /*
+ * $Id: ppd.c,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +57,7 @@ int ppd_init()
 
     return read_ppd( printer->p_ppdfile, 0 );
 }
-#endif SHOWPPD
+#endif /* SHOWPPD */
 
 struct ppdent *getppdent( stream )
     FILE	*stream;
@@ -227,7 +229,7 @@ struct ppd_font *ppd_font( font )
     if ( ! ppd_inited ) {
 	ppd_init();
     }
-#endif SHOWPPD
+#endif /* SHOWPPD */
 
     for ( pfo = ppd_fonts; pfo; pfo = pfo->pd_next ) {
 	if ( strcmp( pfo->pd_font, font ) == 0 ) {
@@ -250,7 +252,7 @@ struct ppd_feature *ppd_feature( feature, len )
     if ( ! ppd_inited ) {
 	ppd_init();
     }
-#endif SHOWPPD
+#endif /* SHOWPPD */
 
     for ( end = feature + len, p = feature, q = ppd_feature_main;
 	    (p <= end) && (*p != '\n') && (*p != '\r'); p++, q++ ) {

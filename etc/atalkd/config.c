@@ -1,11 +1,13 @@
 /*
+ * $Id: config.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -22,13 +24,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 
 #ifdef __svr4__
 #include <sys/sockio.h>
 #include <sys/stropts.h>
-#endif __svr4__
+#endif /* __svr4__ */
 
 #include "interface.h"
 #include "multicast.h"
@@ -38,7 +42,7 @@
 
 #ifndef IFF_SLAVE /* a little backward compatibility */
 #define IFF_SLAVE 0
-#endif
+#endif /* IFF_SLAVE */
 
 int	router(), dontroute(), seed(), phase(), net(), addr(), zone();
 
@@ -253,7 +257,7 @@ int readconf( cf )
 	fclose(conf);
 	return -1;
     }
-#endif __svr4__
+#endif /* __svr4__ */
 
     while ( fgets( line, sizeof( line ), conf ) != NULL ) {
 	if (( argv = parseline( line )) == NULL ) {
@@ -287,7 +291,7 @@ int readconf( cf )
 	if ((ifr.ifr_flags & IFF_MULTICAST) == 0)
 	    fprintf(stderr, "%s: multicast may not work properly.\n",
 		    ifr.ifr_name);
-#endif
+#endif /* IFF_MULTICAST */
 
 	/* configure hw multicast for this interface. */
 	if (addmulti(ifr.ifr_name, NULL) < 0) {
@@ -295,7 +299,7 @@ int readconf( cf )
 	  fprintf(stderr, "Can't configure multicast.\n");
 	  goto read_conf_err;
 	}
-#endif __svr4__
+#endif /* __svr4__ */
 
 	if (( niface = newiface( argv[ 0 ] )) == NULL ) {
 	    perror( "newiface" );
@@ -347,7 +351,7 @@ int readconf( cf )
 
 #ifndef __svr4__
     close( s );
-#endif
+#endif /* __svr4__ */
 
     fclose( conf );
 
@@ -366,7 +370,7 @@ int readconf( cf )
 read_conf_err:
 #ifndef __svr4__
     close(s);
-#endif
+#endif /* __svr4__ */
     fclose(conf);
     return -1;
 }
@@ -647,7 +651,7 @@ int getifconf()
 	if ((ifr.ifr_flags & IFF_MULTICAST) == 0)
 	  fprintf(stderr, "%s: multicast may not work correctly.\n",
 		  ifr.ifr_name);
-#endif
+#endif /* IFF_MULTICAST */
 
 	if (addmulti(ifr.ifr_name, NULL) < 0) {
 	  fprintf(stderr, "%s: disabled.\n", ifr.ifr_name);
@@ -695,11 +699,11 @@ struct interface *newiface( name )
     strncpy( niface->i_name, name, sizeof(niface->i_name));
 #ifdef BSD4_4
     niface->i_addr.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     niface->i_addr.sat_family = AF_APPLETALK;
 #ifdef BSD4_4
     niface->i_caddr.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     niface->i_caddr.sat_family = AF_APPLETALK;
     return( niface );
 }
@@ -753,4 +757,4 @@ int plumb()
 
     return( 0 );
 }
-#endif __svr4__
+#endif /* __svr4__ */

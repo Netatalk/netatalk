@@ -1,11 +1,13 @@
 /*
+ * $Id: main.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
 #include <sys/types.h>
@@ -13,9 +15,9 @@
 #include <sys/uio.h>
 #if defined( sun ) && defined( __svr4__ )
 #include </usr/ucbinclude/sys/file.h>
-#else sun __svr4__
+#else /* sun && __svr4__ */
 #include <sys/file.h>
-#endif sun __svr4__
+#endif /* sun && __svr4__ */
 #include <sys/socket.h>
 #include <sys/syslog.h>
 #include <sys/wait.h>
@@ -27,7 +29,9 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <fcntl.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
@@ -78,7 +82,7 @@ static void papd_exit(const int i)
 
 #if !defined( ibm032 ) && !defined( _IBMR2 )
     void
-#endif ibm032 _IBMR2
+#endif /* ! ibm032 && ! _IBMR2 */
 die( n )
     int			n;
 {
@@ -103,7 +107,7 @@ die( n )
 
 #if !defined( ibm032 ) && !defined( _IBMR2 )
     void
-#endif ibm032 _IBMR2
+#endif /* ! ibm032 && ! _IBMR2 */
 reap()
 {
     int		status;
@@ -169,16 +173,16 @@ int main( ac, av )
 #ifdef __svr4__
     defprinter.p_flags = P_PIPED;
     defprinter.p_printer = "/usr/bin/lp -T PS";
-#else
+#else /* __svr4__ */
     defprinter.p_flags = P_SPOOLED;
     defprinter.p_printer = "lp";
-#endif
+#endif /* __svr4__ */
     defprinter.p_operator = "operator";
     defprinter.p_spool = _PATH_PAPDSPOOLDIR;
 #ifdef ABS_PRINT
     defprinter.p_role = NULL;
     defprinter.p_srvid = 0;
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
     defprinter.p_pagecost = 200;		/* default cost */
     defprinter.p_pagecost_msg = NULL;
     defprinter.p_lock = "lock";
@@ -237,9 +241,9 @@ int main( ac, av )
     }
 #ifdef ultrix
     openlog( p, LOG_PID );
-#else ultrix
+#else /* ultrix */
     openlog( p, LOG_NDELAY|LOG_PID, LOG_LPR );
-#endif ultrix
+#endif /* ultrix */
 
     syslog( LOG_INFO, "restart (%s)", version );
 
@@ -313,7 +317,7 @@ int main( ac, av )
 		bzero( &sat, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
 		sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
 		sat.sat_family = AF_APPLETALK;
 		sat.sat_addr.s_net = ATADDR_ANYNET;
 		sat.sat_addr.s_node = ATADDR_ANYNODE;
@@ -462,7 +466,7 @@ int main( ac, av )
 		if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
 		    syslog( LOG_ERR, "atp_sresp: %m" );
 		}
-#endif notdef
+#endif /* notdef */
 	    }
 	}
     }
@@ -722,7 +726,7 @@ int rprintcap( pr )
 	    } else {
 		pr->p_srvid = c;
 	    }
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 	}
 
 
@@ -777,7 +781,7 @@ int rprintcap( pr )
 	} else {
 	    pr->p_flags &= ~P_KRB;
 	}
-#endif
+#endif /* KRB */
 
 	endprent();
     }

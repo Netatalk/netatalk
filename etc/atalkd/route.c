@@ -1,11 +1,13 @@
 /*
+ * $Id: route.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/param.h>
@@ -27,9 +29,9 @@ int route( message, dst, gate, flags )
 {
 #ifdef TRU64
     struct ortentry	rtent;
-#else
+#else /* TRU64 */
     struct rtentry	rtent;
-#endif
+#endif /* TRU64 */
 
     memset( &rtent, 0, sizeof( struct rtentry ));
     rtent.rt_dst = *dst;
@@ -38,7 +40,7 @@ int route( message, dst, gate, flags )
     return( ioctl( rtfd, message, &rtent ));
 }
 
-#else BSD4_4
+#else /* BSD4_4 */
 
 struct sockaddr_m {
     u_char	sam_len;
@@ -85,4 +87,4 @@ route( message, dst, gate, flags )
     }
     return( 0 );
 }
-#endif BSD4_4
+#endif /* BSD4_4 */

@@ -1,11 +1,13 @@
 /*
+ * $Id: multicast.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,12 +24,12 @@
 #if __FreeBSD_version >= 300000
 #include <net/if_dl.h>
 #define NO_DATA_LINK_PASSTHROUGH
-#endif
-#endif
+#endif /* __FreeBSD_version >= 300000 */
+#endif /* __FreeBSD__ */
 
 #ifdef __svr4__
 #include <sys/sockio.h>
-#endif __svr4__
+#endif /* __svr4__ */
 
 #include <atalk/util.h>
 #include <netatalk/endian.h>
@@ -329,9 +331,9 @@ int addmulti(const char *name, const unsigned char *data)
 {
 #ifdef NO_DATA_LINK_PASSTHROUGH
     struct sockaddr_dl sa;
-#else
+#else /* NO_DATA_LINK_PASSTHROUGH */
     struct sockaddr sa;
-#endif
+#endif /* NO_DATA_LINK_PASSTHROUGH */
 
     memset(&sa, 0, sizeof(sa));
 #ifdef NO_DATA_LINK_PASSTHROUGH
@@ -339,9 +341,9 @@ int addmulti(const char *name, const unsigned char *data)
     memcpy(LLADDR(&sa), data ? data : ethermulti, sizeof(ethermulti));
     sa.sdl_alen = sizeof(ethermulti);
     sa.sdl_len = sizeof(sa);
-#else
+#else /* NO_DATA_LINK_PASSTHROUGH */
     memcpy(sa.sa_data, data ? data : ethermulti, sizeof(ethermulti));
-#endif
+#endif /* NO_DATA_LINK_PASSTHROUGH */
     if (ifconfig(name, SIOCADDMULTI, (struct sockaddr_at *)&sa))
       return -1;
 

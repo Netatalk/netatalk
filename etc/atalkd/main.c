@@ -1,20 +1,22 @@
 /*
+ * $Id: main.c,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #if defined( sun ) && defined( __svr4__ )
 #include </usr/ucbinclude/sys/file.h>
-#else sun __svr4__
+#else /* sun __svr4__ */
 #include <sys/file.h>
-#endif sun __svr4__
+#endif /* sun __svr4__ */
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/ioctl.h>
@@ -45,7 +47,7 @@
 #ifdef __svr4__
 #include <sys/sockio.h>
 #include <termios.h>
-#endif __svr4__
+#endif /* __svr4__ */
 
 #include "interface.h"
 #include "gate.h"
@@ -61,11 +63,11 @@ int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa);
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
-#endif
+#endif /* SOCKLEN_T */
 
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(x)	((x).w_retcode)
-#endif WEXITSTATUS
+#endif /* WEXITSTATUS */
 
 /* linux has a special ioctl for appletalk device destruction.  as of
  * 2.1.57, SIOCDIFADDR works w/ linux. okay, we need to deal with the
@@ -128,14 +130,14 @@ static void atalkd_exit(const int i)
 #if (SIOCDIFADDR != SIOCATALKDIFADDR)
       if (!ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr)) 
 	continue;
-#endif
-#endif
+#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
+#endif /* SIOCATALKIFADDR */
       syslog( LOG_ERR, "difaddr(%u.%u): %m", 
 	      ntohs(iface->i_addr.sat_addr.s_net), 
 	      iface->i_addr.sat_addr.s_node);
     }
   }
-#endif 
+#endif /* SOPCDOFADDR */
 
   server_unlock(pidfile);
   exit(i);
@@ -144,7 +146,7 @@ static void atalkd_exit(const int i)
 
 #if !defined( ibm032 ) && !defined( _IBMR2 )
     void
-#endif ibm032 _IBMR2
+#endif /* ibm032 _IBMR2 */
 as_timer()
 {
     struct sockaddr_at	sat;
@@ -501,7 +503,7 @@ as_timer()
 	if ((iface->i_flags & IFACE_ISROUTER)) {
 #ifdef BSD4_4
 	    sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	    sat.sat_family = AF_APPLETALK;
 	    sat.sat_addr.s_net = ATADDR_ANYNET;
 	    sat.sat_addr.s_node = ATADDR_BCAST;
@@ -649,7 +651,7 @@ as_timer()
 
 #ifdef DEBUG
     consistency();
-#endif DEBUG
+#endif /* DEBUG */
 }
 
 #ifdef DEBUG
@@ -686,11 +688,11 @@ consistency()
 	}
     }
 }
-#endif DEBUG
+#endif /* DEBUG */
 
 #if !defined( ibm032 ) && !defined( _IBMR2 )
     void
-#endif ibm032 _IBMR2
+#endif /* ! ibm032 && ! _IBMR2 */
 as_debug()
 {
     struct interface	*iface;
@@ -794,7 +796,7 @@ as_debug()
  */
 #if !defined( ibm032 ) && !defined( _IBMR2 )
     void
-#endif ibm032 _IBMR2
+#endif /* ! ibm032 && ! _IBMR2 */
 as_down()
 {
     struct interface	*iface;
@@ -999,7 +1001,7 @@ int main( ac, av )
 	fprintf(stderr, "can't establish STREAMS plumbing, exiting.\n" );
 	atalkd_exit( 1 );
     }
-#endif __svr4__
+#endif /* __svr4__ */
 
     /* delete pre-existing interface addresses. */
 #ifdef SIOCDIFADDR
@@ -1008,11 +1010,11 @@ int main( ac, av )
 #ifdef SIOCATALKDIFADDR
 #if (SIOCDIFADDR != SIOCATALKDIFADDR)
 	ifconfig(iface->i_name, SIOCATALKDIFADDR, &iface->i_addr);
-#endif
-#endif
+#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
+#endif /* SIOCATALKDIFADDR */
       }
     }
-#endif
+#endif /* SIOCDIFADDR */
 
     /*
      * Disassociate. The child will send itself a signal when it is
@@ -1052,9 +1054,9 @@ int main( ac, av )
 
 #ifdef ultrix
     openlog( prog, LOG_PID );
-#else ultrix
+#else /* ultrix */
     openlog( prog, LOG_PID, LOG_DAEMON );
-#endif ultrix
+#endif /* ultrix */
 
     syslog( LOG_INFO, "restart (%s)", version );
 
@@ -1071,12 +1073,12 @@ int main( ac, av )
 	syslog( LOG_ERR, "route shutdown: %m" );
 	atalkd_exit( 1 );
     }
-#else BSD4_4
+#else /* BSD4_4 */
     if (( rtfd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
 	syslog( LOG_ERR, "route socket: %m" );
 	atalkd_exit( 1 );
     }
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     memset(&sv, 0, sizeof(sv));
     sv.sa_handler = as_down;
@@ -1153,16 +1155,16 @@ int main( ac, av )
 				    iface->i_flags, ap->ap_port, ap->ap_fd );
 			    bprint( Packet, c );
 			}
-#endif DEBUG
+#endif /* DEBUG */
 #ifdef __svr4__
 			if ( sighold( SIGALRM ) || sighold( SIGUSR1 )) {
 			    syslog( LOG_ERR, "sighold: %m" );
 			    atalkd_exit( 1 );
 			}
-#else __svr4__
+#else /* __svr4__ */
 			mask = sigsetmask( sigmask( SIGALRM ) |
 				sigmask( SIGUSR1 ));
-#endif __svr4__
+#endif /* __svr4__ */
 			if (( *ap->ap_packet )( ap, &sat, Packet, c ) < 0) {
 			  syslog(LOG_ERR, "ap->ap_packet: %m");
 			  atalkd_exit(1);
@@ -1170,15 +1172,15 @@ int main( ac, av )
 
 #ifdef DEBUG
 			consistency();
-#endif DEBUG
+#endif /* DEBUG */
 #ifdef __svr4__
 			if ( sigrelse( SIGUSR1 ) || sigrelse( SIGALRM )) {
 			    syslog( LOG_ERR, "sigrelse: %m" );
 			    atalkd_exit( 1 );
 			}
-#else __svr4__
+#else /* __svr4__ */
 			sigsetmask( mask );
-#endif __svr4__
+#endif /* __svr4__ */
 		    }
 		}
 	    }
@@ -1289,7 +1291,7 @@ void setaddr( iface, phase, net, node, first, last )
 
 #ifdef BSD4_4
     iface->i_addr.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     iface->i_addr.sat_family = AF_APPLETALK;
     iface->i_addr.sat_addr.s_net = net;
     iface->i_addr.sat_addr.s_node = node;
@@ -1311,22 +1313,22 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last));
 
     /* open ports */
     i = 1; /* enable broadcasts */
-#if defined(__svr4__) 
+#ifdef __svr4__ 
     syslog(LOG_INFO, "setsockopt incompatible w/ Solaris STREAMS module.");
-#endif
+#endif /* __svr4__ */
     for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
 	if (( ap->ap_fd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
 	    syslog( LOG_ERR, "socket: %m" );
 	    atalkd_exit( 1 );
 	}
-#if !defined(__svr4__)
+#ifndef __svr4__
 	setsockopt(ap->ap_fd, SOL_SOCKET, SO_BROADCAST, &i, sizeof(i));
-#endif
+#endif /* ! __svr4 */
 
 	memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
 	sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	sat.sat_family = AF_APPLETALK;
 	sat.sat_addr.s_net = iface->i_addr.sat_addr.s_net;
 	sat.sat_addr.s_node = iface->i_addr.sat_addr.s_node;
@@ -1344,11 +1346,11 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last));
 #ifdef SIOCATALKDIFADDR
 #if (SIOCDIFADDR != SIOCATALKDIFADDR)
 		ifconfig( iface->i_name, SIOCATALKDIFADDR, &iface->i_addr );
-#endif		
-#endif
+#endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
+#endif /* SIOCATALKDIFADDR */
 	      }
 	    }
-#endif 
+#endif /* SIOCDIFADDR */
 	    atalkd_exit( 1 );
 	}
     }
@@ -1504,4 +1506,4 @@ void dumpzones()
     printf( "\n" );
     fflush( stdout );
 }
-#endif DEBUG
+#endif /* DEBUG */

@@ -1,9 +1,9 @@
 /*
+ * $Id: psa.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
- */
-
-/*
+ *
  * PostScript Accounting, psa.
  *
  * psa is invoked by psf, as output for a communication program.  The
@@ -19,9 +19,11 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

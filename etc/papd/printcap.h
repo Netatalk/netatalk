@@ -1,3 +1,7 @@
+/*
+ * $Id: printcap.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ */
+
 #ifndef PAPD_PRINTCAP_H
 #define PAPD_PRINTCAP_H 1
 

@@ -1,11 +1,13 @@
 /*
+ * $Id: queries.c,v 1.7 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <stdio.h>
@@ -20,10 +22,10 @@
 #ifdef KRB
 #ifdef SOLARIS
 #include <kerberos/krb.h>
-#else
+#else /* SOLARIS */
 #include <krb.h>
-#endif
-#endif KRB
+#endif /* SOLARIS */
+#endif /* KRB */
 
 #include "file.h"
 #include "comment.h"
@@ -198,7 +200,7 @@ int cq_uameth( in, out )
 	CONSUME( in, linelength + crlflength );
     }
 }
-#endif KRB
+#endif /* KRB */
 
 int gq_true( out )
     struct papfile	*out;
@@ -223,7 +225,7 @@ int gq_pagecost( out )
     } else if ( printer->p_flags & P_ACCOUNT ) {
 #ifdef ABS_PRINT
 	lp_pagecost();
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 	sprintf( cost, "%d", printer->p_pagecost );
 	append( out, cost, strlen( cost ));
     } else {
@@ -246,7 +248,7 @@ int gq_balance( out )
     append( out, balance, strlen( balance ));
     return( 0 );
 }
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 
 
 /*
@@ -297,7 +299,7 @@ struct genquery {
     { "UMICHCostPerPage", gq_pagecost },
 #ifdef notdef
     { "UMICHUserBalance", gq_balance },
-#endif 
+#endif /* notdef */
     { "RBISpoolerID",	gq_rbispoolerid },
     { "RBIUAMListQuery", gq_rbiuamlist },
     { "UMICHListQueue", gq_true },

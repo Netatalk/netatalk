@@ -1,4 +1,4 @@
-($Id: ChangeLog,v 1.53 2001-06-25 18:17:49 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.54 2001-06-25 20:13:45 rufustfirefly Exp $)
 
 2001-06-25  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/auth.c, etc/afpd/main.c, etc/afpd/uam.c,
@@ -9,6 +9,9 @@
 
 	* etc/afpd/uam.c, etc/papd/uam.c: fixed DISABLE_SHELLCHECK
 	support in both afpd and papd (Jason Keltz <jas@cs.yorku.ca>)
+
+	* etc/*/*.{c,h}: corrected malformed defines, nicer comments,
+	CVS Id tags
 
 2001-06-20  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in: check for linux/quota.h before enabling

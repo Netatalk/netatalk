@@ -1,9 +1,9 @@
 /*
+ * $Id: printcap.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
- */
-
-/*
+ *
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
  *
@@ -38,7 +38,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifndef lint
 static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
@@ -47,17 +47,21 @@ static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#ifndef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <atalk/paths.h>
 
 #include "printcap.h"
 
 #ifndef BUFSIZ
 #define	BUFSIZ	1024
-#endif
+#endif /* ! BUFSIZ */
 #define MAXHOP	32	/* max number of tc= indirections */
 
 /*
@@ -87,7 +91,7 @@ static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
 #define tnchktc	pnchktc
 #define	tnamatch pnamatch
 #define V6
-#endif
+#endif /* PRINTCAP */
 
 static	FILE *pfp = NULL;	/* printcap data base file pointer */
 static	char *tbuf;

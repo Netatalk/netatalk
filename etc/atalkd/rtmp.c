@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.5 2001-06-19 18:04:39 rufustfirefly Exp $
+ * $Id: rtmp.c,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -888,7 +888,7 @@ int looproute( iface, cmd )
 		RTF_UP | RTF_HOST ) ) {
 	return( 1 );
     }
-#else /* BSD4_4 */
+#else /* ! BSD4_4 */
     if ( route( cmd,
 	    	(struct sockaddr_at *) &dst,
 		(struct sockaddr_at *) &loop,
@@ -955,7 +955,7 @@ int gateroute( command, rtmp )
 		    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node );
 	    continue;
 	}
-#else /* BSD4_4 */
+#else /* ! BSD4_4 */
 	if ( route( command,
 		    (struct sockaddr_at *) &dst,
 		    (struct sockaddr_at *) &gate,
@@ -964,7 +964,7 @@ int gateroute( command, rtmp )
 	    	    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node );
 	    continue;
 	}
-#endif /* BSD4_4 */
+#endif /* ! BSD4_4 */
     } while ( net++ < ntohs( rtmp->rt_lastnet ));
 
     if ( command == RTMP_ADD ) {

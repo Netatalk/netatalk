@@ -1,3 +1,7 @@
+/*
+ * $Id: main.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ */
+
 #ifndef ATALKD_MAIN_H
 #define ATALKD_MAIN_H
 

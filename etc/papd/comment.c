@@ -1,11 +1,13 @@
 /*
+ * $Id: comment.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/syslog.h>
 #include <sys/param.h>

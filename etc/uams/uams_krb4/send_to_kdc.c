@@ -1,13 +1,11 @@
 /*
- * $Id: send_to_kdc.c,v 1.3 2001-03-28 22:42:46 samnoble Exp $
+ * $Id: send_to_kdc.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Author: rufustfirefly $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
- */
-
-/*
+ *
  * $Source: /home/ralph/netatalk/rsync/netatalk/etc/uams/uams_krb4/send_to_kdc.c,v $
- * $Author: samnoble $
  *
  * Copyright 1987, 1988 by the Massachusetts Institute of Technology.
  *
@@ -17,12 +15,12 @@
 
 #ifndef lint
 static char rcsid_send_to_kdc_c[] =
-"$Id: send_to_kdc.c,v 1.3 2001-03-28 22:42:46 samnoble Exp $";
+"$Id: send_to_kdc.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $";
 #endif /* lint */
 
-#if defined( HAVE_CONFIG_H )
+#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifdef UAM_AFSKRB
 

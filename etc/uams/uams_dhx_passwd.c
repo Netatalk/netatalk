@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.9 2001-06-25 15:18:01 rufustfirefly Exp $
+ * $Id: uams_dhx_passwd.c,v 1.10 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -8,22 +8,25 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifdef UAM_DHX
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #ifndef NO_CRYPT_H
 #include <crypt.h>
-#endif
+#endif /* ! NO_CRYPT_H */
 #include <pwd.h>
 #include <syslog.h>
 
 #ifdef SOLARIS
 #define SHADOWPW
-#endif SOLARIS
+#endif /* SOLARIS */
 
 #ifdef SHADOWPW
 #include <shadow.h>
@@ -33,7 +36,7 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
-#else
+#else /* OPENSSL_DHX */
 #include <bn.h>
 #include <dh.h>
 #include <cast.h>
@@ -74,7 +77,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     u_int8_t g = 0x07;
 #ifdef SHADOWPW
     struct spwd *sp;
-#endif
+#endif /* SHADOWPW */
     BIGNUM *bn, *gbn, *pbn;
     u_int16_t sessid;
     int len, i;
@@ -122,7 +125,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 	return AFPERR_NOTAUTH;
     }
     dhxpwd->pw_passwd = sp->sp_pwdp;
-#endif SHADOWPW
+#endif /* SHADOWPW */
 
     if (!dhxpwd->pw_passwd)
       return AFPERR_NOTAUTH;
@@ -193,9 +196,9 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
       goto passwd_fail;
     }
     memcpy(rbuf + KEYSIZE, name, KEYSIZE); 
-#else
+#else /* 0 */
     memset(rbuf + KEYSIZE, 0, KEYSIZE);
-#endif
+#endif /* 0 */
 
     /* encrypt using cast */
     CAST_cbc_encrypt(rbuf, rbuf, CRYPTBUFLEN, &castkey, iv, CAST_ENCRYPT);
@@ -316,4 +319,5 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
-#endif
+
+#endif /* UAM_DHX */

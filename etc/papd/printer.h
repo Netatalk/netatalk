@@ -1,4 +1,6 @@
 /*
+ * $Id: printer.h,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -10,7 +12,7 @@ struct printer {
 #ifdef notdef
     char		*p_fonts;
     char		*p_psetdir;
-#endif notdef
+#endif /* notdef */
     char		*p_ppdfile;
     char		*p_authprintdir;
     int			p_flags;
@@ -24,7 +26,7 @@ struct printer {
 	    char		*pr_role;
 	    double		pr_balance;
 	    int			pr_srvid;
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 	    int			pr_pagecost;
 	    char		*pr_pagecost_msg;
 	    char		*pr_lock;
@@ -42,7 +44,7 @@ struct printer {
 #define p_role		p_un.pu_pr.pr_role
 #define p_balance	p_un.pu_pr.pr_balance
 #define p_srvid		p_un.pu_pr.pr_srvid
-#endif ABS_PRINT
+#endif /* ABS_PRINT */
 #define p_pagecost	p_un.pu_pr.pr_pagecost
 #define p_pagecost_msg	p_un.pu_pr.pr_pagecost_msg
 #define p_lock		p_un.pu_pr.pr_lock

@@ -1,11 +1,13 @@
 /*
+ * $Id: nbp.c,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +25,7 @@
 
 #ifdef __svr4__
 #include <sys/sockio.h>
-#endif __svr4__
+#endif /* __svr4__ */
 
 #include "atserv.h"
 #include "interface.h"
@@ -108,7 +110,7 @@ int nbp_packet( ap, from, data, len )
     memset( &nn.nn_sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     nn.nn_sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     nn.nn_sat.sat_family = AF_APPLETALK;
     nn.nn_sat.sat_addr.s_net = nt.nt_net;
     nn.nn_sat.sat_addr.s_node = nt.nt_node;
@@ -368,7 +370,7 @@ int nbp_packet( ap, from, data, len )
 	if ( zt == 0 ) {
 #ifdef BSD4_4
 	    sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	    sat.sat_family = AF_APPLETALK;
 	    sat.sat_port = ap->ap_port;
 
@@ -403,7 +405,7 @@ int nbp_packet( ap, from, data, len )
 	} else {
 #ifdef BSD4_4
 	    sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	    sat.sat_family = AF_APPLETALK;
 	    sat.sat_port = ap->ap_port;
 	    for ( l = zt->zt_rt; l; l = l->l_next ) {

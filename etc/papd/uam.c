@@ -1,15 +1,20 @@
-/* Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
+/*
+ * $Id: uam.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
+ * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <fcntl.h>
 #include <ctype.h>
 #include <syslog.h>
@@ -197,7 +202,7 @@ struct passwd *uam_getname(char *name, const int len)
     }
   }
   endpwent();
-#endif
+#endif /* NO_REAL_USER_NAME */
 
   /* os x server doesn't keep anything useful if we do getpwent */
   return pwent ? getpwnam(name) : NULL;

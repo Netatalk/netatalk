@@ -1,4 +1,6 @@
 /*
+ * $Id: comment.h,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

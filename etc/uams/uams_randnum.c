@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.4 2001-02-27 17:07:43 rufustfirefly Exp $
+ * $Id: uams_randnum.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -8,12 +8,14 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <fcntl.h>
 #include <ctype.h>
 #include <pwd.h>
@@ -33,11 +35,11 @@
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
-#endif
+#endif /* USE_CRACKLIB */
 
 #ifndef __inline__
 #define __inline__
-#endif
+#endif /* __inline__ */
 
 #define PASSWDLEN 8
 
@@ -471,7 +473,7 @@ static int randnum_changepw(void *obj, const char *username,
 #ifdef USE_CRACKLIB
     else if (FascistCheck(ibuf + PASSWDLEN, _PATH_CRACKLIB))
         err = AFPERR_PWDPOLCY;
-#endif
+#endif /* USE_CRACKLIB */
 
     if (!err) 
       err = randpass(pwd, passwdfile, ibuf + PASSWDLEN, sizeof(seskey), 1);
