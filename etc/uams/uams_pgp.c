@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pgp.c,v 1.8 2003-01-26 16:40:45 srittau Exp $
+ * $Id: uams_pgp.c,v 1.9 2003-01-26 16:54:46 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -12,6 +12,8 @@
 
 #ifdef UAM_PGP
 
+/* for crypt() */
+#define _XOPEN_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
