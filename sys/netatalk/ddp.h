@@ -1,4 +1,6 @@
 /*
+ * $Id: ddp.h,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -66,16 +68,16 @@ struct ddpehdr {
     unsigned		dub_hops:4;
     unsigned		dub_len:10;
     unsigned		dub_sum:16;
-#else
+#else /* BYTE_ORDER == BIG_ENDIAN */
 #if BYTE_ORDER == LITTLE_ENDIAN
     unsigned		dub_sum:16;
     unsigned		dub_len:10;
     unsigned		dub_hops:4;
     unsigned		dub_pad:2;
-#else
+#else /* BYTE_ORDER == LITTLE_ENDIAN */
     OOPS!
-#endif
-#endif
+#endif /* BYTE_ORDER == LITTLE_ENDIAN */
+#endif /* BYTE_ORDER == BIG_ENDIAN */
 	} du_bits;
 	unsigned	du_bytes;
     } deh_u;
@@ -104,13 +106,13 @@ struct ddpshdr {
     unsigned		dub_len:10;
     unsigned		dub_dport:8;
     unsigned		dub_sport:8;
-#endif
+#endif /* BYTE_ORDER == BIG_ENDIAN */
 #if BYTE_ORDER == LITTLE_ENDIAN
     unsigned		dub_sport:8;
     unsigned		dub_dport:8;
     unsigned		dub_len:10;
     unsigned		dub_pad:6;
-#endif
+#endif /* BYTE_ORDER == LITTLE_ENDIAN */
 	} du_bits;
 	unsigned	du_bytes;
     } dsh_u;

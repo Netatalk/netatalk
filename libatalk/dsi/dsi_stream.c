@@ -1,4 +1,6 @@
 /*
+ * $Id: dsi_stream.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -11,19 +13,21 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #define USE_WRITEV
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
 #ifdef USE_WRITEV
 #include <sys/uio.h>
-#endif
+#endif /* USE_WRITEV */
 #include <syslog.h>
 
 #include <atalk/dsi.h>
@@ -95,7 +99,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   struct iovec iov[2];
   size_t  towrite;
   ssize_t len;
-#endif
+#endif /* USE_WRITEV */
 
   block[0] = dsi->header.dsi_flags;
   block[1] = dsi->header.dsi_command;
@@ -150,14 +154,14 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
     }
   }
   
-#else
+#else /* USE_WRITEV */
   /* write the header then data */
   if ((dsi_stream_write(dsi, block, sizeof(block)) != sizeof(block)) ||
       (dsi_stream_write(dsi, buf, length) != length)) {
     sigprocmask(SIG_SETMASK, &oldset, NULL);
     return 0;
   }
-#endif
+#endif /* USE_WRITEV */
 
   sigprocmask(SIG_SETMASK, &oldset, NULL);
   return 1;

@@ -1,4 +1,6 @@
 /*
+ * $Id: asp_init.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -48,7 +50,7 @@ ASP asp_init( atp )
     asp->asp_atp = atp;
 #ifdef BSD4_4
     asp->asp_sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     asp->asp_sat.sat_family = AF_APPLETALK;
     asp->asp_sat.sat_addr.s_net = ATADDR_ANYNET;
     asp->asp_sat.sat_addr.s_node = ATADDR_ANYNODE;

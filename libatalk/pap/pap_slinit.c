@@ -1,11 +1,13 @@
 /*
+ * $Id: pap_slinit.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,7 +128,7 @@ PAP pap_slinit(PAP pap, server_child *server_children,
     memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     sat.sat_family = AF_APPLETALK;
     sat.sat_addr.s_net = ATADDR_ANYNET;
     sat.sat_addr.s_node = ATADDR_ANYNODE;
@@ -151,7 +153,7 @@ PAP pap_slinit(PAP pap, server_child *server_children,
     case PAPFUNC_STAT:
 #ifdef EBUG
       printf( "pap stat\n" );
-#endif EBUG
+#endif /* EBUG */
       if ( pap->pap_slen > 0 ) {
 	pap->cmdbuf[0] = 0;
 	bcopy( pap->pap_status, pap->cmdbuf + 4, pap->pap_slen );

@@ -1,8 +1,12 @@
-/* taken from bin/pap/pap.c */
+/*
+ * $Id: pap_read.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
+ * taken from bin/pap/pap.c
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 int pap_read(PAP pap)
 {

@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_sresp.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +57,7 @@ int atp_sresp( ah, atpb )
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_sresp" );
-#endif
+#endif /* EBUG */
 
     /* check parameters
     */
@@ -82,7 +84,7 @@ int atp_sresp( ah, atpb )
 	    ah->atph_rxo ? "XO" : "", ah->atph_rtid );
     atp_print_addr( " to", atpb->atp_saddr );
     putchar( '\n' );
-#endif
+#endif /* EBUG */
     if ( ah->atph_rxo ) {
 	if (( save_buf = atp_alloc_buf()) == NULL ) {
 	    return -1;
@@ -94,7 +96,7 @@ int atp_sresp( ah, atpb )
 	ctrlinfo = ATP_TRESP;
 #ifdef STS_RESPONSES
 	ctrlinfo |= ATP_STS;
-#endif STS_RESPONSES
+#endif /* STS_RESPONSES */
 	if ( i == atpb->atp_sresiovcnt-1 ) {
 	    ctrlinfo |= ATP_EOM;
 	}
@@ -105,12 +107,12 @@ int atp_sresp( ah, atpb )
 	}
 #ifdef DROPPACKETS
 if (( random() % 3 ) != 2 ) {
-#endif
+#endif /* DROPPACKETS */
 #ifdef EBUG
 printf( "<%d> sending packet tid=%hu serial no.=%d\n", getpid(),
   ah->atph_rtid, i );
 bprint( resp_buf->atpbuf_info.atpbuf_data, resp_buf->atpbuf_dlen );
-#endif
+#endif /* EBUG */
 	if ( netddp_sendto( ah->atph_socket, resp_buf->atpbuf_info.atpbuf_data,
 	  resp_buf->atpbuf_dlen, 0, (struct sockaddr *) atpb->atp_saddr,
 	  sizeof( struct sockaddr_at )) != resp_buf->atpbuf_dlen ) {
@@ -124,7 +126,7 @@ bprint( resp_buf->atpbuf_info.atpbuf_data, resp_buf->atpbuf_dlen );
 	}
 #ifdef DROPPACKETS
 } else printf( "<%d> atp_sresp: dropped serial no. %d\n", getpid(),  i );
-#endif
+#endif /* DROPPACKETS */
 	/* allocate a buffer for next packet (if XO mode)
 	*/
 	if ( ah->atph_rxo && ( resp_buf = atp_alloc_buf()) == NULL ) {
@@ -148,7 +150,7 @@ bprint( resp_buf->atpbuf_info.atpbuf_data, resp_buf->atpbuf_dlen );
 	ah->atph_sent = save_buf;
 #ifdef EBUG
 printf( "<%d> saved XO response\n", getpid());
-#endif
+#endif /* EBUG */
     }
     return 0;
 }

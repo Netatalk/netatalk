@@ -1,14 +1,22 @@
+/*
+ * $Id: getzones.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/time.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 #include <stdio.h>
 #include <string.h>
 #include <netatalk/endian.h>
@@ -70,7 +78,7 @@ int main( argc, argv )
     memset( &saddr, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     saddr.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     saddr.sat_family = AF_APPLETALK;
     if (( se = getservbyname( "zip", "ddp" )) == NULL )
 	saddr.sat_port = 6;

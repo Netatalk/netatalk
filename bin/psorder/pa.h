@@ -1,4 +1,6 @@
 /*
+ * $Id: pa.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -38,9 +40,12 @@
  *	pa_cancel( h )		Cancel previous match start.
  */
 
+#ifndef _PA_H
+#define _PA_H 1
+
 #ifndef FILE_H
 #include <stdio.h>
-#endif
+#endif /* FILE_H */
 
 #define PA_BUFBLK	1024
 
@@ -68,3 +73,5 @@ extern char *pa_gettok();
 #define pa_cont(h)	(*((h)->cur)=(h)->tmp,(h)->state=PA_MATCHING)
 #define pa_cancel(h)	((h)->state=PA_NORMAL)
 #define pa_back(h)	(--((h)->cur))
+
+#endif /* _PA_H */

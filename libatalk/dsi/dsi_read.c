@@ -1,15 +1,19 @@
 /*
+ * $Id: dsi_read.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -18,7 +22,7 @@
 
 #ifndef min
 #define min(a,b)   ((a) < (b) ? (a) : (b))
-#endif
+#endif /* ! min */
 
 /* streaming i/o for afp_read. this is all from the perspective of the
  * client. it basically does the reverse of dsi_write. on first entry,

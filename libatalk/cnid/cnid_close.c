@@ -1,5 +1,17 @@
+/*
+ * $Id: cnid_close.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <syslog.h>
 #include <db.h>
 #include <errno.h>

@@ -1,4 +1,6 @@
 /*
+ * $Id: strcasecmp.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1987 Regents of the University of California.
  * All rights reserved.
  *
@@ -19,7 +21,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 static int	_strcasecmp_dummy;
 
@@ -106,4 +108,4 @@ strncasecmp(s1, s2, n)
 	return (0);
 }
 
-# endif ibm032
+# endif /* ibm032 */

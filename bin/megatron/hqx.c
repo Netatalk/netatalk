@@ -1,10 +1,10 @@
 /*
- * $Id: hqx.c,v 1.7 2001-06-10 20:12:29 srittau Exp $
+ * $Id: hqx.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -14,12 +14,14 @@
 #ifdef notdef
 #if BSD >= 199006
 # include <machine/endian.h>
-#else
+#else /* BSD >= 199006 */
 # include <netinet/in.h>
-#endif
-#endif notdef
+#endif /* BSD >= 199006 */
+#endif /* notdef */
 #include <time.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <string.h>
 #include <syslog.h>
 #include <ctype.h>
@@ -36,7 +38,7 @@
  */
 #ifndef	STDIN
 #	define	STDIN	"-"
-#endif
+#endif /* ! STDIN */
 
 /*	Yes and no
  */
@@ -76,7 +78,7 @@ int hqx7_fill(u_char *hqx7_ptr);
 
 #if HEXOUTPUT
 FILE		*rawhex, *expandhex;
-#endif
+#endif /* HEXOUTPUT */
 
 struct hqx_file_data {
     u_int32_t		forklen[ NUMFORKS ];
@@ -108,13 +110,13 @@ int hqx_open( hqxfile, flags, fh, options )
 
 #if DEBUG
     fprintf( stderr, "megatron: entering hqx_open\n" );
-#endif
+#endif /* DEBUG */
     if ( flags == O_RDONLY ) {
 
 #if HEXOUTPUT
 	rawhex = fopen( "rawhex.unhex", "w" );
 	expandhex = fopen( "expandhex.unhex", "w" );
-#endif
+#endif /* HEXOUTPUT */
 
 	first_flag = 0;
 
@@ -132,7 +134,7 @@ int hqx_open( hqxfile, flags, fh, options )
 
 		pos = lseek( hqx.filed, 0, L_INCR );
 		fprintf( stderr, "megatron: current position is %ld\n", pos );
-#endif
+#endif /* DEBUG */
 		return( 0 );
 	    }
 	}
@@ -202,7 +204,7 @@ int hqx_read( fork, buffer, length )
     }
     fprintf( stderr, "hqx_read: fork is %s\n", forkname[ fork ] );
     fprintf( stderr, "hqx_read: remaining length is %d\n", hqx.forklen[fork] );
-#endif
+#endif /* DEBUG >= 3 */
 
     if ( hqx.forklen[ fork ] < 0 ) {
 	fprintf( stderr, "This should never happen, dude!\n" );
@@ -216,7 +218,7 @@ int hqx_read( fork, buffer, length )
 #if DEBUG >= 4
     fprintf( stderr, "hqx_read: storedcrc\t\t%x\n", storedcrc );
     fprintf( stderr, "hqx_read: observed crc\t\t%x\n\n", hqx.forkcrc[fork] );
-#endif
+#endif /* DEBUG >= 4 */
 	    if ( storedcrc == hqx.forkcrc[ fork ] ) {
 		return( 0 );
 	    }
@@ -233,7 +235,7 @@ int hqx_read( fork, buffer, length )
     }
 #if DEBUG >= 3
     fprintf( stderr, "hqx_read: readlen is %d\n", readlen );
-#endif
+#endif /* DEBUG >= 3 */
 
     cc = hqx_7tobin( buffer, readlen );
     if ( cc > 0 ) {
@@ -243,7 +245,7 @@ int hqx_read( fork, buffer, length )
     }
 #if DEBUG >= 3
     fprintf( stderr, "hqx_read: chars read is %d\n", cc );
-#endif
+#endif /* DEBUG >= 3 */
     return( cc );
 }
 
@@ -267,7 +269,7 @@ int hqx_header_read( fh )
 #if HEXOUTPUT
     int		headerfork;
     headerfork = open( "headerfork", O_WRONLY|O_CREAT, 0622 );
-#endif
+#endif /* HEXOUTPUT */
 
     mask = htons( 0xfcee );
     hqx.headercrc = 0;
@@ -281,7 +283,7 @@ int hqx_header_read( fh )
 
 #if HEXOUTPUT
     write( headerfork, &namelen, sizeof( namelen ));
-#endif
+#endif /* HEXOUTPUT */
 
     if (( headerbuf = 
 	    (char *)malloc( (unsigned int)( namelen + BHH_HEADSIZ ))) == 0 ) {
@@ -298,7 +300,7 @@ int hqx_header_read( fh )
 
 #if HEXOUTPUT
     write( headerfork, headerbuf, ( namelen + BHH_HEADSIZ ));
-#endif
+#endif /* HEXOUTPUT */
 
 /*
  * stuff from the hqx file header
@@ -352,7 +354,7 @@ int hqx_header_read( fh )
 	fprintf( stderr, "observed crc\t\t%x\n", hqx.headercrc );
 	fprintf( stderr, "\n" );
     }
-#endif
+#endif /* DEBUG >= 5 */
 
 /*
  * create and modify times are figured from right now
@@ -593,7 +595,7 @@ int hqx_7tobin( outbuf, datalen )
 #if DEBUG
     fprintf( stderr, "hqx_7tobin: datalen entering %d\n", datalen );
     fprintf( stderr, "hqx_7tobin: hqx8i entering %d\n", hqx8i );
-#endif
+#endif /* DEBUG */
 
     if ( first_flag == 0 ) {
 	prev_hqx8 = 0;
@@ -606,7 +608,7 @@ int hqx_7tobin( outbuf, datalen )
 
 #if DEBUG
     fprintf( stderr, "hqx_7tobin: hqx8i entering %d\n", hqx8i );
-#endif
+#endif /* DEBUG */
 
     out_first = outbuf;
     out_last = out_first + datalen;
@@ -666,14 +668,14 @@ int hqx_7tobin( outbuf, datalen )
 #if HEXOUTPUT
 	    putc( hqx8i, rawhex );
             putc( hqx8[ hqx8i ], rawhex );
-#endif
+#endif /* HEXOUTPUT */
 
 	    if ( prev_hqx8 == RUNCHAR ) {
 		if ( hqx8[ hqx8i ] == 0 ) {
 		    *out_first = prev_hqx8;
 #if HEXOUTPUT
 		    putc( *out_first, expandhex );
-#endif
+#endif /* HEXOUTPUT */
 		    prev_out = prev_hqx8;
 		    out_first++;
 		}
@@ -681,7 +683,7 @@ int hqx_7tobin( outbuf, datalen )
 		    *out_first = prev_out;
 #if HEXOUTPUT
 		    putc( *out_first, expandhex );
-#endif
+#endif /* HEXOUTPUT */
 		    hqx8[ hqx8i ]--;
 		    out_first++;
 		}
@@ -697,7 +699,7 @@ int hqx_7tobin( outbuf, datalen )
 		*out_first = prev_hqx8;
 #if HEXOUTPUT
 		putc( *out_first, expandhex );
-#endif
+#endif /* HEXOUTPUT */
 		prev_out = prev_hqx8;
 		out_first++;
 	    }

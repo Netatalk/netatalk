@@ -1,7 +1,13 @@
 /*
+ * $Id: aarp.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -11,7 +17,7 @@
 #include <sys/time.h>
 #ifndef _IBMR2
 #include <sys/kernel.h>
-#endif _IBMR2
+#endif /* _IBMR2 */
 #include <net/if.h>
 #include <net/route.h>
 #include <net/af.h>
@@ -23,7 +29,7 @@
 #include <net/spl.h>
 #include <sys/errno.h>
 #include <sys/err_rec.h>
-#endif _IBMR2
+#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -35,10 +41,10 @@
 #ifdef GATEWAY
 #define AARPTAB_BSIZ	16
 #define AARPTAB_NB	37
-#else
+#else /* GATEWAY */
 #define AARPTAB_BSIZ	9
 #define AARPTAB_NB	19
-#endif GATEWAY
+#endif /* GATEWAY */
 #define AARPTAB_SIZE	(AARPTAB_BSIZ * AARPTAB_NB)
 struct aarptab		aarptab[AARPTAB_SIZE];
 int			aarptab_size = AARPTAB_SIZE;
@@ -63,9 +69,9 @@ int			aarptab_size = AARPTAB_SIZE;
 
 #ifdef sun
 extern struct ether_addr	etherbroadcastaddr;
-#else sun
+#else /* sun */
 extern u_char			etherbroadcastaddr[6];
-#endif sun
+#endif /* sun */
 
 u_char	atmulticastaddr[ 6 ] = {
     0x09, 0x00, 0x07, 0xff, 0xff, 0xff,
@@ -113,7 +119,7 @@ at_ifawithnet( sat, ifa )
 		sat->sat_addr.s_net ) {
 	    break;
 	}
-#else BSD4_4
+#else /* BSD4_4 */
 	if ( ifa->ifa_addr.sa_family != AF_APPLETALK ) {
 	    continue;
 	}
@@ -122,7 +128,7 @@ at_ifawithnet( sat, ifa )
 		ntohs( sat->sat_addr.s_net ) <= ntohs( aa->aa_lastnet )) {
 	    break;
 	}
-#endif BSD4_4
+#endif /* BSD4_4 */
     }
     return( ifa );
 }
@@ -145,13 +151,13 @@ aarpwhohas( ac, sat )
     m->m_len = sizeof( *ea );
     m->m_pkthdr.len = sizeof( *ea );
     MH_ALIGN( m, sizeof( *ea ));
-#else BSD4_4
+#else /* BSD4_4 */
     if (( m = m_get( M_DONTWAIT, MT_DATA )) == NULL ) {
 	return;
     }
     m->m_len = sizeof( *ea );
     m->m_off = MMAXOFF - sizeof( *ea );
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     ea = mtod( m, struct ether_aarp *);
     bzero((caddr_t)ea, sizeof( *ea ));
@@ -164,10 +170,10 @@ aarpwhohas( ac, sat )
 #ifdef sun
     bcopy((caddr_t)&ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#else sun
+#else /* sun */
     bcopy((caddr_t)ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif sun
+#endif /* sun */
 
     /*
      * We need to check whether the output ethernet type should
@@ -188,22 +194,22 @@ aarpwhohas( ac, sat )
 #ifdef sun
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)&eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#else sun
+#else /* sun */
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif sun
+#endif /* sun */
 #if defined( sun ) && defined( i386 )
 	eh->ether_type = htons( sizeof( struct llc ) +
 		sizeof( struct ether_aarp ));
-#else sun i386
+#else /* sun && i386 */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
-#endif sun i386
+#endif /* sun && i386 */
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_WAIT );
-#else BSD4_4
+#else /* BSD4_4 */
 	m->m_len += sizeof( struct llc );
 	m->m_off -= sizeof( struct llc );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	llc = mtod( m, struct llc *);
 	llc->llc_dsap = llc->llc_ssap = LLC_SNAP_LSAP;
 	llc->llc_control = LLC_UI;
@@ -221,15 +227,15 @@ aarpwhohas( ac, sat )
 #ifdef sun
 	bcopy((caddr_t)&etherbroadcastaddr, (caddr_t)&eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#else sun
+#else /* sun */
 	bcopy((caddr_t)etherbroadcastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif sun
+#endif /* sun */
 #if defined( sun ) && defined( i386 )
 	eh->ether_type = htons( ETHERTYPE_AARP );
-#else sun i386
+#else /* sun && i386 */
 	eh->ether_type = ETHERTYPE_AARP;
-#endif sun i386
+#endif /* sun && i386 */
 
 	ea->aarp_spa = AA_SAT( aa )->sat_addr.s_node;
 	ea->aarp_tpa = sat->sat_addr.s_node;
@@ -237,7 +243,7 @@ aarpwhohas( ac, sat )
 
 #ifdef BSD4_4
     sa.sa_len = sizeof( struct sockaddr );
-#endif BSD4_4
+#endif /* BSD4_4 */
     sa.sa_family = AF_UNSPEC;
     (*ac->ac_if.if_output)(&ac->ac_if, m, &sa );
 }
@@ -248,9 +254,9 @@ aarpresolve( ac, m, destsat, desten )
     struct sockaddr_at	*destsat;
 #ifdef sun
     struct ether_addr	*desten;
-#else sun
+#else /* sun */
     u_char		*desten;
-#endif sun
+#endif /* sun */
 {
     struct at_ifaddr	*aa;
     struct ifaddr	ifa;
@@ -270,10 +276,10 @@ aarpresolve( ac, m, destsat, desten )
 #ifdef sun
 	    bcopy( (caddr_t)&etherbroadcastaddr, (caddr_t)desten,
 		    sizeof( etherbroadcastaddr ));
-#else sun
+#else /* sun */
 	    bcopy( (caddr_t)etherbroadcastaddr, (caddr_t)desten,
 		    sizeof( etherbroadcastaddr ));
-#endif sun
+#endif /* sun */
 	}
 	return( 1 );
     }
@@ -319,7 +325,7 @@ aarpinput( ac, m )
 
 #ifndef BSD4_4
     IF_ADJ( m );
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     if ( m->m_len < sizeof( struct arphdr )) {
 	goto out;
@@ -374,13 +380,13 @@ at_aarpinput( ac, m )
 	m_freem( m );
 	return;
     }
-#else sun
+#else /* sun */
     if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )ac->ac_enaddr,
 	    sizeof( ac->ac_enaddr ))) {
 	m_freem( m );
 	return;
     }
-#endif sun
+#endif /* sun */
 
     /*
      * Check if from broadcast address.  This could be a more robust
@@ -393,21 +399,21 @@ at_aarpinput( ac, m )
 	m_freem( m );
 	return;
     }
-#else sun
+#else /* sun */
     if ( !bcmp(( caddr_t )ea->aarp_sha, ( caddr_t )etherbroadcastaddr,
 	    sizeof( etherbroadcastaddr ))) {
 #ifndef _IBMR2
 #ifdef ultrix
 	mprintf( LOG_ERR,
-#else ultrix
+#else /* ultrix */
 	log( LOG_ERR,
-#endif ultrix
+#endif /* ultrix */
 		"aarp: source is broadcast!\n" );
-#endif _IBMR2
+#endif /* ! _IBMR2 */
 	m_freem( m );
 	return;
     }
-#endif sun
+#endif /* sun */
 
     op = ntohs( ea->aarp_op );
     bcopy( ea->aarp_tpnet, &net, sizeof( net ));
@@ -469,13 +475,13 @@ at_aarpinput( ac, m )
 #ifndef _IBMR2
 #ifdef ultrix
 	    mprintf( LOG_ERR,
-#else ultrix
+#else /* ultrix */
 	    log( LOG_ERR,
-#endif ultrix
+#endif /* ultrix */
 		    "aarp: duplicate AT address!! %x:%x:%x:%x:%x:%x\n",
 		    ea->aarp_sha[ 0 ], ea->aarp_sha[ 1 ], ea->aarp_sha[ 2 ],
 		    ea->aarp_sha[ 3 ], ea->aarp_sha[ 4 ], ea->aarp_sha[ 5 ]);
-#endif _IBMR2
+#endif /* ! _IBMR2 */
 	    m_freem( m );
 	    return;
 	}
@@ -511,10 +517,10 @@ at_aarpinput( ac, m )
 	    sat.sat_family = AF_UNSPEC;
 	    bcopy( aat->aat_enaddr, (*(struct sockaddr *)&sat).sa_data,
 		    sizeof( aat->aat_enaddr ));
-#else _IBMR2
+#else /* _IBMR2 */
 	    sat.sat_family = AF_APPLETALK;
 	    sat.sat_addr = spa;
-#endif _IBMR2
+#endif /* _IBMR2 */
 	    (*ac->ac_if.if_output)( &ac->ac_if, aat->aat_hold,
 		    (struct sockaddr *)&sat );
 	    aat->aat_hold = 0;
@@ -545,34 +551,34 @@ at_aarpinput( ac, m )
 #ifdef sun
     bcopy(( caddr_t )&ac->ac_enaddr, ( caddr_t )ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#else sun
+#else /* sun */
     bcopy(( caddr_t )ac->ac_enaddr, ( caddr_t )ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif sun
+#endif /* sun */
 
     eh = (struct ether_header *)sa.sa_data;
 #ifdef sun
     bcopy(( caddr_t )ea->aarp_tha, ( caddr_t )&eh->ether_dhost,
 	    sizeof( eh->ether_dhost ));
-#else sun
+#else /* sun */
     bcopy(( caddr_t )ea->aarp_tha, ( caddr_t )eh->ether_dhost,
 	    sizeof( eh->ether_dhost ));
-#endif sun
+#endif /* sun */
 
     if ( aa->aa_flags & AFA_PHASE2 ) {
 #if defined( sun ) && defined( i386 )
 	eh->ether_type = htons( sizeof( struct llc ) +
 		sizeof( struct ether_aarp ));
-#else sun i386
+#else /* sun && i386 */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
-#endif sun i386
+#endif /* sun && i386 */
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_DONTWAIT );
 	if ( m == NULL ) {
 	    m_freem( m );
 	    return;
 	}
-#else BSD4_4
+#else /* BSD4_4 */
 	MGET( m0, M_DONTWAIT, MT_HEADER );
 	if ( m0 == NULL ) {
 	    m_freem( m );
@@ -582,7 +588,7 @@ at_aarpinput( ac, m )
 	m = m0;
 	m->m_off = MMAXOFF - sizeof( struct llc );
 	m->m_len = sizeof ( struct llc );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	llc = mtod( m, struct llc *);
 	llc->llc_dsap = llc->llc_ssap = LLC_SNAP_LSAP;
 	llc->llc_control = LLC_UI;
@@ -594,9 +600,9 @@ at_aarpinput( ac, m )
     } else {
 #if defined( sun ) && defined( i386 )
 	eh->ether_type = htons( ETHERTYPE_AARP );
-#else sun i386
+#else /* sun && i386 */
 	eh->ether_type = ETHERTYPE_AARP;
-#endif sun i386
+#endif /* sun && i386 */
     }
 
     ea->aarp_tpnode = ea->aarp_spnode;
@@ -605,7 +611,7 @@ at_aarpinput( ac, m )
 
 #ifdef BSD4_4
     sa.sa_len = sizeof( struct sockaddr );
-#endif BSD4_4
+#endif /* BSD4_4 */
     sa.sa_family = AF_UNSPEC;
     (*ac->ac_if.if_output)( &ac->ac_if, m, &sa );
     return;
@@ -701,13 +707,13 @@ aarpprobe( ac )
     m->m_len = sizeof( *ea );
     m->m_pkthdr.len = sizeof( *ea );
     MH_ALIGN( m, sizeof( *ea ));
-#else BSD4_4
+#else /* BSD4_4 */
     if (( m = m_get( M_DONTWAIT, MT_DATA )) == NULL ) {
 	return;
     }
     m->m_len = sizeof( *ea );
     m->m_off = MMAXOFF - sizeof( *ea );
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     ea = mtod( m, struct ether_aarp *);
     bzero((caddr_t)ea, sizeof( *ea ));
@@ -720,10 +726,10 @@ aarpprobe( ac )
 #ifdef sun
     bcopy((caddr_t)&ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#else sun
+#else /* sun */
     bcopy((caddr_t)ac->ac_enaddr, (caddr_t)ea->aarp_sha,
 	    sizeof( ea->aarp_sha ));
-#endif sun
+#endif /* sun */
 
     eh = (struct ether_header *)sa.sa_data;
 
@@ -731,22 +737,22 @@ aarpprobe( ac )
 #ifdef sun
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)&eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#else sun
+#else /* sun */
 	bcopy((caddr_t)atmulticastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif sun
+#endif /* sun */
 #if defined( sun ) && defined( i386 )
 	eh->ether_type = htons( sizeof( struct llc ) +
 		sizeof( struct ether_aarp ));
-#else sun i386
+#else /* sun && i386 */
 	eh->ether_type = sizeof( struct llc ) + sizeof( struct ether_aarp );
-#endif sun i386
+#endif /* sun && i386 */
 #ifdef BSD4_4
 	M_PREPEND( m, sizeof( struct llc ), M_WAIT );
-#else BSD4_4
+#else /* BSD4_4 */
 	m->m_len += sizeof( struct llc );
 	m->m_off -= sizeof( struct llc );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	llc = mtod( m, struct llc *);
 	llc->llc_dsap = llc->llc_ssap = LLC_SNAP_LSAP;
 	llc->llc_control = LLC_UI;
@@ -762,21 +768,21 @@ aarpprobe( ac )
 #ifdef sun
 	bcopy((caddr_t)&etherbroadcastaddr, (caddr_t)&eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#else sun
+#else /* sun */
 	bcopy((caddr_t)etherbroadcastaddr, (caddr_t)eh->ether_dhost,
 		sizeof( eh->ether_dhost ));
-#endif sun
+#endif /* sun */
 #if defined( sun ) && defined( i386 )
 	eh->ether_type = htons( ETHERTYPE_AARP );
-#else sun i386
+#else /* sun && i386 */
 	eh->ether_type = ETHERTYPE_AARP;
-#endif sun i386
+#endif /* sun && i386 */
 	ea->aarp_spa = ea->aarp_tpa = AA_SAT( aa )->sat_addr.s_node;
     }
 
 #ifdef BSD4_4
     sa.sa_len = sizeof( struct sockaddr );
-#endif BSD4_4
+#endif /* BSD4_4 */
     sa.sa_family = AF_UNSPEC;
     (*ac->ac_if.if_output)(&ac->ac_if, m, &sa );
     aa->aa_probcnt--;

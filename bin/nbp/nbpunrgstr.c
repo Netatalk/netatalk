@@ -1,4 +1,6 @@
 /*
+ * $Id: nbpunrgstr.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,12 +25,14 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/util.h>

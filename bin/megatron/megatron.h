@@ -1,8 +1,15 @@
+/*
+ * $Id: megatron.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
+#ifndef _MEGATRON_H
+#define _MEGATRON_H 1
+
 #include <atalk/adouble.h>
 
 #ifndef	STDIN
 #	define	STDIN	"-"
-#endif
+#endif /* ! STDIN */
 
 /*
     Where it matters, data stored in either of these two structs is in
@@ -81,6 +88,8 @@ struct FHeader {
 
 #ifndef S_ISDIR
 #	define S_ISDIR(s)	(( s & S_IFMT ) == S_IFDIR )
-#endif
+#endif /* ! S_ISDIR */
 
 extern char *mtoupath( char *);
+
+#endif /* _MEGATRON_H */

@@ -1,8 +1,12 @@
-/* moved over from bin/pap/pap.c */
+/*
+ * $Id: pap_open.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
+ * moved over from bin/pap/pap.c
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 static struct {
   PAP pap;

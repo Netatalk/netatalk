@@ -1,4 +1,6 @@
 /* 
+ * $Id: netddp_open.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -9,7 +11,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 static int _netddp_open_dummy;
 
@@ -21,7 +23,7 @@ static int _netddp_open_dummy;
 #ifdef MACOSX_SERVER
 #include <at/appletalk.h>
 #include <at/ddp.h>
-#endif
+#endif /* MACOSX_SERVER */
 
 #include <netatalk/at.h>
 #include <atalk/netddp.h>
@@ -53,7 +55,7 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
       bridge->sat_addr.s_node = baddress.node;
       bridge->sat_port = baddress.socket;
     }
-#else
+#else /* MACOSX_SERVER */
     int len;
 
     if ((s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0) 
@@ -75,7 +77,7 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
         close(s);
 	return -1;
     }
-#endif
+#endif /* MACOSX_SERVER */
 
     return s;
 }

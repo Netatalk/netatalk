@@ -1,4 +1,6 @@
 /*
+ * $Id: ad_flush.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,13 +25,17 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <errno.h>
@@ -95,7 +101,7 @@ int ad_flush( ad, adflags )
 {
 #ifndef USE_MMAPPED_HEADERS
     int len;
-#endif
+#endif /* ! USE_MMAPPED_HEADERS */
 
     if (( adflags & ADFLAGS_HF ) && ( ad->ad_hf.adf_flags & O_RDWR )) {
 	/* sync our header */
@@ -108,9 +114,9 @@ int ad_flush( ad, adflags )
 	      MS_SYNC | MS_INVALIDATE);
 #else
 	msync(ad->ad_data, ad_getentryoff(ad, ADEID_RFORK));
-#endif
+#endif /* MS_SYNC */
 
-#else
+#else /* USE_MMAPPED_HEADERS */
 	if ( ad->ad_hf.adf_off != 0 ) {
 	    if ( lseek( ad->ad_hf.adf_fd, 0L, SEEK_SET ) < 0L ) {
 		return( -1 );
@@ -127,7 +133,7 @@ int ad_flush( ad, adflags )
 	    return( -1 );
 	}
 	ad->ad_hf.adf_off = len;
-#endif
+#endif /* USE_MMAPPED_HEADERS */
     }
 
     return( 0 );
@@ -154,7 +160,7 @@ int ad_close( ad, adflags )
 #ifdef USE_MMAPPED_HEADERS
         if (ad->ad_data != MAP_FAILED)
 	  munmap(ad->ad_data, ad_getentryoff(ad, ADEID_RFORK));
-#endif
+#endif /* USE_MMAPPED_HEADERS */
 	if ( close( ad->ad_hf.adf_fd ) < 0 ) {
 	    err = -1;
 	}

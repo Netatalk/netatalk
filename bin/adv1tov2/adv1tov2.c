@@ -1,15 +1,22 @@
-/* v1tov2: given a root directory, run down and convert all the
- * files/directories into appledouble v2.  */
+/*
+ * $Id: adv1tov2.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * v1tov2: given a root directory, run down and convert all the
+ * files/directories into appledouble v2.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -130,10 +137,10 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#else
+#else /* AD_VERSION == AD_VERSION2 */
 int main(int argc, char **argv)
 {
   fprintf(stderr, "%s not built for v2 AppleDouble files.\n", *argv);
   return -1;
 }
-#endif
+#endif /* AD_VERSION == AD_VERSION2 */

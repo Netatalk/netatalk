@@ -1,18 +1,22 @@
 /*
+ * $Id: flock.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 static int	_flock_dummy;
 
 #ifndef HAVE_FLOCK
 
 #include <sys/types.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 
 #define LOCK_SH         1

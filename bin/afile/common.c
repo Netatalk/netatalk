@@ -1,4 +1,7 @@
-/*  common functions, defines, and structures for afile, achfile, and acleandir
+/*
+ * $Id: common.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
+    common functions, defines, and structures for afile, achfile, and acleandir
 
     Copyright (C) 2001 Sebastian Rittau.
     All rights reserved.
@@ -31,13 +34,21 @@
     SUCH DAMAGE.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <stdlib.h>
 #include <string.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>

@@ -1,4 +1,6 @@
 /*
+ * $Id: asp_write.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
@@ -35,7 +37,7 @@
 
 #if defined(BSD) || defined(BSD4_3)
 #define memmove(a, b, n)   bcopy((b), (a), (n))
-#endif
+#endif /* BSD || BSD4_3 */
 
 int asp_wrtcont(ASP asp, char *buf, int *buflen)
 {

@@ -1,13 +1,19 @@
 /*
+ * $Id: at_control.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
 #include <sys/systm.h>
 #ifdef ibm032
 #include <sys/dir.h>
-#endif ibm032
+#endif /* ibm032 */
 #include <sys/user.h>
 #include <sys/types.h>
 #include <sys/errno.h>
@@ -15,7 +21,7 @@
 #include <sys/mbuf.h>
 #ifndef _IBMR2
 #include <sys/kernel.h>
-#endif _IBMR2
+#endif /* ! _IBMR2 */
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <net/if.h>
@@ -26,7 +32,7 @@
 #include <netinet/if_ether.h>
 #ifdef _IBMR2
 #include <net/spl.h>
-#endif _IBMR2
+#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -38,7 +44,7 @@
 		    (a)->sat_family == (b)->sat_family && \
 		    (a)->sat_addr.s_net == (b)->sat_addr.s_net && \
 		    (a)->sat_addr.s_node == (b)->sat_addr.s_node )
-#else BSD4_4
+#else /* BSD4_4 */
 atalk_hash( sat, hp )
     struct sockaddr_at	*sat;
     struct afhash	*hp;
@@ -68,7 +74,7 @@ atalk_netmatch( sat1, sat2 )
     }
     return( sat1->sat_addr.s_net == sat2->sat_addr.s_net );
 }
-#endif BSD4_4
+#endif /* BSD4_4 */
 
 at_control( cmd, data, ifp )
     int			cmd;
@@ -81,7 +87,7 @@ at_control( cmd, data, ifp )
 #ifdef BSD4_4
     struct at_aliasreq	*ifra = (struct at_aliasreq *)data;
     struct at_ifaddr	*aa0;
-#endif BSD4_4
+#endif /* BSD4_4 */
     struct at_ifaddr	*aa = 0;
     struct mbuf		*m;
     struct ifaddr	*ifa;
@@ -108,7 +114,7 @@ at_control( cmd, data, ifp )
 	    return( EADDRNOTAVAIL );
 	}
 	/*FALLTHROUGH*/
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     case SIOCSIFADDR:
 #ifdef BSD4_4
@@ -119,11 +125,11 @@ at_control( cmd, data, ifp )
 	if ( suser( u.u_cred, &u.u_acflag )) {
 	    return( EPERM );
 	}
-#else BSD4_4
+#else /* BSD4_4 */
 	if ( !suser()) {
 	    return( EPERM );
 	}
-#endif BSD4_4
+#endif /* BSD4_4 */
 
 	sat = satosat( &ifr->ifr_addr );
 	nr = (struct netrange *)sat->sat_zero;
@@ -184,7 +190,7 @@ at_control( cmd, data, ifp )
 	    aa->aa_ifa.ifa_addr = (struct sockaddr *)&aa->aa_addr;
 	    aa->aa_ifa.ifa_dstaddr = (struct sockaddr *)&aa->aa_addr;
 	    aa->aa_ifa.ifa_netmask = (struct sockaddr *)&aa->aa_netmask;
-#endif BSD4_4
+#endif /* BSD4_4 */
 
 	    /*
 	     * Set/clear the phase 2 bit.
@@ -227,9 +233,9 @@ at_control( cmd, data, ifp )
     case SIOCGIFADDR:
 #ifdef BSD4_4
 	*(struct sockaddr_at *)&ifr->ifr_addr = aa->aa_addr;
-#else BSD4_4
+#else /* BSD4_4 */
 	ifr->ifr_addr = aa->aa_addr;
-#endif BSD4_4
+#endif /* BSD4_4 */
 	break;
 
     case SIOCSIFADDR:
@@ -272,7 +278,7 @@ at_control( cmd, data, ifp )
 	}
 	m_free( dtom( aa0 ));
 	break;
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     default:
 	if ( ifp == 0 || ifp->if_ioctl == 0 )
@@ -290,7 +296,7 @@ at_scrub( ifp, aa )
     struct sockaddr_at	netsat;
     int			error;
     u_short		net;
-#endif BSD4_4
+#endif /* ! BSD4_4 */
 
     if ( aa->aa_flags & AFA_ROUTE ) {
 #ifdef BSD4_4
@@ -299,7 +305,7 @@ at_scrub( ifp, aa )
 	    return( error );
 	}
 	aa->aa_ifa.ifa_flags &= ~IFA_ROUTE;
-#else BSD4_4
+#else /* BSD4_4 */
 	if ( ifp->if_flags & IFF_LOOPBACK ) {
 	    rtinit( &aa->aa_addr, &aa->aa_addr, SIOCDELRT, RTF_HOST );
 	} else {
@@ -325,7 +331,7 @@ at_scrub( ifp, aa )
 		}
 	    }
 	}
-#endif BSD4_4
+#endif /* BSD4_4 */
 	aa->aa_flags &= ~AFA_ROUTE;
     }
     return( 0 );
@@ -341,9 +347,9 @@ at_ifinit( ifp, aa, sat )
     struct netrange	nr, onr;
 #ifdef BSD4_4
     struct sockaddr_at	oldaddr;
-#else BSD4_4
+#else /* BSD4_4 */
     struct sockaddr	oldaddr;
-#endif BSD4_4
+#endif /* BSD4_4 */
     struct sockaddr_at	netaddr;
     int			s = splimp(), error = 0, i, j, netinc, nodeinc, nnets;
     u_short		net;
@@ -367,7 +373,7 @@ at_ifinit( ifp, aa, sat )
     if ( ifp->if_flags & IFF_LOOPBACK ) {
 #ifdef BSD4_4
 	AA_SAT( aa )->sat_len = sat->sat_len;
-#endif BSD4_4
+#endif /* BSD4_4 */
 	AA_SAT( aa )->sat_family = AF_APPLETALK;
 	AA_SAT( aa )->sat_addr.s_net = sat->sat_addr.s_net;
 	AA_SAT( aa )->sat_addr.s_node = sat->sat_addr.s_node;
@@ -456,15 +462,15 @@ at_ifinit( ifp, aa, sat )
     aa->aa_netmask.sat_family = AF_APPLETALK;
     aa->aa_netmask.sat_addr.s_net = 0xffff;
     aa->aa_netmask.sat_addr.s_node = 0;
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     if ( ifp->if_flags & IFF_LOOPBACK ) {
 #ifndef BSD4_4
 	rtinit( &aa->aa_addr, &aa->aa_addr, (int)SIOCADDRT,
 		RTF_HOST|RTF_UP );
-#else BSD4_4
+#else /* ! BSD4_4 */
 	error = rtinit( &(aa->aa_ifa), (int)RTM_ADD, RTF_HOST|RTF_UP );
-#endif BSD4_4
+#endif /* ! BSD4_4 */
     } else {
 #ifndef BSD4_4
 	/*
@@ -511,9 +517,9 @@ at_ifinit( ifp, aa, sat )
 		}
 	    }
 	}
-#else BSD4_4
+#else /* ! BSD4_4 */
 	error = rtinit( &(aa->aa_ifa), (int)RTM_ADD, RTF_UP );
-#endif BSD4_4
+#endif /* ! BSD4_4 */
     }
     if ( error ) {
 	aa->aa_addr = oldaddr;
@@ -525,7 +531,7 @@ at_ifinit( ifp, aa, sat )
 
 #ifdef BSD4_4
     aa->aa_ifa.ifa_flags |= IFA_ROUTE;
-#endif BSD4_4
+#endif /* BSD4_4 */
     aa->aa_flags |= AFA_ROUTE;
     splx( s );
     return( 0 );

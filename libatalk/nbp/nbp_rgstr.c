@@ -1,11 +1,13 @@
 /*
+ * $Id: nbp_rgstr.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
@@ -21,13 +23,15 @@
 #include <atalk/ddp.h>
 #include <atalk/netddp.h>
 
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 #include  "nbp_conf.h"
 
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature. */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
-#endif
+#endif /* ! SOCKLEN_T */
 
 int nbp_rgstr( sat, obj, type, zone )
     struct sockaddr_at	*sat;

@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_packet.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
@@ -45,7 +47,7 @@
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature. */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
-#endif
+#endif /* ! SOCKLEN_T */
 
 #ifdef EBUG
 #include <stdio.h>
@@ -97,7 +99,7 @@ void atp_print_addr( s, saddr )
     saddr->sat_port == ATADDR_ANYPORT ? printf( "*" ) :
       printf( "%d", saddr->sat_port );
 }
-#endif
+#endif /* EBUG */
 
 
 void atp_build_req_packet( pktbuf, tid, ctrl, atpb )
@@ -184,7 +186,7 @@ atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
     */
 #ifdef EBUG
     atp_print_bufuse( ah, "recv_atp checking queue" );
-#endif
+#endif /* EBUG */
     for ( pq = NULL, cq = ah->atph_queue; cq != NULL;
       pq = cq, cq = cq->atpbuf_next ) {
 	memcpy(&ahdr, cq->atpbuf_info.atpbuf_data + 1, 
@@ -196,7 +198,7 @@ atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
 	print_func( rfunc );
 	atp_print_addr( " from", &cq->atpbuf_addr );
 	putchar( '\n' );
-#endif
+#endif /* EBUG */
 	if ((( tid & ahdr.atphd_tid ) == ahdr.atphd_tid ) &&
 	    (( *func & rfunc ) == rfunc )
 	    && at_addr_eq( fromaddr, &cq->atpbuf_addr )) {
@@ -231,12 +233,12 @@ atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
     print_func( *func );
     atp_print_addr( " from", fromaddr );
     putchar( '\n' );
-#endif
+#endif /* EBUG */
 
     do {
 #ifdef EBUG
     fflush( stdout );
-#endif
+#endif /* EBUG */
 	faddrlen = sizeof( struct sockaddr_at );
 	memset( &faddr, 0, sizeof( struct sockaddr_at ));
 
@@ -257,7 +259,7 @@ atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
 	    atp_print_addr( " from", &faddr );
 	    putchar( '\n' );
 	    bprint( rbuf, recvlen );
-#endif
+#endif /* EBUG */
 	    if ( rfunc == ATP_TREL ) {
 		/* remove response from sent list */
 		for ( pq = NULL, cq = ah->atph_sent; cq != NULL;
@@ -269,7 +271,7 @@ atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
 		if ( cq != NULL ) {
 #ifdef EBUG
 	printf( "<%d> releasing transaction %hu\n", getpid(), ntohs( rtid ));
-#endif
+#endif /* EBUG */
 		    if ( pq == NULL ) {
 			ah->atph_sent = cq->atpbuf_next;
 		    } else {
@@ -295,7 +297,7 @@ atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
 		/* add packet to incoming queue */
 #ifdef EBUG
 	printf( "<%d> queuing incoming...\n", getpid() );
-#endif
+#endif /* EBUG */
 		if (( inbuf = atp_alloc_buf()) == NULL ) {
 		    return -1;
 		}

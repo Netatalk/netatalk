@@ -1,6 +1,10 @@
+/*
+ * $Id: pap_sendstatus.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 int pap_sendstatus(PAP pap)
 {

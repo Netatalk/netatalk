@@ -1,8 +1,12 @@
-/* close the connection */
+/*
+ * $Id: pap_close.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
+ * close the connection
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 int pap_close(PAP pap)
 {

@@ -1,11 +1,13 @@
 /*
+ * $Id: nbp_lkup.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
@@ -21,7 +23,9 @@
 #include <atalk/netddp.h>
 #include <atalk/ddp.h>
 
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 #include <errno.h>
 
 #include  "nbp_conf.h"
@@ -29,7 +33,7 @@
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature. */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
-#endif
+#endif /* ! SOCKLEN_T */
 
 int nbp_lookup( obj, type, zone, nn, nncnt, ataddr )
     const char		*obj, *type, *zone;
@@ -58,9 +62,9 @@ int nbp_lookup( obj, type, zone, nn, nncnt, ataddr )
     *data++ = DDPTYPE_NBP;
 #ifdef MACOSX_SERVER
     nh.nh_op = from.sat_addr.s_node ? NBPOP_BRRQ : NBPOP_LKUP;
-#else
+#else /* MACOSX_SERVER */
     nh.nh_op = NBPOP_BRRQ;
-#endif
+#endif /* MACOSX_SERVER */
 
     nh.nh_cnt = 1;
     nh.nh_id = ++nbp_id;
@@ -120,7 +124,7 @@ int nbp_lookup( obj, type, zone, nn, nncnt, ataddr )
       addr.sat_addr.s_net = ATADDR_ANYNET;
       addr.sat_addr.s_node = ATADDR_BCAST;
     }
-#endif
+#endif /* MACOSX_SERVER */
     addr.sat_port = nbp_port;
 
     cnt = 0;

@@ -1,11 +1,13 @@
 /*
+ * $Id: pap.c,v 1.6 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -16,7 +18,9 @@
 #include <atalk/pap.h>
 #include <atalk/nbp.h>
 #include <atalk/util.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <stdio.h>
 #include <string.h>
 #include <string.h>
@@ -34,7 +38,7 @@ int send_file(int fd, ATP atp, int lastfile);
 /* if there is a less hacky way to do this, please do it... */
 #ifdef DEBUG
 #define EBUG
-#endif
+#endif /* DEBUG */
 
 #undef DEBUG
 
@@ -172,7 +176,7 @@ int main( ac, av )
 	case 'W' :
 	    waitforidle = 1;
 	    break;
-#endif /*FUCKED*/
+#endif /* FUCKED */
 
 	case 'c' :
 	    cuts++;
@@ -284,7 +288,7 @@ DEBUG( printf( "SENDSTATUS >\n" ), fflush( stdout ));
 	    fprintf( stderr, "Bad status response!\n" );
 	    exit( 1 );
 	}
-#endif /*NONZEROSTATUS*/
+#endif /* NONZEROSTATUS */
 
 	if ( ((char *)rniov[ 0 ].iov_base)[ 1 ] != PAP_STATUS ||
 		atpb.atp_rresiovcnt != 1 ) {
@@ -443,7 +447,7 @@ DEBUG( printf( "CLOSE >\n" ), fflush( stdout ));
 	fprintf( stderr, "Bad connid in close!\n" );
 	exit( 1 );
     }
-#endif /*ZEROCONNID*/
+#endif /* ZEROCONNID */
 
 DEBUG( printf( "< CLOSEREPLY\n" ), fflush( stdout ));
 
@@ -601,7 +605,7 @@ DEBUG( printf( "| DUP %d\n", rseq ), fflush( stdout ));
 			}
 			if ( rseq++ == 0xffff ) rseq = 1;
 		    }
-#endif /*notdef*/
+#endif /* notdef */
 
 		    data = 1;
 		    port = ssat.sat_port;
@@ -666,7 +670,7 @@ DEBUG( printf( "< TICKLE\n" ), fflush( stdout ));
 		    fprintf( stderr, "Bad data response!\n" );
 		    exit( 1 );
 		}
-#endif /*ZEROCONNID*/
+#endif /* ZEROCONNID */
 		if ( ((char *)rniov[ 0 ].iov_base)[ 1 ] != PAP_DATA ) {
 		    fprintf( stderr, "Bad data response!\n" );
 		    exit( 1 );
@@ -805,7 +809,7 @@ DEBUG( printf( "SENDSTATUS >\n" ), fflush( stdout ));
 		fprintf( stderr, "Bad status response!\n" );
 		exit( 1 );
 	    }
-#endif /*NONZEROSTATUS*/
+#endif /* NONZEROSTATUS */
 
 	    if ( ((char *)rniov[ 0 ].iov_base)[ 1 ] != PAP_STATUS ||
 		    atpb.atp_rresiovcnt != 1 ) {
@@ -826,7 +830,7 @@ DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
 		    waitforprinter = 0;
 		}
 	    }
-#endif /*FUCKED*/
+#endif /* FUCKED */
 
 	    updatestatus( (char *) rniov[ 0 ].iov_base + 9,
 		    ((char *)rniov[ 0 ].iov_base)[ 8 ] );

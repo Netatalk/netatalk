@@ -1,3 +1,7 @@
+/*
+ * $Id: cnid_meta.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #define CNID_META_CNID_LEN      4
 #define CNID_META_MDATE_LEN     4  /* space for 8 */
 #define CNID_META_CDATE_LEN     4  /* space for 8 */

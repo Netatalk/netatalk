@@ -1,4 +1,6 @@
 /*
+ * $Id: aecho.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -27,7 +29,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -39,7 +41,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
@@ -53,7 +57,7 @@
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
-#endif
+#endif /* ! SOCKLEN_T */
 
 struct sockaddr_at	target;
 int			s, nsent = 0, nrecv = 0;
@@ -161,7 +165,7 @@ int main( ac, av )
     memset( &target, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     target.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     target.sat_family = AF_APPLETALK;
     if ( !atalk_aton( av[ optind ], &target.sat_addr )) {
 	if ( nbp_name( av[ optind ], &obj, &type, &zone ) || !obj ) {

@@ -1,4 +1,7 @@
-/* updcrc(3), crc(1) - calculate crc polynomials
+/*
+ * $Id: updcrc.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
+ * updcrc(3), crc(1) - calculate crc polynomials
  *
  * Calculate, intelligently, the CRC of a dataset incrementally given a 
  * buffer full at a time.
@@ -27,7 +30,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 /* The CRC polynomial.
  * These 4 values define the crc-polynomial.
@@ -39,15 +42,15 @@
 #define INIT_CRC 0L	/* init value:	-1	0	0	*/
 #if 0
 #define SWAPPED	/* bit order:	undef	defined	defined */
-#endif
+#endif /* 0 */
 #define W	16	/* bits in CRC:16	16	16	*/
 
     /* data type that holds a W-bit unsigned integer */
 #if W <= 16
 #  define WTYPE	unsigned short
-#else
+#else /* W <= 16 */
 #  define WTYPE   u_int32_t
-#endif
+#endif /* W <= 16 */
 
     /* the number of bits per char: don't change it. */
 #define B	8
@@ -100,9 +103,9 @@ updcrc( icrc, icp, icnt )
     while( cnt-- ) {
 #ifndef SWAPPED
 	crc = (crc<<B) ^ crctab[(crc>>(W-B)) ^ *cp++];
-#else
+#else /* SWAPPED */
 	crc = (crc>>B) ^ crctab[(crc & ((1<<B)-1)) ^ *cp++]; 
-#endif SWAPPED
+#endif /* SWAPPED */
     }
 
     return( crc );
@@ -139,7 +142,7 @@ initcrctab()
 	    printf("  ");
     }
 }
-#endif
+#endif /* MAKETAB */
 
 #ifdef TEST
 
@@ -191,7 +194,7 @@ main( ac, av )
     /* crc should now equal magic */
     buf[0] = buf[1] = buf[2] = buf[3] = 0;
     printf( "magic test: %lx =?= %lx\n", crc, updcrc(-1, buf, W/B));
-#endif MAGICCHECK
+#endif /* MAGICCHECK */
 }
 
-#endif
+#endif /* TEST */

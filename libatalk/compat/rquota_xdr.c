@@ -1,4 +1,7 @@
-/* taken from the quota-1.55 used on linux. here's the bsd copyright:
+/*
+ * $Id: rquota_xdr.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
+ * taken from the quota-1.55 used on linux. here's the bsd copyright:
  *
  * Copyright (c) 1980, 1990 Regents of the University of California. All
  * rights reserved.
@@ -9,7 +12,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h> /* to get __GNU_LIBRARY__ */
 

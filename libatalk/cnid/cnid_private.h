@@ -1,10 +1,16 @@
+/*
+ * $Id: cnid_private.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifndef LIBATALK_CNID_PRIVATE_H
 #define LIBATALK_CNID_PRIVATE_H 1
 
 #include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include <db.h>
 
@@ -91,7 +97,7 @@ typedef struct CNID_private {
 
 #ifndef __inline__
 #define __inline__
-#endif
+#endif /* __inline__ */
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
 static __inline__ char *make_cnid_data(const struct stat *st,

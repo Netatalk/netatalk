@@ -1,8 +1,14 @@
 /*
+ * $Id: at_proto.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  *
  * All Rights Reserved.  See COPYRIGHT.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/protosw.h>
 #include <sys/domain.h>
@@ -19,7 +25,7 @@ extern int		ddp_init();
 extern int		ddp_ifoutput();
 extern int		ddp_ifinput();
 extern int		ddp_ifioctl();
-#endif ultrix
+#endif /* ultrix */
 
 struct protosw		atalksw[] = {
     {
@@ -41,7 +47,7 @@ struct protosw		atalksw[] = {
 #ifdef ultrix
 	/* interface hooks */
 	ddp_ifoutput,	ddp_ifinput,	ddp_ifioctl,	0,
-#endif ultrix
+#endif /* ultrix */
     },
 };
 

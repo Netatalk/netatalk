@@ -1,7 +1,13 @@
 /*
+ * $Id: ddp_output.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -33,7 +39,7 @@ ddp_output( ddp, m )
 #ifndef BSD4_4
     struct mbuf		*m0;
     int			len;
-#endif BSD4_4
+#endif /* ! BSD4_4 */
     struct ifnet	*ifp;
     struct at_ifaddr	*aa = NULL;
     struct ddpehdr	*deh;
@@ -41,7 +47,7 @@ ddp_output( ddp, m )
 
 #ifdef BSD4_4
     M_PREPEND( m, sizeof( struct ddpehdr ), M_WAIT );
-#else BSD4_4
+#else /* BSD4_4 */
     for ( len = 0, m0 = m; m; m = m->m_next ) {
 	len += m->m_len;
     }
@@ -51,13 +57,13 @@ ddp_output( ddp, m )
 	return( ENOBUFS );
     }
     m->m_next = m0;
-#endif BSD4_4
+#endif /* BSD4_4 */
 
 #ifndef BSD4_4
 # define align(a)	(((a)+3)&0xfc)
     m->m_off = MMINOFF + align( SZ_ELAPHDR );
     m->m_len = sizeof( struct ddpehdr );
-#endif BSD4_4
+#endif /* ! BSD4_4 */
 
     deh = mtod( m, struct ddpehdr *);
     deh->deh_pad = 0;
@@ -65,9 +71,9 @@ ddp_output( ddp, m )
 
 #ifdef BSD4_4
     deh->deh_len = m->m_pkthdr.len;
-#else BSD4_4
+#else /* BSD4_4 */
     deh->deh_len = len + sizeof( struct ddpehdr );
-#endif BSD4_4
+#endif /* BSD4_4 */
 
     deh->deh_dnet = ddp->ddp_fsat.sat_addr.s_net;
     deh->deh_dnode = ddp->ddp_fsat.sat_addr.s_node;
@@ -134,9 +140,9 @@ ddp_route( m, ro )
     if ( ro->ro_rt && ( ifp = ro->ro_rt->rt_ifp )) {
 #ifdef BSD4_4
 	net = satosat( ro->ro_rt->rt_gateway )->sat_addr.s_net;
-#else BSD4_4
+#else /* BSD4_4 */
 	net = satosat( &ro->ro_rt->rt_gateway )->sat_addr.s_net;
-#endif BSD4_4
+#endif /* BSD4_4 */
 	for ( aa = at_ifaddr; aa; aa = aa->aa_next ) {
 	    if ( aa->aa_ifp == ifp &&
 		    ntohs( net ) >= ntohs( aa->aa_firstnet ) &&
@@ -170,11 +176,11 @@ ddp_route( m, ro )
 	if ( m == NULL ) {
 	    return( ENOBUFS );
 	}
-#else BSD4_4
+#else /* BSD4_4 */
 	m->m_off -= SZ_ELAPHDR;
 	m->m_len += SZ_ELAPHDR;
-#endif BSD4_4
-# endif notdef
+#endif /* BSD4_4 */
+# endif /* notdef */
 
 	MGET( m0, M_WAIT, MT_HEADER );
 	if ( m0 == 0 ) {
@@ -197,9 +203,9 @@ ddp_route( m, ro )
 	} else {
 #ifdef BSD4_4
 	    elh->el_dnode = satosat( ro->ro_rt->rt_gateway )->sat_addr.s_node;
-#else BSD4_4
+#else /* BSD4_4 */
 	    elh->el_dnode = satosat( &ro->ro_rt->rt_gateway )->sat_addr.s_node;
-#endif BSD4_4
+#endif /* BSD4_4 */
 	}
     }
 
@@ -211,9 +217,9 @@ ddp_route( m, ro )
     } else {
 #ifdef BSD4_4
 	gate = *satosat( ro->ro_rt->rt_gateway );
-#else BSD4_4
+#else /* BSD4_4 */
 	gate = *satosat( &ro->ro_rt->rt_gateway );
-#endif BSD4_4
+#endif /* BSD4_4 */
     }
     ro->ro_rt->rt_use++;
 
@@ -230,11 +236,11 @@ ddp_route( m, ro )
 #ifdef notdef
 	m->m_off += SZ_ELAPHDR;
 	m->m_len -= SZ_ELAPHDR;
-#endif notdef
+#endif /* notdef */
 	ddp_input( m, ifp, (struct elaphdr *)NULL, 2 );
 	return( 0 );
     }
-#endif ultrix
+#endif /* ultrix */
 
 #ifdef _IBMR2
     /*
@@ -256,6 +262,6 @@ ddp_route( m, ro )
 	bcopy( &eh, (*(struct sockaddr *)&gate).sa_data,
 		sizeof( (*(struct sockaddr *)&gate).sa_data ));
     }
-#endif _IBMR2
+#endif /* _IBMR2 */
     return((*ifp->if_output)( ifp, m, &gate ));
 }

@@ -1,9 +1,17 @@
-($Id: ChangeLog,v 1.56 2001-06-27 18:22:19 uhees Exp $)
+($Id: ChangeLog,v 1.57 2001-06-29 14:14:46 rufustfirefly Exp $)
+
+2001-06-27  jeff b  <jeff@univrel.pr.uconn.edu>
+	* many, many, files: more malformed ifdef correction, nicer
+	comments, etc, etc, etc
+
+	* etc/afpd/directory.c, etc/afpd/uid.c, etc/afpd/uid.h: fixes
+	for force-uidgid to compile properly. haven't tested it, but
+	no more compile errors. (Jeff)
 
 2001-06-27  uwe hees <hees@viva.de>
 	* etc/uams/uams_guest.c: fixed a typo.
 
-2001-06-26  andy m  <morgan@orst.edu
+2001-06-26  andy m  <morgan@orst.edu>
 	* etc/papd/file.c: modified markline() to return 1 instead
 	of *linelength for successful completion. This should fix
 	the remaining binary printing problems in papd.  Thanks go

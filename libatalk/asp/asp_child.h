@@ -1,4 +1,6 @@
 /*
+ * $Id: asp_child.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -21,6 +23,9 @@
  *	netatalk@itd.umich.edu
  */
 
+#ifndef _ASP_CHILD_H
+#define _ASP_CHILD_H 1
+
 struct asp_child {
     int			ac_pid;
     int			ac_state;
@@ -30,3 +35,5 @@ struct asp_child {
 #define ACSTATE_DEAD	0
 #define ACSTATE_OK	1
 #define ACSTATE_BAD	7
+
+#endif /* _ASP_CHILD_H */

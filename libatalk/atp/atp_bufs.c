@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_bufs.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -27,7 +29,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +49,7 @@ static struct atpbuf 	*free_list = NULL;	/* free buffers */
 
 #ifdef EBUG
 static int		numbufs = 0;
-#endif EBUG
+#endif /* EBUG */
 
 /* only call this when the free_list is empty...
  * N_MORE_BUFS must be >= one
@@ -114,7 +116,7 @@ void atp_print_bufuse( ah, s )
 	getpid(), s, numbufs, sentcount, incount,
 	( ah->atph_reqpkt != NULL ) ? 1: 0, respcount );
 }
-#endif EBUG
+#endif /* EBUG */
 
 
 struct atpbuf *atp_alloc_buf(void)
@@ -127,7 +129,7 @@ struct atpbuf *atp_alloc_buf(void)
     free_list = free_list->atpbuf_next;
 #ifdef EBUG
     ++numbufs;
-#endif EBUG
+#endif /* EBUG */
     return bp;
 }
 
@@ -142,7 +144,7 @@ int atp_free_buf( bp )
     free_list = bp;
 #ifdef EBUG
     --numbufs;
-#endif EBUG
+#endif /* EBUG */
     return 0;
 }
 

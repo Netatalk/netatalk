@@ -1,12 +1,18 @@
+/*
+ * $Id: megatron.c,v 1.6 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <time.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -268,7 +274,7 @@ int megatron( path, module, newname, flags )
 	fprintf( stderr, "megatron: forkred is \t\t%d\n", forkred );
 	fprintf( stderr, "megatron: fh.forklen[%d] is \t%d\n", fork, 
 		ntohl( fh.forklen[ fork ] ));
-#endif
+#endif /* DEBUG */
 	if (( bufc < 0 ) || ( forkred != ntohl( fh.forklen[ fork ] ))) {
 	    fprintf( stderr, "%s: Problem with input, dude\n", path );
 	    to_close( module, TRASH );
@@ -309,7 +315,7 @@ int main( argc, argv )
 	fprintf( stderr, "megatron: list of program links messed up\n" );
 	return( -1 );
     }
-#endif
+#endif /* DEBUG */
 
     for ( c = 0 ; (( c < converts ) && ( module < 0 )) ; ++c ) {
 	if ( strcmp( name[ c ], progname ) == 0 ) module = c;

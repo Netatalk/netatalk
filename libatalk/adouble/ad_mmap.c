@@ -1,4 +1,7 @@
-/* ad_mmap provides interfaces to memory mapped files. as this is the
+/*
+ * $Id: ad_mmap.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
+ * ad_mmap provides interfaces to memory mapped files. as this is the
  * case, we don't have to deal w/ temporary buffers such as
  * ad_data. the ad_mmap routines are designed to not interact w/ the
  * ad_read/ad_write routines to avoid confusion.
@@ -6,13 +9,17 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <string.h>
 
 #include <atalk/adouble.h>

@@ -1,11 +1,12 @@
 /*
+ * $Id: asp_attn.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <string.h>

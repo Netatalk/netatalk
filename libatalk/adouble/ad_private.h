@@ -1,3 +1,7 @@
+/*
+ * $Id: ad_private.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifndef LIBATALK_ADOUBLE_AD_PRIVATE_H
 #define LIBATALK_ADOUBLE_AD_PRIVATE_H 1
 
@@ -5,11 +9,11 @@
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *) -1)
-#endif
+#endif /* ! MAP_FAILED */
 
 #ifndef __inline__
 #define __inline__
-#endif
+#endif /* ! __inline__ */
 
 /* this is so that we can keep lists of fds referencing the same file
  * around. that way, we can honor locks created by the same process
@@ -17,7 +21,7 @@
 #ifdef USE_FLOCK_LOCKS
 #define adf_lock_init(a)
 #define adf_lock_free(a)
-#else
+#else /* USE_FLOCK_LOCKS */
 
 #define adf_lock_init(a) do { \
 	(a)->adf_lockmax = (a)->adf_lockcount = 0; \
@@ -30,6 +34,6 @@
 	free((a)->adf_lock); \
 	adf_lock_init(a); \
 } while (0)
-#endif
+#endif /* USE_FLOCK_LOCKS */
 
 #endif /* libatalk/adouble/ad_private.h */

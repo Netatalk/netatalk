@@ -1,4 +1,6 @@
 /*
+ * $Id: getusershell.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1985 Regents of the University of California.
  * All rights reserved.
  *
@@ -19,7 +21,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)getusershell.c	5.6 (Berkeley) 6/1/90";
@@ -44,7 +46,7 @@ static char *okshells[] = {
     "/bin/sh", "/bin/csh",
 #ifdef _IBMR2
     "/bin/ksh",
-#endif _IBMR2
+#endif /* _IBMR2 */
     0
 };
 
@@ -134,4 +136,4 @@ initshells()
 	return (shells);
 }
 
-# endif ultrix
+# endif /* ultrix */

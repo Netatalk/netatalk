@@ -1,4 +1,6 @@
 /*
+ * $Id: psorder.c,v 1.5 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -33,11 +35,15 @@
 #include <sys/uio.h>
 #include <sys/file.h>
 #include <ctype.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include "pa.h"
 #include "psorder.h"
 
@@ -139,7 +145,7 @@ filesetup( inputfile, infd, tfile, tfd )
 #if DEBUG
     fprintf( stderr, "Input file or stdin and stdout opened.\n" );
     fprintf( stderr, "Input file descriptor is %d .\n", *infd );
-#endif
+#endif /* DEBUG */
 
 /*
 	make temporary file
@@ -154,7 +160,7 @@ filesetup( inputfile, infd, tfile, tfd )
 #if DEBUG
     fprintf( stderr, "Temporary file %s created and opened.\n", tfile );
     fprintf( stderr, "Temporary file descriptor is %d .\n", *tfd );
-#endif
+#endif /* DEBUG */
 
     psinfo.firstpage = NULL;
     psinfo.lastpage = NULL;
@@ -205,7 +211,7 @@ readps( inputfd, tempfd, tempfile )
     }
 #if DEBUG
     fprintf( stderr, "%s\n", curtok );
-#endif
+#endif /* DEBUG */
 
 /*
  * not postscript
@@ -213,7 +219,7 @@ readps( inputfd, tempfd, tempfile )
     if ( strcmp( curtok, PPSADOBE ) != 0 ) {
 #if DEBUG
     fprintf( stderr, "in the not postscript section of readps\n" );
-#endif
+#endif /* DEBUG */
 	while (( c = pa_getchar( pb )) != 0 ) {
 	    ccread++;
 	    (void)putc( c, tempstream );
@@ -230,7 +236,7 @@ readps( inputfd, tempfd, tempfile )
  */
 #if DEBUG
     fprintf( stderr, "in the postscript section of readps\n" );
-#endif
+#endif /* DEBUG */
     while (( c = pa_getchar( pb )) != 0 ) {
 	ccread++;
 	(void)putc( c, tempstream );
@@ -239,7 +245,7 @@ readps( inputfd, tempfd, tempfile )
 	if ((( pc == '\r' ) || ( pc == '\n' )) && ( cc == '%' )) {
 #if DEBUG
 	    fprintf( stderr, "supposed start of match, cc = %c\n", cc );
-#endif
+#endif /* DEBUG */
 	    pa_match( pb );
 	    ccmatch = ccread - 1;
 	    while ( ( c = pa_getchar( pb ) ) ) {
@@ -253,7 +259,7 @@ readps( inputfd, tempfd, tempfile )
 		    curtok = pa_gettok( pb );
 #if DEBUG
 		    fprintf( stderr, "%s\n", curtok );
-#endif
+#endif /* DEBUG */
 		    if ( handletok( ccmatch, curtok ) < 0 ) {
 			perror( "malloc died" );
 			filecleanup( -1, tempfd, tempfile );
@@ -283,19 +289,19 @@ handletok( count, token )
 	incdoc--;
 #if DEBUG
 	fprintf( stderr, "found an EndDoc\n" );
-#endif
+#endif /* DEBUG */
 
     } else if ( strncmp( PBEGINDOC, token, strlen( PBEGINDOC )) == 0 ) {
 	incdoc++;
 #if DEBUG
 	fprintf( stderr, "found a BeginDoc\n" );
-#endif
+#endif /* DEBUG */
 
     } else if ( !incdoc && 
 	    ( strncmp( PPAGE, token, strlen( PPAGE )) == 0 )) {
 #if DEBUG
 	fprintf( stderr, "found a Page\n" );
-#endif
+#endif /* DEBUG */
 	if (( newpage = getpspage( count )) == NULL ) {
 	    return( -1 );
 	}
@@ -317,13 +323,13 @@ handletok( count, token )
 #if DEBUG
 	fprintf( stderr, "page lable %s, page ord %s\n", newpage->lable,
 		newpage->ord );
-#endif
+#endif /* DEBUG */
 
     } else if ( !incdoc && 
 	    ( strncmp( PPAGES, token, strlen( PPAGES )) == 0 )) {
 #if DEBUG
 	fprintf( stderr, "found a Pages\n" );
-#endif
+#endif /* DEBUG */
 	psinfo.pages.offset = count;
 	psinfo.pages.end = strlen( token ) + count;
 	while ( *token++ != ':' );
@@ -331,7 +337,7 @@ handletok( count, token )
 	if ( strncmp( ATEND, token, strlen( ATEND )) == 0 ) {
 #if DEBUG
 	    fprintf( stderr, "it is a Pages: (atend)\n" );
-#endif
+#endif /* DEBUG */
 	    psinfo.pages.offset = 0;
 	    psinfo.pages.end = 0;
 	} else {
@@ -344,14 +350,14 @@ handletok( count, token )
 #if DEBUG
 	    fprintf( stderr, "number of pages %s\n", psinfo.pages.num );
 	    fprintf( stderr, "order control number %s\n", psinfo.pages.order );
-#endif
+#endif /* DEBUG */
 	}
 
     } else if ( !incdoc && 
 	    ( strncmp( PTRAILER, token, strlen( PTRAILER )) == 0 )) {
 #if DEBUG
 	fprintf( stderr, "found the Trailer\n" );
-#endif
+#endif /* DEBUG */
 	if  ( psinfo.trailer == 0 ) {
 	    psinfo.trailer = count;
 	}

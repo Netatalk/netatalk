@@ -1,8 +1,12 @@
-/* send a tickle */
+/*
+ * $Id: pap_tickle.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
+ * send a tickle
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 void pap_tickle(PAP pap, const u_int8_t connid, struct sockaddr_at *sat)
 {

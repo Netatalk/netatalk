@@ -1,25 +1,31 @@
 /*
+ * $Id: ad_write.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 
 #include <atalk/adouble.h>
 
 #ifndef MIN
 #define MIN(a,b)	((a)<(b)?(a):(b))
-#endif
+#endif /* ! MIN */
 
 /* XXX: this would benefit from pwrite. 
  *      locking has to be checked before each stream of consecutive
@@ -67,7 +73,7 @@ ssize_t ad_write( ad, eid, off, end, buf, buflen )
 	  cc = buflen;
 	  goto ad_write_done;
 	}	  
-#endif
+#endif /* ! USE_MMAPPED_HEADERS */
 
 	if ( ad->ad_hf.adf_off != cc ) {
 	  if ( lseek( ad->ad_hf.adf_fd, (off_t) cc, SEEK_SET ) < 0 ) {
@@ -85,9 +91,9 @@ ssize_t ad_write( ad, eid, off, end, buf, buflen )
 	if (ad->ad_hf.adf_off < ad_getentryoff(ad, ADEID_RFORK))
 	  memcpy(ad->ad_data + ad->ad_hf.adf_off, buf,
 		 MIN(sizeof(ad->ad_data) - ad->ad_hf.adf_off, cc));
-#else	  
+#else /* ! USE_MMAPPED_HEADERS */  
 ad_write_done:
-#endif
+#endif /* ! USE_MMAPPED_HEADERS */
 	  if ( ad->ad_eid[ eid ].ade_len < off + cc ) {
 	    ad->ad_eid[ eid ].ade_len = off + cc;
 	  }

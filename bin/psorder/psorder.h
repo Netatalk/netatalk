@@ -1,4 +1,6 @@
 /*
+ * $Id: psorder.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,11 +25,11 @@
 
 #ifndef	STDIN
 #	define	STDIN	"-"
-#endif
+#endif /* ! STDIN */
 #ifndef FALSE
 #	define	FALSE	0
 #	define	TRUE	1
-#endif
+#endif /* ! FALSE */
 
 #define REVCHAR		'd'
 #define FORWCHAR	'u'

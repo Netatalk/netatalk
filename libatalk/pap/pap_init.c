@@ -1,6 +1,10 @@
+/*
+ * $Id: pap_init.c,v 1.3 2001-06-29 14:14:47 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 PAP pap_init(ATP atp)
 {
@@ -12,7 +16,7 @@ PAP pap_init(ATP atp)
     pap->pap_atp = atp;
 #ifdef BSD4_4
     pap->pap_sat.sat_len = sizeof(struct sockaddr_at);
-#endif
+#endif /* BSD4_4 */
     pap->pap_sat.sat_family = AF_APPLETALK;
     pap->pap_sat.sat_addr.s_net = ATADDR_ANYNET;
     pap->pap_sat.sat_addr.s_node = ATADDR_ANYNODE;

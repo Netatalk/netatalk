@@ -1,4 +1,7 @@
-/*  common functions, defines, and structures for afile, achfile, and acleandir
+/*
+ * $Id: common.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
+    common functions, defines, and structures for afile, achfile, and acleandir
 
     Copyright (C) 2001 Sebastian Rittau.
     All rights reserved.

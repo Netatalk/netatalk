@@ -1,4 +1,6 @@
 /*
+ * $Id: ad_sendfile.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -10,10 +12,12 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -61,16 +65,16 @@ ssize_t ad_readfile(const struct adouble *ad, const int eid,
   fd = ad_sendfile_init(ad, eid, &off, 0);
 #ifdef __linux__
   cc = sendfile(sock, fd, &off, len);
-#endif
+#endif /* __linux__ */
 
 #ifdef BSD4_4
   if (sendfile(fd, sock, off, len, NULL, &cc, 0) < 0)
     return -1;
-#endif
+#endif /* BSD4_4 */
 
   return cc;
 }
-#endif
+#endif /* HAVE_SENDFILE_READ */
 
 #if 0
 #ifdef HAVE_SENDFILE_WRITE
@@ -91,7 +95,7 @@ ssize_t ad_writefile(struct adouble *ad, const int eid,
     ad_setentrylen(ad, eid, off);
 
   return cc;
-#endif
+#endif /* __linux__ */
 }
-#endif
-#endif
+#endif /* HAVE_SENDFILE_WRITE */
+#endif /* 0 */

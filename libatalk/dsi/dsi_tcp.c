@@ -1,4 +1,6 @@
 /*
+ * $Id: dsi_tcp.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -8,23 +10,27 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #define USE_TCP_NODELAY
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <errno.h>
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif
+#endif /* HAVE_STDINT_H */
 
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -37,13 +43,13 @@
 
 #ifdef __svr4__
 #include <sys/sockio.h>
-#endif
+#endif /* __svr4__ */
 
 #ifdef TCPWRAP
 #include <tcpd.h>
 int allow_severity = LOG_INFO;
 int deny_severity = LOG_WARNING;
-#endif
+#endif /* TCPWRAP */
 
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
@@ -55,17 +61,17 @@ int deny_severity = LOG_WARNING;
 
 #ifndef DSI_TCPMAXPEND
 #define DSI_TCPMAXPEND      20       /* max # of pending connections */
-#endif
+#endif /* DSI_TCPMAXPEND */
 
 #ifndef DSI_TCPTIMEOUT
 #define DSI_TCPTIMEOUT      120     /* timeout in seconds for connections */
-#endif
+#endif /* ! DSI_TCPTIMEOUT */
 
 
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature. */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
-#endif
+#endif /* ! SOCKLEN_T */
 
 static void dsi_tcp_close(DSI *dsi)
 {
@@ -105,7 +111,7 @@ static int dsi_tcp_open(DSI *dsi)
       dsi->socket = -1;
     }
   }
-#endif
+#endif /* TCPWRAP */
 
   if (dsi->socket < 0)
     return -1;
@@ -229,15 +235,15 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 #ifdef SO_REUSEADDR
     port = 1;
     setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &port, sizeof(port));
-#endif
+#endif /* SO_REUSEADDR */
 
 #ifdef USE_TCP_NODELAY 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
-#endif
+#endif /* ! SOL_TCP */
     port = 1;
     setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &port, sizeof(port));
-#endif
+#endif /* USE_TCP_NODELAY */
 
     /* now, bind the socket and set it up for listening */
     if ((bind(dsi->serversock, (struct sockaddr *) &dsi->server, 
@@ -265,7 +271,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 
 #ifndef IFF_SLAVE
 #define IFF_SLAVE 0
-#endif
+#endif /* ! IFF_SLAVE */
 	if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
 	  continue;
 

@@ -1,13 +1,21 @@
+/*
+ * $Id: macbin.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/time.h>
 #include <sys/param.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <string.h>
 #include <strings.h>
 #include <syslog.h>
@@ -30,7 +38,7 @@
  */
 #ifndef	STDIN
 #	define	STDIN	"-"
-#endif
+#endif /* STDIN */
 
 /*	Yes and no
  */
@@ -74,7 +82,7 @@ int bin_open( binfile, flags, fh, options )
 
 #if DEBUG
     fprintf( stderr, "entering bin_open\n" );
-#endif
+#endif /* DEBUG */
 
     /* call localtime so that we get the timezone offset */
     bin.gmtoff = 0;
@@ -83,7 +91,7 @@ int bin_open( binfile, flags, fh, options )
     tp = localtime(&t);
     if (tp)
         bin.gmtoff = tp->tm_gmtoff;
-#endif
+#endif /* ! NO_STRUCT_TM_GMTOFF */
 
     if ( flags == O_RDONLY ) { /* input */
 	if ( strcmp( binfile, STDIN ) == 0 ) {
@@ -94,7 +102,7 @@ int bin_open( binfile, flags, fh, options )
 	}
 #if DEBUG
 	fprintf( stderr, "opened %s for read\n", binfile );
-#endif
+#endif /* DEBUG */
 	if ((( rc = test_header() ) > 0 ) && 
 		( bin_header_read( fh, rc ) == 0 )) {
 	    return( 0 );
@@ -109,7 +117,7 @@ int bin_open( binfile, flags, fh, options )
 #if DEBUG
 	  fprintf( stderr, "sizeof bin.path\t\t\t%d\n", sizeof( bin.path ));
 	  fprintf( stderr, "maxlen \t\t\t\t%d\n", maxlen );
-#endif
+#endif /* DEBUG */
 	  strncpy( bin.path, fh->name, maxlen );
 	  strncpy( bin.path, mtoupath( bin.path ), maxlen );
 	  strncat( bin.path, ".bin", maxlen - strlen( bin.path ));
@@ -120,7 +128,7 @@ int bin_open( binfile, flags, fh, options )
 #if DEBUG
 	  fprintf( stderr, "opened %s for write\n", 
 		   (options & OPTION_STDOUT) ? "(stdout)" : bin.path );
-#endif
+#endif /* DEBUG */
 	}
 
 	if ( bin_header_write( fh ) != 0 ) {
@@ -143,7 +151,7 @@ int bin_close( keepflag )
 {
 #if DEBUG
     fprintf( stderr, "entering bin_close\n" );
-#endif
+#endif /* DEBUG */
     if ( keepflag == KEEP ) {
 	return( close( bin.filed ));
     } else if ( keepflag == TRASH ) {
@@ -176,7 +184,7 @@ int bin_read( fork, buffer, length )
 #if DEBUG >= 3
     fprintf( stderr, "bin_read: fork is %s\n", forkname[ fork ] );
     fprintf( stderr, "bin_read: remaining length is %d\n", bin.forklen[fork] );
-#endif
+#endif /* DEBUG >= 3 */
 
     if ( bin.forklen[ fork ] < 0 ) {
 	fprintf( stderr, "This should never happen, dude!\n" );
@@ -188,14 +196,14 @@ int bin_read( fork, buffer, length )
 	    pos = lseek( bin.filed, 0, SEEK_CUR );
 #if DEBUG
 	    fprintf( stderr, "current position is %ld\n", pos );
-#endif
+#endif /* DEBUG */
 	    pos %= HEADBUFSIZ;
 	    if (pos != 0) {
 	      pos = lseek( bin.filed, HEADBUFSIZ - pos, SEEK_CUR );
 	    }
 #if DEBUG
 	    fprintf( stderr, "current position is %ld\n", pos );
-#endif
+#endif /* DEBUG */
 	}
 	return( 0 );
     }
@@ -208,14 +216,14 @@ int bin_read( fork, buffer, length )
 #if DEBUG >= 3
     fprintf( stderr, "bin_read: readlen is %d\n", readlen );
     fprintf( stderr, "bin_read: cc is %d\n", cc );
-#endif
+#endif /* DEBUG >= 3 */
 
     buf_ptr = buffer;
     while (( readlen > 0 ) && ( cc > 0 )) {
 	if (( cc = read( bin.filed, buf_ptr, readlen )) > 0 ) {
 #if DEBUG >= 3
 	    fprintf( stderr, "bin_read: cc is %d\n", cc );
-#endif
+#endif /* DEBUG >= 3 */
 	    readlen -= cc;
 	    buf_ptr += cc;
 	}
@@ -227,7 +235,7 @@ int bin_read( fork, buffer, length )
 
 #if DEBUG >= 3
     fprintf( stderr, "bin_read: chars read is %d\n", cc );
-#endif
+#endif /* DEBUG >= 3 */
     return( cc );
 }
 
@@ -251,7 +259,7 @@ int bin_write( fork, buffer, length )
 #if DEBUG >= 3
     fprintf( stderr, "bin_write: fork is %s\n", forkname[ fork ] );
     fprintf( stderr, "bin_write: remaining length is %d\n", bin.forklen[fork] );
-#endif
+#endif /* DEBUG >= 3 */
 
     if (( fork == RESOURCE ) && ( bin.forklen[ DATA ] != 0 )) {
 	fprintf( stderr, "Forklength error.\n" );
@@ -268,7 +276,7 @@ int bin_write( fork, buffer, length )
 
 #if DEBUG >= 3
     fprintf( stderr, "bin_write: write length is %d\n", writelen );
-#endif
+#endif /* DEBUG >= 3 */
 
     while (( writelen > 0 ) && ( cc >= 0 )) {
 	cc = write( bin.filed, buf_ptr, writelen );
@@ -294,7 +302,7 @@ int bin_write( fork, buffer, length )
 	pos = lseek( bin.filed, 0, SEEK_CUR );
 #if DEBUG
 	fprintf( stderr, "current position is %ld\n", pos );
-#endif
+#endif /* DEBUG */
 	pos %= HEADBUFSIZ;
 	if (pos != 0) { /* pad only if we need to */
 	  pos = lseek( bin.filed, HEADBUFSIZ - pos - 1, SEEK_CUR );
@@ -305,12 +313,12 @@ int bin_write( fork, buffer, length )
 	}
 #if DEBUG
 	  fprintf( stderr, "current position is %ld\n", pos );
-#endif
+#endif /* DEBUG */
     }
 
 #if DEBUG
 	fprintf( stderr, "\n" );
-#endif
+#endif /* DEBUG */
 
     return( length );
 }
@@ -366,7 +374,7 @@ int bin_header_read( fh, revision )
 #ifndef MACBINARY_PLAY_NICE_WITH_OTHERS /* (RLB) */
     memcpy( &fh->finder_info.fdFlags, head_buf + 73, 1 );
     fh->finder_info.fdFlags &= mask;
-#else
+#else /* ! MACBINARY_PLAY_NICE_WITH_OTHERS */
 	memcpy( &fh->finder_info.fdFlags, head_buf + 73, 2 );
 #endif /* ! MACBINARY_PLAY_NICE_WITH_OTHERS */
 
@@ -411,7 +419,7 @@ int bin_header_read( fh, revision )
 	fprintf( stderr, "resource fork length\t%ld\n", bin.forklen[RESOURCE] );
 	fprintf( stderr, "\n" );
     }
-#endif
+#endif /* DEBUG >= 5 */
 
     return( 0 );
 }
@@ -438,7 +446,7 @@ int bin_header_write( fh )
 
 #ifndef MACBINARY_PLAY_NICE_WITH_OTHERS /* (RLB) */
     memcpy( head_buf + 73, &fh->finder_info.fdFlags, 1 );
-#else
+#else /* ! MACBINARY_PLAY_NICE_WITH_OTHERS */
     memcpy( head_buf + 73, &fh->finder_info.fdFlags, 2 );
 #endif /* ! MACBINARY_PLAY_NICE_WITH_OTHERS */
 
@@ -493,7 +501,7 @@ int bin_header_write( fh )
 	fprintf( stderr, "resource fork length\t%ld\n", bin.forklen[RESOURCE] );
 	fprintf( stderr, "\n" );
     }
-#endif
+#endif /* DEBUG >= 5 */
 
     write_ptr = (char *)head_buf;
     wc = sizeof( head_buf );
@@ -538,7 +546,7 @@ int test_header(void)
 
 #if DEBUG
     fprintf( stderr, "entering test_header\n" );
-#endif
+#endif /* DEBUG */
 
     cc = read( bin.filed, (char *)head_buf, sizeof( head_buf ));
     if ( cc < sizeof( head_buf )) {
@@ -548,7 +556,7 @@ int test_header(void)
 
 #if DEBUG
     fprintf( stderr, "was able to read HEADBUFSIZ bytes\n" );
-#endif
+#endif /* DEBUG */
 
     /* check for macbinary III header */
     if (memcmp(head_buf + 102, "mBIN", 4) == 0)
@@ -558,7 +566,7 @@ int test_header(void)
     if (( head_buf[ 0 ] == 0 ) || ( head_buf[ 74 ] == 0 )) {
 #if DEBUG
       fprintf( stderr, "byte 0 and 74 are both zero\n" );
-#endif
+#endif /* DEBUG */
       bin.headercrc = updcrc( (u_short) 0, head_buf, 124 );
       memcpy(&header_crc, head_buf + 124, sizeof( header_crc ));
       header_crc = ntohs( header_crc );
@@ -568,7 +576,7 @@ int test_header(void)
 
 #if DEBUG
       fprintf( stderr, "header crc didn't pan out\n" );
-#endif
+#endif /* DEBUG */
     }
 
     /* now see if we have a macbinary file. */
@@ -578,7 +586,7 @@ int test_header(void)
     memcpy( &namelen, head_buf + 1, sizeof( namelen ));
 #if DEBUG
     fprintf( stderr, "name length is %d\n", namelen );
-#endif
+#endif /* DEBUG */
     if (( namelen < 1 ) || ( namelen > 63 )) {
 	return( -1 );
     }
@@ -600,7 +608,7 @@ int test_header(void)
 
 #if DEBUG
     fprintf( stderr, "byte 82 is zero and name length is cool\n" );
-#endif
+#endif /* DEBUG */
 
     return( 1 );
 }

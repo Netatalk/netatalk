@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_sreq.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +57,7 @@ atp_sreq( ah, atpb, respcount, flags )
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_sreq" );
-#endif
+#endif /* EBUG */
 
     /* check parameters
     */
@@ -96,12 +98,12 @@ atp_sreq( ah, atpb, respcount, flags )
     atp_print_addr( " to", atpb->atp_saddr );
     putchar( '\n' );
     bprint( req_buf->atpbuf_info.atpbuf_data, req_buf->atpbuf_dlen );
-#endif
+#endif /* EBUG */
 
     gettimeofday( &ah->atph_reqtv, (struct timezone *)0 );
 #ifdef DROPPACKETS
 if (( random() % 3 ) != 2 ) {
-#endif
+#endif /* DROPPACKETS */
     if ( netddp_sendto( ah->atph_socket, req_buf->atpbuf_info.atpbuf_data,
 	    req_buf->atpbuf_dlen, 0, (struct sockaddr *) atpb->atp_saddr,
 	    sizeof( struct sockaddr_at )) != req_buf->atpbuf_dlen ) {
@@ -110,7 +112,7 @@ if (( random() % 3 ) != 2 ) {
     }
 #ifdef DROPPACKETS
 } else printf( "<%d> atp_sreq: dropped request\n", getpid() );
-#endif
+#endif /* DROPPACKETS */
 
     if ( atpb->atp_sreqto != 0 ) {
 	if ( ah->atph_reqpkt != NULL ) {

@@ -1,16 +1,28 @@
 /* 
+ * $Id: cnid_add.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
  * cnid_add (db, dev, ino, did, name, hint): 
  * add a name to the CNID database. we use both dev/ino and did/name
- * to keep track of things. */
+ * to keep track of things.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 #include <syslog.h>
 

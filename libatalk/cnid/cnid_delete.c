@@ -1,9 +1,15 @@
 /* 
+ * $Id: cnid_delete.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
  * cnid_delete: delete a CNID from the database 
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <string.h>

@@ -1,19 +1,21 @@
 /*
+ * $Id: endian.h,v 1.4 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  *
  * This file handles both byte ordering and integer sizes.
  */
 
-#  ifndef _ATALK_ENDIAN_H_
+#ifndef _ATALK_ENDIAN_H_
 #define _ATALK_ENDIAN_H_
-
-#include <sys/types.h>
-#include <netinet/in.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
+
+#include <sys/types.h>
+#include <netinet/in.h>
 
 #ifdef _IBMR2
 #include <sys/machine.h>
@@ -31,13 +33,13 @@ typedef uint64_t       u_int64_t;
 #ifdef sun
 #ifdef BSD4_3
 #include <sys/bitypes.h>
-#else
+#else /* BSD4_3 */
 /* solaris and sunos don't consistently define u_int*_t. */
 typedef unsigned char      u_int8_t;
 typedef unsigned short     u_int16_t;
 typedef unsigned int       u_int32_t;
 typedef int                int32_t;
-#endif
+#endif /* BSD4_3 */
 
 typedef unsigned long long u_int64_t;
 
@@ -56,24 +58,24 @@ typedef unsigned char  u_int8_t;
 typedef unsigned short u_int16_t;
 typedef unsigned int   u_int32_t;
 typedef int            int32_t;
-#endif
+#endif /* ultrix || HAVE_32BIT_LONGS || HAVE_64BIT_LONGS */
 
 #ifdef ultrix
 typedef int            ssize_t;
-#endif
+#endif /* ultrix */
 
 #ifdef HAVE_64BIT_LONGS
 typedef unsigned long u_int64_t;
-#else
+#else /* HAVE_64BIT_LONGS */
 /* check for long long support. currently, i assume that if 64-bit
  * ints exist that their made available via long long */
 #ifdef linux
 #include <endian.h> /* i think this is here for libc4 */
-#else 
+#else /* linux */
 #if defined(HAVE_32BIT_LONGS) && !(defined(BSD4_4) || \
 				  defined(NO_LARGE_VOL_SUPPORT))
 typedef unsigned long long  u_int64_t;
-#endif
+#endif /* HAVE_32BIT_LONGS || !BSD4_4 || NO_LARGE_VOL_SUPPORT */
 #endif /* linux */
 #endif /* HAVE_64BIT_LONGS */
 #endif /* sun */
@@ -87,21 +89,21 @@ typedef unsigned long long  u_int64_t;
 #ifdef sun
 #if defined(i386) || defined(_LITTLE_ENDIAN)
 #define BYTE_ORDER	LITTLE_ENDIAN
-#else /*i386*/
+#else /* i386 || _LITTLE_ENDIAN */
 #define BYTE_ORDER	BIG_ENDIAN
-#endif /*i386*/
-#else
+#endif /* i386 || _LITTLE_ENDIAN */
+#else /* sun */
 #if defined(MIPSEB) || defined(__hppa)
 #define BYTE_ORDER	BIG_ENDIAN
-#else
+#else /* MIPSEB || __hppa */
 #ifdef MIPSEL
 #define BYTE_ORDER	LITTLE_ENDIAN
-#else
+#else /* MIPSEL */
 #error Like, what is your byte order, man?
-#endif /*MIPSEL*/
-#endif /*MIPSEB*/
-#endif /*sun*/
-# endif /*BYTE_ORDER*/
+#endif /* MIPSEL*/
+#endif /* MIPSEB || __hppa */
+#endif /* sun */
+# endif /* BYTE_ORDER */
 
 # ifndef ntohl
 # if defined( sun ) || defined( ultrix ) || defined( _IBMR2 )
@@ -111,23 +113,23 @@ typedef unsigned long long  u_int64_t;
 #define htonl(x)	(x)
 #define htons(x)	(x)
 
-#else
+#else /* BYTE_ORDER == BIG_ENDIAN */
 #if defined( mips ) && defined( KERNEL )
 #define	ntohl(x)	nuxi_l(x)
 #define	ntohs(x)	nuxi_s(x)
 #define	htonl(x)	nuxi_l(x)
 #define	htons(x)	nuxi_s(x)
 
-#else /*mips KERNEL*/
+#else /* mips && KERNEL */
 
 #if !( defined( sun ) && defined( i386 ))
 unsigned short ntohs(), htons();
 unsigned int  ntohl(), htonl();
-#endif
+#endif /* ! ( sun && i386 ) */
 
-#endif /*mips KERNEL*/
-#endif /*BYTE_ORDER*/
-# endif /*sun ultrix _IBMR2*/
-# endif /*ntohl*/
+#endif /* mips && KERNEL */
+#endif /* BYTE_ORDER */
+# endif /* sun ultrix _IBMR2 */
+# endif /* ntohl */
 
-#  endif /*_ATALK_ENDIAN_H_*/
+#endif /* _ATALK_ENDIAN_H_ */

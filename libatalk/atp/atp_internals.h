@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_internals.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -53,6 +55,6 @@ extern int atp_recv_atp             __P((ATP, struct sockaddr_at *,
 					 int));
 #ifdef EBUG
 extern void atp_print_addr          __P((char *, struct sockaddr_at *));
-#endif
+#endif /* EBUG */
 
-#endif
+#endif /* ATP_INTERNALS_H */

@@ -1,15 +1,19 @@
 /*
+ * $Id: aarp.h,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
- */
-
-/*
+ *
  * This structure is used for both phase 1 and 2. Under phase 1
  * the net is not filled in. It is in phase 2. In both cases, the
  * hardware address length is (for some unknown reason) 4. If
  * anyone at Apple could program their way out of paper bag, it
  * would be 1 and 3 respectively for phase 1 and 2.
  */
+
+#ifndef _AARP_H
+#define _AARP_H 1
+
 union aapa {
     u_char		ap_pa[4];
     struct ap_node {
@@ -55,4 +59,6 @@ struct aarptab {
 #ifdef KERNEL
 struct aarptab		*aarptnew();
 int			aarpprobe();
-#endif
+#endif /* KERNEL */
+
+#endif /* _AARP_H */

@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_rreq.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +57,7 @@ int atp_rreq( ah, atpb )
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_rreq" );
-#endif
+#endif /* EBUG */
 
     while (( rc = atp_rsel( ah, atpb->atp_saddr, ATP_TREQ )) == 0 ) {
 	;
@@ -64,7 +66,7 @@ int atp_rreq( ah, atpb )
     if ( rc != ATP_TREQ ) {
 #ifdef EBUG
 	printf( "<%d> atp_rreq: atp_rsel returns err %d\n", getpid(), rc );
-#endif EBUG
+#endif /* EBUG */
 	return( rc );
     }
 

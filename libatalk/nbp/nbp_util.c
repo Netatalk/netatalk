@@ -1,14 +1,18 @@
 /*
+ * $Id: nbp_util.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -45,7 +49,7 @@ int nbp_parse( data, nn, len )
 
 #ifdef BSD4_4
     nn->nn_sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     nn->nn_sat.sat_family = AF_APPLETALK;
     nn->nn_sat.sat_addr.s_net = nt.nt_net;
     nn->nn_sat.sat_addr.s_node = nt.nt_node;

@@ -1,4 +1,6 @@
 /*
+ * $Id: nbp_conf.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -36,4 +38,4 @@ extern unsigned char    nbp_id;
 int nbp_parse __P((char *, struct nbpnve *, int));
 int nbp_match __P((struct nbpnve *, struct nbpnve *, int));
 
-#endif
+#endif /* NBP_CONF_H */

@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_rresp.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +41,7 @@
 
 #ifdef EBUG
 #include <stdio.h>
-#endif
+#endif /* EBUG */
 
 #include "atp_internals.h"
 
@@ -52,7 +54,7 @@ atp_rresp( ah, atpb )
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_rresp" );
-#endif
+#endif /* EBUG */
     /* check parameters
     */
     if ( atpb->atp_rresiovcnt <= 0 || atpb->atp_rresiovcnt > 8 ) {
@@ -83,7 +85,7 @@ atp_rresp( ah, atpb )
 		len, i );
 	bprint( (char *)ah->atph_resppkt[ i ]->atpbuf_info.atpbuf_data,
 		len + ATP_HDRSIZE );
-#endif
+#endif /* EBUG */
 	memcpy(atpb->atp_rresiov[ i ].iov_base,
 	       ah->atph_resppkt[ i ]->atpbuf_info.atpbuf_data + ATP_HDRSIZE,
 	       len );

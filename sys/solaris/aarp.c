@@ -1,3 +1,11 @@
+/*
+ * $Id: aarp.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/byteorder.h>

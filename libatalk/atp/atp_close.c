@@ -1,11 +1,13 @@
 /*
+ * $Id: atp_close.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -18,7 +20,7 @@
 #include "atp_internals.h"
 #ifdef EBUG
 #include <stdio.h>
-#endif EBUG
+#endif /* EBUG */
 
 int atp_close( ah )
     ATP		ah;
@@ -30,7 +32,7 @@ int atp_close( ah )
     */
 #ifdef EBUG
     print_bufuse( ah, "atp_close");
-#endif EBUG
+#endif /* EBUG */
 
     while ( ah->atph_queue != NULL ) {
 	cq = ah->atph_queue;
@@ -63,7 +65,7 @@ int atp_close( ah )
 
 #ifdef EBUG
     print_bufuse( ah, "atp_close end");
-#endif EBUG
+#endif /* EBUG */
 
     i = ah->atph_socket;
     atp_free_buf( (struct atpbuf *) ah );

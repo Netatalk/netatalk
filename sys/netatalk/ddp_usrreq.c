@@ -1,7 +1,13 @@
 /*
+ * $Id: ddp_usrreq.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/errno.h>
 #include <sys/types.h>
@@ -9,7 +15,7 @@
 #include <sys/systm.h>
 #ifdef ibm032
 #include <sys/dir.h>
-#endif ibm032
+#endif /* ibm032 */
 #include <sys/user.h>
 #include <sys/mbuf.h>
 #include <sys/ioctl.h>
@@ -20,7 +26,7 @@
 #include <net/route.h>
 #ifdef _IBMR2
 #include <net/spl.h>
-#endif _IBMR2
+#endif /* _IBMR2 */
 
 #include "at.h"
 #include "at_var.h"
@@ -232,11 +238,11 @@ at_pcbsetaddr( ddp, addr )
 		    suser( u.u_cred, &u.u_acflag )) {
 		return( EACCES );
 	    }
-#else BSD4_4
+#else /* BSD4_4 */
 	    if ( sat->sat_port < ATPORT_RESERVED && ( !suser())) {
 		return( EACCES );
 	    }
-#endif BSD4_4
+#endif /* BSD4_4 */
 	}
     } else {
 	bzero( (caddr_t)&lsat, sizeof( struct sockaddr_at ));
@@ -345,9 +351,9 @@ at_pcbconnect( ddp, addr )
 		sat->sat_addr.s_node )) {
 #ifdef ultrix
 	    rtfree( ro->ro_rt );
-#else ultrix
+#else /* ultrix */
 	    RTFREE( ro->ro_rt );
-#endif ultrix
+#endif /* ultrix */
 	    ro->ro_rt = (struct rtentry *)0;
 	}
     }
@@ -359,7 +365,7 @@ at_pcbconnect( ddp, addr )
 	 ro->ro_rt->rt_ifp == (struct ifnet *)0 ) {
 #ifdef BSD4_4
 	ro->ro_dst.sa_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
 	ro->ro_dst.sa_family = AF_APPLETALK;
 	if ( hintnet != 0 ) {
 	    satosat( &ro->ro_dst )->sat_addr.s_net = hintnet;

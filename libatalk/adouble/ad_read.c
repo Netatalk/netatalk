@@ -1,4 +1,6 @@
 /*
+ * $Id: ad_read.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,17 +25,19 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <atalk/adouble.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #ifndef MIN
 #define MIN(a,b)	((a)<(b)?(a):(b))
-#endif
+#endif /* ! MIN */
 
 /* XXX: this would probably benefit from pread. 
  *      locks have to be checked before each stream of consecutive 
@@ -70,7 +74,7 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
 	  cc = buflen;
 	  goto ad_read_done;
 	}
-#endif	
+#endif /* USE_MMAPPED_HEADERS */	
 	if ( ad->ad_hf.adf_off != cc ) {
 	  if ( lseek( ad->ad_hf.adf_fd, (off_t) cc, SEEK_SET ) < 0 ) {
 	      return( -1 );
@@ -98,9 +102,9 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
 	    }
 	}
 	ad->ad_hf.adf_off += cc;
-#else
+#else /* ! USE_MMAPPED_HEADERS */
 ad_read_done:
-#endif
+#endif /* ! USE_MMAPPED_HEADERS */
     }
 
     return( cc );

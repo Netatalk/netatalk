@@ -1,6 +1,10 @@
+/*
+ * $Id: inet_aton.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -11,7 +15,7 @@ static int _inet_aton_dummy;
 #if defined(ultrix) || (defined(sun) && defined(__svr4__))
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned) 0xffffffff)
-#endif
+#endif /* ! INADDR_NONE */
 
 int inet_aton(const char *name, struct in_addr *addr)
 {
@@ -20,4 +24,4 @@ int inet_aton(const char *name, struct in_addr *addr)
 
   return 1;
 }
-#endif
+#endif /* ultrix || ( sun && __svr4__ ) */

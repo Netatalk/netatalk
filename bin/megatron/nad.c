@@ -1,6 +1,10 @@
+/*
+ * $Id: nad.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -13,7 +17,9 @@
 #include <string.h>
 #include <syslog.h>
 #include <dirent.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
@@ -34,18 +40,18 @@ char *mtoupath( mpath )
     while ( *m != '\0' ) {
 #if AD_VERSION == AD_VERSION1
 	if ( !isascii( *m ) || *m == '/' || ( i == 0 && *m == '.' )) {
-#else
+#else /* AD_VERSION == AD_VERSION1 */
 	if (!isprint(*m) || *m == '/' || ( i == 0 && (*m == '.' ))) {
-#endif
+#endif /* AD_VERSION == AD_VERSION1 */
 	    *u++ = ':';
 	    *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
 	    *u++ = hexdig[ *m & 0x0f ];
 	} else {
 #ifdef DOWNCASE
 	    *u++ = ( isupper( *m )) ? tolower( *m ) : *m;
-#else DOWNCASE
+#else /* DOWNCASE */
 	    *u++ = *m;
-#endif DOWNCASE
+#endif /* DOWNCASE */
 	}
 	i++;
 	m++;
@@ -78,9 +84,9 @@ char *utompath( upath )
 	} else {
 #ifdef DOWNCASE
 	  *m = diatolower(*u);
-#else DOWNCASE
+#else /* DOWNCASE */
 	  *m = *u;
-#endif DOWNCASE
+#endif /* DOWNCASE */
 	}
 	u++;
 	m++;
@@ -91,7 +97,7 @@ char *utompath( upath )
 
 #if HEXOUTPUT
     int			hexfork[ NUMFORKS ];
-#endif
+#endif /* HEXOUTPUT */
 
 struct nad_file_data {
     char		macname[ MAXPATHLEN + 1 ];
@@ -132,7 +138,7 @@ int nad_open( path, openflags, fh, options )
 #if DEBUG
     fprintf(stderr, "%s is adpath[0]\n", nad.adpath[0]);
     fprintf(stderr, "%s is adpath[1]\n", nad.adpath[1]);
-#endif
+#endif /* DEBUG */
 	if ( ad_open( nad.adpath[ 0 ], ADFLAGS_DF|ADFLAGS_HF,
 		openflags, (int)( st.st_mode & 0666 ), &nad.ad) < 0 ) {
 	    perror( nad.adpath[ 0 ] );
@@ -149,7 +155,7 @@ int nad_open( path, openflags, fh, options )
     fprintf(stderr, "%s\n", nad.macname);
     fprintf(stderr, "%s is adpath[0]\n", nad.adpath[0]);
     fprintf(stderr, "%s is adpath[1]\n", nad.adpath[1]);
-#endif
+#endif /* DEBUG */
 	if ( stat( ".", &st ) < 0 ) {
 	    perror( "stat of . failed" );
 	    return( -1 );
@@ -195,7 +201,7 @@ int nad_header_read( fh )
     fprintf( stderr, "size of resource fork\t\t%d\n", 
 	    ntohl( fh->forklen[ RESOURCE ] ));
     fprintf( stderr, "get info comment\t\t\"%s\"\n", fh->comment );
-#endif
+#endif /* DEBUG */
 
     ad_getdate(&nad.ad, AD_DATE_CREATE, &temptime);
     memcpy( &fh->create_date, &temptime, sizeof( temptime ));
@@ -215,7 +221,7 @@ int nad_header_read( fh )
     temptime = AD_DATE_TO_UNIX(temptime);
     fprintf( stderr, "backup_date seconds\t\t%lu\n", temptime );
     fprintf( stderr, "size of finder_info\t\t%d\n", sizeof( fh->finder_info ));
-#endif
+#endif /* DEBUG */
 
     memcpy(&fh->finder_info.fdType,
 	    ad_entry( &nad.ad, ADEID_FINDERI ) + FINDERIOFF_TYPE,
@@ -258,7 +264,7 @@ int nad_header_read( fh )
 	fprintf(stderr, "fh script\t\t\t%x\n", fh->finder_xinfo.fdScript);
 	fprintf(stderr, "fh xflags\t\t\t%x\n", fh->finder_xinfo.fdXFlags);
     }
-#endif
+#endif /* DEBUG */
 
     nad.offset[ DATA ] = nad.offset[ RESOURCE ] = 0;
 
@@ -292,7 +298,7 @@ int nad_header_write( fh )
 	    ad_entry( &nad.ad, ADEID_NAME ));
     fprintf( stderr, "ADEID_COMMENT\t\t\t%d\n",
 	     ad_getentrylen( &nad.ad, ADEID_COMMENT ));
-#endif
+#endif /* DEBUG */
 
     memcpy( &temptime, &fh->create_date, sizeof( temptime ));
     ad_setdate(&nad.ad, AD_DATE_CREATE, temptime);
@@ -306,7 +312,7 @@ int nad_header_write( fh )
     ad_getdate(&nad.ad, AD_DATE_MODIFY, &temptime);
     temptime = AD_DATE_TO_UNIX(temptime);
     fprintf(stderr, "FILEIOFF_MODIFY seconds\t\t%ld\n", temptime );
-#endif
+#endif /* DEBUG */
 
     memset( ad_entry( &nad.ad, ADEID_FINDERI ), 0, ADEDLEN_FINDERI );
     memcpy( ad_entry( &nad.ad, ADEID_FINDERI ) + FINDERIOFF_TYPE, 
@@ -338,12 +344,12 @@ int nad_header_write( fh )
 		sizeof( fh->finder_info.fdCreator ),
 		ad_entry( &nad.ad, ADEID_FINDERI ));
     }
-#endif
+#endif /* DEBUG */
 
 #if HEXOUTPUT
     hexfork[ DATA ] = open( "datafork", O_WRONLY|O_CREAT, 0622 );
     hexfork[ RESOURCE ] = open( "resfork", O_WRONLY|O_CREAT, 0622 );
-#endif
+#endif /* HEXOUTPUT */
 
     nad.offset[ DATA ] = nad.offset[ RESOURCE ] = 0;
     ad_flush( &nad.ad, ADFLAGS_DF|ADFLAGS_HF );
@@ -362,7 +368,7 @@ int nad_read( fork, forkbuf, bufc )
 
 #if DEBUG
     fprintf( stderr, "Entering nad_read\n" );
-#endif
+#endif /* DEBUG */
 
     if (( cc = ad_read( &nad.ad, forkeid[ fork ], nad.offset[ fork ], 
 	    forkbuf, bufc)) < 0 )  {
@@ -373,7 +379,7 @@ int nad_read( fork, forkbuf, bufc )
 
 #if DEBUG
     fprintf( stderr, "Exiting nad_read\n" );
-#endif
+#endif /* DEBUG */
 
     return( cc );
 }
@@ -389,11 +395,11 @@ int nad_write( fork, forkbuf, bufc )
 
 #if DEBUG
     fprintf( stderr, "Entering nad_write\n" );
-#endif
+#endif /* DEBUG */
 
 #if HEXOUTPUT
     write( hexfork[ fork ], forkbuf, bufc );
-#endif
+#endif /* HEXOUTPUT */
 
     writelen = bufc;
     buf_ptr = forkbuf;

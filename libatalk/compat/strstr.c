@@ -1,4 +1,6 @@
-/*-
+/*
+ * $Id: strstr.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990 The Regents of the University of California.
  * All rights reserved.
  *
@@ -36,7 +38,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #if defined(LIBC_SCCS) && !defined(lint)
 static char sccsid[] = "@(#)strstr.c	5.2 (Berkeley) 1/26/91";
@@ -47,7 +49,7 @@ static int	_strstr_dummy;
 # if defined(ibm032) || (defined(sun) && defined(i386))
 #ifdef sun
 #define const
-#endif sun
+#endif /* sun */
 
 #include <sys/types.h>
 #include <string.h>
@@ -74,4 +76,4 @@ strstr(s, find)
 	}
 	return ((char *)s);
 }
-# endif ibm03 sun i386
+# endif /* ibm03 sun i386 */

@@ -1,4 +1,6 @@
 /*
+ * $Id: at.h,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  *
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,7 +13,7 @@
 #include <sys/socket.h>
 #include <asm/types.h>
 #include <linux/atalk.h>
-#else
+#else /* linux */
 
 #include <sys/types.h>
 #include <netinet/in.h> /* so that we can deal with sun's s_net #define */
@@ -21,7 +23,7 @@
  */
 #ifdef ATPROTO_DDP
 #undef ATPROTO_DDP
-#endif
+#endif /* ATPROTO_DDP */
 #define ATPROTO_DDP	0
 #define ATPROTO_AARP	254
 
@@ -52,7 +54,7 @@
 struct at_addr {
 #ifdef s_net
 #undef s_net
-#endif
+#endif /* s_net */
     u_short	s_net;
     u_char	s_node;
 };
@@ -73,9 +75,9 @@ struct sockaddr_at {
 #ifdef BSD4_4
     u_char		sat_len;
     u_char		sat_family;
-#else BSD4_4
+#else /* BSD4_4 */
     short		sat_family;
-#endif BSD4_4
+#endif /* BSD4_4 */
     u_char		sat_port;
     struct at_addr	sat_addr;
 #ifdef notdef
@@ -93,9 +95,9 @@ struct sockaddr_at {
 	    u_short		su_interface;
 	} sh_un;
     } sat_hints;
-#else notdef
+#else /* notdef */
     char		sat_zero[ 8 ];
-#endif notdef
+#endif /* notdef */
 };
 
 struct netrange {
@@ -107,7 +109,7 @@ struct netrange {
 #ifdef KERNEL
 extern struct domain	atalkdomain;
 extern struct protosw	atalksw[];
-#endif
+#endif /* KERNEL */
 
 #endif /* linux */
-#endif __AT_HEADER__
+#endif /* __AT_HEADER__ */

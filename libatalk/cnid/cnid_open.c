@@ -1,4 +1,6 @@
 /* 
+ * $Id: cnid_open.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -31,10 +33,18 @@
  * so, CNID_START begins at 3.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <syslog.h>
@@ -49,7 +59,7 @@
 
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
-#endif
+#endif /* ! MIN */
 
 #define ROOTINFO     "RootInfo"
 #define ROOTINFO_LEN 8
@@ -301,7 +311,7 @@ dbversion_retry:
   if (version != htonl(DBVERSION)) {
     /* fix up stuff */
   }
-#endif
+#endif /* 0 */
 
   /* did/macname mapping. btree this one. */
   dbi.bt_compare = compare_mac;

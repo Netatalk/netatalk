@@ -1,16 +1,20 @@
 /*
+ * $Id: asp_getsess.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include <syslog.h>
 #include <errno.h>
@@ -138,7 +142,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     sat.sat_len = sizeof( struct sockaddr_at );
-#endif BSD4_4
+#endif /* BSD4_4 */
     sat.sat_family = AF_APPLETALK;
     sat.sat_addr.s_net = ATADDR_ANYNET;
     sat.sat_addr.s_node = ATADDR_ANYNODE;
@@ -163,7 +167,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
     case ASPFUNC_STAT :
 #ifdef EBUG
       printf( "asp stat\n" );
-#endif EBUG
+#endif /* EBUG */
       if ( asp->asp_slen > 0 ) {
 	asp->cmdbuf[0] = 0;
 	memcpy( asp->cmdbuf + 4, asp->asp_status, asp->asp_slen );

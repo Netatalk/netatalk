@@ -1,18 +1,26 @@
+/*
+ * $Id: asingle.c,v 1.6 2001-06-29 14:14:46 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/time.h>
 #include <sys/param.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <time.h>
 #include <string.h>
 #include <syslog.h>
 #include <ctype.h>
 #include <stdio.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "asingle.h"
@@ -72,7 +80,7 @@ int single_open( singlefile, flags, fh, options )
 	strncpy( single.path, singlefile, MAXPATHLEN );
 #if DEBUG
 	fprintf( stderr, "opened %s for read\n", single.path );
-#endif
+#endif /* DEBUG */
 	if ((( rc = single_header_test()) > 0 ) && 
 		( single_header_read( fh, rc ) == 0 )) {
 	    return( 0 );
@@ -141,7 +149,7 @@ int single_header_read( fh, version )
     num_entries = ntohs( num_entries );
 #if DEBUG >= 2
     fprintf( stderr, "The number of entries is %d\n", num_entries );
-#endif
+#endif /* DEBUG */
     for ( ; num_entries > 0 ; num_entries-- ) {
 	if ( read( single.filed, (char *)entry_buf, AD_ENTRY_LEN )
 		!= AD_ENTRY_LEN ) {
@@ -164,7 +172,7 @@ int single_header_read( fh, version )
 	fprintf( stderr, "entry_id\t%d\n", entry_id );
 	fprintf( stderr, "\toffset\t\t%d\n", single.entry[ entry_id ].ade_off );
 	fprintf( stderr, "\tlength\t\t%d\n", single.entry[ entry_id ].ade_len );
-#endif
+#endif /* DEBUG */
     }
 
 /*
@@ -187,7 +195,7 @@ int single_header_read( fh, version )
     }
 #if DEBUG
     fprintf( stderr, "date_entry = %d\n", date_entry );
-#endif
+#endif /* DEBUG */
 
 /*
  * Go through and copy all the information you can get from 
@@ -245,7 +253,7 @@ int single_header_read( fh, version )
 	    type[4] = creator[4] = '\0';
 	    fprintf( stderr, "type is %s, creator is %s\n", type, creator );
 	}
-#endif
+#endif /* DEBUG */
     }
     if (( single.entry[ ADEID_COMMENT ].ade_len == 0 ) || 
 	    ( single.entry[ ADEID_COMMENT ].ade_off <= AD_HEADER_LEN )) {

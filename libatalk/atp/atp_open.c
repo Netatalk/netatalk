@@ -1,4 +1,6 @@
 /*
+ * $Id: atp_open.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -23,7 +25,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdlib.h>
 #include <string.h>
@@ -53,7 +55,7 @@ ATP atp_open(port, saddr)
 
 #ifdef DEBUG
     printf( "<%d> atp_open\n", getpid());
-#endif
+#endif /* DEBUG */
 
     memset(&addr, 0, sizeof(addr));
     addr.sat_port = port;
@@ -79,7 +81,7 @@ ATP atp_open(port, saddr)
 
 #ifdef EBUG
 srandom( tv.tv_sec );
-#endif
+#endif /* EBUG */
 
     return atp;
 }

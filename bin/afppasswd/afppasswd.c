@@ -1,4 +1,6 @@
 /* 
+ * $Id: afppasswd.c,v 1.6 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -20,17 +22,21 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
 #include <pwd.h>
 
 #include <netatalk/endian.h>
@@ -40,7 +46,7 @@
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
-#endif
+#endif /* USE_CRACKLIB */
 
 #define OPT_ISROOT  (1 << 0)
 #define OPT_CREATE  (1 << 1)
@@ -181,7 +187,7 @@ found_entry:
         goto update_done;
     } 
   }
-#endif
+#endif /* USE_CRACKLIB */
 
   passwd = getpass("Enter NEW AFP password again: ");
   if (strcmp(passwd, password) == 0) {
@@ -268,7 +274,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "  -f        force an action\n");
 #ifdef USE_CRACKLIB
     fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
-#endif
+#endif /* USE_CRACKLIB */
     fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
     fprintf(stderr, "  -p path   path to afppasswd file\n");
     return -1;
@@ -292,7 +298,7 @@ int main(int argc, char **argv)
     case 'n': /* disable CRACKLIB check */
       flags |= OPT_NOCRACK;
       break;
-#endif
+#endif /* USE_CRACKLIB */
     case 'p': /* path to afppasswd file */
       path = optarg;
       break;
@@ -306,15 +312,15 @@ int main(int argc, char **argv)
 			(flags & OPT_ISROOT)) != argc)) {
 #ifdef USE_CRACKLIB
     fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
-#else if !(defined(USE_CRACKLIB))
+#else /* USE_CRACKLIB */
     fprintf(stderr, "Usage: afppasswd [-acf] [-u minuid] [-p path] [username]\n");
-#endif
+#endif /* USE_CRACKLIB */
     fprintf(stderr, "  -a        add a new user\n");
     fprintf(stderr, "  -c        create and initialize password file or specific user\n");
     fprintf(stderr, "  -f        force an action\n");
 #ifdef USE_CRACKLIB
     fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
-#endif
+#endif /* USE_CRACKLIB */
     fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
     fprintf(stderr, "  -p path   path to afppasswd file\n");
     return -1;
@@ -350,7 +356,7 @@ int main(int argc, char **argv)
     return -1;
   }
 }
-#else
+#else /* UAM_RNDNUM */
 
 main(int argc, char **argv)
 {
@@ -358,5 +364,5 @@ main(int argc, char **argv)
   fprintf(stderr, "for the Random Number authentication methods.\n");
   return -1;
 }
-#endif
 
+#endif /* UAM_RNDNUM */

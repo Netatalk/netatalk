@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# $Id: macusers,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
 
 use strict;
 use vars qw($MAC_PROCESS $PS_STR $MATCH_STR $ASIP_PORT $LSOF);

@@ -1,7 +1,13 @@
 /*
+ * $Id: atp_rsel.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
 #include <sys/types.h>
@@ -22,7 +28,7 @@
 
 #ifdef DROP_ATPTREL
 static int	release_count = 0;
-#endif DROP_ATPTREL
+#endif /* DROP_ATPTREL */
 
 
 int
@@ -41,7 +47,7 @@ resend_request( ah )
     putchar( '\n' );
     bprint( ah->atph_reqpkt->atpbuf_info.atpbuf_data,
 	    ah->atph_reqpkt->atpbuf_dlen );
-#endif
+#endif /* EBUG */
 
     memcpy( &req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1, 
 	sizeof( struct atphdr ));
@@ -83,7 +89,7 @@ atp_rsel( ah, faddr, func )
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_rsel at top" );
-#endif
+#endif /* EBUG */
     if ( func == 0 ) {
 	func = ATP_FUNCANY;
     }
@@ -105,7 +111,7 @@ atp_rsel( ah, faddr, func )
     if ( requesting ) {
 #ifdef EBUG
 	printf( "<%d> atp_rsel: request pending\n", getpid());
-#endif
+#endif /* EBUG */
 	gettimeofday( &tv, (struct timezone *)0 );
 	if ( tv.tv_sec - ah->atph_reqtv.tv_sec > ah->atph_reqto ) {
 	    if ( resend_request( ah ) < 0 ) {
@@ -138,7 +144,7 @@ atp_rsel( ah, faddr, func )
 	printf( "<%d> atp_rsel calling recv_atp,", getpid());
 	atp_print_addr( " accepting from: ", &saddr );
 	putchar( '\n' );
-#endif EBUG
+#endif /* EBUG */
 	if (( recvlen = atp_recv_atp( ah, &saddr, &rfunc, ATP_TIDANY,
 		abuf->atpbuf_info.atpbuf_data, 0 )) >= 0 ) {
 	    break;	/* we received something */
@@ -170,7 +176,7 @@ timeout :
     atp_print_addr( " from: ", &saddr );
     putchar( '\n' );
     bprint( abuf->atpbuf_info.atpbuf_data, recvlen );
-#endif
+#endif /* EBUG */
 
     abuf->atpbuf_dlen = recvlen;
     memcpy( &resp_hdr, abuf->atpbuf_info.atpbuf_data + 1,
@@ -193,14 +199,14 @@ timeout :
 	    printf( " %hu", cb->atpbuf_info.atpbuf_xo.atpxo_tid );
 	    atp_print_addr( " (looking for", &saddr );
 	    printf( " %hu)\n", tid );
-#endif
+#endif /* EBUG */
 	    if ( tv.tv_sec - cb->atpbuf_info.atpbuf_xo.atpxo_tv.tv_sec
 		    > cb->atpbuf_info.atpbuf_xo.atpxo_reltime ) {
 		/* discard expired response */
 #ifdef EBUG
 		printf( "<%d> expiring tid %hu\n", getpid(),
 			cb->atpbuf_info.atpbuf_xo.atpxo_tid );
-#endif
+#endif /* EBUG */
 		if ( pb == NULL ) {
 		    ah->atph_sent = cb->atpbuf_next;
 		} else {
@@ -229,7 +235,7 @@ timeout :
 #ifdef EBUG
 	    printf( "<%d> duplicate request -- re-sending XO resp\n",
 		    getpid());
-#endif
+#endif /* EBUG */
 	    /* matches an old response -- just re-send and reset expire */
 	    cb->atpbuf_info.atpbuf_xo.atpxo_tv = tv;
 	    for ( i = 0; i < 8; ++i ) {
@@ -276,7 +282,7 @@ timeout :
 #ifdef EBUG
 	    printf( "<%d> EOM -- seq num %d  current bitmap %d\n",
 		getpid(), resp_hdr.atphd_bitmap, ah->atph_rbitmap );
-#endif
+#endif /* EBUG */
 	    mask = 1 << resp_hdr.atphd_bitmap;
 	    ah->atph_rbitmap &= ( mask | (mask-1) );
 	}
@@ -286,7 +292,7 @@ timeout :
 	if ( resp_hdr.atphd_ctrlinfo & ATP_STS ) {
 #ifdef EBUG
 	    puts( "STS" );
-#endif
+#endif /* EBUG */
 	    req_hdr.atphd_bitmap = ah->atph_rbitmap;
 	    memcpy(ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1,
 		   &req_hdr, sizeof( struct atphdr ));
@@ -309,7 +315,7 @@ timeout :
 	printf( "atp_rsel: ignoring resp bm=%x tid=%d (expected %x/%d)\n",
 		resp_hdr.atphd_bitmap, ntohs( resp_hdr.atphd_tid ),
 		ah->atph_rbitmap, ah->atph_tid );
-#endif EBUG
+#endif /* EBUG */
     }
 
     if ( !ah->atph_rbitmap && ( req_hdr.atphd_ctrlinfo & ATP_XO )) {
@@ -326,10 +332,10 @@ timeout :
 	printf( "<%d> sending TREL", getpid() );
 	bprint( ah->atph_reqpkt->atpbuf_info.atpbuf_data,
 		ah->atph_reqpkt->atpbuf_dlen );
-#endif
+#endif /* EBUG */
 #ifdef DROP_ATPTREL
 	if (( ++release_count % 10 ) != 0 ) {
-#endif DROP_ATPTREL
+#endif /* DROP_ATPTREL */
 	netddp_sendto( ah->atph_socket, 
 		       ah->atph_reqpkt->atpbuf_info.atpbuf_data,
 		       ah->atph_reqpkt->atpbuf_dlen, 0,
@@ -337,7 +343,7 @@ timeout :
 		       sizeof( struct sockaddr_at));
 #ifdef DROP_ATPTREL
 	}
-#endif DROP_ATPTREL
+#endif /* DROP_ATPTREL */
     }
 
     if ( ah->atph_rbitmap != 0 ) {

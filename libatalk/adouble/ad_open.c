@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.7 2001-03-21 14:36:36 rufustfirefly Exp $
+ * $Id: ad_open.c,v 1.8 2001-06-29 14:14:46 rufustfirefly Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -26,11 +26,15 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <string.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 #include <errno.h>
 #include <syslog.h>
 
@@ -47,7 +51,7 @@
 
 #ifndef MAX
 #define MAX(a, b)  ((a) < (b) ? (b) : (a))
-#endif
+#endif /* ! MAX */
 
 /*
  * AppleDouble entry default offsets.
@@ -88,7 +92,7 @@
 /* make sure we don't redefine ADEDOFF_FILEI */
 #ifdef ADEDOFF_FILEI
 #undef ADEDOFF_FILEI
-#endif
+#endif /* ADEDOFF_FILEI */
 
 #define ADEID_NUM_V1         5
 #define ADEDOFF_NAME_V1	     (AD_HEADER_LEN + ADEID_NUM_V1*AD_ENTRY_LEN)
@@ -164,7 +168,7 @@ static const struct entry entry_order[] = {
   {ADEID_RFORK, ADEDOFF_RFORK_V2, ADEDLEN_INIT},
   {0, 0, 0}
 };
-#endif
+#endif /* AD_VERSION == AD_VERSION2 */
 
 #if AD_VERSION == AD_VERSION2
 
@@ -221,7 +225,7 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
   /* okay, unmap our old ad header and point it to our local copy */
   munmap(ad->ad_data, off);
   ad->ad_data = buf;
-#endif
+#endif /* USER_MMAPPED_HEADERS */
 
   /* move the RFORK. this assumes that the RFORK is at the end */
   memmove(buf + off + SHIFTDATA, buf + off, 
@@ -282,7 +286,7 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
 		     MAP_PRIVATE, ad->ad_hf.adf_fd, 0);
   if (ad->ad_data == MAP_FAILED)
     goto bail_err;
-#endif
+#endif /* USE_MMAPPED_HEADERS */
 
   return 0;
   
@@ -295,7 +299,7 @@ bail_lock:
 bail_err:
   return -1;
 }
-#endif
+#endif /* AD_VERSION == AD_VERSION2 */
 
 
 /* read in the entries */
@@ -338,9 +342,9 @@ static __inline__ int ad_header_read(struct adouble *ad)
 {
 #ifdef USE_MMAPPED_HEADERS
     char                buf[AD_ENTRY_LEN*ADEID_MAX];
-#else 
+#else /* USE_MMAPPED_HEADERS */
     char                *buf = ad->ad_data;
-#endif
+#endif /* USE_MMAPPED_HEADERS */
     u_int16_t           nentries;
     int                 len;
     static int          warning = 0;
@@ -393,7 +397,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
     if ((ad->ad_magic != AD_MAGIC) || ((ad->ad_version != AD_VERSION1)
 #if AD_VERSION == AD_VERSION2
 				       && (ad->ad_version != AD_VERSION2)
-#endif
+#endif /* AD_VERSION == AD_VERSION2 */
 				       )) {
       errno = EIO;
       syslog(LOG_DEBUG, "ad_open: can't parse AppleDouble header.");
@@ -410,11 +414,11 @@ static __inline__ int ad_header_read(struct adouble *ad)
 #ifdef USE_MMAPPED_HEADERS
     if (len > sizeof(buf))
       len = sizeof(buf);
-#else
+#else /* USE_MMAPPED_HEADERS */
     if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
       len = sizeof(ad->ad_data) - AD_HEADER_LEN;
     buf += AD_HEADER_LEN;
-#endif
+#endif /* USE_MMAPPED_HEADERS */
     if (read(ad->ad_hf.adf_fd, buf, len) != len) {
         if (errno == 0)
 	    errno = EIO;
@@ -429,7 +433,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
     if (!ad_getentryoff(ad, ADEID_RFORK)
 #ifndef USE_MMAPPED_HEADERS
 	|| (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
-#endif
+#endif /* ! USE_MMAPPED_HEADERS */
 	) {
       syslog(LOG_DEBUG, "ad_header_read: problem with rfork entry offset."); 
       return -1;
@@ -443,7 +447,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
 		       MAP_PRIVATE, ad->ad_hf.adf_fd, 0);
     if (ad->ad_data == MAP_FAILED) 
       return -1;
-#else
+#else /* USE_MMAPPED_HEADERS */
     buf += len;
     len = ad_getentryoff(ad, ADEID_RFORK) - ad->ad_hf.adf_off;
     if (read(ad->ad_hf.adf_fd, buf, len) != len) {
@@ -452,7 +456,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
 	syslog(LOG_DEBUG, "ad_header_read: can't read in entries.");
 	return -1;
     }
-#endif
+#endif /* USE_MMAPPED_HEADERS */
     
     /* fix up broken dates */
     if (ad->ad_version == AD_VERSION1) {
@@ -573,7 +577,7 @@ ad_mkdir( path, mode )
 {
 #ifdef DEBUG
     syslog (LOG_INFO, "ad_mkdir: Creating directory with mode %d", mode);
-#endif
+#endif /* DEBUG */
     return mkdir( path, ad_mode( path, mode ) );
 }
 
@@ -600,7 +604,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	adf_lock_init(&ad->ad_hf);
 #ifdef USE_MMAPPED_HEADERS
 	ad->ad_data = MAP_FAILED;
-#endif
+#endif /* USE_MMAPPED_HEADERS */
         ad->ad_inited = AD_INITED;
         ad->ad_refcount = 1;
     }
@@ -694,9 +698,9 @@ int ad_open( path, adflags, oflags, mode, ad )
 	      ad_close(ad, adflags);
 	      return -1;
 	    }	    
-#else
+#else /* USE_MMAPPED_HEADERS */
 	    memset(ad->ad_data, 0, sizeof(ad->ad_data));
-#endif
+#endif /* USE_MMAPPED_HEADERS */
 
 	    eid = entry_order;
 	    while (eid->id) {
@@ -746,7 +750,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	    if ((ad_header_read( ad ) < 0)
 #if AD_VERSION == AD_VERSION2
 		|| (ad_v1tov2(ad, ad_p) < 0)
-#endif
+#endif /* AD_VERSION == AD_VERSION2 */
 		) {
 	      ad_close( ad, adflags );
 	      return( -1 );
@@ -765,7 +769,7 @@ int ad_refresh(struct adouble *ad)
 {
 #ifdef USE_MMAPPED_HEADERS
   off_t off;
-#endif
+#endif /* USE_MMAPPED_HEADERS */
 
   if (ad->ad_hf.adf_fd < -1)
     return -1;
@@ -801,7 +805,7 @@ int ad_refresh(struct adouble *ad)
   }
   return 0;
 
-#else
+#else /* USE_MMAPPED_HEADERS */
   return ad_header_read(ad);
-#endif
+#endif /* USE_MMAPPED_HEADERS */
 }
