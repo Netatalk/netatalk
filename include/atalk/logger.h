@@ -43,6 +43,9 @@ enum logtypes {
   logtype_logger,
   logtype_cnid,
   logtype_afpd,
+  logtype_atalkd,
+  logtype_papd,
+  logtype_uams,
 
   logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
@@ -54,6 +57,9 @@ enum logtypes {
   "Logger",                          \
   "CNID",                            \
   "AFPDaemon",                       \
+  "ATalkDaemon",                     \
+  "PAPDaemon",                       \
+  "UAMSDaemon",                      \
                                      \
   "end_of_list_marker"}              \
 
