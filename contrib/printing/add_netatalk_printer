@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Id: add_netatalk_printer,v 1.6 2001-10-06 12:27:38 srittau Exp $
+# $Id: add_netatalk_printer,v 1.7 2003-02-23 03:16:34 srittau Exp $
 #
 # A lovely script to add netatalk printers 
 #
@@ -46,7 +46,7 @@ fi
 NETATALKHOME=${NETATALKHOME:-$RUNHOME}
 export NETATALKHOME
 
-PATH=/bin:${PATH}:${NETATALKHOME}/bin:${NETATALKHOME}/etc:${NETATALKHOME}/etc/filters:/usr/lib:/usr/sbin
+PATH=/bin:${PATH}:${NETATALKHOME}/bin:${NETATALKHOME}/etc:${NETATALKHOME}/libexec:/usr/lib:/usr/sbin
 
 if [ ! -x ${NETATALKHOME}/bin/pap ]; then
 	echo "OOPS:	I don't see ${NETATALKHOME}/bin/pap ,"
@@ -237,7 +237,7 @@ Output types: PS
 Printer types: Netatalk
 Printers: any
 Filter type: fast
-Command: ${NETATALKHOME}/etc/filters/ifpap 2>&1 > /dev/null
+Command: ${NETATALKHOME}/libexec/ifpap 2>&1 > /dev/null
 EOF
 	chown lp:lp /etc/lp/fd/netatalk.fd
 	chmod 664   /etc/lp/fd/netatalk.fd
@@ -257,7 +257,7 @@ Output types: PS
 Printer types: Netatalk-R
 Printers: any
 Filter type: fast
-Command: "/usr/lib/lp/postscript/postreverse | ${NETATALKHOME}/etc/filters/ifpap 2>&1 >/dev/null"
+Command: "/usr/lib/lp/postscript/postreverse | ${NETATALKHOME}/libexec/ifpap 2>&1 >/dev/null"
 EOF
 	chown lp:lp /etc/lp/fd/netatalk-r.fd
 	chmod 664   /etc/lp/fd/netatalk-r.fd
