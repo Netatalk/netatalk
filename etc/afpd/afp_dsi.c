@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.22 2002-08-22 06:59:07 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.23 2002-08-22 13:19:58 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -143,7 +143,7 @@ void afp_set_debug (int sig)
 {
     char	fname[MAXPATHLEN];
 
-    strncpy(fname, tempnam(P_tmpdir, "afpd-debug"), MAXPATHLEN-1);
+    snprintf(fname, MAXPATHLEN-1, "%safpd-debug-%d", P_tmpdir, getpid());
     freopen(fname, "w", stdout);
     child.obj->options.flags |= OPTION_DEBUG;
 
