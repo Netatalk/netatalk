@@ -1,4 +1,15 @@
-($Id: ChangeLog,v 1.18 2001-03-07 20:39:24 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.19 2001-03-14 15:57:44 rufustfirefly Exp $)
+
+2001-03-04 11:00 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* libatalk/adouble/ad_open.c: fixed O_RDWR kludge in ad_mode call
+	which was causing file creation problems
+
+2001-03-09 09:42 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* sys/solaris/Makefile: fixed problems noted by Akop Pogosian in Solaris
+	build, most notably paths, and reference to lp2pap.sh in the wrong
+	place
 
 2001-03-07 15:30 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
 

@@ -1,4 +1,6 @@
 /*
+ * $Id: ad_open.c,v 1.6 2001-03-14 15:57:45 rufustfirefly Exp $
+ *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -617,7 +619,7 @@ int ad_open( path, adflags, oflags, mode, ad )
     if (adflags & ADFLAGS_HF) {
         if (ad_hfileno(ad) == -1) {
 	  ad_p = ad_path( path, adflags );
-	  admode = ad_mode( ad_p, O_RDWR );
+	  admode = ad_mode( ad_p, mode ); /* FIXME? */
 	  
 	  hoflags = oflags & ~O_CREAT;
 	  if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, admode )) < 0 ) {
