@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.12 2002-01-19 21:42:08 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.13 2002-06-03 22:58:10 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,7 +47,11 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
 #ifdef DEBUG
         LOG(log_info, logtype_default, "cnid_lookup: Running database checkpoint");
 #endif
+#if DB_VERSION_MAJOR >= 4
+        switch (rc = db->dbenv->txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)) {
+#else
         switch (rc = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)) {
+#endif
         case 0:
         case DB_INCOMPLETE:
             break;

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.40 2002-05-30 06:41:52 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.41 2002-06-03 22:58:10 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -90,7 +90,7 @@
 #define DBVERSION1       0x00000001U
 #define DBVERSION        DBVERSION1
 
-#if DB_VERSION_MINOR > 1
+#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
 #else /* DB_VERSION_MINOR < 1 */
@@ -123,7 +123,7 @@ static __inline__ int compare_did(const DBT *a, const DBT *b)
 
 /* sort did's and then names. this is for unix paths.
  * i.e., did/unixname lookups. */
-#if DB_VERSION_MINOR > 1
+#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 static int compare_unix(DB *db, const DBT *a, const DBT *b)
 #else /* DB_VERSION_MINOR < 1 */
 static int compare_unix(const DBT *a, const DBT *b)
@@ -149,7 +149,7 @@ static int compare_unix(const DBT *a, const DBT *b)
  * did/macname, and did/shortname. i think did/longname needs a
  * unicode table to work. also, we can't use strdiacasecmp as that
  * returns a match if a < b. */
-#if DB_VERSION_MINOR > 1
+#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 static int compare_mac(DB *db, const DBT *a, const DBT *b)
 #else /* DB_VERSION_MINOR < 1 */
 static int compare_mac(const DBT *a, const DBT *b)
@@ -173,13 +173,13 @@ static int compare_mac(const DBT *a, const DBT *b)
 
 
 /* for unicode names -- right now it's the same as compare_mac. */
-#if DB_VERSION_MINOR > 1
+#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 static int compare_unicode(DB *db, const DBT *a, const DBT *b)
 #else /* DB_VERSION_MINOR < 1 */
 static int compare_unicode(const DBT *a, const DBT *b)
 #endif /* DB_VERSION_MINOR */
 {
-#if DB_VERSION_MINOR > 1
+#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
     return compare_mac(db,a,b);
 #else /* DB_VERSION_MINOR < 1 */
     return compare_mac(a,b);
@@ -272,7 +272,7 @@ void *cnid_open(const char *dir) {
         goto fail_lock;
     }
 
-#if DB_VERSION_MINOR > 1
+#if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 #if 0
     /* Take care of setting the DB_TXN_NOSYNC flag in db3 > 3.1.x. */
     if ((rc = db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1)) != 0) {
