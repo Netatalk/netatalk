@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.15 2003-01-04 19:33:20 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.16 2003-01-04 20:49:33 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -49,7 +49,7 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
         LOG(log_info, logtype_default, "cnid_lookup: Running database checkpoint");
 #endif
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
-	db->dbenv->txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)
+        db->dbenv->txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)
 #else
 #if DB_VERSION_MAJOR >= 4
         switch (rc = db->dbenv->txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0)) {
@@ -68,81 +68,81 @@ cnid_t cnid_lookup(void *CNID, const struct stat *st, const cnid_t did,
 #endif /* DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1) */
 #endif /* CNID_DB_CDB */
 
-    if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
-        LOG(log_error, logtype_default, "cnid_lookup: Pathname is too long");
-        return 0;
-    }
-
-    memset(&key, 0, sizeof(key));
-    memset(&devdata, 0, sizeof(devdata));
-    memset(&diddata, 0, sizeof(diddata));
-
-    /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
-     * only get a match in one of them, that means a file has moved. */
-    key.data = buf;
-    key.size = CNID_DEVINO_LEN;
-    while ((rc = db->db_devino->get(db->db_devino, NULL, &key, &devdata, 0))) {
-#ifndef CNID_DB_CDB
-        if (rc == DB_LOCK_DEADLOCK) {
-            continue;
+        if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
+            LOG(log_error, logtype_default, "cnid_lookup: Pathname is too long");
+            return 0;
         }
+
+        memset(&key, 0, sizeof(key));
+        memset(&devdata, 0, sizeof(devdata));
+        memset(&diddata, 0, sizeof(diddata));
+
+        /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
+         * only get a match in one of them, that means a file has moved. */
+        key.data = buf;
+        key.size = CNID_DEVINO_LEN;
+        while ((rc = db->db_devino->get(db->db_devino, NULL, &key, &devdata, 0))) {
+#ifndef CNID_DB_CDB
+            if (rc == DB_LOCK_DEADLOCK) {
+                continue;
+            }
 #endif /* CNID_DB_CDB */
 
-        if (rc == DB_NOTFOUND) {
-            devino = 0;
-            break;
+            if (rc == DB_NOTFOUND) {
+                devino = 0;
+                break;
+            }
+
+            LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
+                st->st_dev, st->st_ino, db_strerror(rc));
+            return 0;
         }
 
-        LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID dev %u, ino %u: %s",
-            st->st_dev, st->st_ino, db_strerror(rc));
-        return 0;
-    }
-
-    /* did/name now */
-    key.data = buf + CNID_DEVINO_LEN;
-    key.size = CNID_DID_LEN + len + 1;
-    while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &diddata, 0))) {
+        /* did/name now */
+        key.data = buf + CNID_DEVINO_LEN;
+        key.size = CNID_DID_LEN + len + 1;
+        while ((rc = db->db_didname->get(db->db_didname, NULL, &key, &diddata, 0))) {
 #ifndef CNID_DB_CDB
-        if (rc == DB_LOCK_DEADLOCK) {
-            continue;
-        }
+            if (rc == DB_LOCK_DEADLOCK) {
+                continue;
+            }
 #endif /* CNID_DB_CDB */
 
-        if (rc == DB_NOTFOUND) {
-            didname = 0;
-            break;
+            if (rc == DB_NOTFOUND) {
+                didname = 0;
+                break;
+            }
+
+            LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID %u, name %s: %s",
+                ntohl(did), name, db_strerror(rc));
+            return 0;
         }
 
-        LOG(log_error, logtype_default, "cnid_lookup: Unable to get CNID %u, name %s: %s",
-            ntohl(did), name, db_strerror(rc));
-        return 0;
-    }
+        /* Set id.  Honor did/name over dev/ino as dev/ino isn't necessarily
+         * 1-1. */
+        if (didname) {
+            memcpy(&id, diddata.data, sizeof(id));
+        }
+        else if (devino) {
+            memcpy(&id, devdata.data, sizeof(id));
+        }
 
-    /* Set id.  Honor did/name over dev/ino as dev/ino isn't necessarily
-     * 1-1. */
-    if (didname) {
-        memcpy(&id, diddata.data, sizeof(id));
-    }
-    else if (devino) {
-        memcpy(&id, devdata.data, sizeof(id));
-    }
-
-    /* Either entries are in both databases or neither of them. */
-    if ((devino && didname) || !(devino || didname)) {
+        /* Either entries are in both databases or neither of them. */
+        if ((devino && didname) || !(devino || didname)) {
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u",
-            ntohl(did), name, ntohl(id));
+            LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u",
+                ntohl(did), name, ntohl(id));
+#endif
+            return id;
+        }
+
+        /* Fix up the database. */
+        cnid_update(db, id, st, did, name, len);
+#ifdef DEBUG
+        LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
 #endif
         return id;
     }
-
-    /* Fix up the database. */
-    cnid_update(db, id, st, did, name, len);
-#ifdef DEBUG
-    LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
-#endif
-    return id;
-}
 #endif /* CNID_DB */
 
 

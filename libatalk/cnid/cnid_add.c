@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.31 2002-11-14 17:09:38 srittau Exp $
+ * $Id: cnid_add.c,v 1.32 2003-01-04 20:49:33 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -254,7 +254,7 @@ retry:
         if ((rc = txn_abort(tid)) != 0) {
             LOG(log_error, logtype_default, "cnid_add: txn_abort: %s", db_strerror(rc));
             errno = CNID_ERR_DB;
-            return CNID_INVALID; 
+            return CNID_INVALID;
         }
         goto retry;
 #endif /* CNID_DB_CDB */

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.45 2003-01-04 19:33:20 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.46 2003-01-04 20:49:33 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -33,7 +33,7 @@
  * CNIDs 4-16 are reserved according to page 31 of the AFP 3.0 spec so, 
  * CNID_START begins at 17.
  */
- 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -197,7 +197,7 @@ void *cnid_open(const char *dir, mode_t mask) {
 #ifndef CNID_DB_CDB
     struct flock lock;
 #endif /* CNID_DB_CDB */
-    char path[MAXPATHLEN + 1];
+char path[MAXPATHLEN + 1];
     CNID_private *db;
     DBT key, data;
     DB_TXN *tid;
@@ -330,7 +330,7 @@ void *cnid_open(const char *dir, mode_t mask) {
     /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
     if ((rc = db->db_didname->open(db->db_didname, NULL, DBDIDNAME, NULL,
-		    		   DB_HASH, open_flag DB_AUTO_COMMIT, 0666 & ~mask))) {
+                                   DB_HASH, open_flag DB_AUTO_COMMIT, 0666 & ~mask))) {
 #else
     if ((rc = db->db_didname->open(db->db_didname, DBDIDNAME, NULL,
                                    DB_HASH, open_flag, 0666 & ~mask))) {
@@ -404,7 +404,7 @@ dbversion_retry:
                 }
                 else if (ret == DB_RUNRECOVERY) {
                     /* At this point, we don't care if the transaction aborts
-                     * successfully or not. */
+                    * successfully or not. */
                     txn_abort(tid);
                     LOG(log_error, logtype_default, "cnid_open: Error putting new version: %s",
                         db_strerror(ret));

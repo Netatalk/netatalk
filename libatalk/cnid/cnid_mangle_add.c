@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_add.c,v 1.4 2002-08-30 03:12:52 jmarcus Exp $
+ * $Id: cnid_mangle_add.c,v 1.5 2003-01-04 20:49:33 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -67,12 +67,12 @@ retry:
 #endif /* CNID_DB_CDB */
         switch (rc) {
 #ifndef CNID_DB_CDB
-            case DB_LOCK_DEADLOCK:
-                goto retry;
+        case DB_LOCK_DEADLOCK:
+            goto retry;
 #endif /* CNID_DB_CDB */
-            default:
-                LOG(log_error, logtype_default, "cnid_mangle_add: Failed to add mangled filename to the database: %s", db_strerror(rc));
-                return -1;
+        default:
+            LOG(log_error, logtype_default, "cnid_mangle_add: Failed to add mangled filename to the database: %s", db_strerror(rc));
+            return -1;
         }
     }
 
