@@ -1,4 +1,6 @@
-
+2001-11-16  jnewman <jnewman@mudpup.com>
+	* macros/db3-check.m4: Prefer specific directories before general ones
+	
 2001-11-15  pooba53 <bobo@bocklabs.wisc.edu>
         * Modified SuSE initscript, distrib/initscripts/rc.atalk.suse.tmpl
 
