@@ -8,7 +8,11 @@
 # inoue@ma.ns.musashi-tech.ac.jp.
 #
 
-.         "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+# default translation -- note that CR <-> LF translation is done on all
+# files of type TEXT.  The first line turns off translation for files of
+# unknown type, the second turns this translation on.
+.         "BINA"  "UNIX"      Unix Binary                    Unix                      application/octet-stream
+# .         "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
 
 .mf       "TEXT"  "*MF*"      Metafont                       Metafont
 .sty      "TEXT"  "*TEX"      TeX Style                      Textures
