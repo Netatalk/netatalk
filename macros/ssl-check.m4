@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.4 2001-12-01 15:17:33 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.5 2001-12-03 19:31:33 srittau Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_PATH_SSL], [
@@ -7,7 +7,12 @@ AC_DEFUN([AC_PATH_SSL], [
 		[
 			if test "x$withval" = "xno"; then
 				tryssl=no
+			elif test "x$withval" = "xyes"; then
+				tryssl=yes
+				tryssldir=
 			else
+				dnl FIXME: should only try in $withval
+				tryssl=yes
 				tryssldir="$withval"
 			fi
 		], [tryssl=yes]
