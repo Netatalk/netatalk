@@ -6,9 +6,9 @@ These files should have been copied into the configuration directory
 the INSTALL file.
 
 
-Netatalk supplies two different types of Appletalk servers and both
-can run at the same time. Classic Appletalk requires afpd and
-atalkd. Appletalk over IP only requires afpd.
+Netatalk supplies two different types of AFP servers and both can run at
+the same time. Classic AFP over AppleTalk requires afpd and atalkd. AFP
+over IP only requires afpd.
 
 
 
@@ -112,15 +112,14 @@ Miscellaneous:
 			(no default, same as -l "Message" on
 			command-line)
      -nodebug		Switch off debugging
-     -tickleval <number>	Specify the tickle timeout interval (in seconds)
+     -ticklevel <number>	Specify the tickle timeout interval (in seconds)
      -icon			Use the platform-specific icon.
 
 An example:
 "Lance" -transall -uamlist uams_dhx.so -nosavepassword -setpassword
-"Lance" is the server name, I enable both TCP and DDP,
-all logins via DHX (requires AppleShare 3.8.6), the users cannot save
-the password with keychains and it allows the users to set their
-passwords.
+"Lance" is the server name, I enable both TCP and DDP, all logins via DHX
+(requires AppleShare Client 3.8.6), the users cannot save the password
+with keychains and it allows the users to set their passwords.
 
 With no afpd.conf the default is:
 
@@ -137,18 +136,18 @@ Try   man afpd  and  man afpd.conf  for further details.
 2. /usr/local/etc/atalkd.conf
 =============================
 
-Classic Appletalk is configured in atalkd.conf. For detailed
+The AppleTalk protocol is configured in atalkd.conf. For detailed
 information please reference 
 
 http://www.neon.com/atalk_routing.html and
 http://www-commeng.cso.uiuc.edu/docs/appletalk/
 
-The whole point of seting up atalkd is to allow appletalk routing to
+The whole point of setting up atalkd is to allow AppleTalk routing to
 the localhost as a file and print server. The atalkd.conf file sets up
-the appletalk routing by assigning Appletalk zone (or zones)
+the AppleTalk routing by assigning AppleTalk zone (or zones)
 information to the networks it is attached to.
 
-Within appletalk there are three different types of routers: seed,
+Within AppleTalk there are three different types of routers: seed,
 nonseed and soft seed.
 
 Seed publishes the network and zone information to the network. In the
@@ -165,24 +164,25 @@ conflict. Any missing configurations will be filled from the network.
 Appletalk phases are of two types. The unused, unsupported, obsolete
 phase 1, or the new useful phase 2. 
 
-Phase 1 was Apples original protocol for Appletalk over Ethernet. It
-treated an entire network segment as one appletalk network capable of
-holding 254 nodes. Don't use this. 
+Phase 1 was Apple's original protocol for Appletalk over LocalTalk. It
+treated an entire network segment as one AppleTalk network capable of
+holding 254 nodes. Don't use this unless you are directly connected to a
+LocalTalk network (unlikely these days).
 
 Phase 2 is the new version. It allows a configurable network range
 between the numbers 1 and 65279, each network capable of hosting 253
-nodes for a total of 16,515,587 Appletalk interfaces. That's a lot
+nodes for a total of 16,515,587 AppleTalk interfaces. That's a lot
 of iMacs. :-)
 
-Within an Appletalk network addressing is a Network:Node:Socket
-triplet. The socket number is general dropped because nothing uses the
+Within an AppleTalk network addressing is a Network:Node:Socket
+triplet. The socket number is generally dropped because nothing uses the
 information. 
 
 Using ethernet and phase 2 the network number can be singular, '1' or
 a range, '1-20'. Node assignment is the responsibility of the clients so
 you don't have to worry about it. The range of 65280-65534 is called
 the startup range and is used by the Mac when it is on a network
-without any routers, you probably shouldn't publish a network withing
+without any routers, you probably shouldn't publish a network within
 this range. If you're publishing to a LocalTalk network segment
 (Hello? Welcome to Y2K. :) your maximum network range is _one_
 network.
