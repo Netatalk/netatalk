@@ -1,4 +1,6 @@
 /*
+ * $Id: atp.h,v 1.4 2002-02-07 23:35:49 srittau Exp $
+ *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *

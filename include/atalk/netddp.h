@@ -1,4 +1,6 @@
-/* 
+/*
+ * $Id: netddp.h,v 1.3 2002-02-07 23:35:49 srittau Exp $
+ *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
