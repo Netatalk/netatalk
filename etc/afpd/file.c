@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.46 2002-06-17 18:23:03 didg Exp $
+ * $Id: file.c,v 1.47 2002-08-16 00:42:56 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -594,6 +594,10 @@ int		ibuflen, *rbuflen;
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         return( AFPERR_NOOBJ );
+    }
+
+    if ( *path == '\0' ) {
+        return( AFPERR_BADTYPE ); /* it's a directory */
     }
 
     if ((u_long)ibuf & 1 ) {
