@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.14 2003-01-12 14:40:02 didg Exp $ 
+ * $Id: mangle.c,v 1.15 2003-03-09 19:55:35 didg Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -40,15 +40,21 @@ demangle(const struct vol *vol, char *mfilename) {
 
 	/* No unmangled filename was found. */
 	if (filename == NULL) {
-	    LOG(log_error, logtype_afpd, "demangle: Unable to lookup %s in the mangle database", mfilename);
+#ifdef DEBUG
+	    LOG(log_debug, logtype_afpd, "demangle: Unable to lookup %s in the mangle database", mfilename);
+#endif
 	    return mfilename;
 	}
-
 	return filename;
 }
 
+/* -----------------------
+   with utf8 filename not always round trip
+   filename   mac filename too long or with unmatchable utf8 replaced with _
+   uname      unix filename 
+*/
 char *
-mangle(const struct vol *vol, char *filename) {
+mangle(const struct vol *vol, char *filename, char *uname, int flags) {
     char *ext = NULL;
     char *tf = NULL;
     char *m = NULL;
@@ -58,11 +64,10 @@ mangle(const struct vol *vol, char *filename) {
     int mangle_suffix_int = 0;
 
     /* Do we really need to mangle this filename? */
-    if (strlen(filename) <= vol->max_filename) {
+    if (!flags && strlen(filename) <= vol->max_filename) {
 	return filename;
     }
-
-    /* First, attmept to locate a file extension. */
+    /* First, attempt to locate a file extension. */
     if (NULL != (ext = strrchr(filename, '.')) ) {
 	ext_len = strlen(ext);
 	if (ext_len > MAX_EXT_LENGTH) {
@@ -86,7 +91,7 @@ mangle(const struct vol *vol, char *filename) {
     	}
 
 	tf = cnid_mangle_get(vol->v_db, m);
-	if (tf == NULL || (strcmp(tf, filename)) == 0) {
+	if (tf == NULL || (strcmp(tf, uname)) == 0) {
 	    break;
 	}
 	else {
@@ -97,7 +102,7 @@ mangle(const struct vol *vol, char *filename) {
 	}
     }
 
-    if (cnid_mangle_add(vol->v_db, m, filename) < 0) {
+    if (cnid_mangle_add(vol->v_db, m, uname) < 0) {
 	return filename;
     }
 

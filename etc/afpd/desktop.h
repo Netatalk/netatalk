@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: desktop.h,v 1.3 2003-03-09 19:55:33 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -46,8 +46,8 @@ struct savedt {
 typedef unsigned char CreatorType[4];
 
 extern char	*dtfile __P((const struct vol *, u_char [], char *));
-extern char	*mtoupath __P((const struct vol *, char *));
-extern char	*utompath __P((const struct vol *, char *));
+extern char	*mtoupath __P((const struct vol *, char *, int utf8));
+extern char	*utompath __P((const struct vol *, char *, int utf8));
 extern u_char	ucreator[];
 
 #define validupath(vol, name) ((((vol)->v_flags & AFPVOL_USEDOTS) ? \

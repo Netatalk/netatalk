@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.28 2003-01-04 20:49:33 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.29 2003-03-09 19:55:35 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,9 +19,8 @@
 #include <errno.h>
 #include <string.h>
 
-#include <atalk/cnid.h>
-
 #include "cnid_private.h"
+#include <atalk/cnid.h>
 
 void cnid_close(void *CNID) {
     CNID_private *db;

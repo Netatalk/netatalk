@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.28 2003-02-17 06:26:53 didg Exp $
+ * $Id: ad_open.c,v 1.29 2003-03-09 19:55:35 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -199,7 +199,7 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
 #define SHIFTDATA (AD_DATASZ2 - AD_DATASZ1)
 
   /* bail if we can't get a lock */
-  if (ad_tmplock(ad, ADEID_RFORK, ADLOCK_WR, 0, 0) < 0) 
+  if (ad_tmplock(ad, ADEID_RFORK, ADLOCK_WR, 0, 0, 0) < 0) 
     goto bail_err;
   
   if ((fd = open(path, O_RDWR)) < 0) 
@@ -224,6 +224,9 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
   memmove(buf + off + SHIFTDATA, buf + off, 
 	  ad->ad_eid[ADEID_RFORK].ade_len);
   
+  munmap(buf, st.st_size + SHIFTDATA);
+  close(fd);
+
   /* now, fix up our copy of the header */
   memset(ad->ad_filler, 0, sizeof(ad->ad_filler));
   
@@ -254,7 +257,7 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
   ad->ad_version = AD_VERSION2;
   
   /* move our data buffer to make space for the new entries. */
-  memmove(buf + ADEDOFF_NAME_V2, buf + ADEDOFF_NAME_V1,
+  memmove(ad->ad_data + ADEDOFF_NAME_V2, ad->ad_data + ADEDOFF_NAME_V1,
 	  ADEDOFF_RFORK_V1 - ADEDOFF_NAME_V1);
   
   /* now, fill in the space with appropriate stuff. we're
@@ -267,10 +270,8 @@ static __inline__ int ad_v1tov2(struct adouble *ad, const char *path)
   memset(ad_entry(ad, ADEID_PRODOSFILEI), 0, ADEDLEN_PRODOSFILEI);
   
   /* rebuild the header and cleanup */
-  ad_rebuild_header(ad);
-  munmap(buf, st.st_size + SHIFTDATA);
-  close(fd);
-  ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
+  ad_flush(ad, ADFLAGS_HF );
+  ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0, 0);
 
   return 0;
   
@@ -279,7 +280,7 @@ bail_truncate:
 bail_open:
   close(fd);
 bail_lock:
-  ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
+  ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0, 0);
 bail_err:
   return -1;
 }

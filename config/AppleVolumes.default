@@ -47,6 +47,7 @@
 # noadouble           -> don't create .AppleDouble unless a resource
 #                        fork needs to be created.
 # ro                  -> mount the volume as read-only.
+# utf8                -> use precomposed utf8 filenames
 # mswindows           -> enforce filename restrictions imposed by MS
 #                        Windows. this will also invoke a default
 #			 codepage (iso8859-1) if one isn't already 

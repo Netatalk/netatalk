@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.86 2003-02-19 18:59:52 jmarcus Exp $
+ * $Id: file.c,v 1.87 2003-03-09 19:55:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -108,15 +108,29 @@ void *get_finderinfo(const char *mpath, struct adouble *adp, void *data)
 
 /* ---------------------
 */
-char *set_name(char *data, const char *name, u_int32_t utf8) 
+char *set_name(const struct vol *vol, char *data, char *name, u_int32_t utf8) 
 {
-    u_int32_t           aint;
-
+    u_int32_t   aint;
+    char        *tp = NULL;
+    char        *src = name;
     aint = strlen( name );
 
     if (!utf8) {
-        if (afp_version >= 30) {
-            /* the name is in utf8 */
+        /* want mac name */
+        if (utf8_encoding()) {
+            /* but name is an utf8 mac name */
+            char *u, *m;
+           
+            /* global static variable... */
+            tp = strdup(name);
+            if (!(u = mtoupath(vol, name, 1)) || !(m = utompath(vol, u, 0))) {
+               aint = 0;
+            }
+            else {
+                aint = strlen(m);
+                src = m;
+            }
+            
         }
         if (aint > MACFILELEN)
             aint = MACFILELEN;
@@ -137,9 +151,12 @@ char *set_name(char *data, const char *name, u_int32_t utf8)
         data += sizeof(temp);
     }
 
-    memcpy( data, name, aint );
+    memcpy( data, src, aint );
     data += aint;
-
+    if (tp) {
+        strcpy(name, tp);
+        free(tp);
+    }
     return data;
 }
 
@@ -155,16 +172,88 @@ char *set_name(char *data, const char *name, u_int32_t utf8)
 				  (1 << FILPBIT_EXTRFLEN) |\
 				  (1 << FILPBIT_PDINFO)))
 
+/* -------------------------- */
+u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
+             const cnid_t did, const char *upath, const int len) 
+{
+u_int32_t aint = 0;
 
+#ifdef CNID_DB
+
+    aint = cnid_add(vol->v_db, st, did, upath, len, aint);
+    /* Throw errors if cnid_add fails. */
+    if (aint == CNID_INVALID) {
+        switch (errno) {
+        case CNID_ERR_CLOSE: /* the db is closed */
+            break;
+        case CNID_ERR_PARAM:
+            LOG(log_error, logtype_afpd, "get_id: Incorrect parameters passed to cnid_add");
+            afp_errno = AFPERR_PARAM;
+            return CNID_INVALID;
+        case CNID_ERR_PATH:
+            afp_errno = AFPERR_PARAM;
+            return CNID_INVALID;
+        default:
+            afp_errno = AFPERR_MISC;
+            return CNID_INVALID;
+        }
+    }
+#endif /* CNID_DB */
+
+    if (aint == 0) {
+        /*
+         * First thing:  DID and FNUMs are
+         * in the same space for purposes of enumerate (and several
+         * other wierd places).  While we consider this Apple's bug,
+         * this is the work-around:  In order to maintain constant and
+         * unique DIDs and FNUMs, we monotonically generate the DIDs
+         * during the session, and derive the FNUMs from the filesystem.
+         * Since the DIDs are small, we insure that the FNUMs are fairly
+         * large by setting thier high bits to the device number.
+         *
+         * AFS already does something very similar to this for the
+         * inode number, so we don't repeat the procedure.
+         *
+         * new algorithm:
+         * due to complaints over did's being non-persistent,
+         * here's the current hack to provide semi-persistent
+         * did's:
+         *      1) we reserve the first bit for file ids.
+         *      2) the next 7 bits are for the device.
+         *      3) the remaining 24 bits are for the inode.
+         *
+         * both the inode and device information are actually hashes
+         * that are then truncated to the requisite bit length.
+         *
+         * it should be okay to use lstat to deal with symlinks.
+         */
+#ifdef USE_LASTDID
+        if ( S_ISDIR(st->st_mode)) {
+            aint = htonl( vol->v_lastdid++ );
+        }
+        else
+        {
+            aint = htonl(( st->st_dev << 16 ) | (st->st_ino & 0x0000ffff));
+        }
+#else /* USE_LASTDID */
+        {
+            struct stat	lst;
+            const struct stat *lstp;
+
+            lstp = lstat(upath, &lst) < 0 ? st : &lst;
+            aint = htonl(CNID(lstp, 1));
+        }
+#endif /* USE_LASTDID */
+    }
+    return aint;
+}
+             
 /* -------------------------- */
 int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
                  struct path *path, struct dir *dir, 
                  char *buf, int *buflen, struct adouble *adp, int attrbits )
 {
-#ifndef USE_LASTDID
-    struct stat		lst, *lstp;
-#endif /* USE_LASTDID */
     char		*data, *l_nameoff = NULL, *upath;
     char                *utf_nameoff = NULL;
     int			bit = 0;
@@ -252,7 +341,6 @@ int getmetadata(struct vol *vol,
                     memcpy(data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
                 }
             }
-
             data += 32;
             break;
 
@@ -267,66 +355,9 @@ int getmetadata(struct vol *vol,
             break;
 
         case FILPBIT_FNUM :
-            aint = 0;
-#if AD_VERSION > AD_VERSION1
-            /* look in AD v2 header */
-            if (adp)
-                memcpy(&aint, ad_entry(adp, ADEID_DID), sizeof(aint));
-#endif /* AD_VERSION > AD_VERSION1 */
-
-#ifdef CNID_DB
-            aint = cnid_add(vol->v_db, st, dir->d_did, upath,
-                            strlen(upath), aint);
-            /* Throw errors if cnid_add fails. */
-            if (aint == CNID_INVALID) {
-                switch (errno) {
-                case CNID_ERR_PARAM:
-                    LOG(log_error, logtype_afpd, "getfilparams: Incorrect parameters passed to cnid_add");
-                    return(AFPERR_PARAM);
-                case CNID_ERR_PATH:
-                    return(AFPERR_PARAM);
-                case CNID_ERR_DB:
-                case CNID_ERR_MAX:
-                    return(AFPERR_MISC);
-                }
-            }
-#endif /* CNID_DB */
-
-            if (aint == 0) {
-                /*
-                 * What a fucking mess.  First thing:  DID and FNUMs are
-                 * in the same space for purposes of enumerate (and several
-                 * other wierd places).  While we consider this Apple's bug,
-                 * this is the work-around:  In order to maintain constant and
-                 * unique DIDs and FNUMs, we monotonically generate the DIDs
-                 * during the session, and derive the FNUMs from the filesystem.
-                 * Since the DIDs are small, we insure that the FNUMs are fairly
-                 * large by setting thier high bits to the device number.
-                 *
-                 * AFS already does something very similar to this for the
-                 * inode number, so we don't repeat the procedure.
-                 *
-                 * new algorithm:
-                 * due to complaints over did's being non-persistent,
-                 * here's the current hack to provide semi-persistent
-                 * did's:
-                 *      1) we reserve the first bit for file ids.
-                 *      2) the next 7 bits are for the device.
-                 *      3) the remaining 24 bits are for the inode.
-                 *
-                 * both the inode and device information are actually hashes
-                 * that are then truncated to the requisite bit length.
-                 *
-                 * it should be okay to use lstat to deal with symlinks.
-                 */
-#ifdef USE_LASTDID
-                aint = htonl(( st->st_dev << 16 ) | (st->st_ino & 0x0000ffff));
-#else /* USE_LASTDID */
-                lstp = lstat(upath, &lst) < 0 ? st : &lst;
-                aint = htonl(CNID(lstp, 1));
-#endif /* USE_LASTDID */
-            }
-
+            aint = get_id(vol, adp, st, dir->d_did, upath, strlen(upath));
+            if (aint == 0)
+                return afp_errno;
             memcpy(data, &aint, sizeof( aint ));
             data += sizeof( aint );
             break;
@@ -438,12 +469,12 @@ int getmetadata(struct vol *vol,
     if ( l_nameoff ) {
         ashort = htons( data - buf );
         memcpy(l_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(data, path->m_name, 0);
+        data = set_name(vol, data, path->m_name, 0);
     }
     if ( utf_nameoff ) {
         ashort = htons( data - buf );
         memcpy(utf_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(data, path->m_name, utf8);
+        data = set_name(vol, data, path->m_name, utf8);
     }
     *buflen = data - buf;
     return (AFP_OK);
@@ -1119,7 +1150,9 @@ int		ibuflen, *rbuflen;
         return( AFPERR_PARAM );
     }
 
-    upath = mtoupath(vol, newname);
+    if (NULL == (upath = mtoupath(vol, newname, utf8_encoding()))) {
+        return( AFPERR_PARAM );
+    }
     if ( (err = copyfile(p, upath , newname, vol_noadouble(vol))) < 0 ) {
         return err;
     }
@@ -1414,9 +1447,6 @@ char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
     struct stat         *st;
-#if AD_VERSION > AD_VERSION1
-    struct adouble	ad;
-#endif
     struct vol		*vol;
     struct dir		*dir;
     char		*upath;
@@ -1430,6 +1460,7 @@ int		ibuflen, *rbuflen;
 #endif /* DEBUG */
 
     *rbuflen = 0;
+
     ibuf += 2;
 
     memcpy(&vid, ibuf, sizeof(vid));
@@ -1437,6 +1468,10 @@ int		ibuflen, *rbuflen;
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM);
+    }
+
+    if (vol->v_db == NULL) {
+        return AFPERR_NOOP;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -1476,15 +1511,7 @@ int		ibuflen, *rbuflen;
         return AFPERR_EXISTID;
     }
 
-#if AD_VERSION > AD_VERSION1
-    memset(&ad, 0, sizeof(ad));
-    if (ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, &ad ) >= 0) {
-        memcpy(&id, ad_entry(&ad, ADEID_DID), sizeof(id));
-        ad_close(&ad, ADFLAGS_HF);
-    }
-#endif /* AD_VERSION > AD_VERSION1 */
-
-    if ((id = cnid_add(vol->v_db, st, did, upath, len, id)) != CNID_INVALID) {
+    if ((id = get_id(vol, NULL, st, did, upath, len)) != CNID_INVALID) {
         memcpy(rbuf, &id, sizeof(id));
         *rbuflen = sizeof(id);
         return AFP_OK;
@@ -1493,19 +1520,7 @@ int		ibuflen, *rbuflen;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "ending afp_createid...:");
 #endif /* DEBUG */
-
-    switch (errno) {
-    case EROFS:
-        return AFPERR_VLOCK;
-        break;
-    case EPERM:
-    case EACCES:
-        return AFPERR_ACCESS;
-        break;
-    default:
-        LOG(log_error, logtype_afpd, "afp_createid: cnid_add: %s", strerror(errno));
-        return AFPERR_PARAM;
-    }
+    return afp_errno;
 }
 
 /* ------------------------------
@@ -1540,6 +1555,10 @@ int		ibuflen, *rbuflen;
         return( AFPERR_PARAM);
     }
 
+    if (vol->v_db == NULL) {
+        return AFPERR_NOOP;
+    }
+
     memcpy(&id, ibuf, sizeof( id ));
     ibuf += sizeof(id);
 
@@ -1568,7 +1587,9 @@ int		ibuflen, *rbuflen;
 
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
-    path.m_name = utompath(vol, upath);
+    if (NULL == (path.m_name = utompath(vol, upath, utf8_encoding()))) {
+        return AFPERR_NOID;
+    }
     if (AFP_OK != (err = getfilparams(vol, bitmap, &path , curdir, 
                             rbuf + sizeof(bitmap), &buflen))) {
         return err;
@@ -1612,6 +1633,10 @@ int		ibuflen, *rbuflen;
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM);
+    }
+
+    if (vol->v_db == NULL) {
+        return AFPERR_NOOP;
     }
 
     if (vol->v_flags & AFPVOL_RO)

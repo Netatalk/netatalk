@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.20 2003-02-16 12:35:05 didg Exp $
+ * $Id: adouble.h,v 1.21 2003-03-09 19:55:35 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -183,6 +183,8 @@ static __inline__ int sendfile(int fdout, int fdin, off_t *off, size_t count)
 #ifndef ADEDOFF_FILEI
 #define ADEDOFF_FILEI	541
 #endif
+
+typedef u_int32_t cnid_t;
 
 /*
  * The header of the AppleDouble Header File looks like this:

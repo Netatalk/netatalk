@@ -21,8 +21,6 @@
 #define CNID_ERR_CLOSE 0x80000004   /* the db was not open */
 #define CNID_ERR_MAX   0x80000005
 
-typedef u_int32_t cnid_t;
-
 /* cnid_open.c */
 extern void *cnid_open __P((const char *, mode_t));
 

@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.42 2003-01-12 14:40:03 didg Exp $
+ * $Id: unix.c,v 1.43 2003-03-09 19:55:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -625,6 +625,7 @@ setdirowner_noadouble:
     return( 0 );
 }
 
+#if 0
 /* recursive chown()ing of a directory */
 static int recursive_chown(const char *path, uid_t uid, gid_t gid) {
     struct stat sbuf;
@@ -669,6 +670,7 @@ recursive_chown_end:
     }
     return ret;
 }
+#endif
 
 /* This is equivalent of unix rename(). */
 int unix_rename(const char *oldpath, const char *newpath)
@@ -680,7 +682,7 @@ int unix_rename(const char *oldpath, const char *newpath)
 
 	if (rename(oldpath, newpath) < 0)
 		return -1;
-
+#if 0
 	for (i = 0; i <= PATH_MAX && newpath[i] != '\0'; i++)
 		pd_name[i] = newpath[i];
 	pd_name[i] = '\0';
@@ -706,7 +708,7 @@ int unix_rename(const char *oldpath, const char *newpath)
 		    pd_name, geteuid(), strerror(errno));
             seteuid(uid);
 	}
-
+#endif
 	return 0;
 }
 

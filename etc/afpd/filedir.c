@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.41 2003-02-16 12:35:04 didg Exp $
+ * $Id: filedir.c,v 1.42 2003-03-09 19:55:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -361,7 +361,10 @@ int         isdir;
     
     if (!isdir) {
 #ifdef CNID_DB
-        p = mtoupath(vol, oldname);
+        p = mtoupath(vol, oldname, utf8_encoding());
+        if (!p) { 
+            return AFPERR_PARAM; /* can't convert */
+        }
         id = cnid_get(vol->v_db, sdir->d_did, p, strlen(p));
 #endif /* CNID_DB */
         p = ctoupath( vol, sdir, oldname );
@@ -400,7 +403,9 @@ int         isdir;
             return(AFPERR_OLOCK);
     }
 
-    upath = mtoupath(vol, newname);
+    if (NULL == (upath = mtoupath(vol, newname, utf8_encoding()))){ 
+        return AFPERR_PARAM;
+    }
     path.u_name = upath;
     st = &path.st;    
     if (0 != (rc = check_name(vol, upath))) {
@@ -609,6 +614,9 @@ char	*u;
     char	*p;
     int		len;
 
+    if (u == NULL)
+        return NULL;
+        
     p = path + sizeof( path ) - 1;
     *p = '\0';
     len = strlen( u );
@@ -643,7 +651,7 @@ const struct vol	*vol;
 struct dir	*dir;
 char	*name;
 {
-    return absupath(vol, dir, mtoupath(vol, name));
+    return absupath(vol, dir, mtoupath(vol, name, utf8_encoding()));
 }
 
 /* ------------------------- */
@@ -735,8 +743,11 @@ int		ibuflen, *rbuflen;
     rc = moveandrename(vol, sdir, oldname, newname, isdir);
 
     if ( rc == AFP_OK ) {
-        char *upath = mtoupath(vol, newname);
-
+        char *upath = mtoupath(vol, newname, utf8_encoding());
+        
+        if (NULL == upath) {
+            return AFPERR_PARAM;
+        }
         curdir->offcnt++;
         sdir->offcnt--;
 #ifdef DROPKLUDGE

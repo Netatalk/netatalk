@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.49 2003-02-16 12:35:04 didg Exp $
+ * $Id: fork.c,v 1.50 2003-03-09 19:55:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -86,7 +86,9 @@ const u_int16_t     attrbits;
     vol = ofork->of_vol;
     dir = ofork->of_dir;
 
-    path.u_name = mtoupath(vol, ofork->of_name);
+    if (NULL == (path.u_name = mtoupath(vol, ofork->of_name, utf8_encoding()))) {
+        return( AFPERR_MISC );
+    }
     path.m_name = ofork->of_name;
     st = &path.st;
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) | 
@@ -427,6 +429,10 @@ int		ibuflen, *rbuflen;
                 /* else we don't set AFPFORK_OPEN because there's no ressource fork file 
                  * We need to check AFPFORK_OPEN in afp_closefork(). eg fork open read-only
                  * then create in open read-write.
+                 * FIXME , it doesn't play well with byte locking example:
+                 * ressource fork open read only
+                 * locking set on it (no effect, there's no file!)
+                 * ressource fork open read write now
                 */
                 break;
             case EMFILE :

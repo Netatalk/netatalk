@@ -1,5 +1,5 @@
 /*
- * $Id: mangle.h,v 1.3 2002-10-17 18:01:54 didg Exp $
+ * $Id: mangle.h,v 1.4 2003-03-09 19:55:35 didg Exp $
  *
  */
 
@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <atalk/adouble.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB */
@@ -24,7 +26,7 @@
 #define MAX_EXT_LENGTH 4 /* XXX This cannot be greater than 27 */
 #define MAX_LENGTH MACFILELEN 
 
-extern char *mangle __P((const struct vol *, char *));
+extern char *mangle __P((const struct vol *, char *, char *, int));
 extern char *demangle __P((const struct vol *, char *));
 
 #endif /* AFPD_MANGLE_H */

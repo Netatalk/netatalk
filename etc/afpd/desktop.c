@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.23 2003-02-16 12:35:04 didg Exp $
+ * $Id: desktop.c,v 1.24 2003-03-09 19:55:33 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -45,9 +45,14 @@
 #include "fork.h"
 #include "globals.h"
 #include "desktop.h"
+
 #ifdef FILE_MANGLING
 #include "mangle.h"
 #endif /* CNID_DB */
+
+#ifdef AFP3x
+#include <iconv.h>
+#endif
 
 int afp_opendt(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
@@ -609,27 +614,19 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
     return( path );
 }
 
-/* 
+/* ---------------------------
  * mpath is only a filename 
 */
-char *mtoupath(const struct vol *vol, char *mpath)
+static char  upath[ MAXPATHLEN + 1];
+static char  mpath[ MAXPATHLEN + 1];
+static char  ucs2[ MAXPATHLEN + 1];
+
+static char *old_mtoupath(const struct vol *vol, char *mpath)
 {
-    static char  upath[ MAXPATHLEN + 1];
     char	*m, *u;
     int		 i = 0;
     int          changed = 0;
         
-    if ( *mpath == '\0' ) {
-        return( "." );
-    }
-
-#ifdef FILE_MANGLING
-    m = demangle(vol, mpath);
-    if (m != mpath) {
-        changed = 1;
-        mpath = m;
-    }
-#endif /* FILE_MANGLING */
     m = mpath;
     u = upath;
     while ( *m != '\0' ) {
@@ -651,7 +648,7 @@ char *mtoupath(const struct vol *vol, char *mpath)
                  * H.P. Jansen <hpj@urpla.net> */
 #ifdef DEBUG
                 LOG(log_debug, logtype_afpd, "mtoupath: hex encode: 0x%x", (unsigned char) *m);
-#endif /* DEBUG */
+#endif
                 *u++ = ':';
                 *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
                 *u = hexdig[ *m & 0x0f ];
@@ -662,12 +659,12 @@ char *mtoupath(const struct vol *vol, char *mpath)
                     (!isascii(*m) || *m == '/')) ||
                     (((vol->v_flags & AFPVOL_USEDOTS) == 0) &&
                      ( i == 0 && (*m == '.' )))) {
-#else /* AD_VERSION == AD_VERSION1 */
+#else 
             if ((((vol->v_flags & AFPVOL_NOHEX) == 0) &&
                     (!isprint(*m) || *m == '/')) ||
                     (((vol->v_flags & AFPVOL_USEDOTS) == 0) &&
                      ( i == 0 && (*m == '.' )))) {
-#endif /* AD_VERSION == AD_VERSION1 */
+#endif
                 /* do hex conversion. */
                 *u++ = ':';
                 *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
@@ -689,12 +686,12 @@ char *mtoupath(const struct vol *vol, char *mpath)
     return( (changed)?upath:mpath );
 }
 
+/* ---------------------------- */
 #define hextoint( c )	( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 #define islxdigit(x)	(!isupper(x)&&isxdigit(x))
 
-char *utompath(const struct vol *vol, char *upath)
+static char *old_utompath(const struct vol *vol, char *upath)
 {
-    static char  mpath[ MAXPATHLEN + 1];
     char        *m, *u;
     int          h;
     int          changed = 0;
@@ -704,13 +701,11 @@ char *utompath(const struct vol *vol, char *upath)
     m = mpath;
     while ( *u != '\0' ) {
         /* we have a code page */
-#if 1
         if (vol->v_utompage && ((*u & 0x80) ||
                                 (vol->v_flags & AFPVOL_MAPASCII))) {
             *m = vol->v_utompage->map[(unsigned char) *u].value;
             changed = 1;
         } else
-#endif /* 1 */
             if ( *u == ':' && *(u+1) != '\0' && islxdigit( *(u+1)) &&
                     *(u+2) != '\0' && islxdigit( *(u+2))) {
                 ++u;
@@ -735,7 +730,7 @@ char *utompath(const struct vol *vol, char *upath)
     m = mpath;
 
 #ifdef FILE_MANGLING
-    m = mangle(vol, mpath);
+    m = mangle(vol, mpath, upath, 0);
     if (m != mpath) {
         changed = 1;
     }
@@ -748,6 +743,252 @@ char *utompath(const struct vol *vol, char *upath)
     return((changed)? m:upath );
 }
 
+/* --------------- */
+extern unsigned int do_precomposition(unsigned int base, unsigned int comb);
+
+static char comp[MAXPATHLEN +1];
+
+static char *precompose(u_int16_t  *name, size_t inplen, size_t *outlen)
+{
+size_t i;
+u_int16_t base, comb;
+u_int16_t *in, *out;
+u_int16_t result;
+
+    if (!inplen || (inplen & 1) || inplen > sizeof(comp)/sizeof(u_int16_t))
+        return NULL;
+    i = 0;
+    in  = name;
+    out = (u_int16_t *)comp;
+    *outlen = 0;
+    
+    base = *in;
+    while (1) {
+        i += 2;
+        in++;
+        if (i == inplen) {
+           *out = base;
+           *outlen += 2;
+           return comp;
+        }
+        comb = *in;
+        if (comb >= 0x300 && (result = do_precomposition(base, comb))) {
+           *out = result;
+           out++;
+           *outlen += 2;
+           i += 2;
+           in++;
+           if (i == inplen) 
+              return comp;
+           base = *in;
+        }
+        else {
+           *out = base;
+           out++;
+           *outlen += 2;
+           base = comb;
+        }
+    }
+}
+
+/* --------------- */
+extern unsigned int do_decomposition(unsigned int base);
+
+static char *decompose(u_int16_t  *name, size_t inplen, size_t *outlen)
+{
+size_t i;
+u_int16_t base;
+u_int16_t *in, *out;
+unsigned int result;
+
+    if (!inplen || (inplen & 1))
+        return NULL;
+    i = 0;
+    in  = name;
+    out = (u_int16_t *)comp;
+    *outlen = 0;
+    
+    while (i < inplen) {
+        if (*outlen >= sizeof(comp)/sizeof(u_int16_t) +2) {
+            return NULL;
+        }
+        base = *in;
+        if ((result = do_decomposition(base))) {
+           *out = result  >> 16;
+           out++;
+           *outlen += 2;
+           *out = result & 0xffff;
+           out++;
+           *outlen += 2;
+        }
+        else {
+           *out = base;
+           out++;
+           *outlen += 2;
+        }
+        i += 2;
+        in++;
+     }
+     return comp;
+}
+
+/* --------------------------- */
+char *mtoupath(const struct vol *vol, char *mpath, int utf8)
+{
+    char	*m, *u, *r;
+    int		 i = 0;
+    size_t       inplen;
+    size_t       outlen;
+        
+    if ( *mpath == '\0' ) {
+        return( "." );
+    }
+
+#ifdef FILE_MANGLING
+    m = demangle(vol, mpath);
+    if (m != mpath) {
+        return m;
+    }
+#endif /* FILE_MANGLING */
+
+    if (!vol_utf8(vol))
+    	return old_mtoupath(vol, mpath);
+
+    m = mpath;
+    u = upath;
+    while ( *m != '\0' ) {
+        if ( (!(vol->v_flags & AFPVOL_NOHEX) && *m == '/') ||
+             (!(vol->v_flags & AFPVOL_USEDOTS) && i == 0 && *m == '.') ||
+             (!utf8 && (unsigned char)*m == 0xf0) /* Apple logo */
+        ) {
+          /* do hex conversion. */
+          *u++ = ':';
+          *u++ = hexdig[ ( *m & 0xf0 ) >> 4 ];
+          *u = hexdig[ *m & 0x0f ];
+        } else
+           *u = *m;
+        u++;
+        i++;
+        m++;
+    }
+    *u = '\0';
+    u = upath;
+#ifdef AFP3x
+    inplen = strlen(u);
+    outlen = MAXPATHLEN;
+    r = ucs2;
+    if (!utf8) {
+        if ((size_t)(-1) == iconv(vol->v_mactoutf8, 0,0,0,0) )
+            return NULL;
+        /* assume precompose */
+        if ((size_t)(-1) == iconv(vol->v_mactoutf8, &u, &inplen, &r, &outlen))
+            return NULL;
+        u = ucs2;
+    }
+    else { 
+        if ((size_t)(-1) == iconv(vol->v_utf8toucs2, 0,0,0,0) )
+            return NULL;
+
+        if ((size_t)(-1) == iconv(vol->v_utf8toucs2, &u, &inplen, &r, &outlen))
+            return NULL;
+
+        u = precompose((u_int16_t *)ucs2, MAXPATHLEN -outlen, &inplen);
+
+        if ((size_t)(-1) == iconv(vol->v_ucs2toutf8, 0,0,0,0))
+            return NULL;
+            
+        outlen = MAXPATHLEN;
+        r = upath;
+        if ((size_t)(-1) == iconv(vol->v_ucs2toutf8, &u, &inplen, &r, &outlen))
+            return NULL;
+        u = upath;
+    }
+    u[MAXPATHLEN -outlen] = 0;
+#endif
+#ifdef DEBUG
+    LOG(log_debug, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
+#endif /* DEBUG */
+    return( u );
+}
+
+/* --------------- */
+char *utompath(const struct vol *vol, char *upath, int utf8)
+{
+    char        *m, *u, *r;
+    int          h;
+    int          mangleflag = 0;
+    size_t       inplen;
+    size_t       outlen;
+
+    if (!vol_utf8(vol))
+    	return old_utompath(vol, upath);
+    /* do the hex conversion */
+    u = upath;
+    m = mpath;
+    while ( *u != '\0' ) {
+        if ( *u == ':' && islxdigit( *(u+1)) && islxdigit( *(u+2))) {
+            ++u;
+            h = hextoint( *u ) << 4;
+            ++u;
+            h |= hextoint( *u );
+            *m = h;
+        } else
+            *m = *u;
+        u++;
+        m++;
+    }
+    *m = '\0';
+    m = mpath;
+#ifdef AFP3x    
+    if ((size_t)(-1) == iconv(vol->v_utf8toucs2, 0,0,0,0) )
+        return NULL;
+    inplen = strlen(mpath);
+    outlen = MAXPATHLEN;
+    r = ucs2;
+    if ((size_t)(-1) == iconv(vol->v_utf8toucs2, &m, &inplen, &r, &outlen))
+        return NULL;
+
+    if (utf8) {
+        if ( NULL == (m = decompose((u_int16_t *)ucs2, MAXPATHLEN -outlen, &inplen)))
+            return NULL;
+
+        if ((size_t)(-1) == iconv(vol->v_ucs2toutf8, 0,0,0,0))
+            return NULL;
+            
+        outlen = MAXPATHLEN;
+        r = mpath;
+        if ((size_t)(-1) == iconv(vol->v_ucs2toutf8, &m, &inplen, &r, &outlen))
+            return NULL;
+    }
+    else {
+        m = precompose((u_int16_t *)ucs2, MAXPATHLEN -outlen, &inplen);
+
+        if ((size_t)(-1) == iconv(vol->v_ucs2tomac, 0,0,0,0))
+            return NULL;
+            
+        outlen = MAXPATHLEN;
+        r = mpath;
+        if ((size_t)(-1) == iconv(vol->v_ucs2tomac, &m, &inplen, &r, &outlen)) {
+            switch (errno) {
+            case EILSEQ:
+                if (outlen != MAXPATHLEN) {
+                    mangleflag = 1;
+                }
+            default:
+                return NULL;
+            }
+        }
+    }
+    mpath[MAXPATHLEN -outlen] = 0;
+#endif
+#ifdef FILE_MANGLING
+    m = mangle(vol, mpath, upath, mangleflag);
+#endif /* FILE_MANGLING */
+
+    return(m);
+}
+
+/* ----------------------------- */
 int afp_addcomment(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;

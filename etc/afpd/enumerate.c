@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.34 2003-02-16 12:35:04 didg Exp $
+ * $Id: enumerate.c,v 1.35 2003-03-09 19:55:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -47,9 +47,6 @@ struct path     *path;
     int		upathlen;
     char        *name;
     char        *upath;
-#ifndef USE_LASTDID
-    struct stat lst, *lstp;
-#endif /* USE_LASTDID */
     struct stat *st;
 
     upath = path->u_name;
@@ -61,38 +58,9 @@ struct path     *path;
         return NULL;
     }
 
-    cdir->d_did = 0;
-
-#ifdef CNID_DB
-    /* add to cnid db */
-    cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath,
-                           upathlen, cdir->d_did);
-    /* Fail out if things go bad with CNID. */
-    if (cdir->d_did == CNID_INVALID) {
-        switch (errno) {
-        case CNID_ERR_CLOSE: /* the db is closed */
-            break;
-        case CNID_ERR_PARAM:
-            LOG(log_error, logtype_afpd, "adddir: Incorrect parameters passed to cnid_add");
-            return NULL;
-        case CNID_ERR_PATH:
-        case CNID_ERR_DB:
-        case CNID_ERR_MAX:
-            return NULL;
-        }
-    }
-#endif /* CNID_DB */
-
-    if (cdir->d_did == 0) {
-#ifdef USE_LASTDID
-        /* last way of doing DIDs */
-        cdir->d_did = htonl( vol->v_lastdid++ );
-#else /* USE_LASTDID */
-        lstp = lstat(upath, &lst) < 0 ? st : &lst;
-        /* the old way of doing DIDs (default) */
-        cdir->d_did = htonl( CNID(lstp, 0) );
-#endif /* USE_LASTDID */
-    }
+    cdir->d_did = get_id(vol, NULL, st, dir->d_did, upath, upathlen);
+    if (cdir->d_did == 0) 
+        return NULL;
 
     if ((edir = dirinsert( vol, cdir ))) {
         /* it's not possible with LASTDID
@@ -195,9 +163,11 @@ char *check_dirent(const struct vol *vol, char *name)
     /* check for vetoed filenames */
     if (veto_file(vol->v_veto, name))
         return NULL;
+    if (NULL == (m_name = utompath(vol, name, utf8_encoding()))) 
+        return NULL;    
 
     /* now check against too big a file */
-    if (strlen(m_name = utompath(vol, name)) > vol->max_filename)
+    if (strlen(m_name) > vol->max_filename)
         return NULL;
 
     return m_name;
@@ -444,8 +414,8 @@ int     ext;
             }
             dir = dirsearch_byname(curdir, s_path.u_name);
             if (!dir) {
-                s_path.m_name = utompath(vol, s_path.u_name);
-                if ((dir = adddir( vol, curdir, &s_path)) == NULL) {
+                s_path.m_name = utompath(vol, s_path.u_name, utf8_encoding() );
+                if (s_path.m_name == NULL || (dir = adddir( vol, curdir, &s_path)) == NULL) {
                     return AFPERR_MISC;
                 }
             }
@@ -462,7 +432,10 @@ int     ext;
                 sd.sd_last += len + 1;
                 continue;
             }
-            s_path.m_name = utompath(vol, s_path.u_name);
+            s_path.m_name = utompath(vol, s_path.u_name, utf8_encoding());
+            if (s_path.m_name == NULL ) {
+                return AFPERR_MISC;
+            }
             if (AFP_OK != ( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
                                      data + header , &esz )) ) {
                 return( ret );

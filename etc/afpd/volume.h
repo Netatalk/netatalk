@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.17 2003-01-08 15:01:37 didg Exp $
+ * $Id: volume.h,v 1.18 2003-03-09 19:55:35 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,6 +11,10 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
+
+#ifdef HAVE_USABLE_ICONV
+#include <iconv.h>
+#endif
 
 #include "globals.h"
 
@@ -55,15 +59,25 @@ struct vol {
     
     char                *v_password;
     char                *v_veto;
+
 #ifdef CNID_DB
     void                *v_db;
     char                *v_dbpath;
-#endif /* CNID_DB */
+#endif 
     mode_t		v_umask;
+
 #ifdef FORCE_UIDGID
-    char				*v_forceuid;
-    char				*v_forcegid;
-#endif /* FORCE_UIDGID */
+    char		*v_forceuid;
+    char		*v_forcegid;
+#endif 
+
+#ifdef HAVE_USABLE_ICONV
+    iconv_t             *v_utf8toucs2;
+    iconv_t             *v_ucs2toutf8;
+    iconv_t             *v_mactoutf8;
+    iconv_t             *v_ucs2tomac;
+#endif
+
 };
 
 #ifdef NO_LARGE_VOL_SUPPORT
@@ -147,6 +161,14 @@ int wincheck(const struct vol *vol, const char *path);
 
 #define vol_noadouble(vol) (((vol)->v_flags & AFPVOL_NOADOUBLE) ? \
 			    ADFLAGS_NOADOUBLE : 0)
+
+#ifdef AFP3x
+#define vol_utf8(vol) ((vol)->v_flags & AFPVOL_UTF8)
+#define utf8_encoding() (afp_version >= 30)
+#else
+#define vol_utf8(vol) (0)
+#define utf8_encoding() (0)
+#endif
 
 extern struct vol	*getvolbyvid __P((const u_int16_t));
 extern int              ustatfs_getvolspace __P((const struct vol *,

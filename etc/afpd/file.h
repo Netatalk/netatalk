@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.15 2003-02-16 12:35:04 didg Exp $
+ * $Id: file.h,v 1.16 2003-03-09 19:55:34 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -74,7 +74,7 @@ struct extmap {
 };
 
 #define kTextEncodingUTF8 0x08000103
-extern char *set_name   __P((char *, const char *, u_int32_t ) );
+extern char *set_name   __P((const struct vol *, char *, char *, u_int32_t ) );
 
 extern struct extmap	*getextmap __P((const char *));
 extern struct extmap	*getdefextmap __P((void));
@@ -89,6 +89,9 @@ extern int deletefile   __P((struct vol *, char *, int));
 
 extern void *get_finderinfo __P((const char *, struct adouble *, void *));
 extern int  copy_path_name __P((char *, char *i));
+
+extern u_int32_t get_id  __P((struct vol *, struct adouble *, const struct stat *,
+                                const cnid_t , const char *, const int ));
 
 /* FP functions */
 extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));

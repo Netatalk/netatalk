@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.62 2003-02-16 12:35:04 didg Exp $
+ * $Id: directory.c,v 1.63 2003-03-09 19:55:33 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -182,7 +182,10 @@ u_int32_t	did;
         return NULL;
     }
     ptr = path + MAXPATHLEN;
-    mpath = utompath(vol, upath);
+    if (NULL == ( mpath = utompath(vol, upath, utf8_encoding()) ) ) {
+        afp_errno = AFPERR_NOOBJ;
+        return NULL;
+    }
     len = strlen(mpath);
     pathlen = len;          /* no 0 in the last part */
     len++;
@@ -193,11 +196,14 @@ u_int32_t	did;
         if (ret != NULL) {
             break;
         }
-        if (NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, buflen))) {
+        if ( NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, buflen))
+             ||
+             NULL == (mpath = utompath(vol, upath, utf8_encoding()))
+        ) {
             afp_errno = AFPERR_NOOBJ;
             return NULL;
         }
-        mpath = utompath(vol, upath);
+
         len = strlen(mpath) + 1;
         pathlen += len;
         if (pathlen > 255) {
@@ -528,10 +534,13 @@ struct vol	*vol;
 struct dir	*dir;
 struct path *path;
 {
-    char	*p;
+    path->u_name = mtoupath(vol, path->m_name, utf8_encoding() );
 
-    path->u_name = p = mtoupath(vol, path->m_name );
-    if ( of_stat( path ) != 0 ) {
+    if ( path->u_name == NULL) {
+        afp_errno = AFPERR_PARAM;
+        return NULL;
+    }
+    if (of_stat( path ) != 0 ) {
         return( NULL );
     }
 
@@ -1051,7 +1060,7 @@ char	**cpath;
 
             if ( cdir == NULL ) {
 
-                if ( len > 0 ) {
+                if ( len > 0 || !ret.u_name) {
                     return NULL;
                 }
 
@@ -1348,12 +1357,12 @@ int getdirparams(const struct vol *vol,
     if ( l_nameoff ) {
         ashort = htons( data - buf );
         memcpy( l_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(data, dir->d_m_name, 0);
+        data = set_name(vol, data, dir->d_m_name, 0);
     }
     if ( utf_nameoff ) {
         ashort = htons( data - buf );
         memcpy( utf_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(data, dir->d_m_name, utf8);
+        data = set_name(vol, data, dir->d_m_name, utf8);
     }
     if ( isad ) {
         ad_close( &ad, ADFLAGS_HF );

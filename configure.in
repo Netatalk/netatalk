@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.178 2003-01-29 00:16:23 srittau Exp $
+dnl $Id: configure.in,v 1.179 2003-03-09 19:55:33 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -197,6 +197,7 @@ AC_ARG_ENABLE(afp3,
 )
 
 if test "$afp3" = "yes"; then
+	AM_ICONV
         AC_SYS_LARGEFILE
 fi
 

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.48 2003-03-05 09:41:34 didg Exp $
+ * $Id: volume.c,v 1.49 2003-03-09 19:55:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1240,7 +1240,9 @@ int		ibuflen, *rbuflen;
         volume->v_db = NULL;
         opened = 1;
     }
-    
+    else {
+       /* FIXME */
+    }    
 #ifdef FORCE_UIDGID
     set_uidgid ( volume );
 #endif /* FORCE_UIDGID */
@@ -1277,6 +1279,31 @@ int		ibuflen, *rbuflen;
                               rbuf + sizeof(bitmap), &buflen )) != AFP_OK ) {
         goto openvol_err;
     }
+#ifdef AFP3x
+    volume->v_utf8toucs2 = (iconv_t)(-1);
+    volume->v_ucs2toutf8 = (iconv_t)(-1);
+    volume->v_mactoutf8  = (iconv_t)(-1);
+    volume->v_ucs2tomac  = (iconv_t)(-1);
+    
+    if (vol_utf8(volume)) {
+        if ((iconv_t)(-1) == (volume->v_utf8toucs2 = iconv_open("UCS-2LE", "UTF-8"))) {
+            LOG(log_error, logtype_afpd, "openvol: no UTF8 to UCS-2LE");
+            goto openvol_err;
+        }
+        if ((iconv_t)(-1) == (volume->v_ucs2toutf8 = iconv_open("UTF-8", "UCS-2LE"))) {
+            LOG(log_error, logtype_afpd, "openvol: no UCS-2LE to UTF-8");
+            goto openvol_err_iconv;
+        }
+        if ((iconv_t)(-1) == (volume->v_mactoutf8 = iconv_open("UTF-8", "MAC"))) {
+            LOG(log_error, logtype_afpd, "openvol: no MAC to UTF-8");
+            goto openvol_err_iconv;
+        }
+        if ((iconv_t)(-1) == (volume->v_ucs2tomac = iconv_open("MAC", "UCS-2LE"))) {
+            LOG(log_error, logtype_afpd, "openvol:  no UCS-2LE to MAC");
+            goto openvol_err_iconv;
+        }
+    }
+#endif
     *rbuflen = buflen + sizeof( bitmap );
     bitmap = htons( bitmap );
     memcpy(rbuf, &bitmap, sizeof( bitmap ));
@@ -1294,7 +1321,17 @@ int		ibuflen, *rbuflen;
 #endif /* CNID_DB */
 
     return( AFP_OK );
-
+#ifdef AFP3x
+openvol_err_iconv:
+    if (volume->v_utf8toucs2 != (iconv_t)(-1))
+        iconv_close(volume->v_utf8toucs2);
+    if (volume->v_ucs2toutf8 != (iconv_t)(-1))
+        iconv_close(volume->v_ucs2toutf8);
+    if (volume->v_mactoutf8  != (iconv_t)(-1))
+        iconv_close(volume->v_mactoutf8);    
+    if (volume->v_ucs2tomac  != (iconv_t)(-1))
+        iconv_close(volume->v_ucs2tomac);
+#endif        
 openvol_err:
 #ifdef CNID_DB
     if (opened && volume->v_db != NULL) {

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.10 2003-01-26 10:42:40 didg Exp $
+ * $Id: directory.h,v 1.11 2003-03-09 19:55:34 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -55,7 +55,7 @@ struct dir {
     time_t      ctime;                /* inode ctime */
     int         offcnt;               /* offspring count */
 
-    char	*d_m_name;             /* mac name */
+    char	*d_m_name;            /* mac name */
     char        *d_u_name;            /* unix name */
 };
 
@@ -175,6 +175,7 @@ struct maccess {
 #define	AR_UOWN		(1<<7)
 
 extern struct dir       *dirnew __P((const char *, const char *));
+extern void             dirfreename __P((struct dir *));
 extern void             dirfree __P((struct dir *));
 extern struct dir	*dirsearch __P((const struct vol *, u_int32_t));
 extern struct dir	*dirlookup __P((const struct vol *, u_int32_t));
