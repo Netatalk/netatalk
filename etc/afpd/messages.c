@@ -39,7 +39,9 @@ void readmessage(void)
   filename=malloc(sizeof(SERVERTEXT)+15);
   sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
+#ifdef DEBUG
   syslog (LOG_DEBUG, "Reading file %s ", filename);
+#endif
   
   message=fopen(filename, "r");
   if (message==NULL) {
@@ -65,11 +67,14 @@ can get it to work, delete this comment and enable the code!  */
     i=unlink (filename);
     if (i)
       syslog (LOG_INFO, "Error deleting %s: %m", filename);
+#ifdef DEBUG
     else
-      syslog (LOG_DEBUG, "Deleted %s", filename);
+      syslog (LOG_INFO, "Deleted %s", filename);
+#endif DEBUG
     free (filename);
- 
-    syslog (LOG_DEBUG, "Set server message to \"%s\"", servermesg);
+#ifdef DEBUG
+    syslog (LOG_INFO, "Set server message to \"%s\"", servermesg);
+#endif
   }
   free(filename);
 #endif
