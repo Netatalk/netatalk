@@ -1,6 +1,7 @@
 2002-09-26  Andrew Morgan <morgan@orst.edu>
 	* Added syncmail script to CVSROOT so commits are logged to the
-	netatalk-cvs@lists.sourceforge.net mailing list.
+	netatalk-cvs@lists.sourceforge.net mailing list.  You can subscribe
+	to this mailing list to keep track of cvs commits.
 
 2002-09-24  Sebastian Rittau  <srittau@jroger.in-berlin.de>
 
