@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.56 2003-01-12 14:39:58 didg Exp $
+ * $Id: directory.c,v 1.57 2003-01-21 09:58:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1283,7 +1283,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return afp_errno;
     }
 
@@ -1291,7 +1291,7 @@ int		ibuflen, *rbuflen;
     bitmap = ntohs( bitmap );
     ibuf += sizeof( bitmap );
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
 
@@ -1306,7 +1306,7 @@ int		ibuflen, *rbuflen;
         ibuf++;
     }
 
-    if (( rc = setdirparams(vol, path, bitmap, ibuf )) == AFP_OK ) {
+    if (AFP_OK == ( rc = setdirparams(vol, path, bitmap, ibuf )) ) {
         setvoltime(obj, vol );
     }
     return( rc );

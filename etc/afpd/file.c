@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.74 2003-01-16 21:18:15 didg Exp $
+ * $Id: file.c,v 1.75 2003-01-21 09:58:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -654,7 +654,7 @@ int		ibuflen, *rbuflen;
 
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -662,7 +662,7 @@ int		ibuflen, *rbuflen;
     bitmap = ntohs( bitmap );
     ibuf += sizeof( bitmap );
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
 
@@ -674,7 +674,7 @@ int		ibuflen, *rbuflen;
         ibuf++;
     }
 
-    if (( rc = setfilparams(vol, s_path, bitmap, ibuf )) == AFP_OK ) {
+    if (AFP_OK == ( rc = setfilparams(vol, s_path, bitmap, ibuf )) ) {
         setvoltime(obj, vol );
     }
 
@@ -1526,7 +1526,7 @@ int		ibuflen, *rbuflen;
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof(did);
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1617,14 +1617,14 @@ int		ibuflen, *rbuflen;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM);
     }
 
     memcpy(&id, ibuf, sizeof( id ));
     ibuf += sizeof(id);
 
-    if ((upath = cnid_resolve(vol->v_db, &id, buffer, len)) == NULL) {
+    if (NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, len)) ) {
         return AFPERR_NOID; /* was AFPERR_BADID, but help older Macs */
     }
 
@@ -1691,7 +1691,7 @@ int		ibuflen, *rbuflen;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid )) ) {
         return( AFPERR_PARAM);
     }
 
@@ -1702,7 +1702,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(id);
     fileid = id;
 
-    if ((upath = cnid_resolve(vol->v_db, &id, buffer, len)) == NULL) {
+    if (NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, len)) ) {
         return AFPERR_NOID;
     }
 
@@ -1800,11 +1800,11 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(did);
 
     /* source file */
-    if ((dir = dirlookup( vol, sid )) == NULL ) {
+    if (NULL == (dir = dirlookup( vol, sid )) ) {
         return( AFPERR_PARAM );
     }
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
         return( AFPERR_PARAM );
     }
 
@@ -1846,11 +1846,11 @@ int		ibuflen, *rbuflen;
                       slen = strlen(supath));
 #endif /* CNID_DB */
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did )) ) {
         return( AFPERR_PARAM );
     }
 
-    if (( path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
         return( AFPERR_PARAM );
     }
 
