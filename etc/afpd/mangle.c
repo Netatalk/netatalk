@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.10 2002-09-29 23:31:24 sibaz Exp $ 
+ * $Id: mangle.c,v 1.11 2002-10-05 20:13:31 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,7 +26,6 @@ demangle(const struct vol *vol, char *mfilename) {
 	/* Is this really a mangled file? */
 	mangle = strstr(mfilename, MANGLE_CHAR);
 	if (!mangle) {
-	    LOG(log_debug, logtype_afpd, "demangle: %s is not a mangled filename", mfilename);
 	    return mfilename;
 	}
 
