@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.37 2002-11-15 10:59:11 srittau Exp $
+ * $Id: auth.c,v 1.38 2002-11-25 09:42:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -328,7 +328,7 @@ unsigned int ibuflen, *rbuflen;
     u_int16_t           type;
     u_int32_t           idlen;
 
-    u_int32_t           tklen; /* FIXME: u_int16_t? */
+    u_int16_t           tklen; /* FIXME: spec  u_int32_t? */
     pid_t               token;
 
     *rbuflen = 0;
@@ -597,8 +597,10 @@ unsigned int	ibuflen, *rbuflen;
         return send_reply(obj, AFPERR_PARAM);
 
     /* Pad */
-    ibuf++;
-    ibuflen--;
+    if ((unsigned long) ibuf & 1) { /* pad character */
+        ibuf++;
+        ibuflen--;
+    }
 
     /* FIXME user name are in unicode */    
     i = afp_uam->u.uam_login.login_ext(obj, username, &pwd, ibuf, ibuflen, rbuf, rbuflen);
