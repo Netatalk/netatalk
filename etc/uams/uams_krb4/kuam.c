@@ -1,9 +1,13 @@
 /*
- * $Id: kuam.c,v 1.2 2001-02-27 21:07:20 rufustfirefly Exp $
+ * $Id: kuam.c,v 1.3 2001-03-28 22:42:15 samnoble Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
+
+#if defined( HAVE_CONFIG_H )
+#include "config.h"
+#endif
 
 #ifdef UAM_AFSKRB
 
