@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.50 2002-10-29 00:27:42 didg Exp $
+ * $Id: directory.c,v 1.51 2002-11-05 18:47:43 pooba53 Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -927,7 +927,7 @@ char	**cpath;
             if ( !extend ) {
                 cdir = dir->d_child;
                 while (cdir) {
-                    if ( strcasecmp( cdir->d_m_name, path ) == 0 ) {
+                    if ( strcmp( cdir->d_m_name, path ) == 0 ) {
                         break;
                     }
                     cdir = (cdir == dir->d_child->d_prev) ? NULL :
