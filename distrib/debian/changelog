@@ -6,8 +6,9 @@ netatalk (1.5pre8cvs-0) unstable; urgency=low
     apple_rm(1), written by Lance Levsen <l.levsen@printwest.com>.
     Removed the links to undocumented(7).
   * Don't supply --with-did=last anymore, since this is now the default.
+  * Added cnid_didname_verify(1) to list of undocumented binaries.
 
- -- Sebastian Rittau <srittau@debian.org>  Wed, 28 Nov 2001 01:22:10 +0100
+ -- Sebastian Rittau <srittau@debian.org>  Mon, 10 Dec 2001 13:46:14 +0100
 
 netatalk (1.5pre8-5) unstable; urgency=low
 
