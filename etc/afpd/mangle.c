@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.5 2002-06-02 22:34:36 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.6 2002-06-03 22:55:27 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -21,7 +21,6 @@ demangle(const struct vol *vol, char *mfilename) {
 	char *filename = NULL;
 	char *ext = NULL;
 	int ext_len = 0;
-	int isPath = 0;
 	char *mangle;
 
 	LOG(log_error, logtype_default, "demangle: Calling demangle on %s", mfilename);
@@ -37,10 +36,11 @@ demangle(const struct vol *vol, char *mfilename) {
 	    ext_len = strlen(ext);
 	}
 	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ext_len) {
-	    LOG(log_error, logtype_default, "demangle: %s is lon long enough to be a mangled filename", mfilename);
+	    LOG(log_error, logtype_default, "demangle: %s is not long enough to be a mangled filename", mfilename);
 	    return mfilename;
 	}
 
+	LOG(log_error, logtype_default, "demangle: Looking up %s in the mangle database", mfilename);
 	filename = cnid_mangle_get(vol->v_db, mfilename);
 
 	/* No unmangled filename was found. */
@@ -73,10 +73,9 @@ mangle(const struct vol *vol, char *filename) {
 	ext_len = strlen(ext);
     }
 
-    m = mfilename;
-
     /* Check to see if we already have a mangled filename by this name. */
     while (1) {
+	m = mfilename;
     	strncpy(m, filename, MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ext_len);
 	m[MAX_LENGTH - strlen(MANGLE_CHAR) - MANGLE_LENGTH - ext_len] = '\0';
 
@@ -88,6 +87,7 @@ mangle(const struct vol *vol, char *filename) {
 		strcat(m, ext);
     	}
 
+	LOG(log_error, logtype_default, "mangle: Looking up %s in the mangle database", m);
 	tf = cnid_mangle_get(vol->v_db, m);
 	if (tf == NULL || (strcmp(tf, filename)) == 0) {
 	    break;
@@ -100,10 +100,12 @@ mangle(const struct vol *vol, char *filename) {
 	}
     }
 
+    LOG(log_error, logtype_default, "mangle: Adding %s to the mangle database as the mangled filename for %s", m, filename);
     if (cnid_mangle_add(vol->v_db, m, filename) < 0) {
 	return filename;
     }
 
-    return mfilename;
+    LOG(log_error, logtype_default, "mangle: Returning %s", m);
+    return m;
 }
 #endif /* FILE_MANGLING */

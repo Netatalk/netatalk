@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_add.c,v 1.2 2002-05-30 06:41:19 jmarcus Exp $
+ * $Id: cnid_mangle_add.c,v 1.3 2002-06-03 22:55:31 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -42,7 +42,7 @@ cnid_mangle_add(void *CNID, char *mfilename, char *filename)
     key.data = mfilename;
     key.size = strlen(mfilename);
     data.data = filename;
-    data.size = strlen(filename);
+    data.size = strlen(filename) + 1;
 
 retry:
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_get.c,v 1.3 2002-06-02 22:34:43 jmarcus Exp $
+ * $Id: cnid_mangle_get.c,v 1.4 2002-06-03 22:55:31 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,16 +50,18 @@ cnid_mangle_get(void *CNID, char *mfilename)
         }
 
         if (rc == DB_NOTFOUND) {
-	    LOG(log_debug, logtype_default, "cnid_mangle_get: Failed to find mangled entry for %s", mfilename);
+	    LOG(log_error, logtype_default, "cnid_mangle_get: Failed to find mangled entry for %s", mfilename);
 	    return NULL;
 
         }
 
+	LOG(log_error, logtype_default, "cnid_mangle_get: Failed to get mangle entry from the database: %s", db_strerror(rc));
         return NULL;
     }
 
     filename = (char *)data.data;
 
+    LOG(log_error, logtype_default, "cnid_mangle_get: Found %s as the unmangled filename for %s", filename, mfilename);
     return filename;
 }
 #endif /* FILE_MANGLING */
