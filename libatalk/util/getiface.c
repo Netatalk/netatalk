@@ -48,6 +48,11 @@ static int addname(char **list, int *i, int *length, const char *name)
        
       if (!new) /* just break if we can't allocate anything */
 	return -1;
+
+      /* copy the old list */
+      memcpy(new, list, *length);
+      list = new;
+      
       *length += IFACE_NUM;
     }
      
