@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.164 2002-09-17 00:27:24 didg Exp $
+dnl $Id: configure.in,v 1.165 2002-09-27 08:10:40 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -378,7 +378,7 @@ AC_ARG_WITH(uams-path,
 )
 
 AC_ARG_WITH(catsearch,
-	[  --with-catsearch	enable fpCatSearch functionality (experimental)]
+	[  --with-catsearch	enable fpCatSearch functionality (experimental)],
 	if test "$withval" = "yes"; then
 	    AC_DEFINE(WITH_CATSEARCH, 1)
 	fi
