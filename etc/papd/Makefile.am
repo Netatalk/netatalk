@@ -13,7 +13,15 @@ papd_LDFLAGS = -rdynamic
 #showppd_SOURCES = showppd.c ppd.c
 #showppd_LDADD = $(top_builddir)/libatalk/libatalk.la
 
-noinst_HEADERS = comment.h file.h ppd.h printer.h uam_auth.h
+noinst_HEADERS =	\
+	comment.h	\
+	file.h		\
+	lp.h		\
+	ppd.h		\
+	printcap.h	\
+	printer.h	\
+	session.h	\
+	uam_auth.h
 
 CFLAGS = \
 	-I$(top_srcdir)/include -I$(top_srcdir)/sys \
