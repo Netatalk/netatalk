@@ -1,5 +1,5 @@
 /*
- * $Id: endian.h,v 1.5 2001-09-07 13:44:38 rufustfirefly Exp $
+ * $Id: endian.h,v 1.6 2001-09-14 14:31:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -23,10 +23,13 @@
 
 #ifdef _ISOC9X_SOURCE
 #include <inttypes.h>
+#ifndef __BIT_TYPES_DEFINED__
+#define __BIT_TYPES_DEFINED__
 typedef uint8_t        u_int8_t;
 typedef uint16_t       u_int16_t;
 typedef uint32_t       u_int32_t;
 typedef uint64_t       u_int64_t;
+#endif /* ! __BIT_TYPES_DEFINED__ */
 #else
 
 /* handle sunos and solaris */
@@ -116,8 +119,10 @@ unsigned int  ntohl(), htonl();
 #endif /* ! ( sun && i386 ) */
 
 #endif /* mips && KERNEL */
-#endif /* BYTE_ORDER */
+#endif /* BYTE_ORDER == BIGENDIAN*/
 # endif /* sun ultrix _IBMR2 */
 # endif /* ntohl */
+#endif /* BYTE_ORDER */
 
 #endif /* _ATALK_ENDIAN_H_ */
+
