@@ -1,8 +1,8 @@
-dnl $Id: configure.in,v 1.118 2001-10-25 20:37:04 srittau Exp $
+dnl $Id: configure.in,v 1.119 2001-10-27 13:07:16 srittau Exp $
 dnl configure.in for netatalk
 
 dnl Check for SSL
-AC_DEFUN([AM_PATH_SSL], [
+AC_DEFUN([AC_PATH_SSL], [
 	tryssl=yes
 
 	AC_ARG_WITH(ssl-dir, [
@@ -723,7 +723,7 @@ if test x"$this_os" = "xtru64"; then
 fi
 
 dnl -- look for openssl
-AM_PATH_SSL
+AC_PATH_SSL
 
 dnl --------------------- check for building PGP UAM module
 
