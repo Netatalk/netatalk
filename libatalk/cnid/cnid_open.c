@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.23 2001-12-10 03:51:56 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.24 2001-12-10 18:39:00 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -234,24 +234,8 @@ void *cnid_open(const char *dir) {
 	strcat(path, "/");
 	len++;
 
-	/* Create a file to represent database recovery.  While this file
-	 * exists, the database is being recovered, and all other clients will
-	 * sleep until recovery is complete, and this file goes away. */
 	strcpy(recover_file, path);
 	strcat(recover_file, DBRECOVERFILE);
-	if (!have_lock) {
-		if (stat(recover_file, &rsb) < 0) {
-			if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
-        		DBEXTRAS |= DB_RECOVER;
-				have_lock = 1;
-			}
-		}
-		else {
-			while(stat(recover_file, &rsb) == 0) {
-				sleep(1);
-			}
-		}
-	}
 
     /* Search for a byte lock.  This allows us to cleanup the log files
      * at cnid_close() in a clean fashion.
@@ -274,6 +258,23 @@ void *cnid_open(const char *dir) {
     else {
         syslog(LOG_ERR, "cnid_open: Cannot establish logfile cleanup lock for database environment %s (open() failed)", path);
     }
+
+	/* Create a file to represent database recovery.  While this file
+	 * exists, the database is being recovered, and all other clients will
+	 * sleep until recovery is complete, and this file goes away. */
+	if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
+		if (stat(recover_file, &rsb) < 0) {
+			if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
+        		DBEXTRAS |= DB_RECOVER;
+				have_lock = 1;
+			}
+		}
+		else {
+			while(stat(recover_file, &rsb) == 0) {
+				sleep(1);
+			}
+		}
+	}
 
     path[len + DBHOMELEN] = '\0';
     open_flag = DB_CREATE;
