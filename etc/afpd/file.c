@@ -1124,13 +1124,13 @@ int deletefile( file )
     /* try to open both at once */
     adflags = ADFLAGS_DF|ADFLAGS_HF;
     memset(&ad, 0, sizeof(ad));
-    if ( ad_open( file, adflags, O_RDWR, 0, &ad ) < 0 ) {
+    if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
 	  switch (errno) {
 	  case ENOENT:
 	    adflags = ADFLAGS_DF;
 	    /* that failed. now try to open just the data fork */
 	    memset(&ad, 0, sizeof(ad));
-	    if ( ad_open( file, adflags, O_RDWR, 0, &ad ) < 0 ) {
+	    if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
 	      switch (errno) {
 	      case ENOENT:
 		return AFPERR_NOOBJ;
