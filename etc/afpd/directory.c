@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.13 2001-06-27 14:53:16 rufustfirefly Exp $
+ * $Id: directory.c,v 1.14 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,7 +22,9 @@
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
+#ifdef CNID_DB
 #include <atalk/cnid.h>
+#endif /* CNID_DB */
 #include <utime.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1751,9 +1753,9 @@ int deletecurdir( vol, path, pathlen )
     }
 
     dirchildremove(curdir, fdir);
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
     cnid_delete(vol->v_db, fdir->d_did);
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
     dir_remove( vol, fdir );
 
 #ifdef FORCE_UIDGID

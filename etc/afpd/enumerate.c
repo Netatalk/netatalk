@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: enumerate.c,v 1.6 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -24,8 +24,9 @@
 #include <netatalk/endian.h>
 #include <atalk/afp.h>
 #include <atalk/adouble.h>
+#ifdef CNID_DB
 #include <atalk/cnid.h>
-
+#endif /* CNID_DB */
 #include "desktop.h"
 #include "directory.h"
 #include "volume.h"
@@ -61,11 +62,17 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
     strcpy( cdir->d_name, name );
     cdir->d_name[namlen] = '\0';
 
-#if AD_VERSION > AD_VERSION1
+	cdir->d_did = 0;
+
+#ifdef CNID_DB
     /* find out if we have a fixed did already */
-    if (!(cdir->d_did = cnid_lookup(vol->v_db, st, dir->d_did, upath,
-				    upathlen))) {
-      memset(&ad, 0, sizeof(ad));
+    cdir->d_did = cnid_lookup(vol->v_db, st, dir->d_did, upath,
+				    upathlen);
+#endif /* CNID_DB */
+
+	if (cdir->d_did == 0) {
+#if AD_VERSION > AD_VERSION1
+	  memset(&ad, 0, sizeof(ad));
       if (ad_open(upath, ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY, 0, &ad) < 0) {
         /* if we can't parse the AppleDouble header, return 0 for the DID */
 	cdir->d_did = 0;
@@ -73,11 +80,18 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
         /* ... else retrieve the DID entry into cdir->d_did */
 	memcpy(&cdir->d_did, ad_entry(&ad, ADEID_DID), sizeof(cdir->d_did));
 	ad_close(&ad, ADFLAGS_HF);
-      }
-      
-      if (!(cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath, 
-				   upathlen, cdir->d_did))) {
-#ifdef USE_LASTDID	      
+	}
+#endif /* AD_VERSION */
+
+#ifdef CNID_DB
+	/* add to cnid db */
+    cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath,
+				   upathlen, cdir->d_did);
+#endif /* CNID_DB */
+	}
+
+	if (cdir->d_did == 0) {
+#ifdef USE_LASTDID
         /* last way of doing DIDs */
 	cdir->d_did = htonl( vol->v_lastdid++ );
 #else /* USE_LASTDID */
@@ -90,24 +104,7 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
         cdir->d_did = htonl( CNID(lstp, 0) );
 #endif /* DID_MTAB */
 #endif /* USE_LASTDID */
-      }
     }
-#else /* AD_VERSION */
-
-#ifdef USE_LASTDID
-      /* last way of doing DIDs */
-      cdir->d_did = htonl( vol->v_lastdid++ );
-#else /* USE_LASTDID */
-      lstp = lstat(upath, &lst) < 0 ? st : &lst;
-#ifdef DID_MTAB
-      /* mtab way of doing DIDs */
-      cdir->d_did = htonl( afpd_st_cnid ( lstp ) );
-#else /* DID_MTAB */
-      /* the old way of doing DIDs (default) */
-      cdir->d_did = htonl( CNID(lstp, 0) );
-#endif /* DID_MTAB */
-#endif /* USE_LASTDID */
-#endif /* AD_VERSION */
 
     if ((edir = dirinsert( vol, cdir ))) {
 	    if (edir->d_name) {

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.8 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: volume.c,v 1.9 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -23,7 +23,9 @@
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
+#ifdef CNID_DB
 #include <atalk/cnid.h>
+#endif /* CNID_DB*/
 #include <dirent.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -60,9 +62,9 @@
 
 static struct vol *volumes = NULL;
 static int		lastvid = 0;
-#if AD_VERSION == AD_VERSION1
+#ifndef CNID_DB
 static char		*Trash = "\02\024Network Trash Folder";
-#endif /* AD_VERSION == AD_VERSION1 */
+#endif /* CNID_DB */
 static struct extmap	*extmap = NULL, *defextmap = NULL;
 
 #define VOLOPT_ALLOW      0  /* user allow list */
@@ -345,13 +347,13 @@ static void volset(struct vol_option *options, char *volname, int vlen,
       p = strtok(NULL, ",");
     }
 
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
   } else if (optionok(tmp, "dbpath:", val)) {
     if (options[VOLOPT_DBPATH].c_value)
       free(options[VOLOPT_DBPATH].c_value);
-    
+
     options[VOLOPT_DBPATH].c_value = strdup(val + 1);
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
   } else if (optionok(tmp, "mapchars:",val)) {
     if (options[VOLOPT_MAPCHARS].c_value)
       free(options[VOLOPT_MAPCHARS].c_value);
@@ -382,7 +384,7 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 
   } else {
     /* we'll assume it's a volume name. */
-    strncpy(volname, tmp, vlen); 
+    strncpy(volname, tmp, vlen);
   }
 }
 
@@ -456,10 +458,10 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
       if (options[VOLOPT_PASSWORD].c_value) 
 	volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);
 
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
       if (options[VOLOPT_DBPATH].c_value)
 	volume->v_dbpath = strdup(options[VOLOPT_DBPATH].c_value);
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
 
 #ifdef FORCE_UIDGID
 
@@ -643,10 +645,10 @@ static int readvolfile(obj, p1, p2, user, pwent)
 	  if (strncmp(path, VOLOPT_DEFAULT, VOLOPT_DEFAULT_LEN) == 0) {
 	    *tmp = '\0';
 	    for (i = 0; i < VOLOPT_NUM; i++) {
-	      if (parseline( sizeof( path ) - VOLOPT_DEFAULT_LEN - 1, 
+	      if (parseline( sizeof( path ) - VOLOPT_DEFAULT_LEN - 1,
 			     path + VOLOPT_DEFAULT_LEN) < 0)
 		break;
-	      volset(save_options, tmp, sizeof(tmp) - 1, 
+	      volset(save_options, tmp, sizeof(tmp) - 1,
 		     obj->options.nlspath, path + VOLOPT_DEFAULT_LEN);
 	    }
 	  }
@@ -721,7 +723,7 @@ static int readvolfile(obj, p1, p2, user, pwent)
 	      if (((options[VOLOPT_FLAGS].i_value & AFPVOL_RO) == 0) && 
 		  ((accessvol(options[VOLOPT_ROLIST].c_value, 
 			      obj->username) == 1) ||
-		   !accessvol(options[VOLOPT_RWLIST].c_value, 
+		   !accessvol(options[VOLOPT_RWLIST].c_value,
 			      obj->username))) 
 		options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
 
@@ -763,7 +765,7 @@ static void load_volumes(AFPObj *obj)
   } else if (pwent) {
         /*
 	 * Read user's AppleVolumes or .AppleVolumes file
-	 * If neither are readable, read the default volumes file. if 
+	 * If neither are readable, read the default volumes file. if
 	 * that doesn't work, create a user share.
 	 */
     if ( readvolfile(obj, pwent->pw_dir, "AppleVolumes", 1, pwent) < 0 &&
@@ -850,7 +852,7 @@ static int getvolparams( bitmap, vol, st, buf, buflen )
      * .Parent file here if it doesn't exist. */
     
     memset(&ad, 0, sizeof(ad));
-    if ( ad_open( vol->v_path, vol_noadouble(vol) | 
+    if ( ad_open( vol->v_path, vol_noadouble(vol) |
 		  ADFLAGS_HF|ADFLAGS_DIR, O_RDWR | O_CREAT, 
 		  0666, &ad) < 0 ) {
 	  isad = 0;
@@ -889,11 +891,11 @@ static int getvolparams( bitmap, vol, st, buf, buflen )
 
 	switch ( bit ) {
 	case VOLPBIT_ATTR :
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
 	    ashort = VOLPBIT_ATTR_FILEID;
-#else /* AD_VERSION > AD_VERSION1 */
+#else /* CNID_DB */
 	    ashort = 0;
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
 	    /* check for read-only.
 	     * NOTE: we don't actually set the read-only flag unless
 	     *       it's passed in that way as it's possible to mount
@@ -1077,9 +1079,9 @@ int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
 {
     struct stat	st;
     char	*volname;
-#if AD_VERSION == AD_VERSION1
+#ifndef CNID_DB
     char *p;
-#endif /* AD_VERSION == AD_VERSION1 */
+#endif /* CNID_DB */
     struct vol	*volume;
     struct dir	*dir;
     int		len, ret, buflen;
@@ -1155,7 +1157,15 @@ int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
         ret = AFPERR_PARAM;
 	goto openvol_err;
     }
-#if AD_VERSION == AD_VERSION1
+
+#ifdef CNID_DB
+	if (volume->v_dbpath)
+		volume->v_db = cnid_open (volume->v_dbpath);
+	if (volume->v_db == 0)
+		volume->v_db = cnid_open (volume->v_path);
+#endif /* CNID_DB */
+
+#ifndef CNID_DB
     /*
      * If you mount a volume twice, the second time the trash appears on
      * the desk-top.  That's because the Mac remembers the DID for the
@@ -1165,7 +1175,7 @@ int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
      */
     p = Trash;
     cname( volume, volume->v_dir, &p );
-#endif /* AD_VERSION == AD_VERSION1 */
+#endif /* CNID_DB */
 
     return( AFP_OK );
 
@@ -1204,7 +1214,7 @@ int afp_closevol(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     dirfree( vol->v_root );
     vol->v_dir = NULL;
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
     cnid_close(vol->v_db);
     vol->v_db = NULL;
 #endif /* AD_VERSION > AD_VERSION1 */
@@ -1269,7 +1279,7 @@ void setvoltime(obj, vol )
          * where no other users can interfere, so there's no issue here
          */
     }
-    
+
     /* a little granularity */
     if (vol->v_time < tv.tv_sec) {
       vol->v_time = tv.tv_sec;

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_lookup.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,21 +32,21 @@ cnid_t cnid_lookup(void *CNID,
   char *buf;
   CNID_private *db;
   DBT key, devdata, diddata;
-  DB_TXNMGR *txnp;
   int devino = 1, didname = 1;
   cnid_t id = 0;
-  
+
+  int debug = 0;
+
   if (!(db = CNID) || !st || !name)
     return 0;
 
-  /* do a little checkpointing if necessary. i stuck it here as 
-   * cnid_lookup gets called when we do directory lookups. only do 
+  /* do a little checkpointing if necessary. i stuck it here as
+   * cnid_lookup gets called when we do directory lookups. only do
    * this if we're using a read-write database. */
   if ((db->flags & CNIDFLAG_DB_RO) == 0) {
-    txnp = db->dbenv.tx_info;
-    errno = txn_checkpoint(txnp, LOGFILEMAX, CHECKTIMEMAX);
+    errno = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0);
     while (errno == DB_INCOMPLETE)
-      errno = txn_checkpoint(txnp, 0, 0);
+      errno = txn_checkpoint(db->dbenv, 0, 0, 0);
   }
 
  if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
@@ -65,19 +65,19 @@ cnid_t cnid_lookup(void *CNID,
 				    &key, &devdata, 0)) {
     if (errno == EAGAIN)
       continue;
-    
+
     if (errno == DB_NOTFOUND) {
       devino = 0;
       break;
     }
-    
+
     syslog(LOG_ERR, "cnid_lookup: can't get CNID(%u/%u)",
 	   st->st_dev, st->st_ino);
     return 0;
   }
 
   /* did/name is right afterwards. */
-  key.data = buf + CNID_DEVINO_LEN; 
+  key.data = buf + CNID_DEVINO_LEN;
   key.size = CNID_DID_LEN + len + 1;
   memset(&diddata, 0, sizeof(diddata));
   while (errno = db->db_didname->get(db->db_didname, NULL,
@@ -95,19 +95,23 @@ cnid_t cnid_lookup(void *CNID,
     return 0;
   }
 
-  /* set id. honor did/name over dev/ino as dev/ino isn't necessarily 
+  /* set id. honor did/name over dev/ino as dev/ino isn't necessarily
    * 1-1. */
   if (didname) {
     memcpy(&id, diddata.data, sizeof(id));
   } else if (devino) {
     memcpy(&id, devdata.data, sizeof(id));
-  } 
+  }
 
   /* either entries in both databases exist or neither of them do. */
-  if ((devino && didname) || !(devino || didname)) 
+  if ((devino && didname) || !(devino || didname)) {
+    if (debug)
+      syslog(LOG_ERR, "cnid_lookup: looked up did %d, name %s as %d", did, name, id);
     return id;
-
+  }
   /* fix up the databases */
   cnid_update(db, id, st, did, name, len);
+  if (debug)
+    syslog(LOG_ERR, "cnid_lookup: looked up did %d, name %s as %d (needed update)", did, name, id);
   return id;
 }

@@ -4,6 +4,7 @@
 #undef ADMIN_GRP
 #undef AFS
 #undef BSD4_4
+#undef CNID_DB
 #undef DEBUG
 #undef DLSYM_PREPEND_UNDERSCORE
 #undef DID_MTAB

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_update.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,14 +24,13 @@
 /* cnid_update: takes the given cnid and updates the metadata. to
    handle the did/name data, there are a bunch of functions to get
    and set the various fields. */
-int cnid_update(void *CNID, cnid_t id, const struct stat *st, 
-		const cnid_t did, const char *name, const int len,
-		const char *info, const int infolen)
+int cnid_update(void *CNID, const cnid_t id, const struct stat *st,
+		const cnid_t did, const char *name, const int len/*,
+		const char *info, const int infolen*/)
 {
   CNID_private *db;
   DBT key, data, altdata;
   DB_TXN *tid;
-  DB_TXNMGR *txnp;
   
   if (!(db = CNID) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO))
     return -1;
@@ -39,11 +38,10 @@ int cnid_update(void *CNID, cnid_t id, const struct stat *st,
   memset(&key, 0, sizeof(key));
   memset(&data, 0, sizeof(data));
   memset(&altdata, 0, sizeof(altdata));
-  txnp = db->dbenv.tx_info;
 
   /* begin a transaction */
 retry:
-  if (errno = txn_begin(txnp, NULL, &tid)) {
+  if (errno = txn_begin(db->dbenv, NULL, &tid, 0)) {
     return errno;
   }
 
@@ -65,7 +63,7 @@ retry:
       txn_abort(tid);
       goto retry;
     }
-      
+
     /* silently fail on a non-existent entry */
     if (errno != DB_NOTFOUND) {
       txn_abort(tid);
@@ -88,14 +86,14 @@ retry:
       goto update_err;
     }
   }
-  
+
   /* delete the old aliases if necessary */
 
 
   /* make a new entry */
   data.data = make_cnid_data(st, did, name, len);
   data.size = CNID_HEADER_LEN + len + 1;
-  
+
   /* put a new dev/ino mapping in */
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
@@ -108,7 +106,7 @@ retry:
     }
     goto update_err;
   }
-  
+
   /* put a new did/name mapping in */
   key.data = data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
@@ -119,7 +117,7 @@ retry:
     }
     goto update_err;
   }
-  
+
   /* update the old CNID with the new info */
   key.data = &id;
   key.size = sizeof(id);
@@ -130,9 +128,9 @@ retry:
     }
     goto update_err;
   }
-  
+
   /* end transaction */
-  return txn_commit(tid);
+  return txn_commit(tid, 0);
 
 update_err:
   syslog(LOG_ERR, "cnid_update: can't update CNID(%x)", id);

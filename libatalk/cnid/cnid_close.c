@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_close.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,18 +35,16 @@ void cnid_close(void *CNID)
     lock.l_whence = SEEK_SET;
     lock.l_start = lock.l_len = 0;
     if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
-      DB_TXNMGR *txnp;
       char **list, **first;
-      
-      txnp = db->dbenv.tx_info;
-      errno = txn_checkpoint(txnp, 0, 0);
+
+      errno = txn_checkpoint(db->dbenv, 0, 0, 0);
       while (errno == DB_INCOMPLETE)
-	errno = txn_checkpoint(txnp, 0, 0);
-      
-      /* we've checkpointed, so clean up the log files. 
+		errno = txn_checkpoint(db->dbenv, 0, 0, 0);
+
+      /* we've checkpointed, so clean up the log files.
        * NOTE: any real problems will make log_archive return an error. */
-      chdir(db->dbenv.db_log_dir ? db->dbenv.db_log_dir : db->dbenv.db_home);
-      if (!log_archive(db->dbenv.lg_info, &first, DB_ARCH_LOG, NULL)) {
+      chdir(db->dbenv->db_log_dir ? db->dbenv->db_log_dir : db->dbenv->db_home);
+      if (!log_archive(db->dbenv, &first, DB_ARCH_LOG, NULL)) {
 	list = first;
 	while (*list) {
 	  if (truncate(*list, 0) < 0)
@@ -61,9 +59,11 @@ void cnid_close(void *CNID)
   db->db_didname->close(db->db_didname, 0);
   db->db_devino->close(db->db_devino, 0);
   db->db_cnid->close(db->db_cnid, 0);
-  db_appexit(&db->dbenv);
+
+  db->dbenv->close(db->dbenv, 0);
+  /* db->dbenv->remove(db->dbenv, db->dbenv->db_home, 0); */
+
   if (db->lockfd > -1)
     close(db->lockfd); /* this will also close any lock we have. */
-  ad_close(&db->rootinfo, ADFLAGS_HF);
   free(db);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.5 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: fork.c,v 1.6 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,7 +36,9 @@
 #include <atalk/afp.h>
 #include <atalk/adouble.h>
 #include <atalk/util.h>
+#ifdef CNID_DB
 #include <atalk/cnid.h>
+#endif
 
 #include "fork.h"
 #include "file.h"
@@ -155,7 +157,7 @@ static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
 		memcpy(data, ufinderi, 8 );
 		if (( em = getextmap( ofork->of_name )) != NULL ) {
 		    memcpy(data, em->em_type, sizeof( em->em_type ));
-		    memcpy(data + 4, em->em_creator, 
+		    memcpy(data + 4, em->em_creator,
 			    sizeof( em->em_creator ));
 		}
 	    }
@@ -173,29 +175,38 @@ static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
 	    break;
 
 	case FILPBIT_FNUM :
-	    /*
-	     * See file.c getfilparams() for why this is done this
-	     * way.
-	     */
+		aint = 0;
+#ifdef CNID_DB
+		/* find out if we have a fixed did already */
+		aint = cnid_lookup(ofork->of_vol->v_db, &st,
+				  ofork->of_dir->d_did,
+				  upath, strlen(upath));
+#endif /* CNID_DB */
+
+	  /* look in AD v2 header */
+	    if (aint == 0)
+		{
 #if AD_VERSION > AD_VERSION1
-	    if (isad) 
-	      memcpy(&aint, ad_entry(ofork->of_ad, ADEID_DID), sizeof(aint));
-	    else
-	      aint = 0;
-	    
-	    if (!(aint = cnid_add(ofork->of_vol->v_db, &st, 
-				  ofork->of_dir->d_did, 
-				  upath, strlen(upath), aint))) {
+          if (isad)
+	        memcpy(&aint, ad_entry(ofork->of_ad, ADEID_DID), sizeof(aint));
 #endif /* AD_VERSION > AD_VERSION1 */
+
+#ifdef CNID_DB
+	      aint = cnid_add(ofork->of_vol->v_db, &st,
+				  ofork->of_dir->d_did,
+				  upath, strlen(upath), aint);
+#endif /* CNID_DB */
+		}
+
+		if (aint == 0) {
 #ifdef AFS
 	      aint = st.st_ino;
 #else /* AFS */
 	      aint = ( st.st_dev << 16 ) | ( st.st_ino & 0x0000ffff );
 #endif /* AFS */
-#if AD_VERSION > AD_VERSION1
 	    }
-#endif /* AD_VERSION > AD_VERSION1 */
-	    memcpy(data, &aint, sizeof( aint ));
+
+		memcpy(data, &aint, sizeof( aint ));
 	    data += sizeof( aint );
 	    break;
 
@@ -414,7 +425,7 @@ int afp_openfork(obj, ibuf, ibuflen, rbuf, rbuflen )
       if (!ret && (access & OPENACC_RD)) {
 	ofork->of_flags |= AFPFORK_ACCRD;
 	ret = ad_lock(ofork->of_ad, eid, ADLOCK_RD | ADLOCK_FILELOCK, 
-		      AD_FILELOCK_RD, 1, ofrefnum); 
+		      AD_FILELOCK_RD, 1, ofrefnum);
       }
     
       /* can we access the fork? */

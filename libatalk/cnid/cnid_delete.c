@@ -1,5 +1,5 @@
-/* 
- * $Id: cnid_delete.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+/*
+ * $Id: cnid_delete.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -28,18 +28,16 @@ int cnid_delete(void *CNID, const cnid_t id)
   CNID_private *db;
   DBT key, data;
   DB_TXN *tid;
-  DB_TXNMGR *txnp;
 
   if (!(db = CNID) || !id || (db->flags & CNIDFLAG_DB_RO))
     return -1;
 
-  txnp = db->dbenv.tx_info;
   memset(&key, 0, sizeof(key));
   memset(&data, 0, sizeof(data));
-  
+
 
 retry:
-  if (errno = txn_begin(txnp, NULL, &tid)) {
+  if (errno = txn_begin(db->dbenv, NULL, &tid, 0)) {
     return errno;
   }
 
@@ -107,7 +105,7 @@ retry:
     goto abort_err;
   }
 
-  return txn_commit(tid);
+  return txn_commit(tid, 0);
 
 abort_err:
   syslog(LOG_ERR, "cnid_del: unable to delete CNID(%x)", id);

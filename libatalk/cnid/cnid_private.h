@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_private.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_private.h,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -29,13 +29,23 @@
 #define CNIDFLAG_ROOTINFO_RO     (1 << 0)
 #define CNIDFLAG_DB_RO           (1 << 1)
 
+/* the key is in the form of a did/name pair. in this case,
+ * we use 0/RootInfo. */
+#define ROOTINFO_KEY    "\0\0\0\0RootInfo"
+#define ROOTINFO_KEYLEN 12
+
 typedef struct CNID_private {
 	u_int32_t magic;
-	DB *db_cnid, *db_didname, *db_devino,
-	  *db_shortname, *db_macname, *db_longname;
-	DB_ENV dbenv;
-	struct adouble rootinfo;
-        int lockfd, flags;
+	DB *db_cnid;
+	DB *db_didname;
+	DB *db_devino;
+#ifdef EXTENDED_DB
+	DB *db_shortname;
+	DB *db_macname;
+	DB *db_longname;
+#endif /* EXTENDED_DB */
+	DB_ENV* dbenv;
+    int lockfd, flags;
 } CNID_private;
 
 /* on-disk data format (in network byte order where appropriate) --
@@ -105,18 +115,19 @@ static __inline__ char *make_cnid_data(const struct stat *st,
 				       const char *name, const int len)
 {
   static char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
+  char *buf = start;
   u_int32_t i;
-  
+
   if (len > MAXPATHLEN)
     return NULL;
 
   i = htonl(st->st_dev);
-  memcpy(start, &i, sizeof(i));
+  buf = memcpy(buf, &i, sizeof(i));
   i = htonl(st->st_ino);
-  memcpy(start + sizeof(i), &i, sizeof(i));
+  buf = memcpy(buf + sizeof(i), &i, sizeof(i));
   /* did is already in network byte order */
-  memcpy(start + CNID_DEVINO_LEN, &did, sizeof(did)); 
-  memcpy(start + CNID_HEADER_LEN, name, len);
+  buf = memcpy(buf + sizeof(i), &did, sizeof(did));
+  buf = memcpy(buf + sizeof(did), name, len);
   *(buf + len) = '\0';
   buf += len + 1;
 

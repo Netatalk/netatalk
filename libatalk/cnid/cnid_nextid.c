@@ -1,6 +1,7 @@
 /*
- * $Id: cnid_nextid.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_nextid.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  */
+#ifdef unused
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -28,3 +29,4 @@ cnid_t cnid_nextid(void *CNID)
   memcpy(&id, ad_entry(&db->rootinfo, ADEID_DID), sizeof(id));
   return id;
 }
+#endif

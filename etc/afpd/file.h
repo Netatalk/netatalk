@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: file.h,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -87,11 +87,11 @@ extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_setfilparams __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_copyfile __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_createfile __P((AFPObj *, char *, int, char *, int *));
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
 extern int      afp_createid __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_resolveid __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_deleteid __P((AFPObj *, char *, int, char *, int *));
-#else /* AD_VERSION > AD_VERSION1 */
+#else /* CNID_DB */
 #define afp_createid      afp_null
 #define afp_resolveid     afp_null
 #define afp_deleteid      afp_null

@@ -1,10 +1,10 @@
-/* 
- * $Id: cnid_add.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+/*
+ * $Id: cnid_add.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
- * cnid_add (db, dev, ino, did, name, hint): 
+ * cnid_add (db, dev, ino, did, name, hint):
  * add a name to the CNID database. we use both dev/ino and did/name
  * to keep track of things.
  */
@@ -37,23 +37,21 @@
 
 /* add an entry to the CNID databases. we do this as a transaction
  * to prevent messiness. */
-static int add_cnid(CNID_private *db, DBT *key, DBT *data)
+static int add_cnid(CNID_private *db, DB_TXN *ptid, DBT *key, DBT *data)
 {
   DBT altkey, altdata;
   DB_TXN *tid;
-  DB_TXNMGR *txnp;
 
-  txnp = db->dbenv.tx_info;
   memset(&altkey, 0, sizeof(altkey));
   memset(&altdata, 0, sizeof(altdata));
   
 retry:
-  if (errno = txn_begin(txnp, NULL, &tid)) {
+  if (errno = txn_begin(db->dbenv, ptid, &tid,0)) {
     return errno;
   }
 
   /* main database */
-  if (errno = db->db_cnid->put(db->db_cnid, tid, 
+  if (errno = db->db_cnid->put(db->db_cnid, tid,
 			       key, data, DB_NOOVERWRITE)) {
     txn_abort(tid);
     if (errno == EAGAIN)
@@ -88,88 +86,117 @@ retry:
     return errno;
   }
 
-  return txn_commit(tid);
+  return txn_commit(tid, 0);
 }
-		    
+
 /* 0 is not a valid cnid. this will do a cnid_lookup beforehand and
    return that cnid if it exists.  */
-cnid_t cnid_add(void *CNID, const struct stat *st, 
+cnid_t cnid_add(void *CNID, const struct stat *st,
 		const cnid_t did, const char *name, const int len,
 		cnid_t hint)
 {
   CNID_private *db;
   DBT key, data;
+  DBT rootinfo_key, rootinfo_data;
+  DB_TXN *tid;
   struct flock lock;
   cnid_t id, save;
-  
-  
-  if (!(db = CNID) || !st || !name)
+
+  int debug = 0;
+
+
+  if (!(db = CNID) || !st || !name) {
     return 0;
-  
-  /* just do a lookup if RootInfo is read-only. */
-  if (db->flags & (CNIDFLAG_ROOTINFO_RO | CNIDFLAG_DB_RO))
-    return cnid_lookup(db, st, did, name, len);
+  }
+
+  /* do a lookup... */
+  id = cnid_lookup(db, st, did, name, len);
+  /* ...return id if it is valid or if RootInfo is read-only. */
+  if (id || (db->flags & CNIDFLAG_DB_RO)) {
+    if (debug)
+      syslog(LOG_ERR, "cnid_add: looked up did %d, name %s as %d", did, name, id);
+    return id;
+  }
 
   /* initialize everything */
   memset(&key, 0, sizeof(key));
   memset(&data, 0, sizeof(data));
 
-  /* acquire a lock on RootInfo. as the cnid database is the only user 
-   * of RootInfo, we just use our own locks. 
-   *
-   * NOTE: we lock it here to serialize access to the database. */
-  lock.l_type = F_WRLCK;
-  lock.l_whence = SEEK_SET;
-  lock.l_start = ad_getentryoff(&db->rootinfo, ADEID_DID);
-  lock.l_len = ad_getentrylen(&db->rootinfo, ADEID_DID);
-  if (fcntl(ad_hfileno(&db->rootinfo), F_SETLKW,  &lock) < 0) {
-    syslog(LOG_ERR, "cnid_add: can't establish lock: %m");
-    goto cleanup_err;
-  }
-
-  /* if it's already stored, just return it */
-  if ((id = cnid_lookup(db, st, did, name, len))) {
-    hint = id;
-    goto cleanup_unlock;
-  }
-  
   /* just set hint, and the key will change. */
   key.data = &hint;
   key.size = sizeof(hint);
-  
-  if ((data.data = 
+
+  if ((data.data =
        make_cnid_data(st, did, name, len)) == NULL) {
     syslog(LOG_ERR, "cnid_add: path name too long.");
-    goto cleanup_unlock;
+    goto cleanup_err;
   }
   data.size = CNID_HEADER_LEN + len + 1;
-  
-  /* start off with the hint. it should be in network byte order. 
+
+  /* Abort and retry the modification. */
+  if (0) {
+retry:    if ((errno = txn_abort(tid)) != 0)
+              syslog(LOG_ERR, "cnid_add: txn_begin failed (%d)", errno);
+          /* FALLTHROUGH */
+  }
+
+  /* Begin the transaction. */
+  if ((errno = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
+    syslog(LOG_ERR, "cnid_add: txn_begin failed (%d)", errno);
+    goto cleanup_err;
+  }
+
+  /* start off with the hint. it should be in network byte order.
    * we need to make sure that somebody doesn't add in restricted
    * cnid's to the database. */
   if (ntohl(hint) >= CNID_START) {
     /* if the key doesn't exist, add it in. don't fiddle with nextID. */
-    errno = add_cnid(db, &key, &data);
+    errno = add_cnid(db, tid, &key, &data);
     switch (errno) {
     case DB_KEYEXIST: /* need to use RootInfo after all. */
       break;
     default:
-      syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint); 
+      syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint);
       hint = 0;
-      /* fall through */
+      goto cleanup_abort;
     case 0:
-      goto cleanup_unlock;
+      if (debug)
+        syslog(LOG_ERR, "cnid_add: used hint for did %d, name %s as %d", did, name, hint);
+      goto cleanup_commit;
     }
-  }    
-    
-  /* no need to refresh the header file */
-  memcpy(&hint, ad_entry(&db->rootinfo, ADEID_DID), sizeof(hint));
+  }
+
+  memset(&rootinfo_key, 0, sizeof(&rootinfo_key));
+  memset(&rootinfo_data, 0, sizeof(&rootinfo_data));
+
+  /* just set hint, and the key will change. */
+  rootinfo_key.data = ROOTINFO_KEY;
+  rootinfo_key.size = ROOTINFO_KEYLEN;
+
+  /* Get the key. */
+  switch (errno = db->db_didname->get(db->db_didname, tid, &rootinfo_key, &rootinfo_data, 0)) {
+  case DB_LOCK_DEADLOCK:
+          goto retry;
+  case 0:
+          memcpy (&hint, rootinfo_data.data, sizeof(hint));
+          if (debug)
+            syslog(LOG_ERR, "cnid_add: found rootinfo for did %d, name %s as %d", did, name, hint);
+          break;
+  case DB_NOTFOUND:
+          hint = htonl(CNID_START);
+          if (debug)
+            syslog(LOG_ERR, "cnid_add: using CNID_START for did %d, name %s as %d", did, name, hint);
+          break;
+  default:
+          syslog(LOG_ERR, "cnid_add: unable to lookup rootinfo (%d)", errno);
+		  goto cleanup_abort;
+ }
 
   /* search for a new id. we keep the first id around to check for
    * wrap-around. NOTE: i do it this way so that we can go back and
    * fill in holes. */
   save = id = ntohl(hint);
-  while (errno = add_cnid(db, &key, &data)) {
+  while (errno = add_cnid(db, tid, &key, &data)) {
     /* don't use any of the special CNIDs */
     if (++id < CNID_START)
       id = CNID_START;
@@ -177,20 +204,39 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
     if ((errno != DB_KEYEXIST) || (save == id)) {
       syslog(LOG_ERR, "cnid_add: unable to add CNID(%x)", hint);
       hint = 0;
-      goto cleanup_unlock;
+      goto cleanup_abort;
     }
     hint = htonl(id);
   }
 
   /* update RootInfo with the next id. */
-  id = htonl(++id);
-  memcpy(ad_entry(&db->rootinfo, ADEID_DID), &id, sizeof(id));
-  ad_flush(&db->rootinfo, ADFLAGS_HF);
+  rootinfo_data.data = &hint;
+  rootinfo_data.size = sizeof(hint);
 
-cleanup_unlock:
-  lock.l_type = F_UNLCK;
-  fcntl(ad_hfileno(&db->rootinfo), F_SETLK, &lock);
+  switch (errno = db->db_didname->put(db->db_didname, tid, &rootinfo_key, &rootinfo_data, 0)) {
+  case DB_LOCK_DEADLOCK:
+          goto retry;
+  case 0:
+          break;
+  default:
+          syslog(LOG_ERR, "cnid_add: unable to update rootinfo (%d)", errno);
+          goto cleanup_abort;
+  }
+
+
+cleanup_commit:
+  /* The transaction finished, commit it. */
+  if ((errno = txn_commit(tid, 0)) != 0) {
+    syslog(LOG_ERR, "cnid_add: txn_commit failed (%d)", errno);
+    goto cleanup_err;
+  }
+
+  if (debug)
+    syslog(LOG_ERR, "cnid_add: returned cnid for did %d, name %s as %d", did, name, hint);
   return hint;
+
+cleanup_abort:
+  txn_abort(tid);
 
 cleanup_err:
   return 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.24 2001-07-12 23:18:12 srittau Exp $
+ * $Id: file.c,v 1.25 2001-08-14 14:00:10 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,8 +33,9 @@
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
+#ifdef CNID_DB
 #include <atalk/cnid.h>
-
+#endif /* CNID_DB */
 #include "directory.h"
 #include "desktop.h"
 #include "volume.h"
@@ -59,7 +60,7 @@
  * files:
  * ioFlFndrInfo  16      ->       type    4  type field
  *                             creator    4  creator field
- *                               flags    2  finder flags: 
+ *                               flags    2  finder flags:
  *					     alias, bundle, etc.
  *                            location    4  location in window
  *                              folder    2  window that contains file
@@ -201,16 +202,28 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 	    break;
 
 	case FILPBIT_FNUM :
-#if AD_VERSION > AD_VERSION1
-	  /* use the CNID database if we're using AD v2 */
-	    if (isad)
-	      memcpy(&aint, ad_entry(adp, ADEID_DID), sizeof(aint));
-	    else
-	      aint = 0;
+		aint = 0;
+#ifdef CNID_DB
+		/* find out if we have a fixed did already */
+		aint = cnid_lookup(vol->v_db, st, dir->d_did, upath,
+						    strlen(upath));
+#endif /* CNID_DB */
 
-	    if (!(aint = cnid_add(vol->v_db, st, dir->d_did, upath, 
-				  strlen(upath), aint))) {
+	  /* look in AD v2 header */
+	    if (aint == 0)
+		{
+#if AD_VERSION > AD_VERSION1
+          if (isad)
+		  	memcpy(&aint, ad_entry(adp, ADEID_DID), sizeof(aint));
 #endif /* AD_VERSION > AD_VERSION1 */
+
+#ifdef CNID_DB
+	      aint = cnid_add(vol->v_db, st, dir->d_did, upath,
+				  			strlen(upath), aint);
+#endif /* CNID_DB */
+		}
+
+		if (aint == 0) {
 	    /*
 	     * What a fucking mess.  First thing:  DID and FNUMs are
 	     * in the same space for purposes of enumerate (and several
@@ -227,7 +240,7 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 	     * new algorithm:
 	     * due to complaints over did's being non-persistent,
 	     * here's the current hack to provide semi-persistent
-	     * did's: 
+	     * did's:
 	     *      1) we reserve the first bit for file ids.
 	     *      2) the next 7 bits are for the device.
 	     *      3) the remaining 24 bits are for the inode.
@@ -247,11 +260,9 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
 	      aint = htonl(CNID(lstp, 1));
 #endif /* DID_MTAB */
 #endif /* USE_LASTDID */
+    	}
 
-#if AD_VERSION > AD_VERSION1
-	    }
-#endif /* AD_VERSION > AD_VERSION1 */
-	    memcpy(data, &aint, sizeof( aint ));
+		memcpy(data, &aint, sizeof( aint ));
 	    data += sizeof( aint );
 	    break;
 
@@ -310,7 +321,7 @@ int getfilparams(vol, bitmap, path, dir, st, buf, buflen )
  	      achar = '\x00';
  	      ashort = 0x0000;
  	    }
- 	    
+
 	    *data++ = achar;
 	    *data++ = 0;
  	    memcpy(data, &ashort, sizeof( ashort ));
@@ -462,7 +473,7 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     }
 
     ad_setentrylen( adp, ADEID_NAME, strlen( path ));
-    memcpy(ad_entry( adp, ADEID_NAME ), path, 
+    memcpy(ad_entry( adp, ADEID_NAME ), path,
 	   ad_getentrylen( adp, ADEID_NAME ));
     ad_flush( adp, ADFLAGS_DF|ADFLAGS_HF );
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
@@ -642,7 +653,7 @@ int setfilparams(vol, path, bitmap, buf )
 
 	case FILPBIT_FINFO :
 	    if ((memcmp( ad_entry( adp, ADEID_FINDERI ), ufinderi, 8 ) == 0)
-		&& (em = getextmap( path )) && 
+		&& (em = getextmap( path )) &&
 		(memcmp(buf, em->em_type, sizeof( em->em_type )) == 0) &&
 		(memcmp(buf + 4, em->em_creator,
 			sizeof( em->em_creator )) == 0)) {
@@ -1025,7 +1036,7 @@ int copyfile(src, dst, newname, noadouble )
 #endif /* SENDFILE_FLAVOR_LINUX */
 	while (1) {
 	  if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
-	    if (errno == EINTR) 
+	    if (errno == EINTR)
 	      continue;
 	    err = AFPERR_PARAM;
 	    break;
@@ -1110,7 +1121,7 @@ copydata_done:
       unlink(dst);
       return err;
     }
-    
+
     if (newname) {
       memset(&ad, 0, sizeof(ad));
       if ( ad_open( dst, noadouble | ADFLAGS_HF, O_RDWR|O_CREAT,
@@ -1264,7 +1275,7 @@ delete_unlock:
 }
 
 
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
 /* return a file id */
 int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
     AFPObj      *obj;
@@ -1283,7 +1294,7 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_createid:");
 #endif /* DEBUG */
-    
+
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1331,6 +1342,7 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
       return AFPERR_EXISTID;
     }
 
+#if AD_VERSION > AD_VERSION1
     memset(&ad, 0, sizeof(ad));
     if (ad_open( upath, ADFLAGS_HF, O_RDONLY, 0, &ad ) < 0)
       id = 0;
@@ -1344,6 +1356,7 @@ int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
       *rbuflen = sizeof(id);
       return AFP_OK;
     }
+#endif /* AD_VERSION > AD_VERSION1 */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "ending afp_createid...:");
@@ -1380,7 +1393,7 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_resolveid:");
 #endif /* DEBUG */
-    
+
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1431,7 +1444,7 @@ int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_resolveid:");
 #endif /* DEBUG */
-    
+
     return AFP_OK;
 }
 
@@ -1513,7 +1526,7 @@ int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     return err;
 }
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
 
 #define APPLETEMP ".AppleTempXXXXXX"
 
@@ -1528,10 +1541,10 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     char		*spath, temp[17], *path, *p;
     char                *supath, *upath;
     int                 err;
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
     int                 slen, dlen;
-#endif /* AD_VERSION > AD_VERSION1 */
-    cnid_t		sid, did;
+#endif /* CNID_DB */
+    u_int32_t		sid, did;
     u_int16_t		vid;
 
 #ifdef DEBUG
@@ -1593,10 +1606,10 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     /* look for the source cnid. if it doesn't exist, don't worry about
      * it. */
-#if AD_VERSION > AD_VERSION1
-    sid = cnid_lookup(vol->v_db, &srcst, sdir->d_did, supath, 
+#ifdef CNID_DB
+    sid = cnid_lookup(vol->v_db, &srcst, sdir->d_did, supath,
 		      slen = strlen(supath));
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
 
     if (( dir = dirsearch( vol, did )) == NULL ) {
 	return( AFPERR_PARAM );
@@ -1628,13 +1641,13 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
       }
     }
 
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
     /* look for destination id. */
-    did = cnid_lookup(vol->v_db, &destst, curdir->d_did, upath, 
+    did = cnid_lookup(vol->v_db, &destst, curdir->d_did, upath,
 		      dlen = strlen(upath));
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
 
-    /* construct a temp name. 
+    /* construct a temp name.
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
     memcpy(temp, APPLETEMP, sizeof(APPLETEMP));
@@ -1647,7 +1660,7 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     of_rename(vol, sdir, spath, curdir, temp);
 
     /* rename destination to source */
-    if ((err = renamefile(path, p, spath, vol_noadouble(vol))) < 0) 
+    if ((err = renamefile(path, p, spath, vol_noadouble(vol))) < 0)
       goto err_src_to_tmp;
     of_rename(vol, curdir, path, sdir, spath);
 
@@ -1656,9 +1669,9 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
       goto err_dest_to_src;
     of_rename(vol, curdir, temp, curdir, path);
     
-#if AD_VERSION > AD_VERSION1
+#ifdef CNID_DB
     /* id's need switching. src -> dest and dest -> src. */
-    if (sid && (cnid_update(vol->v_db, sid, &destst, curdir->d_did, 
+    if (sid && (cnid_update(vol->v_db, sid, &destst, curdir->d_did,
 			    upath, dlen) < 0)) {
       switch (errno) {
       case EPERM:
@@ -1684,7 +1697,7 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
 	cnid_update(vol->v_db, sid, &srcst, sdir->d_did, supath, slen);
       goto err_temp_to_dest;
     }
-#endif /* AD_VERSION > AD_VERSION1 */
+#endif /* CNID_DB */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "ending afp_exchangefiles:");
@@ -1693,7 +1706,7 @@ int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
     return AFP_OK;
 
 
-    /* all this stuff is so that we can unwind a failed operation 
+    /* all this stuff is so that we can unwind a failed operation
      * properly. */
 err_temp_to_dest:
     /* rename dest to temp */
