@@ -30,4 +30,4 @@
 #undef USE_FLOCK_LOCKS
 #undef USE_LASTDID
 #undef USE_PAM
-#undef FORCE_2GB
+
