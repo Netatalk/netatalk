@@ -31,10 +31,13 @@ or may not have to do this. If you downloaded a release tarball, or if
 your download contains a ./configure file then this has already been
 run for you.
 
-2. ./configure
+2. ./configure 
 This step reads the options to the ./configure program and checks your
 system against the requirements of those options. It generally fails
-if your system doesn't meet the requirements. 
+if your system doesn't meet the requirements. You should read check
+the DEVELOPER file because some of these options require external
+sources to function correctly. (PAM, SSL, Berkeley DB3, TCP Wrappers,
+etc).
 
 Netatalk options to the ./configure script: Use ./configure --help for
 a complete list.
