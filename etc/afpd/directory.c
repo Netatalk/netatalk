@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.29 2002-03-24 17:43:39 jmarcus Exp $
+ * $Id: directory.c,v 1.30 2002-04-29 06:53:25 morgana Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -734,8 +734,7 @@ struct dir *dirnew(const int len)
 
 
 /* XXX: this needs to be changed to handle path types */
-char *
-cname( vol, dir, cpath )
+char * cname( vol, dir, cpath )
 const struct vol	*vol;
 struct dir	*dir;
 char	**cpath;
