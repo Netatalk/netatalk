@@ -230,7 +230,11 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
   log_init();
 
   logs = log_file_arr[logtype];
+  
+  LOG(log_debug6, logtype_logger, "doing log_setup, type %d, level %d, filename \"%s\"", logtype, loglevel, filename);
 
+  /* LOG(log_extradebug+10, logtype_logger, "checking array for logtype is malloc'd"); */
+  /* has the given logtype already been assigned memory? */
   if (logs==NULL)
   {
     logs = (log_file_data_pair *)malloc(sizeof(log_file_data_pair));
@@ -248,12 +252,14 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
     }
   }
 
+  /* I think this checks if we're logging to stdout or not.  Probably unused */
   if ( ((*logs)[1].log_file == stdout) && ((*logs)[1].log_file != NULL) )
   {
     fclose((*logs)[1].log_file);
     (*logs)[1].log_file = NULL;
   }
 
+  /* check if we need to append the given filename to a directory */
   if (strlen(global_log_data.log_file_directory)>0)
   {
     lastchar[0] = global_log_data.
@@ -363,6 +369,9 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
   }
 #endif
 
+  LOG(log_debug7, logtype_logger, "log_file_arr[%d] now contains: "
+	                          "{log_filename:%s, log_file:%p, log_level: %d}", logtype,
+				   (*logs)[1].log_filename, (*logs)[1].log_file, (*logs)[1].log_level);
   LOG(log_info, logtype_logger, "Log setup complete");
 
 #endif /* DISABLE_LOGGER */
@@ -875,8 +884,7 @@ int get_syslog_equivalent(enum loglevels loglevel)
 void setuplog(char *logtype, char *loglevel, char *filename)
 {
 #ifndef DISABLE_LOGGER 
-  /* -setuplogtype <syslog|filelog> <logtype> <loglevel>*/
-  /* -setuplogtype <logtype> <loglevel> [<filename>]*/
+  /* -[un]setuplog <logtype> <loglevel> [<filename>]*/
   /*
     This should be rewritten so that somehow logsource is assumed and everything
     can be taken from default if needs be.  
@@ -890,47 +898,8 @@ void setuplog(char *logtype, char *loglevel, char *filename)
   LOG(log_extradebug, logtype_logger, "Attempting setuplog: %s %s %s %s", 
       logsource, logtype, loglevel, filename);
   */
-  LOG(log_extradebug, logtype_logger, "Attempting setuplog: %s %s %s", 
+  LOG(log_debug6, logtype_logger, "Attempting setuplog: %s %s %s", 
       logtype, loglevel, filename);
-
-  /*
-   Do I need these?
-  
-  if (logsource==NULL)
-    logsource=null;
-  if (logtype==NULL)
-    logtype=null;
-  if (loglevel==NULL)
-    loglevel=null;
-  if (filename==NULL)
-    filename=null;
-  */
-
-  /*
-   * We'll just use filename, if its NULL we know its a syslog thing
-   * 
-  if (logsource==NULL)
-  {
-    LOG(log_note, logtype_logger, "no logsource given");
-  }
-  else
-  {
-    for(sourcenum=0;sourcenum<NUMOF(sources);sourcenum++)
-    {
-      if (strcasecmp(logsource, sources[sourcenum])==0)
-        break;
-    }
-    if (sourcenum>=NUMOF(sources))
-    {
-      LOG(log_warning, logtype_logger, "%s is not a valid log source", logsource);
-    }
-    if ((sourcenum>0) && (filename==NULL))
-    {
-      LOG(log_warning, logtype_logger, 
-          "when specifying a filelog, you must specify a valid filename");
-    }
-  }
-  */
 
   if (logtype==NULL)
   {
@@ -976,6 +945,9 @@ void setuplog(char *logtype, char *loglevel, char *filename)
     return;
   }
 
+  /* now match the order of the text string with the actual enum value (10 times) */
+  levelnum*=10;
+  
   /* is this a syslog setup or a filelog setup */
   if (filename==NULL) /* must be syslog */
   {
