@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.25 2002-01-21 04:06:41 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.26 2002-01-24 15:15:48 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
