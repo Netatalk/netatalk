@@ -160,11 +160,6 @@ AC_ARG_WITH(config-dir,
 		config_dir="$withval",
 		config_dir="/etc/atalk"
 )
-AC_DEFINE_UNQUOTED(CONFIG_DIR, "$config_dir",
-	[path to config dir [default=/etc/atalk]])
-CONFIG_DIR="$config_dir"
-AC_SUBST(CONFIG_DIR)
-AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR])
 
 AC_ARG_WITH(cracklib,
 	[  --with-cracklib=dict    enable/set location of cracklib dictionary],
@@ -222,7 +217,7 @@ AC_ARG_ENABLE(dropkludge,
 )
 
 AC_ARG_ENABLE(force-uidgid,
-	[  --enable-force-uidgid   allow forcing of uid/gid per volume (INSECURE?) ],
+	[  --enable-force-uidgid   allow forcing of uid/gid per volume (BROKEN) ],
 	if test "$enableval" = "yes"; then 
 		AC_DEFINE(FORCE_UIDGID, 1)
 		AC_MSG_RESULT([enabling forcing of uid/gid per volume])
@@ -289,7 +284,7 @@ AC_ARG_WITH(tcp-wrappers,
 )
 
 AC_ARG_ENABLE(redhat,
-	[  --enable-redhat     use redhat-style sysv configuration ],
+	[  --enable-redhat         use redhat-style sysv configuration ],
     if test "$enableval" = "yes"; then
 		sysv_style=redhat
 	fi
@@ -305,7 +300,7 @@ AC_ARG_ENABLE(suse,
 )
 
 AC_ARG_ENABLE(cobalt,
-	[  --enable-cobalt     use cobalt-style sysv configuration ],
+	[  --enable-cobalt         use cobalt-style sysv configuration ],
     if test "$enableval" = "yes"; then
 		sysv_style=cobalt
 	fi
@@ -317,6 +312,37 @@ AC_ARG_WITH(uams-path,
 	uams_path="$withval",
 	uams_path="$config_dir/uams"
 )
+
+dnl --------------------------------------------------------------------------
+dnl FHS stuff has to be done last because it overrides other defaults
+dnl --------------------------------------------------------------------------
+
+AC_ARG_ENABLE(fhs,
+	[  --enable-fhs            use Filesystem Hierarchy Standard (FHS) compatibility],
+    if test "$enableval" = "yes"; then
+		CFLAGS="-O2 $CFLAGS"
+		uams_path="/usr/lib/netatalk"
+		config_dir="/etc/netatalk"
+		use_pam_so=yes
+		AC_DEFINE(TCPWRAP)
+		dnl FIXME: NEED TO HAVE --mandir=/usr/share/man AT SOME POINT...
+		AC_DEFINE(FHS_COMPATIBILITY)
+	fi
+	AC_MSG_RESULT([enabling Filesystem Hierarchy Standard (FHS) compatibility])
+)
+
+dnl --------------------------------------------------------------------------
+dnl post-FHS substitutions, etc
+dnl --------------------------------------------------------------------------
+
+dnl ***** CONFIG_DIR
+AC_DEFINE_UNQUOTED(CONFIG_DIR, "$config_dir",
+	[path to config dir [default=/etc/atalk]])
+CONFIG_DIR="$config_dir"
+AC_SUBST(CONFIG_DIR)
+AC_MSG_RESULT([setting configuration files location to $CONFIG_DIR])
+
+dnl ***** UAMS_PATH
 AC_DEFINE_UNQUOTED(UAMS_PATH, "$uams_path",
 	[path to UAMs [default=/etc/atalk/uams]])
 UAMS_PATH="$uams_path"
