@@ -1,0 +1,37 @@
+This is the README file for ntimelord-1.0, for use with netatalk-1.3.
+Please see the COPYRIGHT file.  This package's COPYRIGHT is *not* the
+same as netatalk's.
+
+Building ntimelord:
+
+1.  Set DESTDIR in the Makefile.  DESTDIR should be the same as DESTDIR
+    in your netatalk-1.3 source.  Setting it allows the ntimelord build
+    to find the netatalk libraries and include files.
+
+2.  When you've completed the configuration, type "make" at the root of
+    the source.  This will make all binaries.
+
+Installing ntimelord:
+
+1.  To install the binaries, type "make install".  This will install
+    all of the binaries in the directory specified by DESTDIR.
+
+2.  The file rc.atalk as distributed with netatalk-1.3 includes lines to
+    start ntimelord.
+
+We have set up two mailing lists.  The first is for you to get help and
+report bugs.  It is called netatalk@umich.edu.  If you're reporting
+bugs, you MUST use the format provided in the BUGS file!  We will do
+our best to help you.
+
+The second (moderated) list carries announcements of new releases and
+general discussion.  You can join (or resign from) this list by sending
+mail to netatalk-admins-request@umich.edu.  Submissions (NOT requests
+to join or resign) to this list should be sent to netatalk-admins@umich.edu.
+
+Research Systems Unix Group
+The University of Michigan		netatalk@umich.edu
+c/o Wesley Craig			+1-313-764-2278
+535 W. William St.
+Ann Arbor, Michigan
+48103-4943

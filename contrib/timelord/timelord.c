@@ -1,0 +1,243 @@
+/*
+ * Copyright (c) 1990,1992 Regents of The University of Michigan.
+ * All Rights Reserved. See COPYRIGHT.
+ *
+ * The "timelord protocol" was reverse engineered from Timelord,
+ * distributed with CAP, Copyright (c) 1990, The University of
+ * Melbourne.  The following copyright, supplied by The University
+ * of Melbourne, may apply to this code:
+ *
+ *	This version of timelord.c is based on code distributed
+ *	by the University of Melbourne as part of the CAP package.
+ *
+ *	The tardis/Timelord package for Macintosh/CAP is
+ *	Copyright (c) 1990, The University of Melbourne.
+ */
+
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/file.h>
+#include <sys/uio.h>
+#include <netatalk/at.h>
+#include <netatalk/endian.h>
+#include <atalk/atp.h>
+
+#include <time.h>
+#include <sgtty.h>
+#include <signal.h>
+#include <syslog.h>
+#include <stdio.h>
+#include <strings.h>
+
+#define	TL_GETTIME	0
+#define	TL_OK		12
+#define TL_BAD		10
+#define EPOCH		0x7C25B080	/* 00:00:00 GMT Jan 1, 1970 for Mac */
+
+int	debug = 0;
+char	*bad = "Bad request!";
+char	buf[ 4624 ];
+char	*server;
+
+usage( p )
+    char	*p;
+{
+    char	*s;
+
+    if (( s = rindex( p, '/' )) == NULL ) {
+	s = p;
+    } else {
+	s++;
+    }
+    fprintf( stderr, "Usage:\t%s -d -n nbpname\n", s );
+    exit( 1 );
+}
+
+/*
+ * Unregister ourself on signal.
+ */
+void
+goaway()
+{
+    if ( nbp_unrgstr( server, "TimeLord", "*" ) < 0 ) {
+	syslog( LOG_ERR, "Can't unregister %s", server );
+	exit( 1 );
+    }
+    syslog( LOG_INFO, "going down" );
+    exit( 0 );
+}
+
+main( ac, av )
+    int		ac;
+    char	**av;
+{
+    ATP			atp;
+    struct sigvec	sv;
+    struct sockaddr_at	sat;
+    struct atp_block	atpb;
+    struct timeval	tv;
+    struct timezone	tz;
+    struct iovec	iov;
+    struct tm		*tm;
+    char		hostname[ MAXHOSTNAMELEN ];
+    char		*p;
+    int			c;
+    long		req, mtime, resp;
+    extern char		*optarg;
+    extern int		optind;
+
+    if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
+	perror( "gethostname" );
+	exit( 1 );
+    }
+    if (( server = index( hostname, '.' )) != 0 ) {
+	*server = '\0';
+    }
+    server = hostname;
+
+    while (( c = getopt( ac, av, "dn:" )) != EOF ) {
+	switch ( c ) {
+	case 'd' :
+	    debug++;
+	    break;
+	case 'n' :
+	    server = optarg;
+	    break;
+	default :
+	    fprintf( stderr, "Unknown option -- '%c'\n", c );
+	    usage( *av );
+	}
+    }
+
+    /*
+     * Disassociate from controlling tty.
+     */
+    if ( !debug ) {
+	int		i, dt;
+
+	switch ( fork()) {
+	case 0 :
+	    dt = getdtablesize();
+	    for ( i = 0; i < dt; i++ ) {
+		(void)close( i );
+	    }
+	    if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
+		(void)ioctl( i, TIOCNOTTY, 0 );
+		setpgrp( 0, getpid());
+		(void)close( i );
+	    }
+	    break;
+	case -1 :
+	    perror( "fork" );
+	    exit( 1 );
+	default :
+	    exit( 0 );
+	}
+    }
+
+    if (( p = rindex( *av, '/' )) == NULL ) {
+	p = *av;
+    } else {
+	p++;
+    }
+
+#ifdef ultrix
+    openlog( p, LOG_PID );
+#else ultrix
+    openlog( p, LOG_NDELAY|LOG_PID, LOG_DAEMON );
+#endif ultrix
+
+    if (( atp = atp_open( 0 )) == NULL ) {
+	syslog( LOG_ERR, "main: atp_open: %m" );
+	exit( 1 );
+    }
+
+    if ( nbp_rgstr( atp_sockaddr( atp ), server, "TimeLord", "*" ) < 0 ) {
+	syslog( LOG_ERR, "Can't register %s", server );
+	exit( 1 );
+    }
+    syslog( LOG_INFO, "%s:TimeLord started", server );
+
+    sv.sv_handler = goaway;
+    sv.sv_mask = 0;
+    sv.sv_flags = 0;
+    if ( sigvec( SIGHUP, &sv, 0 ) < 0 ) {
+	syslog( LOG_ERR, "main: sigvec: %m" );
+	exit( 1 );
+    }
+    if ( sigvec( SIGTERM, &sv, 0 ) < 0 ) {
+	syslog( LOG_ERR, "main: sigvec: %m" );
+	exit( 1 );
+    }
+
+    for (;;) {
+	/*
+	 * Something seriously wrong with atp, since these assigns must
+	 * be in the loop...
+	 */
+	atpb.atp_saddr = &sat;
+	atpb.atp_rreqdata = buf;
+	bzero( &sat, sizeof( struct sockaddr_at ));
+	atpb.atp_rreqdlen = sizeof( buf );
+	if ( atp_rreq( atp, &atpb ) < 0 ) {
+	    syslog( LOG_ERR, "main: atp_rreq: %m" );
+	    exit( 1 );
+	}
+
+	p = buf;
+	bcopy( p, &req, sizeof( long ));
+	req = ntohl( req );
+	p += sizeof( long );
+
+	switch( req ) {
+	case TL_GETTIME :
+	    if ( atpb.atp_rreqdlen > 5 ) {
+		    bcopy( p + 1, &mtime, sizeof( long ));
+		    mtime = ntohl( mtime );
+		    syslog( LOG_INFO, "gettime from %s %s was %u",
+			    (*( p + 5 ) == '\0' ) ? "<unknown>" : p + 5,
+			    ( *p == 0 ) ? "at boot" : "in chooser",
+			    mtime );
+	    } else {
+		    syslog( LOG_INFO, "gettime" );
+	    }
+
+	    if ( gettimeofday( &tv, &tz ) < 0 ) {
+		syslog( LOG_ERR, "main: gettimeofday: %m" );
+		exit( 1 );
+	    }
+	    if (( tm = localtime( &tv.tv_sec )) == 0 ) {
+		perror( "localtime" );
+		exit( 1 );
+	    }
+
+	    mtime = tv.tv_sec + tm->tm_gmtoff + EPOCH;
+	    mtime = htonl( mtime );
+
+	    resp = TL_OK;
+	    bcopy( &resp, buf, sizeof( long ));
+	    bcopy( &mtime, buf + sizeof( long ), sizeof( long ));
+	    iov.iov_len = sizeof( long ) + sizeof( long );
+	    break;
+
+	default :
+	    syslog( LOG_ERR, bad );
+
+	    resp = TL_BAD;
+	    bcopy( &resp, buf, sizeof( long ));
+	    *( buf + 4 ) = (unsigned char)strlen( bad );
+	    strcpy( buf + 5, bad );
+	    iov.iov_len = sizeof( long ) + 2 + strlen( bad );
+	    break;
+	}
+
+	iov.iov_base = buf;
+	atpb.atp_sresiov = &iov;
+	atpb.atp_sresiovcnt = 1;
+	if ( atp_sresp( atp, &atpb ) < 0 ) {
+	    syslog( LOG_ERR, "main: atp_sresp: %m" );
+	    exit( 1 );
+	}
+    }
+}
