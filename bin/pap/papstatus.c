@@ -36,12 +36,16 @@
 #include <atalk/nbp.h>
 #include <atalk/util.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
 #define _PATH_PAPRC	".paprc"
 
-usage( path )
+/* Forward Declaration */
+void getstatus(ATP atp, struct sockaddr_at *sat);
+
+void usage( path )
     char	*path;
 {
     char	*p;
@@ -83,7 +87,7 @@ char			*printer = NULL;
 char			cbuf[ 8 ];
 struct nbpnve		nn;
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -157,9 +161,11 @@ main( ac, av )
 	getstatus( atp, &nn.nn_sat );
 	sleep( wait );
     }
+
+    return 0;
 }
 
-getstatus( atp, sat )
+void getstatus( atp, sat )
     ATP			atp;
     struct sockaddr_at	*sat;
 {
@@ -197,5 +203,5 @@ getstatus( atp, sat )
 	return;	/* This is weird, since TIDs must match... */
     }
 
-    printf( "%.*s\n", iov.iov_len - 9, (char *) iov.iov_base + 9 );
+    printf( "%.*s\n", (int)iov.iov_len - 9, (char *) iov.iov_base + 9 );
 }

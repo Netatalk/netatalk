@@ -51,7 +51,7 @@ u_char			psbuf[ 8192 ];
 struct psinfo_st	psinfo;
 int			orderflag, forceflag;
 
-main( argc, argv )
+int main( argc, argv )
     int		argc;
     char	**argv;
 {
@@ -242,7 +242,7 @@ readps( inputfd, tempfd, tempfile )
 #endif
 	    pa_match( pb );
 	    ccmatch = ccread - 1;
-	    while ( c = pa_getchar( pb )) {
+	    while ( ( c = pa_getchar( pb ) ) ) {
 		if ( c != 0 ) {
 		    ccread++;
 		    (void)putc( c, tempstream );

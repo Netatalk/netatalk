@@ -27,6 +27,10 @@
 #define _PATH_PAPRC	".paprc"
 char	*nbpfailure = "AppleTalk printer offline";
 
+/* Forward Declarations */
+void updatestatus(char *s, int len);
+int send_file(int fd, ATP atp, int lastfile);
+
 /* if there is a less hacky way to do this, please do it... */
 #ifdef DEBUG
 #define EBUG
@@ -40,7 +44,7 @@ char	*nbpfailure = "AppleTalk printer offline";
 #define DEBUG(x,y)
 #endif /*EBUG*/
 
-usage( path )
+void usage( path )
     char	*path;
 {
     char	*p;
@@ -138,7 +142,7 @@ struct iovec	sfiov[ PAP_MAXQUANTUM ] = {
     { nbuf[ 7 ] + 4,	0 },
 };
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -358,7 +362,7 @@ DEBUG( printf( "OPEN >\n" ), fflush( stdout ));
 DEBUG( printf( "< OPENREPLY\n" ), fflush( stdout ));
 
 	if ( isatty( 1 )) {
-	    printf( "%.*s\n", iov.iov_len - 9, (char *) iov.iov_base + 9 );
+	    printf( "%.*s\n", (int)iov.iov_len - 9, (char *) iov.iov_base + 9 );
 	}
 	updatestatus( (char *) iov.iov_base + 9, iov.iov_len - 9 );
 
@@ -453,7 +457,7 @@ int		data = 0;
 unsigned char	port;
 u_int16_t       seq = 0, rseq = 1;
 
-send_file( fd, atp, lastfile )
+int send_file( fd, atp, lastfile )
     int			fd;
     ATP			atp;
     int			lastfile;
@@ -830,7 +834,7 @@ DEBUG( printf( "< STATUS\n" ), fflush( stdout ));
     }
 }
 
-updatestatus( s, len )
+void updatestatus( s, len )
     char	*s;
     int		len;
 {
