@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.138 2001-12-03 15:50:06 jmarcus Exp $
+dnl $Id: configure.in,v 1.139 2001-12-10 07:20:37 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -648,6 +648,7 @@ AC_OUTPUT([Makefile
 	bin/aecho/Makefile
 	bin/afile/Makefile
 	bin/afppasswd/Makefile
+	bin/cnid/Makefile
 	bin/getzones/Makefile
 	bin/megatron/Makefile
 	bin/nbp/Makefile

@@ -7,15 +7,26 @@
  * Modified to check the consistency of didname.db by
  * Joe Clarke <marcus@marcuscom.com>
  *
- * $Id: cnid_didname_verify.c,v 1.1 2001-12-10 07:04:27 jmarcus Exp $
+ * $Id: cnid_didname_verify.c,v 1.2 2001-12-10 07:20:38 jmarcus Exp $
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#ifdef CNID_DB
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#include <sys/types.h>
+#endif /* HAVE_UNISTD_H */
+#include <sys/param.h>
+
 #include <db.h>
+
+#include <atalk/cnid.h>
+#include <atalk/util.h>
 
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
@@ -26,7 +37,7 @@ void	usage __P((void));
 void	version_check __P((void));
 
 const char
-	*progname = "db_verify";			/* Program name. */
+	*progname = "cnid_didname_verify";			/* Program name. */
 
 static __inline__ int compare_did(const DBT *a, const DBT *b) {
 	u_int32_t dida, didb;
@@ -200,3 +211,4 @@ version_check()
 		exit (1);
 	}
 }
+#endif /* CNID_DB */

@@ -5,4 +5,4 @@ LIBS = @LIBS@ @DB3_LIBS@
 
 bin_PROGRAMS = cnid_didname_verify
 
-cnid_SOURCES = cnid_didname_verify.c
+cnid_didname_verify_SOURCES = cnid_didname_verify.c
