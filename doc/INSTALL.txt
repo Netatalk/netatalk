@@ -362,14 +362,30 @@ eth1 -seed -phase 2 -addr 100.10 -net 100-110 -zone "Upstairs"
 for eth1 this server acts as a soft seed router of a phase 2 network
 segment of 100-110 where this machine is 100.10
 
-3. /etc/atalk/papd.conf
+3. /etc/atalk/netatalk.conf
+===========================
+
+Set the options as appropriate:
+
+AFPD_MAX_CLIENTS - Maximum number of concurrent clients.
+
+ATALK_ZONE - Name of the zone. Should match the zone in afpd.conf, or use @zone.
+
+ATALK_NAME - Name of the netatalk server.
+
+AFPD_UAMLIST - List of uams available to the clients. Should match
+list in afpd.conf "-U uam1, uam2" 
+
+AFPD_GUEST - If guest access is enabled, the id of the afpd process
+for the guest client.
+
+ATALKD_RUN, PAPD_RUN, AFPD_RUN - Run these daemons, 'yes/no'.
+
+
+4. /etc/atalk/papd.conf
 =======================
 
 To be written by someone who actully uses the print server. :)
 
 
-4. /etc/atalk/netatalk.conf
-===========================
-
-To be written.
 
