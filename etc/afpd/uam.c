@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.14 2001-11-10 18:31:06 srittau Exp $
+ * $Id: uam.c,v 1.15 2001-11-13 15:01:38 rufustfirefly Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -352,7 +352,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
   case UAM_OPTION_PROTOCOL:
     *buf = (void *) obj->proto;
     break;
-#ifdef TRU64
   case UAM_OPTION_CLIENTNAME:
     {
       struct DSI *dsi = obj->handle;
@@ -367,7 +366,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
           *buf = (void *) inet_ntoa( dsi->client.sin_addr );
     }
     break;
-#endif /* TRU64 */
   case UAM_OPTION_COOKIE: 
     /* it's up to the uam to actually store something useful here.
      * this just passes back a handle to the cookie. the uam side

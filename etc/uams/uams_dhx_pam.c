@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.16 2001-09-05 13:42:16 rufustfirefly Exp $
+ * $Id: uams_dhx_pam.c,v 1.17 2001-11-13 15:01:38 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -360,9 +360,12 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }
     ibuf += sizeof(sessid);
     
-    if (uam_afpserver_option(obj, UAM_OPTION_HOSTNAME,
+    if (uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME,
 			     (void *) &hostname, NULL) < 0)
-      return AFPERR_MISC;
+	{
+	syslog(LOG_INFO, "uams_dhx_pam.c :PAM: unable to retrieve client hostname");
+	hostname = NULL;
+	}
 
     CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
 		     msg3_iv, CAST_DECRYPT);

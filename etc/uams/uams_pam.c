@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.9 2001-11-10 18:30:21 srittau Exp $
+ * $Id: uams_pam.c,v 1.10 2001-11-13 15:01:38 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -140,9 +140,13 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 			     (void *) &username, &ulen) < 0)
       return AFPERR_MISC;
 
-    if (uam_afpserver_option(obj, UAM_OPTION_HOSTNAME,
+    if (uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME,
 			     (void *) &hostname, NULL) < 0)
-      return AFPERR_MISC;
+	{
+	syslog(LOG_INFO, "uams_pam.c :PAM: unable to retrieve client hostname");
+	hostname = NULL;
+	}
+
 
     len = (unsigned char) *ibuf++;
     if ( len > ulen ) {
