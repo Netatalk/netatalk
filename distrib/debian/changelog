@@ -5,8 +5,9 @@ netatalk (1.5pre8cvs-0) unstable; urgency=low
   * Upstream does now have manpages for apple_cp(1), apple_mv(1), and
     apple_rm(1), written by Lance Levsen <l.levsen@printwest.com>.
     Removed the links to undocumented(7).
+  * Don't supply --with-did=last anymore, since this is now the default.
 
- -- Sebastian Rittau <srittau@debian.org>  Sun, 18 Nov 2001 15:14:40 +0100
+ -- Sebastian Rittau <srittau@debian.org>  Wed, 28 Nov 2001 01:22:10 +0100
 
 netatalk (1.5pre8-5) unstable; urgency=low
 
