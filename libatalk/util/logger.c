@@ -155,6 +155,20 @@ static log_file_data_pair default_log_file_data_pair = {
   display_options:  logoption_pid
 }};
 
+static log_file_data_pair logger_log_file_data_pair = {
+{
+  log_filename:    "\0\0\0\0\0\0\0\0",
+  log_file:        NULL,
+  log_level:       log_warning,
+  display_options: logoption_pid
+},
+{
+  log_filename:     LOGFILEPATH,
+  log_file:         NULL,
+  log_level:        log_maxdebug,
+  display_options:  logoption_pid
+}};
+
 static log_file_data_pair *log_file_data_array[logtype_end_of_list_marker] = 
 {&default_log_file_data_pair};
 
@@ -204,10 +218,13 @@ void log_init()
     /* next clear out the log_file_data_array */
     memset(log_file_data_array, 0, sizeof(log_file_data_array));
     /* now set default_log_file_data_pairs */
-    log_file_data_array[0] = &default_log_file_data_pair;
+    log_file_data_array[logtype_default] = &default_log_file_data_pair;
+    log_file_data_array[logtype_logger]  = &logger_log_file_data_pair;
 
     /* now setup the global_log_data struct */
     global_log_data.logs = log_file_data_array;
+
+    /* make_log_entry(log_debug, logtype_logger, "log_init ran for the first time"); */
   }
 }
 #endif /* #ifndef DISABLE_LOGGER */
@@ -231,7 +248,7 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
 
   logs = log_file_arr[logtype];
   
-  LOG(log_debug6, logtype_logger, "doing log_setup, type %d, level %d, filename \"%s\"", logtype, loglevel, filename);
+  LOG(log_info, logtype_logger, "doing log_setup, type %d, level %d, filename \"%s\"", logtype, loglevel, filename);
 
   /* LOG(log_extradebug+10, logtype_logger, "checking array for logtype is malloc'd"); */
   /* has the given logtype already been assigned memory? */
@@ -372,7 +389,7 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
   LOG(log_debug7, logtype_logger, "log_file_arr[%d] now contains: "
 	                          "{log_filename:%s, log_file:%p, log_level: %d}", logtype,
 				   (*logs)[1].log_filename, (*logs)[1].log_file, (*logs)[1].log_level);
-  LOG(log_info, logtype_logger, "Log setup complete");
+  LOG(log_debug, logtype_logger, "log_setup[%d] done", logtype);
 
 #endif /* DISABLE_LOGGER */
   return true;
@@ -388,6 +405,8 @@ void syslog_setup(enum loglevels loglevel, enum logtypes logtype,
   log_init();
 
   logs = log_file_arr[logtype];
+
+  LOG(log_info, logtype_logger, "doing syslog_setup, type %d, level %d", logtype, loglevel);
 
   if (logs==NULL)
   {
@@ -412,7 +431,10 @@ void syslog_setup(enum loglevels loglevel, enum logtypes logtype,
   openlog(global_log_data.processname, (*logs)[0].display_options, 
 	  global_log_data.facility);
 
-  LOG(log_info, logtype_logger, "SysLog setup complete");
+  LOG(log_debug7, logtype_logger, "log_file_arr[%d] now contains: "
+                                  "{log_filename:%s, log_file:%p, log_level: %d}", logtype,
+                                  (*logs)[0].log_filename, (*logs)[0].log_file, (*logs)[0].log_level);
+  LOG(log_debug, logtype_logger, "syslog_setup[%d] done", logtype);
 #else /* DISABLE_LOGGER */
 /* behave like a normal openlog call */
   openlog(disabled_logger_processname, display_options, facility);
@@ -425,7 +447,7 @@ void log_close()
   log_file_data_pair *logs;
   int n;
 
-  LOG(log_info, logtype_logger, "Closing logs");
+  LOG(log_info, logtype_logger, "log_close called");
 
   for(n=(sizeof(log_file_arr)-1);n>0;n--)
   {
@@ -436,6 +458,7 @@ void log_close()
 #endif /* KEEP_LOGFILES_OPEN */
     if (logs!=NULL)
     {
+      LOG(log_debug, logtype_logger, "freeing log entry at %d", n);
 #ifdef DEBUG_OUTPUT_TO_SCREEN
       printf("Freeing log_data %d, stored at %p\n", n, logs);
       printf("\t(filename) %s\t(type) %s\n", (*logs)[1].log_filename, 
@@ -453,6 +476,8 @@ void log_close()
 	     );
 #endif /* DEBUG_OUTPUT_TO_SCREEN */
 #endif /* DISABLE_LOGGER */
+
+  LOG(log_debug, logtype_logger, "log_close done");
 
   closelog();
 }
@@ -898,12 +923,12 @@ void setuplog(char *logtype, char *loglevel, char *filename)
   LOG(log_extradebug, logtype_logger, "Attempting setuplog: %s %s %s %s", 
       logsource, logtype, loglevel, filename);
   */
-  LOG(log_debug6, logtype_logger, "Attempting setuplog: %s %s %s", 
+  LOG(log_info, logtype_logger, "setuplog is parsing logtype:%s, loglevel:%s, filename:%s", 
       logtype, loglevel, filename);
 
   if (logtype==NULL)
   {
-    LOG(log_note, logtype_logger, "no logsource given");
+    LOG(log_note, logtype_logger, "no logsource given, default is assumed");
     typenum=0;
   }
   else
@@ -921,7 +946,7 @@ void setuplog(char *logtype, char *loglevel, char *filename)
 
   if (loglevel==NULL)
   {
-    LOG(log_note, logtype_logger, "no loglevel given");
+    LOG(log_note, logtype_logger, "no loglevel given, severe is assumed");
     levelnum=0;
   }
   else
@@ -951,14 +976,14 @@ void setuplog(char *logtype, char *loglevel, char *filename)
   /* is this a syslog setup or a filelog setup */
   if (filename==NULL) /* must be syslog */
   {
-    LOG(log_note, logtype_logger, "Doing syslog_setup(%d, %d, ...)", levelnum, typenum);
+    LOG(log_debug6, logtype_logger, "calling syslog_setup(%d, %d, ...)", levelnum, typenum);
     syslog_setup(levelnum, typenum, 
 		 (*logs)[0].display_options,
 		 global_log_data.facility);
   }
   else /* this must be a filelog */
   {
-    LOG(log_note, logtype_logger, "Doing log_setup(%s, %d, %d, ...)", filename, levelnum, typenum);
+    LOG(log_debug6, logtype_logger, "calling log_setup(%s, %d, %d, ...)", filename, levelnum, typenum);
     log_setup(filename, levelnum, typenum, 
 	      (*logs)[0].display_options);
   };  

@@ -129,9 +129,7 @@
 #                         timing out a connection.  The default is 4, therefore
 #                         a connection will timeout in 2 minutes.
 #     -icon               Use the platform-specific icon.
-#
-#   OPTIONS IN DEVELOPMENT:
-#     -[un]setuplog <logtype> <loglevel> [<filename>]
+#     -[un]setuplog "<logtype> <loglevel> [<filename>]"
 #                         Specify that the given loglevel should be applied
 #                         to log messages of the given logtype and that 
 #                         these messages should be logged to the given file.
@@ -145,6 +143,13 @@
 #                         loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE,
 #                                    LOG_INFO, LOG_DEBUG, LOG_DEBUG6, LOG_DEBUG7, 
 #                                    LOG_DEBUG8, LOG_DEBUG9, LOG_MAXDEBUG
+#
+#                         for example:
+#                    -setuplog "logger log_maxdebug /var/log/netatalk-logger.log"
+#                    -setuplog "afpdaemon log_maxdebug /var/log/netatalk-afp.log"
+#                    -unsetuplog "default level file" 
+#                    -setuplog "default log_maxdebug"
+
 #		
 # Some examples:
 #

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.26 2002-08-24 02:12:48 sibaz Exp $
+ * $Id: afp_options.c,v 1.27 2002-08-24 05:00:07 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -254,7 +254,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     {
       char *ptr, *logsource, *logtype, *loglevel, *filename;
 
-      LOG(log_extradebug, logtype_afpd, "setting up logtype, c is %s", c);
+      LOG(log_debug6, logtype_afpd, "setting up logtype, c is %s", c);
       ptr = c;
       
       /* 
@@ -307,22 +307,17 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         }
       }
 
-      /*
-      LOG(log_extradebug, logtype_afpd, "Doing setuplog %s %s %s %s", 
-          logsource, logtype, loglevel, filename);
-      */
-      LOG(log_extradebug, logtype_afpd, "Doing setuplog %s %s %s", 
+      LOG(log_debug7, logtype_afpd, "calling setuplog %s %s %s", 
           logtype, loglevel, filename);
 
-      /* setuplog(logsource, logtype, loglevel, filename); */
       setuplog(logtype, loglevel, filename);
     }
 
-    if ((c = getoption(buf, "-nosetuplog")))
+    if ((c = getoption(buf, "-unsetuplog")))
     {
       char *ptr, *logtype, *loglevel, *filename;
 
-      LOG(log_extradebug, logtype_afpd, "un setting up logtype, c is %s", c);
+      LOG(log_debug6, logtype_afpd, "unsetting up logtype, c is %s", c);
 
       ptr = c;
       logtype = ptr;
@@ -361,7 +356,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         }
       }
       
-      LOG(log_extradebug, logtype_afpd, "Doing setuplog %s %s %s",
+      LOG(log_debug7, logtype_afpd, "calling setuplog %s %s %s",
               logtype, NULL, filename);
 
       setuplog(logtype, NULL, filename);
