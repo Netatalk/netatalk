@@ -9,20 +9,23 @@
 
 static int	_flock_dummy;
 
-# if defined( sun ) && defined( __svr4__ )
+#ifndef HAVE_FLOCK
 
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
 
-#include </usr/ucbinclude/sys/file.h>
+#define LOCK_SH         1
+#define LOCK_EX         2
+#define LOCK_NB         4
+#define LOCK_UN         8
 
 int flock( fd, operation )
     int		fd;
     int		operation;
 {
-    flock_t	l;
-    int		rc, op;
+    struct flock	l;
+    int			rc, op;
 
     if ( operation & LOCK_NB ) {
 	op = F_SETLK;
@@ -53,4 +56,4 @@ int flock( fd, operation )
     }
     return( rc );
 }
-# endif sun __svr4__
+#endif /* !HAVE_FLOCK */

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.82 2001-06-07 15:39:27 rufustfirefly Exp $
+dnl $Id: configure.in,v 1.83 2001-06-11 17:27:29 rufustfirefly Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -129,7 +129,7 @@ AC_FUNC_MMAP
 AC_TYPE_SIGNAL
 AC_FUNC_UTIME_NULL
 AC_FUNC_WAIT3
-AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strstr strtoul setpgrp)
+AC_CHECK_FUNCS(flock getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strstr strtoul setpgrp)
 AC_FUNC_SETPGRP
 
 dnl --------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.5 2001-03-21 14:36:36 rufustfirefly Exp $
+ * $Id: adouble.h,v 1.6 2001-06-11 17:27:28 rufustfirefly Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -27,10 +27,14 @@
 
 #include <unistd.h>
 
-#if defined(sun) && defined(__svr4__)
-#include </usr/ucbinclude/sys/file.h>
-#else
+#ifdef HAVE_FLOCK
 #include <sys/file.h>
+#else
+#define LOCK_SH 1
+#define LOCK_EX 2
+#define LOCK_NB 4
+#define LOCK_UN 8
+extern int flock (int /*fd*/, int /*operation*/);
 #endif
 #include <fcntl.h>
 #include <sys/cdefs.h>
