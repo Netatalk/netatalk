@@ -6,10 +6,9 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 
-	./configure --prefix=/usr --with-config-dir=/etc/netatalk \
-		--with-pam --with-tcp-wrappers --mandir=/usr/share/man \
-		--with-uams-path=/usr/lib/netatalk \
-		--with-cflags=-O2
+	./configure --with-cflags=-O2 \
+		--with-fhs --with-config-dir=/etc/netatalk \
+		--with-tcp-wrappers --mandir=/usr/share/man
 	$(MAKE)
 
 	touch build-stamp

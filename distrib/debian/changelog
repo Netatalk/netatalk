@@ -4,8 +4,11 @@ netatalk (1.5pre3cvs-1) unstable; urgency=low
   * Some reorganisations to allow building directly from CVS.
   * Debian packaging is now included in upstream CVS.
   * Modified debian/copyright to include CVS instructions.
+  * Call ./configure with --with-fhs and removed --with-uams-path option.
+  * Removed patches/paths.h.patch as this is now supported by
+    --with-fhs.
 
- -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Fri, 16 Feb 2001 14:49:03 +0100
+ -- Sebastian Rittau <srittau@jroger.in-berlin.de>  Mon, 19 Feb 2001 19:22:20 +0100
 
 netatalk (1.5pre3-0.1) unstable; urgency=low
 
