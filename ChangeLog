@@ -1,3 +1,12 @@
+2001-08-28  Lance Levsen  <l.levsen@printwest.com>
+
+	* config/Makefile.am: Added a variable substitution from
+	configure.in to stop overwriting the config files.
+
+	* configure.in: Added --enable-overwrite flag that enables the
+	overwriting of configure files. Default is no overwrite, but does
+	check for missing files.
+	
 2001-08-27  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	Released 1.5pre7

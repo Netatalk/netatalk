@@ -12,8 +12,8 @@ EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 
 CLEANFILES += $(GENFILES)
 
+pkgconf_DATA= @OVERWRITE@
 pkgconfdir = @PKGCONFDIR@
-pkgconf_DATA = $(CONFFILES) $(GENFILES)
 
 #
 # rule to parse template files
