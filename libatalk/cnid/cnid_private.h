@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_private.h,v 1.8 2002-02-01 19:51:09 jmarcus Exp $
+ * $Id: cnid_private.h,v 1.9 2002-02-02 19:12:31 jmarcus Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -25,7 +25,6 @@
 #define CNID_HEADER_LEN          (CNID_DEVINO_LEN + CNID_DID_LEN)
 
 #define CNID_START               17
-#define CNID_INVALID             0
 
 #define CNIDFLAG_ROOTINFO_RO     (1 << 0)
 #define CNIDFLAG_DB_RO           (1 << 1)
