@@ -1,9 +1,20 @@
-($Id: ChangeLog,v 1.41 2001-06-05 12:56:19 pooba53 Exp $)
+($Id: ChangeLog,v 1.42 2001-06-06 13:36:36 rufustfirefly Exp $)
 
 2001-06-05 Dan L. (pooba53)
 	* Modified configure.in so references made to $ac_prefix_default
 	listed at the beginning are correct. The previous references were
 	being made to $ac_default_prefix.
+
+2001-06-04  jeff b  <jeff@univrel.pr.uconn.edu>
+	* doc/README.TRU64: details about tru64 installations, from
+	Edmund Lam <epl@unimelb.edu.au> 
+
+	* etc/afpd/fork.c: implemented Sebastian Rittau's change to
+	avoid overwriting AppleDouble headers (finally)
+
+	* configure.in, etc/afpd/enumerate.c, etc/afpd/parse_mtab.c:
+	added initial support for mtab DID format. removed "lastdid"
+	configure option in favor of --with-did={last,mtab}
 
 2001-06-01  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/quota.c: fix for Linux compile by Sam Noble

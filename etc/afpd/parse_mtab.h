@@ -1,4 +1,8 @@
-/* header for afpd_mtab_parse, afpd_st_cnid */
+/*
+ * $Id: parse_mtab.h,v 1.2 2001-06-06 13:36:36 rufustfirefly Exp $
+ *
+ * header for afpd_mtab_parse, afpd_st_cnid
+ */
 
 #ifndef _parse_mtab_h
 #define _parse_mtab_h

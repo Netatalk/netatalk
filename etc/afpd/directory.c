@@ -1,4 +1,6 @@
 /*
+ * $Id: directory.c,v 1.11 2001-06-06 13:36:36 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  *
@@ -1900,7 +1902,7 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
     u_int16_t		vid;
 #ifdef FORCE_UIDGID
 	uidgidset		*uidgid;
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1942,14 +1944,14 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
 #ifdef FORCE_UIDGID
 	save_uidgid ( uidgid );
 	set_uidgid  ( vol );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
 
     /* we don't already have a did. add one in. */
     if ((dir = adddir(vol, parentdir, path, strlen(path), 
 		      upath, strlen(upath), &st)) == NULL) {
 #ifdef FORCE_UIDGID
 	  restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
       return AFPERR_MISC;
 	}
 
@@ -1957,6 +1959,6 @@ int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
     *rbuflen = sizeof(dir->d_did);
 #ifdef FORCE_UIDGID
 	restore_uidgid ( uidgid );
-#endif FORCE_UIDGID
+#endif /* FORCE_UIDGID */
     return AFP_OK;
 }

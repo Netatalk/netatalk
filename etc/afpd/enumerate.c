@@ -1,4 +1,6 @@
 /*
+ * $Id: enumerate.c,v 1.4 2001-06-06 13:36:36 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -30,6 +32,10 @@
 #include "globals.h"
 #include "file.h"
 
+/* check for mtab DID code */
+#ifdef DID_MTAB
+#include "parse_mtab.h"
+#endif /* DID_MTAB */
 
 struct dir *
 adddir( vol, dir, name, namlen, upath, upathlen, st )
@@ -46,7 +52,7 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
 
 #ifndef USE_LASTDID
     struct stat lst, *lstp;
-#endif
+#endif /* USE_LASTDID */
 
     if ((cdir = dirnew(namlen + 1)) == NULL) {
 	syslog( LOG_ERR, "adddir: malloc: %m" );
@@ -60,9 +66,11 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
     if (!(cdir->d_did = cnid_lookup(vol->v_db, st, dir->d_did, upath,
 				    upathlen))) {
       memset(&ad, 0, sizeof(ad));
-      if (ad_open(upath, ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY, 0, &ad) < 0)
+      if (ad_open(upath, ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY, 0, &ad) < 0) {
+        /* if we can't parse the AppleDouble header, return 0 for the DID */
 	cdir->d_did = 0;
-      else {
+      } else {
+        /* ... else retrieve the DID entry into cdir->d_did */
 	memcpy(&cdir->d_did, ad_entry(&ad, ADEID_DID), sizeof(cdir->d_did));
 	ad_close(&ad, ADFLAGS_HF);
       }
@@ -70,22 +78,36 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
       if (!(cdir->d_did = cnid_add(vol->v_db, st, dir->d_did, upath, 
 				   upathlen, cdir->d_did))) {
 #ifdef USE_LASTDID	      
+        /* last way of doing DIDs */
 	cdir->d_did = htonl( vol->v_lastdid++ );
-#else
+#else /* USE_LASTDID */
 	lstp = lstat(upath, &lst) < 0 ? st : &lst;
-	cdir->d_did = htonl( CNID(lstp, 0) );
-#endif
+#ifdef DID_MTAB
+        /* mtab way of doing DIDs */
+        cdir->d_did = htonl( afpd_st_cnid ( lstp ) );
+#else /* DID_MTAB */
+        /* the old way of doing DIDs (default) */
+        cdir->d_did = htonl( CNID(lstp, 0) );
+#endif /* DID_MTAB */
+#endif /* USE_LASTDID */
       }
     }
-#else
+#else /* AD_VERSION */
 
 #ifdef USE_LASTDID
+      /* last way of doing DIDs */
       cdir->d_did = htonl( vol->v_lastdid++ );
-#else
+#else /* USE_LASTDID */
       lstp = lstat(upath, &lst) < 0 ? st : &lst;
+#ifdef DID_MTAB
+      /* mtab way of doing DIDs */
+      cdir->d_did = htonl( afpd_st_cnid ( lstp ) );
+#else /* DID_MTAB */
+      /* the old way of doing DIDs (default) */
       cdir->d_did = htonl( CNID(lstp, 0) );
-#endif
-#endif
+#endif /* DID_MTAB */
+#endif /* USE_LASTDID */
+#endif /* AD_VERSION */
 
     if ((edir = dirinsert( vol, cdir ))) {
 	    if (edir->d_name) {
