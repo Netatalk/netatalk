@@ -1,0 +1,117 @@
+dnl configure.in for netatalk
+
+AC_INIT(bin/adv1tov2/adv1tov2.c)
+AM_INIT_AUTOMAKE([netatalk], [1.5])
+
+dnl Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+dnl *********************************************************************
+dnl FIXME! FIXME! These should be selectable properly, and should produce
+dnl the proper flags and defines...
+dnl *********************************************************************
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -labs:
+AC_CHECK_LIB(abs, main)
+dnl Replace `main' with a function in -latalk:
+dnl (internal) AC_CHECK_LIB(atalk, main)
+dnl Replace `main' with a function in -laudit:
+AC_CHECK_LIB(audit, main)
+dnl Replace `main' with a function in -lauth:
+AC_CHECK_LIB(auth, main)
+dnl Replace `main' with a function in -lcmd:
+AC_CHECK_LIB(cmd, main)
+dnl Replace `main' with a function in -lcom_err:
+AC_CHECK_LIB(com_err, main)
+dnl Replace `main' with a function in -lcrack:
+AC_CHECK_LIB(crack, main)
+dnl Replace `main' with a function in -lcrypt:
+AC_CHECK_LIB(crypt, main)
+dnl Replace `main' with a function in -lcrypto:
+AC_CHECK_LIB(crypto, main)
+dnl Replace `main' with a function in -ld:
+AC_CHECK_LIB(d, main)
+dnl Replace `main' with a function in -ldb:
+AC_CHECK_LIB(db, main)
+dnl Replace `main' with a function in -ldes:
+AC_CHECK_LIB(des, main)
+dnl Replace `main' with a function in -ldl:
+AC_CHECK_LIB(dl, main)
+dnl Replace `main' with a function in -lkauth:
+AC_CHECK_LIB(kauth, main)
+dnl Replace `main' with a function in -lkrb:
+AC_CHECK_LIB(krb, main)
+dnl Replace `main' with a function in -llwp:
+AC_CHECK_LIB(lwp, main)
+dnl Replace `main' with a function in -ln:
+AC_CHECK_LIB(n, main)
+dnl Replace `main' with a function in -lnsl:
+AC_CHECK_LIB(nsl, main)
+dnl Replace `main' with a function in -lpam:
+AC_CHECK_LIB(pam, main)
+dnl Replace `main' with a function in -lprot:
+AC_CHECK_LIB(prot, main)
+dnl Replace `main' with a function in -lresolv:
+AC_CHECK_LIB(resolv, main)
+dnl Replace `main' with a function in -lrpcsvc:
+AC_CHECK_LIB(rpcsvc, main)
+dnl Replace `main' with a function in -lrx:
+AC_CHECK_LIB(rx, main)
+dnl Replace `main' with a function in -lrxkad:
+AC_CHECK_LIB(rxkad, main)
+dnl Replace `main' with a function in -lsocket:
+AC_CHECK_LIB(socket, main)
+dnl Replace `main' with a function in -lsys:
+AC_CHECK_LIB(sys, main)
+dnl Replace `main' with a function in -lubik:
+AC_CHECK_LIB(ubik, main)
+dnl Replace `main' with a function in -lwrap:
+AC_CHECK_LIB(wrap, main)
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(fcntl.h limits.h strings.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_UID_T
+AC_C_INLINE
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_STRUCT_ST_RDEV
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+AC_TYPE_GETGROUPS
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MEMCMP
+AC_HEADER_MAJOR
+AC_FUNC_MMAP
+AC_TYPE_SIGNAL
+AC_FUNC_UTIME_NULL
+AC_FUNC_WAIT3
+AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strstr strtoul)
+
+dnl --------------------------------------------------------------------------
+dnl specific configuration comes in here:
+dnl --------------------------------------------------------------------------
+
+AC_ARG_ENABLE(shadow,
+	[  --with-shadow           enable shadow password support],
+	AC_DEFINE(SHADOWPW)
+)
+
+dnl List of Makefiles to generate
+
+AC_OUTPUT(libatalk/nbp/Makefile etc/psf/Makefile sys/ultrix/Makefile libatalk/compat/Makefile sys/openbsd/Makefile bin/Makefile man/man4/Makefile etc/atalkd/Makefile etc/Makefile sys/linux/Makefile man/man8/Makefile etc/uams/Makefile etc/afpd/nls/Makefile libatalk/Makefile bin/megatron/Makefile sys/sunos/Makefile bin/psorder/Makefile sys/osx/Makefile bin/aecho/Makefile sys/freebsd/Makefile sys/solaris/Makefile etc/papd/Makefile libatalk/util/Makefile bin/afppasswd/Makefile Makefile libatalk/dsi/Makefile bin/getzones/Makefile libatalk/asp/Makefile libatalk/atp/Makefile man/man1/Makefile man/man3/Makefile man/Makefile bin/adv1tov2/Makefile include/Makefile etc/afpd/Makefile bin/nbp/Makefile bin/pap/Makefile sys/generic/Makefile sys/netbsd/Makefile libatalk/adouble/Makefile libatalk/cnid/Makefile libatalk/netddp/Makefile)

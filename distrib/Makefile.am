@@ -1,0 +1,3 @@
+# Makefile.am for distrib/
+
+# currently nothing...
