@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.9 2001-12-31 18:40:08 jmarcus Exp $
+ * $Id: config.c,v 1.10 2001-12-31 20:01:17 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -81,11 +81,11 @@ static struct param {
 };
 
 #define ARGV_CHUNK_SIZE 128
-char **parseline(char *line)
+char **parseline(const char *line)
 {
-    char	 *p;
+    const char	 *p;
     int		  argc = 0;
-    char	 *buffer;
+    char	 *buffer, *tmpbuf;
     char	**argv;
 
     /* Ignore empty lines and lines with leading hash marks. */
@@ -103,7 +103,7 @@ char **parseline(char *line)
 	return NULL;
     }
     strcpy( buffer, p );
-    p = buffer;
+    tmpbuf = buffer;
 
     argv = (char **) malloc( ARGV_CHUNK_SIZE * sizeof( char * ) );
     if ( !argv ) {
@@ -117,21 +117,21 @@ char **parseline(char *line)
      * handle various escapes, e.g. \" and \031.
      */
     do {
-	if ( *p == '"' ) {
-	    argv[ argc++ ] = ++p;
-	    while ( *p != '\0' && *p != '"' ) {
-		p++;
+	if ( *tmpbuf == '"' ) {
+	    argv[ argc++ ] = ++tmpbuf;
+	    while ( *tmpbuf != '\0' && *tmpbuf != '"' ) {
+		tmpbuf++;
 	    }
-	    if ( *p == '"' ) {
+	    if ( *tmpbuf == '"' ) {
 		/* FIXME: error handling */
 	    }
 	} else {
-	    argv[ argc++ ] = p;
-	    while ( *p != '\0' && !isspace( *p )) {
-		p++;
+	    argv[ argc++ ] = tmpbuf;
+	    while ( *tmpbuf != '\0' && !isspace( *tmpbuf )) {
+		tmpbuf++;
 	    }
 	}
-	*p++ = '\0';
+	*tmpbuf++ = '\0';
 
 	/* Make room for a NULL pointer and our special pointer (s.b.) */
 	if ( (argc + 1) % ARGV_CHUNK_SIZE == 0 ) {
@@ -147,10 +147,10 @@ char **parseline(char *line)
 	}
 
 	/* Skip white spaces. */
-        while ( isspace( *p ) ) {
-            p++;
+        while ( isspace( *tmpbuf ) ) {
+            tmpbuf++;
         }
-    } while ( *p != '\0' );
+    } while ( *tmpbuf != '\0' );
 
     argv[ argc++ ] = NULL;
     /* We store our buffer pointer in argv, too, so we can free it later.
