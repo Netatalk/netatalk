@@ -8,7 +8,7 @@ GENERATED_FILES = \
 	cleanappledouble.pl		\
 	lp2pap.sh			\
 	netatalkshorternamelinks.pl
-TEMPLATE_FILES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
+TEMPLATE_FILES = $(foreach f,$(GENERATED_FILES),$(f).in)
 
 CLEANFILES = $(GENERATED_FILES)
 
