@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.21 2002-10-11 14:18:37 didg Exp $
+ * $Id: ad_open.c,v 1.22 2002-11-14 17:11:54 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -623,7 +623,7 @@ int ad_open( path, adflags, oflags, mode, ad )
             if ((oflags & ( O_RDWR | O_WRONLY)) &&             /* we want write access */
             	!(ad->ad_df.adf_flags & ( O_RDWR | O_WRONLY))) /* and it was denied the first time */
             {
-                 errno == EACCES;
+                 errno = EACCES;
                  return -1;
             }
 	}
@@ -640,7 +640,7 @@ int ad_open( path, adflags, oflags, mode, ad )
                 /* don't call with ADFLAGS_HF because we didn't open ressource fork */
 	        ad_close( ad, ADFLAGS_DF );
 	    }
-            errno == EACCES;
+            errno = EACCES;
 	    return -1;
 	}
 	ad_refresh(ad);
