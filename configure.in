@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.189 2003-06-11 21:45:43 srittau Exp $
+dnl $Id: configure.in,v 1.190 2003-06-12 23:15:06 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -342,15 +342,7 @@ AC_ARG_ENABLE(shell-check,
 	fi
 )
 
-AC_ARG_WITH(tcp-wrappers,
-	[  --with-tcp-wrappers     enable TCP wrappers support],
-	AC_CHECK_LIB(wrap, tcpd_warn,
-		AC_DEFINE(TCPWRAP, 1, [Define if TCP wrappers should be used])
-		WRAP_LIBS="-lwrap"
-		AC_MSG_RESULT([enabling TCP wrappers support])
-	)
-)
-AC_SUBST(WRAP_LIBS)
+NETATALK_TCP_WRAPPERS
 
 AC_ARG_ENABLE(redhat,
 	[  --enable-redhat         use redhat-style sysv configuration ],
