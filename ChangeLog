@@ -1,3 +1,6 @@
+2003-01-15  Steven N. Hirsch <shirsch@adelphia.net>
+	* Fix the a2boot code on 64-bit platforms.
+
 2003-01-11  Steven N. Hirsch <shirsch@adelphia.net>
 	* Add Apple II boot support.
 	* Fix some build nits.

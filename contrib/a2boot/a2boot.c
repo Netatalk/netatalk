@@ -1,5 +1,5 @@
 /*
- * $Id: a2boot.c,v 1.1 2003-01-11 17:26:06 jmarcus Exp $
+ * $Id: a2boot.c,v 1.2 2003-01-15 06:24:28 jmarcus Exp $
  *   Apple II boot support code.       with aid of Steven N. Hirsch
  *
  * based on timelord 1.6 so below copyrights still apply
@@ -70,7 +70,7 @@ int	debug = 0;
 char	*bad = "Bad request!";
 char	buf[ 4624 ];
 char	*server;
-int 	reqblklo,reqblkhi;
+int32_t fileoff;
 
 long a2bootreq(char *fname);
 
@@ -114,7 +114,7 @@ int main( int ac, char **av )
     char	hostname[ MAXHOSTNAMELEN ];
     char	*p;
     int		c;
-    long	req, resp;
+    int32_t	req, resp;
     int 	regerr;
     extern char	*optarg;
     extern int		optind;
@@ -222,17 +222,17 @@ int main( int ac, char **av )
 	}
 
 	p = buf;
-	bcopy( p, &req, sizeof( long ));
+	bcopy( p, &req, sizeof( int32_t ));
 	req = ntohl( req );
-	p += sizeof( long );
+	p += sizeof( int32_t );
 
 /*
     LOG(log_info, logtype_default, "req = %08lx",(long)req );
 */
-
-	reqblklo = (int)(( req & 0x00FF0000 ) >> 7);  /* ie block 1 >> to 0x0200, blk 3 >> 0x0600  */
-	reqblkhi = (int)(( req & 0x0000FF00 ) << 9);  /* simmilar fake multiply is needed here */
-	req &= 0xFF000000;
+	/* Byte-swap and multiply by 0x200. Converts block number to
+	   file offset. */
+	fileoff = (( req & 0x00ff0000 ) >> 7 ) | (( req & 0x0000ff00 ) << 9 );
+	req &= 0xff000000;
 
 /*
     LOG(log_info, logtype_default, "       reqblklo = %02x",(int)reqblklo );
@@ -260,15 +260,15 @@ int main( int ac, char **av )
 	    LOG(log_error, logtype_default, bad );
 
 	    resp = TL_EOF;
-	    *( buf + sizeof( long ) ) = (unsigned char)strlen( bad );
-	    strcpy( buf + 1 + sizeof( long ), bad );
+	    *( buf + sizeof( int32_t ) ) = (unsigned char)strlen( bad );
+	    strcpy( buf + 1 + sizeof( int32_t ), bad );
 
 	    break;
 	}
 
-	bcopy( &resp, buf, sizeof( long ));
+	bcopy( &resp, buf, sizeof( int32_t ));
 
-	iov.iov_len = sizeof( long ) + 0X200;
+	iov.iov_len = sizeof( int32_t ) + 512;
 	iov.iov_base = buf;
 	atpb.atp_sresiov = &iov;
 	atpb.atp_sresiovcnt = 1;
@@ -286,8 +286,7 @@ long a2bootreq(fname)
 	char	*fname;
 {
 	int f,m;
-	long readlen;
-	long reqpos;
+	int32_t readlen;
 /*
     LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );
 */
@@ -297,12 +296,11 @@ long a2bootreq(fname)
 		return close(f);
 	}
 
-	reqpos = reqblklo + reqblkhi;
 /*
-    LOG(log_info, logtype_default, "would lseek to %08lx",reqpos);
+    LOG(log_info, logtype_default, "would lseek to %08lx",fileoff);
 */
-	lseek(f,reqpos,0);
-	readlen=read(f, buf + sizeof( long ), 0x200 );
+	lseek(f,fileoff,0);
+	readlen=read(f, buf + sizeof( int32_t ), 512 );
 
 /*
     LOG(log_info, logtype_default, "length is %08lx", readlen);
