@@ -7,7 +7,7 @@ uams_DATA = uams_krb4.so
 
 endif
 
-EXTRA_DIST = kuam.c lifetime.c send_to_krb4.c uams_krb4.c
+EXTRA_DIST = kuam.c lifetime.c send_to_kdc.c uams_krb4.c
 
 #
 # standard library compilation:
@@ -21,7 +21,7 @@ if USE_KERBEROS
 	$(COMPILE) -DHAVE_CONFIG_H -fPIC -DPIC \
 	  -I$(top_srcdir) -fomit-frame-pointer -c $<
 
-uams_krb4.so: kuam.o lifetime.o sent_to_krb4.o uams_krb4.o
+uams_krb4.so: kuam.o lifetime.o sent_to_kdc.o uams_krb4.o
 	$(LD) -shared $(LDSHAREDFLAGS) -o $@ *.o $(LIBS)
 
 #

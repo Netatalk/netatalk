@@ -1,4 +1,11 @@
-($Id: ChangeLog,v 1.15 2001-03-06 23:26:10 lancel Exp $)
+($Id: ChangeLog,v 1.16 2001-03-07 15:19:20 rufustfirefly Exp $)
+
+2001-03-07 10:14 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* ChangeLog: started using timestamps in ChangeLog
+
+	* etc/uams/uams_krb4/Makefile.am: fixed reference to send_to_kdc.c typo
+	(thanks to Sebastian Rittau)
 
 2001-03-06 13:40  Lance Levsen <l.levsen@printwest.com>
 
