@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.70 2003-04-20 06:53:40 didg Exp $
+ * $Id: directory.c,v 1.71 2003-04-24 17:05:38 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2117,6 +2117,12 @@ int		ibuflen, *rbuflen;
     id = ntohl(id);
     *rbuflen = 0;
 
+    if (sfunc == 3 || sfunc == 4) {
+        if (afp_version < 30) {
+            return( AFPERR_PARAM );
+        }
+        utf8 = 1;
+    }
     if ( id != 0 ) {
         switch ( sfunc ) {
         case 1 :
@@ -2137,16 +2143,6 @@ int		ibuflen, *rbuflen;
 
         default :
             return( AFPERR_PARAM );
-        }
-        switch ( sfunc ) {
-        case 3:
-        case 4:
-            if (afp_version < 30) {
-                return( AFPERR_PARAM );
-            }
-            utf8 = 1;
-            /* map to unicode */
-            break;            
         }
         len = strlen( name );
 
@@ -2184,9 +2180,13 @@ int		ibuflen, *rbuflen;
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
+    *rbuflen = 0;
     switch ( sfunc ) {
     case 1 : 
     case 2 : /* unicode */
+        if (afp_version < 30) {
+            return( AFPERR_PARAM );
+        }
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);
         ibuf += 2;
@@ -2196,7 +2196,6 @@ int		ibuflen, *rbuflen;
         len = (unsigned char) *ibuf++;
         break;
     default :
-        *rbuflen = 0;
         return( AFPERR_PARAM );
     }
 
@@ -2207,7 +2206,6 @@ int		ibuflen, *rbuflen;
         case 1 : /* unicode */
         case 3 :
             if (( pw = (struct passwd *)getpwnam( ibuf )) == NULL ) {
-                *rbuflen = 0;
                 return( AFPERR_NOITEM );
             }
             id = pw->pw_uid;
@@ -2216,7 +2214,6 @@ int		ibuflen, *rbuflen;
         case 2 : /* unicode */
         case 4 :
             if (( gr = (struct group *)getgrnam( ibuf )) == NULL ) {
-                *rbuflen = 0;
                 return( AFPERR_NOITEM );
             }
             id = gr->gr_gid;
