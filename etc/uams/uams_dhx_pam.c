@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.23 2003-01-01 13:19:24 srittau Exp $
+ * $Id: uams_dhx_pam.c,v 1.24 2003-01-08 22:16:24 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -307,55 +307,93 @@ pam_fail:
     return AFPERR_PARAM;
 }
 
+/* -------------------------------- */
+static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
+		     char *ibuf, int ibuflen,
+		     char *rbuf, int *rbuflen)
+{
+    if (( dhxpwd = uam_getname(username, ulen)) == NULL ) {
+        LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username");
+	return AFPERR_PARAM;
+    }
 
+    PAM_username = username;
+    LOG(log_info, logtype_uams, "dhx login: %s", username);
+    return dhx_setup(obj, ibuf, ibuflen, rbuf, rbuflen);
+}
+
+/* -------------------------------- */
 /* dhx login: things are done in a slightly bizarre order to avoid
  * having to clean things up if there's an error. */
 static int pam_login(void *obj, struct passwd **uam_pwd,
 		     char *ibuf, int ibuflen,
 		     char *rbuf, int *rbuflen)
 {
-    char *buf;
-    int len, i;
+    char *username;
+    int len, ulen;
 
     *rbuflen = 0;
 
     /* grab some of the options */
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &buf,
-			     &i) < 0) {
-    /* Log Entry */
-           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %s",
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &username, &ulen) < 0) {
+        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %s",
 		  strerror(errno));
-    /* Log Entry */
-      return AFPERR_PARAM;
+        return AFPERR_PARAM;
     }
 
     len = (unsigned char) *ibuf++;
-    if ( len > i ) {
-    /* Log Entry */
-           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
+    if ( len > ulen ) {
+        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
 		  strerror(errno));
-    /* Log Entry */
-	return( AFPERR_PARAM );
-    }
-
-    memcpy(buf, ibuf, len );
-    ibuf += len;
-    buf[ len ] = '\0';
-    if ((unsigned long) ibuf & 1) /* pad to even boundary */
-      ++ibuf;
-
-    if (( dhxpwd = uam_getname(buf, i)) == NULL ) {
-    /* Log Entry */
-           LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username");
-    /* Log Entry */
 	return AFPERR_PARAM;
     }
 
-    PAM_username = buf;
-    LOG(log_info, logtype_uams, "dhx login: %s", buf);
-    return dhx_setup(obj, ibuf, ibuflen, rbuf, rbuflen);
+    memcpy(username, ibuf, len );
+    ibuf += len;
+    username[ len ] = '\0';
+
+    if ((unsigned long) ibuf & 1) /* pad to even boundary */
+      ++ibuf;
+
+    return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
+/* ----------------------------- */
+static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
+		     char *ibuf, int ibuflen,
+		     char *rbuf, int *rbuflen)
+{
+    char *username;
+    int len, ulen;
+    u_int16_t  temp16;
+
+    *rbuflen = 0;
+
+    /* grab some of the options */
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &username, &ulen) < 0) {
+        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %s",
+		  strerror(errno));
+        return AFPERR_PARAM;
+    }
+
+    if (*uname != 3)
+        return AFPERR_PARAM;
+    uname++;
+    memcpy(&temp16, uname, sizeof(temp16));
+    len = ntohs(temp16);
+
+    if ( !len || len > ulen ) {
+        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Signature Retrieval Failure -- %s",
+		  strerror(errno));
+	return AFPERR_PARAM;
+    }
+    memcpy(username, uname +2, len );
+    username[ len ] = '\0';
+
+    return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+}
+
+/* -------------------------------- */
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
 			 char *ibuf, int ibuflen, 
@@ -661,8 +699,8 @@ static int pam_changepw(void *obj, char *username,
 
 static int uam_setup(const char *path)
 {
-  if (uam_register(UAM_SERVER_LOGIN, path, "DHCAST128", pam_login, 
-		   pam_logincont, pam_logout) < 0)
+  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128", pam_login, 
+		   pam_logincont, pam_logout, pam_login_ext) < 0)
     return -1;
 
   if (uam_register(UAM_SERVER_CHANGEPW, path, "DHCAST128", 

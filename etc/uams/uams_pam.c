@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.14 2002-10-17 18:01:54 didg Exp $
+ * $Id: uams_pam.c,v 1.15 2003-01-08 22:16:25 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -194,7 +194,6 @@ login_err:
     pam_end(pamh, PAM_error);
     pamh = NULL;
     return err;
-
 }
 
 /* --------------------------
@@ -209,10 +208,9 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
     *rbuflen = 0;
 
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
-			     (void *) &username, &ulen) < 0)
-      return AFPERR_MISC;
-
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &username, &ulen) < 0) {
+        return AFPERR_MISC;
+    }
 
     len = (unsigned char) *ibuf++;
     if ( len > ulen ) {
@@ -228,6 +226,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
+/* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 		     char *ibuf, int ibuflen,
 		     char *rbuf, int *rbuflen)
@@ -238,8 +237,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
     *rbuflen = 0;
 
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
-			     (void *) &username, &ulen) < 0)
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &username, &ulen) < 0)
       return AFPERR_MISC;
 
     if (*uname != 3)
@@ -253,11 +251,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     }
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
-#if 0
-    if ((unsigned long) ibuf & 1) {  /* pad character */
-      ++ibuf;
-    }
-#endif    
+
     return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
