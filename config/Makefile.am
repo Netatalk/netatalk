@@ -12,7 +12,8 @@ EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 
 CLEANFILES += $(GENFILES)
 
-sysconf_DATA = $(CONFFILES) $(GENFILES)
+pkgconfdir = #$(pkgconfdir)/ # shut-up automake
+pkgconf_DATA = $(CONFFILES) $(GENFILES)
 
 #
 # rule to parse template files
@@ -20,8 +21,8 @@ sysconf_DATA = $(CONFFILES) $(GENFILES)
 
 .tmpl:
 	sed -e s@:UAMS_PATH:@${UAMS_PATH}@ \
-	    -e s@:NLS_PATH:@${sysconfdir}/nls@ \
-	    -e s@:ETCDIR:@${sysconfdir}@ \
+	    -e s@:NLS_PATH:@${pkgconfdir}/nls@ \
+	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    <$^ >$@
 
 #

@@ -5,7 +5,7 @@ SUFFIXES = .tmpl .
 .tmpl:
 	sed -e s@:BINDIR:@${bindir}@ \
 	    -e s@:SBINDIR:@${sbindir}@ \
-	    -e s@:ETCDIR:@${sysconfdir}@ \
+	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    <$^ >$@
 
 CLEANFILES = rc.atalk.redhat rc.atalk.suse rc.atalk.tru64 atalk

@@ -6,4 +6,4 @@ afppasswd_SOURCES = afppasswd.c
 afppasswd_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 CFLAGS = @CFLAGS@ \
-	-D_PATH_AFPDPWFILE=\"$(sysconfdir)/afppasswd\"
+	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"

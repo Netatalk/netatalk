@@ -1,11 +1,14 @@
 # Makefile.am for etc/afpd/nls/
 
+nlsdir = $(pkgconfdir)/nls
+
 bin_PROGRAMS = makecode parsecode
 
 makecode_SOURCES = makecode.c
 parsecode_SOURCES = parsecode.c
 
-CFLAGS = @CFLAGS@ -I$(top_builddir)/include -I$(top_builddir)/sys -I..
+CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys -I$(top_srcdir)/etc/afpd \
+	@CFLAGS@
 
 #
 # install/install-strip:
@@ -13,8 +16,8 @@ CFLAGS = @CFLAGS@ -I$(top_builddir)/include -I$(top_builddir)/sys -I..
 
 install-data-local: makecode
 	./makecode; \
-	mkdir -p $(DESTDIR)$(sysconfdir)/nls; \
-	$(INSTALL_DATA) maccode.* $(DESTDIR)$(sysconfdir)/nls/
+	mkdir -p $(DESTDIR)$(nlsdir); \
+	$(INSTALL_DATA) maccode.* $(DESTDIR)$(nlsdir)
 
 #
 # cleanup

@@ -1,4 +1,19 @@
-($Id: ChangeLog,v 1.47 2001-06-13 17:41:44 samnoble Exp $)
+($Id: ChangeLog,v 1.48 2001-06-18 13:50:06 rufustfirefly Exp $)
+
+2001-06-18  jeff b  <jeff@univrel.pr.uconn.edu>
+	* configure.in, etc/uams/Makefile.am,
+	etc/uams/uams_krb4/Makefile.am: patch #433952 from Sebastian
+	Rittau to move UAM authentication to use libtool
+
+	* configure.in, bin/afppasswd/Makefile.am, config/Makefile.am,
+	contrib/shell_utils/Makefile.am, distrib/initscripts/Makefile.am,
+	etc/afpd/Makefile.am, etc/afpd/nls/Makefile.am,
+	etc/atalkd/Makefile.am, etc/papd/Makefile.am,
+	man/man5/Makefile.am, man/man8/Makefile.am: patch #433906
+	to move to pkgconfdir for package config files (Sebastian Rittau)
+
+	* configure.in: fixed error that caused --with-did not to function
+	properly
 
 2001-06-13  Sam Noble <ns@shadow.org>
 	* etc/papd/{printcap,ppd,lp,file,comment}.h:

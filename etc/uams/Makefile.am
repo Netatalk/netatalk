@@ -2,73 +2,89 @@
 
 SUBDIRS = uams_krb4
 
+#
+# conditionally build some modules
+#
+
+UAMS_GENERIC = uams_guest.la uams_randnum.la uams_passwd.la
+
 if USE_DHX
-DHX_UAMS_BASE = uams_dhx_passwd.so
-DHX_LINKS = uams_dhx.so
-if USE_PGP
-DHX_UAMS = $(DHX_UAMS_BASE) uams_pgp.so
-else
-DHX_UAMS = $(DHX_UAMS_BASE)
+UAMS_DHX_PW = uams_dhx_passwd.la
 endif
+
+if USE_PGP
+UAMS_PGP = uams_pgp.la
 endif
 
 if BUILD_PAM
-PAM_UAMS= uams_pam.so
+UAMS_PAM = uams_pam.la
 if USE_DHX
-DHX_PAM_UAMS = uams_dhx_pam.so
+UAMS_DHX_PAM = uams_dhx_pam.la
 endif
 endif
 
+# links
 if USE_PAM_SO
-UAM_CLRTXT_SO=uams_pam.so
-UAM_DHX_SO=uams_dhx_pam.so
+UAMS_CLRTXT_LINK = uams_pam.so
+UAMS_DHX_LINK    = uams_dhx_pam.so
 else
-UAM_CLRTXT_SO=uams_passwd.so
-UAM_DHX_SO=uams_dhx_passwd.so
+UAMS_CLRTXT_LINK = uams_passwd.so
+UAMS_DHX_LINK    = uams_dhx_passwd.so
 endif
+
+#
+# source files
+#
+
+uams_guest_la_SOURCES      = uams_guest.c
+uams_randnum_la_SOURCES    = uams_randnum.c
+uams_passwd_la_SOURCES     = uams_passwd.c
+uams_pam_la_SOURCES        = uams_pam.c
+uams_pgp_la_SOURCES        = uams_pgp.c
+uams_dhx_passwd_la_SOURCES = uams_dhx_passwd.c
+uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c
+
+#
+# flags
+#
+
+uams_guest_la_LDFLAGS      = -module -avoid-version
+uams_randnum_la_LDFLAGS    = -module -avoid-version
+uams_passwd_la_LDFLAGS     = -module -avoid-version
+uams_pam_la_LDFLAGS        = -module -avoid-version
+uams_pgp_la_LDFLAGS        = -module -avoid-version
+uams_dhx_passwd_la_LDFLAGS = -module -avoid-version
+uams_dhx_pam_la_LDFLAGS    = -module -avoid-version
+
+#
+# module compilation
+#
 
 uamsdir = @UAMS_PATH@
-uams_DATA = $(DHX_UAMS) $(DHX_PAM_UAMS) $(PAM_UAMS) uams_guest.so \
-	uams_passwd.so \
-	uams_randnum.so
-
-uams_LINKS = $(DHX_LINKS) uams_clrtxt.so
-
-EXTRA_DIST = uams_dhx_pam.c uams_dhx_passwd.c uams_pgp.c \
-	uams_guest.c uams_pam.c uams_passwd.c uams_randnum.c
+uams_LTLIBRARIES = \
+	$(UAMS_GENERIC)	\
+	$(UAMS_PGP)	\
+	$(UAMS_PAM)	\
+	$(UAMS_DHX_PAM)	\
+	$(UAMS_DHX_PW)
 
 #
-# standard library compilation:
+# link creation
 #
 
-SUFFIXES = .c .so
-.c.so:
-	$(COMPILE) -DHAVE_CONFIG_H -fPIC -DPIC \
-	  -I$(top_srcdir) -fomit-frame-pointer -c $< ; \
-	$(LD) -shared $(LDSHAREDFLAGS) -o $@ $*.o $(LIBS)
+uams_LINKS =
 
-#
-# create symbolic links:
-#
-
-uams_clrtxt.so:
-	$(LN_S) -f $(UAM_CLRTXT_SO) $(DESTDIR)$(UAMS_PATH)/uams_clrtxt.so
-
-uams_dhx.so:
-	$(LN_S) -f $(UAM_DHX_SO) $(DESTDIR)$(UAMS_PATH)/uams_dhx.so
-
-#
-# install/install-strip:
-#
-
-install-data-local: $(uams_LINKS)
-
-install-strip:
-	strip $(uams_DATA); \
-	$(MAKE) $(AM_MAKEFLAGS) install
-
-#
-# cleanup
-#
-
-CLEANFILES += *.o $(uams_DATA)
+if USE_DHX
+install-exec-hook:
+	(cd $(DESTDIR)$(uamsdir)					&& \
+		rm -f uams_clrtxt.so uams_dhx.so			&& \
+		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so		&& \
+		$(LN_S) $(UAMS_DHX_LINK) uams_dhx.so			   \
+	)
+else
+install-exec-hook:
+	(cd $(DESTDIR)$(uamsdir) &&					\
+		rm -f uams_clrtxt.so					\
+		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so		\
+	)
+endif

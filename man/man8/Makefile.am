@@ -5,7 +5,7 @@ SUFFIXES = .tmpl .
 .tmpl:
 	sed -e s@:SBINDIR:@${sbindir}@ \
 	    -e s@:BINDIR:@${bindir}@ \
-	    -e s@:ETCDIR:@${sysconfdir}@ \
+	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:LIBDIR:@${libdir}@ \
 	    <$^ >$@
 
