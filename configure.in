@@ -233,8 +233,8 @@ AC_ARG_WITH(message-dir,
 
 AC_ARG_WITH(pam,
 	[  --with-pam              enable password authentication modules support],
-	AC_CHECK_LIB(pam, main,
-		AC_DEFINE(USE_PAM)
+	AC_CHECK_LIB(pam, pam_start,
+		AC_DEFINE(USE_PAM, 1)
 		LIBS="$LIBS -lpam"
 		AC_MSG_RESULT([enabling pam modules support])
 	)
