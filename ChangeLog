@@ -1,3 +1,6 @@
+2003-01-04  Joe Marcus Clarke <marcus@marcuscom.com>
+	* Add DB 4.1.x support.
+
 2002-09-26  Andrew Morgan <morgan@orst.edu>
 	* Added syncmail script to CVSROOT so commits are logged to the
 	netatalk-cvs@lists.sourceforge.net mailing list.  You can subscribe
