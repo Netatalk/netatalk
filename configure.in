@@ -459,6 +459,7 @@ dnl ----- OpenBSD specific -----
 if test x"$this_os" = "xopenbsd"; then 
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
 	AC_DEFINE(BSD4_4)
+	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
 fi
 
 dnl ----- Solaris specific -----

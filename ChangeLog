@@ -1,4 +1,9 @@
-($Id: ChangeLog,v 1.20 2001-03-21 14:36:36 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.21 2001-03-22 17:57:33 rufustfirefly Exp $)
+
+2001-03-22 12:57 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* configure.in: patch for OpenBSD compile reported by Jean-Phillipe
+	Rey <jprey@ads.ecp.fr>
 
 2001-03-21 09:35 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
 
