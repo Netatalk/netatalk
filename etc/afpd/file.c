@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.47 2002-08-16 00:42:56 didg Exp $
+ * $Id: file.c,v 1.48 2002-08-20 19:40:43 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -808,7 +808,6 @@ char	*src, *dst, *newname;
 const int         noadouble;
 struct adouble    *adp;
 {
-    struct ofork	*opened;
     char		adsrc[ MAXPATHLEN + 1];
     int			len, rc;
 
@@ -1823,7 +1822,9 @@ int		ibuflen, *rbuflen;
 
     /* all this stuff is so that we can unwind a failed operation
      * properly. */
+#ifdef CNID_DB
 err_temp_to_dest:
+#endif
     /* rename dest to temp */
     renamefile(upath, temp, temp, vol_noadouble(vol), adsp);
     of_rename(vol, curdir, upath, curdir, temp);

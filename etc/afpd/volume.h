@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.11 2002-03-24 17:45:29 jmarcus Exp $
+ * $Id: volume.h,v 1.12 2002-08-20 19:40:45 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -106,7 +106,7 @@ this is going away. */
 #define MSWINDOWS_BADCHARS ":\t\\/<>*?|\""
 #define MSWINDOWS_CODEPAGE "maccode.iso8859-1"
 
-int wincheck(struct vol *vol, const char *path);
+int wincheck(const struct vol *vol, const char *path);
 
 #define AFPVOLSIG_FLAT          0x0001 /* flat fs */
 #define AFPVOLSIG_FIX	        0x0002 /* fixed ids */

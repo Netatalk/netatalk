@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.30 2002-06-17 18:23:03 didg Exp $
+ * $Id: fork.c,v 1.31 2002-08-20 19:40:45 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -66,15 +66,12 @@ const u_int16_t     attrbits;
     struct stat		lst, *lstp;
 #endif /* !USE_LASTDID */
     struct stat		st;
-    struct extmap	*em;
-    char		    *data, *nameoff = NULL, *upath;
-    int			    bit = 0;
-    u_int32_t       aint;
-    u_int16_t		ashort;
+    char		*upath;
+    u_int32_t		aint;
 
     struct adouble	*adp;
-    struct dir      *dir;
-    struct vol      *vol;
+    struct dir		*dir;
+    struct vol		*vol;
     
     if ( ad_hfileno( ofork->of_ad ) == -1 ) {
         adp = NULL;
