@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.35 2002-09-04 17:28:08 didg Exp $
+ * $Id: fork.c,v 1.36 2002-09-05 14:52:06 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -303,7 +303,7 @@ int		ibuflen, *rbuflen;
        ad_open so that we can keep file locks together.
        FIXME: add the fork we are opening? 
     */
-    if ((opened = of_findname(vol, curdir, upath, &st))) {
+    if ((opened = of_findname(upath, &st))) {
         attrbits = ((opened->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
         attrbits |= ((opened->of_ad->ad_hf.adf_refcount > opened->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
                    

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.4 2002-09-04 17:28:08 didg Exp $
+ * $Id: fork.h,v 1.5 2002-09-05 14:52:07 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -59,9 +59,7 @@ extern struct ofork *of_alloc    __P((struct vol *, struct dir *,
                                                       struct stat *));
 extern void         of_dealloc   __P((struct ofork *));
 extern struct ofork *of_find     __P((const u_int16_t));
-extern struct ofork *of_findname __P((const struct vol *, const struct dir *,
-                                                      const char *,
-                                                      struct stat *));
+extern struct ofork *of_findname __P((const char *, struct stat *));
 extern int          of_rename    __P((const struct vol *,
                                           struct ofork *,
                                           struct dir *, const char *,

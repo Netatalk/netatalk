@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.29 2002-09-04 17:28:08 didg Exp $
+ * $Id: filedir.c,v 1.30 2002-09-05 14:52:06 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -384,7 +384,7 @@ int         isdir;
         id = cnid_get(vol->v_db, sdir->d_did, p, strlen(p));
 #endif /* CNID_DB */
         p = ctoupath( vol, sdir, oldname );
-        if ((opened = of_findname(vol, sdir, p, NULL))) {
+        if ((opened = of_findname(p, NULL))) {
             /* reuse struct adouble so it won't break locks */
             adp = opened->of_ad;
         }
@@ -429,7 +429,7 @@ int         isdir;
         return AFPERR_EXIST;
 
     if ( !isdir ) {
-        if (of_findname(vol, curdir, upath, &st)) {
+        if (of_findname(upath, &st)) {
             rc = AFPERR_EXIST; /* was AFPERR_BUSY; */
         } else {
             rc = renamefile( p, upath, newname,vol_noadouble(vol), adp );
@@ -582,7 +582,7 @@ int		ibuflen, *rbuflen;
     upath = mtoupath(vol, path );
     if ( *path == '\0' ) {
         rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
-    } else if (of_findname(vol, curdir, upath, NULL)) {
+    } else if (of_findname(upath, NULL)) {
         rc = AFPERR_BUSY;
     } else if ((rc = deletefile( upath, 1)) == AFP_OK) {
 #ifdef CNID_DB /* get rid of entry */

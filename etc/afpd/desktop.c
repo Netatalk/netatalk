@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.14 2002-09-04 17:28:08 didg Exp $
+ * $Id: desktop.c,v 1.15 2002-09-05 14:52:05 didg Exp $
  *
  * See COPYRIGHT.
  */
@@ -748,7 +748,7 @@ int		ibuflen, *rbuflen;
     clen = (u_char)*ibuf++;
     clen = min( clen, 199 );
     upath = mtoupath( vol, path );
-    if ((*path == '\0') || !(of = of_findname(vol, curdir, upath, NULL))) {
+    if ((*path == '\0') || !(of = of_findname(upath, NULL))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
@@ -811,7 +811,7 @@ int		ibuflen, *rbuflen;
 
 
     upath = mtoupath( vol, path );
-    if ((*path == '\0') || !(of = of_findname(vol, curdir, upath, NULL))) {
+    if ((*path == '\0') || !(of = of_findname(upath, NULL))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
@@ -872,7 +872,7 @@ int		ibuflen, *rbuflen;
     }
 
     upath = mtoupath( vol, path );
-    if ((*path == '\0') || !(of = of_findname(vol, curdir, upath, NULL))) {
+    if ((*path == '\0') || !(of = of_findname(upath, NULL))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else

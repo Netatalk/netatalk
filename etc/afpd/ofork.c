@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.17 2002-09-04 17:28:08 didg Exp $
+ * $Id: ofork.c,v 1.18 2002-09-05 14:52:07 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -273,8 +273,7 @@ struct ofork *of_find(const u_int16_t ofrefnum )
 /* --------------------------
 */
 struct ofork *
-            of_findname(const struct vol *vol, const struct dir *dir, const char *name,
-            struct stat *st)
+            of_findname(const char *name, struct stat *st)
 {
     struct ofork *of;
     struct file_key key;
@@ -290,8 +289,7 @@ struct ofork *
     key.inode = st->st_ino;
 
     for (of = ofork_table[hashfn(&key)]; of; of = of->next) {
-        if (vol == of->of_vol && dir == of->of_dir &&
-                key.dev == of->key.dev && key.inode == of->key.inode ) {
+        if (key.dev == of->key.dev && key.inode == of->key.inode ) {
             return of;
         }
     }

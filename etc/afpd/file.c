@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.54 2002-09-04 17:28:08 didg Exp $
+ * $Id: file.c,v 1.55 2002-09-05 14:52:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -374,7 +374,7 @@ int getfilparams(struct vol *vol,
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
-    if ((of = of_findname(vol, dir, upath, st))) {
+    if ((of = of_findname(upath, st))) {
         adp = of->of_ad;
     	attrbits = ((of->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
     	attrbits |= ((of->of_ad->ad_hf.adf_refcount > of->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
@@ -464,7 +464,7 @@ int		ibuflen, *rbuflen;
 
     ret = stat(upath, &st);
     /* if upath is deleted we already in trouble anyway */
-    if (!ret && (of = of_findname(vol, curdir, upath, &st))) {
+    if (!ret && (of = of_findname(upath, &st))) {
         adp = of->of_ad;
     } else {
         memset(&ad, 0, sizeof(ad));
@@ -614,7 +614,7 @@ int setfilparams(struct vol *vol,
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
-    if ((of = of_findname(vol, curdir, upath, NULL))) {
+    if ((of = of_findname(upath, NULL))) {
         adp = of->of_ad;
     } else {
         memset(&ad, 0, sizeof(ad));
@@ -934,7 +934,7 @@ int		ibuflen, *rbuflen;
      *      we just balk if the file is opened already. */
 
     upath = mtoupath(vol, newname );
-    if (of_findname(vol, curdir, upath, NULL))
+    if (of_findname(upath, NULL))
         return AFPERR_DENYCONF;
 
     newname = obj->newtmp;
@@ -1701,7 +1701,7 @@ int		ibuflen, *rbuflen;
     }
     memset(&ads, 0, sizeof(ads));
     adsp = &ads;
-    if ((s_of = of_findname(vol, curdir, upath, &srcst))) {
+    if ((s_of = of_findname(upath, &srcst))) {
             /* reuse struct adouble so it won't break locks */
             adsp = s_of->of_ad;
     }
@@ -1751,7 +1751,7 @@ int		ibuflen, *rbuflen;
     }
     memset(&add, 0, sizeof(add));
     addp = &add;
-    if ((d_of = of_findname(vol, curdir, upath, &destst))) {
+    if ((d_of = of_findname( upath, &destst))) {
             /* reuse struct adouble so it won't break locks */
             addp = d_of->of_ad;
     }

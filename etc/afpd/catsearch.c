@@ -233,24 +233,19 @@ static int resolve_dir(struct vol *vol, int cidx)
 } /* resolve_dir */
 
 /* Looks up for an opened adouble structure, opens resource fork of selected file. */
-static struct adouble *adl_lkup(struct vol *vol, char *upath, int cidx, int isdir)
+static struct adouble *adl_lkup(char *upath, struct stat *sb)
 {
 	static struct adouble ad;
 	struct adouble *adp;
-	char *mpath = utompath(vol, upath);
 	struct ofork *of;
+	int isdir = S_ISDIR(sb->st_mode);
 
-/*
-	//if (dstack[cidx].dir == NULL && !resolve_dir(vol, cidx))
-	//	return NULL;
-
-	//if ((of = of_findname(vol, dstack[cidx].dir, mpath))) {
-	//	adp = of->of_ad;
-	//} else {
-	*/
+	if (!isdir && (of = of_findname(upath, sb ))) {
+		adp = of->of_ad;
+	} else {
 		memset(&ad, 0, sizeof(ad));
 		adp = &ad;
-	/* } */
+	} 
 
     	if ( ad_open( upath, ADFLAGS_HF | (isdir)?ADFLAGS_DIR:0, O_RDONLY, 0, adp) < 0 ) {
         	return NULL;
@@ -316,7 +311,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check for creation date... */
 	if (c1.rbitmap & (1<<DIRPBIT_CDATE)) {
-		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp = adl_lkup(uname, &sbuf))) {
 			if (ad_getdate(adp, AD_DATE_CREATE, (u_int32_t*)&c_date) >= 0)
 				c_date = AD_DATE_TO_UNIX(c_date);
 			else c_date = sbuf.st_mtime;
@@ -327,7 +322,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check for backup date... */
 	if (c1.rbitmap & (1<<DIRPBIT_BDATE)) {
-		if (adp || (adp == adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp == adl_lkup(uname, &sbuf))) {
 			if (ad_getdate(adp, AD_DATE_BACKUP, (u_int32_t*)&b_date) >= 0)
 				b_date = AD_DATE_TO_UNIX(b_date);
 			else b_date = sbuf.st_mtime;
@@ -338,7 +333,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 				
 	/* Check attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_ATTR)) && c2.attr != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp = adl_lkup(uname, &sbuf))) {
 			ad_getattr(adp, &attr);
 			if ((attr & c2.attr) != c1.attr)
 				goto crit_check_ret;
@@ -347,7 +342,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
         /* Check file type ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp = adl_lkup(uname, &sbuf))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if (finfo->f_type != c1.finfo.f_type)
 				goto crit_check_ret;
@@ -355,7 +350,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check creator ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp = adl_lkup(uname, &sbuf))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if (finfo->creator != c1.finfo.creator)
 				goto crit_check_ret;
@@ -363,7 +358,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 	
 	/* Check finder info attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp = adl_lkup(uname, &sbuf))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if ((finfo->attrs & c2.finfo.attrs) != c1.finfo.attrs)
 				goto crit_check_ret;
@@ -371,7 +366,7 @@ static int crit_check(struct vol *vol, char *uname, char *fname, int cidx) {
 
 	/* Check label */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0)
-		if (adp || (adp = adl_lkup(vol, uname, cidx, r))) {
+		if (adp || (adp = adl_lkup(uname, &sbuf))) {
 			finfo = (struct finderinfo*)ad_entry(adp, ADEID_FINDERI);
 			if ((finfo->label & c2.finfo.label) != c1.finfo.label)
 				goto crit_check_ret;
