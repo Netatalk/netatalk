@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.30 2003-04-10 22:58:42 didg Exp $
+ * $Id: ad_open.c,v 1.31 2003-06-06 20:46:38 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -286,7 +286,6 @@ bail_err:
 }
 #endif /* AD_VERSION == AD_VERSION2 */
 
-#ifdef ATACC
 mode_t ad_hf_mode (mode_t mode)
 {
     /* fnctl lock need write access */
@@ -306,8 +305,6 @@ mode_t ad_hf_mode (mode_t mode)
 
     return mode;
 }
-
-#endif
 
 /* ------------------------------------- 
   read in the entries 

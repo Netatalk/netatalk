@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.22 2003-06-06 20:43:14 srittau Exp $
+ * $Id: adouble.h,v 1.23 2003-06-06 20:46:39 srittau Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -356,30 +356,7 @@ extern int ad_refresh __P((struct adouble *));
 
 /* extend header to RW if R or W (W if R for locking),
  */ 
-#ifndef ATACC
-static __inline__ mode_t ad_hf_mode (mode_t mode)
-{
-    /* fnctl lock need write access */
-    if ((mode & S_IRUSR))
-        mode |= S_IWUSR;
-    if ((mode & S_IRGRP))
-        mode |= S_IWGRP;
-    if ((mode & S_IROTH))
-        mode |= S_IWOTH;
-
-    /* if write mode set add read mode */
-    if ((mode & S_IWUSR))
-        mode |= S_IRUSR;
-    if ((mode & S_IWGRP))
-        mode |= S_IRGRP;
-    if ((mode & S_IWOTH))
-        mode |= S_IROTH;
-
-    return mode;
-}
-#else
 extern mode_t ad_hf_mode __P((mode_t ));
-#endif
 
 /* ad_read.c/ad_write.c */
 extern ssize_t ad_read __P((struct adouble *, const u_int32_t, 
