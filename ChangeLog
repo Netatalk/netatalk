@@ -1,3 +1,7 @@
+2001-12-04  joe c   <marcus@marcuscom.com>
+	* etc/afpd/unix.c: Fix afpd sharing NFSv3 mounts (thanks to 
+	Pierre Beyssac <beyssac@enst.fr>)
+
 2001-12-03  joe c   <marcus@marcuscom.com>
 	* etc/afpd/*.[ch]: Big commit to clean up code with astyle (readable code 
 	is hackable code).  Also committed a fix to give CNID DB a shot in

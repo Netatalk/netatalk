@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.25 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: unix.c,v 1.26 2001-12-04 16:57:45 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -150,35 +150,22 @@ struct maccess	*ma;
 
 
 /*
- * Calculate the mode for a directory using Posix access() calls to
- * estimate permission, a la mdw.
+ * Calculate the mode for a directory using a stat() call to
+ * estimate permission.
+ *
+ * Note: the previous method, using access(), does not work correctly
+ * over NFS.
  */
 void accessmode( path, ma, dir )
 char		*path;
 struct maccess	*ma;
 struct dir		*dir;
 {
-    if ( access( path, R_OK|W_OK|X_OK ) == 0 ) {
-        ma->ma_user = AR_UREAD|AR_UWRITE|AR_USEARCH|AR_UOWN;
-        ma->ma_owner = AR_UREAD|AR_UWRITE|AR_USEARCH;
-    } else if ( access( path, R_OK|X_OK ) == 0 ) {
-        ma->ma_user = AR_UREAD|AR_USEARCH;
-        ma->ma_owner = AR_UREAD|AR_USEARCH;
-    } else {
-        ma->ma_user = ma->ma_owner = 0;
-        if ( access( path, R_OK ) == 0 ) {
-            ma->ma_user |= AR_UREAD;
-            ma->ma_owner |= AR_UREAD;
-        }
-        if ( access( path, X_OK ) == 0 ) {
-            ma->ma_user |= AR_USEARCH;
-            ma->ma_owner |= AR_USEARCH;
-        }
-        if ( access( path, W_OK ) == 0 ) {
-            ma->ma_user |= AR_UWRITE|AR_UOWN;
-            ma->ma_owner |= AR_UWRITE;
-        }
-    }
+    struct stat sb;
+    ma->ma_user = ma->ma_owner = 0;
+    if ( stat( path, &sb ) == 0 )
+        utommode( &sb, ma );
+    return;
 }
 
 int gmem( gid )
