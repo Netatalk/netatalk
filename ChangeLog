@@ -1,6 +1,11 @@
 
 2001-09-19  joe c   <marcus@marcuscom.com>
 
+	* etc/afpd/afp_config.c: Fixed a bug where SRVLOC services wouldn't
+	show up in OS 9.x
+
+2001-09-19  joe c   <marcus@marcuscom.com>
+
 	* libatalk/cnid/cnid_add.c: Fix a bug where some DBT data structures were
 	not being memset to NULL correctly.
 

@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_config.c,v 1.5 2001-09-17 13:41:26 rufustfirefly Exp $
+ * $Id: afp_config.c,v 1.6 2001-09-19 23:17:23 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -277,6 +277,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
   SLPError err;
   SLPError callbackerr;
   SLPHandle hslp;
+  struct servent *afpovertcp;
 #endif
 
   if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
@@ -310,12 +311,22 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	  goto srvloc_reg_err;
   }
 
-  snprintf(srvloc_url, sizeof(srvloc_url), "afp://%s:%d?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), options->hostname);
+  /* XXX We don't want to tack on the port number if we don't have to.  Why?
+   * Well, this seems to break MacOS < 10.  If the user _really_ wants to
+   * use a non-default port, they can, but be aware, this server might not
+   * show up int the Network Browser. */
+  afpovertcp = getservbyname("afpovertcp", "tcp");
+  if (dsi->server.sin_port == afpovertcp->s_port) {
+  	snprintf(srvloc_url, sizeof(srvloc_url), "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), options->hostname);
+  }
+  else {
+  	snprintf(srvloc_url, sizeof(srvloc_url), "afp://%s:%d/?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), options->hostname);
+  }
 
   err = SLPReg(hslp,
                srvloc_url,
 			   SLP_LIFETIME_MAXIMUM,
-			   "afp:",
+			   "",
 			   "",
 			   SLP_TRUE,
 			   SRVLOC_callback,
