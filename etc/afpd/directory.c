@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.43 2002-10-12 04:02:46 didg Exp $
+ * $Id: directory.c,v 1.44 2002-10-12 17:27:18 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1972,6 +1972,7 @@ int		ibuflen, *rbuflen;
     sfunc = (unsigned char) *ibuf++;
     memcpy( &id, ibuf, sizeof( id ));
 
+    *rbuflen = 0;
     id = ntohl(id);
 
     if ( id != 0 ) {
@@ -1979,7 +1980,6 @@ int		ibuflen, *rbuflen;
         case 1 :
         case 3 :/* unicode */
             if (( pw = getpwuid( id )) == NULL ) {
-                *rbuflen = 0;
                 return( AFPERR_NOITEM );
             }
             name = pw->pw_name;
@@ -1988,7 +1988,6 @@ int		ibuflen, *rbuflen;
         case 2 :
         case 4 : /* unicode */
             if (( gr = (struct group *)getgrgid( id )) == NULL ) {
-                *rbuflen = 0;
                 return( AFPERR_NOITEM );
             }
             name = gr->gr_name;
@@ -2002,7 +2001,6 @@ int		ibuflen, *rbuflen;
         case 3:
         case 4:
             if (afp_version < 30) {
-                *rbuflen = 0;
                 return( AFPERR_PARAM );
             }
             utf8 = 1;
