@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.72 2003-05-03 20:03:13 didg Exp $
+ * $Id: directory.c,v 1.73 2003-05-12 09:43:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -156,7 +156,7 @@ struct dir *dir;
         if ( strcmp( dir->d_u_name, name ) == 0 ) {
             break;
         }
-        dir = (dir == curdir->d_child->d_prev) ? NULL : dir->d_next;
+        dir = (dir == cdir->d_child->d_prev) ? NULL : dir->d_next;
     }
     return dir;
 }            
