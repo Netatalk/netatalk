@@ -1,9 +1,13 @@
 #! /usr/bin/perl
 # 
-# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_mv,v 1.2 2000-08-09 14:12:06 rufustfirefly Exp $
+# $Header: /home/ralph/netatalk/rsync/netatalk/contrib/shell_utils/Attic/apple_mv,v 1.3 2001-10-17 05:21:52 lancel Exp $
 #
 # $Log: apple_mv,v $
-# Revision 1.2  2000-08-09 14:12:06  rufustfirefly
+# Revision 1.3  2001-10-17 05:21:52  lancel
+# Added error checking against multiple files to one file. Eliminated
+# depreciated special variable. $ARGV($#ARGV) to $ARGV(-1)
+#
+# Revision 1.2  2000/08/09 14:12:06  rufustfirefly
 # /usr/local/bin/perl -> /usr/bin/perl and portability fixes
 #
 # Revision 1.1  2000/08/09 14:08:06  rufustfirefly
@@ -27,13 +31,18 @@ Do an apple move, moving the resource fork as well
 USAGE
 
 @from = @ARGV; pop(@from);
-$to = $ARGV[$#ARGV];
+$to = $ARGV[-1];
 
 if (-f $to && @from > 1) { die $USAGE; }
 
 foreach $from (@from) {
     if (!-f $from) {	
 	print STDERR "file $from does not exist\n";
+	die $USAGE;
+    }
+
+    if (!-d $to && @from >1) {
+	print STDERR "directory $to does not exist\nCan't move multiple files into one file.\n";
 	die $USAGE;
     }
     
