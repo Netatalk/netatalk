@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.14 2002-04-14 10:51:39 srittau Exp $
+ * $Id: ad_open.c,v 1.15 2002-05-10 21:47:10 jmarcus Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -609,8 +609,10 @@ int ad_open( path, adflags, oflags, mode, ad )
         ad->ad_refcount = 1;
     }
 
-    // File is always opened RW. Server checks if client may or may not write to.
-    // FIXME: is this a correct solution to this problem ?
+    /* File is always opened RW. Server checks if client may or may not write 
+     * to.
+     * FIXME: is this a correct solution to this problem ?
+     */
     phflags = (oflags & ~(O_RDONLY | O_WRONLY | O_RDWR)) | O_RDWR;
 
     if (adflags & ADFLAGS_DF) { 
@@ -760,16 +762,17 @@ int ad_open( path, adflags, oflags, mode, ad )
 	      return( -1 );
 	    }
 	  }
-	} // if (ad_hfileno(ad) == -1)
-	// FIXME: This assumes that the only way while changing flags is RO->RW.
-	// There may be cases where this is not true, so now it's possible to 
-	// open fork RO, then open RW, then close RW and be able to write to it.
-	// Higher layers (afpd?) may mask this behavior, but it must be corrected.
+	} /* if (ad_hfileno(ad) == -1) */
+	/* FIXME: This assumes that the only way while changing flags is RO->RW.
+	 * There may be cases where this is not true, so now it's possible to 
+	 * open fork RO, then open RW, then close RW and be able to write to it.
+	 * Higher layers (afpd?) may mask this behavior, but it must be corrected.
+	 */
 	if (ad->ad_hf.adf_flags != oflags) 
 		ad->ad_hf.adf_flags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
 
 	ad->ad_hf.adf_refcount++;
-    } // if (adflags & ADFLAGS_HF)
+    } /* if (adflags & ADFLAGS_HF) */
 	
     return( 0 );
 }
