@@ -2,7 +2,6 @@
 
 EXTRA_DIST = \
 	CONFIGURE		\
-	COPYRIGHT.mtab		\
 	DEVELOPER		\
 	INSTALL			\
 	FAQ			\
