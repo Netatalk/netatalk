@@ -1,5 +1,5 @@
 /*
- * $Id: achfile.c,v 1.4 2001-09-05 18:38:23 srittau Exp $
+ * $Id: achfile.c,v 1.5 2001-10-19 02:39:07 jmarcus Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -214,7 +214,7 @@ int handle_file(const char *filename)
     close(fd);
     return -1;
   }
-  if (ad->ad_magic != AD_MAGIC) {
+  if ( ntohl(ad->ad_magic) != AD_MAGIC) {
     fprintf(stderr, "achfile:%s: corrupt resource fork\n", filename);
     free(adname);
     close(fd);
