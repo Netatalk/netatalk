@@ -1,9 +1,11 @@
 /*
+ * $Id: kuam.c,v 1.2 2001-02-27 21:07:20 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
-# ifdef UAM_AFSKRB
+#ifdef UAM_AFSKRB
 
 #include <mit-copyright.h>
 #include <krb.h>
@@ -208,4 +210,5 @@ kuam_set_in_tkt( user, instance, realm, service, sinstance, ptr)
 
     return(INTK_OK);
 }
-# endif UAM_AFSKRB
+
+#endif /* UAM_AFSKRB */

@@ -1,4 +1,6 @@
 /*
+ * $Id: send_to_kdc.c,v 1.2 2001-02-27 21:07:20 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -15,10 +17,10 @@
 
 #ifndef lint
 static char rcsid_send_to_kdc_c[] =
-"$Id: send_to_kdc.c,v 1.1 2000-07-25 21:09:02 rufustfirefly Exp $";
+"$Id: send_to_kdc.c,v 1.2 2001-02-27 21:07:20 rufustfirefly Exp $";
 #endif /* lint */
 
-# ifdef UAM_AFSKRB
+#ifdef UAM_AFSKRB
 
 #include <mit-copyright.h>
 
@@ -317,4 +319,5 @@ static send_recv(pkt,rpkt,f,_to,addrs)
                 "send_to_kdc(send_rcv)", from.sin_addr.s_addr);
     return 0;
 }
-# endif UAM_AFSKRB
+
+#endif /* UAM_AFSKRB */

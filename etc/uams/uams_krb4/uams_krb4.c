@@ -1,8 +1,9 @@
 /*
+ * $Id: uams_krb4.c,v 1.2 2001-02-27 21:07:20 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
-
 
 #if defined( KRB ) || defined( UAM_AFSKRB )
 #include <unistd.h>
@@ -54,7 +55,7 @@ struct ClearToken {
     int32_t BeginTimestamp;
     int32_t EndTimestamp;
 };
-#endif /*AFS*/
+#endif /* AFS */
 
 
 #ifdef KRB
@@ -122,7 +123,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 	syslog( LOG_ERR, "krb_login: setpag: %m" );
 	return( AFPERR_BADUAM );
     }
-#endif /*AFS*/
+#endif /* AFS */
 
     *rbuflen = p - rbuf;
     return( AFPERR_AUTHCONT );
@@ -142,7 +143,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 #ifdef AFS
     struct ViceIoctl	vi;
     struct ClearToken	ct;
-#endif /*AFS*/
+#endif /* AFS */
     char		buf[ 1024 ];
     int			aint, ulen;
 
@@ -263,7 +264,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 	}
 	*uam_pwd = pwd;
 	return AFP_OK;
-#endif /*AFS*/
+#endif /* AFS */
 
     default :
 	syslog( LOG_INFO, "krb4_logincont: bad command %d", rc );
@@ -272,7 +273,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
     }
 }
 
-#endif /*KRB*/
+#endif /* KRB */
 
 
 #ifdef AFS
@@ -363,7 +364,7 @@ static void authenticate(cells,name,passwd)
 		    passwd,/*setpag*/0,&errorstring);
 	}
 }
-#endif /*AFS*/
+#endif /* AFS */
 
 #if defined( UAM_AFSKRB ) && defined( AFS )
 static int afskrb_login(void *obj, struct passwd *uam_pwd,

@@ -522,6 +522,7 @@ AC_SUBST(CFLAGS)
 AC_SUBST(LDSHAREDFLAGS)
 AM_CONDITIONAL(SOLARIS_MODULE, test x$solaris_module = xyes)
 AM_CONDITIONAL(USE_DHX, test x$compile_dhx = xyes)
+AM_CONDITIONAL(USE_KERBEROS, test x$compile_kerberos = xyes)
 AM_CONDITIONAL(USE_PAM_SO, test x$use_pam_so = xyes)
 AM_CONDITIONAL(USE_PAM, test x$compile_pam = xyes)
 AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
@@ -560,6 +561,7 @@ AC_OUTPUT([Makefile
 	etc/afpd/nls/Makefile
 	etc/atalkd/Makefile
 	etc/uams/Makefile
+	etc/uams/uams_krb4/Makefile
 	etc/papd/Makefile
 	etc/psf/Makefile
 	include/Makefile

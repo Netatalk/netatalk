@@ -19,6 +19,10 @@
 	* configure.in, etc/uams/Makefile.am: conditional compilation support
 	for PGP UAM module using --enable-pgp-uam
 
+	* configure.in, etc/uams/Makefile.am, etc/uams/uams_krb4/Makefile.am,
+	etc/uams/uams_krb4/.cvsignore, etc/uams/uams_krb4/*.c: modifications
+	for future Kerberos module reintegration
+
 2001-02-26  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* configure.in: added /usr/local/ssl to list of SSL paths to check, to

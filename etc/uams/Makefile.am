@@ -1,5 +1,7 @@
 # Makefile.am for etc/uams/
 
+SUBDIRS = uams_krb4
+
 if USE_DHX
 DHX_UAMS_BASE = uams_dhx_passwd.so
 DHX_LINKS = uams_dhx.so
