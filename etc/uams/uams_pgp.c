@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pgp.c,v 1.9 2003-01-26 16:54:46 srittau Exp $
+ * $Id: uams_pgp.c,v 1.10 2003-06-11 07:26:50 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -7,7 +7,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #ifdef UAM_PGP
@@ -106,8 +106,12 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
 			 char *ibuf, int ibuflen, 
 			 char *rbuf, int *rbuflen)
 {
-	unsigned char iv[] = "RJscorat";
+    unsigned char iv[] = "RJscorat";
+#ifdef HAVE_GCRYPT
+    GcryMPI *bn1, *bn2, *bn3;
+#else /* HAVE_GCRYPT */
     BIGNUM *bn1, *bn2, *bn3;
+#endif
     u_int16_t sessid;
     char *p;
 
@@ -118,11 +122,51 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
     if (sessid != pgphash(obj))
       return AFPERR_PARAM;
     ibuf += sizeof(sessid);
-   
+
+#ifdef HAVE_GCRYPT
+    {
+      GcryCipherHd handle;
+
+      handle = gcry_cipher_open(GCRY_CIPHER_CAST5,
+				      GCRY_CIPHER_MODE_CBC, 0);
+      if (!handle)
+        return AFPERR_PARAM;
+
+      if (gcry_cipher_setkey(handle, &castkey, ) != 0) {
+        gcry_cipher_close(handle);
+        return AFPERR_PARAM;
+      }
+
+      if (gcry_cipher_setiv(handle, iv, sizeof(iv)) != 0) {
+        gcry_cipher_close(handle);
+        return AFPERR_PARAM;
+      }
+
+      if (gcry_cipher_decrypt(handle, rbuf, CRYPT2BUFLEN, ibuf, CRYPT2BUFLEN) != 0) {
+        gcry_cipher_close(handle);
+        return AFPERR_PARAM;
+      }
+
+      gcry_cipher_close(handle);
+    }
+#else /* HAVE_GCRYPT */
     /* use rbuf as scratch space */
     CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
 		     iv, CAST_DECRYPT);
-    
+#endif /* HAVE_GCRYPT */
+
+#ifdef HAVE_GCRYPT
+    {
+      size_t sz;
+
+      bn1 = gcry_mpi_snew(KEYSIZE * 8);
+      sz = KEYSIZE;
+      gcry_mpi_scan(bn1, GCRYMPI_FMT_STD, rbuf, &sz);
+      bn2 = gcry_mpi_snew(sizeof(randbuf) * 8);
+      sz = sizeof(randbuf);
+      gcry_mpi_scan(bn1, GCRYMPI_FMT_STD, randbuf. &sz);
+    }
+#else /* HAVE_GCRYPT */
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
     if (!(bn1 = BN_bin2bn(rbuf, KEYSIZE, NULL)))
@@ -132,12 +176,25 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
       BN_free(bn1);
       return AFPERR_PARAM;
     }
-      
+#endif /* HAVE_GCRYPT */
+
     /* zero out the random number */
     memset(rbuf, 0, sizeof(randbuf));
     memset(randbuf, 0, sizeof(randbuf));
     rbuf += KEYSIZE;
 
+#ifdef HAVE_GCRYPT
+    bn3 = gcry_mpi_snew(0);
+    gcry_mpi_sub(bn3, bn1, bn2);
+    gcry_mpi_release(bn2);
+    gcry_mpi_release(bn1);
+
+    if (gcry_mpi_cmp_ui(bn3, 1UL) != 0) {
+      gcry_mpi_release(bn3);
+      return AFPERR_PARAM;
+    }
+    gcry_mpi_release(bn3);
+#else /* HAVE_GCRYPT */
     if (!(bn3 = BN_new())) {
       BN_free(bn2);
       BN_free(bn1);
@@ -154,6 +211,7 @@ static int pgp_logincont(void *obj, struct passwd **uam_pwd,
       return AFPERR_PARAM;
     }
     BN_free(bn3);
+#endif /* HAVE_GCRYPT */
 
 #ifdef AFS
     if ( kcheckuser(*uam_pwd, rbuf) == 0) {
