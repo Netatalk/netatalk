@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_open.c,v 1.7 2001-09-04 13:49:54 rufustfirefly Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -84,7 +84,7 @@
 #define DBVERSION        DBVERSION1
 
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC | DB_RECOVER)
+DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER)
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 			    * databases. */
@@ -101,7 +101,7 @@ static __inline__ int compare_did(const DBT *a, const DBT *b)
 
 /* sort did's and then names. this is for unix paths.
  * i.e., did/unixname lookups. */
-static int compare_unix(const DBT *a, const DBT *b)
+static int compare_unix(DB* db, const DBT *a, const DBT *b)
 {
   u_int8_t *sa, *sb;
   int len, ret;
@@ -215,6 +215,8 @@ mkdir_appledb:
     goto fail_lock;
   }
 
+  /* Check to see if a DBENV already exists.  If it does, join it. */
+  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {
   if (db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) {
 
     /* try with a shared memory pool */
@@ -229,6 +231,7 @@ mkdir_appledb:
     db->flags |= CNIDFLAG_DB_RO;
     open_flag = DB_RDONLY;
     syslog(LOG_INFO, "cnid_open: read-only CNID database");
+  }
   }
 
   /* did/name reverse mapping. we use a btree for this one. */
