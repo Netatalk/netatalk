@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_options.c,v 1.11 2001-09-12 19:13:16 uhees Exp $
+ * $Id: afp_options.c,v 1.12 2001-09-19 03:08:40 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -358,6 +358,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 	    break;
 	case 'I':
   	    options->flags |= OPTION_CUSTOMICON;
+		break;
 	default :
 	    err++;
 	}
