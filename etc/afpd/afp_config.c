@@ -1,5 +1,5 @@
 /* 
- * $Id: afp_config.c,v 1.6 2001-09-19 23:17:23 jmarcus Exp $
+ * $Id: afp_config.c,v 1.7 2001-09-23 18:47:52 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -47,7 +47,7 @@ char *strchr (), *strrchr ();
 #ifdef USE_SRVLOC
 #include <slp.h>
 static char srvloc_url[512];
-#endif
+#endif /* USE_SRVLOC */
 
 #include "globals.h"
 #include "afp_config.h"
@@ -97,7 +97,7 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
 static void SRVLOC_callback(SLPHandle hslp, SLPError errcode, void *cookie) {
 	*(SLPError*)cookie = errcode;
 }
-#endif
+#endif /* USE_SRVLOC */
 
 #ifdef USE_SRVLOC
 static void dsi_cleanup(const AFPConfig *config)
@@ -128,7 +128,7 @@ static void dsi_cleanup(const AFPConfig *config)
   srvloc_dereg_err:
     SLPClose(hslp);
 }
-#endif
+#endif /* USE_SRVLOC */
 
 #ifndef NO_DDP
 static void asp_cleanup(const AFPConfig *config)
@@ -278,7 +278,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
   SLPError callbackerr;
   SLPHandle hslp;
   struct servent *afpovertcp;
-#endif
+#endif /* USE_SRVLOC */
 
   if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
     syslog( LOG_ERR, "DSIConfigInit: malloc(config): %m" );
@@ -345,7 +345,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 
   srvloc_reg_err:
     SLPClose(hslp);
-#endif
+#endif /* USE_SRVLOC */
 
 
   config->fd = dsi->serversock;
@@ -366,7 +366,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
   config->server_start = dsi_start;
 #ifdef USE_SRVLOC
   config->server_cleanup = dsi_cleanup;
-#endif
+#endif /* USE_SRVLOC */
   return config;
 }
 
