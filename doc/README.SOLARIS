@@ -1,0 +1,68 @@
+This is the Solaris README file for netatalk.
+
+1.  SELECT COMPILER.  This distribution is configured to build with
+    gcc.  It should also work with cc. At the present time only cc
+    v5.0 and above can build the 64-bit kernel module.
+
+1a. SELECT KERNEL TYPE.  Edit sys/solaris/Makefile and set KCFLAGS to
+     include sparcv9 support if you run a 64-bit kernel, or leave it
+     commented out for a 32-bit kernel. Only UltraSPARC systems
+     running Solaris 7 and above support a 64-bit kernel. If you're
+     not sure what kernel you use, run "isainfo -v". You're running a
+     64-bit kernel if the result includes 64-bit (sparcv9), otherwize
+     it's 32-bit.
+
+     NOTE: If you want both the 32-bit and 64-bit kernel modules to be
+     installed, first compile and install the version appropriate to
+     the kernel that you're currently running, then make clean,
+     compile and install the other version.
+
+2.  EDIT NETCONFIG.  Add the following line to /etc/netconfig:
+
+	ddp tpi_clts - appletalk ddp /dev/ddp -
+
+    This makes the socket library aware of the AppleTalk protocol
+    family.
+
+3.  INSTALL DRIVER.  Since the STREAMS ddp driver must be installed as
+    root, we've separated that portion of the build.  Type
+
+	make kinstall
+
+    to install the driver.  This copies the driver and it's config file
+    into /usr/kernel/drv and /usr/kernel/strmod, runs "add_drv ddp" to
+    make the kernel aware of the new driver, and adds an rc file to
+    /etc/rc?.d.
+
+4.  ATALKD.CONF.  Under Solaris, you must create atalkd.conf, since
+    Solaris provides no method for determining the names of the
+    available interfaces.  It is sufficent to name the available
+    interfaces in atalkd.conf, one per line.  E.g.
+
+	le0
+
+    on a line by itself, on many Suns.  See atalkd(8).
+
+5.  PRINTING.  To quote my Solaris documentation, "Setting up printing
+    services using the LP print service command-line interface is
+    complicated and error-prone."  See your Solaris documentation for
+    similarly helpful statements.
+
+    Presuming that the Solaris print filters are installed (see your
+    helpful Solaris documentation), the following command adds the
+    printer named "bob" your to system and enables printing:
+
+	lpadmin -p bob -i /usr/local/atalk/etc/lp2pap.sh \
+		-I postscript -v /dev/null -T PS
+	enable bob
+
+    This creates the directory /etc/lp/bob, in which you should create
+    a file called ".paprc" containing the NBP name of the printer.  See
+    the "pap" man page for more information.
+
+Research Systems Unix Group
+The University of Michigan		netatalk@umich.edu
+c/o Wes Craig				+1-313-764-2278
+535 W. William St.
+Ann Arbor, Michigan
+48103-4943
