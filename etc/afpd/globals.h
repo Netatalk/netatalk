@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.19 2003-05-16 15:29:27 didg Exp $
+ * $Id: globals.h,v 1.20 2003-08-30 16:10:32 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -60,7 +60,7 @@ struct afp_options {
     char *uamlist;
     char *authprintdir;
     char *signature;
-    char *k5service, *k5realm;
+    char *k5service, *k5realm, *k5keytab;
     mode_t umask;
     mode_t save_mask;
     int    sleep;

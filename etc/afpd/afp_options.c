@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.33 2003-08-22 20:41:09 samnoble Exp $
+ * $Id: afp_options.c,v 1.34 2003-08-30 16:10:32 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -160,6 +160,7 @@ void afp_options_init(struct afp_options *options)
 #endif /* ADMIN_GRP */
     options->k5service = NULL;
     options->k5realm = NULL;
+    options->k5keytab = NULL;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
