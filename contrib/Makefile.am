@@ -6,6 +6,12 @@ else
 TIMELORD =
 endif
 
-SUBDIRS = macusers nu printing shell_utils ${TIMELORD}
+if COMPILE_A2BOOT
+A2BOOT = a2boot
+else
+A2BOOT =
+endif
+
+SUBDIRS = macusers nu printing shell_utils ${TIMELORD} ${A2BOOT}
 
 EXTRA_DIST = ICDumpSuffixMap

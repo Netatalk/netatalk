@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.70 2003-01-08 15:01:34 didg Exp $
+ * $Id: file.c,v 1.71 2003-01-11 17:26:06 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -357,7 +357,7 @@ int getmetadata(struct vol *vol,
                us what the PD file code should be.  Everything gets a
                subtype of 0x0000 unless the original value was hashed
                to "pXYZ" when we created it.  See IA, Ver 2.
-               <shirsch@ibm.net> */
+               <shirsch@adelphia.net> */
         case FILPBIT_PDINFO :
             if (afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
@@ -800,43 +800,24 @@ int setfilparams(struct vol *vol,
             break;
 
             /* Client needs to set the ProDOS file info for this file.
-               Use defined strings for the simple cases, and convert
-               all else into pXYY per Inside Appletalk.  Always set
-               the creator as "pdos". <shirsch@ibm.net> */
+               Use a defined string for TEXT to support crlf
+               translations and convert all else into pXYY per Inside
+               Appletalk.  Always set the creator as "pdos".  Changes
+               from original by Marsha Jackson. */
         case FILPBIT_PDINFO :
             achar = *buf;
             buf += 2;
-            memcpy(&ashort, buf, sizeof( ashort ));
-            ashort = ntohs( ashort );
-            buf += 2;
-
-            switch ( (unsigned int) achar )
-            {
-            case 0x04 :
-                fdType = ( u_char *) "TEXT";
-                break;
-
-            case 0xff :
-                fdType = ( u_char *) "PSYS";
-                break;
-
-            case 0xb3 :
-                fdType = ( u_char *) "PS16";
-                break;
-
-            case 0x00 :
-                fdType = ( u_char *) "BINA";
-                break;
-
-            default :
-                xyy[0] = ( u_char ) 'p';
-                xyy[1] = achar;
-                xyy[2] = ( u_char ) ( ashort >> 8 ) & 0xff;
-                xyy[3] = ( u_char ) ashort & 0xff;
-                fdType = xyy;
-                break;
-            }
-
+            /* Keep special case to support crlf translations */
+            if ((unsigned int) achar == 0x04) {
+	    	fdType = (u_char *)"TEXT";
+		buf += 2;
+            } else {
+            	xyy[0] = ( u_char ) 'p';
+            	xyy[1] = achar;
+            	xyy[3] = *buf++;
+            	xyy[2] = *buf++;
+            	fdType = xyy;
+	    }
             memcpy(ad_entry( adp, ADEID_FINDERI ), fdType, 4 );
             memcpy(ad_entry( adp, ADEID_FINDERI ) + 4, "pdos", 4 );
             break;

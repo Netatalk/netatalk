@@ -1,6 +1,6 @@
 #################################################### VERSIONING INFORMATION
 %define name    netatalk
-%define version 1.5pre6
+%define version __VERSION__
 %define release 1
 
 ################################################# BASIC PACKAGE INFORMATION
@@ -11,6 +11,7 @@ Release: %{release}
 Copyright: BSD
 Group: Networking/Daemons
 Source0: %{name}-%{version}.tar.gz
+Patch0: netatalk-rpmbuild.patch
 URL: http://netatalk.sourceforge.net/
 Packager: rufus t firefly <rufus.t.firefly@linux-mandrake.com>
 Obsoletes: netatalk-1.4b2+asun netatalk-1.4.99
@@ -18,6 +19,8 @@ Obsoletes: netatalk-1.4b2+asun netatalk-1.4.99
 ############################################################## REQUIREMENTS
 Requires: cracklib, openssl, tcp_wrappers, pam
 BuildRequires: openssl-devel
+
+# Note: RedHat 7.3 build requires autoconf >= 2.53, automake >= 1.5, ac-archive >= 0.5
 
 Prefix:    %{_prefix}
 BuildRoot: /var/tmp/%{name}-buildroot
@@ -42,6 +45,10 @@ Ultrix 4. It also supports AFP 2.1 and 2.2 (Appleshare IP).
 This package is required for developing appletalk-based applications.
 
 %changelog
+
+* Sat Jan 04 2002 Steven N. Hirsch <shirsch@adelphia.net>
+  - Fix RedHat RPM build.
+  - Build Apple2 boot support.
 
 * Thu Apr 12 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
   - v1.5pre6-1
@@ -75,11 +82,14 @@ This package is required for developing appletalk-based applications.
 
 %prep
 %setup -q -n %{name}-%{version}/
+%patch0 -p1 -b .rpmbuild
 
 %build
 CFLAGS="$RPM_OPT_FLAGS -fomit-frame-pointer -fsigned-char" ./configure \
 	--prefix=%{prefix} \
+	--libexec=%{prefix}/libexec/netatalk \
 	--with-config-dir=/etc/atalk \
+	--with-pkgconfdir=/etc/atalk \
 	--with-uams-path=/etc/atalk/uams \
 	--with-message-dir=/etc/atalk/msg \
 	--enable-lastdid \
@@ -89,18 +99,14 @@ CFLAGS="$RPM_OPT_FLAGS -fomit-frame-pointer -fsigned-char" ./configure \
 	--with-shadow \
 	--with-tcp-wrappers \
 	--with-ssl \
-	--enable-pgp-uam
+	--enable-pgp-uam \
+	--enable-a2boot
 make all
 
 %install
 ### INSTALL (USING "make install") ###
 mkdir -p $RPM_BUILD_ROOT{%{prefix},/etc/atalk/{uams,msg}}
 make DESTDIR=$RPM_BUILD_ROOT install-strip
-
-# bzip2 man pages
-#for i in 1 3 4 5 8; do
-#	bzip2 -v $RPM_BUILD_ROOT/usr/man/man$i/*.$i
-#done
 
 %post
 ### RUN CHKCONFIG ###
@@ -175,7 +181,8 @@ rm -rf $RPM_BUILD_DIR/%{name}/
 %dir /etc/atalk/uams
 %{prefix}/bin/*
 %{prefix}/sbin/*
-%{prefix}/man/man*/*
+%{prefix}/libexec/*
+%{prefix}/man/man*/*.gz
 
 %files devel
 %defattr(-,root,root)

@@ -84,6 +84,20 @@ atalk_startup() {
 	    echo
 	fi
 
+	# check for a2boot in bin directory
+	if [ x"${A2BOOT_RUN}" = x"yes"  -a -x ${ATALK_BIN}/a2boot ]; then
+	    echo -n "  Starting a2boot"
+	    daemon ${ATALK_BIN}/a2boot
+	    echo
+	fi
+
+	# check for a2boot in sbin directory
+	if [ x"${A2BOOT_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/a2boot ]; then
+	    echo -n "  Starting a2boot"
+	    daemon ${ATALK_SBIN}/a2boot
+	    echo
+	fi
+
     fi
 
     if [ x"${AFPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/afpd ] ; then
@@ -133,6 +147,20 @@ case "$1" in
 	    if [ x"${TIMELORD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/timelord ]; then
 		echo -n "  Stopping timelord:"
 		killproc timelord
+		echo
+	    fi
+
+            # checking for a2boot in bin directory
+	    if [ x"${A2BOOT_RUN}" = x"yes" -a -x ${ATALK_BIN}/a2boot ]; then
+		echo -n "  Stopping a2boot:"
+		killproc a2boot
+		echo
+	    fi
+
+            # checking for a2boot in sbin directory
+	    if [ x"${A2BOOT_RUN}" = x"yes" -a -x ${ATALK_SBIN}/a2boot ]; then
+		echo -n "  Stopping a2boot:"
+		killproc a2boot
 		echo
 	    fi
 

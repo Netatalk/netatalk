@@ -1,22 +1,53 @@
 #!/bin/sh
 #
 # buildrpm
-# $Id: buildrpm,v 1.2 2001-02-20 16:57:32 rufustfirefly Exp $
+# $Id: buildrpm,v 1.3 2003-01-11 17:26:06 jmarcus Exp $
 #
 # automates the process of building the netatalk rpm
+#
+# To properly bootstrap the RPM from a raw CVS pull,
+# place the CVS sandbox under, e.g. /usr/src/redhat/BUILD
+# and name this new directory 'netatalk-$version' (where
+# $version is the contents of the 'VERSION' file under the source
+# root).  Then, cd into the source root and run 'autogen.sh'
+# (with no arguments).  Finally, copy this file to the BUILD
+# directory and run it from there, passing the full name of the
+# source directory as the sole argument.
+#
+if [ "x$1" = "x" ]; then
+    echo "To avoid problems with builds on remote filesystems"
+    echo "please copy this file to your redhat/BUILD directory"
+    echo "and execute as 'buildrpm netatalk-xxy', using the actual"
+    echo "full name (i.e. with version) of the source tree."
+    exit 1
+fi
 
-REDHAT_DIR=/usr/src/redhat
-CVSNAME=netatalk
+CVSNAME=$1
 
-# clean out any object files
-cd ../../
-make clean
+REDHAT_DIR=../
+
+VERSION=`cat $CVSNAME/VERSION`
+
+sed -e "s/__VERSION__/$VERSION/" \
+    $CVSNAME/distrib/rpm/netatalk-redhat.spec \
+    > ${REDHAT_DIR}/SPECS/netatalk.spec
+
+cp -f $CVSNAME/distrib/rpm/netatalk-rpmbuild.patch \
+    ${REDHAT_DIR}/SOURCES
+
+# Newer distros use rpmbuild
+if `rpmbuild --version > /dev/null`; then
+    RPM="rpmbuild"
+else
+    RPM="rpm"
+fi
+
+# clean out objects and Makefiles
+(cd $CVSNAME && make distclean)
 
 # tar up the archive
-cd ../
-tar -c -v -f -z ${REDHAT_DIR}/SOURCES/netatalk.tar.gz \
+tar -c -v -z -f ${REDHAT_DIR}/SOURCES/$CVSNAME.tar.gz \
 	--exclude="*/CVS" --exclude="*~" $CVSNAME
 
-# build the rpm
-rpm -ba ${REDHAT_DIR}/SPECS/netatalk.spec
-
+# build the SRPM and binary and devel RPMs.
+${RPM} -ba ${REDHAT_DIR}/SPECS/netatalk.spec
