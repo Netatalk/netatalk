@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.19 2002-01-18 05:19:26 jmarcus Exp $
+ * $Id: volume.c,v 1.20 2002-01-18 05:23:25 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1196,7 +1196,7 @@ int		ibuflen, *rbuflen;
      * the desk-top.  That's because the Mac remembers the DID for the
      * trash (even for volumes in different zones, on different servers).
      * Just so this works better, we prime the DID cache with the trash,
-     * fixing the trash at DID 3.
+     * fixing the trash at DID 17.
      */
     p = Trash;
     cname( volume, volume->v_dir, &p );

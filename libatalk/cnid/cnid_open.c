@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.32 2002-01-18 04:53:48 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.33 2002-01-18 05:23:25 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -30,7 +30,8 @@
  * 1 -- parent of root directory (handled by afpd) 
  * 2 -- root directory (handled by afpd)
  *
- * so, CNID_START begins at 3.
+ * CNIDs 4-16 are reserved according to page 31 of the AFP 3.0 spec so, 
+ * CNID_START begins at 17.
  */
 
 #ifdef HAVE_CONFIG_H
