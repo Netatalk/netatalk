@@ -1,3 +1,10 @@
+
+2001-08-08  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/papd/session.c: prevents papd client from aborting
+	during the submission of a print job, therefore preventing
+	the job from hanging on the Mac (Michael Boers)
+
 2001-07-10  Lance Levsen  <lance@iworks.pwgroup.ca>
 
 	* man/man8/papd.8.tmpl: Fixed ftp URI for Adobe's PPD files.

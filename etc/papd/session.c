@@ -1,10 +1,11 @@
 /*
- * $Id: session.c,v 1.8 2001-08-03 22:13:28 srittau Exp $
+ * $Id: session.c,v 1.9 2001-08-08 18:12:48 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#include <sys/errno.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -112,9 +113,14 @@ int session( atp, sat )
 	FD_ZERO( &fds );
 	FD_SET( atp_fileno( atp ), &fds );
 
-	if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 ) {
-	    syslog( LOG_ERR, "select: %m" );
-	    return( -1 );
+	do { /* do list until success or an unrecoverable error occurs */
+	  if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 )
+	      syslog( LOG_ERR, "select: %m" ); /* log all errors */
+`	} while (( cc < 0 ) && (errno == 4));
+
+	if ( cc < 0 ) {
+	  syslog( LOG_ERR, "select: Error is unrecoverable" );
+	  return( -1 );
 	}
 	if ( cc == 0 ) {
 	    if ( timeout++ > 2 ) {
