@@ -1,8 +1,9 @@
 netatalk (1.5pre8cvs-0) unstable; urgency=low
 
   * Unofficial CVS release.
+  * Correct included docs, since all platform specific docs were merged.
 
- -- Sebastian Rittau <srittau@debian.org>  Sun,  7 Oct 2001 13:07:23 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Tue, 16 Oct 2001 04:08:27 +0200
 
 netatalk (1.5pre8-2) unstable; urgency=low
 
