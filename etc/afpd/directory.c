@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.66 2003-04-14 18:03:48 didg Exp $
+ * $Id: directory.c,v 1.67 2003-04-15 07:18:45 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1150,6 +1150,11 @@ struct dir	*dir;
     *p = '.';
     for ( d = dir; d->d_parent != NULL && d != curdir; d = d->d_parent ) {
         u = d->d_u_name;
+    	if (!u) {
+    	    /* parent directory is deleted */
+    	    afp_errno = AFPERR_NOOBJ;
+    	    return -1;
+    	}
         n = strlen( u );
         if (p -n -1 < path) {
             afp_errno = AFPERR_PARAM;
