@@ -1,3 +1,9 @@
+2001-09-05  joe c <marcus@marcuscom.com>
+	* libatalk/cnid/cnid_open.c: comment out DB_JOINENV as this is not
+	supported in db3 3.1.17
+
+	* libatalk/cnid/cnid_add.c: fix my comments to properly explain the use
+	of rc over errno
 
 2001-09-04  jeff b  <jeff@univrel.pr.uconn.edu>
 
