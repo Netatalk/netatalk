@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.88 2001-06-19 16:55:23 srittau Exp $
+dnl $Id: configure.in,v 1.89 2001-06-19 17:03:26 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -155,11 +155,11 @@ AC_ARG_ENABLE(afs,
 	fi
 )
 
-#AC_ARG_WITH(config-dir,
-#	[  --with-config-dir=DIR   obsolete - use --pkgconfdir],
-#		sysconfdir="$withval",
-#		sysconfdir="${prefix}/etc"
-#)
+AC_ARG_WITH(config-dir,
+	[  --with-config-dir=DIR   obsolete - use --pkgconfdir],
+		sysconfdir="$withval",
+		sysconfdir="${prefix}/etc"
+)
 
 AC_ARG_WITH(pkgconfdir,
 	[  --with-pkgconfdir=DIR   package specific configuration in DIR [default=SYSCONF/netatalk]],
