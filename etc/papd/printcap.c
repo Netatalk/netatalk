@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.6 2002-01-17 06:10:43 srittau Exp $
+ * $Id: printcap.c,v 1.7 2002-02-07 23:35:10 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -228,7 +228,6 @@ int tgetent( cap, bp, name)
 					continue;
 				else
 					break;
-				break;
 			}
 			if (c == '#' && cp == bp)
 				skip++;
