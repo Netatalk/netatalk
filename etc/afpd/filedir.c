@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.28 2002-08-29 18:57:26 didg Exp $
+ * $Id: filedir.c,v 1.29 2002-09-04 17:28:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -384,7 +384,7 @@ int         isdir;
         id = cnid_get(vol->v_db, sdir->d_did, p, strlen(p));
 #endif /* CNID_DB */
         p = ctoupath( vol, sdir, oldname );
-        if ((opened = of_findname(vol, sdir, oldname))) {
+        if ((opened = of_findname(vol, sdir, p, NULL))) {
             /* reuse struct adouble so it won't break locks */
             adp = opened->of_ad;
         }
@@ -429,13 +429,12 @@ int         isdir;
         return AFPERR_EXIST;
 
     if ( !isdir ) {
-        if (of_findname(vol, curdir, newname)) {
+        if (of_findname(vol, curdir, upath, &st)) {
             rc = AFPERR_EXIST; /* was AFPERR_BUSY; */
-        } else if ((rc = renamefile( p, upath, newname,
-                                     vol_noadouble(vol), adp )) == AFP_OK) {
-            /* if it's still open, rename the ofork as well. */
-            rc = of_rename(vol, sdir, oldname, curdir, newname);
-
+        } else {
+            rc = renamefile( p, upath, newname,vol_noadouble(vol), adp );
+            if (rc == AFP_OK)
+                of_rename(vol, opened, sdir, oldname, curdir, newname);
         }
     } else {
         rc = renamedir(p, upath, sdir, curdir, newname, vol_noadouble(vol));
@@ -580,11 +579,12 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
+    upath = mtoupath(vol, path );
     if ( *path == '\0' ) {
         rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
-    } else if (of_findname(vol, curdir, path)) {
+    } else if (of_findname(vol, curdir, upath, NULL)) {
         rc = AFPERR_BUSY;
-    } else if ((rc = deletefile( upath = mtoupath(vol, path ), 1)) == AFP_OK) {
+    } else if ((rc = deletefile( upath, 1)) == AFP_OK) {
 #ifdef CNID_DB /* get rid of entry */
         cnid_t id = cnid_get(vol->v_db, curdir->d_did, upath, strlen(upath));
         cnid_delete(vol->v_db, id);

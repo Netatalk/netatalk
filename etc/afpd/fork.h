@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: fork.h,v 1.4 2002-09-04 17:28:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -16,14 +16,22 @@
 #include "volume.h"
 #include "directory.h"
 
+struct file_key {
+    dev_t		dev;
+    ino_t		inode;
+};
+
 struct ofork {
     struct adouble	*of_ad;
     struct vol          *of_vol;
     struct dir		*of_dir;
     char		*of_name;
     int                 of_namelen;
+
     u_int16_t           of_refnum;
     int                 of_flags;
+
+    struct file_key     key;
     struct ofork        **prevp, *next;
     struct ofork        *of_d_prev, *of_d_next;
 };
@@ -47,12 +55,15 @@ struct ofork {
 /* in ofork.c */
 extern struct ofork *of_alloc    __P((struct vol *, struct dir *,
                                                       char *, u_int16_t *, const int,
-                                                      struct adouble *));
+                                                      struct adouble *,
+                                                      struct stat *));
 extern void         of_dealloc   __P((struct ofork *));
 extern struct ofork *of_find     __P((const u_int16_t));
 extern struct ofork *of_findname __P((const struct vol *, const struct dir *,
-                                                      const char *));
+                                                      const char *,
+                                                      struct stat *));
 extern int          of_rename    __P((const struct vol *,
+                                          struct ofork *,
                                           struct dir *, const char *,
                                           struct dir *, const char *));
 extern int          of_flush     __P((const struct vol *));

@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.16 2002-06-17 11:40:11 didg Exp $
+ * $Id: ofork.c,v 1.17 2002-09-04 17:28:08 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -24,7 +24,7 @@
 #include "directory.h"
 #include "fork.h"
 
-/* we need to have a hashed list of oforks (by name). just hash
+/* we need to have a hashed list of oforks (by dev inode). just hash
  * by first letter. */
 #define OFORK_HASHSIZE  64
 static struct ofork     *ofork_table[OFORK_HASHSIZE];
@@ -35,21 +35,22 @@ static u_short		lastrefnum = 0;
 
 
 /* OR some of each character for the hash*/
-static __inline__ unsigned long hashfn(const char *name)
+static __inline__ unsigned long hashfn(const struct file_key *key)
 {
     unsigned long i = 0;
-
+#if 0
     while (*name) {
         i = ((i << 4) | (8*sizeof(i) - 4)) ^ *name++;
     }
-    return i & (OFORK_HASHSIZE - 1);
+#endif    
+    return key->inode & (OFORK_HASHSIZE - 1);
 }
 
 static __inline__ void of_hash(struct ofork *of)
 {
     struct ofork **table;
 
-    table = &ofork_table[hashfn(of->of_name)];
+    table = &ofork_table[hashfn(&of->key)];
     if ((of->next = *table) != NULL)
         (*table)->prevp = &of->next;
     *table = of;
@@ -96,20 +97,24 @@ int of_flush(const struct vol *vol)
     return( 0 );
 }
 
-
-int of_rename(vol, olddir, oldpath, newdir, newpath)
+int of_rename(vol, s_of, olddir, oldpath, newdir, newpath)
 const struct vol *vol;
+struct ofork *s_of;
 struct dir *olddir, *newdir;
 const char *oldpath, *newpath;
 {
     struct ofork *of, *next, *d_ofork;
 
-    next = ofork_table[hashfn(oldpath)];
+    if (!s_of)
+        return AFP_OK;
+        
+    next = ofork_table[hashfn(&s_of->key)];
     while ((of = next)) {
         next = next->next; /* so we can unhash and still be all right. */
 
-        if ((vol == of->of_vol) && (olddir == of->of_dir) &&
-                (strcmp(of->of_name, oldpath) == 0)) {
+        if (vol == of->of_vol && olddir == of->of_dir &&
+	         s_of->key.dev == of->key.dev && 
+	         s_of->key.inode == of->key.inode ) {
             of_unhash(of);
             strncpy( of->of_name, newpath, of->of_namelen);
             of->of_d_prev->of_d_next = of->of_d_next;
@@ -137,13 +142,14 @@ const char *oldpath, *newpath;
 #define min(a,b)	((a)<(b)?(a):(b))
 
 struct ofork *
-            of_alloc(vol, dir, path, ofrefnum, eid, ad)
-            struct vol          *vol;
-struct dir		*dir;
+            of_alloc(vol, dir, path, ofrefnum, eid, ad, st)
+struct vol      *vol;
+struct dir	*dir;
 char		*path;
-u_int16_t		*ofrefnum;
-const int           eid;
-struct adouble      *ad;
+u_int16_t	*ofrefnum;
+const int       eid;
+struct adouble  *ad;
+struct stat     *st;
 {
     struct ofork        *of, *d_ofork;
     u_int16_t		refnum, of_refnum;
@@ -234,8 +240,7 @@ struct adouble      *ad;
     /* here's the deal: we allocate enough for the standard mac file length.
      * in the future, we'll reallocate in fairly large jumps in case
      * of long unicode names */
-    if (( of->of_name =(char *)malloc(255 + 1)) ==
-            NULL ) {
+    if (( of->of_name =(char *)malloc(255 + 1)) == NULL ) {
         LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
         if (!ad)
             free(of->of_ad);
@@ -246,13 +251,14 @@ struct adouble      *ad;
     strncpy( of->of_name, path, of->of_namelen = 255 + 1);
     *ofrefnum = refnum;
     of->of_refnum = refnum;
-    of_hash(of);
-
+    of->key.dev = st->st_dev;
+    of->key.inode = st->st_ino;
     if (eid == ADEID_DFORK)
         of->of_flags = AFPFORK_DATA;
     else
         of->of_flags = AFPFORK_RSRC;
 
+    of_hash(of);
     return( of );
 }
 
@@ -265,28 +271,33 @@ struct ofork *of_find(const u_int16_t ofrefnum )
 }
 
 /* --------------------------
-   FIXME it doesn't work :-(
-   mac1 open file "test" with simple text 
-   mac2 rename "test" ==> "test1"
-   
-   now of_findname return NULL 
-   
-   
 */
 struct ofork *
-            of_findname(const struct vol *vol, const struct dir *dir, const char *name)
+            of_findname(const struct vol *vol, const struct dir *dir, const char *name,
+            struct stat *st)
 {
     struct ofork *of;
+    struct file_key key;
+    struct stat buffer;
+    char   *p;
+    
+    if (st == NULL) {
+        st = &buffer;
+        if (stat(name, st) < 0)
+            return NULL;
+    }
+    key.dev = st->st_dev;
+    key.inode = st->st_ino;
 
-    for (of = ofork_table[hashfn(name)]; of; of = of->next) {
-        if ((vol == of->of_vol) && (dir == of->of_dir) &&
-                (strcmp(of->of_name, name) == 0))
+    for (of = ofork_table[hashfn(&key)]; of; of = of->next) {
+        if (vol == of->of_vol && dir == of->of_dir &&
+                key.dev == of->key.dev && key.inode == of->key.inode ) {
             return of;
+        }
     }
 
     return NULL;
 }
-
 
 void of_dealloc( of )
 struct ofork	*of;

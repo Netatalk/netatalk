@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.34 2002-08-29 18:57:26 didg Exp $
+ * $Id: fork.c,v 1.35 2002-09-04 17:28:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -235,7 +235,8 @@ int		ibuflen, *rbuflen;
     u_int32_t           did;
     u_int16_t		vid, bitmap, access, ofrefnum, attrbits = 0;
     char		fork, *path, *upath;
-    u_int16_t bshort;
+    struct stat         st;
+    u_int16_t           bshort;
 
     ibuf++;
     fork = *ibuf++;
@@ -281,6 +282,20 @@ int		ibuflen, *rbuflen;
     if (check_access(upath, access ) < 0) {
         return AFPERR_ACCESS;
     }
+
+    /* stat() data fork */
+    if (stat(upath, &st) < 0) {
+        switch ( errno ) {
+        case ENOENT:
+            return AFPERR_NOOBJ;
+        case EACCES:
+            return (access & OPENACC_WR) ? AFPERR_LOCK : AFPERR_ACCESS;
+        default:
+            LOG(log_error, logtype_afpd, "afp_openfork: ad_open: %s", strerror(errno) );
+            return AFPERR_PARAM;
+        }
+    }
+
     /* XXX: this probably isn't the best way to do this. the already
        open bits should really be set if the fork is opened by any
        program, not just this one. however, that's problematic to do
@@ -288,7 +303,7 @@ int		ibuflen, *rbuflen;
        ad_open so that we can keep file locks together.
        FIXME: add the fork we are opening? 
     */
-    if ((opened = of_findname(vol, curdir, path))) {
+    if ((opened = of_findname(vol, curdir, upath, &st))) {
         attrbits = ((opened->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
         attrbits |= ((opened->of_ad->ad_hf.adf_refcount > opened->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
                    
@@ -296,38 +311,30 @@ int		ibuflen, *rbuflen;
     }
 
     if (( ofork = of_alloc(vol, curdir, path, &ofrefnum, eid,
-                           adsame)) == NULL ) {
+                           adsame, &st)) == NULL ) {
         return( AFPERR_NFILE );
     }
 
+    ret = AFPERR_NOOBJ;
     if (access & OPENACC_WR) {
         /* try opening in read-write mode */
-        ret = AFPERR_NOOBJ;
         if (ad_open(upath, adflags, O_RDWR, 0, ofork->of_ad) < 0) {
             switch ( errno ) {
             case EROFS:
                 ret = AFPERR_VLOCK;
             case EACCES:
                 goto openfork_err;
-
                 break;
             case ENOENT:
-                {
-                    struct stat st;
+                if (fork == OPENFORK_DATA) {
+                    if (ad_open(upath, ADFLAGS_DF, O_RDWR, 0, ofork->of_ad) < 0) {
+                        goto openfork_err;
+                    }
+                    adflags = ADFLAGS_DF;
 
-                    /* see if client asked for the data fork */
-                    if (fork == OPENFORK_DATA) {
-                        if (ad_open(upath, ADFLAGS_DF, O_RDWR, 0, ofork->of_ad) < 0) {
-                            goto openfork_err;
-                        }
-                        adflags = ADFLAGS_DF;
-
-                    } else if (stat(upath, &st) == 0) {
-                        /* here's the deal. we only try to create the resource
-                         * fork if the user wants to open it for write acess. */
-                        if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
-                            goto openfork_err;
-                    } else
+                    /* here's the deal. we only try to create the resource
+                    * fork if the user wants to open it for write acess. */
+                    if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
                         goto openfork_err;
                 }
                 break;
@@ -363,19 +370,12 @@ int		ibuflen, *rbuflen;
                 adflags = ADFLAGS_DF;
                 break;
             case ENOENT:
-                {
-                    struct stat st;
-
-                    /* see if client asked for the data fork */
-                    if (fork == OPENFORK_DATA) {
-                        if (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0) {
-                            goto openfork_err;
-                        }
-                        adflags = ADFLAGS_DF;
-
-                    } else if (stat(upath, &st) != 0) {
+                /* see if client asked for the data fork */
+                if (fork == OPENFORK_DATA) {
+                    if (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0) {
                         goto openfork_err;
                     }
+                    adflags = ADFLAGS_DF;
                 }
                 break;
             case EMFILE :

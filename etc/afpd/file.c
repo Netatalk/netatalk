@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.53 2002-08-30 19:32:41 didg Exp $
+ * $Id: file.c,v 1.54 2002-09-04 17:28:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -374,7 +374,7 @@ int getfilparams(struct vol *vol,
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
-    if ((of = of_findname(vol, dir, path))) {
+    if ((of = of_findname(vol, dir, upath, st))) {
         adp = of->of_ad;
     	attrbits = ((of->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
     	attrbits |= ((of->of_ad->ad_hf.adf_refcount > of->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
@@ -428,7 +428,7 @@ int		ibuflen, *rbuflen;
     char		*path, *upath;
     int			creatf, did, openf, retvalue = AFP_OK;
     u_int16_t		vid;
-
+    int                 ret;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin afp_createfile:");
 #endif /* DEBUG */
@@ -459,13 +459,12 @@ int		ibuflen, *rbuflen;
     }
 
     upath = mtoupath(vol, path);
-    {
-    int ret;
-        if (0 != (ret = check_name(vol, upath))) 
-            return  ret;
-    }
+    if (0 != (ret = check_name(vol, upath))) 
+       return  ret;
 
-    if ((of = of_findname(vol, curdir, path))) {
+    ret = stat(upath, &st);
+    /* if upath is deleted we already in trouble anyway */
+    if (!ret && (of = of_findname(vol, curdir, upath, &st))) {
         adp = of->of_ad;
     } else {
         memset(&ad, 0, sizeof(ad));
@@ -473,11 +472,11 @@ int		ibuflen, *rbuflen;
     }
     if ( creatf) {
         /* on a hard create, fail if file exists and is open */
-        if ((stat(upath, &st) == 0) && of)
+        if (!ret && of)
             return AFPERR_BUSY;
         openf = O_RDWR|O_CREAT|O_TRUNC;
     } else {
-    	/* on a soft create, if the file is open then ad_open won't failed 
+    	/* on a soft create, if the file is open then ad_open won't fail
     	   because open syscall is not called
     	*/
     	if (of) {
@@ -615,7 +614,7 @@ int setfilparams(struct vol *vol,
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);
-    if ((of = of_findname(vol, curdir, path))) {
+    if ((of = of_findname(vol, curdir, upath, NULL))) {
         adp = of->of_ad;
     } else {
         memset(&ad, 0, sizeof(ad));
@@ -892,7 +891,7 @@ int		ibuflen, *rbuflen;
 {
     struct vol	*vol;
     struct dir	*dir;
-    char	*newname, *path, *p;
+    char	*newname, *path, *p, *upath;
     u_int32_t	sdid, ddid;
     int		plen, err, retvalue = AFP_OK;
     u_int16_t	svid, dvid;
@@ -933,7 +932,9 @@ int		ibuflen, *rbuflen;
      *      however, copyfile doesn't have any of that info,
      *      and locks need to stay coherent. as a result,
      *      we just balk if the file is opened already. */
-    if (of_findname(vol, curdir, path))
+
+    upath = mtoupath(vol, newname );
+    if (of_findname(vol, curdir, upath, NULL))
         return AFPERR_DENYCONF;
 
     newname = obj->newtmp;
@@ -976,7 +977,7 @@ int		ibuflen, *rbuflen;
         }
     }
 
-    if ( (err = copyfile(p, mtoupath(vol, newname ), newname,
+    if ( (err = copyfile(p, upath, newname,
                          vol_noadouble(vol))) < 0 ) {
         return err;
     }
@@ -1641,7 +1642,8 @@ int		ibuflen, *rbuflen;
     struct adouble	add;
     struct adouble	*adsp;
     struct adouble	*addp;
-    struct ofork	*opened;
+    struct ofork	*s_of;
+    struct ofork	*d_of;
     
 #ifdef CNID_DB
     int                 slen, dlen;
@@ -1699,9 +1701,9 @@ int		ibuflen, *rbuflen;
     }
     memset(&ads, 0, sizeof(ads));
     adsp = &ads;
-    if ((opened = of_findname(vol, curdir, path))) {
+    if ((s_of = of_findname(vol, curdir, upath, &srcst))) {
             /* reuse struct adouble so it won't break locks */
-            adsp = opened->of_ad;
+            adsp = s_of->of_ad;
     }
     /* save some stuff */
     sdir = curdir;
@@ -1749,10 +1751,16 @@ int		ibuflen, *rbuflen;
     }
     memset(&add, 0, sizeof(add));
     addp = &add;
-    if ((opened = of_findname(vol, curdir, path))) {
+    if ((d_of = of_findname(vol, curdir, upath, &destst))) {
             /* reuse struct adouble so it won't break locks */
-            addp = opened->of_ad;
+            addp = d_of->of_ad;
     }
+
+    /* they are not on the same device and at least one is open
+    */
+    if ((d_of || s_of)  && srcst.st_dev != destst.st_dev)
+        return AFPERR_MISC;
+    
 #ifdef CNID_DB
     /* look for destination id. */
     did = cnid_lookup(vol->v_db, &destst, curdir->d_did, upath,
@@ -1769,17 +1777,17 @@ int		ibuflen, *rbuflen;
     /* now, quickly rename the file. we error if we can't. */
     if ((err = renamefile(p, temp, temp, vol_noadouble(vol), adsp)) < 0)
         goto err_exchangefile;
-    of_rename(vol, sdir, spath, curdir, temp);
+    of_rename(vol, s_of, sdir, spath, curdir, temp);
 
     /* rename destination to source */
     if ((err = renamefile(upath, p, spath, vol_noadouble(vol), addp)) < 0)
         goto err_src_to_tmp;
-    of_rename(vol, curdir, path, sdir, spath);
+    of_rename(vol, d_of, curdir, path, sdir, spath);
 
     /* rename temp to destination */
     if ((err = renamefile(temp, upath, path, vol_noadouble(vol), adsp)) < 0)
         goto err_dest_to_src;
-    of_rename(vol, curdir, temp, curdir, path);
+    of_rename(vol, s_of, curdir, temp, curdir, path);
 
 #ifdef CNID_DB
     /* id's need switching. src -> dest and dest -> src. */
@@ -1827,17 +1835,17 @@ err_temp_to_dest:
 #endif
     /* rename dest to temp */
     renamefile(upath, temp, temp, vol_noadouble(vol), adsp);
-    of_rename(vol, curdir, upath, curdir, temp);
+    of_rename(vol, s_of, curdir, upath, curdir, temp);
 
 err_dest_to_src:
     /* rename source back to dest */
     renamefile(p, upath, path, vol_noadouble(vol), addp);
-    of_rename(vol, sdir, spath, curdir, path);
+    of_rename(vol, d_of, sdir, spath, curdir, path);
 
 err_src_to_tmp:
     /* rename temp back to source */
     renamefile(temp, p, spath, vol_noadouble(vol), adsp);
-    of_rename(vol, curdir, temp, sdir, spath);
+    of_rename(vol, s_of, curdir, temp, sdir, spath);
 
 err_exchangefile:
     return err;

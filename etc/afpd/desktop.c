@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.13 2002-05-29 18:02:59 jmarcus Exp $
+ * $Id: desktop.c,v 1.14 2002-09-04 17:28:08 didg Exp $
  *
  * See COPYRIGHT.
  */
@@ -717,7 +717,7 @@ int		ibuflen, *rbuflen;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path, *name;
+    char		*path, *name, *upath;
     int			clen;
     u_int32_t           did;
     u_int16_t		vid;
@@ -747,13 +747,13 @@ int		ibuflen, *rbuflen;
 
     clen = (u_char)*ibuf++;
     clen = min( clen, 199 );
-
-    if ((*path == '\0') || !(of = of_findname(vol, curdir, path))) {
+    upath = mtoupath( vol, path );
+    if ((*path == '\0') || !(of = of_findname(vol, curdir, upath, NULL))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
-    if (ad_open( mtoupath( vol, path ), vol_noadouble(vol) |
+    if (ad_open( upath , vol_noadouble(vol) |
                  (( *path == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
                  O_RDWR|O_CREAT, 0666, adp) < 0 ) {
         return( AFPERR_ACCESS );
@@ -786,7 +786,7 @@ int		ibuflen, *rbuflen;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path;
+    char		*path, *upath;
     u_int32_t		did;
     u_int16_t		vid;
 
@@ -809,12 +809,14 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
-    if ((*path == '\0') || !(of = of_findname(vol, curdir, path))) {
+
+    upath = mtoupath( vol, path );
+    if ((*path == '\0') || !(of = of_findname(vol, curdir, upath, NULL))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
-    if ( ad_open( mtoupath( vol, path ),
+    if ( ad_open( upath,
                   (( *path == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
                   O_RDONLY, 0666, adp) < 0 ) {
         return( AFPERR_NOITEM );
@@ -846,7 +848,7 @@ int		ibuflen, *rbuflen;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
-    char		*path;
+    char		*path, *upath;
     u_int32_t		did;
     u_int16_t		vid;
 
@@ -869,12 +871,14 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
-    if ((*path == '\0') || !(of = of_findname(vol, curdir, path))) {
+    upath = mtoupath( vol, path );
+    if ((*path == '\0') || !(of = of_findname(vol, curdir, upath, NULL))) {
         memset(&ad, 0, sizeof(ad));
         adp = &ad;
     } else
         adp = of->of_ad;
-    if ( ad_open( mtoupath( vol, path ),
+
+    if ( ad_open( upath,
                   (( *path == '\0' ) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
                   O_RDWR, 0, adp) < 0 ) {
         switch ( errno ) {
