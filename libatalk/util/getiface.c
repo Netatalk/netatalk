@@ -38,7 +38,7 @@
 #define IFACE_NUM 5
 
 /* we leave all of the ioctl's to the application */
-static int addname(char **list, int *i, int *length, const char *name) 
+static int addname(char **list, int *i, const char *name) 
 
 {
     /* if we've run out of room, allocate some more. just return
@@ -53,7 +53,7 @@ static int addname(char **list, int *i, int *length, const char *name)
 }
 
 
-static int getifaces(const int sockfd, char ***list, int *length)
+static int getifaces(const int sockfd, char ***list)
 {
 #ifdef HAVE_IFNAMEINDEX
       struct if_nameindex *ifstart, *ifs;
@@ -65,7 +65,7 @@ static int getifaces(const int sockfd, char ***list, int *length)
 	  new = (char **) malloc((sizeof(ifs)/sizeof(struct if_nameindex) + 1) * sizeof(char *));
       while (ifs && ifs->if_name) {
 	/* just bail if there's a problem */
-	if (addname(new, &i, length, ifs->if_name) < 0)
+	if (addname(new, &i, ifs->if_name) < 0)
 	  break;
 	ifs++;
       }
@@ -104,7 +104,7 @@ static int getifaces(const int sockfd, char ***list, int *length)
 	nextifr = (struct ifreq *)((caddr_t)ifr + ifrsize );
 
 	/* just bail if there's a problem */
-	if (addname(new, &i, length, ifr->ifr_name) < 0)
+	if (addname(new, &i, ifr->ifr_name) < 0)
 	  break;
     }
 	*list = new;
@@ -120,12 +120,12 @@ static int getifaces(const int sockfd, char ***list, int *length)
 char **getifacelist()
 {
   char **list;
-  int  length, i, fd;
+  int  i, fd;
 
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
     return NULL;
 
-  if ((i = getifaces(fd, &list, &length)) == 0) {
+  if ((i = getifaces(fd, &list)) == 0) {
     free(list);
     close(fd);
     return NULL;
