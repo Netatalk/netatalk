@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_get.c,v 1.5 2001-09-21 15:08:37 jmarcus Exp $
+ * $Id: cnid_get.c,v 1.6 2001-09-21 15:09:54 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,6 +29,7 @@ cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
   CNID_private *db;
   DBT key, data;
   cnid_t id;
+  int rc = 0;
 
   if (!(db = CNID) || (len > MAXPATHLEN))
     return 0;
