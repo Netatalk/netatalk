@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.5 2001-07-31 19:50:14 srittau Exp $
+ * $Id: printcap.c,v 1.6 2002-01-17 06:10:43 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -172,6 +172,7 @@ int tgetent( cap, bp, name)
 	register int i = 0, cnt = 0;
 	char ibuf[BUFSIZ];
 	int tf;
+	int skip;
 
 	hopcount = 0;
 	tbuf = bp;
@@ -190,7 +191,7 @@ int tgetent( cap, bp, name)
 			cp2 = getenv("TERM");
 			if (cp2==(char *) 0 || strcmp(name,cp2)==0) {
 				strcpy(bp,cp);
-				return(tnchktc());
+				return(tnchktc(cap));
 			} else {
 				tf = open(cap, 0);
 			}
@@ -199,13 +200,14 @@ int tgetent( cap, bp, name)
 	}
 	if (tf==0)
 		tf = open(cap, 0);
-#else
+#else /* V6 */
 	tf = open(cap, 0);
-#endif
+#endif /* V6 */
 	if (tf < 0)
 		return (-1);
 	for (;;) {
 		cp = bp;
+		skip = 0;
 		for (;;) {
 			if (i == cnt) {
 				cnt = read(tf, ibuf, BUFSIZ);
@@ -217,12 +219,21 @@ int tgetent( cap, bp, name)
 			}
 			c = ibuf[i++];
 			if (c == '\n') {
-				if (cp > bp && cp[-1] == '\\'){
+				if (!skip && cp > bp && cp[-1] == '\\') {
 					cp--;
 					continue;
 				}
+				skip = 0;
+				if (cp == bp)
+					continue;
+				else
+					break;
 				break;
 			}
+			if (c == '#' && cp == bp)
+				skip++;
+			if (skip)
+				continue;
 			if (cp >= bp+BUFSIZ) {
 				write(2,"Termcap entry too long\n", 23);
 				break;
