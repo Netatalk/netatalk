@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.16 2003-01-04 20:49:33 jmarcus Exp $
+ * $Id: cnid_lookup.c,v 1.17 2003-06-06 21:22:44 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,6 +19,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 
+#define use_make_cnid_data
 #include "cnid_private.h"
 
 #define LOGFILEMAX    100  /* kbytes */

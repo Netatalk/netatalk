@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.44 2003-06-05 09:17:12 didg Exp $
+ * $Id: unix.c,v 1.45 2003-06-06 21:18:00 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -23,7 +23,7 @@
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 /* STDC check */
-#if STDC_HEADERS
+#ifdef STDC_HEADERS
 #include <string.h>
 #else /* STDC_HEADERS */
 #ifndef HAVE_STRCHR
@@ -710,10 +710,12 @@ recursive_chown_end:
 /* This is equivalent of unix rename(). */
 int unix_rename(const char *oldpath, const char *newpath)
 {
+#if 0
 	char pd_name[PATH_MAX+1];
 	int i;
         struct stat pd_stat;
         uid_t uid;
+#endif
 
 	if (rename(oldpath, newpath) < 0)
 		return -1;

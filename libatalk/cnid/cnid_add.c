@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.34 2003-03-07 14:51:50 didg Exp $
+ * $Id: cnid_add.c,v 1.35 2003-06-06 21:22:43 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -37,6 +37,7 @@
 #include <atalk/cnid.h>
 #include <atalk/util.h>
 
+#define use_make_cnid_data
 #include "cnid_private.h"
 
 #ifdef CNID_DB_CDB
@@ -50,7 +51,7 @@ static int add_cnid(CNID_private *db, DBT *key, DBT *data) {
 #ifndef CNID_DB_CDB
     DB_TXN *tid;
 #endif /* CNID_DB_CDB */
-    int rc, ret;
+    int rc;
 
     memset(&altkey, 0, sizeof(altkey));
     memset(&altdata, 0, sizeof(altdata));

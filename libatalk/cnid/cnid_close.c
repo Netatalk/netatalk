@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.29 2003-03-09 19:55:35 didg Exp $
+ * $Id: cnid_close.c,v 1.30 2003-06-06 21:22:44 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,7 +24,6 @@
 
 void cnid_close(void *CNID) {
     CNID_private *db;
-    int rc;
 
     if (!(db = CNID)) {
         return;

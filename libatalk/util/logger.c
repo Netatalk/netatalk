@@ -134,8 +134,6 @@ void generate_message_details(char *message_details_buffer,
 
 int get_syslog_equivalent(enum loglevels loglevel);
 
-static char *get_command_name(char *commandpath);
-
 /* =========================================================================
     Instanciated data
    ========================================================================= */
@@ -235,12 +233,6 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
 {
 #ifndef DISABLE_LOGGER
 
-  struct stat statbuf;
-  int firstattempt;
-  int retval;
-  gid_t gid;
-  uid_t uid;
-  int access;
   char lastchar[2];
 
   log_file_data_pair *logs;
@@ -668,6 +660,7 @@ void load_proccessname_from_proc()
     Internal function definitions
    ========================================================================= */
 
+#if 0
 static char *get_command_name(char *commandpath)
 {
   char *ptr;
@@ -679,12 +672,13 @@ static char *get_command_name(char *commandpath)
     ptr = commandpath;
   else
     ptr++;
-
+                                                                                
 #ifdef DEBUG_OUTPUT_TO_SCREEN
   printf("Concluded %s\n", ptr);
 #endif
   return ptr;
 }
+#endif
 
 void  workout_what_to_print(struct what_to_print_array *what_to_print, 
 			    struct tag_log_file_data *log_struct)
@@ -720,17 +714,9 @@ void generate_message_details(char *message_details_buffer,
                               struct tag_log_file_data *log_struct,
                               enum loglevels loglevel, enum logtypes logtype)
 {
-  char datebuffer[32];
-  char processinfo[64];
-
   char *ptr = message_details_buffer;
   int   templen;
   int   len = message_details_buffer_length;
-
-  char log_buffer[MAXLOGSIZE];
-  const char *logtype_string;
-
-  char loglevel_string[12]; /* max int size is 2 billion, or 10 digits */
 
   struct what_to_print_array what_to_print;
 
@@ -929,8 +915,7 @@ void setuplog(char *logtype, char *loglevel, char *filename)
     can be taken from default if needs be.  
    */
   /* const char* sources[] = {"syslog", "filelog"}; */
-  const char *null = "";
-  int sourcenum, typenum, levelnum;
+  int typenum, levelnum;
   log_file_data_pair *logs = log_file_arr[logtype_default];
 
   /*

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.20 2002-08-30 03:12:52 jmarcus Exp $
+ * $Id: cnid_update.c,v 1.21 2003-06-06 21:22:45 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -19,6 +19,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 
+#define use_make_cnid_data
 #include "cnid_private.h"
 
 #ifdef CNID_DB_CDB

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_private.h,v 1.11 2002-05-30 06:41:19 jmarcus Exp $
+ * $Id: cnid_private.h,v 1.12 2003-06-06 21:22:45 srittau Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -113,6 +113,7 @@ typedef struct CNID_private {
 #define __inline__
 #endif /* __inline__ */
 
+#ifdef use_make_cnid_data
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
 static __inline__ char *make_cnid_data(const struct stat *st,
                                        const cnid_t did,
@@ -137,5 +138,6 @@ static __inline__ char *make_cnid_data(const struct stat *st,
 
     return start;
 }
+#endif /* use_make_cnid_date */
 
 #endif /* atalk/cnid/cnid_private.h */

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_mangle_add.c,v 1.5 2003-01-04 20:49:33 jmarcus Exp $
+ * $Id: cnid_mangle_add.c,v 1.6 2003-06-06 21:22:44 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,8 +35,7 @@ cnid_mangle_add(void *CNID, char *mfilename, char *filename)
 #ifndef CNID_DB_CDB
     DB_TXN *tid;
 #endif /* CNID_DB_CDB */
-    cnid_t id;
-    int rc, ret;
+    int rc;
 
     if (!(db = CNID)) {
         return -1;
