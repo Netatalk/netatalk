@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.22 2002-01-18 04:45:38 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.23 2002-01-18 04:46:19 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -60,9 +60,9 @@ retry:
     /* main database */
     if ((rc = db->db_cnid->put(db->db_cnid, tid, key, data, DB_NOOVERWRITE))) {
         if (rc == DB_LOCK_DEADLOCK) {
-    		if ((ret = txn_abort(tid)) != 0) {
-        		return ret;
-    		}
+            if ((ret = txn_abort(tid)) != 0) {
+                return ret;
+            }
             goto retry;
         }
         goto abort;
@@ -75,9 +75,9 @@ retry:
     altdata.size = key->size;
     if ((rc = db->db_devino->put(db->db_devino, tid, &altkey, &altdata, 0))) {
         if (rc == DB_LOCK_DEADLOCK) {
-    		if ((ret = txn_abort(tid)) != 0) {
-        		return ret;
-    		}
+            if ((ret = txn_abort(tid)) != 0) {
+                return ret;
+            }
             goto retry;
         }
         goto abort;
@@ -88,9 +88,9 @@ retry:
     altkey.size = data->size - CNID_DEVINO_LEN;
     if ((rc = db->db_didname->put(db->db_didname, tid, &altkey, &altdata, 0))) {
         if (rc == DB_LOCK_DEADLOCK) {
-    		if ((ret = txn_abort(tid)) != 0) {
-        		return ret;
-    		}
+            if ((ret = txn_abort(tid)) != 0) {
+                return ret;
+            }
             goto retry;
         }
         goto abort;
