@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.44 2002-05-13 04:59:36 jmarcus Exp $
+ * $Id: file.c,v 1.45 2002-05-20 15:03:19 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -459,6 +459,12 @@ int		ibuflen, *rbuflen;
             return AFPERR_BUSY;
         openf = O_RDWR|O_CREAT|O_TRUNC;
     } else {
+    	/* on a soft create, if the file is open then ad_open won't failed 
+    	   because open syscall is not called
+    	*/
+    	if (of) {
+    		return AFPERR_EXIST;
+    	}
         openf = O_RDWR|O_CREAT|O_EXCL;
     }
 
