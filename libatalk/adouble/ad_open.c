@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.13 2002-03-12 07:08:35 jmarcus Exp $
+ * $Id: ad_open.c,v 1.14 2002-04-14 10:51:39 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -594,7 +594,7 @@ int ad_open( path, adflags, oflags, mode, ad )
     const struct entry  *eid;
     struct stat         st;
     char		*slash, *ad_p;
-    int			hoflags, admode;
+    int			hoflags, phflags, admode;
     u_int16_t           ashort;
 
     if (ad->ad_inited != AD_INITED) {
@@ -609,10 +609,14 @@ int ad_open( path, adflags, oflags, mode, ad )
         ad->ad_refcount = 1;
     }
 
+    // File is always opened RW. Server checks if client may or may not write to.
+    // FIXME: is this a correct solution to this problem ?
+    phflags = (oflags & ~(O_RDONLY | O_WRONLY | O_RDWR)) | O_RDWR;
+
     if (adflags & ADFLAGS_DF) { 
         if (ad_dfileno(ad) == -1) {
 	  if (( ad->ad_df.adf_fd =
-		open( path, oflags, ad_mode( path, mode ) )) < 0 ) {
+		open( path, phflags, ad_mode( path, mode ) )) < 0 ) {
 	    return( -1 );
 	  }
 	  ad->ad_df.adf_off = 0;
@@ -627,14 +631,14 @@ int ad_open( path, adflags, oflags, mode, ad )
 	  admode = ad_mode( ad_p, mode ); /* FIXME? */
 	  
 	  hoflags = oflags & ~O_CREAT;
-	  if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, admode )) < 0 ) {
+	  if (( ad->ad_hf.adf_fd = open( ad_p, (hoflags & ~(O_RDONLY | O_WRONLY | O_RDWR)) | O_RDWR, admode )) < 0 ) {
 	    if ( errno == ENOENT && hoflags != oflags ) {
 	      /*
 	       * We're expecting to create a new adouble header file,
 	       * here.
 	       */
 	      errno = 0;
-	      if (( ad->ad_hf.adf_fd = open( ad_p, oflags,
+	      if (( ad->ad_hf.adf_fd = open( ad_p, phflags,
 					     admode )) < 0 ) {
 		/*
 		 * Probably .AppleDouble doesn't exist, try to
@@ -654,7 +658,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 		  }
 		  *slash = '/';
 		  if (( ad->ad_hf.adf_fd = 
-			open( ad_p, oflags, ad_mode( ad_p, mode) )) < 0 ) {
+			open( ad_p, phflags, ad_mode( ad_p, mode) )) < 0 ) {
 		    ad_close( ad, adflags );
 		    return( -1 );
 		  }
@@ -756,9 +760,16 @@ int ad_open( path, adflags, oflags, mode, ad )
 	      return( -1 );
 	    }
 	  }
-	}
+	} // if (ad_hfileno(ad) == -1)
+	// FIXME: This assumes that the only way while changing flags is RO->RW.
+	// There may be cases where this is not true, so now it's possible to 
+	// open fork RO, then open RW, then close RW and be able to write to it.
+	// Higher layers (afpd?) may mask this behavior, but it must be corrected.
+	if (ad->ad_hf.adf_flags != oflags) 
+		ad->ad_hf.adf_flags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
+
 	ad->ad_hf.adf_refcount++;
-    }
+    } // if (adflags & ADFLAGS_HF)
 	
     return( 0 );
 }
