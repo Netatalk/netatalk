@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.30 2002-10-11 14:18:25 didg Exp $
+ * $Id: auth.c,v 1.31 2002-10-11 17:07:19 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -77,7 +77,7 @@ static struct afp_versions	afp_versions[] = {
             { "AFPVersion 2.1",	21 },
             { "AFP2.2",	22 },
 #ifdef AFP3x
-            { "AFP3.0", 30 },
+            { "AFPX03", 30 },
             { "AFP3.1", 31 }
 #endif            
         };
@@ -269,13 +269,15 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
         LOG(log_info, logtype_afpd, "session from %s (%s)", hostname,
             inet_ntoa( dsi->client.sin_addr ) );
-
         if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
             LOG(log_error, logtype_afpd, "login: %s", strerror(errno) );
             return AFPERR_BADUAM;
         }
     }
 #else /* TRU64 */
+#if 0
+        if (setregid(pwd->pw_gid, pwd->pw_gid ) < 0 || setreuid(pwd->pw_uid,pwd->pw_uid ) < 0) {
+#endif        
         if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
             LOG(log_error, logtype_afpd, "login: %s", strerror(errno) );
             return AFPERR_BADUAM;
