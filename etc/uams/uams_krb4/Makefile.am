@@ -22,7 +22,7 @@ if USE_KERBEROS
 	  -I$(top_srcdir) -fomit-frame-pointer -c $<
 
 uams_krb4.so: kuam.o lifetime.o sent_to_kdc.o uams_krb4.o
-	$(LD) -shared $(LDSHAREDFLAGS) -o $@ *.o $(LIBS)
+	$(LD) $(LDSHAREDFLAGS) -o $@ *.o $(LIBS)
 
 #
 # install/install-strip:

@@ -393,12 +393,17 @@ if test x"$this_os" = "xfreebsd"; then
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(SENDFILE_FLAVOR_BSD)
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-shared"
 fi
 
 dnl ----- Linux specific -----
 if test x"$this_os" = "xlinux"; then 
 	AC_MSG_RESULT([ * Linux specific configuration])
-	dnl AC_DEFINE(SENDFILE_FLAVOR_LINUX)
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-shared"
 
 	dnl ----- check if we need the quotactl wrapper
 	AC_CHECK_HEADER(sys/quota.h,,
@@ -437,6 +442,9 @@ if test x"$this_os" = "xmacosx"; then
 	AC_DEFINE(HAVE_2ARG_DBTOB)
 	AC_DEFINE(NO_DLFCN_H)
 	AC_DEFINE(MACOSX_SERVER)
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-shared"
 fi
 
 dnl ----- NetBSD specific -----
@@ -446,6 +454,9 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
 	need_dash_r=yes 
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-shared"
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1)
@@ -460,6 +471,9 @@ if test x"$this_os" = "xopenbsd"; then
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-Bforcearchive -shared"
 
 	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1)
@@ -478,6 +492,10 @@ if test x"$this_os" = "xsolaris"; then
 	AC_DEFINE(SOLARIS)
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-G"
+
 	AC_MSG_RESULT([enabling Solaris kernel module build])
 	solaris_module=yes
 fi
@@ -492,9 +510,12 @@ if test x"$this_os" = "xtru64"; then
 	AC_DEFINE(USE_UFS_QUOTA_H)
 	AC_DEFINE(TRU64)
 	CFLAGS="-I\$(top_srcdir)/sys/tru64 $CFLAGS"
-	LDSHAREDFLAGS="-expect_unresolved \*"
+	LDSHAREDFLAGS="-shared -expect_unresolved \*"
 	need_dash_r=no
 	sysv_style=tru64
+
+	dnl ----- Set -shared flag
+	LDSHAREDFLAGS="-shared"
 fi
 
 dnl -- look for openssl  
