@@ -8,9 +8,15 @@
 	* ChangeLog: started updaing ChangeLog with important patch/fix
 	information, as it is *never* up to date.
 
+	* configure.in, acconfig.h: implemented AFS configuration option
+	patch from Wes Hardaker <hardaker@users.sourceforge.net>
+
+	* VERSION: bumped up version to 1.5pre5, since 1.5pre4 was kind of
+	paperbag-ish
+
 2001-02-20  jeff b  <jeff@univrel.pr.uconn.edu>
 
-	Released 1.5pre3
+	Released 1.5pre4
 	- Debian packaging in tree
 	- Numerous Makefile/build fixes
 	- .cvsignore implemented

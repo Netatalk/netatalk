@@ -29,6 +29,7 @@
 #undef UAM_DHX
 #undef UAM_PGP
 #undef UAM_RNDNUM
+#undef USE_AFS
 #undef USE_CAP
 #undef USE_CRACKLIB
 #undef USE_FLOCK_LOCKS
