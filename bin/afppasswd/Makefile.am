@@ -15,4 +15,6 @@ CFLAGS = @CFLAGS@ @SSL_CFLAGS@ -I$(top_srcdir)/sys \
     -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"
 
 install-exec-hook:
+if USE_DHX
 	chmod u+s $(DESTDIR)$(bindir)/afppasswd
+endif

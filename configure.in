@@ -1,9 +1,9 @@
-dnl $Id: configure.in,v 1.158 2002-05-29 18:02:57 jmarcus Exp $
+dnl $Id: configure.in,v 1.159 2002-06-11 17:21:10 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
 
-NETATALK_VERSION=`cat VERSION`
+NETATALK_VERSION=`cat $srcdir/VERSION`
 AC_SUBST(NETATALK_VERSION)
 
 AC_CANONICAL_SYSTEM
