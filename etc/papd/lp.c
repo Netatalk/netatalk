@@ -354,6 +354,27 @@ lp_open( out, sat )
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
+
+	if (lp.lp_person != NULL) {
+	    if ((pwent = getpwnam(lp.lp_person)) == NULL) {
+		syslog(LOG_ERR, "getpwnam %s: no such user", lp.lp_person);
+		spoolerror( out, NULL );
+		return( -1 );
+	    }
+	} else {
+	    if ((pwent = getpwnam(printer->p_operator)) == NULL) {
+		syslog(LOG_ERR, "getpwnam %s: no such user", printer->p_operator);
+		spoolerror( out, NULL );
+		return( -1 );
+	    }
+	}
+
+	if (fchown(fd, pwent->pw_uid, -1) < 0) {
+	    syslog(LOG_ERR, "chown %s %s: %m", pwent->pw_name, name);
+	    spoolerror( out, NULL );
+	    return( -1 );
+	}
+
 	if (( lp.lp_stream = fdopen( fd, "w" )) == NULL ) {
 	    syslog( LOG_ERR, "lp_open fdopen: %m" );
 	    spoolerror( out, NULL );

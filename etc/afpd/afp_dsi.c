@@ -101,7 +101,7 @@ static void afp_dsi_timedown()
 static void afp_dsi_getmesg (void)
 {
       readmessage();
-      dsi_attention(child.dsi, AFPATTN_MESG | AFPATTN_TIME(5));
+      dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5));
 }
 #endif
 
