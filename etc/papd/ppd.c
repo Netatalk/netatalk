@@ -126,27 +126,13 @@ getppdent( stream )
 	}
 
 	/* value */
-	if ( *p == '"' ) {
+	q = p;
+	while ( *p != '\n' ) {
 	    p++;
-	    q = p;
-
-	    while ( *p != '"' && *p != '\n' ) {
-		p++;
-	    }
-
-	    if ( *p == '\n' ) {
-		continue;
-	    }
-	    *p = '\0';
-	    ppdent.pe_value = q;
-	} else {
-	    q = p;
-	    while ( *p != '\n' ) {
-		p++;
-	    }
-	    *p = '\0';
-	    ppdent.pe_value = q;
 	}
+	*p = '\0';
+	ppdent.pe_value = q;
+
 	return( &ppdent );
     }
 
