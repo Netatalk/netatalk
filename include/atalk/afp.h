@@ -198,5 +198,6 @@ typedef enum {
 
 /* version 3.1 */
 #define AFP_ENUMERATE_EXT2      68
+#define AFP_ZZZ                 122
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.26 2002-12-04 10:59:36 didg Exp $
+ * $Id: afp_dsi.c,v 1.27 2003-03-12 15:07:00 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -244,6 +244,7 @@ void afp_over_dsi(AFPObj *obj)
     /* get stuck here until the end */
     while ((cmd = dsi_receive(dsi))) {
         child.tickle = 0;
+        dsi_sleep(dsi, 0); /* wake up */
 
         if (cmd == DSIFUNC_TICKLE) {
             /* so we don't get killed on the client side. */

@@ -65,6 +65,7 @@ typedef struct DSI {
   int statuslen;
   unsigned int datalen, cmdlen;
   size_t read_count, write_count;
+  int asleep; /* client won't reply AFP 0x7a ? */
   /* inited = initialized?, child = a child?, noreply = send reply? */
   char child, inited, noreply;
   const char *program; 
@@ -138,6 +139,7 @@ extern int  dsi_cmdreply __P((DSI *, const int));
 extern int dsi_tickle __P((DSI *));
 extern void dsi_getstatus __P((DSI *));
 extern void dsi_close __P((DSI *));
+extern void dsi_sleep __P((DSI *, const int ));
 
 /* low-level stream commands -- in dsi_stream.c */
 extern size_t dsi_stream_write __P((DSI *, void *, const size_t));

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.11 2002-10-13 06:18:14 didg Exp $
+ * $Id: uams_guest.c,v 1.12 2003-03-12 15:07:03 didg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -34,6 +34,7 @@ char *strchr (), *strrchr ();
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
+/* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
 			char *ibuf, int ibuflen, 
 			char *rbuf, int *rbuflen)
@@ -68,6 +69,13 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 
     *uam_pwd = pwent;
     return( AFP_OK );
+}
+
+static int noauth_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
+                     char *ibuf, int ibuflen,
+                     char *rbuf, int *rbuflen)
+{
+        return ( noauth_login (obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
 
@@ -119,9 +127,10 @@ int noauth_printer(start, stop, username, out)
 
 static int uam_setup(const char *path)
 {
-  if (uam_register(UAM_SERVER_LOGIN, path, "No User Authent",
-	       noauth_login, NULL, NULL) < 0)
-	return -1;
+  if (uam_register(UAM_SERVER_LOGIN_EXT, path, "No User Authent",
+                   noauth_login, NULL, NULL, noauth_login_ext) < 0)
+        return -1;
+
   if (uam_register(UAM_SERVER_PRINTAUTH, path, "NoAuthUAM",
 		noauth_printer) < 0)
 	return -1;

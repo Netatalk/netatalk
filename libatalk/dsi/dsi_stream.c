@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.10 2003-01-12 14:40:05 didg Exp $
+ * $Id: dsi_stream.c,v 1.11 2003-03-12 15:07:06 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -87,6 +87,10 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
   return stored;
 }
 
+void dsi_sleep(DSI *dsi, const int state)
+{
+    dsi->asleep = state;
+}
 
 /* write data. 0 on failure. this assumes that dsi_len will never
  * cause an overflow in the data buffer. */

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_util.c,v 1.2 2002-10-05 13:07:18 didg Exp $
+ * $Id: afp_util.c,v 1.3 2003-03-12 15:07:01 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -76,11 +76,13 @@ const char *AfpNum2name(int num)
     case AFP_READ_EXT      : return "AFP_READ_EXT";         /*  60 */
     case AFP_WRITE_EXT     : return "AFP_WRITE_EXT";        /*  61 */
     case AFP_GETSESSTOKEN  : return "AFP_GETSESSTOKEN";     /*  64 */ 
+    case AFP_LOGIN_EXT     : return "AFP_LOGIN_EXT";        /*  63 */
     case AFP_DISCTOLDSESS  : return "AFP_DISCTOLDSESS";     /*  65 */
     case AFP_ENUMERATE_EXT : return "AFP_ENUMERATE_EXT";    /*  66 */
     case AFP_CATSEARCH_EXT : return "AFP_CATSEARCH_EXT";    /*  67 */
     /* version 3.1 */
     case AFP_ENUMERATE_EXT2: return "AFP_ENUMERATE_EXT2";   /*  68 */
+    case AFP_ZZZ  : return "AFP_ZZZ";	    /* 122 */
 															  
 	case AFP_ADDICON       : return "AFP_ADDICON";       	/* 192 */
 	}                    									  

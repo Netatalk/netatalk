@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tickle.c,v 1.4 2002-12-04 10:59:37 didg Exp $
+ * $Id: dsi_tickle.c,v 1.5 2003-03-12 15:07:07 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -27,6 +27,9 @@ int dsi_tickle(DSI *dsi)
   u_int16_t id;
   int ret;
   
+  if (dsi->asleep)
+      return 1;
+
   id = htons(dsi_serverID(dsi));
 
   memset(block, 0, sizeof(block));

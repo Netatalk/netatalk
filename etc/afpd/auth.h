@@ -1,5 +1,5 @@
 /*
- * $Id: auth.h,v 1.4 2002-10-16 02:20:41 didg Exp $
+ * $Id: auth.h,v 1.5 2003-03-12 15:07:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -48,5 +48,6 @@ extern int	afp_logout __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_getuserinfo __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_getsession __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
 extern int      afp_disconnect __P((AFPObj *, char *, int, char *, int *));
+extern int      afp_zzz __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
 
 #endif /* auth.h */

@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.41 2003-01-26 16:40:44 srittau Exp $
+ * $Id: auth.c,v 1.42 2003-03-12 15:07:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -307,9 +307,11 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
            enumerate_ext */
 	uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH, afp_catsearch, NULL); 
 	uam_afpserver_action(AFP_GETSESSTOKEN,  UAM_AFPSERVER_POSTAUTH, afp_getsession, NULL); 
-	uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect, NULL); 
 	uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext, NULL); 
 	uam_afpserver_action(AFP_WRITE_EXT,     UAM_AFPSERVER_POSTAUTH, afp_write_ext, NULL); 
+	uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect, NULL); 
+	uam_afpserver_action(AFP_ZZZ,  UAM_AFPSERVER_POSTAUTH, afp_zzz, NULL); 
+
 	break;
     }
     obj->logout = logout;
@@ -322,6 +324,28 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     return( AFP_OK );
 }
 
+/* ---------------------- */
+int afp_zzz (obj, ibuf, ibuflen, rbuf, rbuflen ) /* Function 122 */
+AFPObj       *obj;
+char         *ibuf, *rbuf;
+unsigned int ibuflen, *rbuflen;
+{
+    u_int32_t	retdata;
+
+    *rbuflen = 0;
+
+    retdata = 1;
+    *rbuflen = sizeof(retdata);
+    retdata = htonl(retdata);
+    memcpy(rbuf, &retdata, sizeof(retdata));
+    if (obj->proto == AFPPROTO_DSI) {
+        DSI *dsi = obj->handle;
+        dsi_sleep(dsi, 1);
+    }
+    rbuf += sizeof(retdata);
+    return AFP_OK;
+}
+   
 /* ---------------------- */
 int afp_getsession(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj       *obj;
@@ -362,6 +386,10 @@ unsigned int ibuflen, *rbuflen;
             /* memcpy (id, ibuf, idlen) */
         }
         break;
+    case 3: /* Jaguar */
+    case 4:
+	type = 0;
+	break;
     }
     *rbuflen = sizeof(type);
     type = htons(type);
@@ -406,7 +434,7 @@ int		ibuflen, *rbuflen;
     }   
     memcpy(&token, ibuf, tklen);
     /* killed old session, not easy */
-    return AFP_OK;
+    return AFPERR_SESSCLOS;   /* was AFP_OK */
 }
 
 /* ---------------------- */
@@ -562,7 +590,7 @@ unsigned int	ibuflen, *rbuflen;
     ibuflen -= len;    
 
     /* directory service name */
-    if (!ibuflen)
+    if (!ibuflen) 
         return send_reply(obj, AFPERR_PARAM);
     type = *ibuf;
     ibuf++;
@@ -578,9 +606,9 @@ unsigned int	ibuflen, *rbuflen;
         ibuflen--;
         break;
     case 3:
-        if (ibuflen <= sizeof(len16))
+        /* With "No User Authen" it is equal */
+        if (ibuflen < sizeof(len16)) 
             return send_reply(obj, AFPERR_PARAM);
-    
         memcpy(&len16, ibuf, sizeof(len16));
         ibuf += sizeof(len16);
         ibuflen -= sizeof(len16);
@@ -596,11 +624,8 @@ unsigned int	ibuflen, *rbuflen;
     ibuf += len;
     ibuflen -= len;
     
-    if (!ibuflen )
-        return send_reply(obj, AFPERR_PARAM);
-
     /* Pad */
-    if ((unsigned long) ibuf & 1) { /* pad character */
+    if (ibuflen && ((unsigned long) ibuf & 1)) { /* pad character */
         ibuf++;
         ibuflen--;
     }
