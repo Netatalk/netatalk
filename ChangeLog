@@ -1,4 +1,8 @@
-($Id: ChangeLog,v 1.21 2001-03-22 17:57:33 rufustfirefly Exp $)
+2001-03-22  Lance Levsen  <lance.l@dontspam.home.com>
+
+	* etc/uams/Makefile.am: Added $LDFLAGS to fix broken compile due
+	to inability to find libcrypto. libcrypto is defined in LDFLAGS as
+	"-L$ssldir/lib" in configure.
 
 2001-03-22 12:57 EST  jeff b  <jeff@univrel.pr.uconn.edu>  
 
