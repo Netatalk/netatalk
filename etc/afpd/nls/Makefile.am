@@ -24,6 +24,4 @@ install-data-local: makecode
 # cleanup
 #
 
-clean distclean clean-recursive distclean-recursive:
-	$(RM) maccode.* *.o core makecode parsecode
-
+CLEANFILES = maccode.*
