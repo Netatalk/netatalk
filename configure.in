@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.108 2001-10-06 15:57:26 srittau Exp $
+dnl $Id: configure.in,v 1.109 2001-10-07 10:51:27 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -318,7 +318,7 @@ AC_ARG_WITH(message-dir,
 )
 
 AC_ARG_ENABLE(srvloc,
-	[  --enable-srvloc         Turn on Server Location Protocol support EXPERIMENTAL)],
+	[  --enable-srvloc         Turn on Server Location Protocol support (EXPERIMENTAL)],
 	srvloc=$enableval,
 	srvloc=no
 )
@@ -339,39 +339,41 @@ if test "x$srvloc" != "xno"; then
 fi
 
 # Check for PAM libs
-PAM_MSG="yes"
+AC_MSG_CHECKING([whether PAM support should be enabled])
 AC_ARG_WITH(pam,
-    [  --with-pam              Enable PAM support ],
-    [
-        if test "x$withval" = "xno" ; then
-			PAM_MSG="no"
-		else 
-            PAM_MSG="yes"
-        fi
-    ]
+    [  --with-pam              Enable PAM support],
+    [PAM_MSG="$withval"],
+    [PAM_MSG="yes"]
 )
+AC_MSG_RESULT($PAM_MSG)
 
 if test "x$PAM_MSG" = "xyes"; then
-	AC_MSG_RESULT([enabling pam modules support])
 	if test "x$ac_cv_header_security_pam_appl_h" != "xyes" ; then
 		AC_MSG_ERROR([PAM headers not found]) 
 	fi
         
 	AC_CHECK_LIB(dl, dlopen, , )
-	AC_CHECK_LIB(pam, pam_set_item, , AC_MSG_ERROR([*** libpam missing]))
-	AC_CHECK_FUNCS(pam_getenvlist)
+	AC_CHECK_LIB(pam, pam_set_item, , AC_MSG_ERROR([libpam missing]))
+	AC_CHECK_FUNCS(pam_getenvlist, , AC_MSG_ERROR([invalid libpam]))
 
 	AC_DEFINE(USE_PAM)
 	use_pam_so=yes
+	compile_pam=yes
+else
+	use_pam_so=no
+	compile_pam=no
 fi
 
-shadowpw=no
+AC_MSG_CHECKING([whether shadow support should be enabled])
 AC_ARG_WITH(shadow,
 	[  --with-shadow           enable shadow password support],
-	AC_MSG_RESULT([enabling shadow password support])
-	AC_DEFINE(SHADOWPW)
-	shadowpw=yes
+	[shadowpw="$withval"],
+	[shadowpw=no]
 )
+if test "x$shadowpw" = "xyes"; then
+	AC_DEFINE(SHADOWPW)
+fi
+AC_MSG_RESULT([$shadowpw])
 
 AC_ARG_ENABLE(shell-check,
 	[  --disable-shell-check   disable checking for a valid shell],
@@ -381,11 +383,16 @@ AC_ARG_ENABLE(shell-check,
 	fi
 )
 
+AC_MSG_CHECKING([whether flock locks should be enabled])
 AC_ARG_WITH(flock-locks,
-	[  --with-flock-locks      enable flock locks support],
-	AC_MSG_RESULT([enabling flock locks])
-	AC_DEFINE(USE_FLOCK_LOCKS)
+	[  --with-flock-locks      enable flock locks support],a
+	[flock_locks="$withval"],
+	[flock_locks="no"]
 )
+if test "x$flock_locks" = "xyes"; then
+	AC_DEFINE(USE_FLOCK_LOCKS)
+fi
+AC_MSG_RESULT([$flock_locks])
 
 AC_ARG_WITH(tcp-wrappers,
 	[  --with-tcp-wrappers     enable TCP wrappers support],
@@ -421,14 +428,14 @@ AC_ARG_ENABLE(cobalt,
 )
 
 dnl ----- timelord compilation (disabled by default)
+AC_MSG_CHECKING([whether timelord should be compiled])
 compile_timelord=no
 AC_ARG_ENABLE(timelord,
 	[  --enable-timelord       enable compilation of timelord server],
-	if test "$enableval" = "yes"; then
-		compile_timelord=yes
-	fi
-	AC_MSG_RESULT([enabling timelord compilation])
+	[compile_timelord="$enableval"],
+	[compile_timelord="no"]
 )
+AC_MSG_RESULT([$compile_timelord])
 
 AC_ARG_WITH(uams-path,
 	[  --with-uams-path=path   path to UAMs [default=PKGCONF/uams]],
