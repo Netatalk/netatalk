@@ -6,7 +6,11 @@ SUBDIRS = uams_krb4
 # conditionally build some modules
 #
 
+if USE_GSSAPI
+UAMS_GENERIC = uams_guest.la uams_passwd.la uams_gss.la
+else
 UAMS_GENERIC = uams_guest.la uams_passwd.la
+endif
 
 if USE_DHX
 UAMS_DHX_GENERIC = uams_randnum.la uams_pgp.la uams_dhx_passwd.la
@@ -51,6 +55,7 @@ uams_pam_la_SOURCES        = uams_pam.c
 uams_pgp_la_SOURCES        = uams_pgp.c
 uams_dhx_passwd_la_SOURCES = uams_dhx_passwd.c crypt.c crypt.h
 uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c crypt.c crypt.h
+uams_gss_la_SOURCES	   = uams_gss.c
 
 #
 # flags
@@ -65,6 +70,7 @@ uams_pam_la_CFLAGS        = @CFLAGS@
 uams_pgp_la_CFLAGS        = @CFLAGS@ $(CRYPT_CFLAGS)
 uams_dhx_passwd_la_CFLAGS = @CFLAGS@ @SSL_CFLAGS@
 uams_dhx_pam_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@
+uams_gss_la_CFLAGS	  = @CFLAGS@ @GSSAPI_CFLAGS@
 
 uams_guest_la_LDFLAGS      = -module -avoid-version
 uams_randnum_la_LDFLAGS    = -module -avoid-version $(CRYPT_LIBS)
@@ -73,6 +79,7 @@ uams_pam_la_LDFLAGS        = -module -avoid-version -lpam
 uams_pgp_la_LDFLAGS        = -module -avoid-version $(CRYPT_LIBS)
 uams_dhx_passwd_la_LDFLAGS = -module -avoid-version @SSL_LIBS@
 uams_dhx_pam_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@ -lpam
+uams_gss_la_LDFLAGS	   = -module -avoid-version @GSSAPI_LIBS@
 
 #
 # module compilation

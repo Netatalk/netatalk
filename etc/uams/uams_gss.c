@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.1 2003-08-22 17:12:45 samnoble Exp $
+ * $Id: uams_gss.c,v 1.2 2003-09-03 18:27:14 samnoble Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -34,15 +34,37 @@ char *strchr (), *strrchr ();
 #endif /* STDC_HEADERS */
 
 #include <atalk/logger.h>
-
-// #include <security/pam_appl.h>
-
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
+#include <errno.h>
+
+#if HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif /* HAVE_GSSAPI_H */
+
+#if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
+#endif /* HAVE_GSSAPI_GSSAPI_H */
+
+#if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
+#endif /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
+
+#if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
+#endif /* HAVE_GSSAPI_GSSAPI_KRB5_H */
+
+#if HAVE_COM_ERR_H
+#include <com_err.h>
+#endif /* HAVE_COM_ERR_H */
+
+/* This is a Heimdal/MIT compatibiility fix */
+#ifndef GSS_C_NT_HOSTBASED_SERVICE
+#define GSS_C_NT_HOSTBASED_SERVICE gss_nt_service_name
+#endif
+
+#define MIN(a, b) ((a > b) ? b : a)
 
 /* The following routine is derived from code found in some GSS
  * documentation from SUN.
@@ -94,12 +116,7 @@ void log_ctx_flags( OM_uint32 flags )
     if (flags & GSS_C_INTEG_FLAG)
         LOG(log_debug, logtype_uams, "uams_gss.c :context flag: GSS_C_INTEG_FLAG" );
 }
-/* We work around something I don't entirely understand... */
-#if !defined (GSS_C_NT_HOSTBASED_SERVICE)
-#define GSS_C_NT_HOSTBASED_SERVICE gss_nt_service_name
-#endif
 
-#define MIN(a, b) ((a > b) ? b : a)
 /* return 0 on success */
 static int do_gss_auth( char *service, char *ibuf, int ticket_len,
 	       	 char *rbuf, int *rbuflen, char *username, int ulen ) 
@@ -147,7 +164,9 @@ static int do_gss_auth( char *service, char *ibuf, int ticket_len,
     ticket_buffer.value = ibuf;
     authenticator_buff.length = 0;
     authenticator_buff.value = NULL;
-    LOG(log_debug, logtype_uams, "uams_gss.c :do_gss_auth: accepting context" );
+    LOG(log_debug, logtype_uams, 
+	"uams_gss.c :do_gss_auth: accepting context (ticketlen: %u, value: %X)",
+        ticket_buffer.length, ticket_buffer.value );
     major_status = gss_accept_sec_context( &minor_status, &context_handle,
 		    	server_creds, &ticket_buffer, GSS_C_NO_CHANNEL_BINDINGS,
 			&client_name, NULL, &authenticator_buff,
@@ -188,7 +207,10 @@ static int do_gss_auth( char *service, char *ibuf, int ticket_len,
 
 	/* Clean up after ourselves */
         gss_release_name( &minor_status, &client_name );
-        gss_release_buffer( &minor_status, &authenticator_buff );
+
+	if (authenticator_buff.value)
+            gss_release_buffer( &minor_status, &authenticator_buff );
+
         gss_delete_sec_context( &minor_status, 
 			&context_handle, NULL );
     } else {
@@ -354,9 +376,11 @@ static int uam_setup(const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Client Krb v2", 
 		   gss_login, gss_logincont, gss_logout, gss_login_ext) < 0)
-        return -1;
+	if (uam_register( UAM_SERVER_LOGIN, path, "Client Krb v2",
+		gss_login, gss_logincont, gss_logout ) < 0)
+            return -1;
 
-  return 0;
+    return 0;
 }
 
 static void uam_cleanup(void)
