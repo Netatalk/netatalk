@@ -40,7 +40,16 @@
  */
 #define HEADBUFSIZ	128
 
-u_short		updcrc();
+/*      Forward Declarations
+ */
+int bin_open(char *binfile, int flags, struct FHeader *fh, int options);
+int bin_close(int keepflag);
+int bin_read(int fork, char *buffer, int length);
+int bin_write(int fork, char *buffer, int length);
+int bin_header_read(struct FHeader *fh, int revision);
+int bin_header_write(struct FHeader *fh);
+int test_header(void);
+u_short updcrc();
 
 /*	Both input and output routines use this struct and the
 	following globals; therefore this module can only be used
@@ -530,7 +539,7 @@ int bin_header_write( fh )
  * so, the check for byte 74 isn't very useful.
  */
 
-int test_header()
+int test_header(void)
 {
     const char          zeros[25] = "";
     u_int32_t		cc;
