@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.8 2002-05-07 04:55:26 morgana Exp $
+ * $Id: pap.c,v 1.9 2002-11-25 01:33:02 jmarcus Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -245,7 +245,7 @@ int main( ac, av )
 	exit( 1 );
     }
 
-    if ( isatty( 0 )) {
+    if ( isatty( 1 )) {
 	printf( "Trying %u.%d:%d ...\n", ntohs( nn.nn_sat.sat_addr.s_net ),
 		nn.nn_sat.sat_addr.s_node, nn.nn_sat.sat_port );
     }
