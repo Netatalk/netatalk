@@ -1,5 +1,5 @@
 /*
- * $Id: atp_internals.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_internals.h,v 1.3 2001-08-15 02:17:57 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -26,6 +26,7 @@
 #ifndef ATP_INTERNALS_H
 #define ATP_INTERNALS_H 1
 
+#include <sys/types.h>
 #include <sys/cdefs.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>

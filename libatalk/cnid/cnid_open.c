@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: cnid_open.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -106,13 +106,13 @@ static int compare_unix(const DBT *a, const DBT *b)
   int len, ret;
 
   /* sort by did */
-  if (ret = compare_did(a, b))
+  if ((ret = compare_did(a, b)))
     return ret;
 
-  sa = a->data + 4; /* shift past did */
-  sb = b->data + 4;
+  sa = (u_int8_t *) a->data + 4; /* shift past did */
+  sb = (u_int8_t *) b->data + 4;
   for (len = MIN(a->size, b->size); len-- > 4; sa++, sb++)
-    if (ret = (*sa - *sb))
+    if ((ret = (*sa - *sb)))
       return ret; /* sort by lexical ordering */
 
   return a->size - b->size; /* sort by length */
@@ -128,13 +128,13 @@ static int compare_mac(const DBT *a, const DBT *b)
   int len, ret;
 
   /* sort by did */
-  if (ret = compare_did(a, b))
+  if ((ret = compare_did(a, b)))
     return ret;
 
-  sa = a->data + 4;
-  sb = b->data + 4;
+  sa = (u_int8_t *) a->data + 4;
+  sb = (u_int8_t *) b->data + 4;
   for (len = MIN(a->size, b->size); len-- > 4; sa++, sb++)
-    if (ret = (_diacasemap[*sa] - _diacasemap[*sb]))
+    if ((ret = (_diacasemap[*sa] - _diacasemap[*sb])))
 	  return ret; /* sort by lexical ordering */
 
   return a->size - b->size; /* sort by length */
@@ -234,7 +234,7 @@ mkdir_appledb:
   if (db_create(&db->db_didname, db->dbenv, 0))
   	goto fail_appinit;
 
-  db->db_didname->set_bt_compare(db->db_didname, compare_unix);
+  db->db_didname->set_bt_compare(db->db_didname, &compare_unix);
   if (db->db_didname->open(db->db_didname, DBDIDNAME, NULL, DB_BTREE, open_flag, 0666)) {
     goto fail_appinit;
   }
@@ -245,7 +245,7 @@ mkdir_appledb:
   memset(&data, 0, sizeof(data));
   key.data = DBVERSION_KEY;
   key.size = DBVERSION_KEYLEN;
-  while (errno = db->db_didname->get(db->db_didname, NULL, &key, &data, 0)) {
+  while ((errno = db->db_didname->get(db->db_didname, NULL, &key, &data, 0))) {
     switch (errno) {
     case EAGAIN:
       continue;

@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_getsess.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_getsess.c,v 1.4 2001-08-15 02:18:57 srittau Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -48,7 +49,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
   switch (pid = dsi->proto_open(dsi)) {
   case -1:
     /* if we fail, just return. it might work later */
-    syslog(LOG_ERR, "dsi_getsess: %m");
+    syslog(LOG_ERR, "dsi_getsess: %s", strerror(errno));
     return dsi;
 
   case 0: /* child. mostly handled below. */
@@ -59,7 +60,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     /* using SIGQUIT is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
     if (server_child_add(children, CHILD_DSIFORK, pid) < 0) {
-      syslog(LOG_ERR, "dsi_getsess: %m");
+      syslog(LOG_ERR, "dsi_getsess: %s", strerror(errno));
       dsi->header.dsi_flags = DSIFL_REPLY;
       dsi->header.dsi_code = DSIERR_SERVBUSY;
       dsi_send(dsi);

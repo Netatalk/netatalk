@@ -524,25 +524,30 @@ unsigned const char	_dialowermap[] = {
 	255	/* 255	caron*/,
 };
 
-int strdiacasecmp( s1, s2 )
-    const unsigned char	*s1, *s2;
+int strdiacasecmp( const char *s1, const char *s2 )
 {
-    while ( _diacasemap[ *s1 ] == _diacasemap[ *s2++ ] ) {
+    while ( _diacasemap[ (unsigned char) *s1 ] ==
+	    _diacasemap[ (unsigned char) *s2++ ] ) {
 	if ( *s1++ == '\0' ) {
 	    return( 0 );
 	}
     }
-    return( _diacasemap[ *s1 ] - _diacasemap[ *--s2 ] );
+    return( _diacasemap[ (unsigned char) *s1 ] -
+	    _diacasemap[ (unsigned char) *--s2 ] );
 }
 
-int strndiacasecmp( s1, s2, n )
-    const unsigned char	*s1, *s2;
-    int			n;
+int strndiacasecmp( const char *s1, const char *s2, size_t n )
 {
-    while ( --n >= 0 && _diacasemap[ *s1 ] == _diacasemap[ *s2++ ] ) {
+    while ( --n >= 0 &&
+	    _diacasemap[ (unsigned char) *s1 ] ==
+	    _diacasemap[ (unsigned char) *s2++ ] ) {
 	if ( *s1++ == '\0' ) {
 	    return( 0 );
 	}
     }
-    return( n < 0 ? 0 : _diacasemap[ *s1 ] - _diacasemap[ *--s2 ] );
+
+    if (n < 0)
+	return 0;
+    return _diacasemap[ (unsigned char) *s1 ] -
+	   _diacasemap[ (unsigned char) *--s2 ];
 }

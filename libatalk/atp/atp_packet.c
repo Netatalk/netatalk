@@ -1,5 +1,5 @@
 /*
- * $Id: atp_packet.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_packet.c,v 1.4 2001-08-15 02:17:57 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -102,11 +102,10 @@ void atp_print_addr( s, saddr )
 #endif /* EBUG */
 
 
-void atp_build_req_packet( pktbuf, tid, ctrl, atpb )
-    struct atpbuf	*pktbuf;
-    u_int16_t		tid;
-    u_int8_t		ctrl;
-    struct atp_block	*atpb;
+void atp_build_req_packet( struct atpbuf *pktbuf,
+			   u_int16_t tid,
+			   u_int8_t ctrl,
+			   struct atp_block *atpb )
 {
     struct atphdr	hdr;
 
@@ -125,12 +124,11 @@ void atp_build_req_packet( pktbuf, tid, ctrl, atpb )
     pktbuf->atpbuf_dlen = ATP_HDRSIZE + atpb->atp_sreqdlen;
 }
 
-void atp_build_resp_packet( pktbuf, tid, ctrl, atpb, seqnum )
-    struct atpbuf	*pktbuf;
-    u_int16_t		tid;
-    u_int8_t		ctrl;
-    struct atp_block	*atpb;
-    u_int8_t		seqnum;
+void atp_build_resp_packet( struct atpbuf *pktbuf,
+			    u_int16_t tid,
+			    u_int8_t ctrl,
+			    struct atp_block *atpb,
+			    u_int8_t seqnum )
 {
     struct atphdr	hdr;
 
@@ -152,13 +150,12 @@ void atp_build_resp_packet( pktbuf, tid, ctrl, atpb, seqnum )
 
 
 int
-atp_recv_atp( ah, fromaddr, func, tid, rbuf, wait )
-    ATP			ah;
-    struct sockaddr_at	*fromaddr;
-    u_int8_t		*func;
-    u_int16_t		tid;
-    char		*rbuf;
-    int			wait;
+atp_recv_atp( ATP ah,
+	      struct sockaddr_at *fromaddr,
+	      u_int8_t *func,
+	      u_int16_t tid,
+	      char *rbuf,
+	      int wait )
 {
 /* 
   Receive a packet from address fromaddr of the correct function type

@@ -1,5 +1,5 @@
 /*
- * $Id: asp_attn.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: asp_attn.c,v 1.5 2001-08-15 02:17:21 srittau Exp $
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */
@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/socket.h>
@@ -42,7 +43,7 @@ int asp_attention(ASP asp, AFPUserBytes flags)
     atpb.atp_sreqtries = 5;
 
     if ( atp_sreq( asp->asp_atp, &atpb, 1, 0 ) < 0 ) {
-	syslog( LOG_ERR, "atp_sreq: %m" );
+	syslog( LOG_ERR, "atp_sreq: %s", strerror(errno) );
 	return -1;
     }
 
@@ -51,7 +52,7 @@ int asp_attention(ASP asp, AFPUserBytes flags)
     atpb.atp_rresiov = iov;
     atpb.atp_rresiovcnt = sizeof( iov )/sizeof( iov[ 0 ] );
     if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
-	syslog( LOG_ERR, "atp_rresp: %m" );
+	syslog( LOG_ERR, "atp_rresp: %s", strerror(errno) );
 	return -1;
     }
 

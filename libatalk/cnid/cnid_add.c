@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: cnid_add.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -46,13 +46,13 @@ static int add_cnid(CNID_private *db, DB_TXN *ptid, DBT *key, DBT *data)
   memset(&altdata, 0, sizeof(altdata));
   
 retry:
-  if (errno = txn_begin(db->dbenv, ptid, &tid,0)) {
+  if ((errno = txn_begin(db->dbenv, ptid, &tid,0))) {
     return errno;
   }
 
   /* main database */
-  if (errno = db->db_cnid->put(db->db_cnid, tid,
-			       key, data, DB_NOOVERWRITE)) {
+  if ((errno = db->db_cnid->put(db->db_cnid, tid,
+			        key, data, DB_NOOVERWRITE))) {
     txn_abort(tid);
     if (errno == EAGAIN)
       goto retry;
@@ -75,10 +75,10 @@ retry:
   }
 
   /* did/name database */
-  altkey.data = data->data + CNID_DEVINO_LEN;
+  altkey.data = (char *) data->data + CNID_DEVINO_LEN;
   altkey.size = data->size - CNID_DEVINO_LEN;
-  if (errno = db->db_didname->put(db->db_didname, tid,
-				    &altkey, &altdata, 0)) {
+  if ((errno = db->db_didname->put(db->db_didname, tid,
+				   &altkey, &altdata, 0))) {
     txn_abort(tid);
     if (errno == EAGAIN)
       goto retry;
@@ -99,7 +99,6 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
   DBT key, data;
   DBT rootinfo_key, rootinfo_data;
   DB_TXN *tid;
-  struct flock lock;
   cnid_t id, save;
 
   int debug = 0;
@@ -196,7 +195,7 @@ retry:    if ((errno = txn_abort(tid)) != 0)
    * wrap-around. NOTE: i do it this way so that we can go back and
    * fill in holes. */
   save = id = ntohl(hint);
-  while (errno = add_cnid(db, tid, &key, &data)) {
+  while ((errno = add_cnid(db, tid, &key, &data))) {
     /* don't use any of the special CNIDs */
     if (++id < CNID_START)
       id = CNID_START;

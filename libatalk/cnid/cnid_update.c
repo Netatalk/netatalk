@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_update.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: cnid_update.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,14 +41,14 @@ int cnid_update(void *CNID, const cnid_t id, const struct stat *st,
 
   /* begin a transaction */
 retry:
-  if (errno = txn_begin(db->dbenv, NULL, &tid, 0)) {
+  if ((errno = txn_begin(db->dbenv, NULL, &tid, 0))) {
     return errno;
   }
 
   /* get the old info */
-  key.data = &id;
+  key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if (errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0)) {
+  if ((errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
     if (errno == EAGAIN)
       goto retry;
@@ -58,7 +58,7 @@ retry:
   /* delete the old dev/ino mapping */
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
-  if (errno = db->db_devino->del(db->db_devino, tid, &key, 0)) {
+  if ((errno = db->db_devino->del(db->db_devino, tid, &key, 0))) {
     if (errno == EAGAIN) {
       txn_abort(tid);
       goto retry;
@@ -72,9 +72,9 @@ retry:
   }
 
   /* delete the old did/name mapping */
-  key.data = data.data + CNID_DEVINO_LEN;
+  key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
-  if (errno = db->db_didname->del(db->db_didname, tid, &key, 0)) {
+  if ((errno = db->db_didname->del(db->db_didname, tid, &key, 0))) {
     if (errno == EAGAIN) {
       txn_abort(tid);
       goto retry;
@@ -97,9 +97,9 @@ retry:
   /* put a new dev/ino mapping in */
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
-  altdata.data = &id;
+  altdata.data = (cnid_t *) &id;
   altdata.size = sizeof(id);
-  if (errno = db->db_devino->put(db->db_devino, tid, &key, &altdata, 0)) {
+  if ((errno = db->db_devino->put(db->db_devino, tid, &key, &altdata, 0))) {
     txn_abort(tid);
     if (errno == EAGAIN) {
       goto retry;
@@ -108,9 +108,9 @@ retry:
   }
 
   /* put a new did/name mapping in */
-  key.data = data.data + CNID_DEVINO_LEN;
+  key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
-  if (errno = db->db_didname->put(db->db_didname, tid, &key, &altdata, 0)) {
+  if ((errno = db->db_didname->put(db->db_didname, tid, &key, &altdata, 0))) {
     txn_abort(tid);
     if (errno == EAGAIN) {
       goto retry;
@@ -119,9 +119,9 @@ retry:
   }
 
   /* update the old CNID with the new info */
-  key.data = &id;
+  key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if (errno = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0)) {
+  if ((errno = db->db_cnid->put(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
     if (errno == EAGAIN) {
       goto retry;

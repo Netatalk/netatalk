@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_resolve.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_resolve.c,v 1.3 2001-08-15 02:16:25 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -34,7 +34,7 @@ char *cnid_resolve(void *CNID, cnid_t *id)
 
   key.data = id;
   key.size = sizeof(*id);
-  while (errno = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0)) {
+  while ((errno = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0))) {
     if (errno == EAGAIN)
       continue;
 
@@ -45,6 +45,6 @@ char *cnid_resolve(void *CNID, cnid_t *id)
     return NULL;
   }
   
-  memcpy(id, data.data + CNID_DEVINO_LEN, sizeof(*id));
-  return data.data + CNID_HEADER_LEN;
+  memcpy(id, (char *) data.data + CNID_DEVINO_LEN, sizeof(*id));
+  return (char *) data.data + CNID_HEADER_LEN;
 }

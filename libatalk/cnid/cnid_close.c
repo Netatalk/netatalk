@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: cnid_close.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -12,9 +12,11 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
+#include <stdlib.h>
 #include <syslog.h>
 #include <db.h>
 #include <errno.h>
+#include <string.h>
 
 #include <atalk/cnid.h>
 
@@ -48,7 +50,8 @@ void cnid_close(void *CNID)
 	list = first;
 	while (*list) {
 	  if (truncate(*list, 0) < 0)
-	    syslog(LOG_INFO, "cnid_close: failed to truncate %s: %m", *list);
+	    syslog(LOG_INFO, "cnid_close: failed to truncate %s: %s",
+		   *list, strerror(errno));
 	  list++;
 	}
 	free(first); 

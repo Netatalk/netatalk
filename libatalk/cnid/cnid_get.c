@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_get.c,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: cnid_get.c,v 1.3 2001-08-15 02:16:25 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -43,8 +43,8 @@ cnid_t cnid_get(void *CNID, const cnid_t did, const char *name,
   key.data = start;
   key.size = CNID_DID_LEN + len + 1;
 
-  while (errno = db->db_didname->get(db->db_didname, NULL,
-				     &key, &data, 0)) {
+  while ((errno = db->db_didname->get(db->db_didname, NULL,
+				      &key, &data, 0))) {
     if (errno == EAGAIN) 
       continue;
 

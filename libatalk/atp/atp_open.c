@@ -1,5 +1,5 @@
 /*
- * $Id: atp_open.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_open.c,v 1.5 2001-08-15 02:17:57 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -43,9 +43,7 @@
 
 #include "atp_internals.h"
 
-ATP atp_open(port, saddr)
-    u_int8_t port;
-    const struct at_addr *saddr;
+ATP atp_open(u_int8_t port, const struct at_addr *saddr)
 {
     struct sockaddr_at  addr;
     int			s;

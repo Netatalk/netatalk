@@ -1,5 +1,5 @@
 /*
- * $Id: atp_sreq.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_sreq.c,v 1.4 2001-08-15 02:17:57 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -45,12 +45,14 @@
 
 #include "atp_internals.h"
 
+/*
+ * ah:        open atp handle
+ * atpb:      parameter block
+ * respcount: buffers available for response
+ * flags:     ATP_XO, ATP_TREL
+ */
 int
-atp_sreq( ah, atpb, respcount, flags )
-    ATP			ah;		/* open atp handle */
-    struct atp_block	*atpb;		/* parameter block */
-    int			respcount;	/* buffers available for response */
-    u_int8_t		flags;		/* ATP_XO, ATP_TREL?? */
+atp_sreq( ATP ah, struct atp_block *atpb, int respcount, u_int8_t flags )
 {
     struct atpbuf	*req_buf;
     int			i;

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: cnid_lookup.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -61,8 +61,8 @@ cnid_t cnid_lookup(void *CNID,
      only get a match on one of them, that means a file has moved. */
   key.data = buf; /* dev/ino is the first part of the buffer */
   key.size = CNID_DEVINO_LEN;
-  while (errno = db->db_devino->get(db->db_devino, NULL,
-				    &key, &devdata, 0)) {
+  while ((errno = db->db_devino->get(db->db_devino, NULL,
+				     &key, &devdata, 0))) {
     if (errno == EAGAIN)
       continue;
 
@@ -80,8 +80,8 @@ cnid_t cnid_lookup(void *CNID,
   key.data = buf + CNID_DEVINO_LEN;
   key.size = CNID_DID_LEN + len + 1;
   memset(&diddata, 0, sizeof(diddata));
-  while (errno = db->db_didname->get(db->db_didname, NULL,
-				       &key, &diddata, 0)) {
+  while ((errno = db->db_didname->get(db->db_didname, NULL,
+				      &key, &diddata, 0))) {
     if (errno == EAGAIN)
       continue;
 

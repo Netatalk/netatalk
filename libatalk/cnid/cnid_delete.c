@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_delete.c,v 1.3 2001-08-14 14:00:10 rufustfirefly Exp $
+ * $Id: cnid_delete.c,v 1.4 2001-08-15 02:16:25 srittau Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -37,14 +37,14 @@ int cnid_delete(void *CNID, const cnid_t id)
 
 
 retry:
-  if (errno = txn_begin(db->dbenv, NULL, &tid, 0)) {
+  if ((errno = txn_begin(db->dbenv, NULL, &tid, 0))) {
     return errno;
   }
 
   /* get from main database */
-  key.data = &id;
+  key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if (errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0)) {
+  if ((errno = db->db_cnid->get(db->db_cnid, tid, &key, &data, 0))) {
     txn_abort(tid);
     switch (errno) {
     case EAGAIN:
@@ -62,7 +62,7 @@ retry:
   /* now delete from dev/ino database */
   key.data = data.data;
   key.size = CNID_DEVINO_LEN;
-  if (errno = db->db_devino->del(db->db_devino, tid, &key, 0)) {
+  if ((errno = db->db_devino->del(db->db_devino, tid, &key, 0))) {
     if (errno == EAGAIN) {
       txn_abort(tid);
       goto retry;
@@ -79,9 +79,9 @@ retry:
   /* free from did/macname, did/shortname, and did/longname databases */
 
   /* delete from did/name database */
-  key.data = data.data + CNID_DEVINO_LEN;
+  key.data = (char *) data.data + CNID_DEVINO_LEN;
   key.size = data.size - CNID_DEVINO_LEN;
-  if (errno = db->db_didname->del(db->db_didname, tid, &key, 0)) {
+  if ((errno = db->db_didname->del(db->db_didname, tid, &key, 0))) {
     if (errno == EAGAIN) {
       txn_abort(tid);
       goto retry;
@@ -95,9 +95,9 @@ retry:
   }
 
   /* now delete from main database */
-  key.data = &id;
+  key.data = (cnid_t *) &id;
   key.size = sizeof(id);
-  if (errno = db->db_cnid->del(db->db_cnid, tid, &key, 0)) {
+  if ((errno = db->db_cnid->del(db->db_cnid, tid, &key, 0))) {
     txn_abort(tid);
     if (errno == EAGAIN) {
       goto retry;

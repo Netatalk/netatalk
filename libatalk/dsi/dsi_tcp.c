@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_tcp.c,v 1.5 2001-08-15 02:18:57 srittau Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -33,6 +33,10 @@
 #endif /* HAVE_STDINT_H */
 
 #include <sys/ioctl.h>
+#ifdef TRU64
+#include <sys/mbuf.h>
+#include <net/route.h>
+#endif /* TRU64 */
 #include <net/if.h>
 #include <netinet/tcp.h>
 #include <netinet/in.h>
@@ -131,7 +135,7 @@ static int dsi_tcp_open(DSI *dsi)
     newact.sa_handler = timeout_handler;
     if ((sigaction(SIGALRM, &newact, &oldact) < 0) ||
         (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
-	syslog(LOG_ERR, "dsi_tcp_open: %m");
+	syslog(LOG_ERR, "dsi_tcp_open: %s", strerror(errno));
 	exit(1);
     }
     
@@ -153,7 +157,7 @@ static int dsi_tcp_open(DSI *dsi)
       if (len > 0)
 	stored += len;
       else {
-	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %m");
+	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %s", strerror(errno));
 	exit(1);
       }
     }
@@ -177,7 +181,7 @@ static int dsi_tcp_open(DSI *dsi)
       if (len > 0)
 	stored += len;
       else {
-	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %m");
+	syslog(LOG_ERR, "dsi_tcp_open: stream_read: %s", strerror(errno));
 	exit(1);
       }
     }
@@ -294,7 +298,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
       }
       syslog(LOG_INFO, "dsi_tcp (Chooser will not select afp/tcp)\n\
 Check to make sure %s is in /etc/hosts and the correct domain is in\n\
-/etc/resolv.conf: %m", hostname);
+/etc/resolv.conf: %s", hostname, strerror(errno));
 
 iflist_done:
       if (start)

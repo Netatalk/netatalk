@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_stream.c,v 1.4 2001-08-15 02:18:57 srittau Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -52,7 +52,7 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length)
       continue;
 
     if (len < 0) {
-      syslog(LOG_ERR, "dsi_stream_write: %m");
+      syslog(LOG_ERR, "dsi_stream_write: %s", strerror(errno));
       break;
     }
     
@@ -79,7 +79,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     if (len > 0)
       stored += len;
     else {/* eof or error */
-      syslog(LOG_ERR, "dsi_stream_read(%d): %m", len);
+      syslog(LOG_ERR, "dsi_stream_read(%d): %s", len, strerror(errno));
       break;
     }
   }
@@ -135,7 +135,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
     if (len == towrite) /* wrote everything out */
       break;
     else if (len < 0) { /* error */
-      syslog(LOG_ERR, "dsi_stream_send: %m");
+      syslog(LOG_ERR, "dsi_stream_send: %s", strerror(errno));
       sigprocmask(SIG_SETMASK, &oldset, NULL);
       return 0;
     }
