@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.10 2001-09-21 15:08:37 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.11 2001-09-23 18:43:44 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -86,10 +86,10 @@
 #if DB_VERSION_MINOR > 1
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN)
-#else
+#else /* DB_VERSION_MINOR < 1 */
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
 DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)
-#endif
+#endif /* DB_VERSION_MINOR */
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
 			    * databases. */
@@ -108,9 +108,9 @@ static __inline__ int compare_did(const DBT *a, const DBT *b)
  * i.e., did/unixname lookups. */
 #if DB_VERSION_MINOR > 1
 static int compare_unix(DB *db, const DBT *a, const DBT *b)
-#else
+#else /* DB_VERSION_MINOR < 1 */
 static int compare_unix(const DBT *a, const DBT *b)
-#endif
+#endif /* DB_VERSION_MINOR */
 {
   u_int8_t *sa, *sb;
   int len, ret;
@@ -134,9 +134,9 @@ static int compare_unix(const DBT *a, const DBT *b)
  * returns a match if a < b. */
 #if DB_VERSION_MINOR > 1
 static int compare_mac(DB *db, const DBT *a, const DBT *b)
-#else
+#else /* DB_VERSION_MINOR < 1 */
 static int compare_mac(const DBT *a, const DBT *b)
-#endif
+#endif /* DB_VERSION_MINOR */
 {
   u_int8_t *sa, *sb;
   int len, ret;
@@ -158,15 +158,15 @@ static int compare_mac(const DBT *a, const DBT *b)
 /* for unicode names -- right now it's the same as compare_mac. */
 #if DB_VERSION_MINOR > 1
 static int compare_unicode(DB *db, const DBT *a, const DBT *b)
-#else
+#else /* DB_VERSION_MINOR < 1 */
 static int compare_unicode(const DBT *a, const DBT *b)
-#endif
+#endif /* DB_VERSION_MINOR */
 {
 #if DB_VERSION_MINOR > 1
 	return compare_mac(db,a,b);
-#else
+#else /* DB_VERSION_MINOR < 1 */
 	return compare_mac(a,b);
-#endif
+#endif /* DB_VERSION_MINOR */
 }
 
 void *cnid_open(const char *dir)
@@ -238,7 +238,7 @@ mkdir_appledb:
 
 #if DB_VERSION_MINOR > 1
   db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1);
-#endif
+#endif /* DB_VERSION_MINOR > 1 */
 
   /* Check to see if a DBENV already exists.  If it does, join it. */
 /*  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {*/
