@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.68 2002-10-25 11:10:48 didg Exp $
+ * $Id: file.c,v 1.69 2003-01-07 15:55:21 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -908,7 +908,7 @@ struct adouble    *adp;
     LOG(log_info, logtype_afpd, "begin renamefile:");
 #endif /* DEBUG */
 
-    if ( rename( src, dst ) < 0 ) {
+    if ( unix_rename( src, dst ) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
@@ -931,7 +931,7 @@ struct adouble    *adp;
     strcpy( adsrc, ad_path( src, 0 ));
     rc = 0;
 rename_retry:
-    if (rename( adsrc, ad_path( dst, 0 )) < 0 ) {
+    if (unix_rename( adsrc, ad_path( dst, 0 )) < 0 ) {
         struct stat st;
 
         switch ( errno ) {

@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.39 2002-12-14 04:01:01 didg Exp $
+ * $Id: unix.c,v 1.40 2003-01-07 15:55:22 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -639,3 +639,89 @@ setdirowner_noadouble:
 
     return( 0 );
 }
+
+/* recursive chown()ing of a directory */
+static int recursive_chown(const char *path, uid_t uid, gid_t gid) {
+    struct stat sbuf;
+    DIR *odir = NULL;
+    struct dirent *entry;
+    char *name;
+    int ret = 0;
+    char newpath[PATH_MAX+1];
+    newpath[PATH_MAX] = '\0';
+    
+    if (chown(path, uid, gid) < 0) {
+        LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s\n", path, uid, strerror(errno));
+	return -1;
+    }
+
+    if (stat(path, &sbuf) < 0) {
+	LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s\n", path, uid, strerror(errno));
+	return -1;
+    }
+	
+    if (S_ISDIR(sbuf.st_mode)) {
+	odir = opendir(path);
+	if (odir == NULL) {
+	    LOG(log_error, logtype_afpd, "cannot opendir() [%s] (uid = %d): %s\n", path, uid, strerror(errno));
+	    goto recursive_chown_end;
+	}
+	while ((entry=readdir(odir)) != NULL) {
+	    name = entry->d_name;
+	    if (name[0] == '.' && name[1] == '\0')
+		continue;
+	    if (name[0] == '.' && name[1] == '.' && name[2] == '\0')
+		continue;
+	    sprintf(newpath, "%s/%s", path, name);
+	    if (recursive_chown(newpath, uid, gid) < 0)
+		ret = -1;
+	} /* while */
+    } /* if */
+
+recursive_chown_end:
+    if (odir != NULL) {
+	closedir(odir);
+    }
+    return ret;
+}
+
+/* This is equivalent of unix rename(). */
+int unix_rename(const char *oldpath, const char *newpath)
+{
+	char pd_name[PATH_MAX+1];
+	int i;
+        struct stat pd_stat;
+        uid_t uid;
+
+	if (rename(oldpath, newpath) < 0)
+		return -1;
+
+	for (i = 0; i <= PATH_MAX && newpath[i] != '\0'; i++)
+		pd_name[i] = newpath[i];
+	pd_name[i] = '\0';
+
+	while (i > 0 && pd_name[i] != '/') i--;
+	if (pd_name[i] == '/') i++;
+
+        pd_name[i++] = '.'; pd_name[i++] = '\0';
+
+        if (stat(pd_name, &pd_stat) < 0) {
+	    LOG(log_error, logtype_afpd, "stat() of parent dir failed: pd_name = %s, uid = %d: %s\n",
+		pd_name, geteuid(), strerror(errno));
+		return 0;
+	}
+
+	/* So we have SGID bit set... */
+        if ((S_ISGID & pd_stat.st_mode)	!= 0) {
+            uid = geteuid();
+            if (seteuid(0) < 0)
+		LOG(log_error, logtype_afpd, "seteuid() failed: %s\n", strerror(errno));
+            if (recursive_chown(newpath, uid, pd_stat.st_gid) < 0)
+		LOG(log_error, logtype_afpd, "chown() of parent dir failed: newpath=%s, uid=%d: %s\n",
+		    pd_name, geteuid(), strerror(errno));
+            seteuid(uid);
+	}
+
+	return 0;
+}
+

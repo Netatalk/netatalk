@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.11 2002-08-30 10:19:19 didg Exp $
+ * $Id: unix.h,v 1.12 2003-01-07 15:55:22 rlewczuk Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -104,6 +104,7 @@ extern int setdirmode   __P((const mode_t, const int, const int));
 extern int setdeskowner __P((const uid_t, const gid_t));
 extern int setdirowner  __P((const uid_t, const gid_t, const int));
 extern int setfilmode   __P((char *, mode_t , struct stat *));
+extern int unix_rename  __P((const char *oldpath, const char *newpath));
 
 extern void accessmode  __P((char *, struct maccess *, struct dir *, struct stat *));
 

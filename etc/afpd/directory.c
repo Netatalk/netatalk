@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.53 2002-12-14 04:01:01 didg Exp $
+ * $Id: directory.c,v 1.54 2003-01-07 15:55:21 rlewczuk Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1747,7 +1747,7 @@ const int noadouble;
     int			len, err;
         
     /* existence check moved to afp_moveandrename */
-    if ( rename( src, dst ) < 0 ) {
+    if ( unix_rename( src, dst ) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
