@@ -78,7 +78,11 @@ dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(cdefs.h fcntl.h limits.h strings.h sys/cdefs.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
+AC_CHECK_HEADERS(fcntl.h limits.h strings.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
+AC_CHECK_HEADER(sys/cdefs.h,,
+	AC_MSG_RESULT([enabling generic cdefs.h from tree])
+	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
+)
 
 # Allow user to specify flags
 AC_ARG_WITH(cflags,
