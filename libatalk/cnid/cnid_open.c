@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.9 2001-09-18 22:21:47 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.10 2001-09-21 15:08:37 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -85,10 +85,10 @@
 
 #if DB_VERSION_MINOR > 1
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER)
+DB_INIT_LOG | DB_INIT_TXN)
 #else
 #define DBOPTIONS    (DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | \
-DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC | DB_RECOVER)
+DB_INIT_LOG | DB_INIT_TXN | DB_TXN_NOSYNC)
 #endif
 
 #define MAXITER     0xFFFF /* maximum number of simultaneously open CNID
@@ -236,10 +236,12 @@ mkdir_appledb:
     goto fail_lock;
   }
 
-  /* Check to see if a DBENV already exists.  If it does, join it. */
 #if DB_VERSION_MINOR > 1
-  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {
+  db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1);
 #endif
+
+  /* Check to see if a DBENV already exists.  If it does, join it. */
+/*  if (db->dbenv->open(db->dbenv, path, DB_JOINENV, 0666)) {*/
   if (db->dbenv->open(db->dbenv, path, DBOPTIONS, 0666)) {
 
     /* try with a shared memory pool */
@@ -255,13 +257,8 @@ mkdir_appledb:
     open_flag = DB_RDONLY;
     syslog(LOG_INFO, "cnid_open: read-only CNID database");
   }
-#if DB_VERSION_MINOR > 1
-  }
-#endif
+  /*}*/
 
-#if DB_VERSION_MINOR > 1
-  db->dbenv->set_flags(db->dbenv, DB_TXN_NOSYNC, 1);
-#endif
 
   /* did/name reverse mapping. we use a btree for this one. */
   if (db_create(&db->db_didname, db->dbenv, 0))

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_lookup.c,v 1.6 2001-08-31 14:58:48 rufustfirefly Exp $
+ * $Id: cnid_lookup.c,v 1.7 2001-09-21 15:08:37 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,6 +35,7 @@ cnid_t cnid_lookup(void *CNID,
   DBT key, devdata, diddata;
   int devino = 1, didname = 1;
   cnid_t id = 0;
+  int rc = 0;
 
   int debug = 0;
 
@@ -45,9 +46,13 @@ cnid_t cnid_lookup(void *CNID,
    * cnid_lookup gets called when we do directory lookups. only do
    * this if we're using a read-write database. */
   if ((db->flags & CNIDFLAG_DB_RO) == 0) {
-    errno = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0);
-    while (errno == DB_INCOMPLETE)
-      errno = txn_checkpoint(db->dbenv, 0, 0, 0);
+    rc = txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0);
+    while (rc == DB_INCOMPLETE)
+      rc = txn_checkpoint(db->dbenv, 0, 0, 0);
+	if (rc) {
+	  syslog(LOG_ERR, "cnid_lookup: txn_checkpoint failed with: %d", rc);
+	  return 0;
+	}
   }
 
  if ((buf = make_cnid_data(st, did, name, len)) == NULL) {
@@ -62,18 +67,18 @@ cnid_t cnid_lookup(void *CNID,
      only get a match on one of them, that means a file has moved. */
   key.data = buf; /* dev/ino is the first part of the buffer */
   key.size = CNID_DEVINO_LEN;
-  while ((errno = db->db_devino->get(db->db_devino, NULL,
+  while ((rc = db->db_devino->get(db->db_devino, NULL,
 				    &key, &devdata, 0))) {
-    if (errno == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK)
       continue;
 
-    if (errno == DB_NOTFOUND) {
+    if (rc == DB_NOTFOUND) {
       devino = 0;
       break;
     }
 
-    syslog(LOG_ERR, "cnid_lookup: can't get CNID(%u/%u)",
-	   st->st_dev, st->st_ino);
+    syslog(LOG_ERR, "cnid_lookup: can't get CNID(%u/%u) (%d)",
+	   st->st_dev, st->st_ino, rc);
     return 0;
   }
 
@@ -81,18 +86,18 @@ cnid_t cnid_lookup(void *CNID,
   key.data = buf + CNID_DEVINO_LEN;
   key.size = CNID_DID_LEN + len + 1;
   memset(&diddata, 0, sizeof(diddata));
-  while ((errno = db->db_didname->get(db->db_didname, NULL,
+  while ((rc = db->db_didname->get(db->db_didname, NULL,
 				       &key, &diddata, 0))) {
-    if (errno == DB_LOCK_DEADLOCK)
+    if (rc == DB_LOCK_DEADLOCK)
       continue;
 
-    if (errno == DB_NOTFOUND) {
+    if (rc == DB_NOTFOUND) {
       didname = 0;
       break;
     }
 
-    syslog(LOG_ERR, "cnid_lookup: can't get CNID(%u:%s)",
-	   did, name);
+    syslog(LOG_ERR, "cnid_lookup: can't get CNID(%u:%s) (%d)",
+	   did, name, rc);
     return 0;
   }
 

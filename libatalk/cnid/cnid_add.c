@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.9 2001-09-19 17:44:39 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.10 2001-09-21 15:08:32 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -160,7 +160,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
   /* Abort and retry the modification. */
   if (0) {
 retry:    if ((rc = txn_abort(tid)) != 0)
-              syslog(LOG_ERR, "cnid_add: txn_begin failed (%d)", rc);
+              syslog(LOG_ERR, "cnid_add: txn_abort failed (%d)", rc);
           /* FALLTHROUGH */
   }
 
