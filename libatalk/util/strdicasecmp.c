@@ -4,7 +4,7 @@
 
 #include <atalk/util.h>
 
-unsigned const char	_diacasemap[] = {
+const int	_diacasemap[] = {
 	/* map	value	name */
 	0	/* 0	NUL*/,
 	1	/* 1	SOH*/,
@@ -264,7 +264,7 @@ unsigned const char	_diacasemap[] = {
 	255	/* 255	caron*/,
 };
 
-unsigned const char	_dialowermap[] = {
+const int	_dialowermap[] = {
 	/* map	value	name */
 	0	/* 0	NUL*/,
 	1	/* 1	SOH*/,

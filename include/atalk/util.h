@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.4 2001-08-15 02:15:30 srittau Exp $
+ * $Id: util.h,v 1.5 2001-08-30 13:17:25 srittau Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -12,7 +12,7 @@
 #endif /* HAVE_UNISTD_H */
 #include <netatalk/at.h>
 
-extern unsigned const char _diacasemap[], _dialowermap[];
+extern const int _diacasemap[], _dialowermap[];
 
 extern char **getifacelist(void);
 extern void freeifacelist(char **);
