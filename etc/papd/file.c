@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: file.c,v 1.7 2001-06-27 03:33:14 morgana Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -54,7 +54,8 @@ int markline( pf, start, linelength, crlflength )
 	(*crlflength)++;
     }
 
-    return *linelength;
+    /* success, return 1 */
+    return( 1 );
 }
 
 void morespace( pf, data, len )
