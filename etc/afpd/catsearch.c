@@ -859,6 +859,8 @@ int catsearch_afp(AFPObj *obj, char *ibuf, int ibuflen,
 
 	/* convert charset */	
 	tmppath = mtoupath(vol, c1.utf8name, 1);
+        if (!tmppath)
+            return AFPERR_PARAM;
 	memset (c1.utf8name, 0, 256);
 	memcpy (c1.utf8name, tmppath, MIN(strlen(tmppath), 255));
     }
