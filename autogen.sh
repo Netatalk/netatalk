@@ -9,3 +9,5 @@ libtoolize --copy --force && \
 
 # just in case automake generated errors...
 autoconf
+
+./configure --enable-maintainer-mode "$@"
