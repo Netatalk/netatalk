@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.17 2001-12-03 15:50:06 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.18 2001-12-12 09:16:20 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -220,12 +220,14 @@ retry_get:
     }
 
 
+	if (0) {
 retry:
-    t.tv_usec = rand() % 1000000;
+    	t.tv_usec = rand() % 1000000;
 #ifdef DEBUG
-    syslog(LOG_INFO, "cnid_add: Hitting MAX_ABORTS, sleeping");
+    	syslog(LOG_INFO, "cnid_add: Hitting MAX_ABORTS, sleeping");
 #endif
-    (void)select(0, NULL, NULL, NULL, &t);
+    	(void)select(0, NULL, NULL, NULL, &t);
+	}
     if ((rc = txn_begin(db->dbenv, NULL, &tid, 0)) != 0) {
         syslog(LOG_ERR, "cnid_add: Failed to begin transaction: %s",
                db_strerror(rc));
