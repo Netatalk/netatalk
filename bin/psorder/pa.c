@@ -23,6 +23,10 @@
 
 /* This is used with pa.h */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 
 #include "pa.h"
