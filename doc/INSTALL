@@ -24,12 +24,62 @@ $> make
 $> make install
 
 
+----------------------------------------------------------------
+0. Get the source
+
+A. Download a binary. Several Linux distributions support netatalk
+with a package. There are also Deb's and RPM packages available on the
+the Netatalk Sourceforge
+site. (http://sourceforge.net/projects/netatalk/)
+
+B. Download the tarball. There are tar.gz and tar.bz2 files available
+for download and compiling.
+(http://sourceforge.net/projects/netatalk/)
+
+C. Anonymous CVS. Downloading of the CVS source can be done quickly
+and easily.
+
+1. make sure you have cvs installed. 
+$> which cvs 
+should produce a path to cvs.
+
+2. if you don't have one make a source directory. Mine is
+~lance/src/working/ cd to this directory.
+
+3. Authenticate yourself with your local cvs and the remote cvs: (all
+one line)
+
+cvs \
+-d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk \
+login
+
+Just hit enter for the password for the anonymous user.
+
+4. Now that both machines know who you are, get the source: (all one
+line)
+
+cvs -z3 \
+-d:pserver:anonymous@cvs.netatalk.sourceforge.net:/cvsroot/netatalk \
+co netatalk
+
+This tells cvs what compression, (-z3) what protocol, repository and
+where the source is (-d:protocol:host:path) what to do (co is an alias
+for checkout) and what (netatalk) module.
+
+This will create a netatalk directory and download a complete and
+fresh copy of the netatalk source
+
+
+----------------------------------------------------------------
+
 1. ./autogen.sh (Not necessary for a release tarball.)
 This shell script runs libtoolize, aclocal, autoheader, automake and
 autoconf. This sets up all the conditions for the next step. You may
 or may not have to do this. If you downloaded a release tarball, or if
 your download contains a ./configure file then this has already been
 run for you.
+
+----------------------------------------------------------------
 
 2. ./configure 
 This step reads the options to the ./configure program and checks your
@@ -119,10 +169,13 @@ a complete list.
 
 --enable-overwrite: Overwrite configuration files in PKGCONFDIR
 
+----------------------------------------------------------------
 
 3. ./make
 
 Compile all of the programs
+
+----------------------------------------------------------------
 
 4. ./make install
 Install the programs in the places specified by the ./configure process.
