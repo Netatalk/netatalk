@@ -3,3 +3,4 @@
 * Move filters to /usr/lib/netatalk/filters.
 * etc/atalk/file.c: remove use of mktemp()
 * don't install at.h <-> include upstream
+* generic rc.atalk file
