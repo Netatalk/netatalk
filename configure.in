@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.134 2001-11-28 01:02:21 srittau Exp $
+dnl $Id: configure.in,v 1.135 2001-11-30 05:52:36 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -241,7 +241,7 @@ if test "x$did_scheme" = "xlast"; then
 	AC_DEFINE(USE_LASTDID, 1)
 	AC_MSG_RESULT([last])
 elif test "x$did_scheme" = "xhash"; then
-	AC_MSG_RESULT([inode-based hashing])
+	AC_MSG_RESULT([device/inode-based hashing])
 elif test "x$did_scheme" = "xmtab"; then
 	AC_DEFINE(DID_MTAB, 1)
 	AC_MSG_RESULT([mtab-based DID creation support])
