@@ -99,6 +99,13 @@
 #                         in volume options (default: :NLS_PATH:).
 #
 #   Miscellaneous:
+#     -authprintdir <path> Specifies the path to be used (per server) to 
+#			   store the files required to do CAP-style
+#			   print authentication which papd will examine
+#			   to determine if a print job should be allowed.
+#			   These files are created at login and if they
+#			   are to be properly removed, this directory
+#			   probably needs to be umode 1777
 #     -guestname "user"   Specifies the user name for the guest login
 #                         (default "nobody", same as -g on command line)
 #     -loginmesg "Message"  Client will display "Message" upon logging in
