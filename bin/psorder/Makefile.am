@@ -6,5 +6,3 @@ psorder_SOURCES = psorder.c pa.c
 psorder_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
 noinst_HEADERS = psorder.h pa.h
-
-CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

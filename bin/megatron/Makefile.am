@@ -7,8 +7,6 @@ megatron_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
 noinst_HEADERS = megatron.h
 
-CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys
-
 # ************************************************
 # FIXME! FIXME! Links need to work for:
 # LINKS = unbin unhex unsingle hqx2bin single2bin macbinary binheader nadheader
