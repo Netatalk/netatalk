@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_lock.c,v 1.4 2002-05-13 07:21:57 jmarcus Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -185,6 +185,55 @@ static __inline__  int adf_findxlock(struct ad_fd *ad,
 #define LOCK_RSRC_WR (1)
 #define LOCK_DATA_RD (2)
 #define LOCK_DATA_WR (3)
+
+#define LOCK_RSRC_DRD (4)
+#define LOCK_RSRC_DWR (5)
+#define LOCK_DATA_DRD (6)
+#define LOCK_DATA_DWR (7)
+
+#define LOCK_RSRC_NONE (8)
+#define LOCK_DATA_NONE (9)
+
+/* -------------- 
+	translate a data fork lock to an offset
+*/
+
+static int df2off(int off)
+{
+int start = off;
+	if (off == AD_FILELOCK_OPEN_WR)
+		start = LOCK_DATA_WR;
+	else if (off == AD_FILELOCK_OPEN_RD)
+		start = LOCK_DATA_RD;
+    else if (off == AD_FILELOCK_DENY_RD)
+		start = LOCK_DATA_DRD;
+	else if (off == AD_FILELOCK_DENY_WR)
+		start = LOCK_DATA_DWR;
+	else if (off == AD_FILELOCK_OPEN_NONE)
+		start = LOCK_DATA_NONE;
+	return start;
+}
+
+/* -------------- 
+	translate a resource fork lock to an offset
+*/
+
+static int hf2off(int off)
+{
+int start = off;
+	if (off == AD_FILELOCK_OPEN_WR)
+		start = LOCK_RSRC_WR;
+	else if (off == AD_FILELOCK_OPEN_RD)
+		start = LOCK_RSRC_RD;
+    else if (off == AD_FILELOCK_DENY_RD)
+		start = LOCK_RSRC_DRD;
+	else if (off == AD_FILELOCK_DENY_WR)
+		start = LOCK_RSRC_DWR;
+	else if (off == AD_FILELOCK_OPEN_NONE)
+		start = LOCK_RSRC_NONE;
+	return start;
+}
+
 int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
 		  const off_t off, const size_t len, const int user)
 {
@@ -195,23 +244,18 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
   
   lock.l_start = off;
   if (eid == ADEID_DFORK) {
-    if ((type & ADLOCK_FILELOCK) && (ad_hfileno(ad) != -1)) {
-      adf = &ad->ad_hf;
-      if (off == AD_FILELOCK_WR)
-	lock.l_start = LOCK_DATA_WR;
-      else if (off == AD_FILELOCK_RD)
-	lock.l_start = LOCK_DATA_RD;
-    } else
-      adf = &ad->ad_df;
-
+    adf = &ad->ad_df;
+    if ((type & ADLOCK_FILELOCK)) {
+        if (ad_hfileno(ad) != -1) {
+        	lock.l_start = df2off(off);
+            adf = &ad->ad_hf;
+        }
+    }
   } else { /* rfork */
     adf = &ad->ad_hf;
-    if (type & ADLOCK_FILELOCK) {
-      if (off == AD_FILELOCK_WR)
-	lock.l_start = LOCK_RSRC_WR;
-      else if (off == AD_FILELOCK_RD)
-	lock.l_start = LOCK_RSRC_RD;
-    } else
+    if (type & ADLOCK_FILELOCK) 
+      lock.l_start = hf2off(off);
+    else
       lock.l_start += ad_getentryoff(ad, eid);
   }
 
@@ -302,7 +346,57 @@ fcntl_lock_err:
   return -1;
 }
 
+/* -------------------------
+   we are using lock as tristate variable
+   
+   we have a lock ==> 1
+   no             ==> 0
+   error          ==> -1
+      
+*/
+int ad_testlock(struct adouble *ad, int eid, const off_t off)
+{
+  struct flock lock;
+  struct ad_fd *adf;
+  adf_lock_t *plock;
+  int i;
+  int lockmode;
+    
+  lock.l_start = off;
+  if (eid == ADEID_DFORK) {
+    adf = &ad->ad_df;
+    if ((ad_hfileno(ad) != -1)) {
+      	adf = &ad->ad_hf;
+    	lock.l_start = df2off(off);
+   	}
+  } else { /* rfork */
+	adf = &ad->ad_hf;
+    lock.l_start = hf2off(off);
+  }
 
+  plock = adf->adf_lock;
+  /* Does we have a lock? */
+  lock.l_whence = SEEK_SET;
+  lock.l_len = 1;
+  for (i = 0; i < adf->adf_lockcount; i++) {
+    if (OVERLAP(lock.l_start, 1, plock[i].lock.l_start, plock[i].lock.l_len)) 
+        return 1;   /* */
+  }
+  /* Does another process have a lock? 
+     FIXME F_GETLK ?
+  */
+  lock.l_type = (ad_getoflags(ad, eid) & O_RDWR) ?F_WRLCK : F_RDLCK;                                           
+
+  if (fcntl(adf->adf_fd, F_SETLK, &lock) < 0) {
+    return (errno == EACCES)?1:-1;
+  }
+  
+  lock.l_type = F_UNLCK;
+  return fcntl(adf->adf_fd, F_SETLK, &lock);
+}
+
+/* -------------------------
+*/
 /* with temp locks, we don't need to distinguish within the same
  * process as everything is single-threaded. in addition, if
  * multi-threading gets added, it will only be in a few areas. */
@@ -318,7 +412,14 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int type,
     adf = &ad->ad_df;
   } else {
     adf = &ad->ad_hf;
-    lock.l_start += ad_getentryoff(ad, eid);
+    /* if ADLOCK_FILELOCK we want a lock from offset 0
+     * it's used when deleting a file:
+     * in open we put read locks on meta datas
+     * in delete a write locks on the whole file
+     * so if the file is open by somebody else it fails
+    */
+    if (!(type & ADLOCK_FILELOCK))
+        lock.l_start += ad_getentryoff(ad, eid);
   }
   lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
   lock.l_whence = SEEK_SET;

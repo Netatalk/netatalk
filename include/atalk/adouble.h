@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.7 2001-07-31 19:51:12 srittau Exp $
+ * $Id: adouble.h,v 1.8 2002-05-13 07:21:55 jmarcus Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -215,13 +215,14 @@ struct adouble {
 #if defined(TRY_64BITOFF_T) && (~0UL > 0xFFFFFFFFU)
 /* synchronization locks */
 #define AD_FILELOCK_BASE (0x80000000)
-#define AD_FILELOCK_WR   (AD_FILELOCK_BASE + 0)
-#define AD_FILELOCK_RD   (AD_FILELOCK_BASE + 1)
 #else
-#define AD_FILELOCK_BASE (0x7FFFFFFE)
-#define AD_FILELOCK_WR   (AD_FILELOCK_BASE + 0)
-#define AD_FILELOCK_RD   (AD_FILELOCK_BASE + 1)
+#define AD_FILELOCK_BASE (0x7FFFFFFF -4)
 #endif
+#define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
+#define AD_FILELOCK_OPEN_RD   	   (AD_FILELOCK_BASE + 1)
+#define AD_FILELOCK_DENY_WR   	   (AD_FILELOCK_BASE + 2)
+#define AD_FILELOCK_DENY_RD        (AD_FILELOCK_BASE + 3)
+#define AD_FILELOCK_OPEN_NONE      (AD_FILELOCK_BASE + 4)
 
 /* time stuff. we overload the bits a little.  */
 #define AD_DATE_CREATE	       0
