@@ -1,0 +1,5 @@
+* warning message if appletalk support is not in the kernel
+* debconf interface to ask which daemons to start
+* Move filters to /usr/lib/netatalk/filters.
+* etc/atalk/file.c: remove use of mktemp()
+* don't install at.h <-> include upstream
