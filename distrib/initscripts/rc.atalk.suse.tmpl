@@ -1,19 +1,21 @@
 #! /bin/sh
-# Copyright (c) 1996-2001 S.u.S.E. GmbH Fuerth, Germany.  All rights reserved.
+# Copyright (c) 1996-2001 SuSE GmbH Nuernberg, Germany.  All rights reserved.
 #
 # Author: 
-#       Reinhold Sojer, <reinhold@suse.de>
-#       Olaf Hering, <olh@suse.de>
+#	Reinhold Sojer, <reinhold@suse.de>
+#	Olaf Hering, <olh@suse.de>
 # 
-# adapted to 1.4.99 (at 00-11-15) : Thomas Schierle, <ts@visual-s.de>
-# template changes 2001-02-14     : jeff <jeff@univrel.pr.uconn.edu>
-# template changes 2001-11-16     : Daniel E. Lautenschleger, <bobo@bocklabs.wisc.edu>
+### BEGIN INIT INFO
+# Provides:       netatalk
+# Required-Start: $network $named $remote_fs $netdaemons $syslog
+# Required-Stop:
+# Default-Start:  3 5
+# Default-Stop:
+# Description:    Appletalk TCP/IP daemons
+### END INIT INFO
 
+test -f /etc/rc.config && {
 . /etc/rc.config
-
-test -f :ETCDIR:/netatalk.conf || exit 0
-
-. :ETCDIR:/netatalk.conf
 
 # Determine the base and follow a runlevel link name.
 base=${0##*/}
@@ -23,82 +25,87 @@ link=${base#*[SK][0-9][0-9]}
 test $link = $base && START_ATALK=yes
 test "$START_ATALK" = "yes" || exit 0
 
+test -f /etc/rc.status && . /etc/rc.status
 # The echo return value for success (defined in /etc/rc.config).
 return=$rc_done
+}
 
-# Startup code
+. :ETCDIR:/netatalk.conf
+
+# startup code for everything
 atalk_startup() {
-    if [ x"${ATALKD_RUN}" != x"no" ]; then
-        echo -n "  Starting atalkd:"
-        :SBINDIR:/atalkd
+    if [ x"${ATALKD_RUN}" != x"no" ]; then 
+	echo -n "  Starting atalkd:"
+	:SBINDIR:/atalkd
 
-        if [ -x :BINDIR:/nbprgstr ]; then
-            :BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:Workstation${ATALK_ZONE}"
-            :BINDIR:/nbprgstr -p 4 "${ATALK_NAME}:netatalk${ATALK_ZONE}"
-    
-        fi
+	if [ -x :BINDIR:/nbprgstr ]; then	
+	    :BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:Workstation
+	    :BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
 
-        if [ x"${PAPD_RUN}" = x"yes"  -a -x :SBINDIR:/papd ]; then
-            echo -n "  Starting papd:"
-            :SBINDIR:/papd
-        fi
-            
-        if [ x"${TIMELORD_RUN}" = x"yes"  -a -x :SBINDIR:/timelord ]; then
-            echo -n "  Starting timelord"
-            :SBINDIR:/timelord
-        fi
-          
-    fi   
+	fi	
+
+	if [ x"${PAPD_RUN}" = x"yes"  -a -x :SBINDIR:/papd ]; then
+	    echo -n "  Starting papd:"
+	    :SBINDIR:/papd
+	fi
+
+	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x :SBINDIR:/timelord ]; then
+	    echo -n "  Starting timelord"
+	    :SBINDIR:/timelord
+	fi
+
+    fi
 
     if [ x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ] ; then
-            echo -n "  Starting afpd:"
-            echo ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+	    echo -n "  Starting afpd:"
+	    echo ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
                -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
-            startproc :SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
-               -c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
+	    startproc :SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+               -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
     fi
-        
-        touch /var/lock/subsys/atalk
+
+	touch /var/lock/subsys/atalk 
 }
 
 case "$1" in
     start)
-        if [ x"${ATALK_BGROUND}" = x"yes" ]; then
-            echo "Starting netatalk in the background ... "
-            atalk_startup >& /dev/null &
-        else
-            echo "Starting netatalk (this may take a while) ..."
-            atalk_startup
-        fi
-        ;;
+	if [ x"${ATALK_BGROUND}" = x"yes" ]; then 
+	    echo "Starting netatalk in the background ... "
+	    atalk_startup >& /dev/null &
+	else
+	    echo "Starting netatalk (this may take a while) ..."
+	    atalk_startup
+	fi
+	;;
     stop)
-        echo -n "Shutting down netatalk:"
-        killproc -TERM :SBINDIR:/papd
+	echo -n "Shutting down netatalk:"
+	killproc -TERM :SBINDIR:/papd
         if test -x :SBINDIR:/timelord ; then
-          killproc -TERM :SBINDIR:/timelord
+	  killproc -TERM :SBINDIR:/timelord
         fi
-        killproc -TERM :SBINDIR:/atalkd
-        killproc -TERM :SBINDIR:/afpd
-        echo -e "$return"
-        ;;
+	killproc -TERM :SBINDIR:/atalkd
+	killproc -TERM :SBINDIR:/afpd
+	echo -e "$return"
+	;;
     restart|reload)
-        $0 stop && $0 start || return=$rc_failed
-        ;;
+	$0 stop && $0 start || return=$rc_failed
+	;;
     status)
-        echo -n "Checking for service atalk:"
-        checkproc :SBINDIR:/papd && echo -n "OK" || echo -n "No process"
-        checkproc :SBINDIR:/afpd && echo -n "OK" || echo "No process"
+	echo -n "Checking for service atalk:"
+	checkproc :SBINDIR:/papd && echo -n "OK" || echo -n "No process"
+	checkproc :SBINDIR:/afpd && echo -n "OK" || echo "No process"
         if test -x :SBINDIR:/timelord ; then
-          checkproc :SBINDIR:/timelord || return=$rc_failed
+	  checkproc :SBINDIR:/timelord || return=$rc_failed
         fi
         checkproc :SBINDIR:/atalkd && echo "OK" || echo "No process"
-        ;;
-    *)   
-        echo "Usage: $0 {start|stop|restart|status}"
-        exit 1
-        ;;
+	;;
+    *)
+	echo "Usage: $0 {start|stop|restart|status}"
+	exit 1
+	;;
 esac
 
 # Inform the caller not only verbosely and set an exit status.
 test "$return" = "$rc_done" || exit 1
 exit 0
+
