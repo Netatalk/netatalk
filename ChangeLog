@@ -1,4 +1,4 @@
-($Id: ChangeLog,v 1.44 2001-06-07 15:39:27 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.45 2001-06-07 17:18:26 rufustfirefly Exp $)
 
 2001-06-07  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, bin/afppasswd/Makefile.am,
@@ -7,6 +7,17 @@
 	etc/atalkd/Makefile.am, etc/papd/Makefile.am,
 	man/man5/Makefile, man/man8/Makefile.am: patch #422872 from
 	Sebastian Rittau to move from CONFIG_DIR to sysconfdir
+
+	* etc/psf/Makefile.am, sys/solaris/Makefile: additional removal
+	of CONFIG_DIR in favor of sysconfdir, plus patch #422860 from
+	Sebastian Rittau to correct other problems
+
+	* config/Makefile.am, config/netatalk.pamd: patch #422856 from
+	Sebastian Rittau, moving to pam_unix.so and being more proper
+
+	* etc/afpd/Makefile.am, etc/afpd/main.c: added support for
+	${sysconfdir}/afpd.mtab to be read into memory, so that mtab
+	DID support actually works...
 
 2001-06-06  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/afpd/filedir.c, etc/afpd/unix.c: fixed dropkludge code

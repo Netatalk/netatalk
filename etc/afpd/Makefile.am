@@ -30,4 +30,5 @@ CFLAGS = @CFLAGS@ \
 	 -D_PATH_AFPDCONF=\"$(sysconfdir)/afpd.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	 -D_PATH_AFPDNLSPATH=\"$(sysconfdir)/nls/\" \
+	 -DAFPD_MTAB_FILE=\"$(sysconfdir)/afpd.mtab\" \
 	 -DAPPLCNAME

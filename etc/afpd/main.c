@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.7 2001-05-23 23:55:23 samnoble Exp $
+ * $Id: main.c,v 1.8 2001-06-07 17:18:26 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,6 +49,10 @@
 #include <prot.h>
 #include <sia.h>
 #endif /* TRU64 */
+
+#ifdef DID_MTAB
+#include "parse_mtab.h"
+#endif /* DID_MTAB */
 
 unsigned char	nologin = 0;
 
@@ -148,6 +152,11 @@ int main( ac, av )
     default: /* server */
       exit(0);
     }
+
+#ifdef DID_MTAB
+    /* if we are going to use afpd.mtab, load the file */
+    afpd_mount_table = afpd_mtab_parse ( AFPD_MTAB_FILE );
+#endif /* DID_MTAB */
 
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here. 
