@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.26 2002-01-19 21:29:55 jmarcus Exp $
+ * $Id: directory.c,v 1.27 2002-03-13 19:29:14 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1424,11 +1424,11 @@ int		ibuflen, *rbuflen;
         }
     }
 
-    /* check for illegal bits */
-    if (!wincheck(vol, path))
-        return AFPERR_PARAM;
-
     upath = mtoupath(vol, path);
+
+    /* check for illegal bits in the unix filename */
+    if (!wincheck(vol, upath))
+        return AFPERR_PARAM;
 
     if ((vol->v_flags & AFPVOL_NOHEX) && strchr(upath, '/'))
         return AFPERR_PARAM;

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.22 2002-02-06 21:58:50 jmarcus Exp $
+ * $Id: volume.c,v 1.23 2002-03-13 19:29:17 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1410,8 +1410,10 @@ int wincheck(struct vol *vol, const char *path)
     if ((len = strlen(path)) == 0)
         return 0;
 
-    /* leading or trailing whitespaces are not allowed */
-    if ((*path == ' ') || (path[len-1] == ' '))
+    /* leading or trailing whitespaces are not allowed, carriage returns
+     * and probably other whitespace is okay, tabs are not allowed
+     */
+    if ((path[0] == ' ') || (path[len-1] == ' '))
         return 0;
 
     /* certain characters are not allowed */

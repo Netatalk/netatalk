@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.23 2002-03-05 01:41:36 srittau Exp $
+ * $Id: filedir.c,v 1.24 2002-03-13 19:29:17 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -378,12 +378,12 @@ int		ibuflen, *rbuflen;
     if (strcmp(path, ibuf) == 0)
         return AFP_OK;
 
-    /* check for illegal characters */
-    if (!wincheck(vol, ibuf))
-        return AFPERR_PARAM;
-
     newpath = obj->oldtmp;
     strcpy( newpath, mtoupath(vol, ibuf ));
+
+    /* check for illegal characters in the unix filename */
+    if (!wincheck(vol, newpath))
+        return AFPERR_PARAM;
 
     if ((vol->v_flags & AFPVOL_NOHEX) && strchr(newpath, '/'))
         return AFPERR_PARAM;
@@ -672,11 +672,11 @@ int		ibuflen, *rbuflen;
         newname[ plen ] = '\0';
     }
 
-    /* check for illegal characters */
-    if (!wincheck(vol, newname))
-        return AFPERR_PARAM;
-
     upath = mtoupath(vol, newname);
+
+    /* check for illegal characters in the unix filename */
+    if (!wincheck(vol, upath))
+        return AFPERR_PARAM;
 
     if ((vol->v_flags & AFPVOL_NOHEX) && strchr(upath, '/'))
         return AFPERR_PARAM;

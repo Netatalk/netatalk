@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.9 2002-01-02 21:14:10 srittau Exp $
+ * $Id: volume.h,v 1.10 2002-03-13 19:29:17 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -102,7 +102,7 @@ this is going away. */
 #define AFPVOL_UUPPERMLOWER    (AFPVOL_MTOUUPPER | AFPVOL_UTOMLOWER)
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
 
-#define MSWINDOWS_BADCHARS "\\/<>*?|\""
+#define MSWINDOWS_BADCHARS ":\t\\/<>*?|\""
 #define MSWINDOWS_CODEPAGE "maccode.iso8859-1"
 
 int wincheck(struct vol *vol, const char *path);

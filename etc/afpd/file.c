@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.40 2002-03-05 02:04:46 jmarcus Exp $
+ * $Id: file.c,v 1.41 2002-03-13 19:29:17 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -422,10 +422,11 @@ int		ibuflen, *rbuflen;
         return( AFPERR_NOOBJ );
     }
 
-    if (!wincheck(vol, path))
-        return AFPERR_PARAM;
-
     upath = mtoupath(vol, path);
+
+    /* check for illegal bits in the unix filename */
+    if (!wincheck(vol, upath))
+        return AFPERR_PARAM;
 
     if ((vol->v_flags & AFPVOL_NOHEX) && strchr(upath, '/'))
         return AFPERR_PARAM;
@@ -1727,7 +1728,7 @@ int		ibuflen, *rbuflen;
 
     /* all this stuff is so that we can unwind a failed operation
      * properly. */
-err_temp_to_dest:
+
     /* rename dest to temp */
     renamefile(upath, temp, temp, vol_noadouble(vol));
     of_rename(vol, curdir, upath, curdir, temp);
