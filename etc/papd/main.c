@@ -1,13 +1,15 @@
 /*
- * $Id: main.c,v 1.17 2002-09-29 23:29:14 sibaz Exp $
+ * $Id: main.c,v 1.18 2003-02-17 01:31:51 srittau Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
+
+#include <string.h>
 
 #include <sys/param.h>
 #include <sys/time.h>
