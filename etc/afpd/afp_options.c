@@ -345,7 +345,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 #ifdef ultrix
     openlog( p, LOG_PID );
 #else ultrix
-    openlog( p, LOG_NDELAY|LOG_PID, LOG_LOCAL0 );
+    openlog( p, LOG_NDELAY|LOG_PID, LOG_DAEMON);
 #endif ultrix
 
     return 1;
