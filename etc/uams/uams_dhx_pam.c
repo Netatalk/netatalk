@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.15 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: uams_dhx_pam.c,v 1.16 2001-09-05 13:42:16 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -121,7 +121,7 @@ static int PAM_conv (int num_msg,
     case PAM_TEXT_INFO:
 #ifdef PAM_BINARY_PROMPT
     case PAM_BINARY_PROMPT:
-#endif
+#endif /* PAM_BINARY_PROMPT */
       /* ignore it... */
       break;
     case PAM_ERROR_MSG:
@@ -176,6 +176,12 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     int i;
     BIGNUM *bn, *gbn, *pbn;
     DH *dh;
+
+    /* TODO: seed dhx_setup properly... this is a hack */
+#ifdef sun
+    	/* *SEVERE* hack... fix */
+	RAND_load_file("/var/adm/messages", KEYSIZE);
+#endif /* sun */
 
     /* get the client's public key */
     if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
