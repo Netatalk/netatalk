@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.11 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: ofork.c,v 1.12 2002-04-20 19:05:12 rlewczuk Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -238,7 +238,7 @@ struct adouble      *ad;
     }
     strncpy( of->of_name, path, of->of_namelen = MACFILELEN + 1);
     *ofrefnum = refnum;
-    of->of_refnum = of_refnum;
+    of->of_refnum = refnum;
     of_hash(of);
 
     if (eid == ADEID_DFORK)
@@ -287,7 +287,7 @@ struct ofork	*of;
         of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
     }
 
-    oforks[ of->of_refnum ] = NULL;
+    oforks[ of->of_refnum % nforks ] = NULL;
     free( of->of_name );
 
     /* decrease refcount */
