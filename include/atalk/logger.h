@@ -24,6 +24,7 @@ enum logtypes {
   logtype_default,
   logtype_core,
   logtype_logger,
+  logtype_cnid,
 
   logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
@@ -33,6 +34,7 @@ enum logtypes {
   "Default",                         \
   "Core",                            \
   "Logger",                          \
+  "CNID",                            \
                                      \
   "end_of_list_marker"}              \
 
