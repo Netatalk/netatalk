@@ -1,5 +1,5 @@
 /*
- * $Id: endian.h,v 1.6 2001-09-14 14:31:10 rufustfirefly Exp $
+ * $Id: endian.h,v 1.7 2001-12-15 12:13:10 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -90,7 +90,7 @@ typedef unsigned long long  u_int64_t;
 #define PDP_ENDIAN	3412
 
 
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) || defined(_BIG_ENDIAN)
 #define BYTE_ORDER	BIG_ENDIAN
 #else
 #define BYTE_ORDER	LITTLE_ENDIAN
