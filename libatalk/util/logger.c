@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-/* ==========================================================================
+/* =========================================================================
 
        logger.c is part of the utils section in the libatalk library, 
         which is part of the netatalk project.  
@@ -32,7 +32,7 @@
     duplicated to allow multiple concurrent log files, although this is 
     probably a recipe for wasted resources. 
 
-   ========================================================================== */
+   ========================================================================= */
 
 #include <stdio.h>
 #include <limits.h>
@@ -58,18 +58,20 @@
 #undef  CHECK_STAT_ON_NEW_FILES 
 #undef  CHECK_ACCESS_ON_NEW_FILES 
 
-/* ==========================================================================
+/* =========================================================================
     External function declarations
-   ========================================================================== */
+   ========================================================================= */
 
 /* setup the internal variables used by the logger (called automatically) */
 void log_init();
 
 /* Setup the log filename and the loglevel, and the type of log it is. */
-bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, int display_options);
+bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, 
+	       int display_options);
 
 /* Setup the Level and type of log that will be logged to syslog. */
-void syslog_setup(enum loglevels loglevel, enum logtypes logtype, int display_options, int facility);
+void syslog_setup(enum loglevels loglevel, enum logtypes logtype, 
+		  int display_options, int facility);
 
 /* finish up and close the logs */
 void log_close();
@@ -78,13 +80,14 @@ void log_close();
 void set_processname(char *processname);
 
 /* Log a Message */
-void make_log(enum loglevels loglevel, enum logtypes logtype, char *message, ...);
+void make_log(enum loglevels loglevel, enum logtypes logtype, 
+	      char *message, ...);
 #ifndef DISABLE_LOGGER
 make_log_func set_log_location(char *srcfilename, int srclinenumber);
 
-/* ========================================================================== 
+/* ========================================================================= 
     Structure definitions
-   ========================================================================== */
+   ========================================================================= */
 
 /* A structure containing object level stuff */
 struct tag_log_file_data {
@@ -118,9 +121,9 @@ struct what_to_print_array {
   bool print_errtype;
 };
 
-/* ==========================================================================
+/* =========================================================================
     Internal function declarations
-   ========================================================================== */
+   ========================================================================= */
 
 void generate_message_details(char *message_details_buffer,
                               int message_details_buffer_length,
@@ -131,9 +134,9 @@ int get_syslog_equivalent(enum loglevels loglevel);
 
 static char *get_command_name(char *commandpath);
 
-/* ==========================================================================
+/* =========================================================================
     Instanciated data
-   ========================================================================== */
+   ========================================================================= */
 
 /* A populated instance */
 
@@ -181,9 +184,9 @@ static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
 #else /* #ifndef DISABLE_LOGGER */
   char *disabled_logger_processname=NULL;
 #endif /* DISABLE_LOGGER */
-/* ==========================================================================
+/* =========================================================================
     Global function definitions
-   ========================================================================== */
+   ========================================================================= */
 
 #ifndef DISABLE_LOGGER
 
@@ -207,7 +210,8 @@ void log_init()
 }
 #endif /* #ifndef DISABLE_LOGGER */
 
-bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, int display_options)
+bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, 
+	       int display_options)
 {
 #ifndef DISABLE_LOGGER
 
@@ -234,7 +238,9 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
     }
     else
     {
-      /* memcpy(logs, log_file_arr[logtype_default], sizeof(log_file_data_pair)); */
+    /*
+      memcpy(logs, log_file_arr[logtype_default], sizeof(log_file_data_pair));
+     */
       log_file_arr[logtype] = logs;
       (*logs)[1].log_file = NULL;
     }
@@ -248,7 +254,8 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
 
   if (strlen(global_log_data.log_file_directory)>0)
   {
-    lastchar[0] = global_log_data.log_file_directory[strlen(global_log_data.log_file_directory)-1];
+    lastchar[0] = global_log_data.
+      log_file_directory[strlen(global_log_data.log_file_directory)-1];
 
     if (lastchar[0] == '/' || lastchar[0] == '\\' || lastchar[0] == ':')
       lastchar[0] = 0;
@@ -267,12 +274,14 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
 #endif /* DEBUG_OUTPUT_TO_SCREEN */
   if (filename == NULL)
   {
-    strncpy((*logs)[1].log_filename, (*(log_file_arr[0]))[1].log_filename, PATH_MAX);
+    strncpy((*logs)[1].log_filename, 
+	    (*(log_file_arr[0]))[1].log_filename, PATH_MAX);
   }
   else
   {
-    sprintf((*logs)[1].log_filename, "%s%s%s", global_log_data.log_file_directory,
-                                         lastchar, filename);
+    sprintf((*logs)[1].log_filename, "%s%s%s", 
+	    global_log_data.log_file_directory,
+	    lastchar, filename);
   }
   (*logs)[1].log_level    = loglevel;
   (*logs)[1].display_options = display_options;
@@ -294,8 +303,11 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
   if (firstattempt == -1)
   {
 #ifdef DEBUG_OUTPUT_TO_SCREEN
-    printf("about to call Log with %d, %d, %s, %s\n", log_note, logtype_logger, 
-           "can't stat Logfile",    (*logs)[1].log_filename);
+    printf("about to call Log with %d, %d, %s, %s\n", 
+	   log_note, logtype_logger, 
+           "can't stat Logfile", 
+	   (*logs)[1].log_filename
+	   );
 #endif
 
     /* syslog(LOG_INFO, "stat failed"); */
@@ -342,7 +354,9 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
   (*logs)[1].log_file     = fopen((*logs)[1].log_filename, "at");
   if ((*logs)[1].log_file == NULL)
   {
-    LOG(log_severe, logtype_logger, "can't open Logfile %s", (*logs)[1].log_filename);
+    LOG(log_severe, logtype_logger, "can't open Logfile %s", 
+	(*logs)[1].log_filename
+	);
     return false;
   }
 #endif
@@ -354,7 +368,8 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
 }
 
 
-void syslog_setup(enum loglevels loglevel, enum logtypes logtype, int display_options, int facility)
+void syslog_setup(enum loglevels loglevel, enum logtypes logtype, 
+		  int display_options, int facility)
 {
 #ifndef DISABLE_LOGGER
   log_file_data_pair *logs;
@@ -419,8 +434,10 @@ void log_close()
   }
 #ifdef DEBUG_OUTPUT_TO_SCREEN
       printf("Freeing log_data %d, stored at %p\n", n, log_file_arr[n]);
-      printf("\t(filename) %s\t(type) %s\n", (*(log_file_arr[n]))[1].log_filename, 
-             ((n<num_logtype_strings)?arr_logtype_strings[n]:""));
+      printf("\t(filename) %s\t(type) %s\n", 
+	     (*(log_file_arr[n]))[1].log_filename, 
+             ((n<num_logtype_strings)?arr_logtype_strings[n]:"")
+	     );
 #endif /* DEBUG_OUTPUT_TO_SCREEN */
 #endif /* DISABLE_LOGGER */
 
@@ -453,12 +470,13 @@ make_log_func set_log_location(char *srcfilename, int srclinenumber)
 }
 #endif /* DISABLE_LOGGER */
 
-/* --------------------------------------------------------------------------
+/* -------------------------------------------------------------------------
     MakeLog has 1 main flaws:
       The message in its entirity, must fit into the tempbuffer.  
       So it must be shorter than MAXLOGSIZE
-   -------------------------------------------------------------------------- */
-void make_log_entry(enum loglevels loglevel, enum logtypes logtype, char *message, ...)
+   ------------------------------------------------------------------------- */
+void make_log_entry(enum loglevels loglevel, enum logtypes logtype, 
+		    char *message, ...)
 {
   va_list args;
   char log_buffer[MAXLOGSIZE];
@@ -508,7 +526,10 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype, char *messag
     printf("done onw syslog\n");
 #endif
     syslog(sysloglevel, "%s: %s", log_details_buffer, log_buffer);
-    /* syslog(sysloglevel, "%s:%s: %s", log_levelString, log_typeString, LogBuffer); */
+    /* 
+       syslog(sysloglevel, "%s:%s: %s", log_levelString, 
+              log_typeString, LogBuffer); 
+     */
   }
 #endif
 
@@ -531,7 +552,9 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype, char *messag
       if ((*logs)[1].log_file == NULL)
       {
         (*logs)[1].log_file = stdout;
-        LOG(log_severe, logtype_logger, "can't open Logfile %s", (*logs)[1].log_filename);
+        LOG(log_severe, logtype_logger, "can't open Logfile %s", 
+	    (*logs)[1].log_filename
+	    );
         return;
       }
     }
@@ -589,9 +612,9 @@ void load_proccessname_from_proc()
   set_processname(procname);
 }
 
-/* ==========================================================================
+/* =========================================================================
     Internal function definitions
-   ========================================================================== */
+   ========================================================================= */
 
 static char *get_command_name(char *commandpath)
 {
@@ -611,7 +634,8 @@ static char *get_command_name(char *commandpath)
   return ptr;
 }
 
-void  workout_what_to_print(struct what_to_print_array *what_to_print, struct tag_log_file_data *log_struct)
+void  workout_what_to_print(struct what_to_print_array *what_to_print, 
+			    struct tag_log_file_data *log_struct)
 {
   /* is this a syslog entry? */
   if (log_struct->log_filename[0]==0)
@@ -626,11 +650,14 @@ void  workout_what_to_print(struct what_to_print_array *what_to_print, struct ta
     what_to_print->print_processname = true;
  
     /* pid is dealt with at the syslog level if we're syslogging */
-    what_to_print->print_pid = (((log_struct->display_options & logoption_pid) == 0)?false:true);
+    what_to_print->print_pid = 
+      (((log_struct->display_options & logoption_pid) == 0)?false:true);
   }
 
-  what_to_print->print_srcfile = (((log_struct->display_options & logoption_nfile) == 0)?true:false);
-  what_to_print->print_srcline = (((log_struct->display_options & logoption_nline) == 0)?true:false);
+  what_to_print->print_srcfile = 
+    (((log_struct->display_options & logoption_nfile) == 0)?true:false);
+  what_to_print->print_srcline = 
+    (((log_struct->display_options & logoption_nline) == 0)?true:false);
   
   what_to_print->print_errlevel = true;
   what_to_print->print_errtype = true;
@@ -738,11 +765,14 @@ void generate_message_details(char *message_details_buffer,
     }
     strcpy(buff_ptr, "]");
 
-    /* ok sprintf string is ready, now is the 1st parameter src or linenumber */
+    /* 
+       ok sprintf string is ready, now is the 1st parameter src or linenumber
+     */
     if (what_to_print.print_srcfile)
     {
       sprintf(ptr, sprintf_buffer, 
-             global_log_data.temp_src_filename, global_log_data.temp_src_linenumber);
+	      global_log_data.temp_src_filename, 
+	      global_log_data.temp_src_linenumber);
     }
     else
     {
@@ -909,7 +939,9 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
         strncpy(buffer, opt, ptr-opt);
         buffer[ptr-opt]=0;
 
-        for(logtype=logtype_default;logtype<logtype_end_of_list_marker;logtype++)
+        for(logtype=logtype_default;
+	    logtype<logtype_end_of_list_marker;
+	    logtype++)
         {
           if (strcasecmp(buffer,
 
