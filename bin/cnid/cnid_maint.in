@@ -3,7 +3,7 @@
 #
 # cnid_maint: A script to maintain the consistency of CNID databases.
 #
-# $Id: cnid_maint.in,v 1.5 2002-02-09 20:29:40 jmarcus Exp $
+# $Id: cnid_maint.in,v 1.6 2002-02-11 21:02:00 jmarcus Exp $
 #
 
 use strict;
@@ -166,6 +166,10 @@ close(VOLS);
 my $path = "";
 foreach $path (@paths) {
     my $dbpath = $path . "/.AppleDB";
+    if ( !-d $dbpath ) {
+        error( 1, "Database environment $dbpath does not exist" );
+        next;
+    }
     if ($extra_safe) {
         error( 0,
             "Checking database environment $dbpath for open connections..." );
