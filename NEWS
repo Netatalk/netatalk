@@ -1,3 +1,29 @@
+Changes in 1.6.3
+================
+
+* UPD: afpd: Infrastructural support for an upcoming Kerberos 5 UAM.
+       [Sam Noble]
+* UPD: uams_dhx_passwd: Better random seed in Tru64. [Burkhard Schmidt]
+* FIX: afpd: Bug in AFP connection negotiation stage. [Sam]
+* FIX: afpd: Catsearch, when Mac and unix name differ, search on attributes.
+* FIX: afpd: Files could be opened for writing on read-only filesystems.
+* FIX: afpd: Debugging using SIGUSR1 was broken. [Stefan Muenkner]
+* FIX: afpd: Segfault after login. [Robby Griffin, Sean Bolton]
+* FIX: psf: Correct path to etc2ps.sh.
+* FIX: shell_utils: Don't distribute generated files.
+* FIX: aecho: -A option didn't work. [Chris Shiels]
+* FIX: configure: Berkeley DB path detection could be wrong. [Stefan]
+* FIX: Automake build fixes.
+
+Changes in 1.6.2
+================
+
+* FIX: atalkd: Fixes for reading long configuration file lines. [Dan Wilga]
+* FIX: afpd: CNID id allocation in a multiuser environment.
+* FIX: papd: Fix PSSP support when PAM is enabled.
+* FIX: macusers: Can now cope with IP addresses as well as host names.
+* FIX: etc2ps.sh: Install correctly.
+
 Changes in 1.6.1
 ================
 
