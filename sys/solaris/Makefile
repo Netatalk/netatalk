@@ -40,6 +40,8 @@ ADDLIBS=	-lsocket -lnsl
 
 SRC= linkage.c tpi.c dlpi.c ioc.c if.c aarp.c ddp.c sock.c rt.c
 OBJ= linkage.o tpi.o dlpi.o ioc.o if.o aarp.o ddp.o sock.o rt.o
+HEADERS= if.h ioc.h rt.h sock.h
+EXTRA_DIST= ddp.conf Makefile
 
 INCPATH=	-I../../include -I../netatalk
 CFLAGS=	${DEFS} ${OPTOPTS} ${INCPATH} ${KCFLAGS} 
@@ -175,6 +177,8 @@ install :
 	@echo "services.atalk to /etc/services and to call rc.atalk"
 	@echo "in /etc/rc.  See README and README.SOLARIS for more"
 	@echo "information."
+
+distdir :
 
 clean : sysclean
 	for i in ${ALL}; \

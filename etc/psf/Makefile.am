@@ -12,6 +12,8 @@ CFLAGS = @CFLAGS@ -DZEROWIDTH \
 	-D_PATH_PSFILTER=\"$(bindir)/etc2ps.sh\" \
 	-D_PATH_PAGECOUNT=\"$(CONFIG_DIR)/pagecount.ps\"
 
+EXTRA_DIST = etc2ps.sh
+
 # declare links
 psf_LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap \
 	 tfwpap ifwpaprev tfwpaprev ofmpap ifmpap tfmpap ifmpaprev \
