@@ -59,6 +59,13 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL}}, &uam_changepw,
 
 static struct uam_obj *afp_uam = NULL;
 
+
+/* Variables for CAP style printer authentication */
+#ifdef CAPDIR
+extern int addr_net, addr_node, addr_uid;
+extern char addr_name[32];
+#endif /* CAPDIR */
+
 void status_versions( data )
     char	*data;
 {
@@ -124,6 +131,11 @@ static int send_reply(const AFPObj *obj, const int err)
 
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 {
+#ifdef CAPDIR
+    char nodename[256];
+    FILE *fp;
+#endif /* CAPDIR */
+
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
 	syslog( LOG_ERR, "login: root login denied!" );
 	return AFPERR_NOTAUTH;
@@ -131,6 +143,20 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
     syslog( LOG_INFO, "login %s (uid %d, gid %d)", pwd->pw_name,
 	    pwd->pw_uid, pwd->pw_gid );
+
+#ifdef CAPDIR
+    if(addr_net && addr_node) { /* Do we have a valid Appletalk address? */
+	addr_uid = pwd->pw_uid;
+	strncpy(addr_name, pwd->pw_name, 32);
+	sprintf(nodename, "%s/net%d.%dnode%d", CAPDIR, addr_net / 256, addr_net % 256, addr_node);
+	syslog (LOG_INFO, "registering %s (uid %d) on %u.%u as %s",
+			addr_name, addr_uid, addr_net, addr_node, nodename);
+	fp = fopen(nodename, "w");
+	fprintf(fp, "%s\n", addr_name);
+	fclose(fp);
+    }
+#endif /* CAPDIR */
+
     if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
 #ifdef RUN_AS_USER
       syslog(LOG_INFO, "running with uid %d", geteuid());

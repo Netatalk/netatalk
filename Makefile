@@ -69,6 +69,18 @@ TCPWRAPDIR=/usr
 #AFSDIR=/usr/local/afs
 #KRBDIR=/usr/local/kerberos
 
+# Directory to store node addresses and login names for CAP style
+# authenticated printing.  CAP style authenticated printing requires
+# that a user mount an appletalk share before they can print.  Afpd
+# stores the username in a file named after the Appletalk address which
+# papd reads to determine if the user is allowed to print.  These files
+# will be stored in the directory below.  Unfortunately, because afpd
+# drops privledges, this directory must be writable by any user which
+# connects to the server.  Usually, this means public write access (777
+# permissions). Uncomment and edit the path if you want CAP style 
+# authenticated printing support in afpd and papd.
+#CAPDIR=/var/spool/capsec
+
 ##########################################################################
 all install depend clean tags kernel kinstall kpatch:	FRC
 	@case `uname -rs` in \
@@ -99,6 +111,7 @@ all install depend clean tags kernel kinstall kpatch:	FRC
 	    TCPWRAPDIR="${TCPWRAPDIR}" PAMDIR="${PAMDIR}" DB2DIR="${DB2DIR}" \
 	    AFSDIR="${AFSDIR}" KRBDIR="${KRBDIR}" DESDIR="${DESDIR}" \
 	    CRYPTODIR="${CRYPTODIR}" CRACKDIR="${CRACKDIR}" \
+	    CAPDIR="${CAPDIR}" \
 	    OSVERSION="`uname -r`" MACHINETYPE="`uname -m`" \
 	    $@
 

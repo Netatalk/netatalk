@@ -45,6 +45,11 @@ static AFPConfig *configs;
 static server_child *server_children;
 static fd_set save_rfds;
 
+#ifdef CAPDIR
+int addr_net, addr_node, addr_uid;
+char addr_name[32];
+#endif CAPDIR
+
 static void afp_exit(const int i)
 {
   server_unlock(default_options.pidfile);

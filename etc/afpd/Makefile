@@ -12,7 +12,7 @@ OBJ = unix.o ofork.o main.o switch.o auth.o volume.o directory.o file.o \
 	nfsquota.o codepage.o quota.o uam.o afs.o
 
 INCPATH=	-I../../include ${AFSINCPATH}
-CFLAGS=	${DEFS} ${AFSDEFS} ${OPTOPTS} ${INCPATH} -DAPPLCNAME
+CFLAGS=	${DEFS} ${AFSDEFS} ${CAPDEFS} ${OPTOPTS} ${INCPATH} -DAPPLCNAME
 LIBS =	-latalk ${AFSLIBS} ${ADDLIBS} ${TCPWRAPLIBS} ${DB2LIBS} \
 	${RPCSVCLIB} ${AFPLIBS} ${PAMLIBS} ${LIBSHARED} 
 LIBDIRS=	-L../../libatalk ${AFSLIBDIRS} ${TCPWRAPLIBDIRS} \
@@ -45,6 +45,9 @@ all : ${SUBDIRS}
 	    fi; \
 	    PAMDEFS="-DUSE_PAM"; \
 	fi; \
+	if [ x"${CAPDIR}" != x ]; then \
+	    CAPDEFS="-DCAPDIR='\"${CAPDIR}\"'";\
+	fi; \
 	if [ -f /usr/lib/librpcsvc.a -o -f /lib/librpcsvc.a ]; then \
 	    RPCSVCLIB=-lrpcsvc; \
 	fi; \
@@ -59,7 +62,7 @@ all : ${SUBDIRS}
 	    LIBSHARED="$${LIBSHARED}" PAMLIBS="$${PAMLIBS}" \
 	    PAMLIBDIR="$${PAMLIBDIR}" RPCSVCLIB="$${RPCSVCLIB}" \
 	    AFSINCPATH="$${AFSINCPATH}" AFSDEFS="$${AFSDEFS}" \
-	    DB2INCPATH="$${DB2INCPATH}" \
+	    CAPDEFS="$${CAPDEFS}" DB2INCPATH="$${DB2INCPATH}" \
 	    afpd
 
 ${SUBDIRS}: FRC

@@ -29,6 +29,11 @@
 
 extern struct oforks	*writtenfork;
 
+/* for CAP style authenticated printing */
+#ifdef CAPDIR
+extern int addr_net, addr_node, addr_uid;
+#endif /* CAPDIR */
+
 static AFPObj *child;
 
 static __inline__ void afp_asp_close(AFPObj *obj)
@@ -93,6 +98,11 @@ void afp_over_asp(AFPObj *obj)
     struct sigaction  action;
     int		func, ccnt = 0, reply = 0;
 
+#ifdef CAPDIR
+    char addr_filename[256];
+    struct stat cap_st;
+#endif /* CAPDIR */
+
     obj->exit = afp_asp_die;
     obj->reply = (int (*)()) asp_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes)) asp_attention;
@@ -117,6 +127,11 @@ void afp_over_asp(AFPObj *obj)
 	afp_asp_die(1);
     }
 
+#ifdef CAPDIR
+    addr_net = ntohs( asp->asp_sat.sat_addr.s_net );
+    addr_node  = asp->asp_sat.sat_addr.s_node;
+#endif /* CAPDIR */
+
     syslog( LOG_INFO, "session from %u.%u:%u on %u.%u:%u",
 	    ntohs( asp->asp_sat.sat_addr.s_net ),
 	    asp->asp_sat.sat_addr.s_node, asp->asp_sat.sat_port,
@@ -129,6 +144,20 @@ void afp_over_asp(AFPObj *obj)
       case ASPFUNC_CLOSE :
 	afp_asp_close(obj);
 	syslog( LOG_INFO, "done" );
+
+#ifdef CAPDIR
+	sprintf(addr_filename, "%s/net%d.%dnode%d", CAPDIR, addr_net/256, addr_net%256, addr_node);
+	if(stat(addr_filename, &cap_st) == 0) {
+		if(unlink(addr_filename) == 0) {
+			syslog(LOG_INFO, "removed %s", addr_filename);
+		} else {
+			syslog(LOG_INFO, "error removing %s: %m", addr_filename);
+		}
+	} else {
+		syslog(LOG_INFO, "error stat'ing %s: %m", addr_filename);
+	}
+#endif /* CAPDIR */
+
 	if ( obj->options.flags & OPTION_DEBUG ) {
 	  printf( "done\n" );
 	}
