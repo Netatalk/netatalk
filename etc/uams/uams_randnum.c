@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.11 2002-09-29 23:30:20 sibaz Exp $
+ * $Id: uams_randnum.c,v 1.12 2003-01-21 16:31:39 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -217,7 +217,7 @@ afppasswd_found:
 	/* decrypt the password */
 	ecb_encrypt((C_Block *) p, (C_Block *) p, schedule, DES_DECRYPT);
       }
-      memset(schedule, 0, sizeof(schedule));
+      memset(&schedule, 0, sizeof(schedule));
   }
 
   if (set) {
@@ -383,7 +383,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
   memset(seskey, 0, sizeof(seskey));
   ecb_encrypt((C_Block *) randbuf, (C_Block *) randbuf,
 	       seskeysched, DES_ENCRYPT);
-  memset(seskeysched, 0, sizeof(seskeysched));
+  memset(&seskeysched, 0, sizeof(seskeysched));
 
   /* test against what the client sent */
   if (memcmp( randbuf, ibuf, sizeof(randbuf) )) { /* != */
@@ -431,7 +431,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
   /* test against client's reply */
   if (memcmp(randbuf, ibuf, sizeof(randbuf))) { /* != */
     memset(randbuf, 0, sizeof(randbuf));
-    memset(seskeysched, 0, sizeof(seskeysched));
+    memset(&seskeysched, 0, sizeof(seskeysched));
     return AFPERR_NOTAUTH;
   }
   ibuf += sizeof(randbuf);
@@ -440,7 +440,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
   /* encrypt client's challenge and send back */
   ecb_encrypt( (C_Block *) ibuf, (C_Block *) rbuf,
 	       seskeysched, DES_ENCRYPT);
-  memset(seskeysched, 0, sizeof(seskeysched));
+  memset(&seskeysched, 0, sizeof(seskeysched));
   *rbuflen = sizeof(randbuf);
   
   *uam_pwd = randpwd;
@@ -495,7 +495,7 @@ static int randnum_changepw(void *obj, const char *username,
       err = randpass(pwd, passwdfile, ibuf + PASSWDLEN, sizeof(seskey), 1);
 
     /* zero out some fields */
-    memset(seskeysched, 0, sizeof(seskeysched));
+    memset(&seskeysched, 0, sizeof(seskeysched));
     memset(seskey, 0, sizeof(seskey));
     memset(ibuf, 0, sizeof(seskey)); /* old passwd */
     memset(ibuf + PASSWDLEN, 0, sizeof(seskey)); /* new passwd */

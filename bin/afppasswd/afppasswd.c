@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.9 2001-10-25 20:42:55 srittau Exp $
+ * $Id: afppasswd.c,v 1.10 2003-01-21 16:31:38 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -114,7 +114,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
       /* decrypt the password */
       ecb_encrypt((C_Block *) buf, (C_Block *) buf, schedule, DES_DECRYPT);
     }
-    memset(schedule, 0, sizeof(schedule));      
+    memset(&schedule, 0, sizeof(schedule));      
   }
 
   if (newpwd) {
