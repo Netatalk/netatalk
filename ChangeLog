@@ -1,5 +1,8 @@
 2001-10-16  Lance Levsen  <l.levsen@printwest.com>
 
+	* config/Makefile.am: Change autoconf variable $(f) to shell
+	variable $$f.
+
 	* man/man1/Makefile.am: Modified to allow variable subs in man pages.
 
 	* contrib/shell_utils/apple_cp: Updated. Fixed file to file
