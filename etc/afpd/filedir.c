@@ -1,11 +1,13 @@
 /*
+ * $Id: filedir.c,v 1.9 2001-06-06 19:04:25 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
 #include <sys/syslog.h>
@@ -49,7 +51,7 @@ int matchfile2dirperms(upath, vol, did)
 
 #ifdef DEBUG
     syslog (LOG_INFO, "begin matchfile2dirperms:");
-#endif DEBUG
+#endif /* DEBUG */
 
     if (stat(upath, &st ) < 0)
       syslog(LOG_ERR, "Could not stat %s: %m", upath);
@@ -86,7 +88,7 @@ int matchfile2dirperms(upath, vol, did)
           else 
 	    syslog (LOG_INFO, 
 	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %m");
-#endif DEBUG
+#endif /* DEBUG */
           if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
           {
 	    syslog (LOG_ERR, 
@@ -104,18 +106,18 @@ int matchfile2dirperms(upath, vol, did)
           else 
 	    syslog (LOG_INFO, 
 	      "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %m");
-#endif DEBUG
+#endif /* DEBUG */
 	}
 #ifdef DEBUG
         else
 	  syslog (LOG_INFO, 
 	    "matchfile2dirperms: No ownership change necessary.");
-#endif DEBUG
+#endif /* DEBUG */
     } /* end else if stat success */
     seteuid(uid); /* Restore process ownership to normal */
 #ifdef DEBUG
     syslog (LOG_INFO, "end matchfile2dirperms:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return (AFP_OK);
 
@@ -137,7 +139,7 @@ int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_getfildirparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -197,7 +199,7 @@ int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_getfildirparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( AFP_OK );
 }
@@ -216,7 +218,7 @@ int afp_setfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_setfildirparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -267,7 +269,7 @@ int afp_setfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_setfildirparams:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( rc );
 }
@@ -292,7 +294,7 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_rename:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -338,7 +340,7 @@ int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
     if ( strcasecmp( path, ibuf ) == 0 ) {
 	return( AFP_OK );
     }
-#endif notdef
+#endif /* notdef */
 
     /* if a curdir/newname ofork exists, return busy */
     if (of_findname(vol, curdir, ibuf))
@@ -446,7 +448,7 @@ out:
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_rename:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( AFP_OK );
 }
@@ -465,7 +467,7 @@ int afp_delete(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_delete:");
-#endif DEBUG
+#endif /* DEBUG */ 
 
     *rbuflen = 0;
     ibuf += 2;
@@ -505,7 +507,7 @@ int afp_delete(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_delete:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( rc );
 }
@@ -558,10 +560,13 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 #if AD_VERSION > AD_VERSION1
     cnid_t      id;
 #endif
+#ifdef DROPKLUDGE
+    int		retvalue;
+#endif /* DROPKLUDGE */
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_moveandrename:");
-#endif DEBUG
+#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -679,7 +684,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 	    return retvalue;
         }
     }
-#endif DROPKLUDGE
+#endif /* DROPKLUDGE */
 
     if ( rc == AFP_OK ) {
 #if AD_VERSION > AD_VERSION1
@@ -695,7 +700,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_moveandrename:");
-#endif DEBUG
+#endif /* DEBUG */
 
     return( rc );
 }

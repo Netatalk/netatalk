@@ -1,11 +1,13 @@
 /*
+ * $Id: unix.c,v 1.18 2001-06-06 19:04:25 rufustfirefly Exp $
+ *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -212,7 +214,10 @@ inline int stickydirmode(name, mode, dropbox)
     const int dropbox;
 {
   int retval;
-
+#ifdef DROPKLUDGE
+  int uid;
+#endif /* DROPKLUDGE */
+  
 /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
    retval=0;
 #ifdef DROPKLUDGE
@@ -230,12 +235,12 @@ inline int stickydirmode(name, mode, dropbox)
         } else {
 #ifdef DEBUG
            syslog( LOG_INFO, "stickydirmode: (debug) chmod \"%s\": %m", name );
-#endif
+#endif /* DEBUG */
            seteuid(uid);
         } /* end getting retval */
       } /* end if not & S_IROTH */
    } else { /* end if S_IWOTH and not S_IROTH */
-#endif DROPKLUDGE
+#endif /* DROPKLUDGE */
        if ( (retval=chmod( name, DIRBITS | mode )) < 0 )  {
           syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
        }

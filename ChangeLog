@@ -1,4 +1,9 @@
-($Id: ChangeLog,v 1.42 2001-06-06 13:36:36 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.43 2001-06-06 19:04:24 rufustfirefly Exp $)
+
+2001-06-06  jeff b  <jeff@univrel.pr.uconn.edu>
+	* etc/afpd/filedir.c, etc/afpd/unix.c: fixed dropkludge code
+	so that it properly compiles again, along with minor warning
+	fixen
 
 2001-06-05 Dan L. (pooba53)
 	* Modified configure.in so references made to $ac_prefix_default
