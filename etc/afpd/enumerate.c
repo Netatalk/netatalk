@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.24 2002-10-11 14:18:28 didg Exp $
+ * $Id: enumerate.c,v 1.25 2002-10-15 19:34:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -199,11 +199,11 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 }
 
 /* ----------------------------- */
-static int enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, is64 )
+static int enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, ext )
 AFPObj       *obj;
 char	     *ibuf, *rbuf;
 unsigned int ibuflen, *rbuflen;
-int     is64;
+int     ext;
 {
     static struct savedir	sd = { 0, 0, 0, NULL, NULL, 0 };
     struct vol			*vol;
@@ -215,7 +215,8 @@ int     is64;
     u_int32_t			sindex, maxsz, sz = 0;
     struct path                 *o_path;
     struct path                 s_path;
-    
+    int                         header;
+        
     if ( sd.sd_buflen == 0 ) {
         if (( sd.sd_buf = (char *)malloc( SDBUFBRK )) == NULL ) {
             LOG(log_error, logtype_afpd, "afp_enumerate: malloc: %s", strerror(errno) );
@@ -264,7 +265,7 @@ int     is64;
     reqcnt = ntohs( reqcnt );
     ibuf += sizeof( reqcnt );
 
-    if (is64) {
+    if (ext == 2) {
         memcpy( &sindex, ibuf, sizeof( sindex ));
         sindex = ntohs( sindex );
         ibuf += sizeof( sindex );
@@ -275,7 +276,7 @@ int     is64;
         ibuf += sizeof( temp16 );
     }
     
-    if (is64) {
+    if (ext == 2) {
         memcpy( &maxsz, ibuf, sizeof( maxsz ));
         maxsz = ntohs( maxsz );
         ibuf += sizeof( maxsz );
@@ -285,6 +286,9 @@ int     is64;
         maxsz = ntohs( temp16 );
         ibuf += sizeof( temp16 );
     }
+    
+    header = (ext)?4:2;
+    header *=sizeof( u_char );
     
     maxsz = min(maxsz, *rbuflen);
 
@@ -299,7 +303,7 @@ int     is64;
     }
 
     data = rbuf + 3 * sizeof( u_int16_t );
-    sz = 3 * sizeof( u_int16_t );
+    sz = 3 * sizeof( u_int16_t );	/* fbitmap, dbitmap, reqcount */
 
     /*
      * Read the directory into a pre-malloced buffer, stored
@@ -425,7 +429,7 @@ int     is64;
             }
 
             if (( ret = getdirparams(vol, dbitmap, &s_path, dir,
-                                     data + 2 * sizeof( u_char ), &esz )) != AFP_OK ) {
+                                     data + header , &esz )) != AFP_OK ) {
                 *rbuflen = 0;
                 return( ret );
             }
@@ -437,7 +441,7 @@ int     is64;
             }
             s_path.m_name = utompath(vol, s_path.u_name);
             if (( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
-                                     data + 2 * sizeof( u_char ), &esz )) != AFP_OK ) {
+                                     data + header , &esz )) != AFP_OK ) {
                 *rbuflen = 0;
                 return( ret );
             }
@@ -447,15 +451,15 @@ int     is64;
          * Make sure entry is an even length, possibly with a null
          * byte on the end.
          */
-        if ( esz & 1 ) {
-            *(data + 2 * sizeof( u_char ) + esz ) = '\0';
+        if ( (esz + header) & 1 ) {
+            *(data + header + esz ) = '\0';
             esz++;
         }
 
         /*
          * Check if we've exceeded the size limit.
          */
-        if ( maxsz < sz + esz + 2 * sizeof( u_char )) {
+        if ( maxsz < sz + esz + header) {
             if (first) { /* maxsz can't hold a single reply */
                 *rbuflen = 0;
                 return AFPERR_PARAM;
@@ -467,9 +471,20 @@ int     is64;
         if (first)
             first = 0;
 
-        sz += esz + 2 * sizeof( u_char );
-        *data++ = esz + 2 * sizeof( u_char );
+        sz += esz + header;
+        if (ext) {
+            temp16 = htons( esz + header );
+            memcpy( data, &temp16, sizeof( temp16 ));
+            data += sizeof(temp16);
+        }
+        else {
+            *data++ = esz + header;
+        }
+
         *data++ = S_ISDIR(s_path.st.st_mode) ? FILDIRBIT_ISDIR : FILDIRBIT_ISFILE;
+        if (ext) {
+             *data++ = 0;
+        }
         data += esz;
         actcnt++;
         sd.sd_last += len + 1;
@@ -508,11 +523,20 @@ unsigned int ibuflen, *rbuflen;
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext2(obj, ibuf, ibuflen, rbuf, rbuflen )
+int afp_enumerate_ext(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj       *obj;
 char	     *ibuf, *rbuf;
 unsigned int ibuflen, *rbuflen;
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 1);
+}
+
+/* ----------------------------- */
+int afp_enumerate_ext2(obj, ibuf, ibuflen, rbuf, rbuflen )
+AFPObj       *obj;
+char	     *ibuf, *rbuf;
+unsigned int ibuflen, *rbuflen;
+{
+    return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 2);
 }
 

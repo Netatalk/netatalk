@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.33 2002-10-12 16:42:31 didg Exp $
+ * $Id: auth.c,v 1.34 2002-10-15 19:34:34 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -298,14 +298,15 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     case 31:
 	uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL); 
     case 30:
+	uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext, NULL); 
 	uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL); 
-        /* enumerate_ext and catsearch_ext are using the same packet as no ext calls */
+        /* catsearch_ext uses the same packet as catsearch FIXME double check this, it wasn't true for enue
+           enumerate_ext */
 #ifdef WITH_CATSEARCH
 	uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH, afp_catsearch, NULL); 
 #endif
 	uam_afpserver_action(AFP_GETSESSTOKEN,  UAM_AFPSERVER_POSTAUTH, afp_getsession, NULL); 
 	uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect, NULL); 
-	uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate, NULL); 
 	uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext, NULL); 
 	uam_afpserver_action(AFP_WRITE_EXT,     UAM_AFPSERVER_POSTAUTH, afp_write_ext, NULL); 
 	break;
