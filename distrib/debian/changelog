@@ -1,6 +1,8 @@
 netatalk (1.5pre7cvs-0) unstable; urgency=medium
 
   * Inofficial CVS release.
+  * This release uses libtool for UAM stuff. So, the problems with
+    unresolved symbols should be gone now. (Closes: #95399)
   * Non-DSFG free code was removed. Copyright notice was changed accordingly.
   * Use ./configure --sysconfdir instead of --with-config-dir.
   * Upstream package does now install PAM file in the correct directory.
@@ -11,7 +13,18 @@ netatalk (1.5pre7cvs-0) unstable; urgency=medium
   * Some doc files were removed, others were added.
   * Use debhelper compatibility level 3.
 
- -- Sebastian Rittau <srittau@debian.org>  Thu, 16 Aug 2001 19:13:43 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Wed, 22 Aug 2001 15:28:36 +0200
+
+netatalk (1.5pre6-7) unstable; urgency=low
+
+  * Cleaned up CFLAGS handling in ./configure call.
+  * Updated config.{sub,guess} again, just to make sure ...
+  * Depend on the timeout package from tct. Also, don't distribute
+    /usr/bin/timeout and remove the timeout(1) link to undocumented(7).
+    Make preparations to remove the proper timeout(1) man page that will
+    get distributed with netatalk 1.5pre7.
+
+ -- Sebastian Rittau <srittau@debian.org>  Sun, 19 Aug 2001 18:05:55 +0200
 
 netatalk (1.5pre6-6) unstable; urgency=medium
 
