@@ -59,7 +59,7 @@ uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c crypt.c crypt.h
 INCLUDES = @SSL_CFLAGS@
 
 uams_guest_la_CFLAGS      = @CFLAGS@
-uams_randnum_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@
+uams_randnum_la_CFLAGS    = @CFLAGS@ $(CRYPT_CFLAGS)
 uams_passwd_la_CFLAGS     = @CFLAGS@
 uams_pam_la_CFLAGS        = @CFLAGS@
 uams_pgp_la_CFLAGS        = @CFLAGS@ $(CRYPT_CFLAGS)
@@ -67,7 +67,7 @@ uams_dhx_passwd_la_CFLAGS = @CFLAGS@ @SSL_CFLAGS@
 uams_dhx_pam_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@
 
 uams_guest_la_LDFLAGS      = -module -avoid-version
-uams_randnum_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@
+uams_randnum_la_LDFLAGS    = -module -avoid-version $(CRYPT_LIBS)
 uams_passwd_la_LDFLAGS     = -module -avoid-version
 uams_pam_la_LDFLAGS        = -module -avoid-version -lpam
 uams_pgp_la_LDFLAGS        = -module -avoid-version $(CRYPT_LIBS)
