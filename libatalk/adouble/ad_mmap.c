@@ -1,5 +1,5 @@
 /*
- * $Id: ad_mmap.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_mmap.c,v 1.4 2002-10-05 13:20:14 didg Exp $
  *
  * ad_mmap provides interfaces to memory mapped files. as this is the
  * case, we don't have to deal w/ temporary buffers such as
@@ -11,6 +11,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef USE_MMAPPED_HEADERS
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -113,3 +114,5 @@ void *ad_mmapwrite(struct adouble *ad, const u_int32_t eid,
     return ad_mmap(buflen, PROT_READ | PROT_WRITE, MAP_SHARED,
 		   ad->ad_hf.adf_fd, off);
 }
+
+#endif

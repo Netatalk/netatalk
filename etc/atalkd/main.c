@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.16 2002-09-29 23:24:47 sibaz Exp $
+ * $Id: main.c,v 1.17 2002-10-05 13:20:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -31,6 +31,9 @@
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif /* ! WIFEXITED */
+#ifndef WIFSTOPPED
+#define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
+#endif
 
 #include <errno.h>
 #ifdef TRU64
@@ -1106,6 +1109,9 @@ int main( ac, av )
     }
 #endif /* BSD4_4 */
 
+    ciface = interfaces;
+    bootaddr( ciface );
+
     memset(&sv, 0, sizeof(sv));
     sv.sa_handler = as_down;
     sigemptyset( &sv.sa_mask );
@@ -1149,8 +1155,6 @@ int main( ac, av )
 	atalkd_exit( 1 );
     }
 
-    ciface = interfaces;
-    bootaddr( ciface );
     for (;;) {
 	readfds = fds;
 	if ( select( nfds, &readfds, NULL, NULL, NULL) < 0 ) {

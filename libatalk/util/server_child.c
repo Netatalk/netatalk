@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: server_child.c,v 1.6 2002-10-05 13:20:13 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -37,6 +37,12 @@
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif /* ! WIFEXITED */
+#ifndef WIFSTOPPED
+#define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
+#endif
+#ifndef WIFSIGNAL
+#define WIFSIGNALED(status) (!WIFSTOPPED(status) && !WIFEXITED(status)) 
+#endif
 
 #include <atalk/server_child.h>
 
