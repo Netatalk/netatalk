@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.56 2002-09-06 02:57:49 didg Exp $
+ * $Id: file.c,v 1.57 2002-09-06 04:23:45 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1043,13 +1043,13 @@ const int   noadouble;
     char		filebuf[8192];
     int			sfd, dfd, len, err = AFP_OK;
     ssize_t             cc;
-    char                *dpath;
+    char                dpath[ MAXPATHLEN + 1];
     int                 admode;
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin copyfile:");
 #endif /* DEBUG */
 
-    dpath = ad_path( dst, ADFLAGS_HF );
+    strcpy(dpath, ad_path( dst, ADFLAGS_HF ));
     admode = ad_mode( dst, 0666 );
     if (newname) {
         if ((sfd = open( ad_path( src, ADFLAGS_HF ), O_RDONLY, 0 )) < 0 ) {
