@@ -1,5 +1,5 @@
 /*
- * $Id: makecode.c,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: makecode.c,v 1.6 2002-05-23 15:54:27 rufustfirefly Exp $
  *
  * quick-and-dirty way of creating code pages
  */
@@ -97,6 +97,28 @@ static const unsigned char mac_to_cp850_map[] = {
     0xee, 0xe8, 0xec, 0xf3, 0xf7, 0xfc, 0xfd, 0xb9
 };
 
+
+
+/* Map of CP10000 (Mac Roman) to koi8-r */
+static const unsigned char mac_to_koi8_r_map[] = {
+    225, 226, 247, 231, 228, 229, 246, 250,
+    233, 234, 235, 236, 237, 238, 239, 240,
+    242, 243, 244, 245, 230, 232, 227, 254,
+    251, 253, 255, 249, 248, 252, 224, 241,
+    160, 161, 162, 163, 164, 165, 166, 167,
+    168, 191, 170, 171, 172, 173, 174, 175,
+    176, 177, 178, 179, 180, 181, 182, 183,
+    184, 185, 186, 187, 188, 189, 190, 191,
+    192, 193, 194, 195, 196, 197, 198, 199,
+    200, 201, 202, 203, 204, 205, 206, 207,
+    208, 209, 210, 211, 212, 213, 214, 215,
+    216, 217, 218, 219, 220, 179, 163, 209,
+    193, 194, 215, 199, 196, 197, 214, 218,
+    201, 202, 203, 204, 205, 206, 207, 208,
+    210, 211, 212, 213, 198, 200, 195, 222,
+    219, 221, 223, 217, 216, 220, 192, 255
+};
+
 struct mac_code {
     char *m_name;
     const unsigned char *m_map;
@@ -109,6 +131,7 @@ static struct mac_code names[] = {
                                      {"maccode.850", mac_to_cp850_map, sizeof(mac_to_cp850_map), "cp850"},
                                      {"maccode.iso8859-1", mac_to_isolatin1_map, sizeof(mac_to_isolatin1_map), "iso8859-1"},
                                      {"maccode.iso8859-1.adapted", mac_to_isolatin1_adapted_map, sizeof(mac_to_isolatin1_adapted_map), "iso8859-1-adapted"},
+                                     {"maccode.koi8-r",mac_to_koi8_r_map,sizeof(mac_to_koi8_r_map),"koi8-r"},
                                      {NULL, NULL, 0, NULL}
                                  };
 
