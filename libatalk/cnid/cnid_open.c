@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.33 2002-01-18 05:23:25 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.34 2002-01-21 04:48:14 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -368,9 +368,9 @@ void *cnid_open(const char *dir) {
         goto fail_appinit;
     }
 
-    db->db_didname->set_bt_compare(db->db_didname, &compare_unix);
+    /*db->db_didname->set_bt_compare(db->db_didname, &compare_unix);*/
     if ((rc = db->db_didname->open(db->db_didname, DBDIDNAME, NULL,
-                                   DB_BTREE, open_flag, 0666))) {
+                                   DB_HASH, open_flag, 0666))) {
         LOG(log_error, logtype_default, "cnid_open: Failed to open did/name database: %s",
             db_strerror(rc));
         goto fail_appinit;
