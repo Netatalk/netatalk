@@ -1,6 +1,7 @@
 # Makefile.am for INSTALL/
 
 EXTRA_DIST = \
+	COPYRIGHT.mtab \
 	INSTALL.txt \
 	FAQ	\
 	README \
@@ -13,4 +14,6 @@ EXTRA_DIST = \
 	README.OPENBSD	\
 	README.SOLARIS	\
 	README.SUNOS	\
-	README.ULTRIX
+	README.ULTRIX	\
+	README.mtab		\
+	README.mtab.distribution

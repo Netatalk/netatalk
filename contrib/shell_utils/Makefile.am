@@ -11,6 +11,6 @@ SUFFIXES = .tmpl .
 CLEANFILES = lp2pap.sh
 
 bin_SCRIPTS = apple_cp apple_mv apple_rm cleanappledouble.pl lp2pap.sh \
-	netatalkshorternamelinks.pl
+	netatalkshorternamelinks.pl afpd-mtab.pl
 
 EXTRA_DIST = $(bin_SCRIPTS)

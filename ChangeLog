@@ -1,8 +1,15 @@
-($Id: ChangeLog,v 1.38 2001-05-25 13:23:55 rufustfirefly Exp $)
+($Id: ChangeLog,v 1.39 2001-05-25 16:18:08 rufustfirefly Exp $)
 
 2001-05-25  jeff b  <jeff@univrel.pr.uconn.edu>
 	* etc/uams/uams_passwd.c: another Tru64 fix from Burkhard
 	Schmidt <bs@cpfs.mpg.de>
+
+	* configure.in, contrib/shell_utils/Makefile.am,
+	contrib/shell_utils/afpd-mtab.pl, doc/Makefile.am,
+	doc/COPYRIGHT.mtab, doc/README.mtab, doc/README.mtab.distribution,
+	etc/afpd/.cvsignore, etc/afpd/Makefile.am, etc/afpd/parse_mtab.c,
+	etc/afpd/parse_mtab.h, test_parse_mtab.c: experimental mtab
+	code from Bob Rogers to generate more persistant DIDs
 
 2001-05-22  jeff b  <jeff@univrel.pr.uconn.edu>
 	* configure.in, etc/afpd/unix.h: more portability fixes, and
