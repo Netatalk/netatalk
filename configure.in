@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.124 2001-11-13 19:10:47 srittau Exp $
+dnl $Id: configure.in,v 1.125 2001-11-14 21:42:00 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -277,7 +277,7 @@ AC_ARG_WITH(did,
 
 msg_dir=""
 AC_ARG_WITH(message-dir,
-	[  --with-msg-dir=PATH     path to message files [[PKGCONF/msg]]],
+	[  --with-message-dir=PATH path to message files [[PKGCONF/msg]]],
 		msg_dir="$withval"
 		if test x"$msg_dir" = "x"; then
 			msg_dir="${PKGCONFDIR}/msg"
