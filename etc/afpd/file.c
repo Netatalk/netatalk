@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.58 2002-09-07 19:18:59 didg Exp $
+ * $Id: file.c,v 1.59 2002-09-11 03:03:27 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -424,7 +424,7 @@ int		ibuflen, *rbuflen;
     struct adouble	ad, *adp;
     struct vol		*vol;
     struct dir		*dir;
-    struct ofork        *of;
+    struct ofork        *of = NULL;
     char		*path, *upath;
     int			creatf, did, openf, retvalue = AFP_OK;
     u_int16_t		vid;
