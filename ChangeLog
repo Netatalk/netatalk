@@ -1,6 +1,10 @@
-2011-11-19  pooba53 <bobo@bocklabs.wisc.edu>
-            * Modified distrib/initscripts/Makefile.am so
-              that SuSE init script ends up in the correct directory.
+2001-11-27  joe c   <marcus@marcuscom.com>
+	* configure.in: Removed the --with-cnid-db option, and added
+	  --with-did=cnid for consistency
+
+2001-11-19  pooba53 <bobo@bocklabs.wisc.edu>
+    * Modified distrib/initscripts/Makefile.am so
+      that SuSE init script ends up in the correct directory.
 
 2001-11-19  pooba53 <bobo@bocklabs.wisc.edu>
 	* modified config/AppleVolumes.default to not 

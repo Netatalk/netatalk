@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.132 2001-11-25 21:48:01 srittau Exp $
+dnl $Id: configure.in,v 1.133 2001-11-27 22:40:52 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -228,31 +228,11 @@ AC_ARG_ENABLE(force-uidgid,
 dnl Don't use DB3 unless it's needed
 db3_required=no
 
-dnl Check for CNID DB support
-AC_MSG_CHECKING([whether CNID support should be enabled])
-AC_ARG_ENABLE(cnid-db,
-	[  --enable-cnid-db        use persistent cnid database per volume (EXPERIMENTAL) ],
-	[
-		if test "x$enableval" = "xyes"; then
-			dnl Now we need DB3
-			db3_required="yes"
-			AC_DEFINE(CNID_DB)
-			AC_MSG_RESULT([yes])
-		else
-			AC_MSG_RESULT([no])
-		fi
-	],[AC_MSG_RESULT([no])]
-)
-
-dnl Check for Berkeley DB3 library
-if test "x$db3_required" = "xyes"; then
-	AC_PATH_DB3(, [AC_MSG_ERROR([Berkeley DB3 library not found!])])
-fi
 
 dnl Determine DID scheme
 AC_MSG_CHECKING([for DID scheme to use])
 AC_ARG_WITH(did,
-	[  --with-did=SCHEME       set DID scheme (last,mtab)],
+	[  --with-did=SCHEME       set DID scheme (last,mtab,cnid)],
 	[ did_scheme="$withval" ],
 	[ did_scheme="last" ]
 )
@@ -263,10 +243,19 @@ if test "x$did_scheme" = "xlast"; then
 elif test "x$did_scheme" = "xmtab"; then
 	AC_DEFINE(DID_MTAB, 1)
 	AC_MSG_RESULT([mtab-based DID creation support])
+elif test "x$did_scheme" = "xcnid"; then
+	db3_required="yes"
+	AC_DEFINE(CNID_DB, 1)
+	AC_MSG_RESULT([enabling build with CNID DB support])
 elif test "x$did_scheme" != "xno"; then
 	AC_MSG_RESULT([default])
 else
 	AC_MSG_ERROR([unknown DID scheme])
+fi
+
+dnl Check for Berkeley DB3 library
+if test "x$db3_required" = "xyes"; then
+	AC_PATH_DB3(, [AC_MSG_ERROR([Berkeley DB3 library not found!])])
 fi
 
 msg_dir=""
