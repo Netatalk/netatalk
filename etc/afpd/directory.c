@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.60 2003-01-31 17:38:00 didg Exp $
+ * $Id: directory.c,v 1.61 2003-01-31 17:47:06 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1921,10 +1921,6 @@ int pathlen;
 
     if ( curdir->d_parent == NULL ) {
         return( AFPERR_ACCESS );
-    }
-
-    if ( curdir->d_child != NULL ) {
-        return( AFPERR_DIRNEMPT );
     }
 
     fdir = curdir;
