@@ -1,6 +1,7 @@
-Special folders created inside Netatalk shares
+              Special folders created inside Netatalk shares
 
-(ali@gwc.org.uk 20/10/01)
+(Originally by ali@gwc.org.uk 2001-10-20)
+(Amended by Sebastian Rittau 2001-11-03)
 
 Inside netatalk share points you will find several files and directories
 which are created automatically by the afpd process either for its own
@@ -21,16 +22,23 @@ should be set on them.
 
 Note that in general on Netatalk shares, all directories should have the
 setgid bit set. This forces any new files or folders created to have the
-same group as the folder they were created in.
+same group as the folder they were created in. On some operating systems,
+notably FreeBSD, the group owner is always inherited from the parent
+directory, so the setgid bit is not necessary.
 
 
 .AppleDouble/
 
 This directory exists inside each folder on a Netatalk share. It contains
-the resource fork of each file in that folder. Its permissions should
-match those of its parent directory, i.e. anyone who has write access to
-the parent directory must have write access to the corresponding
-.AppleDouble directory.
+meta information like the resource fork, or creator/type of each file in that
+folder. Its permissions should match those of its parent directory, i.e.
+anyone who has write access to the parent directory must have write access to
+the corresponding .AppleDouble directory.
+
+
+.AppleDouble/.Parent
+
+This file specifically contains meta information about the directory.
 
 
 .AppleDesktop/
