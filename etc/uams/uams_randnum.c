@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.14 2003-06-11 07:14:12 srittau Exp $
+ * $Id: uams_randnum.c,v 1.15 2003-06-11 07:23:24 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -7,7 +7,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
@@ -46,8 +46,6 @@ char *strchr (), *strrchr ();
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
-#include <des.h>
-
 
 #ifdef USE_CRACKLIB
 #include <crack.h>
@@ -61,9 +59,13 @@ char *strchr (), *strrchr ();
 
 #define PASSWDLEN 8
 
-static C_Block		seskey;
+#ifndef DES_KEY_SZ
+#define DES_KEY_SZ 8
+#endif
+
+static u_int8_t		 seskey[DES_KEY_SZ];
 static struct passwd	*randpwd;
-static u_int8_t         randbuf[8];
+static u_int8_t          randbuf[8];
 
 /* hash to a 16-bit number. this will generate completely harmless 
  * warnings on 64-bit machines. */
