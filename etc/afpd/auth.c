@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.25 2002-02-28 21:20:39 jmarcus Exp $
+ * $Id: auth.c,v 1.26 2002-03-20 20:53:57 morgana Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -177,6 +177,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
             if(addr_net && addr_node) { /* Do we have a valid Appletalk address? */
                 char nodename[256];
                 FILE *fp;
+		int mypid = getpid();
                 struct stat stat_buf;
 
                 sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir,
@@ -188,7 +189,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
                     if (S_ISREG(stat_buf.st_mode)) { /* normal file */
                         unlink(nodename);
                         fp = fopen(nodename, "w");
-                        fprintf(fp, "%s\n", pwd->pw_name);
+                        fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
                         fclose(fp);
                         chown( nodename, pwd->pw_uid, -1 );
                     } else { /* somebody is messing with us */
@@ -196,7 +197,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
                     }
                 } else { /* file 'nodename' does not exist */
                     fp = fopen(nodename, "w");
-                    fprintf(fp, "%s\n", pwd->pw_name);
+                    fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
                     fclose(fp);
                     chown( nodename, pwd->pw_uid, -1 );
                 }

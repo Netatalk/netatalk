@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.13 2002-03-16 20:38:09 jmarcus Exp $
+ * $Id: afp_asp.c,v 1.14 2002-03-20 20:53:57 morgana Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -42,9 +42,13 @@ extern struct oforks	*writtenfork;
 
 static AFPObj *child;
 
+static __inline__ void afp_authprint_remove(AFPObj *);
+
 static __inline__ void afp_asp_close(AFPObj *obj)
 {
     ASP asp = obj->handle;
+
+    if (obj->options.authprintdir) afp_authprint_remove(obj);
 
     if (obj->logout)
         (*obj->logout)();
@@ -52,6 +56,65 @@ static __inline__ void afp_asp_close(AFPObj *obj)
     LOG(log_info, logtype_default, "%.2fKB read, %.2fKB written",
         asp->read_count / 1024.0, asp->write_count / 1024.0);
     asp_close( asp );
+}
+
+/* removes the authprint trailing when appropriate */
+static __inline__ void afp_authprint_remove(AFPObj *obj)
+{
+    ASP asp = obj->handle;
+    char addr_filename[256];
+    char addr_filename_buff[256];
+    struct stat cap_st;
+
+    sprintf(addr_filename, "%s/net%d.%dnode%d", obj->options.authprintdir,
+                ntohs( asp->asp_sat.sat_addr.s_net )/256,
+                ntohs( asp->asp_sat.sat_addr.s_net )%256,
+                asp->asp_sat.sat_addr.s_node );
+
+    memset( addr_filename_buff, 0, 256 );
+
+    if(stat(addr_filename, &cap_st) == 0) {
+	if( S_ISREG(cap_st.st_mode) ) {
+	    int len;
+	    int capfd = open( addr_filename, O_RDONLY );
+	    if ((len = read( capfd, addr_filename_buff, 256 )) > 0) {
+		int file_pid;
+		char *p_filepid;
+		close(capfd);
+		addr_filename_buff[len] = 0;
+		if ( (p_filepid = strrchr(addr_filename_buff, ':')) != NULL) {
+		    *p_filepid = '\0';
+		    p_filepid++;
+		    file_pid = atoi(p_filepid);
+		    if (file_pid == (int)getpid()) {
+			if(unlink(addr_filename) == 0) {
+			    syslog(LOG_INFO, "removed %s", addr_filename);
+			} else {
+			    syslog(LOG_INFO, "error removing %s: %s",
+				    addr_filename, strerror(errno));
+			}
+		    } else {
+			syslog( LOG_INFO, "%s belongs to another pid %d",
+			     addr_filename, file_pid );
+		    }
+		} else { /* no pid info */
+		    if (unlink(addr_filename) == 0) {
+			syslog( LOG_INFO, "removed %s", addr_filename );
+		    } else {
+			syslog(LOG_INFO, "error removing %s: %s",
+				addr_filename, strerror(errno));
+		    }
+		}
+	    } else {
+		syslog( LOG_INFO, "couldn't read data from %s", addr_filename );
+	    }
+	} else {
+	    syslog( LOG_INFO, "%s is not a regular file", addr_filename );
+	}
+    } else {
+        syslog(LOG_INFO, "error stat'ing %s: %s",
+                   addr_filename, strerror(errno));
+    }
 }
 
 static void afp_asp_die(const int sig)
@@ -138,28 +201,6 @@ void afp_over_asp(AFPObj *obj)
     while ((reply = asp_getrequest(asp))) {
         switch (reply) {
         case ASPFUNC_CLOSE :
-            if (obj->options.authprintdir) {
-                char addr_filename[256];
-                struct stat cap_st;
-
-                sprintf(addr_filename, "%s/net%d.%dnode%d", obj->options.authprintdir,
-                        ntohs( asp->asp_sat.sat_addr.s_net )/256,
-                        ntohs( asp->asp_sat.sat_addr.s_net )%256,
-                        asp->asp_sat.sat_addr.s_node );
-
-                if(stat(addr_filename, &cap_st) == 0) {
-                    if(unlink(addr_filename) == 0) {
-                        LOG(log_info, logtype_default, "removed %s", addr_filename);
-                    } else {
-                        LOG(log_info, logtype_default, "error removing %s: %s",
-                            addr_filename, strerror(errno));
-                    }
-                } else {
-                    LOG(log_info, logtype_default, "error stat'ing %s: %s",
-                        addr_filename, strerror(errno));
-                }
-            }
-
             afp_asp_close(obj);
             LOG(log_info, logtype_default, "done" );
 
