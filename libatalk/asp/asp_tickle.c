@@ -3,6 +3,8 @@
 #endif
 
 #include <syslog.h>
+#include <sys/socket.h>
+
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 

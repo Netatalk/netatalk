@@ -12,6 +12,7 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/socket.h>
 
 #include <atalk/atp.h>
 #include <atalk/asp.h>
