@@ -144,30 +144,30 @@ static char *get_command_name(char *commandpath);
 
 static log_file_data_pair default_log_file_data_pair = {
 {
-  log_filename:    "\0\0\0\0\0\0\0\0",
-  log_file:        NULL,
-  log_level:       log_debug,
-  display_options: logoption_pid
+  /*log_filename:*/    "\0\0\0\0\0\0\0\0",
+  /*log_file:*/        NULL,
+  /*log_level:*/       log_debug,
+  /*display_options:*/ logoption_pid
 },
 {
-  log_filename:     LOGFILEPATH,
-  log_file:         NULL,
-  log_level:        log_debug,
-  display_options:  logoption_pid
+  /*log_filename:*/     LOGFILEPATH,
+  /*log_file:*/         NULL,
+  /*log_level:*/        log_debug,
+  /*display_options:*/  logoption_pid
 }};
 
 static log_file_data_pair logger_log_file_data_pair = {
 {
-  log_filename:    "\0\0\0\0\0\0\0\0",
-  log_file:        NULL,
-  log_level:       log_warning,
-  display_options: logoption_pid
+  /*log_filename:*/    "\0\0\0\0\0\0\0\0",
+  /*log_file:*/        NULL,
+  /*log_level:*/       log_warning,
+  /*display_options:*/ logoption_pid
 },
 {
-  log_filename:     LOGFILEPATH,
-  log_file:         NULL,
-  log_level:        log_maxdebug,
-  display_options:  logoption_pid
+  /*log_filename:*/     LOGFILEPATH,
+  /*log_file:*/         NULL,
+  /*log_level:*/        log_maxdebug,
+  /*display_options:*/  logoption_pid
 }};
 
 static log_file_data_pair *log_file_data_array[logtype_end_of_list_marker] = 
@@ -175,13 +175,13 @@ static log_file_data_pair *log_file_data_array[logtype_end_of_list_marker] =
 
 /* The class (populated) */
 static struct tag_global_log_data global_log_data = {
-  struct_size:         sizeof(struct tag_global_log_data),
-  temp_src_filename:   NULL,
-  temp_src_linenumber: 0,
-  processname:         "",
-  facility:            logfacility_daemon,
-  log_file_directory:  "",
-  logs:                NULL,
+  /*struct_size:*/         sizeof(struct tag_global_log_data),
+  /*temp_src_filename:*/   NULL,
+  /*temp_src_linenumber:*/ 0,
+  /*processname:*/         "",
+  /*facility:*/            logfacility_daemon,
+  /*log_file_directory:*/  "",
+  /*logs:*/                NULL,
 };
 
 /* macro to get access to the array */
