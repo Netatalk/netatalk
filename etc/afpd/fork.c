@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.41 2003-01-08 15:01:35 didg Exp $
+ * $Id: fork.c,v 1.42 2003-01-10 05:29:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -208,7 +208,7 @@ static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
     return 0;
 }
 
-/* ----------------------- */    
+/* ----------------------- */
 int afp_openfork(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
@@ -232,14 +232,14 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(vid);
 
     *rbuflen = 0;
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( vid ))) {
         return( AFPERR_PARAM );
     }
 
     memcpy(&did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
 
-    if (( dir = dirlookup( vol, did )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, did ))) {
 	return afp_errno;    
     }
 
@@ -254,7 +254,7 @@ int		ibuflen, *rbuflen;
         return AFPERR_VLOCK;
     }
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf ))) {
 	return afp_errno;    
     }
 
@@ -275,7 +275,7 @@ int		ibuflen, *rbuflen;
         LOG(log_error, logtype_afpd, "afp_openfork: ad_open: %s", strerror(errno) );
         return AFPERR_PARAM;
     }
-    /* FIXME should we check first ? */
+    /* FIXME should we check it first ? */
     upath = s_path->u_name;
     if (check_access(upath, access ) < 0) {
         return AFPERR_ACCESS;
@@ -322,11 +322,13 @@ int		ibuflen, *rbuflen;
                 break;
             case ENOENT:
                 if (fork == OPENFORK_DATA) {
+                    /* try to open only the data fork */
                     if (ad_open(upath, ADFLAGS_DF, O_RDWR, 0, ofork->of_ad) < 0) {
                         goto openfork_err;
                     }
                     adflags = ADFLAGS_DF;
-
+                }
+                else {
                     /* here's the deal. we only try to create the resource
                     * fork if the user wants to open it for write acess. */
                     if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
@@ -349,6 +351,8 @@ int		ibuflen, *rbuflen;
                 break;
             }
         }
+        /* the fork is open */
+        ofork->of_flags |= AFPFORK_OPEN;
     } else {
         /* try opening in read-only mode */
         ret = AFPERR_NOOBJ;
@@ -357,21 +361,21 @@ int		ibuflen, *rbuflen;
             case EROFS:
                 ret = AFPERR_VLOCK;
             case EACCES:
-                /* check for a read-only data fork */
-                if ((adflags != ADFLAGS_HF) &&
-                        (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0))
-                    goto openfork_err;
-
-                adflags = ADFLAGS_DF;
+                goto openfork_err;
                 break;
             case ENOENT:
-                /* see if client asked for the data fork */
+                /* see if client asked for a read only data fork */
                 if (fork == OPENFORK_DATA) {
                     if (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0) {
                         goto openfork_err;
                     }
                     adflags = ADFLAGS_DF;
+                    ofork->of_flags |= AFPFORK_OPEN;
                 }
+                /* else we don't set AFPFORK_OPEN because there's no ressource fork file 
+                 * We need to check AFPFORK_OPEN in afp_closefork(). eg fork open read-only
+                 * then create in open read-write.
+                */
                 break;
             case EMFILE :
             case ENFILE :
@@ -387,6 +391,10 @@ int		ibuflen, *rbuflen;
                 goto openfork_err;
                 break;
             }
+        }
+        else {
+            /* the fork is open */
+            ofork->of_flags |= AFPFORK_OPEN;
         }
     }
 
@@ -409,14 +417,18 @@ int		ibuflen, *rbuflen;
     memcpy(rbuf, &bitmap, sizeof( u_int16_t ));
     rbuf += sizeof( u_int16_t );
 
-    /* check  WriteInhibit bit, the test is done here, after some Mac trafic capture */
-    ad_getattr(ofork->of_ad, &bshort);
-    if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
-        ad_close( ofork->of_ad, adflags );
-        of_dealloc( ofork );
-        ofrefnum = 0;
-        memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
-        return(AFPERR_OLOCK);
+    /* check  WriteInhibit bit if we have a ressource fork
+     * the test is done here, after some Mac trafic capture 
+     */
+    if (ad_hfileno(ofork->of_ad) != -1) {
+        ad_getattr(ofork->of_ad, &bshort);
+        if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
+            ad_close( ofork->of_ad, adflags );
+            of_dealloc( ofork );
+            ofrefnum = 0;
+            memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
+            return(AFPERR_OLOCK);
+        }
     }
 
     /*
@@ -448,9 +460,10 @@ int		ibuflen, *rbuflen;
         }
         if ((access & OPENACC_WR))
             ofork->of_flags |= AFPFORK_ACCWR;
-        if ((access & OPENACC_RD))
-            ofork->of_flags |= AFPFORK_ACCRD;
     }
+    /* the file may be open read only without ressource fork */
+    if ((access & OPENACC_RD))
+        ofork->of_flags |= AFPFORK_ACCRD;
 
     memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
     return( AFP_OK );
@@ -1094,32 +1107,31 @@ int		ibuflen, *rbuflen;
     }
 
     adflags = 0;
-    if ((ofork->of_flags & AFPFORK_DATA) &&
-            (ad_dfileno( ofork->of_ad ) != -1)) {
-        adflags |= ADFLAGS_DF;
-    }
-
-    if ( ad_hfileno( ofork->of_ad ) != -1 ) {
-        adflags |= ADFLAGS_HF;
-        /*
-         * Only set the rfork's length if we're closing the rfork.
-         */
-        if ((ofork->of_flags & AFPFORK_RSRC)) {
-            ad_refresh( ofork->of_ad );
-            if ((ofork->of_flags & AFPFORK_DIRTY) &&
-                      !gettimeofday(&tv, NULL)) {
-                ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
-            	doflush++;
-            }
-            if ( doflush ) {
-                ad_flush( ofork->of_ad, adflags );
+    if ((ofork->of_flags & AFPFORK_OPEN)) {
+        if ((ofork->of_flags & AFPFORK_DATA) && (ad_dfileno( ofork->of_ad ) != -1)) {
+            adflags |= ADFLAGS_DF;
+        }
+        if ( ad_hfileno( ofork->of_ad ) != -1 ) {
+            adflags |= ADFLAGS_HF;
+            /*
+             * Only set the rfork's length if we're closing the rfork.
+             */
+            if ((ofork->of_flags & AFPFORK_RSRC)) {
+                ad_refresh( ofork->of_ad );
+                if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
+                    ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
+            	    doflush++;
+                }
+                if ( doflush ) {
+                    ad_flush( ofork->of_ad, adflags );
+                }
             }
         }
-    }
 
-    if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
-        LOG(log_error, logtype_afpd, "afp_closefork: ad_close: %s", strerror(errno) );
-        return( AFPERR_PARAM );
+        if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+            LOG(log_error, logtype_afpd, "afp_closefork: ad_close: %s", strerror(errno) );
+            return( AFPERR_PARAM );
+        }
     }
 
     of_dealloc( ofork );
