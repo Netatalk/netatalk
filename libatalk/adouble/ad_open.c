@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.16 2002-06-03 06:27:46 jmarcus Exp $
+ * $Id: ad_open.c,v 1.17 2002-06-17 17:58:37 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -611,14 +611,13 @@ int ad_open( path, adflags, oflags, mode, ad )
 
     if (adflags & ADFLAGS_DF) { 
         if (ad_dfileno(ad) == -1) {
-	  hoflags = (oflags & ~O_RDONLY) | O_RDWR;
+	  hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
 	  if (( ad->ad_df.adf_fd =
 		open( path, hoflags, ad_mode( path, mode ) )) < 0 ) {
              if (errno == EACCES && !(oflags & O_RDWR)) {
                 hoflags = oflags;
                 ad->ad_df.adf_fd =open( path, hoflags, ad_mode( path, mode ) );
              }
-	    return( -1 );
 	  }
 	  if ( ad->ad_df.adf_fd < 0)
 	  	return -1;	
@@ -633,7 +632,7 @@ int ad_open( path, adflags, oflags, mode, ad )
 	  ad_p = ad_path( path, adflags );
 	  admode = ad_mode( ad_p, mode ); /* FIXME? */
 	  hoflags = oflags & ~O_CREAT;
-	  hoflags = (hoflags & ~O_RDONLY) | O_RDWR;
+	  hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
 	  if (( ad->ad_hf.adf_fd = open( ad_p, hoflags, admode )) < 0 ) {
             if (errno == EACCES) {
                 if (!(oflags & O_RDWR)) {
