@@ -34,7 +34,7 @@ extern cnid_t cnid_add __P((void *, const struct stat *, const cnid_t,
 
 /* cnid_get.c */
 extern cnid_t cnid_get __P((void *, const cnid_t, const char *, const int)); 
-extern char *cnid_resolve __P((void *, cnid_t *)); 
+extern char *cnid_resolve __P((void *, cnid_t *, void *, u_int32_t )); 
 extern cnid_t cnid_lookup __P((void *, const struct stat *, const cnid_t,
 			       const char *, const int));
 

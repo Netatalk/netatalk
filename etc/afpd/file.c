@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.42 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: file.c,v 1.43 2002-03-24 17:43:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -789,10 +789,10 @@ const int         noadouble;
             return AFPERR_VLOCK;
         case EXDEV :			/* Cross device move -- try copy */
             if (( rc = copyfile(src, dst, newname, noadouble )) != AFP_OK ) {
-                deletefile( dst );
+                deletefile( dst, 0 );
                 return( rc );
             }
-            return deletefile( src );
+            return deletefile( src, 0);
         default :
             return( AFPERR_PARAM );
         }
@@ -1171,8 +1171,14 @@ copydata_done:
 }
 
 
-int deletefile( file )
+/* -----------------------------------
+   checkAttrib:   1 check kFPDeleteInhibitBit 
+   ie deletfile called from afp_delete
+   
+*/
+int deletefile( file, checkAttrib )
 char		*file;
+int         checkAttrib;
 {
     struct adouble	ad;
     int			adflags, err = AFP_OK;
@@ -1232,6 +1238,18 @@ char		*file;
             }
         }
         break;	/* from the while */
+    }
+    /*
+     * Does kFPDeleteInhibitBit (bit 8) set?
+     */
+    if (checkAttrib && (adflags & ADFLAGS_HF)) {
+        u_int16_t   bshort;
+
+        ad_getattr(&ad, &bshort);
+        if ((bshort & htons(ATTRBIT_NODELETE))) {
+            ad_close( &ad, adflags );
+            return(AFPERR_OLOCK);
+        }
     }
 
     if ((adflags & ADFLAGS_HF) &&
@@ -1406,6 +1424,9 @@ int		ibuflen, *rbuflen;
     cnid_t		id;
     u_int16_t		vid, bitmap;
 
+    static char buffer[12 + MAXPATHLEN + 1];
+    int len = 12 + MAXPATHLEN + 1;
+
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin afp_resolveid:");
 #endif /* DEBUG */
@@ -1423,11 +1444,11 @@ int		ibuflen, *rbuflen;
     memcpy(&id, ibuf, sizeof( id ));
     ibuf += sizeof(id);
 
-    if ((upath = cnid_resolve(vol->v_db, &id)) == NULL) {
+    if ((upath = cnid_resolve(vol->v_db, &id, buffer, len)) == NULL) {
         return AFPERR_BADID;
     }
 
-    if (( dir = dirsearch( vol, id )) == NULL ) {
+    if (( dir = dirlookup( vol, id )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -1477,6 +1498,8 @@ int		ibuflen, *rbuflen;
     cnid_t		id;
     cnid_t		fileid;
     u_short		vid;
+    static char buffer[12 + MAXPATHLEN + 1];
+    int len = 12 + MAXPATHLEN + 1;
 
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin afp_deleteid:");
@@ -1498,12 +1521,12 @@ int		ibuflen, *rbuflen;
     memcpy(&id, ibuf, sizeof( id ));
     ibuf += sizeof(id);
     fileid = id;
-    
-    if ((upath = cnid_resolve(vol->v_db, &id)) == NULL) {
+
+    if ((upath = cnid_resolve(vol->v_db, &id, buffer, len)) == NULL) {
         return AFPERR_NOID;
     }
 
-    if (( dir = dirsearch( vol, id )) == NULL ) {
+    if (( dir = dirlookup( vol, id )) == NULL ) {
         return( AFPERR_PARAM );
     }
 
@@ -1728,7 +1751,7 @@ int		ibuflen, *rbuflen;
 
     /* all this stuff is so that we can unwind a failed operation
      * properly. */
-
+err_temp_to_dest:
     /* rename dest to temp */
     renamefile(upath, temp, temp, vol_noadouble(vol));
     of_rename(vol, curdir, upath, curdir, temp);

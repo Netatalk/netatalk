@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_resolve.c,v 1.11 2002-01-19 21:42:08 jmarcus Exp $
+ * $Id: cnid_resolve.c,v 1.12 2002-03-24 17:43:42 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -22,7 +22,7 @@
 #include "cnid_private.h"
 
 /* Return the did/name pair corresponding to a CNID. */
-char *cnid_resolve(void *CNID, cnid_t *id) {
+char *cnid_resolve(void *CNID, cnid_t *id, void *buffer, u_int32_t len) {
     CNID_private *db;
     DBT key, data;
     int rc;
@@ -33,6 +33,10 @@ char *cnid_resolve(void *CNID, cnid_t *id) {
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
+
+    data.data = buffer;
+    data.ulen = len;
+    data.flags = DB_DBT_USERMEM;
 
     key.data = id;
     key.size = sizeof(cnid_t);

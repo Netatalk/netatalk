@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.28 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: directory.c,v 1.29 2002-03-24 17:43:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -120,7 +120,67 @@ u_int32_t	did;
     return NULL;
 }
 
+/* -----------------------------------------
+ * if did is not in the cache resolve it with cnid 
+ * 
+ */
+struct dir *
+            dirlookup( vol, did )
+            const struct vol	*vol;
+u_int32_t	did;
+{
+#ifdef CNID_DB
+    struct dir *ret;
+    char		*upath;
+    u_int32_t	id;
+    static char		path[MAXPATHLEN + 1];
+    int len;
+    int pathlen;
+    char *ptr;
+    static char buffer[12 + MAXPATHLEN + 1];
+    int buflen = 12 + MAXPATHLEN + 1;
 
+    ret = dirsearch(vol, did);
+    if (ret != NULL)
+        return ret;
+
+    id = did;
+    if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL) {
+        return NULL;
+    }
+    ptr = path + MAXPATHLEN;
+    len = strlen(upath);
+    pathlen = len;          /* no 0 in the last part */
+    len++;
+    strcpy(ptr - len, upath);
+    ptr -= len;
+    while (1) {
+        ret = dirsearch(vol,id);
+        if (ret != NULL) {
+            break;
+        }
+        if ((upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) == NULL)
+            return NULL;
+        len = strlen(upath) + 1;
+        pathlen += len;
+        if (pathlen > 255)
+            return NULL;
+        strcpy(ptr - len, upath);
+        ptr -= len;
+    }
+    /* fill the cache */
+    ptr--;
+    *ptr = (unsigned char)pathlen;
+    ptr--;
+    *ptr = 2;
+    /* cname is not efficient */
+    if (cname( vol, ret, &ptr ) == NULL )
+        return NULL;
+#endif
+    return dirsearch(vol, did);
+}
+
+/* --------------------------- */
 /* rotate the tree to the left */
 static void dir_leftrotate(vol, dir)
 struct vol *vol;
@@ -1607,6 +1667,8 @@ int pathlen;
     struct stat st;
     struct dir	*fdir;
     DIR *dp;
+    struct adouble	ad;
+    u_int16_t		ashort;
 #ifdef FORCE_UIDGID
     uidgidset		*uidgid;
 
@@ -1627,6 +1689,19 @@ int pathlen;
     save_uidgid ( &uidgid );
     set_uidgid  ( vol );
 #endif /* FORCE_UIDGID */
+
+    if ( ad_open( ".", ADFLAGS_HF|ADFLAGS_DIR, O_RDONLY,
+                  DIRBITS | 0777, &ad) == 0 ) {
+
+        ad_getattr(&ad, &ashort);
+        ad_close( &ad, ADFLAGS_HF );
+        if ((ashort & htons(ATTRBIT_NODELETE))) {
+#ifdef FORCE_UIDGID
+            restore_uidgid ( &uidgid );
+#endif /* FORCE_UIDGID */
+            return  AFPERR_OLOCK;
+        }
+    }
 
     /* delete stray .AppleDouble files. this happens to get .Parent files
        as well. */

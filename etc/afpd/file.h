@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.5 2002-03-13 19:29:17 srittau Exp $
+ * $Id: file.h,v 1.6 2002-03-24 17:43:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -79,7 +79,7 @@ extern int getfilparams __P((struct vol *, u_int16_t, char *,
 extern int setfilparams __P((struct vol *, char *, u_int16_t, char *));
 extern int renamefile   __P((char *, char *, char *, const int));
 extern int copyfile     __P((char *, char *, char *, const int));
-extern int deletefile   __P((char *));
+extern int deletefile   __P((char *, int));
 
 /* FP functions */
 extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));

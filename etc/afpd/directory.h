@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: directory.h,v 1.4 2002-03-24 17:43:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -146,6 +146,7 @@ struct maccess {
 extern struct dir       *dirnew __P((const int));
 extern void             dirfree __P((struct dir *));
 extern struct dir	*dirsearch __P((const struct vol *, u_int32_t));
+extern struct dir	*dirlookup __P((const struct vol *, u_int32_t));
 extern struct dir	*adddir __P((struct vol *, struct dir *, char *,
                                                int, char *, int, struct stat *));
 extern struct dir       *dirinsert __P((struct vol *, struct dir *));

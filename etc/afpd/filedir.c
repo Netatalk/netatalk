@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.25 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: filedir.c,v 1.26 2002-03-24 17:43:39 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -179,7 +179,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
 
-    if (( dir = dirsearch( vol, did )) == NULL ) {
+    if (( dir = dirlookup( vol, did )) == NULL ) {
         return( AFPERR_NOOBJ );
     }
 
@@ -526,7 +526,7 @@ int		ibuflen, *rbuflen;
         rc = deletecurdir( vol, obj->oldtmp, AFPOBJ_TMPSIZ);
     } else if (of_findname(vol, curdir, path)) {
         rc = AFPERR_BUSY;
-    } else if ((rc = deletefile( upath = mtoupath(vol, path ))) == AFP_OK) {
+    } else if ((rc = deletefile( upath = mtoupath(vol, path ), 1)) == AFP_OK) {
 #ifdef CNID_DB /* get rid of entry */
         cnid_t id = cnid_get(vol->v_db, curdir->d_did, upath, strlen(upath));
         cnid_delete(vol->v_db, id);
