@@ -1,3 +1,8 @@
+2001-11-19  pooba53 <bobo@bocklabs.wisc.edu>
+	* modified config/AppleVolumes.default to not 
+          have the "/Home Directory" text in it as this is not the
+          proper way of allowing default Home directory access.
+
 2001-11-16  jnewman <jnewman@mudpup.com>
 	* macros/db3-check.m4: Prefer specific directories before general ones
 	
