@@ -44,7 +44,7 @@
 
 unsigned char	nologin = 0;
 
-static struct afp_options default_options;
+struct afp_options default_options;
 static AFPConfig *configs;
 static server_child *server_children;
 static fd_set save_rfds;

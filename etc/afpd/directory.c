@@ -1154,7 +1154,45 @@ int setdirparams(vol, path, bitmap, buf )
 	    break;
 
 	case DIRPBIT_UID :	/* What kind of loser mounts as root? */
-	    buf += sizeof( int );
+	    memcpy( &aint, buf, sizeof(aint));
+	    buf += sizeof( aint );
+	    if ( (curdir->d_did == DIRDID_ROOT) &&
+		 (setdeskowner( aint, -1 ) < 0)) {
+		switch ( errno ) {
+		case EPERM :
+		case EACCES :
+		    err = AFPERR_ACCESS;
+		    goto setdirparam_done;
+		    break;
+		case EROFS :
+		    err = AFPERR_VLOCK;
+		    goto setdirparam_done;
+		    break;
+		default :
+		    syslog( LOG_ERR, "setdirparam: setdeskowner: %m" );
+		    if (!isad) {
+		    err = AFPERR_PARAM;
+		    goto setdirparam_done;
+		    }
+		    break;
+		}
+	    }
+	    if ( setdirowner( aint, -1, vol_noadouble(vol) ) < 0 ) {
+		switch ( errno ) {
+		case EPERM :
+		case EACCES :
+		    err = AFPERR_ACCESS;
+		    goto setdirparam_done;
+		    break;
+		case EROFS :
+		    err = AFPERR_VLOCK;
+		    goto setdirparam_done;
+		    break;
+		default :
+		    syslog( LOG_ERR, "setdirparam: setdirowner: %m" );
+		    break;
+		}
+	    }
 	    break;
 
 	case DIRPBIT_GID :

@@ -30,6 +30,11 @@
 
 #include <atalk/compat.h>
 
+#ifdef ADMIN_GRP
+#include <grp.h>
+#include <sys/types.h>
+#endif
+
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
 #endif
@@ -114,6 +119,9 @@ void afp_options_init(struct afp_options *options)
   options->transports = AFPTRANS_ALL;
   options->passwdfile = _PATH_AFPDPWFILE;
   options->tickleval = 30;
+#ifdef ADMIN_GRP
+  options->admingid = 0;
+#endif ADMIN_GRP
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -198,6 +206,14 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     options->server_quantum = strtoul(c, NULL, 0);
 
 
+#ifdef ADMIN_GRP
+  if ((c = getoption(buf, "-admingroup"))) {
+    struct group *gr = getgrnam(c);
+    if (gr != NULL) { 
+      options->admingid = gr->gr_gid;
+    }
+  } 
+#endif
   if ((c = getoption(buf, "-uampath")) && (opt = strdup(c)))
     options->uampath = opt;
   if ((c = getoption(buf, "-uamlist")) && (opt = strdup(c)))
@@ -329,7 +345,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 #ifdef ultrix
     openlog( p, LOG_PID );
 #else ultrix
-    openlog( p, LOG_NDELAY|LOG_PID, LOG_DAEMON );
+    openlog( p, LOG_NDELAY|LOG_PID, LOG_LOCAL0 );
 #endif ultrix
 
     return 1;

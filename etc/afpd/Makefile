@@ -13,8 +13,7 @@ OBJ = unix.o ofork.o main.o switch.o auth.o volume.o directory.o file.o \
 
 INCPATH=	-I../../include ${AFSINCPATH}
 CFLAGS=	${DEFS} ${AFSDEFS} ${CAPDEFS} ${OPTOPTS} ${INCPATH} -DAPPLCNAME \
-        -DADMIN_GRP=\"${ADMIN_GRP}\" -DSERVERTEXT=\"${MSGDIR}\"
-
+        -DSERVERTEXT=\"${MSGDIR}\" -DDROPKLUDGE -DADMIN_GRP 
 LIBS =	-latalk ${AFSLIBS} ${ADDLIBS} ${TCPWRAPLIBS} ${DB2LIBS} \
 	${RPCSVCLIB} ${AFPLIBS} ${PAMLIBS} ${LIBSHARED} 
 LIBDIRS=	-L../../libatalk ${AFSLIBDIRS} ${TCPWRAPLIBDIRS} \

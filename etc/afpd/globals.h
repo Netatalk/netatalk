@@ -8,6 +8,12 @@
 
 #include <sys/param.h>
 #include <sys/cdefs.h>
+
+#ifdef ADMIN_GRP
+#include <grp.h>
+#include <sys/types.h>
+#endif
+
 #include <netdb.h>  /* this isn't header-protected under ultrix */
 #include <netatalk/at.h>
 #include <atalk/afp.h>
@@ -39,6 +45,9 @@ struct afp_options {
   char *pidfile, *defaultvol, *systemvol;
   char *guest, *loginmesg, *keyfile, *passwdfile;
   char *uamlist;
+#ifdef ADMIN_GRP
+  gid_t admingid;
+#endif ADMIN_GRP
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)

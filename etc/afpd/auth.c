@@ -145,7 +145,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     FILE *fp;
 #endif /* CAPDIR */
 #ifdef ADMIN_GRP
-    struct group *grps;
+    int admin = 0;
+    struct afp_options *options = &obj->options;
 #endif ADMIN_GRP
 
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
@@ -176,33 +177,38 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
       syslog(LOG_ERR, "login: %m");
       return AFPERR_BADUAM;
 #endif
-#ifdef ADMIN_GRP
-    if ((grps = getgrnam(ADMIN_GRP)) != NULL) {
-      while (*(grps->gr_mem) != NULL) {
-        if (strcmp(pwd->pw_name, *grps->gr_mem) == 0) {
-          syslog(LOG_INFO, "User %s has admin privs, logging in as superuser.",
-            pwd->pw_name);
-          pwd->pw_gid = grps->gr_gid;
-          pwd->pw_uid = 0;
-          strcpy (pwd->pw_name, "root");
-          break;
-        }
-        *(grps->gr_mem)++;
-      }
-    }
-#endif ADMIN_GRP
 
     }
-    
-    if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-	syslog( LOG_ERR, "login: %m" );
-	return AFPERR_BADUAM;
-    }
+
+    /* Basically if the user is in the admin group, we stay root */
 
     if (( ngroups = getgroups( NGROUPS, groups )) < 0 ) {
 	syslog( LOG_ERR, "login: getgroups: %m" );
 	return AFPERR_BADUAM;
     }
+#ifdef ADMIN_GRP
+    syslog(LOG_DEBUG, "options->admingid == %d", options->admingid);
+    if (options->admingid != 0) {
+	int i;
+	for (i = 0; i < ngroups; i++) {
+           if (groups[i] == options->admingid) admin = 1;
+        }
+    }
+    if (admin) syslog( LOG_INFO, "login: admin -- %s", pwd->pw_name );
+    if (!admin)
+#endif
+	if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
+	    syslog( LOG_ERR, "login: %m" );
+	    return AFPERR_BADUAM;
+	}
+
+    /* There's probably a better way to do this, but for now, we just 
+	play root */
+
+#ifdef ADMIN_GRP
+    if (admin) uuid = 0;
+    else
+#endif ADMIN_GRP
     uuid = pwd->pw_uid;
 
     afp_switch = postauth_switch;
