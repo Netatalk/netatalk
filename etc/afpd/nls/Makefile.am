@@ -1,6 +1,5 @@
 # Makefile.am for etc/afpd/nls/
 
-EXTRA_DIST = maccode.437 maccode.850 maccode.iso8859-1 
 bin_PROGRAMS = makecode parsecode
 
 makecode_SOURCES = makecode.c
