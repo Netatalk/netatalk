@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.98 2001-08-28 07:13:03 lancel Exp $
+dnl $Id: configure.in,v 1.99 2001-08-30 00:44:47 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -632,40 +632,45 @@ if test x"$this_os" = "xtru64"; then
 	LDSHAREDFLAGS="-shared"
 fi
 
-dnl -- look for openssl  
+dnl -- look for openssl
+tryssl=yes
 AC_ARG_WITH(ssl-dir,
 	[  --with-ssl-dir=PATH     specify path to openssl installation (must contain
                           lib and include dirs) ],
 	[
 		if test "x$withval" != "xno"; then
 			tryssldir=$withval
+		else
+			tryssl=no
 		fi
 	]
 )
 
-for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl /usr/local/ssl ; do
-	if test -f "$ssldir/include/openssl/cast.h" ; then
-		LDFLAGS="$LDFLAGS -L$ssldir/lib -L$ssldir"
-		CFLAGS="$CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
-		if test "$need_dash_r" = "yes"; then
-			LIBS="$LIBS -R$ssldir/lib -R$ssldir"
+if test "$tryssl" == "yes"; then
+	for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl /usr/local/ssl ; do
+		if test -f "$ssldir/include/openssl/cast.h" ; then
+			LDFLAGS="$LDFLAGS -L$ssldir/lib -L$ssldir"
+			CFLAGS="$CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
+			if test "$need_dash_r" = "yes"; then
+				LIBS="$LIBS -R$ssldir/lib -R$ssldir"
+			fi
+
+			dnl Check for the crypto library:
+			AC_CHECK_LIB(crypto, main)
+			dnl LIBS="$LIBS -lcrypto"
+			dnl Check for "DES" library (for SSLeay, not openssl):
+			AC_CHECK_LIB(des, main)
+
+	 		AC_DEFINE(OPENSSL_DHX,	1)
+			AC_DEFINE(UAM_DHX,	1)
+			AC_DEFINE(UAM_RNDNUM,	1)
+			compile_dhx=yes
+			compile_ssl=yes
+			AC_MSG_RESULT([Found ssl and enabling RANDNUM and DHX support "$ssldir"])
+			break
 		fi
-
-		dnl Check for the crypto library:
-		AC_CHECK_LIB(crypto, main)
-		dnl LIBS="$LIBS -lcrypto"
-		dnl Check for "DES" library (for SSLeay, not openssl):
-		AC_CHECK_LIB(des, main)
-
- 		AC_DEFINE(OPENSSL_DHX,	1)
-		AC_DEFINE(UAM_DHX,	1)
-		AC_DEFINE(UAM_RNDNUM,	1)
-		compile_dhx=yes
-		compile_ssl=yes
-		AC_MSG_RESULT([Found ssl and enabling RANDNUM and DHX support "$ssldir"])
-		break
-	fi
-done
+	done
+fi
 
 dnl --------------------- check for building PGP UAM module
 
@@ -714,7 +719,6 @@ AC_ARG_ENABLE(overwrite,
 )
 
 dnl --------------------- last minute substitutions
-
 
 AC_SUBST(LIBS)
 AC_SUBST(AFPD_LIBS)
