@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.46 2003-01-04 20:49:33 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.47 2003-01-04 20:51:11 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -600,7 +600,7 @@ dbversion_retry:
     }
 #endif /* FILE_MANGLING */
 
-    /* Print out the version of DB3 we're linked against. */
+    /* Print out the version of BDB we're linked against. */
     LOG(log_info, logtype_default, "CNID DB initialized using %s",
         db_version(NULL, NULL, NULL));
 
