@@ -81,12 +81,22 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h limits.h strings.h sys/file.h sys/ioctl.h sys/time.h syslog.h unistd.h)
 
-dnl --- check for openssl headers ... if so, add proper flags
-AC_CHECK_HEADER(openssl/cast.h,
-	AC_DEFINE(OPENSSL_DHX,	1)
-	AC_DEFINE(UAM_DHX,	1)
-	AC_MSG_RESULT([including openssl libraries])
-	compile_dhx=yes
+# Allow user to specify flags
+AC_ARG_WITH(cflags,
+	[  --with-cflags           Specify additional flags to pass to compiler],
+	[
+		if test "x$withval" != "xno" ; then
+			CFLAGS="$CFLAGS $withval"
+		fi
+	]	
+)
+AC_ARG_WITH(libs,
+	[  --with-libs             Specify additional libraries to link with],
+	[
+		if test "x$withval" != "xno" ; then
+			LIBS="$LIBS $withval"
+		fi
+	]
 )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -300,6 +310,7 @@ if test x"$this_os" = "xlinux"; then
 		AC_MSG_RESULT([enabling gcc memcpy bug workaround])
 		AC_DEFINE(HAVE_GCC_MEMCPY_BUG)
 	fi
+	need_dash_r=no
 fi
 
 dnl ----- NetBSD specific -----
@@ -308,6 +319,7 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
+	need_dash_r=yes 
 fi
 
 dnl ----- OpenBSD specific -----
@@ -323,8 +335,35 @@ if test x"$this_os" = "xsolaris"; then
 	AC_DEFINE(_ISOC9X_SOURCE)
 	AC_DEFINE(NO_STRUCT_TM_GMTOFF)
 	AC_DEFINE(SOLARIS)
+	need_dash_r=yes
 fi
 
+dnl -- look for openssl  
+AC_ARG_WITH(ssl-dir,
+	[  --with-ssl-dir=PATH	Specify path to openssl installation (must contain lib and include dirs) ],
+	[
+		if test "x$withval" != "$xno"; then
+			tryssldir=$withval
+		fi
+	]
+)
+
+for ssldir in "" $tryssldir /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl ; do
+	if test -f "$ssldir/include/openssl/cast.h" ; then
+		LIBS="$LIBS -L$ssldir/lib -L$ssldir"
+		CFLAGS="$CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
+		if test "$need_dash_r" = "yes"; then
+			LIBS="$LIBS -R$ssldir/lib -R$ssldir"
+		fi
+		LIBS="$LIBS -lcrypto"
+ 		AC_DEFINE(OPENSSL_DHX,	1)
+		AC_DEFINE(UAM_DHX,	1)
+		AC_DEFINE(UAM_RNDNUM,	1)
+		compile_dhx=yes
+		AC_MSG_RESULT([Found ssl and enabling RANDNUM and DHX support "$ssldir"])
+		break
+	fi
+done
 
 dnl --------------------- last minute substitutions
 
