@@ -152,6 +152,11 @@ if test x"$with_cracklib" = "xyes"; then
 	)
 fi
 
+AC_ARG_ENABLE(ddp,
+	[  --disable-ddp           disable DDP],,
+	AC_DEFINE(NO_DDP, 1)
+)
+
 AC_ARG_ENABLE(debug,
 	[  --enable-debug          enable debug code],
 	AC_DEFINE(DEBUG, 1)
