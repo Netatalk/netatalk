@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.140 2001-12-11 00:38:50 srittau Exp $
+dnl $Id: configure.in,v 1.141 2001-12-14 22:53:33 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -81,24 +81,6 @@ AC_CHECK_HEADERS(fcntl.h limits.h stdint.h strings.h sys/fcntl.h sys/file.h sys/
 AC_CHECK_HEADER(sys/cdefs.h,,
 	AC_MSG_RESULT([enabling generic cdefs.h from tree])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
-)
-
-# Allow user to specify flags
-AC_ARG_WITH(cflags,
-	[  --with-cflags           specify additional flags to pass to compiler],
-	[
-		if test "x$withval" != "xno" ; then
-			CFLAGS="$CFLAGS $withval"
-		fi
-	]	
-)
-AC_ARG_WITH(libs,
-	[  --with-libs             specify additional libraries to link with],
-	[
-		if test "x$withval" != "xno" ; then
-			LIBS="$LIBS $withval"
-		fi
-	]
 )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
