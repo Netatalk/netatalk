@@ -317,12 +317,15 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     int		ibuflen, *rbuflen;
 {
     struct stat         st;
+#ifdef DROPKLUDGE
+    struct stat		sb;
+#endif DROPKLUDGE
     struct adouble	ad, *adp;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of;
     char		*path, *upath;
-    int			creatf, did, openf;
+    int			creatf, did, openf, uid;
     u_int16_t		vid;
 
     *rbuflen = 0;
@@ -402,6 +405,25 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 createfile_done:
     setvoltime(obj, vol );
+
+#ifdef DROPKLUDGE
+
+/* The below code is an experimental, untested, incomplete kludge which 
+provides better dropbox support.  It should NOT be turned on yet unless
+you are a developer who wants to try it out and fix it. */
+    if (stat(dir->d_name, &sb) == -1)
+      syslog (LOG_ERR, "Error checking directory: %m");
+    else {
+      uid=getuid();
+      seteuid(0); /* Become root to change the owner of the file */
+      syslog (LOG_INFO, "Changing %s to uid=%d gid=%d", path, sb.st_uid, sb.st_gid);
+      chown(path, sb.st_uid, sb.st_gid);
+      syslog (LOG_INFO, "Changing afpd owner back to %d", uid);
+      seteuid(uid); /* Restore ownership to normal */
+    }
+
+#endif DROPKLUDGE
+
     return AFP_OK;
 }
 
