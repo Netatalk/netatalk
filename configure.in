@@ -245,6 +245,7 @@ AC_ARG_WITH(pam,
 	AC_CHECK_LIB(pam, pam_start,
 		AC_DEFINE(USE_PAM, 1)
 		LIBS="$LIBS -lpam"
+		compile_pam=yes
 		AC_MSG_RESULT([enabling pam modules support])
 	)
 )
@@ -413,6 +414,7 @@ dnl --------------------- last minute substitutions
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
 AM_CONDITIONAL(USE_DHX, test x$compile_dhx = xyes)
+AM_CONDITIONAL(USE_PAM, test x$compile_pam = xyes)
 
 dnl --------------------- generate files
 

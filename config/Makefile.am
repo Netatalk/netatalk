@@ -13,3 +13,18 @@ CLEANFILES = afpd.conf
 configdir = $(CONFIG_DIR)
 
 config_DATA = AppleVolumes.default AppleVolumes.system afpd.conf atalkd.conf netatalk.conf netatalk.pamd papd.conf
+
+#
+# pluggable authentication modules support?
+#
+
+if USE_PAM
+
+pamdir    = /etc/pam.d
+
+pam_DATA = netatalk
+
+netatalk:
+	cp -f netatalk.pamd netatalk
+
+endif 
