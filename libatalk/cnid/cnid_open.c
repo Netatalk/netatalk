@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.53 2003-06-26 02:15:21 didg Exp $
+ * $Id: cnid_open.c,v 1.54 2003-07-10 13:50:39 rlewczuk Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -447,7 +447,6 @@ fail_db:
     free(db);
     return NULL;
 }
-#endif /* CNID_DB */
 
 
 /*-------------------------*/
@@ -762,3 +761,5 @@ fail:
 #endif
 
 }
+
+#endif /* CNID_DB */
