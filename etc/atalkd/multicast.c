@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: multicast.c,v 1.10 2002-09-29 23:24:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -394,7 +394,7 @@ zone_bcast( zt )
 
     if (!zt->zt_bcast &&
 	(zt->zt_bcast = (u_char *) malloc(sizeof( ethermulti ))) == NULL) {
-       LOG(log_error, logtype_default, "zone_bcast malloc: %s", strerror(errno) );
+       LOG(log_error, logtype_atalkd, "zone_bcast malloc: %s", strerror(errno) );
        return -1;
      }
 

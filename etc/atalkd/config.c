@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.11 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: config.c,v 1.12 2002-09-29 23:24:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -194,7 +194,7 @@ int writeconf( cf )
     /* check if old conf is writable */
     if ( stat( path, &st ) == 0 ) {
 	if (( st.st_mode & S_IWUSR ) == 0 ) {
-	    LOG(log_info, logtype_default, "%s not writable, won't rewrite", path );
+	    LOG(log_info, logtype_atalkd, "%s not writable, won't rewrite", path );
 	    return( -1 );
 	}
 	 mode = st.st_mode;
@@ -206,16 +206,16 @@ int writeconf( cf )
 	sprintf( newpath, "%.*s/%s", (int)(p - path), path, _PATH_ATALKDTMP );
     }
     if (( fd = open( newpath, O_WRONLY|O_CREAT|O_TRUNC, mode )) < 0 ) {
-	LOG(log_error, logtype_default, "%s: %s", newpath, strerror(errno) );
+	LOG(log_error, logtype_atalkd, "%s: %s", newpath, strerror(errno) );
 	return( -1 );
     }
     if (( newconf = fdopen( fd, "w" )) == NULL ) {
-	LOG(log_error, logtype_default, "fdreopen %s: %s", newpath, strerror(errno) );
+	LOG(log_error, logtype_atalkd, "fdreopen %s: %s", newpath, strerror(errno) );
 	return( -1 );
     }
 
     if (( conf = fopen( path, "r" )) == NULL && cf ) {
-	LOG(log_error, logtype_default, "%s: %s", path, strerror(errno) );
+	LOG(log_error, logtype_atalkd, "%s: %s", path, strerror(errno) );
 	return( -1 );
     }
 
@@ -224,7 +224,7 @@ int writeconf( cf )
     while ( conf == NULL || fgets( line, sizeof( line ), conf ) != NULL ) {
 	if ( conf != NULL && ( argv = parseline( line )) == NULL ) {
 	    if ( fputs( line, newconf ) == EOF ) {
-		LOG(log_error, logtype_default, "fputs: %s", strerror(errno) );
+		LOG(log_error, logtype_atalkd, "fputs: %s", strerror(errno) );
 		return( -1 );
 	    }
 	    freeline( argv );
@@ -271,7 +271,7 @@ int writeconf( cf )
     fclose( newconf );
 
     if ( rename( newpath, path ) < 0 ) {
-	LOG(log_error, logtype_default, "rename %s to %s: %s", newpath, path, strerror(errno) );
+	LOG(log_error, logtype_atalkd, "rename %s to %s: %s", newpath, path, strerror(errno) );
 	return( -1 );
     }
     return( 0 );
@@ -790,23 +790,23 @@ int plumb()
 	strcpy( device, "/dev/" );
 	strcat( device, iface->i_name );
 	if (( p = strpbrk( device, "0123456789" )) == NULL ) {
-	    LOG(log_error, logtype_default, "plumb: invalid device: %s", device );
+	    LOG(log_error, logtype_atalkd, "plumb: invalid device: %s", device );
 	    return -1;
 	}
 	ppa = atoi( p );
 	*p = '\0';
 
 	if (( fd = open( device, O_RDWR, 0 )) < 0 ) {
-	    LOG(log_error, logtype_default, "%s: %m", device );
+	    LOG(log_error, logtype_atalkd, "%s: %m", device );
 	    return -1;
 	}
 	if ( ioctl( fd, I_PUSH, "ddp" ) < 0 ) {
-	    LOG(log_error, logtype_default, "I_PUSH: %m" );
+	    LOG(log_error, logtype_atalkd, "I_PUSH: %m" );
 	    close(fd);
 	    return -1;
 	}
 	if ( ioctl( fd, IF_UNITSEL, ppa ) < 0 ) {
-	    LOG(log_error, logtype_default, "IF_UNITSEL: %m" );
+	    LOG(log_error, logtype_atalkd, "IF_UNITSEL: %m" );
 	    close(fd);
 	    return -1;
 	}
@@ -819,7 +819,7 @@ int plumb()
 	  return -1;
 	}
 
-	LOG(log_info, logtype_default, "plumbed %s%d", device, ppa );
+	LOG(log_info, logtype_atalkd, "plumbed %s%d", device, ppa );
     }
 
     return( 0 );

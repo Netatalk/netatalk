@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.9 2002-01-17 06:08:55 srittau Exp $
+ * $Id: nbp.c,v 1.10 2002-09-29 23:24:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -64,7 +64,7 @@ void nbp_ack( fd, nh_op, nh_id, to )
     data += SZ_NBPHDR;
     if ( sendto( fd, packet, data - packet, 0, (struct sockaddr *)to,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	LOG(log_error, logtype_default, "sendto: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "sendto: %s", strerror(errno) );
     }
 }
 
@@ -89,23 +89,23 @@ int nbp_packet( ap, from, data, len )
 
     end = data + len;
     if ( data >= end ) {
-	LOG(log_info, logtype_default, "nbp_packet malformed packet" );
+	LOG(log_info, logtype_atalkd, "nbp_packet malformed packet" );
 	return 1;
     }
     if ( *data++ != DDPTYPE_NBP ) {
-	LOG(log_info, logtype_default, "nbp_packet bad ddp type" );
+	LOG(log_info, logtype_atalkd, "nbp_packet bad ddp type" );
 	return 1;
     }
 
     if ( data + SZ_NBPHDR + SZ_NBPTUPLE > end ) {
-	LOG(log_info, logtype_default, "nbp_packet: malformed packet" );
+	LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
 	return 1;
     }
     memcpy( &nh, data, SZ_NBPHDR );
     nbpop = data;			/* remember for fwd and brrq */
     data += SZ_NBPHDR;
     if ( nh.nh_cnt != 1 ) {
-	LOG(log_info, logtype_default, "nbp_packet: bad tuple count (%d/%d)", nh.nh_cnt,
+	LOG(log_info, logtype_atalkd, "nbp_packet: bad tuple count (%d/%d)", nh.nh_cnt,
 		nh.nh_op );
 	return 1;
     }
@@ -125,7 +125,7 @@ int nbp_packet( ap, from, data, len )
     /* object */
     tmplen = (u_char) *data;
     if ( data >= end || tmplen > 32 || data + tmplen > end ) {
-	LOG(log_info, logtype_default, "nbp_packet: malformed packet" );
+	LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
 	return 1;
     }
     nn.nn_objlen = tmplen;
@@ -136,7 +136,7 @@ int nbp_packet( ap, from, data, len )
     /* type */
     tmplen = (u_char) *data;
     if ( data >= end || tmplen > 32 || data + tmplen > end ) {
-	LOG(log_info, logtype_default, "nbp_packet: malformed packet" );
+	LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
 	return 1;
     }
     nn.nn_typelen = tmplen;
@@ -147,7 +147,7 @@ int nbp_packet( ap, from, data, len )
     /* zone */
     tmplen = (u_char) *data;
     if ( data >= end || tmplen > 32 || data + tmplen > end ) {
-	LOG(log_info, logtype_default, "nbp_packet: malformed packet" );
+	LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
 	return 1;
     }
     zonep = data;			/* remember for fwd */
@@ -157,7 +157,7 @@ int nbp_packet( ap, from, data, len )
     data += nn.nn_zonelen;
 
     if ( data != end ) {
-	LOG(log_info, logtype_default, "nbp_packet: malformed packet" );
+	LOG(log_info, logtype_atalkd, "nbp_packet: malformed packet" );
 	return 1;
     }
 
@@ -213,7 +213,7 @@ int nbp_packet( ap, from, data, len )
 
 	    /* calculate and save multicast address */
 	    if (zone_bcast(zt) < 0) {
-	        LOG(log_error, logtype_default, "nbp_packet: zone_bcast");
+	        LOG(log_error, logtype_atalkd, "nbp_packet: zone_bcast");
 		return -1;
 	    }
 
@@ -225,7 +225,7 @@ int nbp_packet( ap, from, data, len )
 		    if ( zt == (struct ziptab *)l->l_data ) {
 		        /* add multicast */
 		        if (addmulti(iface->i_name, zt->zt_bcast) < 0) {
-			    LOG(log_error, logtype_default, "nbp_packet: addmulti: %s",
+			    LOG(log_error, logtype_atalkd, "nbp_packet: addmulti: %s",
 				    strerror(errno) );
 			    return -1;
 			}
@@ -236,7 +236,7 @@ int nbp_packet( ap, from, data, len )
 
 	if (( ntab = (struct nbptab *)malloc( sizeof( struct nbptab )))
 		== 0 ) {
-	    LOG(log_error, logtype_default, "nbp_packet: malloc: %s", strerror(errno) );
+	    LOG(log_error, logtype_atalkd, "nbp_packet: malloc: %s", strerror(errno) );
 	    return -1;
 	}
 	memcpy( &ntab->nt_nve, &nn, sizeof( struct nbpnve ));
@@ -411,7 +411,7 @@ int nbp_packet( ap, from, data, len )
 
 	    if ( sendto( ap->ap_fd, data - len, len, 0, (struct sockaddr *)&sat,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		LOG(log_error, logtype_default, "nbp brrq sendto: %s", strerror(errno) );
+		LOG(log_error, logtype_atalkd, "nbp brrq sendto: %s", strerror(errno) );
 	    }
 
 	    locallkup = 1;
@@ -432,7 +432,7 @@ int nbp_packet( ap, from, data, len )
 			}
 		    }
 		    if ( !iface ) {
-			LOG(log_error, logtype_default, "nbp_packet: \
+			LOG(log_error, logtype_atalkd, "nbp_packet: \
 Can't find route's interface!" );
 			return -1;
 		    }
@@ -446,7 +446,7 @@ Can't find route's interface!" );
 		    }
 		}
 		if ( !ap ) {
-		    LOG(log_error, logtype_default, "nbp_packet: Can't find port!" );
+		    LOG(log_error, logtype_atalkd, "nbp_packet: Can't find port!" );
 		    return -1;
 		}
 
@@ -477,7 +477,7 @@ Can't find route's interface!" );
 		if ( sendto( ap->ap_fd, data - len, len, 0,
 			(struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    LOG(log_error, logtype_default, "nbp brrq sendto %u.%u: %s",
+		    LOG(log_error, logtype_atalkd, "nbp brrq sendto %u.%u: %s",
 			    ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node,
 			    strerror(errno) );
 		    continue;
@@ -499,7 +499,7 @@ Can't find route's interface!" );
 	    from->sat_addr.s_node = ATADDR_BCAST;
 	    if ( sendto( ap->ap_fd, data - len, len, 0, (struct sockaddr *)from,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		LOG(log_error, logtype_default, "nbp fwd sendto %u.%u: %s",
+		LOG(log_error, logtype_atalkd, "nbp fwd sendto %u.%u: %s",
 			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
 			strerror(errno) );
 		return 0;
@@ -575,7 +575,7 @@ Can't find route's interface!" );
 		if ( sendto( ap->ap_fd, packet, cc, 0,
 			(struct sockaddr *)&nn.nn_sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    LOG(log_error, logtype_default, "nbp lkup sendto %u.%u: %s",
+		    LOG(log_error, logtype_atalkd, "nbp lkup sendto %u.%u: %s",
 			    ntohs( nn.nn_sat.sat_addr.s_net ),
 			    nn.nn_sat.sat_addr.s_node,
 			    strerror(errno) );
@@ -638,7 +638,7 @@ Can't find route's interface!" );
 	    if ( sendto( ap->ap_fd, packet, cc, 0,
 		    (struct sockaddr *)&nn.nn_sat,
 		    sizeof( struct sockaddr_at )) < 0 ) {
-		LOG(log_error, logtype_default, "nbp lkup sendto %u.%u: %s",
+		LOG(log_error, logtype_atalkd, "nbp lkup sendto %u.%u: %s",
 			ntohs( nn.nn_sat.sat_addr.s_net ),
 			nn.nn_sat.sat_addr.s_node,
 			strerror(errno) );
@@ -648,7 +648,7 @@ Can't find route's interface!" );
 	break;
 
     default :
-	LOG(log_info, logtype_default, "nbp_packet: bad op (%d)", nh.nh_op );
+	LOG(log_info, logtype_atalkd, "nbp_packet: bad op (%d)", nh.nh_op );
 	return 1;
     }
 

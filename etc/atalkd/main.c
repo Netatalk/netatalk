@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.15 2002-09-12 17:21:15 srittau Exp $
+ * $Id: main.c,v 1.16 2002-09-29 23:24:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -149,7 +149,7 @@ static void atalkd_exit(const int i)
 	continue;
 #endif /* SIOCDIFADDR != SIOCATALKDIFADDR */
 #endif /* SIOCATALKIFADDR */
-      LOG(log_error, logtype_default, "difaddr(%u.%u): %s", 
+      LOG(log_error, logtype_atalkd, "difaddr(%u.%u): %s", 
 	      ntohs(iface->i_addr.sat_addr.s_net), 
 	      iface->i_addr.sat_addr.s_node, strerror(errno));
     }
@@ -195,13 +195,13 @@ static void as_timer(int sig)
 	    if ( iface->i_time < 3 ) {
 		if ( iface->i_flags & IFACE_PHASE1 ) {
 		  if (rtmp_request( iface ) < 0) {
-		      LOG(log_error, logtype_default, "rtmp_request: %s", strerror(errno));
+		      LOG(log_error, logtype_atalkd, "rtmp_request: %s", strerror(errno));
 		      atalkd_exit(1);
 		  }
 		    newrtmpdata = 1;
 		} else {
 		  if (zip_getnetinfo( iface ) < 0) {
-		    LOG(log_error, logtype_default, "zip_getnetinfo: %s", strerror(errno));
+		    LOG(log_error, logtype_atalkd, "zip_getnetinfo: %s", strerror(errno));
 		    atalkd_exit(1);
 		  }
 		  sentzipq = 1;
@@ -215,11 +215,11 @@ static void as_timer(int sig)
 			 * No seed info, and we've got multiple interfaces.
 			 * Wait forever.
 			 */
-			LOG(log_info, logtype_default,
+			LOG(log_info, logtype_atalkd,
 				"as_timer multiple interfaces, no seed" );
-			LOG(log_info, logtype_default, "as_timer can't configure %s",
+			LOG(log_info, logtype_atalkd, "as_timer can't configure %s",
 				iface->i_name );
-			LOG(log_info, logtype_default, "as_timer waiting for router" );
+			LOG(log_info, logtype_atalkd, "as_timer waiting for router" );
 			iface->i_time = 0;
 			continue;
 		    } else {
@@ -231,7 +231,7 @@ static void as_timer(int sig)
 			for ( zt = iface->i_czt; zt; zt = zt->zt_next ) {
 			    if (addzone( iface->i_rt, zt->zt_len, 
 					 zt->zt_name) < 0) {
-			      LOG(log_error, logtype_default, "addzone: %s", strerror(errno));
+			      LOG(log_error, logtype_atalkd, "addzone: %s", strerror(errno));
 			      atalkd_exit(1);
 			    }
 			}
@@ -240,7 +240,7 @@ static void as_timer(int sig)
 			    iface->i_rt->rt_flags |= RTMPTAB_HASZONES;
 			}
 			if ( iface->i_flags & IFACE_PHASE1 ) {
-			    LOG(log_info, logtype_default,
+			    LOG(log_info, logtype_atalkd,
 				    "as_timer configured %s phase 1 from seed",
 				    iface->i_name );
 			    setaddr( iface, IFACE_PHASE1,
@@ -249,13 +249,13 @@ static void as_timer(int sig)
 				    iface->i_caddr.sat_addr.s_net,
 				    iface->i_caddr.sat_addr.s_net );
 			} else {
-			    LOG(log_info, logtype_default,
+			    LOG(log_info, logtype_atalkd,
 				    "as_timer configured %s phase 2 from seed",
 				    iface->i_name );
 			}
 
 			if ( looproute( iface, RTMP_ADD )) { /* -1 or 1 */
-			    LOG(log_error, logtype_default,
+			    LOG(log_error, logtype_atalkd,
 				    "as_timer: can't route %u.%u to loop: %s",
 				    ntohs( iface->i_addr.sat_addr.s_net ),
 				    iface->i_addr.sat_addr.s_node,
@@ -272,7 +272,7 @@ static void as_timer(int sig)
 		     * Configure for no router operation.  Wait for a route
 		     * to become available in rtmp_packet().
 		     */
-		    LOG(log_info, logtype_default, "config for no router" );
+		    LOG(log_info, logtype_atalkd, "config for no router" );
 		      
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
 			iface->i_rt->rt_firstnet = 0;
@@ -283,7 +283,7 @@ static void as_timer(int sig)
 				0, htons( STARTUP_LASTNET ));
 		    }
 		    if ( looproute( iface, RTMP_ADD ) ) { /* -1 or 1 */
-			LOG(log_error, logtype_default,
+			LOG(log_error, logtype_atalkd,
 				"as_timer: can't route %u.%u to loopback: %s",
 				ntohs( iface->i_addr.sat_addr.s_net ),
 				iface->i_addr.sat_addr.s_node,
@@ -318,7 +318,7 @@ static void as_timer(int sig)
 	     * our zone has gone away.
 	     */
 	    if ( ++gate->g_state >= RTMPTAB_BAD ) {
-		LOG(log_info, logtype_default, "as_timer gateway %u.%u down",
+		LOG(log_info, logtype_atalkd, "as_timer gateway %u.%u down",
 			ntohs( gate->g_sat.sat_addr.s_net ),
 			gate->g_sat.sat_addr.s_node );
 		rtmp = gate->g_rt;
@@ -330,7 +330,7 @@ static void as_timer(int sig)
 		    } else {
 			rtmp->rt_hops = RTMPHOPS_POISON;
 			if ((cc = rtmp_replace( rtmp )) < 0) {
-			  LOG(log_error, logtype_default, "rtmp_replace: %s", strerror(errno));
+			  LOG(log_error, logtype_atalkd, "rtmp_replace: %s", strerror(errno));
 			  atalkd_exit(1);
 			}
 			if (cc) {
@@ -371,7 +371,7 @@ static void as_timer(int sig)
 		      gate->g_iface->i_rt->rt_flags &= ~RTMPTAB_HASZONES;
 		    }
 
-		    LOG(log_info, logtype_default, "as_timer last gateway down" );
+		    LOG(log_info, logtype_atalkd, "as_timer last gateway down" );
 
 		    /* Set netrange to 0-fffe.  */
 		    if ( gate->g_iface->i_flags & IFACE_PHASE2 ) {
@@ -426,7 +426,7 @@ static void as_timer(int sig)
 			} else {
 			    rtmp->rt_hops = RTMPHOPS_POISON;
 			    if ((cc = rtmp_replace( rtmp )) < 0) {
-			    	LOG(log_error, logtype_default, "rtmp_replace: %s", strerror(errno));
+			    	LOG(log_error, logtype_atalkd, "rtmp_replace: %s", strerror(errno));
 			    	atalkd_exit(1);
 			    }
 		            if (cc)
@@ -454,7 +454,7 @@ static void as_timer(int sig)
 			if ( sendto( zap->ap_fd, packet, cc, 0,
 				(struct sockaddr *)&sat,
 				sizeof( struct sockaddr_at )) < 0 ) {
-			    LOG(log_error, logtype_default, "as_timer sendto: %s", strerror(errno) );
+			    LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
 			}
 			sentzipq = 1;
 
@@ -473,7 +473,7 @@ static void as_timer(int sig)
 		     * ask about, and warn that we can't get it's zone.
 		     */
 		    if ( rtmp->rt_nzq++ == 3 ) {
-			LOG(log_info, logtype_default, "as_timer can't get zone for %u",
+			LOG(log_info, logtype_atalkd, "as_timer can't get zone for %u",
 				ntohs( rtmp->rt_firstnet ));
 		    }
 		    if ( rtmp->rt_nzq > 3 ) {
@@ -503,7 +503,7 @@ static void as_timer(int sig)
 
 		if ( sendto( zap->ap_fd, packet, cc, 0, (struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    LOG(log_error, logtype_default, "as_timer sendto: %s", strerror(errno) );
+		    LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
 		}
 	    }
 	}
@@ -582,7 +582,7 @@ static void as_timer(int sig)
 			if ( sendto( rap->ap_fd, packet, data - packet, 0,
 				(struct sockaddr *)&sat,
 				sizeof( struct sockaddr_at )) < 0 ) {
-			    LOG(log_error, logtype_default, "as_timer sendto %u.%u (%u): %s",
+			    LOG(log_error, logtype_atalkd, "as_timer sendto %u.%u (%u): %s",
 				    ntohs( sat.sat_addr.s_net ),
 				    sat.sat_addr.s_node,
 				    ntohs( iface->i_rt->rt_firstnet ),
@@ -622,7 +622,7 @@ static void as_timer(int sig)
 		if ( sendto( rap->ap_fd, packet, data - packet, 0,
 			(struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
-		    LOG(log_error, logtype_default, "as_timer sendto %u.%u (%u): %s",
+		    LOG(log_error, logtype_atalkd, "as_timer sendto %u.%u (%u): %s",
 			    ntohs( sat.sat_addr.s_net ),
 			    sat.sat_addr.s_node,
 			    ntohs( iface->i_rt->rt_firstnet ),
@@ -653,14 +653,14 @@ static void as_timer(int sig)
 
 	if ( stable && !noparent ) {
 	    noparent = 1;
-	    LOG(log_info, logtype_default, "ready %d/%d/%d", stabletimer, newrtmpdata,
+	    LOG(log_info, logtype_atalkd, "ready %d/%d/%d", stabletimer, newrtmpdata,
 		    sentzipq );
 	    if ( !debug ) {
 		/*
 		 * Seems like we could get here more than once...
 		 */
 		if ( kill( getpid(), SIGSTOP ) < 0 ) {
-		    LOG(log_error, logtype_default, "as_timer: kill-self failed!" );
+		    LOG(log_error, logtype_atalkd, "as_timer: kill-self failed!" );
 		    atalkd_exit( 1 );
 		}
 	    }
@@ -686,7 +686,7 @@ consistency()
 	for ( lr = zt->zt_rt; lr; lr = lr->l_next ) {
 	    rtmp = (struct rtmptab *)lr->l_data;
 	    if ( rtmp->rt_iprev == 0 && rtmp->rt_gate != 0 ) {
-		LOG(log_error, logtype_default, "%.*s has %u-%u (unused)\n",
+		LOG(log_error, logtype_atalkd, "%.*s has %u-%u (unused)\n",
 			zt->zt_len, zt->zt_name, ntohs( rtmp->rt_firstnet ),
 			ntohs( rtmp->rt_lastnet ));
 		atalkd_exit(1);
@@ -697,7 +697,7 @@ consistency()
 		}
 	    }
 	    if ( lz == 0 ) {
-		LOG(log_error, logtype_default, "no map from %u-%u to %.*s\n", 
+		LOG(log_error, logtype_atalkd, "no map from %u-%u to %.*s\n", 
 			ntohs( rtmp->rt_firstnet ),
 			ntohs( rtmp->rt_lastnet ),
 			zt->zt_len, zt->zt_name );
@@ -721,7 +721,7 @@ as_debug()
     FILE		*rtmpdebug;
 
     if (( rtmpdebug = fopen( _PATH_ATALKDEBUG, "w" )) == NULL ) {
-	LOG(log_error, logtype_default, "rtmp: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "rtmp: %s", strerror(errno) );
     }
 
     for ( iface = interfaces; iface; iface = iface->i_next ) {
@@ -826,7 +826,7 @@ as_down()
 	    for ( rt = gate->g_rt; rt; rt = rt->rt_next ) {
 		if ( rt->rt_iprev ) {
 		    if ( gateroute( RTMP_DEL, rt ) < 0 ) {
-			LOG(log_error, logtype_default, "as_down remove %u-%u failed: %s",
+			LOG(log_error, logtype_atalkd, "as_down remove %u-%u failed: %s",
 				ntohs( rt->rt_firstnet ),
 				ntohs( rt->rt_lastnet ),
 				strerror(errno) );
@@ -836,7 +836,7 @@ as_down()
 	}
 	if ( iface->i_flags & IFACE_LOOP ) {
 	  if (looproute( iface, RTMP_DEL )) {
-	    LOG(log_error, logtype_default, "as_down remove %s %u.%u failed: %s",
+	    LOG(log_error, logtype_atalkd, "as_down remove %s %u.%u failed: %s",
 		    iface->i_name, ntohs( iface->i_addr.sat_addr.s_net ),
 		    iface->i_addr.sat_addr.s_node,
 		    strerror(errno) );
@@ -844,7 +844,7 @@ as_down()
 	}
     }
 
-    LOG(log_info, logtype_default, "done" );
+    LOG(log_info, logtype_atalkd, "done" );
     atalkd_exit( 0 );
 }
 
@@ -1084,7 +1084,7 @@ int main( ac, av )
     syslog_setup(log_debug, logtype_default, logoption_pid, logfacility_daemon );
 #endif /* ultrix */
 
-    LOG(log_info, logtype_default, "restart (%s)", version );
+    LOG(log_info, logtype_atalkd, "restart (%s)", version );
 
     /*
      * Socket for use in routing ioctl()s. Can't add routes to our
@@ -1092,16 +1092,16 @@ int main( ac, av )
      */
 #ifdef BSD4_4
     if (( rtfd = socket( PF_ROUTE, SOCK_RAW, AF_APPLETALK )) < 0 ) {
-	LOG(log_error, logtype_default, "route socket: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "route socket: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
     if ( shutdown( rtfd, 0 ) < 0 ) {
-	LOG(log_error, logtype_default, "route shutdown: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "route shutdown: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 #else /* BSD4_4 */
     if (( rtfd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
-	LOG(log_error, logtype_default, "route socket: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "route socket: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 #endif /* BSD4_4 */
@@ -1114,7 +1114,7 @@ int main( ac, av )
     sigaddset( &sv.sa_mask, SIGTERM );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, NULL) < 0 ) {
-	LOG(log_error, logtype_default, "sigterm: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "sigterm: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1125,7 +1125,7 @@ int main( ac, av )
     sigaddset( &sv.sa_mask, SIGTERM );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &sv, NULL) < 0 ) {
-	LOG(log_error, logtype_default, "sigusr1: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "sigusr1: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1136,7 +1136,7 @@ int main( ac, av )
     sigaddset( &sv.sa_mask, SIGTERM );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGALRM, &sv, NULL) < 0 ) {
-	LOG(log_error, logtype_default, "sigalrm: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "sigalrm: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1145,7 +1145,7 @@ int main( ac, av )
     it.it_value.tv_sec = 10L;
     it.it_value.tv_usec = 0L;
     if ( setitimer( ITIMER_REAL, &it, NULL) < 0 ) {
-	LOG(log_error, logtype_default, "setitimer: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "setitimer: %s", strerror(errno) );
 	atalkd_exit( 1 );
     }
 
@@ -1158,7 +1158,7 @@ int main( ac, av )
 		errno = 0;
 		continue;
 	    } else {
-		LOG(log_error, logtype_default, "select: %s", strerror(errno) );
+		LOG(log_error, logtype_atalkd, "select: %s", strerror(errno) );
 		atalkd_exit( 1 );
 	    }
 	}
@@ -1170,7 +1170,7 @@ int main( ac, av )
 			fromlen = sizeof( struct sockaddr_at );
 			if (( c = recvfrom( ap->ap_fd, Packet, sizeof( Packet ),
 				0, (struct sockaddr *)&sat, &fromlen )) < 0 ) {
-			    LOG(log_error, logtype_default, "recvfrom: %s", strerror(errno) );
+			    LOG(log_error, logtype_atalkd, "recvfrom: %s", strerror(errno) );
 			    continue;
 			}
 #ifdef DEBUG
@@ -1184,7 +1184,7 @@ int main( ac, av )
 #endif /* DEBUG */
 #ifdef __svr4__
 			if ( sighold( SIGALRM ) || sighold( SIGUSR1 )) {
-			    LOG(log_error, logtype_default, "sighold: %s", strerror(errno) );
+			    LOG(log_error, logtype_atalkd, "sighold: %s", strerror(errno) );
 			    atalkd_exit( 1 );
 			}
 #else /* __svr4__ */
@@ -1192,7 +1192,7 @@ int main( ac, av )
 				sigmask( SIGUSR1 ));
 #endif /* __svr4__ */
 			if (( *ap->ap_packet )( ap, &sat, Packet, c ) < 0) {
-			  LOG(log_error, logtype_default, "ap->ap_packet: %s", strerror(errno));
+			  LOG(log_error, logtype_atalkd, "ap->ap_packet: %s", strerror(errno));
 			  atalkd_exit(1);
 			}
 
@@ -1201,7 +1201,7 @@ int main( ac, av )
 #endif /* DEBUG */
 #ifdef __svr4__
 			if ( sigrelse( SIGUSR1 ) || sigrelse( SIGALRM )) {
-			    LOG(log_error, logtype_default, "sigrelse: %s", strerror(errno) );
+			    LOG(log_error, logtype_atalkd, "sigrelse: %s", strerror(errno) );
 			    atalkd_exit( 1 );
 			}
 #else /* __svr4__ */
@@ -1228,7 +1228,7 @@ void bootaddr( iface )
 
     /* consistency */
     if ( iface->i_flags & IFACE_ADDR ) {
-	LOG(log_error, logtype_default, "bootaddr OOPS!" );
+	LOG(log_error, logtype_atalkd, "bootaddr OOPS!" );
 	atalkd_exit(1);
     }
 
@@ -1244,7 +1244,7 @@ void bootaddr( iface )
 	    }
 
 	} else if (rtmp_request( iface ) < 0) {
-	  LOG(log_error, logtype_default, "bootaddr (rtmp_request): %s", strerror(errno));
+	  LOG(log_error, logtype_atalkd, "bootaddr (rtmp_request): %s", strerror(errno));
 	  atalkd_exit(1);
 	}
 
@@ -1261,7 +1261,7 @@ void bootaddr( iface )
 	    }
 	    
 	} else if (zip_getnetinfo( iface ) < 0) {
-	  LOG(log_error, logtype_default, "bootaddr (zip_getnetinfo): %s", strerror(errno));
+	  LOG(log_error, logtype_atalkd, "bootaddr (zip_getnetinfo): %s", strerror(errno));
 	  atalkd_exit(1);
 	}
     }
@@ -1289,13 +1289,13 @@ void setaddr(struct interface *iface,
     if ( iface->i_ports == NULL ) {	/* allocate port structures */
 	for ( i = 0, as = atserv; i < atservNATSERV; i++, as++ ) {
 	    if (( se = getservbyname( as->as_name, "ddp" )) == NULL ) {
-		LOG(log_info, logtype_default, "%s: service unknown", as->as_name );
+		LOG(log_info, logtype_atalkd, "%s: service unknown", as->as_name );
 	    } else {
 		as->as_port = ntohs( se->s_port );
 	    }
 	    if (( ap = (struct atport *)malloc( sizeof( struct atport ))) ==
 		    NULL ) {
-		LOG(log_error, logtype_default, "malloc: %s", strerror(errno) );
+		LOG(log_error, logtype_atalkd, "malloc: %s", strerror(errno) );
 		atalkd_exit( 1 );
 	    }
 	    ap->ap_fd = 0;
@@ -1325,23 +1325,23 @@ void setaddr(struct interface *iface,
     memcpy( iface->i_addr.sat_zero, &nr, sizeof( struct netrange ));
 
     if ( ifconfig( iface->i_name, SIOCSIFADDR, &iface->i_addr )) {
-      LOG(log_error, logtype_default, "setifaddr: %s (%u-%u): %s. try specifying a \
+      LOG(log_error, logtype_atalkd, "setifaddr: %s (%u-%u): %s. try specifying a \
 smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 	atalkd_exit( 1 );
     }
     if ( ifconfig( iface->i_name, SIOCGIFADDR, &iface->i_addr )) {
-	LOG(log_error, logtype_default, "getifaddr: %s: %s", iface->i_name, strerror(errno) );
+	LOG(log_error, logtype_atalkd, "getifaddr: %s: %s", iface->i_name, strerror(errno) );
 	atalkd_exit( 1 );
     }
 
     /* open ports */
     i = 1; /* enable broadcasts */
 #ifdef __svr4__ 
-    LOG(log_info, logtype_default, "setsockopt incompatible w/ Solaris STREAMS module.");
+    LOG(log_info, logtype_atalkd, "setsockopt incompatible w/ Solaris STREAMS module.");
 #endif /* __svr4__ */
     for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
 	if (( ap->ap_fd = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
-	    LOG(log_error, logtype_default, "socket: %s", strerror(errno) );
+	    LOG(log_error, logtype_atalkd, "socket: %s", strerror(errno) );
 	    atalkd_exit( 1 );
 	}
 #ifndef __svr4__
@@ -1359,7 +1359,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
 
 	if ( bind( ap->ap_fd, (struct sockaddr *)&sat,
 		sizeof( struct sockaddr_at )) < 0 ) {
-	    LOG(log_error, logtype_default, "bind %u.%u:%u: %s",
+	    LOG(log_error, logtype_atalkd, "bind %u.%u:%u: %s",
 		    ntohs( sat.sat_addr.s_net ),
 		    sat.sat_addr.s_node, sat.sat_port, strerror(errno) );
 #ifdef SIOCDIFADDR

@@ -1,5 +1,5 @@
 /*
- * $Id: aep.c,v 1.7 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: aep.c,v 1.8 2002-09-29 23:24:47 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -32,14 +32,14 @@ int aep_packet( ap, from, data, len )
     end = data + len;
     if ( data + 2 > end || *data != DDPTYPE_AEP ||
 	    *( data + 1 ) != AEPOP_REQUEST ) {
-	LOG(log_info, logtype_default, "aep_packet malformed packet" );
+	LOG(log_info, logtype_atalkd, "aep_packet malformed packet" );
 	return 1;
     }
 
     *( data + 1 ) = AEPOP_REPLY;
     if ( sendto( ap->ap_fd, data, len, 0, (struct sockaddr *)from,
 	    sizeof( struct sockaddr_at )) < 0 ) {
-	LOG(log_error, logtype_default, "aep sendto: %s", strerror(errno) );
+	LOG(log_error, logtype_atalkd, "aep sendto: %s", strerror(errno) );
 	return 1;
     }
 
