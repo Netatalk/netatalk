@@ -956,9 +956,11 @@ int getdirparams(vol, bitmap, upath, dir, st, buf, buflen )
 
 	case DIRPBIT_ACCESS :
 	    utommode( st, &ma );
-/* #ifdef HAVE_ACCESS
+#ifndef SENDFILE_FLAVOR_LINUX /* ignore this section if it's linux */
+#ifdef HAVE_ACCESS
 	    accessmode( upath, &ma, dir );
-#endif HAVE_ACCESS */
+#endif HAVE_ACCESS
+#endif SENDFILE_FLAVOR_LINUX
 #ifdef AFS	/* If only AFS defined, access() works only for AFS filesystems */ 
 	    afsmode( upath, &ma, dir );
 #endif AFS
