@@ -1,4 +1,7 @@
-/* Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
+/*
+ * $Id: uam.c,v 1.7 2001-04-10 18:07:06 rufustfirefly Exp $
+ *
+ * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -217,10 +220,12 @@ int uam_checkuser(const struct passwd *pwd)
   }
   endusershell();
 
+#ifdef DISABLE_SHELLCHECK
   if (!p) {
     syslog( LOG_INFO, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
     return -1;
   }
+#endif /* DISABLE_SHELLCHECK */
 
   return 0;
 }
