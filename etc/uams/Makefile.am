@@ -37,8 +37,6 @@ uams_LINKS = $(DHX_LINKS) uams_clrtxt.so
 EXTRA_DIST = uams_dhx_pam.c uams_dhx_passwd.c uams_pgp.c \
 	uams_guest.c uams_pam.c uams_passwd.c uams_randnum.c
 
-LDFLAGS = @LDFLAGS@
-
 #
 # standard library compilation:
 #
@@ -47,7 +45,7 @@ SUFFIXES = .c .so
 .c.so:
 	$(COMPILE) -DHAVE_CONFIG_H -fPIC -DPIC \
 	  -I$(top_srcdir) -fomit-frame-pointer -c $< ; \
-	$(CC) $(LDSHAREDFLAGS) -o $@ $*.o $(LDFLAGS) $(LIBS)
+	$(LD) -shared $(LDSHAREDFLAGS) -o $@ $*.o $(LIBS)
 
 #
 # create symbolic links:
@@ -73,5 +71,4 @@ install-strip:
 # cleanup
 #
 
-clean distclean clean-recursive distclean-recursive:
-	$(RM) $(uams_DATA) *.o core
+CLEANFILES += *.o $(uams_DATA)
