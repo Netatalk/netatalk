@@ -460,6 +460,13 @@ if test x"$this_os" = "xopenbsd"; then
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
 	AC_DEFINE(BSD4_4)
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
+
+	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
+	AC_DEFINE(UAM_DHX, 1)
+	AC_DEFINE(UAM_RNDNUM, 1)
+	compile_dhx=yes
+	compile_ssl=yes
+	AC_DEFINE(NO_CRYPT_H, 1)
 fi
 
 dnl ----- Solaris specific -----
