@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.31 2003-01-19 00:04:37 didg Exp $
+ * $Id: enumerate.c,v 1.32 2003-01-21 07:55:07 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -109,10 +109,10 @@ struct path     *path;
         edir->d_u_name = cdir->d_u_name;
         free(cdir);
         cdir = edir;
-        if (cdir->d_parent && cdir->d_parent != dir) {
-            /* the old was not in the same folder */
-    	    dirchildremove(cdir->d_parent, cdir);
-        }
+        if (!cdir->d_parent || cdir->d_parent == dir)
+            return cdir;
+        /* the old was not in the same folder */
+    	dirchildremove(cdir->d_parent, cdir);
     }
 
     /* parent/child directories */
