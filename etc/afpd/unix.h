@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.4 2001-05-11 12:17:45 rufustfirefly Exp $
+ * $Id: unix.h,v 1.5 2001-05-22 13:35:27 rufustfirefly Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -19,52 +19,52 @@ typedef int	mode_t;
 /* some GLIBC/old-libc-isms */
 #if defined(__GNU_LIBRARY__) 
 #if __GNU_LIBRARY__ < 6
-#define USE_VFS_H
+#define HAVE_SYS_VFS_H
 #else
-#define USE_STATFS_H
+#define HAVE_STATFS_H
 #endif
 #endif
 
-#if defined(USE_VFS_H) || defined( sun ) || defined( ibm032 ) 
+#if defined(HAVE_SYS_VFS_H) || defined( sun ) || defined( ibm032 ) 
 #include <sys/vfs.h>
-#endif
+#endif /* HAVE_SYS_VFS_H || sun || ibm032 */
 
-#if defined(_IBMR2) || defined(USE_STATFS_H) 
+#if defined(_IBMR2) || defined(HAVE_STATFS_H) 
 #include <sys/statfs.h>
 /* this might not be right. */
 #define f_mntfromname f_fname
-#endif
+#endif /* _IBMR2 || HAVE_STATFS_H */
 
-#if defined(HAVE_SYS_STATVFS_H) || defined(__svr4__)
-#include <sys/statvfs.h>
-#define statfs statvfs
-#else
 #if defined(TRU64)
 #define f_frsize f_fsize
 #else /* TRU64 */
+#if defined(HAVE_SYS_STATVFS_H) || defined(__svr4__)
+#include <sys/statvfs.h>
+#define statfs statvfs
+#else /* HAVE_SYS_STATVFS || __svr4__ */
 #define	f_frsize f_bsize
-#endif /* TRU64 */
 #endif /* USE_STATVFS_H */
+#endif /* TRU64 */
 
 #if defined(__svr4__) || defined(HAVE_SYS_MNTTAB_H)
 #include <sys/mnttab.h>
-#endif
+#endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
 #if defined(HAVE_MOUNT_H) || defined(BSD4_4) || \
     defined(linux) || defined(ultrix)
 #include <sys/mount.h>
-#endif
+#endif /* HAVE_MOUNT_H || BSD4_4 || linux || ultrix */
 
 #if defined(linux) || defined(HAVE_MNTENT_H)
 #include <mntent.h>
-#endif
+#endif /* linux || HAVE_MNTENT_H */
 
 
 #ifndef NO_QUOTA_SUPPORT
 
 #if !(defined(__svr4__) || defined(HAVE_DQB_BTIMELIMIT))
 #define dqb_btimelimit  dqb_btime
-#endif
+#endif /* ! __svr4__ || HAVE_DQB_BTIMELIMIT */
 
 #if defined(linux) || defined(ultrix) || defined(HAVE_QUOTA_H)
 #ifndef NEED_QUOTACTL_WRAPPER
@@ -82,7 +82,7 @@ typedef int	mode_t;
 
 #ifdef BSD4_4
 #include <ufs/ufs/quota.h>
-#endif
+#endif /* BSD4_4 */
 
 #ifdef HAVE_UFS_QUOTA_H
 #include <ufs/quota.h>
@@ -90,7 +90,7 @@ typedef int	mode_t;
 
 #ifdef _IBMR2
 #include <jfs/quota.h>
-#endif
+#endif /* _IBMR2 */
 
 extern int getnfsquota __P((const struct vol *, const int, const u_int32_t,
 		            struct dqblk *));
