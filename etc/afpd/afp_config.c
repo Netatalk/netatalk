@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.17 2002-03-24 01:23:40 sibaz Exp $
+ * $Id: afp_config.c,v 1.18 2002-03-31 01:17:34 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -281,6 +281,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     SLPHandle hslp;
     struct servent *afpovertcp;
     int afp_port = 548;
+	char *srvloc_hostname;
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
@@ -319,18 +320,19 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
      * use a non-default port, they can, but be aware, this server might not
      * show up int the Network Browser. */
     afpovertcp = getservbyname("afpovertcp", "tcp");
+	srvloc_hostname = (options->server ? options->server : options->hostname);
     if (afpovertcp != NULL) {
         afp_port = afpovertcp->s_port;
     }
-    if (strlen(options->hostname) > (sizeof(srvloc_url) - strlen(inet_ntoa(dsi->server.sin_addr)) - 21)) {
+    if (strlen(srvloc_hostname) > (sizeof(srvloc_url) - strlen(inet_ntoa(dsi->server.sin_addr)) - 21)) {
         LOG(log_error, logtype_afpd, "DSIConfigInit: Hostname is too long for SRVLOC");
         goto srvloc_reg_err;
     }
     if (dsi->server.sin_port == afp_port) {
-        sprintf(srvloc_url, "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), options->hostname);
+        sprintf(srvloc_url, "afp://%s/?NAME=%s", inet_ntoa(dsi->server.sin_addr), srvloc_hostname);
     }
     else {
-        sprintf(srvloc_url, "afp://%s:%d/?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), options->hostname);
+        sprintf(srvloc_url, "afp://%s:%d/?NAME=%s", inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port), srvloc_hostname);
     }
 
     err = SLPReg(hslp,
