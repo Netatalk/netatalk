@@ -16,7 +16,7 @@
 
 #include "atserv.h"
 
-aep_packet( ap, from, data, len )
+int aep_packet( ap, from, data, len )
     struct atport	*ap;
     struct sockaddr_at	*from;
     char		*data;

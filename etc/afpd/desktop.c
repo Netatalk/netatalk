@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.3 2001-02-23 15:35:37 rufustfirefly Exp $
+ * $Id: desktop.c,v 1.4 2001-05-31 18:48:32 srittau Exp $
  * See COPYRIGHT.
  */
 
@@ -549,6 +549,7 @@ geticon_exit:
       syslog(LOG_INFO, "afp_geticon: %m");
       dsi_readdone(dsi);
       obj->exit(1);
+      return AFP_OK;
 
     } else {
       if ( read( si.sdt_fd, rbuf, rc ) < rc ) {

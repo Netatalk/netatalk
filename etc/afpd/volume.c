@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.6 2001-03-07 15:36:54 rufustfirefly Exp $
+ * $Id: volume.c,v 1.7 2001-05-31 18:48:32 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -14,6 +14,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netatalk/endian.h>
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
@@ -167,7 +170,7 @@ static void volxlate(AFPObj *obj, char *dest, int destlen,
 	destlen -= len;
       }
     } else if (is_var(p, "$f")) {
-      if (q = strchr(pwd->pw_gecos, ','))
+      if ((q = strchr(pwd->pw_gecos, ',')))
 	*q = '\0';
       q = pwd->pw_gecos;
     } else if (is_var(p, "$g")) {

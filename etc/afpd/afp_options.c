@@ -24,6 +24,7 @@
 #include <netdb.h>
 
 #include <atalk/paths.h>
+#include <atalk/util.h>
 #include "globals.h"
 #include "status.h"
 #include "auth.h"
@@ -203,7 +204,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
   if ((c = getoption(buf, "-tickleval")))
     options->tickleval = atoi(c);
 
-  if (c = getoption(buf, "-server_quantum"))
+  if ((c = getoption(buf, "-server_quantum")))
     options->server_quantum = strtoul(c, NULL, 0);
 
 
@@ -225,7 +226,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
   if ((c = getoption(buf, "-nlspath")) && (opt = strdup(c)))
     options->nlspath = opt;
 
-  if (c = getoption(buf, "-ipaddr")) {
+  if ((c = getoption(buf, "-ipaddr"))) {
     struct in_addr inaddr;
     if (inet_aton(c, &inaddr) && (opt = strdup(c))) { 
       if (!gethostbyaddr((const char *) &inaddr, sizeof(inaddr), AF_INET)) 
@@ -236,18 +237,18 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
   if ((c = getoption(buf, "-port")))
     options->port = atoi(c);
-  if (c = getoption(buf, "-ddpaddr"))
+  if ((c = getoption(buf, "-ddpaddr")))
     atalk_aton(c, &options->ddpaddr);
 
   /* do a little checking for the domain name. */
-  if (c = getoption(buf, "-fqdn")) {
+  if ((c = getoption(buf, "-fqdn"))) {
     char *p = strchr(c, ':');
     if (p)
       *p = '\0';
     if (gethostbyname(c)) {
       if (p)
 	*p = ':';
-      if (opt = strdup(c))
+      if ((opt = strdup(c)))
 	options->fqdn = opt;
     }
   }

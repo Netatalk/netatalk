@@ -160,6 +160,7 @@ static void dir_rightrotate(vol, dir)
       dir->d_back = left;
 }
 
+#if 0
 /* recolor after a removal */
 static struct dir *dir_rmrecolor(vol, dir)
      struct vol *vol;
@@ -227,7 +228,10 @@ static struct dir *dir_rmrecolor(vol, dir)
     }
   }
   dir->d_color = DIRTREE_COLOR_BLACK;
+
+  return dir;
 }
+#endif
 
 
 /* remove the node from the tree. this is just like insertion, but

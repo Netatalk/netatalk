@@ -87,7 +87,7 @@ adddir( vol, dir, name, namlen, upath, upathlen, st )
 #endif
 #endif
 
-    if (edir = dirinsert( vol, cdir )) {
+    if ((edir = dirinsert( vol, cdir ))) {
 	    if (edir->d_name) {
 		    if (strcmp(edir->d_name, cdir->d_name)) {
 			    syslog(LOG_INFO, "WARNING: DID conflict for '%s' and '%s'. Are these the same file?", edir->d_name, cdir->d_name);

@@ -553,7 +553,7 @@ int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
     char	*oldname, *newname;
     char        *path, *p, *upath; 
     int		did, rc;
-    int		plen, retvalue;
+    int		plen;
     u_int16_t	vid;
 #if AD_VERSION > AD_VERSION1
     cnid_t      id;

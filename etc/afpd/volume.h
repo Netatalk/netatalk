@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.3 2001-02-28 16:53:24 rufustfirefly Exp $
+ * $Id: volume.h,v 1.4 2001-05-31 18:48:32 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -41,7 +41,7 @@ struct vol {
 #ifdef __svr4__
     int			v_qfd;
 #endif /*__svr4__*/
-    void		*v_gvs;
+    char		*v_gvs;
     u_int32_t		v_time;
     int			v_lastdid;
     u_int16_t		v_vid;

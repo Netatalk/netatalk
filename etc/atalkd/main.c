@@ -55,6 +55,9 @@
 #include "atserv.h"
 #include "main.h"
 
+/* Forward Declarations */
+int ifconfig(char *iname, unsigned long cmd, struct sockaddr_at *sa);
+
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int

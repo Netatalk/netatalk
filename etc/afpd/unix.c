@@ -133,7 +133,7 @@ void utommode( stat, ma )
  * Calculate the mode for a directory using Posix access() calls to
  * estimate permission, a la mdw.
  */
-accessmode( path, ma, dir )
+void accessmode( path, ma, dir )
     char		*path;
     struct maccess	*ma;
     struct dir		*dir;
@@ -159,8 +159,6 @@ accessmode( path, ma, dir )
 	    ma->ma_owner |= AR_UWRITE;
 	}
     }
-
-    return;
 }
 
 int gmem( gid )
@@ -213,7 +211,7 @@ inline int stickydirmode(name, mode, dropbox)
     const mode_t mode;
     const int dropbox;
 {
-  int uid, retval;
+  int retval;
 
 /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
    retval=0;
@@ -238,7 +236,7 @@ inline int stickydirmode(name, mode, dropbox)
       } /* end if not & S_IROTH */
    } else { /* end if S_IWOTH and not S_IROTH */
 #endif DROPKLUDGE
-       if ( retval=chmod( name, DIRBITS | mode ) < 0 )  {
+       if ( (retval=chmod( name, DIRBITS | mode )) < 0 )  {
           syslog( LOG_ERR, "stickydirmode: chmod \"%s\": %m", name );
        }
 #ifdef DROPKLUDGE

@@ -257,7 +257,7 @@ void afp_over_dsi(AFPObj *obj)
     case DSIFUNC_WRITE: /* FPWrite and FPAddIcon */
       function = (u_char) dsi->commands[0];
       if ( obj->options.flags & OPTION_DEBUG ) {
-	printf("(write) command: %d, %ld\n", function, dsi->cmdlen);
+	printf("(write) command: %d, %d\n", function, dsi->cmdlen);
 	bprint(dsi->commands, dsi->cmdlen);
       }
 

@@ -130,6 +130,8 @@ static int send_reply(const AFPObj *obj, const int err)
 
   obj->reply(obj->handle, err);
   obj->exit(0);
+
+  return AFP_OK;
 }
 
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
@@ -303,6 +305,7 @@ int afp_logout(obj, ibuf, ibuflen, rbuf, rbuflen)
 {
   syslog(LOG_INFO, "logout %s", obj->username);
   obj->exit(0);
+  return AFP_OK;
 }
 
 
@@ -472,7 +475,7 @@ int auth_load(const char *path, const char *list)
     if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
     */
     if (stat(name, &st) == 0) {
-      if (mod = uam_load(name, p)) {
+      if ((mod = uam_load(name, p))) {
 	uam_attach(&uam_modules, mod);
 	syslog(LOG_INFO, "uam: %s loaded", p);
       } else {
@@ -483,6 +486,8 @@ int auth_load(const char *path, const char *list)
     }
     p = strtok(NULL, ",");
   }
+
+  return 0;
 }
 
 /* get rid of all of the uams */

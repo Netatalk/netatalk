@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.7 2001-04-10 18:07:06 rufustfirefly Exp $
+ * $Id: uam.c,v 1.8 2001-05-31 18:48:32 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -188,7 +188,7 @@ struct passwd *uam_getname(char *name, const int len)
 
   setpwent();
   while ((pwent = getpwent())) {
-    if (user = strchr(pwent->pw_gecos, ','))
+    if ((user = strchr(pwent->pw_gecos, ',')))
       *user = '\0';
     user = pwent->pw_gecos;
 
@@ -321,7 +321,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
     break;
 
   case UAM_OPTION_PROTOCOL:
-    *buf = obj->proto;
+    *buf = (void *) obj->proto;
     break;
 
   case UAM_OPTION_COOKIE: 
@@ -366,7 +366,7 @@ int uam_afp_read(void *handle, char *buf, int *buflen,
 	goto uam_afp_read_err;
       }
 	
-      while (len = (dsi_write(obj->handle, buf, *buflen))) {
+      while ((len = (dsi_write(obj->handle, buf, *buflen)))) {
 	if ((len = action(handle, buf, len)) < 0) {
 	  dsi_writeflush(obj->handle);
 	  goto uam_afp_read_err;

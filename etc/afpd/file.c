@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.19 2001-04-03 13:20:44 rufustfirefly Exp $
+ * $Id: file.c,v 1.20 2001-05-31 18:48:32 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -807,7 +807,7 @@ int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     struct dir	*dir;
     char	*newname, *path, *p;
     u_int32_t	sdid, ddid;
-    int		plen, err, did, retvalue = AFP_OK;
+    int		plen, err, retvalue = AFP_OK;
     u_int16_t	svid, dvid;
 
 #ifdef DEBUG

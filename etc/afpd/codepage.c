@@ -1,5 +1,5 @@
 /*
- * $Id: codepage.c,v 1.3 2001-02-23 15:35:37 rufustfirefly Exp $
+ * $Id: codepage.c,v 1.4 2001-05-31 18:48:32 srittau Exp $
  *
  * Copyright (c) 2000 Adrian Sun
  * All Rights Reserved. See COPYRIGHT.
@@ -64,7 +64,9 @@ static __inline__ unsigned char *codepage_find(struct codepage *page,
 static int add_code(struct codepage *page, unsigned char *from,
 		    unsigned char *to)
 {
+#if 0
   union codepage_val *ptr;
+#endif
 
   if (page->quantum < 1) /* no quantum given. don't do anything */
     return 1;
@@ -89,6 +91,7 @@ static int add_code(struct codepage *page, unsigned char *from,
     map[*from].hash
   }
 #endif
+  return 0;
 }
 
 static struct codepage *init_codepage(const int quantum)

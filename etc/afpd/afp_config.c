@@ -95,6 +95,8 @@ static int asp_start(AFPConfig *config, AFPConfig *configs,
     afp_over_asp(&config->obj);
     exit (0);
   }
+
+  return 0;
 }
 #endif /* no afp/asp */
 
@@ -115,6 +117,8 @@ static int dsi_start(AFPConfig *config, AFPConfig *configs,
     afp_over_dsi(&config->obj); /* start a session */
     exit (0);
   }
+
+  return 0;
 }
 
 #ifndef NO_DDP
