@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.52 2002-11-26 08:22:38 didg Exp $
+ * $Id: directory.c,v 1.53 2002-12-14 04:01:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -857,15 +857,18 @@ char	**cpath;
         if ( len == 0 ) {
             if ( !extend && movecwd( vol, dir ) < 0 ) {
             	/* it's tricky:
-            	   movecwd failed so dir is not there anymore.
+            	   movecwd failed some of dir path is not there anymore.
             	   FIXME Is it true with other errors?
             	   if path == '\0' ==> the cpath parameter is that dir,
             	   and maybe we are trying to recreate it! So we can't 
             	   fail here.
             	   
             	*/
-    		    if ( dir->d_did == DIRDID_ROOT_PARENT) 
-			        return NULL;    		
+            	if (dir->d_did == DIRDID_ROOT_PARENT) 
+    		        return NULL;
+            	if (errno != ENOENT && errno != ENOTDIR)
+            	    return NULL;    		
+
             	cdir = dir->d_parent;
             	dir_invalidate(vol, dir);
             	if (*path != '\0' || u == NULL) {
@@ -943,8 +946,10 @@ char	**cpath;
                     	/* dir is not valid anymore 
                     	   we delete dir from the cache and abort.
                     	*/
-                    	if ( dir->d_did != DIRDID_ROOT_PARENT) 
+                    	if ( dir->d_did != DIRDID_ROOT_PARENT && 
+                    	      (errno == ENOENT || errno == ENOTDIR)) {
                     	    dir_invalidate(vol, dir);
+                    	}
                         return NULL;
                     }
                     cdir = extenddir( vol, dir, &ret );
@@ -955,6 +960,7 @@ char	**cpath;
             }
 
             if ( cdir == NULL ) {
+
                 if ( len > 0 ) {
                     return NULL;
                 }
@@ -983,6 +989,7 @@ struct dir	*dir;
         return( 0 );
     }
     if ( dir->d_did == DIRDID_ROOT_PARENT) {
+        errno = 0;     /* errno is checked in file.c */
         return( -1 );
     }
 

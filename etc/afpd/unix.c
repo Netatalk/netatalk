@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.38 2002-09-29 15:42:14 didg Exp $
+ * $Id: unix.c,v 1.39 2002-12-14 04:01:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -123,6 +123,7 @@ struct stat		*stat;
 struct maccess	*ma;
 {
 mode_t mode;
+int    ok = 0;
 
     mode = stat->st_mode;
     ma->ma_world = utombits( mode );
@@ -136,11 +137,28 @@ mode_t mode;
     /* ma_user is a union of all permissions */
     ma->ma_user = 0;
     if ( (uuid == stat->st_uid) || (uuid == 0)) {
+        ok = 1;
         ma->ma_user = ma->ma_owner | AR_UOWN;
     }
     if ( gmem( stat->st_gid )) {
+        ok = 1;
         ma->ma_user |= ma->ma_group;
     } 
+    if (ok) {
+       /* We are the directory owner or we are in the group owner.
+        * If we don't have a perm we need to remove it from ma_world.
+        *
+        * eg if perms are rwx--Sr-x and I'm not the user owner but I'm in the group
+        * I DON'T have read and search access on the directory.
+       */
+       if (!(ma->ma_user & AR_UWRITE))
+          ma->ma_world &= ~AR_UWRITE;
+       if (!(ma->ma_user & AR_UREAD))
+          ma->ma_world &= ~AR_UREAD;
+       if (!(ma->ma_user & AR_USEARCH))
+          ma->ma_world &= ~AR_USEARCH;
+    }
+
     ma->ma_user |= ma->ma_world;
 
     /*
@@ -164,6 +182,7 @@ mode_t mode;
  *
  * Note: the previous method, using access(), does not work correctly
  * over NFS.
+ * FIXME what about ACL?
  */
 void accessmode( path, ma, dir, st )
 char		*path;
