@@ -1,11 +1,12 @@
-netatalk (1.5pre6-4cvs) unstable; urgency=medium
+netatalk (1.5pre7-0) unstable; urgency=medium
 
+  * Inofficial CVS release.
   * Non-DSFG free code was removed. Copyright notice was changed accordingly.
   * Use ./configure --sysconfdir instead of --with-config-dir.
   * Upstream package does now install PAM file in the correct directory.
     Removed rule, correcting this from Debian rules file.
 
- -- Sebastian Rittau <srittau@debian.org>  Sat, 23 Jun 2001 15:42:46 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Sat, 23 Jun 2001 16:41:30 +0200
 
 netatalk (1.5pre6-4) unstable; urgency=low
 
