@@ -18,6 +18,13 @@ enum loglevels {
   log_info     = 40,
   log_debug    = 50
 };
+#define LOGLEVEL_STRING_IDENTIFIERS { \
+  "LOG_SEVERE",                       \
+  "LOG_ERROR",                        \
+  "LOG_WARN",                         \
+  "LOG_NOTE",                         \
+  "LOG_INFO",                         \
+  "LOG_DEBUG"}                        
 
 /* this is the enum specifying all availiable logtypes */
 enum logtypes {
@@ -25,6 +32,7 @@ enum logtypes {
   logtype_core,
   logtype_logger,
   logtype_cnid,
+  logtype_afpd,
 
   logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
@@ -35,6 +43,7 @@ enum logtypes {
   "Core",                            \
   "Logger",                          \
   "CNID",                            \
+  "AFPDaemon",                       \
                                      \
   "end_of_list_marker"}              \
 
@@ -67,6 +76,8 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, i
 
 /* Setup the Level and type of log that will be logged to syslog. */
 void syslog_setup(enum loglevels loglevel, enum logtypes logtype, int display_options, int facility);
+
+void setuplog(char *logsource, char *logtype, char *loglevel, char *filename);
 
 /* finish up and close the logs */
 void log_close();
