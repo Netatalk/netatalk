@@ -1,5 +1,5 @@
 /*
- * $Id: aarp.c,v 1.2 2001-06-29 14:14:47 rufustfirefly Exp $
+ * $Id: aarp.c,v 1.3 2002-01-17 06:13:02 srittau Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,7 +18,11 @@
 #include <netinet/arp.h>
 #include <net/if.h>
 
+#ifdef STDC_HEADERS
+#include <strings.h>
+#else
 #include <string.h>
+#endif
 
 #include <netatalk/at.h>
 #include <netatalk/aarp.h>

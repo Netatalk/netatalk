@@ -10,10 +10,11 @@ USE_CRYPTLIB=no
 
 # use gcc (gcc-2.95 on 64-bit sparc)
 CC=		gcc
+LD=		ld
 KCFLAGS=	-D_KERNEL -Wall -Wstrict-prototypes ${KGCCFLAGS} # -mcpu=ultrasparc
 OPTOPTS=	-O
 CSHAREDFLAGS=   -fPIC
-LDSHARED=	gcc
+LDSHARED=	${CC}
 LDSHAREDFLAGS=  -shared
 
 # use Sun CC (for a 64-bit kernel, uncomment " -xarch=v9 -xregs=no%appl ") 
@@ -43,7 +44,7 @@ OBJ= linkage.o tpi.o dlpi.o ioc.o if.o aarp.o ddp.o sock.o rt.o
 HEADERS= if.h ioc.h rt.h sock.h
 EXTRA_DIST= ddp.conf Makefile
 
-INCPATH=	-I../../include -I../netatalk
+INCPATH=	-I../../include -I../netatalk -I../..
 CFLAGS=	${DEFS} ${OPTOPTS} ${INCPATH} ${KCFLAGS} 
 
 ALL=	../../libatalk ../../include ../../bin ../../etc ../../man
@@ -83,7 +84,7 @@ kernel :	FRC
 FRC: 
 
 ddp :	${OBJ}
-	ld -r -o ddp ${OBJ}
+	${LD} -r -o ddp ${OBJ}
 
 linkage.o : linkage.c
 	${CC} ${CFLAGS} -DVERSION=\"`cat ../../VERSION`\" -c linkage.c
