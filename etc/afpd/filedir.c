@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.43 2003-03-15 01:34:35 didg Exp $
+ * $Id: filedir.c,v 1.44 2003-04-14 18:03:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -197,7 +197,7 @@ int		ibuflen, *rbuflen;
     buflen = 0;
     if (S_ISDIR(st->st_mode)) {
         if (dbitmap) {
-            dir = dirsearch_byname(curdir, s_path->u_name);
+            dir = s_path->dir;
             if (!dir) 
                 return AFPERR_NOOBJ;
 
@@ -500,12 +500,8 @@ int		ibuflen, *rbuflen;
     if ( *path->m_name != '\0' ) {
         strcpy(oldname, path->m_name); /* an extra copy for of_rename */
         if (isdir) {
-            /* curdir parent dir, need to move sdir back 
-             * FIXME search by unix name or mac name?
-            */
-            sdir = dirsearch_byname(curdir, path->u_name);
-            if (!sdir)
-                return AFPERR_NOOBJ;           
+            /* curdir parent dir, need to move sdir back */
+            sdir = path->dir;
         }
     }
     else {
@@ -711,9 +707,7 @@ int		ibuflen, *rbuflen;
     isdir = path_isadir(path);
     if ( *path->m_name != '\0' ) {
         if (isdir) {
-            sdir = dirsearch_byname(curdir, path->u_name);
-            if (!sdir)
-                return AFPERR_NOOBJ;           
+            sdir = path->dir;
 	}
         strcpy(oldname, path->m_name); /* an extra copy for of_rename */
     } else {

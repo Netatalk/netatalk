@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.65 2003-03-18 00:20:27 didg Exp $
+ * $Id: directory.c,v 1.66 2003-04-14 18:03:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -125,9 +125,12 @@ u_int32_t	did;
 #ifdef ATACC
 int path_isadir(struct path *o_path)
 {
+    return o_path->dir != NULL;
+#if 0
     return o_path->m_name == '\0' || /* we are in a it */
            !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
            (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
+#endif
 }
 #endif
 
@@ -562,6 +565,7 @@ struct dir	*dir;
 struct path *path;
 {
     path->u_name = mtoupath(vol, path->m_name, utf8_encoding() );
+    path->dir = NULL;
 
     if ( path->u_name == NULL) {
         afp_errno = AFPERR_PARAM;
@@ -579,6 +583,7 @@ struct path *path;
         return( NULL );
     }
 
+    path->dir = dir;
     if ( movecwd( vol, dir ) < 0 ) {
         return( NULL );
     }
@@ -995,6 +1000,7 @@ char	**cpath;
     ret.m_name = path;
     ret.st_errno = 0;
     ret.st_valid = 0;
+    ret.dir = NULL;
     for ( ;; ) {
         if ( len == 0 ) {
             if (movecwd( vol, dir ) < 0 ) {
@@ -1011,6 +1017,7 @@ char	**cpath;
             	    }
             	    ret.m_name = dir->d_m_name;
             	    ret.u_name = dir->d_u_name;
+            	    ret.dir = dir;
             	    return &ret;
             	} else if (afp_errno == AFPERR_NOOBJ) {
                     if ( movecwd( vol, dir->d_parent ) < 0 ) {
@@ -1035,6 +1042,7 @@ char	**cpath;
             }
             if (*path == '\0') {
                ret.u_name = ".";
+               ret.dir = dir;
             }               
             return &ret;
         }

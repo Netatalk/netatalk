@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.11 2003-03-09 19:55:34 didg Exp $
+ * $Id: directory.h,v 1.12 2003-04-14 18:03:49 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -60,11 +60,11 @@ struct dir {
 };
 
 struct path {
-    int         m_type;
-    char	*m_name;             /* mac name */
+    int         m_type;             /* mac name type (long name, unicode */
+    char	*m_name;            /* mac name */
     char        *u_name;            /* unix name */
-
-    int         st_valid;
+    struct dir  *dir;               /* */
+    int         st_valid;           /* does st_errno and st set */
     int         st_errno;
     struct stat st;
 };
@@ -72,9 +72,12 @@ struct path {
 #ifndef ATACC
 static __inline__ int path_isadir(struct path *o_path)
 {
+    return o_path->dir != NULL;
+#if 0
     return o_path->m_name == '\0' || /* we are in a it */
            !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
            (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
+#endif
 }
 #else
 extern int path_isadir(struct path *o_path);
