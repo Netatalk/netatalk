@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.16 2002-03-24 01:23:41 sibaz Exp $
+ * $Id: messages.c,v 1.17 2003-06-02 06:54:23 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -10,6 +10,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <atalk/afp.h>
@@ -42,7 +43,11 @@ void readmessage(void)
 
     i=0;
     /* Construct file name SERVERTEXT/message.[pid] */
-    filename=malloc(sizeof(SERVERTEXT)+15);
+    if ( NULL == (filename=(char*) malloc(sizeof(SERVERTEXT)+15)) ) {
+	LOG(log_error, logtype_afpd, "readmessage: malloc: %s", strerror(errno) );
+        return;
+    }
+
     sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
 #ifdef DEBUG

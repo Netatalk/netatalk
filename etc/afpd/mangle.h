@@ -1,5 +1,5 @@
 /*
- * $Id: mangle.h,v 1.4 2003-03-09 19:55:35 didg Exp $
+ * $Id: mangle.h,v 1.5 2003-06-02 06:54:23 didg Exp $
  *
  */
 
@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <atalk/adouble.h>
 #ifdef CNID_DB

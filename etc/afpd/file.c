@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.92 2003-04-26 16:53:44 didg Exp $
+ * $Id: file.c,v 1.93 2003-06-02 06:54:22 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -58,6 +58,7 @@ char *strchr (), *strrchr ();
 #include "file.h"
 #include "filedir.h"
 #include "globals.h"
+#include "unix.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
