@@ -1,4 +1,5 @@
 /* 
+ * Netatalk 2002 (c)
  * Copyright (C) 1990, 1993 Regents of The University of Michigan
  * All Rights Reserved. See COPYRIGHT
  */
