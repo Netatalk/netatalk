@@ -18,9 +18,6 @@
 #include <atalk/afp.h>
 #include <atalk/util.h>
 
-#include "globals.h"
-#include "config.h"
-#include "auth.h"
 #include "uam_auth.h"
 
 /* --- server uam functions -- */
@@ -33,7 +30,8 @@ struct uam_mod *uam_load(const char *path, const char *name)
   void *module;
 
   if ((module = mod_open(path)) == NULL) {
-    syslog(LOG_ERR, "uam_load(%s): failed to load: %s", name, mod_error());
+    syslog(LOG_ERR, "uam_load(%s): failed to load.", name);
+    syslog(LOG_ERR, dlerror());
     return NULL;
   }
 
@@ -126,6 +124,8 @@ int uam_register(const int type, const char *path, const char *name, ...)
     uam->u.uam_changepw = va_arg(ap, void *);
     break;
   case UAM_SERVER_PRINTAUTH: /* x arguments */
+    uam->u.uam_printer = va_arg(ap, void *);
+    break;
   default:
     break;
   }
@@ -157,6 +157,13 @@ void uam_unregister(const int type, const char *name)
   free(uam);
 }
 
+/* Crap to support uams which call this afpd function */
+int uam_afpserver_option(void *private, const int what, void *option,
+                         int *len)
+{
+	return(0);
+}
+
 /* --- helper functions for plugin uams --- */
 
 struct passwd *uam_getname(char *name, const int len)
@@ -181,7 +188,7 @@ struct passwd *uam_getname(char *name, const int len)
     /* check against both the gecos and the name fields. the user
      * might have just used a different capitalization. */
     if ((strncasecmp(user, name, len) == 0) ||
-	(strncasecmp(pwent->pw_name, name, len) == 0)) {
+        (strncasecmp(pwent->pw_name, name, len) == 0)) {
       strncpy(name, pwent->pw_name, len);
       break;
     }
@@ -192,6 +199,7 @@ struct passwd *uam_getname(char *name, const int len)
   /* os x server doesn't keep anything useful if we do getpwent */
   return pwent ? getpwnam(name) : NULL;
 }
+
 
 int uam_checkuser(const struct passwd *pwd)
 {
@@ -207,162 +215,11 @@ int uam_checkuser(const struct passwd *pwd)
   endusershell();
 
   if (!p) {
-    syslog( LOG_INFO, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
+    syslog( LOG_INFO, "illegal shell %s for %s",pwd->pw_shell,pwd->pw_name);
     return -1;
   }
 
   return 0;
 }
 
-/* afp-specific functions */
-int uam_afpserver_option(void *private, const int what, void *option,
-			 int *len)
-{
-  AFPObj *obj = private;
-  char **buf = (char **) option; /* most of the options are this */
-  int32_t result;
-  int fd;
 
-  if (!obj || !option)
-    return -1;
-
-  switch (what) {
-  case UAM_OPTION_USERNAME:
-    *buf = (void *) obj->username;
-    if (len) 
-      *len = sizeof(obj->username) - 1;
-    break;
-
-  case UAM_OPTION_GUEST:
-    *buf = (void *) obj->options.guest;
-    if (len) 
-      *len = strlen(obj->options.guest);
-    break;
-
-  case UAM_OPTION_PASSWDOPT:
-    if (!len)
-      return -1;
-
-    switch (*len) {
-    case UAM_PASSWD_FILENAME:
-      *buf = (void *) obj->options.passwdfile;
-      *len = strlen(obj->options.passwdfile);
-      break;
-
-    case UAM_PASSWD_MINLENGTH:
-      *((int *) option) = obj->options.passwdminlen;
-      *len = sizeof(obj->options.passwdminlen);
-      break;
-
-    case UAM_PASSWD_MAXFAIL: 
-      *((int *) option) = obj->options.loginmaxfail;
-      *len = sizeof(obj->options.loginmaxfail);
-      break;
-      
-    case UAM_PASSWD_EXPIRETIME: /* not implemented */
-    default:
-      return -1;
-    break;
-    }
-    break;
-
-  case UAM_OPTION_SIGNATURE:
-    *buf = (void *) (((AFPConfig *)obj->config)->signature);
-    if (len)
-      *len = 16;
-    break;
-
-  case UAM_OPTION_RANDNUM: /* returns a random number in 4-byte units. */
-    if (!len || (*len < 0) || (*len % sizeof(result)))
-      return -1;
-
-    /* construct a random number */
-    if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
-      struct timeval tv;
-      struct timezone tz;
-      char *randnum = (char *) option;
-      int i;
-    
-      if (gettimeofday(&tv, &tz) < 0)
-	return -1;
-      srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->handle);
-      for (i = 0; i < *len; i += sizeof(result)) {
-	result = random();
-	memcpy(randnum + i, &result, sizeof(result));
-      }
-    } else {
-      result = read(fd, option, *len);
-      close(fd);
-      if (result < 0)
-	return -1;
-    }
-    break;
-
-  case UAM_OPTION_HOSTNAME:
-    *buf = (void *) obj->options.hostname;
-    if (len) 
-      *len = strlen(obj->options.hostname);
-    break;
-
-  case UAM_OPTION_COOKIE: 
-    /* it's up to the uam to actually store something useful here.
-     * this just passes back a handle to the cookie. the uam side
-     * needs to do something like **buf = (void *) cookie to store
-     * the cookie. */
-    *buf = (void *) &obj->uam_cookie;
-    break;
-
-  default:
-    return -1;
-    break;
-  }
-
-  return 0;
-}
-
-/* if we need to maintain a connection, this is how we do it. 
- * because an action pointer gets passed in, we can stream 
- * DSI connections */
-int uam_afp_read(void *handle, char *buf, int *buflen, 
-		 int (*action)(void *, void *, const int))
-{
-  AFPObj *obj = handle;
-  int len;
-
-  if (!obj)
-    return AFPERR_PARAM;
-
-  switch (obj->proto) {
-    case AFPPROTO_ASP:
-      if ((len = asp_wrtcont(obj->handle, buf, buflen )) < 0) 
-	goto uam_afp_read_err;
-      return action(handle, buf, *buflen);
-      break;
-
-    case AFPPROTO_DSI:
-      len = dsi_writeinit(obj->handle, buf, *buflen);
-      if (!len || ((len = action(handle, buf, len)) < 0)) {
-	dsi_writeflush(obj->handle);
-	goto uam_afp_read_err;
-      }
-	
-      while (len = (dsi_write(obj->handle, buf, *buflen))) {
-	if ((len = action(handle, buf, len)) < 0) {
-	  dsi_writeflush(obj->handle);
-	  goto uam_afp_read_err;
-	}
-      }
-      break;
-  }
-  return 0;
-
-uam_afp_read_err:
-  *buflen = 0;
-  return len;
-}
-
-/* --- papd-specific functions (just placeholders) --- */
-void append(void *pf, char *data, int len)
-{
-	return;
-}

@@ -50,6 +50,7 @@ struct printer {
 #define P_SPOOLED	(1<<1)
 #define P_REGISTERED	(1<<2)
 #define P_ACCOUNT	(1<<3)
-#define P_AUTH		(1<<4)
+#define P_KRB		(1<<4)
+#define P_AUTH		(1<<5)
 
 extern struct printer	*printer;

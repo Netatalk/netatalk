@@ -59,16 +59,16 @@ session( atp, sat )
     u_char		readport;
 
     infile.pf_state = PF_BOT;
-    infile.pf_len = 0;
+    infile.pf_bufsize = 0;
+    infile.pf_datalen = 0;
     infile.pf_buf = 0;
-    infile.pf_cur = 0;
-    infile.pf_end = 0;
+    infile.pf_data = 0;
 
     outfile.pf_state = PF_BOT;
-    outfile.pf_len = 0;
+    outfile.pf_bufsize = 0;
+    outfile.pf_datalen = 0;
     outfile.pf_buf = 0;
-    outfile.pf_cur = 0;
-    outfile.pf_end = 0;
+    outfile.pf_data = 0;
 
     /*
      * Ask for data.
@@ -170,7 +170,7 @@ session( atp, sat )
 		 * If we're in the middle of a file, clean up.
 		 */
 		if (( infile.pf_state & PF_BOT ) ||
-			( PF_BUFSIZ( &infile ) == 0 &&
+			( infile.pf_datalen == 0 &&
 			( infile.pf_state & PF_EOF ))) {
 		    lp_print();
 		} else {
@@ -219,7 +219,7 @@ session( atp, sat )
 	    }
 
 	    for ( i = 0; i < atpb.atp_rresiovcnt; i++ ) {
-		APPEND( &infile,
+		append( &infile,
 			niov[ i ].iov_base + 4, niov[ i ].iov_len - 4 );
 		if (( infile.pf_state & PF_EOF ) == 0 &&
 			((char *)niov[ 0 ].iov_base)[ 2 ] ) {
@@ -262,17 +262,17 @@ session( atp, sat )
 
 	/* send any data that we have */
 	if ( readpending &&
-		( PF_BUFSIZ( &outfile ) || ( outfile.pf_state & PF_EOF ))) {
+		( outfile.pf_datalen || ( outfile.pf_state & PF_EOF ))) {
 	    for ( i = 0; i < quantum; i++ ) {
 		((char *)niov[ i ].iov_base)[ 0 ] = connid;
 		((char *)niov[ i ].iov_base)[ 1 ] = PAP_DATA;
 		((char *)niov[ i ].iov_base)[ 2 ] =
 			((char *)niov[ i ].iov_base)[ 3 ] = 0;
 
-		if ( PF_BUFSIZ( &outfile ) > PAP_MAXDATA  ) {
+		if ( outfile.pf_datalen > PAP_MAXDATA  ) {
 		    cc = PAP_MAXDATA;
 		} else {
-		    cc = PF_BUFSIZ( &outfile );
+		    cc = outfile.pf_datalen;
 		    if ( outfile.pf_state & PF_EOF ) {
 			((char *)niov[ 0 ].iov_base)[ 2 ] = 1;	/* eof */
 			outfile.pf_state = PF_BOT;
@@ -281,9 +281,9 @@ session( atp, sat )
 		}
 
 		niov[ i ].iov_len = 4 + cc;
-		bcopy( outfile.pf_cur, niov[ i ].iov_base + 4, cc );
+		bcopy( outfile.pf_data, niov[ i ].iov_base + 4, cc );
 		CONSUME( &outfile, cc );
-		if ( PF_BUFSIZ( &outfile ) == 0 ) {
+		if ( outfile.pf_datalen == 0 ) {
 		    i++;
 		    break;
 		}

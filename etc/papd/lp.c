@@ -573,6 +573,7 @@ lp_queue( out )
     struct papfile	*out;
 {
     char			buf[ 1024 ], *start, *stop, *p, *q;
+    int				linelength, crlflength;
     static struct papfile	pf;
     int				n, len, s;
 	
@@ -591,19 +592,20 @@ lp_queue( out )
     pf.pf_state = PF_BOT;
 
     while (( n = read( s, buf, sizeof( buf ))) > 0 ) {
-	APPEND( &pf, buf, n );
+	append( &pf, buf, n );
     }
 
     for (;;) {
-	if ( markline( &start, &stop, &pf ) > 0 ) {
+	if ( markline( &pf, &start, &linelength, &crlflength ) > 0 ) {
 	    /* parse */
+	    stop = start + linelength;
 	    for ( p = start; p < stop; p++ ) {
 		if ( *p == ' ' || *p == '\t' ) {
 		    break;
 		}
 	    }
 	    if ( p >= stop ) {
-		consumetomark( start, stop, &pf );
+		CONSUME( &pf , linelength + crlflength);
 		continue;
 	    }
 
@@ -614,15 +616,15 @@ lp_queue( out )
 	    len = p - start;
 	    if ( len == strlen( kw_rank ) &&
 		    strncmp( kw_rank, start, len ) == 0 ) {
-		consumetomark( start, stop, &pf );
+		CONSUME( &pf, linelength + crlflength );
 		continue;
 	    }
 	    if (( len == strlen( kw_active ) &&
 		    strncmp( kw_active, start, len ) == 0 ) ||
 		    isdigit( *start )) {		/* a job line */
-		APPEND( out, tag_rank, strlen( tag_rank ));
-		APPEND( out, start, p - start );
-		APPEND( out, "\n", 1 );
+		append( out, tag_rank, strlen( tag_rank ));
+		append( out, start, p - start );
+		append( out, "\n", 1 );
 
 		for ( ; p < stop; p++ ) {
 		    if ( *p != ' ' && *p != '\t' ) {
@@ -635,13 +637,13 @@ lp_queue( out )
 		    }
 		}
 		if ( p >= stop ) {
-		    APPEND( out, ".\n", 2 );
-		    consumetomark( start, stop, &pf );
+		    append( out, ".\n", 2 );
+		    CONSUME( &pf, linelength + crlflength );
 		    continue;
 		}
-		APPEND( out, tag_owner, strlen( tag_owner ));
-		APPEND( out, q, p - q );
-		APPEND( out, "\n", 1 );
+		append( out, tag_owner, strlen( tag_owner ));
+		append( out, q, p - q );
+		append( out, "\n", 1 );
 
 		for ( ; p < stop; p++ ) {
 		    if ( *p != ' ' && *p != '\t' ) {
@@ -654,13 +656,13 @@ lp_queue( out )
 		    }
 		}
 		if ( p >= stop ) {
-		    APPEND( out, ".\n", 2 );
-		    consumetomark( start, stop, &pf );
+		    append( out, ".\n", 2 );
+		    CONSUME( &pf , linelength + crlflength );
 		    continue;
 		}
-		APPEND( out, tag_job, strlen( tag_job ));
-		APPEND( out, q, p - q );
-		APPEND( out, "\n", 1 );
+		append( out, tag_job, strlen( tag_job ));
+		append( out, q, p - q );
+		append( out, "\n", 1 );
 
 		for ( ; p < stop; p++ ) {
 		    if ( *p != ' ' && *p != '\t' ) {
@@ -683,35 +685,35 @@ lp_queue( out )
 		    }
 		}
 		if ( p <= q ) {
-		    APPEND( out, ".\n", 2 );
-		    consumetomark( start, stop, &pf );
+		    append( out, ".\n", 2 );
+		    CONSUME( &pf, linelength + crlflength );
 		    continue;
 		}
-		APPEND( out, tag_files, strlen( tag_files ));
-		APPEND( out, q, p - q );
-		APPEND( out, "\n", 1 );
+		append( out, tag_files, strlen( tag_files ));
+		append( out, q, p - q );
+		append( out, "\n", 1 );
 
 		for ( ; p < stop; p++ ) {
 		    if ( *p != ' ' && *p != '\t' ) {
 			break;
 		    }
 		}
-		APPEND( out, tag_size, strlen( tag_size ));
-		APPEND( out, p, stop - p );
-		APPEND( out, "\n.\n", 3 );
+		append( out, tag_size, strlen( tag_size ));
+		append( out, p, stop - p );
+		append( out, "\n.\n", 3 );
 
-		consumetomark( start, stop, &pf );
+		CONSUME( &pf, linelength + crlflength );
 		continue;
 	    }
 
 	    /* status */
-	    APPEND( out, tag_status, strlen( tag_status ));
-	    APPEND( out, start, stop - start );
-	    APPEND( out, "\n.\n", 3 );
+	    append( out, tag_status, strlen( tag_status ));
+	    append( out, start, linelength );
+	    append( out, "\n.\n", 3 );
 
-	    consumetomark( start, stop, &pf );
+	    CONSUME( &pf, linelength + crlflength );
 	} else {
-	    APPEND( out, "*\n", 2 );
+	    append( out, "*\n", 2 );
 	    lp_disconn_unix( s );
 	    return( 0 );
 	}

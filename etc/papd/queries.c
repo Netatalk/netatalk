@@ -23,15 +23,17 @@
 #include "comment.h"
 #include "printer.h"
 #include "ppd.h"
+#include "uam_auth.h"
 
 cq_default( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    return( 0 );
 
@@ -39,17 +41,19 @@ cq_default( in, out )
 	    return( CH_MORE );
 	}
 
+	stop = start+linelength;
+
 	if ( comgetflags() == 0 ) {	/* started */
 	    if ( comment->c_end ) {
 		comsetflags( 1 );
 	    } else {
 		compop();
-		consumetomark( start, stop, in );
+		CONSUME( in, linelength + crlflength );
 		return( CH_DONE );
 	    }
 	} else {
 	    /* return default */
-	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
+	    if ( comcmp( start, start+linelength, comment->c_end, 0 ) == 0 ) {
 		for ( p = start; p < stop; p++ ) {
 		    if ( *p == ':' ) {
 			break;
@@ -60,15 +64,14 @@ cq_default( in, out )
 		    p++;
 		}
 
-		*stop = '\n';
-		APPEND( out, p, stop - p + 1 );
+		append( out, p, stop - p + crlflength );
 		compop();
-		consumetomark( start, stop, in );
+		CONSUME( in, linelength + crlflength );
 		return( CH_DONE );
 	    }
 	}
 
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
     }
 }
 
@@ -81,14 +84,15 @@ char	*LoginFailed = "LoginFailed\n";
 cq_k4login( in, out )
     struct papfile	*in, *out;
 {
-    char		*start, *stop, *p;
+    char		*start, *p;
+    int			linelength, crlflength;
     unsigned char	*t;
     struct comment	*comment = compeek();
     KTEXT_ST		tkt;
     AUTH_DAT		ad;
     int			rc, i;
 
-    switch ( markline( &start, &stop, in )) {
+    switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	return( 0 );
 
@@ -102,6 +106,7 @@ cq_k4login( in, out )
     }
 
     bzero( &tkt, sizeof( tkt ));
+    stop = start+linelength;
     for ( i = 0, t = tkt.dat; p < stop; p += 2, t++, i++ ) {
 	*t = ( h2b( (unsigned char)*p ) << 4 ) +
 		h2b( (unsigned char)*( p + 1 ));
@@ -111,9 +116,9 @@ cq_k4login( in, out )
     if (( rc = krb_rd_req( &tkt, "LaserWriter", printer->p_name,
 	    0, &ad, "" )) != RD_AP_OK ) {
 	syslog( LOG_ERR, "cq_k4login: %s", krb_err_txt[ rc ] );
-	APPEND( out, LoginFailed, strlen( LoginFailed ));
+	append( out, LoginFailed, strlen( LoginFailed ));
 	compop();
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
 	return( CH_DONE );
     }
     syslog( LOG_INFO, "cq_k4login: %s.%s@%s", ad.pname, ad.pinst,
@@ -121,9 +126,9 @@ cq_k4login( in, out )
     lp_person( ad.pname );
     lp_host( ad.prealm );
 
-    APPEND( out, LoginOK, strlen( LoginOK ));
+    append( out, LoginOK, strlen( LoginOK ));
     compop();
-    consumetomark( start, stop, in );
+    CONSUME( in, linelength + crlflength);
     return( CH_DONE );
 }
 
@@ -132,11 +137,12 @@ char	*uameth = "UMICHKerberosIV\n*\n";
 cq_uameth( in, out )
     struct papfile	*in, *out;
 {
-    char		*start, *stop;
+    char		*start;
+    int			linelength, crlflength;
     struct comment	*c, *comment = compeek();
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    return( 0 );
 
@@ -145,7 +151,7 @@ cq_uameth( in, out )
 	}
 
 	if ( comgetflags() == 0 ) {	/* start */
-	    if (( printer->p_flags & P_AUTH ) == 0 ) {	/* no kerberos */
+	    if (( printer->p_flags & P_KRB ) == 0 ) {	/* no kerberos */
 		if ( comswitch( queries, cq_default ) < 0 ) {
 		    syslog( LOG_ERR, "cq_uameth: can't find default!" );
 		    exit( 1 );
@@ -155,13 +161,13 @@ cq_uameth( in, out )
 	    comsetflags( 1 );
 	} else {
 	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) { /* end */
-		APPEND( out, uameth, strlen( uameth ));
+		append( out, uameth, strlen( uameth ));
 		compop();
 		return( CH_DONE );
 	    }
 	}
 
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
     }
 }
 #endif KRB
@@ -170,7 +176,7 @@ gq_true( out )
     struct papfile	*out;
 {
     if ( printer->p_flags & P_SPOOLED ) {
-	APPEND( out, "true\n", 5 );
+	append( out, "true\n", 5 );
 	return( 0 );
     } else {
 	return( -1 );
@@ -184,18 +190,18 @@ gq_pagecost( out )
 
     /* check for spooler? XXX */
     if ( printer->p_pagecost_msg != NULL ) {
-	APPEND( out, printer->p_pagecost_msg,
+	append( out, printer->p_pagecost_msg,
 		strlen( printer->p_pagecost_msg ));
     } else if ( printer->p_flags & P_ACCOUNT ) {
 #ifdef ABS_PRINT
 	lp_pagecost();
 #endif ABS_PRINT
 	sprintf( cost, "%d", printer->p_pagecost );
-	APPEND( out, cost, strlen( cost ));
+	append( out, cost, strlen( cost ));
     } else {
 	return( -1 );
     }
-    APPEND( out, "\n", 1 );
+    append( out, "\n", 1 );
     return( 0 );
 }
 
@@ -209,10 +215,52 @@ gq_balance( out )
 	return( -1 );
     }
     sprintf( balance, "$%1.2f\n", printer->p_balance );
-    APPEND( out, balance, strlen( balance ));
+    append( out, balance, strlen( balance ));
     return( 0 );
 }
 #endif ABS_PRINT
+
+
+/*
+ * Handler for RBISpoolerID
+ */
+
+static const char *spoolerid = "(PAPD Spooler) 2.1 (2.1.4 pre-release)\n";
+
+gq_rbispoolerid( out )
+    struct papfile	*out;
+{
+    append( out, spoolerid, strlen( spoolerid ));
+    return(0);
+}
+
+
+
+/*
+ * Handler for RBIUAMListQuery
+ */
+
+static const char *nouams = "*\n";
+
+gq_rbiuamlist( out )
+    struct papfile      *out;
+{
+    char uamnames[128] = "\0";
+
+    if (printer->p_flags & P_AUTH) {
+	if (getuamnames(UAM_SERVER_PRINTAUTH, uamnames) < 0) {
+	    append(out, nouams, strlen(nouams));
+	    return(0);
+	} else {
+	    append(out, uamnames, strlen(uamnames));
+	    return(0);
+	}
+    } else {
+	append(out, nouams, strlen(nouams));
+	return(0);
+    }
+}
+
 
 struct genquery {
     char	*gq_name;
@@ -222,6 +270,8 @@ struct genquery {
 #ifdef notdef
     { "UMICHUserBalance", gq_balance },
 #endif 
+    { "RBISpoolerID",	gq_rbispoolerid },
+    { "RBIUAMListQuery", gq_rbiuamlist },
     { "UMICHListQueue", gq_true },
     { "UMICHDeleteJob", gq_true },
     { NULL },
@@ -231,18 +281,21 @@ cq_query( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p, *q;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
     struct genquery	*gq;
 
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    return( 0 );
 
 	case -1 :
 	    return( CH_MORE );
 	}
+
+	stop = start+linelength;
 
 	if ( comgetflags() == 0 ) {	/* started */
 	    comsetflags( 1 );
@@ -282,12 +335,12 @@ cq_query( in, out )
 	} else {
 	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
 		compop();
-		consumetomark( start, stop, in );
+		CONSUME( in, linelength + crlflength );
 		return( CH_DONE );
 	    }
 	}
 
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
     }
 }
 
@@ -313,14 +366,14 @@ cq_font_answer( start, stop, out )
 	if ( q != buf ) {
 	    *q = '\0';
 
-	    APPEND( out, "/", 1 );
-	    APPEND( out, buf, strlen( buf ));
-	    APPEND( out, ":", 1 );
+	    append( out, "/", 1 );
+	    append( out, buf, strlen( buf ));
+	    append( out, ":", 1 );
 
 	    if (( pfo = ppd_font( buf )) == NULL ) {
-		APPEND( out, "No\n", 3 );
+		append( out, "No\n", 3 );
 	    } else {
-		APPEND( out, "Yes\n", 4 );
+		append( out, "Yes\n", 4 );
 	    }
 	}
     }
@@ -332,16 +385,19 @@ cq_font( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    return( 0 );
 
 	case -1 :
 	    return( CH_MORE );
 	}
+
+	stop = start + linelength;
 
 	if ( comgetflags() == 0 ) {
 	    comsetflags( 1 );
@@ -370,15 +426,15 @@ cq_font( in, out )
 	    } else {
 		comsetflags( 2 );
 		if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
-		    APPEND( out, "*\n", 2 );
+		    append( out, "*\n", 2 );
 		    compop();
-		    consumetomark( start, stop, in );
+		    CONSUME( in, linelength + crlflength );
 		    return( CH_DONE );
 		}
 	    }
 	}
 
-	consumetomark( start, stop, in );
+        CONSUME( in, linelength + crlflength );
     }
 }
 
@@ -386,17 +442,20 @@ cq_feature( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
     struct ppd_feature	*pfe;
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    return( 0 );
 
 	case -1 :
 	    return( CH_MORE );
 	}
+
+	stop = start + linelength;
 
 	if ( comgetflags() == 0 ) {
 	    comsetflags( 1 );
@@ -420,17 +479,17 @@ cq_feature( in, out )
 		return( CH_DONE );
 	    }
 
-	    APPEND( out, pfe->pd_value, strlen( pfe->pd_value ));
-	    APPEND( out, "\r", 1 );
+	    append( out, pfe->pd_value, strlen( pfe->pd_value ));
+	    append( out, "\r", 1 );
 	} else {
 	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
 		compop();
-		consumetomark( start, stop, in );
+		CONSUME( in, linelength + crlflength );
 		return( CH_DONE );
 	    }
 	}
 
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
     }
 }
 
@@ -440,12 +499,13 @@ static const char	*prod = "*Product\n";
 cq_printer( in, out )
     struct papfile	*in, *out;
 {
-    char		*start, *stop, *p;
-    struct comment	*c, *comment = compeek();
+    char		*start, *p;
+    int			linelength, crlflength;
+    struct comment	*comment = compeek();
     struct ppd_feature	*pdpsver, *pdprod;
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    return( 0 );
 
@@ -487,25 +547,25 @@ cq_printer( in, out )
 	    }
 
 	    /* revision */
-	    APPEND( out, p + 1, strlen( p + 1 ));
-	    APPEND( out, "\r", 1 );
+	    append( out, p + 1, strlen( p + 1 ));
+	    append( out, "\r", 1 );
 
 	    /* version */
-	    APPEND( out, pdpsver->pd_value, p - pdpsver->pd_value );
-	    APPEND( out, "\r", 1 );
+	    append( out, pdpsver->pd_value, p - pdpsver->pd_value );
+	    append( out, "\r", 1 );
 
 	    /* product */
-	    APPEND( out, pdprod->pd_value, strlen( pdprod->pd_value ));
-	    APPEND( out, "\r", 1 );
+	    append( out, pdprod->pd_value, strlen( pdprod->pd_value ));
+	    append( out, "\r", 1 );
 	} else {
-	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
+	    if ( comcmp( start, start+linelength, comment->c_end, 0 ) == 0 ) {
 		compop();
-		consumetomark( start, stop, in );
+		CONSUME( in, linelength + crlflength );
 		return( CH_DONE );
 	    }
 	}
 
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
     }
 }
 
@@ -516,15 +576,18 @@ cq_rmjob( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
+    int			linelength, crlflength;
     int			job;
 
-    switch ( markline( &start, &stop, in )) {
+    switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	return( 0 );
 
     case -1 :
 	return( CH_MORE );
     }
+
+    stop = start + linelength;
 
     for ( p = start; p < stop; p++ ) {
 	if ( *p == ' ' || *p == '\t' ) {
@@ -540,22 +603,23 @@ cq_rmjob( in, out )
     *stop = '\0';
     if ( p < stop && ( job = atoi( p )) > 0 ) {
 	lp_rmjob( job );
-	APPEND( out, rmjobok, strlen( rmjobok ));
+	append( out, rmjobok, strlen( rmjobok ));
     } else {
-	APPEND( out, rmjobfailed, strlen( rmjobfailed ));
+	append( out, rmjobfailed, strlen( rmjobfailed ));
     }
 
     compop();
-    consumetomark( start, stop, in );
+    CONSUME( in, linelength + crlflength );
     return( CH_DONE );
 }
 
 cq_listq( in, out )
     struct papfile	*in, *out;
 {
-    char		*start, *stop;
+    char		*start;
+    int			linelength, crlflength;
 
-    switch ( markline( &start, &stop, in )) {
+    switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	return( 0 );
 
@@ -568,9 +632,78 @@ cq_listq( in, out )
     }
 
     compop();
-    consumetomark( start, stop, in );
+    CONSUME( in, linelength + crlflength );
     return( CH_DONE );
 }
+
+
+/*
+ * Handler for RBILogin
+ */
+
+static struct uam_obj *papd_uam = NULL;
+static const char *rbiloginok = "0\r";
+static const char *rbiloginbad = "-1\r";
+static const char *rbiloginerrstr = "%%[Error: SecurityError; \
+SecurityViolation: Unknown user, incorrect password or log on is \
+disabled ]%%\r%%Flushing: rest of job (to end-of-file) will be \
+ignored ]%%\r";
+
+cq_rbilogin( in, out )
+    struct papfile      *in, *out;
+{
+    char        *start, *stop, *p, *begin;
+    int		linelength, crlflength;
+    char        username[9] = "\0";
+    struct comment      *comment = compeek();
+    char	uamtype[20] = "\0";
+
+    for (;;) {
+        switch ( markline( in, &start, &linelength, &crlflength )) {
+        case 0 :
+            return( 0 );
+
+        case -1 :
+            return( CH_MORE );
+        }
+
+	stop = start + linelength;
+
+        if ( comgetflags() == 0 ) { /* first line */
+	    begin = start + strlen(comment->c_begin);
+	    p = begin;
+
+	    while (*p != ' ') {
+		p++;
+	    }
+
+	    strncat(uamtype, begin, p - begin);
+
+	    if ((papd_uam = auth_uamfind(UAM_SERVER_PRINTAUTH,
+				uamtype, strlen(uamtype))) == NULL) {
+		syslog(LOG_INFO, "Could not find uam: %s", uamtype);
+		append(out, rbiloginbad, strlen(rbiloginbad));
+		append(out, rbiloginerrstr, strlen(rbiloginerrstr));
+	    } else {
+                if ( (papd_uam->u.uam_printer(p,stop,username,out)) == 0 ) {
+                    lp_person( username );
+                } else {
+                    append(out, rbiloginbad, strlen( rbiloginbad));
+                    append(out, rbiloginerrstr, strlen(rbiloginerrstr));
+                }
+	    }
+            comsetflags( 1 );
+        } else {
+            if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
+                compop();
+                return( CH_DONE );
+            }
+        }
+
+        CONSUME( in, linelength + crlflength );
+    }
+}
+
 
 /*
  * All queries start with %%?Begin and end with %%?End.  Note that the
@@ -583,6 +716,7 @@ struct comment	queries[] = {
 #endif KRB
     { "%UMICHListQueue", 0,				cq_listq, C_FULL },
     { "%UMICHDeleteJob", 0,				cq_rmjob,	0 },
+    { "%%?BeginQuery: RBILogin ", "%%?EndQuery",	cq_rbilogin,	0 },
     { "%%?BeginQuery",		"%%?EndQuery",		cq_query,	0 },
     { "%%?BeginFeatureQuery",	"%%?EndFeatureQuery",	cq_feature,	0 },
     { "%%?BeginFontQuery",	"%%?EndFontQuery",	cq_font,	0 },

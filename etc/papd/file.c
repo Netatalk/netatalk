@@ -11,56 +11,44 @@
 
 #include "file.h"
 
-markline( start, stop, pf )
-    char		**start, **stop;
+markline( pf, start, linelength, crlflength )
+    char		**start;
+    int			*linelength, *crlflength;
     struct papfile	*pf;
 {
     char		*p;
 
-    if ( PF_BUFSIZ( pf ) == 0 && ( pf->pf_state & PF_EOF )) {
+    if ( pf->pf_datalen == 0 && ( pf->pf_state & PF_EOF )) {
 	return( 0 );
     }
 
+    *start = pf->pf_data;
+
     /* get a line */
-    for ( p = pf->pf_cur; p < pf->pf_end; p++ ) {
-	if ( *p == '\n' || *p == '\r' ) {
+    for ( *linelength=0; *linelength < pf->pf_datalen; (*linelength)++) {
+	if (pf->pf_data[*linelength] == '\n' ||
+	    pf->pf_data[*linelength] == '\r') {
 	    break;
 	}
     }
-    if ( p >= pf->pf_end ) {
+
+    if ( *linelength >= pf->pf_datalen ) {
 	if ( pf->pf_state & PF_EOF ) {
-	    APPEND( pf, "\n", 1 );
-	} else {
+	    append( pf, "\n", 1 );
+	} else if (*linelength < 1024) {
 	    return( -1 );
 	}
     }
 
-    *start = pf->pf_cur;
-    *stop = p;
-    if ( *stop == *start ) {
-	return( 1 );			/* don't return len 0 lines */
-    } else {
-	return( *stop - *start );
-    }
-}
+    p = pf->pf_data + *linelength;
 
-consumetomark( start, stop, pf )
-    char		*start, *stop;
-    struct papfile	*pf;
-{
-    if ( start != pf->pf_cur || pf->pf_cur > stop || stop > pf->pf_end ) {
-	abort();
+    *crlflength=0;
+    while(*crlflength < pf->pf_datalen-*linelength && 
+    (p[*crlflength]=='\r' || p[*crlflength]=='\n')) {
+	(*crlflength)++;
     }
 
-    pf->pf_cur = stop + 1;		/* past the stop char */
-    if ( pf->pf_cur > pf->pf_end ) {
-	abort();
-    }
-    if ( pf->pf_cur == pf->pf_end ) {
-	pf->pf_cur = pf->pf_end = pf->pf_buf;
-    }
-
-    return;
+    return *linelength;
 }
 
 morespace( pf, data, len )
@@ -71,15 +59,14 @@ morespace( pf, data, len )
     char		*nbuf;
     int			nsize;
 
-    if ( pf->pf_cur != pf->pf_buf ) {			/* pull up */
-	bcopy( pf->pf_cur, pf->pf_buf, PF_BUFSIZ( pf ));
-	pf->pf_end = pf->pf_buf + PF_BUFSIZ( pf );
-	pf->pf_cur = pf->pf_buf;
+    if ( pf->pf_data != pf->pf_buf ) {			/* pull up */
+	bcopy( pf->pf_data, pf->pf_buf, pf->pf_datalen);
+	pf->pf_data = pf->pf_buf;
     }
 
-    if ( pf->pf_end + len > pf->pf_buf + pf->pf_len ) {	/* make more space */
-	nsize = (( pf->pf_len + len ) / PF_MORESPACE +
-		(( pf->pf_len + len ) % PF_MORESPACE != 0 )) * PF_MORESPACE;
+    if ( pf->pf_datalen + len > pf->pf_bufsize ) {	/* make more space */
+	nsize = (( pf->pf_bufsize + len ) / PF_MORESPACE +
+		(( pf->pf_bufsize + len ) % PF_MORESPACE != 0 )) * PF_MORESPACE;
 	if ( pf->pf_buf ) {
 	    if (( nbuf = (char *)realloc( pf->pf_buf, nsize )) == 0 ) {
 		exit( 1 );
@@ -89,15 +76,30 @@ morespace( pf, data, len )
 		exit( 1 );
 	    }
 	}
-	pf->pf_len = nsize;
-	pf->pf_end = nbuf + ( pf->pf_end - pf->pf_buf );
-	pf->pf_cur = nbuf + ( pf->pf_cur - pf->pf_buf );
+	pf->pf_bufsize = nsize;
+	pf->pf_data = nbuf + ( pf->pf_data - pf->pf_buf );
 	pf->pf_buf = nbuf;
     }
 
-    bcopy( data, pf->pf_end, len );
-    pf->pf_end += len;
+    bcopy( data, pf->pf_data + pf->pf_datalen, len );
+    pf->pf_datalen += len;
 }
+
+
+append(pf, data, len)
+    struct papfile	*pf;
+    char		*data;
+    int			len;
+{
+    if ((pf->pf_data + pf->pf_datalen + len) >
+	(pf->pf_buf + pf->pf_bufsize)) {
+		morespace(pf, data, len);
+    } else {
+	bcopy(data, pf->pf_data + pf->pf_datalen, len);
+	pf->pf_datalen += len;
+    }
+}
+
 
 spoolerror( out, str )
     struct papfile	*out;
@@ -110,7 +112,7 @@ spoolerror( out, str )
 	str = "Spooler error.";
     }
 
-    APPEND( out, pserr1, strlen( pserr1 ));
-    APPEND( out, str, strlen( str ));
-    APPEND( out, pserr2, strlen( pserr2 ));
+    append( out, pserr1, strlen( pserr1 ));
+    append( out, str, strlen( str ));
+    append( out, pserr2, strlen( pserr2 ));
 }

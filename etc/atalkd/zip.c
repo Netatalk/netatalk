@@ -596,13 +596,13 @@ int zip_packet( ap, from, data, len )
 	    /*
 	     * Ignore ZIP GNIReplys which are either late or unsolicited.
 	     */
-	    syslog( LOG_INFO, "zip gnireply from %u.%u (%s %x)",
+	    syslog( LOG_DEBUG, "zip gnireply from %u.%u (%s %x)",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
 		    iface->i_name, iface->i_flags );
 
 	    if (( iface->i_flags & ( IFACE_CONFIG|IFACE_PHASE1 )) ||
 		    ( iface->i_flags & IFACE_ADDR ) == 0 ) {
-		syslog( LOG_INFO, "zip ignoring gnireply" );
+		syslog( LOG_DEBUG, "zip ignoring gnireply" );
 		return 1;
 	    }
 

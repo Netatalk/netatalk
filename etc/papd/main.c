@@ -51,10 +51,14 @@ struct printer	*printer = NULL;
 char		*version = VERSION;
 static char      *pidfile = _PATH_PAPDLOCK;
 
+char		*uamlist;
+char		*uampath = _PATH_PAPDUAMPATH;
+
 /* this only needs to be used by the server process */
 static void papd_exit(const int i)
 {
   server_unlock(pidfile);
+  auth_unload();
   exit(i);
 }
 
@@ -236,6 +240,12 @@ main( ac, av )
 		    pr->p_zone );
 	    die( 1 );
 	}
+	if ( pr->p_flags & P_AUTH ) {
+		syslog( LOG_INFO, "Authentication enabled: %s", pr->p_name );
+	}
+	else {
+		syslog( LOG_INFO, "Authentication disabled: %s", pr->p_name );
+	}
 	syslog( LOG_INFO, "register %s:%s@%s", pr->p_name, pr->p_type,
 		pr->p_zone );
 	pr->p_flags |= P_REGISTERED;
@@ -257,6 +267,11 @@ main( ac, av )
 	syslog( LOG_ERR, "sigaction: %m" );
 	papd_exit( 1 );
     }
+
+    /*
+     * Load UAMS
+     */
+    auth_load(uampath, uamlist);
 
     /*
      * Begin accepting connections.
@@ -570,6 +585,23 @@ getprinters( cf )
 	    strcpy( pr->p_printer, p );
 	}
 
+	/*
+	 * Do we want authenticated printing?
+	 */
+	if ( pgetflag( "au", &a ) == 1 ) {
+	    pr->p_flags |= P_AUTH;
+	} else {
+	    pr->p_flags &= ~P_AUTH;
+	}
+
+	if ((p = pgetstr("am", &a)) != NULL ) {
+		if ((uamlist = (char *)malloc(strlen(p)+1)) == NULL ) {
+			perror("malloc");
+			exit(1);
+		}
+		strcpy(uamlist, p);
+	}
+
 	if ( pr->p_flags & P_SPOOLED ) {
 	    /*
 	     * Get operator name.
@@ -714,9 +746,9 @@ rprintcap( pr )
 	 * Must Kerberos authenticate?
 	 */
 	if ( pgetflag( "ka" ) == 1 ) {
-	    pr->p_flags |= P_AUTH;
+	    pr->p_flags |= P_KRB;
 	} else {
-	    pr->p_flags &= ~P_AUTH;
+	    pr->p_flags &= ~P_KRB;
 	}
 #endif
 

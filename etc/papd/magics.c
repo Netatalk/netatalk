@@ -14,7 +14,8 @@
 ps( infile, outfile )
     struct papfile	*infile, *outfile;
 {
-    char			*start, *stop;
+    char			*start;
+    int				linelength, crlflength;
     struct comment		*comment;
 
     for (;;) {
@@ -31,7 +32,7 @@ ps( infile, outfile )
 	    }
 
 	} else {
-	    switch ( markline( &start, &stop, infile )) {
+	    switch ( markline( infile, &start, &linelength, &crlflength )) {
 	    case 0 :
 		/* eof on infile */
 		outfile->pf_state |= PF_EOF;
@@ -43,7 +44,7 @@ ps( infile, outfile )
 	    }
 
 	    if ( infile->pf_state & PF_BOT ) {
-		if (( comment = commatch( start, stop, magics )) != NULL ) {
+		if (( comment = commatch( start, start+linelength, magics )) != NULL ) {
 		    compush( comment );
 		    continue;	/* top of for (;;) */
 		}
@@ -57,9 +58,8 @@ ps( infile, outfile )
 	    }
 
 	    /* write to file */
-	    *stop = '\n';
-	    lp_write( start, stop - start + 1 );
-	    consumetomark( start, stop, infile );
+	    lp_write( start, linelength + crlflength );
+	    CONSUME( infile, linelength + crlflength );
 	}
     }
 }
@@ -68,10 +68,11 @@ cm_psquery( in, out )
     struct papfile	*in, *out;
 {
     struct comment	*comment;
-    char		*start, *stop;
+    char		*start;
+    int			linelength, crlflength;
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    /* eof on infile */
 	    out->pf_state |= PF_EOF;
@@ -85,24 +86,25 @@ cm_psquery( in, out )
 	if ( in->pf_state & PF_BOT ) {
 	    in->pf_state &= ~PF_BOT;
 	} else {
-	    if (( comment = commatch( start, stop, queries )) != NULL ) {
+	    if (( comment = commatch( start, start+linelength, queries )) != NULL ) {
 		compush( comment );
 		return( CH_DONE );
 	    }
 	}
 
-	consumetomark( start, stop, in );
+	CONSUME( in, linelength + crlflength );
     }
 }
 
 cm_psadobe( in, out )
     struct papfile	*in, *out;
 {
-    char		*start, *stop;
+    char		*start;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
 
     for (;;) {
-	switch ( markline( &start, &stop, in )) {
+	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    /* eof on infile */
 	    out->pf_state |= PF_EOF;
@@ -120,15 +122,14 @@ cm_psadobe( in, out )
 		spoolerror( out, "Ignoring job." );
 	    }
 	} else {
-	    if (( comment = commatch( start, stop, headers )) != NULL ) {
+	    if (( comment = commatch( start, start + linelength, headers )) != NULL ) {
 		compush( comment );
 		return( CH_DONE );
 	    }
 	}
 
-	*stop = '\n';
-	lp_write( start, stop - start + 1 );
-	consumetomark( start, stop, in );
+	lp_write( start, linelength + crlflength );
+	CONSUME( in, linelength + crlflength );
     }
 }
 
@@ -138,9 +139,10 @@ cm_psswitch( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
 
-    switch ( markline( &start, &stop, in )) {
+    switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	/* eof on infile */
 	out->pf_state |= PF_EOF;
@@ -151,6 +153,7 @@ cm_psswitch( in, out )
 	return( CH_MORE );
     }
 
+    stop = start + linelength;
     for ( p = start; p < stop; p++ ) {
 	if ( *p == ' ' || *p == '\t' ) {
 	    break;

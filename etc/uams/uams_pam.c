@@ -255,20 +255,121 @@ static int pam_changepw(void *obj, char *username,
 }
 
 
+/* Printer ClearTxtUAM login */
+int pam_printer(start, stop, username, out)
+        char    *start, *stop, *username;
+	struct papfile	*out;
+{
+    int PAM_error;
+    char	*data, *p, *q;
+    char	password[PASSWDLEN + 1] = "\0";
+    static const char *loginok = "0\r";
+
+    data = (char *)malloc(stop - start + 1);
+    strncpy(data, start, stop - start + 1);
+
+    /* We are looking for the following format in data:
+     * (username) (password)
+     *
+     * Let's hope username doesn't contain ") ("!
+     */
+
+    /* Parse input for username in () */
+    if ((p = strchr(data, '(' )) == NULL) {
+	syslog(LOG_INFO,"Bad Login ClearTxtUAM: username not found in string");
+	free(data);
+	return(-1);
+    }
+    p++;
+    if ((q = strstr(data, ") (" )) == NULL) {
+	syslog(LOG_INFO,"Bad Login ClearTxtUAM: username not found in string");
+	free(data);
+	return(-1);
+    }
+    strncpy(username, p, q - p);
+
+    /* Parse input for password in next () */
+    p = q + 3;
+    if ((q = strrchr(data, ')' )) == NULL) {
+	syslog(LOG_INFO,"Bad Login ClearTxtUAM: password not found in string");
+	free(data);
+	return(-1);
+    }
+    strncpy(password, p, q - p);
+
+    /* Done copying username and password, clean up */
+    free(data);
+
+    PAM_username = username;
+    PAM_password = password;
+
+    PAM_error = pam_start("netatalk", username, &PAM_conversation,
+                          &pamh);
+    if (PAM_error != PAM_SUCCESS) {
+	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+			username, pam_strerror(pamh, PAM_error));
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+        return(-1);
+    }
+
+    pam_set_item(pamh, PAM_TTY, "papd");
+    pam_set_item(pamh, PAM_RHOST, hostname);
+    PAM_error = pam_authenticate(pamh,0);
+    if (PAM_error != PAM_SUCCESS) {
+	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+			username, pam_strerror(pamh, PAM_error));
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+        return(-1);
+    }      
+
+    PAM_error = pam_acct_mgmt(pamh, 0);
+    if (PAM_error != PAM_SUCCESS) {
+	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+			username, pam_strerror(pamh, PAM_error));
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+        return(-1);
+    }
+
+    PAM_error = pam_open_session(pamh, 0);
+    if (PAM_error != PAM_SUCCESS) {
+	syslog(LOG_INFO, "Bad Login ClearTxtUAM: %s: %s", 
+			username, pam_strerror(pamh, PAM_error));
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+        return(-1);
+    }
+
+    /* Login successful, but no need to hang onto it,
+       so logout immediately */
+    append(out, loginok, strlen(loginok));
+    syslog(LOG_INFO, "Login ClearTxtUAM: %s", username);
+    pam_close_session(pamh, 0);
+    pam_end(pamh, 0);
+    pamh = NULL;
+
+    return(0);
+}
+
+
 static int uam_setup(const char *path)
 {
   if (uam_register(UAM_SERVER_LOGIN, path, "Cleartxt Passwrd", 
 		   pam_login, NULL, pam_logout) < 0)
-    return -1;
+	return -1;
 
   if (uam_register(UAM_SERVER_CHANGEPW, path, "Cleartxt Passwrd",
 		   pam_changepw) < 0) {
-    uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
-    return -1;
+	uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
+	return -1;
   }
 
-  /*uam_register(UAM_SERVER_PRINTAUTH, path, "Cleartxt Passwrd",
-    pam_printer);*/
+  if (uam_register(UAM_SERVER_PRINTAUTH, path, "ClearTxtUAM",
+		   pam_printer) < 0) {
+	return -1;
+  }
 
   return 0;
 }
@@ -277,7 +378,7 @@ static void uam_cleanup(void)
 {
   uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
   uam_unregister(UAM_SERVER_CHANGEPW, "Cleartxt Passwrd");
-  /*uam_unregister(UAM_SERVER_PRINTAUTH, "Cleartxt Passwrd"); */
+  uam_unregister(UAM_SERVER_PRINTAUTH, "ClearTxtUAM");
 }
 
 UAM_MODULE_EXPORT struct uam_export uams_clrtxt = {

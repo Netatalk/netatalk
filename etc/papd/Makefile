@@ -1,13 +1,13 @@
 SRC=    main.c printcap.c session.c file.c comment.c lp.c ppd.c \
-	magics.c headers.c queries.c
+	magics.c headers.c queries.c auth.c uam.c
 OBJ=	main.o printcap.o session.o file.o comment.o lp.o ppd.o \
-	magics.o headers.o queries.o
+	magics.o headers.o queries.o auth.o uam.o
 
 INCPATH = -I../../include ${KRBINCPATH} ${ABSINCPATH}
 CFLAGS=	${DEFS} ${KRBDEFS} ${ABSDEFS} ${OPTOPTS} ${INCPATH}
 TAGSFILE=	tags
-LIBDIRS=	-L../../libatalk ${KRBLIBDIRS} ${ABSLIBDIRS}
-LIBS=	-latalk ${ABSLIBS} ${KRBLIBS} ${ADDLIBS}
+LIBDIRS=	-L../../libatalk ${KRBLIBDIRS} ${ABSLIBDIRS} ${PAMLIBDIRS}
+LIBS=	-latalk ${ABSLIBS} ${KRBLIBS} ${ADDLIBS} ${PAMLIBS} ${LIBSHARED}
 CC=	cc
 INSTALL=	install
 
@@ -18,10 +18,20 @@ all :
 	    KRBINCPATH="-I${KRBDIR}/include"; \
 	    KRBDEFS="-DKRB"; \
 	fi; \
+	if [ x"${PAMDIR}" != x ]; then \
+	    PAMLIBS="-lpam"; \
+	    if [ "${PAMDIR}" != "/usr" ]; then \
+	      PAMLIBDIRS="-L${PAMDIR}/lib"; \
+	      PAMINCPATH="-I${PAMDIR}/include"; \
+	    fi; \
+	    PAMDEFS="-DUSE_PAM"; \
+	fi; \
         ${MAKE} ${MFLAGS} CC="${CC}" ADDLIBS="${ADDLIBS}" DEFS="${DEFS}" \
 	    OPTOPTS="${OPTOPTS}" DESTDIR="${DESTDIR}" \
 	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}" \
 	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
+	    PAMLIBS="$${PAMLIBS}" PAMLIBDIRS="$${PAMLIBDIRS}" \
+	    PAMINCPATH="$${PAMINCPATH}" PAMDEFS="$${PAMDEFS}" \
 	    KRBLIBS="$${KRBLIBS}" KRBLIBDIRS="$${KRBLIBDIRS}" \
 	    KRBINCPATH="$${KRBINCPATH}" KRBDEFS="$${KRBDEFS}" papd showppd
 
@@ -51,12 +61,17 @@ showppd: showppd.c ppd.c
 	${CC} ${CFLAGS} -DSHOWPPD -o showppd showppd.c ppd.c
 
 papd : ${OBJ} ../../libatalk/libatalk.a
-	${CC} ${CFLAGS} ${LDFLAGS} -o papd ${OBJ} ${LIBDIRS} ${LIBS}
+	${CC} ${CFLAGS} ${LDFLAGS_EXPORT} ${PAMINCPATH} ${PAMDEFS} \
+		${LDFLAGS} -o papd ${OBJ} ${LIBDIRS} ${LIBS}
 
 main.o : main.c
 	${CC} ${CFLAGS} -D_PATH_PAPDCONF=\"${ETCDIR}/papd.conf\" \
+	    -D_PATH_PAPDUAMPATH=\"${RESDIR}/uams/\" \
 	    -DVERSION=\"`cat ../../VERSION`\" \
 	    ${CPPFLAGS} -c main.c
+
+queries.o : queries.c
+	${CC} ${CFLAGS} ${PAMDEFS} -c queries.c
 
 install : all
 	${INSTALL} -c papd ${SBINDIR}

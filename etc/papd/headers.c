@@ -14,9 +14,10 @@ ch_title( in, out )
     struct papfile	*in, *out;
 {
     char		*start, *stop, *p, *q, c;
+    int			linelength, crlflength;
     struct comment	*comment = compeek();
 
-    switch ( markline( &start, &stop, in )) {
+    switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
 	return( 0 );
 
@@ -24,6 +25,7 @@ ch_title( in, out )
 	return( CH_MORE );
     }
 
+    stop = start + linelength;
     for ( p = start; p < stop; p++ ) {
 	if ( *p == ':' ) {
 	    break;
@@ -50,10 +52,9 @@ ch_title( in, out )
 	*q = c;
     }
 
-    *stop = '\n';
-    lp_write( start, stop - start + 1 );
+    lp_write( start, linelength + crlflength );
     compop();
-    consumetomark( start, stop, in );
+    CONSUME( in, linelength + crlflength );
     return( CH_DONE );
 }
 
