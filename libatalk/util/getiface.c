@@ -120,7 +120,6 @@ static int getifaces(const int sockfd, char ***list, int *length)
 char **getifacelist()
 {
   char **list;
-  char **new;
   int  length, i, fd;
 
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
@@ -132,10 +131,6 @@ char **getifacelist()
     return NULL;
   }
   close(fd);
-
-  if ((i < length) && 
-      (new = (char **) realloc(list, (i + 1) *  sizeof(char *))))
-    return new;
 
   return list;
 }
