@@ -68,6 +68,19 @@ creation of libraries. It determines if the local platform can support
 shared libraries or if it only supports static libraries.
 
 Netatalk currently requires libtool 1.4 or higher (1.4b for OpenBSD).
+If you are using Tru64 you must apply the following patch to the file
+acinclude.m4 (normally found in /usr/share/libtool/libltdl).
+
+--- acinclude.m4.old	Tue Nov 20 15:30:23 2001
++++ acinclude.m4	Tue Nov 20 15:31:54 2001
+@@ -2226,6 +2226,7 @@
+ 
+ osf3* | osf4* | osf5*)
+   version_type=osf
++  need_lib_prefix=no
+   need_version=no
+   soname_spec='${libname}${release}.so'
+   library_names_spec='${libname}${release}.so$versuffix ${libname}${release}.so $libname.so'
 
 Documentation: http://www.gnu.org/software/libtool/
 Program: (see the GNU mirrors) /gnu/libtool/libtool-1.4.tar.gz
