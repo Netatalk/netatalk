@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.14 2001-12-10 03:51:56 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.15 2001-12-13 02:39:37 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -45,12 +45,19 @@ void cnid_close(void *CNID) {
         lock.l_start = lock.l_len = 0;
         if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
             char **list, **first;
-
+			
+			/* Checkpoint the databases until we can checkpoint no
+			 * more. */
+			rc = txn_checkpoint(db->dbenv, 0, 0, 0);
+			while (rc == DB_INCOMPLETE) {
+				rc = txn_checkpoint(db->dbenv, 0, 0, 0);
+			}
+			
             chdir(db->dbenv->db_log_dir ? db->dbenv->db_log_dir : db->dbenv->db_home);
 #if DB_VERSION_MINOR > 2
-            if ((rc = log_archive(db->dbenv, &list, 0)) != 0) {
+            if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG)) != 0) {
 #else /* DB_VERSION_MINOR < 2 */
-            if ((rc = log_archive(db->dbenv, &list, 0, NULL)) != 0) {
+            if ((rc = log_archive(db->dbenv, &list, DB_ARCH_LOG, NULL)) != 0) {
 #endif /* DB_VERSION_MINOR */
                 syslog(LOG_ERR, "cnid_close: Unable to archive logfiles: %s",
                        db_strerror(rc));

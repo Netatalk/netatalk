@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_open.c,v 1.25 2001-12-10 22:55:13 jmarcus Exp $
+ * $Id: cnid_open.c,v 1.26 2001-12-13 02:39:37 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -263,11 +263,12 @@ void *cnid_open(const char *dir) {
 	 * exists, the database is being recovered, and all other clients will
 	 * sleep until recovery is complete, and this file goes away. */
 	if (!have_lock && db->lockfd > -1 && lock.l_start == 0) {
-		if (stat(recover_file, &rsb) < 0) {
-			if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
-        		DBEXTRAS |= DB_RECOVER;
-				have_lock = 1;
-			}
+		if (stat(recover_file, &rsb) == 0) {
+			(void)remove(recover_file);
+		}
+		if ((rfd = open(recover_file, O_RDWR | O_CREAT, 0666)) > -1) {
+        	DBEXTRAS |= DB_RECOVER;
+			have_lock = 1;
 		}
 	}
 	else if (!have_lock) {
@@ -329,8 +330,16 @@ void *cnid_open(const char *dir) {
 	/* If we have the recovery lock, close the file, remove it, so other
 	 * clients can proceed opening the DB environment. */
 	if (rfd > -1) {
-		close(rfd);
 		(void)remove(recover_file);
+		switch(errno) {
+			case 0:
+			case ENOENT:
+				break;
+			default:
+				syslog(LOG_ERR, "cnid_open: Unable to remove %s: %s",
+					recover_file, strerror(errno));
+		}
+		close(rfd);
 		rfd = -1;
 	}
 
