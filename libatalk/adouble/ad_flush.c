@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.5 2002-10-11 14:18:36 didg Exp $
+ * $Id: ad_flush.c,v 1.6 2003-01-28 15:30:56 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -24,7 +24,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <atalk/adouble.h>
