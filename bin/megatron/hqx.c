@@ -1,3 +1,7 @@
+/*
+ * $Id: hqx.c,v 1.4 2001-03-29 16:40:35 rufustfirefly Exp $
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -49,7 +53,7 @@
 /*	These are field sizes in bytes of various pieces of the
 	binhex header
  */
-#define	VERSION		1
+#define	BVERSION	1
 #define	TCSIZ		8
 #define	FLAGSIZ		2
 #define	DATASIZ		4
@@ -291,7 +295,7 @@ hqx_header_read( fh )
 
     memcpy( fh->name, headerptr, (int)namelen );
     headerptr += namelen;
-    headerptr += VERSION;
+    headerptr += BVERSION;
     memcpy(&fh->finder_info,  headerptr, TCSIZ );
     headerptr += TCSIZ;
     memcpy(&fh->finder_info.fdFlags,  headerptr, FLAGSIZ );
