@@ -294,6 +294,9 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
       ++ibuf;
 
     if (( dhxpwd = uam_getname(buf, i)) == NULL ) {
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: User entered a null value -- %m");
+    /* Log Entry */
 	return AFPERR_PARAM;
     }
 
