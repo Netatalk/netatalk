@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.8 2001-09-06 20:00:59 rufustfirefly Exp $
+ * $Id: uams_pam.c,v 1.9 2001-11-10 18:30:21 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -9,8 +9,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
-#ifdef USE_PAM
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -412,4 +410,8 @@ UAM_MODULE_EXPORT struct uam_export uams_clrtxt = {
   uam_setup, uam_cleanup
 };
 
-#endif /* USE_PAM */
+UAM_MODULE_EXPORT struct uam_export uams_pam = {
+  UAM_MODULE_SERVER,
+  UAM_MODULE_VERSION,
+  uam_setup, uam_cleanup
+};
