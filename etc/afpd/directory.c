@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.64 2003-03-15 01:34:35 didg Exp $
+ * $Id: directory.c,v 1.65 2003-03-18 00:20:27 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -168,28 +168,31 @@ struct dir *
 u_int32_t	did;
 {
 #ifdef CNID_DB
-    struct dir *ret;
-    char		*upath;
-    u_int32_t	id;
-    static char		path[MAXPATHLEN + 1];
-    int len;
-    int pathlen;
-    char *ptr;
-    static char buffer[12 + MAXPATHLEN + 1];
-    int buflen = 12 + MAXPATHLEN + 1;
-    char *mpath;
+    struct dir   *ret;
+    char	 *upath;
+    u_int32_t	 id;
+    static char  path[MAXPATHLEN + 1];
+    size_t len,  pathlen;
+    char         *ptr;
+    static char  buffer[12 + MAXPATHLEN + 1];
+    int          buflen = 12 + MAXPATHLEN + 1;
+    char         *mpath;
+    int          utf8;
+    size_t       maxpath;
     
     ret = dirsearch(vol, did);
     if (ret != NULL || afp_errno == AFPERR_PARAM)
         return ret;
 
+    utf8 = utf8_encoding();
+    maxpath = (utf8)?MAXPATHLEN -7:255;
     id = did;
     if (NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, buflen)) ) {
         afp_errno = AFPERR_NOOBJ;
         return NULL;
     }
     ptr = path + MAXPATHLEN;
-    if (NULL == ( mpath = utompath(vol, upath, utf8_encoding()) ) ) {
+    if (NULL == ( mpath = utompath(vol, upath, utf8) ) ) {
         afp_errno = AFPERR_NOOBJ;
         return NULL;
     }
@@ -205,7 +208,7 @@ u_int32_t	did;
         }
         if ( NULL == (upath = cnid_resolve(vol->v_db, &id, buffer, buflen))
              ||
-             NULL == (mpath = utompath(vol, upath, utf8_encoding()))
+             NULL == (mpath = utompath(vol, upath, utf8))
         ) {
             afp_errno = AFPERR_NOOBJ;
             return NULL;
@@ -213,18 +216,35 @@ u_int32_t	did;
 
         len = strlen(mpath) + 1;
         pathlen += len;
-        if (pathlen > 255) {
+        if (pathlen > maxpath) {
             afp_errno = AFPERR_PARAM;
             return NULL;
         }
         strcpy(ptr - len, mpath);
         ptr -= len;
     }
-    /* fill the cache */
-    ptr--;
-    *ptr = (unsigned char)pathlen;
-    ptr--;
-    *ptr = 2;
+    
+    /* fill the cache, another place where we know about the path type */
+    if (utf8) {
+        u_int16_t temp16;
+        u_int32_t temp;
+
+        ptr -= 2; 
+        temp16 = htons(pathlen);
+        memcpy(ptr, &temp16, sizeof(temp16));
+
+        temp = htonl(kTextEncodingUTF8);
+        ptr -= 4; 
+        memcpy(ptr, &temp, sizeof(temp));
+        ptr--;
+        *ptr = 3;
+    }
+    else {
+        ptr--;
+        *ptr = (unsigned char)pathlen;
+        ptr--;
+        *ptr = 2;
+    }
     /* cname is not efficient */
     if (cname( vol, ret, &ptr ) == NULL )
         return NULL;
@@ -491,15 +511,15 @@ static void dir_invalidate( vol, dir )
 const struct vol *vol;
 struct dir *dir;
 {
-	if (curdir == dir) {
-	    /* v_root can't be deleted */
-		if (movecwd(vol, vol->v_root) < 0) {
+    if (curdir == dir) {
+        /* v_root can't be deleted */
+        if (movecwd(vol, vol->v_root) < 0) {
             LOG(log_error, logtype_afpd, "cname can't chdir to : %s", vol->v_root);
         }
-	}
-	/* FIXME */
+    }
+    /* FIXME */
     dirchildremove(dir->d_parent, dir);
-	dir_remove( vol, dir );
+    dir_remove( vol, dir );
 }
 
 /* ------------------------------------ */
@@ -992,8 +1012,24 @@ char	**cpath;
             	    ret.m_name = dir->d_m_name;
             	    ret.u_name = dir->d_u_name;
             	    return &ret;
-            	}
+            	} else if (afp_errno == AFPERR_NOOBJ) {
+                    if ( movecwd( vol, dir->d_parent ) < 0 ) {
+            	         return NULL;    		
+            	    }
+            	    strcpy(path, dir->d_m_name);
+            	    if (dir->d_m_name == dir->d_u_name) {
+            	        ret.u_name = path;
+            	    }
+            	    else {
+            	        size_t tp = strlen(path)+1;
 
+            	        strcpy(path +tp, dir->d_u_name);
+            	        ret.u_name =  path +tp;
+            	        
+            	    }
+            	    dir_invalidate(vol, dir);
+            	    return &ret;
+            	}
             	dir_invalidate(vol, dir);
             	return NULL;
             }
@@ -1211,8 +1247,8 @@ int getdirparams(const struct vol *vol,
         case DIRPBIT_ATTR :
             if ( isad ) {
                 ad_getattr(&ad, &ashort);
-            } else if (*upath == '.' && strcmp(upath, ".") &&
-                       strcmp(upath, "..")) {
+            } else if (*dir->d_u_name == '.' && strcmp(dir->d_u_name, ".") 
+                        && strcmp(dir->d_u_name, "..")) {
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
@@ -1263,8 +1299,8 @@ int getdirparams(const struct vol *vol,
                 memcpy(data + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
 
                 /* dot files are by default invisible */
-                if (*upath == '.' && strcmp(upath, ".") &&
-                        strcmp(upath, "..")) {
+                if (*dir->d_u_name  == '.' && strcmp(dir->d_u_name , ".") &&
+                        strcmp(dir->d_u_name , "..")) {
                     ashort = htons(FINDERINFO_INVISIBLE);
                     memcpy(data + FINDERINFO_FRFLAGOFF,
                            &ashort, sizeof(ashort));
@@ -1784,7 +1820,11 @@ int		ibuflen, *rbuflen;
     if (NULL == ( dir = dirlookup( vol, did )) ) {
         return afp_errno; /* was AFPERR_NOOBJ */
     }
-
+    /* for concurrent access we need to be sure we are not in the
+     * folder we want to create...
+    */
+    movecwd(vol, dir);
+    
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return get_afp_errno(AFPERR_PARAM);
     }
