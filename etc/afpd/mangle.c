@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.6 2002-06-03 22:55:27 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.7 2002-06-09 07:15:44 jmarcus Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -23,8 +23,6 @@ demangle(const struct vol *vol, char *mfilename) {
 	int ext_len = 0;
 	char *mangle;
 
-	LOG(log_error, logtype_default, "demangle: Calling demangle on %s", mfilename);
-
 	/* Is this really a mangled file? */
 	mangle = strstr(mfilename, MANGLE_CHAR);
 	if (!mangle) {
@@ -40,7 +38,6 @@ demangle(const struct vol *vol, char *mfilename) {
 	    return mfilename;
 	}
 
-	LOG(log_error, logtype_default, "demangle: Looking up %s in the mangle database", mfilename);
 	filename = cnid_mangle_get(vol->v_db, mfilename);
 
 	/* No unmangled filename was found. */
@@ -49,7 +46,6 @@ demangle(const struct vol *vol, char *mfilename) {
 	    return mfilename;
 	}
 
-	LOG(log_error, logtype_default, "demangle: Returning %s as the unmangled filename for %s", filename, mfilename);
 	return filename;
 }
 
@@ -87,7 +83,6 @@ mangle(const struct vol *vol, char *filename) {
 		strcat(m, ext);
     	}
 
-	LOG(log_error, logtype_default, "mangle: Looking up %s in the mangle database", m);
 	tf = cnid_mangle_get(vol->v_db, m);
 	if (tf == NULL || (strcmp(tf, filename)) == 0) {
 	    break;
@@ -100,12 +95,10 @@ mangle(const struct vol *vol, char *filename) {
 	}
     }
 
-    LOG(log_error, logtype_default, "mangle: Adding %s to the mangle database as the mangled filename for %s", m, filename);
     if (cnid_mangle_add(vol->v_db, m, filename) < 0) {
 	return filename;
     }
 
-    LOG(log_error, logtype_default, "mangle: Returning %s", m);
     return m;
 }
 #endif /* FILE_MANGLING */
