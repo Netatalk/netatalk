@@ -16,6 +16,14 @@ DEBVERSION=`cat "$debiandir/VERSION"`
 DISTDIR="netatalk-$VERSION"
 DISTTGZ="netatalk_$DEBVERSION.orig.tar.gz"
 
+if test ! -f INSTALL; then
+  if test -e INSTALL; then
+    echo "INSTALL is in the way, please move it away"
+    exit 1
+  fi
+  touch INSTALL
+fi
+
 if test ! -x configure; then
   ./autogen.sh
 fi
@@ -46,4 +54,6 @@ rm    "$DISTDIR/debian/VERSION"
 
 cd "$DISTDIR" && dpkg-buildpackage -rfakeroot
 
-cd .. && rm -r "$DISTDIR"
+cd ..
+rm -r "$DISTDIR"
+rm INSTALL
