@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.89 2003-04-09 06:06:34 didg Exp $
+ * $Id: file.c,v 1.90 2003-04-20 06:13:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1053,7 +1053,11 @@ u_int32_t   hint;
         memcpy(&len16, ibuf, sizeof(len16));
         ibuf += sizeof(len16);
         plen = ntohs(len16);
+        
         if (plen) {
+            if (plen > AFPOBJ_TMPSIZ) {
+            	return -1;
+            }
             strncpy( newname, ibuf, plen );
             newname[ plen ] = '\0';
             if (strlen(newname) != plen) {

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.68 2003-04-16 06:55:44 didg Exp $
+ * $Id: directory.c,v 1.69 2003-04-20 06:13:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -990,7 +990,6 @@ char	**cpath;
     default:
         afp_errno = AFPERR_PARAM;
         return( NULL );
-    
     }
     *cpath += len + size;
     *path = '\0';
@@ -1061,6 +1060,10 @@ char	**cpath;
         p = path;
         while ( *data != sep && len > 0 ) {
             *p++ = *data++;
+            if (p > &path[ MAXPATHLEN]) {
+                afp_errno = AFPERR_PARAM;
+                return( NULL );
+            }
             len--;
         }
 
