@@ -34,7 +34,7 @@ cq_default( in, out )
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
 
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -91,7 +91,7 @@ cq_k4login( in, out )
     char		*start, *p;
     int			linelength, crlflength;
     unsigned char	*t;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
     KTEXT_ST		tkt;
     AUTH_DAT		ad;
     int			rc, i;
@@ -143,7 +143,7 @@ cq_uameth( in, out )
 {
     char		*start;
     int			linelength, crlflength;
-    struct comment	*c, *comment = compeek();
+    struct papd_comment	*c, *comment = compeek();
 
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -286,7 +286,7 @@ cq_query( in, out )
 {
     char		*start, *stop, *p, *q;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
     struct genquery	*gq;
 
 
@@ -390,7 +390,7 @@ cq_font( in, out )
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
 
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -447,7 +447,7 @@ cq_feature( in, out )
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
     struct ppd_feature	*pfe;
 
     for (;;) {
@@ -505,7 +505,7 @@ cq_printer( in, out )
 {
     char		*start, *p;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
     struct ppd_feature	*pdpsver, *pdprod;
 
     for (;;) {
@@ -656,11 +656,11 @@ ignored ]%%\r";
 cq_rbilogin( in, out )
     struct papfile      *in, *out;
 {
-    char        *start, *stop, *p, *begin;
-    int		linelength, crlflength;
-    char        username[9] = "\0";
-    struct comment      *comment = compeek();
-    char	uamtype[20] = "\0";
+    char        	*start, *stop, *p, *begin;
+    int			linelength, crlflength;
+    char        	username[9] = "\0";
+    struct papd_comment	*comment = compeek();
+    char		uamtype[20] = "\0";
 
     for (;;) {
         switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -713,7 +713,7 @@ cq_rbilogin( in, out )
  * All queries start with %%?Begin and end with %%?End.  Note that the
  * "Begin"/"End" general queries have to be last.
  */
-struct comment	queries[] = {
+struct papd_comment	queries[] = {
 #ifdef KRB
     { "%%Login: UMICHKerberosIV", 0,			cq_k4login,	0 },
     { "%%?BeginUAMethodsQuery",	"%%?EndUAMethodsQuery:", cq_uameth, C_FULL },

@@ -3,7 +3,7 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
-struct comment {
+struct papd_comment {
     char		*c_begin;
     char		*c_end;
     int			(*c_handler)();
@@ -15,17 +15,17 @@ struct comment {
 #define CH_ERROR	-1
 
 struct comstate {
-    struct comment	*cs_comment;
+    struct papd_comment	*cs_comment;
     struct comstate	*cs_prev;
     int			cs_flags;
 };
 
-extern struct comment	*commatch();
-extern struct comstate	*comstate;
-extern struct comment	magics[];
-extern struct comment	queries[];
-extern struct comment	headers[];
-extern char		*comcont;
+extern struct papd_comment	*commatch();
+extern struct comstate		*comstate;
+extern struct papd_comment	magics[];
+extern struct papd_comment	queries[];
+extern struct papd_comment	headers[];
+extern char			*comcont;
 
 #define compeek()	(comstate==NULL?NULL:(comstate->cs_comment))
 #define comgetflags()	(comstate->cs_flags)

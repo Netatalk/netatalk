@@ -21,7 +21,7 @@ ps( infile, outfile, sat )
 {
     char			*start;
     int				linelength, crlflength;
-    struct comment		*comment;
+    struct papd_comment		*comment;
 
     for (;;) {
 	if ( comment = compeek()) {
@@ -73,7 +73,7 @@ cm_psquery( in, out, sat )
     struct papfile	*in, *out;
     struct sockaddr_at	*sat;
 {
-    struct comment	*comment;
+    struct papd_comment	*comment;
     char		*start;
     int			linelength, crlflength;
 
@@ -148,7 +148,7 @@ cm_psswitch( in, out, sat )
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
@@ -188,7 +188,7 @@ cm_psswitch( in, out, sat )
     return( CH_DONE );
 }
 
-struct comment	magics[] = {
+struct papd_comment	magics[] = {
     { "%!PS-Adobe-3.0 Query",	0,			cm_psquery, C_FULL },
     { "%!PS-Adobe-3.0",		0,			cm_psadobe, C_FULL },
     { "%!PS-Adobe-",		0,			cm_psswitch,	0 },

@@ -19,7 +19,7 @@ ch_title( in, out )
 {
     char		*start, *stop, *p, *q, c;
     int			linelength, crlflength;
-    struct comment	*comment = compeek();
+    struct papd_comment	*comment = compeek();
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
@@ -65,7 +65,7 @@ ch_title( in, out )
 /*
  * "Header" comments.
  */
-struct comment	headers[] = {
+struct papd_comment	headers[] = {
     { "%%Title:",			0,		ch_title,	0 },
     { 0 },
 };

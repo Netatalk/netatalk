@@ -29,7 +29,7 @@ compop()
 }
 
 compush( comment )
-    struct comment	*comment;
+    struct papd_comment	*comment;
 {
     struct comstate	*cs;
 
@@ -46,10 +46,10 @@ compush( comment )
 }
 
 comswitch( comments, handler )
-    struct comment	*comments;
+    struct papd_comment	*comments;
     int			(*handler)();
 {
-    struct comment	*c, *comment = NULL;
+    struct papd_comment	*c, *comment = NULL;
 
     for ( c = comments; c->c_begin; c++ ) {
 	if ( c->c_handler == handler ) {
@@ -86,12 +86,12 @@ comcmp( start, stop, str, how )
     return( 1 );
 }
 
-    struct comment *
+    struct papd_comment *
 commatch( start, stop, comments )
     char		*start, *stop;
-    struct comment	comments[];
+    struct papd_comment	comments[];
 {
-    struct comment	*comment;
+    struct papd_comment	*comment;
 
     for ( comment = comments; comment->c_begin; comment++ ) {
 	if ( comcmp( start, stop, comment->c_begin, comment->c_flags ) == 0 ) {
