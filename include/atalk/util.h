@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.6 2001-12-10 20:15:13 srittau Exp $
+ * $Id: util.h,v 1.7 2002-02-01 07:03:49 morgana Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -39,7 +39,12 @@ extern void mod_close    __P((void *));
 #define RTLD_NOW 1
 #endif /* ! RTLD_NOW */
 
+/* NetBSD doesn't like RTLD_NOW for dlopen (it fails). Use RTLD_LAZY. */
+#ifdef __NetBSD__
+#define mod_open(a)      dlopen(a, RTLD_LAZY)
+#else /* ! __NetBSD__ */
 #define mod_open(a)      dlopen(a, RTLD_NOW)
+#endif /* __NetBSD__ */
 
 #ifndef DLSYM_PREPEND_UNDERSCORE
 #define mod_symbol(a, b) dlsym(a, b)
