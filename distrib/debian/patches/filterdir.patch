@@ -1,38 +1,22 @@
---- netatalk.cvs/etc/psf/Makefile.am	2001/02/20 20:37:10	1.7
-+++ netatalk.debian/etc/psf/Makefile.am	2001/05/01 16:18:35
-@@ -1,7 +1,13 @@
- # Makefile.am for etc/psf/
+--- netatalk.cvs/etc/psf/Makefile.am	Sat May  5 18:54:03 2001
++++ netatalk.debian/etc/psf/Makefile.am	Sat May  5 18:56:09 2001
+@@ -2,7 +2,10 @@
  
-+filterdir = $(libdir)/atalk/filters
-+datadir = @datadir@/netatalk
-+
  sbin_PROGRAMS = psf psa
  
-+data_DATA = pagecount.ps
-+filter_SCRIPTS = etc2ps.sh
++filterdir = $(libdir)/atalk/filters
 +
+ pkgdata_DATA = pagecount.ps
++filter_SCRIPTS = etc2ps.sh
+ 
  psf_SOURCES = psf.c
  psa_SOURCES = psa.c
- 
-@@ -10,9 +16,9 @@
- 	-D_PATH_PSORDER=\"$(bindir)/psorder\" \
- 	-D_PATH_PSA=\"$(sbindir)/psa\" \
- 	-D_PATH_PSFILTER=\"$(bindir)/etc2ps.sh\" \
--	-D_PATH_PAGECOUNT=\"$(CONFIG_DIR)/pagecount.ps\"
-+	-D_PATH_PAGECOUNT=\"$(datadir)/pagecount.ps\"
- 
--EXTRA_DIST = etc2ps.sh
-+EXTRA_DIST = etc2ps.sh pagecount.ps
- 
- # declare links
- psf_LINKS = ofpap ifpap tfpap ifpaprev tfpaprev ofwpap ifwpap \
-@@ -24,9 +30,11 @@
+@@ -26,9 +29,11 @@
  # install sections for links
  #
  
--install-data-local:
 +# srittau: We do some dirty hard-coding for Debian to maintain compability.
-+install-exec-local:
+ install-exec-local:
 +	mkdir -p $(DESTDIR)$(filterdir)
  	@list='$(psf_LINKS)'; for l in $$list; do \
 -		$(LN_S) -f psf $(DESTDIR)$(sbindir)/$$l;  \
