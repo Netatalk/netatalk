@@ -1,5 +1,5 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.10 2003-01-04 21:41:48 jmarcus Exp $)
+($Id: FAQ,v 1.11 2003-01-04 22:14:03 jmarcus Exp $)
 
 -----------------------------------------------------------------------------
 
@@ -213,9 +213,7 @@ A:  Compile with the --with-did=last flag set. This activates a different
       --with-bdb=PATH         specify path to Berkeley DB installation
       --with-did=[scheme]     set DID scheme (cnid,last) 
     
-    (For more information on CNID, see the README.cnid file [may not exist yet], 
-    into which I just copied wholesale Joe's comments on what he did with 
-    cnid and lastdid.)
+    (For more information on CNID, see the README.cnid file.)
     
     --with-did=last reverted things back to the old 1.4b2 directory ID
     calculation algorithm.  This also solved the problem of the syslog
