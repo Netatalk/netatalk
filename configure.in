@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.113 2001-10-10 20:19:18 jmarcus Exp $
+dnl $Id: configure.in,v 1.114 2001-10-11 19:10:15 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -353,7 +353,7 @@ if test "x$PAM_MSG" = "xyes"; then
 	if test "x$ac_cv_header_security_pam_appl_h" = "xyes" ; then
         
 		AC_CHECK_LIB(pam, pam_set_item, 
-				[use_pam_so=yes; compile_pam=yes; AC_DEFINE(USE_PAM)],
+				[PAPD_LIBS="$PAPD_LIBS -lpam"; AFPD_LIBS="$AFPD_LIBS -lpam"; use_pam_so=yes; compile_pam=yes; AC_DEFINE(USE_PAM)],
 			[use_pam_so=no; compile_pam=no]
 		)
 	fi
