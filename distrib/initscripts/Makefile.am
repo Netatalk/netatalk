@@ -15,16 +15,16 @@ pkgconfdir = @PKGCONFDIR@
 	    <$< >$@
 
 GENERATED_FILES = \
-	rc.atalk.redhat.tmpl		\
-	rc.atalk.tru64.tmpl		\
-	rc.atalk.bsd.tmpl		\
-	rc.atalk.suse.tmpl
+	rc.atalk.redhat		\
+	rc.atalk.tru64		\
+	rc.atalk.bsd		\
+	rc.atalk.suse
 TEMPLATES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
 
-CLEANFILES = rc.atalk.bsd rc.atalk.redhat rc.atalk.suse rc.atalk.tru64 atalk
+CLEANFILES = $(GENERATED_FILES)
 EXTRA_DIST = $(TEMPLATES) rc.atalk.cobalt rc.atalk.sysv
 
-install-data-hook: $(TEMPLATES)
+install-data-hook: $(GENERATED_FILES)
 
 #
 # checking for "redhat" style sysv scripts:
