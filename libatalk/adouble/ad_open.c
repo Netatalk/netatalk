@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.9 2001-07-31 19:52:25 srittau Exp $
+ * $Id: ad_open.c,v 1.10 2001-08-15 02:17:06 srittau Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -461,7 +461,7 @@ static __inline__ int ad_header_read(struct adouble *ad)
     /* fix up broken dates */
     if (ad->ad_version == AD_VERSION1) {
       struct stat st;
-      int32_t aint;
+      u_int32_t aint;
       
       if (fstat(ad->ad_hf.adf_fd, &st) < 0) {
 	return 1; /* fail silently */
