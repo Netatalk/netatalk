@@ -30,8 +30,7 @@ desired features (in no particular order):
 		3) change lookup algorithms where appropriate. 
 	ability to interact with hfs desktop databases (either by
 	        changing hfs or changing afpd).
-        a way to find out not only who is logged in, but where they're logged
-                in from.  utmp/wtmp support would be best
+        utmp/wtmp support
 		
     papd: implementing uams would be a good idea
 	 
