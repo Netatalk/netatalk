@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.4 2002-03-24 17:43:39 jmarcus Exp $
+ * $Id: directory.h,v 1.5 2002-07-15 14:19:09 srittau Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -78,7 +78,11 @@ struct dir {
 
 /* setgid directories */
 #ifndef DIRBITS
-#define DIRBITS S_ISGID
+# ifdef AFS
+#  define DIRBITS 0
+# else /* AFS */
+#  define DIRBITS S_ISGID
+# endif /* AFS */
 #endif /* DIRBITS */
 
 #define DIRF_FSMASK	(3<<0)
