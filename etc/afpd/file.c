@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.66 2002-10-13 16:12:31 didg Exp $
+ * $Id: file.c,v 1.67 2002-10-13 21:30:55 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -980,7 +980,7 @@ size_t      plen = 0;
 u_int16_t   len16;
 u_int32_t   hint;
 
-    if ( type != 2 || (afp_version >= 30 && type != 3) ) {
+    if ( type != 2 && !(afp_version >= 30 && type == 3) ) {
         return -1;
     }
     ibuf++;
