@@ -8,6 +8,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <sys/syslog.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -32,7 +33,8 @@
 #include "zip.h"
 #include "list.h"
 #include "atserv.h"
-
+#include "route.h"
+#include "main.h"
 
 void rtmp_delzonemap(rtmp)
     struct rtmptab *rtmp;
@@ -431,7 +433,7 @@ int rtmp_packet( ap, from, data, len )
 	    syslog( LOG_INFO, "rtmp_packet no data header" );
 	    return 1;
 	}
-	bcopy( data, &rh, sizeof( struct rtmprdhdr ));
+	memcpy( &rh, data, sizeof( struct rtmprdhdr ));
 	data += sizeof( struct rtmprdhdr );
 
 	/* check rh address against from address */
@@ -484,7 +486,7 @@ int rtmp_packet( ap, from, data, len )
 	    syslog( LOG_INFO, "rtmp_packet missing first tuple" );
 	    return 1;
 	}
-	bcopy( data, &rt, SZ_RTMPTUPLE );
+	memcpy( &rt, data, SZ_RTMPTUPLE );
 	data += SZ_RTMPTUPLE;
 
 	if ( rt.rt_net == 0 ) {
@@ -502,14 +504,14 @@ int rtmp_packet( ap, from, data, len )
 		syslog( LOG_INFO, "rtmp_packet missing second tuple" );
 		return 1;
 	    }
-	    bcopy( data, &rt, SZ_RTMPTUPLE );
+	    memcpy( &rt, data, SZ_RTMPTUPLE );
 	    data += SZ_RTMPTUPLE;
 	} else if ( rt.rt_dist & 0x80 ) {
 	    if ( data + SZ_RTMPTUPLE > end ) {
 		syslog( LOG_INFO, "rtmp_packet missing first range-end" );
 		return 1;
 	    }
-	    bcopy( data, &xrt, SZ_RTMPTUPLE );
+	    memcpy( &xrt, data, SZ_RTMPTUPLE );
 	    data += SZ_RTMPTUPLE;
 
 	    if ( xrt.rt_dist != 0x82 ) {
@@ -728,14 +730,14 @@ int rtmp_packet( ap, from, data, len )
 	    if ( data + SZ_RTMPTUPLE > end ) {
 		break;
 	    }
-	    bcopy( data, &rt, SZ_RTMPTUPLE );
+	    memcpy( &rt, data, SZ_RTMPTUPLE );
 	    data += SZ_RTMPTUPLE;
 	    if ( rt.rt_dist & 0x80 ) {
 		if ( data + SZ_RTMPTUPLE > end ) {
 		    syslog( LOG_INFO, "rtmp_packet missing range-end" );
 		    return 1;
 		}
-		bcopy( data, &xrt, SZ_RTMPTUPLE );
+		memcpy( &xrt, data, SZ_RTMPTUPLE );
 		data += SZ_RTMPTUPLE;
 	    }
 	}
@@ -763,18 +765,18 @@ int rtmp_packet( ap, from, data, len )
 	    rh.rh_net = iface->i_addr.sat_addr.s_net;
 	    rh.rh_nodelen = 8;
 	    rh.rh_node = iface->i_addr.sat_addr.s_node;
-	    bcopy( &rh, data, sizeof( struct rtmp_head ));
+	    memcpy( data, &rh, sizeof( struct rtmp_head ));
 	    data += sizeof( struct rtmp_head );
 
 	    if ( iface->i_flags & IFACE_PHASE2 ) {
 		rt.rt_net = iface->i_rt->rt_firstnet;
 		rt.rt_dist = 0x80;
-		bcopy( &rt, data, SZ_RTMPTUPLE );
+		memcpy( data, &rt, SZ_RTMPTUPLE );
 		data += SZ_RTMPTUPLE;
 
 		rt.rt_net = iface->i_rt->rt_lastnet;
 		rt.rt_dist = 0x82;
-		bcopy( &rt, data, SZ_RTMPTUPLE );
+		memcpy( data, &rt, SZ_RTMPTUPLE );
 		data += SZ_RTMPTUPLE;
 	    }
 	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
@@ -829,7 +831,7 @@ int rtmp_request( iface )
     /*
      * There is a problem with the net zero "hint" hack.
      */
-    bzero( &sat, sizeof( struct sockaddr_at ));
+    memset( &sat, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     sat.sat_len = sizeof( struct sockaddr_at );
 #endif BSD4_4
@@ -862,14 +864,14 @@ int looproute( iface, cmd )
 	return -1;
     }
 
-    bzero( &dst, sizeof( struct sockaddr_at ));
+    memset( &dst, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     dst.sat_len = sizeof( struct sockaddr_at );
 #endif BSD4_4
     dst.sat_family = AF_APPLETALK;
     dst.sat_addr.s_net = iface->i_addr.sat_addr.s_net;
     dst.sat_addr.s_node = iface->i_addr.sat_addr.s_node;
-    bzero( &loop, sizeof( struct sockaddr_at ));
+    memset( &loop, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     loop.sat_len = sizeof( struct sockaddr_at );
 #endif BSD4_4
@@ -910,7 +912,7 @@ int gateroute( command, rtmp )
      * the kernel.  Otherwise, we'll get a bunch of routes to the loop
      * back interface, and who wants that?
      */
-    bzero( &gate, sizeof( struct sockaddr_at ));
+    memset( &gate, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     gate.sat_len = sizeof( struct sockaddr_at );
 #endif BSD4_4
@@ -921,7 +923,7 @@ int gateroute( command, rtmp )
 	gate.sat_addr.s_net = net;
     }
 
-    bzero( &dst, sizeof( struct sockaddr_at ));
+    memset( &dst, 0, sizeof( struct sockaddr_at ));
 #ifdef BSD4_4
     dst.sat_len = sizeof( struct sockaddr_at );
 #endif BSD4_4

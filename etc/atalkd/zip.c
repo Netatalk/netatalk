@@ -36,8 +36,10 @@
 #include "rtmp.h"
 #include "list.h"
 #include "multicast.h"
+#include "main.h"
 
 struct ziptab	*ziptab = NULL, *ziplast = NULL;
+
 
 static int zonecheck( rtmp, iface )
     struct rtmptab	*rtmp;
@@ -1050,4 +1052,5 @@ int addzone( rt, len, zone )
 	syslog( LOG_ERR, "addzone corrupted zone/route mapping" );
 	return -1;
     }
+    return 0;
 }

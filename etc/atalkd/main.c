@@ -53,6 +53,7 @@
 #include "rtmp.h"
 #include "zip.h"
 #include "atserv.h"
+#include "main.h"
 
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature */
 #ifndef SOCKLEN_T
@@ -104,6 +105,12 @@ char		Packet[ PKTSZ ];
 char		*version = VERSION;
 static char     *pidfile = _PATH_ATALKDLOCK;
 
+
+/* from config.c */
+
+int readconf( char * );
+int getifconf( void );
+int writeconf( char * );
 
 /* this is the messiest of the bunch as atalkd can exit pretty much
  * everywhere. we delete interfaces here instead of in as_down. */
@@ -816,7 +823,7 @@ as_down()
     atalkd_exit( 0 );
 }
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -1181,7 +1188,7 @@ main( ac, av )
  * and rtmp_packet()) to set the initial "bootstrapping" address
  * on an interface.
  */
-bootaddr( iface )
+void bootaddr( iface )
     struct interface	*iface;
 {
     if ( iface == 0 ) {
@@ -1237,7 +1244,7 @@ bootaddr( iface )
  * Change setaddr()
  * to manage the i_ports field and the fds for select().
  */
-setaddr( iface, phase, net, node, first, last )
+void setaddr( iface, phase, net, node, first, last )
     struct interface	*iface;
     u_int8_t		phase;
     u_int16_t	        net;
@@ -1356,7 +1363,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last));
     nfds++;
 }
 
-ifconfig( iname, cmd, sa )
+int ifconfig( iname, cmd, sa )
     char		*iname;
     unsigned long	cmd;
     struct sockaddr_at	*sa;
@@ -1382,7 +1389,7 @@ ifconfig( iname, cmd, sa )
     return( 0 );
 }
 
-dumpconfig( iface )
+void dumpconfig( iface )
     struct interface	*iface;
 {
     struct list		*l;
@@ -1419,7 +1426,7 @@ dumpconfig( iface )
 }
 
 #ifdef DEBUG
-dumproutes()
+void dumproutes()
 {
     struct interface	*iface;
     struct rtmptab	*rtmp;
@@ -1467,7 +1474,7 @@ dumproutes()
     fflush( stdout );
 }
 
-dumpzones()
+void dumpzones()
 {
     struct interface	*iface;
     struct rtmptab	*rtmp;

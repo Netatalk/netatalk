@@ -20,4 +20,7 @@ struct ziptab {
 extern struct ziptab	*ziptab, *ziplast;
 struct ziptab	*newzt __P((const int, const char *));
 
+int addzone __P(( struct rtmptab *, int, char * ));
+int zip_getnetinfo __P(( struct interface * ));
+
 #endif /* atalkd/zip.h */

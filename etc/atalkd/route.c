@@ -7,17 +7,20 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <net/route.h>
+#include <sys/ioctl.h>
 
 #include <netatalk/at.h>
 
 #include "rtmp.h"
+#include "route.h"
 
 #ifndef BSD4_4
-route( message, dst, gate, flags )
+int route( message, dst, gate, flags )
     int			message;
     struct sockaddr	*dst, *gate;
     int			flags;
@@ -28,7 +31,7 @@ route( message, dst, gate, flags )
     struct rtentry	rtent;
 #endif
 
-    bzero( &rtent, sizeof( struct rtentry ));
+    memset( &rtent, 0, sizeof( struct rtentry ));
     rtent.rt_dst = *dst;
     rtent.rt_gateway = *gate;
     rtent.rt_flags = flags;
@@ -58,7 +61,7 @@ route( message, dst, gate, flags )
 {
     int			rc;
 
-    bzero( &rtma, sizeof( struct rt_msg_at ));
+    memset( &rtma, 0, sizeof( struct rt_msg_at ));
     rtma.rtma_rtm.rtm_msglen = sizeof( struct rt_msg_at );
     rtma.rtma_rtm.rtm_version = RTM_VERSION;
     rtma.rtma_rtm.rtm_type = message;

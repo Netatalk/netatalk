@@ -82,4 +82,10 @@ extern int	rtfd;
 struct rtmptab	*newrt __P((const struct interface *));
 void rtmp_delzonemap  __P((struct rtmptab *));
 
+int rtmp_request __P(( struct interface * ));
+void rtmp_free __P(( struct rtmptab * ));
+int rtmp_replace __P(( struct rtmptab * ));
+int looproute __P(( struct interface *, int ));
+int gateroute __P(( int, struct rtmptab * ));
+
 #endif /* atalkd/rtmp.h */

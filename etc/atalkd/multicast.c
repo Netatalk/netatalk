@@ -31,7 +31,10 @@
 
 #include <atalk/util.h>
 #include <netatalk/endian.h>
+#include "rtmp.h"
 #include "zip.h"
+#include "main.h"
+
 
 static const unsigned char	ethermulti[ 6 ] = {
     0x09, 0x00, 0x07, 0xff, 0xff, 0xff,

@@ -105,7 +105,7 @@ parseline( line )
     return( argv );
 }
 
-writeconf( cf )
+int writeconf( cf )
     char	*cf;
 {
     struct stat		st;
@@ -134,7 +134,7 @@ writeconf( cf )
     if (( p = strrchr( path, '/' )) == NULL ) {
 	strcpy( newpath, _PATH_ATALKDTMP );
     } else {
-	sprintf( newpath, "%.*s/%s", p - path, path, _PATH_ATALKDTMP );
+	sprintf( newpath, "%.*s/%s", (int)(p - path), path, _PATH_ATALKDTMP );
     }
     if (( fd = open( newpath, O_WRONLY|O_CREAT|O_TRUNC, mode )) < 0 ) {
 	syslog( LOG_ERR, "%s: %m", newpath );
@@ -229,7 +229,7 @@ writeconf( cf )
  * zone for an interface is the first zone encountered for that
  * interface.
  */
-readconf( cf )
+int readconf( cf )
     char		*cf;
 {
     struct ifreq	ifr;
@@ -372,7 +372,7 @@ read_conf_err:
 }
 
 /*ARGSUSED*/
-router( iface, av )
+int router( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -396,7 +396,7 @@ router( iface, av )
 }
 
 /*ARGSUSED*/
-dontroute( iface, av )
+int dontroute( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -411,7 +411,7 @@ dontroute( iface, av )
 }
 
 /*ARGSUSED*/
-seed( iface, av )
+int seed( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -429,7 +429,7 @@ seed( iface, av )
     return( 1 );
 }
 
-phase( iface, av )
+int phase( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -457,7 +457,7 @@ phase( iface, av )
     return( 2 );
 }
 
-net( iface, av )
+int net( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -475,7 +475,7 @@ net( iface, av )
     }
     net = atoi( nrange );
     if ( net < 0 || net >= 0xffff ) {
-	fprintf( stderr, "Bad network: %d\n" );
+	fprintf( stderr, "Bad network: %d\n", net );
 	return -1;
     }
 
@@ -501,7 +501,7 @@ net( iface, av )
 	if ( stop != 0 ) {
 	    net = atoi( stop );
 	    if ( net < 0 || net >= 0xffff ) {
-		fprintf( stderr, "Bad network: %d\n" );
+		fprintf( stderr, "Bad network: %d\n", net );
 		return -1;
 	    }
 	}
@@ -527,7 +527,7 @@ net( iface, av )
     return( 2 );
 }
 
-addr( iface, av )
+int addr( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -563,7 +563,7 @@ addr( iface, av )
     return( 2 );
 }
 
-zone( iface, av )
+int zone( iface, av )
     struct interface	*iface;
     char		**av;
 {
@@ -603,7 +603,7 @@ zone( iface, av )
  * Get the configuration from the kernel. Only called if there's no
  * configuration.
  */
-getifconf()
+int getifconf()
 {
     struct interface	*iface, *niface;
     struct ifreq        ifr;
@@ -682,8 +682,8 @@ getifconf()
  * Allocate a new interface structure.  Centralized here so we can change
  * the interface structure and have it updated nicely.
  */
-    struct interface *
-newiface( name )
+
+struct interface *newiface( name )
     const char		*name;
 {
     struct interface	*niface;
@@ -705,8 +705,7 @@ newiface( name )
 }
 
 #ifdef __svr4__
-    int
-plumb()
+int plumb()
 {
     struct interface	*iface;
     char		device[ MAXPATHLEN + 1], *p;
