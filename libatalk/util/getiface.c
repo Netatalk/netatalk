@@ -44,7 +44,7 @@ static int addname(char **list, int *i, int *length, const char *name)
     /* if we've run out of room, allocate some more. just return
      * the present list if we can't. */
      if (*i >= *length) {
-      char **new = realloc(list, sizeof(char **)*(*length + IFACE_NUM));
+      char **new = realloc(list, sizeof(char **)*(*length + 1));
        
       if (!new) /* just break if we can't allocate anything */
 	return -1;

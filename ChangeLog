@@ -1,4 +1,9 @@
 
+2001-09-10  joe c   <marcus@marcuscom.com>
+
+    * libatalk/util/getiface.c:
+	up the new interface by one each time instead of IFACE_NUM
+
 2001-09-10  jeff b  <jeff@univrel.pr.uconn.edu>
 
 	* etc/afpd/afp_options.c, etc/atalkd/main.c, etc/papd/main.c:
