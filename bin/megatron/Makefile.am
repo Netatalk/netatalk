@@ -11,5 +11,5 @@ LINKS = unbin unhex unsingle hqx2bin single2bin macbinary binheader nadheader
 
 install-exec-hook:
 	@for LINK in $(LINKS); do \
-		$(LN_S) -vn $(bindir)/megatron $(DESTDIR)$(bindir)/$(LINK); \
+		$(LN_S) $(bindir)/megatron $(DESTDIR)$(bindir)/$(LINK); \
 	done
