@@ -1,19 +1,36 @@
 netatalk (1.5pre7cvs-0) unstable; urgency=medium
 
   * Inofficial CVS release.
-  * This release uses libtool for UAM stuff. So, the problems with
-    unresolved symbols should be gone now. (Closes: #95399)
+
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 30 Aug 2001 02:41:07 +0200
+
+netatalk (1.5pre7-1) unstable; urgency=medium
+
+  * New upstream version. Most patches were applied upstream.
+  * This release uses libtool for UAM stuff. Also, the correct flag
+    for dynamic linking is supplied, so the problems with unresolved
+    symbols should be gone now. (Closes: #95399)
   * Non-DSFG free code was removed. Copyright notice was changed accordingly.
   * Use ./configure --sysconfdir instead of --with-config-dir.
   * Upstream package does now install PAM file in the correct directory.
     Removed rule, correcting this from Debian rules file.
-  * Newer versions of config.{sub,guess} were now added to upstream
-    sources. No need to patch them.
-  * netatalk-config(1), timelord(8), and timeout(1) do now have a man page.
+  * Added man pages for netatalk-config(1) and timelord(8). (Upstream
+    does now also include a man page for timeout(1), but since we're not
+    distributing it anymore, we don't care.)
   * Some doc files were removed, others were added.
-  * Use debhelper compatibility level 3.
+  * Use debhelper compatibility level 3 and performed general packaging
+    cleanups at the same time.
+  * Standards-Version 3.5.6.0. No changes needed.
+  * Netatalk is now GPL'ed. Added a note stating that to copyright.
+    Also, we can't link against libssl anymore. Removed SSL stuff.
+    I had to patch configure.in to do that.
+  * Removed emacs stuff from changelog.
+  * Applied a patch to getiface.c for a problem that could lead to
+    segfaults. Thanks to Kai Henningsen <kaih@khms.westfalen.de>
+    for actually being affected by this bug, and - more importantly -
+    finding the problem. (Closes: #109310)
 
- -- Sebastian Rittau <srittau@debian.org>  Wed, 22 Aug 2001 15:28:36 +0200
+ -- Sebastian Rittau <srittau@debian.org>  Thu, 30 Aug 2001 02:02:17 +0200
 
 netatalk (1.5pre6-7) unstable; urgency=low
 
@@ -428,7 +445,3 @@ netatalk (1.3.3-1);
   * Initial Release.
 
  -- Klee Dienes <klee@mit.edu>  Wed Dec 13 22:58:31 MST 1995
-
-Local variables:
-mode: debian-changelog
-End:
