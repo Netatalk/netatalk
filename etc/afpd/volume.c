@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.39 2002-10-12 04:02:46 didg Exp $
+ * $Id: volume.c,v 1.40 2002-10-16 16:19:34 jmarcus Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -293,7 +293,8 @@ static __inline__ char *get_codepage_path(const char *path, const char *name)
 
 /* handle all the options. tmp can't be NULL. */
 static void volset(struct vol_option *options, char *volname, int vlen,
-                   const char *nlspath, const char *tmp)
+                   const char *nlspath, const char *tmp, AFPObj *obj,
+		   struct passwd *pwd)
 {
     char *val;
 
@@ -380,10 +381,12 @@ static void volset(struct vol_option *options, char *volname, int vlen,
 
 #ifdef CNID_DB
     } else if (optionok(tmp, "dbpath:", val)) {
+	char t[MAXPATHLEN + 1];
         if (options[VOLOPT_DBPATH].c_value)
             free(options[VOLOPT_DBPATH].c_value);
 
-        options[VOLOPT_DBPATH].c_value = strdup(val + 1);
+	volxlate(obj, t, MAXPATHLEN, val, pwd, NULL);
+        options[VOLOPT_DBPATH].c_value = strdup(t + 1);
 #endif /* CNID_DB */
     } else if (optionok(tmp, "umask:", val)) {
 	options[VOLOPT_UMASK].i_value = (int)strtol(val, (char **)NULL, 8);
@@ -726,7 +729,8 @@ struct passwd *pwent;
                                    path + VOLOPT_DEFAULT_LEN) < 0)
                         break;
                     volset(save_options, tmp, sizeof(tmp) - 1,
-                           obj->options.nlspath, path + VOLOPT_DEFAULT_LEN);
+                           obj->options.nlspath, path + VOLOPT_DEFAULT_LEN,
+			   obj, pwent);
                 }
             }
             break;
@@ -788,7 +792,7 @@ struct passwd *pwent;
                     break;
 
                 volset(options, volname, sizeof(volname) - 1,
-                       obj->options.nlspath, tmp);
+                       obj->options.nlspath, tmp, obj, pwent);
             }
 
             /* check allow/deny lists:
