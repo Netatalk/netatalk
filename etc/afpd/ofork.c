@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.5 2001-08-15 01:37:34 srittau Exp $
+ * $Id: ofork.c,v 1.6 2001-11-28 03:10:01 jmarcus Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -229,9 +229,9 @@ of_alloc(vol, dir, path, ofrefnum, eid, ad)
 
 struct ofork *of_find(const u_int16_t ofrefnum )
 {
-   if (!oforks)
+   if (!oforks || !nforks)
      return NULL;
-
+	
     return( oforks[ ofrefnum % nforks ] );
 }
 
