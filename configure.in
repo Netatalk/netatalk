@@ -39,8 +39,6 @@ dnl Replace `main' with a function in -lcom_err:
 AC_CHECK_LIB(com_err, main)
 dnl Replace `main' with a function in -lcrypt:
 AC_CHECK_LIB(crypt, main)
-dnl Replace `main' with a function in -lcrypto:
-AC_CHECK_LIB(crypto, main)
 dnl Replace `main' with a function in -ld:
 AC_CHECK_LIB(d, main)
 dnl Replace `main' with a function in -ldb:
@@ -381,6 +379,9 @@ for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local
 		if test "$need_dash_r" = "yes"; then
 			LIBS="$LIBS -R$ssldir/lib -R$ssldir"
 		fi
+		dnl Replace `main' with a function in -lcrypto:
+		AC_CHECK_LIB(crypto, main)
+
 		LIBS="$LIBS -lcrypto"
  		AC_DEFINE(OPENSSL_DHX,	1)
 		AC_DEFINE(UAM_DHX,	1)
