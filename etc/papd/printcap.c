@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.8 2002-08-20 20:25:54 srittau Exp $
+ * $Id: printcap.c,v 1.9 2003-02-17 01:33:01 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -39,10 +39,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
-
-#ifndef lint
-static char sccsid[] = "@(#)printcap.c	5.7 (Berkeley) 3/4/91";
-#endif /* not lint */
 
 #include <ctype.h>
 #include <stdio.h>
