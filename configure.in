@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.176 2003-01-11 17:26:05 jmarcus Exp $
+dnl $Id: configure.in,v 1.177 2003-01-21 16:22:59 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -414,9 +414,11 @@ dnl --------------------------------------------------------------------------
 AC_ARG_ENABLE(fhs,
 	[  --enable-fhs            use Filesystem Hierarchy Standard (FHS) compatibility],
 	if test "$enableval" = "yes"; then
-		uams_path="/usr/lib/netatalk"
+		uams_path="${libdir}/netatalk"
 		sysconfdir="/etc"
 		PKGCONFDIR=${sysconfdir}/netatalk
+		SERVERTEXT="${PKGCONFDIR}/msg"
+		NLSDIR="${PKGCONFDIR}/nls"
 		use_pam_so=yes
 		mandir="/usr/share/man"
 		AC_DEFINE(FHS_COMPATIBILITY)
