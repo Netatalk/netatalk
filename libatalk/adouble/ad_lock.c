@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.4 2002-05-13 07:21:57 jmarcus Exp $
+ * $Id: ad_lock.c,v 1.5 2002-07-01 23:25:00 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -388,7 +388,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
   lock.l_type = (ad_getoflags(ad, eid) & O_RDWR) ?F_WRLCK : F_RDLCK;                                           
 
   if (fcntl(adf->adf_fd, F_SETLK, &lock) < 0) {
-    return (errno == EACCES)?1:-1;
+    return (errno == EACCES || errno == EAGAIN)?1:-1;
   }
   
   lock.l_type = F_UNLCK;
