@@ -51,6 +51,12 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
     *bsize = sfs.f_frsize;
 #endif ultrix
 
+    if ( *bfree > 0x7fffffff / *bsize ) {
+        *bfree = 0x7fffffff;
+    } else {
+        *bfree *= *bsize;
+    }
+
 #ifdef ultrix
     *btotal = (VolSpace) 
       ( sfs.fd_req.btot - ( sfs.fd_req.bfree - sfs.fd_req.bfreen )) * 1024;
@@ -58,6 +64,11 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
     *btotal = (VolSpace) 
       ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail )) * sfs.f_frsize;
 #endif ultrix
+    if ( *bfree > 0x7fffffff / *bsize ) {
+        *bfree = 0x7fffffff;
+    } else {
+        *bfree *= *bsize;
+    }
     return( AFP_OK );
 }
 
