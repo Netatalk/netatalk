@@ -1,4 +1,9 @@
 
+2001-04-24  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* configure.in: fixed problem with tcp_wrappers support; it needed to
+	check for tcpd_warn
+
 2001-04-20  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* configure.in, etc/afpd/Makefile.am, etc/papd/Makefile.am: added

@@ -294,7 +294,7 @@ AC_ARG_WITH(flock-locks,
 
 AC_ARG_WITH(tcp-wrappers,
 	[  --with-tcp-wrappers     enable TCP wrappers support],
-	AC_CHECK_LIB(wrap, hosts_access,
+	AC_CHECK_LIB(wrap, tcpd_warn,
 		AC_DEFINE(TCPWRAP)
 		AFPD_LIBS="$AFPD_LIBS -lwrap"
 		AC_MSG_RESULT([enabling TCP wrappers support])
