@@ -14,7 +14,7 @@ CFLAGS = @CFLAGS@ -I$(top_builddir)/include -I$(top_builddir)/sys -I..
 install-data-local: makecode
 	./makecode; \
 	mkdir -p $(DESTDIR)@CONFIG_DIR@/nls; \
-	$(INSTALL) maccode.* $(DESTDIR)@CONFIG_DIR@/nls/
+	$(INSTALL_DATA) maccode.* $(DESTDIR)@CONFIG_DIR@/nls/
 
 #
 # cleanup
