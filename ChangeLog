@@ -1,4 +1,9 @@
 
+2001-09-14  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* sys/netatalk/endian.h: fix from Robert Cohen
+	<robert.cohen@anu.edu.au> for missing endif
+
 2001-09-13  joe c   <marcus@marcuscom.com>
 
 	* libatalk/util/getiface.c:
