@@ -1,5 +1,5 @@
 /*
- * $Id: route.c,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: route.c,v 1.6 2002-01-17 06:10:12 srittau Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -47,7 +47,8 @@ struct sockaddr_m {
     u_char	sam_family;
     u_short	sam_pad;
     u_short	sam_mask;
-} mask = { sizeof( struct sockaddr_m ), 0, 0, 0xffff };
+    u_short	sam_pad2;
+} mask = { sizeof( struct sockaddr_m ), 0, 0, 0xffff, 0 };
 
 struct rt_msg_at {
     struct rt_msghdr	rtma_rtm;
