@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.18 2002-03-31 01:17:34 jmarcus Exp $
+ * $Id: afp_config.c,v 1.19 2002-04-02 02:41:40 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -449,7 +449,13 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
+    {
+        LOG(log_debug, logtype_afpd, "ConfigFile %s not found, assuming defaults",
+            cmdline->configfile);
         return AFPConfigInit(cmdline, cmdline);
+    }
+
+    LOG(log_debug, logtype_afpd, "Loading ConfigFile"); 
 
     /* scan in the configuration file */
     while (!feof(fp)) {
@@ -478,6 +484,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
         }
     }
 
+    LOG(log_debug, logtype_afpd, "Finished parsing Config File");
     fclose(fp);
 
     if (!have_option)
