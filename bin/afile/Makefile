@@ -1,9 +1,9 @@
 TARGETS= afile achfile 
 MANSRC= afile.1 achfile.1 acleandir.1
 
-INCPATH=	-I/usr/local/atalk/current/include
-BINDIR=		/usr/local/atalk-local/bin
-MANDIR=		/usr/local/atalk-local/man
+INCPATH=	-I../../include -I../../system
+BINDIR=		${PREFIX}/bin
+MANDIR=		${PREFIX}/man
 
 CFLAGS=		 -g ${INCPATH}
 CC=	gcc
