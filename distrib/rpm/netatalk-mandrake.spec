@@ -75,7 +75,7 @@ CFLAGS="$RPM_OPT_FLAGS -fomit-frame-pointer -fsigned-char" ./configure \
 	--prefix=%{prefix} \
     --with-config-dir=/etc/atalk \
 	--with-uams-path=/etc/atalk/uams \
-    --with-msg-dir=/etc/atalk/msg \
+    --with-message-dir=/etc/atalk/msg \
 	--enable-lastdid \
 	--enable-redhat \
 	--with-cracklib \

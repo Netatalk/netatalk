@@ -113,9 +113,9 @@ a complete list.
 	cnid is a new and experimental scheme using Berkeley DB3 files
 	to store a per-volume cnid database persistently.
 
---with-msg-dir=path: path to message files [default=/etc/msg],
+--with-message-dir=path: path to message files [default is DISABLED],
 
---enable-srvloc: Turn on Server Location Protocol support (EXPERIMENTAL),
+--enable-srvloc: Turn on Server Location Protocol support,
 
 --with-pam: enable pluggable authentication modules support,
 	PAM provides a flexible mechanism for authenticating
