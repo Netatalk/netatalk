@@ -51,11 +51,17 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
     *bsize = sfs.f_frsize;
 #endif ultrix
 
+#if FORCE_2GB
+    // if the volume is over 2GB in size, report
+    // the size as 2GB.
+    // this doesn't seem to work correctly for
+    // 64 bit size descriptors.  
     if ( *bfree > 0x7fffffff / *bsize ) {
         *bfree = 0x7fffffff;
     } else {
         *bfree *= *bsize;
     }
+#endif
 
 #ifdef ultrix
     *btotal = (VolSpace) 
@@ -64,11 +70,16 @@ int ustatfs_getvolspace( vol, bfree, btotal, bsize )
     *btotal = (VolSpace) 
       ( sfs.f_blocks - ( sfs.f_bfree - sfs.f_bavail )) * sfs.f_frsize;
 #endif ultrix
+
+#if FORCE_2GB
+    // see similar block above comments
     if ( *bfree > 0x7fffffff / *bsize ) {
         *bfree = 0x7fffffff;
     } else {
         *bfree *= *bsize;
     }
+#endif
+
     return( AFP_OK );
 }
 
