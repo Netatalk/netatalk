@@ -50,7 +50,7 @@
 #include <atalk/adouble.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
-#endif /* DID_MTAB */
+#endif /* CNID_DB */
 #include "desktop.h"
 #include "directory.h"
 #include "file.h"
@@ -58,10 +58,6 @@
 #include "globals.h"
 #include "filedir.h"
 #include "fork.h"
-
-#ifdef DID_MTAB
-#include "parse-mtab.h"
-#endif /* DID_MTAB */
 
 #ifdef WITH_CATSEARCH
 

@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.21 2002-08-25 13:26:20 rlewczuk Exp $
+ * $Id: enumerate.c,v 1.22 2002-10-04 15:15:05 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,11 +33,6 @@
 #include "globals.h"
 #include "file.h"
 #include "filedir.h"
-
-/* check for mtab DID code */
-#ifdef DID_MTAB
-#include "parse_mtab.h"
-#endif /* DID_MTAB */
 
 #define min(a,b)	((a)<(b)?(a):(b))
 
@@ -101,13 +96,8 @@ struct stat *st;
         cdir->d_did = htonl( vol->v_lastdid++ );
 #else /* USE_LASTDID */
         lstp = lstat(upath, &lst) < 0 ? st : &lst;
-#ifdef DID_MTAB
-        /* mtab way of doing DIDs */
-        cdir->d_did = htonl( afpd_st_cnid ( lstp ) );
-#else /* DID_MTAB */
         /* the old way of doing DIDs (default) */
         cdir->d_did = htonl( CNID(lstp, 0) );
-#endif /* DID_MTAB */
 #endif /* USE_LASTDID */
     }
 

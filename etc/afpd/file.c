@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.60 2002-09-29 23:31:24 sibaz Exp $
+ * $Id: file.c,v 1.61 2002-10-04 15:15:05 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -58,11 +58,6 @@ char *strchr (), *strrchr ();
 #include "file.h"
 #include "filedir.h"
 #include "globals.h"
-
-/* check for mtab DID code */
-#ifdef DID_MTAB
-#include "parse_mtab.h"
-#endif /* DID_MTAB */
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
@@ -263,11 +258,7 @@ int getmetadata(struct vol *vol,
                 aint = htonl(( st->st_dev << 16 ) | (st->st_ino & 0x0000ffff));
 #else /* USE_LASTDID */
                 lstp = lstat(upath, &lst) < 0 ? st : &lst;
-#ifdef DID_MTAB
-                aint = htonl( afpd_st_cnid ( lstp ) );
-#else /* DID_MTAB */
                 aint = htonl(CNID(lstp, 1));
-#endif /* DID_MTAB */
 #endif /* USE_LASTDID */
             }
 

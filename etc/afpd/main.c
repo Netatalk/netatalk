@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.19 2002-08-31 08:09:06 jmarcus Exp $
+ * $Id: main.c,v 1.20 2002-10-04 15:15:05 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -57,16 +57,7 @@ static int argc = 0;
 static char **argv = NULL;
 #endif /* TRU64 */
 
-#ifdef DID_MTAB
-#include "parse_mtab.h"
-#endif /* DID_MTAB */
-
 unsigned char	nologin = 0;
-
-#ifdef DID_MTAB
-/* global mount table; afpd_st_cnid uses this to lookup the right entry.  */
-static struct afpd_mount_table *afpd_mount_table = NULL;
-#endif /* DID_MTAB */
 
 struct afp_options default_options;
 static AFPConfig *configs;
@@ -176,11 +167,6 @@ char	**av;
     default: /* server */
         exit(0);
     }
-
-#ifdef DID_MTAB
-    /* if we are going to use afpd.mtab, load the file */
-    afpd_mount_table = afpd_mtab_parse ( AFPD_MTAB_FILE );
-#endif /* DID_MTAB */
 
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here. 
