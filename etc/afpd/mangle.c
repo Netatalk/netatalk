@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.9 2002-08-14 17:49:13 jmarcus Exp $ 
+ * $Id: mangle.c,v 1.10 2002-09-29 23:31:24 sibaz Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,7 +26,7 @@ demangle(const struct vol *vol, char *mfilename) {
 	/* Is this really a mangled file? */
 	mangle = strstr(mfilename, MANGLE_CHAR);
 	if (!mangle) {
-	    LOG(log_debug, logtype_default, "demangle: %s is not a mangled filename", mfilename);
+	    LOG(log_debug, logtype_afpd, "demangle: %s is not a mangled filename", mfilename);
 	    return mfilename;
 	}
 
@@ -34,7 +34,7 @@ demangle(const struct vol *vol, char *mfilename) {
 	    ext_len = strlen(ext);
 	}
 	if (strlen(mangle) != strlen(MANGLE_CHAR) + MANGLE_LENGTH + ext_len) {
-	    LOG(log_error, logtype_default, "demangle: %s is not long enough to be a mangled filename", mfilename);
+	    LOG(log_error, logtype_afpd, "demangle: %s is not long enough to be a mangled filename", mfilename);
 	    return mfilename;
 	}
 
@@ -42,7 +42,7 @@ demangle(const struct vol *vol, char *mfilename) {
 
 	/* No unmangled filename was found. */
 	if (filename == NULL) {
-	    LOG(log_error, logtype_default, "demangle: Unable to lookup %s in the mangle database", mfilename);
+	    LOG(log_error, logtype_afpd, "demangle: Unable to lookup %s in the mangle database", mfilename);
 	    return mfilename;
 	}
 
@@ -93,7 +93,7 @@ mangle(const struct vol *vol, char *filename) {
 	}
 	else {
 	    if (++mangle_suffix_int > MAX_MANGLE_SUFFIX_LENGTH) {
-		LOG(log_error, logtype_default, "mangle: Failed to find a free mangle suffix; returning original filename");
+		LOG(log_error, logtype_afpd, "mangle: Failed to find a free mangle suffix; returning original filename");
 		return filename;
 	    }
 	}

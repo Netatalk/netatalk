@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.59 2002-09-11 03:03:27 didg Exp $
+ * $Id: file.c,v 1.60 2002-09-29 23:31:24 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -370,7 +370,7 @@ int getfilparams(struct vol *vol,
     u_int16_t		attrbits = 0;
     int rc;    
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "begin getfilparams:");
+    LOG(log_info, logtype_afpd, "begin getfilparams:");
 #endif /* DEBUG */
 
     upath = mtoupath(vol, path);

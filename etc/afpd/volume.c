@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.35 2002-09-29 18:44:16 didg Exp $
+ * $Id: volume.c,v 1.36 2002-09-29 23:31:24 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -298,6 +298,8 @@ static void volset(struct vol_option *options, char *volname, int vlen,
     char *val;
 
     val = strchr(tmp, ':');
+    LOG(log_debug, logtype_afpd, "Parsing volset %s", val);
+
     if (optionok(tmp, "allow:", val)) {
         if (options[VOLOPT_ALLOW].c_value)
             free(options[VOLOPT_ALLOW].c_value);
