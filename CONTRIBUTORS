@@ -33,7 +33,7 @@ Developers: Version 1.4.99 - 1.5
 	Jeffrey Buchbinder <jeff@univrel.pr.uconn.edu>
 	Sam Noble <ns@shadow.org>
 	Simon Bazley <sibaz@sibaz.com>
-	Sebastian Rittau <srittau@jroger.in-berlin.de>
+	Sebastian Rittau <srittau@debian.org>
 	Steve Freitas <sflist@ihonk.com>
 	Uwe Hees <uwe.hees@rz-online.de>
 	Benjamin Heitmann <bheitman@ebios.de>
@@ -49,7 +49,7 @@ Webmin Module:
 	Matthew Keller <kellermg@potsdam.edu>
 
 Package Maintainers:
-	Sebastian Rittau <srittau@jroger.in-berlin.de> (RPM, Debian)
+	Sebastian Rittau <srittau@debian.org> (Debian)
 	Joe Clarke <marcus@marcuscom.com> (FreeBSD)
 
 Sourceforge Website Maintainers:
@@ -68,7 +68,7 @@ Documentation: Version 1.4.99 - 1.5
 	Rob Lineweaver <rbline@wm.edu>
 	Alistair Riddell <ali@gwc.org.uk>
 	Edmund Lam <epl@unimelb.edu.au>
-	Sebastian Rittau <srittau@jroger.in-berlin.de>
+	Sebastian Rittau <srittau@debian.org>
 	Chris Blake <Chris.Blake@anu.edu.au>
 
 Bug Reports: Version 1.4.99 - 1.5
