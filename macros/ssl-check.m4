@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.9 2003-06-08 16:04:49 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.10 2003-06-08 16:49:25 srittau Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_PATH_GCRYPT], [
@@ -28,6 +28,7 @@ AC_DEFUN([AC_PATH_GCRYPT], [
 		else
 			GCRYPT_CFLAGS="`$GCRYPT_CONFIG --cflags`"
 			GCRYPT_LIBS="`$GCRYPT_CONFIG --libs`"
+			AC_DEFINE(HAVE_GCRYPT, 1, [Define if libgcrypt is available])
 		fi
 	fi
 
@@ -67,12 +68,6 @@ AC_DEFUN([AC_PATH_SSL], [
 					SSL_LIBS="$SSL_LIBS -R$ssldir/lib -R$ssldir"
 				fi
 				AC_MSG_RESULT([$ssldir (enabling RANDNUM and DHX support)])
-
-dnl FIXME: The following looks crude and probably doesn't work properly.
-				dnl Check for the crypto library:
-				AC_CHECK_LIB(crypto, main)
-				dnl Check for "DES" library (for SSLeay, not openssl):
-				AC_CHECK_LIB(des, main)
 
 		 		AC_DEFINE(OPENSSL_DHX,	1, [Define if the OpenSSL DHX modules should be built])
 				AC_DEFINE(UAM_DHX,	1, [Define if the DHX UAM modules should be compiled])
