@@ -1,5 +1,5 @@
 /* 
- * $Id: afppasswd.c,v 1.11 2003-02-17 02:04:59 srittau Exp $
+ * $Id: afppasswd.c,v 1.12 2003-06-06 22:34:34 srittau Exp $
  *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -21,7 +21,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
@@ -65,6 +65,11 @@
 #define PASSWDLEN 8
 
 static char buf[MAXPATHLEN + 1];
+
+/* FIXME: preparation for i18n */
+#ifndef _
+#define _(x) (x)
+#endif
 
 /* if newpwd is null, convert buf from hex to binary. if newpwd isn't
  * null, convert newpwd to hex and save it in buf. */
@@ -120,11 +125,12 @@ static int update_passwd(const char *path, const char *name, int flags)
   char password[PASSWDLEN + 1], *p, *passwd;
   FILE *fp;
   off_t pos;
+  int found = 0;
   int keyfd = -1, err = 0;
 
   if ((fp = fopen(path, "r+")) == NULL) {
-    fprintf(stderr, "afppasswd: can't open %s\n", path);
-    return -1;
+    fprintf(stderr, _("Can't open password file %s: %s.\n"), path, strerror(errno));
+    return 1;
   }
 
   /* open the key file if it exists */
@@ -142,73 +148,85 @@ static int update_passwd(const char *path, const char *name, int flags)
       if (strncmp(buf, name, p - buf) == 0) {
 	p++;
 	if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
-	  fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
+	  fprintf(stderr, _("Your password is disabled. Please see your administrator.\n"));
 	  break;
 	}
-	goto found_entry;
+	found = 1;
+	break;
       }
     }
     pos = ftell(fp);
     memset(buf, 0, sizeof(buf));
   }
 
-  if (flags & OPT_ADDUSER) {
-    strcpy(buf, name);
-    strcat(buf, FORMAT);
-    p = strchr(buf, ':') + 1;
-    fwrite(buf, strlen(buf), 1, fp);
-  } else {
-    fprintf(stderr, "afppasswd: can't find %s in %s\n", name, path);
-    err = -1;
-    goto update_done;
-  }
-
-found_entry:
-  /* need to verify against old password */
-  if ((flags & OPT_ISROOT) == 0) {
-    passwd = getpass("Enter OLD AFP password: ");
-    convert_passwd(p, NULL, keyfd);
-    if (strncmp(passwd, p, PASSWDLEN)) {
-      fprintf(stderr, "afppasswd: invalid password.\n");
-      err = -1;
+  if (!found) {
+    if ((flags & OPT_ISROOT) && (flags & OPT_ADDUSER)) {
+      strcpy(buf, name);
+      strcat(buf, FORMAT);
+      p = strchr(buf, ':') + 1;
+      fwrite(buf, strlen(buf), 1, fp);
+    } else {
+      fprintf(stderr, _("Can't find user %s in %s\n"), name, path);
+      err = 1;
       goto update_done;
     }
   }
 
+  /* need to verify against old password */
+  if ((flags & OPT_ISROOT) == 0) {
+    passwd = getpass(_("Enter OLD AFP password: "));
+    convert_passwd(p, NULL, keyfd);
+    if (strncmp(passwd, p, PASSWDLEN)) {
+      memset(passwd, 0, strlen(passwd));
+      fprintf(stderr, _("Wrong password.\n"));
+      err = 1;
+      goto update_done;
+    }
+  }
+  memset(passwd, 0, strlen(passwd));
+
   /* new password */
-  passwd = getpass("Enter NEW AFP password: ");
+  passwd = getpass(_("Enter NEW AFP password: "));
   memcpy(password, passwd, sizeof(password));
+  memset(passwd, 0, strlen(passwd));
   password[PASSWDLEN] = '\0';
 #ifdef USE_CRACKLIB
   if (!(flags & OPT_NOCRACK)) {
-    if (passwd = FascistCheck(password, _PATH_CRACKLIB)) { 
-        fprintf(stderr, "Error: %s\n", passwd);
-        err = -1;
-        goto update_done;
+    char *str;
+    if (str = FascistCheck(password, _PATH_CRACKLIB)) { 
+      memset(password, 0, PASSWDLEN);
+      fprintf(stderr, _("Error: %s\n"), str);
+      err = 1;
+      goto update_done;
     } 
   }
 #endif /* USE_CRACKLIB */
 
-  passwd = getpass("Enter NEW AFP password again: ");
+  passwd = getpass(_("Enter NEW AFP password again: "));
   if (strcmp(passwd, password) == 0) {
-     struct flock lock;
-     int fd = fileno(fp);
+    struct flock lock;
+    int fd = fileno(fp);
 
-     convert_passwd(p, password, keyfd);
-     lock.l_type = F_WRLCK;
-     lock.l_start = pos;
-     lock.l_len = 1;
-     lock.l_whence = SEEK_SET;
-     fseek(fp, pos, SEEK_SET);
-     fcntl(fd, F_SETLKW, &lock);
-     fwrite(buf, p - buf + HEXPASSWDLEN, 1, fp);
-     lock.l_type = F_UNLCK;
-     fcntl(fd, F_SETLK, &lock);
-     printf("afppasswd: updated password.\n");
+    memset(passwd, 0, strlen(passwd));
+
+    convert_passwd(p, password, keyfd);
+    lock.l_type = F_WRLCK;
+    lock.l_start = pos;
+    lock.l_len = 1;
+    lock.l_whence = SEEK_SET;
+    fseek(fp, pos, SEEK_SET);
+    fcntl(fd, F_SETLKW, &lock);
+    fwrite(buf, p - buf + HEXPASSWDLEN, 1, fp);
+    lock.l_type = F_UNLCK;
+    fcntl(fd, F_SETLK, &lock);
+    printf(_("Updated password.\n"));
+    memset(password, 0, PASSWDLEN);
 
   } else {
-    fprintf(stderr, "afppasswd: passwords don't match!\n");
-    err = -1;
+    memset(passwd, 0, strlen(passwd));
+    memset(password, 0, PASSWDLEN);
+    fprintf(stderr, _("Passwords don't match!\n"));
+    err = 1;
   }
 
 update_done:
@@ -227,8 +245,8 @@ static int create_file(const char *path, uid_t minuid)
 
   
   if ((fd = open(path, O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0) {
-    fprintf(stderr, "afppasswd: can't create %s\n", path);
-    return -1;
+    fprintf(stderr, _("Can't create password file %s: %s\n"), path, strerror(errno));
+    return 1;
   }
 
   setpwent();
@@ -242,9 +260,9 @@ static int create_file(const char *path, uid_t minuid)
     strcat(buf, FORMAT);
     len = strlen(buf);
     if (write(fd, buf, len) != len) {
-      fprintf(stderr, "afppasswd: problem writing to %s: %s\n", path,
-	      strerror(errno));
-      err = -1;
+      fprintf(stderr, _("Problem writing to password file %s: %s\n"),
+	      path, strerror(errno));
+      err = 1;
       break;
     }
   }
@@ -252,6 +270,24 @@ static int create_file(const char *path, uid_t minuid)
   close(fd);
 
   return err;
+}
+
+
+static void usage(void)
+{
+#ifdef USE_CRACKLIB
+    fprintf(stderr, _("Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n"));
+#else /* USE_CRACKLIB */
+    fprintf(stderr, _("Usage: afppasswd [-acf] [-u minuid] [-p path] [username]\n"));
+#endif /* USE_CRACKLIB */
+    fprintf(stderr, _("  -a        add a new user\n"));
+    fprintf(stderr, _("  -c        create and initialize password file or specific user\n"));
+    fprintf(stderr, _("  -f        force an action\n"));
+#ifdef USE_CRACKLIB
+    fprintf(stderr, _("  -n        disable cracklib checking of passwords\n"));
+#endif /* USE_CRACKLIB */
+    fprintf(stderr, _("  -u uid    minimum uid to use, defaults to 100\n"));
+    fprintf(stderr, _("  -p path   path to afppasswd file\n"));
 }
 
 
@@ -269,16 +305,8 @@ int main(int argc, char **argv)
   flags = ((uid = getuid()) == 0) ? OPT_ISROOT : 0;
 
   if (((flags & OPT_ISROOT) == 0) && (argc > 1)) {
-    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
-    fprintf(stderr, "  -a        add a new user\n");
-    fprintf(stderr, "  -c        create and initialize password file or specific user\n");
-    fprintf(stderr, "  -f        force an action\n");
-#ifdef USE_CRACKLIB
-    fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
-#endif /* USE_CRACKLIB */
-    fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
-    fprintf(stderr, "  -p path   path to afppasswd file\n");
-    return -1;
+    usage();
+    return 1;
   }
 
   while ((i = getopt(argc, argv, OPTIONS)) != EOF) {
@@ -311,41 +339,28 @@ int main(int argc, char **argv)
   
   if (err || (optind + ((flags & OPT_CREATE) ? 0 : 
 			(flags & OPT_ISROOT)) != argc)) {
-#ifdef USE_CRACKLIB
-    fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
-#else /* USE_CRACKLIB */
-    fprintf(stderr, "Usage: afppasswd [-acf] [-u minuid] [-p path] [username]\n");
-#endif /* USE_CRACKLIB */
-    fprintf(stderr, "  -a        add a new user\n");
-    fprintf(stderr, "  -c        create and initialize password file or specific user\n");
-    fprintf(stderr, "  -f        force an action\n");
-#ifdef USE_CRACKLIB
-    fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
-#endif /* USE_CRACKLIB */
-    fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
-    fprintf(stderr, "  -p path   path to afppasswd file\n");
-    return -1;
+    usage();
+    return 1;
   }
 
-  i = stat(path, &st);
   if (flags & OPT_CREATE) {
     if ((flags & OPT_ISROOT) == 0) {
-      fprintf(stderr, "afppasswd: only root can create the password file.\n");
-      return -1;
+      fprintf(stderr, _("Only root can create the password file.\n"));
+      return 1;
     }
 
-    if (!i && ((flags & OPT_FORCE) == 0)) {
-      fprintf(stderr, "afppasswd: password file already exists.\n");
-      return -1;
+    if (!stat(path, &st) && ((flags & OPT_FORCE) == 0)) {
+      fprintf(stderr, _("Password file already exists.\n"));
+      return 1;
     }
     return create_file(path, uid_min);
 
   } else {
     struct passwd *pwd = NULL;
 
-    if (i < 0) {
-      fprintf(stderr, "afppasswd: %s doesn't exist.\n", path);
-      return -1;
+    if (stat(path, &st) < 0) {
+      fprintf(stderr, _("Password file %s doesn't exist.\n"), path);
+      return 1;
     }
     
     /* if we're root, we need to specify the username */
@@ -353,7 +368,7 @@ int main(int argc, char **argv)
     if (pwd)
       return update_passwd(path, pwd->pw_name, flags);
 
-    fprintf(stderr, "afppasswd: can't get password entry.\n");
-    return -1;
+    fprintf(stderr, _("Can't get password entry.\n"));
+    return 1;
   }
 }
