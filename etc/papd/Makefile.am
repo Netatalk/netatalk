@@ -7,7 +7,7 @@ sbin_PROGRAMS = papd
 
 papd_SOURCES = main.c printcap.c session.c file.c comment.c lp.c ppd.c \
 	magics.c headers.c queries.c auth.c uam.c
-papd_LDADD = $(top_builddir)/libatalk/libatalk.la
+papd_LDADD = @PAM_LIBS@ $(top_builddir)/libatalk/libatalk.la
 papd_LDFLAGS = -export-dynamic
 
 #showppd_SOURCES = showppd.c ppd.c
@@ -23,10 +23,7 @@ noinst_HEADERS =	\
 	session.h	\
 	uam_auth.h
 
-CFLAGS = \
+INCLUDES = \
 	-I$(top_srcdir)/include -I$(top_srcdir)/sys \
-	@CFLAGS@ \
 	-D_PATH_PAPDCONF=\"$(pkgconfdir)/papd.conf\" \
 	-D_PATH_PAPDUAMPATH=\"$(UAMS_PATH)/\"
-
-LIBS = @PAM_LIBS@

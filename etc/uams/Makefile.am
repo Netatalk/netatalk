@@ -48,8 +48,7 @@ uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c
 # flags
 #
 
-# do that on behalf of the brokeness of automake 1.4
-CFLAGS = @CFLAGS@ @SSL_CFLAGS@
+INCLUDES = @SSL_CFLAGS@
 
 uams_guest_la_CFLAGS      = @CFLAGS@
 uams_randnum_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@

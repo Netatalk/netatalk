@@ -1,11 +1,11 @@
 # Makefile.am for libatalk/cnid/
 
-CFLAGS = @CFLAGS@ @BDB_CFLAGS@
-LIBS = @LIBS@ @BDB_LIBS@
+INCLUDES = @BDB_CFLAGS@
 
 noinst_LTLIBRARIES = libcnid.la
 
 libcnid_la_SOURCES = cnid_add.c cnid_close.c cnid_delete.c cnid_get.c cnid_lookup.c cnid_mangle_add.c cnid_mangle_get.c cnid_open.c cnid_resolve.c cnid_update.c
+libcnid_la_LIBADD = @BDB_LIBS@
 
 noinst_HEADERS = cnid_meta.h cnid_private.h 
 
