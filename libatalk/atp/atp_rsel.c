@@ -25,7 +25,7 @@ static int	release_count = 0;
 #endif DROP_ATPTREL
 
 
-static int
+int
 resend_request( ah )
     ATP		ah;
 {

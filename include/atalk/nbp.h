@@ -23,6 +23,8 @@
 
 #ifndef _ATALK_NBP_H
 #define _ATALK_NBP_H 1
+#define NBP_UNRGSTR_4ARGS 1
+#define ATP_OPEN_2ARGS 1
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
