@@ -1,3 +1,8 @@
+2001-12-03  joe c   <marcus@marcuscom.com>
+	* etc/afpd/*.[ch]: Big commit to clean up code with astyle (readable code 
+	is hackable code).  Also committed a fix to give CNID DB a shot in
+	production use.
+
 2001-11-27  joe c   <marcus@marcuscom.com>
 	* configure.in: Removed the --with-cnid-db option, and added
 	  --with-did=cnid for consistency
