@@ -419,9 +419,9 @@ more information */
       if ( uid != sb.st_uid )
       {
 	strcpy (adpath, "./.AppleDouble/");
-	strcat (adpath, mtoupath(vol, path));
+	strcat (adpath, upath);
 	seteuid(0); /* Become root to change the owner of the file */
-	if (chown(mtoupath(vol, path), sb.st_uid, sb.st_gid) < 0) 
+	if (chown(upath, sb.st_uid, sb.st_gid) < 0) 
         {
 	  syslog (LOG_ERR, "Error changing owner/gid: %m");
           return (-1);
@@ -430,7 +430,7 @@ more information */
         to be able to read from it too, so read bits have to be turned on.
         Directory permissions remain unchanged */
         stat(upath, &st);
-        if (chmod(mtoupath(vol,path),(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
+        if (chmod(upath,(st.st_mode&0x0FFFF)| S_IRGRP| S_IROTH) < 0)
         {
           syslog (LOG_ERR, "Error adding file read permissions: %m");
           return (-1);
