@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.10 2002-01-19 21:29:54 jmarcus Exp $
+ * $Id: afp_asp.c,v 1.11 2002-02-02 21:08:21 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -49,9 +49,9 @@ static __inline__ void afp_asp_close(AFPObj *obj)
     if (obj->logout)
         (*obj->logout)();
 
-    asp_close( asp );
     LOG(log_info, logtype_default, "%.2fKB read, %.2fKB written",
         asp->read_count / 1024.0, asp->write_count / 1024.0);
+    asp_close( asp );
 }
 
 static void afp_asp_die(const int sig)
