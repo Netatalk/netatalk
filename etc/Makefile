@@ -7,6 +7,7 @@ all:	${ALL}
 
 ${ALL}: FRC
 	cd $@; ${MAKE} ${MFLAGS} CC="${CC}" \
+            ADMIN_GRP="${ADMIN_GRP}" \
 	    ADDLIBS="${ADDLIBS}" DEFS="${DEFS}" OPTOPTS="${OPTOPTS}" \
 	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}" \
 	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \

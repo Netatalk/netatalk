@@ -12,7 +12,9 @@ OBJ = unix.o ofork.o main.o switch.o auth.o volume.o directory.o file.o \
 	nfsquota.o codepage.o quota.o uam.o afs.o
 
 INCPATH=	-I../../include ${AFSINCPATH}
-CFLAGS=	${DEFS} ${AFSDEFS} ${CAPDEFS} ${OPTOPTS} ${INCPATH} -DAPPLCNAME
+CFLAGS=	${DEFS} ${AFSDEFS} ${CAPDEFS} ${OPTOPTS} ${INCPATH} -DAPPLCNAME \
+        -DADMIN_GRP=\"${ADMIN_GRP}\"
+
 LIBS =	-latalk ${AFSLIBS} ${ADDLIBS} ${TCPWRAPLIBS} ${DB2LIBS} \
 	${RPCSVCLIB} ${AFPLIBS} ${PAMLIBS} ${LIBSHARED} 
 LIBDIRS=	-L../../libatalk ${AFSLIBDIRS} ${TCPWRAPLIBDIRS} \

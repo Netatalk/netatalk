@@ -14,6 +14,8 @@ RESDIR=$(DESTDIR)/etc
 ETCDIR=$(DESTDIR)/etc
 # for include files
 INCDIR=$(DESTDIR)/include
+# Group that will have "root" access
+ADMIN_GRP=macadmin
 # Root of man pages.  Subdirectories will be
 # ${MANDIR}/man1, ${MANDIR}/man4, and ${MANDIR}/man8.
 MANDIR=$(DESTDIR)/man
@@ -40,7 +42,7 @@ MANDIR=$(DESTDIR)/man
 # dh.h, and bn.h in $CRYPTODIR/include with -lcrypto in
 # $CRYPTODIR/lib. NOTE: os x server will complain if you use both
 # randnum exchange and DHX.
-CRYPTODIR=/usr/local/ssl
+# CRYPTODIR=/usr/local/ssl
 
 # Location of the DES library and include files. Uncomment this out if
 # you want Randnum Exchange and 2-Way Randnum Exchange as allowable
@@ -55,7 +57,7 @@ TCPWRAPDIR=/usr
 
 # Location of PAM support library and include files. Uncomment this if
 # you want to enable PAM support.
-#PAMDIR=/usr
+PAMDIR=/usr
 
 # Location of cracklib support library and include files. This is used
 # in the password changing routines. Uncomment this out if you want to
@@ -105,6 +107,7 @@ all install depend clean tags kernel kinstall kpatch:	FRC
 	esac; \
 	echo "Making $@ for $$ARCH..."; \
 	cd sys/$$ARCH && ${MAKE} ${MFLAGS} \
+            ADMIN_GRP="${ADMIN_GRP}" \
 	    SBINDIR="${SBINDIR}" BINDIR="${BINDIR}" RESDIR="${RESDIR}"\
 	    ETCDIR="${ETCDIR}" LIBDIR="${LIBDIR}" INCDIR="${INCDIR}" \
 	    DESTDIR="${DESTDIR}" MANDIR="${MANDIR}" \

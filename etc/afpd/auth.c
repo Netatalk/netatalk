@@ -144,6 +144,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     char nodename[256];
     FILE *fp;
 #endif /* CAPDIR */
+#ifdef ADMIN_GRP
+    struct group *grps;
+#endif ADMIN_GRP
 
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
 	syslog( LOG_ERR, "login: root login denied!" );
@@ -173,6 +176,22 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
       syslog(LOG_ERR, "login: %m");
       return AFPERR_BADUAM;
 #endif
+#ifdef ADMIN_GRP
+    if ((grps = getgrnam(ADMIN_GRP)) != NULL) {
+      while (*(grps->gr_mem) != NULL) {
+        if (strcmp(pwd->pw_name, *grps->gr_mem) == 0) {
+          syslog(LOG_INFO, "User %s has admin privs, logging in as superuser.",
+            pwd->pw_name);
+          pwd->pw_gid = grps->gr_gid;
+          pwd->pw_uid = 0;
+          strcpy (pwd->pw_name, "root");
+          break;
+        }
+        *(grps->gr_mem)++;
+      }
+    }
+#endif ADMIN_GRP
+
     }
     
     if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
