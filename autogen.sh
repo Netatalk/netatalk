@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # quick fix to remove old INSTALL/ directory
-rm -Rvf INSTALL
+rm -R -f INSTALL
 
 # another fix to hack move of README
 touch README
