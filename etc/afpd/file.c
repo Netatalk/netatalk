@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.32 2002-01-02 21:14:10 srittau Exp $
+ * $Id: file.c,v 1.33 2002-01-03 17:29:10 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -761,7 +761,7 @@ const int         noadouble;
     /* existence check moved to afp_moveandrename */
 
 #ifdef DEBUG
-    syslog (LOG_INFO, "begin renamefile:");
+    syslog(LOG_INFO, "begin renamefile:");
 #endif /* DEBUG */
 
     if ( rename( src, dst ) < 0 ) {
@@ -832,7 +832,7 @@ rename_retry:
     ad_close( &ad, ADFLAGS_HF );
 
 #ifdef DEBUG
-    syslog (LOG_INFO, "end renamefile:");
+    syslog(LOG_INFO, "end renamefile:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -851,7 +851,7 @@ int		ibuflen, *rbuflen;
     u_int16_t	svid, dvid;
 
 #ifdef DEBUG
-    syslog (LOG_INFO, "begin afp_copyfile:");
+    syslog(LOG_INFO, "begin afp_copyfile:");
 #endif /* DEBUG */
 
     *rbuflen = 0;
@@ -935,7 +935,7 @@ int		ibuflen, *rbuflen;
 #endif /* DROPKLUDGE */
 
 #ifdef DEBUG
-    syslog (LOG_INFO, "end afp_copyfile:");
+    syslog(LOG_INFO, "end afp_copyfile:");
 #endif /* DEBUG */
 
     return( retvalue );

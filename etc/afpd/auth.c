@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.20 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: auth.c,v 1.21 2002-01-03 17:29:10 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -178,7 +178,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
 
                 sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir,
                         addr_net / 256, addr_net % 256, addr_node);
-                syslog (LOG_INFO, "registering %s (uid %d) on %u.%u as %s",
+                syslog(LOG_INFO, "registering %s (uid %d) on %u.%u as %s",
                         pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
 
                 if (stat(nodename, &stat_buf) == 0) { /* file exists */

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.17 2002-01-02 21:14:10 srittau Exp $
+ * $Id: filedir.c,v 1.18 2002-01-03 17:29:10 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -71,7 +71,7 @@ more information */
     int		uid;
 
 #ifdef DEBUG
-    syslog (LOG_INFO, "begin matchfile2dirperms:");
+    syslog(LOG_INFO, "begin matchfile2dirperms:");
 #endif /* DEBUG */
 
     if (stat(upath, &st ) < 0)
@@ -79,11 +79,11 @@ more information */
     strcpy (adpath, "./.AppleDouble/");
     strcat (adpath, upath);
     if (( dir = dirsearch( vol, did )) == NULL ) {
-        syslog (LOG_ERR, "matchfile2dirperms: Unable to get directory info.");
+        syslog(LOG_ERR, "matchfile2dirperms: Unable to get directory info.");
         return( AFPERR_NOOBJ );
     }
     else if (stat(".", &sb) < 0) {
-        syslog (LOG_ERR,
+        syslog(LOG_ERR,
                 "matchfile2dirperms: Error checking directory \"%s\": %s",
                 dir->d_name, strerror(errno));
         return(AFPERR_NOOBJ );
@@ -95,54 +95,54 @@ more information */
             seteuid(0);
             if (lchown(upath, sb.st_uid, sb.st_gid) < 0)
             {
-                syslog (LOG_ERR,
+                syslog(LOG_ERR,
                         "matchfile2dirperms: Error changing owner/gid of %s: %s",
                         upath, strerror(errno));
                 return (AFPERR_ACCESS);
             }
             if (chmod(upath,(st.st_mode&0777&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
-                syslog (LOG_ERR,
+                syslog(LOG_ERR,
                         "matchfile2dirperms:  Error adding file read permissions: %s",
                         strerror(errno));
                 return (AFPERR_ACCESS);
             }
 #ifdef DEBUG
             else
-                syslog (LOG_INFO,
+                syslog(LOG_INFO,
                         "matchfile2dirperms:  Added S_IRGRP and S_IROTH: %s",
                         strerror(errno));
 #endif /* DEBUG */
             if (lchown(adpath, sb.st_uid, sb.st_gid) < 0)
             {
-                syslog (LOG_ERR,
+                syslog(LOG_ERR,
                         "matchfile2dirperms: Error changing AppleDouble owner/gid %s: %s",
                         adpath, strerror(errno));
                 return (AFPERR_ACCESS);
             }
             if (chmod(adpath, (st.st_mode&0777&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
-                syslog (LOG_ERR,
+                syslog(LOG_ERR,
                         "matchfile2dirperms:  Error adding AD file read permissions: %s",
                         strerror(errno));
                 return (AFPERR_ACCESS);
             }
 #ifdef DEBUG
             else
-                syslog (LOG_INFO,
+                syslog(LOG_INFO,
                         "matchfile2dirperms:  Added S_IRGRP and S_IROTH to AD: %s",
                         strerror(errno));
 #endif /* DEBUG */
         }
 #ifdef DEBUG
         else
-            syslog (LOG_INFO,
+            syslog(LOG_INFO,
                     "matchfile2dirperms: No ownership change necessary.");
 #endif /* DEBUG */
     } /* end else if stat success */
     seteuid(uid); /* Restore process ownership to normal */
 #ifdef DEBUG
-    syslog (LOG_INFO, "end matchfile2dirperms:");
+    syslog(LOG_INFO, "end matchfile2dirperms:");
 #endif /* DEBUG */
 
     return (AFP_OK);

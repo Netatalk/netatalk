@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.11 2001-12-10 20:16:54 srittau Exp $
+ * $Id: messages.c,v 1.12 2002-01-03 17:29:10 sibaz Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -45,12 +45,12 @@ void readmessage(void)
     sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
 #ifdef DEBUG
-    syslog (LOG_DEBUG, "Reading file %s ", filename);
+    syslog(LOG_DEBUG, "Reading file %s ", filename);
 #endif /* DEBUG */
 
     message=fopen(filename, "r");
     if (message==NULL) {
-        syslog (LOG_INFO, "Unable to open file %s", filename);
+        syslog(LOG_INFO, "Unable to open file %s", filename);
         sprintf(filename, "%s/message", SERVERTEXT);
         message=fopen(filename, "r");
     }
@@ -82,14 +82,14 @@ void readmessage(void)
         }
 
         if (rc < 0) {
-            syslog (LOG_ERR, "Error deleting %s: %m", filename);
+            syslog(LOG_ERR, "Error deleting %s: %m", filename);
         }
 #ifdef DEBUG
         else {
-            syslog (LOG_INFO, "Deleted %s", filename);
+            syslog(LOG_INFO, "Deleted %s", filename);
         }
 
-        syslog (LOG_INFO, "Set server message to \"%s\"", servermesg);
+        syslog(LOG_INFO, "Set server message to \"%s\"", servermesg);
 #endif /* DEBUG */
     }
     free(filename);

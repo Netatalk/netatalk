@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.6 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: uid.c,v 1.7 2002-01-03 17:29:10 sibaz Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -42,10 +42,10 @@ void restore_uidgid ( pair )
 uidgidset **pair;
 {
     if ( seteuid ( (*pair)->uid ) < 0 )
-        syslog ( LOG_ERR, "restore_uidgid: unable to seteuid '%s': %m",
+        syslog( LOG_ERR, "restore_uidgid: unable to seteuid '%s': %m",
                  (*pair)->uid );
     if ( setegid ( (*pair)->gid ) < 0 )
-        syslog ( LOG_ERR, "restore_uidgid: unable to setegid '%s': %m",
+        syslog( LOG_ERR, "restore_uidgid: unable to setegid '%s': %m",
                  (*pair)->gid );
 } /* end function void restore_uidgid ( pair ) */
 
@@ -57,14 +57,14 @@ const struct vol	*this_volume;
     /* check to see if we have to switch users */
     if ( uid = user_to_uid ( (this_volume)->v_forceuid ) ) {
         if ( seteuid ( uid ) < 0 )
-            syslog ( LOG_ERR, "set_uidgid: unable to seteuid '%s': %m",
+            syslog( LOG_ERR, "set_uidgid: unable to seteuid '%s': %m",
                      (this_volume)->v_forceuid );
     } /* end of checking for (this_volume)->v_forceuid */
 
     /* check to see if we have to switch groups */
     if ( gid = group_to_gid ( (this_volume)->v_forcegid ) ) {
         if ( seteuid ( gid ) < 0 )
-            syslog ( LOG_ERR, "set_uidgid: unable to setegid '%s': %m",
+            syslog( LOG_ERR, "set_uidgid: unable to setegid '%s': %m",
                      (this_volume)->v_forcegid );
     } /* end of checking for (this_volume)->v_forcegid */
 

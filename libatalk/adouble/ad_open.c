@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.10 2001-08-15 02:17:06 srittau Exp $
+ * $Id: ad_open.c,v 1.11 2002-01-03 17:29:12 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -576,7 +576,7 @@ ad_mkdir( path, mode )
     int			mode;
 {
 #ifdef DEBUG
-    syslog (LOG_INFO, "ad_mkdir: Creating directory with mode %d", mode);
+    syslog(LOG_INFO, "ad_mkdir: Creating directory with mode %d", mode);
 #endif /* DEBUG */
     return mkdir( path, ad_mode( path, mode ) );
 }

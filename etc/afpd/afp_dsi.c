@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.14 2001-12-23 01:19:55 jmarcus Exp $
+ * $Id: afp_dsi.c,v 1.15 2002-01-03 17:29:10 sibaz Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -72,7 +72,7 @@ static void afp_dsi_die(int sig)
     afp_dsi_close(child.obj);
     if (sig) /* if no signal, assume dieing because logins are disabled &
             don't log it (maintenance mode)*/
-        syslog (LOG_INFO, "Connection terminated");
+        syslog(LOG_INFO, "Connection terminated");
     if (sig == SIGTERM || sig == SIGALRM) {
         exit( 0 );
     }
