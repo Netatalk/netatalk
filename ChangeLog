@@ -1,4 +1,9 @@
 
+2001-04-10  jeff b  <jeff@univrel.pr.uconn.edu>  
+
+	* configure.in, contrib/Makefile.am: made timelord compilation
+	optional, disabled by default
+
 2001-04-03  jeff b  <jeff@univrel.pr.uconn.edu>  
 
 	* etc/afpd/file.c: merged patch from Soren Spies <sspies@apple.com>
