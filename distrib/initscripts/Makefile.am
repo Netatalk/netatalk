@@ -8,9 +8,7 @@ SUFFIXES = .tmpl .
 	    -e s@:ETCDIR:@${CONFIG_DIR}@ \
 	    <$^ >$@
 
-sysvdir	= /etc/rc.d/init.d
-
-CLEANFILES = rc.atalk.redhat atalk
+CLEANFILES = rc.atalk.redhat rc.atalk.suse rc.atalk.tru64 atalk
 
 #
 # checking for "redhat" style sysv scripts:
@@ -18,6 +16,7 @@ CLEANFILES = rc.atalk.redhat atalk
 
 if USE_REDHAT
 
+sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = atalk
 
 atalk: rc.atalk.redhat
@@ -27,11 +26,28 @@ atalk: rc.atalk.redhat
 endif
 
 #
+# checking for "SuSE" style sysv scripts:
+#
+
+if USE_SUSE
+
+sysvdir	= /sbin/init.d
+sysv_SCRIPTS = atalk
+
+atalk: rc.atalk.suse
+	cp -f rc.atalk.suse atalk
+	chmod a+x atalk
+
+endif
+
+#
+#
 # checking for "cobalt" style sysv scripts:
 #
 
 if USE_COBALT
 
+sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = atalk
 
 atalk: rc.atalk.cobalt
@@ -46,6 +62,7 @@ endif
 
 if USE_TRU64
 
+sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = atalk
 
 atalk: rc.atalk.tru64
