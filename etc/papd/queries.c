@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.15 2002-09-29 23:29:14 sibaz Exp $
+ * $Id: queries.c,v 1.16 2003-02-17 01:35:18 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -673,7 +673,7 @@ int cq_listq( in, out )
  */
 
 static struct uam_obj *papd_uam = NULL;
-static const char *rbiloginok = "0\r";
+/*static const char *rbiloginok = "0\r";*/
 static const char *rbiloginbad = "-1\r";
 static const char *rbiloginerrstr = "%%[Error: SecurityError; \
 SecurityViolation: Unknown user, incorrect password or log on is \

@@ -1,5 +1,5 @@
 /*
- * $Id: magics.c,v 1.10 2002-09-29 23:29:13 sibaz Exp $
+ * $Id: magics.c,v 1.11 2003-02-17 01:34:35 srittau Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -154,7 +154,6 @@ int cm_psswitch( in, out, sat )
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
-    struct papd_comment	*comment = compeek();
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
