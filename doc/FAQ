@@ -1,5 +1,5 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.7 2001-11-28 00:12:03 srittau Exp $)
+($Id: FAQ,v 1.8 2002-02-01 06:15:34 srittau Exp $)
 
 -----------------------------------------------------------------------------
 
@@ -374,10 +374,11 @@ A:  If tcp_wrappers support is compiled into netatalk, access has to be
 
 Q15: I'm having Quark Express file locking problems, is there information on that?
 
-A:  Yes, see the question regardng DID conflicts and the --enable-did= flag. 
+A:  Yes, see the question regarding DID conflicts and the --enable-did= flag. 
     Also, try using the --flock-locks flag. Enabling this code disabled the 
-    new byte locking feature.  With FLOCK locks, the whole file would be locked.  
-    With byte locks, a byte range could be locked without locking the whole file.
+    new byte locking feature. With FLOCK locks, the whole file would be locked. 
+    With byte locks, a byte range could be locked without locking the whole
+    file.
 
 
 Q16: I'm getting this error in Quark Express when trying to save a file to
