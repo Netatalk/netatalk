@@ -1,3 +1,8 @@
+2001-01-02  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	* etc/afpd/uid.c, etc/afpd/uid.h, ...: added support for forcing
+	uid/gid per volume for afpd
+
 2000-09-22  Roland Schulz <rdschulz@abarrach.franken.de>
 
 	* etc/afpd/volume.c (setvoltime): fix for multiple clients

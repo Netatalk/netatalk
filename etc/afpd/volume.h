@@ -51,6 +51,10 @@ struct vol {
     void                *v_db;
     char                *v_dbpath;
 #endif
+#ifdef FORCE_UIDGID
+	char				*v_forceuid;
+	char				*v_forcegid;
+#endif FORCE_UIDGID
 };
 
 #ifdef NO_LARGE_VOL_SUPPORT

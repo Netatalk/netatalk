@@ -37,6 +37,10 @@
 #include "filedir.h"
 #include "globals.h"
 
+#ifdef FORCE_UIDGID
+#include "uid.h"
+#endif FORCE_UIDGID
+
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
  * 
@@ -333,6 +337,9 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
     char		*path, *upath;
     int			creatf, did, openf, retvalue = AFP_OK;
     u_int16_t		vid;
+#ifdef FORCE_UIDGID
+	uidgidset		*uidgid;
+#endif FORCE_UIDGID
 
 #ifdef DEBUG
     syslog(LOG_INFO, "begin afp_createfile:");
@@ -390,12 +397,30 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 	openf = O_RDWR|O_CREAT|O_EXCL;
     }
 
+#ifdef FORCE_UIDGID
+
+	/* preserve current euid, egid */
+	save_uidgid ( uidgid );
+
+	/* perform all switching of users */
+	set_uidgid ( vol );
+
+#endif FORCE_UIDGID
+
     if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF,
 		  openf, 0666, adp) < 0 ) {
       switch ( errno ) {
 	case EEXIST :
+#ifdef FORCE_UIDGID
+		/* bring everything back to old euid, egid */
+		restore_uidgid ( uidgid );
+#endif FORCE_UIDGID
 	    return( AFPERR_EXIST );
 	case EACCES :
+#ifdef FORCE_UIDGID
+		/* bring everything back to old euid, egid */
+		restore_uidgid ( uidgid );
+#endif FORCE_UIDGID
 	    return( AFPERR_ACCESS );
         case ENOENT:
 	    /* on noadouble volumes, just creating the data fork is ok */
@@ -403,6 +428,10 @@ int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
 	      goto createfile_done;
 	    /* fallthrough */
 	default :
+#ifdef FORCE_UIDGID
+		/* bring everything back to old euid, egid */
+		restore_uidgid ( uidgid );
+#endif FORCE_UIDGID
 	    return( AFPERR_PARAM );
 	}
     }
@@ -424,6 +453,11 @@ createfile_done:
 #ifdef DEBUG
     syslog(LOG_INFO, "end afp_createfile");
 #endif DEBUG
+
+#ifdef FORCE_UIDGID
+	/* bring everything back to old euid, egid */
+	restore_uidgid ( uidgid );
+#endif FORCE_UIDGID
 
     return (retvalue);
 }
@@ -500,6 +534,10 @@ int setfilparams(vol, path, bitmap, buf )
     u_int32_t		aint;
     struct utimbuf	ut;
 
+#ifdef FORCE_UIDGID
+	uidgidset		*uidgid;
+#endif FORCE_UIDGID
+
 #ifdef DEBUG
     syslog(LOG_INFO, "begin setfilparams:");
 #endif DEBUG
@@ -511,10 +549,19 @@ int setfilparams(vol, path, bitmap, buf )
       memset(&ad, 0, sizeof(ad));
       adp = &ad;
     }
+
+#ifdef FORCE_UIDGID
+	save_uidgid ( uidgid );
+	set_uidgid ( vol );
+#endif FORCE_UIDGID
+
     if (ad_open( upath, vol_noadouble(vol) | ADFLAGS_HF, 
 		 O_RDWR|O_CREAT, 0666, adp) < 0) {
       /* for some things, we don't need an adouble header */
       if (bitmap & ~(1<<FILPBIT_MDATE)) {
+#ifdef FORCE_UIDGID
+	restore_uidgid ( uidgid );
+#endif FORCE_UIDGID
 	return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
       }
       isad = 0;
@@ -632,6 +679,11 @@ setfilparam_done:
     if (isad) {
       ad_flush( adp, ADFLAGS_HF );
       ad_close( adp, ADFLAGS_HF );
+
+#ifdef FORCE_UIDGID
+	restore_uidgid ( uidgid );
+#endif FORCE_UIDGID
+
     }
 
 #ifdef DEBUG

@@ -77,7 +77,13 @@ static struct extmap	*extmap = NULL, *defextmap = NULL;
 				~u  -> make u illegal only as the first
 				       part of a double-byte character.
 			     */
-#define VOLOPT_MAX        9
+
+#ifdef FORCE_UIDGID
+#define VOLOPT_FORCEUID  10  /* force uid for username x */
+#define VOLOPT_FORCEGID  11  /* force gid for group x */
+#endif FORCE_UIDGID
+
+#define VOLOPT_MAX        11
 #define VOLOPT_NUM        (VOLOPT_MAX + 1)
 
 #define VOLPASSLEN  8
@@ -246,6 +252,9 @@ static __inline__ char *get_codepage_path(const char *path, const char *name)
     page = strdup(name);
   }
 
+  /* debug: show which codepage directory we are using */
+  syslog(LOG_DEBUG, "using codepage directory: %s", page);
+
   return page;
 }
 
@@ -338,6 +347,21 @@ static void volset(struct vol_option *options, char *volname, int vlen,
     if (options[VOLOPT_PASSWORD].c_value)
       free(options[VOLOPT_PASSWORD].c_value);
     options[VOLOPT_PASSWORD].c_value = strdup(val + 1);
+
+#ifdef FORCE_UIDGID
+
+	/* this code allows forced uid/gid per volume settings */
+  } else if (optionok(tmp, "forceuid:", val)) {
+    if (options[VOLOPT_FORCEUID].c_value)
+      free(options[VOLOPT_FORCEUID].c_value);
+    options[VOLOPT_FORCEUID].c_value = strdup(val + 1);
+  } else if (optionok(tmp, "forcegid:", val)) {
+    if (options[VOLOPT_FORCEGID].c_value)
+      free(options[VOLOPT_FORCEGID].c_value);
+    options[VOLOPT_FORCEGID].c_value = strdup(val + 1);
+
+#endif FORCE_UIDGID
+
   } else if (val) {
     /* ignore unknown options */
     syslog(LOG_DEBUG, "ignoring unknown volume option: %s", tmp);
@@ -422,6 +446,23 @@ static int creatvol(const char *path, char *name, struct vol_option *options)
       if (options[VOLOPT_DBPATH].c_value)
 	volume->v_dbpath = strdup(options[VOLOPT_DBPATH].c_value);
 #endif
+
+#ifdef FORCE_UIDGID
+
+	  if (options[VOLOPT_FORCEUID].c_value) {
+	volume->v_forceuid = strdup(options[VOLOPT_FORCEUID].c_value);
+	  } else {
+	volume->v_forceuid = NULL; /* set as null so as to return 0 later on */
+	  }
+
+	  if (options[VOLOPT_FORCEGID].c_value) {
+	volume->v_forcegid = strdup(options[VOLOPT_FORCEGID].c_value);
+	  } else {
+	volume->v_forcegid = NULL; /* set as null so as to return 0 later on */
+	  }
+
+#endif FORCE_UIDGID
+
     }
 
     volume->v_next = volumes;

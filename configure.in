@@ -215,8 +215,18 @@ dnl -----------
 
 AC_ARG_ENABLE(dropkludge,
 	[  --enable-dropkludge     enable the experimental dropbox fix (INSECURE!) ],
-	AC_DEFINE(DROPKLUDGE, 1)
-	AC_MSG_RESULT([enabling experimental dropbox support])
+	if test "$enableval" = "yes"; then 
+		AC_DEFINE(DROPKLUDGE, 1)
+		AC_MSG_RESULT([enabling experimental dropbox support])
+	fi
+)
+
+AC_ARG_ENABLE(force-uidgid,
+	[  --enable-force-uidgid   allow forcing of uid/gid per volume (INSECURE?) ],
+	if test "$enableval" = "yes"; then 
+		AC_DEFINE(FORCE_UIDGID, 1)
+		AC_MSG_RESULT([enabling forcing of uid/gid per volume])
+	fi
 )
 
 AC_ARG_ENABLE(lastdid,
