@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.8 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: ofork.c,v 1.9 2002-01-17 16:13:34 jmarcus Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -152,11 +152,33 @@ struct adouble      *ad;
             return NULL;
     }
 
-    for ( refnum = lastrefnum++, i = 0; i < nforks; i++, refnum++ ) {
+    for ( refnum = ++lastrefnum, i = 0; i < nforks; i++, refnum++ ) {
+        /* cf AFP3.0.pdf, File fork page 40 */
+        if (!refnum)
+           refnum++;
         if ( oforks[ refnum % nforks ] == NULL ) {
             break;
         }
     }
+    /* grr, Apple and their 'uniquely identifies' 
+          the next line is a protection against 
+          of_alloc()
+             refnum % nforks = 3 
+             lastrefnum = 3
+             oforks[3] != NULL 
+             refnum = 4
+             oforks[4] == NULL
+             return 4
+         
+          close(oforks[4])
+      
+          of_alloc()
+             refnum % nforks = 4
+             ...
+             return 4
+         same if lastrefnum++ rather than ++lastrefnum. 
+    */
+    lastrefnum = refnum;
     if ( i == nforks ) {
         LOG(log_error, logtype_default, "of_alloc: maximum number of forks exceeded.");
         return( NULL );
