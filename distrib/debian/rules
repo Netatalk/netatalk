@@ -33,7 +33,7 @@ binary-arch: build
 
 	dh_installdocs
 	dh_installinit --update-rcd-params="defaults 50 50"
-	dh_installmanpages -pnetatalk man/man5/*.tmpl man/man8/*.tmpl
+	dh_installman
 	dh_undocumented
 	dh_installchangelogs ChangeLog
 
