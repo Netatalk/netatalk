@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.18 2002-02-06 21:58:50 jmarcus Exp $
+ * $Id: afp_options.c,v 1.19 2002-02-09 17:13:53 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -142,7 +142,7 @@ void afp_options_init(struct afp_options *options)
     options->passwdfile = _PATH_AFPDPWFILE;
     options->tickleval = 30;
     options->timeout = 4;
-    options->server_notif = 0;
+    options->server_notif = 1;
     options->authprintdir = NULL;
     options->umask = 0;
 #ifdef ADMIN_GRP
@@ -208,6 +208,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->transports |= AFPTRANS_DDP;
     if (strstr(buf, " -noddp"))
         options->transports &= ~AFPTRANS_DDP;
+    if (strstr(buf, "-client_polling"))
+        options->server_notif = 0;
 
     /* figure out options w/ values. currently, this will ignore the setting
      * if memory is lacking. */
@@ -236,9 +238,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         if (options->timeout <= 0) {
             options->timeout = 4;
         }
-    }
-    if ((c = getoption(buf, "-server_notif"))) {
-        options->server_notif = 1;
     }
 
     if ((c = getoption(buf, "-server_quantum")))

@@ -1,3 +1,8 @@
+2002-02-09  joe c  <marcus@marcuscom.com>
+	* etc/afpd/afp_options.c: Redo the -server_notif flag.  Now, server
+	notifications are enabled by default, and specifying the -client_polling
+	flag will disable them.
+
 2002-02-06  joe c  <marcus@marcuscom.com>
 	* etc/afpd/globals.h, etc/afpd/afp_options.c, etc/afpd/status.c
 	etc/afpd/volume.c: Add a new option -server_notif to specify that

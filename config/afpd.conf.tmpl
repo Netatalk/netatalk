@@ -111,6 +111,10 @@
 #     -loginmesg "Message"  Client will display "Message" upon logging in
 #                         (no default, same as -l "Message" on commandline)
 #     -nodebug            Switch off debugging
+#     -client_polling     Disable server notifications.  This forces the 
+#                         clients to poll every 10 seconds for directory
+#                         updates.  Note, currently this is the only way to
+#                         get asynchronous updates.
 #     -tickleval <number> Specify the tickle timeout interval (in seconds).
 #                         Note, this defaults to 30 seconds, and really 
 #                         shouldn't be changed.  If you want to control

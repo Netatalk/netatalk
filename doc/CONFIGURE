@@ -112,7 +112,12 @@ Miscellaneous:
 			(no default, same as -l "Message" on
 			command-line)
      -nodebug		Switch off debugging
+     -client_polling	Disable server notifications.  This forces the
+			clients to poll every 10 seconds for directory updates.  Note, 
+			currently this is the only way to get asynchronous updates.
      -ticklevel <number>	Specify the tickle timeout interval (in seconds)
+     -timeout <number>		Specify the number of tickles to miss before tearing
+			down a client connection
      -icon			Use the platform-specific icon.
 
 An example:
