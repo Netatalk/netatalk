@@ -1,6 +1,6 @@
 #################################################### VERSIONING INFORMATION
 %define name    netatalk
-%define version 1.5pre5
+%define version 1.5pre6
 %define release 1
 
 ################################################# BASIC PACKAGE INFORMATION
@@ -43,6 +43,10 @@ This package is required for developing appletalk-based applications.
 
 %changelog
 
+* Thu Apr 12 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
+  - v1.5pre6-1
+  - pre-release 6 for sourceforge
+
 * Wed Mar 07 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
   - v1.5pre5-1
   - pre-release 5 for sourceforge
@@ -73,22 +77,24 @@ This package is required for developing appletalk-based applications.
 %setup -q -n %{name}-%{version}/
 
 %build
-./autogen.sh
 CFLAGS="$RPM_OPT_FLAGS -fomit-frame-pointer -fsigned-char" ./configure \
 	--prefix=%{prefix} \
+	--with-config-dir=/etc/atalk \
+	--with-uams-path=/etc/atalk/uams \
+	--with-msg-dir=/etc/atalk/msg \
 	--enable-lastdid \
 	--enable-redhat \
 	--with-cracklib \
 	--with-pam \
 	--with-shadow \
 	--with-tcp-wrappers \
-	--with-ssl
-# --with-flock-locks
+	--with-ssl \
+	--enable-pgp-uam
 make all
 
 %install
 ### INSTALL (USING "make install") ###
-mkdir -p $RPM_BUILD_ROOT%{prefix}
+mkdir -p $RPM_BUILD_ROOT{%{prefix},/etc/atalk/{uams,msg}}
 make DESTDIR=$RPM_BUILD_ROOT install-strip
 
 # bzip2 man pages

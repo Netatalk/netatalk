@@ -1,7 +1,8 @@
 #################################################### VERSIONING INFORMATION
 %define name    netatalk
-%define version 1.5pre5
+%define version 1.5pre6
 %define release 1mdk
+%define tardir	%{name}-%{version}
 
 ################################################# BASIC PACKAGE INFORMATION
 Summary: Appletalk and Appleshare/IP services for Linux
@@ -43,7 +44,11 @@ This package is required for developing appletalk-based applications.
 
 %changelog
 
-* Wed Mar 07 2000 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
+* Thu Apr 12 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
+  - v1.5pre6-1mdk
+  - pre-release 6 for sourceforge
+
+* Wed Mar 07 2001 rufus t firefly <rufus.t.firefly@linux-mandrake.com>
   - v1.5pre5-1mdk
   - pre-release 5 for sourceforge
   - sync with redhat package
@@ -62,25 +67,28 @@ This package is required for developing appletalk-based applications.
   - pre-release 1 for sourceforge
 
 %prep
-%setup -q -n netatalk-%{version}/
+%setup -q -n %{tardir}/
 
 %build
-./autogen.sh
+export LD_PRELOAD=
 CFLAGS="$RPM_OPT_FLAGS -fomit-frame-pointer -fsigned-char" ./configure \
 	--prefix=%{prefix} \
+    --with-config-dir=/etc/atalk \
+	--with-uams-path=/etc/atalk/uams \
+    --with-msg-dir=/etc/atalk/msg \
 	--enable-lastdid \
 	--enable-redhat \
 	--with-cracklib \
 	--with-pam \
 	--with-shadow \
 	--with-tcp-wrappers \
-	--with-flock-locks \
-	--with-ssl
+	--with-ssl \
+	--enable-pgp-uam
 make all
 
 %install
 ### INSTALL (USING "make install") ###
-mkdir -p $RPM_BUILD_ROOT/usr
+mkdir -p $RPM_BUILD_ROOT{%{prefix},/etc/atalk/{uams,msg}}
 make DESTDIR=$RPM_BUILD_ROOT install-strip
 
 # bzip2 man pages
@@ -145,11 +153,13 @@ fi
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_DIR/%{tardir}/
 
 %files
 %defattr(-,root,root)
 %doc [A-Z][A-Z]* ChangeLog doc/[A-Z][A-Z]*
 %dir /etc/atalk
+%dir /etc/atalk/msg
 %config /etc/atalk/Apple*
 %config /etc/atalk/*.conf
 %config /etc/pam.d/netatalk
