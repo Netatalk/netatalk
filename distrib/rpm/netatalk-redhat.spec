@@ -70,7 +70,7 @@ This package is required for developing appletalk-based applications.
   - pre-release 1 for sourceforge
 
 %prep
-%setup -q -n %{name}/
+%setup -q -n %{name}-%{version}/
 
 %build
 ./autogen.sh
@@ -95,11 +95,6 @@ make DESTDIR=$RPM_BUILD_ROOT install-strip
 #for i in 1 3 4 5 8; do
 #	bzip2 -v $RPM_BUILD_ROOT/usr/man/man$i/*.$i
 #done
-
-# install pam file
-#mkdir -p $RPM_BUILD_ROOT/etc/pam.d/
-#install -m 644 -o 0 -g 0  config/netatalk.pamd \
-#  $RPM_BUILD_ROOT/etc/pam.d/netatalk
 
 %post
 ### RUN CHKCONFIG ###
@@ -163,7 +158,7 @@ rm -rf $RPM_BUILD_DIR/%{name}/
 %files
 %defattr(-,root,root)
 %doc doc/[A-L,N-Z]*
-wconfig /etc/atalk/Apple*
+%config /etc/atalk/Apple*
 %config /etc/atalk/*.conf
 %config /etc/pam.d/netatalk
 /etc/atalk/nls/*
