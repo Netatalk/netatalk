@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.9 2003-01-24 07:08:42 didg Exp $
+ * $Id: directory.h,v 1.10 2003-01-26 10:42:40 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -201,6 +201,8 @@ typedef int (*dir_loop)(struct dirent *, char *, void *);
 extern int  for_each_dirent __P((const struct vol *, char *, dir_loop , void *));
 
 extern int  check_access __P((char *name , int mode));
+
+extern int netatalk_unlink __P((const char *name));
 
 /* from enumerate.c */
 extern char *check_dirent __P((const struct vol *, char *));

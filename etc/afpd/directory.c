@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.58 2003-01-24 07:08:42 didg Exp $
+ * $Id: directory.c,v 1.59 2003-01-26 10:42:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -550,98 +550,36 @@ struct path *path;
     return( dir );
 }
 
-static int deletedir(char *dir)
+/* -------------------
+   system rmdir with afp error code.
+   ENOENT is not an error.
+ */
+static int netatalk_rmdir(const char *name)
 {
-    char path[MAXPATHLEN + 1];
-    DIR *dp;
-    struct dirent	*de;
-    struct stat st;
-    size_t len;
-    int err;
-
-    if ((len = strlen(dir)) > sizeof(path))
-        return AFPERR_PARAM;
-
-    /* already gone */
-    if ((dp = opendir(dir)) == NULL)
-        return AFP_OK;
-
-    strcpy(path, dir);
-    strcat(path, "/");
-    len++;
-    while ((de = readdir(dp))) {
-        /* skip this and previous directory */
-        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
-            continue;
-
-        strncpy(path + len, de->d_name, sizeof(path) - len);
-        if (stat(path, &st) == 0) {
-            if (S_ISDIR(st.st_mode)) {
-                if ((err = deletedir(path)) < 0) {
-                    closedir(dp);
-                    return err;
-                }
-            } else if (unlink(path) < 0) {
-                switch (errno) {
-                case ENOENT :
-                    continue; /* somebody went and deleted it behind our backs. */
-                case EROFS:
-                    err = AFPERR_VLOCK;
-                    break;
-                case EPERM:
-                case EACCES :
-                    err = AFPERR_ACCESS;
-                    break;
-                default :
-                    err = AFPERR_PARAM;
-                }
-                closedir(dp);
-                return err;
-            }
-        }
-    }
-    closedir(dp);
-
-    /* okay. the directory is empty. delete it. note: we already got rid
-       of .AppleDouble.  */
-    if (rmdir(dir) < 0) {
+    if (rmdir(name) < 0) {
         switch ( errno ) {
         case ENOENT :
             break;
-        case ENOTEMPTY : /* should never happen */
-            return( AFPERR_DIRNEMPT );
+        case ENOTEMPTY : 
+            return AFPERR_DIRNEMPT;
         case EPERM:
         case EACCES :
-            return( AFPERR_ACCESS );
+            return AFPERR_ACCESS;
         case EROFS:
             return AFPERR_VLOCK;
         default :
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
     return AFP_OK;
 }
 
-/* do a recursive copy. */
-static int copydir(char *src, char *dst, int noadouble)
+/* -------------------------
+   appledouble mkdir afp error code.
+*/
+static int netatalk_mkdir(const char *name)
 {
-    char spath[MAXPATHLEN + 1], dpath[MAXPATHLEN + 1];
-    DIR *dp;
-    struct dirent	*de;
-    struct stat st;
-    struct utimbuf      ut;
-    size_t slen, dlen;
-    int err;
-
-    /* doesn't exist or the path is too long. */
-    if (((slen = strlen(src)) > sizeof(spath) - 2) ||
-            ((dlen = strlen(dst)) > sizeof(dpath) - 2) ||
-            ((dp = opendir(src)) == NULL))
-        return AFPERR_PARAM;
-
-    /* try to create the destination directory */
-    if (ad_mkdir(dst, DIRBITS | 0777) < 0) {
-        closedir(dp);
+    if (ad_mkdir(name, DIRBITS | 0777) < 0) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
@@ -659,28 +597,141 @@ static int copydir(char *src, char *dst, int noadouble)
             return( AFPERR_PARAM );
         }
     }
+    return AFP_OK;
+}
+
+/* -------------------
+   system unlink with afp error code.
+   ENOENT is not an error.
+ */
+int netatalk_unlink(const char *name)
+{
+    if (unlink(name) < 0) {
+        switch (errno) {
+        case ENOENT :
+            break;
+        case EROFS:
+            return AFPERR_VLOCK;
+        case EPERM:
+        case EACCES :
+            return AFPERR_ACCESS;
+        default :
+            return AFPERR_PARAM;
+        }
+    }
+    return AFP_OK;
+}
+
+/* ------------------- */
+static int deletedir(char *dir)
+{
+    char path[MAXPATHLEN + 1];
+    DIR *dp;
+    struct dirent	*de;
+    struct stat st;
+    size_t len;
+    int err = AFP_OK;
+    size_t remain;
+
+    if ((len = strlen(dir)) +2 > sizeof(path))
+        return AFPERR_PARAM;
+
+    /* already gone */
+    if ((dp = opendir(dir)) == NULL)
+        return AFP_OK;
+
+    strcpy(path, dir);
+    strcat(path, "/");
+    len++;
+    remain = sizeof(path) -len -1;
+    while ((de = readdir(dp)) && err == AFP_OK) {
+        /* skip this and previous directory */
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+            continue;
+
+        if (strlen(de->d_name) > remain) {
+            err = AFPERR_PARAM;
+            break;
+        }
+        strcpy(path + len, de->d_name);
+        if (stat(path, &st)) {
+            continue;
+        }
+        if (S_ISDIR(st.st_mode)) {
+            err = deletedir(path);
+        } else {
+            err = netatalk_unlink(path);
+        }
+    }
+    closedir(dp);
+
+    /* okay. the directory is empty. delete it. note: we already got rid
+       of .AppleDouble.  */
+    if (err == AFP_OK) {
+        err = netatalk_rmdir(dir);
+    }
+    return err;
+}
+
+/* do a recursive copy. */
+static int copydir(char *src, char *dst, int noadouble)
+{
+    char spath[MAXPATHLEN + 1], dpath[MAXPATHLEN + 1];
+    DIR *dp;
+    struct dirent	*de;
+    struct stat st;
+    struct utimbuf      ut;
+    size_t slen, dlen;
+    size_t srem, drem;
+    
+    int err;
+
+    /* doesn't exist or the path is too long. */
+    if (((slen = strlen(src)) > sizeof(spath) - 2) ||
+            ((dlen = strlen(dst)) > sizeof(dpath) - 2) ||
+            ((dp = opendir(src)) == NULL))
+        return AFPERR_PARAM;
+
+    /* try to create the destination directory */
+    if (AFP_OK != (err = netatalk_mkdir(dst)) ) {
+        closedir(dp);
+        return err;
+    }
 
     /* set things up to copy */
     strcpy(spath, src);
     strcat(spath, "/");
     slen++;
+    srem = sizeof(spath) - slen -1;
+    
     strcpy(dpath, dst);
     strcat(dpath, "/");
     dlen++;
+    drem = sizeof(dpath) - dlen -1;
+
     err = AFP_OK;
     while ((de = readdir(dp))) {
         /* skip this and previous directory */
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
             continue;
 
-        strncpy(spath + slen, de->d_name, sizeof(spath) - slen);
+        if (strlen(de->d_name) > srem) {
+            err = AFPERR_PARAM;
+            break;
+        }
+        strcpy(spath + slen, de->d_name);
+
         if (stat(spath, &st) == 0) {
-            strncpy(dpath + dlen, de->d_name, sizeof(dpath) - dlen);
+            if (strlen(de->d_name) > drem) {
+                err = AFPERR_PARAM;
+                break;
+            }
+            strcpy(dpath + dlen, de->d_name);
 
             if (S_ISDIR(st.st_mode)) {
-                if ((err = copydir(spath, dpath, noadouble)) < 0)
+                if (AFP_OK != (err = copydir(spath, dpath, noadouble)))
                     goto copydir_done;
-            } else if ((err = copyfile(spath, dpath, NULL, noadouble)) < 0) {
+            } else if (AFP_OK != (err = copyfile(spath, dpath, NULL, noadouble))) {
                 goto copydir_done;
 
             } else {
@@ -1691,7 +1742,8 @@ int		ibuflen, *rbuflen;
     struct path         *s_path;
     u_int32_t		did;
     u_int16_t		vid;
-
+    int                 err;
+    
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1718,29 +1770,12 @@ int		ibuflen, *rbuflen;
         return AFPERR_EXIST;
 
     upath = s_path->u_name;
-    {
-    int ret;
-        if (0 != (ret = check_name(vol, upath))) {
-            return  ret;
-        }
+    if (0 != (err = check_name(vol, upath))) {
+       return err;
     }
 
-    if ( ad_mkdir( upath, DIRBITS | 0777 ) < 0 ) {
-        switch ( errno ) {
-        case ENOENT :
-            return( AFPERR_NOOBJ );
-        case EROFS :
-            return( AFPERR_VLOCK );
-        case EACCES :
-            return( AFPERR_ACCESS );
-        case EEXIST :
-            return( AFPERR_EXIST );
-        case ENOSPC :
-        case EDQUOT :
-            return( AFPERR_DFULL );
-        default :
-            return( AFPERR_PARAM );
-        }
+    if (AFP_OK != (err = netatalk_mkdir( upath))) {
+        return err;
     }
 
     if (of_stat(s_path) < 0) {
@@ -1882,6 +1917,7 @@ int pathlen;
     DIR *dp;
     struct adouble	ad;
     u_int16_t		ashort;
+    int err;
 
     if ( curdir->d_parent == NULL ) {
         return( AFPERR_ACCESS );
@@ -1921,38 +1957,16 @@ int pathlen;
             }
 
             strcpy(path + DOT_APPLEDOUBLE_LEN, de->d_name);
-            if (unlink(path) < 0) {
+            if ((err = netatalk_unlink(path))) {
                 closedir(dp);
-                switch (errno) {
-                case EPERM:
-                case EACCES :
-                    return( AFPERR_ACCESS );
-                case EROFS:
-                    return AFPERR_VLOCK;
-                case ENOENT :
-                    continue;
-                default :
-                    return( AFPERR_PARAM );
-                }
+                return err;
             }
         }
         closedir(dp);
     }
 
-    if ( rmdir( ".AppleDouble" ) < 0 ) {
-        switch ( errno ) {
-        case ENOENT :
-            break;
-        case ENOTEMPTY :
-            return( AFPERR_DIRNEMPT );
-        case EROFS:
-            return AFPERR_VLOCK;
-        case EPERM:
-        case EACCES :
-            return( AFPERR_ACCESS );
-        default :
-            return( AFPERR_PARAM );
-        }
+    if ( (err = netatalk_rmdir( ".AppleDouble" ))  ) {
+    	return err;
     }
 
     /* now get rid of dangling symlinks */
@@ -1964,21 +1978,13 @@ int pathlen;
 
             /* bail if it's not a symlink */
             if ((lstat(de->d_name, &st) == 0) && !S_ISLNK(st.st_mode)) {
+            	closedir(dp);
                 return AFPERR_DIRNEMPT;
             }
 
-            if (unlink(de->d_name) < 0) {
-                switch (errno) {
-                case EPERM:
-                case EACCES :
-                    return( AFPERR_ACCESS );
-                case EROFS:
-                    return AFPERR_VLOCK;
-                case ENOENT :
-                    continue;
-                default :
-                    return( AFPERR_PARAM );
-                }
+            if ((err = netatalk_unlink(de->d_name))) {
+            	closedir(dp);
+            	return err;
             }
         }
         closedir(dp);
@@ -1988,20 +1994,8 @@ int pathlen;
         return afp_errno;
     }
 
-    if ( rmdir(fdir->d_u_name) < 0 ) {
-        switch ( errno ) {
-        case ENOENT :
-            return( AFPERR_NOOBJ );
-        case ENOTEMPTY :
-            return( AFPERR_DIRNEMPT );
-        case EPERM:
-        case EACCES :
-            return( AFPERR_ACCESS );
-        case EROFS:
-            return AFPERR_VLOCK;
-        default :
-            return( AFPERR_PARAM );
-        }
+    if ( (err = netatalk_rmdir(fdir->d_u_name))) {
+        return err;
     }
 
     dirchildremove(curdir, fdir);

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.78 2003-01-24 12:42:31 didg Exp $
+ * $Id: file.c,v 1.79 2003-01-26 10:42:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1441,44 +1441,11 @@ int         checkAttrib;
 
     if (ad_tmplock( &ad, ADEID_DFORK, locktype, 0, 0, 0 ) < 0) {
         err = AFPERR_BUSY;
-        goto delete_unlock;
+    }
+    else if ( 0 == (err = netatalk_unlink( ad_path( file, ADFLAGS_HF )) )) {
+        err = netatalk_unlink( file );
     }
 
-    if ( unlink( ad_path( file, ADFLAGS_HF )) < 0 ) {
-        switch ( errno ) {
-        case EPERM:
-        case EACCES :
-            err = AFPERR_ACCESS;
-            goto delete_unlock;
-        case EROFS:
-            err = AFPERR_VLOCK;
-            goto delete_unlock;
-        case ENOENT :
-            break;
-        default :
-            err = AFPERR_PARAM;
-            goto delete_unlock;
-        }
-    }
-
-    if ( unlink( file ) < 0 ) {
-        switch ( errno ) {
-        case EPERM:
-        case EACCES :
-            err = AFPERR_ACCESS;
-            break;
-        case EROFS:
-            err = AFPERR_VLOCK;
-            break;
-        case ENOENT :
-            break;
-        default :
-            err = AFPERR_PARAM;
-            break;
-        }
-    }
-
-delete_unlock:
     if (adflags & ADFLAGS_HF)
         ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR |ADLOCK_FILELOCK, 0, 0, 0);
     ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0, 0);

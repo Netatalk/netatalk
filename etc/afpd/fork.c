@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.45 2003-01-16 21:18:15 didg Exp $
+ * $Id: fork.c,v 1.46 2003-01-26 10:42:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -184,7 +184,7 @@ static int getforkmode(struct adouble *adp, int eid, int what)
     return ad_testlock(adp, eid,  what);
 }
 
-static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
+static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
 {
     int ret;
     int readset;
@@ -484,7 +484,7 @@ int		ibuflen, *rbuflen;
     /* don't try to lock non-existent rforks. */
     if ((eid == ADEID_DFORK) || (ad_hfileno(ofork->of_ad) != -1)) {
 
-        ret = afp_setmode(ofork->of_ad, eid, access, ofrefnum);
+        ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
         if (ret < 0) {
             ret = errno;
