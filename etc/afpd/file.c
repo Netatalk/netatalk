@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.72 2003-01-12 14:39:59 didg Exp $
+ * $Id: file.c,v 1.73 2003-01-16 20:06:33 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1048,7 +1048,7 @@ int		ibuflen, *rbuflen;
     memcpy(&ddid, ibuf, sizeof( ddid ));
     ibuf += sizeof( ddid );
 
-    if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
         return afp_errno;
     }
     if ( *s_path->m_name == '\0' ) {
@@ -1071,14 +1071,14 @@ int		ibuflen, *rbuflen;
 #ifdef FORCE_UIDGID
     /* FIXME svid != dvid && dvid's user can't read svid */
 #endif
-    if (( vol = getvolbyvid( dvid )) == NULL ) {
+    if (NULL == ( vol = getvolbyvid( dvid )) ) {
         return( AFPERR_PARAM );
     }
 
     if (vol->v_flags & AFPVOL_RO)
         return AFPERR_VLOCK;
 
-    if (( dir = dirlookup( vol, ddid )) == NULL ) {
+    if (NULL == ( dir = dirlookup( vol, ddid )) ) {
         return afp_errno;
     }
 
@@ -1428,13 +1428,13 @@ int         checkAttrib;
          *
          * FIXME it doesn't for RFORK open read only and fork open without deny mode
          */
-        if (ad_tmplock(&ad, ADEID_RFORK, locktype |ADLOCK_FILELOCK, 0, 0) < 0 ) {
+        if (ad_tmplock(&ad, ADEID_RFORK, locktype |ADLOCK_FILELOCK, 0, 0, 0) < 0 ) {
             ad_close( &ad, adflags );
             return( AFPERR_BUSY );
         }
     }
 
-    if (ad_tmplock( &ad, ADEID_DFORK, locktype, 0, 0 ) < 0) {
+    if (ad_tmplock( &ad, ADEID_DFORK, locktype, 0, 0, 0 ) < 0) {
         err = AFPERR_BUSY;
         goto delete_unlock;
     }
@@ -1475,8 +1475,8 @@ int         checkAttrib;
 
 delete_unlock:
     if (adflags & ADFLAGS_HF)
-        ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR |ADLOCK_FILELOCK, 0, 0);
-    ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
+        ad_tmplock(&ad, ADEID_RFORK, ADLOCK_CLR |ADLOCK_FILELOCK, 0, 0, 0);
+    ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0, 0);
     ad_close( &ad, adflags );
 
 #ifdef DEBUG

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.4 2002-10-11 14:18:39 didg Exp $
+ * $Id: ad_write.c,v 1.5 2003-01-16 20:06:33 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,7 +46,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
     return cc;
 }
 
-
+/* end is always 0 */
 ssize_t ad_write( ad, eid, off, end, buf, buflen )
     struct adouble	*ad;
     const u_int32_t	eid;
@@ -92,57 +92,30 @@ ssize_t ad_write( ad, eid, off, end, buf, buflen )
     return( cc );
 }
 
-/* set locks here */
+/* 
+ * the caller set the locks
+ * we need tocopy and paste from samba code source/smbd/vfs_wrap.c
+ * ftruncate is undefined when the file length is smaller than 'size'
+ */
 int ad_rtruncate( ad, size )
     struct adouble	*ad;
-    const size_t	size;
+    const off_t  	size;
 {
-    int err;
-
-    if (ad_tmplock(ad, ADEID_RFORK, ADLOCK_WR, 0, 0) < 0)
-      return -2;
-
     if ( ftruncate( ad->ad_hf.adf_fd,
 	    size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
-        err = errno;
-        ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
-	errno = err;
 	return( -1 );
     }
     ad->ad_rlen = size;    
 
-#if 0
-    ad->ad_eid[ ADEID_RFORK ].ade_len = size;
-    if ( lseek( ad->ad_hf.adf_fd, ad->ad_eid[ADEID_RFORK].ade_off, 
-		SEEK_SET ) < 0 ) {
-        err = errno;
-        ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
-	errno = err;
-	return( -1 );
-    }
-
-    ad->ad_hf.adf_off = ad->ad_eid[ADEID_RFORK].ade_off;
-#endif
-    ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0);
     return( 0 );
 }
 
 int ad_dtruncate(ad, size)
     struct adouble	*ad;
-    const size_t	size;
+    const off_t 	size;
 {
-    int err;
-
-    if (ad_tmplock(ad, ADEID_DFORK, ADLOCK_WR, 0, 0) < 0)
-      return -2;
-
     if (ftruncate(ad->ad_df.adf_fd, size) < 0) {
-      err = errno;
-      ad_tmplock(ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
-      errno = err;
       return -1;
-    } else 
-      ad_tmplock(ad, ADEID_DFORK, ADLOCK_CLR, 0, 0);
-
+    }
     return 0;
 }

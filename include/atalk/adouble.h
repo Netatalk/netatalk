@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.12 2002-11-14 17:15:22 srittau Exp $
+ * $Id: adouble.h,v 1.13 2003-01-16 20:06:33 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -261,8 +261,18 @@ struct adouble {
 /* synchronization locks */
 #define AD_FILELOCK_BASE (0x80000000)
 #else
-#define AD_FILELOCK_BASE (0x7FFFFFFF -4)
+#define AD_FILELOCK_BASE (0x7FFFFFFF -9)
 #endif
+
+/* FIXME:
+ * AD_FILELOCK_BASE case 
+ */
+#if _FILE_OFFSET_BITS == 64   
+#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
+#else
+#define BYTELOCK_MAX (0x7FFFFFFFU)
+#endif
+
 #define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
 #define AD_FILELOCK_OPEN_RD   	   (AD_FILELOCK_BASE + 1)
 #define AD_FILELOCK_DENY_WR   	   (AD_FILELOCK_BASE + 2)
@@ -308,12 +318,12 @@ extern int ad_close           __P((struct adouble *, int));
 /* ad_lock.c */
 extern int ad_fcntl_lock __P((struct adouble *, const u_int32_t /*eid*/,
 			      const int /*type*/, const off_t /*offset*/,
-			      const size_t /*len*/, const int /*user*/));
+			      const off_t /*len*/, const int /*user*/));
 extern void ad_fcntl_unlock __P((struct adouble *, const int /*user*/));
 
 extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
 				 const int /*type*/, const off_t /*offset*/,
-				 const size_t /*len*/));
+				 const off_t /*len*/, const int /*user*/));
 
 #define ad_lock ad_fcntl_lock
 #define ad_tmplock ad_fcntl_tmplock
@@ -365,8 +375,8 @@ extern ssize_t ad_write __P((struct adouble *, const u_int32_t, off_t,
 extern ssize_t adf_pread  __P((struct ad_fd *, void *, size_t, off_t));
 extern ssize_t adf_pwrite __P((struct ad_fd *, const void *, size_t, off_t));
 
-extern int ad_dtruncate __P((struct adouble *, const size_t));
-extern int ad_rtruncate __P((struct adouble *, const size_t));
+extern int ad_dtruncate __P((struct adouble *, const off_t));
+extern int ad_rtruncate __P((struct adouble *, const off_t));
 
 /* ad_size.c */
 extern off_t ad_size __P((const struct adouble *, const u_int32_t ));

@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.6 2002-11-14 17:15:22 srittau Exp $
+ * $Id: ad_lock.c,v 1.7 2003-01-16 20:06:33 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -40,14 +40,28 @@
 ((type) == ADLOCK_WR ? LOCK_EX : \
  ((type) == ADLOCK_CLR ? LOCK_UN : -1)))
 
-#define XLATE_FCNTL_LOCK(type) ((type) == ADLOCK_RD ? F_RDLCK : \
-((type) == ADLOCK_WR ? F_WRLCK : \
- ((type) == ADLOCK_CLR ? F_UNLCK : -1))) 
-     
-#define OVERLAP(a,alen,b,blen) ((!(alen) && (a) <= (b)) || \
-				(!(blen) && (b) <= (a)) || \
-				((((a) + (alen)) > (b)) && \
-				(((b) + (blen)) > (a))))
+/* ----------------------- */
+static int XLATE_FCNTL_LOCK(int type) 
+{
+    switch(type) {
+    case ADLOCK_RD:
+        return F_RDLCK;
+    case ADLOCK_WR:
+         return F_WRLCK;
+    case ADLOCK_CLR:
+         return F_UNLCK;
+    }
+    return -1;
+}
+
+/* ----------------------- */
+
+static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen) 
+{
+ return (!alen && a <= b) || 
+	(!blen && b <= a) || 
+	( (a + alen > b) && (b + blen > a) );
+}
 
 
 /* allocation for lock regions. we allocate aggressively and shrink
@@ -116,7 +130,7 @@ static __inline__ void adf_unlock(struct ad_fd *ad, int fd, const int user)
 /* relock any byte lock that overlaps off/len. unlock everything
  * else. */
 static __inline__ void adf_relockrange(struct ad_fd *ad, int fd,
-				       const off_t off, const size_t len)
+				       const off_t off, const off_t len)
 {
     adf_lock_t *lock = ad->adf_lock;
     int i;
@@ -132,7 +146,7 @@ static __inline__ void adf_relockrange(struct ad_fd *ad, int fd,
 static __inline__ int adf_findlock(struct ad_fd *ad,
 				   const int user, const int type,
 				   const off_t off,
-				   const size_t len)
+				   const off_t len)
 {
   adf_lock_t *lock = ad->adf_lock;
   int i;
@@ -154,7 +168,7 @@ static __inline__ int adf_findlock(struct ad_fd *ad,
 static __inline__  int adf_findxlock(struct ad_fd *ad, 
 				     const int user, const int type,
 				     const off_t off,
-				     const size_t len)
+				     const off_t len)
 {
   adf_lock_t *lock = ad->adf_lock;
   int i;
@@ -234,20 +248,23 @@ int start = off;
 	return start;
 }
 
-int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
-		  const off_t off, const size_t len, const int user)
+/* ------------------ */
+int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
+		  const off_t off, const off_t len, const int user)
 {
   struct flock lock;
   struct ad_fd *adf;
   adf_lock_t *adflock, *oldlock;
   int i;
-  
+  int type;  
+
   lock.l_start = off;
+  type = locktype;
   if (eid == ADEID_DFORK) {
     adf = &ad->ad_df;
     if ((type & ADLOCK_FILELOCK)) {
         if (ad_hfileno(ad) != -1) {
-        	lock.l_start = df2off(off);
+            lock.l_start = df2off(off);
             adf = &ad->ad_hf;
         }
     }
@@ -258,8 +275,22 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
     else
       lock.l_start += ad_getentryoff(ad, eid);
   }
-
+  /* NOTE: we can't write lock a read-only file. on those, we just
+    * make sure that we have a read lock set. that way, we at least prevent
+    * someone else from really setting a deny read/write on the file. 
+    */
+  if (!(adf->adf_flags & O_RDWR) && (type & ADLOCK_WR)) {
+      type = (type & ~ADLOCK_WR) | ADLOCK_RD;
+  }
+  
   lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
+  lock.l_whence = SEEK_SET;
+  lock.l_len = len;
+
+  /* byte_lock(len=-1) lock whole file */
+  if (len == BYTELOCK_MAX) {
+      lock.l_len -= lock.l_start; /* otherwise  EOVERFLOW error */
+  }
 
   /* see if it's locked by another user. 
    * NOTE: this guarantees that any existing locks must be at most
@@ -267,13 +298,13 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
    * guaranteed to be ORable. */
   if (adf_findxlock(adf, user, ADLOCK_WR | 
 		    ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
-		    lock.l_start, len) > -1) {
+		    lock.l_start, lock.l_len) > -1) {
     errno = EACCES;
     return -1;
   }
   
   /* look for any existing lock that we may have */
-  i = adf_findlock(adf, user, ADLOCK_RD | ADLOCK_WR, lock.l_start, len);
+  i = adf_findlock(adf, user, ADLOCK_RD | ADLOCK_WR, lock.l_start, lock.l_len);
   adflock = (i < 0) ? NULL : adf->adf_lock + i;
 
   /* here's what we check for:
@@ -283,13 +314,11 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
   if ((!adflock && (lock.l_type == F_UNLCK)) ||
       (adflock && !(type & ADLOCK_UPGRADE) && 
        ((lock.l_type != F_UNLCK) || (adflock->lock.l_start != lock.l_start) ||
-	(adflock->lock.l_len != len)))) {
+	(adflock->lock.l_len != lock.l_len)))) {
     errno = EINVAL;
     return -1;
   }
 
-  lock.l_whence = SEEK_SET;
-  lock.l_len = len;
 
   /* now, update our list of locks */
   /* clear the lock */
@@ -310,8 +339,8 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int type,
 
   /* it wasn't an upgrade */
   oldlock = NULL;
-  if ((lock.l_type = F_RDLCK) &&
-      ((i = adf_findxlock(adf, user, ADLOCK_RD, lock.l_start, len)) > -1)) {
+  if ((lock.l_type == F_RDLCK) &&
+      ((i = adf_findxlock(adf, user, ADLOCK_RD, lock.l_start, lock.l_len)) > -1)) {
     oldlock = adf->adf_lock + i;
   } 
     
@@ -384,7 +413,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
   /* Does another process have a lock? 
      FIXME F_GETLK ?
   */
-  lock.l_type = (ad_getoflags(ad, eid) & O_RDWR) ?F_WRLCK : F_RDLCK;                                           
+  lock.l_type = (adf->adf_flags & O_RDWR) ?F_WRLCK : F_RDLCK;                                           
 
   if (fcntl(adf->adf_fd, F_SETLK, &lock) < 0) {
     return (errno == EACCES || errno == EAGAIN)?1:-1;
@@ -396,11 +425,8 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 
 /* -------------------------
 */
-/* with temp locks, we don't need to distinguish within the same
- * process as everything is single-threaded. in addition, if
- * multi-threading gets added, it will only be in a few areas. */
 int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int type,
-	             const off_t off, const size_t len)
+	             const off_t off, const off_t len, const int user)
 {
   struct flock lock;
   struct ad_fd *adf;
@@ -423,6 +449,14 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int type,
   lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
   lock.l_whence = SEEK_SET;
   lock.l_len = len;
+
+  /* see if it's locked by another user. */
+  if (user && adf_findxlock(adf, user, ADLOCK_WR | 
+		    ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
+		    lock.l_start, lock.l_len) > -1) {
+    errno = EACCES;
+    return -1;
+  }
 
   /* okay, we might have ranges byte-locked. we need to make sure that
    * we restore the appropriate ranges once we're done. so, we check

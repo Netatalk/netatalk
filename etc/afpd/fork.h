@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.6 2002-10-11 14:18:34 didg Exp $
+ * $Id: fork.h,v 1.7 2003-01-16 20:06:33 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -44,6 +44,7 @@ struct ofork {
 #define OPENACC_DRD	(1<<4)
 #define OPENACC_DWR	(1<<5)
 
+/* ofork.of_flags bits */
 #define AFPFORK_OPEN	(1<<0)
 #define AFPFORK_RSRC	(1<<1)
 #define AFPFORK_DATA	(1<<2)

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.43 2003-01-12 14:40:01 didg Exp $
+ * $Id: fork.c,v 1.44 2003-01-16 20:06:33 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,9 +46,6 @@
 #include "directory.h"
 #include "desktop.h"
 #include "volume.h"
-
-#define BYTELOCK_MAX 0x7FFFFFFFU
-#define BYTELOCK_MAXL 0x7FFFFFFFFFFFFFFFULL
 
 struct ofork		*writtenfork;
 extern int getmetadata(struct vol *vol,
@@ -107,24 +104,75 @@ const u_int16_t     attrbits;
     return getmetadata(vol, bitmap, ofork->of_name, dir, &st, buf, buflen, adp, attrbits );    
 }
 
+/* ---------------------------- */
+static off_t get_off_t(ibuf, is64)
+char	**ibuf;
+int     is64;
+{
+    u_int32_t             temp;
+    off_t                 ret;
+
+    ret = 0;
+    memcpy(&temp, *ibuf, sizeof( temp ));
+    ret = ntohl(temp); /* ntohl is unsigned */
+    *ibuf += sizeof(temp);
+
+    if (is64) {
+        memcpy(&temp, *ibuf, sizeof( temp ));
+        *ibuf += sizeof(temp);
+        ret = ntohl(temp)| (ret << 32);
+    }
+    else {
+    	ret = (int)ret;	/* sign extend */
+    }
+    return ret;
+}
+
+/* ---------------------- */
+static int set_off_t(offset, rbuf, is64)
+off_t   offset;
+char	*rbuf;
+int     is64;
+{
+    u_int32_t  temp;
+    int        ret;
+
+    ret = 0;
+    if (is64) {
+        temp = htonl(offset >> 32);
+        memcpy(rbuf, &temp, sizeof( temp ));
+        rbuf += sizeof(temp);
+        ret = sizeof( temp );
+        offset &= 0xffffffff;
+    }
+    temp = htonl(offset);
+    memcpy(rbuf, &temp, sizeof( temp ));
+    ret += sizeof( temp );
+
+    return ret;
+}
+
+/* ------------------------ 
+*/
+static int is_neg(int is64, off_t val)
+{
+    if (val < 0 || (sizeof(off_t) == 8 && !is64 && (val & 0x80000000U)))
+    	return 1;
+    return 0;
+}
+
+static __inline__ int sum_neg(int is64, off_t offset, off_t reqcount) 
+{
+    if (is_neg(is64, offset +reqcount) ) 
+   	return 1;
+    return 0;
+}
+
 /* -------------------------
 */
-#define SHARE 0
-#define EXCL  1
-static int setforkmode(struct adouble *adp, int eid, int ofrefnum, int what, int mode)
+static int setforkmode(struct adouble *adp, int eid, int ofrefnum, int what)
 {
-    int lockmode;
-    int lockop;
-    
-    /* NOTE: we can't write lock a read-only file. on those, we just
-     * make sure that we have a read lock set. that way, we at least prevent
-     * someone else from really setting a deny read/write on the file. 
-     */
-    lockmode = (ad_getoflags(adp, eid) & O_RDWR) ?ADLOCK_WR : ADLOCK_RD;
-    lockop = (mode == EXCL)?lockmode:ADLOCK_RD;
-    
-    return ad_lock(adp, eid, lockop | ADLOCK_FILELOCK | ADLOCK_UPGRADE,
-                        what, 1, ofrefnum);
+    return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, what, 1, ofrefnum);
 }
 
 /* -------------------------
@@ -146,7 +194,7 @@ static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
     int mode;    
 
     if (! (access & (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD))) {
-        return setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_NONE, SHARE);
+        return setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_NONE);
     }
 
     if ((access & (OPENACC_RD | OPENACC_DRD))) {
@@ -166,14 +214,13 @@ static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
         /* boolean logic is not enough, because getforkmode is not always telling the
          * true 
          */
-        mode = ((access & OPENACC_DRD))?EXCL: SHARE;
         if ((access & OPENACC_RD)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_RD, mode);
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_RD);
             if (ret)
                 return ret;
         }
         if ((access & OPENACC_DRD)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_RD, SHARE);
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_RD);
             if (ret)
                 return ret;
         }
@@ -193,14 +240,13 @@ static int afp_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
             errno = EACCES;
             return -1;
         }   
-        mode = ((access & OPENACC_DWR))?EXCL: SHARE;
         if ((access & OPENACC_WR)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_WR, mode);
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_WR);
             if (ret)
                 return ret;
         }
         if ((access & OPENACC_DWR)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_WR, SHARE);
+            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_WR);
             if (ret)
                 return ret;
         }
@@ -481,21 +527,24 @@ char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
 {
     struct ofork	*ofork;
-    int32_t		size;
+    off_t		size;
     u_int16_t		ofrefnum, bitmap;
     int                 err;
-
+    int                 is64;
+    int                 eid;
+    off_t		st_size;
+    
     ibuf += 2;
+
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
     ibuf += sizeof( ofrefnum );
+
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs(bitmap);
     ibuf += sizeof( bitmap );
-    memcpy(&size, ibuf, sizeof( size ));
-    size = ntohl( size );
 
     *rbuflen = 0;
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_setforkparams: of_find could not locate open fork refnum: %u", ofrefnum );
         return( AFPERR_PARAM );
     }
@@ -506,24 +555,69 @@ int		ibuflen, *rbuflen;
     if ((ofork->of_flags & AFPFORK_ACCWR) == 0)
         return AFPERR_ACCESS;
 
-    if (size < 0)
+    if ( ofork->of_flags & AFPFORK_DATA) {
+        eid = ADEID_DFORK;
+    } else if (ofork->of_flags & AFPFORK_RSRC) {
+        eid = ADEID_RFORK;
+    } else
         return AFPERR_PARAM;
 
-    if ((bitmap == (1<<FILPBIT_DFLEN)) && (ofork->of_flags & AFPFORK_DATA)) {
+    if ( ( (bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) )) 
+                  && eid == ADEID_RFORK 
+         ) ||
+         ( (bitmap & ( (1<<FILPBIT_RFLEN) | (1<<FILPBIT_EXTRFLEN) )) 
+                  && eid == ADEID_DFORK)) {
+        return AFPERR_BITMAP;
+    }
+    
+    is64 = 0;
+    if ((bitmap & ( (1<<FILPBIT_EXTDFLEN) | (1<<FILPBIT_EXTRFLEN) ))) {
+        if (afp_version >= 30) {
+            is64 = 4;
+        }
+        else 
+           return AFPERR_BITMAP;
+    }
+
+    if (ibuflen < 2+ sizeof(ofrefnum) + sizeof(bitmap) + is64 +4)
+        return AFPERR_PARAM ;
+    
+    size = get_off_t(&ibuf, is64);
+
+    if (size < 0)
+        return AFPERR_PARAM; /* Some MacOS don't return an error they just don't change the size! */
+
+
+    if (bitmap == (1<<FILPBIT_DFLEN) || bitmap == (1<<FILPBIT_EXTDFLEN)) {
+    	st_size = ad_size(ofork->of_ad, eid);
+    	err = -2;
+    	if (st_size > size && 
+    	      ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, size, st_size -size, ofork->of_refnum) < 0) 
+            goto afp_setfork_err;
+
         err = ad_dtruncate( ofork->of_ad, size );
+        if (st_size > size)
+ 	    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size -size, ofork->of_refnum);  
         if (err < 0)
             goto afp_setfork_err;
-    } else if ((bitmap == (1<<FILPBIT_RFLEN)) &&
-               (ofork->of_flags & AFPFORK_RSRC)) {
+    } else if (bitmap == (1<<FILPBIT_RFLEN) || bitmap == (1<<FILPBIT_EXTRFLEN)) {
         ad_refresh( ofork->of_ad );
+
+    	st_size = ad_size(ofork->of_ad, eid);
+    	err = -2;
+    	if (st_size > size && 
+    	       ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, size, st_size -size, ofork->of_refnum) < 0) {
+            goto afp_setfork_err;
+	}
         err = ad_rtruncate(ofork->of_ad, size);
+        if (st_size > size)
+ 	    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size -size, ofork->of_refnum);  
         if (err < 0)
             goto afp_setfork_err;
 
         if (ad_flush( ofork->of_ad, ADFLAGS_HF ) < 0) {
-            LOG(log_error, logtype_afpd, "afp_setforkparams: ad_flush: %s",
-                strerror(errno) );
-            return( AFPERR_PARAM );
+            LOG(log_error, logtype_afpd, "afp_setforkparams: ad_flush: %s",strerror(errno) );
+            return AFPERR_PARAM;
         }
     } else
         return AFPERR_BITMAP;
@@ -565,48 +659,6 @@ afp_setfork_err:
 #define ENDBIT(a)  ((a) & 0x80)
 #define UNLOCKBIT(a) ((a) & 0x01)
 
-static off_t get_off_t(ibuf, is64)
-char	**ibuf;
-int     is64;
-{
-    u_int32_t             temp;
-    off_t                 ret;
-
-    memcpy(&temp, *ibuf, sizeof( temp ));
-    ret = ntohl(temp); /* ntohl is unsigned */
-    *ibuf += sizeof(temp);
-
-    if (is64) {
-        memcpy(&temp, *ibuf, sizeof( temp ));
-        *ibuf += sizeof(temp);
-        ret = ntohl(temp)| (ret << 32);
-    }
-    return ret;
-}
-
-/* ---------------------- */
-static int set_off_t(offset, rbuf, is64)
-off_t   offset;
-char	*rbuf;
-int     is64;
-{
-    u_int32_t  temp;
-    int        ret;
-
-    ret = 0;
-    if (is64) {
-        temp = htonl(offset >> 32);
-        memcpy(rbuf, &temp, sizeof( temp ));
-        rbuf += sizeof(temp);
-        ret = sizeof( temp );
-        offset &= 0xffffffff;
-    }
-    temp = htonl(offset);
-    memcpy(rbuf, &temp, sizeof( temp ));
-    ret += sizeof( temp );
-
-    return ret;
-}
 
 /* ---------------------- */
 static int byte_lock(obj, ibuf, ibuflen, rbuf, rbuflen, is64 )
@@ -620,7 +672,8 @@ int     is64;
     int                 eid;
     u_int16_t		ofrefnum;
     u_int8_t            flags;
-
+    int                 lockop;
+    
     *rbuflen = 0;
 
     /* figure out parameters */
@@ -630,7 +683,7 @@ int     is64;
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
     ibuf += sizeof(ofrefnum);
 
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_bytelock: of_find");
         return( AFPERR_PARAM );
     }
@@ -645,39 +698,29 @@ int     is64;
     offset = get_off_t(&ibuf, is64);
     length = get_off_t(&ibuf, is64);
 
-    if (is64) {
-        if (length == -1)
-            length = BYTELOCK_MAXL;
-        else if (length <= 0) {
-            return AFPERR_PARAM;
-        } else if ((length >= AD_FILELOCK_BASE) &&
-                   (ad_hfileno(ofork->of_ad) == -1)) {
-            return AFPERR_LOCK;
-        }
+    /* FIXME AD_FILELOCK test is surely wrong */
+    if (length == -1)
+        length = BYTELOCK_MAX;
+     else if (!length || is_neg(is64, length)) {
+     	return AFPERR_PARAM;
+     } else if ((length >= AD_FILELOCK_BASE) && -1 == (ad_hfileno(ofork->of_ad))) {
+        return AFPERR_LOCK;
     }
-    else {
-        if (length == 0xFFFFFFFF)
-            length = BYTELOCK_MAX;
-        else if (!length || (length & (1 << 31))) {
-            return AFPERR_PARAM;
-        } else if ((length >= AD_FILELOCK_BASE) &&
-                   (ad_hfileno(ofork->of_ad) == -1)) {
-            return AFPERR_LOCK;
-        }
-    }
-    
-    if (ENDBIT(flags))
-        offset += ad_size(ofork->of_ad, eid);
 
+    if (ENDBIT(flags)) {
+        offset += ad_size(ofork->of_ad, eid);
+        /* FIXME what do we do if file size > 2 GB and 
+           it's not byte_lock_ext?
+        */
+    }
     if (offset < 0)    /* error if we have a negative offset */
         return AFPERR_PARAM;
 
     /* if the file is a read-only file, we use read locks instead of
      * write locks. that way, we can prevent anyone from initiating
      * a write lock. */
-    if (ad_lock(ofork->of_ad, eid, UNLOCKBIT(flags) ? ADLOCK_CLR :
-                ((ad_getoflags(ofork->of_ad, eid) & O_RDWR) ?
-                 ADLOCK_WR : ADLOCK_RD), offset, length,
+    lockop = UNLOCKBIT(flags) ? ADLOCK_CLR : ADLOCK_WR;
+    if (ad_lock(ofork->of_ad, eid, lockop, offset, length,
                 ofork->of_refnum) < 0) {
         switch (errno) {
         case EACCES:
@@ -747,7 +790,7 @@ struct ofork	*of;
 
 
 static __inline__ ssize_t read_file(struct ofork *ofork, int eid,
-                                    int offset, u_char nlmask,
+                                    off_t offset, u_char nlmask,
                                     u_char nlchar, char *rbuf,
                                     int *rbuflen, const int xlate)
 {
@@ -885,7 +928,7 @@ int is64;
 
     savereqcount = reqcount;
     saveoff = offset;
-    if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, saveoff, savereqcount) < 0) {
+    if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, saveoff, savereqcount,ofork->of_refnum) < 0) {
         err = AFPERR_LOCK;
         goto afp_read_err;
     }
@@ -968,12 +1011,12 @@ afp_read_loop:
 afp_read_exit:
         LOG(log_error, logtype_afpd, "afp_read: %s", strerror(errno));
         dsi_readdone(dsi);
-        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount);
+        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,ofork->of_refnum);
         obj->exit(1);
     }
 
 afp_read_done:
-    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount);
+    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,ofork->of_refnum);
     return err;
 
 afp_read_err:
@@ -1032,7 +1075,7 @@ int		ibuflen, *rbuflen;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
 
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_flushfork: of_find");
         return( AFPERR_PARAM );
     }
@@ -1101,7 +1144,7 @@ int		ibuflen, *rbuflen;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
 
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_closefork: of_find");
         return( AFPERR_PARAM );
     }
@@ -1175,6 +1218,7 @@ static __inline__ ssize_t write_file(struct ofork *ofork, int eid,
     return cc;
 }
 
+
 /* FPWrite. NOTE: on an error, we always use afp_write_err as
  * the client may have sent us a bunch of data that's not reflected 
  * in reqcount et al. */
@@ -1200,7 +1244,7 @@ int                 is64;
     offset   = get_off_t(&ibuf, is64);
     reqcount = get_off_t(&ibuf, is64);
 
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_write: of_find");
         err = AFPERR_PARAM;
         goto afp_write_err;
@@ -1236,7 +1280,7 @@ int                 is64;
 
     /* offset can overflow on 64-bit capable filesystems.
      * report disk full if that's going to happen. */
-    if (offset + reqcount < 0) {
+     if (sum_neg(is64, offset, reqcount)) {
         err = AFPERR_DFULL;
         goto afp_write_err;
     }
@@ -1249,7 +1293,7 @@ int                 is64;
 
     saveoff = offset;
     if (ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, saveoff,
-                   reqcount) < 0) {
+                   reqcount, ofork->of_refnum) < 0) {
         err = AFPERR_LOCK;
         goto afp_write_err;
     }
@@ -1272,7 +1316,7 @@ int                 is64;
         if ((cc = write_file(ofork, eid, offset, rbuf, *rbuflen,
                              xlate)) < 0) {
             *rbuflen = 0;
-            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount);
+            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
             return cc;
         }
         offset += cc;
@@ -1289,7 +1333,7 @@ int                 is64;
                     (cc = write_file(ofork, eid, offset, rbuf, cc, xlate)) < 0) {
                 dsi_writeflush(dsi);
                 *rbuflen = 0;
-                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount);
+                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
                 return cc;
             }
             offset += cc;
@@ -1311,7 +1355,7 @@ int                 is64;
                     dsi_writeflush(dsi);
                     *rbuflen = 0;
                     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                               reqcount);
+                               reqcount,  ofork->of_refnum);
                     return cc;
                 }
 
@@ -1332,7 +1376,7 @@ int                 is64;
                     dsi_writeflush(dsi);
                     *rbuflen = 0;
                     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                               reqcount);
+                               reqcount,  ofork->of_refnum);
                     return cc;
                 }
                 offset += cc;
@@ -1341,7 +1385,7 @@ int                 is64;
         break;
     }
 
-    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount);
+    ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
     if ( ad_hfileno( ofork->of_ad ) != -1 )
         ofork->of_flags |= AFPFORK_DIRTY;
 
@@ -1397,7 +1441,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     *rbuflen = 0;
-    if (( ofork = of_find( ofrefnum )) == NULL ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afp_getforkparams: of_find");
         return( AFPERR_PARAM );
     }
