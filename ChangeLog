@@ -1,3 +1,9 @@
+2003-01-11  Steven N. Hirsch <shirsch@adelphia.net>
+	* Add Apple II boot support.
+	* Fix some build nits.
+	* Fix issues with building RPMs on RedHat 7.3 and 8.0.
+	* Fix issues with ProDOS attributes on files.
+
 2003-01-07  Rafal Marcin Lewczuk <rlewczuk@pronet.pl>
 	* Moving files between different directories on the same volume 
 	  changes group of moved items if necessary (SGID bit set)
