@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.22 2002-02-14 05:59:51 jmarcus Exp $
+ * $Id: fork.c,v 1.23 2002-02-16 10:46:42 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -639,7 +639,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(ofrefnum);
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_bytelock: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_bytelock: of_find");
         return( AFPERR_PARAM );
     }
 
@@ -800,7 +800,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( u_short );
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_read: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_read: of_find");
         err = AFPERR_PARAM;
         goto afp_read_err;
     }
@@ -989,7 +989,7 @@ int		ibuflen, *rbuflen;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_flushfork: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_flushfork: of_find");
         return( AFPERR_PARAM );
     }
 
@@ -1068,7 +1068,7 @@ int		ibuflen, *rbuflen;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_closefork: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_closefork: of_find");
         return( AFPERR_PARAM );
     }
 
@@ -1177,7 +1177,7 @@ int                 ibuflen, *rbuflen;
     ibuf += sizeof( reqcount );
 
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_write: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_write: of_find");
         err = AFPERR_PARAM;
         goto afp_write_err;
     }
@@ -1362,7 +1362,7 @@ int		ibuflen, *rbuflen;
 
     *rbuflen = 0;
     if (( ofork = of_find( ofrefnum )) == NULL ) {
-        LOG(log_error, logtype_default, "afp_getforkparams: of_find: %s", strerror(errno) );
+        LOG(log_error, logtype_default, "afp_getforkparams: of_find");
         return( AFPERR_PARAM );
     }
 
