@@ -18,75 +18,72 @@ use vars qw($MAC_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
 
 $MAC_PROCESS = "afpd";
 if ( $^O eq "freebsd" ) {
-        $PS_STR    = "-awwxouser,pid,ppid,start,command";
-        $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
+    $PS_STR    = "-awwxouser,pid,ppid,start,command";
+    $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
 }
 else {
-        $PS_STR    = "-ef";
-        $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
+    $PS_STR    = "-ef";
+    $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 }
 $ASIP_PORT    = "afpovertcp";
 $ASIP_PORT_NO = 548;
 
 # Change to 0 if you don't have lsof
-$LSOF = 0;
+$LSOF = 1;
 my %mac = ();
 
-if ( $LSOF == 1 ) {
-        open( LSOF, "lsof -i :$ASIP_PORT |" );
+if ( $^O eq "freebsd" ) {
+    open( SOCKSTAT, "sockstat -4 | grep $MAC_PROCESS | grep -v grep |" );
 
-        while (<LSOF>) {
-                next if ( $_ !~ /$ASIP_PORT/ );
-                $_ =~ /\w+\s+(\d+).*->([\w\.-]+).*/;
-                my ( $pid, $host );
-                $pid = $1;
-                $host = $2;
-                ($host) = ( $host =~ /(^[\w\d\-]+)/ );
-                $mac{$pid} = $host;
-        }
-        print
-"PID      UID      Username         Name                 Logintime Mac\n";
-        close(LSOF);
+    while (<SOCKSTAT>) {
+        next if ( $_ !~ /$MAC_PROCESS/ );
+        $_ =~ /\S+\s+\S+\s+(\d+)\s+\d+\s+[\w\d]+\s+[\d\.:]+\s+([\d\.]+)/;
+        my ( $pid, $addr, $host );
+        $pid  = $1;
+        $addr = $2;
+        $host = gethostbyaddr( pack( 'C4', split ( /\./, $addr ) ), AF_INET );
+        ($host) = ( $host =~ /(^[\w\d\-]+)/ );
+        $mac{$pid} = $host;
+    }
+    print
+      "PID      UID      Username         Name                 Logintime Mac\n";
 }
-elsif ( $^O eq "freebsd" ) {
-        open( SOCKSTAT, "sockstat -4 | grep $MAC_PROCESS | grep -v grep |" );
+elsif ( $LSOF == 1 ) {
+    open( LSOF, "lsof -i :$ASIP_PORT |" );
 
-        while (<SOCKSTAT>) {
-                next if ( $_ !~ /$MAC_PROCESS/ );
-                $_ =~
-                  /\S+\s+\S+\s+(\d+)\s+\d+\s+[\w\d]+\s+[\d\.:]+\s+([\d\.]+)/;
-                my ( $pid, $addr, $host );
-                $pid  = $1;
-                $addr = $2;
-                $host =
-                  gethostbyaddr( pack( 'C4', split ( /\./, $addr ) ), AF_INET );
-                ($host) = ( $host =~ /(^[\w\d\-]+)/ );
-                $mac{$pid} = $host;
-        }
-        print
-"PID      UID      Username         Name                 Logintime Mac\n";
+    while (<LSOF>) {
+        next if ( $_ !~ /$ASIP_PORT/ );
+        $_ =~ /\w+\s+(\d+).*->([\w\.-]+).*/;
+        my ( $pid, $host );
+        $pid  = $1;
+        $host = $2;
+        ($host) = ( $host =~ /(^[\w\d\-]+)/ );
+        $mac{$pid} = $host;
+    }
+    print
+      "PID      UID      Username         Name                 Logintime Mac\n";
+    close(LSOF);
 }
 else {
-        print
-          "PID      UID      Username         Name                 Logintime\n";
+    print "PID      UID      Username         Name                 Logintime\n";
 }
 
 open( PS, "ps $PS_STR |" ) || die "Unable to open a pipe to ``ps''";
 
 while (<PS>) {
-        next if ( $_ !~ /$MAC_PROCESS/ );
-        my ( $user, $pid, $ppid, $time, $name, $uid, $t );
-        $_ =~ /$MATCH_STR/;
-        $user = $1;
-        $pid  = $2;
-        $ppid = $3;
-        $time = $4;
+    next if ( $_ !~ /$MAC_PROCESS/ );
+    my ( $user, $pid, $ppid, $time, $name, $uid, $t );
+    $_ =~ /$MATCH_STR/;
+    $user = $1;
+    $pid  = $2;
+    $ppid = $3;
+    $time = $4;
 
-        if ( $ppid != 1 ) {
-                ( $t, $t, $uid, $t, $t, $t, $name, $t, $t ) = getpwnam($user);
-                printf "%-8d %-8d %-16s %-20s %-9s %s\n", $pid, $uid, $user,
-                  $name, $time, $mac{$pid};
-        }
+    if ( $ppid != 1 ) {
+        ( $t, $t, $uid, $t, $t, $t, $name, $t, $t ) = getpwnam($user);
+        printf "%-8d %-8d %-16s %-20s %-9s %s\n", $pid, $uid, $user, $name,
+          $time, $mac{$pid};
+    }
 }
 
 close(PS);
