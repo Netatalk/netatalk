@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.15 2002-02-13 16:44:59 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.16 2002-09-29 23:30:20 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -109,13 +109,13 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
       return AFPERR_PARAM;
     }
 
-    LOG(log_info, logtype_default, "dhx login: %s", name);
+    LOG(log_info, logtype_uams, "dhx login: %s", name);
     if (uam_checkuser(dhxpwd) < 0)
       return AFPERR_NOTAUTH;
 
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
-	LOG(log_info, logtype_default, "no shadow passwd entry for %s", name);
+	LOG(log_info, logtype_uams, "no shadow passwd entry for %s", name);
 	return AFPERR_NOTAUTH;
     }
     dhxpwd->pw_passwd = sp->sp_pwdp;

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.21 2002-02-05 20:42:04 srittau Exp $
+ * $Id: uams_dhx_pam.c,v 1.22 2002-09-29 23:30:20 sibaz Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -83,7 +83,7 @@ static int PAM_conv (int num_msg,
 
   if (num_msg < 1) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
 		  strerror(errno));
     /* Log Entry */
     return PAM_CONV_ERR;
@@ -94,7 +94,7 @@ static int PAM_conv (int num_msg,
 
   if (!reply) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
 		  strerror(errno));
     /* Log Entry */
     return PAM_CONV_ERR;
@@ -107,7 +107,7 @@ static int PAM_conv (int num_msg,
     case PAM_PROMPT_ECHO_ON:
       if (!(string = COPY_STRING(PAM_username))) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: username failure -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: username failure -- %s",
 		  strerror(errno));
     /* Log Entry */
 	goto pam_fail_conv;
@@ -116,7 +116,7 @@ static int PAM_conv (int num_msg,
     case PAM_PROMPT_ECHO_OFF:
       if (!(string = COPY_STRING(PAM_password))) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: passwd failure: --: %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: passwd failure: --: %s",
 		  strerror(errno));
     /* Log Entry */
 	goto pam_fail_conv;
@@ -131,7 +131,7 @@ static int PAM_conv (int num_msg,
     case PAM_ERROR_MSG:
     default:
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Binary_Prompt -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Binary_Prompt -- %s",
 		  strerror(errno));
     /* Log Entry */
       goto pam_fail_conv;
@@ -146,7 +146,7 @@ static int PAM_conv (int num_msg,
 
   *resp = reply;
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM Success -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Success -- %s",
 		  strerror(errno));
     /* Log Entry */
   return PAM_SUCCESS;
@@ -164,7 +164,7 @@ pam_fail_conv:
   }
   free(reply);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
 		  strerror(errno));
     /* Log Entry */
     return PAM_CONV_ERR;
@@ -193,7 +193,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     /* get the client's public key */
     if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM No Public Key -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM No Public Key -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -203,7 +203,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     if (!(gbn = BN_bin2bn(&g, sizeof(g), NULL))) {
       BN_clear_free(bn);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM No Primes: GBN -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM No Primes: GBN -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -213,7 +213,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
       BN_free(gbn);
       BN_clear_free(bn);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM No Primes: PBN -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM No Primes: PBN -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -225,7 +225,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
       BN_free(gbn);
       BN_clear_free(bn);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM DH was equal to DH_New... Go figure... -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DH was equal to DH_New... Go figure... -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -236,7 +236,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
     dh->g = gbn;
     if (!DH_generate_key(dh) || (BN_num_bytes(dh->pub_key) > KEYSIZE)) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Err Generating Key -- Not enough Space? -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Err Generating Key -- Not enough Space? -- %s",
 		  strerror(errno));
     /* Log Entry */
     goto pam_fail;
@@ -265,7 +265,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
 			     &i) < 0) {
       *rbuflen = 0;
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Buffer Encryption Err. -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Buffer Encryption Err. -- %s",
 		  strerror(errno));
     /* Log Entry */
       goto pam_fail;
@@ -278,7 +278,7 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
 			     (void *) &buf, NULL) < 0) {
       *rbuflen = 0;
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
 		  strerror(errno));
     /* Log Entry */
       goto pam_fail;
@@ -300,7 +300,7 @@ pam_fail:
     BN_free(bn);
     DH_free(dh);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Fail - Cast Encryption -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Fail - Cast Encryption -- %s",
 		  strerror(errno));
     /* Log Entry */
     return AFPERR_PARAM;
@@ -322,7 +322,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &buf,
 			     &i) < 0) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -331,7 +331,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     len = (unsigned char) *ibuf++;
     if ( len > i ) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
 		  strerror(errno));
     /* Log Entry */
 	return( AFPERR_PARAM );
@@ -345,13 +345,13 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
     if (( dhxpwd = uam_getname(buf, i)) == NULL ) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c: unknown username");
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username");
     /* Log Entry */
 	return AFPERR_PARAM;
     }
 
     PAM_username = buf;
-    LOG(log_info, logtype_default, "dhx login: %s", buf);
+    LOG(log_info, logtype_uams, "dhx login: %s", buf);
     return dhx_setup(obj, ibuf, ibuflen, rbuf, rbuflen);
 }
 
@@ -371,7 +371,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     memcpy(&sessid, ibuf, sizeof(sessid));
     if (sessid != dhxhash(obj)) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM Session ID - DHXHash Mismatch -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM Session ID - DHXHash Mismatch -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -381,7 +381,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     if (uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME,
 			     (void *) &hostname, NULL) < 0)
 	{
-	LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: unable to retrieve client hostname");
+	LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: unable to retrieve client hostname");
 	hostname = NULL;
 	}
 
@@ -430,7 +430,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 			  &pamh);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
 		  pam_strerror(pamh,PAM_error));
     /* Log Entry */
       goto logincont_err;
@@ -444,7 +444,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
       if (PAM_error == PAM_MAXTRIES) 
 	err = AFPERR_PWDEXPR;
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
 		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
@@ -459,7 +459,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 	err = AFPERR_PWDCHNG;
 #endif
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
 		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
@@ -471,7 +471,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
 		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
@@ -480,7 +480,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_error = pam_open_session(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
 		  pam_strerror(pamh, PAM_error));
     /* Log Entry */
       goto logincont_err;
@@ -489,7 +489,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     memset(rbuf, 0, PASSWDLEN); /* zero out the password */
     *uam_pwd = dhxpwd;
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: PAM Auth OK!");
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Auth OK!");
     /* Log Entry */
     return AFP_OK;
 
@@ -538,7 +538,7 @@ static int pam_changepw(void *obj, char *username,
     /* check out the session id */
     if (sessid != dhxhash(obj)) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Session ID not Equal to DHX Hash -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Session ID not Equal to DHX Hash -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -548,7 +548,7 @@ static int pam_changepw(void *obj, char *username,
     if (uam_afpserver_option(obj, UAM_OPTION_HOSTNAME,
 			     (void *) &hostname, NULL) < 0) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Hostname Null?? -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Hostname Null?? -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_MISC;
@@ -563,7 +563,7 @@ static int pam_changepw(void *obj, char *username,
      * get sent back an incremented random number. */
     if (!(bn1 = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented-- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented-- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -572,7 +572,7 @@ static int pam_changepw(void *obj, char *username,
     if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {
       BN_free(bn1);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Random Number Not the same or not incremented -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -586,7 +586,7 @@ static int pam_changepw(void *obj, char *username,
       BN_free(bn2);
       BN_free(bn1);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Random Number did not Zero -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Random Number did not Zero -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -601,7 +601,7 @@ static int pam_changepw(void *obj, char *username,
     if (!BN_is_one(bn3)) {
       BN_free(bn3);
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: After Random Number not Zero, is it one more? -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: After Random Number not Zero, is it one more? -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
@@ -619,7 +619,7 @@ static int pam_changepw(void *obj, char *username,
 			  &lpamh);
     if (PAM_error != PAM_SUCCESS) {
     /* Log Entry */
-           LOG(log_info, logtype_default, "uams_dhx_pam.c :PAM: Needless to say, PAM_error is != to PAM_SUCCESS -- %s",
+           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Needless to say, PAM_error is != to PAM_SUCCESS -- %s",
 		  strerror(errno));
     /* Log Entry */
       return AFPERR_PARAM;
