@@ -255,6 +255,7 @@ AC_OUTPUT([Makefile
 	contrib/Makefile
 	contrib/nu/Makefile
 	contrib/printing/Makefile
+	contrib/shell_utils/Makefile
 	contrib/timelord/Makefile
 	distrib/Makefile
 	distrib/config/Makefile
@@ -288,6 +289,6 @@ AC_OUTPUT([Makefile
 	sys/Makefile
 	sys/netatalk/Makefile
 	],
-	[chmod a+x distrib/config/netatalk-config]
+	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
 )
 
