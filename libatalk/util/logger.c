@@ -704,7 +704,7 @@ void generate_message_details(char *message_details_buffer,
     time(&thetime);
 
   /* some people might prefer localtime() to gmtime() */
-    strftime(ptr, len, "%b %d %H:%M:%S", gmtime(&thetime));
+    strftime(ptr, len, "%b %d %H:%M:%S", localtime(&thetime));
 #ifdef DEBUG_OUTPUT_TO_SCREEN
     printf("date is %s\n", ptr);
 #endif
@@ -879,42 +879,80 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
     can be taken from default if needs be.  
    */
   const char* sources[] = {"syslog", "filelog"};
+  const char *null = "";
   int sourcenum, typenum, levelnum;
   log_file_data_pair *logs = log_file_arr[logtype_default];
 
-  for(sourcenum=0;sourcenum<NUMOF(sources);sourcenum++)
+  LOG(log_extradebug, logtype_logger, "Attempting setuplog: %s %s %s %s", 
+      logsource, logtype, loglevel, filename);
+
+  /*
+   Do I need these?
+  
+  if (logsource==NULL)
+    logsource=null;
+  if (logtype==NULL)
+    logtype=null;
+  if (loglevel==NULL)
+    loglevel=null;
+  if (filename==NULL)
+    filename=null;
+  */
+
+  if (logsource==NULL)
   {
-    if (strcasecmp(logsource, sources[sourcenum])==0)
-      break;
+    LOG(log_note, logtype_logger, "no logsource given");
   }
-  if (sourcenum>=NUMOF(sources))
+  else
   {
-    LOG(log_warning, logtype_logger, "%s is not a valid log source", logsource);
-  }
-  if ((sourcenum>0) && (filename==NULL))
-  {
-    LOG(log_warning, logtype_logger, 
-	"when specifying a filelog, you must specify a valid filename");
+    for(sourcenum=0;sourcenum<NUMOF(sources);sourcenum++)
+    {
+      if (strcasecmp(logsource, sources[sourcenum])==0)
+        break;
+    }
+    if (sourcenum>=NUMOF(sources))
+    {
+      LOG(log_warning, logtype_logger, "%s is not a valid log source", logsource);
+    }
+    if ((sourcenum>0) && (filename==NULL))
+    {
+      LOG(log_warning, logtype_logger, 
+          "when specifying a filelog, you must specify a valid filename");
+    }
   }
 
-  for(typenum=0;typenum<num_logtype_strings;typenum++)
+  if (logtype==NULL)
   {
-    if (strcasecmp(logtype, arr_logtype_strings[typenum])==0)
-      break;
+    LOG(log_note, logtype_logger, "no logsource given");
   }
-  if (typenum>=num_logtype_strings)
+  else
   {
-    LOG(log_warning, logtype_logger, "%s is not a valid log type", logtype);
+    for(typenum=0;typenum<num_logtype_strings;typenum++)
+    {
+      if (strcasecmp(logtype, arr_logtype_strings[typenum])==0)
+        break;
+    }
+    if (typenum>=num_logtype_strings)
+    {
+      LOG(log_warning, logtype_logger, "%s is not a valid log type", logtype);
+    }
   }
 
-  for(levelnum=0;levelnum<num_loglevel_strings;levelnum++)
+  if (loglevel==NULL)
   {
-    if (strcasecmp(loglevel, arr_loglevel_strings[levelnum])==0)
-      break;
+    LOG(log_note, logtype_logger, "no logsource given");
   }
-  if (levelnum>=num_loglevel_strings)
+  else
   {
-    LOG(log_warning, logtype_logger, "%s is not a valid log level", loglevel);
+    for(levelnum=0;levelnum<num_loglevel_strings;levelnum++)
+    {
+      if (strcasecmp(loglevel, arr_loglevel_strings[levelnum])==0)
+        break;
+    }
+    if (levelnum>=num_loglevel_strings)
+    {
+      LOG(log_warning, logtype_logger, "%s is not a valid log level", loglevel);
+    }
   }
 
   /* check validity */
@@ -925,11 +963,13 @@ void setuplog(char *logsource, char *logtype, char *loglevel, char *filename)
   switch(sourcenum)
   {
   case 0: /* syslog */
+    LOG(log_note, logtype_logger, "Doing syslog_setup(%d, %d, ...)", levelnum, typenum);
     syslog_setup(levelnum, typenum, 
 		 (*logs)[0].display_options,
 		 global_log_data.facility);
     break;
   default: /* filelog */
+    LOG(log_note, logtype_logger, "Doing log_setup(%s, %d, %d, ...)", filename, levelnum, typenum);
     log_setup(filename, levelnum, typenum, 
 	      (*logs)[0].display_options);
   };  
