@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.129 2001-11-23 07:35:12 srittau Exp $
+dnl $Id: configure.in,v 1.130 2001-11-23 22:45:23 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -248,8 +248,6 @@ dnl Check for Berkeley DB3 library
 if test "x$db3_required" = "xyes"; then
 	AC_PATH_DB3(, [AC_MSG_ERROR([Berkeley DB3 library not found!])])
 fi
-CFLAGS="$CFLAGS $DB3_CFLAGS"
-LIBS="$LIBS $DB3_LIBS"
 
 AC_ARG_WITH(did,
 	[  --with-did=SCHEME       set DID scheme (last,mtab)],

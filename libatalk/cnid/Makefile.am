@@ -1,5 +1,8 @@
 # Makefile.am for libatalk/cnid/
 
+CFLAGS = @CFLAGS@ @DB3_CFLAGS@
+LIBS = @LIBS@ @DB3_LIBS@
+
 noinst_LTLIBRARIES = libcnid.la
 
 libcnid_la_SOURCES = cnid_add.c cnid_close.c cnid_delete.c cnid_get.c cnid_lookup.c cnid_open.c cnid_resolve.c cnid_update.c
