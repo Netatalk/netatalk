@@ -1,3 +1,7 @@
+2001-10-31  Dan <bobo@bocklabs.wisc.edu>
+        * Fixed bug in bin/afppasswd/Makefile.am causing compile problems
+          with SuSE distro.
+
 2001-10-24  joe  c  <marcus@marcuscom.com>
 
 	* etc/afpd/fork.c: Patch to add read-only locking support
