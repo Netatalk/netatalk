@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.8 2001-10-25 20:52:55 srittau Exp $
+ * $Id: uams_randnum.c,v 1.9 2001-11-17 12:56:11 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -201,7 +201,7 @@ afppasswd_found:
       read(keyfd, key, sizeof(key));
 
       /* convert to binary key */
-      for (i = j = 0; i < strlen(key); i += 2, j++)
+      for (i = j = 0; i < strlen((char *) key); i += 2, j++)
 	key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
       if (j <= DES_KEY_SZ)
 	memset(key + j, 0, sizeof(key) - j);
