@@ -32,7 +32,7 @@ pkgconfdir = @PKGCONFDIR@
 install-config-files: $(CONFFILES) $(GENFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pkgconfdir)
 	for f in $(CONFFILES) $(GENFILES); do \
-		if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -e $(DESTDIR)$(pkgconfdir)/$$f; then \
+		if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pkgconfdir)/$$f; then \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir)"; \
 			$(INSTALL_DATA) $$f $(DESTDIR)$(pkgconfdir); \
 		else \
