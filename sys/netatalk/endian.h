@@ -1,5 +1,5 @@
 /*
- * $Id: endian.h,v 1.4 2001-06-29 14:14:47 rufustfirefly Exp $
+ * $Id: endian.h,v 1.5 2001-09-07 13:44:38 rufustfirefly Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -86,24 +86,12 @@ typedef unsigned long long  u_int64_t;
 #define BIG_ENDIAN	4321
 #define PDP_ENDIAN	3412
 
-#ifdef sun
-#if defined(i386) || defined(_LITTLE_ENDIAN)
-#define BYTE_ORDER	LITTLE_ENDIAN
-#else /* i386 || _LITTLE_ENDIAN */
+
+#ifdef WORDS_BIGENDIAN
 #define BYTE_ORDER	BIG_ENDIAN
-#endif /* i386 || _LITTLE_ENDIAN */
-#else /* sun */
-#if defined(MIPSEB) || defined(__hppa)
-#define BYTE_ORDER	BIG_ENDIAN
-#else /* MIPSEB || __hppa */
-#ifdef MIPSEL
+#else
 #define BYTE_ORDER	LITTLE_ENDIAN
-#else /* MIPSEL */
-#error Like, what is your byte order, man?
-#endif /* MIPSEL*/
-#endif /* MIPSEB || __hppa */
-#endif /* sun */
-# endif /* BYTE_ORDER */
+#endif /* WORDS_BIGENDIAN */
 
 # ifndef ntohl
 # if defined( sun ) || defined( ultrix ) || defined( _IBMR2 )
