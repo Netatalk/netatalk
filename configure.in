@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.180 2003-06-06 16:16:45 srittau Exp $
+dnl $Id: configure.in,v 1.181 2003-06-06 18:28:10 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -315,8 +315,6 @@ NETATALK_SRVLOC
 
 dnl Check for PAM libs
 AC_PATH_PAM([
-	PAPD_LIBS="$PAPD_LIBS $PAM_LIBS"
-	AFPD_LIBS="$AFPD_LIBS $PAM_LIBS"
 	use_pam_so=yes
 	compile_pam=yes
 	AC_DEFINE(USE_PAM, 1, [Define to enable PAM support])
@@ -345,10 +343,11 @@ AC_ARG_WITH(tcp-wrappers,
 	[  --with-tcp-wrappers     enable TCP wrappers support],
 	AC_CHECK_LIB(wrap, tcpd_warn,
 		AC_DEFINE(TCPWRAP, 1, [Define if TCP wrappers should be used])
-		AFPD_LIBS="$AFPD_LIBS -lwrap"
+		WRAP_LIBS="-lwrap"
 		AC_MSG_RESULT([enabling TCP wrappers support])
 	)
 )
+AC_SUBST(WRAP_LIBS)
 
 AC_ARG_ENABLE(redhat,
 	[  --enable-redhat         use redhat-style sysv configuration ],
@@ -658,8 +657,6 @@ AC_MSG_RESULT([$OVERWRITE_CONFIG])
 dnl --------------------- last minute substitutions
 
 AC_SUBST(LIBS)
-AC_SUBST(AFPD_LIBS)
-AC_SUBST(PAPD_LIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(OVERWRITE_CONFIG)
 

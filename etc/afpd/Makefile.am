@@ -13,7 +13,7 @@ afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 	 afp_config.c nfsquota.c codepage.c quota.c uam.c afs.c uid.c  \
 	 afp_util.c catsearch.c precompose.c
 
-afpd_LDADD = @AFPD_LIBS@ @PAM_LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ \
+afpd_LDADD = @WRAP_LIBS@ @PAM_LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ \
 	$(top_builddir)/libatalk/libatalk.la
 afpd_LDFLAGS = -export-dynamic
 
