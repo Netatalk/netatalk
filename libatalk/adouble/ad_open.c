@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.17 2002-06-17 17:58:37 didg Exp $
+ * $Id: ad_open.c,v 1.18 2002-08-14 10:35:46 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -624,6 +624,15 @@ int ad_open( path, adflags, oflags, mode, ad )
 	  ad->ad_df.adf_off = 0;
 	  ad->ad_df.adf_flags = hoflags;
 	} 
+        else {
+            /* the file is already open... but */
+            if ((oflags & ( O_RDWR | O_WRONLY)) &&             /* we want write access */
+            	!(ad->ad_df.adf_flags & ( O_RDWR | O_WRONLY))) /* and it was denied the first time */
+            {
+                 errno == EACCES;
+                 return -1;
+            }
+	}
 	ad->ad_df.adf_refcount++;
     }
 
@@ -771,6 +780,17 @@ int ad_open( path, adflags, oflags, mode, ad )
 	      return( -1 );
 	    }
 	  }
+	}
+	else { /* already open */
+            if ((oflags & ( O_RDWR | O_WRONLY)) &&             
+            	!(ad->ad_hf.adf_flags & ( O_RDWR | O_WRONLY))) {
+		if (adflags & ADFLAGS_DF) {
+              	    /* don't call with ADFLAGS_HF because we didn't open ressource fork */
+	            ad_close( ad, ADFLAGS_DF );
+	         }
+                 errno == EACCES;
+	         return -1;
+	    }
 	}
 	ad->ad_hf.adf_refcount++;
     }
