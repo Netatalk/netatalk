@@ -1,11 +1,8 @@
 Installation and Configuration of Netatalk 1.5
 Lance Levsen, l.levsen@printwest.com
-V0.2, 02 March 2001
-
 
 Prerequisites
 =============
-
 1. Libtool (only needed by developers)
 Libtool encapsulates the platform specific dependencies for the
 creation of libraries. It determines if the local platform can support
@@ -78,6 +75,9 @@ $> ./configure --help
 This prints a listing of the command line options for configure to
 use. Notables are:
 
+--prefix: top level src directory for ./bin, ./etc, ./include, ./lib,
+./man, ./sbin, ./share.
+
 --disable-admin-group: disable admin group (default on),
 
 --disable-ddp: disable DDP support,
@@ -101,13 +101,10 @@ are incrementally calculated versus the new hash method. Unfortunately
 for machines that have a lot of devices, and/or a lot of inodes the
 hash can fail with multiple directories resolving to the same DID.
 
-Enable/Disable the desired options like this:
+Enable/Disable the desired options, make, and make install.
+
 $>./configure --option1 --option2 ....
-
-2. Assuming ./configure worked well,
 $> make  (as root or sudo)
-
-3. Assuming the program compiled without errors,
 $> make install  (as root or sudo)
 
 Assuming you haven't changed the install directories, this will
@@ -160,6 +157,8 @@ http://www.linuxdoc.org/HOWTO/Kernel-HOWTO.html
 
 
 1. /etc/atalk/afpd.conf
+======================
+
 Edit /etc/atalk/afpd.conf as required. Some options:
 
 Format:
@@ -276,6 +275,7 @@ guest access, logins in clear text and DHX, don't allow the user to
 save the password.
 
 2. /etc/atalk/atalkd.conf
+=========================
 
 Classic Appletalk is configured in atalkd.conf. For detailed
 information please reference 
@@ -363,10 +363,13 @@ for eth1 this server acts as a soft seed router of a phase 2 network
 segment of 100-110 where this machine is 100.10
 
 3. /etc/atalk/papd.conf
+=======================
 
 To be written by someone who actully uses the print server. :)
 
+
 4. /etc/atalk/netatalk.conf
+===========================
 
 To be written.
 
