@@ -45,7 +45,7 @@ atalk_startup() {
             
         if [ x"${TIMELORD_RUN}" = x"yes"  -a -x :SBINDIR:/timelord ]; then
             echo -n "  Starting timelord"
-            :SBIN:/timelord
+            :SBINDIR:/timelord
         fi
           
     fi   
