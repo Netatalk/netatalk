@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.94 2003-06-05 09:17:11 didg Exp $
+ * $Id: file.c,v 1.95 2003-06-09 14:42:39 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -264,6 +264,7 @@ int getmetadata(struct vol *vol,
     u_int32_t           utf8 = 0;
     struct stat         *st;
     struct maccess	ma;
+
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "begin getmetadata:");
 #endif /* DEBUG */

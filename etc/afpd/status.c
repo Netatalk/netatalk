@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.14 2003-06-09 14:25:51 srittau Exp $
+ * $Id: status.c,v 1.15 2003-06-09 14:42:40 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -131,7 +131,7 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
                                   const struct afp_options *options)
 {
     char                 *status;
-    char		 *usersign, *ifaddr;
+    char		 *usersign;
     int                  i;
     u_int16_t            offset, sigoff;
     long                 hostid;
@@ -342,9 +342,9 @@ static int status_utf8servername(char *data, int *nameoffset,
 				 const DSI *dsi,
 				 const struct afp_options *options)
 {
-    u_int16_t namelen, len;
     char *begin = data;
     u_int16_t offset;
+
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
     data += offset;

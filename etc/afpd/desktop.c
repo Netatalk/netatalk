@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.29 2003-06-05 09:17:10 didg Exp $
+ * $Id: desktop.c,v 1.30 2003-06-09 14:42:38 srittau Exp $
  *
  * See COPYRIGHT.
  *
@@ -619,7 +619,9 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 */
 static char  upath[ MAXPATHLEN + 1];
 static char  mpath[ MAXPATHLEN + 1];
+#ifdef AFP3x
 static char  ucs2[ MAXPATHLEN + 1];
+#endif
 
 static char *old_mtoupath(const struct vol *vol, char *mpath)
 {
@@ -750,6 +752,7 @@ static char *old_utompath(const struct vol *vol, char *upath)
 }
 
 /* --------------- */
+#ifdef AFP3x
 extern unsigned int do_precomposition(unsigned int base, unsigned int comb);
 
 static char comp[MAXPATHLEN +1];
@@ -837,14 +840,18 @@ unsigned int result;
      }
      return comp;
 }
+#endif
 
 /* --------------------------- */
 char *mtoupath(const struct vol *vol, char *mpath, int utf8)
 {
-    char	*m, *u, *r;
-    int		 i = 0;
+    int		i = 0;
+    char	*m, *u;
+#ifdef AFP3x
+    char	*r;
     size_t       inplen;
     size_t       outlen;
+#endif
         
     if ( *mpath == '\0' ) {
         return( "." );
@@ -920,11 +927,14 @@ char *mtoupath(const struct vol *vol, char *mpath, int utf8)
 /* --------------- */
 char *utompath(const struct vol *vol, char *upath, int utf8)
 {
-    char        *m, *u, *r;
     int          h;
     int          mangleflag = 0;
+    char	*m, *u;
+#ifdef AFP3x
+    char	*r;
     size_t       inplen;
     size_t       outlen;
+#endif
 
     if (!vol_utf8(vol))
     	return old_utompath(vol, upath);
