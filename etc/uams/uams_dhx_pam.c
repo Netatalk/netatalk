@@ -253,6 +253,9 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen,
 pam_fail:
     BN_free(bn);
     DH_free(dh);
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Fail - Cast Encryption -- %m");
+    /* Log Entry */
     return AFPERR_PARAM;
 }
 
@@ -271,10 +274,16 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     /* grab some of the options */
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &buf,
 			     &i) < 0)
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: uam_afpserver_option didn't meet uam_option_username  -- %m");
+    /* Log Entry */
       return AFPERR_PARAM;
 
     len = (unsigned char) *ibuf++;
     if ( len > i ) {
+    /* Log Entry */
+           syslog(LOG_INFO, "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %m");
+    /* Log Entry */
 	return( AFPERR_PARAM );
     }
 
