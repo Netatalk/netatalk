@@ -149,6 +149,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void))
     struct afp_options *options = &obj->options;
 #endif ADMIN_GRP
 
+    /* UAM had syslog control; afpd needs to reassert itself */
+    openlog( "afpd", LOG_NDELAY|LOG_PID, LOG_DAEMON);
+
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
 	syslog( LOG_ERR, "login: root login denied!" );
 	return AFPERR_NOTAUTH;
