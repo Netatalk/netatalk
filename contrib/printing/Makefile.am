@@ -1,5 +1,9 @@
 # Makefile.am for contrib/printing/
 
 bin_SCRIPTS = add_netatalk_printer
+bin_PROGRAMS = timeout
 
-EXTRA_DIST = netatalk.template timeout.c
+timeout_SOURCES = timeout.c
+timeout_LDADD = $(top_srcdir)/libatalk/libatalk.a
+
+EXTRA_DIST = netatalk.template
