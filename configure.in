@@ -446,6 +446,13 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_DEFINE(DLSYM_PREPEND_UNDERSCORE)
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
 	need_dash_r=yes 
+
+	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
+	AC_DEFINE(UAM_DHX, 1)
+	AC_DEFINE(UAM_RNDNUM, 1)
+	compile_dhx=yes
+	compile_ssl=yes
+	AC_DEFINE(NO_CRYPT_H, 1)
 fi
 
 dnl ----- OpenBSD specific -----
