@@ -19,4 +19,5 @@ noinst_HEADERS =	\
 	rtmp.h		\
 	zip.h
 
-INCLUDES = -D_PATH_ATALKDCONF=\"$(pkgconfdir)/atalkd.conf\"
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
+	-D_PATH_ATALKDCONF=\"$(pkgconfdir)/atalkd.conf\"

@@ -56,7 +56,7 @@ uams_dhx_pam_la_SOURCES    = uams_dhx_pam.c crypt.c crypt.h
 # flags
 #
 
-INCLUDES = @SSL_CFLAGS@
+INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys @SSL_CFLAGS@
 
 uams_guest_la_CFLAGS      = @CFLAGS@
 uams_randnum_la_CFLAGS    = @CFLAGS@ $(CRYPT_CFLAGS)
