@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.10 2002-02-28 21:20:39 jmarcus Exp $
+ * $Id: uid.c,v 1.11 2002-03-17 23:50:37 jmarcus Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <atalk/logger.h>
 
 /* functions for username and group */

@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.14 2002-02-28 21:20:39 jmarcus Exp $
+ * $Id: messages.c,v 1.15 2002-03-17 23:50:36 jmarcus Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <atalk/afp.h>
 #include <atalk/logger.h>
 #ifdef HAVE_UNISTD_H
