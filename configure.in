@@ -123,6 +123,11 @@ AC_DEFINE_UNQUOTED(CONFIG_DIR, "$config_dir",
 CONFIG_DIR="$config_dir"
 AC_SUBST(CONFIG_DIR)
 
+AC_ARG_ENABLE(cracklib,
+	[  --with-cracklib         enable cracklib checking support],
+	AC_DEFINE(USE_CRACKLIB)
+)
+
 AC_ARG_ENABLE(shadow,
 	[  --with-shadow           enable shadow password support],
 	AC_DEFINE(SHADOWPW)
