@@ -15,7 +15,7 @@ LIBATALK_DEPS = \
 	netddp/libnetddp.la	\
 	util/libutil.la
 
-libatalk_la_SOURCES =
+libatalk_la_SOURCES = dummy.c
 libatalk_la_LIBADD  = ${LIBATALK_DEPS}
 libatalk_la_LDFLAGS = -static
 
