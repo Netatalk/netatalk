@@ -1,3 +1,8 @@
+2001-08-16  Uwe Hees <uwe.hees@rz-online.de>
+	* libatalk/cnid: replaced EAGAIN in db result checking with
+	DB_LOCK_DEADLOCK as appropriate for db-3.
+	* fixed a potential transaction problem in cnidd_add.
+
 2001-08-14  Sam Noble <ns@shadow.org>
 
 	* etc/afpd/directory.c: in afp_mapname and afp_mapid
