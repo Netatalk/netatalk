@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.28 2002-05-29 17:40:36 jmarcus Exp $
+ * $Id: fork.c,v 1.29 2002-06-01 05:10:24 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -701,6 +701,19 @@ static __inline__ ssize_t read_file(struct ofork *ofork, int eid,
     return AFP_OK;
 }
 
+/* -----------------------------
+ * with ddp, afp_read can return fewer bytes than in reqcount 
+ * so return EOF only if read actually past end of file not
+ * if offset +reqcount > size of file
+ * e.g.:
+ * getfork size ==> 10430
+ * read fork offset 0 size 10752 ????  ==> 4264 bytes (without EOF)
+ * read fork offset 4264 size 6128 ==> 4264 (without EOF)
+ * read fork offset 9248 size 1508 ==> 1182 (EOF)
+ * 10752 is a bug in Mac 7.5.x finder 
+ *
+ * with dsi, should we check that reqcount < server quantum? 
+*/
 int afp_read(obj, ibuf, ibuflen, rbuf, rbuflen)
 AFPObj      *obj;
 char	*ibuf, *rbuf;
@@ -709,7 +722,7 @@ int		ibuflen, *rbuflen;
     struct ofork	*ofork;
     off_t 		size;
     int32_t		offset, saveoff, reqcount, savereqcount;
-    int			cc, err, saveerr, eid, xlate = 0;
+    int			cc, err, eid, xlate = 0;
     u_int16_t		ofrefnum;
     u_char		nlmask, nlchar;
 
@@ -770,16 +783,8 @@ int		ibuflen, *rbuflen;
         goto afp_read_err;
     }
 
-    /* subtract off the offset */
-    size -= offset;
     savereqcount = reqcount;
-    if (reqcount > size) {
-    	reqcount = size;
-        err = AFPERR_EOF;
-    }
-
     saveoff = offset;
-    /* if EOF lock on the old reqcount, some prg may need it */
     if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, saveoff, savereqcount) < 0) {
         err = AFPERR_LOCK;
         goto afp_read_err;
@@ -787,14 +792,11 @@ int		ibuflen, *rbuflen;
 
 #define min(a,b)	((a)<(b)?(a):(b))
     *rbuflen = min( reqcount, *rbuflen );
-    saveerr = err;
     err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen,
                     xlate);
     if (err < 0)
         goto afp_read_done;
-    if (saveerr < 0) {
-       err = saveerr;
-    }
+
     /* dsi can stream requests. we can only do this if we're not checking
      * for an end-of-line character. oh well. */
     if ((obj->proto == AFPPROTO_DSI) && (*rbuflen < reqcount) && !nlmask) {
@@ -804,6 +806,12 @@ int		ibuflen, *rbuflen;
             printf( "(read) reply: %d/%d, %d\n", *rbuflen,
                     reqcount, dsi->clientID);
             bprint(rbuf, *rbuflen);
+        }
+        /* subtract off the offset */
+        size -= offset;
+        if (reqcount > size) {
+    	   reqcount = size;
+           err = AFPERR_EOF;
         }
 
         offset += *rbuflen;
