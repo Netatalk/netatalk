@@ -3,6 +3,6 @@
 bin_PROGRAMS = adv1tov2
 
 adv1tov2_SOURCES = adv1tov2.c
-adv1tov2_LDADD = ../../libatalk/libatalk.a
+adv1tov2_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

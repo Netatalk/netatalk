@@ -158,6 +158,7 @@ AC_OUTPUT([Makefile
 	bin/nbp/Makefile
 	bin/pap/Makefile
 	bin/psorder/Makefile
+	config/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/afpd/nls/Makefile
@@ -165,6 +166,8 @@ AC_OUTPUT([Makefile
 	etc/uams/Makefile
 	etc/papd/Makefile
 	etc/psf/Makefile
+	include/Makefile
+	include/atalk/Makefile
 	libatalk/Makefile
 	libatalk/adouble/Makefile
 	libatalk/asp/Makefile
@@ -179,5 +182,7 @@ AC_OUTPUT([Makefile
 	man/man3/Makefile
 	man/man4/Makefile
 	man/man8/Makefile
+	sys/Makefile
+	sys/netatalk/Makefile
 ])
 

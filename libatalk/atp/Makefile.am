@@ -6,4 +6,4 @@ libatp_la_SOURCES = atp_bprint.c atp_bufs.c atp_close.c atp_open.c atp_packet.c 
 
 noinst_HEADERS = atp_internals.h
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

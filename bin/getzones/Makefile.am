@@ -3,6 +3,6 @@
 bin_PROGRAMS = getzones
 
 getzones_SOURCES = getzones.c
-getzones_LDADD = ../../libatalk/libatalk.a
+getzones_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

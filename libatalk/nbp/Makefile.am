@@ -6,4 +6,4 @@ libnbp_la_SOURCES = nbp_util.c nbp_lkup.c nbp_rgstr.c nbp_unrgstr.c
 
 noinst_HEADERS = nbp_conf.h
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

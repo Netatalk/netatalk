@@ -5,11 +5,11 @@ SUBDIRS = nls
 sbin_PROGRAMS = afpd
 
 afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c file.c enumerate.c desktop.c filedir.c fork.c appl.c gettok.c status.c afp_options.c afp_asp.c afp_dsi.c messages.c config.c nfsquota.c codepage.c quota.c uam.c afs.c
-afpd_LDADD = ../../libatalk/libatalk.a -latalk
+afpd_LDADD = $(top_srcdir)/libatalk/libatalk.a -latalk
 
 noinst_HEADERS = auth.h codepage.h config.h desktop.h directory.h file.h filedir.h fork.h globals.h icon.h misc.h status.h switch.h uam_auth.h unix.h volume.h
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys \
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_AFPDDEFVOL=\"$(CONFIG_DIR)/AppleVolumes.default\" \
 	 -D_PATH_AFPDSYSVOL=\"$(CONFIG_DIR)/AppleVolumes.system\" \
 	 -D_PATH_AFPDPWFILE=\"$(CONFIG_DIR)/afpd.passwd\" \

@@ -8,4 +8,4 @@ noinst_HEADERS = cnid_meta.h cnid_private.h
 
 EXTRA_DIST = README
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

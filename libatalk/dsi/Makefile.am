@@ -6,4 +6,4 @@ libdsi_la_SOURCES = dsi_attn.c dsi_close.c dsi_cmdreply.c dsi_getsess.c dsi_gets
 
 noinst_HEADERS = dsi_private.h
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

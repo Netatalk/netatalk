@@ -3,12 +3,12 @@
 bin_PROGRAMS = nbplkup nbprgstr nbpunrgstr
 
 nbplkup_SOURCES = nbplkup.c
-nbplkup_LDADD = ../../libatalk/libatalk.a
+nbplkup_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
 nbprgstr_SOURCES = nbprgstr.c
-nbprgstr_LDADD = ../../libatalk/libatalk.a
+nbprgstr_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
 nbpunrgstr_SOURCES = nbpunrgstr.c
-nbpunrgstr_LDADD = ../../libatalk/libatalk.a
+nbpunrgstr_LDADD = $(top_srcdir)/libatalk/libatalk.a
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

@@ -6,4 +6,4 @@ libadouble_la_SOURCES = ad_open.c ad_flush.c ad_read.c ad_write.c ad_size.c ad_m
 
 noinst_HEADERS = ad_private.h
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys

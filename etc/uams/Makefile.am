@@ -12,4 +12,4 @@ lib_uams_pam_la_SOURCES = uams_pam.c
 lib_uams_pgp_la_SOURCES = uams_pgp.c
 lib_uams_randnum_la_SOURCES = uams_randnum.c
 
-CFLAGS = @CFLAGS@ -I../../include -I../../sys
+CFLAGS = @CFLAGS@ -I$(top_srcdir)/include -I$(top_srcdir)/sys
