@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.115 2001-10-20 00:40:38 jmarcus Exp $
+dnl $Id: configure.in,v 1.116 2001-10-21 17:14:22 jmarcus Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -275,7 +275,7 @@ for db3dir in "" $trydb3dir "$trydb3dir/include" /usr/local/BerkeleyDB.3.3/inclu
 				dnl -- also enable CNID DB when this is found
 				AC_DEFINE(CNID_DB, 1)
 				AC_MSG_RESULT([using persistent cnid database per volume])
-				LIBS="$LIBS -ldb3",
+				LIBS="$LIBS -ldb",
 				dnl Not Found
 				AC_MSG_ERROR([Berkeley DB3 library not found!])
 			)
