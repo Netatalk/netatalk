@@ -5,7 +5,7 @@
 export DH_COMPAT=3
 
 # support the DEB_BUILD_OPTIONS variable (partly stolen from gnome-utils)
-CFLAGS :=
+CFLAGS := -O2
 LDFLAGS :=
 ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
   CFLAGS += -g
@@ -18,10 +18,10 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 
-	./configure --with-cflags=-O2 --with-shadow			\
-		--enable-fhs --with-tcp-wrappers --enable-timelord	\
-		--with-did=last --prefix=/usr --mandir=/usr/share/man	\
-		--sysconfdir=/etc/netatalk
+	./configure --with-shadow					\
+		--enable-fhs --sysconfdir=/etc/netatalk			\
+		--with-tcp-wrappers --mandir=/usr/share/man --prefix=/usr \
+		--enable-timelord --with-did=last
 	$(MAKE)
 
 	touch build-stamp
@@ -44,6 +44,9 @@ binary-arch: build
 
 	$(MAKE) install DESTDIR="`pwd`/debian/tmp" # CFLAGS="-Wall -O2"
 
+	# Remove a config file that is not used by the Debian init script.
+	rm debian/tmp/etc/netatalk/netatalk.conf
+
 	dh_installdocs
 	dh_installinit --update-rcd-params="defaults 50 50"
 	dh_installman
@@ -53,6 +56,11 @@ binary-arch: build
 	# Manually remove a header file that is shipped with glibc and
 	# the Linux Kernel.
 	rm debian/tmp/usr/include/netatalk/at.h
+
+	# Remove /usr/bin/timeout and timeout(1) as they conflict with
+	# the timeout package.
+	rm debian/tmp/usr/bin/timeout
+	rm debian/tmp/usr/share/man/man1/timeout.1.gz
 
 	dh_movefiles
 	rmdir debian/tmp/usr/include/atalk debian/tmp/usr/include/netatalk
