@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.49 2002-10-25 11:10:46 didg Exp $
+ * $Id: directory.c,v 1.50 2002-10-29 00:27:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1738,7 +1738,7 @@ const int noadouble;
     struct dir		*parent;
     char                *buf;
     int			len, err;
-    
+        
     /* existence check moved to afp_moveandrename */
     if ( rename( src, dst ) < 0 ) {
         switch ( errno ) {
@@ -1767,27 +1767,17 @@ const int noadouble;
     }
 
     memset(&ad, 0, sizeof(ad));
-    if ( ad_open( dst, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR, 0, &ad) < 0 ) {
-        switch ( errno ) {
-        case ENOENT :
-            if (noadouble) {
-                len = strlen(newname);
-                goto renamedir_done;
-            }
-            return( AFPERR_NOOBJ );
-        case EACCES :
-            return( AFPERR_ACCESS );
-        default :
-            return( AFPERR_PARAM );
-        }
-    }
     len = strlen( newname );
-    ad_setentrylen( &ad, ADEID_NAME, len );
-    memcpy( ad_entry( &ad, ADEID_NAME ), newname, len );
-    ad_flush( &ad, ADFLAGS_HF );
-    ad_close( &ad, ADFLAGS_HF );
-
-renamedir_done:
+    /* rename() succeeded so we need to update our tree even if we can't open
+     * .Parent
+    */
+    if ( !ad_open( dst, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR, 0, &ad)) {
+        ad_setentrylen( &ad, ADEID_NAME, len );
+        memcpy( ad_entry( &ad, ADEID_NAME ), newname, len );
+        ad_flush( &ad, ADFLAGS_HF );
+        ad_close( &ad, ADFLAGS_HF );
+    }
+    
     if (dir->d_m_name == dir->d_u_name)
         dir->d_u_name = NULL;
 
