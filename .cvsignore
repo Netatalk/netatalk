@@ -6,6 +6,8 @@ stamp-h.in
 confdefs.h
 config.*
 configure
+configure.lineno
+configure.scan
 depcomp
 compile
 missing
@@ -14,6 +16,8 @@ aclocal.m4
 libtool
 ltconfig
 ltmain.sh
+autom4te.cache
+autoscan.log
 *.rpm
 *.deb
 *.dsc
