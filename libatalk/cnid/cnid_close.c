@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_close.c,v 1.10 2001-10-14 03:14:41 jmarcus Exp $
+ * $Id: cnid_close.c,v 1.11 2001-10-15 02:06:13 jmarcus Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -44,7 +44,6 @@ void cnid_close(void *CNID)
     if (fcntl(db->lockfd, F_SETLK, &lock) == 0) {
       char **list, **first;
 
-	  syslog(LOG_ERR, "cnid_close: Closing database");
       rc = txn_checkpoint(db->dbenv, 0, 0, 0);
       while (rc == DB_INCOMPLETE)
 		rc = txn_checkpoint(db->dbenv, 0, 0, 0);
