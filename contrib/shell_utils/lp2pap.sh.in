@@ -4,7 +4,7 @@
 chdir "/etc/lp/printers/`basename $0`"
 
 if [ -r "$6" ]; then
-    :BINDIR:/pap -E "$6"
+    @bindir@/pap -E "$6"
     exit $?
 fi
 

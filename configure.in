@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.179 2003-03-09 19:55:33 didg Exp $
+dnl $Id: configure.in,v 1.180 2003-06-06 16:16:45 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -707,6 +707,7 @@ AC_OUTPUT([Makefile
 	contrib/shell_utils/apple_mv
 	contrib/shell_utils/apple_rm
 	contrib/shell_utils/cleanappledouble.pl
+	contrib/shell_utils/lp2pap.sh
 	contrib/shell_utils/netatalkshorternamelinks.pl
 	contrib/timelord/Makefile
 	contrib/a2boot/Makefile

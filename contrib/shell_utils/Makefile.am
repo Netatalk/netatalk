@@ -2,24 +2,16 @@
 
 pkgconfdir = @PKGCONFDIR@
 
-GENERATED_FILES = lp2pap.sh
-TEMPLATE_FILES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
-PERLSCRIPTS = \
+GENERATED_FILES = \
 	afpd-mtab.pl			\
 	apple_cp apple_mv apple_rm	\
 	cleanappledouble.pl		\
+	lp2pap.sh			\
 	netatalkshorternamelinks.pl
-
-SUFFIXES = .tmpl .
-
-.tmpl:
-	sed -e s@:BINDIR:@${bindir}@ \
-		-e s@:SBINDIR:@${sbindir}@ \
-		-e s@:ETCDIR:@${pkgconfdir}@ \
-		<$< >$@
+TEMPLATE_FILES = $(foreach f,$(GENERATED_FILES),$(f).tmpl)
 
 CLEANFILES = $(GENERATED_FILES)
 
-bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES)
+bin_SCRIPTS = $(GENERATED_FILES)
 
-EXTRA_DIST = $(PERLSCRIPTS) $(TEMPLATE_FILES)
+EXTRA_DIST = $(TEMPLATE_FILES)
