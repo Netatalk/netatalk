@@ -65,6 +65,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <pwd.h>
 
 #include "printer.h"
 #include "file.h"
@@ -315,6 +316,7 @@ lp_open( out, sat )
 {
     char	name[ MAXPATHLEN ];
     int		fd;
+    struct passwd	*pwent;
 
     if (( lp.lp_flags & LP_INIT ) == 0 && lp_init( out, sat ) != 0 ) {
 	return( -1 );
@@ -326,6 +328,15 @@ lp_open( out, sat )
 
     if ( lp.lp_flags & LP_PIPE ) {
 	/* go right to program */
+	if (lp.lp_person != NULL) {
+	    if((pwent = getpwnam(lp.lp_person)) != NULL) {
+		if(setreuid(pwent->pw_uid, pwent->pw_uid) != 0) {
+		    syslog(LOG_INFO, "setreuid error: %m");
+		}
+	    } else {
+		syslog(LOG_INFO, "Error getting username (%s)", lp.lp_person);
+	    }
+	}
 	if (( lp.lp_stream = popen( printer->p_printer, "w" )) == NULL ) {
 	    syslog( LOG_ERR, "lp_open popen %s: %m", printer->p_printer );
 	    spoolerror( out, NULL );
