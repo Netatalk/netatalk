@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.125 2001-11-14 21:42:00 srittau Exp $
+dnl $Id: configure.in,v 1.126 2001-11-16 15:44:31 srittau Exp $
 dnl configure.in for netatalk
 
 AC_INIT(bin/adv1tov2/adv1tov2.c)
@@ -442,8 +442,12 @@ AC_SUBST(UAMS_PATH)
 dnl --------------------------------------------------------------------------
 dnl drop in includes for top level directory structures here...
 dnl --------------------------------------------------------------------------
-LIBS="$LIBS -L\$(top_srcdir)/libatalk/"
-CFLAGS="$CFLAGS -I\$(top_srcdir)/include -I\$(top_srcdir)/sys"
+
+dnl Note: $(top_srcdir)/include should be added before all other includes
+dnl       so that includes from that directory a preferred to includes from
+dnl       /usr/include or similar places.
+LIBS="$LIBS -L\$(top_srcdir)/libatalk"
+CFLAGS="-I\$(top_srcdir)/include $CFLAGS -I\$(top_srcdir)/sys"
 
 dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
