@@ -359,7 +359,7 @@ AC_ARG_WITH(ssl-dir,
 	]
 )
 
-for ssldir in "" $tryssldir /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl ; do
+for ssldir in "" $tryssldir /usr /usr/local/openssl /usr/lib/openssl/ /usr/local/ssl /usr/lib/ssl /usr/local /usr/pkg /opt /opt/openssl ; do
 	if test -f "$ssldir/include/openssl/cast.h" ; then
 		LIBS="$LIBS -L$ssldir/lib -L$ssldir"
 		CFLAGS="$CFLAGS -I$ssldir/include -I$ssldir/include/openssl"
