@@ -411,13 +411,14 @@ createfile_done:
 /* The below code is an experimental, untested, incomplete kludge which 
 provides better dropbox support.  It should NOT be turned on yet unless
 you are a developer who wants to try it out and fix it. */
-    if (stat(dir->d_name, &sb) == -1)
-      syslog (LOG_ERR, "Error checking directory: %m");
+    if (stat(upath, &sb) == -1) /****** Directory path only -- FIX! *****/
+      syslog (LOG_ERR, "Error checking directory %s: %m", upath);
     else {
-      uid=getuid();
+      uid=geteuid();
       seteuid(0); /* Become root to change the owner of the file */
       syslog (LOG_INFO, "Changing %s to uid=%d gid=%d", path, sb.st_uid, sb.st_gid);
-      chown(path, sb.st_uid, sb.st_gid);
+      if (chown(path, sb.st_uid, sb.st_gid)==-1)
+        syslog (LOG_ERR, "Error changing permissions: %m");
       syslog (LOG_INFO, "Changing afpd owner back to %d", uid);
       seteuid(uid); /* Restore ownership to normal */
     }
