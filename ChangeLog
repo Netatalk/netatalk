@@ -1,4 +1,8 @@
 
+2001-10-04  jeff b  <jeff@univrel.pr.uconn.edu>
+
+	Released 1.5pre8
+
 2001-10-03  joe c   <marcus@marcuscom.com>
 	
 	* configure.in: Fix bug with PAM configuration
