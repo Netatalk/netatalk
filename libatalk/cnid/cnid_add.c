@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_add.c,v 1.24 2002-01-18 04:51:27 jmarcus Exp $
+ * $Id: cnid_add.c,v 1.25 2002-01-21 04:06:41 jmarcus Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -44,9 +44,6 @@
 static int add_cnid(CNID_private *db, DBT *key, DBT *data) {
     DBT altkey, altdata;
     DB_TXN *tid;
-    /* We create rc here because using errno is bad.  Why?  Well, if you
-     * use errno once, then call another function which resets it, you're
-     * screwed. */
     int rc, ret;
 
     memset(&altkey, 0, sizeof(altkey));
@@ -130,8 +127,7 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
     /* ... Return id if it is valid, or if Rootinfo is read-only. */
     if (id || (db->flags & CNIDFLAG_DB_RO)) {
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_add: Looked up did %u, name %s as %u",
-            ntohl(did), name, ntohl(id));
+        LOG(log_info, logtype_default, "cnid_add: Looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
 #endif
         return id;
     }
@@ -173,10 +169,6 @@ cnid_t cnid_add(void *CNID, const struct stat *st,
         }
     }
 
-    /* We need to create a random sleep interval to prevent deadlocks. */
-    /*(void)srand(getpid() ^ time(NULL));
-    t.tv_sec = 0;*/
-
     memset(&rootinfo_key, 0, sizeof(rootinfo_key));
     memset(&rootinfo_data, 0, sizeof(rootinfo_data));
     rootinfo_key.data = ROOTINFO_KEY;
@@ -199,6 +191,15 @@ retry:
         goto retry;
     case 0:
         memcpy(&hint, rootinfo_data.data, sizeof(hint));
+		id = ntohl(hint);
+    	/* If we've hit the MAX CNID allowed, we return a fatal error.  CNID 
+		 * needs to be recycled before proceding. */
+    	if (++id == CNID_MAX) {
+        	txn_abort(tid);
+        	LOG(log_error, logtype_default, "cnid_add: FATAL: Cannot add CNID for %s.  CNID database has reached its limit.", name);
+        	return CNID_ERR_MAX;
+    	}
+		hint = htonl(id);
 #ifdef DEBUG
         LOG(log_info, logtype_default, "cnid_add: Found rootinfo for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
 #endif
@@ -206,32 +207,13 @@ retry:
     case DB_NOTFOUND:
         hint = htonl(CNID_START);
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_add: Using CNID_START for did %u, name %s",
-            ntohl(did), name);
+        LOG(log_info, logtype_default, "cnid_add: Using CNID_START for did %u, name %s", ntohl(did), name);
 #endif
         break;
     default:
         LOG(log_error, logtype_default, "cnid_add: Unable to lookup rootinfo: %s", db_strerror(rc));
         goto cleanup_abort;
     }
-
-    id = ntohl(hint);
-    if (id <= CNID_START) {
-        id = CNID_START;
-    }
-    else {
-        id++;
-    }
-
-    /* If we've hit the MAX CNID allowed, we return a fatal error.  CNID needs
-     * to be recycled before proceding. */
-    if (id == CNID_MAX) {
-        txn_abort(tid);
-        LOG(log_error, logtype_default, "cnid_add: FATAL: Cannot add CNID for %s.  CNID database has reached its limit.", name);
-        return CNID_ERR_MAX;
-    }
-
-    hint = htonl(id);
 
     rootinfo_data.data = &hint;
     rootinfo_data.size = sizeof(hint);
@@ -244,16 +226,15 @@ retry:
         }
         goto retry;
     case 0:
-        break;
+    	/* The transaction finished, commit it. */
+    	if ((rc = txn_commit(tid, 0)) != 0) {
+        	LOG(log_error, logtype_default, "cnid_add: Unable to commit transaction: %s", db_strerror(rc));
+        	return CNID_ERR_DB;
+    	}
+		break;
     default:
         LOG(log_error, logtype_default, "cnid_add: Unable to update rootinfo: %s", db_strerror(rc));
         goto cleanup_abort;
-    }
-
-    /* The transaction finished, commit it. */
-    if ((rc = txn_commit(tid, 0)) != 0) {
-        LOG(log_error, logtype_default, "cnid_add: Unable to commit transaction: %s", db_strerror(rc));
-        return CNID_ERR_DB;
     }
 
     /* Now we need to add the CNID data to the databases. */
