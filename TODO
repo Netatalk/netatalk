@@ -32,13 +32,15 @@ desired features (in no particular order):
 	        changing hfs or changing afpd).
         utmp/wtmp support
 		
-    papd: implementing uams would be a good idea
+    papd:
+	DHX authenticated printing logins
+	update man pages for authentication options
 	 
         
 things to fix:
         cleaner separation of layers.
 	fcntl-style byte locks - almost done. it just needs to do a
-        little sorting to get around a race condition.
+	        little sorting to get around a race condition.
 	AFP <-> Unix permissions. there are a couple cases where they 
 		don't map perfectly. in particular, gid == 0 means
 		ignore group permissions while uid == 0 means anybody
@@ -87,3 +89,7 @@ added features:
 	AppleVolumes variable substitions
     	atalkd: zones on single interfaces and the ability to control
 		which interfaces get routes between them.
+	papd:	cleartext and noauth logins using Print Server Security
+		Protocol
+		CAP-style authenticated printing
+		fixed errors when spooling to lpr 0.46 queue
