@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.87 2003-03-09 19:55:34 didg Exp $
+ * $Id: file.c,v 1.88 2003-03-15 01:34:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -581,7 +581,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
 
     if ( *s_path->m_name == '\0' ) {
@@ -617,6 +617,8 @@ int		ibuflen, *rbuflen;
     if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF,
                   openf, 0666, adp) < 0 ) {
         switch ( errno ) {
+        case ENOENT : /* we were already in 'did folder' so chdir() didn't fail */
+            return ( AFPERR_NOOBJ );
         case EEXIST :
             return( AFPERR_EXIST );
         case EACCES :
@@ -700,7 +702,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
 
     if (path_isadir(s_path)) {
@@ -1101,7 +1103,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( ddid );
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
     if ( path_isadir(s_path) ) {
         return( AFPERR_BADTYPE );
@@ -1139,7 +1141,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (( s_path = cname( vol, dir, &ibuf )) == NULL ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
     if ( *s_path->m_name != '\0' ) {
         return (path_isadir( s_path))? AFPERR_PARAM:AFPERR_BADTYPE ;
@@ -1481,11 +1483,11 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof(did);
 
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /* was AFPERR_PARAM */
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno; /* was AFPERR_PARAM */
+        return get_afp_errno(AFPERR_NOOBJ); /* was AFPERR_PARAM */
     }
 
     if ( path_isadir(s_path) ) {
@@ -1744,11 +1746,11 @@ int		ibuflen, *rbuflen;
 
     /* source file */
     if (NULL == (dir = dirlookup( vol, sid )) ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /* was AFPERR_PARAM */
     }
 
     if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno; /* was AFPERR_PARAM */
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     if ( path_isadir(path) ) {
@@ -1794,11 +1796,11 @@ int		ibuflen, *rbuflen;
 #endif /* CNID_DB */
 
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /* was AFPERR_PARAM */
     }
 
     if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
-        return( AFPERR_PARAM );
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     if ( path_isadir(path) ) {

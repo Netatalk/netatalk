@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.50 2003-03-09 19:55:35 didg Exp $
+ * $Id: fork.c,v 1.51 2003-03-15 01:34:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -307,7 +307,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf ))) {
-	return afp_errno;    
+	return get_afp_errno(AFPERR_PARAM);    
     }
 
     if (*s_path->m_name == '\0') {

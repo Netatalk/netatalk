@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.15 2003-01-24 07:08:42 didg Exp $
+ * $Id: afs.c,v 1.16 2003-03-15 01:34:35 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -99,7 +99,7 @@ int		ibuflen, *rbuflen;
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         *rbuflen = 0;
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
     if ( *path->m_name != '\0' ) {
         *rbuflen = 0;
@@ -192,7 +192,7 @@ int		ibuflen, *rbuflen;
 
     if (( path = cname( vol, dir, &ibuf )) == NULL ) {
         *rbuflen = 0;
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
     if ( *path->m_name != '\0' ) {
         *rbuflen = 0;

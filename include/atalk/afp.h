@@ -59,6 +59,7 @@ typedef u_int16_t AFPUserBytes;
 #define AFPSRVRINFO_FASTBOZO	 (1<<15) /* fast copying */
 
 #define AFP_OK		0
+#define AFPERR_DID1     -4000   /* not an afp error DID is 1*/
 #define AFPERR_ACCESS	-5000   /* permission denied */
 #define AFPERR_AUTHCONT	-5001   /* logincont */
 #define AFPERR_BADUAM	-5002   /* uam doesn't exist */

@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.16 2003-01-08 15:01:36 didg Exp $
+ * $Id: globals.h,v 1.17 2003-03-15 01:34:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -94,6 +94,7 @@ extern unsigned char	nologin;
 extern struct dir	*curdir;
 extern char		getwdbuf[];
 
+extern int  get_afp_errno   __P((const int param));
 extern void afp_options_init __P((struct afp_options *));
 extern int afp_options_parse __P((int, char **, struct afp_options *));
 extern int afp_options_parseline __P((char *, struct afp_options *));

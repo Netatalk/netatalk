@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.42 2003-03-09 19:55:34 didg Exp $
+ * $Id: filedir.c,v 1.43 2003-03-15 01:34:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -178,7 +178,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( dbitmap );
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     st   = &s_path->st;
@@ -272,7 +272,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     if (NULL == ( path = cname( vol, dir, &ibuf ))) {
-	return afp_errno;    
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     st   = &path->st;
@@ -490,7 +490,7 @@ int		ibuflen, *rbuflen;
 
     /* source pathname */
     if (NULL == ( path = cname( vol, sdir, &ibuf )) ) {
-	return afp_errno;    
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     sdir = curdir;
@@ -577,7 +577,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     upath = s_path->u_name;
@@ -693,7 +693,7 @@ int		ibuflen, *rbuflen;
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( int );
     if (NULL == ( sdir = dirlookup( vol, did )) ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /* was AFPERR_PARAM */
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -701,7 +701,7 @@ int		ibuflen, *rbuflen;
 
     /* source pathname */
     if (NULL == ( path = cname( vol, sdir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     sdir = curdir;
@@ -722,7 +722,7 @@ int		ibuflen, *rbuflen;
 
     /* get the destination directory */
     if (NULL == ( ddir = dirlookup( vol, did )) ) {
-        return( AFPERR_PARAM );
+        return afp_errno; /*  was AFPERR_PARAM */
     }
     if (( path = cname( vol, ddir, &ibuf )) == NULL ) {
         return( AFPERR_NOOBJ );

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.24 2003-03-09 19:55:33 didg Exp $
+ * $Id: desktop.c,v 1.25 2003-03-15 01:34:35 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -1021,7 +1021,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
-	return afp_errno;
+	return get_afp_errno(AFPERR_NOOBJ);
     }
 
     if ((u_long)ibuf & 1 ) {
@@ -1098,7 +1098,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-	return afp_errno;
+	return get_afp_errno(AFPERR_NOOBJ);
     }
 
     upath = s_path->u_name;
@@ -1164,7 +1164,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf ))) {
-	return afp_errno;
+	return get_afp_errno(AFPERR_NOOBJ);
     }
 
     upath = s_path->u_name;

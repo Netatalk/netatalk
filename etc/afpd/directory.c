@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.63 2003-03-09 19:55:33 didg Exp $
+ * $Id: directory.c,v 1.64 2003-03-15 01:34:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -130,6 +130,13 @@ int path_isadir(struct path *o_path)
            (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
 }
 #endif
+
+int get_afp_errno(const int param)
+{
+    if (afp_errno != AFPERR_DID1)
+        return afp_errno;
+    return param;
+}
 
 /* ------------------- */
 struct dir *
@@ -1044,8 +1051,10 @@ char	**cpath;
                     	/* dir is not valid anymore 
                     	   we delete dir from the cache and abort.
                     	*/
-                    	if ( dir->d_did == DIRDID_ROOT_PARENT)
+                    	if ( dir->d_did == DIRDID_ROOT_PARENT) {
+                    	    afp_errno = AFPERR_NOOBJ;
                     	    return NULL;
+                    	}
                     	if (afp_errno == AFPERR_ACCESS)
                     	    return NULL;
                     	dir_invalidate(vol, dir);
@@ -1088,7 +1097,7 @@ struct dir	*dir;
         return( 0 );
     }
     if ( dir->d_did == DIRDID_ROOT_PARENT) {
-        afp_errno = AFPERR_PARAM;
+        afp_errno = AFPERR_DID1; /* AFPERR_PARAM;*/
         return( -1 );
     }
 
@@ -1408,7 +1417,7 @@ int		ibuflen, *rbuflen;
     ibuf += sizeof( bitmap );
 
     if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
 
     /* FIXME access error or not a file */
@@ -1777,7 +1786,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
     /* cname was able to move curdir to it! */
     if (*s_path->m_name == '\0')
@@ -2227,7 +2236,7 @@ int		ibuflen, *rbuflen;
     }
 
     if (NULL == ( path = cname( vol, parentdir, &ibuf )) ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_PARAM);
     }
 
     if ( *path->m_name != '\0' ) {

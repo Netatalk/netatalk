@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.36 2003-03-09 21:14:19 didg Exp $
+ * $Id: enumerate.c,v 1.37 2003-03-15 01:34:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -311,7 +311,7 @@ int     ext;
 
     *rbuflen = 0;
     if (NULL == o_path ) {
-        return afp_errno;
+        return get_afp_errno(AFPERR_NOOBJ); 
     }
     if ( *o_path->m_name != '\0') {
         /* it's a file or it's a dir and extendir() was unable to chdir in it */
