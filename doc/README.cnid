@@ -18,7 +18,7 @@ On top of that, Netatalk uses the Concurrent Datastore method to avoid
 the need for database locking and transactions.
 
 As stated above, CNID requires Berkeley DB.  Currently, Netatalk supports 
-BDB 3.0.17, 3.2.9, 3.3.11, 4.0.14, and 4.1.25.  The recommended version is 
+BDB 3.1.17, 3.2.9, 3.3.11, 4.0.14, and 4.1.25.  The recommended version is 
 3.3.11 as that is the version on which most testing has been done.  
 
 CNID has seen many contributors over the years.  It was first conceived by
