@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.10 2003-06-08 16:49:25 srittau Exp $
+dnl $Id: ssl-check.m4,v 1.11 2003-06-09 02:50:45 srittau Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_PATH_GCRYPT], [
@@ -9,8 +9,8 @@ AC_DEFUN([AC_PATH_GCRYPT], [
 	search="yes"
 	errifnotfound="no"
 
-	AC_ARG_ENABLE(libgcrypt, [  --disable-gcrypt        disable compilation with libgcrypt], [
-		if test "x$enableval" != "xdisable"; then
+	AC_ARG_ENABLE(gcrypt, [  --disable-gcrypt        disable compilation with libgcrypt], [
+		if test "x$enableval" != "xno"; then
 			errifnotfound="yes"
 		else
 			search="no"
