@@ -1,5 +1,5 @@
 /*
- * $Id: nbp_rgstr.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: nbp_rgstr.c,v 1.4 2002-01-17 06:12:02 srittau Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -10,12 +10,13 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
+#include <errno.h>
+#include <signal.h>
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <sys/signal.h>
 #include <sys/time.h>
-#include <errno.h>
 
 #include <netatalk/at.h>
 #include <netatalk/endian.h>

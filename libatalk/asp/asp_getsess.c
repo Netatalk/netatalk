@@ -1,5 +1,5 @@
 /*
- * $Id: asp_getsess.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: asp_getsess.c,v 1.6 2002-01-17 06:12:02 srittau Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,37 +12,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <signal.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 
-#include <atalk/logger.h>
-#include <errno.h>
-#include <sys/signal.h>
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>
-
-/* POSIX.1 sys/wait.h check */
-#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/param.h>
 #ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif /* HAVE_SYS_WAIT_H */
+
+#include <netatalk/at.h>
+#include <atalk/logger.h>
+#include <atalk/compat.h>
+#include <atalk/atp.h>
+#include <atalk/asp.h>
+#include <atalk/server_child.h>
+
+#include "asp_child.h"
+
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
 #endif /* ! WEXITSTATUS */
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif /* ! WIFEXITED */
-
-#include <sys/socket.h>
-#include <sys/param.h>
-#include <netatalk/at.h>
-#include <atalk/compat.h>
-#include <atalk/atp.h>
-#include <atalk/asp.h>
-
-#include <atalk/server_child.h>
-#include "asp_child.h"
 
 static ASP server_asp;
 static struct server_child *children = NULL;
