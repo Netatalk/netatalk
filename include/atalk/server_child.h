@@ -30,11 +30,12 @@ extern int server_child_remove __P((server_child *, const int, const pid_t));
 extern void server_child_free __P((server_child *));
 
 extern void server_child_kill __P((server_child *, const int, const int));
-extern void server_child_kill_one __P((server_child *children, const int forkid, const pid_t pid));
-extern void server_child_kill_one_by_id __P((server_child *children, const int forkid, const pid_t pid, 
+extern void server_child_kill_one __P((server_child *children, const int forkid, const pid_t, const uid_t));
+extern void server_child_kill_one_by_id __P((server_child *children, const int forkid, const pid_t pid, const uid_t,
                                                const u_int32_t len, char *id, u_int32_t boottime));
 
 extern void server_child_setup __P((server_child *, const int, void (*)()));
 extern void server_child_handler __P((server_child *));
+extern void server_reset_signal __P((void));
 
 #endif

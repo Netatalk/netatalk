@@ -1,5 +1,5 @@
 /*
- * $Id: at.h,v 1.4 2003-12-15 04:33:28 srittau Exp $
+ * $Id: at.h,v 1.5 2005-04-28 20:50:07 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  *
@@ -10,7 +10,6 @@
 #define __AT_HEADER__
 
 #if defined(linux) /* pull in the linux header */
-
 #include <sys/socket.h>
 #include <asm/types.h>
 #include <linux/atalk.h>
@@ -128,3 +127,4 @@ extern struct protosw	atalksw[];
 
 #endif /* linux */
 #endif /* __AT_HEADER__ */
+

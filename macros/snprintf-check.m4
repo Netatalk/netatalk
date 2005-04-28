@@ -27,6 +27,7 @@ AC_DEFUN([NETATALK_SNPRINTF_CHECK], [
 		#endif
 		#ifdef HAVE_ERRNO_H
 		#include <errno.h>
+		#endif
 		],[return(sys_nerr);],
 			ac_cv_decl_errno=yes, ac_cv_decl_errno=no)
 		])
@@ -90,7 +91,7 @@ AC_DEFUN([NETATALK_SNPRINTF_CHECK], [
 
 
 
-	AC_CACHE_CHECK(checking for long long,
+	AC_CACHE_CHECK(for long long,
 	ac_cv_long_long,
 	[
 	AC_TRY_COMPILE([
@@ -103,7 +104,7 @@ AC_DEFUN([NETATALK_SNPRINTF_CHECK], [
 	  AC_DEFINE(HAVE_LONG_LONG, 1, [Define if long long is a valid data type])
 	fi
 
-	AC_CACHE_CHECK(checking for long double,
+	AC_CACHE_CHECK(for long double,
 	ac_cv_long_double,
 	[
 	AC_TRY_COMPILE([
@@ -116,7 +117,7 @@ AC_DEFUN([NETATALK_SNPRINTF_CHECK], [
 	  AC_DEFINE(HAVE_LONG_DOUBLE, 1, [Define if long double is a valid data type])
 	fi
 
-	AC_CACHE_CHECK(checking for quad_t,
+	AC_CACHE_CHECK(for quad_t,
 	ac_cv_quad_t,
 	[
 	AC_TRY_COMPILE([

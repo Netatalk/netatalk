@@ -1,35 +1,50 @@
-the catalog database keeps track of three mappings:
-    CNID     -> dev/ino and did/name
-    dev/ino  -> CNID
-    did/name -> CNID
+  
+  CNID back-end refactoring
+  
+This patch allows to compile all DID schemes into 
+afpd  binary and then select desired schemes at runtime,
+per volume.
 
-dev/ino is used to keep track of magically moved files. did/name is
-for quick lookups of CNIDs. 
 
-NOTE: the database will append a nul byte to the end of name. in
-addition, name should be given as it appears on disk. this allows the
-creation of cnid updating/cleaning programs that don't have to deal
-with knowing what the particular codepage is.
+Changes:
 
-here's the ritual:
-	1) open a volume. call cnid_open.
-	2) every time you need a CNID, call cnid_add(). it will
-	   automatically look for an existing cnid and add a new one
-	   if one isn't already there. you can pass a hint if you
-	   want. the only use this has right now is to enable
-	   consistency between AFP and HFS. in the future, it would
-	   allow people to write conversion utilities that
-	   pre-instantiate a database without needing to re-assign
-	   CNIDs.
-	3) if you want to just look for a CNID without automatically
-	   adding one in, you have two choices:
-	     a) cnid_resolve takes a CNID, returns name, and
-	        over-writes the CNID given with the parent DID. this
-	        is good for FPResolveID.
-             b) cnid_lookup returns a CNID corresponding to the
-	        dev/ino,did/name keys. it will auto-update the catalog
-		database if there's a discrepancy. 
-		NOTE: cnid_add calls this before adding a new CNID. 
-	4) when you delete a file or directory, you need to call
-	   cnid_delete with the CNID for that file/directory.
-	5) call cnid_close when closing the volume.
+Libatalk/cnid directory as been restructured. Now it contains
+subdirectories representing particular back-end types and a
+simple cnid-object factory (cnid.c and cnid_init.c).
+
+All CNID functions have been grouped into a structure which 
+contains function pointers and some data. Main afpd code uses
+them in a object manner rather than structural: it calls cnid 
+functions through fields of cnid_db structure. 
+
+Actually there are standard backends: transactional db3, cdb, 
+last and mtab (I'm not sure how to call mtab - it does some magic
+with dev/inode numbers, but mtab has been removed some time ago).
+
+Changes in ./configure options:
+
+Options --with-did=xxx, --with-cdb have been removed.
+
+Instead, there are following options:
+--with-cnid-cdb-backend    - compile DB3 Concurrent Datastore backend
+--with-cnid-db3-backend    - compile DB3 transactional backend
+--with-cnid-last-backend   - compile LAST backend
+--with-cnid-mtab-backend   - compile MTAB backend
+--with-cnid-default-backend={cdb|db3|last|mtab}
+
+Some of the backend names should be (propably) changed (mtab? db3?).
+
+AppleVolumes.default file has a new option: -cnidscheme:{db3|cdb|last|mtab}
+
+Again, sorry for this weird naming. I didn't care about it while coding,
+some cleanups have to be done later.
+
+Was tested mainly against test-suite and against MacOS 9 client.
+
+Things to do:
+- some really reliable kind of backend should be developed
+- file-name mangling should be runtime option
+- naming- and code cleanups are still needed
+- optional dynamic CNID backend loading - lower priority, static linking
+option has still to be available
+

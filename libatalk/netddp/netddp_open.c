@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_open.c,v 1.8 2003-02-17 02:02:25 srittau Exp $
+ * $Id: netddp_open.c,v 1.9 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -59,7 +59,7 @@ int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
       bridge->sat_port = baddress.socket;
     }
 #else /* MACOSX_SERVER */
-    size_t len;
+    socklen_t len;
 
     if ((s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0) 
 	return -1;

@@ -1,40 +1,20 @@
-.TH ACHFILE 1 "26 Feb 1998" 
+.TH achfile 1 "26 Feb 1998" 2.0.0 Netatalk 
 .SH NAME
-achfile \- change type and/or creator of Apple Macintosh  files (netatalk format)
+achfile \- change type and/or creator of Apple Macintosh files (netatalk format)
 .SH SYNOPSIS
-.B achfile 
-[
-.B -t
-.I type
-]
-[
-.B -c
-.I creator
-]
-.I file ...
-
+\fBachfile\fR [ \-t \fBtype\fR ] [ \-c \fBcreator\fR ] \fBfile\fR \&...
 .SH DESCRIPTION
-.B achfile
-changes the Macintosh  type and/or creator of the 
-.I file
-arguments which have a
+achfile changes the Macintosh type and/or creator
+of the \fIfile\fR arguments which have a
 corresponding .AppleDouble file.
-
 .SH OPTIONS
-.HP
-.B -t 
-.I type
-.br
-change the type.
-
-.HP
-.B -c
-.I creator
-.br
-change the creator.
-
+\fB\-t\fR \fItype\fR change the type.
+.PP
+\fB\-c\fR \fIcreator\fR change the
+creator.
 .SH DIAGNOSTICS
 returns exit status 0 if all files changed successfully
-.SH SEE ALSO
-.BR afile (1),
-.BR afpd (1)
+.SH "SEE ALSO"
+\fBafile\fR(1),
+\fBafpd\fR(8)
+

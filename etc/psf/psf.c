@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.8 2002-05-23 15:58:55 rufustfirefly Exp $
+ * $Id: psf.c,v 1.9 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -97,7 +97,7 @@ int main( ac, av )
 {
     int			c, rc, children = 0;
 #ifdef FUCKED
-    int			psafileno, multiconn = 0, waitidle = 0, waitidle2 = 0;
+    int			psafileno = 0, multiconn = 0, waitidle = 0, waitidle2 = 0;
 #endif /* FUCKED */
     int			status;
     extern char		*optarg;
@@ -485,7 +485,8 @@ char		pspro[] = "\
 int textps()
 {
     struct papersize	papersize;
-    int			state = 0, line = 0, col = 0, npages = 0, rc, i;
+    int			state = 0, line = 0, col = 0, npages = 0, rc;
+    unsigned int	i;
     char		*p, *end;
 
 #define elements(x)	(sizeof(x)/sizeof((x)[0]))

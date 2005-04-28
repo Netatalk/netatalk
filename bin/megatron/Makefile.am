@@ -16,3 +16,8 @@ install-exec-hook:
 		rm -f $(DESTDIR)$(bindir)/$$LINK; \
 		$(LN_S) megatron $(DESTDIR)$(bindir)/$$LINK; \
 	done
+
+uninstall-hook:
+	@for LINK in $(LINKS); do \
+		rm -f $(DESTDIR)$(bindir)/$$LINK; \
+	done

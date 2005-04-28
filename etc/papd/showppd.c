@@ -1,5 +1,5 @@
 /*
- * $Id: showppd.c,v 1.5 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: showppd.c,v 1.6 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,7 +26,7 @@ extern struct ppd_font		*ppd_fonts;
 extern struct ppd_feature	ppd_features[];
 
 
-main( ac, av )
+int main( ac, av )
     int		ac;
     char	**av;
 {
@@ -43,8 +43,8 @@ main( ac, av )
 	printf( "Font: %s\n", pfo->pd_font );
     }
     for ( pfe = ppd_features; pfe->pd_name; pfe++ ) {
-	printf( "Feature: %s %s\n", pfe->pd_name, pfe->pd_value );
+	printf( "Feature: %s %s\n", pfe->pd_name, (pfe->pd_value)?pfe->pd_value:"NULL" );
     }
 
-    exit( 0 );
+    exit ( 0 );
 }

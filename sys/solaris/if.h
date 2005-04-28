@@ -11,7 +11,11 @@ struct atif_data {
     /* solaris 7 wants timeout_id_t, but solaris 2.6 doesn't have that.
      * so, we compromise with an unsigned long as we know that's big
      * enough to hold a pointer. */
+#ifdef HAVE_TIMEOUT_ID_T
+    timeout_id_t	aid_aarptimeo;
+#else
     unsigned long	aid_aarptimeo;
+#endif
     /*
      * A little bit of cleverness, to overcome the inability of
      * streams to sleep.  The type of context must be checked before

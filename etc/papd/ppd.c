@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.c,v 1.9 2002-09-29 23:29:14 sibaz Exp $
+ * $Id: ppd.c,v 1.10 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -27,7 +27,11 @@ struct ppd_font		*ppd_fonts = NULL;
 struct ppd_feature	ppd_features[] = {
     { "*LanguageLevel",	0 },
     { "*PSVersion",	0 },
+#ifdef HAVE_CUPS
+    { "*FreeVM",	"33554432" },
+#else
     { "*FreeVM",	0 },
+#endif
     { "*Product",	0 },
     { "*PCFileName",	0 },
     { "*ModelName",	0 },
@@ -59,6 +63,35 @@ int ppd_init()
 }
 #endif /* SHOWPPD */
 
+
+/* quick and ugly hack to be able to read
+   ppd files with Mac line ending */
+static char* my_fgets(buf, bufsize, stream) 
+    char   *buf;
+    size_t bufsize;
+    FILE   *stream;
+{
+    int p;           /* uninitialized, OK 310105 */
+    size_t count = 0;
+ 
+    while (count < bufsize && EOF != (p=fgetc(stream))) {
+        buf[count] = p;
+        count++;
+        if ( p == '\r' || p == '\n')
+           break;
+    }
+
+    if (p == EOF && count == 0)
+        return NULL;
+
+    /* translate line endings */
+    if ( buf[count - 1] == '\r')
+        buf[count - 1] = '\n';
+
+    buf[count] = 0;
+    return buf;
+}
+
 struct ppdent *getppdent( stream )
     FILE	*stream;
 {
@@ -69,11 +102,11 @@ struct ppdent *getppdent( stream )
     ppdent.pe_main = ppdent.pe_option = ppdent.pe_translation =
 	    ppdent.pe_value = NULL;
 
-    while (( p = fgets( buf, sizeof( buf ), stream )) != NULL ) {
+    while (( p = my_fgets( buf, sizeof( buf ), stream )) != NULL ) {
 	if ( *p != '*' ) {	/* main key word */
 	    continue;
 	}
-	if ( p[ strlen( p ) - 1 ] != '\n' ) {
+	if ( p[ strlen( p ) - 1 ] != '\n' && p[ strlen( p ) - 1 ] != '\r') {
 	    LOG(log_error, logtype_papd, "getppdent: line too long" );
 	    continue;
 	}
@@ -204,7 +237,7 @@ int read_ppd( file, fcnt )
 		break;
 	    }
 	}
-	if ( pfe->pd_name && (pfe->pd_value == NULL) ) {
+	if ( pfe->pd_name ) { /*&& (pfe->pd_value == NULL) ) { */
 	    if (( pfe->pd_value =
 		    (char *)malloc( strlen( pe->pe_value ) + 1 )) == NULL ) {
 		LOG(log_error, logtype_papd, "malloc: %m" );

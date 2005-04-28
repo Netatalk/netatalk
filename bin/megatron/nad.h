@@ -1,5 +1,5 @@
 /*
- * $Id: nad.h,v 1.3 2003-06-06 21:17:20 srittau Exp $
+ * $Id: nad.h,v 1.4 2005-04-28 20:49:20 bfernhomberg Exp $
  */
 
 #ifndef _NAD_H

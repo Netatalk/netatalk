@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# atalk         Netatalk 2.x initscript
+#
+# Author:       Thomas Kaiser <Thomas.Kaiser@phg-online.de>
+#
+# Version:      $Id: rc.atalk.debian.tmpl,v 1.2 2005-04-28 20:49:37 bfernhomberg Exp $
+
+set -e
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="Netatalk"
+NAME=atalk
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Guard to prevent execution if netatalk was removed.
+test -x :SBINDIR:/atalkd || exit 0
+
+# Read in netatalk configuration.
+if [ -f :ETCDIR:/netatalk.conf ]; then
+	. :ETCDIR:/netatalk.conf
+fi
+
+# Start Netatalk servers.
+atalk_startup() {
+	if [ x"$ATALKD_RUN" = x"yes" ]; then
+
+	# Try to load the AppleTalk kernel module
+	/sbin/modprobe appletalk || echo "[could not load appletalk module]"
+
+	# Start atalkd server.
+	:SBINDIR:/atalkd
+
+	# register workstation
+	:BINDIR:/nbprgstr -p 4 "$ATALK_NAME:Workstation$ATALK_ZONE"
+	:BINDIR:/nbprgstr -p 4 "$ATALK_NAME:netatalk$ATALK_ZONE"
+
+	echo -n " atalkd"
+	fi
+	
+	# prepare startup of file services
+	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ] ; then
+		echo -n " cnid_metad"
+		:SBINDIR:/cnid_metad
+	fi
+	
+	if [ x"$AFPD_RUN" = x"yes" ]; then
+	:SBINDIR:/afpd $AFPD_UAMLIST -g $AFPD_GUEST -c $AFPD_MAX_CLIENTS \
+		-n "$ATALK_NAME$ATALK_ZONE"
+	echo -n " afpd"
+	fi
+
+	if [ x"$ATALKD_RUN" = x"yes" -a x"$PAPD_RUN" = x"yes" ]; then
+	:SBINDIR:/papd
+	echo -n " papd"
+	fi
+
+	if [ x"$TIMELORD_RUN" = x"yes" ]; then
+	:SBINDIR:/timelord
+	echo -n " timelord"
+	fi
+}
+
+case "$1" in
+	start)
+		if test x"${ATALK_BGROUND}" = x"yes"; then
+			echo "Starting Netatalk services in the background."
+			atalk_startup >/dev/null &
+		else
+			echo -n "Starting Netatalk services (this will take a while): "
+			atalk_startup
+			echo "."
+		fi
+	;;
+
+	stop)
+		echo -n "Stopping Netatalk Daemons:"
+		echo -n " afpd"
+		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/afpd
+
+		echo -n " cnid_metad"
+		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/cnid_metad
+	
+		echo -n " papd"
+		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/papd
+	
+		if test -x :SBINDIR:/timelord; then
+                    echo -n " timelord"
+		    start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/timelord
+	        fi
+
+		echo -n " atalkd"
+		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/atalkd
+	
+		echo "."
+	;;
+	
+	restart)
+		$0 force-reload
+	;;
+
+	force-reload)
+		echo -n "Restarting Netatalk Daemons (this will take a while)"
+		$0 stop
+		echo -n "."
+		sleep 2
+		echo -n "."
+		if $0 start; then
+			echo "done."
+		fi
+	;;
+  
+	*)
+		echo "Usage: $0 {start|stop|restart|force-reload}" >&2
+		exit 1
+	;;
+esac

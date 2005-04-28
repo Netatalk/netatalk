@@ -1,20 +1,26 @@
 /*
- * $Id: uams_passwd.c,v 1.22 2004-01-14 16:10:29 bfernhomberg Exp $
+ * $Id: uams_passwd.c,v 1.23 2005-04-28 20:49:50 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
  */
 
-#define _XOPEN_SOURCE /* for crypt() */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sys/types.h>
+/* crypt needs _XOPEN_SOURCE (500) at least on BSD, but that breaks Solaris compile */
+#ifdef NETBSD
+#define _XOPEN_SOURCE 500 /* for crypt() */
+#endif
+#ifdef FREEBSD
+#define _XOPEN_SOURCE /* for crypt() */
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
-
 /* STDC check */
 #if STDC_HEADERS
 #include <string.h>
@@ -29,26 +35,27 @@ char *strchr (), *strrchr ();
 #define memmove(d,s,n) bcopy ((s), (d), (n))
 #endif /* ! HAVE_MEMCPY */
 #endif /* STDC_HEADERS */
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif /* HAVE_CRYPT_H */
+#endif /* ! HAVE_CRYPT_H */
 #include <pwd.h>
-#include <atalk/logger.h>
-
-#ifdef SOLARIS
-#define SHADOWPW
-#endif /* SOLARIS */
-
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
 
 #include <atalk/afp.h>
+#include <atalk/logger.h>
 #include <atalk/uam.h>
+#include <atalk/util.h>
 
 #define PASSWDLEN 8
 
@@ -64,12 +71,15 @@ char *strchr (), *strrchr ();
 static char *clientname;
 #endif /* TRU64 */
 
+extern void append(void *, const char *, int);
+
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
                         char *ibuf, int ibuflen,
-                        char *rbuf, int *rbuflen)
+                        char *rbuf _U_, int *rbuflen _U_)
 {
     char  *p;
     struct passwd *pwd;
+    int err = AFP_OK;
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
@@ -85,7 +95,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     }
     ibuf[ PASSWDLEN ] = '\0';
 
-    if (( pwd = uam_getname(username, ulen)) == NULL ) {
+    if (( pwd = uam_getname(obj, username, ulen)) == NULL ) {
         return AFPERR_PARAM;
     }
 
@@ -102,6 +112,15 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
         return AFPERR_NOTAUTH;
     }
     pwd->pw_passwd = sp->sp_pwdp;
+
+    if (sp && sp->sp_max != -1 && sp->sp_lstchg) {
+        time_t now = time(NULL) / (60*60*24);
+        int32_t expire_days = sp->sp_lstchg - now + sp->sp_max;
+        if ( expire_days < 0 ) {
+                LOG(log_info, logtype_uams, "Password for user %s expired", username);
+		err = AFPERR_PWDEXPR;
+        }
+    }
 #endif /* SHADOWPW */
 
     if (!pwd->pw_passwd) {
@@ -123,12 +142,12 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
                                    NULL, FALSE, NULL, ibuf ) != SIASUCCESS )
             return AFPERR_NOTAUTH;
 
-        return AFP_OK;
+        return err;
     }
 #else /* TRU64 */
     p = crypt( ibuf, pwd->pw_passwd );
     if ( strcmp( p, pwd->pw_passwd ) == 0 )
-        return AFP_OK;
+        return err;
 #endif /* TRU64 */
 
     return AFPERR_NOTAUTH;
@@ -265,13 +284,12 @@ struct papfile	*out;
     static const char *loginok = "0\r";
     int ulen;
 
-    data = (char *)malloc(stop - start + 2);
+    data = (char *)malloc(stop - start + 1);
     if (!data) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc");
 	return(-1);
     }
-    strncpy(data, start, stop - start + 1);
-    data[stop - start + 2] = 0;
+    strlcpy(data, start, stop - start + 1);
 
     /* We are looking for the following format in data:
      * (username) (password)
@@ -286,32 +304,28 @@ struct papfile	*out;
         return(-1);
     }
     p++;
-    if ((q = strstr(data, ") (" )) == NULL) {
+    if ((q = strstr(p, ") (" )) == NULL) {
         LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: username not found in string");
         free(data);
         return(-1);
     }
-    strncpy(username, p, MIN( UAM_USERNAMELEN, (q - p)) );
-    username[ UAM_USERNAMELEN+1] = '\0';
-
+    memcpy(username, p,  MIN( UAM_USERNAMELEN, q - p ));
 
     /* Parse input for password in next () */
     p = q + 3;
-    if ((q = strrchr(data, ')' )) == NULL) {
+    if ((q = strrchr(p , ')' )) == NULL) {
         LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: password not found in string");
         free(data);
         return(-1);
     }
-    strncpy(password, p, MIN(PASSWDLEN, q - p) );
-    password[ PASSWDLEN+1] = '\0';
-
+    memcpy(password, p, MIN(PASSWDLEN, q - p) );
 
     /* Done copying username and password, clean up */
     free(data);
 
     ulen = strlen(username);
 
-    if (( pwd = uam_getname(username, ulen)) == NULL ) {
+    if (( pwd = uam_getname(NULL, username, ulen)) == NULL ) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
             username);
         return(-1);
@@ -329,6 +343,16 @@ struct papfile	*out;
         return(-1);
     }
     pwd->pw_passwd = sp->sp_pwdp;
+
+    if (sp && sp->sp_max != -1 && sp->sp_lstchg) {
+        time_t now = time(NULL) / (60*60*24);
+        int32_t expire_days = sp->sp_lstchg - now + sp->sp_max;
+        if ( expire_days < 0 ) {
+                LOG(log_info, logtype_uams, "Password for user %s expired", username);
+		return (-1);
+        }
+    }
+
 #endif /* SHADOWPW */
 
     if (!pwd->pw_passwd) {

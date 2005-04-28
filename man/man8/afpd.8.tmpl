@@ -1,372 +1,163 @@
-.TH AFPD 8 "23 Feb 1999" "netatalk 1.4b2/asun 2.1.3"
-
+.TH afpd 8 "06 Jan 2004" 2.0.0 Netatalk 
 .SH NAME
 afpd \- AppleTalk Filing Protocol daemon
 .SH SYNOPSIS
-.B afpd
-[
-.B -duptDTvI
-]
-[
-.B -f
-.I defaultvolumes
-]
-[
-.B -s
-.I systemvolumes
-]
-[
-.B -n
-.I nbpname
-]
-[
-.B -c
-.I maxconnections
-]
-[
-.B -g
-.I guest
-]
-[
-.B -P
-.I pidfile
-]
-[
-.B -S
-.I port
-]
-[
-.B -L
-.I message
-]
-[
-.B -F
-.I config
-]
-[
-.B -U
-.I uams
-]
-[
-.B -m
-.I umask
-]
+\fBafpd\fR [\-duptDTvI] [\-f \fBdefaultvolumes\fR] [\-s \fBsystemvolumes\fR] [\-n \fBnbpname\fR] [\-c \fBmaxconnections\fR] [\-g \fBguest\fR] [\-P \fBpidfile\fR] [\-S \fBport\fR] [\-L \fBmessage\fR] [\-F \fBconfig\fR] [\-U \fBuamsv\fR] [\-m \fBumask\fR]
 .SH DESCRIPTION
-.B afpd
-provides an AppleTalk Filing Protocol (AFP)
-interface to the Unix file system.  It is normally started at boot time
-from
-.BR /etc/rc .
+afpd provides an AppleTalk Filing Protocol (AFP)
+interface to the Unix file system. It is normally started at boot time
+from /etc/rc. 
+.PP
 The list of volumes offered to the user is generated from
-.B :ETCDIR:/AppleVolumes.system
-and one of
-.BR :ETCDIR:/AppleVolumes.default ,
-.BR ~/AppleVolumes ,
-or
-.BR ~/.AppleVolumes .
-.LP
-The
-.B AppleVolumes
-files is used to specify volumes to mount and file name extension mappings.
-It is formatted as follows, one specification per line:
-.RS
-.sp
-.I pathname
-[
-.I volumename
-]
-.br
-.RI . extension
-[
-.I type
-[
-.I creator
-]
-]
-.sp
-.RE
-If
-.I volumename
-is unspecified, the last component of
-.I pathname
-is used.  No two volumes may have the same name.  If
-.I type
-is unspecified
-.RB ' ???? '
-is used.  If
-.I creator
-is unspecified
-.RB ' UNIX '
-is used.  The extension
-.RB ' . '
-sets the default creator and type for otherwise untyped Unix files.
-Blank lines and lines beginning with `#' are ignored.
+\fB:ETCDIR:/AppleVolumes.system\fR and one of
+\fB:ETCDIR:/AppleVolumes.default\fR, \fB~/AppleVolumes\fR,
+or \fB~/.AppleVolumes\fR. The \fBAppleVolumes\fR
+files is used to specify volumes to mount and file name extension
+mappings. It is formatted as follows, one specification per line: pathname
+[ volumename ] .extension [ type [ creator ] ] If volumename is
+unspecified, the last component of pathname is used. No two volumes may
+have the same name. If type is unspecified '????' is used. If
+creator is unspecified 'UNIX' is used. The extension '.'
+sets the default creator and type for otherwise untyped Unix files. Blank
+lines and lines beginning with `#' are ignored.
+.PP
 .SH OPTIONS
-.TP
-.B \-d
-Specifies that the daemon not fork, and that a trace of all AFP
-commands be written to stdout.
-.TP
-.BI \-f " defaultvolumes"
-Specifies that
-.I defaultvolumes
-should be read for a list of default volumes to offer, instead of
-.BR :ETCDIR:/AppleVolumes.default .
-.TP
-.BI \-s " systemvolumes"
-Specifies that
-.I systemvolumes
-should be read for a list of volume that all users will be offered,
-instead of
-.BR :ETCDIR:/AppleVolumes.system .
-.TP
-.B \-u
-Read the user's
-.B AppleVolumes
-file first.  This option causes volume names in the user's
-.B AppleVolumes
-file to override volume names in the system's
-.B AppleVolumes
-file.  The default is to read the system
-.B AppleVolumes
-file first.  Note that this option doesn't effect the precendence of
-filename extension mappings: the user's AppleVolumes file always has
-precedence.
-.TP
-.BI \-n " nbpname"
-Specifies that
-.I nbpname
-should be used for NBP registration, instead of the first component of
-the hostname in the local zone.
-.TP
-.BI \-c " maxconnections"
-Specifies the maximum number of connections to allow for this
-.BR afpd .
-The default is 5.
-.TP
-.BI \-g " guest"
-Specifies the name of the guest account.  The default is ``nobody''.
-.TP
-.BI \-P " pidfile"
-Specifies the file in which
-.B afpd
-stores its process id.
-.TP
-.B \-p
-Prevents clients from saving their passwords. (Equivalent to
-.I \-nosavepasswd
-in
-.BR afpd.conf .)
-.TP
-.B \-t
+.TP 
+\-d
+Specifies that the daemon should not fork. If netatalk has been
+configured with \fI\-\-enable\-debug1\fR, a trace of
+all AFP commands will be written to stdout.
+.TP 
+\-p
+Prevents clients from saving their passwords. (Equivalent to \-\fBnosavepasswd\fR
+in \fBafpd.conf\fR.)
+.TP 
+\-t
 Allows clients to change their passwords. (Equivalent to
-.I \-setpasswd
-in
-.BR afpd.conf .)
-.TP
-.B \-D
+\fB\-setpasswd\fR in \fBafpd.conf\fR.)
+.TP 
+\-D
 Use DDP (AppleTalk) as transport protocol. (Equivalent to
-.I \-ddp
-in
-.BR afpd.cond .)
-.TP
-.B \-T
+\fB\-ddp\fR in \fBafpd.cond\fR.)
+.TP 
+\-T
 Use TCP/IP as transport protocol. (Equivalent to
-.I \-tcp
-in
-.BR afpd.conf .)
-.TP
-.BI \-S " port"
-Specifies the port to register with when doing AFPoverTCP. Defaults to
-.IR 548 .
-(Equivalent to
-.I -port
-in
-.BR afpd.conf .)
-.TP
-.BI \-L " message"
-Specifies the login message that will be sent to clients. (Equivalent to
-.I \-loginmsg
-in
-.BR afpd.conf .)
-.TP
-.BI \-F " config"
-Specifies the configuration file to use. (Defaults to
-.IR :ETCDIR:/afpd.conf .)
-.TP
-.BI \-U " uams"
-Comma-separated list of UAMs to use for the authentication process.
-(Equivalent to
-.I -uamlist
-in
-.BR afpd.conf .)
-.TP
-.B \-I
-Use a platform specific icon. (Equivalent to
-.I \-icon
-in
-.BR afpd.conf .)
-.TP
-.BR \-m " umask"
-Use this umask for the creation of folders in Netatalk.
-.TP
-.B \-v
+\fB\-tcp\fR in \fBafpd.conf\fR.)
+.TP 
+\-v
 Print version information and exit.
-.SH AUTHENTICATION
-.B afpd
-currently understands three User Authentication Methods (UAMs):
-.BR NoUserAuthent ,
-or guest,
-.B Cleartxt
-.BR passwrd ,
-and
-.B Kerberos
-.BR IV .
-If a user uses
-.BR NoUserAuthent ,
-s/he will only be offered default volumes to mount, and will only be able
-to read and write files that are permitted to the guest user.  The
-.B -G
-option disables
-.BR NoUserAuthent .
-With
-.B Cleartxt passwd
-and
-.B Kerberos
-.BR IV ,
-.B afpd
-offers the user all volumes listed in
-.BR ~/AppleVolumes .
-The user may also read and write all files that s/he normally could.
-.B Cleartxt passwd
-is not recommended for AFS use.
-.B Kerberos IV
-is recommended for AFS use.
-A forth, depricated UAM is also included in the distribution,
-.B AFS
-.BR Kerberos .
-.SH CAVEATS
-.BR afpd 's
-Directory IDs are only fixed for the duration of a session.  This means
-that Mac aliases won't work correctly in all cases.
-.LP
-If a user renames a folder that has an application as its progeny, the
-.B APPL
-mapping for the application will not longer be available. This implies
-that double-clicking on one of the application's documents will no
-longer launch the application. The
-.B APPL
-mapping will be rebuilt by the mac, the next time the Finder see the
-application.
-.LP
-If
-.B afpd
-is configured to downcase Macintosh filenames, Unix filenames with
-mixed case will be unavailable.
-.LP
-If carriage return/line feed translation is enabled, it is not
-safe to copy Unix binaries to a Macintosh.
-.LP
-It is not possible to move directories between devices.
-.LP
-When mounting the parent of an existing volume, the desktop database of
-the existing volume will not be available to the parent volume.  The
-.B APPL
-mappings and icons of applications with the
-.B BNDL
-bit set will be generated in the parent volume as the applications are
-seen by the Finder.
-.LP
-If a user edits his
-.B ~/AppleVolumes
-so that his home directory is no longer offered, he will no longer be able
-to edit his
-.B ~/AppleVolumes
-from the Macintosh.
-.LP
-Unix files beginning with `.' are not accessible from the mac.
-.LP
-If the
-.I pathname
-in an
-.B ~/AppleVolumes
-file does not exist, the volume will not be offered in the Chooser.
-.LP
-Microsoft Word
-.B TEXT
-documents do not get carriage return/line feed translation.  This is
-because MS Word uses a type other than
-.B TEXT
-while writing the document, then changes the type to
-.BR TEXT .
-To allow users to edit their
-.BR ~/AppleVolumes ,
-.B afpd
-parses the files with either end of line character.
-.LP
-Unix filenames that are longer than 31 characters are inaccessible from
-the Macintosh.
-
+.TP 
+\-I
+Use a platform specific icon. (Equivalent to \fB\-icon\fR
+in \fBafpd.conf\fR.)
+.TP 
+\-f \fIdefaultvolumes\fR
+Specifies that \fIdefaultvolumes\fR
+should be read for a list of default volumes to offer, instead of
+\fB:ETCDIR:/AppleVolumes.default\fR.
+.TP 
+\-s \fIsystemvolumes\fR
+Specifies that \fIsystemvolumes\fR should
+be read for a list of volume that all users will be offered, instead
+of \fB:ETCDIR:/AppleVolumes.system\fR.
+.TP 
+\-u
+Read the user's \fBAppleVolumes\fR file
+first. This option causes volume names in the user's
+\fBAppleVolumes\fR file to override volume names in
+the system's \fBAppleVolumes\fR file. The default
+is to read the system \fBAppleVolumes\fR file first.
+Note that this option doesn't effect the precendence of filename
+extension mappings: the user's \fBAppleVolumes\fR
+file always has precedence.
+.TP 
+\-n \fInbpname\fR
+Specifies that \fInbpname\fR should be
+used for NBP registration, instead of the first component of the
+hostname in the local zone.
+.TP 
+\-c \fImaxconnections\fR
+Specifies the maximum number of connections to allow for this
+afpd. The default is 20.
+.TP 
+\-g \fIguest\fR
+Specifies the name of the guest account. The default is
+\&'\fInobody\fR'.
+.TP 
+\-P \fIpidfile\fR
+Specifies the file in which afpd stores its
+process id.
+.TP 
+\-S \fIport\fR
+Specifies the port to register with when doing AFPoverTCP.
+Defaults to 548. (Equivalent to \fB\-port \fRin
+\fBafpd.conf\fR.)
+.TP 
+\-L \fImessage\fR
+Specifies the login message that will be sent to clients.
+(Equivalent to \fB\-loginmsg\fR in \fBafpd.conf\fR.)
+.TP 
+\-F \fIconfigfile\fR
+Specifies the configuration file to use. (Defaults to
+\fB:ETCDIR:/netatalk/afpd.conf\fR.)
+.TP 
+\-U \fIuams\fR
+Comma\-separated list of UAMs to use for the authentication
+process. (Equivalent to \fB\-uamlist\fR in
+\fBafpd.conf\fR.)
+.TP 
+\-m \fIumask\fR
+Use this umask for the creation of
+folders in Netatalk.
 .SH SIGNALS
-Signals that are sent to the main
-.B afpd
-process are propagated to the children, so all will be affected.
-.TP 13
-.B SIGHUP
-The
-.B afpd
-process will send the message "The server is going down for maintenance."
-to the client and shut itself down in 5 minutes.  New connections are not
-allowed.  If this is sent to a child
-.BR afpd ,
-the other children are not affected.  However, the main process will still
-exit, disabling all new connections.
-.TP 13
-.B SIGUSR1
-If the
-.B --with-message-dir
-configure option was used, the
-.B afpd
-process will set the
-.B debug
-option and redirect the messages to
-.RI /var/tmp/afpd-debug- pid .
-This should only be sent to a child
-.BR afpd .
-.B Warning:
-If the
-.B --with-message-dir
-option was not used, this will kill the
-.B afpd
-process.
+Signals that are sent to the main afpd process
+are propagated to the children, so all will be affected.
+.TP 
+SIGHUP
+Sending a SIGHUP to afpd will cause it to
+reload its configuration files.
+.TP 
+SIGUSR1
+The afpd process will send the message
+"The server is going down for maintenance." to the client
+and shut itself down in 5 minutes. New connections are not allowed.
+If this is sent to a child afpd, the other children are not
+affected. However, the main process will still exit, disabling all
+new connections.
+.TP 
+SIGUSR2
+The afpd process will look in the message
+directory configured at build time for a file named message.pid. For
+each one found, a the contents will be sent as a message to the
+associated AFP client. The file is removed after the message is
+sent. This should only be sent to a child afpd.
+Warning: If the \-\-with\-message\-dir option was not used, this will
+kill the afpd process
 
-.TP 13
-.B SIGUSR2
-The
-.B afpd
-process will look in the
-.I msg
-directory for a file named
-.RI message. pid .
-For each one found, a the contents will be sent as a message to the
-associated AFP client.  The file is removed after the message is sent.
-
+To shut down a user's afpd process it
+is recommended that SIGKILL (\-9)
+\fINOT\fR be used, except as a last resort, as this
+may leave the CNID database in an inconsistent state. The safe way
+to terminate an afpd is to send it a
+SIGTERM (\-15) signal and wait for it to die on
+its own.
 .SH FILES
-.TP 20
-.B :ETCDIR:/AppleVolumes.default
+.TP 
+\fB:ETCDIR:/AppleVolumes.default\fR
 list of default volumes to mount
-.TP 20
-.B :ETCDIR:/AppleVolumes.system
+.TP 
+\fB:ETCDIR:/AppleVolumes.system\fR
 list of volumes to offer all users
-.TP 20
-.B ~/AppleVolumes
+.TP 
+\fB~/AppleVolumes\fR
 user's list of volumes to mount
-.TP 20
-.BI :ETCDIR:/msg/message. pid
+.TP 
+\fB:ETCDIR:/netatalk/msg/message.pid\fR
 contains messages to be sent to users.
-.TP 20
-.BI /var/tmp/afpd-debug- pid
-contains debug output, if triggered.
 .SH BUGS
-A few calls from the AFP specification are not implemented, because the
-Macintosh does not use them.
+.SH "SEE ALSO"
+\fBhosts_access\fR(5),
+\fBafpd.conf\fR(5),
+\fBAppleVolumes.default\fR(5),
+\fBAppleVolumes.system\fR(5).
+

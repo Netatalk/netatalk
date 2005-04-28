@@ -1,16 +1,21 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.22 2003-06-14 16:40:54 srittau Exp $
+ * $Id: uams_dhx_passwd.c,v 1.23 2005-04-28 20:49:50 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
  */
 
-#define _XOPEN_SOURCE /* for crypt() */
-
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif /* HAVE_CONFIG_H */
+
+#ifdef NETBSD
+#define _XOPEN_SOURCE 500 /* for crypt() */
+#endif
+#ifdef FREEBSD
+#define _XOPEN_SOURCE /* for crypt() */
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,16 +23,32 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
-#ifndef NO_CRYPT_H
+#ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif /* ! NO_CRYPT_H */
+#endif /* ! HAVE_CRYPT_H */
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 #include <pwd.h>
-#include <atalk/logger.h>
-
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
+#if defined(GNUTLS_DHX)
+#include <gnutls/openssl.h>
+#elif defined(OPENSSL_DHX)
+#include <openssl/bn.h>
+#include <openssl/dh.h>
+#include <openssl/cast.h>
+#else /* OPENSSL_DHX */
+#include <bn.h>
+#include <dh.h>
+#include <cast.h>
+#endif /* OPENSSL_DHX */
 
+#include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
@@ -41,6 +62,7 @@
 		     (unsigned long) (a)) & 0xffff)
 
 /* the secret key */
+static CAST_KEY castkey;
 static struct passwd *dhxpwd;
 static u_int8_t randbuf[16];
 
@@ -51,11 +73,9 @@ static u_int8_t randbuf[16];
 static char *clientname;
 #endif /* TRU64 */
 
-#include "crypt.h"
-
 /* dhx passwd */
-static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
-			char *ibuf, int ibuflen,
+static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd _U_,
+			char *ibuf, int ibuflen _U_,
 			char *rbuf, int *rbuflen)
 {
     unsigned char iv[] = "CJalbert";
@@ -65,19 +85,17 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
-    CastKey castkey;
+    BIGNUM *bn, *gbn, *pbn;
     u_int16_t sessid;
     int i;
-#if 0
-    char *name;
-#endif
+    DH *dh;
 
-#if defined(TRU64) && !defined(HAVE_GCRYPT)
+#ifdef TRU64
     int rnd_seed[256];
     for (i = 0; i < 256; i++)
         rnd_seed[i] = random();
     RAND_seed(rnd_seed, sizeof(rnd_seed));
-#endif /* defined(TRU64) && !defined(HAVE_GCRYPT) */
+#endif /* TRU64 */
 
     *rbuflen = 0;
 
@@ -87,7 +105,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
         return AFPERR_PARAM;
 #endif /* TRU64 */
 
-    if (( dhxpwd = uam_getname(username, ulen)) == NULL ) {
+    if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
 	return AFPERR_PARAM;
     }
     
@@ -106,10 +124,44 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     if (!dhxpwd->pw_passwd)
       return AFPERR_NOTAUTH;
 
-    castkey = atalk_cast_key(ibuf, KEYSIZE);
-    if (!castkey)
+    /* get the client's public key */
+    if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
       return AFPERR_PARAM;
+    }
 
+    /* get our primes */
+    if (!(gbn = BN_bin2bn(&g, sizeof(g), NULL))) {
+      BN_free(bn);
+      return AFPERR_PARAM;
+    }
+
+    if (!(pbn = BN_bin2bn(p, sizeof(p), NULL))) {
+      BN_free(gbn);
+      BN_free(bn);
+      return AFPERR_PARAM;
+    }
+
+    /* okay, we're ready */
+    if (!(dh = DH_new())) {
+      BN_free(pbn);
+      BN_free(gbn);
+      BN_free(bn);
+      return AFPERR_PARAM;
+    }
+
+    /* generate key and make sure we have enough space */
+    dh->p = pbn;
+    dh->g = gbn;
+    if (!DH_generate_key(dh) || (BN_num_bytes(dh->pub_key) > KEYSIZE)) {
+      goto passwd_fail;
+    }
+
+    /* figure out the key. use rbuf as a temporary buffer. */
+    i = DH_compute_key(rbuf, bn, dh);
+    
+    /* set the key */
+    CAST_set_key(&castkey, i, rbuf);
+    
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
     memcpy(rbuf, &sessid, sizeof(sessid));
@@ -195,7 +247,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
  * uname format :
     byte      3
     2 bytes   len (network order)
-    len bytes unicode name
+    len bytes utf8 name
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 			char *ibuf, int ibuflen,
@@ -225,13 +277,17 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 }
 			
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
-			    char *ibuf, int ibuflen, 
+			    char *ibuf, int ibuflen _U_, 
 			    char *rbuf, int *rbuflen)
 {
+#ifdef SHADOWPW
+    struct spwd *sp;
+#endif /* SHADOWPW */
     unsigned char iv[] = "LWallace";
     BIGNUM *bn1, *bn2, *bn3;
     u_int16_t sessid;
     char *p;
+    int err = AFPERR_NOTAUTH;
 
     *rbuflen = 0;
 
@@ -300,8 +356,25 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     memset(rbuf, 0, PASSWDLEN);
     if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
       *uam_pwd = dhxpwd;
-      return AFP_OK;
+      err = AFP_OK;
     }
+#ifdef SHADOWPW
+    if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
+	LOG(log_info, logtype_uams, "no shadow passwd entry for %s", dhxpwd->pw_name);
+	return (AFPERR_NOTAUTH);
+    }
+
+    /* check for expired password */
+    if (sp && sp->sp_max != -1 && sp->sp_lstchg) {
+        time_t now = time(NULL) / (60*60*24);
+        int32_t expire_days = sp->sp_lstchg - now + sp->sp_max;
+        if ( expire_days < 0 ) {
+                LOG(log_info, logtype_uams, "password for user %s expired", dhxpwd->pw_name);
+		err = AFPERR_PWDEXPR;
+        }
+    }
+#endif /* SHADOWPW */
+    return err;
 #endif /* TRU64 */
 
     return AFPERR_NOTAUTH;

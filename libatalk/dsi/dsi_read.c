@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_read.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_read.c,v 1.4 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -17,8 +17,12 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#ifdef HAVE_SYS_FILIO_H
+#include <sys/filio.h>
+#endif
 
 #include <atalk/dsi.h>
+#include <sys/ioctl.h> 
 
 #ifndef min
 #define min(a,b)   ((a) < (b) ? (a) : (b))
@@ -32,7 +36,9 @@
 ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
 		    const size_t size, const int err)
 {
+#ifdef TIMER_ON_WRITE
   const struct itimerval none = {{0, 0}, {0, 0}};
+#endif
 
   dsi->noreply = 1; /* we will handle our own replies */
   dsi->header.dsi_flags = DSIFL_REPLY;
@@ -40,8 +46,11 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
   dsi->header.dsi_len = htonl(size);
   dsi->header.dsi_code = htonl(err);
 
-  sigprocmask(SIG_BLOCK, &dsi->sigblockset, NULL);
+  sigprocmask(SIG_BLOCK, &dsi->sigblockset, &dsi->oldset);
+  dsi->sigblocked = 1;
+#ifdef TIMER_ON_WRITE
   setitimer(ITIMER_REAL, &none, &dsi->savetimer);
+#endif  
   if (dsi_stream_send(dsi, buf, buflen)) {
     dsi->datasize = size - buflen;
     return min(dsi->datasize, buflen);
@@ -52,14 +61,38 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
 
 void dsi_readdone(DSI *dsi)
 {
+#ifdef TIMER_ON_WRITE
   setitimer(ITIMER_REAL, &dsi->savetimer, NULL);
-  sigprocmask(SIG_UNBLOCK, &dsi->sigblockset, NULL);
+#endif
+  sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
+  dsi->sigblocked = 0;
+}
+
+/* */
+int dsi_block(DSI *dsi, const int mode)
+{
+#if 0
+    dsi->noblocking = mode;
+    return 0;
+#else
+    int adr = mode;
+    int ret;
+    
+    ret = ioctl(dsi->socket, FIONBIO, &adr);
+    if (!ret) {
+        dsi->noblocking = mode;
+    }
+    return ret;
+#endif    
 }
 
 /* send off the data */
 ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 {
-  size_t len = dsi_stream_write(dsi, buf, buflen);
+  size_t len;
+  int delay = (dsi->datasize != buflen)?1:0;
+  
+  len  = dsi_stream_write(dsi, buf, buflen, delay);
 
   if (len == buflen) {
     dsi->datasize -= len;

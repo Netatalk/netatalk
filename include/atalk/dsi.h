@@ -49,7 +49,7 @@ struct dsi_block {
   u_int32_t dsi_reserved;   /* reserved field */
 };
 
-#define DSI_CMDSIZ        800
+#define DSI_CMDSIZ        8192 
 #define DSI_DATASIZ       8192
 /* child and parent processes might interpret a couple of these
  * differently. */
@@ -57,13 +57,16 @@ typedef struct DSI {
   dsi_proto protocol;
   struct dsi_block header;
   struct sockaddr_in server, client;
-  sigset_t sigblockset;
+  
+  sigset_t sigblockset, oldset;
+  int      sigblocked;
   struct itimerval timer, savetimer;
+  
   u_int32_t attn_quantum, datasize, server_quantum;
   u_int16_t serverID, clientID;
   u_int8_t *status, commands[DSI_CMDSIZ], data[DSI_DATASIZ];
   int statuslen;
-  unsigned int datalen, cmdlen;
+  size_t datalen, cmdlen;
   size_t read_count, write_count;
   int asleep; /* client won't reply AFP 0x7a ? */
   /* inited = initialized?, child = a child?, noreply = send reply? */
@@ -76,6 +79,20 @@ typedef struct DSI {
    * write/read just write/read data */
   pid_t  (*proto_open)(struct DSI *);
   void   (*proto_close)(struct DSI *);
+
+  /* url registered with slpd */
+#ifdef USE_SRVLOC
+  char srvloc_url[512];
+#endif 
+
+  /* buffer for OSX deadlock */
+  int noblocking;
+  char *buffer;
+  char *start;
+  char *eof;
+  char *end;
+  int  maxsize;
+
 } DSI;
   
 /* DSI flags */
@@ -112,9 +129,9 @@ typedef struct DSI {
 
 /* server and client quanta */
 #define DSI_DEFQUANT        2           /* default attention quantum size */
-#define DSI_SERVQUANT_MAX   0xffffffffL /* server quantum */
-#define DSI_SERVQUANT_MIN   0x0004A2E0L /* minimum server quantum */
-#define DSI_SERVQUANT_DEF   DSI_SERVQUANT_MIN /* default server quantum */
+#define DSI_SERVQUANT_MAX   0xffffffff  /* server quantum */
+#define DSI_SERVQUANT_MIN   32000       /* minimum server quantum */
+#define DSI_SERVQUANT_DEF   0x0004A2E0L /* default server quantum */
 
 /* default port number */
 #define DSI_AFPOVERTCP_PORT 548
@@ -141,8 +158,11 @@ extern void dsi_getstatus __P((DSI *));
 extern void dsi_close __P((DSI *));
 extern void dsi_sleep __P((DSI *, const int ));
 
+/* set, unset socket blocking mode */
+extern int dsi_block __P((DSI *, const int));
+
 /* low-level stream commands -- in dsi_stream.c */
-extern size_t dsi_stream_write __P((DSI *, void *, const size_t));
+extern size_t dsi_stream_write __P((DSI *, void *, const size_t, const int mode));
 extern size_t dsi_stream_read __P((DSI *, void *, const size_t));
 extern int dsi_stream_send __P((DSI *, void *, size_t));
 extern int dsi_stream_receive __P((DSI *, void *, const size_t, size_t *));

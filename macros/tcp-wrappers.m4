@@ -1,4 +1,4 @@
-dnl $Id: tcp-wrappers.m4,v 1.2 2004-01-14 16:10:29 bfernhomberg Exp $
+dnl $Id: tcp-wrappers.m4,v 1.3 2005-04-28 20:50:05 bfernhomberg Exp $
 
 AC_DEFUN([NETATALK_TCP_WRAPPERS], [
 	check=maybe
@@ -6,25 +6,36 @@ AC_DEFUN([NETATALK_TCP_WRAPPERS], [
 		[  --disable-tcp-wrappers  disable TCP wrappers support],
 		[
 			if test "x$enableval" = "xno"; then
-				check=no
+				wrapcheck=no
 			else
-				check=yes
+				wrapcheck=yes
 			fi
 		]
 	)
 
 	enable=no
-	if test "x$check" != "xno"; then
-		AC_CHECK_LIB(wrap, tcpd_warn, enable=yes)
+	netatalk_cv_tcpwrap=no
+	if test "x$wrapcheck" != "xno"; then
+		saved_LIBS=$LIBS
+		LIBS="$LIBS -lwrap"
+		AC_TRY_LINK([
+#include <tcpd.h>
+int allow_severity = 0;
+int deny_severity = 0;
+],[
+	tcpd_warn ("link test");
+], netatalk_cv_tcpwrap=yes, netatalk_cv_tcpwrap=no, netatalk_cv_tcpwrap=cross)
+
+		LIBS=$saved_LIBS
 	fi
 
 	AC_MSG_CHECKING([whether to enable the TCP wrappers])
-	if test "x$enable" = "xyes"; then
+	if test "x$netatalk_cv_tcpwrap" = "xyes"; then
 		AC_DEFINE(TCPWRAP, 1, [Define if TCP wrappers should be used])
 		WRAP_LIBS="-lwrap"
 		AC_MSG_RESULT([yes])
 	else
-		if test "x$check" = "xyes"; then
+		if test "x$wrapcheck" = "xyes"; then
 			AC_MSG_ERROR([libwrap not found])
 		else
 			AC_MSG_RESULT([no])

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_krb4.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: uams_krb4.c,v 1.7 2005-04-28 20:49:50 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -190,7 +190,7 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
 	    *p = KRB4RPL_DONE;	/* XXX */
 	    *rbuflen = 1;
 
-	    if (( pwd = uam_getname( ad.pname, strlen(ad.pname) )) == NULL ) {
+	    if (( pwd = uam_getname( obj, ad.pname, strlen(ad.pname) )) == NULL ) {
 		return AFPERR_PARAM;
 	    }
 /*
@@ -337,7 +337,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 	    *p = KRB4RPL_DONE;	/* XXX */
 	    *rbuflen = 1;
 
-	    if (( pwd = uam_getname( username, strlen(username) ) ) == NULL ) {
+	    if (( pwd = uam_getname( obj, username, strlen(username) ) ) == NULL ) {
 		return( AFPERR_NOTAUTH );
 	    }
 /*
@@ -385,7 +385,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 		    *p = KRB4RPL_DONE;	/* XXX */
 		    *rbuflen = 1;
 
-		    if (( pwd = uam_getname( ad.pname, strlen(ad.pname) )) 
+		    if (( pwd = uam_getname( obj, ad.pname, strlen(ad.pname) )) 
 			== NULL ) {
 			return( AFPERR_PARAM );
 		    }
@@ -454,7 +454,7 @@ static int krb4_logincont(void *obj, struct passwd **uam_pwd,
 		    *p = KRB4RPL_DONE;	/* XXX */
 		    *rbuflen = 1;
 
-		    if (( pwd = uam_getname( ad.pname, strlen(ad.pname) )) 
+		    if (( pwd = uam_getname( obj, ad.pname, strlen(ad.pname) )) 
 			== NULL ) {
 			return( AFPERR_PARAM );
 		    }
@@ -746,7 +746,7 @@ static int afskrb_logincont(void *obj, struct passwd *uam_pwd,
 	return ( AFPERR_BADUAM );
     }
 
-    if (( pwd = uam_getname( username )) == NULL ) {
+    if (( pwd = uam_getname( obj, username, strlen(username) )) == NULL ) {
 	return ( AFPERR_PARAM );
     }
 

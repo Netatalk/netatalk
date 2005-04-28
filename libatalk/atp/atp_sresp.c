@@ -1,5 +1,5 @@
 /*
- * $Id: atp_sresp.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_sresp.c,v 1.5 2005-04-28 20:49:56 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -53,7 +53,7 @@ int atp_sresp( ah, atpb )
     int			i;
     u_int8_t		ctrlinfo;
     struct atpbuf	*resp_buf;
-    struct atpbuf	*save_buf;
+    struct atpbuf	*save_buf; /* uninitialized, OK 310105 */
 
 #ifdef EBUG
     atp_print_bufuse( ah, "atp_sresp" );

@@ -1,5 +1,5 @@
 /*
- * $Id: nbplkup.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: nbplkup.c,v 1.5 2005-04-28 20:49:20 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -34,9 +34,12 @@
 #include <atalk/util.h>
 #include <string.h>
 #include <stdio.h>
-#if !defined( sun ) || !defined( i386 )
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#endif /* ! sun || ! i386 */
+#endif
+
+
+#include <atalk/unicode.h>
 
 char *Obj = "=";
 char *Type = "=";
@@ -53,7 +56,7 @@ void Usage( av0 )
 	p++;
     }
 
-    printf( "Usage:\t%s [ -A address ] [ -r responses] [ obj:type@zone ]\n", p );
+    printf( "Usage:\t%s [ -A address ] [ -r responses] [-m Mac charset] [ obj:type@zone ]\n", p );
     exit( 1 );
 }
 
@@ -65,12 +68,16 @@ int main( ac, av )
     char		*name;
     int			i, c, nresp = 1000;
     struct at_addr      addr;
+    char		*obj = NULL;
+    size_t		obj_len;
+    charset_t		chMac = CH_MAC;
+    char *		convname;
 
     extern char		*optarg;
     extern int		optind;
 
     memset(&addr, 0, sizeof(addr));
-    while (( c = getopt( ac, av, "r:A:" )) != EOF ) {
+    while (( c = getopt( ac, av, "r:A:m:" )) != EOF ) {
 	switch ( c ) {
 	case 'A':
   	    if (!atalk_aton(optarg, &addr)) {
@@ -81,6 +88,12 @@ int main( ac, av )
 	case 'r' :
 	    nresp = atoi( optarg );
 	    break;
+        case 'm':
+            if ((charset_t)-1 == (chMac = add_charset(optarg)) ) {
+	        fprintf(stderr, "Invalid Mac charset.\n");
+		exit(1);
+	    }
+            break;
 
 	default :
 	    Usage( av[ 0 ] );
@@ -137,7 +150,11 @@ int main( ac, av )
     }
 
     if ( ac - optind == 1 ) {
-	if ( nbp_name( av[ optind ], &Obj, &Type, &Zone )) {
+	if ((size_t)(-1) == convert_string_allocate( CH_UNIX, chMac,
+                           av[ optind ], strlen(av[optind]), &convname))
+            convname = av[ optind ];
+
+	if ( nbp_name( convname, &Obj, &Type, &Zone )) {
 	    Usage( av[ 0 ] );
 	    exit( 1 );
 	}
@@ -148,13 +165,26 @@ int main( ac, av )
 	exit( -1 );
     }
     for ( i = 0; i < c; i++ ) {
+	
+	if ((size_t)(-1) == (obj_len = convert_string_allocate( chMac, 
+                       CH_UNIX, nn[ i ].nn_obj, nn[ i ].nn_objlen, &obj)) ) {
+            obj_len = nn[ i ].nn_objlen;
+            if (( obj = strdup(nn[ i ].nn_obj)) == NULL ) {
+	        perror( "strdup" );
+	        exit( 1 );
+	    }
+        }
+
 	printf( "%31.*s:%-34.*s %u.%u:%u\n",
-		nn[ i ].nn_objlen, nn[ i ].nn_obj,
+		(int)obj_len, obj,
 		nn[ i ].nn_typelen, nn[ i ].nn_type,
 		ntohs( nn[ i ].nn_sat.sat_addr.s_net ),
 		nn[ i ].nn_sat.sat_addr.s_node,
 		nn[ i ].nn_sat.sat_port );
+
+	free(obj);
     }
 
+    free(nn);
     return 0;
 }

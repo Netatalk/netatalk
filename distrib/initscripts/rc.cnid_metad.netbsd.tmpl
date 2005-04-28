@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# PROVIDE: cnid_metad
+#
+# AppleTalk daemons. Make sure not to start atalkd in the background:
+# its data structures must have time to stablize before running the
+# other processes.
+#
+
+. /etc/rc.subr
+
+name="cnid_metad"
+rcvar=$name
+command=":SBINDIR:/cnid_metad"
+etcdir=":ETCDIR:"
+
+load_rc_config $name
+run_rc_command "$1"
+

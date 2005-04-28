@@ -1,5 +1,5 @@
 /*
- * $Id: uam_auth.h,v 1.4 2002-10-17 18:01:54 didg Exp $
+ * $Id: uam_auth.h,v 1.5 2005-04-28 20:49:45 bfernhomberg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -63,5 +63,8 @@ int auth_register __P((const int, struct uam_obj *));
 #define auth_unregister(a) uam_detach(a)
 struct uam_obj *auth_uamfind __P((const int, const char *, const int));
 void auth_unload __P((void));
+
+/* uam.c */
+int uam_random_string __P((AFPObj *,char *, int));
 
 #endif /* uam_auth.h */

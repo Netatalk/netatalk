@@ -14,6 +14,7 @@ ATALK_SBIN=:SBINDIR:
 ATALK_START_ATALKD=0
 ATALK_START_NBPRGSTR=0
 ATALK_START_PAPD=0
+ATALK_START_CNID_METAD=1
 ATALK_START_AFPD=1
 ATALK_START_TIMELORD=0
 
@@ -51,6 +52,10 @@ case "$1" in
 		${ATALK_SBIN}/papd;			echo ' papd\c'
 	fi
 
+	if [ ${ATALK_START_CNID_METAD} -eq 1 -a -x ${ATALK_SBIN}/cnid_metad ]; then
+		${ATALK_SBIN}/cnid_metad;			echo ' cnid_metad\c'
+	fi
+
 	if [ ${ATALK_START_AFPD} -eq 1 -a -x ${ATALK_SBIN}/afpd ]; then
 		${ATALK_SBIN}/afpd;			echo ' afpd\c'
 	fi
@@ -77,6 +82,10 @@ case "$1" in
 
 	if [ -x ${ATALK_SBIN}/afpd ]; then
 		killproc afpd;			echo ' afpd\c'
+	fi
+
+	if [ -x ${ATALK_SBIN}/cnid_metad ]; then
+		killproc cnid_metad;			echo ' cnid_metad\c'
 	fi
 
 	if [ -x ${ATALK_SBIN}/timelord ]; then

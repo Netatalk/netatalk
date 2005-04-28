@@ -1,5 +1,5 @@
 /*
- * $Id: printer.h,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: printer.h,v 1.6 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,11 +9,13 @@ struct printer {
     char		*p_name;
     char		*p_type;
     char		*p_zone;
+    char		*p_u_name;
 #ifdef notdef
     char		*p_fonts;
     char		*p_psetdir;
 #endif /* notdef */
     char		*p_ppdfile;
+    char		p_status[255];
     char		*p_authprintdir;
     int			p_flags;
     struct at_addr      p_addr;
@@ -34,6 +36,9 @@ struct printer {
 	char		*pu_cmd;
     } p_un;
     ATP			p_atp;
+#ifdef HAVE_CUPS
+    char 		*p_cupsoptions;
+#endif
     struct printer	*p_next;
 };
 #define p_cmd		p_un.pu_cmd
@@ -57,5 +62,9 @@ struct printer {
 #define P_AUTH		(1<<5)
 #define P_AUTH_PSSP	(1<<6)
 #define P_AUTH_CAP	(1<<7)
+#define P_CUPS		(1<<8)
+#define P_CUPS_PPD	(1<<9)
+#define P_CUPS_AUTOADDED (1<<10)
+#define P_FOOMATIC_HACK (1<<11)
 
 extern struct printer	*printer;

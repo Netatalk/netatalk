@@ -1,5 +1,5 @@
 /*
- * $Id: interface.h,v 1.3 2001-07-31 19:50:14 srittau Exp $
+ * $Id: interface.h,v 1.4 2005-04-28 20:49:46 bfernhomberg Exp $
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
@@ -36,6 +36,8 @@ struct interface {
 					   do routing. */
 #define IFACE_DONTROUTE 0x200           /* don't route this interface */
 #define IFACE_ISROUTER  0x400           /* act as a router. */
+#define IFACE_ALLMULTI  0x800		/* set allmulti on this interface, linux only */
+#define IFACE_WASALLMULTI 0x1000	/* don't unset allmulti on this interface on shutdown, linux only */
 
 #define UNSTABLE	2
 #define STABLE		0

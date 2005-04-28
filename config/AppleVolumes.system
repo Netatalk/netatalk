@@ -9,10 +9,12 @@
 #
 
 # default translation -- note that CR <-> LF translation is done on all
-# files of type TEXT.  The first line turns off translation for files of
-# unknown type, the second turns this translation on.
-.         "BINA"  "UNIX"      Unix Binary                    Unix                      application/octet-stream
-# .         "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
+# files of type TEXT (if crlf is set in volume's options).  
+# The first line turns off translation for files of unknown type, 
+# the third turns this translation on.
+#.         "????"  "????"      Unix Binary                    Unix                      application/octet-stream
+#.         "BINA"  "UNIX"      Unix Binary                    Unix                      application/octet-stream
+#.         "TEXT"  "ttxt"      ASCII Text                     SimpleText                text/plain
 
 .1st      "TEXT"  "ttxt"      Text Readme                    SimpleText                application/text
 .669      "6669"  "SNPL"      669 MOD Music                  PlayerPro
@@ -93,7 +95,7 @@
 .hp       "TEXT"  "CWIE"      C Include File                 CodeWarrior
 .hpgl     "HPGL"  "GKON"      HP GL/2                        GraphicConverter
 .hpp      "TEXT"  "CWIE"      C Include File                 CodeWarrior
-.hqx      "TEXT"  "SITx"      BinHex                         StuffIt Expanderª         application/mac-binhex40
+.hqx      "TEXT"  "SITx"      BinHex                         StuffIt Expander          application/mac-binhex40
 .htm      "TEXT"  "MOSS"      HyperText                      Netscape Communicator     text/html
 .html     "TEXT"  "MOSS"      HyperText                      Netscape Communicator     text/html
 .i3       "TEXT"  "R*ch"      Modula 3 Interface             BBEdit

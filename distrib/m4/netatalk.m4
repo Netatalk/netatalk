@@ -6,7 +6,7 @@ dnl Test for netatalk, and define NETATALK_CFLAGS and NETATALK_LIBS
 dnl   to be used as follows:
 dnl AM_PATH_NETATALK(MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
 dnl
-AC_DEFUN(AM_PATH_NETATALK,
+AC_DEFUN([AM_PATH_NETATALK],
 [dnl 
 dnl Get the cflags and libraries from the netatalk-config script
 dnl

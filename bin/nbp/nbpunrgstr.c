@@ -1,5 +1,5 @@
 /*
- * $Id: nbpunrgstr.c,v 1.5 2001-07-31 19:49:02 srittau Exp $
+ * $Id: nbpunrgstr.c,v 1.6 2005-04-28 20:49:20 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -39,6 +39,8 @@
 #include <atalk/util.h>
 #include <atalk/nbp.h>
 
+#include <atalk/unicode.h>
+
 void Usage( av0 )
     char	*av0;
 {
@@ -50,7 +52,7 @@ void Usage( av0 )
 	p++;
     }
 
-    fprintf( stderr, "Usage: %s [ -A address ] obj:type@zone\n", p );
+    fprintf( stderr, "Usage: %s [ -A address ] [ -m Mac charset] obj:type@zone\n", p );
     exit( 1 );
 }
 
@@ -59,14 +61,16 @@ int main( ac, av )
     char	**av;
 {
     char		*Obj = 0, *Type = 0, *Zone = 0;
+    char		*convname = 0;
     struct at_addr      addr;
     int                 c;
+    charset_t		chMac = CH_MAC;
 
     extern char		*optarg;
     extern int		optind;
     
     memset(&addr, 0, sizeof(addr));
-    while ((c = getopt(ac, av, "A:")) != EOF) {
+    while ((c = getopt(ac, av, "A:m:")) != EOF) {
       switch (c) {
       case 'A':
 	if (!atalk_aton(optarg, &addr)) {
@@ -74,6 +78,13 @@ int main( ac, av )
 	  exit(1);
 	}
 	break;
+      case 'm':
+        if ((charset_t)-1 == (chMac = add_charset(optarg)) ) {
+          fprintf(stderr, "Invalid Mac charset.\n");
+          exit(1);
+        }
+        break;
+
       default:
 	Usage(av[0]);
 	break;
@@ -84,10 +95,15 @@ int main( ac, av )
 	Usage( av[ 0 ] );
     }
 
+    /* Convert the name */
+    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac, 
+                        av[optind], strlen(av[optind]), &convname))
+        convname = av[optind]; 
+
     /*
      * Get the name. If Type or Obj aren't specified, error.
      */
-    if ( nbp_name( av[optind], &Obj, &Type, &Zone ) || !Obj || !Type ) {
+    if ( nbp_name( convname, &Obj, &Type, &Zone ) || !Obj || !Type ) {
 	Usage( av[ 0 ] );
     }
 

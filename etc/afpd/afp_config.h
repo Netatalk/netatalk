@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.h,v 1.3 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: afp_config.h,v 1.4 2005-04-28 20:49:39 bfernhomberg Exp $
  */
 
 #ifndef AFPD_CONFIG_H
@@ -17,7 +17,7 @@ typedef struct AFPConfig {
     AFPObj obj;
     int fd, statuslen;
     unsigned char *optcount;
-    char status[ATP_MAXDATA];
+    char status[1400];
     const void *defoptions, *signature;
     int (*server_start) __P((struct AFPConfig *, struct AFPConfig *,
                              server_child *));

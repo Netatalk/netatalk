@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.10 2002-09-29 23:24:47 sibaz Exp $
+ * $Id: nbp.c,v 1.11 2005-04-28 20:49:46 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -79,7 +79,7 @@ int nbp_packet( ap, from, data, len )
     struct nbpnve	nn;
     struct sockaddr_at	sat;
     struct nbptab	*ntab;
-    struct ziptab	*zt;
+    struct ziptab	*zt=NULL;
     struct interface	*iface;
     struct list		*l;
     struct rtmptab	*rtmp;
@@ -563,7 +563,7 @@ Can't find route's interface!" );
 	     * Another tuple won't fit. Send what we've already
 	     * got, and start the next packet.
 	     */
-	    if ( data + SZ_NBPTUPLE + 3 + ntab->nt_nve.nn_objlen +
+	    if ( n > 14 || data + SZ_NBPTUPLE + 3 + ntab->nt_nve.nn_objlen +
 		    ntab->nt_nve.nn_typelen + ntab->nt_nve.nn_zonelen > end ) {
 		nh.nh_op = NBPOP_LKUPREPLY;
 		nh.nh_cnt = n;

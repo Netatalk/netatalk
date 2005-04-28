@@ -1,5 +1,5 @@
 /*
- * $Id: nbprgstr.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: nbprgstr.c,v 1.5 2005-04-28 20:49:20 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,6 +20,7 @@
 #include <atalk/netddp.h>
 #include <atalk/nbp.h>
 #include <atalk/util.h>
+#include <atalk/unicode.h>
 
 void Usage( av0 )
     char	*av0;
@@ -32,7 +33,7 @@ void Usage( av0 )
 	p++;
     }
 
-    fprintf( stderr, "Usage: %s [ -A address ] obj:type@zone\n", p );
+    fprintf( stderr, "Usage: %s [ -A address ] [-m Mac charset] [ -p port] obj:type@zone\n", p );
     exit( 1 );
 }
 
@@ -43,13 +44,15 @@ int main( ac, av )
     struct sockaddr_at	addr;
     struct at_addr      ataddr;
     char		*Obj = 0, *Type = 0, *Zone = 0;
+    char		*convname = 0;
     int			s, c, port = 0;
+    charset_t		chMac = CH_MAC;
     
     extern char		*optarg;
     extern int		optind;
 
     memset(&ataddr, 0, sizeof(ataddr));
-    while (( c = getopt( ac, av, "p:A:" )) != EOF ) {
+    while (( c = getopt( ac, av, "p:A:m:" )) != EOF ) {
 	switch ( c ) {
 	case 'A':
 	    if (!atalk_aton(optarg, &ataddr)) {
@@ -57,6 +60,13 @@ int main( ac, av )
 		exit(1);
 	    }
 	    break;
+
+        case 'm':
+            if ((charset_t)-1 == (chMac = add_charset(optarg)) ) {
+                fprintf(stderr, "Invalid Mac charset.\n");
+                exit(1);
+            }
+            break;
 
 	case 'p' :
 	    port = atoi( optarg );
@@ -71,10 +81,15 @@ int main( ac, av )
 	Usage( av[ 0 ] );
     }
 
+    /* Convert the name */
+    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
+                        av[optind], strlen(av[optind]), &convname))
+        convname = av[optind];
+
     /*
      * Get the name. If Type or Obj aren't specified, error.
      */
-    if ( nbp_name( av[ optind ], &Obj, &Type, &Zone ) || !Obj || !Type ) {
+    if ( nbp_name( convname, &Obj, &Type, &Zone ) || !Obj || !Type ) {
 	Usage( av[ 0 ] );
     }
 

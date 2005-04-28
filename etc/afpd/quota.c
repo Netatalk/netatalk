@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.24 2003-12-28 13:51:12 srittau Exp $
+ * $Id: quota.c,v 1.25 2005-04-28 20:49:44 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,11 +9,12 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifndef NO_QUOTA_SUPPORT
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#include <sys/types.h>
 /* STDC check */
 #if STDC_HEADERS
 #include <string.h>
@@ -28,7 +29,6 @@ char *strchr (), *strrchr ();
 #define memmove(d,s,n) bcopy ((s), (d), (n))
 #endif /* ! HAVE_MEMCPY */
 #endif /* STDC_HEADERS */
-
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/param.h>
@@ -38,16 +38,250 @@ char *strchr (), *strrchr ();
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
-#include <atalk/logger.h>
 
+#include <atalk/logger.h>
 #include <atalk/afp.h>
 
 #include "auth.h"
 #include "volume.h"
 #include "unix.h"
 
-#ifndef NO_QUOTA_SUPPORT
+#define DEBUG_QUOTA 0
+#define WANT_USER_QUOTA 0
+#define WANT_GROUP_QUOTA 1
 
+#ifdef NEED_QUOTACTL_WRAPPER
+int quotactl(int cmd, const char *special, int id, caddr_t addr)
+{
+    return syscall(__NR_quotactl, cmd, special, id, addr);
+}
+#endif /* NEED_QUOTACTL_WRAPPER */
+
+static int overquota( struct dqblk *);
+
+#ifdef linux
+
+#ifdef HAVE_LINUX_XQM_H
+#include <linux/xqm.h>
+#else
+#ifdef HAVE_XFS_XQM_H
+#include <xfs/xqm.h>
+#define HAVE_LINUX_XQM_H
+#endif /* HAVE_XFS_XQM_H */
+#endif /* HAVE_LINUX_XQM_H */
+
+#include <linux/unistd.h>
+
+static int is_xfs = 0;
+
+static int get_linux_xfs_quota(int, char*, uid_t, struct dqblk *);
+static int get_linux_fs_quota(int, char*, uid_t, struct dqblk *);
+
+/* format supported by current kernel */
+static int kernel_iface = IFACE_UNSET;
+
+/*
+**  Check kernel quota version
+**  Taken from quota-tools 3.08 by Jan Kara <jack@suse.cz>
+*/
+static void linuxquota_get_api( void )
+{
+#ifndef LINUX_API_VERSION
+    struct stat st;
+
+    if (stat("/proc/sys/fs/quota", &st) == 0) {
+        kernel_iface = IFACE_GENERIC;
+    }
+    else {
+        struct dqstats_v2 v2_stats;
+        struct sigaction  sig;
+        struct sigaction  oldsig;
+
+        /* This signal handling is needed because old kernels send us SIGSEGV as they try to resolve the device */
+        sig.sa_handler   = SIG_IGN;
+        sig.sa_sigaction = NULL;
+        sig.sa_flags     = 0;
+        sigemptyset(&sig.sa_mask);
+        if (sigaction(SIGSEGV, &sig, &oldsig) < 0) {
+	    LOG( log_error, logtype_afpd, "cannot set SEGV signal handler: %s", strerror(errno));
+            goto failure;
+        }
+        if (quotactl(QCMD(Q_V2_GETSTATS, 0), NULL, 0, (void *)&v2_stats) >= 0) {
+            kernel_iface = IFACE_VFSV0;
+        }
+        else if (errno != ENOSYS && errno != ENOTSUP) {
+            /* RedHat 7.1 (2.4.2-2) newquota check 
+             * Q_V2_GETSTATS in it's old place, Q_GETQUOTA in the new place
+             * (they haven't moved Q_GETSTATS to its new value) */
+            int err_stat = 0;
+            int err_quota = 0;
+            char tmp[1024];         /* Just temporary buffer */
+
+            if (quotactl(QCMD(Q_V1_GETSTATS, 0), NULL, 0, tmp))
+                err_stat = errno;
+            if (quotactl(QCMD(Q_V1_GETQUOTA, 0), "/dev/null", 0, tmp))
+                err_quota = errno;
+
+            /* On a RedHat 2.4.2-2 	we expect 0, EINVAL
+             * On a 2.4.x 		we expect 0, ENOENT
+             * On a 2.4.x-ac	we wont get here */
+            if (err_stat == 0 && err_quota == EINVAL) {
+                kernel_iface = IFACE_VFSV0;
+            }
+            else {
+                kernel_iface = IFACE_VFSOLD;
+            }
+        }
+        else {
+            /* This branch is *not* in quota-tools 3.08
+            ** but without it quota version is not correctly
+            ** identified for the original SuSE 8.0 kernel */
+            unsigned int vers_no;
+            FILE * qf;
+
+            if ((qf = fopen("/proc/fs/quota", "r"))) {
+                if (fscanf(qf, "Version %u", &vers_no) == 1) {
+                    if ( (vers_no == (6*10000 + 5*100 + 0)) ||
+                         (vers_no == (6*10000 + 5*100 + 1)) ) {
+                        kernel_iface = IFACE_VFSV0;
+                    }
+                }
+                fclose(qf);
+            }
+        }
+        if (sigaction(SIGSEGV, &oldsig, NULL) < 0) {
+	    LOG(log_error, logtype_afpd, "cannot reset signal handler: %s", strerror(errno));
+            goto failure;
+        }
+    }
+
+failure:
+    if (kernel_iface == IFACE_UNSET)
+       kernel_iface = IFACE_VFSOLD;
+
+#else /* defined LINUX_API_VERSION */
+    kernel_iface = LINUX_API_VERSION;
+#endif
+}
+
+/****************************************************************************/
+
+static int get_linux_quota(int what, char *path, uid_t euser_id, struct dqblk *dp)
+{
+	int r; /* result */
+
+	if ( is_xfs )
+		r=get_linux_xfs_quota(what, path, euser_id, dp);
+	else
+    		r=get_linux_fs_quota(what, path, euser_id, dp);
+    
+	return r;
+}
+
+/****************************************************************************
+ Abstract out the XFS Quota Manager quota get call.
+****************************************************************************/
+
+static int get_linux_xfs_quota(what, path, euser_id, dqb)
+int what;
+char *path;
+uid_t euser_id;
+struct dqblk *dqb;
+{
+	int ret = -1;
+#ifdef HAVE_LINUX_XQM_H
+	struct fs_disk_quota D;
+	
+	memset (&D, 0, sizeof(D));
+
+	if ((ret = quotactl(QCMD(Q_XGETQUOTA,(what ? GRPQUOTA : USRQUOTA)), path, euser_id, (caddr_t)&D)))
+               return ret;
+
+	dqb->bsize = (u_int64_t)512;
+        dqb->dqb_bsoftlimit  = (u_int64_t)D.d_blk_softlimit;
+        dqb->dqb_bhardlimit  = (u_int64_t)D.d_blk_hardlimit;
+        dqb->dqb_ihardlimit  = (u_int64_t)D.d_ino_hardlimit;
+        dqb->dqb_isoftlimit  = (u_int64_t)D.d_ino_softlimit;
+        dqb->dqb_curinodes   = (u_int64_t)D.d_icount;
+        dqb->dqb_curblocks   = (u_int64_t)D.d_bcount; 
+#endif
+       return ret;
+}
+
+/*
+** Wrapper for the quotactl(GETQUOTA) call.
+** For API v2 the results are copied back into a v1 structure.
+** Taken from quota-1.4.8 perl module
+*/
+static int get_linux_fs_quota( what, path, euser_id, dqb)
+int what;
+char *path;
+uid_t euser_id;
+struct dqblk *dqb;
+{
+	int ret;
+
+	if (kernel_iface == IFACE_UNSET)
+    		linuxquota_get_api();
+
+	if (kernel_iface == IFACE_GENERIC)
+  	{
+    		struct dqblk_v3 dqb3;
+
+    		ret = quotactl(QCMD(Q_V3_GETQUOTA, (what ? GRPQUOTA : USRQUOTA)), path, euser_id, (caddr_t) &dqb3);
+    		if (ret == 0)
+    		{
+      			dqb->dqb_bhardlimit = dqb3.dqb_bhardlimit;
+      			dqb->dqb_bsoftlimit = dqb3.dqb_bsoftlimit;
+      			dqb->dqb_curblocks  = dqb3.dqb_curspace / DEV_QBSIZE;
+      			dqb->dqb_ihardlimit = dqb3.dqb_ihardlimit;
+      			dqb->dqb_isoftlimit = dqb3.dqb_isoftlimit;
+      			dqb->dqb_curinodes  = dqb3.dqb_curinodes;
+      			dqb->dqb_btime      = dqb3.dqb_btime;
+      			dqb->dqb_itime      = dqb3.dqb_itime;
+			dqb->bsize	    = DEV_QBSIZE;
+    		}
+  	}
+  	else if (kernel_iface == IFACE_VFSV0)
+  	{
+    		struct dqblk_v2 dqb2;
+
+    		ret = quotactl(QCMD(Q_V2_GETQUOTA, (what ? GRPQUOTA : USRQUOTA)), path, euser_id, (caddr_t) &dqb2);
+    		if (ret == 0)
+    		{
+      			dqb->dqb_bhardlimit = dqb2.dqb_bhardlimit;
+      			dqb->dqb_bsoftlimit = dqb2.dqb_bsoftlimit;
+      			dqb->dqb_curblocks  = dqb2.dqb_curspace / DEV_QBSIZE;
+      			dqb->dqb_ihardlimit = dqb2.dqb_ihardlimit;
+      			dqb->dqb_isoftlimit = dqb2.dqb_isoftlimit;
+      			dqb->dqb_curinodes  = dqb2.dqb_curinodes;
+      			dqb->dqb_btime      = dqb2.dqb_btime;
+      			dqb->dqb_itime      = dqb2.dqb_itime;
+			dqb->bsize	    = DEV_QBSIZE;
+    		}
+  	}
+  	else /* if (kernel_iface == IFACE_VFSOLD) */
+  	{
+    		struct dqblk_v1 dqb1;
+
+    		ret = quotactl(QCMD(Q_V1_GETQUOTA, (what ? GRPQUOTA : USRQUOTA)), path, euser_id, (caddr_t) &dqb1);
+    		if (ret == 0)
+    		{
+      			dqb->dqb_bhardlimit = dqb1.dqb_bhardlimit;
+      			dqb->dqb_bsoftlimit = dqb1.dqb_bsoftlimit;
+      			dqb->dqb_curblocks  = dqb1.dqb_curblocks;
+      			dqb->dqb_ihardlimit = dqb1.dqb_ihardlimit;
+      			dqb->dqb_isoftlimit = dqb1.dqb_isoftlimit;
+      			dqb->dqb_curinodes  = dqb1.dqb_curinodes;
+      			dqb->dqb_btime      = dqb1.dqb_btime;
+      			dqb->dqb_itime      = dqb1.dqb_itime;
+			dqb->bsize	    = DEV_QBSIZE;
+    		}
+  	}
+  	return ret;
+}
+
+#endif /* linux */
 
 #if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
 /*
@@ -95,6 +329,31 @@ int         *nfs;
 }
 
 #else /* __svr4__ */
+#ifdef ultrix
+/*
+* Return the block-special device name associated with the filesystem
+* on which "file" resides.  Returns NULL on failure.
+*/
+
+static char *
+special( file, nfs )
+char *file;
+int  *nfs;
+{
+    static struct fs_data	fsd;
+
+    if ( getmnt(0, &fsd, 0, STAT_ONE, file ) < 0 ) {
+        LOG(log_info, logtype_afpd, "special: getmnt %s: %s", file, strerror(errno) );
+        return( NULL );
+    }
+
+    /* XXX: does this really detect an nfs mounted fs? */
+    if (strchr(fsd.fd_req.devname, ':'))
+        *nfs = 1;
+    return( fsd.fd_req.devname );
+}
+
+#else /* ultrix */
 #if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
 
 static char *
@@ -131,6 +390,7 @@ int *nfs;
     FILE 		*mtab;
     dev_t		devno;
     struct mntent	*mnt;
+    int 		found=0;
 
     if ( stat( file, &sb ) < 0 ) {
         return( NULL );
@@ -144,8 +404,8 @@ int *nfs;
     while (( mnt = getmntent( mtab )) != NULL ) {
         /* check for local fs */
         if ( (stat( mnt->mnt_fsname, &sb ) == 0) && devno == sb.st_rdev) {
-            endmntent( mtab );
-            return( mnt->mnt_fsname );
+	    found = 1;
+	    break;
         }
 
         /* check for an nfs mount entry. the alternative is to use
@@ -153,27 +413,43 @@ int *nfs;
         if ((stat(mnt->mnt_dir, &sb) == 0) && (devno == sb.st_dev) &&
                 strchr(mnt->mnt_fsname, ':')) {
             *nfs = 1;
-            endmntent( mtab );
-            return( mnt->mnt_fsname );
+	    found = 1;
+	    break;
         }
     }
 
     endmntent( mtab );
-    return( NULL );
+
+    if (!found)
+	return (NULL);
+#ifdef linux
+    if (strcmp(mnt->mnt_type, "xfs") == 0)
+	is_xfs = 1;
+#endif
+	
+    return( mnt->mnt_fsname );
 }
 
 #endif /* BSD4_4 */
+#endif /* ultrix */
 #endif /* __svr4__ */
 
 
 static int getfsquota(vol, uid, dq)
-struct vol          *vol;
-const int           uid;
-struct dqblk        *dq;
-{
-#ifdef __svr4__
-    struct quotctl	qc;
+struct vol		*vol;
+const int		uid;
+struct dqblk		*dq;
 
+{
+	struct dqblk dqg;
+
+#ifdef __svr4__
+    struct quotctl      qc;
+#endif
+
+    memset(&dqg, 0, sizeof(dqg));
+	
+#ifdef __svr4__
     qc.op = Q_GETQUOTA;
     qc.uid = uid;
     qc.addr = (caddr_t)dq;
@@ -182,6 +458,11 @@ struct dqblk        *dq;
     }
 
 #else /* __svr4__ */
+#ifdef ultrix
+    if ( quota( Q_GETDLIM, uid, vol->v_gvs, dq ) != 0 ) {
+        return( AFPERR_PARAM );
+    }
+#else /* ultrix */
 
 #ifndef USRQUOTA
 #define USRQUOTA   0
@@ -194,9 +475,6 @@ struct dqblk        *dq;
 #ifndef TRU64
     /* for group quotas. we only use these if the user belongs
     * to one group. */
-    struct dqblk        dqg;
-
-    memset(&dqg, 0, sizeof(dqg));
 #endif /* TRU64 */
 
 #ifdef BSD4_4
@@ -226,45 +504,48 @@ struct dqblk        *dq;
     }
 
 #else /* BSD4_4 */
-    if ( quotactl(QCMD(Q_GETQUOTA, USRQUOTA), vol->v_gvs, uid,
-                  (caddr_t) dq ) != 0 ) {
+    if (get_linux_quota (WANT_USER_QUOTA, vol->v_gvs, uid, dq) !=0) {
         return( AFPERR_PARAM );
     }
 
-    if (ngroups >= 1)
-        quotactl(QCMD(Q_GETQUOTA, GRPQUOTA), vol->v_gvs,
-                 groups[0], (char *) &dqg);
+    if (get_linux_quota(WANT_GROUP_QUOTA, vol->v_gvs, getegid(),  &dqg) != 0) {
+#ifdef DEBUG_QUOTA
+        LOG(log_debug, logtype_afpd, "group quota did not work!" );
+#endif /* DEBUG_QUOTA */
+
+	return AFP_OK; /* no need to check user vs group quota */
+    }
 #endif  /* BSD4_4 */
 
+
 #ifndef TRU64
-    /* set stuff up for group quotas if necessary */
+    /* return either the group quota entry or user quota entry,
+       whichever has the least amount of space remaining
+    */
 
-    /* max(user blocks, group blocks) */
-#ifdef HAVE_STRUCT_IF_DQBLK
-    if (dqg.dqb_curspace && (dq->dqb_curspace < dqg.dqb_curspace))
-        dq->dqb_curspace = dqg.dqb_curspace;
-#else
-    if (dqg.dqb_curblocks && (dq->dqb_curblocks < dqg.dqb_curblocks))
+    /* if user space remaining > group space remaining */
+    if( 
+        /* if overquota, free space is 0 otherwise hard-current */
+        ( overquota( dq ) ? 0 : ( dq->dqb_bhardlimit ? dq->dqb_bhardlimit - 
+                                  dq->dqb_curblocks : ~((u_int64_t) 0) ) )
+
+      >
+        
+        ( overquota( &dqg ) ? 0 : ( dqg.dqb_bhardlimit ? dqg.dqb_bhardlimit - 
+                                    dqg.dqb_curblocks : ~((u_int64_t) 0) ) )
+
+      ) /* if */
+    {
+        /* use group quota limits rather than user limits */
         dq->dqb_curblocks = dqg.dqb_curblocks;
-#endif
-
-    /* min(user limit, group limit) */
-    if (dqg.dqb_bhardlimit && (!dq->dqb_bhardlimit ||
-                               (dq->dqb_bhardlimit > dqg.dqb_bhardlimit)))
         dq->dqb_bhardlimit = dqg.dqb_bhardlimit;
-
-    /* ditto */
-    if (dqg.dqb_bsoftlimit && (!dq->dqb_bsoftlimit ||
-                               (dq->dqb_bsoftlimit > dqg.dqb_bsoftlimit)))
         dq->dqb_bsoftlimit = dqg.dqb_bsoftlimit;
-
-    /* ditto */
-    if (dqg.dqb_btimelimit && (!dq->dqb_btimelimit ||
-                               (dq->dqb_btimelimit > dqg.dqb_btimelimit)))
         dq->dqb_btimelimit = dqg.dqb_btimelimit;
+    } /* if */
 
 #endif /* TRU64 */
 
+#endif /* ultrix */
 #endif /* __svr4__ */
 
     return AFP_OK;
@@ -273,8 +554,8 @@ struct dqblk        *dq;
 
 static int getquota( vol, dq, bsize)
 struct vol		*vol;
-struct dqblk	*dq;
-const u_int32_t     bsize;
+struct dqblk	 	*dq;
+const u_int32_t		bsize;
 {
     char *p;
 
@@ -358,17 +639,24 @@ const u_int32_t     bsize;
 }
 
 static int overquota( dqblk )
-struct dqblk	*dqblk;
+struct dqblk	  *dqblk;
 {
     struct timeval	tv;
 
-#ifdef HAVE_STRUCT_IF_DQBLK
-    if ( dqblk->dqb_curspace < dqblk->dqb_bsoftlimit ) {
-#else
-    if ( dqblk->dqb_curblocks < dqblk->dqb_bsoftlimit ) {
-#endif
-        return 0 ;
+    if ( dqblk->dqb_curblocks > dqblk->dqb_bhardlimit &&
+         dqblk->dqb_bhardlimit != 0 ) {
+        return( 1 );
     }
+
+    if ( dqblk->dqb_curblocks < dqblk->dqb_bsoftlimit ||
+         dqblk->dqb_bsoftlimit == 0 ) {
+        return( 0 );
+    }
+#ifdef ultrix
+    if ( dqblk->dqb_bwarn ) {
+        return( 0 );
+    }
+#else /* ultrix */
     if ( gettimeofday( &tv, 0 ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
@@ -376,6 +664,7 @@ struct dqblk	*dqblk;
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
         return( 0 );
     }
+#endif /* ultrix */
     return( 1 );
 }
 
@@ -404,45 +693,67 @@ struct dqblk	*dqblk;
 #else 
 #define tobytes(a, b)  dbtob((VolSpace) (a))
 #endif
+
 int uquota_getvolspace( vol, bfree, btotal, bsize)
-const struct vol	*vol;
+struct vol	*vol;
 VolSpace	*bfree, *btotal;
 const u_int32_t bsize;
 {
-    struct dqblk	dqblk;
+	u_int64_t this_bsize;
+	struct dqblk dqblk;
 
-    if (getquota( vol, &dqblk, bsize) != 0 ) {
-        return( AFPERR_PARAM );
-    }
+	this_bsize = bsize;
+			
+	if (getquota( vol, &dqblk, bsize) != 0 ) {
+		return( AFPERR_PARAM );
+	}
 
-    /* no limit set for this user. it might be set in the future. */
-    if (dqblk.dqb_bsoftlimit == 0 && dqblk.dqb_bhardlimit == 0) {
-        *btotal = *bfree = ~((VolSpace) 0);
-    } else if ( overquota( &dqblk )) {
-#ifdef HAVE_STRUCT_IF_DQBLK
-        if ( tobytes( dqblk.dqb_curspace, bsize ) > tobytes( dqblk.dqb_bhardlimit, bsize ) ) {
-            *btotal = tobytes( dqblk.dqb_curspace, bsize );
-#else
-        if ( tobytes( dqblk.dqb_curblocks, bsize ) > tobytes( dqblk.dqb_bhardlimit, bsize ) ) {
-            *btotal = tobytes( dqblk.dqb_curblocks, bsize );
+#ifdef linux
+	this_bsize = dqblk.bsize;
 #endif
-            *bfree = 0;
-        }
-        else {
-            *btotal = tobytes( dqblk.dqb_bhardlimit, bsize );
-            *bfree = tobytes( dqblk.dqb_bhardlimit, bsize ) -
-#ifdef HAVE_STRUCT_IF_DQBLK
-                     tobytes( dqblk.dqb_curspace, bsize );
-#else
-                     tobytes( dqblk.dqb_curblocks, bsize );
-#endif
-        }
-    } else {
-        *btotal = tobytes( dqblk.dqb_bsoftlimit, bsize );
-        *bfree = tobytes( dqblk.dqb_bsoftlimit, bsize  ) -
-                 tobytes( dqblk.dqb_curblocks, bsize );
-    }
 
-    return( AFP_OK );
+#if DEBUG_QUOTA
+        LOG(log_info, logtype_afpd, "after calling getquota in uquota_getvolspace!" );
+        LOG(log_info, logtype_afpd, "dqb_ihardlimit: %u", dqblk.dqb_ihardlimit );
+        LOG(log_info, logtype_afpd, "dqb_isoftlimit: %u", dqblk.dqb_isoftlimit );
+        LOG(log_info, logtype_afpd, "dqb_curinodes : %u", dqblk.dqb_curinodes );
+        LOG(log_info, logtype_afpd, "dqb_bhardlimit: %u", dqblk.dqb_bhardlimit );
+        LOG(log_info, logtype_afpd, "dqb_bsoftlimit: %u", dqblk.dqb_bsoftlimit );
+        LOG(log_info, logtype_afpd, "dqb_curblocks : %u", dqblk.dqb_curblocks );
+        LOG(log_info, logtype_afpd, "dqb_btime     : %u", dqblk.dqb_btime );
+        LOG(log_info, logtype_afpd, "dqb_itime     : %u", dqblk.dqb_itime );
+        LOG(log_info, logtype_afpd, "bsize/this_bsize : %u/%u", bsize, this_bsize );
+	LOG(log_info, logtype_afpd, "dqblk.dqb_bhardlimit size: %u", tobytes( dqblk.dqb_bhardlimit, this_bsize ));
+	LOG(log_info, logtype_afpd, "dqblk.dqb_bsoftlimit size: %u", tobytes( dqblk.dqb_bsoftlimit, this_bsize ));
+	LOG(log_info, logtype_afpd, "dqblk.dqb_curblocks  size: %u", tobytes( dqblk.dqb_curblocks, this_bsize ));
+#endif /* DEBUG_QUOTA */ 
+
+	/* no limit set for this user. it might be set in the future. */
+	if (dqblk.dqb_bsoftlimit == 0 && dqblk.dqb_bhardlimit == 0) {
+        	*btotal = *bfree = ~((VolSpace) 0);
+    	} else if ( overquota( &dqblk )) {
+        	if ( tobytes( dqblk.dqb_curblocks, this_bsize ) > tobytes( dqblk.dqb_bsoftlimit, this_bsize ) ) {
+            		*btotal = tobytes( dqblk.dqb_curblocks, this_bsize );
+            		*bfree = 0;
+        	}
+        	else {
+            		*btotal = tobytes( dqblk.dqb_bsoftlimit, this_bsize );
+            		*bfree  = tobytes( dqblk.dqb_bsoftlimit, this_bsize ) -
+                     		  tobytes( dqblk.dqb_curblocks, this_bsize );
+        	}
+    	} else {
+        	*btotal = tobytes( dqblk.dqb_bhardlimit, this_bsize );
+        	*bfree  = tobytes( dqblk.dqb_bhardlimit, this_bsize  ) -
+                 	  tobytes( dqblk.dqb_curblocks, this_bsize );
+    	}
+
+#if DEBUG_QUOTA
+        LOG(log_info, logtype_afpd, "bfree          : %u", *bfree );
+        LOG(log_info, logtype_afpd, "btotal         : %u", *btotal );
+        LOG(log_info, logtype_afpd, "bfree          : %uKB", *bfree/1024 );
+        LOG(log_info, logtype_afpd, "btotal         : %uKB", *btotal/1024 );
+#endif
+
+	return( AFP_OK );
 }
 #endif

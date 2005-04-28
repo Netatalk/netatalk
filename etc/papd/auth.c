@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.6 2002-09-29 23:29:13 sibaz Exp $
+ * $Id: auth.c,v 1.7 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -31,11 +31,11 @@
 #include "uam_auth.h"
 
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
-static struct uam_obj uam_login = {"", "", 0, {{NULL}}, &uam_login,
+static struct uam_obj uam_login = {"", "", 0, {{NULL, NULL, NULL}}, &uam_login,
 				   &uam_login};
-static struct uam_obj uam_changepw = {"", "", 0, {{NULL}}, &uam_changepw, 
+static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL}}, &uam_changepw, 
 				      &uam_changepw};
-static struct uam_obj uam_printer = {"", "", 0, {{NULL}}, &uam_printer,
+static struct uam_obj uam_printer = {"", "", 0, {{NULL, NULL, NULL}}, &uam_printer,
 					&uam_printer};
 
 
@@ -87,7 +87,7 @@ int auth_register(const int type, struct uam_obj *uam)
     return -1;
 
   if (!(start = UAM_LIST(type)))
-    return 0; /* silently fail */
+    return 1; 
 
   uam_attach(start, uam);
   return 0;
@@ -104,7 +104,7 @@ int auth_load(const char *path, const char *list)
   if (!path || !list || (len = strlen(path)) > sizeof(name) - 2)
     return -1;
 
-  strncpy(buf, list, sizeof(buf));
+  strlcpy(buf, list, sizeof(buf));
   if ((p = strtok(buf, ",")) == NULL)
     return -1;
 
@@ -115,7 +115,7 @@ int auth_load(const char *path, const char *list)
   }
 
   while (p) {
-    strncpy(name + len, p, sizeof(name) - len);
+    strlcpy(name + len, p, sizeof(name) - len);
     if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
       uam_attach(&uam_modules, mod);
       LOG(log_info, logtype_papd, "uam: %s loaded", p);

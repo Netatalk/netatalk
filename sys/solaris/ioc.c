@@ -1,4 +1,4 @@
-/* $Id: ioc.c,v 1.2 2002-01-17 07:11:13 srittau Exp $
+/* $Id: ioc.c,v 1.3 2005-04-28 20:50:07 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -84,7 +84,7 @@ ioc_copyin( queue_t *q, mblk_t *m, mblk_t *private, caddr_t addr, uint size )
 	freemsg( m );
 	return;
     }
-#endif notdef
+#endif /* notdef */
     m->b_datap->db_type = M_COPYIN;
     m->b_wptr = m->b_rptr + sizeof( struct copyreq );
     cq = (struct copyreq *)m->b_rptr;
@@ -114,7 +114,7 @@ ioc_copyout( queue_t *q, mblk_t *m, mblk_t *private, caddr_t data,
 	freemsg( m );
 	return;
     }
-#endif notdef
+#endif /* notdef */
     if (( m0 = allocb( size, BPRI_MED )) == NULL ) {
 	cmn_err( CE_CONT, "ioc_copyout nomem\n" );
 	freemsg( m );

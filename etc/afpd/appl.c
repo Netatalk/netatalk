@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.14 2003-06-09 15:09:19 srittau Exp $
+ * $Id: appl.c,v 1.15 2005-04-28 20:49:40 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -13,19 +13,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#include <sys/types.h>
-#include <sys/stat.h>
+
 #include <sys/param.h>
 #include <atalk/logger.h>
 #include <errno.h>
 
-#include <netatalk/endian.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 
@@ -35,7 +27,7 @@
 #include "file.h"
 #include "desktop.h"
 
-static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0 };
+static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0, 0};
 
 static __inline__ int pathcmp( p, plen, q, qlen )
 char	*p;
@@ -49,6 +41,8 @@ int	qlen;
 static int applopen( vol, creator, flags, mode )
 struct vol	*vol;
 u_char	creator[ 4 ];
+int flags;
+int mode;
 {
     char	*dtf, *adt, *adts;
 
@@ -134,7 +128,8 @@ u_short	mplen;
  * but uses upaths instead of mac format paths.
  *
  * The new way: dir and path refer to an app, path is a mac format
- * pathname.  makemacpath() builds a cname.
+ * pathname.  makemacpath() builds a cname. (zero is a path separator
+ * and it's not \0 terminated).
  *
  * See afp_getappl() for the backward compatiblity code.
  */
@@ -149,10 +144,14 @@ char	*path;
 
     p = mpath + mpathlen;
     p -= strlen( path );
-    strncpy( p, path, strlen( path ));
+    memcpy( p, path, strlen( path )); 
 
     while ( dir->d_parent != NULL ) {
         p -= strlen( dir->d_m_name ) + 1;
+        if (p < mpath) {
+            /* FIXME: pathname too long */
+            return NULL;
+        }
         strcpy( p, dir->d_m_name );
         dir = dir->d_parent;
     }
@@ -161,9 +160,9 @@ char	*path;
 
 
 int afp_addappl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
-char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+AFPObj  *obj;
+char	*ibuf, *rbuf _U_;
+int	ibuflen _U_, *rbuflen;
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -218,6 +217,9 @@ int		ibuflen, *rbuflen;
     }
     mpath = obj->newtmp;
     mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
+    if (!mp) {
+        return AFPERR_PARAM;
+    }
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
 
     /* write the new appl entry at start of temporary file */
@@ -248,9 +250,9 @@ int		ibuflen, *rbuflen;
 }
 
 int afp_rmvappl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
-char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+AFPObj  *obj;
+char	*ibuf, *rbuf _U_;
+int	ibuflen _U_, *rbuflen;
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -301,6 +303,10 @@ int		ibuflen, *rbuflen;
     }
     mpath = obj->newtmp;
     mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
+    if (!mp) {
+        return AFPERR_PARAM ;
+    }
+
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
     close( tfd );
@@ -318,9 +324,9 @@ int		ibuflen, *rbuflen;
 }
 
 int afp_getappl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
+AFPObj  *obj;
 char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+int	ibuflen _U_, *rbuflen;
 {
     struct vol		*vol;
     char		*p, *q;
@@ -330,7 +336,7 @@ int		ibuflen, *rbuflen;
     u_char		appltag[ 4 ];
     char                *buf, *cbuf;
     struct path         *path;
-
+    
     ibuf += 2;
 
     memcpy( &vid, ibuf, sizeof( vid ));

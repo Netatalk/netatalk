@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.9 2003-02-17 01:35:57 srittau Exp $
+ * $Id: uam.c,v 1.10 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -55,8 +55,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
   void *module;
 
   if ((module = mod_open(path)) == NULL) {
-    LOG(log_error, logtype_papd, "uam_load(%s): failed to load.", name);
-    LOG(log_error, logtype_papd, dlerror());
+    LOG(log_error, logtype_papd, "uam_load(%s): failed to load: %s", name, mod_error());
     return NULL;
   }
 
@@ -65,7 +64,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
     goto uam_load_fail;
   }
 
-  strncpy(buf, name, sizeof(buf));
+  strlcpy(buf, name, sizeof(buf));
   if ((p = strchr(buf, '.')))
     *p = '\0';
   if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
@@ -114,6 +113,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
 {
   va_list ap;
   struct uam_obj *uam;
+  int ret;
 
   if (!name)
     return -1;
@@ -157,13 +157,13 @@ int uam_register(const int type, const char *path, const char *name, ...)
   va_end(ap);
 
   /* attach to other uams */
-  if (auth_register(type, uam) < 0) {
+  ret = auth_register(type, uam);
+  if (ret) {
     free(uam->uam_path);
     free(uam);
-    return -1;
   }
 
-  return 0;
+  return ret;
 }
 
 void uam_unregister(const int type, const char *name)
@@ -183,15 +183,15 @@ void uam_unregister(const int type, const char *name)
 }
 
 /* Crap to support uams which call this afpd function */
-int uam_afpserver_option(void *private, const int what, void *option,
-                         int *len)
+int uam_afpserver_option(void *private _U_, const int what _U_, void *option _U_,
+                         int *len _U_)
 {
 	return(0);
 }
 
 /* --- helper functions for plugin uams --- */
 
-struct passwd *uam_getname(char *name, const int len)
+struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
 {
   struct passwd *pwent;
   char *user;

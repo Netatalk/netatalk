@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.22 2003-02-09 20:34:38 jmarcus Exp $
+ * $Id: afp_config.c,v 1.23 2005-04-28 20:49:39 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -34,6 +34,7 @@ char *strchr (), *strrchr ();
 #endif /* HAVE_UNISTD_H */
 #include <ctype.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -48,7 +49,6 @@ char *strchr (), *strrchr ();
 #include <atalk/server_child.h>
 #ifdef USE_SRVLOC
 #include <slp.h>
-static char srvloc_url[512];
 #endif /* USE_SRVLOC */
 
 #include "globals.h"
@@ -96,8 +96,61 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
 }
 
 #ifdef USE_SRVLOC
-static void SRVLOC_callback(SLPHandle hslp, SLPError errcode, void *cookie) {
+static void SRVLOC_callback(SLPHandle hslp _U_, SLPError errcode, void *cookie) {
     *(SLPError*)cookie = errcode;
+}
+
+static char hex[17] = "0123456789abcdef";
+
+static char * srvloc_encode(const struct afp_options *options, const char *name)
+{
+	static char buf[512];
+	char *conv_name;
+	unsigned char *p;
+	unsigned int i = 0;
+#ifndef NO_DDP
+	char *Obj, *Type = "", *Zone = "";
+#endif
+
+	/* Convert name to maccharset */
+        if ((size_t)-1 ==(convert_string_allocate( options->unixcharset, options->maccharset,
+			 name, strlen(name), &conv_name)) )
+		return (char*)name;
+
+	/* Escape characters */
+	p = conv_name;
+	while (*p && i<(sizeof(buf)-4)) {
+	    if (*p == '@')
+		break;
+	    else if (isspace(*p)) {
+	        buf[i++] = '%';
+           	buf[i++] = '2';
+           	buf[i++] = '0';
+		p++;
+	    }	
+	    else if ((!isascii(*p)) || *p <= 0x2f || *p == 0x3f ) {
+	        buf[i++] = '%';
+           	buf[i++] = hex[*p >> 4];
+           	buf[i++] = hex[*p++ & 15];
+	    }
+	    else {
+		buf[i++] = *p++;
+	    }
+	}
+	buf[i] = '\0';
+
+#ifndef NO_DDP
+	/* Add ZONE,  */
+        if (nbp_name(options->server, &Obj, &Type, &Zone )) {
+        	LOG(log_error, logtype_afpd, "srvloc_encode: can't parse %s", options->server );
+    	}
+	else {
+		snprintf( buf+i, sizeof(buf)-i-1 ,"&ZONE=%s", Zone);
+	}
+#endif
+	free (conv_name);
+
+	return buf;
 }
 #endif /* USE_SRVLOC */
 
@@ -107,9 +160,10 @@ static void dsi_cleanup(const AFPConfig *config)
     SLPError err;
     SLPError callbackerr;
     SLPHandle hslp;
+    DSI *dsi = (DSI *)config->obj.handle;
 
     /*  Do nothing if we didn't register.  */
-    if (srvloc_url[0] == '\0')
+    if (!dsi || dsi->srvloc_url[0] == '\0')
         return;
 
     err = SLPOpen("en", SLP_FALSE, &hslp);
@@ -119,20 +173,21 @@ static void dsi_cleanup(const AFPConfig *config)
     }
 
     err = SLPDereg(hslp,
-                   srvloc_url,
+                   dsi->srvloc_url,
                    SRVLOC_callback,
                    &callbackerr);
     if (err != SLP_OK) {
-        LOG(log_error, logtype_afpd, "dsi_cleanup: Error unregistering %s from SRVLOC", srvloc_url);
+        LOG(log_error, logtype_afpd, "dsi_cleanup: Error unregistering %s from SRVLOC", dsi->srvloc_url);
         goto srvloc_dereg_err;
     }
 
     if (callbackerr != SLP_OK) {
-        LOG(log_error, logtype_afpd, "dsi_cleanup: Error in callback while trying to unregister %s from SRVLOC (%d)", srvloc_url, callbackerr);
+        LOG(log_error, logtype_afpd, "dsi_cleanup: Error in callback while trying to unregister %s from SRVLOC (%d)", dsi->srvloc_url, callbackerr);
         goto srvloc_dereg_err;
     }
 
 srvloc_dereg_err:
+    dsi->srvloc_url[0] = '\0';
     SLPClose(hslp);
 }
 #endif /* USE_SRVLOC */
@@ -140,6 +195,8 @@ srvloc_dereg_err:
 #ifndef NO_DDP
 static void asp_cleanup(const AFPConfig *config)
 {
+    /* we need to stop tickle handler */
+    asp_stop_tickle();
     nbp_unrgstr(config->obj.Obj, config->obj.Type, config->obj.Zone,
                 &config->obj.options.ddpaddr);
 }
@@ -154,7 +211,7 @@ static int asp_start(AFPConfig *config, AFPConfig *configs,
     if (!(asp = asp_getsession(config->obj.handle, server_children,
                                config->obj.options.tickleval))) {
         LOG(log_error, logtype_afpd, "main: asp_getsession: %s", strerror(errno) );
-        exit( 1 );
+        exit( EXITERR_CLNT );
     }
 
     if (asp->child) {
@@ -175,7 +232,7 @@ static int dsi_start(AFPConfig *config, AFPConfig *configs,
     if (!(dsi = dsi_getsession(config->obj.handle, server_children,
                                config->obj.options.tickleval))) {
         LOG(log_error, logtype_afpd, "main: dsi_getsession: %s", strerror(errno) );
-        exit( 1 );
+        exit( EXITERR_CLNT );
     }
 
     /* we've forked. */
@@ -196,6 +253,7 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
     ATP atp;
     ASP asp;
     char *Obj, *Type = "AFPServer", *Zone = "*";
+    char *convname = NULL;
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL)
         return NULL;
@@ -215,10 +273,20 @@ static AFPConfig *ASPConfigInit(const struct afp_options *options,
 
     /* register asp server */
     Obj = (char *) options->hostname;
-    if (nbp_name(options->server, &Obj, &Type, &Zone )) {
+    if (options->server && (size_t)-1 ==(convert_string_allocate( options->unixcharset, options->maccharset,
+                         options->server, strlen(options->server), &convname)) ) {
+        if ((convname = strdup(options->server)) == NULL ) {
+            LOG(log_error, logtype_afpd, "malloc: %s", strerror(errno) );
+            goto serv_free_return;
+        }
+    }
+
+    if (nbp_name(convname, &Obj, &Type, &Zone )) {
         LOG(log_error, logtype_afpd, "main: can't parse %s", options->server );
         goto serv_free_return;
     }
+    if (convname)
+        free (convname);
 
     /* dup Obj, Type and Zone as they get assigned to a single internal
      * buffer by nbp_name */
@@ -286,8 +354,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     SLPHandle hslp;
     struct servent *afpovertcp;
     int afp_port = 548;
-    const char *srvloc_hostname, *hostname;
-    struct hostent *h;
+    char *srvloc_hostname, *hostname;
 #endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
@@ -315,7 +382,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     }
 
 #ifdef USE_SRVLOC
-    srvloc_url[0] = '\0';	/*  Mark that we haven't registered.  */
+    dsi->srvloc_url[0] = '\0';	/*  Mark that we haven't registered.  */
     if (!(options->flags & OPTION_NOSLP)) {
 	err = SLPOpen("en", SLP_FALSE, &hslp);
 	if (err != SLP_OK) {
@@ -333,44 +400,49 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	if (afpovertcp != NULL) {
 	    afp_port = afpovertcp->s_port;
 	}
-	/* Try to use the FQDN to register with srvloc. */
-	h = gethostbyaddr((char*)&dsi->server.sin_addr, sizeof(dsi->server.sin_addr), AF_INET);
-	if (h) hostname = h->h_name;
-	else hostname = inet_ntoa(dsi->server.sin_addr);
-	srvloc_hostname = (options->server ? options->server : options->hostname);
-	if (strlen(srvloc_hostname) > (sizeof(srvloc_url) - strlen(hostname) - 21)) {
+	/* If specified use the FQDN to register with srvloc, otherwise use IP. */
+	p = NULL;
+	if (options->fqdn) {
+	    hostname = options->fqdn;
+	    p = strchr(hostname, ':');
+	}	
+	else 
+	    hostname = inet_ntoa(dsi->server.sin_addr);
+	srvloc_hostname = srvloc_encode(options, (options->server ? options->server : options->hostname));
+
+	if (strlen(srvloc_hostname) > (sizeof(dsi->srvloc_url) - strlen(hostname) - 21)) {
 	    LOG(log_error, logtype_afpd, "DSIConfigInit: Hostname is too long for SRVLOC");
-	    srvloc_url[0] = '\0';
+	    dsi->srvloc_url[0] = '\0';
 	    goto srvloc_reg_err;
 	}
-	if (dsi->server.sin_port == afp_port) {
-	    sprintf(srvloc_url, "afp://%s/?NAME=%s", hostname, srvloc_hostname);
+	if ((p) || dsi->server.sin_port == afp_port) {
+	    sprintf(dsi->srvloc_url, "afp://%s/?NAME=%s", hostname, srvloc_hostname);
 	}
 	else {
-	    sprintf(srvloc_url, "afp://%s:%d/?NAME=%s", hostname, ntohs(dsi->server.sin_port), srvloc_hostname);
+	    sprintf(dsi->srvloc_url, "afp://%s:%d/?NAME=%s", hostname, ntohs(dsi->server.sin_port), srvloc_hostname);
 	}
 
 	err = SLPReg(hslp,
-		     srvloc_url,
+		     dsi->srvloc_url,
 		     SLP_LIFETIME_MAXIMUM,
-		     "",
+		     "afp",
 		     "",
 		     SLP_TRUE,
 		     SRVLOC_callback,
 		     &callbackerr);
 	if (err != SLP_OK) {
-	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error registering %s with SRVLOC", srvloc_url);
-	    srvloc_url[0] = '\0';
+	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error registering %s with SRVLOC", dsi->srvloc_url);
+	    dsi->srvloc_url[0] = '\0';
 	    goto srvloc_reg_err;
 	}
 
 	if (callbackerr != SLP_OK) {
-	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error in callback trying to register %s with SRVLOC", srvloc_url);
-	    srvloc_url[0] = '\0';
+	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error in callback trying to register %s with SRVLOC", dsi->srvloc_url);
+	    dsi->srvloc_url[0] = '\0';
 	    goto srvloc_reg_err;
 	}
 
-	LOG(log_info, logtype_afpd, "Sucessfully registered %s with SRVLOC", srvloc_url);
+	LOG(log_info, logtype_afpd, "Sucessfully registered %s with SRVLOC", dsi->srvloc_url);
 
 srvloc_reg_err:
 	SLPClose(hslp);
@@ -396,7 +468,7 @@ srvloc_reg_err:
     config->server_start = dsi_start;
 #ifdef USE_SRVLOC
     config->server_cleanup = dsi_cleanup;
-#endif /* USE_SRVLOC */
+#endif 
     return config;
 }
 
@@ -463,8 +535,9 @@ AFPConfig *configinit(struct afp_options *cmdline)
     FILE *fp;
     char buf[LINESIZE + 1], *p, have_option = 0;
     struct afp_options options;
-    AFPConfig *config, *first = NULL;
+    AFPConfig *config=NULL, *first = NULL; 
 
+    status_reset();
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
     {

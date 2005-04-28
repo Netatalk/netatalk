@@ -1,5 +1,5 @@
 /*
- * $Id: lp.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: lp.h,v 1.4 2005-04-28 20:49:49 bfernhomberg Exp $
  */
 
 #ifndef PAPD_LP_H
@@ -13,6 +13,8 @@ void lp_person __P(( char * ));
 int lp_pagecost __P(( void ));
 void lp_host __P(( char * ));
 void lp_job __P(( char * ));
+void lp_for __P(( char * ));
+void lp_origin __P(( int ));
 int lp_rmjob __P(( int ));
 int lp_queue __P(( struct papfile * ));
 
@@ -25,7 +27,7 @@ int lp_print __P(( void ));
 /* open a file for spooling */
 int lp_open __P(( struct papfile *, struct sockaddr_at * ));
 /* open a buffer to the current open file */
-int lp_write __P(( char *, int ));
+int lp_write __P(( struct papfile *,char *, size_t ));
 /* close current spooling file */
 int lp_close __P(( void ));
 

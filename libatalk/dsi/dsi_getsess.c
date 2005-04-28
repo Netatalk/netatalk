@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_getsess.c,v 1.6 2002-01-04 04:45:48 sibaz Exp $
+ * $Id: dsi_getsess.c,v 1.7 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -32,6 +32,7 @@
 
 #include <sys/time.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 
 #include <atalk/dsi.h>
 #include <atalk/server_child.h>
@@ -91,7 +92,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_code = DSIERR_TOOMANY;
     dsi_send(dsi);
-    exit(1);
+    exit(EXITERR_CLNT);
   }
 
   /* get rid of some stuff */
@@ -134,6 +135,6 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
   default: /* just close */
     LOG(log_info, logtype_default, "DSIUnknown %d", dsi->header.dsi_command);
     dsi->proto_close(dsi);
-    exit(1);
+    exit(EXITERR_CLNT);
   }
 }

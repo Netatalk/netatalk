@@ -24,7 +24,7 @@ Sourceforge Administration:
 	Jeffrey Buchbinder <jeff@univrel.pr.uconn.edu>
 	Matthew Keller <kellermg@potsdam.edu>
 
-Developers: Version 1.4.99 - 1.6
+Developers: Version 1.4.99 - 2.0
 	Alain Richard <alain.richard@equation.fr>	
 	David R Bosso <dbosso@ltsc.ucsb.edu>
 	Joe Clarke <marcus@marcuscom.com>
@@ -49,6 +49,10 @@ Developers: Version 1.4.99 - 1.6
  	Sumit Bose <sbose@hbv.de>
 	Brandon Warren <bwarren@u.washington.edu>
 	Dan Wilga <dwilga@mtholyoke.edu>
+	Rafal Lewczuk <rlewczuk@pronet.pl>
+	Didier Gautheron <dgautheron@magic.fr>
+	Joerg Lenneis <lenneis@wu-wien.ac.at>
+	Bjoern Fernhomberg <lists@fernhomberg.de>
 
 Webmin Module:
 	Matthew Keller <kellermg@potsdam.edu>
@@ -61,7 +65,7 @@ Package Maintainers and Contributors:
 Sourceforge Website Maintainers:
 	Andrew Morgan <morgan@orst.edu>	
 
-Documentation: Version 1.4.99 - 1.6
+Documentation: Version 1.4.99 - 2.0
 	Steve Freitas <sflist@ihonk.com>
 	Karen A Swanberg <swanberg@tc.umn.edu>
 	Lance Levsen <l.levsen@printwest.com>
@@ -76,8 +80,9 @@ Documentation: Version 1.4.99 - 1.6
 	Edmund Lam <epl@unimelb.edu.au>
 	Sebastian Rittau <srittau@jroger.in-berlin.de>
 	Chris Blake <Chris.Blake@anu.edu.au>
+	Thomas Kaiser <Thomas.Kaiser@phg-online.de>
 
-Bug Reports: Version 1.4.99 - 1.5
+Bug Reports: Version 1.4.99 - 2.0
 	Ryan Dooley <dooleyr@missouri.edu>
 	Don Jessup <DJessup@tricord.com>
 	Kevin M. Myer <kevin_myer@iu13.k12.pa.us>

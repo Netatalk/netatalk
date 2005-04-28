@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.20 2003-08-30 16:10:32 bfernhomberg Exp $
+ * $Id: globals.h,v 1.21 2005-04-28 20:49:43 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -23,6 +23,8 @@
 #include <netatalk/at.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
+#include <atalk/unicode.h>
+#include <atalk/uam.h>
 
 /* test for inline */
 #ifndef __inline__
@@ -37,6 +39,7 @@
 #define OPTION_PROXY         (1 << 3)
 #define OPTION_CUSTOMICON    (1 << 4)
 #define OPTION_NOSLP         (1 << 5)
+#define OPTION_ANNOUNCESSH   (1 << 6)
 
 #ifdef FORCE_UIDGID
 /* set up a structure for this */
@@ -48,19 +51,31 @@ typedef struct uidgidset_t {
 
 /* a couple of these options could get stuck in unions to save
  * space. */
+struct afp_volume_name {
+    time_t     mtime;
+    char       *name;
+    char       *full_name;
+    int        loaded;
+};
+
 struct afp_options {
     int connections, port, transports, tickleval, timeout, server_notif, flags;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *configfile;
     struct at_addr ddpaddr;
-    char *uampath, *nlspath, *fqdn;
-    char *pidfile, *defaultvol, *systemvol;
+    char *uampath, *fqdn;
+    char *pidfile;
+    struct afp_volume_name defaultvol, systemvol, uservol;
+    int  closevol;
+
     char *guest, *loginmesg, *keyfile, *passwdfile;
     char *uamlist;
     char *authprintdir;
     char *signature;
     char *k5service, *k5realm, *k5keytab;
+    char *unixcodepage,*maccodepage;
+    charset_t maccharset, unixcharset; 
     mode_t umask;
     mode_t save_mask;
     int    sleep;
@@ -84,6 +99,7 @@ typedef struct AFPObj {
     /* to prevent confusion, only use these in afp_* calls */
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */
+    struct session_info  sinfo;
 
 #ifdef FORCE_UIDGID
     int                 force_uid;
@@ -97,6 +113,10 @@ extern unsigned char	nologin;
 extern struct dir	*curdir;
 extern char		getwdbuf[];
 
+/* FIXME CNID */
+extern char             Cnid_srv[MAXHOSTNAMELEN + 1];
+extern int              Cnid_port;
+
 extern int  get_afp_errno   __P((const int param));
 extern void afp_options_init __P((struct afp_options *));
 extern int afp_options_parse __P((int, char **, struct afp_options *));
@@ -104,7 +124,7 @@ extern int afp_options_parseline __P((char *, struct afp_options *));
 extern void afp_options_free __P((struct afp_options *,
                                       const struct afp_options *));
 extern void setmessage __P((const char *));
-extern void readmessage __P((void));
+extern void readmessage __P((AFPObj *));
 
 /* gettok.c */
 extern void initline   __P((int, char *));

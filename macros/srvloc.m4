@@ -1,50 +1,77 @@
 dnl Check for optional server location protocol support (used by MacOS X)
 
-dnl $Id: srvloc.m4,v 1.8 2003-02-23 16:09:28 jmarcus Exp $
+dnl $Id: srvloc.m4,v 1.9 2005-04-28 20:50:05 bfernhomberg Exp $
 
 AC_DEFUN([NETATALK_SRVLOC], [
 
 	SLP_LIBS=""
 	SLP_CFLAGS=""
+	found_slp=no
+	srvlocdir=""
 
 	AC_ARG_ENABLE(srvloc,
-		[  --enable-srvloc[=DIR]     turn on Server Location Protocol support],
+		[  --enable-srvloc[[=DIR]]   enable Server Location Protocol (SLP) support [[auto]]],
 		[srvloc=$enableval],
-		[srvloc=no]
+		[srvloc=try]
 	)
+
+    dnl make sure atalk_libname is defined beforehand
+    [[ -n "$atalk_libname" ]] || AC_MSG_ERROR([internal error, atalk_libname undefined])
 
 	if test "x$srvloc" != "xno"; then
 
 		savedcppflags="$CPPFLAGS"
 		savedldflags="$LDFLAGS"
-		if test "x$srvloc" = "xyes"; then
-			srvloc="/usr"
+		if test "x$srvloc" = "xyes" -o "x$srvloc" = "xtry"; then
+			srvlocdir="/usr"
+		else
+			srvlocdir="$srvloc"
 		fi
-		CPPFLAGS="$CPPFLAGS -I$srvloc/include"
-		LDFLAGS="$LDFLAGS -L$srvloc/lib"
+		CPPFLAGS="$CPPFLAGS -I$srvlocdir/include"
+		LDFLAGS="$LDFLAGS -L$srvlocdir/$atalk_libname"
 
 		AC_MSG_CHECKING([for slp.h])
 		AC_TRY_CPP([#include <slp.h>],
-			[AC_MSG_RESULT([yes])],
+			[
+				AC_MSG_RESULT([yes])
+				found_slp=yes
+			],
 			[
 				AC_MSG_RESULT([no])
-				AC_MSG_ERROR([SLP installation not found])
 			]
 		)
-		AC_CHECK_LIB(slp, SLPOpen, [
-			if test "$srvloc" != "/usr"; then
-			    SLP_LIBS="-L$srvloc/lib"
-			    SLP_CFLAGS="-I$srvloc/include"
-			fi
-			SLP_LIBS="$SLP_LIBS -lslp"
-		], AC_MSG_ERROR([SLP installation not found]))
-
-		AC_DEFINE(USE_SRVLOC, 1, [Define to enable SLP support])
+		
+		if test "x$found_slp" = "xyes"; then
+			AC_CHECK_LIB(slp, SLPOpen, [
+		    	   SLP_LIBS="-L$srvlocdir/$atalk_libname -lslp"
+		    	   SLP_CFLAGS="-I$srvlocdir/include"
+			],[ 
+		    	   AC_MSG_RESULT([no])
+			   found_slp=no
+			])
+		fi
 
 		CPPFLAGS="$savedcppflags"
 		LDFLAGS="$savedldflags"
 	fi
+	
+	netatalk_cv_srvloc=no
+	AC_MSG_CHECKING([whether to enable srvloc (SLP) support])
+	if test "x$found_slp" = "xyes"; then
+		AC_MSG_RESULT([yes])
+		AC_DEFINE(USE_SRVLOC, 1, [Define to enable SLP support])
+		netatalk_cv_srvloc=yes
+	else
+		AC_MSG_RESULT([no])
+		if test "x$srvloc" != "xno" -a "x$srvloc" != "xtry"; then
+			AC_MSG_ERROR([SLP installation not found])
+		fi
+	fi
+		
 
+
+	LIB_REMOVE_USR_LIB(SLP_LIBS)
+	CFLAGS_REMOVE_USR_INCLUDE(SLP_CFLAGS)
 	AC_SUBST(SLP_LIBS)
 	AC_SUBST(SLP_CFLAGS)
 ])

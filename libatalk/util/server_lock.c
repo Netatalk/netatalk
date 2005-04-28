@@ -21,8 +21,15 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#include <sys/time.h>
+
 #include <atalk/compat.h>
 #include <atalk/util.h>
+
+#ifdef ATACC
+#define fork aTaC_fork
+#endif
+static struct itimerval itimer;
 
 /* this creates an open lock file which hangs around until the program
  * dies. it returns the pid. due to problems w/ solaris, this has
@@ -59,11 +66,16 @@ pid_t server_lock(char *program, char *pidfile, int debug)
   if ( !debug ) {
     int		i;
 
+    getitimer(ITIMER_PROF, &itimer);
     switch (pid = fork()) {
     case 0 :
+      setitimer(ITIMER_PROF, &itimer, NULL);
       fclose(stdin);
       fclose(stdout);
       fclose(stderr);
+      i = open( "/dev/null", O_RDWR );
+      i = open( "/dev/null", O_RDWR );
+      i = open( "/dev/null", O_RDWR );
 
 #ifdef TIOCNOTTY
       if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
@@ -87,3 +99,4 @@ pid_t server_lock(char *program, char *pidfile, int debug)
   fclose(pf);
   return 0;
 }
+

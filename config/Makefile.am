@@ -2,9 +2,9 @@
 
 SUFFIXES = .tmpl .
 
-GENFILES = afpd.conf
-TMPLFILES = $(foreach file,$(GENFILES),$(file).tmpl)
-CONFFILES = AppleVolumes.default AppleVolumes.system \
+GENFILES = afpd.conf AppleVolumes.default
+TMPLFILES = afpd.conf.tmpl AppleVolumes.default.tmpl
+CONFFILES = AppleVolumes.system \
 	atalkd.conf netatalk.conf papd.conf
 PAMFILES = netatalk.pamd
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
@@ -14,7 +14,6 @@ EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
 CLEANFILES = $(GENFILES)
 
 pkgconfdir = @PKGCONFDIR@
-nlsdir = @NLSDIR@
 
 #
 # rule to parse template files
@@ -22,8 +21,9 @@ nlsdir = @NLSDIR@
 
 .tmpl:
 	sed -e s@:UAMS_PATH:@${UAMS_PATH}@ \
-	    -e s@:NLS_PATH:@${nlsdir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
+	    -e s@:COMPILED_BACKENDS:@"$(compiled_backends)"@ \
+	    -e s@:DEFAULT_CNID_SCHEME:@$(DEFAULT_CNID_SCHEME)@ \
 	    <$< >$@
 
 #

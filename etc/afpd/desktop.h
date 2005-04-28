@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.h,v 1.3 2003-03-09 19:55:33 didg Exp $
+ * $Id: desktop.h,v 1.4 2005-04-28 20:49:41 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -30,12 +30,6 @@
 #include "globals.h"
 #include "volume.h"
 
-/* various finder info bits */
-#define FINDERINFO_FRFLAGOFF   8
-#define FINDERINFO_FRVIEWOFF  14 
-#define FINDERINFO_INVISIBLE  (1<<14)
-#define FINDERINFO_CLOSEDVIEW 0x100   
-
 struct savedt {
     u_char	sdt_creator[ 4 ];
     int		sdt_fd;
@@ -46,13 +40,8 @@ struct savedt {
 typedef unsigned char CreatorType[4];
 
 extern char	*dtfile __P((const struct vol *, u_char [], char *));
-extern char	*mtoupath __P((const struct vol *, char *, int utf8));
-extern char	*utompath __P((const struct vol *, char *, int utf8));
-extern u_char	ucreator[];
-
-#define validupath(vol, name) ((((vol)->v_flags & AFPVOL_USEDOTS) ? \
-   (strncasecmp((name),".Apple", 6) && \
-    strcasecmp((name), ".Parent")) : (name)[0] != '.'))
+extern char	*mtoupath __P((const struct vol *, char *, cnid_t, int utf8));
+extern char	*utompath __P((const struct vol *, char *, cnid_t, int utf8));
 
 /* FP functions */
 extern int	afp_opendt __P((AFPObj *, char *, int, char *, int *));

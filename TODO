@@ -6,9 +6,7 @@ desired features (in no particular order):
         	Add afp_fileid capabilities - done
         	Add afp_catalogue
 		afp_enumerate optimization
-		cname expansion to handle 8+3 and 255-unicode.
         server messages in useful places 
-        Other useful bits of AFP 2.0/2.1. are there any?
 	change afp/ddp child handling to be in line w/ generic?
         administrative control program (using asip API?)
 	appledouble v2 (gets us persistent DIDs). we'll need a did
@@ -44,8 +42,6 @@ desired features (in no particular order):
         
 things to fix:
         cleaner separation of layers.
-	fcntl-style byte locks - almost done. it just needs to do a
-	        little sorting to get around a race condition.
 	AFP <-> Unix permissions. there are a couple cases where they 
 		don't map perfectly. in particular, gid == 0 means
 		ignore group permissions while uid == 0 means anybody
@@ -57,11 +53,6 @@ things to fix:
 		            read -> can see files.
 		we need to map permissions so that these semantics get
                 followed.
-        real variable DIDs for now: it turns out that afpd lies about
-                this and says that it's doing fixed dids. bad bad
-                bad. i just have to implement Open/CloseDir and fiddle
-                a little with did assignment. argh. apple's appleshare
-		client doesn't like non-fixed directory ids. 
         support picking up items from dropboxes without linux-side superuser
                 intervention
         support for system-wide messages; send the main afpd process SIGUSR2
@@ -70,10 +61,7 @@ things to fix:
                 server messaging (currently replaces with a space)
 
 added features:
-	more of AFP 2.0!
 	sped up of_findname and of_dealloc.
-	increased AFP compliance w.r.t. open forks and renames:
-	        wordperfect and simpletext now both work!
         nfs quota support
 	solaris beta STREAMS driver added.
 	64-bit cleanup
@@ -84,13 +72,9 @@ added features:
 	operate separately now (-T turns off tcp, -D turns off ddp).
 	incorporated the netbsd patches 
 		[source: wrstuden@loki.stanford.edu (Bill Studenmund)]
-	added/fixed quota support for linux/bsd4.4
-	codepage support/casefolding on a per volume basis.
-	expanded per-volume options
+	casefolding on a per volume basis.
 	added "generic" platform support for AFP/tcp.
-	dynamically loaded uams	
 	:ETCDIR:/afppasswd file for randnum passwds
-	can turn off .AppleDouble generation.
 	AppleVolumes variable substitions
     	atalkd: zones on single interfaces and the ability to control
 		which interfaces get routes between them.

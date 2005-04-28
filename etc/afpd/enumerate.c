@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.41 2003-05-20 14:46:50 didg Exp $
+ * $Id: enumerate.c,v 1.42 2005-04-28 20:49:41 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,17 +15,12 @@
 #include <errno.h>
 
 #include <atalk/logger.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/file.h>
 #include <sys/param.h>
 
-#include <netatalk/endian.h>
 #include <atalk/afp.h>
 #include <atalk/adouble.h>
-#ifdef CNID_DB
 #include <atalk/cnid.h>
-#endif /* CNID_DB */
 #include "desktop.h"
 #include "directory.h"
 #include "volume.h"
@@ -36,64 +31,6 @@
 
 #define min(a,b)	((a)<(b)?(a):(b))
 
-/* ---------------------------- */
-struct dir *
-            adddir( vol, dir, path)
-struct vol	*vol;
-struct dir	*dir;
-struct path     *path;
-{
-    struct dir	*cdir, *edir;
-    int		upathlen;
-    char        *name;
-    char        *upath;
-    struct stat *st;
-    int         deleted;
-
-    upath = path->u_name;
-    name  = path->m_name;    
-    st    = &path->st;
-    upathlen = strlen(upath);
-    if ((cdir = dirnew(name, upath)) == NULL) {
-        LOG(log_error, logtype_afpd, "adddir: malloc: %s", strerror(errno) );
-        return NULL;
-    }
-
-    cdir->d_did = get_id(vol, NULL, st, dir->d_did, upath, upathlen);
-    if (cdir->d_did == 0) 
-        return NULL;
-
-    if ((edir = dirinsert( vol, cdir ))) {
-        /* it's not possible with LASTDID
-           for CNID:
-           - someone else have moved the directory.
-           - it's a symlink inside the share.
-           - it's an ID reused, the old directory was deleted but not
-             the cnid record and the server've reused the inode for 
-             the new dir.
-           for HASH (we should get ride of HASH) 
-           - someone else have moved the directory.
-           - it's an ID reused as above
-           - it's a hash duplicate and we are in big trouble
-        */
-        deleted = (edir->d_m_name == NULL);
-        dirfreename(edir);
-        edir->d_m_name = cdir->d_m_name;
-        edir->d_u_name = cdir->d_u_name;
-        free(cdir);
-        cdir = edir;
-        if (!cdir->d_parent || (cdir->d_parent == dir && !deleted))
-            return cdir;
-        /* the old was not in the same folder */
-        if (!deleted)
-            dirchildremove(cdir->d_parent, cdir);
-    }
-
-    /* parent/child directories */
-    cdir->d_parent = dir;
-    dirchildadd(dir, cdir);
-    return( cdir );
-}
 /*
  * Struct to save directory reading context in. Used to prevent
  * O(n^2) searches on a directory.
@@ -108,7 +45,7 @@ struct savedir {
 };
 #define SDBUFBRK	2048
 
-static int enumerate_loop(struct dirent *de, char *mname, void *data)
+static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 {
     struct savedir *sd = data; 
     char *start, *end;
@@ -117,7 +54,7 @@ static int enumerate_loop(struct dirent *de, char *mname, void *data)
     end = sd->sd_buf + sd->sd_buflen;
     len = strlen(de->d_name);
     *(sd->sd_last)++ = len;
-    lenm = strlen(mname);
+    lenm = 0; /* strlen(mname);*/
     if ( sd->sd_last + len +lenm + 4 > end ) {
         char *buf;
 
@@ -136,11 +73,11 @@ static int enumerate_loop(struct dirent *de, char *mname, void *data)
 
     memcpy( sd->sd_last, de->d_name, len + 1 );
     sd->sd_last += len + 1;
-
+#if 0
     *(sd->sd_last)++ = lenm;
     memcpy( sd->sd_last, mname, lenm + 1 );
     sd->sd_last += lenm + 1;
-    
+#endif    
     return 0;
 }
 
@@ -160,25 +97,27 @@ static int enumerate_loop(struct dirent *de, char *mname, void *data)
 */
 char *check_dirent(const struct vol *vol, char *name)
 {
-    char *m_name = NULL;
 
     if (!strcmp(name, "..") || !strcmp(name, "."))
         return NULL;
 
-    if (!(validupath(vol, name)))
+    if (!vol->vfs->validupath(vol, name))
         return NULL;
 
     /* check for vetoed filenames */
     if (veto_file(vol->v_veto, name))
         return NULL;
-    if (NULL == (m_name = utompath(vol, name, utf8_encoding()))) 
+#if 0
+    char *m_name = NULL;
+
+    if (NULL == (m_name = utompath(vol, name, 0, utf8_encoding()))) 
         return NULL;    
 
     /* now check against too big a file */
     if (strlen(m_name) > vol->max_filename)
         return NULL;
-
-    return m_name;
+#endif
+    return name;
 }
 
 /* ----------------------------- */
@@ -208,11 +147,18 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
     return ret;
 }
 
+/* This is the maximal length of a single entry for a file/dir in the reply
+   block if all bits in the file/dir bitmap are set: header(4) + params(104) +
+   macnamelength(1) + macname(31) + utf8(4) + utf8namelen(2) + utf8name(255) +
+   oddpadding(1) */
+
+#define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + 255 + 1)
+
 /* ----------------------------- */
 static int enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, ext )
-AFPObj       *obj;
+AFPObj       *obj _U_;
 char	     *ibuf, *rbuf;
-unsigned int ibuflen, *rbuflen;
+unsigned int ibuflen _U_, *rbuflen;
 int     ext;
 {
     static struct savedir	sd = { 0, 0, 0, NULL, NULL, 0 };
@@ -305,7 +251,7 @@ int     ext;
     header = (ext)?4:2;
     header *=sizeof( u_char );
     
-    maxsz = min(maxsz, *rbuflen);
+    maxsz = min(maxsz, *rbuflen - REPLY_PARAM_MAXLEN);
     o_path = cname( vol, dir, &ibuf );
 
     if (afp_errno == AFPERR_NOOBJ) 
@@ -345,8 +291,7 @@ int     ext;
                 return AFPERR_NODIR;
             }
         }
-        curdir->ctime  = o_path->st.st_ctime; /* play safe */
-        curdir->offcnt = ret;
+        setdiroffcnt(curdir, &o_path->st,  ret);
         *sd.sd_last = 0;
 
         sd.sd_last = sd.sd_buf;
@@ -364,18 +309,16 @@ int     ext;
         sd.sd_last = sd.sd_buf;
     }
     while ( sd.sd_sindex < sindex ) {
-        len = *(sd.sd_last)++;
+        len = (unsigned char)*(sd.sd_last)++;
         if ( len == 0 ) {
             sd.sd_did = 0;	/* invalidate sd struct to force re-read */
             return( AFPERR_NOOBJ );
         }
         sd.sd_last += len + 1;
-        len = *(sd.sd_last)++;
-        sd.sd_last += len + 1;
         sd.sd_sindex++;
     }
 
-    while (( len = *(sd.sd_last)) != 0 ) {
+    while (( len = (unsigned char)*(sd.sd_last)) != 0 ) {
         /*
          * If we've got all we need, send it.
          */
@@ -393,10 +336,9 @@ int     ext;
         if (*sd.sd_last == 0) {
             /* stat() already failed on this one */
             sd.sd_last += len + 1;
-            len = *(sd.sd_last)++;
-            sd.sd_last += len + 1;
             continue;
         }
+        memset(&s_path, 0, sizeof(s_path));
         s_path.u_name = sd.sd_last;
         if (of_stat( &s_path) < 0 ) {
             /*
@@ -410,16 +352,12 @@ int     ext;
              */
             *sd.sd_last = 0;
             sd.sd_last += len + 1;
-            len = *(sd.sd_last)++;
-            sd.sd_last += len + 1;
             curdir->offcnt--;		/* a little lie */
             continue;
         }
 
         sd.sd_last += len + 1;
-        len = *(sd.sd_last)++;
-        s_path.m_name = sd.sd_last;
-        sd.sd_last += len + 1;
+        s_path.m_name = NULL;
         /*
          * If a fil/dir is not a dir, it's a file. This is slightly
          * inaccurate, since that means /dev/null is a file, /dev/printer
@@ -430,14 +368,9 @@ int     ext;
                 continue;
             }
             dir = dirsearch_byname(curdir, s_path.u_name);
-            if (!dir) {
-                if (s_path.m_name == NULL || (dir = adddir( vol, curdir, &s_path)) == NULL) {
+            if (!dir && NULL == (dir = adddir( vol, curdir, &s_path) ) ) {
                     return AFPERR_MISC;
                 }
-            }
-            else {
-                s_path.m_name = NULL;
-            }
             if (AFP_OK != ( ret = getdirparams(vol, dbitmap, &s_path, dir,
                                      data + header , &esz ))) {
                 return( ret );
@@ -446,9 +379,6 @@ int     ext;
         } else {
             if ( fbitmap == 0 ) {
                 continue;
-            }
-            if (s_path.m_name == NULL ) {
-                return AFPERR_MISC;
             }
             if (AFP_OK != ( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
                                      data + header , &esz )) ) {

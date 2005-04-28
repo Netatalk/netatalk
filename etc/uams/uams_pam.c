@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.16 2003-05-14 15:13:50 didg Exp $
+ * $Id: uams_pam.c,v 1.17 2005-04-28 20:49:50 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -34,10 +34,16 @@ char *strchr (), *strrchr ();
 
 #include <atalk/logger.h>
 
+#ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
+#endif
+#ifdef HAVE_PAM_PAM_APPL_H
+#include <pam/pam_appl.h>
+#endif
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
+#include <atalk/util.h>
 
 #define PASSWDLEN 8
 
@@ -54,6 +60,8 @@ static char *hostname;
 static char *PAM_username;
 static char *PAM_password;
 
+extern void append(void *, const char *, int);
+
 /* PAM conversation function
  * Here we assume (for now, at least) that echo on means login name, and
  * echo off means password.
@@ -61,7 +69,7 @@ static char *PAM_password;
 static int PAM_conv (int num_msg,
                      const struct pam_message **msg,
                      struct pam_response **resp,
-                     void *appdata_ptr) 
+                     void *appdata_ptr _U_) 
 {
   struct pam_response *reply;
   int count;
@@ -131,8 +139,8 @@ static struct pam_conv PAM_conversation = {
 };
 
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
-		     char *ibuf, int ibuflen,
-		     char *rbuf, int *rbuflen)
+		     char *ibuf, int ibuflen _U_,
+		     char *rbuf _U_, int *rbuflen _U_)
 {
     struct passwd *pwd;
     int err, PAM_error;
@@ -146,7 +154,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     
     ibuf[ PASSWDLEN ] = '\0';
 
-    if (( pwd = uam_getname(username, ulen)) == NULL ) {
+    if (( pwd = uam_getname(obj, username, ulen)) == NULL ) {
 	return AFPERR_PARAM;
     }
 
@@ -172,13 +180,14 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 
     PAM_error = pam_acct_mgmt(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-      if (PAM_error == PAM_ACCT_EXPIRED)
+      if (PAM_error == PAM_NEW_AUTHTOK_REQD) /* Password change required */
 	err = AFPERR_PWDEXPR;
 #ifdef PAM_AUTHTOKEN_REQD
       else if (PAM_error == PAM_AUTHTOKEN_REQD) 
 	err = AFPERR_PWDCHNG;
 #endif /* PAM_AUTHTOKEN_REQD */
-      goto login_err;
+      else
+        goto login_err;
     }
 
 #ifndef PAM_CRED_ESTABLISH
@@ -193,6 +202,10 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
       goto login_err;
 
     *uam_pwd = pwd;
+
+    if (err == AFPERR_PWDEXPR)
+	return err;
+
     return AFP_OK;
 
 login_err:
@@ -226,6 +239,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     ibuf += len;
 
     username[ len ] = '\0';
+
     if ((unsigned long) ibuf & 1)  /* pad character */
       ++ibuf;
     return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
@@ -256,7 +270,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     }
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
-
+    
     return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }
 
@@ -268,9 +282,9 @@ static void pam_logout() {
 }
 
 /* change passwd */
-static int pam_changepw(void *obj, char *username,
-			struct passwd *pwd, char *ibuf, int ibuflen,
-			char *rbuf, int *rbuflen)
+static int pam_changepw(void *obj _U_, char *username,
+			struct passwd *pwd _U_, char *ibuf, int ibuflen _U_,
+			char *rbuf _U_, int *rbuflen _U_)
 {
     char pw[PASSWDLEN + 1];
     pam_handle_t *lpamh;
@@ -338,14 +352,13 @@ int pam_printer(start, stop, username, out)
     static const char *loginok = "0\r";
     struct passwd *pwd;
 
-    data = (char *)malloc(stop - start + 2);
+    data = (char *)malloc(stop - start + 1);
     if (!data) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc");
 	return(-1);
     }
 
-    strncpy(data, start, stop - start + 1);
-    data[stop - start + 2] = 0;
+    strlcpy(data, start, stop - start + 1);
 
     /* We are looking for the following format in data:
      * (username) (password)
@@ -365,8 +378,7 @@ int pam_printer(start, stop, username, out)
 	free(data);
 	return(-1);
     }
-    strncpy(username, p, MIN(UAM_USERNAMELEN, q - p) );
-    username[ UAM_USERNAMELEN +1] = '\0';
+    memcpy(username, p, MIN(UAM_USERNAMELEN, q - p) );
 
     /* Parse input for password in next () */
     p = q + 3;
@@ -375,13 +387,12 @@ int pam_printer(start, stop, username, out)
 	free(data);
 	return(-1);
     }
-    strncpy(password, p, MIN(PASSWDLEN, (q - p)) );
-    password[ PASSWDLEN + 1] = '\0';
+    memcpy(password, p, MIN(PASSWDLEN, (q - p)) );
 
     /* Done copying username and password, clean up */
     free(data);
 
-    if (( pwd = uam_getname(username, strlen(username))) == NULL ) {
+    if (( pwd = uam_getname(NULL, username, strlen(username))) == NULL ) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
             username);
         return(-1);

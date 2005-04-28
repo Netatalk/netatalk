@@ -1,5 +1,5 @@
 /*
- * $Id: macbin.c,v 1.11 2003-12-15 05:27:24 srittau Exp $
+ * $Id: macbin.c,v 1.12 2005-04-28 20:49:19 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -85,12 +85,12 @@ int bin_open( binfile, flags, fh, options )
 
     /* call localtime so that we get the timezone offset */
     bin.gmtoff = 0;
-#ifdef HAVE_STRUCT_TM_TM_GMTOFF
+#ifndef NO_STRUCT_TM_GMTOFF
     time(&t);
     tp = localtime(&t);
     if (tp)
         bin.gmtoff = tp->tm_gmtoff;
-#endif /* HAVE_STRUCT_TM_TM_GMTOFF */
+#endif /* ! NO_STRUCT_TM_GMTOFF */
 
     if ( flags == O_RDONLY ) { /* input */
 	if ( strcmp( binfile, STDIN ) == 0 ) {
@@ -185,9 +185,9 @@ int bin_read( fork, buffer, length )
     fprintf( stderr, "bin_read: remaining length is %d\n", bin.forklen[fork] );
 #endif /* DEBUG >= 3 */
 
-    if ( bin.forklen[ fork ] < 0 ) {
-	fprintf( stderr, "This should never happen, dude!\n" );
-	return( bin.forklen[ fork ] );
+    if (bin.forklen[fork] > length) {
+	fprintf(stderr, "This should never happen, dude! length %d, fork length == %u\n", length, bin.forklen[fork]);
+	return bin.forklen[fork];
     }
 
     if ( bin.forklen[ fork ] == 0 ) {
@@ -286,12 +286,13 @@ int bin_write( fork, buffer, length )
 	perror( "Couldn't write to macbinary file:" );
 	return( cc );
     }
-    bin.forklen[ fork ] -= length;
 
-    if ( bin.forklen[ fork ] < 0 ) {
-	fprintf( stderr, "This should never happen, dude!\n" );
-	return( bin.forklen[ fork ] );
+    if (length > bin.forklen[fork]) {
+	fprintf(stderr, "This should never happen, dude! length %d, fork length %u\n", length, bin.forklen[fork]);
+	return bin.forklen[fork];
     }
+
+    bin.forklen[fork] -= length;
 
 /*
  * add the padding at end of data and resource forks
@@ -595,13 +596,14 @@ int test_header(void)
         return -1;
 
     /* macbinary forks aren't larger than 0x7FFFFF */
+    /* we allow forks to be larger, breaking the specs */
     memcpy(&cc, head_buf + 83, sizeof(cc));
     cc = ntohl(cc);
-    if (cc > 0x7FFFFF)
+    if (cc > 0x7FFFFFFF)
         return -1;
     memcpy(&cc, head_buf + 87, sizeof(cc));
     cc = ntohl(cc);
-    if (cc > 0x7FFFFF)
+    if (cc > 0x7FFFFFFF)
         return -1;
 
 

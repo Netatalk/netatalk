@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.18 2003-02-17 01:31:51 srittau Exp $
+ * $Id: main.c,v 1.19 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -68,11 +68,13 @@ char *strchr (), *strrchr ();
 #include <atalk/paths.h>
 #include <atalk/util.h>
 #include <atalk/nbp.h>
+#include <atalk/unicode.h>
 
 #include "printer.h"
 #include "printcap.h"
 #include "session.h"
 #include "uam_auth.h"
+#include "print_cups.h"
 
 #define _PATH_PAPDPPDFILE	".ppd"
 
@@ -121,13 +123,20 @@ die( n )
     for ( pr = printers; pr; pr = pr->p_next ) {
 	if ( pr->p_flags & P_REGISTERED ) {
 	    if ( nbp_unrgstr( pr->p_name, pr->p_type, pr->p_zone, &addr ) < 0 ) {
-		LOG(log_error, logtype_papd, "can't unregister %s:%s@%s\n", pr->p_name,
+		LOG(log_error, logtype_papd, "can't unregister %s:%s@%s", pr->p_name,
 			pr->p_type, pr->p_zone );
 		papd_exit( n + 1 );
 	    }
-	    LOG(log_error, logtype_papd, "unregister %s:%s@%s\n", pr->p_name, pr->p_type,
+	    LOG(log_info, logtype_papd, "unregister %s:%s@%s", pr->p_name, pr->p_type,
 		    pr->p_zone );
 	}
+#ifdef HAVE_CUPS
+	if ( pr->p_flags & P_SPOOLED && pr->p_flags & P_CUPS_PPD ) {
+		LOG(log_info, logtype_papd, "Deleting CUPS temp PPD file for %s (%s)", pr->p_name, pr->p_ppdfile);
+		unlink (pr->p_ppdfile);
+	}
+#endif /* HAVE_CUPS */
+
     }
     papd_exit( n );
 }
@@ -178,6 +187,7 @@ int main( ac, av )
     char		*p, hostname[ MAXHOSTNAMELEN ];
     char		cbuf[ 8 ];
     int			c;
+    char 		*atname;
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
 	perror( "gethostname" );
@@ -247,7 +257,6 @@ int main( ac, av )
 	}
     }
 
-    getprinters( conffile );
 
     switch (server_lock("papd", pidfile, debug)) {
     case 0: /* open a couple things again in the child */
@@ -261,6 +270,10 @@ int main( ac, av )
     default:
       exit(0);
     }      
+
+#ifdef DEBUG1
+    fault_setup(NULL);
+#endif
 
     /*
      * Start logging.
@@ -278,28 +291,41 @@ int main( ac, av )
 #endif /* ultrix */
 
     LOG(log_info, logtype_papd, "restart (%s)", version );
+#ifdef HAVE_CUPS
+    LOG(log_info, logtype_papd, "CUPS support enabled (%s)", CUPS_API_VERSION );
+#endif
+
+    getprinters( conffile );
 
     for ( pr = printers; pr; pr = pr->p_next ) {
 	if (( pr->p_flags & P_SPOOLED ) && rprintcap( pr ) < 0 ) {
 	    LOG(log_error, logtype_papd, "printcap problem: %s", pr->p_printer );
 	}
+
+	if (!(pr->p_flags & P_CUPS)) {
+		if ((size_t)-1 != convert_string_allocate(CH_UNIX, CH_MAC, pr->p_name, strlen(pr->p_name), &atname)) {
+			pr->p_u_name = pr->p_name;
+			pr->p_name = atname;
+		}
+	}
+			
 	if (( pr->p_atp = atp_open( ATADDR_ANYPORT, &pr->p_addr )) == NULL ) {
 	    LOG(log_error, logtype_papd, "atp_open: %m" );
 	    papd_exit( 1 );
 	}
 	if ( nbp_rgstr( atp_sockaddr( pr->p_atp ), pr->p_name, pr->p_type,
 		pr->p_zone ) < 0 ) {
-	    LOG(log_error, logtype_papd, "can't register %s:%s@%s", pr->p_name, pr->p_type,
+	    LOG(log_error, logtype_papd, "can't register %s:%s@%s", pr->p_u_name, pr->p_type,
 		    pr->p_zone );
 	    die( 1 );
 	}
 	if ( pr->p_flags & P_AUTH ) {
-		LOG(log_info, logtype_papd, "Authentication enabled: %s", pr->p_name );
+		LOG(log_info, logtype_papd, "Authentication enabled: %s", pr->p_u_name );
 	}
 	else {
-		LOG(log_info, logtype_papd, "Authentication disabled: %s", pr->p_name );
+		LOG(log_info, logtype_papd, "Authentication disabled: %s", pr->p_u_name );
 	}
-	LOG(log_info, logtype_papd, "register %s:%s@%s", pr->p_name, pr->p_type,
+	LOG(log_info, logtype_papd, "register %s:%s@%s", pr->p_u_name, pr->p_type,
 		pr->p_zone );
 	pr->p_flags |= P_REGISTERED;
     }
@@ -384,6 +410,23 @@ int main( ac, av )
 			err = 1;
 		    }
 
+#ifdef HAVE_CUPS
+		   /*
+		    * If cups is not accepting jobs, we return
+		    * 0xffff to indicate we're busy
+		    */
+#ifdef DEBUG
+                    LOG(log_debug, logtype_papd, "CUPS: PAP_OPEN");
+#endif
+		    if ( (pr->p_flags & P_SPOOLED) && (cups_get_printer_status ( pr ) == 0)) {
+                        LOG(log_error, logtype_papd, "CUPS_PAP_OPEN: %s is not accepting jobs",
+                                pr->p_printer );
+                        rbuf[ 2 ] = rbuf[ 3 ] = 0xff;
+                        err = 1;
+                    }
+#endif /* HAVE_CUPS */
+
+
 		    /*
 		     * If this fails, we've run out of sockets. Rather than
 		     * just die(), let's try to continue. Maybe some sockets
@@ -423,11 +466,20 @@ int main( ac, av )
 		    case 0 : /* child */
 			printer = pr;
 
+			#ifndef HAVE_CUPS
 			if (( printer->p_flags & P_SPOOLED ) &&
 				chdir( printer->p_spool ) < 0 ) {
 			    LOG(log_error, logtype_papd, "chdir %s: %m", printer->p_spool );
 			    exit( 1 );
 			}
+			#else
+			if (( printer->p_flags & P_SPOOLED ) &&
+				chdir( SPOOLDIR ) < 0 ) {
+			    LOG(log_error, logtype_papd, "chdir %s: %m", SPOOLDIR );
+			    exit( 1 );
+			}
+
+			#endif
 
 			sv.sa_handler = SIG_DFL;
 			sigemptyset( &sv.sa_mask );
@@ -513,6 +565,20 @@ int getstatus( pr, buf )
     struct printer	*pr;
     char		*buf;
 {
+
+#ifdef HAVE_CUPS
+    if ( pr->p_flags & P_PIPED ) {
+	*buf = strlen( cannedstatus );
+	strncpy( &buf[ 1 ], cannedstatus, *buf );
+	return( *buf + 1 );
+    } else {
+	cups_get_printer_status( pr );
+	*buf = strlen ( pr->p_status );
+	strncpy ( &buf[1], pr->p_status, *buf);
+	return ( *buf + 1);
+    }
+#else
+
     char		path[ MAXPATHLEN ];
     int			fd = -1, rc;
 
@@ -537,6 +603,7 @@ int getstatus( pr, buf )
 	*buf = rc;
 	return( rc + 1 );
     }
+#endif /* HAVE_CUPS */
 }
 
 char	*pgetstr();
@@ -689,8 +756,42 @@ static void getprinters( cf )
 	else 
 	    atalk_aton(p, &pr->p_addr);
 
-	pr->p_next = printers;
-	printers = pr;
+#ifdef HAVE_CUPS
+	if ((p = pgetstr("co", &a)) != NULL ) {
+            pr->p_cupsoptions = strdup(p);
+            LOG (log_error, logtype_papd, "enabling cups-options for %s: %s", pr->p_name, pr->p_cupsoptions);
+	}
+#endif
+
+	/* convert line endings for setup sections.
+           real ugly work around for foomatic deficiencies,
+	   need to get rid of this */
+	if ( pgetflag("fo") == 1 ) {
+            pr->p_flags |= P_FOOMATIC_HACK;
+            LOG (log_error, logtype_papd, "enabling foomatic hack for %s", pr->p_name);
+	}
+
+	if (strncasecmp (pr->p_name, "cupsautoadd", 11) == 0)
+	{
+#ifdef HAVE_CUPS
+		pr = cups_autoadd_printers (pr, printers);
+		printers = pr;
+#else
+		LOG (log_error, logtype_papd, "cupsautoadd: Cups support not compiled in");
+#endif /* HAVE_CUPS */
+	}
+	else {
+#ifdef HAVE_CUPS
+		if ( cups_check_printer ( pr, printers, 1) == 0)
+		{
+			pr->p_next = printers;
+			printers = pr;
+		}
+#else
+		pr->p_next = printers;
+		printers = pr;
+#endif /* HAVE_CUPS */
+	}
     }
     if ( c == 0 ) {
 	endprent();
@@ -702,6 +803,37 @@ static void getprinters( cf )
 int rprintcap( pr )
     struct printer	*pr;
 {
+
+#ifdef HAVE_CUPS
+
+    char		*p;
+
+    if ( pr->p_flags & P_SPOOLED && !(pr->p_flags & P_CUPS_AUTOADDED) ) { /* Skip check if autoadded */
+	if ( cups_printername_ok ( pr->p_printer ) != 1) {
+	    LOG(log_error, logtype_papd, "No such CUPS printer: '%s'", pr->p_printer );
+	    return( -1 );
+	}
+    }
+
+    /*
+     * Check for ppd file, moved here because of cups_autoadd we cannot check at the usual location
+     */
+
+    if ( pr->p_ppdfile == defprinter.p_ppdfile ) {
+	if ( (p = (char *) cups_get_printer_ppd ( pr->p_printer )) != NULL ) {
+	    if (( pr->p_ppdfile = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
+	    	LOG(log_error, logtype_papd, "malloc: %m" );
+		exit( 1 );
+	    }
+	    strcpy( pr->p_ppdfile, p );
+	    pr->p_flags |= P_CUPS_PPD;
+	    /*LOG(log_info, logtype_papd, "PPD File for %s set to %s", pr->p_printer, pr->p_ppdfile );*/
+	}
+    }
+
+
+#else
+
     char		buf[ 1024 ], area[ 1024 ], *a, *p;
     int			c;
 
@@ -819,6 +951,7 @@ int rprintcap( pr )
 
 	endprent();
     }
+#endif /* HAVE_CUPS */
 
     return( 0 );
 }

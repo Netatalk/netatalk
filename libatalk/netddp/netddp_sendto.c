@@ -1,5 +1,5 @@
 /* 
- * $Id: netddp_sendto.c,v 1.6 2003-02-17 02:02:25 srittau Exp $
+ * $Id: netddp_sendto.c,v 1.7 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -54,7 +54,7 @@ int netddp_sendto(int fd, void *buf, size_t buflen, unsigned int dummy,
       return -1;
 
     memset(&ddphdr, 0, sizeof(ddphdr));
-    ddphdr.deh_len = htons(sizeof(ddphdr) + (uint16_t) buflen);
+    ddphdr.deh_len = htons(sizeof(ddphdr) + (u_int16_t) buflen);
     ddphdr.deh_dnet = sat->sat_addr.s_net;
     ddphdr.deh_dnode = sat->sat_addr.s_node;
     ddphdr.deh_dport = sat->sat_port;

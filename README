@@ -1,9 +1,7 @@
 The documentation for Netatalk is arranged as follows:
 
-* doc/INSTALL
-  netatalk specific installation instructions
-* doc/CONFIGURE
-  how to set up the configuration files
+* doc/Netatalk-Manual(.pdf|.txt)
+  the Netatalk manual
 * doc/DEVELOPER 
   information for developers and additional requirements for compiling
 * doc/FAQ

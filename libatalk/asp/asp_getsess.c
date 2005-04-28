@@ -1,5 +1,5 @@
 /*
- * $Id: asp_getsess.c,v 1.7 2002-06-18 23:45:16 didg Exp $
+ * $Id: asp_getsess.c,v 1.8 2005-04-28 20:49:55 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -43,6 +43,10 @@
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif /* ! WIFEXITED */
+
+#ifndef MIN
+#define MIN(a,b)     ((a)<(b)?(a):(b))
+#endif /* ! MIN */
 
 static ASP server_asp;
 static struct server_child *children = NULL;
@@ -99,6 +103,14 @@ void asp_kill(int sig)
     server_child_kill(children, CHILD_ASPFORK, sig);
 }
 
+void asp_stop_tickle(void)
+{
+    if (server_asp && server_asp->inited) {
+    	static const struct itimerval timer = {{0, 0}, {0, 0}};
+	
+	setitimer(ITIMER_REAL, &timer, NULL);
+    }
+}
 
 /*
  * This call handles open, tickle, and getstatus requests. On a
@@ -111,21 +123,24 @@ static void set_asp_ac(int sid, struct asp_child *tmp);
 ASP asp_getsession(ASP asp, server_child *server_children, 
 		   const int tickleval)
 {
-    struct sigaction action;
-    struct itimerval timer;
-    struct sockaddr_at	sat;
-    struct atp_block	atpb;
+    struct sigaction    action;
+    struct itimerval    timer;
+    struct sockaddr_at  sat;
+    struct atp_block    atpb;
     ATP                 atp;
-    struct iovec	iov[ 8 ];
+    struct iovec        iov[ 8 ];
     pid_t               pid;
-    int			i, sid;
-    u_int16_t		asperr;
+    int                 i, iovcnt, sid;
+    u_int16_t           asperr;
+    char                *buf;
+    int                 buflen;
 
     if (!asp->inited) {
       if (!(children = server_children))
 	return NULL;
 
-      if ((asp_ac = (struct asp_child **) 
+      /* only calloc once */
+      if (!asp_ac && (asp_ac = (struct asp_child **) 
 	   calloc(server_children->nsessions, sizeof(struct asp_child *)))
 	   == NULL)
 	return NULL;
@@ -135,10 +150,15 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       /* install cleanup pointer */
       server_child_setup(children, CHILD_ASPFORK, child_cleanup);
 
-      /* install tickle handler */
+      /* install tickle handler 
+       * we are the parent process
+       */
       memset(&action, 0, sizeof(action));
       action.sa_handler = tickle_handler;
       sigemptyset(&action.sa_mask);
+      sigaddset(&action.sa_mask, SIGHUP);
+      sigaddset(&action.sa_mask, SIGTERM);
+      sigaddset(&action.sa_mask, SIGCHLD);
       action.sa_flags = SA_RESTART;
 
       timer.it_interval.tv_sec = timer.it_value.tv_sec = tickleval;
@@ -146,6 +166,8 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       if ((sigaction(SIGALRM, &action, NULL) < 0) ||
 	  (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
 	free(asp_ac);
+	server_asp = NULL;
+	asp_ac = NULL;
 	return NULL;
       }
 
@@ -182,13 +204,45 @@ ASP asp_getsession(ASP asp, server_child *server_children,
       printf( "asp stat\n" );
 #endif /* EBUG */
       if ( asp->asp_slen > 0 ) {
-	asp->cmdbuf[0] = 0;
-	memcpy( asp->cmdbuf + 4, asp->asp_status, asp->asp_slen );
-	iov[ 0 ].iov_base = asp->cmdbuf;
-	iov[ 0 ].iov_len = 4 + asp->asp_slen;
-	atpb.atp_sresiov = iov;
-	atpb.atp_sresiovcnt = 1;
-	atp_sresp( asp->asp_atp, &atpb );
+        i = 0;
+        while(atpb.atp_bitmap) {
+            i++;
+            atpb.atp_bitmap >>= 1;
+        }
+
+	/* asp->data is big enough ... */
+        memcpy( asp->data, asp->asp_status, MIN(asp->asp_slen, i*ASP_CMDSIZ));
+	
+        buflen = MIN(asp->asp_slen, i*ASP_CMDSIZ);
+        buf = asp->data;
+        iovcnt = 0;
+
+        /* If status information is too big to fit into the available
+         * ASP packets, we simply send as much as we can.
+         * Older client versions will most likely not be able to use
+         * the additional information anyway, like directory services
+         * or UTF8 server name. A very long fqdn could be a problem,
+         * we could end up with an invalid address list.
+         */
+        do {
+            iov[ iovcnt ].iov_base = buf;
+            memmove(buf + ASP_HDRSIZ, buf, buflen);
+            memset( iov[ iovcnt ].iov_base, 0, ASP_HDRSIZ );
+
+           if ( buflen > ASP_CMDSIZ ) {
+                buf += ASP_CMDMAXSIZ;
+                buflen -= ASP_CMDSIZ;
+                iov[ iovcnt ].iov_len = ASP_CMDMAXSIZ;
+            } else {
+                iov[ iovcnt ].iov_len = buflen + ASP_HDRSIZ;
+                buflen = 0;
+            }
+            iovcnt++;
+        } while ( iovcnt < i && buflen > 0 );
+
+        atpb.atp_sresiovcnt = iovcnt;
+        atpb.atp_sresiov = iov;
+        atp_sresp( asp->asp_atp, &atpb );
       }
       break;
 
@@ -214,8 +268,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 
 	switch ((pid = fork())) {
 	case 0 : /* child */
-	  signal(SIGTERM, SIG_DFL);
-	  signal(SIGHUP, SIG_DFL);
+	  server_reset_signal();
 	  /* free/close some things */
 	  for (i = 0; i < children->nsessions; i++ ) {
 	    if ( asp_ac[i] != NULL )

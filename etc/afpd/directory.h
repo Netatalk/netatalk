@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.17 2003-06-06 20:36:59 srittau Exp $
+ * $Id: directory.h,v 1.18 2005-04-28 20:49:41 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -57,46 +57,33 @@ struct dir {
 
     char	*d_m_name;            /* mac name */
     char        *d_u_name;            /* unix name */
+    ucs2_t	*d_m_name_ucs2;	      /* mac name as UCS2 */
 };
 
 struct path {
     int         m_type;             /* mac name type (long name, unicode */
     char	*m_name;            /* mac name */
     char        *u_name;            /* unix name */
-    struct dir  *dir;               /* */
+    cnid_t	id;                 /* file id (only for getmetadata) */
+    struct dir  *d_dir;             /* */
     int         st_valid;           /* does st_errno and st set */
     int         st_errno;
     struct stat st;
 };
 
-#define path_isadir(o_path) \
-	((o_path)->dir != NULL)
+#ifndef ATACC
+static __inline__ int path_isadir(struct path *o_path)
+{
+    return o_path->d_dir != NULL;
 #if 0
-	((o_path)->m_name == '\0' || /* we are in a it */ \
-	 !(o_path)->st_valid ||      /* in cache but we can't chdir in it */ \
-	 (!(o_path)->st_errno && S_ISDIR((o_path)->st.st_mode)) /* not in cache an can't chdir */ \
-	)
+    return o_path->m_name == '\0' || /* we are in a it */
+           !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
+           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
 #endif
-	   
-/* child addition/removal macros */
-#define dirchildadd(a, b) do { \
-	if (!(a)->d_child) \
-		(a)->d_child = (b); \
-	else { \
-		(b)->d_next = (a)->d_child; \
-		(b)->d_prev = (b)->d_next->d_prev; \
-		(b)->d_next->d_prev = (b); \
-		(b)->d_prev->d_next = (b); \
-	} \
-} while (0)
-
-#define dirchildremove(a,b) do { \
-	if ((a)->d_child == (b)) \
-		(a)->d_child = ((b) == (b)->d_next) ? NULL : (b)->d_next; \
-	(b)->d_next->d_prev = (b)->d_prev; \
-	(b)->d_prev->d_next = (b)->d_next; \
-        (b)->d_next = (b)->d_prev = (b); \
-} while (0)
+}
+#else
+extern int path_isadir(struct path *o_path);
+#endif
 
 #define DIRTREE_COLOR_RED    0
 #define DIRTREE_COLOR_BLACK  1
@@ -114,6 +101,10 @@ struct path {
 #define DIRF_NOFS	(0<<0)
 #define DIRF_AFS	(1<<0)
 #define DIRF_UFS	(2<<0)
+
+#define DIRF_OFFCNT     (1<<4)	/* offsprings count is valid */
+#define DIRF_CNID	(1<<5)  /* renumerate id */
+
 
 #define AFPDIR_READ	(1<<0)
 
@@ -149,6 +140,8 @@ struct path {
 /* file/directory ids. what a mess. we scramble things in a vain attempt
  * to get something meaningful */
 #ifndef AFS
+
+#if 0
 #define CNID_XOR(a)  (((a) >> 16) ^ (a))
 #define CNID_DEV(a)   ((((CNID_XOR(major((a)->st_dev)) & 0xf) << 3) | \
 	(CNID_XOR(minor((a)->st_dev)) & 0x7)) << 24)
@@ -156,6 +149,10 @@ struct path {
 				       & 0x00ffffff)
 #define CNID_FILE(a)  (((a) & 0x1) << 31)
 #define CNID(a,b)     (CNID_DEV(a) | CNID_INODE(a) | CNID_FILE(b))
+#endif
+
+#define CNID(a,b)     ((a)->st_ino & 0xffffffff)
+
 #else /* AFS */
 #define CNID(a,b)     (((a)->st_ino & 0x7fffffff) | CNID_FILE(b))
 #endif /* AFS */
@@ -183,9 +180,8 @@ extern struct dir       *dirsearch_byname __P((struct dir *,const char *));
 extern struct dir	*adddir __P((struct vol *, struct dir *, 
                                                struct path *));
 
-extern struct dir       *dirinsert __P((struct vol *, struct dir *));
 extern int              movecwd __P((const struct vol *, struct dir *));
-extern int              deletecurdir __P((const struct vol *, char *, int));
+extern int              deletecurdir __P((const struct vol *));
 extern struct path      *cname __P((const struct vol *, struct dir *,
                              char **));
 extern mode_t           mtoumode __P((struct maccess *));
@@ -193,9 +189,12 @@ extern void             utommode __P((struct stat *, struct maccess *));
 extern int getdirparams __P((const struct vol *, u_int16_t, struct path *,
                                  struct dir *, char *, int *));
 extern int setdirparams __P((const struct vol *, struct path *, u_int16_t, char *));
-extern int renamedir __P((char *, char *, struct dir *,
-                              struct dir *, char *, const int));
+extern int renamedir __P((const struct vol *, char *, char *, struct dir *,
+                              struct dir *, char *));
 extern int path_error __P((struct path *, int error));
+
+extern void setdiroffcnt __P((struct dir *dir, struct stat *st,  u_int32_t count));
+extern int dirreenumerate __P((struct dir *dir, struct stat *st));
 
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
@@ -204,8 +203,10 @@ extern int  for_each_dirent __P((const struct vol *, char *, dir_loop , void *))
 extern int  check_access __P((char *name , int mode));
 extern int file_access   __P((struct path *path, int mode));
 
+extern int netatalk_rmdir __P((const char *name));
 extern int netatalk_unlink __P((const char *name));
 
+extern int caseenumerate __P((const struct vol *, struct path *, struct dir *));
 /* from enumerate.c */
 extern char *check_dirent __P((const struct vol *, char *));
 

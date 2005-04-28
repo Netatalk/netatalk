@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.24 2003-04-16 22:45:11 samnoble Exp $
+ * $Id: uam.c,v 1.25 2005-04-28 20:49:44 bfernhomberg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,6 +56,12 @@ char *strchr (), *strrchr ();
 #include "auth.h"
 #include "uam_auth.h"
 
+#ifdef AFP3x
+#define utf8_encoding() (afp_version >= 30)
+#else
+#define utf8_encoding() (0)
+#endif
+
 #ifdef TRU64
 #include <netdb.h>
 #include <sia.h>
@@ -87,8 +93,7 @@ struct uam_mod *uam_load(const char *path, const char *name)
         goto uam_load_fail;
     }
 
-    strncpy(buf, name, sizeof(buf));
-    buf[sizeof(buf) - 1] = '\0';
+    strlcpy(buf, name, sizeof(buf));
     if ((p = strchr(buf, '.')))
         *p = '\0';
 
@@ -148,6 +153,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
 {
     va_list ap;
     struct uam_obj *uam;
+    int ret;
 
     if (!name)
         return -1;
@@ -197,13 +203,13 @@ int uam_register(const int type, const char *path, const char *name, ...)
     va_end(ap);
 
     /* attach to other uams */
-    if (auth_register(type, uam) < 0) {
+    ret = auth_register(type, uam);
+    if ( ret) {
         free(uam->uam_path);
         free(uam);
-        return -1;
     }
 
-    return 0;
+    return ret;
 }
 #endif
 
@@ -287,31 +293,44 @@ void uam_unregister(const int type, const char *name)
 
 /* --- helper functions for plugin uams --- */
 
-struct passwd *uam_getname(char *name, const int len)
+struct passwd *uam_getname(void *private, char *name, const int len)
 {
+    AFPObj *obj = private;
     struct passwd *pwent;
-    char *user;
-    int i;
+    static char username[256];
+    static char user[256];
+    static char pwname[256];
+    char *p;
+    size_t namelen, gecoslen = 0, pwnamelen = 0;
 
     if ((pwent = getpwnam(name)))
         return pwent;
 
 #ifndef NO_REAL_USER_NAME
-    for (i = 0; i < len; i++)
-        name[i] = tolower(name[i]);
+
+    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
+				CH_UCS2, name, strlen(name), username, sizeof(username))))
+	return NULL;
 
     setpwent();
     while ((pwent = getpwent())) {
-        if ((user = strchr(pwent->pw_gecos, ',')))
-            *user = '\0';
-        user = pwent->pw_gecos;
+        if ((p = strchr(pwent->pw_gecos, ',')))
+            *p = '\0';
+
+	if ((size_t)-1 == ( gecoslen = convert_string(obj->options.unixcharset, CH_UCS2, 
+				pwent->pw_gecos, strlen(pwent->pw_gecos), user, sizeof(username))) )
+		continue;
+	if ((size_t)-1 == ( pwnamelen = convert_string(obj->options.unixcharset, CH_UCS2, 
+				pwent->pw_name, strlen(pwent->pw_name), pwname, sizeof(username))) )
+		continue;
+
 
         /* check against both the gecos and the name fields. the user
          * might have just used a different capitalization. */
-        if ((strncasecmp(user, name, len) == 0) ||
-                (strncasecmp(pwent->pw_name, name, len) == 0)) {
-            strncpy(name, pwent->pw_name, len);
-            name[len - 1] = '\0';
+
+	if ( (namelen == gecoslen && strncasecmp_w((ucs2_t*)user, (ucs2_t*)username, len) == 0) || 
+		( namelen == pwnamelen && strncasecmp_w ( (ucs2_t*) pwname, (ucs2_t*) username, len) == 0)) {
+            strlcpy(name, pwent->pw_name, len);
             break;
         }
     }
@@ -334,7 +353,6 @@ int uam_checkuser(const struct passwd *pwd)
 		LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell", pwd->pw_name);
 		return -1;
 	}
-#endif
 
     while ((p = getusershell())) {
         if ( strcmp( p, pwd->pw_shell ) == 0 )
@@ -342,7 +360,6 @@ int uam_checkuser(const struct passwd *pwd)
     }
     endusershell();
 
-#ifndef DISABLE_SHELLCHECK
     if (!p) {
         LOG(log_info, logtype_afpd, "illegal shell %s for %s", pwd->pw_shell, pwd->pw_name);
         return -1;
@@ -352,27 +369,57 @@ int uam_checkuser(const struct passwd *pwd)
     return 0;
 }
 
+int uam_random_string (AFPObj *obj, char *buf, int len)
+{
+    u_int32_t result;
+    int ret;
+    int fd;
+
+    if ( (len <= 0) || (len % sizeof(result)))
+            return -1;
+
+    /* construct a random number */
+    if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
+        struct timeval tv;
+        struct timezone tz;
+        int i;
+
+        if (gettimeofday(&tv, &tz) < 0)
+            return -1;
+        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->handle);
+        for (i = 0; i < len; i += sizeof(result)) {
+            result = random();
+            memcpy(buf + i, &result, sizeof(result));
+        }
+    } else {
+        ret = read(fd, buf, len);
+        close(fd);
+        if (ret <= 0)
+            return -1;
+    }
+    return 0;
+}
+
 /* afp-specific functions */
 int uam_afpserver_option(void *private, const int what, void *option,
                          int *len)
 {
 AFPObj *obj = private;
     char **buf = (char **) option; /* most of the options are this */
-    int32_t result;
-    int fd;
+    struct session_info **sinfo = (struct session_info **) option;
 
     if (!obj || !option)
         return -1;
 
     switch (what) {
     case UAM_OPTION_USERNAME:
-        *buf = (void *) obj->username;
+        *buf = obj->username;
         if (len)
             *len = sizeof(obj->username) - 1;
         break;
 
     case UAM_OPTION_GUEST:
-        *buf = (void *) obj->options.guest;
+        *buf = obj->options.guest;
         if (len)
             *len = strlen(obj->options.guest);
         break;
@@ -383,7 +430,7 @@ AFPObj *obj = private;
 
         switch (*len) {
         case UAM_PASSWD_FILENAME:
-            *buf = (void *) obj->options.passwdfile;
+            *buf = obj->options.passwdfile;
             *len = strlen(obj->options.passwdfile);
             break;
 
@@ -411,40 +458,22 @@ AFPObj *obj = private;
         break;
 
     case UAM_OPTION_RANDNUM: /* returns a random number in 4-byte units. */
-        if (!len || (*len < 0) || (*len % sizeof(result)))
+        if (!len)
             return -1;
 
-        /* construct a random number */
-        if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
-            struct timeval tv;
-            struct timezone tz;
-            char *randnum = (char *) option;
-            int i;
-
-            if (gettimeofday(&tv, &tz) < 0)
-                return -1;
-            srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->handle);
-            for (i = 0; i < *len; i += sizeof(result)) {
-                result = random();
-                memcpy(randnum + i, &result, sizeof(result));
-            }
-        } else {
-            result = read(fd, option, *len);
-            close(fd);
-            if (result < 0)
-                return -1;
-        }
+        return uam_random_string(obj, option, *len);
         break;
 
     case UAM_OPTION_HOSTNAME:
-        *buf = (void *) obj->options.hostname;
+        *buf = obj->options.hostname;
         if (len)
             *len = strlen(obj->options.hostname);
         break;
 
     case UAM_OPTION_PROTOCOL:
-        *buf = (void *) obj->proto;
+        *((int *) option) = obj->proto;
         break;
+        
     case UAM_OPTION_CLIENTNAME:
         {
             struct DSI *dsi = obj->handle;
@@ -454,9 +483,9 @@ AFPObj *obj = private;
                                 sizeof( struct in_addr ),
                                 dsi->client.sin_family );
             if( hp )
-                *buf = (void *) hp->h_name;
+                *buf = hp->h_name;
             else
-                *buf = (void *) inet_ntoa( dsi->client.sin_addr );
+                *buf = inet_ntoa( dsi->client.sin_addr );
         }
         break;
     case UAM_OPTION_COOKIE:
@@ -469,8 +498,29 @@ AFPObj *obj = private;
     case UAM_OPTION_KRB5SERVICE:
 	*buf = obj->options.k5service;
         if (len)
-            *len = strlen(obj->options.k5service);
+            *len = (*buf)?strlen(*buf):0;
 	break;
+    case UAM_OPTION_KRB5REALM:
+	*buf = obj->options.k5realm;
+        if (len)
+            *len = (*buf)?strlen(*buf):0;
+	break;
+    case UAM_OPTION_FQDN:
+	*buf = obj->options.fqdn;
+        if (len)
+            *len = (*buf)?strlen(*buf):0;
+	break;
+    case UAM_OPTION_MACCHARSET:
+        *((int *) option) = obj->options.maccharset;
+        *len = sizeof(obj->options.maccharset);
+        break;
+    case UAM_OPTION_UNIXCHARSET:
+        *((int *) option) = obj->options.unixcharset;
+        *len = sizeof(obj->options.unixcharset);
+        break;
+    case UAM_OPTION_SESSIONINFO:
+        *sinfo = &(obj->sinfo);
+        break;
     default:
         return -1;
         break;
@@ -572,7 +622,7 @@ int uam_sia_validate_user(sia_collect_func_t * collect, int argc, char **argv,
 #endif /* TRU64 */
 
 /* --- papd-specific functions (just placeholders) --- */
-void append(void *pf, char *data, int len)
+void append(void *pf  _U_, char *data _U_, int len _U_)
 {
     return;
 }

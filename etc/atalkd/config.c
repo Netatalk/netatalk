@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.13 2003-03-18 23:32:17 srittau Exp $
+ * $Id: config.c,v 1.14 2005-04-28 20:49:46 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -55,19 +55,21 @@ char *strchr (), *strrchr ();
 #include <sys/stropts.h>
 #endif /* __svr4__ */
 
+#include <atalk/unicode.h>
 #include "interface.h"
 #include "multicast.h"
 #include "rtmp.h"
 #include "zip.h"
 #include "list.h"
+#include "main.h"
 
 #ifndef IFF_SLAVE /* a little backward compatibility */
 #define IFF_SLAVE 0
 #endif /* IFF_SLAVE */
 
-int	router(), dontroute(), seed(), phase(), net(), addr(), zone();
+int	router(), dontroute(), seed(), phase(), net(), addr(), zone(), noallmulti();
 
-static struct param {
+static const struct param {
     char	*p_name;
     int		(*p_func)();
 } params[] = {
@@ -78,6 +80,7 @@ static struct param {
     { "net",	net },
     { "addr",	addr },
     { "zone",	zone },
+    { "noallmulti", noallmulti }
 };
 
 #define ARGV_CHUNK_SIZE 128
@@ -185,6 +188,8 @@ int writeconf( cf )
     struct interface	*iface;
     struct list		*l;
     int			mode = 0644, fd;
+    size_t		len;
+    char		*zonename;
 
     if ( cf == NULL ) {
 	path = _PATH_ATALKDCONF;
@@ -243,6 +248,11 @@ int writeconf( cf )
 	    if ( iface->i_flags & IFACE_DONTROUTE) {
 	        fprintf( newconf, " -dontroute");
 	    }
+#ifdef linux
+            if ( !(iface->i_flags & IFACE_ALLMULTI)) {
+	        fprintf( newconf, " -noallmulti");
+            }
+#endif
 
 	    fprintf( newconf, " -phase %d",
 		    ( iface->i_flags & IFACE_PHASE1 ) ? 1 : 2 );
@@ -254,9 +264,20 @@ int writeconf( cf )
 		    ntohs( iface->i_addr.sat_addr.s_net ),
 		    iface->i_addr.sat_addr.s_node );
 	    for ( l = iface->i_rt->rt_zt; l; l = l->l_next ) {
-		fprintf( newconf, " -zone \"%.*s\"",
-			((struct ziptab *)l->l_data)->zt_len,
-			((struct ziptab *)l->l_data)->zt_name );
+                /* codepage conversion */
+                if ((size_t)(-1) == (len = convert_string_allocate(CH_MAC, CH_UNIX, 
+                                      ((struct ziptab *)l->l_data)->zt_name,
+                                      ((struct ziptab *)l->l_data)->zt_len,
+                                      &zonename)) ) {
+                    if ( NULL == 
+                      (zonename = strdup(((struct ziptab *)l->l_data)->zt_name))) {
+		        LOG(log_error, logtype_atalkd, "malloc: %m" );
+		        return( -1 );
+                    }
+                    len = ((struct ziptab *)l->l_data)->zt_len;
+                } 
+		fprintf( newconf, " -zone \"%.*s\"", (int)len, zonename);
+                free(zonename);
 	    }
 	    fprintf( newconf, "\n" );
 
@@ -306,7 +327,8 @@ int readconf( cf )
     struct ifreq	ifr;
     struct interface	*iface, *niface;
     char		line[ MAXLINELEN ], **argv, *p;
-    int			i, j, s, cc;
+    unsigned int	i, j;
+    int			s, cc = 0;
     FILE		*conf;
 
     if ( cf == NULL ) {
@@ -336,8 +358,7 @@ int readconf( cf )
 	 * Check that av[ 0 ] is a valid interface.
 	 * Not possible under sysV.
 	 */
-	strncpy( ifr.ifr_name, argv[ 0 ], sizeof(ifr.ifr_name) );
-	ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = '\0';
+	strlcpy( ifr.ifr_name, argv[ 0 ], sizeof(ifr.ifr_name) );
 
 	/* for devices that don't support appletalk */
 	if ((ioctl(s, SIOCGIFADDR, &ifr) < 0) && (errno == ENODEV)) {
@@ -367,6 +388,7 @@ int readconf( cf )
 	  fprintf(stderr, "Can't configure multicast.\n");
 	  goto read_conf_err;
 	}
+
 #endif /* __svr4__ */
 
 	if (( niface = newiface( argv[ 0 ] )) == NULL ) {
@@ -407,6 +429,15 @@ int readconf( cf )
 	    goto read_conf_err;
 	}
 
+#ifdef	linux
+	/* Don't set interface to allmulti if it already is, or -noallmulti was given */
+	if ((ifr.ifr_flags & IFF_ALLMULTI))
+		niface->i_flags |= IFACE_WASALLMULTI; 
+
+	if ((niface->i_flags & IFACE_ALLMULTI) && !(niface->i_flags & IFACE_WASALLMULTI))
+		ifsetallmulti(ifr.ifr_name, 1);
+#endif
+
 	if ( interfaces == NULL ) {
 	    interfaces = niface;
 	} else {
@@ -443,10 +474,20 @@ read_conf_err:
     return -1;
 }
 
+int noallmulti( iface, av )
+    struct interface	*iface;
+    char		**av _U_;
+{
+    /* Linux specific, no effect on other platforms */
+    iface->i_flags &= !IFACE_ALLMULTI;
+
+    return (1);
+}
+	
 /*ARGSUSED*/
 int router( iface, av )
     struct interface	*iface;
-    char		**av;
+    char		**av _U_;
 {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
     if (iface->i_flags & IFACE_DONTROUTE) {
@@ -470,7 +511,7 @@ int router( iface, av )
 /*ARGSUSED*/
 int dontroute( iface, av )
     struct interface	*iface;
-    char		**av;
+    char		**av _U_;
 {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
     if (iface->i_flags & IFACE_RSEED) {
@@ -485,7 +526,7 @@ int dontroute( iface, av )
 /*ARGSUSED*/
 int seed( iface, av )
     struct interface	*iface;
-    char		**av;
+    char		**av _U_;
 {
     /*
      * Check to be sure "-seed" is before "-zone". we keep the old
@@ -642,9 +683,14 @@ int zone( iface, av )
     struct ziptab	*zt;
     char		*zname;
 
-    if (( zname = av[ 0 ] ) == NULL ) {
+    if ( av[ 0 ]  == NULL ) {
 	fprintf( stderr, "No zone.\n" );
 	return -1;
+    }
+
+    /* codepage conversion */
+    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, CH_MAC, av[0], strlen(av[0]), &zname)) {
+	zname = strdup(av[0]);
     }
 
     /*
@@ -657,6 +703,7 @@ int zone( iface, av )
   	    fprintf( stderr, "Must specify net-range before zones.\n" );
 	    return -1;
         }
+
 	if (( zt = newzt( strlen( zname ), zname )) == NULL ) {
 	    perror( "newzt" );
 	    return -1;
@@ -668,6 +715,8 @@ int zone( iface, av )
 	    iface->i_czt->zt_next = zt;
 	}
     }
+    free(zname);
+
     return( 2 );
 }
 
@@ -689,7 +738,7 @@ int getifconf()
 
     start = list = getifacelist();
     while (list && *list) {
-        strncpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
+        strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
 	list++;
 
 	if (ioctl(s, SIOCGIFFLAGS, &ifr) < 0)
@@ -764,7 +813,7 @@ struct interface *newiface( name )
 	    == NULL ) {
 	return( NULL );
     }
-    strncpy( niface->i_name, name, sizeof(niface->i_name));
+    strlcpy( niface->i_name, name, sizeof(niface->i_name));
 #ifdef BSD4_4
     niface->i_addr.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */
@@ -773,6 +822,9 @@ struct interface *newiface( name )
     niface->i_caddr.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */
     niface->i_caddr.sat_family = AF_APPLETALK;
+#ifdef linux
+    niface->i_flags = IFACE_ALLMULTI;
+#endif
     return( niface );
 }
 

@@ -59,7 +59,7 @@ typedef struct ASP {
     char		child, inited, *commands;
     char                cmdbuf[ASP_CMDMAXSIZ];
     char                data[ASP_DATAMAXSIZ];  
-    unsigned int        cmdlen, datalen;
+    size_t		cmdlen, datalen;
     size_t 		read_count, write_count;
 } *ASP;
 
@@ -99,5 +99,6 @@ extern int asp_wrtcont      __P((ASP, char *, int *));
 #define asp_wrtreply(a,b)   asp_cmdreply((a), (b))
 extern void asp_kill        __P((int));
 extern int asp_tickle      __P((ASP, const u_int8_t, struct sockaddr_at *));
+extern void asp_stop_tickle __P((void));
 
 #endif

@@ -92,7 +92,7 @@ static int getifaces(const int sockfd, char ***list)
     }
 
 	new = (char **) malloc((ifc.ifc_len/sizeof(struct ifreq) + 1) * sizeof(char *));
-    for ( ifr = ifc.ifc_req; ifc.ifc_len >= sizeof( struct ifreq );
+    for ( ifr = ifc.ifc_req; ifc.ifc_len >= (int) sizeof( struct ifreq );
 	    ifc.ifc_len -= ifrsize, ifr = nextifr ) {
 #ifdef BSD4_4
  	ifrsize = sizeof(ifr->ifr_name) +
@@ -119,7 +119,7 @@ static int getifaces(const int sockfd, char ***list)
  */
 char **getifacelist()
 {
-  char **list;
+  char **list = NULL; /* FIXME */
   int  i, fd;
 
   if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0)

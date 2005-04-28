@@ -1,5 +1,5 @@
 /*
- * $Id: aecho.c,v 1.6 2003-06-06 19:35:15 srittau Exp $
+ * $Id: aecho.c,v 1.7 2005-04-28 20:49:18 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -60,20 +60,21 @@
 #endif /* ! SOCKLEN_T */
 
 struct sockaddr_at	target;
-int			s, nsent = 0, nrecv = 0;
+int			sock;
+unsigned int		nsent = 0, nrecv = 0;
 time_t			totalms = 0, minms = -1, maxms = -1;
-static unsigned int     pings = 0;
+unsigned int     	pings = 0;
 
 void usage(char *);
 
 void done()
 {
-    if ( nsent > 0 ) {
+    if ( nsent) {
 	printf( "\n----%d.%d AEP Statistics----\n",
 		ntohs( target.sat_addr.s_net ), target.sat_addr.s_node );
 	printf( "%d packets sent, %d packets received, %d%% packet loss\n",
 		nsent, nrecv, (( nsent - nrecv ) * 100 ) / nsent );
-	if ( nrecv > 0 ) {
+	if ( nrecv ) {
 	    printf( "round-trip (ms)  min/avg/max = %ld/%ld/%ld\n",
 		    minms, totalms / nrecv, maxms );
 	}	
@@ -101,7 +102,7 @@ void aep_send()
     memcpy( p, &tv, sizeof( struct timeval ));
     p += sizeof( struct timeval );
 
-    if ( netddp_sendto( s, buf, p - buf, 0, (struct sockaddr *) &target,
+    if ( netddp_sendto( sock, buf, p - buf, 0, (struct sockaddr *) &target,
 	    sizeof( struct sockaddr_at )) < 0 ) {
 	perror( "sendto" );
 	exit( 1 );
@@ -182,7 +183,7 @@ int main( ac, av )
     }
     target.sat_port = port;
 
-    if ((s = netddp_open(saddr.sat_addr.s_net || saddr.sat_addr.s_node ? 
+    if ((sock = netddp_open(saddr.sat_addr.s_net || saddr.sat_addr.s_node ? 
 			 &saddr : NULL, NULL)) < 0) {
        perror("ddp_open");
        exit(1);
@@ -218,7 +219,7 @@ int main( ac, av )
 
     for (;;) {
 	satlen = sizeof( struct sockaddr_at );
-	if (( cc = netddp_recvfrom( s, buf, sizeof( buf ), 0, 
+	if (( cc = netddp_recvfrom( sock, buf, sizeof( buf ), 0, 
 				    (struct sockaddr *) &sat,
 				    &satlen )) < 0 ) {
 	    if ( errno == EINTR ) {

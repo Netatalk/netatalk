@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.14 2002-09-29 23:29:13 sibaz Exp $
+ * $Id: lp.c,v 1.15 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,7 +46,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/param.h>
-#include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -63,14 +62,10 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #undef s_net
-#include <netatalk/at.h>
-#include <atalk/atp.h>
-#include <atalk/paths.h>
 
 #ifdef ABS_PRINT
 #include <math.h>
 #endif /* ABS_PRINT */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,9 +75,20 @@
 #endif /* HAVE_FCNTL_H */
 #include <pwd.h>
 
+#include <atalk/logger.h>
+#include <netatalk/at.h>
+#include <atalk/atp.h>
+#include <atalk/paths.h>
+#include <atalk/unicode.h>
+
 #include "printer.h"
 #include "file.h"
 #include "lp.h"
+
+#ifdef HAVE_CUPS
+#include  "print_cups.h"
+#endif
+
 
 /* These functions aren't used outside of lp.c */
 int lp_conn_inet();
@@ -98,16 +104,173 @@ struct lp {
     int			lp_flags;
     FILE		*lp_stream;
     int			lp_seq;
+    int 		lp_origin;
     char		lp_letter;
     char		*lp_person;
+    char		*lp_created_for; /* Holds the content of the Postscript %%For Comment if available */
     char		*lp_host;
     char		*lp_job;
+    char		*lp_spoolfile;
 } lp;
 #define LP_INIT		(1<<0)
 #define LP_OPEN		(1<<1)
 #define LP_PIPE		(1<<2)
 #define LP_CONNECT	(1<<3)
 #define LP_QUEUE	(1<<4)
+#define LP_JOBPENDING	(1<<5)
+
+void lp_origin (int origin)
+{
+    lp.lp_origin = origin;
+}
+
+/* the converted string should always be shorter, but ... FIXME! */
+static void convert_octal (char *string, charset_t dest)
+{
+    unsigned char *p, *q;
+    char temp[4];
+    long int ch;
+
+    q=p=string;
+    while ( *p != '\0' ) {
+        ch = 0;
+        if ( *p == '\\' ) {
+            p++;
+            if (dest && isdigit(*p) && isdigit(*(p+1)) && isdigit(*(p+2)) ) {
+                temp[0] = *p;
+                temp[1] = *(p+1);
+                temp[2] = *(p+2);
+                temp[3] = 0;
+                ch = strtol( temp, NULL, 8);
+                if ( ch && ch < 0xff)
+                    *q = ch;
+              	else
+                    *q = '.';
+                p += 2;
+            }
+       	    else 
+                *q = '.';
+       }
+       else {
+           *q = *p;
+       }
+           p++;
+           q++;
+    }
+    *q = 0;
+}
+
+
+static void translate(charset_t from, charset_t dest, char **option)
+{
+    char *translated;
+
+    if (*option != NULL) {
+        convert_octal(*option, from);
+        if (from) {
+             if ((size_t) -1 != (convert_string_allocate(from, dest, *option, strlen(*option), &translated)) ) {
+                 free (*option);
+                 *option = translated;
+             }
+        }
+    }
+}
+
+
+static void lp_setup_comments (charset_t dest)
+{
+    charset_t from=0;
+
+    switch (lp.lp_origin) {
+	case 1:
+		from=CH_MAC;
+		break;
+	case 2:
+		from=CH_UTF8_MAC;
+		break;
+    }
+
+    if (lp.lp_job) {
+#ifdef DEBUG1
+        LOG(log_debug, logtype_papd, "job: %s", lp.lp_job );
+#endif
+        translate(from, dest, &lp.lp_job);
+    }
+    if (lp.lp_created_for) {
+#ifdef DEBUG1
+        LOG(log_debug, logtype_papd, "for: %s", lp.lp_created_for );
+#endif
+        translate(from, dest, &lp.lp_created_for);
+    }
+    if (lp.lp_person) {
+#ifdef DEBUG1
+       LOG(log_debug, logtype_papd, "person: %s", lp.lp_person );
+#endif
+       translate(from, dest, &lp.lp_person);
+    }
+}
+
+#define is_var(a, b) (strncmp((a), (b), 2) == 0)
+
+static char* pipexlate(char *src)
+{
+    char *p, *q, *dest; 
+    static char destbuf[MAXPATHLEN];
+    size_t destlen = MAXPATHLEN;
+    int len = 0;
+   
+    dest = destbuf; 
+
+    if (!src)
+	return NULL;
+
+    strncpy(dest, src, MAXPATHLEN);
+    if ((p = strchr(src, '%')) == NULL) /* nothing to do */
+        return destbuf;
+
+    /* first part of the path. just forward to the next variable. */
+    len = MIN((size_t)(p - src), destlen);
+    if (len > 0) {
+        destlen -= len;
+        dest += len;
+    }
+
+    while (p && destlen > 0) {
+        /* now figure out what the variable is */
+        q = NULL;
+        if (is_var(p, "%U")) {
+	    q = lp.lp_person;
+        } else if (is_var(p, "%C") || is_var(p, "%J") ) {
+            q = lp.lp_job;
+        } else if (is_var(p, "%F")) {
+            q =  lp.lp_created_for;
+        } else if (is_var(p, "%%")) {
+            q = "%";
+        } else
+            q = p;
+
+        /* copy the stuff over. if we don't understand something that we
+         * should, just skip it over. */
+        if (q) {
+            len = MIN(p == q ? 2 : strlen(q), destlen);
+            strncpy(dest, q, len);
+            dest += len;
+            destlen -= len;
+        }
+
+        /* stuff up to next $ */
+        src = p + 2;
+        p = strchr(src, '$');
+        len = p ? MIN((size_t)(p - src), destlen) : destlen;
+        if (len > 0) {
+            strncpy(dest, src, len);
+            dest += len;
+            destlen -= len;
+        }
+    }
+    return destbuf;
+}
+
 
 void lp_person( person )
     char	*person;
@@ -151,38 +314,49 @@ void lp_host( host )
 	exit( 1 );
     }
     strcpy( lp.lp_host, host );
+    LOG(log_debug, logtype_papd, "host: %s", lp.lp_host );
 }
+
+/* Currently lp_job and lp_for will not handle the
+ * conversion of macroman chars > 0x7f correctly
+ * This should be added.
+ */
 
 void lp_job( job )
     char	*job;
 {
-    char	*p, *q;
-
     if ( lp.lp_job != NULL ) {
 	free( lp.lp_job );
     }
-    if (( lp.lp_job = (char *)malloc( strlen( job ) + 1 )) == NULL ) {
-	LOG(log_error, logtype_papd, "malloc: %m" );
-	exit( 1 );
-    }
-    for ( p = job, q = lp.lp_job; *p != '\0'; p++, q++ ) {
-	if ( !isascii( *p ) || !isprint( *p ) || *p == '\\' ) {
-	    *q = '.';
-	} else {
-	    *q = *p;
-	}
-    }
-    *q = '\0';
+
+    lp.lp_job = strdup(job);
+#ifdef DEBUG
+    LOG(log_debug, logtype_papd, "job: %s", lp.lp_job );
+#endif
+    
 }
+
+void lp_for ( lpfor )
+	char	*lpfor;
+{
+    if ( lp.lp_created_for != NULL ) {
+	free( lp.lp_created_for );
+    }
+
+    lp.lp_created_for = strdup(lpfor);
+}
+
 
 int lp_init( out, sat )
     struct papfile	*out;
     struct sockaddr_at	*sat;
 {
+    int		authenticated = 0;
+#ifndef HAVE_CUPS
     int		fd, n, len;
     char	*cp, buf[ BUFSIZ ];
     struct stat	st;
-    int		authenticated = 0;
+#endif /* HAVE_CUPS */
 #ifdef ABS_PRINT
     char	cost[ 22 ];
     char	balance[ 22 ];
@@ -270,6 +444,8 @@ int lp_init( out, sat )
     lp.lp_letter = 'A';
 
     if ( printer->p_flags & P_SPOOLED ) {
+
+#ifndef HAVE_CUPS
 	/* check if queuing is enabled: mode & 010 on lock file */
 	if ( stat( printer->p_lock, &st ) < 0 ) {
 	    LOG(log_error, logtype_papd, "lp_init: %s: %m", printer->p_lock );
@@ -288,11 +464,13 @@ int lp_init( out, sat )
 	    return( -1 );
 	}
 
+#ifndef SOLARIS /* flock is unsupported, I doubt this stuff works anyway with newer solaris so ignore for now */
 	if ( flock( fd, LOCK_EX ) < 0 ) {
 	    LOG(log_error, logtype_papd, "lp_init: can't lock .seq" );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
+#endif
 
 	n = 0;
 	if (( len = read( fd, buf, sizeof( buf ))) < 0 ) {
@@ -315,6 +493,16 @@ int lp_init( out, sat )
 	lseek( fd, 0L, 0 );
 	write( fd, buf, strlen( buf ));
 	close( fd );
+#else
+
+	if (cups_get_printer_status ( printer ) == 0)
+	{
+	    spoolerror( out, "Queuing is disabled." );
+	    return( -1 );
+	}
+
+	lp.lp_seq = getpid();
+#endif /* HAVE CUPS */
     } else {
 	lp.lp_flags |= LP_PIPE;
 	lp.lp_seq = getpid();
@@ -332,15 +520,25 @@ int lp_open( out, sat )
     int		fd;
     struct passwd	*pwent;
 
+#ifdef DEBUG
+    LOG (log_debug, logtype_papd, "lp_open");
+#endif
+
+    if ( lp.lp_flags & LP_JOBPENDING ) {
+	lp_print();
+    }
+
     if (( lp.lp_flags & LP_INIT ) == 0 && lp_init( out, sat ) != 0 ) {
 	return( -1 );
     }
     if ( lp.lp_flags & LP_OPEN ) {
-	LOG(log_error, logtype_papd, "lp_open already open" );
-	abort();
+	/* LOG(log_error, logtype_papd, "lp_open already open" ); */
+	/* abort(); */
+	return (-1);
     }
 
     if ( lp.lp_flags & LP_PIPE ) {
+
 	/* go right to program */
 	if (lp.lp_person != NULL) {
 	    if((pwent = getpwnam(lp.lp_person)) != NULL) {
@@ -351,11 +549,14 @@ int lp_open( out, sat )
 		LOG(log_info, logtype_papd, "Error getting username (%s)", lp.lp_person);
 	    }
 	}
-	if (( lp.lp_stream = popen( printer->p_printer, "w" )) == NULL ) {
+
+	lp_setup_comments(CH_UNIX);
+	if (( lp.lp_stream = popen( pipexlate(printer->p_printer), "w" )) == NULL ) {
 	    LOG(log_error, logtype_papd, "lp_open popen %s: %m", printer->p_printer );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
+        LOG(log_debug, logtype_papd, "lp_open: opened %s",  pipexlate(printer->p_printer) );
     } else {
 	sprintf( name, "df%c%03d%s", lp.lp_letter++, lp.lp_seq, hostname );
 
@@ -364,6 +565,12 @@ int lp_open( out, sat )
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
+
+	if ( NULL == (lp.lp_spoolfile = (char *) malloc (strlen (name) +1)) ) {
+	    LOG(log_error, logtype_papd, "malloc: %m");
+	    exit(1);
+	}
+	strcpy ( lp.lp_spoolfile, name);	
 
 	if (lp.lp_person != NULL) {
 	    if ((pwent = getpwnam(lp.lp_person)) == NULL) {
@@ -390,9 +597,11 @@ int lp_open( out, sat )
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
+#ifdef DEBUG        
+        LOG(log_debug, logtype_papd, "lp_open: opened %s", name );
+#endif	
     }
     lp.lp_flags |= LP_OPEN;
-
     return( 0 );
 }
 
@@ -404,18 +613,92 @@ int lp_close()
     fclose( lp.lp_stream );
     lp.lp_stream = NULL;
     lp.lp_flags &= ~LP_OPEN;
+    lp.lp_flags |= LP_JOBPENDING;
     return 0;
 }
 
-int lp_write( buf, len )
+
+
+int lp_write(in, buf, len )
+    struct papfile *in;
     char	*buf;
-    int		len;
+    size_t	len;
 {
-    if (( lp.lp_flags & LP_OPEN ) == 0 ) {
-	return( -1 );
+#define BUFSIZE 32768
+    static char tempbuf[BUFSIZE];
+    static char tempbuf2[BUFSIZE];
+    static size_t bufpos = 0;
+    static int last_line_translated = 1; /* if 0, append a \n a the start */
+    char *tbuf = buf;
+
+    /* Before we write out anything check for a pending job, e.g. cover page */
+    if (lp.lp_flags & LP_JOBPENDING)
+	lp_print();
+
+    /* foomatic doesn't handle mac line endings, so we convert them for 
+     * the Postscript headers
+     * REALLY ugly hack, remove ASAP again */
+    if ((printer->p_flags & P_FOOMATIC_HACK) && (in->pf_state & PF_TRANSLATE) && 
+        (buf[len-1] != '\n') ) {
+        if (len <= BUFSIZE) {
+	    if (!last_line_translated) {
+	    	tempbuf2[0] = '\n';
+            	memcpy(tempbuf2+1, buf, len++);
+	    }
+	    else
+            	memcpy(tempbuf2, buf, len);
+		
+            if (tempbuf2[len-1] == '\r')
+	        tempbuf2[len-1] = '\n';
+            tempbuf2[len] = 0;
+            tbuf = tempbuf2;
+            last_line_translated = 1;
+#ifdef DEBUG
+            LOG(log_debug, logtype_papd, "lp_write: %s", tbuf );
+#endif
+        }
+        else {
+            LOG(log_error, logtype_papd, "lp_write: conversion buffer too small" );
+            abort();
+        }
+    }
+    else {
+        if (printer->p_flags & P_FOOMATIC_HACK && buf[len-1] == '\n') {
+            last_line_translated = 1;
+	}
+        else
+	    last_line_translated = 0;
     }
 
-    if ( fwrite( buf, 1, len, lp.lp_stream ) != len ) {
+    /* To be able to do commandline substitutions on piped printers
+     * we store the start of the print job in a buffer.
+     * %%EndComment triggers writing to file */
+    if (( lp.lp_flags & LP_OPEN ) == 0 ) {
+#ifdef DEBUG
+        LOG(log_debug, logtype_papd, "lp_write: writing to temporary buffer" );
+#endif
+    	if ((bufpos+len) > BUFSIZE) {
+            LOG(log_error, logtype_papd, "lp_write: temporary buffer too small" );
+            /* FIXME: call lp_open here? abort isn't nice... */
+            abort();
+        }
+	else {
+            memcpy(tempbuf + bufpos, tbuf, len);
+            bufpos += len;
+            if (bufpos > BUFSIZE/2)
+                in->pf_state |= PF_STW; /* we used half of the buffer, start writing */
+            return(0);
+	}
+    }
+    else if ( bufpos) {
+        if ( fwrite( tempbuf, 1, bufpos, lp.lp_stream ) != bufpos ) {
+            LOG(log_error, logtype_papd, "lp_write: %m" );
+            abort();
+        }
+        bufpos=0;
+    }
+
+    if ( fwrite( tbuf, 1, len, lp.lp_stream ) != len ) {
 	LOG(log_error, logtype_papd, "lp_write: %m" );
 	abort();
     }
@@ -453,19 +736,23 @@ int lp_cancel()
  */
 int lp_print()
 {
+#ifndef HAVE_CUPS
     char		buf[ MAXPATHLEN ];
     char		tfname[ MAXPATHLEN ];
     char		cfname[ MAXPATHLEN ];
     char		letter;
     int			fd, n, s;
     FILE		*cfile;
+#endif /* HAVE_CUPS */
 
     if (( lp.lp_flags & LP_INIT ) == 0 || lp.lp_letter == 'A' ) {
 	return 0;
     }
     lp_close();
+    lp.lp_flags &= ~LP_JOBPENDING;
 
     if ( printer->p_flags & P_SPOOLED ) {
+#ifndef HAVE_CUPS
 	sprintf( tfname, "tfA%03d%s", lp.lp_seq, hostname );
 	if (( fd = open( tfname, O_WRONLY|O_EXCL|O_CREAT, 0660 )) < 0 ) {
 	    LOG(log_error, logtype_papd, "lp_print %s: %m", tfname );
@@ -541,11 +828,31 @@ int lp_print()
 	    LOG(log_error, logtype_papd, "lp_print lpd said %c: %m", buf[ 0 ] );
 	    return 0;
 	}
+#else
+        if ( ! (lp.lp_job && *lp.lp_job) ) {
+            lp.lp_job = strdup("Mac Job");
+        }
+
+        lp_setup_comments(add_charset(cups_get_language ()));
+
+        if (lp.lp_person != NULL) {
+	    cups_print_job ( printer->p_printer, lp.lp_spoolfile, lp.lp_job, lp.lp_person, printer->p_cupsoptions);
+        } else if (lp.lp_created_for != NULL) {
+            cups_print_job ( printer->p_printer, lp.lp_spoolfile, lp.lp_job, lp.lp_created_for, printer->p_cupsoptions);
+        } else {
+            cups_print_job ( printer->p_printer, lp.lp_spoolfile, lp.lp_job, printer->p_operator, printer->p_cupsoptions);
+        }
+
+	/*LOG(log_info, logtype_papd, "lp_print unlink %s", lp.lp_spoolfile );*/
+        unlink ( lp.lp_spoolfile );
+	return 0;
+#endif /* HAVE_CUPS*/
     }
     LOG(log_info, logtype_papd, "lp_print queued" );
     return 0;
 }
 
+#ifndef HAVE_CUPS
 int lp_disconn_unix( fd )
 {
     return( close( fd ));
@@ -586,7 +893,7 @@ int lp_conn_inet()
     struct hostent	*hp;
 
     if (( sp = getservbyname( "printer", "tcp" )) == NULL ) {
-	LOG(log_error, logtype_papd, "printer/tcp: unknown service\n" );
+	LOG(log_error, logtype_papd, "printer/tcp: unknown service" );
 	return( -1 );
     }
 
@@ -596,7 +903,7 @@ int lp_conn_inet()
     }
 
     if (( hp = gethostbyname( hostname )) == NULL ) {
-	LOG(log_error, logtype_papd, "%s: unknown host\n", hostname );
+	LOG(log_error, logtype_papd, "%s: unknown host", hostname );
 	return( -1 );
     }
 
@@ -812,3 +1119,4 @@ int lp_queue( out )
 	}
     }
 }
+#endif /* HAVE_CUPS */

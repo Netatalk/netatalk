@@ -62,6 +62,8 @@ their embeded documents.  These can break in the same way as aliases.
 
 So how does netatalk approach the problem?
 
+!!! The following is outdated, please refer to the Manual instead !!!
+
 Netatalk has two different methods of allocating IDs: last and cnid.
 
 DID = last.
@@ -88,8 +90,8 @@ default. On top of that, Netatalk uses the Concurrent Datastore method to
 avoid the need for database locking and transactions.
 
 As stated above, CNID requires Berkeley DB.  Currently, Netatalk supports
-BDB 3.1.17, 3.2.9, 3.3.11, 4.0.14, and 4.1.25.  The recommended version is
-3.3.11 as that is the version on which most testing has been done.  
+BDB 4.1.25 and 4.2.52  The recommended version is 4.2.52 as that is the version
+on which most testing has been done.  
 
 CNID has seen many contributors over the years.  It was conceived by
 Adrian Sun <asun@zoology.washington.edu>.  His developer notes can be found

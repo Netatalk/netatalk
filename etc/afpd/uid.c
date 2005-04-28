@@ -1,5 +1,5 @@
 /*
- * $Id: uid.c,v 1.13 2002-08-30 19:32:41 didg Exp $
+ * $Id: uid.c,v 1.14 2005-04-28 20:49:45 bfernhomberg Exp $
  * code: jeff@univrel.pr.uconn.edu
  *
  * These functions are abstracted here, so that all calls for resolving
@@ -40,7 +40,8 @@ uidgidset *pair;
 void restore_uidgid ( pair )
 uidgidset *pair;
 {
-    int		uid, gid;   
+    uid_t uid
+    gid_t gid;   
     
     uid = geteuid ();
     gid = getegid ();

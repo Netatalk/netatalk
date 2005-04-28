@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.17 2003-05-14 15:13:50 didg Exp $
+ * $Id: queries.c,v 1.18 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,8 +50,10 @@ int cq_font( struct papfile *, struct papfile * );
 int cq_feature( struct papfile *, struct papfile * );
 int cq_printer( struct papfile *, struct papfile * );
 int cq_rmjob( struct papfile *, struct papfile * );
+#ifndef HAVE_CUPS
 int cq_listq( struct papfile *, struct papfile * );
 int cq_rbilogin( struct papfile *, struct papfile * );
+#endif  /* HAVE_CUPS */
 
 
 
@@ -305,7 +307,7 @@ struct genquery {
     { "ADOIsBinaryOK?", gq_true },
     { "UMICHListQueue", gq_true },
     { "UMICHDeleteJob", gq_true },
-    { NULL },
+    { NULL, NULL },
 };
 
 int cq_query( in, out )
@@ -600,6 +602,8 @@ int cq_printer( in, out )
     }
 }
 
+#ifndef HAVE_CUPS
+
 static const char	*rmjobfailed = "Failed\n";
 static const char	*rmjobok = "Ok\n";
 
@@ -666,6 +670,7 @@ int cq_listq( in, out )
     CONSUME( in, linelength + crlflength );
     return( CH_DONE );
 }
+#endif /* HAVE_CUPS */
 
 
 /*
@@ -744,16 +749,18 @@ int cq_rbilogin( in, out )
  */
 struct papd_comment	queries[] = {
 #ifdef KRB
-    { "%%Login: UMICHKerberosIV", 0,			cq_k4login,	0 },
-    { "%%?BeginUAMethodsQuery",	"%%?EndUAMethodsQuery:", cq_uameth, C_FULL },
+    { "%%Login: UMICHKerberosIV", NULL,			cq_k4login,	0 },
+    { "%%?BeginUAMethodsQuery",	"%%?EndUAMethodsQuery:", cq_uameth,C_FULL },
 #endif /* KRB */
-    { "%UMICHListQueue", 0,				cq_listq, C_FULL },
-    { "%UMICHDeleteJob", 0,				cq_rmjob,	0 },
+#ifndef HAVE_CUPS
+    { "%UMICHListQueue",	NULL,			cq_listq,  C_FULL },
+    { "%UMICHDeleteJob",	NULL,			cq_rmjob,	0 },
+#endif /* HAVE_CUPS */
     { "%%?BeginQuery: RBILogin ", "%%?EndQuery",	cq_rbilogin,	0 },
     { "%%?BeginQuery",		"%%?EndQuery",		cq_query,	0 },
     { "%%?BeginFeatureQuery",	"%%?EndFeatureQuery",	cq_feature,	0 },
     { "%%?BeginFontQuery",	"%%?EndFontQuery",	cq_font,	0 },
-    { "%%?BeginPrinterQuery",	"%%?EndPrinterQuery",	cq_printer, C_FULL },
+    { "%%?BeginPrinterQuery",	"%%?EndPrinterQuery",	cq_printer,C_FULL },
     { "%%?Begin",		"%%?End",		cq_default,	0 },
-    { 0 },
+    { NULL,			NULL,			NULL,		0 },
 };

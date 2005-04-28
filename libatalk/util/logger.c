@@ -83,6 +83,8 @@ void set_processname(char *processname);
 /* Log a Message */
 void make_log(enum loglevels loglevel, enum logtypes logtype, 
 	      char *message, ...);
+int get_syslog_equivalent(enum loglevels loglevel);
+
 #ifndef DISABLE_LOGGER
 make_log_func set_log_location(char *srcfilename, int srclinenumber);
 
@@ -132,7 +134,7 @@ void generate_message_details(char *message_details_buffer,
                               struct tag_log_file_data *log_struct,
                               enum loglevels loglevel, enum logtypes logtype);
 
-int get_syslog_equivalent(enum loglevels loglevel);
+static char *get_command_name(char *commandpath);
 
 /* =========================================================================
     Instanciated data
@@ -233,10 +235,18 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype,
 {
 #ifndef DISABLE_LOGGER
 
+#ifdef CHECK_STAT_ON_NEW_FILES
+  struct stat statbuf;
+  int firstattempt;
+  int retval;
+  gid_t gid;
+  uid_t uid;
+  int access;
+#endif
   char lastchar[2];
 
   log_file_data_pair *logs;
-
+  
   log_init();
 
   logs = log_file_arr[logtype];
@@ -503,6 +513,81 @@ make_log_func set_log_location(char *srcfilename, int srclinenumber)
 }
 #endif /* DISABLE_LOGGER */
 
+/* ---------------------- 
+ * chainsawed from ethereal
+*/
+#ifdef isprint
+#undef isprint
+#endif
+#define isprint(c) ((c) >= 0x20 && (c) < 0x7f)
+
+static char *format_text(char *fmtbuf, const char *string)
+{
+  int column;
+  const char *stringend = string + strlen(string);
+  char c;
+  int i;
+
+  column = 0;
+  while (string < stringend) {
+    c = *string++;
+
+    if (isprint(c)) {
+      fmtbuf[column] = c;
+      column++;
+    } else {
+      fmtbuf[column] =  '\\';
+      column++;
+      switch (c) {
+      case '\\':
+	fmtbuf[column] = '\\';
+	column++;
+	break;
+      case '\a':
+	fmtbuf[column] = 'a';
+	column++;
+	break;
+      case '\b':
+	fmtbuf[column] = 'b';
+	column++;
+	break;
+      case '\f':
+	fmtbuf[column] = 'f';
+	column++;
+	break;
+      case '\n':
+	fmtbuf[column] = 'n';
+	column++;
+	break;
+      case '\r':
+	fmtbuf[column] = 'r';
+	column++;
+	break;
+      case '\t':
+	fmtbuf[column] = 't';
+	column++;
+	break;
+      case '\v':
+	fmtbuf[column] = 'v';
+	column++;
+	break;
+      default:
+	i = (c>>6)&03;
+	fmtbuf[column] = i + '0';
+	column++;
+	i = (c>>3)&07;
+	fmtbuf[column] = i + '0';
+	column++;
+	i = (c>>0)&07;
+	fmtbuf[column] = i + '0';
+	column++;
+	break;
+      }
+    }
+  }
+  fmtbuf[column] = '\0';
+  return fmtbuf;
+}
 /* -------------------------------------------------------------------------
     MakeLog has 1 main flaws:
       The message in its entirity, must fit into the tempbuffer.  
@@ -512,14 +597,27 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 		    char *message, ...)
 {
   va_list args;
-  char log_buffer[MAXLOGSIZE];
+  char temp_buffer[MAXLOGSIZE];
+  char log_buffer[4*MAXLOGSIZE];
+  /* fn is not reentrant but is used in signal handler 
+   * with LOGGER it's a little late source name and line number
+   * are already changed.
+  */
+  static int inlog = 0;
+
 #ifndef DISABLE_LOGGER
   char log_details_buffer[MAXLOGSIZE];
 #ifdef OPEN_LOGS_AS_UID
   uid_t process_uid;
 #endif
   log_file_data_pair *logs;
+#endif
 
+  if (inlog)
+     return;
+  inlog = 1;
+  
+#ifndef DISABLE_LOGGER
   log_init();
 
   logs = log_file_arr[logtype];
@@ -537,10 +635,11 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
   /* Initialise the Messages */
   va_start(args, message);
 
-  vsnprintf(log_buffer, sizeof(log_buffer), message, args);
+  vsnprintf(temp_buffer, sizeof(temp_buffer), message, args);
 
   /* Finished with args for now */
   va_end(args);
+  format_text(log_buffer, temp_buffer);
 
 #ifdef DISABLE_LOGGER
   syslog(get_syslog_equivalent(loglevel), "%s", log_buffer);
@@ -597,6 +696,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         LOG(log_severe, logtype_logger, "can't open Logfile %s", 
 	    (*logs)[1].log_filename
 	    );
+	inlog = 0;
         return;
       }
     }
@@ -632,6 +732,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
   global_log_data.temp_src_filename = NULL;
   global_log_data.temp_src_linenumber = 0;
 #endif /* DISABLE_LOGGER */
+  inlog = 0;
 }
 
 #ifndef DISABLE_LOGGER
@@ -660,7 +761,6 @@ void load_proccessname_from_proc()
     Internal function definitions
    ========================================================================= */
 
-#if 0
 static char *get_command_name(char *commandpath)
 {
   char *ptr;
@@ -672,13 +772,12 @@ static char *get_command_name(char *commandpath)
     ptr = commandpath;
   else
     ptr++;
-                                                                                
+
 #ifdef DEBUG_OUTPUT_TO_SCREEN
   printf("Concluded %s\n", ptr);
 #endif
   return ptr;
 }
-#endif
 
 void  workout_what_to_print(struct what_to_print_array *what_to_print, 
 			    struct tag_log_file_data *log_struct)
@@ -714,9 +813,19 @@ void generate_message_details(char *message_details_buffer,
                               struct tag_log_file_data *log_struct,
                               enum loglevels loglevel, enum logtypes logtype)
 {
+#if 0
+  char datebuffer[32];
+  char processinfo[64];
+  char log_buffer[MAXLOGSIZE];
+  const char *logtype_string;
+
+  char loglevel_string[12]; /* max int size is 2 billion, or 10 digits */
+#endif
+
   char *ptr = message_details_buffer;
   int   templen;
   int   len = message_details_buffer_length;
+
 
   struct what_to_print_array what_to_print;
 
@@ -783,7 +892,7 @@ void generate_message_details(char *message_details_buffer,
   if (what_to_print.print_srcfile || what_to_print.print_srcline)
   {
     char sprintf_buffer[8];
-    char *buff_ptr;
+    char *buff_ptr=NULL;
 
     sprintf_buffer[0] = '[';
     if (what_to_print.print_srcfile)

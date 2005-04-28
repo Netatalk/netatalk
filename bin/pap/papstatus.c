@@ -1,5 +1,5 @@
 /*
- * $Id: papstatus.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: papstatus.c,v 1.5 2005-04-28 20:49:20 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -33,6 +33,7 @@
 #include <sys/file.h>
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
+#include <errno.h>
 #include <atalk/atp.h>
 #include <atalk/pap.h>
 #include <atalk/nbp.h>
@@ -40,7 +41,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #define _PATH_PAPRC	".paprc"
 

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.24 2003-01-08 22:16:24 didg Exp $
+ * $Id: uams_dhx_pam.c,v 1.25 2005-04-28 20:49:50 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -20,8 +20,13 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <errno.h>
-
+#ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
+#endif
+#ifdef HAVE_PAM_PAM_APPL_H
+#include <pam/pam_appl.h>
+#endif
+
 
 #if defined(GNUTLS_DHX)
 #include <gnutls/openssl.h>
@@ -29,6 +34,9 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
+#ifdef sun
+#include <openssl/rand.h>
+#endif
 #else /* OPENSSL_DHX */
 #include <bn.h>
 #include <dh.h>
@@ -75,7 +83,7 @@ static char *PAM_password;
 static int PAM_conv (int num_msg,
                      const struct pam_message **msg,
                      struct pam_response **resp,
-                     void *appdata_ptr) {
+                     void *appdata_ptr _U_) {
   int count = 0;
   struct pam_response *reply;
   
@@ -177,7 +185,7 @@ static struct pam_conv PAM_conversation = {
 };
 
 
-static int dhx_setup(void *obj, char *ibuf, int ibuflen, 
+static int dhx_setup(void *obj, char *ibuf, int ibuflen _U_, 
 		     char *rbuf, int *rbuflen)
 {
     u_int16_t sessid;
@@ -308,11 +316,11 @@ pam_fail:
 }
 
 /* -------------------------------- */
-static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
+static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _U_,
 		     char *ibuf, int ibuflen,
 		     char *rbuf, int *rbuflen)
 {
-    if (( dhxpwd = uam_getname(username, ulen)) == NULL ) {
+    if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
         LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username");
 	return AFPERR_PARAM;
     }
@@ -396,7 +404,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* -------------------------------- */
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
-			 char *ibuf, int ibuflen, 
+			 char *ibuf, int ibuflen _U_, 
 			 char *rbuf, int *rbuflen)
 {
     char *hostname;
@@ -490,18 +498,19 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }      
 
     PAM_error = pam_acct_mgmt(pamh, 0);
-    if (PAM_error != PAM_SUCCESS) {
-      if (PAM_error == PAM_ACCT_EXPIRED)
+    if (PAM_error != PAM_SUCCESS ) {
+      /* Log Entry */
+      LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
+	  pam_strerror(pamh, PAM_error));
+      /* Log Entry */
+      if (PAM_error == PAM_NEW_AUTHTOK_REQD)	/* password expired */
 	err = AFPERR_PWDEXPR;
 #ifdef PAM_AUTHTOKEN_REQD
       else if (PAM_error == PAM_AUTHTOKEN_REQD) 
 	err = AFPERR_PWDCHNG;
 #endif
-    /* Log Entry */
-           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
-		  pam_strerror(pamh, PAM_error));
-    /* Log Entry */
-      goto logincont_err;
+      else
+        goto logincont_err;
     }
 
 #ifndef PAM_CRED_ESTABLISH
@@ -530,6 +539,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     /* Log Entry */
            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Auth OK!");
     /* Log Entry */
+    if ( err == AFPERR_PWDEXPR)
+	return err;
     return AFP_OK;
 
 logincont_err:
@@ -550,7 +561,7 @@ static void pam_logout() {
 /* change pw for dhx needs a couple passes to get everything all
  * right. basically, it's like the login/logincont sequence */
 static int pam_changepw(void *obj, char *username,
-			struct passwd *pwd, char *ibuf, int ibuflen,
+			struct passwd *pwd _U_, char *ibuf, int ibuflen,
 			char *rbuf, int *rbuflen)
 {
     BIGNUM *bn1, *bn2, *bn3;

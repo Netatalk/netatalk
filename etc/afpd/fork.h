@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.8 2003-01-16 21:18:15 didg Exp $
+ * $Id: fork.h,v 1.9 2005-04-28 20:49:43 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -68,8 +68,13 @@ extern int          of_rename    __P((const struct vol *,
 extern int          of_flush     __P((const struct vol *));
 extern void         of_pforkdesc __P((FILE *));
 extern int          of_stat      __P((struct path *));
+extern int          of_statdir   __P((const struct vol *vol, struct path *));
+extern int          of_closefork __P((struct ofork *ofork));
+extern void         of_closevol  __P((const struct vol *vol));
+extern struct adouble *of_ad     __P((const struct vol *, struct path *, struct adouble *));
 /* in fork.c */
 extern int          flushfork    __P((struct ofork *));
+extern int          getforkmode  __P((struct adouble *, int , int ));
 
 /* FP functions */
 extern int	afp_openfork __P((AFPObj *, char *, int, char *, int *));

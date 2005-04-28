@@ -1,0 +1,28 @@
+.TH apple_cp 1 "22 Aug 2004" 2.0.0 Netatalk 
+.SH NAME
+apple_cp \- Do an apple copy, copying file metadata and the resource fork as well
+.SH SYNOPSIS
+\fI:BINDIR:/apple_cp\fR \fISOURCE
+DEST\fR \fI:BINDIR:/apple_cp\fR \fISOURCE\fR... \fIDIRECTORY\fR
+.SH DESCRIPTION
+\fIapple_cp\fR is a perl script to copy
+SOURCE to DEST or multiple SOURCE(s) to DIRECTORY. It also copies the file 
+specific metadata (including resource forks) to the .AppleDouble directory
+for DEST or DIRECTORY. If the .AppleDouble directory doesn't exist for 
+DEST or DIRECTORY it will create it.
+.SH EXAMPLES
+\fI:BINDIR:/apple_cp\fR test.text
+/target/directory/
+.PP
+\fI:BINDIR:/apple_cp\fR test.text
+/target/directory/test2.text
+.PP
+\fI:BINDIR:/apple_cp\fR test.text
+testing.text /target/directory/
+.SH "REPORTING BUGS"
+Report bugs to the Netatalk\-devel list
+<netatalk\-devel@lists.sourceforge.net>.
+.SH "SEE ALSO"
+\fBapple_mv\fR(1),
+\fBapple_rm\fR(1).
+

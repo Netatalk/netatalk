@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.12 2002-09-29 23:24:47 sibaz Exp $
+ * $Id: rtmp.c,v 1.13 2005-04-28 20:49:46 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -800,7 +800,7 @@ int rtmp_packet( ap, from, data, len )
 		    from->sat_addr.s_node );
 #endif /* DEBUG */
 	} else {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet unknown request from %u.%u\n",
+	    LOG(log_info, logtype_atalkd, "rtmp_packet unknown request from %u.%u",
 		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
 	}
 	break;

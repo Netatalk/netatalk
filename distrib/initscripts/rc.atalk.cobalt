@@ -48,6 +48,7 @@ test -f /etc/atalk/netatalk.conf || exit 0
 RETVAL=1
 RETVAL_ATALKD=0
 RETVAL_PAPD=0
+RETVAL_CNID_METAD=0
 RETVAL_AFPD=0
 
 # startup code for everything
@@ -71,13 +72,18 @@ atalk_startup() {
 	fi
     fi
 
+    if [ x"${CNID_METAD_RUN}" = x"yes" -a -x /usr/sbin/cnid_metad ] ; then
+	    daemon /usr/sbin/cnid_metad
+	    RETVAL_CNID_METAD=$?
+    fi
+
     if [ x"${AFPD_RUN}" = x"yes" -a -x /usr/sbin/afpd ] ; then
 	    daemon /usr/sbin/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
 		-c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
 	    RETVAL_AFPD=$?
     fi
 
-    if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ]; then
+    if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_CNID_METAD -eq 0 -a $RETVAL_AFPD -eq 0 ]; then
         RETVAL=0
 	touch /var/lock/subsys/atalk || RETVAL=1
     fi
@@ -127,7 +133,12 @@ case "$1" in
 	    RETVAL_AFPD=$?
 	fi
 
-	if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ] ; then
+	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x /usr/sbin/cnid_metad ]; then
+	    killproc cnid_metad
+	    RETVAL_CNID_METAD=$?
+	fi
+
+	if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_CNID_METAD -eq 0 -a $RETVAL_AFPD -eq 0 ] ; then
 	    RETVAL=0
 	    rm -f /var/lock/subsys/atalk || RETVAL=1
 	fi

@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.16 2003-03-15 01:34:35 didg Exp $
+ * $Id: afs.c,v 1.17 2005-04-28 20:49:40 bfernhomberg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -21,13 +21,15 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
+#include <sys/stat.h>
 
 #include "globals.h"
 #include "directory.h"
 #include "volume.h"
 #include "misc.h"
+#include "unix.h"
 
-afs_getvolspace( vol, bfree, btotal, bsize )
+int afs_getvolspace( vol, bfree, btotal, bsize )
 struct vol	*vol;
 VolSpace	*bfree, *btotal;
 u_int32_t   *bsize;
@@ -48,6 +50,9 @@ u_int32_t   *bsize;
 
     if ( vs->PartBlocksAvail > 0 ) {
         if ( vs->MaxQuota != 0 ) {
+#ifdef min
+#undef min
+#endif
 #define min(x,y)	(((x)<(y))?(x):(y))
             free = min( vs->MaxQuota - vs->BlocksInUse, vs->PartBlocksAvail );
         } else {
@@ -70,7 +75,7 @@ u_int32_t   *bsize;
     return( AFP_OK );
 }
 
-afp_getdiracl(obj, ibuf, ibuflen, rbuf, rbuflen )
+int afp_getdiracl(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
@@ -127,7 +132,7 @@ int		ibuflen, *rbuflen;
     #undef accessmode
 #endif
 
-afsmode( path, ma, dir, st )
+void afsmode( path, ma, dir, st )
 char		*path;
 struct maccess	*ma;
 struct dir      *dir;
@@ -151,7 +156,7 @@ struct stat     *st;
         return;
     }
 
-    accessmode( path, &ma, dir, st );
+    accessmode( path, ma, dir, st );
 
     return;
 }
@@ -160,7 +165,7 @@ extern struct dir	*curdir;
 /*
  * cmd | 0 | vid | did | pathtype | pathname | 0 | acl
  */
-afp_setdiracl(obj, ibuf, ibuflen, rbuf, rbuflen )
+int afp_setdiracl(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;
@@ -230,7 +235,7 @@ int		ibuflen, *rbuflen;
 extern C_Block		seskey;
 extern Key_schedule	seskeysched;
 
-afp_afschangepw(obj, ibuf, ibuflen, rbuf, rbuflen )
+int afp_afschangepw(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj      *obj;
 char	*ibuf, *rbuf;
 int		ibuflen, *rbuflen;

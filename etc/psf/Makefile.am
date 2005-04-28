@@ -8,8 +8,7 @@ pkgdata_DATA = pagecount.ps
 psf_SOURCES = psf.c
 psa_SOURCES = psa.c
 
-INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
-	-DZEROWIDTH \
+CFLAGS = @CFLAGS@ -DZEROWIDTH \
 	-D_PATH_PAP=\"$(bindir)/pap\" \
 	-D_PATH_PSORDER=\"$(bindir)/psorder\" \
 	-D_PATH_PSA=\"$(libexecdir)/psa\" \
@@ -32,6 +31,15 @@ install-exec-hook:
 	@list='$(psf_LINKS)'; for l in $$list; do \
 		rm $(DESTDIR)$(libexecdir)/$$l 2>/dev/null || true; \
 		(cd $(DESTDIR)$(libexecdir) && $(LN_S) psf $$l);  \
+	done
+
+#
+# uninstall sections for links
+#
+
+uninstall-hook:
+	@list='$(psf_LINKS)'; for l in $$list; do \
+		rm -f $(DESTDIR)$(libexecdir)/$$l; \
 	done
 
 #

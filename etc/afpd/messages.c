@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.17 2003-06-02 06:54:23 didg Exp $
+ * $Id: messages.c,v 1.18 2005-04-28 20:49:44 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -9,37 +9,46 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <atalk/afp.h>
-#include <atalk/logger.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <atalk/afp.h>
+#include <atalk/dsi.h>
+#include <atalk/util.h>
+#include <atalk/logger.h>
 #include "globals.h"
 #include "misc.h"
+
 
 #define MAXMESGSIZE 199
 
 /* this is only used by afpd children, so it's okay. */
-static char servermesg[MAXMESGSIZE] = "";
+static char servermesg[MAXPATHLEN] = "";
+static char localized_message[MAXPATHLEN] = "";
 
 void setmessage(const char *message)
 {
-    strncpy(servermesg, message, MAXMESGSIZE);
+    strlcpy(servermesg, message, MAXMESGSIZE);
 }
 
-void readmessage(void)
+void readmessage(obj)
+AFPObj *obj;
 {
     /* Read server message from file defined as SERVERTEXT */
 #ifdef SERVERTEXT
     FILE *message;
     char * filename;
-    int i, rc;
+    unsigned int i; 
+    int rc;
     static int c;
     uid_t euid;
+    u_int32_t maxmsgsize;
+
+    maxmsgsize = (obj->proto == AFPPROTO_DSI)?MIN(MAX(((DSI*)obj->handle)->attn_quantum, MAXMESGSIZE),MAXPATHLEN):MAXMESGSIZE;
 
     i=0;
     /* Construct file name SERVERTEXT/message.[pid] */
@@ -64,7 +73,7 @@ void readmessage(void)
     /* if either message.pid or message exists */
     if (message!=NULL) {
         /* added while loop to get characters and put in servermesg */
-        while ((( c=fgetc(message)) != EOF) && (i < (MAXMESGSIZE - 1))) {
+        while ((( c=fgetc(message)) != EOF) && (i < (maxmsgsize - 1))) {
             if ( c == '\n')  c = ' ';
             servermesg[i++] = c;
         }
@@ -81,7 +90,8 @@ void readmessage(void)
 				strerror(errno));
         }
 
-        rc = unlink(filename);
+        if ( 0 < (rc = unlink(filename)) )
+	    LOG(log_error, logtype_afpd, "File '%s' could not be deleted", strerror(errno));
 
         /* Drop privs again, failing this is very bad */
         if (seteuid(euid) < 0) {
@@ -106,10 +116,18 @@ void readmessage(void)
 int afp_getsrvrmesg(obj, ibuf, ibuflen, rbuf, rbuflen)
 AFPObj *obj;
 char *ibuf, *rbuf;
-int ibuflen, *rbuflen;
+int ibuflen _U_, *rbuflen;
 {
     char *message;
     u_int16_t type, bitmap;
+    u_int16_t msgsize;
+    size_t outlen = 0;
+    size_t msglen = 0;
+    int utf8 = 0;
+
+    *rbuflen = 0;
+
+    msgsize = (obj->proto == AFPPROTO_DSI)?MAX(((DSI*)obj->handle)->attn_quantum, MAXMESGSIZE):MAXMESGSIZE;
 
     memcpy(&type, ibuf + 2, sizeof(type));
     memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
@@ -122,27 +140,51 @@ int ibuflen, *rbuflen;
         message = servermesg;
         break;
     default:
-        *rbuflen = 0;
         return AFPERR_BITMAP;
     }
 
     /* output format:
      * message type:   2 bytes
      * bitmap:         2 bytes
-     * message length: 1 byte
-     * message:        up to 199 bytes
+     * message length: 1 byte ( 2 bytes for utf8)
+     * message:        up to 199 bytes (dsi attn_quantum for utf8)
      */
     memcpy(rbuf, &type, sizeof(type));
     rbuf += sizeof(type);
+    *rbuflen += sizeof(type);
     memcpy(rbuf, &bitmap, sizeof(bitmap));
     rbuf += sizeof(bitmap);
-    *rbuflen = strlen(message);
-    if (*rbuflen > MAXMESGSIZE)
-        *rbuflen = MAXMESGSIZE;
-    *rbuf++ = *rbuflen;
-    memcpy(rbuf, message, *rbuflen);
+    *rbuflen += sizeof(bitmap);
 
-    *rbuflen += 5;
+    utf8 = ntohs(bitmap) & 2; 
+    msglen = strlen(message);
+    if (msglen > msgsize)
+        msglen = msgsize;
+
+    if (msglen) { 
+        if ( (size_t)-1 == (outlen = convert_string(obj->options.unixcharset, utf8?CH_UTF8_MAC:obj->options.maccharset,
+                                                    message, msglen, localized_message, msgsize)) )
+        {
+    	    memcpy(rbuf+((utf8)?2:1), message, msglen); /*FIXME*/
+	    outlen = msglen;
+        }
+        else
+        {
+	    memcpy(rbuf+((utf8)?2:1), localized_message, outlen);
+        }
+    }
+    
+    if ( utf8 ) {
+	/* UTF8 message, 2 byte length */
+	msgsize = htons(outlen);
+    	memcpy(rbuf, &msgsize, sizeof(msgsize));
+	*rbuflen += sizeof(msgsize);
+    }
+    else {
+        *rbuf = outlen;
+	*rbuflen += 1;
+    }
+    *rbuflen += outlen;
 
     return AFP_OK;
 }

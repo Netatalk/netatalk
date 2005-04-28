@@ -1,0 +1,66 @@
+.TH cnid_metad 8 "28 Nov 2003" 2.0.0 Netatalk 
+.SH NAME
+cnid_metad \- start cnid_dbd daemons on request
+.SH SYNOPSIS
+\fBcnid_metad\fR [\-d] [ \-h \fBhostname\fR ] [ \-p \fBport\fR ] [ \-u \fBuser\fR ] [ \-g \fBgroup\fR ] [ \-s \fBcnid_dbdpathname\fR ]
+.SH DESCRIPTION
+cnid_metad waits for requests from \fIafpd\fR to start up instances of the \fIcnid_dbd\fR
+daemon. It keeps track of the status of a \fIcnid_dbd\fR
+instance once started and will restart it if necessary.
+cnid_metad is normally started at boot time from
+\fB/etc/rc\fR or equivalent and runs until shutdown.
+\fIafpd\fR needs to be configured with the
+\fB\-cnidserver\fR option in \fIafpd.conf\fR
+in order to access \fIcnid_metad.\fR It is
+possible to run more than one instance of cnid_metad on
+the same machine if different values for the interface and/or port are
+specified with the \fB\-h\fR and \fB\-p\fR options.
+.SH OPTIONS
+.TP 
+\fB\-d\fR
+\fIcnid_metad will remain in the foreground
+and\fR will also leave the standard input, standard output
+and standard error file descriptors open. Useful for debugging.
+.TP 
+\fB\-h\fR\fI hostname\fR
+Use \fIhostname\fR as the network
+interface for requests as opposed to the default \fIlocalhost
+\fR\&.
+.TP 
+\fB\-p\fR\fI port\fR
+Use \fIport\fR as the port number for
+reqests. Default is 4700.
+.TP 
+\fB\-u\fR\fI user\fR
+Switch to the userid of \fIuser\fR
+before serving requests. This userid will be inherited by all
+\fIcnid_dbd\fR daemon processes started.
+.TP 
+\fB\-u\fR\fI group\fR
+Switch to the groupid of \fIgroup\fR
+before serving requests. This groupid will be inherited by all
+\fIcnid_dbd\fR daemon processes started.
+Both \fIuser\fR and \fIgroup\fR
+must be specified as strings.
+.TP 
+\fB\-s\fR\fI cnid_dbd pathname\fR
+Use \fIcnid_dbd pathname\fR as the
+pathname of the executeable of the \fIcnid_dbd\fR
+daemon. The default is \fI:SBINDIR:/cnid_dbd.\fR
+.SH CAVEATS
+The number of \fIcnid_dbd\fR subprocecesses
+is currently limited to 128. This restriction will be lifted in the
+future.
+.PP
+cnid_metad does not block or catch any signals
+apart from SIGPIPE. It will therefore exit on most signals received. This
+will also cause all instances of \fIcnid_dbd's\fR
+started by that cnid_metad to exit gracefully. Since
+state about and IPC access to the subprocesses is only maintained in
+memory by cnid_metad this is desired behaviour. As soon
+as cnid_metad is restarted \fIafpd\fR
+processes will transparently reconnect.
+.SH "SEE ALSO"
+\fBcnid_dbd\fR(8),
+\fBafpd\fR(8)
+

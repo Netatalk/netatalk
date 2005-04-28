@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.15 2003-06-09 14:42:40 srittau Exp $
+ * $Id: status.c,v 1.16 2005-04-28 20:49:44 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,14 +29,17 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/nbp.h>
+#include <atalk/unicode.h>
 
 #include "globals.h"  /* includes <netdb.h> */
 #include "status.h"
 #include "afp_config.h"
 #include "icon.h"
 
+static   size_t maxstatuslen = 0;
+
 static void status_flags(char *data, const int notif, const int ipok,
-                         const unsigned char passwdbits, const int dirsrvcs)
+                         const unsigned char passwdbits, const int dirsrvcs _U_)
 {
     u_int16_t           status;
 
@@ -59,18 +62,20 @@ static void status_flags(char *data, const int notif, const int ipok,
         status |= AFPSRVRINFO_SRVNOTIFY;
     }
     status |= AFPSRVRINFO_FASTBOZO;
-    if (dirsrvcs)
-	status |= AFPSRVRINFO_SRVRDIR;
+    status |= AFPSRVRINFO_SRVRDIR; /* AFP 3.1 specs says we need to specify this, but may set the count to 0 */
+    /* We don't set the UTF8 name flag here, we don't know whether we have enough space ... */
+
     status = htons(status);
     memcpy(data + AFPSTATUS_FLAGOFF, &status, sizeof(status));
 }
 
-static int status_server(char *data, const char *server)
+static int status_server(char *data, const char *server, const struct afp_options *options)
 {
     char                *start = data;
     char                *Obj, *Type, *Zone;
+    char		buf[32];
     u_int16_t           status;
-    int			len;
+    size_t		len;
 
     /* make room for all offsets before server name */
     data += AFPSTATUS_PRELEN;
@@ -78,21 +83,29 @@ static int status_server(char *data, const char *server)
     /* extract the obj part of the server */
     Obj = (char *) server;
     nbp_name(server, &Obj, &Type, &Zone);
-    len = strlen(Obj);
-    *data++ = len;
-    memcpy( data, Obj, len );
+    if ((size_t)-1 == (len = convert_string( 
+			options->unixcharset, options->maccharset, 
+			Obj, strlen(Obj), buf, 31)) ) {
+	len = MIN(strlen(Obj), 31);
+    	*data++ = len;
+    	memcpy( data, Obj, len );
+	LOG ( log_error, logtype_afpd, "Could not set servername, using fallback");
+    } else {
+    	*data++ = len;
+    	memcpy( data, buf, len );
+    }
     if ((len + 1) & 1) /* pad server name and length byte to even boundary */
         len++;
     data += len;
 
-    /* Make room for signature and net address offset. Save location of
-     * signature offset. We're also making room for directory names offset
+    /* make room for signature and net address offset. save location of
+     * signature offset. we're also making room for directory names offset
      * and the utf-8 server name offset.
      *
-     * NOTE: Technically, we don't need to reserve space for the
+     * NOTE: technically, we don't need to reserve space for the
      * signature and net address offsets if they're not going to be
-     * used. As there are no offsets after them, it doesn't hurt to
-     * have them specified though. So, we just do that to simplify
+     * used. as there are no offsets after them, it doesn't hurt to
+     * have them specified though. so, we just do that to simplify
      * things.  
      *
      * NOTE2: AFP3.1 Documentation states that the directory names offset
@@ -112,7 +125,7 @@ static void status_machine(char *data)
 #ifdef AFS
     const char		*machine = "afs";
 #else /* !AFS */
-    const char		*machine = "unix";
+    const char		*machine = "Netatalk";
 #endif /* AFS */
 
     memcpy(&status, start + AFPSTATUS_MACHOFF, sizeof(status));
@@ -125,6 +138,14 @@ static void status_machine(char *data)
     memcpy(start + AFPSTATUS_VERSOFF, &status, sizeof(status));
 }
 
+/* -------------------------------- 
+ * it turns out that a server signature screws up separate
+ * servers running on the same machine. to work around that, 
+ * i add in an increment.
+ * Not great, server signature are config dependent but well.
+ */
+ 
+static int           Id = 0;
 
 /* server signature is a 16-byte quantity */
 static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
@@ -135,7 +156,6 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
     int                  i;
     u_int16_t            offset, sigoff;
     long                 hostid;
-    static int           id = 0;
 #ifdef BSD4_4
     int                  mib[2];
     size_t               len;
@@ -193,8 +213,8 @@ server_signature_hostid:
     /* it turns out that a server signature screws up separate
      * servers running on the same machine. to work around that, 
      * i add in an increment */
-    hostid += id;
-    id++;
+    hostid += Id;
+    Id++;
     for (i = 0; i < 16; i += sizeof(hostid)) {
         memcpy(data, &hostid, sizeof(hostid));
         data += sizeof(hostid);
@@ -208,12 +228,13 @@ server_signature_done:
     return sigoff;
 }
 
-static int status_netaddress(char *data, int *servoffset,
+static size_t status_netaddress(char *data, int *servoffset,
                              const ASP asp, const DSI *dsi,
-                             const char *fqdn)
+                             const struct afp_options *options)
 {
     char               *begin;
     u_int16_t          offset;
+    size_t             addresses_len = 0;
 
     begin = data;
 
@@ -232,16 +253,8 @@ static int status_netaddress(char *data, int *servoffset,
     /* number of addresses. this currently screws up if we have a dsi
        connection, but we don't have the ip address. to get around this,
        we turn off the status flag for tcp/ip. */
-    *data++ = ((fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) + (asp ? 1 : 0);
-
-    /* handle DNS names */
-    if (fqdn && dsi) {
-        int len = strlen(fqdn);
-        *data++ = len +2;
-        *data++ = 0x04;
-        memcpy(data, fqdn, len);
-        data += len;
-    }
+    *data++ = ((options->fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) + (asp ? 1 : 0) +
+              (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn && dsi)? 1 : 0);
 
     /* ip address */
     if (dsi) {
@@ -253,6 +266,7 @@ static int status_netaddress(char *data, int *servoffset,
             memcpy(data, &inaddr->sin_addr.s_addr,
                    sizeof(inaddr->sin_addr.s_addr));
             data += sizeof(inaddr->sin_addr.s_addr);
+            addresses_len += 7;
         } else {
             /* ip address + port */
             *data++ = 8;
@@ -262,6 +276,34 @@ static int status_netaddress(char *data, int *servoffset,
             data += sizeof(inaddr->sin_addr.s_addr);
             memcpy(data, &inaddr->sin_port, sizeof(inaddr->sin_port));
             data += sizeof(inaddr->sin_port);
+            addresses_len += 9;
+        }
+    }
+
+    /* handle DNS names */
+    if (options->fqdn && dsi) {
+        size_t len = strlen(options->fqdn);
+        if ( len + 2 + addresses_len < maxstatuslen - offset) {
+            *data++ = len +2;
+            *data++ = 0x04;
+            memcpy(data, options->fqdn, len);
+            data += len;
+            addresses_len += len+2;
+        }
+
+        /* Annouce support for SSH tunneled AFP session, 
+         * this feature is available since 10.3.2.
+         * According to the specs (AFP 3.1 p.225) this should
+         * be an IP+Port style value, but it only works with 
+         * a FQDN. OSX Server uses FQDN as well.
+         */
+        if ( len + 2 + addresses_len < maxstatuslen - offset) {
+            if (options->flags & OPTION_ANNOUNCESSH) {
+                *data++ = len +2;
+                *data++ = 0x05;
+                memcpy(data, options->fqdn, len);
+                data += len;
+            }
         }
     }
 
@@ -291,8 +333,8 @@ static int status_netaddress(char *data, int *servoffset,
     return (data - begin);
 }
 
-static int status_directorynames(char *data, int *diroffset, 
-				 const DSI *dsi, 
+static size_t status_directorynames(char *data, int *diroffset, 
+				 const DSI *dsi _U_, 
 				 const struct afp_options *options)
 {
     char *begin = data;
@@ -310,7 +352,7 @@ static int status_directorynames(char *data, int *diroffset,
      */
     if (options->k5service && options->k5realm && options->fqdn) {
 	/* should k5princ be utf8 encoded? */
-	u_int8_t len;
+	size_t len;
 	char *p = strchr( options->fqdn, ':' );
 	if (p) 
 	    *p = '\0';
@@ -318,15 +360,21 @@ static int status_directorynames(char *data, int *diroffset,
 			+ strlen( options->fqdn )
 			+ strlen( options->k5realm );
 	len+=2; /* '/' and '@' */
-	*data++ = 1; /* DirectoryNamesCount */
-	*data++ = len;
-	snprintf( data, len + 1, "%s/%s@%s", options->k5service,
+	if ( len > 255 || len+2 > maxstatuslen - offset) {
+	    *data++ = 0;
+	    LOG ( log_error, logtype_afpd, "status: could not set directory service list, no more room");
+	}	 
+	else {
+	    *data++ = 1; /* DirectoryNamesCount */
+	    *data++ = len;
+	    snprintf( data, len + 1, "%s/%s@%s", options->k5service,
 				options->fqdn, options->k5realm );
-	data += len;
-	if (p)
-	    *p = ':';
+	    data += len;
+	    if (p)
+	        *p = ':';
+       }
     } else {
-	memset(begin + *diroffset, 0, sizeof(offset));
+	*data++ = 0;
     }
 
     /* Calculate and store offset for UTF8ServerName */
@@ -338,28 +386,56 @@ static int status_directorynames(char *data, int *diroffset,
     return (data - begin);
 }
 
-static int status_utf8servername(char *data, int *nameoffset,
-				 const DSI *dsi,
+static size_t status_utf8servername(char *data, int *nameoffset,
+				 const DSI *dsi _U_,
 				 const struct afp_options *options)
 {
+    char *Obj, *Type, *Zone;
+    u_int16_t namelen;
+    size_t len;
     char *begin = data;
-    u_int16_t offset;
+    u_int16_t offset, status;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
     data += offset;
 
-    /* FIXME: For now we set the UTF-8 ServerName offset to 0
-     * It's irrelevent anyway until we set the appropriate Flags value.
-     * Later this can be set to something meaningful.
-     *
+    /* FIXME:
      * What is the valid character range for an nbpname?
      *
      * Apple's server likes to use the non-qualified hostname
      * This obviously won't work very well if multiple servers are running
      * on the box.
      */
-    memset(begin + *nameoffset, 0, sizeof(offset));
+
+    /* extract the obj part of the server */
+    Obj = (char *) (options->server ? options->server : options->hostname);
+    nbp_name(options->server ? options->server : options->hostname, &Obj, &Type, &Zone);
+
+    if ((size_t) -1 == (len = convert_string (
+					options->unixcharset, CH_UTF8_MAC, 
+					Obj, strlen(Obj), data+sizeof(namelen), maxstatuslen-offset )) ) {
+	LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
+
+	/* set offset to 0 */
+	memset(begin + *nameoffset, 0, sizeof(offset));
+        data = begin + offset;
+    }
+    else {
+    	namelen = htons(len);
+    	memcpy( data, &namelen, sizeof(namelen));
+    	data += sizeof(namelen);
+    	data += len;
+    	offset = htons(offset);
+    	memcpy(begin + *nameoffset, &offset, sizeof(u_int16_t));
+        
+        /* Now set the flag ... */
+	memcpy(&status, begin + AFPSTATUS_FLAGOFF, sizeof(status));
+	status = ntohs(status);
+	status |= AFPSRVRINFO_SRVUTF8;
+	status = htons(status);
+	memcpy(begin + AFPSTATUS_FLAGOFF, &status, sizeof(status));
+    }
 
     /* return length of buffer */
     return (data - begin);
@@ -390,27 +466,39 @@ static void status_icon(char *data, const unsigned char *icondata,
         memcpy(sigdata, &ret, sizeof(ret));
 }
 
+/* ---------------------
+*/
+void status_reset()
+{
+    Id = 0;
+}
+
+
+/* ---------------------
+ */
 void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
                  const struct afp_options *options)
 {
     ASP asp;
     DSI *dsi;
-    char *status;
-    int statuslen, c, sigoff;
+    u_int8_t *status = NULL;
+    size_t statuslen;
+    int c, sigoff;
 
     if (!(aspconfig || dsiconfig) || !options)
         return;
 
     if (aspconfig) {
-        asp = aspconfig->obj.handle;
         status = aspconfig->status;
+        maxstatuslen=sizeof(aspconfig->status);
+        asp = aspconfig->obj.handle;
     } else
         asp = NULL;
-
+	
     if (dsiconfig) {
+        status = dsiconfig->status;
+        maxstatuslen=sizeof(dsiconfig->status);
         dsi = dsiconfig->obj.handle;
-        if (!aspconfig)
-            status = dsiconfig->status;
     } else
         dsi = NULL;
 
@@ -437,10 +525,10 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     status_flags(status, options->server_notif, options->fqdn ||
                  (dsiconfig && dsi->server.sin_addr.s_addr),
                  options->passwdbits, 
-                 (options->k5service && options->k5realm && options->fqdn));
+		 (options->k5service && options->k5realm && options->fqdn));
     /* returns offset to signature offset */
     c = status_server(status, options->server ? options->server :
-                      options->hostname);
+                      options->hostname, options);
     status_machine(status);
     status_versions(status);
     status_uams(status, options->uamlist);
@@ -452,17 +540,19 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     sigoff = status_signature(status, &c, dsi, options);
     /* c now contains the offset where the netaddress offset lives */
 
-    status_netaddress(status, &c, asp, dsi, options->fqdn);
+    status_netaddress(status, &c, asp, dsi, options);
     /* c now contains the offset where the Directory Names Count offset lives */
 
-    status_directorynames(status, &c, dsi, options);
+    statuslen = status_directorynames(status, &c, dsi, options);
     /* c now contains the offset where the UTF-8 ServerName offset lives */
 
-    statuslen = status_utf8servername(status, &c, dsi, options);
-
+    if ( statuslen < maxstatuslen) 
+        statuslen = status_utf8servername(status, &c, dsi, options);
 
 #ifndef NO_DDP
     if (aspconfig) {
+        if (dsiconfig) /* status is dsiconfig->status */
+            memcpy(aspconfig->status, status, statuslen);
         asp_setstatus(asp, status, statuslen);
         aspconfig->signature = status + sigoff;
         aspconfig->statuslen = statuslen;
@@ -470,11 +560,6 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 #endif /* ! NO_DDP */
 
     if (dsiconfig) {
-        if (aspconfig) { /* copy to dsiconfig */
-            memcpy(dsiconfig->status, status, ATP_MAXDATA);
-            status = dsiconfig->status;
-        }
-
         if ((options->flags & OPTION_CUSTOMICON) == 0) {
             status_icon(status, apple_tcp_icon, sizeof(apple_tcp_icon), 0);
         }
@@ -486,9 +571,9 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 
 /* this is the same as asp/dsi_getstatus */
 int afp_getsrvrinfo(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
-char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+AFPObj  *obj;
+char	*ibuf _U_, *rbuf;
+int	ibuflen _U_, *rbuflen;
 {
     AFPConfig *config = obj->config;
 

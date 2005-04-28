@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.12 2003-03-12 15:07:03 didg Exp $
+ * $Id: uams_guest.c,v 1.13 2005-04-28 20:49:50 bfernhomberg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -33,11 +33,18 @@ char *strchr (), *strrchr ();
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
+#include <atalk/util.h>
+
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif /* MIN */
+
+extern void append(void *, const char *, int);
 
 /* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
-			char *ibuf, int ibuflen, 
-			char *rbuf, int *rbuflen)
+			char *ibuf _U_, int ibuflen _U_, 
+			char *rbuf _U_, int *rbuflen)
 {
     struct passwd *pwent;
     char *guest, *username;
@@ -71,7 +78,7 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
     return( AFP_OK );
 }
 
-static int noauth_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
+static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
                      char *ibuf, int ibuflen,
                      char *rbuf, int *rbuflen)
 {
@@ -88,7 +95,12 @@ int noauth_printer(start, stop, username, out)
     static const char *loginok = "0\r";
 
     data = (char *)malloc(stop - start + 1);
-    strncpy(data, start, stop - start + 1);
+    if (!data) {
+	LOG(log_info, logtype_uams,"Bad Login NoAuthUAM: malloc");
+	return(-1);
+    }
+
+    strlcpy(data, start, stop - start + 1);
 
     /* We are looking for the following format in data:
      * (username)
@@ -102,12 +114,12 @@ int noauth_printer(start, stop, username, out)
 	return(-1);
     }
     p++;
-    if ((q = strchr(data, ')' )) == NULL) {
+    if ((q = strchr(p, ')' )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login NoAuthUAM: username not found in string");
 	free(data);
 	return(-1);
     }
-    strncpy(username, p, q - p);
+    memcpy(username, p,  MIN( UAM_USERNAMELEN, q - p ));
 
     /* Done copying username, clean up */
     free(data);

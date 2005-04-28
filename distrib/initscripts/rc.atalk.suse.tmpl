@@ -7,7 +7,7 @@
 # 
 ### BEGIN INIT INFO
 # Provides:       netatalk
-# Required-Start: $network $named $remote_fs $netdaemons $syslog
+# Required-Start: $network $named $remote_fs $syslog
 # Required-Stop:
 # Default-Start:  3 5
 # Default-Stop:
@@ -56,6 +56,11 @@ atalk_startup() {
 
     fi
 
+    if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ] ; then
+	    echo -n "  Starting cnid_metad:"
+	    startproc :SBINDIR:/cnid_metad
+    fi
+
     if [ x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ] ; then
 	    echo -n "  Starting afpd:"
 	    echo ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
@@ -82,9 +87,12 @@ case "$1" in
 	killproc -TERM :SBINDIR:/papd
         if test -x :SBINDIR:/timelord ; then
 	  killproc -TERM :SBINDIR:/timelord
-        fi
+        fi        
 	killproc -TERM :SBINDIR:/atalkd
 	killproc -TERM :SBINDIR:/afpd
+	if test -x :SBINDIR:/cnid_metad ; then
+	  killproc -TERM :SBINDIR:/cnid_metad
+        fi
 	echo -e "$return"
 	;;
     restart|reload)
@@ -97,7 +105,10 @@ case "$1" in
         if test -x :SBINDIR:/timelord ; then
 	  checkproc :SBINDIR:/timelord || return=$rc_failed
         fi
-        checkproc :SBINDIR:/atalkd && echo "OK" || echo "No process"
+        if test -x :SBINDIR:/cnid_metad ; then
+	  checkproc :SBINDIR:/cnid_metad || return=$rc_failed
+        fi
+        checkproc :SBINDIR:/atalkd && echo "OK" || echo "No process"	
 	;;
     *)
 	echo "Usage: $0 {start|stop|restart|status}"

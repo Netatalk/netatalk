@@ -1,0 +1,197 @@
+This is a reimplementation of the netatalk CNID database support that
+attempts to put all current functionality into a separate daemon
+called cnid_dbd. There is one such daemon per netatalk volume. The
+underlying database structure is still based on Berkeley DB and the
+database format is the same as in the current CNID implementation, so
+this can be used as a drop-in replacement.
+
+Advantages: 
+
+- No locking issues or leftover locks due to crashed afpd daemons any
+  more. Since there is only one thread of control accessing the
+  database, no locking is needed and changes appear atomic.
+
+- Berkeley DB transactions are difficult to get right with several
+  processes attempting to access the CNID database simultanously. This 
+  is much easier with a single process and the database can be made nearly 
+  crashproof this way (at a performance cost).
+
+- No problems with user permissions and access to underlying database
+  files, the cnid_dbd process runs under a configurable user
+  ID that normally also owns the underlying database
+  and can be contacted by whatever afpd daemon accesses a volume.
+
+- If an afpd process crashes, the CNID database is unaffected. If the
+  process was making changes to the database at the time of the crash,
+  those changes will either be completed (no transactions) or rolled
+  back entirely (transactions). If the process was not using the
+  database at the time of the crash, no corrective action is
+  necessary. In both cases, database consistency is assured.
+
+Disadvantages:
+
+- Performance in an environment of processes sharing the database
+  (files) is potentially better for two reasons:
+
+  i)  IPC overhead.
+  ii) r/o access to database pages is possible by more than one
+      process at once, r/w access is possible for nonoverlapping regions.
+
+  The current implementation of cnid_dbd uses unix domain sockets as
+  the IPC mechanism. While this is not the fastest possible method, it
+  is very portable and the cnid_dbd IPC mechanisms can be extended to
+  use faster IPC (like mmap) on architectures where it is
+  supported. As a ballpark figure, 20000 requests/replies to the cnid_dbd
+  daemon take about 0.6 seconds on a Pentium III 733 Mhz running Linux
+  Kernel 2.4.18 using unix domain sockets. The requests are "empty"
+  (no database lookups/changes), so this is just the IPC
+  overhead.
+  
+  I have not measured the effects of the advantages of simultanous
+  database access.
+
+
+Installation and configuration
+
+cnid_dbd is now part of a new CNID framework whereby various CNID
+backends (including the ones present so far) can be selected for afpd
+as a runtime option for a given volume. The default is to compile
+support for all these backends, so normally there is no need to
+specify other options to configure. The only exception is
+transactional support, which is enabled as the default. If you want to
+turn it off use --with-cnid-dbd-txn=no.
+
+In order to turn on cnid_dbd backend support for a given volume, set
+the option -cnidscheme:dbd in your AppleVolumes.default file or
+equivalent. The default for this parameter is -cnidscheme:cdb.
+
+There are two executeables that will be built in etc/cnid_dbd and
+installed into the systems binaries directories of netatalk
+(e.g. /usr/local/netatalk/sbin or whatever you specify with --sbindir
+to configure): cnid_metad and cnid_dbd. cnid_metad should run all the
+time with root permissions. It will be notified when an instance of
+afpd starts up and will in turn make sure that a cnid_dbd daemon is
+started for the volume that afpd wishes to access. The daemon runs as
+long as necessary (see the idle_timeout option below) and services any
+other instances of afpd that access the volume. You can safely kill it
+with SIGTERM, it will be restarted automatically by cnid_metad as soon
+as the volume is accessed again.
+
+cnid_metad needs one command line argument, the name of the cnid_dbd
+executeable. You can either specify "cnid_dbd" if it is in the path
+for cnid_metad or otherwise use the fully qualified pathname to
+cnid_dbd, e.g. /usr/local/netatalk/sbin/cnid_dbd. cnid_metad also uses
+a unix domain socket to receive requests from afpd. The pathname for
+that socket is /tmp/cnid_meta. It should not be deleted while
+cnid_metad runs.
+
+
+cnid_dbd changes to the Berkeley DB directory on startup and sets
+effective UID and GID to owner and group of that directory. Database and
+supporting files should therefore be writeable by that user/group. cnid_dbd
+reads configuration information from the file db_param in the database
+directory on startup. If the file does not exist, suitable default
+values for all parameters are used. The format for a single parameter
+is the parameter name, followed by one or more spaces, followed by the
+parameter value, followed by a newline. The following parameters are
+currently recognized:
+
+Name               Default
+
+backlog            20
+cachesize          1024
+nosync             0
+flush_frequency    100
+flush_interval     30
+usock_file         <databasedirectory>/usock
+fd_table_size      16
+idle_timeout       600
+
+
+"backlog" specifies the maximum number of connection requests that can
+be pending on the unix domain socket cnid_dbd uses. listen(2) has more
+information about this value on your system.
+
+"cachesize" determines the size of the Berkeley DB cache in
+kilobytes. Each cnid_dbd process grabs that much memory on top of its
+normal memory footprint. It can be used to tune database
+performance. The db_stat utility with the "-m" option that comes with
+Berkely DB can help you determine wether you need to change this
+value. The default is pretty conservative so that a large percentage
+of requests should be satisfied from the cache directly. If memory is
+not a bottleneck on your system you might want to leave it at that
+value. The Berkeley DB Tutorial and Reference Guide has a section
+"Selecting a cache size" that gives more detailed information.
+
+"nosync" is only valid if transactional support is enabled. If it is
+set to 1, transactional changes to the database are not synchronously
+written to disk when the transaction completes. This will increase
+performance considerably at the risk of recent changes getting
+lost in case of a crash. The database will still be consistent,
+though. See "Transaction throughput" in the Berkeley DB Tutorial for
+more information.
+
+"flush_frequency" and "flush_interval" control how often changes to
+the database are written to the underlying database files if no
+transactions are used or how often the transaction system is
+checkpointed for transactions. Both of these operations are
+performed if either i) more than flush_frequency requests have been
+received or ii) more than flush_interval seconds have elapsed since
+the last save/checkpoint. If you use transactions with nosync set to
+zero these parameters only influence how long recovery takes after
+a crash, there should never be any lost data. If nosync is 1, changes
+might be lost, but only since the last checkpoint. Be careful to check
+your harddisk configuration for on disk cache settings. Many IDE disks
+just cache writes as the default behaviour, so even flushing database
+files to disk will not have the desired effect.
+
+"usock_file" gives the pathname of the unix domain socket file that
+that instance of cnid_dbd will use for receiving requests. You might
+have to use another value if the total length of the default pathname
+exceeds the limits for unix domain socket files on your system,
+usually this is something like 100 bytes.
+
+"fd_table_size" is the maximum number of connections (filedescriptors)
+that can be open for afpd client processes in cnid_dbd. If this number
+is exceeded, one of the existing connections is closed and reused. The
+affected afpd process will transparently reconnect later, which causes
+slight overhead. On the other hand, setting this parameter too high
+could affect performance in cnid_dbd since all descriptors have to be
+checked in a select() system call, or worse, you might exceed the per
+process limit of open file descriptors on your system. It is safe to
+set the value to 1 on volumes where only one afpd client process
+is expected to run, e.g. home directories.
+
+"idle_timeout" is the number of seconds of inactivity before an idle
+cnid_dbd exits. Set this to 0 to disable the timeout.
+
+Current shortcomings:
+
+- The implementation for cnid_dbd doubles code from libatalk/cnid,
+making it more difficult to keep changes to the library interface and
+the semantics of database requests in sync.  If cnid_dbd takes over
+the world, this problem will eventually disappear, otherwise it should
+be possible to merge things again, if transactional support is
+eliminated from libatalk/cnid. I do not think it can work relieably in
+the current form anyway.
+
+- It would be more flexible to have transaction support as a run time
+option as well.
+
+- mmap for IPC would be nice as an alternative.
+
+- The parameter file parsing of db_param is very simpleminded. It is
+easy to cause buffer overruns and the like.
+Also, there is no support for blanks (or weird characters) in
+filenames for the usock_file parameter.
+
+- There is no protection against a malicious user connecting to the
+cnid_dbd socket and changing the database. I will adress this problem
+soon.
+
+Please feel free to grep the source in etc/cnid_dbd and the file
+libatalk/cnid/dbd/cnid_dbd.c for the string TODO, which indicates
+comments that adress other, less important points.
+
+
+Joerg Lenneis, lenneis@wu-wien.ac.at

@@ -1,184 +1,230 @@
-'\" t
-.TH PAPD 8 "06 Mar 2001" "netatalk 1.5"
+.\" t
+.TH papd 8 "06 September 2004" 2.0.0 Netatalk 
 .SH NAME
 papd \- AppleTalk print server daemon
 .SH SYNOPSIS
-.B :SBINDIR:/papd
-[
-.B -d
-] [
-.B -f
-.I configfile
-] [
-.B -p
-.I printcap
-]
+\fBpapd\fR [\-d] [\-f configfile] [\-p printcap]
 .SH DESCRIPTION
-.B papd
-is the AppleTalk printer daemon.  This daemon accepts print jobs from
-AppleTalk clients (typically Macintosh computers) using the Printer
-Access Protocol (PAP).
-.B papd
-spools jobs directly into an
-.BR lpd (8)
-spool directory and wakes up
-.B lpd
-after accepting a job from the network to have it re-examine the
-appropriate spool directory.  The actual printing and spooling is
-handled entirely by
-.B lpd.
-.B papd
-can also pipe the print job to an external program for processing, and
-this is the preferred method to avoid compatibility problems with all
-the flavors of lpd in use.
-.LP
-.B papd
-is typically started at boot time, out of system init scripts.
-It first reads from its configuration file,
-.BR :ETCDIR:/papd.conf .
-The file is in the same format as
-.BR /etc/printcap .
-See
-.BR printcap (5)
-for details.  The name of the entry is registered with
-.BR NBP .
-The following options are supported:
-.LP
+papd is the AppleTalk printer daemon. This daemon
+accepts print jobs from AppleTalk clients (typically Macintosh computers)
+using the Printer Access Protocol (PAP). When used with System V printing
+systems, papd spools jobs directly into an
+\fBlpd\fR(8) spool directory and wakes up lpd
+after accepting a job from the network to have it re\-examine the
+appropriate spool directory. The actual printing and spooling is handled
+entirely by lpd.
+.PP
+papd can also pipe the print job to an external
+program for processing, and this is the preferred method on systems not
+using CUPS to avoid compatibility problems with all the flavours of
+lpd in use.
+.PP
+As of version 2.0, CUPS is also supported. Simply using \fIcupsautoadd\fR as first papd.conf entry will share all
+CUPS printers automagically using the PPD files configured in CUPS. It ist
+still possible to overwrite these defaults by individually define printer
+shares. See \fBpapd.conf\fR(5) for details.
+.PP
+papd is typically started at boot time, out of
+system init scripts. It first reads from its configuration file,
+\fB:ETCDIR:/papd.conf\fR. The file is in the same format as
+\fB/etc/printcap\fR. See \fBprintcap\fR(5) for details. The name of the entry is registered with
+NBP.
+.PP
+The following options are supported: 
 .TS
-c c l l
-cfB l l l .
-Name	Type	Default	Descripton
-.sp .5
-pd	str	`.ppd'	Pathname to PPD file
-pr	str	`lp'	LPD printer name (or print command)
-op	str	`operator'	Operator name for LPD spooling
-ca	str	NULL	Pathname used for CAP-style authentication
-sp	bool	false	PSSP-style authentication
-am	str	NULL	UAMS to use for authentication
-pa	str	NULL	Printer's AppleTalk address?
+c c c l.
+T{
+Name
+T}	T{
+Type
+T}	T{
+Default
+T}	T{
+Description
+T}
+.T&
+c l l l.
+T{
+pd
+T}	T{
+str
+T}	T{
+\&'.ppd'
+T}	T{
+Pathname to PPD file
+T}
+T{
+pr
+T}	T{
+str
+T}	T{
+\&'lp'
+T}	T{
+LPD or CUPS printer name (or pipe to a print
+command)
+T}
+T{
+op
+T}	T{
+str
+T}	T{
+\&'operator'
+T}	T{
+Operator name for LPD spooling
+T}
+T{
+au
+T}	T{
+bool
+T}	T{
+false
+T}	T{
+Whether to do authenticated printing or not
+T}
+T{
+ca
+T}	T{
+str
+T}	T{
+NULL
+T}	T{
+Pathname used for CAP\-style authentification
+T}
+T{
+sp
+T}	T{
+bool
+T}	T{
+false
+T}	T{
+PSSP\-style authetication
+T}
+T{
+am
+T}	T{
+str
+T}	T{
+NULL
+T}	T{
+UAMS to use for authentication
+T}
+T{
+pa
+T}	T{
+str
+T}	T{
+NULL
+T}	T{
+Printer's AppleTalk address
+T}
+T{
+co
+T}	T{
+str
+T}	T{
+NULL
+T}	T{
+CUPS options as supplied to the \fBlp\fR(1) command with "\-o"
+T}
+T{
+fo
+T}	T{
+bool
+T}	T{
+false
+T}	T{
+adjust lineending for foomatic\-rip
+T}
 .TE
-.LP
-If no configuration file is given, the hostname of the machine is used
-as the NBP name and all options take their default value.
+If no configuration file is given, the hostname of the
+machine is used as the NBP name and all options take their default
+value.
 .SH OPTIONS
-.TP
-.B -d
-Do not fork or disassociate from the terminal.  Write some
+.TP 
+\-d
+Do not fork or disassociate from the terminal. Write some
 debugging information to stderr.
-.HP
-.B -f
-.I configfile
-.br
-Consult
-.I configfile
-instead of
-.B :ETCDIR:/papd.conf
-for the configuration information.
-.HP
-.B -p
-.I printcap
-.br
-Consult
-.I printcap
-instead of
-.B /etc/printcap
-for LPD configuration information.
-.SH EXAMPLE
-The following papd configuration file sets up three print spoolers.
-The first spooler is known by the NBP name
-.B Mac Printer Spooler,
-and uses a PPD file located in /usr/share/lib/ppd.
-In addition, the user mcs
-will be the owner of all jobs that are spooled.
-The second spooler is known as
-.B HP Printer
-and all options are the default. The third spooler is known as
-.B HP 8100 .
-It pipes the print job to lpr for printing.  PSSP authenticated printing
-is enabled, as is CAP-style authenticated printing.  Both methods support
-guest and cleartext authentication as specified by the 'am' option.  The
-PPD used is /etc/atalk/ppds/hp8100.ppd.
-.sp
-.RS
-.nf
-Mac Printer Spooler:\\ 
-	:pr=ps:\\
-	:pd=/usr/share/lib/ppd/HPLJ_4M.PPD:\\
-	:op=mcs:
-
-HP Printer:\\ 
-	:
-
-HP 8100:\\
-	:pr=|/usr/bin/lpr -Plp:\\
-	:sp:\\
-	:ca=/tmp/print:\\
-	:am=uams_guest.so,uams_pam.so:\\
-	:pd=/etc/atalk/ppds/hp8100.ppd:
-.fi
-.RE
+.TP 
+\-f \fIconfigfile\fR
+Consult \fIconfigfile\fR instead of
+\fB:ETCDIR:/papd.conf\fR for the configuration
+information.
+.TP 
+\-p \fIprintcap\fR
+Consult \fIprintcap\fR instead of
+\fB/etc/printcap\fR for LPD configuration
+information.
 .SH NOTES
-PSSP (Print Server Security Protocol) is an authentication protocol
-carried out through postscript printer queries to the print server.  Using
-PSSP requires LaserWriter 8.6.1 or greater on the client mac.  The user
-will be prompted to enter their username and password before they print.
-It may be necessary to re-setup the printer on each client the first time
-PSSP is enabled, so that the client can figure out that authentication is
-required to print.  You can enable PSSP on a per-printer basis.  PSSP is
-the recommended method of authenticating printers as it is more robust
-that CAP-style authentication, described below.
-.LP
-CAP-style authentication gets its name from the method the CAP (Columbia
-APpletalk) package used to authenticate its mac clients' printing.  This
-method requires that a user login to a file share before they print.
-.B afpd
-records the username in a temporary file named after the clients
-Appletalk address, and it deletes the temporary file when the user
-disconnects.
-.B papd
-gets the username from the file with the same Appletalk address as the
-machine connecting to it.  CAP-style authentication will work with any
-mac client.  If both CAP and PSSP are enabled for a particular printer, CAP
-will be tried first, then it will fall back to PSSP.
-.LP
-
-The list of UAMS to use for authentication (specified with the 'am'
-option) applies to all printers.  It is not possible to define different
+PSSP (Print Server Security Protocol) is an authentication
+protocol carried out through postscript printer queries to the print
+server. Using PSSP requires LaserWriter 8.6.1 or greater on the client
+mac. The user will be prompted to enter their username and password before
+they print. It may be necessary to re\-setup the printer on each client the
+first time PSSP is enabled, so that the client can figure out that
+authentication is required to print. You can enable PSSP on a per\-printer
+basis. PSSP is the recommended method of authenticating printers as it is
+more robust than CAP\-style authentication, described below.
+.PP
+CAP\-style authentication gets its name from the method the CAP (Columbia APpletalk)
+package used to authenticate its mac clients' printing. This method
+requires that a user login to a file share before they print.
+afpd records the username in a temporary file named
+after the client's Appletalk address, and it deletes the temporary file
+when the user disconnects. Therefore CAP style authentification will
+\fInot\fR work for clients connected to
+afpd via TCP/IP. papd gets the
+username from the file with the same Appletalk address as the machine
+connecting to it. CAP\-style authentication will work with any mac client.
+If both CAP and PSSP are enabled for a particular printer, CAP will be
+tried first, then papd will fall back to PSSP.
+.PP
+The list of UAMs to use for authentication (specified with the 'am' option)
+applies to all printers. It is not possible to define different
 authentication methods on each printer. You can specify the list of UAMS
-multiple times, but only the last setting will be used.  Currently only
-uams_guest.so, uams_passwd.so, and uams_pam.so are supported as printer
-authentication methods.  The guest method requires a valid username, but
-not a password. The passwd and pam methods require both a valid username
-and the correct password.
+multiple times, but only the last setting will be used. Currently only
+uams_guest.so and uams_clrtxt.so are supported as printer authentication
+methods. The guest method requires a valid username, but not a password.
+The Cleartext UAM requires both a valid username and the correct
+password.
+.RS 
+\fBNote\fR
+.PP
+As of this writing, Mac OS X makes no use of PSSP authentication
+any longer. CAP\-style authentication normally won't be an option, too
+caused by the use of AFP over TCP these days.
+.RE
+.PP
 .SH FILES
-.TP 16
-.B :ETCDIR:/papd.conf
+.TP 
+\fB:ETCDIR:/papd.conf\fR
 Default configuration file.
-.TP 16
-.B /etc/printcap
+.TP 
+\fB/etc/printcap\fR
 Printer capabilities database.
-.TP 16
-.B .ppd
-PostScript Printer Description file.
-.B papd
-answers configuration and font queries from printing clients by
-consulting the configured PPD file.  Such files are available from
-Adobe, Inc, via anonymous ftp from ftp.adobe.com in /pub/adobe/printerdrivers/mac/all/ppdfiles/
-(ftp://ftp.adobe.com//pub/adobe/printerdrivers/mac/all/ppdfiles/), or from the printer's
-manufacturer.  If no PPD file is configured,
-.B papd
-will return the default answer, possibly causing the client to send
-excessively large jobs.
-.SH SEE ALSO
-.BR lpr (1),
-.BR lprm (1),
-\." .BR pap (4),
-.BR printcap (5).
-.BR lpc (8),
-.BR lpd (8).
+.TP 
+\fB\&.ppd\fR
+PostScript Printer Description file. papd answers
+configuration and font queries from printing clients by consulting
+the configured PPD file. Such files are available for download from
+Adobe, Inc. (http://www.adobe.com/support/downloads/main.htm),
+or from the printer's manufacturer. If no PPD file is configured,
+papd will return the default answer, possibly causing the client to
+send excessively large jobs.
 .SH CAVEATS
-.I papd
-accepts characters with the high bit set (a full 8-bits) from the clients,
-but some PostScript printers (including Apple Computer's LaserWriter family)
-only accept 7-bit characters on their serial interface by default.  You will
-need to configure your printer to accept a full 8 bits.
+papd accepts characters with the high bit set (a
+full 8\-bits) from the clients, but some PostScript printers (including
+Apple Computer's LaserWriter family) only accept 7\-bit characters on their
+serial interface by default. The same applies for some printers when
+they're accessed via TCP/IP methods (remote LPR or socket). You will need
+to configure your printer to accept a full 8 bits or take special
+precautions and convert the printjob's encoding (eg. by using \fIco="protocol=BCP"\fR when using CUPS 1.1.19 or
+above).
+.PP
+When printing clients run MacOS 10.2 or above, take care that PPDs
+do not make use of \fI*cupsFilter:\fR comments
+unless the appropriate filters are installed at the client's side, too
+(remember: Starting with 10.2 Apple chose to integrate CUPS into MacOS X).
+For in\-depth information on how CUPS uses PPDs see chapter 3.4 in http://tinyurl.com/zbxn).
+.SH "SEE ALSO"
+\fBlpr\fR(1),\fBlprm\fR(1),\fBprintcap\fR(5),\fBlpc\fR(8),\fBlpd\fR(8), \fBlp\fR(1).
+

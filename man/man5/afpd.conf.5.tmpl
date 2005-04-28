@@ -1,199 +1,377 @@
-.\" $Id: afpd.conf.5.tmpl,v 1.3 2002-05-03 22:51:34 jmarcus Exp $
-.TH afpd.conf 5 "28 September 2000" "netatalk 1.5"
-.UC 4
+.TH afpd.conf 5 "24 September 2004" 2.0.0 Netatalk 
 .SH NAME
-afpd.conf \- Configuration file used by \fBafpd\fR(8)
-to determine the setup of its file sharing services
-
+afpd.conf \- Configuration file used by afpd(8) to determine the setup of its file sharing services
 .SH DESCRIPTION
-\fB:ETCDIR:/afpd.conf\fR is the configuration file used
-by afpd to determine the behavior and configuration of the different
-virtual file servers that it provides.
-
-Any line not prefixed with \fB#\fR is interpreted. The configuration lines
-are composed like:
-
-.RS
-.sp
-.I server name
-.B [
-.I options
-.B ]
-
-.sp
-.RE
-If a \fB-\fR is used instead of a server name, the default server is
-specified. Server names must be quoted if they contain spaces.
-
+\fB:ETCDIR:/afpd.conf\fR is the configuration file
+used by afpd to determine the behavior and
+configuration of the different virtual file servers that it
+provides.
+.PP
+Any line not prefixed with # is interpreted. The configuration lines
+are composed like: server name [ options ] If a \fB\-\fR is used
+instead of a server name, the default server is specified. Server names
+must be quoted if they contain spaces. They must not contain ":" or "@".
 The path name must be a fully qualified path name, or a path name using
-either the \fB~\fR shell shorthand or any of the substitution variables,
-which are listed below.
+either the ~ shell shorthand or any of the substitution variables, which
+are listed below.
+.PP
+.RS 
+\fBNote\fR
+.PP
+Each server has to be configured on a \fBsingle\fR line.
+.RE
 
 The possible options and their meanings are:
-
-.TP
-.I AppleVolumes Files
-
-.TP
-.B -defaultvol [path]
-Specifies path to AppleVolumes.default file (default is 
+.SH "APPLEVOLUMES FILES"
+.TP 
+\-defaultvol \fI[path]\fR
+Specifies path to AppleVolumes.default file (default is
 \fB:ETCDIR:/AppleVolumes.default\fR).
-
-.TP
-.B -nlspath [path]
-Specifies the path to the code pages (default is \fB:ETCDIR:/nls\fR).
-
-.TP
-.B -systemvol [path]
-Specifies path to AppleVolumes.system file (default is 
+.TP 
+\-systemvol \fI[path]\fR
+Specifies path to AppleVolumes.system file (default is
 \fB:ETCDIR:/AppleVolumes.system\fR).
-
-.TP
-.B -[no]uservol
-Enables or disables reading of the users' individual volumes file
-entirely.
-
-.TP
-.B -[no]uservolfirst
-Enables or disables reading of the users' individual volumes file
-before processing the global \fBAppleVolumes.default\fR file.
-
-.TP
-.I Authentication Methods
-
-.TP
-.B -uamlist [uams list]
+.TP 
+\-[no]uservol
+Enables or disables reading of the users' individual volumes
+file entirely.
+.TP 
+\-[no]uservolfirst
+Enables or disables reading of the users' individual volumes
+file before processing the global
+\fBAppleVolumes.default\fR file.
+.SH "AUTHENTICATION METHODS"
+.TP 
+\-uamlist \fI[uams list]\fR
 Comma separated list of UAMs. (The default is
-\fBuams_guest.so,uams_passwd.so,uams_dhx_passwd.so\fR).
+uams_guest.so,uams_clrtxt.so,uams_dhx.so).
+
 The most commonly used UAMs are:
-
-\fBuams_dhx_passwd.so or uams_dhx_pam.so\fR - allows logins
-using Diffie-Hellman eXchange (DHX)
-
-\fBuams_guest.so\fR - allows guest logins
-
-\fBuams_passwd.so or uams_pam.so\fR - allows logins with clear
-text passwords
-
-\fBuams_randum.so\fR - allows Random Number and Two-Way Random
-Number Exchange for authentication (requires \fB:ETCDIR:/afppaswd\fR
-file)
-
-.TP
-.B -uampath [path]
-Sets the default path for UAMs for this server (default is 
+.RS 
+.TP 
+uams_guest.so
+allows guest logins
+.TP 
+uams_clrtxt.so
+(uams_pam.so or uams_passwd.so) Allow logins with
+passwords transmitted in the clear.
+.TP 
+uams_randum.so
+allows Random Number and Two\-Way Random Number Exchange
+for authentication (requires a separate file containing the
+passwords, either :ETCDIR:/afppasswd file or the one specified
+via \fB\-passwdfile\fR. See \fBafppasswd\fR(1) for details
+.TP 
+uams_dhx.so
+(uams_dhx_pam.so or uams_dhx_passwd.so) Allow
+Diffie\-Hellman eXchange (DHX) for authentication.
+.TP 
+uam_gss.so
+Allow Kerberos V for authentication (optional)
+.RE
+.TP 
+\-uampath \fI[path]\fR
+Sets the default path for UAMs for this server (default is
 :ETCDIR:/uams).
+.TP 
+\-k5keytab \fI[path]\fR, \-k5service \fI[service]\fR, \-k5realm \fI[realm]\fR
+These are required if the server supports the Kerberos 5
+authentication UAM.
+.SH "CODEPAGE OPTIONS"
+With OS X Apple introduced the AFP3 protocol. One of the big changes
+was, that AFP3 uses Unicode names encoded as UTF\-8 decomposed. Previous
+AFP/OS versions used codepages like MacRoman, MacCentralEurope,
+etc.
+.PP
+To be able to serve AFP3 and older clients at the same time,
+afpd needs to be able to convert between UTF\-8 and Mac
+codepages. Even OS X clients partly still rely on codepages. As there's no
+way, afpd can detect the codepage a pre AFP3 client
+uses, you have to specify it using the \fB\-maccodepage\fR
+option. The default is MacRoman, which should be fine for most western
+users.
+.PP
+As afpd needs to interact with unix operating
+system as well, it need's to be able to convert from UTF\-8/MacCodepage to
+the unix codepage. By default afpd uses the systems
+LOCALE, or ASCII if your system doesn't support locales. You can set the
+unix codepage using the \fB\-unixcodepage\fR option. If you're
+using extended characters in the configuration files for
+afpd, make sure your terminal matches the
+\fB\-unixcodepage\fR.
+.TP 
+\-unixcodepage [CODEPAGE]
+Specifies the servers unix codepage, e.g. "ISO\-8859\-15" or
+"UTF8". This is used to convert strings to/from the systems locale,
+e.g. for authenthication, server messages and volume names. Defaults
+to LOCALE if your system supports it, otherwise ASCII will be
+used.
+.TP 
+\-maccodepage [CODEPAGE]
+Specifies the mac clients codepage, e.g. "MAC_ROMAN". This is
+used to convert strings and filenames to the clients codepage for
+OS9 and Classic, i.e. for authentication and AFP messages (SIGUSR2
+messaging). This will also be the default for the volumes
+maccharset. Defaults to MAC_ROMAN.
+.SH "PASSWORD OPTIONS"
+.TP 
+\-loginmaxfail [number]
+Sets the maximum number of failed logins, if supported by the
+UAM (currently none)
+.TP 
+\-passwdfile [path]
+Sets the path to the Randnum UAM passwd file for this server
+(default is :ETCDIR:/afppasswd).
+.TP 
+\-passwdminlen [number]
+Sets the minimum password length, if supported by the
+UAM
+.TP 
+\-[no]savepassword
+Enables or disables the ability of clients to save passwords
+locally
+.TP 
+\-[no]setpassword
+Enables or disables the ability of clients to change their
+passwords via chooser or the "connect to server" dialog
+.SH "TRANSPORT PROTOCOLS"
+.TP 
+\-[no]ddp
+Enables or disables AFP\-over\-Appletalk. If
+\fB\-proxy\fR is specified, you must instead use
+\fB\-uamlist ""\fR to prevent DDP connections from
+working.
+.TP 
+\-[no]tcp
+Enables or disables AFP\-over\-TCP
+.TP 
+\-transall
+Make both available (default)
+.SH "TRANSPORT OPTIONS"
+.TP 
+\-advertise_ssh
+Allows Mac OS X clients (10.3.3 or above) to automagically
+establish a tunneled AFP connection through SSH. If this option is
+set, the server's answers to client's FPGetSrvrInfo requests contain
+an additional entry. It depends on both client's settings and a
+correctly configured and running \fBsshd\fR(8) on the server to let things work.
+.RS 
+\fBNote\fR
 
-.TP
-.I Password Options
+Setting this option is not recommended since globally
+encrypting AFP connections via SSH will increase the server's load
+significantly. On the other hand, Apple's client side
+implementation of this feature in MacOS X versions prior to 10.3.4
+contained a security flaw.
+.RE
+.TP 
+\-ddpaddr \fI[ddp address]\fR
+Specifies the DDP address of the server. The default is to
+auto\-assign an address (0.0). This is only useful if you are running
+AppleTalk on more than one interface.
+.TP 
+\-fqdn \fI[name:port]\fR
+Specifies a fully\-qualified domain name, with an optional
+port. This is discarded if the server cannot resolve it. This option
+is not honored by AppleShare clients <= 3.8.3. This option is
+disabled by default. Use with caution as this will involve a second
+name resolution step on the client side. Also note that afpd will
+advertise this name:port combination but not automatically listen to
+it.
+.TP 
+\-ipaddr \fI[ip address]\fR
+Specifies the IP address that the server should advertise
+\fBand\fR listens to (the default is the
+first IP address of the system). This option also allows to use one
+machine to advertise the AFP\-over\-TCP/IP settings of another machine
+via NBP when used together with the \fB\-proxy\fR
+option.
+.TP 
+\-port \fI[port number]\fR
+Allows a different TCP port to be used for AFP\-over\-TCP. The
+default is 548.
+.TP 
+\-proxy
+Runs an AppleTalk proxy server for the specified AFP\-over\-TCP
+server. If the address and port aren't given, then the first IP
+address of the system and port 548 will be used. If you don't want
+the proxy server to act as a DDP server as well, set \fB\-uamlist
+""\fR.
+.TP 
+\-server_quantum \fI[number]\fR
+This specifoes the DSI server quantum. The minimum value is
+303840 (0x4A2E0). The maximum value is 0xFFFFFFFFF. If you specify a
+value that is out of range, the default value will be set (which is
+the minimum). Do not change this value unless you're absolutely
+sure, what you're doing
+.TP 
+\-noslp
+Do not register this server using the Service Location
+Protocol (if SLP support was compiled in). This is useful if you are
+running multiple servers and want one to be hidden, perhaps because
+it is advertised elsewhere, ie. by a SLP Directory Agent.
+.SH "MISCELLANEOUS OPTIONS"
+.TP 
+\-admingroup \fI[group]\fR
+Allows users of a certain group to be seen as the superuser
+when they log in. This option is disabled by default.
+.TP 
+\-authprintdir \fI[path]\fR
+Specifies the path to be used (per server) to store the files
+required to do CAP\-style print authentication which papd will
+examine to determine if a print job should be allowed. These files
+are created at login and if they are to be properly removed, this
+directory probably needs to be umode 1777.
+.RS 
+\fBNote\fR
 
-.TP
-.B -loginmaxmail [number]
-Sets the maximum number of failed logins, if supported by the UAM
+\fB\-authprintdir\fR will only work for clients
+connecting via DDP. Almost all modern Clients will use TCP.
+.RE
+.TP 
+\-client_polling
+With this switch enabled, afpd won't advertise that it is
+capable of server notifications, so that connected clients poll the
+server every 10 seconds to detect changes in opened server windows.
+\fINote\fR: Depending on the number of simultaneously
+connected clients and the network's speed, this can lead to a
+significant higher load on your network!
+.RS 
+\fBNote\fR
 
-.TP
-.B -passwdfile [path]
-Sets the path to the Randnum passwd file for this server (default is
-\fB:ETCDIR:/afppasswd\fR).
+Do not use this option any longer as Netatalk 2.0 correctly
+supports server notifications, allowing connected clients to
+update folder listings in case another client changed the
+contents.
+.RE
+.TP 
+\-cnidserver \fI[ipaddress:port]\fR
+Specifies the IP address and port of a cnid_metad server,
+required for CNID dbd backend. Defaults to localhost:4700.
+.TP 
+\-guestname \fI[name]\fR
+Specifies the user that guests should use (default is
+"nobody"). The name should be quoted.
+.TP 
+\-icon
+Use the platform\-specific icon
+.TP 
+\-loginmesg \fI[message]\fR
+Sets a message to be displayed when clients logon to the
+server. The message should be in \fBunixcodepage\fR and
+should be quoted. Extended characters are allowed.
+.TP 
+\-nodebug
+Disables debugging.
+.TP 
+\-sleep \fI[number]\fR
+AFP 3.x waits number hours before
+disconnecting clients in sleep mode. Default is 10 hours.
+.TP 
+\-signature { user:<text> | host }
+Specify a server signature. This option is useful while
+running multiple independent instances of afpd on one machine (eg.
+in clustered environments, to provide fault isolation etc.). "host"
+signature type allows afpd generating signature automatically (based
+on machine primary IP address). "user" signature type allows
+administrator to set up a signature string manually. The maximum
+length is 16 characters
 
-.TP
-.B -passwdminlen [number]
-Sets the minimum password length, if supported by the UAM
+\fBThree server definitions using 2 different server
+signatures\fR
 
-.TP
-.B -[no]savepassword
-Enables or disables the ability of clients to save passwords locally
+.nf
+first \-signature user:USERS 
+second \-signature user:USERS 
+third \-signature user:ADMINS
+.fi
 
-.TP
-.B -[no]setpassword
-Enables or disables the ability of clients to change their passwords
+First two servers will appear as one logical AFP service to
+the clients \- if user logs in to first one and then connects to
+second one, session will be automatically redirected to the first
+one. But if client connects to first and then to third, will be
+asked for password twice and will see resources of both servers.
+Traditional method of signature generation causes two independent
+afpd instances to have the same signature and thus cause clients to
+be redirected automatically to server (s)he logged in first.
+.SH "LOGGING OPTIONS"
+.RS 
+\fBNote\fR
+.PP
+Extended logging capabilities are only available if Netatalk was
+built using \-\-with\-logfile. As of Netatalk 2.0, the
+default is \-\-without\-logfile since the logger code is
+partially broken and needs a complete rewrite (the
+\fB\-setuplog\fR option might not work as expected). If
+Netatalk was built without logger support then the daemons log to
+syslog.
+.RE
+.TP 
+\-[un]setuplog "<logtype> <loglevel> [<filename>]"
+Specify that the given loglevel should be applied to log
+messages of the given logtype and that these messages should be
+logged to the given file. If the filename is ommited the loglevel
+applies to messages passed to syslog. Each logtype may have a
+loglevel applied to syslog and a loglevel applied to a single file.
+Latter \fB\-setuplog\fR settings will override earlier
+ones of the same logtype (file or syslog).
 
+logtypes: Default, Core, Logger, CNID, AFP
 
-.TP
-.I Transport Protocols
+Daemon loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE,
+LOG_INFO, LOG_DEBUG, LOG_DEBUG6, LOG_DEBUG7, LOG_DEBUG8, LOG_DEBUG9,
+LOG_MAXDEBUG
 
-.TP
-.B -[no]ddp
-Enables or disables AFP-over-Appletalk. If \fB-proxy\fR is specified, you must
-instead use \fB-uamlist ""\fR to prevent DDP connections from working.
+\fBSome ways to change afpd's logging behaviour via
+\-[un]setuplog\fR
 
-.TP
-.B -[no]tcp
-Enables or disables AFP-over-TCP
+Example: 
 
-.TP
-.I Transport Options
+.nf
+\-setuplog "logger log_maxdebug /var/log/netatalk\-logger.log" 
+\-setuplog "afpdaemon log_maxdebug /var/log/netatalk\-afp.log" 
+\-unsetuplog "default level file" 
+\-setuplog "default log_maxdebug"
+.fi
+.SH "DEBUG OPTIONS"
+These options are useful for debugging only.
+.TP 
+\-tickleval \fI[number]\fR
+Sets the tickle timeout interval (in seconds). Defaults to
+30.
+.TP 
+\-timeout \fI[number]\fR
+Specify the number of tickles to send before timing out a
+connection. The default is 4, therefore a connection will timeout
+after 2 minutes.
+.SH EXAMPLES
+\fBafpd.conf default configuration\fR
+.PP
+.nf
+\- \-transall \-uamlist uams_clrtxt.so,uams_dhx.so,uams_guest.so
+.fi
+.PP
+\fBafpd.conf MacCyrillic setup / UTF8 unix locale\fR
+.PP
+.nf
+\- \-transall \-maccodepage mac_cyrillic \-unixcodepage utf8
+.fi
+.PP
+\fBafpd.conf setup for Kerberos V auth\fR
+.PP
+.nf
+\- \-transall \-uamlist uams_clrtxt.so,uams_dhx.so,uams_guest.so,uams_gss.so \\ 
+\-k5service afpserver \-k5keytab /path/to/afpserver.keytab \\ 
+\-k5realm YOUR.REALM \-fqdn your.fqdn.namel:548
+.fi
+.PP
+\fBafpd.conf letting afpd appear as three servers on the net\fR
+.PP
+.nf
+"Guest Server" \-uamlist uams_guest.so \-loginmesg "Welcome guest!"
+"User Server" \-uamlist uams_dhx.so \-port 12000
+"special" \-notcp \-defaultvol <path> \-systemvol <path>
+.fi
+.SH "SEE ALSO"
+\fBafpd\fR(8), \fBafppasswd\fR(1), \fBAppleVolumes.default\fR(5)
 
-.TP
-.B -admingroup [group]
-Allows users of a certain group to be seen as the superuser when they
-log in. This option is disabled, by default.
-
-.TP
-.B -ddpaddr [ddp address]
-Specifies the DDP address of the server. The default is to auto-assign an
-address (0.0). This is only useful if you are running on a multihomed host.
-
-.TP
-.B -fqdn [name:port]
-Specifies a fully-qualified domain name, with an optional port. This is
-discarded if the server cannot resolve it. This option is not honored by
-AppleShare clients <= 3.8.3. This option is disabled by default.
-
-.TP
-.B -ipaddr [ip address]
-Specifies the IP that the server should respond to (the default is the
-first IP address of the system). This option also allows one machine to
-advertise TCP/IP for another machine.
-
-.TP
-.B -port [port number]
-Allows a different TCP port to be specified for AFP-over-TCP. The default
-is 548.
-
-.TP
-.B -proxy
-Runs an AppleTalk proxy server for the specified AFP-over-TCP server. If
-the address and port aren't given, then the first IP address of the system
-and port 548 will be used. If you don't want the proxy server to act as a
-DDP server as well, set \fB-uamlist ""\fR.
-
-.TP
-.B -server_quantum [number]
-This specifoes the DSI server quantum. The minimum value is 1 MB. The
-maximum value is 0xFFFFFFFFF. If you specify a value that is out of
-range, the default value will be set (which is the minimum).
-
-.TP
-.B -noslp
-Do not register this server using the Service Location Protocol (if SLP
-support was compiled in).  This is useful if you are running multiple
-servers and want one to be hidden, perhaps because it is advertised elsewhere.
-
-.TP
-.I Miscellaneous Options
-
-.TP
-.B -guestname [name]
-Specifies the user that guests should use (default is \fB"nobody"\fR). The
-name should be quoted.
-
-.TP
-.B -icon
-Use the platform-specific icon
-
-.TP
-.B -loginmsg [message]
-Sets a message to be displayed when clients logon to the server. The
-message should be quoted.
-
-.TP
-.B -nodebug
-Disables debugging
-
-.TP
-.B -tickleval [number]
-Sets the tickle timeout interval (in seconds).
-
-.SH SEE ALSO
-afpd(8), AppleVolumes.default(5)

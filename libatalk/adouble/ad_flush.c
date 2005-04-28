@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.6 2003-01-28 15:30:56 srittau Exp $
+ * $Id: ad_flush.c,v 1.7 2005-04-28 20:49:52 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -35,6 +35,20 @@
 #include <errno.h>
 
 #include "ad_private.h"
+#if AD_VERSION == AD_VERSION1 
+
+#define EID_DISK(a) (a)
+
+#else
+
+static const u_int32_t set_eid[] = {
+0,1,2,3,4,5,6,7,8,
+9,10,11,12,13,14,15,
+AD_DEV, AD_INO, AD_SYN, AD_ID
+};
+
+#define EID_DISK(a) (set_eid[a])
+#endif
 
 /* rebuild the header */
 void ad_rebuild_header(struct adouble *ad)
@@ -67,7 +81,7 @@ void ad_rebuild_header(struct adouble *ad)
       if ( ad->ad_eid[ eid ].ade_off == 0 ) {
 	continue;
       }
-      temp = htonl( eid );
+      temp = htonl( EID_DISK(eid) );
       memcpy(buf, &temp, sizeof( temp ));
       buf += sizeof( temp );
 

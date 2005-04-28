@@ -1,159 +1,404 @@
-.\" $Id: AppleVolumes.default.5.tmpl,v 1.2 2001-02-28 16:53:24 rufustfirefly Exp $
-.TH AppleVolumes.default 5 "20 September 2000" "netatalk 1.5"
-.UC 4
+.TH AppleVolumes.default 5 "06 September 2004" 2.0.0 Netatalk 
 .SH NAME
-AppleVolumes.default \- Configuration file used by \fBafpd\fR(8)
-to determine the shares made available through Appletalk
-
+AppleVolumes.default \- Configuration file used by afpd(8) to determine the shares made available through Appletalk
 .SH DESCRIPTION
-\fB:ETCDIR:/AppleVolumes.default\fR is the configuration file used
-by afpd to determine what portions of the file system will be shared via
-Appletalk, as well as their behaviors.
-
-Any line not prefixed with \fB#\fR is interpreted. The configuration lines
-are composed like:
-
-.RS
-.sp
-.I path
-.B [
-.I chooser name
-.B ] [
-.I options
-.B ]
-
-.sp
-.RE
-The path name must be a fully qualified path name, or a path name using
-either the \fB~\fR shell shorthand or any of the substitution variables,
+\fB:ETCDIR:/AppleVolumes.default\fR is the
+configuration file used by afpd to determine what
+portions of the file system will be shared via Apple Filing Protocol, as
+well as their behaviour. Any line not prefixed with # is interpreted. The
+configuration lines are composed like:
+.PP
+\fBpath\fR \fI[ volume name ] [ options
+]\fR
+.PP
+The path name must be a fully qualified path name, or a path name
+using either the ~ shell shorthand or any of the substitution variables,
 which are listed below.
-
-The chooser name is the name that appears in the Chooser on Macintoshes
-to represent the appropriate share. If there are spaces in the name, it
-should be in quotes (i.e. \fB"File Share"\fR). The chooser name may not
-exceed 27 characters in length, and cannot contain the \fB:\fR character.
-
+.PP
+The volume name is the name that appears in the Chooser ot the
+"connect to server" dialog on Macintoshes to represent the appropriate
+share. If there are spaces in the name, it should be in quotes (i.e. "File
+Share"). The volume name may not exceed 27 characters in length, and
+cannot contain the \fB':'\fR character.
+.RS 
+\fBNote\fR
+.PP
+Each volume has to be configured on a \fBsingle\fR line.
+.RE
+.PP
 The possible options and their meanings are:
+.TP 
+adouble:\fI[v1|v2|osx]\fR
+specify the format of the metadata files, which are used for
+saving Mac resource fork as well. Earlier versions used AppleDouble
+V1, the new default format is V2. Starting with Netatalk 2.0, the
+scheme MacOS X uses currently (10.3.x), is also supported
+.RS 
+\fBNote\fR
 
-.TP
-.B allow:[users/groups]
-The allow option allows the users and groups that access a share to
-be specified. Users and groups are specified, delimited by commas. Groups
-are designated by a \fB@\fR prefix.
-
-\fIExample:\fR \fBallow:user1,user2,@group\fR
-
-.TP
-.B casefold:[option]
-The casefold option handles how casenames should be mangled. The available
-options are:
-
-\fBtolower\fR - Lowercases names in both directions.
-
-\fBtoupper\fR - Uppercases names in both directions.
-
-\fBxlatelower\fR - Client sees lowercase, server sees uppercase.
-
-\fBxlateupper\fR - Client sees uppercase, server sees lowercase.
-
-.TP
-.B codepage:[nls file]
-The codepage option loads a specific codepage from the nls directory.
-
-.TP
-.B dbpath:[path]
-Sets the database information to be stored in \fBpath\fR.
-
-.TP
-.B deny:[users/groups]
-The deny option specifies users and groups who are not allowed access
-to the share. It follows the same format as the \fBallow\fR option.
-
-.TP
-.B options:[option]
-This allows multiple options to be specified in a comma delimited format.
-The available options are:
-
-\fBcrlf\fR - Enables crlf translation for TEXT files.
-
-\fBdropbox\fR - Allows a volume to be declared as being a "dropbox." Note
-that netatalk must be compiled with dropkludge support for this to
-function.
-
-\fBlimitsize\fR - Hack for older Macintoshes using newer Appleshare
-clients to limit the disk size reporting to 2 GB.
-
-\fBmswindows\fR - Forces filename restrictions imposed by MS WinXX, and
-invokes the MS default codepage (iso8859-1) if one is not already
-specified.
-
-\fBnoadouble\fR - Forces afpd to not create .AppleDouble unless a resource
-fork needs to be created.
-
-\fBnohex\fR - Disables :hex translations for anything except dot files.
-This option makes the \fB/\fR character illegal.
-
-\fBprodos\fR - Provides compatibility with Apple II clients.
-
-\fBro\fR - Specifies the share as being read only for all users.
-
-\fBusedots\fR - Don't do :hex translation for dot files. This makes all
-files such as .Parent, .Apple* illegal. Dot files created on the server
-side will be invisible to the client.
-
-.TP
-.B password:[password]
-This option allows you to set a volume password, which can be a maximum
-of 8 characters long.
-
-.TP
-.B rolist:[users/groups]
-Allows certain users and groups to have read-only access to a share.
-This follows the \fBallow\fR option format.
-
-.TP
-.B rwlist:[users/groups]
-Allows certain users and groups to have read/write access to a share.
-This follows the \fBallow\fR option format.
-
-.P
-The variables which can be used for subsitutions are:
-
-.TP
-.B $c
+Using \fBadouble:osx\fR is \fBnot\fR recommended for production use. Its
+only aim is to temporarely share eg. FAT32 formatted FireWire
+harddrives written on a Macintosh with afpd. Apple's metadata
+scheme lacks several essential features, so using it on the
+server's side will break both CNIDs and MacOS 9
+compatibility
+.RE
+.TP 
+allow:\fI[users/groups]\fR
+The allow option allows the users and groups that access a
+share to be specified. Users and groups are specified, delimited by
+commas. Groups are designated by a @ prefix. Example:
+allow:user1,user2,@group
+.TP 
+deny:\fI[users/groups]\fR
+The deny option specifies users and groups who are not allowed
+access to the share. It follows the same format as the allow
+option.
+.TP 
+cnidscheme:\fI[backend]\fR
+set the CNID backend to be used for the volume, default is
+[:DEFAULT_CNID_SCHEME:] available schemes:
+[:COMPILED_BACKENDS:]
+.TP 
+dbpath:\fI[path]\fR
+Sets the database information to be stored in path. You have
+to specifiy a writable location, even if the volume is read
+only.
+.TP 
+maccharset:\fI[charset]\fR
+specifies the mac client codepage for this Volume, e.g.
+"MAC_ROMAN", "MAC_CYRILLIC". If not specified the setting from
+\fBafpd.conf\fR is inherited. This setting is only
+required if you need volumes, where the mac codepage differs from
+the one globally set in \fBafpd.conf\fR.
+.TP 
+options:\fI[option]\fR
+This allows multiple options to be specified in a comma
+delimited format. The available options are:
+.RS 
+.TP 
+limitsize
+Limit disk size reporting to 2GB. This can be used for
+older Macintoshes using newer Appleshare clients.
+.TP 
+ro
+Specifies the share as being read only for all users.
+The .AppleDB directory has to be writeable, you can use the
+\fB\-dbpath\fR option to relocate it.
+.TP 
+usedots
+Don't do :hex translation for dot files. note: when this
+option gets set, certain file names become illegal. These are
+\&.Parent and anything that starts with .Apple. Also, dot files
+created on the unix side are marked invisible.
+.TP 
+root_preexec_close
+a non\-zero return code from root_preexec closes the
+volume immediately, preventing clients to mount/see the volume
+in question.
+.TP 
+preexec_close
+a non\-zero return code from preexec close the volume
+being immediately, preventing clients to mount/see the volume
+in question.
+.RE
+.TP 
+password:\fI[password]\fR
+This option allows you to set a volume password, which can be
+a maximum of 8 characters long (using ASCII strongly recommended at
+the time of this writing).
+.TP 
+preexec:\fI[command]\fR
+command to be run when the volume is mounted, ignored for user
+defined volumes
+.TP 
+postexec:\fI[command]\fR
+command to be run when the volume is closed, ignored for user
+defined volumes
+.TP 
+root_preexec:\fI[command]\fR
+command to be run as root when the volume is mounted, ignored
+for user defined volumes
+.TP 
+root_postexec:\fI[command]\fR
+command to be run as root when the volume is closed, ignored
+for user defined volumes
+.TP 
+rolist:[\fBusers/groups\fR]
+Allows certain users and groups to have read\-only access to a
+share. This follows the allow option format.
+.TP 
+rwlist:\fI[users/groups]\fR
+Allows certain users and groups to have read/write access to a
+share. This follows the allow option format.
+.TP 
+veto:\fI[vetoed name]\fR
+hide files and directories,where the path matches one of the
+\&'/' delimited vetoed names. Matches are partial, e.g. path is
+\fB/abc/def/file\fR and veto:/abc/ will hide the
+file.
+.TP 
+volcharset:\fI[charset]\fR
+specifies the volume codepage, e.g. "UTF8", "UTF8\-MAC",
+"ISO\-8859\-15". Defaults to "UTF8".
+.SH "VARIABLE SUBSTITUTIONS"
+You can use variables in both volume path and volume name.
+.TP 
+1.
+if you specify an unknown variable, it will not get
+converted.
+.TP 
+2.
+if you specify a known variable, but that variable doesn't have
+a value, it will get ignored.
+.PP
+The variables which can be used for substitutions are:
+.TP 
+$b
+basename
+.TP 
+$c
 client's ip or appletalk address
-
-.TP
-.B $f
-full name (contents of the gecos field in the passwd file)
-
-.TP
-.B $g
+.TP 
+$d
+volume pathname on server
+.TP 
+$f
+full name (contents of the gecos field in the passwd
+file)
+.TP 
+$g
 group name
-
-.TP
-.B $h
+.TP 
+$h
 hostname
-
-.TP
-.B $s
+.TP 
+$i
+client's ip, without port
+.TP 
+$s
 server name (this can be the hostname)
-
-.TP
-.B $u
-user name (if guest, it is the user that guest is running as)
-
-.TP
-.B $v
+.TP 
+$u
+user name (if guest, it is the user that guest is running
+as)
+.TP 
+$v
 volume name (either ADEID_NAME or basename of path)
-
-.TP
-.B $z
+.TP 
+$z
 appletalk zone (may not exist)
+.TP 
+$$
+prints dollar sign ($)
+.PP
+When using variable substitution in the volume name, always keep in
+mind, not to exceed the 27 characters limit
+.PP
+\fBUsing variable substitution when defining volumes\fR
+.PP
+.nf
+/home/groups/$g "Groupdir for $g"
+~ "$f is the best one"
+.fi
 
-.TP
-.B $$
-prints dollar sign (\fb$\fR)
+We define "groupdirs" for each primary
+group and use a personalized server name for homedir shares.
+.SH "CNID BACKENDS"
+The AFP protocol mostly refers to files and directories by ID and
+not by name. Netatalk needs a way to store these ID's in a persistent way,
+to achieve this several different CNID backends are available. The CNID
+Databases are by default located in the \fB.AppleDB\fR
+folder in the volume root.
+.TP 
+cdb
+"Concurrent database", backend is based on Sleepycat's Berkely
+DB. With this backend several afpd deamons access
+the CNID database directly. Berkeley DB locking is used to
+synchronize access, if more than one afpd process
+is active for a volume. The drawback is, that the crash of a single
+afpd process might corrupt the database.
+.TP 
+dbd
+Access to the CNID database is restricted to the
+cnid_metad daemon process.
+afpd processes communicate with the daemon for
+database reads and updates. If built with Berkeley DB transactions
+the probability for database corruption is practically zero, but
+performance can be slower than with \fBcdb\fR
+.TP 
+last
+This backend is an exception, in terms of ID persistency. ID's
+are only valid for the current session. This is basically what
+afpd did in the 1.5 (and 1.6) versions. This
+backend is still available, as it is useful for e.g. sharing
+cdroms.
 
-.SH SEE ALSO
-afpd(8)
+\fBWarning\fR: It is
+\fINOT\fR recommended to use this backend for volumes
+anymore, as afpd now relies heavily on a
+persistent ID database. Aliases will likely not work and filename
+mangling is not supported.
+.PP
+Even though ./configure \-\-help might show that
+there are other CNID backends available, be warned those are likely broken
+or mainly used for testing. Don't use them unless you know what you're
+doing, they may be removed without further notice from future
+versions.
+.SH "CHARSET OPTIONS"
+With OS X Apple introduced the AFP3 protocol. One of the most
+important changes was that AFP3 uses unicode names encoded as UTF\-8
+decomposed. Previous AFP/OS versions used codepages, like MacRoman,
+MacCentralEurope, etc.
+.PP
+afpd needs a way to preserve extended macintosh
+characters, or characters illegal in unix filenames, when saving files on
+a unix filesystem. Earlier versions used the the so called CAP encoding.
+An extended character (>0x7F) would be converted to a :xx sequence,
+e.g. the Apple Logo (MacRoman: 0XF0) was saved as \fB:f0\fR.
+Some special characters will be converted as to :xx notation as well.
+\&'\fB/\fR' will be encoded to \fB:2f\fR, if
+\fB\-usedots\fR is not specified, a leading dot
+\&'\fB.\fR' will be encoded as \fB:2e\fR.
+.PP
+This version now uses UTF\-8 as the default encoding for names.
+Special characters, like '\fB/\fR' and a leading
+\&'\fB.\fR' will still be CAP style encoded .
+.PP
+The \fB\-volcharset\fR option will allow you to select
+another volume encoding. E.g. for western users another useful setting
+could be \-volcharset ISO\-8859\-15. apfd will accept any
+\fBiconv\fR(1) provided charset. If a character cannot be converted
+from the mac codepage to the selected volcharset, afpd will save it as a
+CAP encoded character. For AFP3 clients, afpd will
+convert the UTF\-8 character to \fB\-maccharset\fR first. If this
+conversion fails, you'll receive a \-50 error on the mac.
+.PP
+\fINote\fR: Whenever you can, please stick with the
+default UTF\-8 volume format.
+.SH "COMPATIBILITY WITH EARLIER VERSIONS"
+To use a volume created with an earlier afpd
+version, you'll have to specify the following options:
+.PP
+\fBuse a 1.x style volume\fR
+.PP
+.nf
+/path/to/volume "Volname" adouble:v1 volcharset:ASCII
+.fi
+.PP
+In case you used an NLS you could try using a compatible iconv
+charset for \fB\-volcharset\fR.
+.PP
+\fBuse a 1.x style volume, created with maccode.iso8859\-1\fR
+.PP
+.nf
+/path/to/volume "Volname" adouble:v1 volcharset:ISO\-8859\-1
+.fi
+.PP
+You should consider converting old style volumes to the new
+UTF\-8/AD2 format. The safest way to do this, is to create a new volume
+with the default options and copy the files between this volumes with a
+mac.
+.PP
+\fINote\fR: Using above example options will allow
+you to downgrade to 1.x netatalk again.
+.PP
+\fINote\fR: Some 1.x NLS files used non standard
+mappings, e.g. \fBmaccode.iso8859\-1.adapted\fR. This is not
+supported anymore. You'll have to copy the contents of those volumes files
+to a Mac and then back to the netatalk server, preferably to an UTF\-8
+volume.
+.SH "ADVANCED OPTIONS"
+The following options should only be used after serious
+consideration. Be sure you fully understood the, sometimes complex,
+consequences, before using them.
+.TP 
+casefold:\fB[option]\fR
+The casefold option handles, if the case of filenames should
+be changed. The available options are:
+
+\fBtolower\fR \- Lowercases names in both
+directions.
+
+\fBtoupper\fR \- Uppercases names in both
+directions.
+
+\fBxlatelower\fR \- Client sees lowercase, server
+sees uppercase.
+
+\fBxlateupper\fR \- Client sees uppercase, server
+sees lowercase.
+.TP 
+options:[\fBoption\fR]
+This allows multiple options to be specified in a comma
+delimited format. The available options are:
+.RS 
+.TP 
+crlf
+Enables crlf translation for TEXT files, automatically
+converting macintosh line breaks into Unix ones. Use of this
+option might be dangerous since some older programs store
+binary data files as type "TEXT" when saving and switch the
+filetype in a second step. Afpd will
+potentially destroy such files when "erroneously" changing
+bytes in order to do line break translation.
+.TP 
+dropbox
+Allows a volume to be declared as being a "dropbox."
+Note that netatalk must be compiled with dropkludge support
+for this to function. \fIWarning\fR: This
+option is deprecated and might not work as expected.
+.TP 
+mswindows
+Forces filename restrictions imposed by MS WinXX.
+\fIWarning\fR: This is \fINOT\fR
+recommened for volumes mainly used by Macs. Please make sure
+you fully understand this option before using it.
+.TP 
+noadouble
+Forces afpd to not create
+\&.AppleDouble directories unless macintosh metadata needs to be
+written. This option is only useful if you want to share files
+mostly used NOT by macs, causing afpd to
+not automatically create .AppleDouble subdirs containing AD
+header files in every directory it enters (which will it do by
+default).
+
+In case, you save or change files from mac clients, AD
+metadata files have to be written even in case you set this
+option. So you can't avoid the creation of .AppleDouble
+directories and its contents when you give macs write access
+to a share and they make use of it.
+
+Try to avoid \fBnoadouble\fR whenever
+possible.
+.TP 
+nodev
+always use 0 for device number, helps when the device
+number is not constant across a reboot, cluster, ...
+.TP 
+nofileid
+don't advertise createfileid, resolveid, deleteid
+calls.
+.TP 
+nohex
+Disables :hex translations for anything except dot
+files. This option makes the \fB'/\fR' character
+illegal.
+.TP 
+prodos
+Provides compatibility with Apple II clients.
+.TP 
+nostat
+don't stat volume path when enumerating volumes list,
+useful for automounting or volumes created by a preexec
+script.
+.TP 
+upriv
+use AFP3 unix privileges. Become familiar with the new
+"unix privileges" AFP permissions concepts in MacOS X before
+using this option.
+.RE
+.SH "SEE ALSO"
+\fBafpd.conf\fR(5), \fBafpd\fR(8)
+

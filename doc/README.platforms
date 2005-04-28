@@ -127,7 +127,7 @@ C. SOLARIS
 
 1.  SELECT COMPILER.  This distribution is configured to build with
     gcc.  It should also work with cc. At the present time only cc
-    v5.0 and above can build the 64-bit kernel module.
+    v5.0 and gcc 3.1 and above can build the 64-bit kernel module.
 
 1a. SELECT KERNEL TYPE.  Edit sys/solaris/Makefile.kernel and set KCFLAGS
      to include sparcv9 support if you run a 64-bit kernel, or leave it

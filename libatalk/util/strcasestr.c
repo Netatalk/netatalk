@@ -81,7 +81,7 @@ char * FUNC ( const char *phaystack, const char *pneedle)
 				a = *++haystack;
 				if (a == '\0')
 					goto ret0;
-		  shloop:}
+		  shloop:;}
 			while (VAL(a) != VAL(b));
 
 		  jin:a = *++haystack;

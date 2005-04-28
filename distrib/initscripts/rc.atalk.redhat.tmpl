@@ -48,6 +48,7 @@ fi
 RETVAL=1
 RETVAL_ATALKD=0
 RETVAL_PAPD=0
+RETVAL_CNID_METAD=0
 RETVAL_AFPD=0
 
 # startup code for everything
@@ -100,6 +101,13 @@ atalk_startup() {
 
     fi
 
+    if [ x"${CNID_METAD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/cnid_metad ] ; then
+	    echo -n "  Starting cnid_metad:"
+	    daemon ${ATALK_SBIN}/cnid_metad
+	    RETVAL_CNID_METAD=$?
+	    echo
+    fi
+
     if [ x"${AFPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/afpd ] ; then
 	    echo -n "  Starting afpd:"
 	    daemon ${ATALK_SBIN}/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
@@ -108,7 +116,7 @@ atalk_startup() {
 	    echo
     fi
 
-    if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_AFPD -eq 0 ]; then
+    if [ $RETVAL_ATALKD -eq 0 -a $RETVAL_PAPD -eq 0 -a $RETVAL_CNID_METAD -eq 0 -a $RETVAL_AFPD -eq 0 ]; then
         RETVAL=0
 	touch /var/lock/subsys/atalk || RETVAL=1
     fi
@@ -181,6 +189,13 @@ case "$1" in
 	    echo -n "  Stopping afpd:"
 	    killproc afpd
 	    RETVAL_AFPD=$?
+	    echo
+	fi
+
+	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/cnid_metad ]; then
+	    echo -n "  Stopping cnid_metad:"
+	    killproc cnid_metad
+	    RETVAL_CNID_METAD=$?
 	    echo
 	fi
 

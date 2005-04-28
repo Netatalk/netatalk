@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.11 2003-02-16 12:35:05 didg Exp $
+ * $Id: ad_lock.c,v 1.12 2005-04-28 20:49:52 bfernhomberg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -20,18 +20,13 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <atalk/adouble.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <errno.h>
 
-#include <atalk/adouble.h>
+#include <string.h>
 
 #include "ad_private.h"
 
@@ -39,6 +34,10 @@
 #define XLATE_FLOCK(type) ((type) == ADLOCK_RD ? LOCK_SH : \
 ((type) == ADLOCK_WR ? LOCK_EX : \
  ((type) == ADLOCK_CLR ? LOCK_UN : -1)))
+
+#ifdef DISABLE_LOCKING
+#define fcntl(a, b, c ) (0)
+#endif
 
 /* ----------------------- */
 static int XLATE_FCNTL_LOCK(int type) 
@@ -112,7 +111,7 @@ static __inline__ void adf_freelock(struct ad_fd *ad, const int i)
  * i converted to using arrays of locks. everytime a lock
  * gets removed, we shift all of the locks down.
  */
-static __inline__ void adf_unlock(struct ad_fd *ad, int fd, const int user)
+static __inline__ void adf_unlock(struct ad_fd *ad, const int user)
 {
     adf_lock_t *lock = ad->adf_lock;
     int i;
@@ -271,6 +270,14 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
     }
   } else { /* rfork */
     adf = &ad->ad_hf;
+    if (adf->adf_fd == -1) {
+        /* there's no resource fork. return a lock error
+         * otherwise if a second process is able to create it
+         * locks are a mess.
+         */
+        errno = EACCES;
+        return -1;
+    }
     if (type & ADLOCK_FILELOCK) 
       lock.l_start = hf2off(off);
     else
@@ -396,9 +403,14 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
     if ((ad_hfileno(ad) != -1)) {
       	adf = &ad->ad_hf;
     	lock.l_start = df2off(off);
-   	}
-  } else { /* rfork */
-	adf = &ad->ad_hf;
+    }
+  } 
+  else { /* rfork */
+    if ((ad_hfileno(ad) == -1)) {
+        /* there's no resource fork. return no lock */
+        return 0;
+    }
+    adf = &ad->ad_hf;
     lock.l_start = hf2off(off);
   }
 
@@ -439,6 +451,10 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
     adf = &ad->ad_df;
   } else {
     adf = &ad->ad_hf;
+    if (adf->adf_fd == -1) {
+        /* there's no resource fork. return success */
+        return 0;
+    }
     /* if ADLOCK_FILELOCK we want a lock from offset 0
      * it's used when deleting a file:
      * in open we put read locks on meta datas
@@ -493,15 +509,17 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
   struct flock lock;
   int    err;
   
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_df;
-  } else {
-    adf = &ad->ad_hf;
-  }
   lock.l_start = 0;
   lock.l_type = F_WRLCK;
   lock.l_whence = SEEK_SET;
   lock.l_len = 0;
+
+  if (eid == ADEID_DFORK) {
+    adf = &ad->ad_df;
+  } else {
+    adf = &ad->ad_hf;
+    lock.l_start = ad_getentryoff(ad, eid);
+  }
   
   err = fcntl(adf->adf_fd, F_SETLK, &lock);
   if (!err)
@@ -513,9 +531,9 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
 void ad_fcntl_unlock(struct adouble *ad, const int user)
 {
   if (ad->ad_df.adf_fd != -1) {
-    adf_unlock(&ad->ad_df, ad->ad_df.adf_fd, user);
+    adf_unlock(&ad->ad_df, user);
   }
   if (ad->ad_hf.adf_fd != -1) {
-    adf_unlock(&ad->ad_hf, ad->ad_hf.adf_fd, user);
+    adf_unlock(&ad->ad_hf, user);
   }
 }

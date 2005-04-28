@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.11 2002-04-29 01:52:50 morgana Exp $
+ * $Id: nad.c,v 1.12 2005-04-28 20:49:20 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -21,10 +21,13 @@
 #endif /* HAVE_FCNTL_H */
 
 #include <atalk/adouble.h>
+#include <atalk/util.h>
+#include <atalk/volinfo.h>
 #include <netatalk/endian.h>
 #include "megatron.h"
 #include "nad.h"
 
+struct volinfo	vol;
 static char		hexdig[] = "0123456789abcdef";
 
 static char mtou_buf[MAXPATHLEN + 1], utom_buf[MAXPATHLEN + 1];
@@ -308,6 +311,83 @@ static char *utompathsjis( char *from)
 
     return utom_buf;
  }
+
+static char *utompathiconv(char *upath)
+{
+    char        *m, *u;
+    u_int16_t    flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+    size_t       outlen;
+    static char	 mpath[MAXPATHLEN];
+
+    m = mpath;
+    outlen = strlen(upath);
+
+#if 0
+    if (vol->v_casefold & AFPVOL_UTOMUPPER)
+        flags |= CONV_TOUPPER;
+    else if (vol->v_casefold & AFPVOL_UTOMLOWER)
+        flags |= CONV_TOLOWER;
+#endif
+
+    u = upath;
+
+    /* convert charsets */
+    if ((size_t)-1 == ( outlen = convert_charset ( vol.v_volcharset, vol.v_maccharset, vol.v_maccharset, u, outlen, mpath, MAXPATHLEN, &flags)) ) {
+        fprintf( stderr, "Conversion from %s to %s for %s failed.", vol.v_volcodepage, vol.v_maccodepage, u);
+        goto utompath_error;
+    }
+
+    mpath[outlen] = 0;
+    if (flags & CONV_REQMANGLE) 
+	goto utompath_error;
+
+    return(m);
+
+utompath_error:
+    return(utompathcap( upath ));
+}
+
+char *mtoupathiconv(char *mpath)
+{
+    char        *m, *u;
+    size_t       inplen;
+    size_t       outlen;
+    u_int16_t    flags = 0;
+    static char	 upath[MAXPATHLEN];
+
+    if ( *mpath == '\0' ) {
+        return( "." );
+    }
+
+    /* set conversion flags */
+    if (!(vol.v_flags & AFPVOL_NOHEX))
+        flags |= CONV_ESCAPEHEX;
+    if (!(vol.v_flags & AFPVOL_USEDOTS))
+        flags |= CONV_ESCAPEDOTS;
+
+#if 0
+    if ((vol->v_casefold & AFPVOL_MTOUUPPER))
+        flags |= CONV_TOUPPER;
+    else if ((vol->v_casefold & AFPVOL_MTOULOWER))
+        flags |= CONV_TOLOWER;
+#endif
+
+    m = mpath;
+    u = upath;
+
+    inplen = strlen(m);
+    outlen = MAXPATHLEN;
+
+    if ((size_t)-1 == (outlen = convert_charset ( vol.v_maccharset, vol.v_volcharset, vol.v_maccharset, m, inplen, u, outlen, &flags)) ) {
+        fprintf (stderr, "conversion from %s to %s for %s failed.", vol.v_maccodepage, vol.v_volcodepage, mpath);
+        return(mtoupathcap( upath ));
+    }
+    upath[outlen] = 0;
+
+    return( upath );
+}
+
+
  
 char * (*_mtoupath) ( char *mpath) = mtoupathcap;
 char * (*_utompath) ( char *upath) = utompathcap;
@@ -340,6 +420,19 @@ struct nad_file_data {
     struct adouble	ad;
 } nad;
 
+static void initvol(char *path)
+{
+    if (!loadvolinfo(path, &vol)) {
+        vol_load_charsets(&vol);
+        ad_init(&nad.ad, vol.v_adouble, 0);
+        _mtoupath = mtoupathiconv;
+        _utompath = utompathiconv;
+    }
+    else
+        ad_init(&nad.ad, 0, 0);
+}
+
+
 int nad_open( path, openflags, fh, options )
     char		*path;
     int			openflags, options;
@@ -355,10 +448,12 @@ int nad_open( path, openflags, fh, options )
  */
     select_charset( options);
     memset(&nad.ad, 0, sizeof(nad.ad));
+
     if ( openflags == O_RDONLY ) {
+    	initvol(path);
 	strcpy( nad.adpath[0], path );
 	strcpy( nad.adpath[1], 
-		ad_path( nad.adpath[0], ADFLAGS_DF|ADFLAGS_HF ));
+		nad.ad.ad_path( nad.adpath[0], ADFLAGS_DF|ADFLAGS_HF ));
 	for ( fork = 0 ; fork < NUMFORKS ; fork++ ) {
 	    if ( stat( nad.adpath[ fork ], &st ) < 0 ) {
 		if ( errno == ENOENT ) {
@@ -382,10 +477,11 @@ int nad_open( path, openflags, fh, options )
 	return( nad_header_read( fh ));
 
     } else {
+	initvol (".");
 	strcpy( nad.macname, fh->name );
 	strcpy( nad.adpath[0], mtoupath( nad.macname ));
 	strcpy( nad.adpath[1], 
-		ad_path( nad.adpath[0], ADFLAGS_DF|ADFLAGS_HF ));
+		nad.ad.ad_path( nad.adpath[0], ADFLAGS_DF|ADFLAGS_HF ));
 #if DEBUG
     fprintf(stderr, "%s\n", nad.macname);
     fprintf(stderr, "%s is adpath[0]\n", nad.adpath[0]);
@@ -410,15 +506,25 @@ int nad_header_read( fh )
 {
     u_int32_t		temptime;
     struct stat		st;
+    char 		*p;
 
+#if 0
     memcpy( nad.macname, ad_entry( &nad.ad, ADEID_NAME ), 
 	    ad_getentrylen( &nad.ad, ADEID_NAME ));
     nad.macname[ ad_getentrylen( &nad.ad, ADEID_NAME ) ] = '\0';
     strcpy( fh->name, nad.macname );
+#endif
 
     /* just in case there's nothing in macname */
-    if (*fh->name == '\0')
+    if (*fh->name == '\0') {
+      if ( NULL == (p = strrchr(nad.adpath[DATA], '/')) )
+        p = nad.adpath[DATA];
+      else p++;
+#if 0      
       strcpy(fh->name, utompath(nad.adpath[DATA]));
+#endif      
+      strcpy(fh->name, utompath(p));
+    }
 
     if ( stat( nad.adpath[ DATA ], &st ) < 0 ) {
 	perror( "stat of datafork failed" );

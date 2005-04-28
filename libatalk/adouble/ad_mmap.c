@@ -1,5 +1,5 @@
 /*
- * $Id: ad_mmap.c,v 1.4 2002-10-05 13:20:14 didg Exp $
+ * $Id: ad_mmap.c,v 1.5 2005-04-28 20:49:52 bfernhomberg Exp $
  *
  * ad_mmap provides interfaces to memory mapped files. as this is the
  * case, we don't have to deal w/ temporary buffers such as
@@ -13,17 +13,9 @@
 
 #ifdef USE_MMAPPED_HEADERS
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-#include <string.h>
 
 #include <atalk/adouble.h>
+#include <string.h>
 
 #include "ad_private.h"
 

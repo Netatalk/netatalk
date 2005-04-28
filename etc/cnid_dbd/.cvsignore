@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+cnid_metad
+cnid_dbd
+.deps
+.libs

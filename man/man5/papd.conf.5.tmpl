@@ -1,68 +1,180 @@
-.\" $Id: papd.conf.5.tmpl,v 1.2 2002-03-19 23:23:53 morgana Exp $
-.TH papd.conf 5 "26 September 2000" "netatalk 1.5"
-.UC 4
+.TH papd.conf 5 "06 Sep 2004" 2.0.0 Netatalk 
 .SH NAME
-papd.conf \- Configuration file used by \fBpapd\fR(8)
-to determine the configuration of printers used by the Netatalk printing
-daemon
-
+papd.conf \- Configuration file used by papd(8) to determine the configuration of printers used by the Netatalk printing daemon
 .SH DESCRIPTION
-\fB:ETCDIR:/papd.conf\fR is the configuration file used
-by papd to configure the printing services offered by netatalk. Please note
-that papd must be enabled in \fB:ETCDIR:/netatalk.conf\fR for this to take
-any effect. \fBpapd\fR shares the same defaults as lpd on many systems, but not
-Solaris.
-
-Any line not prefixed with \fB#\fR is interpreted. The configuration lines
-are composed like:
-
-.RS
-.sp
-.I printername:[options]
-
-.sp
-.RE
-The simplest case is to have either no papd.conf, or to have one that
-has no active lines. In this case, atalkd should auto-discover the local
-printers on the machine. Please note that you can split lines by using
-\fB\\\fR.
-
-printername may be just a name (\fBPrinter 1\fR), or it may be a full name
-in nbp_name format (\fBPrinter 1:LaserWriter@My Zone\fR).  If more than 15
-printers are defined, you should explicitly define the zone for each printer.
-Otherwise, the Mac Chooser not show all the printers.
-
-The possible options are colon delimited (\fB:\fR), and lines must be
-terminated with colons. The possible options and flags are:
-
-.TP
-.B am=(uams list)
-The \fBam\fR option allows specific UAMs to be specified for a particular
-printer. It has no effect if the \fBau\fR flag is not present or if papd
-authentication was not built into netatalk.
-
-.TP
-.B au
-If present, this flag enables authentication for the printer. Please note
-that papd authentication must be built into netatalk for this to take
-effect.
-
-.TP
-.B op=(operator)
+\fI:ETCDIR:/papd.conf\fR is the
+configuration file used by papd to configure the printing services offered
+by netatalk. Please note that papd must be enabled in \fI:ETCDIR:/netatalk.conf\fR for this to take any effect.
+\fIpapd\fR shares the same defaults as lpd on
+many systems, but not Solaris.
+.PP
+Any line not prefixed with \fI#\fR is
+interpreted. The configuration lines are composed like:
+.PP
+\fIprintername:[options]\fR
+.PP
+On systems running a System V printing system the simplest case is
+to have either no papd.conf, or to have one that has no active lines. In
+this case, atalkd should auto\-discover the local printers on the machine.
+Please note that you can split lines by using \fI\\\\fR.\fR
+.PP
+printername may be just a name (\fIPrinter
+1\fR), or it may be a full name in nbp_name format (\fIPrinter 1:LaserWriter@My Zone\fR).
+.PP
+Systems using a BSD printing system should make use of a pipe to the
+printing command in question within the \fIpr\fR
+option (eg. \fIpr=|/usr/bin/lpr \-J%J \-u%U\fR).
+Note: When printing using a pipe, papd recognizes several wildcards: %F
+will be replaced by the name present in the "%%For:" comment in the
+PostScript stream, same with %J for the "%%Title:" comment. %U will be
+substituted with the login name (the latter applies only when
+authenticated printing is in effect).
+.PP
+When CUPS support is compiled in, then \fIcupsautoadd \fRas the first entry in papd.conf will
+automagically share all CUPS printers by papd utilizing the PPDs assigned
+in CUPS (customizable \-\- see below). This can be overwritten for individal
+printers by subsequently adding individual entries using the CUPS queue
+name as \fIpr \fRentry. Note: CUPS support is
+mutually exclusive with System V support described above.
+.PP
+The possible options are colon delimited (\fI:\fR), and lines must be terminated with colons. The
+possible options and flags are:
+.TP 
+\fIam=(uams list)\fR
+The \fIam\fR option allows specific
+UAMs to be specified for a particular printer. It has no effect if
+the \fIau\fR flag is not present or if papd
+authentication was not built into netatalk. Note: possible values
+are \fIuams_guest.so\fR and \fIuams_clrtxt.so\fR only. The first method requires
+a valid username, but no password. The second requires both a valid
+username and the correct password.
+.TP 
+\fIau\fR
+If present, this flag enables authentication for the printer.
+Please note that papd authentication must be built into netatalk for
+this to take effect.
+.TP 
+\fIco=(CUPS options)\fR
+The \fIco\fR option allows options to
+be passed through to CUPS (eg. \fIco="protocol=TBCP" \fRor \fIco="raw"\fR).
+.TP 
+\fIcupsautoadd[:type][@zone]\fR
+If used as the first entry in papd.conf this will share all
+CUPS printers via papd. type/zone settings as well as other
+parameters assigned to this special printer share will apply to all
+CUPS printers. Unless the \fIpd\fR option
+is set, the CUPS PPDs will be used. To overwrite these global
+settings for individual printers simply add them subsequently to
+papd.conf and assign different settings.
+.TP 
+\fIfo\fR
+If present, this flag enables a hack to translate line endings
+originating from pre Mac OS X LaserWriter drivers to let \fIfoomatic\-rip\fR recognize foomatic PPD options set
+in the printer dialog. Attention: Use with caution since this might
+corrupt binary print jobs!
+.TP 
+\fIop=(operator)\fR
 This specifies the operator name, for lpd spooling.
+.TP 
+\fIpa=(appletalk address)\fR
+Allows specification of Appletalk addresses. Usually not
+needed.
+.TP 
+\fIpd=(path to ppd file)\fR
+Specifies a particular PPD (printer description file) to
+associate with the selected printer.
+.TP 
+\fIpr=(lpd/CUPS printer name or pipe command)\fR
+Sets the \fIlpd\fR or \fICUPS\fR printer that this is spooled to.
+.SH EXAMPLES
+Unless CUPS support has been compiled in (which is default from
+Netatalk 2.0 on) one simply defines the lpd queue in question by setting
+the \fBpr\fR parameter to the queue name, in the following
+example "ps". If no \fBpr\fR parameter is set, the default
+printer will be used.
+.PP
+\fBpapd.conf System V printing system examples\fR
+.PP
+The first spooler is known by the AppleTalk name Mac Printer
+Spooler, and uses a PPD file located in
+\fB/usr/share/lib/ppd\fR. In addition, the user mcs will
+be the owner of all jobs that are spooled. The second spooler is known
+as HP Printer and all options are the default. 
 
-.TP
-.B pa=(appletalk address)
-Allows specification of Appletalk addresses. Usually not needed.
+.nf
+Mac Printer Spooler:\\
+   :pr=ps:\\
+   :pd=/usr/share/lib/ppd/HPLJ_4M.PPD:\\
+   :op=mcs:
 
-.TP
-.B pd=(path to ppd file)
-Specifies a particular PPD (printer description file) to associate with
-the selected printer.
+HP Printer:\\
+   :
+.fi
+.PP
+An alternative to the technique outlined above is to direct papd's
+output via a pipe into another program. Using this mechanism almost all
+printing systems can be driven. Netatalk supplies three "wildcards" that
+get substituted with values of the already printed job:
+\fB%F\fR, \fB%U\fR and \fB%J\fR. Using
+these wildcards, one can pass those parameters directly to programs or
+implement small wrapper scripts to call the printing system in
+question.
+.PP
+\fBpapd.conf examples using pipes\fR
+.PP
+The first spooler is known as HP 8100. It pipes the print job to
+/usr/bin/lpr for printing using the value of the
+\fI%%Title: \fRcomment as job name. PSSP authenticated
+printing is enabled, as is CAP\-style authenticated printing. Both
+methods support guest and cleartext authentication as specified by the
+\&'\fBam\fR' option. The PPD used is
+\fB/etc/atalk/ppds/hp8100.ppd\fR. The second spooler is
+called "Dump PostScript" and uses a pipe to cat to
+send the raw PostScript code into the user's home directory into a file
+called like the printjob. 
 
-.TP
-.B pr=(lpd printer name)
-Sets the \fBlpd\fR printer that this is spooled to.
+.nf
+HP 8100:\\
+   :pr=|/usr/bin/lpr \-Plp \-J"%J":\\
+   :sp:\\
+   :ca=/tmp/print:\\
+   :am=uams_guest.so,uams_pam.so:\\
+   :pd=/etc/atalk/ppds/hp8100.ppd:
 
-.SH SEE ALSO
-papd(8), atalkd.conf(5), lpd(8)
+Dump PostScript:LaserWriter@Server:\\
+   :pr=|cat >/home/%U/%J\-prn.out:\\
+   :pd=/usr/share/lib/ppd/mooralana.ppd:\\
+   :sp:au:op=lp:\\
+   :am=uams_clrtxt.so:
+.fi
+.PP
+Starting with Netatalk 2.0 direct CUPS integration is available. In
+this case, defining only a queue name as \fBpr\fR parameter
+won't invoke the SysV lpd daemon but uses CUPS instead. Unless a specific
+PPD has been assigned using the \fBpd\fR switch, the PPD
+configured in CUPS will be used by papd, too.
+.PP
+There exists one special share named "cupsautoadd". If this is
+present as the first entry then all available CUPS queues will be served
+automagically using the parameters assigned to this global share. But
+subsequent printer definitions can be used to override these global
+settings for individual spoolers.
+.PP
+\fBpapd.conf CUPS examples\fR
+.PP
+The first entry sets up automatic sharing of all CUPS printers.
+All those shares appear in the zone "1st floor" and since no additional
+settings have been made, they use the CUPS printer name as NBP name and
+use the PPD configured in CUPS. The second entry defines different
+settings for one single CUPS printer. It's NBP name is differing from
+the printer's name and the registration happens in another zone.
+
+.nf
+cupsautoadd@1st floor:op=root:
+
+Boss' LaserWriter@2nd floor:\\
+   :pr=laserwriter\-chief:
+.fi
+.SH "SEE ALSO"
+\fBpapd\fR(8), \fBatalkd.conf\fR(5), \fBlpd\fR(8), \fBlpoptions\fR(8)
+

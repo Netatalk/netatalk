@@ -1,84 +1,46 @@
-.TH PAPSTATUS 8 "17 Dec 1991"
+.TH papstatus 8 "17 Dec 1991" 2.0.0 Netatalk 
 .SH NAME
-papstatus \- get the status of an AppleTalk-connected printer
+papstatus \- get the status of an AppleTalk\-connected printer
 .SH SYNOPSIS
-.B :SBINDIR:/papstatus
-[
-.BI -d
-] [
-.B -p
-.I printer
-] [
-.I retrytime
-]
+\fB:SBINDIR:/papstatus\fR [\-d] [ \-p \fBprinter\fR ] [\fBretrytime\fR]
 .SH DESCRIPTION
-.B papstatus
-is used to obtain the current status message from an AppleTalk connected
-printer.  It uses the Printer Access Protocol (PAP) to obtain the
-status information.
-.LP
-If no printer is specified on the command line,
-.B papstatus
-looks for a file called
-.B .paprc
-in the current directory and reads it to obtain the name of a printer.  The
-.B .paprc
-file should contain a single line of the form
-.IB object : \c
-.IB type @ \c
-.I zone
-where each of
-.IR object ,
-.BI : type ,
-and
-.BI @ zone
-are optional.
-.I type
-and
-.I zone
-must be proceeded by
-.RB ` : '
-and
-.RB ` @ '
-respectively.  Blank lines and lines the begin with a
-.RB ` # '
-are ignored.
-.I type
-and
-.I zone
-default to
-.B LaserWriter
-and the zone of the local host, respectively.
+\fIpapstatus\fR is used to obtain the
+current status message from an AppleTalk connected printer. It uses the
+Printer Access Protocol (PAP) to obtain the status information.
+.PP
+If no printer is specified on the command line, \fIpapstatus\fR
+looks for a file called .paprc in the current directory
+and reads it to obtain the name of a printer. The .paprc
+file should contain a single line of the form \fIobject\fR\fI:\fR\fI\fR\fItype\fR\fI@\fR\fI\fR\fIzone\fR
+where each of \fIobject\fR, \fI:\fR\fItype\fR\fI,\fR and \fI@\fR\fIzone\fR are optional.
+\fItype\fR and \fIzone\fR
+must be proceeded by `\fI:\fR' and `\fI@\fR' respectively. Blank lines and lines the begin
+with a `\fI#\fR' are ignored. \fItype\fR and \fIzone\fR default
+to \fILaserWriter\fR and the zone of the local
+host, respectively.
 .SH OPTIONS
-.TP
-.B -d
-Turns on a debugging mode that prints some extra information to standard error.
-.HP
-.B -p
-.I printer
-.br
-Get status from
-.I printer
-(do not consult any
-.B .paprc
-files to find a printer name).  The syntax for
-.I printer
-is the same as discussed above for the
-.B .paprc
-file.
-.TP
-.I retrytime
-Normally,
-.B papstatus
-only gets the status from the printer once.  If
-.I retrytime
+.TP 
+\fB\-d\fR
+Turns on a debugging mode that prints some extra information
+to standard error.
+.TP 
+\fB\-p\fR \fIprinter\fR
+Get status from \fIprinter\fR (do not
+consult any .paprc files to find a printer name).
+The syntax for \fIprinter\fR is the same as
+discussed above for the .paprc file.
+.TP 
+\fIretrytime\fR
+Normally, \fIpapstatus\fR only gets
+the status from the printer once. If \fIretrytime\fR
 is specified, the status is obtained repeatedly, with a sleep of
-.I retrytime
-seconds between inquiring the printer.
+\fIretrytime\fR seconds between inquiring
+the printer.
 .SH FILES
-.TP 20
-.B .paprc
+.TP 
+\&.paprc
 file that contains printer name
-.SH SEE ALSO
-.BR nbp (1),
-.BR pap (8)
+.SH "SEE ALSO"
+\fBnbp\fR(1),
+\fBpap\fR(1)
+

@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.9 2002-11-25 01:33:02 jmarcus Exp $
+ * $Id: pap.c,v 1.10 2005-04-28 20:49:20 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -14,6 +14,7 @@
 #include <sys/uio.h>
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
+#include <errno.h>
 #include <atalk/atp.h>
 #include <atalk/pap.h>
 #include <atalk/nbp.h>
@@ -25,7 +26,6 @@
 #include <string.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
 
 #define FUCKED
 

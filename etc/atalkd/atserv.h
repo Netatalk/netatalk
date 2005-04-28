@@ -1,5 +1,5 @@
 /*
- * $Id: atserv.h,v 1.2 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: atserv.h,v 1.3 2005-04-28 20:49:46 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -19,5 +19,3 @@ struct atport {
     int			(*ap_packet)();
 };
 
-extern struct atserv	atserv[];
-extern int		atservNATSERV;

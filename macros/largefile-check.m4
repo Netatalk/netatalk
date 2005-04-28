@@ -34,6 +34,9 @@ define(WX_SYS_LARGEFILE_MACRO_VALUE,
     fi
 ])
 
+
+
+
 dnl AC_SYS_LARGEFILE
 dnl ----------------
 dnl By default, many hosts won't let programs access large files;
@@ -52,11 +55,23 @@ if test "$enable_largefile" != no; then
         WX_SYS_LARGEFILE_MACRO_VALUE(_LARGE_FILES, 1, ac_cv_sys_large_files)
     fi
 
-    AC_MSG_CHECKING(if large file support is available)
-    if test "x$wx_largefile" = "xyes"; then
+    
+    AC_CACHE_CHECK([for 64 bit off_t],netatalk_cv_SIZEOF_OFF_T,[
+    AC_TRY_RUN([#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+main() { exit((sizeof(off_t) == 8) ? 0 : 1); }],
+netatalk_cv_SIZEOF_OFF_T=yes,netatalk_cv_SIZEOF_OFF_T=no,netatalk_cv_SIZEOF_OFF_T=cross)])
+
+    AC_MSG_CHECKING([if large file support is available])
+    if test "x$netatalk_cv_SIZEOF_OFF_T" = "xyes"; then
         AC_DEFINE(HAVE_LARGEFILE_SUPPORT, [], [LARGEFILE support])
+	AC_MSG_RESULT([yes])
+        ifelse([$1], , :, [$1])
+    else
+        AC_MSG_RESULT([no])
+        ifelse([$2], , :, [$2])
     fi
-    AC_MSG_RESULT($wx_largefile)
 fi
 ])
 

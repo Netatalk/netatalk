@@ -1,4 +1,4 @@
-/* $Id: if.c,v 1.2 2002-01-17 07:11:13 srittau Exp $
+/* $Id: if.c,v 1.3 2005-04-28 20:50:07 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -163,8 +163,10 @@ if_addmulti( queue_t *q, mblk_t *m, char *name, struct sockaddr *sa )
 }
 
     void
-if_pickaddr( struct atif_data *aid )
+if_pickaddr( void *ptr )
 {
+    struct atif_data *aid = (struct atif_data*) ptr;
+
     if ( aid->aid_c.c_type != SIOCSIFADDR ) {
 	cmn_err( CE_NOTE, "if_pickaddr context %x\n", aid->aid_c.c_type );
 	return;

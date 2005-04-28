@@ -1,5 +1,5 @@
 /*
- * $Id: auth.h,v 1.5 2003-03-12 15:07:02 didg Exp $
+ * $Id: auth.h,v 1.6 2005-04-28 20:49:40 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,13 +29,10 @@ struct afp_versions {
 #define USERIBIT_ALL   (USERIBIT_USER | USERIBIT_GROUP)
 
 extern uid_t    uuid;
-#if defined( __svr4__ ) && !defined( NGROUPS )
-#define NGROUPS	NGROUPS_MAX
-#endif /*__svr4__ NGROUPS*/
 #if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
-extern int	groups[ NGROUPS ];
+extern int	*groups;
 #else /*sun __svr4__ ultrix*/
-extern gid_t	groups[ NGROUPS ];
+extern gid_t	*groups;
 #endif /*sun __svr4__ ultrix*/
 extern int	ngroups;
 

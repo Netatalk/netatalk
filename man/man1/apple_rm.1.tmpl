@@ -1,0 +1,21 @@
+.TH apple_rm 1 "22 Aug 2004" 2.0.0 Netatalk 
+.SH NAME
+apple_rm \- Do an apple remove, remove metadata and resource fork as well
+.SH SYNOPSIS
+\fI:BINDIR:/apple_rm\fR \fIFILE\fR...
+.SH DESCRIPTION
+\fIapple_rm\fR is a perl script that
+removes FILE(s) as well as the .AppleDouble metadata file(s) that
+corresponds to FILE(s). These AppleDouble header files eventually also
+contain the resource fork if the files had one. \fIapple_rm\fR does not delete directories.
+.SH EXAMPLES
+\fI:BINDIR:/apple_rm\fR test.text
+.PP
+\fI:BINDIR:/apple_rm\fR test.text
+testing.text
+.SH "REPORTING BUGS"
+Report bugs to the Netatalk\-devel list
+<netatalk\-devel@lists.sourceforge.net>.
+.SH "SEE ALSO"
+\fBapple_cp\fR(1), \fBapple_mv\fR(1).
+

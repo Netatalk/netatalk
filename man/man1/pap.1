@@ -1,166 +1,94 @@
-.TH PAP 1 "6 May 2002" "netatalk 1.5"
+.TH pap 1 "6 May 2002" 2.0.0 Netatalk 
 .SH NAME
-pap, papstatus \- client interface to remote printers using Printer Access Protocol
+pap \- client interface to remote printers using Printer Access Protocol
 .SH SYNOPSIS
-.B pap
-[
-.B -A
-.I address
-] [
-.B -c
-] [
-.B -d
-] [
-.B -e
-] [
-.B -E
-] [
-.B -p
-.I nbpname
-] [
-.B -s
-.I statusfile
-] [
-.B -w
-] [
-.B -W
-] [
-.I FILES
-]
-.sp
-.B papstatus
-[
-.B -p
-.I nbpname
-]
+\fBpap\fR [ \-A \fBaddress\fR ] [\-c] [\-d] [\-e] [\-E] [ \-p \fBnbpname\fR ] [ \-s \fBstatusfile\fR ] [\-w] [\-W] [\fBFILES\fR]
 .SH DESCRIPTION
-.B pap
-is used to connect and send files to an AppleTalk connected printer using
-the Apple Printer Access Protocol (PAP).
-When
-.B pap
-starts execution, it
-tries to open a session with the printer using PAP, and
-then downloads the
-.I files
+pap is used to connect and send files to an
+AppleTalk connected printer using the Apple Printer Access Protocol (PAP).
+When pap starts execution, it tries to open a session
+with the printer using PAP, and then downloads the \fIfiles\fR
 to the printer.
-.LP
-If no
-.I files
-are given on the command line,
-.B pap
-begins reading from standard input.
-.LP
-If no printer is specified on the command line,
-.B pap
-looks for a file called
-.B .paprc
-in the current working directory and reads it to obtain the
-.I nbpname
-of a
-printer.
-Blank lines and lines that begin with a
-.RB ` # '
-are ignored.
-.I type
-and
-.I zone
-default to
-.B LaserWriter
-and the zone of the local host, respectively.
-.LP
-Note that
-.B pap
-is designed to be useful as a communication filter for sending
-.BR lpd (8)
-spooled print jobs to AppleTalk connected printers.  See
-.BR psf (8)
+.PP
+If no \fIfiles\fR are given on the command
+line, pap begins reading from standard input.
+.PP
+If no printer is specified on the command line, pap
+looks for a file called .paprc in the current working
+directory and reads it to obtain the \fInbpname\fR
+of a printer. Blank lines and lines that begin with a `\fI#\fR'
+are ignored. \fItype\fR and \fIzone\fR
+default to \fILaserWriter\fR and the zone of the
+local host, respectively.
+.PP
+Note that pap is designed to be useful as a
+communication filter for sending \fBlpd\fR(8)
+spooled print jobs to AppleTalk connected printers. See
+\fBpsf\fR(8)
 for hints on how to use it this way.
 .SH OPTIONS
-.HP
-.B -A
-.I address
-.br
-Connect to the printer with Appletalk address
-.I address
-and do not consult the
-.B .paprc
-file to find a printer name.  See
-.BR atalk_aton (3)
-for the syntax of
-.IR address .
-.TP
-.B -c
-Take cuts.  The PAP protocol specified a simple queuing
-procedure, such that the clients tell the printer how long
-they have been waiting to print.  This option causes
-.B pap
-to lie about how long it has been waiting.
-.TP
-.B -d
+.TP 
+\fB\-A \fR\fIaddress\fR
+Connect to the printer with Appletalk address \fIaddress\fR and do not consult the
+\&.paprc file to find a printer name. See
+\fBatalk_aton\fR(3)
+for the syntax of \fIaddress\fR.
+.TP 
+\fB\-c\fR
+Take cuts. The PAP protocol specified a simple queuing
+procedure, such that the clients tell the printer how long they have
+been waiting to print. This option causes pap to
+lie about how long it has been waiting.
+.TP 
+\fB\-d\fR
 Enable debug output.
-.TP
-.B -e
+.TP 
+\fB\-e\fR
 Send any message from the printer to stderr instead of stdout.
-.BR psf (8)
-invokes
-.B pap
-with this option.
-.TP
-.B -E
-Don't wait for EOF from the printer.  This option is useful
-for printers which don't implement PAP correctly.  In a correct
+\fBpsf\fR(8)
+invokes pap with this option.
+.TP 
+\fB\-E\fR
+Don't wait for EOF from the printer. This option is useful
+for printers which don't implement PAP correctly. In a correct
 implementation, the client side should wait for the printer to
-return EOF before closing the connection.  Some clients don't
+return EOF before closing the connection. Some clients don't
 wait, and hence some printers have related bugs in their
 implementation.
-.HP
-.B -p
-.I nbpname
-.br
-Connect to the printer named
-.I nbpname
-and do not consult the
-.B .paprc
-file to find a printer name.  See
-.BR nbp_name (3)
-for the syntax of
-.IR nbpname .
-.HP
-.B -s
-.I statusfile
-.br
-Update the file called
-.I statusfile
+.TP 
+\fB\-p\fR \fInbpname\fR
+Connect to the printer named \fInbpname\fR
+and do not consult the .paprc file to find a
+printer name. See \fBnbp_name\fR(3)
+for the syntax of \fInbpname\fR.
+.TP 
+\fB\-s\fR \fIstatusfile\fR
+Update the file called \fIstatusfile\fR
 to contain the most recent status message from the printer.
-.B pap
-gets the status from the printer when it is waiting for the printer to
-process input.  The
-.I statusfile
-will contain a single line terminated with a newline.  This is useful
-when
-.B pap
-is invoked by
-.BR psf (8)
-within
-.BR lpd 's
-spool directory.
-.TP
-.B -w
-Wait for the printer status to contain the word "waiting" before
-sending the job.  This is to defeat printer-side spool available
-on HP IV and V printers.
-.TP
-.B -W
-Wait for the printer status to contain the word "idle" before
-sending the job.  This is to defeat printer-side spool available
-on HP IV and V printers.
+pap gets the status from the printer when it is
+waiting for the printer to process input. The \fIstatusfile\fR
+will contain a single line terminated with a newline. This is useful
+when pap is invoked by
+\fBpsf\fR(8)
+within \fIlpd\fR's spool directory.
+.TP 
+\fB\-w\fR
+Wait for the printer status to contain the word
+"waiting" before sending the job. This is to defeat
+printer\-side spool available on HP IV and V printers.
+.TP 
+\fB\-W\fR
+Wait for the printer status to contain the word "idle"
+before sending the job. This is to defeat printer\-side spool
+available on HP IV and V printers.
 .SH FILES
-.TP 20
-.B .paprc
-file read to obtain printer name if not specified on command line
-.SH SEE ALSO
-.BR nbp_name (3),
-.BR atalk_aton (3),
-.BR lpd (8),
-.BR psf (8).
+.TP 
+\&.paprc
+file read to obtain printer name if not specified on command
+line
+.SH "SEE ALSO"
+\fBnbp_name\fR(3),
+\fBatalk_aton\fR(3),
+\fBlpd\fR(8),
+\fBpsf\fR(8).
+

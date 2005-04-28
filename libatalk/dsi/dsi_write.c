@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_write.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_write.c,v 1.4 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -34,9 +34,11 @@
 /* initialize relevant things for dsi_write. this returns the amount
  * of data in the data buffer. the interface has been reworked to allow
  * for arbitrary buffers. */
-size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
+size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen _U_)
 {
+#ifdef TIMER_ON_READ
   const struct itimerval none = {{0, 0}, {0, 0}};
+#endif  
   size_t len, header;
 
   /* figure out how much data we have. do a couple checks for 0 
@@ -54,11 +56,14 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
   } else
     len = 0;
 
+#ifdef TIMER_ON_READ
   /* deal with signals. i'm doing it this way to ensure that we don't
    * get confused if a writeflush on zero remaining data is, for some
    * reason, needed. */
-  sigprocmask(SIG_BLOCK, &dsi->sigblockset, NULL);
+  sigprocmask(SIG_BLOCK, &dsi->sigblockset, &dsi->oldset);
+  dsi->sigblocked = 1;
   setitimer(ITIMER_REAL, &none, &dsi->savetimer);
+#endif  
   return len;
 }
 
@@ -74,9 +79,10 @@ size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
     dsi->datasize -= length;
     return length;
   }
-
+#ifdef TIMER_ON_READ
   setitimer(ITIMER_REAL, &dsi->savetimer, NULL);
-  sigprocmask(SIG_UNBLOCK, &dsi->sigblockset, NULL);
+  sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
+#endif
   return 0;
 }
 
@@ -93,7 +99,8 @@ void dsi_writeflush(DSI *dsi)
     else
       break;
   }
-
+#ifdef TIMER_ON_READ
   setitimer(ITIMER_REAL, &dsi->savetimer, NULL);
-  sigprocmask(SIG_UNBLOCK, &dsi->sigblockset, NULL);
+  sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
+#endif  
 }

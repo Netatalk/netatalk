@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.6 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: file.h,v 1.7 2005-04-28 20:49:49 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -17,11 +17,14 @@ struct papfile {
     int			pf_datalen;
     char		*pf_buf;
     char		*pf_data;
+    int		origin;
 };
 
 #define PF_BOT		(1<<0)
 #define PF_EOF		(1<<1)
 #define PF_QUERY	(1<<2)
+#define PF_STW		(1<<3)
+#define PF_TRANSLATE	(1<<4)
 
 #define CONSUME( pf, len )  {   (pf)->pf_data += (len); \
 				(pf)->pf_datalen -= (len); \

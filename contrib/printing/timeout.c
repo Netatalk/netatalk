@@ -1,5 +1,5 @@
 /*
- * $Id: timeout.c,v 1.4 2001-07-31 19:49:37 srittau Exp $
+ * $Id: timeout.c,v 1.5 2005-04-28 20:49:36 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -163,7 +163,8 @@ main (argc, argv)
 
 	av = argv;
 
-	while ((i = getopt (argc, argv, "s:")) != -1) {
+	while ((i = getopt (argc, argv, "+s:")) != -1) {
+
 		switch (i) {
 		case 's':
 			if (isdigit (*optarg)) {

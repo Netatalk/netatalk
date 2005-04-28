@@ -1,5 +1,5 @@
 /*
- * $Id: getzones.c,v 1.6 2001-08-11 11:47:22 srittau Exp $
+ * $Id: getzones.c,v 1.7 2005-04-28 20:49:19 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,6 +24,7 @@
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 #include <atalk/util.h>
+#include <atalk/unicode.h>
 #include <atalk/zip.h>
 
 void print_zones(short n, char *buf);
@@ -151,7 +152,22 @@ int main( argc, argv )
  */
 void print_zones( short n, char *buf )
 {
+    size_t zone_len;
+    char *zone;
+
     for ( ; n--; buf += (*buf) + 1 ) {
-	printf( "%.*s\n", *buf, buf+1 );
+
+        if ((size_t)(-1) == (zone_len = convert_string_allocate( CH_MAC,
+                       CH_UNIX, buf+1, *buf, &zone)) ) {
+            zone_len = *buf;
+            if (( zone = strdup(buf+1)) == NULL ) {
+	        perror( "strdup" );
+	        exit( 1 );
+            }
+        }
+
+	printf( "%.*s\n", (int)zone_len, zone );
+
+	free(zone);
     }
 }

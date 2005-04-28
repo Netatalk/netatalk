@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.c,v 1.9 2002-04-29 01:52:49 morgana Exp $
+ * $Id: megatron.c,v 1.10 2005-04-28 20:49:20 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -191,7 +191,7 @@ int megatron( path, module, newname, flags )
     struct FHeader	fh;
     int			bufc;
     int			fork;
-    int			forkred;
+    unsigned int	forkred;
 
 /*
  * If the source file is not stdin, make sure it exists and

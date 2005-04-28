@@ -16,6 +16,7 @@ AFPD_GUEST=nobody
 
 # Set which daemons to run:
 PAPD_RUN=no
+CNID_METAD_RUN=yes
 AFPD_RUN=yes
 
 # Control whether the daemons are started in the background

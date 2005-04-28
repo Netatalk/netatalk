@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_cmdreply.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_cmdreply.c,v 1.4 2005-04-28 20:50:02 bfernhomberg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -18,10 +18,16 @@
  * reserved field are assumed to already be set. */ 
 int dsi_cmdreply(DSI *dsi, const int err)
 {
+int ret;
   dsi->header.dsi_flags = DSIFL_REPLY;
   /*dsi->header.dsi_command = DSIFUNC_CMD;*/
   dsi->header.dsi_len = htonl(dsi->datalen);
   dsi->header.dsi_code = htonl(err);
 
-  return dsi_stream_send(dsi, dsi->data, dsi->datalen);
+  ret = dsi_stream_send(dsi, dsi->data, dsi->datalen);
+  if (dsi->sigblocked)  {
+      sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
+      dsi->sigblocked = 0;
+  }
+  return ret;
 }

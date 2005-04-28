@@ -1,5 +1,5 @@
 /*
- * $Id: aarp.c,v 1.3 2002-01-17 06:13:02 srittau Exp $
+ * $Id: aarp.c,v 1.4 2005-04-28 20:50:07 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -124,8 +124,9 @@ aarp_free( struct atif_data *aid, struct aarplist *aal )
 }
 
     void
-aarp_timeout( struct atif_data *aid )
+aarp_timeout( void *ptr )
 {
+    struct atif_data 	*aid = (struct atif_data *) ptr;
     struct aarplist	*aal, *p;
 
     aid->aid_aarptimeo = qtimeout( aid->aid_q, aarp_timeout,

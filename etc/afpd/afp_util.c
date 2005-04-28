@@ -1,5 +1,5 @@
 /*
- * $Id: afp_util.c,v 1.3 2003-03-12 15:07:01 didg Exp $
+ * $Id: afp_util.c,v 1.4 2005-04-28 20:49:40 bfernhomberg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -14,6 +14,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef DEBUG1
 #include <atalk/afp.h>
 
 const char *AfpNum2name(int num)
@@ -88,3 +89,4 @@ const char *AfpNum2name(int num)
 	}                    									  
 	return "not yet defined";								  
 }
+#endif

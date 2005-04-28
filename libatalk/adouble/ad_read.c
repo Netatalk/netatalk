@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.5 2003-02-09 15:36:13 didg Exp $
+ * $Id: ad_read.c,v 1.6 2005-04-28 20:49:52 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -75,6 +75,10 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
     } else {
         off_t r_off;
         
+        if ( ad_hfileno( ad ) == -1 ) {
+             /* resource fork is not open ( cf etc/afp/fork.c) */
+             return 0;
+        }
         r_off = ad_getentryoff(ad, eid) + off;
 	
 	if (( cc = adf_pread( &ad->ad_hf, buf, buflen, r_off )) < 0 ) {

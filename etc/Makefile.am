@@ -1,3 +1,3 @@
 # Makefile.am for etc/
 
-SUBDIRS = afpd atalkd papd psf uams
+SUBDIRS = afpd cnid_dbd atalkd papd psf uams

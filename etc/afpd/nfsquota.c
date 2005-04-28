@@ -1,5 +1,5 @@
 /*
- * $Id: nfsquota.c,v 1.11 2003-12-28 13:51:12 srittau Exp $
+ * $Id: nfsquota.c,v 1.12 2005-04-28 20:49:44 bfernhomberg Exp $
  *
  * parts of this are lifted from the bsd quota program and are
  * therefore under the following copyright:
@@ -18,8 +18,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifndef NO_QUOTA_SUPPORT
 #include <stdio.h>
-
 /* STDC check */
 #if STDC_HEADERS
 #include <string.h>
@@ -34,26 +34,27 @@ char *strchr (), *strrchr ();
 #define memmove(d,s,n) bcopy ((s), (d), (n))
 #endif /* ! HAVE_MEMCPY */
 #endif /* STDC_HEADERS */
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/param.h> /* for DEV_BSIZE */
-#include <sys/time.h>
-#include <atalk/logger.h>
-
+#include <sys/time.h>  /* <rpc/rpc.h> on ultrix doesn't include this */
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
 #include <netinet/in.h>
+#ifndef PORTMAP
+#define PORTMAP 1
+#endif
 #include <rpc/rpc.h>
 #include <rpc/pmap_prot.h>
 #include <rpcsvc/rquota.h>
 
+
 #include <atalk/afp.h>
+#include <atalk/logger.h>
 
 #include "unix.h"
 
-#ifndef NO_QUOTA_SUPPORT
 /* lifted (with modifications) from the bsd quota program */
 static int
 callaurpc(vol, prognum, versnum, procnum, inproc, in, outproc, out)
@@ -104,7 +105,7 @@ char *in, *out;
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
 #endif /* USE_OLD_RQUOTA */
 
-int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
+int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
                 struct dqblk *dqp)
 {
 
@@ -142,7 +143,7 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
         break;
 
     case Q_EPERM:
-        LOG(log_error, logtype_afpd, "nfsquota: quota permission error, host: %s\n",
+        LOG(log_error, logtype_afpd, "nfsquota: quota permission error, host: %s",
             vol->v_gvs);
         break;
 
@@ -163,22 +164,22 @@ int getnfsquota(const struct vol *vol, const int uid, const u_int32_t bsize,
             gq_rslt.GQR_RQUOTA.rq_bhardlimit*NFS_BSIZE;
         dqp->dqb_bsoftlimit =
             gq_rslt.GQR_RQUOTA.rq_bsoftlimit*NFS_BSIZE;
-#ifdef HAVE_STRUCT_IF_DQBLK
-	dqp->dqb_curspace =
-#else
         dqp->dqb_curblocks =
-#endif
             gq_rslt.GQR_RQUOTA.rq_curblocks*NFS_BSIZE;
 
+#ifdef ultrix
+        dqp->dqb_bwarn = gq_rslt.GQR_RQUOTA.rq_btimeleft;
+#else /* ultrix */
         dqp->dqb_btimelimit =
             tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
+#endif /* ultrix */
 
         *hostpath = ':';
         return AFP_OK;
         break;
 
     default:
-        LOG(log_info, logtype_afpd, "bad rpc result, host: %s\n", vol->v_gvs);
+        LOG(log_info, logtype_afpd, "bad rpc result, host: %s", vol->v_gvs);
         break;
     }
 

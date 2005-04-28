@@ -1,78 +1,40 @@
-.TH NBP_NAME 3 "12 Jan 1994" "netatalk 1.3"
+.TH nbp_name 3 "12 Jan 1994" 2.0.0 Netatalk 
 .SH NAME
 nbp_name \- NBP name parsing
 .SH SYNOPSIS
-.nf
-int nbp_name(char * name, char **obj, char **type, char **zone)
-.fi
+int \fInbp_name\fR(char *\fIname\fR, char **\fIobj\fR, char **\fItype\fR, char **\fIzone\fR);
 .SH DESCRIPTION
-.B nbp_name()
-parses user supplied names into their component object, type, and
-zone.
-.BR obj ,
-.BR type ,
-and
-.B zone
-should be passed by reference, and should point to the caller's default
-values.
-.B nbp_name()
-will change the pointers to the parsed-out values.
-.B name
-is of the form
-.IB object : \c
-.IB type @ \c
-.IR zone ,
-where each of
-.IR object ,
-.BI : type ,
-and
-.BI @ zone
-replace
-.BR obj ,
-.BR type ,
-and
-.BR zone,
-respectively.
-.I type
-must be proceeded by
-.RB ` : ',
-and
-.I zone
-must be preceded by
-.RB ` @ '.
+nbp_name() parses user supplied names into
+their component object, type, and zone. \fIobj\fR,
+\fItype\fR, and zone
+should be passed by reference, and should point to the caller's
+default values. nbp_name() will change the pointers
+to the parsed\-out values. \fIname\fR is of the
+form \fIobject\fR\fI:\fR\fI\fR\fItype\fR\fI@\fR\fI\fRzone, where each of \fIobject\fR,
+\fI:\fR\fItype\fR\fI,\fR and \fI@\fRzone replace \fIobj\fR,
+\fItype\fR, and \fIzone,\fR
+respectively. \fItype\fR must be proceeded by `\fI:\fR', and zone
+must be preceded by `\fI@\fR'.
 .SH EXAMPLE
-The argument of
-.BR afpd (8)'s
-.B -n
-option is parsed with
-.BR nbp_name() .
-The default value of
-.B obj
-is the first component of the machine's hostname (as returned by
-.BR gethostbyname (3)).
-The default value of
-.B type
-is ``AFPServer'', and of
-.B zone
-is ``*'', the default zone.  To cause
-.B afpd
-to register itself in some zone other than the default, one would
-invoke it as
-.sp
-.RS
+The argument of \fBafpd\fR(8)'s
+\fB\-n\fR option is parsed with nbp_name().
+The default value of \fIobj\fR is the first
+component of the machine's hostname (as returned by
+\fBgethostbyname\fR(3)).
+The default value of \fItype\fR is
+``AFPServer'', and of zone is
+``*'', the default zone. To cause \fIafpd\fR
+to register itself in some zone other than the default, one would invoke
+it as
+.PP
 .nf
-afpd -n @some-other-zone
+afpd \-n @some\-other\-zone
 .fi
-.RE
-.sp
-.B obj
-and
-.B type
+.PP
+\fIobj\fR and \fItype\fR
 would retain their default values.
 .SH BUGS
-.BR obj ,
-.BR type ,
-and
-.B zone
-return pointers into static area which may be over-written on each
-call.
+\fIobj\fR, \fItype\fR,
+and zone return pointers into static
+area which may be over\-written on each call.
+

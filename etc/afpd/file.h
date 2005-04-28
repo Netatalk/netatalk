@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.17 2003-06-05 09:17:11 didg Exp $
+ * $Id: file.h,v 1.18 2005-04-28 20:49:42 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -75,7 +75,52 @@ struct extmap {
 };
 
 #define kTextEncodingUTF8 0x08000103
-extern char *set_name   __P((const struct vol *, char *, char *, u_int32_t ) );
+
+typedef enum {
+                                        /* Mac OS encodings*/
+  kTextEncodingMacRoman         = 0L,
+  kTextEncodingMacJapanese      = 1,
+  kTextEncodingMacChineseTrad   = 2,
+  kTextEncodingMacKorean        = 3,
+  kTextEncodingMacArabic        = 4,
+  kTextEncodingMacHebrew        = 5,
+  kTextEncodingMacGreek         = 6,
+  kTextEncodingMacCyrillic      = 7,
+  kTextEncodingMacDevanagari    = 9,
+  kTextEncodingMacGurmukhi      = 10,
+  kTextEncodingMacGujarati      = 11,
+  kTextEncodingMacOriya         = 12,
+  kTextEncodingMacBengali       = 13,
+  kTextEncodingMacTamil         = 14,
+  kTextEncodingMacTelugu        = 15,
+  kTextEncodingMacKannada       = 16,
+  kTextEncodingMacMalayalam     = 17,
+  kTextEncodingMacSinhalese     = 18,
+  kTextEncodingMacBurmese       = 19,
+  kTextEncodingMacKhmer         = 20,
+  kTextEncodingMacThai          = 21,
+  kTextEncodingMacLaotian       = 22,
+  kTextEncodingMacGeorgian      = 23,
+  kTextEncodingMacArmenian      = 24,
+  kTextEncodingMacChineseSimp   = 25,
+  kTextEncodingMacTibetan       = 26,
+  kTextEncodingMacMongolian     = 27,
+  kTextEncodingMacEthiopic      = 28,
+  kTextEncodingMacCentralEurRoman = 29,
+  kTextEncodingMacVietnamese    = 30,
+  kTextEncodingMacExtArabic     = 31,   /* The following use script code 0, smRoman*/
+  kTextEncodingMacSymbol        = 33,
+  kTextEncodingMacDingbats      = 34,
+  kTextEncodingMacTurkish       = 35,
+  kTextEncodingMacCroatian      = 36,
+  kTextEncodingMacIcelandic     = 37,
+  kTextEncodingMacRomanian      = 38,
+  kTextEncodingMacCeltic        = 39,
+  kTextEncodingMacGaelic        = 40,
+  kTextEncodingMacKeyboardGlyphs = 41,
+} kTextEncoding_t;
+
+extern char *set_name   __P((const struct vol *, char *, cnid_t, char *, cnid_t, u_int32_t ) );
 
 extern struct extmap	*getextmap __P((const char *));
 extern struct extmap	*getdefextmap __P((void));
@@ -84,29 +129,25 @@ extern int getfilparams __P((struct vol *, u_int16_t, struct path *,
                                  struct dir *, char *buf, int *));
 
 extern int setfilparams __P((struct vol *, struct path *, u_int16_t, char *));
-extern int renamefile   __P((char *, char *, char *, const int, struct adouble *));
-extern int copyfile     __P((char *, char *, char *, const int));
-extern int deletefile   __P((struct vol *, char *, int));
+extern int renamefile   __P((const struct vol *, char *, char *, char *, struct adouble *));
+extern int copyfile     __P((const struct vol *, const struct vol *, char *, char *, char *, struct adouble *));
+extern int deletefile   __P((const struct vol *, char *, int));
 
 extern void *get_finderinfo __P((const char *, struct adouble *, void *));
-extern int  copy_path_name __P((char *, char *i));
+
+extern size_t mtoUTF8   __P((const struct vol *, const char *, size_t , char *, size_t ));
+extern int  copy_path_name __P((const struct vol *, char *, char *i));
 
 extern u_int32_t get_id  __P((struct vol *, struct adouble *, const struct stat *,
-                                const cnid_t , const char *, const int ));
+                                const cnid_t , char *, const int ));
 
 /* FP functions */
 extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_setfilparams __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_copyfile __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_createfile __P((AFPObj *, char *, int, char *, int *));
-#ifdef CNID_DB
 extern int      afp_createid __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_resolveid __P((AFPObj *, char *, int, char *, int *));
 extern int      afp_deleteid __P((AFPObj *, char *, int, char *, int *));
-#else /* CNID_DB */
-#define afp_createid      afp_null
-#define afp_resolveid     afp_null
-#define afp_deleteid      afp_null
-#endif /* AD_VERSION > AD_VERSION1 */
 
 #endif

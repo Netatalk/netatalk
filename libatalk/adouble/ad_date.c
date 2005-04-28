@@ -1,15 +1,12 @@
 /*
- * $Id: ad_date.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: ad_date.c,v 1.4 2005-04-28 20:49:51 bfernhomberg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
 #include <atalk/adouble.h>
 
 int ad_setdate(const struct adouble *ad, 
@@ -27,8 +24,11 @@ int ad_setdate(const struct adouble *ad,
     memcpy(ad_entry(ad, ADEID_FILEI) + dateoff, &date, sizeof(date));
 
   } else if (ad->ad_version == AD_VERSION2) {
+    if (!ad_getentryoff(ad, ADEID_FILEDATESI))
+        return -1;
+        
     if (dateoff > AD_DATE_ACCESS)
-      return -1;
+        return -1;
     memcpy(ad_entry(ad, ADEID_FILEDATESI) + dateoff, &date, sizeof(date));
 
   } else 
@@ -49,6 +49,9 @@ int ad_getdate(const struct adouble *ad,
     memcpy(date, ad_entry(ad, ADEID_FILEI) + dateoff, sizeof(u_int32_t));
 
   } else if (ad->ad_version == AD_VERSION2) {
+    if (!ad_getentryoff(ad, ADEID_FILEDATESI))
+        return -1;
+
     if (dateoff > AD_DATE_ACCESS)
       return -1;
     memcpy(date, ad_entry(ad, ADEID_FILEDATESI) + dateoff, sizeof(u_int32_t));

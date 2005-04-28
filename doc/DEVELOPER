@@ -149,6 +149,6 @@ scalable, and mission-critical database support to software
 developers. BDB can downloaded from
 http://www.sleepycat.com/download.html
 Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 3.1.17, 3.2.9, 3.3.11, 4.0.14, and 4.1.25.
-The recommended version is 3.3.11 as that is the version on which most
+Currently, Netatalk supports BDB 4.1.25 and 4.2.52.
+The recommended version is 4.2.52 as that is the version on which most
 testing has been done.
