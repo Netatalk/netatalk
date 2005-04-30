@@ -592,7 +592,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				   ALL dirsearch_byname will fail.
 				*/
 				if (cached)
-            		path.d_dir = dirsearch_byname(dstack[cidx].dir, path.u_name);
+            		path.d_dir = dirsearch_byname(vol, dstack[cidx].dir, path.u_name);
             	else
             		path.d_dir = NULL;
             	if (!path.d_dir) {

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.58 2005-04-28 20:49:45 bfernhomberg Exp $
+ * $Id: volume.c,v 1.59 2005-04-30 21:33:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1640,6 +1640,7 @@ int	ibuflen _U_, *rbuflen;
     }
 
     volume->v_dir = volume->v_root = NULL;
+    volume->v_hash = NULL;
 
     volume->v_flags |= AFPVOL_OPEN;
     volume->v_cdb = NULL;  
@@ -1705,6 +1706,7 @@ int	ibuflen _U_, *rbuflen;
     dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
     dir->d_m_name_ucs2 = strdup_w(volume->v_name);
     volume->v_dir = volume->v_root = dir;
+    volume->v_hash = dirhash();
 
     curdir = volume->v_dir;
     if (volume->v_cnidscheme == NULL) {
@@ -1789,6 +1791,7 @@ int	ibuflen _U_, *rbuflen;
 
 openvol_err:
     if (volume->v_dir) {
+    	hash_free( volume->v_hash);
         dirfree( volume->v_dir );
         volume->v_dir = volume->v_root = NULL;
     }
@@ -1808,6 +1811,7 @@ static void closevol(struct vol	*vol)
     if (!vol)
         return;
 
+    hash_free( vol->v_hash);
     dirfree( vol->v_root );
     vol->v_dir = NULL;
     if (vol->v_cdb != NULL) {

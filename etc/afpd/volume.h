@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.21 2005-04-28 20:49:46 bfernhomberg Exp $
+ * $Id: volume.h,v 1.22 2005-04-30 21:33:41 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,6 +15,7 @@
 #include "atalk/unicode.h"
 #include "globals.h"
 #include "afp_vfs.h"
+#include "hash.h"
 
 #define AFPVOL_NAMELEN   27
 
@@ -24,7 +25,9 @@ struct vol {
     struct vol		*v_next;
     ucs2_t		*v_name;
     char		*v_path;
+    
     struct dir		*v_dir, *v_root;
+    hash_t		*v_hash;
     int			v_flags;
 #ifdef __svr4__
     int			v_qfd;

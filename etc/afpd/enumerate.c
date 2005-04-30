@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.42 2005-04-28 20:49:41 bfernhomberg Exp $
+ * $Id: enumerate.c,v 1.43 2005-04-30 21:33:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -367,7 +367,7 @@ int     ext;
             if ( dbitmap == 0 ) {
                 continue;
             }
-            dir = dirsearch_byname(curdir, s_path.u_name);
+            dir = dirsearch_byname(vol, curdir, s_path.u_name);
             if (!dir && NULL == (dir = adddir( vol, curdir, &s_path) ) ) {
                     return AFPERR_MISC;
                 }

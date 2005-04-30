@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.77 2005-04-28 20:49:41 bfernhomberg Exp $
+ * $Id: directory.c,v 1.78 2005-04-30 21:33:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -148,20 +148,24 @@ int get_afp_errno(const int param)
 
 /* ------------------- */
 struct dir *
-            dirsearch_byname( cdir, name )
-            struct dir *cdir;
-            const char	*name;
+dirsearch_byname( const struct vol *vol, struct dir *cdir, char *name)
 {
-struct dir *dir;
+struct dir *dir = NULL;
 
-    if (!strcmp(name, "."))
-        return cdir;
-    dir = cdir->d_child;
-    while (dir) {
-        if ( strcmp( dir->d_u_name, name ) == 0 ) {
-            break;
+    if (cdir->d_did == DIRDID_ROOT_PARENT) {
+        if ( !strcmp(vol->v_dir->d_u_name, name)) {
+            dir = vol->v_dir;
         }
-        dir = (dir == cdir->d_child->d_prev) ? NULL : dir->d_next;
+    } else if ( cdir->d_child) {
+        struct dir key;
+        hnode_t *hn;
+        
+        key.d_parent = cdir;
+        key.d_u_name = name;
+	hn = hash_lookup(vol->v_hash, &key);
+	if (hn) {
+	    dir = hnode_get(hn);
+	}
     }
     return dir;
 }            
@@ -264,7 +268,7 @@ u_int32_t	did;
 }
 
 /* child addition/removal */
-static void dirchildadd(struct dir *a, struct dir *b) 
+static void dirchildadd(const struct vol *vol, struct dir *a, struct dir *b) 
 {
     if (!a->d_child)
         a->d_child = b;
@@ -273,6 +277,9 @@ static void dirchildadd(struct dir *a, struct dir *b)
         b->d_prev = b->d_next->d_prev;
 	b->d_next->d_prev = b;
 	b->d_prev->d_next = b;
+    }
+    if (!hash_alloc_insert(vol->v_hash, b, b)) { 
+        LOG(log_error, logtype_afpd, "dirchildadd: can't hash %s", b->d_u_name);
     }
 } 
 
@@ -419,23 +426,37 @@ struct dir *dir;
 }
 #endif /* 0 */
 
+/* --------------------- */
+static void dir_hash_del(const struct vol *vol, struct dir *dir)
+{
+    hnode_t *hn;
+
+    hn = hash_lookup(vol->v_hash, dir);
+    if (!hn) {
+        LOG(log_error, logtype_afpd, "dir_hash_del: %s not hashed", dir->d_u_name);
+    }
+    else {
+    	hash_delete(vol->v_hash, hn);
+    }
+}
 
 /* remove the node from the tree. this is just like insertion, but
  * different. actually, it has to worry about a bunch of things that
  * insertion doesn't care about. */
 static void dir_remove( vol, dir )
-struct vol	*vol _U_;
+struct vol	*vol;
 struct dir	*dir;
 {
 #ifdef REMOVE_NODES
     struct ofork *of, *last;
     struct dir *node, *leaf;
 #endif /* REMOVE_NODES */
-
+	
     if (!dir || (dir == SENTINEL))
         return;
-
+        
     /* i'm not sure if it really helps to delete stuff. */
+    dir_hash_del(vol, dir);
 #ifndef REMOVE_NODES 
     dirfreename(dir);
     dir->d_m_name = NULL;
@@ -674,9 +695,6 @@ struct vol	*vol;
 struct dir	*dir;
 struct path *path;
 {
-    if ( path->u_name == NULL) {
-        path->u_name = mtoupath(vol, path->m_name, dir->d_did, (path->m_type==3) );
-    }
     path->d_dir = NULL;
 
     if ( path->u_name == NULL) {
@@ -1023,14 +1041,19 @@ struct path     *path;
            - it's a hash duplicate and we are in big trouble
         */
         deleted = (edir->d_m_name == NULL);
+        if (!deleted)
+            dir_hash_del(vol, edir);
         dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
         edir->d_m_name_ucs2 = cdir->d_m_name_ucs2;
         free(cdir);
         cdir = edir;
-        if (!cdir->d_parent || (cdir->d_parent == dir && !deleted))
+        LOG(log_error, logtype_afpd, "adddir: insert %s", edir->d_m_name);
+        if (!cdir->d_parent || (cdir->d_parent == dir && !deleted)) {
+            hash_alloc_insert(vol->v_hash, cdir, cdir);
             return cdir;
+        }
         /* the old was not in the same folder */
         if (!deleted)
             dirchildremove(cdir->d_parent, cdir);
@@ -1038,10 +1061,11 @@ struct path     *path;
 
     /* parent/child directories */
     cdir->d_parent = dir;
-    dirchildadd(dir, cdir);
+    dirchildadd(vol, dir, cdir);
     return( cdir );
 }
 
+/* --- public functions follow --- */
 /* free everything down. we don't bother to recolor as this is only
  * called to free the entire tree */
 void dirfreename(struct dir *dir)
@@ -1102,6 +1126,48 @@ struct dir *dirnew(const char *m_name, const char *u_name)
     dir->d_left = dir->d_right = SENTINEL;
     dir->d_next = dir->d_prev = dir;
     return dir;
+}
+
+/* ------------------ */
+static hash_val_t hash_fun_dir(const void *key)
+{
+const struct dir *k = key;
+
+    static unsigned long randbox[] = {
+	0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
+	0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
+	0xc1af4d69U, 0x1d2917b5U, 0xec4c304dU, 0x9ee5016cU,
+	0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
+    };
+
+    const unsigned char *str = k->d_u_name;
+    hash_val_t acc = 0;
+
+    while (*str) {
+	acc ^= randbox[(*str + acc) & 0xf];
+	acc = (acc << 1) | (acc >> 31);
+	acc &= 0xffffffffU;
+	acc ^= randbox[((*str++ >> 4) + acc) & 0xf];
+	acc = (acc << 2) | (acc >> 30);
+	acc &= 0xffffffffU;
+    }
+    return acc;
+}
+
+/* ---------------- */
+static int hash_comp_dir(const void *key1, const void *key2)
+{
+const struct dir *k1 = key1;
+const struct dir *k2 = key2;
+
+    return !(k1->d_parent->d_did == k2->d_parent->d_did && !strcmp(k1->d_u_name, k2->d_u_name));
+}
+
+/* ---------------- */
+hash_t *
+dirhash(void)
+{
+    return hash_create(HASHCOUNT_T_MAX, hash_comp_dir, hash_fun_dir);
 }
 
 /* ------------------ */
@@ -1315,6 +1381,12 @@ char	**cpath;
                  }                    
             }
         }
+        if (ret.u_name == NULL) {
+            if (!(ret.u_name = mtoupath(vol, ret.m_name, dir->d_did, utf8_encoding()))) {
+                afp_errno = AFPERR_PARAM;
+                return NULL;
+            }
+        }
         if ( !extend ) {
             ucs2_t *tmpname;
             cdir = dir->d_child;
@@ -1342,12 +1414,7 @@ char	**cpath;
             }
             else {
 noucsfallback:
-                while (cdir) {
-                    if ( strcmp( cdir->d_m_name, path ) == 0 ) {
-                         break;
-                    }
-                    cdir = (cdir == dir->d_child->d_prev) ? NULL :cdir->d_next;
-                }
+                cdir = dirsearch_byname(vol, dir, ret.u_name);
             }
 
             if (cdir == NULL && scdir != NULL) {
@@ -1383,7 +1450,7 @@ noucsfallback:
 
         if ( cdir == NULL ) {
 
-            if ( len > 0 || !ret.u_name) {
+            if ( len > 0) {
                 return NULL;
             }
 
@@ -2339,6 +2406,7 @@ struct dir	*dir, *newparent;
         ad_close( &ad, ADFLAGS_HF );
     }
 
+    dir_hash_del(vol, dir);
     if (dir->d_m_name == dir->d_u_name)
         dir->d_u_name = NULL;
 
@@ -2374,13 +2442,14 @@ struct dir	*dir, *newparent;
         return( AFP_OK );
     }
     if ( parent == newparent ) {
+        hash_alloc_insert(vol->v_hash, dir, dir);
         return( AFP_OK );
     }
 
     /* detach from old parent and add to new one. */
     dirchildremove(parent, dir);
     dir->d_parent = newparent;
-    dirchildadd(newparent, dir);
+    dirchildadd(vol, newparent, dir);
     return( AFP_OK );
 }
 

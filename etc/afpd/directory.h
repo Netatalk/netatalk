@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.18 2005-04-28 20:49:41 bfernhomberg Exp $
+ * $Id: directory.h,v 1.19 2005-04-30 21:33:41 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -175,7 +175,7 @@ extern void             dirfreename __P((struct dir *));
 extern void             dirfree __P((struct dir *));
 extern struct dir	*dirsearch __P((const struct vol *, u_int32_t));
 extern struct dir	*dirlookup __P((const struct vol *, u_int32_t));
-extern struct dir       *dirsearch_byname __P((struct dir *,const char *));
+extern struct dir       *dirsearch_byname __P((const struct vol *, struct dir *,char *));
 
 extern struct dir	*adddir __P((struct vol *, struct dir *, 
                                                struct path *));
@@ -207,6 +207,8 @@ extern int netatalk_rmdir __P((const char *name));
 extern int netatalk_unlink __P((const char *name));
 
 extern int caseenumerate __P((const struct vol *, struct path *, struct dir *));
+
+extern hash_t *dirhash __P((void));
 /* from enumerate.c */
 extern char *check_dirent __P((const struct vol *, char *));
 
