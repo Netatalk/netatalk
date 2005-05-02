@@ -117,7 +117,7 @@ struct dsitem {
  
 
 #define DS_BSIZE 128
-static int cur_pos = 0;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
+static u_int32_t cur_pos = 0;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
 static DIR *dirpos = NULL; /* UNIX structure describing currently opened directory. */
 static int save_cidx = -1; /* Saved index of currently scanned directory. */
 
@@ -486,7 +486,7 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
  */
 #define NUM_ROUNDS 100
 static int catsearch(struct vol *vol, struct dir *dir,  
-		     int rmatches, int *pos, char *rbuf, u_int32_t *nrecs, int *rsize, int ext)
+		     int rmatches, u_int32_t *pos, char *rbuf, u_int32_t *nrecs, int *rsize, int ext)
 {
 	int cidx, r;
 	struct dirent *entry;
@@ -501,8 +501,10 @@ static int catsearch(struct vol *vol, struct dir *dir,
     int num_rounds = NUM_ROUNDS;
     int cached;
         
-	if (*pos != 0 && *pos != cur_pos) 
-		return AFPERR_CATCHNG;
+	if (*pos != 0 && *pos != cur_pos) {
+		result = AFPERR_CATCHNG;
+		goto catsearch_end;
+	}
 
 	/* FIXME: Category "offspring count ! */
 
