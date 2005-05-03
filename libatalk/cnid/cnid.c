@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.2 2005-04-28 20:49:57 bfernhomberg Exp $
+ * $Id: cnid.c,v 1.3 2005-05-03 14:55:12 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -196,7 +196,7 @@ u_int32_t flags;
 
 /* --------------- */
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
-			char *name, const int len, cnid_t hint)
+			char *name, const size_t len, cnid_t hint)
 {
 cnid_t ret;
 
@@ -219,7 +219,7 @@ int ret;
 
 
 /* --------------- */
-cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,const int len)
+cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,const size_t len)
 {
 cnid_t ret;
 
@@ -230,7 +230,7 @@ cnid_t ret;
 }
 
 /* --------------- */
-int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const int len)
+int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
 {
 cnid_t ret;
 time_t t;
@@ -252,7 +252,7 @@ time_t t;
 
 /* --------------- */
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-			char *name, const int len)
+			char *name, const size_t len)
 {
 cnid_t ret;
 
@@ -263,7 +263,7 @@ cnid_t ret;
 }
 
 /* --------------- */
-char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, u_int32_t len)
+char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 {
 char *ret;
 
@@ -275,7 +275,7 @@ char *ret;
 
 /* --------------- */
 int cnid_update   (struct _cnid_db *cdb, const cnid_t id, const struct stat *st, 
-			const cnid_t did, char *name, const int len)
+			const cnid_t did, char *name, const size_t len)
 {
 int ret;
 
@@ -287,7 +287,7 @@ int ret;
 			
 /* --------------- */
 cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                       const char *name, const int len, cnid_t hint)
+                       char *name, const size_t len, cnid_t hint)
 {
 cnid_t ret;
 

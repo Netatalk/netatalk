@@ -1,5 +1,5 @@
 /*
- * $Id: pack.h,v 1.2 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: pack.h,v 1.3 2005-05-03 14:55:11 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -38,7 +38,7 @@
 #define CNID_DBD_HEADER_LEN          (CNID_DBD_DEVINO_LEN + CNID_DBD_DID_LEN)
 #endif
 
-extern char      *pack_cnid_data  __P((struct cnid_dbd_rqst *));
+extern unsigned char *pack_cnid_data  __P((struct cnid_dbd_rqst *));
 
 #ifdef DEBUG
 extern char      *stringify_devino  __P((dev_t dev, ino_t ino));

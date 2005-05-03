@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_update.c,v 1.2 2005-04-28 20:50:00 bfernhomberg Exp $
+ * $Id: cnid_db3_update.c,v 1.3 2005-05-03 14:55:13 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,7 +30,7 @@
  * handle the did/name data, there are a bunch of functions to get
  * and set the various fields. */
 int cnid_db3_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const int len
+                const cnid_t did, char *name, const size_t len
                 /*, const char *info, const int infolen*/)
 {
     CNID_private *db;

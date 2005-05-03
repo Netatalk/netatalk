@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_last.c,v 1.2 2005-04-28 20:50:01 bfernhomberg Exp $
+ * $Id: cnid_last.c,v 1.3 2005-05-03 14:55:14 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -23,7 +23,7 @@
 
 /* ------------------------ */
 cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
-                     const cnid_t did, char *name, const int len, cnid_t hint)
+                     const cnid_t did _U_, char *name _U_, const size_t len _U_, cnid_t hint _U_)
 {
 
     /* FIXME: it relies on fact, that this is never called twice for the same file/dir. */
@@ -80,7 +80,7 @@ void cnid_last_close(struct _cnid_db *cdb)
 
 
 
-int cnid_last_delete(struct _cnid_db *cdb, const cnid_t id)
+int cnid_last_delete(struct _cnid_db *cdb _U_, const cnid_t id _U_)
 {
     return CNID_INVALID;
 }
@@ -88,7 +88,7 @@ int cnid_last_delete(struct _cnid_db *cdb, const cnid_t id)
 
 
 /* Return CNID for a given did/name. */
-cnid_t cnid_last_get(struct _cnid_db *cdb, const cnid_t did, char *name, const int len)
+cnid_t cnid_last_get(struct _cnid_db *cdb _U_, const cnid_t did _U_, char *name _U_, const size_t len _U_)
 {
     /* FIXME: it relies on fact, that this is never called twice for the same file/dir. */
     /* Propably we should look through DID tree. */
@@ -98,7 +98,8 @@ cnid_t cnid_last_get(struct _cnid_db *cdb, const cnid_t did, char *name, const i
 
 
 /* */
-cnid_t cnid_last_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const int len)
+cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, const cnid_t did _U_, 
+    char *name _U_, const size_t len _U_)
 {
     /* FIXME: this function doesn't work in [last] scheme ! */
     /* Should be never called or CNID should be somewhat refactored again. */
@@ -143,7 +144,7 @@ static struct _cnid_db *cnid_last_new(const char *volpath)
     return cdb;
 }
 
-struct _cnid_db *cnid_last_open(const char *dir, mode_t mask)
+struct _cnid_db *cnid_last_open(const char *dir, mode_t mask _U_)
 {
     struct _cnid_db *cdb;
 
@@ -167,16 +168,15 @@ struct _cnid_module cnid_last_module = {
 };
 
 /* Return the did/name pair corresponding to a CNID. */
-char *cnid_last_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer, u_int32_t len)
+char *cnid_last_resolve(struct _cnid_db *cdb _U_, cnid_t * id _U_, void *buffer _U_, size_t len _U_)
 {
     /* FIXME: frankly, it does not work. As get, add and other functions. */
     return NULL;
 }
 
 
-int cnid_last_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                     const cnid_t did, char *name, const int len
-                     /*, const char *info, const int infolen */ )
+int cnid_last_update(struct _cnid_db *cdb _U_, const cnid_t id _U_, const struct stat *st _U_,
+                     const cnid_t did  _U_, char *name  _U_, const size_t len _U_)
 {
     return 0;
 }

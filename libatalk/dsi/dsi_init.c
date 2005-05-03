@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_init.c,v 1.4 2005-04-28 20:50:02 bfernhomberg Exp $
+ * $Id: dsi_init.c,v 1.5 2005-05-03 14:55:15 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -55,7 +55,7 @@ DSI *dsi_init(const dsi_proto protocol, const char *program,
     return dsi;
 }
 
-void dsi_setstatus(DSI *dsi, u_int8_t *status, const int slen)
+void dsi_setstatus(DSI *dsi, char *status, const size_t slen)
 {
     dsi->status = status;
     dsi->statuslen = slen;

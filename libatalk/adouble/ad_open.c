@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.32 2005-04-28 20:49:52 bfernhomberg Exp $
+ * $Id: ad_open.c,v 1.33 2005-05-03 14:55:12 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -938,7 +938,7 @@ int ret = 0;
 #ifdef EMULATE_SUIDDIR
 uid_t id;
 
-    if (default_uid != -1) {  
+    if (default_uid != (uid_t)-1) {  
         /* we are root (admin) */
         id = (default_uid)?default_uid:stbuf->st_uid;
 	ret = chown( path, id, stbuf->st_gid );

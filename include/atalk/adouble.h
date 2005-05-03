@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.24 2005-04-28 20:49:51 bfernhomberg Exp $
+ * $Id: adouble.h,v 1.25 2005-05-03 14:55:12 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -247,7 +247,8 @@ struct adouble {
     char		ad_filler[ 16 ];
     struct ad_entry	ad_eid[ ADEID_MAX ];
     struct ad_fd	ad_df, ad_hf;
-    int                 ad_flags, ad_inited;
+    int                 ad_flags;
+    unsigned int        ad_inited;
     int                 ad_options;
     int                 ad_refcount; /* used in afpd/ofork.c */
     off_t               ad_rlen;     /* ressource fork len with AFP 3.0

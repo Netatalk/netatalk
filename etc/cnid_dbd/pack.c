@@ -1,5 +1,5 @@
 /*
- * $Id: pack.c,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: pack.c,v 1.3 2005-05-03 14:55:11 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -89,10 +89,10 @@ DBT *skey;
    differ from make_cnid_data in that we never return NULL, rqst->name cannot
    ever cause start[] to overflow because name length is checked in libatalk. */
 
-char *pack_cnid_data(struct cnid_dbd_rqst *rqst)
+unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst)
 {
-    static char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    char *buf = start +CNID_LEN;
+    static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
+    unsigned char *buf = start +CNID_LEN;
     u_int32_t i;
 
     pack_devino(buf, rqst->dev, rqst->ino);

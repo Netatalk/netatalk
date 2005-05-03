@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_db3_open.c,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
+ * $Id: cnid_db3_open.c,v 1.3 2005-05-03 14:55:13 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -115,6 +115,7 @@ DB_INIT_LOG | DB_INIT_TXN)
 #define MAXITER     0xFFFF      /* maximum number of simultaneously open CNID
                                  * databases. */
 
+#if 0
 /* -----------------------
  * bandaid for LanTest performance pb. for now not used, cf. ifdef 0 below
 */
@@ -128,6 +129,7 @@ static int my_yield(void)
     ret = select(0, NULL, NULL, NULL, &t);
     return 0;
 }
+#endif
 
 /* --------------- */
 static int my_open(DB * p, const char *f, const char *d, DBTYPE t, u_int32_t flags, int mode)
@@ -139,7 +141,10 @@ static int my_open(DB * p, const char *f, const char *d, DBTYPE t, u_int32_t fla
 #endif
 }
 
-/* --------------- */
+#if 0
+/* --------------- 
+ * XXX not used
+*/
 
 /* the first compare that's always done. */
 static __inline__ int compare_did(const DBT * a, const DBT * b)
@@ -154,7 +159,7 @@ static __inline__ int compare_did(const DBT * a, const DBT * b)
 /* sort did's and then names. this is for unix paths.
  * i.e., did/unixname lookups. */
 #if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-static int compare_unix(DB * db, const DBT * a, const DBT * b)
+static int compare_unix(DB * db _U_, const DBT * a, const DBT * b)
 #else /* DB_VERSION_MINOR < 1 */
 static int compare_unix(const DBT * a, const DBT * b)
 #endif                          /* DB_VERSION_MINOR */
@@ -180,7 +185,7 @@ static int compare_unix(const DBT * a, const DBT * b)
  * unicode table to work. also, we can't use strdiacasecmp as that
  * returns a match if a < b. */
 #if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
-static int compare_mac(DB * db, const DBT * a, const DBT * b)
+static int compare_mac(DB * db _U_, const DBT * a, const DBT * b)
 #else /* DB_VERSION_MINOR < 1 */
 static int compare_mac(const DBT * a, const DBT * b)
 #endif                          /* DB_VERSION_MINOR */
@@ -201,7 +206,6 @@ static int compare_mac(const DBT * a, const DBT * b)
     return a->size - b->size;   /* sort by length */
 }
 
-
 /* for unicode names -- right now it's the same as compare_mac. */
 #if DB_VERSION_MAJOR >= 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR > 1)
 static int compare_unicode(DB * db, const DBT * a, const DBT * b)
@@ -215,6 +219,7 @@ static int compare_unicode(const DBT * a, const DBT * b)
     return compare_mac(a, b);
 #endif /* DB_VERSION_MINOR */
 }
+#endif
 
 static struct _cnid_db *cnid_db3_new(const char *volpath)
 {
@@ -497,7 +502,6 @@ struct _cnid_db *cnid_db3_open(const char *dir, mode_t mask)
 
   fail_adouble:
 
-  fail_db:
     free(db);
 
   fail_cdb:

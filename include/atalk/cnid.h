@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.h,v 1.10 2005-04-28 20:49:51 bfernhomberg Exp $
+ * $Id: cnid.h,v 1.11 2005-05-03 14:55:12 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -51,20 +51,19 @@ struct _cnid_db {
 	void *_private;              /* back-end speficic data */
 
 	cnid_t (*cnid_add)(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
-			char *name, const int len, cnid_t hint);
+			char *name, const size_t, cnid_t hint);
 	int (*cnid_delete)(struct _cnid_db *cdb, cnid_t id);
-	cnid_t (*cnid_get)(struct _cnid_db *cdb, const cnid_t did, char *name,
-			const int len);
+	cnid_t (*cnid_get)(struct _cnid_db *cdb, const cnid_t did, char *name, const  size_t);
 	cnid_t (*cnid_lookup)(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-			char *name, const int len);
+			char *name, const size_t);
 	cnid_t (*cnid_nextid)(struct _cnid_db *cdb);
-	char *(*cnid_resolve)(struct _cnid_db *cdb, cnid_t *id, void *buffer, u_int32_t len);
+	char *(*cnid_resolve)(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len);
 	int (*cnid_update)(struct _cnid_db *cdb, const cnid_t id, const struct stat *st, 
-			const cnid_t did, char *name, const int len);	
+			const cnid_t did, char *name, const size_t len);	
 	void (*cnid_close)(struct _cnid_db *cdb);
-	int  (*cnid_getstamp)(struct _cnid_db *cdb, void *buffer, const int len);
+	int  (*cnid_getstamp)(struct _cnid_db *cdb, void *buffer, const size_t len);
         cnid_t (*cnid_rebuild_add)(struct _cnid_db *, const struct stat *, const cnid_t,
-                        const char *, const int, cnid_t);
+                        char *, const size_t, cnid_t);
 };
 typedef struct _cnid_db cnid_db;
 
@@ -90,24 +89,24 @@ void cnid_register(struct _cnid_module *module);
 struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int flags);
 
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
-			char *name, const int len, cnid_t hint);
+			char *name, const size_t len, cnid_t hint);
 
 int    cnid_delete(struct _cnid_db *cdb, cnid_t id);
 
-cnid_t cnid_get   (struct _cnid_db *cdb, const cnid_t did, char *name,const int len);
+cnid_t cnid_get   (struct _cnid_db *cdb, const cnid_t did, char *name,const size_t len);
 
-int    cnid_getstamp(struct _cnid_db *cdb, void *buffer, const int len);
+int    cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len);
 
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-			char *name, const int len);
+			char *name, const size_t len);
 
-char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, u_int32_t len);
+char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len);
 
 int cnid_update   (struct _cnid_db *cdb, const cnid_t id, const struct stat *st, 
-			const cnid_t did, char *name, const int len);
+			const cnid_t did, char *name, const size_t len);
 
 cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                        const char *name, const int len, cnid_t hint);
+                        char *name, const size_t len, cnid_t hint);
 
 
 /* This function closes a CNID database and frees all resources assigned to it. */ 
@@ -117,7 +116,11 @@ void cnid_close(struct _cnid_db *db);
 
 /*
  * $Log: cnid.h,v $
- * Revision 1.10  2005-04-28 20:49:51  bfernhomberg
+ * Revision 1.11  2005-05-03 14:55:12  didg
+ *
+ * remove gcc warning
+ *
+ * Revision 1.10  2005/04/28 20:49:51  bfernhomberg
  *
  * - merge branch-netatalk-afp-3x-dev, HEAD was tagged before
  *

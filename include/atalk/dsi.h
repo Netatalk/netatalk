@@ -64,8 +64,9 @@ typedef struct DSI {
   
   u_int32_t attn_quantum, datasize, server_quantum;
   u_int16_t serverID, clientID;
-  u_int8_t *status, commands[DSI_CMDSIZ], data[DSI_DATASIZ];
-  int statuslen;
+  char      *status;
+  u_int8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
+  size_t statuslen;
   size_t datalen, cmdlen;
   size_t read_count, write_count;
   int asleep; /* client won't reply AFP 0x7a ? */
@@ -142,7 +143,7 @@ extern DSI *dsi_init __P((const dsi_proto /*protocol*/,
 			  const char * /*host*/, const char * /*address*/,
 			  const int /*port*/, const int /*proxy*/,
 			  const u_int32_t /* server quantum */));
-extern void dsi_setstatus __P((DSI *, u_int8_t *, const int));
+extern void dsi_setstatus __P((DSI *, char *, const size_t));
 
 /* in dsi_getsess.c */
 extern DSI *dsi_getsession __P((DSI *, server_child *, const int));

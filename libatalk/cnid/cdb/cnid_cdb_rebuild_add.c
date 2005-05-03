@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_rebuild_add.c,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
+ * $Id: cnid_cdb_rebuild_add.c,v 1.3 2005-05-03 14:55:13 didg Exp $
  *
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -16,42 +16,6 @@
 #define DEBUG 1
 
 #include "cnid_cdb.h"
-
-#ifdef ATACC
-/* FIXME: Enhance for 8 byte dev/inode */
-char *make_cnid_data(const struct stat *st,const cnid_t did,
-                     const char *name, const int len)
-{
-    static char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    char *buf = start  +CNID_LEN;
-    u_int32_t i;
-
-    if (len > MAXPATHLEN)
-        return NULL;
-
-    memcpy(buf, &st->st_dev, sizeof(st->st_dev));
-    buf += sizeof(st->st_dev);
-
-    i = htonl(st->st_ino);
-    memcpy(buf , &st->st_ino, sizeof(st->st_ino));
-    buf += sizeof(st->st_ino);
-
-    i = S_ISDIR(st->st_mode)?1:0;
-    i = htonl(i);
-    memcpy(buf, &i, sizeof(i));
-    buf += sizeof(i);
-    
-    /* did is already in network byte order */
-    memcpy(buf, &did, sizeof(did));
-    buf += sizeof(did);
-
-    memcpy(buf, name, len);
-    *(buf + len) = '\0';
-
-    return start;
-}    
-#endif
-
 
 /* ----------------------------- */
 static cnid_t set_max_cnid(CNID_private *db, cnid_t hint)
@@ -111,7 +75,7 @@ cleanup:
 
 /* ------------------------ */
 cnid_t cnid_cdb_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
-                const cnid_t did, const char *name, const int len, 
+                const cnid_t did, char *name, const size_t len, 
 		cnid_t hint)
 {
     CNID_private *db;

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_private.h,v 1.2 2005-04-28 20:50:00 bfernhomberg Exp $
+ * $Id: cnid_db3_private.h,v 1.3 2005-05-03 14:55:13 didg Exp $
  */
 
 #ifndef LIBATALK_CNID_PRIVATE_H
@@ -106,12 +106,12 @@ typedef struct CNID_private {
 #endif /* __inline__ */
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
-static __inline__ char *make_cnid_data(const struct stat *st,
+static __inline__ unsigned char *make_cnid_data(const struct stat *st,
                                        const cnid_t did,
-                                       const char *name, const int len)
+                                       const char *name, const size_t len)
 {
-    static char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    char *buf = start;
+    static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
+    unsigned char *buf = start;
     u_int32_t i;
 
     if (len > MAXPATHLEN)

@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.16 2005-04-28 20:49:50 bfernhomberg Exp $
+ * $Id: uams_randnum.c,v 1.17 2005-05-03 14:55:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -73,7 +73,7 @@ static u_int8_t         randbuf[8];
 /* handle ~/.passwd. courtesy of shirsch@ibm.net. */
 static  __inline__ int home_passwd(const struct passwd *pwd, 
 				   const char *path, const int pathlen _U_, 
-				   char *passwd, const int len,
+				   unsigned char *passwd, const int len,
 				   const int set)
 {
   struct stat st;
@@ -145,7 +145,7 @@ home_passwd_fail:
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 static int afppasswd(const struct passwd *pwd, 
 		     const char *path, const int pathlen, 
-		     char *passwd, int len, 
+		     unsigned char *passwd, int len, 
 		     const int set)
 {
   u_int8_t key[DES_KEY_SZ*2];
@@ -264,7 +264,7 @@ afppasswd_done:
  * depending upon whether or not the password is in ~/.passwd
  * or in a global location */
 static int randpass(const struct passwd *pwd, const char *file,
-		    char *passwd, const int len, const int set) 
+		    unsigned char *passwd, const int len, const int set) 
 {
   int i;
   uid_t uid = geteuid();

@@ -70,16 +70,16 @@ extern void cnid_tdb_close __P((struct _cnid_db *));
 
 /* cnid_add.c */
 extern cnid_t cnid_tdb_add __P((struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const int, cnid_t));
+                                 char *, const size_t, cnid_t));
 
 /* cnid_get.c */
-extern cnid_t cnid_tdb_get __P((struct _cnid_db *, const cnid_t, char *, const int));
-extern char *cnid_tdb_resolve __P((struct _cnid_db *, cnid_t *, void *, u_int32_t));
-extern cnid_t cnid_tdb_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t, char *, const int));
+extern cnid_t cnid_tdb_get __P((struct _cnid_db *, const cnid_t, char *, const size_t));
+extern char *cnid_tdb_resolve __P((struct _cnid_db *, cnid_t *, void *, size_t));
+extern cnid_t cnid_tdb_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t));
 
 /* cnid_update.c */
 extern int cnid_tdb_update __P((struct _cnid_db *, const cnid_t, const struct stat *,
-                                 const cnid_t, char *, int));
+                                 const cnid_t, char *, size_t));
 
 /* cnid_delete.c */
 extern int cnid_tdb_delete __P((struct _cnid_db *, const cnid_t));
@@ -90,7 +90,7 @@ extern cnid_t cnid_tdb_nextid __P((struct _cnid_db *));
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
 static __inline__ char *make_tdb_data(const struct stat *st,
                                        const cnid_t did,
-                                       const char *name, const int len)
+                                       const char *name, const size_t len)
 {
     static char start[TDB_HEADER_LEN + MAXPATHLEN + 1];
     char *buf = start;

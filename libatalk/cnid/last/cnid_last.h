@@ -23,12 +23,12 @@ extern struct _cnid_module cnid_last_module;
 extern struct _cnid_db *cnid_last_open __P((const char *, mode_t));
 extern void cnid_last_close __P((struct _cnid_db *));
 extern cnid_t cnid_last_add __P((struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const int, cnid_t));
-extern cnid_t cnid_last_get __P((struct _cnid_db *, const cnid_t, char *, const int));
-extern char *cnid_last_resolve __P((struct _cnid_db *, cnid_t *, void *, u_int32_t));
-extern cnid_t cnid_last_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t, char *, const int));
+                                 char *, const size_t, cnid_t));
+extern cnid_t cnid_last_get __P((struct _cnid_db *, const cnid_t, char *, const size_t));
+extern char *cnid_last_resolve __P((struct _cnid_db *, cnid_t *, void *, size_t));
+extern cnid_t cnid_last_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t));
 extern int cnid_last_update __P((struct _cnid_db *, const cnid_t, const struct stat *,
-                                 const cnid_t, char *, int));
+                                 const cnid_t, char *, size_t));
 extern int cnid_last_delete __P((struct _cnid_db *, const cnid_t));
 
 #endif /* include/atalk/cnid_last.h */

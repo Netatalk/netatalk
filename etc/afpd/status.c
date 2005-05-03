@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.16 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: status.c,v 1.17 2005-05-03 14:55:10 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -481,7 +481,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 {
     ASP asp;
     DSI *dsi;
-    u_int8_t *status = NULL;
+    char *status = NULL;
     size_t statuslen;
     int c, sigoff;
 

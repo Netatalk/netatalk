@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_resolve.c,v 1.2 2005-04-28 20:50:00 bfernhomberg Exp $
+ * $Id: cnid_db3_resolve.c,v 1.3 2005-05-03 14:55:13 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,7 +27,7 @@
 #include "cnid_db3_private.h"
 
 /* Return the did/name pair corresponding to a CNID. */
-char *cnid_db3_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, u_int32_t len) {
+char *cnid_db3_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len) {
     CNID_private *db;
     DBT key, data;
     int rc;

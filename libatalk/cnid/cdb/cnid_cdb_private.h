@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_private.h,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
+ * $Id: cnid_cdb_private.h,v 1.3 2005-05-03 14:55:13 didg Exp $
  */
 
 #ifndef LIBATALK_CDB_PRIVATE_H
@@ -195,12 +195,12 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
 }
 
-static __inline__ char *make_cnid_data(const struct stat *st,
+static __inline__ unsigned char *make_cnid_data(const struct stat *st,
                                        const cnid_t did,
-                                       const char *name, const int len)
+                                       const char *name, const size_t len)
 {
-    static char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    char *buf = start  +CNID_LEN;
+    static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
+    unsigned char *buf = start  +CNID_LEN;
     u_int32_t i;
 
     if (len > MAXPATHLEN)
@@ -224,8 +224,8 @@ static __inline__ char *make_cnid_data(const struct stat *st,
     return start;
 }
 #else
-extern char *make_cnid_data __P((const struct stat *,const cnid_t ,
-                                       const char *, const int ));
+extern unsigned char *make_cnid_data __P((const struct stat *,const cnid_t ,
+                                       const char *, const size_t ));
 #endif
 
 #endif /* atalk/cnid/cnid_private.h */

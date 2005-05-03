@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_add.c,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
+ * $Id: cnid_cdb_add.c,v 1.3 2005-05-03 14:55:13 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -40,11 +40,11 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
 }
 
-char *make_cnid_data(const struct stat *st,const cnid_t did,
-                     const char *name, const int len)
+unsigned char *make_cnid_data(const struct stat *st,const cnid_t did,
+                     const char *name, const size_t len)
 {
-    static char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    char *buf = start  +CNID_LEN;
+    static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
+    unsigned char *buf = start  +CNID_LEN;
     u_int32_t i;
 
     if (len > MAXPATHLEN)
@@ -70,7 +70,7 @@ char *make_cnid_data(const struct stat *st,const cnid_t did,
 #endif
 
 extern int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const int len);
+                const cnid_t did, char *name, const size_t len);
 
 /* --------------- */
 int db_stamp(void *buffer, size_t size)
@@ -169,7 +169,7 @@ cleanup:
 
 /* ------------------------ */
 cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
-                const cnid_t did, char *name, const int len,
+                const cnid_t did, char *name, const size_t len,
                 cnid_t hint)
 {
     CNID_private *db;
@@ -246,7 +246,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
 
 /* cnid_cbd_getstamp */
 /*-----------------------*/
-int cnid_cdb_getstamp(struct _cnid_db *cdb, void *buffer, const int len)
+int cnid_cdb_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {
     DBT key, data;
     int rc;

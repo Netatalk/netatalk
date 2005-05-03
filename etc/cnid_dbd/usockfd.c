@@ -1,5 +1,5 @@
 /*
- * $Id: usockfd.c,v 1.2 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: usockfd.c,v 1.3 2005-05-03 14:55:11 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -141,7 +141,7 @@ int tsockfd_create(char *host, u_int16_t ipport, int backlog)
 int usockfd_check(int sockfd, unsigned long ndelay)
 {
     int fd;
-    int size;
+    socklen_t size;
     fd_set readfds;
     struct timeval tv;
     int ret;
