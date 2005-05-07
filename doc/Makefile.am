@@ -1,10 +1,10 @@
 # Makefile.am for INSTALL/
 
 EXTRA_DIST = \
-	CONFIGURE		\
-	DEVELOPER		\
-	INSTALL			\
-	FAQ			\
-	README.hidden-items	\
-	README.platforms	\
-	README.veto
+	DEVELOPER \
+	FAQ \
+	README.documentation \
+	README.hidden-items \
+	README.ids \
+	README.logger \
+	README.platforms
