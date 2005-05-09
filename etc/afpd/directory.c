@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.78 2005-04-30 21:33:41 didg Exp $
+ * $Id: directory.c,v 1.79 2005-05-09 00:58:27 bfernhomberg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -152,11 +152,7 @@ dirsearch_byname( const struct vol *vol, struct dir *cdir, char *name)
 {
 struct dir *dir = NULL;
 
-    if (cdir->d_did == DIRDID_ROOT_PARENT) {
-        if ( !strcmp(vol->v_dir->d_u_name, name)) {
-            dir = vol->v_dir;
-        }
-    } else if ( cdir->d_child) {
+    if ((cdir->d_did != DIRDID_ROOT_PARENT) && (cdir->d_child)) {
         struct dir key;
         hnode_t *hn;
         
@@ -1414,7 +1410,20 @@ char	**cpath;
             }
             else {
 noucsfallback:
-                cdir = dirsearch_byname(vol, dir, ret.u_name);
+                if (dir->d_did == DIRDID_ROOT_PARENT) {
+                    /* root parent has only one child and d_m_name is *NOT* utm (d_u_name)
+                     * d_m_name is the Mac volume name
+                     * d_u_name is the volume unix directory name
+                     *
+                    */
+                    cdir = NULL;
+                    if (!strcmp(vol->v_dir->d_m_name, ret.m_name)) {
+			cdir = vol->v_dir;
+                    }
+                }
+		else {
+                    cdir = dirsearch_byname(vol, dir, ret.u_name);
+                }
             }
 
             if (cdir == NULL && scdir != NULL) {
