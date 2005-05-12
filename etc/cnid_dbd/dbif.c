@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: dbif.c,v 1.3 2005-05-12 00:20:27 bfernhomberg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -514,7 +514,11 @@ int dbif_count(const int dbi, u_int32_t *count)
     DB_BTREE_STAT *sp;
     DB *db = db_table[dbi].db;
 
+#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 3)
+    ret = db->stat(db, db_txn, &sp, 0);
+#else
     ret = db->stat(db, &sp, 0);
+#endif
 
     if (ret) {
         LOG(log_error, logtype_cnid, "error getting stat infotmation on database: %s", db_strerror(errno));
