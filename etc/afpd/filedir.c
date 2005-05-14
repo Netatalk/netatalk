@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.48 2005-04-28 20:49:42 bfernhomberg Exp $
+ * $Id: filedir.c,v 1.49 2005-05-14 12:54:53 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -384,10 +384,10 @@ int         isdir;
     */
     
     if (!ad_metadata(p, adflags, adp)) {
-    u_int16_t bshort;
+        u_int16_t bshort;
 
         ad_getattr(adp, &bshort);
-        ad_close( adp, ADFLAGS_HF );
+        ad_close_metadata( adp);
         if ((bshort & htons(ATTRBIT_NORENAME))) 
             return(AFPERR_OLOCK);
     }

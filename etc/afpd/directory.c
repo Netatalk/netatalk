@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.79 2005-05-09 00:58:27 bfernhomberg Exp $
+ * $Id: directory.c,v 1.80 2005-05-14 12:54:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1812,7 +1812,7 @@ int getdirparams(const struct vol *vol,
             
         default :
             if ( isad ) {
-                ad_close( &ad, ADFLAGS_HF );
+                ad_close_metadata( &ad );
             }
             return( AFPERR_BITMAP );
         }
@@ -1830,7 +1830,7 @@ int getdirparams(const struct vol *vol,
         data = set_name(vol, data, pdid, dir->d_m_name, dir->d_did, utf8);
     }
     if ( isad ) {
-        ad_close( &ad, ADFLAGS_HF );
+        ad_close_metadata( &ad );
     }
     *buflen = data - buf;
     return( AFP_OK );
@@ -2069,8 +2069,7 @@ int setdirparams(const struct vol *vol,
     }
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (ad_open( upath, vol_noadouble(vol)|ADFLAGS_HF|ADFLAGS_DIR,
-                 O_RDWR|O_CREAT, 0666, &ad) < 0) {
+    if (ad_open_metadata( upath, vol_noadouble(vol)|ADFLAGS_DIR, O_CREAT, &ad) < 0) {
         /*
          * Check to see what we're trying to set.  If it's anything
          * but ACCESS, UID, or GID, give an error.  If it's any of those
@@ -2255,8 +2254,8 @@ setdirparam_done:
                 ad_setid(&ad, st->st_dev, st->st_ino,  dir->d_did, dir->d_parent->d_did, vol->v_stamp);
             }
         }
-        ad_flush( &ad, ADFLAGS_HF );
-        ad_close( &ad, ADFLAGS_HF );
+        ad_flush_metadata( &ad);
+        ad_close_metadata( &ad);
     }
 
     if (change_parent_mdate && dir->d_did != DIRDID_ROOT
@@ -2338,8 +2337,7 @@ int	ibuflen _U_, *rbuflen;
     }
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if (ad_open( ".", vol_noadouble(vol)|ADFLAGS_HF|ADFLAGS_DIR,
-                 O_RDWR|O_CREAT, 0666, &ad ) < 0)  {
+    if (ad_open_metadata( ".", vol_noadouble(vol)|ADFLAGS_DIR, O_CREAT, &ad ) < 0)  {
         if (vol_noadouble(vol))
             goto createdir_done;
         return( AFPERR_ACCESS );
@@ -2347,8 +2345,8 @@ int	ibuflen _U_, *rbuflen;
     ad_setname(&ad, s_path->m_name);
     ad_setid( &ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did, vol->v_stamp);
 
-    ad_flush( &ad, ADFLAGS_HF );
-    ad_close( &ad, ADFLAGS_HF );
+    ad_flush_metadata( &ad);
+    ad_close_metadata( &ad);
 
 createdir_done:
     memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));
@@ -2409,10 +2407,10 @@ struct dir	*dir, *newparent;
     
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (!ad_open( dst, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR, 0, &ad)) {
+    if (!ad_open_metadata( dst, ADFLAGS_DIR, 0, &ad)) {
         ad_setname(&ad, newname);
-        ad_flush( &ad, ADFLAGS_HF );
-        ad_close( &ad, ADFLAGS_HF );
+        ad_flush_metadata( &ad);
+        ad_close_metadata( &ad);
     }
 
     dir_hash_del(vol, dir);

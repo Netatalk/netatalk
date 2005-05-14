@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.96 2005-04-28 20:49:41 bfernhomberg Exp $
+ * $Id: file.c,v 1.97 2005-05-14 12:54:52 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -575,7 +575,7 @@ int getfilparams(struct vol *vol,
     }
     rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp, attrbits);
     if ( adp ) {
-        ad_close( adp, ADFLAGS_HF );
+        ad_close_metadata( adp);
     }
 #ifdef DEBUG
     LOG(log_info, logtype_afpd, "end getfilparams:");
@@ -910,8 +910,7 @@ int setfilparams(struct vol *vol,
 
     /* second try with adouble open 
     */
-    if ( ad_open( upath, vol_noadouble(vol) | ADFLAGS_HF,
-                 O_RDWR|O_CREAT, 0666, adp) < 0) {
+    if ( ad_open_metadata( upath, vol_noadouble(vol), O_CREAT, adp) < 0) {
         /* for some things, we don't need an adouble header */
         if (f_bitmap & ~(1<<FILPBIT_MDATE)) {
             return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
@@ -996,8 +995,8 @@ setfilparam_done:
     }
 
     if (isad) {
-        ad_flush( adp, ADFLAGS_HF );
-        ad_close( adp, ADFLAGS_HF );
+        ad_flush_metadata( adp);
+        ad_close_metadata( adp);
 
     }
 
@@ -1531,7 +1530,7 @@ int         checkAttrib;
                 continue;
 
             case EACCES:
-                adp = NULL; /* maybe it's a file we no rw mode for us */
+                adp = NULL; /* maybe it's a file with no write mode for us */
                 break;      /* was return AFPERR_ACCESS;*/
             case EROFS:
                 return AFPERR_VLOCK;
@@ -1547,23 +1546,11 @@ int         checkAttrib;
     if (checkAttrib) {
         u_int16_t   bshort;
         
-        if (adp && (adflags & ADFLAGS_HF)) {
-
+        if ( ad_metadata( file , 0, &ad) == 0 ) {
             ad_getattr(&ad, &bshort);
+            ad_close_metadata( &ad);
             if ((bshort & htons(ATTRBIT_NODELETE))) {
-                ad_close( &ad, adflags );
-                return(AFPERR_OLOCK);
-            }
-        }
-        else if (!adp) {
-            /* was EACCESS error try to get only metadata */
-            ad_init(&ad, vol->v_adouble, vol->v_ad_options);  /* OK */
-            if ( ad_metadata( file , 0, &ad) == 0 ) {
-                ad_getattr(&ad, &bshort);
-                ad_close( &ad, ADFLAGS_HF );
-                if ((bshort & htons(ATTRBIT_NODELETE))) {
-                    return  AFPERR_OLOCK;
-                }
+                return  AFPERR_OLOCK;
             }
         }
     }
@@ -1720,13 +1707,13 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
             
         adp = of_ad(vol, &path, &ad);
             
-        if ( ad_open( de->d_name, ADFLAGS_HF, O_RDWR, 0, adp ) < 0 ) {
+        if ( ad_open_metadata( de->d_name, 0, 0, adp ) < 0 ) {
             return 0;
         }
         if (ad_setid(adp, path.st.st_dev, path.st.st_ino, aint, did, vol->v_stamp)) {
-            ad_flush(adp, ADFLAGS_HF);
+            ad_flush_metadata(adp);
         }
-        ad_close(adp, ADFLAGS_HF);
+        ad_close_metadata(adp);
     }
 #endif /* AD_VERSION > AD_VERSION1 */
 

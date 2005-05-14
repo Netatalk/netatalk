@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.59 2005-04-30 21:33:41 didg Exp $
+ * $Id: volume.c,v 1.60 2005-05-14 12:54:53 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1220,9 +1220,7 @@ int		*buflen;
      * .Parent file here if it doesn't exist. */
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ( ad_open( vol->v_path, vol_noadouble(vol) |
-                  ADFLAGS_HF|ADFLAGS_DIR, O_RDWR | O_CREAT,
-                  0666, &ad) < 0 ) {
+    if ( ad_open_metadata( vol->v_path, vol_noadouble(vol) | ADFLAGS_DIR, O_CREAT, &ad) < 0 ) {
         isad = 0;
         vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
 
@@ -1238,7 +1236,7 @@ int		*buflen;
                ad_getentrylen( &ad, ADEID_NAME ));
         }
         vol_setdate(vol->v_vid, &ad, st->st_mtime);
-        ad_flush(&ad, ADFLAGS_HF);
+        ad_flush_metadata(&ad);
     }
     else {
         if (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0)
@@ -1392,7 +1390,7 @@ int		*buflen;
         data += aint;
     }
     if ( isad ) {
-        ad_close( &ad, ADFLAGS_HF );
+        ad_close_metadata( &ad);
     }
     *buflen = data - buf;
     return( AFP_OK );

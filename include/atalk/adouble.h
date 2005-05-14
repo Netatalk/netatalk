@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.25 2005-05-03 14:55:12 didg Exp $
+ * $Id: adouble.h,v 1.26 2005-05-14 12:54:55 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -411,9 +411,11 @@ extern int ad_refresh     __P((struct adouble *));
 extern int ad_stat        __P((const char *, struct stat *));
 extern int ad_metadata    __P((const char *, int, struct adouble *));
 
-#if 0
-#define ad_metadata(name, flags, adp)  ad_open(name, ADFLAGS_HF|(flags), O_RDONLY, 0666, adp)
-#endif
+#define ad_open_metadata(name, flags, mode, adp)\
+   ad_open(name, ADFLAGS_HF|(flags), O_RDWR |(mode), 0666, (adp))
+
+#define ad_flush_metadata(adp) ad_flush( (adp), ADFLAGS_HF)
+#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_HF)
 
 /* extend header to RW if R or W (W if R for locking),
  */ 

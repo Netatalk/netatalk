@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.33 2005-05-03 14:55:12 didg Exp $
+ * $Id: ad_open.c,v 1.34 2005-05-14 12:54:55 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1221,7 +1221,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     uid_t uid;
     int   ret, err;
 
-    if ((ret = ad_open(name, ADFLAGS_HF | (flags), O_RDONLY, 0, adp)) < 0 && errno == EACCES) {
+    if ((ret = ad_open(name, ADFLAGS_HF | flags, O_RDONLY, 0, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
@@ -1229,7 +1229,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
             return -1;
         }
         /* we are root open read only */
-        ret = ad_open(name, ADFLAGS_HF|ADFLAGS_RDONLY|(flags), O_RDONLY, 0, adp);
+        ret = ad_open(name, ADFLAGS_HF|ADFLAGS_RDONLY|flags, O_RDONLY, 0, adp);
         err = errno;
         if ( seteuid(uid) < 0) {
             LOG(log_error, logtype_default, "ad_metadata: can't seteuid back");

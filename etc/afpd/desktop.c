@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.31 2005-04-28 20:49:41 bfernhomberg Exp $
+ * $Id: desktop.c,v 1.32 2005-05-14 12:54:49 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -740,9 +740,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     } else
         adp = of->of_ad;
 
-    if (ad_open( upath , vol_noadouble(vol) |
-                 (( isadir) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF),
-                 O_RDWR|O_CREAT, 0666, adp) < 0 ) {
+    if (ad_open_metadata( upath , vol_noadouble(vol) | ( (isadir) ? ADFLAGS_DIR :0),O_CREAT, adp) < 0 ) {
         return( AFPERR_ACCESS );
     }
 
@@ -757,9 +755,9 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         }
         ad_setentrylen( adp, ADEID_COMMENT, clen );
         memcpy( ad_entry( adp, ADEID_COMMENT ), ibuf, clen );
-        ad_flush( adp, ADFLAGS_HF );
+        ad_flush_metadata( adp );
     }
-    ad_close( adp, ADFLAGS_HF );
+    ad_close_metadata( adp);
     return( AFP_OK );
 }
 
@@ -830,15 +828,14 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, int *rb
      */
     if ( ad_getentrylen( adp, ADEID_COMMENT ) <= 0 ||
             ad_getentrylen( adp, ADEID_COMMENT ) > 199 ) {
-        ad_close( adp, ADFLAGS_HF );
+        ad_close_metadata( adp );
         return( AFPERR_NOITEM );
     }
 
     *rbuf++ = ad_getentrylen( adp, ADEID_COMMENT );
-    memcpy( rbuf, ad_entry( adp, ADEID_COMMENT ),
-            ad_getentrylen( adp, ADEID_COMMENT ));
+    memcpy( rbuf, ad_entry( adp, ADEID_COMMENT ), ad_getentrylen( adp, ADEID_COMMENT ));
     *rbuflen = ad_getentrylen( adp, ADEID_COMMENT ) + 1;
-    ad_close( adp, ADFLAGS_HF );
+    ad_close_metadata( adp);
 
     return( AFP_OK );
 }
@@ -897,9 +894,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     } else
         adp = of->of_ad;
 
-    if ( ad_open( upath,
-                   (isadir) ? ADFLAGS_HF|ADFLAGS_DIR : ADFLAGS_HF,
-                  O_RDWR, 0, adp) < 0 ) {
+    if ( ad_open_metadata( upath, (isadir) ? ADFLAGS_DIR : 0, 0, adp) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOITEM );
@@ -912,9 +907,9 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
 
     if (ad_getentryoff(adp, ADEID_COMMENT)) {
         ad_setentrylen( adp, ADEID_COMMENT, 0 );
-        ad_flush( adp, ADFLAGS_HF );
+        ad_flush_metadata( adp );
     }
-    ad_close( adp, ADFLAGS_HF );
+    ad_close_metadata( adp);
     return( AFP_OK );
 }
 
