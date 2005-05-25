@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.26 2005-05-14 12:54:55 didg Exp $
+ * $Id: adouble.h,v 1.27 2005-05-25 18:19:33 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -417,7 +417,8 @@ extern int ad_metadata    __P((const char *, int, struct adouble *));
 #define ad_flush_metadata(adp) ad_flush( (adp), ADFLAGS_HF)
 #define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_HF)
 
-/* extend header to RW if R or W (W if R for locking),
+/* build a resource fork mode from the data fork mode:
+ * remove X mode and extend header to RW if R or W (W if R for locking),
  */ 
 #ifndef ATACC
 #ifndef __inline__
@@ -425,9 +426,7 @@ extern int ad_metadata    __P((const char *, int, struct adouble *));
 #endif
 static __inline__ mode_t ad_hf_mode (mode_t mode)
 {
-#if 0
-    mode |= S_IRUSR;
-#endif    
+    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
     /* fnctl lock need write access */
     if ((mode & S_IRUSR))
         mode |= S_IWUSR;
