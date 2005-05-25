@@ -174,8 +174,8 @@ static int ads_setfilmode_loop(struct dirent *de _U_, char *name, void *data, in
 
 static int ads_setfilmode(const char * name, mode_t mode, struct stat *st)
 {
-    mode_t dir_mode = mode;
     mode_t file_mode = ad_hf_mode(mode);
+    mode_t dir_mode = file_mode;
     struct set_mode param;
 
     if ((dir_mode & (S_IRUSR | S_IWUSR )))
