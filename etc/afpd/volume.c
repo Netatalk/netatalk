@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.60 2005-05-14 12:54:53 didg Exp $
+ * $Id: volume.c,v 1.61 2005-05-25 18:30:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -618,7 +618,9 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_ad_options |= ADVOL_NODEV;
         if ((volume->v_flags & AFPVOL_CACHE))
             volume->v_ad_options |= ADVOL_CACHE;
-        
+        if ((volume->v_flags & AFPVOL_UNIX_PRIV))
+            volume->v_ad_options |= ADVOL_UNIXPRIV;
+
         if (options[VOLOPT_PASSWORD].c_value)
             volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);
 
