@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.97 2005-05-14 12:54:52 didg Exp $
+ * $Id: file.c,v 1.98 2005-05-25 18:32:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1377,6 +1377,7 @@ static int copy_fd(int dfd, int sfd)
 /* ----------------------------------
  * if newname is NULL (from directory.c) we don't want to copy ressource fork.
  * because we are doing it elsewhere.
+ * currently if newname is NULL then adp is NULL. 
  */
 int copyfile(s_vol, d_vol, src, dst, newname, adp )
 const struct vol *s_vol, *d_vol;
@@ -1388,6 +1389,7 @@ struct adouble *adp;
     int                 ret_err = 0;
     int                 adflags;
     int                 noadouble = vol_noadouble(d_vol);
+    int                 stat_result;
     struct stat         st;
     
 #ifdef DEBUG
@@ -1414,7 +1416,14 @@ struct adouble *adp;
         adflags &= ~ADFLAGS_HF;
     }
 
-    if (ad_open(dst , adflags | noadouble, O_RDWR|O_CREAT|O_EXCL, 0666, &add) < 0) {
+    stat_result = fstat(ad_dfileno(adp), &st); /* saving stat exit code, thus saving us on one more stat later on */
+
+    if (stat_result < 0) {           
+      /* unlikely but if fstat fails, the default file mode will be 0666. */
+      st.st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    }
+
+    if (ad_open(dst , adflags | noadouble, O_RDWR|O_CREAT|O_EXCL, st.st_mode, &add) < 0) {
         ret_err = errno;
         ad_close( adp, adflags );
         if (EEXIST != ret_err) {
@@ -1423,6 +1432,8 @@ struct adouble *adp;
         }
         return AFPERR_EXIST;
     }
+    /* XXX if the source and the dest don't use the same resource type it's broken
+    */
     if (ad_hfileno(adp) == -1 || 0 == (err = copy_fd(ad_hfileno(&add), ad_hfileno(adp)))){
         /* copy the data fork */
 	err = copy_fd(ad_dfileno(&add), ad_dfileno(adp));
@@ -1439,29 +1450,34 @@ struct adouble *adp;
         ret_err = errno;
         goto done;
     } 
-    else {
+
+    if (!ret_err && newname && (adflags & ADFLAGS_HF)) {
+        /* set the new name in the resource fork */
 	ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
-	if (ad_open(dst , adflags | noadouble, O_RDWR, 0666, &add) < 0) {
+	if (ad_open(dst , ADFLAGS_HF | noadouble, O_RDWR, 0666, &add) < 0) {
 	    ret_err = errno;
 	}
+	else {
+            ad_setname(&add, newname);
+            ad_flush( &add, ADFLAGS_HF );
+            if (ad_close( &add, ADFLAGS_HF ) <0) {
+                ret_err = errno;
+            }
+        }
     }
 
-    if (!ret_err && newname) {
-        ad_setname(&add, newname);
-    }
-
-    ad_flush( &add, adflags );
-    if (ad_close( &add, adflags ) <0) {
-       ret_err = errno;
-    }
     if (ret_err) {
         deletefile(d_vol, dst, 0);
     }
-    else if (!stat(src, &st)) {
+    else if (stat_result == 0) {
         /* set dest modification date to src date */
         struct utimbuf	ut;
-
-        /* ADS here ? */
+#if 0        
+        if (vol_unix_priv(d_vol)) {
+            /* unix priv, use source priv. XXX should be done in ad_open? */
+            setfilunixmode(d_vol, dst, st.st_mode);
+        }
+#endif        
     	ut.actime = ut.modtime = st.st_mtime;
     	utime(dst, &ut);
     	/* FIXME netatalk doesn't use resource fork file date
