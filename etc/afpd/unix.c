@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.47 2005-05-25 18:19:33 didg Exp $
+ * $Id: unix.c,v 1.48 2005-06-02 12:32:18 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -403,6 +403,8 @@ mode_t mode;
         return -1;
     }
         
+    mode |= vol->v_perm;
+
     if (setfilmode( path->u_name, mode, &path->st) < 0)
         return -1;
     /* we need to set write perm if read set for resource fork */
@@ -435,10 +437,11 @@ mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;  /* rwx for owner group and other, by
 int setdirunixmode( vol, name, mode )
 const struct vol *vol;
 const char       *name;
-const mode_t     mode;
+mode_t           mode;
 {
 
     int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
+    mode |= vol->v_perm;
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first then .AppleDouble in rf_setdirmode */
@@ -459,15 +462,18 @@ const mode_t     mode;
 int setdirmode( vol, name, mode )
 const struct vol *vol;
 const char       *name;
-const mode_t mode;
+mode_t           mode;
 {
     struct stat		st;
     struct dirent	*dirp;
     DIR			*dir;
+    mode_t              hf_mode;
     int                 osx = vol->v_adouble == AD_VERSION2_OSX;
-    mode_t              hf_mode = ad_hf_mode(mode);
     int                 dropbox = (vol->v_flags & AFPVOL_DROPBOX);
     
+    mode |= vol->v_perm;
+    hf_mode = ad_hf_mode(mode);
+
     if (dir_rx_set(mode)) {
     	/* extending right? dir first */
     	if ( stickydirmode(name, DIRBITS | mode, dropbox) < 0 )

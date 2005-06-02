@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.80 2005-05-14 12:54:50 didg Exp $
+ * $Id: directory.c,v 1.81 2005-06-02 12:32:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1961,7 +1961,7 @@ int setdirparams(const struct vol *vol,
     u_int16_t           bitmap = d_bitmap;
     u_char              finder_buf[32];
     u_int32_t		upriv;
-    mode_t              mpriv;          /* uninitialized, OK 310105 */
+    mode_t              mpriv = 0;        
     u_int16_t           upriv_bit = 0;
 
     bit = 0;
@@ -2015,7 +2015,7 @@ int setdirparams(const struct vol *vol,
             ma.ma_world = *buf++;
             ma.ma_group = *buf++;
             ma.ma_owner = *buf++;
-            mpriv = mtoumode( &ma );
+            mpriv = mtoumode( &ma ) | vol->v_perm;
             if (dir_rx_set(mpriv) && setdirmode( vol, upath, mpriv) < 0 ) {
                 err = set_dir_errors(path, "setdirmode", errno);
                 bitmap = 0;
@@ -2043,12 +2043,12 @@ int setdirparams(const struct vol *vol,
                 change_parent_mdate = 1;
                 memcpy( &upriv, buf, sizeof( upriv ));
                 buf += sizeof( upriv );
-                upriv = ntohl (upriv);
+                upriv = ntohl (upriv) | vol->v_perm;
                 if (dir_rx_set(upriv)) {
                     /* maybe we are trying to set perms back */
                     if ( setdirunixmode(vol, upath, upriv) < 0 ) {
                         bitmap = 0;
-                        err = set_dir_errors(path, "setdirmode", errno);
+                        err = set_dir_errors(path, "setdirunixmode", errno);
                     }
                 }
                 else {
@@ -2219,7 +2219,7 @@ int setdirparams(const struct vol *vol,
                 }
 
                 if ( upriv_bit && setdirunixmode(vol, upath, upriv) < 0 ) {
-                    err = set_dir_errors(path, "setdirmode", errno);
+                    err = set_dir_errors(path, "setdirunixmode", errno);
                     goto setdirparam_done;
                 }
                 break;

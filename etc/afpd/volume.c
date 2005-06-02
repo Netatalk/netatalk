@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.61 2005-05-25 18:30:50 didg Exp $
+ * $Id: volume.c,v 1.62 2005-06-02 12:32:18 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -116,11 +116,13 @@ m=u -> map both ways
 #define VOLOPT_FORCEUID  19  /* force uid for username x */
 #define VOLOPT_FORCEGID  20  /* force gid for group x */
 #define VOLOPT_UMASK     21
+#define VOLOPT_DFLTPERM  22
 #else 
 #define VOLOPT_UMASK     19
+#define VOLOPT_DFLTPERM  20
 #endif /* FORCE_UIDGID */
 
-#define VOLOPT_MAX       (VOLOPT_UMASK +1)
+#define VOLOPT_MAX       (VOLOPT_DFLTPERM +1)
 
 #define VOLOPT_NUM        (VOLOPT_MAX + 1)
 
@@ -489,7 +491,9 @@ static void volset(struct vol_option *options, struct vol_option *save,
         setoption(options, save, VOLOPT_DBPATH, val);
 
     } else if (optionok(tmp, "umask:", val)) {
-	options[VOLOPT_UMASK].i_value = (int)strtol(val +1, (char **)NULL, 8);
+	options[VOLOPT_UMASK].i_value = (int)strtol(val +1, NULL, 8);
+    } else if (optionok(tmp, "perm:", val)) {
+        options[VOLOPT_DFLTPERM].i_value = (int)strtol(val+1, NULL, 8);
     } else if (optionok(tmp, "mapchars:",val)) {
         setoption(options, save, VOLOPT_MAPCHARS, val);
 
@@ -641,6 +645,9 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
 	if (options[VOLOPT_UMASK].i_value)
 	    volume->v_umask = (mode_t)options[VOLOPT_UMASK].i_value;
+
+	if (options[VOLOPT_DFLTPERM].i_value)
+	    volume->v_perm = (mode_t)options[VOLOPT_DFLTPERM].i_value;
 
 	if (options[VOLOPT_ADOUBLE].i_value)
 	    volume->v_adouble = options[VOLOPT_ADOUBLE].i_value;
