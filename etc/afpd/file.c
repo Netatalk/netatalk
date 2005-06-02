@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.98 2005-05-25 18:32:04 didg Exp $
+ * $Id: file.c,v 1.99 2005-06-02 10:23:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1454,13 +1454,13 @@ struct adouble *adp;
     if (!ret_err && newname && (adflags & ADFLAGS_HF)) {
         /* set the new name in the resource fork */
 	ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
-	if (ad_open(dst , ADFLAGS_HF | noadouble, O_RDWR, 0666, &add) < 0) {
+	if (ad_open_metadata(dst , noadouble, 0, &add) < 0) {
 	    ret_err = errno;
 	}
 	else {
             ad_setname(&add, newname);
-            ad_flush( &add, ADFLAGS_HF );
-            if (ad_close( &add, ADFLAGS_HF ) <0) {
+            ad_flush_metadata( &add);
+            if (ad_close_metadata( &add)) {
                 ret_err = errno;
             }
         }
@@ -1472,12 +1472,7 @@ struct adouble *adp;
     else if (stat_result == 0) {
         /* set dest modification date to src date */
         struct utimbuf	ut;
-#if 0        
-        if (vol_unix_priv(d_vol)) {
-            /* unix priv, use source priv. XXX should be done in ad_open? */
-            setfilunixmode(d_vol, dst, st.st_mode);
-        }
-#endif        
+
     	ut.actime = ut.modtime = st.st_mtime;
     	utime(dst, &ut);
     	/* FIXME netatalk doesn't use resource fork file date
