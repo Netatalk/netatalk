@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.21 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: ofork.c,v 1.22 2005-07-08 16:48:45 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -378,6 +378,7 @@ int of_closefork(struct ofork *ofork)
 {
     struct timeval      tv;
     int			adflags, doflush = 0;
+    int                 ret;
 
     adflags = 0;
     if ((ofork->of_flags & AFPFORK_DATA) && (ad_dfileno( ofork->of_ad ) != -1)) {
@@ -399,13 +400,13 @@ int of_closefork(struct ofork *ofork)
             }
         }
     }
-
+    ret = 0;
     if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
-        return -1;
+        ret = -1;
     }
  
     of_dealloc( ofork );
-    return 0;
+    return ret;
 }
 
 /* ----------------------
