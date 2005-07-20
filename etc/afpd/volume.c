@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.62 2005-06-02 12:32:18 didg Exp $
+ * $Id: volume.c,v 1.63 2005-07-20 22:28:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1518,6 +1518,8 @@ int 	ibuflen _U_, *rbuflen;
     data = rbuf + 5;
     for ( vcnt = 0, volume = Volumes; volume; volume = volume->v_next ) {
         if (!(volume->v_flags & AFPVOL_NOSTAT)) {
+            struct maccess ma;
+
             if ( stat( volume->v_path, &st ) < 0 ) {
                 LOG(log_info, logtype_afpd, "afp_getsrvrparms(%s): stat: %s",
                         volume->v_path, strerror(errno) );
@@ -1525,6 +1527,10 @@ int 	ibuflen _U_, *rbuflen;
             }
             if (!S_ISDIR(st.st_mode)) {
                 continue;		/* not a dir */
+            }
+            accessmode(volume->v_path, &ma, NULL, &st);
+            if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
+                continue;   /* no r-x access */
             }
         }
         if (volume->v_hide) {
