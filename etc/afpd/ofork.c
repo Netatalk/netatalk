@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.22 2005-07-08 16:48:45 didg Exp $
+ * $Id: ofork.c,v 1.23 2005-07-20 21:23:52 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -210,11 +210,25 @@ struct stat     *st;
     }
     of = oforks[of_refnum];
 
+    /* here's the deal: we allocate enough for the standard mac file length.
+     * in the future, we'll reallocate in fairly large jumps in case
+     * of long unicode names */
+    of->of_namelen = 255 +1;
+    if (( of->of_name =(char *)malloc( of->of_namelen )) == NULL ) {
+        LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
+        free(of);
+        oforks[ of_refnum ] = NULL;
+        return NULL;
+    }
+
     /* see if we need to allocate space for the adouble struct */
     if (!ad) {
         ad = malloc( sizeof( struct adouble ) );
         if (!ad) {
             LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
+            free(of->of_name);
+            free(of);
+            oforks[ of_refnum ] = NULL;
             return NULL;
         }
 
@@ -228,7 +242,6 @@ struct stat     *st;
     }
 
     of->of_ad = ad;
-
     of->of_vol = vol;
     of->of_dir = dir;
 
@@ -242,18 +255,7 @@ struct stat     *st;
         d_ofork->of_d_prev = of;
     }
 
-    /* here's the deal: we allocate enough for the standard mac file length.
-     * in the future, we'll reallocate in fairly large jumps in case
-     * of long unicode names */
-    if (( of->of_name =(char *)malloc(255 + 1)) == NULL ) {
-        LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
-        if (!ad)
-            free(of->of_ad);
-        free(of);
-        oforks[ of_refnum ] = NULL;
-        return NULL;
-    }
-    strlcpy( of->of_name, path, of->of_namelen = 255 + 1);
+    strlcpy( of->of_name, path, of->of_namelen);
     *ofrefnum = refnum;
     of->of_refnum = refnum;
     of->key.dev = st->st_dev;
