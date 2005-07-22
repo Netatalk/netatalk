@@ -17,6 +17,17 @@
 #include "precompose.h"
 #include "byteorder.h"
 
+#define HANGUL_SBASE 0xAC00
+#define HANGUL_LBASE 0x1100
+#define HANGUL_VBASE 0x1161
+#define HANGUL_TBASE 0x11A7
+#define HANGUL_LCOUNT 19
+#define HANGUL_VCOUNT 21
+#define HANGUL_TCOUNT 28
+#define HANGUL_NCOUNT (HANGUL_VCOUNT * HANGUL_TCOUNT)   /* 588 */
+#define HANGUL_SCOUNT (HANGUL_LCOUNT * HANGUL_NCOUNT)   /* 11172 */
+
+#define MAXCOMBLEN 3
 
 ucs2_t toupper_w(ucs2_t val)
 {
@@ -380,14 +391,23 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	size_t i;
 	ucs2_t base, comb;
 	ucs2_t *in, *out;
+	ucs2_t hangul_lindex, hangul_vindex;
 	ucs2_t result;
 	size_t o_len = *outlen;
 
     	if (!inplen || (inplen & 1) || inplen > o_len)
         	return (size_t)-1;
+	
+	/*   Actually,                                                 */
+	/*   Decomposition and Canonical Ordering are necessary here.  */
+	/*                                                             */
+	/*         Ex. in = CanonicalOrdering(decompose_w(name))       */
+	/*                                                             */
+	/*   A new mapping table is needed for CanonicalOrdering.      */
+	
     	i = 0;
     	in  = name;
-    	out = (ucs2_t *)comp;
+	out = comp;
     
     	base = *in;
     	while (*outlen > 2) {
@@ -401,19 +421,36 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
            		return o_len - *outlen;
         	}
         	comb = *in;
-        	if (comb >= 0x300 && (result = do_precomposition(base, comb))) {
-           		*out = result;
-           		out++;
-           		*outlen -= 2;
-           		i += 2;
-           		in++;
-           		if (i == inplen) {
-				*out = 0;
-              			return o_len - *outlen;
+		result = 0;
+		
+		/* Non-Combination Character */
+		if (comb < 0x300) ;
+		
+		/* Unicode Standard Annex #15 A10.3 Hangul Composition */
+		/* Step 1 <L,V> */
+		else if ((HANGUL_VBASE <= comb) && (comb <= HANGUL_VBASE + HANGUL_VCOUNT)) {
+			if ((HANGUL_LBASE <= base) && (base < HANGUL_LBASE + HANGUL_LCOUNT)) {
+				result = 1;
+				hangul_lindex = base - HANGUL_LBASE;
+				hangul_vindex = comb - HANGUL_VBASE;
+				base = HANGUL_SBASE + (hangul_lindex * HANGUL_VCOUNT + hangul_vindex) * HANGUL_TCOUNT;
 			}
-           		base = *in;
         	}
-        	else {
+		
+		/* Step 2 <LV,T> */
+		else if ((HANGUL_TBASE < comb) && (comb < HANGUL_TBASE + HANGUL_TCOUNT)) {
+			if ((HANGUL_SBASE <= base) && (base < HANGUL_SBASE +HANGUL_SCOUNT) && (((base - HANGUL_SBASE) % HANGUL_TCOUNT) == 0)) {
+				result = 1;
+				base += comb - HANGUL_TBASE;
+			}
+		}
+		
+		/* Combining Sequence */
+		else if ((result = do_precomposition(base, comb))) {
+			base = result;
+		}
+		
+		if (!result) {
            		*out = base;
            		out++;
            		*outlen -= 2;
@@ -427,10 +464,16 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 
 /* --------------- */
 
+/* Singleton Decomposition is unsupported.               */
+/* A new mapping table is needed for implementation.     */
+
 size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
 	size_t i;
+	size_t comblen;
 	ucs2_t base;
+	ucs2_t comb[MAXCOMBLEN];
+	ucs2_t hangul_sindex, tjamo;
 	ucs2_t *in, *out;
 	unsigned int result;
 	size_t o_len = *outlen;
@@ -439,42 +482,68 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
         	return (size_t)-1;
 	i = 0;
 	in  = name;
-	out = (ucs2_t *)comp;
+	out = comp;
     
     	while (i < inplen) {
-        	if (*outlen < 2) {
-			errno = E2BIG;
-            		return (size_t)-1;
-        	}
         	base = *in;
-		if ( (base > 0x1fff && base < 0x3000) || (base > 0xfe2f && base < 0xfe50)) {
-			/* exclude these ranges from decomposition according to AFP 3.1 spec */
-			/* page 97 */
-			*out = base;
-			out++;
-			*outlen -= 2;
+		comblen = 0;
+		
+		/* check ASCII first. this is frequent. */
+		if (base <= 0x007f) ;
+		
+		/* Unicode Standard Annex #15 A10.2 Hangul Decomposition */
+		else if ((HANGUL_SBASE <= base) && (base < HANGUL_SBASE + HANGUL_SCOUNT)) {
+			hangul_sindex = base - HANGUL_SBASE;
+			base = HANGUL_LBASE + hangul_sindex / HANGUL_NCOUNT;
+			comb[MAXCOMBLEN-2] = HANGUL_VBASE + (hangul_sindex % HANGUL_NCOUNT) / HANGUL_TCOUNT;
+			
+			/* <L,V> */
+			if ((tjamo = HANGUL_TBASE + hangul_sindex % HANGUL_TCOUNT) == HANGUL_TBASE) {
+				comb[MAXCOMBLEN-1] = comb[MAXCOMBLEN-2];
+				comblen = 1;
+			}
+			
+			/* <L,V,T> */
+			else {
+				comb[MAXCOMBLEN-1] = tjamo;
+				comblen = 2;
+			}
 		}
-        	else if ((result = do_decomposition(base))) {
-			if ( *outlen < 4 ) {
+		
+		/* Combining Sequence */
+		/* exclude U2000-U2FFF and UFE30-UFE4F ranges      */
+		/* from decomposition according to AFP 3.1 spec    */
+		else if ((base < 0x2000) || ((0x2fff < base) && (base < 0xfe30)) || (0xfe4f < base)) {
+			do {
+				if ((comblen >= MAXCOMBLEN) || !(result = do_decomposition(base))) break;
+				comblen++;
+				base = result  >> 16;
+				comb[MAXCOMBLEN-comblen] = result & 0xffff;
+			} while (((0x007f < base) && (base < 0x2000)) || ((0x2fff < base) && (base < 0xfe30)) || (0xfe4f < base)) ;
+		}
+		
+		if (*outlen < (comblen + 1) << 1) {
 				errno = E2BIG;
 				return (size_t)-1;
 			}
-           		*out = result  >> 16;
+		
+		*out = base;
            		out++;
            		*outlen -= 2;
-           		*out = result & 0xffff;
+		
+		while ( comblen > 0 ) {
+			*out = comb[MAXCOMBLEN-comblen];
            		out++;
            		*outlen -= 2;
+			comblen--;
         	}
-        	else {
-           		*out = base;
-           		out++;
-           		*outlen -= 2;
-        	}
+		
         	i += 2;
         	in++;
      	}
 
+	/* Is Canonical Ordering necessary here? */
+	
 	*out = 0;
 	return o_len-*outlen;
 }
