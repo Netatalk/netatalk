@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.h,v 1.11 2005-05-03 14:55:12 didg Exp $
+ * $Id: cnid.h,v 1.12 2005-09-07 15:23:21 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -32,6 +32,7 @@
 #define CNID_FLAG_SETUID       0x04      /* Set db owner to parent folder owner. */
 #define CNID_FLAG_BLOCK        0x08      /* block signals in update. */
 #define CNID_FLAG_NODEV        0x10      /* don't use device number only inode */
+#define CNID_FLAG_LAZY_INIT    0x20      /* */
 
 #define CNID_INVALID   0
 
@@ -116,7 +117,11 @@ void cnid_close(struct _cnid_db *db);
 
 /*
  * $Log: cnid.h,v $
- * Revision 1.11  2005-05-03 14:55:12  didg
+ * Revision 1.12  2005-09-07 15:23:21  didg
+ *
+ * lazy init dbd database, help with pre tiger OS and a lot of volumes.
+ *
+ * Revision 1.11  2005/05/03 14:55:12  didg
  *
  * remove gcc warning
  *

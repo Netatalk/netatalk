@@ -94,6 +94,8 @@ typedef struct CNID_private {
     char      db_dir[MAXPATHLEN + 1]; /* Database directory without /.AppleDB appended */
     int       fd;		/* File descriptor to cnid_dbd */
     char      stamp[ADEDLEN_PRIVSYN]; /* db timestamp */
+    char      *client_stamp;
+    size_t    stamp_size;
     int       notfirst;   /* already open before */
     int       changed;  /* stamp differ */
 } CNID_private;

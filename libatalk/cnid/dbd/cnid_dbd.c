@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_dbd.c,v 1.4 2005-09-07 15:23:22 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -314,37 +314,44 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
     while (1) {
 
         if (db->fd == -1) {
+            struct cnid_dbd_rqst rqst_stamp;
+            struct cnid_dbd_rply rply_stamp;
+            char  stamp[ADEDLEN_PRIVSYN];
+                
             if ((db->fd = init_tsock(db)) < 0) {
                 time(&t);
                 if (t - orig > MAX_DELAY)
                     return -1;
 	        continue;
             }
+            dbd_initstamp(&rqst_stamp);
+            memset(stamp, 0, ADEDLEN_PRIVSYN);
+            rply_stamp.name = stamp;
+            rply_stamp.namelen = ADEDLEN_PRIVSYN;
+
+            if (dbd_rpc(db, &rqst_stamp, &rply_stamp, silent) < 0)
+                goto transmit_fail;
+            if (dbd_reply_stamp(&rply_stamp ) < 0)
+                goto transmit_fail;
+            
             if (db->notfirst) {
-                struct cnid_dbd_rqst rqst_stamp;
-                struct cnid_dbd_rply rply_stamp;
-                char  stamp[ADEDLEN_PRIVSYN];
-                
-                dbd_initstamp(&rqst_stamp);
-        	memset(stamp, 0, ADEDLEN_PRIVSYN);
-                rply_stamp.name = stamp;
-                rply_stamp.namelen = ADEDLEN_PRIVSYN;
-                
-        	if (dbd_rpc(db, &rqst_stamp, &rply_stamp, silent) < 0)
-        	    goto transmit_fail;
-        	if (dbd_reply_stamp(&rply_stamp ) < 0)
-        	    goto transmit_fail;
         	if (memcmp(stamp, db->stamp, ADEDLEN_PRIVSYN)) {
                     LOG(log_error, logtype_cnid, "transmit: not the same db!");
         	    db->changed = 1;
         	    return -1;
         	}
             }
-
+            else {
+                db->notfirst = 1;
+                if (db->client_stamp) {
+    	            memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
+    	        }
+    	        memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
+            }
         }
-        if (!dbd_rpc(db, rqst, rply, silent))
+        if (!dbd_rpc(db, rqst, rply, silent)) {
             return 0;
-
+	}
 transmit_fail:
 	silent = 0; /* From now on dbd_rpc and subroutines called from there
                        will log messages if something goes wrong again */
@@ -379,7 +386,7 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
 	return NULL;
     }
     
-    cdb->flags = CNID_FLAG_PERSISTENT;
+    cdb->flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
     
     cdb->cnid_add = cnid_dbd_add;
     cdb->cnid_delete = cnid_dbd_delete;
@@ -632,42 +639,20 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
     return name;
 }
 
-/* --------------------- */
-static int dbd_getstamp(CNID_private *db, void *buffer, const size_t len)
-{
-    struct cnid_dbd_rqst rqst;
-    struct cnid_dbd_rply rply;
-
-    memset(buffer, 0, len);
-    dbd_initstamp(&rqst);
-
-    rply.name = buffer;
-    rply.namelen = len;
-
-    if (transmit(db, &rqst, &rply) < 0) {
-        errno = CNID_ERR_DB;
-        return -1;
-    }
-    return dbd_reply_stamp(&rply);
-}
-
 /* ---------------------- */
 int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {
     CNID_private *db;
-    int ret;
 
     if (!cdb || !(db = cdb->_private) || len != ADEDLEN_PRIVSYN) {
         LOG(log_error, logtype_cnid, "cnid_getstamp: Parameter error");
         errno = CNID_ERR_PARAM;                
         return -1;
     }
-    ret = dbd_getstamp(db, buffer, len);
-    if (!ret) {
-    	db->notfirst = 1;
-    	memcpy(db->stamp, buffer, len);
-    }
-    return ret;
+    db->client_stamp = buffer;
+    db->stamp_size = len;
+    memset(buffer,0, len);
+    return 0;
 }
 
 /* ---------------------- */
