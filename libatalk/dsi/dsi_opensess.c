@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_opensess.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_opensess.c,v 1.4 2005-09-07 15:27:29 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -37,6 +37,7 @@ void dsi_opensession(DSI *dsi)
   /* let the client know the server quantum. we don't use the
    * max server quantum due to a bug in appleshare client 3.8.6. */
   dsi->header.dsi_flags = DSIFL_REPLY;
+  dsi->header.dsi_code = 0;
   /* dsi->header.dsi_command = DSIFUNC_OPEN;*/
   dsi->cmdlen = 2 + sizeof(i); /* length of data. dsi_send uses it. */
   dsi->commands[0] = DSIOPT_SERVQUANT;
