@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.28 2005-05-25 18:24:24 didg Exp $
+ * $Id: adouble.h,v 1.29 2005-09-28 09:46:37 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -254,6 +254,9 @@ struct adouble {
     off_t               ad_rlen;     /* ressource fork len with AFP 3.0
                                         the header parameter size is too small.
                                      */
+    char                *ad_m_name;   /* mac name for open fork */
+    int                 ad_m_namelen;
+
     char                *(*ad_path)(const char *, int);
     int                 (*ad_mkrf)(char *);
                            

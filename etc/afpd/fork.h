@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.9 2005-04-28 20:49:43 bfernhomberg Exp $
+ * $Id: fork.h,v 1.10 2005-09-28 09:46:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -25,8 +25,6 @@ struct ofork {
     struct adouble	*of_ad;
     struct vol          *of_vol;
     struct dir		*of_dir;
-    char		*of_name;
-    int                 of_namelen;
 
     u_int16_t           of_refnum;
     int                 of_flags;
@@ -53,6 +51,7 @@ struct ofork {
 #define AFPFORK_ACCWR   (1<<5)
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
 
+#define of_name(a) (a)->of_ad->ad_m_name
 /* in ofork.c */
 extern struct ofork *of_alloc    __P((struct vol *, struct dir *,
                                                       char *, u_int16_t *, const int,
