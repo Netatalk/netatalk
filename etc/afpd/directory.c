@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.81 2005-06-02 12:32:17 didg Exp $
+ * $Id: directory.c,v 1.82 2005-09-28 09:43:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2035,9 +2035,10 @@ int setdirparams(const struct vol *vol,
             break;
 	case DIRPBIT_UNIXPR :
 	    if (vol_unix_priv(vol)) {
-	        /* Skip UID and GID for now, there seems to be no way to set them from an OSX client anyway */
-                buf += sizeof( aint );
-                buf += sizeof( aint );
+                memcpy( &owner, buf, sizeof(owner)); /* FIXME need to change owner too? */
+                buf += sizeof( owner );
+                memcpy( &group, buf, sizeof( group ));
+                buf += sizeof( group );
 
                 change_mdate = 1;
                 change_parent_mdate = 1;
@@ -2165,27 +2166,14 @@ int setdirparams(const struct vol *vol,
                 goto setdirparam_done;
             }
             break;
-
         case DIRPBIT_GID :
             if (dir->d_did == DIRDID_ROOT)
                 setdeskowner( -1, ntohl(group) ); 
-
-#if 0       /* don't error if we can't set the desktop owner. */
-                err = set_dir_errors(path, "setdeskowner", errno);
-                if (isad && err == AFPERR_PARAM) {
-                    err = AFP_OK; /* ???*/
-                }
-                else {
-                    goto setdirparam_done;
-                }
-#endif /* 0 */
-
             if ( setdirowner(vol, upath, -1, ntohl(group) ) < 0 ) {
                 err = set_dir_errors(path, "setdirowner", errno);
                 goto setdirparam_done;
             }
             break;
-
         case DIRPBIT_ACCESS :
             if (dir->d_did == DIRDID_ROOT) {
                 setdeskmode(mpriv);
@@ -2210,21 +2198,29 @@ int setdirparams(const struct vol *vol,
 	case DIRPBIT_UNIXPR :
 	    if (vol_unix_priv(vol)) {
                 if (dir->d_did == DIRDID_ROOT) {
-                    setdeskmode( upriv );
                     if (!dir_rx_set(upriv)) {
                         /* we can't remove read and search for owner on volume root */
                         err = AFPERR_ACCESS;
                         goto setdirparam_done;
                     }
+                    setdeskowner( -1, ntohl(group) ); 
+                    setdeskmode( upriv );
+                }
+                if ( setdirowner(vol, upath, -1, ntohl(group) ) < 0 ) {
+                    err = set_dir_errors(path, "setdirowner", errno);
+                    goto setdirparam_done;
                 }
 
                 if ( upriv_bit && setdirunixmode(vol, upath, upriv) < 0 ) {
                     err = set_dir_errors(path, "setdirunixmode", errno);
                     goto setdirparam_done;
                 }
-                break;
             }
-            /* fall through */
+            else {
+                err = AFPERR_BITMAP;
+                goto setdirparam_done;
+            }
+            break;
         default :
             err = AFPERR_BITMAP;
             goto setdirparam_done;
