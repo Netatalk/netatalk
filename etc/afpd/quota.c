@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.25 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: quota.c,v 1.26 2006-02-08 05:14:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -67,6 +67,11 @@ static int overquota( struct dqblk *);
 #ifdef HAVE_XFS_XQM_H
 #include <xfs/xqm.h>
 #define HAVE_LINUX_XQM_H
+#else
+#ifdef  HAVE_LINUX_DQBLK_XFS_H
+#include <linux/dqblk_xfs.h>
+#define HAVE_LINUX_XQM_H
+#endif /* HAVE_LINUX_DQBLK_XFS_H */
 #endif /* HAVE_XFS_XQM_H */
 #endif /* HAVE_LINUX_XQM_H */
 
