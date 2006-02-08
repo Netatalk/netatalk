@@ -1,5 +1,5 @@
 /*
- * $Id: endian.h,v 1.7 2001-12-15 12:13:10 srittau Exp $
+ * $Id: endian.h,v 1.8 2006-02-08 03:00:09 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -57,10 +57,13 @@ typedef int ssize_t;
  * various types are forever. this makes some assumptions about integer
  * sizes. */
 #if defined (ultrix) || defined(HAVE_32BIT_LONGS) || defined(HAVE_64BIT_LONGS)
+#ifndef __BIT_TYPES_DEFINED__
+#define __BIT_TYPES_DEFINED__
 typedef unsigned char  u_int8_t;
 typedef unsigned short u_int16_t;
 typedef unsigned int   u_int32_t;
 typedef int            int32_t;
+#endif
 #endif /* ultrix || HAVE_32BIT_LONGS || HAVE_64BIT_LONGS */
 
 #ifdef ultrix
