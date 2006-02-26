@@ -1,5 +1,5 @@
 /*
- * $Id: asingle.c,v 1.10 2005-04-28 20:49:19 bfernhomberg Exp $
+ * $Id: asingle.c,v 1.11 2006-02-26 22:45:05 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -310,9 +310,9 @@ int single_header_read( fh, version )
 		sizeof(fh->backup_date));
     }
     if ( single.entry[ ADEID_RFORK ].ade_off == 0 ) {
-	fh->forklen[ ADEID_RFORK ] = 0;
+	fh->forklen[RESOURCE] = 0;
     } else {
-	fh->forklen[ ADEID_RFORK ] =
+	fh->forklen[RESOURCE] =
 		htonl( single.entry[ ADEID_RFORK ].ade_len );
     }
     if ( single.entry[ ADEID_DFORK ].ade_off == 0 ) {
