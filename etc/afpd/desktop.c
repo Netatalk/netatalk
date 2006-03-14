@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.32 2005-05-14 12:54:49 didg Exp $
+ * $Id: desktop.c,v 1.33 2006-03-14 06:15:45 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -821,6 +821,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, int *rb
     }
 
     if (!ad_getentryoff(adp, ADEID_COMMENT)) {
+        ad_close_metadata( adp );
         return AFPERR_NOITEM;
     }
     /*
