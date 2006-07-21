@@ -92,6 +92,7 @@ extern  struct charset_functions charset_mac_roman;
 extern  struct charset_functions charset_mac_hebrew;
 extern  struct charset_functions charset_mac_centraleurope;
 extern  struct charset_functions charset_mac_cyrillic;
+extern  struct charset_functions charset_mac_greek;
 extern  struct charset_functions charset_mac_turkish;
 extern  struct charset_functions charset_utf8;
 extern  struct charset_functions charset_utf8_mac;
@@ -172,6 +173,7 @@ void lazy_initialize_iconv(void)
 		atalk_register_charset(&charset_utf8_mac);
 		atalk_register_charset(&charset_mac_roman);
 		atalk_register_charset(&charset_mac_hebrew);
+		atalk_register_charset(&charset_mac_greek);
 		atalk_register_charset(&charset_mac_turkish);
 		atalk_register_charset(&charset_mac_centraleurope);
 		atalk_register_charset(&charset_mac_cyrillic);

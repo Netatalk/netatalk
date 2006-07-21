@@ -64,7 +64,7 @@ typedef struct {
 /* this defines the charset types used in samba */
 typedef enum {CH_UCS2=0, CH_UTF8=1, CH_MAC=2, CH_UNIX=3, CH_UTF8_MAC=4} charset_t;
 
-#define NUM_CHARSETS 5
+#define NUM_CHARSETS 6
 
 /*
  *   for each charset we have a function that pulls from that charset to

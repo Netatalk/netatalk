@@ -7,6 +7,7 @@ LIBS =
 
 libcharsets_la_SOURCES = \
 	mac_roman.c	\
+	mac_greek.c	\
 	mac_hebrew.c	\
 	mac_centraleurope.c	\
 	mac_turkish.c \
@@ -20,6 +21,7 @@ libcharsets_la_SOURCES = \
 
 noinst_HEADERS = \
 	mac_roman.h \
+	mac_greek.h \
 	mac_centraleurope.h \
 	mac_hebrew.h \
 	mac_turkish.h \
