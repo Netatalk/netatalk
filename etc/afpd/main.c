@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.22 2005-04-28 20:49:43 bfernhomberg Exp $
+ * $Id: main.c,v 1.23 2006-08-01 09:01:32 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -279,7 +279,7 @@ char	**av;
 
     sigprocmask(SIG_BLOCK, &sigs, NULL);
     if (!(configs = configinit(&default_options))) {
-        LOG(log_error, logtype_afpd, "main: no servers configured: %s", strerror(errno));
+        LOG(log_error, logtype_afpd, "main: no servers configured");
         afp_exit(EXITERR_CONF);
     }
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
