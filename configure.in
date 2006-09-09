@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.204 2006-09-09 04:07:25 didg Exp $
+dnl $Id: configure.in,v 1.205 2006-09-09 04:30:01 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -46,7 +46,7 @@ dnl AC_CHECK_LIB(crypt, main)
 dnl Replace `main' with a function in -ld:
 dnl AC_CHECK_LIB(d, main)
 dnl Replace `main' with a function in -ldl:
-# AC_CHECK_LIB(dl, dlopen)
+dnl AC_CHECK_LIB(dl, dlopen)
 dnl Replace `main' with a function in -lkauth:
 dnl AC_CHECK_LIB(kauth, main)
 dnl Replace `main' with a function in -lkrb:
@@ -55,16 +55,17 @@ dnl Replace `main' with a function in -llwp:
 dnl AC_CHECK_LIB(lwp, main)
 dnl Replace `main' with a function in -ln:
 dnl AC_CHECK_LIB(n, main)
-dnl Replace `main' with a function in -lnsl:
-# AC_CHECK_LIB(nsl, main)
+
+dnl not the right stuff but should be enough for now
+AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
+AC_CHECK_FUNC(connect,,[AC_CHECK_LIB(socket,connect)])
+
 dnl Replace `main' with a function in -lprot:
 dnl AC_CHECK_LIB(prot, main)
 dnl Replace `main' with a function in -lrx:
 dnl AC_CHECK_LIB(rx, main)
 dnl Replace `main' with a function in -lrxkad:
 dnl AC_CHECK_LIB(rxkad, main)
-dnl Replace `main' with a function in -lsocket:
-AC_CHECK_LIB(socket, socket)
 dnl Replace `main' with a function in -lsys:
 dnl AC_CHECK_LIB(sys, main)
 dnl Replace `main' with a function in -lubik:

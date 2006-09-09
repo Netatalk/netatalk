@@ -9,7 +9,7 @@ bin_PROGRAMS = showppd
 papd_SOURCES = main.c printcap.c session.c file.c comment.c lp.c ppd.c \
 	       magics.c headers.c queries.c auth.c uam.c print_cups.c
 
-papd_LDADD = $(top_builddir)/libatalk/libatalk.la @PAM_LIBS@ @CUPS_LIBS@ @LIBADD_DL@
+papd_LDADD = $(top_builddir)/libatalk/libatalk.la @CUPS_LIBS@ @LIBADD_DL@
 papd_LDFLAGS = -export-dynamic @CUPS_LDFLAGS@
 
 showppd_SOURCES = showppd.c ppd.c
