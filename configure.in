@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.203 2005-04-28 20:49:17 bfernhomberg Exp $
+dnl $Id: configure.in,v 1.204 2006-09-09 04:07:25 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -705,10 +705,12 @@ fi
 #	)
 
         # For quotas on Linux XFS filesystems
-        AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
-        AC_CHECK_HEADERS(xfs/libxfs.h xfs/xqm.h xfs/xfs_fs.h)
+        
         # For linux > 2.5.56
-        AC_CHECK_HEADERS(linux/dqblk_xfs.h)
+        AC_CHECK_HEADERS(linux/dqblk_xfs.h,,
+		[AC_CHECK_HEADERS(linux/xqm.h linux/xfs_fs.h)
+        	AC_CHECK_HEADERS(xfs/libxfs.h xfs/xqm.h xfs/xfs_fs.h)]
+	)
 
 
 	dnl ----- as far as I can tell, dbtob always does the wrong thing
