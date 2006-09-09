@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.64 2005-09-28 10:19:34 didg Exp $
+ * $Id: volume.c,v 1.65 2006-09-09 02:48:25 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -174,7 +174,7 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
     {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},     /* encode illegal sequence */
-    {AFPVOL_CACHE,      "CACHE ID"},     /* encode illegal sequence */
+    {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
     {0, NULL}
 };
 
