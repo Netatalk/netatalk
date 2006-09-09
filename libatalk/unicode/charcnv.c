@@ -973,7 +973,10 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
 	    } else if (errno != E2BIG) {
 	      SAFE_FREE(buf);
 	      goto end;
-	    }
+            } else if (o < buflen) {
+              buflen -= o;
+              break;
+            }
 	  }
 	  if (o_len < buflen * 3) {
 	    SAFE_FREE(buf);
