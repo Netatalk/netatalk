@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.26 2006-02-08 05:14:12 didg Exp $
+ * $Id: quota.c,v 1.27 2006-09-15 00:07:43 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -717,7 +717,7 @@ const u_int32_t bsize;
 	this_bsize = dqblk.bsize;
 #endif
 
-#if DEBUG_QUOTA
+#ifdef DEBUG_QUOTA
         LOG(log_info, logtype_afpd, "after calling getquota in uquota_getvolspace!" );
         LOG(log_info, logtype_afpd, "dqb_ihardlimit: %u", dqblk.dqb_ihardlimit );
         LOG(log_info, logtype_afpd, "dqb_isoftlimit: %u", dqblk.dqb_isoftlimit );
@@ -752,7 +752,7 @@ const u_int32_t bsize;
                  	  tobytes( dqblk.dqb_curblocks, this_bsize );
     	}
 
-#if DEBUG_QUOTA
+#ifdef DEBUG_QUOTA
         LOG(log_info, logtype_afpd, "bfree          : %u", *bfree );
         LOG(log_info, logtype_afpd, "btotal         : %u", *btotal );
         LOG(log_info, logtype_afpd, "bfree          : %uKB", *bfree/1024 );
