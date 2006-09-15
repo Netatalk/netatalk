@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.100 2006-09-15 00:02:56 didg Exp $
+ * $Id: file.c,v 1.101 2006-09-15 00:09:23 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -670,6 +670,9 @@ int	ibuflen _U_, *rbuflen;
             return( AFPERR_EXIST );
         case EACCES :
             return( AFPERR_ACCESS );
+        case EDQUOT:
+        case ENOSPC :
+            return( AFPERR_DFULL );
         default :
             return( AFPERR_PARAM );
         }
