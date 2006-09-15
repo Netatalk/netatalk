@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.65 2006-09-09 02:48:25 didg Exp $
+ * $Id: volume.c,v 1.66 2006-09-15 00:05:51 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2186,14 +2186,14 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
 		ad_getattr(&ad, &attr);
 		attr |= htons( ntohs( attr ) | ATTRBIT_INVISIBLE );
 		ad_setattr(&ad, attr);
-#if 0		
+
 		/* do the same with the finder info */
 		if (ad_entry(&ad, ADEID_FINDERI)) {
 			memcpy(&attr, ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, sizeof(attr));
 			attr   |= htons(FINDERINFO_INVISIBLE);
 			memcpy(ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF,&attr, sizeof(attr));
 		}
-#endif    
+
         	ad_flush( &ad, ADFLAGS_HF );
         	ad_close( &ad, ADFLAGS_HF );
 	}
