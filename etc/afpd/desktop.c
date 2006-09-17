@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.33 2006-03-14 06:15:45 didg Exp $
+ * $Id: desktop.c,v 1.34 2006-09-17 17:48:15 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -315,6 +315,8 @@ static const u_char	utag[] = { 0, 0, 0, 0 };
 static const u_char	ucreator[] = { 0, 0, 0, 0 };/* { 'U', 'N', 'I', 'X' };*/
 static const u_char	utype[] = { 0, 0, 0, 0 };/* { 'T', 'E', 'X', 'T' };*/
 static const short	usize = 256;
+
+#if 0
 static const u_char	uicon[] = {
     0x1F, 0xFF, 0xFC, 0x00, 0x10, 0x00, 0x06, 0x00,
     0x10, 0x00, 0x05, 0x00, 0x10, 0x00, 0x04, 0x80,
@@ -349,6 +351,7 @@ static const u_char	uicon[] = {
     0x1F, 0xFF, 0xFF, 0xF0, 0x1F, 0xFF, 0xFF, 0xF0,
     0x1F, 0xFF, 0xFF, 0xF0, 0x1F, 0xFF, 0xFF, 0xF0,
 };
+#endif
 
 int afp_geticoninfo(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj  *obj _U_;
@@ -454,6 +457,7 @@ int	ibuflen _U_, *rbuflen;
     memcpy( &bsize, ibuf, sizeof( bsize ));
     bsize = ntohs( bsize );
 
+#if 0
     if ( memcmp( fcreator, ucreator, sizeof( ucreator )) == 0 &&
             memcmp( ftype, utype, sizeof( utype )) == 0 &&
             itype == 1 &&
@@ -462,6 +466,7 @@ int	ibuflen _U_, *rbuflen;
         *rbuflen = bsize;
         return( AFP_OK );
     }
+#endif
 
     if ( iconopen( vol, fcreator, O_RDONLY, 0 ) < 0) {
         return( AFPERR_NOITEM );
