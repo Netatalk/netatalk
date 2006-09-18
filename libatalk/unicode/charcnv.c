@@ -275,6 +275,28 @@ void init_iconv(void)
 }
 
 /**
+ *
+ **/
+static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
+{
+	/* Terminate the string */
+	if (to == CH_UCS2 && bytesleft >= 2) {
+		buf[len]   = 0;
+		buf[len+1] = 0;
+
+	}
+	else if ( to != CH_UCS2 && bytesleft > 0 )
+		buf[len]   = 0;
+	else {
+		errno = E2BIG;
+ 	        return (size_t)(-1);
+	}
+
+	return len;
+}
+
+ 
+/**
  * Convert string from one encoding to another, making error checking etc
  *
  * @param src pointer to source string (multibyte or singlebyte)
@@ -331,19 +353,9 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 		LOG(log_debug, logtype_default,"Conversion error: %s",reason);
 		return (size_t)-1;
 	}
-
+	
 	/* Terminate the string */
-	if (to == CH_UCS2 && destlen-o_len >= 2) {
-		o_save[destlen-o_len]   = 0;
-		o_save[destlen-o_len+1] = 0;
-	}
-	else if ( to != CH_UCS2 && destlen-o_len > 0 )
-		o_save[destlen-o_len] = 0;
-	else {
-		/* FIXME: what should we do here, string *might* be unterminated. E2BIG? */
-	}
-
-	return destlen-o_len;
+	return add_null( to, o_save, o_len, destlen -o_len);
 }
 
 
@@ -707,7 +719,6 @@ size_t charset_precompose ( charset_t ch, char * src, size_t inlen, char * dst, 
 	}
 	
 	free(buffer);
-	dst[len] = 0;
 	return (len);
 }
 
@@ -734,7 +745,6 @@ size_t charset_decompose ( charset_t ch, char * src, size_t inlen, char * dst, s
 	}
 
 	free(buffer);
-	dst[len] = 0;
 	return (len);
 }
 

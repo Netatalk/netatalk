@@ -185,7 +185,6 @@ static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
                   		from_charset, to_charset, name, ntohl(cur_did));
 			return name;
 		}
-		buffer[outlen] = 0;
 
 		if (!strcmp(buffer, name)) {
 	   		return name;
@@ -195,7 +194,7 @@ static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
                   	from_charset, to_charset, name, ntohl(cur_did));
 	   return name;
 	}
-	buffer[outlen] = 0;
+
 	if (strcmp (name, buffer)) {
 	    if (dry_run) {
     		fprintf(stdout, "dry_run: would rename %s to %s.\n", name, buffer);

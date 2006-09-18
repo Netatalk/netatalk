@@ -303,7 +303,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	if ((c1.rbitmap & (1<<DIRPBIT_LNAME))) { 
 		if ( (size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), convbuf, 512)) )
 			goto crit_check_ret;
-		convbuf[len] = 0; 
+
 		if ((c1.rbitmap & (1<<CATPBIT_PARTIAL))) {
 			if (strcasestr_w( (ucs2_t*) convbuf, (ucs2_t*) c1.lname) == NULL)
 				goto crit_check_ret;
@@ -316,7 +316,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		if ( (size_t)(-1) == (len = convert_charset( CH_UTF8_MAC, CH_UCS2, CH_UTF8, path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
 			goto crit_check_ret;
 		}
-		convbuf[len] = 0; 
+
 		if (c1.rbitmap & (1<<CATPBIT_PARTIAL)) {
 			if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t*)c1.utf8name) == NULL)
 				goto crit_check_ret;
@@ -829,10 +829,9 @@ int catsearch_afp(AFPObj *obj _U_, char *ibuf, int ibuflen,
         /* Get the long filename */	
 		memcpy(tmppath, bspec1 + spec1[1] + 1, (bspec1 + spec1[1])[0]);
 		tmppath[(bspec1 + spec1[1])[0]]= 0;
-		len = convert_string ( vol->v_maccharset, CH_UCS2, tmppath, strlen(tmppath), c1.lname, 64);
+		len = convert_string ( vol->v_maccharset, CH_UCS2, tmppath, strlen(tmppath), c1.lname, sizeof(c1.lname));
         if (len == (size_t)(-1))
             return AFPERR_PARAM;
-		c1.lname[len] = 0;
 
 #if 0	
 		/* FIXME: do we need it ? It's always null ! */
@@ -863,7 +862,6 @@ int catsearch_afp(AFPObj *obj _U_, char *ibuf, int ibuflen,
  		len = convert_charset(CH_UTF8_MAC, CH_UCS2, CH_UTF8, c1.utf8name, namelen, c1.utf8name, 512, &flags);
         if (len == (size_t)(-1))
             return AFPERR_PARAM;
- 		c1.utf8name[len]=0;
     }
     
     /* Call search */

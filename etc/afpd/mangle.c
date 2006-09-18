@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.17 2005-04-28 20:49:44 bfernhomberg Exp $ 
+ * $Id: mangle.c,v 1.18 2006-09-18 01:06:44 didg Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -41,7 +41,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
 static char *demangle_checks ( const struct vol *vol, char* uname, char * mfilename, size_t prefix, char * ext)
 {
     u_int16_t flags;
-    static char buffer[MAXPATHLEN +1];
+    static char buffer[MAXPATHLEN];
     size_t len;
     size_t mfilenamelen;
 
