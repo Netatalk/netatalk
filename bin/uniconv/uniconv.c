@@ -142,7 +142,7 @@ static int do_rename( char* src, char *dst, struct stat *st)
 
 static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
 {
-	static char   buffer[MAXPATHLEN];
+	static char   buffer[MAXPATHLEN +2];  /* for convert_charset dest_len parameter +2 */
 	size_t outlen = 0;
 	unsigned char *p,*q;
 	int require_conversion = 0;
@@ -171,14 +171,14 @@ static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
 	q=buffer;
 	p=name;
 
-	outlen = convert_charset(ch_from, ch_to, ch_mac, p, strlen(p), q, sizeof(buffer), &flags);
+	outlen = convert_charset(ch_from, ch_to, ch_mac, p, strlen(p), q, sizeof(buffer) -2, &flags);
 	if ((size_t)-1 == outlen) {
   	   if ( ch_to == CH_UTF8) {
 		/* maybe name is already in UTF8? */
 		flags = conv_flags;
 		q = (char*) buffer;
 		p = name;
-		outlen = convert_charset(ch_to, ch_to, ch_mac, p, strlen(p), q, sizeof(buffer), &flags);
+		outlen = convert_charset(ch_to, ch_to, ch_mac, p, strlen(p), q, sizeof(buffer) -2, &flags);
 		if ((size_t)-1 == outlen) {
 			/* it's not UTF8... */
         		fprintf(stderr, "ERROR: conversion from '%s' to '%s' for '%s' in DID %u failed!!!\n", 

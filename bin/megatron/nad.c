@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.13 2006-09-18 01:06:44 didg Exp $
+ * $Id: nad.c,v 1.14 2006-09-19 01:35:45 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -317,7 +317,7 @@ static char *utompathiconv(char *upath)
     char        *m, *u;
     u_int16_t    flags = CONV_IGNORE | CONV_UNESCAPEHEX;
     size_t       outlen;
-    static char	 mpath[MAXPATHLEN];
+    static char	 mpath[MAXPATHLEN +2]; /* for convert_charset dest_len parameter +2 */
 
     m = mpath;
     outlen = strlen(upath);
@@ -352,7 +352,7 @@ char *mtoupathiconv(char *mpath)
     size_t       inplen;
     size_t       outlen;
     u_int16_t    flags = 0;
-    static char	 upath[MAXPATHLEN];
+    static char	 upath[MAXPATHLEN +2]; /* for convert_charset dest_len parameter +2 */
 
     if ( *mpath == '\0' ) {
         return( "." );

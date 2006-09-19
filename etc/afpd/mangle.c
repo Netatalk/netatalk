@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.18 2006-09-18 01:06:44 didg Exp $ 
+ * $Id: mangle.c,v 1.19 2006-09-19 01:35:45 didg Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -41,7 +41,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
 static char *demangle_checks ( const struct vol *vol, char* uname, char * mfilename, size_t prefix, char * ext)
 {
     u_int16_t flags;
-    static char buffer[MAXPATHLEN];
+    static char buffer[MAXPATHLEN +2];  /* for convert_charset dest_len parameter +2 */
     size_t len;
     size_t mfilenamelen;
 
@@ -51,7 +51,7 @@ static char *demangle_checks ( const struct vol *vol, char* uname, char * mfilen
 
     /* check whether file extensions match */
     {
-      char buf[MAX_EXT_LENGTH + 1];
+      char buf[MAX_EXT_LENGTH + 2];  /* for convert_charset dest_len parameter +2 */
       size_t ext_len = mangle_extension(vol, uname, buf, CH_UTF8_MAC);
 
       if (ext_len) {
@@ -233,9 +233,9 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
 char *
 mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname, cnid_t id, int flags) {
     char *m = NULL;
-    static char mfilename[MAXPATHLEN + 1];
+    static char mfilename[MAXPATHLEN]; /* way > maxlen */
     char mangle_suffix[MANGLE_LENGTH + 1];
-    char ext[MAX_EXT_LENGTH];
+    char ext[MAX_EXT_LENGTH +2];  /* for convert_charset dest_len parameter +2 */
     size_t ext_len;
     size_t maxlen;
     int k;

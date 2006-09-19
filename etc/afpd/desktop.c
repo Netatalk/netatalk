@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.35 2006-09-18 09:22:25 didg Exp $
+ * $Id: desktop.c,v 1.36 2006-09-19 01:35:45 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -621,7 +621,7 @@ char *dtfile(const struct vol *vol, u_char creator[], char *ext )
 
 char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 {
-    static char  upath[ MAXPATHLEN + 1];
+    static char  upath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
     char	*m, *u;
     size_t       inplen;
     size_t       outlen;
@@ -661,7 +661,6 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
         LOG(log_error, logtype_afpd, "conversion from %s to %s for %s failed.", (utf8)?"UTF8-MAC":vol->v_maccodepage, vol->v_volcodepage, mpath);
 	    return NULL;
     }
-    upath[outlen] = 0;
 
 #ifdef DEBUG
     LOG(log_debug, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
@@ -674,7 +673,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 */
 char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 {
-    static char  mpath[ MAXPATHLEN + 1];
+    static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
     char        *m, *u;
     u_int16_t    flags = CONV_IGNORE | CONV_UNESCAPEHEX;
     size_t       outlen;
@@ -699,7 +698,6 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 	goto utompath_error;
     }
 
-    mpath[outlen] = 0; 
     if (!(flags & CONV_REQMANGLE)) 
         flags = 0;
     else

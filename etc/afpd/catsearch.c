@@ -97,7 +97,7 @@ struct scrit {
     u_int16_t offcnt;           /* Offspring count */
 	struct finderinfo finfo;    /* Finder info */
 	char lname[64];             /* Long name */ 
-	char utf8name[512];         /* UTF8 name */
+	char utf8name[514];         /* UTF8 or UCS2 name */ /* for convert_charset dest_len parameter +2 */
 };
 
 /*
@@ -258,7 +258,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	struct adouble *adp = NULL;
 	time_t c_date, b_date;
 	u_int32_t ac_date, ab_date;
-	static char convbuf[512];
+	static char convbuf[514]; /* for convert_charset dest_len parameter +2 */
 	size_t len;
 
 	if (S_ISDIR(path->st.st_mode)) {
