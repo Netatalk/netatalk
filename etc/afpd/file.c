@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.101 2006-09-15 00:09:23 didg Exp $
+ * $Id: file.c,v 1.102 2006-09-19 23:00:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -89,7 +89,7 @@ static int default_type(void *finder)
 }
 
 /* FIXME path : unix or mac name ? (for now it's unix name ) */
-void *get_finderinfo(const char *upath, struct adouble *adp, void *data)
+void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data)
 {
     struct extmap	*em;
     void                *ad_finder = NULL;
@@ -107,7 +107,7 @@ void *get_finderinfo(const char *upath, struct adouble *adp, void *data)
     else {
         memcpy(data, ufinderi, ADEDLEN_FINDERI);
         chk_ext = 1;
-        if (*upath == '.') { /* make it invisible */
+        if (vol_inv_dots(vol) && *upath == '.') { /* make it invisible */
             u_int16_t ashort;
             
             ashort = htons(FINDERINFO_INVISIBLE);
@@ -284,7 +284,7 @@ int getmetadata(struct vol *vol,
         case FILPBIT_ATTR :
             if ( adp ) {
                 ad_getattr(adp, &ashort);
-            } else if (*upath == '.') {
+            } else if (vol_inv_dots(vol) && *upath == '.') {
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
@@ -338,7 +338,7 @@ int getmetadata(struct vol *vol,
             break;
 
         case FILPBIT_FINFO :
-	    get_finderinfo(upath, adp, (char *)data);
+	    get_finderinfo(vol, upath, adp, (char *)data);
             data += ADEDLEN_FINDERI;
             break;
 

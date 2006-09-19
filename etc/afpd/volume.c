@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.66 2006-09-15 00:05:51 didg Exp $
+ * $Id: volume.c,v 1.67 2006-09-19 23:00:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -458,6 +458,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOHEX;
             else if (strcasecmp(p, "usedots") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS;
+            else if (strcasecmp(p, "invisibledots") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS | AFPVOL_INV_DOTS;
             else if (strcasecmp(p, "limitsize") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_LIMITSIZE;
             /* support for either "dropbox" or "dropkludge" */
@@ -624,6 +626,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_ad_options |= ADVOL_CACHE;
         if ((volume->v_flags & AFPVOL_UNIX_PRIV))
             volume->v_ad_options |= ADVOL_UNIXPRIV;
+        if ((volume->v_flags & AFPVOL_INV_DOTS))
+            volume->v_ad_options |= ADVOL_INVDOTS;
 
         if (options[VOLOPT_PASSWORD].c_value)
             volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);

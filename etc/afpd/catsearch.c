@@ -233,12 +233,13 @@ static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
 
 /* -------------------- */
 static struct finderinfo *
-unpack_finderinfo(char *upath, struct adouble *adp, struct finderinfo *finfo)
+unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, struct finderinfo *finfo)
 {
 	packed_finder  buf;
 	void           *ptr;
 	
-	ptr = get_finderinfo(upath, adp, &buf);
+    *adp = adl_lkup(vol, path, *adp);
+	ptr = get_finderinfo(vol, path->u_name, *adp, &buf);
 	return unpack_buffer(finfo, ptr);
 }
 
@@ -374,8 +375,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 
         /* Check file type ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
-		adp = adl_lkup(vol, path, adp);
-	    finfo = unpack_finderinfo(path->u_name, adp, &finderinfo);
+	    finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
 		if (finfo->f_type != c1.finfo.f_type)
 			goto crit_check_ret;
 	}
@@ -383,8 +383,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	/* Check creator ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
 		if (!finfo) {
-	    	adp = adl_lkup(vol, path, adp);
-			finfo = unpack_finderinfo(path->u_name, adp, &finderinfo);
+			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
 		}
 		if (finfo->creator != c1.finfo.creator)
 			goto crit_check_ret;
@@ -393,8 +392,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	/* Check finder info attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
 		if (!finfo) {
-	    	adp = adl_lkup(vol, path, adp);
-			finfo = unpack_finderinfo(path->u_name, adp, &finderinfo);
+			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
 		}
 
 		if ((finfo->attrs & c2.finfo.attrs) != c1.finfo.attrs)
@@ -404,8 +402,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	/* Check label */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
 		if (!finfo) {
-	    	adp = adl_lkup(vol, path, adp);
-			finfo = unpack_finderinfo(path->u_name, adp, &finderinfo);
+			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
 		}
 		if ((finfo->label & c2.finfo.label) != c1.finfo.label)
 			goto crit_check_ret;

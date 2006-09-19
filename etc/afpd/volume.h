@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.23 2005-06-02 12:32:18 didg Exp $
+ * $Id: volume.h,v 1.24 2006-09-19 23:00:50 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -94,8 +94,8 @@ typedef u_int64_t VolSpace;
 #endif /* NO_LARGE_VOL_SUPPORT */
 
 #define AFPVOL_OPEN	(1<<0)
-#define AFPVOL_DT	(1<<1)
 
+/* flags  for AFS and quota 0xxx0 */
 #define AFPVOL_GVSMASK	(7<<2)
 #define AFPVOL_NONE	(0<<2)
 #define AFPVOL_AFSGVS	(1<<2)
@@ -126,7 +126,8 @@ this is going away. */
 #define AFPVOL_EILSEQ    (1 << 20)  /* encode illegal sequence 'asis' UCS2, ex "\217-", which is not 
                                        a valid SHIFT-JIS char, is encoded  as U\217 -*/
 
-#define AFPVOL_CACHE     (1 << 21)  /* Use adouble v2 CNID caching, default don't use it */
+#define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching, default don't use it */
+#define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)
@@ -187,6 +188,8 @@ int wincheck(const struct vol *vol, const char *path);
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
 
 #define vol_unix_priv(vol) (afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
+
+#define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)
 
 extern struct vol	*getvolbyvid __P((const u_int16_t));
 extern int              ustatfs_getvolspace __P((const struct vol *,
