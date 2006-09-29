@@ -1,5 +1,5 @@
 /*
- * $Id: ad_size.c,v 1.6 2005-04-28 20:49:52 bfernhomberg Exp $
+ * $Id: ad_size.c,v 1.7 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -19,7 +19,7 @@ off_t ad_size(const struct adouble *ad, const u_int32_t eid)
   if (eid == ADEID_DFORK) {
     struct stat st;
     
-    if (fstat(ad_dfileno(ad), &st) < 0)
+    if (fstat(ad_data_fileno(ad), &st) < 0)
       return 0;
     return st.st_size;
   }  

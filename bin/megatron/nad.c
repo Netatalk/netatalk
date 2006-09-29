@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.14 2006-09-19 01:35:45 didg Exp $
+ * $Id: nad.c,v 1.15 2006-09-29 09:39:16 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -451,7 +451,7 @@ int nad_open( path, openflags, fh, options )
     	initvol(path);
 	strcpy( nad.adpath[0], path );
 	strcpy( nad.adpath[1], 
-		nad.ad.ad_path( nad.adpath[0], ADFLAGS_DF|ADFLAGS_HF ));
+		nad.ad.ad_ops->ad_path( nad.adpath[0], ADFLAGS_HF ));
 	for ( fork = 0 ; fork < NUMFORKS ; fork++ ) {
 	    if ( stat( nad.adpath[ fork ], &st ) < 0 ) {
 		if ( errno == ENOENT ) {
@@ -479,7 +479,7 @@ int nad_open( path, openflags, fh, options )
 	strcpy( nad.macname, fh->name );
 	strcpy( nad.adpath[0], mtoupath( nad.macname ));
 	strcpy( nad.adpath[1], 
-		nad.ad.ad_path( nad.adpath[0], ADFLAGS_DF|ADFLAGS_HF ));
+		nad.ad.ad_ops->ad_path( nad.adpath[0], ADFLAGS_HF ));
 #if DEBUG
     fprintf(stderr, "%s\n", nad.macname);
     fprintf(stderr, "%s is adpath[0]\n", nad.adpath[0]);
@@ -691,7 +691,7 @@ int nad_header_write( fh )
 #endif /* HEXOUTPUT */
 
     nad.offset[ DATA ] = nad.offset[ RESOURCE ] = 0;
-    ad_flush( &nad.ad, ADFLAGS_DF|ADFLAGS_HF );
+    ad_flush( &nad.ad );
 
     return( 0 );
 }
@@ -763,7 +763,7 @@ int			status;
 {
     int			rv;
     if ( status == KEEP ) {
-	if (( rv = ad_flush( &nad.ad, ADFLAGS_DF|ADFLAGS_HF )) < 0 ) {
+	if (( rv = ad_flush( &nad.ad )) < 0 ) {
 	    fprintf( stderr, "nad_close rv for flush %d\n", rv );
 	    return( rv );
 	}

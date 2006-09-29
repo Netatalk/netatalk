@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.7 2005-04-28 20:49:52 bfernhomberg Exp $
+ * $Id: ad_flush.c,v 1.8 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -27,11 +27,11 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <string.h>
 #include <atalk/adouble.h>
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 
 #include "ad_private.h"
@@ -50,8 +50,10 @@ AD_DEV, AD_INO, AD_SYN, AD_ID
 #define EID_DISK(a) (set_eid[a])
 #endif
 
-/* rebuild the header */
-void ad_rebuild_header(struct adouble *ad)
+/* rebuild the adouble header 
+ * XXX should be in a separate file ?
+*/
+int  ad_rebuild_adouble_header(struct adouble *ad)
 {
     u_int32_t		eid;
     u_int32_t 		temp;
@@ -96,16 +98,83 @@ void ad_rebuild_header(struct adouble *ad)
     }
     nent = htons( nent );
     memcpy(nentp, &nent, sizeof( nent ));
+    return ad_getentryoff(ad, ADEID_RFORK);
+}
+
+/* ------------------- 
+ * XXX copy only header with same size or comment
+ * doesn't work well for adouble with different version.
+ * 
+*/
+int ad_copy_header(struct adouble *add, struct adouble *ads)
+{
+    u_int32_t		eid;
+    int			len;
+
+    for ( eid = 0; eid < ADEID_MAX; eid++ ) {
+      if ( ads->ad_eid[ eid ].ade_off == 0 ) {
+	continue;
+      }
+
+      if ( add->ad_eid[ eid ].ade_off == 0 ) {
+	continue;
+      }
+
+      len = ads->ad_eid[ eid ].ade_len;
+      if (!len) {
+	continue;
+      }
+      
+      if (eid != ADEID_COMMENT && add->ad_eid[ eid ].ade_len != len ) {
+	continue;      
+      }
+      
+      ad_setentrylen( add, eid, len );
+      memcpy( ad_entry( add, eid ), ad_entry( ads, eid ), len );
+    }
+    add->ad_rlen = ads->ad_rlen;
+    return 0;
+}
+
+/* ------------------- */
+int  ad_rebuild_sfm_header(struct adouble *ad)
+{
+    u_int32_t		eid;
+    u_int32_t 		temp;
+    
+    u_int16_t		attr;
+    char		*buf, *nentp;
+
+    /*
+     * Rebuild any header information that might have changed.
+     */
+    buf = ad->ad_data;
+    /* FIXME */
+//    temp = htonl( ad->ad_magic );
+    temp = ad->ad_magic;
+    memcpy(buf, &temp, sizeof( temp ));
+    
+//    temp = htonl( ad->ad_version );
+    temp = ad->ad_version;
+    memcpy(buf +4, &temp, sizeof( temp ));
+
+    /* need to save attrib */
+    if (!ad_getattr(ad, &attr)) {
+        attr &= ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
+
+        memcpy(buf +48 +4, &attr, sizeof(attr));
+        
+    }
+    return AD_SFM_LEN;
 }
 
 
-int ad_flush( ad, adflags )
+int ad_flush( ad )
     struct adouble	*ad;
-    int			adflags;
 {
     int len;
 
-    if (( adflags & ADFLAGS_HF ) && ( ad->ad_hf.adf_flags & O_RDWR )) {
+    if (( ad->ad_md->adf_flags & O_RDWR )) {
 	/* sync our header */
         if (ad->ad_rlen > 0xffffffff) {
             ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
@@ -113,10 +182,9 @@ int ad_flush( ad, adflags )
         else {
             ad_setentrylen(ad, ADEID_RFORK, ad->ad_rlen);
         }
-        ad_rebuild_header(ad);
-	len = ad_getentryoff(ad, ADEID_RFORK);
-	/* now flush it out */
-        if (adf_pwrite(&ad->ad_hf, ad->ad_data, len, 0) != len) {
+        len = ad->ad_ops->ad_rebuild_header(ad);
+
+        if (adf_pwrite(ad->ad_md, ad->ad_data, len, 0) != len) {
 	    if ( errno == 0 ) {
 		errno = EIO;
 	    }
@@ -134,23 +202,44 @@ int ad_close( ad, adflags )
 {
     int			err = 0;
 
-    if (( adflags & ADFLAGS_DF ) && ad->ad_df.adf_fd != -1 &&
-	    !(--ad->ad_df.adf_refcount)) {
-	if ( close( ad->ad_df.adf_fd ) < 0 ) {
+    if (( adflags & ADFLAGS_DF ) && ad_data_fileno(ad) != -1 &&
+	    !(--ad->ad_data_fork.adf_refcount)) {
+	if ( close( ad_data_fileno(ad) ) < 0 ) {
 	    err = -1;
 	}
-	ad->ad_df.adf_fd = -1;
-	adf_lock_free(&ad->ad_df);
+	ad_data_fileno(ad) = -1;
+	adf_lock_free(&ad->ad_data_fork);
     }
 
-    if (( adflags & ADFLAGS_HF ) && ad->ad_hf.adf_fd != -1 &&
-	    !(--ad->ad_hf.adf_refcount)) {
-	if ( close( ad->ad_hf.adf_fd ) < 0 ) {
+    if (!( adflags & ADFLAGS_HF )) {
+        return err;
+    }
+    
+    /* meta /resource fork */
+
+    if ( ad_meta_fileno(ad) != -1 && !(--ad->ad_md->adf_refcount)) {
+	if ( close( ad_meta_fileno(ad) ) < 0 ) {
 	    err = -1;
 	}
-	ad->ad_hf.adf_fd = -1;
-	adf_lock_free(&ad->ad_hf);
+	ad_meta_fileno(ad) = -1;
+	adf_lock_free(ad->ad_md);
     }
 
-    return( err );
+    if (ad->ad_flags != AD_VERSION1_SFM) {
+    	return err;
+    }
+
+    if ((adflags & ADFLAGS_DIR)) {
+    	return err;
+    }
+
+    if ( ad_reso_fileno(ad) != -1 && !(--ad->ad_resource_fork.adf_refcount)) {
+	if ( close( ad_reso_fileno(ad) ) < 0 ) {
+	    err = -1;
+	}
+	ad_reso_fileno(ad) = -1;
+	adf_lock_free(&ad->ad_resource_fork);
+    }
+    
+    return err;
 }

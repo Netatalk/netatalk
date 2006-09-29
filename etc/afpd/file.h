@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.19 2006-09-19 23:00:50 didg Exp $
+ * $Id: file.h,v 1.20 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -58,8 +58,13 @@ extern const u_char	ufinderi[];
 #define ATTRBIT_INVISIBLE (1<<0)  /* invisible (d) */
 #define ATTRBIT_MULTIUSER (1<<1)  /* multiuser */
 #define ATTRBIT_SYSTEM    (1<<2)  /* system (d) */
+
+#if 0
+/* define in adouble.h */
 #define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
 #define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
+#endif
+
 #define ATTRBIT_SHARED    (1<<4)  /* shared area (d) */
 #define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit */
 #define ATTRBIT_BACKUP    (1<<6)  /* backup needed (d) */

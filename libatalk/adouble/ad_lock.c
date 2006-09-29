@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.12 2005-04-28 20:49:52 bfernhomberg Exp $
+ * $Id: ad_lock.c,v 1.13 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -261,27 +261,31 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   lock.l_start = off;
   type = locktype;
   if (eid == ADEID_DFORK) {
-    adf = &ad->ad_df;
+    adf = &ad->ad_data_fork;
     if ((type & ADLOCK_FILELOCK)) {
-        if (ad_hfileno(ad) != -1) {
+        if (ad_meta_fileno(ad) != -1) { /* META */
+            adf = ad->ad_md;
             lock.l_start = df2off(off);
-            adf = &ad->ad_hf;
         }
     }
   } else { /* rfork */
-    adf = &ad->ad_hf;
-    if (adf->adf_fd == -1) {
-        /* there's no resource fork. return a lock error
+    if (ad_meta_fileno(ad) == -1 || ad_reso_fileno(ad) == -1) {
+        /* there's no meta data. return a lock error 
          * otherwise if a second process is able to create it
          * locks are a mess.
          */
         errno = EACCES;
         return -1;
     }
-    if (type & ADLOCK_FILELOCK) 
+    if (type & ADLOCK_FILELOCK) {
+      adf = ad->ad_md;			/* either resource or meta data (set in ad_open) */
       lock.l_start = hf2off(off);
-    else
+    }
+    else {
+      /* we really want the resource fork it's a byte lock */
+      adf = &ad->ad_resource_fork;
       lock.l_start += ad_getentryoff(ad, eid);
+    }
   }
   /* NOTE: we can't write lock a read-only file. on those, we just
     * make sure that we have a read lock set. that way, we at least prevent
@@ -399,18 +403,18 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 
   lock.l_start = off;
   if (eid == ADEID_DFORK) {
-    adf = &ad->ad_df;
-    if ((ad_hfileno(ad) != -1)) {
-      	adf = &ad->ad_hf;
+    adf = &ad->ad_data_fork;
+    if ((ad_meta_fileno(ad) != -1)) {
+      	adf = ad->ad_md;
     	lock.l_start = df2off(off);
     }
   } 
   else { /* rfork */
-    if ((ad_hfileno(ad) == -1)) {
+    if ((ad_meta_fileno(ad) == -1)) {
         /* there's no resource fork. return no lock */
         return 0;
     }
-    adf = &ad->ad_hf;
+    adf = ad->ad_md;
     lock.l_start = hf2off(off);
   }
 
@@ -448,9 +452,10 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
   lock.l_start = off;
   type = locktype;
   if (eid == ADEID_DFORK) {
-    adf = &ad->ad_df;
+    adf = &ad->ad_data_fork;
   } else {
-    adf = &ad->ad_hf;
+    /* FIXME META */
+    adf = &ad->ad_resource_fork;
     if (adf->adf_fd == -1) {
         /* there's no resource fork. return success */
         return 0;
@@ -515,9 +520,9 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
   lock.l_len = 0;
 
   if (eid == ADEID_DFORK) {
-    adf = &ad->ad_df;
+    adf = &ad->ad_data_fork;
   } else {
-    adf = &ad->ad_hf;
+    adf = &ad->ad_resource_fork;
     lock.l_start = ad_getentryoff(ad, eid);
   }
   
@@ -530,10 +535,18 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
 /* --------------------- */
 void ad_fcntl_unlock(struct adouble *ad, const int user)
 {
-  if (ad->ad_df.adf_fd != -1) {
-    adf_unlock(&ad->ad_df, user);
+  if (ad_data_fileno(ad) != -1) {
+    adf_unlock(&ad->ad_data_fork, user);
   }
-  if (ad->ad_hf.adf_fd != -1) {
-    adf_unlock(&ad->ad_hf, user);
+  if (ad_reso_fileno(ad) != -1) {
+    adf_unlock(&ad->ad_resource_fork, user);
   }
+
+  if (ad->ad_flags != AD_VERSION1_SFM) {
+    return;
+  }
+  if (ad_meta_fileno(ad) != -1) {
+    adf_unlock(&ad->ad_metadata_fork, user);
+  }
+
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.24 2005-09-28 09:46:37 didg Exp $
+ * $Id: ofork.c,v 1.25 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -387,10 +387,10 @@ int of_closefork(struct ofork *ofork)
     int                 ret;
 
     adflags = 0;
-    if ((ofork->of_flags & AFPFORK_DATA) && (ad_dfileno( ofork->of_ad ) != -1)) {
+    if ((ofork->of_flags & AFPFORK_DATA) && (ad_data_fileno( ofork->of_ad ) != -1)) {
             adflags |= ADFLAGS_DF;
     }
-    if ( (ofork->of_flags & AFPFORK_OPEN) && ad_hfileno( ofork->of_ad ) != -1 ) {
+    if ( (ofork->of_flags & AFPFORK_OPEN) && ad_reso_fileno( ofork->of_ad ) != -1 ) {
         adflags |= ADFLAGS_HF;
         /*
          * Only set the rfork's length if we're closing the rfork.
@@ -402,7 +402,7 @@ int of_closefork(struct ofork *ofork)
             	doflush++;
             }
             if ( doflush ) {
-                 ad_flush( ofork->of_ad, adflags );
+                 ad_flush( ofork->of_ad );
             }
         }
     }

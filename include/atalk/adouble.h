@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.30 2006-09-19 23:00:50 didg Exp $
+ * $Id: adouble.h,v 1.31 2006-09-29 09:39:16 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -80,9 +80,12 @@
 
 /* version info */
 #define AD_VERSION1	0x00010000
+#define SFM_VERSION     AD_VERSION1
+
 #define AD_VERSION2	0x00020000
 #define AD_VERSION2_OSX	0x00020001
 #define AD_VERSION1_ADS	0x00010002
+#define AD_VERSION1_SFM	0x00010003
 #define AD_VERSION	AD_VERSION2
 
 /*
@@ -112,12 +115,14 @@
 #define ADEID_PRIVINO           17
 #define ADEID_PRIVSYN           18 /* in synch with database */
 #define ADEID_PRIVID            19
+#define ADEID_SFMRESERVE1       20
+#define ADEID_SFMRESERVE2       21
 
 #define AD_DEV                  0x80444556
 #define AD_INO                  0x80494E4F
 #define AD_SYN                  0x8053594E
 #define AD_ID                   0x8053567E
-#define ADEID_MAX		20
+#define ADEID_MAX		22
 #endif
 
 /* magic */
@@ -125,6 +130,7 @@
 #define AD_APPLEDOUBLE_MAGIC 0x00051607
 #define AD_MAGIC	     AD_APPLEDOUBLE_MAGIC
 
+#define SFM_MAGIC            0x00504641 
 
 /* sizes of relevant entry bits */
 #define ADEDLEN_MAGIC       4
@@ -158,6 +164,10 @@
 
 #define ADEID_NUM_V1         5
 #define ADEID_NUM_V2         13
+
+// #define ADEID_NUM_SFM        5
+/* sizeof SFM meta data */
+#define AD_SFM_LEN 60  
 
 /* 589 */
 #define AD_DATASZ1      (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT +ADEDLEN_FILEI +ADEDLEN_FINDERI+\
@@ -239,14 +249,22 @@ struct ad_fd {
     int          adf_refcount, adf_lockcount, adf_lockmax;
 };
 
+/* fork attribute */
+#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
+#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
+
 /* some header protection */
 #define AD_INITED  0xad494e54  /* ad"INT" */
+struct adouble_fops;
+
 struct adouble {
     u_int32_t		ad_magic;
     u_int32_t		ad_version;
     char		ad_filler[ 16 ];
     struct ad_entry	ad_eid[ ADEID_MAX ];
-    struct ad_fd	ad_df, ad_hf;
+    struct ad_fd	ad_data_fork, ad_resource_fork, ad_metadata_fork;
+    struct ad_fd	*ad_md; /* either ad_resource or ad_metadata */
+
     int                 ad_flags;
     unsigned int        ad_inited;
     int                 ad_options;
@@ -256,9 +274,10 @@ struct adouble {
                                      */
     char                *ad_m_name;   /* mac name for open fork */
     int                 ad_m_namelen;
+    struct adouble_fops	*ad_ops;
 
-    char                *(*ad_path)(const char *, int);
-    int                 (*ad_mkrf)(char *);
+
+    u_int16_t		ad_open_forks;      /* open forks (by others) */
                            
 #ifdef USE_MMAPPED_HEADERS
     char                *ad_data;
@@ -267,13 +286,28 @@ struct adouble {
 #endif
 };
 
+struct adouble_fops {
+    char                *(*ad_path)(const char *, int);
+    int                 (*ad_mkrf)(char *);
+
+    int 		(*ad_rebuild_header)(struct adouble *);
+    int			(*ad_check_header)(struct adouble *, struct stat *);
+    int			(*ad_header_read)(struct adouble *, struct stat *);
+
+    int			(*ad_header_upgrade)(struct adouble *, char *);
+
+};
+
 #define ADFLAGS_DF	  (1<<0)
-#define ADFLAGS_HF	  (1<<1)
+#define ADFLAGS_HF	  (1<<1)  
 #define ADFLAGS_DIR	  (1<<2)
 #define ADFLAGS_NOADOUBLE (1<<3)
 #define ADFLAGS_V1COMPAT  (1<<4)
 #define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
 #define ADFLAGS_RDONLY    (1<<6)  /* don't try readwrite */
+#define ADFLAGS_OPENFORKS (1<<7)  /* check for open fork in ad_metadata function */
+#define ADFLAGS_RF	  (1<<8) 
+#define ADFLAGS_MD	  ADFLAGS_HF /* (1<<9) */
 
 /* adouble v2 cnid cache */
 #define ADVOL_NODEV      (1 << 0)   
@@ -363,8 +397,10 @@ struct adouble {
 #define AD_AFPFILEI_GROUP       (1 << 1) /* ignore group */
 #define AD_AFPFILEI_BLANKACCESS (1 << 2) /* blank access permissions */
 
-#define ad_dfileno(ad)		((ad)->ad_df.adf_fd)
-#define ad_hfileno(ad)		((ad)->ad_hf.adf_fd)
+#define ad_data_fileno(ad)	((ad)->ad_data_fork.adf_fd)
+#define ad_reso_fileno(ad)	((ad)->ad_resource_fork.adf_fd)
+#define ad_meta_fileno(ad)	((ad)->ad_md->adf_fd)
+
 #define ad_getversion(ad)	((ad)->ad_version)
 
 #define ad_getentrylen(ad,eid)	((ad)->ad_eid[(eid)].ade_len)
@@ -373,14 +409,17 @@ struct adouble {
 #define ad_getentryoff(ad,eid)  ((ad)->ad_eid[(eid)].ade_off)
 #define ad_entry(ad,eid)        ((caddr_t)(ad)->ad_data + \
 				 (ad)->ad_eid[(eid)].ade_off)     
-#define ad_getoflags(ad,adf)	(((adf)&ADFLAGS_HF) ? \
-	(ad)->ad_hf.adf_flags : (ad)->ad_df.adf_flags)
 
-#define ad_get_HF_flags(ad)	((ad)->ad_hf.adf_flags)
+#define ad_get_HF_flags(ad)	((ad)->ad_resource_fork.adf_flags)
+#define ad_get_MD_flags(ad)	((ad)->ad_md->adf_flags)
 
-/* ad_flush.c */
-extern void ad_rebuild_header __P((struct adouble *));
-extern int ad_flush           __P((struct adouble *, int));
+/* ad_flush.c 
+
+*/
+extern int ad_rebuild_adouble_header __P((struct adouble *));
+extern int ad_rebuild_sfm_header __P((struct adouble *));
+
+extern int ad_flush           __P((struct adouble *));
 extern int ad_close           __P((struct adouble *, int));
 
 /* ad_lock.c */
@@ -408,6 +447,7 @@ extern char *ad_dir       __P((const char *));
 extern char *ad_path      __P((const char *, int));
 extern char *ad_path_osx  __P((const char *, int));
 extern char *ad_path_ads  __P((const char *, int));
+extern char *ad_path_sfm  __P((const char *, int));
 
 extern int ad_mode        __P((const char *, int));
 extern int ad_mkdir       __P((const char *, int));
@@ -419,10 +459,9 @@ extern int ad_stat        __P((const char *, struct stat *));
 extern int ad_metadata    __P((const char *, int, struct adouble *));
 
 #define ad_open_metadata(name, flags, mode, adp)\
-   ad_open(name, ADFLAGS_HF|(flags), O_RDWR |(mode), 0666, (adp))
+   ad_open(name, ADFLAGS_MD|(flags), O_RDWR |(mode), 0666, (adp))
 
-#define ad_flush_metadata(adp) ad_flush( (adp), ADFLAGS_HF)
-#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_HF)
+#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_MD)
 
 /* build a resource fork mode from the data fork mode:
  * remove X mode and extend header to RW if R or W (W if R for locking),

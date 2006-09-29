@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.8 2005-04-28 20:49:52 bfernhomberg Exp $
+ * $Id: ad_write.c,v 1.9 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -60,23 +60,23 @@ ssize_t ad_write( ad, eid, off, end, buf, buflen )
     
     if ( eid == ADEID_DFORK ) {
 	if ( end ) {
-	    if ( fstat( ad->ad_df.adf_fd, &st ) < 0 ) {
+	    if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
 		return( -1 );
 	    }
 	    off = st.st_size - off;
 	}
-	cc = adf_pwrite(&ad->ad_df, buf, buflen, off);
+	cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
     } else if ( eid == ADEID_RFORK ) {
         off_t    r_off;
 
 	if ( end ) {
-	    if ( fstat( ad->ad_df.adf_fd, &st ) < 0 ) {
+	    if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
 		return( -1 );
 	    }
 	    off = st.st_size - off -ad_getentryoff(ad, eid);
 	}
 	r_off = ad_getentryoff(ad, eid) + off;
-	cc = adf_pwrite(&ad->ad_hf, buf, buflen, r_off);
+	cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
 
 	/* sync up our internal buffer  FIXME always false? */
 	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
@@ -155,7 +155,7 @@ int ad_rtruncate( ad, size )
     struct adouble	*ad;
     const off_t  	size;
 {
-    if ( sys_ftruncate( ad->ad_hf.adf_fd,
+    if ( sys_ftruncate( ad_reso_fileno(ad),
 	    size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
 	return -1;
     }
@@ -168,7 +168,7 @@ int ad_dtruncate(ad, size)
     struct adouble	*ad;
     const off_t 	size;
 {
-    if (sys_ftruncate(ad->ad_df.adf_fd, size) < 0) {
+    if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
       return -1;
     }
     return 0;

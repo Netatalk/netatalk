@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.36 2006-09-19 01:35:45 didg Exp $
+ * $Id: desktop.c,v 1.37 2006-09-29 09:39:16 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -748,7 +748,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     }
 
     if (ad_getentryoff(adp, ADEID_COMMENT)) {
-        if ( (ad_getoflags( adp, ADFLAGS_HF ) & O_CREAT) ) {
+        if ( (ad_get_MD_flags( adp ) & O_CREAT) ) {
             if ( *path->m_name == '\0' ) {
                 name = curdir->d_m_name;
             } else {
@@ -758,7 +758,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         }
         ad_setentrylen( adp, ADEID_COMMENT, clen );
         memcpy( ad_entry( adp, ADEID_COMMENT ), ibuf, clen );
-        ad_flush_metadata( adp );
+        ad_flush( adp );
     }
     ad_close_metadata( adp);
     return( AFP_OK );
@@ -912,7 +912,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
 
     if (ad_getentryoff(adp, ADEID_COMMENT)) {
         ad_setentrylen( adp, ADEID_COMMENT, 0 );
-        ad_flush_metadata( adp );
+        ad_flush( adp );
     }
     ad_close_metadata( adp);
     return( AFP_OK );

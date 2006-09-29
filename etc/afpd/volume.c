@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.67 2006-09-19 23:00:50 didg Exp $
+ * $Id: volume.c,v 1.68 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -436,6 +436,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION2_OSX;
         else if (strcasecmp(val + 1, "ads") == 0)
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION1_ADS;
+        else if (strcasecmp(val + 1, "sfm") == 0)
+            options[VOLOPT_ADOUBLE].i_value = AD_VERSION1_SFM;
 #endif
     } else if (optionok(tmp, "options:", val)) {
         char *p;
@@ -1237,7 +1239,7 @@ int		*buflen;
         isad = 0;
         vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
 
-    } else if (ad_get_HF_flags( &ad ) & O_CREAT) {
+    } else if (ad_get_MD_flags( &ad ) & O_CREAT) {
         slash = strrchr( vol->v_path, '/' );
         if(slash)
             slash++;
@@ -1249,7 +1251,7 @@ int		*buflen;
                ad_getentrylen( &ad, ADEID_NAME ));
         }
         vol_setdate(vol->v_vid, &ad, st->st_mtime);
-        ad_flush_metadata(&ad);
+        ad_flush(&ad);
     }
     else {
         if (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0)
@@ -2087,7 +2089,7 @@ int	ibuflen _U_, *rbuflen;
 
     memcpy(&aint, ibuf, sizeof(aint));
     ad_setdate(&ad, AD_DATE_BACKUP, aint);
-    ad_flush(&ad, ADFLAGS_HF);
+    ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
     return( AFP_OK );
 }
@@ -2198,7 +2200,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
 			memcpy(ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF,&attr, sizeof(attr));
 		}
 
-        	ad_flush( &ad, ADFLAGS_HF );
+        	ad_flush( &ad );
         	ad_close( &ad, ADFLAGS_HF );
 	}
 	free(p);
@@ -2276,6 +2278,9 @@ static int savevoloptions (const struct vol *vol)
             break;
         case AD_VERSION1_ADS:
             strlcat(buf, "ADOUBLE_VER:ads\n", sizeof(buf));
+            break;
+        case AD_VERSION1_SFM:
+            strlcat(buf, "ADOUBLE_VER:sfm\n", sizeof(buf));
             break;
     }
 

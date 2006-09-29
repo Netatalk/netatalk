@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.6 2005-04-28 20:49:52 bfernhomberg Exp $
+ * $Id: ad_read.c,v 1.7 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -71,17 +71,17 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
     if ( eid == ADEID_DFORK ) {
-        cc = adf_pread(&ad->ad_df, buf, buflen, off);
+        cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
     } else {
         off_t r_off;
         
-        if ( ad_hfileno( ad ) == -1 ) {
+        if ( ad_reso_fileno( ad ) == -1 ) {
              /* resource fork is not open ( cf etc/afp/fork.c) */
              return 0;
         }
         r_off = ad_getentryoff(ad, eid) + off;
 	
-	if (( cc = adf_pread( &ad->ad_hf, buf, buflen, r_off )) < 0 ) {
+	if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 ) {
 	  return( -1 );
 	}
 	/*
@@ -91,7 +91,7 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
 	 * FIXME : always false?
 	 */
 	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
-	    if ( ad->ad_hf.adf_flags & O_RDWR ) {
+	    if ( ad->ad_resource_fork.adf_flags & O_RDWR ) {
 	      memcpy(buf, ad->ad_data + r_off,
 		     MIN(sizeof( ad->ad_data ) - r_off, cc));
 	    } else {

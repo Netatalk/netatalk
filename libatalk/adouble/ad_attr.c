@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.5 2005-04-28 20:49:51 bfernhomberg Exp $
+ * $Id: ad_attr.c,v 1.6 2006-09-29 09:39:16 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -33,12 +33,17 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
    else 
       return -1;
 
+   *attr |= htons(ad->ad_open_forks);
+
    return 0;
 }
 
 /* ----------------- */
-int ad_setattr(const struct adouble *ad, const u_int16_t attr)
+int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
 {
+   /* we don't save open forks indicator */
+   u_int16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
+
    if (ad->ad_version == AD_VERSION1) {
        if (ad_getentryoff(ad, ADEID_FILEI)) {
            memcpy(ad_entry(ad, ADEID_FILEI) + FILEIOFF_ATTR, &attr,
@@ -107,7 +112,7 @@ char   temp[ADEDLEN_PRIVSYN];
      * note inode and device are opaques and not in network order
      * only use the ID if adouble is writable for us.
     */
-    if (adp && ( adp->ad_options & ADVOL_CACHE) && ( adp->ad_hf.adf_flags & O_RDWR )
+    if (adp && ( adp->ad_options & ADVOL_CACHE) && ( adp->ad_md->adf_flags & O_RDWR )
             && sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)
             && sizeof(ino_t) == ad_getentrylen(adp,ADEID_PRIVINO)
             && sizeof(temp) == ad_getentrylen(adp,ADEID_PRIVSYN)

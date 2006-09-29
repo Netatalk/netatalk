@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.102 2006-09-19 23:00:49 didg Exp $
+ * $Id: file.c,v 1.103 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -227,7 +227,7 @@ u_int32_t aint = 0;
              * for a folder adp is always null
              */
             if (ad_setid(adp, st->st_dev, st->st_ino, aint, did, vol->v_stamp)) {
-                ad_flush(adp, ADFLAGS_HF);
+                ad_flush(adp);
             }
         }
 #endif    
@@ -239,7 +239,7 @@ u_int32_t aint = 0;
 int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
                  struct path *path, struct dir *dir, 
-                 char *buf, int *buflen, struct adouble *adp, int attrbits )
+                 char *buf, int *buflen, struct adouble *adp)
 {
     char		*data, *l_nameoff = NULL, *upath;
     char                *utf_nameoff = NULL;
@@ -296,12 +296,10 @@ int getmetadata(struct vol *vol,
             if ((ma.ma_user & AR_UWRITE)) {
             	accessmode( upath, &ma, dir , st);
             	if (!(ma.ma_user & AR_UWRITE)) {
-                	attrbits |= ATTRBIT_NOWRITE;
+                	ashort |= htons(ATTRBIT_NOWRITE);
                 }
             }
 #endif
-            if (attrbits)
-                ashort = htons(ntohs(ashort) | attrbits);
             memcpy(data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
             break;
@@ -518,7 +516,6 @@ int getfilparams(struct vol *vol,
     struct adouble	ad, *adp;
     struct ofork        *of;
     char		    *upath;
-    u_int16_t		attrbits = 0;
     int                 opened = 0;
     int rc;    
 
@@ -528,18 +525,18 @@ int getfilparams(struct vol *vol,
 
     opened = PARAM_NEED_ADP(bitmap);
     adp = NULL;
+
     if (opened) {
+        int flags = (bitmap & (1 << FILPBIT_ATTR))?ADFLAGS_OPENFORKS:0;
         upath = path->u_name;
         if ((of = of_findname(path))) {
             adp = of->of_ad;
-    	    attrbits = ((of->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
-    	    attrbits |= ((of->of_ad->ad_hf.adf_refcount > of->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
         } else {
             ad_init(&ad, vol->v_adouble, vol->v_ad_options);
             adp = &ad;
         }
 
-        if ( ad_metadata( upath, 0, adp) < 0 ) {
+        if ( ad_metadata( upath, flags, adp) < 0 ) {
             switch (errno) {
             case EACCES:
                 LOG(log_error, logtype_afpd, "getfilparams(%s): %s: check resource fork permission?",
@@ -554,26 +551,8 @@ int getfilparams(struct vol *vol,
                 break;
             }
         }
-        if (adp) {
-    	    /* FIXME 
-    	       we need to check if the file is open by another process.
-    	       it's slow so we only do it if we have to:
-    	       - bitmap is requested.
-    	       - we don't already have the answer!
-    	    */
-    	    if ((bitmap & (1 << FILPBIT_ATTR))) {
-	         if (!(attrbits & ATTRBIT_ROPEN)) {
-    		     attrbits |= ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_OPEN_RD) > 0? ATTRBIT_ROPEN : 0;
-    		     attrbits |= ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_OPEN_WR) > 0? ATTRBIT_ROPEN : 0;
-	    	 }
-    		 if (!(attrbits & ATTRBIT_DOPEN)) {
-    		     attrbits |= ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_OPEN_RD) > 0? ATTRBIT_DOPEN : 0;
-    		     attrbits |= ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_OPEN_WR) > 0? ATTRBIT_DOPEN : 0;
-	    	 }
-    	    }
-    	}
     }
-    rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp, attrbits);
+    rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp);
     if ( adp ) {
         ad_close_metadata( adp);
     }
@@ -677,7 +656,7 @@ int	ibuflen _U_, *rbuflen;
             return( AFPERR_PARAM );
         }
     }
-    if ( ad_hfileno( adp ) == -1 ) {
+    if ( ad_reso_fileno( adp ) == -1 ) { /* Hard META / HF */
          /* on noadouble volumes, just creating the data fork is ok */
          if (vol_noadouble(vol)) {
              ad_close( adp, ADFLAGS_DF );
@@ -693,7 +672,7 @@ int	ibuflen _U_, *rbuflen;
 
     path = s_path->m_name;
     ad_setname(adp, path);
-    ad_flush( adp, ADFLAGS_DF|ADFLAGS_HF );
+    ad_flush( adp);
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:
@@ -998,7 +977,7 @@ setfilparam_done:
     }
 
     if (isad) {
-        ad_flush_metadata( adp);
+        ad_flush( adp);
         ad_close_metadata( adp);
 
     }
@@ -1050,7 +1029,7 @@ struct adouble    *adp;
             * get two files, it's fixable for our process (eg reopen the new file, get the
             * locks, and so on. But it doesn't solve the case with a second process
             */
-    	    if (adp->ad_df.adf_refcount || adp->ad_hf.adf_refcount) {
+    	    if (adp->ad_open_forks) {
     	        /* FIXME  warning in syslog so admin'd know there's a conflict ?*/
     	        return AFPERR_OLOCK; /* little lie */
     	    }
@@ -1092,7 +1071,7 @@ struct adouble    *adp;
      */
     if (!ad_open( dst, ADFLAGS_HF, O_RDWR, 0666, adp)) {
         ad_setname(adp, newname);
-        ad_flush( adp, ADFLAGS_HF );
+        ad_flush( adp );
         ad_close( adp, ADFLAGS_HF );
     }
 #ifdef DEBUG
@@ -1326,13 +1305,31 @@ static __inline__ int copy_all(const int dfd, const void *buf,
     return 0;
 }
 
-/* -------------------------- */
-static int copy_fd(int dfd, int sfd)
+/* -------------------------- 
+ * copy only the fork data stream
+*/
+static int copy_fork(int eid, struct adouble *add, struct adouble *ads)
 {
     ssize_t cc;
     int     err = 0;
     char    filebuf[8192];
+    int     sfd, dfd;
     
+    if (eid == ADEID_DFORK) {
+        sfd = ad_data_fileno(ads);
+        dfd = ad_data_fileno(add);
+    }
+    else {
+        sfd = ad_reso_fileno(ads);
+        dfd = ad_reso_fileno(add);
+    }        
+
+    if ((off_t)-1 == lseek(sfd, ad_getentryoff(ads, eid), SEEK_SET))
+    	return -1;
+
+    if ((off_t)-1 == lseek(dfd, ad_getentryoff(add, eid), SEEK_SET))
+    	return -1;
+    	
 #if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
     /* doesn't work With 2.6 FIXME, only check for EBADFD ? */
     off_t   offset = 0;
@@ -1378,7 +1375,7 @@ static int copy_fd(int dfd, int sfd)
 }
 
 /* ----------------------------------
- * if newname is NULL (from directory.c) we don't want to copy ressource fork.
+ * if newname is NULL (from directory.c) we don't want to copy the resource fork.
  * because we are doing it elsewhere.
  * currently if newname is NULL then adp is NULL. 
  */
@@ -1414,12 +1411,12 @@ struct adouble *adp;
         goto done;
     }
 
-    if (ad_hfileno(adp) == -1) {
+    if (ad_meta_fileno(adp) == -1 && ad_reso_fileno(adp) == -1) { /* META / HF */
         /* no resource fork, don't create one for dst file */
         adflags &= ~ADFLAGS_HF;
     }
 
-    stat_result = fstat(ad_dfileno(adp), &st); /* saving stat exit code, thus saving us on one more stat later on */
+    stat_result = fstat(ad_data_fileno(adp), &st); /* saving stat exit code, thus saving us on one more stat later on */
 
     if (stat_result < 0) {           
       /* unlikely but if fstat fails, the default file mode will be 0666. */
@@ -1437,39 +1434,26 @@ struct adouble *adp;
     }
     /* XXX if the source and the dest don't use the same resource type it's broken
     */
-    if (ad_hfileno(adp) == -1 || 0 == (err = copy_fd(ad_hfileno(&add), ad_hfileno(adp)))){
+    if (ad_reso_fileno(adp) == -1 || 0 == (err = copy_fork(ADEID_RFORK, &add, adp))){
         /* copy the data fork */
-	err = copy_fd(ad_dfileno(&add), ad_dfileno(adp));
+ 	err = copy_fork(ADEID_DFORK, &add, adp);
     }
 
-    /* Now, reopen destination file */
     if (err < 0) {
        ret_err = errno;
+    }
+
+    if (!ret_err && newname && (adflags & ADFLAGS_HF)) {
+        /* set the new name in the resource fork */
+        ad_copy_header(&add, adp);
+        ad_setname(&add, newname);
+        ad_flush( &add );
     }
     ad_close( adp, adflags );
 
     if (ad_close( &add, adflags ) <0) {
-        if (!ret_err) {
-            ret_err = errno;
-        }
-        deletefile(d_vol, dst, 0);
-        goto done;
+       ret_err = errno;
     } 
-
-    if (!ret_err && newname && (adflags & ADFLAGS_HF)) {
-        /* set the new name in the resource fork */
-	ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
-	if (ad_open_metadata(dst , noadouble, 0, &add) < 0) {
-	    ret_err = errno;
-	}
-	else {
-            ad_setname(&add, newname);
-            ad_flush_metadata( &add);
-            if (ad_close_metadata( &add)) {
-                ret_err = errno;
-            }
-        }
-    }
 
     if (ret_err) {
         deletefile(d_vol, dst, 0);
@@ -1518,6 +1502,24 @@ done:
    ad_open always try to open file RDWR first and ad_lock takes care of
    WRITE lock on read only file.
 */
+
+static int check_attrib(struct adouble *adp)
+{
+u_int16_t   bshort = 0;
+
+	ad_getattr(adp, &bshort);
+    /*
+     * Does kFPDeleteInhibitBit (bit 8) set?
+     */
+	if ((bshort & htons(ATTRBIT_NODELETE))) {
+		return AFPERR_OLOCK;
+	}
+    if ((bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+    	return AFPERR_BUSY;
+	}
+	return 0;
+}
+
 int deletefile( vol, file, checkAttrib )
 const struct vol      *vol;
 char		*file;
@@ -1533,8 +1535,19 @@ int         checkAttrib;
 
     /* try to open both forks at once */
     adflags = ADFLAGS_DF|ADFLAGS_HF;
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);  /* OK */
+    if (checkAttrib) {
+        /* was EACCESS error try to get only metadata */
+        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        if ( ad_metadata( file , ADFLAGS_OPENFORKS, &ad) == 0 ) {
+            ad_close( &ad, adflags );
+            if ((err = check_attrib(&ad))) {
+               return err;
+            }
+        }
+    }
+ 
     while(1) {
+    	ad_init(&ad, vol->v_adouble, vol->v_ad_options);  /* OK */
         if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
             switch (errno) {
             case ENOENT:
@@ -1556,21 +1569,7 @@ int         checkAttrib;
         }
         break;	/* from the while */
     }
-    /*
-     * Does kFPDeleteInhibitBit (bit 8) set?
-     */
-    if (checkAttrib) {
-        u_int16_t   bshort;
-        
-        if ( ad_metadata( file , 0, &ad) == 0 ) {
-            ad_getattr(&ad, &bshort);
-            ad_close_metadata( &ad);
-            if ((bshort & htons(ATTRBIT_NODELETE))) {
-                return  AFPERR_OLOCK;
-            }
-        }
-    }
-    
+
     if (adp && (adflags & ADFLAGS_HF) ) {
         /* FIXME we have a pb here because we want to know if a file is open 
          * there's a 'priority inversion' if you can't open the ressource fork RW
@@ -1727,7 +1726,7 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
             return 0;
         }
         if (ad_setid(adp, path.st.st_dev, path.st.st_ino, aint, did, vol->v_stamp)) {
-            ad_flush_metadata(adp);
+            ad_flush(adp);
         }
         ad_close_metadata(adp);
     }
@@ -2009,7 +2008,8 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
     }
     else {
         ret = ad_open( path->u_name, ADFLAGS_HF, O_RDONLY, 0, adp);
-        if ( !ret && ad_hfileno(adp) != -1 && !(adp->ad_hf.adf_flags & ( O_RDWR | O_WRONLY))) {
+        /* META and HF */
+        if ( !ret && ad_reso_fileno(adp) != -1 && !(adp->ad_resource_fork.adf_flags & ( O_RDWR | O_WRONLY))) {
             /* from AFP spec.
              * The user must have the Read & Write privilege for both files in order to use this command.
              */
@@ -2212,12 +2212,12 @@ int	ibuflen _U_, *rbuflen;
     /* here we need to reopen if crossdev */
     if (sid && ad_setid(addp, destst.st_dev, destst.st_ino,  sid, sdir->d_did, vol->v_stamp)) 
     {
-       ad_flush( addp, ADFLAGS_HF );
+       ad_flush( addp );
     }
         
     if (did && ad_setid(adsp, srcst.st_dev, srcst.st_ino,  did, curdir->d_did, vol->v_stamp)) 
     {
-       ad_flush( adsp, ADFLAGS_HF );
+       ad_flush( adsp );
     }
 
     /* change perms, src gets dest perm and vice versa */
@@ -2282,10 +2282,10 @@ err_src_to_tmp:
     of_rename(vol, s_of, curdir, temp, sdir, spath);
 
 err_exchangefile:
-    if ( !s_of && adsp && ad_hfileno(adsp) != -1 ) {
+    if ( !s_of && adsp && ad_meta_fileno(adsp) != -1 ) { /* META */
        ad_close(adsp, ADFLAGS_HF);
     }
-    if ( !d_of && addp && ad_hfileno(addp) != -1 ) {
+    if ( !d_of && addp && ad_meta_fileno(addp) != -1 ) {/* META */
        ad_close(addp, ADFLAGS_HF);
     }
 

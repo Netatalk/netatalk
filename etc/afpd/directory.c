@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.83 2006-09-19 23:00:49 didg Exp $
+ * $Id: directory.c,v 1.84 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2253,7 +2253,7 @@ setdirparam_done:
                 ad_setid(&ad, st->st_dev, st->st_ino,  dir->d_did, dir->d_parent->d_did, vol->v_stamp);
             }
         }
-        ad_flush_metadata( &ad);
+        ad_flush( &ad);
         ad_close_metadata( &ad);
     }
 
@@ -2344,7 +2344,7 @@ int	ibuflen _U_, *rbuflen;
     ad_setname(&ad, s_path->m_name);
     ad_setid( &ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did, vol->v_stamp);
 
-    ad_flush_metadata( &ad);
+    ad_flush( &ad);
     ad_close_metadata( &ad);
 
 createdir_done:
@@ -2408,7 +2408,7 @@ struct dir	*dir, *newparent;
 
     if (!ad_open_metadata( dst, ADFLAGS_DIR, 0, &ad)) {
         ad_setname(&ad, newname);
-        ad_flush_metadata( &ad);
+        ad_flush( &ad);
         ad_close_metadata( &ad);
     }
 

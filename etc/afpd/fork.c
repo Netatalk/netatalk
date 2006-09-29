@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.55 2005-09-28 09:46:37 didg Exp $
+ * $Id: fork.c,v 1.56 2006-09-29 09:39:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -48,14 +48,13 @@ struct ofork		*writtenfork;
 extern int getmetadata(struct vol *vol,
                  u_int16_t bitmap,
                  struct path *path, struct dir *dir, char *buf, 
-                 int *buflen, struct adouble *adp, int attrbits );
+                 int *buflen, struct adouble *adp);
 
-static int getforkparams(ofork, bitmap, buf, buflen, attrbits )
+static int getforkparams(ofork, bitmap, buf, buflen )
 struct ofork	*ofork;
 u_int16_t		bitmap;
 char		*buf;
 int			*buflen;
-const u_int16_t     attrbits;
 {
     struct path         path;
     struct stat		*st;
@@ -74,7 +73,7 @@ const u_int16_t     attrbits;
         return( AFPERR_BITMAP );
     }
 
-    if ( ad_hfileno( ofork->of_ad ) == -1 ) {
+    if ( ad_reso_fileno( ofork->of_ad ) == -1 ) { /* META ? */
         adp = NULL;
     } else {
         adp = ofork->of_ad;
@@ -91,18 +90,18 @@ const u_int16_t     attrbits;
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) | 
                     (1<<FILPBIT_FNUM) | (1 << FILPBIT_CDATE) | 
                     (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE))) {
-        if ( ad_dfileno( ofork->of_ad ) == -1 ) {
+        if ( ad_data_fileno( ofork->of_ad ) == -1 ) {
             if (movecwd(vol, dir) < 0)
                 return( AFPERR_NOOBJ );
             if ( stat( path.u_name, st ) < 0 )
                 return( AFPERR_NOOBJ );
         } else {
-            if ( fstat( ad_dfileno( ofork->of_ad ), st ) < 0 ) {
+            if ( fstat( ad_data_fileno( ofork->of_ad ), st ) < 0 ) {
                 return( AFPERR_BITMAP );
             }
         }
     }
-    return getmetadata(vol, bitmap, &path, dir, buf, buflen, adp, attrbits );    
+    return getmetadata(vol, bitmap, &path, dir, buf, buflen, adp );
 }
 
 /* ---------------------------- */
@@ -269,7 +268,7 @@ int	ibuflen _U_, *rbuflen;
     struct adouble      *adsame = NULL;
     int			buflen, ret, adflags, eid;
     u_int32_t           did;
-    u_int16_t		vid, bitmap, access, ofrefnum, attrbits = 0;
+    u_int16_t		vid, bitmap, access, ofrefnum;
     char		fork, *path, *upath;
     struct stat         *st;
     u_int16_t           bshort;
@@ -346,9 +345,6 @@ int	ibuflen _U_, *rbuflen;
        FIXME: add the fork we are opening? 
     */
     if ((opened = of_findname(s_path))) {
-        attrbits = ((opened->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
-        attrbits |= ((opened->of_ad->ad_hf.adf_refcount > opened->of_ad->ad_df.adf_refcount)? ATTRBIT_ROPEN : 0);
-                   
         adsame = opened->of_ad;
     }
 
@@ -462,12 +458,12 @@ int	ibuflen _U_, *rbuflen;
 
     if ((adflags & ADFLAGS_HF) && (ad_get_HF_flags( ofork->of_ad) & O_CREAT)) {
         if (ad_setname(ofork->of_ad, path)) {
-            ad_flush( ofork->of_ad, adflags );
+            ad_flush( ofork->of_ad );
         }
     }
 
     if (( ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof( u_int16_t ),
-                              &buflen, attrbits )) != AFP_OK ) {
+                              &buflen )) != AFP_OK ) {
         ad_close( ofork->of_ad, adflags );
         goto openfork_err;
     }
@@ -480,7 +476,7 @@ int	ibuflen _U_, *rbuflen;
     /* check  WriteInhibit bit if we have a ressource fork
      * the test is done here, after some Mac trafic capture 
      */
-    if (ad_hfileno(ofork->of_ad) != -1) {
+    if (ad_meta_fileno(ofork->of_ad) != -1) {   /* META */
         ad_getattr(ofork->of_ad, &bshort);
         if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
             ad_close( ofork->of_ad, adflags );
@@ -496,7 +492,7 @@ int	ibuflen _U_, *rbuflen;
      */
 
     /* don't try to lock non-existent rforks. */
-    if ((eid == ADEID_DFORK) || (ad_hfileno(ofork->of_ad) != -1)) {
+    if ((eid == ADEID_DFORK) || (ad_meta_fileno(ofork->of_ad) != -1)) { /* META */
 
         ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
@@ -629,7 +625,7 @@ int	ibuflen, *rbuflen;
         if (err < 0)
             goto afp_setfork_err;
 
-        if (ad_flush( ofork->of_ad, ADFLAGS_HF ) < 0) {
+        if (ad_flush( ofork->of_ad ) < 0) {
             LOG(log_error, logtype_afpd, "afp_setforkparams(%s): ad_flush: %s", of_name(ofork), strerror(errno) );
             return AFPERR_PARAM;
         }
@@ -717,7 +713,7 @@ int     is64;
         length = BYTELOCK_MAX;
      else if (!length || is_neg(is64, length)) {
      	return AFPERR_PARAM;
-     } else if ((length >= AD_FILELOCK_BASE) && -1 == (ad_hfileno(ofork->of_ad))) {
+     } else if ((length >= AD_FILELOCK_BASE) && -1 == (ad_reso_fileno(ofork->of_ad))) { /* HF ?*/
         return AFPERR_LOCK;
     }
 
@@ -783,7 +779,7 @@ struct ofork	*of;
 {
     struct extmap	*em;
 
-    if ( ad_hfileno( of->of_ad ) == -1 || !memcmp( ufinderi, ad_entry( of->of_ad, ADEID_FINDERI),8)) {
+    if ( ad_meta_fileno( of->of_ad ) == -1 || !memcmp( ufinderi, ad_entry( of->of_ad, ADEID_FINDERI),8)) { /* META */
         /* no resource fork or no finderinfo, use our files extension mapping */
         if (!( em = getextmap( of_name(of) )) || memcmp( "TEXT", em->em_type, sizeof( em->em_type ))) {
             return 0;
@@ -1110,14 +1106,14 @@ struct ofork	*ofork;
 
     int err = 0, doflush = 0;
 
-    if ( ad_dfileno( ofork->of_ad ) != -1 &&
-            fsync( ad_dfileno( ofork->of_ad )) < 0 ) {
+    if ( ad_data_fileno( ofork->of_ad ) != -1 &&
+            fsync( ad_data_fileno( ofork->of_ad )) < 0 ) {
         LOG(log_error, logtype_afpd, "flushfork(%s): dfile(%d) %s",
-            of_name(ofork), ad_dfileno(ofork->of_ad), strerror(errno) );
+            of_name(ofork), ad_data_fileno(ofork->of_ad), strerror(errno) );
         err = -1;
     }
 
-    if ( ad_hfileno( ofork->of_ad ) != -1 && 
+    if ( ad_reso_fileno( ofork->of_ad ) != -1 &&  /* HF */
            (ofork->of_flags & AFPFORK_RSRC)) {
 
         /* read in the rfork length */
@@ -1131,15 +1127,15 @@ struct ofork	*ofork;
         }
 
         /* flush the header */
-        if (doflush && ad_flush(ofork->of_ad, ADFLAGS_HF) < 0)
+        if (doflush && ad_flush(ofork->of_ad) < 0)
                 err = -1;
 
-        if (fsync( ad_hfileno( ofork->of_ad )) < 0)
+        if (fsync( ad_reso_fileno( ofork->of_ad )) < 0)
             err = -1;
 
         if (err < 0)
             LOG(log_error, logtype_afpd, "flushfork(%s): hfile(%d) %s",
-                of_name(ofork), ad_hfileno(ofork->of_ad), strerror(errno) );
+                of_name(ofork), ad_reso_fileno(ofork->of_ad), strerror(errno) );
     }
 
     return( err );
@@ -1375,7 +1371,7 @@ int                 is64;
     }
 
     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
-    if ( ad_hfileno( ofork->of_ad ) != -1 )
+    if ( ad_meta_fileno( ofork->of_ad ) != -1 ) /* META */
         ofork->of_flags |= AFPFORK_DIRTY;
 
     *rbuflen = set_off_t (offset, rbuf, is64);
@@ -1421,7 +1417,6 @@ int	ibuflen _U_, *rbuflen;
     struct ofork	*ofork;
     int			buflen, ret;
     u_int16_t		ofrefnum, bitmap;
-    u_int16_t		attrbits = 0;
 
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
@@ -1435,10 +1430,8 @@ int	ibuflen _U_, *rbuflen;
         LOG(log_error, logtype_afpd, "afp_getforkparams: of_find(%d) could not locate fork", ofrefnum );
         return( AFPERR_PARAM );
     }
-    attrbits = ((ofork->of_ad->ad_df.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
-    attrbits |= ((ofork->of_ad->ad_hf.adf_refcount > ofork->of_ad->ad_df.adf_refcount) ? ATTRBIT_ROPEN : 0);
 
-    if ( ad_hfileno( ofork->of_ad ) != -1 ) {
+    if ( ad_meta_fileno( ofork->of_ad ) != -1 ) { /* META */
         if ( ad_refresh( ofork->of_ad ) < 0 ) {
             LOG(log_error, logtype_afpd, "getforkparams(%s): ad_refresh: %s", of_name(ofork), strerror(errno) );
             return( AFPERR_PARAM );
@@ -1446,7 +1439,7 @@ int	ibuflen _U_, *rbuflen;
     }
 
     if (AFP_OK != ( ret = getforkparams( ofork, bitmap,
-                               rbuf + sizeof( u_short ), &buflen, attrbits ))) {
+                               rbuf + sizeof( u_short ), &buflen ))) {
         return( ret );
     }
 
