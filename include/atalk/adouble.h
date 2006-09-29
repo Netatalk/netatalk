@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.31 2006-09-29 09:39:16 didg Exp $
+ * $Id: adouble.h,v 1.32 2006-09-29 09:44:59 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -308,6 +308,7 @@ struct adouble_fops {
 #define ADFLAGS_OPENFORKS (1<<7)  /* check for open fork in ad_metadata function */
 #define ADFLAGS_RF	  (1<<8) 
 #define ADFLAGS_MD	  ADFLAGS_HF /* (1<<9) */
+#define ADFLAGS_CREATE    (1<<9)
 
 /* adouble v2 cnid cache */
 #define ADVOL_NODEV      (1 << 0)   
