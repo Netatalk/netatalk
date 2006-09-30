@@ -2,7 +2,7 @@
 
 noinst_LTLIBRARIES = libcharsets.la
 
-CFLAGS = -I$(top_srcdir)/sys @CFLAGS@ @ICONV_CFLAGS@
+AM_CFLAGS = -I$(top_srcdir)/sys @CFLAGS@ @ICONV_CFLAGS@
 LIBS = 
 
 libcharsets_la_SOURCES = \

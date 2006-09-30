@@ -22,5 +22,5 @@ noinst_HEADERS = dbif.h pack.h db_param.h dbd.h usockfd.h comm.h
 EXTRA_DIST = README
 
 
-CFLAGS = @CFLAGS@ @BDB_CFLAGS@ \
+AM_CFLAGS = @CFLAGS@ @BDB_CFLAGS@ \
          -D_PATH_CNID_DBD=\"$(sbindir)/cnid_dbd\"

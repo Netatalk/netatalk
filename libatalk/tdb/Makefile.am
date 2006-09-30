@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/tdb/
 
-CFLAGS = @CFLAGS@ 
+AM_CFLAGS = @CFLAGS@ 
 
 noinst_LTLIBRARIES = libtdb.la
 

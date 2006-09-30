@@ -27,12 +27,12 @@ noinst_HEADERS =	\
 	print_cups.h	\
 	uam_auth.h
 
-CFLAGS = \
+AM_CFLAGS = \
 	-I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	@CFLAGS@ @CUPS_CFLAGS@\
 	-D_PATH_PAPDCONF=\"$(pkgconfdir)/papd.conf\" \
 	-D_PATH_PAPDUAMPATH=\"$(UAMS_PATH)/\" \
- 	-DSPOOLDIR=\"$(spooldir)/\"
+	-DSPOOLDIR=\"$(spooldir)/\"
 
 if USE_SPOOLDIR
 install-exec-hook:

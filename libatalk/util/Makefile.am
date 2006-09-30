@@ -2,7 +2,7 @@
 
 noinst_LTLIBRARIES = libutil.la
 
-CFLAGS = -I$(top_srcdir)/sys @CFLAGS@
+AM_CFLAGS = -I$(top_srcdir)/sys @CFLAGS@
 
 libutil_la_SOURCES = \
 	atalk_addr.c	\

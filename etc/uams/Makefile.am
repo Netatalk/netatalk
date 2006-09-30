@@ -54,7 +54,7 @@ uams_gss_la_SOURCES   = uams_gss.c
 #
 
 # do that on behalf of the brokeness of automake 1.4
-CFLAGS = @CFLAGS@ @SSL_CFLAGS@
+AM_CFLAGS = @CFLAGS@ @SSL_CFLAGS@
 
 uams_guest_la_CFLAGS      = @CFLAGS@
 uams_randnum_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@

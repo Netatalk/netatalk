@@ -9,7 +9,7 @@ LIBS = @LIBS@
 
 EXTRA_DIST = COPYRIGHT VERSION
 
-CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
+AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @CFLAGS@ @SLP_CFLAGS@ \
 	 -D_PATH_A_GS_BLOCKS=\"$(PKGCONFDIR)/a2boot/ProDOS16\ Boot\ Blocks\" \
 	 -D_PATH_A_2E_BLOCKS=\"$(PKGCONFDIR)/a2boot/Apple\ :2f:2fe\ Boot\ Blocks\" \

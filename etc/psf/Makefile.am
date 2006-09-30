@@ -8,7 +8,7 @@ pkgdata_DATA = pagecount.ps
 psf_SOURCES = psf.c
 psa_SOURCES = psa.c
 
-CFLAGS = @CFLAGS@ -DZEROWIDTH \
+AM_CFLAGS = @CFLAGS@ -DZEROWIDTH \
 	-D_PATH_PAP=\"$(bindir)/pap\" \
 	-D_PATH_PSORDER=\"$(bindir)/psorder\" \
 	-D_PATH_PSA=\"$(libexecdir)/psa\" \

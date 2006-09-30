@@ -19,7 +19,7 @@ noinst_HEADERS = auth.h afp_config.h desktop.h directory.h file.h \
 
 LIBS = @LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
 
-CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
+AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @CFLAGS@ @SLP_CFLAGS@ \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
 	 -D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \

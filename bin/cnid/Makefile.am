@@ -15,5 +15,5 @@ cnid_index_SOURCES = cnid_index.c
 cnid_index_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 LIBS = @LIBS@ @BDB_LIBS@
- 
-CFLAGS = @CFLAGS@ @BDB_CFLAGS@ 
+
+AM_CFLAGS = @CFLAGS@ @BDB_CFLAGS@ 

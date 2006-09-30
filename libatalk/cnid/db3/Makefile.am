@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/cnid/
 
-CFLAGS = @CFLAGS@ @BDB_CFLAGS@
+AM_CFLAGS = @CFLAGS@ @BDB_CFLAGS@
 
 noinst_LTLIBRARIES = libcnid_db3.la
 if USE_CDB_BACKEND
