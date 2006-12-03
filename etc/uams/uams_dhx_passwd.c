@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.23 2005-04-28 20:49:50 bfernhomberg Exp $
+ * $Id: uams_dhx_passwd.c,v 1.24 2006-12-03 06:04:43 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -399,6 +399,12 @@ static void uam_cleanup(void)
 }
 
 UAM_MODULE_EXPORT struct uam_export uams_dhx = {
+  UAM_MODULE_SERVER,
+  UAM_MODULE_VERSION,
+  uam_setup, uam_cleanup
+};
+
+UAM_MODULE_EXPORT struct uam_export uams_dhx_passwd = {
   UAM_MODULE_SERVER,
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
