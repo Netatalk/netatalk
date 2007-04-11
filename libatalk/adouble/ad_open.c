@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.38 2006-09-29 09:44:59 didg Exp $
+ * $Id: ad_open.c,v 1.39 2007-04-11 01:11:10 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -692,10 +692,7 @@ static int ad_header_sfm_read(struct adouble *ad, struct stat *hst)
 {
     char                *buf = ad->ad_data;
     const struct entry  *eid;
-    u_int16_t           nentries;
-    int                 len;
     ssize_t             header_len;
-    static int          warning = 0;
     struct stat         st;
 
     /* read the header */
@@ -710,9 +707,10 @@ static int ad_header_sfm_read(struct adouble *ad, struct stat *hst)
     memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
     memcpy(&ad->ad_version, buf + 4, sizeof( ad->ad_version ));
 
-    /* FIXME in the the great Microsoft tradition they aren't in network order */
+    /* FIXME in the great Microsoft tradition they aren't in network order */
 #if 0
     if (ad->ad_magic == SFM_MAGIC && ad->ad_version == AD_VERSION1) {
+      static int          warning = 0;
       if (!warning) {
 	LOG(log_debug, logtype_default, "notice: fixing up byte-swapped v1 magic/version.");
 	warning++;

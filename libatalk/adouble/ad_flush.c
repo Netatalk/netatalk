@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.8 2006-09-29 09:39:16 didg Exp $
+ * $Id: ad_flush.c,v 1.9 2007-04-11 01:11:10 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -139,22 +139,21 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
 /* ------------------- */
 int  ad_rebuild_sfm_header(struct adouble *ad)
 {
-    u_int32_t		eid;
     u_int32_t 		temp;
     
     u_int16_t		attr;
-    char		*buf, *nentp;
+    char		*buf;
 
     /*
      * Rebuild any header information that might have changed.
      */
     buf = ad->ad_data;
     /* FIXME */
-//    temp = htonl( ad->ad_magic );
+/*    temp = htonl( ad->ad_magic ); */
     temp = ad->ad_magic;
     memcpy(buf, &temp, sizeof( temp ));
     
-//    temp = htonl( ad->ad_version );
+/*    temp = htonl( ad->ad_version ); */
     temp = ad->ad_version;
     memcpy(buf +4, &temp, sizeof( temp ));
 
