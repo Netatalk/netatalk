@@ -423,7 +423,11 @@ int RF_renamefile_ads(const struct vol *vol, const char *src, const char *dst)
 
 static int validupath_adouble(const struct vol *vol, const char *name) 
 {
-    return (vol->v_flags & AFPVOL_USEDOTS) ? strncasecmp(name,".Apple", 6) && strcasecmp(name, ".Parent")
+     return (vol->v_flags & AFPVOL_USEDOTS) ?
+         strcasecmp(name,".AppleDB") &&
+         strcasecmp(name,".AppleDouble") &&
+         strcasecmp(name,".AppleDesktop") &&
+         strcasecmp(name,".Parent")
                                            : name[0] != '.';
 }
 
