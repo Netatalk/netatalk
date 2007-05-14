@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.20 2007-04-27 11:30:16 didg Exp $
+ * $Id: main.c,v 1.21 2007-05-14 18:38:52 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -426,7 +426,6 @@ int main( ac, av )
                     }
 #endif /* HAVE_CUPS */
 
-
 		    /*
 		     * If this fails, we've run out of sockets. Rather than
 		     * just die(), let's try to continue. Maybe some sockets
@@ -454,16 +453,20 @@ int main( ac, av )
 		     */
 		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
 			LOG(log_error, logtype_papd, "atp_sresp: %m" );
-			continue;
+			err = 1;
 		    }
 
 		    if ( err ) {
+			if (atp) {
+			   atp_close(atp);
+                        }
 			continue;
 		    }
 
 		    switch ( c = fork()) {
 		    case -1 :
 			LOG(log_error, logtype_papd, "fork: %m" );
+                        atp_close(atp);
 			continue;
 
 		    case 0 : /* child */
