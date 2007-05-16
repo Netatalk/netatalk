@@ -214,18 +214,18 @@ static int RF_setdirunixmode_ads(const struct vol *vol, const char * name, mode_
 {
     char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
     char   ad_p[ MAXPATHLEN + 1];
-    int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
+    int dropbox = vol->v_flags;
 
     strlcpy(ad_p,ad_dir(adouble), MAXPATHLEN + 1);
 
     if (dir_rx_set(mode)) {
 
         /* .AppleDouble */
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, dropbox) < 0) 
             return -1;
 
         /* .AppleDouble/.Parent */
-        if (stickydirmode(ad_p, DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_p, DIRBITS | mode, dropbox) < 0) 
             return -1;
     }
 
@@ -233,9 +233,9 @@ static int RF_setdirunixmode_ads(const struct vol *vol, const char * name, mode_
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_p, DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_p, DIRBITS | mode, dropbox) < 0) 
             return  -1 ;
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, dropbox) < 0) 
             return -1;
     }
     return 0;
@@ -282,13 +282,13 @@ static int RF_setdirmode_ads(const struct vol *vol, const char * name, mode_t mo
     struct dir_mode param;
 
     param.mode = mode;
-    param.dropbox = (vol->v_flags & AFPVOL_DROPBOX);
+    param.dropbox = vol->v_flags;
 
     strlcpy(ad_p,ad_dir(adouble), sizeof(ad_p));
 
     if (dir_rx_set(mode)) {
         /* .AppleDouble */
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, param.dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, param.dropbox) < 0) 
             return -1;
     }
 
@@ -296,7 +296,7 @@ static int RF_setdirmode_ads(const struct vol *vol, const char * name, mode_t mo
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, param.dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(ad_p), DIRBITS | mode, param.dropbox) < 0 ) 
             return -1;
     }
     return 0;
@@ -496,10 +496,10 @@ static int RF_setfilmode_adouble(const struct vol *vol, const char * name, mode_
 static int RF_setdirunixmode_adouble(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
 {
     char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
-    int  dropbox = (vol->v_flags & AFPVOL_DROPBOX);
+    int  dropbox = vol->v_flags;
 
     if (dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0 ) 
             return -1;
     }
 
@@ -507,7 +507,7 @@ static int RF_setdirunixmode_adouble(const struct vol *vol, const char * name, m
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0 ) 
             return  -1 ;
     }
     return 0;
@@ -534,13 +534,13 @@ static int setdirmode_adouble_loop(struct dirent *de _U_, char *name, void *data
 
 static int RF_setdirmode_adouble(const struct vol *vol, const char * name, mode_t mode, struct stat *st _U_)
 {
-    int   dropbox = (vol->v_flags & AFPVOL_DROPBOX);
+    int   dropbox = vol->v_flags;
     mode_t hf_mode = ad_hf_mode(mode);
     char  *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
     char  *adouble_p = ad_dir(adouble);
 
     if (dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0) 
             return -1;
     }
 
@@ -548,7 +548,7 @@ static int RF_setdirmode_adouble(const struct vol *vol, const char * name, mode_
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0 && !vol_noadouble(vol)) 
+        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox) < 0) 
             return  -1 ;
     }
     return 0;

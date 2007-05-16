@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.48 2005-06-02 12:32:18 didg Exp $
+ * $Id: unix.c,v 1.49 2007-05-16 18:35:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -270,7 +270,7 @@ const int dropbox;
 
 #ifdef DROPKLUDGE
     /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
-    if (dropbox) {
+    if ((dropbox & AFPVOL_DROPBOX)) {
         int uid;
 
         if ( ( (mode & S_IWOTH) && !(mode & S_IROTH)) ||
@@ -297,7 +297,9 @@ const int dropbox;
      *  Ignore EPERM errors:  We may be dealing with a directory that is
      *  group writable, in which case chmod will fail.
      */
-    if ( (chmod( name, (DIRBITS | mode) & ~default_options.umask ) < 0) && errno != EPERM)  {
+    if ( (chmod( name, (DIRBITS | mode) & ~default_options.umask ) < 0) && errno != EPERM && 
+    		!(errno == ENOENT && (dropbox & AFPVOL_NOADOUBLE)) )  
+    {
         LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
         retval = -1;
     }
