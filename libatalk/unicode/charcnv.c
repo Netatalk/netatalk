@@ -66,7 +66,7 @@
  */
 
 
-#define MAX_CHARSETS 10
+#define MAX_CHARSETS 20
 
 #define CHECK_FLAGS(a,b) (((a)!=NULL) ? (*(a) & (b)) : 0 )
 
