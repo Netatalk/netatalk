@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.27 2006-09-15 00:07:43 didg Exp $
+ * $Id: quota.c,v 1.28 2007-12-03 11:39:14 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,7 +46,10 @@ char *strchr (), *strrchr ();
 #include "volume.h"
 #include "unix.h"
 
+/*
 #define DEBUG_QUOTA 0
+*/
+
 #define WANT_USER_QUOTA 0
 #define WANT_GROUP_QUOTA 1
 
