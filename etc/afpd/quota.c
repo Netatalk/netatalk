@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.28 2007-12-03 11:39:14 didg Exp $
+ * $Id: quota.c,v 1.29 2007-12-03 14:50:39 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.

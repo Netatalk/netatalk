@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.35 2005-04-28 20:49:39 bfernhomberg Exp $
+ * $Id: afp_options.c,v 1.36 2007-12-03 14:50:38 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -147,6 +147,11 @@ void afp_options_free(struct afp_options *opt,
 	free(opt->unixcodepage);
     if (opt->maccodepage && (opt->maccodepage != save->maccodepage))
 	free(opt->maccodepage);
+
+    if (opt->ntdomain && (opt->ntdomain != save->ntdomain))
+	free(opt->ntdomain);
+    if (opt->ntseparator && (opt->ntseparator != save->ntseparator))
+	free(opt->ntseparator);
 }
 
 /* initialize options */
@@ -181,6 +186,9 @@ void afp_options_init(struct afp_options *options)
     options->unixcodepage = "LOCALE";
     options->maccharset = CH_MAC;
     options->maccodepage = "MAC_ROMAN";
+
+    options->ntdomain = NULL;
+    options->ntseparator = NULL;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -517,6 +525,12 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->closevol= 1;
     }
 
+    if ((c = getoption(buf, "-ntdomain")) && (opt = strdup(c)))
+       options->ntdomain = opt;
+
+    if ((c = getoption(buf, "-ntseparator")) && (opt = strdup(c)))
+       options->ntseparator = opt;
+     
     return 1;
 }
 

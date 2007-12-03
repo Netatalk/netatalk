@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.68 2006-09-29 09:39:16 didg Exp $
+ * $Id: volume.c,v 1.69 2007-12-03 14:50:39 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -315,7 +315,11 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
             } else
                 q = obj->options.hostname;
         } else if (is_var(p, "$u")) {
-            q = obj->username;
+            char* sep = NULL;
+            if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
+                q = sep+1;
+            else
+                q = obj->username;
         } else if (is_var(p, "$v")) {
             if (volname) {
                 q = volname;
@@ -1599,6 +1603,7 @@ int	ibuflen _U_, *rbuflen;
     char        path[ MAXPATHLEN + 1];
     char        *vol_uname;
     char        *vol_mname;
+    char        *volname_tmp;
 
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
@@ -1611,6 +1616,10 @@ int	ibuflen _U_, *rbuflen;
 
     len = (unsigned char)*ibuf++;
     volname = obj->oldtmp;
+
+    if ((volname_tmp = strchr(volname,'+')) != NULL)
+        volname = volname_tmp+1;
+
     namelen = convert_string( (utf8_encoding()?CH_UTF8_MAC:obj->options.maccharset), CH_UCS2,
                               ibuf, len, volname, sizeof(obj->oldtmp));
     if ( namelen <= 0){

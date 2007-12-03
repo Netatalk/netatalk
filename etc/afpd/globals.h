@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.21 2005-04-28 20:49:43 bfernhomberg Exp $
+ * $Id: globals.h,v 1.22 2007-12-03 14:50:38 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -32,6 +32,7 @@
 #endif
 
 #define MACFILELEN 31
+#define MAXUSERLEN 256
 
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_USERVOLFIRST  (1 << 1)
@@ -82,6 +83,10 @@ struct afp_options {
 #ifdef ADMIN_GRP
     gid_t admingid;
 #endif /* ADMIN_GRP */
+
+    /* default value for winbind authentication */
+    char *ntdomain, *ntseparator;
+
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
@@ -91,7 +96,7 @@ typedef struct AFPObj {
     void *handle, *config;
     struct afp_options options;
     char *Obj, *Type, *Zone;
-    char username[MACFILELEN + 1];
+    char username[MAXUSERLEN];
     void (*logout)(void), (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);

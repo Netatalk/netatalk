@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.25 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: uam.c,v 1.26 2007-12-03 14:50:39 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -291,7 +291,10 @@ void uam_unregister(const int type, const char *name)
     free(uam);
 }
 
-/* --- helper functions for plugin uams --- */
+/* --- helper functions for plugin uams --- 
+ * name: user name
+ * len:  size of name buffer.
+*/
 
 struct passwd *uam_getname(void *private, char *name, const int len)
 {
@@ -305,7 +308,29 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
     if ((pwent = getpwnam(name)))
         return pwent;
+        
+    /* if we have a NT domain name try with it */
+    if (obj->options.ntdomain && obj->options.ntseparator) {
+        /* FIXME What about charset ? */
+        size_t ulen = strlen(obj->options.ntdomain) + strlen(obj->options.ntseparator) + strlen(name);
+        if ((p = malloc(ulen +1))) {
+            strcpy(p, obj->options.ntdomain);
+            strcat(p, obj->options.ntseparator);
+            strcat(p, name);
+            pwent = getpwnam(p);
+            free(p);
+            if (pwent) {
+                int len = strlen(pwent->pw_name);              
+                if (len < MAXUSERLEN) {
+                    strncpy(name,pwent->pw_name, MAXUSERLEN);  
+                }else{
+                    LOG(log_error, logtype_uams, "MAJOR:The name %s is longer than %d",pwent->pw_name,MAXUSERLEN);
+                }
 
+                return pwent;
+            }
+        }
+    }
 #ifndef NO_REAL_USER_NAME
 
     if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
