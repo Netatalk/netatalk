@@ -64,7 +64,7 @@ main() { exit((sizeof(off_t) == 8) ? 0 : 1); }],
 netatalk_cv_SIZEOF_OFF_T=yes,netatalk_cv_SIZEOF_OFF_T=no,netatalk_cv_SIZEOF_OFF_T=cross)])
 
     AC_MSG_CHECKING([if large file support is available])
-    if test "x$netatalk_cv_SIZEOF_OFF_T" = "xyes"; then
+    if test "x$netatalk_cv_SIZEOF_OFF_T" != "xno"; then
         AC_DEFINE(HAVE_LARGEFILE_SUPPORT, [], [LARGEFILE support])
 	AC_MSG_RESULT([yes])
         ifelse([$1], , :, [$1])
