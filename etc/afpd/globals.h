@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.22 2007-12-03 14:50:38 didg Exp $
+ * $Id: globals.h,v 1.23 2008-05-16 04:19:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.

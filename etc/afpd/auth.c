@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.51 2007-12-03 14:50:38 didg Exp $
+ * $Id: auth.c,v 1.52 2008-05-16 04:19:41 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
