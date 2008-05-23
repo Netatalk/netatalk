@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.52 2008-05-16 04:19:41 didg Exp $
+ * $Id: auth.c,v 1.53 2008-05-23 06:35:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -76,7 +76,8 @@ static struct afp_versions	afp_versions[] = {
             { "AFP2.2",	22 },
 #ifdef AFP3x
             { "AFPX03", 30 },
-            { "AFP3.1", 31 }
+            { "AFP3.1", 31 },
+            { "AFP3.2", 32 }
 #endif            
         };
 
@@ -186,6 +187,7 @@ static int set_auth_switch(int expired)
     else {
         afp_switch = postauth_switch;
         switch (afp_version) {
+        case 32:
         case 31:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL); 
         case 30:

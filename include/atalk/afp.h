@@ -201,4 +201,7 @@ typedef enum {
 #define AFP_ENUMERATE_EXT2      68
 #define AFP_ZZZ                 122
 
+/* version 3.2 */
+#define AFP_FPSYNCDIR		78
+
 #endif
