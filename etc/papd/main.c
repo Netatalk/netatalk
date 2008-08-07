@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.21 2007-05-14 18:38:52 didg Exp $
+ * $Id: main.c,v 1.22 2008-08-07 07:47:44 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -260,7 +260,7 @@ int main( ac, av )
 
     switch (server_lock("papd", pidfile, debug)) {
     case 0: /* open a couple things again in the child */
-      if ((c = open("/", O_RDONLY)) >= 0) {
+      if (!debug && (c = open("/", O_RDONLY)) >= 0) {
 	dup2(c, 1);
 	dup2(c, 2);
       }
@@ -287,7 +287,8 @@ int main( ac, av )
     openlog( p, LOG_PID );
 #else /* ultrix */
     set_processname(p);
-    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_lpr );
+    syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid |
+               debug ? logoption_perror : 0, logfacility_lpr );
 #endif /* ultrix */
 
     LOG(log_info, logtype_papd, "restart (%s)", version );
