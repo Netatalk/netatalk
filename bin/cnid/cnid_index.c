@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_index.c,v 1.4 2005-05-12 00:22:26 bfernhomberg Exp $
+ * $Id: cnid_index.c,v 1.5 2008-08-07 07:39:14 didg Exp $
  *
  * All Rights Reserved.  See COPYING.
  */
@@ -356,7 +356,6 @@ static int dbif_env_init(void)
     if (db_errlog != NULL)
         db_env->set_errfile(db_env, db_errlog); 
     db_env->set_verbose(db_env, DB_VERB_RECOVERY, 1);
-    db_env->set_verbose(db_env, DB_VERB_CHKPOINT, 1);
     if ((ret = db_env->open(db_env, ".", DBOPTIONS | DB_PRIVATE | DB_RECOVER, 0))) {
         LOG(log_error, logtype_cnid, "error opening DB environment: %s", 
             db_strerror(ret));
