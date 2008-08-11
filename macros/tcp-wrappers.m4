@@ -1,4 +1,4 @@
-dnl $Id: tcp-wrappers.m4,v 1.3 2005-04-28 20:50:05 bfernhomberg Exp $
+dnl $Id: tcp-wrappers.m4,v 1.4 2008-08-11 20:44:03 didg Exp $
 
 AC_DEFUN([NETATALK_TCP_WRAPPERS], [
 	check=maybe
@@ -17,14 +17,20 @@ AC_DEFUN([NETATALK_TCP_WRAPPERS], [
 	netatalk_cv_tcpwrap=no
 	if test "x$wrapcheck" != "xno"; then
 		saved_LIBS=$LIBS
-		LIBS="$LIBS -lwrap"
-		AC_TRY_LINK([
-#include <tcpd.h>
-int allow_severity = 0;
-int deny_severity = 0;
-],[
-	tcpd_warn ("link test");
-], netatalk_cv_tcpwrap=yes, netatalk_cv_tcpwrap=no, netatalk_cv_tcpwrap=cross)
+		W_LIBS="-lwrap" 
+		LIBS="$LIBS $W_LIBS"
+		AC_TRY_LINK([ int allow_severity = 0; int deny_severity = 0;]
+			,[hosts_access();]
+			, netatalk_cv_tcpwrap=yes , 
+   			[
+				LIBS=$saved_LIBS
+				W_LIBS="-lwrap -lnsl" 
+				LIBS="$LIBS $W_LIBS"
+				AC_TRY_LINK([ int allow_severity = 0; int deny_severity = 0;]
+					,[hosts_access();]
+					, netatalk_cv_tcpwrap=yes , netatalk_cv_tcpwrap=no)
+			]
+			, netatalk_cv_tcpwrap=cross)
 
 		LIBS=$saved_LIBS
 	fi
@@ -32,7 +38,7 @@ int deny_severity = 0;
 	AC_MSG_CHECKING([whether to enable the TCP wrappers])
 	if test "x$netatalk_cv_tcpwrap" = "xyes"; then
 		AC_DEFINE(TCPWRAP, 1, [Define if TCP wrappers should be used])
-		WRAP_LIBS="-lwrap"
+		WRAP_LIBS=$W_LIBS
 		AC_MSG_RESULT([yes])
 	else
 		if test "x$wrapcheck" = "xyes"; then
