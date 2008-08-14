@@ -1,5 +1,5 @@
 /*
- * $Id: headers.c,v 1.10 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: headers.c,v 1.11 2008-08-14 19:57:52 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,6 +12,7 @@
 #include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <netatalk/at.h>
 #include <atalk/logger.h>
@@ -23,11 +24,66 @@
 int ch_title( struct papfile *, struct papfile * );
 int ch_for( struct papfile *, struct papfile * );
 
+static char *get_text(char *start, int linelength)
+{
+    char *p, *q;
+    char *t, *ret;
+    char *stop;
+    
+    /* 1023 is arbitrary 255 max for comment but some may be escape \xxx and space and keyword */
+
+    if (linelength > 1023)
+        return NULL;
+
+    t = ret = calloc(1, linelength +1);
+
+    if (!ret)
+        return NULL;
+
+    stop = start + linelength;
+    for ( p = start; p < stop; p++ ) {
+        if ( *p == ':' ) {
+            p++;
+            break;
+        }
+    }
+    
+    for ( ; p < stop; p++ ) {
+        if (*p != ' ' && *p != '\t') {
+            break;
+        }
+    }
+
+    if ( p < stop && *p == '(' ) {
+        int count;
+        /* start with ( then it's a <text> */ 
+        p++;
+        for ( q = p, count = 1; q < stop; q++, t++ ) {
+            if (*q == '(') {
+              count++;
+            }
+            else if ( *q == ')' ) {
+                count--;
+                if (!count) {
+                    break;
+                }
+            }
+            *t = *q;
+        }
+    }
+    else {
+        /* it's a textline */
+        for ( q = p; q < stop; q++, t++ ) {
+            *t = *q;
+        }
+    }
+    return ret;
+}
 
 int ch_for( in, out )
 	struct papfile	*in, *out _U_;
 {
-    char                *start, *stop, *p, *q, c;
+    char                *start, *cmt;
     int                 linelength, crlflength;
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -38,31 +94,11 @@ int ch_for( in, out )
         return( CH_MORE );
     }
 
-    stop = start + linelength;
-    for ( p = start; p < stop; p++ ) {
-        if ( *p == ':' ) {
-            break;
-        }
-    }
+    cmt = get_text(start, linelength);
 
-    for ( ; p < stop; p++ ) {
-        if ( *p == '(' ) {
-            break;
-        }
-    }
-
-    for ( q = p; q < stop; q++ ) {
-        if ( *q == ')' ) {
-            break;
-        }
-    }
-
-    if ( q < stop && p < stop ) {
-        p++;
-        c = *q;
-        *q = '\0';
-	lp_for ( p );
-        *q = c;
+    if ( cmt ) {
+	lp_for ( cmt );
+	free(cmt);
     }
 
     in->pf_state |= PF_TRANSLATE;
@@ -76,7 +112,7 @@ int ch_for( in, out )
 int ch_title( in, out )
     struct papfile	*in, *out _U_;
 {
-    char		*start, *stop, *p, *q, c;
+    char		*start, *cmt;
     int			linelength, crlflength;
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -91,31 +127,11 @@ int ch_title( in, out )
     LOG(log_debug, logtype_papd, "Parsing %%Title");
 #endif
 
-    stop = start + linelength;
-    for ( p = start; p < stop; p++ ) {
-	if ( *p == ':' ) {
-	    break;
-	}
-    }
+    cmt = get_text(start, linelength);
 
-    for ( ; p < stop; p++ ) {
-	if ( *p == '(' ) {
-	    break;
-	}
-    }
-
-    for ( q = p; q < stop; q++ ) {
-	if ( *q == ')' ) {
-	    break;
-	}
-    }
-
-    if ( q < stop && p < stop ) {
-	p++;
-	c = *q;
-	*q = '\0';
-	lp_job( p );
-	*q = c;
+    if ( cmt ) {
+	lp_job( cmt );
+	free(cmt);
     }
 
     in->pf_state |= PF_TRANSLATE;
@@ -140,7 +156,7 @@ static int guess_creator ( char *creator )
 int ch_creator( in, out )
     struct papfile	*in, *out _U_;
 {
-    char		*start, *stop, *p, *q, c;
+    char		*start, *cmt;
     int			linelength, crlflength;
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -151,32 +167,12 @@ int ch_creator( in, out )
 	return( CH_MORE );
     }
 
-    stop = start + linelength;
-    for ( p = start; p < stop; p++ ) {
-	if ( *p == ':' ) {
-	    break;
-	}
-    }
+    cmt = get_text(start, linelength);
 
-    for ( ; p < stop; p++ ) {
-	if ( *p == '(' ) {
-	    break;
-	}
-    }
-
-    for ( q = p; q < stop; q++ ) {
-	if ( *q == ')' ) {
-	    break;
-	}
-    }
-
-    if ( q < stop && p < stop ) {
-	p++;
-	c = *q;
-	*q = '\0';
-	in->origin = guess_creator ( p );
+    if ( cmt ) {
+	in->origin = guess_creator ( cmt );
+	free(cmt);
 	lp_origin(in->origin);
-	*q = c;
     }
 
     in->pf_state |= PF_TRANSLATE;
