@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.16 2008-08-14 20:02:47 didg Exp $
+ * $Id: lp.c,v 1.17 2008-08-14 20:18:50 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -212,10 +212,37 @@ static void lp_setup_comments (charset_t dest)
 
 #define is_var(a, b) (strncmp((a), (b), 2) == 0)
 
+static size_t quote(char *dest, char *src, const size_t bsize, size_t len)
+{
+size_t used = 0;
+
+    while (len && used < bsize ) {
+        switch (*src) {
+          case '$':
+          case '\\':
+          case '"':
+          case '`':
+            if (used + 2 > bsize )
+              return used;
+            *dest = '\\';
+            dest++;
+            used++;
+            break;
+        }
+        *dest = *src;
+        src++;
+        dest++;
+        len--;
+        used++;
+    }
+    return used;
+}
+
+
 static char* pipexlate(char *src)
 {
     char *p, *q, *dest; 
-    static char destbuf[MAXPATHLEN];
+    static char destbuf[MAXPATHLEN +1];
     size_t destlen = MAXPATHLEN;
     int len = 0;
    
@@ -224,13 +251,15 @@ static char* pipexlate(char *src)
     if (!src)
 	return NULL;
 
-    strncpy(dest, src, MAXPATHLEN);
-    if ((p = strchr(src, '%')) == NULL) /* nothing to do */
+    memset(dest, 0, MAXPATHLEN +1);
+    if ((p = strchr(src, '%')) == NULL) { /* nothing to do */
+        strncpy(dest, src, MAXPATHLEN);
         return destbuf;
-
-    /* first part of the path. just forward to the next variable. */
+    }
+    /* first part of the path. copy and forward to the next variable. */
     len = MIN((size_t)(p - src), destlen);
     if (len > 0) {
+        strncpy(dest, src, len);
         destlen -= len;
         dest += len;
     }
@@ -246,17 +275,20 @@ static char* pipexlate(char *src)
             q =  lp.lp_created_for;
         } else if (is_var(p, "%%")) {
             q = "%";
-        } else
-            q = p;
+        } 
 
         /* copy the stuff over. if we don't understand something that we
          * should, just skip it over. */
         if (q) {
-            len = MIN(p == q ? 2 : strlen(q), destlen);
-            strncpy(dest, q, len);
-            dest += len;
-            destlen -= len;
+            len = MIN(strlen(q), destlen);
+            len = quote(dest, q, destlen, len);
         }
+        else {
+            len = MIN(2, destlen);
+            strncpy(dest, q, len);
+        }
+        dest += len;
+        destlen -= len;
 
         /* stuff up to next % */
         src = p + 2;
