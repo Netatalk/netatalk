@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.15 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: lp.c,v 1.16 2008-08-14 20:02:47 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -258,9 +258,9 @@ static char* pipexlate(char *src)
             destlen -= len;
         }
 
-        /* stuff up to next $ */
+        /* stuff up to next % */
         src = p + 2;
-        p = strchr(src, '$');
+        p = strchr(src, '%');
         len = p ? MIN((size_t)(p - src), destlen) : destlen;
         if (len > 0) {
             strncpy(dest, src, len);
