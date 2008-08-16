@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.25 2006-09-29 09:39:16 didg Exp $
+ * $Id: ofork.c,v 1.26 2008-08-16 21:11:36 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,7 +80,7 @@ FILE	*f;
 
     for ( ofrefnum = 0; ofrefnum < nforks; ofrefnum++ ) {
         if ( oforks[ ofrefnum ] != NULL ) {
-            fprintf( f, "%hu <%s>\n", ofrefnum, of_name(oforks[ ofrefnum ]);
+            fprintf( f, "%hu <%s>\n", ofrefnum, of_name(oforks[ ofrefnum ]));
         }
     }
 }
