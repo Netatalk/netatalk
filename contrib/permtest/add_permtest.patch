@@ -1,0 +1,38 @@
+Index: configure.in
+===================================================================
+RCS file: /cvsroot/netatalk/netatalk/configure.in,v
+retrieving revision 1.205
+diff -u -w -b -r1.205 configure.in
+--- configure.in	9 Sep 2006 04:30:01 -0000	1.205
++++ configure.in	25 Jul 2008 13:48:05 -0000
+@@ -1053,6 +1053,7 @@
+ 	contrib/shell_utils/apple_rm
+ 	contrib/shell_utils/asip-status.pl
+ 	contrib/shell_utils/cleanappledouble.pl
++	contrib/shell_utils/permtest.pl
+ 	contrib/timelord/Makefile
+ 	contrib/a2boot/Makefile
+ 	distrib/Makefile
+Index: contrib/shell_utils/Makefile.am
+===================================================================
+RCS file: /cvsroot/netatalk/netatalk/contrib/shell_utils/Makefile.am,v
+retrieving revision 1.16
+diff -u -w -b -r1.16 Makefile.am
+--- contrib/shell_utils/Makefile.am	28 Apr 2005 20:49:36 -0000	1.16
++++ contrib/shell_utils/Makefile.am	25 Jul 2008 13:48:05 -0000
+@@ -9,6 +9,9 @@
+ 	apple_cp apple_mv apple_rm	\
+ 	cleanappledouble.pl		\
+ 	asip-status.pl
++EXTRASCRIPTS = \
++	permtest.pl \
++	permtest.cfg
+ 
+ SUFFIXES = .tmpl .
+ 
+@@ -22,4 +25,4 @@
+ 
+ bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES)
+ 
+-EXTRA_DIST = $(PERLSCRIPTS) $(TEMPLATE_FILES)
++EXTRA_DIST = $(PERLSCRIPTS) $(TEMPLATE_FILES) $(EXTRASCRIPTS)

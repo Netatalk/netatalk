@@ -1,0 +1,224 @@
+#!@PERL@ -w
+
+###########################################################################
+#
+# Characterization testing netatalks permission model
+#
+# (c) 2008 by Frank Lahm <franklahm@googlemail.com>
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+# 
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+# 
+###########################################################################
+
+###########################################################################
+#
+# Usage:
+#
+#  "permtest.cfg" must be in your CWD. Must be run on a OS X host. Tested
+#  with 10.4.11. Uses Applescript through system("osascript ...") to mount
+#  AFP Volumes. Uses `ssh LOGIN@HOST stat FILE|DIR`. Therefor PKI
+#  authentication must be setup and working!
+#  See "permtest.cfg" for more details, it's pretty much self-explaining.
+# 
+###########################################################################
+
+use strict;
+
+my $DEBUG = 0;
+
+###########################################################################
+
+sub parseConfig;
+sub mountAPFVols;
+sub createTestFiles;
+sub createTestDirs;
+sub verifyTestFiles;
+sub verifyTestDirs;
+sub unmountAfp;
+
+my ($sshLogin, $sshResult, %sshStat, @AFPVols, @createFiles, @createDirs, @testFiles, @testDirs);
+my ($dir, $file, $user, $group, $perms, $mode, $cmd);
+
+parseConfig();
+mountAPFVols();
+createTestFiles();
+createTestDirs();
+print "\n";
+verifyTestFiles();
+verifyTestDirs();
+unmountAfp();
+
+exit 0;
+
+###########################################################################
+
+# parse config file
+sub parseConfig
+{
+	open CFG, "permtest.cfg" or die "Config file not found!";
+	while (<CFG>) {
+		chop;
+	    if (/^#/) { next; };
+	    if (/^sshLogin/) {
+			$sshLogin = $_;
+			$sshLogin =~ s/^sshLogin ?= ?// ;
+			next;
+		}
+		if (/^mountAFPVolume/) {
+			s/^mountAFPVolume ?= ?// ;
+			print "Found AFP Volume Definition \"$_\"\n" if $DEBUG;
+			push @AFPVols, $_;
+			next;
+		}
+	    if (/^createFile/) {
+			s/^createFile ?= ?// ;
+			push @createFiles, $_;
+			next;
+		}
+		if (/^createDir/) {
+			s/^createDir ?= ?// ;
+			push @createDirs, $_;
+			next;
+		}
+		if (/^testFile/) {
+			push @testFiles, $_;
+			next;
+		}
+		if (/^testDir/) {
+			push @testDirs, $_;
+			next;
+		}
+	}
+	close CFG;
+}
+
+# mount AFP Volumes
+sub mountAPFVols
+{
+	foreach (@AFPVols) {
+		print "Mounting AFP Volume \"$_\"\n";
+		$cmd = "osascript -e 'tell application \"Finder\"' -e 'mount volume \"$_\"' -e 'end tell' &> /dev/null";
+		print "Going to run the following Applescript:\n" . $cmd . "\n\n" if $DEBUG;
+		system($cmd);
+		if ($? != 0) { die "Error mounting \"$_\"\n"; }
+	}
+}
+
+# Create test files
+sub createTestFiles
+{
+	foreach (@createFiles) {
+		s/^createFile ?= ?// ;
+		system("rm \"$_\" &> /dev/null");
+		print "Creating file: \"$_\"\n";
+		system("touch \"$_\"");
+		if ($? != 0) { die "Error creating file \"$_\"\n"; }
+	}
+}
+
+# Create test dirs
+sub createTestDirs
+{
+	foreach (@createDirs) {
+		s/^createDir ?= ?// ;
+		system("rmdir \"$_\" &> /dev/null");
+		print "Creating dir: \"$_\"\n";
+		system("mkdir \"$_\"");
+		if ($? != 0) { die "Error creating dir \"$_\"\n"; }
+	}
+}
+
+# Verify files and dirs
+sub verifyTestFiles
+{
+	foreach (@testFiles) {
+		my @line = split(",");
+		foreach (@line) {
+			if (/^testFile/) {
+				$file = $_;
+				$file =~ s/^testFile ?= ?//;
+			}
+			elsif (/^user/) {
+				$user = $_;
+				$user =~ s/^user ?= ?//;
+			}
+			elsif (/^group/) {
+				$group = $_;
+				$group =~ s/^group ?= ?//;
+			}
+			elsif (/^mode/) {
+				$mode = $_;
+				$mode =~ s/^mode ?= ?//;
+			}
+		} # foreach (@elems)
+		print "File: $file, User: $user, Group: $group, Perms: $perms\n" if $DEBUG;
+	
+		$sshResult = `ssh $sshLogin stat -c \"user,%U,group,%G,mode,0%a\" \"$file\"`;
+		if ($? != 0) { die "Error stat'ing file \"$file\"\n"; }
+		chop $sshResult;
+		print "ssh stat $file gave us: $sshResult\n" if $DEBUG;
+	
+		%sshStat = split(",", $sshResult);
+		if ( ($sshStat{user} ne $user) or ($sshStat{group} ne $group) or ($sshStat{mode} ne $mode) ) {
+			print "Creatin error for: \"$file\"!\nExpected:\t$user, $group, $mode.\nGot:\t\t$sshStat{user}, $sshStat{group}, $sshStat{mode}.\n\n";
+		}
+		system("rm \"$file\"");
+		if ($? != 0) { die "Couldn't delete \"$file\"\n"; }
+	}
+}
+
+sub verifyTestDirs
+{
+	foreach (@testDirs) {
+		my @line = split(",");
+		foreach (@line) {
+			if (/^testDir/) {
+				$dir = $_;
+				$dir =~ s/^testDir ?= ?//;
+			}
+			elsif (/^user/) {
+				$user = $_;
+				$user =~ s/^user ?= ?//;
+			}
+			elsif (/^group/) {
+				$group = $_;
+				$group =~ s/^group ?= ?//;
+			}
+			elsif (/^mode/) {
+				$mode = $_;
+				$mode =~ s/^mode ?= ?//;
+			}
+		} # foreach (@elems)
+		print "Dir: $dir, User: $user, Group: $group, Perms: $perms\n" if $DEBUG;
+	
+		$sshResult = `ssh $sshLogin stat -c \"user,%U,group,%G,mode,0%a\" \"$dir\"`;
+		if ($? != 0) { die "Error stat'ing file \"$dir\"\n"; }
+		chop $sshResult;
+		print "ssh stat $dir gave us: $sshResult\n" if $DEBUG;
+	
+		%sshStat = split(",", $sshResult);
+		if ( ($sshStat{user} ne $user) or ($sshStat{group} ne $group) or ($sshStat{mode} ne $mode) ) {
+			print "Creatin error for: \"$dir\"!\nExpected:\t$user, $group, $mode.\nGot:\t\t$sshStat{user}, $sshStat{group}, $sshStat{mode}.\n\n";
+		}
+		system("rmdir \"$dir\""); if ($? != 0) { die "Couldn't delete \"$dir\"\n"; }
+	}
+}
+
+sub unmountAfp
+{
+	foreach (@AFPVols) {
+		print "Goint to eject Volume \"$_\"\n";
+		s#^(.*/)## ;
+		$cmd = "osascript -e 'tell application \"Finder\"' -e 'eject \"$_\"' -e 'end tell' &> /dev/null";
+		print "Going to run the following Applescript:\n" . $cmd . "\n\n" if $DEBUG;
+		system($cmd);
+	}
+}
