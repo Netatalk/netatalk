@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.50 2005-06-02 12:32:17 didg Exp $
+ * $Id: filedir.c,v 1.51 2008-08-31 13:25:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -406,14 +406,14 @@ int         isdir;
         if (strcmp(oldname, newname) == 0)
             return AFP_OK;
 
-        if (stat(upath, st) == 0 || caseenumerate(vol, &path, curdir) == 0) {
+        if (stat(upath, st) == 0 ) {
             if (!stat(p, &nst) && !(nst.st_dev == st->st_dev && nst.st_ino == st->st_ino) ) {
                 /* not the same file */
                 return AFPERR_EXIST;
             }
             errno = 0;
         }
-    } else if (stat(upath, st ) == 0 || caseenumerate(vol, &path, curdir) == 0)
+    } else if (stat(upath, st ) == 0)
         return AFPERR_EXIST;
 
     if ( !isdir ) {

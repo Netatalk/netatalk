@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.20 2008-05-23 06:35:49 didg Exp $
+ * $Id: directory.h,v 1.21 2008-08-31 13:25:58 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -205,8 +205,6 @@ extern int file_access   __P((struct path *path, int mode));
 
 extern int netatalk_rmdir __P((const char *name));
 extern int netatalk_unlink __P((const char *name));
-
-extern int caseenumerate __P((const struct vol *, struct path *, struct dir *));
 
 extern hash_t *dirhash __P((void));
 /* from enumerate.c */
