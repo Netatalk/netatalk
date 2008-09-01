@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.71 2008-08-31 13:25:59 didg Exp $
+ * $Id: volume.c,v 1.72 2008-09-01 15:18:38 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1730,7 +1730,6 @@ int	ibuflen _U_, *rbuflen;
 
     dir->d_did = DIRDID_ROOT;
     dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
-    dir->d_m_name_ucs2 = strdup_w(volume->v_name);
     volume->v_dir = volume->v_root = dir;
     volume->v_hash = dirhash();
 

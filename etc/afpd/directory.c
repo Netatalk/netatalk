@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.86 2008-08-31 13:25:57 didg Exp $
+ * $Id: directory.c,v 1.87 2008-09-01 15:18:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -61,10 +61,10 @@ int             afp_errno;
 #define SENTINEL (&sentinel)
 static struct dir sentinel = { SENTINEL, SENTINEL, NULL, DIRTREE_COLOR_BLACK,
                                  NULL, NULL, NULL, NULL, NULL, 0, 0, 
-                                 0, 0, NULL, NULL, NULL};
+                                 0, 0, NULL, NULL};
 static struct dir rootpar  = { SENTINEL, SENTINEL, NULL, 0,
                                  NULL, NULL, NULL, NULL, NULL, 0, 0, 
-                                 0, 0, NULL, NULL, NULL};
+                                 0, 0, NULL, NULL};
 
 /* (from IM: Toolbox Essentials)
  * dirFinderInfo (DInfo) fields:
@@ -457,7 +457,6 @@ struct dir	*dir;
     dirfreename(dir);
     dir->d_m_name = NULL;
     dir->d_u_name = NULL;
-    dir->d_m_name_ucs2 = NULL;
 #else /* ! REMOVE_NODES */
 
     /* go searching for a node with at most one child */
@@ -533,14 +532,11 @@ struct dir	*dir;
         /* set the node's d_name */
         node->d_m_name = save.d_m_name;
         node->d_u_name = save.d_u_name;
-        node->d_m_name_ucs2 = save.d_m_name_ucs2;
     }
 
     if (node->d_color == DIRTREE_COLOR_BLACK)
         dir_rmrecolor(vol, leaf);
 
-    if (node->d_m_name_ucs2)
-        free(node->d_u_name_ucs2);
     if (node->d_u_name != node->d_m_name) {
         free(node->d_u_name);
     }
@@ -933,10 +929,6 @@ struct path     *path;
         LOG(log_error, logtype_afpd, "adddir: malloc: %s", strerror(errno) );
         return NULL;
     }
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), &cdir->d_m_name_ucs2)) {
-	LOG(log_error, logtype_afpd, "Couldn't set UCS2 name for %s", name);
-	cdir->d_m_name_ucs2 = NULL;
-    }
 
     cdir->d_did = id;
 
@@ -959,7 +951,6 @@ struct path     *path;
         dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
-        edir->d_m_name_ucs2 = cdir->d_m_name_ucs2;
         free(cdir);
         cdir = edir;
         LOG(log_error, logtype_afpd, "adddir: insert %s", edir->d_m_name);
@@ -986,8 +977,6 @@ void dirfreename(struct dir *dir)
     if (dir->d_u_name != dir->d_m_name) {
         free(dir->d_u_name);
     }
-    if (dir->d_m_name_ucs2)
-        free(dir->d_m_name_ucs2); 
     free(dir->d_m_name);
 }
 
@@ -1035,7 +1024,6 @@ struct dir *dirnew(const char *m_name, const char *u_name)
         return NULL;
     }
 
-    dir->d_m_name_ucs2 = NULL;
     dir->d_left = dir->d_right = SENTINEL;
     dir->d_next = dir->d_prev = dir;
     return dir;
@@ -1053,7 +1041,7 @@ const struct dir *k = key;
 	0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
     };
 
-    const unsigned char *str = k->d_u_name;
+    const unsigned char *str = (unsigned char *)k->d_u_name;
     hash_val_t acc = 0;
 
     while (*str) {
@@ -1838,7 +1826,7 @@ int setdirparams(const struct vol *vol,
 
     char                *upath;
     struct dir          *dir;
-    int			bit, aint, isad = 1;
+    int			bit, isad = 1;
     int                 cdate, bdate;
     int                 owner, group;
     u_int16_t		ashort, bshort;
@@ -2368,13 +2356,6 @@ struct dir	*dir, *newparent;
         dir->d_u_name = buf;
         strcpy( dir->d_u_name, dst );
     }
-
-    if (dir->d_m_name_ucs2)
-	free(dir->d_m_name_ucs2);
-
-    dir->d_m_name_ucs2 = NULL;
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, dir->d_m_name, strlen(dir->d_m_name), (char**)&dir->d_m_name_ucs2))
-        dir->d_m_name_ucs2 = NULL;
 
     if (( parent = dir->d_parent ) == NULL ) {
         return( AFP_OK );
