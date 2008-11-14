@@ -251,25 +251,25 @@ static int parseline ( char *buf, struct volinfo *vol)
     switch (option) {
       case MAC_CHARSET:
         if ((vol->v_maccodepage = strdup(value)) == NULL) {
-	    fprintf (stderr, "strdup: %m");
+	    fprintf (stderr, "strdup: %s", strerror(errno));
             return -1;
         }
         break;
       case VOL_CHARSET:
         if ((vol->v_volcodepage = strdup(value)) == NULL) {
-	    fprintf (stderr, "strdup: %m");
+	    fprintf (stderr, "strdup: %s", strerror(errno));
             return -1;
         }
         break;
       case CNIDBACKEND:
         if ((vol->v_cnidscheme = strdup(value)) == NULL) {
-	    fprintf (stderr, "strdup: %m");
+	    fprintf (stderr, "strdup: %s", strerror(errno));
             return -1;
         }
         break;
       case CNIDDBDHOST:
         if ((vol->v_dbd_host = strdup(value)) == NULL) {
-	    fprintf (stderr, "strdup: %m");
+	    fprintf (stderr, "strdup: %s", strerror(errno));
             return -1;
         }
         break;
@@ -278,7 +278,7 @@ static int parseline ( char *buf, struct volinfo *vol)
         break;
       case CNID_DBPATH:
         if ((vol->v_dbpath = strdup(value)) == NULL) {
-	    fprintf (stderr, "strdup: %m");
+	    fprintf (stderr, "strdup: %s", strerror(errno));
             return -1;
         }
         break;
@@ -341,7 +341,7 @@ int loadvolinfo (char *path, struct volinfo *vol)
         return -1;
 
     if ((vol->v_path = strdup(volinfofile)) == NULL ) {
-	fprintf (stderr, "strdup: %m");
+	fprintf (stderr, "strdup: %s", strerror(errno));
         return (-1);
     }
     strlcat(volinfofile, ".AppleDesktop/", sizeof(volinfofile));
@@ -349,7 +349,7 @@ int loadvolinfo (char *path, struct volinfo *vol)
 
     /* open the file read only */
     if ( NULL == (fp = fopen( volinfofile, "r")) )  {
-	fprintf (stderr, "error opening volinfo (%s): %m", volinfofile);
+	fprintf (stderr, "error opening volinfo (%s): %s", volinfofile, strerror(errno));
         return (-1);
     }
     fd = fileno(fp); 

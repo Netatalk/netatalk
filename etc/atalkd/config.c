@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.14 2005-04-28 20:49:46 bfernhomberg Exp $
+ * $Id: config.c,v 1.15 2008-11-14 10:29:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -271,7 +271,7 @@ int writeconf( cf )
                                       &zonename)) ) {
                     if ( NULL == 
                       (zonename = strdup(((struct ziptab *)l->l_data)->zt_name))) {
-		        LOG(log_error, logtype_atalkd, "malloc: %m" );
+		        LOG(log_error, logtype_atalkd, "malloc: %s",  strerror(errno) );
 		        return( -1 );
                     }
                     len = ((struct ziptab *)l->l_data)->zt_len;
@@ -850,16 +850,16 @@ int plumb()
 	*p = '\0';
 
 	if (( fd = open( device, O_RDWR, 0 )) < 0 ) {
-	    LOG(log_error, logtype_atalkd, "%s: %m", device );
+	    LOG(log_error, logtype_atalkd, "%s: %s", device, strerror(errno) );
 	    return -1;
 	}
 	if ( ioctl( fd, I_PUSH, "ddp" ) < 0 ) {
-	    LOG(log_error, logtype_atalkd, "I_PUSH: %m" );
+	    LOG(log_error, logtype_atalkd, "I_PUSH: %s", strerror(errno) );
 	    close(fd);
 	    return -1;
 	}
 	if ( ioctl( fd, IF_UNITSEL, ppa ) < 0 ) {
-	    LOG(log_error, logtype_atalkd, "IF_UNITSEL: %m" );
+	    LOG(log_error, logtype_atalkd, "IF_UNITSEL: %s", strerror(errno) );
 	    close(fd);
 	    return -1;
 	}

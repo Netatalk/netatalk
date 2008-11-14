@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.15 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: session.c,v 1.16 2008-11-14 10:29:08 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -102,7 +102,7 @@ int session( atp, sat )
     atpb.atp_sreqto = 5;		/* retry timer */
     atpb.atp_sreqtries = -1;		/* infinite retries */
     if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
-	LOG(log_error, logtype_papd, "atp_sreq: %m" );
+	LOG(log_error, logtype_papd, "atp_sreq: %s", strerror(errno) );
 	return( -1 );
     }
 
@@ -121,7 +121,7 @@ int session( atp, sat )
 
 	do { /* do list until success or an unrecoverable error occurs */
 	  if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 )
-	      LOG(log_error, logtype_papd, "select: %m" ); /* log all errors */
+	      LOG(log_error, logtype_papd, "select: %s", strerror(errno) ); /* log all errors */
 	} while (( cc < 0 ) && (errno == 4));
 
 	if ( cc < 0 ) {
@@ -147,7 +147,7 @@ int session( atp, sat )
 	    atpb.atp_sreqto = 0;		/* best effort */
 	    atpb.atp_sreqtries = 1;		/* try once */
 	    if ( atp_sreq( atp, &atpb, 0, 0 )) {
-		LOG(log_error, logtype_papd, "atp_sreq: %m" );
+		LOG(log_error, logtype_papd, "atp_sreq: %s", strerror(errno) );
 		return( -1 );
 	    }
 	    continue;
@@ -162,7 +162,7 @@ int session( atp, sat )
 	    atpb.atp_rreqdata = cbuf;
 	    atpb.atp_rreqdlen = sizeof( cbuf );
 	    if ( atp_rreq( atp, &atpb ) < 0 ) {
-		LOG(log_error, logtype_papd, "atp_rreq: %m" );
+		LOG(log_error, logtype_papd, "atp_rreq: %s", strerror(errno) );
 		return( -1 );
 	    }
 	    /* sanity */
@@ -208,7 +208,7 @@ int session( atp, sat )
 		atpb.atp_sresiov = niov;
 		atpb.atp_sresiovcnt = 1;
 		if ( atp_sresp( atp, &atpb ) < 0 ) {
-		    LOG(log_error, logtype_papd, "atp_sresp: %m" );
+		    LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
 		    exit( 1 );
 		}
 		return( 0 );
@@ -230,7 +230,7 @@ int session( atp, sat )
 	    atpb.atp_rresiov = niov;
 	    atpb.atp_rresiovcnt = oquantum;
 	    if ( atp_rresp( atp, &atpb ) < 0 ) {
-		LOG(log_error, logtype_papd, "atp_rresp: %m" );
+		LOG(log_error, logtype_papd, "atp_rresp: %s", strerror(errno) );
 		return( -1 );
 	    }
 
@@ -270,7 +270,7 @@ int session( atp, sat )
 	    atpb.atp_sreqto = 5;		/* retry timer */
 	    atpb.atp_sreqtries = -1;		/* infinite retries */
 	    if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
-		LOG(log_error, logtype_papd, "atp_sreq: %m" );
+		LOG(log_error, logtype_papd, "atp_sreq: %s", strerror(errno) );
 		return( -1 );
 	    }
 	    break;
@@ -279,7 +279,7 @@ int session( atp, sat )
 	    break;
 
 	default :
-	    LOG(log_error, logtype_papd, "atp_rsel: %m" );
+	    LOG(log_error, logtype_papd, "atp_rsel: %s", strerror(errno) );
 	    return( -1 );
 	}
 
@@ -316,7 +316,7 @@ int session( atp, sat )
 	    atpb.atp_sresiov = niov;
 	    atpb.atp_sresiovcnt = i;	/* reported by stevebn@pc1.eos.co.uk */
 	    if ( atp_sresp( atp, &atpb ) < 0 ) {
-		LOG(log_error, logtype_papd, "atp_sresp: %m" );
+		LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
 		return( -1 );
 	    }
 	    readpending = 0;

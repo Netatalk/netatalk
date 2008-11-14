@@ -484,7 +484,7 @@ BUGS
  
  
  static char *const _id = "plp_snprintf V98.12.21 Copyright Patrick Powell 1988-2000 "
- "$Id: snprintf.c,v 1.1 2002-08-30 16:56:50 jmarcus Exp $"
+ "$Id: snprintf.c,v 1.2 2008-11-14 10:29:08 didg Exp $"
  " LOCAL REVISIONS: Modified for Netatalk 2002/02/12 Burkhard Schmidt";
 
 /* varargs declarations: */
@@ -1057,7 +1057,7 @@ int main( void )
 	errno = 1;
 	buffer[0] = 0;
 	n = plp_snprintf( buffer, 0, (t="test")); printf( "[%d] %s = '%s'\n", n, t, buffer );
-	n = plp_snprintf( buffer, sizeof(buffer), (t="errno '%m'")); printf( "[%d] %s = '%s'\n", n, t, buffer );
+	n = plp_snprintf( buffer, sizeof(buffer), (t="errno '%s'")); printf( "[%d] %s = '%s'\n", n, t, buffer, strerror(errno) );
 	n = plp_snprintf( buffer, sizeof(buffer), (t = "%s"), test1 ); printf( "[%d] %s = '%s'\n", n, t, buffer );
 	n = plp_snprintf( buffer, sizeof(buffer), (t = "%12s"), test1 ); printf( "[%d] %s = '%s'\n", n, t, buffer );
 	n = plp_snprintf( buffer, sizeof(buffer), (t = "%-12s"), test1 ); printf( "[%d] %s = '%s'\n", n, t, buffer );

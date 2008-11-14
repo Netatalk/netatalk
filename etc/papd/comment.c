@@ -1,5 +1,5 @@
 /*
- * $Id: comment.c,v 1.8 2002-09-29 23:29:13 sibaz Exp $
+ * $Id: comment.c,v 1.9 2008-11-14 10:29:08 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "comment.h"
 
@@ -37,7 +38,7 @@ void compush( comment )
 
     if (( cs = (struct comstate *)malloc( sizeof( struct comstate ))) ==
 	    NULL ) {
-	LOG(log_error, logtype_papd, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 	exit( 1 );
     }
 

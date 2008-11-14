@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.c,v 1.10 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: ppd.c,v 1.11 2008-11-14 10:29:08 didg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <atalk/logger.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -192,7 +193,7 @@ int read_ppd( file, fcnt )
     }
 
     if (( ppdfile = fopen( file, "r" )) == NULL ) {
-	LOG(log_error, logtype_papd, "read_ppd %s: %m", file );
+	LOG(log_error, logtype_papd, "read_ppd %s: %s", file, strerror(errno) );
 	return( -1 );
     }
 
@@ -216,12 +217,12 @@ int read_ppd( file, fcnt )
 
 	    if (( pfo = (struct ppd_font *)malloc( sizeof( struct ppd_font )))
 		    == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %m" );
+		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 	    if (( pfo->pd_font =
 		    (char *)malloc( strlen( pe->pe_option ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %m" );
+		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 	    strcpy( pfo->pd_font, pe->pe_option );
@@ -240,7 +241,7 @@ int read_ppd( file, fcnt )
 	if ( pfe->pd_name ) { /*&& (pfe->pd_value == NULL) ) { */
 	    if (( pfe->pd_value =
 		    (char *)malloc( strlen( pe->pe_value ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %m" );
+		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 

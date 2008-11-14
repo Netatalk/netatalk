@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.22 2008-08-07 07:47:44 didg Exp $
+ * $Id: main.c,v 1.23 2008-11-14 10:29:08 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -311,7 +311,7 @@ int main( ac, av )
 	}
 			
 	if (( pr->p_atp = atp_open( ATADDR_ANYPORT, &pr->p_addr )) == NULL ) {
-	    LOG(log_error, logtype_papd, "atp_open: %m" );
+	    LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
 	    papd_exit( 1 );
 	}
 	if ( nbp_rgstr( atp_sockaddr( pr->p_atp ), pr->p_name, pr->p_type,
@@ -336,7 +336,7 @@ int main( ac, av )
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-	LOG(log_error, logtype_papd, "sigaction: %m" );
+	LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 	papd_exit( 1 );
     }
 
@@ -344,7 +344,7 @@ int main( ac, av )
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
-	LOG(log_error, logtype_papd, "sigaction: %m" );
+	LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 	papd_exit( 1 );
     }
 
@@ -365,7 +365,7 @@ int main( ac, av )
 	    if ( errno == EINTR ) {
 		continue;
 	    }
-	    LOG(log_error, logtype_papd, "select: %m" );
+	    LOG(log_error, logtype_papd, "select: %s", strerror(errno) );
 	    papd_exit( 1 );
 	}
 
@@ -389,7 +389,7 @@ int main( ac, av )
 		atpb.atp_rreqdata = cbuf;
 		atpb.atp_rreqdlen = sizeof( cbuf );
 		if ( atp_rreq( pr->p_atp, &atpb ) < 0 ) {
-		    LOG(log_error, logtype_papd, "atp_rreq: %m" );
+		    LOG(log_error, logtype_papd, "atp_rreq: %s", strerror(errno) );
 		    continue;
 		}
 
@@ -434,7 +434,7 @@ int main( ac, av )
 		     */
 		    if (( atp = atp_open( ATADDR_ANYPORT, 
 					  &pr->p_addr)) == NULL ) {
-			LOG(log_error, logtype_papd, "atp_open: %m" );
+			LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
 			rbuf[ 2 ] = rbuf[ 3 ] = 0xff;  /* printer busy */
 			rbuf[ 4 ] = 0; /* FIXME is it right? */
 			err = 1;
@@ -453,7 +453,7 @@ int main( ac, av )
 		     * This may error out if we lose a route, so we won't die().
 		     */
 		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-			LOG(log_error, logtype_papd, "atp_sresp: %m" );
+			LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
 			err = 1;
 		    }
 
@@ -466,7 +466,7 @@ int main( ac, av )
 
 		    switch ( c = fork()) {
 		    case -1 :
-			LOG(log_error, logtype_papd, "fork: %m" );
+			LOG(log_error, logtype_papd, "fork: %s", strerror(errno) );
                         atp_close(atp);
 			continue;
 
@@ -476,13 +476,13 @@ int main( ac, av )
 			#ifndef HAVE_CUPS
 			if (( printer->p_flags & P_SPOOLED ) &&
 				chdir( printer->p_spool ) < 0 ) {
-			    LOG(log_error, logtype_papd, "chdir %s: %m", printer->p_spool );
+			    LOG(log_error, logtype_papd, "chdir %s: %s", printer->p_spool, strerror(errno) );
 			    exit( 1 );
 			}
 			#else
 			if (( printer->p_flags & P_SPOOLED ) &&
 				chdir( SPOOLDIR ) < 0 ) {
-			    LOG(log_error, logtype_papd, "chdir %s: %m", SPOOLDIR );
+			    LOG(log_error, logtype_papd, "chdir %s: %s", SPOOLDIR, strerror(errno) );
 			    exit( 1 );
 			}
 
@@ -492,7 +492,7 @@ int main( ac, av )
 			sigemptyset( &sv.sa_mask );
 			sv.sa_flags = SA_RESTART;
 			if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
-			    LOG(log_error, logtype_papd, "sigaction: %m" );
+			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 			    exit( 1 );
 			}
 
@@ -530,7 +530,7 @@ int main( ac, av )
 		     * This may error out if we lose a route, so we won't die().
 		     */
 		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-			LOG(log_error, logtype_papd, "atp_sresp: %m" );
+			LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
 		    }
 		    break;
 
@@ -555,7 +555,7 @@ int main( ac, av )
 		 * This may error out if we lose a route, so we won't die().
 		 */
 		if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-		    LOG(log_error, logtype_papd, "atp_sresp: %m" );
+		    LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
 		}
 #endif /* notdef */
 	    }
@@ -829,7 +829,7 @@ int rprintcap( pr )
     if ( pr->p_ppdfile == defprinter.p_ppdfile ) {
 	if ( (p = (char *) cups_get_printer_ppd ( pr->p_printer )) != NULL ) {
 	    if (( pr->p_ppdfile = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-	    	LOG(log_error, logtype_papd, "malloc: %m" );
+	    	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_ppdfile, p );
@@ -864,7 +864,7 @@ int rprintcap( pr )
 	    pr->p_spool = defprinter.p_spool;
 	} else {
 	    if (( pr->p_spool = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %m" );
+		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_spool, p );
@@ -888,7 +888,7 @@ int rprintcap( pr )
 	    } else {
 		if (( pr->p_role =
 			(char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		    LOG(log_error, logtype_papd, "malloc: %m" );
+		    LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		    exit( 1 );
 		}
 		strcpy( pr->p_role, p );
@@ -914,7 +914,7 @@ int rprintcap( pr )
 	if (( p = pgetstr( "pc", &a )) != NULL ) {
 	    if (( pr->p_pagecost_msg =
 		    (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %m" );
+		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_pagecost_msg, p );
@@ -939,7 +939,7 @@ int rprintcap( pr )
 	    pr->p_lock = defprinter.p_lock;
 	} else {
 	    if (( pr->p_lock = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %m" );
+		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 		exit( 1 );
 	    }
 	    strcpy( pr->p_lock, p );

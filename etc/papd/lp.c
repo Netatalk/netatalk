@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.17 2008-08-14 20:18:50 didg Exp $
+ * $Id: lp.c,v 1.18 2008-11-14 10:29:08 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -311,7 +311,7 @@ void lp_person( person )
 	free( lp.lp_person );
     }
     if (( lp.lp_person = (char *)malloc( strlen( person ) + 1 )) == NULL ) {
-	LOG(log_error, logtype_papd, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 	exit( 1 );
     }
     strcpy( lp.lp_person, person );
@@ -342,7 +342,7 @@ void lp_host( host )
 	free( lp.lp_host );
     }
     if (( lp.lp_host = (char *)malloc( strlen( host ) + 1 )) == NULL ) {
-	LOG(log_error, logtype_papd, "malloc: %m" );
+	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
 	exit( 1 );
     }
     strcpy( lp.lp_host, host );
@@ -431,10 +431,10 @@ int lp_init( out, sat )
 			LOG(log_info, logtype_papd, "CAP error: could not read username");
 		    }
 		} else {
-		    LOG(log_info, logtype_papd, "CAP error: %m");
+		    LOG(log_info, logtype_papd, "CAP error: %s", strerror(errno));
 		}
 	    } else {
-		LOG(log_info, logtype_papd, "CAP error: %m");
+		LOG(log_info, logtype_papd, "CAP error: %s", strerror(errno));
 	    }
 	}
 
@@ -462,7 +462,7 @@ int lp_init( out, sat )
     }
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
-	LOG(log_error, logtype_papd, "gethostname: %m" );
+	LOG(log_error, logtype_papd, "gethostname: %s", strerror(errno) );
 	exit( 1 );
     }
 
@@ -480,7 +480,7 @@ int lp_init( out, sat )
 #ifndef HAVE_CUPS
 	/* check if queuing is enabled: mode & 010 on lock file */
 	if ( stat( printer->p_lock, &st ) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_init: %s: %m", printer->p_lock );
+	    LOG(log_error, logtype_papd, "lp_init: %s: %s", printer->p_lock, strerror(errno) );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -506,7 +506,7 @@ int lp_init( out, sat )
 
 	n = 0;
 	if (( len = read( fd, buf, sizeof( buf ))) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_init read: %m" );
+	    LOG(log_error, logtype_papd, "lp_init read: %s", strerror(errno) );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -575,7 +575,7 @@ int lp_open( out, sat )
 	if (lp.lp_person != NULL) {
 	    if((pwent = getpwnam(lp.lp_person)) != NULL) {
 		if(setreuid(pwent->pw_uid, pwent->pw_uid) != 0) {
-		    LOG(log_info, logtype_papd, "setreuid error: %m");
+		    LOG(log_info, logtype_papd, "setreuid error: %s", strerror(errno));
 		}
 	    } else {
 		LOG(log_info, logtype_papd, "Error getting username (%s)", lp.lp_person);
@@ -584,7 +584,7 @@ int lp_open( out, sat )
 
 	lp_setup_comments(CH_UNIX);
 	if (( lp.lp_stream = popen( pipexlate(printer->p_printer), "w" )) == NULL ) {
-	    LOG(log_error, logtype_papd, "lp_open popen %s: %m", printer->p_printer );
+	    LOG(log_error, logtype_papd, "lp_open popen %s: %s", printer->p_printer, strerror(errno) );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -593,13 +593,13 @@ int lp_open( out, sat )
 	sprintf( name, "df%c%03d%s", lp.lp_letter++, lp.lp_seq, hostname );
 
 	if (( fd = open( name, O_WRONLY|O_CREAT|O_EXCL, 0660 )) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_open %s: %m", name );
+	    LOG(log_error, logtype_papd, "lp_open %s: %s", name, strerror(errno) );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 
 	if ( NULL == (lp.lp_spoolfile = (char *) malloc (strlen (name) +1)) ) {
-	    LOG(log_error, logtype_papd, "malloc: %m");
+	    LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
 	    exit(1);
 	}
 	strcpy ( lp.lp_spoolfile, name);	
@@ -619,13 +619,13 @@ int lp_open( out, sat )
 	}
 
 	if (fchown(fd, pwent->pw_uid, -1) < 0) {
-	    LOG(log_error, logtype_papd, "chown %s %s: %m", pwent->pw_name, name);
+	    LOG(log_error, logtype_papd, "chown %s %s: %s", pwent->pw_name, name, strerror(errno));
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
 
 	if (( lp.lp_stream = fdopen( fd, "w" )) == NULL ) {
-	    LOG(log_error, logtype_papd, "lp_open fdopen: %m" );
+	    LOG(log_error, logtype_papd, "lp_open fdopen: %s", strerror(errno) );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
@@ -724,14 +724,14 @@ int lp_write(in, buf, len )
     }
     else if ( bufpos) {
         if ( fwrite( tempbuf, 1, bufpos, lp.lp_stream ) != bufpos ) {
-            LOG(log_error, logtype_papd, "lp_write: %m" );
+            LOG(log_error, logtype_papd, "lp_write: %s", strerror(errno) );
             abort();
         }
         bufpos=0;
     }
 
     if ( fwrite( tbuf, 1, len, lp.lp_stream ) != len ) {
-	LOG(log_error, logtype_papd, "lp_write: %m" );
+	LOG(log_error, logtype_papd, "lp_write: %s", strerror(errno) );
 	abort();
     }
     return( 0 );
@@ -753,7 +753,7 @@ int lp_cancel()
     for ( letter = 'A'; letter < lp.lp_letter; letter++ ) {
 	sprintf( name, "df%c%03d%s", letter, lp.lp_seq, hostname );
 	if ( unlink( name ) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_cancel unlink %s: %m", name );
+	    LOG(log_error, logtype_papd, "lp_cancel unlink %s: %s", name, strerror(errno) );
 	}
     }
 
@@ -787,11 +787,11 @@ int lp_print()
 #ifndef HAVE_CUPS
 	sprintf( tfname, "tfA%03d%s", lp.lp_seq, hostname );
 	if (( fd = open( tfname, O_WRONLY|O_EXCL|O_CREAT, 0660 )) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_print %s: %m", tfname );
+	    LOG(log_error, logtype_papd, "lp_print %s: %s", tfname, strerror(errno) );
 	    return 0;
 	}
 	if (( cfile = fdopen( fd, "w" )) == NULL ) {
-	    LOG(log_error, logtype_papd, "lp_print %s: %m", tfname );
+	    LOG(log_error, logtype_papd, "lp_print %s: %s", tfname, strerror(errno) );
 	    return 0;
 	}
 	fprintf( cfile, "H%s\n", hostname );	/* XXX lp_host? */
@@ -832,32 +832,32 @@ int lp_print()
 
 	sprintf( cfname, "cfA%03d%s", lp.lp_seq, hostname );
 	if ( link( tfname, cfname ) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_print can't link %s to %s: %m", cfname,
-		    tfname );
+	    LOG(log_error, logtype_papd, "lp_print can't link %s to %s: %s", cfname,
+		    tfname, strerror(errno) );
 	    return 0;
 	}
 	unlink( tfname );
 
 	if (( s = lp_conn_unix()) < 0 ) {
-	    LOG(log_error, logtype_papd, "lp_print: lp_conn_unix: %m" );
+	    LOG(log_error, logtype_papd, "lp_print: lp_conn_unix: %s", strerror(errno) );
 	    return 0;
 	}
 
 	sprintf( buf, "\1%s\n", printer->p_printer );
 	n = strlen( buf );
 	if ( write( s, buf, n ) != n ) {
-	    LOG(log_error, logtype_papd, "lp_print write: %m" );
+	    LOG(log_error, logtype_papd, "lp_print write: %s" , strerror(errno));
 	    return 0;
 	}
 	if ( read( s, buf, 1 ) != 1 ) {
-	    LOG(log_error, logtype_papd, "lp_print read: %m" );
+	    LOG(log_error, logtype_papd, "lp_print read: %s" , strerror(errno));
 	    return 0;
 	}
 
 	lp_disconn_unix( s );
 
 	if ( buf[ 0 ] != '\0' ) {
-	    LOG(log_error, logtype_papd, "lp_print lpd said %c: %m", buf[ 0 ] );
+	    LOG(log_error, logtype_papd, "lp_print lpd said %c: %s", buf[ 0 ], strerror(errno) );
 	    return 0;
 	}
 #else
@@ -896,7 +896,7 @@ int lp_conn_unix()
     struct sockaddr_un	saun;
 
     if (( s = socket( AF_UNIX, SOCK_STREAM, 0 )) < 0 ) {
-	LOG(log_error, logtype_papd, "lp_conn_unix socket: %m" );
+	LOG(log_error, logtype_papd, "lp_conn_unix socket: %s", strerror(errno) );
 	return( -1 );
     }
     memset( &saun, 0, sizeof( struct sockaddr_un ));
@@ -904,7 +904,7 @@ int lp_conn_unix()
     strcpy( saun.sun_path, _PATH_DEVPRINTER );
     if ( connect( s, (struct sockaddr *)&saun,
 	    strlen( saun.sun_path ) + 2 ) < 0 ) {
-	LOG(log_error, logtype_papd, "lp_conn_unix connect %s: %m", saun.sun_path );
+	LOG(log_error, logtype_papd, "lp_conn_unix connect %s: %s", saun.sun_path, strerror(errno) );
 	close( s );
 	return( -1 );
     }
@@ -930,7 +930,7 @@ int lp_conn_inet()
     }
 
     if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
-	LOG(log_error, logtype_papd, "gethostname: %m" );
+	LOG(log_error, logtype_papd, "gethostname: %s", strerror(errno) );
 	exit( 1 );
     }
 
@@ -940,7 +940,7 @@ int lp_conn_inet()
     }
 
     if (( privfd = rresvport( &port )) < 0 ) {
-	LOG(log_error, logtype_papd, "lp_connect: socket: %m" );
+	LOG(log_error, logtype_papd, "lp_connect: socket: %s", strerror(errno) );
 	close( privfd );
 	return( -1 );
     }
@@ -953,7 +953,7 @@ int lp_conn_inet()
 
     if ( connect( privfd, (struct sockaddr *)&sin,
 	    sizeof( struct sockaddr_in )) < 0 ) {
-	LOG(log_error, logtype_papd, "lp_connect: %m" );
+	LOG(log_error, logtype_papd, "lp_connect: %s", strerror(errno) );
 	close( privfd );
 	return( -1 );
     }
@@ -968,7 +968,7 @@ int lp_rmjob( job )
     int		n, s;
 
     if (( s = lp_conn_inet()) < 0 ) {
-	LOG(log_error, logtype_papd, "lp_rmjob: %m" );
+	LOG(log_error, logtype_papd, "lp_rmjob: %s", strerror(errno) );
 	return( -1 );
     }
 
@@ -979,7 +979,7 @@ int lp_rmjob( job )
     sprintf( buf, "\5%s %s %d\n", printer->p_printer, lp.lp_person, job );
     n = strlen( buf );
     if ( write( s, buf, n ) != n ) {
-	LOG(log_error, logtype_papd, "lp_rmjob write: %m" );
+	LOG(log_error, logtype_papd, "lp_rmjob write: %s", strerror(errno) );
 	lp_disconn_inet( s );
 	return( -1 );
     }
@@ -1010,14 +1010,14 @@ int lp_queue( out )
     int				n, len, s;
 	
     if (( s = lp_conn_unix()) < 0 ) {
-	LOG(log_error, logtype_papd, "lp_queue: %m" );
+	LOG(log_error, logtype_papd, "lp_queue: %s", strerror(errno) );
 	return( -1 );
     }
 
     sprintf( buf, "\3%s\n", printer->p_printer );
     n = strlen( buf );
     if ( write( s, buf, n ) != n ) {
-	LOG(log_error, logtype_papd, "lp_queue write: %m" );
+	LOG(log_error, logtype_papd, "lp_queue write: %s", strerror(errno) );
 	lp_disconn_unix( s );
 	return( -1 );
     }
