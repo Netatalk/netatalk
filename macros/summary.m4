@@ -1,4 +1,4 @@
-dnl $Id: summary.m4,v 1.2 2005-04-28 20:50:05 bfernhomberg Exp $
+dnl $Id: summary.m4,v 1.3 2008-11-22 12:07:26 didg Exp $
 dnl Autoconf macros, display configure summary
 
 AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
@@ -26,8 +26,13 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	if test "x$netatalk_cv_use_shadowpw" = "xyes"; then
         	uams_using_options="$uams_using_options SHADOW"
 	fi
-	if test "x$compile_ssl" = "xyes"; then
+	if test "x$neta_cv_compile_dhx" = "xyes"; then
 		AC_MSG_RESULT([         DHX     ($uams_using_options)])
+	fi
+        if test "x$neta_cv_compile_dhx2" = "xyes"; then
+                AC_MSG_RESULT([         DHX2    ($uams_using_options)])
+        fi
+	if test "x$neta_cv_have_openssl" = "xyes"; then
 		AC_MSG_RESULT([         RANDNUM ($uams_using_options)])
 	fi
 	if test x"$netatalk_cv_build_krb5_uam" = x"yes"; then
@@ -73,11 +78,16 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 	AC_MSG_RESULT([Using libraries:])
 	AC_MSG_RESULT([    LIBS = $LIBS])
 	AC_MSG_RESULT([    CFLAGS = $CFLAGS])
-	if test x"$compile_ssl" = x"yes"; then
+	if test x"$neta_cv_have_openssl" = x"yes"; then
 		AC_MSG_RESULT([    SSL:])
 		AC_MSG_RESULT([        LIBS   = $SSL_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $SSL_CFLAGS])
 	fi
+        if test x"$neta_cv_have_libgcrypt" = x"yes"; then
+                AC_MSG_RESULT([    LIBGCRYPT:])
+                AC_MSG_RESULT([        LIBS   = $LIBGCRYPT_LIBS])
+                AC_MSG_RESULT([        CFLAGS = $LIBGCRYPT_CFLAGS])
+        fi
 	if test x"$netatalk_cv_use_pam" = x"yes"; then
 		AC_MSG_RESULT([    PAM:])
 		AC_MSG_RESULT([        LIBS   = $PAM_LIBS])

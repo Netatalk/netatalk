@@ -1,4 +1,4 @@
-dnl $Id: ssl-check.m4,v 1.13 2005-04-28 20:50:05 bfernhomberg Exp $
+dnl $Id: ssl-check.m4,v 1.14 2008-11-22 12:07:26 didg Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
 AC_DEFUN([AC_CRYPT], [
@@ -38,7 +38,8 @@ AC_DEFUN([AC_PATH_SSL], [
 	SSL_LIBS=""
 	saved_LIBS=$LIBS
 	saved_CFLAGS=$CFLAGS
-	compile_ssl=no
+	neta_cv_have_openssl=no
+dnl	compile_ssl=no
 
 	dnl make sure atalk_libname is defined beforehand
 	[[ -n "$atalk_libname" ]] || AC_MSG_ERROR([internal error, atalk_libname undefined])
@@ -64,13 +65,14 @@ dnl FIXME: The following looks crude and probably doesn't work properly.
 
 		 		AC_DEFINE(OPENSSL_DHX,	1, [Define if the OpenSSL DHX modules should be built])
 				AC_DEFINE(UAM_DHX,	1, [Define if the DHX UAM modules should be compiled])
-				compile_ssl=yes
+				neta_cv_have_openssl=yes
+				neta_cv_compile_dhx=yes
 				CFLAGS=$saved_CFLAGS
 				LIBS=$saved_LIBS
 				break
 			fi
 		done
-		if test "x$compile_ssl" = "xno"; then
+		if test "x$neta_cv_have_openssl" = "xno"; then
 			AC_MSG_RESULT([no])
 		fi
 	fi

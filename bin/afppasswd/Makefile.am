@@ -2,7 +2,7 @@
 
 pkgconfdir = @PKGCONFDIR@
 
-if USE_DHX
+if HAVE_OPENSSL
 bin_PROGRAMS = afppasswd
 else
 bin_PROGRAMS =
@@ -15,6 +15,6 @@ AM_CFLAGS = @CFLAGS@ @SSL_CFLAGS@ -I$(top_srcdir)/sys \
     -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\"
 
 install-exec-hook:
-if USE_DHX
+if HAVE_OPENSSL
 	chmod u+s $(DESTDIR)$(bindir)/afppasswd
 endif
