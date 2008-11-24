@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.1 2008-11-22 12:07:26 didg Exp $
+ * $Id: uams_dhx2_pam.c,v 1.2 2008-11-24 20:15:55 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -256,17 +256,10 @@ static struct pam_conv PAM_conversation = {
 static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
 		      char *rbuf, int *rbuflen)
 {
-    int i, ret;
-
-    unsigned int g_uint;
+    int ret;
+    size_t nwritten;
     gcry_mpi_t g, Ma;
     char *Ra_binary = NULL;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
-
-    const int g_len = 4;
-    size_t len;
-    size_t nwritten;
 
     *rbuflen = 0;
 
@@ -307,7 +300,7 @@ static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
     *rbuflen += 2;
 
     /* g is next */
-    gcry_mpi_print( GCRYMPI_FMT_USG, rbuf, 4, &nwritten, g);
+    gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten, g);
     if (nwritten < 4) {
 	memmove( rbuf+4-nwritten, rbuf, nwritten);
 	memset( rbuf, 0, 4-nwritten);
@@ -321,15 +314,15 @@ static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
     *rbuflen += 2;
 
     /* p */
-    gcry_mpi_print( GCRYMPI_FMT_USG, rbuf, PRIMEBITS/8, NULL, p);
+    gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, NULL, p);
     rbuf += PRIMEBITS/8;
     *rbuflen += PRIMEBITS/8;
 
     /* Ma */
-    gcry_mpi_print( GCRYMPI_FMT_USG, rbuf, PRIMEBITS/8, &len, Ma);
-    if (len < PRIMEBITS/8) {
-	memmove(rbuf + (PRIMEBITS/8) - len, rbuf, len);
-	memset(rbuf, 0, (PRIMEBITS/8) - len);
+    gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, &nwritten, Ma);
+    if (nwritten < PRIMEBITS/8) {
+	memmove(rbuf + (PRIMEBITS/8) - nwritten, rbuf, nwritten);
+	memset(rbuf, 0, (PRIMEBITS/8) - nwritten);
     }
     rbuf += PRIMEBITS/8;
     *rbuflen += PRIMEBITS/8;
@@ -433,13 +426,10 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int logincont1(void *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
-    u_int16_t retID;
-    size_t nwritten;
     int ret;
-    *rbuflen = 0;
-
+    size_t nwritten;
     gcry_mpi_t Mb, K, clientNonce;
-    char *K_bin = NULL;
+    unsigned char *K_bin = NULL;
     char serverNonce_bin[16];
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
@@ -531,7 +521,7 @@ static int logincont1(void *obj, char *ibuf, int ibuflen, char *rbuf, int *rbufl
     *rbuflen += 2;
 
     /* Client nonce + 1 */
-    gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, PRIMEBITS/8, NULL, clientNonce);
+    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, NULL, clientNonce);
     /* Server nonce */
     memcpy(rbuf+16, serverNonce_bin, 16);
 
@@ -740,20 +730,16 @@ static void pam_logout() {
 static int changepw_1(void *obj, char *uname,
 		      char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
-    unsigned int len;
     *rbuflen = 0;
 
     /* Remember it now, use it in changepw_3 */
     PAM_username = uname;
-    LOG(log_error, logtype_uams, "DHX2 ChangePW: packet 1 processin for user: %s",PAM_username);
-
     return( dhx2_setup(obj, ibuf, ibuflen, rbuf, rbuflen) );
 }
 
 static int changepw_2(void *obj, 
 		      char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
-    LOG(log_error, logtype_uams, "DHX2 ChangePW: packet 2 processing");
     return( logincont1(obj, ibuf, ibuflen, rbuf, rbuflen) );
 }
 
@@ -829,9 +815,6 @@ static int changepw_3(void *obj _U_,
     ibuf[255] = '\0';		/* For safety */
     ibuf[511] = '\0';
 
-    LOG(log_info, logtype_uams, "DHX2 Chgpwd: new pwd \'%s\'",ibuf);
-    LOG(log_info, logtype_uams, "DHX2 Chgpwd: old pwd \'%s\'",ibuf+256);
-
     /* check if new and old password are equal */
     if (memcmp(ibuf, ibuf + 256, 255) == 0) {
 	LOG(log_info, logtype_uams, "DHX2 Chgpwd: new and old password are equal");
@@ -876,7 +859,6 @@ static int changepw_3(void *obj _U_,
 error_ctx:
     gcry_cipher_close(ctx);
 error_noctx:
-exit:
     free(K_MD5hash);
     K_MD5hash=NULL;
     gcry_mpi_release(serverNonce);
@@ -892,8 +874,6 @@ static int dhx2_changepw(void *obj _U_, char *uname,
     static int dhx2_changepw_status = 1;
 
     int ret;
-
-    LOG(log_error, logtype_uams, "DHX2 ChangePW: Start!");
 
     switch (dhx2_changepw_status) {
     case 1:

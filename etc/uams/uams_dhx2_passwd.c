@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_passwd.c,v 1.1 2008-11-22 12:07:26 didg Exp $
+ * $Id: uams_dhx2_passwd.c,v 1.2 2008-11-24 20:15:55 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -165,26 +165,20 @@ error:
 static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
 		      char *rbuf, int *rbuflen)
 {
-    int i, ret;
-
-    unsigned int g_uint;
+    int ret;
+    size_t nwritten;
     gcry_mpi_t g, Ma;
     char *Ra_binary = NULL;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
-
-    const int g_len = 4;
-    size_t len;
-    size_t nwritten;
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
+
     *rbuflen = 0;
 
     /* Initialize passwd/shadow */
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
-        LOG(log_info, logtype_uams, "no shadow passwd entry for this user");
+        LOG(log_info, logtype_uams, "DHX2: no shadow passwd entry for this user");
         return AFPERR_NOTAUTH;
     }
     dhxpwd->pw_passwd = sp->sp_pwdp;
@@ -232,7 +226,7 @@ static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
     *rbuflen += 2;
 
     /* g is next */
-    gcry_mpi_print( GCRYMPI_FMT_USG, rbuf, 4, &nwritten, g);
+    gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten, g);
     if (nwritten < 4) {
 	memmove( rbuf+4-nwritten, rbuf, nwritten);
 	memset( rbuf, 0, 4-nwritten);
@@ -246,15 +240,15 @@ static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
     *rbuflen += 2;
 
     /* p */
-    gcry_mpi_print( GCRYMPI_FMT_USG, rbuf, PRIMEBITS/8, NULL, p);
+    gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, NULL, p);
     rbuf += PRIMEBITS/8;
     *rbuflen += PRIMEBITS/8;
 
     /* Ma */
-    gcry_mpi_print( GCRYMPI_FMT_USG, rbuf, PRIMEBITS/8, &len, Ma);
-    if (len < PRIMEBITS/8) {
-	memmove(rbuf + (PRIMEBITS/8) - len, rbuf, len);
-	memset(rbuf, 0, (PRIMEBITS/8) - len);
+    gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, &nwritten, Ma);
+    if (nwritten < PRIMEBITS/8) {
+	memmove(rbuf + (PRIMEBITS/8) - nwritten, rbuf, nwritten);
+	memset(rbuf, 0, (PRIMEBITS/8) - nwritten);
     }
     rbuf += PRIMEBITS/8;
     *rbuflen += PRIMEBITS/8;
@@ -359,16 +353,15 @@ static int logincont1(void *obj, struct passwd **uam_pwd,
                          char *ibuf, int ibuflen,
                          char *rbuf, int *rbuflen)
 {
-    u_int16_t retID;
     size_t nwritten;
     int ret;
-    *rbuflen = 0;
-
     gcry_mpi_t Mb, K, clientNonce;
-    char *K_bin = NULL;
+    unsigned char *K_bin = NULL;
     char serverNonce_bin[16];
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
+
+    *rbuflen = 0;
 
     Mb = gcry_mpi_new(0);
     K = gcry_mpi_new(0);
@@ -457,7 +450,7 @@ static int logincont1(void *obj, struct passwd **uam_pwd,
     *rbuflen += 2;
 
     /* Client nonce + 1 */
-    gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, PRIMEBITS/8, NULL, clientNonce);
+    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, NULL, clientNonce);
     /* Server nonce */
     memcpy(rbuf+16, serverNonce_bin, 16);
 
@@ -501,7 +494,6 @@ static int logincont2(void *obj, struct passwd **uam_pwd,
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
-    size_t nwritten;
     int ret;
     char *p;
     *rbuflen = 0;
@@ -637,7 +629,7 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx2 = {
 };
 
 
-UAM_MODULE_EXPORT struct uam_export uams_dhx2_pam = {
+UAM_MODULE_EXPORT struct uam_export uams_dhx2_passwd = {
     UAM_MODULE_SERVER,
     UAM_MODULE_VERSION,
     uam_setup, uam_cleanup
