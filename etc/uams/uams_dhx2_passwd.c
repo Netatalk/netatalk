@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_passwd.c,v 1.2 2008-11-24 20:15:55 didg Exp $
+ * $Id: uams_dhx2_passwd.c,v 1.3 2008-11-24 21:50:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -162,7 +162,7 @@ error:
     return result;
 }
 
-static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
+static int dhx2_setup(void *obj, char *ibuf _U_, int ibuflen _U_,
 		      char *rbuf, int *rbuflen)
 {
     int ret;
@@ -349,7 +349,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 /* -------------------------------- */
 
-static int logincont1(void *obj, struct passwd **uam_pwd,
+static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
                          char *ibuf, int ibuflen,
                          char *rbuf, int *rbuflen)
 {
@@ -487,20 +487,20 @@ exit:
     return ret;
 }
 
-static int logincont2(void *obj, struct passwd **uam_pwd,
+static int logincont2(void *obj _U_, struct passwd **uam_pwd,
 		      char *ibuf, int ibuflen,
-		      char *rbuf, int *rbuflen)
+		      char *rbuf _U_, int *rbuflen)
 {
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
     int ret;
     char *p;
-    *rbuflen = 0;
     gcry_mpi_t retServerNonce;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
 
+    *rbuflen = 0;
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer */
     if (ibuflen != 2 + 16 + 256) {
         LOG(log_error, logtype_uams, "DHX2: Paket length not correct");

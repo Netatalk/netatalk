@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.2 2008-11-24 20:15:55 didg Exp $
+ * $Id: uams_dhx2_pam.c,v 1.3 2008-11-24 21:50:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -253,7 +253,7 @@ static struct pam_conv PAM_conversation = {
 };
 
 
-static int dhx2_setup(void *obj, char *ibuf, int ibuflen _U_,
+static int dhx2_setup(void *obj, char *ibuf _U_, int ibuflen _U_,
 		      char *rbuf, int *rbuflen)
 {
     int ret;
@@ -424,7 +424,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 /* -------------------------------- */
 
-static int logincont1(void *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+static int logincont1(void *obj _U_, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
     int ret;
     size_t nwritten;
@@ -560,7 +560,7 @@ exit:
 
 static int logincont2(void *obj, struct passwd **uam_pwd,
 		      char *ibuf, int ibuflen,
-		      char *rbuf, int *rbuflen)
+		      char *rbuf _U_, int *rbuflen)
 {
     int ret;
     int PAM_error;
@@ -873,18 +873,18 @@ static int dhx2_changepw(void *obj _U_, char *uname,
     /* We use this to serialize the three incoming FPChangePassword calls */
     static int dhx2_changepw_status = 1;
 
-    int ret;
+    int ret = AFPERR_NOTAUTH;  /* gcc can't figure out it's always initialized */
 
     switch (dhx2_changepw_status) {
     case 1:
 	ret = changepw_1( obj, uname, ibuf, ibuflen, rbuf, rbuflen);
 	if ( ret == AFPERR_AUTHCONT)
-	    dhx2_changepw_status += 1;
+	    dhx2_changepw_status = 2;
 	break;
     case 2:
 	ret = changepw_2( obj, ibuf, ibuflen, rbuf, rbuflen);
         if ( ret == AFPERR_AUTHCONT)
-            dhx2_changepw_status += 1;
+            dhx2_changepw_status = 3;
 	else
 	    dhx2_changepw_status = 1;
 	break;
