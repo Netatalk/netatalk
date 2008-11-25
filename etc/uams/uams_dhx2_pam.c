@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.3 2008-11-24 21:50:02 didg Exp $
+ * $Id: uams_dhx2_pam.c,v 1.4 2008-11-25 17:13:23 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -433,6 +433,8 @@ static int logincont1(void *obj _U_, char *ibuf, int ibuflen, char *rbuf, int *r
     char serverNonce_bin[16];
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
+
+    *rbuflen = 0;
 
     Mb = gcry_mpi_new(0);
     K = gcry_mpi_new(0);
