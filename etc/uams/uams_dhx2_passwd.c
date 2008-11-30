@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_passwd.c,v 1.3 2008-11-24 21:50:02 didg Exp $
+ * $Id: uams_dhx2_passwd.c,v 1.4 2008-11-30 17:36:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -77,7 +77,7 @@ static struct passwd *dhxpwd;
 
 /*********************************************************
  * Crypto helper func to generate p and g for use in DH.
- * libgcrpyt doesn't provide one directly.
+ * libgcrypt doesn't provide one directly.
  * Algorithm taken from GNUTLS:gnutls_dh_primes.c 
  *********************************************************/
 

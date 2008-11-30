@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.206 2008-11-22 12:07:26 didg Exp $
+dnl $Id: configure.in,v 1.207 2008-11-30 17:36:08 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -920,7 +920,12 @@ if test x"$this_os" = "xtru64"; then
 fi
 
 dnl -- check for libgcrypt, if found enables DHX UAM
-NETATALK_CHECK_LIBGCRYPT
+AM_PATH_LIBGCRYPT([1:1.2.3],[neta_cv_compile_dhx2=yes
+			neta_cv_have_libgcrypt=yes
+			AC_MSG_NOTICE([Enabling DHX2 UAM])
+			AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if the DHX2 modules should be built with libgcrypt])
+			AC_DEFINE(UAM_DHX2, 1, [Define if the DHX2 UAM modules should be compiled])
+			])
 
 dnl -- look for openssl, if found enables DHX UAM and Randnum UAM
 AC_PATH_SSL
