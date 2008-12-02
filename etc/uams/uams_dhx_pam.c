@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.26 2008-12-02 18:24:55 morgana Exp $
+ * $Id: uams_dhx_pam.c,v 1.27 2008-12-02 18:26:33 morgana Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -192,12 +192,6 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen _U_,
     int i;
     BIGNUM *bn, *gbn, *pbn;
     DH *dh;
-
-    /* TODO: seed dhx_setup properly... this is a hack */
-#ifdef sun
-    	/* *SEVERE* hack... fix */
-	RAND_load_file("/var/adm/messages", KEYSIZE);
-#endif /* sun */
 
     /* get the client's public key */
     if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
