@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.15 2008-11-14 10:29:08 didg Exp $
+ * $Id: config.c,v 1.16 2008-12-02 18:18:06 morgana Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -832,8 +832,9 @@ struct interface *newiface( name )
 int plumb()
 {
     struct interface	*iface;
-    char		device[ MAXPATHLEN + 1], *p;
+    char		device[ MAXPATHLEN + 1], *p, *t;
     int			fd, ppa;
+    int			digits = 0;
 
     for ( iface = interfaces; iface != NULL; iface = iface->i_next ) {
 	if ( strcmp( iface->i_name, LOOPIFACE ) == 0 ) {
@@ -842,7 +843,16 @@ int plumb()
 
 	strcpy( device, "/dev/" );
 	strcat( device, iface->i_name );
-	if (( p = strpbrk( device, "0123456789" )) == NULL ) {
+	for (t = device; *t != '\0' ; ++t) {
+	    if (isdigit(*t) == 0) {
+		p = t + 1;
+	    }
+	    else {
+		digits++;
+	    }
+	}
+
+	if (digits == 0) {
 	    LOG(log_error, logtype_atalkd, "plumb: invalid device: %s", device );
 	    return -1;
 	}
