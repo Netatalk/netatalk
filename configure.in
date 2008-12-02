@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.207 2008-11-30 17:36:08 didg Exp $
+dnl $Id: configure.in,v 1.208 2008-12-02 18:22:01 morgana Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -379,19 +379,6 @@ AC_ARG_ENABLE(force-uidgid,
 dnl Check for CNID database backends
 bdb_required=no
 AC_NETATALK_CNID([bdb_required=yes],[bdb_required=no])
-
-dnl Check for Berkeley DB library
-if test "x$bdb_required" = "xyes"; then
-	AC_PATH_BDB(, [
-		AC_MSG_RESULT([])
-		AC_MSG_RESULT([Make sure you have the required Berkeley DB libraries AND headers installed.])
-		AC_MSG_RESULT([You can download the latest version from http://www.sleepycat.com.])
-		AC_MSG_RESULT([If you have installed BDB in a non standard location use the])
-		AC_MSG_RESULT([--with-bdb=/path/to/bdb configure option and make sure])
-		AC_MSG_RESULT([your linker is configured to check for libraries there.])
-		AC_MSG_ERROR([Berkeley DB library required but not found!])
-	])
-fi
 
 dnl Check for quota support
 AC_CHECK_QUOTA
@@ -929,6 +916,19 @@ AM_PATH_LIBGCRYPT([1:1.2.3],[neta_cv_compile_dhx2=yes
 
 dnl -- look for openssl, if found enables DHX UAM and Randnum UAM
 AC_PATH_SSL
+
+dnl Check for Berkeley DB library
+if test "x$bdb_required" = "xyes"; then
+	AC_PATH_BDB(, [
+		AC_MSG_RESULT([])
+		AC_MSG_RESULT([Make sure you have the required Berkeley DB libraries AND headers installed.])
+		AC_MSG_RESULT([You can download the latest version from http://www.sleepycat.com.])
+		AC_MSG_RESULT([If you have installed BDB in a non standard location use the])
+		AC_MSG_RESULT([--with-bdb=/path/to/bdb configure option and make sure])
+		AC_MSG_RESULT([your linker is configured to check for libraries there.])
+		AC_MSG_ERROR([Berkeley DB library required but not found!])
+	])
+fi
 
 dnl -- check for crypt
 AC_CRYPT

@@ -1,4 +1,4 @@
-dnl $Id: db3-check.m4,v 1.14 2006-09-09 03:52:41 didg Exp $
+dnl $Id: db3-check.m4,v 1.15 2008-12-02 18:22:01 morgana Exp $
 dnl Autoconf macros to check for the Berkeley DB library
 
 
@@ -207,11 +207,17 @@ dnl			  bdbbindir="`echo $bdbdir | sed 's/include\/db4\.*.*/bin/'`"
 			  CPPFLAGS="-I${bdbdir}${subdir} $CFLAGS"
 			  CFLAGS=""
 			  LDFLAGS="-L$bdblibdir $LDFLAGS"
+			  if test "x$need_dash_r" = "xyes"; then
+				LDFLAGS="$LDFLAGS -R${bdblibdir}"
+			  fi
 			  NETATALK_BERKELEY_LINK
 			  if test x"${atalk_cv_lib_db}" != x"no"; then
 				NETATALK_BDB_CHECK_VERSION
 				if test x"${atalk_cv_bdb_version}" != x"no"; then
 				    BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
+				    if test "x$need_dash_r" = "xyes"; then
+					BDB_LIBS="$BDB_LIBS -R${bdblibdir}"
+				    fi
 				    BDB_CFLAGS="-I${bdbdir}${subdir}"
                                     BDB_BIN=$bdbbindir
                                     BDB_PATH="`echo $bdbdir | sed 's,include\/db4$,,'`"
