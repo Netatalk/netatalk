@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.25 2005-04-28 20:49:50 bfernhomberg Exp $
+ * $Id: uams_dhx_pam.c,v 1.26 2008-12-02 18:24:55 morgana Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -243,12 +243,22 @@ static int dhx_setup(void *obj, char *ibuf, int ibuflen _U_,
     /* generate key and make sure that we have enough space */
     dh->p = pbn;
     dh->g = gbn;
-    if (!DH_generate_key(dh) || (BN_num_bytes(dh->pub_key) > KEYSIZE)) {
-    /* Log Entry */
-           LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Err Generating Key -- Not enough Space? -- %s",
-		  strerror(errno));
-    /* Log Entry */
-    goto pam_fail;
+    if (DH_generate_key(dh) == 0) {
+	unsigned long dherror;
+	char errbuf[256];
+
+	ERR_load_crypto_strings();
+	dherror = ERR_get_error();
+	ERR_error_string_n(dherror, errbuf, 256);
+
+	LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Err Generating Key (OpenSSL error code: %u, %s)", dherror, errbuf);
+
+	ERR_free_strings();
+	goto pam_fail;
+    }
+    if (BN_num_bytes(dh->pub_key) > KEYSIZE) {
+	LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Err Generating Key -- Not enough Space? -- %s", strerror(errno));
+	goto pam_fail;
     }
 
     /* figure out the key. store the key in rbuf for now. */
