@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.22 2008-09-01 15:18:37 didg Exp $
+ * $Id: directory.h,v 1.23 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -71,7 +71,7 @@ struct path {
 };
 
 #ifndef ATACC
-static __inline__ int path_isadir(struct path *o_path)
+static inline int path_isadir(struct path *o_path)
 {
     return o_path->d_dir != NULL;
 #if 0

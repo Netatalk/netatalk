@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.3 2005-05-03 14:55:12 didg Exp $
+ * $Id: cnid.c,v 1.4 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -98,8 +98,8 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
     struct _cnid_db *db;
     cnid_module *mod = NULL;
     struct list_head *ptr;
-    uid_t uid;  /* uninitialized, OK 310105 */
-    gid_t gid;
+    uid_t uid = -1;  
+    gid_t gid = -1;
     
     list_for_each(ptr, &modules) {
         if (0 == strcmp(list_entry(ptr, cnid_module, db_list)->name, type)) {

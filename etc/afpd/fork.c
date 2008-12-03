@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.56 2006-09-29 09:39:16 didg Exp $
+ * $Id: fork.c,v 1.57 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -161,7 +161,7 @@ static int is_neg(int is64, off_t val)
     return 0;
 }
 
-static __inline__ int sum_neg(int is64, off_t offset, off_t reqcount) 
+static int sum_neg(int is64, off_t offset, off_t reqcount) 
 {
     if (is_neg(is64, offset +reqcount) ) 
    	return 1;
@@ -774,7 +774,7 @@ int	ibuflen, *rbuflen;
 #undef UNLOCKBIT
 
 /* --------------------------- */
-static __inline__ int crlf( of )
+static int crlf( of )
 struct ofork	*of;
 {
     struct extmap	*em;
@@ -794,7 +794,7 @@ struct ofork	*of;
 }
 
 
-static __inline__ ssize_t read_file(struct ofork *ofork, int eid,
+static ssize_t read_file(struct ofork *ofork, int eid,
                                     off_t offset, u_char nlmask,
                                     u_char nlchar, char *rbuf,
                                     int *rbuflen, const int xlate)
@@ -1166,7 +1166,7 @@ int	ibuflen _U_, *rbuflen;
 }
 
 
-static __inline__ ssize_t write_file(struct ofork *ofork, int eid,
+static ssize_t write_file(struct ofork *ofork, int eid,
                                      off_t offset, char *rbuf,
                                      size_t rbuflen, const int xlate)
 {

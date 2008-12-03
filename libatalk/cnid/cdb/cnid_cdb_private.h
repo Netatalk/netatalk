@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_private.h,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_cdb_private.h,v 1.4 2008-12-03 18:35:44 didg Exp $
  */
 
 #ifndef LIBATALK_CDB_PRIVATE_H
@@ -168,64 +168,8 @@ typedef struct CNID_private {
  * name namelen = strlen(name) + 1 
  */
 
-#ifndef __inline__
-#define __inline__
-#endif /* __inline__ */
-
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
-#ifndef ATACC
-static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
-{
-    buf[CNID_DEV_LEN - 1] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 2] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 3] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 4] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 5] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 6] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 7] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 8] = dev;
-
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 1] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 2] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 3] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 4] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 5] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 6] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 7] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
-}
-
-static __inline__ unsigned char *make_cnid_data(const struct stat *st,
-                                       const cnid_t did,
-                                       const char *name, const size_t len)
-{
-    static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    unsigned char *buf = start  +CNID_LEN;
-    u_int32_t i;
-
-    if (len > MAXPATHLEN)
-        return NULL;
-
-    make_devino_data(buf, st->st_dev, st->st_ino);
-    buf += CNID_DEVINO_LEN;
-
-    i = S_ISDIR(st->st_mode)?1:0;
-    i = htonl(i);
-    memcpy(buf, &i, sizeof(i));
-    buf += sizeof(i);
-    
-    /* did is already in network byte order */
-    memcpy(buf, &did, sizeof(did));
-    buf += sizeof(did);
-
-    memcpy(buf, name, len);
-    *(buf + len) = '\0';
-
-    return start;
-}
-#else
 extern unsigned char *make_cnid_data __P((const struct stat *,const cnid_t ,
                                        const char *, const size_t ));
-#endif
 
 #endif /* atalk/cnid/cnid_private.h */

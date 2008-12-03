@@ -4,11 +4,6 @@
 #ifndef _ATALK_LIST_H
 #define _ATALK_LIST_H
 
-/* test for inline */
-#ifndef __inline__
-#define __inline__
-#endif
-
 /*
  * Simple doubly linked list implementation.
  *
@@ -39,7 +34,7 @@ struct list_head {
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static __inline__ void __list_add(struct list_head * new,
+static inline void __list_add(struct list_head * new,
                                   struct list_head * prev,
                                   struct list_head * next)
 {
@@ -57,7 +52,7 @@ static __inline__ void __list_add(struct list_head * new,
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
-static __inline__ void list_add(struct list_head *new, struct list_head *head)
+static inline void list_add(struct list_head *new, struct list_head *head)
 {
     __list_add(new, head, head->next);
 }
@@ -70,7 +65,7 @@ static __inline__ void list_add(struct list_head *new, struct list_head *head)
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
-static __inline__ void list_add_tail(struct list_head *new, struct list_head *head)
+static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
     __list_add(new, head->prev, head);
 }
@@ -82,7 +77,7 @@ static __inline__ void list_add_tail(struct list_head *new, struct list_head *he
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static __inline__ void __list_del(struct list_head * prev,
+static inline void __list_del(struct list_head * prev,
                                   struct list_head * next)
 {
     next->prev = prev;
@@ -94,7 +89,7 @@ static __inline__ void __list_del(struct list_head * prev,
  * @entry: the element to delete from the list.
  * Note: list_empty on entry does not return true after this, the entry is in an undefined state.
  */
-static __inline__ void list_del(struct list_head *entry)
+static inline void list_del(struct list_head *entry)
 {
     __list_del(entry->prev, entry->next);
 }
@@ -103,7 +98,7 @@ static __inline__ void list_del(struct list_head *entry)
  * list_del_init - deletes entry from list and reinitialize it.
  * @entry: the element to delete from the list.
  */
-static __inline__ void list_del_init(struct list_head *entry)
+static inline void list_del_init(struct list_head *entry)
 {
     __list_del(entry->prev, entry->next);
     ATALK_INIT_LIST_HEAD(entry);
@@ -113,7 +108,7 @@ static __inline__ void list_del_init(struct list_head *entry)
  * list_empty - tests whether a list is empty
  * @head: the list to test.
  */
-static __inline__ int list_empty(struct list_head *head)
+static inline int list_empty(struct list_head *head)
 {
     return head->next == head;
 }
@@ -123,7 +118,7 @@ static __inline__ int list_empty(struct list_head *head)
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static __inline__ void list_splice(struct list_head *list, struct list_head *head)
+static inline void list_splice(struct list_head *list, struct list_head *head)
 {
     struct list_head *first = list->next;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.15 2005-04-28 20:49:40 bfernhomberg Exp $
+ * $Id: appl.c,v 1.16 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,7 +29,7 @@
 
 static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0, 0};
 
-static __inline__ int pathcmp( p, plen, q, qlen )
+static int pathcmp( p, plen, q, qlen )
 char	*p;
 int	plen;
 char	*q;

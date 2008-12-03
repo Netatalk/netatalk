@@ -14,7 +14,7 @@
 #include <netatalk/endian.h>
 #include <atalk/cnid.h>
 
-static __inline__ int db3_txn_abort(DB_TXN *db_txn)
+static int db3_txn_abort(DB_TXN *db_txn)
 {
     int ret;
 #if DB_VERSION_MAJOR >= 4
@@ -26,7 +26,7 @@ static __inline__ int db3_txn_abort(DB_TXN *db_txn)
 }
 
 /* -------------------- */
-static __inline__ int db3_txn_begin(DB_ENV *db_env, DB_TXN *parent, DB_TXN **db_txn, u_int32_t flags)
+static int db3_txn_begin(DB_ENV *db_env, DB_TXN *parent, DB_TXN **db_txn, u_int32_t flags)
 {
     int ret;
 #if DB_VERSION_MAJOR >= 4
@@ -38,7 +38,7 @@ static __inline__ int db3_txn_begin(DB_ENV *db_env, DB_TXN *parent, DB_TXN **db_
 }
             
 /* -------------------- */
-static __inline__ int db3_txn_commit(DB_TXN *db_txn, u_int32_t flags)
+static int db3_txn_commit(DB_TXN *db_txn, u_int32_t flags)
 {
     int ret;
 #if DB_VERSION_MAJOR >= 4

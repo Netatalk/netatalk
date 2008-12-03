@@ -88,7 +88,7 @@ extern int cnid_tdb_delete __P((struct _cnid_db *, const cnid_t));
 extern cnid_t cnid_tdb_nextid __P((struct _cnid_db *));
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
-static __inline__ char *make_tdb_data(const struct stat *st,
+static inline char *make_tdb_data(const struct stat *st,
                                        const cnid_t did,
                                        const char *name, const size_t len)
 {

@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.13 2006-09-29 09:39:16 didg Exp $
+ * $Id: ad_lock.c,v 1.14 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -67,7 +67,7 @@ static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
 #define ARRAY_FREE_DELTA 100
 
 /* remove a lock and compact space if necessary */
-static __inline__ void adf_freelock(struct ad_fd *ad, const int i)
+static void adf_freelock(struct ad_fd *ad, const int i)
 {
     adf_lock_t *lock = ad->adf_lock + i;
 
@@ -111,7 +111,7 @@ static __inline__ void adf_freelock(struct ad_fd *ad, const int i)
  * i converted to using arrays of locks. everytime a lock
  * gets removed, we shift all of the locks down.
  */
-static __inline__ void adf_unlock(struct ad_fd *ad, const int user)
+static void adf_unlock(struct ad_fd *ad, const int user)
 {
     adf_lock_t *lock = ad->adf_lock;
     int i;
@@ -128,7 +128,7 @@ static __inline__ void adf_unlock(struct ad_fd *ad, const int user)
 
 /* relock any byte lock that overlaps off/len. unlock everything
  * else. */
-static __inline__ void adf_relockrange(struct ad_fd *ad, int fd,
+static void adf_relockrange(struct ad_fd *ad, int fd,
 				       const off_t off, const off_t len)
 {
     adf_lock_t *lock = ad->adf_lock;
@@ -142,7 +142,7 @@ static __inline__ void adf_relockrange(struct ad_fd *ad, int fd,
 
 
 /* find a byte lock that overlaps off/len for a particular user */
-static __inline__ int adf_findlock(struct ad_fd *ad,
+static int adf_findlock(struct ad_fd *ad,
 				   const int user, const int type,
 				   const off_t off,
 				   const off_t len)
@@ -164,7 +164,7 @@ static __inline__ int adf_findlock(struct ad_fd *ad,
 
 
 /* search other user lock lists */
-static __inline__  int adf_findxlock(struct ad_fd *ad, 
+static int adf_findxlock(struct ad_fd *ad, 
 				     const int user, const int type,
 				     const off_t off,
 				     const off_t len)

@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.9 2005-04-28 20:50:05 bfernhomberg Exp $
+ * $Id: server_child.c,v 1.10 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -51,10 +51,6 @@
 
 #include <atalk/server_child.h>
 
-#ifndef __inline__
-#define __inline__
-#endif /* ! __inline__ */
-
 /* hash/child functions: hash OR's pid */
 #define CHILD_HASHSIZE 32
 #define HASH(i) ((((i) >> 8) ^ (i)) & (CHILD_HASHSIZE - 1))
@@ -77,7 +73,7 @@ typedef struct server_child_fork {
 } server_child_fork;
 
  
-static __inline__ void hash_child(struct server_child_data **htable,
+static inline void hash_child(struct server_child_data **htable,
 				  struct server_child_data *child)
 {
   struct server_child_data **table;
@@ -89,7 +85,7 @@ static __inline__ void hash_child(struct server_child_data **htable,
   child->prevp = table;
 }
 
-static __inline__ void unhash_child(struct server_child_data *child)
+static inline void unhash_child(struct server_child_data *child)
 {
   if (child->prevp) {
     if (child->next)
@@ -98,7 +94,7 @@ static __inline__ void unhash_child(struct server_child_data *child)
   }
 }
 
-static __inline__ struct server_child_data 
+static inline struct server_child_data 
 *resolve_child(struct server_child_data **table, const pid_t pid)
 {
   struct server_child_data *child;

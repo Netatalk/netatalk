@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.17 2005-05-03 14:55:11 didg Exp $
+ * $Id: uams_randnum.c,v 1.18 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -53,10 +53,6 @@ char *strchr (), *strrchr ();
 #include <crack.h>
 #endif /* USE_CRACKLIB */
 
-#ifndef __inline__
-#define __inline__
-#endif /* __inline__ */
-
 #define PASSWDLEN 8
 
 static C_Block		seskey;
@@ -71,7 +67,7 @@ static u_int8_t         randbuf[8];
 
 
 /* handle ~/.passwd. courtesy of shirsch@ibm.net. */
-static  __inline__ int home_passwd(const struct passwd *pwd, 
+static  int home_passwd(const struct passwd *pwd, 
 				   const char *path, const int pathlen _U_, 
 				   unsigned char *passwd, const int len,
 				   const int set)

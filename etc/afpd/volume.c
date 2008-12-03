@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.72 2008-09-01 15:18:38 didg Exp $
+ * $Id: volume.c,v 1.73 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -189,7 +189,7 @@ static void handle_special_folders (const struct vol *);
 static int savevoloptions (const struct vol *);
 static void deletevol(struct vol *vol);
 
-static __inline__ void volfree(struct vol_option *options,
+static void volfree(struct vol_option *options,
                                const struct vol_option *save)
 {
     int i;

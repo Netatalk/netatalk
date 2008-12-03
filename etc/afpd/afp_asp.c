@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.22 2005-04-28 20:49:39 bfernhomberg Exp $
+ * $Id: afp_asp.c,v 1.23 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -47,9 +47,9 @@ extern struct oforks	*writtenfork;
 
 static AFPObj *child;
 
-static __inline__ void afp_authprint_remove(AFPObj *);
+static void afp_authprint_remove(AFPObj *);
 
-static __inline__ void afp_asp_close(AFPObj *obj)
+static void afp_asp_close(AFPObj *obj)
 {
     ASP asp = obj->handle;
 
@@ -65,7 +65,7 @@ static __inline__ void afp_asp_close(AFPObj *obj)
 }
 
 /* removes the authprint trailing when appropriate */
-static __inline__ void afp_authprint_remove(AFPObj *obj)
+static void afp_authprint_remove(AFPObj *obj)
 {
     ASP asp = obj->handle;
     char addr_filename[256];

@@ -1,5 +1,5 @@
 /*
- * $Id: uams_krb4.c,v 1.8 2008-11-14 10:29:08 didg Exp $
+ * $Id: uams_krb4.c,v 1.9 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -86,7 +86,7 @@ struct ClearToken {
 
 #ifdef KRB
 
-static __inline__ void lcase( p )
+static void lcase( p )
     char	*p;
 {
     for (; *p; p++ ) {
@@ -97,7 +97,7 @@ static __inline__ void lcase( p )
     return;
 }
 
-static __inline__ void ucase( p )
+static void ucase( p )
     char	*p;
 {
     for (; *p; p++ ) {

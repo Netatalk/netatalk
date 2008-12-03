@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_add.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_cdb_add.c,v 1.4 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -16,9 +16,12 @@
 #ifdef CNID_BACKEND_CDB
 #include "cnid_cdb_private.h"
 
+extern int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
+                const cnid_t did, char *name, const size_t len);
+
+
 #define tid    NULL
 
-#ifdef ATACC
 static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
 {
     buf[CNID_DEV_LEN - 1] = dev; dev >>= 8;
@@ -67,10 +70,6 @@ unsigned char *make_cnid_data(const struct stat *st,const cnid_t did,
 
     return start;
 }    
-#endif
-
-extern int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const size_t len);
 
 /* --------------- */
 int db_stamp(void *buffer, size_t size)

@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.10 2005-09-28 09:46:37 didg Exp $
+ * $Id: fork.h,v 1.11 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,6 +22,7 @@ struct file_key {
 };
 
 struct ofork {
+    struct file_key     key;
     struct adouble	*of_ad;
     struct vol          *of_vol;
     struct dir		*of_dir;
@@ -29,7 +30,6 @@ struct ofork {
     u_int16_t           of_refnum;
     int                 of_flags;
 
-    struct file_key     key;
     struct ofork        **prevp, *next;
     struct ofork        *of_d_prev, *of_d_next;
 };

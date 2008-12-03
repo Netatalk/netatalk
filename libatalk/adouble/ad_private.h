@@ -1,5 +1,5 @@
 /*
- * $Id: ad_private.h,v 1.5 2003-01-31 11:26:36 didg Exp $
+ * $Id: ad_private.h,v 1.6 2008-12-03 18:35:44 didg Exp $
  */
 
 #ifndef LIBATALK_ADOUBLE_AD_PRIVATE_H
@@ -10,10 +10,6 @@
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *) -1)
 #endif /* ! MAP_FAILED */
-
-#ifndef __inline__
-#define __inline__
-#endif /* ! __inline__ */
 
 /* this is so that we can keep lists of fds referencing the same file
  * around. that way, we can honor locks created by the same process

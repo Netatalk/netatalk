@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.87 2008-09-01 15:18:36 didg Exp $
+ * $Id: directory.c,v 1.88 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -439,9 +439,7 @@ static void dir_hash_del(const struct vol *vol, struct dir *dir)
 /* remove the node from the tree. this is just like insertion, but
  * different. actually, it has to worry about a bunch of things that
  * insertion doesn't care about. */
-static void dir_remove( vol, dir )
-struct vol	*vol;
-struct dir	*dir;
+static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
 {
 #ifdef REMOVE_NODES
     struct ofork *of, *last;
@@ -2146,8 +2144,8 @@ setdirparam_done:
 
 
 int afp_syncdir(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char    *ibuf, *rbuf;
+AFPObj  *obj _U_;
+char    *ibuf, *rbuf _U_;
 int     ibuflen _U_, *rbuflen;
 {
     DIR                  *dp;

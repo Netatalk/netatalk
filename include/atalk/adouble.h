@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.32 2006-09-29 09:44:59 didg Exp $
+ * $Id: adouble.h,v 1.33 2008-12-03 18:35:44 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -468,10 +468,7 @@ extern int ad_metadata    __P((const char *, int, struct adouble *));
  * remove X mode and extend header to RW if R or W (W if R for locking),
  */ 
 #ifndef ATACC
-#ifndef __inline__
-#define __inline__
-#endif
-static __inline__ mode_t ad_hf_mode (mode_t mode)
+static inline mode_t ad_hf_mode (mode_t mode)
 {
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
     /* fnctl lock need write access */

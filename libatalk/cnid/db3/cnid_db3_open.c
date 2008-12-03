@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_db3_open.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_db3_open.c,v 1.4 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -147,7 +147,7 @@ static int my_open(DB * p, const char *f, const char *d, DBTYPE t, u_int32_t fla
 */
 
 /* the first compare that's always done. */
-static __inline__ int compare_did(const DBT * a, const DBT * b)
+static int compare_did(const DBT * a, const DBT * b)
 {
     u_int32_t dida, didb;
 

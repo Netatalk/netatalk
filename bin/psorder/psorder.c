@@ -1,5 +1,5 @@
 /*
- * $Id: psorder.c,v 1.5 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: psorder.c,v 1.6 2008-12-03 18:35:44 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -151,7 +151,7 @@ filesetup( inputfile, infd, tfile, tfd )
 	make temporary file
  */
 
-    (void *)strncpy( tfile, template, MAXNAMLEN );
+    strncpy( tfile, template, MAXNAMLEN );
     if (( *tfd = mkstemp( tfile )) == -1 ) {
 	fprintf( stderr, "can't create temporary file %s\n", tfile );
 	filecleanup( -1, -1, "" );
