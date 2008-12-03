@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.28 2008-12-03 19:15:06 didg Exp $
+ * $Id: uams_dhx_pam.c,v 1.29 2008-12-03 19:31:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -34,10 +34,12 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/cast.h>
+#include <openssl/err.h>
 #else /* OPENSSL_DHX */
 #include <bn.h>
 #include <dh.h>
 #include <cast.h>
+#include <err.h>
 #endif /* OPENSSL_DHX */
 
 #include <atalk/afp.h>
