@@ -65,12 +65,13 @@ if test x$libgcrypt_config_prefix != xno ; then
 	   fi
 	fi
   fi
-fi
   if test $ok = yes; then
     AC_MSG_RESULT([yes ($libgcrypt_config_version)])
   else
     AC_MSG_RESULT(no)
   fi
+fi
+
   if test $ok = yes; then
      # If we have a recent libgcrypt, we should also check that the
      # API is compatible
