@@ -36,6 +36,8 @@ tpi_getinfo( dev_info_t *dip, ddi_info_cmd_t cmd, void *arg, void **resultp )
     return( DDI_FAILURE );
 }
 
+/* Solaris 10 removed DDI_IDENTIFIED and replaced "identify" with "nulldev" */
+#ifdef DDI_IDENTIFIED
     static int
 tpi_identify( dev_info_t *dip )
 {
@@ -49,6 +51,7 @@ tpi_identify( dev_info_t *dip )
 	return( DDI_NOT_IDENTIFIED );
     }
 }
+#endif /* DDI_IDENTIFIED */
 
     static int
 tpi_attach( dev_info_t *dip, ddi_attach_cmd_t cmd )
@@ -463,7 +466,7 @@ cmn_err( CE_CONT, "tpi_wput T_UNITDATA_REQ mblk size %X %X\n", m->b_rptr + tl->u
 	}
 	cp = (struct copyresp *)m->b_rptr;
 	if ( cp->cp_rval != 0 ) {
-	    cmn_err( CE_CONT, "tpi_wput IOCDATA failed %d\n", cp->cp_rval );
+	    cmn_err( CE_CONT, "tpi_wput IOCDATA failed %s\n", cp->cp_rval );
 	    freemsg( m );
 	    break;
 	}
@@ -701,7 +704,11 @@ static struct dev_ops		tpi_devops = {
     DEVO_REV,
     0,
     tpi_getinfo,
+#ifdef DDI_IDENTIFIED
     tpi_identify,
+#else
+    nulldev,
+#endif
     nulldev,
     tpi_attach,
     tpi_detach,
