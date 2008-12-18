@@ -78,7 +78,7 @@ fi
      if test "$req_libgcrypt_api" -gt 0 ; then
         tmp=`$LIBGCRYPT_CONFIG --api-version 2>/dev/null || echo 0`
         if test "$tmp" -gt 0 ; then
-           AC_MSG_CHECKING([LIBGCRYPT API version])
+           AC_MSG_CHECKING([libgcrypt API version])
            if test "$req_libgcrypt_api" -eq "$tmp" ; then
              AC_MSG_RESULT([okay])
            else
@@ -88,6 +88,22 @@ fi
         fi
      fi
   fi
+  if test $ok = yes; then
+     # Opensolaris 11/08 provided libgcrypt doesn't have CAST5,
+     # so we better check the general case
+      AC_MSG_CHECKING([libgcrypt hast CAST5 API])
+      cast=`$LIBGCRYPT_CONFIG --algorithms 2>/dev/null | grep cast5 | sed 's/\(.*\)\(cast5\)\(.*\)/\2/'`
+      if test x$cast = xcast5 ; then
+        AC_MSG_RESULT([yes])
+      else
+        AC_MSG_RESULT([no])
+        echo "***          Detected libgcryt without CAST5              ***"
+        echo "*** Please install/build another one and point to it with ***"
+        echo "***         --with-libgcrypt-dir=<path-to-lib>            ***"
+        ok=no
+      fi
+  fi
+
   if test $ok = yes; then
     LIBGCRYPT_CFLAGS=`$LIBGCRYPT_CONFIG --cflags`
     LIBGCRYPT_LIBS=`$LIBGCRYPT_CONFIG --libs`
