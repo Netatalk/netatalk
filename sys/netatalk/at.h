@@ -1,5 +1,5 @@
 /*
- * $Id: at.h,v 1.5 2005-04-28 20:50:07 bfernhomberg Exp $
+ * $Id: at.h,v 1.6 2008-12-18 17:31:31 morgana Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  *
@@ -42,8 +42,12 @@
  * These should really be in some global header file, but we can't
  * count on them being there, and it's annoying to patch system files.
  */
+#ifndef ETHERTYPE_AT
 #define ETHERTYPE_AT	0x809B		/* AppleTalk protocol */
+#endif
+#ifndef ETHERTYPE_AARP
 #define ETHERTYPE_AARP	0x80F3		/* AppleTalk ARP */
+#endif
 
 #define DDP_MAXSZ	587
 
