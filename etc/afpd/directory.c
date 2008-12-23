@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.88 2008-12-03 18:35:44 didg Exp $
+ * $Id: directory.c,v 1.89 2008-12-23 07:51:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2185,7 +2185,8 @@ int     ibuflen _U_, *rbuflen;
     if ( fsync ( dfd ) < 0 ) {
         LOG(log_error, logtype_afpd, "syncdir(%s): ddir(%d) %s", dir->d_u_name, dfd, strerror(errno) );
     }
-   
+    closedir(dp);
+    
     return ( AFP_OK );
 }
 
