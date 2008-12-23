@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.208 2008-12-02 18:22:01 morgana Exp $
+dnl $Id: configure.in,v 1.209 2008-12-23 07:37:44 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1034,6 +1034,7 @@ AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
 AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
+AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 
 dnl --------------------- generate files
 

@@ -3,12 +3,12 @@
 EXTRA_DIST = cnid_maint.in cnid2_create.in
 INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/sys
 
-#if COMPILE_CNID
+if USE_BDB
 bin_SCRIPTS = cnid_maint cnid2_create
 bin_PROGRAMS = cnid_index
-#else
+else
 #bin_SCRIPTS = 
-#endif
+endif
 
 cnid_index_SOURCES = cnid_index.c 
 
