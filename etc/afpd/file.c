@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.107 2008-12-03 18:35:44 didg Exp $
+ * $Id: file.c,v 1.108 2008-12-23 08:27:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1861,8 +1861,10 @@ retry:
     }
 
     /* directories are bad */
-    if (S_ISDIR(path.st.st_mode))
-        return AFPERR_BADTYPE;
+    if (S_ISDIR(path.st.st_mode)) {
+        /* OS9 and OSX don't return the same error code  */
+        return (afp_version >=30)?AFPERR_NOID:AFPERR_BADTYPE;
+    }
 
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
