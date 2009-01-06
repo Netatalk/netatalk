@@ -1,7 +1,7 @@
 # Solaris specific defines, passed to subdirectories.
 # To use Sun CC, uncomment the CC and KFLAGS variables.
 #
-# $Id: Makefile.in,v 1.3 2008-12-20 00:18:34 morgana Exp $
+# $Id: Makefile.in,v 1.4 2009-01-06 20:00:59 morgana Exp $
 # This Makefile.in is not automake generated
 # copy and paste from automake Makefile.in
 srcdir = @srcdir@
@@ -153,6 +153,8 @@ maintainer-clean: distclean
 depend :
 
 check:
+
+tags:
 
 # DO NOT DELETE THIS LINE
 
