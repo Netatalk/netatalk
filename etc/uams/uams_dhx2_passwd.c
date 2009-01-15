@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_passwd.c,v 1.4 2008-11-30 17:36:08 didg Exp $
+ * $Id: uams_dhx2_passwd.c,v 1.5 2009-01-15 04:16:32 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -501,9 +501,9 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     gcry_error_t ctxerror;
 
     *rbuflen = 0;
-    /* Packet size should be: Session ID + ServerNonce + Passwd buffer */
-    if (ibuflen != 2 + 16 + 256) {
-        LOG(log_error, logtype_uams, "DHX2: Paket length not correct");
+    /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs)*/
+    if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
+        LOG(log_error, logtype_uams, "DHX2: Paket length not correct: %d. Should be 274 or 284.", ibuflen);
         ret = AFPERR_PARAM;
         goto error_noctx;
     }
