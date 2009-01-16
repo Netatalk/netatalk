@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.23 2005-04-28 20:49:39 bfernhomberg Exp $
+ * $Id: afp_config.c,v 1.24 2009-01-16 18:45:26 morgana Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -534,6 +534,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
 {
     FILE *fp;
     char buf[LINESIZE + 1], *p, have_option = 0;
+    size_t len;
     struct afp_options options;
     AFPConfig *config=NULL, *first = NULL; 
 
@@ -549,9 +550,16 @@ AFPConfig *configinit(struct afp_options *cmdline)
     LOG(log_debug, logtype_afpd, "Loading ConfigFile"); 
 
     /* scan in the configuration file */
+    len = 0;
     while (!feof(fp)) {
-        if (!fgets(buf, sizeof(buf), fp) || buf[0] == '#')
+	if (!fgets(&buf[len], LINESIZE - len, fp) || buf[len] == '#')
             continue;
+	len = strlen(buf);
+	if ( buf[len-2] == '\\' ) {
+	    len -= 2;
+	    continue;
+	} else
+	    len = 0;
 
         /* a little pre-processing to get rid of spaces and end-of-lines */
         p = buf;
