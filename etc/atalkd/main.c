@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.18 2005-04-28 20:49:46 bfernhomberg Exp $
+ * $Id: main.c,v 1.19 2009-01-16 18:21:16 morgana Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -11,11 +11,7 @@
 
 #include <sys/param.h>
 #include <sys/socket.h>
-#if defined( sun ) && defined( __svr4__ )
-#include </usr/ucbinclude/sys/file.h>
-#else /* sun __svr4__ */
 #include <sys/file.h>
-#endif /* sun __svr4__ */
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/ioctl.h>
