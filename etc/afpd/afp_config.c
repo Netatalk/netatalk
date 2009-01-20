@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.24 2009-01-16 18:45:26 morgana Exp $
+ * $Id: afp_config.c,v 1.25 2009-01-20 04:31:10 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -555,7 +555,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
 	if (!fgets(&buf[len], LINESIZE - len, fp) || buf[len] == '#')
             continue;
 	len = strlen(buf);
-	if ( buf[len-2] == '\\' ) {
+	if ( len >= 2 && buf[len-2] == '\\' ) {
 	    len -= 2;
 	    continue;
 	} else
