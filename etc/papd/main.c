@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.24 2009-01-16 18:21:16 morgana Exp $
+ * $Id: main.c,v 1.25 2009-01-21 04:04:20 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -72,7 +72,6 @@ char *strchr (), *strrchr ();
 #include "uam_auth.h"
 #include "print_cups.h"
 
-#define _PATH_PAPDPPDFILE	".ppd"
 
 #define PIPED_STATUS	"status: print spooler processing job"
 
@@ -201,7 +200,6 @@ int main( ac, av )
     defprinter.p_type = "LaserWriter";
     defprinter.p_zone = "*";
     memset(&defprinter.p_addr, 0, sizeof(defprinter.p_addr));
-    defprinter.p_ppdfile = _PATH_PAPDPPDFILE;
 #ifdef __svr4__
     defprinter.p_flags = P_PIPED;
     defprinter.p_printer = "/usr/bin/lp -T PS";
@@ -681,9 +679,7 @@ static void getprinters( cf )
 	/*
 	 * Get PPD file.
 	 */
-	if (( p = pgetstr( "pd", &a )) == NULL ) {
-	    pr->p_ppdfile = defprinter.p_ppdfile;
-	} else {
+	if (( p = pgetstr( "pd", &a ) )) {
 	    if (( pr->p_ppdfile = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
 		perror( "malloc" );
 		exit( 1 );
@@ -822,7 +818,7 @@ int rprintcap( pr )
      * Check for ppd file, moved here because of cups_autoadd we cannot check at the usual location
      */
 
-    if ( pr->p_ppdfile == defprinter.p_ppdfile ) {
+    if ( pr->p_ppdfile == NULL ) {
 	if ( (p = (char *) cups_get_printer_ppd ( pr->p_printer )) != NULL ) {
 	    if (( pr->p_ppdfile = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
 	    	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
@@ -830,7 +826,7 @@ int rprintcap( pr )
 	    }
 	    strcpy( pr->p_ppdfile, p );
 	    pr->p_flags |= P_CUPS_PPD;
-	    /*LOG(log_info, logtype_papd, "PPD File for %s set to %s", pr->p_printer, pr->p_ppdfile );*/
+	    LOG(log_info, logtype_papd, "PPD File for %s set to %s", pr->p_printer, pr->p_ppdfile );
 	}
     }
 
