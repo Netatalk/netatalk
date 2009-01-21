@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.c,v 1.12 2009-01-15 22:01:26 morgana Exp $
+ * $Id: ppd.c,v 1.13 2009-01-21 02:42:56 didg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -93,7 +93,7 @@ static char* my_fgets(buf, bufsize, stream)
     return buf;
 }
 
-struct ppdent *getppdent( stream )
+static struct ppdent *getppdent( stream )
     FILE	*stream;
 {
     static char			buf[ 1024 ];
@@ -107,7 +107,7 @@ struct ppdent *getppdent( stream )
 	if ( *p != '*' ) {	/* main key word */
 	    continue;
 	}
-	if ( p[ strlen( p ) - 1 ] != '\n' && p[ strlen( p ) - 1 ] != '\r') {
+	if ( p[ strlen( p ) - 1 ] != '\n') {
 	    LOG(log_error, logtype_papd, "getppdent: line too long" );
 	    continue;
 	}
@@ -205,7 +205,7 @@ int read_ppd( file, fcnt )
 	}
 
 	/* *Font */
-	if ( strcmp( pe->pe_main, "*Font" ) == 0 ) {
+	if ( strcmp( pe->pe_main, "*Font" ) == 0 && pe->pe_option ) {
 	    for ( pfo = ppd_fonts; pfo; pfo = pfo->pd_next ) {
 		if ( strcmp( pfo->pd_font, pe->pe_option ) == 0 ) {
 		    break;
@@ -238,7 +238,7 @@ int read_ppd( file, fcnt )
 		break;
 	    }
 	}
-	if ( pfe->pd_name ) { /*&& (pfe->pd_value == NULL) ) { */
+	if ( pfe->pd_name && pe->pe_value ) { 
 	    if (( pfe->pd_value =
 		    (char *)malloc( strlen( pe->pe_value ) + 1 )) == NULL ) {
 		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
