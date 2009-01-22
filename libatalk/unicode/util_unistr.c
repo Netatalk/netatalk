@@ -511,15 +511,15 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		}
 		
 		/* Combining Sequence */
-		/* exclude U2000-U2FFF and UFE30-UFE4F ranges      */
+		/* exclude U2000-U2FFF and UFE30-UFE4F ranges in decompositions[]     */
 		/* from decomposition according to AFP 3.1 spec    */
-		else if ((base < 0x2000) || ((0x2fff < base) && (base < 0xfe30)) || (0xfe4f < base)) {
+		else {
 			do {
 				if ((comblen >= MAXCOMBLEN) || !(result = do_decomposition(base))) break;
 				comblen++;
 				base = result  >> 16;
 				comb[MAXCOMBLEN-comblen] = result & 0xffff;
-			} while (((0x007f < base) && (base < 0x2000)) || ((0x2fff < base) && (base < 0xfe30)) || (0xfe4f < base)) ;
+			} while (0x007f < base) ;
 		}
 		
 		if (*outlen < (comblen + 1) << 1) {
