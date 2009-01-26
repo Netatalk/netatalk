@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.73 2008-12-03 18:35:44 didg Exp $
+ * $Id: volume.c,v 1.74 2009-01-26 10:37:19 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2334,13 +2334,10 @@ static int savevoloptions (const struct vol *vol)
         LOG(log_debug, logtype_afpd,"Error writing .volinfo file: buffer too small, %s", buf);
 
 
-   if (write( fd, buf, strlen(buf)) < 0) {
+   if (write( fd, buf, strlen(buf)) < 0 || ftruncate(fd, strlen(buf)) < 0 ) {
        LOG(log_debug, logtype_afpd,"Error writing .volinfo file: %s", strerror(errno));
-       goto done;
    }
-   ftruncate(fd, strlen(buf));
 
-done:
    lock.l_type = F_UNLCK;
    fcntl(fd, F_SETLK, &lock);
    close (fd);
