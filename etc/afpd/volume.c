@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.75 2009-01-26 15:09:31 didg Exp $
+ * $Id: volume.c,v 1.76 2009-01-30 04:57:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -115,12 +115,12 @@ m=u -> map both ways
 
 #define VOLOPT_FORCEUID  19  /* force uid for username x */
 #define VOLOPT_FORCEGID  20  /* force gid for group x */
-#define VOLOPT_UMASK     21
-#define VOLOPT_DFLTPERM  22
-#else 
-#define VOLOPT_UMASK     19
-#define VOLOPT_DFLTPERM  20
 #endif /* FORCE_UIDGID */
+
+#define VOLOPT_UMASK     21
+#define VOLOPT_DPERM     22  /* dperm default directories perms */
+#define VOLOPT_FPERM     23  /* fperm default files perms */
+#define VOLOPT_DFLTPERM  24  /* perm */
 
 #define VOLOPT_MAX       (VOLOPT_DFLTPERM +1)
 
@@ -499,6 +499,10 @@ static void volset(struct vol_option *options, struct vol_option *save,
 	options[VOLOPT_UMASK].i_value = (int)strtol(val +1, NULL, 8);
     } else if (optionok(tmp, "perm:", val)) {
         options[VOLOPT_DFLTPERM].i_value = (int)strtol(val+1, NULL, 8);
+    } else if (optionok(tmp, "dperm:", val)) {
+        options[VOLOPT_DPERM].i_value = (int)strtol(val+1, NULL, 8);
+    } else if (optionok(tmp, "fperm:", val)) {
+        options[VOLOPT_FPERM].i_value = (int)strtol(val+1, NULL, 8);
     } else if (optionok(tmp, "mapchars:",val)) {
         setoption(options, save, VOLOPT_MAPCHARS, val);
 
@@ -653,6 +657,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 	if (options[VOLOPT_UMASK].i_value)
 	    volume->v_umask = (mode_t)options[VOLOPT_UMASK].i_value;
 
+	if (options[VOLOPT_DPERM].i_value)
+
 	if (options[VOLOPT_DFLTPERM].i_value)
 	    volume->v_perm = (mode_t)options[VOLOPT_DFLTPERM].i_value;
 
@@ -691,6 +697,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
                 volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_ROOTPOSTEXEC].c_value, pwd, path,  name);
         }
     }
+    volume->v_dperm |= volume->v_perm;
+    volume->v_fperm |= volume->v_perm;
 
     volume->v_next = Volumes;
     Volumes = volume;

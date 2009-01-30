@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.89 2008-12-23 07:51:12 didg Exp $
+ * $Id: directory.c,v 1.90 2009-01-30 04:57:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1889,7 +1889,7 @@ int setdirparams(const struct vol *vol,
             ma.ma_world = *buf++;
             ma.ma_group = *buf++;
             ma.ma_owner = *buf++;
-            mpriv = mtoumode( &ma ) | vol->v_perm;
+            mpriv = mtoumode( &ma ) | vol->v_dperm;
             if (dir_rx_set(mpriv) && setdirmode( vol, upath, mpriv) < 0 ) {
                 err = set_dir_errors(path, "setdirmode", errno);
                 bitmap = 0;
@@ -1918,7 +1918,7 @@ int setdirparams(const struct vol *vol,
                 change_parent_mdate = 1;
                 memcpy( &upriv, buf, sizeof( upriv ));
                 buf += sizeof( upriv );
-                upriv = ntohl (upriv) | vol->v_perm;
+                upriv = ntohl (upriv) | vol->v_dperm;
                 if (dir_rx_set(upriv)) {
                     /* maybe we are trying to set perms back */
                     if ( setdirunixmode(vol, upath, upriv) < 0 ) {
