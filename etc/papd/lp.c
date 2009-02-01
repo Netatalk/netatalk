@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.22 2009-01-28 18:03:15 morgana Exp $
+ * $Id: lp.c,v 1.23 2009-02-01 18:00:41 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -217,26 +217,7 @@ size_t used = 0;
           case '$':
           case '\\':
           case '"':
-          case ';':
-          case '&':
-          case '(':
-          case ')':
-          case ' ':
-          case '*':
-          case '#':
-          case '|':
-          case '>':
-          case '<':
-          case '[':
-          case ']':
-          case '{':
-          case '}':
-          case '^':
-          case '?':
-          case '~':
           case '`':
-          case '\x0A':
-          case '\xFF':
             if (used + 2 > bsize )
               return used;
             *dest = '\\';
@@ -266,9 +247,9 @@ static char* pipexlate(char *src)
     if (!src)
 	return NULL;
 
-    memset(dest, 0, sizeof(destbuf));
+    memset(dest, 0, MAXPATHLEN +1);
     if ((p = strchr(src, '%')) == NULL) { /* nothing to do */
-        strncpy(dest, src, sizeof(dest) - 1);
+        strncpy(dest, src, MAXPATHLEN);
         return destbuf;
     }
     /* first part of the path. copy and forward to the next variable. */
