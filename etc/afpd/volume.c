@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.77 2009-02-01 07:03:57 didg Exp $
+ * $Id: volume.c,v 1.78 2009-02-01 07:11:56 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -721,6 +721,11 @@ FILE	*fp;
     p = buf;
     while ((EOF != ( c = getc( fp )) ) && ( size > 1 )) {
         if ( c == '\n' || c == '\r' ) {
+            if (p != buf && *(p -1) == '\\') {
+                p--;
+                size++;
+                continue;
+            }
             *p++ = '\n';
             break;
         } else {
