@@ -1,5 +1,5 @@
 /*
- * $Id: lp.h,v 1.4 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: lp.h,v 1.5 2009-02-01 18:55:37 didg Exp $
  */
 
 #ifndef PAPD_LP_H
@@ -18,8 +18,6 @@ void lp_origin __P(( int ));
 int lp_rmjob __P(( int ));
 int lp_queue __P(( struct papfile * ));
 
-/* initialize printing interface */
-int lp_init __P(( struct papfile *, struct sockaddr_at * ));
 /* cancel current job */
 int lp_cancel __P(( void ));
 /* print current job */

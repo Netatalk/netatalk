@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.23 2009-02-01 18:00:41 didg Exp $
+ * $Id: lp.c,v 1.24 2009-02-01 18:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -375,7 +375,7 @@ void lp_for ( lpfor )
 }
 
 
-int lp_init( out, sat )
+static int lp_init( out, sat )
     struct papfile	*out;
     struct sockaddr_at	*sat;
 {
@@ -571,10 +571,12 @@ int lp_open( out, sat )
 	if (lp.lp_person != NULL) {
 	    if((pwent = getpwnam(lp.lp_person)) != NULL) {
 		if(setreuid(pwent->pw_uid, pwent->pw_uid) != 0) {
-		    LOG(log_info, logtype_papd, "setreuid error: %s", strerror(errno));
+		    LOG(log_error, logtype_papd, "setreuid error: %s", strerror(errno));
+		    exit(1);
 		}
 	    } else {
-		LOG(log_info, logtype_papd, "Error getting username (%s)", lp.lp_person);
+		LOG(log_error, logtype_papd, "Error getting username (%s)", lp.lp_person);
+                exit(1);
 	    }
 	}
 
