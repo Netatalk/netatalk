@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.19 2009-02-02 10:31:32 didg Exp $
+ * $Id: queries.c,v 1.20 2009-02-02 12:46:45 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -398,14 +398,16 @@ void cq_font_answer( start, stop, out )
 
     p = start;
     while ( p < stop ) {
+        unsigned int count = 0;
 	while (( *p == ' ' || *p == '\t' ) && p < stop ) {
 	    p++;
 	}
 
 	q = buf;
 	while ( *p != ' ' && *p != '\t' &&
-		*p != '\n' && *p != '\r' && p < stop ) {
+		*p != '\n' && *p != '\r' && p < stop && count < sizeof(buf)) {
 	    *q++ = *p++;
+	    count++;
 	}
 
 	if ( q != buf ) {
@@ -719,7 +721,7 @@ int cq_rbilogin( in, out )
     int			linelength, crlflength;
     char        	username[UAM_USERNAMELEN + 1] = "\0";
     struct papd_comment	*comment = compeek();
-    char		uamtype[20] = "\0";
+    char		uamtype[20];
 
     for (;;) {
         switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -739,13 +741,16 @@ int cq_rbilogin( in, out )
 	    begin = start + strlen(comment->c_begin);
 	    p = begin;
 
-	    while (*p != ' ') {
+	    while (*p != ' ' && p < stop) {
 		p++;
 	    }
 
-	    strncat(uamtype, begin, p - begin);
+	    memset(uamtype, 0, sizeof(uamtype));
+	    if ((size_t)(p -begin) <= sizeof(uamtype) -1) {
+	        strncpy(uamtype, begin, p - begin);
+            }
 
-	    if ((papd_uam = auth_uamfind(UAM_SERVER_PRINTAUTH,
+	    if ( !*uamtype || (papd_uam = auth_uamfind(UAM_SERVER_PRINTAUTH,
 				uamtype, strlen(uamtype))) == NULL) {
 		LOG(log_info, logtype_papd, "Could not find uam: %s", uamtype);
 		append(out, rbiloginbad, strlen(rbiloginbad));
