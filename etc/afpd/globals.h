@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.24 2008-12-03 18:35:44 didg Exp $
+ * $Id: globals.h,v 1.25 2009-02-02 11:55:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,6 +36,7 @@
 #define OPTION_CUSTOMICON    (1 << 4)
 #define OPTION_NOSLP         (1 << 5)
 #define OPTION_ANNOUNCESSH   (1 << 6)
+#define OPTION_UUID          (1 << 7)
 
 #ifdef FORCE_UIDGID
 /* set up a structure for this */

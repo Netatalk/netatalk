@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.78 2009-02-01 07:11:56 didg Exp $
+ * $Id: volume.c,v 1.79 2009-02-02 11:55:01 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -174,6 +174,7 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},     /* encode illegal sequence */
     {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
+    {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {0, NULL}
 };
 
@@ -482,6 +483,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
 		options[VOLOPT_ROOTPREEXEC].i_value = 1;
             else if (strcasecmp(p, "upriv") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
+            else if (strcasecmp(p, "acls") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
             else if (strcasecmp(p, "nodev") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NODEV;
             else if (strcasecmp(p, "illegalseq") == 0)
@@ -1317,6 +1320,10 @@ int		*buflen;
                 ashort |= VOLPBIT_ATTR_UTF8;
 	        if (vol->v_flags & AFPVOL_UNIX_PRIV)
 		    ashort |= VOLPBIT_ATTR_UNIXPRIV;
+            }
+            if (afp_version >= 32) {
+	        if (vol->v_flags & AFPVOL_ACLS)
+		    ashort |= VOLPBIT_ATTR_ACLS;
             }
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));

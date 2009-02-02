@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.26 2009-01-30 04:57:42 didg Exp $
+ * $Id: volume.h,v 1.27 2009-02-02 11:55:01 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -130,6 +130,7 @@ this is going away. */
 
 #define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching, default don't use it */
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
+#define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)
@@ -163,7 +164,7 @@ int wincheck(const struct vol *vol, const char *path);
 #define VOLPBIT_ATTR_UNIXPRIV     (1 << 5)
 #define VOLPBIT_ATTR_UTF8         (1 << 6)
 #define VOLPBIT_ATTR_NONETUID     (1 << 7)
-
+#define VOLPBIT_ATTR_ACLS         (1 << 11)
 #define VOLPBIT_ATTR	0
 #define VOLPBIT_SIG	1
 #define VOLPBIT_CDATE	2

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.25 2009-01-20 04:31:10 didg Exp $
+ * $Id: afp_config.c,v 1.26 2009-02-02 11:55:00 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,6 +50,9 @@ char *strchr (), *strrchr ();
 #ifdef USE_SRVLOC
 #include <slp.h>
 #endif /* USE_SRVLOC */
+#ifdef HAVE_NFSv4_ACLS
+#include <atalk/ldapconfig.h>
+#endif
 
 #include "globals.h"
 #include "afp_config.h"
@@ -587,7 +590,22 @@ AFPConfig *configinit(struct afp_options *cmdline)
     fclose(fp);
 
     if (!have_option)
-        return AFPConfigInit(cmdline, cmdline);
+        first = AFPConfigInit(cmdline, cmdline);
+
+#ifdef HAVE_NFSv4_ACLS
+    /* Parse ldap.conf */
+    LOG(log_debug, logtype_afpd, "Start parsing ldap.conf");
+    acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
+    LOG(log_debug, logtype_afpd, "Finished parsing ldap.conf");
+
+    /* If we have a good LDAP config, enable UUID option for all apfd's */
+    config = first;
+    while(config) {
+	if (ldap_config_valid)
+	    config->obj.options.flags |= OPTION_UUID;
+	config = config->next;
+    }
+#endif
 
     return first;
 }

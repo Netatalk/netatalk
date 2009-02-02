@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.53 2008-05-23 06:35:49 didg Exp $
+ * $Id: auth.c,v 1.54 2009-02-02 11:55:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -30,6 +30,7 @@
 #include <grp.h>
 #include <atalk/logger.h>
 #include <atalk/server_ipc.h>
+#include <atalk/uuid.h>
 
 #ifdef TRU64
 #include <netdb.h>
@@ -45,8 +46,10 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "uam_auth.h"
 #include "switch.h"
 #include "status.h"
-
 #include "fork.h"
+#ifdef HAVE_NFSv4_ACLS
+#include "acls.h"
+#endif
 
 int	afp_version = 11;
 static int afp_version_index;
@@ -188,6 +191,13 @@ static int set_auth_switch(int expired)
         afp_switch = postauth_switch;
         switch (afp_version) {
         case 32:
+#ifdef HAVE_NFSv4_ACLS
+	    uam_afpserver_action(21, UAM_AFPSERVER_POSTAUTH, afp_mapid, NULL);
+	    uam_afpserver_action(22, UAM_AFPSERVER_POSTAUTH, afp_mapname, NULL);
+	    uam_afpserver_action(73, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
+	    uam_afpserver_action(74, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
+	    uam_afpserver_action(75, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
+#endif
         case 31:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL); 
         case 30:
@@ -919,9 +929,14 @@ AFPObj  *obj _U_;
 char	*ibuf, *rbuf;
 int	ibuflen _U_, *rbuflen;
 {
+    int ret;
     u_int8_t  thisuser;
     u_int32_t id;
     u_int16_t bitmap;
+    uuid_t uuid;
+    char *uuidstring;
+
+    LOG(log_debug, logtype_afpd, "begin afp_getuserinfo:");
 
     *rbuflen = 0;
     ibuf++;
@@ -958,7 +973,26 @@ int	ibuflen _U_, *rbuflen;
         *rbuflen += sizeof(id);
     }
 
+#ifdef HAVE_NFSv4_ACLS
+    if (bitmap & USERIBIT_UUID) {
+	if ( ! (obj->options.flags & OPTION_UUID))
+	    return AFPERR_BITMAP;
+	LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
+	ret = getuuidfromname( obj->username, UUID_USER, uuid);
+	if (ret != 0) {
+	    LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
+	    return AFPERR_NOITEM;
+	}
+	uuid_bin2string( uuid, &uuidstring);
+	LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuidstring);
+	free(uuidstring);
+	memcpy(rbuf, uuid, UUID_BINSIZE);
+	rbuf += UUID_BINSIZE;
+	*rbuflen += UUID_BINSIZE;
+    }
+#endif
     return AFP_OK;
+    LOG(log_debug, logtype_afpd, "END afp_getuserinfo:");
 }
 
 #define UAM_LIST(type) (((type) == UAM_SERVER_LOGIN || (type) == UAM_SERVER_LOGIN_EXT) ? &uam_login : \

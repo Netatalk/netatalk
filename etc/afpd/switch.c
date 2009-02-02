@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.14 2008-05-23 06:35:49 didg Exp $
+ * $Id: switch.c,v 1.15 2009-02-02 11:55:01 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -46,6 +46,9 @@
 #include "filedir.h"
 #include "status.h"
 #include "misc.h"
+#ifdef HAVE_NFSv4_ACLS
+#include "acls.h"
+#endif
 
 static int afp_null(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj  *obj _U_;

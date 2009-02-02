@@ -34,6 +34,10 @@
 #include "volume.h"
 #include "unix.h"
 
+#ifdef HAVE_NFSv4_ACLS
+extern int remove_acl(const char *name);
+#endif
+
 struct perm {
     uid_t uid;
     gid_t gid;
@@ -650,6 +654,54 @@ int RF_renamefile_adouble(const struct vol *vol, const char *src, const char *ds
 	return 0;
 }
 
+#ifdef HAVE_NFSv4_ACLS
+static int RF_acl(const struct vol *vol, const char *path, int cmd, int count, ace_t *aces)
+{
+    static char buf[ MAXPATHLEN + 1];
+    struct stat st;
+
+    if ((stat(path, &st)) != 0)
+	return -1;
+    if (S_ISDIR(st.st_mode)) {
+	if ((snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path)) < 0)
+	    return -1;
+	/* set acl on .AppleDouble dir first */
+	if ((acl(buf, cmd, count, aces)) != 0)
+	    return -1;
+	/* now set ACL on ressource fork */
+	if ((acl(vol->vfs->ad_path(path, ADFLAGS_DIR), cmd, count, aces)) != 0)
+	    return -1;
+    } else
+	/* set ACL on ressource fork */
+	if ((acl(vol->vfs->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
+	    return -1;
+
+    return 0;
+}
+
+static int RF_remove_acl(const struct vol *vol, const char *path, int dir)
+{
+    int ret;
+    static char buf[ MAXPATHLEN + 1];
+
+    if (dir) {
+	if ((snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path)) < 0)
+	    return AFPERR_MISC;
+	/* remove ACL from .AppleDouble/.Parent first */
+	if ((ret = remove_acl(vol->vfs->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
+	    return ret;
+	/* now remove from .AppleDouble dir */
+	if ((ret = remove_acl(buf)) != AFP_OK)
+	    return ret;
+    } else
+	/* remove ACL from ressource fork */
+	if ((ret = remove_acl(vol->vfs->ad_path(path, ADFLAGS_HF))) != AFP_OK)
+	    return ret;
+
+    return AFP_OK;
+}
+#endif
+
 struct vfs_ops netatalk_adouble = {
     /* ad_path:           */ ad_path,
     /* validupath:        */ validupath_adouble,
@@ -662,6 +714,10 @@ struct vfs_ops netatalk_adouble = {
     /* rf_setdirowner:    */ RF_setdirowner_adouble,
     /* rf_deletefile:     */ RF_deletefile_adouble,
     /* rf_renamefile:     */ RF_renamefile_adouble,
+#ifdef HAVE_NFSv4_ACLS
+    /* rf_acl:            */ RF_acl,
+    /* rf_remove_acl      */ RF_remove_acl
+#endif
 };
 
 /* =======================================

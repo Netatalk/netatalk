@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.90 2009-01-30 04:57:42 didg Exp $
+ * $Id: directory.c,v 1.91 2009-02-02 11:55:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -44,6 +44,7 @@ char *strchr (), *strrchr ();
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
+#include <atalk/uuid.h>
 
 #include "directory.h"
 #include "desktop.h"
@@ -54,6 +55,10 @@ char *strchr (), *strrchr ();
 #include "globals.h"
 #include "unix.h"
 #include "mangle.h"
+
+#ifdef HAVE_NFSv4_ACLS
+extern void addir_inherit_acl(const struct vol *vol);
+#endif 
 
 struct dir	*curdir;
 int             afp_errno;
@@ -2267,6 +2272,11 @@ int	ibuflen _U_, *rbuflen;
     ad_close_metadata( &ad);
 
 createdir_done:
+#ifdef HAVE_NFSv4_ACLS
+    /* FIXME: are we really inside the created dir? */
+    addir_inherit_acl(vol);
+#endif
+
     memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));
     *rbuflen = sizeof( u_int32_t );
     setvoltime(obj, vol );
@@ -2456,49 +2466,93 @@ int	ibuflen _U_, *rbuflen;
     u_int32_t           id;
     int			len, sfunc;
     int         utf8 = 0;
+    uuidtype_t          type;
+
+    LOG(log_debug, logtype_afpd, "afp_mapid: BEGIN");
     
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
-    memcpy( &id, ibuf, sizeof( id ));
-
-    id = ntohl(id);
     *rbuflen = 0;
 
-    if (sfunc == 3 || sfunc == 4) {
+
+    if (sfunc >= 3 && sfunc <= 6) {
         if (afp_version < 30) {
             return( AFPERR_PARAM );
         }
         utf8 = 1;
     }
-    if ( id != 0 ) {
+
         switch ( sfunc ) {
         case 1 :
         case 3 :/* unicode */
+	memcpy( &id, ibuf, sizeof( id ));
+	id = ntohl(id);
+	if ( id != 0 ) {
             if (( pw = getpwuid( id )) == NULL ) {
                 return( AFPERR_NOITEM );
             }
 	    len = convert_string_allocate( obj->options.unixcharset, ((!utf8)?obj->options.maccharset:CH_UTF8_MAC),
                                             pw->pw_name, strlen(pw->pw_name), &name);
+	} else {
+	    len = 0;
+	    name = NULL;
+	}
             break;
-
         case 2 :
         case 4 : /* unicode */
+	memcpy( &id, ibuf, sizeof( id ));
+	id = ntohl(id);
+	if ( id != 0 ) {
             if (NULL == ( gr = (struct group *)getgrgid( id ))) {
                 return( AFPERR_NOITEM );
             }
 	    len = convert_string_allocate( obj->options.unixcharset, (!utf8)?obj->options.maccharset:CH_UTF8_MAC,
                                             gr->gr_name, strlen(gr->gr_name), &name);
+	} else {
+	    len = 0;
+	    name = NULL;
+	}
             break;
-
+#ifdef HAVE_NFSv4_ACLS
+    case 5 : /* username -> UUID  */
+    case 6 : /* groupname -> UUID */
+	if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+	    return AFPERR_PARAM;
+	LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
+	len = getnamefromuuid( ibuf, &name, &type);
+	if (len != 0)		/* its a error code, not len */
+	    return AFPERR_NOITEM;
+	if (type == UUID_USER) {
+	    if (( pw = getpwnam( name )) == NULL )
+		return( AFPERR_NOITEM );
+	    LOG(log_debug, logtype_afpd, "afp_mapid: name:%s -> uid:%d", name, pw->pw_uid);
+	    id = htonl(UUID_USER);
+	    memcpy( rbuf, &id, sizeof( id ));
+	    id = htonl( pw->pw_uid);
+	    rbuf += sizeof( id );
+	    memcpy( rbuf, &id, sizeof( id ));
+	    rbuf += sizeof( id );
+	    *rbuflen = 2 * sizeof( id );
+	} else {		/* type == UUID_GROUP */
+            if (( gr = getgrnam( name )) == NULL )
+                return( AFPERR_NOITEM );
+	    LOG(log_debug, logtype_afpd, "afp_mapid: group:%s -> gid:%d", name, gr->gr_gid);
+	    id = htonl(UUID_GROUP);
+	    memcpy( rbuf, &id, sizeof( id ));
+	    rbuf += sizeof( id );
+	    id = htonl( gr->gr_gid);
+	    memcpy( rbuf, &id, sizeof( id ));
+	    rbuf += sizeof( id );
+	    *rbuflen = 2 * sizeof( id );
+	}
+	break;
+#endif
         default :
             return( AFPERR_PARAM );
         }
+
         len = strlen( name );
 
-    } else {
-        len = 0;
-        name = NULL;
-    }
     if (utf8) {
         u_int16_t tp = htons(len);
         memcpy(rbuf, &tp, sizeof(tp));
@@ -2528,10 +2582,14 @@ int	ibuflen _U_, *rbuflen;
     int             len, sfunc;
     u_int32_t       id;
     u_int16_t       ulen;
+    char            *uuidstring;
+
+    LOG(log_debug, logtype_afpd, "afp_mapname: BEGIN");
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     *rbuflen = 0;
+    LOG(log_debug, logtype_afpd, "afp_mapname: sfunc: %d, afp_version: %d", sfunc, afp_version);
     switch ( sfunc ) {
     case 1 : 
     case 2 : /* unicode */
@@ -2541,18 +2599,31 @@ int	ibuflen _U_, *rbuflen;
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);
         ibuf += 2;
+	LOG(log_debug, logtype_afpd, "afp_mapname: alive");
         break;
     case 3 :
     case 4 :
         len = (unsigned char) *ibuf++;
         break;
+#ifdef HAVE_NFSv4_ACLS
+    case 5 : /* username -> UUID  */
+    case 6 : /* groupname -> UUID */
+        if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+            return AFPERR_PARAM;
+        memcpy(&ulen, ibuf, sizeof(ulen));
+        len = ntohs(ulen);
+        ibuf += 2;
+        break;
+#endif
     default :
         return( AFPERR_PARAM );
     }
 
     ibuf[ len ] = '\0';
 
-    if ( len != 0 ) {
+    if ( len == 0 )
+	return AFPERR_PARAM;
+    else {
         switch ( sfunc ) {
         case 1 : /* unicode */
         case 3 :
@@ -2560,22 +2631,39 @@ int	ibuflen _U_, *rbuflen;
                 return( AFPERR_NOITEM );
             }
             id = pw->pw_uid;
+	    id = htonl(id);
+	    memcpy( rbuf, &id, sizeof( id ));
+	    *rbuflen = sizeof( id );
             break;
 
         case 2 : /* unicode */
         case 4 :
+	    LOG(log_debug, logtype_afpd, "afp_mapname: gettgrnam for name: %s",ibuf);
             if (NULL == ( gr = (struct group *)getgrnam( ibuf ))) {
                 return( AFPERR_NOITEM );
             }
             id = gr->gr_gid;
-            break;
-        }
-    } else {
-        id = 0;
-    }
+	    LOG(log_debug, logtype_afpd, "afp_mapname: gettgrnam for name: %s -> id: %d",ibuf, id);
     id = htonl(id);
     memcpy( rbuf, &id, sizeof( id ));
     *rbuflen = sizeof( id );
+	    break;
+#ifdef HAVE_NFSv4_ACLS
+	case 5 :		/* username -> UUID */
+	    LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);	   
+	    if (0 != getuuidfromname(ibuf, UUID_USER, rbuf))
+		return AFPERR_NOITEM;
+	    *rbuflen = UUID_BINSIZE;
+	    break;
+	case 6 :		/* groupname -> UUID */
+	    LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);	   
+	    if (0 != getuuidfromname(ibuf, UUID_GROUP, rbuf))
+		return AFPERR_NOITEM;
+	    *rbuflen = UUID_BINSIZE;
+	    break;
+#endif
+        }
+    }
     return( AFP_OK );
 }
 

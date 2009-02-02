@@ -12,6 +12,6 @@ else
 A2BOOT =
 endif
 
-SUBDIRS = macusers nu printing shell_utils ${TIMELORD} ${A2BOOT}
+SUBDIRS = macusers nu printing shell_utils ${TIMELORD} ${A2BOOT} acltests
 
 EXTRA_DIST = ICDumpSuffixMap

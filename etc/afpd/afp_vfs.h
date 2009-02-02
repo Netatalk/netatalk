@@ -21,6 +21,14 @@
 #ifndef _AFP_VFS_H
 #define _AFP_VFS_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#ifdef HAVE_NFSv4_ACLS
+#include <sys/acl.h>
+#endif
+
 #include <atalk/adouble.h>
 struct vol;
 
@@ -41,7 +49,10 @@ struct vfs_ops {
 
     int (*rf_deletefile)(const struct vol *, const char * );
     int (*rf_renamefile)(const struct vol *, const char *oldpath, const char *newpath);
-
+#ifdef HAVE_NFSv4_ACLS
+    int (*rf_acl)(const struct vol *, const char *path, int cmd, int count, ace_t *aces);
+    int (*rf_remove_acl)(const struct vol *, const char *path, int dir);
+#endif
 };
 
 void initvol_vfs(struct vol *vol);

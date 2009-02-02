@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.18 2006-09-18 01:06:44 didg Exp $
+ * $Id: status.c,v 1.19 2009-02-02 11:55:01 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -64,6 +64,9 @@ static void status_flags(char *data, const int notif, const int ipok,
     status |= AFPSRVRINFO_FASTBOZO;
     status |= AFPSRVRINFO_SRVRDIR; /* AFP 3.1 specs says we need to specify this, but may set the count to 0 */
     /* We don't set the UTF8 name flag here, we don't know whether we have enough space ... */
+
+    if (flags & OPTION_UUID)	/* 05122008 FIXME: can we set AFPSRVRINFO_UUID here ? see AFPSRVRINFO_SRVRDIR*/
+	status |= AFPSRVRINFO_UUID;
 
     status = htons(status);
     memcpy(data + AFPSTATUS_FLAGOFF, &status, sizeof(status));
@@ -525,7 +528,8 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     status_flags(status, options->server_notif, options->fqdn ||
                  (dsiconfig && dsi->server.sin_addr.s_addr),
                  options->passwdbits, 
-		 (options->k5service && options->k5realm && options->fqdn));
+		 (options->k5service && options->k5realm && options->fqdn), 
+		 options->flags);
     /* returns offset to signature offset */
     c = status_server(status, options->server ? options->server :
                       options->hostname, options);

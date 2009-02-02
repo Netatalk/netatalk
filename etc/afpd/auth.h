@@ -1,5 +1,5 @@
 /*
- * $Id: auth.h,v 1.6 2005-04-28 20:49:40 bfernhomberg Exp $
+ * $Id: auth.h,v 1.7 2009-02-02 11:55:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,7 +26,8 @@ struct afp_versions {
 /* for GetUserInfo */
 #define USERIBIT_USER  (1 << 0)
 #define USERIBIT_GROUP (1 << 1)
-#define USERIBIT_ALL   (USERIBIT_USER | USERIBIT_GROUP)
+#define USERIBIT_UUID  (1 << 2)
+#define USERIBIT_ALL   (USERIBIT_USER | USERIBIT_GROUP | USERIBIT_UUID)
 
 extern uid_t    uuid;
 #if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )

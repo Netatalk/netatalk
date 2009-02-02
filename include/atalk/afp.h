@@ -55,7 +55,7 @@ typedef u_int16_t AFPUserBytes;
 #define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */ 
 
 #define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */ 
-
+#define AFPSRVRINFO_UUID         (1<<10) /* supports UUIDs */
 #define AFPSRVRINFO_FASTBOZO	 (1<<15) /* fast copying */
 
 #define AFP_OK		0
