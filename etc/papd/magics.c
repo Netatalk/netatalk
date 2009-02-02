@@ -1,5 +1,5 @@
 /*
- * $Id: magics.c,v 1.13 2009-02-02 10:31:32 didg Exp $
+ * $Id: magics.c,v 1.14 2009-02-02 16:04:33 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -216,7 +216,7 @@ int cm_psswitch( in, out, sat )
 	}
     }
 
-    if ( stop - p >= strlen( Query ) &&
+    if ( (size_t)(stop - p) >= strlen( Query ) &&
 	    strncmp( p, Query, strlen( Query )) == 0 ) {
 	if ( comswitch( magics, cm_psquery ) < 0 ) {
 	    LOG(log_error, logtype_papd, "cm_psswitch: can't find psquery!" );

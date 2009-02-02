@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.20 2009-02-02 12:46:45 didg Exp $
+ * $Id: queries.c,v 1.21 2009-02-02 16:04:33 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -94,9 +94,11 @@ int cq_default( in, out )
 			break;
 		    }
 		}
-		p++;
-		while ( *p == ' ' ) {
+		if (p < stop) {
 		    p++;
+		    while ( *p == ' ' ) {
+		        p++;
+                    }
 		}
 
 		append( out, p, stop - p + crlflength );
@@ -145,6 +147,7 @@ int cq_k4login( in, out )
 
     bzero( &tkt, sizeof( tkt ));
     stop = start+linelength;
+    /* FIXME */
     for ( i = 0, t = tkt.dat; p < stop; p += 2, t++, i++ ) {
 	*t = ( h2b( (unsigned char)*p ) << 4 ) +
 		h2b( (unsigned char)*( p + 1 ));
@@ -351,7 +354,7 @@ int cq_query( in, out )
 		}
 	    }
 
-	    for ( p++; p < stop; p++ ) {
+	    if (p < stop) for ( p++; p < stop; p++ ) {
 		if ( *p != ' ' && *p != '\t' ) {
 		    break;
 		}
@@ -364,7 +367,7 @@ int cq_query( in, out )
 	    }
 
 	    for ( gq = genqueries; gq->gq_name; gq++ ) {
-		if (( strlen( gq->gq_name ) == q - p ) &&
+		if (( strlen( gq->gq_name ) == (size_t)(q - p) ) &&
 			( strncmp( gq->gq_name, p, q - p ) == 0 )) {
 		    break;
 		}
@@ -457,7 +460,8 @@ int cq_font( in, out )
 		    break;
 		}
 	    }
-	    p++;
+	    if (p < stop)
+	        p++;
 
 	    cq_font_answer( p, stop, out );
 	} else {
@@ -470,7 +474,8 @@ int cq_font( in, out )
 			break;
 		    }
 		}
-		p++;
+		if (p < stop)
+		    p++;
 
 		cq_font_answer( p, stop, out );
 	    } else {
@@ -519,7 +524,8 @@ int cq_feature( in, out )
 		    break;
 		}
 	    }
-	    p++;
+	    if (p < stop)
+	        p++;
 	    while ( *p == ' ' ) {
 		p++;
 	    }
