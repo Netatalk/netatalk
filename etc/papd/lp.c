@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.24 2009-02-01 18:55:37 didg Exp $
+ * $Id: lp.c,v 1.25 2009-02-02 08:54:20 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -566,6 +566,7 @@ int lp_open( out, sat )
     }
 
     if ( lp.lp_flags & LP_PIPE ) {
+        char *pipe_cmd;
 
 	/* go right to program */
 	if (lp.lp_person != NULL) {
@@ -581,12 +582,13 @@ int lp_open( out, sat )
 	}
 
 	lp_setup_comments(CH_UNIX);
-	if (( lp.lp_stream = popen( pipexlate(printer->p_printer), "w" )) == NULL ) {
+	pipe_cmd = pipexlate(printer->p_printer);
+	if (( lp.lp_stream = popen(pipe_cmd, "w" )) == NULL ) {
 	    LOG(log_error, logtype_papd, "lp_open popen %s: %s", printer->p_printer, strerror(errno) );
 	    spoolerror( out, NULL );
 	    return( -1 );
 	}
-        LOG(log_debug, logtype_papd, "lp_open: opened %s",  pipexlate(printer->p_printer) );
+        LOG(log_debug, logtype_papd, "lp_open: opened %s",  pipe_cmd );
     } else {
 	sprintf( name, "df%c%03d%s", lp.lp_letter++, lp.lp_seq, hostname );
 
