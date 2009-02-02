@@ -1,5 +1,5 @@
 /*
- * $Id: headers.c,v 1.11 2008-08-14 19:57:52 didg Exp $
+ * $Id: headers.c,v 1.12 2009-02-02 10:31:32 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -92,6 +92,9 @@ int ch_for( in, out )
 
     case -1 :
         return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     cmt = get_text(start, linelength);
@@ -121,6 +124,9 @@ int ch_title( in, out )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
 #ifdef DEBUG
@@ -165,6 +171,9 @@ int ch_creator( in, out )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     cmt = get_text(start, linelength);
@@ -200,6 +209,9 @@ int ch_endcomm( in, out )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     in->pf_state |= PF_TRANSLATE;
@@ -226,6 +238,9 @@ int ch_starttranslate(in,out)
 
     case -1 :
         return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     in->pf_state |= PF_TRANSLATE;
@@ -251,6 +266,9 @@ int ch_endtranslate(in,out)
 
     case -1 :
         return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     lp_write( in, start, linelength + crlflength );
@@ -276,6 +294,9 @@ int ch_translateone(in,out)
 
     case -1 :
         return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     in->pf_state |= PF_TRANSLATE;

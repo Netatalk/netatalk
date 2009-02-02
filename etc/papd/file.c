@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.9 2002-01-04 04:45:47 sibaz Exp $
+ * $Id: file.c,v 1.10 2009-02-02 10:31:32 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -17,6 +17,8 @@
 
 #include "file.h"
 
+/* 
+*/
 int markline( pf, start, linelength, crlflength )
     char		**start;
     int			*linelength, *crlflength;
@@ -52,6 +54,12 @@ int markline( pf, start, linelength, crlflength )
     while(*crlflength < pf->pf_datalen-*linelength && 
     (p[*crlflength]=='\r' || p[*crlflength]=='\n')) {
 	(*crlflength)++;
+    }
+    
+    if (!*crlflength) {
+        /* line is way too long, something fishy is going on, give up */
+        LOG(log_error, logtype_papd, "markline: no crlf in comment, give up" );
+        return( -2 );
     }
 
     /* success, return 1 */

@@ -1,5 +1,5 @@
 /*
- * $Id: magics.c,v 1.12 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: magics.c,v 1.13 2009-02-02 10:31:32 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,6 +22,14 @@
 #include "lp.h"
 
 static int state=0;
+
+static void parser_error(outfile)
+    struct papfile	*outfile;
+{
+                spoolerror( outfile, "Comments error, Ignoring job." );
+		outfile->pf_state |= PF_EOF;
+		lp_close();
+}
 
 int ps( infile, outfile, sat )
     struct papfile	*infile, *outfile;
@@ -49,6 +57,10 @@ int ps( infile, outfile, sat )
 	    case CH_MORE :
 		return( CH_MORE );
 
+	    case CH_ERROR :
+	        parser_error(outfile);
+		return( 0 );
+
 	    default :
 		return( CH_ERROR );
 	    }
@@ -58,6 +70,10 @@ int ps( infile, outfile, sat )
 		/* eof on infile */
 		outfile->pf_state |= PF_EOF;
 		lp_close();
+		return( 0 );
+
+	    case -2:
+	        parser_error(outfile);
 		return( 0 );
 
 	    case -1 :
@@ -105,6 +121,9 @@ int cm_psquery( in, out, sat )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	if ( in->pf_state & PF_BOT ) {
@@ -138,6 +157,9 @@ int cm_psadobe( in, out, sat )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 	if ( in->pf_state & PF_BOT ) {
 	    in->pf_state &= ~PF_BOT;
@@ -177,6 +199,9 @@ int cm_psswitch( in, out, sat )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     stop = start + linelength;

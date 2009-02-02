@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.18 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: queries.c,v 1.19 2009-02-02 10:31:32 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -71,6 +71,9 @@ int cq_default( in, out )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	stop = start+linelength;
@@ -130,6 +133,9 @@ int cq_k4login( in, out )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     p = start + strlen( comment->c_begin );
@@ -180,6 +186,9 @@ int cq_uameth( in, out )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	if ( comgetflags() == 0 ) {	/* start */
@@ -326,6 +335,9 @@ int cq_query( in, out )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	stop = start+linelength;
@@ -428,6 +440,9 @@ int cq_font( in, out )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	stop = start + linelength;
@@ -486,6 +501,9 @@ int cq_feature( in, out )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	stop = start + linelength;
@@ -544,6 +562,9 @@ int cq_printer( in, out )
 
 	case -1 :
 	    return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
 	}
 
 	if ( comgetflags() == 0 ) {
@@ -620,6 +641,9 @@ int cq_rmjob( in, out )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     stop = start + linelength;
@@ -660,6 +684,9 @@ int cq_listq( in, out )
 
     case -1 :
 	return( CH_MORE );
+
+    case -2 :
+        return( CH_ERROR );
     }
 
     if ( lp_queue( out )) {
@@ -701,6 +728,9 @@ int cq_rbilogin( in, out )
 
         case -1 :
             return( CH_MORE );
+
+        case -2 :
+            return( CH_ERROR );
         }
 
 	stop = start + linelength;
