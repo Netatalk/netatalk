@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.c,v 1.14 2009-01-21 04:04:20 didg Exp $
+ * $Id: ppd.c,v 1.15 2009-02-02 10:24:28 didg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -289,6 +289,9 @@ struct ppd_feature *ppd_feature( feature, len )
     }
 #endif /* SHOWPPD */
 
+    if (len > sizeof(ppd_feature_main) -1)
+        return( NULL );
+        
     for ( end = feature + len, p = feature, q = ppd_feature_main;
 	    (p <= end) && (*p != '\n') && (*p != '\r'); p++, q++ ) {
 	*q = *p;
