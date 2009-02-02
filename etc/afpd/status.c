@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.19 2009-02-02 11:55:01 franklahm Exp $
+ * $Id: status.c,v 1.20 2009-02-02 12:35:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -39,7 +39,7 @@
 static   size_t maxstatuslen = 0;
 
 static void status_flags(char *data, const int notif, const int ipok,
-                         const unsigned char passwdbits, const int dirsrvcs _U_)
+                         const unsigned char passwdbits, const int dirsrvcs _U_, int flags)
 {
     u_int16_t           status;
 
