@@ -14,8 +14,9 @@ SUFFIXES = .tmpl .
 	    <$< >$@
 
 NONGENERATED_MANS = timelord.8
-GENERATED_MANS    = afpd.8 atalkd.8 cnid_dbd.8 cnid_metad.8 papd.8 papstatus.8 psf.8
-TEMPLATE_FILES    = afpd.8.tmpl atalkd.8.tmpl cnid_dbd.8.tmpl cnid_metad.8.tmpl papd.8.tmpl papstatus.8.tmpl psf.8.tmpl
+GENERATED_MANS    = afp_acls.8 afpd.8 atalkd.8 cnid_dbd.8 cnid_metad.8 papd.8 papstatus.8 psf.8
+TEMPLATE_FILES    = afp_acls.8.tmpl afpd.8.tmpl atalkd.8.tmpl cnid_dbd.8.tmpl \
+	cnid_metad.8.tmpl papd.8.tmpl papstatus.8.tmpl psf.8.tmpl
 
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
 

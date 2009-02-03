@@ -1,0 +1,229 @@
+.\"     Title: afp_acls
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.0 <http://docbook.sf.net/>
+.\"      Date: 31-01-2009
+.\"    Manual: Netatalk 2.0 Manual
+.\"    Source: :NETATALK_VERSION:
+.\"  Language: English
+.\"
+.TH "AFP_ACLS" "8" "31-01-2009" ":NETATALK_VERSION:" "Netatalk 2.0 Manual"
+.\" -----------------------------------------------------------------
+.\" * (re)Define some macros
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" BB/BE - put background/screen (filled box) around block of text
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de BB
+.if t \{\
+.sp -.5
+.br
+.in +2n
+.ll -2n
+.gcolor red
+.di BX
+.\}
+..
+.de EB
+.if t \{\
+.if "\\$2"adjust-for-leading-newline" \{\
+.sp -1
+.\}
+.br
+.di
+.in
+.ll
+.gcolor
+.nr BW \\n(.lu-\\n(.i
+.nr BH \\n(dn+.5v
+.ne \\n(BHu+.5v
+.ie "\\$2"adjust-for-leading-newline" \{\
+\M[\\$1]\h'1n'\v'+.5v'\D'P \\n(BWu 0 0 \\n(BHu -\\n(BWu 0 0 -\\n(BHu'\M[]
+.\}
+.el \{\
+\M[\\$1]\h'1n'\v'-.5v'\D'P \\n(BWu 0 0 \\n(BHu -\\n(BWu 0 0 -\\n(BHu'\M[]
+.\}
+.in 0
+.sp -.5v
+.nf
+.BX
+.in
+.sp .5v
+.fi
+.\}
+..
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" BM/EM - put colored marker in margin next to block of text
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.de BM
+.if t \{\
+.br
+.ll -2n
+.gcolor red
+.di BX
+.\}
+..
+.de EM
+.if t \{\
+.br
+.di
+.ll
+.gcolor
+.nr BH \\n(dn
+.ne \\n(BHu
+\M[\\$1]\D'P -.75n 0 0 \\n(BHu -(\\n[.i]u - \\n(INu - .75n) 0 0 -\\n(BHu'\M[]
+.in 0
+.nf
+.BX
+.in
+.fi
+.\}
+..
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "Name"
+afp_acls \- Setup and Usage Howto for ACLs with Netatalk
+.SH "Description"
+.PP
+ACL support for AFP is implemented with NFSv4 ACLs\&. Few filesystems and fewer OSes support these\&. At the time of implementation its only provided with ZFS on Solaris, Opensolaris and derived distributions\&.
+.SH "Configuration"
+.PP
+In order to be able to support ACLs, the following things have to be configured:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+ZFS Volumes
+.sp
+You MUST configure two ACL parameters for any volume you want to use with Netatalk:
+.sp
+.if n \{\
+.RS 4
+.\}
+.fam C
+.ps -1
+.nf
+.BB lightgray
+aclinherit = passthrough
+aclmode = passthrough
+.EB lightgray
+.fi
+.fam
+.ps +1
+.if n \{\
+.RE
+.\}
+.sp
+For an explanation of what these parameters mean and how to apply them see, your hosts ZFS documentation (e\&.g\&. man zfs)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Authentication Domain
+.sp
+Your server and the clients must be part of a security association where identity data is coming from a common source\&. ACLs in Darwin are based on UUIDs and so is the ACL specification in AFP 3\&.2\&. Therefor your source of identity data has to provide an attribute for every user and group where a UUID is stored as a ASCII string\&.
+.sp
+In other words:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+you need an Open Directory Server or an LDAP server where you store UUIDs in some attribute
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+your clients must be configured to use this server
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+your server should be configured to use this server via nsswitch and PAM\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.BM yellow
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBTip\fR
+.ps -1
+.br
+This however is not a strict requirement: if you create duplicates of every LDAP/OD user and group with identic attributes (name, uid, gid) in your local data store (/etc/[passwd|group]) ACLs will work
+\fIas long as user/group names/ids in the filesystem are equal to their counterparts in the LDAP/OD datastore\fR\&.
+.sp .5v
+.EM yellow
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+configure Netatalk via ldap\&.conf so that Netatalk is able to retrieve the UUID for users and groups via LDAP search queries
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+Netatalk Volumes
+.sp
+Finally you can add
+\fBoptions:acls\fR
+to your volume defintion to add ACL support\&. In case your volume basedir doesn\'t grant read permissions via mode (like:
+\fB0700 root:adm\fR) but only via ACLs, you MUST add the
+\fBnostat\fR
+option to the volume defintion\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBldap.conf\fR(5),
+\fBAppleVolumes.default\fR(5)
