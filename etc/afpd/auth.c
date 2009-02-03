@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.54 2009-02-02 11:55:00 franklahm Exp $
+ * $Id: auth.c,v 1.55 2009-02-03 14:20:44 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -192,8 +192,6 @@ static int set_auth_switch(int expired)
         switch (afp_version) {
         case 32:
 #ifdef HAVE_NFSv4_ACLS
-	    uam_afpserver_action(21, UAM_AFPSERVER_POSTAUTH, afp_mapid, NULL);
-	    uam_afpserver_action(22, UAM_AFPSERVER_POSTAUTH, afp_mapname, NULL);
 	    uam_afpserver_action(73, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
 	    uam_afpserver_action(74, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
 	    uam_afpserver_action(75, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
