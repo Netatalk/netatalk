@@ -19,7 +19,7 @@ afpd_LDFLAGS = -export-dynamic
 
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h file.h \
 	 filedir.h fork.h globals.h icon.h mangle.h misc.h status.h switch.h \
-	 uam_auth.h uid.h unix.h volume.h afp_vfs.h hash.h acls.h
+	 uam_auth.h uid.h unix.h volume.h afp_vfs.h hash.h acls.h acl_mappings.h
 
 LIBS = @LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
 
