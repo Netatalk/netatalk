@@ -389,7 +389,7 @@ int RF_renamefile_ads(const struct vol *vol, const char *src, const char *dst)
 	        struct adouble    ad;
 
             if (stat(adsrc, &st)) /* source has no ressource fork, */
-                return AFP_OK;
+                return 0;
             
             /* We are here  because :
              * -there's no dest folder. 
@@ -625,7 +625,7 @@ int RF_renamefile_adouble(const struct vol *vol, const char *src, const char *ds
 	        struct adouble    ad;
 
             if (stat(adsrc, &st)) /* source has no ressource fork, */
-                return AFP_OK;
+                return 0;
             
             /* We are here  because :
              * -there's no dest folder. 
@@ -766,9 +766,20 @@ RF_setdirowner_osx(const struct vol *vol _U_, const char *path _U_, uid_t uid _U
 int RF_renamefile_osx(const struct vol *vol, const char *src, const char *dst)
 {
     char  adsrc[ MAXPATHLEN + 1];
+    int   err = 0;
 
     strcpy( adsrc, vol->vfs->ad_path( src, 0 ));
-    return unix_rename( adsrc, vol->vfs->ad_path( dst, 0 ));
+
+    if (unix_rename( adsrc, vol->vfs->ad_path( dst, 0 )) < 0) {
+        struct stat st;
+
+        err = errno;
+        if (errno == ENOENT && stat(adsrc, &st)) /* source has no ressource fork, */
+            return 0;
+        errno = err;
+        return -1;
+    }
+    return 0;
 }
 
 struct vfs_ops netatalk_adouble_osx = {
