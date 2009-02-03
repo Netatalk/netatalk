@@ -6,7 +6,6 @@ if USE_NFSv4_ACLS
 
 noinst_LTLIBRARIES = libacl.la
 libacl_la_SOURCES = \
-	acl.c		\
 	ldap.c		\
 	uuid.c		\
 	cache.c		\
