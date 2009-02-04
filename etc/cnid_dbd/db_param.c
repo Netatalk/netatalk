@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.c,v 1.2 2005-04-28 20:49:47 bfernhomberg Exp $
+ * $Id: db_param.c,v 1.3 2009-02-04 20:28:01 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -36,7 +36,7 @@
 #define DEFAULT_FLUSH_FREQUENCY    100  
 #define DEFAULT_FLUSH_INTERVAL     30   
 #define DEFAULT_USOCK_FILE         "usock"
-#define DEFAULT_FD_TABLE_SIZE      16
+#define DEFAULT_FD_TABLE_SIZE      64
 #define DEFAULT_IDLE_TIMEOUT       600
 #define DEFAULT_CHECK              0
 
