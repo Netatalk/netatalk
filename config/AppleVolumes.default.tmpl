@@ -59,6 +59,12 @@
 # maccharset           -> specifies the charset to be used as the mac client codepage
 #                         e.g. "MAC_ROMAN", "MAC_CYRILLIC"
 #
+# perm                -> default permission value OR with the client requested perm
+# dperm               -> default permission value for directories OR with the client 
+#			 requested perm
+# fperm               -> default permission value for filesOR with the client 
+#			 requested perm
+#
 # miscellaneous options [syntax: options:option1,option2]:
 # prodos              -> make compatible with appleII clients.
 # crlf                -> enable crlf translation for TEXT files.
@@ -93,11 +99,8 @@
 #                        volume being mounted.
 # nostat              -> don't stat volume path when enumerating volumes list
 # upriv               -> use unix privilege.  
-# perm                -> default permission value OR with the client requested perm
-# dperm               -> default permission value for directories OR with the client 
-#			 requested perm
-# fperm               -> default permission value for filesOR with the client 
-#			 requested perm
+# illegalseq          -> encode illegal sequence in filename asis, ex "\217-", which is not
+#                        a valid SHIFT-JIS char, is encoded  as U\217 -
 # acls                -> Enable ACLs on this volume. Requires a NFSv4 ACLs
 #                        compatible filesystem (e.g. ZFS) and an ACL API
 #                        compatible to *Solaris. In other words: this requires
