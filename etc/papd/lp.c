@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.25 2009-02-02 08:54:20 didg Exp $
+ * $Id: lp.c,v 1.26 2009-02-04 22:35:45 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -296,6 +296,10 @@ static char* pipexlate(char *src)
             destlen -= len;
         }
     }
+    if (!destlen) {
+        /* reach end of buffer, maybe prematurely, give up */
+        return NULL;
+    }
     return destbuf;
 }
 
@@ -583,6 +587,11 @@ int lp_open( out, sat )
 
 	lp_setup_comments(CH_UNIX);
 	pipe_cmd = pipexlate(printer->p_printer);
+	if (!pipe_cmd) {
+	    LOG(log_error, logtype_papd, "lp_open: can't generate pipe cmd" );
+	    spoolerror( out, NULL );
+	    return( -1 );
+	}
 	if (( lp.lp_stream = popen(pipe_cmd, "w" )) == NULL ) {
 	    LOG(log_error, logtype_papd, "lp_open popen %s: %s", printer->p_printer, strerror(errno) );
 	    spoolerror( out, NULL );
