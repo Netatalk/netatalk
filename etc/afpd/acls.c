@@ -1,5 +1,5 @@
 /*
-   $Id: acls.c,v 1.1 2009-02-02 11:55:00 franklahm Exp $
+   $Id: acls.c,v 1.2 2009-02-08 11:13:01 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -1079,14 +1079,14 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     w_ok = check_acl_access(path, uuid, (DARWIN_ACE_WRITE_DATA|DARWIN_ACE_APPEND_DATA));
     x_ok = check_acl_access(path, uuid, DARWIN_ACE_EXECUTE);
 
-    LOG(log_error, logtype_afpd, "acltoownermode: ma_user before: %04o",ma->ma_user);
+    LOG(log_debug7, logtype_afpd, "acltoownermode: ma_user before: %04o",ma->ma_user);
     if (r_ok == 0)
 	ma->ma_user |= AR_UREAD;
     if (w_ok == 0)
 	ma->ma_user |= AR_UWRITE;
     if (x_ok == 0)
 	ma->ma_user |= AR_USEARCH;
-    LOG(log_error, logtype_afpd, "acltoownermode: ma_user after: %04o", ma->ma_user);
+    LOG(log_debug7, logtype_afpd, "acltoownermode: ma_user after: %04o", ma->ma_user);
 
     return;
 }
