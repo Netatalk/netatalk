@@ -1,5 +1,5 @@
 /*
-   $Id: uuidtest.c,v 1.1 2009-02-02 11:55:00 franklahm Exp $
+   $Id: uuidtest.c,v 1.2 2009-02-10 15:31:48 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -27,7 +27,6 @@
 
 #include <atalk/ldapconfig.h>
 #include <atalk/uuid.h>
-#include <atalk/logger.h>
 
 #define STRNCMP(a, R, b, l) (strncmp(a,b,l) R 0)
 
@@ -44,11 +43,6 @@ int main( int argc, char **argv)
 	return -1;
     }
     
-    set_processname("uuidtest");
-    log_init();
-    log_setup("uuid.log", log_maxdebug, logtype_default, logoption_cons);
-
-
     /* Parse ldap.conf */
     printf("Start parsing ldap.conf\n");
     acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
