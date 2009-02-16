@@ -14,6 +14,10 @@ if USE_NFSv4_ACLS
 afpd_SOURCES += acls.c
 endif
 
+if USE_EXT_ATTRS
+afpd_SOURCES += extattrs.c
+endif
+
 afpd_LDADD =  $(top_builddir)/libatalk/cnid/libcnid.la $(top_builddir)/libatalk/libatalk.la
 afpd_LDFLAGS = -export-dynamic
 

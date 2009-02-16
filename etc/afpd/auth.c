@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.55 2009-02-03 14:20:44 franklahm Exp $
+ * $Id: auth.c,v 1.56 2009-02-16 13:49:20 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,6 +49,9 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "fork.h"
 #ifdef HAVE_NFSv4_ACLS
 #include "acls.h"
+#endif
+#ifdef HAVE_EXT_ATTRS
+#include "extattrs.h"
 #endif
 
 int	afp_version = 11;
@@ -195,6 +198,12 @@ static int set_auth_switch(int expired)
 	    uam_afpserver_action(73, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
 	    uam_afpserver_action(74, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
 	    uam_afpserver_action(75, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
+#endif
+#ifdef HAVE_EXT_ATTRS
+	    uam_afpserver_action(69, UAM_AFPSERVER_POSTAUTH, afp_getextattr, NULL);
+	    uam_afpserver_action(70, UAM_AFPSERVER_POSTAUTH, afp_setextattr, NULL);
+	    uam_afpserver_action(71, UAM_AFPSERVER_POSTAUTH, afp_remextattr, NULL);
+	    uam_afpserver_action(72, UAM_AFPSERVER_POSTAUTH, afp_listextattr, NULL);
 #endif
         case 31:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL); 
