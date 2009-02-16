@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.21 2009-02-16 13:49:20 franklahm Exp $
+ * $Id: status.c,v 1.22 2009-02-16 14:03:30 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -580,8 +580,6 @@ char	*ibuf _U_, *rbuf;
 int	ibuflen _U_, *rbuflen;
 {
     AFPConfig *config = obj->config;
-
-    LOG(log_error, logtype_afpd, "afp_getsrvrinfo: options->flags: %04x", obj->options.flags);
 
     memcpy(rbuf, config->status, config->statuslen);
     *rbuflen = config->statuslen;
