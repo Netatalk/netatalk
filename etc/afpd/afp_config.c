@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.26 2009-02-02 11:55:00 franklahm Exp $
+ * $Id: afp_config.c,v 1.27 2009-02-16 12:56:42 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -541,6 +541,13 @@ AFPConfig *configinit(struct afp_options *cmdline)
     struct afp_options options;
     AFPConfig *config=NULL, *first = NULL; 
 
+#ifdef HAVE_NFSv4_ACLS
+    /* Parse ldap.conf first so we can set the uuid option */
+    LOG(log_debug, logtype_afpd, "Start parsing ldap.conf");
+    acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
+    LOG(log_debug, logtype_afpd, "Finished parsing ldap.conf");
+#endif
+
     status_reset();
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
@@ -577,6 +584,12 @@ AFPConfig *configinit(struct afp_options *cmdline)
         if (!afp_options_parseline(p, &options))
             continue;
 
+#ifdef HAVE_NFSv4_ACLS
+	/* Enable UUID support if LDAP config is complete */
+	if (ldap_config_valid)
+	    options.flags |= OPTION_UUID;
+#endif
+
         /* this should really get a head and a tail to simplify things. */
         if (!first) {
             if ((first = AFPConfigInit(&options, cmdline)))
@@ -591,21 +604,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
     if (!have_option)
         first = AFPConfigInit(cmdline, cmdline);
-
-#ifdef HAVE_NFSv4_ACLS
-    /* Parse ldap.conf */
-    LOG(log_debug, logtype_afpd, "Start parsing ldap.conf");
-    acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-    LOG(log_debug, logtype_afpd, "Finished parsing ldap.conf");
-
-    /* If we have a good LDAP config, enable UUID option for all apfd's */
-    config = first;
-    while(config) {
-	if (ldap_config_valid)
-	    config->obj.options.flags |= OPTION_UUID;
-	config = config->next;
-    }
-#endif
 
     return first;
 }
