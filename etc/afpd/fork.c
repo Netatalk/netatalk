@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.57 2008-12-03 18:35:44 didg Exp $
+ * $Id: fork.c,v 1.58 2009-02-25 16:14:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1098,6 +1098,39 @@ int	ibuflen _U_, *rbuflen;
     return( AFP_OK );
 }
 
+/*
+  There is a lot to tell about fsync, fdatasync, F_FULLFSYNC.
+  fsync(2) on OSX is implemented differently than on other platforms.
+  see: http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf.
+ */
+int afp_syncfork(obj, ibuf, ibuflen, rbuf, rbuflen )
+    AFPObj  *obj;
+    char    *ibuf, *rbuf _U_;
+    int     ibuflen _U_, *rbuflen;
+{
+    struct ofork        *ofork;
+    u_int16_t           ofrefnum;
+
+    *rbuflen = 0;
+    ibuf += 2;
+
+    memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
+    ibuf += sizeof( ofrefnum );
+
+    if (NULL == ( ofork == of_find( ofrefnum )) ) {
+        LOG(log_error, logtype_afpd, "afpd_syncfork: of_find(%d) could not locate fork", ofrefnum );
+        return( AFPERR_PARAM );
+    }
+
+    if ( flushfork( ofork ) < 0 ) {
+	LOG(log_error, logtype_afpd, "flushfork(%s): %s", of_name(ofork), strerror(errno) );
+	return AFPERR_MISC;
+    }
+
+    return( AFP_OK );
+}
+
+
 /* this is very similar to closefork */
 int flushfork( ofork )
 struct ofork	*ofork;
@@ -1114,7 +1147,7 @@ struct ofork	*ofork;
     }
 
     if ( ad_reso_fileno( ofork->of_ad ) != -1 &&  /* HF */
-           (ofork->of_flags & AFPFORK_RSRC)) {
+	 (ofork->of_flags & AFPFORK_RSRC)) {
 
         /* read in the rfork length */
         ad_refresh(ofork->of_ad);

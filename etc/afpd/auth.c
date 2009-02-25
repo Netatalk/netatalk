@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.56 2009-02-16 13:49:20 franklahm Exp $
+ * $Id: auth.c,v 1.57 2009-02-25 16:14:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -206,7 +206,10 @@ static int set_auth_switch(int expired)
 	    uam_afpserver_action(72, UAM_AFPSERVER_POSTAUTH, afp_listextattr, NULL);
 #endif
         case 31:
-	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL); 
+	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL);
+	    uam_afpserver_action(76, UAM_AFPSERVER_POSTAUTH, afp_null, NULL);
+	    uam_afpserver_action(78, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
+	    uam_afpserver_action(79, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
         case 30:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext, NULL); 
 	    uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL); 

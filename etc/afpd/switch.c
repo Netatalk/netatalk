@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.15 2009-02-02 11:55:01 franklahm Exp $
+ * $Id: switch.c,v 1.16 2009-02-25 16:14:08 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -155,7 +155,7 @@ int	(*postauth_switch[])() = {
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL,					/*  64 -  71 */
     NULL, NULL, NULL, NULL,
-    NULL, NULL, afp_syncdir, NULL,				/*  72 -  79 */
+    NULL, NULL, NULL, NULL,				        /*  72 -  79 */
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL,					/*  80 -  87 */
     NULL, NULL, NULL, NULL,
