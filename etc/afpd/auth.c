@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.58 2009-02-25 22:41:03 didg Exp $
+ * $Id: auth.c,v 1.59 2009-02-25 22:51:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -172,7 +172,7 @@ int	ibuflen _U_, *rbuflen;
 
 static int afp_null_nolog(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
+char	*ibuf _U_, *rbuf _U_;
 int	ibuflen _U_, *rbuflen;
 {
     *rbuflen = 0;
@@ -947,12 +947,9 @@ AFPObj  *obj _U_;
 char	*ibuf, *rbuf;
 int	ibuflen _U_, *rbuflen;
 {
-    int ret;
     u_int8_t  thisuser;
     u_int32_t id;
     u_int16_t bitmap;
-    uuid_t uuid;
-    char *uuidstring;
 
     LOG(log_debug, logtype_afpd, "begin afp_getuserinfo:");
 
@@ -993,6 +990,10 @@ int	ibuflen _U_, *rbuflen;
 
 #ifdef HAVE_NFSv4_ACLS
     if (bitmap & USERIBIT_UUID) {
+        int ret;
+        uuid_t uuid;
+        char *uuidstring;
+        
 	if ( ! (obj->options.flags & OPTION_UUID))
 	    return AFPERR_BITMAP;
 	LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
