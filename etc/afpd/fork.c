@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.58 2009-02-25 16:14:08 franklahm Exp $
+ * $Id: fork.c,v 1.59 2009-02-25 22:41:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1099,6 +1099,7 @@ int	ibuflen _U_, *rbuflen;
 }
 
 /*
+  FIXME
   There is a lot to tell about fsync, fdatasync, F_FULLFSYNC.
   fsync(2) on OSX is implemented differently than on other platforms.
   see: http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf.

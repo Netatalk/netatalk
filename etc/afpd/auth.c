@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.57 2009-02-25 16:14:08 franklahm Exp $
+ * $Id: auth.c,v 1.58 2009-02-25 22:41:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -170,6 +170,14 @@ int	ibuflen _U_, *rbuflen;
     return AFPERR_PWDEXPR;
 }
 
+static int afp_null_nolog(obj, ibuf, ibuflen, rbuf, rbuflen )
+AFPObj  *obj _U_;
+char	*ibuf, *rbuf _U_;
+int	ibuflen _U_, *rbuflen;
+{
+    *rbuflen = 0;
+    return( AFPERR_NOOP );
+}
 
 static int set_auth_switch(int expired)
 {
@@ -195,21 +203,21 @@ static int set_auth_switch(int expired)
         switch (afp_version) {
         case 32:
 #ifdef HAVE_NFSv4_ACLS
-	    uam_afpserver_action(73, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
-	    uam_afpserver_action(74, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
-	    uam_afpserver_action(75, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
+	    uam_afpserver_action(AFP_GETACL, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
+	    uam_afpserver_action(AFP_SETACL, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
+	    uam_afpserver_action(AFP_ACCESS, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
 #endif
 #ifdef HAVE_EXT_ATTRS
-	    uam_afpserver_action(69, UAM_AFPSERVER_POSTAUTH, afp_getextattr, NULL);
-	    uam_afpserver_action(70, UAM_AFPSERVER_POSTAUTH, afp_setextattr, NULL);
-	    uam_afpserver_action(71, UAM_AFPSERVER_POSTAUTH, afp_remextattr, NULL);
-	    uam_afpserver_action(72, UAM_AFPSERVER_POSTAUTH, afp_listextattr, NULL);
+	    uam_afpserver_action(AFP_GETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_getextattr, NULL);
+	    uam_afpserver_action(AFP_SETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_setextattr, NULL);
+	    uam_afpserver_action(AFP_REMOVEATTR, UAM_AFPSERVER_POSTAUTH, afp_remextattr, NULL);
+	    uam_afpserver_action(AFP_LISTEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_listextattr, NULL);
 #endif
         case 31:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL);
-	    uam_afpserver_action(76, UAM_AFPSERVER_POSTAUTH, afp_null, NULL);
-	    uam_afpserver_action(78, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
-	    uam_afpserver_action(79, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
+	    uam_afpserver_action(76, UAM_AFPSERVER_POSTAUTH, afp_null_nolog, NULL);
+	    uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
+	    uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
         case 30:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext, NULL); 
 	    uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL); 
