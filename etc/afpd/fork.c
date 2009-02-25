@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.59 2009-02-25 22:41:03 didg Exp $
+ * $Id: fork.c,v 1.60 2009-02-25 22:46:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1118,7 +1118,7 @@ int afp_syncfork(obj, ibuf, ibuflen, rbuf, rbuflen )
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
     ibuf += sizeof( ofrefnum );
 
-    if (NULL == ( ofork == of_find( ofrefnum )) ) {
+    if (NULL == ( ofork = of_find( ofrefnum )) ) {
         LOG(log_error, logtype_afpd, "afpd_syncfork: of_find(%d) could not locate fork", ofrefnum );
         return( AFPERR_PARAM );
     }
