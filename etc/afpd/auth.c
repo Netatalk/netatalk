@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.59 2009-02-25 22:51:36 didg Exp $
+ * $Id: auth.c,v 1.60 2009-02-26 14:05:05 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -202,6 +202,9 @@ static int set_auth_switch(int expired)
         afp_switch = postauth_switch;
         switch (afp_version) {
         case 32:
+	    uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE, UAM_AFPSERVER_POSTAUTH, afp_null_nolog, NULL);
+	    uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
+	    uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
 #ifdef HAVE_NFSv4_ACLS
 	    uam_afpserver_action(AFP_GETACL, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
 	    uam_afpserver_action(AFP_SETACL, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
@@ -215,9 +218,6 @@ static int set_auth_switch(int expired)
 #endif
         case 31:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL);
-	    uam_afpserver_action(76, UAM_AFPSERVER_POSTAUTH, afp_null_nolog, NULL);
-	    uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
-	    uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
         case 30:
 	    uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext, NULL); 
 	    uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL); 
