@@ -1,5 +1,5 @@
 /*
-   $Id: acls.c,v 1.2 2009-02-08 11:13:01 franklahm Exp $
+   $Id: acls.c,v 1.3 2009-02-26 14:00:18 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -48,24 +48,6 @@
 /********************************************************
  * Basic and helper funcs
  ********************************************************/
-
-static void hexdump(char *o, void *buf, size_t l) {
-    int count = 0, len;
-    unsigned char *p = (unsigned char *)buf;
-
-    while (l--) {
-        if ((count % 16) == 0) {
-            len = sprintf(o, "\n%p: ", p);
-	    o += len;
-	}
-	len = sprintf(o, "%02x ", *p);
-	o += len;
-	count++;
-        p++;
-    }
-    sprintf(o, "\n");
-}
-
 
 /* Get ACL. Allocates storage as needed. Caller must free.
  * Returns no of ACEs or -1 on error.  */
@@ -1062,8 +1044,6 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     struct passwd *pw;
     uuid_t uuid;
     int dir, r_ok, w_ok, x_ok;
-
-    dir = S_ISDIR(st->st_mode);
 
     if ((pw = getpwuid(uid)) == NULL) {
 	LOG(log_error, logtype_afpd, "acltoownermode: %s", strerror(errno));
