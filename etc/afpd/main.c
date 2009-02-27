@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.23 2006-08-01 09:01:32 didg Exp $
+ * $Id: main.c,v 1.24 2009-02-27 09:14:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -190,8 +190,10 @@ char	**av;
         exit(0);
     }
 
+#if 0
     /* Register CNID  */
     cnid_init();
+#endif
 
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here. 
@@ -283,6 +285,9 @@ char	**av;
         afp_exit(EXITERR_CONF);
     }
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
+
+    /* Register CNID  */
+    cnid_init();
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
     if ((ipc = server_ipc_create())) {

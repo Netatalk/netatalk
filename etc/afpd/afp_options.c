@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.37 2008-05-16 04:19:41 didg Exp $
+ * $Id: afp_options.c,v 1.38 2009-02-27 09:14:40 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -308,121 +308,50 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if ((c = getoption(buf, "-server_quantum")))
         options->server_quantum = strtoul(c, NULL, 0);
 
-#ifndef DISABLE_LOGGER
-    /* -setuplogtype <syslog|filelog> <logtype> <loglevel> <filename>*/
     /* -[no]setuplog <logtype> <loglevel> [<filename>]*/
-    if ((c = getoption(buf, "-setuplog")))
-    {
-      char *ptr, *logsource, *logtype, *loglevel, *filename;
-
-      LOG(log_debug6, logtype_afpd, "setting up logtype, c is %s", c);
+    if ((c = getoption(buf, "-setuplog"))) {
+      char *ptr, *logtype, *loglevel, *filename;
       ptr = c;
-      
-      /* 
-      logsource = ptr = c;
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr) 
-        {
-          *ptr++ = 0;
-          while (*ptr && isspace(*ptr))
-            ptr++;
-        }
-      }
-      */
 
+      /* logtype */
       logtype = ptr; 
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr) 
-        {
+
+      /* get loglevel */
+      ptr = strpbrk(ptr, " \t");
+      if (ptr) {
           *ptr++ = 0;
           while (*ptr && isspace(*ptr))
-            ptr++;
-        }
+	      ptr++;
+	  loglevel = ptr;
+      
+	  /* get filename */
+	  ptr = strpbrk(ptr, " \t");
+	  if (ptr) {
+	      *ptr++ = 0;
+	      while (*ptr && isspace(*ptr))
+		  ptr++;
+	  }
+	  filename = ptr;
       }
 
-      loglevel = ptr;
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr) 
-        {
-          *ptr++ = 0;
-          while (*ptr && isspace(*ptr))
-            ptr++;
-        }
-      }
-
-      filename = ptr;
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr) 
-        {
-          *ptr++ = 0;
-          while (*ptr && isspace(*ptr))
-            ptr++;
-        }
-      }
-
-      LOG(log_debug7, logtype_afpd, "calling setuplog %s %s %s", 
-          logtype, loglevel, filename);
-
+      /* finally call setuplog, filename can be NULL */
       setuplog(logtype, loglevel, filename);
     }
 
-    if ((c = getoption(buf, "-unsetuplog")))
-    {
+    if ((c = getoption(buf, "-unsetuplog"))) {
       char *ptr, *logtype, *loglevel, *filename;
 
-      LOG(log_debug6, logtype_afpd, "unsetting up logtype, c is %s", c);
+      /* logtype */
+      logtype = c; 
 
-      ptr = c;
-      logtype = ptr;
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr)
-        {
-          *ptr++ = 0;
-          while (*ptr && isspace(*ptr))
-            ptr++;
-        }
-      }
+      /* get filename, can be NULL */
+      strtok(c, " \t");
+      filename = strtok(NULL, " \t");
 
-      loglevel = ptr;
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr)
-        {
-          *ptr++ = 0;
-           while (*ptr && isspace(*ptr))
-             ptr++;
-        }
-      }
-
-      filename = ptr;
-      if (ptr)
-      {
-        ptr = strpbrk(ptr, " \t");
-        if (ptr)
-        {
-          *ptr++ = 0;
-          while (*ptr && isspace(*ptr))
-            ptr++;
-        }
-      }
-      
-      LOG(log_debug7, logtype_afpd, "calling setuplog %s %s %s",
-              logtype, NULL, filename);
-
+      /* finally call setuplog, filename can be NULL */
       setuplog(logtype, NULL, filename);
     }
-#endif /* DISABLE_LOGGER */
+
 #ifdef ADMIN_GRP
     if ((c = getoption(buf, "-admingroup"))) {
         struct group *gr = getgrnam(c);
@@ -794,9 +723,8 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
 
 #ifdef ultrix
     openlog( p, LOG_PID ); /* ultrix only */
-#else /* ultrix */
+#else
     set_processname(p);
-    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon);
 #endif /* ultrix */
 
     return 1;

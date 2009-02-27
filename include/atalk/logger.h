@@ -1,6 +1,8 @@
-
 #ifndef _ATALK_LOGGER_H
 #define _ATALK_LOGGER_H 1
+
+#include <limits.h>
+#include <stdio.h>
 
 #include <atalk/boolean.h>
 
@@ -11,19 +13,21 @@
 #define MAXLOGSIZE 512
 
 enum loglevels {
-  log_severe   = 0,
-  log_error    = 10,
-  log_warning  = 20,
-  log_note     = 30,
-  log_info     = 40,
-  log_debug    = 50,
-  log_debug6   = 60,
-  log_debug7   = 70,
-  log_debug8   = 80,
-  log_debug9   = 90,
-  log_maxdebug = 100
+    log_none     = 0,
+    log_severe   = 10,
+    log_error    = 20,
+    log_warning  = 30,
+    log_note     = 40,
+    log_info     = 50,
+    log_debug    = 60,
+    log_debug6   = 70,
+    log_debug7   = 80,
+    log_debug8   = 90,
+    log_debug9   = 100,
+    log_maxdebug = 110
 };
 #define LOGLEVEL_STRING_IDENTIFIERS { \
+  "LOG_NOTHING",                      \
   "LOG_SEVERE",                       \
   "LOG_ERROR",                        \
   "LOG_WARN",                         \
@@ -66,6 +70,9 @@ enum logtypes {
 /* Display Option flags. */
 /* redefine these so they can don't interfeer with syslog */
 /* these can be used in standard logging too */
+#define logoption_nsrcinfo    0x04   /* don't log source info */
+/* the following do not work anymore, they're only provided in order to not
+ * break existing source code */
 #define logoption_pid         0x01   /* log the pid with each message */
 #define logoption_cons        0x02   /* log on the console if error logging */
 #define logoption_ndelay      0x08   /* don't delay open */
@@ -84,15 +91,59 @@ enum logtypes {
 #define logfacility_authpriv    (10<<3) /* security/auth messages (private) */
 #define logfacility_ftp         (11<<3) /* ftp daemon */
 
-/* Setup the log filename and the loglevel, and the type of log it is. */
-/* setup the internal variables used by the logger (called automatically) */
-void log_init();
+/* ========================================================================= 
+    Structure definitions
+   ========================================================================= */
 
-bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype, 
-	       int display_options);
+/* Main log config */
+typedef struct {
+    int   inited;		  /* file log config initialized ? */
+    int   filelogging;		  /* Any level set to filelogging ? */
+                                  /* Deactivates syslog logging */
+    char  processname[16];
+    int   syslog_opened;	  /* syslog opened ? */
+    int   facility;               /* syslog facility to use */
+    int   syslog_display_options;
+    int   syslog_level;           /* Log Level to send to syslog */
+} log_config_t;
 
-/* Setup the Level and type of log that will be logged to syslog. */
-void syslog_setup(enum loglevels loglevel, enum logtypes logtype, 
+/* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
+typedef struct {
+    int  set;			  /* set individually ? yes: changing default
+				   * doesnt change it. no: it changes it.*/
+    char *filename;               /* Name of file */
+    int  fd;                      /* logfiles fd */
+    int  level;                   /* Log Level to put in this file */
+    int  display_options;
+} filelog_conf_t;
+
+/* ========================================================================= 
+    Global variables
+   ========================================================================= */
+
+#ifndef LOGGER_C
+/* Make config accessible for LOG macro */
+extern log_config_t log_config;
+extern filelog_conf_t file_configs[logtype_end_of_list_marker];
+
+/* These are used by the LOG macro to store __FILE__ and __LINE__ */
+extern char *log_src_filename;
+extern int  log_src_linenumber;
+#endif
+
+/* =========================================================================
+    Global function decarations
+   ========================================================================= */
+
+/*  */
+void log_init(void);
+
+/* Setup the level and type of log that will be logged for file loggging */
+bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype);
+
+/* Setup the level and type of log that will be logged to syslog. */
+//void syslog_setup(enum loglevels loglevel);
+void syslog_setup(int loglevel, enum logtypes logtype, 
 		  int display_options, int facility);
 
 /* void setuplog(char *logsource, char *logtype, char *loglevel, char *filename); */
@@ -104,21 +155,38 @@ void log_close();
 /* This function sets up the ProcessName */
 void set_processname(char *processname);
 
-/* Log a Message */
-void make_log_entry(enum loglevels loglevel, enum logtypes logtype, 
-             char *message, ...);
+/*
+ * How to write a LOG macro:
+ * http://c-faq.com/cpp/debugmacs.html
+ * 
+ * We choose the verbose form in favor of the obfuscated ones, its easier
+ * to parse for human beings and facilitates expanding the macro for
+ * inline checks for debug levels.
+ *
+ * How to properly enclose multistatement macros:
+ * http://en.wikipedia.org/wiki/C_macro#Multiple_statements
+ */
 
-#ifndef DISABLE_LOGGER
-typedef void(*make_log_func)
-       (enum loglevels loglevel, enum logtypes logtype, char *message, ...);
-make_log_func set_log_location(char *srcfilename, int srclinenumber);
+/* LOG macro func no.1: log the message to file */
+void make_log_entry(enum loglevels loglevel, enum logtypes logtype, char *message, ...);
 
-void LoadProccessNameFromProc();
+/* LOG macro func no.2: log the message to syslog */
+void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *message, ...);
 
-#define LOG set_log_location(__FILE__, __LINE__)
-#else /* DISABLE_LOGGER */
-/* if the logger is disabled the rest is a bit futile */
-#define LOG make_log_entry
-#endif /* DISABLE_LOGGER */
+/* 
+   Note:
+   any configured file-logging deactivates syslog logging
+ */
 
-#endif
+#define LOG(a,b, ...)  \
+  do { \
+    if ( ! log_config.inited) \
+      log_init(); \
+    if (file_configs[b].level >= a) \
+      log_src_filename = __FILE__, \
+      log_src_linenumber = __LINE__, \
+      make_log_entry(a, b, __VA_ARGS__); \
+    else if (( ! log_config.filelogging) && (log_config.syslog_level >= a)) \
+       make_syslog_entry(a, b, __VA_ARGS__); \
+  } while(0)  
+#endif /* _ATALK_LOGGER_H */

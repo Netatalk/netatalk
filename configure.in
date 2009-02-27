@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.211 2009-02-16 13:49:19 franklahm Exp $
+dnl $Id: configure.in,v 1.212 2009-02-27 09:14:40 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -206,11 +206,10 @@ NETATALK_AFS_CHECK
 
 NETATALK_CONFIG_DIRS
 
-AC_MSG_CHECKING([whether to use logfile])
+AC_MSG_CHECKING([whether to force logfile])
 AC_ARG_WITH(logfile,
-	[  --with-logfile=PATH     path for file used by logger],[
+	[  --with-logfile=PATH     force logging to file PATH],[
         if test x"$withval" = x"no"; then
-		AC_DEFINE(DISABLE_LOGGER, 1, [Define if the logger should not be used])
 		AC_MSG_RESULT([no, syslog])
 	elif test "$withval" != "yes"; then
 		AC_DEFINE_UNQUOTED(LOGFILEPATH, "$withval", [Path to the log file])
@@ -219,11 +218,9 @@ AC_ARG_WITH(logfile,
 		AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log", [Path to the log file])
 		AC_MSG_RESULT([/var/log/netatalk.log]) 
 	fi],[
-		AC_DEFINE(DISABLE_LOGGER, 1, [Define if the logger should not be used])
-		AC_MSG_RESULT([no, syslog])
+	AC_MSG_RESULT([no, syslog])
 	]
 )
-
 
 netatalk_cv_with_cracklib=no
 AC_ARG_WITH(cracklib,
@@ -1165,6 +1162,7 @@ AC_OUTPUT([Makefile
 	libatalk/nbp/Makefile
 	libatalk/netddp/Makefile
 	libatalk/util/Makefile
+	libatalk/util/test/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile

@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.60 2009-02-26 14:05:05 franklahm Exp $
+ * $Id: auth.c,v 1.61 2009-02-27 09:14:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -248,9 +248,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     int admin = 0;
 #endif /* ADMIN_GRP */
 
-    /* UAM had syslog control; afpd needs to reassert itself */
+#if 0
     set_processname("afpd");
-    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon);
+#endif
 
     if ( pwd->pw_uid == 0 ) {	/* don't allow root login */
         LOG(log_error, logtype_afpd, "login: root login denied!" );

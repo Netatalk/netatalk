@@ -1,5 +1,7 @@
 # Makefile.am for libatalk/util/
 
+SUBDIRS = . test
+
 noinst_LTLIBRARIES = libutil.la
 
 AM_CFLAGS = -I$(top_srcdir)/sys @CFLAGS@
