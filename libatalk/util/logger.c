@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -94,7 +95,7 @@ static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
     Internal function definitions
    ========================================================================= */
 
-void generate_message_details(char *message_details_buffer, 
+static void generate_message_details(char *message_details_buffer, 
                               int message_details_buffer_length,
                               int display_options,
                               enum loglevels loglevel, enum logtypes logtype)
@@ -128,21 +129,26 @@ void generate_message_details(char *message_details_buffer,
 
     /* Source info ? */
     if ( ! (display_options & logoption_nsrcinfo)) {
-	templen = snprintf(ptr, len, " {%s:%d}", log_src_filename, log_src_linenumber);
+	char *basename = strrchr(log_src_filename, '/');
+	if (basename)
+	    templen = snprintf(ptr, len, " {%s:%d}", basename + 1, log_src_linenumber);
+	else
+	    templen = snprintf(ptr, len, " {%s:%d}", log_src_filename, log_src_linenumber);	    
+	if (templen >= len)
+	    return;
 	len -= templen;
 	ptr += templen;
     }
 
     /* Errorlevel */
-    if ((loglevel/10) >= (num_loglevel_chars-1))
-	templen = snprintf(ptr, len,  " (%c%d:", arr_loglevel_chars[num_loglevel_chars-1], loglevel / 10 - 1);
+    if (loglevel >= (num_loglevel_chars - 1))
+	templen = snprintf(ptr, len,  " (D%d:", loglevel - 1);
     else
-	templen = snprintf(ptr, len, " (%c:", arr_loglevel_chars[loglevel/10]);
+	templen = snprintf(ptr, len, " (%c:", arr_loglevel_chars[loglevel]);
     len -= templen;
     ptr += templen;    
 
     /* Errortype */
-    const char *logtype_string;
     if (logtype<num_logtype_strings) {
         templen = snprintf(ptr, len, "%s", arr_logtype_strings[logtype]);
 	len -= templen;
@@ -154,7 +160,7 @@ void generate_message_details(char *message_details_buffer,
 
 int get_syslog_equivalent(enum loglevels loglevel)
 {
-  switch (loglevel/10)
+  switch (loglevel)
   {
     /* The question is we know how bad it is for us,
                     but how should that translate in the syslogs?  */
@@ -180,15 +186,15 @@ int get_syslog_equivalent(enum loglevels loglevel)
 void log_init(void)
 {
 #ifdef LOGFILEPATH
-    log_setup(LOGFILEPATH, log_warning, logtype_default);
+    log_setup(LOGFILEPATH, log_note, logtype_default);
 #else
-    syslog_setup(log_warning, 0,
+    syslog_setup(log_note, 0,
 		 log_config.syslog_display_options,
 		 log_config.facility);
 #endif
 }
 
-bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
+void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 {
     uid_t process_uid;
 
@@ -214,17 +220,17 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 	    }
 	}
 
-	return true;
+	return;
     }
 
     /* Safety check */
     if (NULL == filename)
-	return false;
+	return;
 
     /* Resetting existing config ? */
     if (file_configs[logtype].set && file_configs[logtype].filename) {
 	free(file_configs[logtype].filename);
-	file_configs[logtype].filename == NULL;
+	file_configs[logtype].filename = NULL;
 	close(file_configs[logtype].fd);
 	file_configs[logtype].fd = -1;
 	file_configs[logtype].level = 0;
@@ -237,12 +243,14 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 
 
     /* Open log file as OPEN_LOGS_AS_UID*/
-    process_uid = getuid();
-    setuid(OPEN_LOGS_AS_UID);
+    process_uid = geteuid();
+    if (process_uid)
+	seteuid(OPEN_LOGS_AS_UID);
     file_configs[logtype].fd = open( file_configs[logtype].filename,
 				     O_CREAT | O_WRONLY | O_APPEND,
 				     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    setuid(process_uid);
+    if (process_uid)
+	seteuid(process_uid);
 
     /* Check for error opening/creating logfile */
     if (-1 == file_configs[logtype].fd) {
@@ -250,7 +258,7 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 	file_configs[logtype].filename = NULL;
 	file_configs[logtype].level = -1;
 	file_configs[logtype].set = 0;
-	return false;
+	return;
     }
     
     file_configs[logtype].set = 1;
@@ -273,14 +281,12 @@ bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 	logtype = logtype_default;
     }
 
-    LOG(log_info, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
-	arr_logtype_strings[logtype], arr_loglevel_strings[loglevel/10], file_configs[logtype].filename);
-
-    return true;
+    LOG(log_note, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
+	arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], file_configs[logtype].filename);
 }
 
 /* logtype is ignored, it's just one for all */
-void syslog_setup(int loglevel, enum logtypes logtype, 
+void syslog_setup(int loglevel, enum logtypes logtype _U_,
 		  int display_options, int facility)
 {
     log_config.syslog_level = loglevel;
@@ -289,8 +295,8 @@ void syslog_setup(int loglevel, enum logtypes logtype,
 
     log_config.inited = 1;
 
-    LOG(log_info, logtype_logger, "Setup syslog logging: type: %s, level: %s",
-	arr_logtype_strings[logtype], arr_loglevel_strings[loglevel/10]);
+    LOG(log_note, logtype_logger, "Set syslog logging to level: %s",
+	arr_loglevel_strings[loglevel]);
 }
 
 void log_close()
@@ -312,46 +318,55 @@ void set_processname(char *processname)
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype, 
 		    char *message, ...)
 {
-    size_t n = 0;
-    int fd;
-  va_list args;
-  char temp_buffer[MAXLOGSIZE];
   /* fn is not reentrant but is used in signal handler 
    * with LOGGER it's a little late source name and line number
-   * are already changed.
-  */
-  static int inlog = 0;
+   * are already changed. */
+    static int inlog = 0;
+    int fd, len;
+    char temp_buffer[MAXLOGSIZE];
+    char log_details_buffer[MAXLOGSIZE];
+    va_list args;
+    struct iovec iov[2];
 
-  char log_details_buffer[MAXLOGSIZE];
-  uid_t process_uid;
   if (inlog)
      return;
   inlog = 1;
 
   /* Initialise the Messages */
   va_start(args, message);
-  vsnprintf(temp_buffer, sizeof(temp_buffer), message, args);
+  len = vsnprintf(temp_buffer, MAXLOGSIZE - 1, message, args);
   va_end(args);
-  strncat(temp_buffer, "\n", MAXLOGSIZE);
+
+  /* Append \n */
+  if (len >= MAXLOGSIZE)
+      /* vsnprintf hit the buffer size*/
+      temp_buffer[MAXLOGSIZE-2] = '\n';
+  else {
+      temp_buffer[len] = '\n';
+      temp_buffer[len+1] = 0;
+  }
 
   generate_message_details(log_details_buffer, sizeof(log_details_buffer),
-			   file_configs[loglevel].set ? 
-			       file_configs[loglevel].display_options : 
+			   file_configs[logtype].set ? 
+			       file_configs[logtype].display_options : 
        			       file_configs[logtype_default].display_options, 
 			   loglevel, logtype);
 
   /* Check if requested logtype is setup */
-  if (file_configs[loglevel].set)
+  if (file_configs[logtype].set)
       /* Yes */
-      fd = file_configs[loglevel].fd;
+      fd = file_configs[logtype].fd;
   else
       /* No: use default */
       fd = file_configs[logtype_default].fd;
 
   /* If default wasnt setup its fd is -1 */
   if (fd > 0) {
-      write( fd, log_details_buffer, strlen(log_details_buffer) );
-      write( fd, temp_buffer, strlen(temp_buffer) );
+      iov[0].iov_base = log_details_buffer;
+      iov[0].iov_len = strlen(log_details_buffer);
+      iov[1].iov_base = temp_buffer;
+      iov[1].iov_len = strlen(temp_buffer);
+      writev( fd,  iov, 2);
   }
 
   inlog = 0;
@@ -426,9 +441,6 @@ void setuplog(char *logtype, char *loglevel, char *filename)
       }
   }
 
-  /* now match the order of the text string with the actual enum value (10 times) */
-  levelnum *= 10;
-  
   /* is this a syslog setup or a filelog setup ? */
   if (filename == NULL) {
       /* must be syslog */

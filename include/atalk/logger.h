@@ -13,18 +13,18 @@
 #define MAXLOGSIZE 512
 
 enum loglevels {
-    log_none     = 0,
-    log_severe   = 10,
-    log_error    = 20,
-    log_warning  = 30,
-    log_note     = 40,
-    log_info     = 50,
-    log_debug    = 60,
-    log_debug6   = 70,
-    log_debug7   = 80,
-    log_debug8   = 90,
-    log_debug9   = 100,
-    log_maxdebug = 110
+    log_none,
+    log_severe,
+    log_error,
+    log_warning,
+    log_note,
+    log_info,
+    log_debug,
+    log_debug6,
+    log_debug7,
+    log_debug8,
+    log_debug9,
+    log_maxdebug
 };
 #define LOGLEVEL_STRING_IDENTIFIERS { \
   "LOG_NOTHING",                      \
@@ -139,10 +139,9 @@ extern int  log_src_linenumber;
 void log_init(void);
 
 /* Setup the level and type of log that will be logged for file loggging */
-bool log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype);
+void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype);
 
 /* Setup the level and type of log that will be logged to syslog. */
-//void syslog_setup(enum loglevels loglevel);
 void syslog_setup(int loglevel, enum logtypes logtype, 
 		  int display_options, int facility);
 
