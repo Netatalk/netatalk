@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.1 2009-02-16 13:49:20 franklahm Exp $
+  $Id: extattrs.c,v 1.2 2009-03-03 13:51:25 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -42,8 +42,12 @@
 #include "fork.h"
 #include "extattrs.h"
 
-char *ea_finderinfo = "com.apple.FinderInfo";
-char *ea_resourcefork = "com.apple.ResourceFork";
+static char *ea_finderinfo = "com.apple.FinderInfo";
+static char *ea_resourcefork = "com.apple.ResourceFork";
+
+/* This should be big enough to consecutively store the names of all attributes */
+#define ATTRNAMEBUFSIZ 4096
+static char attrnamebuf[ATTRNAMEBUFSIZ];
 
 static void hexdump(void *m, size_t l) {
     char *p = m;
@@ -76,7 +80,7 @@ static int getextattr_size(char *rbuf, int *rbuflen, char *uname, int oflag, cha
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
 
-            *(uint32_t *)rbuf = 0;
+	    memset(rbuf, 0, 4);
             *rbuflen += 4;
 
             return AFP_OK;
@@ -97,7 +101,8 @@ static int getextattr_size(char *rbuf, int *rbuflen, char *uname, int oflag, cha
     LOG(log_debug7, logtype_afpd, "getextattr_size(%s): attribute: \"%s\", size: %u", uname, attruname, attrsize);
 
     /* length of attribute data */
-    *(uint32_t *)rbuf = htonl((uint32_t)attrsize);
+    attrsize = htonl(attrsize);
+    memcpy(rbuf, &attrsize, 4);
     *rbuflen += 4;
 
     ret = AFP_OK;
@@ -111,7 +116,7 @@ static int getextattr_content(char *rbuf, int *rbuflen, char *uname, int oflag, 
 {
     int                 ret, attrdirfd;
     size_t              toread, okread = 0, len;
-    uint32_t            *datalength;
+    char                *datalength;
     struct stat         st;
 
     if ( -1 == (attrdirfd = attropen(uname, attruname, O_RDONLY | oflag))) {
@@ -119,7 +124,7 @@ static int getextattr_content(char *rbuf, int *rbuflen, char *uname, int oflag, 
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
 
-            *(uint32_t *)rbuf = 0;
+	    memset(rbuf, 0, 4);
             *rbuflen += 4;
 
             return AFP_OK;
@@ -146,7 +151,7 @@ static int getextattr_content(char *rbuf, int *rbuflen, char *uname, int oflag, 
     LOG(log_debug7, logtype_afpd, "getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
 
     /* remember where we must store length of attribute data in rbuf */
-    datalength = (uint32_t *)rbuf;
+    datalength = rbuf;
     rbuf += 4;
     *rbuflen += 4;
 
@@ -164,7 +169,8 @@ static int getextattr_content(char *rbuf, int *rbuflen, char *uname, int oflag, 
             break;
     }
 
-    *datalength = htonl((uint32_t)okread);
+    okread = htonl((uint32_t)okread);
+    memcpy(datalength, &okread, 4);
 
     ret = AFP_OK;
 
@@ -173,6 +179,71 @@ exit:
     return ret;
 }
 
+int list_extattr(AFPObj *obj, char *attrnamebuf, int *buflen, char *uname, int oflag)
+{
+    int ret, attrbuflen = *buflen, len, attrdirfd = 0;
+    struct dirent *dp;
+    DIR *dirp = NULL;
+
+    /* Now list file attribute dir */
+    if ( -1 == (attrdirfd = attropen( uname, ".", O_RDONLY | oflag))) {
+	if (errno == ELOOP) {
+	    /* its a symlink and client requested O_NOFOLLOW */
+	    ret = AFPERR_BADTYPE;
+	    goto exit;
+	}	
+	LOG(log_error, logtype_afpd, "list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
+	ret = AFPERR_MISC;
+	goto exit;
+    }
+
+    if (NULL == (dirp = fdopendir(attrdirfd))) {
+	LOG(log_error, logtype_afpd, "list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
+	ret = AFPERR_MISC;
+	goto exit;
+    }
+    
+    while ((dp = readdir(dirp)))  {
+	/* check if its "." or ".." */
+	if ((strcmp(dp->d_name, ".") == 0) || (strcmp(dp->d_name, "..") == 0) ||
+	    (strcmp(dp->d_name, "SUNWattr_ro") == 0) || (strcmp(dp->d_name, "SUNWattr_rw") == 0))
+	    continue;
+	
+	len = strlen(dp->d_name);
+	
+	if ( 0 >= ( len = convert_string(obj->options.unixcharset, CH_UTF8_MAC, dp->d_name, len, attrnamebuf + attrbuflen, 255)) ) {
+	    ret = AFPERR_MISC;
+	    goto exit;
+	}
+	if (len == 255)
+	    /* convert_string didn't 0-terminate */
+	    attrnamebuf[attrbuflen + 255] = 0;
+	
+	LOG(log_debug7, logtype_afpd, "list_extattr(%s): attribute: %s", uname, dp->d_name);
+	
+	attrbuflen += len + 1;
+	if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
+	    /* Next EA name could overflow, so bail out with error.
+	       FIXME: evantually malloc/memcpy/realloc whatever.
+	       Is it worth it ? */
+	    LOG(log_warning, logtype_afpd, "list_extattr(%s): running out of buffer for EA names", uname);
+	    ret = AFPERR_MISC;
+	    goto exit;
+	}
+    }
+
+    ret = AFP_OK;
+
+exit:
+    if (dirp)
+        closedir(dirp);
+
+    if (attrdirfd > 0)
+        close(attrdirfd);
+
+    *buflen = attrbuflen;
+    return ret;
+}
 
 /***************************************
  * Interface
@@ -185,7 +256,7 @@ exit:
  */
 int afp_listextattr(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
-    int                 count, attrdirfd = 0, ret, len, oflag = 0;
+    int                 count, ret, oflag = 0;
     uint16_t            vid, bitmap;
     uint32_t            did, maxreply;
     struct vol          *vol;
@@ -193,14 +264,8 @@ int afp_listextattr(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *r
     struct path         *s_path;
     struct adouble      ad, *adp = NULL;
     struct ofork        *of;
-    struct dirent       *dp;
     char                *uname, *FinderInfo;
-    DIR                 *dirp = NULL;
-
-    static int          buf_valid = 0, attrbuflen;
-    /* This should be big enough to consecutively store the names of all attributes */
-#define ATTRNAMEBUFSIZ 4096
-    static char         attrnamebuf[ATTRNAMEBUFSIZ];
+    static int          buf_valid = 0, attrbuflen = 0;
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "afp_listextattr: BEGIN");
@@ -303,71 +368,36 @@ int afp_listextattr(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *r
 	    attrbuflen += strlen(ea_resourcefork) + 1;	    
 	}
 
-        /* Now list file attribute dir */
-        if ( -1 == (attrdirfd = attropen( uname, ".", O_RDONLY | oflag))) {
-            if (errno == ELOOP) {
-                /* its a symlink and client requested O_NOFOLLOW */
-                LOG(log_debug, logtype_afpd, "afp_listextattr(%s): encountered symlink with kXAttrNoFollow", uname);
-
-                *(uint16_t *)rbuf = htons(bitmap);
-                rbuf += 2;
-                *rbuflen += 2;
-
-                *(uint32_t *)rbuf = 0;
-                *rbuflen += 4;
-
-                ret = AFP_OK;
-                goto exit;
-            }
-            LOG(log_error, logtype_afpd, "afp_listextattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-            ret = AFPERR_MISC;
-            goto exit;
-        }
-        if (NULL == (dirp = fdopendir(attrdirfd))) {
-            LOG(log_error, logtype_afpd, "afp_listextattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-            ret = AFPERR_MISC;
-            goto exit;
-        }
-
-        while ((dp = readdir(dirp)))  {
-            /* check if its "." or ".." */
-            if ((strcmp(dp->d_name, ".") == 0) || (strcmp(dp->d_name, "..") == 0) ||
-                (strcmp(dp->d_name, "SUNWattr_ro") == 0) || (strcmp(dp->d_name, "SUNWattr_rw") == 0))
-                continue;
-
-            len = strlen(dp->d_name);
-
-	    if ( 0 >= ( len = convert_string(obj->options.unixcharset, CH_UTF8_MAC, dp->d_name, len, attrnamebuf + attrbuflen, 255)) ) {
-		ret = AFPERR_MISC;
-		goto exit;
-	    }
-	    if (len == 255)
-		/* convert_string didn't 0-terminate */
-		attrnamebuf[attrbuflen + 255] = 0;
-		
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): attribute: %s", uname, dp->d_name);
-
-            attrbuflen += len + 1;
-	    if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
-		/* Next EA name could overflow, so bail out with error.
-		   FIXME: evantually malloc/memcpy/realloc whatever.
-		   Is it worth it ? */
-		ret = AFPERR_MISC;
-		goto exit;
-	    }
-        }
-        buf_valid = 1;
+	ret = list_extattr(obj, attrnamebuf, &attrbuflen, uname, oflag);
+	switch (ret) {
+	case AFPERR_BADTYPE:
+	    /* its a symlink and client requested O_NOFOLLOW */
+	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): encountered symlink with kXAttrNoFollow", uname);
+	    attrbuflen = 0;
+	    buf_valid = 0;
+	    ret = AFP_OK;
+	    goto exit;
+	case AFPERR_MISC:
+	    attrbuflen = 0;
+	    goto exit;
+	default:
+	    buf_valid = 1;
+	}
     }
 
     /* Start building reply packet */
-    *(uint16_t *)rbuf = htons(bitmap);
+    bitmap = htons(bitmap);
+    memcpy( rbuf, &bitmap, 2);
     rbuf += 2;
     *rbuflen += 2;
 
-    *(uint32_t *)rbuf = htonl(attrbuflen);
+    attrbuflen = htonl(attrbuflen);
+    memcpy( rbuf, &attrbuflen, 4);
     rbuf += 4;
     *rbuflen += 4;
 
+    /* Only copy buffer if the client asked for it (2nd request, maxreply>0)
+       and we didnt have an error (buf_valid) */
     if (maxreply && buf_valid) {
         memcpy( rbuf, attrnamebuf, attrbuflen);
         *rbuflen += attrbuflen;
@@ -381,14 +411,6 @@ exit:
 	buf_valid = 0;
     if (adp)
         ad_close_metadata( adp);
-    if (dirp) {
-        closedir(dirp);
-        dirp = NULL;
-    }
-    if (attrdirfd) {
-        close(attrdirfd);
-        attrdirfd = 0;
-    }
 
     LOG(log_debug9, logtype_afpd, "afp_listextattr: END");
     return ret;
@@ -436,7 +458,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
     ibuf += 16;
 
     /* Get MaxReply */
-    maxreply = ntohl(*((uint32_t *)ibuf));
+    memcpy(&maxreply, ibuf, 4);
+    maxreply = ntohl(maxreply);
     ibuf += 4;
 
     /* get name */
@@ -449,7 +472,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
         ibuf++;
 
     /* get length of EA name */
-    attrnamelen = ntohs(*((uint16_t *)ibuf));
+    memcpy(&attrnamelen, ibuf, 2);
+    attrnamelen = ntohs(attrnamelen);
     ibuf += 2;
     if (attrnamelen > 255)
 	/* dont fool with us */
@@ -470,7 +494,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
 	attruname[255] = 0;
     
     /* write bitmap now */
-    *(uint16_t *)rbuf = htons(bitmap);
+    bitmap = htons(bitmap);
+    memcpy(rbuf, &bitmap, 2);
     rbuf += 2;
     *rbuflen += 2;
     
@@ -545,7 +570,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
         ibuf++;
 
     /* get length of EA name */
-    attrnamelen = ntohs(*((uint16_t *)ibuf));
+    memcpy(&attrnamelen, ibuf, 2);
+    attrnamelen = ntohs(attrnamelen);
     ibuf += 2;
     if (attrnamelen > 255)
 	return AFPERR_PARAM;
@@ -564,7 +590,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
 	attruname[255] = 0;
 
     /* get EA size */
-    attrsize = ntohl(*((uint32_t *)ibuf));
+    memcpy(&attrsize, ibuf, 4);
+    attrsize = ntohl(attrsize);
     ibuf += 4;
     if (attrsize > MAX_EA_SIZE)
 	/* we arbitrarily make this fatal */
@@ -648,7 +675,8 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
         ibuf++;
 
     /* get length of EA name */
-    attrnamelen = ntohs(*((uint16_t *)ibuf));
+    memcpy(&attrnamelen, ibuf, 2);
+    attrnamelen = ntohs(attrnamelen);
     ibuf += 2;
     if (attrnamelen > 255)
 	return AFPERR_PARAM;
