@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.4 2009-02-04 20:12:47 didg Exp $
+ * $Id: cnid_metad.c,v 1.5 2009-03-06 13:05:52 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -95,7 +95,7 @@ static int srvfd;
 static int rqstfd;
 volatile sig_atomic_t alarmed = 0;
 
-#define MAXSRV 128
+#define MAXSRV 512
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
 
