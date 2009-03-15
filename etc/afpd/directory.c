@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.91 2009-02-02 11:55:00 franklahm Exp $
+ * $Id: directory.c,v 1.92 2009-03-15 13:00:14 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2466,10 +2466,7 @@ int	ibuflen _U_, *rbuflen;
     u_int32_t           id;
     int			len, sfunc;
     int         utf8 = 0;
-    uuidtype_t          type;
 
-    LOG(log_debug, logtype_afpd, "afp_mapid: BEGIN");
-    
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     *rbuflen = 0;
@@ -2514,8 +2511,8 @@ int	ibuflen _U_, *rbuflen;
 	}
             break;
 #ifdef HAVE_NFSv4_ACLS
-    case 5 : /* username -> UUID  */
-    case 6 : /* groupname -> UUID */
+    case 5 : /* UUID -> username */
+    case 6 : /* UUID -> groupname */
 	if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
 	    return AFPERR_PARAM;
 	LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
@@ -2551,8 +2548,9 @@ int	ibuflen _U_, *rbuflen;
             return( AFPERR_PARAM );
         }
 
-        len = strlen( name );
-
+        if (name)
+            len = strlen( name );
+        
     if (utf8) {
         u_int16_t tp = htons(len);
         memcpy(rbuf, &tp, sizeof(tp));
@@ -2582,9 +2580,6 @@ int	ibuflen _U_, *rbuflen;
     int             len, sfunc;
     u_int32_t       id;
     u_int16_t       ulen;
-    char            *uuidstring;
-
-    LOG(log_debug, logtype_afpd, "afp_mapname: BEGIN");
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
