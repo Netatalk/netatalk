@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.92 2009-03-15 13:00:14 franklahm Exp $
+ * $Id: directory.c,v 1.93 2009-03-16 13:59:12 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -444,6 +444,7 @@ static void dir_hash_del(const struct vol *vol, struct dir *dir)
 /* remove the node from the tree. this is just like insertion, but
  * different. actually, it has to worry about a bunch of things that
  * insertion doesn't care about. */
+
 static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
 {
 #ifdef REMOVE_NODES
@@ -1264,12 +1265,24 @@ char	**cpath;
             if (toUTF8) {
                 static char	temp[ MAXPATHLEN + 1];
 
-                /* not an UTF8 name */
-                if (mtoUTF8(vol, path, strlen(path), temp, MAXPATHLEN) == (size_t)-1) {
-                    afp_errno = AFPERR_PARAM;
-                    return( NULL );
+                if (dir->d_did == DIRDID_ROOT_PARENT) {
+                    /*
+                      With uft8 volume name is utf8-mac, but requested path may be a mangled longname. See #2611981.
+                      So we compare it with the longname from the current volume and if they match
+                      we overwrite the requested path with the utf8 volume name so that the following
+                      strcmp can match.
+                    */
+                    ucs2_to_charset(vol->v_maccharset, vol->v_macname, temp, AFPVOL_MACNAMELEN + 1);
+                    if (strcasecmp( path, temp) == 0)
+                        ucs2_to_charset(CH_UTF8_MAC, vol->v_u8mname, path, AFPVOL_U8MNAMELEN);
+                } else {
+                    /* toUTF8 */
+                    if (mtoUTF8(vol, path, strlen(path), temp, MAXPATHLEN) == (size_t)-1) {
+                        afp_errno = AFPERR_PARAM;
+                        return( NULL );
+                    }
+                    strcpy(path, temp);
                 }
-                strcpy(path, temp);
             }
             /* check for OS X mangled filename :( */
 	    
@@ -1293,15 +1306,14 @@ char	**cpath;
         }
         if ( !extend ) {
             if (dir->d_did == DIRDID_ROOT_PARENT) {
-                    /* root parent has only one child and d_m_name is *NOT* utm (d_u_name)
-                     * d_m_name is the Mac volume name
-                     * d_u_name is the volume unix directory name
-                     *
-                    */
-                cdir = NULL;
-                if (!strcmp(vol->v_dir->d_m_name, ret.m_name)) {
-			cdir = vol->v_dir;
-                }
+                /* 
+                   root parent (did 1) has one child: the volume. Requests for did=1 with some <name>
+                   must check against the volume name.
+                */
+                if (!strcmp(vol->v_dir->d_m_name, ret.m_name))
+                    cdir = vol->v_dir;
+                else
+                    cdir = NULL;
             }
             else {
                 cdir = dirsearch_byname(vol, dir, ret.u_name);

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.80 2009-02-16 13:49:20 franklahm Exp $
+ * $Id: volume.c,v 1.81 2009-03-16 13:59:12 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -53,6 +53,7 @@ char *strchr (), *strrchr ();
 #include "file.h"
 #include "volume.h"
 #include "unix.h"
+#include "mangle.h"
 #include "fork.h"
 
 extern int afprun(int root, char *cmd, int *outfd);
@@ -190,6 +191,7 @@ static const _vol_opt_name vol_opt_casefold[] = {
 static void handle_special_folders (const struct vol *);
 static int savevoloptions (const struct vol *);
 static void deletevol(struct vol *vol);
+static void volume_free(struct vol *vol);
 
 static void volfree(struct vol_option *options,
                                const struct vol_option *save)
@@ -548,7 +550,7 @@ static void showvol(const ucs2_t *name)
 {
     struct vol	*volume;
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-        if (volume->v_hide && !strcasecmp_w( volume->v_name, name ) ) {
+      if (volume->v_hide && !strcasecmp_w( (utf8_encoding()?volume->v_u8mname:volume->v_macname), name ) ) {
             volume->v_hide = 0;
             return;
         }
@@ -563,9 +565,12 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
                     )
 {
     struct vol	*volume;
-    int		vlen;
+    int         suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
     int         hide = 0;
-    ucs2_t	tmpname[512];
+    char        tmpname[AFPVOL_U8MNAMELEN+1];
+    ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
+    char        suffix[6]; /* max is #FFFF */
+    u_int16_t   flags;
 
     if ( name == NULL || *name == '\0' ) {
         if ((name = strrchr( path, '/' )) == NULL) {
@@ -577,18 +582,70 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             return -1;
     }
 
+    /* suffix for mangling use (lastvid + 1)   */
+    /* because v_vid has not been decided yet. */
+    suffixlen = sprintf(suffix, "%c%X", MANGLE_CHAR, lastvid + 1 );
+
     vlen = strlen( name );
-    if ( vlen > AFPVOL_NAMELEN ) {
-        vlen = AFPVOL_NAMELEN;
-        name[AFPVOL_NAMELEN] = '\0';
+
+    /* Unicode Volume Name */
+    /* Firstly convert name from unixcharset to UTF8-MAC */
+    flags = CONV_IGNORE;
+    tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, AFPVOL_U8MNAMELEN, &flags);
+    if (tmpvlen <= 0) {
+        strcpy(tmpname, "???");
+        tmpvlen = 3;
     }
 
-    /* convert name to UCS2 first */
-    if ( 0 >= ( vlen = convert_string(obj->options.unixcharset, CH_UCS2, name, vlen, tmpname, 512)) )
+    /* Do we have to mangle ? */
+    if ( (flags & CONV_REQMANGLE) || (tmpvlen > obj->options.volnamelen)) {
+        if (tmpvlen + suffixlen > obj->options.volnamelen) {
+            flags = CONV_FORCE;
+            tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, obj->options.volnamelen - suffixlen, &flags);
+            tmpname[tmpvlen != (size_t)-1 ? tmpvlen : 0] = 0;
+        }
+        strcat(tmpname, suffix);
+        tmpvlen = strlen(tmpname);
+    }
+
+    /* Secondly convert name from UTF8-MAC to UCS2 */
+    if ( 0 >= ( u8mvlen = convert_string(CH_UTF8_MAC, CH_UCS2, tmpname, tmpvlen, u8mtmpname, AFPVOL_U8MNAMELEN*2)) )
         return -1;
 
+    LOG(log_debug, logtype_afpd, "createvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
+
+    /* Maccharset Volume Name */
+    /* Firsty convert name from unixcharset to maccharset */
+    flags = CONV_IGNORE;
+    tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_U8MNAMELEN, &flags);
+    if (tmpvlen <= 0) {
+        strcpy(tmpname, "???");
+        tmpvlen = 3;
+    }
+
+    /* Do we have to mangle ? */
+    if ( (flags & CONV_REQMANGLE) || (tmpvlen > AFPVOL_MACNAMELEN)) {
+        if (tmpvlen + suffixlen > AFPVOL_MACNAMELEN) {
+            flags = CONV_FORCE;
+            tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_MACNAMELEN - suffixlen, &flags);
+            tmpname[tmpvlen != (size_t)-1 ? tmpvlen : 0] = 0;
+        }
+        if (*tmpname == 0) {
+            strcat(tmpname, "???");
+        }
+        strcat(tmpname, suffix);
+        tmpvlen = strlen(tmpname);
+    }
+
+    /* Secondly convert name from maccharset to UCS2 */
+    if ( 0 >= ( macvlen = convert_string(obj->options.maccharset, CH_UCS2, tmpname, tmpvlen, mactmpname, AFPVOL_U8MNAMELEN*2)) )
+        return -1;
+
+    LOG(log_debug, logtype_afpd, "createvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
+
+    /* check duplicate */
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-        if ( strcasecmp_w( volume->v_name, tmpname ) == 0 ) {
+      if (( strcasecmp_w( volume->v_u8mname, u8mtmpname ) == 0 ) || ( strcasecmp_w( volume->v_macname, mactmpname ) == 0 )){
            if (volume->v_deleted) {
                volume->v_new = hide = 1;
            }
@@ -598,19 +655,31 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         }
     }
 
-
     if (!( volume = (struct vol *)calloc(1, sizeof( struct vol ))) ) {
         LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
         return -1;
     }
-    if ( NULL == ( volume->v_name = strdup_w(tmpname))) {
+    if ( NULL == ( volume->v_localname = strdup(name))) {
         LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
+        free(volume);
+        return -1;
+    }
+
+    if ( NULL == ( volume->v_u8mname = strdup_w(u8mtmpname))) {
+        LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
+        volume_free(volume);
+        free(volume);
+        return -1;
+    }
+    if ( NULL == ( volume->v_macname = strdup_w(mactmpname))) {
+        LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
+        volume_free(volume);
         free(volume);
         return -1;
     }
     if (!( volume->v_path = (char *)malloc( strlen( path ) + 1 )) ) {
         LOG(log_error, logtype_afpd, "creatvol: malloc: %s", strerror(errno) );
-        free(volume->v_name);
+        volume_free(volume);
         free(volume);
         return -1;
     }
@@ -934,7 +1003,7 @@ struct passwd *pwent;
 {
     FILE		*fp;
     char		path[ MAXPATHLEN + 1], tmp[ MAXPATHLEN + 1],
-    volname[ AFPVOL_NAMELEN + 1 ], buf[ BUFSIZ ],
+    volname[ AFPVOL_U8MNAMELEN + 1 ], buf[ BUFSIZ ],
     type[ 5 ], creator[ 5 ];
     char		*u, *p;
     struct passwd	*pw;
@@ -1094,8 +1163,12 @@ struct passwd *pwent;
 /* ------------------------------- */
 static void volume_free(struct vol *vol)
 {
-    free(vol->v_name);
-    vol->v_name = NULL;
+    free(vol->v_localname);
+    vol->v_localname = NULL;
+    free(vol->v_u8mname);
+    vol->v_u8mname = NULL;
+    free(vol->v_macname);
+    vol->v_macname = NULL;
     free(vol->v_path);
     free(vol->v_password);
     free(vol->v_veto);
@@ -1127,7 +1200,7 @@ static void free_volumes(void )
     for ( vol = Volumes, ovol = NULL; vol; vol = nvol) {
         nvol = vol->v_next;
 
-        if (vol->v_name == NULL) {
+        if (vol->v_localname == NULL) {
            if (Volumes == vol) {
                Volumes = nvol;
                ovol = Volumes;
@@ -1253,6 +1326,8 @@ int		*buflen;
     VolSpace            xbfree, xbtotal; /* extended bytes */
     char		*data, *nameoff = NULL;
     char                *slash;
+
+    LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
 
     /* courtesy of jallison@whistle.com:
      * For MacOS8.x support we need to create the
@@ -1425,8 +1500,8 @@ int		*buflen;
     if ( nameoff ) {
         ashort = htons( data - buf );
         memcpy(nameoff, &ashort, sizeof( ashort ));
-        /* name is always in mac charset, FIXME mangle if length > 27 char */
-	aint = ucs2_to_charset( vol->v_maccharset, vol->v_name, data+1, 255);
+        /* name is always in mac charset */
+	aint = ucs2_to_charset( vol->v_maccharset, vol->v_macname, data+1, AFPVOL_MACNAMELEN + 1);
 	if ( aint <= 0 ) {
 	    *buflen = 0;
             return AFPERR_MISC;
@@ -1573,8 +1648,13 @@ int 	ibuflen _U_, *rbuflen;
         if (volume->v_hide) {
             continue;		/* config file changed but the volume was mounted */
         }
-	len = ucs2_to_charset_allocate((utf8_encoding()?CH_UTF8_MAC:obj->options.maccharset),
-					&namebuf, volume->v_name);
+
+	if (utf8_encoding()) {
+	    len = ucs2_to_charset_allocate(CH_UTF8_MAC, &namebuf, volume->v_u8mname);
+	} else {
+	    len = ucs2_to_charset_allocate(obj->options.maccharset, &namebuf, volume->v_macname);
+	}
+
 	if (len == (size_t)-1)
 		continue;
 
@@ -1646,8 +1726,12 @@ int	ibuflen _U_, *rbuflen;
     if ((volname_tmp = strchr(volname,'+')) != NULL)
         volname = volname_tmp+1;
 
-    namelen = convert_string( (utf8_encoding()?CH_UTF8_MAC:obj->options.maccharset), CH_UCS2,
-                              ibuf, len, volname, sizeof(obj->oldtmp));
+    if (utf8_encoding()) {
+      namelen = convert_string(CH_UTF8_MAC, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
+    } else {
+      namelen = convert_string(obj->options.maccharset, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
+    }
+
     if ( namelen <= 0){
         *rbuflen = 0;
         return AFPERR_PARAM;
@@ -1660,7 +1744,7 @@ int	ibuflen _U_, *rbuflen;
     load_volumes(obj);
 
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-        if ( strcasecmp_w( (ucs2_t*) volname, volume->v_name ) == 0 ) {
+        if ( strcasecmp_w( (ucs2_t*) volname, (utf8_encoding()?volume->v_u8mname:volume->v_macname) ) == 0 ) {
             break;
         }
     }
@@ -1687,7 +1771,7 @@ int	ibuflen _U_, *rbuflen;
     /* initialize volume variables
      * FIXME file size
     */
-    if (afp_version >= 30) {
+    if (utf8_encoding()) {
         volume->max_filename = 255;
     }
     else {
@@ -1730,8 +1814,11 @@ int	ibuflen _U_, *rbuflen;
         goto openvol_err;
     }
 
-    len = convert_string_allocate( CH_UCS2, (utf8_encoding()?CH_UTF8_MAC:obj->options.maccharset),
-                              	       volume->v_name, namelen, &vol_mname);
+    if (utf8_encoding()) {
+        len = convert_string_allocate(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, namelen, &vol_mname);
+    } else {
+        len = convert_string_allocate(CH_UCS2, obj->options.maccharset, volume->v_macname, namelen, &vol_mname);
+    }
     if ( !vol_mname || len <= 0) {
         ret = AFPERR_MISC;
         goto openvol_err;
@@ -1914,7 +2001,7 @@ static void deletevol(struct vol *vol)
 
     closevol(vol);
     if (vol->v_deleted) {
-	showvol(vol->v_name);
+      showvol(utf8_encoding()?vol->v_u8mname:vol->v_macname);
 	volume_free(vol);
 	volume_unlink(vol);
 	free(vol);

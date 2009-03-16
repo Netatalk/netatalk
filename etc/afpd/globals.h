@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.25 2009-02-02 11:55:00 franklahm Exp $
+ * $Id: globals.h,v 1.26 2009-03-16 13:59:12 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -79,10 +79,10 @@ struct afp_options {
 #ifdef ADMIN_GRP
     gid_t admingid;
 #endif /* ADMIN_GRP */
+    int    volnamelen;
 
     /* default value for winbind authentication */
     char *ntdomain, *ntseparator;
-
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)

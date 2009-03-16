@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.38 2009-02-27 09:14:40 franklahm Exp $
+ * $Id: afp_options.c,v 1.39 2009-03-16 13:59:12 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -186,7 +186,7 @@ void afp_options_init(struct afp_options *options)
     options->unixcodepage = "LOCALE";
     options->maccharset = CH_MAC;
     options->maccodepage = "MAC_ROMAN";
-
+    options->volnamelen = 31; /* Conservative default. 10.4/10.5 can handle up to 80 */
     options->ntdomain = NULL;
     options->ntseparator = NULL;
 }
@@ -307,6 +307,16 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-server_quantum")))
         options->server_quantum = strtoul(c, NULL, 0);
+
+    if ((c = getoption(buf, "-volnamelen"))) {
+        options->volnamelen = atoi(c);
+        if (options->volnamelen < 8) {
+            options->volnamelen = 8; /* max mangled volname "???#FFFF" */
+        }
+        if (options->volnamelen > 255) {
+	    options->volnamelen = 255; /* AFP3 spec */
+        }
+    }
 
     /* -[no]setuplog <logtype> <loglevel> [<filename>]*/
     if ((c = getoption(buf, "-setuplog"))) {

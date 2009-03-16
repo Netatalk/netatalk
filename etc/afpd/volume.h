@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.28 2009-02-16 13:49:20 franklahm Exp $
+ * $Id: volume.h,v 1.29 2009-03-16 13:59:12 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -17,13 +17,16 @@
 #include "afp_vfs.h"
 #include "hash.h"
 
-#define AFPVOL_NAMELEN   27
+#define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
+#define AFPVOL_MACNAMELEN    27 /* AFP2 spec */
 
 #include <atalk/cnid.h>
 
 struct vol {
     struct vol		*v_next;
-    ucs2_t		*v_name;
+    char        *v_localname;   /* as defined in AppleVolumes.default */
+    ucs2_t		*v_u8mname;     /* converted to utf8-mac in ucs2 */
+    ucs2_t		*v_macname;     /* mangled to legacy longname in ucs2 */
     char		*v_path;
     
     struct dir		*v_dir, *v_root;
