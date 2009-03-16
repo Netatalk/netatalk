@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.61 2009-02-27 09:14:40 franklahm Exp $
+ * $Id: auth.c,v 1.62 2009-03-16 11:02:43 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -994,24 +994,26 @@ int	ibuflen _U_, *rbuflen;
         uuid_t uuid;
         char *uuidstring;
         
-	if ( ! (obj->options.flags & OPTION_UUID))
-	    return AFPERR_BITMAP;
-	LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
-	ret = getuuidfromname( obj->username, UUID_USER, uuid);
-	if (ret != 0) {
-	    LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
-	    return AFPERR_NOITEM;
-	}
-	uuid_bin2string( uuid, &uuidstring);
-	LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuidstring);
-	free(uuidstring);
-	memcpy(rbuf, uuid, UUID_BINSIZE);
-	rbuf += UUID_BINSIZE;
-	*rbuflen += UUID_BINSIZE;
+        if ( ! (obj->options.flags & OPTION_UUID))
+            return AFPERR_BITMAP;
+        LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
+        ret = getuuidfromname( obj->username, UUID_USER, uuid);
+        if (ret != 0) {
+            LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
+            return AFPERR_NOITEM;
+        }
+        if (0 == (uuid_bin2string( uuid, &uuidstring)) {
+            LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuidstring);
+            free(uuidstring);
+        }
+        memcpy(rbuf, uuid, UUID_BINSIZE);
+        rbuf += UUID_BINSIZE;
+        *rbuflen += UUID_BINSIZE;
     }
 #endif
-    return AFP_OK;
+
     LOG(log_debug, logtype_afpd, "END afp_getuserinfo:");
+    return AFP_OK;
 }
 
 #define UAM_LIST(type) (((type) == UAM_SERVER_LOGIN || (type) == UAM_SERVER_LOGIN_EXT) ? &uam_login : \
