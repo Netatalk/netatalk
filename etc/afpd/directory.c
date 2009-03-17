@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.93 2009-03-16 13:59:12 franklahm Exp $
+ * $Id: directory.c,v 1.94 2009-03-17 14:30:57 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2478,6 +2478,7 @@ int	ibuflen _U_, *rbuflen;
     u_int32_t           id;
     int			len, sfunc;
     int         utf8 = 0;
+    uuidtype_t          type;
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
