@@ -32,7 +32,6 @@ NONGENERATED_MANS	=	achfile.1  \
 				papstatus.1 \
 				psorder.1 \
 				single2bin.1 \
-				timeout.1 \
 				unbin.1 \
 				unhex.1 \
 				unsingle.1
