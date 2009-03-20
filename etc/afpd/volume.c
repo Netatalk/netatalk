@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.81 2009-03-16 13:59:12 franklahm Exp $
+ * $Id: volume.c,v 1.82 2009-03-20 06:19:26 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -629,9 +629,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             flags = CONV_FORCE;
             tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_MACNAMELEN - suffixlen, &flags);
             tmpname[tmpvlen != (size_t)-1 ? tmpvlen : 0] = 0;
-        }
-        if (*tmpname == 0) {
-            strcat(tmpname, "???");
         }
         strcat(tmpname, suffix);
         tmpvlen = strlen(tmpname);
