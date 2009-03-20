@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.82 2009-03-20 06:19:26 franklahm Exp $
+ * $Id: volume.c,v 1.83 2009-03-20 11:32:11 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -119,9 +119,11 @@ m=u -> map both ways
 #endif /* FORCE_UIDGID */
 
 #define VOLOPT_UMASK     21
-#define VOLOPT_DPERM     22  /* dperm default directories perms */
-#define VOLOPT_FPERM     23  /* fperm default files perms */
-#define VOLOPT_DFLTPERM  24  /* perm */
+#define VOLOPT_ALLOWED_HOSTS 22
+#define VOLOPT_DENIED_HOSTS  23
+#define VOLOPT_DPERM     24  /* dperm default directories perms */
+#define VOLOPT_FPERM     25  /* fperm default files perms */
+#define VOLOPT_DFLTPERM  26  /* perm */
 
 #define VOLOPT_MAX       (VOLOPT_DFLTPERM +1)
 
@@ -538,6 +540,12 @@ static void volset(struct vol_option *options, struct vol_option *save,
     } else if (optionok(tmp, "postexec:", val)) {
         setoption(options, save, VOLOPT_POSTEXEC, val);
 
+    } else if (optionok(tmp, "allowed_hosts:", val)) {
+        setoption(options, save, VOLOPT_ALLOWED_HOSTS, val);
+
+    } else if (optionok(tmp, "denied_hosts:", val)) {
+        setoption(options, save, VOLOPT_DENIED_HOSTS, val);
+
     } else {
         /* ignore unknown options */
         LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
@@ -863,6 +871,55 @@ const char *name;
     return 0;
 }
 
+static int hostaccessvol(type, volname, args, obj)
+int type;
+char *volname;
+const char *args;
+const AFPObj *obj;
+{
+    char buf[MAXPATHLEN + 1], *p, *b;
+    DSI *dsi = obj->handle;
+
+    if (!args)
+        return -1;
+
+    strlcpy(buf, args, sizeof(buf));
+    if ((p = strtok_r(buf, ",", &b)) == NULL) /* nothing, return okay */
+        return -1;
+
+    while (p) {
+        if (obj->proto == AFPPROTO_DSI) {
+            struct in_addr mask, net;
+            char *net_char, *mask_char;
+            int mask_int;
+
+            net_char = strtok(p, "/");
+            mask_char = strtok(NULL,"/");
+            if (mask_char == NULL) {
+                mask_int = 32;
+            } else {
+                mask_int = atoi(mask_char);
+            }
+           
+            // convert the integer netmask to a bitmask in network order
+            mask.s_addr = htonl(-1 - ((1 << (32 - mask_int)) - 1));
+            net.s_addr = inet_addr(net_char) & mask.s_addr;
+
+            if ((dsi->client.sin_addr.s_addr & mask.s_addr) == net.s_addr) {
+		    if (type == VOLOPT_DENIED_HOSTS)
+			LOG(log_info, logtype_afpd, "AFP access denied for client IP '%s' to volume '%s' by denied list",
+			    inet_ntoa(dsi->client.sin_addr), volname);
+		    return 1;
+	    }
+        }
+        p = strtok_r(NULL, ",", &b);
+    }
+    if (type == VOLOPT_ALLOWED_HOSTS)
+	LOG(log_info, logtype_afpd, "AFP access denied for client IP '%s' to volume '%s', not in allowed list",
+	    inet_ntoa(dsi->client.sin_addr), volname);
+    return 0;
+}
+
 static void setextmap( ext, type, creator, user)
 char		*ext, *type, *creator;
 int			user;
@@ -1118,7 +1175,9 @@ struct passwd *pwent;
                allow -> either no list (-1), or in list (1)
                deny -> either no list (-1), or not in list (0) */
             if (accessvol(options[VOLOPT_ALLOW].c_value, obj->username) &&
-                    (accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1)) {
+		(accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1) &&
+		hostaccessvol(VOLOPT_ALLOWED_HOSTS, volname, options[VOLOPT_ALLOWED_HOSTS].c_value, obj) &&
+		(hostaccessvol(VOLOPT_DENIED_HOSTS, volname, options[VOLOPT_DENIED_HOSTS].c_value, obj) < 1)) {
 
                 /* handle read-only behaviour. semantics:
                  * 1) neither the rolist nor the rwlist exist -> rw
