@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.34 2009-02-27 09:14:40 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.35 2009-03-20 09:10:25 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -288,6 +288,7 @@ void afp_over_dsi(AFPObj *obj)
         afp_dsi_die(EXITERR_SYS);
     }
 
+#ifndef DEBUGGING
     /* tickle handler */
     action.sa_handler = alarm_handler;
     sigemptyset(&action.sa_mask);
@@ -302,6 +303,7 @@ void afp_over_dsi(AFPObj *obj)
             (setitimer(ITIMER_REAL, &dsi->timer, NULL) < 0)) {
         afp_dsi_die(EXITERR_SYS);
     }
+#endif /* DEBUGGING */
 
 #ifdef DEBUG1
     fault_setup((void (*)(void *))afp_dsi_die);
@@ -323,7 +325,9 @@ void afp_over_dsi(AFPObj *obj)
                 dsi_tickle(dsi);
             continue;
         } else if (!(child.flags & CHILD_DIE)) { /* reset tickle timer */
+#ifndef DEBUGGING
             setitimer(ITIMER_REAL, &dsi->timer, NULL);
+#endif
         }
         switch(cmd) {
         case DSIFUNC_CLOSE:

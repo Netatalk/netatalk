@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.12 2007-03-25 15:51:50 didg Exp $
+ * $Id: dsi_tcp.c,v 1.13 2009-03-20 09:10:25 franklahm Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -131,10 +131,11 @@ static int dsi_tcp_open(DSI *dsi)
     struct sigaction newact, oldact;
     u_int8_t block[DSI_BLOCKSIZ];
     size_t stored;
-    
+
     /* reset signals */
     server_reset_signal();
 
+#ifndef DEBUGGING
     /* install an alarm to deal with non-responsive connections */
     newact.sa_handler = timeout_handler;
     sigemptyset(&newact.sa_mask);
@@ -148,6 +149,7 @@ static int dsi_tcp_open(DSI *dsi)
 	LOG(log_error, logtype_default, "dsi_tcp_open: %s", strerror(errno));
 	exit(EXITERR_SYS);
     }
+#endif
     
     /* read in commands. this is similar to dsi_receive except
      * for the fact that we do some sanity checking to prevent
@@ -201,10 +203,11 @@ static int dsi_tcp_open(DSI *dsi)
     }
     
     /* stop timer and restore signal handler */
+#ifndef DEBUGGING
     memset(&timer, 0, sizeof(timer));
     setitimer(ITIMER_REAL, &timer, NULL);
     sigaction(SIGALRM, &oldact, NULL);
-
+#endif
     LOG(log_info, logtype_default,"ASIP session:%u(%d) from %s:%u(%d)", 
 	   ntohs(dsi->server.sin_port), dsi->serversock, 
 	   inet_ntoa(dsi->client.sin_addr), ntohs(dsi->client.sin_port),
