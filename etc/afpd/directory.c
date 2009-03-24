@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.94 2009-03-17 14:30:57 franklahm Exp $
+ * $Id: directory.c,v 1.95 2009-03-24 11:02:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1173,7 +1173,7 @@ char	**cpath;
     int         size = 0;
     char        sep;
     int         toUTF8 = 0;
-       	
+
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
     memset(&ret, 0, sizeof(ret));
@@ -2187,6 +2187,9 @@ int     ibuflen _U_, *rbuflen;
         return afp_errno; /* was AFPERR_NOOBJ */
     }
 
+    if (movecwd( vol, dir ) < 0 )
+        return ( AFPERR_NOOBJ ); 
+
     if (NULL == ( dp = opendir( "." )) ) {
         switch( errno ) {
         case ENOENT :
@@ -2198,12 +2201,33 @@ int     ibuflen _U_, *rbuflen;
         }
     }
 
+    LOG(log_debug, logtype_afpd, "afp_syncdir: dir: '%s'", dir->d_u_name);
+
     dfd = dirfd( dp );
-    if ( fsync ( dfd ) < 0 ) {
-        LOG(log_error, logtype_afpd, "syncdir(%s): ddir(%d) %s", dir->d_u_name, dfd, strerror(errno) );
+    if ( fsync ( dfd ) < 0 )
+        LOG(log_error, logtype_afpd, "afp_syncdir(%s):  %s",
+            dir->d_u_name, strerror(errno) );
+    closedir(dp); /* closes dfd too */
+
+    if ( -1 == (dfd = open(vol->vfs->ad_path(".", ADFLAGS_DIR), O_RDONLY))) {
+        switch( errno ) {
+        case ENOENT:
+            return( AFPERR_NOOBJ );
+        case EACCES:
+            return( AFPERR_ACCESS );
+        default:
+            return( AFPERR_PARAM );
+        }        
     }
-    closedir(dp);
+
+    LOG(log_debug, logtype_afpd, "afp_syncdir: ad-file: '%s'",
+        vol->vfs->ad_path(".", ADFLAGS_DIR) );
     
+    if ( fsync(dfd) < 0 )
+        LOG(log_error, logtype_afpd, "afp_syncdir(%s): %s",
+            vol->vfs->ad_path(dir->d_u_name, ADFLAGS_DIR), strerror(errno) );
+    close(dfd);
+
     return ( AFP_OK );
 }
 
