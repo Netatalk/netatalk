@@ -1,4 +1,4 @@
-dnl $Id: db3-check.m4,v 1.16 2009-03-06 11:45:01 franklahm Exp $
+dnl $Id: db3-check.m4,v 1.17 2009-03-25 15:53:03 franklahm Exp $
 dnl Autoconf macros to check for the Berkeley DB library
 
 dnl -- check header for minimum version and return version in
@@ -135,7 +135,7 @@ AC_DEFUN([AC_PATH_BDB],[
                         eval export $shlibpath_var=$saved_shlibpath_var
 
                         if test x"${atalk_cv_bdb_version}" = x"yes"; then
-                            BDB_CFLAGS="-I${bdbdir}${subdir}/include"
+                            BDB_CFLAGS="-I${bdbdir}/include${subdir}"
                             BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
                             BDB_BIN="$bdbbindir"
                             BDB_PATH="$bdbdir"
