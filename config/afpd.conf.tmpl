@@ -143,18 +143,19 @@
 #     -[un]setuplog "<logtype> <loglevel> [<filename>]"
 #                         Specify that any message of a loglevel up to the given loglevel
 #                         should be logged to the given file. If the filename is ommited the
-#                         loglevel applies to messages passed to syslog. Latter -setuplog
-#                         settings will override earlier ones of the same logtype (file or
-#                         syslog).
-#               
+#                         loglevel applies to messages passed to syslog.
+#
 #                         By default (no explicit -setuplog and no buildtime configure flag
-#                         --with-logfile) all netatalk daemons log to syslog with a default
-#                         logging setup equivalent to "-setuplog default log_debug".
+#                         --with-logfile) afpd logs to syslog with a default
+#                         logging setup equivalent to "-setuplog default log_note".
 #               
-#                         If build with --with-logfile (default logfile
-#                         /var/log/netatalk.log) or --with-logfile=somefile all daemons
-#                         default to a setup that is equivalent to "-setuplog default
-#                         log_info [netatalk.log|somefile]"
+#                         If build with --with-logfile[=somefile] (default logfile
+#                         /var/log/netatalk.log) afpd defaults to a setup that is equivalent
+#                         to "-setuplog default log_note [netatalk.log|somefile]"
+#
+#                         logtypes:  Default, AFPDaemon, Logger, UAMSDaemon
+#                         loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE, LOG_INFO, LOG_DEBUG,
+#                                    LOG_DEBUG6, LOG_DEBUG7, LOG_DEBUG8, LOG_DEBUG9, LOG_MAXDEBUG
 #
 #                Example: Useful default config
 #                         -setuplog "default log_info /var/log/afpd.log"
