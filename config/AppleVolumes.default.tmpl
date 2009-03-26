@@ -6,12 +6,14 @@
 # :DEFAULT: [all of the default options except volume name]
 # path [name] [casefold:x] [options:z,l,j] \
 #   [allow:a,@b,c,d] [deny:a,@b,c,d] [dbpath:path] [password:p] \
-#   [rwlist:a,@b,c,d] [rolist:a,@b,c,d] [limitsize:value in bytes]\
-#   [preexec:cmd] [root_preexec:cmd] [postexec:cmd]  [root_postexec:cmd] 
+#   [rwlist:a,@b,c,d] [rolist:a,@b,c,d] [limitsize:value in bytes] \
+#   [preexec:cmd] [root_preexec:cmd] [postexec:cmd]  [root_postexec:cmd] \
+#   [allowed_hosts:IPv4 address[/IPv4 netmask bits]] \
+#   [denied_hosts:IPv4 address[/IPv4 netmask bits]] \
+#   
 #
 #
-# name:      volume name. it can't include the ':' character and is limited
-#            to 27 characters in length.
+# name:      volume name. it can't include the ':' character
 #
 # variable substitutions:
 # you can use variables for both <path> and <name> now. here are the
@@ -43,7 +45,13 @@
 # allow/deny/rwlist/rolist format [syntax: allow:user1,@group]:
 # user1,@group,user2  -> allows/denies access from listed users/groups
 #                        rwlist/rolist control whether or not the
-#			 volume is ro for those users.
+#                        volume is ro for those users.
+# allowed_hosts       -> Only listed hosts and networks are allowed,
+#                        all others are rejected. Example:
+#                        allowed_hosts:10.1.0.0/16,10.2.1.100
+# denied_hosts        -> Listed hosts and nets are rejected,
+#                        all others are allowed. Example:
+#                        denied_hosts: 192.168.100/24,10.1.1.1
 # preexec             -> command to be run when the volume is mounted,
 #                        ignore for user defined volumes
 # root_preexec        -> command to be run as root when the volume is mounted,
