@@ -134,11 +134,12 @@
 #     -volnamelen <number>
 #                         Max length of UTF8-MAC volume name for Mac OS X.
 #                         Note that Hangul is especially sensitive to this.
-#                           31:  conservative default
-#                           80:  limit for Mac OS X 10.5
 #                           255: limit of spec
-#                         Mac OS 9 and earlier are not influenced by this,
-#                         Maccharset volume name is always 27 limit.
+#                           80:  limit of generic Mac OS X (default)
+#                           73:  limit of Mac OS X 10.1, if >= 74
+#                                Finder crashed and restart repeatedly.
+#                         Mac OS 9 and earlier is not influenced by this,
+#                         Maccharset volume names are always limitted to 27.
 #     -[un]setuplog "<logtype> <loglevel> [<filename>]"
 #                         Specify that any message of a loglevel up to the given loglevel
 #                         should be logged to the given file. If the filename is ommited the
