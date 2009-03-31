@@ -31,6 +31,7 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <time.h>
+#include <ctype.h>
 
 #include <atalk/boolean.h>
 
@@ -94,6 +95,57 @@ static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
 /* =========================================================================
     Internal function definitions
    ========================================================================= */
+
+/* 
+ * If filename == NULL its for syslog logging, otherwise its for file-logging.
+ * "unsetuplog" calls with loglevel == NULL.
+ * loglevel == NULL means:
+ *    if logtype == default
+ *       disable logging
+ *    else 
+ *       set to default logging
+ */
+
+  /* -[un]setuplog <logtype> <loglevel> [<filename>]*/
+static void setuplog_internal(char *logtype, char *loglevel, char *filename)
+{
+  int typenum, levelnum;
+
+  /* Parse logtype */
+  for( typenum=0; typenum < num_logtype_strings; typenum++) {
+      if (strcasecmp(logtype, arr_logtype_strings[typenum]) == 0)
+	  break;
+  }
+  if (typenum >= num_logtype_strings) {
+      return;
+  }
+
+  /* Parse loglevel */
+  if (loglevel == NULL) {
+      levelnum = 0;
+  } else {
+      for(levelnum=1; levelnum < num_loglevel_strings; levelnum++) {
+	  if (strcasecmp(loglevel, arr_loglevel_strings[levelnum]) == 0)
+	      break;
+      }
+      if (levelnum >= num_loglevel_strings) {
+	  return;
+      }
+  }
+
+  /* is this a syslog setup or a filelog setup ? */
+  if (filename == NULL) {
+      /* must be syslog */
+      syslog_setup(levelnum, 0, 
+		   log_config.syslog_display_options,
+		   log_config.facility);
+  } else {
+      /* this must be a filelog */
+      log_setup(filename, levelnum, typenum);
+  }
+
+  return;
+}
 
 static void generate_message_details(char *message_details_buffer, 
                               int message_details_buffer_length,
@@ -260,7 +312,8 @@ void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 	file_configs[logtype].set = 0;
 	return;
     }
-    
+
+    fcntl(file_configs[logtype].fd, F_SETFD, FD_CLOEXEC);
     file_configs[logtype].set = 1;
     log_config.filelogging = 1;
     log_config.inited = 1;
@@ -304,7 +357,7 @@ void log_close()
 }
 
 /* This function sets up the processname */
-void set_processname(char *processname)
+void set_processname(const char *processname)
 {
   strncpy(log_config.processname, processname, 15);
   log_config.processname[15] = 0;
@@ -361,7 +414,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
       fd = file_configs[logtype_default].fd;
 
   /* If default wasnt setup its fd is -1 */
-  if (fd > 0) {
+  if (fd >= 0) {
       iov[0].iov_base = log_details_buffer;
       iov[0].iov_len = strlen(log_details_buffer);
       iov[1].iov_base = temp_buffer;
@@ -403,54 +456,53 @@ void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *mes
     inlog = 0;
 }
 
-/* 
- * This is called from the afpd.conf parsing code.
- * If filename == NULL its for syslog logging, otherwise its for file-logging.
- * "unsetuplog" calls with loglevel == NULL.
- * loglevel == NULL means:
- *    if logtype == default
- *       disable logging
- *    else 
- *       set to default logging
- */
-
-  /* -[un]setuplog <logtype> <loglevel> [<filename>]*/
-void setuplog(char *logtype, char *loglevel, char *filename)
+void setuplog(const char *logstr)
 {
-  int typenum, levelnum;
+    char *ptr, *logtype, *loglevel, *filename;
+    ptr = strdup(logstr);
+    
+    /* logtype */
+    logtype = ptr; 
 
-  /* Parse logtype */
-  for( typenum=0; typenum < num_logtype_strings; typenum++) {
-      if (strcasecmp(logtype, arr_logtype_strings[typenum]) == 0)
-	  break;
-  }
-  if (typenum >= num_logtype_strings) {
-      return;
-  }
+    /* get loglevel */
+    ptr = strpbrk(ptr, " \t");
+    if (ptr) {
+        *ptr++ = 0;
+        while (*ptr && isspace(*ptr))
+            ptr++;
+        loglevel = ptr;
+      
+        /* get filename */
+        ptr = strpbrk(ptr, " \t");
+        if (ptr) {
+            *ptr++ = 0;
+            while (*ptr && isspace(*ptr))
+                ptr++;
+        }
+        filename = ptr;
+    }
 
-  /* Parse loglevel */
-  if (loglevel == NULL) {
-      levelnum = 0;
-  } else {
-      for(levelnum=1; levelnum < num_loglevel_strings; levelnum++) {
-	  if (strcasecmp(loglevel, arr_loglevel_strings[levelnum]) == 0)
-	      break;
-      }
-      if (levelnum >= num_loglevel_strings) {
-	  return;
-      }
-  }
+    /* finally call setuplog, filename can be NULL */
+    setuplog_internal(logtype, loglevel, filename);
 
-  /* is this a syslog setup or a filelog setup ? */
-  if (filename == NULL) {
-      /* must be syslog */
-      syslog_setup(levelnum, 0, 
-		   log_config.syslog_display_options,
-		   log_config.facility);
-  } else {
-      /* this must be a filelog */
-      log_setup(filename, levelnum, typenum);
-  }
+    free(ptr);
+}
 
-  return;
+void unsetuplog(const char *logstr)
+{
+      char *str, *logtype, *filename;
+
+      str = strdup(logstr);
+
+      /* logtype */
+      logtype = str; 
+
+      /* get filename, can be NULL */
+      strtok(str, " \t");
+      filename = strtok(NULL, " \t");
+
+      /* finally call setuplog, filename can be NULL */
+      setuplog_internal(str, NULL, filename);
+
+      free(str);
 }

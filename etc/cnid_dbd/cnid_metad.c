@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.5 2009-03-06 13:05:52 didg Exp $
+ * $Id: cnid_metad.c,v 1.6 2009-03-31 11:40:26 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -115,6 +115,9 @@ struct server {
 };
 
 static struct server srv[MAXSRV +1];
+
+/* Default logging config: log to syslog with level log_debug */
+static char *logconfig = "default log_debug";
 
 static struct server *test_usockfn(char *dir, char *fn _U_)
 {
@@ -280,10 +283,10 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
 	     * it will run recover, delete the db whatever
 	    */
 	    LOG(log_error, logtype_cnid, "try with -d %s", up->name);
-	    ret = execlp(dbdpn, dbdpn, "-d", dbdir, buf1, buf2, NULL);
+	    ret = execlp(dbdpn, dbdpn, "-d", dbdir, buf1, buf2, logconfig, NULL);
 	}
 	else {
-	    ret = execlp(dbdpn, dbdpn, dbdir, buf1, buf2, NULL);
+	    ret = execlp(dbdpn, dbdpn, dbdir, buf1, buf2, logconfig, NULL);
 	}
 	if (ret < 0) {
 	    LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
@@ -390,7 +393,7 @@ int main(int argc, char *argv[])
 
     set_processname("cnid_metad");
     
-    while (( cc = getopt( argc, argv, "ds:p:h:u:g:")) != -1 ) {
+    while (( cc = getopt( argc, argv, "ds:p:h:u:g:l:")) != -1 ) {
         switch (cc) {
         case 'd':
             debug = 1;
@@ -418,12 +421,17 @@ int main(int argc, char *argv[])
         case 's':
             dbdpn = strdup(optarg);
             break;
+        case 'l':
+            logconfig = strdup(optarg);
+            break;
         default:
             err++;
             break;
         }
     }
-    
+
+    setuplog(logconfig);
+
     if (err) {
         LOG(log_error, logtype_cnid, "main: bad arguments");
         exit(1);

@@ -1,6 +1,60 @@
 #ifndef _ATALK_LOGGER_H
 #define _ATALK_LOGGER_H 1
 
+/* 
+ * logger LOG Macro Usage
+ * ======================
+ *
+ * LOG(<logtype>, <loglevel>, "<string>"[, args]);
+ * 
+ *
+ * logger API Setup
+ * ================
+ * 
+ * Standard interface:
+ * -------------------
+ *
+ *    setuplog(char *confstring)
+ *    confstring = "<logtype> <loglevel> [<filename>]"
+ *
+ * Calling without <filename> configures basic logging to syslog. Specifying <filename>
+ * configures extended logging to <filename>.
+ * 
+ * You can later disable logging by calling
+ *
+ *    unsetuplog(char *confstring)
+ *    confstring = "<logtype> [<any_string>]"
+ *
+ * Calling without <any_string> disables syslog logging, calling with <any_string>
+ * disables file logging.
+ *
+ * <logtype>:
+ * you can setup a default with "Default". Any other logtype used in LOG will then
+ * use the default if not setup itself. This is probabyl the only thing you may
+ * want to use.
+ *
+ * Example:
+ * setuplog("default log_debug /var/log/debug.log");
+ * See also libatalk/util/test/logger_test.c
+ *
+ * "Legacy" interface:
+ * -------------------
+ *
+ * Some netatalk daemons (31.3.2009.: e.g. atalkd, papd) may not be converted to
+ * use the new API and might still call
+ *
+ *    syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
+ *
+ * directly. These daemons are therefore limited to syslog logging. Also their
+ * loglevel can't be changed at runtime.
+ *
+ *
+ * Note:
+ * dont get confused by log_init(). It only gets called if your app
+ * forgets to setup logging before calling LOG.
+ */
+
+
 #include <limits.h>
 #include <stdio.h>
 
@@ -145,14 +199,19 @@ void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype);
 void syslog_setup(int loglevel, enum logtypes logtype, 
 		  int display_options, int facility);
 
-/* void setuplog(char *logsource, char *logtype, char *loglevel, char *filename); */
-void setuplog(char *logtype, char *loglevel, char *filename);
+/* This gets called e.g. from afpd.conf parsing code with a string like: */
+/* "default log_maxdebug /var/log/afpd.log" */
+void setuplog(const char *logstr);
+
+/* This gets called e.g. from afpd.conf parsing code with a string like: */
+/* "default dummyname" */
+void unsetuplog(const char *logstr);
 
 /* finish up and close the logs */
 void log_close();
 
 /* This function sets up the ProcessName */
-void set_processname(char *processname);
+void set_processname(const char *processname);
 
 /*
  * How to write a LOG macro:

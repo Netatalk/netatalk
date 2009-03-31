@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: main.c,v 1.3 2009-03-31 11:40:26 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -54,7 +54,7 @@ static void sig_exit(int signo)
 static void block_sigs_onoff(int block)
 {
     sigset_t set;
-    
+
     sigemptyset(&set);
     sigaddset(&set, SIGINT);
     sigaddset(&set, SIGTERM);
@@ -65,18 +65,18 @@ static void block_sigs_onoff(int block)
     return;
 }
 
-/* 
-   The dbd_XXX and comm_XXX functions all obey the same protocol for return values:
-   
-   1: Success, if transactions are used commit.
-   0: Failure, but we continue to serve requests. If transactions are used abort/rollback.
-  -1: Fatal error, either from the database or from the socket. Abort the transaction if applicable 
-      (which might fail as well) and then exit.
+/*
+  The dbd_XXX and comm_XXX functions all obey the same protocol for return values:
+
+  1: Success, if transactions are used commit.
+  0: Failure, but we continue to serve requests. If transactions are used abort/rollback.
+  -1: Fatal error, either from the database or from the socket. Abort the transaction if applicable
+  (which might fail as well) and then exit.
 
   We always try to notify the client process about the outcome, the result field
   of the cnid_dbd_rply structure contains further details.
 
- */
+*/
 
 static int loop(struct db_param *dbp)
 {
@@ -94,9 +94,9 @@ static int loop(struct db_param *dbp)
     time_last_rqst = now;
     if (dbp->nosync)
         checkp_flags = DB_FORCE;
-    else 
+    else
         checkp_flags = 0;
-    
+
     rqst.name = namebuf;
 
     while (1) {
@@ -104,7 +104,7 @@ static int loop(struct db_param *dbp)
             return -1;
 
         now = time(NULL);
-        
+
         if (count > dbp->flush_frequency || now > time_next_flush) {
 #ifdef CNID_BACKEND_DBD_TXN
             if (dbif_txn_checkpoint(0, 0, checkp_flags) < 0)
@@ -122,26 +122,26 @@ static int loop(struct db_param *dbp)
             block_sigs_onoff(1);
             if (exit_sig)
                 return 0;
-	    if (dbp->idle_timeout && comm_nbe() <= 0 && (now - time_last_rqst) > dbp->idle_timeout)
-		return 0;
-	    continue;
+            if (dbp->idle_timeout && comm_nbe() <= 0 && (now - time_last_rqst) > dbp->idle_timeout)
+                return 0;
+            continue;
         }
         /* We got a request */
-	time_last_rqst = now;
+        time_last_rqst = now;
         count++;
-        
+
 #ifdef CNID_BACKEND_DBD_TXN
-        if (dbif_txn_begin() < 0) 
+        if (dbif_txn_begin() < 0)
             return -1;
 #endif /* CNID_BACKEND_DBD_TXN */
 
-	memset(&rply, 0, sizeof(rply));
+        memset(&rply, 0, sizeof(rply));
         switch(rqst.op) {
             /* ret gets set here */
         case CNID_DBD_OP_OPEN:
         case CNID_DBD_OP_CLOSE:
             /* open/close are noops for now. */
-            rply.namelen = 0; 
+            rply.namelen = 0;
             ret = 1;
             break;
         case CNID_DBD_OP_ADD:
@@ -172,7 +172,7 @@ static int loop(struct db_param *dbp)
             LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
             ret = -1;
             break;
-        }       
+        }
 
         if ((cret = comm_snd(&rply)) < 0 || ret < 0) {
 #ifdef CNID_BACKEND_DBD_TXN
@@ -182,10 +182,10 @@ static int loop(struct db_param *dbp)
         }
 #ifdef CNID_BACKEND_DBD_TXN
         if (ret == 0 || cret == 0) {
-            if (dbif_txn_abort() < 0) 
+            if (dbif_txn_abort() < 0)
                 return -1;
         } else {
-            if (dbif_txn_commit() < 0) 
+            if (dbif_txn_commit() < 0)
                 return -1;
         }
 #endif /* CNID_BACKEND_DBD_TXN */
@@ -201,7 +201,7 @@ static void switch_to_user(char *dir)
         LOG(log_error, logtype_cnid, "chdir to %s failed: %s", dir, strerror(errno));
         exit(1);
     }
-    
+
     if (stat(".", &st) < 0) {
         LOG(log_error, logtype_cnid, "error in stat for %s: %s", dir, strerror(errno));
         exit(1);
@@ -222,24 +222,24 @@ int get_lock(void)
     struct flock lock;
 
     if ((lockfd = open(LOCKFILENAME, O_RDWR | O_CREAT, 0644)) < 0) {
-	LOG(log_error, logtype_cnid, "main: error opening lockfile: %s", strerror(errno));
-	exit(1);
+        LOG(log_error, logtype_cnid, "main: error opening lockfile: %s", strerror(errno));
+        exit(1);
     }
-    
+
     lock.l_start  = 0;
     lock.l_whence = SEEK_SET;
     lock.l_len    = 0;
     lock.l_type   = F_WRLCK;
 
     if (fcntl(lockfd, F_SETLK, &lock) < 0) {
-	if (errno == EACCES || errno == EAGAIN) {
-	    exit(0);
-	} else {
-	    LOG(log_error, logtype_cnid, "main: fcntl F_WRLCK lockfile: %s", strerror(errno));
-	    exit(1);
-	}
+        if (errno == EACCES || errno == EAGAIN) {
+            exit(0);
+        } else {
+            LOG(log_error, logtype_cnid, "main: fcntl F_WRLCK lockfile: %s", strerror(errno));
+            exit(1);
+        }
     }
-    
+
     return lockfd;
 }
 
@@ -285,12 +285,11 @@ int main(int argc, char *argv[])
     int err = 0;
     int ret;
     int lockfd, ctrlfd, clntfd;
-    char *dir;
-       
+    char *dir, *logconfig;
+
     set_processname("cnid_dbd");
-    syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid, logfacility_daemon);
-    
-    if (argc  != 4) {
+
+    if (argc  != 5) {
         LOG(log_error, logtype_cnid, "main: not enough arguments");
         exit(1);
     }
@@ -298,17 +297,19 @@ int main(int argc, char *argv[])
     dir = argv[1];
     ctrlfd = atoi(argv[2]);
     clntfd = atoi(argv[3]);
+    logconfig = strdup(argv[4]);
+    setuplog(logconfig);
 
     switch_to_user(dir);
-    
+
     /* Before we do anything else, check if there is an instance of cnid_dbd
        running already and silently exit if yes. */
     lockfd = get_lock();
-    
+
     LOG(log_info, logtype_cnid, "Startup, DB dir %s", dir);
-    
+
     set_signal();
-    
+
     /* SIGINT and SIGTERM are always off, unless we get a return code of 0 from
        comm_rcv (no requests for one second, see above in loop()). That means we
        only shut down after one second of inactivity. */
@@ -318,16 +319,16 @@ int main(int argc, char *argv[])
         exit(1);
 
     if (dbif_env_init(dbp) < 0)
-        exit(2); /* FIXME: same exit code as failure for dbif_open() */  
-    
+        exit(2); /* FIXME: same exit code as failure for dbif_open() */
+
 #ifdef CNID_BACKEND_DBD_TXN
     if (dbif_txn_begin() < 0)
-	exit(6);
+        exit(6);
 #endif
-    
+
     if (dbif_open(dbp, 0) < 0) {
 #ifdef CNID_BACKEND_DBD_TXN
-	dbif_txn_abort();
+        dbif_txn_abort();
 #endif
         dbif_close();
         exit(2);
@@ -340,26 +341,26 @@ int main(int argc, char *argv[])
             exit(2);
         }
         dbif_closedb();
-	LOG(log_info, logtype_cnid, "main: re-opening, secondaries will be rebuilt. This may take some time");
+        LOG(log_info, logtype_cnid, "main: re-opening, secondaries will be rebuilt. This may take some time");
         if (dbif_open(dbp, 1) < 0) {
-	    LOG(log_info, logtype_cnid, "main: re-opening databases failed");
+            LOG(log_info, logtype_cnid, "main: re-opening databases failed");
             dbif_close();
             exit(2);
         }
-	LOG(log_info, logtype_cnid, "main: rebuilt done");
+        LOG(log_info, logtype_cnid, "main: rebuilt done");
     }
 #endif
 
     if (dbd_stamp() < 0) {
 #ifdef CNID_BACKEND_DBD_TXN
-	dbif_txn_abort();
+        dbif_txn_abort();
 #endif
         dbif_close();
         exit(5);
     }
 #ifdef CNID_BACKEND_DBD_TXN
     if (dbif_txn_commit() < 0)
-	exit(6);
+        exit(6);
 #endif
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
@@ -379,15 +380,15 @@ int main(int argc, char *argv[])
 
     if (dbif_close() < 0)
         err++;
-        
+
     free_lock(lockfd);
-    
+
     if (err)
         exit(4);
     else if (exit_sig)
-	LOG(log_info, logtype_cnid, "main: Exiting on signal %i", exit_sig);
+        LOG(log_info, logtype_cnid, "main: Exiting on signal %i", exit_sig);
     else
-	LOG(log_info, logtype_cnid, "main: Idle timeout, exiting");
-    
+        LOG(log_info, logtype_cnid, "main: Idle timeout, exiting");
+
     return 0;
 }
