@@ -4,7 +4,7 @@
 #
 # Author:       Thomas Kaiser <Thomas.Kaiser@phg-online.de>
 #
-# Version:      $Id: rc.atalk.debian.tmpl,v 1.2 2005-04-28 20:49:37 bfernhomberg Exp $
+# Version:      $Id: rc.atalk.debian.tmpl,v 1.3 2009-03-31 14:08:35 franklahm Exp $
 
 set -e
 
@@ -41,7 +41,7 @@ atalk_startup() {
 	# prepare startup of file services
 	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ] ; then
 		echo -n " cnid_metad"
-		:SBINDIR:/cnid_metad
+		:SBINDIR:/cnid_metad "$CNID_DBD_LOGCONFIG"
 	fi
 	
 	if [ x"$AFPD_RUN" = x"yes" ]; then

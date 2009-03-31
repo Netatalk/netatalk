@@ -30,7 +30,7 @@ if [ -x :SBINDIR:/papd ]; then
 fi
 
 if [ -x :SBINDIR:/cnid_metad ]; then
-	:SBINDIR:/cnid_metad;		echo -n ' cnid_metad'
+	:SBINDIR:/cnid_metad "$CNID_DBD_LOGCONFIG";		echo -n ' cnid_metad'
 fi
 
 if [ -x :SBINDIR:/afpd ]; then

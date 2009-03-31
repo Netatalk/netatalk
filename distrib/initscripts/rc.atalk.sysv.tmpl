@@ -50,7 +50,7 @@ atalk_startup() {
 	fi
 
 	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ]; then
-		:SBINDIR:/cnid_metad;			echo ' cnid_metad\c'
+		:SBINDIR:/cnid_metad "$CNID_DBD_LOGCONFIG";			echo ' cnid_metad\c'
 	fi
 
 	if [  x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ]; then

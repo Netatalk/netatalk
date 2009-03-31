@@ -101,7 +101,7 @@ atalk_startup() {
 
     if [ x"${CNID_METAD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/cnid_metad ] ; then
 	    echo -n "  Starting cnid_metad:"
-	    daemon ${ATALK_SBIN}/cnid_metad
+	    daemon ${ATALK_SBIN}/cnid_metad "$CNID_DBD_LOGCONFIG"
 	    RETVAL_CNID_METAD=$?
 	    echo
     fi
