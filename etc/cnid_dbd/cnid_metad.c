@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.6 2009-03-31 11:40:26 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.7 2009-03-31 12:13:00 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -116,8 +116,8 @@ struct server {
 
 static struct server srv[MAXSRV +1];
 
-/* Default logging config: log to syslog with level log_debug */
-static char *logconfig = "default log_debug";
+/* Default logging config: log to syslog with level log_note */
+static char *logconfig = "default log_note";
 
 static struct server *test_usockfn(char *dir, char *fn _U_)
 {
