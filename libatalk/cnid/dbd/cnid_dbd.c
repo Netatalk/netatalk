@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.5 2009-02-04 20:28:01 didg Exp $
+ * $Id: cnid_dbd.c,v 1.6 2009-04-01 09:57:38 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -418,7 +418,7 @@ struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_)
     }
     
     if ((cdb = cnid_dbd_new(dir)) == NULL) {
-        LOG(log_error, logtype_default, "cnid_open: Unable to allocate memory for database");
+        LOG(log_error, logtype_cnid, "cnid_open: Unable to allocate memory for database");
 	return NULL;
     }
         
@@ -458,7 +458,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
     CNID_private *db;
 
     if (!cdb) {
-        LOG(log_error, logtype_afpd, "cnid_close called with NULL argument !");
+        LOG(log_error, logtype_cnid, "cnid_close called with NULL argument !");
 	return;
     }
 
