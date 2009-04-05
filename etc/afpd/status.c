@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.22 2009-02-16 14:03:30 franklahm Exp $
+ * $Id: status.c,v 1.23 2009-04-05 07:22:06 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -18,9 +18,9 @@
 
 #ifdef BSD4_4
 #include <sys/param.h>
-#ifndef USE_GETHOSTID
+#ifndef HAVE_GETHOSTID
 #include <sys/sysctl.h>
-#endif /* USE_GETHOSTID */
+#endif /* HAVE_GETHOSTID */
 #endif /* BSD4_4 */
 
 #include <netatalk/at.h>
@@ -194,14 +194,14 @@ static u_int16_t status_signature(char *data, int *servoffset, DSI *dsi,
     /* If signature type is a standard hostid... */
 server_signature_hostid:
     /* 16-byte signature consists of copies of the hostid */
-#if defined(BSD4_4) && defined(USE_GETHOSTID)
+#if defined(BSD4_4) && !defined(HAVE_GETHOSTID)
     mib[0] = CTL_KERN;
     mib[1] = KERN_HOSTID;
     len = sizeof(hostid);
     sysctl(mib, 2, &hostid, &len, NULL, 0);
-#else /* BSD4_4 && USE_GETHOSTID */
+#else /* BSD4_4 && !HAVE_GETHOSTID */
     hostid = gethostid();
-#endif /* BSD4_4 && USE_GETHOSTID */
+#endif /* BSD4_4 && !HAVE_GETHOSTID */
     if (!hostid) {
         if (dsi)
             hostid = dsi->server.sin_addr.s_addr;

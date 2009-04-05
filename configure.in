@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.213 2009-03-20 09:10:25 franklahm Exp $
+dnl $Id: configure.in,v 1.214 2009-04-05 07:22:06 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -135,8 +135,7 @@ AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select s
 AC_CHECK_FUNCS(backtrace_symbols)
 AC_CHECK_FUNCS(setlocale nl_langinfo)
 AC_CHECK_FUNCS(waitpid getcwd strdup strndup strnlen strtoul strerror chown fchown chmod fchmod chroot link mknod mknod64)
-AC_CHECK_FUNCS(strlcpy strlcat)
-AC_CHECK_FUNCS(setlinebuf)
+AC_CHECK_FUNCS(strlcpy strlcat setlinebuf gethostid)
 AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 AC_CACHE_SAVE
 
