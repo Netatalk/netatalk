@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.95 2009-03-24 11:02:07 franklahm Exp $
+ * $Id: directory.c,v 1.96 2009-04-10 11:21:19 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2165,7 +2165,9 @@ AFPObj  *obj _U_;
 char    *ibuf, *rbuf _U_;
 int     ibuflen _U_, *rbuflen;
 {
+#ifdef HAVE_DIRFD
     DIR                  *dp;
+#endif
     int                  dfd;
     struct vol           *vol;
     struct dir           *dir;
@@ -2190,6 +2192,12 @@ int     ibuflen _U_, *rbuflen;
     if (movecwd( vol, dir ) < 0 )
         return ( AFPERR_NOOBJ ); 
 
+/*
+  Assuming only OSens that have dirfd also may require fsyncing directories
+  in order to flush metadata e.g. Linux.
+*/
+    
+#ifdef HAVE_DIRFD
     if (NULL == ( dp = opendir( "." )) ) {
         switch( errno ) {
         case ENOENT :
@@ -2208,8 +2216,9 @@ int     ibuflen _U_, *rbuflen;
         LOG(log_error, logtype_afpd, "afp_syncdir(%s):  %s",
             dir->d_u_name, strerror(errno) );
     closedir(dp); /* closes dfd too */
+#endif
 
-    if ( -1 == (dfd = open(vol->vfs->ad_path(".", ADFLAGS_DIR), O_RDONLY))) {
+    if ( -1 == (dfd = open(vol->vfs->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
         switch( errno ) {
         case ENOENT:
             return( AFPERR_NOOBJ );
