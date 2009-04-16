@@ -1,5 +1,5 @@
 /*
- * $Id: afp_util.c,v 1.4 2005-04-28 20:49:40 bfernhomberg Exp $
+ * $Id: afp_util.c,v 1.5 2009-04-16 06:17:14 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -14,7 +14,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef DEBUG1
 #include <atalk/afp.h>
 
 const char *AfpNum2name(int num)
@@ -72,6 +71,7 @@ const char *AfpNum2name(int num)
     case AFP_ADDCMT        : return "AFP_ADDCMT";       	/*	56 */
 	case AFP_RMVCMT        : return "AFP_RMVCMT";       	/*	57 */
 	case AFP_GETCMT        : return "AFP_GETCMT";       	/*	58 */
+	case AFP_ADDICON       : return "AFP_ADDICON";       	/* 192 */
     /* version 3.0 */
     case AFP_BYTELOCK_EXT  : return "AFP_BYTELOCK_EXT";     /*  59 */
     case AFP_READ_EXT      : return "AFP_READ_EXT";         /*  60 */
@@ -84,9 +84,17 @@ const char *AfpNum2name(int num)
     /* version 3.1 */
     case AFP_ENUMERATE_EXT2: return "AFP_ENUMERATE_EXT2";   /*  68 */
     case AFP_ZZZ  : return "AFP_ZZZ";	    /* 122 */
-															  
-	case AFP_ADDICON       : return "AFP_ADDICON";       	/* 192 */
-	}                    									  
+    /* version 3.2 */															  
+    case AFP_GETEXTATTR         : return "AFP_GETEXTATTR";	      /* 69 */
+    case AFP_SETEXTATTR         : return "AFP_SETEXTATTR";	      /* 70 */
+    case AFP_REMOVEATTR         : return "AFP_REMOVEATTR";	      /* 71 */
+    case AFP_LISTEXTATTR        : return "AFP_LISTEXTATTR";	      /* 72 */
+    case AFP_GETACL             : return "AFP_GETACL";	          /* 73 */
+    case AFP_SETACL             : return "AFP_SETACL";	          /* 74 */
+    case AFP_ACCESS             : return "AFP_ACCESS";	          /* 75 */
+    case AFP_SPOTLIGHT_PRIVATE  : return "AFP_SPOTLIGHT_PRIVATE"; /* 76 */
+    case AFP_SYNCDIR            : return "AFP_SYNCDIR";	          /* 78 */
+    case AFP_SYNCFORK           : return "AFP_SYNCFORK";	      /* 79 */
+	}
 	return "not yet defined";								  
 }
-#endif
