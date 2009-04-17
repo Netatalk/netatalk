@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.83 2009-03-20 11:32:11 franklahm Exp $
+ * $Id: volume.c,v 1.84 2009-04-17 04:24:20 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -175,6 +175,7 @@ static const _vol_opt_name vol_opt_names[] = {
                                          * maybe because it will be mounted later in preexec */
     {AFPVOL_UNIX_PRIV,  "UNIXPRIV"},    /* support unix privileges */
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
+    {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},     /* encode illegal sequence */
     {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
     {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
@@ -494,6 +495,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
             else if (strcasecmp(p, "nodev") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NODEV;
+            else if (strcasecmp(p, "caseinsensitive") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_CASEINSEN;
             else if (strcasecmp(p, "illegalseq") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_EILSEQ;
             else if (strcasecmp(p, "cachecnid") == 0)
@@ -558,7 +561,7 @@ static void showvol(const ucs2_t *name)
 {
     struct vol	*volume;
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-      if (volume->v_hide && !strcasecmp_w( (utf8_encoding()?volume->v_u8mname:volume->v_macname), name ) ) {
+      if (volume->v_hide && !strcasecmp_w( volume->v_name, name ) ) {
             volume->v_hide = 0;
             return;
         }
@@ -688,6 +691,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         free(volume);
         return -1;
     }
+
+    volume->v_name = utf8_encoding()?volume->v_u8mname:volume->v_macname;
     volume->v_hide = hide;
     strcpy( volume->v_path, path );
 
@@ -1800,7 +1805,7 @@ int	ibuflen _U_, *rbuflen;
     load_volumes(obj);
 
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-        if ( strcasecmp_w( (ucs2_t*) volname, (utf8_encoding()?volume->v_u8mname:volume->v_macname) ) == 0 ) {
+        if ( strcasecmp_w( (ucs2_t*) volname, volume->v_name ) == 0 ) {
             break;
         }
     }
@@ -1902,6 +1907,7 @@ int	ibuflen _U_, *rbuflen;
 
     dir->d_did = DIRDID_ROOT;
     dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
+    dir->d_m_name_ucs2 = strdup_w(volume->v_name);
     volume->v_dir = volume->v_root = dir;
     volume->v_hash = dirhash();
 
@@ -2057,7 +2063,7 @@ static void deletevol(struct vol *vol)
 
     closevol(vol);
     if (vol->v_deleted) {
-      showvol(utf8_encoding()?vol->v_u8mname:vol->v_macname);
+      showvol(vol->v_name);
 	volume_free(vol);
 	volume_unlink(vol);
 	free(vol);

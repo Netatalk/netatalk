@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.29 2009-03-16 13:59:12 franklahm Exp $
+ * $Id: volume.h,v 1.30 2009-04-17 04:24:20 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -27,6 +27,7 @@ struct vol {
     char        *v_localname;   /* as defined in AppleVolumes.default */
     ucs2_t		*v_u8mname;     /* converted to utf8-mac in ucs2 */
     ucs2_t		*v_macname;     /* mangled to legacy longname in ucs2 */
+    ucs2_t		*v_name;        /* either v_u8mname or v_macname */
     char		*v_path;
     
     struct dir		*v_dir, *v_root;
@@ -127,7 +128,7 @@ this is going away. */
                                      * help if device number is notconsistent across reboot 
                                      * NOTE symlink to a different device will return an ACCESS error
                                      */
-#define AFPVOL_RESERVED  (1 << 19)  /* was AFPVOL_CASEINSEN, volume is case insensitive */
+#define AFPVOL_CASEINSEN (1 << 19)  /* volume is case insensitive */
 #define AFPVOL_EILSEQ    (1 << 20)  /* encode illegal sequence 'asis' UCS2, ex "\217-", which is not 
                                        a valid SHIFT-JIS char, is encoded  as U\217 -*/
 

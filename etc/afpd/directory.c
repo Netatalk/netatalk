@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.96 2009-04-10 11:21:19 franklahm Exp $
+ * $Id: directory.c,v 1.97 2009-04-17 04:24:20 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -66,10 +66,10 @@ int             afp_errno;
 #define SENTINEL (&sentinel)
 static struct dir sentinel = { SENTINEL, SENTINEL, NULL, DIRTREE_COLOR_BLACK,
                                  NULL, NULL, NULL, NULL, NULL, 0, 0, 
-                                 0, 0, NULL, NULL};
+                                 0, 0, NULL, NULL, NULL};
 static struct dir rootpar  = { SENTINEL, SENTINEL, NULL, 0,
                                  NULL, NULL, NULL, NULL, NULL, 0, 0, 
-                                 0, 0, NULL, NULL};
+                                 0, 0, NULL, NULL, NULL};
 
 /* (from IM: Toolbox Essentials)
  * dirFinderInfo (DInfo) fields:
@@ -461,6 +461,7 @@ static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
     dirfreename(dir);
     dir->d_m_name = NULL;
     dir->d_u_name = NULL;
+    dir->d_m_name_ucs2 = NULL;
 #else /* ! REMOVE_NODES */
 
     /* go searching for a node with at most one child */
@@ -536,11 +537,14 @@ static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
         /* set the node's d_name */
         node->d_m_name = save.d_m_name;
         node->d_u_name = save.d_u_name;
+        node->d_m_name_ucs2 = save.d_m_name_ucs2;
     }
 
     if (node->d_color == DIRTREE_COLOR_BLACK)
         dir_rmrecolor(vol, leaf);
 
+    if (node->d_m_name_ucs2)
+        free(node->d_u_name_ucs2);
     if (node->d_u_name != node->d_m_name) {
         free(node->d_u_name);
     }
@@ -601,6 +605,89 @@ struct dir *dir;
     return pdir;
 }
 
+#define ENUMVETO "./../Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/:2eDS_Store/Contents/Desktop Folder/Trash/Benutzer/"
+
+int
+caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
+{
+    DIR               *dp;
+    struct dirent     *de;
+    int               ret;
+    static u_int32_t  did = 0;
+    static char	      cname[MAXPATHLEN];
+    static char	      lname[MAXPATHLEN];
+    ucs2_t	      u2_path[MAXPATHLEN];
+    ucs2_t	      u2_dename[MAXPATHLEN];
+    char 	      *tmp, *savepath;
+
+    if (!(vol->v_flags & AFPVOL_CASEINSEN))
+        return -1;
+        
+    if (veto_file(ENUMVETO, path->u_name))
+	return -1;
+
+    savepath = path->u_name;
+
+    /* very simple cache */
+    if ( dir->d_did == did && strcmp(lname, path->u_name) == 0) {
+        path->u_name = cname;
+        path->d_dir = NULL;
+        if (of_stat( path ) == 0 ) {
+            return 0;
+        }
+        /* something changed, we cannot stat ... */
+        did = 0;
+    }
+
+    if (NULL == ( dp = opendir( "." )) ) {
+        LOG(log_debug, logtype_afpd, "caseenumerate: opendir failed: %s", dir->d_u_name);
+        return -1;
+    }
+
+
+    /* LOG(log_debug, logtype_afpd, "caseenumerate: for %s", path->u_name); */
+    if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, path->u_name, strlen(path->u_name), u2_path, sizeof(u2_path)) ) 
+        LOG(log_debug, logtype_afpd, "caseenumerate: conversion failed for %s", path->u_name);
+
+    /*LOG(log_debug, logtype_afpd, "caseenumerate: dir: %s, path: %s", dir->d_u_name, path->u_name); */
+    ret = -1;
+    for ( de = readdir( dp ); de != NULL; de = readdir( dp )) {
+        if (NULL == check_dirent(vol, de->d_name))
+            continue;
+
+        if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, de->d_name, strlen(de->d_name), u2_dename, sizeof(u2_dename)) )
+            continue;
+
+        if (strcasecmp_w( u2_path, u2_dename) == 0) {
+            tmp = path->u_name;
+            strlcpy(cname, de->d_name, sizeof(cname));
+            path->u_name = cname;
+            path->d_dir = NULL;
+            if (of_stat( path ) == 0 ) {
+                LOG(log_debug, logtype_afpd, "caseenumerate: using dir: %s, path: %s", de->d_name, path->u_name);
+                strlcpy(lname, tmp, sizeof(lname));
+                did = dir->d_did;
+                ret = 0;
+                break;
+            }
+            else 
+                path->u_name = tmp;
+        }
+
+    }
+    closedir(dp);
+
+    if (ret) {
+        /* invalidate cache */
+        cname[0] = 0;
+        did = 0;
+        path->u_name = savepath;
+    }
+    /* LOG(log_debug, logtype_afpd, "caseenumerate: path on ret: %s", path->u_name); */
+    return ret;
+}
+
+
 /*
  * attempt to extend the current dir. tree to include path
  * as a side-effect, movecwd to that point and return the new dir
@@ -618,7 +705,10 @@ struct path *path;
         return NULL;
     }
     if (of_stat( path ) != 0 ) {
-        return NULL;
+        if (!(vol->v_flags & AFPVOL_CASEINSEN))
+            return NULL;
+	else if(caseenumerate(vol, path, dir) != 0)
+            return(NULL);
     }
 
     if (!S_ISDIR(path->st.st_mode)) {
@@ -933,6 +1023,10 @@ struct path     *path;
         LOG(log_error, logtype_afpd, "adddir: malloc: %s", strerror(errno) );
         return NULL;
     }
+    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), &cdir->d_m_name_ucs2)) {
+	LOG(log_error, logtype_afpd, "Couldn't set UCS2 name for %s", name);
+	cdir->d_m_name_ucs2 = NULL;
+    }
 
     cdir->d_did = id;
 
@@ -955,6 +1049,7 @@ struct path     *path;
         dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
+        edir->d_m_name_ucs2 = cdir->d_m_name_ucs2;
         free(cdir);
         cdir = edir;
         LOG(log_error, logtype_afpd, "adddir: insert %s", edir->d_m_name);
@@ -981,6 +1076,8 @@ void dirfreename(struct dir *dir)
     if (dir->d_u_name != dir->d_m_name) {
         free(dir->d_u_name);
     }
+    if (dir->d_m_name_ucs2)
+        free(dir->d_m_name_ucs2); 
     free(dir->d_m_name);
 }
 
@@ -1028,6 +1125,7 @@ struct dir *dirnew(const char *m_name, const char *u_name)
         return NULL;
     }
 
+    dir->d_m_name_ucs2 = NULL;
     dir->d_left = dir->d_right = SENTINEL;
     dir->d_next = dir->d_prev = dir;
     return dir;
@@ -1045,7 +1143,7 @@ const struct dir *k = key;
 	0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
     };
 
-    const unsigned char *str = (unsigned char *)k->d_u_name;
+    const unsigned char *str = k->d_u_name;
     hash_val_t acc = 0;
 
     while (*str) {
@@ -1161,7 +1259,7 @@ const struct vol	*vol;
 struct dir	*dir;
 char	**cpath;
 {
-    struct dir		   *cdir;
+    struct dir		   *cdir, *scdir=NULL;
     static char		   path[ MAXPATHLEN + 1];
     static struct path ret;
 
@@ -1305,18 +1403,50 @@ char	**cpath;
             }
         }
         if ( !extend ) {
-            if (dir->d_did == DIRDID_ROOT_PARENT) {
-                /* 
-                   root parent (did 1) has one child: the volume. Requests for did=1 with some <name>
-                   must check against the volume name.
-                */
-                if (!strcmp(vol->v_dir->d_m_name, ret.m_name))
-                    cdir = vol->v_dir;
-                else
-                    cdir = NULL;
+            ucs2_t *tmpname;
+            cdir = dir->d_child;
+            scdir = NULL;
+	    if ( cdir && (vol->v_flags & AFPVOL_CASEINSEN) &&
+                    (size_t)-1 != convert_string_allocate(((ret.m_type == 3)?CH_UTF8_MAC:vol->v_maccharset), 
+                                                          CH_UCS2, path, strlen(path), (char **)&tmpname) )
+            {
+                while (cdir) {
+                    if (!cdir->d_m_name_ucs2) {
+                        LOG(log_error, logtype_afpd, "cname: no UCS2 name for %s (did %u)!!!", cdir->d_m_name, ntohl(cdir->d_did) );
+                        /* this shouldn't happen !!!! */
+                        goto noucsfallback;
+                    }
+
+                    if ( strcmp_w( cdir->d_m_name_ucs2, tmpname ) == 0 ) {
+                         break;
+                    }
+                    if ( strcasecmp_w( cdir->d_m_name_ucs2, tmpname ) == 0 ) {
+                         scdir = cdir;
+                    }
+                    cdir = (cdir == dir->d_child->d_prev) ? NULL :cdir->d_next;
+                }
+                free(tmpname);
             }
             else {
-                cdir = dirsearch_byname(vol, dir, ret.u_name);
+noucsfallback:
+                if (dir->d_did == DIRDID_ROOT_PARENT) {
+                  /* 
+                     root parent (did 1) has one child: the volume. Requests for did=1 with some <name>
+                     must check against the volume name.
+                  */
+                  if (!strcmp(vol->v_dir->d_m_name, ret.m_name))
+                      cdir = vol->v_dir;
+                  else
+                      cdir = NULL;
+                }
+                else {
+                  cdir = dirsearch_byname(vol, dir, ret.u_name);
+                }
+            }
+  
+            if (cdir == NULL && scdir != NULL) {
+                cdir = scdir;
+                /* LOG(log_debug, logtype_afpd, "cname: using casediff for %s, (%s = %s)", fullpathname(cdir->d_u_name), cdir->d_m_name, path ); */
             }
 
             if ( cdir == NULL ) {
@@ -2410,6 +2540,13 @@ struct dir	*dir, *newparent;
         dir->d_u_name = buf;
         strcpy( dir->d_u_name, dst );
     }
+
+    if (dir->d_m_name_ucs2)
+	free(dir->d_m_name_ucs2);
+
+    dir->d_m_name_ucs2 = NULL;
+    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, dir->d_m_name, strlen(dir->d_m_name), (char**)&dir->d_m_name_ucs2))
+        dir->d_m_name_ucs2 = NULL;
 
     if (( parent = dir->d_parent ) == NULL ) {
         return( AFP_OK );
