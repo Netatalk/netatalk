@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <time.h>
 #include <ctype.h>
 
@@ -155,15 +156,18 @@ static void generate_message_details(char *message_details_buffer,
     char   *ptr = message_details_buffer;
     int    templen;
     int    len = message_details_buffer_length;
+    struct timeval tv;
 
     *ptr = 0;
 
-    /* Print date */
-    time_t thetime;
-    time(&thetime);
-
-    strftime(ptr, len, "%b %d %H:%M:%S ", localtime(&thetime));
+    /* Print time */
+    gettimeofday(&tv, NULL);
+    strftime(ptr, len, "%b %d %H:%M:%S.", localtime(&tv.tv_sec));
     templen = strlen(ptr);
+    len -= templen;
+    ptr += templen;
+
+    templen = snprintf(ptr, len, "%06u ", (int)tv.tv_usec);
     len -= templen;
     ptr += templen;
 
