@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_getstamp.c,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: dbd_getstamp.c,v 1.3 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -50,9 +50,9 @@ int dbd_getstamp(struct cnid_dbd_rqst *rqst _U_, struct cnid_dbd_rply *rply)
     rply->namelen = CNID_DEV_LEN;
     rply->name = (char *)data.data + CNID_DEV_OFS;
     
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "cnid_getstamp: Returning stamp");
-#endif
+
+    LOG(log_debug, logtype_cnid, "cnid_getstamp: Returning stamp '%08x'", *(uint32_t *)rply->name);
+
     rply->result = CNID_DBD_RES_OK;
     return 1;
 }

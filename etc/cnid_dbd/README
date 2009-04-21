@@ -1,9 +1,8 @@
-This is a reimplementation of the netatalk CNID database support that
-attempts to put all current functionality into a separate daemon
-called cnid_dbd. There is one such daemon per netatalk volume. The
-underlying database structure is still based on Berkeley DB and the
-database format is the same as in the current CNID implementation, so
-this can be used as a drop-in replacement.
+This is a implementation of the netatalk CNID database support that
+attempts to put all functionality into a separate daemon called cnid_dbd.
+There is one such daemon per netatalk volume. The underlying database
+structure is based on Berkeley DB and the database format is the same
+as in the cdb CNID backend, so this can be used as a drop-in replacement.
 
 Advantages: 
 
@@ -23,10 +22,10 @@ Advantages:
 
 - If an afpd process crashes, the CNID database is unaffected. If the
   process was making changes to the database at the time of the crash,
-  those changes will either be completed (no transactions) or rolled
-  back entirely (transactions). If the process was not using the
-  database at the time of the crash, no corrective action is
-  necessary. In both cases, database consistency is assured.
+  those changes will be rolled back entirely (transactions).
+  If the process was not using the database at the time of the crash,
+  no corrective action is necessary. In any case, database consistency
+  is assured.
 
 Disadvantages:
 
@@ -53,17 +52,9 @@ Disadvantages:
 
 Installation and configuration
 
-cnid_dbd is now part of a new CNID framework whereby various CNID
-backends (including the ones present so far) can be selected for afpd
-as a runtime option for a given volume. The default is to compile
-support for all these backends, so normally there is no need to
-specify other options to configure. The only exception is
-transactional support, which is enabled as the default. If you want to
-turn it off use --with-cnid-dbd-txn=no.
-
-In order to turn on cnid_dbd backend support for a given volume, set
-the option -cnidscheme:dbd in your AppleVolumes.default file or
-equivalent. The default for this parameter is -cnidscheme:cdb.
+cnid_dbd is part of the CNID framework whereby various CNID backends
+can be selected for afpd as a runtime option for a given volume.
+By default only last and dbd backend are built and dbd is the default.
 
 There are two executeables that will be built in etc/cnid_dbd and
 installed into the systems binaries directories of netatalk
@@ -80,11 +71,8 @@ as the volume is accessed again.
 cnid_metad needs one command line argument, the name of the cnid_dbd
 executeable. You can either specify "cnid_dbd" if it is in the path
 for cnid_metad or otherwise use the fully qualified pathname to
-cnid_dbd, e.g. /usr/local/netatalk/sbin/cnid_dbd. cnid_metad also uses
-a unix domain socket to receive requests from afpd. The pathname for
-that socket is /tmp/cnid_meta. It should not be deleted while
-cnid_metad runs.
-
+cnid_dbd, e.g. /usr/local/netatalk/sbin/cnid_dbd. cnid_metad listens
+on TCP port 4700 by default for request from afpd processes.
 
 cnid_dbd changes to the Berkeley DB directory on startup and sets
 effective UID and GID to owner and group of that directory. Database and
@@ -97,20 +85,13 @@ parameter value, followed by a newline. The following parameters are
 currently recognized:
 
 Name               Default
-
-backlog            20
-cachesize          1024
-nosync             0
+====               =======
+cachesize          8192
 flush_frequency    100
-flush_interval     30
+flush_interval     1800
 usock_file         <databasedirectory>/usock
-fd_table_size      16
+fd_table_size      128
 idle_timeout       600
-
-
-"backlog" specifies the maximum number of connection requests that can
-be pending on the unix domain socket cnid_dbd uses. listen(2) has more
-information about this value on your system.
 
 "cachesize" determines the size of the Berkeley DB cache in
 kilobytes. Each cnid_dbd process grabs that much memory on top of its
@@ -123,27 +104,16 @@ not a bottleneck on your system you might want to leave it at that
 value. The Berkeley DB Tutorial and Reference Guide has a section
 "Selecting a cache size" that gives more detailed information.
 
-"nosync" is only valid if transactional support is enabled. If it is
-set to 1, transactional changes to the database are not synchronously
-written to disk when the transaction completes. This will increase
-performance considerably at the risk of recent changes getting
-lost in case of a crash. The database will still be consistent,
-though. See "Transaction throughput" in the Berkeley DB Tutorial for
-more information.
-
 "flush_frequency" and "flush_interval" control how often changes to
 the database are written to the underlying database files if no
 transactions are used or how often the transaction system is
 checkpointed for transactions. Both of these operations are
 performed if either i) more than flush_frequency requests have been
 received or ii) more than flush_interval seconds have elapsed since
-the last save/checkpoint. If you use transactions with nosync set to
-zero these parameters only influence how long recovery takes after
-a crash, there should never be any lost data. If nosync is 1, changes
-might be lost, but only since the last checkpoint. Be careful to check
-your harddisk configuration for on disk cache settings. Many IDE disks
-just cache writes as the default behaviour, so even flushing database
-files to disk will not have the desired effect.
+the last save/checkpoint.
+Be careful to check your harddisk configuration for on disk cache
+settings. Many IDE disks just cache writes as the default behaviour,
+so even flushing database files to disk will not have the desired effect.
 
 "usock_file" gives the pathname of the unix domain socket file that
 that instance of cnid_dbd will use for receiving requests. You might
@@ -175,9 +145,6 @@ be possible to merge things again, if transactional support is
 eliminated from libatalk/cnid. I do not think it can work relieably in
 the current form anyway.
 
-- It would be more flexible to have transaction support as a run time
-option as well.
-
 - mmap for IPC would be nice as an alternative.
 
 - The parameter file parsing of db_param is very simpleminded. It is
@@ -186,12 +153,11 @@ Also, there is no support for blanks (or weird characters) in
 filenames for the usock_file parameter.
 
 - There is no protection against a malicious user connecting to the
-cnid_dbd socket and changing the database. I will adress this problem
-soon.
+cnid_dbd socket and changing the database.
 
 Please feel free to grep the source in etc/cnid_dbd and the file
 libatalk/cnid/dbd/cnid_dbd.c for the string TODO, which indicates
 comments that adress other, less important points.
 
 
-Joerg Lenneis, lenneis@wu-wien.ac.at
+The Netatalk Team

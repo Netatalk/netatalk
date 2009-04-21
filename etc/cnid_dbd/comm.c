@@ -1,5 +1,5 @@
 /*
- * $Id: comm.c,v 1.2 2005-04-28 20:49:47 bfernhomberg Exp $
+ * $Id: comm.c,v 1.3 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -7,7 +7,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif 
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif 
+#endif
 
 #include <sys/param.h>
 #define _XPG4_2 1
@@ -24,15 +24,15 @@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif 
+#endif
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif 
+#endif
 
 #ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
-#endif 
+#endif
 
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -51,7 +51,7 @@
 
 /* Length of the space taken up by a padded control message of length len */
 #ifndef CMSG_SPACE
-#define	CMSG_SPACE(len)	(__CMSG_ALIGN(sizeof(struct cmsghdr)) + __CMSG_ALIGN(len))
+#define CMSG_SPACE(len) (__CMSG_ALIGN(sizeof(struct cmsghdr)) + __CMSG_ALIGN(len))
 #endif
 
 
@@ -73,27 +73,27 @@ static void invalidate_fd(int fd)
 
     if (fd == control_fd)
         return;
-    for (i = 0; i != fds_in_use; i++) 
-	if (fd_table[i].fd == fd)
-	    break;
-    
+    for (i = 0; i != fds_in_use; i++)
+        if (fd_table[i].fd == fd)
+            break;
+
     assert(i < fds_in_use);
 
     fds_in_use--;
     fd_table[i] = fd_table[fds_in_use];
     fd_table[fds_in_use].fd = -1;
-    close(fd);    
+    close(fd);
     return;
 }
 
 static int recv_cred(int fd)
 {
-int ret;
-struct msghdr msgh; 
-struct iovec iov[1];
-struct cmsghdr *cmsgp = NULL;
-char buf[CMSG_SPACE(sizeof(int))];
-char dbuf[80];
+    int ret;
+    struct msghdr msgh;
+    struct iovec iov[1];
+    struct cmsghdr *cmsgp = NULL;
+    char buf[CMSG_SPACE(sizeof(int))];
+    char dbuf[80];
 
     memset(&msgh,0,sizeof(msgh));
     memset(buf,0,sizeof(buf));
@@ -111,24 +111,24 @@ char dbuf[80];
     msgh.msg_controllen = sizeof(buf);
 
     do  {
-          ret = recvmsg(fd ,&msgh,0);
+        ret = recvmsg(fd ,&msgh,0);
     } while ( ret == -1 && errno == EINTR );
 
     if ( ret == -1 ) {
         return -1;
     }
-      
+
     for ( cmsgp = CMSG_FIRSTHDR(&msgh); cmsgp != NULL; cmsgp = CMSG_NXTHDR(&msgh,cmsgp) ) {
         if ( cmsgp->cmsg_level == SOL_SOCKET && cmsgp->cmsg_type == SCM_RIGHTS ) {
-              return *(int *) CMSG_DATA(cmsgp);
+            return *(int *) CMSG_DATA(cmsgp);
         }
     }
 
     if ( ret == sizeof (int) )
-       errno = *(int *)dbuf; /* Rcvd errno */
+        errno = *(int *)dbuf; /* Rcvd errno */
     else
-       errno = ENOENT;    /* Default errno */
-   
+        errno = ENOENT;    /* Default errno */
+
     return -1;
 }
 
@@ -150,14 +150,14 @@ static int check_fd()
     int i;
     int maxfd = control_fd;
     time_t t;
-    
+
     FD_ZERO(&readfds);
     FD_SET(control_fd, &readfds);
-    
+
     for (i = 0; i != fds_in_use; i++) {
-	FD_SET(fd_table[i].fd, &readfds);
-	if (maxfd < fd_table[i].fd)
-	    maxfd = fd_table[i].fd;
+        FD_SET(fd_table[i].fd, &readfds);
+        if (maxfd < fd_table[i].fd)
+            maxfd = fd_table[i].fd;
     }
 
     tv.tv_usec = 0;
@@ -170,43 +170,43 @@ static int check_fd()
     }
 
     if (!ret)
-	return 0;
+        return 0;
 
     time(&t);
 
     if (FD_ISSET(control_fd, &readfds)) {
-	int    l = 0;
-	
+        int    l = 0;
+
         fd = recv_cred(control_fd);
         if (fd < 0) {
             return -1;
         }
-	if (fds_in_use < fd_table_size) {
-	    fd_table[fds_in_use].fd = fd;
-	    fd_table[fds_in_use].tm = t;
-	    fds_in_use++;
-	} else {
-	    time_t older = t;
-	     
-	    for (i = 0; i != fds_in_use; i++) {
-	        if (older <= fd_table[i].tm) {
-	            older = fd_table[i].tm;
-	            l = i;
-	        }
-	    }
-	    close(fd_table[l].fd);
-	    fd_table[l].fd = fd;
-	    fd_table[l].tm = t;
-	}
-	return 0;
+        if (fds_in_use < fd_table_size) {
+            fd_table[fds_in_use].fd = fd;
+            fd_table[fds_in_use].tm = t;
+            fds_in_use++;
+        } else {
+            time_t older = t;
+
+            for (i = 0; i != fds_in_use; i++) {
+                if (older <= fd_table[i].tm) {
+                    older = fd_table[i].tm;
+                    l = i;
+                }
+            }
+            close(fd_table[l].fd);
+            fd_table[l].fd = fd;
+            fd_table[l].tm = t;
+        }
+        return 0;
     }
 
     for (i = 0; i != fds_in_use; i++) {
-	if (FD_ISSET(fd_table[i].fd, &readfds)) {
-	    fd_table[i].tm = t;
-	    return fd_table[i].fd;
-	}
-    }	    
+        if (FD_ISSET(fd_table[i].fd, &readfds)) {
+            fd_table[i].tm = t;
+            return fd_table[i].fd;
+        }
+    }
     /* We should never get here */
     return 0;
 }
@@ -217,13 +217,13 @@ int comm_init(struct db_param *dbp, int ctrlfd, int clntfd)
 
     fds_in_use = 0;
     fd_table_size = dbp->fd_table_size;
-    
+
     if ((fd_table = malloc(fd_table_size * sizeof(struct connection))) == NULL) {
         LOG(log_error, logtype_cnid, "Out of memory");
-	return -1;
+        return -1;
     }
     for (i = 0; i != fd_table_size; i++)
-	fd_table[i].fd = -1;
+        fd_table[i].fd = -1;
     /* from dup2 */
     control_fd = ctrlfd;
 #if 0
@@ -231,17 +231,17 @@ int comm_init(struct db_param *dbp, int ctrlfd, int clntfd)
     /* this one dump core in recvmsg, great */
     if ( setsockopt(control_fd, SOL_SOCKET, SO_PASSCRED, &b, sizeof (b)) < 0) {
         LOG(log_error, logtype_cnid, "setsockopt SO_PASSCRED %s",  strerror(errno));
-	return -1;
+        return -1;
     }
 #endif
     /* push the first client fd */
     fd_table[fds_in_use].fd = clntfd;
     fds_in_use++;
-    
+
     return 0;
 }
 
-/* ------------ 
+/* ------------
    nbe of clients
 */
 int comm_nbe(void)
@@ -262,8 +262,8 @@ int comm_rcv(struct cnid_dbd_rqst *rqst)
         return 0;
     nametmp = rqst->name;
     if ((b = read(cur_fd, rqst, sizeof(struct cnid_dbd_rqst))) != sizeof(struct cnid_dbd_rqst)) {
-	if (b)
-	    LOG(log_error, logtype_cnid, "error reading message header: %s", strerror(errno));
+        if (b)
+            LOG(log_error, logtype_cnid, "error reading message header: %s", strerror(errno));
         invalidate_fd(cur_fd);
         rqst->name = nametmp;
         return 0;
@@ -277,7 +277,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst)
     /* We set this to make life easier for logging. None of the other stuff
        needs zero terminated strings. */
     rqst->name[rqst->namelen] = '\0';
-        
+
     return 1;
 }
 
@@ -285,9 +285,9 @@ int comm_rcv(struct cnid_dbd_rqst *rqst)
 #define USE_WRITEV
 int comm_snd(struct cnid_dbd_rply *rply)
 {
-#ifdef USE_WRITEV 
-  struct iovec iov[2];
-  size_t towrite;
+#ifdef USE_WRITEV
+    struct iovec iov[2];
+    size_t towrite;
 #endif
 
     if (!rply->namelen) {
@@ -298,7 +298,7 @@ int comm_snd(struct cnid_dbd_rply *rply)
         }
         return 1;
     }
-#ifdef USE_WRITEV 
+#ifdef USE_WRITEV
 
     iov[0].iov_base = rply;
     iov[0].iov_len = sizeof(struct cnid_dbd_rply);
@@ -322,7 +322,7 @@ int comm_snd(struct cnid_dbd_rply *rply)
         invalidate_fd(cur_fd);
         return 0;
     }
-#endif    
+#endif
     return 1;
 }
 

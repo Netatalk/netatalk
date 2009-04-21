@@ -1,12 +1,29 @@
 /*
- * $Id: cnid_metad.c,v 1.7 2009-03-31 12:13:00 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.8 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
  *
  */
 
-/* cnid_dbd metadaemon to start up cnid_dbd upon request from afpd */
+/* 
+   cnid_dbd metadaemon to start up cnid_dbd upon request from afpd.
+   Here is how it works:
+   
+                       via TCP socket
+   1.       afpd          ------->        cnid_metad
+
+                   via UNIX domain socket
+   2.   cnid_metad        ------->         cnid_dbd
+
+                    passes afpd client fd
+   3.   cnid_metad        ------->         cnid_dbd
+
+   Result:
+                       via TCP socket
+   4.       afpd          ------->         cnid_dbd
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -41,8 +58,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/ioctl.h>
-  
-#ifndef WEXITSTATUS 
+
+#ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
 #endif /* ! WEXITSTATUS */
 #ifndef WIFEXITED
@@ -89,16 +106,14 @@
 #include "usockfd.h"
 
 #define DBHOME        ".AppleDB"
-#define DBHOMELEN    8      
+#define DBHOMELEN    8
 
 static int srvfd;
 static int rqstfd;
 volatile sig_atomic_t alarmed = 0;
 
-#define MAXSRV 512
-
 #define MAXSPAWN   3                   /* Max times respawned in.. */
-
+#define MAXVOLS    512
 #define DEFAULTHOST  "localhost"
 #define DEFAULTPORT  4700
 #define TESTTIME   22                  /* this much seconds apfd client tries to
@@ -110,19 +125,19 @@ struct server {
     pid_t pid;
     time_t tm;                    /* When respawned last */
     int count;                    /* Times respawned in the last TESTTIME secondes */
-    int toofast; 
+    int toofast;
     int control_fd;               /* file descriptor to child cnid_dbd process */
 };
 
-static struct server srv[MAXSRV +1];
+static struct server srv[MAXVOLS];
 
 /* Default logging config: log to syslog with level log_note */
 static char *logconfig = "default log_note";
 
-static struct server *test_usockfn(char *dir, char *fn _U_)
+static struct server *test_usockfn(char *dir)
 {
-int i;
-    for (i = 1; i <= MAXSRV; i++) {
+    int i;
+    for (i = 0; i < MAXVOLS; i++) {
         if (srv[i].name && !strcmp(srv[i].name, dir)) {
             return &srv[i];
         }
@@ -133,54 +148,54 @@ int i;
 /* -------------------- */
 static int send_cred(int socket, int fd)
 {
-   int ret;
-   struct msghdr msgh; 
-   struct iovec iov[1];
-   struct cmsghdr *cmsgp = NULL;
-   char *buf;
-   size_t size;
-   int er=0;
+    int ret;
+    struct msghdr msgh;
+    struct iovec iov[1];
+    struct cmsghdr *cmsgp = NULL;
+    char *buf;
+    size_t size;
+    int er=0;
 
-   size = CMSG_SPACE(sizeof fd);
-   buf = malloc(size);
-   if (!buf) {
-       LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
-       return -1;
-   }
+    size = CMSG_SPACE(sizeof fd);
+    buf = malloc(size);
+    if (!buf) {
+        LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
+        return -1;
+    }
 
-   memset(&msgh,0,sizeof (msgh));
-   memset(buf,0, size);
+    memset(&msgh,0,sizeof (msgh));
+    memset(buf,0, size);
 
-   msgh.msg_name = NULL;
-   msgh.msg_namelen = 0;
+    msgh.msg_name = NULL;
+    msgh.msg_namelen = 0;
 
-   msgh.msg_iov = iov;
-   msgh.msg_iovlen = 1;
+    msgh.msg_iov = iov;
+    msgh.msg_iovlen = 1;
 
-   iov[0].iov_base = &er;
-   iov[0].iov_len = sizeof(er);
+    iov[0].iov_base = &er;
+    iov[0].iov_len = sizeof(er);
 
-   msgh.msg_control = buf;
-   msgh.msg_controllen = size;
+    msgh.msg_control = buf;
+    msgh.msg_controllen = size;
 
-   cmsgp = CMSG_FIRSTHDR(&msgh);
-   cmsgp->cmsg_level = SOL_SOCKET;
-   cmsgp->cmsg_type = SCM_RIGHTS;
-   cmsgp->cmsg_len = CMSG_LEN(sizeof(fd));
+    cmsgp = CMSG_FIRSTHDR(&msgh);
+    cmsgp->cmsg_level = SOL_SOCKET;
+    cmsgp->cmsg_type = SCM_RIGHTS;
+    cmsgp->cmsg_len = CMSG_LEN(sizeof(fd));
 
-   *((int *)CMSG_DATA(cmsgp)) = fd;
-   msgh.msg_controllen = cmsgp->cmsg_len;
+    *((int *)CMSG_DATA(cmsgp)) = fd;
+    msgh.msg_controllen = cmsgp->cmsg_len;
 
-   do  {
-       ret = sendmsg(socket,&msgh, 0);
-   } while ( ret == -1 && errno == EINTR );
-   if (ret == -1) {
-       LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
-       free(buf);
-       return -1;
-   }
-   free(buf);
-   return 0;
+    do  {
+        ret = sendmsg(socket,&msgh, 0);
+    } while ( ret == -1 && errno == EINTR );
+    if (ret == -1) {
+        LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
+        free(buf);
+        return -1;
+    }
+    free(buf);
+    return 0;
 }
 
 /* -------------------- */
@@ -194,104 +209,101 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
     char buf1[8];
     char buf2[8];
 
-    up = test_usockfn(dbdir, usockfn);
+    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: dbdir: '%s', UNIX socket file: '%s'", 
+        dbdir, usockfn);
+
+    up = test_usockfn(dbdir);
     if (up && up->pid) {
-       /* we already have a process, send our fd */
-       if (send_cred(up->control_fd, rqstfd) < 0) {
-           /* FIXME */
-           return -1;
-       }
-       return 0;
+        /* we already have a process, send our fd */
+        if (send_cred(up->control_fd, rqstfd) < 0) {
+            /* FIXME */
+            return -1;
+        }
+        return 0;
     }
+
+    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: no cnid_dbd for that volume yet. Starting one ...");
 
     time(&t);
     if (!up) {
         /* find an empty slot */
-        for (i = 1; i <= MAXSRV; i++) {
-            if (!srv[i].pid && srv[i].tm + TESTTIME < t) {
+        for (i = 0; i < MAXVOLS; i++) {
+            if ( !srv[i].pid ) {
                 up = &srv[i];
-                free(up->name);
                 up->tm = t;
                 up->count = 0;
                 up->toofast = 0;
-                /* copy name */
                 up->name = strdup(dbdir);
                 break;
             }
         }
         if (!up) {
-	    LOG(log_error, logtype_cnid, "no free slot");
-	    return -1;
+            LOG(log_error, logtype_cnid, "no free slot for cnid_dbd child. Configured maximum: %d. Do you have so many volumes?", MAXVOLS);
+            return -1;
         }
     }
     else {
         /* we have a slot but no process, check for respawn too fast */
-        if (up->tm + TESTTIME > t) {
-            if (up->toofast) {
-                /* silently exit */
-                return -1;
-            }
-            up->count++;
-        } else {
-            up->count = 0;
-	    up->toofast = 0;
-            up->tm = t;
+        if ( (t < (up->tm + TESTTIME)) /* We're in the respawn time window */
+             &&
+             (up->count > MAXSPAWN) ) /* ...and already tried to fork too often */
+            return -1; /* just exit, dont sleep, because we might have work to do for another client  */
+
+        if ( t >= (up->tm + TESTTIME) ) { /* "reset" timer and count */
+             up->count = 0;
+             up->tm = t;
         }
-        if (up->count > MAXSPAWN) {
-	    up->toofast = 1;
-            up->tm = t;
-	    LOG(log_error, logtype_cnid, "respawn too fast %s", up->name);
-	    /* FIXME should we sleep a little ? */
-	    return -1;
-        }
-        
+        up->count++;
     }
-    /* create socketpair for comm between parent and child 
-     * FIXME Do we really need a permanent pipe between them ?
-     */
+
+    /* 
+       Create socketpair for comm between parent and child.
+       We use it to pass fds from connecting afpd processes to our
+       cnid_dbd child via fd passing.
+    */
     if (socketpair(PF_UNIX, SOCK_STREAM, 0, sv) < 0) {
-	LOG(log_error, logtype_cnid, "error in socketpair: %s", strerror(errno));
-	return -1;
+        LOG(log_error, logtype_cnid, "error in socketpair: %s", strerror(errno));
+        return -1;
     }
-        
+
     if ((pid = fork()) < 0) {
-	LOG(log_error, logtype_cnid, "error in fork: %s", strerror(errno));
-	return -1;
-    }    
+        LOG(log_error, logtype_cnid, "error in fork: %s", strerror(errno));
+        return -1;
+    }
     if (pid == 0) {
         int ret;
-	/*
-	 *  Child. Close descriptors and start the daemon. If it fails
-	 *  just log it. The client process will fail connecting
-	 *  afterwards anyway.
-	 */
+        /*
+         *  Child. Close descriptors and start the daemon. If it fails
+         *  just log it. The client process will fail connecting
+         *  afterwards anyway.
+         */
 
-	close(srvfd);
-	close(sv[0]);
-	
-	for (i = 1; i <= MAXSRV; i++) {
+        close(srvfd);
+        close(sv[0]);
+
+        for (i = 0; i < MAXVOLS; i++) {
             if (srv[i].pid && up != &srv[i]) {
-		close(srv[i].control_fd);
+                close(srv[i].control_fd);
             }
         }
 
-	sprintf(buf1, "%i", sv[1]);
-	sprintf(buf2, "%i", rqstfd);
-	
-	if (up->count == MAXSPAWN) {
-	    /* there's a pb with the db inform child 
-	     * it will run recover, delete the db whatever
-	    */
-	    LOG(log_error, logtype_cnid, "try with -d %s", up->name);
-	    ret = execlp(dbdpn, dbdpn, "-d", dbdir, buf1, buf2, logconfig, NULL);
-	}
-	else {
-	    ret = execlp(dbdpn, dbdpn, dbdir, buf1, buf2, logconfig, NULL);
-	}
-	if (ret < 0) {
-	    LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
-	    exit(0);
-	}
+        sprintf(buf1, "%i", sv[1]);
+        sprintf(buf2, "%i", rqstfd);
+
+        if (up->count == MAXSPAWN) {
+            /* there's a pb with the db inform child
+             * it will run recover, delete the db whatever
+             */
+            LOG(log_error, logtype_cnid, "try with -d %s", up->name);
+            ret = execlp(dbdpn, dbdpn, "-d", dbdir, buf1, buf2, logconfig, NULL);
+        }
+        else {
+            ret = execlp(dbdpn, dbdpn, dbdir, buf1, buf2, logconfig, NULL);
+        }
+        if (ret < 0) {
+            LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
+            exit(0);
+        }
     }
     /*
      *  Parent.
@@ -305,7 +317,7 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
 /* ------------------ */
 static int set_dbdir(char *dbdir, int len)
 {
-   struct stat st;
+    struct stat st;
 
     if (!len)
         return -1;
@@ -316,60 +328,60 @@ static int set_dbdir(char *dbdir, int len)
     }
 
     if (dbdir[len - 1] != '/') {
-         strcat(dbdir, "/");
-         len++;
+        strcat(dbdir, "/");
+        len++;
     }
     strcpy(dbdir + len, DBHOME);
     if (stat(dbdir, &st) < 0 && mkdir(dbdir, 0755 ) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
         return -1;
     }
-    return 0;   
+    return 0;
 }
 
 /* ------------------ */
 uid_t user_to_uid ( username )
-char    *username;
+    char    *username;
 {
     struct passwd *this_passwd;
- 
+
     /* check for anything */
     if ( !username || strlen ( username ) < 1 ) return 0;
- 
+
     /* grab the /etc/passwd record relating to username */
     this_passwd = getpwnam ( username );
- 
+
     /* return false if there is no structure returned */
     if (this_passwd == NULL) return 0;
- 
+
     /* return proper uid */
     return this_passwd->pw_uid;
- 
-} 
+
+}
 
 /* ------------------ */
 gid_t group_to_gid ( group )
-char    *group;
+    char    *group;
 {
     struct group *this_group;
- 
+
     /* check for anything */
     if ( !group || strlen ( group ) < 1 ) return 0;
- 
+
     /* grab the /etc/groups record relating to group */
     this_group = getgrnam ( group );
- 
+
     /* return false if there is no structure returned */
     if (this_group == NULL) return 0;
- 
+
     /* return proper gid */
     return this_group->gr_gid;
- 
+
 }
 
 /* ------------------ */
 void catch_alarm(int sig) {
-	alarmed = 1;
+    alarmed = 1;
 }
 
 /* ------------------ */
@@ -392,14 +404,14 @@ int main(int argc, char *argv[])
     int    ret;
 
     set_processname("cnid_metad");
-    
+
     while (( cc = getopt( argc, argv, "ds:p:h:u:g:l:")) != -1 ) {
         switch (cc) {
         case 'd':
             debug = 1;
             break;
         case 'h':
-            host = strdup(optarg);  
+            host = strdup(optarg);
             break;
         case 'u':
             uid = user_to_uid (optarg);
@@ -436,9 +448,9 @@ int main(int argc, char *argv[])
         LOG(log_error, logtype_cnid, "main: bad arguments");
         exit(1);
     }
-    
+
     if (!debug) {
- 
+
         switch (fork()) {
         case 0 :
             fclose(stdin);
@@ -447,7 +459,7 @@ int main(int argc, char *argv[])
 
 #ifdef TIOCNOTTY
             {
-    	        int i;
+                int i;
                 if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
                     (void)ioctl( i, TIOCNOTTY, 0 );
                     setpgid( 0, getpid());
@@ -457,7 +469,7 @@ int main(int argc, char *argv[])
 #else
             setpgid( 0, getpid());
 #endif
-           break;
+            break;
         case -1 :  /* error */
             LOG(log_error, logtype_cnid, "detach from terminal: %s", strerror(errno));
             exit(1);
@@ -491,29 +503,28 @@ int main(int argc, char *argv[])
 
     while (1) {
         rqstfd = usockfd_check(srvfd, 10000000);
-	/* Collect zombie processes and log what happened to them */       
+        /* Collect zombie processes and log what happened to them */
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-           for (i = 1; i <= MAXSRV; i++) {
-               if (srv[i].pid == pid) {
-                   srv[i].pid = 0;
-#if 0                   
-                   free(srv[i].name);
-#endif                   
-                   close(srv[i].control_fd);
-                   break;
-               }
+            for (i = 0; i < MAXVOLS; i++) {
+                if (srv[i].pid == pid) {
+                    srv[i].pid = 0;
+                    free(srv[i].name);
+                    srv[i].name = NULL;
+                    close(srv[i].control_fd);
+                    break;
+                }
             }
-	    if (WIFEXITED(status)) {
-		LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with exit code %i", 
-		    pid, WEXITSTATUS(status));
-	    }
-	    else if (WIFSIGNALED(status)) {
-		LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with signal %i", 
-		    pid, WTERMSIG(status));
-	    }
-	    /* FIXME should */
-	    
-	}
+            if (WIFEXITED(status)) {
+                LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with exit code %i",
+                    pid, WEXITSTATUS(status));
+            }
+            else if (WIFSIGNALED(status)) {
+                LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with signal %i",
+                    pid, WTERMSIG(status));
+            }
+            /* FIXME should */
+
+        }
         if (rqstfd <= 0)
             continue;
 
@@ -521,13 +532,13 @@ int main(int argc, char *argv[])
            SIGIPE ignored there? Answer: Ignored for dsi, but not for asp ... */
         alarm(5); /* to prevent read from getting stuck */
         ret = read(rqstfd, &len, sizeof(int));
-	alarm(0);
-	if (alarmed) {
-	    alarmed = 0;
-	    LOG(log_severe, logtype_cnid, "Read(1) bailed with alarm (timeout)");
-	    goto loop_end;
-	}
-	
+        alarm(0);
+        if (alarmed) {
+            alarmed = 0;
+            LOG(log_severe, logtype_cnid, "Read(1) bailed with alarm (timeout)");
+            goto loop_end;
+        }
+
         if (!ret) {
             /* already close */
             goto loop_end;
@@ -541,37 +552,37 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
         /*
-         *  checks for buffer overruns. The client libatalk side does it too 
+         *  checks for buffer overruns. The client libatalk side does it too
          *  before handing the dir path over but who trusts clients?
          */
         if (!len || len +DBHOMELEN +2 > MAXPATHLEN) {
             LOG(log_error, logtype_cnid, "wrong len parameter: %d", len);
             goto loop_end;
         }
-        
+
         alarm(5);
-	actual_len = read(rqstfd, dbdir, len);
-	alarm(0);
-	if (alarmed) {
-	    alarmed = 0;
-	    LOG(log_severe, logtype_cnid, "Read(2) bailed with alarm (timeout)");
-	    goto loop_end;
-	}
+        actual_len = read(rqstfd, dbdir, len);
+        alarm(0);
+        if (alarmed) {
+            alarmed = 0;
+            LOG(log_severe, logtype_cnid, "Read(2) bailed with alarm (timeout)");
+            goto loop_end;
+        }
         if (actual_len != len) {
             LOG(log_error, logtype_cnid, "error/short read (dir): %s", strerror(errno));
             goto loop_end;
         }
         dbdir[len] = '\0';
-        
+
         if (set_dbdir(dbdir, len) < 0) {
             goto loop_end;
         }
-        
-        if ((dbp = db_param_read(dbdir)) == NULL) {
+
+        if ((dbp = db_param_read(dbdir, METAD)) == NULL) {
             LOG(log_error, logtype_cnid, "Error reading config file");
             goto loop_end;
         }
-	maybe_start_dbd(dbdpn, dbdir, dbp->usock_file);
+        maybe_start_dbd(dbdpn, dbdir, dbp->usock_file);
 
     loop_end:
         close(rqstfd);

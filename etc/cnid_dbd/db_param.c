@@ -1,7 +1,8 @@
 /*
- * $Id: db_param.c,v 1.3 2009-02-04 20:28:01 didg Exp $
+ * $Id: db_param.c,v 1.4 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (c) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
  */
 
@@ -20,25 +21,20 @@
 #include <errno.h>
 #include <sys/param.h>
 #include <sys/un.h>
-
-
 #include <atalk/logger.h>
 
 #include "db_param.h"
 
-
 #define DB_PARAM_FN       "db_param"
 #define MAXKEYLEN         64
 
-#define DEFAULT_LOGFILE_AUTOREMOVE 0   
-#define DEFAULT_CACHESIZE          1024 * 4 
-#define DEFAULT_NOSYNC             0    
-#define DEFAULT_FLUSH_FREQUENCY    100  
-#define DEFAULT_FLUSH_INTERVAL     30   
+#define DEFAULT_LOGFILE_AUTOREMOVE 1
+#define DEFAULT_CACHESIZE          8 * 1024 
+#define DEFAULT_FLUSH_FREQUENCY    100
+#define DEFAULT_FLUSH_INTERVAL     1800
 #define DEFAULT_USOCK_FILE         "usock"
-#define DEFAULT_FD_TABLE_SIZE      64
-#define DEFAULT_IDLE_TIMEOUT       600
-#define DEFAULT_CHECK              0
+#define DEFAULT_FD_TABLE_SIZE      128
+#define DEFAULT_IDLE_TIMEOUT       10 * 60
 
 static struct db_param params;
 static int parse_err;
@@ -46,7 +42,6 @@ static int parse_err;
 static size_t usock_maxlen()
 {
     struct sockaddr_un addr;
-
     return sizeof(addr.sun_path) - 1;
 }
 
@@ -72,10 +67,8 @@ static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
 
 static void default_params(struct db_param *dbp, char *dir)
 {        
-    dbp->check               = DEFAULT_CHECK;
     dbp->logfile_autoremove  = DEFAULT_LOGFILE_AUTOREMOVE;
     dbp->cachesize           = DEFAULT_CACHESIZE;
-    dbp->nosync              = DEFAULT_NOSYNC;
     dbp->flush_frequency     = DEFAULT_FLUSH_FREQUENCY;
     dbp->flush_interval      = DEFAULT_FLUSH_INTERVAL;
     if (make_pathname(dbp->usock_file, dir, DEFAULT_USOCK_FILE, usock_maxlen()) < 0) {
@@ -84,6 +77,7 @@ static void default_params(struct db_param *dbp, char *dir)
     }
     dbp->fd_table_size       = DEFAULT_FD_TABLE_SIZE;
     dbp->idle_timeout        = DEFAULT_IDLE_TIMEOUT;
+
     return;
 }
 
@@ -105,7 +99,7 @@ static int parse_int(char *val)
    buffer overflow) nor elegant, we need to add support for whitespace in
    filenames as well. */
 
-struct db_param *db_param_read(char *dir)
+struct db_param *db_param_read(char *dir, enum identity id)
 {
     FILE *fp;
     static char key[MAXKEYLEN + 1];
@@ -114,6 +108,7 @@ struct db_param *db_param_read(char *dir)
     int    items;
     
     default_params(&params, dir);
+    params.dir = dir;
     
     if (make_pathname(pfn, dir, DB_PARAM_FN, MAXPATHLEN) < 0) {
         LOG(log_error, logtype_cnid, "Parameter filename too long");
@@ -141,33 +136,44 @@ struct db_param *db_param_read(char *dir)
             parse_err++;
             break;
         }
-        
-        if (! strcmp(key, "logfile_autoremove")) 
-            params.logfile_autoremove = parse_int(val);
-        else if (! strcmp(key, "cachesize"))
-            params.cachesize = parse_int(val);
-        else if (! strcmp(key, "nosync"))
-            params.nosync = parse_int(val);
-        else if (! strcmp(key, "check"))
-            params.check = parse_int(val);
-        else if (! strcmp(key, "flush_frequency"))
-            params.flush_frequency = parse_int(val);
-        else if (! strcmp(key, "flush_interval"))
-            params.flush_interval = parse_int(val);
-        else if (! strcmp(key, "usock_file")) {
+
+        /* Config for both cnid_meta and dbd */
+        if (! strcmp(key, "usock_file")) {
             if (make_pathname(params.usock_file, dir, val, usock_maxlen()) < 0) {
                 LOG(log_error, logtype_cnid, "usock filename %s too long", val);
                 parse_err++;
-            }
-        } else if (! strcmp(key, "fd_table_size"))
-            params.fd_table_size = parse_int(val);
-	else if (! strcmp(key, "idle_timeout"))
-            params.idle_timeout = parse_int(val);
-	else {
-            LOG(log_error, logtype_cnid, "error parsing %s -> %s in config file", key, val);
-            parse_err++;
+            } else
+                LOG(log_info, logtype_cnid, "db_param: setting UNIX domain socket filename to %s", params.usock_file);
         }
-        if(parse_err)
+
+        /* Config for cnid_metad only */
+        if ( id == METAD ) {
+            /* Currently empty */
+        }
+
+        /* Config for dbd only */
+        else if (id == DBD ) {
+            if (! strcmp(key, "fd_table_size")) {
+                params.fd_table_size = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting max number of concurrent afpd connections per volume (fd_table_size) to %d", params.fd_table_size);
+            } else if (! strcmp(key, "logfile_autoremove")) {
+                params.logfile_autoremove = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting logfile_autoremove to %d", params.logfile_autoremove);
+            } else if (! strcmp(key, "cachesize")) {
+                params.cachesize = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting cachesize to %d", params.cachesize);
+            } else if (! strcmp(key, "flush_frequency")) {
+                params.flush_frequency = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting flush_frequency to %d", params.flush_frequency);
+            } else if (! strcmp(key, "flush_interval")) {
+                params.flush_interval = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting flush_interval to %d", params.flush_interval);
+            } else if (! strcmp(key, "idle_timeout")) {
+                params.idle_timeout = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting idle timeout to %d", params.idle_timeout);
+            }
+        }
+        if (parse_err)
             break;
     }
     

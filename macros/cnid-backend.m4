@@ -13,7 +13,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
         else
             use_cdb_backend=yes
         fi
-    ],[use_cdb_backend=yes]
+    ],[use_cdb_backend=no]
     )
 
     if test $use_cdb_backend = yes; then
@@ -42,31 +42,6 @@ AC_DEFUN([AC_NETATALK_CNID], [
         use_dbd_backend=yes
         AC_MSG_RESULT([yes])
     ])
-
-    dnl Determine whether or not to use with transaction support in Database Daemon
-    AC_MSG_CHECKING([whether or not to use Database Daemon with transaction support])
-    AC_ARG_WITH(cnid-dbd-txn,
-    [  --with-cnid-dbd-txn           build transaction support for dbd backend],
-    [   if test x"$withval" = x"no"; then
-            AC_MSG_RESULT([no])
-            use_dbd_txn=no
-        else
-            use_dbd_txn=yes
-            AC_MSG_RESULT([yes])
-        fi
-	],[
-        use_dbd_txn=no
-        AC_MSG_RESULT([no])
-    ])
-
-    if test $use_dbd_txn = yes; then
-        use_dbd_backend=yes
-        AC_DEFINE(CNID_BACKEND_DBD_TXN, 1, [Define if CNID Database Daemon backend has transaction support])
-    else
-        if test x"$use_dbd_backend" = x; then    
-            use_dbd_backend=no
-        fi
-    fi
 
     if test $use_dbd_backend = yes; then
         compiled_backends="$compiled_backends dbd"

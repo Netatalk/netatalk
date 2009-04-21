@@ -63,12 +63,22 @@
 #define ROOTINFO_KEY    "\0\0\0\0"
 #define ROOTINFO_KEYLEN 4
 
-/*                         cnid   - dev        - inode     - type  - did  - name */
-#define ROOTINFO_DATA    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0RootInfo"
-#define ROOTINFO_DATALEN (3*4 +2*8  +9)
-
-
-
+/* 
+   Rootinfo data:
+   4 unused bytes (cnid) 
+   8 bytes, in first 4 bytes db stamp: struct stat.st_ctime of database file (dev)
+   8 unused bytes (inode)
+   4 bytes: last used cnid (type)
+   4 unused bytes (did)
+   9 bytes name "RootInfo"
+*/
+#define ROOTINFO_DATA    "\0\0\0\0" \
+                         "\0\0\0\0\0\0\0\0" \
+                         "\0\0\0\0\0\0\0\0" \
+                         "\0\0\0\0" \
+                         "\0\0\0\0" \
+                         "RootInfo"
+#define ROOTINFO_DATALEN (3*4 + 2*8 + 9)
 
 struct cnid_dbd_rqst {
     int     op;

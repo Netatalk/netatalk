@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.6 2009-04-01 09:57:38 franklahm Exp $
+ * $Id: cnid_dbd.c,v 1.7 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -33,8 +33,8 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
-#include <time.h>    
- 
+#include <time.h>
+
 #include <netatalk/endian.h>
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
@@ -46,9 +46,9 @@
 #define SOL_TCP IPPROTO_TCP
 #endif /* ! SOL_TCP */
 
-static void RQST_RESET(struct cnid_dbd_rqst  *r) 
-{ 
-   memset(r, 0, sizeof(struct cnid_dbd_rqst ));
+static void RQST_RESET(struct cnid_dbd_rqst  *r)
+{
+    memset(r, 0, sizeof(struct cnid_dbd_rqst ));
 }
 
 /* ----------- */
@@ -57,11 +57,11 @@ extern int              Cnid_port;
 
 static int tsock_getfd(char *host, int port)
 {
-int sock;
-struct sockaddr_in server;
-struct hostent* hp;
-int attr;
-int err;
+    int sock;
+    struct sockaddr_in server;
+    struct hostent* hp;
+    int attr;
+    int err;
 
     server.sin_family=AF_INET;
     server.sin_port=htons((unsigned short)port);
@@ -69,47 +69,50 @@ int err;
         LOG(log_error, logtype_cnid, "getfd: -cnidserver not defined");
         return -1;
     }
-    
+
     hp=gethostbyname(host);
     if (!hp) {
-	unsigned long int addr=inet_addr(host);
-	LOG(log_warning, logtype_cnid, "getfd: Could not resolve host %s, trying numeric address instead", host);
+        unsigned long int addr=inet_addr(host);
+        LOG(log_warning, logtype_cnid, "getfd: Could not resolve host %s, trying numeric address instead", host);
         if (addr!= (unsigned)-1)
             hp=gethostbyaddr((char*)addr,sizeof(addr),AF_INET);
- 
-    	if (!hp) {
-	    LOG(log_error, logtype_cnid, "getfd: Could not resolve host %s", host);
-    	    return(-1);
-    	}
+
+        if (!hp) {
+            LOG(log_error, logtype_cnid, "getfd: Could not resolve host %s", host);
+            return(-1);
+        }
     }
     memcpy((char*)&server.sin_addr,(char*)hp->h_addr,sizeof(server.sin_addr));
     sock=socket(PF_INET,SOCK_STREAM,0);
     if (sock==-1) {
-	LOG(log_error, logtype_cnid, "getfd: socket %s: %s", host, strerror(errno));
-    	return(-1);
+        LOG(log_error, logtype_cnid, "getfd: socket %s: %s", host, strerror(errno));
+        return(-1);
     }
     attr = 1;
     if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &attr, sizeof(attr)) == -1) {
-	LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY %s: %s", host, strerror(errno));
-	close(sock);
-	return(-1);
+        LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY %s: %s", host, strerror(errno));
+        close(sock);
+        return(-1);
     }
     if(connect(sock ,(struct sockaddr*)&server,sizeof(server))==-1) {
         struct timeval tv;
         err = errno;
-    	close(sock);
-    	sock=-1;
-	LOG(log_error, logtype_cnid, "getfd: connect %s: %s", host, strerror(err));
+        close(sock);
+        sock=-1;
+        LOG(log_error, logtype_cnid, "getfd: connect %s: %s", host, strerror(err));
         switch (err) {
         case ENETUNREACH:
-        case ECONNREFUSED: 
-            
+        case ECONNREFUSED:
+
             tv.tv_usec = 0;
             tv.tv_sec  = 5;
             select(0, NULL, NULL, NULL, &tv);
             break;
         }
     }
+
+    LOG(log_debug7, logtype_cnid, "tsock_getfd: using sockfd %d for cnid server '%s:%d'", sock, host, port);
+
     return(sock);
 }
 
@@ -118,18 +121,20 @@ static int write_vec(int fd, struct iovec *iov, size_t towrite)
 {
     ssize_t len;
     size_t len1;
-    
+
+    LOG(log_maxdebug, logtype_cnid, "write_vec: request to write %d bytes", towrite);
+
     len1 =  iov[1].iov_len;
     while (towrite > 0) {
         if (((len = writev(fd, iov, 2)) == -1 && errno == EINTR) || !len)
             continue;
- 
+
         if ((size_t)len == towrite) /* wrote everything out */
             break;
         else if (len < 0) { /* error */
             return -1;
         }
- 
+
         towrite -= len;
         if (towrite > len1) { /* skip part of header */
             iov[0].iov_base = (char *) iov[0].iov_base + len;
@@ -143,6 +148,9 @@ static int write_vec(int fd, struct iovec *iov, size_t towrite)
             iov[1].iov_len -= len;
         }
     }
+
+    LOG(log_maxdebug, logtype_cnid, "write_vec: wrote %d bytes", towrite);
+
     return 0;
 }
 
@@ -152,8 +160,10 @@ static int init_tsock(CNID_private *db)
     int fd;
     int len;
     struct iovec iov[2];
-    
-    if ((fd = tsock_getfd(Cnid_srv, Cnid_port)) < 0) 
+
+    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s'", db->db_dir);
+
+    if ((fd = tsock_getfd(Cnid_srv, Cnid_port)) < 0)
         return -1;
 
     len = strlen(db->db_dir);
@@ -169,23 +179,27 @@ static int init_tsock(CNID_private *db)
         close(fd);
         return -1;
     }
+
+    LOG(log_debug, logtype_cnid, "init_tsock: ok");
+
     return fd;
 }
 
 /* --------------------- */
-static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst, int silent)
+static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
 {
     struct iovec iov[2];
     size_t towrite;
-  
-    
+
+    LOG(log_maxdebug, logtype_cnid, "send_packet: BEGIN");
+
     if (!rqst->namelen) {
         if (write(db->fd, rqst, sizeof(struct cnid_dbd_rqst)) != sizeof(struct cnid_dbd_rqst)) {
-	    if (!silent)
-		LOG(log_warning, logtype_cnid, "send_packet: Error/short write rqst (db_dir %s): %s", 
-		    db->db_dir, strerror(errno));
+            LOG(log_warning, logtype_cnid, "send_packet: Error/short write rqst (db_dir %s): %s",
+                db->db_dir, strerror(errno));
             return -1;
         }
+        LOG(log_maxdebug, logtype_cnid, "send_packet: OK");
         return 0;
     }
 
@@ -198,12 +212,12 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst, int silent)
     towrite = sizeof(struct cnid_dbd_rqst) +rqst->namelen;
 
     if (write_vec(db->fd, iov, towrite) < 0) {
-	if (!silent)
-	    LOG(log_warning, logtype_cnid, "send_packet: Error writev rqst (db_dir %s): %s", 
-		      db->db_dir, strerror(errno));
-	return -1;	      
+        LOG(log_warning, logtype_cnid, "send_packet: Error writev rqst (db_dir %s): %s",
+            db->db_dir, strerror(errno));
+        return -1;
     }
-
+    
+    LOG(log_maxdebug, logtype_cnid, "send_packet: OK");
     return 0;
 }
 
@@ -230,13 +244,13 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
     return 0;
 }
 
-/* --------------------- 
+/* ---------------------
  * send a request and get reply
  * assume send is non blocking
  * if no answer after sometime (at least MAX_DELAY secondes) return an error
-*/
+ */
 #define MAX_DELAY 40
-static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int silent)
+static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     ssize_t ret;
     char *nametmp;
@@ -245,56 +259,55 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
     int    maxfd;
     size_t len;
 
-    if (send_packet(db, rqst, silent) < 0) {
+    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: BEGIN");
+
+    if (send_packet(db, rqst) < 0) {
         return -1;
     }
     FD_ZERO(&readfds);
     FD_SET(db->fd, &readfds);
     maxfd = db->fd +1;
-        
+
     tv.tv_usec = 0;
     tv.tv_sec  = MAX_DELAY;
     while ((ret = select(maxfd + 1, &readfds, NULL, NULL, &tv)) < 0 && errno == EINTR);
 
     if (ret < 0) {
-	if (!silent)
-	    LOG(log_error, logtype_cnid, "dbd_rpc: Error in select (db_dir %s): %s",
-		db->db_dir, strerror(errno));
+        LOG(log_error, logtype_cnid, "dbd_rpc: Error in select (db_dir %s): %s",
+            db->db_dir, strerror(errno));
         return ret;
     }
     /* signal ? */
     if (!ret) {
         /* no answer */
-	if (!silent)
-	    LOG(log_error, logtype_cnid, "dbd_rpc: select timed out (db_dir %s)",
-		db->db_dir);
+        LOG(log_error, logtype_cnid, "dbd_rpc: select timed out (db_dir %s)",
+            db->db_dir);
         return -1;
     }
-
     len = rply->namelen;
     nametmp = rply->name;
-    /* assume that if we have something then everything is there (doesn't sleep) */ 
+    /* assume that if we have something then everything is there (doesn't sleep) */
     if ((ret = read(db->fd, rply, sizeof(struct cnid_dbd_rply))) != sizeof(struct cnid_dbd_rply)) {
-	if (!silent)
-	    LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
-                db->db_dir, ret == -1?strerror(errno):"closed");
+        LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
+            db->db_dir, ret == -1?strerror(errno):"closed");
         rply->name = nametmp;
         return -1;
     }
     rply->name = nametmp;
     if (rply->namelen && rply->namelen > len) {
-	if (!silent)
-            LOG(log_error, logtype_cnid, 
-                 "dbd_rpc: Error reading name (db_dir %s): %s name too long wanted %d only %d, garbage?",
-                 db->db_dir, rply->namelen, len);
+        LOG(log_error, logtype_cnid,
+            "dbd_rpc: Error reading name (db_dir %s): %s name too long: %d. only wanted %d, garbage?",
+            db->db_dir, rply->name, rply->namelen, len);
         return -1;
     }
     if (rply->namelen && (ret = read(db->fd, rply->name, rply->namelen)) != (ssize_t)rply->namelen) {
-	if (!silent)
-            LOG(log_error, logtype_cnid, "dbd_rpc: Error reading name from fd (db_dir %s): %s",
-                db->db_dir, ret == -1?strerror(errno):"closed");
+        LOG(log_error, logtype_cnid, "dbd_rpc: Error reading name from fd (db_dir %s): %s",
+            db->db_dir, ret == -1?strerror(errno):"closed");
         return -1;
     }
+
+    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: END");
+
     return 0;
 }
 
@@ -303,75 +316,79 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
 {
     struct timeval tv;
     time_t orig, t;
-    int silent = 1;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
-    
+
+    LOG(log_debug7, logtype_cnid, "transmit: BEGIN");
+
     if (db->changed) {
         /* volume and db don't have the same timestamp
-        */
+         */
         return -1;
     }
     time(&orig);
     while (1) {
-
         if (db->fd == -1) {
+            LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             struct cnid_dbd_rqst rqst_stamp;
             struct cnid_dbd_rply rply_stamp;
             char  stamp[ADEDLEN_PRIVSYN];
-                
+
             if ((db->fd = init_tsock(db)) < 0) {
                 time(&t);
                 if (t - orig > MAX_DELAY)
                     return -1;
-	        continue;
+                continue;
             }
             dbd_initstamp(&rqst_stamp);
             memset(stamp, 0, ADEDLEN_PRIVSYN);
             rply_stamp.name = stamp;
             rply_stamp.namelen = ADEDLEN_PRIVSYN;
 
-            if (dbd_rpc(db, &rqst_stamp, &rply_stamp, silent) < 0)
+            if (dbd_rpc(db, &rqst_stamp, &rply_stamp) < 0)
                 goto transmit_fail;
             if (dbd_reply_stamp(&rply_stamp ) < 0)
                 goto transmit_fail;
-            
+
             if (db->notfirst) {
-        	if (memcmp(stamp, db->stamp, ADEDLEN_PRIVSYN)) {
-                    LOG(log_error, logtype_cnid, "transmit: not the same db!");
-        	    db->changed = 1;
-        	    return -1;
-        	}
+                LOG(log_debug7, logtype_cnid, "transmit: reconnected to cnid_dbd, comparing database stamps...");
+                if (memcmp(stamp, db->stamp, ADEDLEN_PRIVSYN)) {
+                    LOG(log_error, logtype_cnid, "transmit: ... not the same db!");
+                    db->changed = 1;
+                    return -1;
+                }
+                LOG(log_debug7, logtype_cnid, "transmit: ... OK.");
             }
             else {
                 db->notfirst = 1;
-                if (db->client_stamp) {
-    	            memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
-    	        }
-    	        memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
+                if (db->client_stamp)
+                    memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
+                memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
             }
+            LOG(log_debug, logtype_cnid, "transmit: succesfully attached to cnid_dbd for volume '%s' with stamp '%08lx'.", 
+                db->db_dir, *(uint64_t *)stamp);
         }
-        if (!dbd_rpc(db, rqst, rply, silent)) {
+        if (!dbd_rpc(db, rqst, rply)) {
+            LOG(log_debug7, logtype_cnid, "transmit: END OK");
             return 0;
-	}
-transmit_fail:
-	silent = 0; /* From now on dbd_rpc and subroutines called from there
-                       will log messages if something goes wrong again */
+        }
+    transmit_fail:
+        LOG(log_error, logtype_cnid, "transmit: something went wrong");
         if (db->fd != -1) {
             close(db->fd);
             db->fd = -1; /* FD not valid... will need to reconnect */
         }
         time(&t);
         if (t - orig > MAX_DELAY) {
-	    LOG(log_error, logtype_cnid, "transmit: Request to dbd daemon (db_dir %s) timed out.", db->db_dir);
+            LOG(log_error, logtype_cnid, "transmit: Request to dbd daemon (db_dir %s) timed out.", db->db_dir);
             return -1;
-	}
+        }
 
-	if (!clean) { /* don't sleep if just got disconnected by cnid server */
+        if (!clean) { /* don't sleep if just got disconnected by cnid server */
             /* sleep a little before retry */
             tv.tv_usec = 0;
             tv.tv_sec  = 5;
             select(0, NULL, NULL, NULL, &tv); /* sleep for 5 seconds */
-	} else {
+        } else {
             clean = 0; /* false... next time sleep */
         }
     }
@@ -382,17 +399,17 @@ transmit_fail:
 static struct _cnid_db *cnid_dbd_new(const char *volpath)
 {
     struct _cnid_db *cdb;
-    
+
     if ((cdb = (struct _cnid_db *)calloc(1, sizeof(struct _cnid_db))) == NULL)
-	return NULL;
-	
+        return NULL;
+
     if ((cdb->volpath = strdup(volpath)) == NULL) {
         free(cdb);
-	return NULL;
+        return NULL;
     }
-    
+
     cdb->flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
-    
+
     cdb->cnid_add = cnid_dbd_add;
     cdb->cnid_delete = cnid_dbd_delete;
     cdb->cnid_get = cnid_dbd_get;
@@ -403,7 +420,7 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
     cdb->cnid_update = cnid_dbd_update;
     cdb->cnid_rebuild_add = cnid_dbd_rebuild_add;
     cdb->cnid_close = cnid_dbd_close;
-    
+
     return cdb;
 }
 
@@ -414,19 +431,19 @@ struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_)
     struct _cnid_db *cdb = NULL;
 
     if (!dir) {
-         return NULL;
+        return NULL;
     }
-    
+
     if ((cdb = cnid_dbd_new(dir)) == NULL) {
         LOG(log_error, logtype_cnid, "cnid_open: Unable to allocate memory for database");
-	return NULL;
+        return NULL;
     }
-        
+
     if ((db = (CNID_private *)calloc(1, sizeof(CNID_private))) == NULL) {
         LOG(log_error, logtype_cnid, "cnid_open: Unable to allocate memory for database");
         goto cnid_dbd_open_fail;
     }
-    
+
     cdb->_private = db;
 
     /* We keep a copy of the directory in the db structure so that we can
@@ -434,21 +451,21 @@ struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_)
     strcpy(db->db_dir, dir);
     db->magic = CNID_DB_MAGIC;
     db->fd = -1;
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "opening database connection to %s", db->db_dir); 
-#endif
+
+    LOG(log_debug, logtype_cnid, "cnid_dbd_open: Finished initializing cnid dbd module for volume '%s'", db->db_dir);
+
     return cdb;
 
 cnid_dbd_open_fail:
     if (cdb != NULL) {
-	if (cdb->volpath != NULL) {
-	    free(cdb->volpath);
-	}
-	free(cdb);
+        if (cdb->volpath != NULL) {
+            free(cdb->volpath);
+        }
+        free(cdb);
     }
     if (db != NULL)
-	free(db);
-	
+        free(db);
+
     return NULL;
 }
 
@@ -459,28 +476,27 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 
     if (!cdb) {
         LOG(log_error, logtype_cnid, "cnid_close called with NULL argument !");
-	return;
+        return;
     }
 
     if ((db = cdb->_private) != NULL) {
-#ifdef DEBUG 
-        LOG(log_info, logtype_cnid, "closing database connection to %s", db->db_dir);
-#endif  
-	if (db->fd >= 0)
-	    close(db->fd);
+        LOG(log_info, logtype_cnid, "closing database connection for volume '%s'", db->db_dir);
+
+        if (db->fd >= 0)
+            close(db->fd);
         free(db);
     }
-    
+
     free(cdb->volpath);
     free(cdb);
-    
+
     return;
 }
 
 /* ---------------------- */
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
-                const cnid_t did, char *name, const size_t len,
-                cnid_t hint _U_)
+                    const cnid_t did, char *name, const size_t len,
+                    cnid_t hint _U_)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -512,15 +528,19 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
     rqst.name = name;
     rqst.namelen = len;
 
+    LOG(log_debug, logtype_cnid, "cnid_dbd_add: CNID: %u, name: '%s', inode: 0x%llx, type: %d (0=file, 1=dir)",
+        ntohl(did), name, (long long)st->st_ino, rqst.type);
+
     rply.namelen = 0;
     if (transmit(db, &rqst, &rply) < 0) {
         errno = CNID_ERR_DB;
         return CNID_INVALID;
     }
-    
+
     switch(rply.result) {
     case CNID_DBD_RES_OK:
         id = rply.cnid;
+        LOG(log_debug, logtype_cnid, "cnid_dbd_add: got CNID: %u", ntohl(id));
         break;
     case CNID_DBD_RES_ERR_MAX:
         errno = CNID_ERR_MAX;
@@ -534,6 +554,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
     default:
         abort();
     }
+
     return id;
 }
 
@@ -545,18 +566,19 @@ cnid_t cnid_dbd_get(struct _cnid_db *cdb, const cnid_t did, char *name, const si
     struct cnid_dbd_rply rply;
     cnid_t id;
 
-
     if (!cdb || !(db = cdb->_private) || !name) {
-        LOG(log_error, logtype_cnid, "cnid_get: Parameter error");
-        errno = CNID_ERR_PARAM;        
+        LOG(log_error, logtype_cnid, "cnid_dbd_get: Parameter error");
+        errno = CNID_ERR_PARAM;
         return CNID_INVALID;
     }
 
     if (len > MAXPATHLEN) {
-        LOG(log_error, logtype_cnid, "cnid_add: Path name is too long");
+        LOG(log_error, logtype_cnid, "cnid_dbd_get: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;
     }
+
+    LOG(log_debug, logtype_cnid, "cnid_dbd_get: DID: %u, name: '%s'", ntohl(did), name);
 
     RQST_RESET(&rqst);
     rqst.op = CNID_DBD_OP_GET;
@@ -569,10 +591,11 @@ cnid_t cnid_dbd_get(struct _cnid_db *cdb, const cnid_t did, char *name, const si
         errno = CNID_ERR_DB;
         return CNID_INVALID;
     }
-    
+
     switch(rply.result) {
     case CNID_DBD_RES_OK:
         id = rply.cnid;
+        LOG(log_debug, logtype_cnid, "cnid_dbd_get: got CNID: %u", ntohl(id));
         break;
     case CNID_DBD_RES_NOTFOUND:
         id = CNID_INVALID;
@@ -581,7 +604,7 @@ cnid_t cnid_dbd_get(struct _cnid_db *cdb, const cnid_t did, char *name, const si
         id = CNID_INVALID;
         errno = CNID_ERR_DB;
         break;
-    default: 
+    default:
         abort();
     }
 
@@ -598,9 +621,11 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
 
     if (!cdb || !(db = cdb->_private) || !id || !(*id)) {
         LOG(log_error, logtype_cnid, "cnid_resolve: Parameter error");
-        errno = CNID_ERR_PARAM;                
+        errno = CNID_ERR_PARAM;
         return NULL;
     }
+
+    LOG(log_debug, logtype_cnid, "cnid_dbd_resolve: resolving CNID: %u", ntohl(*id));
 
     /* TODO: We should maybe also check len. At the moment we rely on the caller
        to provide a buffer that is large enough for MAXPATHLEN plus
@@ -627,6 +652,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
     case CNID_DBD_RES_OK:
         *id = rply.did;
         name = rply.name;
+        LOG(log_debug, logtype_cnid, "cnid_dbd_resolve: resolved CNID: %u to '%s'", ntohl(*id), name);
         break;
     case CNID_DBD_RES_NOTFOUND:
         *id = CNID_INVALID;
@@ -651,7 +677,7 @@ int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 
     if (!cdb || !(db = cdb->_private) || len != ADEDLEN_PRIVSYN) {
         LOG(log_error, logtype_cnid, "cnid_getstamp: Parameter error");
-        errno = CNID_ERR_PARAM;                
+        errno = CNID_ERR_PARAM;
         return -1;
     }
     db->client_stamp = buffer;
@@ -662,7 +688,7 @@ int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 
 /* ---------------------- */
 cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                   char *name, const size_t len)
+                       char *name, const size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -671,7 +697,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 
     if (!cdb || !(db = cdb->_private) || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_lookup: Parameter error");
-        errno = CNID_ERR_PARAM;        
+        errno = CNID_ERR_PARAM;
         return CNID_INVALID;
     }
 
@@ -694,6 +720,9 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
     rqst.name = name;
     rqst.namelen = len;
 
+    LOG(log_debug, logtype_cnid, "cnid_dbd_lookup: CNID: %u, name: '%s', inode: 0x%llx, type: %d (0=file, 1=dir)",
+        ntohl(did), name, (long long)st->st_ino, rqst.type);
+
     rply.namelen = 0;
     if (transmit(db, &rqst, &rply) < 0) {
         errno = CNID_ERR_DB;
@@ -703,6 +732,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
     switch (rply.result) {
     case CNID_DBD_RES_OK:
         id = rply.cnid;
+        LOG(log_debug, logtype_cnid, "cnid_dbd_lookup: got CNID: %u", ntohl(id));
         break;
     case CNID_DBD_RES_NOTFOUND:
         id = CNID_INVALID;
@@ -720,16 +750,15 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 
 /* ---------------------- */
 int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const size_t len)
+                    const cnid_t did, char *name, const size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 
-    
     if (!cdb || !(db = cdb->_private) || !id || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_update: Parameter error");
-        errno = CNID_ERR_PARAM;        
+        errno = CNID_ERR_PARAM;
         return -1;
     }
 
@@ -751,6 +780,9 @@ int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     rqst.name = name;
     rqst.namelen = len;
 
+    LOG(log_debug, logtype_cnid, "cnid_dbd_update: CNID: %u, name: '%s', inode: 0x%llx, type: %d (0=file, 1=dir)",
+        ntohl(id), name, (long long)st->st_ino, rqst.type);
+
     rply.namelen = 0;
     if (transmit(db, &rqst, &rply) < 0) {
         errno = CNID_ERR_DB;
@@ -759,6 +791,7 @@ int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
 
     switch (rply.result) {
     case CNID_DBD_RES_OK:
+        LOG(log_debug, logtype_cnid, "cnid_dbd_update: updated");
     case CNID_DBD_RES_NOTFOUND:
         return 0;
     case CNID_DBD_RES_ERR_DB:
@@ -770,15 +803,15 @@ int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
 }
 
 /* ---------------------- */
-cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st, 
-			    const cnid_t did, char *name, const size_t len, 
-			    cnid_t hint)
+cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
+                            const cnid_t did, char *name, const size_t len,
+                            cnid_t hint)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     cnid_t id;
-    
+
     if (!cdb || !(db = cdb->_private) || !st || !name || hint == CNID_INVALID) {
         LOG(log_error, logtype_cnid, "cnid_rebuild_add: Parameter error");
         errno = CNID_ERR_PARAM;
@@ -805,6 +838,9 @@ cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
     rqst.namelen = len;
     rqst.cnid = hint;
 
+    LOG(log_debug, logtype_cnid, "cnid_dbd_rebuild_add: CNID: %u, name: '%s', inode: 0x%llx, type: %d (0=file, 1=dir), hint: %u",
+        ntohl(did), name, (long long)st->st_ino, rqst.type, hint);
+
     if (transmit(db, &rqst, &rply) < 0) {
         errno = CNID_ERR_DB;
         return CNID_INVALID;
@@ -813,6 +849,7 @@ cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
     switch(rply.result) {
     case CNID_DBD_RES_OK:
         id = rply.cnid;
+        LOG(log_debug, logtype_cnid, "cnid_dbd_rebuild_add: got CNID: %u", ntohl(id));
         break;
     case CNID_DBD_RES_ERR_MAX:
         errno = CNID_ERR_MAX;
@@ -830,18 +867,19 @@ cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* ---------------------- */
-int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id) 
+int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 
-
     if (!cdb || !(db = cdb->_private) || !id) {
         LOG(log_error, logtype_cnid, "cnid_delete: Parameter error");
-        errno = CNID_ERR_PARAM;        
+        errno = CNID_ERR_PARAM;
         return -1;
     }
+
+    LOG(log_debug, logtype_cnid, "cnid_dbd_delete: delete CNID: %u", ntohl(id));
 
     RQST_RESET(&rqst);
     rqst.op = CNID_DBD_OP_DELETE;
@@ -855,6 +893,7 @@ int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
 
     switch (rply.result) {
     case CNID_DBD_RES_OK:
+        LOG(log_debug, logtype_cnid, "cnid_dbd_delete: deleted CNID: %u", ntohl(id));
     case CNID_DBD_RES_NOTFOUND:
         return 0;
     case CNID_DBD_RES_ERR_DB:

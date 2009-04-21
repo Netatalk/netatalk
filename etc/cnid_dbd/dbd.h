@@ -1,5 +1,5 @@
 /*
- * $Id: dbd.h,v 1.2 2005-04-28 20:49:47 bfernhomberg Exp $
+ * $Id: dbd.h,v 1.3 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -7,7 +7,6 @@
 
 #ifndef CNID_DBD_DBD_H
 #define CNID_DBD_DBD_H 1
-
 
 #include <atalk/cnid_dbd_private.h>
 
@@ -20,7 +19,6 @@ extern int      dbd_update  __P((struct cnid_dbd_rqst *, struct cnid_dbd_rply *)
 extern int      dbd_delete  __P((struct cnid_dbd_rqst *, struct cnid_dbd_rply *));
 extern int      dbd_getstamp  __P((struct cnid_dbd_rqst *, struct cnid_dbd_rply *));
 extern int      dbd_rebuild_add __P((struct cnid_dbd_rqst *, struct cnid_dbd_rply *));
-extern int      dbd_check  __P((char *));
-
+extern int      dbd_check_indexes  __P((char *));
 
 #endif /* CNID_DBD_DBD_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_add.c,v 1.2 2005-04-28 20:49:47 bfernhomberg Exp $
+ * $Id: dbd_add.c,v 1.3 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -128,7 +128,7 @@ int dbd_stamp(void)
     cnid_t hint;
     char buf[ROOTINFO_DATALEN];
     char stamp[CNID_DEV_LEN];
-     
+
     memset(&rootinfo_key, 0, sizeof(rootinfo_key));
     memset(&rootinfo_data, 0, sizeof(rootinfo_data));
     rootinfo_key.data = ROOTINFO_KEY;

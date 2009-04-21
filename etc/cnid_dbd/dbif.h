@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.h,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: dbif.h,v 1.3 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -30,14 +30,9 @@ extern int        dbif_del __P((const int, DBT *, u_int32_t));
 
 extern int        dbif_count __P((const int, u_int32_t *));
 
-
-#ifdef CNID_BACKEND_DBD_TXN
 extern int        dbif_txn_begin  __P((void));
 extern int        dbif_txn_commit  __P((void));
 extern int        dbif_txn_abort  __P((void));
 extern int        dbif_txn_checkpoint  __P((u_int32_t, u_int32_t, u_int32_t));
-#else
-extern int        dbif_sync  __P((void));
-#endif /* CNID_BACKEND_DBD_TXN */
 
 #endif

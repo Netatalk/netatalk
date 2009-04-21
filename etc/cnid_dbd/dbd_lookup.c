@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.3 2005-05-03 14:55:11 didg Exp $
+ * $Id: dbd_lookup.c,v 1.4 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -32,7 +32,9 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     unsigned char *buf;
     DBT key, devdata, diddata;
     char dev[CNID_DEV_LEN];
+#if 0
     char ino[CNID_INO_LEN];
+#endif
     int devino = 1, didname = 1; 
     int rc;
     cnid_t id_devino, id_didname;
@@ -50,12 +52,14 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     
     buf = pack_cnid_data(rqst); 
     memcpy(dev, buf + CNID_DEV_OFS, CNID_DEV_LEN);
+#if 0
     /* FIXME: ino is not needed later on, remove? */
     memcpy(ino, buf + CNID_INO_OFS, CNID_INO_LEN);
+#endif
 
     /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
        only get a match in one of them, that means a file has moved. */
-    key.data = buf +CNID_DEVINO_OFS;
+    key.data = buf + CNID_DEVINO_OFS;
     key.size = CNID_DEVINO_LEN;
 
     if ((rc = dbif_get(DBIF_IDX_DEVINO, &key, &devdata, 0))  < 0) {
@@ -72,10 +76,8 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         memcpy(&type_devino, (char *)devdata.data +CNID_TYPE_OFS, sizeof(type_devino));
         type_devino = ntohl(type_devino);
     }
-    
-    /* FIXME: This second call to pack_cnid_data() is redundant, any reason it is here? */
-    buf = pack_cnid_data(rqst); 
-    key.data = buf +CNID_DID_OFS;
+
+    key.data = buf + CNID_DID_OFS;
     key.size = CNID_DID_LEN + rqst->namelen + 1;
 
     if ((rc = dbif_get(DBIF_IDX_DIDNAME, &key, &diddata, 0))  < 0) {
@@ -95,20 +97,20 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     
     if (!devino && !didname) {  
         /* not found */
-#ifdef DEBUG
-	LOG(log_info, logtype_cnid, "cnid_lookup: dev/ino %s did %u name %s neither in devino nor didname", 
-	    stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name);
-#endif
+
+        LOG(log_debug, logtype_cnid, "cnid_lookup: dev/ino %s did %u name %s neither in devino nor didname", 
+            stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name);
+
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }
 
     if (devino && didname && id_devino == id_didname && type_devino == rqst->type) {
         /* the same */
-#ifdef DEBUG
-	LOG(log_info, logtype_cnid, "cnid_lookup: Looked up dev/ino %s did %u name %s as %u", 
-	    stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name, ntohl(id_didname));
-#endif
+
+        LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino %s did %u name %s as %u", 
+            stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name, ntohl(id_didname));
+
         rply->cnid = id_didname;
         rply->result = CNID_DBD_RES_OK;
         return 1;
@@ -154,9 +156,9 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     if (rc >0) {
         rply->cnid = rqst->cnid;
     }
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "cnid_lookup: Looked up dev/ino %s did %u name %s as %u (needed update)", 
-	stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
-#endif
+
+    LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino %s did %u name %s as %u (needed update)", 
+        stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
+
     return rc;
 }

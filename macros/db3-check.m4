@@ -1,4 +1,4 @@
-dnl $Id: db3-check.m4,v 1.17 2009-03-25 15:53:03 franklahm Exp $
+dnl $Id: db3-check.m4,v 1.18 2009-04-21 08:55:44 franklahm Exp $
 dnl Autoconf macros to check for the Berkeley DB library
 
 dnl -- check header for minimum version and return version in
@@ -70,11 +70,11 @@ AC_DEFUN([AC_PATH_BDB],[
     trybdbdir=""
     dobdbsearch=yes
     bdb_search_dirs="/usr/local /usr"
-    search_subdirs="/ /db4.7 /db47 /db4.6 /db46 /db4.5 /db45 /db4.4 /db44 /db4.3 /db43 /db4.2 /db42 /db4.1 /db41 /db4"
+    search_subdirs="/ /db4.7 /db47 /db4.6 /db46 /db4.5 /db45 /db4.4 /db44 /db4"
 
-    dnl required BDB version
+    dnl required BDB version: 4.4, because of DB_AUTO_COMMIT
     DB_MAJOR_REQ=4
-    DB_MINOR_REQ=1
+    DB_MINOR_REQ=4
     DB_PATCH_REQ=0
 
     dnl make sure atalk_libname is defined beforehand

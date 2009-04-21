@@ -1,8 +1,20 @@
 /*
- * $Id: main.c,v 1.3 2009-03-31 11:40:26 franklahm Exp $
+ * $Id: main.c,v 1.4 2009-04-21 08:55:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (c) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
+ */
+
+/* 
+   dbd and transactions
+   ====================
+
+   We use AUTO_COMMIT for our BerkeleyDB environment. This avoids explicit transactions
+   for every bdb access which speeds up reads. But in order to be able to rollback
+   in case of errors we start a transaction once we encounter the first write.
+   The logic to do this is stuffed two levels lower into the dbif.c file and functions
+   dbif_put and dbif_del.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -83,21 +95,21 @@ static int loop(struct db_param *dbp)
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     int ret, cret;
-    time_t now, time_next_flush, time_last_rqst;
     int count;
+    time_t now, time_next_flush, time_last_rqst;
+    char timebuf[64];
     static char namebuf[MAXPATHLEN + 1];
-    u_int32_t checkp_flags;
 
     count = 0;
     now = time(NULL);
     time_next_flush = now + dbp->flush_interval;
     time_last_rqst = now;
-    if (dbp->nosync)
-        checkp_flags = DB_FORCE;
-    else
-        checkp_flags = 0;
 
     rqst.name = namebuf;
+
+    strftime(timebuf, 63, "%b %d %H:%M:%S.",localtime(&time_next_flush));
+    LOG(log_debug, logtype_cnid, "Checkpoint interval: %d seconds. Next checkpoint: %s",
+        dbp->flush_interval, timebuf);
 
     while (1) {
         if ((cret = comm_rcv(&rqst)) < 0)
@@ -105,91 +117,106 @@ static int loop(struct db_param *dbp)
 
         now = time(NULL);
 
-        if (count > dbp->flush_frequency || now > time_next_flush) {
-#ifdef CNID_BACKEND_DBD_TXN
-            if (dbif_txn_checkpoint(0, 0, checkp_flags) < 0)
-                return -1;
-#else
-            if (dbif_sync() < 0)
-                return -1;
-#endif
-            count = 0;
-            time_next_flush = now + dbp->flush_interval;
-        }
-
         if (cret == 0) {
+            /* comm_rcv returned from select without receiving anything. */
+
+            /* Give signals a chance... */
             block_sigs_onoff(0);
             block_sigs_onoff(1);
             if (exit_sig)
+                /* Received signal (TERM|INT) */
                 return 0;
             if (dbp->idle_timeout && comm_nbe() <= 0 && (now - time_last_rqst) > dbp->idle_timeout)
+                /* Idle timeout */
                 return 0;
-            continue;
-        }
-        /* We got a request */
-        time_last_rqst = now;
-        count++;
-
-#ifdef CNID_BACKEND_DBD_TXN
-        if (dbif_txn_begin() < 0)
-            return -1;
-#endif /* CNID_BACKEND_DBD_TXN */
-
-        memset(&rply, 0, sizeof(rply));
-        switch(rqst.op) {
-            /* ret gets set here */
-        case CNID_DBD_OP_OPEN:
-        case CNID_DBD_OP_CLOSE:
-            /* open/close are noops for now. */
-            rply.namelen = 0;
-            ret = 1;
-            break;
-        case CNID_DBD_OP_ADD:
-            ret = dbd_add(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_GET:
-            ret = dbd_get(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_RESOLVE:
-            ret = dbd_resolve(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_LOOKUP:
-            ret = dbd_lookup(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_UPDATE:
-            ret = dbd_update(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_DELETE:
-            ret = dbd_delete(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_GETSTAMP:
-            ret = dbd_getstamp(&rqst, &rply);
-            break;
-        case CNID_DBD_OP_REBUILD_ADD:
-            ret = dbd_rebuild_add(&rqst, &rply);
-            break;
-        default:
-            LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
-            ret = -1;
-            break;
-        }
-
-        if ((cret = comm_snd(&rply)) < 0 || ret < 0) {
-#ifdef CNID_BACKEND_DBD_TXN
-            dbif_txn_abort();
-#endif /* CNID_BACKEND_DBD_TXN */
-            return -1;
-        }
-#ifdef CNID_BACKEND_DBD_TXN
-        if (ret == 0 || cret == 0) {
-            if (dbif_txn_abort() < 0)
-                return -1;
         } else {
-            if (dbif_txn_commit() < 0)
+            /* We got a request */
+            time_last_rqst = now;
+
+            memset(&rply, 0, sizeof(rply));
+            switch(rqst.op) {
+                /* ret gets set here */
+            case CNID_DBD_OP_OPEN:
+            case CNID_DBD_OP_CLOSE:
+                /* open/close are noops for now. */
+                rply.namelen = 0;
+                ret = 1;
+                break;
+            case CNID_DBD_OP_ADD:
+                ret = dbd_add(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_GET:
+                ret = dbd_get(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_RESOLVE:
+                ret = dbd_resolve(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_LOOKUP:
+                ret = dbd_lookup(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_UPDATE:
+                ret = dbd_update(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_DELETE:
+                ret = dbd_delete(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_GETSTAMP:
+                ret = dbd_getstamp(&rqst, &rply);
+                break;
+            case CNID_DBD_OP_REBUILD_ADD:
+                ret = dbd_rebuild_add(&rqst, &rply);
+                break;
+            default:
+                LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
+                ret = -1;
+                break;
+            }
+            
+            if ((cret = comm_snd(&rply)) < 0 || ret < 0) {
+                dbif_txn_abort();
                 return -1;
+            }
+            
+            if (ret == 0 || cret == 0) {
+                if (dbif_txn_abort() < 0)
+                    return -1;
+            } else {
+                ret = dbif_txn_commit();
+                if (  ret < 0)
+                    return -1;
+                else if ( ret > 0 )
+                    /* We had a designated txn because we wrote to the db */
+                    count++;
+            }
+        } /* got a request */
+
+        /*
+          Shall we checkpoint bdb ?
+          "flush_interval" seconds passed ?
+        */
+        if (now > time_next_flush) {
+            LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB for volume '%s'", dbp->dir);
+            if (dbif_txn_checkpoint(0, 0, 0) < 0)
+                return -1;
+            count = 0;
+            time_next_flush = now + dbp->flush_interval;
+
+            strftime(timebuf, 63, "%b %d %H:%M:%S.",localtime(&time_next_flush));
+            LOG(log_debug, logtype_cnid, "Checkpoint interval: %d seconds. Next checkpoint: %s",
+                dbp->flush_interval, timebuf);
         }
-#endif /* CNID_BACKEND_DBD_TXN */
-    }
+
+        /* 
+           Shall we checkpoint bdb ?
+           Have we commited "count" more changes than "flush_frequency" ?
+        */
+        if (count > dbp->flush_frequency) {
+            LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB after %d writes for volume '%s'", count, dbp->dir);
+            if (dbif_txn_checkpoint(0, 0, 0) < 0)
+                return -1;
+            count = 0;
+        }
+    } /* while(1) */
 }
 
 /* ------------------------ */
@@ -283,7 +310,6 @@ int main(int argc, char *argv[])
 {
     struct db_param *dbp;
     int err = 0;
-    int ret;
     int lockfd, ctrlfd, clntfd;
     char *dir, *logconfig;
 
@@ -315,53 +341,25 @@ int main(int argc, char *argv[])
        only shut down after one second of inactivity. */
     block_sigs_onoff(1);
 
-    if ((dbp = db_param_read(dir)) == NULL)
+    if ((dbp = db_param_read(dir, DBD)) == NULL)
         exit(1);
+    LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
     if (dbif_env_init(dbp) < 0)
         exit(2); /* FIXME: same exit code as failure for dbif_open() */
-
-#ifdef CNID_BACKEND_DBD_TXN
-    if (dbif_txn_begin() < 0)
-        exit(6);
-#endif
+    LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
 
     if (dbif_open(dbp, 0) < 0) {
-#ifdef CNID_BACKEND_DBD_TXN
-        dbif_txn_abort();
-#endif
         dbif_close();
         exit(2);
     }
-
-#ifndef CNID_BACKEND_DBD_TXN
-    if (dbp->check && (ret = dbd_check(dir))) {
-        if (ret < 0) {
-            dbif_close();
-            exit(2);
-        }
-        dbif_closedb();
-        LOG(log_info, logtype_cnid, "main: re-opening, secondaries will be rebuilt. This may take some time");
-        if (dbif_open(dbp, 1) < 0) {
-            LOG(log_info, logtype_cnid, "main: re-opening databases failed");
-            dbif_close();
-            exit(2);
-        }
-        LOG(log_info, logtype_cnid, "main: rebuilt done");
-    }
-#endif
+    LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
 
     if (dbd_stamp() < 0) {
-#ifdef CNID_BACKEND_DBD_TXN
-        dbif_txn_abort();
-#endif
         dbif_close();
         exit(5);
     }
-#ifdef CNID_BACKEND_DBD_TXN
-    if (dbif_txn_commit() < 0)
-        exit(6);
-#endif
+    LOG(log_maxdebug, logtype_cnid, "Finished checking database stamp");
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
         dbif_close();
@@ -370,13 +368,6 @@ int main(int argc, char *argv[])
 
     if (loop(dbp) < 0)
         err++;
-
-#ifndef CNID_BACKEND_DBD_TXN
-    /* FIXME: Do we really need to sync before closing the DB? Just closing it
-       should be enough. */
-    if (dbif_sync() < 0)
-        err++;
-#endif
 
     if (dbif_close() < 0)
         err++;
