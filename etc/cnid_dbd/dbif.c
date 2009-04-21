@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.5 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: dbif.c,v 1.6 2009-04-21 10:18:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -204,19 +204,39 @@ int dbif_env_init(struct db_param *dbp)
         return -1;
     }
 
-    if (dbp->logfile_autoremove && db_env->log_archive(db_env, &logfiles, 0)) {
-        LOG(log_error, logtype_cnid, "error getting list of stale logfiles: %s",
-            db_strerror(ret));
-        db_env->close(db_env, 0);
-        db_env = NULL;
-        return -1;
-    }
-    if (logfiles != NULL) {
-        for (file = logfiles; *file != NULL; file++) {
-            if (unlink(*file) < 0)
-                LOG(log_warning, logtype_cnid, "Error removing stale logfile %s: %s", *file, strerror(errno));
+    if (dbp->logfile_autoremove) {
+        if (db_env->log_archive(db_env, &logfiles, 0)) {
+            LOG(log_error, logtype_cnid, "error getting list of stale logfiles: %s",
+                db_strerror(ret));
+            db_env->close(db_env, 0);
+            db_env = NULL;
+            return -1;
         }
-        free(logfiles);
+        if (logfiles != NULL) {
+            for (file = logfiles; *file != NULL; file++) {
+                if (unlink(*file) < 0)
+                    LOG(log_warning, logtype_cnid, "Error removing stale logfile %s: %s", *file, strerror(errno));
+            }
+            free(logfiles);
+        }
+
+#if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 7)
+        if ((ret = db_env->log_set_config(db_env, DB_LOG_AUTO_REMOVE, 1))) {
+            LOG(log_error, logtype_cnid, "error setting DB_LOG_AUTO_REMOVE flag: %s",
+            db_strerror(ret));
+            db_env->close(db_env, 0);
+            db_env = NULL;
+            return -1;
+        }
+#else
+        if ((ret = db_env->set_flags(db_env, DB_LOG_AUTOREMOVE, 1))) {
+            LOG(log_error, logtype_cnid, "error setting DB_LOG_AUTOREMOVE flag: %s",
+                db_strerror(ret));
+            db_env->close(db_env, 0);
+            db_env = NULL;
+            return -1;
+        }
+#endif
     }
 
     return 0;
