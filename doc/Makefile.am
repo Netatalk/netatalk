@@ -6,5 +6,4 @@ EXTRA_DIST = \
 	README.documentation \
 	README.hidden-items \
 	README.ids \
-	README.logger \
 	README.platforms
