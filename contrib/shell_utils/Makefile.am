@@ -5,9 +5,8 @@ pkgconfdir = @PKGCONFDIR@
 GENERATED_FILES = lp2pap.sh
 TEMPLATE_FILES = lp2pap.sh.tmpl
 PERLSCRIPTS = \
-	afpd-mtab.pl			\
-	apple_cp apple_mv apple_rm	\
-	cleanappledouble.pl		\
+	afpd-mtab.pl \
+	apple_cp apple_mv apple_rm apple_cleanup \
 	asip-status.pl
 
 SUFFIXES = .tmpl .
