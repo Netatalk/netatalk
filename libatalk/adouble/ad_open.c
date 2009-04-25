@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.39 2007-04-11 01:11:10 didg Exp $
+ * $Id: ad_open.c,v 1.40 2009-04-25 06:44:48 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1540,7 +1540,9 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     int   ret, err;
     int   dir = flags & ADFLAGS_DIR;
 
-    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDONLY, 0, adp)) < 0 && errno == EACCES) {
+    /* Open with O_CREAT, thus enumarating a dir will create missing adouble files, see: */
+    /* http://marc.info/?l=netatalk-devel&m=124039156832408&w=2 */
+    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR | O_CREAT, 0666, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
