@@ -58,8 +58,22 @@ install-data-local: install-config-files $(PAMFILES)
 	    echo "not overwriting $(DESTDIR)$(pamdir)/netatalk"; \
 	fi; 
 
+uninstall-local:
+	echo rm -f $(DESTDIR)$(pamdir)/netatalk; \
+	rm -f $(DESTDIR)$(pamdir)/netatalk; \
+	for f in $(CONFFILES) $(GENFILES); do \
+		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+	done
+
 else
 
 install-data-local: install-config-files
+
+uninstall-local:
+    for f in $(CONFFILES) $(GENFILES); do \
+        echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+        rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+    done
 
 endif 
