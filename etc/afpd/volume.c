@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.84 2009-04-17 04:24:20 didg Exp $
+ * $Id: volume.c,v 1.85 2009-04-27 07:58:25 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -159,6 +159,8 @@ typedef struct _volopt_name {
 	const char 	*name;
 } _vol_opt_name;
 
+
+/* Keep in sync with libatalk/util/volinfo.c ! */
 static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_A2VOL,      "PRODOS"},      /* prodos volume */
     {AFPVOL_CRLF,       "CRLF"},        /* cr/lf translation */

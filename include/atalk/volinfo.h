@@ -1,5 +1,5 @@
 /*
- * $Id: volinfo.h,v 1.2 2005-04-28 20:49:51 bfernhomberg Exp $
+ * $Id: volinfo.h,v 1.3 2009-04-27 07:58:26 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
@@ -24,8 +24,16 @@
 #define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */
 #define AFPVOL_NODEV     (1 << 18)  /* always use 0 for device number in cnid calls
                                      * help if device number is notconsistent across reboot
-                                     * NOTE symlink to a different device will return an ACCESS error
-                                     */
+                                     * NOTE symlink to a different device will return an ACCESS error */
+#define AFPVOL_CASEINSEN (1 << 19)  /* volume is case insensitive */
+#define AFPVOL_EILSEQ    (1 << 20)  /* encode illegal sequence 'asis' UCS2, ex "\217-", which is not 
+                                       a valid SHIFT-JIS char, is encoded  as U\217 -*/
+#define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching, default don't use it */
+#define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
+#define AFPVOL_EXT_ATTRS (1 << 23)   /* Volume supports Extended Attributes */
+#define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
+
+
 /* handle casefolding */
 #define AFPVOL_MTOUUPPER       (1 << 0)
 #define AFPVOL_MTOULOWER       (1 << 1)

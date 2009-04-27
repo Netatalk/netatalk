@@ -85,13 +85,19 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_NOHEX,      "NOHEX"},       /* don't do :hex translation */
     {AFPVOL_USEDOTS,    "USEDOTS"},     /* use real dots */
     {AFPVOL_LIMITSIZE,  "LIMITSIZE"},   /* limit size for older macs */
-    {AFPVOL_MAPASCII,	"MAPASCII"},	/* map the ascii range as well */
-    {AFPVOL_DROPBOX,	"DROPBOX"},	/* dropkludge dropbox support */
-    {AFPVOL_NOFILEID,	"NOFILEID"},	/* don't advertise createid resolveid and deleteid calls */
-    {AFPVOL_NOSTAT,	"NOSTAT"},	/* advertise the volume even if we can't stat() it
-					 * maybe because it will be mounted later in preexec */
+    {AFPVOL_MAPASCII,   "MAPASCII"},    /* map the ascii range as well */
+    {AFPVOL_DROPBOX,    "DROPBOX"},     /* dropkludge dropbox support */
+    {AFPVOL_NOFILEID,   "NOFILEID"},    /* don't advertise createid resolveid and deleteid calls */
+    {AFPVOL_NOSTAT,     "NOSTAT"},      /* advertise the volume even if we can't stat() it
+                                         * maybe because it will be mounted later in preexec */
     {AFPVOL_UNIX_PRIV,  "UNIXPRIV"},    /* support unix privileges */
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
+    {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
+    {AFPVOL_EILSEQ,     "ILLEGALSEQ"},  /* encode illegal sequence */
+    {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
+    {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"}, 
+    {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
+    {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {0, NULL}
 };
 

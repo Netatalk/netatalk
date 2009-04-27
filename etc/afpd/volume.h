@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.30 2009-04-17 04:24:20 didg Exp $
+ * $Id: volume.h,v 1.31 2009-04-27 07:58:25 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -108,7 +108,10 @@ typedef u_int64_t VolSpace;
 #define AFPVOL_USTATFS	(2<<2)
 #define AFPVOL_UQUOTA	(4<<2)
 
-/* flags that alter volume behaviour. */
+/* 
+   Flags that alter volume behaviour.
+   Keep in sync with include/atalk/volinfo.h and libatalk/util/volinfo.c
+*/
 #define AFPVOL_A2VOL     (1 << 5)   /* prodos volume */
 #define AFPVOL_CRLF      (1 << 6)   /* cr/lf translation */
 #define AFPVOL_NOADOUBLE (1 << 7)   /* don't create .AppleDouble by default */
