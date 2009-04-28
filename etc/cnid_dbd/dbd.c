@@ -1,5 +1,5 @@
 /* 
-   $Id: dbd.c,v 1.1 2009-04-28 13:01:24 franklahm Exp $
+   $Id: dbd.c,v 1.2 2009-04-28 14:09:00 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -99,8 +99,8 @@ void set_signal(void)
         exit(EXIT_FAILURE);
     }        
 
-    sv.sa_handler = SIG_IGN;
     memset(&sv, 0, sizeof(struct sigaction));
+    sv.sa_handler = SIG_IGN;
     sigemptyset(&sv.sa_mask);
 
     if (sigaction(SIGINT, &sv, NULL) < 0) {
