@@ -1,9 +1,11 @@
 /*
- * $Id: volinfo.h,v 1.3 2009-04-27 07:58:26 franklahm Exp $
+ * $Id: volinfo.h,v 1.4 2009-04-28 13:01:24 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
 #define _ATALK_VOLINFO_H 1
+
+#include <atalk/unicode.h>
 
 /* FIXME: following duplicated from etc/afpd/volume.h  */
 
@@ -33,7 +35,6 @@
 #define AFPVOL_EXT_ATTRS (1 << 23)   /* Volume supports Extended Attributes */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
 
-
 /* handle casefolding */
 #define AFPVOL_MTOUUPPER       (1 << 0)
 #define AFPVOL_MTOULOWER       (1 << 1)
@@ -44,5 +45,27 @@
 #define AFPVOL_UUPPERMLOWER    (AFPVOL_MTOUUPPER | AFPVOL_UTOMLOWER)
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
 
+/* volinfo for shell utilities */
+#define VOLINFOFILE ".volinfo"
+
+struct volinfo {
+    char                *v_name;
+    char                *v_path;
+    int                 v_flags;
+    int                 v_casefold;
+    char                *v_cnidscheme;
+    char                *v_dbpath;
+    char                *v_volcodepage;
+    charset_t           v_volcharset;
+    char                *v_maccodepage;
+    charset_t           v_maccharset;
+    int                 v_adouble;  /* default adouble format */
+    char                *(*ad_path)(const char *, int);
+    char                *v_dbd_host;
+    int                 v_dbd_port;
+};
+
+extern int loadvolinfo(char *path, struct volinfo *vol);
+extern int vol_load_charsets(struct volinfo *vol);
 
 #endif

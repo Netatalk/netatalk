@@ -1,5 +1,5 @@
 /*
- * $Id: pack.c,v 1.3 2005-05-03 14:55:11 didg Exp $
+ * $Id: pack.c,v 1.4 2009-04-28 13:01:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -130,7 +130,7 @@ char *stringify_devino(dev_t dev, ino_t ino)
     char *end;
     int   ci;
 
-    pack_devino(buf, dev, ino);
+    pack_devino((unsigned char *)buf, dev, ino);
     
     middle = buf + CNID_DEV_LEN;
     end = buf + CNID_DEV_LEN + CNID_INO_LEN;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.4 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: main.c,v 1.5 2009-04-28 13:01:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -51,11 +51,15 @@
 #include "dbd.h"
 #include "comm.h"
 
-
 #define LOCKFILENAME  "lock"
 
-static int exit_sig = 0;
+/* 
+   Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.
+   It's a likey performance hit, but it might we worth it.
+ */
+#define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN)
 
+static int exit_sig = 0;
 
 static void sig_exit(int signo)
 {
@@ -345,7 +349,7 @@ int main(int argc, char *argv[])
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
-    if (dbif_env_init(dbp) < 0)
+    if (dbif_env_init(dbp, DBOPTIONS) < 0)
         exit(2); /* FIXME: same exit code as failure for dbif_open() */
     LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
 

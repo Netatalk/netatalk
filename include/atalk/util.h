@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.8 2005-04-28 20:49:51 bfernhomberg Exp $
+ * $Id: util.h,v 1.9 2009-04-28 13:01:24 franklahm Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -81,9 +81,8 @@ extern void *mod_symbol  __P((void *, const char *));
 #define mod_close(a)     dlclose(a)
 #endif /* ! HAVE_DLFCN_H */
 
-
+#if 0
 /* volinfo for shell utilities */
-
 #define VOLINFOFILE ".volinfo"
 
 struct volinfo {
@@ -105,5 +104,6 @@ struct volinfo {
 
 extern int loadvolinfo __P((char *path, struct volinfo *vol));
 extern int vol_load_charsets __P(( struct volinfo *vol));
+#endif /* 0 */
 
 #endif

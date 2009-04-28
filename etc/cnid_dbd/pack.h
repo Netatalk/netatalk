@@ -1,5 +1,5 @@
 /*
- * $Id: pack.h,v 1.3 2005-05-03 14:55:11 didg Exp $
+ * $Id: pack.h,v 1.4 2009-04-28 13:01:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -8,40 +8,24 @@
 #ifndef CNID_DBD_PACK_H
 #define CNID_DBD_PACK_H 1
 
-
+#include <db.h>
 #include <atalk/cnid_dbd_private.h>
 
-#define CNID_OFS                 0
-#define CNID_LEN                 4
- 
-#define CNID_DEV_OFS             CNID_LEN
-#define CNID_DEV_LEN             8
-  
-#define CNID_INO_OFS             (CNID_DEV_OFS + CNID_DEV_LEN)
-#define CNID_INO_LEN             8
-   
-#define CNID_DEVINO_OFS          CNID_LEN
-#define CNID_DEVINO_LEN          (CNID_DEV_LEN +CNID_INO_LEN)
-    
-#define CNID_TYPE_OFS            (CNID_DEVINO_OFS +CNID_DEVINO_LEN)
-#define CNID_TYPE_LEN            4
-     
-#define CNID_DID_OFS             (CNID_TYPE_OFS +CNID_TYPE_LEN)
-#define CNID_DID_LEN             CNID_LEN
-      
-#define CNID_NAME_OFS            (CNID_DID_OFS + CNID_DID_LEN)
-#define CNID_HEADER_LEN          (CNID_NAME_OFS)
+#define ntoh64(x)       (((uint64_t)(x) << 56) | \
+                        (((uint64_t)(x) << 40) & 0xff000000000000ULL) | \
+                        (((uint64_t)(x) << 24) & 0xff0000000000ULL) | \
+                        (((uint64_t)(x) << 8)  & 0xff00000000ULL) | \
+                        (((uint64_t)(x) >> 8)  & 0xff000000ULL) | \
+                        (((uint64_t)(x) >> 24) & 0xff0000ULL) | \
+                        (((uint64_t)(x) >> 40) & 0xff00ULL) | \
+                        ((uint64_t)(x)  >> 56))
 
-#if 0
-#define CNID_DBD_DEVINO_LEN          8
-#define CNID_DBD_DID_LEN             4
-#define CNID_DBD_HEADER_LEN          (CNID_DBD_DEVINO_LEN + CNID_DBD_DID_LEN)
-#endif
-
-extern unsigned char *pack_cnid_data  __P((struct cnid_dbd_rqst *));
+extern unsigned char *pack_cnid_data(struct cnid_dbd_rqst *);
+extern int didname(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey);
+extern int devino(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey);
 
 #ifdef DEBUG
-extern char      *stringify_devino  __P((dev_t dev, ino_t ino));
+extern char *stringify_devino(dev_t dev, ino_t ino);
 #endif
 
 #endif /* CNID_DBD_PACK_H */

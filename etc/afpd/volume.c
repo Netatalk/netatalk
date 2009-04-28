@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.85 2009-04-27 07:58:25 franklahm Exp $
+ * $Id: volume.c,v 1.86 2009-04-28 13:01:24 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -43,6 +43,7 @@ char *strchr (), *strrchr ();
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
+#include <atalk/volinfo.h>
 #include <atalk/logger.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>

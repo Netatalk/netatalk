@@ -118,9 +118,6 @@ static char* find_in_path( char *path, char *subdir, size_t maxlen)
     pos = strrchr(path, '/');
 
     while ( stat(path, &st) != 0) {
-#ifdef DEBUG
-        fprintf(stderr, "searching in path %s\n", path);
-#endif
         path[pos-path]=0;
         if ((pos = strrchr(path, '/'))) {
             path[pos-path]=0;
@@ -133,9 +130,7 @@ static char* find_in_path( char *path, char *subdir, size_t maxlen)
 
     path[pos-path] = '/';
     path[pos-path+1] = 0;
-#ifdef DEBUG
-    fprintf(stderr, "%s path %s\n", subdir, path);
-#endif
+
     return path;
 }
 
@@ -319,9 +314,6 @@ static int parseline ( char *buf, struct volinfo *vol)
 	return (-1);
         break;
     }
-#ifdef DEBUG
-    printf ("volume information: %s, %s", buf, value);
-#endif
         
     return 0;
 }

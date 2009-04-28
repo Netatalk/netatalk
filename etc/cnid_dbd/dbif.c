@@ -1,7 +1,8 @@
 /*
- * $Id: dbif.c,v 1.6 2009-04-21 10:18:44 franklahm Exp $
+ * $Id: dbif.c,v 1.7 2009-04-28 13:01:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
  */
 
@@ -24,18 +25,13 @@
 #include <db.h>
 #include "db_param.h"
 #include "dbif.h"
+#include "pack.h"
 
 #define DB_ERRLOGFILE "db_errlog"
 
 static DB_ENV *db_env = NULL;
 static DB_TXN *db_txn = NULL;
 static FILE   *db_errlog = NULL;
-
-/* 
-   Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.
-   It's a likey performance hit, but it might we worth it.
- */
-#define DBOPTIONS    (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN)
 
 static struct db_table {
     char            *name;
@@ -50,9 +46,6 @@ static struct db_table {
 };
 
 static char *old_dbfiles[] = {"cnid.db", NULL};
-
-extern int didname(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey);
-extern int devino(DB *dbp, const DBT *pkey, const DBT *pdata, DBT *skey);
 
 /* --------------- */
 static int  db_compat_associate (DB *p, DB *s,
@@ -121,7 +114,7 @@ int dbif_stamp(void *buffer, int size)
  *  We assume our current directory is already the BDB homedir. Otherwise
  *  opening the databases will not work as expected.
  */
-int dbif_env_init(struct db_param *dbp)
+int dbif_env_init(struct db_param *dbp, uint32_t dbenv_oflags)
 {
     int ret;
     char **logfiles = NULL;
@@ -151,7 +144,7 @@ int dbif_env_init(struct db_param *dbp)
     db_env->set_verbose(db_env, DB_VERB_RECOVERY, 1);
 
     /* Open the database for recovery using DB_PRIVATE option which is faster */
-    if ((ret = db_env->open(db_env, ".", DBOPTIONS | DB_PRIVATE | DB_RECOVER, 0))) {
+    if ((ret = db_env->open(db_env, ".", dbenv_oflags | DB_PRIVATE | DB_RECOVER, 0))) {
         LOG(log_error, logtype_cnid, "error opening DB environment: %s",
             db_strerror(ret));
         db_env->close(db_env, 0);
@@ -188,7 +181,7 @@ int dbif_env_init(struct db_param *dbp)
         db_env->set_errfile(db_env, db_errlog);
         db_env->set_msgfile(db_env, db_errlog);
     }
-    if ((ret = db_env->open(db_env, ".", DBOPTIONS , 0))) {
+    if ((ret = db_env->open(db_env, ".", dbenv_oflags, 0))) {
         LOG(log_error, logtype_cnid, "error opening DB environment after recovery: %s",
             db_strerror(ret));
         db_env->close(db_env, 0);
@@ -270,6 +263,7 @@ int dbif_open(struct db_param *dbp _U_, int do_truncate)
             db_table[i].db->set_errfile(db_table[i].db, db_errlog);
 
         if (do_truncate && i > 0) {
+            LOG(log_info, logtype_cnid, "Truncating CNID index.");
             if ((ret = db_table[i].db->truncate(db_table[i].db, NULL, &count, 0))) {
                 LOG(log_error, logtype_cnid, "error truncating database %s: %s",
                     db_table[i].name, db_strerror(ret));
@@ -281,15 +275,19 @@ int dbif_open(struct db_param *dbp _U_, int do_truncate)
     /* TODO: Implement CNID DB versioning info on new databases. */
 
     /* Associate the secondary with the primary. */
+    LOG(log_debug, logtype_cnid, "Associating DBIF_IDX_DIDNAME index. Possibly reindexing...");
     if ((ret = db_compat_associate(db_table[0].db, db_table[DBIF_IDX_DIDNAME].db, didname, (do_truncate)?DB_CREATE:0)) != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate didname database: %s",db_strerror(ret));
         return -1;
     }
+    LOG(log_debug, logtype_cnid, "... done.");
 
+    LOG(log_debug, logtype_cnid, "Associating DBIF_IDX_DEVINO index. Possibly reindexing...");
     if ((ret = db_compat_associate(db_table[0].db, db_table[DBIF_IDX_DEVINO].db, devino, (do_truncate)?DB_CREATE:0)) != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate devino database: %s",db_strerror(ret));
         return -1;
     }
+    LOG(log_debug, logtype_cnid, "... done.");
 
     return 0;
 }
@@ -504,4 +502,160 @@ int dbif_count(const int dbi, u_int32_t *count)
     return 0;
 }
 
+int dbif_dump(int dumpindexes)
+{
+    int rc;
+    uint32_t max = 0, count = 0, cnid, type, did;
+    uint64_t dev, ino;
+    DBC *cur;
+    DBT key = { 0 }, data = { 0 };
+    DB *db = db_table[DBIF_IDX_CNID].db;
+    char *typestring[2] = {"f", "d"};
+
+    printf("CNID database:\n");
+
+    rc = db->cursor(db, NULL, &cur, 0);
+    if (rc) {
+        LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(errno));
+        return -1;
+    }
+
+    cur->c_get(cur, &key, &data, DB_FIRST);
+    while (rc == 0) {
+        /* Parse and print data */
+        memcpy(&cnid, key.data, 4);
+        cnid = ntohl(cnid);
+        if (cnid > max)
+            max = cnid;
+
+        /* Rootinfo node ? */
+        if (cnid == 0) {
+        } else {
+            /* dev */
+            memcpy(&dev, data.data + CNID_DEV_OFS, 8);
+            dev = ntoh64(dev);
+            /* ino */
+            memcpy(&ino, data.data + CNID_INO_OFS, 8);
+            ino = ntoh64(ino);
+            /* type */
+            memcpy(&type, data.data + CNID_TYPE_OFS, 4);
+            type = ntohl(type);
+            /* did */
+            memcpy(&did, data.data + CNID_DID_OFS, 4);
+            did = ntohl(did);
+
+            count++;
+            printf("id: %10u, did: %10u, type: %s, dev: 0x%llx, ino: 0x%016llx, name: %s\n", 
+                   cnid, did, typestring[type],
+                   (long long unsigned int)dev, (long long unsigned int)ino, 
+                   (char *)data.data + CNID_NAME_OFS);
+
+        }
+
+        rc = cur->c_get(cur, &key, &data, DB_NEXT);
+    }
+
+    if (rc != DB_NOTFOUND) {
+        LOG(log_error, logtype_cnid, "Error iterating over btree: %s", db_strerror(errno));
+        return -1;
+    }
+
+    rc = cur->c_close(cur);
+    if (rc) {
+        LOG(log_error, logtype_cnid, "Couldn't close cursor: %s", db_strerror(errno));
+        return -1;
+    }
+    printf("%u CNIDs in database. Max CNID: %u.\n", count, max);
+
+    /* Dump indexes too ? */
+    if (dumpindexes) {
+        /* DBIF_IDX_DEVINO */
+        printf("\ndev/inode index:\n");
+        count = 0;
+        db = db_table[DBIF_IDX_DEVINO].db;
+        rc = db->cursor(db, NULL, &cur, 0);
+        if (rc) {
+            LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(errno));
+            return -1;
+        }
+        
+        cur->c_get(cur, &key, &data, DB_FIRST);
+        while (rc == 0) {
+            /* Parse and print data */
+
+            /* cnid */
+            memcpy(&cnid, data.data, CNID_LEN);
+            cnid = ntohl(cnid);
+            if (cnid == 0) {
+                /* Rootinfo node */
+            } else {
+                /* dev */
+                memcpy(&dev, key.data, CNID_DEV_LEN);
+                dev = ntoh64(dev);
+                /* ino */
+                memcpy(&ino, key.data + CNID_DEV_LEN, CNID_INO_LEN);
+                ino = ntoh64(ino);
+                
+                printf("id: %10u <== dev: 0x%llx, ino: 0x%016llx\n", 
+                       cnid, (unsigned long long int)dev, (unsigned long long int)ino);
+                count++;
+            }
+            rc = cur->c_get(cur, &key, &data, DB_NEXT);
+        }
+        if (rc != DB_NOTFOUND) {
+            LOG(log_error, logtype_cnid, "Error iterating over btree: %s", db_strerror(errno));
+            return -1;
+        }
+        
+        rc = cur->c_close(cur);
+        if (rc) {
+            LOG(log_error, logtype_cnid, "Couldn't close cursor: %s", db_strerror(errno));
+            return -1;
+        }
+        printf("%u items\n", count);
+
+        /* Now dump DBIF_IDX_DIDNAME */
+        printf("\ndid/name index:\n");
+        count = 0;
+        db = db_table[DBIF_IDX_DIDNAME].db;
+        rc = db->cursor(db, NULL, &cur, 0);
+        if (rc) {
+            LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(errno));
+            return -1;
+        }
+        
+        cur->c_get(cur, &key, &data, DB_FIRST);
+        while (rc == 0) {
+            /* Parse and print data */
+
+            /* cnid */
+            memcpy(&cnid, data.data, CNID_LEN);
+            cnid = ntohl(cnid);
+            if (cnid == 0) {
+                /* Rootinfo node */
+            } else {
+                /* did */
+                memcpy(&did, key.data, CNID_LEN);
+                did = ntohl(did);
+
+                printf("id: %10u <== did: %10u, name: %s\n", cnid, did, (char *)key.data + CNID_LEN);
+                count++;
+            }
+            rc = cur->c_get(cur, &key, &data, DB_NEXT);
+        }
+        if (rc != DB_NOTFOUND) {
+            LOG(log_error, logtype_cnid, "Error iterating over btree: %s", db_strerror(errno));
+            return -1;
+        }
+        
+        rc = cur->c_close(cur);
+        if (rc) {
+            LOG(log_error, logtype_cnid, "Couldn't close cursor: %s", db_strerror(errno));
+            return -1;
+        }
+        printf("%u items\n", count);
+    }
+
+    return 0;
+}
 
