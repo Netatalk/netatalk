@@ -338,7 +338,7 @@ void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
 	logtype = logtype_default;
     }
 
-    LOG(log_note, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
+    LOG(log_debug, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
 	arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], file_configs[logtype].filename);
 }
 
