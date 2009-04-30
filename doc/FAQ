@@ -1,5 +1,5 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.12 2003-02-24 23:33:14 srittau Exp $)
+($Id: FAQ,v 1.13 2009-04-30 10:48:38 franklahm Exp $)
 
 -----------------------------------------------------------------------------
 
@@ -615,6 +615,20 @@ A:   Most of the security for Netatalk must be derived from the
          get everything at:
 
            http://www.openssl.org/ 
+
+       --with-libgcrypt-dir=[PATH]: specify path to Libgcrypt installation.
+
+         NOTE: This is dependent on the same directory layout as the
+         source distribution of Libgcrypt. That is: include/ and
+	 lib/ to be on the same level.
+         This is required to enable DHX2 login support, which
+         will encrypt all of the passwords being sent across the 
+         connection. (Some old Mac clients don't support this, check
+         this FAQ for the section on AppleShare clients.)
+         Check to see if your Unix has Libgcrypt already, or
+         get everything at:
+
+           http://directory.fsf.org/project/libgcrypt/
 
     Be aware that on the volumes that are shared, some of the 
     special folders (.AppleDesktop, "Network Trash Folder") get

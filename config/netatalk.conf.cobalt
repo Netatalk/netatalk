@@ -6,10 +6,11 @@ AFPD_MAX_CLIENTS=100
 #ATALK_ZONE=@zone
 ATALK_NAME=`hostname|sed 's/\..*$//'`
 
-# specify this if you don't want guest, clrtxt, and dhx
-# available options: uams_guest.so, uams_clrtxt.so, uams_dhx.so, 
+# specify this if you don't want dhx and dhx2
+# available options: uams_guest.so, uams_clrtxt.so, 
+#                    uams_dhx.so, uams_dhx2.so, 
 # 		     uams_randnum.so
-AFPD_UAMLIST="-U uams_clrtxt.so,uams_dhx.so"
+AFPD_UAMLIST="-U uams_dhx.so,uams_dhx2.so"
 
 # Change this to set the id of the guest user
 AFPD_GUEST=nobody

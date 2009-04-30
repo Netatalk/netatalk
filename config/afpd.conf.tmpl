@@ -57,7 +57,7 @@
 #     -uampath <path>  Use this path to look for User Authentication Modules.
 #		       (default: :UAMS_PATH:)
 #     -uamlist <a,b,c> Comma-separated list of UAMs. (default:
-#		       uams_guest.so,uams_clrtxt.so,uams_dhx.so) 
+#		       uams_dhx.so,uams_dhx2.so) 
 #
 #		       some commonly available UAMs:
 #                      uams_guest.so: Allow guest logins
@@ -73,6 +73,10 @@
 #		       uams_dhx.so: (uams_dhx_pam.so or uams_dhx_passwd.so)
 #		                    Allow Diffie-Hellman eXchange
 #				    (DHX) for authentication.
+#
+#		       uams_dhx2.so: (uams_dhx2_pam.so or uams_dhx2_passwd.so)
+#		                     Allow Diffie-Hellman eXchange 2
+#				     (DHX2) for authentication.
 #
 #   Password Options:
 #     -[no]savepassword   [Don't] Allow clients to save password locally
@@ -221,4 +225,4 @@
 #		"special" -notcp -defaultvol <path> -systemvol <path>
 #
 # default:
-# - -transall -uamlist uams_clrtxt.so,uams_dhx.so -nosavepassword
+# - -transall -uamlist uams_dhx.so,uams_dhx2.so -nosavepassword

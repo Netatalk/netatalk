@@ -1,4 +1,4 @@
-afpd\[.*\]: ((dhx|cleartext) )?login: [[:alnum:]]+
+afpd\[.*\]: ((dhx|dhx2) )?login: [[:alnum:]]+
 afpd\[.*\]: (server_child\[[[:digit:]]+\] [[:digit:]]+ )?(done|exited 1)
 afpd\[.*\]: [\.[:alnum:]]+ read, [\.[:alnum:]]+ written
 afpd\[.*\]: .*: Broken pipe
@@ -18,6 +18,7 @@ afpd\[.*\]: logout [[:alnum:]]+
 afpd\[.*\]: registering [[:alnum:]]+ \(uid [[:digit:]]+\) on [\.[:digit:]]+ as /.+/net[\.[:digit:]]+node[[:digit:]]+
 afpd\[.*\]: session from [\.:[:digit:]]+ on [\.:[:digit:]]+
 afpd\[.*\]: uams_dhx_pam.c :PAM: PAM (Auth OK!|Success -- Success)
+afpd\[.*\]: uams_dhx2_pam.c :PAM: PAM (Auth OK!|Success -- Success)
 afpd\[.*\]: using codepage directory: /etc/netatalk/nls/maccode\.[\.[:alnum:]-]+
 atalkd\[.*\]: .*: Network is unreachable
 atalkd\[.*\]: zip gnireply from [\.[:digit:]]+ \(.* [[:digit:]]\)

@@ -108,7 +108,7 @@ Program: (see the GNU mirrors) /gnu/automake/automake-1.5.tar.gz
 
 Optional
 ========
-5. OpenSSL
+5. OpenSSL and/or Libgcrypt
 The OpenSSL Project is a collaborative effort to develop a robust,
 commercial-grade, full-featured, and Open Source toolkit implementing
 the Secure Sockets Layer (SSL v2/v3) and Transport Layer Security (TLS
@@ -117,6 +117,12 @@ library.
 This is required to enable DHX login support.
 
 Get everything at http://www.openssl.org/ 
+
+The Libgcrypt is a general purpose cryptographic library based on
+the code from GnuPG.
+This is required to enable DHX2 login support.
+
+Get everything at http://directory.fsf.org/project/libgcrypt/
 
 6. TCP Wrappers 
 Wietse Venema's network logger, also known as TCPD or LOG_TCP. These
