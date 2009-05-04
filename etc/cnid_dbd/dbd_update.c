@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_update.c,v 1.3 2005-05-03 14:55:11 didg Exp $
+ * $Id: dbd_update.c,v 1.4 2009-05-04 09:09:43 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -39,9 +39,7 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     unsigned char *buf;                            
     int notfound = 0;
     char getbuf[CNID_HEADER_LEN + MAXPATHLEN +1];
-#ifdef DEBUG
     cnid_t tmpcnid;
-#endif
 
     memset(&key, 0, sizeof(key));
     memset(&pkey, 0, sizeof(pkey));
@@ -59,16 +57,15 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         goto err_db;
     }
     else if  (rc > 0) {
-#ifdef DEBUG
-	memcpy(&tmpcnid, pkey.data, sizeof(cnid_t));
-	LOG(log_info, logtype_cnid, "dbd_update: Deleting %u corresponding to dev/ino %s from cnid2.db",
-	    ntohl(tmpcnid), stringify_devino(rqst->dev, rqst->ino));
-#endif
+        memcpy(&tmpcnid, pkey.data, sizeof(cnid_t));
+        LOG(log_debug, logtype_cnid, "dbd_update: Deleting %u corresponding to dev/ino 0x%llx/0x%llx from cnid2.db",
+            ntohl(tmpcnid), ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino));
+
         if ((rc = dbif_del(DBIF_IDX_CNID, &pkey, 0)) < 0 ) {
             goto err_db;
         }
         else if (!rc) {
-    		LOG(log_error, logtype_cnid, "dbd_update: delete DEVINO %u %s", ntohl(rqst->cnid), db_strerror(errno));
+            LOG(log_error, logtype_cnid, "dbd_update: delete DEVINO %u %s", ntohl(rqst->cnid), db_strerror(errno));
         }
     }
     if (!rc) {
@@ -84,11 +81,12 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         goto err_db;
     }
     else if  (rc > 0) {
-#ifdef DEBUG
+
 	memcpy(&tmpcnid, pkey.data, sizeof(cnid_t));
-	LOG(log_info, logtype_cnid, "dbd_update: Deleting %u corresponding to did %u name %s from cnid2.db",
+
+	LOG(log_debug, logtype_cnid, "dbd_update: Deleting %u corresponding to did %u name %s from cnid2.db",
 	    ntohl(tmpcnid), ntohl(rqst->did), rqst->name);
-#endif
+
         if ((rc = dbif_del(DBIF_IDX_CNID, &pkey, 0)) < 0) {
             goto err_db;
         }
@@ -112,19 +110,20 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 
     if (dbif_put(DBIF_IDX_CNID, &key, &data, 0) < 0)
         goto err_db;
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "dbd_update: Updated cnid2.db with dev/ino %s did %u name %s cnid %u",
-	stringify_devino(rqst->dev, rqst->ino),
-	ntohl(rqst->did), rqst->name, ntohl(rqst->cnid));
-#endif
+
+    LOG(log_info, logtype_cnid, "dbd_update: Updated cnid2.db with dev/ino 0x%llx/0x%llx did %u name %s cnid %u",
+        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino),
+        ntohl(rqst->did), rqst->name, ntohl(rqst->cnid));
+
     rply->result = CNID_DBD_RES_OK;
     return 1;
 
 err_db:
-#ifdef DEBUG
-    LOG(log_error, logtype_cnid, "dbd_update: Unable to update CNID %u dev/ino %s, DID %x:%s",
-        ntohl(rqst->cnid), stringify_devino(rqst->ino, rqst->did), rqst->name);
-#endif
+    LOG(log_error, logtype_cnid, "dbd_update: Unable to update CNID %u dev/ino 0x%llx/0x%llx, DID %ul: %s",
+        ntohl(rqst->cnid),
+        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino),
+        rqst->did, rqst->name);
+
     rply->result = CNID_DBD_RES_ERR_DB;
     return -1;
 }

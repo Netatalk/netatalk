@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_get.c,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: dbd_get.c,v 1.3 2009-05-04 09:09:43 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -50,19 +50,17 @@ int dbd_get(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     }
 
     if (rc == 0) {
-#ifdef DEBUG
-	LOG(log_info, logtype_cnid, "cnid_get: CNID not found for did %u name %s",
+	LOG(log_debug, logtype_cnid, "cnid_get: CNID not found for did %u name %s",
 	    ntohl(rqst->did), rqst->name);
-#endif
-        rply->result = CNID_DBD_RES_NOTFOUND;
-        return 1;
+    rply->result = CNID_DBD_RES_NOTFOUND;
+    return 1;
     }
 
     memcpy(&rply->cnid, data.data, sizeof(rply->cnid));
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "cnid_get: Returning CNID did %u name %s as %u",
+
+    LOG(log_debug, logtype_cnid, "cnid_get: Returning CNID did %u name %s as %u",
         ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
-#endif
+
     rply->result = CNID_DBD_RES_OK;
     return 1;
 }

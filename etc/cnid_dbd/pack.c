@@ -1,5 +1,5 @@
 /*
- * $Id: pack.c,v 1.4 2009-04-28 13:01:24 franklahm Exp $
+ * $Id: pack.c,v 1.5 2009-05-04 09:09:43 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -21,13 +21,6 @@
 
 #include <atalk/cnid_dbd_private.h>
 #include "pack.h"
-
-#ifdef DEBUG
-/*
- *  Auxiliary stuff for stringify_devino. See comments below.
- */
-static char hexchars[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-#endif
 
 /* --------------- */
 /*
@@ -111,43 +104,3 @@ unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst)
     return start;
 }
 
-#ifdef DEBUG
-
-/*
- *  Whack 4 or 8 byte dev/ino numbers into something printable for DEBUG
- *  logging. This function must not be used more that once per printf() style
- *  invocation. This (or something improved) should probably migrate to
- *  libatalk logging. Checking for printf() %ll support would be an alternative.
- */
-
-char *stringify_devino(dev_t dev, ino_t ino)
-{
-    static char rbuf[CNID_DEV_LEN * 2 + 1 + CNID_INO_LEN * 2 + 1] = {0};
-    char buf[CNID_DEV_LEN + CNID_INO_LEN];
-    char *c1;
-    char *c2;
-    char *middle;
-    char *end;
-    int   ci;
-
-    pack_devino((unsigned char *)buf, dev, ino);
-    
-    middle = buf + CNID_DEV_LEN;
-    end = buf + CNID_DEV_LEN + CNID_INO_LEN;
-    c1  = buf;
-    c2  = rbuf;  
-    
-    while (c1 < end) {
-	if (c1 == middle) {
-	    *c2 = '/';
-	    c2++;
-	}    
-	ci = *c1;
-	c2[0] = hexchars[(ci & 0xf0) >> 4];
-	c2[1] = hexchars[ci & 0x0f];
-	c1++;
-	c2 += 2;
-    }
-    return rbuf;
-}
-#endif

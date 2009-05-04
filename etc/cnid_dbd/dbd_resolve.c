@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_resolve.c,v 1.2 2005-04-28 20:49:48 bfernhomberg Exp $
+ * $Id: dbd_resolve.c,v 1.3 2009-05-04 09:09:43 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -41,10 +41,9 @@ int dbd_resolve(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     }
      
     if (rc == 0) {
-#ifdef DEBUG
-	LOG(log_info, logtype_cnid, "dbd_resolve: Could not resolve CNID %u",
-	    ntohl(rqst->cnid));
-#endif
+
+        LOG(log_debug, logtype_cnid, "dbd_resolve: Could not resolve CNID %u", ntohl(rqst->cnid));
+    
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }
@@ -54,10 +53,9 @@ int dbd_resolve(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     rply->namelen = data.size - CNID_NAME_OFS;
     rply->name = (char *)data.data + CNID_NAME_OFS;
 
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "dbd_resolve: Resolving CNID %u to did %u name %s",
+    LOG(log_debug, logtype_cnid, "dbd_resolve: Resolving CNID %u to did %u name %s",
         ntohl(rqst->cnid), ntohl(rply->did), rply->name);
-#endif
+
     rply->result = CNID_DBD_RES_OK;
     return 1;
 }

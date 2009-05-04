@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_add.c,v 1.3 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: dbd_add.c,v 1.4 2009-05-04 09:09:43 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -169,9 +169,7 @@ int dbd_add(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 
     if (rply->result == CNID_DBD_RES_OK) {
         /* Found it. rply->cnid is the correct CNID now. */
-#ifdef DEBUG
-        LOG(log_info, logtype_cnid, "dbd_add: dbd_lookup success, cnid %u", ntohl(rply->cnid));
-#endif
+        LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success, cnid %u", ntohl(rply->cnid));
         return 1;
     }
 
@@ -196,11 +194,10 @@ int dbd_add(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             return -1;
         }
     }
-#ifdef DEBUG
-    LOG(log_info, logtype_cnid, "dbd_add: Added dev/ino %s did %u name %s cnid %u",
-	stringify_devino(rqst->dev, rqst->ino),
-	ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
-#endif
+    LOG(log_info, logtype_cnid, "dbd_add: Added dev/ino 0x%llx/0x%llx did %u name %s cnid %u",
+        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino),
+        ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
+
     rply->result = CNID_DBD_RES_OK;
     return 1;
 }

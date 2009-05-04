@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.4 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.5 2009-05-04 09:09:43 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -98,8 +98,8 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     if (!devino && !didname) {  
         /* not found */
 
-        LOG(log_debug, logtype_cnid, "cnid_lookup: dev/ino %s did %u name %s neither in devino nor didname", 
-            stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name);
+        LOG(log_debug, logtype_cnid, "cnid_lookup: dev/ino 0x%llx/0x%llx did %u name %s neither in devino nor didname", 
+            ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino), ntohl(rqst->did), rqst->name);
 
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
@@ -108,8 +108,8 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     if (devino && didname && id_devino == id_didname && type_devino == rqst->type) {
         /* the same */
 
-        LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino %s did %u name %s as %u", 
-            stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name, ntohl(id_didname));
+        LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino 0x%llx/0x%llx did %u name %s as %u", 
+            ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino), ntohl(rqst->did), rqst->name, ntohl(id_didname));
 
         rply->cnid = id_didname;
         rply->result = CNID_DBD_RES_OK;
@@ -157,8 +157,8 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         rply->cnid = rqst->cnid;
     }
 
-    LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino %s did %u name %s as %u (needed update)", 
-        stringify_devino(rqst->dev, rqst->ino), ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
+    LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino 0x%llx/0x%llx did %u name %s as %u (needed update)", 
+        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino), ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
 
     return rc;
 }
