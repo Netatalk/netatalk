@@ -1,20 +1,19 @@
-Information for Netatalk 1.5 Developers
-=======================================
+Information for Netatalk Developers
+===================================
 
 For basic installation instructions, see the INSTALL file.
 
+Netatalk is an implementation of the AppleTalk Protocol Suite and
+the Apple Filing Protocol (AFP).  The current release contains support
+for EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP
+and AFP.  The complete stack looks like this on a BSD-derived system:
 
-netatalk is an implementation of the AppleTalk Protocol Suite.  The
-current release contains support for EtherTalk Phase I and II, DDP,
-RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, and AFP.  The complete stack looks
-like this on a BSD-derived system:
-
-    AFP
-     |
-    ASP    PAP
-      \   /
-       ATP RTMP NBP ZIP AEP
-	|    |   |   |   |
+    AFP                          AFP
+     |                            |
+    ASP    PAP                   DSI
+      \   /                       |
+       ATP RTMP NBP ZIP AEP       |
+        |    |   |   |   |        |
    -+---------------------------------------------------+- (kernel boundary)
     |                    Socket                         |
     +-----------------------+------------+--------------+
@@ -153,8 +152,6 @@ Netatalk also supports other standard PAM implementations such as OpenPAM.
 Berkeley DB is a programmatic toolkit that provides fast, reliable,
 scalable, and mission-critical database support to software
 developers. BDB can downloaded from
-http://www.sleepycat.com/download.html
+http://www.oracle.com/database/berkeley-db/index.html
 Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 4.1.25 and 4.2.52.
-The recommended version is 4.2.52 as that is the version on which most
-testing has been done.
+Currently, Netatalk supports BDB 4.4 and later.
