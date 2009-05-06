@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.5 2009-05-04 09:09:43 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.6 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -27,7 +27,7 @@
  *  up the database if there's a problem.
  */
 
-int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     unsigned char *buf;
     DBT key, devdata, diddata;
@@ -62,7 +62,7 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     key.data = buf + CNID_DEVINO_OFS;
     key.size = CNID_DEVINO_LEN;
 
-    if ((rc = dbif_get(DBIF_IDX_DEVINO, &key, &devdata, 0))  < 0) {
+    if ((rc = dbif_get(dbd, DBIF_IDX_DEVINO, &key, &devdata, 0))  < 0) {
         LOG(log_error, logtype_cnid, "dbd_lookup: Unable to get CNID %u, name %s",
                 ntohl(rqst->did), rqst->name);
         rply->result = CNID_DBD_RES_ERR_DB;
@@ -80,7 +80,7 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     key.data = buf + CNID_DID_OFS;
     key.size = CNID_DID_LEN + rqst->namelen + 1;
 
-    if ((rc = dbif_get(DBIF_IDX_DIDNAME, &key, &diddata, 0))  < 0) {
+    if ((rc = dbif_get(dbd, DBIF_IDX_DIDNAME, &key, &diddata, 0))  < 0) {
         LOG(log_error, logtype_cnid, "dbd_lookup: Unable to get CNID %u, name %s",
                 ntohl(rqst->did), rqst->name);
         rply->result = CNID_DBD_RES_ERR_DB;
@@ -124,7 +124,7 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         */
         if (!memcmp(dev, (char *)diddata.data + CNID_DEV_OFS, CNID_DEV_LEN) ||
                    type_didname != rqst->type) {
-            if (dbd_delete(rqst, rply) < 0) {
+            if (dbd_delete(dbd, rqst, rply) < 0) {
                 return -1;
             }
         }
@@ -139,7 +139,7 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             /* same dev:inode but not same type one is a folder the other 
              * is a file,it's an inode reused, delete the record
             */
-            if (dbd_delete(rqst, rply) < 0) {
+            if (dbd_delete(dbd, rqst, rply) < 0) {
                 return -1;
             }
         }
@@ -152,7 +152,7 @@ int dbd_lookup(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         return 1;
     }
     /* Fix up the database. assume it was a file move and rename */
-    rc = dbd_update(rqst, rply);
+    rc = dbd_update(dbd, rqst, rply);
     if (rc >0) {
         rply->cnid = rqst->cnid;
     }

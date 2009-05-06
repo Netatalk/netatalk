@@ -16,11 +16,11 @@ cnid_dbd_LDADD = $(top_builddir)/libatalk/libatalk.la @BDB_LIBS@
 cnid_metad_SOURCES = cnid_metad.c usockfd.c db_param.c
 cnid_metad_LDADD = $(top_builddir)/libatalk/libatalk.la
 
-dbd_SOURCES = dbd.c dbif.c pack.c
+dbd_SOURCES = dbd.c dbif.c pack.c cmd_dbd_scanvol.c
 dbd_CFLAGS = $(AM_CFLAGS)
 dbd_LDADD = $(top_builddir)/libatalk/libatalk.la @BDB_LIBS@
 
-noinst_HEADERS = dbif.h pack.h db_param.h dbd.h usockfd.h comm.h
+noinst_HEADERS = dbif.h pack.h db_param.h dbd.h usockfd.h comm.h cmd_dbd.h
 
 EXTRA_DIST = README
 

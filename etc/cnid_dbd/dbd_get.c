@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_get.c,v 1.3 2009-05-04 09:09:43 franklahm Exp $
+ * $Id: dbd_get.c,v 1.4 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -24,7 +24,7 @@
 
 /* Return CNID for a given did/name. */
 
-int dbd_get(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+int dbd_get(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     char start[CNID_DID_LEN + MAXPATHLEN + 1], *buf;
     DBT key, data;
@@ -43,7 +43,7 @@ int dbd_get(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     key.data = start;
     key.size = CNID_DID_LEN + rqst->namelen + 1;
 
-    if ((rc = dbif_get(DBIF_IDX_DIDNAME, &key, &data, 0)) < 0) {
+    if ((rc = dbif_get(dbd, DBIF_IDX_DIDNAME, &key, &data, 0)) < 0) {
         LOG(log_error, logtype_cnid, "dbd_get: Unable to get CNID %u, name %s", ntohl(rqst->did), rqst->name);
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;

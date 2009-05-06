@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_delete.c,v 1.3 2009-05-04 09:09:43 franklahm Exp $
+ * $Id: dbd_delete.c,v 1.4 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -19,7 +19,7 @@
 #include "dbd.h"
 #include "pack.h"
 
-int dbd_delete(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     DBT key;
     int rc;
@@ -31,7 +31,7 @@ int dbd_delete(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     key.data = (void *) &rqst->cnid;
     key.size = sizeof(rqst->cnid);
 
-    if ((rc = dbif_del(DBIF_IDX_CNID, &key, 0)) < 0) {
+    if ((rc = dbif_del(dbd, DBIF_CNID, &key, 0)) < 0) {
         LOG(log_error, logtype_cnid, "dbd_delete: Unable to delete entry for CNID %u", ntohl(rqst->cnid));
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;

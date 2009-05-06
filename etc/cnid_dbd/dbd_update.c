@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_update.c,v 1.4 2009-05-04 09:09:43 franklahm Exp $
+ * $Id: dbd_update.c,v 1.5 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -32,7 +32,7 @@
       other secondary index.
 */   
    
-int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     DBT key,pkey, data;
     int rc;
@@ -53,7 +53,7 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 
     data.data = getbuf;
     data.size = CNID_HEADER_LEN + MAXPATHLEN + 1;
-    if ((rc = dbif_pget(DBIF_IDX_DEVINO, &key, &pkey, &data, 0)) < 0 ) {
+    if ((rc = dbif_pget(dbd, DBIF_IDX_DEVINO, &key, &pkey, &data, 0)) < 0 ) {
         goto err_db;
     }
     else if  (rc > 0) {
@@ -61,7 +61,7 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         LOG(log_debug, logtype_cnid, "dbd_update: Deleting %u corresponding to dev/ino 0x%llx/0x%llx from cnid2.db",
             ntohl(tmpcnid), ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino));
 
-        if ((rc = dbif_del(DBIF_IDX_CNID, &pkey, 0)) < 0 ) {
+        if ((rc = dbif_del(dbd, DBIF_CNID, &pkey, 0)) < 0 ) {
             goto err_db;
         }
         else if (!rc) {
@@ -77,17 +77,17 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     key.size = CNID_DID_LEN + rqst->namelen +1;
     memset(&pkey, 0, sizeof(pkey));
 
-    if ((rc = dbif_pget(DBIF_IDX_DIDNAME, &key, &pkey, &data, 0)) < 0) {
+    if ((rc = dbif_pget(dbd, DBIF_IDX_DIDNAME, &key, &pkey, &data, 0)) < 0) {
         goto err_db;
     }
     else if  (rc > 0) {
 
-	memcpy(&tmpcnid, pkey.data, sizeof(cnid_t));
-
-	LOG(log_debug, logtype_cnid, "dbd_update: Deleting %u corresponding to did %u name %s from cnid2.db",
-	    ntohl(tmpcnid), ntohl(rqst->did), rqst->name);
-
-        if ((rc = dbif_del(DBIF_IDX_CNID, &pkey, 0)) < 0) {
+        memcpy(&tmpcnid, pkey.data, sizeof(cnid_t));
+        
+        LOG(log_debug, logtype_cnid, "dbd_update: Deleting %u corresponding to did %u name %s from cnid2.db",
+            ntohl(tmpcnid), ntohl(rqst->did), rqst->name);
+    
+        if ((rc = dbif_del(dbd, DBIF_CNID, &pkey, 0)) < 0) {
             goto err_db;
         }
         else if (!rc) {
@@ -108,7 +108,7 @@ int dbd_update(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     memcpy(data.data, &rqst->cnid, sizeof(rqst->cnid));
     data.size = CNID_HEADER_LEN + rqst->namelen + 1;
 
-    if (dbif_put(DBIF_IDX_CNID, &key, &data, 0) < 0)
+    if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)
         goto err_db;
 
     LOG(log_info, logtype_cnid, "dbd_update: Updated cnid2.db with dev/ino 0x%llx/0x%llx did %u name %s cnid %u",

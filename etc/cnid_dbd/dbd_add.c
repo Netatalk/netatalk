@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_add.c,v 1.4 2009-05-04 09:09:43 franklahm Exp $
+ * $Id: dbd_add.c,v 1.5 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -34,7 +34,7 @@
 #include "pack.h"
 #include "dbd.h"
 
-static int add_cnid(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+static int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     DBT key, data;
     int rc;
@@ -50,7 +50,7 @@ static int add_cnid(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     memcpy(data.data, &rply->cnid, sizeof(rply->cnid));
 
     /* main database */
-    if ((rc = dbif_put(DBIF_IDX_CNID, &key, &data, DB_NOOVERWRITE))) {
+    if ((rc = dbif_put(dbd, DBIF_CNID, &key, &data, DB_NOOVERWRITE))) {
         /* This could indicate a database error or that the key already exists
          (because of DB_NOOVERWRITE). In that case we still look at some sort of
          database corruption since that is not supposed to happen. */
@@ -65,7 +65,7 @@ static int add_cnid(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
              , (char *)data.data + CNID_NAME_OFS);
             
             rqst->cnid = rply->cnid;
-            rc = dbd_update(rqst, rply);
+            rc = dbd_update(dbd, rqst, rply);
             if (rc < 0) {
                 rply->result = CNID_DBD_RES_ERR_DB;
                 return -1;
@@ -81,7 +81,7 @@ static int add_cnid(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 }
 
 /* ---------------------- */
-static int get_cnid(struct cnid_dbd_rply *rply)
+static int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 {
     DBT rootinfo_key, rootinfo_data;
     int rc;
@@ -92,7 +92,7 @@ static int get_cnid(struct cnid_dbd_rply *rply)
     rootinfo_key.data = ROOTINFO_KEY;
     rootinfo_key.size = ROOTINFO_KEYLEN;
 
-    if ((rc = dbif_get(DBIF_IDX_CNID, &rootinfo_key, &rootinfo_data, 0)) <= 0) {
+    if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) <= 0) {
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;
     }
@@ -112,7 +112,7 @@ static int get_cnid(struct cnid_dbd_rply *rply)
     hint = htonl(id);
     memcpy((char *)rootinfo_data.data +CNID_TYPE_OFS, &hint, sizeof(hint));
 
-    if (dbif_put(DBIF_IDX_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
+    if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;
     }
@@ -122,7 +122,7 @@ static int get_cnid(struct cnid_dbd_rply *rply)
 
 /* --------------- 
 */
-int dbd_stamp(void) 
+int dbd_stamp(DBD *dbd)
 {
     DBT rootinfo_key, rootinfo_data;
     cnid_t hint;
@@ -134,18 +134,18 @@ int dbd_stamp(void)
     rootinfo_key.data = ROOTINFO_KEY;
     rootinfo_key.size = ROOTINFO_KEYLEN;
 
-    switch (dbif_get(DBIF_IDX_CNID, &rootinfo_key, &rootinfo_data, 0)) {
+    switch (dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) {
     case 0:
         hint = htonl(CNID_START);
         memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
         rootinfo_data.data = buf;
         rootinfo_data.size = ROOTINFO_DATALEN;
-        if (dbif_stamp(stamp, CNID_DEV_LEN) < 0) {
+        if (dbif_stamp(dbd, stamp, CNID_DEV_LEN) < 0) {
             return -1;
         }
-        memcpy((char *)rootinfo_data.data +CNID_TYPE_OFS, &hint, sizeof(hint));
-        memcpy((char *)rootinfo_data.data +CNID_DEV_OFS, stamp, sizeof(stamp));
-        if (dbif_put(DBIF_IDX_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
+        memcpy((char *)rootinfo_data.data + CNID_TYPE_OFS, &hint, sizeof(hint));
+        memcpy((char *)rootinfo_data.data + CNID_DEV_OFS, stamp, sizeof(stamp));
+        if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
             return -1;
         }
         return 0;
@@ -159,12 +159,12 @@ int dbd_stamp(void)
 }
 
 /* ------------------------ */
-int dbd_add(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     rply->namelen = 0;
 
     /* See if we have an entry already and return it if yes */
-    if (dbd_lookup(rqst, rply) < 0)
+    if (dbd_lookup(dbd, rqst, rply) < 0)
         return -1;
 
     if (rply->result == CNID_DBD_RES_OK) {
@@ -173,7 +173,7 @@ int dbd_add(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         return 1;
     }
 
-    if (get_cnid(rply) < 0) {
+    if (get_cnid(dbd, rply) < 0) {
         if (rply->result == CNID_DBD_RES_ERR_MAX) {
             LOG(log_error, logtype_cnid, "dbd_add: FATAL: CNID database has reached its limit.");
             /* This will cause an abort/rollback if transactions are used */
@@ -184,7 +184,7 @@ int dbd_add(struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         }
     }
     
-    if (add_cnid(rqst, rply) < 0) {
+    if (add_cnid(dbd, rqst, rply) < 0) {
         if (rply->result == CNID_DBD_RES_ERR_DUPLCNID) {
             LOG(log_error, logtype_cnid, "dbd_add: Cannot add CNID %u. Corrupt/invalid Rootkey?.", ntohl(rply->cnid));
             /* abort/rollback, see above */

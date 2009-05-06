@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.c,v 1.4 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: db_param.c,v 1.5 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -152,7 +152,7 @@ struct db_param *db_param_read(char *dir, enum identity id)
         }
 
         /* Config for dbd only */
-        else if (id == DBD ) {
+        else if (id == CNID_DBD ) {
             if (! strcmp(key, "fd_table_size")) {
                 params.fd_table_size = parse_int(val);
                 LOG(log_info, logtype_cnid, "db_param: setting max number of concurrent afpd connections per volume (fd_table_size) to %d", params.fd_table_size);

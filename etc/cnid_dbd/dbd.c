@@ -1,5 +1,5 @@
 /* 
-   $Id: dbd.c,v 1.2 2009-04-28 14:09:00 franklahm Exp $
+   $Id: dbd.c,v 1.3 2009-05-06 11:54:24 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -31,18 +31,18 @@
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/volinfo.h>
+#include "cmd_dbd.h"
 #include "dbif.h"
 #include "db_param.h"
 
 #define LOCKFILENAME  "lock"
-#define DBOPTIONS (DB_CREATE | DB_INIT_LOCK | DB_INIT_MPOOL | DB_INIT_TXN)
+#define DBOPTIONS (DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN)
 
-enum logtype {LOGSTD, LOGDEBUG};
+static DBD *dbd;
 
 static volatile sig_atomic_t alarmed;
-static int verbose; /* Logging flag */
-static int exclusive;  /* How to open the bdb database */
-static struct volinfo volinfo;
+static int verbose;             /* Logging flag */
+static int exclusive;           /* Exclusive volume access */
 static struct db_param db_param = {
     NULL,                       /* Volume dirpath */
     1,                          /* bdb logfile autoremove */
@@ -58,7 +58,7 @@ static struct db_param db_param = {
 /* 
    Provide some logging
  */
-static void dblog(enum logtype lt, char *fmt, ...)
+void dbd_log(enum logtype lt, char *fmt, ...)
 {
     int len;
     static char logbuffer[1024];
@@ -95,7 +95,7 @@ void set_signal(void)
     sigemptyset(&sv.sa_mask);
     sigaddset(&sv.sa_mask, SIGTERM);
     if (sigaction(SIGTERM, &sv, NULL) < 0) {
-        dblog( LOGSTD, "error in sigaction(SIGTERM): %s", strerror(errno));
+        dbd_log( LOGSTD, "error in sigaction(SIGTERM): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }        
 
@@ -104,19 +104,19 @@ void set_signal(void)
     sigemptyset(&sv.sa_mask);
 
     if (sigaction(SIGINT, &sv, NULL) < 0) {
-        dblog( LOGSTD, "error in sigaction(SIGINT): %s", strerror(errno));
+        dbd_log( LOGSTD, "error in sigaction(SIGINT): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }        
     if (sigaction(SIGABRT, &sv, NULL) < 0) {
-        dblog( LOGSTD, "error in sigaction(SIGABRT): %s", strerror(errno));
+        dbd_log( LOGSTD, "error in sigaction(SIGABRT): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }        
     if (sigaction(SIGHUP, &sv, NULL) < 0) {
-        dblog( LOGSTD, "error in sigaction(SIGHUP): %s", strerror(errno));
+        dbd_log( LOGSTD, "error in sigaction(SIGHUP): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }        
     if (sigaction(SIGQUIT, &sv, NULL) < 0) {
-        dblog( LOGSTD, "error in sigaction(SIGQUIT): %s", strerror(errno));
+        dbd_log( LOGSTD, "error in sigaction(SIGQUIT): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }        
 }
@@ -143,7 +143,7 @@ int get_lock(void)
     struct flock lock;
 
     if ((lockfd = open(LOCKFILENAME, O_RDWR | O_CREAT, 0644)) < 0) {
-        dblog( LOGSTD, "Error opening lockfile: %s", strerror(errno));
+        dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
     
@@ -155,11 +155,11 @@ int get_lock(void)
     if (fcntl(lockfd, F_SETLK, &lock) < 0) {
         if (errno == EACCES || errno == EAGAIN) {
             if (exclusive) {
-                dblog( LOGDEBUG, "Database is in use and exlusive was requested", strerror(errno));        
+                dbd_log( LOGSTD, "Database is in use and exlusive was requested", strerror(errno));        
                 exit(EXIT_FAILURE);
             };
         } else {
-            dblog( LOGSTD, "Error getting fcntl F_WRLCK on lockfile: %s", strerror(errno));
+            dbd_log( LOGSTD, "Error getting fcntl F_WRLCK on lockfile: %s", strerror(errno));
             exit(EXIT_FAILURE);
        }
     }
@@ -183,37 +183,50 @@ static void usage ()
 {
     printf("Usage: dbd [-e|-v|-x] -d [-i] | -s | -r [-f] <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
-           "dbd must run with appropiate permissions i.e. as root.\n\n"
+           "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
-           "   -d dump\n"
-           "      Dump CNID database\n"
+           "   -d Dump CNID database\n"
            "      Option: -i dump indexes too\n"
-           "   -s scan\n"
-           "      Compare database with volume\n"
-           "   -r rebuild\n"
-           "      Rebuild CNID database\n"
-           "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files\n\n"
+           "   -s Scan volume:\n"
+           "      1. Compare database with volume\n"
+           "      2. Check if .AppleDouble dirs exist\n"
+           "      3. Check if  AppleDouble file exist\n"
+           "      4. Report orphaned AppleDouble files\n"
+           "      5. Check for directories inside AppleDouble directories\n"
+           "      6. Check name encoding by roundtripping, log on error\n"
+           "   -r Rebuild volume:\n"
+           "      1. Sync database with volume\n"
+           "      2. Make sure .AppleDouble dir exist, create if missing\n"
+           "      3. Make sure AppleDouble file exists, create if missing\n"
+           "      4. Delete orphaned AppleDouble files\n"
+           "      5. Check for directories inside AppleDouble directories\n"
+           "      6. Check name encoding by roundtripping, log on error\n"
+           "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
+           "                 only available for volumes with 'cachecnid' option\n\n"
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes\n"
            "   -v verbose\n"
            "\n"
-           "28-04-2009: -s and -r and not yet implemented\n"
+           "05-05-2009: -s and -r already check/repair the AppleDouble stuff and encoding,\n"
+           "            no CNID database maintanance is done yet\n"
         );
 }
 
 int main(int argc, char **argv)
 {
-    int c, ret, lockfd;
+    int c, lockfd;
     int dump=0, scan=0, rebuild=0, rebuildindexes=0, dumpindexes=0, force=0;
+    dbd_flags_t flags = 0;
     char *volpath;
+    struct volinfo volinfo;
 
     if (geteuid() != 0) {
         usage();
         exit(EXIT_FAILURE);
     }
 
-    while ((c = getopt(argc, argv, ":dsrvxif")) != -1) {
+    while ((c = getopt(argc, argv, ":dsrvxife")) != -1) {
         switch(c) {
         case 'd':
             dump = 1;
@@ -223,6 +236,7 @@ int main(int argc, char **argv)
             break;
         case 's':
             scan = 1;
+            flags = DBD_FLAGS_SCAN;
             break;
         case 'r':
             rebuild = 1;
@@ -238,6 +252,7 @@ int main(int argc, char **argv)
             break;
         case 'f':
             force = 1;
+            flags = DBD_FLAGS_FORCE;
             break;
         case ':':
         case '?':
@@ -260,23 +275,24 @@ int main(int argc, char **argv)
 
     /* Put "/.AppleDB" at end of volpath */
     if ( (strlen(volpath) + strlen("/.AppleDB")) > (PATH_MAX -1) ) {
-        dblog( LOGSTD, "Volume pathname too long");
+        dbd_log( LOGSTD, "Volume pathname too long");
         exit(EXIT_FAILURE);        
     }
     char dbpath[PATH_MAX];
     strncpy(dbpath, volpath, PATH_MAX - 1);
     strcat(dbpath, "/.AppleDB");
 
-    if ( -1 == (ret = loadvolinfo(volpath, &volinfo)) ) {
-        dblog( LOGSTD, "Unkown volume options!");
+    /* cd to .AppleDB dir */
+    int cdir;
+    if ((cdir = open(".", O_RDONLY)) < 0) {
+        dbd_log( LOGSTD, "Can't open dir: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
-    
     if (chdir(dbpath) < 0) {
-        dblog( LOGSTD, "chdir to %s failed: %s", dbpath, strerror(errno));
+        dbd_log( LOGSTD, "chdir to %s failed: %s", dbpath, strerror(errno));
         exit(EXIT_FAILURE);
     }
-    
+        
     /* 
        Before we do anything else, check if there is an instance of cnid_dbd
        running already and silently exit if yes.
@@ -292,28 +308,51 @@ int main(int argc, char **argv)
     else
         setuplog("default log_debug /dev/tty");
 
+    /* Load .volinfo file */
+    if ( -1 == loadvolinfo(volpath, &volinfo)) {
+        dbd_log( LOGSTD, "Unkown volume options!");
+        exit(EXIT_FAILURE);
+    }
+    if ( -1 == vol_load_charsets(&volinfo)) {
+        dbd_log( LOGSTD, "Error loading charsets!");
+        exit(EXIT_FAILURE);
+    }
+
     /* 
        Lets start with the BerkeleyDB stuff
     */
-    if (dbif_env_init(&db_param, DBOPTIONS) < 0) {
-        dblog( LOGSTD, "error opening database!");
+    if (NULL == (dbd = dbif_init("cnid2.db")))
+        exit(2);
+
+    if (dbif_env_open(dbd, &db_param, DBOPTIONS) < 0) {
+        dbd_log( LOGSTD, "error opening database!");
         exit(EXIT_FAILURE);
     }
 
-    dblog( LOGDEBUG, "Finished opening BerkeleyDB databases including recovery.");
+    dbd_log( LOGDEBUG, "Finished opening BerkeleyDB databases including recovery.");
 
-    if (dbif_open(&db_param, rebuildindexes) < 0) {
-        dbif_close();
+    if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
+        dbif_close(dbd);
         exit(EXIT_FAILURE);
+    }
+
+    if ((fchdir(cdir)) < 0) {
+        dbd_log(LOGSTD, "fchdir: %s", strerror(errno));        
+        goto cleanup;
     }
 
     if (dump) {
-        if (dbif_dump(dumpindexes) < 0) {
-            dblog( LOGSTD, "Error dumping database");
+        if (dbif_dump(dbd, dumpindexes) < 0) {
+            dbd_log( LOGSTD, "Error dumping database");
+        }
+    } else if (rebuild || scan) {
+        if (cmd_dbd_scanvol(dbd, &volinfo, flags) < 0) {
+            dbd_log( LOGSTD, "Fatal error repairing database. Please rm -r it.");
         }
     }
 
-    if (dbif_close() < 0)
+cleanup:
+    if (dbif_close(dbd) < 0)
         exit(EXIT_FAILURE);
 
     free_lock(lockfd);

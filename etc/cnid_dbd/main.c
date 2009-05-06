@@ -1,20 +1,9 @@
 /*
- * $Id: main.c,v 1.5 2009-04-28 13:01:24 franklahm Exp $
+ * $Id: main.c,v 1.6 2009-05-06 11:54:24 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
- */
-
-/* 
-   dbd and transactions
-   ====================
-
-   We use AUTO_COMMIT for our BerkeleyDB environment. This avoids explicit transactions
-   for every bdb access which speeds up reads. But in order to be able to rollback
-   in case of errors we start a transaction once we encounter the first write.
-   The logic to do this is stuffed two levels lower into the dbif.c file and functions
-   dbif_put and dbif_del.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +46,9 @@
    Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.
    It's a likey performance hit, but it might we worth it.
  */
-#define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN)
+#define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER)
+
+static DBD *dbd;
 
 static int exit_sig = 0;
 
@@ -147,28 +138,28 @@ static int loop(struct db_param *dbp)
                 ret = 1;
                 break;
             case CNID_DBD_OP_ADD:
-                ret = dbd_add(&rqst, &rply);
+                ret = dbd_add(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_GET:
-                ret = dbd_get(&rqst, &rply);
+                ret = dbd_get(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_RESOLVE:
-                ret = dbd_resolve(&rqst, &rply);
+                ret = dbd_resolve(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_LOOKUP:
-                ret = dbd_lookup(&rqst, &rply);
+                ret = dbd_lookup(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_UPDATE:
-                ret = dbd_update(&rqst, &rply);
+                ret = dbd_update(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_DELETE:
-                ret = dbd_delete(&rqst, &rply);
+                ret = dbd_delete(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_GETSTAMP:
-                ret = dbd_getstamp(&rqst, &rply);
+                ret = dbd_getstamp(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_REBUILD_ADD:
-                ret = dbd_rebuild_add(&rqst, &rply);
+                ret = dbd_rebuild_add(dbd, &rqst, &rply);
                 break;
             default:
                 LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
@@ -177,15 +168,15 @@ static int loop(struct db_param *dbp)
             }
             
             if ((cret = comm_snd(&rply)) < 0 || ret < 0) {
-                dbif_txn_abort();
+                dbif_txn_abort(dbd);
                 return -1;
             }
             
             if (ret == 0 || cret == 0) {
-                if (dbif_txn_abort() < 0)
+                if (dbif_txn_abort(dbd) < 0)
                     return -1;
             } else {
-                ret = dbif_txn_commit();
+                ret = dbif_txn_commit(dbd);
                 if (  ret < 0)
                     return -1;
                 else if ( ret > 0 )
@@ -200,7 +191,7 @@ static int loop(struct db_param *dbp)
         */
         if (now > time_next_flush) {
             LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB for volume '%s'", dbp->dir);
-            if (dbif_txn_checkpoint(0, 0, 0) < 0)
+            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0)
                 return -1;
             count = 0;
             time_next_flush = now + dbp->flush_interval;
@@ -216,7 +207,7 @@ static int loop(struct db_param *dbp)
         */
         if (count > dbp->flush_frequency) {
             LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB after %d writes for volume '%s'", count, dbp->dir);
-            if (dbif_txn_checkpoint(0, 0, 0) < 0)
+            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0)
                 return -1;
             count = 0;
         }
@@ -345,35 +336,38 @@ int main(int argc, char *argv[])
        only shut down after one second of inactivity. */
     block_sigs_onoff(1);
 
-    if ((dbp = db_param_read(dir, DBD)) == NULL)
+    if ((dbp = db_param_read(dir, CNID_DBD)) == NULL)
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
-    if (dbif_env_init(dbp, DBOPTIONS) < 0)
+    if (NULL == (dbd = dbif_init("cnid2.db")))
+        exit(2);
+
+    if (dbif_env_open(dbd, dbp, DBOPTIONS) < 0)
         exit(2); /* FIXME: same exit code as failure for dbif_open() */
     LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
 
-    if (dbif_open(dbp, 0) < 0) {
-        dbif_close();
+    if (dbif_open(dbd, dbp, 0) < 0) {
+        dbif_close(dbd);
         exit(2);
     }
     LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
 
-    if (dbd_stamp() < 0) {
-        dbif_close();
+    if (dbd_stamp(dbd) < 0) {
+        dbif_close(dbd);
         exit(5);
     }
     LOG(log_maxdebug, logtype_cnid, "Finished checking database stamp");
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
-        dbif_close();
+        dbif_close(dbd);
         exit(3);
     }
 
     if (loop(dbp) < 0)
         err++;
 
-    if (dbif_close() < 0)
+    if (dbif_close(dbd) < 0)
         err++;
 
     free_lock(lockfd);

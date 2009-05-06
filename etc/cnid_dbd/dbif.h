@@ -1,10 +1,47 @@
 /*
- * $Id: dbif.h,v 1.4 2009-04-28 13:01:24 franklahm Exp $
- *
- * Copyright (C) Joerg Lenneis 2003
- * Copyright (C) Frank Lahm 2009
- * All Rights Reserved.  See COPYING.
- */
+  $Id: dbif.h,v 1.5 2009-05-06 11:54:24 franklahm Exp $
+ 
+  Copyright (C) Joerg Lenneis 2003
+  Copyright (C) Frank Lahm 2009
+  All Rights Reserved.  See COPYING.
+
+
+  API usage
+  =========
+
+  Initialisation
+  --------------
+  1. Provide storage for a DBD * handle
+     DBD *dbd;
+  2. Call dbif_init with a filename to receive a DBD handle:
+     dbd = dbif_init("cnid2.db");
+     Pass NULL to create an in-memory db.
+     Note: the DBD type is NOT from BerkeleyDB ! We've defined it.
+  3. Optional:
+     Call dbif_env_open to open an dbd environment, chdir to it beforehand
+  4. Call dbif_open to finally open the CNID database itself
+  
+  Querying the CNID database
+  --------------------------
+  Call dbif_[get|pget|put|del]. They map to the corresponding BerkeleyDB calls
+  with the same names.
+
+  Transactions
+  ------------
+  We use AUTO_COMMIT for the BDB database accesses. This avoids explicit transactions
+  for every bdb access which speeds up reads. But in order to be able to rollback
+  in case of errors we start a transaction once we encounter the first write from
+  dbif_put or dbif_del.
+  Thus you shouldn't call dbif_txn_[begin|abort|commit], they're used internally.
+
+  Checkpoiting
+  ------------
+  Call dbif_txn_checkpoint.
+
+  Closing
+  -------
+  Call dbif_close.
+*/
 
 #ifndef CNID_DBD_DBIF_H
 #define CNID_DBD_DBIF_H 1
@@ -14,27 +51,47 @@
 #include "db_param.h"
 
 #define DBIF_DB_CNT 3
-
-#define DBIF_IDX_CNID      0
+ 
+#define DBIF_CNID          0
 #define DBIF_IDX_DEVINO    1
 #define DBIF_IDX_DIDNAME   2
 
-extern int dbif_stamp(void *, int);
-extern int dbif_env_init(struct db_param *, uint32_t);
-extern int dbif_open(struct db_param *, int);
-extern int dbif_close(void);
-extern int dbif_closedb(void);
-extern int dbif_get(const int, DBT *, DBT *, u_int32_t);
-extern int dbif_pget(const int, DBT *, DBT *, DBT *, u_int32_t);
-extern int dbif_put(const int, DBT *, DBT *, u_int32_t);
-extern int dbif_del(const int, DBT *, u_int32_t);
+/* Structures */
+typedef struct {
+    char     *name;
+    DB       *db;
+    uint32_t flags;
+    uint32_t openflags;
+    DBTYPE   type;
+} db_table;
 
-extern int dbif_count(const int, u_int32_t *);
+typedef struct {
+    DB_ENV   *db_env;
+    DB_TXN   *db_txn;
+    char     *db_filename;
+    FILE     *db_errlog;
+    db_table db_table[3];
+} DBD;
 
-extern int dbif_txn_begin(void);
-extern int dbif_txn_commit(void);
-extern int dbif_txn_abort(void);
-extern int dbif_txn_checkpoint(u_int32_t, u_int32_t, u_int32_t);
+/* Functions */
+extern DBD *dbif_init(const char *dbname);
+extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
+extern int dbif_open(DBD *dbd, struct db_param *dbp, int do_truncate);
+extern int dbif_close(DBD *dbd);
 
-extern int dbif_dump(int dumpindexes);
+extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
+extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
+extern int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
+extern int dbif_del(DBD *, const int, DBT *, u_int32_t);
+
+extern int dbif_count(DBD *, const int, u_int32_t *);
+extern int dbif_stamp(DBD *, void *, int);
+extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
+extern int dbif_txn_begin(DBD *);
+extern int dbif_txn_commit(DBD *);
+extern int dbif_txn_abort(DBD *);
+extern int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
+
+extern int dbif_dump(DBD *, int dumpindexes);
+
 #endif
