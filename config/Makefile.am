@@ -71,9 +71,9 @@ else
 install-data-local: install-config-files
 
 uninstall-local:
-    for f in $(CONFFILES) $(GENFILES); do \
-        echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
-        rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
-    done
+	for f in $(CONFFILES) $(GENFILES); do \
+		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+	done
 
 endif 
