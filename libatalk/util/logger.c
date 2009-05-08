@@ -108,7 +108,7 @@ static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
  */
 
   /* -[un]setuplog <logtype> <loglevel> [<filename>]*/
-static void setuplog_internal(char *logtype, char *loglevel, char *filename)
+static void setuplog_internal(const char *logtype, const char *loglevel, const char *filename)
 {
   int typenum, levelnum;
 
@@ -250,7 +250,7 @@ void log_init(void)
 #endif
 }
 
-void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype)
+void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)
 {
     uid_t process_uid;
 
@@ -462,9 +462,10 @@ void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *mes
 
 void setuplog(const char *logstr)
 {
-    char *ptr, *logtype, *loglevel, *filename;
+    char *ptr, *ptrbak, *logtype, *loglevel, *filename;
     ptr = strdup(logstr);
-    
+    ptrbak = ptr;
+
     /* logtype */
     logtype = ptr; 
 
@@ -489,7 +490,7 @@ void setuplog(const char *logstr)
     /* finally call setuplog, filename can be NULL */
     setuplog_internal(logtype, loglevel, filename);
 
-    free(ptr);
+    free(ptrbak);
 }
 
 void unsetuplog(const char *logstr)

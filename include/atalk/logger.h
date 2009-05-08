@@ -193,7 +193,7 @@ extern int  log_src_linenumber;
 void log_init(void);
 
 /* Setup the level and type of log that will be logged for file loggging */
-void log_setup(char *filename, enum loglevels loglevel, enum logtypes logtype);
+void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype);
 
 /* Setup the level and type of log that will be logged to syslog. */
 void syslog_setup(int loglevel, enum logtypes logtype, 
