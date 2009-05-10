@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.8 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: dbif.c,v 1.9 2009-05-10 08:08:28 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -95,12 +95,9 @@ DBD *dbif_init(const char *filename)
     dbd->db_table[DBIF_IDX_DEVINO].type  = DB_BTREE;
     dbd->db_table[DBIF_IDX_DIDNAME].type = DB_BTREE;
 
-    if (filename == NULL) {
-        /* Without an environment we must pass DB_CREATE to db->open */
-        dbd->db_table[DBIF_CNID].openflags        = DB_CREATE;
-        dbd->db_table[DBIF_IDX_DEVINO].openflags  = DB_CREATE;
-        dbd->db_table[DBIF_IDX_DIDNAME].openflags = DB_CREATE;
-    }
+    dbd->db_table[DBIF_CNID].openflags        = DB_CREATE;
+    dbd->db_table[DBIF_IDX_DEVINO].openflags  = DB_CREATE;
+    dbd->db_table[DBIF_IDX_DIDNAME].openflags = DB_CREATE;
 
     return dbd;
 }
