@@ -2,5 +2,6 @@ Makefile
 Makefile.in
 cnid_metad
 cnid_dbd
+dbd
 .deps
 .libs

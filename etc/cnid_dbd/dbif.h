@@ -1,5 +1,5 @@
 /*
-  $Id: dbif.h,v 1.5 2009-05-06 11:54:24 franklahm Exp $
+  $Id: dbif.h,v 1.6 2009-05-14 13:46:08 franklahm Exp $
  
   Copyright (C) Joerg Lenneis 2003
   Copyright (C) Frank Lahm 2009
@@ -68,13 +68,14 @@ typedef struct {
 typedef struct {
     DB_ENV   *db_env;
     DB_TXN   *db_txn;
+    char     *db_envhome;
     char     *db_filename;
     FILE     *db_errlog;
     db_table db_table[3];
 } DBD;
 
 /* Functions */
-extern DBD *dbif_init(const char *dbname);
+extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
 extern int dbif_open(DBD *dbd, struct db_param *dbp, int do_truncate);
 extern int dbif_close(DBD *dbd);
@@ -90,6 +91,7 @@ extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 extern int dbif_txn_begin(DBD *);
 extern int dbif_txn_commit(DBD *);
 extern int dbif_txn_abort(DBD *);
+extern void dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
 extern int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
 
 extern int dbif_dump(DBD *, int dumpindexes);

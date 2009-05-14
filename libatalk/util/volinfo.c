@@ -373,6 +373,17 @@ int loadvolinfo (char *path, struct volinfo *vol)
     lock.l_type = F_UNLCK;
     fcntl(fd, F_SETLK, &lock);
 
+    /* Translate vol options to ad options like afp/volume.c does it */
+    vol->v_ad_options = 0;
+    if ((vol->v_flags & AFPVOL_NODEV))
+        vol->v_ad_options |= ADVOL_NODEV;
+    if ((vol->v_flags & AFPVOL_CACHE))
+        vol->v_ad_options |= ADVOL_CACHE;
+    if ((vol->v_flags & AFPVOL_UNIX_PRIV))
+        vol->v_ad_options |= ADVOL_UNIXPRIV;
+    if ((vol->v_flags & AFPVOL_INV_DOTS))
+        vol->v_ad_options |= ADVOL_INVDOTS;
+
     fclose(fp);
     return 0;
 }

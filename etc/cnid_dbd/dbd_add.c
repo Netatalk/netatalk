@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_add.c,v 1.5 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: dbd_add.c,v 1.6 2009-05-14 13:46:08 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -34,7 +34,7 @@
 #include "pack.h"
 #include "dbd.h"
 
-static int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     DBT key, data;
     int rc;
@@ -81,7 +81,7 @@ static int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *
 }
 
 /* ---------------------- */
-static int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
+int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 {
     DBT rootinfo_key, rootinfo_data;
     int rc;
@@ -194,8 +194,8 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             return -1;
         }
     }
-    LOG(log_info, logtype_cnid, "dbd_add: Added dev/ino 0x%llx/0x%llx did %u name %s cnid %u",
-        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino),
+    LOG(log_debug, logtype_cnid, "dbd_add: Added dev/ino 0x%llx/0x%llx did %u name %s cnid %u",
+        (unsigned long long)rqst->dev, (unsigned long long)rqst->ino,
         ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
 
     rply->result = CNID_DBD_RES_OK;

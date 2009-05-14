@@ -1,6 +1,9 @@
 #ifndef CMD_DBD_H
 #define CMD_DBD_H
 
+#include <signal.h>
+#include <limits.h>
+
 #include <atalk/volinfo.h>
 #include "dbif.h"
 
@@ -18,7 +21,17 @@ typedef unsigned int dbd_flags_t;
 #define STRCMP(a,b,c) \
         (strcmp(a,c) b 0)
 
+extern volatile sig_atomic_t alarmed;
+extern struct volinfo *volinfo;
+extern char cwdbuf[MAXPATHLEN+1];
+
 extern void dbd_log(enum logtype lt, char *fmt, ...);
 extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
 
+/*
+  Functions for querying the database which couldn't be reused from the existing
+  funcs pool of dbd_* for one reason or another
+*/
+extern int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int roflag);
+extern int cmd_dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
 #endif /* CMD_DBD_H */

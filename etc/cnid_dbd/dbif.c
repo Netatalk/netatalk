@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.9 2009-05-10 08:08:28 franklahm Exp $
+ * $Id: dbif.c,v 1.10 2009-05-14 13:46:08 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -71,7 +71,7 @@ int dbif_stamp(DBD *dbd, void *buffer, int size)
 }
 
 /* --------------- */
-DBD *dbif_init(const char *filename)
+DBD *dbif_init(const char *envhome, const char *filename)
 {
     DBD *dbd;
 
@@ -80,8 +80,18 @@ DBD *dbif_init(const char *filename)
 
     /* filename == NULL means in memory db */
     if (filename) {
+        if (! envhome)
+            return NULL;
+
+        dbd->db_envhome = strdup(envhome);
+        if (NULL == dbd->db_envhome) {
+            free(dbd);
+            return NULL;
+        }
+
         dbd->db_filename = strdup(filename);
         if (NULL == dbd->db_filename) {
+            free(dbd->db_envhome);
             free(dbd);
             return NULL;
         }
@@ -134,11 +144,10 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
         dbd->db_env->set_msgfile(dbd->db_env, dbd->db_errlog);
     }
 
-    dbd->db_env->set_verbose(dbd->db_env, DB_VERB_RECOVERY, 1);
-
     if (dbenv_oflags & DB_RECOVER) {
+        dbd->db_env->set_verbose(dbd->db_env, DB_VERB_RECOVERY, 1);
         /* Open the database for recovery using DB_PRIVATE option which is faster */
-        if ((ret = dbd->db_env->open(dbd->db_env, ".", dbenv_oflags | DB_PRIVATE, 0))) {
+        if ((ret = dbd->db_env->open(dbd->db_env, dbd->db_envhome, dbenv_oflags | DB_PRIVATE, 0))) {
             LOG(log_error, logtype_cnid, "error opening DB environment: %s",
                 db_strerror(ret));
             dbd->db_env->close(dbd->db_env, 0);
@@ -177,7 +186,7 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
         dbd->db_env->set_errfile(dbd->db_env, dbd->db_errlog);
         dbd->db_env->set_msgfile(dbd->db_env, dbd->db_errlog);
     }
-    if ((ret = dbd->db_env->open(dbd->db_env, ".", dbenv_oflags, 0))) {
+    if ((ret = dbd->db_env->open(dbd->db_env, dbd->db_envhome, dbenv_oflags, 0))) {
         LOG(log_error, logtype_cnid, "error opening DB environment after recovery: %s",
             db_strerror(ret));
         dbd->db_env->close(dbd->db_env, 0);
@@ -524,6 +533,28 @@ int dbif_txn_abort(DBD *dbd)
         return -1;
     } else
         return 0;
+}
+
+/* 
+   ret = 1 -> commit txn
+   ret = 0 -> abort txn -> exit!
+   anything else -> exit!
+*/
+void dbif_txn_close(DBD *dbd, int ret)
+{
+    if (ret == 0) {
+        if (dbif_txn_abort(dbd) < 0) {
+            LOG( log_error, logtype_cnid, "Fatal error aborting transaction. Exiting!");
+            exit(EXIT_FAILURE);
+        }
+    } else if (ret == 1) {
+        ret = dbif_txn_commit(dbd);
+        if (  ret < 0) {
+            LOG( log_error, logtype_cnid, "Fatal error committing transaction. Exiting!");
+            exit(EXIT_FAILURE);
+        }
+    } else
+       exit(EXIT_FAILURE);
 }
 
 int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min, u_int32_t flags)

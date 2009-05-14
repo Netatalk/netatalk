@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.6 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: main.c,v 1.7 2009-05-14 13:46:08 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
-    if (NULL == (dbd = dbif_init("cnid2.db")))
+    if (NULL == (dbd = dbif_init(".", "cnid2.db")))
         exit(2);
 
     if (dbif_env_open(dbd, dbp, DBOPTIONS) < 0)

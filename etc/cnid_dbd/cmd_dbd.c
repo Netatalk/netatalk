@@ -1,5 +1,5 @@
 /* 
-   $Id: dbd.c,v 1.3 2009-05-06 11:54:24 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.1 2009-05-14 13:46:08 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -40,7 +40,7 @@
 
 static DBD *dbd;
 
-static volatile sig_atomic_t alarmed;
+volatile sig_atomic_t alarmed;
 static int verbose;             /* Logging flag */
 static int exclusive;           /* Exclusive volume access */
 static struct db_param db_param = {
@@ -76,8 +76,7 @@ void dbd_log(enum logtype lt, char *fmt, ...)
 
 /* 
    SIGNAL handling:
-   ignore everything except SIGTERM which we catch and which causes
-   a clean exit.
+   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
  */
 
 static void sig_handler(int signo)
@@ -93,9 +92,12 @@ void set_signal(void)
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
     sigemptyset(&sv.sa_mask);
-    sigaddset(&sv.sa_mask, SIGTERM);
     if (sigaction(SIGTERM, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGTERM): %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }        
+    if (sigaction(SIGINT, &sv, NULL) < 0) {
+        dbd_log( LOGSTD, "error in sigaction(SIGINT): %s", strerror(errno));
         exit(EXIT_FAILURE);
     }        
 
@@ -103,10 +105,6 @@ void set_signal(void)
     sv.sa_handler = SIG_IGN;
     sigemptyset(&sv.sa_mask);
 
-    if (sigaction(SIGINT, &sv, NULL) < 0) {
-        dbd_log( LOGSTD, "error in sigaction(SIGINT): %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }        
     if (sigaction(SIGABRT, &sv, NULL) < 0) {
         dbd_log( LOGSTD, "error in sigaction(SIGABRT): %s", strerror(errno));
         exit(EXIT_FAILURE);
@@ -120,22 +118,6 @@ void set_signal(void)
         exit(EXIT_FAILURE);
     }        
 }
-
-#if 0
-static void block_sigs_onoff(int block)
-{
-    sigset_t set;
-    
-    sigemptyset(&set);
-    sigaddset(&set, SIGINT);
-    sigaddset(&set, SIGTERM);
-    if (block)
-        sigprocmask(SIG_BLOCK, &set, NULL);
-    else
-        sigprocmask(SIG_UNBLOCK, &set, NULL);
-    return;
-}
-#endif
 
 int get_lock(void)
 {
@@ -274,7 +256,7 @@ int main(int argc, char **argv)
     volpath = argv[optind];
 
     /* Put "/.AppleDB" at end of volpath */
-    if ( (strlen(volpath) + strlen("/.AppleDB")) > (PATH_MAX -1) ) {
+    if ( (strlen(volpath) + strlen("/.AppleDB")) > (PATH_MAX - 1) ) {
         dbd_log( LOGSTD, "Volume pathname too long");
         exit(EXIT_FAILURE);        
     }
@@ -282,14 +264,10 @@ int main(int argc, char **argv)
     strncpy(dbpath, volpath, PATH_MAX - 1);
     strcat(dbpath, "/.AppleDB");
 
-    /* cd to .AppleDB dir */
+    /* Remember cwd */
     int cdir;
     if ((cdir = open(".", O_RDONLY)) < 0) {
         dbd_log( LOGSTD, "Can't open dir: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-    if (chdir(dbpath) < 0) {
-        dbd_log( LOGSTD, "chdir to %s failed: %s", dbpath, strerror(errno));
         exit(EXIT_FAILURE);
     }
         
@@ -298,8 +276,8 @@ int main(int argc, char **argv)
        running already and silently exit if yes.
     */
     lockfd = get_lock();
-    
-    /* Ignore everything except SIGTERM */
+
+    /* Setup signal handling */
     set_signal();
 
     /* Setup logging. Should be portable among *NIXes */
@@ -309,11 +287,11 @@ int main(int argc, char **argv)
         setuplog("default log_debug /dev/tty");
 
     /* Load .volinfo file */
-    if ( -1 == loadvolinfo(volpath, &volinfo)) {
+    if (loadvolinfo(volpath, &volinfo) == -1) {
         dbd_log( LOGSTD, "Unkown volume options!");
         exit(EXIT_FAILURE);
     }
-    if ( -1 == vol_load_charsets(&volinfo)) {
+    if (vol_load_charsets(&volinfo) == -1) {
         dbd_log( LOGSTD, "Error loading charsets!");
         exit(EXIT_FAILURE);
     }
@@ -321,24 +299,20 @@ int main(int argc, char **argv)
     /* 
        Lets start with the BerkeleyDB stuff
     */
-    if (NULL == (dbd = dbif_init("cnid2.db")))
-        exit(2);
+    if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
+        exit(EXIT_FAILURE);
 
-    if (dbif_env_open(dbd, &db_param, DBOPTIONS) < 0) {
+    if (dbif_env_open(dbd, &db_param, exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
         dbd_log( LOGSTD, "error opening database!");
         exit(EXIT_FAILURE);
     }
 
-    dbd_log( LOGDEBUG, "Finished opening BerkeleyDB databases including recovery.");
+    if (exclusive)
+        dbd_log( LOGDEBUG, "Finished recovery.");
 
     if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
         dbif_close(dbd);
         exit(EXIT_FAILURE);
-    }
-
-    if ((fchdir(cdir)) < 0) {
-        dbd_log(LOGSTD, "fchdir: %s", strerror(errno));        
-        goto cleanup;
     }
 
     if (dump) {
@@ -347,15 +321,20 @@ int main(int argc, char **argv)
         }
     } else if (rebuild || scan) {
         if (cmd_dbd_scanvol(dbd, &volinfo, flags) < 0) {
-            dbd_log( LOGSTD, "Fatal error repairing database. Please rm -r it.");
+            dbd_log( LOGSTD, "Error repairing database.");
         }
     }
 
 cleanup:
-    if (dbif_close(dbd) < 0)
+    if (dbif_close(dbd) < 0) {
+        dbd_log( LOGSTD, "Error closing database");
         exit(EXIT_FAILURE);
+    }
 
     free_lock(lockfd);
+
+    if ((fchdir(cdir)) < 0)
+        dbd_log(LOGSTD, "fchdir: %s", strerror(errno));
 
     return 0;
 }

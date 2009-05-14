@@ -1,42 +1,59 @@
-/* 
-   $Id: cmd_dbd_scanvol.c,v 1.1 2009-05-06 11:54:24 franklahm Exp $
+/*
+  $Id: cmd_dbd_scanvol.c,v 1.2 2009-05-14 13:46:08 franklahm Exp $
 
-   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
-   
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
- 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 */
 
-/* 
-   dbd specs and implementation progress
-   =====================================
+/*
+  dbd specs and implementation progress
+  =====================================
 
-   St Type Check (Status of implementation progress, type: file/dir)
-   -- ---- -----
-   OK D    Make sure .AppleDouble dir exist, create if missing. Error creating
-           it is fatal as that shouldn't happen as root
-   OK F    Make sure ad file exists
-   OK F/D  Delete orphaned ad-files, log dirs in ad-dir
-   OK F/D  Check name encoding by roundtripping, log on error
-   .. F/D  try: read CNID from ad file (if cnid caching is on)
-           try: fetch CNID from database
-           on mismatch: keep CNID from file, update database
-           on no CNID id ad file: write CNID from database to ad file
-           on no CNID in database: add CNID from ad file to database
-           on no CNID at all: create one and store in both places
+  St := Status
+
+  Force option
+  ------------
+  
+  St Spec
+  -- ----
+  -- If -f is requested, ensure -e is too.
+     Check if volumes is usign AFPVOL_CACHE, then wipe db from disk.
+
+  1st pass: Scan volume
+  --------------------
+
+  St Type Check
+  -- ---- -----
+  OK F/D  Make sure ad file exists
+  OK D    Make sure .AppleDouble dir exist, create if missing. Error creating
+          it is fatal as that shouldn't happen as root.
+  OK F/D  Delete orphaned ad-files, log dirs in ad-dir
+  OK F/D  Check name encoding by roundtripping, log on error
+  OK F/D  try: read CNID from ad file (if cnid caching is on)
+          try: fetch CNID from database
+          -> on mismatch: use CNID from file, update database (deleting both found CNIDs first)
+          -> if no CNID in ad file: write CNID from database to ad file
+          -> if no CNID in database: add CNID from ad file to database
+          -> on no CNID at all: create one and store in both places
+  OK F/D  Add found CNID, DID, filename, dev/inode, stamp to rebuild database
+
+  2nd pass: Delete unused CNIDs
+  -----------------------------
+
+  St Spec
+  -- ----
+  -- Step through dbd (the one on disk) and rebuild-db from pass 1 and delete any CNID from
+     dbd not in rebuild db.
 */
-
-/* FIXME: set id */
-#if 0
-        ad_setid( &ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did, vol->v_stamp);
-#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -50,26 +67,39 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
-
+#include <setjmp.h>
 #include <atalk/adouble.h>
 #include <atalk/unicode.h>
 #include <atalk/volinfo.h>
-#include "cmd_dbd.h" 
+#include <atalk/cnid_dbd_private.h>
+#include "cmd_dbd.h"
 #include "dbif.h"
 #include "db_param.h"
+#include "dbd.h"
+
+/* Some defines to ease code parsing */
+#define ADDIR_OK (addir_ok == 0)
+#define ADFILE_OK (adfile_ok == 0)
+
+/* These must be accessible for cmd_dbd_* funcs */
+struct volinfo        *volinfo;
+char                  cwdbuf[MAXPATHLEN+1];
+DBD                   *dbd;
 
 static DBD            *dbd_rebuild;
-static struct volinfo *volinfo;
 static dbd_flags_t    dbd_flags;
-static char           cwdbuf[MAXPATHLEN+1];
+static char           stamp[CNID_DEV_LEN];
 static char           *netatalk_dirs[] = {
     ".AppleDB",
     ".AppleDesktop",
     NULL
 };
+static struct cnid_dbd_rqst rqst;
+static struct cnid_dbd_rply rply;
+static jmp_buf jmp;
 
-/* 
-   Taken form afpd/desktop.c
+/*
+  Taken form afpd/desktop.c
 */
 static char *utompath(char *upath)
 {
@@ -96,9 +126,9 @@ static char *utompath(char *upath)
 
     /* convert charsets */
     if ((size_t)-1 == ( outlen = convert_charset(volinfo->v_volcharset,
-                                                 CH_UTF8_MAC, 
+                                                 CH_UTF8_MAC,
                                                  volinfo->v_maccharset,
-                                                 u, outlen, mpath, MAXPATHLEN, &flags)) ) { 
+                                                 u, outlen, mpath, MAXPATHLEN, &flags)) ) {
         dbd_log( LOGSTD, "Conversion from %s to %s for %s failed.",
                  volinfo->v_volcodepage, volinfo->v_maccodepage, u);
         return NULL;
@@ -107,20 +137,20 @@ static char *utompath(char *upath)
     return(m);
 }
 
-/* 
-   Taken form afpd/desktop.c
+/*
+  Taken form afpd/desktop.c
 */
 static char *mtoupath(char *mpath)
 {
     static char  upath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
-    char	*m, *u;
+    char    *m, *u;
     size_t       inplen;
     size_t       outlen;
-    u_int16_t	 flags = 0;
+    u_int16_t    flags = 0;
 
     if (!mpath)
         return NULL;
-        
+
     if ( *mpath == '\0' ) {
         return( "." );
     }
@@ -152,15 +182,15 @@ static char *mtoupath(char *mpath)
                                                 m, inplen, u, outlen, &flags)) ) {
         dbd_log( LOGSTD, "conversion from UTF8-MAC to %s for %s failed.",
                  volinfo->v_volcodepage, mpath);
-	    return NULL;
+        return NULL;
     }
 
     return( upath );
 }
 
-/* 
-   Check for wrong encoding e.g. "." at the beginning is not CAP encoded (:2e) although volume is default !AFPVOL_USEDOTS.
-   We do it by roundtripiping from volcharset to UTF8-MAC and back and then compare the result.
+/*
+  Check for wrong encoding e.g. "." at the beginning is not CAP encoded (:2e) although volume is default !AFPVOL_USEDOTS.
+  We do it by roundtripiping from volcharset to UTF8-MAC and back and then compare the result.
 */
 static int check_name_encoding(char *uname)
 {
@@ -168,12 +198,12 @@ static int check_name_encoding(char *uname)
 
     roundtripped = mtoupath(utompath(uname));
     if (!roundtripped) {
-        dbd_log( LOGSTD, "Error checking encoding for %s/%s", cwdbuf, uname);
+        dbd_log( LOGSTD, "Error checking encoding for '%s/%s'", cwdbuf, uname);
         return -1;
     }
 
     if ( STRCMP(uname, !=, roundtripped)) {
-        dbd_log( LOGSTD, "Bad encoding for %s/%s", cwdbuf, uname);
+        dbd_log( LOGSTD, "Bad encoding for '%s/%s'", cwdbuf, uname);
         return -1;
     }
 
@@ -187,7 +217,7 @@ static int check_name_encoding(char *uname)
 static const char *check_netatalk_dirs(const char *name)
 {
     int c;
-    
+
     for (c=0; netatalk_dirs[c]; c++) {
         if ((strcmp(name, netatalk_dirs[c])) == 0)
             return netatalk_dirs[c];
@@ -195,16 +225,21 @@ static const char *check_netatalk_dirs(const char *name)
     return NULL;
 }
 
-/* 
-   Check for .AppleDouble file, create if missing
+/*
+  Check for .AppleDouble file, create if missing
 */
 static int check_adfile(const char *fname, const struct stat *st)
 {
-    int ret;
+    int ret, adflags;
     struct adouble ad;
     char *adname;
 
-    adname = volinfo->ad_path(fname, 0);
+    if (S_ISREG(st->st_mode))
+        adflags = 0;
+    else
+        adflags = ADFLAGS_DIR;
+
+    adname = volinfo->ad_path(fname, adflags);
 
     if ((ret = access( adname, F_OK)) != 0) {
         if (errno != ENOENT) {
@@ -217,13 +252,13 @@ static int check_adfile(const char *fname, const struct stat *st)
 
         if (dbd_flags & DBD_FLAGS_SCAN)
             /* Scan only requested, dont change anything */
-            return 0;
+            return -1;
 
         /* Create ad file */
-        ad_init(&ad, volinfo->v_adouble, volinfo->v_flags);
-        
-        if ((ret = ad_open_metadata( fname, 0, O_CREAT, &ad)) != 0) {
-            dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s", 
+        ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
+
+        if ((ret = ad_open_metadata( fname, adflags, O_CREAT, &ad)) != 0) {
+            dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                      cwdbuf, adname, strerror(errno));
             return -1;
         }
@@ -242,31 +277,50 @@ static int check_adfile(const char *fname, const struct stat *st)
     return 0;
 }
 
-/* 
-   Check for .AppleDouble folder, create if missing
+/*
+  Check for .AppleDouble folder and .Parent, create if missing
 */
 static int check_addir(int volroot)
 {
-    int ret;
+    int addir_ok, adpar_ok;
     struct stat st;
     struct adouble ad;
 
-    if ((ret = access(ADv2_DIRNAME, F_OK)) != 0) {
+    /* Check for ad-dir */
+    if ( (addir_ok = access(ADv2_DIRNAME, F_OK)) != 0) {
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Access error in directory %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
-        /* Missing. Log and create it */
-        dbd_log(LOGSTD, "Missing %s directory %s", ADv2_DIRNAME, cwdbuf);
+        dbd_log(LOGSTD, "Missing %s for '%s'", ADv2_DIRNAME, cwdbuf);
+    }
 
-        if (dbd_flags & DBD_FLAGS_SCAN)
-            /* Scan only requested, dont change anything */
-            return 0;
+    /* Check for ".Parent" */
+    if ( (adpar_ok = access(volinfo->ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
+        if (errno != ENOENT) {
+            dbd_log(LOGSTD, "Access error on '%s/%s': %s",
+                    cwdbuf, volinfo->ad_path(".", ADFLAGS_DIR), strerror(errno));
+            return -1;
+        }
+        dbd_log(LOGSTD, "Missing .AppleDouble/.Parent for '%s'", cwdbuf);
+    }
 
-        /* Create ad dir and set name and id */
-        ad_init(&ad, volinfo->v_adouble, volinfo->v_flags);
-        
-        if ((ret = ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad)) != 0) {
+    /* Is one missing ? */
+    if ((addir_ok != 0) || (adpar_ok != 0)) {
+        /* Yes, but are we only scanning ? */
+        if (dbd_flags & DBD_FLAGS_SCAN) {
+            /* Yes:  missing .Parent is not a problem, but missing ad-dir
+               causes later checking of ad-files to fail. So we have to return appropiately */
+            if (addir_ok != 0)
+                return -1;
+            else  /* (adpar_ok != 0) */
+                return 0;
+        }
+
+        /* Create ad dir and set name */
+        ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
+
+        if (ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
@@ -278,7 +332,7 @@ static int check_addir(int volroot)
         ad_setname(&ad, mname);
         ad_flush(&ad);
         ad_close_metadata(&ad);
-        
+
         /* Inherit owner/group from "." to ".AppleDouble" and ".Parent" */
         if ((stat(".", &st)) != 0) {
             dbd_log( LOGSTD, "Couldnt stat %s: %s", cwdbuf, strerror(errno));
@@ -296,7 +350,7 @@ static int read_addir(void)
     DIR *dp;
     struct dirent *ep;
     struct stat st;
-    static char fname[NAME_MAX] = "../";
+    static char fname[MAXPATHLEN] = "../";
 
     if ((chdir(ADv2_DIRNAME)) != 0) {
         dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
@@ -314,9 +368,12 @@ static int read_addir(void)
         /* Check if its "." or ".." */
         if (DIR_DOT_OR_DOTDOT(ep->d_name))
             continue;
+        /* Skip ".Parent" */
+        if (STRCMP(ep->d_name, ==, ".Parent"))
+            continue;
 
         if ((stat(ep->d_name, &st)) < 0) {
-            dbd_log( LOGSTD, "Lost file while reading dir '%s/%s/%s', probably removed: %s",
+            dbd_log( LOGSTD, "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
                      cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
             continue;
         }
@@ -328,15 +385,11 @@ static int read_addir(void)
             continue;
         }
 
-        /* Skip ".Parent" */
-        if (STRCMP(ep->d_name, ==, ".Parent"))
-            continue;
-
         /* Check for data file */
         strcpy(fname+3, ep->d_name);
         if ((access( fname, F_OK)) != 0) {
             if (errno != ENOENT) {
-                dbd_log(LOGSTD, "Access error for file '%s/%s': %s", 
+                dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
                         cwdbuf, ep->d_name, strerror(errno));
                 continue;
             }
@@ -368,21 +421,146 @@ static int read_addir(void)
     return 0;
 }
 
+
+static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok,
+                         int adflags)
+{
+    int ret;
+    cnid_t db_cnid, ad_cnid;
+    struct adouble ad;
+
+    /* Get CNID from ad-file if volume is using AFPVOL_CACHE */
+    ad_cnid = 0;
+    if ( (volinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
+        ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
+        if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+            dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
+            return 0;
+        }
+        ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);
+        if (ad_cnid == 0)
+            dbd_log( LOGSTD, "ZeroID '%s/%s'", cwdbuf, name);
+        ad_close_metadata(&ad);
+    }
+
+    /* Get CNID from database */
+
+    /* Prepare request data */
+    memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
+    memset(&rply, 0, sizeof(struct cnid_dbd_rply));
+    rqst.did = did;
+    if ( ! (volinfo->v_flags & AFPVOL_NODEV))
+        rqst.dev = st->st_dev;
+    rqst.ino = st->st_ino;
+    rqst.type = S_ISDIR(st->st_mode)?1:0;
+    rqst.name = (char *)name;
+    rqst.namelen = strlen(name);
+
+    /* Query the database */
+    ret = cmd_dbd_lookup(dbd, &rqst, &rply, (dbd_flags & DBD_FLAGS_SCAN) ? 1 : 0);
+    dbif_txn_close(dbd, ret);
+    if (rply.result == CNID_DBD_RES_OK) {
+        db_cnid = rply.cnid;
+    } else if (rply.result == CNID_DBD_RES_NOTFOUND) {
+        dbd_log( LOGSTD, "Missing CNID for: '%s/%s'", cwdbuf, name);
+        db_cnid = 0;
+    } else {
+        dbd_log( LOGSTD, "Fatal error resolving '%s/%s'", cwdbuf, name);
+        db_cnid = 0;
+    }
+
+    /* Compare results from both CNID searches */
+    if (ad_cnid && db_cnid && (ad_cnid == db_cnid)) {
+        /* Everything is fine */
+        return db_cnid;
+    } else if (ad_cnid && db_cnid && (ad_cnid != db_cnid)) {
+        /* Mismatch ? Delete both from db and re-add data from file */
+        dbd_log( LOGSTD, "CNID mismatch for '%s/%s', db: %u, ad-file: %u", cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
+        if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+            rqst.cnid = db_cnid;
+            ret = dbd_delete(dbd, &rqst, &rply);
+            dbif_txn_close(dbd, ret);
+
+            rqst.cnid = ad_cnid;
+            ret = dbd_delete(dbd, &rqst, &rply);
+            dbif_txn_close(dbd, ret);
+
+            ret = dbd_rebuild_add(dbd, &rqst, &rply);
+            dbif_txn_close(dbd, ret);
+        }
+        return ad_cnid;
+    } else if (ad_cnid && (db_cnid == 0)) {
+        /* in ad-file but not in db */
+        if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+            dbd_log( LOGSTD, "CNID rebuild add for '%s/%s', adding with CNID from ad-file: %u", cwdbuf, name, ntohl(ad_cnid));
+            rqst.cnid = ad_cnid;
+            ret = dbd_delete(dbd, &rqst, &rply);
+            dbif_txn_close(dbd, ret);
+            ret = dbd_rebuild_add(dbd, &rqst, &rply);
+            dbif_txn_close(dbd, ret);
+        }
+        return ad_cnid;
+    } else if ((db_cnid == 0) && (ad_cnid == 0)) {
+        /* No CNID at all, we clearly have to allocat a fresh one... */
+        /* Note: the next test will use this new CNID too! */
+        if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+            /* add to db */
+            dbd_log( LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
+            ret = cmd_dbd_add(dbd, &rqst, &rply);
+            dbif_txn_close(dbd, ret);
+            db_cnid = rply.cnid;
+        }
+    } else if ((ad_cnid == 0) && db_cnid) {
+        /* in db but zeroID in ad-file, write it to ad-file if AFPVOL_CACHE */
+        if ((volinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
+            if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+                dbd_log( LOGSTD, "Setting CNID for ZeroID '%s/%s' from db: %u", cwdbuf, name, ntohl(db_cnid));
+                ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
+                if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+                    dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
+                    return 0;
+                }
+                ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+                ad_flush(&ad);
+                ad_close_metadata(&ad);
+            }
+        }
+        return db_cnid;
+    } else {
+        dbd_log( LOGSTD, "Uncaught CNID mismatch for '%s/%s'", cwdbuf, name);
+        return 0;
+    }
+    /* Not reached */
+    return 0;
+}
+
+/*
+  This is called recursively for all dirs.
+  volroot=1 means we're in the volume root dir, 0 means we aren't.
+  We use this when checking for netatalk private folders like .AppleDB.
+  did is our parents CNID.
+*/
 static int dbd_readdir(int volroot, cnid_t did)
 {
-    int cwd, ret = 0, encoding_ok;
+    int cwd, ret = 0, adflags, adfile_ok, addir_ok, encoding_ok;
+    cnid_t cnid;
     const char *name;
     DIR *dp;
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
 
-    /* Check for .AppleDouble folder */
-    if ((check_addir(volroot)) != 0)
-        return -1;
+    /* Check again for .AppleDouble folder, check_adfile also checks/creates it */
+    if ((addir_ok = check_addir(volroot)) != 0)
+        if ( ! (dbd_flags & DBD_FLAGS_SCAN))
+            /* Fatal on rebuild run, continue if only scanning ! */
+            return -1;
 
-    /* Check AppleDouble files in AppleDouble folder */
-    if ((ret = read_addir()) != 0)
-        return -1;
+    /* Check AppleDouble files in AppleDouble folder, but only if it exists or could be created */
+    if (ADDIR_OK)
+        if ((read_addir()) != 0)
+            if ( ! (dbd_flags & DBD_FLAGS_SCAN))
+                /* Fatal on rebuild run, continue if only scanning ! */
+                return -1;
 
     if ((dp = opendir (".")) == NULL) {
         dbd_log(LOGSTD, "Couldn't open the directory: %s",strerror(errno));
@@ -390,6 +568,10 @@ static int dbd_readdir(int volroot, cnid_t did)
     }
 
     while ((ep = readdir (dp))) {
+        /* Check if we got a termination signal */
+        if (alarmed)
+            longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+
         /* Check if its "." or ".." */
         if (DIR_DOT_OR_DOTDOT(ep->d_name))
             continue;
@@ -409,6 +591,10 @@ static int dbd_readdir(int volroot, cnid_t did)
             dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s", cwdbuf, ep->d_name, strerror(errno));
             continue;
         }
+        if (S_ISREG(st.st_mode))
+            adflags = 0;
+        else
+            adflags = ADFLAGS_DIR;
 
         /**************************************************************************
            Tests
@@ -417,21 +603,33 @@ static int dbd_readdir(int volroot, cnid_t did)
         /* Check encoding */
         if ( -1 == (encoding_ok = check_name_encoding(ep->d_name)) ) {
             /* If its a file: skipp all other tests now ! */
-            /* For dirs we skip tests too, but later */
-            if (S_ISREG(st.st_mode))
-                continue;
+            /* For dirs we could try to get a CNID for it and recurse, but currently I prefer not to */
+            continue;
         }
 
-        /* Check for appledouble file, create if missing */
-        if (S_ISREG(st.st_mode)) {
-            if ( 0 != check_adfile(ep->d_name, &st))
-                continue;
+        /* Check for appledouble file, create if missing, but only if we have addir */
+        adfile_ok = -1;
+        if (ADDIR_OK)
+            adfile_ok = check_adfile(ep->d_name, &st);
+
+        /* Check CNIDs */
+        cnid = check_cnid(ep->d_name, did, &st, adfile_ok, adflags);
+
+        /* Now add this object to our rebuild dbd */
+        if (cnid) {
+            rqst.cnid = rply.cnid;
+            dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
+            if (rply.result != CNID_DBD_RES_OK) {
+                dbd_log( LOGDEBUG, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
+                         cnid, cwdbuf, ep->d_name);
+                exit(EXIT_FAILURE);
+            }
         }
-        
+
         /**************************************************************************
           Recursion
         **************************************************************************/
-        if (S_ISDIR(st.st_mode)) {
+        if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we cant recur */
             strcat(cwdbuf, "/");
             strcat(cwdbuf, ep->d_name);
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
@@ -445,7 +643,7 @@ static int dbd_readdir(int volroot, cnid_t did)
                 continue;
             }
 
-            ret = dbd_readdir(0, did);
+            ret = dbd_readdir(0, cnid);
 
             fchdir(cwd);
             close(cwd);
@@ -455,12 +653,11 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
     }
 
-    /* 
-       Use results of previous checks
+    /*
+      Use results of previous checks
     */
 
-exit_cleanup:
-    closedir(dp);    
+    closedir(dp);
     return ret;
 }
 
@@ -486,15 +683,18 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     chdir(volinfo->v_path);
 
     /* Start recursion */
-    if (dbd_readdir(1, 2) < 0)  /* 2 = volumeroot CNID */
+    if (dbd_readdir(1, htonl(2)) < 0)  /* 2 = volumeroot CNID */
         return -1;
 
     return 0;
 }
 
-int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags)
+int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
 {
     int ret = 0;
+
+    /* Make it accessible for all funcs */
+    dbd = dbd_ref;
 
     /* We only support unicode volumes ! */
     if ( volinfo->v_volcharset != CH_UTF8) {
@@ -502,20 +702,30 @@ int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags)
         return -1;
     }
 
-    /* open/create dbd, copy rootinfo key */
-    if (NULL == (dbd_rebuild = dbif_init(NULL)))
+    /* Get volume stamp */
+    dbd_getstamp(dbd, &rqst, &rply);
+    if (rply.result != CNID_DBD_RES_OK)
+        goto exit_cleanup;
+    memcpy(stamp, rply.name, CNID_DEV_LEN);
+
+    /* open/create rebuild dbd, copy rootinfo key */
+    if (NULL == (dbd_rebuild = dbif_init(NULL, NULL)))
         return -1;
     if (0 != (dbif_open(dbd_rebuild, NULL, 0)))
         return -1;
-    if (0 != (ret = dbif_copy_rootinfokey(dbd, dbd_rebuild)))
+    if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild)))
         goto exit_cleanup;
 
-    dbd_log( LOGSTD, "dumping rebuilddb");
-    dbif_dump(dbd_rebuild, 0);
+//    dbif_dump(dbd_rebuild, 0);
+
+    if (setjmp(jmp) != 0)
+        goto exit_cleanup;      /* Got signal, jump from dbd_readdir */
 
     /* scanvol */
     if ( (scanvol(volinfo, flags)) != 0)
         return -1;
+
+//    dbif_dump(dbd_rebuild, 0);
 
 exit_cleanup:
     dbif_close(dbd_rebuild);

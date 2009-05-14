@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.6 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.7 2009-05-14 13:46:08 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -32,9 +32,6 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     unsigned char *buf;
     DBT key, devdata, diddata;
     char dev[CNID_DEV_LEN];
-#if 0
-    char ino[CNID_INO_LEN];
-#endif
     int devino = 1, didname = 1; 
     int rc;
     cnid_t id_devino, id_didname;
@@ -52,10 +49,6 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     
     buf = pack_cnid_data(rqst); 
     memcpy(dev, buf + CNID_DEV_OFS, CNID_DEV_LEN);
-#if 0
-    /* FIXME: ino is not needed later on, remove? */
-    memcpy(ino, buf + CNID_INO_OFS, CNID_INO_LEN);
-#endif
 
     /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
        only get a match in one of them, that means a file has moved. */
@@ -99,7 +92,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         /* not found */
 
         LOG(log_debug, logtype_cnid, "cnid_lookup: dev/ino 0x%llx/0x%llx did %u name %s neither in devino nor didname", 
-            ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino), ntohl(rqst->did), rqst->name);
+            (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rqst->did), rqst->name);
 
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
@@ -109,7 +102,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         /* the same */
 
         LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino 0x%llx/0x%llx did %u name %s as %u", 
-            ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino), ntohl(rqst->did), rqst->name, ntohl(id_didname));
+            (unsigned long long )rqst->dev, (unsigned long long )rqst->ino, ntohl(rqst->did), rqst->name, ntohl(id_didname));
 
         rply->cnid = id_didname;
         rply->result = CNID_DBD_RES_OK;
@@ -158,7 +151,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     }
 
     LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino 0x%llx/0x%llx did %u name %s as %u (needed update)", 
-        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino), ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
+        (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
 
     return rc;
 }

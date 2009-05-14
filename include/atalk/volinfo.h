@@ -1,5 +1,5 @@
 /*
- * $Id: volinfo.h,v 1.4 2009-04-28 13:01:24 franklahm Exp $
+ * $Id: volinfo.h,v 1.5 2009-05-14 13:46:08 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
@@ -60,6 +60,7 @@ struct volinfo {
     char                *v_maccodepage;
     charset_t           v_maccharset;
     int                 v_adouble;  /* default adouble format */
+    int                 v_ad_options;
     char                *(*ad_path)(const char *, int);
     char                *v_dbd_host;
     int                 v_dbd_port;
