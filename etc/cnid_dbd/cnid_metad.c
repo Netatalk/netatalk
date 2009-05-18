@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.8 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.9 2009-05-18 09:54:14 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -508,8 +508,6 @@ int main(int argc, char *argv[])
             for (i = 0; i < MAXVOLS; i++) {
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
-                    free(srv[i].name);
-                    srv[i].name = NULL;
                     close(srv[i].control_fd);
                     break;
                 }

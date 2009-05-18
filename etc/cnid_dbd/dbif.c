@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.10 2009-05-14 13:46:08 franklahm Exp $
+ * $Id: dbif.c,v 1.11 2009-05-18 09:54:14 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -112,16 +112,30 @@ DBD *dbif_init(const char *envhome, const char *filename)
     return dbd;
 }
 
-/* --------------- */
-/*
- *  We assume our current directory is already the BDB homedir. Otherwise
- *  opening the databases will not work as expected.
- */
+/* 
+   We must open the db_env with an absolute pathname, as `dbd` keeps chdir'ing, which
+   breaks e.g. bdb logfile-rotation with relative pathnames.
+   But still we use relative paths with upgrade_required() and the DB_ERRLOGFILE
+   in order to avoid creating absolute paths by copying. Both have no problem with
+   a relative path.
+*/
 int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 {
-    int ret;
+    int ret, cwd;
     char **logfiles = NULL;
     char **file;
+
+    /* Remember cwd */
+    if ((cwd = open(".", O_RDONLY)) < 0) {
+        LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
+        return -1;
+    }
+
+    /* chdir to db_envhome. makes it easier checking for old db files and creating db_errlog file  */
+    if ((chdir(dbd->db_envhome)) != 0) {
+        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+        return -1;
+    }
 
     /* Refuse to do anything if this is an old version of the CNID database */
     if (upgrade_required()) {
@@ -131,6 +145,11 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 
     if ((dbd->db_errlog = fopen(DB_ERRLOGFILE, "a")) == NULL)
         LOG(log_warning, logtype_cnid, "error creating/opening DB errlogfile: %s", strerror(errno));
+
+    if ((fchdir(cwd)) != 0) {
+        LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+        return -1;
+    }
 
     if ((ret = db_env_create(&dbd->db_env, 0))) {
         LOG(log_error, logtype_cnid, "error creating DB environment: %s",
