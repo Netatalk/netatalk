@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.1 2009-05-14 13:46:08 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.2 2009-05-18 09:25:25 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -119,13 +119,33 @@ void set_signal(void)
     }        
 }
 
-int get_lock(void)
+int get_lock(const char *dbpath)
 {
     int lockfd;
+    char lockpath[PATH_MAX];
     struct flock lock;
+    struct stat st;
 
-    if ((lockfd = open(LOCKFILENAME, O_RDWR | O_CREAT, 0644)) < 0) {
+    if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+        dbd_log( LOGSTD, ".AppleDB pathname too long");
+        exit(EXIT_FAILURE);
+    }
+    strncpy(lockpath, dbpath, PATH_MAX - 1);
+    strcat(lockpath, "/");
+    strcat(lockpath, LOCKFILENAME);
+
+    if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
         dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    if ((stat(dbpath, &st)) != 0) {
+        dbd_log( LOGSTD, "Error statting lockfile: %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
+        dbd_log( LOGSTD, "Error inheriting lockfile permissions: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
     
@@ -189,9 +209,6 @@ static void usage ()
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes\n"
            "   -v verbose\n"
-           "\n"
-           "05-05-2009: -s and -r already check/repair the AppleDouble stuff and encoding,\n"
-           "            no CNID database maintanance is done yet\n"
         );
 }
 
@@ -275,7 +292,7 @@ int main(int argc, char **argv)
        Before we do anything else, check if there is an instance of cnid_dbd
        running already and silently exit if yes.
     */
-    lockfd = get_lock();
+    lockfd = get_lock(dbpath);
 
     /* Setup signal handling */
     set_signal();
@@ -325,7 +342,6 @@ int main(int argc, char **argv)
         }
     }
 
-cleanup:
     if (dbif_close(dbd) < 0) {
         dbd_log( LOGSTD, "Error closing database");
         exit(EXIT_FAILURE);
