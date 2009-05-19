@@ -35,8 +35,12 @@ atalk_startup () {
 	fi
 
 	if [ "${CNID_METAD_RUN}" = "yes" ] ; then
-        	ebegin "Starting cnid_metad"
-		start-stop-daemon --start --quiet --exec :SBINDIR:/cnid_metad "$CNID_DBD_LOGCONFIG"
+        ebegin "Starting cnid_metad"
+        if [ "x$CNID_DBD_LOGCONFIG" = "x" ]; then
+		    start-stop-daemon --start --quiet --exec :SBINDIR:/cnid_metad
+        else
+		    start-stop-daemon --start --quiet --exec :SBINDIR:/cnid_metad -l "$CNID_DBD_LOGCONFIG"
+        fi
 		eend $?
 	fi
 
