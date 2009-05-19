@@ -101,9 +101,8 @@
 #                         :ETCDIR:/AppleVolumes.default
 #                         (same as -u on command line)
 #     -[no]uservol        [Don't] Read the user's volume file
-#     -closevol           After an AppleVolumes change, disconnect immediatly
-#                         removed volumes.
-#
+#     -closevol           Immediately unmount volumes removed from AppleVolumes
+#                         files on SIGHUP sent to the afp master process.
 #
 #   Miscellaneous:
 #     -authprintdir <path> Specifies the path to be used (per server) to 
