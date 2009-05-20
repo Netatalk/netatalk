@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.2 2009-05-14 13:46:08 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.3 2009-05-20 10:56:02 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -26,7 +26,7 @@
   St Spec
   -- ----
   -- If -f is requested, ensure -e is too.
-     Check if volumes is usign AFPVOL_CACHE, then wipe db from disk.
+     Check if volumes is using AFPVOL_CACHE, then wipe db from disk.
 
   1st pass: Scan volume
   --------------------
@@ -45,6 +45,7 @@
           -> if no CNID in database: add CNID from ad file to database
           -> on no CNID at all: create one and store in both places
   OK F/D  Add found CNID, DID, filename, dev/inode, stamp to rebuild database
+  OK F/D  Check/update stamp (implicitly done while checking CNIDs)
 
   2nd pass: Delete unused CNIDs
   -----------------------------
@@ -84,8 +85,9 @@
 /* These must be accessible for cmd_dbd_* funcs */
 struct volinfo        *volinfo;
 char                  cwdbuf[MAXPATHLEN+1];
-DBD                   *dbd;
 
+/* Some static vars */
+static DBD            *dbd;
 static DBD            *dbd_rebuild;
 static dbd_flags_t    dbd_flags;
 static char           stamp[CNID_DEV_LEN];
@@ -345,6 +347,11 @@ static int check_addir(int volroot)
     return 0;
 }
 
+/* 
+  Check files and dirs inside .AppleDouble folder:
+  - remove orphaned files
+  - bail on dirs
+*/
 static int read_addir(void)
 {
     DIR *dp;
@@ -421,9 +428,11 @@ static int read_addir(void)
     return 0;
 }
 
-
-static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok,
-                         int adflags)
+/* 
+   Check CNID for a file/dir, both from db and from ad-file.
+   For detailed specs see intro.
+*/
+static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok, int adflags)
 {
     int ret;
     cnid_t db_cnid, ad_cnid;
@@ -439,7 +448,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         }
         ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);
         if (ad_cnid == 0)
-            dbd_log( LOGSTD, "ZeroID '%s/%s'", cwdbuf, name);
+            dbd_log( LOGSTD, "Incorrect CNID data in .AppleDouble data for '%s/%s' (bad stamp?)", cwdbuf, name);
         ad_close_metadata(&ad);
     }
 
@@ -462,7 +471,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     if (rply.result == CNID_DBD_RES_OK) {
         db_cnid = rply.cnid;
     } else if (rply.result == CNID_DBD_RES_NOTFOUND) {
-        dbd_log( LOGSTD, "Missing CNID for: '%s/%s'", cwdbuf, name);
+        dbd_log( LOGSTD, "No CNID for '%s/%s' in database", cwdbuf, name);
         db_cnid = 0;
     } else {
         dbd_log( LOGSTD, "Fatal error resolving '%s/%s'", cwdbuf, name);
@@ -501,20 +510,22 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         }
         return ad_cnid;
     } else if ((db_cnid == 0) && (ad_cnid == 0)) {
-        /* No CNID at all, we clearly have to allocat a fresh one... */
+        /* No CNID at all, we clearly have to allocate a fresh one... */
         /* Note: the next test will use this new CNID too! */
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
             /* add to db */
-            dbd_log( LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
             ret = cmd_dbd_add(dbd, &rqst, &rply);
             dbif_txn_close(dbd, ret);
             db_cnid = rply.cnid;
+            dbd_log( LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
         }
-    } else if ((ad_cnid == 0) && db_cnid) {
+    }
+    
+    if ((ad_cnid == 0) && db_cnid) {
         /* in db but zeroID in ad-file, write it to ad-file if AFPVOL_CACHE */
         if ((volinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
             if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-                dbd_log( LOGSTD, "Setting CNID for ZeroID '%s/%s' from db: %u", cwdbuf, name, ntohl(db_cnid));
+                dbd_log( LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file", cwdbuf, name, ntohl(db_cnid));
                 ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
                 if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
                     dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
@@ -526,11 +537,8 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             }
         }
         return db_cnid;
-    } else {
-        dbd_log( LOGSTD, "Uncaught CNID mismatch for '%s/%s'", cwdbuf, name);
-        return 0;
     }
-    /* Not reached */
+
     return 0;
 }
 
