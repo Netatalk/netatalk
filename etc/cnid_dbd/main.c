@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.7 2009-05-14 13:46:08 franklahm Exp $
+ * $Id: main.c,v 1.8 2009-05-20 10:29:22 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -310,6 +310,7 @@ int main(int argc, char *argv[])
 
     set_processname("cnid_dbd");
 
+    /* FIXME: implement -d from cnid_metad */
     if (argc  != 5) {
         LOG(log_error, logtype_cnid, "main: not enough arguments");
         exit(1);
