@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.9 2009-05-18 09:54:14 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.10 2009-05-20 10:36:09 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -113,19 +113,17 @@ static int rqstfd;
 volatile sig_atomic_t alarmed = 0;
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
+#define TESTTIME   42                  /* this much seconds apfd client tries to  *
+                                        * to reconnect every 5 secondes, catch it */
 #define MAXVOLS    512
 #define DEFAULTHOST  "localhost"
 #define DEFAULTPORT  4700
-#define TESTTIME   22                  /* this much seconds apfd client tries to
-                                        * to reconnect every 5 secondes, catch it
-                                        */
 
 struct server {
     char  *name;
     pid_t pid;
     time_t tm;                    /* When respawned last */
     int count;                    /* Times respawned in the last TESTTIME secondes */
-    int toofast;
     int control_fd;               /* file descriptor to child cnid_dbd process */
 };
 
@@ -232,7 +230,6 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
                 up = &srv[i];
                 up->tm = t;
                 up->count = 0;
-                up->toofast = 0;
                 up->name = strdup(dbdir);
                 break;
             }
@@ -246,14 +243,23 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
         /* we have a slot but no process, check for respawn too fast */
         if ( (t < (up->tm + TESTTIME)) /* We're in the respawn time window */
              &&
-             (up->count > MAXSPAWN) ) /* ...and already tried to fork too often */
+             (up->count > MAXSPAWN) ) { /* ...and already tried to fork too often */
+            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn too fast just exiting");
             return -1; /* just exit, dont sleep, because we might have work to do for another client  */
-
-        if ( t >= (up->tm + TESTTIME) ) { /* "reset" timer and count */
-             up->count = 0;
-             up->tm = t;
+        }
+        if ( t >= (up->tm + TESTTIME) ) { /* drop slot */
+            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn window ended, dropping slot");
+            free(up->name);
+            up->name = NULL;
+            return -1; /* next time we'll try again with a new slot */
         }
         up->count++;
+        LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn count now is: %u", up->count);
+        if (up->count > MAXSPAWN) {
+            /* We spawned too fast. From now until the first time we tried + TESTTIME seconds
+               we will just return -1 above */
+            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: reached MAXSPAWN threshhold");
+        }
     }
 
     /* 
