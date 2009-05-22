@@ -1,5 +1,5 @@
 /*
-  $Id: dbif.h,v 1.6 2009-05-14 13:46:08 franklahm Exp $
+  $Id: dbif.h,v 1.7 2009-05-22 20:48:44 franklahm Exp $
  
   Copyright (C) Joerg Lenneis 2003
   Copyright (C) Frank Lahm 2009
@@ -48,6 +48,7 @@
 
 #include <sys/cdefs.h>
 #include <db.h>
+#include <atalk/adouble.h>
 #include "db_param.h"
 
 #define DBIF_DB_CNT 3
@@ -68,6 +69,7 @@ typedef struct {
 typedef struct {
     DB_ENV   *db_env;
     DB_TXN   *db_txn;
+    DBC      *db_cur;              /* for dbif_walk */
     char     *db_envhome;
     char     *db_filename;
     FILE     *db_errlog;
@@ -77,14 +79,13 @@ typedef struct {
 /* Functions */
 extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
-extern int dbif_open(DBD *dbd, struct db_param *dbp, int do_truncate);
+extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
 extern int dbif_close(DBD *dbd);
 
 extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
 extern int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_del(DBD *, const int, DBT *, u_int32_t);
-
 extern int dbif_count(DBD *, const int, u_int32_t *);
 extern int dbif_stamp(DBD *, void *, int);
 extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
@@ -94,6 +95,6 @@ extern int dbif_txn_abort(DBD *);
 extern void dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
 extern int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
 
-extern int dbif_dump(DBD *, int dumpindexes);
-
+extern int dbif_dump(DBD *dbd, int dumpindexes);
+extern int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close);
 #endif

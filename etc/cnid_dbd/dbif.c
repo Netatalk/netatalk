@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.11 2009-05-18 09:54:14 franklahm Exp $
+ * $Id: dbif.c,v 1.12 2009-05-22 20:48:44 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -55,10 +55,22 @@ static int upgrade_required()
 int dbif_stamp(DBD *dbd, void *buffer, int size)
 {
     struct stat st;
-    int         rc;
+    int         rc,cwd;
 
     if (size < 8)
         return -1;
+
+    /* Remember cwd */
+    if ((cwd = open(".", O_RDONLY)) < 0) {
+        LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
+        return -1;
+    }
+
+    /* chdir to db_envhome */
+    if ((chdir(dbd->db_envhome)) != 0) {
+        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+        return -1;
+    }
 
     if ((rc = stat(dbd->db_table[DBIF_CNID].name, &st)) < 0) {
         LOG(log_error, logtype_cnid, "error stating database %s: %s", dbd->db_table[DBIF_CNID].name, db_strerror(rc));
@@ -66,6 +78,11 @@ int dbif_stamp(DBD *dbd, void *buffer, int size)
     }
     memset(buffer, 0, size);
     memcpy(buffer, &st.st_ctime, sizeof(st.st_ctime));
+
+    if ((fchdir(cwd)) != 0) {
+        LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+        return -1;
+    }
 
     return 0;
 }
@@ -260,7 +277,7 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 }
 
 /* --------------- */
-int dbif_open(DBD *dbd, struct db_param *dbp _U_, int do_truncate)
+int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
 {
     int ret;
     int i;
@@ -295,7 +312,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp _U_, int do_truncate)
         if (dbd->db_errlog != NULL)
             dbd->db_table[i].db->set_errfile(dbd->db_table[i].db, dbd->db_errlog);
 
-        if (do_truncate && i > 0) {
+        if (reindex && i > 0) {
             LOG(log_info, logtype_cnid, "Truncating CNID index.");
             if ((ret = dbd->db_table[i].db->truncate(dbd->db_table[i].db, NULL, &count, 0))) {
                 LOG(log_error, logtype_cnid, "error truncating database %s: %s",
@@ -308,32 +325,32 @@ int dbif_open(DBD *dbd, struct db_param *dbp _U_, int do_truncate)
     /* TODO: Implement CNID DB versioning info on new databases. */
 
     /* Associate the secondary with the primary. */
-    if (do_truncate)
+    if (reindex)
         LOG(log_info, logtype_cnid, "Reindexing did/name index...");
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[DBIF_CNID].db,
                                               dbd->db_txn,
                                               dbd->db_table[DBIF_IDX_DIDNAME].db, 
                                               didname,
-                                              (do_truncate) ? DB_CREATE : 0))
+                                              (reindex) ? DB_CREATE : 0))
          != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate didname database: %s",db_strerror(ret));
         return -1;
     }
-    if (do_truncate)
+    if (reindex)
         LOG(log_info, logtype_cnid, "... done.");
 
-    if (do_truncate)
+    if (reindex)
         LOG(log_info, logtype_cnid, "Reindexing dev/ino index...");
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db, 
                                               dbd->db_txn,
                                               dbd->db_table[DBIF_IDX_DEVINO].db, 
                                               devino,
-                                              (do_truncate) ? DB_CREATE : 0))
+                                              (reindex) ? DB_CREATE : 0))
         != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate devino database: %s",db_strerror(ret));
         return -1;
     }
-    if (do_truncate)
+    if (reindex)
         LOG(log_info, logtype_cnid, "... done.");
     
     return 0;
@@ -469,6 +486,12 @@ int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
 int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
 {
     int ret;
+
+    /* For cooperation with the dbd utility and its usage of a cursor */
+    if (dbd->db_cur) {
+        dbd->db_cur->close(dbd->db_cur);
+        dbd->db_cur = NULL;
+    }    
 
     if (dbif_txn_begin(dbd) < 0) {
         LOG(log_error, logtype_cnid, "error deleting key/value from %s: %s", 
@@ -798,3 +821,57 @@ int dbif_dump(DBD *dbd, int dumpindexes)
     return 0;
 }
 
+/* 
+   Iterates over dbd, returning cnids.
+   Uses in-value of cnid to seek to that cnid, then gets next and return that in cnid.
+   If close=1, close cursor.
+   Return -1 on error, 0 on EOD (end-of-database), 1 if returning cnid.
+*/
+int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close)
+{
+    int rc;
+    int flag;
+    cnid_t id;
+
+    static DBT key = { 0 }, data = { 0 };
+    DB *db = dbd->db_table[DBIF_CNID].db;
+
+    if (close && dbd->db_cur) {
+        dbd->db_cur->close(dbd->db_cur);
+        dbd->db_cur = NULL;
+        return 0;
+    }
+
+    /* An dbif_del will have closed our cursor too */
+    if ( ! dbd->db_cur ) {
+        if (db->cursor(db, NULL, &dbd->db_cur, 0) != 0) {
+            LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(errno));
+            return -1;
+        }
+        flag = DB_SET_RANGE;    /* This will seek to next cnid after the one just deleted */
+        id = htonl(*cnid);
+        key.data = &id;
+        key.size = sizeof(cnid_t);
+    } else
+        flag = DB_NEXT;
+
+    if ((rc = dbd->db_cur->get(dbd->db_cur, &key, &data, flag)) == 0) {
+        memcpy(cnid, key.data, sizeof(cnid_t));
+        *cnid = ntohl(*cnid);
+        return 1;
+    }
+
+    if (rc != DB_NOTFOUND) {
+        LOG(log_error, logtype_cnid, "Error iterating over btree: %s", db_strerror(errno));
+        dbd->db_cur->close(dbd->db_cur);
+        dbd->db_cur = NULL;
+        return -1;
+    }
+
+    if (dbd->db_cur) {
+        dbd->db_cur->close(dbd->db_cur);
+        dbd->db_cur = NULL;
+    }    
+
+    return 0;
+}

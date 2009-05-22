@@ -11,7 +11,8 @@ enum logtype {LOGSTD, LOGDEBUG};
 typedef unsigned int dbd_flags_t;
 
 #define DBD_FLAGS_SCAN     (1 << 0)
-#define DBD_FLAGS_FORCE    (1 << 0)
+#define DBD_FLAGS_FORCE    (1 << 1)
+#define DBD_FLAGS_EXCL     (1 << 2)
 
 #define ADv2_DIRNAME ".AppleDouble"
 

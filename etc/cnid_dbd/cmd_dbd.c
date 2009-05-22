@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.2 2009-05-18 09:25:25 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.3 2009-05-22 20:48:44 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -12,6 +12,49 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
+*/
+
+/*
+  dbd specs and implementation progress
+  =====================================
+
+  St := Status
+
+  Force option
+  ------------
+  
+  St Spec
+  -- ----
+  OK If -f is requested, ensure -e is too.
+     Check if volumes is using AFPVOL_CACHE, then wipe db from disk. Rebuild from ad-files.
+
+  1st pass: Scan volume
+  --------------------
+
+  St Type Check
+  -- ---- -----
+  OK F/D  Make sure ad file exists
+  OK D    Make sure .AppleDouble dir exist, create if missing. Error creating
+          it is fatal as that shouldn't happen as root.
+  OK F/D  Delete orphaned ad-files, log dirs in ad-dir
+  OK F/D  Check name encoding by roundtripping, log on error
+  OK F/D  try: read CNID from ad file (if cnid caching is on)
+          try: fetch CNID from database
+          -> on mismatch: use CNID from file, update database (deleting both found CNIDs first)
+          -> if no CNID in ad file: write CNID from database to ad file
+          -> if no CNID in database: add CNID from ad file to database
+          -> on no CNID at all: create one and store in both places
+  OK F/D  Add found CNID, DID, filename, dev/inode, stamp to rebuild database
+  OK F/D  Check/update stamp (implicitly done while checking CNIDs)
+
+
+  2nd pass: Delete unused CNIDs
+  -----------------------------
+
+  St Spec
+  -- ----
+  OK Step through dbd (the one on disk) and rebuild-db from pass 1 and delete any CNID from
+     dbd not in rebuild db. This in only done in exclusive mode.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -32,6 +75,7 @@
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/volinfo.h>
 #include "cmd_dbd.h"
+#include "dbd.h"
 #include "dbif.h"
 #include "db_param.h"
 
@@ -204,10 +248,11 @@ static void usage ()
            "      5. Check for directories inside AppleDouble directories\n"
            "      6. Check name encoding by roundtripping, log on error\n"
            "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
-           "                 only available for volumes with 'cachecnid' option\n\n"
+           "                 only available for volumes with 'cachecnid' option.\n"
+           "                 Implies -e."
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
-           "   -x rebuild indexes\n"
+           "   -x rebuild indexes (just for completeness, mostly useless!)\n"
            "   -v verbose\n"
         );
 }
@@ -235,7 +280,7 @@ int main(int argc, char **argv)
             break;
         case 's':
             scan = 1;
-            flags = DBD_FLAGS_SCAN;
+            flags |= DBD_FLAGS_SCAN;
             break;
         case 'r':
             rebuild = 1;
@@ -245,13 +290,14 @@ int main(int argc, char **argv)
             break;
         case 'e':
             exclusive = 1;
+            flags |= DBD_FLAGS_EXCL;
             break;
         case 'x':
             rebuildindexes = 1;
             break;
         case 'f':
             force = 1;
-            flags = DBD_FLAGS_FORCE;
+            flags |= DBD_FLAGS_FORCE | DBD_FLAGS_EXCL;
             break;
         case ':':
         case '?':
@@ -313,6 +359,15 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    /* Check if -f is requested and wipe db if yes */
+    if ((flags & DBD_FLAGS_FORCE) && (volinfo.v_flags & AFPVOL_CACHE)) {
+        char cmd[8 + MAXPATHLEN];
+        snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/cnid2.db", dbpath);
+        dbd_log( LOGSTD, "Removing old database of volume: '%s'", volpath);
+        system(cmd);
+        dbd_log( LOGSTD, "Removed old database.");
+    }
+
     /* 
        Lets start with the BerkeleyDB stuff
     */
@@ -328,6 +383,11 @@ int main(int argc, char **argv)
         dbd_log( LOGDEBUG, "Finished recovery.");
 
     if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
+        dbif_close(dbd);
+        exit(EXIT_FAILURE);
+    }
+
+    if (dbd_stamp(dbd) < 0) {
         dbif_close(dbd);
         exit(EXIT_FAILURE);
     }

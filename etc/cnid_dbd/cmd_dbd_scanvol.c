@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.3 2009-05-20 10:56:02 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.4 2009-05-22 20:48:44 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -12,48 +12,6 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-*/
-
-/*
-  dbd specs and implementation progress
-  =====================================
-
-  St := Status
-
-  Force option
-  ------------
-  
-  St Spec
-  -- ----
-  -- If -f is requested, ensure -e is too.
-     Check if volumes is using AFPVOL_CACHE, then wipe db from disk.
-
-  1st pass: Scan volume
-  --------------------
-
-  St Type Check
-  -- ---- -----
-  OK F/D  Make sure ad file exists
-  OK D    Make sure .AppleDouble dir exist, create if missing. Error creating
-          it is fatal as that shouldn't happen as root.
-  OK F/D  Delete orphaned ad-files, log dirs in ad-dir
-  OK F/D  Check name encoding by roundtripping, log on error
-  OK F/D  try: read CNID from ad file (if cnid caching is on)
-          try: fetch CNID from database
-          -> on mismatch: use CNID from file, update database (deleting both found CNIDs first)
-          -> if no CNID in ad file: write CNID from database to ad file
-          -> if no CNID in database: add CNID from ad file to database
-          -> on no CNID at all: create one and store in both places
-  OK F/D  Add found CNID, DID, filename, dev/inode, stamp to rebuild database
-  OK F/D  Check/update stamp (implicitly done while checking CNIDs)
-
-  2nd pass: Delete unused CNIDs
-  -----------------------------
-
-  St Spec
-  -- ----
-  -- Step through dbd (the one on disk) and rebuild-db from pass 1 and delete any CNID from
-     dbd not in rebuild db.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -446,9 +404,14 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
             return 0;
         }
-        ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);
+
+        if (dbd_flags & DBD_FLAGS_FORCE)
+            ad_cnid = ad_forcegetid(&ad);
+        else
+            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);            
         if (ad_cnid == 0)
             dbd_log( LOGSTD, "Incorrect CNID data in .AppleDouble data for '%s/%s' (bad stamp?)", cwdbuf, name);
+
         ad_close_metadata(&ad);
     }
 
@@ -697,6 +660,92 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     return 0;
 }
 
+/* 
+   Remove all CNIDs from dbd that are not in dbd_rebuild
+*/
+void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
+{
+    int ret, deleted = 0;
+    cnid_t dbd_cnid = 0, rebuild_cnid = 0;
+    struct cnid_dbd_rqst rqst;
+    struct cnid_dbd_rply rply;
+
+    /* jump over rootinfo key */
+    if ( dbif_idwalk(dbd, &dbd_cnid, 0) != 1)
+        return;
+    if ( dbif_idwalk(dbd_rebuild, &rebuild_cnid, 0) != 1)
+        return;
+
+    /* Get first id from dbd_rebuild */
+    if ((dbif_idwalk(dbd_rebuild, &rebuild_cnid, 0)) == -1)
+        return;
+
+    /* Start main loop through dbd: get CNID from dbd */
+    while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) {
+
+        if (deleted > 50) {
+            deleted = 0;
+            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
+                dbd_log(LOGSTD, "Error checkpointing!");
+                goto cleanup;
+            }
+        }
+
+        /* This should be the normal case: CNID is in both dbs */
+        if (dbd_cnid == rebuild_cnid) {
+            /* Get next CNID from rebuild db */
+            if ((ret = dbif_idwalk(dbd_rebuild, &rebuild_cnid, 0)) == -1) {
+                /* Some error */
+                goto cleanup;
+            } else if (ret == 0) {
+                /* end of rebuild_cnid, delete all remaining CNIDs from dbd */
+                while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) {
+                    dbd_log(LOGSTD, "Orphaned CNID in database: %u", dbd_cnid);
+                    if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+                        rqst.cnid = htonl(dbd_cnid);
+                        ret = dbd_delete(dbd, &rqst, &rply);
+                        dbif_txn_close(dbd, ret);
+                        deleted++;
+                    }
+                }
+                return;
+            } else
+                /* Normal case (ret=1): continue while loop */
+                continue;
+        }
+
+        if (dbd_cnid < rebuild_cnid) {
+            /* CNID is orphaned -> delete */
+            dbd_log(LOGSTD, "Orphaned CNID in database: %u.", dbd_cnid);
+            if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+                rqst.cnid = htonl(dbd_cnid);
+                ret = dbd_delete(dbd, &rqst, &rply);
+                dbif_txn_close(dbd, ret);
+                deleted++;
+            }
+            continue;
+        }
+
+        if (dbd_cnid > rebuild_cnid) {
+            dbd_log(LOGSTD, "Ghost CNID: %u. This is fatal! Dumping rebuild db:\n", rebuild_cnid);
+            dbif_dump(dbd_rebuild, 0);
+            dbd_log(LOGSTD, "Send this dump and a `dbd -d ...` dump to the Netatalk Dev team!");
+            dbif_txn_close(dbd, ret);
+            dbif_idwalk(dbd, NULL, 1); /* Close cursor */
+            dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    dbif_idwalk(dbd, NULL, 1); /* Close cursor */
+    dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
+    return;
+}
+
+/*
+  Main func called from cmd_dbd.c
+*/
 int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
 {
     int ret = 0;
@@ -724,8 +773,6 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
     if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild)))
         goto exit_cleanup;
 
-//    dbif_dump(dbd_rebuild, 0);
-
     if (setjmp(jmp) != 0)
         goto exit_cleanup;      /* Got signal, jump from dbd_readdir */
 
@@ -733,7 +780,10 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
     if ( (scanvol(volinfo, flags)) != 0)
         return -1;
 
-//    dbif_dump(dbd_rebuild, 0);
+    /* We can only do this in excluse mode, otherwise we might delete CNIDs added from
+       other clients in between our pass 1 and 2 */
+    if (flags & DBD_FLAGS_EXCL)
+        delete_orphaned_cnids(dbd, dbd_rebuild, flags);
 
 exit_cleanup:
     dbif_close(dbd_rebuild);
