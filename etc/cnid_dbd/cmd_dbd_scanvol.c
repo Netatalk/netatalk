@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.4 2009-05-22 20:48:44 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.5 2009-05-23 06:28:27 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -405,8 +405,12 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             return 0;
         }
 
-        if (dbd_flags & DBD_FLAGS_FORCE)
+        if (dbd_flags & DBD_FLAGS_FORCE) {
             ad_cnid = ad_forcegetid(&ad);
+            /* This ensures the changed stamp is written */
+            ad_setid( &ad, st->st_dev, st->st_ino, ad_cnid, did, stamp);
+            ad_flush(&ad);
+        }
         else
             ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);            
         if (ad_cnid == 0)
