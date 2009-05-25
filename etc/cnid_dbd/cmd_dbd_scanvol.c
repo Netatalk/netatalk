@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.5 2009-05-23 06:28:27 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.6 2009-05-25 13:52:14 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -413,6 +413,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         }
         else
             ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);            
+
         if (ad_cnid == 0)
             dbd_log( LOGSTD, "Incorrect CNID data in .AppleDouble data for '%s/%s' (bad stamp?)", cwdbuf, name);
 
@@ -438,7 +439,8 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     if (rply.result == CNID_DBD_RES_OK) {
         db_cnid = rply.cnid;
     } else if (rply.result == CNID_DBD_RES_NOTFOUND) {
-        dbd_log( LOGSTD, "No CNID for '%s/%s' in database", cwdbuf, name);
+        if ( ! (dbd_flags & DBD_FLAGS_FORCE))
+            dbd_log( LOGSTD, "No CNID for '%s/%s' in database", cwdbuf, name);
         db_cnid = 0;
     } else {
         dbd_log( LOGSTD, "Fatal error resolving '%s/%s'", cwdbuf, name);
@@ -468,7 +470,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     } else if (ad_cnid && (db_cnid == 0)) {
         /* in ad-file but not in db */
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-            dbd_log( LOGSTD, "CNID rebuild add for '%s/%s', adding with CNID from ad-file: %u", cwdbuf, name, ntohl(ad_cnid));
+            dbd_log( LOGDEBUG, "CNID rebuild add for '%s/%s', adding with CNID from ad-file: %u", cwdbuf, name, ntohl(ad_cnid));
             rqst.cnid = ad_cnid;
             ret = dbd_delete(dbd, &rqst, &rply);
             dbif_txn_close(dbd, ret);
@@ -784,7 +786,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
     if ( (scanvol(volinfo, flags)) != 0)
         return -1;
 
-    /* We can only do this in excluse mode, otherwise we might delete CNIDs added from
+    /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
        other clients in between our pass 1 and 2 */
     if (flags & DBD_FLAGS_EXCL)
         delete_orphaned_cnids(dbd, dbd_rebuild, flags);

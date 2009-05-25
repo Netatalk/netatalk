@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.3 2009-05-22 20:48:44 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.4 2009-05-25 13:52:14 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -234,26 +234,31 @@ static void usage ()
            "   -d Dump CNID database\n"
            "      Option: -i dump indexes too\n"
            "   -s Scan volume:\n"
-           "      1. Compare database with volume\n"
+           "      1. Compare CNIDs in database with volume\n"
            "      2. Check if .AppleDouble dirs exist\n"
            "      3. Check if  AppleDouble file exist\n"
            "      4. Report orphaned AppleDouble files\n"
            "      5. Check for directories inside AppleDouble directories\n"
            "      6. Check name encoding by roundtripping, log on error\n"
+           "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "   -r Rebuild volume:\n"
-           "      1. Sync database with volume\n"
+           "      1. Sync CNIDSs in database with volume\n"
            "      2. Make sure .AppleDouble dir exist, create if missing\n"
            "      3. Make sure AppleDouble file exists, create if missing\n"
            "      4. Delete orphaned AppleDouble files\n"
            "      5. Check for directories inside AppleDouble directories\n"
            "      6. Check name encoding by roundtripping, log on error\n"
+           "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
-           "                 only available for volumes with 'cachecnid' option.\n"
-           "                 Implies -e."
+           "                 only available for volumes with 'cachecnid' option. Implies -e.\n"
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
-           "   -v verbose\n"
+           "   -v verbose\n\n"
+           "WARNING:\n"
+           "If you want/need to run an -r -f rebuild after adding 'cachecnid' to a volume configuration,\n"
+           "you must run a rebuild with -r alone at first in order to sync all existing CNIDs from the db\n"
+           "to the AppleDouble files!\n"
         );
 }
 
@@ -297,6 +302,7 @@ int main(int argc, char **argv)
             break;
         case 'f':
             force = 1;
+            exclusive = 1;
             flags |= DBD_FLAGS_FORCE | DBD_FLAGS_EXCL;
             break;
         case ':':
@@ -362,10 +368,10 @@ int main(int argc, char **argv)
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
-        snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/cnid2.db", dbpath);
-        dbd_log( LOGSTD, "Removing old database of volume: '%s'", volpath);
+        snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", dbpath);
+        dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
-        dbd_log( LOGSTD, "Removed old database.");
+        dbd_log( LOGDEBUG, "Removed old database.");
     }
 
     /* 
