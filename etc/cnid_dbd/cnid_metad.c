@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.10 2009-05-20 10:36:09 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.11 2009-05-26 07:16:56 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -226,7 +226,7 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
     if (!up) {
         /* find an empty slot */
         for (i = 0; i < MAXVOLS; i++) {
-            if ( !srv[i].pid ) {
+            if ( !srv[i].name ) {
                 up = &srv[i];
                 up->tm = t;
                 up->count = 0;
