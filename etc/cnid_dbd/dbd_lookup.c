@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.7 2009-05-14 13:46:08 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.8 2009-05-28 10:22:07 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -110,6 +110,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     }
     
     if (didname) {
+        LOG(log_maxdebug, logtype_cnid, "CNID resolve problem: changed dev/ino for '%s'", rqst->name);
         rqst->cnid = id_didname;
         /* we have a did:name 
          * if it's the same dev or not the same type
@@ -127,6 +128,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     }
 
     if (devino) {
+        LOG(log_maxdebug, logtype_cnid, "CNID resolve problem: server side rename oder reused inode for '%s'", rqst->name);
         rqst->cnid = id_devino;
         if (type_devino != rqst->type) {
             /* same dev:inode but not same type one is a folder the other 

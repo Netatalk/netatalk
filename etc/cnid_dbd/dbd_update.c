@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_update.c,v 1.5 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: dbd_update.c,v 1.6 2009-05-28 10:22:07 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -59,7 +59,7 @@ int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     else if  (rc > 0) {
         memcpy(&tmpcnid, pkey.data, sizeof(cnid_t));
         LOG(log_debug, logtype_cnid, "dbd_update: Deleting %u corresponding to dev/ino 0x%llx/0x%llx from cnid2.db",
-            ntohl(tmpcnid), ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino));
+            ntohl(tmpcnid), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
 
         if ((rc = dbif_del(dbd, DBIF_CNID, &pkey, 0)) < 0 ) {
             goto err_db;
@@ -112,17 +112,14 @@ int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         goto err_db;
 
     LOG(log_info, logtype_cnid, "dbd_update: Updated cnid2.db with dev/ino 0x%llx/0x%llx did %u name %s cnid %u",
-        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino),
-        ntohl(rqst->did), rqst->name, ntohl(rqst->cnid));
+        (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rqst->did), rqst->name, ntohl(rqst->cnid));
 
     rply->result = CNID_DBD_RES_OK;
     return 1;
 
 err_db:
     LOG(log_error, logtype_cnid, "dbd_update: Unable to update CNID %u dev/ino 0x%llx/0x%llx, DID %ul: %s",
-        ntohl(rqst->cnid),
-        ntoh64((unsigned long long int)rqst->dev), ntoh64((unsigned long long int)rqst->ino),
-        rqst->did, rqst->name);
+        ntohl(rqst->cnid), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, rqst->did, rqst->name);
 
     rply->result = CNID_DBD_RES_ERR_DB;
     return -1;

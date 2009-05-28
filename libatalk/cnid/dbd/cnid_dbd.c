@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.7 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: cnid_dbd.c,v 1.8 2009-05-28 10:22:07 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -652,7 +652,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
     case CNID_DBD_RES_OK:
         *id = rply.did;
         name = rply.name;
-        LOG(log_debug, logtype_cnid, "cnid_dbd_resolve: resolved CNID: %u to '%s'", ntohl(*id), name);
+        LOG(log_debug, logtype_cnid, "cnid_dbd_resolve: resolved did: %u, name: '%s'", ntohl(*id), name);
         break;
     case CNID_DBD_RES_NOTFOUND:
         *id = CNID_INVALID;
