@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.4 2009-05-25 13:52:14 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.5 2009-05-28 11:28:49 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -98,6 +98,7 @@ static struct db_param db_param = {
     -1,
     -1
 };
+static char dbpath[PATH_MAX];   /* Path to the dbd database */
 
 /* 
    Provide some logging
@@ -324,15 +325,6 @@ int main(int argc, char **argv)
     }
     volpath = argv[optind];
 
-    /* Put "/.AppleDB" at end of volpath */
-    if ( (strlen(volpath) + strlen("/.AppleDB")) > (PATH_MAX - 1) ) {
-        dbd_log( LOGSTD, "Volume pathname too long");
-        exit(EXIT_FAILURE);        
-    }
-    char dbpath[PATH_MAX];
-    strncpy(dbpath, volpath, PATH_MAX - 1);
-    strcat(dbpath, "/.AppleDB");
-
     /* Remember cwd */
     int cdir;
     if ((cdir = open(".", O_RDONLY)) < 0) {
@@ -340,12 +332,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
         
-    /* 
-       Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes.
-    */
-    lockfd = get_lock(dbpath);
-
     /* Setup signal handling */
     set_signal();
 
@@ -364,6 +350,20 @@ int main(int argc, char **argv)
         dbd_log( LOGSTD, "Error loading charsets!");
         exit(EXIT_FAILURE);
     }
+
+    /* Put "/.AppleDB" at end of volpath, get path from volinfo file */
+    if ( (strlen(volinfo.v_dbpath) + strlen("/.AppleDB")) > (PATH_MAX - 1) ) {
+        dbd_log( LOGSTD, "Volume pathname too long");
+        exit(EXIT_FAILURE);        
+    }
+    strncpy(dbpath, volinfo.v_dbpath, PATH_MAX - 9 - 1);
+    strcat(dbpath, "/.AppleDB");
+
+    /* 
+       Before we do anything else, check if there is an instance of cnid_dbd
+       running already and silently exit if yes.
+    */
+    lockfd = get_lock(dbpath);
 
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && (volinfo.v_flags & AFPVOL_CACHE)) {
