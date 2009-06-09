@@ -42,7 +42,7 @@ TEMPLATES = \
 	rc.atalk.gentoo.tmpl		\
 	rc.atalk.debian.tmpl
 
-CLEANFILES = $(GENERATED_FILES) atalk afpd atalkd papd timelord
+CLEANFILES = $(GENERATED_FILES) atalk afpd atalkd netatalk papd timelord
 EXTRA_DIST = $(TEMPLATES) rc.atalk.cobalt
 
 # overwrite automake uninstall
@@ -222,18 +222,18 @@ endif
 if USE_DEBIAN
 
 sysvdir = /etc/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
-atalk: rc.atalk.debian
-	cp -f rc.atalk.debian atalk
-	chmod a+x atalk
+netatalk: rc.atalk.debian
+	cp -f rc.atalk.debian netatalk
+	chmod a+x netatalk
 
 install-data-hook:
-	update-rc.d atalk defaults 90 10
+#	update-rc.d netatalk defaults 90 10
 
 uninstall-startup:
-	rm -f /etc/init.d/atalk
-	update-rc.d atalk remove
+#	rm -f /etc/init.d/netatalk
+#	update-rc.d netatalk remove
 
 endif
 

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.11 2009-05-26 07:16:56 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.12 2009-06-09 11:58:49 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -99,6 +99,7 @@
 #endif
 #endif
 
+#include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 
@@ -130,7 +131,7 @@ struct server {
 static struct server srv[MAXVOLS];
 
 /* Default logging config: log to syslog with level log_note */
-static char *logconfig = "default log_note";
+static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
 
 static struct server *test_usockfn(char *dir)
 {
@@ -408,10 +409,12 @@ int main(int argc, char *argv[])
     int    err = 0;
     int    debug = 0;
     int    ret;
+    char   *loglevel = NULL;
+    char   *logfile  = NULL;
 
     set_processname("cnid_metad");
 
-    while (( cc = getopt( argc, argv, "ds:p:h:u:g:l:")) != -1 ) {
+    while (( cc = getopt( argc, argv, "ds:p:h:u:g:l:f:")) != -1 ) {
         switch (cc) {
         case 'd':
             debug = 1;
@@ -440,7 +443,10 @@ int main(int argc, char *argv[])
             dbdpn = strdup(optarg);
             break;
         case 'l':
-            logconfig = strdup(optarg);
+            loglevel = strdup(optarg);
+            break;
+        case 'f':
+            logfile = strdup(optarg);
             break;
         default:
             err++;
@@ -448,6 +454,15 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (loglevel) {
+        strlcpy(logconfig + 8, loglevel, 13);
+        free(loglevel);
+        strcat(logconfig, " ");
+    }
+    if (logfile) {
+        strlcat(logconfig, logfile, MAXPATHLEN);
+        free(logfile);
+    }
     setuplog(logconfig);
 
     if (err) {

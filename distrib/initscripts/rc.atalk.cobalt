@@ -73,7 +73,7 @@ atalk_startup() {
     fi
 
     if [ x"${CNID_METAD_RUN}" = x"yes" -a -x /usr/sbin/cnid_metad ] ; then
-	    daemon /usr/sbin/cnid_metad
+	    daemon /usr/sbin/cnid_metad $CNID_CONFIG
 	    RETVAL_CNID_METAD=$?
     fi
 

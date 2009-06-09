@@ -22,7 +22,7 @@ fi
 if [ -x :BINDIR:/nbprgstr ]; then
 	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:Workstation
 	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
-					echo -n ' nbprgstr'
+	echo -n ' nbprgstr'
 fi
 
 if [ -x :SBINDIR:/papd ]; then
@@ -30,11 +30,7 @@ if [ -x :SBINDIR:/papd ]; then
 fi
 
 if [ -x :SBINDIR:/cnid_metad ]; then
-    if [ "x$CNID_DBD_LOGCONFIG" = "x" ]; then
-        :SBINDIR:/cnid_metad
-    else
-        :SBINDIR:/cnid_metad -l "$CNID_DBD_LOGCONFIG"
-    fi
+    :SBINDIR:/cnid_metad $CNID_CONFIG
     echo -n ' cnid_metad'
 fi
 

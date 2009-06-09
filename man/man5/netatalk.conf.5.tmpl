@@ -1,67 +1,109 @@
-.TH netatalk.conf 5 "24 June 2004" 2.0.0 Netatalk 
-.SH NAME
-netatalk.conf \- Configuration file used by netatalk(8) to determine its general configuration 
-.SH DESCRIPTION
-\fI:ETCDIR:/netatalk.conf\fR is the
-configuration file used by afpd to determine what portions of the file
-system will be shared via Appletalk, as well as their behaviors.
+'\" t
+.\"     Title: netatalk.conf
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 9 Jun 2009
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
+.\"  Language: English
+.\"
+.TH "NETATALK\&.CONF" "5" "9 Jun 2009" "Netatalk 2\&.1" "Netatalk 2.1"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+netatalk.conf \- Configuration file used by netatalk(8) to determine its general configuration
+.SH "DESCRIPTION"
 .PP
-Any line not prefixed with \fI#\fR is
-interpreted. The configuration lines are composed like:
+\fB:ETCDIR:/netatalk\&.conf\fR
+is the configuration file used by afpd to determine what portions of the file system will be shared via Appletalk, as well as their behaviors\&.
 .PP
-\fIoption\fR \fI=\fR
+Any line not prefixed with
+\fB#\fR
+is interpreted\&. The configuration lines are composed like:
+.PP
+\fIoption\fR
+\fB=\fR
 \fIvalue\fR
 .PP
 The possible options and their meanings are:
-.TP 
-\fIAFPD_GUEST\fR
-Sets the id of the guest user to a local user on the system.
-.TP 
-\fIAFPD_MAX_CLIENTS\fR
-Sets the maximum number of clients that can simultaneously
-connect to the server.
-.TP 
-\fIAFPD_RUN\fR
-Enables the afpd daemon if set to "yes". This should
-be enabled if you are planning on using netatalk as a file server.
-.TP 
-\fIAFPD_UAM_LIST\fR
-Sets the default UAMs for afpd (and papd, if printer
-authentication is compiled in) to use.
-
-\fIExample:\fR \fIAFPD_UAMLIST\fR=\fI"\-U uams_guest.so,uams_randnum.so"\fR
-.TP 
-\fICNID_METAD_RUN\fR
-Enables the cnid_metad daemon if set to "yes". This
-should be enabled if you are going to use the dbd CNID backend.
-.TP 
-\fIATALK_BGROUND\fR
-"yes" will set netatalk to initialize in the
-background, and "no" will cause normal initialization.
-.TP 
-\fIATALK_NAME\fR
-Sets the machines' Appletalk name.
-.TP 
-\fIATALK_ZONE\fR
-Sets the machines' Appletalk zone.
-.TP 
-\fIATALKD_RUN\fR
-Enables the atalkd daemon if set to "yes". This should
-be enabled if you are planning on providing Appletalk services.
-.TP 
-\fIPAPD_RUN\fR
-Enables the papd daemon if set to "yes". This should
-be enabled if you are planning on using netatalk as a print server.
-.TP 
-\fIATALK_MAC_CHARSET\fR
-Set the Mac client codepage, used by atalkd and papd to
-convert extended characters from the Unix to the Mac codepage.
-.TP 
-\fIATALK_UNIX_CHARSET\fR
-Set the Unix codepage, used by atalkd and papd to convert
-extended characters from the Unix to the Mac codepage. Has to match
-the codepage of the configuration files.
+.PP
+\fBAFPD_GUEST\fR
+.RS 4
+Sets the id of the guest user to a local user on the system\&.
+.RE
+.PP
+\fBAFPD_MAX_CLIENTS\fR
+.RS 4
+Sets the maximum number of clients that can simultaneously connect to the server\&.
+.RE
+.PP
+\fBAFPD_RUN\fR
+.RS 4
+Enables the afpd daemon if set to "yes"\&. This should be enabled if you are planning on using netatalk as a file server\&.
+.RE
+.PP
+\fBAFPD_UAM_LIST\fR
+.RS 4
+Sets the default UAMs for afpd (and papd, if printer authentication is compiled in) to use\&.
+.sp
+\fIExample:\fR
+\fBAFPD_UAMLIST\fR=\fB"\-U uams_guest\&.so,uams_randnum\&.so"\fR
+.RE
+.PP
+\fBCNID_METAD_RUN\fR
+.RS 4
+Enables the cnid_metad daemon if set to "yes"\&. This should be enabled if you are going to use the dbd CNID backend\&.
+.RE
+.PP
+\fBCNID_CONFIG\fR
+.RS 4
+Configuration options for cnid_metad\&. See:
+\fBcnid_metad\fR(8)
+.RE
+.PP
+\fBATALK_BGROUND\fR
+.RS 4
+"yes" will set netatalk to initialize in the background, and "no" will cause normal initialization\&.
+.RE
+.PP
+\fBATALK_NAME\fR
+.RS 4
+Sets the machines\' Appletalk name\&.
+.RE
+.PP
+\fBATALK_ZONE\fR
+.RS 4
+Sets the machines\' Appletalk zone\&.
+.RE
+.PP
+\fBATALKD_RUN\fR
+.RS 4
+Enables the atalkd daemon if set to "yes"\&. This should be enabled if you are planning on providing Appletalk services\&.
+.RE
+.PP
+\fBPAPD_RUN\fR
+.RS 4
+Enables the papd daemon if set to "yes"\&. This should be enabled if you are planning on using netatalk as a print server\&.
+.RE
+.PP
+\fBATALK_MAC_CHARSET\fR
+.RS 4
+Set the Mac client codepage, used by atalkd and papd to convert extended characters from the Unix to the Mac codepage\&.
+.RE
+.PP
+\fBATALK_UNIX_CHARSET\fR
+.RS 4
+Set the Unix codepage, used by atalkd and papd to convert extended characters from the Unix to the Mac codepage\&. Has to match the codepage of the configuration files\&.
+.RE
 .SH "SEE ALSO"
+.PP
 \fBatalkd\fR(8),
 \fBatalkd.conf\fR(5)
-
