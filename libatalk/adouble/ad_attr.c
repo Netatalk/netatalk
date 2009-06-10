@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.7 2009-05-22 20:48:44 franklahm Exp $
+ * $Id: ad_attr.c,v 1.8 2009-06-10 08:37:25 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -12,9 +12,16 @@
 #define FILEIOFF_ATTR 14
 #define AFPFILEIOFF_ATTR 2
 
+/* 
+   Note:
+   the "shared" and "invisible" attributes are opaque and stored and
+   retrieved from the FinderFlags. This fixes Bug #2802236:
+   <https://sourceforge.net/tracker/?func=detail&aid=2802236&group_id=8642&atid=108642>
+ */
 int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 {
     *attr = 0;
+    u_int16_t fflags;
 
     if (ad->ad_version == AD_VERSION1) {
         if (ad_getentryoff(ad, ADEID_FILEI)) {
@@ -25,8 +32,30 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 #if AD_VERSION == AD_VERSION2
     else if (ad->ad_version == AD_VERSION2) {
         if (ad_getentryoff(ad, ADEID_AFPFILEI)) {
-            memcpy(attr, ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR,
-                   sizeof(u_int16_t));
+            memcpy(attr, ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR, 2);
+
+            /* Now get opaque flags from FinderInfo */
+            memcpy(&fflags, ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, 2);
+            if (fflags & htons(FINDERINFO_INVISIBLE))
+                *attr |= htons(ATTRBIT_INVISIBLE);
+            else
+                *attr &= htons(~ATTRBIT_INVISIBLE);
+ /*
+   Although technically correct to check if its a directory because FINDERINFO_ISHARED and
+   ATTRBIT_MULTIUSER are only valid then, at least 10.4 doesn't mind and sets FINDERINFO_ISHARED
+   for directories if told so with e.g. SetFile -a M <directory>. The check would cause an
+   out of sync, so I disabled it.
+ */
+#if 0
+            if ( ! (ad->ad_flags & ADFLAGS_DIR) ) {
+#endif
+                if (fflags & htons(FINDERINFO_ISHARED))
+                    *attr |= htons(ATTRBIT_MULTIUSER);
+                else
+                    *attr &= htons(~ATTRBIT_MULTIUSER);
+#if 0
+            }
+#endif
         }
     }
 #endif
@@ -41,6 +70,9 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 /* ----------------- */
 int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
 {
+    u_int16_t *fflags;
+    u_int16_t hostattr;
+
     /* we don't save open forks indicator */
     u_int16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
 
@@ -53,8 +85,27 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
 #if AD_VERSION == AD_VERSION2
     else if (ad->ad_version == AD_VERSION2) {
         if (ad_getentryoff(ad, ADEID_AFPFILEI)) {
-            memcpy(ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR, &attr,
-                   sizeof(attr));
+            memcpy(ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR, &attr, sizeof(attr));
+            
+            /* Now set opaque flags in FinderInfo too */
+            fflags = (u_int16_t *)ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF;
+            if (hostattr & htons(ATTRBIT_INVISIBLE))
+                *fflags |= htons(FINDERINFO_INVISIBLE);
+            else
+                *fflags &= htons(~FINDERINFO_INVISIBLE);
+/*
+  See above comment at ad_getattr()
+*/
+#if 0
+            if ( ! (ad->ad_flags & ADFLAGS_DIR) ) {
+#endif
+                if (hostattr & htons(ATTRBIT_MULTIUSER))
+                    *fflags |= htons(FINDERINFO_ISHARED);
+                else
+                    *fflags &= htons(~FINDERINFO_ISHARED);
+#if 0
+            }
+#endif
         }
     }
 #endif

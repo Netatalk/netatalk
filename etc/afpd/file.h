@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.20 2006-09-29 09:39:16 didg Exp $
+ * $Id: file.h,v 1.21 2009-06-10 08:37:25 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -53,25 +53,6 @@ extern const u_char	ufinderi[];
 #define FILPBIT_PDINFO   13    /* ProDOS Info/ UTF8 name */
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
-
-/* attribute bits. (d) = directory attribute bit as well. */
-#define ATTRBIT_INVISIBLE (1<<0)  /* invisible (d) */
-#define ATTRBIT_MULTIUSER (1<<1)  /* multiuser */
-#define ATTRBIT_SYSTEM    (1<<2)  /* system (d) */
-
-#if 0
-/* define in adouble.h */
-#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
-#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
-#endif
-
-#define ATTRBIT_SHARED    (1<<4)  /* shared area (d) */
-#define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit */
-#define ATTRBIT_BACKUP    (1<<6)  /* backup needed (d) */
-#define ATTRBIT_NORENAME  (1<<7)  /* rename inhibit (d) */
-#define ATTRBIT_NODELETE  (1<<8)  /* delete inhibit (d) */
-#define ATTRBIT_NOCOPY    (1<<10) /* copy protect */
-#define ATTRBIT_SETCLR	  (1<<15) /* set/clear bits (d) */
 
 struct extmap {
     char		*em_ext;

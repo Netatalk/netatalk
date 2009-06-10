@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.40 2009-04-25 06:44:48 franklahm Exp $
+ * $Id: ad_open.c,v 1.41 2009-06-10 08:37:25 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -118,9 +118,6 @@
 
 /* we keep local copies of a bunch of stuff so that we can initialize things 
  * correctly. */
-
-/* invisible bit for dot files */
-#define ATTRBIT_INVISIBLE     (1 << 0)
 
 /* this is to prevent changing timezones from causing problems with
    localtime volumes. the screw-up is 30 years. we use a delta of 5

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.34 2009-05-22 20:48:44 franklahm Exp $
+ * $Id: adouble.h,v 1.35 2009-06-10 08:37:25 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -249,10 +249,6 @@ struct ad_fd {
     int          adf_refcount, adf_lockcount, adf_lockmax;
 };
 
-/* fork attribute */
-#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
-#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
-
 /* some header protection */
 #define AD_INITED  0xad494e54  /* ad"INT" */
 struct adouble_fops;
@@ -373,8 +369,8 @@ struct adouble_fops {
 /* various finder offset and info bits */
 #define FINDERINFO_FRTYPEOFF   0
 #define FINDERINFO_FRCREATOFF  4
-
 #define FINDERINFO_FRFLAGOFF   8
+
 /* finderinfo flags */
 #define FINDERINFO_ISONDESK      (1)
 #define FINDERINFO_COLOR         (0x0e)
@@ -392,6 +388,29 @@ struct adouble_fops {
 #define FINDERINFO_CUSTOMICON 0x4
 #define FINDERINFO_CLOSEDVIEW 0x100   
 
+/* 
+   The "shared" and "invisible" attributes are opaque and stored and
+   retrieved from the FinderFlags. This fixes Bug #2802236:
+   <https://sourceforge.net/tracker/?func=detail&aid=2802236&group_id=8642&atid=108642>
+ */
+
+/* AFP attributes for files and dirs. (d) = only these are valid for directories */
+#define ATTRBIT_INVISIBLE (1<<0)  /* invisible ("v") (d) */
+#define ATTRBIT_MULTIUSER (1<<1)  /* multiuser ("m") */
+#define ATTRBIT_SYSTEM    (1<<2)  /* system ("y") (d) */
+#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
+#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
+#define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit ("") */
+#define ATTRBIT_BACKUP    (1<<6)  /* backup needed ("") (d) */
+#define ATTRBIT_NORENAME  (1<<7)  /* rename inhibit ("") (d) */
+#define ATTRBIT_NODELETE  (1<<8)  /* delete inhibit ("") (d) */
+#define ATTRBIT_NOCOPY    (1<<10) /* copy protect ("") */
+#define ATTRBIT_SETCLR    (1<<15) /* set/clear bits (d) */
+
+/* AFP attributes for dirs */
+#define ATTRBIT_EXPFLDR   (1<<1)  /* Folder is a sharepoint ("p") */
+#define ATTRBIT_MOUNTED   (1<<3)  /* Directory is mounted by a user ("") */
+#define ATTRBIT_SHARED    (1<<4)  /* shared area, called IsExpFolder in spec ("") */
  
 /* private AFPFileInfo bits */
 #define AD_AFPFILEI_OWNER       (1 << 0) /* any owner */
