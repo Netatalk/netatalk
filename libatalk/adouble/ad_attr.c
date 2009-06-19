@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.8 2009-06-10 08:37:25 franklahm Exp $
+ * $Id: ad_attr.c,v 1.9 2009-06-19 13:38:34 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,21 +41,15 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
             else
                 *attr &= htons(~ATTRBIT_INVISIBLE);
  /*
-   Although technically correct to check if its a directory because FINDERINFO_ISHARED and
-   ATTRBIT_MULTIUSER are only valid then, at least 10.4 doesn't mind and sets FINDERINFO_ISHARED
-   for directories if told so with e.g. SetFile -a M <directory>. The check would cause an
-   out of sync, so I disabled it.
+   This one is tricky, I actually got it wrong the first time:
+   for directories bit 1<<1 is ATTRBIT_EXPFLDR and is NOT opaque !
  */
-#if 0
-            if ( ! (ad->ad_flags & ADFLAGS_DIR) ) {
-#endif
+            if ( ! (ad->ad_adflags & ADFLAGS_DIR)) {
                 if (fflags & htons(FINDERINFO_ISHARED))
                     *attr |= htons(ATTRBIT_MULTIUSER);
                 else
                     *attr &= htons(~ATTRBIT_MULTIUSER);
-#if 0
             }
-#endif
         }
     }
 #endif
@@ -71,10 +65,14 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
 {
     u_int16_t *fflags;
-    u_int16_t hostattr;
 
     /* we don't save open forks indicator */
     u_int16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
+
+    /* Proactively (10.4 does indeed try to set ATTRBIT_MULTIUSER (=ATTRBIT_EXPFLDR)
+       for dirs with SetFile -a M <dir> ) disable all flags not defined for dirs. */
+    if (ad->ad_adflags & ADFLAGS_DIR)
+        attr &= ~(ATTRBIT_MULTIUSER | ATTRBIT_NOWRITE | ATTRBIT_NOCOPY);
 
     if (ad->ad_version == AD_VERSION1) {
         if (ad_getentryoff(ad, ADEID_FILEI)) {
@@ -89,23 +87,17 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
             
             /* Now set opaque flags in FinderInfo too */
             fflags = (u_int16_t *)ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF;
-            if (hostattr & htons(ATTRBIT_INVISIBLE))
+            if (attr & htons(ATTRBIT_INVISIBLE))
                 *fflags |= htons(FINDERINFO_INVISIBLE);
             else
                 *fflags &= htons(~FINDERINFO_INVISIBLE);
-/*
-  See above comment at ad_getattr()
-*/
-#if 0
-            if ( ! (ad->ad_flags & ADFLAGS_DIR) ) {
-#endif
-                if (hostattr & htons(ATTRBIT_MULTIUSER))
+
+            /* See above comment in ad_getattr() */
+            if (attr & htons(ATTRBIT_MULTIUSER)) {
+                if ( ! (ad->ad_adflags & ADFLAGS_DIR) )
                     *fflags |= htons(FINDERINFO_ISHARED);
-                else
+            } else
                     *fflags &= htons(~FINDERINFO_ISHARED);
-#if 0
-            }
-#endif
         }
     }
 #endif

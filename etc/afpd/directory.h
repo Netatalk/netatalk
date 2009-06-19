@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.24 2009-04-17 04:24:20 didg Exp $
+ * $Id: directory.h,v 1.25 2009-06-19 13:38:33 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -124,11 +124,6 @@ extern int path_isadir(struct path *o_path);
 #define DIRPBIT_ACCESS	12
 #define DIRPBIT_PDINFO  13         /* ProDOS Info */
 #define DIRPBIT_UNIXPR  15
-
-/* directory attribute bits (see file.h for other bits) */
-#define ATTRBIT_EXPFOLDER   (1 << 1) /* shared point */
-#define ATTRBIT_MOUNTED     (1 << 3) /* mounted share point by non-admin */
-#define ATTRBIT_INEXPFOLDER (1 << 4) /* folder in a shared area */
 
 #define FILDIRBIT_ISDIR        (1 << 7) /* is a directory */
 #define FILDIRBIT_ISFILE       (0)      /* is a file */

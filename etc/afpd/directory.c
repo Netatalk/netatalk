@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.97 2009-04-17 04:24:20 didg Exp $
+ * $Id: directory.c,v 1.98 2009-06-19 13:38:32 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2155,6 +2155,10 @@ int setdirparams(const struct vol *vol,
             break;
         case DIRPBIT_FINFO :
             if (isad) {
+                /* Fixes #2802236 */
+                u_int16_t *fflags = (u_int16_t *)(finder_buf + FINDERINFO_FRFLAGOFF);
+                *fflags &= htons(~FINDERINFO_ISHARED);
+                /* #2802236 end */
                 if (  dir->d_did == DIRDID_ROOT ) {
                     /*
                      * Alright, we admit it, this is *really* sick!

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.35 2009-06-10 08:37:25 franklahm Exp $
+ * $Id: adouble.h,v 1.36 2009-06-19 13:38:33 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -254,16 +254,18 @@ struct ad_fd {
 struct adouble_fops;
 
 struct adouble {
-    u_int32_t		ad_magic;
-    u_int32_t		ad_version;
-    char		ad_filler[ 16 ];
-    struct ad_entry	ad_eid[ ADEID_MAX ];
-    struct ad_fd	ad_data_fork, ad_resource_fork, ad_metadata_fork;
-    struct ad_fd	*ad_md; /* either ad_resource or ad_metadata */
+    u_int32_t		    ad_magic;
+    u_int32_t		    ad_version;
+    char		        ad_filler[ 16 ];
+    struct ad_entry	    ad_eid[ ADEID_MAX ];
+    struct ad_fd	    ad_data_fork, ad_resource_fork, ad_metadata_fork;
+    struct ad_fd	    *ad_md; /* either ad_resource or ad_metadata */
 
-    int                 ad_flags;
+    int                 ad_flags;    /* This really stores version info too (AD_VERSION*) */
+    int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
     unsigned int        ad_inited;
     int                 ad_options;
+    int                 ad_fileordir;
     int                 ad_refcount; /* used in afpd/ofork.c */
     off_t               ad_rlen;     /* ressource fork len with AFP 3.0
                                         the header parameter size is too small.
@@ -372,17 +374,17 @@ struct adouble_fops {
 #define FINDERINFO_FRFLAGOFF   8
 
 /* finderinfo flags */
-#define FINDERINFO_ISONDESK      (1)
+#define FINDERINFO_ISONDESK      (1)     /* "d" */
 #define FINDERINFO_COLOR         (0x0e)
-#define FINDERINFO_ISHARED       (1<<6)
-#define FINDERINFO_HASNOINITS    (1<<7)
-#define FINDERINFO_HASBEENINITED (1<<8)
-#define FINDERINFO_HASCUSTOMICON (1<<10)
-#define FINDERINFO_ISSTATIONNERY (1<<11)
-#define FINDERINFO_NAMELOCKED    (1<<12)
-#define FINDERINFO_HASBUNDLE     (1<<13)
-#define FINDERINFO_INVISIBLE     (1<<14)
-#define FINDERINFO_ISALIAS       (1<<15)
+#define FINDERINFO_ISHARED       (1<<6)  /* "m" */
+#define FINDERINFO_HASNOINITS    (1<<7)  /* "n" */
+#define FINDERINFO_HASBEENINITED (1<<8)  /* "i" */
+#define FINDERINFO_HASCUSTOMICON (1<<10) /* "c" */
+#define FINDERINFO_ISSTATIONNERY (1<<11) /* "t" */
+#define FINDERINFO_NAMELOCKED    (1<<12) /* "s" */
+#define FINDERINFO_HASBUNDLE     (1<<13) /* "b" */
+#define FINDERINFO_INVISIBLE     (1<<14) /* "v" */
+#define FINDERINFO_ISALIAS       (1<<15) /* "a" */
 
 #define FINDERINFO_FRVIEWOFF  14 
 #define FINDERINFO_CUSTOMICON 0x4
@@ -395,16 +397,16 @@ struct adouble_fops {
  */
 
 /* AFP attributes for files and dirs. (d) = only these are valid for directories */
-#define ATTRBIT_INVISIBLE (1<<0)  /* invisible ("v") (d) */
-#define ATTRBIT_MULTIUSER (1<<1)  /* multiuser ("m") */
-#define ATTRBIT_SYSTEM    (1<<2)  /* system ("y") (d) */
+#define ATTRBIT_INVISIBLE (1<<0)  /* (d) */
+#define ATTRBIT_MULTIUSER (1<<1)
+#define ATTRBIT_SYSTEM    (1<<2)  /* "y" (d) */
 #define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
 #define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
-#define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit ("") */
-#define ATTRBIT_BACKUP    (1<<6)  /* backup needed ("") (d) */
-#define ATTRBIT_NORENAME  (1<<7)  /* rename inhibit ("") (d) */
-#define ATTRBIT_NODELETE  (1<<8)  /* delete inhibit ("") (d) */
-#define ATTRBIT_NOCOPY    (1<<10) /* copy protect ("") */
+#define ATTRBIT_NOWRITE   (1<<5)  /* "w" write inhibit(v2)/read-only(v1) bit ("") */
+#define ATTRBIT_BACKUP    (1<<6)  /* "b" (d) */
+#define ATTRBIT_NORENAME  (1<<7)  /* "r" (d) */
+#define ATTRBIT_NODELETE  (1<<8)  /* "d" (d) */
+#define ATTRBIT_NOCOPY    (1<<10) /* "c" */
 #define ATTRBIT_SETCLR    (1<<15) /* set/clear bits (d) */
 
 /* AFP attributes for dirs */

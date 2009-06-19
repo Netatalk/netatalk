@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.41 2009-06-10 08:37:25 franklahm Exp $
+ * $Id: ad_open.c,v 1.42 2009-06-19 13:38:34 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1301,6 +1301,7 @@ int ad_open( path, adflags, oflags, mode, ad )
         ad->ad_inited = AD_INITED;
         ad->ad_refcount = 1;
         ad->ad_open_forks = 0;
+        ad->ad_adflags = adflags;
     }
     else {
     	ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
