@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.42 2009-06-19 13:38:34 franklahm Exp $
+ * $Id: ad_open.c,v 1.43 2009-06-22 12:05:15 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1450,8 +1450,9 @@ int ad_open( path, adflags, oflags, mode, ad )
             /* the file is already deleted, perm, whatever, so return an error*/
             ad_close(ad, adflags);
             errno = err;
-	    return -1;
-	}
+            return -1;
+        }
+        ad_flush(ad);
     } else {
 	/* Read the adouble header in and parse it.*/
 	if (ad->ad_ops->ad_header_read( ad , pst) < 0

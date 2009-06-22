@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.36 2009-06-19 13:38:33 franklahm Exp $
+ * $Id: adouble.h,v 1.37 2009-06-22 12:05:15 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -93,7 +93,7 @@
  */
 #define ADEID_DFORK		1
 #define ADEID_RFORK		2
-#define ADEID_NAME		3
+#define ADEID_NAME		3 /* Note: starting with Netatalk 2.1 we do NOT alway set the name */
 #define ADEID_COMMENT		4
 #define ADEID_ICONBW		5
 #define ADEID_ICONCOL		6
@@ -545,7 +545,7 @@ extern int ad_getdate __P((const struct adouble *, unsigned int, u_int32_t *));
 /* ad_attr.c */
 extern int ad_setattr __P((const struct adouble *, const u_int16_t));
 extern int ad_getattr __P((const struct adouble *, u_int16_t *));
-
+/* Note: starting with Netatalk 2.1 we do NOT alway set the name */
 extern int ad_setname __P((struct adouble *, const char *));
 #if AD_VERSION == AD_VERSION2
 extern int ad_setid __P((struct adouble *, const dev_t dev,const ino_t ino, const u_int32_t, const u_int32_t, const void *));
