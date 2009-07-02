@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.86 2009-04-28 13:01:24 franklahm Exp $
+ * $Id: volume.c,v 1.87 2009-07-02 17:53:52 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1917,8 +1917,7 @@ int	ibuflen _U_, *rbuflen;
     curdir = volume->v_dir;
     if (volume->v_cnidscheme == NULL) {
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
-        LOG(log_warning, logtype_afpd, "Warning: No CNID scheme for volume %s. Using default.",
-               volume->v_path);
+        LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
     }
     if (volume->v_dbpath)
         volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
