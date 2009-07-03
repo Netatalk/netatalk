@@ -1,4 +1,4 @@
-dnl $Id: db3-check.m4,v 1.18 2009-04-21 08:55:44 franklahm Exp $
+dnl $Id: db3-check.m4,v 1.19 2009-07-03 08:15:19 franklahm Exp $
 dnl Autoconf macros to check for the Berkeley DB library
 
 dnl -- check header for minimum version and return version in
@@ -28,11 +28,11 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
     atalk_cv_bdb_version=no
     maj=$atalk_cv_bdb_MAJOR
     min=$atalk_cv_bdb_MINOR
-    atalk_cv_bdb_try_libs="-ldb$maj$min -ldb$maj.$min -ldb-$maj$min -ldb-$maj.$min"
+    atalk_cv_bdb_try_libs="db$maj$min db$maj.$min db-$maj$min db-$maj.$min"
 
     for lib in $atalk_cv_bdb_try_libs ; do
-        LIBS="$lib $savedlibs"
-        AC_MSG_CHECKING([Berkeley DB library ($lib)])
+        LIBS="-l$lib $savedlibs"
+        AC_MSG_CHECKING([Berkeley DB library (-l$lib)])
         AC_TRY_RUN([
             #include <stdio.h>
             #include <db.h>
@@ -53,13 +53,27 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
                 return (0);
             }
         ],[
-
             AC_MSG_RESULT(yes)
             atalk_cv_bdb_version="yes"
-            atalk_cv_lib_db="$lib"
+            atalk_cv_lib_db="-l$lib"
             break
         ],[
             AC_MSG_RESULT(no)
+        ],[
+            bdblibs=`ls $bdblibdir/lib$lib.* 2>/dev/null`
+            for bdblib in $bdblibs ; do
+                echo "Testing for lib file $bdblib" >&AS_MESSAGE_LOG_FD
+                if test -f "$bdblib" ; then
+                    AC_MSG_RESULT([yes (cross-compiling)])
+                    atalk_cv_bdb_version="yes"
+                    atalk_cv_lib_db="-l$lib"
+                    break
+                fi
+            done
+            if test "x$atalk_cv_bdb_version" = "xyes" ; then
+                break
+            fi
+            AC_MSG_RESULT([no (cross-compiling)])
         ])
     done
     LIBS="$savedlibs"
