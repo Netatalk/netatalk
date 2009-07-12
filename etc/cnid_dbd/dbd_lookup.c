@@ -1,9 +1,94 @@
 /*
- * $Id: dbd_lookup.c,v 1.8 2009-05-28 10:22:07 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.9 2009-07-12 09:21:34 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
  */
+
+/* 
+   ATTENTION:
+   whatever you change here, also change cmd_dbd_lookup.c !
+   cmd_dbd_lookup has an read-only mode but besides that it's the same.
+*/
+
+/* 
+The lines...
+
+Id  Did T   Dev Inode   Name
+============================
+a   b   c   d   e       name1
+-->
+f   g   h   i   h       name2
+
+...are the expected results of certain operations.
+
+
+1) UNIX rename (mv)
+-------------------
+Name is changed but inode stays the same. We should try to keep the CNID.
+
+15  2   f   1   1       file
+-->
+15  2   f   1   1       movedfile
+
+Result in dbd_lookup (-: not found, +: found):
+- devino
++ didname
+
+Possible solution:
+Update.
+
+
+2) UNIX copy (cp)
+-----------------
+Changes inode and name. Result is just a new file which will get a fresh CNID.
+Unfortunately the old one gets orphaned.
+
+15  2   f   1   1       file
+-->
+16  2   f   1   2       copyfile
+
+Result in dbd_lookup:
+- devino
+- didname
+
+Possible fixup solution:
+Not possible. Only dbd -re can delete the orphaned CNID 15
+
+
+3) Restore from backup
+----------------------
+15  2   f   1   1       file
+-->
+15  2   f   1   2       file
+
+Result in dbd_lookup:
+- devino
++ didname
+
+Possible fixup solution:
+Update.
+
+
+4) UNIX emacs
+-------------
+This one is tough:
+emacs uses a backup file (file~). When saving because of inode reusage of the fs,
+both files exchange inodes. This should just be treated like 1).
+
+15  2   f   1   1       file
+16  2   f   1   2       file~
+-->
+15  2   f   1   2       file
+16  2   f   1   1       file~
+
+Result in dbd_lookup:
++ devino
++ didname
+
+Possible fixup solution:
+Update CNID entry found via "didname"(!).
+*/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -102,13 +187,33 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         /* the same */
 
         LOG(log_debug, logtype_cnid, "cnid_lookup: Looked up dev/ino 0x%llx/0x%llx did %u name %s as %u", 
-            (unsigned long long )rqst->dev, (unsigned long long )rqst->ino, ntohl(rqst->did), rqst->name, ntohl(id_didname));
+            (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rqst->did), rqst->name, ntohl(id_didname));
 
         rply->cnid = id_didname;
         rply->result = CNID_DBD_RES_OK;
         return 1;
     }
     
+    /* 
+       Order matters for the next 2 ifs because both found a CNID but they do not match.
+       So in order to pick the CNID from "didname" it must come after devino.
+       See test cases laid out in dbd_lookup.c.
+    */
+    if (devino) {
+        LOG(log_maxdebug, logtype_cnid, "CNID resolve problem: server side rename oder reused inode for '%s'", rqst->name);
+        rqst->cnid = id_devino;
+        if (type_devino != rqst->type) {
+            /* same dev:inode but not same type one is a folder the other 
+             * is a file,it's an inode reused, delete the record
+            */
+            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0) {
+                return -1;
+            }
+        }
+        else {
+            update = 1;
+        }
+    }
     if (didname) {
         LOG(log_maxdebug, logtype_cnid, "CNID resolve problem: changed dev/ino for '%s'", rqst->name);
         rqst->cnid = id_didname;
@@ -118,23 +223,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         */
         if (!memcmp(dev, (char *)diddata.data + CNID_DEV_OFS, CNID_DEV_LEN) ||
                    type_didname != rqst->type) {
-            if (dbd_delete(dbd, rqst, rply) < 0) {
-                return -1;
-            }
-        }
-        else {
-            update = 1;
-        }
-    }
-
-    if (devino) {
-        LOG(log_maxdebug, logtype_cnid, "CNID resolve problem: server side rename oder reused inode for '%s'", rqst->name);
-        rqst->cnid = id_devino;
-        if (type_devino != rqst->type) {
-            /* same dev:inode but not same type one is a folder the other 
-             * is a file,it's an inode reused, delete the record
-            */
-            if (dbd_delete(dbd, rqst, rply) < 0) {
+            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0) {
                 return -1;
             }
         }

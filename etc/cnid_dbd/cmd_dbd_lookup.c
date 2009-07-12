@@ -1,5 +1,5 @@
 /*
- * $Id: cmd_dbd_lookup.c,v 1.1 2009-05-14 13:46:08 franklahm Exp $
+ * $Id: cmd_dbd_lookup.c,v 1.2 2009-07-12 09:21:34 franklahm Exp $
  *
  * Copyright (C) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
@@ -23,14 +23,21 @@
 #include "dbd.h"
 #include "cmd_dbd.h"
 
+/* 
+   ATTENTION:
+   whatever you change here, also change cmd_dbd_lookup.c !
+   cmd_dbd_lookup has an read-only mode, but besides that it's the same.
+ */
+
+
 /* Pull these in from dbd_add.c */
 extern int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
 extern int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply);
 
 /*
  *  This returns the CNID corresponding to a particular file and logs any inconsitencies.
- *  If roflags == 1 we only scan, if roflag == 0, we modify, but we do _not_ *add* as does
- *  dbd_lookup.
+ *  If roflags == 1 we only scan, if roflag == 0, we modify i.e. call dbd_update
+ *  FIXME: realign this wih dbd_lookup.
  */
 
 int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int roflag)
@@ -107,6 +114,24 @@ int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *r
         return 1;
     }
 
+    /* 
+       Order matters for the next 2 ifs because both found a CNID but they didn't match.
+       So in order to pick the CNID from "didname" it must come after devino.
+       See test cases laid out in dbd_lookup.c.
+    */
+    if (devino) {
+        dbd_log( LOGSTD, "CNID resolve problem: server side rename oder reused inode for '%s/%s'", cwdbuf, rqst->name);
+        rqst->cnid = id_devino;
+        if (type_devino != rqst->type) {
+            /* same dev/inode but not same type: it's an inode reused, delete the record */
+            if (! roflag)
+                if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
+                    return -1;
+        }
+        else {
+            update = 1;
+        }
+    }
     if (didname) {
         dbd_log( LOGSTD, "CNID resolve problem: changed dev/ino for '%s/%s'", cwdbuf, rqst->name);
         rqst->cnid = id_didname;
@@ -114,9 +139,9 @@ int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *r
            If it's the same dev or not the same type, e.g. a remove followed by a new file
            with the same name */
         if (!memcmp(&dev, (char *)diddata.data + CNID_DEV_OFS, CNID_DEV_LEN) ||
-                   type_didname != rqst->type) {
+            type_didname != rqst->type) {
             if (! roflag)
-                if (dbd_delete(dbd, rqst, rply) < 0)
+                if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
                     return -1;
         }
         else {
@@ -124,19 +149,6 @@ int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *r
         }
     }
 
-    if (devino) {
-        dbd_log( LOGSTD, "CNID resolve problem: server side rename oder reused inode for '%s/%s'", cwdbuf, rqst->name);
-        rqst->cnid = id_devino;
-        if (type_devino != rqst->type) {
-            /* same dev/inode but not same type: it's an inode reused, delete the record */
-            if (! roflag)
-                if (dbd_delete(dbd, rqst, rply) < 0)
-                    return -1;
-        }
-        else {
-            update = 1;
-        }
-    }
     if (!update || roflag) {
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
@@ -155,7 +167,9 @@ int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *r
 }
 
 /* 
-   This is taken from dbd_add.c
+   This is taken from dbd_add.c, but this func really is only "add", dbd_add calls dbd_lookup
+   before adding.
+   FIXME: realign with dbd_add using e.g. using a new arg like "int lookup".
 */
 int cmd_dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {

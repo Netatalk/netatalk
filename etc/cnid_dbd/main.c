@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.8 2009-05-20 10:29:22 franklahm Exp $
+ * $Id: main.c,v 1.9 2009-07-12 09:21:34 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -153,7 +153,7 @@ static int loop(struct db_param *dbp)
                 ret = dbd_update(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_DELETE:
-                ret = dbd_delete(dbd, &rqst, &rply);
+                ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
                 break;
             case CNID_DBD_OP_GETSTAMP:
                 ret = dbd_getstamp(dbd, &rqst, &rply);

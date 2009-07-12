@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.6 2009-05-25 13:52:14 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.7 2009-07-12 09:21:34 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -456,11 +456,11 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         dbd_log( LOGSTD, "CNID mismatch for '%s/%s', db: %u, ad-file: %u", cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
             rqst.cnid = db_cnid;
-            ret = dbd_delete(dbd, &rqst, &rply);
+            ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
             dbif_txn_close(dbd, ret);
 
             rqst.cnid = ad_cnid;
-            ret = dbd_delete(dbd, &rqst, &rply);
+            ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
             dbif_txn_close(dbd, ret);
 
             ret = dbd_rebuild_add(dbd, &rqst, &rply);
@@ -472,7 +472,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
             dbd_log( LOGDEBUG, "CNID rebuild add for '%s/%s', adding with CNID from ad-file: %u", cwdbuf, name, ntohl(ad_cnid));
             rqst.cnid = ad_cnid;
-            ret = dbd_delete(dbd, &rqst, &rply);
+            ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
             dbif_txn_close(dbd, ret);
             ret = dbd_rebuild_add(dbd, &rqst, &rply);
             dbif_txn_close(dbd, ret);
@@ -709,7 +709,7 @@ void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
                     dbd_log(LOGSTD, "Orphaned CNID in database: %u", dbd_cnid);
                     if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
                         rqst.cnid = htonl(dbd_cnid);
-                        ret = dbd_delete(dbd, &rqst, &rply);
+                        ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
                         dbif_txn_close(dbd, ret);
                         deleted++;
                     }
@@ -725,7 +725,7 @@ void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
             dbd_log(LOGSTD, "Orphaned CNID in database: %u.", dbd_cnid);
             if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
                 rqst.cnid = htonl(dbd_cnid);
-                ret = dbd_delete(dbd, &rqst, &rply);
+                ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
                 dbif_txn_close(dbd, ret);
                 deleted++;
             }
