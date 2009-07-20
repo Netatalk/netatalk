@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.108 2008-12-23 08:27:50 didg Exp $
+ * $Id: file.c,v 1.109 2009-07-20 18:31:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -576,7 +576,6 @@ int	ibuflen _U_, *rbuflen;
     char		*path, *upath;
     int			creatf, did, openf, retvalue = AFP_OK;
     u_int16_t		vid;
-    int                 ret;
     struct path		*s_path;
     
 #ifdef DEBUG
@@ -613,8 +612,6 @@ int	ibuflen _U_, *rbuflen;
     }
 
     upath = s_path->u_name;
-    if (0 != (ret = check_name(vol, upath))) 
-       return  ret;
     
     /* if upath is deleted we already in trouble anyway */
     if ((of = of_findname(s_path))) {
