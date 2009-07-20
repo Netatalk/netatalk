@@ -801,23 +801,6 @@ struct vfs_ops netatalk_adouble_osx = {
 };
 
 /* =======================================
-   samba ads format 
- */
-struct vfs_ops netatalk_adouble_ads = {
-    /* ad_path:          */ ad_path_ads,
-    /* validupath:       */ validupath_adouble,
-    /* rf_chown:         */ RF_chown_ads,
-    /* rf_renamedir:     */ RF_renamedir_adouble,
-    /* rf_deletecurdir:  */ RF_deletecurdir_ads,
-    /* rf_setfilmode:    */ RF_setfilmode_ads,
-    /* rf_setdirmode:    */ RF_setdirmode_ads,
-    /* rf_setdirunixmode:*/ RF_setdirunixmode_ads,
-    /* rf_setdirowner:   */ RF_setdirowner_ads,
-    /* rf_deletefile:    */ RF_deletefile_ads,
-    /* rf_renamefile:    */ RF_renamefile_ads,
-};
-
-/* =======================================
    samba sfm format
    ad_path shouldn't be set here
  */
@@ -840,9 +823,6 @@ void initvol_vfs(struct vol *vol)
 {
     if (vol->v_adouble == AD_VERSION2_OSX) {
         vol->vfs = &netatalk_adouble_osx;
-    }
-    else if (vol->v_adouble == AD_VERSION1_ADS) {
-        vol->vfs = &netatalk_adouble_ads;
     }
     else if (vol->v_adouble == AD_VERSION1_SFM) {
         vol->vfs = &netatalk_adouble_sfm;

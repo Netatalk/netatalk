@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.37 2009-06-22 12:05:15 franklahm Exp $
+ * $Id: adouble.h,v 1.38 2009-07-20 23:23:02 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -84,7 +84,9 @@
 
 #define AD_VERSION2	0x00020000
 #define AD_VERSION2_OSX	0x00020001
+/*
 #define AD_VERSION1_ADS	0x00010002
+*/
 #define AD_VERSION1_SFM	0x00010003
 #define AD_VERSION	AD_VERSION2
 

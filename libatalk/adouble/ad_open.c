@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.43 2009-06-22 12:05:15 franklahm Exp $
+ * $Id: ad_open.c,v 1.44 2009-07-20 23:23:02 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -878,48 +878,10 @@ static int ad_mkrf_osx(char *path _U_)
 /* ---------------------------------------
  * Put the .AppleDouble where it needs to be:
  *
- *	    /	a/.AppleDouble/b/Afp_AfpInfo
+ *	    /	a/.AppleDouble/b/AFP_AfpInfo
  *	a/b     
- *	    \	b/.AppleDouble/.Parent/Afp_AfpInfo
+ *	    \	b/.AppleDouble/.Parent/AFP_AfpInfo
  *
- */
-char *
-ad_path_ads( path, adflags )
-    const char	*path;
-    int		adflags;
-{
-    static char	pathbuf[ MAXPATHLEN + 1];
-    char	c, *slash, buf[MAXPATHLEN + 1];
-    size_t      l;
-
-    l = strlcpy(buf, path, MAXPATHLEN +1);
-    if ( adflags & ADFLAGS_DIR ) {
-	strcpy( pathbuf, buf);
-	if ( *buf != '\0' && l < MAXPATHLEN) {
-	    pathbuf[l++] = '/';
-	    pathbuf[l] = 0;
-	}
-	slash = ".Parent";
-    } else {
-	if (NULL != ( slash = strrchr( buf, '/' )) ) {
-	    c = *++slash;
-	    *slash = '\0';
-	    strcpy( pathbuf, buf);
-	    *slash = c;
-	} else {
-	    pathbuf[ 0 ] = '\0';
-	    slash = buf;
-	}
-    }
-    strlcat( pathbuf, ".AppleDouble/", MAXPATHLEN +1);
-    strlcat( pathbuf, slash, MAXPATHLEN +1);
-
-    strlcat( pathbuf, "/Afp_AfpInfo", MAXPATHLEN +1);
-    return( pathbuf );
-}
-
-/* ---------------------- 
- * mostly the same as ads, only case change Afp --> AFP and AFP_Resoure
 */
 char *
 ad_path_sfm( path, adflags )
@@ -962,7 +924,7 @@ ad_path_sfm( path, adflags )
 }
 
 /* -------------------- */
-static int ad_mkrf_ads(char *path)
+static int ad_mkrf_sfm(char *path)
 {
     char *slash;
     /*
@@ -1218,19 +1180,9 @@ static struct adouble_fops ad_osx = {
         &ad_header_upgrade,        
 };
 
-static struct adouble_fops ad_ads = {
-        &ad_path_ads,
-        &ad_mkrf_ads,
-        &ad_rebuild_adouble_header,
-        &ad_check_size,
-
-        &ad_header_read,
-        &ad_header_upgrade,        
-};
-
 static struct adouble_fops ad_sfm = {
         &ad_path_sfm,
-        &ad_mkrf_ads,
+        &ad_mkrf_sfm,
         &ad_rebuild_sfm_header,
         &ad_check_size_sfm,
         
@@ -1255,9 +1207,6 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad->ad_flags = flags;
     if (flags == AD_VERSION2_OSX) {
         ad->ad_ops = &ad_osx;
-    }
-    else if (flags == AD_VERSION1_ADS) {
-        ad->ad_ops = &ad_ads;
     }
     else if (flags == AD_VERSION1_SFM) {
         ad->ad_ops = &ad_sfm;

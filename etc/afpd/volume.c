@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.87 2009-07-02 17:53:52 franklahm Exp $
+ * $Id: volume.c,v 1.88 2009-07-20 23:23:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -447,8 +447,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION2;
         else if (strcasecmp(val + 1, "osx") == 0)
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION2_OSX;
-        else if (strcasecmp(val + 1, "ads") == 0)
-            options[VOLOPT_ADOUBLE].i_value = AD_VERSION1_ADS;
         else if (strcasecmp(val + 1, "sfm") == 0)
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION1_SFM;
 #endif
@@ -2460,9 +2458,6 @@ static int savevoloptions (const struct vol *vol)
             break;
         case AD_VERSION2_OSX:
             strlcat(buf, "ADOUBLE_VER:osx\n", sizeof(buf));
-            break;
-        case AD_VERSION1_ADS:
-            strlcat(buf, "ADOUBLE_VER:ads\n", sizeof(buf));
             break;
         case AD_VERSION1_SFM:
             strlcat(buf, "ADOUBLE_VER:sfm\n", sizeof(buf));
