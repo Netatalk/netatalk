@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.4 2008-12-03 18:35:44 didg Exp $
+ * $Id: cnid.c,v 1.5 2009-07-20 18:33:07 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -270,6 +270,10 @@ char *ret;
     block_signal(cdb->flags);
     ret = cdb->cnid_resolve(cdb, id, buffer, len);
     unblock_signal(cdb->flags);
+    if (ret && !strcmp(ret, "..")) {
+        LOG(log_error, logtype_afpd, "cnid_resolve: name is '..', corrupted db? ");
+        ret = NULL;
+    }
     return ret;
 }
 
