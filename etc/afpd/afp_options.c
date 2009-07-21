@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.43 2009-04-30 10:48:38 franklahm Exp $
+ * $Id: afp_options.c,v 1.44 2009-07-21 13:41:16 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -319,15 +319,16 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     }
 
     /* -[no]setuplog <logtype> <loglevel> [<filename>]*/
-    char *optstr;
     c = buf;
     /* Now THIS is hokey! Multiple occurrences are not supported by our current code, */
     /* so I have to loop myself. */
-    while (NULL != (c = strstr(c, "-setuplog")))
+    while (NULL != (c = strstr(c, "-setuplog"))) {
+        char *optstr;
         if ((optstr = getoption(c, "-setuplog"))) {
             setuplog(optstr);
             c += sizeof("-setuplog");
         }
+    }
 
     if ((c = getoption(buf, "-unsetuplog")))
       unsetuplog(c);

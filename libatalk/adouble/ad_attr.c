@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.9 2009-06-19 13:38:34 franklahm Exp $
+ * $Id: ad_attr.c,v 1.10 2009-07-21 13:41:16 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,8 +20,8 @@
  */
 int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 {
-    *attr = 0;
     u_int16_t fflags;
+    *attr = 0;
 
     if (ad->ad_version == AD_VERSION1) {
         if (ad_getentryoff(ad, ADEID_FILEI)) {

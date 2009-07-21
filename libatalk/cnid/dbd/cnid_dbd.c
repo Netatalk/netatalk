@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.8 2009-05-28 10:22:07 franklahm Exp $
+ * $Id: cnid_dbd.c,v 1.9 2009-07-21 13:41:16 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -328,11 +328,11 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
     time(&orig);
     while (1) {
         if (db->fd == -1) {
-            LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             struct cnid_dbd_rqst rqst_stamp;
             struct cnid_dbd_rply rply_stamp;
             char  stamp[ADEDLEN_PRIVSYN];
 
+            LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             if ((db->fd = init_tsock(db)) < 0) {
                 time(&t);
                 if (t - orig > MAX_DELAY)

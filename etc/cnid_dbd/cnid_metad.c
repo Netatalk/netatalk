@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.12 2009-06-09 11:58:49 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.13 2009-07-21 13:41:16 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -387,7 +387,7 @@ gid_t group_to_gid ( group )
 }
 
 /* ------------------ */
-void catch_alarm(int sig) {
+void catch_alarm(int sig _U_) {
     alarmed = 1;
 }
 

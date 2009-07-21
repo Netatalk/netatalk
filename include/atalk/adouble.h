@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.38 2009-07-20 23:23:02 didg Exp $
+ * $Id: adouble.h,v 1.39 2009-07-21 13:41:16 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -442,6 +442,7 @@ struct adouble_fops {
 */
 extern int ad_rebuild_adouble_header __P((struct adouble *));
 extern int ad_rebuild_sfm_header __P((struct adouble *));
+extern int ad_copy_header __P((struct adouble *, struct adouble *));
 
 extern int ad_flush           __P((struct adouble *));
 extern int ad_close           __P((struct adouble *, int));

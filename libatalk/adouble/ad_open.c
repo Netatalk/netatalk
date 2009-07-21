@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.44 2009-07-20 23:23:02 didg Exp $
+ * $Id: ad_open.c,v 1.45 2009-07-21 13:41:16 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1136,7 +1136,7 @@ static int new_rfork(const char *path, struct adouble *ad, int adflags);
 #endif
 
 /* --------------------------- */
-static int ad_check_size(struct adouble *ad, struct stat *st)
+static int ad_check_size(struct adouble *ad _U_, struct stat *st)
 {
    if (st->st_size > 0 && st->st_size < AD_DATASZ1) 
    	return 1;
@@ -1144,7 +1144,7 @@ static int ad_check_size(struct adouble *ad, struct stat *st)
 }
 
 /* --------------------------- */
-static int ad_check_size_sfm(struct adouble *ad, struct stat *st)
+static int ad_check_size_sfm(struct adouble *ad _U_, struct stat *st)
 {
    if (st->st_size > 0 && st->st_size < AD_SFM_LEN) 
    	return 1;
@@ -1164,7 +1164,7 @@ static int ad_header_upgrade(struct adouble *ad, char *name)
 }
 
 /* --------------------------- */
-static int ad_header_upgrade_none(struct adouble *ad, char *name)
+static int ad_header_upgrade_none(struct adouble *ad _U_, char *name _U_)
 {
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.36 2009-04-16 06:17:14 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.37 2009-07-21 13:41:16 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -217,7 +217,7 @@ void afp_over_dsi(AFPObj *obj)
     u_int32_t err, cmd;
     u_int8_t function;
     struct sigaction action;
-    char *afpcmpstr;
+    const char *afpcmpstr;
 
     obj->exit = afp_dsi_die;
     obj->reply = (int (*)()) dsi_cmdreply;

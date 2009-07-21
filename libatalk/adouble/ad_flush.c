@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.9 2007-04-11 01:11:10 didg Exp $
+ * $Id: ad_flush.c,v 1.10 2009-07-21 13:41:16 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -109,7 +109,7 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
 int ad_copy_header(struct adouble *add, struct adouble *ads)
 {
     u_int32_t		eid;
-    int			len;
+    u_int32_t		len;
 
     for ( eid = 0; eid < ADEID_MAX; eid++ ) {
       if ( ads->ad_eid[ eid ].ade_off == 0 ) {
