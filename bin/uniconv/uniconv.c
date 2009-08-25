@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
         setlinebuf(stdout); 
 #endif        
 
-        while ((c = getopt (argc, argv, "f:m:t:c:nvVh")) != -1)
+        while ((c = getopt (argc, argv, "f:m:t:c:dnvVh")) != -1)
         switch (c)
         {
 	case 'f':
@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 		mac_charset = strdup(optarg);
 		break;
 	case 'd':
-		conv_flags &= !CONV_ESCAPEDOTS;
+		conv_flags &= ~CONV_ESCAPEDOTS;
 		usedots = 1;
 		break;
 	case 'n':
