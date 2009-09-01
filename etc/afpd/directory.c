@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.100 2009-09-01 13:15:13 franklahm Exp $
+ * $Id: directory.c,v 1.101 2009-09-01 13:18:17 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1484,7 +1484,7 @@ noucsfallback:
             cdir = extenddir( vol, dir, &ret );
         } /* if (!extend) */
 
-        if ( cdir == NULL ) {
+        if ( cdir == NULL || !ret.u_name ) {
 
             if ( len > 0) {
                 return NULL;
