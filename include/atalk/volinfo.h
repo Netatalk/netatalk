@@ -1,5 +1,5 @@
 /*
- * $Id: volinfo.h,v 1.5 2009-05-14 13:46:08 franklahm Exp $
+ * $Id: volinfo.h,v 1.6 2009-09-01 14:28:07 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
@@ -46,6 +46,7 @@
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
 
 /* volinfo for shell utilities */
+#define VOLINFODIR  ".AppleDesktop"
 #define VOLINFOFILE ".volinfo"
 
 struct volinfo {

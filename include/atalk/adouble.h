@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.39 2009-07-21 13:41:16 didg Exp $
+ * $Id: adouble.h,v 1.40 2009-09-01 14:28:07 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -375,18 +375,19 @@ struct adouble_fops {
 #define FINDERINFO_FRCREATOFF  4
 #define FINDERINFO_FRFLAGOFF   8
 
-/* finderinfo flags */
-#define FINDERINFO_ISONDESK      (1)     /* "d" */
+/* FinderInfo Flags, char in `ad ls`, valid for files|dirs */
+#define FINDERINFO_ISONDESK      (1)     /* "d", fd */
 #define FINDERINFO_COLOR         (0x0e)
-#define FINDERINFO_ISHARED       (1<<6)  /* "m" */
-#define FINDERINFO_HASNOINITS    (1<<7)  /* "n" */
-#define FINDERINFO_HASBEENINITED (1<<8)  /* "i" */
-#define FINDERINFO_HASCUSTOMICON (1<<10) /* "c" */
-#define FINDERINFO_ISSTATIONNERY (1<<11) /* "t" */
-#define FINDERINFO_NAMELOCKED    (1<<12) /* "s" */
-#define FINDERINFO_HASBUNDLE     (1<<13) /* "b" */
-#define FINDERINFO_INVISIBLE     (1<<14) /* "v" */
-#define FINDERINFO_ISALIAS       (1<<15) /* "a" */
+#define FINDERINFO_HIDEEXT       (1<<4)  /* "e", fd */
+#define FINDERINFO_ISHARED       (1<<6)  /* "m", f  */
+#define FINDERINFO_HASNOINITS    (1<<7)  /* "n", f  */
+#define FINDERINFO_HASBEENINITED (1<<8)  /* "i", fd */
+#define FINDERINFO_HASCUSTOMICON (1<<10) /* "c", fd */
+#define FINDERINFO_ISSTATIONNERY (1<<11) /* "t", f  */
+#define FINDERINFO_NAMELOCKED    (1<<12) /* "s", fd */
+#define FINDERINFO_HASBUNDLE     (1<<13) /* "b", fd */
+#define FINDERINFO_INVISIBLE     (1<<14) /* "v", fd */
+#define FINDERINFO_ISALIAS       (1<<15) /* "a", fd */
 
 #define FINDERINFO_FRVIEWOFF  14 
 #define FINDERINFO_CUSTOMICON 0x4
@@ -398,23 +399,24 @@ struct adouble_fops {
    <https://sourceforge.net/tracker/?func=detail&aid=2802236&group_id=8642&atid=108642>
  */
 
-/* AFP attributes for files and dirs. (d) = only these are valid for directories */
-#define ATTRBIT_INVISIBLE (1<<0)  /* (d) */
-#define ATTRBIT_MULTIUSER (1<<1)
-#define ATTRBIT_SYSTEM    (1<<2)  /* "y" (d) */
-#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
-#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
-#define ATTRBIT_NOWRITE   (1<<5)  /* "w" write inhibit(v2)/read-only(v1) bit ("") */
-#define ATTRBIT_BACKUP    (1<<6)  /* "b" (d) */
-#define ATTRBIT_NORENAME  (1<<7)  /* "r" (d) */
-#define ATTRBIT_NODELETE  (1<<8)  /* "d" (d) */
-#define ATTRBIT_NOCOPY    (1<<10) /* "c" */
-#define ATTRBIT_SETCLR    (1<<15) /* set/clear bits (d) */
+/* AFP attributes, char in `ad ls`, valid for files|dirs */
+#define ATTRBIT_INVISIBLE (1<<0)  /* opaque from FinderInfo */
+#define ATTRBIT_MULTIUSER (1<<1)  /* file: opaque, dir: see below */
+#define ATTRBIT_SYSTEM    (1<<2)  /* "y", fd */
+#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open. Not stored, computed on the fly */
+#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open. Not stored, computed on the fly */
+#define ATTRBIT_NOWRITE   (1<<5)  /* "w", f, write inhibit(v2)/read-only(v1) bit */
+#define ATTRBIT_BACKUP    (1<<6)  /* "p", fd */
+#define ATTRBIT_NORENAME  (1<<7)  /* "r", fd */
+#define ATTRBIT_NODELETE  (1<<8)  /* "l", fd */
+#define ATTRBIT_NOCOPY    (1<<10) /* "o", f */
+#define ATTRBIT_SETCLR    (1<<15) /* set/clear bit (d) */
 
-/* AFP attributes for dirs */
-#define ATTRBIT_EXPFLDR   (1<<1)  /* Folder is a sharepoint ("p") */
-#define ATTRBIT_MOUNTED   (1<<3)  /* Directory is mounted by a user ("") */
-#define ATTRBIT_SHARED    (1<<4)  /* shared area, called IsExpFolder in spec ("") */
+/* AFP attributes for dirs. These should probably be computed on the fly.
+ * We don't do that, nor does e.g. OS S X 10.5 Server */
+#define ATTRBIT_EXPFLDR   (1<<1)  /* Folder is a sharepoint */
+#define ATTRBIT_MOUNTED   (1<<3)  /* Directory is mounted by a user */
+#define ATTRBIT_SHARED    (1<<4)  /* Shared area, called IsExpFolder in spec */
  
 /* private AFPFileInfo bits */
 #define AD_AFPFILEI_OWNER       (1 << 0) /* any owner */

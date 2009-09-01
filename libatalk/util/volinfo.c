@@ -149,8 +149,9 @@ static char * make_path_absolute(char *path, size_t bufsize)
 
     if (!S_ISDIR(st.st_mode)) {
         if (NULL == (p=strrchr(abspath, '/')) )
-            return NULL;
-        *p = '\0';
+            strcpy(abspath, ".");
+        else
+            *p = '\0';
     }
 
     if (!getcwd(savecwd, sizeof(savecwd)) || chdir(abspath) < 0)	
@@ -158,13 +159,11 @@ static char * make_path_absolute(char *path, size_t bufsize)
 
     if (!getcwd(abspath, sizeof(abspath)) || chdir (savecwd) < 0)
         return NULL;
-        
     
     if (strlen(abspath) > bufsize)
         return NULL;
 
     strlcpy(path, abspath, bufsize);
-
     return path;
 }
 

@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
+ad
 cnid2_create
 cnid_maint
 cnid_index
