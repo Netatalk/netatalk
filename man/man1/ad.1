@@ -1,0 +1,76 @@
+'\" t
+.\"     Title: ad
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 01 Sep 2009
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
+.\"  Language: English
+.\"
+.TH "AD" "1" "01 Sep 2009" "Netatalk 2.1" "Netatalk 2.1"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+ad \- Netatalk compatible UNIX file utility suite\&.
+.SH "SYNOPSIS"
+.HP \w'\fBad\fR\ 'u
+\fBad\fR {ls} [\&.\&.\&.]
+.SH "DESCRIPTION"
+.PP
+\fBad\fR
+is a UNIX file utlity suite with Netatalk compatibity\&. AppleDouble
+files in
+\&.AppleDouble
+directories and the CNID databases are updated as appropiate\&.
+.SH "AVAILABLE COMMANDS"
+.PP
+.HP \w'\fBad\ ls\fR\ 'u \fBad ls\fR [\-dRl\ [u]] {file|dir\ [\&.\&.\&.]}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\-l Long Output [\-u: unix info]:
+
+   <unixinfo \&.\&.\&.> <FinderFlags> <AFPAttributes> <Color> <Type> <Creator> <CNID from AppleDouble> <name>
+
+   FinderFlags (valid for (f)ile and/or (d)irectory):
+     d = On Desktop (f/d)
+     e = Hidden extension (f/d)
+     m = Shared (can run multiple times) (f)
+     n = No INIT resources (f)
+     i = Inited (f/d)
+     c = Custom icon (f/d)
+     t = Stationery (f)
+     s = Name locked (f/d)
+     b = Bundle (f/d)
+     v = Invisible (f/d)
+     a = Alias file (f/d)
+
+   AFPAttributes:
+     y = System (f/d)
+     w = No write (f)
+     p = Needs backup (f/d)
+     r = No rename (f/d)
+     l = No delete (f/d)
+     o = No copy (f)
+
+  Note: any letter appearing in uppercase means the flag is set but it\'s a directory for which the flag is not allowed\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "REPORTING BUGS"
+.PP
+Report bugs to the Netatalk\-devel list <netatalk\-devel@lists\&.sourceforge\&.net>\&.
+.SH "SEE ALSO"
+.PP
+\fBdbd\fR(1)\&.

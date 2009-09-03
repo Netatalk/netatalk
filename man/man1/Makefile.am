@@ -15,6 +15,7 @@ SUFFIXES= .tmpl .
 GENERATED_MANS	= apple_cp.1 apple_mv.1 apple_rm.1 uniconv.1 asip-status.pl.1
 TEMPLATE_FILES	= apple_cp.1.tmpl apple_mv.1.tmpl apple_rm.1.tmpl uniconv.1.tmpl asip-status.pl.1.tmpl
 NONGENERATED_MANS	=	achfile.1  \
+				ad.1 \
 				aecho.1 \
 				afile.1 \
 				afppasswd.1 \
