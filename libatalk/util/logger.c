@@ -234,13 +234,9 @@ int get_syslog_equivalent(enum loglevels loglevel)
 
 void log_init(void)
 {
-#ifdef LOGFILEPATH
-    log_setup(LOGFILEPATH, log_note, logtype_default);
-#else
     syslog_setup(log_note, 0,
                  log_config.syslog_display_options,
                  log_config.facility);
-#endif
 }
 
 void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)

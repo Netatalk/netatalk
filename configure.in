@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.217 2009-04-28 13:01:24 franklahm Exp $
+dnl $Id: configure.in,v 1.218 2009-09-03 12:47:33 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -205,22 +205,6 @@ AC_ARG_ENABLE(admin-group,
 NETATALK_AFS_CHECK
 
 NETATALK_CONFIG_DIRS
-
-AC_MSG_CHECKING([whether to force logfile])
-AC_ARG_WITH(logfile,
-	[  --with-logfile=PATH     force logging to file PATH],[
-        if test x"$withval" = x"no"; then
-		AC_MSG_RESULT([no, syslog])
-	elif test "$withval" != "yes"; then
-		AC_DEFINE_UNQUOTED(LOGFILEPATH, "$withval", [Path to the log file])
-		AC_MSG_RESULT([$withval])
-	else
-		AC_DEFINE_UNQUOTED(LOGFILEPATH, "/var/log/netatalk.log", [Path to the log file])
-		AC_MSG_RESULT([/var/log/netatalk.log]) 
-	fi],[
-	AC_MSG_RESULT([no, syslog])
-	]
-)
 
 netatalk_cv_with_cracklib=no
 AC_ARG_WITH(cracklib,
