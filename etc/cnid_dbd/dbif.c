@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.12 2009-05-22 20:48:44 franklahm Exp $
+ * $Id: dbif.c,v 1.13 2009-09-03 08:35:15 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -279,10 +279,52 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 /* --------------- */
 int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
 {
-    int ret;
-    int i;
+    int ret, i, cwd;
     u_int32_t count;
+    struct stat st;
+    DB *upgrade_db;
 
+    /* Try to upgrade if it's a normal on-disk database */
+    if (dbd->db_envhome) {
+        /* Remember cwd */
+        if ((cwd = open(".", O_RDONLY)) < 0) {
+            LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
+            return -1;
+        }
+        
+        /* chdir to db_envhome. makes it easier checking for old db files and creating db_errlog file  */
+        if ((chdir(dbd->db_envhome)) != 0) {
+            LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+            return -1;
+        }
+        
+        if ((stat(dbd->db_filename, &st)) == 0) {
+            LOG(log_debug, logtype_cnid, "See if we can upgrade the CNID database");
+            if ((ret = db_create(&upgrade_db, dbd->db_env, 0))) {
+                LOG(log_error, logtype_cnid, "error creating handle for database: %s", db_strerror(ret));
+                return -1;
+            }
+            if ((ret = upgrade_db->upgrade(upgrade_db, dbd->db_filename, 0))) {
+                LOG(log_error, logtype_cnid, "error upgarding database: %s", db_strerror(ret));
+                return -1;
+            }
+            if ((ret = upgrade_db->close(upgrade_db, 0))) {
+                LOG(log_error, logtype_cnid, "error closing database: %s", db_strerror(ret));
+                return -1;
+            }
+            if ((ret = dbd->db_env->txn_checkpoint(dbd->db_env, 0, 0, DB_FORCE))) {
+                LOG(log_error, logtype_cnid, "error forcing checkpoint: %s", db_strerror(ret));
+                return -1;
+            }
+        }
+        
+        if ((fchdir(cwd)) != 0) {
+            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+            return -1;
+        }
+    }
+
+    /* Now open databases ... */
     for (i = 0; i != DBIF_DB_CNT; i++) {
         if ((ret = db_create(&dbd->db_table[i].db, dbd->db_env, 0))) {
             LOG(log_error, logtype_cnid, "error creating handle for database %s: %s",
@@ -398,6 +440,99 @@ int dbif_close(DBD *dbd)
 
     if (err)
         return -1;
+    return 0;
+}
+
+/* 
+   In order to support silent database upgrades:
+   destroy env at cnid_dbd shutdown.
+ */
+int dbif_prep_upgrade(const char *path)
+{
+    int cwd, ret;
+    DBD *dbd;
+
+    LOG(log_debug, logtype_cnid, "Reopening BerkeleyDB environment");
+    
+    if (NULL == (dbd = dbif_init(path, "cnid2.db")))
+        return -1;
+
+    /* Remember cwd */
+    if ((cwd = open(".", O_RDONLY)) < 0) {
+        LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
+        return -1;
+    }
+
+    /* chdir to db_envhome. makes it easier checking for old db files and creating db_errlog file  */
+    if ((chdir(dbd->db_envhome)) != 0) {
+        LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+        return -1;
+    }
+
+    if ((dbd->db_errlog = fopen(DB_ERRLOGFILE, "a")) == NULL)
+        LOG(log_warning, logtype_cnid, "error creating/opening DB errlogfile: %s", strerror(errno));
+    
+    if ((fchdir(cwd)) != 0) {
+        LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+        return -1;
+    }
+
+    /* Get db_env handle */
+    if ((ret = db_env_create(&dbd->db_env, 0))) {
+        LOG(log_error, logtype_cnid, "error creating DB environment: %s", db_strerror(ret));
+        dbd->db_env = NULL;
+        return -1;
+    }
+
+    /* Set logfile */
+    if (dbd->db_errlog != NULL) {
+        dbd->db_env->set_errfile(dbd->db_env, dbd->db_errlog);
+        dbd->db_env->set_msgfile(dbd->db_env, dbd->db_errlog);
+        dbd->db_env->set_verbose(dbd->db_env, DB_VERB_RECOVERY, 1);
+    }
+
+    /* Open environment with recovery */
+    if ((ret = dbd->db_env->open(dbd->db_env, 
+                                 dbd->db_envhome,
+                                 DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_PRIVATE,
+                                 0))) {
+        LOG(log_error, logtype_cnid, "error opening DB environment: %s",
+            db_strerror(ret));
+        dbd->db_env->close(dbd->db_env, 0);
+        dbd->db_env = NULL;
+        return -1;
+    }
+
+    if (dbd->db_errlog != NULL)
+        fflush(dbd->db_errlog);
+
+    /* Remove logfiles */
+    if ((ret = dbd->db_env->log_archive(dbd->db_env, NULL, DB_ARCH_REMOVE))) {
+         LOG(log_error, logtype_cnid, "error removing transaction logfiles: %s", db_strerror(ret));
+         return -1;
+    }
+
+    if ((ret = dbd->db_env->close(dbd->db_env, 0))) {
+        LOG(log_error, logtype_cnid, "error closing DB environment after recovery: %s", db_strerror(ret));
+        dbd->db_env = NULL;
+        return -1;
+    }
+
+    LOG(log_debug, logtype_cnid, "BerkeleyDB environment recovery done.");
+
+    /* Get a new db_env handle and then remove environment */
+    if ((ret = db_env_create(&dbd->db_env, 0))) {
+        LOG(log_error, logtype_cnid, "error acquiring db_end handle: %s", db_strerror(ret));
+        dbd->db_env = NULL;
+        return -1;
+    }
+    if ((ret = dbd->db_env->remove(dbd->db_env, dbd->db_envhome, 0))) {
+        LOG(log_error, logtype_cnid, "error removing BerkeleyDB environment: %s", db_strerror(ret));
+        return -1;
+    }
+
+    LOG(log_debug, logtype_cnid, "Removed BerkeleyDB environment.");
+
     return 0;
 }
 

@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.5 2009-05-28 11:28:49 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.6 2009-09-03 08:35:15 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -228,7 +228,7 @@ void free_lock(int lockfd)
 
 static void usage ()
 {
-    printf("Usage: dbd [-e|-v|-x] -d [-i] | -s | -r [-f] <path to netatalk volume>\n"
+    printf("Usage: dbd [-e|-v|-x|-u] -d [-i] | -s | -r [-f] <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
@@ -252,6 +252,11 @@ static void usage ()
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
            "                 only available for volumes with 'cachecnid' option. Implies -e.\n"
+           "   -u Prepare upgrade:\n"
+           "      Before installing an upgraded version of Netatalk that is linked against\n"
+           "      a newer BerkeleyDB lib, run `dbd -u ...` from the OLD Netatalk pior to\n"
+           "      upgrading on all volumes. This removes the BerkleyDB environment.\n"
+           "      On exit cnid_dbd does this automatically, so normally calling dbd -u should not be necessary.\n\n"
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
@@ -265,8 +270,8 @@ static void usage ()
 
 int main(int argc, char **argv)
 {
-    int c, lockfd;
-    int dump=0, scan=0, rebuild=0, rebuildindexes=0, dumpindexes=0, force=0;
+    int c, lockfd, ret = -1;
+    int dump=0, scan=0, rebuild=0, prep_upgrade=0, rebuildindexes=0, dumpindexes=0, force=0;
     dbd_flags_t flags = 0;
     char *volpath;
     struct volinfo volinfo;
@@ -276,7 +281,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    while ((c = getopt(argc, argv, ":dsrvxife")) != -1) {
+    while ((c = getopt(argc, argv, ":dsruvxife")) != -1) {
         switch(c) {
         case 'd':
             dump = 1;
@@ -290,6 +295,9 @@ int main(int argc, char **argv)
             break;
         case 'r':
             rebuild = 1;
+            break;
+        case 'u':
+            prep_upgrade = 1;
             break;
         case 'v':
             verbose = 1;
@@ -314,7 +322,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if ((dump + scan + rebuild) != 1) {
+    if ((dump + scan + rebuild + prep_upgrade) != 1) {
         usage();
         exit(EXIT_FAILURE);
     }
@@ -365,8 +373,15 @@ int main(int argc, char **argv)
     */
     lockfd = get_lock(dbpath);
 
+    /* Prepare upgrade ? */
+    if (prep_upgrade) {
+        if (dbif_prep_upgrade(dbpath))
+            goto exit_failure;
+        goto exit_success;
+    }        
+
     /* Check if -f is requested and wipe db if yes */
-    if ((flags & DBD_FLAGS_FORCE) && (volinfo.v_flags & AFPVOL_CACHE)) {
+    if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
         snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
@@ -378,11 +393,11 @@ int main(int argc, char **argv)
        Lets start with the BerkeleyDB stuff
     */
     if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
-        exit(EXIT_FAILURE);
+        goto exit_failure;
 
     if (dbif_env_open(dbd, &db_param, exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
         dbd_log( LOGSTD, "error opening database!");
-        exit(EXIT_FAILURE);
+        goto exit_failure;
     }
 
     if (exclusive)
@@ -390,12 +405,12 @@ int main(int argc, char **argv)
 
     if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
         dbif_close(dbd);
-        exit(EXIT_FAILURE);
+        goto exit_failure;
     }
 
     if (dbd_stamp(dbd) < 0) {
         dbif_close(dbd);
-        exit(EXIT_FAILURE);
+        goto exit_failure;
     }
 
     if (dump) {
@@ -410,13 +425,20 @@ int main(int argc, char **argv)
 
     if (dbif_close(dbd) < 0) {
         dbd_log( LOGSTD, "Error closing database");
-        exit(EXIT_FAILURE);
+        goto exit_failure;
     }
 
-    free_lock(lockfd);
+exit_success:
+    ret = 0;
 
+exit_failure:
+    free_lock(lockfd);
+    
     if ((fchdir(cdir)) < 0)
         dbd_log(LOGSTD, "fchdir: %s", strerror(errno));
 
-    return 0;
+    if (ret == 0)
+        exit(EXIT_SUCCESS);
+    else
+        exit(EXIT_FAILURE);
 }

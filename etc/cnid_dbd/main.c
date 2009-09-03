@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.9 2009-07-12 09:21:34 franklahm Exp $
+ * $Id: main.c,v 1.10 2009-09-03 08:35:15 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -369,6 +369,9 @@ int main(int argc, char *argv[])
         err++;
 
     if (dbif_close(dbd) < 0)
+        err++;
+
+    if (dbif_prep_upgrade(dir) < 0)
         err++;
 
     free_lock(lockfd);

@@ -1,3 +1,28 @@
+
+
+REMEMBER TO UPDATE the Changes in 2.0.x section !!!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Changes in 2.1
+==============
+* UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
+* FIX: rewritten logger
+* NEW: cnid_metad: options -l and -f to configure logging
+* NEW: CNID database maintanance utility dbd
+* NEW: support BerkeleyDB upgrade. Starting with the next release
+       after 2.1 in case of BerkeleyDB library updates, Netatalk
+       will be able to upgrade the CNID databases.
+* NEW: AppleDouble compatible UNIX files utility suite `ad ...`.
+       With 2.1 only `ad ls`.
+* NEW: afpd: ACL support with ZFS
+* NEW: afpd: ExtendedAttributes support with ZFS
+
+Changes in 2.0.x
+================
+
+...........
+
+
 Changes in 2.0.0
 ================
 

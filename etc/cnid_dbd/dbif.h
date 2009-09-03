@@ -1,5 +1,5 @@
 /*
-  $Id: dbif.h,v 1.7 2009-05-22 20:48:44 franklahm Exp $
+  $Id: dbif.h,v 1.8 2009-09-03 08:35:15 franklahm Exp $
  
   Copyright (C) Joerg Lenneis 2003
   Copyright (C) Frank Lahm 2009
@@ -17,8 +17,8 @@
      dbd = dbif_init("cnid2.db");
      Pass NULL to create an in-memory db.
      Note: the DBD type is NOT from BerkeleyDB ! We've defined it.
-  3. Optional:
-     Call dbif_env_open to open an dbd environment, chdir to it beforehand
+  3. Call dbif_env_open to open an dbd environment if you called dbif_init
+     with a filename.
   4. Call dbif_open to finally open the CNID database itself
   
   Querying the CNID database
@@ -41,6 +41,14 @@
   Closing
   -------
   Call dbif_close.
+
+  Silent Upgrade Support
+  ----------------------
+
+  On cnid_dbd shutdown we reopen the environment with recovery, close and then
+  remove it. This enables an upgraded netatalk installation possibly linked against
+  a newer bdb lib to succesfully open/create an environment and then silently
+  upgrade the database itself. How nice!
 */
 
 #ifndef CNID_DBD_DBIF_H
@@ -81,6 +89,7 @@ extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
 extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
 extern int dbif_close(DBD *dbd);
+extern int dbif_prep_upgrade(const char *path);
 
 extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
