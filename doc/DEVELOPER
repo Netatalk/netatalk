@@ -3,10 +3,11 @@ Information for Netatalk Developers
 
 For basic installation instructions, see the INSTALL file.
 
-Netatalk is an implementation of the AppleTalk Protocol Suite and
-the Apple Filing Protocol (AFP).  The current release contains support
-for EtherTalk Phase I and II, DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP
-and AFP.  The complete stack looks like this on a BSD-derived system:
+Netatalk is an implementation of "AFP over TCP".
+Netatalk also support the AppleTalk Protocol Suite for legacy Macs.
+The current release contains support for EtherTalk Phase I and II, 
+DDP, RTMP, NBP, ZIP, AEP, ATP, PAP, ASP, AFP and DSI.
+The complete stack looks like this on a BSD-derived system:
 
     AFP                          AFP
      |                            |
@@ -24,6 +25,7 @@ and AFP.  The complete stack looks like this on a BSD-derived system:
     |                Network-Interface                  |
     +---------------------------------------------------+
 
+DSI is a session layer used to carry AFP over TCP.
 DDP is in the kernel.  "atalkd" implements RTMP, NBP, ZIP, and AEP.  It
 is the AppleTalk equivalent of Unix "routed".  There is also a
 client-stub library for NBP.  ATP and ASP are implemented as
@@ -154,4 +156,4 @@ scalable, and mission-critical database support to software
 developers. BDB can downloaded from
 http://www.oracle.com/database/berkeley-db/index.html
 Netatalk's CNID database uses the library and header files from BDB.
-Currently, Netatalk supports BDB 4.4 and later.
+Currently, Netatalk supports BDB 4.6 and later.

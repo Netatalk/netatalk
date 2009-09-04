@@ -12,12 +12,12 @@
 #
 # The following options are available:
 #   Transport Protocols:
-#     -[no]tcp       Make AFP-over-TCP [not] available
-#     -[no]ddp       Make AFP over AppleTalk [not] available. if you
-#                    have -proxy specified, specify -uamlist "" to 
+#     -[no]tcp       Make "AFP over TCP" [not] available
+#     -[no]ddp       Make "AFP over AppleTalk" [not] available.
+#                    If you have -proxy specified, specify -uamlist "" to 
 #                    prevent ddp connections from working.
 #
-#     -transall      Make both available (default)
+#     -transall      Make both available
 #
 #   Transport Options:
 #     -ipaddr <w.x.y.z>   Specifies the IP address the server should respond
@@ -223,5 +223,6 @@
 #		"User Volume" -uamlist uams_clrtxt.so -port 12000
 #		"special" -notcp -defaultvol <path> -systemvol <path>
 #
+
 # default:
-# - -transall -uamlist uams_dhx.so,uams_dhx2.so -nosavepassword
+# - -tcp -noddp -uamlist uams_dhx.so,uams_dhx2.so -nosavepassword

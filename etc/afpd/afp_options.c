@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.44 2009-07-21 13:41:16 didg Exp $
+ * $Id: afp_options.c,v 1.45 2009-09-04 15:27:21 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -167,7 +167,7 @@ void afp_options_init(struct afp_options *options)
     options->uamlist = "uams_dhx.so,uams_dhx2.so";
     options->guest = "nobody";
     options->loginmesg = "";
-    options->transports = AFPTRANS_ALL;
+    options->transports = AFPTRANS_TCP; /*  TCP only */
     options->passwdfile = _PATH_AFPDPWFILE;
     options->tickleval = 30;
     options->timeout = 4;
