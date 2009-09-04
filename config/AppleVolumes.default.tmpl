@@ -11,8 +11,6 @@
 #   [allowed_hosts:IPv4 address[/IPv4 netmask bits]] \
 #   [denied_hosts:IPv4 address[/IPv4 netmask bits]] \
 #   
-#
-#
 # name:      volume name. it can't include the ':' character
 #
 # variable substitutions:
@@ -56,22 +54,22 @@
 #                        ignore for user defined volumes
 # root_preexec        -> command to be run as root when the volume is mounted,
 #                        ignore for user defined volumes
-# postexec             -> command to be run when the volume is closed,
+# postexec            -> command to be run when the volume is closed,
 #                        ignore for user defined volumes
-# root_postexec        -> command to be run as root when the volume is closed,
+# root_postexec       -> command to be run as root when the volume is closed,
 #                        ignore for user defined volumes
 #
 # codepage options [syntax: options:charsetname]
-# volcharset           -> specifies the charset to be used as the volume codepage
-#                         e.g. "UTF8", "UTF8-MAC", "ISO-8859-15"
-# maccharset           -> specifies the charset to be used as the mac client codepage
-#                         e.g. "MAC_ROMAN", "MAC_CYRILLIC"
+# volcharset          -> specifies the charset to be used as the volume codepage
+#                        e.g. "UTF8", "UTF8-MAC", "ISO-8859-15"
+# maccharset          -> specifies the charset to be used as the mac client codepage
+#                        e.g. "MAC_ROMAN", "MAC_CYRILLIC"
 #
 # perm                -> default permission value OR with the client requested perm
 # dperm               -> default permission value for directories OR with the client 
-#			 requested perm
+#                        requested perm
 # fperm               -> default permission value for filesOR with the client 
-#			 requested perm
+#                        requested perm
 #
 # miscellaneous options [syntax: options:option1,option2]:
 # prodos              -> make compatible with appleII clients.
@@ -81,21 +79,21 @@
 # ro                  -> mount the volume as read-only.
 # mswindows           -> enforce filename restrictions imposed by MS
 #                        Windows. this will also invoke a default
-#			 codepage (iso8859-1) if one isn't already 
-#			 specified.
-# nohex		      -> don't do :hex translations for anything
-#		         except dot files. specify usedots as well if
-#			 you want that turned off. note: this option
-#			 makes the / character illegal.
+#                        codepage (iso8859-1) if one isn't already 
+#                        specified.
+# nohex               -> don't do :hex translations for anything
+#                        except dot files. specify usedots as well if
+#                        you want that turned off. note: this option
+#                         makes the / character illegal.
 # usedots             -> don't do :hex translation for dot files. note: when 
 #                        this option gets set, certain file names
-#			 become illegal. these are .Parent and
-#			 anything that starts with .Apple.
+#                        become illegal. these are .Parent and
+#                        anything that starts with .Apple.
 # invisibledots       -> don't do :hex translation for dot files. note: when 
 #                        this option gets set, certain file names
-#			 become illegal. these are .Parent and
-#			 anything that starts with .Apple. also, dot
-#			 files created on the unix side are marked invisible. 
+#                        become illegal. these are .Parent and
+#                        anything that starts with .Apple. also, dot
+#                        files created on the unix side are marked invisible. 
 # limitsize           -> limit disk size reporting to 2GB. this is
 #                        here for older macintoshes using newer
 #                        appleshare clients. yucko.
@@ -114,8 +112,6 @@
 #                        compatible to *Solaris. In other words: this requires
 #                        Solaris, Opensolaris or a derived distribution.
 
-#
-#
 # dbpath:path         -> store the database stuff in the following path.
 # password:password   -> set a volume password (8 characters max)
 # cnidscheme:scheme   -> set the cnid scheme for the volume, default is [:DEFAULT_CNID_SCHEME:]
