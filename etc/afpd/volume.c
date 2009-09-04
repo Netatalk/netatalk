@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.88 2009-07-20 23:23:02 didg Exp $
+ * $Id: volume.c,v 1.89 2009-09-04 07:59:50 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -180,7 +180,7 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
     {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},     /* encode illegal sequence */
-    {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
+    {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching. Default: yes */
     {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {0, NULL}
@@ -500,8 +500,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_CASEINSEN;
             else if (strcasecmp(p, "illegalseq") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_EILSEQ;
-            else if (strcasecmp(p, "cachecnid") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+            else if (strcasecmp(p, "nocnidcache") == 0)
+                options[VOLOPT_FLAGS].i_value &= ~AFPVOL_CACHE;
 
             p = strtok(NULL, ",");
         }
@@ -1094,6 +1094,10 @@ struct passwd *pwent;
     }
 
     memset(save_options, 0, sizeof(save_options));
+
+    /* Enable some default options for all volumes */
+    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+
     while ( myfgets( buf, sizeof( buf ), fp ) != NULL ) {
         initline( strlen( buf ), buf );
         parseline( sizeof( path ) - 1, path );

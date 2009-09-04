@@ -14,8 +14,14 @@ Changes in 2.1
        will be able to upgrade the CNID databases.
 * NEW: AppleDouble compatible UNIX files utility suite `ad ...`.
        With 2.1 only `ad ls`.
+* NEW: afpd: AFP 3.2 support
 * NEW: afpd: ACL support with ZFS
 * NEW: afpd: ExtendedAttributes support with ZFS
+* NEW: afpd: store and read CNIDs to/from AppleDouble files by default.
+       This is used as a cache and as a backup in case the database
+       is deleted or corrupted. It can be disabled with a new volume
+       option "nocnidcache".
+       
 
 Changes in 2.0.x
 ================

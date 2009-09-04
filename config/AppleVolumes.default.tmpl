@@ -111,6 +111,9 @@
 #                        compatible filesystem (e.g. ZFS) and an ACL API
 #                        compatible to *Solaris. In other words: this requires
 #                        Solaris, Opensolaris or a derived distribution.
+# nocnidcache         -> Don't store and read CNID to/from AppleDouble file.
+#                        This should not be used as it also prevents a CNID
+#                        database rebuild with `dbd`!
 
 # dbpath:path         -> store the database stuff in the following path.
 # password:password   -> set a volume password (8 characters max)
