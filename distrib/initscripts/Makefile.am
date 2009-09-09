@@ -223,13 +223,8 @@ endif
 
 if USE_DEBIAN
 
-<<<<<<< Makefile.am
-sysvdir = /etc/init.d
-sysv_SCRIPTS = netatalk
-=======
 sysvdir = $(DESTDIR)$(sysconfdir)/init.d
-sysv_SCRIPTS = atalk
->>>>>>> 1.16.6.8.2.2
+sysv_SCRIPTS = netatalk
 
 netatalk: rc.atalk.debian
 	cp -f rc.atalk.debian netatalk
