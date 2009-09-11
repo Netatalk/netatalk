@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.89 2009-09-04 07:59:50 franklahm Exp $
+ * $Id: volume.c,v 1.90 2009-09-11 09:14:16 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -183,6 +183,7 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching. Default: yes */
     {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
+    {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
     {0, NULL}
 };
 
@@ -502,6 +503,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_EILSEQ;
             else if (strcasecmp(p, "nocnidcache") == 0)
                 options[VOLOPT_FLAGS].i_value &= ~AFPVOL_CACHE;
+            else if (strcasecmp(p, "tm") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_TM;
 
             p = strtok(NULL, ",");
         }
@@ -1462,8 +1465,10 @@ int		*buflen;
             ashort |= VOLPBIT_ATTR_CATSEARCH;
             if (afp_version >= 30) {
                 ashort |= VOLPBIT_ATTR_UTF8;
-	        if (vol->v_flags & AFPVOL_UNIX_PRIV)
-		    ashort |= VOLPBIT_ATTR_UNIXPRIV;
+                if (vol->v_flags & AFPVOL_UNIX_PRIV)
+                    ashort |= VOLPBIT_ATTR_UNIXPRIV;
+                if (vol->v_flags & AFPVOL_TM)
+                    ashort |= VOLPBIT_ATTR_TM;
             }
             if (afp_version >= 32) {
 		if (vol->v_flags & AFPVOL_EXT_ATTRS)

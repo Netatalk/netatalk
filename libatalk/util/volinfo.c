@@ -98,6 +98,7 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"}, 
     {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
+    {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
     {0, NULL}
 };
 

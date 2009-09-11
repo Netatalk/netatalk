@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.102 2009-09-01 13:55:55 franklahm Exp $
+ * $Id: directory.c,v 1.103 2009-09-11 09:14:16 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2302,7 +2302,6 @@ setdirparam_done:
     return err;
 }
 
-
 int afp_syncdir(obj, ibuf, ibuflen, rbuf, rbuflen )
 AFPObj  *obj _U_;
 char    *ibuf, *rbuf _U_;
@@ -2328,57 +2327,70 @@ int     ibuflen _U_, *rbuflen;
 
     memcpy( &did, ibuf, sizeof( did ));
     ibuf += sizeof( did );
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
-        return afp_errno; /* was AFPERR_NOOBJ */
-    }
 
-    if (movecwd( vol, dir ) < 0 )
-        return ( AFPERR_NOOBJ ); 
+    /* 
+     * Here's the deal:
+     * if it's CNID 2 our only choice to meet the specs is call sync.
+     * For any other CNID just sync that dir. To my knowledge the
+     * intended use of FPSyncDir is to sync the volume so all we're
+     * ever going to see here is probably CNID 2. Anyway, we' prepared.
+    */
 
-/*
-  Assuming only OSens that have dirfd also may require fsyncing directories
-  in order to flush metadata e.g. Linux.
-*/
+    if ( ntohl(did) == 2 ) {
+        sync();
+    } else {
+        if (NULL == ( dir = dirlookup( vol, did )) ) {
+            return afp_errno; /* was AFPERR_NOOBJ */
+        }
+        
+        if (movecwd( vol, dir ) < 0 )
+            return ( AFPERR_NOOBJ ); 
+        
+        /*
+         * Assuming only OSens that have dirfd also may require fsyncing directories
+         * in order to flush metadata e.g. Linux.
+         */
     
 #ifdef HAVE_DIRFD
-    if (NULL == ( dp = opendir( "." )) ) {
-        switch( errno ) {
-        case ENOENT :
-            return( AFPERR_NOOBJ );
-        case EACCES :
+        if (NULL == ( dp = opendir( "." )) ) {
+            switch( errno ) {
+            case ENOENT :
+                return( AFPERR_NOOBJ );
+            case EACCES :
             return( AFPERR_ACCESS );
-        default :
-            return( AFPERR_PARAM );
+            default :
+                return( AFPERR_PARAM );
+            }
         }
-    }
-
-    LOG(log_debug, logtype_afpd, "afp_syncdir: dir: '%s'", dir->d_u_name);
-
-    dfd = dirfd( dp );
-    if ( fsync ( dfd ) < 0 )
-        LOG(log_error, logtype_afpd, "afp_syncdir(%s):  %s",
-            dir->d_u_name, strerror(errno) );
-    closedir(dp); /* closes dfd too */
+        
+        LOG(log_debug, logtype_afpd, "afp_syncdir: dir: '%s'", dir->d_u_name);
+        
+        dfd = dirfd( dp );
+        if ( fsync ( dfd ) < 0 )
+            LOG(log_error, logtype_afpd, "afp_syncdir(%s):  %s",
+                dir->d_u_name, strerror(errno) );
+        closedir(dp); /* closes dfd too */
 #endif
-
-    if ( -1 == (dfd = open(vol->vfs->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
-        switch( errno ) {
-        case ENOENT:
-            return( AFPERR_NOOBJ );
+        
+        if ( -1 == (dfd = open(vol->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
+            switch( errno ) {
+            case ENOENT:
+                return( AFPERR_NOOBJ );
         case EACCES:
             return( AFPERR_ACCESS );
-        default:
-            return( AFPERR_PARAM );
-        }        
+            default:
+                return( AFPERR_PARAM );
+            }        
+        }
+        
+        LOG(log_debug, logtype_afpd, "afp_syncdir: ad-file: '%s'",
+            vol->ad_path(".", ADFLAGS_DIR) );
+        
+        if ( fsync(dfd) < 0 )
+            LOG(log_error, logtype_afpd, "afp_syncdir(%s): %s",
+                vol->ad_path(dir->d_u_name, ADFLAGS_DIR), strerror(errno) );
+        close(dfd);
     }
-
-    LOG(log_debug, logtype_afpd, "afp_syncdir: ad-file: '%s'",
-        vol->vfs->ad_path(".", ADFLAGS_DIR) );
-    
-    if ( fsync(dfd) < 0 )
-        LOG(log_error, logtype_afpd, "afp_syncdir(%s): %s",
-            vol->vfs->ad_path(dir->d_u_name, ADFLAGS_DIR), strerror(errno) );
-    close(dfd);
 
     return ( AFP_OK );
 }

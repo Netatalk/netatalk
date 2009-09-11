@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.32 2009-09-11 07:46:30 franklahm Exp $
+ * $Id: volume.h,v 1.33 2009-09-11 09:14:16 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -138,6 +138,7 @@ this is going away. */
 #define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching. Default: yes */
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
 #define AFPVOL_EXT_ATTRS (1 << 23)   /* Volume supports Extended Attributes */
+#define AFPVOL_TM        (1 << 24)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
 
 /* FPGetSrvrParms options */
@@ -174,6 +175,8 @@ int wincheck(const struct vol *vol, const char *path);
 #define VOLPBIT_ATTR_NONETUID     (1 << 7)
 #define VOLPBIT_ATTR_EXT_ATTRS    (1 << 10)
 #define VOLPBIT_ATTR_ACLS         (1 << 11)
+#define VOLPBIT_ATTR_TM           (1 << 13)
+
 #define VOLPBIT_ATTR	0
 #define VOLPBIT_SIG	1
 #define VOLPBIT_CDATE	2

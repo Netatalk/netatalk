@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.12 2009-02-25 16:14:08 franklahm Exp $
+ * $Id: fork.h,v 1.13 2009-09-11 09:14:16 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -89,5 +89,5 @@ extern int	afp_closefork __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_bytelock_ext __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_read_ext __P((AFPObj *, char *, int, char *, int *));
 extern int	afp_write_ext __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_syncfork __P((AFPObj *, char *, int, char *, int *));
+extern int  afp_syncfork __P((AFPObj *, char *, int, char *, int *));
 #endif

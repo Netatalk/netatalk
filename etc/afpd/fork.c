@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.61 2009-07-21 13:41:16 didg Exp $
+ * $Id: fork.c,v 1.62 2009-09-11 09:14:16 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1130,7 +1130,6 @@ int afp_syncfork(obj, ibuf, ibuflen, rbuf, rbuflen )
 
     return( AFP_OK );
 }
-
 
 /* this is very similar to closefork */
 int flushfork( ofork )

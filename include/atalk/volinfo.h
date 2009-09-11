@@ -1,5 +1,5 @@
 /*
- * $Id: volinfo.h,v 1.6 2009-09-01 14:28:07 franklahm Exp $
+ * $Id: volinfo.h,v 1.7 2009-09-11 09:14:16 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
@@ -33,6 +33,7 @@
 #define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching, default don't use it */
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
 #define AFPVOL_EXT_ATTRS (1 << 23)   /* Volume supports Extended Attributes */
+#define AFPVOL_TM        (1 << 24)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
 
 /* handle casefolding */
