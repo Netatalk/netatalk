@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.7 2006-09-29 09:39:16 didg Exp $
+ * $Id: ad_read.c,v 1.8 2009-09-11 13:26:05 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -14,13 +14,13 @@
  * permission. This software is supplied as is without expressed or
  * implied warranties of any kind.
  *
- *	Research Systems Unix Group
- *	The University of Michigan
- *	c/o Mike Clark
- *	535 W. William Street
- *	Ann Arbor, Michigan
- *	+1-313-763-0525
- *	netatalk@itd.umich.edu
+ *  Research Systems Unix Group
+ *  The University of Michigan
+ *  c/o Mike Clark
+ *  535 W. William Street
+ *  Ann Arbor, Michigan
+ *  +1-313-763-0525
+ *  netatalk@itd.umich.edu
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,41 +32,41 @@
 #include <sys/param.h>
 
 #ifndef MIN
-#define MIN(a,b)	((a)<(b)?(a):(b))
+#define MIN(a,b)    ((a)<(b)?(a):(b))
 #endif /* ! MIN */
 
 ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 {
-    ssize_t		cc;
+    ssize_t     cc;
 
 #ifndef  HAVE_PREAD
     if ( ad_fd->adf_off != offset ) {
         if ( lseek( ad_fd->adf_fd, offset, SEEK_SET ) < 0 ) {
-		return -1;
-	}
-	ad_fd->adf_off = offset;
+            return -1;
+        }
+        ad_fd->adf_off = offset;
     }
     if (( cc = read( ad_fd->adf_fd, buf, count )) < 0 ) {
         return -1;
     }
     ad_fd->adf_off += cc;
 #else
-   cc = pread(ad_fd->adf_fd, buf, count, offset );
+    cc = pread(ad_fd->adf_fd, buf, count, offset );
 #endif
     return cc;
 }
 
-/* XXX: locks have to be checked before each stream of consecutive 
+/* XXX: locks have to be checked before each stream of consecutive
  *      ad_reads to prevent a denial in the middle from causing
  *      problems. */
 ssize_t ad_read( ad, eid, off, buf, buflen)
-    struct adouble	*ad;
-    const u_int32_t 	eid;
+    struct adouble  *ad;
+    const u_int32_t     eid;
     off_t               off;
-    char		*buf;
-    const size_t	buflen;
+    char        *buf;
+    const size_t    buflen;
 {
-    ssize_t		cc;
+    ssize_t     cc;
 
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
@@ -74,31 +74,31 @@ ssize_t ad_read( ad, eid, off, buf, buflen)
         cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
     } else {
         off_t r_off;
-        
+
         if ( ad_reso_fileno( ad ) == -1 ) {
-             /* resource fork is not open ( cf etc/afp/fork.c) */
-             return 0;
+            /* resource fork is not open ( cf etc/afp/fork.c) */
+            return 0;
         }
         r_off = ad_getentryoff(ad, eid) + off;
-	
-	if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 ) {
-	  return( -1 );
-	}
-	/*
-	 * We've just read in bytes from the disk that we read earlier
-	 * into ad_data. If we're going to write this buffer out later,
-	 * we need to update ad_data.
-	 * FIXME : always false?
-	 */
-	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
-	    if ( ad->ad_resource_fork.adf_flags & O_RDWR ) {
-	      memcpy(buf, ad->ad_data + r_off,
-		     MIN(sizeof( ad->ad_data ) - r_off, cc));
-	    } else {
-	      memcpy(ad->ad_data + r_off, buf,
-		     MIN(sizeof( ad->ad_data ) - r_off, cc));
-	    }
-	}
+
+        if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 ) {
+            return( -1 );
+        }
+        /*
+         * We've just read in bytes from the disk that we read earlier
+         * into ad_data. If we're going to write this buffer out later,
+         * we need to update ad_data.
+         * FIXME : always false?
+         */
+        if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
+            if ( ad->ad_resource_fork.adf_flags & O_RDWR ) {
+                memcpy(buf, ad->ad_data + r_off,
+                       MIN(sizeof( ad->ad_data ) - r_off, cc));
+            } else {
+                memcpy(ad->ad_data + r_off, buf,
+                       MIN(sizeof( ad->ad_data ) - r_off, cc));
+            }
+        }
     }
 
     return( cc );
