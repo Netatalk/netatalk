@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.7 2009-07-12 09:21:34 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.8 2009-09-14 02:56:19 didg Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -245,7 +245,8 @@ static int check_addir(int volroot)
     int addir_ok, adpar_ok;
     struct stat st;
     struct adouble ad;
-
+    char *mname;
+    
     /* Check for ad-dir */
     if ( (addir_ok = access(ADv2_DIRNAME, F_OK)) != 0) {
         if (errno != ENOENT) {
@@ -286,7 +287,7 @@ static int check_addir(int volroot)
         }
 
         /* Get basename of cwd from cwdbuf */
-        char *mname = utompath(strrchr(cwdbuf, '/') + 1);
+        utompath(strrchr(cwdbuf, '/') + 1);
 
         /* Update name in ad file */
         ad_setname(&ad, mname);
