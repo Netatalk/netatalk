@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.13 2009-09-03 08:35:15 franklahm Exp $
+ * $Id: dbif.c,v 1.14 2009-09-14 03:12:11 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -822,23 +822,23 @@ int dbif_dump(DBD *dbd, int dumpindexes)
 
         /* Rootinfo node ? */
         if (cnid == 0) {
-            memcpy(&stamp, data.data + 4, sizeof(time_t));
-            memcpy(&lastid, data.data + 20, sizeof(cnid_t));
+            memcpy(&stamp, (char *)data.data + 4, sizeof(time_t));
+            memcpy(&lastid, (char *)data.data + 20, sizeof(cnid_t));
             lastid = ntohl(lastid);
             strftime(timebuf, sizeof(timebuf), "%b %d %Y %H:%M:%S", localtime(&stamp));
             printf("dbd stamp: 0x%08x (%s), next free CNID: %u\n", (unsigned int)stamp, timebuf, lastid + 1);
         } else {
             /* dev */
-            memcpy(&dev, data.data + CNID_DEV_OFS, 8);
+            memcpy(&dev, (char *)data.data + CNID_DEV_OFS, 8);
             dev = ntoh64(dev);
             /* ino */
-            memcpy(&ino, data.data + CNID_INO_OFS, 8);
+            memcpy(&ino, (char *)data.data + CNID_INO_OFS, 8);
             ino = ntoh64(ino);
             /* type */
-            memcpy(&type, data.data + CNID_TYPE_OFS, 4);
+            memcpy(&type, (char *)data.data + CNID_TYPE_OFS, 4);
             type = ntohl(type);
             /* did */
-            memcpy(&did, data.data + CNID_DID_OFS, 4);
+            memcpy(&did, (char *)data.data + CNID_DID_OFS, 4);
             did = ntohl(did);
 
             count++;
@@ -890,7 +890,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
                 memcpy(&dev, key.data, CNID_DEV_LEN);
                 dev = ntoh64(dev);
                 /* ino */
-                memcpy(&ino, key.data + CNID_DEV_LEN, CNID_INO_LEN);
+                memcpy(&ino, (char *)key.data + CNID_DEV_LEN, CNID_INO_LEN);
                 ino = ntoh64(ino);
                 
                 printf("id: %10u <== dev: 0x%llx, ino: 0x%016llx\n", 
