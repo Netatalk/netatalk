@@ -150,6 +150,7 @@ static void generate_message_details(char *message_details_buffer,
     int    templen;
     int    len = message_details_buffer_length;
     struct timeval tv;
+    pid_t  pid;
 
     *ptr = 0;
 
@@ -171,7 +172,7 @@ static void generate_message_details(char *message_details_buffer,
     ptr += templen;
 
     /* PID */
-    pid_t pid = getpid();
+    pid = getpid();
     templen = snprintf(ptr, len, "[%d]", pid);
     len -= templen;
     ptr += templen;

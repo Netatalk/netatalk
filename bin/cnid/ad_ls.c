@@ -1,5 +1,5 @@
 /* 
-   $Id: ad_ls.c,v 1.1 2009-09-01 14:28:07 franklahm Exp $
+   $Id: ad_ls.c,v 1.2 2009-09-14 01:24:40 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -184,6 +184,8 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     uint16_t AFPattributes;
     char type[5] = "----";
     char creator[5] = "----";
+    int i;
+    uint32_t cnid;
 
     if (S_ISDIR(st->st_mode))
         adflags = ADFLAGS_DIR;
@@ -319,7 +321,6 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     printf(" %s ", labels[(FinderFlags & FINDERINFO_COLOR) >> 1]);
 
     /* Type & Creator */
-    int i;
     for(i=0; i<4; i++) {
         if (isalnum(type[i]))
             putchar(type[i]);
@@ -336,7 +337,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     putchar(' '); 
 
     /* CNID */
-    uint32_t cnid = ad_forcegetid(&ad);
+    cnid = ad_forcegetid(&ad);
     if (cnid)
         printf(" %10u ", ntohl(cnid));
     else
@@ -584,10 +585,11 @@ int ad_ls(int argc, char **argv)
         freevol(&vol);
     }
     else {
+        int havefile = 0;
+
         firstarg = optind;
 
         /* First run: only print files from argv paths */
-        int havefile = 0;
         while(optind < argc) {
             if (stat(argv[optind], &st) != 0)
                 goto next;

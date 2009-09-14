@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.6 2009-09-03 08:35:15 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.7 2009-09-14 01:24:40 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -275,6 +275,7 @@ int main(int argc, char **argv)
     dbd_flags_t flags = 0;
     char *volpath;
     struct volinfo volinfo;
+    int cdir;
 
     if (geteuid() != 0) {
         usage();
@@ -334,7 +335,6 @@ int main(int argc, char **argv)
     volpath = argv[optind];
 
     /* Remember cwd */
-    int cdir;
     if ((cdir = open(".", O_RDONLY)) < 0) {
         dbd_log( LOGSTD, "Can't open dir: %s", strerror(errno));
         exit(EXIT_FAILURE);
