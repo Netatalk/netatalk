@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.26 2009-09-11 09:14:16 franklahm Exp $
+ * $Id: directory.h,v 1.27 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -71,7 +71,6 @@ struct path {
     struct stat st;
 };
 
-#ifndef ATACC
 static inline int path_isadir(struct path *o_path)
 {
     return o_path->d_dir != NULL;
@@ -81,9 +80,6 @@ static inline int path_isadir(struct path *o_path)
            (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
 #endif
 }
-#else
-extern int path_isadir(struct path *o_path);
-#endif
 
 #define DIRTREE_COLOR_RED    0
 #define DIRTREE_COLOR_BLACK  1

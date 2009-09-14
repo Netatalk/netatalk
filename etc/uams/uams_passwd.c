@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.24 2006-12-03 06:04:43 didg Exp $
+ * $Id: uams_passwd.c,v 1.25 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -378,19 +378,6 @@ struct papfile	*out;
     return(0);
 }
 
-#ifdef ATACC
-int uam_setup(const char *path)
-{
-    if (uam_register_fn(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
-                     passwd_login, NULL, NULL, passwd_login_ext) < 0)
-        return -1;
-    if (uam_register_fn(UAM_SERVER_PRINTAUTH, path, "ClearTxtUAM",
-                     passwd_printer) < 0)
-        return -1;
-
-    return 0;
-}
-#else 
 static int uam_setup(const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
@@ -402,8 +389,6 @@ static int uam_setup(const char *path)
 
     return 0;
 }
-
-#endif
 
 static void uam_cleanup(void)
 {

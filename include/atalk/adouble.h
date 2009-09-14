@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.40 2009-09-01 14:28:07 franklahm Exp $
+ * $Id: adouble.h,v 1.41 2009-09-14 00:02:21 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -493,7 +493,6 @@ extern int ad_metadata    __P((const char *, int, struct adouble *));
 /* build a resource fork mode from the data fork mode:
  * remove X mode and extend header to RW if R or W (W if R for locking),
  */ 
-#ifndef ATACC
 static inline mode_t ad_hf_mode (mode_t mode)
 {
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
@@ -515,9 +514,6 @@ static inline mode_t ad_hf_mode (mode_t mode)
 
     return mode;
 }
-#else
-extern mode_t ad_hf_mode __P((mode_t ));
-#endif
 
 /* ad_read.c/ad_write.c */
 extern ssize_t ad_read __P((struct adouble *, const u_int32_t, 

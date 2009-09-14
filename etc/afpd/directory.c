@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.103 2009-09-11 09:14:16 franklahm Exp $
+ * $Id: directory.c,v 1.104 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -132,18 +132,6 @@ u_int32_t	did;
 }
 
 /* ------------------- */
-#ifdef ATACC
-int path_isadir(struct path *o_path)
-{
-    return o_path->d_dir != NULL;
-#if 0
-    return o_path->m_name == '\0' || /* we are in a it */
-           !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
-           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
-#endif
-}
-#endif
-
 int get_afp_errno(const int param)
 {
     if (afp_errno != AFPERR_DID1)

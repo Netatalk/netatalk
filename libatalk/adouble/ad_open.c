@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.46 2009-09-11 13:26:05 franklahm Exp $
+ * $Id: ad_open.c,v 1.47 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -481,35 +481,6 @@ bail_err:
     return ret;
 }
 #endif /* AD_VERSION == AD_VERSION2 */
-
-/* --------------------------- */
-#ifdef ATACC
-mode_t ad_hf_mode (mode_t mode)
-{
-    /* we always need RW mode for file owner */
-#if 0
-    mode |= S_IRUSR;
-#endif
-    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
-    /* fnctl lock need write access */
-    if ((mode & S_IRUSR))
-        mode |= S_IWUSR;
-    if ((mode & S_IRGRP))
-        mode |= S_IWGRP;
-    if ((mode & S_IROTH))
-        mode |= S_IWOTH;
-    /* if write mode set add read mode */
-    if ((mode & S_IWUSR))
-        mode |= S_IRUSR;
-    if ((mode & S_IWGRP))
-        mode |= S_IRGRP;
-    if ((mode & S_IWOTH))
-        mode |= S_IROTH;
-
-    return mode;
-}
-
-#endif
 
 /* -------------------------------------
    read in the entries

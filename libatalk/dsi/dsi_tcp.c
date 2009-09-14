@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.13 2009-03-20 09:10:25 franklahm Exp $
+ * $Id: dsi_tcp.c,v 1.14 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -92,10 +92,6 @@ static void timeout_handler()
   LOG(log_error, logtype_default, "dsi_tcp_open: connection timed out");
   exit(EXITERR_CLNT);
 }
-
-#ifdef ATACC
-#define fork aTaC_fork
-#endif
 
 static struct itimerval itimer;
 /* accept the socket and do a little sanity checking */

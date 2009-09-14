@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.13 2009-07-21 13:41:16 didg Exp $
+ * $Id: cnid_metad.c,v 1.14 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -74,10 +74,6 @@
 #endif
 #ifndef WTERMSIG
 #define WTERMSIG(status)      ((status) & 0x7f)
-#endif
-
-#ifdef ATACC
-#define fork aTaC_fork
 #endif
 
 /* functions for username and group */

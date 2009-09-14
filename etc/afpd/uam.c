@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.27 2008-05-16 04:19:42 didg Exp $
+ * $Id: uam.c,v 1.28 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -147,7 +147,6 @@ void uam_unload(struct uam_mod *mod)
 }
 
 /* -- client-side uam functions -- */
-#ifndef ATACC
 /* set up stuff for this uam. */
 int uam_register(const int type, const char *path, const char *name, ...)
 {
@@ -211,69 +210,6 @@ int uam_register(const int type, const char *path, const char *name, ...)
 
     return ret;
 }
-#endif
-
-#ifdef ATACC
-int uam_register_fn(const int type, const char *path, const char *name, void *fn1, void *fn2, 
-                     void *fn3, void *fn4)
-{
-    va_list ap;
-    struct uam_obj *uam;
-
-    if (!name)
-        return -1;
-
-    /* see if it already exists. */
-    if ((uam = auth_uamfind(type, name, strlen(name)))) {
-        if (strcmp(uam->uam_path, path)) {
-            /* it exists, but it's not the same module. */
-            LOG(log_error, logtype_afpd, "uam_register: \"%s\" already loaded by %s",
-                name, path);
-            return -1;
-        }
-        uam->uam_count++;
-        return 0;
-    }
-
-    /* allocate space for uam */
-    if ((uam = calloc(1, sizeof(struct uam_obj))) == NULL)
-        return -1;
-
-    uam->uam_name = name;
-    uam->uam_path = strdup(path);
-    uam->uam_count++;
-
-    switch (type) {
-    case UAM_SERVER_LOGIN_EXT: /* expect four arguments */
-        uam->u.uam_login.login_ext = fn4;
-        uam->u.uam_login.login = fn1;
-        uam->u.uam_login.logincont = fn2;
-        uam->u.uam_login.logout = fn3;
-        break;
-    case UAM_SERVER_LOGIN: /* expect three arguments */
-        uam->u.uam_login.login_ext = NULL;
-        uam->u.uam_login.login = fn1;
-        uam->u.uam_login.logincont = fn2;
-        uam->u.uam_login.logout = fn3;
-        break;
-    case UAM_SERVER_CHANGEPW: /* one argument */
-        uam->u.uam_changepw = fn1;
-        break;
-    case UAM_SERVER_PRINTAUTH: /* x arguments */
-    default:
-        break;
-    }
-
-    /* attach to other uams */
-    if (auth_register(type, uam) < 0) {
-        free(uam->uam_path);
-        free(uam);
-        return -1;
-    }
-
-    return 0;
-}
-#endif
 
 void uam_unregister(const int type, const char *name)
 {

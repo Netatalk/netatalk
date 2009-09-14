@@ -26,9 +26,6 @@
 #include <atalk/compat.h>
 #include <atalk/util.h>
 
-#ifdef ATACC
-#define fork aTaC_fork
-#endif
 static struct itimerval itimer;
 
 /* this creates an open lock file which hangs around until the program

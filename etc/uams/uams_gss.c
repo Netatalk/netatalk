@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.3 2005-04-28 20:49:50 bfernhomberg Exp $
+ * $Id: uams_gss.c,v 1.4 2009-09-14 00:02:21 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -12,7 +12,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifndef ATACC
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -622,4 +621,3 @@ UAM_MODULE_EXPORT struct uam_export uams_gss = {
   UAM_MODULE_VERSION,
   uam_setup, uam_cleanup
 };
-#endif
