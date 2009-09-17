@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.4 2009-09-14 00:02:21 didg Exp $
+ * $Id: uams_gss.c,v 1.5 2009-09-17 08:35:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -65,6 +65,10 @@ char *strchr (), *strrchr ();
 /* BF: This is a Heimdal/MIT compatibility fix */
 #ifndef HAVE_GSS_C_NT_HOSTBASED_SERVICE
 #define GSS_C_NT_HOSTBASED_SERVICE gss_nt_service_name
+#endif
+
+#ifdef MIN
+#undef MIN
 #endif
 
 #define MIN(a, b) ((a > b) ? b : a)
