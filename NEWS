@@ -9,6 +9,7 @@ Changes in 2.1
        AppleTalk is legacy.
 * UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
 * FIX: rewritten logger
+* FIX: afpd: UNIX permissions handling
 * NEW: cnid_metad: options -l and -f to configure logging
 * NEW: CNID database maintanance utility dbd
 * NEW: support BerkeleyDB upgrade. Starting with the next release

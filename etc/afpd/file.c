@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.109 2009-07-20 18:31:04 didg Exp $
+ * $Id: file.c,v 1.110 2009-09-21 12:35:05 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -890,10 +890,17 @@ int setfilparams(struct vol *vol,
     /* second try with adouble open 
     */
     if ( ad_open_metadata( upath, vol_noadouble(vol), O_CREAT, adp) < 0) {
-        /* for some things, we don't need an adouble header */
-        if (f_bitmap & ~(1<<FILPBIT_MDATE)) {
+        LOG(log_debug, logtype_afpd, "setfilparams: ad_open_metadata error");
+        /*
+         * For some things, we don't need an adouble header:
+         * - change of modification date
+         * - UNIX privs (Bug-ID #2863424)
+         */
+        if ( (f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR))) {
+            LOG(log_debug, logtype_afpd, "setfilparams: need adouble access");
             return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
         }
+        LOG(log_debug, logtype_afpd, "setfilparams: no adouble perms, but only FILPBIT_MDATE and/or FILPBIT_UNIXPR");
         isad = 0;
     } else if ((ad_get_HF_flags( adp ) & O_CREAT) ) {
         ad_setname(adp, path->m_name);
