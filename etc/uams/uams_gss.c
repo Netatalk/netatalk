@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.6 2009-09-28 12:16:49 franklahm Exp $
+ * $Id: uams_gss.c,v 1.7 2009-09-28 13:19:48 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -319,10 +319,17 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 static int acquire_credentials (gss_name_t *server_name, gss_cred_id_t *server_creds)
 {
     OM_uint32 major_status = 0, minor_status = 0;
+    char *envp;
 
-    LOG(log_debug, logtype_uams,
-        "acquire credentials: acquiring credentials (uid = %d, keytab = %s)",
-        (int)geteuid(), getenv( "KRB5_KTNAME") );
+    if (envp = getenv("KRB5_KTNAME"))
+        LOG(log_debug, logtype_uams,
+            "acquire credentials: acquiring credentials (uid = %d, keytab = %s)",
+            (int)geteuid(), envp);
+    else
+        LOG(log_debug, logtype_uams,
+            "acquire credentials: acquiring credentials (uid = %d) - $KRB5_KTNAME not found in env",
+            (int)geteuid());
+        
     /*
      * Acquire credentials usable for accepting context negotiations.
      * Credentials are for server_name, have an indefinite lifetime,
