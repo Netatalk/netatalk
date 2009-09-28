@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.64 2009-09-28 09:21:09 franklahm Exp $
+ * $Id: auth.c,v 1.65 2009-09-28 12:04:51 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -327,9 +327,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
 
 #ifdef ADMIN_GRP
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "obj->options.admingid == %d", obj->options.admingid);
-#endif /* DEBUG */
+    LOG(log_debug, logtype_afpd, "obj->options.admingid == %d", obj->options.admingid);
+
     if (obj->options.admingid != 0) {
         int i;
         for (i = 0; i < ngroups; i++) {
@@ -341,7 +340,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name );
     }
     if (!admin)
-#endif /* DEBUG */
+#endif /* ADMIN_GRP */
 #ifdef TRU64
     {
         struct DSI *dsi = obj->handle;
