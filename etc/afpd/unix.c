@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.52 2009-02-02 11:55:01 franklahm Exp $
+ * $Id: unix.c,v 1.53 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,6 +36,7 @@ char *strchr (), *strrchr ();
 #include <sys/stat.h>
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
+#include <atalk/vfs.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 
@@ -249,78 +250,6 @@ struct maccess	*ma;
     return( mode );
 }
 
-/* ----------------------------- */
-char *fullpathname(const char *name)
-{
-    static char wd[ MAXPATHLEN + 1];
-
-    if ( getcwd( wd , MAXPATHLEN) ) {
-        strlcat(wd, "/", MAXPATHLEN);
-        strlcat(wd, name, MAXPATHLEN);
-    }
-    else {
-        strlcpy(wd, name, MAXPATHLEN);
-    }
-    return wd;
-}
-
-/* -----------------------------
-   a dropbox is a folder where w is set but not r eg:
-   rwx-wx-wx or rwx-wx-- 
-   rwx----wx (is not asked by a Mac with OS >= 8.0 ?)
-*/
-int stickydirmode(name, mode, dropbox)
-const char * name;
-const mode_t mode;
-const int dropbox;
-{
-    int retval = 0;
-
-#ifdef DROPKLUDGE
-    /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
-    if ((dropbox & AFPVOL_DROPBOX)) {
-        int uid;
-
-        if ( ( (mode & S_IWOTH) && !(mode & S_IROTH)) ||
-             ( (mode & S_IWGRP) && !(mode & S_IRGRP)) )
-        {
-            uid=geteuid();
-            if ( seteuid(0) < 0) {
-                LOG(log_error, logtype_afpd, "stickydirmode: unable to seteuid root: %s", strerror(errno));
-            }
-            if ( (retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~default_options.umask) )) < 0) {
-                LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
-            } else {
-#ifdef DEBUG
-                LOG(log_info, logtype_afpd, "stickydirmode: (debug) chmod \"%s\": %s", fullpathname(name), strerror(retval) );
-#endif /* DEBUG */
-            }
-            seteuid(uid);
-            return retval;
-        }
-    }
-#endif /* DROPKLUDGE */
-
-    /*
-     *  Ignore EPERM errors:  We may be dealing with a directory that is
-     *  group writable, in which case chmod will fail.
-     */
-    if ( (chmod( name, (DIRBITS | mode) & ~default_options.umask ) < 0) && errno != EPERM && 
-    		!(errno == ENOENT && (dropbox & AFPVOL_NOADOUBLE)) )  
-    {
-        LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
-        retval = -1;
-    }
-
-    return retval;
-}
-
-/* ------------------------- */
-int dir_rx_set(mode_t mode)
-{
-    return (mode & (S_IXUSR | S_IRUSR)) == (S_IXUSR | S_IRUSR);
-}
-
 #define EXEC_MODE (S_IXGRP | S_IXUSR | S_IXOTH)
 
 int setdeskmode( mode )
@@ -415,33 +344,12 @@ mode_t mode;
         
     mode |= vol->v_fperm;
 
-    if (setfilmode( path->u_name, mode, &path->st) < 0)
+    if (setfilmode( path->u_name, mode, &path->st, vol->v_umask) < 0)
         return -1;
     /* we need to set write perm if read set for resource fork */
     return vol->vfs->rf_setfilmode(vol, path->u_name, mode, &path->st);
 }
 
-/* --------------------- */
-int setfilmode(name, mode, st)
-const char * name;
-mode_t mode;
-struct stat *st;
-{
-struct stat sb;
-mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;  /* rwx for owner group and other, by default */
-
-    if (!st) {
-        if (stat(name, &sb) != 0)
-            return -1;
-        st = &sb;
-    }
-   
-   mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
-   if ( chmod( name,  mode & ~default_options.umask ) < 0 && errno != EPERM ) {
-       return -1;
-   }
-   return 0;
-}
 
 /* --------------------- */
 int setdirunixmode( vol, name, mode )
@@ -455,14 +363,14 @@ mode_t           mode;
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first then .AppleDouble in rf_setdirmode */
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
         	return -1;
     }
     if (vol->vfs->rf_setdirunixmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
         return  -1 ;
     }
     if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
             return -1;
     }
     return 0;
@@ -486,7 +394,7 @@ mode_t           mode;
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first */
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
         	return -1;
     }
     
@@ -508,7 +416,7 @@ mode_t           mode;
         if (!S_ISDIR(st.st_mode)) {
            int setmode = (osx && *dirp->d_name == '.')?hf_mode:mode;
 
-           if (setfilmode(dirp->d_name, setmode, &st) < 0) {
+           if (setfilmode(dirp->d_name, setmode, &st, vol->v_umask) < 0) {
                 LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
                 return -1;
            }
@@ -521,7 +429,7 @@ mode_t           mode;
     }
 
     if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
         	return -1;
     }
     return( 0 );

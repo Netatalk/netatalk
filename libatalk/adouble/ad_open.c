@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.47 2009-09-14 00:02:21 didg Exp $
+ * $Id: ad_open.c,v 1.48 2009-10-02 09:32:41 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -218,6 +218,8 @@ static int ad_update(struct adouble *ad, const char *path)
     /* check to see if we should convert this header. */
     if (!path || ad->ad_flags != AD_VERSION2)
         return 0;
+
+    LOG(log_maxdebug, logtype_default, "ad_update: checking whether '%s' needs an upgrade.", path);
 
     if (!(ad->ad_md->adf_flags & O_RDWR)) {
         /* we were unable to open the file read write the last time */

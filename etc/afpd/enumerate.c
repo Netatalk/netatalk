@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.43 2005-04-30 21:33:41 didg Exp $
+ * $Id: enumerate.c,v 1.44 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -13,13 +13,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#include <atalk/logger.h>
 #include <sys/file.h>
 #include <sys/param.h>
 
+#include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/adouble.h>
+#include <atalk/vfs.h>
 #include <atalk/cnid.h>
 #include "desktop.h"
 #include "directory.h"

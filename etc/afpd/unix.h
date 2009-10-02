@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.20 2005-06-02 12:32:18 didg Exp $
+ * $Id: unix.h,v 1.21 2009-10-02 09:32:40 franklahm Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -221,15 +221,9 @@ extern int setdirunixmode   __P((const struct vol *, const char *, mode_t));
 extern int setdirmode       __P((const struct vol *, const char *, mode_t));
 extern int setdeskowner     __P((const uid_t, const gid_t));
 extern int setdirowner      __P((const struct vol *, const char *, const uid_t, const gid_t));
-extern int setfilmode       __P((const char *, mode_t , struct stat *));
 extern int setfilunixmode   __P((const struct vol *, struct path*, const mode_t));
 extern int setfilowner      __P((const struct vol *, const uid_t, const gid_t, struct path*));
-extern int unix_rename      __P((const char *oldpath, const char *newpath));
-extern int dir_rx_set       __P((mode_t mode));
-extern int stickydirmode    __P((const char * name, const mode_t mode, const int dropbox));
-
 extern void accessmode      __P((char *, struct maccess *, struct dir *, struct stat *));
-extern char *fullpathname   __P((const char *));
 
 #ifdef AFS	
     #define accessmode afsmode

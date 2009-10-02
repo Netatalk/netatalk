@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.42 2009-09-14 14:11:45 franklahm Exp $
+ * $Id: adouble.h,v 1.43 2009-10-02 09:32:40 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -131,7 +131,6 @@
 #define AD_APPLESINGLE_MAGIC 0x00051600
 #define AD_APPLEDOUBLE_MAGIC 0x00051607
 #define AD_MAGIC             AD_APPLEDOUBLE_MAGIC
-
 #define SFM_MAGIC            0x00504641
 
 /* sizes of relevant entry bits */
@@ -551,5 +550,14 @@ extern ssize_t ad_writefile __P((struct adouble *, const int,
                                  const int, off_t, const int, const size_t));
 #endif /* HAVE_SENDFILE_WRITE */
 #endif /* 0 */
+
+/* ad_unix.c */
+extern int netatalk_unlink(const char *name);
+extern char *fullpathname(const char *);
+extern int netatalk_rmdir(const char *name);
+extern int setfilmode(const char *, mode_t, struct stat *, mode_t);
+extern int dir_rx_set(mode_t mode);
+extern int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask);
+extern int unix_rename(const char *oldpath, const char *newpath);
 
 #endif /* _ATALK_ADOUBLE_H */

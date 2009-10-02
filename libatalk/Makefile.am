@@ -1,7 +1,7 @@
 
 # Makefile.am for libatalk/
 
-SUBDIRS = adouble asp atp compat cnid dsi nbp netddp util tdb unicode acl
+SUBDIRS = acl adouble asp atp compat cnid dsi nbp netddp tdb util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -16,8 +16,9 @@ libatalk_la_LIBADD  = \
 	nbp/libnbp.la		\
 	netddp/libnetddp.la	\
 	util/libutil.la		\
-        tdb/libtdb.la           \
-	unicode/libunicode.la @LIBATALK_ACLS@
+	tdb/libtdb.la       \
+	unicode/libunicode.la \
+	vfs/libvfs.la @LIBATALK_ACLS@
 
 libatalk_la_DEPENDENCIES = \
 	adouble/libadouble.la	\
@@ -28,8 +29,9 @@ libatalk_la_DEPENDENCIES = \
 	nbp/libnbp.la		\
 	netddp/libnetddp.la	\
 	util/libutil.la		\
-        tdb/libtdb.la           \
-	unicode/libunicode.la @LIBATALK_ACLS@
+	tdb/libtdb.la       \
+	unicode/libunicode.la \
+	vfs/libvfs.la @LIBATALK_ACLS@
 
 libatalk_la_LDFLAGS = -static
 

@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.9 2009-04-28 13:01:24 franklahm Exp $
+ * $Id: util.h,v 1.10 2009-10-02 09:32:40 franklahm Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -105,5 +105,55 @@ struct volinfo {
 extern int loadvolinfo __P((char *path, struct volinfo *vol));
 extern int vol_load_charsets __P(( struct volinfo *vol));
 #endif /* 0 */
+
+/*
+ * Function: lock_reg
+ *
+ * Purpose: lock a file with fctnl
+ *
+ * Arguments:
+ *
+ *    fd         (r) File descriptor
+ *    cmd        (r) cmd to fcntl, only F_SETLK is usable here
+ *    type       (r) F_RDLCK, F_WRLCK, F_UNLCK
+ *    offset     (r) byte offset relative to l_whence
+ *    whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
+ *    len        (r) no. of bytes (0 means to EOF)
+ *
+ * Returns: 0 on success, -1 on failure
+ *          fcntl return value and errno
+ *
+ * Effects:
+ *
+ * Function called by macros to ease locking.
+ */
+extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t len);
+
+/*
+ * Macros: read_lock, write_lock, un_lock
+ *
+ * Purpose: lock and unlock files
+ *
+ * Arguments:
+ *
+ *    fd         (r) File descriptor
+ *    offset     (r) byte offset relative to l_whence
+ *    whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
+ *    len        (r) no. of bytes (0 means to EOF)
+ *
+ * Returns: 0 on success, -1 on failure
+ *          fcntl return value and errno
+ *
+ * Effects:
+ *
+ * Nice locking macros.
+ */
+
+#define read_lock(fd, offset, whence, len) \
+    lock_reg((fd), F_SETLK, F_RDLCK, (offset), (whence), (len))
+#define write_lock(fd, offset, whence, len) \
+    lock_reg((fd), F_SETLK, F_WRLCK, (offset), (whence), (len))
+#define unlock(fd, offset, whence, len) \
+    lock_reg((fd), F_SETLK, F_UNLCK, (offset), (whence), (len))
 
 #endif

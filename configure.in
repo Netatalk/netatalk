@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.219 2009-09-18 12:36:39 franklahm Exp $
+dnl $Id: configure.in,v 1.220 2009-10-02 09:32:40 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1043,25 +1043,14 @@ fi
 AC_SUBST(LIBATALK_ACLS)
 
 dnl --------------------- check for Extended Attributes support
-neta_cv_extattrs="no"
-AC_MSG_CHECKING([if Extended Attribute Support should be enabled])
-AC_ARG_ENABLE(extattrs,
-	[  --enable-extattrs       enable Extended Attributes],[
-	if test x"$enableval" = x"yes"; then
-	   AC_MSG_RESULT([yes])
-	   neta_cv_extattrs="yes"
-	else
-	   AC_MSG_RESULT([no])
-	fi],[
-	   AC_MSG_RESULT([no])
-	]
-)
-if test x$neta_cv_extattrs = xyes; then
-   	AC_CHECK_LIB(c,attropen,neta_cv_extattrs=yes,neta_cv_extattrs=no)
-fi
-if test x$neta_cv_extattrs = xyes; then
-	AC_MSG_NOTICE([Enabling Extended Attributes support])
-	AC_DEFINE([HAVE_EXT_ATTRS], 1, [Enable Extended Attributes])
+neta_cv_eas="adouble"
+if test "x$this_os" = "xsolaris"; then
+   	AC_CHECK_LIB(c,attropen, [
+            neta_cv_eas="$neta_cv_eas Solaris"
+            AC_MSG_NOTICE([Enabling Solaris Extended Attributes support])
+            AC_DEFINE([HAVE_SOLARIS_EAS], 1, [Enable Extended Attributes])
+        ]
+    )
 fi
 
 dnl --------------------- last minute substitutions
@@ -1170,6 +1159,7 @@ AC_OUTPUT([Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
+	libatalk/vfs/Makefile
 	macros/Makefile
 	man/Makefile
 	man/man1/Makefile

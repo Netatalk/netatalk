@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.104 2009-09-14 00:02:21 didg Exp $
+ * $Id: directory.c,v 1.105 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -38,8 +38,9 @@ char *strchr (), *strrchr ();
 #include <sys/param.h>
 #include <errno.h>
 #include <utime.h>
-#include <atalk/adouble.h>
 
+#include <atalk/adouble.h>
+#include <atalk/vfs.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
@@ -55,6 +56,7 @@ char *strchr (), *strrchr ();
 #include "globals.h"
 #include "unix.h"
 #include "mangle.h"
+#include "hash.h"
 
 #ifdef HAVE_NFSv4_ACLS
 extern void addir_inherit_acl(const struct vol *vol);
@@ -725,30 +727,6 @@ struct path *path;
     return( dir );
 }
 
-/* -------------------
-   system rmdir with afp error code.
-   ENOENT is not an error.
- */
-int netatalk_rmdir(const char *name)
-{
-    if (rmdir(name) < 0) {
-        switch ( errno ) {
-        case ENOENT :
-            break;
-        case ENOTEMPTY : 
-            return AFPERR_DIRNEMPT;
-        case EPERM:
-        case EACCES :
-            return AFPERR_ACCESS;
-        case EROFS:
-            return AFPERR_VLOCK;
-        default :
-            return AFPERR_PARAM;
-        }
-    }
-    return AFP_OK;
-}
-
 /* -------------------------
    appledouble mkdir afp error code.
 */
@@ -770,28 +748,6 @@ static int netatalk_mkdir(const char *name)
             return( AFPERR_DFULL );
         default :
             return( AFPERR_PARAM );
-        }
-    }
-    return AFP_OK;
-}
-
-/* -------------------
-   system unlink with afp error code.
-   ENOENT is not an error.
- */
-int netatalk_unlink(const char *name)
-{
-    if (unlink(name) < 0) {
-        switch (errno) {
-        case ENOENT :
-            break;
-        case EROFS:
-            return AFPERR_VLOCK;
-        case EPERM:
-        case EACCES :
-            return AFPERR_ACCESS;
-        default :
-            return AFPERR_PARAM;
         }
     }
     return AFP_OK;

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.90 2009-09-11 09:14:16 franklahm Exp $
+ * $Id: volume.c,v 1.91 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -125,6 +125,7 @@ m=u -> map both ways
 #define VOLOPT_DPERM     24  /* dperm default directories perms */
 #define VOLOPT_FPERM     25  /* fperm default files perms */
 #define VOLOPT_DFLTPERM  26  /* perm */
+#define VOLOPT_EA_VFS    27  /* Extended Attributes vfs indirection */
 
 #define VOLOPT_MAX       (VOLOPT_DFLTPERM +1)
 
@@ -133,10 +134,11 @@ m=u -> map both ways
 #define VOLPASSLEN  8
 #define VOLOPT_DEFAULT     ":DEFAULT:"
 #define VOLOPT_DEFAULT_LEN 9
-  struct vol_option {
-      char *c_value;
-      int i_value;
-  };
+
+struct vol_option {
+    char *c_value;
+    int i_value;
+};
 
 typedef struct _special_folder {
         const char *name;
@@ -181,7 +183,6 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},     /* encode illegal sequence */
     {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching. Default: yes */
-    {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
     {0, NULL}
@@ -491,8 +492,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
 		options[VOLOPT_ROOTPREEXEC].i_value = 1;
             else if (strcasecmp(p, "upriv") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
-            else if (strcasecmp(p, "extattrs") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_EXT_ATTRS;
             else if (strcasecmp(p, "acls") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
             else if (strcasecmp(p, "nodev") == 0)
@@ -552,6 +551,12 @@ static void volset(struct vol_option *options, struct vol_option *save,
 
     } else if (optionok(tmp, "denied_hosts:", val)) {
         setoption(options, save, VOLOPT_DENIED_HOSTS, val);
+
+    } else if (optionok(tmp, "ea:", val)) {
+        if (strcasecmp(val + 1, "ad") == 0) /* the default anyway */
+            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AD;
+        else if (strcasecmp(val + 1, "solaris") == 0)
+            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_SOLARIS;
 
     } else {
         /* ignore unknown options */
@@ -706,6 +711,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     /* os X start at 1 and use network order ie. 1 2 3 */
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
+    volume->v_vfs_ea = AFPVOL_EA_AD;
 
     /* handle options */
     if (options) {
@@ -714,6 +720,9 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
         /* shift in some flags */
         volume->v_flags = options[VOLOPT_FLAGS].i_value;
+        
+        if (options[VOLOPT_EA_VFS].i_value != AFPVOL_EA_AD)
+            volume->v_vfs_ea = options[VOLOPT_EA_VFS].i_value;
 
         volume->v_ad_options = 0;
         if ((volume->v_flags & AFPVOL_NODEV))
@@ -1463,6 +1472,7 @@ int		*buflen;
                 ashort |= VOLPBIT_ATTR_RO;
             }
             ashort |= VOLPBIT_ATTR_CATSEARCH;
+            ashort |= VOLPBIT_ATTR_EXT_ATTRS;
             if (afp_version >= 30) {
                 ashort |= VOLPBIT_ATTR_UTF8;
                 if (vol->v_flags & AFPVOL_UNIX_PRIV)
@@ -1471,10 +1481,8 @@ int		*buflen;
                     ashort |= VOLPBIT_ATTR_TM;
             }
             if (afp_version >= 32) {
-		if (vol->v_flags & AFPVOL_EXT_ATTRS)
-		    ashort |= VOLPBIT_ATTR_EXT_ATTRS;
 	        if (vol->v_flags & AFPVOL_ACLS)
-		    ashort |= VOLPBIT_ATTR_ACLS;
+                ashort |= VOLPBIT_ATTR_ACLS;
             }
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));

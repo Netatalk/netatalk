@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.54 2009-09-01 13:15:13 franklahm Exp $
+ * $Id: filedir.c,v 1.55 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -32,8 +32,9 @@ char *strchr (), *strrchr ();
 #include <dirent.h>
 #include <errno.h>
 #include <sys/param.h>
-#include <atalk/adouble.h>
 
+#include <atalk/adouble.h>
+#include <atalk/vfs.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
@@ -755,7 +756,7 @@ int	ibuflen  _U_, *rbuflen;
             if (!isdir && !vol_unix_priv(vol)) {
                 int  admode = ad_mode("", 0777) | vol->v_fperm;
 
-                setfilmode(upath, admode, NULL);
+                setfilmode(upath, admode, NULL, vol->v_umask);
                 vol->vfs->rf_setfilmode(vol, upath, admode, NULL);
             }
         setvoltime(obj, vol );

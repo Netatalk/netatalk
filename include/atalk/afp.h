@@ -199,6 +199,7 @@ typedef enum {
 
 /* version 3.1 */
 #define AFP_ENUMERATE_EXT2      68
+#define AFP_SPOTLIGHT_PRIVATE   76
 #define AFP_SYNCDIR             78
 #define AFP_SYNCFORK            79
 #define AFP_ZZZ                 122
@@ -211,6 +212,5 @@ typedef enum {
 #define AFP_GETACL              73
 #define AFP_SETACL              74
 #define AFP_ACCESS              75
-#define AFP_SPOTLIGHT_PRIVATE   76
 
 #endif

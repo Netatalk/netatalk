@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.65 2009-09-28 12:04:51 franklahm Exp $
+ * $Id: auth.c,v 1.66 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -47,11 +47,9 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "switch.h"
 #include "status.h"
 #include "fork.h"
+#include "extattrs.h"
 #ifdef HAVE_NFSv4_ACLS
 #include "acls.h"
-#endif
-#ifdef HAVE_EXT_ATTRS
-#include "extattrs.h"
 #endif
 
 int afp_version = 11;
@@ -202,21 +200,19 @@ static int set_auth_switch(int expired)
         afp_switch = postauth_switch;
         switch (afp_version) {
         case 32:
-            uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE, UAM_AFPSERVER_POSTAUTH, afp_null_nolog, NULL);
-            uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
-            uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
 #ifdef HAVE_NFSv4_ACLS
             uam_afpserver_action(AFP_GETACL, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
             uam_afpserver_action(AFP_SETACL, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
             uam_afpserver_action(AFP_ACCESS, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
 #endif
-#ifdef HAVE_EXT_ATTRS
             uam_afpserver_action(AFP_GETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_getextattr, NULL);
             uam_afpserver_action(AFP_SETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_setextattr, NULL);
             uam_afpserver_action(AFP_REMOVEATTR, UAM_AFPSERVER_POSTAUTH, afp_remextattr, NULL);
             uam_afpserver_action(AFP_LISTEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_listextattr, NULL);
-#endif
         case 31:
+            uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
+            uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
+            uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE, UAM_AFPSERVER_POSTAUTH, afp_null_nolog, NULL);
             uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL);
         case 30:
             uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext, NULL);

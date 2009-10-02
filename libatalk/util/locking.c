@@ -1,0 +1,49 @@
+/*
+   $Id: locking.c,v 1.1 2009-10-02 09:32:41 franklahm Exp $
+   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+*/
+
+#include <unistd.h>
+#include <fcntl.h>
+
+/*
+ * Function: lock_reg
+ *
+ * Purpose: lock a file with fctnl
+ *
+ * Arguments:
+ *
+ * fd         (r) File descriptor
+ * cmd        (r) cmd to fcntl, only F_SETLK is usable here
+ * type       (r) F_RDLCK, F_WRLCK, F_UNLCK
+ * offset     (r) byte offset relative to l_whence
+ * whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
+ * len        (r) no. of bytes (0 means to EOF)
+ *
+ * Returns: fcntl return value
+ *
+ * Effects:
+ *
+ * Function called by macros {read|write|un]_lock to ease locking.
+ */
+int lock_reg(int fd, int cmd, int type, off_t offset, int whence, off_t len)
+{
+    struct flock lock;
+
+    lock.l_type = type;
+    lock.l_start = offset;
+    lock.l_whence = whence;
+    lock.l_len = len;
+
+    return (fcntl(fd, cmd, &lock));
+}

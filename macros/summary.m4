@@ -1,4 +1,4 @@
-dnl $Id: summary.m4,v 1.5 2009-02-16 13:49:20 franklahm Exp $
+dnl $Id: summary.m4,v 1.6 2009-10-02 09:32:41 franklahm Exp $
 dnl Autoconf macros, display configure summary
 
 AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
@@ -15,6 +15,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	if test "x$afp3" = "xyes"; then
 		AC_MSG_RESULT([         Large file support (>2GB) for AFP3: $wx_largefile])
 	fi
+	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([         DDP enabled: $netatalk_cv_ddp_enabled])
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
@@ -61,7 +62,6 @@ dnl	fi
 	AC_MSG_RESULT([         force volume uid/gid:   $netatalk_cv_force_uidgid])
 	AC_MSG_RESULT([         Apple 2 boot support:   $compile_a2boot])
 	AC_MSG_RESULT([         ACL support:            $neta_cv_nfsv4acl])
-	AC_MSG_RESULT([         Extended Attributes:    $neta_cv_extattrs])
 	if test x"$use_pam_so" = x"yes" -a x"$netatalk_cv_install_pam" = x"no"; then
 		AC_MSG_RESULT([])
 		AC_MSG_WARN([ PAM support was configured for your system, but the netatalk PAM configuration file])

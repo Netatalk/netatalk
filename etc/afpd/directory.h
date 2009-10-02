@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.27 2009-09-14 00:02:21 didg Exp $
+ * $Id: directory.h,v 1.28 2009-10-02 09:32:40 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -38,60 +38,13 @@
 #include <sys/sysmacros.h>
 #endif
 
+#include <atalk/directory.h>
+
 #include "globals.h"
 #include "volume.h"
 
-/* the did tree is now a red-black tree while the parent/child
- * tree is a circular doubly-linked list. how exciting. */
-struct dir {
-    struct dir	*d_left, *d_right, *d_back; /* for red-black tree */
-    int		d_color;
-    struct dir  *d_parent, *d_child; /* parent-child */
-    struct dir  *d_prev, *d_next;    /* siblings */
-    void        *d_ofork;            /* oforks using this directory. */
-    u_int32_t   d_did;
-    int	        d_flags;
-
-    time_t      ctime;                /* inode ctime */
-    u_int32_t   offcnt;               /* offspring count */
-
-    char	*d_m_name;            /* mac name */
-    char        *d_u_name;            /* unix name */
-    ucs2_t	*d_m_name_ucs2;	      /* mac name as UCS2 */
-};
-
-struct path {
-    int         m_type;             /* mac name type (long name, unicode */
-    char	*m_name;            /* mac name */
-    char        *u_name;            /* unix name */
-    cnid_t	id;                 /* file id (only for getmetadata) */
-    struct dir  *d_dir;             /* */
-    int         st_valid;           /* does st_errno and st set */
-    int         st_errno;
-    struct stat st;
-};
-
-static inline int path_isadir(struct path *o_path)
-{
-    return o_path->d_dir != NULL;
-#if 0
-    return o_path->m_name == '\0' || /* we are in a it */
-           !o_path->st_valid ||      /* in cache but we can't chdir in it */ 
-           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
-#endif
-}
-
 #define DIRTREE_COLOR_RED    0
 #define DIRTREE_COLOR_BLACK  1
-
-/* setgid directories */
-#ifndef DIRBITS
-# ifdef AFS
-#  define DIRBITS 0
-# else /* AFS */
-#  define DIRBITS S_ISGID
-# endif /* AFS */
-#endif /* DIRBITS */
 
 #define DIRF_FSMASK	(3<<0)
 #define DIRF_NOFS	(0<<0)
@@ -100,7 +53,6 @@ static inline int path_isadir(struct path *o_path)
 
 #define DIRF_OFFCNT     (1<<4)	/* offsprings count is valid */
 #define DIRF_CNID	(1<<5)  /* renumerate id */
-
 
 #define AFPDIR_READ	(1<<0)
 
@@ -194,7 +146,6 @@ extern int  for_each_dirent __P((const struct vol *, char *, dir_loop , void *))
 extern int  check_access __P((char *name , int mode));
 extern int file_access   __P((struct path *path, int mode));
 
-extern int netatalk_rmdir __P((const char *name));
 extern int netatalk_unlink __P((const char *name));
 
 extern int caseenumerate __P((const struct vol *, struct path *, struct dir *));

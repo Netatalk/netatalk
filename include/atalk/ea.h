@@ -1,0 +1,110 @@
+/*
+   $Id: ea.h,v 1.1 2009-10-02 09:32:40 franklahm Exp $
+   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+ 
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+*/
+
+#ifndef ATALK_EA_H
+#define ATALK_EA_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+/*
+ * This seems to be the current limit fo HFS+, we arbitrarily force that
+ *  which also safes us from buffer overflows
+ */
+#define MAX_EA_SIZE 3802
+
+/*
+ * At time of writing the 10.5.6 client adds 8 bytes to the
+ * length of the EA that we send him 
+*/
+#define MAX_REPLY_EXTRA_BYTES 8
+
+/* 
+ * Library user must provide a static buffer of size ATTRNAMEBUFSIZ.
+ * It's used when listing EAs as intermediate buffer. For afpd it's
+ * defined in extattrs.c.
+ */
+#define ATTRNAMEBUFSIZ 4096
+
+enum {
+    kXAttrNoFollow = 0x1,
+    kXAttrCreate = 0x2,
+    kXAttrReplace = 0x4
+};
+
+
+#define EA_MAGIC    0x61644541 /* "adEA" */
+#define EA_VERSION1 0x01
+#define EA_VERSION  EA_VERSION1
+
+typedef enum {
+    /* ea_open flags */
+    EA_CREATE    = (1<<1),      /* create if not existing on ea_open */
+    EA_RDONLY    = (1<<2),      /* open read only */
+    EA_RDWR      = (1<<3),      /* open read/write */
+    /* ea_open internal flags */
+    EA_DIR       = (1<<4)       /* ea header file is for a dir, ea_open adds it as appropiate */
+} eaflags_t;
+
+#define EA_MAGIC_OFF   0
+#define EA_MAGIC_LEN   4
+#define EA_VERSION_OFF (EA_MAGIC_OFF + EA_MAGIC_LEN)
+#define EA_VERSION_LEN 2
+#define EA_COUNT_OFF   (EA_VERSION_OFF + EA_VERSION_LEN)
+#define EA_COUNT_LEN   2
+#define EA_HEADER_SIZE (EA_MAGIC_LEN + EA_VERSION_LEN + EA_COUNT_LEN)
+
+/* 
+ * structs describing the layout of the Extended Attributes bookkeeping file.
+ * This isn't really an AppleDouble structure, it's just a binary blob that
+ * lives in our .AppleDouble directory too.
+ */
+
+struct ea_entry {
+    size_t       ea_namelen; /* len of ea_name without terminating 0 ie. strlen(ea_name)*/
+    size_t       ea_size;    /* size of EA*/
+    char         *ea_name;   /* name of the EA */
+};
+
+/* We read the on-disk data into *ea_data and parse it into this*/
+struct ea {
+    const struct vol     *vol;            /* vol handle, ea_close needs it */
+    char                 *filename;       /* name of file, needed by ea_close too */
+    unsigned int         ea_count;        /* number of EAs in ea_entries array */
+    struct ea_entry      (*ea_entries)[]; /* malloced and realloced as needed by ea_count*/
+    int                  ea_fd;           /* open fd for ea_data */
+    eaflags_t            ea_flags;        /* flags */
+    size_t               ea_size;         /* size of header file = size of ea_data buffer */
+    char                 *ea_data;        /* pointer to buffer into that we actually *
+                                           * read the disc file into                 */
+};
+
+/* On-disk format, just for reference ! */
+#if 0
+struct ea_entry_ondisk {
+    uint32_t               ea_size;
+    char                   ea_name[]; /* zero terminated string */
+};
+
+struct ea_ondisk {
+    u_int32_t              ea_magic;
+    u_int16_t              ea_version;
+    u_int16_t              ea_count;
+    struct ea_entry_ondisk ea_entries[ea_count];
+};
+#endif /* 0 */
+
+#endif /* ATALK_EA_H */

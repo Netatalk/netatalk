@@ -96,7 +96,6 @@ static const _vol_opt_name vol_opt_names[] = {
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},  /* encode illegal sequence */
     {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
     {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"}, 
-    {AFPVOL_EXT_ATTRS,  "EXT_ATTRS"},   /* Vol supports Extened Attributes */
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
     {0, NULL}

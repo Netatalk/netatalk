@@ -1,5 +1,5 @@
 /*
- * $Id: volinfo.h,v 1.7 2009-09-11 09:14:16 franklahm Exp $
+ * $Id: volinfo.h,v 1.8 2009-10-02 09:32:41 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
@@ -32,7 +32,6 @@
                                        a valid SHIFT-JIS char, is encoded  as U\217 -*/
 #define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching, default don't use it */
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
-#define AFPVOL_EXT_ATTRS (1 << 23)   /* Volume supports Extended Attributes */
 #define AFPVOL_TM        (1 << 24)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
 
