@@ -31,10 +31,6 @@
 #include <atalk/volume.h>
 #include <atalk/directory.h>
 
-#if 0
-#include "extattrs.h"
-#endif
-
 #ifdef HAVE_NFSv4_ACLS
 extern int remove_acl(const char *name);
 #endif

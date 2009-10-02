@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.1 2009-10-02 09:32:41 franklahm Exp $
+  $Id: ea.c,v 1.2 2009-10-02 14:57:57 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -271,6 +271,7 @@ static char * ea_path(const struct ea * restrict ea,
  *    uname         (r) name of file
  *    attruname     (r) name of EA
  *    attrsize      (r) size of ea
+ *    bitmap        (r) bitmap from FP func
  *
  * Returns: new number of EA entries, -1 on error
  *
@@ -282,9 +283,28 @@ static char * ea_path(const struct ea * restrict ea,
 static int ea_addentry(struct ea * restrict ea,
                        const char * restrict uname,
                        const char * restrict attruname,
-                       size_t attrsize)
+                       size_t attrsize,
+                       int bitmap)
 {
+    int count = 0;
     void *tmprealloc;
+
+    /* First check if an EA of the requested name already exist */
+    if (ea->ea_count > 0) {
+        while (count < ea->ea_count) {
+            if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
+                LOG(log_debug, logtype_afpd, "ea_addentry('%s'): exists", attruname);
+                if (bitmap & kXAttrCreate)
+                    /* its like O_CREAT|O_EXCL -> fail */
+                    return -1;
+                if ( ! (bitmap & kXAttrReplace))
+                    /* replace was not requested, then its an error */
+                    return -1;
+                break;
+            }
+            count++;
+        }
+    }
 
     if (ea->ea_count == 0) {
         ea->ea_entries = malloc(sizeof(struct ea_entry));
@@ -1015,7 +1035,7 @@ int list_eas(const struct vol * restrict vol,
     }
 
 exit:
-    *buflen += attrbuflen;
+    *buflen = attrbuflen;
 
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "list_eas: error closing ea handle for file: %s", uname);
@@ -1063,7 +1083,7 @@ int set_ea(const struct vol * restrict vol,
         return AFPERR_MISC;
     }
 
-    if ((ea_addentry(&ea, uname, attruname, attrsize)) == -1) {
+    if ((ea_addentry(&ea, uname, attruname, attrsize, oflag)) == -1) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): ea_addentry error", uname);
         ret = AFPERR_MISC;
         goto exit;
