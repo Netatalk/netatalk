@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.8 2009-10-12 11:30:52 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.9 2009-10-12 11:38:01 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -229,7 +229,7 @@ void free_lock(int lockfd)
 
 static void usage ()
 {
-    printf("Usage: dbd [-e|-v|-x|-u] -d [-i] | -s [-n]| -r [-f] <path to netatalk volume>\n"
+    printf("Usage: dbd [-e|-v|-x] -d [-i] | -s [-n]| -r [-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
