@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.9 2009-10-12 11:38:01 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.10 2009-10-12 11:55:27 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -255,7 +255,7 @@ static void usage ()
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
            "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
-           "                 only available for volumes with 'cachecnid' option. Implies -e.\n"
+           "                 only available for volumes without 'nocnidcache' option. Implies -e.\n"
            "   -u Prepare upgrade:\n"
            "      Before installing an upgraded version of Netatalk that is linked against\n"
            "      a newer BerkeleyDB lib, run `dbd -u ...` from the OLD Netatalk pior to\n"
