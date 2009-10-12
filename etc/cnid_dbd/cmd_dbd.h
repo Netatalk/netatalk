@@ -22,6 +22,7 @@ typedef unsigned int dbd_flags_t;
 #define STRCMP(a,b,c) \
         (strcmp(a,c) b 0)
 
+extern int nocniddb; /* Dont open CNID database, only scan filesystem */
 extern volatile sig_atomic_t alarmed;
 extern struct volinfo *volinfo;
 extern char cwdbuf[MAXPATHLEN+1];

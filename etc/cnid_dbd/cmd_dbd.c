@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.7 2009-09-14 01:24:40 didg Exp $
+   $Id: cmd_dbd.c,v 1.8 2009-10-12 11:30:52 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -82,9 +82,10 @@
 #define LOCKFILENAME  "lock"
 #define DBOPTIONS (DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN)
 
-static DBD *dbd;
-
+int nocniddb = 0;               /* Dont open CNID database, only scan filesystem */
 volatile sig_atomic_t alarmed;
+
+static DBD *dbd;
 static int verbose;             /* Logging flag */
 static int exclusive;           /* Exclusive volume access */
 static struct db_param db_param = {
@@ -228,7 +229,7 @@ void free_lock(int lockfd)
 
 static void usage ()
 {
-    printf("Usage: dbd [-e|-v|-x|-u] -d [-i] | -s | -r [-f] <path to netatalk volume>\n"
+    printf("Usage: dbd [-e|-v|-x|-u] -d [-i] | -s [-n]| -r [-f] <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
@@ -242,6 +243,8 @@ static void usage ()
            "      5. Check for directories inside AppleDouble directories\n"
            "      6. Check name encoding by roundtripping, log on error\n"
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
+           "      8. Open and close adouble files\n"
+           "      Option: -n Don't open CNID database, skip CNID checks\n"
            "   -r Rebuild volume:\n"
            "      1. Sync CNIDSs in database with volume\n"
            "      2. Make sure .AppleDouble dir exist, create if missing\n"
@@ -250,6 +253,7 @@ static void usage ()
            "      5. Check for directories inside AppleDouble directories\n"
            "      6. Check name encoding by roundtripping, log on error\n"
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
+           "      8. Open and close adouble files\n"
            "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
            "                 only available for volumes with 'cachecnid' option. Implies -e.\n"
            "   -u Prepare upgrade:\n"
@@ -282,7 +286,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    while ((c = getopt(argc, argv, ":dsruvxife")) != -1) {
+    while ((c = getopt(argc, argv, ":dsnruvxife")) != -1) {
         switch(c) {
         case 'd':
             dump = 1;
@@ -293,6 +297,9 @@ int main(int argc, char **argv)
         case 's':
             scan = 1;
             flags |= DBD_FLAGS_SCAN;
+            break;
+        case 'n':
+            nocniddb = 1;
             break;
         case 'r':
             rebuild = 1;
@@ -392,38 +399,42 @@ int main(int argc, char **argv)
     /* 
        Lets start with the BerkeleyDB stuff
     */
-    if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
-        goto exit_failure;
+    if ( ! nocniddb) {
+        if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
+            goto exit_failure;
+        
+        if (dbif_env_open(dbd, &db_param, exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
+            dbd_log( LOGSTD, "error opening database!");
+            goto exit_failure;
+        }
 
-    if (dbif_env_open(dbd, &db_param, exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
-        dbd_log( LOGSTD, "error opening database!");
-        goto exit_failure;
+        if (exclusive)
+            dbd_log( LOGDEBUG, "Finished recovery.");
+
+        if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
+            dbif_close(dbd);
+            goto exit_failure;
+        }
+
+        if (dbd_stamp(dbd) < 0) {
+            dbif_close(dbd);
+            goto exit_failure;
+        }
     }
 
-    if (exclusive)
-        dbd_log( LOGDEBUG, "Finished recovery.");
-
-    if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
-        dbif_close(dbd);
-        goto exit_failure;
-    }
-
-    if (dbd_stamp(dbd) < 0) {
-        dbif_close(dbd);
-        goto exit_failure;
-    }
-
-    if (dump) {
+    /* Now execute given command scan|rebuild|dump */
+    if (dump && ! nocniddb) {
         if (dbif_dump(dbd, dumpindexes) < 0) {
             dbd_log( LOGSTD, "Error dumping database");
         }
-    } else if (rebuild || scan) {
+    } else if ((rebuild && ! nocniddb) || (scan && nocniddb)) {
         if (cmd_dbd_scanvol(dbd, &volinfo, flags) < 0) {
             dbd_log( LOGSTD, "Error repairing database.");
         }
     }
 
-    if (dbif_close(dbd) < 0) {
+    /* Cleanup */
+    if (! nocniddb && dbif_close(dbd) < 0) {
         dbd_log( LOGSTD, "Error closing database");
         goto exit_failure;
     }

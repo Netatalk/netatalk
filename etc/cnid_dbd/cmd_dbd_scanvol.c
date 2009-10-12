@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.8 2009-09-14 02:56:19 didg Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.9 2009-10-12 11:30:52 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -208,7 +208,7 @@ static int check_adfile(const char *fname, const struct stat *st)
             return -1;
         }
         /* Missing. Log and create it */
-        dbd_log(LOGSTD, "Missing AppleDoube file '%s/%s'", cwdbuf, adname);
+        dbd_log(LOGSTD, "Missing AppleDouble file '%s/%s'", cwdbuf, adname);
 
         if (dbd_flags & DBD_FLAGS_SCAN)
             /* Scan only requested, dont change anything */
@@ -220,6 +220,7 @@ static int check_adfile(const char *fname, const struct stat *st)
         if ((ret = ad_open_metadata( fname, adflags, O_CREAT, &ad)) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                      cwdbuf, adname, strerror(errno));
+
             return -1;
         }
 
@@ -233,6 +234,13 @@ static int check_adfile(const char *fname, const struct stat *st)
 #if 0
         chmod(adname, st->st_mode);
 #endif
+    } else {
+        ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
+        if (ad_open_metadata( fname, adflags, O_RDONLY, &ad) != 0) {
+            dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
+            return -1;
+        }
+        ad_close_metadata(&ad);
     }
     return 0;
 }
@@ -590,24 +598,26 @@ static int dbd_readdir(int volroot, cnid_t did)
         if (ADDIR_OK)
             adfile_ok = check_adfile(ep->d_name, &st);
 
-        /* Check CNIDs */
-        cnid = check_cnid(ep->d_name, did, &st, adfile_ok, adflags);
+        if ( ! nocniddb) {
+            /* Check CNIDs */
+            cnid = check_cnid(ep->d_name, did, &st, adfile_ok, adflags);
 
-        /* Now add this object to our rebuild dbd */
-        if (cnid) {
-            rqst.cnid = rply.cnid;
-            dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
-            if (rply.result != CNID_DBD_RES_OK) {
-                dbd_log( LOGDEBUG, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
-                         cnid, cwdbuf, ep->d_name);
-                exit(EXIT_FAILURE);
+            /* Now add this object to our rebuild dbd */
+            if (cnid) {
+                rqst.cnid = rply.cnid;
+                dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
+                if (rply.result != CNID_DBD_RES_OK) {
+                    dbd_log( LOGDEBUG, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
+                             cnid, cwdbuf, ep->d_name);
+                    exit(EXIT_FAILURE);
+                }
             }
         }
 
         /**************************************************************************
           Recursion
         **************************************************************************/
-        if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we cant recur */
+        if (S_ISDIR(st.st_mode) && (cnid || nocniddb)) { /* If we have no cnid for it we cant recur */
             strcat(cwdbuf, "/");
             strcat(cwdbuf, ep->d_name);
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
@@ -766,19 +776,21 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
         return -1;
     }
 
-    /* Get volume stamp */
-    dbd_getstamp(dbd, &rqst, &rply);
-    if (rply.result != CNID_DBD_RES_OK)
-        goto exit_cleanup;
-    memcpy(stamp, rply.name, CNID_DEV_LEN);
+    if (! nocniddb) {
+        /* Get volume stamp */
+        dbd_getstamp(dbd, &rqst, &rply);
+        if (rply.result != CNID_DBD_RES_OK)
+            goto exit_cleanup;
+        memcpy(stamp, rply.name, CNID_DEV_LEN);
 
-    /* open/create rebuild dbd, copy rootinfo key */
-    if (NULL == (dbd_rebuild = dbif_init(NULL, NULL)))
-        return -1;
-    if (0 != (dbif_open(dbd_rebuild, NULL, 0)))
-        return -1;
-    if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild)))
-        goto exit_cleanup;
+        /* open/create rebuild dbd, copy rootinfo key */
+        if (NULL == (dbd_rebuild = dbif_init(NULL, NULL)))
+            return -1;
+        if (0 != (dbif_open(dbd_rebuild, NULL, 0)))
+            return -1;
+        if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild)))
+            goto exit_cleanup;
+    }
 
     if (setjmp(jmp) != 0)
         goto exit_cleanup;      /* Got signal, jump from dbd_readdir */
@@ -787,12 +799,15 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
     if ( (scanvol(volinfo, flags)) != 0)
         return -1;
 
+    if (! nocniddb) {
     /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
        other clients in between our pass 1 and 2 */
-    if (flags & DBD_FLAGS_EXCL)
-        delete_orphaned_cnids(dbd, dbd_rebuild, flags);
+        if (flags & DBD_FLAGS_EXCL)
+            delete_orphaned_cnids(dbd, dbd_rebuild, flags);
+    }
 
 exit_cleanup:
-    dbif_close(dbd_rebuild);
+    if (! nocniddb)
+        dbif_close(dbd_rebuild);
     return ret;
 }
