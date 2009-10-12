@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.10 2009-10-12 11:55:27 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.11 2009-10-12 13:18:11 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -358,7 +358,7 @@ int main(int argc, char **argv)
 
     /* Load .volinfo file */
     if (loadvolinfo(volpath, &volinfo) == -1) {
-        dbd_log( LOGSTD, "Unkown volume options!");
+        dbd_log( LOGSTD, "Not a Netatalk volume at '%s', no .volinfo file at '%s/.AppleDesktop/.volinfo' or unknown volume options", volpath, volpath);
         exit(EXIT_FAILURE);
     }
     if (vol_load_charsets(&volinfo) == -1) {
