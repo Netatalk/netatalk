@@ -1,5 +1,5 @@
 /*
- * $Id: zip.h,v 1.3 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: zip.h,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -20,9 +20,10 @@ struct ziptab {
 };
 
 extern struct ziptab	*ziptab, *ziplast;
-struct ziptab	*newzt __P((const int, const char *));
+struct ziptab	*newzt (const int, const char *);
 
-int addzone __P(( struct rtmptab *, int, char * ));
-int zip_getnetinfo __P(( struct interface * ));
+int addzone ( struct rtmptab *, int, char * );
+int zip_getnetinfo ( struct interface * );
+int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len);
 
 #endif /* atalkd/zip.h */

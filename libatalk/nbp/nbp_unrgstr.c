@@ -1,5 +1,5 @@
 /*
- * $Id: nbp_unrgstr.c,v 1.4 2002-01-17 06:12:02 srittau Exp $
+ * $Id: nbp_unrgstr.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -34,9 +34,7 @@
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
-int nbp_unrgstr( obj, type, zone, addr )
-    const char		*obj, *type, *zone;
-    const struct at_addr *addr;
+int nbp_unrgstr(const char *obj,const char *type,const char  *zone, const struct at_addr *addr)
 {
     struct sockaddr_at	to;
     struct nbphdr	nh;

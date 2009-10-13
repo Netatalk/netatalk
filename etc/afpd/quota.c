@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.30 2008-05-16 04:19:41 didg Exp $
+ * $Id: quota.c,v 1.31 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -190,11 +190,7 @@ static int get_linux_quota(int what, char *path, uid_t euser_id, struct dqblk *d
  Abstract out the XFS Quota Manager quota get call.
 ****************************************************************************/
 
-static int get_linux_xfs_quota(what, path, euser_id, dqb)
-int what;
-char *path;
-uid_t euser_id;
-struct dqblk *dqb;
+static int get_linux_xfs_quota(int what, char *path, uid_t euser_id, struct dqblk *dqb)
 {
 	int ret = -1;
 #ifdef HAVE_LINUX_XQM_H
@@ -221,11 +217,7 @@ struct dqblk *dqb;
 ** For API v2 the results are copied back into a v1 structure.
 ** Taken from quota-1.4.8 perl module
 */
-static int get_linux_fs_quota( what, path, euser_id, dqb)
-int what;
-char *path;
-uid_t euser_id;
-struct dqblk *dqb;
+static int get_linux_fs_quota(int what, char *path, uid_t euser_id, struct dqblk *dqb)
 {
 	int ret;
 
@@ -297,9 +289,7 @@ struct dqblk *dqb;
  * on which "file" resides.  Returns NULL on failure.
  */
 static char *
-mountp( file, nfs)
-char	*file;
-int         *nfs;
+mountp( char *file, int *nfs)
 {
     struct stat			sb;
     FILE 			*mtab;
@@ -344,9 +334,7 @@ int         *nfs;
 */
 
 static char *
-special( file, nfs )
-char *file;
-int  *nfs;
+special( char *file, int *nfs)
 {
     static struct fs_data	fsd;
 
@@ -365,9 +353,7 @@ int  *nfs;
 #if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4) || defined(_IBMR2)
 
 static char *
-special( file, nfs )
-char	*file;
-int         *nfs;
+special(char *file, int *nfs)
 {
     static struct statfs	sfs;
 
@@ -390,9 +376,7 @@ int         *nfs;
 #else /* BSD4_4 */
 
 static char *
-special( file, nfs )
-char *file;
-int *nfs;
+special(char *file, int *nfs)
 {
     struct stat		sb;
     FILE 		*mtab;
@@ -443,10 +427,7 @@ int *nfs;
 #endif /* __svr4__ */
 
 
-static int getfsquota(vol, uid, dq)
-struct vol		*vol;
-const int		uid;
-struct dqblk		*dq;
+static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 
 {
 	struct dqblk dqg;
@@ -560,10 +541,7 @@ struct dqblk		*dq;
 }
 
 
-static int getquota( vol, dq, bsize)
-struct vol		*vol;
-struct dqblk	 	*dq;
-const u_int32_t		bsize;
+static int getquota( struct vol *vol, struct dqblk *dq, const u_int32_t bsize)
 {
     char *p;
 
@@ -646,8 +624,7 @@ const u_int32_t		bsize;
 #endif /* TRU64 */
 }
 
-static int overquota( dqblk )
-struct dqblk	  *dqblk;
+static int overquota( struct dqblk *dqblk)
 {
     struct timeval	tv;
 
@@ -702,10 +679,7 @@ struct dqblk	  *dqblk;
 #define tobytes(a, b)  dbtob((VolSpace) (a))
 #endif
 
-int uquota_getvolspace( vol, bfree, btotal, bsize)
-struct vol	*vol;
-VolSpace	*bfree, *btotal;
-const u_int32_t bsize;
+int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const u_int32_t bsize)
 {
 	u_int64_t this_bsize;
 	struct dqblk dqblk;

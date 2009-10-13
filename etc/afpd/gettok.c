@@ -1,5 +1,5 @@
 /*
- * $Id: gettok.c,v 1.5 2001-12-03 05:03:38 jmarcus Exp $
+ * $Id: gettok.c,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -34,9 +34,7 @@ char *strchr (), *strrchr ();
 static char	*l_curr;
 static char	*l_end;
 
-void initline( len, line )
-int		len;
-char	*line;
+void initline( int len, char *line)
 {
     l_curr = line;
     l_end = line + len;
@@ -47,9 +45,7 @@ char	*line;
 #define ST_BEGIN	2
 
 int
-parseline( len, token )
-int		len;
-char	*token;
+parseline(int len, char *token)
 {
     char	*p, *e;
     int		state;
@@ -103,8 +99,7 @@ char	*token;
 }
 
 #ifdef notdef
-void parseline( token, user )
-char	*token, *user;
+void parseline(char *token, char *user)
 {
     char		*p = pos, *t = token, *u, *q, buf[ MAXPATHLEN ];
     struct passwd	*pwent;

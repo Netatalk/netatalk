@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.43 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: adouble.h,v 1.44 2009-10-13 22:55:37 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -432,42 +432,42 @@ struct adouble_fops {
 #define ad_get_MD_flags(ad) ((ad)->ad_md->adf_flags)
 
 /* ad_flush.c */
-extern int ad_rebuild_adouble_header __P((struct adouble *));
-extern int ad_rebuild_sfm_header __P((struct adouble *));
-extern int ad_copy_header __P((struct adouble *, struct adouble *));
-extern int ad_flush __P((struct adouble *));
-extern int ad_close __P((struct adouble *, int));
+extern int ad_rebuild_adouble_header (struct adouble *);
+extern int ad_rebuild_sfm_header (struct adouble *);
+extern int ad_copy_header (struct adouble *, struct adouble *);
+extern int ad_flush (struct adouble *);
+extern int ad_close (struct adouble *, int);
 
 /* ad_lock.c */
-extern int ad_fcntl_lock    __P((struct adouble *, const u_int32_t /*eid*/,
+extern int ad_fcntl_lock    (struct adouble *, const u_int32_t /*eid*/,
                                  const int /*type*/, const off_t /*offset*/,
-                                 const off_t /*len*/, const int /*user*/));
-extern void ad_fcntl_unlock __P((struct adouble *, const int /*user*/));
-extern int ad_fcntl_tmplock __P((struct adouble *, const u_int32_t /*eid*/,
+                                 const off_t /*len*/, const int /*user*/);
+extern void ad_fcntl_unlock (struct adouble *, const int /*user*/);
+extern int ad_fcntl_tmplock (struct adouble *, const u_int32_t /*eid*/,
                                  const int /*type*/, const off_t /*offset*/,
-                                 const off_t /*len*/, const int /*user*/));
-extern int ad_testlock      __P((struct adouble * /*adp*/, int /*eid*/, off_t /*off*/));
-extern int ad_excl_lock     __P((struct adouble * /*adp*/, const u_int32_t /*eid*/));
+                                 const off_t /*len*/, const int /*user*/);
+extern int ad_testlock      (struct adouble * /*adp*/, int /*eid*/, off_t /*off*/);
+extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
 
 #define ad_lock ad_fcntl_lock
 #define ad_tmplock ad_fcntl_tmplock
 #define ad_unlock ad_fcntl_unlock
 
 /* ad_open.c */
-extern int ad_setfuid     __P((const uid_t ));
-extern uid_t ad_getfuid   __P((void ));
-extern char *ad_dir       __P((const char *));
-extern char *ad_path      __P((const char *, int));
-extern char *ad_path_osx  __P((const char *, int));
-extern char *ad_path_ads  __P((const char *, int));
-extern char *ad_path_sfm  __P((const char *, int));
-extern int ad_mode        __P((const char *, int));
-extern int ad_mkdir       __P((const char *, int));
-extern void ad_init       __P((struct adouble *, int, int ));
-extern int ad_open        __P((const char *, int, int, int, struct adouble *));
-extern int ad_refresh     __P((struct adouble *));
-extern int ad_stat        __P((const char *, struct stat *));
-extern int ad_metadata    __P((const char *, int, struct adouble *));
+extern int ad_setfuid     (const uid_t );
+extern uid_t ad_getfuid   (void );
+extern char *ad_dir       (const char *);
+extern char *ad_path      (const char *, int);
+extern char *ad_path_osx  (const char *, int);
+extern char *ad_path_ads  (const char *, int);
+extern char *ad_path_sfm  (const char *, int);
+extern int ad_mode        (const char *, int);
+extern int ad_mkdir       (const char *, int);
+extern void ad_init       (struct adouble *, int, int );
+extern int ad_open        (const char *, int, int, int, struct adouble *);
+extern int ad_refresh     (struct adouble *);
+extern int ad_stat        (const char *, struct stat *);
+extern int ad_metadata    (const char *, int, struct adouble *);
 
 #define ad_open_metadata(name, flags, mode, adp)\
    ad_open(name, ADFLAGS_MD|(flags), O_RDWR |(mode), 0666, (adp))
@@ -500,54 +500,54 @@ static inline mode_t ad_hf_mode (mode_t mode)
 }
 
 /* ad_read.c/ad_write.c */
-extern ssize_t ad_read __P((struct adouble *, const u_int32_t,
-                            const off_t, char *, const size_t));
-extern ssize_t ad_pread __P((struct ad_fd *, void *, size_t, off_t));
-extern ssize_t ad_write __P((struct adouble *, const u_int32_t, off_t,
-                             const int, const char *, const size_t));
-extern ssize_t adf_pread  __P((struct ad_fd *, void *, size_t, off_t));
-extern ssize_t adf_pwrite __P((struct ad_fd *, const void *, size_t, off_t));
-extern int     ad_dtruncate __P((struct adouble *, const off_t));
-extern int     ad_rtruncate __P((struct adouble *, const off_t));
+extern ssize_t ad_read (struct adouble *, const u_int32_t,
+                            const off_t, char *, const size_t);
+extern ssize_t ad_pread (struct ad_fd *, void *, size_t, off_t);
+extern ssize_t ad_write (struct adouble *, const u_int32_t, off_t,
+                             const int, const char *, const size_t);
+extern ssize_t adf_pread  (struct ad_fd *, void *, size_t, off_t);
+extern ssize_t adf_pwrite (struct ad_fd *, const void *, size_t, off_t);
+extern int     ad_dtruncate (struct adouble *, const off_t);
+extern int     ad_rtruncate (struct adouble *, const off_t);
 
 /* ad_size.c */
-extern off_t ad_size __P((const struct adouble *, const u_int32_t ));
+extern off_t ad_size (const struct adouble *, const u_int32_t );
 
 /* ad_mmap.c */
-extern void *ad_mmapread __P((struct adouble *, const u_int32_t,
-                              const off_t, const size_t));
-extern void *ad_mmapwrite __P((struct adouble *, const u_int32_t,
-                               const off_t, const int, const size_t));
+extern void *ad_mmapread (struct adouble *, const u_int32_t,
+                              const off_t, const size_t);
+extern void *ad_mmapwrite (struct adouble *, const u_int32_t,
+                               const off_t, const int, const size_t);
 #define ad_munmap(buf, len)  (munmap((buf), (len)))
 
 /* ad_date.c */
-extern int ad_setdate __P((const struct adouble *, unsigned int, u_int32_t));
-extern int ad_getdate __P((const struct adouble *, unsigned int, u_int32_t *));
+extern int ad_setdate (const struct adouble *, unsigned int, u_int32_t);
+extern int ad_getdate (const struct adouble *, unsigned int, u_int32_t *);
 
 /* ad_attr.c */
-extern int       ad_setattr __P((const struct adouble *, const u_int16_t));
-extern int       ad_getattr __P((const struct adouble *, u_int16_t *));
+extern int       ad_setattr (const struct adouble *, const u_int16_t);
+extern int       ad_getattr (const struct adouble *, u_int16_t *);
 
 /* Note: starting with Netatalk 2.1 we do NOT alway set the name */
-extern int       ad_setname __P((struct adouble *, const char *));
+extern int       ad_setname (struct adouble *, const char *);
 
 #if AD_VERSION == AD_VERSION2
-extern int       ad_setid __P((struct adouble *, const dev_t dev,const ino_t ino, const u_int32_t, const u_int32_t, const void *));
-extern u_int32_t ad_getid __P((struct adouble *, const dev_t, const ino_t, const cnid_t, const void *));
-extern u_int32_t ad_forcegetid __P((struct adouble *adp));
+extern int       ad_setid (struct adouble *, const dev_t dev,const ino_t ino, const u_int32_t, const u_int32_t, const void *);
+extern u_int32_t ad_getid (struct adouble *, const dev_t, const ino_t, const cnid_t, const void *);
+extern u_int32_t ad_forcegetid (struct adouble *adp);
 #else
 #define ad_setid(a, b, c)
 #endif
 
 #ifdef WITH_SENDFILE
-extern ssize_t ad_readfile __P((const struct adouble *, const int,
-                                const int, off_t, const size_t));
+extern ssize_t ad_readfile (const struct adouble *, const int,
+                                const int, off_t, const size_t);
 #endif
 
 #if 0
 #ifdef HAVE_SENDFILE_WRITE
-extern ssize_t ad_writefile __P((struct adouble *, const int,
-                                 const int, off_t, const int, const size_t));
+extern ssize_t ad_writefile (struct adouble *, const int,
+                                 const int, off_t, const int, const size_t);
 #endif /* HAVE_SENDFILE_WRITE */
 #endif /* 0 */
 

@@ -346,7 +346,7 @@ void syslog_setup(int loglevel, enum logtypes logtype _U_,
         arr_loglevel_strings[loglevel]);
 }
 
-void log_close()
+void log_close(void)
 {
 }
 

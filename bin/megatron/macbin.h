@@ -1,5 +1,5 @@
 /*
- * $Id: macbin.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: macbin.h,v 1.3 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifndef _MACBIN_H
@@ -15,6 +15,5 @@ int bin_write(int fork, char *buffer, int length);
 int bin_header_read(struct FHeader *fh, int revision);
 int bin_header_write(struct FHeader *fh);
 int test_header(void);
-u_short updcrc();
 
 #endif /* _MACBIN_H */

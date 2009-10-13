@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.7 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: file.h,v 1.8 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,9 +36,9 @@ struct papfile {
 
 #define PF_MORESPACE	1024
 
-int markline __P(( struct papfile *, char **, int *, int * ));
-void morespace __P(( struct papfile *, const char *, int ));
-void append __P(( struct papfile *, const char *, int ));
-void spoolerror __P(( struct papfile *, char * ));
+int markline ( struct papfile *, char **, int *, int * );
+void morespace ( struct papfile *, const char *, int );
+void append ( struct papfile *, const char *, int );
+void spoolerror ( struct papfile *, char * );
 
 #endif /* PAPD_FILE_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.9 2006-09-29 09:39:16 didg Exp $
+ * $Id: ad_write.c,v 1.10 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -47,13 +47,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
 }
 
 /* end is always 0 */
-ssize_t ad_write( ad, eid, off, end, buf, buflen )
-    struct adouble	*ad;
-    const u_int32_t	eid;
-    off_t               off;
-    const int		end;
-    const char		*buf;
-    const size_t	buflen;
+ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int end, const char *buf, const size_t buflen)
 {
     struct stat		st;
     ssize_t		cc;
@@ -151,9 +145,7 @@ char            c = 0;
 }
 
 /* ------------------------ */
-int ad_rtruncate( ad, size )
-    struct adouble	*ad;
-    const off_t  	size;
+int ad_rtruncate( struct adouble *ad, const off_t size)
 {
     if ( sys_ftruncate( ad_reso_fileno(ad),
 	    size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
@@ -164,9 +156,7 @@ int ad_rtruncate( ad, size )
     return 0;
 }
 
-int ad_dtruncate(ad, size)
-    struct adouble	*ad;
-    const off_t 	size;
+int ad_dtruncate(struct adouble *ad, const off_t size)
 {
     if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
       return -1;

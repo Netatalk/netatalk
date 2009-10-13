@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.14 2009-09-14 00:02:21 didg Exp $
+ * $Id: dsi_tcp.c,v 1.15 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -87,7 +87,7 @@ static void dsi_tcp_close(DSI *dsi)
 }
 
 /* alarm handler for tcp_open */
-static void timeout_handler()
+static void timeout_handler(int sig _U_)
 {
   LOG(log_error, logtype_default, "dsi_tcp_open: connection timed out");
   exit(EXITERR_CLNT);

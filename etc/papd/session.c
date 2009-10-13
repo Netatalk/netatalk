@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.16 2008-11-14 10:29:08 didg Exp $
+ * $Id: session.c,v 1.17 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -62,9 +62,7 @@ struct iovec	iov[ PAP_MAXQUANTUM ] = {
  * Read lines of a file, until the client sends eof, after
  * which we'll send eof also.
  */
-int session( atp, sat )
-    ATP			atp;
-    struct sockaddr_at	*sat;
+int session(ATP atp, struct sockaddr_at *sat)
 {
     struct timeval	tv;
     struct atp_block	atpb;

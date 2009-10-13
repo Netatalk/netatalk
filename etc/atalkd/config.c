@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.16 2008-12-02 18:18:06 morgana Exp $
+ * $Id: config.c,v 1.17 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -67,11 +67,18 @@ char *strchr (), *strrchr ();
 #define IFF_SLAVE 0
 #endif /* IFF_SLAVE */
 
-int	router(), dontroute(), seed(), phase(), net(), addr(), zone(), noallmulti();
+int router(struct interface *iface, char **av);
+int dontroute(struct interface *iface, char **av);
+int seed(struct interface *iface, char **av);
+int phase(struct interface *iface, char **av); 
+int net(struct interface *iface, char **av);
+int addr(struct interface *iface, char **av); 
+int zone(struct interface *iface, char **av);
+int noallmulti(struct interface *iface, char **av);
 
 static const struct param {
     char	*p_name;
-    int		(*p_func)();
+    int		(*p_func)(struct interface *iface, char **av);
 } params[] = {
     { "router", router },
     { "dontroute", dontroute },
@@ -178,8 +185,7 @@ void freeline( char **argv )
     }
 }
 
-int writeconf( cf )
-    char	*cf;
+int writeconf(char *cf)
 {
     struct stat		st;
     char		*path, *p, newpath[ MAXPATHLEN ], line[ MAXLINELEN ];
@@ -321,8 +327,7 @@ int writeconf( cf )
  * zone for an interface is the first zone encountered for that
  * interface.
  */
-int readconf( cf )
-    char		*cf;
+int readconf(char *cf)
 {
     struct ifreq	ifr;
     struct interface	*iface, *niface;
@@ -474,9 +479,7 @@ read_conf_err:
     return -1;
 }
 
-int noallmulti( iface, av )
-    struct interface	*iface;
-    char		**av _U_;
+int noallmulti( struct interface *iface, char **av _U_)
 {
     /* Linux specific, no effect on other platforms */
     iface->i_flags &= !IFACE_ALLMULTI;
@@ -485,9 +488,7 @@ int noallmulti( iface, av )
 }
 	
 /*ARGSUSED*/
-int router( iface, av )
-    struct interface	*iface;
-    char		**av _U_;
+int router(struct interface *iface, char **av _U_)
 {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
     if (iface->i_flags & IFACE_DONTROUTE) {
@@ -509,9 +510,7 @@ int router( iface, av )
 }
 
 /*ARGSUSED*/
-int dontroute( iface, av )
-    struct interface	*iface;
-    char		**av _U_;
+int dontroute(struct interface *iface, char **av _U_)
 {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
     if (iface->i_flags & IFACE_RSEED) {
@@ -524,9 +523,7 @@ int dontroute( iface, av )
 }
 
 /*ARGSUSED*/
-int seed( iface, av )
-    struct interface	*iface;
-    char		**av _U_;
+int seed( struct interface *iface, char **av _U_)
 {
     /*
      * Check to be sure "-seed" is before "-zone". we keep the old
@@ -542,9 +539,7 @@ int seed( iface, av )
     return( 1 );
 }
 
-int phase( iface, av )
-    struct interface	*iface;
-    char		**av;
+int phase(struct interface *iface, char **av)
 {
     int			n;
     char		*pnum;
@@ -570,9 +565,7 @@ int phase( iface, av )
     return( 2 );
 }
 
-int net( iface, av )
-    struct interface	*iface;
-    char		**av;
+int net(struct interface *iface, char **av)
 {
     char		*nrange;
     char		*stop;
@@ -640,9 +633,7 @@ int net( iface, av )
     return( 2 );
 }
 
-int addr( iface, av )
-    struct interface	*iface;
-    char		**av;
+int addr(struct interface *iface, char **av)
 {
     if ( av[ 0 ] == NULL ) {
 	fprintf( stderr, "No address.\n" );
@@ -676,9 +667,7 @@ int addr( iface, av )
     return( 2 );
 }
 
-int zone( iface, av )
-    struct interface	*iface;
-    char		**av;
+int zone(struct interface *iface, char **av)
 {
     struct ziptab	*zt;
     char		*zname;
@@ -724,7 +713,7 @@ int zone( iface, av )
  * Get the configuration from the kernel. Only called if there's no
  * configuration.
  */
-int getifconf()
+int getifconf(void)
 {
     struct interface	*iface, *niface;
     struct ifreq        ifr;
@@ -804,8 +793,7 @@ int getifconf()
  * the interface structure and have it updated nicely.
  */
 
-struct interface *newiface( name )
-    const char		*name;
+struct interface *newiface( const char *name)
 {
     struct interface	*niface;
 
@@ -829,7 +817,7 @@ struct interface *newiface( name )
 }
 
 #ifdef __svr4__
-int plumb()
+int plumb(void)
 {
     struct interface	*iface;
     char		device[ MAXPATHLEN + 1], *p, *t;

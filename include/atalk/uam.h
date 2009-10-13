@@ -78,29 +78,29 @@ struct session_info {
 };
 
 /* register and unregister uams with these functions */
-extern int uam_register __P((const int, const char *, const char *, ...));
-extern void uam_unregister __P((const int, const char *));
+extern int uam_register (const int, const char *, const char *, ...);
+extern void uam_unregister (const int, const char *);
 
 /* helper functions */
-extern struct passwd *uam_getname __P((void*, char *, const int));
-extern int uam_checkuser __P((const struct passwd *));
+extern struct passwd *uam_getname (void*, char *, const int);
+extern int uam_checkuser (const struct passwd *);
 
 /* afp helper functions */
-extern int uam_afp_read __P((void *, char *, int *,
-			     int (*)(void *, void *, const int)));
-extern int uam_afpserver_option __P((void *, const int, void *, int *));
+extern int uam_afp_read (void *, char *, int *,
+			     int (*)(void *, void *, const int));
+extern int uam_afpserver_option (void *, const int, void *, int *);
 #ifdef TRU64
-extern void uam_afp_getcmdline __P((int *, char ***));
-extern int uam_sia_validate_user __P((sia_collect_func_t *, int, char **,
+extern void uam_afp_getcmdline (int *, char ***);
+extern int uam_sia_validate_user (sia_collect_func_t *, int, char **,
                                      char *, char *, char *, int, char *,
-                                     char *));
+                                     char *);
 #endif /* TRU64 */
 
 /* switch.c */
 #define UAM_AFPSERVER_PREAUTH  (0)
 #define UAM_AFPSERVER_POSTAUTH (1 << 0)
 
-extern int uam_afpserver_action __P((const int /*id*/, const int /*switch*/, 
-				     int (*)(), int (**)()));
+extern int uam_afpserver_action (const int /*id*/, const int /*switch*/, 
+				     int (*)(), int (**)());
 
 #endif

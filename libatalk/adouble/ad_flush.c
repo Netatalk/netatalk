@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.11 2009-09-14 10:04:16 franklahm Exp $
+ * $Id: ad_flush.c,v 1.12 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -168,8 +168,7 @@ int  ad_rebuild_sfm_header(struct adouble *ad)
 }
 
 
-int ad_flush( ad )
-    struct adouble  *ad;
+int ad_flush( struct adouble *ad)
 {
     int len;
 
@@ -195,9 +194,7 @@ int ad_flush( ad )
 }
 
 /* use refcounts so that we don't have to re-establish fcntl locks. */
-int ad_close( ad, adflags )
-    struct adouble  *ad;
-    int         adflags;
+int ad_close( struct adouble *ad, int adflags)
 {
     int         err = 0;
 

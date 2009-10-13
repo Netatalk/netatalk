@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.15 2006-09-29 09:39:16 didg Exp $
+ * $Id: nad.c,v 1.16 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -31,8 +31,7 @@ struct volinfo	vol;
 static char		hexdig[] = "0123456789abcdef";
 
 static char mtou_buf[MAXPATHLEN + 1], utom_buf[MAXPATHLEN + 1];
-static char *mtoupathcap( mpath )
-    char	*mpath;
+static char *mtoupathcap(char *mpath)
 {
     char	*m, *u, *umax;
     int		i = 0;
@@ -67,8 +66,7 @@ static char *mtoupathcap( mpath )
 #define hextoint( c )	( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 #define islxdigit(x)	(!isupper(x)&&isxdigit(x))
 
-static char *utompathcap( upath )
-    char	*upath;
+static char *utompathcap( char *upath)
 {
     char	*m, *u;
     int h;
@@ -431,10 +429,7 @@ static void initvol(char *path)
 }
 
 
-int nad_open( path, openflags, fh, options )
-    char		*path;
-    int			openflags, options;
-    struct FHeader	*fh;
+int nad_open( char *path, int openflags, struct FHeader *fh, int options)
 {
     struct stat		st;
     int			fork;
@@ -499,8 +494,7 @@ int nad_open( path, openflags, fh, options )
     }
 }
 
-int nad_header_read( fh )
-    struct FHeader	*fh;
+int nad_header_read(struct FHeader *fh)
 {
     u_int32_t		temptime;
     struct stat		st;
@@ -611,8 +605,7 @@ int nad_header_read( fh )
 
 }
 
-int nad_header_write( fh )
-    struct FHeader	*fh;
+int nad_header_write(struct FHeader *fh)
 {
     u_int32_t		temptime;
 
@@ -698,10 +691,7 @@ int nad_header_write( fh )
 
 int			forkeid[] = { ADEID_DFORK, ADEID_RFORK };
 
-int nad_read( fork, forkbuf, bufc )
-    int			fork;
-    char		*forkbuf;
-    int			bufc;
+int nad_read(int fork, char *forkbuf, int bufc)
 {
     int			cc = 0;
 
@@ -723,10 +713,7 @@ int nad_read( fork, forkbuf, bufc )
     return( cc );
 }
 
-int nad_write( fork, forkbuf, bufc )
-    int			fork;
-    char		*forkbuf;
-    int			bufc;
+int nad_write(int fork, char *forkbuf, int bufc)
 {
     char		*buf_ptr;
     int			writelen;
@@ -758,8 +745,7 @@ int nad_write( fork, forkbuf, bufc )
     return( bufc );
 }
 
-int nad_close( status )
-int			status;
+int nad_close(int status)
 {
     int			rv;
     if ( status == KEEP ) {

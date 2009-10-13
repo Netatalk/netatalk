@@ -1,5 +1,5 @@
 /*
- * $Id: netddp.h,v 1.3 2002-02-07 23:35:49 srittau Exp $
+ * $Id: netddp.h,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -18,13 +18,13 @@
 #include <sys/socket.h>
 #include <netatalk/at.h>
 
-extern int netddp_open   __P((struct sockaddr_at *, struct sockaddr_at *));
+extern int netddp_open   (struct sockaddr_at *, struct sockaddr_at *);
 
 #if !defined(NO_DDP) && defined(MACOSX_SERVER)
-extern int netddp_sendto __P((int, void *, size_t, unsigned int, 
-			   const struct sockaddr *, unsigned int));
-extern int netddp_recvfrom __P((int, void *, int, unsigned int, 
-			     struct sockaddr *, unsigned int *));
+extern int netddp_sendto (int, void *, size_t, unsigned int, 
+			   const struct sockaddr *, unsigned int);
+extern int netddp_recvfrom (int, void *, int, unsigned int, 
+			     struct sockaddr *, unsigned int *);
 #define netddp_close(a)  ddp_close(a)
 #else
 #include <unistd.h>

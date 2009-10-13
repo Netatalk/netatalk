@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.44 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: enumerate.c,v 1.45 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -155,11 +155,10 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 #define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + 255 + 1)
 
 /* ----------------------------- */
-static int enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, ext )
-AFPObj       *obj _U_;
-char	     *ibuf, *rbuf;
-unsigned int ibuflen _U_, *rbuflen;
-int     ext;
+static int enumerate(AFPObj *obj _U_, char *ibuf, unsigned int ibuflen _U_, 
+    char *rbuf, 
+    unsigned int *rbuflen, 
+    int ext)
 {
     static struct savedir	sd = { 0, 0, 0, NULL, NULL, 0 };
     struct vol			*vol;
@@ -451,28 +450,25 @@ int     ext;
 }
 
 /* ----------------------------- */
-int afp_enumerate(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj       *obj;
-char	     *ibuf, *rbuf;
-unsigned int ibuflen, *rbuflen;
+int afp_enumerate(AFPObj *obj, char *ibuf, unsigned int ibuflen, 
+    char *rbuf, 
+    unsigned int *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 0);
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj       *obj;
-char	     *ibuf, *rbuf;
-unsigned int ibuflen, *rbuflen;
+int afp_enumerate_ext(AFPObj *obj, char *ibuf, unsigned int ibuflen, 
+    char *rbuf, 
+    unsigned int *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 1);
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext2(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj       *obj;
-char	     *ibuf, *rbuf;
-unsigned int ibuflen, *rbuflen;
+int afp_enumerate_ext2(AFPObj *obj, char *ibuf, unsigned int ibuflen, 
+    char *rbuf, 
+    unsigned int *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 2);
 }

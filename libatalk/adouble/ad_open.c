@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.48 2009-10-02 09:32:41 franklahm Exp $
+ * $Id: ad_open.c,v 1.49 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -760,9 +760,7 @@ static int ad_header_sfm_read(struct adouble *ad, struct stat *hst)
  * FIXME: should do something for pathname > MAXPATHLEN
  */
 char *
-ad_path( path, adflags )
-    const char  *path;
-    int     adflags;
+ad_path( const char *path, int adflags)
 {
     static char pathbuf[ MAXPATHLEN + 1];
     char    c, *slash, buf[MAXPATHLEN + 1];
@@ -857,9 +855,7 @@ static int ad_mkrf_osx(char *path _U_)
  *
  */
 char *
-ad_path_sfm( path, adflags )
-    const char  *path;
-    int     adflags;
+ad_path_sfm( const char *path, int adflags)
 {
     static char pathbuf[ MAXPATHLEN + 1];
     char    c, *slash, buf[MAXPATHLEN + 1];
@@ -938,8 +934,7 @@ static int ad_mkrf_sfm(char *path)
 #define DEFMASK 07700   /* be conservative */
 
 char
-*ad_dir(path)
-    const char      *path;
+*ad_dir(const char *path)
 {
     static char     modebuf[ MAXPATHLEN + 1];
     char        *slash;
@@ -1051,9 +1046,7 @@ static int ad_mode_st(const char *path, int *mode, struct stat *stbuf)
    return access right of path parent directory
 */
 int
-ad_mode( path, mode )
-    const char      *path;
-    int         mode;
+ad_mode( const char *path, int mode)
 {
     struct stat     stbuf;
     ad_mode_st(path, &mode, &stbuf);
@@ -1064,9 +1057,7 @@ ad_mode( path, mode )
  * Use mkdir() with mode bits taken from ad_mode().
  */
 int
-ad_mkdir( path, mode )
-    const char      *path;
-    int         mode;
+ad_mkdir( const char *path, int mode)
 {
     int ret;
     int st_invalid;
@@ -1194,10 +1185,7 @@ void ad_init(struct adouble *ad, int flags, int options)
  * It's not possible to open the header file O_RDONLY -- the read
  * will fail and return an error. this refcounts things now.
  */
-int ad_open( path, adflags, oflags, mode, ad )
-    const char      *path;
-    int         adflags, oflags, mode;
-    struct adouble  *ad;
+int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
 {
     struct stat         st_dir;
     struct stat         st_meta;

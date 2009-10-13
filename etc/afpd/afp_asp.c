@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.23 2008-12-03 18:35:44 didg Exp $
+ * $Id: afp_asp.c,v 1.24 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -145,7 +145,7 @@ static void afp_asp_die(const int sig)
 /* -----------------------------
  * SIGUSR1
  */
-static void afp_asp_timedown()
+static void afp_asp_timedown(int sig _U_)
 {
     struct sigaction	sv;
     struct itimerval	it;
@@ -189,7 +189,7 @@ static void afp_asp_timedown()
 */
 extern volatile int reload_request;
 
-static void afp_asp_reload()
+static void afp_asp_reload(int sig _U_)
 {
     reload_request = 1;
 }

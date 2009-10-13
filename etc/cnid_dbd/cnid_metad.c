@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.14 2009-09-14 00:02:21 didg Exp $
+ * $Id: cnid_metad.c,v 1.15 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -343,8 +343,7 @@ static int set_dbdir(char *dbdir, int len)
 }
 
 /* ------------------ */
-uid_t user_to_uid ( username )
-    char    *username;
+uid_t user_to_uid (char *username)
 {
     struct passwd *this_passwd;
 
@@ -363,8 +362,7 @@ uid_t user_to_uid ( username )
 }
 
 /* ------------------ */
-gid_t group_to_gid ( group )
-    char    *group;
+gid_t group_to_gid ( char *group)
 {
     struct group *this_group;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: asp_init.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: asp_init.c,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -38,8 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-ASP asp_init( atp )
-    ATP		atp;
+ASP asp_init(ATP atp)
 {
     ASP		asp;
 
@@ -66,10 +65,7 @@ ASP asp_init( atp )
     return( asp );
 }
 
-void asp_setstatus( asp, status, slen )
-    ASP		asp;
-    char	*status;
-    const int	slen;
+void asp_setstatus(ASP asp, char *status, const int slen)
 {
     asp->asp_status = status;
     asp->asp_slen = slen;

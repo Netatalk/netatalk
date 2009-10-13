@@ -1,5 +1,5 @@
 /*
- * $Id: aep.c,v 1.8 2002-09-29 23:24:47 sibaz Exp $
+ * $Id: aep.c,v 1.9 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -21,11 +21,11 @@
 
 #include "atserv.h"
 
-int aep_packet( ap, from, data, len )
-    struct atport	*ap;
-    struct sockaddr_at	*from;
-    char		*data;
-    int			len;
+int aep_packet(
+    struct atport	*ap,
+    struct sockaddr_at	*from,
+    char		*data,
+    int			len)
 {
     char		*end;
 

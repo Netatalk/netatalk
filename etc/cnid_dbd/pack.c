@@ -1,5 +1,5 @@
 /*
- * $Id: pack.c,v 1.5 2009-05-04 09:09:43 franklahm Exp $
+ * $Id: pack.c,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -49,10 +49,7 @@ static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino)
 }
 
 /* --------------- */
-int didname(dbp, pkey, pdata, skey)
-DB *dbp _U_;
-const DBT *pkey _U_, *pdata;
-DBT *skey;
+int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 {
 int len;
  
@@ -67,10 +64,7 @@ int len;
 }
  
 /* --------------- */
-int devino(dbp, pkey, pdata, skey)
-DB *dbp _U_;
-const DBT *pkey _U_, *pdata;
-DBT *skey;
+int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 {
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DEVINO_OFS;

@@ -1,5 +1,5 @@
 /*
- * $Id: psorder.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: psorder.h,v 1.3 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -77,29 +77,3 @@ struct psinfo_st {
     struct pages_st	pages;
 };
 
-int
-psorder();
-
-void
-filesetup();
-
-void
-readps();
-
-int
-handletok();
-
-void
-writeps();
-
-void
-writelable();
-
-void
-temp2out();
-
-struct pspage_st
-*getpspage();
-
-void
-filecleanup();

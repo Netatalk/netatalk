@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.h,v 1.3 2002-04-29 01:52:50 morgana Exp $
+ * $Id: megatron.h,v 1.4 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifndef _MEGATRON_H
@@ -92,8 +92,8 @@ struct FHeader {
 #	define S_ISDIR(s)	(( s & S_IFMT ) == S_IFDIR )
 #endif /* ! S_ISDIR */
 
-extern char     *(*_mtoupath) __P(( char *));
-extern char     *(*_utompath) __P(( char *));
+extern char     *(*_mtoupath) ( char *);
+extern char     *(*_utompath) ( char *);
 #define mtoupath(s) (*_mtoupath)(s)
 #define utompath(s) (*_utompath)(s)
 

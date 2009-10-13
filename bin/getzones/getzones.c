@@ -1,5 +1,5 @@
 /*
- * $Id: getzones.c,v 1.7 2005-04-28 20:49:19 bfernhomberg Exp $
+ * $Id: getzones.c,v 1.8 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,16 +29,13 @@
 
 void print_zones(short n, char *buf);
 
-void usage( s )
-    char *s;
+void usage( char *s)
 {
     fprintf( stderr, "usage:\t%s [-m | -l] [address]\n", s );
     exit( 1 );
 }
 
-int main( argc, argv )
-    int		argc;
-    char	*argv[];
+int main( int argc, char *argv[])
 {
     struct atp_handle	*ah;
     struct atp_block	atpb;

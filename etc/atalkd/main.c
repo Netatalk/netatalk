@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.19 2009-01-16 18:21:16 morgana Exp $
+ * $Id: main.c,v 1.20 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -55,6 +55,7 @@
 #include <atalk/compat.h>
 #include <atalk/zip.h>
 #include <atalk/rtmp.h>
+#include <atalk/nbp.h>
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
 #include <atalk/paths.h>
@@ -70,6 +71,7 @@
 #include "list.h"
 #include "rtmp.h"
 #include "zip.h"
+#include "nbp.h"
 #include "atserv.h"
 #include "main.h"
 
@@ -97,10 +99,7 @@ int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa);
 
 #define PKTSZ	1024
 
-extern int	rtmp_packet();
-extern int	nbp_packet();
-extern int	aep_packet();
-extern int	zip_packet();
+extern int aep_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len);
 
 int		rtfd;
 
@@ -713,10 +712,8 @@ consistency()
 }
 #endif /* DEBUG */
 
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif /* ! ibm032 && ! _IBMR2 */
-as_debug()
+void
+as_debug(int sig _U_)
 {
     struct interface	*iface;
     struct list		*l;
@@ -817,10 +814,8 @@ as_debug()
 /*
  * Called when SIGTERM is recieved.  Remove all routes and then exit.
  */
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif /* ! ibm032 && ! _IBMR2 */
-as_down()
+void
+as_down(int sig _U_)
 {
     struct interface	*iface;
     struct gate		*gate;
@@ -853,9 +848,7 @@ as_down()
     atalkd_exit( 0 );
 }
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main( int ac, char **av)
 {
     extern char         *optarg;
     extern int          optind;
@@ -1233,8 +1226,7 @@ int main( ac, av )
  * and rtmp_packet()) to set the initial "bootstrapping" address
  * on an interface.
  */
-void bootaddr( iface )
-    struct interface	*iface;
+void bootaddr(struct interface *iface)
 {
     if ( iface == 0 ) {
 	return;
@@ -1406,9 +1398,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
     nfds++;
 }
 
-int ifsetallmulti ( iname, set )
-const char		*iname;
-int set;
+int ifsetallmulti (const char *iname, int set)
 {
     int sock;
     struct ifreq ifr;
@@ -1443,10 +1433,7 @@ int set;
     return (0);
 }
 
-int ifconfig( iname, cmd, sa )
-    const char		*iname;
-    unsigned long	cmd;
-    struct sockaddr_at	*sa;
+int ifconfig( const char *iname, unsigned long cmd, struct sockaddr_at *sa)
 {
     struct ifreq	ifr;
     int			s;
@@ -1469,8 +1456,7 @@ int ifconfig( iname, cmd, sa )
     return( 0 );
 }
 
-void dumpconfig( iface )
-    struct interface	*iface;
+void dumpconfig( struct interface *iface)
 {
     struct list		*l;
 
@@ -1506,7 +1492,7 @@ void dumpconfig( iface )
 }
 
 #ifdef DEBUG
-void dumproutes()
+void dumproutes(void)
 {
     struct interface	*iface;
     struct rtmptab	*rtmp;
@@ -1554,7 +1540,7 @@ void dumproutes()
     fflush( stdout );
 }
 
-void dumpzones()
+void dumpzones(void)
 {
     struct interface	*iface;
     struct rtmptab	*rtmp;

@@ -1,5 +1,5 @@
 /*
- * $Id: nbplkup.c,v 1.5 2005-04-28 20:49:20 bfernhomberg Exp $
+ * $Id: nbplkup.c,v 1.6 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -45,8 +45,7 @@ char *Obj = "=";
 char *Type = "=";
 char *Zone = "*";
 
-void Usage( av0 )
-    char	*av0;
+void Usage(char *av0)
 {
     char	*p;
 
@@ -60,9 +59,7 @@ void Usage( av0 )
     exit( 1 );
 }
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main(int ac, char **av)
 {
     struct nbpnve	*nn;
     char		*name;

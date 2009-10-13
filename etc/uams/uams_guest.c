@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.14 2009-09-14 00:02:21 didg Exp $
+ * $Id: uams_guest.c,v 1.15 2009-10-13 22:55:37 didg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -38,7 +38,9 @@ char *strchr (), *strrchr ();
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif /* MIN */
 
-extern void append(void *, const char *, int);
+/*XXX in etc/papd/file.h */
+struct papfile;
+extern void append(struct papfile *, const char *, int);
 
 /* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
@@ -86,9 +88,7 @@ static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
 
 
 /* Printer NoAuthUAM Login */
-int noauth_printer(start, stop, username, out)
-	char	*start, *stop, *username;
-	struct papfile	*out;
+int noauth_printer(char *start, char *stop, char *username, struct papfile *out)
 {
     char	*data, *p, *q;
     static const char *loginok = "0\r";
@@ -149,7 +149,7 @@ static int uam_setup(const char *path)
   return 0;
 }
 
-static void uam_cleanup()
+static void uam_cleanup(void)
 {
   uam_unregister(UAM_SERVER_LOGIN, "No User Authent");
   uam_unregister(UAM_SERVER_PRINTAUTH, "NoAuthUAM");

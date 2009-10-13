@@ -1,5 +1,5 @@
 /*
- * $Id: atp.h,v 1.4 2002-02-07 23:35:49 srittau Exp $
+ * $Id: atp.h,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -180,14 +180,14 @@ struct atp_block {
 #define ATP_TRESP	(2<<6)		/* Trans. RESPonse */
 #define ATP_TREL	(3<<6)		/* Trans. RELease */
 
-extern ATP		atp_open  __P((u_int8_t, 
-				       const struct at_addr *));
-extern int		atp_close __P((ATP));
-extern int		atp_sreq  __P((ATP, struct atp_block *, int, 
-				       u_int8_t));
-extern int		atp_rresp __P((ATP, struct atp_block *));
-extern int		atp_rsel  __P((ATP, struct sockaddr_at *, int));
-extern int		atp_rreq  __P((ATP, struct atp_block *));
-extern int		atp_sresp __P((ATP, struct atp_block *));
+extern ATP		atp_open  (u_int8_t, 
+				       const struct at_addr *);
+extern int		atp_close (ATP);
+extern int		atp_sreq  (ATP, struct atp_block *, int, 
+				       u_int8_t);
+extern int		atp_rresp (ATP, struct atp_block *);
+extern int		atp_rsel  (ATP, struct sockaddr_at *, int);
+extern int		atp_rreq  (ATP, struct atp_block *);
+extern int		atp_sresp (ATP, struct atp_block *);
 
 #endif

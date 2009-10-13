@@ -1,5 +1,5 @@
 /*
- * $Id: updcrc.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: updcrc.c,v 1.5 2009-10-13 22:55:36 didg Exp $
  *
  * updcrc(3), crc(1) - calculate crc polynomials
  *
@@ -32,6 +32,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include "updcrc.h"
+
 /* The CRC polynomial.
  * These 4 values define the crc-polynomial.
  * If you change them, you must change crctab[]'s initial value to what is
@@ -43,15 +45,6 @@
 #if 0
 #define SWAPPED	/* bit order:	undef	defined	defined */
 #endif /* 0 */
-#define W	16	/* bits in CRC:16	16	16	*/
-
-    /* data type that holds a W-bit unsigned integer */
-#if W <= 16
-#  define WTYPE	unsigned short
-#else /* W <= 16 */
-#  define WTYPE   u_int32_t
-#endif /* W <= 16 */
-
     /* the number of bits per char: don't change it. */
 #define B	8
 
@@ -91,10 +84,7 @@ static WTYPE crctab[1<<B] = /* as calculated by initcrctab() */ {
 } ;
 
 WTYPE
-updcrc( icrc, icp, icnt )
-    WTYPE icrc;
-    unsigned char *icp;
-    int icnt;
+updcrc(WTYPE icrc, unsigned char *icp, int icnt)
 {
     register WTYPE crc = icrc;
     register unsigned char *cp = icp;
@@ -114,12 +104,12 @@ updcrc( icrc, icp, icnt )
 #ifdef MAKETAB
 
 #include <stdio.h>
-main()
+int main(void)
 {
     initcrctab();
 }
 
-initcrctab()
+void initcrctab(void)
 {
     register  int b, i;
     WTYPE v;
@@ -153,8 +143,7 @@ initcrctab()
 
 
 
-main( ac, av )
-    int ac; char **av;
+main( int ac, char **av)
 {
     int fd;
     int nr;

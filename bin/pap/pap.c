@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.10 2005-04-28 20:49:20 bfernhomberg Exp $
+ * $Id: pap.c,v 1.11 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -36,8 +36,7 @@ char	*nbpfailure = "AppleTalk printer offline";
 void updatestatus(char *s, int len);
 int send_file(int fd, ATP atp, int lastfile);
 
-void usage( path )
-    char	*path;
+void usage(char *path)
 {
     char	*p;
 
@@ -64,7 +63,7 @@ void usage( path )
 }
 
 char *
-paprc()
+paprc(void)
 {
     static char	s[ 32 + 1 + 32 + 1 + 32 ];
     char	*name = NULL;
@@ -148,9 +147,7 @@ struct iovec	sfiov[ PAP_MAXQUANTUM ] = {
 
 int debug;
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main( int ac, char	**av)
 {
     ATP			atp;
     struct atp_block	atpb;
@@ -468,10 +465,7 @@ int		data = 0;
 unsigned char	port;
 u_int16_t       seq = 0, rseq = 1;
 
-int send_file( fd, atp, lastfile )
-    int			fd;
-    ATP			atp;
-    int			lastfile;
+int send_file( int fd, ATP atp, int lastfile)
 {
     struct timeval	stv, tv;
     struct sockaddr_at	ssat;
@@ -845,9 +839,7 @@ int send_file( fd, atp, lastfile )
     }
 }
 
-void updatestatus( s, len )
-    char	*s;
-    int		len;
+void updatestatus(char *s, int len)
 {
     int			fd = -1;
     struct iovec	iov[ 3 ];

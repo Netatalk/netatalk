@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.26 2009-02-02 08:50:50 didg Exp $
+ * $Id: main.c,v 1.27 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -104,11 +104,8 @@ static void papd_exit(const int i)
   exit(i);
 }
 
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif /* ! ibm032 && ! _IBMR2 */
-die( n )
-    int			n;
+void
+die(int n)
 {
     struct printer	*pr;
     struct at_addr	addr;
@@ -136,10 +133,8 @@ die( n )
     papd_exit( n );
 }
 
-#if !defined( ibm032 ) && !defined( _IBMR2 )
-    void
-#endif /* ! ibm032 && ! _IBMR2 */
-reap()
+void
+reap(int sig _U_)
 {
     int		status;
     int		pid;
@@ -166,9 +161,7 @@ reap()
 
 char		rbuf[ 255 + 1 + 8 ];
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main(int ac, char **av)
 {
     extern char         *optarg;
 
@@ -567,9 +560,7 @@ int main( ac, av )
  * We assume buf is big enough for 255 bytes of data and a length byte.
  */
 
-int getstatus( pr, buf )
-    struct printer	*pr;
-    char		*buf;
+int getstatus(struct printer *pr, char *buf)
 {
 
 #ifdef HAVE_CUPS
@@ -612,13 +603,12 @@ int getstatus( pr, buf )
 #endif /* HAVE_CUPS */
 }
 
-char	*pgetstr();
+char	*pgetstr(char *id, char **area);
 char	*getpname(char **area, int bufsize);
 
 #define PF_CONFBUFFER	1024
 
-static void getprinters( cf )
-    char	*cf;
+static void getprinters( char *cf)
 {
     char		buf[ PF_CONFBUFFER ], area[ PF_CONFBUFFER ], *a, *p, *name, *type, *zone;
     struct printer	*pr;
@@ -804,8 +794,7 @@ static void getprinters( cf )
     }
 }
 
-int rprintcap( pr )
-    struct printer	*pr;
+int rprintcap( struct printer *pr)
 {
 
 #ifdef HAVE_CUPS

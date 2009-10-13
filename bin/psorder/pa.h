@@ -1,5 +1,5 @@
 /*
- * $Id: pa.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: pa.h,v 1.3 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -63,9 +63,9 @@ typedef struct pa_buf_t {
 	char tmp;
 } pa_buf_t;
 
-extern pa_buf_t *pa_init();
-extern char _pa_fixbuf();
-extern char *pa_gettok();
+extern pa_buf_t *pa_init(int fd);
+extern char _pa_fixbuf(pa_buf_t *h);
+extern char *pa_gettok(pa_buf_t *h);
 
 #define pa_getchar(h)	(((h)->cur==(h)->end)?(_pa_fixbuf(h)):\
 			(*(++((h)->cur))))

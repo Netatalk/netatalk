@@ -40,28 +40,28 @@ struct _cnid_hash_private {
 
 /* cnid_open.c */
 extern struct _cnid_module cnid_hash_module;
-extern struct _cnid_db *cnid_hash_open __P((const char *, mode_t));
+extern struct _cnid_db *cnid_hash_open (const char *, mode_t);
 
 /* cnid_close.c */
-extern void cnid_hash_close __P((struct _cnid_db *));
+extern void cnid_hash_close (struct _cnid_db *);
 
 /* cnid_add.c */
-extern cnid_t cnid_hash_add __P((struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const int, cnid_t));
+extern cnid_t cnid_hash_add (struct _cnid_db *, const struct stat *, const cnid_t,
+                                 char *, const int, cnid_t);
 
 /* cnid_get.c */
-extern cnid_t cnid_hash_get __P((struct _cnid_db *, const cnid_t, char *, const int));
-extern char *cnid_hash_resolve __P((struct _cnid_db *, cnid_t *, void *, u_int32_t));
-extern cnid_t cnid_hash_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t, char *, const int));
+extern cnid_t cnid_hash_get (struct _cnid_db *, const cnid_t, char *, const int);
+extern char *cnid_hash_resolve (struct _cnid_db *, cnid_t *, void *, u_int32_t);
+extern cnid_t cnid_hash_lookup (struct _cnid_db *, const struct stat *, const cnid_t, char *, const int);
 
 /* cnid_update.c */
-extern int cnid_hash_update __P((struct _cnid_db *, const cnid_t, const struct stat *,
-                                 const cnid_t, char *, int));
+extern int cnid_hash_update (struct _cnid_db *, const cnid_t, const struct stat *,
+                                 const cnid_t, char *, int);
 
 /* cnid_delete.c */
-extern int cnid_hash_delete __P((struct _cnid_db *, const cnid_t));
+extern int cnid_hash_delete (struct _cnid_db *, const cnid_t);
 
 /* cnid_nextid.c */
-extern cnid_t cnid_hash_nextid __P((struct _cnid_db *));
+extern cnid_t cnid_hash_nextid (struct _cnid_db *);
 
 #endif /* include/atalk/cnid_hash.h */

@@ -1,5 +1,5 @@
 /*
- * $Id: status.h,v 1.7 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: status.h,v 1.8 2009-10-13 22:55:37 didg Exp $
  */
 
 #ifndef AFPD_STATUS_H
@@ -39,11 +39,11 @@
 #define PASSWD_NOSAVE  (1 << 1)
 #define PASSWD_ALL     (PASSWD_SET | PASSWD_NOSAVE)
 
-extern void status_versions __P((char * /*status*/));
-extern void status_uams __P((char * /*status*/, const char * /*authlist*/));
-extern void status_reset __P((void ));
-extern void status_init __P((AFPConfig *, AFPConfig *,
-                                 const struct afp_options *));
-extern int      afp_getsrvrinfo __P((AFPObj *, char *, int, char *, int *));
+extern void status_versions (char * /*status*/);
+extern void status_uams (char * /*status*/, const char * /*authlist*/);
+extern void status_reset (void );
+extern void status_init (AFPConfig *, AFPConfig *,
+                                 const struct afp_options *);
+extern int      afp_getsrvrinfo (AFPObj *, char *, int, char *, int *);
 
 #endif

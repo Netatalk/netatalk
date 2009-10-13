@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.37 2006-09-29 09:39:16 didg Exp $
+ * $Id: desktop.c,v 1.38 2009-10-13 22:55:36 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -40,10 +40,7 @@
 #include "mangle.h"
 
 
-int afp_opendt(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_opendt(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol	*vol;
     u_int16_t	vid;
@@ -61,10 +58,7 @@ int	ibuflen _U_, *rbuflen;
     return( AFP_OK );
 }
 
-int afp_closedt(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf _U_, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     *rbuflen = 0;
     return( AFP_OK );
@@ -77,11 +71,7 @@ static char *icon_dtfile(struct vol *vol, u_char creator[ 4 ])
     return dtfile( vol, creator, ".icon" );
 }
 
-static int iconopen( vol, creator, flags, mode )
-struct vol	*vol;
-u_char	creator[ 4 ];
-int flags;
-int mode;
+static int iconopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
 {
     char	*dtf, *adt, *adts;
 
@@ -126,10 +116,7 @@ int mode;
     return 0;
 }
 
-int afp_addicon(obj, ibuf, ibuflen, rbuf, rbuflen)
-AFPObj  *obj;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_addicon(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol		*vol;
 #ifndef NO_DDP
@@ -353,10 +340,7 @@ static const u_char	uicon[] = {
 };
 #endif
 
-int afp_geticoninfo(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol	*vol;
     u_char	fcreator[ 4 ], ih[ 12 ];
@@ -427,10 +411,7 @@ int	ibuflen _U_, *rbuflen;
 }
 
 
-int afp_geticon(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_geticon(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol	*vol;
     off_t       offset;
@@ -765,10 +746,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
 }
 
 /* ----------------------------- */
-int afp_addcomment(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_addcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -846,10 +824,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, int *rb
 }
 
 /* -------------------- */
-int afp_getcomment(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_getcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -919,10 +894,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
 }
 
 /* ----------------------- */
-int afp_rmvcomment(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;

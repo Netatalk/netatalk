@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.66 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: auth.c,v 1.67 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -94,8 +94,7 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( data )
-    char    *data;
+void status_versions( char *data)
 {
     char                *start = data;
     u_int16_t           status;
@@ -159,19 +158,13 @@ static int send_reply(const AFPObj *obj, const int err)
     return AFP_OK;
 }
 
-static int afp_errpwdexpired(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj  *obj _U_;
-    char    *ibuf _U_, *rbuf _U_;
-    int ibuflen _U_, *rbuflen;
+static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     *rbuflen = 0;
     return AFPERR_PWDEXPR;
 }
 
-static int afp_null_nolog(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj  *obj _U_;
-    char    *ibuf _U_, *rbuf _U_;
-    int ibuflen _U_, *rbuflen;
+static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     *rbuflen = 0;
     return( AFPERR_NOOP );
@@ -401,10 +394,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 }
 
 /* ---------------------- */
-int afp_zzz (obj, ibuf, ibuflen, rbuf, rbuflen ) /* Function 122 */
-    AFPObj       *obj;
-    char         *ibuf  _U_, *rbuf;
-    unsigned int ibuflen  _U_, *rbuflen;
+int afp_zzz ( /* Function 122 */
+    AFPObj       *obj,
+    char         *ibuf _U_, unsigned int ibuflen _U_, 
+    char *rbuf, unsigned int *rbuflen)
 {
     u_int32_t   retdata;
 
@@ -459,10 +452,10 @@ static int create_session_key(AFPObj *obj)
 
 
 /* ---------------------- */
-int afp_getsession(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj       *obj;
-    char         *ibuf, *rbuf;
-    unsigned int ibuflen, *rbuflen;
+int afp_getsession(
+    AFPObj *obj,
+    char   *ibuf, unsigned int ibuflen, 
+    char   *rbuf, unsigned int *rbuflen)
 {
     u_int16_t           type;
     u_int32_t           idlen = 0;
@@ -553,10 +546,7 @@ int afp_getsession(obj, ibuf, ibuflen, rbuf, rbuflen )
 }
 
 /* ---------------------- */
-int afp_disconnect(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj  *obj  _U_;
-    char    *ibuf, *rbuf  _U_;
-    int ibuflen  _U_, *rbuflen;
+int afp_disconnect(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     u_int16_t           type;
 
@@ -608,11 +598,7 @@ int afp_disconnect(obj, ibuf, ibuflen, rbuf, rbuflen )
 }
 
 /* ---------------------- */
-static int get_version(obj, ibuf, ibuflen, len)
-    AFPObj  *obj;
-    char    *ibuf;
-    int     ibuflen;
-    int     len;
+static int get_version(AFPObj *obj, char *ibuf, int ibuflen, int len)
 {
     int num,i;
 
@@ -643,10 +629,7 @@ static int get_version(obj, ibuf, ibuflen, len)
 }
 
 /* ---------------------- */
-int afp_login(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj      *obj;
-    char    *ibuf, *rbuf;
-    int     ibuflen, *rbuflen;
+int afp_login(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
     struct passwd *pwd = NULL;
     int     len, i;
@@ -696,10 +679,7 @@ int afp_login(obj, ibuf, ibuflen, rbuf, rbuflen )
 }
 
 /* ---------------------- */
-int afp_login_ext(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj  *obj;
-    char    *ibuf, *rbuf;
-    unsigned int    ibuflen, *rbuflen;
+int afp_login_ext(AFPObj *obj, char *ibuf, unsigned int ibuflen, char *rbuf, unsigned int *rbuflen)
 {
     struct passwd *pwd = NULL;
     unsigned int  len;
@@ -826,10 +806,7 @@ int afp_login_ext(obj, ibuf, ibuflen, rbuf, rbuflen )
 }
 
 /* ---------------------- */
-int afp_logincont(obj, ibuf, ibuflen, rbuf, rbuflen)
-    AFPObj      *obj;
-    char    *ibuf, *rbuf;
-    int     ibuflen, *rbuflen;
+int afp_logincont(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
     struct passwd *pwd = NULL;
     int err;
@@ -849,10 +826,7 @@ int afp_logincont(obj, ibuf, ibuflen, rbuf, rbuflen)
 }
 
 
-int afp_logout(obj, ibuf, ibuflen, rbuf, rbuflen)
-    AFPObj     *obj;
-    char       *ibuf _U_, *rbuf  _U_;
-    int        ibuflen  _U_, *rbuflen  _U_;
+int afp_logout(AFPObj *obj, char *ibuf _U_, int ibuflen  _U_, char *rbuf  _U_, int *rbuflen  _U_)
 {
     LOG(log_info, logtype_afpd, "logout %s", obj->username);
     close_all_vol();
@@ -867,10 +841,7 @@ int afp_logout(obj, ibuf, ibuflen, rbuf, rbuflen)
  *       to work. this also does a little pre-processing before it hands
  *       it off to the uam.
  */
-int afp_changepw(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj      *obj;
-    char    *ibuf, *rbuf;
-    int     ibuflen, *rbuflen;
+int afp_changepw(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 {
     char username[MACFILELEN + 1], *start = ibuf;
     struct uam_obj *uam;
@@ -937,10 +908,7 @@ int afp_changepw(obj, ibuf, ibuflen, rbuf, rbuflen )
 
 
 /* FPGetUserInfo */
-int afp_getuserinfo(obj, ibuf, ibuflen, rbuf, rbuflen )
-    AFPObj  *obj _U_;
-    char    *ibuf, *rbuf;
-    int ibuflen _U_, *rbuflen;
+int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     u_int8_t  thisuser;
     u_int32_t id;
@@ -1091,7 +1059,7 @@ int auth_load(const char *path, const char *list)
 }
 
 /* get rid of all of the uams */
-void auth_unload()
+void auth_unload(void)
 {
     struct uam_mod *mod, *prev, *start = &uam_modules;
 

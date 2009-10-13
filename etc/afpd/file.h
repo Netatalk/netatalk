@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.21 2009-06-10 08:37:25 franklahm Exp $
+ * $Id: file.h,v 1.22 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -106,34 +106,34 @@ typedef enum {
   kTextEncodingMacKeyboardGlyphs = 41,
 } kTextEncoding_t;
 
-extern char *set_name   __P((const struct vol *, char *, cnid_t, char *, cnid_t, u_int32_t ) );
+extern char *set_name   (const struct vol *, char *, cnid_t, char *, cnid_t, u_int32_t );
 
-extern struct extmap	*getextmap __P((const char *));
-extern struct extmap	*getdefextmap __P((void));
+extern struct extmap	*getextmap (const char *);
+extern struct extmap	*getdefextmap (void);
 
-extern int getfilparams __P((struct vol *, u_int16_t, struct path *,
-                                 struct dir *, char *buf, int *));
+extern int getfilparams (struct vol *, u_int16_t, struct path *,
+                                 struct dir *, char *buf, int *);
 
-extern int setfilparams __P((struct vol *, struct path *, u_int16_t, char *));
-extern int renamefile   __P((const struct vol *, char *, char *, char *, struct adouble *));
-extern int copyfile     __P((const struct vol *, const struct vol *, char *, char *, char *, struct adouble *));
-extern int deletefile   __P((const struct vol *, char *, int));
+extern int setfilparams (struct vol *, struct path *, u_int16_t, char *);
+extern int renamefile   (const struct vol *, char *, char *, char *, struct adouble *);
+extern int copyfile     (const struct vol *, const struct vol *, char *, char *, char *, struct adouble *);
+extern int deletefile   (const struct vol *, char *, int);
 
-extern void *get_finderinfo __P((const struct vol *, const char *, struct adouble *, void *));
+extern void *get_finderinfo (const struct vol *, const char *, struct adouble *, void *);
 
-extern size_t mtoUTF8   __P((const struct vol *, const char *, size_t , char *, size_t ));
-extern int  copy_path_name __P((const struct vol *, char *, char *i));
+extern size_t mtoUTF8   (const struct vol *, const char *, size_t , char *, size_t );
+extern int  copy_path_name (const struct vol *, char *, char *i);
 
-extern u_int32_t get_id  __P((struct vol *, struct adouble *, const struct stat *,
-                                const cnid_t , char *, const int ));
+extern u_int32_t get_id  (struct vol *, struct adouble *, const struct stat *,
+                                const cnid_t , char *, const int );
 
 /* FP functions */
-extern int      afp_exchangefiles __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_setfilparams __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_copyfile __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_createfile __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_createid __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_resolveid __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_deleteid __P((AFPObj *, char *, int, char *, int *));
+extern int      afp_exchangefiles (AFPObj *, char *, int, char *, int *);
+extern int	afp_setfilparams (AFPObj *, char *, int, char *, int *);
+extern int	afp_copyfile (AFPObj *, char *, int, char *, int *);
+extern int	afp_createfile (AFPObj *, char *, int, char *, int *);
+extern int      afp_createid (AFPObj *, char *, int, char *, int *);
+extern int      afp_resolveid (AFPObj *, char *, int, char *, int *);
+extern int      afp_deleteid (AFPObj *, char *, int, char *, int *);
 
 #endif

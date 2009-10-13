@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.9 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: psf.c,v 1.10 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -91,9 +91,7 @@ struct papersize {
     { 80, 70, 8.27, 11.69 },			/* A4 */
 };
 
-int main( ac, av ) 
-    int		ac;
-    char	**av;
+int main( int ac, char **av)
 {
     int			c, rc, children = 0;
 #ifdef FUCKED
@@ -368,7 +366,7 @@ restart:
     exit( rc );
 }
 
-int copyio()
+int copyio(void)
 {
     /* implement the FSM needed to do the suspend. Note that
      * the last characters will be \031\001 so don't worry
@@ -482,7 +480,7 @@ char		pspro[] = "\
 /EP { SV restore showpage } bind def\n\
 %%EndProlog\n";
 
-int textps()
+int textps(void)
 {
     struct papersize	papersize;
     int			state = 0, line = 0, col = 0, npages = 0, rc;
@@ -691,8 +689,7 @@ out:
  * Manipulates file descriptors 0, 1, and 2, such that the new child
  * is reading from the parent's output.
  */
-int pexecv( path, argv )
-    char	*path, *argv[];
+int pexecv( char *path, char *argv[])
 {
     int		fd[ 2 ], c;
 

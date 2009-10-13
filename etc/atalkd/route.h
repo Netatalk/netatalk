@@ -1,5 +1,5 @@
 /*
- * $Id: route.h,v 1.2 2001-06-19 18:04:39 rufustfirefly Exp $
+ * $Id: route.h,v 1.3 2009-10-13 22:55:37 didg Exp $
  */
 
 #ifndef ATALKD_ROUTE_H
@@ -8,9 +8,9 @@
 #include <sys/cdefs.h>
 
 #ifndef BSD4_4
-int route __P(( int, struct sockaddr *, struct sockaddr *, int ));
+int route ( int, struct sockaddr *, struct sockaddr *, int );
 #else /* BSD4_4 */
-int route __P(( int, struct sockaddr_at *, struct sockaddr_at *, int));
+int route ( int, struct sockaddr_at *, struct sockaddr_at *, int);
 #endif /* BSD4_4 */
 
 #endif /* ATALKD_ROUTE_H */

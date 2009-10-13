@@ -1,5 +1,5 @@
 /*
- * $Id: asp_getsess.c,v 1.8 2005-04-28 20:49:55 bfernhomberg Exp $
+ * $Id: asp_getsess.c,v 1.9 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -60,7 +60,7 @@ static struct asp_child    **asp_ac = NULL;
  * + space: if actual connections < potential
  * - space: actual connections ~ potential
  */
-static void tickle_handler()
+static void tickle_handler(int sig _U_)
 {
   int sid;
   

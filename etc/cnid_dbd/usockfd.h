@@ -1,5 +1,5 @@
 /*
- * $Id: usockfd.h,v 1.2 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: usockfd.h,v 1.3 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -13,9 +13,9 @@
 #include <atalk/cnid_dbd_private.h>
 
 
-extern int      usockfd_create  __P((char *, mode_t, int));
-extern int      tsockfd_create  __P((char *, u_int16_t, int));
-extern int      usockfd_check   __P((int, unsigned long));
+extern int      usockfd_create  (char *, mode_t, int);
+extern int      tsockfd_create  (char *, u_int16_t, int);
+extern int      usockfd_check   (int, unsigned long);
 
 #ifndef OSSH_ALIGNBYTES
 #define OSSH_ALIGNBYTES (sizeof(int) - 1)

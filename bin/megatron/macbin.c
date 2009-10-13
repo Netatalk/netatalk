@@ -1,5 +1,5 @@
 /*
- * $Id: macbin.c,v 1.12 2005-04-28 20:49:19 bfernhomberg Exp $
+ * $Id: macbin.c,v 1.13 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +26,7 @@
 #include <netatalk/endian.h>
 #include "megatron.h"
 #include "macbin.h"
+#include "updcrc.h"
 
 /* This allows megatron to generate .bin files that won't choke other
    well-known converter apps. It also makes sure that checksums
@@ -69,10 +70,7 @@ u_char		head_buf[HEADBUFSIZ];
  * somewhat initialized; bin_filed is set.
  */
 
-int bin_open( binfile, flags, fh, options )
-    char		*binfile;
-    int			flags, options;
-    struct FHeader	*fh;
+int bin_open(char *binfile, int flags, struct FHeader *fh, int options)
 {
     int			maxlen;
     int			rc;
@@ -145,8 +143,7 @@ int bin_open( binfile, flags, fh, options )
  * Otherwise, a value of -1 is returned.
  */
 
-int bin_close( keepflag )
-    int			keepflag;
+int bin_close(int keepflag)
 {
 #if DEBUG
     fprintf( stderr, "entering bin_close\n" );
@@ -170,10 +167,7 @@ int bin_close( keepflag )
  * return zero and no more than that.
  */
 
-int bin_read( fork, buffer, length )
-    int			fork;
-    char		*buffer;
-    int			length;
+int bin_read( int fork, char *buffer, int length)
 {
     char		*buf_ptr;
     int			readlen;
@@ -242,10 +236,7 @@ int bin_read( fork, buffer, length )
  * bin_write 
  */
 
-int bin_write( fork, buffer, length )
-    int			fork;
-    char		*buffer;
-    int			length;
+int bin_write(int fork, char *buffer, int length)
 {
     char		*buf_ptr;
     int			writelen;
@@ -329,9 +320,7 @@ int bin_write( fork, buffer, length )
  * of the bytes of the other two forks can be read, as well.
  */
 
-int bin_header_read( fh, revision )
-    struct FHeader	*fh;
-    int			revision;
+int bin_header_read(struct FHeader *fh, int revision)
 {
     u_short		mask;
 
@@ -431,8 +420,7 @@ int bin_header_read( fh, revision )
  * bin_header_write and bin_header_read are opposites.
  */
 
-int bin_header_write( fh )
-    struct FHeader	*fh;
+int bin_header_write(struct FHeader *fh)
 {
     char		*write_ptr;
     u_int32_t           t;

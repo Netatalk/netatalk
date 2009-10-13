@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.10 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: util.h,v 1.11 2009-10-13 22:55:37 didg Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -19,10 +19,10 @@
 #define EXITERR_SYS  3  /* local system error */
 
 
-extern int     sys_ftruncate __P((int fd, off_t length));
+extern int     sys_ftruncate (int fd, off_t length);
 
 #ifdef WITH_SENDFILE
-extern ssize_t sys_sendfile __P((int __out_fd, int __in_fd, off_t *__offset,size_t __count));
+extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);
 #endif
 
 extern const int _diacasemap[], _dialowermap[];
@@ -32,27 +32,27 @@ extern void freeifacelist(char **);
 
 #define diatolower(x)     _dialowermap[(unsigned char) (x)]
 #define diatoupper(x)     _diacasemap[(unsigned char) (x)]
-extern int atalk_aton     __P((char *, struct at_addr *));
-extern void bprint        __P((char *, int));
-extern int strdiacasecmp  __P((const char *, const char *));
-extern int strndiacasecmp __P((const char *, const char *, size_t));
-extern pid_t server_lock  __P((char * /*program*/, char * /*file*/, 
-			       int /*debug*/));
-extern void fault_setup	  __P((void (*fn)(void *)));
+extern int atalk_aton     (char *, struct at_addr *);
+extern void bprint        (char *, int);
+extern int strdiacasecmp  (const char *, const char *);
+extern int strndiacasecmp (const char *, const char *, size_t);
+extern pid_t server_lock  (char * /*program*/, char * /*file*/, 
+			       int /*debug*/);
+extern void fault_setup	  (void (*fn)(void *));
 #define server_unlock(x)  (unlink(x))
 
 #ifndef HAVE_STRLCPY
-size_t strlcpy __P((char *, const char *, size_t));
+size_t strlcpy (char *, const char *, size_t);
 #endif
  
 #ifndef HAVE_STRLCAT
-size_t strlcat __P((char *, const char *, size_t));
+size_t strlcat (char *, const char *, size_t);
 #endif
 
 #ifndef HAVE_DLFCN_H
-extern void *mod_open    __P((const char *));
-extern void *mod_symbol  __P((void *, const char *));
-extern void mod_close    __P((void *));
+extern void *mod_open    (const char *);
+extern void *mod_symbol  (void *, const char *);
+extern void mod_close    (void *);
 #define mod_error()      ""
 #else /* ! HAVE_DLFCN_H */
 #include <dlfcn.h>
@@ -75,7 +75,7 @@ extern void mod_close    __P((void *));
 #ifndef DLSYM_PREPEND_UNDERSCORE
 #define mod_symbol(a, b) dlsym(a, b)
 #else /* ! DLSYM_PREPEND_UNDERSCORE */
-extern void *mod_symbol  __P((void *, const char *));
+extern void *mod_symbol  (void *, const char *);
 #endif /* ! DLSYM_PREPEND_UNDERSCORE */
 #define mod_error()      dlerror()
 #define mod_close(a)     dlclose(a)
@@ -102,8 +102,8 @@ struct volinfo {
     int                 v_dbd_port;
 };
 
-extern int loadvolinfo __P((char *path, struct volinfo *vol));
-extern int vol_load_charsets __P(( struct volinfo *vol));
+extern int loadvolinfo (char *path, struct volinfo *vol);
+extern int vol_load_charsets ( struct volinfo *vol);
 #endif /* 0 */
 
 /*

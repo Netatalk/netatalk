@@ -1,5 +1,5 @@
 /*
- * $Id: asp_cmdreply.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: asp_cmdreply.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -39,9 +39,7 @@
 #define memmove(a, b, n)   bcopy((b), (a), (n))
 #endif /* BSD || BSD4_3 */
 
-int asp_cmdreply( asp, result)
-    ASP		asp;
-    int		result;
+int asp_cmdreply(ASP asp, int result)
 {
     struct iovec	iov[ ASP_MAXPACKETS ];
     struct atp_block	atpb;

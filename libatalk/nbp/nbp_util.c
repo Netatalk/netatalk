@@ -1,5 +1,5 @@
 /*
- * $Id: nbp_util.c,v 1.4 2002-01-17 06:12:02 srittau Exp $
+ * $Id: nbp_util.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -35,10 +35,7 @@ char		nbp_recv[ 1024 ];
 u_char		nbp_port = 0;
 unsigned char   nbp_id = 0;
 
-int nbp_parse( data, nn, len )
-    char		*data;
-    struct nbpnve	*nn;
-    int			len;
+int nbp_parse(char *data, struct nbpnve *nn, int len)
 {
     struct nbptuple	nt;
 
@@ -96,9 +93,7 @@ int nbp_parse( data, nn, len )
 #define NBPM_TYPE	(1<<2)
 #define NBPM_ZONE	(1<<3)
 
-int nbp_match( n1, n2, flags )
-    struct nbpnve	*n1, *n2;
-    int			flags;
+int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
 {
     int			match = 0;
 
@@ -137,9 +132,7 @@ int nbp_match( n1, n2, flags )
     return( 1 );
 }
 
-int nbp_name( name, objp, typep, zonep )
-    const char  *name;
-    char	**objp, **typep, **zonep;
+int nbp_name(const char  *name, char **objp,char **typep,char **zonep)
 {
     static char	buf[ 32 + 1 + 32 + 1 + 32 + 1 ];
     char	*p;

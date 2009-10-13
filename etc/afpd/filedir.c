@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.55 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: filedir.c,v 1.56 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,12 +50,12 @@ char *strchr (), *strrchr ();
 #include "unix.h"
 
 #ifdef DROPKLUDGE
-int matchfile2dirperms(upath, vol, did)
+int matchfile2dirperms(
 /* Since it's kinda' big; I decided against an
 inline function */
-char	*upath;
-struct vol  *vol;
-int		did;
+    char	*upath,
+    struct vol  *vol,
+    int		did)
 /* The below code changes the way file ownership is determined in the name of
 fixing dropboxes.  It has known security problem.  See the netatalk FAQ for
 more information */
@@ -130,10 +130,7 @@ more information */
 }
 #endif
 
-int afp_getfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct stat		*st;
     struct vol		*vol;
@@ -228,10 +225,7 @@ int	ibuflen _U_, *rbuflen;
     return( AFP_OK );
 }
 
-int afp_setfildirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_setfildirparams(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct stat	*st;
     struct vol	*vol;
@@ -333,12 +327,7 @@ int check_name(const struct vol *vol, char *name)
    
     special care is needed for lock   
 */
-static int moveandrename(vol, sdir, oldname, newname, isdir)
-const struct vol	*vol;
-struct dir	*sdir;
-char        *oldname;
-char        *newname;
-int         isdir;
+static int moveandrename(const struct vol *vol, struct dir *sdir, char *oldname, char *newname, int isdir)
 {
     char            *p;
     char            *upath;
@@ -445,10 +434,7 @@ int         isdir;
 }
 
 /* -------------------------------------------- */
-int afp_rename(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_rename(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol	*vol;
     struct dir	*sdir;
@@ -531,10 +517,7 @@ int	ibuflen _U_, *rbuflen;
 }
 
 /* ------------------------------- */
-int afp_delete(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_delete(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -594,10 +577,7 @@ int	ibuflen _U_, *rbuflen;
     return( rc );
 }
 /* ------------------------ */
-char *absupath( vol, dir, u )
-const struct vol	*vol;
-struct dir	*dir;
-char	*u;
+char *absupath(const struct vol *vol, struct dir *dir, char *u)
 {
     struct dir	*d;
     static char	path[ MAXPATHLEN + 1];
@@ -639,19 +619,13 @@ char	*u;
 /* ------------------------
  * FIXME dir could be NULL
 */
-char *ctoupath( vol, dir, name )
-const struct vol	*vol;
-struct dir	*dir;
-char	*name;
+char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
 {
     return absupath(vol, dir, mtoupath(vol, name, dir->d_did, utf8_encoding()));
 }
 
 /* ------------------------- */
-int afp_moveandrename(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen  _U_, *rbuflen;
+int afp_moveandrename(AFPObj *obj, char *ibuf, int ibuflen  _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol	*vol;
     struct dir	*sdir, *ddir;

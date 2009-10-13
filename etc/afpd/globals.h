@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.26 2009-03-16 13:59:12 franklahm Exp $
+ * $Id: globals.h,v 1.27 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -118,25 +118,25 @@ extern char		getwdbuf[];
 extern char             Cnid_srv[MAXHOSTNAMELEN + 1];
 extern int              Cnid_port;
 
-extern int  get_afp_errno   __P((const int param));
-extern void afp_options_init __P((struct afp_options *));
-extern int afp_options_parse __P((int, char **, struct afp_options *));
-extern int afp_options_parseline __P((char *, struct afp_options *));
-extern void afp_options_free __P((struct afp_options *,
-                                      const struct afp_options *));
-extern void setmessage __P((const char *));
-extern void readmessage __P((AFPObj *));
+extern int  get_afp_errno   (const int param);
+extern void afp_options_init (struct afp_options *);
+extern int afp_options_parse (int, char **, struct afp_options *);
+extern int afp_options_parseline (char *, struct afp_options *);
+extern void afp_options_free (struct afp_options *,
+                                      const struct afp_options *);
+extern void setmessage (const char *);
+extern void readmessage (AFPObj *);
 
 /* gettok.c */
-extern void initline   __P((int, char *));
-extern int  parseline  __P((int, char *));
+extern void initline   (int, char *);
+extern int  parseline  (int, char *);
 
 /* afp_util.c */
-const char *AfpNum2name __P((int ));
+const char *AfpNum2name (int );
 
 #ifndef NO_DDP
-extern void afp_over_asp __P((AFPObj *));
+extern void afp_over_asp (AFPObj *);
 #endif /* NO_DDP */
-extern void afp_over_dsi __P((AFPObj *));
+extern void afp_over_dsi (AFPObj *);
 
 #endif /* globals.h */

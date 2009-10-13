@@ -1,5 +1,5 @@
 /*
- * $Id: lp.h,v 1.5 2009-02-01 18:55:37 didg Exp $
+ * $Id: lp.h,v 1.6 2009-10-13 22:55:37 didg Exp $
  */
 
 #ifndef PAPD_LP_H
@@ -9,24 +9,24 @@
 #include <sys/cdefs.h>
 #include "file.h"
 
-void lp_person __P(( char * ));
-int lp_pagecost __P(( void ));
-void lp_host __P(( char * ));
-void lp_job __P(( char * ));
-void lp_for __P(( char * ));
-void lp_origin __P(( int ));
-int lp_rmjob __P(( int ));
-int lp_queue __P(( struct papfile * ));
+void lp_person ( char * );
+int lp_pagecost ( void );
+void lp_host ( char * );
+void lp_job ( char * );
+void lp_for ( char * );
+void lp_origin ( int );
+int lp_rmjob ( int );
+int lp_queue ( struct papfile * );
 
 /* cancel current job */
-int lp_cancel __P(( void ));
+int lp_cancel ( void );
 /* print current job */
-int lp_print __P(( void ));
+int lp_print ( void );
 /* open a file for spooling */
-int lp_open __P(( struct papfile *, struct sockaddr_at * ));
+int lp_open ( struct papfile *, struct sockaddr_at * );
 /* open a buffer to the current open file */
-int lp_write __P(( struct papfile *,char *, size_t ));
+int lp_write ( struct papfile *,char *, size_t );
 /* close current spooling file */
-int lp_close __P(( void ));
+int lp_close ( void );
 
 #endif /* PAPD_LP_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.h,v 1.4 2005-04-28 20:49:41 bfernhomberg Exp $
+ * $Id: desktop.h,v 1.5 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -39,21 +39,21 @@ struct savedt {
 
 typedef unsigned char CreatorType[4];
 
-extern char	*dtfile __P((const struct vol *, u_char [], char *));
-extern char	*mtoupath __P((const struct vol *, char *, cnid_t, int utf8));
-extern char	*utompath __P((const struct vol *, char *, cnid_t, int utf8));
+extern char	*dtfile (const struct vol *, u_char [], char *);
+extern char	*mtoupath (const struct vol *, char *, cnid_t, int utf8);
+extern char	*utompath (const struct vol *, char *, cnid_t, int utf8);
 
 /* FP functions */
-extern int	afp_opendt __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_addcomment __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_getcomment __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_rmvcomment __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_addappl __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_rmvappl __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_getappl __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_closedt __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_addicon __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_geticoninfo __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_geticon __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_opendt (AFPObj *, char *, int, char *, int *);
+extern int	afp_addcomment (AFPObj *, char *, int, char *, int *);
+extern int	afp_getcomment (AFPObj *, char *, int, char *, int *);
+extern int	afp_rmvcomment (AFPObj *, char *, int, char *, int *);
+extern int	afp_addappl (AFPObj *, char *, int, char *, int *);
+extern int	afp_rmvappl (AFPObj *, char *, int, char *, int *);
+extern int	afp_getappl (AFPObj *, char *, int, char *, int *);
+extern int      afp_closedt (AFPObj *, char *, int, char *, int *);
+extern int	afp_addicon (AFPObj *, char *, int, char *, int *);
+extern int	afp_geticoninfo (AFPObj *, char *, int, char *, int *);
+extern int	afp_geticon (AFPObj *, char *, int, char *, int *);
 
 #endif

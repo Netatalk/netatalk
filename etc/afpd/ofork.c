@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.27 2008-12-03 18:35:44 didg Exp $
+ * $Id: ofork.c,v 1.28 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -70,8 +70,7 @@ static void of_unhash(struct ofork *of)
 }
 
 #ifdef DEBUG1
-void of_pforkdesc( f )
-FILE	*f;
+void of_pforkdesc( FILE *f)
 {
     int	ofrefnum;
 
@@ -102,11 +101,11 @@ int of_flush(const struct vol *vol)
     return( 0 );
 }
 
-int of_rename(vol, s_of, olddir, oldpath, newdir, newpath)
-const struct vol *vol;
-struct ofork *s_of;
-struct dir *olddir, *newdir;
-const char *oldpath _U_, *newpath;
+int of_rename(
+    const struct vol *vol,
+    struct ofork *s_of,
+    struct dir *olddir, const char *oldpath _U_,
+    struct dir *newdir, const char *newpath)
 {
     struct ofork *of, *next, *d_ofork;
     int done = 0;
@@ -151,14 +150,13 @@ const char *oldpath _U_, *newpath;
 #define min(a,b)	((a)<(b)?(a):(b))
 
 struct ofork *
-            of_alloc(vol, dir, path, ofrefnum, eid, ad, st)
-struct vol      *vol;
-struct dir	*dir;
-char		*path;
-u_int16_t	*ofrefnum;
-const int       eid;
-struct adouble  *ad;
-struct stat     *st;
+of_alloc(struct vol *vol,
+    struct dir	   *dir,
+    char	   *path,
+    u_int16_t	   *ofrefnum,
+    const int      eid,
+    struct adouble *ad,
+    struct stat    *st)
 {
     struct ofork        *of, *d_ofork;
     u_int16_t		refnum, of_refnum;
@@ -349,8 +347,7 @@ struct ofork *
     return NULL;
 }
 
-void of_dealloc( of )
-struct ofork	*of;
+void of_dealloc( struct ofork *of)
 {
     if (!oforks)
         return;

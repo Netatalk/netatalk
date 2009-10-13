@@ -1,5 +1,5 @@
 /*
- * $Id: nbpunrgstr.c,v 1.6 2005-04-28 20:49:20 bfernhomberg Exp $
+ * $Id: nbpunrgstr.c,v 1.7 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -41,8 +41,7 @@
 
 #include <atalk/unicode.h>
 
-void Usage( av0 )
-    char	*av0;
+void Usage(char *av0)
 {
     char	*p;
 
@@ -56,9 +55,7 @@ void Usage( av0 )
     exit( 1 );
 }
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main(int ac, char **av)
 {
     char		*Obj = 0, *Type = 0, *Zone = 0;
     char		*convname = 0;

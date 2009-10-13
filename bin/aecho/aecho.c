@@ -1,5 +1,5 @@
 /*
- * $Id: aecho.c,v 1.7 2005-04-28 20:49:18 bfernhomberg Exp $
+ * $Id: aecho.c,v 1.8 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -67,7 +67,7 @@ unsigned int     	pings = 0;
 
 void usage(char *);
 
-void done()
+void done(int sig _U_)
 {
     if ( nsent) {
 	printf( "\n----%d.%d AEP Statistics----\n",
@@ -82,7 +82,7 @@ void done()
     exit( 0 );
 }
   
-void aep_send()
+void aep_send(int sig _U_)
 {
     struct timeval	tv;
     char		*p, buf[ 1024 ];
@@ -108,12 +108,10 @@ void aep_send()
 	exit( 1 );
     }
     nsent++;
-    if (pings && nsent > pings) done();
+    if (pings && nsent > pings) done(0);
 }
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main(int ac, char **av)
 {
     struct servent	*se;
     struct sigaction	sv;
@@ -255,7 +253,7 @@ int main( ac, av )
 	printf( "%d bytes from %u.%u: aep_seq=%d. time=%ld. ms\n",
 		cc, ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node,
 		seq, ms );
-        if (pings && seq + 1 >= pings) done();
+        if (pings && seq + 1 >= pings) done(0);
     }
 }
 

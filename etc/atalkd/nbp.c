@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.11 2005-04-28 20:49:46 bfernhomberg Exp $
+ * $Id: nbp.c,v 1.12 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -46,11 +46,7 @@ extern int	transition;
 struct nbptab	*nbptab = NULL;
 
 static 
-void nbp_ack( fd, nh_op, nh_id, to )
-    int			fd;
-    int			nh_op;
-    int			nh_id;
-    struct sockaddr_at	*to;
+void nbp_ack( int fd, int nh_op, int nh_id, struct sockaddr_at *to)
 {
     struct nbphdr	nh;
     char		*data, packet[ SZ_NBPHDR + 1 ];
@@ -68,11 +64,7 @@ void nbp_ack( fd, nh_op, nh_id, to )
     }
 }
 
-int nbp_packet( ap, from, data, len )
-    struct atport	*ap;
-    struct sockaddr_at	*from;
-    char		*data;
-    int			len;
+int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 {
     struct nbphdr	nh;
     struct nbptuple	nt;

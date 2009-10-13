@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.29 2008-12-03 19:31:50 didg Exp $
+ * $Id: uams_dhx_pam.c,v 1.30 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -554,7 +554,7 @@ logincont_err:
 }
 
 /* logout */
-static void pam_logout() {
+static void pam_logout(void) {
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;

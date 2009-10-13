@@ -117,7 +117,7 @@ static int getifaces(const int sockfd, char ***list)
  * Get interfaces from the kernel. we keep an extra null entry to signify
  * the end of the interface list. 
  */
-char **getifacelist()
+char **getifacelist(void)
 {
   char **list = NULL; /* FIXME */
   int  i, fd;

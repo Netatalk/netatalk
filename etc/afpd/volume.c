@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.91 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: volume.c,v 1.92 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,6 +56,8 @@ char *strchr (), *strrchr ();
 #include "unix.h"
 #include "mangle.h"
 #include "fork.h"
+#include "hash.h"
+#include "afp_vfs.h"
 
 extern int afprun(int root, char *cmd, int *outfd);
 
@@ -808,10 +810,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 }
 
 /* ---------------- */
-static char *myfgets( buf, size, fp )
-char	*buf;
-int		size;
-FILE	*fp;
+static char *myfgets( char *buf, int size, FILE *fp)
 {
     char	*p;
     int		c;
@@ -863,9 +862,7 @@ FILE	*fp;
 
 #endif
 
-static int accessvol(args, name)
-const char *args;
-const char *name;
+static int accessvol(const char *args, const char *name)
 {
     char buf[MAXPATHLEN + 1], *p;
     struct group *gr;
@@ -889,11 +886,7 @@ const char *name;
     return 0;
 }
 
-static int hostaccessvol(type, volname, args, obj)
-int type;
-char *volname;
-const char *args;
-const AFPObj *obj;
+static int hostaccessvol(int type, char *volname, const char *args, const AFPObj *obj)
 {
     char buf[MAXPATHLEN + 1], *p, *b;
     DSI *dsi = obj->handle;
@@ -938,9 +931,7 @@ const AFPObj *obj;
     return 0;
 }
 
-static void setextmap( ext, type, creator, user)
-char		*ext, *type, *creator;
-int			user;
+static void setextmap(char *ext, char *type, char *creator, int user)
 {
     struct extmap	*em;
     int                 cnt;
@@ -1066,12 +1057,7 @@ static int volfile_changed(struct afp_volume_name *p)
  *                           [codepage:<file>] [casefold:<num>]
  *		<extension> TYPE [CREATOR]
  */
-static int readvolfile(obj, p1, p2, user, pwent)
-AFPObj      *obj;
-struct afp_volume_name 	*p1;
-char        *p2;
-int		user;
-struct passwd *pwent;
+static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
 {
     FILE		*fp;
     char		path[ MAXPATHLEN + 1], tmp[ MAXPATHLEN + 1],
@@ -1316,10 +1302,9 @@ struct vol *vol, *ovol, *nvol;
     }
 }
 
-static int getvolspace( vol, bfree, btotal, xbfree, xbtotal, bsize )
-struct vol	*vol;
-u_int32_t	*bfree, *btotal, *bsize;
-VolSpace    *xbfree, *xbtotal;
+static int getvolspace(struct vol *vol,
+  u_int32_t *bfree, u_int32_t *btotal,
+  VolSpace *xbfree, VolSpace *xbtotal, u_int32_t *bsize)
 {
     int	        spaceflag, rc;
     u_int32_t   maxsize;
@@ -1389,12 +1374,7 @@ static void vol_setdate(u_int16_t id, struct adouble *adp, time_t date)
 }
 
 /* ----------------------- */
-static int getvolparams( bitmap, vol, st, buf, buflen )
-u_int16_t	bitmap;
-struct vol	*vol;
-struct stat	*st;
-char	*buf;
-int		*buflen;
+static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, char *buf, int *buflen)
 {
     struct adouble	ad;
     int			bit = 0, isad = 1;
@@ -1691,10 +1671,7 @@ void load_volumes(AFPObj *obj)
 }
 
 /* ------------------------------- */
-int afp_getsrvrparms(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf _U_, *rbuf;
-int 	ibuflen _U_, *rbuflen;
+int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct timeval	tv;
     struct stat		st;
@@ -1772,10 +1749,7 @@ int 	ibuflen _U_, *rbuflen;
 /* ------------------------- 
  * we are the user here
 */
-int afp_openvol(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_openvol(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct stat	st;
     char	*volname;
@@ -2088,10 +2062,7 @@ static void deletevol(struct vol *vol)
 }
 
 /* ------------------------- */
-int afp_closevol(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_closevol(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol	*vol;
     u_int16_t	vid;
@@ -2165,8 +2136,7 @@ struct extmap *getdefextmap(void)
 /* --------------------------
    poll if a volume is changed by other processes.
 */
-int  pollvoltime(obj)
-AFPObj *obj;
+int  pollvoltime(AFPObj *obj)
 {
     struct vol	     *vol;
     struct timeval   tv;
@@ -2192,9 +2162,7 @@ AFPObj *obj;
 }
 
 /* ------------------------- */
-void setvoltime(obj, vol )
-AFPObj *obj;
-struct vol	*vol;
+void setvoltime(AFPObj *obj, struct vol *vol)
 {
     struct timeval	tv;
 
@@ -2225,10 +2193,7 @@ struct vol	*vol;
 }
 
 /* ------------------------- */
-int afp_getvolparams(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_getvolparams(AFPObj *obj _U_, char *ibuf, int ibuflen _U_,char *rbuf, int *rbuflen)
 {
     struct vol	*vol;
     u_int16_t	vid, bitmap;
@@ -2248,10 +2213,7 @@ int	ibuflen _U_, *rbuflen;
 }
 
 /* ------------------------- */
-int afp_setvolparams(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_setvolparams(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_,  int *rbuflen)
 {
     struct adouble ad;
     struct vol	*vol;

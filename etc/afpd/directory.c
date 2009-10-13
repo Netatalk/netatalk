@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.105 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: directory.c,v 1.106 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -95,9 +95,7 @@ static struct dir rootpar  = { SENTINEL, SENTINEL, NULL, 0,
  * how exciting.
  */
 struct dir *
-            dirsearch( vol, did )
-            const struct vol	*vol;
-u_int32_t	did;
+            dirsearch(const struct vol *vol, u_int32_t	did)
 {
     struct dir	*dir;
 
@@ -169,9 +167,7 @@ struct dir *dir = NULL;
  * and we are really bad in this case.
  */
 struct dir *
-            dirlookup( vol, did )
-            const struct vol	*vol;
-u_int32_t	did;
+            dirlookup( const struct vol *vol, u_int32_t did)
 {
     struct dir   *ret;
     char	 *upath;
@@ -285,9 +281,7 @@ static void dirchildremove(struct dir *a,struct dir *b)
 
 /* --------------------------- */
 /* rotate the tree to the left */
-static void dir_leftrotate(vol, dir)
-struct vol *vol;
-struct dir *dir;
+static void dir_leftrotate(struct vol *vol, struct dir *dir)
 {
     struct dir *right = dir->d_right;
 
@@ -316,9 +310,7 @@ struct dir *dir;
 
 
 /* rotate the tree to the right */
-static void dir_rightrotate(vol, dir)
-struct vol *vol;
-struct dir *dir;
+static void dir_rightrotate(struct vol *vol, struct dir *dir)
 {
     struct dir *left = dir->d_left;
 
@@ -346,9 +338,7 @@ struct dir *dir;
 
 #if 0
 /* recolor after a removal */
-static struct dir *dir_rmrecolor(vol, dir)
-            struct vol *vol;
-struct dir *dir;
+static struct dir *dir_rmrecolor(struct vol *vol, struct dir *dir)
 {
     struct dir *leaf;
 
@@ -552,9 +542,7 @@ static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
  * process. It's fixable within afpd if fnctl_lock, doable with smb and
  * next to impossible for nfs and local filesystem access.
  */
-static void dir_invalidate( vol, dir )
-const struct vol *vol;
-struct dir *dir;
+static void dir_invalidate( const struct vol *vol, struct dir *dir)
 {
     if (curdir == dir) {
         /* v_root can't be deleted */
@@ -568,9 +556,7 @@ struct dir *dir;
 }
 
 /* ------------------------------------ */
-static struct dir *dir_insert(vol, dir)
-            const struct vol *vol;
-struct dir *dir;
+static struct dir *dir_insert(const struct vol *vol, struct dir *dir)
 {
     struct dir	*pdir;
 
@@ -683,10 +669,7 @@ caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
  * as a side-effect, movecwd to that point and return the new dir
  */
 static struct dir *
-            extenddir( vol, dir, path )
-struct vol	*vol;
-struct dir	*dir;
-struct path *path;
+            extenddir(struct vol *vol, struct dir *dir, struct path *path)
 {
     path->d_dir = NULL;
 
@@ -887,9 +870,7 @@ copydir_done:
 /* --- public functions follow --- */
 
 /* NOTE: we start off with at least one node (the root directory). */
-static struct dir *dirinsert( vol, dir )
-            struct vol	*vol;
-struct dir	*dir;
+static struct dir *dirinsert(struct vol *vol, struct dir *dir)
 {
     struct dir *node;
 
@@ -947,10 +928,7 @@ struct dir	*dir;
 
 /* ---------------------------- */
 struct dir *
-            adddir( vol, dir, path)
-struct vol	*vol;
-struct dir	*dir;
-struct path     *path;
+            adddir(struct vol *vol, struct dir *dir, struct path *path)
 {
     struct dir	*cdir, *edir;
     int		upathlen;
@@ -1034,8 +1012,7 @@ void dirfreename(struct dir *dir)
     free(dir->d_m_name);
 }
 
-void dirfree( dir )
-struct dir	*dir;
+void dirfree(struct dir *dir)
 {
     if (!dir || (dir == SENTINEL))
         return;
@@ -1207,10 +1184,7 @@ static struct path *invalidate (const struct vol *vol, struct dir *dir, struct p
                  
 */
 struct path *
-cname( vol, dir, cpath )
-const struct vol	*vol;
-struct dir	*dir;
-char	**cpath;
+cname(const struct vol *vol, struct dir *dir, char **cpath)
 {
     struct dir		   *cdir, *scdir=NULL;
     static char		   path[ MAXPATHLEN + 1];
@@ -1444,9 +1418,7 @@ noucsfallback:
 /*
  * Move curdir to dir, with a possible chdir()
  */
-int movecwd( vol, dir)
-const struct vol	*vol;
-struct dir	*dir;
+int movecwd(const struct vol *vol, struct dir *dir)
 {
     char path[MAXPATHLEN + 1];
     struct dir	*d;
@@ -1825,10 +1797,7 @@ int path_error(struct path *path, int error)
 }
 
 /* ----------------------------- */
-int afp_setdirparams(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_setdirparams(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol	*vol;
     struct dir	*dir;
@@ -2246,10 +2215,7 @@ setdirparam_done:
     return err;
 }
 
-int afp_syncdir(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char    *ibuf, *rbuf _U_;
-int     ibuflen _U_, *rbuflen;
+int afp_syncdir(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
 #ifdef HAVE_DIRFD
     DIR                  *dp;
@@ -2339,10 +2305,7 @@ int     ibuflen _U_, *rbuflen;
     return ( AFP_OK );
 }
 
-int afp_createdir(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_createdir(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct adouble	ad;
     struct vol		*vol;
@@ -2430,10 +2393,10 @@ createdir_done:
  * newparent curdir
  *
 */
-int renamedir(vol, src, dst, dir, newparent, newname)
-const struct vol *vol;
-char	*src, *dst, *newname;
-struct dir	*dir, *newparent;
+int renamedir(const struct vol *vol, char *src, char *dst, 
+    struct dir *dir, 
+    struct dir *newparent, 
+    char *newname)
 {
     struct adouble	ad;
     struct dir		*parent;
@@ -2530,8 +2493,7 @@ struct dir	*dir, *newparent;
 }
 
 /* delete an empty directory */
-int deletecurdir( vol)
-const struct vol	*vol;
+int deletecurdir(const struct vol *vol)
 {
     struct dirent *de;
     struct stat st;
@@ -2603,10 +2565,7 @@ delete_done:
     return err;
 }
 
-int afp_mapid(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_mapid(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct passwd	*pw;
     struct group	*gr;
@@ -2719,10 +2678,7 @@ int	ibuflen _U_, *rbuflen;
     return( AFP_OK );
 }
 
-int afp_mapname(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_mapname(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct passwd	*pw;
     struct group	*gr;
@@ -2814,10 +2770,7 @@ int	ibuflen _U_, *rbuflen;
 /* ------------------------------------
   variable DID support 
 */
-int afp_closedir(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf _U_, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
 #if 0
     struct vol   *vol;
@@ -2853,10 +2806,7 @@ int	ibuflen _U_, *rbuflen;
 /* did creation gets done automatically 
  * there's a pb again with case but move it to cname
 */
-int afp_opendir(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen  _U_, *rbuflen;
+int afp_opendir(AFPObj *obj _U_, char *ibuf, int ibuflen  _U_, char *rbuf, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*parentdir;

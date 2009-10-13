@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.14 2005-04-28 20:49:19 bfernhomberg Exp $
+ * $Id: hqx.c,v 1.15 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,6 +30,7 @@
 #include "megatron.h"
 #include "nad.h"
 #include "hqx.h"
+#include "updcrc.h"
 
 #define HEXOUTPUT	0
 
@@ -65,8 +66,6 @@
 #define BHH_CRCSIZ		2
 #define BHH_HEADSIZ		21
 
-u_short		updcrc();
-
 /*	Forward declarations.
  */
 int skip_junk(int line);
@@ -101,10 +100,7 @@ somewhat initialized; hqx_fd is set.  skip_junk is called from
 here; skip_junk leaves hqx7_first and hqx7_last set.
  */
 
-int hqx_open( hqxfile, flags, fh, options )
-    char		*hqxfile;
-    int			flags, options;
-    struct FHeader	*fh;
+int hqx_open(char *hqxfile, int flags, struct FHeader *fh, int options)
 {
     int			maxlen;
 
@@ -166,8 +162,7 @@ int hqx_open( hqxfile, flags, fh, options )
  * Otherwise, a value of -1 is returned.
  */
 
-int hqx_close( keepflag )
-    int			keepflag;
+int hqx_close(int keepflag)
 {
     if ( keepflag == KEEP ) {
 	return( close( hqx.filed ));
@@ -188,10 +183,7 @@ int hqx_close( keepflag )
  * return zero and no more than that.
  */
 
-int hqx_read( fork, buffer, length )
-    int			fork;
-    char		*buffer;
-    int			length;
+int hqx_read(int fork, char *buffer, int length)
 {
     u_short		storedcrc;
     int			readlen;
@@ -258,8 +250,7 @@ int hqx_read( fork, buffer, length )
  * to fill the hqx_header fields.
  */
 
-int hqx_header_read( fh )
-    struct FHeader	*fh;
+int hqx_header_read(struct FHeader *fh)
 {
     char		*headerbuf, *headerptr;
     u_int32_t		time_seconds;
@@ -392,8 +383,7 @@ int hqx_header_read( fh )
  * hqx_header_write.
  */
 
-int hqx_header_write( fh )
-    struct FHeader	*fh _U_;
+int hqx_header_write(struct FHeader *fh _U_)
 {
     return( -1 );
 }
@@ -405,8 +395,7 @@ int hqx_header_write( fh )
  * it sets the pointers to the hqx7 buffer up to point to the valid data.
  */
 
-int hqx7_fill( hqx7_ptr )
-    u_char		*hqx7_ptr;
+int hqx7_fill(u_char *hqx7_ptr)
 {
     int			cc;
     int			cs;
@@ -476,8 +465,7 @@ u_char hqxlookup[] = {
  * OTHER when looking for any subsequent line.
  */
 
-int skip_junk( line )
-int			line;
+int skip_junk(int line)
 {
     int			found = NOWAY;
     int			stopflag;
@@ -578,9 +566,7 @@ int			line;
  * file is reached.
  */
 
-int hqx_7tobin( outbuf, datalen ) 
-    char		*outbuf;
-    int			datalen;
+int hqx_7tobin( char *outbuf, int datalen)
 {
     static u_char	hqx8[3];
     static int		hqx8i;

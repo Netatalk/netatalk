@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.h,v 1.4 2001-08-03 22:12:54 srittau Exp $
+ * $Id: rtmp.h,v 1.5 2009-10-13 22:55:37 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -78,13 +78,17 @@ struct rtmp_tuple {
 #define STARTUP_LASTNET		0xfffe
 
 extern int	rtfd;
-struct rtmptab	*newrt __P((const struct interface *));
-void rtmp_delzonemap  __P((struct rtmptab *));
+struct rtmptab	*newrt (const struct interface *);
+void rtmp_delzonemap  (struct rtmptab *);
 
-int rtmp_request __P(( struct interface * ));
-void rtmp_free __P(( struct rtmptab * ));
-int rtmp_replace __P(( struct rtmptab * ));
-int looproute __P(( struct interface *, unsigned int ));
-int gateroute __P(( unsigned int, struct rtmptab * ));
+int rtmp_request ( struct interface * );
+void rtmp_free ( struct rtmptab * );
+int rtmp_replace ( struct rtmptab * );
+int looproute ( struct interface *, unsigned int );
+int gateroute ( unsigned int, struct rtmptab * );
+
+struct atport;
+
+int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len);
 
 #endif /* atalkd/rtmp.h */

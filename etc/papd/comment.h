@@ -1,5 +1,5 @@
 /*
- * $Id: comment.h,v 1.5 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: comment.h,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -54,11 +54,11 @@ extern char			*comcont;
  */
 #define CM_NOPRINT	(1<<16)				/* or print */
 
-void compop __P(( void ));
-void compush __P(( struct papd_comment * ));
-int comswitch __P(( struct papd_comment *, int (*)() ));
-int comcmp __P(( char *, char *, char *, int ));
-struct papd_comment *commatch __P(( char *, char *, struct papd_comment * ));
-char *comtoken __P(( char *, char *, char *, char * ));
+void compop ( void );
+void compush ( struct papd_comment * );
+int comswitch ( struct papd_comment *, int (*)() );
+int comcmp ( char *, char *, char *, int );
+struct papd_comment *commatch ( char *, char *, struct papd_comment * );
+char *comtoken ( char *, char *, char *, char * );
 
 #endif /* PAPD_COMMENT_H */

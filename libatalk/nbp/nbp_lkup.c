@@ -1,5 +1,5 @@
 /*
- * $Id: nbp_lkup.c,v 1.4 2002-01-17 06:12:02 srittau Exp $
+ * $Id: nbp_lkup.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -37,11 +37,9 @@
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
-int nbp_lookup( obj, type, zone, nn, nncnt, ataddr )
-    const char		*obj, *type, *zone;
-    struct nbpnve	*nn;
-    int			nncnt;
-    const struct at_addr *ataddr;
+int nbp_lookup( const char *obj, const char *type, const char *zone, struct nbpnve *nn,
+    int			nncnt,
+    const struct at_addr *ataddr)
 {
     struct sockaddr_at	addr, from;
     struct timeval	tv, tv_begin, tv_end;

@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.18 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: messages.c,v 1.19 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -35,8 +35,7 @@ void setmessage(const char *message)
     strlcpy(servermesg, message, MAXMESGSIZE);
 }
 
-void readmessage(obj)
-AFPObj *obj;
+void readmessage(AFPObj *obj)
 {
     /* Read server message from file defined as SERVERTEXT */
 #ifdef SERVERTEXT
@@ -113,10 +112,7 @@ AFPObj *obj;
 #endif /* SERVERTEXT */
 }
 
-int afp_getsrvrmesg(obj, ibuf, ibuflen, rbuf, rbuflen)
-AFPObj *obj;
-char *ibuf, *rbuf;
-int ibuflen _U_, *rbuflen;
+int afp_getsrvrmesg(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     char *message;
     u_int16_t type, bitmap;

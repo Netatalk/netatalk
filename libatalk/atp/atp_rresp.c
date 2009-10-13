@@ -1,5 +1,5 @@
 /*
- * $Id: atp_rresp.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
+ * $Id: atp_rresp.c,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -46,9 +46,9 @@
 #include "atp_internals.h"
 
 int
-atp_rresp( ah, atpb )
-    ATP			ah;		/* open atp handle */
-    struct atp_block	*atpb;		/* parameter block */
+atp_rresp(
+    ATP			ah,		/* open atp handle */
+    struct atp_block	*atpb)		/* parameter block */
 {
     int		i, rc;
     size_t	len;

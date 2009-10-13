@@ -1,5 +1,5 @@
 /*
- * $Id: headers.c,v 1.12 2009-02-02 10:31:32 didg Exp $
+ * $Id: headers.c,v 1.13 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,8 +80,7 @@ static char *get_text(char *start, int linelength)
     return ret;
 }
 
-int ch_for( in, out )
-	struct papfile	*in, *out _U_;
+int ch_for( struct papfile *in, struct papfile *out _U_)
 {
     char                *start, *cmt;
     int                 linelength, crlflength;
@@ -112,8 +111,7 @@ int ch_for( in, out )
     return( CH_DONE );
 }
 
-int ch_title( in, out )
-    struct papfile	*in, *out _U_;
+int ch_title( struct papfile *in, struct papfile *out _U_)
 {
     char		*start, *cmt;
     int			linelength, crlflength;
@@ -159,8 +157,7 @@ static int guess_creator ( char *creator )
 }
 
 
-int ch_creator( in, out )
-    struct papfile	*in, *out _U_;
+int ch_creator( struct papfile *in, struct papfile *out _U_)
 {
     char		*start, *cmt;
     int			linelength, crlflength;
@@ -192,8 +189,7 @@ int ch_creator( in, out )
     return( CH_DONE );
 }
 
-int ch_endcomm( in, out )
-    struct papfile	*in, *out _U_;
+int ch_endcomm( struct papfile *in, struct papfile *out _U_)
 {
     char                *start;
     int                 linelength, crlflength;
@@ -222,8 +218,7 @@ int ch_endcomm( in, out )
     return ( CH_DONE);
 }
 
-int ch_starttranslate(in,out)
-    struct papfile      *in, *out _U_;
+int ch_starttranslate( struct papfile *in, struct papfile *out _U_)
 {
     char                *start;
     int                 linelength, crlflength;
@@ -250,8 +245,7 @@ int ch_starttranslate(in,out)
     return ( CH_DONE);
 }
 
-int ch_endtranslate(in,out)
-    struct papfile      *in, *out _U_;
+int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
 {
     char                *start;
     int                 linelength, crlflength;
@@ -278,8 +272,7 @@ int ch_endtranslate(in,out)
     return ( CH_DONE);
 }
 
-int ch_translateone(in,out)
-    struct papfile      *in, *out _U_;
+int ch_translateone( struct papfile *in, struct papfile *out _U_)
 {
     char                *start;
     int                 linelength, crlflength;

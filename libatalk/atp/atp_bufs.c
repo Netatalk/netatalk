@@ -1,5 +1,5 @@
 /*
- * $Id: atp_bufs.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_bufs.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -80,9 +80,7 @@ static int more_bufs(void)
 
 
 #ifdef EBUG
-void atp_print_bufuse( ah, s )
-    ATP		ah;
-    char	*s;
+void atp_print_bufuse(ATP ah, char *s)
 {
     struct atpbuf	*bp;
     int			i, sentcount, incount, respcount;
@@ -134,8 +132,7 @@ struct atpbuf *atp_alloc_buf(void)
 }
 
 
-int atp_free_buf( bp )
-    struct atpbuf	*bp;
+int atp_free_buf(struct atpbuf *bp)
 {
     if ( bp == NULL ) {
 	return -1;

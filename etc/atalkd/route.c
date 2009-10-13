@@ -1,5 +1,5 @@
 /*
- * $Id: route.c,v 1.7 2005-04-28 20:49:46 bfernhomberg Exp $
+ * $Id: route.c,v 1.8 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1996 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -24,10 +24,7 @@
 #include "route.h"
 
 #ifndef BSD4_4
-int route( message, dst, gate, flags )
-    int			message;
-    struct sockaddr	*dst, *gate;
-    int			flags;
+int route( int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 {
 #ifdef TRU64
     struct ortentry	rtent;
@@ -59,10 +56,7 @@ struct rt_msg_at {
     struct sockaddr_m	rtma_mask;
 } rtma;
 
-route( message, dst, gate, flags )
-    int			message;
-    struct sockaddr_at	*dst, *gate;
-    int			flags;
+route( int message, struct sockaddr_at	*dst, struct sockaddr_at *gate, int flags)
 {
     int			rc;
 

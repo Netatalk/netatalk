@@ -1,5 +1,5 @@
 /*
- * $Id: atp_rsel.c,v 1.4 2002-01-17 06:08:55 srittau Exp $
+ * $Id: atp_rsel.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1997 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -32,8 +32,7 @@ static int	release_count = 0;
 
 
 int
-resend_request( ah )
-    ATP		ah;
+resend_request(ATP ah)
 {
     /*
      * update bitmap and send request packet
@@ -72,10 +71,10 @@ resend_request( ah )
 }
 
 int
-atp_rsel( ah, faddr, func )
-    ATP			ah;		/* open atp handle */
-    struct sockaddr_at	*faddr;		/* address to receive from */
-    int			func;		/* which function(s) to wait for;
+atp_rsel( 
+    ATP			ah,		/* open atp handle */
+    struct sockaddr_at	*faddr,		/* address to receive from */
+    int			func)		/* which function(s) to wait for;
 					   0 means request or response */
 {
     struct atpbuf	*abuf, *pb, *cb;

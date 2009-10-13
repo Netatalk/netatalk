@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.111 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: file.c,v 1.112 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -563,10 +563,7 @@ int getfilparams(struct vol *vol,
 }
 
 /* ----------------------------- */
-int afp_createfile(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_createfile(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct adouble	ad, *adp;
     struct vol		*vol;
@@ -689,10 +686,7 @@ createfile_done:
     return (retvalue);
 }
 
-int afp_setfilparams(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_setfilparams(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol	*vol;
     struct dir	*dir;
@@ -1007,10 +1001,7 @@ setfilparam_done:
  * adp         adouble struct of src file, if open, or & zeroed one
  *
  */
-int renamefile(vol, src, dst, newname, adp )
-const struct vol *vol;
-char	*src, *dst, *newname;
-struct adouble    *adp;
+int renamefile(const struct vol *vol, char *src, char *dst, char *newname, struct adouble *adp)
 {
     int		rc;
 
@@ -1155,10 +1146,7 @@ u_int32_t   hint;
 
 /* -----------------------------------
 */
-int afp_copyfile(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_copyfile(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol	*s_vol, *d_vol;
     struct dir	*dir;
@@ -1382,10 +1370,8 @@ static int copy_fork(int eid, struct adouble *add, struct adouble *ads)
  * because we are doing it elsewhere.
  * currently if newname is NULL then adp is NULL. 
  */
-int copyfile(s_vol, d_vol, src, dst, newname, adp )
-const struct vol *s_vol, *d_vol;
-char	*src, *dst, *newname;
-struct adouble *adp;
+int copyfile(const struct vol *s_vol, const struct vol*d_vol, 
+    char *src, char *dst, char *newname, struct adouble *adp)
 {
     struct adouble	ads, add;
     int			err = 0;
@@ -1522,10 +1508,7 @@ u_int16_t   bshort = 0;
 	return 0;
 }
 
-int deletefile( vol, file, checkAttrib )
-const struct vol      *vol;
-char		*file;
-int         checkAttrib;
+int deletefile(const struct vol *vol, char *file, int checkAttrib)
 {
     struct adouble	ad;
     struct adouble      *adp = &ad;
@@ -1610,10 +1593,7 @@ int         checkAttrib;
 
 /* ------------------------------------ */
 /* return a file id */
-int afp_createid(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_createid(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct stat         *st;
     struct vol		*vol;
@@ -1774,10 +1754,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 
 /* ------------------------------
    resolve a file id */
-int afp_resolveid(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_resolveid(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -1890,10 +1867,7 @@ retry:
 }
 
 /* ------------------------------ */
-int afp_deleteid(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_deleteid(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct stat         st;
     struct vol		*vol;
@@ -2027,10 +2001,7 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
 
 #define APPLETEMP ".AppleTempXXXXXX"
 
-int afp_exchangefiles(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_ ;
-int	ibuflen _U_, *rbuflen;
+int afp_exchangefiles(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct stat         srcst, destst;
     struct vol		*vol;

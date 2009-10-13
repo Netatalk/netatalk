@@ -1,5 +1,5 @@
 /*
- * $Id: switch.h,v 1.2 2001-06-20 18:33:04 rufustfirefly Exp $
+ * $Id: switch.h,v 1.3 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -26,7 +26,7 @@
 #ifndef AFPD_SWITCH_H
 #define AFPD_SWITCH_H 1
 
-extern int	(**afp_switch)();
+extern int	(**afp_switch)(AFPObj *, char *ibuf, int ilen, char *rbuf, int *rlen);
 extern int	(*postauth_switch[])();
 
 #endif

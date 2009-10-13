@@ -1,5 +1,5 @@
 /*
- * $Id: psa.c,v 1.4 2001-06-25 20:13:45 rufustfirefly Exp $
+ * $Id: psa.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -28,9 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main( int ac, char **av)
 {
     FILE	*af;
     char	*acc, *user, *host;

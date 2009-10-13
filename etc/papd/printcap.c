@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.10 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: printcap.c,v 1.11 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -43,6 +43,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -92,10 +94,6 @@
 static	FILE *pfp = NULL;	/* printcap data base file pointer */
 static	char *tbuf;
 static	int hopcount;		/* detect infinite loops in termcap, init 0 */
-static char	*tskip();
-char	*tgetstr();
-static char	*tdecode();
-char	*getenv();
 
 /*
  * Similar to tgetent except it returns the next entry instead of
@@ -104,10 +102,7 @@ char	*getenv();
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int getprent( cap, bp, bufsize )
-	register char *cap;
-	register char *bp;
-	register int bufsize;
+int getprent( char *cap, char *bp, int bufsize)
 {
 	register int c, skip = 0, i;
 
@@ -159,7 +154,7 @@ int getprent( cap, bp, bufsize )
 	}
 }
 
-void endprent()
+void endprent(void)
 {
 	if (pfp != NULL)
 		fclose(pfp);
@@ -173,8 +168,7 @@ void endprent()
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int tgetent( cap, bp, name)
-	char *cap, *bp, *name;
+int tgetent(char *cap, char *bp, char *name)
 {
 	register char *cp;
 	register int c;
@@ -270,8 +264,7 @@ int tgetent( cap, bp, name)
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int tnchktc( cap )
-    char *cap;
+int tnchktc( char *cap)
 {
 	register char *p, *q;
 	char tcname[16];	/* name of similar terminal */
@@ -318,8 +311,7 @@ int tnchktc( cap )
  * against each such name.  The normal : terminator after the last
  * name (before the first field) stops us.
  */
-int tnamatch(np)
-	char *np;
+int tnamatch(char *np)
 {
 	register char *Np, *Bp;
 
@@ -344,9 +336,7 @@ int tnamatch(np)
  * knowing about \: escapes or any such.  If necessary, :'s can be put
  * into the termcap file in octal.
  */
-static char *
-tskip(bp)
-	register char *bp;
+static char *tskip(char *bp)
 {
 
 	while (*bp && *bp != ':')
@@ -364,8 +354,7 @@ tskip(bp)
  * a # character.  If the option is not found we return -1.
  * Note that we handle octal numbers beginning with 0.
  */
-int tgetnum(id)
-	char *id;
+int tgetnum(char *id)
 {
 	register int i, base;
 	register char *bp = tbuf;
@@ -397,8 +386,7 @@ int tgetnum(id)
  * of the buffer.  Return 1 if we find the option, or 0 if it is
  * not given.
  */
-int tgetflag(id)
-	char *id;
+int tgetflag(char *id)
 {
 	register char *bp = tbuf;
 
@@ -416,42 +404,11 @@ int tgetflag(id)
 }
 
 /*
- * Get a string valued option.
- * These are given as
- *	cl=^Z
- * Much decoding is done on the strings, and the strings are
- * placed in area, which is a ref parameter which is updated.
- * No checking on area overflow.
- */
-char *
-tgetstr(id, area)
-	char *id, **area;
-{
-	register char *bp = tbuf;
-
-	for (;;) {
-		bp = tskip(bp);
-		if (!*bp)
-			return (0);
-		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
-			continue;
-		if (*bp == '@')
-			return(0);
-		if (*bp != '=')
-			continue;
-		bp++;
-		return (tdecode(bp, area));
-	}
-}
-
-/*
  * Tdecode does the grung work to decode the
  * string capability escapes.
  */
 static char *
-tdecode(str, area)
-	register char *str;
-	char **area;
+tdecode(char *str, char **area)
 {
 	register char *cp;
 	register int c;
@@ -493,11 +450,36 @@ nextc:
 	return (str);
 }
 
+/*
+ * Get a string valued option.
+ * These are given as
+ *	cl=^Z
+ * Much decoding is done on the strings, and the strings are
+ * placed in area, which is a ref parameter which is updated.
+ * No checking on area overflow.
+ */
+char *
+tgetstr(char *id, char **area)
+{
+	register char *bp = tbuf;
+
+	for (;;) {
+		bp = tskip(bp);
+		if (!*bp)
+			return (0);
+		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
+			continue;
+		if (*bp == '@')
+			return(0);
+		if (*bp != '=')
+			continue;
+		bp++;
+		return (tdecode(bp, area));
+	}
+}
+
 static char *
-decodename(str, area, bufsize)
-	register char *str;
-	char **area;
-	int bufsize;
+decodename(char *str, char **area, int bufsize)
 {
 	register char *cp;
 	register int c;
@@ -540,9 +522,7 @@ nextc:
 }
 
 char *
-getpname( area, bufsize )
-	char	**area;
-	int	bufsize;
+getpname(char **area, int bufsize)
 {
 	return( decodename( tbuf, area, bufsize));
 }

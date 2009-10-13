@@ -1,5 +1,5 @@
 /*
- * $Id: mangle.h,v 1.6 2005-04-28 20:49:44 bfernhomberg Exp $
+ * $Id: mangle.h,v 1.7 2009-10-13 22:55:37 didg Exp $
  *
  */
 
@@ -24,8 +24,8 @@
 #define MANGLE_LENGTH  9 /* #ffffffff This really can't be changed. */
 #define MAX_LENGTH MACFILELEN 
 
-extern char *mangle __P((const struct vol *, char *, size_t, char *, cnid_t, int));
-extern char *demangle __P((const struct vol *, char *, cnid_t did));
-extern char *demangle_osx __P((const struct vol *, char *, cnid_t did, cnid_t *fileid));
+extern char *mangle (const struct vol *, char *, size_t, char *, cnid_t, int);
+extern char *demangle (const struct vol *, char *, cnid_t did);
+extern char *demangle_osx (const struct vol *, char *, cnid_t did, cnid_t *fileid);
 
 #endif /* AFPD_MANGLE_H */

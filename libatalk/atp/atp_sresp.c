@@ -1,5 +1,5 @@
 /*
- * $Id: atp_sresp.c,v 1.5 2005-04-28 20:49:56 bfernhomberg Exp $
+ * $Id: atp_sresp.c,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -46,9 +46,9 @@
 
 /* send a transaction response
 */
-int atp_sresp( ah, atpb )
-    ATP			ah;		/* open atp handle */
-    struct atp_block	*atpb;		/* parameter block */
+int atp_sresp(
+    ATP			ah,		/* open atp handle */
+    struct atp_block	*atpb)		/* parameter block */
 {
     int			i;
     u_int8_t		ctrlinfo;

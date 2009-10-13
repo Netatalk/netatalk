@@ -1,5 +1,5 @@
 /*
- * $Id: psorder.c,v 1.6 2008-12-03 18:35:44 didg Exp $
+ * $Id: psorder.c,v 1.7 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -57,70 +57,30 @@ u_char			psbuf[ 8192 ];
 struct psinfo_st	psinfo;
 int			orderflag, forceflag;
 
-int main( argc, argv )
-    int		argc;
-    char	**argv;
+void
+filecleanup( int errorcode, int tfd, char *tfile)
 {
-    extern int	optind;
-    char	*progname;
-    int		errflag = 0;
-    int		c;
 
-    while (( c = getopt( argc, argv, OPTSTR )) != -1 ) {
-	switch ( c ) {
-	case REVCHAR:
-	    if ( orderflag ) errflag++;
-	    else orderflag = REVERSE;
-	    break;
-	case FORWCHAR:
-	    if ( orderflag ) errflag++;
-	    else orderflag = FORWARD;
-	    break;
-	case FORCECHAR:
-	    if ( forceflag ) errflag++;
-	    else forceflag++;
-	    break;
+/*
+	Close and unlink the temporary file.
+ */
+
+    if ( tfd != 0 ) {
+	if ( close( tfd ) != 0 ) {
+	    perror( tfile );
+	    exit( errorcode );
+	}
+	if ( unlink( tfile ) != 0 ) {
+	    perror( tfile );
+	    exit( errorcode );
 	}
     }
-    if ( errflag ) {
-	if (( progname = strrchr( argv[ 0 ], '/' )) == NULL ) {
-	    progname = argv[ 0 ];
-	} else progname++;
-	fprintf( stderr, "usage: %s [-duf] [sourcefile]\n", progname );
-	return( -1 );
-    } else if ( !orderflag ) orderflag = FORWARD;
 
-    if ( optind >= argc ) {
-	return( psorder( STDIN ));
-    }
-    return( psorder( argv[ optind ] ));
-}
-
-int
-psorder( path )
-    char	*path;
-{
-    int			tempfd;
-    int			inputfd;
-    char		tempfile[MAXNAMLEN];
-
-    filesetup( path, &inputfd, tempfile, &tempfd );
-    readps( inputfd, tempfd, tempfile );
-    if ( lseek( tempfd, REWIND, SEEK_SET ) < 0 ) {
-	perror( tempfile );
-	filecleanup( -1, tempfd, tempfile );
-    }
-    writeps( tempfd, tempfile );
-    filecleanup( 0, tempfd, tempfile );
-    return( 0 );
+    exit( errorcode );
 }
 
 void
-filesetup( inputfile, infd, tfile, tfd )
-    char	*inputfile;
-    int		*infd;
-    char	*tfile;
-    int		*tfd;
+filesetup( char *inputfile, int *infd, char *tfile, int *tfd)
 {
     struct stat		st;
     char		*template = _PATH_TMPPAGEORDER;
@@ -173,11 +133,111 @@ filesetup( inputfile, infd, tfile, tfd )
     return;
 }
 
+struct pspage_st
+*getpspage(off_t off)
+{
+    struct pspage_st	*newpspage;
+
+    newpspage = (struct pspage_st *)malloc( sizeof( struct pspage_st )); 
+    if ( newpspage != NULL ) {
+	newpspage->offset = off;
+	newpspage->nextpage = NULL;
+	*newpspage->lable = '\0';
+	*newpspage->ord = '\0';
+    }
+    return( newpspage );
+}
+
+int
+handletok(off_t count, char *token)
+{
+    int			incdoc = 0;
+    struct pspage_st	*newpage;
+    char		*tmp;
+
+    if (( strncmp( PENDDOC, token, strlen( PENDDOC )) == 0 ) && incdoc ) {
+	incdoc--;
+#if DEBUG
+	fprintf( stderr, "found an EndDoc\n" );
+#endif /* DEBUG */
+
+    } else if ( strncmp( PBEGINDOC, token, strlen( PBEGINDOC )) == 0 ) {
+	incdoc++;
+#if DEBUG
+	fprintf( stderr, "found a BeginDoc\n" );
+#endif /* DEBUG */
+
+    } else if ( !incdoc && 
+	    ( strncmp( PPAGE, token, strlen( PPAGE )) == 0 )) {
+#if DEBUG
+	fprintf( stderr, "found a Page\n" );
+#endif /* DEBUG */
+	if (( newpage = getpspage( count )) == NULL ) {
+	    return( -1 );
+	}
+	if ( psinfo.firstpage == NULL ) {
+	    newpage->prevpage = NULL;
+	    psinfo.firstpage = newpage;
+	} else {
+	    newpage->prevpage = psinfo.lastpage;
+	    psinfo.lastpage->nextpage = newpage;
+	}
+	psinfo.lastpage = newpage;
+	while ( *token++ != ':' );
+	if (( tmp = strtok( token, WHITESPACE )) != NULL ) {
+	    (void)strncpy( newpage->lable, tmp, NUMLEN );
+	    if (( tmp = strtok( NULL, WHITESPACE )) != NULL ) {
+		(void)strncpy( newpage->ord, tmp, ORDLEN );
+	    }
+	}
+#if DEBUG
+	fprintf( stderr, "page lable %s, page ord %s\n", newpage->lable,
+		newpage->ord );
+#endif /* DEBUG */
+
+    } else if ( !incdoc && 
+	    ( strncmp( PPAGES, token, strlen( PPAGES )) == 0 )) {
+#if DEBUG
+	fprintf( stderr, "found a Pages\n" );
+#endif /* DEBUG */
+	psinfo.pages.offset = count;
+	psinfo.pages.end = strlen( token ) + count;
+	while ( *token++ != ':' );
+	while ( isspace( *token )) token++;
+	if ( strncmp( ATEND, token, strlen( ATEND )) == 0 ) {
+#if DEBUG
+	    fprintf( stderr, "it is a Pages: (atend)\n" );
+#endif /* DEBUG */
+	    psinfo.pages.offset = 0;
+	    psinfo.pages.end = 0;
+	} else {
+	    if (( tmp = strtok( token, WHITESPACE )) != NULL ) {
+		(void)strncpy( psinfo.pages.num, tmp, NUMLEN );
+		if (( tmp = strtok( NULL, WHITESPACE )) != NULL ) {
+		    (void)strncpy( psinfo.pages.order, tmp, ORDERLEN );
+		}
+	    }
+#if DEBUG
+	    fprintf( stderr, "number of pages %s\n", psinfo.pages.num );
+	    fprintf( stderr, "order control number %s\n", psinfo.pages.order );
+#endif /* DEBUG */
+	}
+
+    } else if ( !incdoc && 
+	    ( strncmp( PTRAILER, token, strlen( PTRAILER )) == 0 )) {
+#if DEBUG
+	fprintf( stderr, "found the Trailer\n" );
+#endif /* DEBUG */
+	if  ( psinfo.trailer == 0 ) {
+	    psinfo.trailer = count;
+	}
+    }
+
+    return( 0 );
+}
+
 void
-readps( inputfd, tempfd, tempfile )
-    int			inputfd;
-    int			tempfd;
-    char		*tempfile;
+readps(int inputfd, int tempfd, char *tempfile)
 {
     off_t		ccread = 0;
     off_t		ccmatch;
@@ -276,100 +336,66 @@ readps( inputfd, tempfd, tempfile )
     return;
 }
 
-int
-handletok( count, token )
-    off_t		count;
-    char		*token;
+void
+temp2out(int tempfd, char *tempfile, off_t length)
 {
-    int			incdoc = 0;
-    struct pspage_st	*newpage;
-    char		*tmp;
+    int			ccread;
+    int			ccwrite;
+    int			size;
 
-    if (( strncmp( PENDDOC, token, strlen( PENDDOC )) == 0 ) && incdoc ) {
-	incdoc--;
-#if DEBUG
-	fprintf( stderr, "found an EndDoc\n" );
-#endif /* DEBUG */
-
-    } else if ( strncmp( PBEGINDOC, token, strlen( PBEGINDOC )) == 0 ) {
-	incdoc++;
-#if DEBUG
-	fprintf( stderr, "found a BeginDoc\n" );
-#endif /* DEBUG */
-
-    } else if ( !incdoc && 
-	    ( strncmp( PPAGE, token, strlen( PPAGE )) == 0 )) {
-#if DEBUG
-	fprintf( stderr, "found a Page\n" );
-#endif /* DEBUG */
-	if (( newpage = getpspage( count )) == NULL ) {
-	    return( -1 );
-	}
-	if ( psinfo.firstpage == NULL ) {
-	    newpage->prevpage = NULL;
-	    psinfo.firstpage = newpage;
-	} else {
-	    newpage->prevpage = psinfo.lastpage;
-	    psinfo.lastpage->nextpage = newpage;
-	}
-	psinfo.lastpage = newpage;
-	while ( *token++ != ':' );
-	if (( tmp = strtok( token, WHITESPACE )) != NULL ) {
-	    (void)strncpy( newpage->lable, tmp, NUMLEN );
-	    if (( tmp = strtok( NULL, WHITESPACE )) != NULL ) {
-		(void)strncpy( newpage->ord, tmp, ORDLEN );
-	    }
-	}
-#if DEBUG
-	fprintf( stderr, "page lable %s, page ord %s\n", newpage->lable,
-		newpage->ord );
-#endif /* DEBUG */
-
-    } else if ( !incdoc && 
-	    ( strncmp( PPAGES, token, strlen( PPAGES )) == 0 )) {
-#if DEBUG
-	fprintf( stderr, "found a Pages\n" );
-#endif /* DEBUG */
-	psinfo.pages.offset = count;
-	psinfo.pages.end = strlen( token ) + count;
-	while ( *token++ != ':' );
-	while ( isspace( *token )) token++;
-	if ( strncmp( ATEND, token, strlen( ATEND )) == 0 ) {
-#if DEBUG
-	    fprintf( stderr, "it is a Pages: (atend)\n" );
-#endif /* DEBUG */
-	    psinfo.pages.offset = 0;
-	    psinfo.pages.end = 0;
-	} else {
-	    if (( tmp = strtok( token, WHITESPACE )) != NULL ) {
-		(void)strncpy( psinfo.pages.num, tmp, NUMLEN );
-		if (( tmp = strtok( NULL, WHITESPACE )) != NULL ) {
-		    (void)strncpy( psinfo.pages.order, tmp, ORDERLEN );
+    while ( length > 0 ) {
+	if ( length > sizeof( psbuf )) {
+	    size = sizeof( psbuf );
+	} else size = length;
+	if (( ccread = read( tempfd, psbuf, size )) > 0 ) {
+	    size = ccread;
+	    while ( ccread > 0 ) {
+		ccwrite = write( 1, psbuf, ccread );
+		if ( ccwrite < 0 ) {
+		    perror( "stdout" );
+		    filecleanup( ccwrite, tempfd, tempfile );
+		} else {
+		    ccread -= ccwrite;
 		}
 	    }
-#if DEBUG
-	    fprintf( stderr, "number of pages %s\n", psinfo.pages.num );
-	    fprintf( stderr, "order control number %s\n", psinfo.pages.order );
-#endif /* DEBUG */
 	}
-
-    } else if ( !incdoc && 
-	    ( strncmp( PTRAILER, token, strlen( PTRAILER )) == 0 )) {
-#if DEBUG
-	fprintf( stderr, "found the Trailer\n" );
-#endif /* DEBUG */
-	if  ( psinfo.trailer == 0 ) {
-	    psinfo.trailer = count;
+	if ( ccread < 0 ) {
+	    perror( "temporary file" );
+	    filecleanup( ccread, tempfd, tempfile );
 	}
+	length -= size;
     }
-
-    return( 0 );
 }
 
 void
-writeps( tempfd, tempfile )
-    int			tempfd;
-    char		*tempfile;
+writelable(int tempfd, char *tempfile, char *lable)
+{
+    char		line[256];
+    int			ccwrite;
+    int			linelen;
+    char		*argone;
+    char		*argtwo;
+
+    if ( strcmp( lable, PPAGES ) == 0 ) {
+	argone = psinfo.pages.num;
+	argtwo = psinfo.pages.order;
+    } else {
+	argone = argtwo = NULL;
+    }
+    (void)sprintf( line, "%s %s %s", lable, argone, argtwo );
+    linelen = strlen( line );
+
+    ccwrite = write( 1, line, linelen );
+    if ( ccwrite < 0 ) {
+	perror( "stdout" );
+	filecleanup( ccwrite, tempfd, tempfile );
+    } else {
+	linelen -= ccwrite;
+    }
+}
+
+void
+writeps(int tempfd, char *tempfile)
 {
     struct stat		st;
     off_t		endofpage;
@@ -463,107 +489,58 @@ writeps( tempfd, tempfile )
     return;
 }
 
-void
-writelable( tempfd, tempfile, lable )
+int
+psorder(char *path)
+{
     int			tempfd;
-    char		*tempfile;
-    char		*lable;
-{
-    char		line[256];
-    int			ccwrite;
-    int			linelen;
-    char		*argone;
-    char		*argtwo;
+    int			inputfd;
+    char		tempfile[MAXNAMLEN];
 
-    if ( strcmp( lable, PPAGES ) == 0 ) {
-	argone = psinfo.pages.num;
-	argtwo = psinfo.pages.order;
-    } else {
-	argone = argtwo = NULL;
+    filesetup( path, &inputfd, tempfile, &tempfd );
+    readps( inputfd, tempfd, tempfile );
+    if ( lseek( tempfd, REWIND, SEEK_SET ) < 0 ) {
+	perror( tempfile );
+	filecleanup( -1, tempfd, tempfile );
     }
-    (void)sprintf( line, "%s %s %s", lable, argone, argtwo );
-    linelen = strlen( line );
-
-    ccwrite = write( 1, line, linelen );
-    if ( ccwrite < 0 ) {
-	perror( "stdout" );
-	filecleanup( ccwrite, tempfd, tempfile );
-    } else {
-	linelen -= ccwrite;
-    }
+    writeps( tempfd, tempfile );
+    filecleanup( 0, tempfd, tempfile );
+    return( 0 );
 }
 
-void
-temp2out( tempfd, tempfile, length )
-    int			tempfd;
-    char		*tempfile;
-    off_t		length;
+int main(int argc, char **argv)
 {
-    int			ccread;
-    int			ccwrite;
-    int			size;
+    extern int	optind;
+    char	*progname;
+    int		errflag = 0;
+    int		c;
 
-    while ( length > 0 ) {
-	if ( length > sizeof( psbuf )) {
-	    size = sizeof( psbuf );
-	} else size = length;
-	if (( ccread = read( tempfd, psbuf, size )) > 0 ) {
-	    size = ccread;
-	    while ( ccread > 0 ) {
-		ccwrite = write( 1, psbuf, ccread );
-		if ( ccwrite < 0 ) {
-		    perror( "stdout" );
-		    filecleanup( ccwrite, tempfd, tempfile );
-		} else {
-		    ccread -= ccwrite;
-		}
-	    }
-	}
-	if ( ccread < 0 ) {
-	    perror( "temporary file" );
-	    filecleanup( ccread, tempfd, tempfile );
-	}
-	length -= size;
-    }
-}
-
-struct pspage_st
-*getpspage( off )
-    off_t		off;
-{
-    struct pspage_st	*newpspage;
-
-    newpspage = (struct pspage_st *)malloc( sizeof( struct pspage_st )); 
-    if ( newpspage != NULL ) {
-	newpspage->offset = off;
-	newpspage->nextpage = NULL;
-	*newpspage->lable = '\0';
-	*newpspage->ord = '\0';
-    }
-    return( newpspage );
-}
-
-void
-filecleanup( errorcode, tfd, tfile )
-    int			errorcode;
-    int			tfd;
-    char		*tfile;
-{
-
-/*
-	Close and unlink the temporary file.
- */
-
-    if ( tfd != 0 ) {
-	if ( close( tfd ) != 0 ) {
-	    perror( tfile );
-	    exit( errorcode );
-	}
-	if ( unlink( tfile ) != 0 ) {
-	    perror( tfile );
-	    exit( errorcode );
+    while (( c = getopt( argc, argv, OPTSTR )) != -1 ) {
+	switch ( c ) {
+	case REVCHAR:
+	    if ( orderflag ) errflag++;
+	    else orderflag = REVERSE;
+	    break;
+	case FORWCHAR:
+	    if ( orderflag ) errflag++;
+	    else orderflag = FORWARD;
+	    break;
+	case FORCECHAR:
+	    if ( forceflag ) errflag++;
+	    else forceflag++;
+	    break;
 	}
     }
+    if ( errflag ) {
+	if (( progname = strrchr( argv[ 0 ], '/' )) == NULL ) {
+	    progname = argv[ 0 ];
+	} else progname++;
+	fprintf( stderr, "usage: %s [-duf] [sourcefile]\n", progname );
+	return( -1 );
+    } else if ( !orderflag ) orderflag = FORWARD;
 
-    exit( errorcode );
+    if ( optind >= argc ) {
+	return( psorder( STDIN ));
+    }
+    return( psorder( argv[ optind ] ));
 }
+

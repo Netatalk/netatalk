@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.h,v 1.4 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: db_param.h,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -28,7 +28,7 @@ struct db_param {
     int max_vols;
 };
 
-extern struct db_param *      db_param_read  __P((char *, enum identity));
+extern struct db_param *      db_param_read  (char *, enum identity);
 
 
 #endif /* CNID_DBD_DB_PARAM_H */

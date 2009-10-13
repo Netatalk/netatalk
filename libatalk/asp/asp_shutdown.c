@@ -1,5 +1,5 @@
 /*
- * $Id: asp_shutdown.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: asp_shutdown.c,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -18,8 +18,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_shutdown( asp )
-    ASP			asp;
+int asp_shutdown(ASP asp)
 {
     struct atp_block	atpb;
     struct iovec	iov;

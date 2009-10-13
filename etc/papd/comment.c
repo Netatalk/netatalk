@@ -1,5 +1,5 @@
 /*
- * $Id: comment.c,v 1.9 2008-11-14 10:29:08 didg Exp $
+ * $Id: comment.c,v 1.10 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -31,8 +31,7 @@ void compop( void )
     free( cs );
 }
 
-void compush( comment )
-    struct papd_comment	*comment;
+void compush(struct papd_comment *comment)
 {
     struct comstate	*cs;
 
@@ -48,9 +47,7 @@ void compush( comment )
     comstate = cs;
 }
 
-int comswitch( comments, handler )
-    struct papd_comment	*comments;
-    int			(*handler)();
+int comswitch(struct papd_comment *comments, int (*handler)())
 {
     struct papd_comment	*c, *comment = NULL;
 
@@ -68,9 +65,7 @@ int comswitch( comments, handler )
     return( 0 );
 }
 
-int comcmp( start, stop, str, how )
-    char	*start, *stop, *str;
-    int		how;
+int comcmp( char *start, char *stop, char *str,int how)
 {
     int		cc, len;
 
@@ -89,9 +84,7 @@ int comcmp( start, stop, str, how )
     return( 1 );
 }
 
-struct papd_comment *commatch( start, stop, comments )
-    char		*start, *stop;
-    struct papd_comment	comments[];
+struct papd_comment *commatch( char *start, char *stop, struct papd_comment comments[])
 {
     struct papd_comment	*comment;
 
@@ -107,8 +100,7 @@ struct papd_comment *commatch( start, stop, comments )
     }
 }
 
-char *comtoken( start, stop, pos, delim )
-    char	*start, *stop, *pos, *delim;
+char *comtoken( char *start, char *stop, char *pos, char *delim)
 {
     if ( pos < start || pos > stop ) {
 	abort();

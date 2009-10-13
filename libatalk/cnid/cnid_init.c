@@ -1,6 +1,6 @@
 
 /* 
- * $Id: cnid_init.c,v 1.2 2005-04-28 20:49:58 bfernhomberg Exp $
+ * $Id: cnid_init.c,v 1.3 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -57,7 +57,7 @@ extern struct _cnid_module cnid_dbd_module;
 extern struct _cnid_module cnid_tdb_module;
 #endif
 
-void cnid_init()
+void cnid_init(void)
 {
 #ifdef CNID_BACKEND_DB3
     cnid_register(&cnid_db3_module);

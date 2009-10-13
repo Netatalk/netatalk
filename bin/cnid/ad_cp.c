@@ -1,5 +1,5 @@
 /* 
-   $Id: ad_cp.c,v 1.1 2009-09-01 14:28:07 franklahm Exp $
+   $Id: ad_cp.c,v 1.2 2009-10-13 22:55:36 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -73,7 +73,7 @@ static const char *check_netatalk_dirs(const char *name)
 }
 
 
-static void usage_cp()
+static void usage_cp(void)
 {
     printf(
         "Usage: ad cp [-R [-L | -P]] [-pv] <source_file> <target_file>\n"

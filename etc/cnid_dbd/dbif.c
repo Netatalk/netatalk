@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.14 2009-09-14 03:12:11 didg Exp $
+ * $Id: dbif.c,v 1.15 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -32,7 +32,7 @@
 static char *old_dbfiles[] = {"cnid.db", NULL};
 
 /* --------------- */
-static int upgrade_required()
+static int upgrade_required(void)
 {
     int i;
     int found = 0;

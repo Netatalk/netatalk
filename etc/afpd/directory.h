@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.28 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: directory.h,v 1.29 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -113,63 +113,63 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
-extern struct dir       *dirnew __P((const char *, const char *));
-extern void             dirfreename __P((struct dir *));
-extern void             dirfree __P((struct dir *));
-extern struct dir	*dirsearch __P((const struct vol *, u_int32_t));
-extern struct dir	*dirlookup __P((const struct vol *, u_int32_t));
-extern struct dir       *dirsearch_byname __P((const struct vol *, struct dir *,char *));
+extern struct dir       *dirnew (const char *, const char *);
+extern void             dirfreename (struct dir *);
+extern void             dirfree (struct dir *);
+extern struct dir	*dirsearch (const struct vol *, u_int32_t);
+extern struct dir	*dirlookup (const struct vol *, u_int32_t);
+extern struct dir       *dirsearch_byname (const struct vol *, struct dir *,char *);
 
-extern struct dir	*adddir __P((struct vol *, struct dir *, 
-                                               struct path *));
+extern struct dir	*adddir (struct vol *, struct dir *, 
+                                               struct path *);
 
-extern int              movecwd __P((const struct vol *, struct dir *));
-extern int              deletecurdir __P((const struct vol *));
-extern struct path      *cname __P((const struct vol *, struct dir *,
-                             char **));
-extern mode_t           mtoumode __P((struct maccess *));
-extern void             utommode __P((struct stat *, struct maccess *));
-extern int getdirparams __P((const struct vol *, u_int16_t, struct path *,
-                                 struct dir *, char *, int *));
-extern int setdirparams __P((const struct vol *, struct path *, u_int16_t, char *));
-extern int renamedir __P((const struct vol *, char *, char *, struct dir *,
-                              struct dir *, char *));
-extern int path_error __P((struct path *, int error));
+extern int              movecwd (const struct vol *, struct dir *);
+extern int              deletecurdir (const struct vol *);
+extern struct path      *cname (const struct vol *, struct dir *,
+                             char **);
+extern mode_t           mtoumode (struct maccess *);
+extern void             utommode (struct stat *, struct maccess *);
+extern int getdirparams (const struct vol *, u_int16_t, struct path *,
+                                 struct dir *, char *, int *);
+extern int setdirparams (const struct vol *, struct path *, u_int16_t, char *);
+extern int renamedir (const struct vol *, char *, char *, struct dir *,
+                              struct dir *, char *);
+extern int path_error (struct path *, int error);
 
-extern void setdiroffcnt __P((struct dir *dir, struct stat *st,  u_int32_t count));
-extern int dirreenumerate __P((struct dir *dir, struct stat *st));
+extern void setdiroffcnt (struct dir *dir, struct stat *st,  u_int32_t count);
+extern int dirreenumerate (struct dir *dir, struct stat *st);
 
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
-extern int  for_each_dirent __P((const struct vol *, char *, dir_loop , void *));
+extern int  for_each_dirent (const struct vol *, char *, dir_loop , void *);
 
-extern int  check_access __P((char *name , int mode));
-extern int file_access   __P((struct path *path, int mode));
+extern int  check_access (char *name , int mode);
+extern int file_access   (struct path *path, int mode);
 
-extern int netatalk_unlink __P((const char *name));
+extern int netatalk_unlink (const char *name);
 
-extern int caseenumerate __P((const struct vol *, struct path *, struct dir *));
+extern int caseenumerate (const struct vol *, struct path *, struct dir *);
 
-extern hash_t *dirhash __P((void));
+extern hash_t *dirhash (void);
 /* from enumerate.c */
-extern char *check_dirent __P((const struct vol *, char *));
+extern char *check_dirent (const struct vol *, char *);
 
 /* FP functions */
-extern int	afp_createdir __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_opendir __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_setdirparams __P((AFPObj *, char *, int, char *, int *));
-extern int      afp_closedir __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_mapid __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_mapname __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_syncdir __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_createdir (AFPObj *, char *, int, char *, int *);
+extern int      afp_opendir (AFPObj *, char *, int, char *, int *);
+extern int	afp_setdirparams (AFPObj *, char *, int, char *, int *);
+extern int      afp_closedir (AFPObj *, char *, int, char *, int *);
+extern int	afp_mapid (AFPObj *, char *, int, char *, int *);
+extern int	afp_mapname (AFPObj *, char *, int, char *, int *);
+extern int	afp_syncdir (AFPObj *, char *, int, char *, int *);
 
 /* from enumerate.c */
-extern int	afp_enumerate __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
-extern int	afp_enumerate_ext __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
-extern int	afp_enumerate_ext2 __P((AFPObj *, char *, unsigned int, char *, unsigned int *));
+extern int	afp_enumerate (AFPObj *, char *, unsigned int, char *, unsigned int *);
+extern int	afp_enumerate_ext (AFPObj *, char *, unsigned int, char *, unsigned int *);
+extern int	afp_enumerate_ext2 (AFPObj *, char *, unsigned int, char *, unsigned int *);
 
 /* from catsearch.c */
-extern int	afp_catsearch __P((AFPObj *, char *, int, char *, int *));
-extern int	afp_catsearch_ext __P((AFPObj *, char *, int, char *, int *));
+extern int	afp_catsearch (AFPObj *, char *, int, char *, int *);
+extern int	afp_catsearch_ext (AFPObj *, char *, int, char *, int *);
 
 #endif

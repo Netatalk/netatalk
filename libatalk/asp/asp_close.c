@@ -1,5 +1,5 @@
 /*
- * $Id: asp_close.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: asp_close.c,v 1.5 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -38,8 +38,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_close( asp )
-    ASP		asp;
+int asp_close(ASP asp)
 {
     struct atp_block	atpb;
     struct iovec	iov[ 1 ];

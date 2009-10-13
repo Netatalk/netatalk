@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.11 2009-10-12 13:18:11 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.12 2009-10-13 22:55:37 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -227,7 +227,7 @@ void free_lock(int lockfd)
     close(lockfd);
 }
 
-static void usage ()
+static void usage (void)
 {
     printf("Usage: dbd [-e|-v|-x] -d [-i] | -s [-n]| -r [-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"

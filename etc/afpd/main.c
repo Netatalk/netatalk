@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.24 2009-02-27 09:14:40 franklahm Exp $
+ * $Id: main.c,v 1.25 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -147,14 +147,12 @@ static void afp_goaway(int sig)
     return;
 }
 
-static void child_handler()
+static void child_handler(int sig _U_)
 {
     server_child_handler(server_children);
 }
 
-int main( ac, av )
-int		ac;
-char	**av;
+int main(int ac, char **av)
 {
     AFPConfig           *config;
     fd_set              rfds;

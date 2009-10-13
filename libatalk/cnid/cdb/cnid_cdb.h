@@ -16,37 +16,37 @@
 
 /* cnid_open.c */
 extern struct _cnid_module cnid_cdb_module;
-extern struct _cnid_db *cnid_cdb_open __P((const char *, mode_t));
+extern struct _cnid_db *cnid_cdb_open (const char *, mode_t);
 
 /* cnid_close.c */
-extern void cnid_cdb_close __P((struct _cnid_db *));
+extern void cnid_cdb_close (struct _cnid_db *);
 
 /* cnid_add.c */
-extern cnid_t cnid_cdb_add __P((struct _cnid_db *, const struct stat *, const cnid_t,
-			    char *, const size_t, cnid_t));
-extern int cnid_cdb_getstamp __P((struct _cnid_db *, void *, const size_t ));
+extern cnid_t cnid_cdb_add (struct _cnid_db *, const struct stat *, const cnid_t,
+			    char *, const size_t, cnid_t);
+extern int cnid_cdb_getstamp (struct _cnid_db *, void *, const size_t );
 
 /* cnid_get.c */
-extern cnid_t cnid_cdb_get __P((struct _cnid_db *, const cnid_t, char *, const size_t)); 
-extern char *cnid_cdb_resolve __P((struct _cnid_db *, cnid_t *, void *, size_t )); 
-extern cnid_t cnid_cdb_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t,
-			       char *, const size_t));
+extern cnid_t cnid_cdb_get (struct _cnid_db *, const cnid_t, char *, const size_t); 
+extern char *cnid_cdb_resolve (struct _cnid_db *, cnid_t *, void *, size_t ); 
+extern cnid_t cnid_cdb_lookup (struct _cnid_db *, const struct stat *, const cnid_t,
+			       char *, const size_t);
 
 /* cnid_update.c */
-extern int cnid_cdb_update __P((struct _cnid_db *, const cnid_t, const struct stat *,
-			    const cnid_t, char *, size_t));
+extern int cnid_cdb_update (struct _cnid_db *, const cnid_t, const struct stat *,
+			    const cnid_t, char *, size_t);
 
 /* cnid_delete.c */
-extern int cnid_cdb_delete __P((struct _cnid_db *, const cnid_t));
+extern int cnid_cdb_delete (struct _cnid_db *, const cnid_t);
 
 /* cnid_nextid.c */
-extern cnid_t cnid_cdb_nextid __P((struct _cnid_db *));
+extern cnid_t cnid_cdb_nextid (struct _cnid_db *);
 
-extern int cnid_cdb_lock   __P((void *));
-extern int cnid_cdb_unlock __P((void *));
+extern int cnid_cdb_lock   (void *);
+extern int cnid_cdb_unlock (void *);
 
-extern cnid_t cnid_cdb_rebuild_add __P((struct _cnid_db *, const struct stat *,
-                const cnid_t, char *, const size_t, cnid_t));
+extern cnid_t cnid_cdb_rebuild_add (struct _cnid_db *, const struct stat *,
+                const cnid_t, char *, const size_t, cnid_t);
 
 
 #endif /* include/atalk/cnid_cdb.h */

@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.53 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: unix.c,v 1.54 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -54,10 +54,7 @@ extern void acltoownermode(char *path, struct stat *st,uid_t uid, struct maccess
 /*
  * Get the free space on a partition.
  */
-int ustatfs_getvolspace( vol, bfree, btotal, bsize )
-const struct vol	*vol;
-VolSpace    *bfree, *btotal;
-u_int32_t   *bsize;
+int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, u_int32_t *bsize)
 {
     VolSpace maxVolSpace = (~(VolSpace)0);
 
@@ -105,8 +102,7 @@ u_int32_t   *bsize;
     return( AFP_OK );
 }
 
-static int utombits( bits )
-mode_t	bits;
+static int utombits(mode_t bits)
 {
     int		mbits;
 
@@ -123,9 +119,7 @@ mode_t	bits;
 /* --------------------------------
     cf AFP 3.0 page 63
 */
-void utommode( stat, ma )
-struct stat		*stat;
-struct maccess	*ma;
+void utommode(struct stat *stat, struct maccess *ma)
 {
 mode_t mode;
 
@@ -178,11 +172,7 @@ mode_t mode;
  *
  * dir parameter is used by AFS
  */
-void accessmode( path, ma, dir, st )
-char		*path;
-struct maccess	*ma;
-struct dir	*dir _U_;
-struct stat     *st;
+void accessmode(char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
 
 {
 struct stat     sb;
@@ -200,8 +190,7 @@ struct stat     sb;
 #endif
 }
 
-int gmem( gid )
-const gid_t	gid;
+int gmem(const gid_t gid)
 {
     int		i;
 
@@ -213,8 +202,7 @@ const gid_t	gid;
     return( 0 );
 }
 
-static mode_t mtoubits( bits )
-u_char	bits;
+static mode_t mtoubits(u_char bits)
 {
     mode_t	mode;
 
@@ -233,8 +221,7 @@ u_char	bits;
    and from AFP 3.0 spec page 63 
    the mac mode should be save somewhere 
 */
-mode_t mtoumode( ma )
-struct maccess	*ma;
+mode_t mtoumode(struct maccess *ma)
 {
     mode_t		mode;
 
@@ -252,8 +239,7 @@ struct maccess	*ma;
 
 #define EXEC_MODE (S_IXGRP | S_IXUSR | S_IXOTH)
 
-int setdeskmode( mode )
-const mode_t	mode;
+int setdeskmode(const mode_t mode)
 {
     char		wd[ MAXPATHLEN + 1];
     struct stat         st;
@@ -329,10 +315,7 @@ const mode_t	mode;
 }
 
 /* --------------------- */
-int setfilunixmode (vol, path, mode)
-const struct vol *vol;
-struct path* path;
-mode_t mode;
+int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
 {
     if (!path->st_valid) {
         of_stat(path);
@@ -352,10 +335,7 @@ mode_t mode;
 
 
 /* --------------------- */
-int setdirunixmode( vol, name, mode )
-const struct vol *vol;
-const char       *name;
-mode_t           mode;
+int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 {
 
     int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
@@ -377,10 +357,7 @@ mode_t           mode;
 }
 
 /* --------------------- */
-int setdirmode( vol, name, mode )
-const struct vol *vol;
-const char       *name;
-mode_t           mode;
+int setdirmode(const struct vol *vol, const char *name, mode_t mode)
 {
     struct stat		st;
     struct dirent	*dirp;
@@ -436,9 +413,7 @@ mode_t           mode;
 }
 
 /* ----------------------------- */
-int setdeskowner( uid, gid )
-const uid_t	uid;
-const gid_t	gid;
+int setdeskowner(const uid_t uid, const gid_t gid)
 {
     char		wd[ MAXPATHLEN + 1];
     char		modbuf[12 + 1], *m;
@@ -500,11 +475,7 @@ const gid_t	gid;
 }
 
 /* ----------------------------- */
-int setfilowner(vol, uid, gid, path)
-const struct vol *vol;
-const uid_t	uid;
-const gid_t	gid;
-struct path* path;
+int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path* path)
 {
 
     if (!path->st_valid) {
@@ -535,11 +506,7 @@ struct path* path;
  * that user/group should inherit from other, but that doesn't fit
  * into the unix permission scheme. we can get around this by
  * co-opting some bits. */
-int setdirowner(vol, name, uid, gid )
-const struct vol *vol;
-const char      *name;
-const uid_t	uid;
-const gid_t	gid;
+int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 {
     struct stat		st;
     struct dirent	*dirp;

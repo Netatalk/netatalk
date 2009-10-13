@@ -1,5 +1,5 @@
 /*
- * $Id: atp_packet.c,v 1.5 2002-01-17 06:08:55 srittau Exp $
+ * $Id: atp_packet.c,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -52,8 +52,7 @@
 #ifdef EBUG
 #include <stdio.h>
 
-static void print_func( ctrlinfo )
-    u_int8_t	ctrlinfo;
+static void print_func(u_int8_t ctrlinfo)
 {
     switch ( ctrlinfo & ATP_FUNCMASK ) {
     case ATP_TREQ:
@@ -73,9 +72,7 @@ static void print_func( ctrlinfo )
     }
 }
 
-static void dump_packet( buf, len )
-    char	*buf;
-    int		len;
+static void dump_packet(char *buf, int len)
 {
     int		i;
 
@@ -85,9 +82,7 @@ static void dump_packet( buf, len )
     putchar( '\n' );
 }
 
-void atp_print_addr( s, saddr )
-    char		*s;
-    struct sockaddr_at	*saddr;
+void atp_print_addr(char *s, struct sockaddr_at *saddr)
 {
     printf( "%s ", s );
     saddr->sat_family == AF_APPLETALK ? printf( "at." ) :
@@ -315,9 +310,9 @@ atp_recv_atp( ATP ah,
 }
 
 
-int at_addr_eq( paddr, saddr )
-    struct sockaddr_at	*paddr;		/* primary address */
-    struct sockaddr_at	*saddr;		/* secondary address */
+int at_addr_eq( 
+    struct sockaddr_at	*paddr,		/* primary address */
+    struct sockaddr_at	*saddr)		/* secondary address */
 {
 /* compare two atalk addresses -- only check the non-zero fields
     of paddr against saddr.

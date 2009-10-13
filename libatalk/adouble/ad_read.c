@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.8 2009-09-11 13:26:05 franklahm Exp $
+ * $Id: ad_read.c,v 1.9 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -59,12 +59,7 @@ ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 /* XXX: locks have to be checked before each stream of consecutive
  *      ad_reads to prevent a denial in the middle from causing
  *      problems. */
-ssize_t ad_read( ad, eid, off, buf, buflen)
-    struct adouble  *ad;
-    const u_int32_t     eid;
-    off_t               off;
-    char        *buf;
-    const size_t    buflen;
+ssize_t ad_read( struct adouble *ad, const u_int32_t eid, off_t off, char *buf, const size_t buflen)
 {
     ssize_t     cc;
 

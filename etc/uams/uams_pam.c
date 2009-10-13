@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.18 2009-09-14 00:02:21 didg Exp $
+ * $Id: uams_pam.c,v 1.19 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -59,7 +59,9 @@ static char *hostname;
 static char *PAM_username;
 static char *PAM_password;
 
-extern void append(void *, const char *, int);
+/*XXX in etc/papd/file.h */
+struct papfile;
+extern void append(struct papfile *, const char *, int);
 
 /* PAM conversation function
  * Here we assume (for now, at least) that echo on means login name, and
@@ -274,7 +276,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 }
 
 /* logout */
-static void pam_logout() {
+static void pam_logout(void) {
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
@@ -341,9 +343,7 @@ static int pam_changepw(void *obj _U_, char *username,
 
 
 /* Printer ClearTxtUAM login */
-int pam_printer(start, stop, username, out)
-        char    *start, *stop, *username;
-	struct papfile	*out;
+int pam_printer(char *start, char *stop, char *username, struct papfile *out)
 {
     int PAM_error;
     char	*data, *p, *q;

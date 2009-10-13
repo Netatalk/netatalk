@@ -1,5 +1,5 @@
 /*
- * $Id: print_cups.c,v 1.3 2008-11-14 10:29:08 didg Exp $
+ * $Id: print_cups.c,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright 2004 Bjoern Fernhomberg.
  *
@@ -66,7 +66,7 @@ static int 	cups_mangle_printer_name ( struct printer *pr, struct printer *print
 static void     cups_free_printer ( struct printer *pr);
 
 
-char * cups_get_language ()
+char * cups_get_language (void)
 {
         cups_lang_t *language;
 

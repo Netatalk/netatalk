@@ -1,5 +1,5 @@
 /*
- * $Id: showppd.c,v 1.6 2005-04-28 20:49:49 bfernhomberg Exp $
+ * $Id: showppd.c,v 1.7 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,9 +26,7 @@ extern struct ppd_font		*ppd_fonts;
 extern struct ppd_feature	ppd_features[];
 
 
-int main( ac, av )
-    int		ac;
-    char	**av;
+int main(int ac, char **av)
 {
     struct ppd_feature	*pfe;
     struct ppd_font	*pfo;

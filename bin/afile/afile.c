@@ -1,5 +1,5 @@
 /*
- * $Id: afile.c,v 1.5 2001-09-05 18:38:23 srittau Exp $
+ * $Id: afile.c,v 1.6 2009-10-13 22:55:36 didg Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -92,7 +92,7 @@ void help(char *prog)
 }
 
 /* Print the version. */
-void version()
+void version(void)
 {
   fprintf(stderr, "afile (netatalk " VERSION ")\n");
 }

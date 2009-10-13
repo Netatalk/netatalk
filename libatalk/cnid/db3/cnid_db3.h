@@ -53,33 +53,33 @@ static int db3_txn_commit(DB_TXN *db_txn, u_int32_t flags)
    cnid_open.c 
 */
 extern struct _cnid_module cnid_db3_module;
-extern struct _cnid_db *cnid_db3_open __P((const char *, mode_t));
+extern struct _cnid_db *cnid_db3_open (const char *, mode_t);
 
 /* cnid_close.c */
-extern void cnid_db3_close __P((struct _cnid_db *));
+extern void cnid_db3_close (struct _cnid_db *);
 
 /* cnid_add.c */
-extern cnid_t cnid_db3_add __P((struct _cnid_db *, const struct stat *, const cnid_t,
-			    char *, const size_t, cnid_t));
+extern cnid_t cnid_db3_add (struct _cnid_db *, const struct stat *, const cnid_t,
+			    char *, const size_t, cnid_t);
 
 /* cnid_get.c */
-extern cnid_t cnid_db3_get __P((struct _cnid_db *, const cnid_t, char *, const size_t)); 
-extern char *cnid_db3_resolve __P((struct _cnid_db *, cnid_t *, void *, size_t )); 
-extern cnid_t cnid_db3_lookup __P((struct _cnid_db *, const struct stat *, const cnid_t,
-			       char *, const size_t));
+extern cnid_t cnid_db3_get (struct _cnid_db *, const cnid_t, char *, const size_t); 
+extern char *cnid_db3_resolve (struct _cnid_db *, cnid_t *, void *, size_t ); 
+extern cnid_t cnid_db3_lookup (struct _cnid_db *, const struct stat *, const cnid_t,
+			       char *, const size_t);
 
 /* cnid_update.c */
-extern int cnid_db3_update __P((struct _cnid_db *, const cnid_t, const struct stat *,
-			    const cnid_t, char *, size_t));
+extern int cnid_db3_update (struct _cnid_db *, const cnid_t, const struct stat *,
+			    const cnid_t, char *, size_t);
 
 /* cnid_delete.c */
-extern int cnid_db3_delete __P((struct _cnid_db *, const cnid_t));
+extern int cnid_db3_delete (struct _cnid_db *, const cnid_t);
 
 /* cnid_nextid.c */
-extern cnid_t cnid_db3_nextid __P((struct _cnid_db *));
+extern cnid_t cnid_db3_nextid (struct _cnid_db *);
 
-extern int cnid_db3_lock   __P((void *));
-extern int cnid_db3_unlock __P((void *));
+extern int cnid_db3_lock   (void *);
+extern int cnid_db3_unlock (void *);
 
 #endif /* include/atalk/cnid_db3.h */
 

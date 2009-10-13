@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.h,v 1.5 2009-01-21 04:04:20 didg Exp $
+ * $Id: ppd.h,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,8 +20,8 @@ struct ppd_feature {
     char	*pd_value;
 };
 
-struct ppd_feature	*ppd_feature __P((const char *, int));
-struct ppd_font		*ppd_font __P((char *));
-int read_ppd __P((char *, int));
+struct ppd_feature	*ppd_feature (const char *, int);
+struct ppd_font		*ppd_font (char *);
+int read_ppd (char *, int);
 
 #endif /* PAPD_PPD_H */

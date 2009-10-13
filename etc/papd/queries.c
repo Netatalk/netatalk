@@ -1,5 +1,5 @@
 /*
- * $Id: queries.c,v 1.21 2009-02-02 16:04:33 didg Exp $
+ * $Id: queries.c,v 1.22 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -57,8 +57,7 @@ int cq_rbilogin( struct papfile *, struct papfile * );
 
 
 
-int cq_default( in, out )
-    struct papfile	*in, *out;
+int cq_default( struct papfile *in, struct papfile *out)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -118,8 +117,7 @@ char	*LoginFailed = "LoginFailed\n";
 
 #define h2b(x)	(isdigit((x))?(x)-'0':(isupper((x))?(x)-'A':(x)-'a')+10)
 
-int cq_k4login( in, out )
-    struct papfile	*in, *out;
+int cq_k4login( struct papfile *in, struct papfile *out)
 {
     char		*start, *p;
     int			linelength, crlflength;
@@ -175,8 +173,7 @@ int cq_k4login( in, out )
 
 char	*uameth = "UMICHKerberosIV\n*\n";
 
-int cq_uameth( in, out )
-    struct papfile	*in, *out;
+int cq_uameth( struct papfile *in, struct papfile *out)
 {
     char		*start;
     int			linelength, crlflength;
@@ -216,8 +213,7 @@ int cq_uameth( in, out )
 }
 #endif /* KRB */
 
-int gq_true( out )
-    struct papfile	*out;
+int gq_true( struct papfile *out)
 {
     if ( printer->p_flags & P_SPOOLED ) {
 	append( out, "true\n", 5 );
@@ -227,8 +223,7 @@ int gq_true( out )
     }
 }
 
-int gq_pagecost( out )
-    struct papfile	*out;
+int gq_pagecost( struct papfile *out)
 {
     char		cost[ 60 ];
 
@@ -250,8 +245,7 @@ int gq_pagecost( out )
 }
 
 #ifdef ABS_PRINT
-int gq_balance( out )
-    struct papfile	*out;
+int gq_balance( struct papfile *out)
 {
     char		balance[ 60 ];
 
@@ -271,8 +265,7 @@ int gq_balance( out )
 
 static const char *spoolerid = "(PAPD Spooler) 1.0 (" VERSION ")\n";
 
-int gq_rbispoolerid( out )
-    struct papfile	*out;
+int gq_rbispoolerid( struct papfile *out)
 {
     append( out, spoolerid, strlen( spoolerid ));
     return(0);
@@ -286,8 +279,7 @@ int gq_rbispoolerid( out )
 
 static const char *nouams = "*\n";
 
-int gq_rbiuamlist( out )
-    struct papfile      *out;
+int gq_rbiuamlist( struct papfile *out)
 {
     char uamnames[128] = "\0";
 
@@ -322,8 +314,7 @@ struct genquery {
     { NULL, NULL },
 };
 
-int cq_query( in, out )
-    struct papfile	*in, *out;
+int cq_query( struct papfile *in, struct papfile *out)
 {
     char		*start, *stop, *p, *q;
     int			linelength, crlflength;
@@ -392,9 +383,7 @@ int cq_query( in, out )
     }
 }
 
-void cq_font_answer( start, stop, out )
-    char		*start, *stop;
-    struct papfile	*out;
+void cq_font_answer( char *start, char *stop, struct papfile *out)
 {
     char		*p, *q, buf[ 256 ];
     struct ppd_font	*pfo;
@@ -431,8 +420,7 @@ void cq_font_answer( start, stop, out )
     return;
 }
 
-int cq_font( in, out )
-    struct papfile	*in, *out;
+int cq_font(struct papfile *in, struct papfile *out)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -493,8 +481,7 @@ int cq_font( in, out )
     }
 }
 
-int cq_feature( in, out )
-    struct papfile	*in, *out;
+int cq_feature( struct papfile *in, struct papfile *out)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -555,8 +542,7 @@ int cq_feature( in, out )
 static const char	*psver = "*PSVersion\n";
 static const char	*prod = "*Product\n";
 
-int cq_printer( in, out )
-    struct papfile	*in, *out;
+int cq_printer(struct papfile *in, struct papfile *out)
 {
     char		*start, *p;
     int			linelength, crlflength;
@@ -636,8 +622,7 @@ int cq_printer( in, out )
 static const char	*rmjobfailed = "Failed\n";
 static const char	*rmjobok = "Ok\n";
 
-int cq_rmjob( in, out )
-    struct papfile	*in, *out;
+int cq_rmjob( struct papfile *in, struct papfile *out)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -680,8 +665,7 @@ int cq_rmjob( in, out )
     return( CH_DONE );
 }
 
-int cq_listq( in, out )
-    struct papfile	*in, *out;
+int cq_listq( struct papfile *in, struct papfile *out)
 {
     char		*start;
     int			linelength, crlflength;
@@ -720,8 +704,7 @@ SecurityViolation: Unknown user, incorrect password or log on is \
 disabled ]%%\r%%[Flushing: rest of job (to end-of-file) will be \
 ignored ]%%\r";
 
-int cq_rbilogin( in, out )
-    struct papfile      *in, *out;
+int cq_rbilogin( struct papfile *in, struct papfile *out)
 {
     char        	*start, *stop, *p, *begin;
     int			linelength, crlflength;

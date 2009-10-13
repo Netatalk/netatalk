@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.37 2009-07-21 13:41:16 didg Exp $
+ * $Id: afp_dsi.c,v 1.38 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -108,7 +108,7 @@ static void afp_dsi_sleep(void)
 }
 
 /* ------------------- */
-static void afp_dsi_timedown()
+static void afp_dsi_timedown(int sig _U_)
 {
     struct sigaction	sv;
     struct itimerval	it;
@@ -156,7 +156,7 @@ static void afp_dsi_timedown()
 */
 volatile int reload_request = 0;
 
-static void afp_dsi_reload()
+static void afp_dsi_reload(int sig _U_)
 {
     reload_request = 1;
 }
@@ -170,7 +170,7 @@ static void afp_dsi_getmesg (int sig _U_)
 }
 #endif /* SERVERTEXT */
 
-static void alarm_handler()
+static void alarm_handler(int sig _U_)
 {
     int err;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: comm.c,v 1.3 2009-04-21 08:55:44 franklahm Exp $
+ * $Id: comm.c,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -141,7 +141,7 @@ static int recv_cred(int fd)
  *  things and clean up fd_table. The same happens for any read/write errors.
  */
 
-static int check_fd()
+static int check_fd(void)
 {
     int fd;
     fd_set readfds;

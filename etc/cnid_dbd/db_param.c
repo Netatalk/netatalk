@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.c,v 1.5 2009-05-06 11:54:24 franklahm Exp $
+ * $Id: db_param.c,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -39,7 +39,7 @@
 static struct db_param params;
 static int parse_err;
 
-static size_t usock_maxlen()
+static size_t usock_maxlen(void)
 {
     struct sockaddr_un addr;
     return sizeof(addr.sun_path) - 1;

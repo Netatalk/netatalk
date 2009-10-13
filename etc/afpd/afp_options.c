@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.45 2009-09-04 15:27:21 franklahm Exp $
+ * $Id: afp_options.c,v 1.46 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -448,7 +448,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
  * Show version information about afpd.
  * Used by "afp -v".
  */
-void show_version( )
+void show_version( void )
 {
 	printf( "afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION );
 
@@ -506,7 +506,7 @@ void show_version( )
  * Show extended version information about afpd and Netatalk.
  * Used by "afp -V".
  */
-void show_version_extended( )
+void show_version_extended(void )
 {
 	show_version( );
 

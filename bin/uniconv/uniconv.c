@@ -411,12 +411,12 @@ static void usage( char * name )
     exit( 1 );
 }
 
-static void print_version ()
+static void print_version (void)
 {
     fprintf( stderr, "uniconv - Netatalk %s\n", VERSION );
 }
 
-static void help ()
+static void help (void)
 {
     fprintf (stdout, "\nuniconv, a tool to convert between various Netatalk volume encodings\n");
     fprintf (stdout, "\nUsage:  uniconv [-ndv] -c cnid -f fromcode -t tocode [-m maccode] path\n\n");

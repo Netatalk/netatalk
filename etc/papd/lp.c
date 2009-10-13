@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.27 2009-07-20 09:06:03 franklahm Exp $
+ * $Id: lp.c,v 1.28 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -304,8 +304,7 @@ static char* pipexlate(char *src)
 }
 
 
-void lp_person( person )
-    char	*person;
+void lp_person(char *person)
 {
     if ( lp.lp_person != NULL ) {
 	free( lp.lp_person );
@@ -318,7 +317,7 @@ void lp_person( person )
 }
 
 #ifdef ABS_PRINT
-int lp_pagecost()
+int lp_pagecost(void)
 {
     char	cost[ 22 ];
     char	balance[ 22 ];
@@ -335,8 +334,7 @@ int lp_pagecost()
 }
 #endif /* ABS_PRINT */
 
-void lp_host( host )
-    char	*host;
+void lp_host( char *host)
 {
     if ( lp.lp_host != NULL ) {
 	free( lp.lp_host );
@@ -354,8 +352,7 @@ void lp_host( host )
  * This should be added.
  */
 
-void lp_job( job )
-    char	*job;
+void lp_job(char *job)
 {
     if ( lp.lp_job != NULL ) {
 	free( lp.lp_job );
@@ -368,8 +365,7 @@ void lp_job( job )
     
 }
 
-void lp_for ( lpfor )
-	char	*lpfor;
+void lp_for (char *lpfor)
 {
     if ( lp.lp_created_for != NULL ) {
 	free( lp.lp_created_for );
@@ -379,9 +375,7 @@ void lp_for ( lpfor )
 }
 
 
-static int lp_init( out, sat )
-    struct papfile	*out;
-    struct sockaddr_at	*sat;
+static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 {
     int		authenticated = 0;
 #ifndef HAVE_CUPS
@@ -544,9 +538,7 @@ static int lp_init( out, sat )
     return( 0 );
 }
 
-int lp_open( out, sat )
-    struct papfile	*out;
-    struct sockaddr_at	*sat;
+int lp_open(struct papfile *out, struct sockaddr_at *sat)
 {
     char	name[ MAXPATHLEN ];
     int		fd;
@@ -646,7 +638,7 @@ int lp_open( out, sat )
     return( 0 );
 }
 
-int lp_close()
+int lp_close(void)
 {
     if (( lp.lp_flags & LP_INIT ) == 0 || ( lp.lp_flags & LP_OPEN ) == 0 ) {
 	return 0;
@@ -660,10 +652,7 @@ int lp_close()
 
 
 
-int lp_write(in, buf, len )
-    struct papfile *in;
-    char	*buf;
-    size_t	len;
+int lp_write(struct papfile *in, char *buf, size_t len)
 {
 #define BUFSIZE 32768
     static char tempbuf[BUFSIZE];
@@ -746,7 +735,7 @@ int lp_write(in, buf, len )
     return( 0 );
 }
 
-int lp_cancel()
+int lp_cancel(void)
 {
     char	name[ MAXPATHLEN ];
     char	letter;
@@ -775,7 +764,7 @@ int lp_cancel()
  *
  * XXX piped?
  */
-int lp_print()
+int lp_print(void)
 {
 #ifndef HAVE_CUPS
     char		buf[ MAXPATHLEN ];
@@ -899,7 +888,7 @@ int lp_disconn_unix( int fd )
     return( close( fd ));
 }
 
-int lp_conn_unix()
+int lp_conn_unix(void)
 {
     int			s;
     struct sockaddr_un	saun;
@@ -926,7 +915,7 @@ int lp_disconn_inet( int fd )
     return( close( fd ));
 }
 
-int lp_conn_inet()
+int lp_conn_inet(void)
 {
     int			privfd, port = IPPORT_RESERVED - 1;
     struct sockaddr_in	sin;
@@ -970,8 +959,7 @@ int lp_conn_inet()
     return( privfd );
 }
 
-int lp_rmjob( job )
-    int		job;
+int lp_rmjob( int job)
 {
     char	buf[ 1024 ];
     int		n, s;
@@ -1010,8 +998,7 @@ char	*tag_files = "files: ";
 char	*tag_size = "size: ";
 char	*tag_status = "status: ";
 
-int lp_queue( out )
-    struct papfile	*out;
+int lp_queue( struct papfile *out)
 {
     char			buf[ 1024 ], *start, *stop, *p, *q;
     int				linelength, crlflength;

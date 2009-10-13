@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.17 2009-09-11 09:14:16 franklahm Exp $
+ * $Id: switch.c,v 1.18 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -50,10 +50,7 @@
 #include "acls.h"
 #endif
 
-static int afp_null(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj _U_;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+static int afp_null(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     LOG(log_info, logtype_afpd, "afp_null handle %d", *ibuf );
     *rbuflen = 0;

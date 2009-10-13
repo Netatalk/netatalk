@@ -1,5 +1,5 @@
 /*
- * $Id: pa.c,v 1.4 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: pa.c,v 1.5 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -37,8 +37,7 @@
 
 #include "pa.h"
 
-pa_buf_t *pa_init( fd )
-	int fd;
+pa_buf_t *pa_init(int fd)
 {
 	pa_buf_t *h;
 	int rc;
@@ -59,8 +58,7 @@ pa_buf_t *pa_init( fd )
 	return( h );
 }
 
-char *pa_gettok( h )
-	pa_buf_t *h;
+char *pa_gettok(pa_buf_t *h)
 {
 	h->state = PA_NORMAL;
 	h->tmp = *(h->cur);
@@ -68,8 +66,7 @@ char *pa_gettok( h )
 	return( h->mark );
 }
 
-char _pa_fixbuf( h )
-	pa_buf_t *h;
+char _pa_fixbuf(pa_buf_t *h)
 {
 	int rc;
 	char *t;

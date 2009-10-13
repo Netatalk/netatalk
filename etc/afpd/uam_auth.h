@@ -1,5 +1,5 @@
 /*
- * $Id: uam_auth.h,v 1.5 2005-04-28 20:49:45 bfernhomberg Exp $
+ * $Id: uam_auth.h,v 1.6 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -28,16 +28,16 @@ struct uam_obj {
     int uam_count;
     union {
         struct {
-            int (*login) __P((void *, struct passwd **,
-                              char *, int, char *, int *));
-            int (*logincont) __P((void *, struct passwd **, char *,
-                                  int, char *, int *));
-            void (*logout) __P((void));
-            int (*login_ext) __P((void *, char *, struct passwd **,
-                              char *, int, char *, int *));
+            int (*login) (void *, struct passwd **,
+                              char *, int, char *, int *);
+            int (*logincont) (void *, struct passwd **, char *,
+                                  int, char *, int *);
+            void (*logout) (void);
+            int (*login_ext) (void *, char *, struct passwd **,
+                              char *, int, char *, int *);
         } uam_login;
-        int (*uam_changepw) __P((void *, char *, struct passwd *, char *,
-                                 int, char *, int *));
+        int (*uam_changepw) (void *, char *, struct passwd *, char *,
+                                 int, char *, int *);
     } u;
     struct uam_obj *uam_prev, *uam_next;
 };
@@ -54,17 +54,17 @@ struct uam_obj {
     (a)->uam_next->uam_prev = (a)->uam_prev; \
 } while (0)
 
-extern struct uam_mod *uam_load __P((const char *, const char *));
-extern void uam_unload __P((struct uam_mod *));
+extern struct uam_mod *uam_load (const char *, const char *);
+extern void uam_unload (struct uam_mod *);
 
 /* auth.c */
-int auth_load __P((const char *, const char *));
-int auth_register __P((const int, struct uam_obj *));
+int auth_load (const char *, const char *);
+int auth_register (const int, struct uam_obj *);
 #define auth_unregister(a) uam_detach(a)
-struct uam_obj *auth_uamfind __P((const int, const char *, const int));
-void auth_unload __P((void));
+struct uam_obj *auth_uamfind (const int, const char *, const int);
+void auth_unload (void);
 
 /* uam.c */
-int uam_random_string __P((AFPObj *,char *, int));
+int uam_random_string (AFPObj *,char *, int);
 
 #endif /* uam_auth.h */

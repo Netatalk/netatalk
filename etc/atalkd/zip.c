@@ -1,5 +1,5 @@
 /*
- * $Id: zip.c,v 1.12 2005-04-28 20:49:47 bfernhomberg Exp $
+ * $Id: zip.c,v 1.13 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -48,9 +48,7 @@
 struct ziptab	*ziptab = NULL, *ziplast = NULL;
 
 
-static int zonecheck( rtmp, iface )
-    struct rtmptab	*rtmp;
-    struct interface	*iface;
+static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 {
     struct list		*l;
     struct ziptab	*czt, *zt;
@@ -88,11 +86,7 @@ static int zonecheck( rtmp, iface )
 }
 
 
-int zip_packet( ap, from, data, len )
-    struct atport	*ap;
-    struct sockaddr_at	*from;
-    char		*data;
-    int			len;
+int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 {
     struct ziphdr	zh;
     struct atphdr	ah;
@@ -898,8 +892,7 @@ int zip_packet( ap, from, data, len )
     return 0;
 }
 
-int zip_getnetinfo( iface )
-    struct interface	*iface;
+int zip_getnetinfo(struct interface *iface)
 {
     struct atport	*ap;
     struct ziphdr	zh;
@@ -955,10 +948,7 @@ int zip_getnetinfo( iface )
     return 0;
 }
 
-    struct ziptab *
-newzt( len, name )
-    const int		len;
-    const char	*name;
+struct ziptab *newzt(const int len, const char *name)
 {
     struct ziptab	*zt;
 
@@ -981,9 +971,7 @@ newzt( len, name )
  * Insert at the end.  Return 1 if a mapping already exists, 0 otherwise.
  * -1 on error.
  */
-static int add_list( head, data )
-    struct list	**head;
-    void	*data;
+static int add_list(struct list **head, void *data)
 {
     struct list	*l, *l2;
 
@@ -1012,10 +1000,7 @@ static int add_list( head, data )
     return( 0 );
 }
 
-int addzone( rt, len, zone )
-    struct rtmptab	*rt;
-    int			len;
-    char		*zone;
+int addzone(struct rtmptab *rt, int len, char *zone)
 {
     struct ziptab	*zt;
     int			cc, exists = 0;

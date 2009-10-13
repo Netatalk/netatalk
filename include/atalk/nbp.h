@@ -84,13 +84,13 @@ struct nbpnve {
 #define NBPMATCH_NOGLOB	(1<<1)
 #define NBPMATCH_NOZONE	(1<<2)
 
-extern int nbp_name __P((const char *, char **, char **, char **));
-extern int nbp_lookup __P((const char *, const char *, const char *,
+extern int nbp_name (const char *, char **, char **, char **);
+extern int nbp_lookup (const char *, const char *, const char *,
 			   struct nbpnve *, const int, 
-			   const struct at_addr *));
-extern int nbp_rgstr __P((struct sockaddr_at *, 
-			  const char *, const char *, const char *));
-extern int nbp_unrgstr __P((const char *, const char *, const char *,
-			    const struct at_addr *));
+			   const struct at_addr *);
+extern int nbp_rgstr (struct sockaddr_at *, 
+			  const char *, const char *, const char *);
+extern int nbp_unrgstr (const char *, const char *, const char *,
+			    const struct at_addr *);
 
 #endif

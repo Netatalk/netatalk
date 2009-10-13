@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.c,v 1.10 2005-04-28 20:49:20 bfernhomberg Exp $
+ * $Id: megatron.c,v 1.11 2009-10-13 22:55:36 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -36,10 +36,7 @@ char		*name[] = { "unhex",
 			    "binheader",
 			    "megatron" };
 
-int from_open( un, file, fh, flags )
-    int			un, flags;
-    char		*file;
-    struct FHeader	*fh;
+int from_open(int un, char *file, struct FHeader *fh, int flags)
 {
     switch ( un ) {
 	case MEGATRON :
@@ -64,11 +61,7 @@ int from_open( un, file, fh, flags )
     }
 }
 
-int from_read( un, fork, buf, len )
-    int			un;
-    int			fork;
-    char		*buf;
-    int			len;
+int from_read(int un, int fork, char *buf, int len)
 {
     switch ( un ) {
 	case MEGATRON :
@@ -91,8 +84,7 @@ int from_read( un, fork, buf, len )
     }
 }
 
-int from_close( un )
-    int			un;
+int from_close(int un)
 {
     switch ( un ) {
 	case MEGATRON :
@@ -115,10 +107,7 @@ int from_close( un )
     }
 }
 
-int to_open( to, file, fh, flags )
-    int			to, flags;
-    char		*file;
-    struct FHeader	*fh;
+int to_open(int to, char *file, struct FHeader *fh, int flags)
 {
     switch ( to ) {
 	case MEGATRON :
@@ -138,10 +127,7 @@ int to_open( to, file, fh, flags )
     }
 }
 
-int to_write( to, fork, bufc )
-    int			to;
-    int			fork;
-    int			bufc;
+int to_write(int to, int fork, int bufc)
 {
     switch ( to ) {
 	case MEGATRON :
@@ -161,9 +147,7 @@ int to_write( to, fork, bufc )
     }
 }
 
-int to_close( to, keepflag )
-    int			to;
-    int			keepflag;
+int to_close(int to, int keepflag)
 {
     switch ( to ) {
 	case MEGATRON :
@@ -183,9 +167,7 @@ int to_close( to, keepflag )
     }
 }
 
-int megatron( path, module, newname, flags )
-    char	*path, *newname;
-    int		module, flags;
+int megatron( char *path, int module, char *newname, int flags)
 {
     struct stat		st;
     struct FHeader	fh;
@@ -293,9 +275,7 @@ int megatron( path, module, newname, flags )
     return( from_close( module ));
 }
 
-int main( argc, argv )
-    int		argc;
-    char	**argv;
+int main(int argc, char **argv)
 {
     int		rc, c;
     int		rv = 0;

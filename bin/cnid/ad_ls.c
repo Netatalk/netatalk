@@ -1,5 +1,5 @@
 /* 
-   $Id: ad_ls.c,v 1.2 2009-09-14 01:24:40 didg Exp $
+   $Id: ad_ls.c,v 1.3 2009-10-13 22:55:36 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -88,7 +88,7 @@ static const char *check_netatalk_dirs(const char *name)
 }
 
 
-static void usage_ls()
+static void usage_ls(void)
 {
     printf(
         "Usage: ad ls [-dRl[u]] [file|dir, ...]\n\n"

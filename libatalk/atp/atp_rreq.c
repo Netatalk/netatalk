@@ -1,5 +1,5 @@
 /*
- * $Id: atp_rreq.c,v 1.3 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: atp_rreq.c,v 1.4 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -43,9 +43,9 @@
 
 /* wait for a tranasaction service request
 */
-int atp_rreq( ah, atpb )
-    ATP			ah;		/* open atp handle */
-    struct atp_block	*atpb;		/* parameter block */
+int atp_rreq(
+    ATP			ah,		/* open atp handle */
+    struct atp_block	*atpb)		/* parameter block */
 {
     struct atpbuf	*req_buf;	/* for receiving request packet */
     struct atphdr	req_hdr;	/* request header overlay */

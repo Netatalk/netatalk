@@ -1,5 +1,5 @@
 /*
- * $Id: interface.h,v 1.4 2005-04-28 20:49:46 bfernhomberg Exp $
+ * $Id: interface.h,v 1.5 2009-10-13 22:55:37 didg Exp $
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
@@ -53,6 +53,6 @@ struct interface {
 
 extern struct interface	*interfaces;
 extern struct interface	*ciface;
-struct interface	*newiface __P((const char *));
+struct interface	*newiface (const char *);
 
 #endif /* ATALKD_INTERFACE_H */

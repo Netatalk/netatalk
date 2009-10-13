@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.16 2008-12-03 18:35:44 didg Exp $
+ * $Id: appl.c,v 1.17 2009-10-13 22:55:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,20 +29,12 @@
 
 static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0, 0};
 
-static int pathcmp( p, plen, q, qlen )
-char	*p;
-int	plen;
-char	*q;
-int	qlen;
+static int pathcmp(char *p, int plen, char *q, int qlen)
 {
     return (( plen == qlen && memcmp( p, q, plen ) == 0 ) ? 0 : 1 );
 }
 
-static int applopen( vol, creator, flags, mode )
-struct vol	*vol;
-u_char	creator[ 4 ];
-int flags;
-int mode;
+static int applopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
 {
     char	*dtf, *adt, *adts;
 
@@ -89,11 +81,7 @@ int mode;
 /*
  * copy appls to new file, deleting any matching (old) appl entries
  */
-static int copyapplfile( sfd, dfd, mpath, mplen )
-int		sfd;
-int		dfd;
-char	*mpath;
-u_short	mplen;
+static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
 {
     int		cc;
     char	*p;
@@ -134,11 +122,7 @@ u_short	mplen;
  * See afp_getappl() for the backward compatiblity code.
  */
 static char *
-makemacpath( mpath, mpathlen, dir, path )
-char	*mpath;
-int		mpathlen;
-struct dir	*dir;
-char	*path;
+makemacpath(char *mpath, int mpathlen, struct dir *dir, char *path)
 {
     char	*p;
 
@@ -159,10 +143,7 @@ char	*path;
 }
 
 
-int afp_addappl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_addappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -249,10 +230,7 @@ int	ibuflen _U_, *rbuflen;
     return( AFP_OK );
 }
 
-int afp_rmvappl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf _U_;
-int	ibuflen _U_, *rbuflen;
+int afp_rmvappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -323,10 +301,7 @@ int	ibuflen _U_, *rbuflen;
     return( AFP_OK );
 }
 
-int afp_getappl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_getappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     struct vol		*vol;
     char		*p, *q;

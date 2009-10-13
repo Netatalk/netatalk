@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_private.h,v 1.2 2001-06-29 14:14:46 rufustfirefly Exp $
+ * $Id: dsi_private.h,v 1.3 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -17,9 +17,9 @@
 #include <sys/types.h>
 #include <netatalk/endian.h>
 
-extern int dsi_tcp_init __P((DSI *, const char * /*host*/, 
+extern int dsi_tcp_init (DSI *, const char * /*host*/, 
 			     const char * /*address*/,
 			     const u_int16_t /*port*/,
-			     const int /*proxy*/));
+			     const int /*proxy*/);
 
 #endif /* _DSI_PRIVATE_H */

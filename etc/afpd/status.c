@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.23 2009-04-05 07:22:06 franklahm Exp $
+ * $Id: status.c,v 1.24 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -471,7 +471,7 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
 */
-void status_reset()
+void status_reset(void)
 {
     Id = 0;
 }
@@ -574,10 +574,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 }
 
 /* this is the same as asp/dsi_getstatus */
-int afp_getsrvrinfo(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj  *obj;
-char	*ibuf _U_, *rbuf;
-int	ibuflen _U_, *rbuflen;
+int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, int ibuflen _U_, char *rbuf, int *rbuflen)
 {
     AFPConfig *config = obj->config;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: achfile.c,v 1.5 2001-10-19 02:39:07 jmarcus Exp $
+ * $Id: achfile.c,v 1.6 2009-10-13 22:55:36 didg Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -81,7 +81,7 @@ void help(char *prog)
 }
 
 /* Print the version. */
-void version()
+void version(void)
 {
   fprintf(stderr, "achfile (netatalk " VERSION ")\n");
 }

@@ -160,7 +160,7 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 }
 
 /* Removes checked items from top of directory stack. Returns index of the first unchecked elements or -1. */
-static int reducestack()
+static int reducestack(void)
 {
 	int r;
 	if (save_cidx != -1) {
@@ -180,7 +180,7 @@ static int reducestack()
 } 
 
 /* Clears directory stack. */
-static void clearstack() 
+static void clearstack(void) 
 {
 	save_cidx = -1;
 	while (dsidx > 0) {

@@ -1,5 +1,5 @@
 /* 
-   $Id: ad.c,v 1.1 2009-09-01 14:28:07 franklahm Exp $
+   $Id: ad.c,v 1.2 2009-10-13 22:55:36 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -32,7 +32,7 @@
 #include <atalk/volinfo.h>
 #include "ad.h"
 
-static void usage_main()
+static void usage_main(void)
 {
 /*
     printf("Usage: ad ls|rm|cp|mv|set [file|dir, ...]\n");

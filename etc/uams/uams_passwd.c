@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.25 2009-09-14 00:02:21 didg Exp $
+ * $Id: uams_passwd.c,v 1.26 2009-10-13 22:55:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -71,7 +71,9 @@ char *strchr (), *strrchr ();
 static char *clientname;
 #endif /* TRU64 */
 
-extern void append(void *, const char *, int);
+/*XXX in etc/papd/file.h */
+struct papfile;
+extern void append(struct papfile *, const char *, int);
 
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
                         char *ibuf, int ibuflen,
@@ -271,9 +273,7 @@ static int passwd_changepw(void *obj, char *username,
 
 
 /* Printer ClearTxtUAM login */
-static int passwd_printer(start, stop, username, out)
-char	*start, *stop, *username;
-struct papfile	*out;
+static int passwd_printer(char	*start, char *stop, char *username, struct papfile *out)
 {
     struct passwd *pwd;
 #ifdef SHADOWPW
