@@ -1,5 +1,5 @@
 /* 
-   $Id: ad_util.c,v 1.1 2009-09-01 14:28:07 franklahm Exp $
+   $Id: ad_util.c,v 1.2 2009-10-14 02:30:42 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -36,7 +36,7 @@ int newvol(const char *path, afpvol_t *vol)
 {
 //    char *pathdup;
 
-    memset(vol, sizeof(afpvol_t), 0);
+    memset(vol, 0, sizeof(afpvol_t));
 
 //    pathdup = strdup(path);
 //    vol->dirname = strdup(dirname(pathdup));
