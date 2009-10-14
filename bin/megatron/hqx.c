@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.16 2009-10-14 01:38:28 didg Exp $
+ * $Id: hqx.c,v 1.17 2009-10-14 02:24:04 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -278,7 +278,7 @@ int hqx_header_read(struct FHeader *fh)
 #endif /* HEXOUTPUT */
 
     if (( headerbuf = 
-	    (char *)malloc( (unsigned int)( namelen + BHH_HEADSIZ ))) == 0 ) {
+	    (char *)malloc( (unsigned int)( namelen + BHH_HEADSIZ ))) == NULL ) {
 	return( -1 );
     }
     if ( hqx_7tobin( headerbuf, ( namelen + BHH_HEADSIZ )) == 0 ) {

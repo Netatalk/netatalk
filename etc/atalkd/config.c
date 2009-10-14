@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.18 2009-10-14 01:38:28 didg Exp $
+ * $Id: config.c,v 1.19 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -576,7 +576,7 @@ int net(struct interface *iface, char **av)
 	return -1;
     }
 
-    if (( stop = strchr( nrange, '-' )) != 0 ) {
+    if (( stop = strchr( nrange, '-' )) != NULL ) {
 	stop++;
     }
     net = atoi( nrange );
@@ -591,7 +591,7 @@ int net(struct interface *iface, char **av)
     }
 
     if ( iface->i_flags & IFACE_PHASE1 ) {
-	if ( stop != 0 ) {
+	if ( stop != NULL ) {
 	    fprintf( stderr, "Phase 1 doesn't use an address range.\n" );
 	    return -1;
 	}
@@ -604,7 +604,7 @@ int net(struct interface *iface, char **av)
 	iface->i_rt->rt_firstnet = iface->i_rt->rt_lastnet = htons( net );
     } else if ( iface->i_flags & IFACE_PHASE2 ) {
 	iface->i_rt->rt_firstnet = htons( net );
-	if ( stop != 0 ) {
+	if ( stop != NULL ) {
 	    net = atoi( stop );
 	    if ( net < 0 || net >= 0xffff ) {
 		fprintf( stderr, "Bad network: %d\n", net );

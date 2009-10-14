@@ -1,5 +1,5 @@
 /*
- * $Id: zip.c,v 1.13 2009-10-13 22:55:37 didg Exp $
+ * $Id: zip.c,v 1.14 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -66,7 +66,7 @@ static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 		break;
 	    }
 	}
-	if ( l == 0 ) {
+	if ( l == NULL ) {
 	    LOG(log_error, logtype_atalkd, "zonecheck: %.*s not in zone list", czt->zt_len,
 		    czt->zt_name );
 	    return( -1 );	/* configured zone not found in net zones */
@@ -150,7 +150,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 			break;
 		    }
 		}
-		if ( rtmp == 0 ) {
+		if ( rtmp == NULL ) {
 		    continue;
 		}
 
@@ -299,10 +299,10 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		    /*
 		     * Update head to this rtmp entry.
 		     */
-		    if ( rtmp != 0 && gate->g_rt != rtmp ) {
+		    if ( rtmp != NULL && gate->g_rt != rtmp ) {
 			gate->g_rt->rt_prev->rt_next = gate->g_rt;
 			gate->g_rt = rtmp;
-			rtmp->rt_prev->rt_next = 0;
+			rtmp->rt_prev->rt_next = NULL;
 		    }
 		}
 
@@ -322,7 +322,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		 * We won't find any rtmp entry if the gateway is no longer
 		 * telling us about the entry.
 		 */
-		if ( rtmp == 0 ) {
+		if ( rtmp == NULL ) {
 		    LOG(log_info, logtype_atalkd, "zip skip reply %u from %u.%u (no rtmp)",
 			    ntohs( firstnet ), ntohs( from->sat_addr.s_net ),
 			    from->sat_addr.s_node );
@@ -360,7 +360,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 
 	    if ( rtmp && rtmp->rt_flags & RTMPTAB_HASZONES ) {
 		/* XXX */
-		if ( rtmp->rt_gate == 0 &&
+		if ( rtmp->rt_gate == NULL &&
 			zonecheck( rtmp, gate->g_iface ) != 0 ) {
 		    LOG(log_error, logtype_atalkd, "zip_packet seed zonelist mismatch" );
 		    return -1;
@@ -408,7 +408,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 			    from->sat_addr.s_node );
 		    return 1;
 		}
-		if ( rtmp->rt_iprev == 0 ) {
+		if ( rtmp->rt_iprev == NULL ) {
 		    LOG(log_info, logtype_atalkd,
 			    "zip ereply %u-%u from %u.%u (rtmp not in use)",
 			    ntohs( rtmp->rt_firstnet ),
@@ -418,10 +418,10 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		}
 
 		/* update head to *next* rtmp entry */
-		if ( rtmp->rt_next != 0 ) {
+		if ( rtmp->rt_next != NULL ) {
 		    gate->g_rt->rt_prev->rt_next = gate->g_rt;
 		    gate->g_rt = rtmp->rt_next;
-		    rtmp->rt_next = 0;
+		    rtmp->rt_next = NULL;
 		}
 	    }
 
@@ -478,7 +478,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		if ( n == zh.zh_count ) {
 		    rtmp->rt_flags |= RTMPTAB_HASZONES;
 		    /* XXX */
-		    if ( rtmp->rt_gate == 0 &&
+		    if ( rtmp->rt_gate == NULL &&
 			    zonecheck( rtmp, gate->g_iface ) != 0 ) {
 			LOG(log_error, logtype_atalkd, "zip_packet seed zonelist mismatch" );
 			return -1;
@@ -493,7 +493,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 	     * Don't answer with bogus information.
 	     */
 	    if (((iface->i_flags & IFACE_ISROUTER) == 0) ||
-		iface->i_rt->rt_zt == 0 ||
+		iface->i_rt->rt_zt == NULL ||
 		( iface->i_flags & IFACE_CONFIG ) == 0 ) {
 		return 0;
 	    }
@@ -549,7 +549,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		    break;
 		}
 	    }
-	    if ( l == 0 ) {
+	    if ( l == NULL ) {
 		zt = (struct ziptab *)iface->i_rt->rt_zt->l_data;
 		zh.zh_flags |= ZIPGNI_INVALID;
 	    }
@@ -806,7 +806,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		return 0;
 	    }
 
-	    if ( iface->i_rt->rt_zt == 0 ) {
+	    if ( iface->i_rt->rt_zt == NULL ) {
 		return 0;
 	    }
 	    zt = (struct ziptab *)iface->i_rt->rt_zt->l_data;
@@ -834,7 +834,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		data += zt->zt_len;
 	    }
 
-	    *lastflag = ( zt == 0 );		/* Too clever? */
+	    *lastflag = ( zt == NULL );		/* Too clever? */
 	    break;
 
 	case ZIPOP_GETLOCALZONES :
@@ -860,7 +860,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 		data += zt->zt_len;
 	    }
 
-	    *lastflag = ( l == 0 );
+	    *lastflag = ( l == NULL );
 	    break;
 
 	default :
@@ -907,7 +907,7 @@ int zip_getnetinfo(struct interface *iface)
 	    break;
 	}
     }
-    if ( ap == 0 ) {
+    if ( ap == NULL ) {
 	LOG(log_error, logtype_atalkd, "zip_getnetinfo can't find zip socket!" );
 	return -1;
     }

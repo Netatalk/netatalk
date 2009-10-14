@@ -1,5 +1,5 @@
 /*
- * $Id: pa.c,v 1.5 2009-10-13 22:55:36 didg Exp $
+ * $Id: pa.c,v 1.6 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -47,7 +47,7 @@ pa_buf_t *pa_init(int fd)
 	h->bufsz = PA_BUFBLK * 2;
 
 	if (( rc = read( fd, h->buf, PA_BUFBLK )) < 0 ) {
-		return( 0 );
+		return( NULL );
 	}
 
 	h->cur = h->buf - 1;

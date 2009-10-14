@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.18 2009-10-14 01:38:28 didg Exp $
+ * $Id: session.c,v 1.19 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -77,14 +77,14 @@ int session(ATP atp, struct sockaddr_at *sat)
     infile.pf_state = PF_BOT;
     infile.pf_bufsize = 0;
     infile.pf_datalen = 0;
-    infile.pf_buf = 0;
-    infile.pf_data = 0;
+    infile.pf_buf = NULL;
+    infile.pf_data = NULL;
 
     outfile.pf_state = PF_BOT;
     outfile.pf_bufsize = 0;
     outfile.pf_datalen = 0;
-    outfile.pf_buf = 0;
-    outfile.pf_data = 0;
+    outfile.pf_buf = NULL;
+    outfile.pf_data = NULL;
 
     /*
      * Ask for data.
@@ -118,7 +118,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	FD_SET( atp_fileno( atp ), &fds );
 
 	do { /* do list until success or an unrecoverable error occurs */
-	  if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 )
+	  if (( cc = select( FD_SETSIZE, &fds, NULL, NULL, &tv )) < 0 )
 	      LOG(log_error, logtype_papd, "select: %s", strerror(errno) ); /* log all errors */
 	} while (( cc < 0 ) && (errno == 4));
 

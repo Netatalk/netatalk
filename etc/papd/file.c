@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.11 2009-10-13 22:55:37 didg Exp $
+ * $Id: file.c,v 1.12 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -77,11 +77,11 @@ void morespace(struct papfile *pf, const char *data, int len)
 	nsize = (( pf->pf_bufsize + len ) / PF_MORESPACE +
 		(( pf->pf_bufsize + len ) % PF_MORESPACE != 0 )) * PF_MORESPACE;
 	if ( pf->pf_buf ) {
-	    if (( nbuf = (char *)realloc( pf->pf_buf, nsize )) == 0 ) {
+	    if (( nbuf = (char *)realloc( pf->pf_buf, nsize )) == NULL ) {
 		exit( 1 );
 	    }
 	} else {
-	    if (( nbuf = (char *)malloc( nsize )) == 0 ) {
+	    if (( nbuf = (char *)malloc( nsize )) == NULL ) {
 		exit( 1 );
 	    }
 	}

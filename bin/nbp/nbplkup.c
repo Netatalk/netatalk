@@ -1,5 +1,5 @@
 /*
- * $Id: nbplkup.c,v 1.7 2009-10-14 01:38:28 didg Exp $
+ * $Id: nbplkup.c,v 1.8 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -49,7 +49,7 @@ static void Usage(char *av0)
 {
     char	*p;
 
-    if (( p = strrchr( av0, '/' )) == 0 ) {
+    if (( p = strrchr( av0, '/' )) == NULL ) {
 	p = av0;
     } else {
 	p++;

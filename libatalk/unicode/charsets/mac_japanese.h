@@ -92,7 +92,7 @@ static const cjk_index_t mac_japanese_uni2_index[] = {
   { { 0x3220, 0x33df }, mac_japanese_uni2_page32 },
   { { 0xe000, 0xe04f }, mac_japanese_uni2_pagee0 },
   { { 0xfe30, 0xff3f }, mac_japanese_uni2_pagefe },
-  { { 0, 0 }, 0 }
+  { { 0, 0 }, NULL }
 };
 
 static const u_int16_t mac_japanese_uni2_charset[] = {
@@ -182,7 +182,7 @@ static const cjk_index_t mac_japanese_2uni_index[] = {
   { { 0x8150, 0x815f }, mac_japanese_2uni_page81 },
   { { 0x8540, 0x886f }, mac_japanese_2uni_page85 },
   { { 0xeb40, 0xed9f }, mac_japanese_2uni_pageeb },
-  { { 0, 0 }, 0 }
+  { { 0, 0 }, NULL }
 };
 
 static const u_int16_t mac_japanese_2uni_charset[] = {

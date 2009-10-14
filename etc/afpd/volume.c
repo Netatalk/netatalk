@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.92 2009-10-13 22:55:37 didg Exp $
+ * $Id: volume.c,v 1.93 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1734,7 +1734,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, int ibuflen _U_, char *rbuf, i
 
     *rbuflen = data - rbuf;
     data = rbuf;
-    if ( gettimeofday( &tv, 0 ) < 0 ) {
+    if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_getsrvrparms(%s): gettimeofday: %s", volume->v_path, strerror(errno) );
         *rbuflen = 0;
         return AFPERR_PARAM;
@@ -2145,7 +2145,7 @@ int  pollvoltime(AFPObj *obj)
     if (!(afp_version > 21 && obj->options.server_notif)) 
          return 0;
 
-    if ( gettimeofday( &tv, 0 ) < 0 ) 
+    if ( gettimeofday( &tv, NULL ) < 0 ) 
          return 0;
 
     for ( vol = Volumes; vol; vol = vol->v_next ) {
@@ -2172,7 +2172,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
      * the afpd processes would come closer)
      * [RS] */
 
-    if ( gettimeofday( &tv, 0 ) < 0 ) {
+    if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path, strerror(errno) );
         return;
     }

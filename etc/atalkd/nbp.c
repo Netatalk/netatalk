@@ -1,5 +1,5 @@
 /*
- * $Id: nbp.c,v 1.12 2009-10-13 22:55:37 didg Exp $
+ * $Id: nbp.c,v 1.13 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -165,7 +165,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 	    if ( interfaces->i_next->i_rt->rt_zt ) {
 		zt = (struct ziptab *)interfaces->i_next->i_rt->rt_zt->l_data;
 	    } else {
-		zt = 0;
+		zt = NULL;
 	    }
 	} else {
 	    for ( zt = ziptab; zt; zt = zt->zt_next ) {
@@ -174,7 +174,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 		    break;
 		}
 	    }
-	    if ( zt == 0 ) {
+	    if ( zt == NULL ) {
 		nbp_ack( ap->ap_fd, NBPOP_ERROR, (int)nh.nh_id, from );
 		return 0;
 	    }
@@ -184,7 +184,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 	 * Observe that we don't have to do any local-zone verification
 	 * if the zone aleady has a multicast address set.
 	 */
-	if ( zt != 0 && zt->zt_bcast == 0 ) {
+	if ( zt != NULL && zt->zt_bcast == NULL ) {
 	    /*
 	     * Check if zone is associated with any of our local interfaces.
 	     */
@@ -194,11 +194,11 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 			break;
 		    }
 		}
-		if ( l != 0 ) {
+		if ( l != NULL ) {
 		    break;
 		}
 	    }
-	    if ( iface == 0 ) {
+	    if ( iface == NULL ) {
 		nbp_ack( ap->ap_fd, NBPOP_ERROR, (int)nh.nh_id, from );
 		return 0;
 	    }
@@ -227,14 +227,14 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 	}
 
 	if (( ntab = (struct nbptab *)malloc( sizeof( struct nbptab )))
-		== 0 ) {
+		== NULL ) {
 	    LOG(log_error, logtype_atalkd, "nbp_packet: malloc: %s", strerror(errno) );
 	    return -1;
 	}
 	memcpy( &ntab->nt_nve, &nn, sizeof( struct nbpnve ));
 	ntab->nt_iface = ap->ap_iface;
 	ntab->nt_next = nbptab;
-	ntab->nt_prev = 0;
+	ntab->nt_prev = NULL;
 	if ( nbptab ) {
 	    nbptab->nt_prev = ntab;
 	}
@@ -297,15 +297,15 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 		break;
 	    }
 	}
-	if ( ntab == 0 ) {
+	if ( ntab == NULL ) {
 	    nbp_ack( ap->ap_fd, NBPOP_ERROR, (int)nh.nh_id, from );
 	    return 0;
 	}
 
-	if ( ntab->nt_next != 0 ) {
+	if ( ntab->nt_next != NULL ) {
 	    ntab->nt_next->nt_prev = ntab->nt_prev;
 	}
-	if ( ntab->nt_prev != 0 ) {
+	if ( ntab->nt_prev != NULL ) {
 	    ntab->nt_prev->nt_next = ntab->nt_next;
 	}
 	if ( ntab == nbptab ) {
@@ -362,7 +362,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 		    break;
 		}
 	    }
-	    if ( zt == 0 ) {
+	    if ( zt == NULL ) {
 		nbp_ack( ap->ap_fd, NBPOP_ERROR, (int)nh.nh_id, from );
 		return 0;
 	    }
@@ -372,7 +372,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 	 * If we've got no zones, send out LKUP on the local net.
 	 * Otherwise, look through the zone table.
 	 */
-	if ( zt == 0 ) {
+	if ( zt == NULL ) {
 #ifdef BSD4_4
 	    sat.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */
@@ -392,7 +392,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 		    break;
 		}
 	    }
-	    if ( iface == 0 ) {
+	    if ( iface == NULL ) {
 		return 0;
 	    }
 	    for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
@@ -416,7 +416,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 	    for ( l = zt->zt_rt; l; l = l->l_next ) {
 		rtmp = (struct rtmptab *)l->l_data;
 
-		if ( rtmp->rt_gate == 0 ) {
+		if ( rtmp->rt_gate == NULL ) {
 		    for ( iface = interfaces; iface;
 			    iface = iface->i_next ) {
 			if ( iface->i_rt == rtmp ) {
@@ -444,7 +444,7 @@ Can't find route's interface!" );
 
 		if ( transition &&
 			( rtmp->rt_flags & RTMPTAB_EXTENDED ) == 0 ) {
-		    if ( rtmp->rt_gate == 0 ) {
+		    if ( rtmp->rt_gate == NULL ) {
 			locallkup = 1;
 		    }
 		    nh.nh_op = NBPOP_LKUP;
@@ -452,7 +452,7 @@ Can't find route's interface!" );
 		    sat.sat_addr.s_net = rtmp->rt_firstnet;
 		    sat.sat_addr.s_node = ATADDR_BCAST;
 		} else {
-		    if ( rtmp->rt_gate == 0 ) {
+		    if ( rtmp->rt_gate == NULL ) {
 			nh.nh_op = NBPOP_LKUP;
 			memcpy( nbpop, &nh, SZ_NBPHDR );
 			sat.sat_addr.s_net = 0;

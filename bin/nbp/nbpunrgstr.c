@@ -1,5 +1,5 @@
 /*
- * $Id: nbpunrgstr.c,v 1.8 2009-10-14 01:38:28 didg Exp $
+ * $Id: nbpunrgstr.c,v 1.9 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -45,7 +45,7 @@ static void Usage(char *av0)
 {
     char	*p;
 
-    if (( p = strrchr( av0, '/' )) == 0 ) {
+    if (( p = strrchr( av0, '/' )) == NULL ) {
 	p = av0;
     } else {
 	p++;
@@ -57,8 +57,8 @@ static void Usage(char *av0)
 
 int main(int ac, char **av)
 {
-    char		*Obj = 0, *Type = 0, *Zone = 0;
-    char		*convname = 0;
+    char		*Obj = NULL, *Type = NULL, *Zone = NULL;
+    char		*convname = NULL;
     struct at_addr      addr;
     int                 c;
     charset_t		chMac = CH_MAC;

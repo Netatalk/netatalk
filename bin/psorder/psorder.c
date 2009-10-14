@@ -1,5 +1,5 @@
 /*
- * $Id: psorder.c,v 1.8 2009-10-14 01:38:28 didg Exp $
+ * $Id: psorder.c,v 1.9 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -241,7 +241,7 @@ readps(int inputfd, int tempfd, char *tempfile)
 {
     off_t		ccread = 0;
     off_t		ccmatch;
-    char		*curtok = 0;
+    char		*curtok = NULL;
     FILE		*tempstream;
     pa_buf_t		*pb;
     int			n;

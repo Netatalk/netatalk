@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.39 2009-10-14 01:38:28 didg Exp $
+ * $Id: afp_dsi.c,v 1.40 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -122,7 +122,7 @@ static void afp_dsi_timedown(int sig _U_)
     it.it_value.tv_sec = 300;
     it.it_value.tv_usec = 0;
 
-    if ( setitimer( ITIMER_REAL, &it, 0 ) < 0 ) {
+    if ( setitimer( ITIMER_REAL, &it, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_timedown: setitimer: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -132,7 +132,7 @@ static void afp_dsi_timedown(int sig _U_)
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGTERM);
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGALRM, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGALRM, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_timedown: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -141,7 +141,7 @@ static void afp_dsi_timedown(int sig _U_)
     sv.sa_handler = SIG_IGN;
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGUSR1, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGUSR1, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_timedown: sigaction SIGHUP: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -237,7 +237,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
     action.sa_flags = SA_RESTART;
-    if ( sigaction( SIGHUP, &action, 0 ) < 0 ) {
+    if ( sigaction( SIGHUP, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -252,7 +252,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
     action.sa_flags = SA_RESTART;
-    if ( sigaction( SIGTERM, &action, 0 ) < 0 ) {
+    if ( sigaction( SIGTERM, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -266,7 +266,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR1);
     sigaddset(&action.sa_mask, SIGHUP);
     action.sa_flags = SA_RESTART;
-    if ( sigaction( SIGUSR2, &action, 0) < 0 ) {
+    if ( sigaction( SIGUSR2, &action, NULL) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -282,7 +282,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
     action.sa_flags = SA_RESTART;
-    if ( sigaction( SIGUSR1, &action, 0) < 0 ) {
+    if ( sigaction( SIGUSR1, &action, NULL) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }

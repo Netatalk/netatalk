@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.25 2009-10-13 22:55:37 didg Exp $
+ * $Id: main.c,v 1.26 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -219,7 +219,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGUSR1);
     
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
@@ -231,7 +231,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGCHLD);
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGUSR1, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGUSR1, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
@@ -242,7 +242,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGUSR1);
     sigaddset(&sv.sa_mask, SIGCHLD);
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGHUP, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGHUP, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
@@ -254,7 +254,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGUSR1);
     sigaddset(&sv.sa_mask, SIGCHLD);
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }

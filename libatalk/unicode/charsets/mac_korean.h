@@ -138,7 +138,7 @@ static const cjk_index_t mac_korean_uni2_index[] = {
   { { 0xe000, 0xe41f }, mac_korean_uni2_pagee0 },
   { { 0xf800, 0xf84f }, mac_korean_uni2_pagef8 },
   { { 0xfe50, 0xffef }, mac_korean_uni2_pagefe },
-  { { 0, 0 }, 0 }
+  { { 0, 0 }, NULL }
 };
 
 static const u_int16_t mac_korean_uni2_charset[] = {
@@ -352,7 +352,7 @@ static const u_int16_t mac_korean_2uni_pagea1[][2] = {
 static const cjk_index_t mac_korean_2uni_index[] = {
   { { 0x0080, 0x00ff }, mac_korean_2uni_page00 },
   { { 0xa140, 0xadbf }, mac_korean_2uni_pagea1 },
-  { { 0, 0 }, 0 }
+  { { 0, 0 }, NULL }
 };
 
 static const u_int16_t mac_korean_2uni_charset[] = {

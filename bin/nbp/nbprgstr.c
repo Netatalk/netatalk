@@ -1,5 +1,5 @@
 /*
- * $Id: nbprgstr.c,v 1.7 2009-10-14 01:38:28 didg Exp $
+ * $Id: nbprgstr.c,v 1.8 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,7 +26,7 @@ static void Usage(char *av0)
 {
     char	*p;
 
-    if (( p = strrchr( av0, '/' )) == 0 ) {
+    if (( p = strrchr( av0, '/' )) == NULL ) {
 	p = av0;
     } else {
 	p++;
@@ -40,8 +40,8 @@ int main(int ac, char **av)
 {
     struct sockaddr_at	addr;
     struct at_addr      ataddr;
-    char		*Obj = 0, *Type = 0, *Zone = 0;
-    char		*convname = 0;
+    char		*Obj = NULL, *Type = NULL, *Zone = NULL;
+    char		*convname = NULL;
     int			s, c, port = 0;
     charset_t		chMac = CH_MAC;
     

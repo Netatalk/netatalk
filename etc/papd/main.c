@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.28 2009-10-14 01:38:28 didg Exp $
+ * $Id: main.c,v 1.29 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -139,7 +139,7 @@ reap(int sig _U_)
     int		status;
     int		pid;
 
-    while (( pid = wait3( &status, WNOHANG, 0 )) > 0 ) {
+    while (( pid = wait3( &status, WNOHANG, NULL )) > 0 ) {
 	if ( WIFEXITED( status )) {
 	    if ( WEXITSTATUS( status )) {
 		LOG(log_error, logtype_papd, "child %d exited with %d", pid,
@@ -181,7 +181,7 @@ int main(int ac, char **av)
 	perror( "gethostname" );
 	exit( 1 );
     }
-    if (( p = strchr( hostname, '.' )) != 0 ) {
+    if (( p = strchr( hostname, '.' )) != NULL ) {
 	*p = '\0';
     }
     if (( defprinter.p_name = (char *)malloc( strlen( hostname ) + 1 ))
@@ -322,7 +322,7 @@ int main(int ac, char **av)
     sv.sa_handler = die;
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
 	LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 	papd_exit( 1 );
     }
@@ -330,7 +330,7 @@ int main(int ac, char **av)
     sv.sa_handler = reap;
     sigemptyset( &sv.sa_mask );
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
+    if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
 	LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 	papd_exit( 1 );
     }
@@ -348,7 +348,7 @@ int main(int ac, char **av)
 	for ( pr = printers; pr; pr = pr->p_next ) {
 	    FD_SET( atp_fileno( pr->p_atp ), &fdset );
 	}
-	if (( c = select( FD_SETSIZE, &fdset, 0, 0, 0 )) < 0 ) {
+	if (( c = select( FD_SETSIZE, &fdset, NULL, NULL, NULL )) < 0 ) {
 	    if ( errno == EINTR ) {
 		continue;
 	    }
@@ -478,12 +478,12 @@ int main(int ac, char **av)
 			sv.sa_handler = SIG_DFL;
 			sigemptyset( &sv.sa_mask );
 			sv.sa_flags = SA_RESTART;
-			if ( sigaction( SIGTERM, &sv, 0 ) < 0 ) {
+			if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
 			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 			    exit( 1 );
 			}
 			
-			if ( sigaction( SIGCHLD, &sv, 0 ) < 0 ) {
+			if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
 			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
 			    exit( 1 );
                         }

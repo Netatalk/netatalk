@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.15 2009-10-13 22:55:37 didg Exp $
+ * $Id: rtmp.c,v 1.16 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -551,13 +551,13 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 	    }
 	}
 	if ( !gate ) {	/* new gateway */
-	    if (( gate = (struct gate *)malloc( sizeof( struct gate ))) == 0 ) {
+	    if (( gate = (struct gate *)malloc( sizeof( struct gate ))) == NULL ) {
 		LOG(log_error, logtype_atalkd, "rtmp_packet: malloc: %s", strerror(errno) );
 		return -1;
 	    }
 	    gate->g_next = iface->i_gate;
-	    gate->g_prev = 0;
-	    gate->g_rt = 0;
+	    gate->g_prev = NULL;
+	    gate->g_rt = NULL;
 	    gate->g_iface = iface;	/* need this? */
 	    gate->g_sat = *from;
 	    if ( iface->i_gate ) {
@@ -680,10 +680,10 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 		 * we're not likely to be asked for the same tuple twice
 		 * in a row.
 		 */
-		if ( rtmp->rt_next != 0 ) {
+		if ( rtmp->rt_next != NULL ) {
 		    gate->g_rt->rt_prev->rt_next = gate->g_rt;
 		    gate->g_rt = rtmp->rt_next;
-		    rtmp->rt_next = 0;
+		    rtmp->rt_next = NULL;
 		}
 	    } else if (( rt.rt_dist & 0x7f ) + 1 > RTMPHOPS_MAX ) {
 		LOG(log_info, logtype_atalkd, "rtmp_packet bad hop count from %u.%u for %u",
@@ -708,7 +708,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 		/*
 		 * Add rtmptab entry to end of list (leave head alone).
 		 */
-		if ( gate->g_rt == 0 ) {
+		if ( gate->g_rt == NULL ) {
 		    rtmp->rt_prev = rtmp;
 		    gate->g_rt = rtmp;
 		} else {
@@ -751,7 +751,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 	 * Request and RDR.
 	 */
         if (((iface->i_flags & IFACE_ISROUTER) == 0) ||
-	    iface->i_rt->rt_zt == 0 ||
+	    iface->i_rt->rt_zt == NULL ||
 	    ( iface->i_flags & IFACE_CONFIG ) == 0 ) {
 	    return 0;
 	}
@@ -814,7 +814,7 @@ int rtmp_request( struct interface *iface)
 	    break;
 	}
     }
-    if ( ap == 0 ) {
+    if ( ap == NULL ) {
 	LOG(log_error, logtype_atalkd, "rtmp_request can't find rtmp socket!" );
 	return -1;
     }
@@ -972,8 +972,8 @@ newrt(const struct interface *iface)
 {
     struct rtmptab	*rtmp;
 
-    if (( rtmp = (struct rtmptab *)calloc(1, sizeof(struct rtmptab))) == 0 ) {
-	return( 0 );
+    if (( rtmp = (struct rtmptab *)calloc(1, sizeof(struct rtmptab))) == NULL ) {
+	return( NULL );
     }
 
     rtmp->rt_iface = iface;

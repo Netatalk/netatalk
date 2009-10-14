@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.21 2009-10-14 01:38:28 didg Exp $
+ * $Id: main.c,v 1.22 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -331,7 +331,7 @@ static void as_timer(int sig _U_)
 		while ( rtmp ) {
 		    frtmp = rtmp->rt_next;
 		    if ( rtmp->rt_hops == RTMPHOPS_POISON ||
-			    rtmp->rt_iprev == 0 ) {
+			    rtmp->rt_iprev == NULL ) {
 			rtmp_free( rtmp );
 		    } else {
 			rtmp->rt_hops = RTMPHOPS_POISON;
@@ -345,13 +345,13 @@ static void as_timer(int sig _U_)
 		    }
 		    rtmp = frtmp;
 		}
-		if ( gate->g_rt == 0 ) {
-		    if ( gate->g_prev == 0 ) {
+		if ( gate->g_rt == NULL ) {
+		    if ( gate->g_prev == NULL ) {
 			gate->g_iface->i_gate = gate->g_next;
 		    } else {
 			gate->g_prev->g_next = gate->g_next;
 		    }
-		    if ( gate->g_next != 0 ) {
+		    if ( gate->g_next != NULL ) {
 			gate->g_next->g_prev = gate->g_prev;
 		    }
 		    fgate = gate;	/* can't free here, just mark it */
@@ -366,7 +366,7 @@ static void as_timer(int sig _U_)
 		 * if we're not a seed router.
 		 */
 
-		if ( gate->g_iface->i_gate == 0 && 
+		if ( gate->g_iface->i_gate == NULL && 
 		     ((iface->i_flags & IFACE_SEED) == 0)) {
 		    gate->g_iface->i_flags |= IFACE_NOROUTER;
 		    gate->g_iface->i_flags &= ~IFACE_CONFIG;
@@ -424,7 +424,7 @@ static void as_timer(int sig _U_)
 		 */
 		if ( rtmp->rt_state >= RTMPTAB_BAD ) {
 		    frtmp = rtmp->rt_next;
-		    if ( rtmp->rt_iprev == 0 ) {	/* not in use */
+		    if ( rtmp->rt_iprev == NULL ) {	/* not in use */
 			rtmp_free( rtmp );
 		    } else {				/* in use */
 			if ( rtmp->rt_hops == RTMPHOPS_POISON ) {
@@ -576,7 +576,7 @@ static void as_timer(int sig _U_)
 		 */
 		for ( rtmp = iface2->i_rt; rtmp; rtmp = rtmp->rt_inext ) {
 		    /* don't broadcast routes we have no zone for */
-		    if ( rtmp->rt_zt == 0 ||
+		    if ( rtmp->rt_zt == NULL ||
 			    ( rtmp->rt_flags & RTMPTAB_ZIPQUERY ) ||
 			    ( rtmp->rt_flags & RTMPTAB_HASZONES ) == 0 ) {
 			continue;
@@ -1230,7 +1230,7 @@ int main( int ac, char **av)
  */
 void bootaddr(struct interface *iface)
 {
-    if ( iface == 0 ) {
+    if ( iface == NULL ) {
 	return;
     }
 

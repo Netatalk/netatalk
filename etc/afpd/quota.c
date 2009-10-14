@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.31 2009-10-13 22:55:37 didg Exp $
+ * $Id: quota.c,v 1.32 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -642,7 +642,7 @@ static int overquota( struct dqblk *dqblk)
         return( 0 );
     }
 #else /* ultrix */
-    if ( gettimeofday( &tv, 0 ) < 0 ) {
+    if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
         return( AFPERR_PARAM );
     }

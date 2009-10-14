@@ -14,7 +14,7 @@
  * into proprietary software; there is no requirement for such software to
  * contain a copyright notice related to this source.
  *
- * $Id: hash.c,v 1.1 2005-04-30 21:33:41 didg Exp $
+ * $Id: hash.c,v 1.2 2009-10-14 02:24:05 didg Exp $
  * $Name:  $
  */
 #define NDEBUG
@@ -26,7 +26,7 @@
 #include "hash.h"
 
 #ifdef KAZLIB_RCSID
-static const char rcsid[] = "$Id: hash.c,v 1.1 2005-04-30 21:33:41 didg Exp $";
+static const char rcsid[] = "$Id: hash.c,v 1.2 2009-10-14 02:24:05 didg Exp $";
 #endif
 
 #define INIT_BITS	6
@@ -170,9 +170,9 @@ static void grow_table(hash_t *hash)
 	assert (mask != hash->mask);
 
 	for (chain = 0; chain < hash->nchains; chain++) { /* 7 */
-	    hnode_t *low_chain = 0, *high_chain = 0, *hptr, *next;
+	    hnode_t *low_chain = NULL, *high_chain = NULL, *hptr, *next;
 
-	    for (hptr = newtable[chain]; hptr != 0; hptr = next) {
+	    for (hptr = newtable[chain]; hptr != NULL; hptr = next) {
 		next = hptr->next;
 
 		if (hptr->hkey & exposed_bit) {
@@ -240,9 +240,9 @@ static void shrink_table(hash_t *hash)
 	high_chain = hash->table[chain + nchains];
 	for (low_tail = low_chain; low_tail && low_tail->next; low_tail = low_tail->next)
 	    ;	/* 3 */
-	if (low_chain != 0)				/* 4 */
+	if (low_chain != NULL)				/* 4 */
 	    low_tail->next = high_chain;
-	else if (high_chain != 0)			/* 5 */
+	else if (high_chain != NULL)			/* 5 */
 	    hash->table[chain] = high_chain;
 	else
 	    assert (hash->table[chain] == NULL);	/* 6 */
@@ -439,7 +439,7 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
 
     /* 1 */
 
-    for (chain = 0; chain < nchains && hash->table[chain] == 0; chain++)
+    for (chain = 0; chain < nchains && hash->table[chain] == NULL; chain++)
 	;
 
     if (chain < nchains) {	/* 2 */
@@ -489,7 +489,7 @@ hnode_t *hash_scan_next(hscan_t *scan)
 	if (next->next) {	/* 4 */
 	    scan->next = next->next;
 	} else {
-	    while (chain < nchains && hash->table[chain] == 0)	/* 5 */
+	    while (chain < nchains && hash->table[chain] == NULL)	/* 5 */
 	    	chain++;
 	    if (chain < nchains) {	/* 6 */
 		scan->chain = chain;
@@ -704,7 +704,7 @@ int hash_verify(hash_t *hash)
     }
 
     for (chain = 0; chain < hash->nchains; chain++) {	/* 2 */
-	for (hptr = hash->table[chain]; hptr != 0; hptr = hptr->next) {
+	for (hptr = hash->table[chain]; hptr != NULL; hptr = hptr->next) {
 	    if ((hptr->hkey & hash->mask) != chain)
 		return 0;
 	    count++;

@@ -72,7 +72,7 @@ static const cjk_index_t mac_chinese_trad_uni2_index[] = {
   { { 0xf880, 0xf88f }, mac_chinese_trad_uni2_pagef8 },
   { { 0xfe40, 0xfe5f }, mac_chinese_trad_uni2_pagefe },
   { { 0xff60, 0xff6f }, mac_chinese_trad_uni2_pageff },
-  { { 0, 0 }, 0 }
+  { { 0, 0 }, NULL }
 };
 
 static const u_int16_t mac_chinese_trad_uni2_charset[] = {
@@ -103,7 +103,7 @@ static const u_int16_t mac_chinese_trad_2uni_pagea1[][2] = {
 static const cjk_index_t mac_chinese_trad_2uni_index[] = {
   { { 0x0080, 0x00ff }, mac_chinese_trad_2uni_page00 },
   { { 0xa140, 0xa2cf }, mac_chinese_trad_2uni_pagea1 },
-  { { 0, 0 }, 0 }
+  { { 0, 0 }, NULL }
 };
 
 static const u_int16_t mac_chinese_trad_2uni_charset[] = {

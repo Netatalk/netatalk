@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.12 2009-10-14 01:38:28 didg Exp $
+ * $Id: pap.c,v 1.13 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -321,7 +321,7 @@ int main( int ac, char	**av)
     cbuf[ 2 ] = cbuf[ 3 ] = 0;
     cbuf[ 4 ] = atp_sockaddr( atp )->sat_port;
     cbuf[ 5 ] = oquantum;	/* flow quantum */
-    if ( gettimeofday( &stv, 0 ) < 0 ) {
+    if ( gettimeofday( &stv, NULL ) < 0 ) {
 	perror( "gettimeofday" );
 	exit( 2 );
     }
@@ -329,7 +329,7 @@ int main( int ac, char	**av)
 	if ( cuts ) {
 	    waiting = 0xffff;
 	} else {
-	    if ( gettimeofday( &tv, 0 ) < 0 ) {
+	    if ( gettimeofday( &tv, NULL ) < 0 ) {
 		perror( "gettimeofday" );
 		exit( 2 );
 	    }
@@ -477,7 +477,7 @@ static int send_file( int fd, ATP atp, int lastfile)
     int			cc, i;
     unsigned short	netseq;
 
-    if ( gettimeofday( &stv, 0 ) < 0 ) {
+    if ( gettimeofday( &stv, NULL ) < 0 ) {
 	perror( "gettimeofday" );
 	exit( 2 );
     }
@@ -503,7 +503,7 @@ static int send_file( int fd, ATP atp, int lastfile)
 	if(debug){ printf( "READ %d >\n", seq ), fflush( stdout );}
 
     for (;;) {
-	if ( gettimeofday( &tv, 0 ) < 0 ) {
+	if ( gettimeofday( &tv, NULL ) < 0 ) {
 	    perror( "gettimeofday" );
 	    exit( 2 );
 	}
@@ -539,7 +539,7 @@ static int send_file( int fd, ATP atp, int lastfile)
 	}
 	FD_SET( atp_fileno( atp ), &fds );
 
-	if (( cc = select( FD_SETSIZE, &fds, 0, 0, &tv )) < 0 ) {
+	if (( cc = select( FD_SETSIZE, &fds, NULL, NULL, &tv )) < 0 ) {
 	    perror( "select" );
 	    exit( 2 );
 	}

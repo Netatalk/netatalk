@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.11 2009-10-14 01:38:28 didg Exp $
+ * $Id: psf.c,v 1.12 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -56,7 +56,7 @@ int copyio();
 int textps();
 
 static char		psapath[] = _PATH_PSA;
-static char		*psaargv[] = { "psa", 0, 0, 0, 0 };
+static char		*psaargv[] = { "psa", NULL, NULL, NULL, NULL };
 
 /*
  * If we're not doing accounting, we just call pap as below.
@@ -66,12 +66,12 @@ static char		*psaargv[] = { "psa", 0, 0, 0, 0 };
  * in arg 3, and 0 in arg 4.
  */
 static char		pappath[] = _PATH_PAP;
-static char		*papargv[] = { "pap", "-sstatus", 0, 0, 0, 0, 0, 0 };
+static char		*papargv[] = { "pap", "-sstatus", NULL, NULL, NULL, NULL, NULL, NULL };
 
 static char		revpath[] = _PATH_PSORDER;
-static char		*revargv[] = { "psorder", "-d", 0 };
+static char		*revargv[] = { "psorder", "-d", NULL };
 
-static char		*filtargv[] = { 0, 0, 0 };
+static char		*filtargv[] = { NULL, NULL, NULL };
 
 static char		inbuf[ 1024 * 8 ];
 static int		inlen;
@@ -224,20 +224,20 @@ restart:
 		    papargv[ 4 ] = "-E";
 		    papargv[ 5 ] = _PATH_PAGECOUNT;
 		    papargv[ 6 ] = "-";
-		    papargv[ 7 ] = 0;
+		    papargv[ 7 ] = NULL;
 		} else if ( waitidle ) {
 		    papargv[ 2 ] = "-w";
 		    papargv[ 3 ] = "-c";
 		    papargv[ 4 ] = "-E";
 		    papargv[ 5 ] = _PATH_PAGECOUNT;
 		    papargv[ 6 ] = "-";
-		    papargv[ 7 ] = 0;
+		    papargv[ 7 ] = NULL;
 		} else {
 		    papargv[ 2 ] = "-c";
 		    papargv[ 3 ] = "-E";
 		    papargv[ 4 ] = _PATH_PAGECOUNT;
 		    papargv[ 5 ] = "-";
-		    papargv[ 6 ] = 0;
+		    papargv[ 6 ] = NULL;
 		}
 	    } else {
 		/*
@@ -247,13 +247,13 @@ restart:
 		papargv[ 3 ] = _PATH_PAGECOUNT;
 		papargv[ 4 ] = "-";
 		papargv[ 5 ] = _PATH_PAGECOUNT;
-		papargv[ 6 ] = 0;
+		papargv[ 6 ] = NULL;
 	    }
 #endif /* FUCKED */
 	} else {
 	    papargv[ 2 ] = "-c";
 	    papargv[ 3 ] = "-E";
-	    papargv[ 4 ] = 0;
+	    papargv[ 4 ] = NULL;
 	}
 
 	if (( c = pexecv( pappath, papargv )) < 0 ) {
@@ -311,14 +311,14 @@ restart:
 	if ( waitidle2 ) {
 	    papargv[ 3 ] = "-W";
 	    papargv[ 4 ] = _PATH_PAGECOUNT;
-	    papargv[ 5 ] = 0;
+	    papargv[ 5 ] = NULL;
 	} else if ( waitidle ) {
 	    papargv[ 3 ] = "-w";
 	    papargv[ 4 ] = _PATH_PAGECOUNT;
-	    papargv[ 5 ] = 0;
+	    papargv[ 5 ] = NULL;
 	} else {
 	    papargv[ 3 ] = _PATH_PAGECOUNT;
-	    papargv[ 4 ] = 0;
+	    papargv[ 4 ] = NULL;
 	}
 
 	if (( c = pexecv( pappath, papargv )) < 0 ) {
@@ -334,7 +334,7 @@ restart:
 	close( 1 );
     }
     while ( children ) {
-	if (( c = wait3( &status, 0, 0 )) < 0 ) {
+	if (( c = wait3( &status, 0, NULL )) < 0 ) {
 	    syslog( LOG_ERR, "wait3: %s", strerror(errno) );
 	    exit( 1 );
 	}

@@ -1,5 +1,5 @@
 /*
- * $Id: printcap.c,v 1.11 2009-10-13 22:55:37 didg Exp $
+ * $Id: printcap.c,v 1.12 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -466,11 +466,11 @@ tgetstr(char *id, char **area)
 	for (;;) {
 		bp = tskip(bp);
 		if (!*bp)
-			return (0);
+			return (NULL);
 		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
 			continue;
 		if (*bp == '@')
-			return(0);
+			return(NULL);
 		if (*bp != '=')
 			continue;
 		bp++;

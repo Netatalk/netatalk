@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.c,v 1.12 2009-10-14 01:38:28 didg Exp $
+ * $Id: megatron.c,v 1.13 2009-10-14 02:24:04 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     char	*progname, newname[ADEDLEN_NAME + 1];
 
     progname = strrchr( argv[ 0 ], '/' );
-    if (( progname == NULL ) || ( progname == '\0' )) {
+    if (( progname == NULL ) || ( *progname == '\0' )) {
 	progname = argv[ 0 ];
     } else progname++;
 

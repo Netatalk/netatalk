@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.10 2008-12-03 18:35:44 didg Exp $
+ * $Id: server_child.c,v 1.11 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -416,11 +416,11 @@ void server_reset_signal(void)
     sv.sa_handler =  SIG_DFL;
     sigemptyset( &sv.sa_mask );
     
-    sigaction(SIGALRM, &sv, 0 );
-    sigaction(SIGHUP,  &sv, 0 );
-    sigaction(SIGTERM, &sv, 0 );
-    sigaction(SIGUSR1, &sv, 0 );
-    sigaction(SIGCHLD, &sv, 0 );
+    sigaction(SIGALRM, &sv, NULL );
+    sigaction(SIGHUP,  &sv, NULL );
+    sigaction(SIGTERM, &sv, NULL );
+    sigaction(SIGUSR1, &sv, NULL );
+    sigaction(SIGCHLD, &sv, NULL );
     
     sigemptyset(&sigs);
     sigaddset(&sigs, SIGALRM);

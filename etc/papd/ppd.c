@@ -1,5 +1,5 @@
 /*
- * $Id: ppd.c,v 1.16 2009-10-13 22:55:37 didg Exp $
+ * $Id: ppd.c,v 1.17 2009-10-14 02:24:05 didg Exp $
  *
  * Copyright (c) 1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -26,21 +26,21 @@
 struct ppd_font		*ppd_fonts = NULL;
 
 struct ppd_feature	ppd_features[] = {
-    { "*LanguageLevel",	0 },
-    { "*PSVersion",	0 },
+    { "*LanguageLevel",	NULL },
+    { "*PSVersion",	NULL },
 #ifdef HAVE_CUPS
     { "*FreeVM",	"33554432" },
 #else
-    { "*FreeVM",	0 },
+    { "*FreeVM",	NULL },
 #endif
-    { "*Product",	0 },
-    { "*PCFileName",	0 },
-    { "*ModelName",	0 },
-    { "*NickName",	0 },
-    { "*ColorDevice",	0 },
-    { "*FaxSupport",	0 },
-    { "*TTRasterizer",	0 },
-    { 0, 0 },
+    { "*Product",	NULL },
+    { "*PCFileName",	NULL },
+    { "*ModelName",	NULL },
+    { "*NickName",	NULL },
+    { "*ColorDevice",	NULL },
+    { "*FaxSupport",	NULL },
+    { "*TTRasterizer",	NULL },
+    { NULL, NULL },
 };
 
 struct ppdent {
