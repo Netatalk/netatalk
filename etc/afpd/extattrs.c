@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.4 2009-10-02 09:32:40 franklahm Exp $
+  $Id: extattrs.c,v 1.5 2009-10-14 15:04:00 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -183,7 +183,7 @@ int afp_listextattr(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *r
             attrbuflen += strlen(ea_resourcefork) + 1;
         }
 
-        ret = vol->vfs->list_eas(vol, attrnamebuf, &attrbuflen, uname, oflag);
+        ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag);
 
         switch (ret) {
         case AFPERR_BADTYPE:
@@ -319,9 +319,9 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
       if its non 0 we must return the attribute.
     */
     if (maxreply == 0)
-        ret = vol->vfs->get_easize(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname);
+        ret = vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname);
     else
-        ret = vol->vfs->get_eacontent(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, maxreply);
+        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, maxreply);
 
     return ret;
 }
@@ -409,7 +409,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
 
     LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u", s_path->u_name, attrmname, attrsize);
 
-    ret = vol->vfs->set_ea(vol, s_path->u_name, attruname, ibuf, attrsize, oflag);
+    ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize, oflag);
 
     return ret;
 }
@@ -481,7 +481,7 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int
 
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name, attrmname);
 
-    ret = vol->vfs->remove_ea(vol, s_path->u_name, attruname, oflag);
+    ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag);
 
     return ret;
 }

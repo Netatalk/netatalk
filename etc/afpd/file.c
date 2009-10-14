@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.112 2009-10-13 22:55:36 didg Exp $
+ * $Id: file.c,v 1.113 2009-10-14 15:04:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1037,7 +1037,7 @@ int renamefile(const struct vol *vol, char *src, char *dst, char *newname, struc
         }
     }
 
-    if (vol->vfs->rf_renamefile(vol, src, dst) < 0 ) {
+    if (vol->vfs->vfs_renamefile(vol, src, dst) < 0 ) {
         int err;
         
         err = errno;        
@@ -1574,7 +1574,7 @@ int deletefile(const struct vol *vol, char *file, int checkAttrib)
     if (adp && ad_tmplock( &ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 0 ) < 0) {
         err = AFPERR_BUSY;
     }
-    else if (!(err = vol->vfs->rf_deletefile(vol, file)) && !(err = netatalk_unlink( file )) ) {
+    else if (!(err = vol->vfs->vfs_deletefile(vol, file)) && !(err = netatalk_unlink( file )) ) {
         cnid_t id;
         if (checkAttrib && (id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file)))) 
         {

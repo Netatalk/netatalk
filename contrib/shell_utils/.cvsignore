@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 afpd-mtab.pl
+apple_cleanup
 apple_cp
 apple_mv
 apple_rm

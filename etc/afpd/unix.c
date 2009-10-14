@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.54 2009-10-13 22:55:37 didg Exp $
+ * $Id: unix.c,v 1.55 2009-10-14 15:04:01 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -330,7 +330,7 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
     if (setfilmode( path->u_name, mode, &path->st, vol->v_umask) < 0)
         return -1;
     /* we need to set write perm if read set for resource fork */
-    return vol->vfs->rf_setfilmode(vol, path->u_name, mode, &path->st);
+    return vol->vfs->vfs_setfilmode(vol, path->u_name, mode, &path->st);
 }
 
 
@@ -346,7 +346,7 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
     	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
         	return -1;
     }
-    if (vol->vfs->rf_setdirunixmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
+    if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
         return  -1 ;
     }
     if (!dir_rx_set(mode)) {
@@ -401,7 +401,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     }
     closedir( dir );
     
-    if (vol->vfs->rf_setdirmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
+    if (vol->vfs->vfs_setdirmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
         return  -1 ;
     }
 
@@ -492,7 +492,7 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct 
 	return -1;
     }
 
-    if (vol->vfs->rf_chown(vol, path->u_name, uid, gid ) < 0 && errno != EPERM) {
+    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid ) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setfilowner: rf_chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno) );
         return -1;
@@ -535,7 +535,7 @@ int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const 
     }
     closedir( dir );
 
-    if (vol->vfs->rf_setdirowner(vol, name, uid, gid) < 0) {
+    if (vol->vfs->vfs_setdirowner(vol, name, uid, gid) < 0) {
         return -1;
     }
     

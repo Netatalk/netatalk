@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.56 2009-10-13 22:55:37 didg Exp $
+ * $Id: filedir.c,v 1.57 2009-10-14 15:04:01 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -311,7 +311,7 @@ int check_name(const struct vol *vol, char *name)
     if ((vol->v_flags & AFPVOL_NOHEX) && strchr(name, '/'))
         return AFPERR_PARAM;
 
-    if (!vol->vfs->validupath(vol, name)) {
+    if (!vol->vfs->vfs_validupath(vol, name)) {
         LOG(log_info, logtype_afpd, "check_name: illegal name: '%s'", name);
         return AFPERR_EXIST;
     }
@@ -731,7 +731,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, int ibuflen  _U_, char *rbuf _U_,
                 int  admode = ad_mode("", 0777) | vol->v_fperm;
 
                 setfilmode(upath, admode, NULL, vol->v_umask);
-                vol->vfs->rf_setfilmode(vol, upath, admode, NULL);
+                vol->vfs->vfs_setfilmode(vol, upath, admode, NULL);
             }
         setvoltime(obj, vol );
     }

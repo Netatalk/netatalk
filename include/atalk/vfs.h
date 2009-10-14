@@ -25,66 +25,90 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_NFSv4_ACLS
-#include <sys/acl.h>
-#endif
-
 #include <atalk/adouble.h>
 #include <atalk/volume.h>
 
+#define VFS_FUNC_ARGS_VALIDUPATH const struct vol *vol, const char *name
+#define VFS_FUNC_VARS_VALIDUPATH vol, name
+
+#define VFS_FUNC_ARGS_CHOWN const struct vol *vol, const char *path, uid_t uid, gid_t gid
+#define VFS_FUNC_VARS_CHOWN vol, path, uid, gid
+
+#define VFS_FUNC_ARGS_RENAMEDIR const struct vol *vol, const char *oldpath, const char *newpath
+#define VFS_FUNC_VARS_RENAMEDIR vol, oldpath, newpath
+
+#define VFS_FUNC_ARGS_DELETECURDIR const struct vol *vol
+#define VFS_FUNC_VARS_DELETECURDIR vol
+
+#define VFS_FUNC_ARGS_SETFILEMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st
+#define VFS_FUNC_VARS_SETFILEMODE vol, name, mode, st
+
+#define VFS_FUNC_ARGS_SETDIRMODE const struct vol *vol,  const char *name, mode_t mode, struct stat *st
+#define VFS_FUNC_VARS_SETDIRMODE vol, name, mode, st
+
+#define VFS_FUNC_ARGS_SETDIRUNIXMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st
+#define VFS_FUNC_VARS_SETDIRUNIXMODE vol, name, mode, st
+
+#define VFS_FUNC_ARGS_SETDIROWNER const struct vol *vol, const char *name, uid_t uid, gid_t gid
+#define VFS_FUNC_VARS_SETDIROWNER vol, name, uid, gid
+
+#define VFS_FUNC_ARGS_DELETEFILE const struct vol *vol, const char *file
+#define VFS_FUNC_VARS_DELETEFILE vol, file
+
+#define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, const char *src, const char *dst
+#define VFS_FUNC_VARS_RENAMEFILE vol, src, dst
+
+#define VFS_FUNC_ARGS_ACL const struct vol *vol, const char *path, int cmd, int count, void *aces
+#define VFS_FUNC_VARS_ACL vol, path, cmd, count, aces
+
+#define VFS_FUNC_ARGS_REMOVE_ACL const struct vol *vol, const char *path, int dir
+#define VFS_FUNC_VARS_REMOVE_ACL vol, path, dir
+
+#define VFS_FUNC_ARGS_EA_GETSIZE const struct vol * restrict vol, char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname
+#define VFS_FUNC_VARS_EA_GETSIZE vol, rbuf, rbuflen, uname, oflag, attruname
+
+#define VFS_FUNC_ARGS_EA_GETCONTENT const struct vol * restrict vol, char * restrict rbuf, int * restrict rbuflen,  const char * restrict uname, int oflag, const char * restrict attruname, int maxreply
+#define VFS_FUNC_VARS_EA_GETCONTENT vol, rbuf, rbuflen, uname, oflag, attruname, maxreply
+
+#define VFS_FUNC_ARGS_EA_LIST const struct vol * restrict vol, char * restrict attrnamebuf, int * restrict buflen, const char * restrict uname, int oflag
+#define VFS_FUNC_VARS_EA_LIST vol, attrnamebuf, buflen, uname, oflag
+
+#define VFS_FUNC_ARGS_EA_SET const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag
+#define VFS_FUNC_VARS_EA_SET vol, uname, attruname, ibuf, attrsize, oflag
+
+#define VFS_FUNC_ARGS_EA_REMOVE const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag
+#define VFS_FUNC_VARS_EA_REMOVE vol, uname, attruname, oflag
+
 struct vfs_ops {
     /* low level adouble fn */
-    char *(*ad_path)(const char *, int);
+    char *(*ad_path)        (const char *, int); /* name is ad_path because it was too
+                                                    much work to change all calls to
+                                                    sth. different eg vfs_path */
 
     /* */
-    int (*validupath)(const struct vol *, const char *);
-    int (*rf_chown)(const struct vol *, const char *path, uid_t owner, gid_t group);
-    int (*rf_renamedir)(const struct vol *, const char *oldpath, const char *newpath);
-    int (*rf_deletecurdir)(const struct vol *);
-    int (*rf_setfilmode)(const struct vol *, const char * name, mode_t mode, struct stat *st);
-    int (*rf_setdirmode)(const struct vol *, const char * name, mode_t mode, struct stat *st);
-    int (*rf_setdirunixmode)(const struct vol *, const char * name, mode_t mode, struct stat *st);
+    int (*vfs_validupath)    (VFS_FUNC_ARGS_VALIDUPATH);
+    int (*vfs_chown)         (VFS_FUNC_ARGS_CHOWN);
+    int (*vfs_renamedir)     (VFS_FUNC_ARGS_RENAMEDIR);
+    int (*vfs_deletecurdir)  (VFS_FUNC_ARGS_DELETECURDIR);
+    int (*vfs_setfilmode)    (VFS_FUNC_ARGS_SETFILEMODE);
+    int (*vfs_setdirmode)    (VFS_FUNC_ARGS_SETDIRMODE);
+    int (*vfs_setdirunixmode)(VFS_FUNC_ARGS_SETDIRUNIXMODE);
+    int (*vfs_setdirowner)   (VFS_FUNC_ARGS_SETDIROWNER);
+    int (*vfs_deletefile)    (VFS_FUNC_ARGS_DELETEFILE);
+    int (*vfs_renamefile)    (VFS_FUNC_ARGS_RENAMEFILE);
 
-    int (*rf_setdirowner)(const struct vol *, const char *path, uid_t owner, gid_t group);
-
-    int (*rf_deletefile)(const struct vol *, const char * );
-    int (*rf_renamefile)(const struct vol *, const char *oldpath, const char *newpath);
-#ifdef HAVE_NFSv4_ACLS
-    int (*rf_acl)(const struct vol *, const char *path, int cmd, int count, ace_t *aces);
-    int (*rf_remove_acl)(const struct vol *, const char *path, int dir);
-#endif
+    /* ACLs */
+    int (*vfs_acl)           (VFS_FUNC_ARGS_ACL);
+    int (*vfs_remove_acl)    (VFS_FUNC_ARGS_REMOVE_ACL);
 
     /* Extended Attributes */
-    int (*get_easize)(const struct vol * restrict, char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname);
-    int (*get_eacontent)(const struct vol * restrict , char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname, int maxreply);
-    int (*list_eas)(const struct vol * restrict , char * restrict attrnamebuf, int * restrict buflen, const char * restrict uname, int oflag);
-    int (*set_ea)(const struct vol * restrict , const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag);
-    int (*remove_ea)(const struct vol * restrict , const char * restrict uname, const char * restrict attruname, int oflag);
+    int (*vfs_ea_getsize)    (VFS_FUNC_ARGS_EA_GETSIZE);
+    int (*vfs_ea_getcontent) (VFS_FUNC_ARGS_EA_GETCONTENT);
+    int (*vfs_ea_list)       (VFS_FUNC_ARGS_EA_LIST);
+    int (*vfs_ea_set)        (VFS_FUNC_ARGS_EA_SET);
+    int (*vfs_ea_remove)     (VFS_FUNC_ARGS_EA_REMOVE);
 };
 
 extern void initvol_vfs(struct vol * restrict vol);
-
-/* VFS inderected funcs ... : */
-/* ...default adouble EAs */
-extern int get_easize(const struct vol * restrict vol, char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname);
-extern int get_eacontent(const struct vol * restrict vol, char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname, int maxreply);
-extern int list_eas(const struct vol * restrict vol, char * restrict attrnamebuf, int * restrict buflen, const char * restrict uname, int oflag);
-extern int set_ea(const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag);
-extern int remove_ea(const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag);
-
-/* ... Solaris native EAs */
-#ifdef HAVE_SOLARIS_EAS
-extern int sol_get_easize(const struct vol * restrict vol, char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname);
-extern int sol_get_eacontent(const struct vol * restrict vol, char * restrict rbuf, int * restrict rbuflen, const char * restrict uname, int oflag, char * restrict attruname, int maxreply);
-extern int sol_list_eas(const struct vol * restrict vol, char * restrict attrnamebuf, int * restrict buflen, const char * restrict uname, int oflag);
-extern int sol_set_ea(const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf,size_t attrsize, int oflag);
-extern int sol_remove_ea(const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag);
-#endif /* HAVE_SOLARIS_EAS */
-
-/* Solaris NFSv4 ACL stuff */
-#ifdef HAVE_NFSv4_ACLS
-extern int get_nfsv4_acl(const char *name, ace_t **retAces);
-extern int remove_acl(const char *name);
-#endif /* HAVE_NFSv4_ACLS */
 
 #endif /* ATALK_VFS_H */

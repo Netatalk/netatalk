@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.45 2009-10-13 22:55:36 didg Exp $
+ * $Id: enumerate.c,v 1.46 2009-10-14 15:04:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -97,16 +97,16 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 */
 char *check_dirent(const struct vol *vol, char *name)
 {
-
     if (!strcmp(name, "..") || !strcmp(name, "."))
         return NULL;
 
-    if (!vol->vfs->validupath(vol, name))
+    if (!vol->vfs->vfs_validupath(vol, name))
         return NULL;
 
     /* check for vetoed filenames */
     if (veto_file(vol->v_veto, name))
         return NULL;
+
 #if 0
     char *m_name = NULL;
 

@@ -26,14 +26,12 @@
 #include <atalk/afp.h>    
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
+#include <atalk/ea.h>
+#include <atalk/acl.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 #include <atalk/directory.h>
-
-#ifdef HAVE_NFSv4_ACLS
-extern int remove_acl(const char *name);
-#endif
 
 struct perm {
     uid_t uid;
@@ -91,15 +89,14 @@ static int netatalk_name(const char *name)
         strcasecmp(name,".AppleDesktop");
 }
 
-static int validupath_adouble(const struct vol *vol, const char *name) 
+static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 {
     return (vol->v_flags & AFPVOL_USEDOTS) ? 
         netatalk_name(name) && strcasecmp(name,".Parent"): name[0] != '.';
 }                                           
 
 /* ----------------- */
-static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
-
+static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
 {
     struct stat st;
     char        *ad_p;
@@ -113,7 +110,7 @@ static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid, 
 }
 
 /* ----------------- */
-static int RF_renamedir_adouble(const struct vol *vol _U_, const char *oldpath _U_, const char *newpath _U_)
+static int RF_renamedir_adouble(VFS_FUNC_ARGS_RENAMEDIR)
 {
     return 0;
 }
@@ -136,7 +133,7 @@ static int deletecurdir_adouble_loop(struct dirent *de, char *name, void *data _
     return 0;
 }
 
-static int RF_deletecurdir_adouble(const struct vol *vol)
+static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
 {
     int err;
 
@@ -153,13 +150,13 @@ static int adouble_setfilmode(const char * name, mode_t mode, struct stat *st, m
     return setfilmode(name, ad_hf_mode(mode), st, v_umask);
 }
 
-static int RF_setfilmode_adouble(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
+static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 {
     return adouble_setfilmode(vol->vfs->ad_path( name, ADFLAGS_HF ), mode, st, vol->v_umask);
 }
 
 /* ----------------- */
-static int RF_setdirunixmode_adouble(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
+static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
     char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
     int  dropbox = vol->v_flags;
@@ -198,7 +195,7 @@ static int setdirmode_adouble_loop(struct dirent *de _U_, char *name, void *data
     return 0;
 }
 
-static int RF_setdirmode_adouble(const struct vol *vol, const char * name, mode_t mode, struct stat *st _U_)
+static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 {
     int   dropbox = vol->v_flags;
     mode_t hf_mode = ad_hf_mode(mode);
@@ -233,8 +230,7 @@ static int setdirowner_adouble_loop(struct dirent *de _U_, char *name, void *dat
     return 0;
 }
 
-static int RF_setdirowner_adouble(const struct vol *vol, const char *name, uid_t uid, gid_t gid)
-
+static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 {
     int           noadouble = vol_noadouble(vol);
     char          *adouble_p;
@@ -267,13 +263,13 @@ static int RF_setdirowner_adouble(const struct vol *vol, const char *name, uid_t
 }
 
 /* ----------------- */
-static int RF_deletefile_adouble(const struct vol *vol, const char *file )
+static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE)
 {
 	return netatalk_unlink(vol->vfs->ad_path( file, ADFLAGS_HF));
 }
 
 /* ----------------- */
-static int RF_renamefile_adouble(const struct vol *vol, const char *src, const char *dst)
+static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
 {
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
@@ -317,7 +313,7 @@ static int RF_renamefile_adouble(const struct vol *vol, const char *src, const c
 }
 
 #ifdef HAVE_NFSv4_ACLS
-static int RF_acl(const struct vol *vol, const char *path, int cmd, int count, ace_t *aces)
+static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
 {
     static char buf[ MAXPATHLEN + 1];
     struct stat st;
@@ -341,7 +337,7 @@ static int RF_acl(const struct vol *vol, const char *path, int cmd, int count, a
     return 0;
 }
 
-static int RF_remove_acl(const struct vol *vol, const char *path, int dir)
+static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 {
     int ret;
     static char buf[ MAXPATHLEN + 1];
@@ -377,8 +373,7 @@ static int ads_chown_loop(struct dirent *de _U_, char *name, void *data, int fla
     return 0;
 }
 
-static int RF_chown_ads(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
-
+static int RF_chown_ads(VFS_FUNC_ARGS_CHOWN)
 {
     struct        stat st;
     char          *ad_p;
@@ -407,7 +402,7 @@ static int deletecurdir_ads1_loop(struct dirent *de _U_, char *name, void *data 
     return netatalk_unlink(name);
 }
 
-static int ads_delete_rf(char *name) 
+static int ads_delete_rf(char *name)
 {
     int err;
 
@@ -436,7 +431,7 @@ static int deletecurdir_ads_loop(struct dirent *de, char *name, void *data _U_, 
     return ads_delete_rf(name);
 }
 
-static int RF_deletecurdir_ads(const struct vol *vol _U_)
+static int RF_deletecurdir_ads(VFS_FUNC_ARGS_DELETECURDIR)
 {
     int err;
     
@@ -491,13 +486,13 @@ static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_
     return 0;
 }
 
-static int RF_setfilmode_ads(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
+static int RF_setfilmode_ads(VFS_FUNC_ARGS_SETFILEMODE)
 {
     return ads_setfilmode(ad_dir(vol->vfs->ad_path( name, ADFLAGS_HF )), mode, st, vol->v_umask);
 }
 
 /* ------------------- */
-static int RF_setdirunixmode_ads(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
+static int RF_setdirunixmode_ads(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
     char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
     char   ad_p[ MAXPATHLEN + 1];
@@ -562,7 +557,7 @@ static int setdirmode_ads_loop(struct dirent *de _U_, char *name, void *data, in
     return 0;
 }
 
-static int RF_setdirmode_ads(const struct vol *vol, const char * name, mode_t mode, struct stat *st _U_)
+static int RF_setdirmode_ads(VFS_FUNC_ARGS_SETDIRMODE)
 {
     char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
     char   ad_p[ MAXPATHLEN + 1];
@@ -617,7 +612,7 @@ static int setdirowner_ads_loop(struct dirent *de _U_, char *name, void *data, i
     return 0;
 }
 
-static int RF_setdirowner_ads(const struct vol *vol, const char *name, uid_t uid, gid_t gid)
+static int RF_setdirowner_ads(VFS_FUNC_ARGS_SETDIROWNER)
 {
     int           noadouble = vol_noadouble(vol);
     char          adouble_p[ MAXPATHLEN + 1];
@@ -650,7 +645,7 @@ static int RF_setdirowner_ads(const struct vol *vol, const char *name, uid_t uid
 }
 
 /* ------------------- */
-static int RF_deletefile_ads(const struct vol *vol, const char *file )
+static int RF_deletefile_ads(VFS_FUNC_ARGS_DELETEFILE)
 {
     char *ad_p = ad_dir(vol->vfs->ad_path(file, ADFLAGS_HF ));
 
@@ -658,7 +653,7 @@ static int RF_deletefile_ads(const struct vol *vol, const char *file )
 }
 
 /* --------------------------- */
-static int RF_renamefile_ads(const struct vol *vol, const char *src, const char *dst)
+static int RF_renamefile_ads(VFS_FUNC_ARGS_RENAMEFILE)
 {
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
@@ -707,14 +702,14 @@ static int RF_renamefile_ads(const struct vol *vol, const char *src, const char 
 /*************************************************************************
  * osx adouble format 
  ************************************************************************/
-static int validupath_osx(const struct vol *vol, const char *name) 
+static int validupath_osx(VFS_FUNC_ARGS_VALIDUPATH)
 {
     return strncmp(name,"._", 2) && (
       (vol->v_flags & AFPVOL_USEDOTS) ? netatalk_name(name): name[0] != '.');
 }             
 
 /* ---------------- */
-static int RF_renamedir_osx(const struct vol *vol, const char *oldpath, const char *newpath)
+static int RF_renamedir_osx(VFS_FUNC_ARGS_RENAMEDIR)
 {
     /* We simply move the corresponding ad file as well */
     char   tempbuf[258]="._";
@@ -722,33 +717,31 @@ static int RF_renamedir_osx(const struct vol *vol, const char *oldpath, const ch
 }
 
 /* ---------------- */
-static int RF_deletecurdir_osx(const struct vol *vol)
+static int RF_deletecurdir_osx(VFS_FUNC_ARGS_DELETECURDIR)
 {
     return netatalk_unlink( vol->vfs->ad_path(".",0) );
 }
 
 /* ---------------- */
-static int RF_setdirunixmode_osx(const struct vol *vol, const char * name, mode_t mode, struct stat *st)
+static int RF_setdirunixmode_osx(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
     return adouble_setfilmode(vol->vfs->ad_path( name, ADFLAGS_DIR ), mode, st, vol->v_umask);
 }
 
 /* ---------------- */
-static int 
-RF_setdirmode_osx(const struct vol *vol _U_, const char *name _U_, mode_t mode _U_, struct stat *st _U_)
+static int RF_setdirmode_osx(VFS_FUNC_ARGS_SETDIRMODE)
 {
     return 0;
 }
 
 /* ---------------- */
-static int 
-RF_setdirowner_osx(const struct vol *vol _U_, const char *path _U_, uid_t uid _U_, gid_t gid _U_)
+static int RF_setdirowner_osx(VFS_FUNC_ARGS_SETDIROWNER)
 {
 	return 0;
 }
 
 /* ---------------- */
-static int RF_renamefile_osx(const struct vol *vol, const char *src, const char *dst)
+static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
 {
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
@@ -767,6 +760,102 @@ static int RF_renamefile_osx(const struct vol *vol, const char *src, const char 
     return 0;
 }
 
+/********************************************************************************************
+ * VFS chaining
+ ********************************************************************************************/
+
+/* 
+ * Up until we really start stacking many VFS modules on top of one another or use
+ * dynamic module loading like we do for UAMs, up until then we just stack VFS modules
+ * via an fixed size array.
+ * All VFS funcs must return AFP_ERR codes. When a func in the chain returns an error
+ * this error code will be returned to the caller, BUT the chain in followed and all
+ * following funcs are called in order to give them a chance.
+ */
+
+/* 
+ * Currently the maximum will be:
+ * main adouble module + EA module + ACL module + NULL = 4.
+ * NULL is an end of array marker.
+ */
+static struct vfs_ops *vfs[4] = { NULL };
+
+/* 
+ * Define most VFS funcs with macros as they all do the same.
+ * Only "ad_path" and "validupath" will NOT do stacking and only
+ * call the func from the first module.
+ */
+#define VFS_MFUNC(name, args, vars) \
+    static int vfs_ ## name(args) \
+    { \
+        int i = 0, ret = AFP_OK, err; \
+        while (vfs[i]) { \
+            if (vfs[i]->vfs_ ## name) { \
+                err = vfs[i]->vfs_ ## name (vars); \
+                if ((ret == AFP_OK) && (err != AFP_OK)) \
+                    ret = err; \
+            } \
+            i ++; \
+        } \
+        return ret; \
+    }
+
+VFS_MFUNC(chown, VFS_FUNC_ARGS_CHOWN, VFS_FUNC_VARS_CHOWN)
+VFS_MFUNC(renamedir, VFS_FUNC_ARGS_RENAMEDIR, VFS_FUNC_VARS_RENAMEDIR) 
+VFS_MFUNC(deletecurdir, VFS_FUNC_ARGS_DELETECURDIR, VFS_FUNC_VARS_DELETECURDIR)
+VFS_MFUNC(setfilmode, VFS_FUNC_ARGS_SETFILEMODE, VFS_FUNC_VARS_SETFILEMODE)
+VFS_MFUNC(setdirmode, VFS_FUNC_ARGS_SETDIRMODE, VFS_FUNC_VARS_SETDIRMODE)
+VFS_MFUNC(setdirunixmode, VFS_FUNC_ARGS_SETDIRUNIXMODE, VFS_FUNC_VARS_SETDIRUNIXMODE)
+VFS_MFUNC(setdirowner, VFS_FUNC_ARGS_SETDIROWNER, VFS_FUNC_VARS_SETDIROWNER)
+VFS_MFUNC(deletefile, VFS_FUNC_ARGS_DELETEFILE, VFS_FUNC_VARS_DELETEFILE)
+VFS_MFUNC(renamefile, VFS_FUNC_ARGS_RENAMEFILE, VFS_FUNC_VARS_RENAMEFILE)
+VFS_MFUNC(acl, VFS_FUNC_ARGS_ACL, VFS_FUNC_VARS_ACL)
+VFS_MFUNC(remove_acl, VFS_FUNC_ARGS_REMOVE_ACL, VFS_FUNC_VARS_REMOVE_ACL)
+VFS_MFUNC(ea_getsize, VFS_FUNC_ARGS_EA_GETSIZE, VFS_FUNC_VARS_EA_GETSIZE)
+VFS_MFUNC(ea_getcontent, VFS_FUNC_ARGS_EA_GETCONTENT, VFS_FUNC_VARS_EA_GETCONTENT)
+VFS_MFUNC(ea_list, VFS_FUNC_ARGS_EA_LIST, VFS_FUNC_VARS_EA_LIST)
+VFS_MFUNC(ea_set, VFS_FUNC_ARGS_EA_SET, VFS_FUNC_VARS_EA_SET)
+VFS_MFUNC(ea_remove, VFS_FUNC_ARGS_EA_REMOVE, VFS_FUNC_VARS_EA_REMOVE)
+
+static char *vfs_path(const char *path, int flags)
+{
+    return vfs[0]->ad_path(path, flags);
+}
+
+static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH)
+{
+    return vfs[0]->vfs_validupath(VFS_FUNC_VARS_VALIDUPATH);
+}
+
+/*
+ * These function pointers get called from the lib users via vol->vfs->func.
+ * These funcs are defined via the macros above.
+ */
+struct vfs_ops vfs_master_funcs = {
+    vfs_path,
+    vfs_validupath,
+    vfs_chown,
+    vfs_renamedir,
+    vfs_deletecurdir,
+    vfs_setfilmode,
+    vfs_setdirmode,
+    vfs_setdirunixmode,
+    vfs_setdirowner,
+    vfs_deletefile,
+    vfs_renamefile,
+    vfs_acl,
+    vfs_remove_acl,
+    vfs_ea_getsize,
+    vfs_ea_getcontent,
+    vfs_ea_list,
+    vfs_ea_set,
+    vfs_ea_remove
+};
+
+/* 
+ * Primary adouble modules: default, osx, sfm
+ */
+
 static struct vfs_ops netatalk_adouble = {
     /* ad_path:           */ ad_path,
     /* validupath:        */ validupath_adouble,
@@ -779,10 +868,6 @@ static struct vfs_ops netatalk_adouble = {
     /* rf_setdirowner:    */ RF_setdirowner_adouble,
     /* rf_deletefile:     */ RF_deletefile_adouble,
     /* rf_renamefile:     */ RF_renamefile_adouble,
-#ifdef HAVE_NFSv4_ACLS
-    /* rf_acl:            */ RF_acl,
-    /* rf_remove_acl      */ RF_remove_acl
-#endif
 };
 
 static struct vfs_ops netatalk_adouble_osx = {
@@ -814,18 +899,90 @@ static struct vfs_ops netatalk_adouble_sfm = {
     /* rf_renamefile:    */ RF_renamefile_ads,
 };
 
+/* 
+ * Secondary vfs modules for Extended Attributes
+ */
+
+struct vfs_ops netatalk_ea_adouble = {
+    /* ad_path:           */ NULL,
+    /* validupath:        */ NULL,
+    /* rf_chown:          */ NULL,
+    /* rf_renamedir:      */ NULL,
+    /* rf_deletecurdir:   */ NULL,
+    /* rf_setfilmode:     */ NULL,
+    /* rf_setdirmode:     */ NULL,
+    /* rf_setdirunixmode: */ NULL,
+    /* rf_setdirowner:    */ NULL,
+    /* rf_deletefile:     */ ea_deletefile,
+    /* rf_renamefile:     */ ea_renamefile,
+    /* rf_acl:            */ NULL,
+    /* rf_remove_acl      */ NULL,
+    /* ea_getsize         */ get_easize,
+    /* ea_getcontent      */ get_eacontent,
+    /* ea_list            */ list_eas,
+    /* ea_set             */ set_ea,
+    /* ea_remove          */ remove_ea
+};
+
+#ifdef HAVE_SOLARIS_EAS
+struct vfs_ops netatalk_ea_solaris = {
+    /* ad_path:           */ NULL,
+    /* validupath:        */ NULL,
+    /* rf_chown:          */ NULL,
+    /* rf_renamedir:      */ NULL,
+    /* rf_deletecurdir:   */ NULL,
+    /* rf_setfilmode:     */ NULL,
+    /* rf_setdirmode:     */ NULL,
+    /* rf_setdirunixmode: */ NULL,
+    /* rf_setdirowner:    */ NULL,
+    /* rf_deletefile:     */ NULL,
+    /* rf_renamefile:     */ NULL,
+    /* rf_acl:            */ NULL,
+    /* rf_remove_acl      */ NULL,
+    /* ea_getsize         */ sol_get_easize,
+    /* ea_getcontent      */ sol_get_eacontent,
+    /* ea_list            */ sol_list_eas,
+    /* ea_set             */ sol_set_ea,
+    /* ea_remove          */ sol_remove_ea
+};
+#endif
+
+/* 
+ * Tertiary attributes for ACLs
+ */
+
+#ifdef HAVE_NFSv4_ACLS
+struct vfs_ops netatalk_solaris_acl_adouble = {
+    /* ad_path:           */ NULL,
+    /* validupath:        */ NULL,
+    /* rf_chown:          */ NULL,
+    /* rf_renamedir:      */ NULL,
+    /* rf_deletecurdir:   */ NULL,
+    /* rf_setfilmode:     */ NULL,
+    /* rf_setdirmode:     */ NULL,
+    /* rf_setdirunixmode: */ NULL,
+    /* rf_setdirowner:    */ NULL,
+    /* rf_deletefile:     */ NULL,
+    /* rf_renamefile:     */ NULL,
+    /* rf_acl:            */ RF_solaris_acl,
+    /* rf_remove_acl      */ RF_remove_acl
+};
+#endif
+
 /* ---------------- */
 void initvol_vfs(struct vol *vol)
 {
-    /* adouble stuff */
+    vol->vfs = &vfs_master_funcs;
+
+    /* Default adouble stuff */
     if (vol->v_adouble == AD_VERSION2_OSX) {
-        vol->vfs = &netatalk_adouble_osx;
+        vfs[0] = &netatalk_adouble_osx;
     }
     else if (vol->v_adouble == AD_VERSION1_SFM) {
-        vol->vfs = &netatalk_adouble_sfm;
+        vfs[0] = &netatalk_adouble_sfm;
     }
     else {
-        vol->vfs = &netatalk_adouble;
+        vfs[0] = &netatalk_adouble;
     }
 
     /* Extended Attributes */
@@ -833,12 +990,7 @@ void initvol_vfs(struct vol *vol)
 
 #ifdef HAVE_SOLARIS_EAS
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with Solaris native EAs.");
-
-        netatalk_adouble.list_eas = sol_list_eas;
-        netatalk_adouble.get_easize = sol_get_easize;
-        netatalk_adouble.get_eacontent = sol_get_eacontent;
-        netatalk_adouble.set_ea = sol_set_ea;
-        netatalk_adouble.remove_ea = sol_remove_ea;
+        vfs[1] = &netatalk_ea_solaris;
 #else
         LOG(log_error, logtype_afpd, "initvol_vfs: Can't enable Solaris EA support.");
         goto enable_adea;
@@ -847,12 +999,12 @@ void initvol_vfs(struct vol *vol)
     enable_adea:
         /* default: AFPVOL_EA_AD */
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with adouble files.");
-
-        netatalk_adouble.set_ea = set_ea;
-        netatalk_adouble.list_eas = list_eas;
-        netatalk_adouble.get_easize = get_easize;
-        netatalk_adouble.get_eacontent = get_eacontent;
-        netatalk_adouble.remove_ea = remove_ea;
+        vfs[1] = &netatalk_ea_adouble;
     }
+
+    /* ACLs */
+#ifdef HAVE_NFSv4_ACLS
+    vfs[2] = &netatalk_solaris_acl_adouble;
+#endif
 }
 

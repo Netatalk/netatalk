@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.2 2009-10-02 14:57:57 franklahm Exp $
+  $Id: ea.c,v 1.3 2009-10-14 15:04:01 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -268,7 +268,6 @@ static char * ea_path(const struct ea * restrict ea,
  * Arguments:
  *
  *    ea            (rw) pointer to struct ea
- *    uname         (r) name of file
  *    attruname     (r) name of EA
  *    attrsize      (r) size of ea
  *    bitmap        (r) bitmap from FP func
@@ -281,7 +280,6 @@ static char * ea_path(const struct ea * restrict ea,
  * Otherwise realloc and put entry at the end. Increments ea->ea_count.
  */
 static int ea_addentry(struct ea * restrict ea,
-                       const char * restrict uname,
                        const char * restrict attruname,
                        size_t attrsize,
                        int bitmap)
@@ -351,8 +349,7 @@ error:
  * Arguments:
  *
  *    ea            (rw) pointer to struct ea
- *    uname         (r) name of EA
- *    attruname     (r) size of ea
+ *    attruname     (r) EA name
  *
  * Returns: new number of EA entries, -1 on error
  *
@@ -363,12 +360,12 @@ error:
  * ea_close and pack_buffer must honor this.
  */
 static int ea_delentry(struct ea * restrict ea,
-                       const char * restrict uname,
                        const char * restrict attruname)
 {
     int ret = 0, count = 0;
 
     if (ea->ea_count == 0) {
+        LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion");
         return -1;
     }
 
@@ -441,6 +438,7 @@ static int create_ea_header(const char * restrict uname,
     *(uint16_t *)ptr = 0;       /* count */
 
     ea->ea_size = EA_HEADER_SIZE;
+    ea->ea_inited = EA_INITED;
 
 exit:
     if (err != 0) {
@@ -588,12 +586,7 @@ static int ea_open(const struct vol * restrict vol,
         return -1;
     }
 
-    if ((stat(uname, &st)) != 0) {
-        LOG(log_debug, logtype_afpd, "ea_open: cant stat: %s", uname);
-        return -1;
-    }
-
-    /* set it all to 0 */
+    /* Set it all to 0 */
     memset(ea, 0, sizeof(struct ea));
 
     ea->vol = vol;              /* ea_close needs it */
@@ -696,7 +689,9 @@ static int ea_open(const struct vol * restrict vol,
     }
 
 exit:
-    if (ret != 0) {
+    if (ret == 0) {
+        ea->ea_inited = EA_INITED;
+    } else {
         if (ea->ea_data) {
             free(ea->ea_data);
             ea->ea_data = NULL;
@@ -706,6 +701,7 @@ exit:
             ea->ea_fd = -1;
         }
     }
+
     return ret;
 }
 
@@ -732,6 +728,11 @@ static int ea_close(struct ea * restrict ea)
     struct stat st;
 
     LOG(log_debug, logtype_afpd, "ea_close('%s')", ea->filename);
+
+    if (ea->ea_inited != EA_INITED) {
+        LOG(log_warning, logtype_afpd, "ea_close('%s'): non initialized ea", ea->filename);
+        return 0;
+    }
 
     /* pack header and write it to disk if it was opened EA_RDWR*/
     if (ea->ea_flags & EA_RDWR) {
@@ -1083,7 +1084,7 @@ int set_ea(const struct vol * restrict vol,
         return AFPERR_MISC;
     }
 
-    if ((ea_addentry(&ea, uname, attruname, attrsize, oflag)) == -1) {
+    if ((ea_addentry(&ea, attruname, attrsize, oflag)) == -1) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): ea_addentry error", uname);
         ret = AFPERR_MISC;
         goto exit;
@@ -1138,7 +1139,7 @@ int remove_ea(const struct vol * restrict vol,
         return AFPERR_MISC;
     }
 
-    if ((ea_delentry(&ea, uname, attruname)) == -1) {
+    if ((ea_delentry(&ea, attruname)) == -1) {
         LOG(log_error, logtype_afpd, "remove_ea('%s'): ea_delentry error", uname);
         ret = AFPERR_MISC;
         goto exit;
@@ -1527,3 +1528,136 @@ int sol_remove_ea(const struct vol * restrict vol,
 
 }
 #endif /* HAVE_SOLARIS_EAS */
+
+/******************************************************************************************
+ * EA VFS funcs that deal with file/dir cp/mv/rm
+ ******************************************************************************************/
+
+int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
+{
+    LOG(log_debug, logtype_afpd, "ea_deletefile('%s')", file);
+
+    int count = 0, ret = AFP_OK;
+    struct ea ea;
+
+    /* Open EA stuff */
+    if ((ea_open(vol, file, EA_RDWR, &ea)) != 0) {
+        if (errno == ENOENT)
+            /* no EA files, nothing to do */
+            return AFP_OK;
+        else {
+            LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error calling ea_open", file);
+            return AFPERR_MISC;
+        }
+    }
+
+    while (count < ea.ea_count) {
+        if ((delete_ea_file(&ea, (*ea.ea_entries)[count].ea_name)) != 0) {
+            ret = AFPERR_MISC;
+            continue;
+        }
+        free((*ea.ea_entries)[count].ea_name);
+        (*ea.ea_entries)[count].ea_name = NULL;
+        count++;
+    }
+
+    /* ea_close removes the EA header file for us because all names are NULL */
+    if ((ea_close(&ea)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error closing ea handle", file);
+        return AFPERR_MISC;
+    }
+
+    return ret;
+}
+
+int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
+{
+    int    count = 0;
+    int    ret = AFP_OK;
+    size_t easize;
+    char   srceapath[ MAXPATHLEN + 1];
+    char   *eapath;
+    char   *eaname;
+    struct ea srcea;
+    struct ea dstea;
+    struct adouble ad;
+
+    LOG(log_debug, logtype_afpd, "ea_renamefile('%s'/'%s')", src, dst);
+            
+
+    /* Open EA stuff */
+    if ((ea_open(vol, src, EA_RDWR, &srcea)) != 0) {
+        if (errno == ENOENT)
+            /* no EA files, nothing to do */
+            return AFP_OK;
+        else {
+            LOG(log_error, logtype_afpd, "ea_renamefile('%s'/'%s'): ea_open error: '%s'", src, dst, src);
+            return AFPERR_MISC;
+        }
+    }
+
+    if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
+        if (errno == ENOENT) {
+            /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
+            ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
+            if ((ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) != 0) {
+                LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): ad_open error: '%s'", src, dst, dst);
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+            ad_close(&ad, ADFLAGS_HF);
+            if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+        }
+    }
+
+    /* Loop through all EAs: */
+    while (count < srcea.ea_count) {
+        /* Move EA */
+        eaname = (*srcea.ea_entries)[count].ea_name;
+        easize = (*srcea.ea_entries)[count].ea_size;
+
+        /* Build src and dst paths for rename() */
+        eapath = ea_path(&srcea, eaname);
+        strcpy(srceapath, eapath);
+        eapath = ea_path(&dstea, eaname);
+
+        LOG(log_maxdebug, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
+            src, dst, srceapath, eapath);
+
+        /* Add EA to dstea */
+        if ((ea_addentry(&dstea, eaname, easize, 0)) == -1) {
+            LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
+                src, dst, srceapath, eapath);
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+
+        /* Remove EA entry from srcea */
+        if ((ea_delentry(&srcea, eaname)) == -1) {
+            LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
+                src, dst, srceapath, eapath);
+            ea_delentry(&dstea, eaname);
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+
+        /* Now rename the EA */
+        if ((rename( srceapath, eapath)) < 0) {
+            LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
+                src, dst, srceapath, eapath);
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+
+        count++;
+    }
+
+
+exit:
+    ea_close(&srcea);
+    ea_close(&dstea);
+	return ret;
+}

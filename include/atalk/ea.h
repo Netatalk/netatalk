@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.1 2009-10-02 09:32:40 franklahm Exp $
+   $Id: ea.h,v 1.2 2009-10-14 15:04:01 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -19,6 +19,12 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#ifdef HAVE_NFSv4_ACLS
+#include <sys/acl.h>
+#endif
+
+#include <atalk/vfs.h>
 
 /*
  * This seems to be the current limit fo HFS+, we arbitrarily force that
@@ -45,7 +51,7 @@ enum {
     kXAttrReplace = 0x4
 };
 
-
+#define EA_INITED   0xea494e54  /* ea"INT", for interfacing ea_open w. ea_close */
 #define EA_MAGIC    0x61644541 /* "adEA" */
 #define EA_VERSION1 0x01
 #define EA_VERSION  EA_VERSION1
@@ -81,6 +87,7 @@ struct ea_entry {
 
 /* We read the on-disk data into *ea_data and parse it into this*/
 struct ea {
+    uint32_t             ea_inited;       /* needed for interfacing ea_open w. ea_close */
     const struct vol     *vol;            /* vol handle, ea_close needs it */
     char                 *filename;       /* name of file, needed by ea_close too */
     unsigned int         ea_count;        /* number of EAs in ea_entries array */
@@ -106,5 +113,26 @@ struct ea_ondisk {
     struct ea_entry_ondisk ea_entries[ea_count];
 };
 #endif /* 0 */
+
+/* VFS inderected funcs ... : */
+
+/* Default adouble EAs */
+extern int get_easize(VFS_FUNC_ARGS_EA_GETSIZE);
+extern int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT);
+extern int list_eas(VFS_FUNC_ARGS_EA_LIST);
+extern int set_ea(VFS_FUNC_ARGS_EA_SET);
+extern int remove_ea(VFS_FUNC_ARGS_EA_REMOVE);
+/* ... EA VFS funcs that deal with file/dir cp/mv/rm */
+extern int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE);
+extern int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE);
+
+/* Solaris native EAs */
+#ifdef HAVE_SOLARIS_EAS
+extern int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE);
+extern int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT);
+extern int sol_list_eas(VFS_FUNC_ARGS_EA_LIST);
+extern int sol_set_ea(VFS_FUNC_ARGS_EA_SET);
+extern int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE);
+#endif /* HAVE_SOLARIS_EAS */
 
 #endif /* ATALK_EA_H */

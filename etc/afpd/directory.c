@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.106 2009-10-13 22:55:36 didg Exp $
+ * $Id: directory.c,v 1.107 2009-10-14 15:04:00 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -955,8 +955,8 @@ struct dir *
         return NULL;
     }
     if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), &cdir->d_m_name_ucs2)) {
-	LOG(log_error, logtype_afpd, "Couldn't set UCS2 name for %s", name);
-	cdir->d_m_name_ucs2 = NULL;
+        LOG(log_error, logtype_afpd, "Couldn't set UCS2 name for %s", name);
+        cdir->d_m_name_ucs2 = NULL;
     }
 
     cdir->d_did = id;
@@ -2430,7 +2430,7 @@ int renamedir(const struct vol *vol, char *src, char *dst,
         }
     }
 
-    vol->vfs->rf_renamedir(vol, src, dst);
+    vol->vfs->vfs_renamedir(vol, src, dst);
 
     len = strlen( newname );
     /* rename() succeeded so we need to update our tree even if we can't open
@@ -2518,7 +2518,7 @@ int deletecurdir(const struct vol *vol)
             return  AFPERR_OLOCK;
         }
     }
-    err = vol->vfs->rf_deletecurdir(vol);
+    err = vol->vfs->vfs_deletecurdir(vol);
     if (err) {
         return err;
     }
