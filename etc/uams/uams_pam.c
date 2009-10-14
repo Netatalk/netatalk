@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.19 2009-10-13 22:55:37 didg Exp $
+ * $Id: uams_pam.c,v 1.20 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -343,7 +343,7 @@ static int pam_changepw(void *obj _U_, char *username,
 
 
 /* Printer ClearTxtUAM login */
-int pam_printer(char *start, char *stop, char *username, struct papfile *out)
+static int pam_printer(char *start, char *stop, char *username, struct papfile *out)
 {
     int PAM_error;
     char	*data, *p, *q;

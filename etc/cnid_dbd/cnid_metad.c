@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.15 2009-10-13 22:55:37 didg Exp $
+ * $Id: cnid_metad.c,v 1.16 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -107,7 +107,7 @@
 
 static int srvfd;
 static int rqstfd;
-volatile sig_atomic_t alarmed = 0;
+static volatile sig_atomic_t alarmed = 0;
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
 #define TESTTIME   42                  /* this much seconds apfd client tries to  *
@@ -343,7 +343,7 @@ static int set_dbdir(char *dbdir, int len)
 }
 
 /* ------------------ */
-uid_t user_to_uid (char *username)
+static uid_t user_to_uid (char *username)
 {
     struct passwd *this_passwd;
 
@@ -362,7 +362,7 @@ uid_t user_to_uid (char *username)
 }
 
 /* ------------------ */
-gid_t group_to_gid ( char *group)
+static gid_t group_to_gid ( char *group)
 {
     struct group *this_group;
 
@@ -381,7 +381,7 @@ gid_t group_to_gid ( char *group)
 }
 
 /* ------------------ */
-void catch_alarm(int sig _U_) {
+static void catch_alarm(int sig _U_) {
     alarmed = 1;
 }
 

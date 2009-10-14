@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.44 2009-10-13 22:55:37 didg Exp $
+ * $Id: adouble.h,v 1.45 2009-10-14 01:38:28 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -500,6 +500,7 @@ static inline mode_t ad_hf_mode (mode_t mode)
 }
 
 /* ad_read.c/ad_write.c */
+extern int     sys_ftruncate(int fd, off_t length);
 extern ssize_t ad_read (struct adouble *, const u_int32_t,
                             const off_t, char *, const size_t);
 extern ssize_t ad_pread (struct ad_fd *, void *, size_t, off_t);

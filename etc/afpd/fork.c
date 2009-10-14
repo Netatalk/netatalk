@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.63 2009-10-13 22:55:37 didg Exp $
+ * $Id: fork.c,v 1.64 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -44,11 +44,9 @@
 #define Debug(a) (0)
 #endif
 
-struct ofork		*writtenfork;
-extern int getmetadata(struct vol *vol,
-                 u_int16_t bitmap,
-                 struct path *path, struct dir *dir, char *buf, 
-                 int *buflen, struct adouble *adp);
+#ifdef AFS
+struct ofork *writtenfork;
+#endif
 
 static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, int *buflen)
 {

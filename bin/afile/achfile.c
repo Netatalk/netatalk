@@ -1,5 +1,5 @@
 /*
- * $Id: achfile.c,v 1.6 2009-10-13 22:55:36 didg Exp $
+ * $Id: achfile.c,v 1.7 2009-10-14 01:38:28 didg Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -56,18 +56,18 @@
 #include "common.h"
 
 /* Global Variables */
-const char *type    = NULL;
-const char *creator = NULL;
+static const char *type    = NULL;
+static const char *creator = NULL;
 
 
 /* Print usage information. */
-void usage(char *prog)
+static void usage(char *prog)
 {
   fprintf(stderr, "Usage: %s [-t TYPE] [-c CREATOR] FILE ...\n", prog);
 }
 
 /* Print extensive help. */
-void help(char *prog)
+static void help(char *prog)
 {
   usage(prog);
   fprintf(stderr,
@@ -81,7 +81,7 @@ void help(char *prog)
 }
 
 /* Print the version. */
-void version(void)
+static void version(void)
 {
   fprintf(stderr, "achfile (netatalk " VERSION ")\n");
 }
@@ -91,7 +91,7 @@ void version(void)
  * known long options: --help, --version
  */
 #define OPTSTRING "t:c:hv-:"
-const char *get_long_arg(int argc, char *argv[], const char *arg, const char *oa) {
+static const char *get_long_arg(int argc, char *argv[], const char *arg, const char *oa) {
   switch (*oa) {
   case '=':
     return &oa[1];
@@ -108,7 +108,7 @@ const char *get_long_arg(int argc, char *argv[], const char *arg, const char *oa
   }
 }
 
-int parse_args(int argc, char *argv[])
+static int parse_args(int argc, char *argv[])
 {
   int c;
   const char *longarg;
@@ -178,7 +178,7 @@ int parse_args(int argc, char *argv[])
 
 
 /* Change the owner/creator of each file specified on the command line. */
-int handle_file(const char *filename)
+static int handle_file(const char *filename)
 {
   int fd;
   struct stat statbuf;

@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.17 2009-10-13 22:55:37 didg Exp $
+ * $Id: config.c,v 1.18 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -92,7 +92,7 @@ static const struct param {
 
 #define ARGV_CHUNK_SIZE 128
 #define MAXLINELEN 2048
-char **parseline(const char *line)
+static char **parseline(const char *line)
 {
     const char	 *p;
     int		  argc = 0;
@@ -172,7 +172,7 @@ char **parseline(const char *line)
     return argv;
 }
 
-void freeline( char **argv )
+static void freeline( char **argv )
 {
     char **tmp = argv;
 

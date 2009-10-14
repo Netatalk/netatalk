@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.27 2009-10-13 22:55:37 didg Exp $
+ * $Id: main.c,v 1.28 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -104,7 +104,7 @@ static void papd_exit(const int i)
   exit(i);
 }
 
-void
+static void
 die(int n)
 {
     struct printer	*pr;
@@ -133,7 +133,7 @@ die(int n)
     papd_exit( n );
 }
 
-void
+static void
 reap(int sig _U_)
 {
     int		status;
@@ -159,7 +159,7 @@ reap(int sig _U_)
     return;
 }
 
-char		rbuf[ 255 + 1 + 8 ];
+static char rbuf[ 255 + 1 + 8 ];
 
 int main(int ac, char **av)
 {

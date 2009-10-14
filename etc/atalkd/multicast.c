@@ -1,5 +1,5 @@
 /*
- * $Id: multicast.c,v 1.12 2009-10-13 22:55:37 didg Exp $
+ * $Id: multicast.c,v 1.13 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -41,6 +41,7 @@
 #include "rtmp.h"
 #include "zip.h"
 #include "main.h"
+#include "multicast.h"
 
 
 static const unsigned char	ethermulti[ 6 ] = {

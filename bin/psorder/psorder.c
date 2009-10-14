@@ -1,5 +1,5 @@
 /*
- * $Id: psorder.c,v 1.7 2009-10-13 22:55:36 didg Exp $
+ * $Id: psorder.c,v 1.8 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -53,11 +53,11 @@
  *			Global Variables
  */
 
-u_char			psbuf[ 8192 ];
-struct psinfo_st	psinfo;
-int			orderflag, forceflag;
+static u_char			psbuf[ 8192 ];
+static struct psinfo_st		psinfo;
+static int			orderflag, forceflag;
 
-void
+static void
 filecleanup( int errorcode, int tfd, char *tfile)
 {
 
@@ -79,7 +79,7 @@ filecleanup( int errorcode, int tfd, char *tfile)
     exit( errorcode );
 }
 
-void
+static void
 filesetup( char *inputfile, int *infd, char *tfile, int *tfd)
 {
     struct stat		st;
@@ -133,7 +133,7 @@ filesetup( char *inputfile, int *infd, char *tfile, int *tfd)
     return;
 }
 
-struct pspage_st
+static struct pspage_st
 *getpspage(off_t off)
 {
     struct pspage_st	*newpspage;
@@ -148,7 +148,7 @@ struct pspage_st
     return( newpspage );
 }
 
-int
+static int
 handletok(off_t count, char *token)
 {
     int			incdoc = 0;
@@ -236,7 +236,7 @@ handletok(off_t count, char *token)
     return( 0 );
 }
 
-void
+static void
 readps(int inputfd, int tempfd, char *tempfile)
 {
     off_t		ccread = 0;
@@ -336,7 +336,7 @@ readps(int inputfd, int tempfd, char *tempfile)
     return;
 }
 
-void
+static void
 temp2out(int tempfd, char *tempfile, off_t length)
 {
     int			ccread;
@@ -367,7 +367,7 @@ temp2out(int tempfd, char *tempfile, off_t length)
     }
 }
 
-void
+static void
 writelable(int tempfd, char *tempfile, char *lable)
 {
     char		line[256];
@@ -394,7 +394,7 @@ writelable(int tempfd, char *tempfile, char *lable)
     }
 }
 
-void
+static void
 writeps(int tempfd, char *tempfile)
 {
     struct stat		st;
@@ -489,7 +489,7 @@ writeps(int tempfd, char *tempfile)
     return;
 }
 
-int
+static int
 psorder(char *path)
 {
     int			tempfd;

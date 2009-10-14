@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.12 2009-10-13 22:55:37 didg Exp $
+   $Id: cmd_dbd.c,v 1.13 2009-10-14 01:38:28 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -131,7 +131,7 @@ static void sig_handler(int signo)
     return;
 }
 
-void set_signal(void)
+static void set_signal(void)
 {
     struct sigaction sv;
 
@@ -165,7 +165,7 @@ void set_signal(void)
     }        
 }
 
-int get_lock(const char *dbpath)
+static int get_lock(const char *dbpath)
 {
     int lockfd;
     char lockpath[PATH_MAX];
@@ -215,7 +215,7 @@ int get_lock(const char *dbpath)
     return lockfd;
 }
 
-void free_lock(int lockfd)
+static void free_lock(int lockfd)
 {
     struct flock lock;
 

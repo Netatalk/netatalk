@@ -208,7 +208,7 @@ static void generate_message_details(char *message_details_buffer,
     strncat(ptr, "): ", len);
 }
 
-int get_syslog_equivalent(enum loglevels loglevel)
+static int get_syslog_equivalent(enum loglevels loglevel)
 {
     switch (loglevel)
     {

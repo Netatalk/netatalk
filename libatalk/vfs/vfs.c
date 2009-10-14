@@ -113,7 +113,7 @@ static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid, 
 }
 
 /* ----------------- */
-int RF_renamedir_adouble(const struct vol *vol _U_, const char *oldpath _U_, const char *newpath _U_)
+static int RF_renamedir_adouble(const struct vol *vol _U_, const char *oldpath _U_, const char *newpath _U_)
 {
     return 0;
 }
@@ -273,7 +273,7 @@ static int RF_deletefile_adouble(const struct vol *vol, const char *file )
 }
 
 /* ----------------- */
-int RF_renamefile_adouble(const struct vol *vol, const char *src, const char *dst)
+static int RF_renamefile_adouble(const struct vol *vol, const char *src, const char *dst)
 {
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
@@ -658,7 +658,7 @@ static int RF_deletefile_ads(const struct vol *vol, const char *file )
 }
 
 /* --------------------------- */
-int RF_renamefile_ads(const struct vol *vol, const char *src, const char *dst)
+static int RF_renamefile_ads(const struct vol *vol, const char *src, const char *dst)
 {
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
@@ -714,7 +714,7 @@ static int validupath_osx(const struct vol *vol, const char *name)
 }             
 
 /* ---------------- */
-int RF_renamedir_osx(const struct vol *vol, const char *oldpath, const char *newpath)
+static int RF_renamedir_osx(const struct vol *vol, const char *oldpath, const char *newpath)
 {
     /* We simply move the corresponding ad file as well */
     char   tempbuf[258]="._";
@@ -722,7 +722,7 @@ int RF_renamedir_osx(const struct vol *vol, const char *oldpath, const char *new
 }
 
 /* ---------------- */
-int RF_deletecurdir_osx(const struct vol *vol)
+static int RF_deletecurdir_osx(const struct vol *vol)
 {
     return netatalk_unlink( vol->vfs->ad_path(".",0) );
 }
@@ -748,7 +748,7 @@ RF_setdirowner_osx(const struct vol *vol _U_, const char *path _U_, uid_t uid _U
 }
 
 /* ---------------- */
-int RF_renamefile_osx(const struct vol *vol, const char *src, const char *dst)
+static int RF_renamefile_osx(const struct vol *vol, const char *src, const char *dst)
 {
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
@@ -767,7 +767,7 @@ int RF_renamefile_osx(const struct vol *vol, const char *src, const char *dst)
     return 0;
 }
 
-struct vfs_ops netatalk_adouble = {
+static struct vfs_ops netatalk_adouble = {
     /* ad_path:           */ ad_path,
     /* validupath:        */ validupath_adouble,
     /* rf_chown:          */ RF_chown_adouble,
@@ -785,7 +785,7 @@ struct vfs_ops netatalk_adouble = {
 #endif
 };
 
-struct vfs_ops netatalk_adouble_osx = {
+static struct vfs_ops netatalk_adouble_osx = {
     /* ad_path:          */ ad_path_osx,
     /* validupath:       */ validupath_osx,
     /* rf_chown:         */ RF_chown_adouble,
@@ -800,7 +800,7 @@ struct vfs_ops netatalk_adouble_osx = {
 };
 
 /* samba sfm format. ad_path shouldn't be set her */
-struct vfs_ops netatalk_adouble_sfm = {
+static struct vfs_ops netatalk_adouble_sfm = {
     /* ad_path:          */ ad_path_sfm,
     /* validupath:       */ validupath_adouble,
     /* rf_chown:         */ RF_chown_ads,

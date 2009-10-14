@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.15 2009-10-13 22:55:37 didg Exp $
+ * $Id: dbif.c,v 1.16 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -399,7 +399,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
 }
 
 /* ------------------------ */
-int dbif_closedb(DBD *dbd)
+static int dbif_closedb(DBD *dbd)
 {
     int i;
     int ret;

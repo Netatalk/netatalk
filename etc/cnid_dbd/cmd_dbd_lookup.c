@@ -1,5 +1,5 @@
 /*
- * $Id: cmd_dbd_lookup.c,v 1.2 2009-07-12 09:21:34 franklahm Exp $
+ * $Id: cmd_dbd_lookup.c,v 1.3 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (C) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
@@ -29,10 +29,6 @@
    cmd_dbd_lookup has an read-only mode, but besides that it's the same.
  */
 
-
-/* Pull these in from dbd_add.c */
-extern int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
-extern int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply);
 
 /*
  *  This returns the CNID corresponding to a particular file and logs any inconsitencies.

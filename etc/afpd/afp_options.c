@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.46 2009-10-13 22:55:36 didg Exp $
+ * $Id: afp_options.c,v 1.47 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -448,7 +448,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
  * Show version information about afpd.
  * Used by "afp -v".
  */
-void show_version( void )
+static void show_version( void )
 {
 	printf( "afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION );
 
@@ -506,7 +506,7 @@ void show_version( void )
  * Show extended version information about afpd and Netatalk.
  * Used by "afp -V".
  */
-void show_version_extended(void )
+static void show_version_extended(void )
 {
 	show_version( );
 
@@ -570,7 +570,7 @@ void show_version_extended(void )
 /*
  * Display compiled-in default paths
  */
-void show_paths( void )
+static void show_paths( void )
 {
 	printf( "             afpd.conf:\t%s\n", _PATH_AFPDCONF );
 	printf( "   AppleVolumes.system:\t%s\n", _PATH_AFPDSYSVOL );
@@ -581,7 +581,7 @@ void show_paths( void )
 /*
  * Display usage information about adpd.
  */
-void show_usage( char *name )
+static void show_usage( char *name )
 {
 	fprintf( stderr, "Usage:\t%s [-dDIptTu] [-c maxconnections] [-f defaultvolumes] [-F config]\n", name );
 	fprintf( stderr, "\t     [-g guest] [-L message] [-m umask][-n nbpname] [-P pidfile]\n" );

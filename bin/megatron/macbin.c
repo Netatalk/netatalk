@@ -1,5 +1,5 @@
 /*
- * $Id: macbin.c,v 1.13 2009-10-13 22:55:36 didg Exp $
+ * $Id: macbin.c,v 1.14 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,7 +53,7 @@
 	following globals; therefore this module can only be used
 	for one of the two functions at a time.
  */
-struct bin_file_data {
+static struct bin_file_data {
     u_int32_t		forklen[ NUMFORKS ];
     char		path[ MAXPATHLEN + 1];
     int			filed;
@@ -62,7 +62,7 @@ struct bin_file_data {
 } 		bin;
 
 extern char	*forkname[];
-u_char		head_buf[HEADBUFSIZ];
+static u_char	head_buf[HEADBUFSIZ];
 
 /* 
  * bin_open must be called first.  pass it a filename that is supposed

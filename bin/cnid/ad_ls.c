@@ -1,5 +1,5 @@
 /* 
-   $Id: ad_ls.c,v 1.3 2009-10-13 22:55:36 didg Exp $
+   $Id: ad_ls.c,v 1.4 2009-10-14 01:38:28 didg Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -407,7 +407,7 @@ static void print_mode(const struct stat *st)
 #undef TYPE
 #undef MODE
 
-int ad_print(char *path, const struct stat *st, afpvol_t *vol)
+static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
 {
     if ( ! ls_l) {
         printf("%s  ", path);
@@ -432,7 +432,7 @@ int ad_print(char *path, const struct stat *st, afpvol_t *vol)
     return 0;
 }
 
-int ad_ls_r(char *path, afpvol_t *vol)
+static int ad_ls_r(char *path, afpvol_t *vol)
 {
     int ret = 0, cwd, dirprinted = 0, dirempty;
     const char *name;

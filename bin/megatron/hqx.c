@@ -1,5 +1,5 @@
 /*
- * $Id: hqx.c,v 1.15 2009-10-13 22:55:36 didg Exp $
+ * $Id: hqx.c,v 1.16 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -79,7 +79,7 @@ int hqx7_fill(u_char *hqx7_ptr);
 FILE		*rawhex, *expandhex;
 #endif /* HEXOUTPUT */
 
-struct hqx_file_data {
+static struct hqx_file_data {
     u_int32_t		forklen[ NUMFORKS ];
     u_short		forkcrc[ NUMFORKS ];
     char		path[ MAXPATHLEN + 1];
@@ -88,10 +88,10 @@ struct hqx_file_data {
 } 		hqx;
 
 extern char	*forkname[];
-u_char		hqx7_buf[8192];
-u_char		*hqx7_first;
-u_char		*hqx7_last;
-int		first_flag;
+static u_char	hqx7_buf[8192];
+static u_char	*hqx7_first;
+static u_char	*hqx7_last;
+static int	first_flag;
 
 /* 
 hqx_open must be called first.  pass it a filename that is supposed
@@ -422,7 +422,7 @@ character that should be skipped, namely '\n', '\r'.  0xFD signals ':'.
 0xFC signals a whitespace character.
 */
 
-u_char hqxlookup[] = {
+static const u_char hqxlookup[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFC, 0xFE, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

@@ -1,5 +1,5 @@
 /*
- * $Id: nbplkup.c,v 1.6 2009-10-13 22:55:36 didg Exp $
+ * $Id: nbplkup.c,v 1.7 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -41,11 +41,11 @@
 
 #include <atalk/unicode.h>
 
-char *Obj = "=";
-char *Type = "=";
-char *Zone = "*";
+static char *Obj = "=";
+static char *Type = "=";
+static char *Zone = "*";
 
-void Usage(char *av0)
+static void Usage(char *av0)
 {
     char	*p;
 

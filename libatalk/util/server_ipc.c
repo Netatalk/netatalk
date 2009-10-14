@@ -1,5 +1,5 @@
 /*
- * $Id: server_ipc.c,v 1.2 2005-04-28 20:50:05 bfernhomberg Exp $
+ * $Id: server_ipc.c,v 1.3 2009-10-14 01:38:29 didg Exp $
  *
  * All rights reserved. See COPYRIGHT.
  *
@@ -56,7 +56,7 @@ int server_ipc_parent(void *obj _U_)
 }
 
 /* ----------------- */
-int ipc_kill_token (struct ipc_header *ipc, server_child *children)
+static int ipc_kill_token (struct ipc_header *ipc, server_child *children)
 {
     pid_t pid;
 
@@ -72,7 +72,7 @@ int ipc_kill_token (struct ipc_header *ipc, server_child *children)
 }
 
 /* ----------------- */
-int ipc_get_session (struct ipc_header *ipc, server_child *children)
+static int ipc_get_session (struct ipc_header *ipc, server_child *children)
 {
     u_int32_t boottime;
     u_int32_t idlen;

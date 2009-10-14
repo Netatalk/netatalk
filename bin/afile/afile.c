@@ -1,5 +1,5 @@
 /*
- * $Id: afile.c,v 1.6 2009-10-13 22:55:36 didg Exp $
+ * $Id: afile.c,v 1.7 2009-10-14 01:38:28 didg Exp $
  *
     afile - determine the MacOS creator/type of files
 
@@ -69,17 +69,17 @@
 
 
 /* Global Variables */
-int showall = 0;
+static int showall = 0;
 
 
 /* Print usage information. */
-void usage(char *prog)
+static void usage(char *prog)
 {
   fprintf(stderr, "Usage: %s [-a] FILE ...\n", prog);
 }
 
 /* Print extensive help. */
-void help(char *prog)
+static void help(char *prog)
 {
   usage(prog);
   fprintf(stderr,
@@ -92,7 +92,7 @@ void help(char *prog)
 }
 
 /* Print the version. */
-void version(void)
+static void version(void)
 {
   fprintf(stderr, "afile (netatalk " VERSION ")\n");
 }
@@ -102,7 +102,7 @@ void version(void)
  * known long options: --show-all, --help, --version
  */
 #define OPTSTRING "ahv-:"
-int parse_args(int argc, char *argv[])
+static int parse_args(int argc, char *argv[])
 {
   int c;
 
@@ -149,13 +149,13 @@ int parse_args(int argc, char *argv[])
 /* Print the creator/type as taken from the supplied character stream, which
  * must be a AppleDouble file header.
  */
-void print_type(const char *filename, const char *creator, const char *type)
+static void print_type(const char *filename, const char *creator, const char *type)
 {
   printf("%4.4s %4.4s %s\n", creator, type, filename);
 }
 
 
-int handle_ad(struct AFile *rfile)
+static int handle_ad(struct AFile *rfile)
 {
   int fd;
   char *dataname;
@@ -179,7 +179,7 @@ int handle_ad(struct AFile *rfile)
 }
 
 
-int handle_datafile(struct AFile *datafile)
+static int handle_datafile(struct AFile *datafile)
 {
   int ret;
   char *adname;
@@ -218,7 +218,7 @@ int handle_datafile(struct AFile *datafile)
 
 
 /* Parse a file and its resource fork. Output the file's creator/type. */
-int parse_file(char *filename)
+static int parse_file(char *filename)
 {
   int ret;
   struct AFile *afile;

@@ -1,5 +1,5 @@
 /*
- * $Id: megatron.c,v 1.11 2009-10-13 22:55:36 didg Exp $
+ * $Id: megatron.c,v 1.12 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,9 +24,9 @@
 #include "macbin.h"
 #include "nad.h"
 
-char		forkbuf[8192];
 char		*forkname[] = { "data", "resource" };
-char		*name[] = { "unhex",
+static char	forkbuf[8192];
+static char	*name[] = { "unhex",
 			    "unbin",
 			    "unsingle",
 			    "macbinary",
@@ -36,7 +36,7 @@ char		*name[] = { "unhex",
 			    "binheader",
 			    "megatron" };
 
-int from_open(int un, char *file, struct FHeader *fh, int flags)
+static int from_open(int un, char *file, struct FHeader *fh, int flags)
 {
     switch ( un ) {
 	case MEGATRON :
@@ -61,7 +61,7 @@ int from_open(int un, char *file, struct FHeader *fh, int flags)
     }
 }
 
-int from_read(int un, int fork, char *buf, int len)
+static int from_read(int un, int fork, char *buf, int len)
 {
     switch ( un ) {
 	case MEGATRON :
@@ -84,7 +84,7 @@ int from_read(int un, int fork, char *buf, int len)
     }
 }
 
-int from_close(int un)
+static int from_close(int un)
 {
     switch ( un ) {
 	case MEGATRON :
@@ -107,7 +107,7 @@ int from_close(int un)
     }
 }
 
-int to_open(int to, char *file, struct FHeader *fh, int flags)
+static int to_open(int to, char *file, struct FHeader *fh, int flags)
 {
     switch ( to ) {
 	case MEGATRON :
@@ -127,7 +127,7 @@ int to_open(int to, char *file, struct FHeader *fh, int flags)
     }
 }
 
-int to_write(int to, int fork, int bufc)
+static int to_write(int to, int fork, int bufc)
 {
     switch ( to ) {
 	case MEGATRON :
@@ -147,7 +147,7 @@ int to_write(int to, int fork, int bufc)
     }
 }
 
-int to_close(int to, int keepflag)
+static int to_close(int to, int keepflag)
 {
     switch ( to ) {
 	case MEGATRON :
@@ -167,7 +167,7 @@ int to_close(int to, int keepflag)
     }
 }
 
-int megatron( char *path, int module, char *newname, int flags)
+static int megatron( char *path, int module, char *newname, int flags)
 {
     struct stat		st;
     struct FHeader	fh;

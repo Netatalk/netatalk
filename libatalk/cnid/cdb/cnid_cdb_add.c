@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_add.c,v 1.4 2008-12-03 18:35:44 didg Exp $
+ * $Id: cnid_cdb_add.c,v 1.5 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -72,7 +72,7 @@ unsigned char *make_cnid_data(const struct stat *st,const cnid_t did,
 }    
 
 /* --------------- */
-int db_stamp(void *buffer, size_t size)
+static int db_stamp(void *buffer, size_t size)
 {
 time_t t;
     memset(buffer, 0, size);

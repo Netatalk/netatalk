@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.17 2009-10-13 22:55:37 didg Exp $
+ * $Id: session.c,v 1.18 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -35,8 +35,8 @@ int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
 
 extern unsigned char	connid, quantum, oquantum;
 
-char		buf[ PAP_MAXQUANTUM ][ 4 + PAP_MAXDATA ];
-struct iovec	niov[ PAP_MAXQUANTUM ] = {
+static char		buf[ PAP_MAXQUANTUM ][ 4 + PAP_MAXDATA ];
+static struct iovec	niov[ PAP_MAXQUANTUM ] = {
     { buf[ 0 ],	0 },
     { buf[ 1 ],	0 },
     { buf[ 2 ],	0 },
@@ -46,7 +46,7 @@ struct iovec	niov[ PAP_MAXQUANTUM ] = {
     { buf[ 6 ],	0 },
     { buf[ 7 ],	0 },
 };
-struct iovec	iov[ PAP_MAXQUANTUM ] = {
+static struct iovec	iov[ PAP_MAXQUANTUM ] = {
     { buf[ 0 ] + 4,	0 },
     { buf[ 1 ] + 4,	0 },
     { buf[ 2 ] + 4,	0 },

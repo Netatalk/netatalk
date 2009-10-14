@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.15 2009-10-13 22:55:37 didg Exp $
+ * $Id: uams_guest.c,v 1.16 2009-10-14 01:38:28 didg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -88,7 +88,7 @@ static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
 
 
 /* Printer NoAuthUAM Login */
-int noauth_printer(char *start, char *stop, char *username, struct papfile *out)
+static int noauth_printer(char *start, char *stop, char *username, struct papfile *out)
 {
     char	*data, *p, *q;
     static const char *loginok = "0\r";

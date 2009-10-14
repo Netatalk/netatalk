@@ -1975,12 +1975,12 @@ int tdb_chainunlock(TDB_CONTEXT *tdb, TDB_DATA key)
 	return tdb_unlock(tdb, BUCKET(tdb_hash(&key)), F_WRLCK);
 }
 
-int tdb_chainlock_read(TDB_CONTEXT *tdb, TDB_DATA key)
+static int tdb_chainlock_read(TDB_CONTEXT *tdb, TDB_DATA key)
 {
 	return tdb_lock(tdb, BUCKET(tdb_hash(&key)), F_RDLCK);
 }
 
-int tdb_chainunlock_read(TDB_CONTEXT *tdb, TDB_DATA key)
+static int tdb_chainunlock_read(TDB_CONTEXT *tdb, TDB_DATA key)
 {
 	return tdb_unlock(tdb, BUCKET(tdb_hash(&key)), F_RDLCK);
 }

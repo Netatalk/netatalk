@@ -1,5 +1,5 @@
 /*
- * $Id: dbd.h,v 1.5 2009-07-12 09:21:34 franklahm Exp $
+ * $Id: dbd.h,v 1.6 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -10,6 +10,9 @@
 #define CNID_DBD_DBD_H 1
 
 #include <atalk/cnid_dbd_private.h>
+
+extern int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
+extern int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply);
 
 extern int dbd_stamp(DBD *dbd);
 extern int dbd_add(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);

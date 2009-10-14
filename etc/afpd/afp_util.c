@@ -1,5 +1,5 @@
 /*
- * $Id: afp_util.c,v 1.6 2009-09-28 11:59:44 franklahm Exp $
+ * $Id: afp_util.c,v 1.7 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -15,6 +15,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <atalk/afp.h>
+#include "globals.h"
 
 const char *AfpNum2name(int num)
 {

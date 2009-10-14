@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.9 2009-10-12 11:30:52 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.10 2009-10-14 01:38:28 didg Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -680,7 +680,7 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
 /* 
    Remove all CNIDs from dbd that are not in dbd_rebuild
 */
-void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
+static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
 {
     int ret, deleted = 0;
     cnid_t dbd_cnid = 0, rebuild_cnid = 0;

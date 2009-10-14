@@ -170,7 +170,7 @@ if (ch == CH_UNIX) ret = NULL;
 	return ret;
 }
 
-struct charset_functions* get_charset_functions (charset_t ch)
+static struct charset_functions* get_charset_functions (charset_t ch)
 {
 	if (charsets[ch] != NULL)
 		return charsets[ch];
@@ -181,7 +181,7 @@ struct charset_functions* get_charset_functions (charset_t ch)
 }
 	
 
-void lazy_initialize_conv(void)
+static void lazy_initialize_conv(void)
 {
 	static int initialized = 0;
 

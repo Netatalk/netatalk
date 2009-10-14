@@ -1,5 +1,5 @@
 /*
- * $Id: asingle.c,v 1.12 2009-10-13 22:55:36 didg Exp $
+ * $Id: asingle.c,v 1.13 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,14 +47,14 @@
 	following globals; therefore this module can only be used
 	for one of the two functions at a time.
  */
-struct single_file_data {
+static struct single_file_data {
     int			filed;
     char		path[ MAXPATHLEN + 1];
     struct ad_entry	entry[ ADEID_MAX ];
 } 		single;
 
 extern char	*forkname[];
-u_char		header_buf[ AD_HEADER_LEN ];
+static u_char	header_buf[ AD_HEADER_LEN ];
 
 /* 
  * single_open must be called first.  pass it a filename that is supposed
@@ -333,7 +333,7 @@ int single_header_read( struct FHeader *fh, int version)
  * "Macintosh       " (that is seven blanks of padding).
  */
 #define MACINTOSH	"Macintosh       "
-u_char		sixteennulls[] = { 0, 0, 0, 0, 0, 0, 0, 0,
+static u_char		sixteennulls[] = { 0, 0, 0, 0, 0, 0, 0, 0,
 				    0, 0, 0, 0, 0, 0, 0, 0 };
 
 int single_header_test(void)

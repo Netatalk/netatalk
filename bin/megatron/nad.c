@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.16 2009-10-13 22:55:36 didg Exp $
+ * $Id: nad.c,v 1.17 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,7 +27,7 @@
 #include "megatron.h"
 #include "nad.h"
 
-struct volinfo	vol;
+static struct volinfo	vol;
 static char		hexdig[] = "0123456789abcdef";
 
 static char mtou_buf[MAXPATHLEN + 1], utom_buf[MAXPATHLEN + 1];
@@ -344,7 +344,7 @@ utompath_error:
     return(utompathcap( upath ));
 }
 
-char *mtoupathiconv(char *mpath)
+static char *mtoupathiconv(char *mpath)
 {
     char        *m, *u;
     size_t       inplen;
@@ -409,7 +409,7 @@ void select_charset( int options)
     int			hexfork[ NUMFORKS ];
 #endif /* HEXOUTPUT */
 
-struct nad_file_data {
+static struct nad_file_data {
     char		macname[ MAXPATHLEN + 1 ];
     char		adpath[ 2 ][ MAXPATHLEN + 1];
     int			offset[ NUMFORKS ];
@@ -689,7 +689,7 @@ int nad_header_write(struct FHeader *fh)
     return( 0 );
 }
 
-int			forkeid[] = { ADEID_DFORK, ADEID_RFORK };
+static int		forkeid[] = { ADEID_DFORK, ADEID_RFORK };
 
 int nad_read(int fork, char *forkbuf, int bufc)
 {

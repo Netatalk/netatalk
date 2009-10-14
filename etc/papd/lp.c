@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.28 2009-10-13 22:55:37 didg Exp $
+ * $Id: lp.c,v 1.29 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -92,11 +92,11 @@ int lp_disconn_inet( int );
 int lp_conn_unix();
 int lp_disconn_unix( int );
 
-char	hostname[ MAXHOSTNAMELEN ];
+static char hostname[ MAXHOSTNAMELEN ];
 
 extern struct sockaddr_at *sat;
 
-struct lp {
+static struct lp {
     int			lp_flags;
     FILE		*lp_stream;
     int			lp_seq;

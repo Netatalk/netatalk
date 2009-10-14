@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.10 2009-10-13 22:55:37 didg Exp $
+ * $Id: psf.c,v 1.11 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -55,8 +55,8 @@ int pexecv(char *path, char *argv[]);
 int copyio();
 int textps();
 
-char		psapath[] = _PATH_PSA;
-char		*psaargv[] = { "psa", 0, 0, 0, 0 };
+static char		psapath[] = _PATH_PSA;
+static char		*psaargv[] = { "psa", 0, 0, 0, 0 };
 
 /*
  * If we're not doing accounting, we just call pap as below.
@@ -65,23 +65,23 @@ char		*psaargv[] = { "psa", 0, 0, 0, 0 };
  * arg 4.  The second time, we call it with "-c" in arg 2, pagecount.ps
  * in arg 3, and 0 in arg 4.
  */
-char		pappath[] = _PATH_PAP;
-char		*papargv[] = { "pap", "-sstatus", 0, 0, 0, 0, 0, 0 };
+static char		pappath[] = _PATH_PAP;
+static char		*papargv[] = { "pap", "-sstatus", 0, 0, 0, 0, 0, 0 };
 
-char		revpath[] = _PATH_PSORDER;
-char		*revargv[] = { "psorder", "-d", 0 };
+static char		revpath[] = _PATH_PSORDER;
+static char		*revargv[] = { "psorder", "-d", 0 };
 
-char		*filtargv[] = { 0, 0, 0 };
+static char		*filtargv[] = { 0, 0, 0 };
 
-char		inbuf[ 1024 * 8 ];
-int		inlen;
+static char		inbuf[ 1024 * 8 ];
+static int		inlen;
 
-FILE		*acctfile = NULL;
-int		literal;
-int		width = 80, length = 66, indent = 0;
-char		*prog, *name, *host;
+static FILE		*acctfile = NULL;
+static int		literal;
+static int		width = 80, length = 66, indent = 0;
+static char		*prog, *name, *host;
 
-struct papersize {
+static struct papersize {
     int		width;
     int		length;
    float	win;
@@ -458,10 +458,10 @@ notdone:
     return( 0 );
 }
 
-char		*font = "Courier";
-int		point = 11;
+static char		*font = "Courier";
+static int		point = 11;
 
-char		pspro[] = "\
+static char		pspro[] = "\
 /GSV save def						% global VM\n\
 /SP {\n\
 	/SV save def					% save vmstate\n\

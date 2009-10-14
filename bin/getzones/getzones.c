@@ -1,5 +1,5 @@
 /*
- * $Id: getzones.c,v 1.8 2009-10-13 22:55:36 didg Exp $
+ * $Id: getzones.c,v 1.9 2009-10-14 01:38:28 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,9 +27,9 @@
 #include <atalk/unicode.h>
 #include <atalk/zip.h>
 
-void print_zones(short n, char *buf);
+static void print_zones(short n, char *buf);
 
-void usage( char *s)
+static void usage( char *s)
 {
     fprintf( stderr, "usage:\t%s [-m | -l] [address]\n", s );
     exit( 1 );
@@ -147,7 +147,7 @@ int main( int argc, char *argv[])
  * n:   number of zones in this packet
  * buf: zone length/name pairs
  */
-void print_zones( short n, char *buf )
+static void print_zones( short n, char *buf )
 {
     size_t zone_len;
     char *zone;

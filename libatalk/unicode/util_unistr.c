@@ -334,7 +334,7 @@ ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
 
 
 /* ------------------------ */
-ucs2_t do_precomposition(unsigned int base, unsigned int comb) 
+static ucs2_t do_precomposition(unsigned int base, unsigned int comb) 
 {
   	int min = 0;
   	int max = sizeof(precompositions) / sizeof(precompositions[0]) - 1;
@@ -358,7 +358,7 @@ ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 }
 
 /* -------------------------- */
-u_int32_t do_decomposition(ucs2_t base) 
+static u_int32_t do_decomposition(ucs2_t base) 
 {
   	int min = 0;
   	int max = sizeof(decompositions) / sizeof(decompositions[0]) - 1;

@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.10 2009-09-03 08:35:15 franklahm Exp $
+ * $Id: main.c,v 1.11 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -238,7 +238,7 @@ static void switch_to_user(char *dir)
 }
 
 /* ------------------------ */
-int get_lock(void)
+static int get_lock(void)
 {
     int lockfd;
     struct flock lock;
@@ -266,7 +266,7 @@ int get_lock(void)
 }
 
 /* ----------------------- */
-void set_signal(void)
+static void set_signal(void)
 {
     struct sigaction sv;
 
@@ -288,7 +288,7 @@ void set_signal(void)
 }
 
 /* ----------------------- */
-void free_lock(int lockfd)
+static void free_lock(int lockfd)
 {
     struct flock lock;
 

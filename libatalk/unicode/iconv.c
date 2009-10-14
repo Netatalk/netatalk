@@ -157,7 +157,7 @@ int atalk_register_charset(struct charset_functions *funcs)
 	return 0;
 }
 
-void lazy_initialize_iconv(void)
+static void lazy_initialize_iconv(void)
 {
 	static int initialized = 0;
 	int i;

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.24 2009-10-13 22:55:36 didg Exp $
+ * $Id: afp_asp.c,v 1.25 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -42,8 +42,6 @@
 #warning UIDGID
 #include "uid.h"
 #endif /* FORCE_UIDGID */
-
-extern struct oforks	*writtenfork;
 
 static AFPObj *child;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.38 2009-10-13 22:55:36 didg Exp $
+ * $Id: desktop.c,v 1.39 2009-10-14 01:38:28 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -64,7 +64,7 @@ int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, int ibuflen _U_, char *rbuf _U_
     return( AFP_OK );
 }
 
-struct savedt	si = { { 0, 0, 0, 0 }, -1, 0, 0 };
+static struct savedt	si = { { 0, 0, 0, 0 }, -1, 0, 0 };
 
 static char *icon_dtfile(struct vol *vol, u_char creator[ 4 ])
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.20 2009-10-13 22:55:37 didg Exp $
+ * $Id: main.c,v 1.21 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -102,6 +102,8 @@ int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa);
 extern int aep_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len);
 
 int		rtfd;
+int 		transition = 0;
+int		stabletimer, newrtmpdata = 0;
 
 static struct atserv	atserv[] = {
     { "rtmp",		1,	rtmp_packet },		/* 0 */
@@ -113,17 +115,17 @@ static int		atservNATSERV = elements( atserv );
 
 struct interface	*interfaces = NULL, *ciface = NULL;
 
-int		debug = 0, quiet = 0, chatty = 0;
-char		*configfile = NULL;
-int		ziptimeout = 0, transition = 0;
-int		stabletimer, stable = 0, newrtmpdata = 0, noparent = 0;
-static int	ninterfaces;
-int		defphase = IFACE_PHASE2;
-int		nfds = 0;
-fd_set		fds;
-char		Packet[ PKTSZ ];
-char		*version = VERSION;
-static char     *pidfile = _PATH_ATALKDLOCK;
+static int		debug = 0, quiet = 0, chatty = 0;
+static char		*configfile = NULL;
+static int		ziptimeout = 0;
+static int		stable = 0, noparent = 0;
+static int		ninterfaces;
+static int		defphase = IFACE_PHASE2;
+static int		nfds = 0;
+static fd_set		fds;
+static char		Packet[ PKTSZ ];
+static char		*version = VERSION;
+static char     	*pidfile = _PATH_ATALKDLOCK;
 
 
 /* from config.c */
@@ -712,7 +714,7 @@ consistency()
 }
 #endif /* DEBUG */
 
-void
+static void
 as_debug(int sig _U_)
 {
     struct interface	*iface;
@@ -814,7 +816,7 @@ as_debug(int sig _U_)
 /*
  * Called when SIGTERM is recieved.  Remove all routes and then exit.
  */
-void
+static void
 as_down(int sig _U_)
 {
     struct interface	*iface;

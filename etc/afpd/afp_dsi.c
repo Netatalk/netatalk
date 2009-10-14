@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.38 2009-10-13 22:55:36 didg Exp $
+ * $Id: afp_dsi.c,v 1.39 2009-10-14 01:38:28 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -42,8 +42,6 @@
 #warning UIDGID
 #include "uid.h"
 #endif /* FORCE_UIDGID */
-
-extern struct oforks	*writtenfork;
 
 #define CHILD_DIE         (1 << 0)
 #define CHILD_RUNNING     (1 << 1)
