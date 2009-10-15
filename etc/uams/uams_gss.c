@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.8 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_gss.c,v 1.9 2009-10-15 14:54:43 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -148,10 +148,15 @@ static int get_afpd_principal(void *obj, gss_name_t *server_name)
     /* get all the required information from afpd */
     if (uam_afpserver_option(obj, UAM_OPTION_KRB5REALM, (void*) &realm, &realmlen) < 0)
         return 1;
+    LOG(log_debug, logtype_uams, "get_afpd_principal: REALM: %s", realm);
+
     if (uam_afpserver_option(obj, UAM_OPTION_FQDN, (void*) &fqdn, &fqdnlen) < 0)
         return 1;
+    LOG(log_debug, logtype_uams, "get_afpd_principal: fqdn: %s", fqdn);
+
     if (uam_afpserver_option(obj, UAM_OPTION_KRB5SERVICE, (void *)&service, &servicelen) < 0)
         return 1;
+    LOG(log_debug, logtype_uams, "get_afpd_principal: service: %s", service);
 
     /* we need all the info, log error and return if one's missing */
     if (!service || !servicelen || !fqdn || !fqdnlen || !realm || !realmlen) {
