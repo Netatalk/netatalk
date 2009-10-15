@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.4 2009-10-15 12:06:07 franklahm Exp $
+  $Id: ea.c,v 1.5 2009-10-15 15:00:55 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -1742,4 +1742,62 @@ exit:
     ea_close(&srcea);
     ea_close(&dstea);
 	return ret;
+}
+
+int ea_chown(VFS_FUNC_ARGS_CHOWN)
+{
+    LOG(log_debug, logtype_afpd, "ea_chown('%s')", path);
+
+    int count = 0, ret = AFP_OK;
+    char *eaname;
+    struct ea ea;
+
+    /* Open EA stuff */
+    if ((ea_open(vol, path, EA_RDWR, &ea)) != 0) {
+        if (errno == ENOENT)
+            /* no EA files, nothing to do */
+            return AFP_OK;
+        else {
+            LOG(log_error, logtype_afpd, "ea_chown('%s'): error calling ea_open", path);
+            return AFPERR_MISC;
+        }
+    }
+
+    if ((chown(ea_path(&ea, NULL), uid, gid)) != 0) {
+        switch (errno) {
+        case EPERM:
+        case EACCES:
+            ret = AFPERR_ACCESS;
+            goto exit;
+        default:
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+    }
+
+    while (count < ea.ea_count) {
+        eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name);
+        if ((chown(eaname, uid, gid)) != 0) {
+            switch (errno) {
+            case EPERM:
+            case EACCES:
+                ret = AFPERR_ACCESS;
+                goto exit;
+            default:
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+            continue;
+        }
+
+        count++;
+    }
+
+exit:
+    if ((ea_close(&ea)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chown('%s'): error closing ea handle", path);
+        return AFPERR_MISC;
+    }
+
+    return ret;
 }

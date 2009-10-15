@@ -908,25 +908,25 @@ static struct vfs_ops netatalk_adouble_sfm = {
  */
 
 struct vfs_ops netatalk_ea_adouble = {
-    /* ad_path:           */ NULL,
-    /* validupath:        */ NULL,
-    /* rf_chown:          */ NULL,
-    /* rf_renamedir:      */ NULL,
-    /* rf_deletecurdir:   */ NULL,
-    /* rf_setfilmode:     */ NULL,
-    /* rf_setdirmode:     */ NULL,
-    /* rf_setdirunixmode: */ NULL,
-    /* rf_setdirowner:    */ NULL,
-    /* rf_deletefile:     */ ea_deletefile,
-    /* rf_renamefile:     */ ea_renamefile,
+    /* vfs_path:          */ NULL,
+    /* vfs_validupath:    */ NULL,
+    /* vfs_chown:         */ ea_chown,
+    /* vfs_renamedir:     */ NULL, /* ok */
+    /* vfs_deletecurdir:  */ NULL, /* ok */
+    /* vfs_setfilmode:    */ NULL,
+    /* vfs_setdirmode:    */ NULL,
+    /* vfs_setdirunixmode:*/ NULL,
+    /* vfs_setdirowner:   */ NULL,
+    /* vfs_deletefile:    */ ea_deletefile,
+    /* vfs_renamefile:    */ ea_renamefile,
     /* vfs_copyfile       */ ea_copyfile,
-    /* rf_acl:            */ NULL,
-    /* rf_remove_acl      */ NULL,
-    /* ea_getsize         */ get_easize,
-    /* ea_getcontent      */ get_eacontent,
-    /* ea_list            */ list_eas,
-    /* ea_set             */ set_ea,
-    /* ea_remove          */ remove_ea
+    /* vfs_acl:           */ NULL,
+    /* vfs_remove_acl     */ NULL,
+    /* vfs_getsize        */ get_easize,
+    /* vfs_getcontent     */ get_eacontent,
+    /* vfs_list           */ list_eas,
+    /* vfs_set            */ set_ea,
+    /* vfs_remove         */ remove_ea
 };
 
 #ifdef HAVE_SOLARIS_EAS
