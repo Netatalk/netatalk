@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.108 2009-10-15 10:43:13 didg Exp $
+ * $Id: directory.c,v 1.109 2009-10-15 12:08:22 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -167,7 +167,7 @@ struct dir *dir = NULL;
  * and we are really bad in this case.
  */
 struct dir *
-            dirlookup( const struct vol *vol, u_int32_t did)
+            dirlookup( struct vol *vol, u_int32_t did)
 {
     struct dir   *ret;
     char	 *upath;
@@ -1184,7 +1184,7 @@ static struct path *invalidate (const struct vol *vol, struct dir *dir, struct p
                  
 */
 struct path *
-cname(const struct vol *vol, struct dir *dir, char **cpath)
+cname(struct vol *vol, struct dir *dir, char **cpath)
 {
     struct dir		   *cdir, *scdir=NULL;
     static char		   path[ MAXPATHLEN + 1];
