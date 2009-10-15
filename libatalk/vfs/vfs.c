@@ -32,6 +32,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 #include <atalk/directory.h>
+#include <atalk/unix.h>
 
 struct perm {
     uid_t uid;
@@ -809,6 +810,7 @@ VFS_MFUNC(setdirunixmode, VFS_FUNC_ARGS_SETDIRUNIXMODE, VFS_FUNC_VARS_SETDIRUNIX
 VFS_MFUNC(setdirowner, VFS_FUNC_ARGS_SETDIROWNER, VFS_FUNC_VARS_SETDIROWNER)
 VFS_MFUNC(deletefile, VFS_FUNC_ARGS_DELETEFILE, VFS_FUNC_VARS_DELETEFILE)
 VFS_MFUNC(renamefile, VFS_FUNC_ARGS_RENAMEFILE, VFS_FUNC_VARS_RENAMEFILE)
+VFS_MFUNC(copyfile, VFS_FUNC_ARGS_COPYFILE, VFS_FUNC_VARS_COPYFILE)
 VFS_MFUNC(acl, VFS_FUNC_ARGS_ACL, VFS_FUNC_VARS_ACL)
 VFS_MFUNC(remove_acl, VFS_FUNC_ARGS_REMOVE_ACL, VFS_FUNC_VARS_REMOVE_ACL)
 VFS_MFUNC(ea_getsize, VFS_FUNC_ARGS_EA_GETSIZE, VFS_FUNC_VARS_EA_GETSIZE)
@@ -843,6 +845,7 @@ struct vfs_ops vfs_master_funcs = {
     vfs_setdirowner,
     vfs_deletefile,
     vfs_renamefile,
+    vfs_copyfile,
     vfs_acl,
     vfs_remove_acl,
     vfs_ea_getsize,
@@ -857,46 +860,47 @@ struct vfs_ops vfs_master_funcs = {
  */
 
 static struct vfs_ops netatalk_adouble = {
-    /* ad_path:           */ ad_path,
-    /* validupath:        */ validupath_adouble,
-    /* rf_chown:          */ RF_chown_adouble,
-    /* rf_renamedir:      */ RF_renamedir_adouble,
-    /* rf_deletecurdir:   */ RF_deletecurdir_adouble,
-    /* rf_setfilmode:     */ RF_setfilmode_adouble,
-    /* rf_setdirmode:     */ RF_setdirmode_adouble,
-    /* rf_setdirunixmode: */ RF_setdirunixmode_adouble,
-    /* rf_setdirowner:    */ RF_setdirowner_adouble,
-    /* rf_deletefile:     */ RF_deletefile_adouble,
-    /* rf_renamefile:     */ RF_renamefile_adouble,
+    /* vfs_path:          */ ad_path,
+    /* vfs_validupath:    */ validupath_adouble,
+    /* vfs_chown:         */ RF_chown_adouble,
+    /* vfs_renamedir:     */ RF_renamedir_adouble,
+    /* vfs_deletecurdir:  */ RF_deletecurdir_adouble,
+    /* vfs_setfilmode:    */ RF_setfilmode_adouble,
+    /* vfs_setdirmode:    */ RF_setdirmode_adouble,
+    /* vfs_setdirunixmode:*/ RF_setdirunixmode_adouble,
+    /* vfs_setdirowner:   */ RF_setdirowner_adouble,
+    /* vfs_deletefile:    */ RF_deletefile_adouble,
+    /* vfs_renamefile:    */ RF_renamefile_adouble
+    /* NULL, ...          */
 };
 
 static struct vfs_ops netatalk_adouble_osx = {
-    /* ad_path:          */ ad_path_osx,
-    /* validupath:       */ validupath_osx,
-    /* rf_chown:         */ RF_chown_adouble,
-    /* rf_renamedir:     */ RF_renamedir_osx,
-    /* rf_deletecurdir:  */ RF_deletecurdir_osx,
-    /* rf_setfilmode:    */ RF_setfilmode_adouble,
-    /* rf_setdirmode:    */ RF_setdirmode_osx,
-    /* rf_setdirunixmode:*/ RF_setdirunixmode_osx,
-    /* rf_setdirowner:   */ RF_setdirowner_osx,
-    /* rf_deletefile:    */ RF_deletefile_adouble,
-    /* rf_renamefile:    */ RF_renamefile_osx,
+    /* vfs_path:          */ ad_path_osx,
+    /* vfs_validupath:    */ validupath_osx,
+    /* vfs_chown:         */ RF_chown_adouble,
+    /* vfs_renamedir:     */ RF_renamedir_osx,
+    /* vfs_deletecurdir:  */ RF_deletecurdir_osx,
+    /* vfs_setfilmode:    */ RF_setfilmode_adouble,
+    /* vfs_setdirmode:    */ RF_setdirmode_osx,
+    /* vfs_setdirunixmode:*/ RF_setdirunixmode_osx,
+    /* vfs_setdirowner:   */ RF_setdirowner_osx,
+    /* vfs_deletefile:    */ RF_deletefile_adouble,
+    /* vfs_renamefile:    */ RF_renamefile_osx
 };
 
 /* samba sfm format. ad_path shouldn't be set her */
 static struct vfs_ops netatalk_adouble_sfm = {
-    /* ad_path:          */ ad_path_sfm,
-    /* validupath:       */ validupath_adouble,
-    /* rf_chown:         */ RF_chown_ads,
-    /* rf_renamedir:     */ RF_renamedir_adouble,
-    /* rf_deletecurdir:  */ RF_deletecurdir_ads,
-    /* rf_setfilmode:    */ RF_setfilmode_ads,
-    /* rf_setdirmode:    */ RF_setdirmode_ads,
-    /* rf_setdirunixmode:*/ RF_setdirunixmode_ads,
-    /* rf_setdirowner:   */ RF_setdirowner_ads,
-    /* rf_deletefile:    */ RF_deletefile_ads,
-    /* rf_renamefile:    */ RF_renamefile_ads,
+    /* vfs_path:          */ ad_path_sfm,
+    /* vfs_validupath:    */ validupath_adouble,
+    /* vfs_chown:         */ RF_chown_ads,
+    /* vfs_renamedir:     */ RF_renamedir_adouble,
+    /* vfs_deletecurdir:  */ RF_deletecurdir_ads,
+    /* vfs_setfilmode:    */ RF_setfilmode_ads,
+    /* vfs_setdirmode:    */ RF_setdirmode_ads,
+    /* vfs_setdirunixmode:*/ RF_setdirunixmode_ads,
+    /* vfs_setdirowner:   */ RF_setdirowner_ads,
+    /* vfs_deletefile:    */ RF_deletefile_ads,
+    /* vfs_renamefile:    */ RF_renamefile_ads,
 };
 
 /* 
@@ -915,6 +919,7 @@ struct vfs_ops netatalk_ea_adouble = {
     /* rf_setdirowner:    */ NULL,
     /* rf_deletefile:     */ ea_deletefile,
     /* rf_renamefile:     */ ea_renamefile,
+    /* vfs_copyfile       */ ea_copyfile,
     /* rf_acl:            */ NULL,
     /* rf_remove_acl      */ NULL,
     /* ea_getsize         */ get_easize,
@@ -937,6 +942,7 @@ struct vfs_ops netatalk_ea_solaris = {
     /* rf_setdirowner:    */ NULL,
     /* rf_deletefile:     */ NULL,
     /* rf_renamefile:     */ NULL,
+    /* vfs_copyfile:      */ NULL,
     /* rf_acl:            */ NULL,
     /* rf_remove_acl      */ NULL,
     /* ea_getsize         */ sol_get_easize,
@@ -964,6 +970,7 @@ struct vfs_ops netatalk_solaris_acl_adouble = {
     /* rf_setdirowner:    */ NULL,
     /* rf_deletefile:     */ NULL,
     /* rf_renamefile:     */ NULL,
+    /* vfs_copyfile       */ NULL,
     /* rf_acl:            */ RF_solaris_acl,
     /* rf_remove_acl      */ RF_remove_acl
 };

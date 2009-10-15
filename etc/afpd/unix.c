@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.55 2009-10-14 15:04:01 franklahm Exp $
+ * $Id: unix.c,v 1.56 2009-10-15 12:06:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -39,6 +39,7 @@ char *strchr (), *strrchr ();
 #include <atalk/vfs.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
+#include <atalk/unix.h>
 
 #include "auth.h"
 #include "directory.h"

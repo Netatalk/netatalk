@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.1 2009-10-02 09:32:41 franklahm Exp $
+ * $Id: unix.c,v 1.2 2009-10-15 12:06:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,6 +22,7 @@
 #include <atalk/directory.h>
 #include <atalk/volume.h>
 #include <atalk/logger.h>
+#include <atalk/unix.h>
 
 /* -----------------------------
    a dropbox is a folder where w is set but not r eg:
@@ -152,4 +153,56 @@ char *fullpathname(const char *name)
         strlcpy(wd, name, MAXPATHLEN);
     }
     return wd;
+}
+
+int copy_file(const char *src, const char *dst, mode_t mode)
+{
+    int    ret = 0;
+    int    sfd = -1;
+    int    dfd = -1;
+    size_t cc;
+    char   filebuf[8192];
+
+    if ((sfd = open(src, O_RDONLY)) < 0) {
+        LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
+            src, dst, src, strerror(errno));
+        return -1;
+    }
+
+    if ((dfd = open(dst, O_WRONLY | O_CREAT | O_EXCL, mode)) < 0) {
+        LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
+            src, dst, dst, strerror(errno));
+        ret = -1;
+        goto exit;
+    }
+
+    while ((cc = read(sfd, filebuf, sizeof(filebuf)))) {
+        if (cc < 0) {
+            if (errno == EINTR)
+                continue;
+            LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): read '%s' error: %s",
+                src, dst, src, strerror(errno));
+            ret = -1;
+            goto exit;
+        }
+
+        while (cc > 0) {
+            if ((cc -= write(dfd, filebuf, cc)) < 0) {
+                if (errno == EINTR)
+                    continue;
+                LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): read '%s' error: %s",
+                    src, dst, dst, strerror(errno));
+                ret = -1;
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    if (sfd != -1)
+        close(sfd);
+    if (dfd != -1)
+        close(dfd);
+
+    return ret;
 }

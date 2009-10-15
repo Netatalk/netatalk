@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.2 2009-10-14 15:04:01 franklahm Exp $
+   $Id: ea.h,v 1.3 2009-10-15 12:06:07 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -125,6 +125,7 @@ extern int remove_ea(VFS_FUNC_ARGS_EA_REMOVE);
 /* ... EA VFS funcs that deal with file/dir cp/mv/rm */
 extern int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE);
 extern int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE);
+extern int ea_copyfile(VFS_FUNC_ARGS_COPYFILE);
 
 /* Solaris native EAs */
 #ifdef HAVE_SOLARIS_EAS

@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.45 2009-10-14 01:38:28 didg Exp $
+ * $Id: adouble.h,v 1.46 2009-10-15 12:06:07 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -551,14 +551,5 @@ extern ssize_t ad_writefile (struct adouble *, const int,
                                  const int, off_t, const int, const size_t);
 #endif /* HAVE_SENDFILE_WRITE */
 #endif /* 0 */
-
-/* ad_unix.c */
-extern int netatalk_unlink(const char *name);
-extern char *fullpathname(const char *);
-extern int netatalk_rmdir(const char *name);
-extern int setfilmode(const char *, mode_t, struct stat *, mode_t);
-extern int dir_rx_set(mode_t mode);
-extern int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask);
-extern int unix_rename(const char *oldpath, const char *newpath);
 
 #endif /* _ATALK_ADOUBLE_H */

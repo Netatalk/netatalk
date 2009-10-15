@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.114 2009-10-15 10:43:13 didg Exp $
+ * $Id: file.c,v 1.115 2009-10-15 12:06:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -39,6 +39,8 @@ char *strchr (), *strrchr ();
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
+#include <atalk/unix.h>
+
 #include "directory.h"
 #include "desktop.h"
 #include "volume.h"
@@ -1420,11 +1422,15 @@ int copyfile(const struct vol *s_vol, const struct vol*d_vol,
         }
         return AFPERR_EXIST;
     }
-    /* XXX if the source and the dest don't use the same resource type it's broken
-    */
+    
+    /*
+     * XXX if the source and the dest don't use the same resource type it's broken
+     */
     if (ad_reso_fileno(adp) == -1 || 0 == (err = copy_fork(ADEID_RFORK, &add, adp))){
         /* copy the data fork */
- 	err = copy_fork(ADEID_DFORK, &add, adp);
+        if ((err = copy_fork(ADEID_DFORK, &add, adp)) == 0) {
+            err = d_vol->vfs->vfs_copyfile(d_vol, src, dst);
+        }
     }
 
     if (err < 0) {

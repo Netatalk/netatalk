@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.3 2009-10-14 15:04:01 franklahm Exp $
+  $Id: ea.c,v 1.4 2009-10-15 12:06:07 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@
 #include <atalk/volume.h>
 #include <atalk/vfs.h>
 #include <atalk/util.h>
+#include <atalk/unix.h>
 
 /*
  * Store Extended Attributes inside .AppleDouble folders as follows:
@@ -1655,6 +1656,87 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         count++;
     }
 
+
+exit:
+    ea_close(&srcea);
+    ea_close(&dstea);
+	return ret;
+}
+
+int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
+{
+    int    count = 0;
+    int    ret = AFP_OK;
+    size_t easize;
+    char   srceapath[ MAXPATHLEN + 1];
+    char   *eapath;
+    char   *eaname;
+    struct ea srcea;
+    struct ea dstea;
+    struct adouble ad;
+
+    LOG(log_debug, logtype_afpd, "ea_copyfile('%s'/'%s')", src, dst);
+
+    /* Open EA stuff */
+    if ((ea_open(vol, src, EA_RDWR, &srcea)) != 0) {
+        if (errno == ENOENT)
+            /* no EA files, nothing to do */
+            return AFP_OK;
+        else {
+            LOG(log_error, logtype_afpd, "ea_copyfile('%s'/'%s'): ea_open error: '%s'", src, dst, src);
+            return AFPERR_MISC;
+        }
+    }
+
+    if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
+        if (errno == ENOENT) {
+            /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
+            ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
+            if ((ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) != 0) {
+                LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): ad_open error: '%s'", src, dst, dst);
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+            ad_close(&ad, ADFLAGS_HF);
+            if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+        }
+    }
+
+    /* Loop through all EAs: */
+    while (count < srcea.ea_count) {
+        /* Copy EA */
+        eaname = (*srcea.ea_entries)[count].ea_name;
+        easize = (*srcea.ea_entries)[count].ea_size;
+
+        /* Build src and dst paths for copy_file() */
+        eapath = ea_path(&srcea, eaname);
+        strcpy(srceapath, eapath);
+        eapath = ea_path(&dstea, eaname);
+
+        LOG(log_maxdebug, logtype_afpd, "ea_copyfile('%s/%s'): copying EA '%s' to '%s'",
+            src, dst, srceapath, eapath);
+
+        /* Add EA to dstea */
+        if ((ea_addentry(&dstea, eaname, easize, 0)) == -1) {
+            LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): ea_addentry('%s') error",
+                src, dst, eaname);
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+
+        /* Now copy the EA */
+        if ((copy_file( srceapath, eapath, (0666 & ~vol->v_umask))) < 0) {
+            LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): copying EA '%s' to '%s'",
+                src, dst, srceapath, eapath);
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+
+        count++;
+    }
 
 exit:
     ea_close(&srcea);

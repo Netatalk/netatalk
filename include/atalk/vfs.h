@@ -58,6 +58,9 @@
 #define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, const char *src, const char *dst
 #define VFS_FUNC_VARS_RENAMEFILE vol, src, dst
 
+#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, const char *src, const char *dst
+#define VFS_FUNC_VARS_COPYFILE vol, src, dst
+
 #define VFS_FUNC_ARGS_ACL const struct vol *vol, const char *path, int cmd, int count, void *aces
 #define VFS_FUNC_VARS_ACL vol, path, cmd, count, aces
 
@@ -96,6 +99,7 @@ struct vfs_ops {
     int (*vfs_setdirowner)   (VFS_FUNC_ARGS_SETDIROWNER);
     int (*vfs_deletefile)    (VFS_FUNC_ARGS_DELETEFILE);
     int (*vfs_renamefile)    (VFS_FUNC_ARGS_RENAMEFILE);
+    int (*vfs_copyfile)      (VFS_FUNC_ARGS_COPYFILE);
 
     /* ACLs */
     int (*vfs_acl)           (VFS_FUNC_ARGS_ACL);
