@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.6 2009-10-15 10:43:13 didg Exp $
+  $Id: extattrs.c,v 1.7 2009-10-15 15:35:05 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -74,12 +74,13 @@ static void hexdump(void *m, size_t l) {
 */
 int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    int                 count, ret, oflag = 0;
+    int                 count, ret, oflag = 0, adflags = 0;
     uint16_t            vid, bitmap;
     uint32_t            did, maxreply, tmpattr;
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
+    struct stat         st;
     struct adouble      ad, *adp = NULL;
     struct ofork        *of;
     char                *uname, *FinderInfo;
@@ -145,7 +146,11 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
             adp = &ad;
         }
 
-        if ( ad_metadata( uname, 0, adp) < 0 ) {
+        stat(uname, &st);
+        if (S_ISDIR(st.st_mode))
+            adflags = ADFLAGS_DIR;
+
+        if ( ad_metadata( uname, adflags, adp) < 0 ) {
             switch (errno) {
             case EACCES:
                 LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",

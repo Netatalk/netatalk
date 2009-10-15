@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.5 2009-10-15 15:00:55 franklahm Exp $
+  $Id: ea.c,v 1.6 2009-10-15 15:35:05 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -591,8 +591,9 @@ static int ea_open(const struct vol * restrict vol,
     memset(ea, 0, sizeof(struct ea));
 
     ea->vol = vol;              /* ea_close needs it */
-
     ea->ea_flags = eaflags;
+    /* Dont check for errors, eg when removing the file is already gone */
+    stat(uname, &st);
     if (S_ISDIR(st.st_mode))
         ea->ea_flags |=  EA_DIR;
 
