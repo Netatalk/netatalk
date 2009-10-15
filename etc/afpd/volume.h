@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.35 2009-10-13 22:55:37 didg Exp $
+ * $Id: volume.h,v 1.36 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -30,11 +30,11 @@ extern int              pollvoltime (AFPObj *);
 extern void             load_volumes (AFPObj *obj);
 
 /* FP functions */
-extern int	afp_openvol      (AFPObj *, char *, int, char *, int *);
-extern int	afp_getvolparams (AFPObj *, char *, int, char *, int *);
-extern int	afp_setvolparams (AFPObj *, char *, int, char *, int *);
-extern int	afp_getsrvrparms (AFPObj *, char *, int, char *, int *);
-extern int	afp_closevol     (AFPObj *, char *, int, char *, int *);
+int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getvolparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setvolparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getsrvrparms (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_closevol     (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 /* netatalk functions */
 extern void     close_all_vol   (void);

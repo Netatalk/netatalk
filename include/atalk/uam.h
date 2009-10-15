@@ -96,11 +96,4 @@ extern int uam_sia_validate_user (sia_collect_func_t *, int, char **,
                                      char *);
 #endif /* TRU64 */
 
-/* switch.c */
-#define UAM_AFPSERVER_PREAUTH  (0)
-#define UAM_AFPSERVER_POSTAUTH (1 << 0)
-
-extern int uam_afpserver_action (const int /*id*/, const int /*switch*/, 
-				     int (*)(), int (**)());
-
 #endif

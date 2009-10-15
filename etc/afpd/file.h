@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.23 2009-10-14 01:38:28 didg Exp $
+ * $Id: file.h,v 1.24 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -112,7 +112,7 @@ extern struct extmap	*getextmap (const char *);
 extern struct extmap	*getdefextmap (void);
 
 extern int getfilparams (struct vol *, u_int16_t, struct path *,
-                                 struct dir *, char *buf, int *);
+                                 struct dir *, char *buf, size_t *);
 
 extern int setfilparams (struct vol *, struct path *, u_int16_t, char *);
 extern int renamefile   (const struct vol *, char *, char *, char *, struct adouble *);
@@ -120,7 +120,7 @@ extern int copyfile     (const struct vol *, const struct vol *, char *, char *,
 extern int deletefile   (const struct vol *, char *, int);
 
 extern int getmetadata  (struct vol *vol, u_int16_t bitmap, struct path *path, 
-                         struct dir *dir, char *buf, int *buflen, struct adouble *adp);
+                         struct dir *dir, char *buf, size_t *buflen, struct adouble *adp);
 
 extern void *get_finderinfo (const struct vol *, const char *, struct adouble *, void *);
 
@@ -131,12 +131,12 @@ extern u_int32_t get_id  (struct vol *, struct adouble *, const struct stat *,
                                 const cnid_t , char *, const int );
 
 /* FP functions */
-extern int      afp_exchangefiles (AFPObj *, char *, int, char *, int *);
-extern int	afp_setfilparams (AFPObj *, char *, int, char *, int *);
-extern int	afp_copyfile (AFPObj *, char *, int, char *, int *);
-extern int	afp_createfile (AFPObj *, char *, int, char *, int *);
-extern int      afp_createid (AFPObj *, char *, int, char *, int *);
-extern int      afp_resolveid (AFPObj *, char *, int, char *, int *);
-extern int      afp_deleteid (AFPObj *, char *, int, char *, int *);
+int afp_exchangefiles (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setfilparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_copyfile (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_createfile (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_createid (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_resolveid (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_deleteid (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif

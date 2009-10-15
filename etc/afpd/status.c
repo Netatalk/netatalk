@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.24 2009-10-13 22:55:37 didg Exp $
+ * $Id: status.c,v 1.25 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -574,7 +574,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 }
 
 /* this is the same as asp/dsi_getstatus */
-int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     AFPConfig *config = obj->config;
 

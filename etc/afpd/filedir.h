@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.h,v 1.10 2009-10-13 22:55:37 didg Exp $
+ * $Id: filedir.h,v 1.11 2009-10-15 10:43:13 didg Exp $
  */
 
 #ifndef AFPD_FILEDIR_H
@@ -19,14 +19,13 @@ extern char		*absupath (const struct vol *, struct dir *,
 extern int		veto_file (const char *veto_str, const char *path);
 extern int 		check_name (const struct vol *vol, char *name);
 
+extern int matchfile2dirperms (char *, struct vol *, int);
+
 /* FP functions */
-extern int	matchfile2dirperms (char *, struct vol *, int);
-extern int	afp_moveandrename (AFPObj *, char *, int, char *, int *);
-extern int	afp_rename (AFPObj *, char *, int, char *, int *);
-extern int	afp_delete (AFPObj *, char *, int, char *, int *);
-extern int	afp_getfildirparams (AFPObj *, char *, int, char *,
-                                        int *);
-extern int	afp_setfildirparams (AFPObj *, char *, int, char *,
-                                        int *);
+int afp_moveandrename (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_rename (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_delete (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getfildirparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setfildirparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif

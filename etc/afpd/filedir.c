@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.57 2009-10-14 15:04:01 franklahm Exp $
+ * $Id: filedir.c,v 1.58 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -130,13 +130,14 @@ more information */
 }
 #endif
 
-int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct stat		*st;
     struct vol		*vol;
     struct dir		*dir;
     u_int32_t           did;
-    int			buflen, ret;
+    int			ret;
+    size_t		buflen;
     u_int16_t		fbitmap, dbitmap, vid;
     struct path         *s_path;
 
@@ -225,7 +226,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf
     return( AFP_OK );
 }
 
-int afp_setfildirparams(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct stat	*st;
     struct vol	*vol;
@@ -434,7 +435,7 @@ static int moveandrename(const struct vol *vol, struct dir *sdir, char *oldname,
 }
 
 /* -------------------------------------------- */
-int afp_rename(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol	*vol;
     struct dir	*sdir;
@@ -517,7 +518,7 @@ int afp_rename(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rb
 }
 
 /* ------------------------------- */
-int afp_delete(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -625,7 +626,7 @@ char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
 }
 
 /* ------------------------- */
-int afp_moveandrename(AFPObj *obj, char *ibuf, int ibuflen  _U_, char *rbuf _U_, int *rbuflen)
+int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol	*vol;
     struct dir	*sdir, *ddir;

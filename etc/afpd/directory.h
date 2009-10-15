@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.29 2009-10-13 22:55:36 didg Exp $
+ * $Id: directory.h,v 1.30 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -155,21 +155,21 @@ extern hash_t *dirhash (void);
 extern char *check_dirent (const struct vol *, char *);
 
 /* FP functions */
-extern int	afp_createdir (AFPObj *, char *, int, char *, int *);
-extern int      afp_opendir (AFPObj *, char *, int, char *, int *);
-extern int	afp_setdirparams (AFPObj *, char *, int, char *, int *);
-extern int      afp_closedir (AFPObj *, char *, int, char *, int *);
-extern int	afp_mapid (AFPObj *, char *, int, char *, int *);
-extern int	afp_mapname (AFPObj *, char *, int, char *, int *);
-extern int	afp_syncdir (AFPObj *, char *, int, char *, int *);
+int afp_createdir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_opendir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setdirparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_closedir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_mapid (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_mapname (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_syncdir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 /* from enumerate.c */
-extern int	afp_enumerate (AFPObj *, char *, unsigned int, char *, unsigned int *);
-extern int	afp_enumerate_ext (AFPObj *, char *, unsigned int, char *, unsigned int *);
-extern int	afp_enumerate_ext2 (AFPObj *, char *, unsigned int, char *, unsigned int *);
+int afp_enumerate (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_enumerate_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_enumerate_ext2 (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 /* from catsearch.c */
-extern int	afp_catsearch (AFPObj *, char *, int, char *, int *);
-extern int	afp_catsearch_ext (AFPObj *, char *, int, char *, int *);
+int afp_catsearch (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_catsearch_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif

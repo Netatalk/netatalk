@@ -1,5 +1,5 @@
 /*
- * $Id: switch.c,v 1.18 2009-10-13 22:55:37 didg Exp $
+ * $Id: switch.c,v 1.19 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -50,7 +50,7 @@
 #include "acls.h"
 #endif
 
-static int afp_null(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+static int afp_null(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,  size_t *rbuflen)
 {
     LOG(log_info, logtype_afpd, "afp_null handle %d", *ibuf );
     *rbuflen = 0;
@@ -62,7 +62,7 @@ static int afp_null(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_
  * Routines marked "afp_null" are AFP functions
  * which are not yet implemented. A fine line...
  */
-int	(*preauth_switch[])() = {
+static AFPCmd preauth_switch[] = {
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL,					/*   0 -   7 */
     NULL, NULL, NULL, NULL,
@@ -129,9 +129,9 @@ int	(*preauth_switch[])() = {
     NULL, NULL, NULL, NULL,					/* 248 - 255 */
 };
 
-int	(**afp_switch)() = preauth_switch;
+AFPCmd *afp_switch = preauth_switch;
 
-int	(*postauth_switch[])() = {
+AFPCmd postauth_switch[] = {
     NULL, afp_bytelock, afp_closevol, afp_closedir,
     afp_closefork, afp_copyfile, afp_createdir, afp_createfile,	/*   0 -   7 */
     afp_delete, afp_enumerate, afp_flush, afp_flushfork,
@@ -203,20 +203,20 @@ int	(*postauth_switch[])() = {
 /* add a new function if it's specified. return the old function in
  * "old" if there's a pointer there. */
 int uam_afpserver_action(const int id, const int which,
-                         int (*new)(), int (**old)())
+                         AFPCmd new_table, AFPCmd *old)
 {
     switch (which) {
     case UAM_AFPSERVER_PREAUTH:
         if (old)
             *old = preauth_switch[id];
-        if (new)
-            preauth_switch[id] = new;
+        if (new_table)
+            preauth_switch[id] = new_table;
         break;
     case UAM_AFPSERVER_POSTAUTH:
         if (old)
             *old = postauth_switch[id];
-        if (new)
-            postauth_switch[id] = new;
+        if (new_table)
+            postauth_switch[id] = new_table;
         break;
     default:
         LOG(log_debug, logtype_afpd, "uam_afpserver_action: unknown switch %d[%d]",

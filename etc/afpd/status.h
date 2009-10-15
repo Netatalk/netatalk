@@ -1,5 +1,5 @@
 /*
- * $Id: status.h,v 1.8 2009-10-13 22:55:37 didg Exp $
+ * $Id: status.h,v 1.9 2009-10-15 10:43:13 didg Exp $
  */
 
 #ifndef AFPD_STATUS_H
@@ -44,6 +44,7 @@ extern void status_uams (char * /*status*/, const char * /*authlist*/);
 extern void status_reset (void );
 extern void status_init (AFPConfig *, AFPConfig *,
                                  const struct afp_options *);
-extern int      afp_getsrvrinfo (AFPObj *, char *, int, char *, int *);
+/* FP functions */
+int afp_getsrvrinfo (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif

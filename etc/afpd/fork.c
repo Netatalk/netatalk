@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.64 2009-10-14 01:38:28 didg Exp $
+ * $Id: fork.c,v 1.65 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -48,7 +48,7 @@
 struct ofork *writtenfork;
 #endif
 
-static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, int *buflen)
+static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_t *buflen)
 {
     struct path         path;
     struct stat		*st;
@@ -246,13 +246,14 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
 }
 
 /* ----------------------- */
-int afp_openfork(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
     struct ofork	*ofork, *opened;
     struct adouble      *adsame = NULL;
-    int			buflen, ret, adflags, eid;
+    size_t		buflen;
+    int			ret, adflags, eid;
     u_int32_t           did;
     u_int16_t		vid, bitmap, access, ofrefnum;
     char		fork, *path, *upath;
@@ -517,7 +518,7 @@ openfork_err:
     return ret;
 }
 
-int afp_setforkparams(AFPObj *obj _U_, char *ibuf, int ibuflen, char *rbuf _U_, int *rbuflen)
+int afp_setforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork	*ofork;
     off_t		size;
@@ -654,7 +655,7 @@ afp_setfork_err:
 
 
 /* ---------------------- */
-static int byte_lock(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen, int is64)
+static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
     struct ofork	*ofork;
     off_t               offset, length;
@@ -733,13 +734,13 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, i
 }
 
 /* --------------------------- */
-int afp_bytelock(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+int afp_bytelock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
    return byte_lock ( obj, ibuf, ibuflen, rbuf, rbuflen , 0);
 }
 
 /* --------------------------- */
-int afp_bytelock_ext(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
    return byte_lock ( obj, ibuf, ibuflen, rbuf, rbuflen , 1);
 }
@@ -769,7 +770,7 @@ static int crlf(struct ofork *of)
 static ssize_t read_file(struct ofork *ofork, int eid,
                                     off_t offset, u_char nlmask,
                                     u_char nlchar, char *rbuf,
-                                    int *rbuflen, const int xlate)
+                                    size_t *rbuflen, const int xlate)
 {
     ssize_t cc;
     int eof = 0;
@@ -781,7 +782,7 @@ static ssize_t read_file(struct ofork *ofork, int eid,
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
-    if ( cc < *rbuflen ) {
+    if ( (size_t)cc < *rbuflen ) {
         eof = 1;
     }
 
@@ -834,11 +835,12 @@ static ssize_t read_file(struct ofork *ofork, int eid,
  *
  * with dsi, should we check that reqcount < server quantum? 
 */
-static int read_fork(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen, int is64)
+static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
     struct ofork	*ofork;
     off_t		offset, saveoff, reqcount, savereqcount;
-    int			cc, err, eid, xlate = 0;
+    ssize_t		cc, err;
+    int			eid, xlate = 0;
     u_int16_t		ofrefnum;
     u_char		nlmask, nlchar;
     
@@ -931,9 +933,9 @@ static int read_fork(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *
         /* dsi_readinit() returns size of next read buffer. by this point,
          * we know that we're sending some data. if we fail, something
          * horrible happened. */
-        if ((*rbuflen = dsi_readinit(dsi, rbuf, *rbuflen, reqcount, err)) < 0)
+        if ((cc = dsi_readinit(dsi, rbuf, *rbuflen, reqcount, err)) < 0)
             goto afp_read_exit;
-
+        *rbuflen = cc;
         /* due to the nature of afp packets, we have to exit if we get
            an error. we can't do this with translation on. */
 #if 0 /* ifdef WITH_SENDFILE */
@@ -1004,19 +1006,19 @@ afp_read_err:
 }
 
 /* ---------------------- */
-int afp_read(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+int afp_read(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
 /* ---------------------- */
-int afp_read_ext(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 
 /* ---------------------- */
-int afp_flush(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol *vol;
     u_int16_t vid;
@@ -1033,7 +1035,7 @@ int afp_flush(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int 
     return( AFP_OK );
 }
 
-int afp_flushfork(AFPObj *obj _U_, char	*ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_flushfork(AFPObj *obj _U_, char	*ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork	*ofork;
     u_int16_t		ofrefnum;
@@ -1060,7 +1062,7 @@ int afp_flushfork(AFPObj *obj _U_, char	*ibuf, int ibuflen _U_, char *rbuf _U_, 
   fsync(2) on OSX is implemented differently than on other platforms.
   see: http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf.
  */
-int afp_syncfork(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork        *ofork;
     u_int16_t           ofrefnum;
@@ -1126,7 +1128,7 @@ int flushfork(struct ofork *ofork)
     return( err );
 }
 
-int afp_closefork(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork	*ofork;
     u_int16_t		ofrefnum;
@@ -1188,7 +1190,7 @@ static ssize_t write_file(struct ofork *ofork, int eid,
 /* FPWrite. NOTE: on an error, we always use afp_write_err as
  * the client may have sent us a bunch of data that's not reflected 
  * in reqcount et al. */
-static int write_fork(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen, int is64)
+static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
     struct ofork	*ofork;
     off_t           	offset, saveoff, reqcount;
@@ -1367,7 +1369,7 @@ afp_write_err:
 }
 
 /* ---------------------------- */
-int afp_write(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+int afp_write(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
@@ -1375,13 +1377,13 @@ int afp_write(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
 /* ---------------------------- 
  * FIXME need to deal with SIGXFSZ signal
 */
-int afp_write_ext(AFPObj *obj, char *ibuf, int ibuflen, char *rbuf, int *rbuflen)
+int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 
 /* ---------------------------- */
-int afp_getforkparams(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct ofork	*ofork;
     int			buflen, ret;

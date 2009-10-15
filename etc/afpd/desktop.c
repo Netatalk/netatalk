@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.39 2009-10-14 01:38:28 didg Exp $
+ * $Id: desktop.c,v 1.40 2009-10-15 10:43:13 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -40,7 +40,7 @@
 #include "mangle.h"
 
 
-int afp_opendt(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
     u_int16_t	vid;
@@ -58,7 +58,7 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rb
     return( AFP_OK );
 }
 
-int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
     return( AFP_OK );
@@ -116,14 +116,15 @@ static int iconopen(struct vol *vol, u_char creator[ 4 ], int flags, int mode)
     return 0;
 }
 
-int afp_addicon(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
 #ifndef NO_DDP
     struct iovec	iov[ 2 ];
 #endif
     u_char		fcreator[ 4 ], imh[ 12 ], irh[ 12 ], *p;
-    int			itype, cc = AFP_OK, iovcnt = 0, buflen;
+    int			itype, cc = AFP_OK, iovcnt = 0;
+    size_t 		buflen;
     u_int32_t           ftype, itag;
     u_int16_t		bsize, rsize, vid;
 
@@ -340,7 +341,7 @@ static const u_char	uicon[] = {
 };
 #endif
 
-int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
     u_char	fcreator[ 4 ], ih[ 12 ];
@@ -411,11 +412,11 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, in
 }
 
 
-int afp_geticon(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol	*vol;
     off_t       offset;
-    int		rc, buflen;
+    ssize_t	rc, buflen;
     u_char	fcreator[ 4 ], ftype[ 4 ], itype, ih[ 12 ];
     u_int16_t	vid, bsize, rsize;
 
@@ -502,9 +503,10 @@ int afp_geticon(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbufl
             return AFPERR_PARAM;
         }
 
-        if ((*rbuflen = dsi_readinit(dsi, rbuf, buflen, rc, AFP_OK)) < 0)
+        if ((buflen = dsi_readinit(dsi, rbuf, buflen, rc, AFP_OK)) < 0)
             goto geticon_exit;
 
+        *rbuflen = buflen;
         /* do to the streaming nature, we have to exit if we encounter
          * a problem. much confusion results otherwise. */
         while (*rbuflen > 0) {
@@ -746,7 +748,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
 }
 
 /* ----------------------------- */
-int afp_addcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_addcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -781,7 +783,7 @@ int afp_addcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_,
 }
 
 /* -------------------- */
-static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, int *rbuflen)
+static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t *rbuflen)
 {
     struct adouble	ad, *adp;
     struct ofork        *of;
@@ -824,7 +826,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, int *rb
 }
 
 /* -------------------- */
-int afp_getcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -894,7 +896,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
 }
 
 /* ----------------------- */
-int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;

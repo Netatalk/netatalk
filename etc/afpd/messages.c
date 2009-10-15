@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.19 2009-10-13 22:55:37 didg Exp $
+ * $Id: messages.c,v 1.20 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -112,7 +112,7 @@ void readmessage(AFPObj *obj)
 #endif /* SERVERTEXT */
 }
 
-int afp_getsrvrmesg(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     char *message;
     u_int16_t type, bitmap;

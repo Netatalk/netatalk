@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.27 2009-10-13 22:55:37 didg Exp $
+ * $Id: globals.h,v 1.28 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -86,7 +86,7 @@ struct afp_options {
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
-typedef struct AFPObj {
+typedef struct _AFPObj {
     int proto;
     unsigned long servernum;
     void *handle, *config;
@@ -107,6 +107,9 @@ typedef struct AFPObj {
     uidgidset		uidgid;
 #endif
 } AFPObj;
+
+/* typedef for AFP functions handlers */
+typedef int (*AFPCmd)(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 extern int		afp_version;
 extern int		afp_errno;

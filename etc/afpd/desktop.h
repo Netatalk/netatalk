@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.h,v 1.5 2009-10-13 22:55:36 didg Exp $
+ * $Id: desktop.h,v 1.6 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -44,16 +44,16 @@ extern char	*mtoupath (const struct vol *, char *, cnid_t, int utf8);
 extern char	*utompath (const struct vol *, char *, cnid_t, int utf8);
 
 /* FP functions */
-extern int	afp_opendt (AFPObj *, char *, int, char *, int *);
-extern int	afp_addcomment (AFPObj *, char *, int, char *, int *);
-extern int	afp_getcomment (AFPObj *, char *, int, char *, int *);
-extern int	afp_rmvcomment (AFPObj *, char *, int, char *, int *);
-extern int	afp_addappl (AFPObj *, char *, int, char *, int *);
-extern int	afp_rmvappl (AFPObj *, char *, int, char *, int *);
-extern int	afp_getappl (AFPObj *, char *, int, char *, int *);
-extern int      afp_closedt (AFPObj *, char *, int, char *, int *);
-extern int	afp_addicon (AFPObj *, char *, int, char *, int *);
-extern int	afp_geticoninfo (AFPObj *, char *, int, char *, int *);
-extern int	afp_geticon (AFPObj *, char *, int, char *, int *);
+int afp_opendt (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_addcomment (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getcomment (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_rmvcomment (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_addappl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_rmvappl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getappl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_closedt (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_addicon (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_geticoninfo (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_geticon (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif

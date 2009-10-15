@@ -1,5 +1,5 @@
 /*
-   $Id: acls.h,v 1.1 2009-02-02 11:55:00 franklahm Exp $
+   $Id: acls.h,v 1.2 2009-10-15 10:43:13 didg Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -101,9 +101,9 @@ typedef struct {
 } darwin_acl_header_t;
 
 /* FP functions */
-extern int afp_access(AFPObj *, char *, int, char *, int *);
-extern int afp_getacl(AFPObj *, char *, int, char *, int *);
-extern int afp_setacl(AFPObj *, char *, int, char *, int *);
+int afp_access (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 /* Parse ldap.conf */
 extern int acl_ldap_readconfig(char *name);

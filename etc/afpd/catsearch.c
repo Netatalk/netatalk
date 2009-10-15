@@ -422,7 +422,8 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
 {
 
 	char 		*p = *buf;
-	int 		ret, tbuf =0;
+	int 		ret;
+	size_t		tbuf =0;
 	u_int16_t	resultsize;
 	int 		isdir = S_ISDIR(path->st.st_mode); 
 
@@ -662,8 +663,8 @@ catsearch_end: /* Exiting catsearch: error condition */
 } /* catsearch() */
 
 /* -------------------------- */
-static int catsearch_afp(AFPObj *obj _U_, char *ibuf, int ibuflen,
-                  char *rbuf, int *rbuflen, int ext)
+static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
+                  char *rbuf, size_t *rbuflen, int ext)
 {
     struct vol *vol;
     u_int16_t   vid;
@@ -884,15 +885,15 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, int ibuflen,
 } /* catsearch_afp */
 
 /* -------------------------- */
-int afp_catsearch (AFPObj *obj, char *ibuf, int ibuflen,
-                  char *rbuf, int *rbuflen)
+int afp_catsearch (AFPObj *obj, char *ibuf, size_t ibuflen,
+                  char *rbuf, size_t *rbuflen)
 {
 	return catsearch_afp( obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
 
-int afp_catsearch_ext (AFPObj *obj, char *ibuf, int ibuflen,
-                  char *rbuf, int *rbuflen)
+int afp_catsearch_ext (AFPObj *obj, char *ibuf, size_t ibuflen,
+                  char *rbuf, size_t *rbuflen)
 {
 	return catsearch_afp( obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }

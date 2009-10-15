@@ -1,5 +1,5 @@
 /*
-   $Id: acls.c,v 1.4 2009-10-02 09:32:40 franklahm Exp $
+   $Id: acls.c,v 1.5 2009-10-15 10:43:13 didg Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -393,7 +393,7 @@ static int map_acl(int type, ace_t *nfsv4_aces, darwin_ace_t *buf, int ace_count
 /* Get ACL from object omitting trivial ACEs. Map to Darwin ACL style and 
    store Darwin ACL at rbuf. Add length of ACL written to rbuf to *rbuflen.
    Returns 0 on success, -1 on error. */
-static int get_and_map_acl(char *name, char *rbuf, int *rbuflen)
+static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 {
     int ace_count, mapped_aces, err;
     ace_t *aces;
@@ -717,7 +717,7 @@ exit:
  * Interface
  ********************************************************/
 
-int afp_access(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     int			ret;
     struct vol		*vol;
@@ -776,7 +776,7 @@ int afp_access(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rb
     return ret;
 }
 
-int afp_getacl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -861,7 +861,7 @@ int afp_getacl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rb
     return AFP_OK;
 }
 
-int afp_setacl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;

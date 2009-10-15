@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.17 2009-10-13 22:55:36 didg Exp $
+ * $Id: appl.c,v 1.18 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -143,7 +143,7 @@ makemacpath(char *mpath, int mpathlen, struct dir *dir, char *path)
 }
 
 
-int afp_addappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -230,7 +230,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *r
     return( AFP_OK );
 }
 
-int afp_rmvappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *rbuflen)
+int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -301,11 +301,12 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf _U_, int *r
     return( AFP_OK );
 }
 
-int afp_getappl(AFPObj *obj, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen)
+int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
     char		*p, *q;
-    int			cc, buflen;
+    int			cc; 
+    size_t		buflen;
     u_int16_t		vid, aindex, bitmap, len;
     u_char		creator[ 4 ];
     u_char		appltag[ 4 ];

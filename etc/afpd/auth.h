@@ -1,5 +1,5 @@
 /*
- * $Id: auth.h,v 1.8 2009-10-13 22:55:36 didg Exp $
+ * $Id: auth.h,v 1.9 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -38,14 +38,14 @@ extern gid_t	*groups;
 extern int	ngroups;
 
 /* FP functions */
-extern int	afp_login (AFPObj *, char *, int, char *, int *);
-extern int	afp_login_ext (AFPObj *, char *, unsigned int, char *, unsigned int *);
-extern int	afp_logincont (AFPObj *, char *, int, char *, int *);
-extern int	afp_changepw (AFPObj *, char *, int, char *, int *);
-extern int	afp_logout (AFPObj *, char *, int, char *, int *);
-extern int      afp_getuserinfo (AFPObj *, char *, int, char *, int *);
-extern int      afp_getsession (AFPObj *, char *, unsigned int, char *, unsigned int *);
-extern int      afp_disconnect (AFPObj *, char *, int, char *, int *);
-extern int      afp_zzz (AFPObj *, char *, unsigned int, char *, unsigned int *);
+int afp_login (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_login_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_logincont (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_changepw (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_logout (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getuserinfo (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getsession (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_disconnect (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_zzz (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif /* auth.h */

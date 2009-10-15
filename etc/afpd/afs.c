@@ -1,5 +1,5 @@
 /*
- * $Id: afs.c,v 1.17 2005-04-28 20:49:40 bfernhomberg Exp $
+ * $Id: afs.c,v 1.18 2009-10-15 10:43:13 didg Exp $
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -75,10 +75,7 @@ u_int32_t   *bsize;
     return( AFP_OK );
 }
 
-int afp_getdiracl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
-char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+int afp_getdiracl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     struct ViceIoctl	vi;
     struct vol		*vol;
@@ -165,10 +162,7 @@ extern struct dir	*curdir;
 /*
  * cmd | 0 | vid | did | pathtype | pathname | 0 | acl
  */
-int afp_setdiracl(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
-char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+int afp_setdiracl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     struct ViceIoctl	vi;
     struct vol		*vol;
@@ -235,10 +229,7 @@ int		ibuflen, *rbuflen;
 extern C_Block		seskey;
 extern Key_schedule	seskeysched;
 
-int afp_afschangepw(obj, ibuf, ibuflen, rbuf, rbuflen )
-AFPObj      *obj;
-char	*ibuf, *rbuf;
-int		ibuflen, *rbuflen;
+int afp_afschangepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     char	name[ MAXKTCNAMELEN ], instance[ MAXKTCNAMELEN ];
     char	realm[ MAXKTCREALMLEN ];

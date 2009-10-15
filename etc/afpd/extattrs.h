@@ -1,5 +1,5 @@
 /*
-   $Id: extattrs.h,v 1.2 2009-10-02 09:32:40 franklahm Exp $
+   $Id: extattrs.h,v 1.3 2009-10-15 10:43:13 didg Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,9 @@
 #define AFPD_EXT_ATTRS_H
 
 /* AFP funcs */
-extern int afp_listextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen);
-extern int afp_getextattr(AFPObj *obj _U_ , char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen);
-extern int afp_setextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen);
-extern int afp_remextattr(AFPObj *obj _U_, char *ibuf, int ibuflen _U_, char *rbuf, int *rbuflen);
+int afp_listextattr (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getextattr (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
 #endif /* AFPD_EXT_ATTRS_H */

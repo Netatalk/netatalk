@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.15 2009-10-14 01:38:28 didg Exp $
+ * $Id: fork.h,v 1.16 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,18 +80,18 @@ extern int          flushfork    (struct ofork *);
 extern int          getforkmode  (struct adouble *, int , int );
 
 /* FP functions */
-extern int	afp_openfork (AFPObj *, char *, int, char *, int *);
-extern int	afp_bytelock (AFPObj *, char *, int, char *, int *);
-extern int	afp_getforkparams (AFPObj *, char *, int, char *, int *);
-extern int	afp_setforkparams (AFPObj *, char *, int, char *, int *);
-extern int	afp_read (AFPObj *, char *, int, char *, int *);
-extern int	afp_write (AFPObj *, char *, int, char *, int *);
-extern int	afp_flushfork (AFPObj *, char *, int, char *, int *);
-extern int	afp_flush (AFPObj *, char *, int, char *, int *);
-extern int	afp_closefork (AFPObj *, char *, int, char *, int *);
+int afp_openfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_bytelock (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getforkparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_setforkparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_read (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_write (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_flushfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_flush (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_closefork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
-extern int	afp_bytelock_ext (AFPObj *, char *, int, char *, int *);
-extern int	afp_read_ext (AFPObj *, char *, int, char *, int *);
-extern int	afp_write_ext (AFPObj *, char *, int, char *, int *);
-extern int  afp_syncfork (AFPObj *, char *, int, char *, int *);
+int afp_bytelock_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_read_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_write_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen); 
+int afp_syncfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 #endif

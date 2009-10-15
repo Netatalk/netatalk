@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.46 2009-10-14 15:04:00 franklahm Exp $
+ * $Id: enumerate.c,v 1.47 2009-10-15 10:43:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -155,15 +155,16 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 #define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + 255 + 1)
 
 /* ----------------------------- */
-static int enumerate(AFPObj *obj _U_, char *ibuf, unsigned int ibuflen _U_, 
+static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, 
     char *rbuf, 
-    unsigned int *rbuflen, 
+    size_t *rbuflen, 
     int ext)
 {
     static struct savedir	sd = { 0, 0, 0, NULL, NULL, 0 };
     struct vol			*vol;
     struct dir			*dir;
-    int				did, ret, esz, len, first = 1;
+    int				did, ret, len, first = 1;
+    size_t			esz;
     char                        *data, *start;
     u_int16_t			vid, fbitmap, dbitmap, reqcnt, actcnt = 0;
     u_int16_t			temp16;
@@ -450,25 +451,25 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, unsigned int ibuflen _U_,
 }
 
 /* ----------------------------- */
-int afp_enumerate(AFPObj *obj, char *ibuf, unsigned int ibuflen, 
+int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, 
     char *rbuf, 
-    unsigned int *rbuflen)
+    size_t *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 0);
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext(AFPObj *obj, char *ibuf, unsigned int ibuflen, 
+int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, 
     char *rbuf, 
-    unsigned int *rbuflen)
+    size_t *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 1);
 }
 
 /* ----------------------------- */
-int afp_enumerate_ext2(AFPObj *obj, char *ibuf, unsigned int ibuflen, 
+int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, 
     char *rbuf, 
-    unsigned int *rbuflen)
+    size_t *rbuflen)
 {
     return enumerate(obj, ibuf,ibuflen ,rbuf,rbuflen , 2);
 }
