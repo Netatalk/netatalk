@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.20 2009-10-14 01:38:28 didg Exp $
+ * $Id: uams_pam.c,v 1.21 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -140,8 +140,8 @@ static struct pam_conv PAM_conversation = {
 };
 
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
-		     char *ibuf, int ibuflen _U_,
-		     char *rbuf _U_, int *rbuflen _U_)
+		     char *ibuf, size_t ibuflen _U_,
+		     char *rbuf _U_, size_t *rbuflen _U_)
 {
     struct passwd *pwd;
     int err, PAM_error;
@@ -219,11 +219,11 @@ login_err:
    cleartxt login 
 */
 static int pam_login(void *obj, struct passwd **uam_pwd,
-		     char *ibuf, int ibuflen,
-		     char *rbuf, int *rbuflen)
+		     char *ibuf, size_t ibuflen,
+		     char *rbuf, size_t *rbuflen)
 {
     char *username; 
-    int  len, ulen;
+    size_t  len, ulen;
 
     *rbuflen = 0;
 
@@ -248,11 +248,11 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
 /* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-		     char *ibuf, int ibuflen,
-		     char *rbuf, int *rbuflen)
+		     char *ibuf, size_t ibuflen,
+		     char *rbuf, size_t *rbuflen)
 {
     char *username; 
-    int  len, ulen;
+    size_t  len, ulen;
     u_int16_t  temp16;
 
     *rbuflen = 0;
@@ -284,8 +284,8 @@ static void pam_logout(void) {
 
 /* change passwd */
 static int pam_changepw(void *obj _U_, char *username,
-			struct passwd *pwd _U_, char *ibuf, int ibuflen _U_,
-			char *rbuf _U_, int *rbuflen _U_)
+			struct passwd *pwd _U_, char *ibuf, size_t ibuflen _U_,
+			char *rbuf _U_, size_t *rbuflen _U_)
 {
     char pw[PASSWDLEN + 1];
     pam_handle_t *lpamh;

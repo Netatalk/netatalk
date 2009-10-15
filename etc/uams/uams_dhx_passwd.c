@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.24 2006-12-03 06:04:43 didg Exp $
+ * $Id: uams_dhx_passwd.c,v 1.25 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -75,8 +75,8 @@ static char *clientname;
 
 /* dhx passwd */
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd _U_,
-			char *ibuf, int ibuflen _U_,
-			char *rbuf, int *rbuflen)
+			char *ibuf, size_t ibuflen _U_,
+			char *rbuf, size_t *rbuflen)
 {
     unsigned char iv[] = "CJalbert";
     u_int8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
@@ -87,7 +87,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* SHADOWPW */
     BIGNUM *bn, *gbn, *pbn;
     u_int16_t sessid;
-    int i;
+    size_t i;
     DH *dh;
 
 #ifdef TRU64
@@ -209,11 +209,11 @@ passwd_fail:
 
 /* cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
-			char *ibuf, int ibuflen,
-			char *rbuf, int *rbuflen)
+			char *ibuf, size_t ibuflen,
+			char *rbuf, size_t *rbuflen)
 {
     char *username;
-    int len, ulen;
+    size_t len, ulen;
 
     *rbuflen = 0;
 
@@ -221,7 +221,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 			     (void *) &username, &ulen) < 0)
 	return AFPERR_MISC;
 
-    if (ibuflen <= 1) {
+    if (ibuflen < 2) {
 	return( AFPERR_PARAM );
     }
 
@@ -250,11 +250,11 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     len bytes utf8 name
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-			char *ibuf, int ibuflen,
-			char *rbuf, int *rbuflen)
+			char *ibuf, size_t ibuflen,
+			char *rbuf, size_t *rbuflen)
 {
     char       *username;
-    int        len, ulen;
+    size_t     len, ulen;
     u_int16_t  temp16;
 
     *rbuflen = 0;
@@ -277,8 +277,8 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 }
 			
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
-			    char *ibuf, int ibuflen _U_, 
-			    char *rbuf, int *rbuflen)
+			    char *ibuf, size_t ibuflen _U_, 
+			    char *rbuf, size_t *rbuflen)
 {
 #ifdef SHADOWPW
     struct spwd *sp;

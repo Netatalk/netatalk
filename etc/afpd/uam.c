@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.28 2009-09-14 00:02:21 didg Exp $
+ * $Id: uam.c,v 1.29 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -363,7 +363,7 @@ int uam_random_string (AFPObj *obj, char *buf, int len)
 
 /* afp-specific functions */
 int uam_afpserver_option(void *private, const int what, void *option,
-                         int *len)
+                         size_t *len)
 {
 AFPObj *obj = private;
     char **buf = (char **) option; /* most of the options are this */

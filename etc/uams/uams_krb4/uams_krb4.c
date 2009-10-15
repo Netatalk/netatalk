@@ -1,5 +1,5 @@
 /*
- * $Id: uams_krb4.c,v 1.9 2008-12-03 18:35:44 didg Exp $
+ * $Id: uams_krb4.c,v 1.10 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -121,8 +121,8 @@ static void ucase( p )
 #define KRB4CMD_SKIP	11
 
 static int krb4_login(void *obj, struct passwd **uam_pwd,
-		      char *ibuf, int ibuflen,
-		      char *rbuf, int *rbuflen )
+		      char *ibuf, size_t ibuflen,
+		      char *rbuf, size_t *rbuflen )
 {
     char		*p;
     char		*username;
@@ -130,7 +130,8 @@ static int krb4_login(void *obj, struct passwd **uam_pwd,
     u_int16_t		len;
     KTEXT_ST		tkt;
     static AUTH_DAT	ad;
-    int			rc, ulen, proto;
+    int			rc, proto;
+    size_t		ulen;
     char		inst[ 40 ], princ[ 40 ];
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, &username, &ulen) < 0)
@@ -252,8 +253,8 @@ static int krb4_action( void *v1, void *v2, const int i )
    with non-16bit short's and non-32bit int's
 */
 static int krb4_logincont(void *obj, struct passwd **uam_pwd,
-			  char *ibuf, int ibuflen,
-			  char *rbuf, int *rbuflen)
+			  char *ibuf, size_t ibuflen,
+			  char *rbuf, size_t *rbuflen)
 {
     static struct passwd	*pwd;
     KTEXT_ST		tkt;
@@ -567,8 +568,8 @@ static void authenticate(cells,name,passwd)
 
 #if defined( UAM_AFSKRB ) && defined( AFS )
 static int afskrb_login(void *obj, struct passwd *uam_pwd,
-			char *ibuf, int ibuflen, 
-			char *rbuf, int *rbuflen )
+			char *ibuf, size_t ibuflen, 
+			char *rbuf, size_t *rbuflen )
 {
     KTEXT_ST	authent, rpkt;
     CREDENTIALS	cr;
@@ -671,8 +672,8 @@ static int afskrb_login(void *obj, struct passwd *uam_pwd,
 }
 
 static int afskrb_logincont(void *obj, struct passwd *uam_pwd,
-			    char *ibuf, int ibuflen, 
-			    char *rbuf, int *rbuflen )
+			    char *ibuf, size_t ibuflen, 
+			    char *rbuf, size_t *rbuflen )
 {
     CREDENTIALS		cr;
     struct ViceIoctl	vi;

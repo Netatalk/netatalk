@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pgp.c,v 1.11 2005-04-28 20:49:50 bfernhomberg Exp $
+ * $Id: uams_pgp.c,v 1.12 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -57,10 +57,10 @@ static u_int8_t randbuf[16];
 
 /* pgp passwd */
 static int pgp_login(void *obj, struct passwd **uam_pwd,
-		     char *ibuf, int ibuflen,
-		     char *rbuf, int *rbuflen)
+		     char *ibuf, size_t ibuflen,
+		     char *rbuf, size_t *rbuflen)
 {
-    int len, i;
+    size_t len, i;
     char *name;
 
     *rbuflen = 0;
@@ -104,8 +104,8 @@ pgp_fail:
 }
 
 static int pgp_logincont(void *obj, struct passwd **uam_pwd,
-			 char *ibuf, int ibuflen, 
-			 char *rbuf, int *rbuflen)
+			 char *ibuf, size_t ibuflen, 
+			 char *rbuf, size_t *rbuflen)
 {
 	unsigned char iv[] = "RJscorat";
     BIGNUM *bn1, *bn2, *bn3;

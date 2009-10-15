@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.26 2009-10-13 22:55:37 didg Exp $
+ * $Id: uams_passwd.c,v 1.27 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -76,8 +76,8 @@ struct papfile;
 extern void append(struct papfile *, const char *, int);
 
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
-                        char *ibuf, int ibuflen,
-                        char *rbuf _U_, int *rbuflen _U_)
+                        char *ibuf, size_t ibuflen,
+                        char *rbuf _U_, size_t *rbuflen _U_)
 {
     char  *p;
     struct passwd *pwd;
@@ -158,11 +158,11 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 
 /* cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
-                        char *ibuf, int ibuflen,
-                        char *rbuf, int *rbuflen)
+                        char *ibuf, size_t ibuflen,
+                        char *rbuf, size_t *rbuflen)
 {
     char *username;
-    int len, ulen;
+    size_t len, ulen;
 
     *rbuflen = 0;
 
@@ -170,7 +170,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
                              (void *) &username, &ulen) < 0)
         return AFPERR_MISC;
 
-    if (ibuflen <= 1) {
+    if (ibuflen < 2) {
         return( AFPERR_PARAM );
     }
 
@@ -199,11 +199,11 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     len bytes unicode name
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-                        char *ibuf, int ibuflen,
-                        char *rbuf, int *rbuflen)
+                        char *ibuf, size_t ibuflen,
+                        char *rbuf, size_t *rbuflen)
 {
     char       *username;
-    int        len, ulen;
+    size_t     len, ulen;
     u_int16_t  temp16;
 
     *rbuflen = 0;
@@ -230,7 +230,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* change passwd */
 static int passwd_changepw(void *obj, char *username,
                            struct passwd *pwd, char *ibuf,
-                           int ibuflen, char *rbuf, int *rbuflen)
+                           size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
 #ifdef SHADOWPW
     struct spwd *sp;

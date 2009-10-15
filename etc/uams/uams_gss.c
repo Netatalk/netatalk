@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.7 2009-09-28 13:19:48 franklahm Exp $
+ * $Id: uams_gss.c,v 1.8 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -141,7 +141,7 @@ static int get_afpd_principal(void *obj, gss_name_t *server_name)
 {
     OM_uint32 major_status = 0, minor_status = 0;
     char *realm, *fqdn, *service, *principal, *p;
-    int realmlen=0, fqdnlen=0, servicelen=0;
+    size_t realmlen=0, fqdnlen=0, servicelen=0;
     size_t principal_length;
     gss_buffer_desc s_princ_buffer;
 
@@ -454,8 +454,8 @@ cleanup_vars:
 
 /* -------------------------- */
 static int gss_login(void *obj, struct passwd **uam_pwd,
-                     char *ibuf, int ibuflen,
-                     char *rbuf, int *rbuflen)
+                     char *ibuf, size_t ibuflen,
+                     char *rbuf, size_t *rbuflen)
 {
 
     u_int16_t  temp16;
@@ -472,8 +472,8 @@ static int gss_login(void *obj, struct passwd **uam_pwd,
 }
 
 static int gss_logincont(void *obj, struct passwd **uam_pwd,
-                         char *ibuf, int ibuflen,
-                         char *rbuf, int *rbuflen)
+                         char *ibuf, size_t ibuflen,
+                         char *rbuf, size_t *rbuflen)
 {
     struct passwd *pwd = NULL;
     u_int16_t login_id;
@@ -481,7 +481,7 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
     u_int16_t ticket_len;
     char *p;
     int rblen;
-    int userlen;
+    size_t userlen;
     struct session_info *sinfo;
 
     /* Apple's AFP 3.1 documentation specifies that this command
@@ -510,7 +510,7 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
 
     rblen = *rbuflen = 0;
 
-    if (ibuflen < 3) {
+    if (ibuflen < 1 +sizeof(login_id)) {
         LOG(log_info, logtype_uams, "uams_gss.c :LoginCont: received incomplete packet");
         return AFPERR_PARAM;
     }
@@ -591,8 +591,8 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
  * point is trustworthy as we'll have a signed ticket to parse in logincont.
  */
 static int gss_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-                         char *ibuf, int ibuflen,
-                         char *rbuf, int *rbuflen)
+                         char *ibuf, size_t ibuflen,
+                         char *rbuf, size_t *rbuflen)
 {
     u_int16_t  temp16;
 

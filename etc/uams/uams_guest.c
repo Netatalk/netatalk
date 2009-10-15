@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.16 2009-10-14 01:38:28 didg Exp $
+ * $Id: uams_guest.c,v 1.17 2009-10-15 11:39:48 didg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -44,8 +44,8 @@ extern void append(struct papfile *, const char *, int);
 
 /* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
-			char *ibuf _U_, int ibuflen _U_, 
-			char *rbuf _U_, int *rbuflen)
+			char *ibuf _U_, size_t ibuflen _U_, 
+			char *rbuf _U_, size_t *rbuflen)
 {
     struct passwd *pwent;
     char *guest, *username;
@@ -80,8 +80,8 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 }
 
 static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
-                     char *ibuf, int ibuflen,
-                     char *rbuf, int *rbuflen)
+                     char *ibuf, size_t ibuflen,
+                     char *rbuf, size_t *rbuflen)
 {
         return ( noauth_login (obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
 }

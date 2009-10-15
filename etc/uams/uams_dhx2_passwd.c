@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_passwd.c,v 1.5 2009-01-15 04:16:32 didg Exp $
+ * $Id: uams_dhx2_passwd.c,v 1.6 2009-10-15 11:39:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -162,8 +162,8 @@ error:
     return result;
 }
 
-static int dhx2_setup(void *obj, char *ibuf _U_, int ibuflen _U_,
-		      char *rbuf, int *rbuflen)
+static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
+		      char *rbuf, size_t *rbuflen)
 {
     int ret;
     size_t nwritten;
@@ -264,8 +264,8 @@ error:				/* We exit here anyway */
 
 /* -------------------------------- */
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _U_,
-                 char *ibuf, int ibuflen,
-                 char *rbuf, int *rbuflen)
+                 char *ibuf, size_t ibuflen,
+                 char *rbuf, size_t *rbuflen)
 {
     if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
         LOG(log_info, logtype_uams, "DHX2: unknown username");
@@ -280,11 +280,11 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _
 /* dhx login: things are done in a slightly bizarre order to avoid
  * having to clean things up if there's an error. */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
-                     char *ibuf, int ibuflen,
-                     char *rbuf, int *rbuflen)
+                     char *ibuf, size_t ibuflen,
+                     char *rbuf, size_t *rbuflen)
 {
     char *username;
-    int len, ulen;
+    size_t len, ulen;
 
     *rbuflen = 0;
 
@@ -314,11 +314,11 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 
 /* ----------------------------- */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-                         char *ibuf, int ibuflen,
-                         char *rbuf, int *rbuflen)
+                         char *ibuf, size_t ibuflen,
+                         char *rbuf, size_t *rbuflen)
 {
     char *username;
-    int len, ulen;
+    size_t len, ulen;
     u_int16_t  temp16;
 
     *rbuflen = 0;
@@ -350,8 +350,8 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* -------------------------------- */
 
 static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
-                         char *ibuf, int ibuflen,
-                         char *rbuf, int *rbuflen)
+                         char *ibuf, size_t ibuflen,
+                         char *rbuf, size_t *rbuflen)
 {
     size_t nwritten;
     int ret;
@@ -488,8 +488,8 @@ exit:
 }
 
 static int logincont2(void *obj _U_, struct passwd **uam_pwd,
-		      char *ibuf, int ibuflen,
-		      char *rbuf _U_, int *rbuflen)
+		      char *ibuf, size_t ibuflen,
+		      char *rbuf _U_, size_t *rbuflen)
 {
 #ifdef SHADOWPW
     struct spwd *sp;
@@ -589,8 +589,8 @@ exit:
 }
 
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
-                         char *ibuf, int ibuflen,
-                         char *rbuf, int *rbuflen)
+                         char *ibuf, size_t ibuflen,
+                         char *rbuf, size_t *rbuflen)
 {
     u_int16_t retID;
     int ret;

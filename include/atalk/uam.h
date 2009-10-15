@@ -88,7 +88,7 @@ extern int uam_checkuser (const struct passwd *);
 /* afp helper functions */
 extern int uam_afp_read (void *, char *, int *,
 			     int (*)(void *, void *, const int));
-extern int uam_afpserver_option (void *, const int, void *, int *);
+extern int uam_afpserver_option (void *, const int, void *, size_t *);
 #ifdef TRU64
 extern void uam_afp_getcmdline (int *, char ***);
 extern int uam_sia_validate_user (sia_collect_func_t *, int, char **,
