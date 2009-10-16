@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.109 2009-10-15 12:08:22 didg Exp $
+ * $Id: directory.c,v 1.110 2009-10-16 00:11:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1530,7 +1530,7 @@ void setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count)
  * is our cached offspring count valid?
 */
 
-int diroffcnt(struct dir *dir, struct stat *st)
+static int diroffcnt(struct dir *dir, struct stat *st)
 {
     return st->st_ctime == dir->ctime;
 }
