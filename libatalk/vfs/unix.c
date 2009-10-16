@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.3 2009-10-16 00:40:48 didg Exp $
+ * $Id: unix.c,v 1.4 2009-10-16 00:48:08 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -161,6 +161,7 @@ int copy_file(const char *src, const char *dst, mode_t mode)
     int    sfd = -1;
     int    dfd = -1;
     ssize_t cc;
+    size_t  buflen;
     char   filebuf[8192];
 
     if ((sfd = open(src, O_RDONLY)) < 0) {
@@ -186,8 +187,9 @@ int copy_file(const char *src, const char *dst, mode_t mode)
             goto exit;
         }
 
-        while (cc > 0) {
-            if ((cc -= write(dfd, filebuf, cc)) < 0) {
+        buflen = cc;
+        while (buflen > 0) {
+            if ((cc = write(dfd, filebuf, buflen)) < 0) {
                 if (errno == EINTR)
                     continue;
                 LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): read '%s' error: %s",
@@ -195,6 +197,7 @@ int copy_file(const char *src, const char *dst, mode_t mode)
                 ret = -1;
                 goto exit;
             }
+            buflen -= cc;
         }
     }
 
