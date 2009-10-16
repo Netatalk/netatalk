@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.2 2009-10-15 12:06:08 franklahm Exp $
+ * $Id: unix.c,v 1.3 2009-10-16 00:40:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -160,7 +160,7 @@ int copy_file(const char *src, const char *dst, mode_t mode)
     int    ret = 0;
     int    sfd = -1;
     int    dfd = -1;
-    size_t cc;
+    ssize_t cc;
     char   filebuf[8192];
 
     if ((sfd = open(src, O_RDONLY)) < 0) {
