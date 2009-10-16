@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.4 2009-10-16 00:48:08 didg Exp $
+ * $Id: unix.c,v 1.5 2009-10-16 00:57:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -204,8 +204,18 @@ int copy_file(const char *src, const char *dst, mode_t mode)
 exit:
     if (sfd != -1)
         close(sfd);
-    if (dfd != -1)
-        close(dfd);
+
+    if (dfd != -1) {
+        int err;
+
+        err = close(dfd);
+        if (!ret && err) {
+            /* don't bother to report an error if there's already one */
+            LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): close '%s' error: %s",
+                    src, dst, dst, strerror(errno));
+            ret = -1;
+        }
+    }
 
     return ret;
 }
