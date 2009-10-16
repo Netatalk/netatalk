@@ -1,5 +1,5 @@
 /*
- * $Id: pap.c,v 1.13 2009-10-14 02:24:05 didg Exp $
+ * $Id: pap.c,v 1.14 2009-10-16 01:10:59 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -30,7 +30,6 @@
 #define FUCKED
 
 #define _PATH_PAPRC	".paprc"
-static char	*nbpfailure = "AppleTalk printer offline";
 
 /* Forward Declarations */
 static void updatestatus(char *s, int len);
@@ -465,7 +464,7 @@ int main( int ac, char	**av)
 
 static int		data = 0;
 static unsigned char	port;
-static u_int16_t	seq = 0, rseq = 1;
+static u_int16_t	seq = 0;
 
 static int send_file( int fd, ATP atp, int lastfile)
 {

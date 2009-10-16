@@ -1,5 +1,5 @@
 /*
- * $Id: session.c,v 1.19 2009-10-14 02:24:05 didg Exp $
+ * $Id: session.c,v 1.20 2009-10-16 01:10:59 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -45,16 +45,6 @@ static struct iovec	niov[ PAP_MAXQUANTUM ] = {
     { buf[ 5 ],	0 },
     { buf[ 6 ],	0 },
     { buf[ 7 ],	0 },
-};
-static struct iovec	iov[ PAP_MAXQUANTUM ] = {
-    { buf[ 0 ] + 4,	0 },
-    { buf[ 1 ] + 4,	0 },
-    { buf[ 2 ] + 4,	0 },
-    { buf[ 3 ] + 4,	0 },
-    { buf[ 4 ] + 4,	0 },
-    { buf[ 5 ] + 4,	0 },
-    { buf[ 6 ] + 4,	0 },
-    { buf[ 7 ] + 4,	0 },
 };
 
 /*

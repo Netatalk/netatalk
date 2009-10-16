@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.29 2009-10-14 01:38:28 didg Exp $
+ * $Id: lp.c,v 1.30 2009-10-16 01:10:59 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -208,6 +208,8 @@ static void lp_setup_comments (charset_t dest)
 
 #define is_var(a, b) (strncmp((a), (b), 2) == 0)
 
+#if 0
+/* removed, it's not used and a pain to get it right from a security POV */
 static size_t quote(char *dest, char *src, const size_t bsize, size_t len)
 {
 size_t used = 0;
@@ -233,7 +235,6 @@ size_t used = 0;
     }
     return used;
 }
-
 
 static char* pipexlate(char *src)
 {
@@ -302,7 +303,7 @@ static char* pipexlate(char *src)
     }
     return destbuf;
 }
-
+#endif
 
 void lp_person(char *person)
 {
