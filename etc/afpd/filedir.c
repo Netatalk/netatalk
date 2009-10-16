@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.58 2009-10-15 10:43:13 didg Exp $
+ * $Id: filedir.c,v 1.59 2009-10-16 00:15:53 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -39,6 +39,7 @@ char *strchr (), *strrchr ();
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
+#include <atalk/unix.h>
 
 #include "directory.h"
 #include "desktop.h"

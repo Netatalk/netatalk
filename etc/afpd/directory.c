@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.110 2009-10-16 00:11:42 didg Exp $
+ * $Id: directory.c,v 1.111 2009-10-16 00:15:53 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -46,6 +46,7 @@ char *strchr (), *strrchr ();
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
 #include <atalk/uuid.h>
+#include <atalk/unix.h>
 
 #include "directory.h"
 #include "desktop.h"
