@@ -1,5 +1,5 @@
 /*
- * $Id: psf.c,v 1.12 2009-10-14 02:24:05 didg Exp $
+ * $Id: psf.c,v 1.13 2009-10-16 01:50:50 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -76,7 +76,6 @@ static char		*filtargv[] = { NULL, NULL, NULL };
 static char		inbuf[ 1024 * 8 ];
 static int		inlen;
 
-static FILE		*acctfile = NULL;
 static int		literal;
 static int		width = 80, length = 66, indent = 0;
 static char		*prog, *name, *host;
