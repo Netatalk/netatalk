@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.17 2009-10-18 18:25:13 didg Exp $
+ * $Id: cnid_metad.c,v 1.18 2009-10-18 19:02:43 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -108,6 +108,7 @@
 static int srvfd;
 static int rqstfd;
 static volatile sig_atomic_t alarmed = 0;
+static volatile sig_atomic_t sigchild = 0;
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
 #define TESTTIME   42                  /* this much seconds apfd client tries to  *
@@ -384,6 +385,33 @@ static void catch_alarm(int sig _U_) {
     alarmed = 1;
 }
 
+static void catch_child(int sig _U_) 
+{
+    sigchild = 1;
+}
+
+/* ----------------------- */
+static void set_signal(void)
+{
+    struct sigaction sv;
+    sigset_t set;
+
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGALRM, catch_alarm);
+
+    sv.sa_handler = catch_child;
+    sv.sa_flags = SA_NOCLDSTOP;
+    sigemptyset(&sv.sa_mask);
+    if (sigaction(SIGCHLD, &sv, NULL) < 0) {
+        LOG(log_error, logtype_cnid, "cnid_metad: sigaction: %s", strerror(errno));
+        exit(1);
+    }
+    /* block everywhere but in pselect */
+    sigemptyset(&set);
+    sigaddset(&set, SIGCHLD);
+    sigprocmask(SIG_BLOCK, &set, NULL);
+}
+
 /* ------------------ */
 int main(int argc, char *argv[])
 {
@@ -404,6 +432,7 @@ int main(int argc, char *argv[])
     int    ret;
     char   *loglevel = NULL;
     char   *logfile  = NULL;
+    sigset_t set;
 
     set_processname("cnid_metad");
 
@@ -512,13 +541,16 @@ int main(int argc, char *argv[])
         }
     }
 
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGALRM, catch_alarm);
+    set_signal();
+
+    sigemptyset(&set);
+    sigprocmask(SIG_SETMASK, NULL, &set);
+    sigdelset(&set, SIGCHLD);
 
     while (1) {
-        rqstfd = usockfd_check(srvfd, 10000000);
+        rqstfd = usockfd_check(srvfd, &set);
         /* Collect zombie processes and log what happened to them */
-        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        if (sigchild) while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
             for (i = 0; i < MAXVOLS; i++) {
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
@@ -534,8 +566,7 @@ int main(int argc, char *argv[])
                 LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with signal %i",
                     pid, WTERMSIG(status));
             }
-            /* FIXME should */
-
+            sigchild = 0;
         }
         if (rqstfd <= 0)
             continue;

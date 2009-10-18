@@ -1,5 +1,5 @@
 /*
- * $Id: usockfd.c,v 1.3 2005-05-03 14:55:11 didg Exp $
+ * $Id: usockfd.c,v 1.4 2009-10-18 19:02:43 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -33,6 +33,7 @@
 #include <atalk/logger.h>
 #include "usockfd.h"
 
+#include <sys/select.h>
 
 int usockfd_create(char *usock_fn, mode_t mode, int backlog)
 {
@@ -138,20 +139,17 @@ int tsockfd_create(char *host, u_int16_t ipport, int backlog)
 }
 
 /* --------------------- */
-int usockfd_check(int sockfd, unsigned long ndelay)
+int usockfd_check(int sockfd, const sigset_t *sigset)
 {
     int fd;
     socklen_t size;
     fd_set readfds;
-    struct timeval tv;
     int ret;
      
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
 
-    tv.tv_usec = ndelay % 1000000;
-    tv.tv_sec  = ndelay / 1000000;
-    if ((ret = select(sockfd + 1, &readfds, NULL, NULL, &tv)) < 0) {
+    if ((ret = pselect(sockfd + 1, &readfds, NULL, NULL, NULL, sigset)) < 0) {
         if (errno == EINTR)
             return 0;
         LOG(log_error, logtype_cnid, "error in select: %s",
