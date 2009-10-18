@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.16 2009-10-14 01:38:28 didg Exp $
+ * $Id: cnid_metad.c,v 1.17 2009-10-18 18:25:13 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -244,11 +244,10 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
             LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn too fast just exiting");
             return -1; /* just exit, dont sleep, because we might have work to do for another client  */
         }
-        if ( t >= (up->tm + TESTTIME) ) { /* drop slot */
-            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn window ended, dropping slot");
-            free(up->name);
-            up->name = NULL;
-            return -1; /* next time we'll try again with a new slot */
+        if ( t >= (up->tm + TESTTIME) ) { /* out of respawn too fast windows reset the count */
+            LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn window ended");
+            up->tm = t;
+            up->count = 0;
         }
         up->count++;
         LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn count now is: %u", up->count);
