@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.49 2009-10-13 22:55:37 didg Exp $
+ * $Id: ad_open.c,v 1.50 2009-10-18 06:16:05 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1340,11 +1340,18 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         else {
             return ad_error(ad, adflags);
         }
-    } else if (fstat(ad->ad_md->adf_fd, &st_meta) == 0 && st_meta.st_size == 0) {
-        /* for 0 length files, treat them as new. */
-        ad->ad_md->adf_flags = hoflags| O_TRUNC;
     } else {
         ad->ad_md->adf_flags = hoflags;
+        if (fstat(ad->ad_md->adf_fd, &st_meta) == 0 && st_meta.st_size == 0) {
+            /* for 0 length files, treat them as new. */
+            ad->ad_md->adf_flags |= O_TRUNC;
+        } 
+        else {
+            /* we have valid data in st_meta stat structure, reused it
+               in ad_header_read
+            */
+            pst = &st_meta;
+        }
     }
     AD_SET(ad->ad_md->adf_off);
 
