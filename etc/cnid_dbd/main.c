@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.11 2009-10-14 01:38:28 didg Exp $
+ * $Id: main.c,v 1.12 2009-10-18 17:50:13 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -84,16 +84,26 @@ static void block_sigs_onoff(int block)
   of the cnid_dbd_rply structure contains further details.
 
 */
+#ifndef min
+#define min(a,b)        ((a)<(b)?(a):(b))
+#endif
 
 static int loop(struct db_param *dbp)
 {
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
+    time_t timeout;
     int ret, cret;
     int count;
     time_t now, time_next_flush, time_last_rqst;
     char timebuf[64];
     static char namebuf[MAXPATHLEN + 1];
+    sigset_t set;
+
+    sigemptyset(&set);
+    sigprocmask(SIG_SETMASK, NULL, &set);
+    sigdelset(&set, SIGINT);
+    sigdelset(&set, SIGTERM);
 
     count = 0;
     now = time(NULL);
@@ -107,17 +117,19 @@ static int loop(struct db_param *dbp)
         dbp->flush_interval, timebuf);
 
     while (1) {
-        if ((cret = comm_rcv(&rqst)) < 0)
+        timeout = min(time_next_flush, time_last_rqst +dbp->idle_timeout);
+        if (timeout > now)
+            timeout -= now;
+        else
+            timeout = 1;
+
+        if ((cret = comm_rcv(&rqst, timeout, &set)) < 0)
             return -1;
 
         now = time(NULL);
 
         if (cret == 0) {
             /* comm_rcv returned from select without receiving anything. */
-
-            /* Give signals a chance... */
-            block_sigs_onoff(0);
-            block_sigs_onoff(1);
             if (exit_sig)
                 /* Received signal (TERM|INT) */
                 return 0;
@@ -332,9 +344,7 @@ int main(int argc, char *argv[])
 
     set_signal();
 
-    /* SIGINT and SIGTERM are always off, unless we get a return code of 0 from
-       comm_rcv (no requests for one second, see above in loop()). That means we
-       only shut down after one second of inactivity. */
+    /* SIGINT and SIGTERM are always off, unless we are in pselect */
     block_sigs_onoff(1);
 
     if ((dbp = db_param_read(dir, CNID_DBD)) == NULL)
