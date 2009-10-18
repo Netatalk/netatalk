@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.18 2009-10-18 19:02:43 didg Exp $
+ * $Id: cnid_metad.c,v 1.19 2009-10-18 20:21:09 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -107,7 +107,6 @@
 
 static int srvfd;
 static int rqstfd;
-static volatile sig_atomic_t alarmed = 0;
 static volatile sig_atomic_t sigchild = 0;
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
@@ -381,10 +380,6 @@ static gid_t group_to_gid ( char *group)
 }
 
 /* ------------------ */
-static void catch_alarm(int sig _U_) {
-    alarmed = 1;
-}
-
 static void catch_child(int sig _U_) 
 {
     sigchild = 1;
@@ -397,7 +392,6 @@ static void set_signal(void)
     sigset_t set;
 
     signal(SIGPIPE, SIG_IGN);
-    signal(SIGALRM, catch_alarm);
 
     sv.sa_handler = catch_child;
     sv.sa_flags = SA_NOCLDSTOP;
@@ -573,21 +567,13 @@ int main(int argc, char *argv[])
 
         /* TODO: Check out read errors, broken pipe etc. in libatalk. Is
            SIGIPE ignored there? Answer: Ignored for dsi, but not for asp ... */
-        alarm(5); /* to prevent read from getting stuck */
         ret = read(rqstfd, &len, sizeof(int));
-        alarm(0);
-        if (alarmed) {
-            alarmed = 0;
-            LOG(log_severe, logtype_cnid, "Read(1) bailed with alarm (timeout)");
-            goto loop_end;
-        }
-
         if (!ret) {
             /* already close */
             goto loop_end;
         }
         else if (ret < 0) {
-            LOG(log_error, logtype_cnid, "error read: %s", strerror(errno));
+            LOG(log_severe, logtype_cnid, "error read: %s", strerror(errno));
             goto loop_end;
         }
         else if (ret != sizeof(int)) {
@@ -603,12 +589,9 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        alarm(5);
         actual_len = read(rqstfd, dbdir, len);
-        alarm(0);
-        if (alarmed) {
-            alarmed = 0;
-            LOG(log_severe, logtype_cnid, "Read(2) bailed with alarm (timeout)");
+        if (actual_len < 0) {
+            LOG(log_severe, logtype_cnid, "Read(2) error : %s", strerror(errno));
             goto loop_end;
         }
         if (actual_len != len) {
