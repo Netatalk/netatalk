@@ -101,7 +101,7 @@ static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
  */
 
 /* -[un]setuplog <logtype> <loglevel> [<filename>]*/
-static void setuplog_internal(const char *logtype, const char *loglevel, const char *filename)
+static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename)
 {
     int typenum, levelnum;
 
@@ -424,7 +424,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 }
 
 /* Called by the LOG macro for syslog messages */
-void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *message, ...)
+void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message, ...)
 {
     va_list args;
     char log_buffer[MAXLOGSIZE];
@@ -482,7 +482,7 @@ void setuplog(const char *logstr)
     }
 
     /* finally call setuplog, filename can be NULL */
-    setuplog_internal(logtype, loglevel, filename);
+    setuplog_internal(loglevel, logtype, filename);
 
     free(ptrbak);
 }
@@ -501,7 +501,7 @@ void unsetuplog(const char *logstr)
     filename = strtok(NULL, " \t");
 
     /* finally call setuplog, filename can be NULL */
-    setuplog_internal(str, NULL, filename);
+    setuplog_internal(NULL, str, filename);
 
     free(str);
 }
