@@ -377,8 +377,21 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 
     if (inlog)
         return;
-    inlog = 1;
 
+    /* Check if requested logtype is setup */
+    if (file_configs[logtype].set)
+        /* Yes */
+        fd = file_configs[logtype].fd;
+    else
+        /* No: use default */
+        fd = file_configs[logtype_default].fd;
+
+    if (fd < 0) {
+        /* no where to send the output, give up */
+        return;
+    }
+
+    inlog = 1;
     /* Initialise the Messages */
     va_start(args, message);
     len = vsnprintf(temp_buffer, MAXLOGSIZE - 1, message, args);
@@ -399,22 +412,13 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
                              file_configs[logtype_default].display_options,
                              loglevel, logtype);
 
-    /* Check if requested logtype is setup */
-    if (file_configs[logtype].set)
-        /* Yes */
-        fd = file_configs[logtype].fd;
-    else
-        /* No: use default */
-        fd = file_configs[logtype_default].fd;
 
     /* If default wasnt setup its fd is -1 */
-    if (fd >= 0) {
-        iov[0].iov_base = log_details_buffer;
-        iov[0].iov_len = strlen(log_details_buffer);
-        iov[1].iov_base = temp_buffer;
-        iov[1].iov_len = strlen(temp_buffer);
-        writev( fd,  iov, 2);
-    }
+    iov[0].iov_base = log_details_buffer;
+    iov[0].iov_len = strlen(log_details_buffer);
+    iov[1].iov_base = temp_buffer;
+    iov[1].iov_len = strlen(temp_buffer);
+    writev( fd,  iov, 2);
 
     inlog = 0;
 }
