@@ -236,15 +236,15 @@ void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *mes
    any configured file-logging deactivates syslog logging
  */
 
-#define LOG(level, type, ...)  \
+#define LOG(log_level, type, ...)  \
   do { \
     if ( ! log_config.inited) \
       log_init(); \
-    if (file_configs[(type)].level >= (level)) \
+    if (file_configs[(type)].level >= (log_level)) \
       log_src_filename = __FILE__, \
       log_src_linenumber = __LINE__, \
-      make_log_entry((level), (type), __VA_ARGS__); \
-    else if (( ! log_config.filelogging) && (log_config.syslog_level >= (level))) \
-       make_syslog_entry((level), (type), __VA_ARGS__); \
+      make_log_entry((log_level), (type), __VA_ARGS__); \
+    else if (( ! log_config.filelogging) && (log_config.syslog_level >= (log_level))) \
+       make_syslog_entry((log_level), (type), __VA_ARGS__); \
   } while(0)  
 #endif /* _ATALK_LOGGER_H */
