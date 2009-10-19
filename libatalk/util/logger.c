@@ -196,6 +196,7 @@ static void generate_message_details(char *message_details_buffer,
         templen = snprintf(ptr, len,  " (D%d:", loglevel - 1);
     else
         templen = snprintf(ptr, len, " (%c:", arr_loglevel_chars[loglevel]);
+
     if (templen == -1 || templen >= len)
         return;
     len -= templen;
@@ -209,9 +210,9 @@ static void generate_message_details(char *message_details_buffer,
         len -= templen;
         ptr += templen;
     }
-
+    
     strncat(ptr, "): ", len);
-    ptr[len] = 0;
+    ptr[len -1] = 0;
 }
 
 static int get_syslog_equivalent(enum loglevels loglevel)
