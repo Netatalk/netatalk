@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.c,v 1.7 2009-10-19 05:02:35 didg Exp $
+ * $Id: db_param.c,v 1.8 2009-10-19 05:38:22 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -30,12 +30,12 @@
 #define MAXKEYLEN         64
 
 #define DEFAULT_LOGFILE_AUTOREMOVE 1
-#define DEFAULT_CACHESIZE          8 * 1024 
-#define DEFAULT_FLUSH_FREQUENCY    100
+#define DEFAULT_CACHESIZE          (8 * 1024)
+#define DEFAULT_FLUSH_FREQUENCY    1000
 #define DEFAULT_FLUSH_INTERVAL     1800
 #define DEFAULT_USOCK_FILE         "usock"
 #define DEFAULT_FD_TABLE_SIZE      512
-#define DEFAULT_IDLE_TIMEOUT       10 * 60
+#define DEFAULT_IDLE_TIMEOUT       (10 * 60)
 
 static struct db_param params;
 static int parse_err;
@@ -186,8 +186,22 @@ struct db_param *db_param_read(char *dir, enum identity id)
     }
 
     fclose(fp);
-    if (! parse_err)
+    if (! parse_err) {
+        /* sanity checks */
+        if (params.flush_frequency <= 0) 
+            params.flush_frequency = 86400;
+
+        if (params.flush_interval <= 0)
+            params.flush_interval = 1000000;
+
+        if (params.fd_table_size <= 2)
+            params.fd_table_size = 32;
+
+        if (params.idle_timeout <= 0)
+            params.idle_timeout = 86400;
+
         return &params;
+    }
     else
         return NULL;
 }

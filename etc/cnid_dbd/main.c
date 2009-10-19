@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.12 2009-10-18 17:50:13 didg Exp $
+ * $Id: main.c,v 1.13 2009-10-19 05:38:22 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -77,7 +77,8 @@ static void block_sigs_onoff(int block)
 
   1: Success, if transactions are used commit.
   0: Failure, but we continue to serve requests. If transactions are used abort/rollback.
-  -1: Fatal error, either from the database or from the socket. Abort the transaction if applicable
+  -1: Fatal error, either from t
+  he database or from the socket. Abort the transaction if applicable
   (which might fail as well) and then exit.
 
   We always try to notify the client process about the outcome, the result field
@@ -133,9 +134,16 @@ static int loop(struct db_param *dbp)
             if (exit_sig)
                 /* Received signal (TERM|INT) */
                 return 0;
-            if (dbp->idle_timeout && comm_nbe() <= 0 && (now - time_last_rqst) > dbp->idle_timeout)
-                /* Idle timeout */
-                return 0;
+            if (now - time_last_rqst > dbp->idle_timeout) {
+                if (comm_nbe() <= 0) {
+                    /* Idle timeout */
+                    return 0;
+                }
+                else {
+                    /* still active connections, reset time_last_rqst */
+                    time_last_rqst = now;
+                }
+            }
         } else {
             /* We got a request */
             time_last_rqst = now;
