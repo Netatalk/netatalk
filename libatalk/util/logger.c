@@ -496,6 +496,8 @@ void setuplog(const char *logstr)
                 ptr++;
         }
         filename = ptr;
+        if (*filename == 0)
+            filename = NULL;
     }
 
     /* finally call setuplog, filename can be NULL */
