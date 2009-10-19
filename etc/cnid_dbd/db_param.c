@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.c,v 1.6 2009-10-13 22:55:37 didg Exp $
+ * $Id: db_param.c,v 1.7 2009-10-19 05:02:35 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <sys/param.h>
 #include <sys/un.h>
+#include <sys/select.h>
 #include <atalk/logger.h>
 
 #include "db_param.h"
@@ -33,7 +34,7 @@
 #define DEFAULT_FLUSH_FREQUENCY    100
 #define DEFAULT_FLUSH_INTERVAL     1800
 #define DEFAULT_USOCK_FILE         "usock"
-#define DEFAULT_FD_TABLE_SIZE      128
+#define DEFAULT_FD_TABLE_SIZE      512
 #define DEFAULT_IDLE_TIMEOUT       10 * 60
 
 static struct db_param params;
@@ -76,6 +77,8 @@ static void default_params(struct db_param *dbp, char *dir)
         dbp->usock_file[0] = '\0';
     }
     dbp->fd_table_size       = DEFAULT_FD_TABLE_SIZE;
+    if ( dbp->fd_table_size > FD_SETSIZE -1)
+        dbp->fd_table_size = FD_SETSIZE -1;
     dbp->idle_timeout        = DEFAULT_IDLE_TIMEOUT;
 
     return;
