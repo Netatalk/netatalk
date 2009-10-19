@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.14 2009-10-19 07:46:35 didg Exp $
+ * $Id: main.c,v 1.15 2009-10-19 08:09:07 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -124,10 +124,8 @@ static int loop(struct db_param *dbp)
         else
             timeout = 1;
 
-        if ((cret = comm_rcv(&rqst, timeout, &set)) < 0)
+        if ((cret = comm_rcv(&rqst, timeout, &set, &now)) < 0)
             return -1;
-
-        now = time(NULL);
 
         if (cret == 0) {
             /* comm_rcv returned from select without receiving anything. */

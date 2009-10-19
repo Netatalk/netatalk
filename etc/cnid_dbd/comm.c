@@ -1,5 +1,5 @@
 /*
- * $Id: comm.c,v 1.5 2009-10-18 17:50:13 didg Exp $
+ * $Id: comm.c,v 1.6 2009-10-19 08:09:07 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -142,7 +142,7 @@ static int recv_cred(int fd)
  *  things and clean up fd_table. The same happens for any read/write errors.
  */
 
-static int check_fd(time_t timeout, const sigset_t *sigmask)
+static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
 {
     int fd;
     fd_set readfds;
@@ -170,10 +170,13 @@ static int check_fd(time_t timeout, const sigset_t *sigmask)
         return -1;
     }
 
+    time(&t);
+    if (now)
+        *now = t;
+
     if (!ret)
         return 0;
 
-    time(&t);
 
     if (FD_ISSET(control_fd, &readfds)) {
         int    l = 0;
@@ -251,12 +254,12 @@ int comm_nbe(void)
 }
 
 /* ------------ */
-int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask)
+int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask, time_t *now)
 {
     char *nametmp;
     int b;
 
-    if ((cur_fd = check_fd(timeout, sigmask)) < 0)
+    if ((cur_fd = check_fd(timeout, sigmask, now)) < 0)
         return -1;
 
     if (!cur_fd)
