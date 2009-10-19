@@ -26,8 +26,10 @@ Netatalk 2001 (c)
 #include <sys/time.h>
 #include <time.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <atalk/boolean.h>
+#include <atalk/util.h>
 
 #define LOGGER_C
 #include <atalk/logger.h>
@@ -294,13 +296,21 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
 
     /* Open log file as OPEN_LOGS_AS_UID*/
     process_uid = geteuid();
-    if (process_uid)
-        seteuid(OPEN_LOGS_AS_UID);
+    if (process_uid) {
+        if (seteuid(OPEN_LOGS_AS_UID) == -1) {
+            /* XXX failing silently */
+            return;
+        }
+    }
     file_configs[logtype].fd = open( file_configs[logtype].filename,
                                      O_CREAT | O_WRONLY | O_APPEND,
                                      S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (process_uid)
-        seteuid(process_uid);
+    if (process_uid) {
+        if (seteuid(process_uid) == -1) {
+            LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+            exit(EXITERR_SYS);
+        }
+    }
 
     /* Check for error opening/creating logfile */
     if (-1 == file_configs[logtype].fd) {
