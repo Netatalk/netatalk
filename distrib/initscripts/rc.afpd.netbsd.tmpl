@@ -2,6 +2,7 @@
 #
 # PROVIDE: afpd
 # REQUIRE: atalkd
+# KEYWORD: shutdown
 #
 # AppleTalk daemons. Make sure not to start atalkd in the background:
 # its data structures must have time to stablize before running the
@@ -15,7 +16,7 @@ rcvar=$name
 command=":SBINDIR:/afpd"
 etcdir=":ETCDIR:"
 pidfile="/var/run/${name}.pid"
-required_files="$etcdir/papd.conf $etcdir/AppleVolumes.default $etcdir/AppleVolumes.system"
+required_files="$etcdir/afpd.conf $etcdir/AppleVolumes.default $etcdir/AppleVolumes.system"
 
 load_rc_config $name
 run_rc_command "$1"
