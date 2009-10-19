@@ -42,7 +42,7 @@ TEMPLATES = \
 	rc.atalk.gentoo.tmpl		\
 	rc.atalk.debian.tmpl
 
-CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) afpd atalkd papd timelord
+CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES) rc.atalk.cobalt
 
 # overwrite automake uninstall
@@ -144,12 +144,17 @@ endif
 if USE_NETBSD
 
 sysvdir = $(sysconfdir)/rc.d
-sysv_SCRIPTS = afpd atalkd papd timelord
+sysv_SCRIPTS = afpd atalkd cnid_metad papd timelord
 
 afpd: rc.afpd.netbsd
 	cp -f $< $@
+	chmod a+x $@
 
 atalkd: rc.atalkd.netbsd
+	cp -f $< $@
+	chmod a+x $@
+
+cnid_metad: rc.cnid_metad.netbsd
 	cp -f $< $@
 	chmod a+x $@
 
