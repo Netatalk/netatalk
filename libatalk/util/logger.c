@@ -162,6 +162,9 @@ static void generate_message_details(char *message_details_buffer,
     ptr += templen;
 
     templen = snprintf(ptr, len, "%06u ", (int)tv.tv_usec);
+    if (templen == -1 || templen >= len)
+        return;
+        
     len -= templen;
     ptr += templen;
 
@@ -174,6 +177,8 @@ static void generate_message_details(char *message_details_buffer,
     /* PID */
     pid = getpid();
     templen = snprintf(ptr, len, "[%d]", pid);
+    if (templen == -1 || templen >= len)
+        return;
     len -= templen;
     ptr += templen;
 
@@ -184,7 +189,7 @@ static void generate_message_details(char *message_details_buffer,
             templen = snprintf(ptr, len, " {%s:%d}", basename + 1, log_src_linenumber);
         else
             templen = snprintf(ptr, len, " {%s:%d}", log_src_filename, log_src_linenumber);
-        if (templen >= len)
+        if (templen == -1 || templen >= len)
             return;
         len -= templen;
         ptr += templen;
@@ -195,12 +200,16 @@ static void generate_message_details(char *message_details_buffer,
         templen = snprintf(ptr, len,  " (D%d:", loglevel - 1);
     else
         templen = snprintf(ptr, len, " (%c:", arr_loglevel_chars[loglevel]);
+    if (templen == -1 || templen >= len)
+        return;
     len -= templen;
     ptr += templen;
 
     /* Errortype */
     if (logtype<num_logtype_strings) {
         templen = snprintf(ptr, len, "%s", arr_logtype_strings[logtype]);
+        if (templen == -1 || templen >= len)
+            return;
         len -= templen;
         ptr += templen;
     }
@@ -398,7 +407,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     va_end(args);
 
     /* Append \n */
-    if (len >= MAXLOGSIZE)
+    if (len ==-1 || len >= MAXLOGSIZE)
         /* vsnprintf hit the buffer size*/
         temp_buffer[MAXLOGSIZE-2] = '\n';
     else {
@@ -448,7 +457,7 @@ void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char 
     va_start(args, message);
     vsnprintf(log_buffer, sizeof(log_buffer), message, args);
     va_end(args);
-
+    log_buffer[MAXLOGSIZE -1] = 0;
     syslog(get_syslog_equivalent(loglevel), "%s", log_buffer);
 
     inlog = 0;

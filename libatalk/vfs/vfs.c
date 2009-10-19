@@ -318,11 +318,13 @@ static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
 {
     static char buf[ MAXPATHLEN + 1];
     struct stat st;
+    int len;
 
     if ((stat(path, &st)) != 0)
 	return -1;
     if (S_ISDIR(st.st_mode)) {
-	if ((snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path)) < 0)
+	len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
+	if (len < 0 || len >=  MAXPATHLEN)
 	    return -1;
 	/* set acl on .AppleDouble dir first */
 	if ((acl(buf, cmd, count, aces)) != 0)
@@ -342,9 +344,11 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 {
     int ret;
     static char buf[ MAXPATHLEN + 1];
+    int len;
 
     if (dir) {
-	if ((snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path)) < 0)
+	len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
+	if (len < 0 || len >=  MAXPATHLEN)
 	    return AFPERR_MISC;
 	/* remove ACL from .AppleDouble/.Parent first */
 	if ((ret = remove_acl(vol->vfs->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
