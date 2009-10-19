@@ -168,15 +168,9 @@ static void generate_message_details(char *message_details_buffer,
     len -= templen;
     ptr += templen;
 
-    /* Process name */
-    strncpy(ptr, log_config.processname, len);
-    templen = strlen(ptr);
-    len -= templen;
-    ptr += templen;
-
-    /* PID */
+    /* Process name &&  PID */
     pid = getpid();
-    templen = snprintf(ptr, len, "[%d]", pid);
+    templen = snprintf(ptr, len, "%s[%d]", log_config.processname, pid);
     if (templen == -1 || templen >= len)
         return;
     len -= templen;
@@ -215,6 +209,7 @@ static void generate_message_details(char *message_details_buffer,
     }
 
     strncat(ptr, "): ", len);
+    ptr[len] = 0;
 }
 
 static int get_syslog_equivalent(enum loglevels loglevel)
@@ -403,13 +398,15 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     inlog = 1;
     /* Initialise the Messages */
     va_start(args, message);
-    len = vsnprintf(temp_buffer, MAXLOGSIZE - 1, message, args);
+    len = vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
     va_end(args);
 
     /* Append \n */
-    if (len ==-1 || len >= MAXLOGSIZE)
+    if (len ==-1 || len >= MAXLOGSIZE -1) {
         /* vsnprintf hit the buffer size*/
         temp_buffer[MAXLOGSIZE-2] = '\n';
+        temp_buffer[MAXLOGSIZE-1] = 0;
+    }
     else {
         temp_buffer[len] = '\n';
         temp_buffer[len+1] = 0;
