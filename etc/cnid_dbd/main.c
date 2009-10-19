@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.13 2009-10-19 05:38:22 didg Exp $
+ * $Id: main.c,v 1.14 2009-10-19 07:46:35 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -131,19 +131,16 @@ static int loop(struct db_param *dbp)
 
         if (cret == 0) {
             /* comm_rcv returned from select without receiving anything. */
-            if (exit_sig)
+            if (exit_sig) {
                 /* Received signal (TERM|INT) */
                 return 0;
-            if (now - time_last_rqst > dbp->idle_timeout) {
-                if (comm_nbe() <= 0) {
-                    /* Idle timeout */
-                    return 0;
-                }
-                else {
-                    /* still active connections, reset time_last_rqst */
-                    time_last_rqst = now;
-                }
             }
+            if (now - time_last_rqst >= dbp->idle_timeout && comm_nbe() <= 0) {
+                /* Idle timeout */
+                return 0;
+            }
+            /* still active connections, reset time_last_rqst */
+            time_last_rqst = now;
         } else {
             /* We got a request */
             time_last_rqst = now;
@@ -209,7 +206,7 @@ static int loop(struct db_param *dbp)
           Shall we checkpoint bdb ?
           "flush_interval" seconds passed ?
         */
-        if (now > time_next_flush) {
+        if (now >= time_next_flush) {
             LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB for volume '%s'", dbp->dir);
             if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0)
                 return -1;
