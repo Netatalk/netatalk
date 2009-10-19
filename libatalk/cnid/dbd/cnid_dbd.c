@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.9 2009-07-21 13:41:16 didg Exp $
+ * $Id: cnid_dbd.c,v 1.10 2009-10-19 11:00:28 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -55,11 +55,26 @@ static void RQST_RESET(struct cnid_dbd_rqst  *r)
 extern char             Cnid_srv[MAXHOSTNAMELEN + 1];
 extern int              Cnid_port;
 
+#define MAX_DELAY 40
+
+/* *MUST* be < afp tickle or it's never triggered (got EINTR first) */
+#define SOCK_DELAY 11
+
+static void delay(int sec)
+{
+    struct timeval tv;
+
+    tv.tv_usec = 0;
+    tv.tv_sec  = sec;
+    select(0, NULL, NULL, NULL, &tv);
+}
+
 static int tsock_getfd(char *host, int port)
 {
     int sock;
     struct sockaddr_in server;
     struct hostent* hp;
+    struct timeval tv;
     int attr;
     int err;
 
@@ -94,8 +109,24 @@ static int tsock_getfd(char *host, int port)
         close(sock);
         return(-1);
     }
+
+    tv.tv_sec = SOCK_DELAY;
+    tv.tv_usec = 0;
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+        LOG(log_error, logtype_cnid, "getfd: set SO_RCVTIMEO %s: %s", host, strerror(errno));
+        close(sock);
+        return(-1);
+    }
+
+    tv.tv_sec = SOCK_DELAY;
+    tv.tv_usec = 0;
+    if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
+        LOG(log_error, logtype_cnid, "getfd: set SO_SNDTIMEO %s: %s", host, strerror(errno));
+        close(sock);
+        return(-1);
+    }
+
     if(connect(sock ,(struct sockaddr*)&server,sizeof(server))==-1) {
-        struct timeval tv;
         err = errno;
         close(sock);
         sock=-1;
@@ -103,10 +134,7 @@ static int tsock_getfd(char *host, int port)
         switch (err) {
         case ENETUNREACH:
         case ECONNREFUSED:
-
-            tv.tv_usec = 0;
-            tv.tv_sec  = 5;
-            select(0, NULL, NULL, NULL, &tv);
+            delay(5);
             break;
         }
     }
@@ -244,19 +272,37 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
     return 0;
 }
 
+/* ------------------- */
+static ssize_t dbd_read(int socket, void *data, const size_t length)
+{
+    size_t stored;
+    ssize_t len;
+  
+    stored = 0;
+    while (stored < length) {
+        len = read(socket, (u_int8_t *) data + stored, length - stored);
+        if (len == -1) {
+            if (errno == EINTR)
+                continue;
+            return -1;
+        }
+        else if (len > 0)
+            stored += len;
+        else
+            break;
+    }
+    return stored;
+}
+
 /* ---------------------
  * send a request and get reply
  * assume send is non blocking
  * if no answer after sometime (at least MAX_DELAY secondes) return an error
  */
-#define MAX_DELAY 40
 static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     ssize_t ret;
     char *nametmp;
-    struct timeval tv;
-    fd_set readfds;
-    int    maxfd;
     size_t len;
 
     LOG(log_maxdebug, logtype_cnid, "dbd_rpc: BEGIN");
@@ -264,30 +310,12 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
     if (send_packet(db, rqst) < 0) {
         return -1;
     }
-    FD_ZERO(&readfds);
-    FD_SET(db->fd, &readfds);
-    maxfd = db->fd +1;
-
-    tv.tv_usec = 0;
-    tv.tv_sec  = MAX_DELAY;
-    while ((ret = select(maxfd + 1, &readfds, NULL, NULL, &tv)) < 0 && errno == EINTR);
-
-    if (ret < 0) {
-        LOG(log_error, logtype_cnid, "dbd_rpc: Error in select (db_dir %s): %s",
-            db->db_dir, strerror(errno));
-        return ret;
-    }
-    /* signal ? */
-    if (!ret) {
-        /* no answer */
-        LOG(log_error, logtype_cnid, "dbd_rpc: select timed out (db_dir %s)",
-            db->db_dir);
-        return -1;
-    }
     len = rply->namelen;
     nametmp = rply->name;
-    /* assume that if we have something then everything is there (doesn't sleep) */
-    if ((ret = read(db->fd, rply, sizeof(struct cnid_dbd_rply))) != sizeof(struct cnid_dbd_rply)) {
+
+    ret = dbd_read(db->fd, rply, sizeof(struct cnid_dbd_rply));
+
+    if (ret != sizeof(struct cnid_dbd_rply)) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
             db->db_dir, ret == -1?strerror(errno):"closed");
         rply->name = nametmp;
@@ -300,7 +328,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
             db->db_dir, rply->name, rply->namelen, len);
         return -1;
     }
-    if (rply->namelen && (ret = read(db->fd, rply->name, rply->namelen)) != (ssize_t)rply->namelen) {
+    if (rply->namelen && (ret = dbd_read(db->fd, rply->name, rply->namelen)) != (ssize_t)rply->namelen) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading name from fd (db_dir %s): %s",
             db->db_dir, ret == -1?strerror(errno):"closed");
         return -1;
@@ -314,7 +342,6 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
 /* -------------------- */
 static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
-    struct timeval tv;
     time_t orig, t;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
 
@@ -325,12 +352,14 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
          */
         return -1;
     }
-    time(&orig);
     while (1) {
         if (db->fd == -1) {
             struct cnid_dbd_rqst rqst_stamp;
             struct cnid_dbd_rply rply_stamp;
             char  stamp[ADEDLEN_PRIVSYN];
+
+            if (clean)
+                time(&orig);
 
             LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             if ((db->fd = init_tsock(db)) < 0) {
@@ -372,24 +401,22 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
             return 0;
         }
     transmit_fail:
-        LOG(log_error, logtype_cnid, "transmit: something went wrong");
         if (db->fd != -1) {
             close(db->fd);
             db->fd = -1; /* FD not valid... will need to reconnect */
         }
-        time(&t);
-        if (t - orig > MAX_DELAY) {
-            LOG(log_error, logtype_cnid, "transmit: Request to dbd daemon (db_dir %s) timed out.", db->db_dir);
-            return -1;
-        }
 
         if (!clean) { /* don't sleep if just got disconnected by cnid server */
+            time(&t);
+            if (t - orig > MAX_DELAY) {
+                LOG(log_error, logtype_cnid, "transmit: Request to dbd daemon (db_dir %s) timed out.", db->db_dir);
+                return -1;
+            }
             /* sleep a little before retry */
-            tv.tv_usec = 0;
-            tv.tv_sec  = 5;
-            select(0, NULL, NULL, NULL, &tv); /* sleep for 5 seconds */
+            delay(5);
         } else {
             clean = 0; /* false... next time sleep */
+            time(&orig);
         }
     }
     return -1;
