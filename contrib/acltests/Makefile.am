@@ -6,5 +6,5 @@ bin_PROGRAMS = uuidtest
 uuidtest_SOURCES = uuidtest.c
 uuidtest_LDADD =  $(top_builddir)/libatalk/libatalk.la
 
-AM_CFLAGS = @CFLAGS@ -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/ldap.conf\"
+AM_CFLAGS = -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/ldap.conf\"
 endif

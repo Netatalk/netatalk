@@ -13,7 +13,7 @@ papd_LDADD = $(top_builddir)/libatalk/libatalk.la @CUPS_LIBS@ @LIBADD_DL@
 papd_LDFLAGS = -export-dynamic @CUPS_LDFLAGS@
 
 showppd_SOURCES = showppd.c ppd.c
-showppd_CFLAGS = @CFLAGS@ -DSHOWPPD
+showppd_CFLAGS = -DSHOWPPD
 showppd_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 noinst_HEADERS =	\
@@ -29,7 +29,7 @@ noinst_HEADERS =	\
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/include -I$(top_srcdir)/sys \
-	@CFLAGS@ @CUPS_CFLAGS@\
+	@CUPS_CFLAGS@\
 	-D_PATH_PAPDCONF=\"$(pkgconfdir)/papd.conf\" \
 	-D_PATH_PAPDUAMPATH=\"$(UAMS_PATH)/\" \
 	-DSPOOLDIR=\"$(spooldir)/\"

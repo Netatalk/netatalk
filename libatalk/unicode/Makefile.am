@@ -2,7 +2,7 @@
 
 noinst_LTLIBRARIES = libunicode.la
 
-AM_CFLAGS = -I$(top_srcdir)/sys @CFLAGS@ @ICONV_CFLAGS@
+AM_CFLAGS = -I$(top_srcdir)/sys @ICONV_CFLAGS@
 
 SUBDIRS = charsets
 

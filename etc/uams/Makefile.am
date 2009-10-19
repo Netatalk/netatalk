@@ -90,18 +90,12 @@ uams_gss_la_SOURCES   = uams_gss.c
 #
 
 # do that on behalf of the brokeness of automake 1.4
-AM_CFLAGS = @CFLAGS@ @SSL_CFLAGS@ @LIBGCRYPT_CFLAGS@
+AM_CFLAGS = @SSL_CFLAGS@ @LIBGCRYPT_CFLAGS@
 
-uams_guest_la_CFLAGS      = @CFLAGS@
-uams_randnum_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@
-uams_passwd_la_CFLAGS     = @CFLAGS@
-uams_pam_la_CFLAGS        = @CFLAGS@ @PAM_CFLAGS@
-uams_pgp_la_CFLAGS        = @CFLAGS@ @SSL_CFLAGS@
-uams_dhx_passwd_la_CFLAGS = @CFLAGS@ @SSL_CFLAGS@
-uams_dhx_pam_la_CFLAGS    = @CFLAGS@ @SSL_CFLAGS@ @PAM_CFLAGS@
-uams_dhx2_passwd_la_CFLAGS	= @CFLAGS@ @LIBGCRYPT_CFLAGS@
-uams_dhx2_pam_la_CFLAGS		= @CFLAGS@ @LIBGCRYPT_CFLAGS@ @PAM_CFLAGS@
-uams_gss_la_CFLAGS   	  = @CFLAGS@ @GSSAPI_CFLAGS@
+uams_pam_la_CFLAGS         = @PAM_CFLAGS@
+uams_dhx_pam_la_CFLAGS     = @PAM_CFLAGS@
+uams_dhx2_pam_la_CFLAGS    = @PAM_CFLAGS@
+uams_gss_la_CFLAGS   	   = @GSSAPI_CFLAGS@
 
 uams_guest_la_LDFLAGS      = -module -avoid-version
 uams_randnum_la_LDFLAGS    = -module -avoid-version @SSL_LIBS@

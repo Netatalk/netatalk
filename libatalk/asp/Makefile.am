@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/asp/
 
-AM_CFLAGS = -I$(top_srcdir) @CFLAGS@
+AM_CFLAGS = -I$(top_srcdir)
 
 noinst_LTLIBRARIES = libasp.la
 

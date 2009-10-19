@@ -19,4 +19,4 @@ noinst_HEADERS =	\
 	rtmp.h		\
 	zip.h
 
-AM_CFLAGS = @CFLAGS@ -D_PATH_ATALKDCONF=\"$(pkgconfdir)/atalkd.conf\"
+AM_CFLAGS = -D_PATH_ATALKDCONF=\"$(pkgconfdir)/atalkd.conf\"
