@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.6 2009-10-15 15:35:05 franklahm Exp $
+  $Id: ea.c,v 1.7 2009-10-20 08:38:41 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,28 @@
  *   ".AppleDouble/fileWithEAs::EA"
  * - store EAs in files "fileWithEAs::EA::testEA1" and "fileWithEAs::EA::testEA2"
  */
+
+/* 
+ * Build mode for EA header from file mode
+ */
+static inline mode_t ea_header_mode(mode_t mode)
+{
+    /* Same as ad_hf_mode(mode) */
+    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
+    /* Owner must be able to open, read and w-lock it, in order to chmod from eg 0000 -> 0xxxx*/
+    mode |= S_IRUSR | S_IWUSR;
+    return mode;
+}
+
+/* 
+ * Build mode for EA file from file mode
+ */
+static inline mode_t ea_mode(mode_t mode)
+{
+    /* Same as ad_hf_mode(mode) */
+    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
+    return mode;
+}
 
 /*
  * Function: unpack_header
@@ -655,7 +677,7 @@ static int ea_open(const struct vol * restrict vol,
 
     /* Now lock, open and read header file from disk */
     if ((ea->ea_fd = open(eaname, (ea->ea_flags & EA_RDWR) ? O_RDWR : O_RDONLY)) == -1) {
-        LOG(log_error, logtype_afpd, "ea_open: error on open for header: %s", eaname);
+        LOG(log_error, logtype_afpd, "ea_open('%s'): error: %s", eaname, strerror(errno));
         ret = -1;
         goto exit;
     }
@@ -1797,6 +1819,153 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
 exit:
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chown('%s'): error closing ea handle", path);
+        return AFPERR_MISC;
+    }
+
+    return ret;
+}
+
+int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
+{
+    LOG(log_debug, logtype_afpd, "ea_chmod_file('%s')", name);
+
+    int count = 0, ret = AFP_OK;
+    const char *eaname;
+    struct ea ea;
+
+    /* Open EA stuff */
+    if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
+        if (errno == ENOENT)
+            /* no EA files, nothing to do */
+            return AFP_OK;
+        else
+            return AFPERR_MISC;
+    }
+
+    /* Set mode on EA header file */
+    if ((setfilmode(ea_path(&ea, NULL), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL), strerror(errno));
+        switch (errno) {
+        case EPERM:
+        case EACCES:
+            ret = AFPERR_ACCESS;
+            goto exit;
+        default:
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+    }
+
+    /* Set mode on EA files */
+    while (count < ea.ea_count) {
+        eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name);
+        if ((setfilmode(eaname, ea_mode(mode), NULL, vol->v_umask)) != 0) {
+            LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", eaname, strerror(errno));
+            switch (errno) {
+            case EPERM:
+            case EACCES:
+                ret = AFPERR_ACCESS;
+                goto exit;
+            default:
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+            continue;
+        }
+
+        count++;
+    }
+
+exit:
+    if ((ea_close(&ea)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): error closing ea handle", name);
+        return AFPERR_MISC;
+    }
+
+    return ret;
+}
+
+int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
+{
+    LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
+
+    int ret = AFP_OK;
+    uid_t uid;
+    const char *eaname;
+    const char *eaname_safe = NULL;
+    struct ea ea;
+
+    /* .AppleDouble already might be inaccesible, so we must run as id 0 */
+    uid = geteuid();
+    if (seteuid(0)) {
+        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): seteuid: %s", name, strerror(errno));
+        ret = AFPERR_MISC;
+        goto exit;
+    }
+
+    /* Open EA stuff */
+    if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
+        if (errno == ENOENT)
+            /* no EA files, nothing to do */
+            return AFP_OK;
+        else
+            return AFPERR_MISC;
+    }
+
+    /* Set mode on EA header */
+    if ((setfilmode(ea_path(&ea, NULL), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", ea_path(&ea, NULL), strerror(errno));
+        switch (errno) {
+        case EPERM:
+        case EACCES:
+            ret = AFPERR_ACCESS;
+            goto exit;
+        default:
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+    }
+
+    /* Set mode on EA files */
+    int count = 0;
+    while (count < ea.ea_count) {
+        eaname = (*ea.ea_entries)[count].ea_name;
+        /*
+         * Be careful with EA names from the EA header!
+         * Eg NFS users might have access to them, can inject paths using ../ or /.....
+         * FIXME:
+         * Until the EA code escapes / in EA name requests from the client, these therefor wont work.
+         */
+        if ((eaname_safe = strrchr(eaname, '/'))) {
+            LOG(log_warning, logtype_afpd, "ea_chmod_dir('%s'): contains a slash", eaname);
+            eaname = eaname_safe;
+        }
+        eaname = ea_path(&ea, eaname);
+        if ((setfilmode(eaname, ea_mode(mode), NULL, vol->v_umask)) != 0) {
+            LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", eaname, strerror(errno));
+            switch (errno) {
+            case EPERM:
+            case EACCES:
+                ret = AFPERR_ACCESS;
+                goto exit;
+            default:
+                ret = AFPERR_MISC;
+                goto exit;
+            }
+            continue;
+        }
+
+        count++;
+    }
+
+exit:
+    if (seteuid(uid) < 0) {
+        LOG(log_error, logtype_afpd, "can't seteuid back: %s", strerror(errno));
+        exit(EXITERR_SYS);
+    }
+
+    if ((ea_close(&ea)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): error closing ea handle", name);
         return AFPERR_MISC;
     }
 

@@ -917,10 +917,10 @@ struct vfs_ops netatalk_ea_adouble = {
     /* vfs_chown:         */ ea_chown,
     /* vfs_renamedir:     */ NULL, /* ok */
     /* vfs_deletecurdir:  */ NULL, /* ok */
-    /* vfs_setfilmode:    */ NULL,
-    /* vfs_setdirmode:    */ NULL,
-    /* vfs_setdirunixmode:*/ NULL,
-    /* vfs_setdirowner:   */ NULL,
+    /* vfs_setfilmode:    */ ea_chmod_file,
+    /* vfs_setdirmode:    */ NULL, /* ok */
+    /* vfs_setdirunixmode:*/ ea_chmod_dir,
+    /* vfs_setdirowner:   */ NULL, /* ok */
     /* vfs_deletefile:    */ ea_deletefile,
     /* vfs_renamefile:    */ ea_renamefile,
     /* vfs_copyfile       */ ea_copyfile,
