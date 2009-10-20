@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.7 2009-10-15 15:35:05 franklahm Exp $
+  $Id: extattrs.c,v 1.8 2009-10-20 09:53:42 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -74,8 +74,8 @@ static void hexdump(void *m, size_t l) {
 */
 int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    int                 count, ret, oflag = 0, adflags = 0;
-    uint16_t            vid, bitmap;
+    int                 ret, oflag = 0, adflags = 0;
+    uint16_t            vid, bitmap, uint16;
     uint32_t            did, maxreply, tmpattr;
     struct vol          *vol;
     struct dir          *dir;
@@ -85,6 +85,7 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     struct ofork        *of;
     char                *uname, *FinderInfo;
     static int          buf_valid = 0, attrbuflen = 0;
+    char                emptyFinderInfo[32] = { 0 };
 
     *rbuflen = 0;
     ibuf += 2;
@@ -163,21 +164,24 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         }
 
         FinderInfo = ad_entry(adp, ADEID_FINDERI);
+
 #ifdef DEBUG
-        LOG(log_debug9, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
+        LOG(log_maxdebug, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
         hexdump( FinderInfo, 32);
 #endif
 
-        /* Now scan FinderInfo if its all 0 */
-        count = 32;
-        while (count--) {
-            if (*FinderInfo++) {
-                /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
-                strcpy(attrnamebuf, ea_finderinfo);
-                attrbuflen += strlen(ea_finderinfo) + 1;
-                LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
-                break;
-            }
+        if ((adflags & ADFLAGS_DIR)) {
+            /* set default view */
+            uint16 = htons(FINDERINFO_CLOSEDVIEW);
+            memcpy(emptyFinderInfo + FINDERINFO_FRVIEWOFF, &uint16, 2);
+        }
+
+        /* Check if FinderInfo equals default and empty FinderInfo*/
+        if ((memcmp(FinderInfo, emptyFinderInfo, 32)) != 0) {
+            /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
+            strcpy(attrnamebuf, ea_finderinfo);
+            attrbuflen += strlen(ea_finderinfo) + 1;
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
         }
 
         /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
