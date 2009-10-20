@@ -13,6 +13,7 @@ Changes in 2.1
 * NEW: AppleDouble compatible UNIX files utility suite `ad ...`.
        With 2.1 only `ad ls`.
 * NEW: afpd: AFP 3.2 support
+* NEW: afpd: Extended Attributes support using AppleDouble files
 * NEW: afpd: ACL support with ZFS
 * NEW: afpd: ExtendedAttributes support with ZFS
 * NEW: afpd: store and read CNIDs to/from AppleDouble files by default.
