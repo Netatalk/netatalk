@@ -1,8 +1,3 @@
-
-
-REMEMBER TO UPDATE the Changes in 2.0.x section !!!
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Changes in 2.1
 ==============
 * UPD: atalkd and papd are now disabled by default.
@@ -24,13 +19,134 @@ Changes in 2.1
        This is used as a cache and as a backup in case the database
        is deleted or corrupted. It can be disabled with a new volume
        option "nocnidcache".
-       
 
-Changes in 2.0.x
+Changes in 2.0.5
 ================
 
-...........
+* NEW: afpd: Time Machine support with new volume option "tm".
+* FIX: papd: Remove variable expansion for BSD printers. Fixes CVE-2008-5718.
+* FIX: afpd: .AppleDxxx folders were user accessible if option 'usedots'
+       was set 
+* FIX: afpd: vetoed files/dirs where still accessible
+* FIX: afpd: cnid_resolve: don't return '..' as a valid name.
+* FIX: uniconv: -d option wasn't working
 
+Changes in 2.0.4
+================
+
+* REM: remove timeout 
+* NEW: afpd: DHX2 uams using GNU libgcrypt.
+* NEW: afpd: volume options 'illegalseq', 'perm' and 'invisibledots'
+       'ilegalseq'  encode illegal sequence in filename asis, ex "\217-", which is not 
+       a valid SHIFT-JIS char, is encoded  as U\217 -.
+       'perm' value OR with the client requested permissions. (help with OSX 10.5
+       strange permissions).
+       Make dot files visible by default with 'usedots', use 'invisibledots' 
+       for keeping the old behavior, ie for OS9 (OSX hide dot files on its
+       own).
+* NEW: afpd: volume options allow_hosts/denied hosts
+* NEW: afpd: volume options dperm/fperm default directory and file
+       permissions or with server requests.
+* NEW: afpd: afpd.conf, allow line continuation with \ 
+* NEW: afpd: AppleVolumes.default allow line continuation with \
+* NEW: afpd: Mac greek encoding.
+* NEW: afpd: CJK encoding.
+* UPD: afpd: Default UAMs: DHX + DHX2
+* FIX: afpd: return the right error in createfile and copyfile if the disk
+       is full.
+* FIX: afpd: resolveid return the same error code than OSX if it's a directory
+* FIX: afpd: server name check, test for the whole loopback subnet 
+       not only 127.0.0.1.
+* UPD: afpd: limit comments size to 128 bytes, (workaround for Adobe CS2 bug).
+* UPD: afpd: no more daemon icon.
+* UPD: usedots, return an invalide name only for .Applexxx files used by netatalk not
+       all files starting with .apple.
+* UPD: cnid: increase the number of cnid_dbd slots to 512.
+* FIX: cnid: dbd detach the daemon from the control terminal.
+* UPD: cnid: never ending Berkeley API changes...
+* UPD: cnid: dbd add a timeout when reading data from afpd client.
+* UPD: cnid: Don't wait five second after the first error when speaking to the dbd
+       backend.
+* FIX: papd: vars use % not $
+* FIX: papd: quote chars in popen variables expansion. security fix.
+* FIX: papd: papd -d didn't write to stderr.
+* FIX: papd: ps comments don't always use ()
+* FIX: many compilation errors (solaris, AFS, Tru64, xfs quota...).
+
+Changes in 2.0.3
+================
+
+* NEW: afpd: add a cachecnid option that controls if afpd should 
+       use the IDs stored in the AD2 files as cache. Defaults
+       to off.
+* UPD: afpd: deal with more than 32 groups.
+* FIX: afpd: several catsearch fixes, based on patch from
+       TSUBAKIMOTO Hiroya.
+* FIX: afpd: fix a race when a client very quickly reconnects and 
+       tries to kill its old session.
+* FIX: afpd: OSX style symlink caused problems with Panther clients.
+* FIX: afpd: old files with default type didn't show the right icon
+       in finder, from Shlomi Yaakobovich, slightly modified.
+* FIX: cnid_check: disable cnid_check if CNID db was configured with
+       transactions and really bail out after the first error.
+* FIX: admin-group configure option was broken.
+* FIX: several problems with IDs cached in AD2 files.
+* FIX: Ignore BIDI in UTF8 hints from OSX.
+* FIX: Lots of gcc warning fixes.
+* FIX: small configure script changes.
+
+
+Changes in 2.0.2
+================
+
+* NEW: cnid: Add an indexes check and rebuild, optional for dbd 
+       (parameter check default no), standalone program cnid_index for
+       cdb.
+* UPD: Enhanced afpd's -v command line switch and added -V for more 
+       verbose information
+* UPD: uams_gss: build the principal used by uams_gss.so from afpd's
+       configuration, don't use GSS_C_NT_HOSTBASED_SERVICE
+* UPD: cnid_dbd: add process id in syslog and small clean up
+* REM: remove netatalkshorternamelinks.pl cf. SF bug [ 1061396 ]
+       netatalkshorternamelinks.pl broken
+* FIX: afpd: check for DenyRead on FPCopyFile
+* FIX: afpd: add missing flush for AD2 Metadata on FPCopyFile, SF bug 
+       [ 1055691 ] Word 98 OS 9 Saving an existing file
+* FIX: afpd: Deal with AFP3 connection and type 2 (non-UTF8) names.
+       reported by Gair Heaton, HI RESOLUTION SYSTEMS
+* FIX: afpd: Broken 'crlf' option
+* FIX: afpd: fix SF bug [ 1079622 ] afpd/dhx memory bug, 
+       by Ralf Schuchardt
+* FIX: afpd: Return an error if we cannot get the db stamp in 
+       afp_openvol.
+* FIX: afpd: Fix slp registration with Solaris9 slpd, from
+       hat at fa2.so-net.ne.jp
+        
+
+Changes in 2.0.1
+================
+
+* NEW: --enable-debian configure option. Will install /etc/init.d/atalk
+       to get not in conflict with standard debian /etc/init.d/netatalk.
+       Reads netatalk.conf from $ETCDIR and not from /etc/default/
+* UPD: Disable logger code by default. Log to syslog instead
+* UPD: changed netatalk.conf default settings to prevent problems with
+       AppleTalk zone names containing spaces
+* FIX: insecure tempfile handling bug in etc2ps.sh,
+       found by Trustix, CAN-2004-0974.
+* REM: remove add_netatalk_printer and netatalk.template from stable 
+       branch until fixed. (possible symlink vulnerabilities)
+* FIX: afpd: set hasBeenInited in default finder info. This bug caused 
+       endless finder refreshes with OS9 finder if the noadouble option 
+       was used. From TSUBAKIMOTO Hiroya.
+* FIX: afpd: fix a bug in default CREATOR/TYPE handling. Due to this bug 
+       the type/creator mappings in AppleVolumes.system were ignored, 
+       causing problems i.e. with OS9 clients.
+* FIX: AppleVolumes.system: By default don't define a CREATOR/TYPE for a
+       file of unknown type.
+* FIX: fix two Tru64 UNIX compilation errors, 
+       from Burkhard Schmidt bs AT cpfs.mpg.de
+* FIX: afpd: FPMapId wasn't using UTF8 for groups if requested by client.       
 
 Changes in 2.0.0
 ================
