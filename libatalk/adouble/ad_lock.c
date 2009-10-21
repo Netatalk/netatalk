@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.14 2008-12-03 18:35:44 didg Exp $
+ * $Id: ad_lock.c,v 1.15 2009-10-21 07:33:50 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -105,19 +105,19 @@ static void adf_freelock(struct ad_fd *ad, const int i)
 
 
 /* this needs to deal with the following cases:
- * 1) user is the only user of the lock 
- * 2) user shares a read lock with another user
+ * 1) fork is the only user of the lock 
+ * 2) fork shares a read lock with another open fork
  *
  * i converted to using arrays of locks. everytime a lock
  * gets removed, we shift all of the locks down.
  */
-static void adf_unlock(struct ad_fd *ad, const int user)
+static void adf_unlock(struct ad_fd *ad, const int fork)
 {
     adf_lock_t *lock = ad->adf_lock;
     int i;
 
     for (i = 0; i < ad->adf_lockcount; i++) {
-      if (lock[i].user == user) {
+      if (lock[i].user == fork) {
 	/* we're really going to delete this lock. note: read locks
            are the only ones that allow refcounts > 1 */
 	 adf_freelock(ad, i);
@@ -141,9 +141,9 @@ static void adf_relockrange(struct ad_fd *ad, int fd,
 }
 
 
-/* find a byte lock that overlaps off/len for a particular user */
+/* find a byte lock that overlaps off/len for a particular open fork */
 static int adf_findlock(struct ad_fd *ad,
-				   const int user, const int type,
+				   const int fork, const int type,
 				   const off_t off,
 				   const off_t len)
 {
@@ -153,7 +153,7 @@ static int adf_findlock(struct ad_fd *ad,
   for (i = 0; i < ad->adf_lockcount; i++) {
     if ((((type & ADLOCK_RD) && (lock[i].lock.l_type == F_RDLCK)) ||
 	((type & ADLOCK_WR) && (lock[i].lock.l_type == F_WRLCK))) &&
-	(lock[i].user == user) && 
+	(lock[i].user == fork) && 
 	OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) {
       return i;
     }
@@ -163,9 +163,9 @@ static int adf_findlock(struct ad_fd *ad,
 }
 
 
-/* search other user lock lists */
+/* search other fork lock lists */
 static int adf_findxlock(struct ad_fd *ad, 
-				     const int user, const int type,
+				     const int fork, const int type,
 				     const off_t off,
 				     const off_t len)
 {
@@ -175,7 +175,7 @@ static int adf_findxlock(struct ad_fd *ad,
   for (i = 0; i < ad->adf_lockcount; i++) {
     if ((((type & ADLOCK_RD) && (lock[i].lock.l_type == F_RDLCK)) ||
 	 ((type & ADLOCK_WR) && (lock[i].lock.l_type == F_WRLCK))) &&
-	(lock[i].user != user) && 
+	(lock[i].user != fork) && 
 	OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
 	    return i;
   } 
@@ -249,7 +249,7 @@ int start = off;
 
 /* ------------------ */
 int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
-		  const off_t off, const off_t len, const int user)
+		  const off_t off, const off_t len, const int fork)
 {
   struct flock lock;
   struct ad_fd *adf;
@@ -304,11 +304,11 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
       lock.l_len -= lock.l_start; /* otherwise  EOVERFLOW error */
   }
 
-  /* see if it's locked by another user. 
+  /* see if it's locked by another fork. 
    * NOTE: this guarantees that any existing locks must be at most
    * read locks. we use ADLOCK_WR/RD because F_RD/WRLCK aren't
    * guaranteed to be ORable. */
-  if (adf_findxlock(adf, user, ADLOCK_WR | 
+  if (adf_findxlock(adf, fork, ADLOCK_WR | 
 		    ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
 		    lock.l_start, lock.l_len) > -1) {
     errno = EACCES;
@@ -316,7 +316,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   }
   
   /* look for any existing lock that we may have */
-  i = adf_findlock(adf, user, ADLOCK_RD | ADLOCK_WR, lock.l_start, lock.l_len);
+  i = adf_findlock(adf, fork, ADLOCK_RD | ADLOCK_WR, lock.l_start, lock.l_len);
   adflock = (i < 0) ? NULL : adf->adf_lock + i;
 
   /* here's what we check for:
@@ -352,7 +352,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   /* it wasn't an upgrade */
   oldlock = -1;
   if (lock.l_type == F_RDLCK) {
-    oldlock = adf_findxlock(adf, user, ADLOCK_RD, lock.l_start, lock.l_len);
+    oldlock = adf_findxlock(adf, fork, ADLOCK_RD, lock.l_start, lock.l_len);
   } 
     
   /* no more space. this will also happen if lockmax == lockcount == 0 */
@@ -369,7 +369,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
 
   /* fill in fields */
   memcpy(&adflock->lock, &lock, sizeof(lock));
-  adflock->user = user;
+  adflock->user = fork;
   if (oldlock > -1) {
     adflock->refcount = (adf->adf_lock + oldlock)->refcount;
   } else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
@@ -419,7 +419,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
   }
 
   plock = adf->adf_lock;
-  /* Does we have a lock? */
+  /* Do we have a lock? */
   lock.l_whence = SEEK_SET;
   lock.l_len = 1;
   for (i = 0; i < adf->adf_lockcount; i++) {
@@ -442,7 +442,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 /* -------------------------
 */
 int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype,
-	             const off_t off, const off_t len, const int user)
+	             const off_t off, const off_t len, const int fork)
 {
   struct flock lock;
   struct ad_fd *adf;
@@ -478,8 +478,8 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
   lock.l_whence = SEEK_SET;
   lock.l_len = len;
 
-  /* see if it's locked by another user. */
-  if (user && adf_findxlock(adf, user, ADLOCK_WR | 
+  /* see if it's locked by another fork. */
+  if (fork && adf_findxlock(adf, fork, ADLOCK_WR | 
 		    ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
 		    lock.l_start, lock.l_len) > -1) {
     errno = EACCES;
@@ -533,20 +533,20 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
 }
 
 /* --------------------- */
-void ad_fcntl_unlock(struct adouble *ad, const int user)
+void ad_fcntl_unlock(struct adouble *ad, const int fork)
 {
   if (ad_data_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_data_fork, user);
+    adf_unlock(&ad->ad_data_fork, fork);
   }
   if (ad_reso_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_resource_fork, user);
+    adf_unlock(&ad->ad_resource_fork, fork);
   }
 
   if (ad->ad_flags != AD_VERSION1_SFM) {
     return;
   }
   if (ad_meta_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_metadata_fork, user);
+    adf_unlock(&ad->ad_metadata_fork, fork);
   }
 
 }
