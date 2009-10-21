@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.50 2009-10-18 06:16:05 didg Exp $
+ * $Id: ad_open.c,v 1.51 2009-10-21 13:28:17 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1476,25 +1476,13 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     }
 
     if (!ret && (ADFLAGS_OPENFORKS & flags)) {
-        u_int16_t attrbits = adp->ad_open_forks;
-
         /*
           we need to check if the file is open by another process.
           it's slow so we only do it if we have to:
           - it's requested.
           - we don't already have the answer!
         */
-
-        if (!(attrbits & ATTRBIT_ROPEN)) {
-            attrbits |= ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_OPEN_RD) > 0? ATTRBIT_ROPEN : 0;
-            attrbits |= ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_OPEN_WR) > 0? ATTRBIT_ROPEN : 0;
-        }
-
-        if (!(attrbits & ATTRBIT_DOPEN)) {
-            attrbits |= ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_OPEN_RD) > 0? ATTRBIT_DOPEN : 0;
-            attrbits |= ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_OPEN_WR) > 0? ATTRBIT_DOPEN : 0;
-        }
-        adp->ad_open_forks = attrbits;
+        adp->ad_open_forks |= ad_openforks(adp, adp->ad_open_forks);
     }
     return ret;
 }

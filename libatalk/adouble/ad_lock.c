@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.16 2009-10-21 10:49:36 didg Exp $
+ * $Id: ad_lock.c,v 1.17 2009-10-21 13:28:17 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -194,10 +194,10 @@ static int adf_findxlock(struct ad_fd *ad,
  *       2) if the header file doesn't exist, we stick the locks
  *          in the locations specified by AD_FILELOCK_RD/WR.
  */
-#define LOCK_RSRC_RD (0)
-#define LOCK_RSRC_WR (1)
-#define LOCK_DATA_RD (2)
-#define LOCK_DATA_WR (3)
+#define LOCK_DATA_WR (0)
+#define LOCK_DATA_RD (1)
+#define LOCK_RSRC_WR (2)
+#define LOCK_RSRC_RD (3)
 
 #define LOCK_RSRC_DRD (4)
 #define LOCK_RSRC_DWR (5)
@@ -394,41 +394,26 @@ fcntl_lock_err:
    error          ==> -1
       
 */
-int ad_testlock(struct adouble *ad, int eid, const off_t off)
+static int testlock(struct ad_fd *adf, off_t off, off_t len)
 {
   struct flock lock;
-  struct ad_fd *adf;
   adf_lock_t *plock;
   int i;
 
   lock.l_start = off;
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_data_fork;
-    if ((ad_meta_fileno(ad) != -1)) {
-      	adf = ad->ad_md;
-    	lock.l_start = df2off(off);
-    }
-  } 
-  else { /* rfork */
-    if ((ad_meta_fileno(ad) == -1)) {
-        /* there's no resource fork. return no lock */
-        return 0;
-    }
-    adf = ad->ad_md;
-    lock.l_start = hf2off(off);
-  }
 
   plock = adf->adf_lock;
-  /* Do we have a lock? */
   lock.l_whence = SEEK_SET;
-  lock.l_len = 1;
+  lock.l_len = len;
+
+  /* Do we have a lock? */
   for (i = 0; i < adf->adf_lockcount; i++) {
     if (OVERLAP(lock.l_start, 1, plock[i].lock.l_start, plock[i].lock.l_len)) 
         return 1;   /* */
   }
   /* Does another process have a lock? 
   */
-  lock.l_type = (adf->adf_flags & O_RDWR) ?F_WRLCK : F_RDLCK;                                           
+  lock.l_type = (adf->adf_flags & O_RDWR) ?F_WRLCK : F_RDLCK;
 
   if (fcntl(adf->adf_fd, F_GETLK, &lock) < 0) {
       /* is that kind of error possible ?*/
@@ -439,6 +424,92 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
       return 0;
   }
   return 1;
+}
+
+/* --------------- */
+int ad_testlock(struct adouble *ad, int eid, const off_t off)
+{
+  struct ad_fd *adf;
+  off_t      lock_offset;
+
+  lock_offset = off;
+  if (eid == ADEID_DFORK) {
+    adf = &ad->ad_data_fork;
+    if (ad_meta_fileno(ad) != -1) {
+      	adf = ad->ad_md;
+    	lock_offset = df2off(off);
+    }
+  } 
+  else { /* rfork */
+    if (ad_meta_fileno(ad) == -1) {
+        /* there's no resource fork. return no lock */
+        return 0;
+    }
+    adf = ad->ad_md;
+    lock_offset = hf2off(off);
+  }
+  return testlock(adf, lock_offset, 1);
+}
+
+/* -------------------------
+   return if a file is open by another process.
+   Optimized for the common case:
+   - there's no locks held by another process (clients)
+   - or we already know the answer and don't need to test.
+*/
+u_int16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
+{
+  u_int16_t ret = 0;
+  struct ad_fd *adf;
+  off_t off;
+
+  if (!(attrbits & (ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+      off_t len;
+      /* XXX know the locks layout: 
+         AD_FILELOCK_OPEN_WR is first 
+         and use it for merging requests
+      */
+      if (ad_meta_fileno(ad) != -1) {
+          /* there's a resource fork test the four bytes for
+           * data RW/RD and fork RW/RD locks in one request
+          */
+      	  adf = ad->ad_md;
+      	  off = LOCK_DATA_WR;
+      	  len = 4;
+      }
+      else {
+          /* no resource fork, only data RD/RW may exist */
+          adf = &ad->ad_data_fork;
+          off = AD_FILELOCK_OPEN_WR;
+          len = 2;
+      }
+      if (!testlock(adf, off, len))
+          return ret;
+  }
+  /* either there's a lock or we already know one 
+     fork is open
+  */
+  if (!(attrbits & ATTRBIT_DOPEN)) {
+      if (ad_meta_fileno(ad) != -1) {
+      	  adf = ad->ad_md;
+      	  off = LOCK_DATA_WR;
+      }
+      else {
+          adf = &ad->ad_data_fork;
+          off = AD_FILELOCK_OPEN_WR;
+      }
+      ret = testlock(adf, off, 2) > 0? ATTRBIT_DOPEN : 0;
+  }
+
+  if (!(attrbits & ATTRBIT_ROPEN)) {
+      if (ad_meta_fileno(ad) != -1) {
+      	  adf = ad->ad_md;
+          off = LOCK_RSRC_WR;
+          ret |= testlock(adf, off, 2) > 0? ATTRBIT_ROPEN : 0;
+      }
+  }
+
+  return ret;
 }
 
 /* -------------------------

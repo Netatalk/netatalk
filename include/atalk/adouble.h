@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.46 2009-10-15 12:06:07 franklahm Exp $
+ * $Id: adouble.h,v 1.47 2009-10-21 13:28:17 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -447,6 +447,8 @@ extern int ad_fcntl_tmplock (struct adouble *, const u_int32_t /*eid*/,
                                  const int /*type*/, const off_t /*offset*/,
                                  const off_t /*len*/, const int /*user*/);
 extern int ad_testlock      (struct adouble * /*adp*/, int /*eid*/, off_t /*off*/);
+
+extern u_int16_t ad_openforks (struct adouble * /*adp*/, u_int16_t);
 extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
 
 #define ad_lock ad_fcntl_lock
