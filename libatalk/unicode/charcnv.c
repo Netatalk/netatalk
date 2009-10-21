@@ -793,7 +793,7 @@ char * debug_out ( char * seq, size_t len)
  *		for e.g. HFS cdroms.
  */
 
-static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, char* src, size_t srclen, char* dest, size_t destlen, u_int16_t *flags)
+static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const char *src, size_t srclen, char* dest, size_t destlen, u_int16_t *flags)
 {
   const u_int16_t option = (flags ? *flags : 0);
   size_t i_len, o_len;
@@ -1031,7 +1031,7 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
  * FIXME the size is a mess we really need a malloc/free logic
  *`dest size must be dest_len +2
 */
-size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_charset, char* src, size_t src_len, char* dest, size_t dest_len, u_int16_t *flags)
+size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_charset, const char *src, size_t src_len, char *dest, size_t dest_len, u_int16_t *flags)
 {
 	size_t i_len, o_len;
 	ucs2_t *u;
