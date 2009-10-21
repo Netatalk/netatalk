@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.40 2009-10-14 02:24:05 didg Exp $
+ * $Id: afp_dsi.c,v 1.41 2009-10-21 07:03:08 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -46,6 +46,7 @@
 #define CHILD_DIE         (1 << 0)
 #define CHILD_RUNNING     (1 << 1)
 #define CHILD_SLEEPING    (1 << 2)
+#define CHILD_DATA        (1 << 3)
 
 static struct {
     AFPObj *obj;
@@ -171,12 +172,26 @@ static void afp_dsi_getmesg (int sig _U_)
 static void alarm_handler(int sig _U_)
 {
     int err;
+    DSI *dsi = (DSI *) child.obj->handle;
+
+    /* we have to restart the timer because some libraries 
+     * may use alarm() */
+    setitimer(ITIMER_REAL, &dsi->timer, NULL);
+
+    /* we got some traffic from the client since the previous timer 
+     * tick. */
+    if ((child.flags & CHILD_DATA)) {
+        child.flags &= ~CHILD_DATA;
+        return;
+    }
 
     /* if we're in the midst of processing something,
        don't die. */
     if ((child.flags & CHILD_SLEEPING) && child.tickle++ < child.obj->options.sleep) {
         return;
-    } else if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
+    } 
+        
+    if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
         if (!(err = pollvoltime(child.obj)))
             err = dsi_tickle(child.obj->handle);
         if (err <= 0) 
@@ -323,11 +338,8 @@ void afp_over_dsi(AFPObj *obj)
             if ((child.flags & CHILD_DIE))
                 dsi_tickle(dsi);
             continue;
-        } else if (!(child.flags & CHILD_DIE)) { /* reset tickle timer */
-#ifndef DEBUGGING
-            setitimer(ITIMER_REAL, &dsi->timer, NULL);
-#endif
-        }
+        } 
+        child.flags |= CHILD_DATA;
         switch(cmd) {
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
