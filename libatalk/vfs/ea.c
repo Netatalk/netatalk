@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.7 2009-10-20 08:38:41 franklahm Exp $
+  $Id: ea.c,v 1.8 2009-10-21 17:41:45 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -72,6 +72,42 @@ static inline mode_t ea_mode(mode_t mode)
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
     return mode;
 }
+
+/*
+  Taken form afpd/desktop.c
+*/
+static char *mtoupath(const struct vol *vol, const char *mpath)
+{
+    static char  upath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
+    const char   *m;
+    char         *u;
+    size_t       inplen;
+    size_t       outlen;
+    uint16_t     flags = CONV_ESCAPEHEX;
+
+    if (!mpath)
+        return NULL;
+
+    if ( *mpath == '\0' ) {
+        return( "." );
+    }
+
+    m = mpath;
+    u = upath;
+
+    inplen = strlen(m);
+    outlen = MAXPATHLEN;
+
+    if ((size_t)-1 == (outlen = convert_charset(CH_UTF8_MAC,
+                                                vol->v_volcharset,
+                                                vol->v_maccharset,
+                                                m, inplen, u, outlen, &flags)) ) {
+        return NULL;
+    }
+
+    return( upath );
+}
+
 
 /*
  * Function: unpack_header
@@ -253,7 +289,7 @@ static int pack_header(struct ea * restrict ea)
  *    ea           (r) ea handle
  *    eaname       (r) name of EA or NULL
  *
- * Returns: pointer to name in static buffer
+ * Returns: pointer to name in static buffer, NULL on error
  *
  * Effects:
  *
@@ -277,6 +313,8 @@ static char * ea_path(const struct ea * restrict ea,
 
     if (eaname) {
         strlcat(pathbuf, "::", MAXPATHLEN + 1);
+        if ((eaname = mtoupath(ea->vol, eaname)) == NULL)
+            return NULL;
         strlcat(pathbuf, eaname, MAXPATHLEN + 1);
     }
 
@@ -499,8 +537,12 @@ static int write_ea(const struct ea * restrict ea,
     struct stat st;
     char *eaname;
 
-    eaname = ea_path(ea, attruname);
-    LOG(log_maxdebug, logtype_afpd, "write_ea: ea_apth: %s", eaname);
+    if ((eaname = ea_path(ea, attruname)) == NULL) {
+        LOG(log_error, logtype_afpd, "write_ea('%s'): ea_path error", attruname);
+        return AFPERR_MISC;
+    }
+
+    LOG(log_maxdebug, logtype_afpd, "write_ea('%s')", eaname);
 
     /* Check if it exists, remove if yes*/
     if ((stat(eaname, &st)) == 0) {
@@ -525,7 +567,7 @@ static int write_ea(const struct ea * restrict ea,
     }
 
     if ((write(fd, ibuf, attrsize)) != attrsize) {
-        LOG(log_error, logtype_afpd, "write_ea: short write: %s", eaname);
+        LOG(log_error, logtype_afpd, "write_ea('%s'): write: %s", eaname, strerror(errno));
         ret = -1;
         goto exit;
     }
@@ -555,7 +597,10 @@ static int delete_ea_file(const struct ea * restrict ea,
     char *eafile;
     struct stat st;
 
-    eafile = ea_path(ea, eaname);
+    if ((eafile = ea_path(ea, eaname)) == NULL) {
+        LOG(log_error, logtype_afpd, "delete_ea_file('%s'): ea_path error", eaname);
+        return -1;
+    }
 
     /* Check if it exists, remove if yes*/
     if ((stat(eafile, &st)) == 0) {
@@ -936,6 +981,7 @@ int get_eacontent(const struct vol * restrict vol,
     uint32_t uint32;
     size_t toread;
     struct ea ea;
+    char *eafile;
 
     LOG(log_debug, logtype_afpd, "get_eacontent('%s/%s')", uname, attruname);
 
@@ -946,7 +992,12 @@ int get_eacontent(const struct vol * restrict vol,
 
     while (count < ea.ea_count) {
         if (strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
-            if ((fd = open(ea_path(&ea, attruname), O_RDONLY)) == -1) {
+            if ( (eafile = ea_path(&ea, attruname)) == NULL) {
+                ret = AFPERR_MISC;
+                break;
+            }
+
+            if ((fd = open(eafile, O_RDONLY)) == -1) {
                 ret = AFPERR_MISC;
                 break;
             }
@@ -1644,9 +1695,15 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         easize = (*srcea.ea_entries)[count].ea_size;
 
         /* Build src and dst paths for rename() */
-        eapath = ea_path(&srcea, eaname);
+        if ((eapath = ea_path(&srcea, eaname)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
         strcpy(srceapath, eapath);
-        eapath = ea_path(&dstea, eaname);
+        if ((eapath = ea_path(&dstea, eaname)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
 
         LOG(log_maxdebug, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
             src, dst, srceapath, eapath);
@@ -1735,9 +1792,15 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
         easize = (*srcea.ea_entries)[count].ea_size;
 
         /* Build src and dst paths for copy_file() */
-        eapath = ea_path(&srcea, eaname);
+        if ((eapath = ea_path(&srcea, eaname)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
         strcpy(srceapath, eapath);
-        eapath = ea_path(&dstea, eaname);
+        if ((eapath = ea_path(&dstea, eaname)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
 
         LOG(log_maxdebug, logtype_afpd, "ea_copyfile('%s/%s'): copying EA '%s' to '%s'",
             src, dst, srceapath, eapath);
@@ -1799,7 +1862,10 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
     }
 
     while (count < ea.ea_count) {
-        eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name);
+        if ((eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
         if ((chown(eaname, uid, gid)) != 0) {
             switch (errno) {
             case EPERM:
@@ -1858,7 +1924,10 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
 
     /* Set mode on EA files */
     while (count < ea.ea_count) {
-        eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name);
+        if ((eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
         if ((setfilmode(eaname, ea_mode(mode), NULL, vol->v_umask)) != 0) {
             LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", eaname, strerror(errno));
             switch (errno) {
@@ -1940,7 +2009,10 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             LOG(log_warning, logtype_afpd, "ea_chmod_dir('%s'): contains a slash", eaname);
             eaname = eaname_safe;
         }
-        eaname = ea_path(&ea, eaname);
+        if ((eaname = ea_path(&ea, eaname)) == NULL) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
         if ((setfilmode(eaname, ea_mode(mode), NULL, vol->v_umask)) != 0) {
             LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", eaname, strerror(errno));
             switch (errno) {
