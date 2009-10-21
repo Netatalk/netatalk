@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.15 2009-10-21 07:33:50 didg Exp $
+ * $Id: ad_lock.c,v 1.16 2009-10-21 10:49:36 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -427,16 +427,18 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
         return 1;   /* */
   }
   /* Does another process have a lock? 
-     FIXME F_GETLK ?
   */
   lock.l_type = (adf->adf_flags & O_RDWR) ?F_WRLCK : F_RDLCK;                                           
 
-  if (fcntl(adf->adf_fd, F_SETLK, &lock) < 0) {
-    return (errno == EACCES || errno == EAGAIN)?1:-1;
+  if (fcntl(adf->adf_fd, F_GETLK, &lock) < 0) {
+      /* is that kind of error possible ?*/
+      return (errno == EACCES || errno == EAGAIN)?1:-1;
   }
   
-  lock.l_type = F_UNLCK;
-  return fcntl(adf->adf_fd, F_SETLK, &lock);
+  if (lock.l_type == F_UNLCK) {
+      return 0;
+  }
+  return 1;
 }
 
 /* -------------------------
