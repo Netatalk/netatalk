@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.8 2009-10-21 17:41:45 franklahm Exp $
+  $Id: ea.c,v 1.9 2009-10-22 12:35:39 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -908,12 +908,7 @@ exit:
  *
  * Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int get_easize(const struct vol * restrict vol,
-               char * restrict rbuf,
-               int * restrict rbuflen,
-               const char * restrict uname,
-               int oflag,
-               const char * restrict attruname)
+int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
     int ret = AFPERR_MISC, count = 0;
     uint32_t uint32;
@@ -969,13 +964,7 @@ int get_easize(const struct vol * restrict vol,
  *
  * Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int get_eacontent(const struct vol * restrict vol,
-                  char * restrict rbuf,
-                  int * restrict rbuflen,
-                  const char * restrict uname,
-                  int oflag,
-                  const char * restrict attruname,
-                  int maxreply)
+int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
     int ret = AFPERR_MISC, count = 0, fd = -1;
     uint32_t uint32;
@@ -1058,11 +1047,7 @@ int get_eacontent(const struct vol * restrict vol,
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *buflen accordingly.
  */
-int list_eas(const struct vol * restrict vol,
-             char * restrict attrnamebuf,
-             int * restrict buflen,
-             const char * restrict uname,
-             int oflag)
+int list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
     int count = 0, attrbuflen = *buflen, ret = AFP_OK, len;
     char *buf = attrnamebuf;

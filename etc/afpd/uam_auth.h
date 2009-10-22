@@ -1,5 +1,5 @@
 /*
- * $Id: uam_auth.h,v 1.6 2009-10-13 22:55:37 didg Exp $
+ * $Id: uam_auth.h,v 1.7 2009-10-22 12:35:38 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,15 +29,15 @@ struct uam_obj {
     union {
         struct {
             int (*login) (void *, struct passwd **,
-                              char *, int, char *, int *);
+                              char *, int, char *, size_t *);
             int (*logincont) (void *, struct passwd **, char *,
-                                  int, char *, int *);
+                                  int, char *, size_t *);
             void (*logout) (void);
             int (*login_ext) (void *, char *, struct passwd **,
-                              char *, int, char *, int *);
+                              char *, int, char *, size_t *);
         } uam_login;
         int (*uam_changepw) (void *, char *, struct passwd *, char *,
-                                 int, char *, int *);
+                                 int, char *, size_t *);
     } u;
     struct uam_obj *uam_prev, *uam_next;
 };

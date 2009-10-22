@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.66 2009-10-22 05:09:56 didg Exp $
+ * $Id: fork.c,v 1.67 2009-10-22 12:35:38 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1374,9 +1374,9 @@ int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct ofork	*ofork;
-    int			buflen, ret;
+    int             ret;
     u_int16_t		ofrefnum, bitmap;
-
+    size_t          buflen;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
     ibuf += sizeof( ofrefnum );

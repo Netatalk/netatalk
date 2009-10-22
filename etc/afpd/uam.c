@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.29 2009-10-15 11:39:48 didg Exp $
+ * $Id: uam.c,v 1.30 2009-10-22 12:35:38 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -493,7 +493,7 @@ AFPObj *obj = private;
 /* if we need to maintain a connection, this is how we do it.
  * because an action pointer gets passed in, we can stream 
  * DSI connections */
-int uam_afp_read(void *handle, char *buf, int *buflen,
+int uam_afp_read(void *handle, char *buf, size_t *buflen,
                  int (*action)(void *, void *, const int))
 {
     AFPObj *obj = handle;

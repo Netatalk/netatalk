@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.8 2009-10-20 09:53:42 franklahm Exp $
+  $Id: extattrs.c,v 1.9 2009-10-22 12:35:38 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -84,8 +84,10 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     struct adouble      ad, *adp = NULL;
     struct ofork        *of;
     char                *uname, *FinderInfo;
-    static int          buf_valid = 0, attrbuflen = 0;
     char                emptyFinderInfo[32] = { 0 };
+
+    static int          buf_valid = 0;
+    static size_t       attrbuflen = 0;
 
     *rbuflen = 0;
     ibuf += 2;

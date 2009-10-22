@@ -86,7 +86,7 @@ extern struct passwd *uam_getname (void*, char *, const int);
 extern int uam_checkuser (const struct passwd *);
 
 /* afp helper functions */
-extern int uam_afp_read (void *, char *, int *,
+extern int uam_afp_read (void *, char *, size_t *,
 			     int (*)(void *, void *, const int));
 extern int uam_afpserver_option (void *, const int, void *, size_t *);
 #ifdef TRU64

@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.111 2009-10-16 00:15:53 didg Exp $
+ * $Id: directory.c,v 1.112 2009-10-22 12:35:38 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -955,7 +955,7 @@ struct dir *
         LOG(log_error, logtype_afpd, "adddir: malloc: %s", strerror(errno) );
         return NULL;
     }
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), &cdir->d_m_name_ucs2)) {
+    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), (char **)&cdir->d_m_name_ucs2)) {
         LOG(log_error, logtype_afpd, "Couldn't set UCS2 name for %s", name);
         cdir->d_m_name_ucs2 = NULL;
     }
@@ -1559,7 +1559,7 @@ static int invisible_dots(const struct vol *vol, const char *name)
 int getdirparams(const struct vol *vol,
                  u_int16_t bitmap, struct path *s_path,
                  struct dir *dir, 
-                 char *buf, int *buflen )
+                 char *buf, size_t *buflen )
 {
     struct maccess	ma;
     struct adouble	ad;

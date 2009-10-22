@@ -95,7 +95,7 @@ extern int asp_shutdown     (ASP);
 extern int asp_attention    (ASP, AFPUserBytes);
 extern int asp_getrequest   (ASP);
 extern int asp_cmdreply     (ASP, int);
-extern int asp_wrtcont      (ASP, char *, int *);
+extern int asp_wrtcont      (ASP, char *, size_t *);
 #define asp_wrtreply(a,b)   asp_cmdreply((a), (b))
 extern void asp_kill        (int);
 extern int asp_tickle      (ASP, const u_int8_t, struct sockaddr_at *);

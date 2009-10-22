@@ -1,5 +1,5 @@
 /*
-   $Id: locking.c,v 1.2 2009-10-14 01:38:29 didg Exp $
+   $Id: locking.c,v 1.3 2009-10-22 12:35:39 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -12,6 +12,10 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 #include <unistd.h>
 #include <fcntl.h>
