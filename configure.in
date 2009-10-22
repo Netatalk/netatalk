@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.220 2009-10-02 09:32:40 franklahm Exp $
+dnl $Id: configure.in,v 1.221 2009-10-22 08:36:30 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1052,6 +1052,9 @@ if test "x$this_os" = "xsolaris"; then
         ]
     )
 fi
+
+dnl --------------------- Netatalk Webmin
+NETATALK_WEBMIN
 
 dnl --------------------- last minute substitutions
 
