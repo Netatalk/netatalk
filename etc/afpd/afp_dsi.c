@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.43 2009-10-22 05:53:20 didg Exp $
+ * $Id: afp_dsi.c,v 1.44 2009-10-22 07:40:50 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -46,6 +46,7 @@
 #define CHILD_DIE         (1 << 0)
 #define CHILD_RUNNING     (1 << 1)
 #define CHILD_SLEEPING    (1 << 2)
+#define CHILD_DATA        (1 << 3)
 
 static struct {
     AFPObj *obj;
@@ -178,6 +179,13 @@ static void alarm_handler(int sig _U_)
     /* we have to restart the timer because some libraries 
      * may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
+
+    /* we got some traffic from the client since the previous timer 
+     * tick. */
+    if ((child.flags & CHILD_DATA)) {
+        child.flags &= ~CHILD_DATA;
+        return;
+    }
 
     /* if we're in the midst of processing something,
        don't die. */
@@ -327,6 +335,8 @@ void afp_over_dsi(AFPObj *obj)
             pending_request(dsi);
             continue;
         } 
+
+        child.flags |= CHILD_DATA;
         switch(cmd) {
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
