@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.14 2009-10-19 11:01:51 didg Exp $
+ * $Id: dsi_stream.c,v 1.15 2009-10-22 04:59:50 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -134,6 +134,7 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode _U_)
   }
 #endif
   
+  dsi->in_write++;
   written = 0;
   while (written < length) {
     if ((-1 == (len = send(dsi->socket, (u_int8_t *) data + written,
@@ -160,6 +161,7 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode _U_)
   }
 
   dsi->write_count += written;
+  dsi->in_write--;
   return written;
 }
 
@@ -266,6 +268,7 @@ void dsi_sleep(DSI *dsi, const int state)
 */
 static void block_sig(DSI *dsi)
 {
+  dsi->in_write++;
   if (!dsi->sigblocked) sigprocmask(SIG_BLOCK, &dsi->sigblockset, &dsi->oldset);
 }
 
@@ -273,6 +276,7 @@ static void block_sig(DSI *dsi)
 */
 static void unblock_sig(DSI *dsi)
 {
+  dsi->in_write--;
   if (!dsi->sigblocked) sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_read.c,v 1.5 2009-10-20 04:53:19 didg Exp $
+ * $Id: dsi_read.c,v 1.6 2009-10-22 04:59:50 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -45,6 +45,7 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
 
   sigprocmask(SIG_BLOCK, &dsi->sigblockset, &dsi->oldset);
   dsi->sigblocked = 1;
+  dsi->in_write++;
   if (dsi_stream_send(dsi, buf, buflen)) {
     dsi->datasize = size - buflen;
     return min(dsi->datasize, buflen);
@@ -57,6 +58,7 @@ void dsi_readdone(DSI *dsi)
 {
   sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
   dsi->sigblocked = 0;
+  dsi->in_write--;
 }
 
 /* */

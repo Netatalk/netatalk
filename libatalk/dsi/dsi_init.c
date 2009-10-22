@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_init.c,v 1.5 2005-05-03 14:55:15 didg Exp $
+ * $Id: dsi_init.c,v 1.6 2009-10-22 04:59:50 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -33,7 +33,6 @@ DSI *dsi_init(const dsi_proto protocol, const char *program,
     sigemptyset(&dsi->sigblockset);
     sigaddset(&dsi->sigblockset, SIGTERM);
     sigaddset(&dsi->sigblockset, SIGHUP);
-    sigaddset(&dsi->sigblockset, SIGALRM);
     sigaddset(&dsi->sigblockset, SIGUSR1);
     /* always block SIGUSR2 even if SERVERTEXT is not defined */
     sigaddset(&dsi->sigblockset, SIGUSR2);

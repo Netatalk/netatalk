@@ -60,7 +60,11 @@ typedef struct DSI {
   
   sigset_t sigblockset, oldset;
   int      sigblocked;
-  struct itimerval timer, savetimer;
+  struct itimerval timer;
+
+  int	   in_write;	  /* in the middle of writing multiple packets, signal handlers
+			   * can't write to the socket 
+			  */
   
   u_int32_t attn_quantum, datasize, server_quantum;
   u_int16_t serverID, clientID;

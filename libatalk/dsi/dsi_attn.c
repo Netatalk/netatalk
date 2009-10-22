@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_attn.c,v 1.6 2005-04-28 20:50:02 bfernhomberg Exp $
+ * $Id: dsi_attn.c,v 1.7 2009-10-22 04:59:50 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -35,7 +35,7 @@ int dsi_attention(DSI *dsi, AFPUserBytes flags)
   u_int32_t len, nlen;
   u_int16_t id;
 
-  if (dsi->asleep)
+  if (dsi->asleep || dsi->in_write)
       return 1;
       
   id = htons(dsi_serverID(dsi));
