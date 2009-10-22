@@ -65,7 +65,8 @@ typedef struct DSI {
   int	   in_write;	  /* in the middle of writing multiple packets, signal handlers
 			   * can't write to the socket 
 			  */
-  
+  int      msg_request;   /* pending message to the client */
+
   u_int32_t attn_quantum, datasize, server_quantum;
   u_int16_t serverID, clientID;
   char      *status;

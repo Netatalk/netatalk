@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_init.c,v 1.7 2009-10-22 05:19:29 didg Exp $
+ * $Id: dsi_init.c,v 1.8 2009-10-22 05:53:20 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -33,8 +33,6 @@ DSI *dsi_init(const dsi_proto protocol, const char *program,
     sigemptyset(&dsi->sigblockset);
     sigaddset(&dsi->sigblockset, SIGTERM);
     sigaddset(&dsi->sigblockset, SIGUSR1);
-    /* always block SIGUSR2 even if SERVERTEXT is not defined */
-    sigaddset(&dsi->sigblockset, SIGUSR2);
     switch (protocol) {
       /* currently the only transport protocol that exists for dsi */
     case DSI_TCPIP: 

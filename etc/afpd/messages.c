@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.20 2009-10-15 10:43:13 didg Exp $
+ * $Id: messages.c,v 1.21 2009-10-22 05:53:20 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -95,6 +95,7 @@ void readmessage(AFPObj *obj)
         /* Drop privs again, failing this is very bad */
         if (seteuid(euid) < 0) {
             LOG(log_error, logtype_afpd, "Could not switch back to uid %d: %s", euid, strerror(errno));
+            exit(EXITERR_SYS);
         }
 
         if (rc < 0) {

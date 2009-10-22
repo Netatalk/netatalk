@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.42 2009-10-22 05:09:56 didg Exp $
+ * $Id: afp_dsi.c,v 1.43 2009-10-22 05:53:20 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -46,7 +46,6 @@
 #define CHILD_DIE         (1 << 0)
 #define CHILD_RUNNING     (1 << 1)
 #define CHILD_SLEEPING    (1 << 2)
-#define CHILD_DATA        (1 << 3)
 
 static struct {
     AFPObj *obj;
@@ -164,7 +163,9 @@ static void afp_dsi_reload(int sig _U_)
 #ifdef SERVERTEXT
 static void afp_dsi_getmesg (int sig _U_)
 {
-    readmessage(child.obj);
+    DSI *dsi = (DSI *) child.obj->handle;
+
+    dsi->msg_request = 1;
     dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5));
 }
 #endif /* SERVERTEXT */
@@ -177,13 +178,6 @@ static void alarm_handler(int sig _U_)
     /* we have to restart the timer because some libraries 
      * may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
-
-    /* we got some traffic from the client since the previous timer 
-     * tick. */
-    if ((child.flags & CHILD_DATA)) {
-        child.flags &= ~CHILD_DATA;
-        return;
-    }
 
     /* if we're in the midst of processing something,
        don't die. */
@@ -200,6 +194,21 @@ static void alarm_handler(int sig _U_)
     } else { /* didn't receive a tickle. close connection */
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out");
         afp_dsi_die(EXITERR_CLNT);
+    }
+}
+
+/* ----------------- 
+   if dsi->in_write is set attention, tickle (and close?) msg
+   aren't sent. We don't care about tickle 
+*/
+static void pending_request(DSI *dsi)
+{
+    /* send pending attention */
+
+    /* read msg if any, it could be done in afp_getsrvrmesg */
+    if (dsi->msg_request) {
+        dsi->msg_request = 0;
+        readmessage(child.obj);
     }
 }
 
@@ -315,9 +324,9 @@ void afp_over_dsi(AFPObj *obj)
             /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
             if ((child.flags & CHILD_DIE))
                 dsi_tickle(dsi);
+            pending_request(dsi);
             continue;
         } 
-        child.flags |= CHILD_DATA;
         switch(cmd) {
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
@@ -401,7 +410,6 @@ void afp_over_dsi(AFPObj *obj)
             break;
 
         case DSIFUNC_ATTN: /* attention replies */
-            continue;
             break;
 
             /* error. this usually implies a mismatch of some kind
@@ -413,6 +421,7 @@ void afp_over_dsi(AFPObj *obj)
             dsi_writeflush(dsi);
             break;
         }
+        pending_request(dsi);
     }
 
     /* error */
