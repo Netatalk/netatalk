@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.9 2009-10-22 12:35:38 franklahm Exp $
+  $Id: extattrs.c,v 1.10 2009-10-22 13:40:11 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,7 @@ static char *ea_resourcefork = "com.apple.ResourceFork";
 /* This should be big enough to consecutively store the names of all attributes */
 static char attrnamebuf[ATTRNAMEBUFSIZ];
 
+#ifdef DEBUG
 static void hexdump(void *m, size_t l) {
     char *p = m;
     int count = 0, len;
@@ -62,6 +63,7 @@ static void hexdump(void *m, size_t l) {
         }
     }
 }
+#endif
 
 /***************************************
  * AFP funcs

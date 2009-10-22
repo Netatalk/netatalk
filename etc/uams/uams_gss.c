@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.9 2009-10-15 14:54:43 franklahm Exp $
+ * $Id: uams_gss.c,v 1.10 2009-10-22 13:40:11 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -326,7 +326,7 @@ static int acquire_credentials (gss_name_t *server_name, gss_cred_id_t *server_c
     OM_uint32 major_status = 0, minor_status = 0;
     char *envp;
 
-    if (envp = getenv("KRB5_KTNAME"))
+    if ((envp = getenv("KRB5_KTNAME")))
         LOG(log_debug, logtype_uams,
             "acquire credentials: acquiring credentials (uid = %d, keytab = %s)",
             (int)geteuid(), envp);

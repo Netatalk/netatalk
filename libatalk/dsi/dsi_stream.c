@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.15 2009-10-22 04:59:50 didg Exp $
+ * $Id: dsi_stream.c,v 1.16 2009-10-22 13:40:11 franklahm Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -368,7 +368,7 @@ int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
   char block[DSI_BLOCKSIZ];
 
   /* read in the header */
-  if (dsi_buffered_stream_read(dsi, block, sizeof(block)) != sizeof(block)) 
+  if (dsi_buffered_stream_read(dsi, (u_int8_t *)block, sizeof(block)) != sizeof(block)) 
     return 0;
 
   dsi->header.dsi_flags = block[0];

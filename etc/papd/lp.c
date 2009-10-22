@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.30 2009-10-16 01:10:59 didg Exp $
+ * $Id: lp.c,v 1.31 2009-10-22 13:40:11 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -127,7 +127,7 @@ static void convert_octal (char *string, charset_t dest)
     char temp[4];
     long int ch;
 
-    q=p=string;
+    q=p=(unsigned char *)string;
     while ( *p != '\0' ) {
         ch = 0;
         if ( *p == '\\' ) {

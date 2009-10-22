@@ -5,8 +5,6 @@
 
 int main(int argc, char *argv[])
 {
-  bool retval;
-
   set_processname("logger_Test");
 
   LOG(log_severe, logtype_logger, "Logging Test starting: this should only log to syslog");

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.41 2009-10-22 05:09:56 didg Exp $
+ * $Id: desktop.c,v 1.42 2009-10-22 13:40:11 franklahm Exp $
  *
  * See COPYRIGHT.
  *
@@ -530,7 +530,6 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             *rbuflen = buflen;
         }
 
-geticon_done:
         dsi_readdone(dsi);
         return AFP_OK;
 

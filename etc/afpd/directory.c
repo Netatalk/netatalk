@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.112 2009-10-22 12:35:38 franklahm Exp $
+ * $Id: directory.c,v 1.113 2009-10-22 13:40:11 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1074,7 +1074,7 @@ const struct dir *k = key;
 	0x69232f74U, 0xfead7bb3U, 0xe9089ab6U, 0xf012f6aeU,
     };
 
-    const unsigned char *str = k->d_u_name;
+    const unsigned char *str = (unsigned char *)(k->d_u_name);
     hash_val_t acc = 0;
 
     while (*str) {
@@ -2574,8 +2574,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     u_int32_t           id;
     int			len, sfunc;
     int         utf8 = 0;
-    uuidtype_t          type;
-
+    
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     *rbuflen = 0;

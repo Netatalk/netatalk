@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.25 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_dhx_passwd.c,v 1.26 2009-10-22 13:40:11 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -125,7 +125,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
       return AFPERR_NOTAUTH;
 
     /* get the client's public key */
-    if (!(bn = BN_bin2bn(ibuf, KEYSIZE, NULL))) {
+    if (!(bn = BN_bin2bn((unsigned char *)ibuf, KEYSIZE, NULL))) {
       return AFPERR_PARAM;
     }
 
@@ -157,10 +157,10 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     }
 
     /* figure out the key. use rbuf as a temporary buffer. */
-    i = DH_compute_key(rbuf, bn, dh);
+    i = DH_compute_key((unsigned char *)rbuf, bn, dh);
     
     /* set the key */
-    CAST_set_key(&castkey, i, rbuf);
+    CAST_set_key(&castkey, i, (unsigned char *)rbuf);
     
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -169,7 +169,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     *rbuflen += sizeof(sessid);
     
     /* send our public key */
-    BN_bn2bin(dh->pub_key, rbuf); 
+    BN_bn2bin(dh->pub_key, (unsigned char *)rbuf); 
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
 
@@ -195,7 +195,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* 0 */
 
     /* encrypt using cast */
-    CAST_cbc_encrypt(rbuf, rbuf, CRYPTBUFLEN, &castkey, iv, CAST_ENCRYPT);
+    CAST_cbc_encrypt((unsigned char *)rbuf, (unsigned char *)rbuf, CRYPTBUFLEN, &castkey, iv, CAST_ENCRYPT);
     *rbuflen += CRYPTBUFLEN;
     BN_free(bn);
     DH_free(dh);
@@ -298,12 +298,12 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     ibuf += sizeof(sessid);
    
     /* use rbuf as scratch space */
-    CAST_cbc_encrypt(ibuf, rbuf, CRYPT2BUFLEN, &castkey,
+    CAST_cbc_encrypt((unsigned char *)ibuf, (unsigned char *)rbuf, CRYPT2BUFLEN, &castkey,
 		     iv, CAST_DECRYPT);
     
     /* check to make sure that the random number is the same. we
      * get sent back an incremented random number. */
-    if (!(bn1 = BN_bin2bn(rbuf, KEYSIZE, NULL)))
+    if (!(bn1 = BN_bin2bn((unsigned char *)rbuf, KEYSIZE, NULL)))
       return AFPERR_PARAM;
 
     if (!(bn2 = BN_bin2bn(randbuf, sizeof(randbuf), NULL))) {

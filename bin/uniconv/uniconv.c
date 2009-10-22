@@ -146,11 +146,11 @@ static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
 	size_t outlen = 0;
 	unsigned char *p,*q;
 	int require_conversion = 0;
-        u_int16_t    flags = conv_flags;
+    u_int16_t    flags = conv_flags;
 	cnid_t id;
 
-	p = name;
-	q = buffer;
+	p = (unsigned char *)name;
+	q = (unsigned char *)buffer;
 
 	/* optimize for ascii case */
 	while (*p != 0) {
@@ -168,17 +168,17 @@ static char *convert_name(char *name, struct stat *st, cnid_t cur_did)
 	}
 
 	/* convert charsets */
-	q=buffer;
-	p=name;
+	q=(unsigned char *)buffer;
+	p=(unsigned char *)name;
 
-	outlen = convert_charset(ch_from, ch_to, ch_mac, p, strlen(p), q, sizeof(buffer) -2, &flags);
+	outlen = convert_charset(ch_from, ch_to, ch_mac, (char *)p, strlen((char *)p), (char *)q, sizeof(buffer) -2, &flags);
 	if ((size_t)-1 == outlen) {
   	   if ( ch_to == CH_UTF8) {
 		/* maybe name is already in UTF8? */
 		flags = conv_flags;
-		q = (char*) buffer;
-		p = name;
-		outlen = convert_charset(ch_to, ch_to, ch_mac, p, strlen(p), q, sizeof(buffer) -2, &flags);
+		q = (unsigned char *)buffer;
+		p = (unsigned char *)name;
+		outlen = convert_charset(ch_to, ch_to, ch_mac, (char *)p, strlen((char *)p), (char *)q, sizeof(buffer) -2, &flags);
 		if ((size_t)-1 == outlen) {
 			/* it's not UTF8... */
         		fprintf(stderr, "ERROR: conversion from '%s' to '%s' for '%s' in DID %u failed!!!\n", 

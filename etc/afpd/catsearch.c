@@ -736,8 +736,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     }
 
     /* Parse file specifications */
-    spec1 = ibuf;
-    spec2 = ibuf + spec_len + 2;
+    spec1 = (unsigned char*)ibuf;
+    spec2 = (unsigned char*)ibuf + spec_len + 2;
 
     spec1 += 2; 
     spec2 += 2; 

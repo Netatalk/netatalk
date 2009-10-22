@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.19 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_randnum.c,v 1.20 2009-10-22 13:40:11 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -476,7 +476,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
 #endif /* USE_CRACKLIB */
 
     if (!err) 
-      err = randpass(pwd, passwdfile, ibuf + PASSWDLEN, sizeof(seskey), 1);
+        err = randpass(pwd, passwdfile, (unsigned char *)ibuf + PASSWDLEN, sizeof(seskey), 1);
 
     /* zero out some fields */
     memset(&seskeysched, 0, sizeof(seskeysched));
