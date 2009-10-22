@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.40 2009-10-15 10:43:13 didg Exp $
+ * $Id: desktop.c,v 1.41 2009-10-22 05:09:56 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -278,12 +278,6 @@ addicon_err:
             }
 
             while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
-#ifdef DEBUG1
-                if ( obj->options.flags & OPTION_DEBUG ) {
-                    printf("(write) command cont'd: %d\n", iovcnt);
-                    bprint(rbuf, iovcnt);
-                }
-#endif
                 if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
                     LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
                     dsi_writeflush(dsi);
@@ -528,12 +522,6 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             if (buflen < 0)
                 goto geticon_exit;
 
-#ifdef DEBUG1
-            if (obj->options.flags & OPTION_DEBUG) {
-                printf( "(read) reply: %d, %d\n", buflen, dsi->clientID);
-                bprint(rbuf, buflen);
-            }
-#endif
             /* dsi_read() also returns buffer size of next allocation */
             buflen = dsi_read(dsi, rbuf, buflen); /* send it off */
             if (buflen < 0)

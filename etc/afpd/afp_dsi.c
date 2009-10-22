@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.41 2009-10-21 07:03:08 didg Exp $
+ * $Id: afp_dsi.c,v 1.42 2009-10-22 05:09:56 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -203,24 +203,6 @@ static void alarm_handler(int sig _U_)
     }
 }
 
-
-#ifdef DEBUG1
-/*  ---------------------------------
- *  old signal handler for SIGUSR1 - set the debug flag and 
- *  redirect stdout to <tmpdir>/afpd-debug-<pid>.
- */
-void afp_set_debug (int sig)
-{
-    char	fname[MAXPATHLEN];
-
-    snprintf(fname, MAXPATHLEN-1, "%safpd-debug-%d", P_tmpdir, getpid());
-    freopen(fname, "w", stdout);
-    child.obj->options.flags |= OPTION_DEBUG;
-
-    return;
-}
-#endif
-
 /* -------------------------------------------
  afp over dsi. this never returns. 
 */
@@ -319,10 +301,6 @@ void afp_over_dsi(AFPObj *obj)
     }
 #endif /* DEBUGGING */
 
-#ifdef DEBUG1
-    fault_setup((void (*)(void *))afp_dsi_die);
-#endif
-
     /* get stuck here until the end */
     while ((cmd = dsi_receive(dsi))) {
         child.tickle = 0;
@@ -344,10 +322,6 @@ void afp_over_dsi(AFPObj *obj)
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
             LOG(log_info, logtype_afpd, "done");
-#ifdef DEBUG1
-            if (obj->options.flags & OPTION_DEBUG )
-                printf("done\n");
-#endif                
             return;
             break;
 
@@ -362,12 +336,6 @@ void afp_over_dsi(AFPObj *obj)
 #endif /* AFS */
 
             function = (u_char) dsi->commands[0];
-#ifdef DEBUG1
-            if (obj->options.flags & OPTION_DEBUG ) {
-                printf("command: %d (%s)\n", function, AfpNum2name(function));
-                bprint((char *) dsi->commands, dsi->cmdlen);
-            }
-#endif            
 
             /* send off an afp command. in a couple cases, we take advantage
              * of the fact that we're a stream-based protocol. */
@@ -401,12 +369,6 @@ void afp_over_dsi(AFPObj *obj)
                 break;
             }
 
-#ifdef DEBUG1
-            if (obj->options.flags & OPTION_DEBUG ) {
-                printf( "reply: %d, %d\n", err, dsi->clientID);
-                bprint((char *) dsi->data, dsi->datalen);
-            }
-#endif
             if (!dsi_cmdreply(dsi, err)) {
                 LOG(log_error, logtype_afpd, "dsi_cmdreply(%d): %s", dsi->socket, strerror(errno) );
                 afp_dsi_die(EXITERR_CLNT);
@@ -415,12 +377,6 @@ void afp_over_dsi(AFPObj *obj)
 
         case DSIFUNC_WRITE: /* FPWrite and FPAddIcon */
             function = (u_char) dsi->commands[0];
-#ifdef DEBUG1
-            if ( obj->options.flags & OPTION_DEBUG ) {
-                printf("(write) command: %d, %d\n", function, dsi->cmdlen);
-                bprint((char *) dsi->commands, dsi->cmdlen);
-            }
-#endif
             if ( afp_switch[ function ] != NULL ) {
                 dsi->datalen = DSI_DATASIZ;
                 child.flags |= CHILD_RUNNING;
@@ -438,12 +394,6 @@ void afp_over_dsi(AFPObj *obj)
                 err = AFPERR_NOOP;
             }
 
-#ifdef DEBUG1
-            if (obj->options.flags & OPTION_DEBUG ) {
-                printf( "(write) reply code: %d, %d\n", err, dsi->clientID);
-                bprint((char *) dsi->data, dsi->datalen);
-            }
-#endif
             if (!dsi_wrtreply(dsi, err)) {
                 LOG(log_error, logtype_afpd, "dsi_wrtreply: %s", strerror(errno) );
                 afp_dsi_die(EXITERR_CLNT);
@@ -463,15 +413,6 @@ void afp_over_dsi(AFPObj *obj)
             dsi_writeflush(dsi);
             break;
         }
-#ifdef DEBUG1
-        if ( obj->options.flags & OPTION_DEBUG ) {
-#ifdef notdef
-            pdesc( stdout );
-#endif /* notdef */
-            of_pforkdesc( stdout );
-            fflush( stdout );
-        }
-#endif
     }
 
     /* error */

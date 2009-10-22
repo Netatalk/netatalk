@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.65 2009-10-15 10:43:13 didg Exp $
+ * $Id: fork.c,v 1.66 2009-10-22 05:09:56 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -912,12 +912,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         off_t  size;
         int    non_blocking = 0;
 
-#ifdef DEBUG1
-        if (obj->options.flags & OPTION_DEBUG) {
-            printf( "(read) reply: %d/%d, %d\n", *rbuflen,(int) reqcount, dsi->clientID);
-            bprint(rbuf, *rbuflen);
-        }
-#endif        
         /* reqcount isn't always truthful. we need to deal with that. */
         size = ad_size(ofork->of_ad, eid);
 
@@ -1331,12 +1325,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
             /* loop until everything gets written. currently
                     * dsi_write handles the end case by itself. */
             while ((cc = dsi_write(dsi, rbuf, *rbuflen))) {
-#ifdef DEBUG1
-                if ( obj->options.flags & OPTION_DEBUG ) {
-                    printf("(write) command cont'd: %d\n", cc);
-                    bprint(rbuf, cc);
-                }
-#endif
                 if ((cc = write_file(ofork, eid, offset, rbuf, cc, xlate)) < 0) {
                     dsi_writeflush(dsi);
                     *rbuflen = 0;
