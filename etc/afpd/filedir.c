@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.59 2009-10-16 00:15:53 didg Exp $
+ * $Id: filedir.c,v 1.60 2009-10-23 17:35:06 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -565,7 +565,16 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     } else if (of_findname(s_path)) {
         rc = AFPERR_BUSY;
     } else {
-        rc = deletefile(vol, upath, 1);
+        /* it's a file st_valid should always be true
+         * only test for ENOENT because EACCES needs
+         * to read meta data in deletefile
+         */
+        if (s_path->st_valid && s_path->st_errno == ENOENT) {
+            rc = AFPERR_NOOBJ;
+        }
+        else {
+            rc = deletefile(vol, upath, 1);
+        }
     }
     if ( rc == AFP_OK ) {
 	curdir->offcnt--;
