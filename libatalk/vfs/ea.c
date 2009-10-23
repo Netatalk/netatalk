@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.10 2009-10-23 14:09:51 franklahm Exp $
+  $Id: ea.c,v 1.11 2009-10-23 14:49:30 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -1572,17 +1572,18 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     uid = geteuid();
     if (seteuid(0)) {
         LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): seteuid: %s", name, strerror(errno));
-        ret = AFPERR_MISC;
-        goto exit;
+        return AFPERR_MISC;
     }
 
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
-            return AFP_OK;
-        else
-            return AFPERR_MISC;
+            goto exit;
+        else {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
     }
 
     /* Set mode on EA header */
