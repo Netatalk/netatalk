@@ -8,3 +8,6 @@ if USE_NFSv4_ACLS
 libvfs_la_SOURCES += acl.c
 endif
 
+if USE_SOLARIS_EAS
+libvfs_la_SOURCES += ea_solaris.c
+endif

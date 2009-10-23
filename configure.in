@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.221 2009-10-22 08:36:30 franklahm Exp $
+dnl $Id: configure.in,v 1.222 2009-10-23 14:09:50 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1047,6 +1047,7 @@ neta_cv_eas="adouble"
 if test "x$this_os" = "xsolaris"; then
    	AC_CHECK_LIB(c,attropen, [
             neta_cv_eas="$neta_cv_eas Solaris"
+            neta_cv_solaris_eas="yes"
             AC_MSG_NOTICE([Enabling Solaris Extended Attributes support])
             AC_DEFINE([HAVE_SOLARIS_EAS], 1, [Enable Extended Attributes])
         ]
@@ -1068,7 +1069,7 @@ AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
 AM_CONDITIONAL(USE_NFSv4_ACLS, test x$neta_cv_nfsv4acl = xyes)
-AM_CONDITIONAL(USE_EXT_ATTRS, test x$neta_cv_extattrs = xyes)
+AM_CONDITIONAL(USE_SOLARIS_EAS, test x$neta_cv_solaris_eas = xyes)
 AM_CONDITIONAL(USE_DHX, test x$neta_cv_compile_dhx = xyes)
 AM_CONDITIONAL(USE_DHX2, test x$neta_cv_compile_dhx2 = xyes)
 AM_CONDITIONAL(USE_RANDNUM, test x$neta_cv_have_openssl = xyes)
