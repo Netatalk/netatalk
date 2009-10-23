@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.51 2009-10-21 13:28:17 didg Exp $
+ * $Id: ad_open.c,v 1.52 2009-10-23 08:24:33 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1289,14 +1289,14 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
 
     ad_p = ad->ad_ops->ad_path( path, adflags );
 
-    hoflags = oflags & ~O_CREAT;
+    hoflags = oflags & ~(O_CREAT | O_EXCL);
     if (!(adflags & ADFLAGS_RDONLY)) {
         hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
     }
     ad->ad_md->adf_fd = open( ad_p, hoflags, 0 );
     if (ad->ad_md->adf_fd < 0 ) {
         if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
-            hoflags = oflags & ~O_CREAT;
+            hoflags = oflags & ~(O_CREAT | O_EXCL);
             ad->ad_md->adf_fd = open( ad_p, hoflags, 0 );
         }
     }
