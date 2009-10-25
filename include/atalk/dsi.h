@@ -72,7 +72,7 @@ typedef struct DSI {
   u_int8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
   size_t statuslen;
   size_t datalen, cmdlen;
-  size_t read_count, write_count;
+  off_t  read_count, write_count;
   int asleep; /* client won't reply AFP 0x7a ? */
   /* inited = initialized?, child = a child?, noreply = send reply? */
   char child, inited, noreply;

@@ -60,7 +60,7 @@ typedef struct ASP {
     char                cmdbuf[ASP_CMDMAXSIZ];
     char                data[ASP_DATAMAXSIZ];  
     size_t		cmdlen, datalen;
-    size_t 		read_count, write_count;
+    off_t 		read_count, write_count;
 } *ASP;
 
 #define ASPFL_SLS	1
