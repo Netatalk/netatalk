@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.26 2009-10-14 02:24:05 didg Exp $
+ * $Id: afp_asp.c,v 1.27 2009-10-25 07:18:11 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -51,6 +51,10 @@ static void afp_asp_close(AFPObj *obj)
 {
     ASP asp = obj->handle;
 
+    if (seteuid( obj->uid ) < 0) {
+        LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
+        exit(EXITERR_SYS);
+    }
     close_all_vol();
     if (obj->options.authprintdir) afp_authprint_remove(obj);
 

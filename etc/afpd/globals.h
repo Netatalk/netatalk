@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.28 2009-10-15 10:43:13 didg Exp $
+ * $Id: globals.h,v 1.29 2009-10-25 07:18:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -101,6 +101,7 @@ typedef struct _AFPObj {
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */
     struct session_info  sinfo;
+    uid_t uid; 	/* client running user id */
 
 #ifdef FORCE_UIDGID
     int                 force_uid;

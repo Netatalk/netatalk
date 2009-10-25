@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.68 2009-10-15 10:43:13 didg Exp $
+ * $Id: auth.c,v 1.69 2009-10-25 07:18:12 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -384,7 +384,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         uuid = pwd->pw_uid;
 
     set_auth_switch(expired);
-
+    /* save our euid, we need it for preexec_close */
+    obj->uid = geteuid();
     obj->logout = logout;
 
 #ifdef FORCE_UIDGID

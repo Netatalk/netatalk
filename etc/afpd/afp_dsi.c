@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.46 2009-10-25 06:12:51 didg Exp $
+ * $Id: afp_dsi.c,v 1.47 2009-10-25 07:18:12 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -59,7 +59,14 @@ static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->handle;
 
-    /* XXX we have to check we are not root here */
+    /* we may have been called from a signal handler caught when afpd was running
+     * as uid 0, that's the wrong user for volume's prexec_close scripts if any,
+     * restore our login user
+     */
+    if (seteuid( obj->uid ) < 0) {
+        LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
+        exit(EXITERR_SYS);
+    }
     close_all_vol();
     if (obj->logout)
         (*obj->logout)();
