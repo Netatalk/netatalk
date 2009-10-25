@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.18 2009-10-25 09:47:05 didg Exp $
+ * $Id: dsi_stream.c,v 1.19 2009-10-25 12:09:00 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -195,6 +195,7 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 
 /* ---------------------------------
 */
+#ifdef WITH_SENDFILE
 ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t length)
 {
   size_t written;
@@ -237,6 +238,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
   dsi->in_write--;
   return written;
 }
+#endif
 
 /* ---------------------------------
 */
