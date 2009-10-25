@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.17 2009-10-25 06:13:11 didg Exp $
+ * $Id: dsi_stream.c,v 1.18 2009-10-25 09:47:05 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -37,6 +37,7 @@
 
 #include <atalk/dsi.h>
 #include <netatalk/endian.h>
+#include <atalk/util.h>
 #include <sys/ioctl.h> 
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))
@@ -184,6 +185,52 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
     else {
         written += len;
     }
+  }
+
+  dsi->write_count += written;
+  dsi->in_write--;
+  return written;
+}
+
+
+/* ---------------------------------
+*/
+ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t length)
+{
+  size_t written;
+  ssize_t len;
+
+  dsi->in_write++;
+  written = 0;
+
+  while (written < length) {
+    len = sys_sendfile(dsi->socket, fromfd, &offset, length - written);
+        
+    if (len < 0) {
+      if (errno == EINTR)
+          continue;
+      if (errno == EINVAL || errno == ENOSYS)
+          return -1;
+          
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          if (dsi_buffer(dsi)) {
+              /* can't go back to blocking mode, exit, the next read
+                 will return with an error and afpd will die.
+              */
+              break;
+          }
+          continue;
+      }
+      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
+      break;
+    }
+    else if (!len) {
+        /* afpd is going to exit */
+        errno = EIO;
+        return -1; /* I think we're at EOF here... */
+    }
+    else 
+        written += len;
   }
 
   dsi->write_count += written;

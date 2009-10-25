@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.47 2009-10-21 13:28:17 didg Exp $
+ * $Id: adouble.h,v 1.48 2009-10-25 09:47:04 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -543,8 +543,9 @@ extern u_int32_t ad_forcegetid (struct adouble *adp);
 #endif
 
 #ifdef WITH_SENDFILE
-extern ssize_t ad_readfile (const struct adouble *, const int,
-                                const int, off_t, const size_t);
+extern int ad_readfile_init(const struct adouble *ad, 
+				       const int eid, off_t *off,
+				       const int end);
 #endif
 
 #if 0

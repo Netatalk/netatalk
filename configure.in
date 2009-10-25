@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.222 2009-10-23 14:09:50 franklahm Exp $
+dnl $Id: configure.in,v 1.223 2009-10-25 09:47:03 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -708,15 +708,14 @@ fi
 	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
 
 	netatalk_cv_linux_sendfile=no
-dnl	disable this for now, code doesn't use sendfile anyway
-dnl        AC_ARG_ENABLE(sendfile,
-dnl	    [  --enable-sendfile       use sendfile syscall default (no) ],[
-dnl	    	if test "$enableval" = "yes"; then
-dnl	  		netatalk_cv_linux_sendfile=yes
-dnl	    	fi
-dnl	    	AC_MSG_RESULT([enabling sendfile syscall])
-dnl	    ]
-dnl       )
+        AC_ARG_ENABLE(sendfile,
+	    [  --enable-sendfile       use sendfile syscall default (no) ],[
+	    	if test "$enableval" = "yes"; then
+	  		netatalk_cv_linux_sendfile=yes
+	    	fi
+	    	AC_MSG_RESULT([enabling sendfile syscall])
+	    ]
+       )
 
 	if test x"$netatalk_cv_linux_sendfile" = "xyes"; then 
 	    AC_CACHE_CHECK([for linux sendfile support],netatalk_cv_HAVE_SENDFILE,[

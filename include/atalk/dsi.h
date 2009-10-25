@@ -169,6 +169,10 @@ extern size_t dsi_stream_read (DSI *, void *, const size_t);
 extern int dsi_stream_send (DSI *, void *, size_t);
 extern int dsi_stream_receive (DSI *, void *, const size_t, size_t *);
 
+#ifdef WITH_SENDFILE
+extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len);
+#endif
+
 /* client writes -- dsi_write.c */
 extern size_t dsi_writeinit (DSI *, void *, const size_t);
 extern size_t dsi_write (DSI *, void *, const size_t);

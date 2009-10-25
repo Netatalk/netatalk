@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.42 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: desktop.c,v 1.43 2009-10-25 09:47:03 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -506,7 +506,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         while (*rbuflen > 0) {
 #ifdef WITH_SENDFILE
             if (!obj->options.flags & OPTION_DEBUG) {
-                if (sys_sendfile(dsi->socket, si.sdt_fd, &offset, dsi->datasize) < 0) {
+                if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize) < 0) {
                     switch (errno) {
                     case ENOSYS:
                     case EINVAL:  /* there's no guarantee that all fs support sendfile */
@@ -515,7 +515,10 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
                         goto geticon_exit;
                     }
                 }
-                goto geticon_done;
+                else {
+                    dsi_readdone(dsi);
+                    return AFP_OK;
+                }
             }
 #endif
             buflen = read(si.sdt_fd, rbuf, *rbuflen);
@@ -529,7 +532,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
             *rbuflen = buflen;
         }
-
+        
         dsi_readdone(dsi);
         return AFP_OK;
 

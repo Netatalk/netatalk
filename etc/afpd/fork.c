@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.68 2009-10-25 06:12:51 didg Exp $
+ * $Id: fork.c,v 1.69 2009-10-25 09:47:04 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -931,10 +931,12 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         *rbuflen = cc;
         /* due to the nature of afp packets, we have to exit if we get
            an error. we can't do this with translation on. */
-#if 0 /* ifdef WITH_SENDFILE */
-        /* FIXME with OS X deadlock partial workaround we can't use sendfile */
+#ifdef WITH_SENDFILE 
         if (!(xlate || Debug(obj) )) {
-            if (ad_readfile(ofork->of_ad, eid, dsi->socket, offset, dsi->datasize) < 0) {
+            int fd;
+                        
+            fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
+            if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) {
                 if (errno == EINVAL || errno == ENOSYS)
                     goto afp_read_loop;
                 else {
