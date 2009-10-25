@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.11 2009-10-23 14:49:30 franklahm Exp $
+  $Id: ea.c,v 1.12 2009-10-25 05:45:59 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -654,9 +654,8 @@ static int ea_open(const struct vol * restrict vol,
 
     ea->vol = vol;              /* ea_close needs it */
     ea->ea_flags = eaflags;
-    /* Dont check for errors, eg when removing the file is already gone */
-    stat(uname, &st);
-    if (S_ISDIR(st.st_mode))
+    /* Dont care for errors, eg when removing the file is already gone */
+    if (!stat(uname, &st) && S_ISDIR(st.st_mode))
         ea->ea_flags |=  EA_DIR;
 
     if ( ! (ea->filename = strdup(uname))) {
@@ -1577,13 +1576,14 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
-        if (errno == ENOENT)
-            /* no EA files, nothing to do */
-            goto exit;
-        else {
+        /* ENOENT --> no EA files, nothing to do */
+        if (errno != ENOENT)
             ret = AFPERR_MISC;
-            goto exit;
+        if (seteuid(uid) < 0) {
+            LOG(log_error, logtype_afpd, "can't seteuid back: %s", strerror(errno));
+            exit(EXITERR_SYS);
         }
+        return ret;
     }
 
     /* Set mode on EA header */
