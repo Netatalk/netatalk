@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.45 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.46 2009-10-25 06:12:51 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -59,6 +59,7 @@ static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->handle;
 
+    /* XXX we have to check we are not root here */
     close_all_vol();
     if (obj->logout)
         (*obj->logout)();
@@ -115,8 +116,11 @@ static void afp_dsi_timedown(int sig _U_)
     child.flags |= CHILD_DIE;
     /* shutdown and don't reconnect. server going down in 5 minutes. */
     setmessage("The server is going down for maintenance.");
-    dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN | AFPATTN_NORECONNECT |
-                  AFPATTN_MESG | AFPATTN_TIME(5));
+    if (dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN | AFPATTN_NORECONNECT |
+                  AFPATTN_MESG | AFPATTN_TIME(5)) < 0) {
+        DSI *dsi = (DSI *) child.obj->handle;
+        dsi->down_request = 1;
+    }                  
 
     it.it_interval.tv_sec = 0;
     it.it_interval.tv_usec = 0;
@@ -146,7 +150,6 @@ static void afp_dsi_timedown(int sig _U_)
         LOG(log_error, logtype_afpd, "afp_timedown: sigaction SIGHUP: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
-
 }
 
 /* ---------------------------------
@@ -167,7 +170,8 @@ static void afp_dsi_getmesg (int sig _U_)
     DSI *dsi = (DSI *) child.obj->handle;
 
     dsi->msg_request = 1;
-    dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5));
+    if (dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5)) < 0)
+        dsi->msg_request = 2;
 }
 #endif /* SERVERTEXT */
 
@@ -215,8 +219,17 @@ static void pending_request(DSI *dsi)
 
     /* read msg if any, it could be done in afp_getsrvrmesg */
     if (dsi->msg_request) {
+        if (dsi->msg_request == 2) {
+            /* didn't send it in signal handler */
+            dsi_attention(child.obj->handle, AFPATTN_MESG | AFPATTN_TIME(5));
+        }
         dsi->msg_request = 0;
         readmessage(child.obj);
+    }
+    if (dsi->down_request) {
+        dsi->down_request = 0;
+        dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN | AFPATTN_NORECONNECT |
+                  AFPATTN_MESG | AFPATTN_TIME(5));
     }
 }
 

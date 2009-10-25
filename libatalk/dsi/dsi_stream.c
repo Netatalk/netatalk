@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.16 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: dsi_stream.c,v 1.17 2009-10-25 06:13:11 didg Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -37,6 +37,7 @@
 
 #include <atalk/dsi.h>
 #include <netatalk/endian.h>
+#include <sys/ioctl.h> 
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
@@ -68,13 +69,27 @@ static void dsi_init_buffer(DSI *dsi)
     }
 }
 
-/* ---------------------- */
-static void dsi_buffer(DSI *dsi)
+/* ---------------------- 
+   afpd is sleeping too much while trying to send something.
+   May be there's no reader or the reader is also sleeping in write,
+   look if there's some data for us to read, hopefully it will wake up
+   the reader
+*/
+static int dsi_buffer(DSI *dsi)
 {
     fd_set readfds, writefds;
     int    len;
     int    maxfd;
+    int adr;
 
+    /* non blocking mode */
+    adr = 1;
+    if (ioctl(dsi->socket, FIONBIO, &adr) < 0) {
+        /* can't do it! exit without error it will sleep to death below */
+        LOG(log_error, logtype_default, "dsi_buffer: ioctl non blocking mode %s", strerror(errno));
+        return 0;
+    }
+    
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     FD_SET( dsi->socket, &readfds);
@@ -84,11 +99,11 @@ static void dsi_buffer(DSI *dsi)
         FD_SET( dsi->socket, &readfds);
         FD_SET( dsi->socket, &writefds);
         if (select( maxfd, &readfds, &writefds, NULL, NULL) <= 0)
-            return;
+            break;
 
         if ( !FD_ISSET(dsi->socket, &readfds)) {
             /* nothing waiting in the read queue */
-            return;
+            break;
         }
         dsi_init_buffer(dsi);
         len = dsi->end - dsi->eof;
@@ -98,25 +113,32 @@ static void dsi_buffer(DSI *dsi)
              * fall back to blocking IO 
              * could block and disconnect but it's better than a cpu hog
              */
-            dsi_block(dsi, 0);
-            return;
+            break;
         }
 
         len = read(dsi->socket, dsi->eof, len);
         if (len <= 0)
-            return;
+            break;
         dsi->eof += len;
         if ( FD_ISSET(dsi->socket, &writefds)) {
-            return;
+            /* we can write again at last */
+            break;
         }
     }
+    adr = 0;
+    if (ioctl(dsi->socket, FIONBIO, &adr) < 0) {
+        /* can't do it! afpd will fail very quickly */
+        LOG(log_error, logtype_default, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
+        return -1;
+    }
+    return 0;
 }
 
 /* ------------------------------
  * write raw data. return actual bytes read. checks against EINTR
  * aren't necessary if all of the signals have SA_RESTART
  * specified. */
-size_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode _U_)
+ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 {
   size_t written;
   ssize_t len;
@@ -129,9 +151,7 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode _U_)
 #if 0
   /* XXX there's no MSG_DONTWAIT in recv ?? so we have to play with ioctl
   */ 
-  if (dsi->noblocking) {
-      flags |= MSG_DONTWAIT;
-  }
+  flags |= MSG_DONTWAIT;
 #endif
   
   dsi->in_write++;
@@ -143,17 +163,23 @@ size_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode _U_)
       continue;
 
     if (len < 0) {
-      if (dsi->noblocking && errno ==  EAGAIN) {
-         /* non blocking mode but will block 
-          * read data in input queue.
-          * 
-         */
-         dsi_buffer(dsi);
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          if (mode == DSI_NOWAIT && written == 0) {
+              /* DSI_NOWAIT is used by attention
+                 give up in this case.
+              */
+              return -1;
+          }
+          if (dsi_buffer(dsi)) {
+              /* can't go back to blocking mode, exit, the next read
+                 will return with an error and afpd will die.
+              */
+              break;
+          }
+          continue;
       }
-      else {
-          LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
-          break;
-      }
+      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
+      break;
     }
     else {
         written += len;
@@ -269,7 +295,6 @@ void dsi_sleep(DSI *dsi, const int state)
 static void block_sig(DSI *dsi)
 {
   dsi->in_write++;
-  if (!dsi->sigblocked) sigprocmask(SIG_BLOCK, &dsi->sigblockset, &dsi->oldset);
 }
 
 /* ---------------------------------------
@@ -277,7 +302,6 @@ static void block_sig(DSI *dsi)
 static void unblock_sig(DSI *dsi)
 {
   dsi->in_write--;
-  if (!dsi->sigblocked) sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
 }
 
 /* ---------------------------------------
@@ -325,6 +349,11 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
     if ((size_t)len == towrite) /* wrote everything out */
       break;
     else if (len < 0) { /* error */
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          if (!dsi_buffer(dsi)) {
+              continue;
+          }
+      }
       LOG(log_error, logtype_default, "dsi_stream_send: %s", strerror(errno));
       unblock_sig(dsi);
       return 0;

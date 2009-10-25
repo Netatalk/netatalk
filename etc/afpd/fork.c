@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.67 2009-10-22 12:35:38 franklahm Exp $
+ * $Id: fork.c,v 1.68 2009-10-25 06:12:51 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -910,7 +910,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     if ((obj->proto == AFPPROTO_DSI) && (*rbuflen < reqcount) && !nlmask) {
         DSI    *dsi = obj->handle;
         off_t  size;
-        int    non_blocking = 0;
 
         /* reqcount isn't always truthful. we need to deal with that. */
         size = ad_size(ofork->of_ad, eid);
@@ -952,12 +951,6 @@ afp_read_loop:
 #endif 
 
         /* fill up our buffer. */
-        if (*rbuflen) {
-            /* set to non blocking mode */
-            non_blocking = 1;
-            dsi_block(dsi, 1);
-        }
-        /* fill up our buffer. */
         while (*rbuflen > 0) {
             cc = read_file(ofork, eid, offset, nlmask, nlchar, rbuf,rbuflen, xlate);
             if (cc < 0)
@@ -975,10 +968,6 @@ afp_read_loop:
             if (cc < 0)
                 goto afp_read_exit;
             *rbuflen = cc;
-        }
-        if (non_blocking) {
-            /* set back to blocking mode */
-            dsi_block(dsi, 0);
         }
         dsi_readdone(dsi);
         goto afp_read_done;

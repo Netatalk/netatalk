@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tickle.c,v 1.7 2009-10-22 04:59:50 didg Exp $
+ * $Id: dsi_tickle.c,v 1.8 2009-10-25 06:13:11 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -18,12 +18,10 @@
 #include <netatalk/endian.h>
 
 /* server generated tickles. as this is only called by the tickle handler,
- * we don't need to block signals. well, actually, we might get it during
- * a SIGHUP. */
+ * we don't need to block signals. */
 int dsi_tickle(DSI *dsi)
 {
   char block[DSI_BLOCKSIZ];
-  sigset_t oldset;
   u_int16_t id;
   int ret;
   
@@ -38,9 +36,11 @@ int dsi_tickle(DSI *dsi)
   memcpy(block + 2, &id, sizeof(id));
   /* code = len = reserved = 0 */
 
-  sigprocmask(SIG_BLOCK, &dsi->sigblockset, &oldset);
-  ret = dsi_stream_write(dsi, block, DSI_BLOCKSIZ, 0) == DSI_BLOCKSIZ;
-  sigprocmask(SIG_SETMASK, &oldset, NULL);
+  ret = dsi_stream_write(dsi, block, DSI_BLOCKSIZ, DSI_NOWAIT);
+  /* we don't really care if we can't send a tickle, it will fail
+   * elsewhere
+  */
+  ret = (ret == -1 || ret == DSI_BLOCKSIZ);
   return ret;
 }
 

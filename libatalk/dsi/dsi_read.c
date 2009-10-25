@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_read.c,v 1.6 2009-10-22 04:59:50 didg Exp $
+ * $Id: dsi_read.c,v 1.7 2009-10-25 06:13:11 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -22,7 +22,6 @@
 #endif
 
 #include <atalk/dsi.h>
-#include <sys/ioctl.h> 
 
 #ifndef min
 #define min(a,b)   ((a) < (b) ? (a) : (b))
@@ -43,8 +42,6 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
   dsi->header.dsi_len = htonl(size);
   dsi->header.dsi_code = htonl(err);
 
-  sigprocmask(SIG_BLOCK, &dsi->sigblockset, &dsi->oldset);
-  dsi->sigblocked = 1;
   dsi->in_write++;
   if (dsi_stream_send(dsi, buf, buflen)) {
     dsi->datasize = size - buflen;
@@ -56,36 +53,15 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
 
 void dsi_readdone(DSI *dsi)
 {
-  sigprocmask(SIG_SETMASK, &dsi->oldset, NULL);
-  dsi->sigblocked = 0;
   dsi->in_write--;
-}
-
-/* */
-int dsi_block(DSI *dsi, const int mode)
-{
-#if 0
-    dsi->noblocking = mode;
-    return 0;
-#else
-    int adr = mode;
-    int ret;
-    
-    ret = ioctl(dsi->socket, FIONBIO, &adr);
-    if (!ret) {
-        dsi->noblocking = mode;
-    }
-    return ret;
-#endif    
 }
 
 /* send off the data */
 ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 {
   size_t len;
-  int delay = (dsi->datasize != buflen)?1:0;
   
-  len  = dsi_stream_write(dsi, buf, buflen, delay);
+  len  = dsi_stream_write(dsi, buf, buflen, 0);
 
   if (len == buflen) {
     dsi->datasize -= len;

@@ -58,14 +58,13 @@ typedef struct DSI {
   struct dsi_block header;
   struct sockaddr_in server, client;
   
-  sigset_t sigblockset, oldset;
-  int      sigblocked;
   struct itimerval timer;
 
   int	   in_write;	  /* in the middle of writing multiple packets, signal handlers
 			   * can't write to the socket 
 			  */
   int      msg_request;   /* pending message to the client */
+  int      down_request;  /* pending SIGUSR1 down in 5 mn */
 
   u_int32_t attn_quantum, datasize, server_quantum;
   u_int16_t serverID, clientID;
@@ -92,7 +91,6 @@ typedef struct DSI {
 #endif 
 
   /* buffer for OSX deadlock */
-  int noblocking;
   char *buffer;
   char *start;
   char *eof;
@@ -164,11 +162,9 @@ extern void dsi_getstatus (DSI *);
 extern void dsi_close (DSI *);
 extern void dsi_sleep (DSI *, const int );
 
-/* set, unset socket blocking mode */
-extern int dsi_block (DSI *, const int);
-
+#define DSI_NOWAIT 1
 /* low-level stream commands -- in dsi_stream.c */
-extern size_t dsi_stream_write (DSI *, void *, const size_t, const int mode);
+extern ssize_t dsi_stream_write (DSI *, void *, const size_t, const int mode);
 extern size_t dsi_stream_read (DSI *, void *, const size_t);
 extern int dsi_stream_send (DSI *, void *, size_t);
 extern int dsi_stream_receive (DSI *, void *, const size_t, size_t *);

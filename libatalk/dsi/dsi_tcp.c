@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.15 2009-10-13 22:55:37 didg Exp $
+ * $Id: dsi_tcp.c,v 1.16 2009-10-25 06:13:11 didg Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -86,6 +86,25 @@ static void dsi_tcp_close(DSI *dsi)
   dsi->socket = -1;
 }
 
+static void dsi_tcp_timeout(DSI *dsi)
+{
+  struct timeval tv;
+  /* 2 seconds delay, most of the time it translates to 4 seconds:
+   * send/write returns first with whatever it has written and the 
+   * second time it returns EAGAIN
+  */
+  tv.tv_sec = 2;
+  tv.tv_usec = 0;
+
+  /* Note: write isn't a restartable syscall if there's a timeout on the socket 
+   * we have to test for EINTR
+  */
+  if (setsockopt(dsi->socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
+      LOG(log_error, logtype_default, "dsi_tcp_open: unable to set timeout %s", strerror(errno));
+      exit(EXITERR_CLNT);
+  }
+}
+                                  
 /* alarm handler for tcp_open */
 static void timeout_handler(int sig _U_)
 {
@@ -204,6 +223,9 @@ static int dsi_tcp_open(DSI *dsi)
     setitimer(ITIMER_REAL, &timer, NULL);
     sigaction(SIGALRM, &oldact, NULL);
 #endif
+    
+    dsi_tcp_timeout(dsi);
+
     LOG(log_info, logtype_default,"ASIP session:%u(%d) from %s:%u(%d)", 
 	   ntohs(dsi->server.sin_port), dsi->serversock, 
 	   inet_ntoa(dsi->client.sin_addr), ntohs(dsi->client.sin_port),

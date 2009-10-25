@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.94 2009-10-15 10:43:13 didg Exp $
+ * $Id: volume.c,v 1.95 2009-10-25 06:12:51 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2136,8 +2136,18 @@ struct extmap *getdefextmap(void)
 
 /* --------------------------
    poll if a volume is changed by other processes.
+   return 
+    0 no attention msg sent
+    1 attention msg sent
+   -1 error (socket closed)
+   
+   Note: if attention return -1 no packet has been
+   sent because the buffer is full, we don't care
+   either there's no reader or there's a lot of
+   traffic and another pollvoltime will follow
 */
 int  pollvoltime(AFPObj *obj)
+
 {
     struct vol	     *vol;
     struct timeval   tv;
@@ -2186,7 +2196,9 @@ void setvoltime(AFPObj *obj, struct vol *vol)
     /* a little granularity */
     if (vol->v_mtime < tv.tv_sec) {
         vol->v_mtime = tv.tv_sec;
-        /* or finder doesn't update free space */
+        /* or finder doesn't update free space 
+         * XXX is it still true with newer OSX?
+        */
         if (afp_version > 21 && obj->options.server_notif) {
             obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
         }
