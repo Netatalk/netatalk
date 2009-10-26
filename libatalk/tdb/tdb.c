@@ -47,7 +47,7 @@
 #include <config.h>
 #endif
 
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
