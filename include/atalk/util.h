@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.11 2009-10-13 22:55:37 didg Exp $
+ * $Id: util.h,v 1.12 2009-10-26 12:35:56 franklahm Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -81,30 +81,9 @@ extern void *mod_symbol  (void *, const char *);
 #define mod_close(a)     dlclose(a)
 #endif /* ! HAVE_DLFCN_H */
 
-#if 0
-/* volinfo for shell utilities */
-#define VOLINFOFILE ".volinfo"
-
-struct volinfo {
-    char                *v_name;
-    char                *v_path;
-    int                 v_flags;
-    int                 v_casefold;
-    char                *v_cnidscheme;
-    char                *v_dbpath;
-    char                *v_volcodepage;
-    charset_t           v_volcharset;
-    char                *v_maccodepage;
-    charset_t           v_maccharset;
-    int                 v_adouble;  /* default adouble format */
-    char                *(*ad_path)(const char *, int);
-    char                *v_dbd_host;
-    int                 v_dbd_port;
-};
-
-extern int loadvolinfo (char *path, struct volinfo *vol);
-extern int vol_load_charsets ( struct volinfo *vol);
-#endif /* 0 */
+/******************************************************************
+ * locking.c
+ ******************************************************************/
 
 /*
  * Function: lock_reg
@@ -157,3 +136,26 @@ extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t l
     lock_reg((fd), F_SETLK, F_UNLCK, (offset), (whence), (len))
 
 #endif
+
+/******************************************************************
+ * socket.c
+ ******************************************************************/
+
+/*
+ * Function: setnonblock
+ *
+ * Purpose: set or unset non-blocking IO on a fd
+ *
+ * Arguments:
+ *
+ *    fd         (r) File descriptor
+ *    cmd        (r) 0: disable non-blocking IO, ie block
+ *                   <>0: enable non-blocking IO
+ *
+ * Returns: 0 on success, -1 on failure
+ *
+ * Effects:
+ *
+ * fd's file flags.
+ */
+extern int setnonblock(int fd, int cmd);

@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_stream.c,v 1.19 2009-10-25 12:09:00 didg Exp $
+ * $Id: dsi_stream.c,v 1.20 2009-10-26 12:35:56 franklahm Exp $
  *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -34,11 +34,9 @@
 #endif
 
 #include <atalk/logger.h>
-
 #include <atalk/dsi.h>
 #include <netatalk/endian.h>
 #include <atalk/util.h>
-#include <sys/ioctl.h> 
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
@@ -81,11 +79,9 @@ static int dsi_buffer(DSI *dsi)
     fd_set readfds, writefds;
     int    len;
     int    maxfd;
-    int adr;
 
     /* non blocking mode */
-    adr = 1;
-    if (ioctl(dsi->socket, FIONBIO, &adr) < 0) {
+    if (setnonblock(dsi->socket, 1) < 0) {
         /* can't do it! exit without error it will sleep to death below */
         LOG(log_error, logtype_default, "dsi_buffer: ioctl non blocking mode %s", strerror(errno));
         return 0;
@@ -126,8 +122,7 @@ static int dsi_buffer(DSI *dsi)
             break;
         }
     }
-    adr = 0;
-    if (ioctl(dsi->socket, FIONBIO, &adr) < 0) {
+    if (setnonblock(dsi->socket, 0) < 0) {
         /* can't do it! afpd will fail very quickly */
         LOG(log_error, logtype_default, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
         return -1;
