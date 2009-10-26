@@ -1,5 +1,5 @@
 /*
-  $Id: ea_solaris.c,v 1.1 2009-10-23 14:09:51 franklahm Exp $
+  $Id: ea_solaris.c,v 1.2 2009-10-26 13:12:00 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -309,13 +309,13 @@ int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
 {
     int attrdirfd;
 
-    if ( -1 == (attrdirfd = attropen(u_name, attruname, oflag, 0666))) {
+    if ( -1 == (attrdirfd = attropen(uname, attruname, oflag, 0666))) {
         if (errno == ELOOP) {
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "afp_setextattr(%s): encountered symlink with kXAttrNoFollow", s_path->u_name);
+            LOG(log_debug, logtype_afpd, "afp_setextattr(%s): encountered symlink with kXAttrNoFollow", uname);
             return AFP_OK;
         }
-        LOG(log_error, logtype_afpd, "afp_setextattr(%s): attropen error: %s", s_path->u_name, strerror(errno));
+        LOG(log_error, logtype_afpd, "afp_setextattr(%s): attropen error: %s", uname, strerror(errno));
         return AFPERR_MISC;
     }
 
@@ -353,23 +353,23 @@ int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
         switch (errno) {
         case ELOOP:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): encountered symlink with kXAttrNoFollow", s_path->u_name);
+            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): encountered symlink with kXAttrNoFollow", uname);
             return AFP_OK;
         case EACCES:
-            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", s_path->u_name, strerror(errno));
+            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
             return AFPERR_ACCESS;
         default:
-            LOG(log_error, logtype_afpd, "afp_remextattr(%s): attropen error: %s", s_path->u_name, strerror(errno));
+            LOG(log_error, logtype_afpd, "afp_remextattr(%s): attropen error: %s", uname, strerror(errno));
             return AFPERR_MISC;
         }
     }
 
     if ( -1 == (unlinkat(attrdirfd, attruname, 0)) ) {
         if (errno == EACCES) {
-            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", s_path->u_name, strerror(errno));
+            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
             return AFPERR_ACCESS;
         }
-        LOG(log_error, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", s_path->u_name, strerror(errno));
+        LOG(log_error, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
         return AFPERR_MISC;
     }
 
