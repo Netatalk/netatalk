@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.56 2009-10-15 12:06:07 franklahm Exp $
+ * $Id: unix.c,v 1.57 2009-10-27 10:24:02 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -597,46 +597,4 @@ recursive_chown_end:
     return ret;
 }
 #endif
-
-/* This is equivalent of unix rename(). */
-int unix_rename(const char *oldpath, const char *newpath)
-{
-#if 0
-	char pd_name[PATH_MAX+1];
-	int i;
-        struct stat pd_stat;
-        uid_t uid;
-#endif
-
-	if (rename(oldpath, newpath) < 0)
-		return -1;
-#if 0
-	for (i = 0; i <= PATH_MAX && newpath[i] != '\0'; i++)
-		pd_name[i] = newpath[i];
-	pd_name[i] = '\0';
-
-	while (i > 0 && pd_name[i] != '/') i--;
-	if (pd_name[i] == '/') i++;
-
-        pd_name[i++] = '.'; pd_name[i++] = '\0';
-
-        if (stat(pd_name, &pd_stat) < 0) {
-	    LOG(log_error, logtype_afpd, "stat() of parent dir failed: pd_name = %s, uid = %d: %s",
-		pd_name, geteuid(), strerror(errno));
-		return 0;
-	}
-
-	/* So we have SGID bit set... */
-        if ((S_ISGID & pd_stat.st_mode)	!= 0) {
-            uid = geteuid();
-            if (seteuid(0) < 0)
-		LOG(log_error, logtype_afpd, "seteuid() failed: %s", strerror(errno));
-            if (recursive_chown(newpath, uid, pd_stat.st_gid) < 0)
-		LOG(log_error, logtype_afpd, "chown() of parent dir failed: newpath=%s, uid=%d: %s",
-		    pd_name, geteuid(), strerror(errno));
-            seteuid(uid);
-	}
-#endif
-	return 0;
-}
 
