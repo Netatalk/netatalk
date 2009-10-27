@@ -838,7 +838,7 @@ static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH)
  * These function pointers get called from the lib users via vol->vfs->func.
  * These funcs are defined via the macros above.
  */
-struct vfs_ops vfs_master_funcs = {
+static struct vfs_ops vfs_master_funcs = {
     vfs_path,
     vfs_validupath,
     vfs_chown,
@@ -875,8 +875,8 @@ static struct vfs_ops netatalk_adouble = {
     /* vfs_setdirunixmode:*/ RF_setdirunixmode_adouble,
     /* vfs_setdirowner:   */ RF_setdirowner_adouble,
     /* vfs_deletefile:    */ RF_deletefile_adouble,
-    /* vfs_renamefile:    */ RF_renamefile_adouble
-    /* NULL, ...          */
+    /* vfs_renamefile:    */ RF_renamefile_adouble,
+    NULL
 };
 
 static struct vfs_ops netatalk_adouble_osx = {
@@ -890,7 +890,8 @@ static struct vfs_ops netatalk_adouble_osx = {
     /* vfs_setdirunixmode:*/ RF_setdirunixmode_osx,
     /* vfs_setdirowner:   */ RF_setdirowner_osx,
     /* vfs_deletefile:    */ RF_deletefile_adouble,
-    /* vfs_renamefile:    */ RF_renamefile_osx
+    /* vfs_renamefile:    */ RF_renamefile_osx,
+    NULL
 };
 
 /* samba sfm format. ad_path shouldn't be set her */
@@ -906,13 +907,14 @@ static struct vfs_ops netatalk_adouble_sfm = {
     /* vfs_setdirowner:   */ RF_setdirowner_ads,
     /* vfs_deletefile:    */ RF_deletefile_ads,
     /* vfs_renamefile:    */ RF_renamefile_ads,
+    NULL
 };
 
 /* 
  * Secondary vfs modules for Extended Attributes
  */
 
-struct vfs_ops netatalk_ea_adouble = {
+static struct vfs_ops netatalk_ea_adouble = {
     /* vfs_path:          */ NULL,
     /* vfs_validupath:    */ NULL,
     /* vfs_chown:         */ ea_chown,
@@ -935,7 +937,7 @@ struct vfs_ops netatalk_ea_adouble = {
 };
 
 #ifdef HAVE_SOLARIS_EAS
-struct vfs_ops netatalk_ea_solaris = {
+static struct vfs_ops netatalk_ea_solaris = {
     /* ad_path:           */ NULL,
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
@@ -959,11 +961,11 @@ struct vfs_ops netatalk_ea_solaris = {
 #endif
 
 /* 
- * Tertiary attributes for ACLs
+ * Tertiary VFS modules for ACLs
  */
 
 #ifdef HAVE_NFSv4_ACLS
-struct vfs_ops netatalk_solaris_acl_adouble = {
+static struct vfs_ops netatalk_solaris_acl_adouble = {
     /* ad_path:           */ NULL,
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
@@ -977,7 +979,8 @@ struct vfs_ops netatalk_solaris_acl_adouble = {
     /* rf_renamefile:     */ NULL,
     /* vfs_copyfile       */ NULL,
     /* rf_acl:            */ RF_solaris_acl,
-    /* rf_remove_acl      */ RF_remove_acl
+    /* rf_remove_acl      */ RF_remove_acl,
+    NULL
 };
 #endif
 
@@ -1019,4 +1022,3 @@ void initvol_vfs(struct vol *vol)
     vfs[2] = &netatalk_solaris_acl_adouble;
 #endif
 }
-
