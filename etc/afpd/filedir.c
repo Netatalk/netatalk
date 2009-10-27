@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.60 2009-10-23 17:35:06 didg Exp $
+ * $Id: filedir.c,v 1.61 2009-10-27 23:35:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,7 +29,6 @@ char *strchr (), *strrchr ();
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#include <dirent.h>
 #include <errno.h>
 #include <sys/param.h>
 

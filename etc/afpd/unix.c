@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.57 2009-10-27 10:24:02 franklahm Exp $
+ * $Id: unix.c,v 1.58 2009-10-27 23:35:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -30,7 +30,6 @@ char *strchr (), *strrchr ();
 #endif /* STDC_HEADERS */
 
 #include <errno.h>
-#include <dirent.h>
 #include <limits.h>
 #include <sys/param.h>
 #include <sys/stat.h>

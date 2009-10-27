@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.113 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: directory.c,v 1.114 2009-10-27 23:35:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -31,7 +31,6 @@ char *strchr (), *strrchr ();
 #endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
 
 #include <grp.h>
 #include <pwd.h>

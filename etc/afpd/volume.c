@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.95 2009-10-25 06:12:51 didg Exp $
+ * $Id: volume.c,v 1.96 2009-10-27 23:35:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
 #include <utime.h>

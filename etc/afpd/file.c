@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.115 2009-10-15 12:06:07 franklahm Exp $
+ * $Id: file.c,v 1.116 2009-10-27 23:35:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,7 +29,6 @@ char *strchr (), *strrchr ();
 #endif /* STDC_HEADERS */
 
 #include <utime.h>
-#include <dirent.h>
 #include <errno.h>
 #include <sys/param.h>
 

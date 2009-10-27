@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.43 2009-10-25 09:47:03 didg Exp $
+ * $Id: desktop.c,v 1.44 2009-10-27 23:35:17 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -18,7 +18,6 @@
 #include <ctype.h>
 
 #include <errno.h>
-#include <dirent.h>
 
 #include <atalk/adouble.h>
 #include <sys/uio.h>
