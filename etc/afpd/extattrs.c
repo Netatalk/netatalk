@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.14 2009-10-28 01:44:58 didg Exp $
+  $Id: extattrs.c,v 1.15 2009-10-28 01:52:49 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -245,8 +245,8 @@ exit:
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 ret, oflag = 0;
-    uint16_t            vid, bitmap;
-    uint32_t            did, maxreply, attrnamelen;
+    uint16_t            vid, bitmap, attrnamelen;
+    uint32_t            did, maxreply;
     char                attrmname[256], attruname[256];
     struct vol          *vol;
     struct dir          *dir;
@@ -296,7 +296,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
-    /* XXX get length of EA name */
+    /* get length of EA name */
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
     ibuf += sizeof(attrnamelen);
@@ -340,8 +340,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 oflag = O_CREAT | O_WRONLY, ret;
-    uint16_t            vid, bitmap;
-    uint32_t            did, attrnamelen, attrsize;
+    uint16_t            vid, bitmap, attrnamelen;
+    uint32_t            did, attrsize;
     char                attrmname[256], attruname[256];
     struct vol          *vol;
     struct dir          *dir;
@@ -390,7 +390,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
-    /* XXX get length of EA name */
+    /* get length of EA name */
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
     ibuf += sizeof(attrnamelen);
@@ -428,8 +428,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 oflag = O_RDONLY, ret;
-    uint16_t            vid, bitmap;
-    uint32_t            did, attrnamelen;
+    uint16_t            vid, bitmap, attrnamelen;
+    uint32_t            did;
     char                attrmname[256], attruname[256];
     struct vol          *vol;
     struct dir          *dir;
@@ -470,10 +470,10 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
-    /* XXX get length of EA name */
+    /* get length of EA name */
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
-    attrnamelen = ntohs(sizeof(attrnamelen));
-    ibuf += 2;
+    attrnamelen = ntohs(attrnamelen);
+    ibuf += sizeof(attrnamelen);
     if (attrnamelen > 255)
         return AFPERR_PARAM;
 
