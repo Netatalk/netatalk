@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.12 2009-10-28 01:30:25 didg Exp $
+  $Id: extattrs.c,v 1.13 2009-10-28 01:31:57 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -37,8 +37,8 @@
 #include "fork.h"
 #include "extattrs.h"
 
-static char *ea_finderinfo = "com.apple.FinderInfo";
-static char *ea_resourcefork = "com.apple.ResourceFork";
+static const char *ea_finderinfo = "com.apple.FinderInfo";
+static const char *ea_resourcefork = "com.apple.ResourceFork";
 
 /* This should be big enough to consecutively store the names of all attributes */
 static char attrnamebuf[ATTRNAMEBUFSIZ];
