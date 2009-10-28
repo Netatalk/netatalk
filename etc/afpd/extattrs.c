@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.13 2009-10-28 01:31:57 didg Exp $
+  $Id: extattrs.c,v 1.14 2009-10-28 01:44:58 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -93,7 +93,7 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     ibuf += 2;
 
     /* Get MaxReplySize first */
-    memcpy( &maxreply, ibuf + 14, 4);
+    memcpy( &maxreply, ibuf + 14, sizeof (maxreply));
     maxreply = ntohl( maxreply );
 
     /*
@@ -104,23 +104,23 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 
         attrbuflen = 0;
 
-        memcpy( &vid, ibuf, 2);
-        ibuf += 2;
+        memcpy( &vid, ibuf, sizeof(vid));
+        ibuf += sizeof(vid);
         if (NULL == ( vol = getvolbyvid( vid )) ) {
             LOG(log_error, logtype_afpd, "afp_listextattr: getvolbyvid error: %s", strerror(errno));
             return AFPERR_ACCESS;
         }
 
-        memcpy( &did, ibuf, 4);
-        ibuf += 4;
+        memcpy( &did, ibuf, sizeof(did));
+        ibuf += sizeof(did);
         if (NULL == ( dir = dirlookup( vol, did )) ) {
             LOG(log_error, logtype_afpd, "afp_listextattr: dirlookup error: %s", strerror(errno));
             return afp_errno;
         }
 
-        memcpy( &bitmap, ibuf, 2);
+        memcpy( &bitmap, ibuf, sizeof(bitmap));
         bitmap = ntohs( bitmap );
-        ibuf += 2;
+        ibuf += sizeof(bitmap);
 
 #ifdef HAVE_SOLARIS_EAS
         if (bitmap & kXAttrNoFollow)
@@ -214,14 +214,14 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 
     /* Start building reply packet */
     bitmap = htons(bitmap);
-    memcpy( rbuf, &bitmap, 2);
-    rbuf += 2;
-    *rbuflen += 2;
+    memcpy( rbuf, &bitmap, sizeof(bitmap));
+    rbuf += sizeof(bitmap);
+    *rbuflen += sizeof(bitmap);
 
     tmpattr = htonl(attrbuflen);
-    memcpy( rbuf, &tmpattr, 4);
-    rbuf += 4;
-    *rbuflen += 4;
+    memcpy( rbuf, &tmpattr, sizeof(tmpattr));
+    rbuf += sizeof(tmpattr);
+    *rbuflen += sizeof(tmpattr);
 
     /* Only copy buffer if the client asked for it (2nd request, maxreply>0)
        and we didnt have an error (buf_valid) */
@@ -256,23 +256,23 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     *rbuflen = 0;
     ibuf += 2;
 
-    memcpy( &vid, ibuf, 2);
-    ibuf += 2;
+    memcpy( &vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         LOG(log_error, logtype_afpd, "afp_getextattr: getvolbyvid error: %s", strerror(errno));
         return AFPERR_ACCESS;
     }
 
-    memcpy( &did, ibuf, 4);
-    ibuf += 4;
+    memcpy( &did, ibuf, sizeof(did));
+    ibuf += sizeof(did);
     if (NULL == ( dir = dirlookup( vol, did )) ) {
         LOG(log_error, logtype_afpd, "afp_getextattr: dirlookup error: %s", strerror(errno));
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, 2);
+    memcpy( &bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
-    ibuf += 2;
+    ibuf += sizeof(bitmap);
 
 #ifdef HAVE_SOLARIS_EAS
     if (bitmap & kXAttrNoFollow)
@@ -283,9 +283,9 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     ibuf += 16;
 
     /* Get MaxReply */
-    memcpy(&maxreply, ibuf, 4);
+    memcpy(&maxreply, ibuf, sizeof(maxreply));
     maxreply = ntohl(maxreply);
-    ibuf += 4;
+    ibuf += sizeof(maxreply);
 
     /* get name */
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
@@ -296,10 +296,10 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
-    /* get length of EA name */
-    memcpy(&attrnamelen, ibuf, 2);
+    /* XXX get length of EA name */
+    memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
-    ibuf += 2;
+    ibuf += sizeof(attrnamelen);
     if (attrnamelen > 255)
         /* dont fool with us */
         attrnamelen = 255;
@@ -320,9 +320,9 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 
     /* write bitmap now */
     bitmap = htons(bitmap);
-    memcpy(rbuf, &bitmap, 2);
-    rbuf += 2;
-    *rbuflen += 2;
+    memcpy(rbuf, &bitmap, sizeof(bitmap));
+    rbuf += sizeof(bitmap);
+    *rbuflen += sizeof(bitmap);
 
     /*
       Switch on maxreply:
@@ -350,23 +350,23 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     *rbuflen = 0;
     ibuf += 2;
 
-    memcpy( &vid, ibuf, 2);
-    ibuf += 2;
+    memcpy( &vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         LOG(log_error, logtype_afpd, "afp_setextattr: getvolbyvid error: %s", strerror(errno));
         return AFPERR_ACCESS;
     }
 
-    memcpy( &did, ibuf, 4);
-    ibuf += 4;
+    memcpy( &did, ibuf, sizeof(did));
+    ibuf += sizeof(did);
     if (NULL == ( dir = dirlookup( vol, did )) ) {
         LOG(log_error, logtype_afpd, "afp_setextattr: dirlookup error: %s", strerror(errno));
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, 2);
+    memcpy( &bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
-    ibuf += 2;
+    ibuf += sizeof(bitmap);
 
 #ifdef HAVE_SOLARIS_EAS
     if (bitmap & kXAttrNoFollow)
@@ -390,10 +390,10 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
-    /* get length of EA name */
-    memcpy(&attrnamelen, ibuf, 2);
+    /* XXX get length of EA name */
+    memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
-    ibuf += 2;
+    ibuf += sizeof(attrnamelen);
     if (attrnamelen > 255)
         return AFPERR_PARAM;
 
@@ -411,9 +411,9 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
         attruname[255] = 0;
 
     /* get EA size */
-    memcpy(&attrsize, ibuf, 4);
+    memcpy(&attrsize, ibuf, sizeof(attrsize));
     attrsize = ntohl(attrsize);
-    ibuf += 4;
+    ibuf += sizeof(attrsize);
     if (attrsize > MAX_EA_SIZE)
         /* we arbitrarily make this fatal */
         return AFPERR_PARAM;
@@ -438,23 +438,23 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     *rbuflen = 0;
     ibuf += 2;
 
-    memcpy( &vid, ibuf, 2);
-    ibuf += 2;
+    memcpy( &vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         LOG(log_error, logtype_afpd, "afp_remextattr: getvolbyvid error: %s", strerror(errno));
         return AFPERR_ACCESS;
     }
 
-    memcpy( &did, ibuf, 4);
-    ibuf += 4;
+    memcpy( &did, ibuf, sizeof(did));
+    ibuf += sizeof(did);
     if (NULL == ( dir = dirlookup( vol, did )) ) {
         LOG(log_error, logtype_afpd, "afp_remextattr: dirlookup error: %s", strerror(errno));
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, 2);
+    memcpy( &bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
-    ibuf += 2;
+    ibuf += sizeof(bitmap);
 
 #ifdef HAVE_SOLARIS_EAS
     if (bitmap & kXAttrNoFollow)
@@ -470,9 +470,9 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     if ((unsigned long)ibuf & 1)
         ibuf++;
 
-    /* get length of EA name */
-    memcpy(&attrnamelen, ibuf, 2);
-    attrnamelen = ntohs(attrnamelen);
+    /* XXX get length of EA name */
+    memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
+    attrnamelen = ntohs(sizeof(attrnamelen));
     ibuf += 2;
     if (attrnamelen > 255)
         return AFPERR_PARAM;
