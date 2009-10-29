@@ -974,12 +974,15 @@ void initvol_vfs(struct vol *vol)
     /* Default adouble stuff */
     if (vol->v_adouble == AD_VERSION2_OSX) {
         vol->vfs_modules[0] = &netatalk_adouble_osx;
+        vol->ad_path = ad_path_osx;
     }
     else if (vol->v_adouble == AD_VERSION1_SFM) {
         vol->vfs_modules[0] = &netatalk_adouble_sfm;
+        vol->ad_path = ad_path_sfm;
     }
     else {
         vol->vfs_modules[0] = &netatalk_adouble;
+        vol->ad_path = ad_path;
     }
 
     /* Extended Attributes */
