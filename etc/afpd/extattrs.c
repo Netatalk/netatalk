@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.19 2009-10-29 10:53:52 didg Exp $
+  $Id: extattrs.c,v 1.20 2009-10-29 12:48:34 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include <atalk/adouble.h>
+#include <atalk/util.h>
 #include <atalk/vfs.h>
 #include <atalk/afp.h>
 #include <atalk/logger.h>
@@ -247,12 +248,25 @@ exit:
     return ret;
 }
 
+static char *to_stringz(char *ibuf, uint16_t len)
+{
+static char attrmname[256];
+
+    if (len > 256)
+        /* dont fool with us */
+        len = 256;
+
+    /* we must copy the name as its not 0-terminated and I DONT WANT TO WRITE to ibuf */
+    strlcpy(attrmname, ibuf, len);
+    return attrmname;
+}
+
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 ret, oflag = 0;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, maxreply;
-    char                attrmname[256], attruname[256];
+    char                attruname[256];
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
@@ -305,18 +319,11 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
     ibuf += sizeof(attrnamelen);
-    if (attrnamelen > 255)
-        /* dont fool with us */
-        attrnamelen = 255;
 
-    /* we must copy the name as its not 0-terminated and I DONT WANT TO WRITE to ibuf */
-    strncpy(attrmname, ibuf, attrnamelen);
-    attrmname[attrnamelen] = 0;
-
-    LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name, attrmname);
+    LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name, to_stringz(ibuf, attrnamelen));
 
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 256)) )
+    if ( 0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf, attrnamelen, attruname, 256) )
         return AFPERR_MISC;
 
     /* write bitmap now */
@@ -343,7 +350,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     int                 oflag = O_CREAT | O_WRONLY, ret;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, attrsize;
-    char                attrmname[256], attruname[256];
+    char                attruname[256];
+    char		*attrmname;
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
@@ -398,15 +406,12 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     if (attrnamelen > 255)
         return AFPERR_PARAM;
 
-    /* we must copy the name as its not 0-terminated and we cant write to ibuf */
-    strncpy(attrmname, ibuf, attrnamelen);
-    attrmname[attrnamelen] = 0;
-    ibuf += attrnamelen;
-
+    attrmname = ibuf;
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 256)) )
+    if ( 0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, attrmname, attrnamelen, attruname, 256))
         return AFPERR_MISC;
 
+    ibuf += attrnamelen;
     /* get EA size */
     memcpy(&attrsize, ibuf, sizeof(attrsize));
     attrsize = ntohl(attrsize);
@@ -415,7 +420,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         /* we arbitrarily make this fatal */
         return AFPERR_PARAM;
 
-    LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u", s_path->u_name, attrmname, attrsize);
+    LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u", s_path->u_name, to_stringz(attrmname, attrnamelen), attrsize);
 
     ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize, oflag);
 
@@ -427,7 +432,7 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     int                 oflag = O_RDONLY, ret;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did;
-    char                attrmname[256], attruname[256];
+    char                attruname[256];
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
@@ -474,16 +479,11 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     if (attrnamelen > 255)
         return AFPERR_PARAM;
 
-    /* we must copy the name as its not 0-terminated and we cant write to ibuf */
-    strncpy(attrmname, ibuf, attrnamelen);
-    attrmname[attrnamelen] = 0;
-    ibuf += attrnamelen;
-
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 256)) )
+    if ( 0 >= (convert_string(CH_UTF8_MAC, obj->options.unixcharset,ibuf, attrnamelen, attruname, 256)) )
         return AFPERR_MISC;
 
-    LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name, attrmname);
+    LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name, to_stringz(ibuf, attrnamelen));
 
     ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag);
 
