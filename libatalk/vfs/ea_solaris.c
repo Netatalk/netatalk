@@ -1,5 +1,5 @@
 /*
-  $Id: ea_solaris.c,v 1.2 2009-10-26 13:12:00 franklahm Exp $
+  $Id: ea_solaris.c,v 1.3 2009-10-29 13:06:19 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -373,4 +373,5 @@ int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
         return AFPERR_MISC;
     }
 
+    return AFP_OK;
 }

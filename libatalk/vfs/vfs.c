@@ -26,12 +26,12 @@
 
 #include <atalk/afp.h>    
 #include <atalk/adouble.h>
-#include <atalk/vfs.h>
 #include <atalk/ea.h>
 #include <atalk/acl.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
+#include <atalk/vfs.h>
 #include <atalk/directory.h>
 #include <atalk/unix.h>
 
@@ -103,7 +103,7 @@ static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
     struct stat st;
     char        *ad_p;
 
-    ad_p = vol->vfs->ad_path(path, ADFLAGS_HF );
+    ad_p = vol->ad_path(path, ADFLAGS_HF );
 
     if ( stat( ad_p, &st ) < 0 )
         return 0; /* ignore */
@@ -154,13 +154,13 @@ static int adouble_setfilmode(const char * name, mode_t mode, struct stat *st, m
 
 static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 {
-    return adouble_setfilmode(vol->vfs->ad_path( name, ADFLAGS_HF ), mode, st, vol->v_umask);
+    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_HF ), mode, st, vol->v_umask);
 }
 
 /* ----------------- */
 static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
+    char *adouble = vol->ad_path(name, ADFLAGS_DIR );
     int  dropbox = vol->v_flags;
 
     if (dir_rx_set(mode)) {
@@ -168,7 +168,7 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             return -1;
     }
 
-    if (adouble_setfilmode(vol->vfs->ad_path( name, ADFLAGS_DIR ), mode, st, vol->v_umask) < 0) 
+    if (adouble_setfilmode(vol->ad_path(name, ADFLAGS_DIR ), mode, st, vol->v_umask) < 0) 
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -201,7 +201,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 {
     int   dropbox = vol->v_flags;
     mode_t hf_mode = ad_hf_mode(mode);
-    char  *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
+    char  *adouble = vol->ad_path(name, ADFLAGS_DIR );
     char  *adouble_p = ad_dir(adouble);
 
     if (dir_rx_set(mode)) {
@@ -242,7 +242,7 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
     owner.uid = uid;
     owner.gid = gid;
 
-    adouble_p = ad_dir(vol->vfs->ad_path( name, ADFLAGS_DIR ));
+    adouble_p = ad_dir(vol->ad_path(name, ADFLAGS_DIR ));
 
     if (for_each_adouble("setdirowner", adouble_p, setdirowner_adouble_loop, &owner, noadouble, vol->v_umask)) 
         return -1;
@@ -267,7 +267,7 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 /* ----------------- */
 static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE)
 {
-	return netatalk_unlink(vol->vfs->ad_path( file, ADFLAGS_HF));
+	return netatalk_unlink(vol->ad_path(file, ADFLAGS_HF));
 }
 
 /* ----------------- */
@@ -276,8 +276,8 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
 
-    strcpy( adsrc, vol->vfs->ad_path( src, 0 ));
-    if (unix_rename( adsrc, vol->vfs->ad_path( dst, 0 )) < 0) {
+    strcpy( adsrc, vol->ad_path(src, 0 ));
+    if (unix_rename( adsrc, vol->ad_path(dst, 0 )) < 0) {
         struct stat st;
 
         err = errno;
@@ -297,7 +297,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
             ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
             if (!ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) {
             	ad_close(&ad, ADFLAGS_HF);
-    	        if (!unix_rename( adsrc, vol->vfs->ad_path( dst, 0 )) ) 
+    	        if (!unix_rename( adsrc, vol->ad_path(dst, 0 )) ) 
                    err = 0;
                 else 
                    err = errno;
@@ -389,7 +389,7 @@ static int RF_chown_ads(VFS_FUNC_ARGS_CHOWN)
     owner.gid = gid;
 
 
-    ad_p = ad_dir(vol->vfs->ad_path(path, ADFLAGS_HF ));
+    ad_p = ad_dir(vol->ad_path(path, ADFLAGS_HF ));
 
     if ( stat( ad_p, &st ) < 0 ) {
 	/* ignore */
@@ -494,13 +494,13 @@ static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_
 
 static int RF_setfilmode_ads(VFS_FUNC_ARGS_SETFILEMODE)
 {
-    return ads_setfilmode(ad_dir(vol->vfs->ad_path( name, ADFLAGS_HF )), mode, st, vol->v_umask);
+    return ads_setfilmode(ad_dir(vol->ad_path(name, ADFLAGS_HF )), mode, st, vol->v_umask);
 }
 
 /* ------------------- */
 static int RF_setdirunixmode_ads(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
+    char *adouble = vol->ad_path(name, ADFLAGS_DIR );
     char   ad_p[ MAXPATHLEN + 1];
     int dropbox = vol->v_flags;
 
@@ -517,7 +517,7 @@ static int RF_setdirunixmode_ads(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             return -1;
     }
 
-    if (ads_setfilmode(ad_dir(vol->vfs->ad_path( name, ADFLAGS_DIR)), mode, st, vol->v_umask) < 0)
+    if (ads_setfilmode(ad_dir(vol->ad_path(name, ADFLAGS_DIR)), mode, st, vol->v_umask) < 0)
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -565,7 +565,7 @@ static int setdirmode_ads_loop(struct dirent *de _U_, char *name, void *data, in
 
 static int RF_setdirmode_ads(VFS_FUNC_ARGS_SETDIRMODE)
 {
-    char *adouble = vol->vfs->ad_path( name, ADFLAGS_DIR );
+    char *adouble = vol->ad_path(name, ADFLAGS_DIR );
     char   ad_p[ MAXPATHLEN + 1];
     struct dir_mode param;
 
@@ -628,7 +628,7 @@ static int RF_setdirowner_ads(VFS_FUNC_ARGS_SETDIROWNER)
     owner.uid = uid;
     owner.gid = gid;
 
-    strlcpy(adouble_p, ad_dir(vol->vfs->ad_path( name, ADFLAGS_DIR )), sizeof(adouble_p));
+    strlcpy(adouble_p, ad_dir(vol->ad_path(name, ADFLAGS_DIR )), sizeof(adouble_p));
 
     if (for_each_adouble("setdirowner", ad_dir(adouble_p), setdirowner_ads_loop, &owner, noadouble, 0)) 
         return -1;
@@ -653,7 +653,7 @@ static int RF_setdirowner_ads(VFS_FUNC_ARGS_SETDIROWNER)
 /* ------------------- */
 static int RF_deletefile_ads(VFS_FUNC_ARGS_DELETEFILE)
 {
-    char *ad_p = ad_dir(vol->vfs->ad_path(file, ADFLAGS_HF ));
+    char *ad_p = ad_dir(vol->ad_path(file, ADFLAGS_HF ));
 
     return ads_delete_rf(ad_p);
 }
@@ -664,8 +664,8 @@ static int RF_renamefile_ads(VFS_FUNC_ARGS_RENAMEFILE)
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
 
-    strcpy( adsrc, ad_dir(vol->vfs->ad_path( src, 0 )));
-    if (unix_rename( adsrc, ad_dir(vol->vfs->ad_path( dst, 0 ))) < 0) {
+    strcpy( adsrc, ad_dir(vol->ad_path(src, 0 )));
+    if (unix_rename( adsrc, ad_dir(vol->ad_path(dst, 0 ))) < 0) {
         struct stat st;
 
         err = errno;
@@ -688,7 +688,7 @@ static int RF_renamefile_ads(VFS_FUNC_ARGS_RENAMEFILE)
 
             	/* We must delete it */
             	RF_deletefile_ads(vol, dst );
-    	        if (!unix_rename( adsrc, ad_dir(vol->vfs->ad_path( dst, 0 ))) ) 
+    	        if (!unix_rename( adsrc, ad_dir(vol->ad_path(dst, 0 ))) ) 
                    err = 0;
                 else 
                    err = errno;
@@ -719,19 +719,19 @@ static int RF_renamedir_osx(VFS_FUNC_ARGS_RENAMEDIR)
 {
     /* We simply move the corresponding ad file as well */
     char   tempbuf[258]="._";
-    return rename(vol->vfs->ad_path(oldpath,0),strcat(tempbuf,newpath));
+    return rename(vol->ad_path(oldpath,0),strcat(tempbuf,newpath));
 }
 
 /* ---------------- */
 static int RF_deletecurdir_osx(VFS_FUNC_ARGS_DELETECURDIR)
 {
-    return netatalk_unlink( vol->vfs->ad_path(".",0) );
+    return netatalk_unlink( vol->ad_path(".",0) );
 }
 
 /* ---------------- */
 static int RF_setdirunixmode_osx(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    return adouble_setfilmode(vol->vfs->ad_path( name, ADFLAGS_DIR ), mode, st, vol->v_umask);
+    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_DIR ), mode, st, vol->v_umask);
 }
 
 /* ---------------- */
@@ -752,9 +752,9 @@ static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
 
-    strcpy( adsrc, vol->vfs->ad_path( src, 0 ));
+    strcpy( adsrc, vol->ad_path(src, 0 ));
 
-    if (unix_rename( adsrc, vol->vfs->ad_path( dst, 0 )) < 0) {
+    if (unix_rename( adsrc, vol->ad_path(dst, 0 )) < 0) {
         struct stat st;
 
         err = errno;
@@ -780,24 +780,18 @@ static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
  */
 
 /* 
- * Currently the maximum will be:
- * main adouble module + EA module + ACL module + NULL = 4.
- * NULL is an end of array marker.
- */
-static struct vfs_ops *vfs[4] = { NULL };
-
-/* 
  * Define most VFS funcs with macros as they all do the same.
  * Only "ad_path" and "validupath" will NOT do stacking and only
  * call the func from the first module.
  */
+
 #define VFS_MFUNC(name, args, vars) \
     static int vfs_ ## name(args) \
     { \
         int i = 0, ret = AFP_OK, err; \
-        while (vfs[i]) { \
-            if (vfs[i]->vfs_ ## name) { \
-                err = vfs[i]->vfs_ ## name (vars); \
+        while (vol->vfs_modules[i]) { \
+            if (vol->vfs_modules[i]->vfs_ ## name) { \
+                err = vol->vfs_modules[i]->vfs_ ## name (vars); \
                 if ((ret == AFP_OK) && (err != AFP_OK)) \
                     ret = err; \
             } \
@@ -824,14 +818,9 @@ VFS_MFUNC(ea_list, VFS_FUNC_ARGS_EA_LIST, VFS_FUNC_VARS_EA_LIST)
 VFS_MFUNC(ea_set, VFS_FUNC_ARGS_EA_SET, VFS_FUNC_VARS_EA_SET)
 VFS_MFUNC(ea_remove, VFS_FUNC_ARGS_EA_REMOVE, VFS_FUNC_VARS_EA_REMOVE)
 
-static char *vfs_path(const char *path, int flags)
-{
-    return vfs[0]->ad_path(path, flags);
-}
-
 static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH)
 {
-    return vfs[0]->vfs_validupath(VFS_FUNC_VARS_VALIDUPATH);
+    return vol->vfs_modules[0]->vfs_validupath(VFS_FUNC_VARS_VALIDUPATH);
 }
 
 /*
@@ -839,7 +828,6 @@ static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH)
  * These funcs are defined via the macros above.
  */
 static struct vfs_ops vfs_master_funcs = {
-    vfs_path,
     vfs_validupath,
     vfs_chown,
     vfs_renamedir,
@@ -865,7 +853,6 @@ static struct vfs_ops vfs_master_funcs = {
  */
 
 static struct vfs_ops netatalk_adouble = {
-    /* vfs_path:          */ ad_path,
     /* vfs_validupath:    */ validupath_adouble,
     /* vfs_chown:         */ RF_chown_adouble,
     /* vfs_renamedir:     */ RF_renamedir_adouble,
@@ -880,7 +867,6 @@ static struct vfs_ops netatalk_adouble = {
 };
 
 static struct vfs_ops netatalk_adouble_osx = {
-    /* vfs_path:          */ ad_path_osx,
     /* vfs_validupath:    */ validupath_osx,
     /* vfs_chown:         */ RF_chown_adouble,
     /* vfs_renamedir:     */ RF_renamedir_osx,
@@ -896,7 +882,6 @@ static struct vfs_ops netatalk_adouble_osx = {
 
 /* samba sfm format. ad_path shouldn't be set her */
 static struct vfs_ops netatalk_adouble_sfm = {
-    /* vfs_path:          */ ad_path_sfm,
     /* vfs_validupath:    */ validupath_adouble,
     /* vfs_chown:         */ RF_chown_ads,
     /* vfs_renamedir:     */ RF_renamedir_adouble,
@@ -915,7 +900,6 @@ static struct vfs_ops netatalk_adouble_sfm = {
  */
 
 static struct vfs_ops netatalk_ea_adouble = {
-    /* vfs_path:          */ NULL,
     /* vfs_validupath:    */ NULL,
     /* vfs_chown:         */ ea_chown,
     /* vfs_renamedir:     */ NULL, /* ok */
@@ -938,7 +922,6 @@ static struct vfs_ops netatalk_ea_adouble = {
 
 #ifdef HAVE_SOLARIS_EAS
 static struct vfs_ops netatalk_ea_solaris = {
-    /* ad_path:           */ NULL,
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
     /* rf_renamedir:      */ NULL,
@@ -966,7 +949,6 @@ static struct vfs_ops netatalk_ea_solaris = {
 
 #ifdef HAVE_NFSv4_ACLS
 static struct vfs_ops netatalk_solaris_acl_adouble = {
-    /* ad_path:           */ NULL,
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
     /* rf_renamedir:      */ NULL,
@@ -991,13 +973,13 @@ void initvol_vfs(struct vol *vol)
 
     /* Default adouble stuff */
     if (vol->v_adouble == AD_VERSION2_OSX) {
-        vfs[0] = &netatalk_adouble_osx;
+        vol->vfs_modules[0] = &netatalk_adouble_osx;
     }
     else if (vol->v_adouble == AD_VERSION1_SFM) {
-        vfs[0] = &netatalk_adouble_sfm;
+        vol->vfs_modules[0] = &netatalk_adouble_sfm;
     }
     else {
-        vfs[0] = &netatalk_adouble;
+        vol->vfs_modules[0] = &netatalk_adouble;
     }
 
     /* Extended Attributes */
@@ -1005,7 +987,7 @@ void initvol_vfs(struct vol *vol)
 
 #ifdef HAVE_SOLARIS_EAS
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with Solaris native EAs.");
-        vfs[1] = &netatalk_ea_solaris;
+        vol->vfs_modules[1] = &netatalk_ea_solaris;
 #else
         LOG(log_error, logtype_afpd, "initvol_vfs: Can't enable Solaris EA support.");
         goto enable_adea;
@@ -1014,11 +996,11 @@ void initvol_vfs(struct vol *vol)
     enable_adea:
         /* default: AFPVOL_EA_AD */
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with adouble files.");
-        vfs[1] = &netatalk_ea_adouble;
+        vol->vfs_modules[1] = &netatalk_ea_adouble;
     }
 
     /* ACLs */
 #ifdef HAVE_NFSv4_ACLS
-    vfs[2] = &netatalk_solaris_acl_adouble;
+    vol->vfs_modules[2] = &netatalk_solaris_acl_adouble;
 #endif
 }

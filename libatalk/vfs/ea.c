@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.12 2009-10-25 05:45:59 didg Exp $
+  $Id: ea.c,v 1.13 2009-10-29 13:06:19 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -300,7 +300,7 @@ static char * ea_path(const struct ea * restrict ea,
     static char pathbuf[MAXPATHLEN + 1];
 
     /* get name of a adouble file from uname */
-    adname = ea->vol->vfs->ad_path(ea->filename, (ea->ea_flags & EA_DIR) ? ADFLAGS_DIR : 0);
+    adname = ea->vol->ad_path(ea->filename, (ea->ea_flags & EA_DIR) ? ADFLAGS_DIR : 0);
     /* copy it so we can work with it */
     strlcpy(pathbuf, adname, MAXPATHLEN + 1);
     /* append "::EA" */

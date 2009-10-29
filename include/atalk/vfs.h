@@ -82,13 +82,13 @@
 #define VFS_FUNC_ARGS_EA_REMOVE const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag
 #define VFS_FUNC_VARS_EA_REMOVE vol, uname, attruname, oflag
 
-struct vfs_ops {
-    /* low level adouble fn */
-    char *(*ad_path)        (const char *, int); /* name is ad_path because it was too
-                                                    much work to change all calls to
-                                                    sth. different eg vfs_path */
+/*
+ * Forward declaration. We need it because of the circular inclusion of
+ * of vfs.h <-> volume.h. 
+ */
+struct vol;
 
-    /* */
+struct vfs_ops {
     int (*vfs_validupath)    (VFS_FUNC_ARGS_VALIDUPATH);
     int (*vfs_chown)         (VFS_FUNC_ARGS_CHOWN);
     int (*vfs_renamedir)     (VFS_FUNC_ARGS_RENAMEDIR);

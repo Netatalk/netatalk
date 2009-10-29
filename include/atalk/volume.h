@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.1 2009-10-02 09:32:41 franklahm Exp $
+ * $Id: volume.h,v 1.2 2009-10-29 13:06:19 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,6 +15,7 @@
 #include <atalk/unicode.h>
 #include <atalk/cnid.h>
 #include <atalk/hash.h>
+#include <atalk/vfs.h>
 
 #define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
 #define AFPVOL_MACNAMELEN    27 /* AFP2 spec */
@@ -65,8 +66,8 @@ struct vol {
     char                *v_volcodepage;
     charset_t		v_volcharset;	
     struct charset_functions	*v_vol;
-    char		*v_maccodepage;
-    charset_t		v_maccharset;
+    char		        *v_maccodepage;
+    charset_t		    v_maccharset;
     struct charset_functions	*v_mac;
 
     int                 v_deleted;    /* volume open but deleted in new config file */
@@ -85,9 +86,9 @@ struct vol {
     int                 v_preexec_close;
     
     /* adouble indirection */
-    struct vfs_ops      *vfs;
+    struct vfs_ops      *vfs;   /* pointer to vfs_master_funcs for chaining */
+    const struct vfs_ops *vfs_modules[4];
     int                 v_vfs_ea;       /* The AFPVOL_EA_xx flag */
-    int                 (*validupath)(const struct vol *, const char *);
     char                *(*ad_path)(const char *, int);
 };
 
