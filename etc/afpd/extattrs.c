@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.18 2009-10-29 10:34:15 didg Exp $
+  $Id: extattrs.c,v 1.19 2009-10-29 10:53:52 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -316,12 +316,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name, attrmname);
 
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 255)) )
+    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 256)) )
         return AFPERR_MISC;
-
-    if (attrnamelen == 255)
-        /* convert_string didn't 0-terminate */
-        attruname[255] = 0;
 
     /* write bitmap now */
     bitmap = htons(bitmap);
@@ -408,12 +404,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     ibuf += attrnamelen;
 
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 255)) )
+    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 256)) )
         return AFPERR_MISC;
-
-    if (attrnamelen == 255)
-        /* convert_string didn't 0-terminate */
-        attruname[255] = 0;
 
     /* get EA size */
     memcpy(&attrsize, ibuf, sizeof(attrsize));
@@ -488,12 +480,8 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     ibuf += attrnamelen;
 
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 255)) )
+    if ( 0 >= ( attrnamelen = convert_string(CH_UTF8_MAC, obj->options.unixcharset,attrmname, attrnamelen, attruname, 256)) )
         return AFPERR_MISC;
-
-    if (attrnamelen == 255)
-        /* convert_string didn't 0-terminate */
-        attruname[255] = 0;
 
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name, attrmname);
 
