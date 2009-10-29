@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.17 2009-10-29 10:27:45 didg Exp $
+  $Id: extattrs.c,v 1.18 2009-10-29 10:34:15 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -70,7 +70,7 @@ static void hexdump(void *m, size_t l) {
   EA names, secondly it wants these names. In order to avoid scanning EAs twice
   we cache them in a static buffer.
 */
-int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     int                 ret, oflag = 0, adflags = 0;
     uint16_t            vid, bitmap, uint16;
@@ -342,7 +342,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     return ret;
 }
 
-int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     int                 oflag = O_CREAT | O_WRONLY, ret;
     uint16_t            vid, bitmap, attrnamelen;
@@ -430,7 +430,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     return ret;
 }
 
-int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     int                 oflag = O_RDONLY, ret;
     uint16_t            vid, bitmap, attrnamelen;
