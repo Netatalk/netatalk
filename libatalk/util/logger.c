@@ -31,20 +31,73 @@ Netatalk 2001 (c)
 #include <atalk/boolean.h>
 #include <atalk/util.h>
 
-#define LOGGER_C
 #include <atalk/logger.h>
-#undef LOGGER_C
 
 #define OPEN_LOGS_AS_UID 0
 
 #define COUNT_ARRAY(array) (sizeof((array))/sizeof((array)[0]))
+
+#define MAXLOGSIZE 512
+
+#define LOGLEVEL_STRING_IDENTIFIERS { \
+  "LOG_NOTHING",                      \
+  "LOG_SEVERE",                       \
+  "LOG_ERROR",                        \
+  "LOG_WARN",                         \
+  "LOG_NOTE",                         \
+  "LOG_INFO",                         \
+  "LOG_DEBUG",                        \
+  "LOG_DEBUG6",                       \
+  "LOG_DEBUG7",                       \
+  "LOG_DEBUG8",                       \
+  "LOG_DEBUG9",                       \
+  "LOG_MAXDEBUG"}                        
+
+/* these are the string identifiers corresponding to each logtype */
+#define LOGTYPE_STRING_IDENTIFIERS { \
+  "Default",                         \
+  "Core",                            \
+  "Logger",                          \
+  "CNID",                            \
+  "AFPDaemon",                       \
+  "ATalkDaemon",                     \
+  "PAPDaemon",                       \
+  "UAMSDaemon",                      \
+                                     \
+  "end_of_list_marker"}              \
+
+/* ========================================================================= 
+    Structure definitions
+   ========================================================================= */
+
+/* Main log config */
+typedef struct {
+    int   inited;		  /* file log config initialized ? */
+    int   filelogging;		  /* Any level set to filelogging ? */
+                                  /* Deactivates syslog logging */
+    char  processname[16];
+    int   syslog_opened;	  /* syslog opened ? */
+    int   facility;               /* syslog facility to use */
+    int   syslog_display_options;
+    int   syslog_level;           /* Log Level to send to syslog */
+} log_config_t;
+
+/* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
+typedef struct {
+    int  set;			  /* set individually ? yes: changing default
+				   * doesnt change it. no: it changes it.*/
+    char *filename;               /* Name of file */
+    int  fd;                      /* logfiles fd */
+    int  level;                   /* Log Level to put in this file */
+    int  display_options;
+} filelog_conf_t;
 
 /* =========================================================================
    Config
    ========================================================================= */
 
 /* Main log config container, must be globally visible */
-log_config_t log_config = {
+static log_config_t log_config = {
     0,                  /* Initialized ? 0 = no */
     0,                  /* No filelogging setup yet */
     {0},                /* processname */
@@ -62,7 +115,7 @@ log_config_t log_config = {
    0:    Display options */
 #define DEFAULT_LOG_CONFIG {0, NULL, -1, 0, 0}
 
-filelog_conf_t file_configs[logtype_end_of_list_marker] = {
+static filelog_conf_t file_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
     DEFAULT_LOG_CONFIG, /* logtype_core */
     DEFAULT_LOG_CONFIG, /* logtype_logger */
@@ -74,8 +127,8 @@ filelog_conf_t file_configs[logtype_end_of_list_marker] = {
 };
 
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
-char *log_src_filename;
-int  log_src_linenumber;
+static const char *log_src_filename;
+static int  log_src_linenumber;
 
 /* Array to store text to list given a log type */
 static const char *arr_logtype_strings[] =  LOGTYPE_STRING_IDENTIFIERS;
@@ -372,13 +425,25 @@ void set_processname(const char *processname)
     log_config.processname[15] = 0;
 }
 
+/* Called by the LOG macro for syslog messages */
+static void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message)
+{
+    if ( !log_config.syslog_opened ) {
+        openlog(log_config.processname, log_config.syslog_display_options,
+                log_config.facility);
+        log_config.syslog_opened = 1;
+    }
+
+    syslog(get_syslog_equivalent(loglevel), "%s", message);
+}
+
 /* -------------------------------------------------------------------------
    make_log_entry has 1 main flaws:
    The message in its entirity, must fit into the tempbuffer.
    So it must be shorter than MAXLOGSIZE
    ------------------------------------------------------------------------- */
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
-                    char *message, ...)
+                    const char *file, int line, char *message, ...)
 {
     /* fn is not reentrant but is used in signal handler
      * with LOGGER it's a little late source name and line number
@@ -393,6 +458,31 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     if (inlog)
         return;
 
+    inlog = 1;
+
+    if (!log_config.inited) {
+      log_init();
+    }
+    
+    if (file_configs[logtype].level >= loglevel) {
+      log_src_filename = file;
+      log_src_linenumber = line;
+    }
+    else if (!log_config.filelogging && log_config.syslog_level >= loglevel) {
+       /* Initialise the Messages */
+       va_start(args, message);
+       vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
+       va_end(args);
+       temp_buffer[MAXLOGSIZE -1] = 0;
+       make_syslog_entry(loglevel, logtype, temp_buffer);
+       inlog = 0;
+       return;
+    }
+    else {
+       inlog = 0;
+       return;
+    }
+
     /* Check if requested logtype is setup */
     if (file_configs[logtype].set)
         /* Yes */
@@ -406,7 +496,6 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         return;
     }
 
-    inlog = 1;
     /* Initialise the Messages */
     va_start(args, message);
     len = vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
@@ -440,40 +529,10 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     inlog = 0;
 }
 
-/* Called by the LOG macro for syslog messages */
-void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message, ...)
-{
-    va_list args;
-    char log_buffer[MAXLOGSIZE];
-    /* fn is not reentrant but is used in signal handler
-     * with LOGGER it's a little late source name and line number
-     * are already changed.
-     */
-    static int inlog = 0;
-
-    if (inlog)
-        return;
-    inlog = 1;
-
-    if ( ! (log_config.syslog_opened) ) {
-        openlog(log_config.processname, log_config.syslog_display_options,
-                log_config.facility);
-        log_config.syslog_opened = 1;
-    }
-
-    /* Initialise the Messages */
-    va_start(args, message);
-    vsnprintf(log_buffer, sizeof(log_buffer), message, args);
-    va_end(args);
-    log_buffer[MAXLOGSIZE -1] = 0;
-    syslog(get_syslog_equivalent(loglevel), "%s", log_buffer);
-
-    inlog = 0;
-}
 
 void setuplog(const char *logstr)
 {
-    char *ptr, *ptrbak, *logtype, *loglevel, *filename;
+    char *ptr, *ptrbak, *logtype, *loglevel = NULL, *filename = NULL;
     ptr = strdup(logstr);
     ptrbak = ptr;
 

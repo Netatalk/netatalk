@@ -64,8 +64,6 @@
 #include "config.h"
 #endif
 
-#define MAXLOGSIZE 512
-
 enum loglevels {
     log_none,
     log_severe,
@@ -73,36 +71,13 @@ enum loglevels {
     log_warning,
     log_note,
     log_info,
-#ifndef NO_DEBUG
     log_debug,
     log_debug6,
     log_debug7,
     log_debug8,
     log_debug9,
     log_maxdebug
-#else
-#define log_debug -1
-#define log_debug6 -1
-#define log_debug7 -1
-#define log_debug8 -1
-#define log_debug9 -1
-#define log_maxdebug -1 
-#endif    
 };
-
-#define LOGLEVEL_STRING_IDENTIFIERS { \
-  "LOG_NOTHING",                      \
-  "LOG_SEVERE",                       \
-  "LOG_ERROR",                        \
-  "LOG_WARN",                         \
-  "LOG_NOTE",                         \
-  "LOG_INFO",                         \
-  "LOG_DEBUG",                        \
-  "LOG_DEBUG6",                       \
-  "LOG_DEBUG7",                       \
-  "LOG_DEBUG8",                       \
-  "LOG_DEBUG9",                       \
-  "LOG_MAXDEBUG"}                        
 
 /* this is the enum specifying all availiable logtypes */
 enum logtypes {
@@ -118,18 +93,6 @@ enum logtypes {
   logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
 
-/* these are the string identifiers corresponding to each logtype */
-#define LOGTYPE_STRING_IDENTIFIERS { \
-  "Default",                         \
-  "Core",                            \
-  "Logger",                          \
-  "CNID",                            \
-  "AFPDaemon",                       \
-  "ATalkDaemon",                     \
-  "PAPDaemon",                       \
-  "UAMSDaemon",                      \
-                                     \
-  "end_of_list_marker"}              \
 
 /* Display Option flags. */
 /* redefine these so they can don't interfeer with syslog */
@@ -154,46 +117,6 @@ enum logtypes {
 #define logfacility_lpr         (6<<3)  /* line printer subsystem */
 #define logfacility_authpriv    (10<<3) /* security/auth messages (private) */
 #define logfacility_ftp         (11<<3) /* ftp daemon */
-
-/* ========================================================================= 
-    Structure definitions
-   ========================================================================= */
-
-/* Main log config */
-typedef struct {
-    int   inited;		  /* file log config initialized ? */
-    int   filelogging;		  /* Any level set to filelogging ? */
-                                  /* Deactivates syslog logging */
-    char  processname[16];
-    int   syslog_opened;	  /* syslog opened ? */
-    int   facility;               /* syslog facility to use */
-    int   syslog_display_options;
-    int   syslog_level;           /* Log Level to send to syslog */
-} log_config_t;
-
-/* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
-typedef struct {
-    int  set;			  /* set individually ? yes: changing default
-				   * doesnt change it. no: it changes it.*/
-    char *filename;               /* Name of file */
-    int  fd;                      /* logfiles fd */
-    int  level;                   /* Log Level to put in this file */
-    int  display_options;
-} filelog_conf_t;
-
-/* ========================================================================= 
-    Global variables
-   ========================================================================= */
-
-#ifndef LOGGER_C
-/* Make config accessible for LOG macro */
-extern log_config_t log_config;
-extern filelog_conf_t file_configs[logtype_end_of_list_marker];
-
-/* These are used by the LOG macro to store __FILE__ and __LINE__ */
-extern char *log_src_filename;
-extern int  log_src_linenumber;
-#endif
 
 /* =========================================================================
     Global function decarations
@@ -236,26 +159,24 @@ void set_processname(const char *processname);
  */
 
 /* LOG macro func no.1: log the message to file */
-void make_log_entry(enum loglevels loglevel, enum logtypes logtype, char *message, ...);
-
-/* LOG macro func no.2: log the message to syslog */
-void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *message, ...);
+void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
 
 /* 
    Note:
    any configured file-logging deactivates syslog logging
+   log_level is always a constant with O2 a sane compiler will remove the call to
+   make_log_entry
  */
+#ifdef NO_DEBUG
+#define LOG_MAX log_info
+#else 
+#define LOG_MAX log_maxdebug
+#endif
+
 #define LOG(log_level, type, ...)  \
   do { \
-    if (log_level < 0) \
+    if (log_level > LOG_MAX) \
       break; \
-    if ( ! log_config.inited) \
-      log_init(); \
-    if (file_configs[(type)].level >= (log_level)) \
-      log_src_filename = __FILE__, \
-      log_src_linenumber = __LINE__, \
-      make_log_entry((log_level), (type), __VA_ARGS__); \
-    else if (( ! log_config.filelogging) && (log_config.syslog_level >= (log_level))) \
-       make_syslog_entry((log_level), (type), __VA_ARGS__); \
+    make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
   } while(0)  
 #endif /* _ATALK_LOGGER_H */
