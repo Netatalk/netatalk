@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.16 2009-10-29 10:04:35 didg Exp $
+  $Id: extattrs.c,v 1.17 2009-10-29 10:27:45 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -78,7 +78,7 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
-    struct stat         st;
+    struct stat         *st;
     struct adouble      ad, *adp = NULL;
     struct ofork        *of;
     char                *uname, *FinderInfo;
@@ -132,9 +132,17 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
             LOG(log_error, logtype_afpd, "afp_listextattr: cname error: %s", strerror(errno));
             return AFPERR_NOOBJ;
         }
-        uname = s_path->u_name;
 
-        /*
+        st   = &s_path->st;
+        if (!s_path->st_valid) {
+            /* it's a dir in our cache, we didn't stat it, do it now */
+            of_statdir(vol, s_path);
+        }
+        if ( s_path->st_errno != 0 ) {
+            return( AFPERR_NOOBJ );
+        }
+
+        uname = s_path->u_name;        /*
           We have to check the FinderInfo for the file, because if they aren't all 0
           we must return the synthetic attribute "com.apple.FinderInfo".
           Note: the client will never (never seen in traces) request that attribute
@@ -147,8 +155,7 @@ int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
             adp = &ad;
         }
 
-        stat(uname, &st);
-        if (S_ISDIR(st.st_mode))
+        if (S_ISDIR(st->st_mode))
             adflags = ADFLAGS_DIR;
 
         if ( ad_metadata( uname, adflags, adp) < 0 ) {
