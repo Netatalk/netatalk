@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.61 2009-10-27 23:35:17 didg Exp $
+ * $Id: filedir.c,v 1.62 2009-10-29 12:58:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -141,10 +141,6 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     u_int16_t		fbitmap, dbitmap, vid;
     struct path         *s_path;
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_getfildirparams:");
-#endif /* DEBUG */
-
     *rbuflen = 0;
     ibuf += 2;
 
@@ -219,10 +215,6 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     rbuf += sizeof( dbitmap ) + sizeof( u_char );
     *rbuf = 0;
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_getfildirparams:");
-#endif /* DEBUG */
-
     return( AFP_OK );
 }
 
@@ -234,10 +226,6 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     struct path *path;
     u_int16_t	vid, bitmap;
     int		did, rc;
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_setfildirparams:");
-#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -292,10 +280,6 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     if ( rc == AFP_OK ) {
         setvoltime(obj, vol );
     }
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_setfildirparams:");
-#endif /* DEBUG */
 
     return( rc );
 }
@@ -446,9 +430,6 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     u_int16_t	vid;
     int         isdir = 0;
     int         rc;
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_rename:");
-#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -510,10 +491,6 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         setvoltime(obj, vol );
     }
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_rename:");
-#endif /* DEBUG */
-
     return( rc );
 }
 
@@ -526,10 +503,6 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     char		*upath;
     int			did, rc;
     u_int16_t		vid;
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_delete:");
-#endif /* DEBUG */ 
 
     *rbuflen = 0;
     ibuf += 2;
@@ -579,10 +552,6 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 	curdir->offcnt--;
         setvoltime(obj, vol );
     }
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_delete:");
-#endif /* DEBUG */
 
     return( rc );
 }
@@ -650,10 +619,6 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 #ifdef DROPKLUDGE
     int		retvalue;
 #endif /* DROPKLUDGE */
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_moveandrename:");
-#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -745,10 +710,6 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
             }
         setvoltime(obj, vol );
     }
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_moveandrename:");
-#endif /* DEBUG */
 
     return( rc );
 }

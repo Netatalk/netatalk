@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.116 2009-10-27 23:35:17 didg Exp $
+ * $Id: file.c,v 1.117 2009-10-29 12:58:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -575,10 +575,6 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     u_int16_t		vid;
     struct path		*s_path;
     
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_createfile:");
-#endif /* DEBUG */
-
     *rbuflen = 0;
     ibuf++;
     creatf = (unsigned char) *ibuf++;
@@ -680,10 +676,6 @@ createfile_done:
 
     setvoltime(obj, vol );
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_createfile");
-#endif /* DEBUG */
-
     return (retvalue);
 }
 
@@ -694,10 +686,6 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     struct path *s_path;
     int		did, rc;
     u_int16_t	vid, bitmap;
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_setfilparams:");
-#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -740,10 +728,6 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     if (AFP_OK == ( rc = setfilparams(vol, s_path, bitmap, ibuf )) ) {
         setvoltime(obj, vol );
     }
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_setfilparams:");
-#endif /* DEBUG */
 
     return( rc );
 }
@@ -1160,10 +1144,6 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     struct adouble ad, *adp;
     int denyreadset;
     
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_copyfile:");
-#endif /* DEBUG */
-
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1260,10 +1240,6 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
 #endif /* DROPKLUDGE */
 
     setvoltime(obj, d_vol );
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_copyfile:");
-#endif /* DEBUG */
 
     return( retvalue );
 }
@@ -1609,10 +1585,6 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     u_short		vid;
     struct path         *s_path;
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_createid:");
-#endif /* DEBUG */
-
     *rbuflen = 0;
 
     ibuf += 2;
@@ -1671,9 +1643,6 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         return AFP_OK;
     }
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "ending afp_createid...:");
-#endif /* DEBUG */
     return afp_errno;
 }
 
@@ -1773,10 +1742,6 @@ int afp_resolveid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     static char buffer[12 + MAXPATHLEN + 1];
     int len = 12 + MAXPATHLEN + 1;
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_resolveid:");
-#endif /* DEBUG */
-
     *rbuflen = 0;
     ibuf += 2;
 
@@ -1865,10 +1830,6 @@ retry:
     *rbuflen = buflen + sizeof(bitmap);
     memcpy(rbuf, ibuf, sizeof(bitmap));
 
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_resolveid:");
-#endif /* DEBUG */
-
     return AFP_OK;
 }
 
@@ -1885,10 +1846,6 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     u_short		vid;
     static char buffer[12 + MAXPATHLEN + 1];
     int len = 12 + MAXPATHLEN + 1;
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_deleteid:");
-#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1950,10 +1907,6 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
             return AFPERR_PARAM;
         }
     }
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end afp_deleteid:");
-#endif /* DEBUG */
 
     return err;
 }
@@ -2030,10 +1983,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 
     uid_t              uid;
     gid_t              gid;
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin afp_exchangefiles:");
-#endif /* DEBUG */
 
     *rbuflen = 0;
     ibuf += 2;
@@ -2237,10 +2186,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
         exit(EXITERR_SYS);
     }
-
-#ifdef DEBUG
-    LOG(log_info, logtype_afpd, "ending afp_exchangefiles:");
-#endif /* DEBUG */
 
     err = AFP_OK;
     goto err_exchangefile;
