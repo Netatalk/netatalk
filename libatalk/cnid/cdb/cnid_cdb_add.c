@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_add.c,v 1.5 2009-10-14 01:38:28 didg Exp $
+ * $Id: cnid_cdb_add.c,v 1.6 2009-10-29 13:17:29 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -186,7 +186,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
     /* ... Return id if it is valid, or if Rootinfo is read-only. */
     if (id || (db->flags & CNIDFLAG_DB_RO)) {
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_add: Looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
+        LOG(log_debug, logtype_default, "cnid_add: Looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
 #endif
         return id;
     }
@@ -237,7 +237,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "cnid_add: Returned CNID for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
+    LOG(log_debug, logtype_default, "cnid_add: Returned CNID for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
 #endif
 
     return hint;
@@ -286,7 +286,7 @@ int cnid_cdb_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 
     memcpy(buffer, (char*)data.data + CNID_DEV_OFS, len);
 #ifdef DEBUG
-    LOG(log_info, logtype_cnid, "cnid_getstamp: Returning stamp");
+    LOG(log_debug, logtype_cnid, "cnid_getstamp: Returning stamp");
 #endif
    return 0;
 }

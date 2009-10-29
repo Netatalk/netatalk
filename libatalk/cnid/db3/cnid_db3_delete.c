@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_delete.c,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
+ * $Id: cnid_db3_delete.c,v 1.3 2009-10-29 13:17:29 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -55,7 +55,7 @@ int cnid_db3_delete(struct _cnid_db *cdb, const cnid_t id) {
             break;
         case DB_NOTFOUND:
 #ifdef DEBUG
-            LOG(log_info, logtype_default, "cnid_delete: CNID %u not in database",
+            LOG(log_debug, logtype_default, "cnid_delete: CNID %u not in database",
                 ntohl(id));
 #endif
             return 0;
@@ -141,7 +141,7 @@ retry:
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "cnid_delete: Deleting CNID %u", ntohl(id));
+    LOG(log_debug, logtype_default, "cnid_delete: Deleting CNID %u", ntohl(id));
 #endif
     if ((rc = db3_txn_commit(tid, 0)) != 0) {
         LOG(log_error, logtype_default, "cnid_delete: Failed to commit transaction: %s",

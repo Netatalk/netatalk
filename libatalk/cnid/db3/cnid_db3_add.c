@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_add.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_db3_add.c,v 1.4 2009-10-29 13:17:29 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -154,14 +154,14 @@ retry:
         hint = htonl(id);
 /* #ifdef DEBUG */
 #if 0
-        LOG(log_info, logtype_default, "cnid_add: Found rootinfo for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
+        LOG(log_debug, logtype_default, "cnid_add: Found rootinfo for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
 #endif
         break;
     case DB_NOTFOUND:
         hint = htonl(CNID_START);
 /* #ifdef DEBUG */
 #if 0
-        LOG(log_info, logtype_default, "cnid_add: Using CNID_START for did %u, name %s", ntohl(did), name);
+        LOG(log_debug, logtype_default, "cnid_add: Using CNID_START for did %u, name %s", ntohl(did), name);
 #endif
         break;
     default:
@@ -220,7 +220,7 @@ cnid_t cnid_db3_add(struct _cnid_db *cdb, const struct stat *st,
     /* ... Return id if it is valid, or if Rootinfo is read-only. */
     if (id || (db->flags & CNIDFLAG_DB_RO)) {
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_add: Looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
+        LOG(log_debug, logtype_default, "cnid_add: Looked up did %u, name %s as %u", ntohl(did), name, ntohl(id));
 #endif
         return id;
     }
@@ -256,7 +256,7 @@ cnid_t cnid_db3_add(struct _cnid_db *cdb, const struct stat *st,
             return CNID_INVALID;
         case 0:
 #ifdef DEBUG
-            LOG(log_info, logtype_default, "cnid_add: Used hint for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
+            LOG(log_debug, logtype_default, "cnid_add: Used hint for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
 #endif
             return hint;
         }
@@ -276,7 +276,7 @@ cnid_t cnid_db3_add(struct _cnid_db *cdb, const struct stat *st,
     }
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "cnid_add: Returned CNID for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
+    LOG(log_debug, logtype_default, "cnid_add: Returned CNID for did %u, name %s as %u", ntohl(did), name, ntohl(hint));
 #endif
 
     return hint;

@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.62 2009-10-29 12:58:11 didg Exp $
+ * $Id: filedir.c,v 1.63 2009-10-29 13:17:28 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -66,7 +66,7 @@ more information */
     uid_t       uid;
     int         ret = AFP_OK;
 #ifdef DEBUG
-    LOG(log_info, logtype_afpd, "begin matchfile2dirperms:");
+    LOG(log_debug, logtype_afpd, "begin matchfile2dirperms:");
 #endif /* DEBUG */
 
     if (stat(upath, &st ) < 0) {
@@ -124,7 +124,7 @@ more information */
     } /* end else if stat success */
 
 #ifdef DEBUG
-    LOG(log_info, logtype_afpd, "end matchfile2dirperms:");
+    LOG(log_debug, logtype_afpd, "end matchfile2dirperms:");
 #endif /* DEBUG */
     return ret;
 }

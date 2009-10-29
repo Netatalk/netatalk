@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_close.c,v 1.2 2005-04-28 20:49:59 bfernhomberg Exp $
+ * $Id: cnid_db3_close.c,v 1.3 2009-10-29 13:17:29 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -86,7 +86,7 @@ void cnid_db3_close(struct _cnid_db *cdb) {
                 for (first = list; *list != NULL; ++list) {
                     if ((rc = remove(*list)) != 0) {
 #ifdef DEBUG
-                            LOG(log_info, logtype_default, "cnid_close: failed to remove %s: %s", *list, strerror(rc));
+                            LOG(log_debug, logtype_default, "cnid_close: failed to remove %s: %s", *list, strerror(rc));
 #endif
                         }
                 }

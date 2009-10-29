@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_db3_lookup.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_db3_lookup.c,v 1.4 2009-10-29 13:17:29 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +50,7 @@ cnid_t cnid_db3_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
      * a read-write database. */
     if ((db->flags & CNIDFLAG_DB_RO) == 0) {
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_lookup: Running database checkpoint");
+        LOG(log_debug, logtype_default, "cnid_lookup: Running database checkpoint");
 #endif
 #if DB_VERSION_MAJOR > 4 || (DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 1)
         if ((rc = db->dbenv->txn_checkpoint(db->dbenv, LOGFILEMAX, CHECKTIMEMAX, 0))) {
@@ -130,7 +130,7 @@ cnid_t cnid_db3_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
     /* Either entries are in both databases or neither of them. */
     if ((devino && didname) || !(devino || didname)) {
 #ifdef DEBUG
-        LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u", ntohl(did), name, ntohl(id));
+        LOG(log_debug, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u", ntohl(did), name, ntohl(id));
 #endif
         return id;
     }
@@ -138,7 +138,7 @@ cnid_t cnid_db3_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
     /* Fix up the database. */
     cnid_db3_update(cdb, id, st, did, name, len);
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name,
+    LOG(log_debug, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name,
         ntohl(id));
 #endif
     return id;

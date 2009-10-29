@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_lookup.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_cdb_lookup.c,v 1.4 2009-10-29 13:17:29 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -132,7 +132,7 @@ cnid_t cnid_cdb_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
     cnid_cdb_update(cdb, id, st, did, name, len);
 
 #ifdef DEBUG
-    LOG(log_info, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
+    LOG(log_debug, logtype_default, "cnid_lookup: Looked up did %u, name %s, as %u (needed update)", ntohl(did), name, ntohl(id));
 #endif
     return id;
 }
