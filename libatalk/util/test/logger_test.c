@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
   set_processname("logger_Test");
-
+#if 0
   LOG(log_severe, logtype_logger, "Logging Test starting: this should only log to syslog");
 
   /* syslog testing */
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   LOG(log_debug, logtype_default, "This shouldn't log to syslog. LOG(log_debug, logtype_default).");
   LOG(log_severe, logtype_logger, "Disabling syslog logging.");
   unsetuplog("Default");
-
+#endif
   /* filelog testing */
   setuplog("Default LOG_INFO test.log");
   LOG(log_info, logtype_logger, "This should log.");
