@@ -319,9 +319,9 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 	/* Fixed based on Samba 3.0.6 */
 	if (srclen == (size_t)-1) {
 		if (from == CH_UCS2) {
-			srclen = (strlen_w((const ucs2_t *)src)+1) * 2;
+			srclen = (strlen_w((const ucs2_t *)src)) * 2;
 		} else {
-			srclen = strlen((const char *)src)+1;
+			srclen = strlen((const char *)src);
 		}
 	}
 

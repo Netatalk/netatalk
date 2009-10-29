@@ -1,5 +1,5 @@
 /*
- * $Id: config.c,v 1.19 2009-10-14 02:24:05 didg Exp $
+ * $Id: config.c,v 1.20 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -678,7 +678,7 @@ int zone(struct interface *iface, char **av)
     }
 
     /* codepage conversion */
-    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, CH_MAC, av[0], strlen(av[0]), &zname)) {
+    if ((size_t)(-1) == convert_string_allocate(CH_UNIX, CH_MAC, av[0], -1, &zname)) {
 	zname = strdup(av[0]);
     }
 

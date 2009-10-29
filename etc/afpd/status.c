@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.25 2009-10-15 10:43:13 didg Exp $
+ * $Id: status.c,v 1.26 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -88,7 +88,7 @@ static int status_server(char *data, const char *server, const struct afp_option
     nbp_name(server, &Obj, &Type, &Zone);
     if ((size_t)-1 == (len = convert_string( 
 			options->unixcharset, options->maccharset, 
-			Obj, strlen(Obj), buf, sizeof(buf))) ) {
+			Obj, -1, buf, sizeof(buf))) ) {
 	len = MIN(strlen(Obj), 31);
     	*data++ = len;
     	memcpy( data, Obj, len );
@@ -417,7 +417,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
     if ((size_t) -1 == (len = convert_string (
 					options->unixcharset, CH_UTF8_MAC, 
-					Obj, strlen(Obj), data+sizeof(namelen), maxstatuslen-offset )) ) {
+					Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
 	LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
 
 	/* set offset to 0 */

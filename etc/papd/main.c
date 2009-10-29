@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.29 2009-10-14 02:24:05 didg Exp $
+ * $Id: main.c,v 1.30 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -291,7 +291,7 @@ int main(int ac, char **av)
 	}
 
 	if (!(pr->p_flags & P_CUPS)) {
-		if ((size_t)-1 != convert_string_allocate(CH_UNIX, CH_MAC, pr->p_name, strlen(pr->p_name), &atname)) {
+		if ((size_t)-1 != convert_string_allocate(CH_UNIX, CH_MAC, pr->p_name, -1, &atname)) {
 			pr->p_u_name = pr->p_name;
 			pr->p_name = atname;
 		}

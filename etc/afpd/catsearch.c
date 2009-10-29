@@ -301,7 +301,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 
 	/* Check for filename */
 	if ((c1.rbitmap & (1<<DIRPBIT_LNAME))) { 
-		if ( (size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), convbuf, 512)) )
+		if ( (size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2, path->m_name, -1, convbuf, 512)) )
 			goto crit_check_ret;
 
 		if ((c1.rbitmap & (1<<CATPBIT_PARTIAL))) {
@@ -826,7 +826,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         /* Get the long filename */	
 		memcpy(tmppath, bspec1 + spec1[1] + 1, (bspec1 + spec1[1])[0]);
 		tmppath[(bspec1 + spec1[1])[0]]= 0;
-		len = convert_string ( vol->v_maccharset, CH_UCS2, tmppath, strlen(tmppath), c1.lname, sizeof(c1.lname));
+		len = convert_string ( vol->v_maccharset, CH_UCS2, tmppath, -1, c1.lname, sizeof(c1.lname));
         if (len == (size_t)(-1))
             return AFPERR_PARAM;
 

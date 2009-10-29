@@ -1,5 +1,5 @@
 /*
- * $Id: nbprgstr.c,v 1.8 2009-10-14 02:24:05 didg Exp $
+ * $Id: nbprgstr.c,v 1.9 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,7 +80,7 @@ int main(int ac, char **av)
 
     /* Convert the name */
     if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
-                        av[optind], strlen(av[optind]), &convname))
+                        av[optind], -1, &convname))
         convname = av[optind];
 
     /*

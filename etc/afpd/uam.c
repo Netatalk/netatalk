@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.30 2009-10-22 12:35:38 franklahm Exp $
+ * $Id: uam.c,v 1.31 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -270,7 +270,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 #ifndef NO_REAL_USER_NAME
 
     if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
-				CH_UCS2, name, strlen(name), username, sizeof(username))))
+				CH_UCS2, name, -1, username, sizeof(username))))
 	return NULL;
 
     setpwent();
@@ -279,10 +279,10 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             *p = '\0';
 
 	if ((size_t)-1 == ( gecoslen = convert_string(obj->options.unixcharset, CH_UCS2, 
-				pwent->pw_gecos, strlen(pwent->pw_gecos), user, sizeof(username))) )
+				pwent->pw_gecos, -1, user, sizeof(username))) )
 		continue;
 	if ((size_t)-1 == ( pwnamelen = convert_string(obj->options.unixcharset, CH_UCS2, 
-				pwent->pw_name, strlen(pwent->pw_name), pwname, sizeof(username))) )
+				pwent->pw_name, -1, pwname, sizeof(username))) )
 		continue;
 
 

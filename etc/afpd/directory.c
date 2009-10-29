@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.115 2009-10-29 09:47:11 didg Exp $
+ * $Id: directory.c,v 1.116 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -622,7 +622,7 @@ caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
 
 
     /* LOG(log_debug, logtype_afpd, "caseenumerate: for %s", path->u_name); */
-    if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, path->u_name, strlen(path->u_name), u2_path, sizeof(u2_path)) ) 
+    if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, path->u_name, -1, u2_path, sizeof(u2_path)) ) 
         LOG(log_debug, logtype_afpd, "caseenumerate: conversion failed for %s", path->u_name);
 
     /*LOG(log_debug, logtype_afpd, "caseenumerate: dir: %s, path: %s", dir->d_u_name, path->u_name); */
@@ -631,7 +631,7 @@ caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
         if (NULL == check_dirent(vol, de->d_name))
             continue;
 
-        if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, de->d_name, strlen(de->d_name), u2_dename, sizeof(u2_dename)) )
+        if ((size_t) -1 == convert_string(vol->v_volcharset, CH_UCS2, de->d_name, -1, u2_dename, sizeof(u2_dename)) )
             continue;
 
         if (strcasecmp_w( u2_path, u2_dename) == 0) {
@@ -954,7 +954,7 @@ struct dir *
         LOG(log_error, logtype_afpd, "adddir: malloc: %s", strerror(errno) );
         return NULL;
     }
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, strlen(path->m_name), (char **)&cdir->d_m_name_ucs2)) {
+    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, path->m_name, -1, (char **)&cdir->d_m_name_ucs2)) {
         LOG(log_error, logtype_afpd, "Couldn't set UCS2 name for %s", name);
         cdir->d_m_name_ucs2 = NULL;
     }
@@ -1335,7 +1335,7 @@ cname(struct vol *vol, struct dir *dir, char **cpath)
             scdir = NULL;
 	    if ( cdir && (vol->v_flags & AFPVOL_CASEINSEN) &&
                     (size_t)-1 != convert_string_allocate(((ret.m_type == 3)?CH_UTF8_MAC:vol->v_maccharset), 
-                                                          CH_UCS2, path, strlen(path), (char **)&tmpname) )
+                                                          CH_UCS2, path, -1, (char **)&tmpname) )
             {
                 while (cdir) {
                     if (!cdir->d_m_name_ucs2) {
@@ -2474,7 +2474,7 @@ int renamedir(const struct vol *vol, char *src, char *dst,
 	free(dir->d_m_name_ucs2);
 
     dir->d_m_name_ucs2 = NULL;
-    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, dir->d_m_name, strlen(dir->d_m_name), (char**)&dir->d_m_name_ucs2))
+    if ((size_t)-1 == convert_string_allocate((utf8_encoding())?CH_UTF8_MAC:vol->v_maccharset, CH_UCS2, dir->d_m_name, -1, (char**)&dir->d_m_name_ucs2))
         dir->d_m_name_ucs2 = NULL;
 
     if (( parent = dir->d_parent ) == NULL ) {
@@ -2596,7 +2596,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
                 return( AFPERR_NOITEM );
             }
 	    len = convert_string_allocate( obj->options.unixcharset, ((!utf8)?obj->options.maccharset:CH_UTF8_MAC),
-                                            pw->pw_name, strlen(pw->pw_name), &name);
+                                            pw->pw_name, -1, &name);
 	} else {
 	    len = 0;
 	    name = NULL;
@@ -2611,7 +2611,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
                 return( AFPERR_NOITEM );
             }
 	    len = convert_string_allocate( obj->options.unixcharset, (!utf8)?obj->options.maccharset:CH_UTF8_MAC,
-                                            gr->gr_name, strlen(gr->gr_name), &name);
+                                            gr->gr_name, -1, &name);
 	} else {
 	    len = 0;
 	    name = NULL;

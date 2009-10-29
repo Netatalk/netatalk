@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.27 2009-02-16 12:56:42 franklahm Exp $
+ * $Id: afp_config.c,v 1.28 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -117,7 +117,7 @@ static char * srvloc_encode(const struct afp_options *options, const char *name)
 
 	/* Convert name to maccharset */
         if ((size_t)-1 ==(convert_string_allocate( options->unixcharset, options->maccharset,
-			 name, strlen(name), &conv_name)) )
+			 name, -1, &conv_name)) )
 		return (char*)name;
 
 	/* Escape characters */

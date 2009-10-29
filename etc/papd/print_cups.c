@@ -1,5 +1,5 @@
 /*
- * $Id: print_cups.c,v 1.4 2009-10-13 22:55:37 didg Exp $
+ * $Id: print_cups.c,v 1.5 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright 2004 Bjoern Fernhomberg.
  *
@@ -392,7 +392,7 @@ cups_autoadd_printers ( struct printer	*defprinter, struct printer *printers)
 
 		/* convert from CUPS to local encoding */
                 convert_string_allocate( add_charset(cupsLangEncoding(language)), CH_UNIX, 
-                                         dests[i].name, strlen(dests[i].name), &pr->p_u_name);
+                                         dests[i].name, -1, &pr->p_u_name);
 
 		/* convert CUPS name to Mac charset */
 		if ( convert_to_mac_name ( cupsLangEncoding(language), dests[i].name, name, sizeof(name)) <= 0)
@@ -533,7 +533,7 @@ static int convert_to_mac_name ( char * encoding, char * inptr, char * outptr, s
 
 	/* Change the encoding */
 	if ((charset_t)-1 != (chCups = add_charset(encoding))) {
-		name_len = convert_string_allocate( chCups, CH_MAC, inptr, strlen(inptr), &outbuf);
+		name_len = convert_string_allocate( chCups, CH_MAC, inptr, -1, &outbuf);
 	}
 
 	if (name_len == 0 || name_len == (size_t)-1) {

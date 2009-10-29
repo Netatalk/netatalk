@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.31 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: lp.c,v 1.32 2009-10-29 11:35:58 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -164,7 +164,7 @@ static void translate(charset_t from, charset_t dest, char **option)
     if (*option != NULL) {
         convert_octal(*option, from);
         if (from) {
-             if ((size_t) -1 != (convert_string_allocate(from, dest, *option, strlen(*option), &translated)) ) {
+             if ((size_t) -1 != (convert_string_allocate(from, dest, *option, -1, &translated)) ) {
                  free (*option);
                  *option = translated;
              }
