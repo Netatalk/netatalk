@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.114 2009-10-27 23:35:17 didg Exp $
+ * $Id: directory.c,v 1.115 2009-10-29 09:47:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1074,7 +1074,7 @@ const struct dir *k = key;
     };
 
     const unsigned char *str = (unsigned char *)(k->d_u_name);
-    hash_val_t acc = 0;
+    hash_val_t acc = k->d_parent->d_did;
 
     while (*str) {
 	acc ^= randbox[(*str + acc) & 0xf];
