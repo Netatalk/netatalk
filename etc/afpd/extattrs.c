@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.15 2009-10-28 01:52:49 didg Exp $
+  $Id: extattrs.c,v 1.16 2009-10-29 10:04:35 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.58 2009-10-27 23:35:17 didg Exp $
+ * $Id: unix.c,v 1.59 2009-10-29 10:04:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -32,7 +32,6 @@ char *strchr (), *strrchr ();
 #include <errno.h>
 #include <limits.h>
 #include <sys/param.h>
-#include <sys/stat.h>
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
