@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.118 2009-10-29 13:17:28 didg Exp $
+ * $Id: file.c,v 1.119 2009-10-29 13:38:15 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -253,7 +253,7 @@ int getmetadata(struct vol *vol,
     struct maccess	ma;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "begin getmetadata:");
+    LOG(log_debug9, logtype_afpd, "begin getmetadata:");
 #endif /* DEBUG */
 
     upath = path->u_name;
@@ -520,7 +520,7 @@ int getfilparams(struct vol *vol,
     int rc;    
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_default, "begin getfilparams:");
+    LOG(log_debug9, logtype_default, "begin getfilparams:");
 #endif /* DEBUG */
 
     opened = PARAM_NEED_ADP(bitmap);
@@ -557,7 +557,7 @@ int getfilparams(struct vol *vol,
         ad_close_metadata( adp);
     }
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "end getfilparams:");
+    LOG(log_debug9, logtype_afpd, "end getfilparams:");
 #endif /* DEBUG */
 
     return( rc );
@@ -764,7 +764,7 @@ int setfilparams(struct vol *vol,
     u_char              finder_buf[32];
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "begin setfilparams:");
+    LOG(log_debug9, logtype_afpd, "begin setfilparams:");
 #endif /* DEBUG */
 
     upath = path->u_name;
@@ -971,7 +971,7 @@ setfilparam_done:
     }
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "end setfilparams:");
+    LOG(log_debug9, logtype_afpd, "end setfilparams:");
 #endif /* DEBUG */
     return err;
 }
@@ -991,7 +991,7 @@ int renamefile(const struct vol *vol, char *src, char *dst, char *newname, struc
     int		rc;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "begin renamefile:");
+    LOG(log_debug9, logtype_afpd, "begin renamefile:");
 #endif /* DEBUG */
 
     if ( unix_rename( src, dst ) < 0 ) {
@@ -1054,7 +1054,7 @@ int renamefile(const struct vol *vol, char *src, char *dst, char *newname, struc
         ad_close( adp, ADFLAGS_HF );
     }
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "end renamefile:");
+    LOG(log_debug9, logtype_afpd, "end renamefile:");
 #endif /* DEBUG */
 
     return( AFP_OK );
@@ -1251,7 +1251,7 @@ static int copy_all(const int dfd, const void *buf,
     ssize_t cc;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "begin copy_all:");
+    LOG(log_debug9, logtype_afpd, "begin copy_all:");
 #endif /* DEBUG */
 
     while (buflen > 0) {
@@ -1267,7 +1267,7 @@ static int copy_all(const int dfd, const void *buf,
     }
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "end copy_all:");
+    LOG(log_debug9, logtype_afpd, "end copy_all:");
 #endif /* DEBUG */
 
     return 0;
@@ -1358,7 +1358,7 @@ int copyfile(const struct vol *s_vol, const struct vol*d_vol,
     struct stat         st;
     
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "begin copyfile:");
+    LOG(log_debug9, logtype_afpd, "begin copyfile:");
 #endif /* DEBUG */
 
     if (adp == NULL) {
@@ -1439,7 +1439,7 @@ int copyfile(const struct vol *s_vol, const struct vol*d_vol,
     }
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "end copyfile:");
+    LOG(log_debug9, logtype_afpd, "end copyfile:");
 #endif /* DEBUG */
 
 done:
@@ -1496,7 +1496,7 @@ int deletefile(const struct vol *vol, char *file, int checkAttrib)
     int			adflags, err = AFP_OK;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "begin deletefile:");
+    LOG(log_debug9, logtype_afpd, "begin deletefile:");
 #endif /* DEBUG */
 
     /* try to open both forks at once */
@@ -1566,7 +1566,7 @@ int deletefile(const struct vol *vol, char *file, int checkAttrib)
         ad_close( &ad, adflags );  /* ad_close removes locks if any */
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "end deletefile:");
+    LOG(log_debug9, logtype_afpd, "end deletefile:");
 #endif /* DEBUG */
 
     return err;

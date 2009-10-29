@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.30 2009-10-29 11:35:58 didg Exp $
+ * $Id: main.c,v 1.31 2009-10-29 13:38:15 didg Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -404,7 +404,7 @@ int main(int ac, char **av)
 		    * 0xffff to indicate we're busy
 		    */
 #ifdef DEBUG
-                    LOG(log_debug, logtype_papd, "CUPS: PAP_OPEN");
+                    LOG(log_debug9, logtype_papd, "CUPS: PAP_OPEN");
 #endif
 		    if ( (pr->p_flags & P_SPOOLED) && (cups_get_printer_status ( pr ) == 0)) {
                         LOG(log_error, logtype_papd, "CUPS_PAP_OPEN: %s is not accepting jobs",

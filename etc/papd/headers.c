@@ -1,5 +1,5 @@
 /*
- * $Id: headers.c,v 1.13 2009-10-13 22:55:37 didg Exp $
+ * $Id: headers.c,v 1.14 2009-10-29 13:38:15 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -128,7 +128,7 @@ int ch_title( struct papfile *in, struct papfile *out _U_)
     }
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_papd, "Parsing %%Title");
+    LOG(log_debug9, logtype_papd, "Parsing %%Title");
 #endif
 
     cmt = get_text(start, linelength);
@@ -195,7 +195,7 @@ int ch_endcomm( struct papfile *in, struct papfile *out _U_)
     int                 linelength, crlflength;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_papd, "End Comment");
+    LOG(log_debug9, logtype_papd, "End Comment");
 #endif
     in->pf_state |= PF_STW;
 
@@ -224,7 +224,7 @@ int ch_starttranslate( struct papfile *in, struct papfile *out _U_)
     int                 linelength, crlflength;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_papd, "Start translate");
+    LOG(log_debug9, logtype_papd, "Start translate");
 #endif
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -251,7 +251,7 @@ int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
     int                 linelength, crlflength;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_papd, "EndTranslate");
+    LOG(log_debug9, logtype_papd, "EndTranslate");
 #endif
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
@@ -278,7 +278,7 @@ int ch_translateone( struct papfile *in, struct papfile *out _U_)
     int                 linelength, crlflength;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_papd, "TranslateOne");
+    LOG(log_debug9, logtype_papd, "TranslateOne");
 #endif
 
     switch ( markline( in, &start, &linelength, &crlflength )) {

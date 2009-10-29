@@ -1,5 +1,5 @@
 /*
- * $Id: lp.c,v 1.32 2009-10-29 11:35:58 didg Exp $
+ * $Id: lp.c,v 1.33 2009-10-29 13:38:15 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -188,19 +188,19 @@ static void lp_setup_comments (charset_t dest)
 
     if (lp.lp_job) {
 #ifdef DEBUG1
-        LOG(log_debug, logtype_papd, "job: %s", lp.lp_job );
+        LOG(log_debug9, logtype_papd, "job: %s", lp.lp_job );
 #endif
         translate(from, dest, &lp.lp_job);
     }
     if (lp.lp_created_for) {
 #ifdef DEBUG1
-        LOG(log_debug, logtype_papd, "for: %s", lp.lp_created_for );
+        LOG(log_debug9, logtype_papd, "for: %s", lp.lp_created_for );
 #endif
         translate(from, dest, &lp.lp_created_for);
     }
     if (lp.lp_person) {
 #ifdef DEBUG1
-       LOG(log_debug, logtype_papd, "person: %s", lp.lp_person );
+       LOG(log_debug9, logtype_papd, "person: %s", lp.lp_person );
 #endif
        translate(from, dest, &lp.lp_person);
     }
@@ -361,7 +361,7 @@ void lp_job(char *job)
 
     lp.lp_job = strdup(job);
 #ifdef DEBUG
-    LOG(log_debug, logtype_papd, "job: %s", lp.lp_job );
+    LOG(log_debug9, logtype_papd, "job: %s", lp.lp_job );
 #endif
     
 }
@@ -546,7 +546,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
     struct passwd	*pwent;
 
 #ifdef DEBUG
-    LOG (log_debug, logtype_papd, "lp_open");
+    LOG (log_debug9, logtype_papd, "lp_open");
 #endif
 
     if ( lp.lp_flags & LP_JOBPENDING ) {
@@ -632,7 +632,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
 	    return( -1 );
 	}
 #ifdef DEBUG        
-        LOG(log_debug, logtype_papd, "lp_open: opened %s", name );
+        LOG(log_debug9, logtype_papd, "lp_open: opened %s", name );
 #endif	
     }
     lp.lp_flags |= LP_OPEN;
@@ -685,7 +685,7 @@ int lp_write(struct papfile *in, char *buf, size_t len)
             tbuf = tempbuf2;
             last_line_translated = 1;
 #ifdef DEBUG
-            LOG(log_debug, logtype_papd, "lp_write: %s", tbuf );
+            LOG(log_debug9, logtype_papd, "lp_write: %s", tbuf );
 #endif
         }
         else {
@@ -706,7 +706,7 @@ int lp_write(struct papfile *in, char *buf, size_t len)
      * %%EndComment triggers writing to file */
     if (( lp.lp_flags & LP_OPEN ) == 0 ) {
 #ifdef DEBUG
-        LOG(log_debug, logtype_papd, "lp_write: writing to temporary buffer" );
+        LOG(log_debug9, logtype_papd, "lp_write: writing to temporary buffer" );
 #endif
     	if ((bufpos+len) > BUFSIZE) {
             LOG(log_error, logtype_papd, "lp_write: temporary buffer too small" );

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_delete.c,v 1.3 2009-10-29 13:17:29 didg Exp $
+ * $Id: cnid_cdb_delete.c,v 1.4 2009-10-29 13:38:16 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -37,7 +37,7 @@ int cnid_cdb_delete(struct _cnid_db *cdb, const cnid_t id) {
     }
     else {
 #ifdef DEBUG
-        LOG(log_debug, logtype_default, "cnid_delete: Deleting CNID %u", ntohl(id));
+        LOG(log_debug9, logtype_default, "cnid_delete: Deleting CNID %u", ntohl(id));
 #endif
     }
     return rc;

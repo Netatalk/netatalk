@@ -235,8 +235,8 @@ charset_t add_charset(char* name)
 	max_charset_t++;
 
 #ifdef DEBUG
-	LOG(log_debug, logtype_default, "Added charset %s with handle %u", name, cur_charset_t);
-#endif /* DEBUG */
+	LOG(log_debug9, logtype_default, "Added charset %s with handle %u", name, cur_charset_t);
+#endif
 	return (cur_charset_t);
 }
 

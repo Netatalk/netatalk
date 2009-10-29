@@ -1,5 +1,5 @@
 /*
-   $Id: uuid.c,v 1.1 2009-02-02 11:55:01 franklahm Exp $
+   $Id: uuid.c,v 1.2 2009-10-29 13:38:15 didg Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -131,7 +131,7 @@ int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     if (ret == 0) {		/* found in cache */
 #ifdef DEBUG
 	uuid_bin2string( uuidp, &uuid_string);
-	LOG(log_debug, logtype_afpd, "getnamefromuuid{cache}: UUID: %s -> name: %s, type:%s", uuid_string, *name, uuidtype[*type]);
+	LOG(log_debug9, logtype_afpd, "getnamefromuuid{cache}: UUID: %s -> name: %s, type:%s", uuid_string, *name, uuidtype[*type]);
 #endif
     } else  {                   /* if not found in cache */
 	uuid_bin2string( uuidp, &uuid_string);

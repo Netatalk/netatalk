@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.53 2009-10-29 13:17:29 didg Exp $
+ * $Id: ad_open.c,v 1.54 2009-10-29 13:38:16 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1064,8 +1064,8 @@ ad_mkdir( const char *path, int mode)
     struct stat stbuf;
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_default, "ad_mkdir: Creating directory with mode %d", mode);
-#endif /* DEBUG */
+    LOG(log_debug9, logtype_default, "ad_mkdir: Creating directory with mode %d", mode);
+#endif
 
     st_invalid = ad_mode_st(path, &mode, &stbuf);
     ret = mkdir( path, mode );

@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.21 2009-10-22 05:53:20 didg Exp $
+ * $Id: messages.c,v 1.22 2009-10-29 13:38:15 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -59,8 +59,8 @@ void readmessage(AFPObj *obj)
     sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "Reading file %s ", filename);
-#endif /* DEBUG */
+    LOG(log_debug9, logtype_afpd, "Reading file %s ", filename);
+#endif 
 
     message=fopen(filename, "r");
     if (message==NULL) {
@@ -103,11 +103,11 @@ void readmessage(AFPObj *obj)
         }
 #ifdef DEBUG
         else {
-            LOG(log_info, logtype_afpd, "Deleted %s", filename);
+            LOG(log_debug9, logtype_afpd, "Deleted %s", filename);
         }
 
-        LOG(log_info, logtype_afpd, "Set server message to \"%s\"", servermesg);
-#endif /* DEBUG */
+        LOG(log_debug9, logtype_afpd, "Set server message to \"%s\"", servermesg);
+#endif
     }
     free(filename);
 #endif /* SERVERTEXT */

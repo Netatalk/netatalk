@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_get.c,v 1.4 2009-10-29 13:17:29 didg Exp $
+ * $Id: cnid_db3_get.c,v 1.5 2009-10-29 13:38:16 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -66,7 +66,7 @@ cnid_t cnid_db3_get(struct _cnid_db *cdb, const cnid_t did, char *name, const si
 
     memcpy(&id, data.data, sizeof(id));
 #ifdef DEBUG
-    LOG(log_debug, logtype_default, "cnid_get: Returning CNID for %u, name %s as %u",
+    LOG(log_debug9, logtype_default, "cnid_get: Returning CNID for %u, name %s as %u",
         ntohl(did), name, ntohl(id));
 #endif
     return id;

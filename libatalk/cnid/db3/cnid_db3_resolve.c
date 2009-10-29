@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_db3_resolve.c,v 1.4 2009-10-29 13:17:29 didg Exp $
+ * $Id: cnid_db3_resolve.c,v 1.5 2009-10-29 13:38:16 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -61,7 +61,7 @@ char *cnid_db3_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
 
     memcpy(id, (char *)data.data + CNID_DEVINO_LEN, sizeof(cnid_t));
 #ifdef DEBUG
-    LOG(log_debug, logtype_default, "cnid_resolve: Returning id = %u, did/name = %s",
+    LOG(log_debug9, logtype_default, "cnid_resolve: Returning id = %u, did/name = %s",
         ntohl(*id), (char *)data.data + CNID_HEADER_LEN);
 #endif
     return (char *)data.data + CNID_HEADER_LEN;

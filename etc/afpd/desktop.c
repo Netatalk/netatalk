@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.44 2009-10-27 23:35:17 didg Exp $
+ * $Id: desktop.c,v 1.45 2009-10-29 13:38:15 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -635,7 +635,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     }
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
+    LOG(log_debug9, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
 #endif /* DEBUG */
     return( upath );
 }
@@ -681,7 +681,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
     m = mangle(vol, mpath, outlen, upath, id, flags);
 
 #ifdef DEBUG
-    LOG(log_debug, logtype_afpd, "utompath: '%s':'%s':'%2.2X'", upath, m, ntohl(id));
+    LOG(log_debug9, logtype_afpd, "utompath: '%s':'%s':'%2.2X'", upath, m, ntohl(id));
 #endif /* DEBUG */
     return(m);
 
