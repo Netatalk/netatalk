@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.19 2009-10-18 20:21:09 didg Exp $
+ * $Id: cnid_metad.c,v 1.20 2009-10-29 11:19:23 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -32,7 +32,8 @@
 #include <stdlib.h>
 
 #ifdef HAVE_UNISTD_H
-#define __USE_GNU
+#undef _USE_GNU_SOURCE
+#define _USE_GNU_SOURCE
 #include <unistd.h>
 #undef __USE_GNU
 #endif /* HAVE_UNISTD_H */
