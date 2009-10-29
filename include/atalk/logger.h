@@ -73,13 +73,23 @@ enum loglevels {
     log_warning,
     log_note,
     log_info,
+#ifndef NO_DEBUG
     log_debug,
     log_debug6,
     log_debug7,
     log_debug8,
     log_debug9,
     log_maxdebug
+#else
+#define log_debug -1
+#define log_debug6 -1
+#define log_debug7 -1
+#define log_debug8 -1
+#define log_debug9 -1
+#define log_maxdebug -1 
+#endif    
 };
+
 #define LOGLEVEL_STRING_IDENTIFIERS { \
   "LOG_NOTHING",                      \
   "LOG_SEVERE",                       \
@@ -235,9 +245,10 @@ void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *mes
    Note:
    any configured file-logging deactivates syslog logging
  */
-
 #define LOG(log_level, type, ...)  \
   do { \
+    if (log_level < 0) \
+      break; \
     if ( ! log_config.inited) \
       log_init(); \
     if (file_configs[(type)].level >= (log_level)) \
