@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.13 2009-10-29 13:06:19 franklahm Exp $
+  $Id: ea.c,v 1.14 2009-10-29 19:20:28 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -78,7 +78,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
     char         *u;
     size_t       inplen;
     size_t       outlen;
-    uint16_t     flags = CONV_ESCAPEHEX;
+    uint16_t     flags = CONV_ESCAPEHEX | CONV_FORCE;
 
     if (!mpath)
         return NULL;
