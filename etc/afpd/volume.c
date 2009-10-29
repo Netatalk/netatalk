@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.96 2009-10-27 23:35:17 didg Exp $
+ * $Id: volume.c,v 1.97 2009-10-29 10:55:46 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -44,6 +44,7 @@ char *strchr (), *strrchr ();
 #include <atalk/util.h>
 #include <atalk/volinfo.h>
 #include <atalk/logger.h>
+#include <atalk/vfs.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/
@@ -56,7 +57,6 @@ char *strchr (), *strrchr ();
 #include "mangle.h"
 #include "fork.h"
 #include "hash.h"
-#include "afp_vfs.h"
 
 extern int afprun(int root, char *cmd, int *outfd);
 
