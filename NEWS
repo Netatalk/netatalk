@@ -33,6 +33,8 @@ Changes in 2.0.5
 * FIX: afpd: vetoed files/dirs where still accessible
 * FIX: afpd: cnid_resolve: don't return '..' as a valid name.
 * FIX: uniconv: -d option wasn't working
+* FIX: initscripts installation now correctly uses autoconf paths,
+       ie they're installed to --sysconfdir.
 
 Changes in 2.0.4
 ================
