@@ -55,6 +55,8 @@ install-webmin:
 		wget http://prdownloads.sourceforge.net/webadmin/webmin-$(webminversion).tar.gz ; \
 		tar xzf webmin-$(webminversion).tar.gz; \
 		rm webmin-$(webminversion).tar.gz; \
+		/etc/init.d/webmin stop; \
+		rm -r webmin; \
 		mv webmin-$(webminversion) webmin; \
 		cd webmin; \
 		rm -r adsl-client apache at backup-config bacula-backup bandwidth bind8 bsdexports burner \
@@ -62,7 +64,7 @@ install-webmin:
 			cluster-usermin cluster-webmin custom \
 			cron dfsadmin dhcpd dnsadmin dovecot exim exports \
 			fdisk fetchmail file filter firewall format frox fsdump grub heartbeat hpuxexports \
-			htaccess-htpasswd idmapd images inetd inittab ipfilter ipfw ipsec jabber \
+			htaccess-htpasswd idmapd inetd inittab ipfilter ipfw ipsec jabber \
 			ldap-server lilo logrotate lpadmin lvm \
 			mailboxes mailcap majordomo man mon mscstyle3 mysql \
 			net nis openslp pap phpini postfix postgresql ppp-client pptp-client pptp-server \
