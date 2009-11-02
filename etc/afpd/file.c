@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.119 2009-10-29 13:38:15 didg Exp $
+ * $Id: file.c,v 1.120 2009-11-02 14:35:27 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -514,8 +514,6 @@ int getfilparams(struct vol *vol,
                  char *buf, size_t *buflen )
 {
     struct adouble	ad, *adp;
-    struct ofork        *of;
-    char		    *upath;
     int                 opened = 0;
     int rc;    
 
@@ -527,14 +525,11 @@ int getfilparams(struct vol *vol,
     adp = NULL;
 
     if (opened) {
-        int flags = (bitmap & (1 << FILPBIT_ATTR))?ADFLAGS_OPENFORKS:0;
+        char *upath;
+        int  flags = (bitmap & (1 << FILPBIT_ATTR))?ADFLAGS_OPENFORKS:0;
+
+        adp = of_ad(vol, path, &ad);
         upath = path->u_name;
-        if ((of = of_findname(path))) {
-            adp = of->of_ad;
-        } else {
-            ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-            adp = &ad;
-        }
 
         if ( ad_metadata( upath, flags, adp) < 0 ) {
             switch (errno) {
@@ -767,9 +762,8 @@ int setfilparams(struct vol *vol,
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
 #endif /* DEBUG */
 
-    upath = path->u_name;
     adp = of_ad(vol, path, &ad);
-    
+    upath = path->u_name;
 
     if (!vol_unix_priv(vol) && check_access(upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
@@ -1660,8 +1654,6 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
     cnid_t        did  = param->did;
     cnid_t	  aint;
     
-    memset(&path, 0, sizeof(path));
-
     if ( stat(de->d_name, &path.st)<0 )
         return 0;
     
@@ -1765,7 +1757,6 @@ int afp_resolveid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         return AFPERR_NOID;
     }
 retry:
-    memset(&path, 0, sizeof(path));
     if (NULL == (upath = cnid_resolve(vol->v_cdb, &id, buffer, len)) ) {
         return AFPERR_NOID; /* was AFPERR_BADID, but help older Macs */
     }
@@ -1773,7 +1764,6 @@ retry:
     if (NULL == ( dir = dirlookup( vol, id )) ) {
         return AFPERR_NOID; /* idem AFPERR_PARAM */
     }
-    path.u_name = upath;
     if (movecwd(vol, dir) < 0) {
         switch (errno) {
         case EACCES:
@@ -1786,6 +1776,8 @@ retry:
         }
     }
 
+    memset(&path, 0, sizeof(path));
+    path.u_name = upath;
     if ( of_stat(&path) < 0 ) {
 #ifdef ESTALE
         /* with nfs and our working directory is deleted */
