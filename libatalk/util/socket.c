@@ -1,5 +1,5 @@
 /*
-   $Id: socket.c,v 1.2 2009-11-05 14:38:08 franklahm Exp $
+   $Id: socket.c,v 1.3 2009-11-05 21:28:13 didg Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 #include <string.h>
-
-#include <atalk/logger.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 
