@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.47 2009-10-14 01:38:28 didg Exp $
+ * $Id: afp_options.c,v 1.48 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -62,8 +62,8 @@ char *strchr (), *strrchr ();
 #endif /* MIN */
 
 /* FIXME CNID */
-char             Cnid_srv[MAXHOSTNAMELEN + 1] = "localhost";
-int              Cnid_port = 4700;
+const char *Cnid_srv = "localhost";
+const char *Cnid_port = "4700";
 
 #define OPTIONS "dn:f:s:uc:g:P:ptDS:TL:F:U:hIvVm:"
 #define LENGTH 512
@@ -127,6 +127,8 @@ void afp_options_free(struct afp_options *opt,
         free(opt->server);
     if (opt->ipaddr && (opt->ipaddr != save->ipaddr))
         free(opt->ipaddr);
+    if (opt->port && (opt->port != save->port))
+        free(opt->port);
     if (opt->fqdn && (opt->fqdn != save->fqdn))
         free(opt->fqdn);
     if (opt->uampath && (opt->uampath != save->uampath))
@@ -376,18 +378,17 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     /* FIXME CNID Cnid_srv is a server attribute */
     if ((c = getoption(buf, "-cnidserver"))) {
-        char *p;
-	int len;        
-        p = strchr(c, ':');
-	if (p != NULL && (len = p - c) <= MAXHOSTNAMELEN) {
-	    memcpy(Cnid_srv, c, len);
-	    Cnid_srv[len] = 0;
-	    Cnid_port = atoi(p +1);
-	}
+        char *p = strrchr(c, ':');
+        if (p)
+            *p = 0;
+        Cnid_srv = strdup(c);
+        if (p)
+            Cnid_port = strdup(p + 1);
+        LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", Cnid_srv, Cnid_port);
     }
 
     if ((c = getoption(buf, "-port")))
-        options->port = atoi(c);
+        options->port = strdup(c);
     if ((c = getoption(buf, "-ddpaddr")))
         atalk_aton(c, &options->ddpaddr);
     if ((c = getoption(buf, "-signature")) && (opt = strdup(c)))
@@ -651,7 +652,7 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
             options->transports &= ~AFPTRANS_DDP;
             break;
         case 'S':
-            options->port = atoi(optarg);
+            options->port = optarg;
             break;
         case 'T':
             options->transports &= ~AFPTRANS_TCP;

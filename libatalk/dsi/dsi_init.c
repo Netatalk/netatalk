@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_init.c,v 1.9 2009-10-25 06:13:11 didg Exp $
+ * $Id: dsi_init.c,v 1.10 2009-11-05 14:38:08 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -17,7 +17,7 @@
 
 DSI *dsi_init(const dsi_proto protocol, const char *program, 
 	      const char *hostname, const char *address,
-	      const int port, const int proxy, const u_int32_t quantum)
+	      const char *port, const int proxy, const u_int32_t quantum)
 {
     DSI		*dsi;
 

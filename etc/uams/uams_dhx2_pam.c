@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.8 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_dhx2_pam.c,v 1.9 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -566,7 +566,7 @@ static int logincont2(void *obj, struct passwd **uam_pwd,
 {
     int ret;
     int PAM_error;
-    char *hostname = NULL;
+    const char *hostname = NULL;
     gcry_mpi_t retServerNonce;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
@@ -753,7 +753,7 @@ static int changepw_3(void *obj _U_,
     int PAM_error;
     uid_t uid;
     pam_handle_t *lpamh;
-    char *hostname = NULL;
+    const char *hostname = NULL;
     gcry_mpi_t retServerNonce;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;

@@ -1,5 +1,5 @@
 /*
- * $Id: usockfd.c,v 1.5 2009-10-18 20:21:09 didg Exp $
+ * $Id: usockfd.c,v 1.6 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -78,63 +78,72 @@ int usockfd_create(char *usock_fn, mode_t mode, int backlog)
 }
 
 /* ---------------
-   create a tcp socket (should share dsi stuff)
-*/
-int tsockfd_create(char *host, u_int16_t ipport, int backlog)
+ * create a tcp socket
+ */
+int tsockfd_create(char *host, char *port, int backlog)
 {
-    int sockfd;
-    struct sockaddr_in server;
-    struct hostent     *hp;  
-    int                port;
-    
-    hp=gethostbyname(host);
-    if (!hp) {
-        unsigned long int addr=inet_addr(host);
-        if (addr!= (unsigned)-1)
-            hp=gethostbyaddr((char*)addr,sizeof(addr),AF_INET);
- 
-        if (!hp) {
-            LOG(log_error, logtype_cnid, "gethostbyaddr %s: %s", host, strerror(errno));
-            return -1;
+    int sockfd, flag, ret;
+    struct addrinfo hints, *servinfo, *p;
+
+    /* Prepare hint for getaddrinfo */
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ((ret = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
+        LOG(log_error, logtype_default, "tsockfd_create: getaddrinfo: %s\n", gai_strerror(ret));
+        return 0;
+    }
+
+    /* create a socket */
+    /* loop through all the results and bind to the first we can */
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            LOG(log_info, logtype_default, "tsockfd_create: socket: %s", strerror(errno));
+            continue;
         }
-    }
-    memcpy((char*)&server.sin_addr,(char*)hp->h_addr,sizeof(server.sin_addr));    
 
-    if ((sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-        LOG(log_error, logtype_cnid, "error in socket call: %s", strerror(errno));
-        return -1;
-    }
-     
-    port = htons(ipport);
-    
-    server.sin_family = AF_INET;
-    server.sin_port = port;
-
+        /*
+         * Set some socket options:
+         * SO_REUSEADDR deals w/ quick close/opens
+         * TCP_NODELAY diables Nagle
+         */
 #ifdef SO_REUSEADDR
-    port = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &port, sizeof(port));
-#endif /* SO_REUSEADDR */
+        flag = 1;
+        setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+#endif
 
-#ifdef USE_TCP_NODELAY 
+#ifdef USE_TCP_NODELAY
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
-#endif /* ! SOL_TCP */
-    port = 1;
-    setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &port, sizeof(port));
+#endif
+        flag = 1;
+        setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 #endif /* USE_TCP_NODELAY */
+            
+        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            LOG(log_info, logtype_default, "tsockfd_create: bind: %s\n", strerror(errno));
+            continue;
+        }
 
-    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        LOG(log_error, logtype_cnid, "error binding to socket for %s: %s",
-            host, strerror(errno));
+        if (listen(sockfd, backlog) < 0) {
+            close(sockfd);
+            LOG(log_info, logtype_default, "tsockfd_create: listen: %s\n", strerror(errno));
+            continue;
+        }
+
+        /* We got a socket */
+        break;
+    }
+
+    if (p == NULL)  {
+        LOG(log_error, logtype_default, "tsockfd_create: no suitable network config %s:%s", host, port);
+        freeaddrinfo(servinfo);
         return -1;
     }
 
-    if (listen(sockfd, backlog) < 0) {
-        LOG(log_error, logtype_cnid, "error in listen for %s: %s",
-            host, strerror(errno));
-        return -1;
-    }
-
+    freeaddrinfo(servinfo);
     return sockfd;
 }
 

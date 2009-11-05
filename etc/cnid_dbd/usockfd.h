@@ -1,5 +1,5 @@
 /*
- * $Id: usockfd.h,v 1.4 2009-10-18 19:02:43 didg Exp $
+ * $Id: usockfd.h,v 1.5 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -14,7 +14,7 @@
 
 
 extern int      usockfd_create  (char *, mode_t, int);
-extern int      tsockfd_create  (char *, u_int16_t, int);
+extern int      tsockfd_create  (char *, char *, int);
 extern int      usockfd_check   (int, const sigset_t *);
 
 #ifndef OSSH_ALIGNBYTES

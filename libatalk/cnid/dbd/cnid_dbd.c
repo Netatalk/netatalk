@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.10 2009-10-19 11:00:28 didg Exp $
+ * $Id: cnid_dbd.c,v 1.11 2009-11-05 14:38:08 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -52,8 +52,8 @@ static void RQST_RESET(struct cnid_dbd_rqst  *r)
 }
 
 /* ----------- */
-extern char             Cnid_srv[MAXHOSTNAMELEN + 1];
-extern int              Cnid_port;
+extern char *Cnid_srv;
+extern char *Cnid_port;
 
 #define MAX_DELAY 40
 
@@ -69,77 +69,80 @@ static void delay(int sec)
     select(0, NULL, NULL, NULL, &tv);
 }
 
-static int tsock_getfd(char *host, int port)
+static int tsock_getfd(const char *host, const char *port)
 {
-    int sock;
-    struct sockaddr_in server;
-    struct hostent* hp;
+    int sock = -1;
     struct timeval tv;
     int attr;
     int err;
+    struct addrinfo hints, *servinfo, *p;
 
-    server.sin_family=AF_INET;
-    server.sin_port=htons((unsigned short)port);
-    if (!host) {
-        LOG(log_error, logtype_cnid, "getfd: -cnidserver not defined");
+    /* Prepare hint for getaddrinfo */
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_NUMERICSERV;
+
+    if ((err = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
+        LOG(log_error, logtype_default, "tsock_getfd: getaddrinfo: %s:%s : %s\n", host, port, gai_strerror(err));
         return -1;
     }
 
-    hp=gethostbyname(host);
-    if (!hp) {
-        unsigned long int addr=inet_addr(host);
-        LOG(log_warning, logtype_cnid, "getfd: Could not resolve host %s, trying numeric address instead", host);
-        if (addr!= (unsigned)-1)
-            hp=gethostbyaddr((char*)addr,sizeof(addr),AF_INET);
-
-        if (!hp) {
-            LOG(log_error, logtype_cnid, "getfd: Could not resolve host %s", host);
-            return(-1);
+    /* loop through all the results and bind to the first we can */
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            LOG(log_info, logtype_default, "tsock_getfd: socket %s:: %s", host, strerror(errno));
+                continue;
         }
-    }
-    memcpy((char*)&server.sin_addr,(char*)hp->h_addr,sizeof(server.sin_addr));
-    sock=socket(PF_INET,SOCK_STREAM,0);
-    if (sock==-1) {
-        LOG(log_error, logtype_cnid, "getfd: socket %s: %s", host, strerror(errno));
-        return(-1);
-    }
-    attr = 1;
-    if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &attr, sizeof(attr)) == -1) {
-        LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY %s: %s", host, strerror(errno));
-        close(sock);
-        return(-1);
+
+        attr = 1;
+        if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &attr, sizeof(attr)) == -1) {
+            LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY %s: %s", host, strerror(errno));
+            close(sock);
+            continue;
+        }
+        
+        tv.tv_sec = SOCK_DELAY;
+        tv.tv_usec = 0;
+        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+            LOG(log_error, logtype_cnid, "getfd: set SO_RCVTIMEO %s: %s", host, strerror(errno));
+            close(sock);
+            continue;
+        }
+
+        tv.tv_sec = SOCK_DELAY;
+        tv.tv_usec = 0;
+        if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
+            LOG(log_error, logtype_cnid, "getfd: set SO_SNDTIMEO %s: %s", host, strerror(errno));
+            close(sock);
+            continue;
+        }
+        
+        if (connect(sock, p->ai_addr, p->ai_addrlen) == -1) {
+            err = errno;
+            close(sock);
+            sock=-1;
+            LOG(log_error, logtype_cnid, "getfd: connect %s: %s", host, strerror(err));
+            continue;
+        }
+        
+        /* We've got a socket */
+        break;
     }
 
-    tv.tv_sec = SOCK_DELAY;
-    tv.tv_usec = 0;
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        LOG(log_error, logtype_cnid, "getfd: set SO_RCVTIMEO %s: %s", host, strerror(errno));
-        close(sock);
-        return(-1);
-    }
+exit:
+    freeaddrinfo(servinfo);
 
-    tv.tv_sec = SOCK_DELAY;
-    tv.tv_usec = 0;
-    if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-        LOG(log_error, logtype_cnid, "getfd: set SO_SNDTIMEO %s: %s", host, strerror(errno));
-        close(sock);
-        return(-1);
-    }
-
-    if(connect(sock ,(struct sockaddr*)&server,sizeof(server))==-1) {
-        err = errno;
-        close(sock);
-        sock=-1;
-        LOG(log_error, logtype_cnid, "getfd: connect %s: %s", host, strerror(err));
+    if (p == NULL) {
         switch (err) {
         case ENETUNREACH:
         case ECONNREFUSED:
             delay(5);
-            break;
+            return -1;
         }
+        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from %s:%s", host, port);
+        return -1;
     }
-
-    LOG(log_debug7, logtype_cnid, "tsock_getfd: using sockfd %d for cnid server '%s:%d'", sock, host, port);
 
     return(sock);
 }
@@ -189,7 +192,7 @@ static int init_tsock(CNID_private *db)
     int len;
     struct iovec iov[2];
 
-    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s'", db->db_dir);
+    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s", db->db_dir, Cnid_srv, Cnid_port);
 
     if ((fd = tsock_getfd(Cnid_srv, Cnid_port)) < 0)
         return -1;

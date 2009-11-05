@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_private.h,v 1.3 2009-10-13 22:55:37 didg Exp $
+ * $Id: dsi_private.h,v 1.4 2009-11-05 14:38:08 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -19,7 +19,7 @@
 
 extern int dsi_tcp_init (DSI *, const char * /*host*/, 
 			     const char * /*address*/,
-			     const u_int16_t /*port*/,
+			     const char * /*port*/,
 			     const int /*proxy*/);
 
 #endif /* _DSI_PRIVATE_H */

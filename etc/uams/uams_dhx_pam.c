@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_pam.c,v 1.31 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_dhx_pam.c,v 1.32 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -410,7 +410,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 			 char *ibuf, size_t ibuflen _U_, 
 			 char *rbuf, size_t *rbuflen)
 {
-    char *hostname;
+    const char *hostname;
     BIGNUM *bn1, *bn2, *bn3;
     u_int16_t sessid;
     int err, PAM_error;

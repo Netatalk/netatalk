@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.29 2009-10-25 07:18:12 didg Exp $
+ * $Id: globals.h,v 1.30 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,10 +56,10 @@ struct afp_volume_name {
 };
 
 struct afp_options {
-    int connections, port, transports, tickleval, timeout, server_notif, flags;
+    int connections, transports, tickleval, timeout, server_notif, flags;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
-    char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *configfile;
+    char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
     struct at_addr ddpaddr;
     char *uampath, *fqdn;
     char *pidfile;
@@ -119,8 +119,8 @@ extern struct dir	*curdir;
 extern char		getwdbuf[];
 
 /* FIXME CNID */
-extern char             Cnid_srv[MAXHOSTNAMELEN + 1];
-extern int              Cnid_port;
+extern const char *Cnid_srv;
+extern const char *Cnid_port;
 
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);

@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.26 2009-10-29 11:35:58 didg Exp $
+ * $Id: status.c,v 1.27 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -203,9 +203,15 @@ server_signature_hostid:
     hostid = gethostid();
 #endif /* BSD4_4 && !HAVE_GETHOSTID */
     if (!hostid) {
-        if (dsi)
-            hostid = dsi->server.sin_addr.s_addr;
-        else {
+        if (dsi) {
+            if (dsi->server.ss_family == AF_INET) { /* IPv4 */
+                hostid = ((struct sockaddr_in *)(&dsi->server))->sin_addr.s_addr;
+            } else {                                /* IPv6 */
+                struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
+                /* Use the last "sizeof(long) bytes of the IPv6 addr */
+                memcpy(&hostid, sa6->sin6_addr.s6_addr + (16 - sizeof(long)), sizeof(long));
+            }
+        } else {
             struct hostent *host;
 
             if ((host = gethostbyname(options->hostname)))
@@ -261,25 +267,45 @@ static size_t status_netaddress(char *data, int *servoffset,
 
     /* ip address */
     if (dsi) {
-        const struct sockaddr_in *inaddr = &dsi->server;
+        if (dsi->server.ss_family == AF_INET) { /* IPv4 */
+            const struct sockaddr_in *inaddr = (struct sockaddr_in *)&dsi->server;
+            if (inaddr->sin_port == htons(DSI_AFPOVERTCP_PORT)) {
+                *data++ = 6; /* length */
+                *data++ = 0x01; /* basic ip address */
+                memcpy(data, &inaddr->sin_addr.s_addr,
+                       sizeof(inaddr->sin_addr.s_addr));
+                data += sizeof(inaddr->sin_addr.s_addr);
+                addresses_len += 7;
+            } else {
+                /* ip address + port */
+                *data++ = 8;
+                *data++ = 0x02; /* ip address with port */
+                memcpy(data, &inaddr->sin_addr.s_addr,
+                       sizeof(inaddr->sin_addr.s_addr));
+                data += sizeof(inaddr->sin_addr.s_addr);
+                memcpy(data, &inaddr->sin_port, sizeof(inaddr->sin_port));
+                data += sizeof(inaddr->sin_port);
+                addresses_len += 9;
+            }
+        } else { /* IPv6 */
+            const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
+            if (sa6->sin6_port == htons(DSI_AFPOVERTCP_PORT)) {
+                *data++ = 18; /* length */
+                *data++ = 6; /* type */
+                memcpy(data, &sa6->sin6_addr.s6_addr, sizeof(sa6->sin6_addr.s6_addr));
+                data += sizeof(sa6->sin6_addr.s6_addr);
+                addresses_len += 19;
+            } else {
+                /* ip address + port */
+                *data++ = 20; /* length */
+                *data++ = 7; /* type*/
+                memcpy(data, &sa6->sin6_addr.s6_addr, sizeof(sa6->sin6_addr.s6_addr));
+                data += sizeof(sa6->sin6_addr.s6_addr);
+                memcpy(data, &sa6->sin6_port, sizeof(sa6->sin6_port));
+                data += sizeof(sa6->sin6_port);
+                addresses_len += 21;
+            }
 
-        if (inaddr->sin_port == htons(DSI_AFPOVERTCP_PORT)) {
-            *data++ = 6; /* length */
-            *data++ = 0x01; /* basic ip address */
-            memcpy(data, &inaddr->sin_addr.s_addr,
-                   sizeof(inaddr->sin_addr.s_addr));
-            data += sizeof(inaddr->sin_addr.s_addr);
-            addresses_len += 7;
-        } else {
-            /* ip address + port */
-            *data++ = 8;
-            *data++ = 0x02; /* ip address with port */
-            memcpy(data, &inaddr->sin_addr.s_addr,
-                   sizeof(inaddr->sin_addr.s_addr));
-            data += sizeof(inaddr->sin_addr.s_addr);
-            memcpy(data, &inaddr->sin_port, sizeof(inaddr->sin_port));
-            data += sizeof(inaddr->sin_port);
-            addresses_len += 9;
         }
     }
 
@@ -486,7 +512,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     DSI *dsi;
     char *status = NULL;
     size_t statuslen;
-    int c, sigoff;
+    int c, sigoff, ipok;
 
     if (!(aspconfig || dsiconfig) || !options)
         return;
@@ -502,6 +528,19 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
         status = dsiconfig->status;
         maxstatuslen=sizeof(dsiconfig->status);
         dsi = dsiconfig->obj.handle;
+        if (dsi->server.ss_family == AF_INET) { /* IPv4 */
+            const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
+            ipok = sa4->sin_addr.s_addr ? 1 : 0;
+        } else { /* IPv6 */
+            const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
+            ipok = 0;
+            for (int i=0; i<16; i++) {
+                if (sa6->sin6_addr.s6_addr[i]) {
+                    ipok = 1;
+                    break;
+                }
+            }
+        }
     } else
         dsi = NULL;
 
@@ -525,11 +564,12 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
      * (16-bytes), network addresses, volume icon/mask 
      */
 
-    status_flags(status, options->server_notif, options->fqdn ||
-                 (dsiconfig && dsi->server.sin_addr.s_addr),
+    status_flags(status,
+                 options->server_notif,
+                 (options->fqdn || ipok),
                  options->passwdbits, 
-		 (options->k5service && options->k5realm && options->fqdn), 
-		 options->flags);
+                 (options->k5service && options->k5realm && options->fqdn),
+                 options->flags);
     /* returns offset to signature offset */
     c = status_server(status, options->server ? options->server :
                       options->hostname, options);

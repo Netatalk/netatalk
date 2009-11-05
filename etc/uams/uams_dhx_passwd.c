@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx_passwd.c,v 1.26 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: uams_dhx_passwd.c,v 1.27 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -70,7 +70,7 @@ static u_int8_t randbuf[16];
 #include <sia.h>
 #include <siad.h>
 
-static char *clientname;
+static const char *clientname;
 #endif /* TRU64 */
 
 /* dhx passwd */

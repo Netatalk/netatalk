@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.28 2009-10-29 11:35:58 didg Exp $
+ * $Id: afp_config.c,v 1.29 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -365,6 +365,11 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
         return NULL;
     }
 
+    LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, ip/port: %s/%s, ",
+        options->hostname,
+        options->ipaddr ? options->ipaddr : "default",
+        options->port ? options->port : "548");
+
     if ((dsi = dsi_init(protocol, "afpd", options->hostname,
                         options->ipaddr, options->port,
                         options->flags & OPTION_PROXY,
@@ -375,13 +380,11 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     }
 
     if (options->flags & OPTION_PROXY) {
-        LOG(log_info, logtype_afpd, "ASIP proxy initialized for %s:%d (%s)",
-            inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
-            VERSION);
+        LOG(log_info, logtype_afpd, "AFP/TCP proxy initialized for %s:%d (%s)",
+            getip_string((struct sockaddr *)&dsi->server), getip_port((struct sockaddr *)&dsi->server), VERSION);
     } else {
-        LOG(log_info, logtype_afpd, "ASIP started on %s:%d(%d) (%s)",
-            inet_ntoa(dsi->server.sin_addr), ntohs(dsi->server.sin_port),
-            dsi->serversock, VERSION);
+        LOG(log_info, logtype_afpd, "AFP/TCP started, advertising %s:%d (%s)",
+            getip_string((struct sockaddr *)&dsi->server), getip_port((struct sockaddr *)&dsi->server), VERSION);
     }
 
 #ifdef USE_SRVLOC

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.20 2009-10-29 11:19:23 didg Exp $
+ * $Id: cnid_metad.c,v 1.21 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -29,14 +29,13 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <stdlib.h>
-
-#ifdef HAVE_UNISTD_H
-#undef _USE_GNU_SOURCE
-#define _USE_GNU_SOURCE
+#ifdef linux
+#define _GNU_SOURCE
+#endif
 #include <unistd.h>
 #undef __USE_GNU
-#endif /* HAVE_UNISTD_H */
+
+#include <stdlib.h>
 #include <sys/param.h>
 #include <errno.h>
 #include <string.h>
@@ -87,14 +86,14 @@
 #define USE_SETRESUID 1
 #define SWITCH_TO_GID(gid)  ((setresgid(gid,gid,gid) < 0 || setgid(gid) < 0) ? -1 : 0)
 #define SWITCH_TO_UID(uid)  ((setresuid(uid,uid,uid) < 0 || setuid(uid) < 0) ? -1 : 0)
-#endif
-#else
+#endif  /* USE_SETRESUID */
+#else   /* ! linux */
 #ifndef USE_SETEUID
 #define USE_SETEUID 1
 #define SWITCH_TO_GID(gid)  ((setegid(gid) < 0 || setgid(gid) < 0) ? -1 : 0)
 #define SWITCH_TO_UID(uid)  ((setuid(uid) < 0 || seteuid(uid) < 0 || setuid(uid) < 0) ? -1 : 0)
-#endif
-#endif
+#endif  /* USE_SETEUID */
+#endif  /* linux */
 
 #include <atalk/util.h>
 #include <atalk/logger.h>
@@ -115,7 +114,7 @@ static volatile sig_atomic_t sigchild = 0;
                                         * to reconnect every 5 secondes, catch it */
 #define MAXVOLS    512
 #define DEFAULTHOST  "localhost"
-#define DEFAULTPORT  4700
+#define DEFAULTPORT  "4700"
 
 struct server {
     char  *name;
@@ -416,7 +415,7 @@ int main(int argc, char *argv[])
     int   status;
     char  *dbdpn = _PATH_CNID_DBD;
     char  *host = DEFAULTHOST;
-    u_int16_t   port = DEFAULTPORT;
+    char  *port = DEFAULTPORT;
     struct db_param *dbp;
     int    i;
     int    cc;
@@ -454,7 +453,7 @@ int main(int argc, char *argv[])
             }
             break;
         case 'p':
-            port = atoi(optarg);
+            port = strdup(optarg);
             break;
         case 's':
             dbdpn = strdup(optarg);

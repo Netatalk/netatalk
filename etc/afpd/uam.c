@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.31 2009-10-29 11:35:58 didg Exp $
+ * $Id: uam.c,v 1.32 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -365,8 +365,8 @@ int uam_random_string (AFPObj *obj, char *buf, int len)
 int uam_afpserver_option(void *private, const int what, void *option,
                          size_t *len)
 {
-AFPObj *obj = private;
-    char **buf = (char **) option; /* most of the options are this */
+    AFPObj *obj = private;
+    const char **buf = (const char **) option; /* most of the options are this */
     struct session_info **sinfo = (struct session_info **) option;
 
     if (!obj || !option)
@@ -436,19 +436,19 @@ AFPObj *obj = private;
         break;
         
     case UAM_OPTION_CLIENTNAME:
-        {
-            struct DSI *dsi = obj->handle;
-            struct hostent *hp;
+    {
+        struct DSI *dsi = obj->handle;
+        const struct sockaddr *sa;
+        char hbuf[NI_MAXHOST];
+        
+        sa = (struct sockaddr *)&dsi->client;
+        if (getnameinfo(sa, sizeof(dsi->client), hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
+            *buf = hbuf;
+        else
+            *buf = getip_string((struct sockaddr *)&dsi->client);
 
-            hp = gethostbyaddr( (char *) &dsi->client.sin_addr,
-                                sizeof( struct in_addr ),
-                                dsi->client.sin_family );
-            if( hp )
-                *buf = hp->h_name;
-            else
-                *buf = inet_ntoa( dsi->client.sin_addr );
-        }
         break;
+    }
     case UAM_OPTION_COOKIE:
         /* it's up to the uam to actually store something useful here.
          * this just passes back a handle to the cookie. the uam side

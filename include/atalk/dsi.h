@@ -56,7 +56,7 @@ struct dsi_block {
 typedef struct DSI {
   dsi_proto protocol;
   struct dsi_block header;
-  struct sockaddr_in server, client;
+  struct sockaddr_storage server, client;
   
   struct itimerval timer;
 
@@ -144,7 +144,7 @@ typedef struct DSI {
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
 			  const char * /*program*/, 
 			  const char * /*host*/, const char * /*address*/,
-			  const int /*port*/, const int /*proxy*/,
+			  const char * /*port*/, const int /*proxy*/,
 			  const u_int32_t /* server quantum */);
 extern void dsi_setstatus (DSI *, char *, const size_t);
 

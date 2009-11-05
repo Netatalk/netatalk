@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.17 2009-11-02 10:27:13 franklahm Exp $
+ * $Id: dsi_tcp.c,v 1.18 2009-11-05 14:38:08 franklahm Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -120,8 +120,7 @@ static int dsi_tcp_open(DSI *dsi)
     SOCKLEN_T len;
 
     len = sizeof(dsi->client);
-    dsi->socket = accept(dsi->serversock, (struct sockaddr *) &dsi->client,
-                         &len);
+    dsi->socket = accept(dsi->serversock, (struct sockaddr *) &dsi->client, &len);
 
 #ifdef TCPWRAP
     {
@@ -226,10 +225,9 @@ static int dsi_tcp_open(DSI *dsi)
 
         dsi_tcp_timeout(dsi);
 
-        LOG(log_info, logtype_default,"ASIP session:%u(%d) from %s:%u(%d)",
-            ntohs(dsi->server.sin_port), dsi->serversock,
-            inet_ntoa(dsi->client.sin_addr), ntohs(dsi->client.sin_port),
-            dsi->socket);
+        LOG(log_info, logtype_default, "AFP/TCP session from %s:%u",
+            getip_string((struct sockaddr *)&dsi->client),
+            getip_port((struct sockaddr *)&dsi->client));
     }
 
     /* send back our pid */
@@ -238,134 +236,173 @@ static int dsi_tcp_open(DSI *dsi)
 
 /* this needs to accept passed in addresses */
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
-                 const u_int16_t ipport, const int proxy)
+                 const char *port, const int proxy)
 {
-    struct servent     *service;
-    struct hostent     *host;
-    int                port;
+    int                ret;
+    int                flag;
+    struct addrinfo    hints, *servinfo, *p;
 
     dsi->protocol = DSI_TCPIP;
+
+    /* Prepare hint for getaddrinfo */
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_NUMERICSERV;
+    if ( ! address)
+        hints.ai_flags |= AI_PASSIVE;
+    else
+        hints.ai_flags |= AI_NUMERICHOST;
+
+    if ((ret = getaddrinfo(address ? address : NULL, port ? port : "548", &hints, &servinfo)) != 0) {
+        LOG(log_error, logtype_default, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
+        return 0;
+    }
 
     /* create a socket */
     if (proxy)
         dsi->serversock = -1;
-    else if ((dsi->serversock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-        return 0;
+    else {
+        /* loop through all the results and bind to the first we can */
+        for (p = servinfo; p != NULL; p = p->ai_next) {
+            if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+                LOG(log_info, logtype_default, "dsi_tcp_init: socket: %s", strerror(errno));
+                continue;
+            }
 
-    /* find port */
-    if (ipport)
-        port = htons(ipport);
-    else if ((service = getservbyname("afpovertcp", "tcp")))
-        port = service->s_port;
-    else
-        port = htons(DSI_AFPOVERTCP_PORT);
-
-    /* find address */
-    if (!address)
-        dsi->server.sin_addr.s_addr = htonl(INADDR_ANY);
-    else if (inet_aton(address, &dsi->server.sin_addr) == 0) {
-        LOG(log_info, logtype_default, "dsi_tcp: invalid address (%s)", address);
-        return 0;
-    }
-
-    dsi->server.sin_family = AF_INET;
-    dsi->server.sin_port = port;
-
-    if (!proxy) {
-        /* this deals w/ quick close/opens */
+            /*
+             * Set some socket options:
+             * SO_REUSEADDR deals w/ quick close/opens
+             * TCP_NODELAY diables Nagle
+             */
 #ifdef SO_REUSEADDR
-        port = 1;
-        setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &port, sizeof(port));
+            flag = 1;
+            setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 #endif
 
 #ifdef USE_TCP_NODELAY
-
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
-
-        port = 1;
-        setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &port, sizeof(port));
+            flag = 1;
+            setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 #endif /* USE_TCP_NODELAY */
+            
+            if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
+                close(dsi->serversock);
+                LOG(log_info, logtype_default, "dsi_tcp_init: bind: %s\n", strerror(errno));
+                continue;
+            }
 
-        /* now, bind the socket and set it up for listening */
-        if ((bind(dsi->serversock, (struct sockaddr *) &dsi->server,
-                  sizeof(dsi->server)) < 0) ||
-            (listen(dsi->serversock, DSI_TCPMAXPEND) < 0)) {
-            close(dsi->serversock);
+            if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
+                close(dsi->serversock);
+                LOG(log_info, logtype_default, "dsi_tcp_init: listen: %s\n", strerror(errno));
+                continue;
+            }
+            
+            break;
+        }
+
+        if (p == NULL)  {
+            LOG(log_error, logtype_default, "dsi_tcp_init: no suitable network config for TCP socket");
+            freeaddrinfo(servinfo);
             return 0;
         }
-    }
+
+        /* Copy struct sockaddr to struct sockaddr_storage */
+        memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+        freeaddrinfo(servinfo);
+    } /* if (proxy) */
 
     /* Point protocol specific functions to tcp versions */
     dsi->proto_open = dsi_tcp_open;
     dsi->proto_close = dsi_tcp_close;
 
-    /* get real address for GetStatus. we'll go through the list of
-     * interfaces if necessary. */
+    /* get real address for GetStatus. */
 
     if (address) {
         /* address is a parameter, use it 'as is' */
         return 1;
     }
 
-    if (!(host = gethostbyname(hostname)) ) { /* we can't resolve the name */
+    /* Prepare hint for getaddrinfo */
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
+    if ((ret = getaddrinfo(hostname, port ? port : "548", &hints, &servinfo)) != 0) {
+        LOG(log_error, logtype_default, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
+        return 0;
+    }
+
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        if (p->ai_family == AF_INET) { // IPv4
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            if ( (ipv4->sin_addr.s_addr & htonl(0x7f000000)) != htonl(0x7f000000) )
+                break;
+        } else { // IPv6
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+            unsigned char ipv6loopb[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+            if ((memcmp(ipv6->sin6_addr.s6_addr, ipv6loopb, 16)) != 0)
+                break;
+        }
+    }
+
+    if (p == NULL) { /* no advertisable address found */
         LOG(log_info, logtype_default, "dsi_tcp: cannot resolve hostname '%s'", hostname);
-        if (proxy) {
-            /* give up we have nothing to advertise */
-            return 0;
-        }
+        freeaddrinfo(servinfo);
+        return 0;
     }
-    else {
-        if (( ((struct in_addr *) host->h_addr)->s_addr & htonl(0x7F000000) ) !=  htonl(0x7F000000)) { /* FIXME ugly check */
-            dsi->server.sin_addr.s_addr = ((struct in_addr *) host->h_addr)->s_addr;
-            return 1;
-        }
-        LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
-    }
-    {
-        char **start, **list;
-        struct ifreq ifr;
 
-        /* get it from the interface list */
-        start = list = getifacelist();
-        while (list && *list) {
-            strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
-            list++;
+    /* Store found address in dsi->server */
+    memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+    freeaddrinfo(servinfo);
+    return 1;
+
+    /*
+     * Note: I'll leave this code just in case. With getaddrinfo I guess we
+     * should be able to get an IP != 127.0.0.1 or ::1 from the hostname. Hopefully.
+     */
+#if 0
+    /* get it from the interface list */
+    char **start, **list;
+    struct ifreq ifr;
+    start = list = getifacelist();
+    while (list && *list) {
+        strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
+        list++;
 
 #ifndef IFF_SLAVE
 #define IFF_SLAVE 0
 #endif
 
-            if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
-                continue;
+        if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
+            continue;
 
-            if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
-                continue;
+        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
+            continue;
 
-            if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) )
-                continue;
+        if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) )
+            continue;
 
-            if (ioctl(dsi->serversock, SIOCGIFADDR, &ifr) < 0)
-                continue;
+        if (ioctl(dsi->serversock, SIOCGIFADDR, &ifr) < 0)
+            continue;
 
-            dsi->server.sin_addr.s_addr =
-                ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr;
-            LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
-                inet_ntoa(dsi->server.sin_addr), ifr.ifr_name);
-            goto iflist_done;
-        }
-        LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) \
-Check to make sure %s is in /etc/hosts and the correct domain is in \
-/etc/resolv.conf: %s", hostname, strerror(errno));
-
-    iflist_done:
-        if (start)
-            freeifacelist(start);
+        dsi->server.sin_addr.s_addr =
+            ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr;
+        LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
+            inet_ntoa(dsi->server.sin_addr), ifr.ifr_name);
+        goto iflist_done;
     }
+    LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) "
+        "Check to make sure %s is in /etc/hosts and the correct domain is in "
+        "/etc/resolv.conf: %s", hostname, strerror(errno));
 
+iflist_done:
+    if (start)
+        freeifacelist(start);
     return 1;
 
+#endif
 }
 

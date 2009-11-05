@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.21 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_pam.c,v 1.22 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -55,7 +55,7 @@ char *strchr (), *strrchr ();
  * and the server_login function
  */
 static pam_handle_t *pamh = NULL; 
-static char *hostname;
+static const char *hostname;
 static char *PAM_username;
 static char *PAM_password;
 

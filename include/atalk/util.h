@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.12 2009-10-26 12:35:56 franklahm Exp $
+ * $Id: util.h,v 1.13 2009-11-05 14:38:08 franklahm Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -159,3 +159,77 @@ extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t l
  * fd's file flags.
  */
 extern int setnonblock(int fd, int cmd);
+
+/* 
+ * Function: getip_string
+ *
+ * Purpose: convert an IPv4 or IPv6 address to a static string using inet_ntop
+ *
+ * Arguments:
+ *
+ *   sa        (r) pointer to an struct sockaddr
+ *
+ * Returns: pointer to a static string cotaining the converted address as string.
+ *          On error pointers to "0.0.0.0" or "::0" are returned.
+ *
+ * Effects:
+ *
+ * IPv6 mapped IPv4 addresses are returned as IPv4 addreses eg
+ * ::ffff:10.0.0.0 is returned as "10.0.0.0".
+ */
+extern const char *getip_string(const struct sockaddr *sa);
+
+/* 
+ * Function: getip_string
+ *
+ * Purpose: return port number from struct sockaddr
+ *
+ * Arguments:
+ *
+ *   sa        (r) pointer to an struct sockaddr
+ *
+ * Returns: port as unsigned int
+ *
+ * Effects: none.
+ */
+extern unsigned int getip_port(const struct sockaddr *sa);
+
+/* 
+ * Function: apply_ip_mask
+ *
+ * Purpose: apply netmask to IP (v4 or v6)
+ *
+ * Arguments:
+ *
+ *   ai        (rw) pointer to an struct sockaddr
+ *   mask      (r) number of maskbits
+ *
+ * Returns: void
+ *
+ * Effects: 
+ *
+ * Modifies IP address in sa->sin[6]_addr-s[6]_addr. The caller is responsible
+ * for passing a value for mask that is sensible to the passed address,
+ * eg 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
+ * IPv4 is treated as mask = 32, mask > 128 is set to 128 for IPv6.
+ */
+extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
+
+/* 
+ * Function: compare_ip
+ *
+ * Purpose: Compare IP addresses for equality
+ *
+ * Arguments:
+ *
+ *   sa1       (r) pointer to an struct sockaddr
+ *   sa2       (r) pointer to an struct sockaddr
+ *
+ * Returns: Addresses are converted to strings and compared with strcmp and
+ *          the result of strcmp is returned.
+ *
+ * Effects: 
+ *
+ * IPv6 mapped IPv4 addresses are treated as IPv4 addresses.
+ */
+extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);

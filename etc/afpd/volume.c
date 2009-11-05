@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.97 2009-10-29 10:55:46 franklahm Exp $
+ * $Id: volume.c,v 1.98 2009-11-05 14:38:07 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -242,7 +242,8 @@ static void volfree(struct vol_option *options,
 static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
                      char *src, struct passwd *pwd, char *path, char *volname)
 {
-    char *p, *q;
+    char *p, *r;
+    const char *q;
     int len;
     char *ret;
     
@@ -288,17 +289,17 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
 
             } else if (obj->proto == AFPPROTO_DSI) {
                 DSI *dsi = obj->handle;
-
-                len = sprintf(dest, "%s:%u", inet_ntoa(dsi->client.sin_addr),
-                              ntohs(dsi->client.sin_port));
+                len = sprintf(dest, "%s:%u",
+                              getip_string((struct sockaddr *)&dsi->client),
+                              getip_port((struct sockaddr *)&dsi->client));
                 dest += len;
                 destlen -= len;
             }
         } else if (is_var(p, "$d")) {
              q = path;
         } else if (is_var(p, "$f")) {
-            if ((q = strchr(pwd->pw_gecos, ',')))
-                *q = '\0';
+            if ((r = strchr(pwd->pw_gecos, ',')))
+                *r = '\0';
             q = pwd->pw_gecos;
         } else if (is_var(p, "$g")) {
             struct group *grp = getgrgid(pwd->pw_gid);
@@ -316,9 +317,8 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
  
             } else if (obj->proto == AFPPROTO_DSI) {
                 DSI *dsi = obj->handle;
- 
-                q = inet_ntoa(dsi->client.sin_addr);
-            }
+                q = getip_string((struct sockaddr *)&dsi->client);
+           }
         } else if (is_var(p, "$s")) {
             if (obj->Obj)
                 q = obj->Obj;
@@ -885,10 +885,12 @@ static int accessvol(const char *args, const char *name)
     return 0;
 }
 
-static int hostaccessvol(int type, char *volname, const char *args, const AFPObj *obj)
+static int hostaccessvol(int type, const char *volname, const char *args, const AFPObj *obj)
 {
+    int mask_int;
     char buf[MAXPATHLEN + 1], *p, *b;
     DSI *dsi = obj->handle;
+    struct sockaddr_storage client;
 
     if (!args)
         return -1;
@@ -897,36 +899,57 @@ static int hostaccessvol(int type, char *volname, const char *args, const AFPObj
     if ((p = strtok_r(buf, ",", &b)) == NULL) /* nothing, return okay */
         return -1;
 
+    if (obj->proto != AFPPROTO_DSI)
+        return -1;
+
     while (p) {
-        if (obj->proto == AFPPROTO_DSI) {
-            struct in_addr mask, net;
-            char *net_char, *mask_char;
-            int mask_int;
+        int ret;
+        char *ipaddr, *mask_char;
+        struct addrinfo hints, *ai;
 
-            net_char = strtok(p, "/");
-            mask_char = strtok(NULL,"/");
-            if (mask_char == NULL) {
+        ipaddr = strtok(p, "/");
+        mask_char = strtok(NULL,"/");
+
+        /* Get address from string with getaddrinfo */
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        if ((ret = getaddrinfo(ipaddr, NULL, &hints, &ai)) != 0) {
+            LOG(log_error, logtype_afpd, "hostaccessvol: getaddrinfo: %s\n", gai_strerror(ret));
+            continue;
+        }        
+
+        /* netmask */
+        if (mask_char != NULL)
+            mask_int = atoi(mask_char); /* apply_ip_mask does range checking on it */
+        else {
+            if (ai->ai_family == AF_INET) /* IPv4 */
                 mask_int = 32;
-            } else {
-                mask_int = atoi(mask_char);
-            }
-           
-            // convert the integer netmask to a bitmask in network order
-            mask.s_addr = htonl(-1 - ((1 << (32 - mask_int)) - 1));
-            net.s_addr = inet_addr(net_char) & mask.s_addr;
-
-            if ((dsi->client.sin_addr.s_addr & mask.s_addr) == net.s_addr) {
-		    if (type == VOLOPT_DENIED_HOSTS)
-			LOG(log_info, logtype_afpd, "AFP access denied for client IP '%s' to volume '%s' by denied list",
-			    inet_ntoa(dsi->client.sin_addr), volname);
-		    return 1;
-	    }
+            else                          /* IPv6 */
+                mask_int = 128;
         }
+
+        /* Apply mask to addresses */
+        client = dsi->client;
+        apply_ip_mask((struct sockaddr *)&client, mask_int);
+        apply_ip_mask(ai->ai_addr, mask_int);
+
+        if (compare_ip((struct sockaddr *)&client, ai->ai_addr) == 0) {
+            if (type == VOLOPT_DENIED_HOSTS)
+                LOG(log_info, logtype_afpd, "AFP access denied for client IP '%s' to volume '%s' by denied list",
+                    getip_string((struct sockaddr *)&client), volname);
+            freeaddrinfo(ai);
+            return 1;
+        }
+
+        /* next address */
+        freeaddrinfo(ai);
         p = strtok_r(NULL, ",", &b);
     }
+
     if (type == VOLOPT_ALLOWED_HOSTS)
-	LOG(log_info, logtype_afpd, "AFP access denied for client IP '%s' to volume '%s', not in allowed list",
-	    inet_ntoa(dsi->client.sin_addr), volname);
+        LOG(log_info, logtype_afpd, "AFP access denied for client IP '%s' to volume '%s', not in allowed list",
+            getip_string((struct sockaddr *)&dsi->client), volname);
     return 0;
 }
 
@@ -1182,9 +1205,9 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
                allow -> either no list (-1), or in list (1)
                deny -> either no list (-1), or not in list (0) */
             if (accessvol(options[VOLOPT_ALLOW].c_value, obj->username) &&
-		(accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1) &&
-		hostaccessvol(VOLOPT_ALLOWED_HOSTS, volname, options[VOLOPT_ALLOWED_HOSTS].c_value, obj) &&
-		(hostaccessvol(VOLOPT_DENIED_HOSTS, volname, options[VOLOPT_DENIED_HOSTS].c_value, obj) < 1)) {
+                (accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1) &&
+                hostaccessvol(VOLOPT_ALLOWED_HOSTS, volname, options[VOLOPT_ALLOWED_HOSTS].c_value, obj) &&
+                (hostaccessvol(VOLOPT_DENIED_HOSTS, volname, options[VOLOPT_DENIED_HOSTS].c_value, obj) < 1)) {
 
                 /* handle read-only behaviour. semantics:
                  * 1) neither the rolist nor the rwlist exist -> rw
@@ -2463,8 +2486,9 @@ static int savevoloptions (const struct vol *vol)
     strlcat(buf, Cnid_srv, sizeof(buf));
     strlcat(buf, "\n", sizeof(buf));
 
-    snprintf(item, sizeof(item), "CNIDDBDPORT:%u\n", Cnid_port);
-    strlcat(buf, item, sizeof(buf));
+    strlcat(buf, "CNIDDBDPORT:", sizeof(buf));
+    strlcat(buf, Cnid_port, sizeof(buf));
+    strlcat(buf, "\n", sizeof(buf));
 
     strcpy(item, "CNID_DBPATH:");
     if (vol->v_dbpath)
