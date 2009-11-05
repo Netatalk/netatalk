@@ -1,5 +1,5 @@
 /*
-   $Id: socket.c,v 1.3 2009-11-05 21:28:13 didg Exp $
+   $Id: socket.c,v 1.4 2009-11-05 21:31:53 didg Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -92,8 +92,6 @@ unsigned int getip_port(const struct sockaddr  *sa)
 
 void apply_ip_mask(struct sockaddr *sa, uint32_t mask)
 {
-    if (mask < 0)
-        return;
 
     switch (sa->sa_family) {
     case AF_INET: {
@@ -136,7 +134,7 @@ void apply_ip_mask(struct sockaddr *sa, uint32_t mask)
 int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
 {
     int ret;
-    const char *ip1;
+    char *ip1;
     const char *ip2;
 
     ip1 = strdup(getip_string(sa1));
