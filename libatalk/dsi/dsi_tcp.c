@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.19 2009-11-06 13:53:16 franklahm Exp $
+ * $Id: dsi_tcp.c,v 1.20 2009-11-06 14:33:52 franklahm Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -361,6 +361,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 interfaces:
     LOG(log_warning, logtype_default, "dsi_tcp: cannot resolve hostname '%s'", hostname);
     /* get it from the interface list */
+    int fd;
     char **start, **list;
     struct ifreq ifr;
     start = list = getifacelist();
@@ -375,14 +376,17 @@ interfaces:
         if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
             continue;
 
-        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
+//        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
+        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_SLAVE))
             continue;
 
         if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) )
             continue;
 
-        if (ioctl(dsi->serversock, SIOCGIFADDR, &ifr) < 0)
+        fd = socket(PF_INET, SOCK_STREAM, 0);
+        if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
             continue;
+        close(fd);
 
         memcpy(&dsi->server, &ifr.ifr_addr, sizeof(struct sockaddr_storage));
         LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
