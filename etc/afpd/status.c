@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.27 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: status.c,v 1.28 2009-11-06 03:52:42 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -524,6 +524,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     } else
         asp = NULL;
 	
+    ipok = 0;
     if (dsiconfig) {
         status = dsiconfig->status;
         maxstatuslen=sizeof(dsiconfig->status);
@@ -533,7 +534,6 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
             ipok = sa4->sin_addr.s_addr ? 1 : 0;
         } else { /* IPv6 */
             const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
-            ipok = 0;
             for (int i=0; i<16; i++) {
                 if (sa6->sin6_addr.s6_addr[i]) {
                     ipok = 1;
