@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.98 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: volume.c,v 1.99 2009-11-06 04:28:25 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1443,7 +1443,7 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
                      (1<<VOLPBIT_XBFREE)|(1<<VOLPBIT_XBTOTAL) |
                      (1<<VOLPBIT_BSIZE)) ) != 0 ) {
         if ( getvolspace( vol, &bfree, &btotal, &xbfree, &xbtotal,
-                          &bsize) < 0 ) {
+                          &bsize) != AFP_OK ) {
             if ( isad ) {
                 ad_close( &ad, ADFLAGS_HF );
             }
@@ -2135,11 +2135,11 @@ struct extmap *getextmap(const char *path)
     char	  *p;
     struct extmap *em;
 
-    if (NULL == ( p = strrchr( path, '.' )) ) {
+    if (!Extmap_cnt || NULL == ( p = strrchr( path, '.' )) ) {
         return( Defextmap );
     }
     p++;
-    if (!*p || !Extmap_cnt) {
+    if (!*p) {
         return( Defextmap );
     }
     em = bsearch(p, Extmap, Extmap_cnt, sizeof(struct extmap), ext_cmp_key);
