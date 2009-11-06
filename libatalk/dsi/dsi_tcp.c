@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.21 2009-11-06 14:37:26 franklahm Exp $
+ * $Id: dsi_tcp.c,v 1.22 2009-11-06 23:05:09 didg Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -331,7 +331,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     hints.ai_socktype = SOCK_STREAM;
 
     if ((ret = getaddrinfo(hostname, port ? port : "548", &hints, &servinfo)) != 0) {
-        LOG(log_debug, logtype_default, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
+        LOG(log_info, logtype_default, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
         goto interfaces;
     }
 
@@ -340,13 +340,11 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
             if ( (ipv4->sin_addr.s_addr & htonl(0x7f000000)) != htonl(0x7f000000) )
                 break;
-            LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
         } else { // IPv6
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
             unsigned char ipv6loopb[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
             if ((memcmp(ipv6->sin6_addr.s6_addr, ipv6loopb, 16)) != 0)
                 break;
-            LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
         }
     }
 
@@ -356,10 +354,11 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         freeaddrinfo(servinfo);
         return 1;
     }
+    LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
     freeaddrinfo(servinfo);
 
 interfaces:
-    LOG(log_warning, logtype_default, "dsi_tcp: cannot resolve hostname '%s'", hostname);
+    ;
     /* get it from the interface list */
     int fd;
     char **start, **list;
