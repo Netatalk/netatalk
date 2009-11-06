@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.18 2009-11-05 14:38:08 franklahm Exp $
+ * $Id: dsi_tcp.c,v 1.19 2009-11-06 13:53:16 franklahm Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -331,8 +331,8 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     hints.ai_socktype = SOCK_STREAM;
 
     if ((ret = getaddrinfo(hostname, port ? port : "548", &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_default, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
-        return 0;
+        LOG(log_debug, logtype_default, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
+        goto interfaces;
     }
 
     for (p = servinfo; p != NULL; p = p->ai_next) {
@@ -340,30 +340,26 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
             if ( (ipv4->sin_addr.s_addr & htonl(0x7f000000)) != htonl(0x7f000000) )
                 break;
+            LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
         } else { // IPv6
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
             unsigned char ipv6loopb[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
             if ((memcmp(ipv6->sin6_addr.s6_addr, ipv6loopb, 16)) != 0)
                 break;
+            LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
         }
     }
 
-    if (p == NULL) { /* no advertisable address found */
-        LOG(log_info, logtype_default, "dsi_tcp: cannot resolve hostname '%s'", hostname);
+    if (p) {
+        /* Store found address in dsi->server */
+        memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
         freeaddrinfo(servinfo);
-        return 0;
+        return 1;
     }
-
-    /* Store found address in dsi->server */
-    memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
     freeaddrinfo(servinfo);
-    return 1;
 
-    /*
-     * Note: I'll leave this code just in case. With getaddrinfo I guess we
-     * should be able to get an IP != 127.0.0.1 or ::1 from the hostname. Hopefully.
-     */
-#if 0
+interfaces:
+    LOG(log_warning, logtype_default, "dsi_tcp: cannot resolve hostname '%s'", hostname);
     /* get it from the interface list */
     char **start, **list;
     struct ifreq ifr;
@@ -388,10 +384,9 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         if (ioctl(dsi->serversock, SIOCGIFADDR, &ifr) < 0)
             continue;
 
-        dsi->server.sin_addr.s_addr =
-            ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr;
+        memcpy(&dsi->server, &ifr.ifr_addr, sizeof(struct sockaddr_storage));
         LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
-            inet_ntoa(dsi->server.sin_addr), ifr.ifr_name);
+            getip_string((struct sockaddr *)&dsi->server), ifr.ifr_name);
         goto iflist_done;
     }
     LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) "
@@ -402,7 +397,5 @@ iflist_done:
     if (start)
         freeifacelist(start);
     return 1;
-
-#endif
 }
 
