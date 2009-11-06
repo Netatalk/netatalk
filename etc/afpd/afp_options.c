@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.48 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: afp_options.c,v 1.49 2009-11-06 09:16:15 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -365,6 +365,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->uamlist = opt;
 
     if ((c = getoption(buf, "-ipaddr"))) {
+#if 0
         struct in_addr inaddr;
         if (inet_aton(c, &inaddr) && (opt = strdup(c))) {
             if (!gethostbyaddr((const char *) &inaddr, sizeof(inaddr), AF_INET))
@@ -374,6 +375,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         else {
             LOG(log_error, logtype_afpd, "Error parsing -ipaddr, is %s in numbers-and-dots notation?", c);
         }
+#endif
+        options->ipaddr = strdup(c);
     }
 
     /* FIXME CNID Cnid_srv is a server attribute */
