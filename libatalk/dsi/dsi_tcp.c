@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.22 2009-11-06 23:05:09 didg Exp $
+ * $Id: dsi_tcp.c,v 1.23 2009-11-06 23:25:35 didg Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -234,6 +234,54 @@ static int dsi_tcp_open(DSI *dsi)
     return pid;
 }
 
+/* get it from the interface list */
+#ifndef IFF_SLAVE
+#define IFF_SLAVE 0
+#endif
+
+static void guess_interface(DSI *dsi, const char *hostname)
+{
+    int fd;
+    char **start, **list;
+    struct ifreq ifr;
+
+    start = list = getifacelist();
+    if (!start)
+        return;
+        
+    fd = socket(PF_INET, SOCK_STREAM, 0);
+
+    while (list && *list) {
+        strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
+        list++;
+
+
+        if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
+            continue;
+
+        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
+            continue;
+
+        if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) )
+            continue;
+
+        if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
+            continue;
+
+        memcpy(&dsi->server, &ifr.ifr_addr, sizeof(struct sockaddr_storage));
+        LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
+                  getip_string((struct sockaddr *)&dsi->server), ifr.ifr_name);
+        goto iflist_done;
+    }
+    LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) "
+        "Check to make sure %s is in /etc/hosts and the correct domain is in "
+        "/etc/resolv.conf: %s", hostname, strerror(errno));
+
+iflist_done:
+    close(fd);
+    freeifacelist(start);
+}
+
 /* this needs to accept passed in addresses */
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
                  const char *port, const int proxy)
@@ -358,48 +406,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     freeaddrinfo(servinfo);
 
 interfaces:
-    ;
-    /* get it from the interface list */
-    int fd;
-    char **start, **list;
-    struct ifreq ifr;
-
-    start = list = getifacelist();
-    fd = socket(PF_INET, SOCK_STREAM, 0);
-
-    while (list && *list) {
-        strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
-        list++;
-
-#ifndef IFF_SLAVE
-#define IFF_SLAVE 0
-#endif
-
-        if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
-            continue;
-
-        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
-            continue;
-
-        if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) )
-            continue;
-
-        if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
-            continue;
-
-        memcpy(&dsi->server, &ifr.ifr_addr, sizeof(struct sockaddr_storage));
-        LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
-            getip_string((struct sockaddr *)&dsi->server), ifr.ifr_name);
-        goto iflist_done;
-    }
-    LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) "
-        "Check to make sure %s is in /etc/hosts and the correct domain is in "
-        "/etc/resolv.conf: %s", hostname, strerror(errno));
-
-iflist_done:
-    close(fd);
-    if (start)
-        freeifacelist(start);
+    guess_interface(dsi, hostname);
     return 1;
 }
 
