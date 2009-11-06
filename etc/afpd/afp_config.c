@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.29 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: afp_config.c,v 1.30 2009-11-06 03:50:32 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -351,14 +351,6 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     AFPConfig *config;
     DSI *dsi;
     char *p, *q;
-#ifdef USE_SRVLOC
-    SLPError err;
-    SLPError callbackerr;
-    SLPHandle hslp;
-    struct servent *afpovertcp;
-    int afp_port = 548;
-    char *srvloc_hostname, *hostname;
-#endif /* USE_SRVLOC */
 
     if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
         LOG(log_error, logtype_afpd, "DSIConfigInit: malloc(config): %s", strerror(errno) );
@@ -390,6 +382,14 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 #ifdef USE_SRVLOC
     dsi->srvloc_url[0] = '\0';	/*  Mark that we haven't registered.  */
     if (!(options->flags & OPTION_NOSLP)) {
+        SLPError err;
+        SLPError callbackerr;
+        SLPHandle hslp;
+        unsigned int afp_port;
+        int   l;
+        char *srvloc_hostname;
+        const char *hostname;
+
 	err = SLPOpen("en", SLP_FALSE, &hslp);
 	if (err != SLP_OK) {
 	    LOG(log_error, logtype_afpd, "DSIConfigInit: Error opening SRVLOC handle");
@@ -402,10 +402,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	 * use a non-default port, they can, but be aware, this server might
 	 * not show up int the Network Browser.
 	 */
-	afpovertcp = getservbyname("afpovertcp", "tcp");
-	if (afpovertcp != NULL) {
-	    afp_port = afpovertcp->s_port;
-	}
+	afp_port = getip_port((struct sockaddr *)&dsi->server);
 	/* If specified use the FQDN to register with srvloc, otherwise use IP. */
 	p = NULL;
 	if (options->fqdn) {
@@ -413,19 +410,21 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	    p = strchr(hostname, ':');
 	}	
 	else 
-	    hostname = inet_ntoa(dsi->server.sin_addr);
+	    hostname = getip_string((struct sockaddr *)&dsi->server);
+
 	srvloc_hostname = srvloc_encode(options, (options->server ? options->server : options->hostname));
 
-	if (strlen(srvloc_hostname) > (sizeof(dsi->srvloc_url) - strlen(hostname) - 21)) {
+	if ((p) || afp_port == 548) {
+	    l = snprintf(dsi->srvloc_url, sizeof(dsi->srvloc_url), "afp://%s/?NAME=%s", hostname, srvloc_hostname);
+	}
+	else {
+	    l = snprintf(dsi->srvloc_url, sizeof(dsi->srvloc_url), "afp://%s:%d/?NAME=%s", hostname, afp_port, srvloc_hostname);
+	}
+
+	if (l == -1 || l >= (int)sizeof(dsi->srvloc_url)) {
 	    LOG(log_error, logtype_afpd, "DSIConfigInit: Hostname is too long for SRVLOC");
 	    dsi->srvloc_url[0] = '\0';
 	    goto srvloc_reg_err;
-	}
-	if ((p) || dsi->server.sin_port == afp_port) {
-	    sprintf(dsi->srvloc_url, "afp://%s/?NAME=%s", hostname, srvloc_hostname);
-	}
-	else {
-	    sprintf(dsi->srvloc_url, "afp://%s:%d/?NAME=%s", hostname, ntohs(dsi->server.sin_port), srvloc_hostname);
 	}
 
 	err = SLPReg(hslp,
@@ -449,6 +448,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
 	}
 
 	LOG(log_info, logtype_afpd, "Sucessfully registered %s with SRVLOC", dsi->srvloc_url);
+	config->server_cleanup = dsi_cleanup;
 
 srvloc_reg_err:
 	SLPClose(hslp);
@@ -472,9 +472,6 @@ srvloc_reg_err:
     (*refcount)++;
 
     config->server_start = dsi_start;
-#ifdef USE_SRVLOC
-    config->server_cleanup = dsi_cleanup;
-#endif 
     return config;
 }
 
