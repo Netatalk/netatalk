@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.20 2009-11-06 14:33:52 franklahm Exp $
+ * $Id: dsi_tcp.c,v 1.21 2009-11-06 14:37:26 franklahm Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -364,7 +364,10 @@ interfaces:
     int fd;
     char **start, **list;
     struct ifreq ifr;
+
     start = list = getifacelist();
+    fd = socket(PF_INET, SOCK_STREAM, 0);
+
     while (list && *list) {
         strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
         list++;
@@ -376,17 +379,14 @@ interfaces:
         if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0)
             continue;
 
-//        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
-        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_SLAVE))
+        if (ifr.ifr_flags & (IFF_LOOPBACK | IFF_POINTOPOINT | IFF_SLAVE))
             continue;
 
         if (!(ifr.ifr_flags & (IFF_UP | IFF_RUNNING)) )
             continue;
 
-        fd = socket(PF_INET, SOCK_STREAM, 0);
         if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
             continue;
-        close(fd);
 
         memcpy(&dsi->server, &ifr.ifr_addr, sizeof(struct sockaddr_storage));
         LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
@@ -398,6 +398,7 @@ interfaces:
         "/etc/resolv.conf: %s", hostname, strerror(errno));
 
 iflist_done:
+    close(fd);
     if (start)
         freeifacelist(start);
     return 1;
