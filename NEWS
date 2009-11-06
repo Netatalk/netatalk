@@ -8,6 +8,8 @@ Changes in 2.1
 * NEW: configure args to download and install a "private" Webmin instance
        including only basic Webmin modules plus our netatalk.wbm.
 * NEW: cnid_metad: options -l and -f to configure logging
+* NEW: cnid_metad: IPv6 support
+* FIX: cnid_dbd: always use BerkeleyDB transactions
 * NEW: CNID database maintanance utility dbd
 * NEW: support BerkeleyDB upgrade. Starting with the next release
        after 2.1 in case of BerkeleyDB library updates, Netatalk
@@ -22,6 +24,7 @@ Changes in 2.1
        This is used as a cache and as a backup in case the database
        is deleted or corrupted. It can be disabled with a new volume
        option "nocnidcache".
+* NEW: afpd: IPv6 support
 
 Changes in 2.0.5
 ================
