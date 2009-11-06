@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.28 2009-10-13 22:55:37 didg Exp $
+ * $Id: ofork.c,v 1.29 2009-11-06 03:51:54 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -290,10 +290,14 @@ int ret;
    return ret;
 }
 
-/* -------------------------- */
+/* -------------------------- 
+   stat the current directory.
+   stat(".") works even if "." is deleted thus
+   we have to stat ../name because we want to know if it's there
+*/
 int of_statdir  (const struct vol *vol, struct path *path)
 {
-static char pathname[ MAXPATHLEN + 1];
+static char pathname[ MAXPATHLEN + 1] = "../";
 int ret;
 
     if (*path->m_name) {
@@ -303,8 +307,7 @@ int ret;
     path->st_errno = 0;
     path->st_valid = 1;
     /* FIXME, what about: we don't have r-x perm anymore ? */
-    strcpy(pathname, "../");
-    strlcat(pathname, path->d_dir->d_u_name, MAXPATHLEN);
+    strlcpy(pathname +3, path->d_dir->d_u_name, sizeof (pathname) -3);
 
     if (!(ret = stat(pathname, &path->st)))
         return 0;
