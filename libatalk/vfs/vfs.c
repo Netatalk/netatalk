@@ -86,15 +86,20 @@ for_each_adouble(const char *from, const char *name, rf_loop fn, void *data, int
 
 static int netatalk_name(const char *name)
 {
-    return strcasecmp(name,".AppleDB") &&
-        strcasecmp(name,".AppleDouble") &&
+    return strcasecmp(name,".AppleDouble") &&
+        strcasecmp(name,".AppleDB") &&
         strcasecmp(name,".AppleDesktop");
 }
 
 static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 {
-    return (vol->v_flags & AFPVOL_USEDOTS) ? 
-        netatalk_name(name) && strcasecmp(name,".Parent"): name[0] != '.';
+    if (name[0] != '.')
+        return 1;
+    
+    if (!(vol->v_flags & AFPVOL_USEDOTS))
+        return 0;
+        
+    return netatalk_name(name) && strcasecmp(name,".Parent");
 }                                           
 
 /* ----------------- */
