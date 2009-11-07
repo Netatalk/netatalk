@@ -369,8 +369,6 @@ size_t convert_string(charset_t from, charset_t to,
     ucs2_t buffer2[MAXPATHLEN];
     int composition = 0;
 
-    lazy_initialize_conv();
-
     /* convert from_set to UCS2 */
     if ((size_t)(-1) == ( o_len = convert_string_internal( from, CH_UCS2, src, srclen,
                                                            (char*) buffer, sizeof(buffer))) ) {
@@ -518,8 +516,6 @@ size_t convert_string_allocate(charset_t from, charset_t to,
     ucs2_t buffer[MAXPATHLEN];
     ucs2_t buffer2[MAXPATHLEN];
     int composition = 0;
-
-    lazy_initialize_conv();
 
     *dest = NULL;
 
@@ -806,8 +802,6 @@ static size_t pull_charset_flags (charset_t from_set, charset_t cap_set, const c
     if (srclen == (size_t)-1)
         srclen = strlen(src) + 1;
 
-    lazy_initialize_conv();
-
     descriptor = conv_handles[from_set][CH_UCS2];
     descriptor_cap = conv_handles[cap_set][CH_UCS2];
 
@@ -916,8 +910,6 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
     char* outbuf = (char*)dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
-
-    lazy_initialize_conv();
 
     descriptor = conv_handles[CH_UCS2][to_set];
     descriptor_cap = conv_handles[CH_UCS2][cap_set];
