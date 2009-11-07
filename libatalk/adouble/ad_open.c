@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.56 2009-11-07 01:02:58 didg Exp $
+ * $Id: ad_open.c,v 1.57 2009-11-07 01:18:50 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -939,36 +939,46 @@ char
 {
     static char     modebuf[ MAXPATHLEN + 1];
     char        *slash;
-    size_t              len;
-
-    if ( (len = strlen( path )) >= MAXPATHLEN ) {
-        errno = ENAMETOOLONG;
-        return NULL;  /* can't do it */
-    }
-
     /*
      * For a path with directories in it, remove the final component
      * (path or subdirectory name) to get the name we want to stat.
      * For a path which is just a filename, use "." instead.
      */
-    strcpy( modebuf, path );
-    slash = strrchr( modebuf, '/' );
-    /* is last char a '/' */
-    if (slash && slash[1] == 0) {
-        while (modebuf < slash && slash[-1] == '/') {
-            --slash;
-        }
-        if (modebuf < slash) {
-            *slash = '\0';      /* remove pathname component */
-            slash = strrchr( modebuf, '/' );
-        }
-    }
+    slash = strrchr( path, '/' );
     if (slash) {
-        *slash = '\0';      /* remove pathname component */
-    } else {
-        modebuf[0] = '.';   /* use current directory */
-        modebuf[1] = '\0';
+        size_t len;
+
+        len = slash - path;
+        if (len >= MAXPATHLEN) {
+            errno = ENAMETOOLONG;
+            return NULL;  /* can't do it */
+        }
+        memcpy( modebuf, path, len );
+        modebuf[len] = '\0';
+        /* is last char a '/' ? */
+        if (slash[1] == 0) {
+            slash = modebuf+ len;
+            /* remove them */
+            while (modebuf < slash && slash[-1] == '/') {
+                --slash;
+            }
+            if (modebuf == slash) {
+                goto use_cur;
+            }
+            *slash = '\0';
+            while (modebuf < slash && *slash != '/') {
+                --slash;
+            }
+            if (modebuf == slash) {
+                goto use_cur;
+            }
+            *slash = '\0';      /* remove pathname component */
+        }
+        return modebuf;
     }
+use_cur:
+    modebuf[0] = '.';   /* use current directory */
+    modebuf[1] = '\0';
     return modebuf;
 }
 
