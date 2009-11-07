@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.55 2009-11-07 00:58:16 didg Exp $
+ * $Id: ad_open.c,v 1.56 2009-11-07 01:02:58 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -763,30 +763,31 @@ char *
 ad_path( const char *path, int adflags)
 {
     static char pathbuf[ MAXPATHLEN + 1];
-    char    c, *slash, buf[MAXPATHLEN + 1];
-    size_t      l;
+    const char *slash;
+    size_t  l ;
 
-    l = strlcpy(buf, path, MAXPATHLEN +1);
     if ( adflags & ADFLAGS_DIR ) {
-        strcpy( pathbuf, buf);
-        if ( *buf != '\0' && l < MAXPATHLEN) {
+        l = strlcpy( pathbuf, path, sizeof(pathbuf));
+
+        if ( l && l < MAXPATHLEN) {
             pathbuf[l++] = '/';
-            pathbuf[l] = 0;
         }
-        slash = ".Parent";
+        strlcpy(pathbuf +l, ".AppleDouble/.Parent", sizeof(pathbuf) -l);
     } else {
-        if (NULL != ( slash = strrchr( buf, '/' )) ) {
-            c = *++slash;
-            *slash = '\0';
-            strcpy( pathbuf, buf);
-            *slash = c;
+        if (NULL != ( slash = strrchr( path, '/' )) ) {
+            slash++;
+            l = slash - path;
+            /* XXX we must return NULL here and test in the caller */
+            if (l > MAXPATHLEN)
+                l = MAXPATHLEN;
+            memcpy( pathbuf, path, l);
         } else {
-            pathbuf[ 0 ] = '\0';
-            slash = buf;
+            l = 0;
+            slash = path;
         }
+        l += strlcpy( pathbuf +l, ".AppleDouble/", sizeof(pathbuf) -l);
+        strlcpy( pathbuf + l, slash, sizeof(pathbuf) -l);
     }
-    strlcat( pathbuf, ".AppleDouble/", MAXPATHLEN +1);
-    strlcat( pathbuf, slash, MAXPATHLEN +1);
 
     return( pathbuf );
 }
