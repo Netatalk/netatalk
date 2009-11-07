@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.54 2009-10-29 13:38:16 didg Exp $
+ * $Id: ad_open.c,v 1.55 2009-11-07 00:58:16 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -575,8 +575,8 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
                                        && (ad->ad_version != AD_VERSION2)
 #endif /* AD_VERSION == AD_VERSION2 */
             )) {
-        errno = EIO;
         LOG(log_debug, logtype_default, "ad_open: can't parse AppleDouble header.");
+        errno = EIO;
         return -1;
     }
 
@@ -593,8 +593,8 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 
     buf += AD_HEADER_LEN;
     if (len > header_len - AD_HEADER_LEN) {
-        errno = EIO;
         LOG(log_debug, logtype_default, "ad_header_read: can't read entry info.");
+        errno = EIO;
         return -1;
     }
 
@@ -605,14 +605,14 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     if (!ad_getentryoff(ad, ADEID_RFORK)
         || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
         ) {
-        errno = EIO;
         LOG(log_debug, logtype_default, "ad_header_read: problem with rfork entry offset.");
+        errno = EIO;
         return -1;
     }
 
     if (ad_getentryoff(ad, ADEID_RFORK) > header_len) {
-        errno = EIO;
         LOG(log_debug, logtype_default, "ad_header_read: can't read in entries.");
+        errno = EIO;
         return -1;
     }
 
