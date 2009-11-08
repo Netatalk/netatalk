@@ -1,5 +1,5 @@
 /*
- * $Id: dsi_tcp.c,v 1.23 2009-11-06 23:25:35 didg Exp $
+ * $Id: dsi_tcp.c,v 1.24 2009-11-08 09:44:22 franklahm Exp $
  *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -244,6 +244,7 @@ static void guess_interface(DSI *dsi, const char *hostname)
     int fd;
     char **start, **list;
     struct ifreq ifr;
+    struct sockaddr_in *sa = (struct sockaddr_in *)&dsi->server;
 
     start = list = getifacelist();
     if (!start)
@@ -268,7 +269,11 @@ static void guess_interface(DSI *dsi, const char *hostname)
         if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
             continue;
 
-        memcpy(&dsi->server, &ifr.ifr_addr, sizeof(struct sockaddr_storage));
+        memset(&dsi->server, 0, sizeof(struct sockaddr_storage));
+        sa->sin_family = AF_INET;
+        sa->sin_port = htons(548);
+        sa->sin_addr = ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr;
+
         LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
                   getip_string((struct sockaddr *)&dsi->server), ifr.ifr_name);
         goto iflist_done;
