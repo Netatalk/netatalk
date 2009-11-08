@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.32 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: uam.c,v 1.33 2009-11-08 00:41:45 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -583,7 +583,8 @@ int uam_sia_validate_user(sia_collect_func_t * collect, int argc, char **argv,
 #endif /* TRU64 */
 
 /* --- papd-specific functions (just placeholders) --- */
-void append(void *pf  _U_, char *data _U_, int len _U_)
+struct papfile;
+void append(struct papfile *pf  _U_, const char *data _U_, int len _U_)
 {
     return;
 }
