@@ -159,7 +159,7 @@ void set_processname(const char *processname);
  */
 
 /* LOG macro func no.1: log the message to file */
-__attribute__ ((visibility("default"))) void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
+void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
 
 /* 
    Note:
