@@ -1,5 +1,5 @@
 /*
- * $Id: uam.c,v 1.33 2009-11-08 00:41:45 didg Exp $
+ * $Id: uam.c,v 1.34 2009-11-08 01:01:43 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -70,9 +70,6 @@ char *strchr (), *strrchr ();
 #endif /* TRU64 */
 
 /* --- server uam functions -- */
-#ifndef NO_LOAD_UAM
-extern  int uam_setup(const char *path);
-#endif
 
 /* uam_load. uams must have a uam_setup function. */
 struct uam_mod *uam_load(const char *path, const char *name)
@@ -81,12 +78,10 @@ struct uam_mod *uam_load(const char *path, const char *name)
     struct uam_mod *mod;
     void *module;
 
-#ifndef NO_LOAD_UAM
     if ((module = mod_open(path)) == NULL) {
         LOG(log_error, logtype_afpd, "uam_load(%s): failed to load: %s", name, mod_error());
         return NULL;
     }
-#endif
 
     if ((mod = (struct uam_mod *) malloc(sizeof(struct uam_mod))) == NULL) {
         LOG(log_error, logtype_afpd, "uam_load(%s): malloc failed", name);
@@ -97,7 +92,6 @@ struct uam_mod *uam_load(const char *path, const char *name)
     if ((p = strchr(buf, '.')))
         *p = '\0';
 
-#ifndef NO_LOAD_UAM
     if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
         LOG(log_error, logtype_afpd, "uam_load(%s): mod_symbol error for symbol %s",
             name,
@@ -118,9 +112,6 @@ struct uam_mod *uam_load(const char *path, const char *name)
         LOG(log_error, logtype_afpd, "uam_load(%s): uam_setup failed", name);
         goto uam_load_err;
     }
-#else
-   uam_setup(name);
-#endif
 
     mod->uam_module = module;
     return mod;
@@ -140,9 +131,7 @@ void uam_unload(struct uam_mod *mod)
     if (mod->uam_fcn->uam_cleanup)
         (*mod->uam_fcn->uam_cleanup)();
 
-#ifndef NO_LOAD_UAM
     mod_close(mod->uam_module);
-#endif    
     free(mod);
 }
 
