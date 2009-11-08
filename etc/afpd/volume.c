@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.99 2009-11-06 04:28:25 didg Exp $
+ * $Id: volume.c,v 1.100 2009-11-08 23:17:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1786,7 +1786,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     char        *vol_uname;
     char        *vol_mname;
     char        *volname_tmp;
-
+    struct charset_functions *charset;
+    
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
     bitmap = ntohs( bitmap );
@@ -1953,7 +1954,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 	goto openvol_err;
     }
 
-    if ( NULL == ( volume->v_vol = find_charset_functions(volume->v_volcodepage)) || volume->v_vol->flags & CHARSET_ICONV ) {
+    if ( NULL == (charset = find_charset_functions(volume->v_volcodepage)) || charset->flags & CHARSET_ICONV ) {
 	LOG (log_warning, logtype_afpd, "WARNING: volume encoding %s is *not* supported by netatalk, expect problems !!!!", volume->v_volcodepage);
     }	
 
@@ -1966,11 +1967,12 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 	goto openvol_err;
     }
 
-    if ( NULL == ( volume->v_mac = find_charset_functions(volume->v_maccodepage)) || ! (volume->v_mac->flags & CHARSET_CLIENT) ) {
+    if ( NULL == ( charset = find_charset_functions(volume->v_maccodepage)) || ! (charset->flags & CHARSET_CLIENT) ) {
 	LOG (log_error, logtype_afpd, "Fatal error: mac charset %s not supported", volume->v_maccodepage);
 	ret = AFPERR_MISC;
 	goto openvol_err;
-    }	
+    }
+    volume->v_kTextEncoding = htonl(charset->kTextEncoding);
 
     ret  = stat_vol(bitmap, volume, rbuf, rbuflen);
     if (ret == AFP_OK) {
