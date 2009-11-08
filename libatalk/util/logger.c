@@ -72,24 +72,24 @@ Netatalk 2001 (c)
 
 /* Main log config */
 typedef struct {
-    int   inited;		  /* file log config initialized ? */
-    int   filelogging;		  /* Any level set to filelogging ? */
-                                  /* Deactivates syslog logging */
-    char  processname[16];
-    int   syslog_opened;	  /* syslog opened ? */
-    int   facility;               /* syslog facility to use */
-    int   syslog_display_options;
-    int   syslog_level;           /* Log Level to send to syslog */
+    int            inited;		   /* file log config initialized ? */
+    int            filelogging;		   /* Any level set to filelogging ? */
+                                           /* Deactivates syslog logging */
+    char           processname[16];
+    int            syslog_opened;	   /* syslog opened ? */
+    int            facility;               /* syslog facility to use */
+    int            syslog_display_options;
+    enum loglevels syslog_level;           /* Log Level to send to syslog */
 } log_config_t;
 
 /* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
 typedef struct {
-    int  set;			  /* set individually ? yes: changing default
+    int            set;		  /* set individually ? yes: changing default
 				   * doesnt change it. no: it changes it.*/
-    char *filename;               /* Name of file */
-    int  fd;                      /* logfiles fd */
-    int  level;                   /* Log Level to put in this file */
-    int  display_options;
+    char           *filename;     /* Name of file */
+    int            fd;            /* logfiles fd */
+    enum loglevels level;         /* Log Level to put in this file */
+    int            display_options;
 } filelog_conf_t;
 
 /* =========================================================================
@@ -132,14 +132,14 @@ static int  log_src_linenumber;
 
 /* Array to store text to list given a log type */
 static const char *arr_logtype_strings[] =  LOGTYPE_STRING_IDENTIFIERS;
-static const int num_logtype_strings = COUNT_ARRAY(arr_logtype_strings);
+static const unsigned int num_logtype_strings = COUNT_ARRAY(arr_logtype_strings);
 
 /* Array for charachters representing log severity in the log file */
 static const char arr_loglevel_chars[] = {'-','S', 'E', 'W', 'N', 'I', 'D'};
-static const int num_loglevel_chars = COUNT_ARRAY(arr_loglevel_chars);
+static const unsigned int num_loglevel_chars = COUNT_ARRAY(arr_loglevel_chars);
 
 static const char *arr_loglevel_strings[] = LOGLEVEL_STRING_IDENTIFIERS;
-static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
+static const unsigned int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
 
 /* =========================================================================
    Internal function definitions
@@ -158,7 +158,7 @@ static const int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
 /* -[un]setuplog <logtype> <loglevel> [<filename>]*/
 static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename)
 {
-    int typenum, levelnum;
+    unsigned int typenum, levelnum;
 
     /* Parse logtype */
     for( typenum=0; typenum < num_logtype_strings; typenum++) {
