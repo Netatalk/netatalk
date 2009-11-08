@@ -1,5 +1,5 @@
 /*
- * $Id: uams_pam.c,v 1.22 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: uams_pam.c,v 1.23 2009-11-08 01:07:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -61,7 +61,7 @@ static char *PAM_password;
 
 /*XXX in etc/papd/file.h */
 struct papfile;
-extern void append(struct papfile *, const char *, int);
+extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
 /* PAM conversation function
  * Here we assume (for now, at least) that echo on means login name, and

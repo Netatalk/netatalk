@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.28 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: uams_passwd.c,v 1.29 2009-11-08 01:07:17 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -73,7 +73,7 @@ static const char *clientname;
 
 /*XXX in etc/papd/file.h */
 struct papfile;
-extern void append(struct papfile *, const char *, int);
+extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,

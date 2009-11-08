@@ -1,5 +1,5 @@
 /*
- * $Id: uams_guest.c,v 1.17 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_guest.c,v 1.18 2009-11-08 01:07:17 didg Exp $
  *
  * (c) 2001 (see COPYING)
  */
@@ -40,7 +40,7 @@ char *strchr (), *strrchr ();
 
 /*XXX in etc/papd/file.h */
 struct papfile;
-extern void append(struct papfile *, const char *, int);
+extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
 /* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
