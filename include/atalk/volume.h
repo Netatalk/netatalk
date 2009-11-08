@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.2 2009-10-29 13:06:19 franklahm Exp $
+ * $Id: volume.h,v 1.3 2009-11-08 22:08:04 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,35 +22,28 @@
 
 struct vol {
     struct vol		*v_next;
-    char        *v_localname;   /* as defined in AppleVolumes.default */
-    ucs2_t		*v_u8mname;     /* converted to utf8-mac in ucs2 */
-    ucs2_t		*v_macname;     /* mangled to legacy longname in ucs2 */
-    ucs2_t		*v_name;        /* either v_u8mname or v_macname */
+    u_int16_t		v_vid;
+    int			v_flags;
+
     char		*v_path;
     
     struct dir		*v_dir, *v_root;
     hash_t		*v_hash;
-    int			v_flags;
-#ifdef __svr4__
-    int			v_qfd;
-#endif /*__svr4__*/
-    char		*v_gvs;
     time_t		v_mtime;
-    time_t		v_ctime;  /* volume creation date, not unix ctime */
 
-    u_int16_t		v_vid;
-    void                *v_nfsclient;
-    int                 v_nfs;
-    
+    charset_t		v_volcharset;	
+    charset_t		v_maccharset;
+    struct charset_functions	*v_mac;
+
     int                 v_casefold;
     size_t              max_filename;
     
-    char                *v_password;
     char                *v_veto;
 
-    char                *v_cnidscheme;
-    char                *v_dbpath;
-    dev_t               v_dev;              /* Unix volume device */
+    int                 v_adouble;    /* default adouble format */
+    int                 v_ad_options; /* adouble option NODEV, NOCACHE, etc.. */
+    char                *(*ad_path)(const char *, int);
+
     struct _cnid_db     *v_cdb;
     char                v_stamp[ADEDLEN_PRIVSYN];
     mode_t		v_umask;
@@ -63,19 +56,42 @@ struct vol {
     char		*v_forcegid;
 #endif 
 
-    char                *v_volcodepage;
-    charset_t		v_volcharset;	
-    struct charset_functions	*v_vol;
-    char		        *v_maccodepage;
-    charset_t		    v_maccharset;
-    struct charset_functions	*v_mac;
+    /* adouble indirection */
+    struct vfs_ops      *vfs;   /* pointer to vfs_master_funcs for chaining */
+    const struct vfs_ops *vfs_modules[4];
+    int                 v_vfs_ea;       /* The AFPVOL_EA_xx flag */
 
-    int                 v_deleted;    /* volume open but deleted in new config file */
+    ucs2_t		*v_u8mname;     /* converted to utf8-mac in ucs2 */
+    ucs2_t		*v_macname;     /* mangled to legacy longname in ucs2 */
+    ucs2_t		*v_name;        /* either v_u8mname or v_macname */
+
+    /* get/set volparams */
+    time_t		v_ctime;  /* volume creation date, not unix ctime */
+
+    dev_t               v_dev;    /* Unix volume device, Set but not used */
+
+#ifdef __svr4__
+    int			v_qfd;
+#endif /*__svr4__*/
+    char		*v_gvs;
+    void                *v_nfsclient;
+    int                 v_nfs;
+    
+    struct charset_functions	*v_vol;  /* set but not used */
+
+    /* only when opening/closing volumes or in error */
+    char        	*v_localname;   /* as defined in AppleVolumes.default */
+    char                *v_volcodepage;
+    char		*v_maccodepage;
+
+    char                *v_password;
+
+    char                *v_cnidscheme;
+    char                *v_dbpath;
+
     int                 v_hide;       /* new volume wait until old volume is closed */
     int                 v_new;        /* volume deleted but there's a new one with the same name */
-    int                 v_adouble;    /* default adouble format */
-    int                 v_ad_options; /* adouble option NODEV, NOCACHE, etc.. */
-
+    int                 v_deleted;    /* volume open but deleted in new config file */
     char                *v_root_preexec;
     char                *v_preexec;
 
@@ -85,11 +101,6 @@ struct vol {
     int                 v_root_preexec_close;
     int                 v_preexec_close;
     
-    /* adouble indirection */
-    struct vfs_ops      *vfs;   /* pointer to vfs_master_funcs for chaining */
-    const struct vfs_ops *vfs_modules[4];
-    int                 v_vfs_ea;       /* The AFPVOL_EA_xx flag */
-    char                *(*ad_path)(const char *, int);
 };
 
 #ifdef NO_LARGE_VOL_SUPPORT
