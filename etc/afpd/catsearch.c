@@ -111,6 +111,7 @@ struct dsitem {
 	struct dir *dir; /* Structure describing this directory */
 	int pidx;        /* Parent's dsitem structure index. */
 	int checked;     /* Have we checked this directory ? */
+	int path_len;
 	char *path;      /* absolute UNIX path to this directory */
 };
  
@@ -130,7 +131,7 @@ static struct scrit c1, c2;          /* search criteria */
 static int addstack(char *uname, struct dir *dir, int pidx)
 {
 	struct dsitem *ds;
-	int           l;
+	size_t         l, u;
 
 	/* check if we have some space on stack... */
 	if (dsidx >= dssize) {
@@ -144,17 +145,21 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 	ds = dstack + dsidx++;
 	ds->dir = dir;
 	ds->pidx = pidx;
-	if (pidx >= 0) {
-	    l = strlen(dstack[pidx].path);
-	    if (!(ds->path = malloc(l + strlen(uname) + 2) ))
-			return -1;
-		strcpy(ds->path, dstack[pidx].path);
-		strcat(ds->path, "/");
-		strcat(ds->path, uname);
-	}
-
 	ds->checked = 0;
-
+	if (pidx >= 0) {
+	    l = dstack[pidx].path_len;
+	    u = strlen(uname) +1;
+	    if (!(ds->path = malloc(l + u + 1) ))
+			return -1;
+		memcpy(ds->path, dstack[pidx].path, l);
+		ds->path[l] = '/';
+		memcpy(&ds->path[l+1], uname, u);
+		ds->path_len = l +u;
+	}
+	else {
+	    ds->path = strdup(uname);
+		ds->path_len = strlen(uname);
+	}
 	return 0;
 }
 
@@ -481,7 +486,7 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
  * rbuf - output buffer
  * rbuflen - output buffer length
  */
-#define NUM_ROUNDS 100
+#define NUM_ROUNDS 200
 static int catsearch(struct vol *vol, struct dir *dir,  
 		     int rmatches, u_int32_t *pos, char *rbuf, u_int32_t *nrecs, int *rsize, int ext)
 {
@@ -516,11 +521,10 @@ static int catsearch(struct vol *vol, struct dir *dir,
 			dirpos = NULL;
 		} 
 		
-		if (addstack("", dir, -1) == -1) {
+		if (addstack(vpath, dir, -1) == -1) {
 			result = AFPERR_MISC;
 			goto catsearch_end;
 		}
-		dstack[0].path = strdup(vpath);
 		/* FIXME: Sometimes DID is given by client ! (correct this one above !) */
 	}
 
