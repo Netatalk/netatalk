@@ -367,40 +367,29 @@ size_t convert_string(charset_t from, charset_t to,
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN];
     ucs2_t buffer2[MAXPATHLEN];
-    int composition = 0;
 
     /* convert from_set to UCS2 */
-    if ((size_t)(-1) == ( o_len = convert_string_internal( from, CH_UCS2, src, srclen,
+    if ((size_t)-1 == ( o_len = convert_string_internal( from, CH_UCS2, src, srclen,
                                                            (char*) buffer, sizeof(buffer))) ) {
         LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )", charset_name(from));
         return (size_t) -1;
     }
 
     /* Do pre/decomposition */
-    if ( ((!(charsets[to])   || !(charsets[to]->flags & CHARSET_DECOMPOSED)) &&
-          (!(charsets[from]) || (charsets[from]->flags & CHARSET_DECOMPOSED))))
-        composition = 1;
-    if ((charsets[to] && charsets[to]->flags & CHARSET_DECOMPOSED) )
-        composition = 2;
-
     i_len = sizeof(buffer2);
     u = buffer2;
-
-    switch (composition) {
-    case 0:
+    if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED) ) {
+        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
+            return (size_t)-1;
+    }
+    else if (!charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED)) {
+        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
+            return (size_t)-1;
+    }
+    else {
         u = buffer;
         i_len = o_len;
-        break;
-    case 1:
-        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
-        break;
-    case 2:
-        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
-        break;
     }
-
     /* Convert UCS2 to to_set */
     if ((size_t)(-1) == ( o_len = convert_string_internal( CH_UCS2, to, (char*) u, i_len, dest, destlen)) ) {
         LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s", charset_name(to), strerror(errno));
@@ -515,7 +504,6 @@ size_t convert_string_allocate(charset_t from, charset_t to,
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN];
     ucs2_t buffer2[MAXPATHLEN];
-    int composition = 0;
 
     *dest = NULL;
 
@@ -527,32 +515,23 @@ size_t convert_string_allocate(charset_t from, charset_t to,
     }
 
     /* Do pre/decomposition */
-    if ( ((!(charsets[to])   || !(charsets[to]->flags & CHARSET_DECOMPOSED)) &&
-          (!(charsets[from]) || (charsets[from]->flags & CHARSET_DECOMPOSED))))
-        composition = 1;
-    if ((charsets[to] && charsets[to]->flags & CHARSET_DECOMPOSED) )
-        composition = 2;
-
     i_len = sizeof(buffer2);
     u = buffer2;
-
-    switch (composition) {
-    case 0:
+    if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED) ) {
+        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
+            return (size_t)-1;
+    }
+    else if ( !charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED) ) {
+        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
+            return (size_t)-1;
+    }
+    else {
         u = buffer;
         i_len = o_len;
-        break;
-    case 1:
-        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
-        break;
-    case 2:
-        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
-        break;
     }
 
     /* Convert UCS2 to to_set */
-    if ((size_t)(-1) == ( o_len = convert_string_allocate_internal( CH_UCS2, to, (char*)u, i_len, dest)) )
+    if ((size_t)-1 == ( o_len = convert_string_allocate_internal( CH_UCS2, to, (char*)u, i_len, dest)) )
         LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s", charset_name(to), strerror(errno));
 
     return o_len;
@@ -1029,7 +1008,6 @@ size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_cha
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN +2];
     ucs2_t buffer2[MAXPATHLEN +2];
-    int composition = 0;
 
     lazy_initialize_conv();
 
@@ -1044,29 +1022,19 @@ size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_cha
         return o_len;
 
     /* Do pre/decomposition */
-    if (CHECK_FLAGS(flags, CONV_PRECOMPOSE) ||
-        ((!(charsets[to_set])   || !(charsets[to_set]->flags & CHARSET_DECOMPOSED)) &&
-         (!(charsets[from_set]) || (charsets[from_set]->flags & CHARSET_DECOMPOSED))))
-        composition = 1;
-    if (CHECK_FLAGS(flags, CONV_DECOMPOSE) || (charsets[to_set] && charsets[to_set]->flags & CHARSET_DECOMPOSED) )
-        composition = 2;
-
     i_len = sizeof(buffer2) -2;
     u = buffer2;
-
-    switch (composition) {
-    case 0:
-        u = buffer;
-        i_len = o_len;
-        break;
-    case 1:
-        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
-        break;
-    case 2:
+    if (CHECK_FLAGS(flags, CONV_DECOMPOSE) || (charsets[to_set] && (charsets[to_set]->flags & CHARSET_DECOMPOSED)) ) {
         if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
             return (size_t)(-1);
-        break;
+    }
+    else if (CHECK_FLAGS(flags, CONV_PRECOMPOSE) || !charsets[from_set] || (charsets[from_set]->flags & CHARSET_DECOMPOSED)) {
+        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
+            return (size_t)(-1);
+    }
+    else {
+        u = buffer;
+        i_len = o_len;
     }
     /* null terminate */
     u[i_len] = 0;
@@ -1076,7 +1044,7 @@ size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_cha
     if (CHECK_FLAGS(flags, CONV_TOUPPER)) {
         strupper_w(u);
     }
-    if (CHECK_FLAGS(flags, CONV_TOLOWER)) {
+    else if (CHECK_FLAGS(flags, CONV_TOLOWER)) {
         strlower_w(u);
     }
 
