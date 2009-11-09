@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.20 2009-10-29 12:48:34 didg Exp $
+  $Id: extattrs.c,v 1.21 2009-11-09 05:33:18 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -81,7 +81,6 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct path         *s_path;
     struct stat         *st;
     struct adouble      ad, *adp = NULL;
-    struct ofork        *of;
     char                *uname, *FinderInfo;
     char                emptyFinderInfo[32] = { 0 };
 
@@ -143,18 +142,13 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             return( AFPERR_NOOBJ );
         }
 
+        adp = of_ad(vol, s_path, &ad);
         uname = s_path->u_name;        /*
           We have to check the FinderInfo for the file, because if they aren't all 0
           we must return the synthetic attribute "com.apple.FinderInfo".
           Note: the client will never (never seen in traces) request that attribute
           via FPGetExtAttr !
         */
-        if ((of = of_findname(s_path))) {
-            adp = of->of_ad;
-        } else {
-            ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-            adp = &ad;
-        }
 
         if (S_ISDIR(st->st_mode))
             adflags = ADFLAGS_DIR;
