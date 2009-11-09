@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.21 2009-11-09 05:33:18 didg Exp $
+  $Id: extattrs.c,v 1.22 2009-11-09 05:45:06 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -90,7 +90,10 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     *rbuflen = 0;
     ibuf += 2;
 
-    /* Get MaxReplySize first */
+    /* Get Bitmap and MaxReplySize first */
+    memcpy( &bitmap, ibuf +6, sizeof(bitmap));
+    bitmap = ntohs( bitmap );
+
     memcpy( &maxreply, ibuf + 14, sizeof (maxreply));
     maxreply = ntohl( maxreply );
 
@@ -116,16 +119,12 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             return afp_errno;
         }
 
-        memcpy( &bitmap, ibuf, sizeof(bitmap));
-        bitmap = ntohs( bitmap );
-        ibuf += sizeof(bitmap);
-
 #ifdef HAVE_SOLARIS_EAS
         if (bitmap & kXAttrNoFollow)
             oflag = O_NOFOLLOW;
 #endif
-        /* Skip ReqCount, StartIndex and maxreply*/
-        ibuf += 10;
+        /* Skip Bitmap, ReqCount, StartIndex and maxreply*/
+        ibuf += 12;
 
         /* get name */
         if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
