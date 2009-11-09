@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.4 2009-11-08 23:17:40 didg Exp $
+ * $Id: volume.h,v 1.5 2009-11-09 01:36:18 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -33,11 +33,13 @@ struct vol {
 
     charset_t		v_volcharset;	
     charset_t		v_maccharset;
+
+    u_int16_t		v_mtou_flags;    /* flags for convert_charset in mtoupath */
+    u_int16_t		v_utom_flags;
+
     long    		v_kTextEncoding; /* mac charset encoding in network order 
     					  * XXX should be a u_int32_t ?
 					  */
-
-    int                 v_casefold;
     size_t              max_filename;
     
     char                *v_veto;
@@ -80,6 +82,8 @@ struct vol {
     int                 v_nfs;
     
     /* only when opening/closing volumes or in error */
+    int                 v_casefold;
+
     char        	*v_localname;   /* as defined in AppleVolumes.default */
     char                *v_volcodepage;
     char		*v_maccodepage;

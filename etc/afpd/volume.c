@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.100 2009-11-08 23:17:40 didg Exp $
+ * $Id: volume.c,v 1.101 2009-11-09 01:36:18 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -770,7 +770,32 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 	else 
 	    volume->v_adouble = AD_VERSION;
 
+        /* Mac to Unix conversion flags*/
+        volume->v_mtou_flags = 0;
+        if (!(volume->v_flags & AFPVOL_NOHEX))
+            volume->v_mtou_flags |= CONV_ESCAPEHEX;
+        if (!(volume->v_flags & AFPVOL_USEDOTS))
+            volume->v_mtou_flags |= CONV_ESCAPEDOTS;
+        if ((volume->v_flags & AFPVOL_EILSEQ))
+            volume->v_mtou_flags |= CONV__EILSEQ;
+
+        if ((volume->v_casefold & AFPVOL_MTOUUPPER))
+            volume->v_mtou_flags |= CONV_TOUPPER;
+        else if ((volume->v_casefold & AFPVOL_MTOULOWER))
+            volume->v_mtou_flags |= CONV_TOLOWER;
+
+        /* Unix to Mac conversion flags*/
+        volume->v_utom_flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+        if ((volume->v_casefold & AFPVOL_UTOMUPPER))
+            volume->v_utom_flags |= CONV_TOUPPER;
+        else if ((volume->v_casefold & AFPVOL_UTOMLOWER))
+            volume->v_utom_flags |= CONV_TOLOWER;
+
+        if ((volume->v_flags & AFPVOL_EILSEQ)) 
+            volume->v_utom_flags |= CONV__EILSEQ;
+
 	initvol_vfs(volume);
+
 #ifdef FORCE_UIDGID
         if (options[VOLOPT_FORCEUID].c_value) {
             volume->v_forceuid = strdup(options[VOLOPT_FORCEUID].c_value);

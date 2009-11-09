@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.45 2009-10-29 13:38:15 didg Exp $
+ * $Id: desktop.c,v 1.46 2009-11-09 01:36:18 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -597,27 +597,15 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     char	*m, *u;
     size_t       inplen;
     size_t       outlen;
-    u_int16_t	 flags = 0;
+    u_int16_t	 flags;
         
     if ( *mpath == '\0' ) {
         return( "." );
     }
 
     /* set conversion flags */
-    if (!(vol->v_flags & AFPVOL_NOHEX))
-        flags |= CONV_ESCAPEHEX;
-    if (!(vol->v_flags & AFPVOL_USEDOTS))
-        flags |= CONV_ESCAPEDOTS;
-
-    if ((vol->v_casefold & AFPVOL_MTOUUPPER))
-        flags |= CONV_TOUPPER;
-    else if ((vol->v_casefold & AFPVOL_MTOULOWER))
-        flags |= CONV_TOLOWER;
-
-    if ((vol->v_flags & AFPVOL_EILSEQ)) {
-        flags |= CONV__EILSEQ;
-    }
-
+    flags = vol->v_mtou_flags;
+    
     m = demangle(vol, mpath, did);
     if (m != mpath) {
         return m;
@@ -647,20 +635,13 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 {
     static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
     char        *m, *u;
-    u_int16_t    flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+    u_int16_t    flags;
     size_t       outlen;
 
     m = mpath;
     outlen = strlen(upath);
 
-    if ((vol->v_casefold & AFPVOL_UTOMUPPER))
-        flags |= CONV_TOUPPER;
-    else if ((vol->v_casefold & AFPVOL_UTOMLOWER))
-        flags |= CONV_TOLOWER;
-
-    if ((vol->v_flags & AFPVOL_EILSEQ)) {
-        flags |= CONV__EILSEQ;
-    }
+    flags = vol->v_utom_flags;
 
     u = upath;
 
@@ -670,10 +651,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 	goto utompath_error;
     }
 
-    if (!(flags & CONV_REQMANGLE)) 
-        flags = 0;
-    else
-        flags = 1;
+    flags = !!(flags & CONV_REQMANGLE);
 
     if (utf8)
         flags |= 2;
