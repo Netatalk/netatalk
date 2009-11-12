@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.17 2009-10-21 13:28:17 didg Exp $
+ * $Id: ad_lock.c,v 1.18 2009-11-12 06:28:40 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -117,12 +117,15 @@ static void adf_unlock(struct ad_fd *ad, const int fork)
     int i;
 
     for (i = 0; i < ad->adf_lockcount; i++) {
+      
       if (lock[i].user == fork) {
 	/* we're really going to delete this lock. note: read locks
            are the only ones that allow refcounts > 1 */
 	 adf_freelock(ad, i);
 	 i--; /* we shifted things down, so we need to backtrack */
-       }
+	 /* unlikely but realloc may have change adf_lock */
+	 lock = ad->adf_lock;       
+      }
     }
 }
 
