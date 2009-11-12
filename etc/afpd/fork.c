@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.70 2009-10-27 23:35:17 didg Exp $
+ * $Id: fork.c,v 1.71 2009-11-12 02:33:13 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -79,6 +79,7 @@ static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_
         return( AFPERR_MISC );
     }
     path.m_name = of_name(ofork);
+    path.id = 0;
     st = &path.st;
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) | 
                     (1<<FILPBIT_FNUM) | (1 << FILPBIT_CDATE) | 
