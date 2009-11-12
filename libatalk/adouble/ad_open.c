@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.57 2009-11-07 01:18:50 didg Exp $
+ * $Id: ad_open.c,v 1.58 2009-11-12 09:39:46 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1178,18 +1178,30 @@ static struct adouble_fops ad_adouble = {
 
 void ad_init(struct adouble *ad, int flags, int options)
 {
-    memset( ad, 0, sizeof( struct adouble ) );
+    ad->ad_inited = 0;
     ad->ad_flags = flags;
     if (flags == AD_VERSION2_OSX) {
         ad->ad_ops = &ad_osx;
+        ad->ad_md = &ad->ad_resource_fork;
     }
     else if (flags == AD_VERSION1_SFM) {
         ad->ad_ops = &ad_sfm;
+        ad->ad_md = &ad->ad_metadata_fork;
     }
     else {
         ad->ad_ops = &ad_adouble;
+        ad->ad_md = &ad->ad_resource_fork;
     }
     ad->ad_options = options;
+
+    ad_data_fileno(ad) = -1;
+    ad_reso_fileno(ad) = -1;
+    ad_meta_fileno(ad) = -1;
+    /* following can be read even if there's no
+     * meda data.
+     */
+    memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
+    ad->ad_rlen = 0;
 }
 
 /* -------------------
@@ -1207,22 +1219,12 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
     int                 open_df = 0;
 
     if (ad->ad_inited != AD_INITED) {
-        ad_data_fileno(ad) = -1;
-        ad_reso_fileno(ad) = -1;
-        adf_lock_init(&ad->ad_data_fork);
-        adf_lock_init(&ad->ad_resource_fork);
-        if (ad->ad_flags != AD_VERSION1_SFM) {
-            ad->ad_md = &ad->ad_resource_fork;
-        }
-        else {
-            adf_lock_init(&ad->ad_metadata_fork);
-            ad->ad_md = &ad->ad_metadata_fork;
-            ad_meta_fileno(ad) = -1;
-        }
         ad->ad_inited = AD_INITED;
         ad->ad_refcount = 1;
         ad->ad_open_forks = 0;
         ad->ad_adflags = adflags;
+        ad->ad_resource_fork.adf_refcount = 0;
+        ad->ad_data_fork.adf_refcount = 0;
     }
     else {
         ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
@@ -1257,6 +1259,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 /* just created, set owner if admin (root) */
                 ad_chown(path, &st_dir);
             }
+            adf_lock_init(&ad->ad_data_fork);
         }
         else {
             /* the file is already open... but */
@@ -1298,6 +1301,8 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         goto sfm;
     }
 
+    memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
+    ad->ad_rlen = 0;
     ad_p = ad->ad_ops->ad_path( path, adflags );
 
     hoflags = oflags & ~(O_CREAT | O_EXCL);
@@ -1366,8 +1371,8 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
     }
     AD_SET(ad->ad_md->adf_off);
 
-    memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
-    ad->ad_md->adf_refcount++;
+    ad->ad_md->adf_refcount = 1;
+    adf_lock_init(ad->ad_md);
     if ((ad->ad_md->adf_flags & ( O_TRUNC | O_CREAT ))) {
         /*
          * This is a new adouble header file. Initialize the structure,
@@ -1445,7 +1450,7 @@ sfm:
         errno = err;
         return -1;
     }
-
+    adf_lock_init(&ad->ad_resource_fork);
     AD_SET(ad->ad_resource_fork.adf_off);
     ad->ad_resource_fork.adf_flags = hoflags;
     if ((oflags & O_CREAT) && !st_invalid) {
