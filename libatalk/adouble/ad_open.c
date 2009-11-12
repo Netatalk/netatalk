@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.58 2009-11-12 09:39:46 didg Exp $
+ * $Id: ad_open.c,v 1.59 2009-11-12 09:44:59 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1427,14 +1427,15 @@ sfm:
 
     ad_p = ad->ad_ops->ad_path( path, ADFLAGS_RF );
 
-    hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-    ad->ad_resource_fork.adf_fd = open( ad_p, hoflags, admode );
     admode = mode;
     st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
 
     if ((ad->ad_options & ADVOL_UNIXPRIV)) {
         admode = mode;
     }
+
+    hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
+    ad->ad_resource_fork.adf_fd = open( ad_p, hoflags, admode );
 
     if (ad->ad_resource_fork.adf_fd < 0 ) {
         if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
