@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.11 2009-11-05 14:38:08 franklahm Exp $
+ * $Id: cnid_dbd.c,v 1.12 2009-11-12 10:08:22 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -134,12 +134,6 @@ exit:
     freeaddrinfo(servinfo);
 
     if (p == NULL) {
-        switch (err) {
-        case ENETUNREACH:
-        case ECONNREFUSED:
-            delay(5);
-            return -1;
-        }
         LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from %s:%s", host, port);
         return -1;
     }
@@ -361,15 +355,9 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
             struct cnid_dbd_rply rply_stamp;
             char  stamp[ADEDLEN_PRIVSYN];
 
-            if (clean)
-                time(&orig);
-
             LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             if ((db->fd = init_tsock(db)) < 0) {
-                time(&t);
-                if (t - orig > MAX_DELAY)
-                    return -1;
-                continue;
+                goto transmit_fail;
             }
             dbd_initstamp(&rqst_stamp);
             memset(stamp, 0, ADEDLEN_PRIVSYN);
