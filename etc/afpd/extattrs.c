@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.25 2009-11-13 13:47:54 didg Exp $
+  $Id: extattrs.c,v 1.26 2009-11-13 13:52:02 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -188,9 +188,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
 
             /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %u", uname, adp->ad_eid[ADEID_RFORK].ade_len);
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, adp->ad_rlen);
 
-            if (adp->ad_eid[ADEID_RFORK].ade_len > 0) {
+            if (adp->ad_rlen > 0) {
                 LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
                 strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
                 attrbuflen += strlen(ea_resourcefork) + 1;
