@@ -21,7 +21,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
    Samba 3.0.28, modified for netatalk.
-   $Id: ad_ea.c,v 1.1 2009-11-13 06:36:05 didg Exp $
+   $Id: ad_ea.c,v 1.2 2009-11-13 06:46:58 didg Exp $
    
 */
 
@@ -850,13 +850,14 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 	dirp = fdopendir(newfd);
 
 	while ((de = readdir(dirp))) {
-		size_t listlen = strlen(de->d_name);
+		size_t listlen;
 		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
 			/* we don't want "." and ".." here: */
 			LOG(log_maxdebug, logtype_default, "skipped EA %s\n",de->d_name);
 			continue;
 		}
 
+		listlen = strlen(de->d_name);
 		if (size == 0) {
 			/* return the current size of the list of extended attribute names*/
 			len += listlen + 1;
@@ -867,8 +868,7 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 				len = -1;
 				break;
 			} else {
-				safe_strcpy(list + len, de->d_name, listlen);
-				pstrcpy(list + len, de->d_name);
+				strcpy(list + len, de->d_name);
 				len += listlen;
 				list[len] = '\0';
 				++len;
