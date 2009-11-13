@@ -21,7 +21,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
    Samba 3.0.28, modified for netatalk.
-   $Id: ad_ea.c,v 1.4 2009-11-13 13:03:29 didg Exp $
+   $Id: ad_ea.c,v 1.5 2009-11-13 13:31:13 didg Exp $
    
 */
 
@@ -29,23 +29,7 @@
 #include "config.h"
 #endif
 
-/* linux */
-#if 0
-#define HAVE_ATTR_XATTR_H 1
-#define HAVE_FGETXATTR 1
-#define HAVE_FLISTXATTR 1
-#define HAVE_FREMOVEXATTR 1
-#define HAVE_FSETXATTR 1
-#define HAVE_GETXATTR 1
-#define HAVE_LGETXATTR 1
-#define HAVE_LISTXATTR 1
-#define HAVE_LLISTXATTR 1
-#define HAVE_LREMOVEXATTR 1
-#define HAVE_LSETXATTR 1
-#define HAVE_REMOVEXATTR 1
-#define HAVE_SETXATTR 1
-#define HAVE_SYS_XATTR_H 1
-#endif
+#include <string.h>
 
 #include <sys/types.h>
 
