@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.16 2009-10-15 10:43:13 didg Exp $
+ * $Id: fork.h,v 1.17 2009-11-13 00:27:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -71,7 +71,7 @@ extern int          of_rename    (const struct vol *,
 extern int          of_flush     (const struct vol *);
 extern void         of_pforkdesc (FILE *);
 extern int          of_stat      (struct path *);
-extern int          of_statdir   (const struct vol *vol, struct path *);
+extern int          of_statdir   (struct vol *vol, struct path *);
 extern int          of_closefork (struct ofork *ofork);
 extern void         of_closevol  (const struct vol *vol);
 extern struct adouble *of_ad     (const struct vol *, struct path *, struct adouble *);

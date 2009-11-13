@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.101 2009-11-09 01:36:18 didg Exp $
+ * $Id: volume.c,v 1.102 2009-11-13 00:27:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1950,6 +1950,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
     dir->d_m_name_ucs2 = strdup_w(volume->v_name);
     volume->v_dir = volume->v_root = dir;
+    volume->v_curdir = NULL;
     volume->v_hash = dirhash();
 
     curdir = volume->v_dir;

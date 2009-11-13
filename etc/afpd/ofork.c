@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.29 2009-11-06 03:51:54 didg Exp $
+ * $Id: ofork.c,v 1.30 2009-11-13 00:27:36 didg Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -295,7 +295,7 @@ int ret;
    stat(".") works even if "." is deleted thus
    we have to stat ../name because we want to know if it's there
 */
-int of_statdir  (const struct vol *vol, struct path *path)
+int of_statdir  (struct vol *vol, struct path *path)
 {
 static char pathname[ MAXPATHLEN + 1] = "../";
 int ret;

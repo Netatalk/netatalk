@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.116 2009-10-29 11:35:58 didg Exp $
+ * $Id: directory.c,v 1.117 2009-11-13 00:27:35 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -90,12 +90,26 @@ static struct dir rootpar  = { SENTINEL, SENTINEL, NULL, 0,
  * frPutAway:   4    home directory ID
  */
 
+static struct dir *
+vol_tree_root(const struct vol *vol, u_int32_t did)
+{
+  struct dir *dir;
+    
+  if (vol->v_curdir && vol->v_curdir->d_did == did) {
+        dir = vol->v_curdir;
+  }
+  else {
+        dir = vol->v_root;
+  }
+  return dir;
+}
+
 /*
  * redid did assignment for directories. now we use red-black trees.
  * how exciting.
  */
 struct dir *
-            dirsearch(const struct vol *vol, u_int32_t	did)
+dirsearch(const struct vol *vol, u_int32_t did)
 {
     struct dir	*dir;
 
@@ -111,16 +125,8 @@ struct dir *
         rootpar.d_child = vol->v_dir;
         return( &rootpar );
     }
-#if 0
-    /* XXX would be nice to check against curdir but we need to keep its volume  */
-    if (vol->curdir && curdir->d_did == did) {
-        dir = curdir;
-    }
-    else {
-        dir = vol->v_root;
-    }
-#endif
-    dir = vol->v_root;
+    
+    dir = vol_tree_root(vol, did);
 
     afp_errno = AFPERR_NOOBJ;
     while ( dir != SENTINEL ) {
@@ -425,7 +431,7 @@ static void dir_hash_del(const struct vol *vol, struct dir *dir)
  * different. actually, it has to worry about a bunch of things that
  * insertion doesn't care about. */
 
-static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
+static void dir_remove( struct vol *vol, struct dir *dir)
 {
 #ifdef REMOVE_NODES
     struct ofork *of, *last;
@@ -437,6 +443,7 @@ static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
         
     /* i'm not sure if it really helps to delete stuff. */
     dir_hash_del(vol, dir);
+    vol->v_curdir = NULL;
 #ifndef REMOVE_NODES 
     dirfreename(dir);
     dir->d_m_name = NULL;
@@ -542,7 +549,7 @@ static void dir_remove( const struct vol *vol _U_, struct dir	*dir)
  * process. It's fixable within afpd if fnctl_lock, doable with smb and
  * next to impossible for nfs and local filesystem access.
  */
-static void dir_invalidate( const struct vol *vol, struct dir *dir)
+static void dir_invalidate( struct vol *vol, struct dir *dir)
 {
     if (curdir == dir) {
         /* v_root can't be deleted */
@@ -560,7 +567,7 @@ static struct dir *dir_insert(const struct vol *vol, struct dir *dir)
 {
     struct dir	*pdir;
 
-    pdir = vol->v_root;
+    pdir = vol_tree_root(vol, dir->d_did);
     while (pdir->d_did != dir->d_did ) {
         if ( pdir->d_did > dir->d_did ) {
             if ( pdir->d_left == SENTINEL ) {
@@ -1104,7 +1111,7 @@ dirhash(void)
 }
 
 /* ------------------ */
-static struct path *invalidate (const struct vol *vol, struct dir *dir, struct path *ret)
+static struct path *invalidate (struct vol *vol, struct dir *dir, struct path *ret)
 {
     /* it's tricky:
        movecwd failed some of dir path are not there anymore.
@@ -1418,7 +1425,7 @@ noucsfallback:
 /*
  * Move curdir to dir, with a possible chdir()
  */
-int movecwd(const struct vol *vol, struct dir *dir)
+int movecwd(struct vol *vol, struct dir *dir)
 {
     char path[MAXPATHLEN + 1];
     struct dir	*d;
@@ -1474,7 +1481,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
         }
         return( -1 );
     }
-    curdir = dir;
+    vol->v_curdir = curdir = dir;
     return( 0 );
 }
 
@@ -1883,7 +1890,7 @@ static int set_dir_errors(struct path *path, const char *where, int err)
 }
  
 /* ------------------ */
-int setdirparams(const struct vol *vol, 
+int setdirparams(struct vol *vol, 
                  struct path *path, u_int16_t d_bitmap, char *buf )
 {
     struct maccess	ma;
@@ -2493,7 +2500,7 @@ int renamedir(const struct vol *vol, char *src, char *dst,
 }
 
 /* delete an empty directory */
-int deletecurdir(const struct vol *vol)
+int deletecurdir(struct vol *vol)
 {
     struct dirent *de;
     struct stat st;
