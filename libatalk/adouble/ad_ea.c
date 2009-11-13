@@ -21,7 +21,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
    Samba 3.0.28, modified for netatalk.
-   $Id: ad_ea.c,v 1.3 2009-11-13 09:18:07 didg Exp $
+   $Id: ad_ea.c,v 1.4 2009-11-13 13:03:29 didg Exp $
    
 */
 
@@ -64,6 +64,7 @@
 #endif
 
 #include <atalk/adouble.h>
+#include <atalk/util.h>
 #include <atalk/logger.h>
 
 /******** Solaris EA helper function prototypes ********/
@@ -81,9 +82,22 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
  Wrappers for extented attribute calls. Based on the Linux package with
  support for IRIX and (Net|Free)BSD also. Expand as other systems have them.
 ****************************************************************************/
+static char attr_name[256 +5] = "user.";
 
-ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size)
+static const char *prefix(const char *uname)
 {
+#if defined(HAVE_ATTROPEN)
+	return uname;
+#else
+	strlcpy(attr_name +5, uname, 256);
+	return attr_name;
+#endif
+}
+
+ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t size)
+{
+	const char *name = prefix(uname);
+
 #if defined(HAVE_GETXATTR)
 #ifndef XATTR_ADD_OPT
 	return getxattr(path, name, value, size);
@@ -139,8 +153,10 @@ ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t si
 #endif
 }
 
-ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size)
+ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t size)
 {
+	const char *name = prefix(uname);
+
 #if defined(HAVE_LGETXATTR)
 	return lgetxattr(path, name, value, size);
 #elif defined(HAVE_GETXATTR) && defined(XATTR_ADD_OPT)
@@ -351,15 +367,46 @@ static ssize_t irix_attr_list(const char *path, int filedes, char *list, size_t 
 
 #endif
 
+#if defined(HAVE_LISTXATTR)
+static ssize_t remove_user(ssize_t ret, char *list, size_t size)
+{
+	size_t len;
+	char *ptr;
+	char *ptr1;
+	ssize_t ptrsize;
+	
+	if (ret <= 0 || size == 0)
+		return ret;
+	ptrsize = ret;
+	ptr = ptr1 = list;
+	while (ptrsize > 0) {
+		len = strlen(ptr1) +1;
+		ptrsize -= len;
+		if (strncmp(ptr1, "user.",5)) {
+			ptr1 += len;
+			continue;
+		}
+		memmove(ptr, ptr1 +5, len -5);
+		ptr += len -5;
+		ptr1 += len;
+	}
+	return ptr -list;
+}
+#endif
+
 ssize_t sys_listxattr (const char *path, char *list, size_t size)
 {
 #if defined(HAVE_LISTXATTR)
+	ssize_t ret;
+
 #ifndef XATTR_ADD_OPT
-	return listxattr(path, list, size);
+	ret = listxattr(path, list, size);
 #else
 	int options = 0;
-	return listxattr(path, list, size, options);
+	ret = listxattr(path, list, size, options);
 #endif
+	return remove_user(ret, list, size);
+
 #elif defined(HAVE_LISTEA)
 	return listea(path, list, size);
 #elif defined(HAVE_EXTATTR_LIST_FILE)
@@ -385,10 +432,17 @@ ssize_t sys_listxattr (const char *path, char *list, size_t size)
 ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 {
 #if defined(HAVE_LLISTXATTR)
-	return llistxattr(path, list, size);
+	ssize_t ret;
+
+	ret = llistxattr(path, list, size);
+	return remove_user(ret, list, size);
 #elif defined(HAVE_LISTXATTR) && defined(XATTR_ADD_OPT)
+	ssize_t ret;
 	int options = XATTR_NOFOLLOW;
-	return listxattr(path, list, size, options);
+
+	ret = listxattr(path, list, size, options);
+	return remove_user(ret, list, size);
+
 #elif defined(HAVE_LLISTEA)
 	return llistea(path, list, size);
 #elif defined(HAVE_EXTATTR_LIST_LINK)
@@ -411,8 +465,9 @@ ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 #endif
 }
 
-int sys_removexattr (const char *path, const char *name)
+int sys_removexattr (const char *path, const char *uname)
 {
+	const char *name = prefix(uname);
 #if defined(HAVE_REMOVEXATTR)
 #ifndef XATTR_ADD_OPT
 	return removexattr(path, name);
@@ -450,8 +505,9 @@ int sys_removexattr (const char *path, const char *name)
 #endif
 }
 
-int sys_lremovexattr (const char *path, const char *name)
+int sys_lremovexattr (const char *path, const char *uname)
 {
+	const char *name = prefix(uname);
 #if defined(HAVE_LREMOVEXATTR)
 	return lremovexattr(path, name);
 #elif defined(HAVE_REMOVEXATTR) && defined(XATTR_ADD_OPT)
@@ -492,8 +548,9 @@ int sys_lremovexattr (const char *path, const char *name)
 #define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
 #endif
 
-int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags)
+int sys_setxattr (const char *path, const char *uname, const void *value, size_t size, int flags)
 {
+	const char *name = prefix(uname);
 #if defined(HAVE_SETXATTR)
 #ifndef XATTR_ADD_OPT
 	return setxattr(path, name, value, size, flags);
@@ -557,8 +614,9 @@ int sys_setxattr (const char *path, const char *name, const void *value, size_t 
 #endif
 }
 
-int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags)
+int sys_lsetxattr (const char *path, const char *uname, const void *value, size_t size, int flags)
 {
+	const char *name = prefix(uname);
 #if defined(HAVE_LSETXATTR)
 	return lsetxattr(path, name, value, size, flags);
 #elif defined(HAVE_SETXATTR) && defined(XATTR_ADD_OPT)
@@ -663,7 +721,9 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 
 	while ((de = readdir(dirp))) {
 		size_t listlen;
-		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
+		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..") ||
+		     !strcmp(dp->d_name, "SUNWattr_ro") || !strcmp(dp->d_name, "SUNWattr_rw")) 
+		{
 			/* we don't want "." and ".." here: */
 			LOG(log_maxdebug, logtype_default, "skipped EA %s\n",de->d_name);
 			continue;

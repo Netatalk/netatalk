@@ -925,7 +925,6 @@ static struct vfs_ops netatalk_ea_adouble = {
     /* vfs_remove         */ remove_ea
 };
 
-#ifdef HAVE_SOLARIS_EAS
 static struct vfs_ops netatalk_ea_solaris = {
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
@@ -946,7 +945,6 @@ static struct vfs_ops netatalk_ea_solaris = {
     /* ea_set             */ sol_set_ea,
     /* ea_remove          */ sol_remove_ea
 };
-#endif
 
 /* 
  * Tertiary VFS modules for ACLs
@@ -993,15 +991,9 @@ void initvol_vfs(struct vol *vol)
     /* Extended Attributes */
     if (vol->v_vfs_ea == AFPVOL_EA_SOLARIS) {
 
-#ifdef HAVE_SOLARIS_EAS
-        LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with Solaris native EAs.");
+        LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with native EAs.");
         vol->vfs_modules[1] = &netatalk_ea_solaris;
-#else
-        LOG(log_error, logtype_afpd, "initvol_vfs: Can't enable Solaris EA support.");
-        goto enable_adea;
-#endif
     } else {
-    enable_adea:
         /* default: AFPVOL_EA_AD */
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with adouble files.");
         vol->vfs_modules[1] = &netatalk_ea_adouble;

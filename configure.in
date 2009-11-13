@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.223 2009-10-25 09:47:03 didg Exp $
+dnl $Id: configure.in,v 1.224 2009-11-13 13:03:29 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1043,15 +1043,73 @@ AC_SUBST(LIBATALK_ACLS)
 
 dnl --------------------- check for Extended Attributes support
 neta_cv_eas="adouble"
-if test "x$this_os" = "xsolaris"; then
-   	AC_CHECK_LIB(c,attropen, [
-            neta_cv_eas="$neta_cv_eas Solaris"
-            neta_cv_solaris_eas="yes"
-            AC_MSG_NOTICE([Enabling Solaris Extended Attributes support])
-            AC_DEFINE([HAVE_SOLARIS_EAS], 1, [Enable Extended Attributes])
-        ]
-    )
+neta_cv_eas="$neta_cv_eas Solaris"
+neta_cv_solaris_eas="yes"
+
+AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h)
+AC_CHECK_HEADERS(sys/ea.h)
+
+case "$this_os" in
+  *osf*)
+	AC_SEARCH_LIBS(getproplist, [proplist])
+	AC_CHECK_FUNCS(getproplist fgetproplist setproplist fsetproplist)
+	AC_CHECK_FUNCS(delproplist fdelproplist add_proplist_entry get_proplist_entry)
+	AC_CHECK_FUNCS(sizeof_proplist_entry)
+  ;;
+  *)
+	AC_SEARCH_LIBS(getxattr, [attr])
+	AC_CHECK_FUNCS(getxattr lgetxattr fgetxattr listxattr llistxattr)
+	AC_CHECK_FUNCS(getea fgetea lgetea listea flistea llistea)
+	AC_CHECK_FUNCS(removeea fremoveea lremoveea setea fsetea lsetea)
+	AC_CHECK_FUNCS(flistxattr removexattr lremovexattr fremovexattr)
+	AC_CHECK_FUNCS(setxattr lsetxattr fsetxattr)
+	AC_CHECK_FUNCS(attr_get attr_list attr_set attr_remove)
+	AC_CHECK_FUNCS(attr_getf attr_listf attr_setf attr_removef)
+  ;;
+esac
+
+# Check if attropen() is present if this is Solaris
+case "$this_os" in
+  *solaris*)
+	AC_CHECK_FUNCS(attropen)
+  ;;
+esac
+
+# Do xattr functions take additional options like on Darwin?
+if test x"$ac_cv_func_getxattr" = x"yes" ; then
+	AC_CACHE_CHECK([whether xattr interface takes additional options], smb_attr_cv_xattr_add_opt, [
+		old_LIBS=$LIBS
+		LIBS="$LIBS $ACL_LIBS"
+		AC_TRY_COMPILE([
+			#include <sys/types.h>
+			#if HAVE_ATTR_XATTR_H
+			#include <attr/xattr.h>
+			#elif HAVE_SYS_XATTR_H
+			#include <sys/xattr.h>
+			#endif
+		],[
+			getxattr(0, 0, 0, 0, 0, 0);
+		],
+	        [smb_attr_cv_xattr_add_opt=yes],
+		[smb_attr_cv_xattr_add_opt=no;LIBS=$old_LIBS])
+	])
+	if test x"$smb_attr_cv_xattr_add_opt" = x"yes"; then
+		AC_DEFINE(XATTR_ADD_OPT, 1, [xattr functions have additional options])
+	fi
 fi
+
+# Check if we have extattr
+case "$this_os" in
+  *freebsd4* | *dragonfly* )
+    AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
+    ;;
+  *)
+    AC_CHECK_FUNCS(extattr_delete_fd extattr_delete_file extattr_delete_link)
+    AC_CHECK_FUNCS(extattr_get_fd extattr_get_file extattr_get_link)
+    AC_CHECK_FUNCS(extattr_list_fd extattr_list_file extattr_list_link)
+    AC_CHECK_FUNCS(extattr_set_fd extattr_set_file extattr_set_link)
+    ;;
+esac
 
 dnl --------------------- Netatalk Webmin
 NETATALK_WEBMIN

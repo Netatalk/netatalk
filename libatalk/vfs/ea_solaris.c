@@ -1,5 +1,5 @@
 /*
-  $Id: ea_solaris.c,v 1.3 2009-10-29 13:06:19 franklahm Exp $
+  $Id: ea_solaris.c,v 1.4 2009-11-13 13:03:29 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,20 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+
+#if HAVE_ATTR_XATTR_H
+#include <attr/xattr.h>
+#elif HAVE_SYS_XATTR_H
+#include <sys/xattr.h>
+#endif
+
+#ifdef HAVE_SYS_EA_H
+#include <sys/ea.h>
+#endif
+
+#ifdef HAVE_SYS_EXTATTR_H
+#include <sys/extattr.h>
+#endif
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
@@ -66,46 +80,44 @@
  */
 int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
-    int                 ret, attrdirfd;
-    uint32_t            attrsize;
-    struct stat         st;
+    ssize_t   ret;
+    uint32_t  attrsize;
 
     LOG(log_debug7, logtype_afpd, "sol_getextattr_size(%s): attribute: \"%s\"", uname, attruname);
 
-    if ( -1 == (attrdirfd = attropen(uname, ".", O_RDONLY | oflag))) {
-        if (errno == ELOOP) {
-            /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sol_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
+    if ((oflag & O_NOFOLLOW) ) {
+        ret = sys_lgetxattr(uname, attruname, rbuf +4, 0);
+    }
+    else {
+        ret = sys_getxattr(uname, attruname,  rbuf +4, 0);
+    }
+    
+    if (ret == -1) switch(errno) {
+    case ELOOP:
+        /* its a symlink and client requested O_NOFOLLOW  */
+        LOG(log_debug, logtype_afpd, "sol_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
 
-            memset(rbuf, 0, 4);
-            *rbuflen += 4;
+        memset(rbuf, 0, 4);
+        *rbuflen += 4;
 
-            return AFP_OK;
-        }
-        LOG(log_error, logtype_afpd, "sol_getextattr_size: attropen error: %s", strerror(errno));
+        return AFP_OK;
+    default:
+        LOG(log_error, logtype_afpd, "sol_getextattr_size: error: %s", strerror(errno));
         return AFPERR_MISC;
     }
 
-    if ( -1 == (fstatat(attrdirfd, attruname, &st, 0))) {
-        LOG(log_error, logtype_afpd, "sol_getextattr_size: fstatat error: %s", strerror(errno));
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-    attrsize = (st.st_size > MAX_EA_SIZE) ? MAX_EA_SIZE : st.st_size;
+    if (ret > MAX_EA_SIZE) 
+      ret = MAX_EA_SIZE;
 
     /* Start building reply packet */
-
-    LOG(log_debug7, logtype_afpd, "sol_getextattr_size(%s): attribute: \"%s\", size: %u", uname, attruname, attrsize);
+    LOG(log_debug7, logtype_afpd, "sol_getextattr_size(%s): attribute: \"%s\", size: %u", uname, attruname, ret);
 
     /* length of attribute data */
-    attrsize = htonl(attrsize);
+    attrsize = htonl((uint32_t)ret);
     memcpy(rbuf, &attrsize, 4);
     *rbuflen += 4;
 
     ret = AFP_OK;
-
-exit:
-    close(attrdirfd);
     return ret;
 }
 
@@ -132,69 +144,46 @@ exit:
  */
 int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
-    int                 ret, attrdirfd;
-    size_t              toread, okread = 0, len;
-    char                *datalength;
-    struct stat         st;
-
-    if ( -1 == (attrdirfd = attropen(uname, attruname, O_RDONLY | oflag))) {
-        if (errno == ELOOP) {
-            /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sol_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
-
-            memset(rbuf, 0, 4);
-            *rbuflen += 4;
-
-            return AFP_OK;
-        }
-        LOG(log_error, logtype_afpd, "sol_getextattr_content(%s): attropen error: %s", attruname, strerror(errno));
-        return AFPERR_MISC;
-    }
-
-    if ( -1 == (fstat(attrdirfd, &st))) {
-        LOG(log_error, logtype_afpd, "sol_getextattr_content(%s): fstatat error: %s", attruname,strerror(errno));
-        ret = AFPERR_MISC;
-        goto exit;
-    }
+    ssize_t   ret;
+    uint32_t  attrsize;
 
     /* Start building reply packet */
 
     maxreply -= MAX_REPLY_EXTRA_BYTES;
+
     if (maxreply > MAX_EA_SIZE)
         maxreply = MAX_EA_SIZE;
 
-    /* But never send more than the client requested */
-    toread = (maxreply < st.st_size) ? maxreply : st.st_size;
-
     LOG(log_debug7, logtype_afpd, "sol_getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
 
-    /* remember where we must store length of attribute data in rbuf */
-    datalength = rbuf;
-    rbuf += 4;
-    *rbuflen += 4;
+    if ((oflag & O_NOFOLLOW) ) {
+        ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply);
+    }
+    else {
+        ret = sys_getxattr(uname, attruname,  rbuf +4, maxreply);
+    }
+    
+    if (ret == -1) switch(errno) {
+    case ELOOP:
+        /* its a symlink and client requested O_NOFOLLOW  */
+        LOG(log_debug, logtype_afpd, "sol_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
 
-    while (1) {
-        len = read(attrdirfd, rbuf, toread);
-        if (len == -1) {
-            LOG(log_error, logtype_afpd, "sol_getextattr_content(%s): read error: %s", attruname, strerror(errno));
-            ret = AFPERR_MISC;
-            goto exit;
-        }
-        okread += len;
-        rbuf += len;
-        *rbuflen += len;
-        if ((len == 0) || (okread == toread))
-            break;
+        memset(rbuf, 0, 4);
+        *rbuflen += 4;
+
+        return AFP_OK;
+    default:
+        LOG(log_error, logtype_afpd, "sol_getextattr_content(%s): error: %s", attruname, strerror(errno));
+        return AFPERR_MISC;
     }
 
-    okread = htonl((uint32_t)okread);
-    memcpy(datalength, &okread, 4);
+    /* remember where we must store length of attribute data in rbuf */
+    *rbuflen += 4 +ret;
 
-    ret = AFP_OK;
+    attrsize = htonl((uint32_t)ret);
+    memcpy(rbuf, &attrsize, 4);
 
-exit:
-    close(attrdirfd);
-    return ret;
+    return AFP_OK;
 }
 
 /*
@@ -219,48 +208,44 @@ exit:
  */
 int sol_list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
-    int ret, attrbuflen = *buflen, len, attrdirfd = 0;
-    struct dirent *dp;
-    DIR *dirp = NULL;
+    ssize_t attrbuflen = *buflen;
+    int     ret, len, nlen;
+    char    *buf;
+    char    *ptr;
+        
+    buf = malloc(ATTRNAMEBUFSIZ);
+    if (!buf)
+        return AFPERR_MISC;
 
-    /* Now list file attribute dir */
-    if ( -1 == (attrdirfd = attropen( uname, ".", O_RDONLY | oflag))) {
-        if (errno == ELOOP) {
+    if ((oflag & O_NOFOLLOW)) {
+        ret = sys_llistxattr(uname, buf, ATTRNAMEBUFSIZ);
+    }
+    else {
+        ret = sys_listxattr(uname, buf, ATTRNAMEBUFSIZ);
+    }
+
+    if (ret == -1) switch(errno) {
+        case ELOOP:
             /* its a symlink and client requested O_NOFOLLOW */
             ret = AFPERR_BADTYPE;
-            goto exit;
-        }
-        LOG(log_error, logtype_afpd, "sol_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-        ret = AFPERR_MISC;
-        goto exit;
+        default:
+            LOG(log_error, logtype_afpd, "sol_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
+            ret= AFPERR_MISC;
     }
-
-    if (NULL == (dirp = fdopendir(attrdirfd))) {
-        LOG(log_error, logtype_afpd, "sol_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-
-    while ((dp = readdir(dirp)))  {
-        /* check if its "." or ".." */
-        if ((strcmp(dp->d_name, ".") == 0) || (strcmp(dp->d_name, "..") == 0) ||
-            (strcmp(dp->d_name, "SUNWattr_ro") == 0) || (strcmp(dp->d_name, "SUNWattr_rw") == 0))
-            continue;
-
-        len = strlen(dp->d_name);
+    
+    ptr = buf;
+    while (ret > 0)  {
+        len = strlen(ptr);
 
         /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
-        if ( 0 >= ( len = convert_string(vol->v_volcharset, CH_UTF8_MAC, dp->d_name, len, attrnamebuf + attrbuflen, 255)) ) {
+        if ( 0 >= ( nlen = convert_string(vol->v_volcharset, CH_UTF8_MAC, ptr, len, attrnamebuf + attrbuflen, 256)) ) {
             ret = AFPERR_MISC;
             goto exit;
         }
-        if (len == 255)
-            /* convert_string didn't 0-terminate */
-            attrnamebuf[attrbuflen + 255] = 0;
 
-        LOG(log_debug7, logtype_afpd, "sol_list_extattr(%s): attribute: %s", uname, dp->d_name);
+        LOG(log_debug7, logtype_afpd, "sol_list_extattr(%s): attribute: %s", uname, ptr);
 
-        attrbuflen += len + 1;
+        attrbuflen += nlen + 1;
         if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
             /* Next EA name could overflow, so bail out with error.
                FIXME: evantually malloc/memcpy/realloc whatever.
@@ -269,17 +254,14 @@ int sol_list_eas(VFS_FUNC_ARGS_EA_LIST)
             ret = AFPERR_MISC;
             goto exit;
         }
+        ret -= len +1;
+        ptr += len +1;
     }
 
     ret = AFP_OK;
 
 exit:
-    if (dirp)
-        closedir(dirp);
-
-    if (attrdirfd > 0)
-        close(attrdirfd);
-
+    free(buf);
     *buflen = attrbuflen;
     return ret;
 }
@@ -287,7 +269,7 @@ exit:
 /*
  * Function: sol_set_ea
  *
- * Purpose: set a Solaris native EA
+ * Purpose: set a native EA
  *
  * Arguments:
  *
@@ -302,24 +284,32 @@ exit:
  *
  * Effects:
  *
- * Copies names of all EAs of uname as consecutive C strings into rbuf.
- * Increments *rbuflen accordingly.
  */
 int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
 {
-    int attrdirfd;
+    int attr_flag;
+    int ret;
 
-    if ( -1 == (attrdirfd = attropen(uname, attruname, oflag, 0666))) {
-        if (errno == ELOOP) {
-            /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "afp_setextattr(%s): encountered symlink with kXAttrNoFollow", uname);
-            return AFP_OK;
-        }
-        LOG(log_error, logtype_afpd, "afp_setextattr(%s): attropen error: %s", uname, strerror(errno));
-        return AFPERR_MISC;
+    attr_flag = 0;
+    if ((oflag & O_CREAT) ) 
+        attr_flag |= XATTR_CREATE;
+
+    else if ((oflag & O_TRUNC) ) 
+        attr_flag |= XATTR_REPLACE;
+    
+    if ((oflag & O_NOFOLLOW) ) {
+        ret = sys_lsetxattr(uname, attruname,  ibuf, attrsize,attr_flag);
+    }
+    else {
+        ret = sys_setxattr(uname, attruname,  ibuf, attrsize, attr_flag);
     }
 
-    if ((write(attrdirfd, ibuf, attrsize)) != attrsize) {
+    if (ret == -1) switch(errno) {
+    case ELOOP:
+        /* its a symlink and client requested O_NOFOLLOW  */
+        LOG(log_debug, logtype_afpd, "afp_setextattr(%s): encountered symlink with kXAttrNoFollow", uname);
+        return AFP_OK;
+    default:
         LOG(log_error, logtype_afpd, "afp_setextattr(%s): read error: %s", attruname, strerror(errno));
         return AFPERR_MISC;
     }
@@ -330,7 +320,7 @@ int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
 /*
  * Function: sol_remove_ea
  *
- * Purpose: remove a Solaris native EA
+ * Purpose: remove a native EA
  *
  * Arguments:
  *
@@ -347,31 +337,26 @@ int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
  */
 int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
-    int attrdirfd;
+    int ret;
 
-    if ( -1 == (attrdirfd = attropen(uname, ".", oflag))) {
-        switch (errno) {
-        case ELOOP:
-            /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): encountered symlink with kXAttrNoFollow", uname);
-            return AFP_OK;
-        case EACCES:
-            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
-            return AFPERR_ACCESS;
-        default:
-            LOG(log_error, logtype_afpd, "afp_remextattr(%s): attropen error: %s", uname, strerror(errno));
-            return AFPERR_MISC;
-        }
+    if ((oflag & O_NOFOLLOW) ) {
+        ret = sys_lremovexattr(uname, attruname);
+    }
+    else {
+        ret = sys_removexattr(uname, attruname);
     }
 
-    if ( -1 == (unlinkat(attrdirfd, attruname, 0)) ) {
-        if (errno == EACCES) {
-            LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
-            return AFPERR_ACCESS;
-        }
-        LOG(log_error, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
+    if (ret == -1) switch(errno) {
+    case ELOOP:
+        /* its a symlink and client requested O_NOFOLLOW  */
+        LOG(log_debug, logtype_afpd, "afp_remextattr(%s): encountered symlink with kXAttrNoFollow", uname);
+        return AFP_OK;
+    case EACCES:
+        LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
+        return AFPERR_ACCESS;
+    default:
+        LOG(log_error, logtype_afpd, "afp_remextattr(%s): attropen error: %s", uname, strerror(errno));
         return AFPERR_MISC;
     }
-
     return AFP_OK;
 }

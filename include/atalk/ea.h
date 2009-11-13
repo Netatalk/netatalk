@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.5 2009-10-20 08:38:41 franklahm Exp $
+   $Id: ea.h,v 1.6 2009-11-13 13:03:29 didg Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -131,12 +131,10 @@ extern int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE);
 extern int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE);
 
 /* Solaris native EAs */
-#ifdef HAVE_SOLARIS_EAS
 extern int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE);
 extern int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT);
 extern int sol_list_eas(VFS_FUNC_ARGS_EA_LIST);
 extern int sol_set_ea(VFS_FUNC_ARGS_EA_SET);
 extern int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE);
-#endif /* HAVE_SOLARIS_EAS */
 
 #endif /* ATALK_EA_H */

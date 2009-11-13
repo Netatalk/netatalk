@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.22 2009-11-09 05:45:06 didg Exp $
+  $Id: extattrs.c,v 1.23 2009-11-13 13:03:29 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -119,10 +119,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             return afp_errno;
         }
 
-#ifdef HAVE_SOLARIS_EAS
         if (bitmap & kXAttrNoFollow)
             oflag = O_NOFOLLOW;
-#endif
         /* Skip Bitmap, ReqCount, StartIndex and maxreply*/
         ibuf += 12;
 
@@ -286,10 +284,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     bitmap = ntohs( bitmap );
     ibuf += sizeof(bitmap);
 
-#ifdef HAVE_SOLARIS_EAS
     if (bitmap & kXAttrNoFollow)
         oflag = O_NOFOLLOW;
-#endif
 
     /* Skip Offset and ReqCount */
     ibuf += 16;
@@ -340,7 +336,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 
 int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    int                 oflag = O_CREAT | O_WRONLY, ret;
+    int                 oflag = 0, ret;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, attrsize;
     char                attruname[256];
@@ -370,13 +366,11 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     bitmap = ntohs( bitmap );
     ibuf += sizeof(bitmap);
 
-#ifdef HAVE_SOLARIS_EAS
     if (bitmap & kXAttrNoFollow)
-        oflag |= AT_SYMLINK_NOFOLLOW;
-#endif
+        oflag |= O_NOFOLLOW;
 
     if (bitmap & kXAttrCreate)
-        oflag |= O_EXCL;
+        oflag |= O_CREAT;
     else if (bitmap & kXAttrReplace)
         oflag |= O_TRUNC;
 
@@ -422,7 +416,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 
 int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    int                 oflag = O_RDONLY, ret;
+    int                 oflag = 0, ret;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did;
     char                attruname[256];
@@ -451,10 +445,8 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     bitmap = ntohs( bitmap );
     ibuf += sizeof(bitmap);
 
-#ifdef HAVE_SOLARIS_EAS
     if (bitmap & kXAttrNoFollow)
-        oflag |= AT_SYMLINK_NOFOLLOW;
-#endif
+        oflag |= O_NOFOLLOW;
 
     /* get name */
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
