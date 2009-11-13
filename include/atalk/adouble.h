@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.48 2009-10-25 09:47:04 didg Exp $
+ * $Id: adouble.h,v 1.49 2009-11-13 02:52:07 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -501,8 +501,23 @@ static inline mode_t ad_hf_mode (mode_t mode)
     return mode;
 }
 
+/* ad_ea.c */
+ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size);
+ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size);
+ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size);
+ssize_t sys_listxattr (const char *path, char *list, size_t size);
+ssize_t sys_llistxattr (const char *path, char *list, size_t size);
+ssize_t sys_flistxattr (int filedes, char *list, size_t size);
+int sys_removexattr (const char *path, const char *name);
+int sys_lremovexattr (const char *path, const char *name);
+int sys_fremovexattr (int filedes, const char *name);
+int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
+int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
+int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
+
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);
+
 extern ssize_t ad_read (struct adouble *, const u_int32_t,
                             const off_t, char *, const size_t);
 extern ssize_t ad_pread (struct ad_fd *, void *, size_t, off_t);
