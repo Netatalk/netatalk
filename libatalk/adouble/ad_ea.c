@@ -21,7 +21,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
    Samba 3.0.28, modified for netatalk.
-   $Id: ad_ea.c,v 1.2 2009-11-13 06:46:58 didg Exp $
+   $Id: ad_ea.c,v 1.3 2009-11-13 09:18:07 didg Exp $
    
 */
 
@@ -179,59 +179,6 @@ ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t s
 #elif defined(HAVE_ATTROPEN)
 	ssize_t ret = -1;
 	int attrfd = solaris_attropen(path, name, O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
-	if (attrfd >= 0) {
-		ret = solaris_read_xattr(attrfd, value, size);
-		close(attrfd);
-	}
-	return ret;
-#else
-	errno = ENOSYS;
-	return -1;
-#endif
-}
-
-ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size)
-{
-#if defined(HAVE_FGETXATTR)
-#ifndef XATTR_ADD_OPT
-	return fgetxattr(filedes, name, value, size);
-#else
-	int options = 0;
-	return fgetxattr(filedes, name, value, size, 0, options);
-#endif
-#elif defined(HAVE_FGETEA)
-	return fgetea(filedes, name, value, size);
-#elif defined(HAVE_EXTATTR_GET_FD)
-	char *s;
-	ssize_t retval;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
-
-	if((retval=extattr_get_fd(filedes, attrnamespace, attrname, NULL, 0)) >= 0) {
-		if(retval > size) {
-			errno = ERANGE;
-			return -1;
-		}
-		if((retval=extattr_get_fd(filedes, attrnamespace, attrname, value, size)) >= 0)
-			return retval;
-	}
-	
-	LOG(log_maxdebug, logtype_default, "sys_fgetxattr: extattr_get_fd() failed with: %s\n", strerror(errno));
-	return -1;
-#elif defined(HAVE_ATTR_GETF)
-	int retval, flags = 0;
-	int valuelength = (int)size;
-	char *attrname = strchr(name,'.') + 1;
-	
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	retval = attr_getf(filedes, attrname, (char *)value, &valuelength, flags);
-
-	return retval ? retval : valuelength;
-#elif defined(HAVE_ATTROPEN)
-	ssize_t ret = -1;
-	int attrfd = solaris_openat(filedes, name, O_RDONLY|O_XATTR, 0);
 	if (attrfd >= 0) {
 		ret = solaris_read_xattr(attrfd, value, size);
 		close(attrfd);
@@ -464,37 +411,6 @@ ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 #endif
 }
 
-ssize_t sys_flistxattr (int filedes, char *list, size_t size)
-{
-#if defined(HAVE_FLISTXATTR)
-#ifndef XATTR_ADD_OPT
-	return flistxattr(filedes, list, size);
-#else
-	int options = 0;
-	return flistxattr(filedes, list, size, options);
-#endif
-#elif defined(HAVE_FLISTEA)
-	return flistea(filedes, list, size);
-#elif defined(HAVE_EXTATTR_LIST_FD)
-	extattr_arg arg;
-	arg.filedes = filedes;
-	return bsd_attr_list(2, arg, list, size);
-#elif defined(HAVE_ATTR_LISTF)
-	return irix_attr_list(NULL, filedes, list, size, 0);
-#elif defined(HAVE_ATTROPEN)
-	ssize_t ret = -1;
-	int attrdirfd = solaris_openat(filedes, ".", O_RDONLY|O_XATTR, 0);
-	if (attrdirfd >= 0) {
-		ret = solaris_list_xattr(attrdirfd, list, size);
-		close(attrdirfd);
-	}
-	return ret;
-#else
-	errno = ENOSYS;
-	return -1;
-#endif
-}
-
 int sys_removexattr (const char *path, const char *name)
 {
 #if defined(HAVE_REMOVEXATTR)
@@ -560,45 +476,6 @@ int sys_lremovexattr (const char *path, const char *name)
 #elif defined(HAVE_ATTROPEN)
 	int ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
-	if (attrdirfd >= 0) {
-		ret = solaris_unlinkat(attrdirfd, name);
-		close(attrdirfd);
-	}
-	return ret;
-#else
-	errno = ENOSYS;
-	return -1;
-#endif
-}
-
-int sys_fremovexattr (int filedes, const char *name)
-{
-#if defined(HAVE_FREMOVEXATTR)
-#ifndef XATTR_ADD_OPT
-	return fremovexattr(filedes, name);
-#else
-	int options = 0;
-	return fremovexattr(filedes, name, options);
-#endif
-#elif defined(HAVE_FREMOVEEA)
-	return fremoveea(filedes, name);
-#elif defined(HAVE_EXTATTR_DELETE_FD)
-	char *s;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
-
-	return extattr_delete_fd(filedes, attrnamespace, attrname);
-#elif defined(HAVE_ATTR_REMOVEF)
-	int flags = 0;
-	char *attrname = strchr(name,'.') + 1;
-	
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	return attr_removef(filedes, attrname, flags);
-#elif defined(HAVE_ATTROPEN)
-	int ret = -1;
-	int attrdirfd = solaris_openat(filedes, ".", O_RDONLY|O_XATTR, 0);
 	if (attrdirfd >= 0) {
 		ret = solaris_unlinkat(attrdirfd, name);
 		close(attrdirfd);
@@ -733,71 +610,6 @@ int sys_lsetxattr (const char *path, const char *name, const void *value, size_t
 	if (flags & XATTR_CREATE) myflags |= O_EXCL;
 	if (!(flags & XATTR_REPLACE)) myflags |= O_CREAT;
 	attrfd = solaris_attropen(path, name, myflags, (mode_t) SOLARIS_ATTRMODE);
-	if (attrfd >= 0) {
-		ret = solaris_write_xattr(attrfd, value, size);
-		close(attrfd);
-	}
-	return ret;
-#else
-	errno = ENOSYS;
-	return -1;
-#endif
-}
-
-int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags)
-{
-#if defined(HAVE_FSETXATTR)
-#ifndef XATTR_ADD_OPT
-	return fsetxattr(filedes, name, value, size, flags);
-#else
-	int options = 0;
-	return fsetxattr(filedes, name, value, size, 0, options);
-#endif
-#elif defined(HAVE_FSETEA)
-	return fsetea(filedes, name, value, size, flags);
-#elif defined(HAVE_EXTATTR_SET_FD)
-	char *s;
-	int retval = 0;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
-	if (flags) {
-		/* Check attribute existence */
-		retval = extattr_get_fd(filedes, attrnamespace, attrname, NULL, 0);
-		if (retval < 0) {
-			/* REPLACE attribute, that doesn't exist */
-			if (flags & XATTR_REPLACE && errno == ENOATTR) {
-				errno = ENOATTR;
-				return -1;
-			}
-			/* Ignore other errors */
-		}
-		else {
-			/* CREATE attribute, that already exists */
-			if (flags & XATTR_CREATE) {
-				errno = EEXIST;
-				return -1;
-			}
-		}
-	}
-	retval = extattr_set_fd(filedes, attrnamespace, attrname, value, size);
-	return (retval < 0) ? -1 : 0;
-#elif defined(HAVE_ATTR_SETF)
-	int myflags = 0;
-	char *attrname = strchr(name,'.') + 1;
-	
-	if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
-	if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
-	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
-
-	return attr_setf(filedes, attrname, (const char *)value, size, myflags);
-#elif defined(HAVE_ATTROPEN)
-	int ret = -1;
-	int myflags = O_RDWR | O_XATTR;
-	int attrfd;
-	if (flags & XATTR_CREATE) myflags |= O_EXCL;
-	if (!(flags & XATTR_REPLACE)) myflags |= O_CREAT;
-	attrfd = solaris_openat(filedes, name, myflags, (mode_t) SOLARIS_ATTRMODE);
 	if (attrfd >= 0) {
 		ret = solaris_write_xattr(attrfd, value, size);
 		close(attrfd);
