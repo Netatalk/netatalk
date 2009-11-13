@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.24 2009-11-13 13:27:12 didg Exp $
+  $Id: extattrs.c,v 1.25 2009-11-13 13:47:54 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -152,6 +152,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         if ( ad_metadata( uname, adflags, adp) < 0 ) {
             switch (errno) {
+            case ENOENT:
+                adp = NULL;
+                break;
             case EACCES:
                 LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",
                     uname, strerror(errno));
@@ -162,35 +165,38 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
         }
 
-        FinderInfo = ad_entry(adp, ADEID_FINDERI);
+        if (adp) {
+            FinderInfo = ad_entry(adp, ADEID_FINDERI);
 
 #ifdef DEBUG
-        LOG(log_maxdebug, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
-        hexdump( FinderInfo, 32);
+            LOG(log_maxdebug, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
+            hexdump( FinderInfo, 32);
 #endif
 
-        if ((adflags & ADFLAGS_DIR)) {
-            /* set default view */
-            uint16 = htons(FINDERINFO_CLOSEDVIEW);
-            memcpy(emptyFinderInfo + FINDERINFO_FRVIEWOFF, &uint16, 2);
-        }
+            if ((adflags & ADFLAGS_DIR)) {
+                /* set default view */
+                uint16 = htons(FINDERINFO_CLOSEDVIEW);
+                memcpy(emptyFinderInfo + FINDERINFO_FRVIEWOFF, &uint16, 2);
+            }
 
-        /* Check if FinderInfo equals default and empty FinderInfo*/
-        if ((memcmp(FinderInfo, emptyFinderInfo, 32)) != 0) {
-            /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
-            strcpy(attrnamebuf, ea_finderinfo);
-            attrbuflen += strlen(ea_finderinfo) + 1;
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
-        }
+            /* Check if FinderInfo equals default and empty FinderInfo*/
+            if (memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
+                /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
+                strcpy(attrnamebuf, ea_finderinfo);
+                attrbuflen += strlen(ea_finderinfo) + 1;
+                LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
+            }
 
-        /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-        LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %u", uname, adp->ad_eid[ADEID_RFORK].ade_len);
-        if (adp->ad_eid[ADEID_RFORK].ade_len > 0) {
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
-            strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
-            attrbuflen += strlen(ea_resourcefork) + 1;
-        }
+            /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %u", uname, adp->ad_eid[ADEID_RFORK].ade_len);
 
+            if (adp->ad_eid[ADEID_RFORK].ade_len > 0) {
+                LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
+                strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
+                attrbuflen += strlen(ea_resourcefork) + 1;
+            }
+        }
+        
         ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag);
 
         switch (ret) {
