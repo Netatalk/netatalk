@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.23 2009-11-13 13:03:29 didg Exp $
+  $Id: extattrs.c,v 1.24 2009-11-13 13:27:12 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -108,14 +108,14 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         memcpy( &vid, ibuf, sizeof(vid));
         ibuf += sizeof(vid);
         if (NULL == ( vol = getvolbyvid( vid )) ) {
-            LOG(log_error, logtype_afpd, "afp_listextattr: getvolbyvid error: %s", strerror(errno));
+            LOG(log_debug, logtype_afpd, "afp_listextattr: getvolbyvid error: %s", strerror(errno));
             return AFPERR_ACCESS;
         }
 
         memcpy( &did, ibuf, sizeof(did));
         ibuf += sizeof(did);
         if (NULL == ( dir = dirlookup( vol, did )) ) {
-            LOG(log_error, logtype_afpd, "afp_listextattr: dirlookup error: %s", strerror(errno));
+            LOG(log_debug, logtype_afpd, "afp_listextattr: dirlookup error: %s", strerror(errno));
             return afp_errno;
         }
 
@@ -126,7 +126,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         /* get name */
         if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-            LOG(log_error, logtype_afpd, "afp_listextattr: cname error: %s", strerror(errno));
+            LOG(log_debug, logtype_afpd, "afp_listextattr: cname error: %s", strerror(errno));
             return AFPERR_NOOBJ;
         }
 
@@ -269,14 +269,14 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     memcpy( &vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        LOG(log_error, logtype_afpd, "afp_getextattr: getvolbyvid error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_getextattr: getvolbyvid error: %s", strerror(errno));
         return AFPERR_ACCESS;
     }
 
     memcpy( &did, ibuf, sizeof(did));
     ibuf += sizeof(did);
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        LOG(log_error, logtype_afpd, "afp_getextattr: dirlookup error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_getextattr: dirlookup error: %s", strerror(errno));
         return afp_errno;
     }
 
@@ -297,7 +297,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 
     /* get name */
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_error, logtype_afpd, "afp_getextattr: cname error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_getextattr: cname error: %s", strerror(errno));
         return AFPERR_NOOBJ;
     }
 
@@ -351,14 +351,14 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     memcpy( &vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        LOG(log_error, logtype_afpd, "afp_setextattr: getvolbyvid error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_setextattr: getvolbyvid error: %s", strerror(errno));
         return AFPERR_ACCESS;
     }
 
     memcpy( &did, ibuf, sizeof(did));
     ibuf += sizeof(did);
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        LOG(log_error, logtype_afpd, "afp_setextattr: dirlookup error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_setextattr: dirlookup error: %s", strerror(errno));
         return afp_errno;
     }
 
@@ -379,7 +379,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 
     /* get name */
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_error, logtype_afpd, "afp_setextattr: cname error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_setextattr: cname error: %s", strerror(errno));
         return AFPERR_NOOBJ;
     }
 
@@ -430,14 +430,14 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     memcpy( &vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        LOG(log_error, logtype_afpd, "afp_remextattr: getvolbyvid error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_remextattr: getvolbyvid error: %s", strerror(errno));
         return AFPERR_ACCESS;
     }
 
     memcpy( &did, ibuf, sizeof(did));
     ibuf += sizeof(did);
     if (NULL == ( dir = dirlookup( vol, did )) ) {
-        LOG(log_error, logtype_afpd, "afp_remextattr: dirlookup error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_remextattr: dirlookup error: %s", strerror(errno));
         return afp_errno;
     }
 
@@ -450,7 +450,7 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 
     /* get name */
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_error, logtype_afpd, "afp_setextattr: cname error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_setextattr: cname error: %s", strerror(errno));
         return AFPERR_NOOBJ;
     }
 
