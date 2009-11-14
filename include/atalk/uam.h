@@ -15,7 +15,9 @@
 #endif /* TRU64 */
 
 /* just a label for exported bits */
-#define UAM_MODULE_EXPORT
+#ifndef UAM_MODULE_EXPORT
+#define UAM_MODULE_EXPORT 
+#endif
 
 /* type of uam */
 #define UAM_MODULE_SERVER   	 1
@@ -78,17 +80,18 @@ struct session_info {
 };
 
 /* register and unregister uams with these functions */
-extern int uam_register (const int, const char *, const char *, ...);
-extern void uam_unregister (const int, const char *);
+extern UAM_MODULE_EXPORT int uam_register (const int, const char *, const char *, ...);
+extern UAM_MODULE_EXPORT void uam_unregister (const int, const char *);
 
 /* helper functions */
-extern struct passwd *uam_getname (void*, char *, const int);
-extern int uam_checkuser (const struct passwd *);
+extern UAM_MODULE_EXPORT struct passwd *uam_getname (void*, char *, const int);
+extern UAM_MODULE_EXPORT int uam_checkuser (const struct passwd *);
 
 /* afp helper functions */
-extern int uam_afp_read (void *, char *, size_t *,
+extern UAM_MODULE_EXPORT int uam_afp_read (void *, char *, size_t *,
 			     int (*)(void *, void *, const int));
-extern int uam_afpserver_option (void *, const int, void *, size_t *);
+extern UAM_MODULE_EXPORT int uam_afpserver_option (void *, const int, void *, size_t *);
+
 #ifdef TRU64
 extern void uam_afp_getcmdline (int *, char ***);
 extern int uam_sia_validate_user (sia_collect_func_t *, int, char **,
