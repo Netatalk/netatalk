@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.12 2009-11-12 10:08:22 didg Exp $
+ * $Id: cnid_dbd.c,v 1.13 2009-11-16 01:03:18 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -130,7 +130,6 @@ static int tsock_getfd(const char *host, const char *port)
         break;
     }
 
-exit:
     freeaddrinfo(servinfo);
 
     if (p == NULL) {
