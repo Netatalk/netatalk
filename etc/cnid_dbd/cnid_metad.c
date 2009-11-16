@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_metad.c,v 1.21 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: cnid_metad.c,v 1.22 2009-11-16 02:04:47 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -29,9 +29,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef linux
-#define _GNU_SOURCE
-#endif
 #include <unistd.h>
 #undef __USE_GNU
 

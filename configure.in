@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.225 2009-11-15 16:39:03 franklahm Exp $
+dnl $Id: configure.in,v 1.226 2009-11-16 02:04:47 didg Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -623,6 +623,12 @@ case "$host_cpu" in
 	alpha)						this_cpu=alpha ;;
 	mips)						this_cpu=mips ;;
 	powerpc|ppc)				this_cpu=ppc ;;
+esac
+
+dnl --------------------- GNU source
+case "$this_os" in
+	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+        ;;
 esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
