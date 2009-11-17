@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.227 2009-11-17 16:17:13 franklahm Exp $
+dnl $Id: configure.in,v 1.228 2009-11-17 16:28:23 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1138,9 +1138,6 @@ case "$this_os" in
     AC_CHECK_FUNCS(extattr_set_fd extattr_set_file extattr_set_link)
     ;;
 esac
-
-echo neta_cv_eas_sys_found = $neta_cv_eas_sys_found
-echo neta_cv_eas_sys_not_found = $neta_cv_eas_sys_not_found
 
 if test "x$neta_cv_eas_sys_found" = "xyes" ; then
    if test "x$neta_cv_eas_sys_not_found" != "xyes" ; then
