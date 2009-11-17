@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.102 2009-11-13 00:27:36 didg Exp $
+ * $Id: volume.c,v 1.103 2009-11-17 12:33:29 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -556,8 +556,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
     } else if (optionok(tmp, "ea:", val)) {
         if (strcasecmp(val + 1, "ad") == 0) /* the default anyway */
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AD;
-        else if (strcasecmp(val + 1, "solaris") == 0)
-            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_SOLARIS;
+        else if (strcasecmp(val + 1, "sys") == 0)
+            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_SYS;
 
     } else {
         /* ignore unknown options */

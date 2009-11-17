@@ -21,7 +21,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
    Samba 3.0.28, modified for netatalk.
-   $Id: ad_ea.c,v 1.6 2009-11-17 11:41:37 franklahm Exp $
+   $Id: sys_ea.c,v 1.1 2009-11-17 12:33:30 franklahm Exp $
    
 */
 

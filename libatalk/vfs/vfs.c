@@ -925,7 +925,7 @@ static struct vfs_ops netatalk_ea_adouble = {
     /* vfs_remove         */ remove_ea
 };
 
-static struct vfs_ops netatalk_ea_solaris = {
+static struct vfs_ops netatalk_ea_sys = {
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
     /* rf_renamedir:      */ NULL,
@@ -939,11 +939,11 @@ static struct vfs_ops netatalk_ea_solaris = {
     /* vfs_copyfile:      */ NULL,
     /* rf_acl:            */ NULL,
     /* rf_remove_acl      */ NULL,
-    /* ea_getsize         */ sol_get_easize,
-    /* ea_getcontent      */ sol_get_eacontent,
-    /* ea_list            */ sol_list_eas,
-    /* ea_set             */ sol_set_ea,
-    /* ea_remove          */ sol_remove_ea
+    /* ea_getsize         */ sys_get_easize,
+    /* ea_getcontent      */ sys_get_eacontent,
+    /* ea_list            */ sys_list_eas,
+    /* ea_set             */ sys_set_ea,
+    /* ea_remove          */ sys_remove_ea
 };
 
 /* 
@@ -989,10 +989,9 @@ void initvol_vfs(struct vol *vol)
     }
 
     /* Extended Attributes */
-    if (vol->v_vfs_ea == AFPVOL_EA_SOLARIS) {
-
+    if (vol->v_vfs_ea == AFPVOL_EA_SYS) {
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with native EAs.");
-        vol->vfs_modules[1] = &netatalk_ea_solaris;
+        vol->vfs_modules[1] = &netatalk_ea_sys;
     } else {
         /* default: AFPVOL_EA_AD */
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with adouble files.");

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.6 2009-11-13 00:27:38 didg Exp $
+ * $Id: volume.h,v 1.7 2009-11-17 12:33:30 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -158,7 +158,7 @@ this is going away. */
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_AD             0   /* Store them in adouble files. Default. */
-#define AFPVOL_EA_SOLARIS        1   /* Store them in native Solaris EAs */
+#define AFPVOL_EA_SYS            1   /* Store them in native EAs */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)

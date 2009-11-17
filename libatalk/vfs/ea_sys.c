@@ -1,5 +1,5 @@
 /*
-  $Id: ea_solaris.c,v 1.4 2009-11-13 13:03:29 didg Exp $
+  $Id: ea_sys.c,v 1.1 2009-11-17 12:33:30 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -12,9 +12,6 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
-
-/* According to man fsattr.5 we must define _ATFILE_SOURCE */
-#define _ATFILE_SOURCE
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -55,13 +52,13 @@
 
 
 /**********************************************************************************
- * Solaris EA VFS funcs
+ * EA VFS funcs for storing EAs in nativa filesystem EAs
  **********************************************************************************/
 
 /*
- * Function: sol_get_easize
+ * Function: sys_get_easize
  *
- * Purpose: get size of an EA on Solaris native EA
+ * Purpose: get size of a native EA
  *
  * Arguments:
  *
@@ -78,12 +75,12 @@
  *
  * Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
+int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
     ssize_t   ret;
     uint32_t  attrsize;
 
-    LOG(log_debug7, logtype_afpd, "sol_getextattr_size(%s): attribute: \"%s\"", uname, attruname);
+    LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\"", uname, attruname);
 
     if ((oflag & O_NOFOLLOW) ) {
         ret = sys_lgetxattr(uname, attruname, rbuf +4, 0);
@@ -92,25 +89,27 @@ int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
         ret = sys_getxattr(uname, attruname,  rbuf +4, 0);
     }
     
-    if (ret == -1) switch(errno) {
-    case ELOOP:
-        /* its a symlink and client requested O_NOFOLLOW  */
-        LOG(log_debug, logtype_afpd, "sol_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
+    if (ret == -1) {
+        switch(errno) {
+        case ELOOP:
+            /* its a symlink and client requested O_NOFOLLOW  */
+            LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
 
-        memset(rbuf, 0, 4);
-        *rbuflen += 4;
+            memset(rbuf, 0, 4);
+            *rbuflen += 4;
 
-        return AFP_OK;
-    default:
-        LOG(log_error, logtype_afpd, "sol_getextattr_size: error: %s", strerror(errno));
-        return AFPERR_MISC;
+            return AFP_OK;
+        default:
+            LOG(log_error, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
+            return AFPERR_MISC;
+        }
     }
 
     if (ret > MAX_EA_SIZE) 
       ret = MAX_EA_SIZE;
 
     /* Start building reply packet */
-    LOG(log_debug7, logtype_afpd, "sol_getextattr_size(%s): attribute: \"%s\", size: %u", uname, attruname, ret);
+    LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\", size: %u", uname, attruname, ret);
 
     /* length of attribute data */
     attrsize = htonl((uint32_t)ret);
@@ -122,9 +121,9 @@ int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 }
 
 /*
- * Function: sol_get_eacontent
+ * Function: sys_get_eacontent
  *
- * Purpose: copy Solaris native EA into rbuf
+ * Purpose: copy native EA into rbuf
  *
  * Arguments:
  *
@@ -142,7 +141,7 @@ int sol_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *
  * Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
+int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
     ssize_t   ret;
     uint32_t  attrsize;
@@ -154,7 +153,7 @@ int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     if (maxreply > MAX_EA_SIZE)
         maxreply = MAX_EA_SIZE;
 
-    LOG(log_debug7, logtype_afpd, "sol_getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
+    LOG(log_debug7, logtype_afpd, "sys_getextattr_content(%s): attribute: \"%s\", size: %u", uname, attruname, maxreply);
 
     if ((oflag & O_NOFOLLOW) ) {
         ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply);
@@ -166,14 +165,14 @@ int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     if (ret == -1) switch(errno) {
     case ELOOP:
         /* its a symlink and client requested O_NOFOLLOW  */
-        LOG(log_debug, logtype_afpd, "sol_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
+        LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
 
         memset(rbuf, 0, 4);
         *rbuflen += 4;
 
         return AFP_OK;
     default:
-        LOG(log_error, logtype_afpd, "sol_getextattr_content(%s): error: %s", attruname, strerror(errno));
+        LOG(log_error, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
         return AFPERR_MISC;
     }
 
@@ -187,9 +186,9 @@ int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 }
 
 /*
- * Function: sol_list_eas
+ * Function: sys_list_eas
  *
- * Purpose: copy names of Solaris native EA into attrnamebuf
+ * Purpose: copy names of native EAs into attrnamebuf
  *
  * Arguments:
  *
@@ -206,7 +205,7 @@ int sol_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
  */
-int sol_list_eas(VFS_FUNC_ARGS_EA_LIST)
+int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
     ssize_t attrbuflen = *buflen;
     int     ret, len, nlen;
@@ -229,7 +228,7 @@ int sol_list_eas(VFS_FUNC_ARGS_EA_LIST)
             /* its a symlink and client requested O_NOFOLLOW */
             ret = AFPERR_BADTYPE;
         default:
-            LOG(log_error, logtype_afpd, "sol_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
+            LOG(log_error, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
             ret= AFPERR_MISC;
     }
     
@@ -243,14 +242,14 @@ int sol_list_eas(VFS_FUNC_ARGS_EA_LIST)
             goto exit;
         }
 
-        LOG(log_debug7, logtype_afpd, "sol_list_extattr(%s): attribute: %s", uname, ptr);
+        LOG(log_debug7, logtype_afpd, "sys_list_extattr(%s): attribute: %s", uname, ptr);
 
         attrbuflen += nlen + 1;
         if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
             /* Next EA name could overflow, so bail out with error.
                FIXME: evantually malloc/memcpy/realloc whatever.
                Is it worth it ? */
-            LOG(log_warning, logtype_afpd, "sol_list_extattr(%s): running out of buffer for EA names", uname);
+            LOG(log_warning, logtype_afpd, "sys_list_extattr(%s): running out of buffer for EA names", uname);
             ret = AFPERR_MISC;
             goto exit;
         }
@@ -267,7 +266,7 @@ exit:
 }
 
 /*
- * Function: sol_set_ea
+ * Function: sys_set_ea
  *
  * Purpose: set a native EA
  *
@@ -285,7 +284,7 @@ exit:
  * Effects:
  *
  */
-int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
+int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
 {
     int attr_flag;
     int ret;
@@ -304,21 +303,24 @@ int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
         ret = sys_setxattr(uname, attruname,  ibuf, attrsize, attr_flag);
     }
 
-    if (ret == -1) switch(errno) {
-    case ELOOP:
-        /* its a symlink and client requested O_NOFOLLOW  */
-        LOG(log_debug, logtype_afpd, "afp_setextattr(%s): encountered symlink with kXAttrNoFollow", uname);
-        return AFP_OK;
-    default:
-        LOG(log_error, logtype_afpd, "afp_setextattr(%s): read error: %s", attruname, strerror(errno));
-        return AFPERR_MISC;
+    if (ret == -1) {
+        switch(errno) {
+        case ELOOP:
+            /* its a symlink and client requested O_NOFOLLOW  */
+            LOG(log_debug, logtype_afpd, "sys_set_ea(%s/%s): encountered symlink with kXAttrNoFollow",
+                uname, attruname);
+            return AFP_OK;
+        default:
+            LOG(log_error, logtype_afpd, "sys_set_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
+            return AFPERR_MISC;
+        }
     }
 
     return AFP_OK;
 }
 
 /*
- * Function: sol_remove_ea
+ * Function: sys_remove_ea
  *
  * Purpose: remove a native EA
  *
@@ -335,7 +337,7 @@ int sol_set_ea(VFS_FUNC_ARGS_EA_SET)
  *
  * Removes EA attruname from file uname.
  */
-int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
+int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
     int ret;
 
@@ -346,17 +348,20 @@ int sol_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
         ret = sys_removexattr(uname, attruname);
     }
 
-    if (ret == -1) switch(errno) {
-    case ELOOP:
-        /* its a symlink and client requested O_NOFOLLOW  */
-        LOG(log_debug, logtype_afpd, "afp_remextattr(%s): encountered symlink with kXAttrNoFollow", uname);
-        return AFP_OK;
-    case EACCES:
-        LOG(log_debug, logtype_afpd, "afp_remextattr(%s): unlinkat error: %s", uname, strerror(errno));
-        return AFPERR_ACCESS;
-    default:
-        LOG(log_error, logtype_afpd, "afp_remextattr(%s): attropen error: %s", uname, strerror(errno));
-        return AFPERR_MISC;
+    if (ret == -1) {
+        switch(errno) {
+        case ELOOP:
+            /* its a symlink and client requested O_NOFOLLOW  */
+            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): encountered symlink with kXAttrNoFollow", uname);
+            return AFP_OK;
+        case EACCES:
+            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
+            return AFPERR_ACCESS;
+        default:
+            LOG(log_error, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
+            return AFPERR_MISC;
+        }
     }
+
     return AFP_OK;
 }
