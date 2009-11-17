@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.226 2009-11-16 02:04:47 didg Exp $
+dnl $Id: configure.in,v 1.227 2009-11-17 16:17:13 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1048,36 +1048,58 @@ fi
 AC_SUBST(LIBATALK_ACLS)
 
 dnl --------------------- check for Extended Attributes support
-neta_cv_eas="adouble"
-neta_cv_eas="$neta_cv_eas Solaris"
-neta_cv_solaris_eas="yes"
+neta_cv_eas="files"
+neta_cv_eas_sys_found=no
+neta_cv_eas_sys_not_found=no
 
-AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h)
-AC_CHECK_HEADERS(sys/ea.h)
+AC_CHECK_HEADERS(sys/attributes.h attr/xattr.h sys/xattr.h sys/extattr.h sys/uio.h sys/ea.h)
 
 case "$this_os" in
+
   *osf*)
 	AC_SEARCH_LIBS(getproplist, [proplist])
-	AC_CHECK_FUNCS(getproplist fgetproplist setproplist fsetproplist)
-	AC_CHECK_FUNCS(delproplist fdelproplist add_proplist_entry get_proplist_entry)
-	AC_CHECK_FUNCS(sizeof_proplist_entry)
+	AC_CHECK_FUNCS([getproplist fgetproplist setproplist fsetproplist],
+                   [neta_cv_eas_sys_found=yes],
+                   [neta_cv_eas_sys_not_found=yes])
+	AC_CHECK_FUNCS([delproplist fdelproplist add_proplist_entry get_proplist_entry],,
+                   [neta_cv_eas_sys_not_found=yes])
+	AC_CHECK_FUNCS([sizeof_proplist_entry],,
+                   [neta_cv_eas_sys_not_found=yes])
   ;;
+
+  *solaris*)
+	AC_CHECK_FUNCS([attropen],
+                   [neta_cv_eas_sys_found=yes],
+                   [neta_cv_eas_sys_not_found=yes])
+  ;;
+
   *)
 	AC_SEARCH_LIBS(getxattr, [attr])
-	AC_CHECK_FUNCS(getxattr lgetxattr fgetxattr listxattr llistxattr)
-	AC_CHECK_FUNCS(getea fgetea lgetea listea flistea llistea)
-	AC_CHECK_FUNCS(removeea fremoveea lremoveea setea fsetea lsetea)
-	AC_CHECK_FUNCS(flistxattr removexattr lremovexattr fremovexattr)
-	AC_CHECK_FUNCS(setxattr lsetxattr fsetxattr)
-	AC_CHECK_FUNCS(attr_get attr_list attr_set attr_remove)
-	AC_CHECK_FUNCS(attr_getf attr_listf attr_setf attr_removef)
-  ;;
-esac
 
-# Check if attropen() is present if this is Solaris
-case "$this_os" in
-  *solaris*)
-	AC_CHECK_FUNCS(attropen)
+    if test "x$neta_cv_eas_sys_found" != "xyes" ; then
+       AC_CHECK_FUNCS([getxattr lgetxattr fgetxattr listxattr llistxattr],
+                      [neta_cv_eas_sys_found=yes],
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([flistxattr removexattr lremovexattr fremovexattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([setxattr lsetxattr fsetxattr],,
+                      [neta_cv_eas_sys_not_found=yes])
+    fi
+
+    if test "x$neta_cv_eas_sys_found" != "xyes" ; then
+	   AC_CHECK_FUNCS([getea fgetea lgetea listea flistea llistea],
+                      [neta_cv_eas_sys_found=yes],
+                      [neta_cv_eas_sys_not_found=yes])
+	   AC_CHECK_FUNCS([removeea fremoveea lremoveea setea fsetea lsetea],,
+                      [neta_cv_eas_sys_not_found=yes])
+    fi
+
+    if test "x$neta_cv_eas_sys_found" != "xyes" ; then
+	   AC_CHECK_FUNCS([attr_get attr_list attr_set attr_remove],,
+                      [neta_cv_eas_sys_not_found=yes])
+       AC_CHECK_FUNCS([attr_getf attr_listf attr_setf attr_removef],,
+                      [neta_cv_eas_sys_not_found=yes])
+    fi
   ;;
 esac
 
@@ -1117,6 +1139,15 @@ case "$this_os" in
     ;;
 esac
 
+echo neta_cv_eas_sys_found = $neta_cv_eas_sys_found
+echo neta_cv_eas_sys_not_found = $neta_cv_eas_sys_not_found
+
+if test "x$neta_cv_eas_sys_found" = "xyes" ; then
+   if test "x$neta_cv_eas_sys_not_found" != "xyes" ; then
+      neta_cv_eas="$neta_cv_eas | native"
+   fi
+fi
+
 dnl --------------------- Netatalk Webmin
 NETATALK_WEBMIN
 
@@ -1132,7 +1163,6 @@ AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
 AM_CONDITIONAL(USE_NFSv4_ACLS, test x$neta_cv_nfsv4acl = xyes)
-AM_CONDITIONAL(USE_SOLARIS_EAS, test x$neta_cv_solaris_eas = xyes)
 AM_CONDITIONAL(USE_DHX, test x$neta_cv_compile_dhx = xyes)
 AM_CONDITIONAL(USE_DHX2, test x$neta_cv_compile_dhx2 = xyes)
 AM_CONDITIONAL(USE_RANDNUM, test x$neta_cv_have_openssl = xyes)
