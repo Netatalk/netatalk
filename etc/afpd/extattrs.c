@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.26 2009-11-13 13:52:02 didg Exp $
+  $Id: extattrs.c,v 1.27 2009-11-17 18:10:48 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -249,12 +249,12 @@ static char *to_stringz(char *ibuf, uint16_t len)
 {
 static char attrmname[256];
 
-    if (len > 256)
+    if (len > 255)
         /* dont fool with us */
-        len = 256;
+        len = 255;
 
     /* we must copy the name as its not 0-terminated and I DONT WANT TO WRITE to ibuf */
-    strlcpy(attrmname, ibuf, len);
+    strlcpy(attrmname, ibuf, len + 1);
     return attrmname;
 }
 
