@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.6 2009-11-13 13:03:29 didg Exp $
+   $Id: ea.h,v 1.7 2009-11-17 11:41:37 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,16 @@ enum {
     kXAttrCreate = 0x2,
     kXAttrReplace = 0x4
 };
+
+#if !defined(HAVE_SETXATTR)
+#define XATTR_CREATE  0x1       /* set value, fail if attr already exists */
+#define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
+#endif
+
+
+/****************************************************************************************
+ * Stuff for our implementation of storing EAs in files in .AppleDouble dirs
+ ****************************************************************************************/
 
 #define EA_INITED   0xea494e54  /* ea"INT", for interfacing ea_open w. ea_close */
 #define EA_MAGIC    0x61644541 /* "adEA" */

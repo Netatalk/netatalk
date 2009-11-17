@@ -21,7 +21,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
    Samba 3.0.28, modified for netatalk.
-   $Id: ad_ea.c,v 1.5 2009-11-13 13:31:13 didg Exp $
+   $Id: ad_ea.c,v 1.6 2009-11-17 11:41:37 franklahm Exp $
    
 */
 
@@ -30,8 +30,8 @@
 #endif
 
 #include <string.h>
-
 #include <sys/types.h>
+#include <errno.h>
 
 #if HAVE_ATTR_XATTR_H
 #include <attr/xattr.h>
@@ -43,6 +43,11 @@
 #include <sys/ea.h>
 #endif
 
+#ifdef HAVE_ATTROPEN
+
+#include <dirent.h>
+#endif
+
 #ifdef HAVE_SYS_EXTATTR_H
 #include <sys/extattr.h>
 #endif
@@ -50,6 +55,7 @@
 #include <atalk/adouble.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/ea.h>
 
 /******** Solaris EA helper function prototypes ********/
 #ifdef HAVE_ATTROPEN
@@ -527,11 +533,6 @@ int sys_lremovexattr (const char *path, const char *uname)
 #endif
 }
 
-#if !defined(HAVE_SETXATTR)
-#define XATTR_CREATE  0x1       /* set value, fail if attr already exists */
-#define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
-#endif
-
 int sys_setxattr (const char *path, const char *uname, const void *value, size_t size, int flags)
 {
 	const char *name = prefix(uname);
@@ -672,7 +673,6 @@ static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
 	struct stat sbuf;
 
 	if (fstat(attrfd, &sbuf) == -1) {
-		errno = ENOATTR;
 		return -1;
 	}
 
@@ -683,7 +683,6 @@ static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
 
 	/* check size and read xattr */
 	if (sbuf.st_size > size) {
-		errno = ERANGE;
 		return -1;
 	}
 
@@ -706,7 +705,7 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 	while ((de = readdir(dirp))) {
 		size_t listlen;
 		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..") ||
-		     !strcmp(dp->d_name, "SUNWattr_ro") || !strcmp(dp->d_name, "SUNWattr_rw")) 
+		     !strcmp(de->d_name, "SUNWattr_ro") || !strcmp(de->d_name, "SUNWattr_rw")) 
 		{
 			/* we don't want "." and ".." here: */
 			LOG(log_maxdebug, logtype_default, "skipped EA %s\n",de->d_name);
@@ -742,9 +741,6 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 static int solaris_unlinkat(int attrdirfd, const char *name)
 {
 	if (unlinkat(attrdirfd, name, 0) == -1) {
-		if (errno == ENOENT) {
-			errno = ENOATTR;
-		}
 		return -1;
 	}
 	return 0;
@@ -755,11 +751,6 @@ static int solaris_attropen(const char *path, const char *attrpath, int oflag, m
 	int filedes = attropen(path, attrpath, oflag, mode);
 	if (filedes == -1) {
 		LOG(log_maxdebug, logtype_default, "attropen FAILED: path: %s, name: %s, errno: %s\n",path,attrpath,strerror(errno));
-		if (errno == EINVAL) {
-			errno = ENOTSUP;
-		} else {
-			errno = ENOATTR;
-		}
 	}
 	return filedes;
 }
@@ -769,11 +760,6 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
 	int filedes = openat(fildes, path, oflag, mode);
 	if (filedes == -1) {
 		LOG(log_maxdebug, logtype_default, "openat FAILED: fd: %s, path: %s, errno: %s\n",filedes,path,strerror(errno));
-		if (errno == EINVAL) {
-			errno = ENOTSUP;
-		} else {
-			errno = ENOATTR;
-		}
 	}
 	return filedes;
 }
