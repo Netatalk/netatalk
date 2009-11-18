@@ -46,7 +46,9 @@ typedef struct {
 
 /* conversion flags */
 #define CONV_IGNORE         (1<<0) /* return the first convertable characters. */
-#define CONV_ESCAPEHEX      (1<<1) /* escape unconvertable chars with :[UCS2HEX] */
+#define CONV_ESCAPEHEX      (1<<1) /* escape unconvertable chars with :[UCS2HEX], */
+                                   /* also escape '/'. Escape ':' if also CONV_ALLOW_COLON, */
+                                   /* else ':' raises EILSEQ */
 #define CONV_ESCAPEDOTS     (1<<2) /* escape leading dots with :2600 */
 #define CONV_UNESCAPEHEX    (1<<3)
 #define CONV_TOUPPER        (1<<4) /* convert to UPPERcase */
@@ -55,6 +57,7 @@ typedef struct {
 #define CONV_DECOMPOSE      (1<<7) /* precompose */
 #define CONV_FORCE          (1<<8) /* force convertion */
 #define CONV__EILSEQ        (1<<9) /* ignore EILSEQ, replace with IGNORE_CHAR (try USC2) */
+#define CONV_ALLOW_COLON   (1<<10) /* Allow ':' in name. Needed for Extended Attributes */
 
 /* conversion return flags */
 #define CONV_REQMANGLE  (1<<14) /* mangling of returned name is required */
@@ -68,7 +71,7 @@ typedef enum {CH_UCS2=0, CH_UTF8=1, CH_MAC=2, CH_UNIX=3, CH_UTF8_MAC=4} charset_
 /*
  *   for each charset we have a function that pulls from that charset to
  *     a ucs2 buffer, and a function that pushes to a ucs2 buffer
- *     */
+ */
 
 struct charset_functions {
     const char *name;

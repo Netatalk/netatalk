@@ -889,6 +889,7 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
     char* outbuf = (char*)dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
+    char escch;
 
     descriptor = conv_handles[CH_UCS2][to_set];
     descriptor_cap = conv_handles[CH_UCS2][cap_set];
@@ -920,13 +921,21 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
         if ((option & CONV_ESCAPEHEX)) {
             for (i = 0; i < i_len; i += 2) {
                 ucs2_t c = SVAL(inbuf, i);
-                if (c == 0x002f) { /* 0x002f = / */
+                switch (c) {
+                case 0x003a: /* 0x003a = ':' */
+                    if ( ! (option & CONV_ALLOW_COLON)) {
+                        errno = EILSEQ;
+                        goto end;
+                    }
+                    escch = c;
                     j = i_len - i;
                     i_len = i;
                     break;
-                } else if (c == 0x003a) { /* 0x003a = : */
-                    errno = EILSEQ;
-                    goto end;
+                case 0x002f: /* 0x002f = '/' */
+                    escch = c;
+                    j = i_len - i;
+                    i_len = i;
+                    break;
                 }
             }
         }
@@ -985,9 +994,27 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
                 errno = E2BIG;
                 goto end;
             }
-            *outbuf++ = ':';
-            *outbuf++ = '2';
-            *outbuf++ = 'f';
+            switch (escch) {
+            case '/':
+                *outbuf++ = ':';
+                *outbuf++ = '2';
+                *outbuf++ = 'f';
+                break;
+            case ':':
+                *outbuf++ = ':';
+                *outbuf++ = '3';
+                *outbuf++ = 'a';
+                break;
+            default:
+                /*
+                 *  THIS SHOULD NEVER BE REACHED !!!
+                 *  As a safety net I put in a ' ' here
+                 */
+                *outbuf++ = ':';
+                *outbuf++ = '2';
+                *outbuf++ = '0';
+                break;
+            }
             o_len -= 3;
             inbuf += 2;
             i_len -= 2;

@@ -8,7 +8,7 @@
 
 #define MACCHARSET "MAC_ROMAN"
 
-#define flag(x) x, #x
+#define flag(x) {x, #x}
 
 struct flag_map {
     int flag;
@@ -17,6 +17,7 @@ struct flag_map {
 
 struct flag_map flag_map[] = {
     flag(CONV_ESCAPEHEX),
+    flag(CONV_ALLOW_COLON),
     flag(CONV_UNESCAPEHEX),    
     flag(CONV_ESCAPEDOTS),
     flag(CONV_IGNORE),
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
                                        string, strlen(string),
                                        buffer, MAXPATHLEN,
                                        &flags)) ) {
-        fprintf( stderr, "Conversion error");
+        perror("Conversion error");
         return 1;
     }
 
