@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.8 2009-11-17 12:33:30 franklahm Exp $
+   $Id: ea.h,v 1.9 2009-11-18 11:14:59 didg Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -146,5 +146,7 @@ extern int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT);
 extern int sys_list_eas(VFS_FUNC_ARGS_EA_LIST);
 extern int sys_set_ea(VFS_FUNC_ARGS_EA_SET);
 extern int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE);
+/* native EA VFSfile/dir cp/mv/rm */
+extern int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE);
 
 #endif /* ATALK_EA_H */

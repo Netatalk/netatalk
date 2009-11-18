@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.1 2009-11-17 12:33:30 franklahm Exp $
+  $Id: ea_sys.c,v 1.2 2009-11-18 11:14:59 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -359,6 +359,30 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
             return AFPERR_ACCESS;
         default:
             LOG(log_error, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
+            return AFPERR_MISC;
+        }
+    }
+
+    return AFP_OK;
+}
+
+/* --------------------- 
+   copy EA 
+*/
+int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
+{
+    int ret;
+    ret = sys_copyxattr(src, dst);
+    if (ret == -1) {
+        switch(errno) {
+        case ENOENT:
+            /* no attribute */
+            break;
+        case EACCES:
+            LOG(log_debug, logtype_afpd, "sys_ea_copyfile(%s, %s): error: %s", src, dst, strerror(errno));
+            return AFPERR_ACCESS;
+        default:
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile(%s, %s): error: %s", src, dst, strerror(errno));
             return AFPERR_MISC;
         }
     }

@@ -20,8 +20,12 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    
+   sys_copyxattr modified from LGPL2.1 libattr copyright
+   Copyright (C) 2001-2002 Silicon Graphics, Inc.  All Rights Reserved.
+   Copyright (C) 2001 Andreas Gruenbacher.
+      
    Samba 3.0.28, modified for netatalk.
-   $Id: sys_ea.c,v 1.1 2009-11-17 12:33:30 franklahm Exp $
+   $Id: sys_ea.c,v 1.2 2009-11-18 11:14:59 didg Exp $
    
 */
 
@@ -29,6 +33,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -661,6 +666,93 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 #else
 	errno = ENOSYS;
 	return -1;
+#endif
+}
+
+/* copy EA, from LGPL2.1 libattr attr_copy_file.c
+   should use fgetxattr? We don't have them but they are in Samba.
+   Or add a sys_copyfxattr? Currently it's only call by afp_copyfile so we can open
+   the both files for reading and get a fd.
+
+   Or don't use sys_xxx and copy all attributes.
+
+*/
+int sys_copyxattr(const char *src_path, const char *dst_path)
+{
+#if defined(HAVE_LISTXATTR) && defined(HAVE_GETXATTR) && defined(HAVE_SETXATTR)
+  	int ret = 0;
+	ssize_t size;
+	char *names = NULL, *end_names, *name, *value = NULL;
+	unsigned int setxattr_ENOTSUP = 0;
+
+	size = sys_listxattr(src_path, NULL, 0);
+	if (size < 0) {
+		if (errno != ENOSYS && errno != ENOTSUP) {
+			ret = -1;
+		}
+		goto getout;
+	}
+	names = malloc(size+1);
+	if (names == NULL) {
+		ret = -1;
+		goto getout;
+	}
+	size = sys_listxattr(src_path, names, size);
+	if (size < 0) {
+		ret = -1;
+		goto getout;
+	} else {
+		names[size] = '\0';
+		end_names = names + size;
+	}
+
+	for (name = names; name != end_names; name = strchr(name, '\0') + 1) {
+		void *old_value;
+
+		/* check if this attribute shall be preserved */
+		if (!*name)
+			continue;
+
+		size = sys_getxattr (src_path, name, NULL, 0);
+		if (size < 0) {
+			ret = -1;
+			continue;
+		}
+		value = realloc(old_value = value, size);
+		if (size != 0 && value == NULL) {
+			free(old_value);
+			ret = -1;
+		}
+		size = sys_getxattr(src_path, name, value, size);
+		if (size < 0) {
+			ret = -1;
+			continue;
+		}
+		if (sys_setxattr(dst_path, name, value, size, 0) != 0) {
+			if (errno == ENOTSUP)
+				setxattr_ENOTSUP++;
+			else {
+				if (errno == ENOSYS) {
+					ret = -1;
+					/* no hope of getting any further */
+					break;
+				} else {
+					ret = -1;
+				}
+			}
+		}
+	}
+	if (setxattr_ENOTSUP) {
+		errno = ENOTSUP;
+		ret = -1;
+	}
+getout:
+	free(value);
+	free(names);
+	return ret;
+#else
+	/* FIXME same for solaris */
+	return 0;
 #endif
 }
 

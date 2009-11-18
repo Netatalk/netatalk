@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.49 2009-11-13 02:52:07 didg Exp $
+ * $Id: adouble.h,v 1.50 2009-11-18 11:14:59 didg Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -514,6 +514,7 @@ int sys_fremovexattr (int filedes, const char *name);
 int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
 int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
 int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
+int sys_copyxattr (const char *src, const char *dst);
 
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);

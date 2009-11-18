@@ -936,7 +936,7 @@ static struct vfs_ops netatalk_ea_sys = {
     /* rf_setdirowner:    */ NULL,
     /* rf_deletefile:     */ NULL,
     /* rf_renamefile:     */ NULL,
-    /* vfs_copyfile:      */ NULL,
+    /* vfs_copyfile:      */ sys_ea_copyfile,
     /* rf_acl:            */ NULL,
     /* rf_remove_acl      */ NULL,
     /* ea_getsize         */ sys_get_easize,
