@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.14 2009-10-29 19:20:28 franklahm Exp $
+  $Id: ea.c,v 1.15 2009-11-18 08:02:33 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -121,7 +121,8 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
  */
 static int unpack_header(struct ea * restrict ea)
 {
-    int ret = 0, count = 0;
+    int ret = 0;
+    unsigned int count = 0;
     uint32_t uint32;
     char *buf;
 
@@ -199,7 +200,7 @@ exit:
  */
 static int pack_header(struct ea * restrict ea)
 {
-    int count = 0, eacount = 0;
+    unsigned int count = 0, eacount = 0;
     uint16_t uint16;
     uint32_t uint32;
     size_t bufsize = EA_HEADER_SIZE;
@@ -340,7 +341,7 @@ static int ea_addentry(struct ea * restrict ea,
                        size_t attrsize,
                        int bitmap)
 {
-    int count = 0;
+    unsigned int count = 0;
     void *tmprealloc;
 
     /* First check if an EA of the requested name already exist */
@@ -418,7 +419,8 @@ error:
 static int ea_delentry(struct ea * restrict ea,
                        const char * restrict attruname)
 {
-    int ret = 0, count = 0;
+    int ret = 0;
+    unsigned int count = 0;
 
     if (ea->ea_count == 0) {
         LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion");
@@ -561,7 +563,7 @@ static int write_ea(const struct ea * restrict ea,
         goto exit;
     }
 
-    if ((write(fd, ibuf, attrsize)) != attrsize) {
+    if (write(fd, ibuf, attrsize) != (ssize_t)attrsize) {
         LOG(log_error, logtype_afpd, "write_ea('%s'): write: %s", eaname, strerror(errno));
         ret = -1;
         goto exit;
@@ -739,7 +741,7 @@ static int ea_open(const struct vol * restrict vol,
     }
 
     /* read it */
-    if ((read(ea->ea_fd, ea->ea_data, ea->ea_size)) != ea->ea_size) {
+    if (read(ea->ea_fd, ea->ea_data, ea->ea_size) != (ssize_t)ea->ea_size) {
         LOG(log_error, logtype_afpd, "ea_open: short read on header: %s", eaname);
         ret = -1;
         goto exit;
@@ -786,7 +788,8 @@ exit:
  */
 static int ea_close(struct ea * restrict ea)
 {
-    int ret = 0, count = 0;
+    int ret = 0; 
+    unsigned int count = 0;
     char *eaname;
     struct stat st;
 
@@ -835,7 +838,7 @@ static int ea_close(struct ea * restrict ea)
                     goto exit;
                 }
 
-                if (write(ea->ea_fd, ea->ea_data, ea->ea_size) != ea->ea_size) {
+                if (write(ea->ea_fd, ea->ea_data, ea->ea_size) != (ssize_t)ea->ea_size) {
                     LOG(log_error, logtype_afpd, "ea_close: write: %s", strerror(errno));
                     ret = -1;
                 }
@@ -904,7 +907,8 @@ exit:
  */
 int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
-    int ret = AFPERR_MISC, count = 0;
+    int ret = AFPERR_MISC;
+    unsigned int count = 0;
     uint32_t uint32;
     struct ea ea;
 
@@ -960,7 +964,8 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  */
 int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
-    int ret = AFPERR_MISC, count = 0, fd = -1;
+    int ret = AFPERR_MISC, fd = -1;
+    unsigned int count = 0;
     uint32_t uint32;
     size_t toread;
     struct ea ea;
@@ -998,7 +1003,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             rbuf += 4;
             *rbuflen += 4;
 
-            if ((read(fd, rbuf, toread)) != toread) {
+            if (read(fd, rbuf, toread) != (ssize_t)toread) {
                 LOG(log_error, logtype_afpd, "get_eacontent('%s/%s'): short read", uname, attruname);
                 ret = AFPERR_MISC;
                 break;
@@ -1043,7 +1048,8 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  */
 int list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
-    int count = 0, attrbuflen = *buflen, ret = AFP_OK, len;
+    unsigned int count = 0;
+    int attrbuflen = *buflen, ret = AFP_OK, len;
     char *buf = attrnamebuf;
     struct ea ea;
 
@@ -1213,10 +1219,11 @@ exit:
 
 int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
 {
-    LOG(log_debug, logtype_afpd, "ea_deletefile('%s')", file);
-
-    int count = 0, ret = AFP_OK;
+    unsigned int count = 0;
+    int ret = AFP_OK;
     struct ea ea;
+
+    LOG(log_debug, logtype_afpd, "ea_deletefile('%s')", file);
 
     /* Open EA stuff */
     if ((ea_open(vol, file, EA_RDWR, &ea)) != 0) {
@@ -1250,7 +1257,7 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
 
 int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
 {
-    int    count = 0;
+    unsigned int count = 0;
     int    ret = AFP_OK;
     size_t easize;
     char   srceapath[ MAXPATHLEN + 1];
@@ -1348,7 +1355,7 @@ exit:
 
 int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {
-    int    count = 0;
+    unsigned int count = 0;
     int    ret = AFP_OK;
     size_t easize;
     char   srceapath[ MAXPATHLEN + 1];
@@ -1435,12 +1442,13 @@ exit:
 
 int ea_chown(VFS_FUNC_ARGS_CHOWN)
 {
-    LOG(log_debug, logtype_afpd, "ea_chown('%s')", path);
 
-    int count = 0, ret = AFP_OK;
+    unsigned int count = 0;
+    int ret = AFP_OK;
     char *eaname;
     struct ea ea;
 
+    LOG(log_debug, logtype_afpd, "ea_chown('%s')", path);
     /* Open EA stuff */
     if ((ea_open(vol, path, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
@@ -1496,12 +1504,13 @@ exit:
 
 int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
 {
-    LOG(log_debug, logtype_afpd, "ea_chmod_file('%s')", name);
 
-    int count = 0, ret = AFP_OK;
+    unsigned int count = 0;
+    int ret = AFP_OK;
     const char *eaname;
     struct ea ea;
 
+    LOG(log_debug, logtype_afpd, "ea_chmod_file('%s')", name);
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
@@ -1559,14 +1568,15 @@ exit:
 
 int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
 
     int ret = AFP_OK;
+    unsigned int count = 0;
     uid_t uid;
     const char *eaname;
     const char *eaname_safe = NULL;
     struct ea ea;
 
+    LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
     /* .AppleDouble already might be inaccesible, so we must run as id 0 */
     uid = geteuid();
     if (seteuid(0)) {
@@ -1601,7 +1611,6 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     }
 
     /* Set mode on EA files */
-    int count = 0;
     while (count < ea.ea_count) {
         eaname = (*ea.ea_entries)[count].ea_name;
         /*
