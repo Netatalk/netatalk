@@ -25,7 +25,7 @@
    Copyright (C) 2001 Andreas Gruenbacher.
       
    Samba 3.0.28, modified for netatalk.
-   $Id: sys_ea.c,v 1.2 2009-11-18 11:14:59 didg Exp $
+   $Id: sys_ea.c,v 1.3 2009-11-18 11:30:03 didg Exp $
    
 */
 
@@ -71,6 +71,7 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size);
 static int solaris_unlinkat(int attrdirfd, const char *name);
 static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode);
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
+static int solaris_copy_xattr(const char *src, const char *dst );
 #endif
 
 /**************************************************************************
@@ -750,9 +751,12 @@ getout:
 	free(value);
 	free(names);
 	return ret;
-#else
+#elif defined(HAVE_ATTROPEN)
 	/* FIXME same for solaris */
-	return 0;
+	return solaris_copy_xattr(src_path, dst_path );
+#else
+	errno = ENOTSUP;
+	return -1;
 #endif
 }
 
@@ -865,5 +869,12 @@ static int solaris_write_xattr(int attrfd, const char *value, size_t size)
 		return -1;
 	}
 }
+
+static int solaris_copy_xattr(const char *src, const char *dst )
+{
+	errno = ENOTSUP;
+	return -1;
+}
+
 #endif /*HAVE_ATTROPEN*/
 
