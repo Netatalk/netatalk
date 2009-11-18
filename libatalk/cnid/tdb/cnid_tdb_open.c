@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_open.c,v 1.2 2005-04-28 20:50:02 bfernhomberg Exp $
+ * $Id: cnid_tdb_open.c,v 1.3 2009-11-18 13:26:50 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -164,7 +164,7 @@ struct _cnid_module cnid_tdb_module = {
     "tdb",
     {NULL, NULL},
     cnid_tdb_open,
-    CNID_FLAG_SETUID
+    CNID_FLAG_SETUID | CNID_FLAG_BLOCK
 };
 
 
