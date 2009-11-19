@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.117 2009-11-13 00:27:35 didg Exp $
+ * $Id: directory.c,v 1.118 2009-11-19 10:37:43 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -68,10 +68,10 @@ int             afp_errno;
 #define SENTINEL (&sentinel)
 static struct dir sentinel = { SENTINEL, SENTINEL, NULL, DIRTREE_COLOR_BLACK,
                                  NULL, NULL, NULL, NULL, NULL, 0, 0, 
-                                 0, 0, NULL, NULL, NULL};
+                               0, 0, NULL, NULL, 0, NULL};
 static struct dir rootpar  = { SENTINEL, SENTINEL, NULL, 0,
                                  NULL, NULL, NULL, NULL, NULL, 0, 0, 
-                                 0, 0, NULL, NULL, NULL};
+                               0, 0, NULL, NULL, 0, NULL};
 
 /* (from IM: Toolbox Essentials)
  * dirFinderInfo (DInfo) fields:
@@ -149,7 +149,7 @@ int get_afp_errno(const int param)
 struct dir *
 dirsearch_byname( const struct vol *vol, struct dir *cdir, char *name)
 {
-struct dir *dir = NULL;
+    struct dir *dir = NULL;
 
     if ((cdir->d_did != DIRDID_ROOT_PARENT) && (cdir->d_child)) {
         struct dir key;
@@ -157,13 +157,14 @@ struct dir *dir = NULL;
         
         key.d_parent = cdir;
         key.d_u_name = name;
-	hn = hash_lookup(vol->v_hash, &key);
-	if (hn) {
-	    dir = hnode_get(hn);
-	}
+        key.d_u_name_len = strlen(name);
+        hn = hash_lookup(vol->v_hash, &key);
+        if (hn) {
+            dir = hnode_get(hn);
+        }
     }
     return dir;
-}            
+}        
 
 /* -----------------------------------------
  * if did is not in the cache resolve it with cnid 
@@ -1062,6 +1063,7 @@ struct dir *dirnew(const char *m_name, const char *u_name)
         return NULL;
     }
 
+    dir->d_u_name_len = strlen(dir->d_u_name);
     dir->d_m_name_ucs2 = NULL;
     dir->d_left = dir->d_right = SENTINEL;
     dir->d_next = dir->d_prev = dir;
@@ -1094,6 +1096,63 @@ const struct dir *k = key;
     return acc;
 }
 
+#undef get16bits
+#if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
+    || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
+#define get16bits(d) (*((const uint16_t *) (d)))
+#endif
+
+#if !defined (get16bits)
+#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
+                      +(uint32_t)(((const uint8_t *)(d))[0]) )
+#endif
+
+static hash_val_t hash_fun2_dir(const void *key)
+{
+    const struct dir *k = key;
+    const char *data = k->d_u_name;
+    int len = k->d_u_name_len;
+    hash_val_t hash = k->d_parent->d_did, tmp;
+
+    int rem = len & 3;
+    len >>= 2;
+
+    /* Main loop */
+    for (;len > 0; len--) {
+        hash  += get16bits (data);
+        tmp    = (get16bits (data+2) << 11) ^ hash;
+        hash   = (hash << 16) ^ tmp;
+        data  += 2*sizeof (uint16_t);
+        hash  += hash >> 11;
+    }
+
+    /* Handle end cases */
+    switch (rem) {
+    case 3: hash += get16bits (data);
+        hash ^= hash << 16;
+        hash ^= data[sizeof (uint16_t)] << 18;
+        hash += hash >> 11;
+        break;
+    case 2: hash += get16bits (data);
+        hash ^= hash << 11;
+        hash += hash >> 17;
+        break;
+    case 1: hash += *data;
+        hash ^= hash << 10;
+        hash += hash >> 1;
+    }
+
+    /* Force "avalanching" of final 127 bits */
+    hash ^= hash << 3;
+    hash += hash >> 5;
+    hash ^= hash << 4;
+    hash += hash >> 17;
+    hash ^= hash << 25;
+    hash += hash >> 6;
+
+    return hash;
+}
+
 /* ---------------- */
 static int hash_comp_dir(const void *key1, const void *key2)
 {
@@ -1107,7 +1166,7 @@ const struct dir *k2 = key2;
 hash_t *
 dirhash(void)
 {
-    return hash_create(HASHCOUNT_T_MAX, hash_comp_dir, hash_fun_dir);
+    return hash_create(HASHCOUNT_T_MAX, hash_comp_dir, hash_fun2_dir);
 }
 
 /* ------------------ */

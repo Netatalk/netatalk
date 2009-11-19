@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 afpd
+hash
 test_parse_mtab
 .deps
 .libs

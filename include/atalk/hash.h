@@ -14,7 +14,7 @@
  * into proprietary software; there is no requirement for such software to
  * contain a copyright notice related to this source.
  *
- * $Id: hash.h,v 1.1 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: hash.h,v 1.2 2009-11-19 10:37:44 franklahm Exp $
  * $Name:  $
  */
 
@@ -22,12 +22,13 @@
 #define ATALK_HASH_H
 
 #include <limits.h>
+#include <stdint.h>
 
 typedef unsigned long hashcount_t;
 #define HASHCOUNT_T_MAX ULONG_MAX
 
-typedef unsigned long hash_val_t;
-#define HASH_VAL_T_MAX ULONG_MAX
+typedef uint32_t hash_val_t;
+#define HASH_VAL_T_MAX UINT32_MAX
 
 extern int hash_val_t_bit;
 

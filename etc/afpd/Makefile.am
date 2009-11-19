@@ -3,6 +3,7 @@
 pkgconfdir = @PKGCONFDIR@
 
 sbin_PROGRAMS = afpd
+noinst_PROGRAMS = hash
 
 afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 	 file.c enumerate.c desktop.c filedir.c fork.c appl.c gettok.c \
@@ -14,17 +15,9 @@ if USE_NFSv4_ACLS
 afpd_SOURCES += acls.c
 endif
 
-
 afpd_LDADD =  $(top_builddir)/libatalk/cnid/libcnid.la $(top_builddir)/libatalk/libatalk.la
-afpd_LDFLAGS = -export-dynamic
-
-noinst_HEADERS = auth.h afp_config.h desktop.h directory.h file.h \
-	 filedir.h fork.h globals.h icon.h mangle.h misc.h status.h switch.h \
-	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h
-
-LIBS = @LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
-
-AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
+afpd_LDFLAGS = -export-dynamic @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
+afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @SLP_CFLAGS@ \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
 	 -D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \
@@ -34,3 +27,10 @@ AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/ldap.conf\" \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\"
+
+noinst_HEADERS = auth.h afp_config.h desktop.h directory.h file.h \
+	 filedir.h fork.h globals.h icon.h mangle.h misc.h status.h switch.h \
+	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h
+
+hash_SOURCES = hash.c
+hash_CFLAGS = -DKAZLIB_TEST_MAIN -I$(top_srcdir)/include

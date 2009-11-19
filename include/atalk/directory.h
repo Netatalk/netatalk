@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.1 2009-10-02 09:32:40 franklahm Exp $
+ * $Id: directory.h,v 1.2 2009-11-19 10:37:44 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -59,6 +59,8 @@ struct dir {
 
     char	*d_m_name;            /* mac name */
     char        *d_u_name;            /* unix name */
+    size_t      d_u_name_len;         /* Length of unix name
+                                         MUST be initialized from d_u_name !!*/
     ucs2_t	*d_m_name_ucs2;	      /* mac name as UCS2 */
 };
 
