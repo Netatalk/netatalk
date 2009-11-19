@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_private.h,v 1.5 2009-10-13 22:55:37 didg Exp $
+ * $Id: cnid_cdb_private.h,v 1.6 2009-11-19 01:17:31 didg Exp $
  */
 
 #ifndef LIBATALK_CDB_PRIVATE_H
@@ -33,12 +33,10 @@
 
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
+#include <atalk/cnid_private.h>
 #include <atalk/cnid.h>
 #include <atalk/util.h>
 #include "cnid_cdb.h"
-
-#define CNID_DB_MAGIC   0x434E4944U  /* CNID */
-#define CNID_DATA_MAGIC 0x434E4945U  /* CNIE */
 
 /* record structure 
    cnid                4
@@ -65,42 +63,6 @@ typedef struct cnid_record { /* helper for debug don't use */
   char          name[50];
 } cnid_record;
 
-#define CNID_OFS                 0
-#define CNID_LEN                 4
-
-#define CNID_DEV_OFS             CNID_LEN
-#define CNID_DEV_LEN             8
-
-#define CNID_INO_OFS             (CNID_DEV_OFS + CNID_DEV_LEN)
-#define CNID_INO_LEN             8
-
-#define CNID_DEVINO_OFS          CNID_LEN
-#define CNID_DEVINO_LEN          (CNID_DEV_LEN +CNID_INO_LEN)
-
-#define CNID_TYPE_OFS            (CNID_DEVINO_OFS +CNID_DEVINO_LEN)
-#define CNID_TYPE_LEN            4
-
-#define CNID_DID_OFS             (CNID_TYPE_OFS +CNID_TYPE_LEN)
-#define CNID_DID_LEN             CNID_LEN
-
-#define CNID_NAME_OFS            (CNID_DID_OFS + CNID_DID_LEN)
-#define CNID_HEADER_LEN          (CNID_NAME_OFS)
-
-#define CNID_START               17
-
-#define CNIDFLAG_ROOTINFO_RO     (1 << 0)
-#define CNIDFLAG_DB_RO           (1 << 1)
-
-/* the key is cnid 0 
- * we use 0/RootInfo. */
-#define ROOTINFO_KEY    "\0\0\0\0"
-#define ROOTINFO_KEYLEN 4
-
-/*                         cnid   - dev        - inode     - type  - did  - name */
-#define ROOTINFO_DATA    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0RootInfo"
-#define ROOTINFO_DATALEN (3*4 +2*8  +9)
-
-
 typedef struct CNID_private {
     u_int32_t magic;
     DB *db_cnid;
@@ -111,6 +73,7 @@ typedef struct CNID_private {
     char lock_file[MAXPATHLEN + 1];
 } CNID_private;
 
+/* XXX stuff below is outdate */
 /* on-disk data format (in network byte order where appropriate) --
  * db_cnid:      (key: cnid)
  * name          size (in bytes)
