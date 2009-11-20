@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.2 2009-11-18 11:14:59 didg Exp $
+  $Id: ea_sys.c,v 1.3 2009-11-20 16:26:23 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -371,8 +371,77 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 */
 int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {
-    int ret;
-    ret = sys_copyxattr(src, dst);
+  	int ret = 0;
+	ssize_t size;
+	char *names = NULL, *end_names, *name, *value = NULL;
+	unsigned int setxattr_ENOTSUP = 0;
+
+	size = sys_listxattr(src, NULL, 0);
+	if (size < 0) {
+		if (errno != ENOSYS && errno != ENOTSUP) {
+			ret = -1;
+		}
+		goto getout;
+	}
+	names = malloc(size+1);
+	if (names == NULL) {
+		ret = -1;
+		goto getout;
+	}
+	size = sys_listxattr(src, names, size);
+	if (size < 0) {
+		ret = -1;
+		goto getout;
+	} else {
+		names[size] = '\0';
+		end_names = names + size;
+	}
+
+	for (name = names; name != end_names; name = strchr(name, '\0') + 1) {
+		void *old_value;
+
+		/* check if this attribute shall be preserved */
+		if (!*name)
+			continue;
+
+		size = sys_getxattr (src, name, NULL, 0);
+		if (size < 0) {
+			ret = -1;
+			continue;
+		}
+		value = realloc(old_value = value, size);
+		if (size != 0 && value == NULL) {
+			free(old_value);
+			ret = -1;
+		}
+		size = sys_getxattr(src, name, value, size);
+		if (size < 0) {
+			ret = -1;
+			continue;
+		}
+		if (sys_setxattr(dst, name, value, size, 0) != 0) {
+			if (errno == ENOTSUP)
+				setxattr_ENOTSUP++;
+			else {
+				if (errno == ENOSYS) {
+					ret = -1;
+					/* no hope of getting any further */
+					break;
+				} else {
+					ret = -1;
+				}
+			}
+		}
+	}
+	if (setxattr_ENOTSUP) {
+		errno = ENOTSUP;
+		ret = -1;
+	}
+
+getout:
+	free(value);
+	free(names);
+
     if (ret == -1) {
         switch(errno) {
         case ENOENT:

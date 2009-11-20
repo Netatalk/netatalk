@@ -25,7 +25,7 @@
    Copyright (C) 2001 Andreas Gruenbacher.
       
    Samba 3.0.28, modified for netatalk.
-   $Id: sys_ea.c,v 1.3 2009-11-18 11:30:03 didg Exp $
+   $Id: sys_ea.c,v 1.4 2009-11-20 16:26:23 franklahm Exp $
    
 */
 
@@ -71,7 +71,6 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size);
 static int solaris_unlinkat(int attrdirfd, const char *name);
 static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode);
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
-static int solaris_copy_xattr(const char *src, const char *dst );
 #endif
 
 /**************************************************************************
@@ -670,96 +669,6 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 #endif
 }
 
-/* copy EA, from LGPL2.1 libattr attr_copy_file.c
-   should use fgetxattr? We don't have them but they are in Samba.
-   Or add a sys_copyfxattr? Currently it's only call by afp_copyfile so we can open
-   the both files for reading and get a fd.
-
-   Or don't use sys_xxx and copy all attributes.
-
-*/
-int sys_copyxattr(const char *src_path, const char *dst_path)
-{
-#if defined(HAVE_LISTXATTR) && defined(HAVE_GETXATTR) && defined(HAVE_SETXATTR)
-  	int ret = 0;
-	ssize_t size;
-	char *names = NULL, *end_names, *name, *value = NULL;
-	unsigned int setxattr_ENOTSUP = 0;
-
-	size = sys_listxattr(src_path, NULL, 0);
-	if (size < 0) {
-		if (errno != ENOSYS && errno != ENOTSUP) {
-			ret = -1;
-		}
-		goto getout;
-	}
-	names = malloc(size+1);
-	if (names == NULL) {
-		ret = -1;
-		goto getout;
-	}
-	size = sys_listxattr(src_path, names, size);
-	if (size < 0) {
-		ret = -1;
-		goto getout;
-	} else {
-		names[size] = '\0';
-		end_names = names + size;
-	}
-
-	for (name = names; name != end_names; name = strchr(name, '\0') + 1) {
-		void *old_value;
-
-		/* check if this attribute shall be preserved */
-		if (!*name)
-			continue;
-
-		size = sys_getxattr (src_path, name, NULL, 0);
-		if (size < 0) {
-			ret = -1;
-			continue;
-		}
-		value = realloc(old_value = value, size);
-		if (size != 0 && value == NULL) {
-			free(old_value);
-			ret = -1;
-		}
-		size = sys_getxattr(src_path, name, value, size);
-		if (size < 0) {
-			ret = -1;
-			continue;
-		}
-		if (sys_setxattr(dst_path, name, value, size, 0) != 0) {
-			if (errno == ENOTSUP)
-				setxattr_ENOTSUP++;
-			else {
-				if (errno == ENOSYS) {
-					ret = -1;
-					/* no hope of getting any further */
-					break;
-				} else {
-					ret = -1;
-				}
-			}
-		}
-	}
-	if (setxattr_ENOTSUP) {
-		errno = ENOTSUP;
-		ret = -1;
-	}
-getout:
-	free(value);
-	free(names);
-	return ret;
-#elif defined(HAVE_ATTROPEN)
-	/* FIXME same for solaris */
-	return solaris_copy_xattr(src_path, dst_path );
-#else
-	errno = ENOTSUP;
-	return -1;
-#endif
-}
-
 /**************************************************************************
  helper functions for Solaris' EA support
 ****************************************************************************/
@@ -788,7 +697,6 @@ static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
 static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 {
 	ssize_t len = 0;
-	int stop = 0;
 	DIR *dirp;
 	struct dirent *de;
 	int newfd = dup(attrdirfd);
@@ -868,12 +776,6 @@ static int solaris_write_xattr(int attrfd, const char *value, size_t size)
 		LOG(log_maxdebug, logtype_default, "solaris_write_xattr FAILED!\n");
 		return -1;
 	}
-}
-
-static int solaris_copy_xattr(const char *src, const char *dst )
-{
-	errno = ENOTSUP;
-	return -1;
 }
 
 #endif /*HAVE_ATTROPEN*/
