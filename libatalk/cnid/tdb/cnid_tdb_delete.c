@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_delete.c,v 1.3 2009-11-20 17:37:14 didg Exp $
+ * $Id: cnid_tdb_delete.c,v 1.4 2009-11-20 19:25:05 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -41,7 +41,7 @@ int cnid_tdb_delete(struct _cnid_db *cdb, const cnid_t id)
     tdb_delete(db->tdb_devino, key); 
 
     key.dptr = (char *)data.dptr +CNID_DID_OFS;
-    key.dsize = data.dsize -CNID_DID_OFS;;
+    key.dsize = data.dsize -CNID_DID_OFS;
     tdb_delete(db->tdb_didname, key); 
 
     free(data.dptr);

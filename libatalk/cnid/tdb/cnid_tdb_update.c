@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_update.c,v 1.4 2009-11-20 17:37:14 didg Exp $
+ * $Id: cnid_tdb_update.c,v 1.5 2009-11-20 19:25:05 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,23 +26,55 @@ int cnid_tdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     memset(&altdata, 0, sizeof(altdata));
 
 
-    /* Get the old info. */
-    key.dptr = (char *)&id;
-    key.dsize = sizeof(id);
-    memset(&data, 0, sizeof(data));
-    data = tdb_fetch(db->tdb_cnid, key);
-    if (!data.dptr) {
-        return 0;
-    }
+    /* Get the old info. search by dev/ino */
+    data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
+    data.dsize = CNID_HEADER_LEN + len + 1;
     key.dptr = data.dptr +CNID_DEVINO_OFS;
     key.dsize = CNID_DEVINO_LEN;
-    tdb_delete(db->tdb_devino, key); 
+    altdata = tdb_fetch(db->tdb_devino, key);
+    if (altdata.dptr) {
+        tdb_delete(db->tdb_devino, key); 
 
+        key.dptr = altdata.dptr;
+        key.dsize = sizeof(id);
+
+        data = tdb_fetch(db->tdb_cnid, key);
+        tdb_delete(db->tdb_cnid, key); 
+        free(altdata.dptr);
+
+        if (data.dptr) {
+            key.dptr = (char *)data.dptr +CNID_DID_OFS;
+            key.dsize = data.dsize - CNID_DID_OFS;
+            tdb_delete(db->tdb_didname, key); 
+        
+            free(data.dptr);
+        }
+    }
+
+    /* search by did/name */
+    data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
+    data.dsize = CNID_HEADER_LEN + len + 1;
     key.dptr = (char *)data.dptr +CNID_DID_OFS;
     key.dsize = data.dsize - CNID_DID_OFS;
-    tdb_delete(db->tdb_didname, key); 
+    altdata = tdb_fetch(db->tdb_didname, key);
+    if (altdata.dptr) {
+        tdb_delete(db->tdb_didname, key); 
 
-    free(data.dptr);
+        key.dptr = altdata.dptr;
+        key.dsize = sizeof(id);
+        data = tdb_fetch(db->tdb_cnid, key);
+        tdb_delete(db->tdb_cnid, key); 
+        free(altdata.dptr);
+
+        if (data.dptr) {
+            key.dptr = data.dptr +CNID_DEVINO_OFS;
+            key.dsize = CNID_DEVINO_LEN;
+            tdb_delete(db->tdb_devino, key); 
+            free(data.dptr);
+        }
+    }
+    
+
     /* Make a new entry. */
     data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
     data.dsize = CNID_HEADER_LEN + len + 1;

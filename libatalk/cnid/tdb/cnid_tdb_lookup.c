@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_lookup.c,v 1.4 2009-11-20 17:37:14 didg Exp $
+ * $Id: cnid_tdb_lookup.c,v 1.5 2009-11-20 19:25:05 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,7 +41,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
          devino = 0;
     }
     /* did/name now */
-    key.dptr = buf + +CNID_DID_OFS;
+    key.dptr = buf + CNID_DID_OFS;
     key.dsize = CNID_DID_LEN + len + 1;
     diddata = tdb_fetch(db->tdb_didname, key);
     if (!diddata.dptr) {
