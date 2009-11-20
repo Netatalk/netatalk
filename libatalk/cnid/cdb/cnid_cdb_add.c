@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_add.c,v 1.7 2009-10-29 13:38:16 didg Exp $
+ * $Id: cnid_cdb_add.c,v 1.8 2009-11-20 17:22:11 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -43,7 +43,7 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
 }
 
-unsigned char *make_cnid_data(const struct stat *st,const cnid_t did,
+unsigned char *make_cnid_data(u_int32_t flags, const struct stat *st, const cnid_t did,
                      const char *name, const size_t len)
 {
     static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
@@ -53,7 +53,7 @@ unsigned char *make_cnid_data(const struct stat *st,const cnid_t did,
     if (len > MAXPATHLEN)
         return NULL;
 
-    make_devino_data(buf, st->st_dev, st->st_ino);
+    make_devino_data(buf, !(flags & CNID_FLAG_NODEV)?st->st_dev:0, st->st_ino);
     buf += CNID_DEVINO_LEN;
 
     i = S_ISDIR(st->st_mode)?1:0;
@@ -195,7 +195,7 @@ cnid_t cnid_cdb_add(struct _cnid_db *cdb, const struct stat *st,
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
-    if ((data.data = make_cnid_data(st, did, name, len)) == NULL) {
+    if ((data.data = make_cnid_data(cdb->flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_add: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;

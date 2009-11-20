@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_update.c,v 1.3 2005-05-03 14:55:13 didg Exp $
+ * $Id: cnid_cdb_update.c,v 1.4 2009-11-20 17:22:11 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -33,7 +33,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     memset(&pkey, 0, sizeof(pkey));
     memset(&data, 0, sizeof(data));
 
-    buf = make_cnid_data(st, did, name, len);
+    buf = make_cnid_data(cdb->flags, st, did, name, len);
 
     key.data = buf +CNID_DEVINO_OFS;
     key.size = CNID_DEVINO_LEN;
@@ -59,7 +59,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     }
 
     memset(&pkey, 0, sizeof(pkey));
-    buf = make_cnid_data(st, did, name, len);
+    buf = make_cnid_data(cdb->flags, st, did, name, len);
     key.data = buf + CNID_DID_OFS;
     key.size = CNID_DID_LEN + len + 1;
 
@@ -88,7 +88,7 @@ int cnid_cdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
 
     memset(&data, 0, sizeof(data));
     /* Make a new entry. */
-    buf = make_cnid_data(st, did, name, len);
+    buf = make_cnid_data(cdb->flags, st, did, name, len);
     data.data = buf;
     memcpy(data.data, &id, sizeof(id));
     data.size = CNID_HEADER_LEN + len + 1;

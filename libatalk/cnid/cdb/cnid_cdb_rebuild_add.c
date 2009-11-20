@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_rebuild_add.c,v 1.5 2009-10-29 13:38:16 didg Exp $
+ * $Id: cnid_cdb_rebuild_add.c,v 1.6 2009-11-20 17:22:11 didg Exp $
  *
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -104,7 +104,7 @@ cnid_t cnid_cdb_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
-    if ((data.data = make_cnid_data(st, did, name, len)) == NULL) {
+    if ((data.data = make_cnid_data(cdb->flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "cnid_add: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;

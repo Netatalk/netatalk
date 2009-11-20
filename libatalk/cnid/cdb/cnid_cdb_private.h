@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_cdb_private.h,v 1.6 2009-11-19 01:17:31 didg Exp $
+ * $Id: cnid_cdb_private.h,v 1.7 2009-11-20 17:22:11 didg Exp $
  */
 
 #ifndef LIBATALK_CDB_PRIVATE_H
@@ -132,7 +132,7 @@ typedef struct CNID_private {
  */
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
-extern unsigned char *make_cnid_data (const struct stat *,const cnid_t ,
+extern unsigned char *make_cnid_data (u_int32_t flags, const struct stat *,const cnid_t ,
                                        const char *, const size_t );
 
 #endif /* atalk/cnid/cnid_private.h */
