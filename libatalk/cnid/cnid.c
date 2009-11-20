@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.6 2009-11-19 06:40:51 didg Exp $
+ * $Id: cnid.c,v 1.7 2009-11-20 05:19:04 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -37,7 +37,6 @@ static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
 
 static sigset_t sigblockset;
 static const struct itimerval none = {{0, 0}, {0, 0}};
-static struct itimerval savetimer;
 
 /* Registers new CNID backend module. */
 
@@ -166,7 +165,6 @@ static void block_signal( u_int32_t flags)
 {
     if ((flags & CNID_FLAG_BLOCK)) {
         sigprocmask(SIG_BLOCK, &sigblockset, NULL);
-        setitimer(ITIMER_REAL, &none, &savetimer);
     }
 }
 
@@ -174,7 +172,6 @@ static void block_signal( u_int32_t flags)
 static void unblock_signal(u_int32_t flags)
 {
     if ((flags & CNID_FLAG_BLOCK)) {
-        setitimer(ITIMER_REAL, &savetimer, NULL);
         sigprocmask(SIG_UNBLOCK, &sigblockset, NULL);
     }
 }
