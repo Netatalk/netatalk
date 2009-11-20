@@ -15,6 +15,7 @@
 
 #include <netatalk/endian.h>
 #include <atalk/cnid.h>
+#include <atalk/cnid_private.h>
 #define STANDALONE 1
 
 #include <stdlib.h>
@@ -32,23 +33,6 @@
 #define TDB_ERROR_LINK  1
 #define TDB_ERROR_DEV   2
 #define TDB_ERROR_INODE 4
-
-#define TDB_DB_MAGIC   0x434E4944U  /* CNID */
-#define TDB_DATA_MAGIC 0x434E4945U  /* CNIE */
-
-#define TDB_DEVINO_LEN          8
-#define TDB_DID_LEN             4
-#define TDB_HEADER_LEN          (TDB_DEVINO_LEN + TDB_DID_LEN)
-
-#define TDB_START               17
-
-#define TDBFLAG_ROOTINFO_RO     (1 << 0)
-#define TDBFLAG_DB_RO           (1 << 1)
-
-/* the key is in the form of a did/name pair. in this case,
- * we use 0/RootInfo. */
-#define ROOTINFO_KEY    "\0\0\0\0RootInfo"
-#define ROOTINFO_KEYLEN 12
 
 struct _cnid_tdb_private {
     dev_t  st_dev;
@@ -88,28 +72,6 @@ extern int cnid_tdb_delete (struct _cnid_db *, const cnid_t);
 extern cnid_t cnid_tdb_nextid (struct _cnid_db *);
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
-static inline char *make_tdb_data(const struct stat *st,
-                                       const cnid_t did,
-                                       const char *name, const size_t len)
-{
-    static char start[TDB_HEADER_LEN + MAXPATHLEN + 1];
-    char *buf = start;
-    u_int32_t i;
-
-    if (len > MAXPATHLEN)
-        return NULL;
-
-    i = htonl(st->st_dev);
-    buf = memcpy(buf, &i, sizeof(i));
-    i = htonl(st->st_ino);
-    buf = memcpy(buf + sizeof(i), &i, sizeof(i));
-    /* did is already in network byte order */
-    buf = memcpy(buf + sizeof(i), &did, sizeof(did));
-    buf = memcpy(buf + sizeof(did), name, len);
-    *(buf + len) = '\0';
-    buf += len + 1;
-
-    return start;
-}
+extern unsigned char *make_tdb_data(u_int32_t flags, const struct stat *st, const cnid_t did, const char *name, const size_t len);
 
 #endif /* include/atalk/cnid_tdb.h */

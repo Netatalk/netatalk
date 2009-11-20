@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_lookup.c,v 1.3 2005-05-03 14:55:15 didg Exp $
+ * $Id: cnid_tdb_lookup.c,v 1.4 2009-11-20 17:37:14 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,7 +23,7 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
         return 0;
     }
 
-    if ((buf = make_tdb_data(st, did, name, len)) == NULL) {
+    if ((buf = make_tdb_data(cdb->flags, st, did, name, len)) == NULL) {
         LOG(log_error, logtype_default, "tdb_lookup: Pathname is too long");
         return 0;
     }
@@ -34,15 +34,15 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 
     /* Look for a CNID.  We have two options: dev/ino or did/name.  If we
     * only get a match in one of them, that means a file has moved. */
-    key.dptr = buf;
-    key.dsize  = TDB_DEVINO_LEN;
+    key.dptr = buf +CNID_DEVINO_OFS;
+    key.dsize  = CNID_DEVINO_LEN;
     devdata = tdb_fetch(db->tdb_devino, key);
     if (!devdata.dptr) {
          devino = 0;
     }
     /* did/name now */
-    key.dptr = buf + TDB_DEVINO_LEN;
-    key.dsize = TDB_DID_LEN + len + 1;
+    key.dptr = buf + +CNID_DID_OFS;
+    key.dsize = CNID_DID_LEN + len + 1;
     diddata = tdb_fetch(db->tdb_didname, key);
     if (!diddata.dptr) {
         didname = 0;

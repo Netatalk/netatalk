@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_open.c,v 1.3 2009-11-18 13:26:50 didg Exp $
+ * $Id: cnid_tdb_open.c,v 1.4 2009-11-20 17:37:14 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -23,8 +23,8 @@
 #define DBDEVINO     "devino.tdb"
 #define DBDIDNAME    "didname.tdb"      /* did/full name mapping */
 
-#define DBVERSION_KEY    "\0\0\0\0\0"
-#define DBVERSION_KEYLEN 5
+#define DBVERSION_KEY    "\0\0\0\0Version"
+#define DBVERSION_KEYLEN (sizeof(DBVERSION_KEY))
 #define DBVERSION1       0x00000001U
 #define DBVERSION        DBVERSION1
 

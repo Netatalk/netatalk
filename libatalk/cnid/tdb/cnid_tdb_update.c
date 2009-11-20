@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_update.c,v 1.3 2005-05-03 14:55:15 didg Exp $
+ * $Id: cnid_tdb_update.c,v 1.4 2009-11-20 17:37:14 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -18,7 +18,7 @@ int cnid_tdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     struct _cnid_tdb_private *db;
     TDB_DATA key, data, altdata;
 
-    if (!cdb || !(db = cdb->_private) || !id || !st || !name || (db->flags & TDBFLAG_DB_RO)) {
+    if (!cdb || !(db = cdb->_private) || !id || !st || !name || (db->flags & CNIDFLAG_DB_RO)) {
         return -1;
     }
 
@@ -31,21 +31,21 @@ int cnid_tdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     key.dsize = sizeof(id);
     memset(&data, 0, sizeof(data));
     data = tdb_fetch(db->tdb_cnid, key);
-    if (!data.dptr)
+    if (!data.dptr) {
         return 0;
-
-    key.dptr = data.dptr;
-    key.dsize = TDB_DEVINO_LEN;
+    }
+    key.dptr = data.dptr +CNID_DEVINO_OFS;
+    key.dsize = CNID_DEVINO_LEN;
     tdb_delete(db->tdb_devino, key); 
 
-    key.dptr = (char *)data.dptr + TDB_DEVINO_LEN;
-    key.dsize = data.dsize - TDB_DEVINO_LEN;
+    key.dptr = (char *)data.dptr +CNID_DID_OFS;
+    key.dsize = data.dsize - CNID_DID_OFS;
     tdb_delete(db->tdb_didname, key); 
 
     free(data.dptr);
     /* Make a new entry. */
-    data.dptr = make_tdb_data(st, did, name, len);
-    data.dsize = TDB_HEADER_LEN + len + 1;
+    data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
+    data.dsize = CNID_HEADER_LEN + len + 1;
 
     /* Update the old CNID with the new info. */
     key.dptr = (char *) &id;
@@ -55,24 +55,24 @@ int cnid_tdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     }
 
     /* Put in a new dev/ino mapping. */
-    key.dptr = data.dptr;
-    key.dsize = TDB_DEVINO_LEN;
+    key.dptr = data.dptr +CNID_DEVINO_OFS;
+    key.dsize = CNID_DEVINO_LEN;
     altdata.dptr  = (char *) &id;
     altdata.dsize = sizeof(id);
     if (tdb_store(db->tdb_devino, key, altdata, TDB_REPLACE)) {
         goto update_err;
     }
     /* put in a new did/name mapping. */
-    key.dptr = (char *) data.dptr + TDB_DEVINO_LEN;
-    key.dsize = data.dsize - TDB_DEVINO_LEN;
+    key.dptr = (char *) data.dptr +CNID_DID_OFS;
+    key.dsize = data.dsize -CNID_DID_OFS;
+
     if (tdb_store(db->tdb_didname, key, altdata, TDB_REPLACE)) {
         goto update_err;
     }
 
     return 0;
 update_err:
-    LOG(log_error, logtype_default, "cnid_update: Unable to update CNID %u",
-        ntohl(id));
+    LOG(log_error, logtype_default, "cnid_update: Unable to update CNID %u", ntohl(id));
     return -1;
 
 }

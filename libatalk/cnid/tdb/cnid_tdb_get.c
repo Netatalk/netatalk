@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_get.c,v 1.3 2005-05-03 14:55:15 didg Exp $
+ * $Id: cnid_tdb_get.c,v 1.4 2009-11-20 17:37:14 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -13,7 +13,7 @@
 /* Return CNID for a given did/name. */
 cnid_t cnid_tdb_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
 {
-    char start[TDB_DID_LEN + MAXPATHLEN + 1], *buf;
+    char start[CNID_DID_LEN + MAXPATHLEN + 1], *buf;
     struct _cnid_tdb_private *db;
     TDB_DATA key, data;
     cnid_t id;
@@ -31,7 +31,7 @@ cnid_t cnid_tdb_get(struct _cnid_db *cdb, const cnid_t did, char *name, const si
     memcpy(buf, name, len);
     *(buf + len) = '\0'; /* Make it a C-string. */
     key.dptr = start;
-    key.dsize = TDB_DID_LEN + len + 1;
+    key.dsize = CNID_DID_LEN + len + 1;
     data = tdb_fetch(db->tdb_didname, key);
     if (!data.dptr)
         return 0;
