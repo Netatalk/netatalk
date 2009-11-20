@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.30 2009-11-06 03:50:32 didg Exp $
+ * $Id: afp_config.c,v 1.31 2009-11-20 17:45:47 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -542,10 +542,10 @@ AFPConfig *configinit(struct afp_options *cmdline)
     AFPConfig *config=NULL, *first = NULL; 
 
 #ifdef HAVE_NFSv4_ACLS
-    /* Parse ldap.conf first so we can set the uuid option */
-    LOG(log_debug, logtype_afpd, "Start parsing ldap.conf");
+    /* Parse afp_ldap.conf first so we can set the uuid option */
+    LOG(log_debug, logtype_afpd, "Start parsing afp_ldap.conf");
     acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-    LOG(log_debug, logtype_afpd, "Finished parsing ldap.conf");
+    LOG(log_debug, logtype_afpd, "Finished parsing afp_ldap.conf");
 #endif
 
     status_reset();

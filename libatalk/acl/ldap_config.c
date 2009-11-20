@@ -1,5 +1,5 @@
 /*
-   $Id: ldap_config.c,v 1.1 2009-02-02 11:55:01 franklahm Exp $
+   $Id: ldap_config.c,v 1.2 2009-11-20 17:45:47 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ static int getpref(char *buf, char **R_pref, char **R_val)
     return 0;
 }
 
-/* Parse the ldap.conf file */
+/* Parse the afp_ldap.conf file */
 int acl_ldap_readconfig(char *name)
 {
     int i, j;

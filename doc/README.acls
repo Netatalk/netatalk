@@ -44,7 +44,7 @@ In order to be able to support ACLs, the following things have to be configured:
 	      *  as long as user/group names/ids in the filesystem are equal  *
 	      *         to their counterparts in the LDAP/OD datastore        *
 
-      - configure Netatalk via ldap.conf so that Netatalk is able to retrieve the UUID
+      - configure Netatalk via afp_ldap.conf so that Netatalk is able to retrieve the UUID
       	for users and groups via LDAP search queries
 
   3. Netatalk Volumes

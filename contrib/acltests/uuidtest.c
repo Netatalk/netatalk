@@ -1,5 +1,5 @@
 /*
-   $Id: uuidtest.c,v 1.2 2009-02-10 15:31:48 franklahm Exp $
+   $Id: uuidtest.c,v 1.3 2009-11-20 17:45:46 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -43,21 +43,21 @@ int main( int argc, char **argv)
 	return -1;
     }
     
-    /* Parse ldap.conf */
-    printf("Start parsing ldap.conf\n");
+    /* Parse afp_ldap.conf */
+    printf("Start parsing afp_ldap.conf\n");
     acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-    printf("Finished parsing ldap.conf\n");
+    printf("Finished parsing afp_ldap.conf\n");
     if (ldap_config_valid) {
 	if (ldap_auth_method == LDAP_AUTH_NONE)
-	    printf("ldap.conf is ok. Using anonymous bind.\n");
+	    printf("afp_ldap.conf is ok. Using anonymous bind.\n");
 	else if (ldap_auth_method == LDAP_AUTH_SIMPLE)
-	    printf("ldap.conf is ok. Using simple bind.\n");
+	    printf("afp_ldap.conf is ok. Using simple bind.\n");
 	else {
 	    ldap_config_valid = 0;
-	    printf("ldap.conf want SASL which is not yet supported.\n");	
+	    printf("afp_ldap.conf want SASL which is not yet supported.\n");	
 	}
     } else {
-	printf("ldap.conf is not ok.\n");
+	printf("afp_ldap.conf is not ok.\n");
 	return 1;
     }
 

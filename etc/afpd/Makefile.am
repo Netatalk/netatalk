@@ -24,7 +24,7 @@ afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
 	 -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/ldap.conf\" \
+	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\"
 
