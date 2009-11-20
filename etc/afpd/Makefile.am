@@ -15,8 +15,8 @@ if USE_NFSv4_ACLS
 afpd_SOURCES += acls.c
 endif
 
-afpd_LDADD =  $(top_builddir)/libatalk/cnid/libcnid.la $(top_builddir)/libatalk/libatalk.la
-afpd_LDFLAGS = -export-dynamic @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
+afpd_LDADD =  $(top_builddir)/libatalk/cnid/libcnid.la $(top_builddir)/libatalk/libatalk.la @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
+afpd_LDFLAGS = -export-dynamic 
 afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @SLP_CFLAGS@ \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
