@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_open.c,v 1.4 2009-11-20 17:37:14 didg Exp $
+ * $Id: cnid_tdb_open.c,v 1.5 2009-11-21 13:38:11 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -16,17 +16,14 @@
 #include <atalk/logger.h>
 #include <stdlib.h>
 #define DBHOME       ".AppleDB"
-#define DBNAME       "private_tdb.%sX"
 #define DBHOMELEN    9                  /* strlen(DBHOME) +1 for / */
 #define DBLEN        12
-#define DBCNID       "cnid.tdb"
-#define DBDEVINO     "devino.tdb"
-#define DBDIDNAME    "didname.tdb"      /* did/full name mapping */
+#define DBCNID       "cnid2.tdb"
 
 #define DBVERSION_KEY    "\0\0\0\0Version"
 #define DBVERSION_KEYLEN (sizeof(DBVERSION_KEY))
-#define DBVERSION1       0x00000001U
-#define DBVERSION        DBVERSION1
+#define DBVERSION2       0x00000002U
+#define DBVERSION        DBVERSION2
 
 static struct _cnid_db *cnid_tdb_new(const char *volpath)
 {
@@ -105,20 +102,15 @@ struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask)
 
     path[len + DBHOMELEN] = '\0';
     strcat(path, DBCNID);
-    db->tdb_cnid = tdb_open(path, 0, 0 , O_RDWR | O_CREAT, 0666 & ~mask);
+    db->tdb_cnid = tdb_open(path, 131071, 0 , O_RDWR | O_CREAT, 0666 & ~mask);
     if (!db->tdb_cnid) {
         LOG(log_error, logtype_default, "tdb_open: unable to open tdb", path);
         goto fail;
     }
     /* ------------- */
+    db->tdb_didname = db->tdb_cnid;
+    db->tdb_devino = db->tdb_cnid;
 
-    path[len + DBHOMELEN] = '\0';
-    strcat(path, DBDIDNAME);
-    db->tdb_didname = tdb_open(path, 0, 0 , O_RDWR | O_CREAT, 0666 & ~mask);
-    if (!db->tdb_cnid) {
-        LOG(log_error, logtype_default, "tdb_open: unable to open tdb", path);
-        goto fail;
-    }
     /* Check for version.  This way we can update the database if we need
      * to change the format in any way. */
     memset(&key, 0, sizeof(key));
@@ -141,14 +133,6 @@ struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask)
         free(data.dptr);
     }
         
-    /* ------------- */
-    path[len + DBHOMELEN] = '\0';
-    strcat(path, DBDEVINO);
-    db->tdb_devino = tdb_open(path, 0, 0 , O_RDWR | O_CREAT, 0666 & ~mask);
-    if (!db->tdb_devino) {
-        LOG(log_error, logtype_default, "tdb_open: unable to open tdb", path);
-        goto fail;
-    }
 
     return cdb;
 

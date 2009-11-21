@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_close.c,v 1.2 2005-04-28 20:50:02 bfernhomberg Exp $
+ * $Id: cnid_tdb_close.c,v 1.3 2009-11-21 13:38:11 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,8 +17,6 @@ void cnid_tdb_close(struct _cnid_db *cdb)
     free(cdb->volpath);
     db = (struct _cnid_tdb_private *)cdb->_private;
     tdb_close(db->tdb_cnid);
-    tdb_close(db->tdb_didname);
-    tdb_close(db->tdb_devino);
     free(cdb->_private);
     free(cdb);
 }
