@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_update.c,v 1.5 2009-11-20 19:25:05 didg Exp $
+ * $Id: cnid_tdb_update.c,v 1.6 2009-11-21 11:12:49 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -78,6 +78,7 @@ int cnid_tdb_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
     /* Make a new entry. */
     data.dptr = make_tdb_data(cdb->flags, st, did, name, len);
     data.dsize = CNID_HEADER_LEN + len + 1;
+    memcpy(data.dptr, &id, sizeof(id));
 
     /* Update the old CNID with the new info. */
     key.dptr = (char *) &id;
