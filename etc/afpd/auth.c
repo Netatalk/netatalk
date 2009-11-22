@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.69 2009-10-25 07:18:12 didg Exp $
+ * $Id: auth.c,v 1.70 2009-11-22 11:52:38 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -74,15 +74,17 @@ int ngroups;
  * These numbers are scattered throughout the code.
  */
 static struct afp_versions  afp_versions[] = {
+#ifndef NO_DDP
     { "AFPVersion 1.1", 11 },
     { "AFPVersion 2.0", 20 },
     { "AFPVersion 2.1", 21 },
+#endif /* ! NO_DDP */
     { "AFP2.2", 22 },
 #ifdef AFP3x
     { "AFPX03", 30 },
     { "AFP3.1", 31 },
     { "AFP3.2", 32 }
-#endif
+#endif /* AFP3x */
 };
 
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
@@ -94,17 +96,30 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( char *data)
+void status_versions( char *data, const ASP asp, const DSI *dsi)
 {
     char                *start = data;
     u_int16_t           status;
-    int         len, num, i;
+    int         len, num, i, count = 0;
 
     memcpy(&status, start + AFPSTATUS_VERSOFF, sizeof(status));
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
-    data += ntohs( status );
-    *data++ = num;
+
     for ( i = 0; i < num; i++ ) {
+#ifndef NO_DDP
+        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
+#endif /* ! NO_DDP */
+        if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
+        count++;
+    }
+    data += ntohs( status );
+    *data++ = count;
+
+    for ( i = 0; i < num; i++ ) {
+#ifndef NO_DDP
+        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
+#endif /* ! NO_DDP */
+        if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         len = strlen( afp_versions[ i ].av_name );
         *data++ = len;
         memcpy( data, afp_versions[ i ].av_name , len );

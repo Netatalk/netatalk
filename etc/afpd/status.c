@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.28 2009-11-06 03:52:42 didg Exp $
+ * $Id: status.c,v 1.29 2009-11-22 11:52:38 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -574,7 +574,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     c = status_server(status, options->server ? options->server :
                       options->hostname, options);
     status_machine(status);
-    status_versions(status);
+    status_versions(status, asp, dsi);
     status_uams(status, options->uamlist);
     if (options->flags & OPTION_CUSTOMICON)
         status_icon(status, icon, sizeof(icon), c);
