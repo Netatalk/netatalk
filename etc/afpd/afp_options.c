@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.49 2009-11-06 09:16:15 franklahm Exp $
+ * $Id: afp_options.c,v 1.50 2009-11-22 11:57:45 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -463,7 +463,7 @@ static void show_version( void )
 
 	puts( "afpd has been compiled with support for these features:\n" );
 
-	printf( "        AFP3.1 support:\t" );
+	printf( "        AFP3.x support:\t" );
 #ifdef AFP3x
 	puts( "Yes" );
 #else
