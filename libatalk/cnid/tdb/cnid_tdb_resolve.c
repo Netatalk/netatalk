@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_resolve.c,v 1.3 2009-11-20 17:37:14 didg Exp $
+ * $Id: cnid_tdb_resolve.c,v 1.4 2009-11-22 14:14:05 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,7 +11,7 @@
 #include "cnid_tdb.h"
 
 /* Return the did/name pair corresponding to a CNID. */
-char *cnid_tdb_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer, u_int32_t len)
+char *cnid_tdb_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer, size_t len)
 {
     struct _cnid_tdb_private *db;
     TDB_DATA key, data;      
