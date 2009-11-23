@@ -4,29 +4,6 @@ AC_DEFUN([AC_NETATALK_CNID], [
     bdb_required=no
     compiled_backends=""
 
-    dnl Determine whether or not to use BDB Concurrent Data Store
-    AC_MSG_CHECKING([whether or not to use BDB Concurrent Data Store])
-    AC_ARG_WITH(cnid-cdb-backend,
-	[  --with-cnid-cdb-backend	build CNID with Concurrent BDB Data Store],[
-	    if test x"$withval" = x"no"; then
-	        use_cdb_backend=no
-        else
-            use_cdb_backend=yes
-        fi
-    ],[use_cdb_backend=no]
-    )
-
-    if test $use_cdb_backend = yes; then
-        AC_MSG_RESULT([yes])
-        AC_DEFINE(CNID_BACKEND_CDB, 1, [Define if CNID Concurrent BDB backend should be compiled.])	    
-        DEFAULT_CNID_SCHEME=cdb
-        bdb_required=yes
-        compiled_backends="$compiled_backends cdb"
-    else
-        AC_MSG_RESULT([no])
-    fi
-    AM_CONDITIONAL(USE_CDB_BACKEND, test x"$use_cdb_backend" = x"yes")
-
     dnl Determine whether or not to use Database Daemon CNID backend
     AC_MSG_CHECKING([whether or not to use Database Daemon CNID backend])
     AC_ARG_WITH(cnid-dbd-backend,
@@ -53,32 +30,30 @@ AC_DEFUN([AC_NETATALK_CNID], [
     fi
     AM_CONDITIONAL(BUILD_DBD_DAEMON, test x"$use_dbd_backend" = x"yes")
 
-    dnl Determine whether or not to use BDB transactional data store
-    AC_MSG_CHECKING([whether or not to use BDB transactional DB store])
-    AC_ARG_WITH(cnid-db3-backend,
-    [  --with-cnid-db3-backend	build CNID with transactional BDB Data Store],
-	[
+    dnl Determine whether or not to use BDB Concurrent Data Store
+    AC_MSG_CHECKING([whether or not to use BDB Concurrent Data Store])
+    AC_ARG_WITH(cnid-cdb-backend,
+	[  --with-cnid-cdb-backend	build CNID with Concurrent BDB Data Store],[
 	    if test x"$withval" = x"no"; then
-            use_db3_backend=no
+	        use_cdb_backend=no
         else
-            use_db3_backend=yes
+            use_cdb_backend=yes
         fi
-    ],[
-        use_db3_backend=no
-    ])
+    ],[use_cdb_backend=no]
+    )
 
-    if test x"$use_db3_backend" = x"yes"; then
+    if test $use_cdb_backend = yes; then
         AC_MSG_RESULT([yes])
-        AC_DEFINE(CNID_BACKEND_DB3, 1, [Define if CNID transactional BDB backend should be compiled.])
+        AC_DEFINE(CNID_BACKEND_CDB, 1, [Define if CNID Concurrent BDB backend should be compiled.])	    
         if test x"$DEFAULT_CNID_SCHEME" = x; then
-            DEFAULT_CNID_SCHEME=db3
+            DEFAULT_CNID_SCHEME=cdb
         fi
-        compiled_backends="$compiled_backends db3"
         bdb_required=yes
+        compiled_backends="$compiled_backends cdb"
     else
         AC_MSG_RESULT([no])
     fi
-    AM_CONDITIONAL(USE_DB3_BACKEND, test x"$use_db3_backend" = x"yes")
+    AM_CONDITIONAL(USE_CDB_BACKEND, test x"$use_cdb_backend" = x"yes")
 
     dnl Determine whether or not to use LAST DID scheme
     AC_MSG_CHECKING([whether or not to use LAST DID scheme])
@@ -104,31 +79,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     else
         AC_MSG_RESULT([no])
     fi
-
-    dnl Determine whether or not to use HASH DID scheme
-    AC_MSG_CHECKING([whether or not to use HASH DID scheme])
-    AC_ARG_WITH(cnid-hash-backend,
-	[  --with-cnid-hash-backend	build HASH CNID scheme],
-	[
-        if test x"$withval" = x"no"; then
-            use_hash_backend=no
-        else
-            use_hash_backend=yes
-        fi
-    ],[
-        use_hash_backend=no
-    ])
-
-    if test $use_hash_backend = yes; then
-        AC_MSG_RESULT([yes])
-        AC_DEFINE(CNID_BACKEND_HASH, 1, [Define if CNID HASH scheme backend should be compiled.])
-        if test x"$DEFAULT_CNID_SCHEME" = x; then
-            DEFAULT_CNID_SCHEME=hash
-        fi
-        compiled_backends="$compiled_backends hash"
-    else
-        AC_MSG_RESULT([no])
-    fi
+    AM_CONDITIONAL(USE_LAST_BACKEND, test x"$use_last_backend" = x"yes")
 
     dnl Determine whether or not to use TDB DID scheme
     AC_MSG_CHECKING([whether or not to use TDB DID scheme])
@@ -154,6 +105,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     else
         AC_MSG_RESULT([no])
     fi
+    AM_CONDITIONAL(USE_TDB_BACKEND, test x"$use_tdb_backend" = x"yes")
 
     dnl Determine whether or not to use MTAB DID scheme
     AC_MSG_CHECKING([whether or not to use MTAB DID scheme])
@@ -179,6 +131,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     else		
         AC_MSG_RESULT([no])
     fi
+    AM_CONDITIONAL(USE_MTAB_BACKEND, test x"$use_mtab_backend" = x"yes")
 
     dnl Set default DID scheme
     AC_MSG_CHECKING([default DID scheme])

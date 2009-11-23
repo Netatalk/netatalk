@@ -1,6 +1,8 @@
 # Makefile.am for libatalk/cnid/
 
+if USE_HASH_BACKEND
 noinst_LTLIBRARIES = libcnid_hash.la
+endif
 
 libcnid_hash_la_SOURCES = cnid_hash_add.c \
 		         cnid_hash_close.c \
