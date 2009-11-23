@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.15 2009-11-08 22:12:40 didg Exp $
+ * $Id: util.h,v 1.16 2009-11-23 18:17:30 didg Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -18,8 +18,6 @@
 #define EXITERR_CONF 2  /* error in config files/cmd line parameters */
 #define EXITERR_SYS  3  /* local system error */
 
-
-extern int     sys_ftruncate (int fd, off_t length);
 
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);
@@ -41,12 +39,17 @@ extern pid_t server_lock  (char * /*program*/, char * /*file*/,
 extern void fault_setup	  (void (*fn)(void *));
 #define server_unlock(x)  (unlink(x))
 
+/* strlcpy and strlcat are used by pam modules */
+#ifndef UAM_MODULE_EXPORT
+#define UAM_MODULE_EXPORT 
+#endif
+
 #ifndef HAVE_STRLCPY
-size_t strlcpy (char *, const char *, size_t);
+UAM_MODULE_EXPORT size_t strlcpy (char *, const char *, size_t);
 #endif
  
 #ifndef HAVE_STRLCAT
-size_t strlcat (char *, const char *, size_t);
+UAM_MODULE_EXPORT size_t strlcat (char *, const char *, size_t);
 #endif
 
 #ifndef HAVE_DLFCN_H

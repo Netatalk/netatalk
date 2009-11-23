@@ -64,6 +64,11 @@
 #include "config.h"
 #endif
 
+/* logger is used by pam modules */
+#ifndef UAM_MODULE_EXPORT
+#define UAM_MODULE_EXPORT 
+#endif
+
 enum loglevels {
     log_none,
     log_severe,
@@ -159,7 +164,7 @@ void set_processname(const char *processname);
  */
 
 /* LOG macro func no.1: log the message to file */
-void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
+UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
 
 /* 
    Note:
