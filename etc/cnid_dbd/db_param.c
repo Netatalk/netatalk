@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.c,v 1.8 2009-10-19 05:38:22 didg Exp $
+ * $Id: db_param.c,v 1.9 2009-11-23 19:04:14 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -10,12 +10,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>

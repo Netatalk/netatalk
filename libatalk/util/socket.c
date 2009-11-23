@@ -1,5 +1,5 @@
 /*
-   $Id: socket.c,v 1.4 2009-11-05 21:31:53 didg Exp $
+   $Id: socket.c,v 1.5 2009-11-23 19:04:15 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -1,5 +1,5 @@
 /*
- * $Id: status.c,v 1.29 2009-11-22 11:52:38 franklahm Exp $
+ * $Id: status.c,v 1.30 2009-11-23 19:04:14 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <atalk/logger.h>
 
 #ifdef BSD4_4

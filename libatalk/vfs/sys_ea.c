@@ -25,7 +25,7 @@
    Copyright (C) 2001 Andreas Gruenbacher.
       
    Samba 3.0.28, modified for netatalk.
-   $Id: sys_ea.c,v 1.4 2009-11-20 16:26:23 franklahm Exp $
+   $Id: sys_ea.c,v 1.5 2009-11-23 19:04:15 franklahm Exp $
    
 */
 
@@ -107,7 +107,7 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 	ssize_t retval;
 	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
 		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 	/*
 	 * The BSD implementation has a nasty habit of silently truncating
 	 * the returned value to the size of the buffer, so we have to check
@@ -164,7 +164,7 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	ssize_t retval;
 	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
 		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 
 	if((retval=extattr_get_link(path, attrnamespace, attrname, NULL, 0)) >= 0) {
 		if(retval > size) {
@@ -476,7 +476,7 @@ int sys_removexattr (const char *path, const char *uname)
 	char *s;
 	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
 		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 
 	return extattr_delete_file(path, attrnamespace, attrname);
 #elif defined(HAVE_ATTR_REMOVE)
@@ -514,7 +514,7 @@ int sys_lremovexattr (const char *path, const char *uname)
 	char *s;
 	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
 		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 
 	return extattr_delete_link(path, attrnamespace, attrname);
 #elif defined(HAVE_ATTR_REMOVE)
@@ -555,7 +555,7 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 	int retval = 0;
 	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
 		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 	if (flags) {
 		/* Check attribute existence */
 		retval = extattr_get_file(path, attrnamespace, attrname, NULL, 0);
@@ -619,7 +619,7 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 	int retval = 0;
 	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
 		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 	if (flags) {
 		/* Check attribute existence */
 		retval = extattr_get_link(path, attrnamespace, attrname, NULL, 0);
