@@ -1,4 +1,4 @@
-dnl $Id: pam-check.m4,v 1.4 2009-11-23 18:29:50 franklahm Exp $
+dnl $Id: pam-check.m4,v 1.5 2009-11-23 20:09:50 franklahm Exp $
 dnl PAM finding macro
 
 AC_DEFUN([AC_PATH_PAM], [
@@ -90,6 +90,14 @@ AC_DEFUN([AC_PATH_PAM], [
            PAM_ACCOUNT=system-auth
            PAM_PASSWORD=system-auth
            PAM_SESSION=system-auth
+        dnl FreeBSD
+        elif test -f "$pampath/system" ; then
+           PAM_DIRECTIVE=include
+           PAM_AUTH=system
+           PAM_ACCOUNT=system
+           PAM_PASSWORD=system
+           PAM_SESSION=system
+        dnl Fallback
         else
            PAM_DIRECTIVE=required
            PAM_AUTH=pam_unix.so
