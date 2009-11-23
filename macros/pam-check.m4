@@ -1,4 +1,4 @@
-dnl $Id: pam-check.m4,v 1.3 2005-04-28 20:50:05 bfernhomberg Exp $
+dnl $Id: pam-check.m4,v 1.4 2009-11-23 18:29:50 franklahm Exp $
 dnl PAM finding macro
 
 AC_DEFUN([AC_PATH_PAM], [
@@ -72,6 +72,37 @@ AC_DEFUN([AC_PATH_PAM], [
 	if test x"$pam_found" = "xyes" -a "x$PAMDIR" = "xNONE"; then
 		AC_MSG_WARN([PAM support can be compiled, but the install location for the netatalk.pamd file could not be determined. Either install this file by hand or specify the install path.])
 		netatalk_cv_install_pam=no
+    else
+        dnl Check for some system|common auth file
+        AC_MSG_CHECKING([for includable common PAM config])
+        pampath="${PAMDIR}etc/pam.d"
+        dnl Debian/SuSE
+        if test -f "$pampath/common-auth" ; then
+           PAM_DIRECTIVE=include
+           PAM_AUTH=common-auth
+           PAM_ACCOUNT=common-account
+           PAM_PASSWORD=common-password
+           PAM_SESSION=common-session
+        dnl RHEL/FC
+        elif test -f "$pampath/system-auth" ; then
+           PAM_DIRECTIVE=include
+           PAM_AUTH=system-auth
+           PAM_ACCOUNT=system-auth
+           PAM_PASSWORD=system-auth
+           PAM_SESSION=system-auth
+        else
+           PAM_DIRECTIVE=required
+           PAM_AUTH=pam_unix.so
+           PAM_ACCOUNT=pam_unix.so
+           PAM_PASSWORD="pam_unix.so use_authtok"
+           PAM_SESSION=pam_unix.so
+        fi  
+
+        if test "x$PAM_DIRECTIVE" != "xrequired" ; then
+            AC_MSG_RESULT([yes ($PAM_DIRECTIVE $PAM_AUTH)])
+        else
+            AC_MSG_RESULT([no (using defaut pam_unix.so)])
+        fi
 	fi
 
 	AC_MSG_CHECKING([whether to enable PAM support])
@@ -92,4 +123,9 @@ AC_DEFUN([AC_PATH_PAM], [
 	AC_SUBST(PAMDIR)
 	AC_SUBST(PAM_CFLAGS)
 	AC_SUBST(PAM_LIBS)
+    AC_SUBST(PAM_DIRECTIVE)
+    AC_SUBST(PAM_AUTH)
+    AC_SUBST(PAM_ACCOUNT)
+    AC_SUBST(PAM_PASSWORD)
+    AC_SUBST(PAM_SESSION)
 ])

@@ -25,6 +25,7 @@ Changes in 2.1
        is deleted or corrupted. It can be disabled with a new volume
        option "nocnidcache".
 * NEW: afpd: IPv6 support
+* UPD: afpd: try to install PAM config that pulls in system|common auth
 
 Changes in 2.0.5
 ================

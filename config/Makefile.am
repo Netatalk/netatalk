@@ -1,15 +1,16 @@
 ## Makefile.am for config/
 
+SUBDIRS = pam
+
 SUFFIXES = .tmpl .
 
 GENFILES = afpd.conf AppleVolumes.default
 TMPLFILES = afpd.conf.tmpl AppleVolumes.default.tmpl
 CONFFILES = AppleVolumes.system \
 	atalkd.conf netatalk.conf papd.conf
-PAMFILES = netatalk.pamd
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
-EXTRA_DIST = $(CONFFILES) $(TMPLFILES) $(PAMFILES)
+EXTRA_DIST = $(CONFFILES) $(TMPLFILES)
 
 CLEANFILES = $(GENFILES)
 
@@ -103,40 +104,3 @@ install-webmin:
 			bootscript=netamin \
 			./setup.sh > /dev/null; \
 	fi
-
-#
-# pluggable authentication modules support
-#
-
-if USE_PAM
-
-pamdir = @PAMDIR@/etc/pam.d
-
-install-data-local: install-config-files install-webmin $(PAMFILES)
-	$(mkinstalldirs) $(DESTDIR)$(pamdir)
-	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f $(DESTDIR)$(pamdir)/netatalk; then \
-	    echo "$(INSTALL_DATA) $$f $(DESTDIR)$(pamdir)/netatalk"; \
-	    $(INSTALL_DATA) netatalk.pamd $(DESTDIR)$(pamdir)/netatalk || echo "WARNING: Can't install PAM files";		\
-	else \
-	    echo "not overwriting $(DESTDIR)$(pamdir)/netatalk"; \
-	fi; 
-
-uninstall-local:
-	echo rm -f $(DESTDIR)$(pamdir)/netatalk; \
-	rm -f $(DESTDIR)$(pamdir)/netatalk; \
-	for f in $(CONFFILES) $(GENFILES); do \
-		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
-		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
-	done
-
-else
-
-install-data-local: install-config-files install-webmin
-
-uninstall-local:
-	for f in $(CONFFILES) $(GENFILES); do \
-		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
-		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
-	done
-
-endif 

@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.229 2009-11-23 10:20:15 franklahm Exp $
+dnl $Id: configure.in,v 1.230 2009-11-23 18:29:50 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1200,6 +1200,7 @@ AC_OUTPUT([Makefile
 	bin/psorder/Makefile
 	bin/uniconv/Makefile
 	config/Makefile
+    config/pam/Makefile
 	contrib/Makefile
 	contrib/acltests/Makefile
 	contrib/macusers/Makefile
