@@ -1,7 +1,8 @@
 /*
- * $Id: dbd_lookup.c,v 1.9 2009-07-12 09:21:34 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.10 2009-11-24 12:01:04 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
  */
 
@@ -41,7 +42,7 @@ Update.
 
 2) UNIX copy (cp)
 -----------------
-Changes inode and name. Result is just a new file which will get a fresh CNID.
+Changed inode and name. Result is just a new file which will get a fresh CNID.
 Unfortunately the old one gets orphaned.
 
 15  2   f   1   1       file
@@ -70,24 +71,33 @@ Possible fixup solution:
 Update.
 
 
-4) UNIX emacs
--------------
+4) inode reusage eg. UNIX emacs
+-------------------------------
 This one is tough:
 emacs uses a backup file (file~). When saving because of inode reusage of the fs,
-both files exchange inodes. This should just be treated like 1).
+both files exchange inodes. There's probably no appropiate solution for all
+scenarios where this might occur eg. for the emacs case it would be good to
+preserve the CNIDs while probably in the general case we should assign new CNIDs
+to both files:
 
+General case:
+15  2   f   1   1       file
+-->
+16  2   f   1   1       new_file_with_reused_inode
+
+Emacs case:
 15  2   f   1   1       file
 16  2   f   1   2       file~
 -->
-15  2   f   1   2       file
-16  2   f   1   1       file~
+??  2   f   1   2       file
+??  2   f   1   1       file~
 
 Result in dbd_lookup:
 + devino
 + didname
 
 Possible fixup solution:
-Update CNID entry found via "didname"(!).
+to be safe we must implement the general case, sorry emacs.
 */
 
 #ifdef HAVE_CONFIG_H
