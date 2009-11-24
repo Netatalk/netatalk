@@ -5,10 +5,12 @@ pkgconfdir = @PKGCONFDIR@
 SUFFIXES = .tmpl .
 
 .tmpl:
-	sed -e s@:SBINDIR:@${sbindir}@ \
-	    -e s@:BINDIR:@${bindir}@ \
-	    -e s@:ETCDIR:@${pkgconfdir}@ \
-	    -e s@:LIBDIR:@${libdir}@ \
+	sed -e "s@:SBINDIR:@${sbindir}@g" \
+	    -e "s@:BINDIR:@${bindir}@g" \
+	    -e "s@:ETCDIR:@${pkgconfdir}@g" \
+	    -e "s@:LIBDIR:@${libdir}@g" \
+		-e "s@:DEFAULT_CNID_SCHEME:@${DEFAULT_CNID_SCHEME}@g" \
+		-e "s@:COMPILED_BACKENDS:@${compiled_backends}@g" \
 	    <$< >$@
 
 man_MANS = AppleVolumes.default.5 afpd.conf.5 \
