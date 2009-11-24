@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.9 2009-11-24 12:18:19 didg Exp $
+ * $Id: cnid.c,v 1.10 2009-11-24 15:44:56 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -112,7 +112,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         return NULL;
     }
 
-    if ((mod->flags & CNID_FLAG_SETUID)) {
+    if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
         uid = geteuid();
         gid = getegid();
         if (seteuid(0)) {
@@ -130,7 +130,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
 
     db = mod->cnid_open(volpath, mask, flags);
 
-    if ((mod->flags & CNID_FLAG_SETUID)) {
+    if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
         seteuid(0);
         if ( setegid(gid) < 0 || seteuid(uid) < 0) {
             LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));

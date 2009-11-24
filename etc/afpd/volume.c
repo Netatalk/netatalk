@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.105 2009-11-24 11:40:11 didg Exp $
+ * $Id: volume.c,v 1.106 2009-11-24 15:44:40 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1845,6 +1845,21 @@ static int volume_openDB(struct vol *volume)
         volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, flags);
     else
         volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, flags);
+
+    if (!volume->v_cdb) {
+        flags |= CNID_FLAG_MEMORY;
+        LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.", volume->v_path);
+        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags);
+#ifdef SERVERTEXT
+        /* kill ourself with SIGUSR2 aka msg pending */
+        if (volume->v_cdb) {
+            setmessage("Something wrong with the volume's DB ... FIXME with a better msg");
+            kill(getpid(), SIGUSR2);
+            /* XXX desactivate cachecnid ? */
+        }
+#endif        
+    }
+
     return (!volume->v_cdb)?-1:0;
 }
 

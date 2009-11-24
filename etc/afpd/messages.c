@@ -1,5 +1,5 @@
 /*
- * $Id: messages.c,v 1.22 2009-10-29 13:38:15 didg Exp $
+ * $Id: messages.c,v 1.23 2009-11-24 15:44:40 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -64,7 +64,7 @@ void readmessage(AFPObj *obj)
 
     message=fopen(filename, "r");
     if (message==NULL) {
-        LOG(log_info, logtype_afpd, "Unable to open file %s", filename);
+        /* try without the process id */
         sprintf(filename, "%s/message", SERVERTEXT);
         message=fopen(filename, "r");
     }
@@ -129,12 +129,20 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     memcpy(&type, ibuf + 2, sizeof(type));
     memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
 
+    message = servermesg;
     switch (ntohs(type)) {
     case AFPMESG_LOGIN: /* login */
-        message = obj->options.loginmesg;
+        /* at least TIGER loses server messages
+         * if it receives a server msg attention before
+         * it has asked the login msg...
+         * Workaround: concatenate the two if any, ugly.
+         */
+        if (*message && *obj->options.loginmesg) {
+            strlcat(message, " - ", MAXMESGSIZE);
+        }
+        strlcat(message, obj->options.loginmesg, MAXMESGSIZE);
         break;
     case AFPMESG_SERVER: /* server */
-        message = servermesg;
         break;
     default:
         return AFPERR_BITMAP;
@@ -182,6 +190,6 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 	*rbuflen += 1;
     }
     *rbuflen += outlen;
-
+    *message = 0;
     return AFP_OK;
 }
