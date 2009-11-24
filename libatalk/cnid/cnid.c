@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.7 2009-11-20 05:19:04 didg Exp $
+ * $Id: cnid.c,v 1.8 2009-11-24 11:40:11 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -143,7 +143,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         return NULL;
     }
     /* FIXME should module know about it ? */
-    if (flags) {
+    if ((flags & CNID_FLAG_NODEV)) {
         db->flags |= CNID_FLAG_NODEV;
     }
     db->flags |= mod->flags;

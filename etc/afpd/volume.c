@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.104 2009-11-24 11:18:38 didg Exp $
+ * $Id: volume.c,v 1.105 2009-11-24 11:40:11 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1831,14 +1831,20 @@ static int volume_codepage(AFPObj *obj, struct vol *volume)
 /* ------------------------- */
 static int volume_openDB(struct vol *volume)
 {
+    int flags = 0;
+
+    if ((volume->v_flags & AFPVOL_NODEV)) {
+        flags |= CNID_FLAG_NODEV;
+    }
+
     if (volume->v_cnidscheme == NULL) {
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
         LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
     }
     if (volume->v_dbpath)
-        volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
+        volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, flags);
     else
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
+        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, flags);
     return (!volume->v_cdb)?-1:0;
 }
 
