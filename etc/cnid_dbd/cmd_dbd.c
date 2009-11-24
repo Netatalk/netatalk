@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.13 2009-10-14 01:38:28 didg Exp $
+   $Id: cmd_dbd.c,v 1.14 2009-11-24 14:48:07 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -373,6 +373,22 @@ int main(int argc, char **argv)
     }
     strncpy(dbpath, volinfo.v_dbpath, PATH_MAX - 9 - 1);
     strcat(dbpath, "/.AppleDB");
+
+    /* Check or create dbpath */
+    int dbdirfd = open(dbpath, O_RDONLY);
+    if (dbdirfd == -1 && errno == ENOENT) {
+        if (errno == ENOENT) {
+            if ((mkdir(dbpath, 0755)) != 0) {
+                dbd_log( LOGSTD, "Can't create .AppleDB for \"%s\": %s", dbpath, strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            dbd_log( LOGSTD, "Somethings wrong with .AppleDB for \"%s\", giving up: %s", dbpath, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        close(dbdirfd);
+    }
 
     /* 
        Before we do anything else, check if there is an instance of cnid_dbd
