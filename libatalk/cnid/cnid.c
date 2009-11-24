@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.8 2009-11-24 11:40:11 didg Exp $
+ * $Id: cnid.c,v 1.9 2009-11-24 12:18:19 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -128,7 +128,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         }
     }
 
-    db = mod->cnid_open(volpath, mask);
+    db = mod->cnid_open(volpath, mask, flags);
 
     if ((mod->flags & CNID_FLAG_SETUID)) {
         seteuid(0);

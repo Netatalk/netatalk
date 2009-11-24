@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.h,v 1.12 2005-09-07 15:23:21 didg Exp $
+ * $Id: cnid.h,v 1.13 2009-11-24 12:18:19 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -33,6 +33,8 @@
 #define CNID_FLAG_BLOCK        0x08      /* block signals in update. */
 #define CNID_FLAG_NODEV        0x10      /* don't use device number only inode */
 #define CNID_FLAG_LAZY_INIT    0x20      /* */
+#define CNID_FLAG_MEMORY       0x40	 /* this is a memory only db */
+#define CNID_FLAG_INODE        0x80	 /* in cnid_add the inode is authoritative */
 
 #define CNID_INVALID   0
 
@@ -74,7 +76,7 @@ typedef struct _cnid_db cnid_db;
 struct _cnid_module {
 	char *name;
 	struct list_head db_list;   /* CNID modules are also stored on a bidirectional list. */
-	struct _cnid_db *(*cnid_open)(const char *dir, mode_t mask);
+	struct _cnid_db *(*cnid_open)(const char *dir, mode_t mask, u_int32_t flags);
 	u_int32_t flags;            /* Flags describing some CNID backend aspects. */
 
 };
@@ -117,7 +119,10 @@ void cnid_close(struct _cnid_db *db);
 
 /*
  * $Log: cnid.h,v $
- * Revision 1.12  2005-09-07 15:23:21  didg
+ * Revision 1.13  2009-11-24 12:18:19  didg
+ * add a flag parameter to cnid open functions
+ *
+ * Revision 1.12  2005/09/07 15:23:21  didg
  *
  * lazy init dbd database, help with pre tiger OS and a lot of volumes.
  *

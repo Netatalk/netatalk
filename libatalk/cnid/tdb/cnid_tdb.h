@@ -47,7 +47,7 @@ struct _cnid_tdb_private {
 
 /* cnid_open.c */
 extern struct _cnid_module cnid_tdb_module;
-extern struct _cnid_db *cnid_tdb_open (const char *, mode_t);
+extern struct _cnid_db *cnid_tdb_open (const char *, mode_t, u_int32_t flags);
 
 /* cnid_close.c */
 extern void cnid_tdb_close (struct _cnid_db *);

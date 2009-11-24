@@ -53,7 +53,7 @@ static int db3_txn_commit(DB_TXN *db_txn, u_int32_t flags)
    cnid_open.c 
 */
 extern struct _cnid_module cnid_db3_module;
-extern struct _cnid_db *cnid_db3_open (const char *, mode_t);
+extern struct _cnid_db *cnid_db3_open (const char *, mode_t, u_int32_t flags);
 
 /* cnid_close.c */
 extern void cnid_db3_close (struct _cnid_db *);

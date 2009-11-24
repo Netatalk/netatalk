@@ -1,6 +1,5 @@
-
 /*
- * $Id: cnid_cdb_open.c,v 1.3 2009-10-13 22:55:37 didg Exp $
+ * $Id: cnid_cdb_open.c,v 1.4 2009-11-24 12:18:19 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -202,7 +201,7 @@ static int upgrade_required(char *dbdir)
 }
 
 /* --------------- */
-struct _cnid_db *cnid_cdb_open(const char *dir, mode_t mask)
+struct _cnid_db *cnid_cdb_open(const char *dir, mode_t mask, u_int32_t flags _U_)
 {
     struct stat st;
     char path[MAXPATHLEN + 1];

@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_last.c,v 1.3 2005-05-03 14:55:14 didg Exp $
+ * $Id: cnid_last.c,v 1.4 2009-11-24 12:18:20 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -144,7 +144,7 @@ static struct _cnid_db *cnid_last_new(const char *volpath)
     return cdb;
 }
 
-struct _cnid_db *cnid_last_open(const char *dir, mode_t mask _U_)
+struct _cnid_db *cnid_last_open(const char *dir, mode_t mask _U_, u_int32_t flags _U_)
 {
     struct _cnid_db *cdb;
 

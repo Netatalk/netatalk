@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_open.c,v 1.5 2009-11-21 13:38:11 didg Exp $
+ * $Id: cnid_tdb_open.c,v 1.6 2009-11-24 12:18:20 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -63,7 +63,7 @@ static struct _cnid_db *cnid_tdb_new(const char *volpath)
 }
 
 /* ---------------------------- */
-struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask)
+struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask, u_int32_t flags _U_)
 {
     struct stat               st;
     struct _cnid_db           *cdb;

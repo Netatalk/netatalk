@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_mtab.c,v 1.3 2009-11-24 08:59:25 franklahm Exp $
+ * $Id: cnid_mtab.c,v 1.4 2009-11-24 12:18:20 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -96,7 +96,7 @@ static struct _cnid_db *cnid_mtab_new(const char *volpath)
     return cdb;
 }
 
-struct _cnid_db *cnid_mtab_open(const char *dir, mode_t mask)
+struct _cnid_db *cnid_mtab_open(const char *dir, mode_t mask, u_int32_t flags _U_)
 {
     struct _cnid_db *cdb;
 

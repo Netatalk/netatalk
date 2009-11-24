@@ -1,6 +1,6 @@
 
 /*
- * $Id: cnid_db3_open.c,v 1.4 2008-12-03 18:35:44 didg Exp $
+ * $Id: cnid_db3_open.c,v 1.5 2009-11-24 12:18:19 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -247,7 +247,7 @@ static struct _cnid_db *cnid_db3_new(const char *volpath)
     return cdb;
 }
 
-struct _cnid_db *cnid_db3_open(const char *dir, mode_t mask)
+struct _cnid_db *cnid_db3_open(const char *dir, mode_t mask, u_int32_t flags _U_)
 {
     struct stat st;
     struct flock lock;

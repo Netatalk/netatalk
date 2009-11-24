@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_hash_open.c,v 1.2 2005-04-28 20:50:01 bfernhomberg Exp $
+ * $Id: cnid_hash_open.c,v 1.3 2009-11-24 12:18:20 didg Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -58,7 +58,7 @@ static struct _cnid_db *cnid_hash_new(const char *volpath)
 }
 
 /* ---------------------------- */
-struct _cnid_db *cnid_hash_open(const char *dir, mode_t mask)
+struct _cnid_db *cnid_hash_open(const char *dir, mode_t mask, u_int32_t flags _U_)
 {
     struct stat               st;
     struct _cnid_db           *cdb;

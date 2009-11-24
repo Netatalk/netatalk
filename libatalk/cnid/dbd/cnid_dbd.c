@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.13 2009-11-16 01:03:18 didg Exp $
+ * $Id: cnid_dbd.c,v 1.14 2009-11-24 12:18:19 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -442,7 +442,7 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
 }
 
 /* ---------------------- */
-struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_)
+struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_, u_int32_t flags _U_)
 {
     CNID_private *db = NULL;
     struct _cnid_db *cdb = NULL;

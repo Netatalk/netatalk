@@ -20,7 +20,7 @@ struct _cnid_last_private {
 };
 
 extern struct _cnid_module cnid_last_module;
-extern struct _cnid_db *cnid_last_open (const char *, mode_t);
+extern struct _cnid_db *cnid_last_open (const char *, mode_t, u_int32_t flags);
 extern void cnid_last_close (struct _cnid_db *);
 extern cnid_t cnid_last_add (struct _cnid_db *, const struct stat *, const cnid_t,
                                  char *, const size_t, cnid_t);

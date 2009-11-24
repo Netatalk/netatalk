@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.h,v 1.4 2009-10-13 22:55:37 didg Exp $
+ * $Id: cnid_dbd.h,v 1.5 2009-11-24 12:18:19 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -18,7 +18,7 @@
 #include <atalk/cnid.h>
 
 extern struct _cnid_module cnid_dbd_module;
-extern struct _cnid_db *cnid_dbd_open (const char *, mode_t);
+extern struct _cnid_db *cnid_dbd_open (const char *, mode_t, u_int32_t flags);
 extern void cnid_dbd_close (struct _cnid_db *);
 extern cnid_t cnid_dbd_add (struct _cnid_db *, const struct stat *, const cnid_t,
 			    char *, const size_t, cnid_t);
