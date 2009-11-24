@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.50 2009-11-22 11:57:45 franklahm Exp $
+ * $Id: afp_options.c,v 1.51 2009-11-24 21:01:45 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -191,6 +191,10 @@ void afp_options_init(struct afp_options *options)
     options->volnamelen = 80; /* spec: 255, 10.1: 73, 10.4/10.5: 80 */
     options->ntdomain = NULL;
     options->ntseparator = NULL;
+#ifdef USE_SRVLOC
+    /* don't advertize slp by default */
+    options->flags |= OPTION_NOSLP;
+#endif
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -213,9 +217,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if (strstr(buf, " -nodebug"))
         options->flags &= ~OPTION_DEBUG;
 #ifdef USE_SRVLOC
-    if (strstr(buf, " -noslp"))
-        options->flags |= OPTION_NOSLP;
-#endif /* USE_SRVLOC */
+    if (strstr(buf, " -slp"))
+        options->flags &= ~OPTION_NOSLP;
+#endif
 
     if (strstr(buf, " -nouservolfirst"))
         options->flags &= ~OPTION_USERVOLFIRST;
