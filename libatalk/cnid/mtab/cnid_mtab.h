@@ -20,12 +20,13 @@ extern struct _cnid_module cnid_mtab_module;
 extern struct _cnid_db *cnid_mtab_open (const char *, mode_t);
 extern void cnid_mtab_close (struct _cnid_db *);
 extern cnid_t cnid_mtab_add (struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const int, cnid_t);
-extern cnid_t cnid_mtab_get (struct _cnid_db *, const cnid_t, char *, const int);
-extern char *cnid_mtab_resolve (struct _cnid_db *, cnid_t *, void *, u_int32_t);
-extern cnid_t cnid_mtab_lookup (struct _cnid_db *, const struct stat *, const cnid_t, char *, const int);
+                                 char *, const size_t, cnid_t);
+extern cnid_t cnid_mtab_get (struct _cnid_db *, const cnid_t, char *, const size_t);
+extern char *cnid_mtab_resolve (struct _cnid_db *, cnid_t *, void *, size_t);
+extern cnid_t cnid_mtab_lookup (struct _cnid_db *, const struct stat *, const cnid_t,
+                                char *, const size_t);
 extern int cnid_mtab_update (struct _cnid_db *, const cnid_t, const struct stat *,
-                                 const cnid_t, char *, int);
+                                 const cnid_t, char *, size_t);
 extern int cnid_mtab_delete (struct _cnid_db *, const cnid_t);
 
 #endif /* include/atalk/cnid_mtab.h */
