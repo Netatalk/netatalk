@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.103 2009-11-17 12:33:29 franklahm Exp $
+ * $Id: volume.c,v 1.104 2009-11-24 11:18:38 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -623,7 +623,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         if (tmpvlen + suffixlen > obj->options.volnamelen) {
             flags = CONV_FORCE;
             tmpvlen = convert_charset(obj->options.unixcharset, CH_UTF8_MAC, 0, name, vlen, tmpname, obj->options.volnamelen - suffixlen, &flags);
-            tmpname[tmpvlen != (size_t)-1 ? tmpvlen : 0] = 0;
+            tmpname[tmpvlen >= 0 ? tmpvlen : 0] = 0;
         }
         strcat(tmpname, suffix);
         tmpvlen = strlen(tmpname);
@@ -649,7 +649,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         if (tmpvlen + suffixlen > AFPVOL_MACNAMELEN) {
             flags = CONV_FORCE;
             tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_MACNAMELEN - suffixlen, &flags);
-            tmpname[tmpvlen != (size_t)-1 ? tmpvlen : 0] = 0;
+            tmpname[tmpvlen >= 0 ? tmpvlen : 0] = 0;
         }
         strcat(tmpname, suffix);
         tmpvlen = strlen(tmpname);
@@ -1794,6 +1794,54 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     return( AFP_OK );
 }
 
+/* ------------------------- */
+static int volume_codepage(AFPObj *obj, struct vol *volume)
+{
+    struct charset_functions *charset;
+    /* Codepages */
+
+    if (!volume->v_volcodepage)
+	volume->v_volcodepage = strdup("UTF8");
+
+    if ( (charset_t) -1 == ( volume->v_volcharset = add_charset(volume->v_volcodepage)) ) {
+	LOG (log_error, logtype_afpd, "Setting codepage %s as volume codepage failed", volume->v_volcodepage);
+	return -1;
+    }
+
+    if ( NULL == (charset = find_charset_functions(volume->v_volcodepage)) || charset->flags & CHARSET_ICONV ) {
+	LOG (log_warning, logtype_afpd, "WARNING: volume encoding %s is *not* supported by netatalk, expect problems !!!!", volume->v_volcodepage);
+    }	
+
+    if (!volume->v_maccodepage)
+	volume->v_maccodepage = strdup(obj->options.maccodepage);
+
+    if ( (charset_t) -1 == ( volume->v_maccharset = add_charset(volume->v_maccodepage)) ) {
+	LOG (log_error, logtype_afpd, "Setting codepage %s as mac codepage failed", volume->v_maccodepage);
+	return -1;
+    }
+
+    if ( NULL == ( charset = find_charset_functions(volume->v_maccodepage)) || ! (charset->flags & CHARSET_CLIENT) ) {
+	LOG (log_error, logtype_afpd, "Fatal error: mac charset %s not supported", volume->v_maccodepage);
+	return -1;
+    }
+    volume->v_kTextEncoding = htonl(charset->kTextEncoding);
+    return 0;
+}
+
+/* ------------------------- */
+static int volume_openDB(struct vol *volume)
+{
+    if (volume->v_cnidscheme == NULL) {
+        volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
+        LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
+    }
+    if (volume->v_dbpath)
+        volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
+    else
+        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
+    return (!volume->v_cdb)?-1:0;
+}
+
 /* ------------------------- 
  * we are the user here
 */
@@ -1802,6 +1850,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     struct stat	st;
     char	*volname;
     char        *p;
+    
     struct vol	*volume;
     struct dir	*dir;
     int		len, ret;
@@ -1811,14 +1860,14 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     char        *vol_uname;
     char        *vol_mname;
     char        *volname_tmp;
-    struct charset_functions *charset;
     
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof( bitmap ));
     bitmap = ntohs( bitmap );
     ibuf += sizeof( bitmap );
+
+    *rbuflen = 0;
     if (( bitmap & (1<<VOLPBIT_VID)) == 0 ) {
-        *rbuflen = 0;
         return AFPERR_BITMAP;
     }
 
@@ -1834,8 +1883,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
       namelen = convert_string(obj->options.maccharset, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
     }
 
-    if ( namelen <= 0){
-        *rbuflen = 0;
+    if ( namelen <= 0) {
         return AFPERR_PARAM;
     }
 
@@ -1852,13 +1900,11 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
 
     if ( volume == NULL ) {
-        *rbuflen = 0;
         return AFPERR_PARAM;
     }
 
     /* check for a volume password */
     if (volume->v_password && strncmp(ibuf, volume->v_password, VOLPASSLEN)) {
-        *rbuflen = 0;
         return AFPERR_ACCESS;
     }
 
@@ -1869,6 +1915,43 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 #endif
         return stat_vol(bitmap, volume, rbuf, rbuflen);
     }
+
+    if (volume->v_root_preexec) {
+	if ((ret = afprun(1, volume->v_root_preexec, NULL)) && volume->v_root_preexec_close) {
+            LOG(log_error, logtype_afpd, "afp_openvol(%s): root preexec : %d", volume->v_path, ret );
+            return AFPERR_MISC;
+	}
+    }
+
+#ifdef FORCE_UIDGID
+    set_uidgid ( volume );
+#endif
+
+    if (volume->v_preexec) {
+	if ((ret = afprun(0, volume->v_preexec, NULL)) && volume->v_preexec_close) {
+            LOG(log_error, logtype_afpd, "afp_openvol(%s): preexec : %d", volume->v_path, ret );
+            return AFPERR_MISC;
+	}
+    }
+
+    if ( stat( volume->v_path, &st ) < 0 ) {
+        return AFPERR_PARAM;
+    }
+
+    if ( chdir( volume->v_path ) < 0 ) {
+        return AFPERR_PARAM;
+    }
+
+    if ( NULL == getcwd(path, MAXPATHLEN)) {
+        /* shouldn't be fatal but it will fail later */
+        LOG(log_error, logtype_afpd, "afp_openvol(%s): volume pathlen too long", volume->v_path);
+        return AFPERR_MISC;
+    }
+
+    if (volume_codepage(obj, volume) < 0) {
+	ret = AFPERR_MISC;
+	goto openvol_err;
+    }    
 
     /* initialize volume variables
      * FIXME file size
@@ -1886,36 +1969,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     volume->v_flags |= AFPVOL_OPEN;
     volume->v_cdb = NULL;  
 
-    if (volume->v_root_preexec) {
-	if ((ret = afprun(1, volume->v_root_preexec, NULL)) && volume->v_root_preexec_close) {
-            LOG(log_error, logtype_afpd, "afp_openvol(%s): root preexec : %d", volume->v_path, ret );
-            ret = AFPERR_MISC;
-            goto openvol_err;
-	}
-    }
-
-#ifdef FORCE_UIDGID
-    set_uidgid ( volume );
-#endif
-
-    if (volume->v_preexec) {
-	if ((ret = afprun(0, volume->v_preexec, NULL)) && volume->v_preexec_close) {
-            LOG(log_error, logtype_afpd, "afp_openvol(%s): preexec : %d", volume->v_path, ret );
-            ret = AFPERR_MISC;
-            goto openvol_err;
-	}
-    }
-
-    if ( stat( volume->v_path, &st ) < 0 ) {
-        ret = AFPERR_PARAM;
-        goto openvol_err;
-    }
-
-    if ( chdir( volume->v_path ) < 0 ) {
-        ret = AFPERR_PARAM;
-        goto openvol_err;
-    }
-
     if (utf8_encoding()) {
         len = convert_string_allocate(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, namelen, &vol_mname);
     } else {
@@ -1925,13 +1978,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         ret = AFPERR_MISC;
         goto openvol_err;
     }
-    
-    if ( NULL == getcwd(path, MAXPATHLEN)) {
-        /* shouldn't be fatal but it will fail later */
-        LOG(log_error, logtype_afpd, "afp_openvol(%s): volume pathlen too long", volume->v_path);
-        ret = AFPERR_MISC;
-        goto openvol_err;
-    }        
     
     if ((vol_uname = strrchr(path, '/')) == NULL)
          vol_uname = path;
@@ -1954,51 +2000,12 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     volume->v_hash = dirhash();
 
     curdir = volume->v_dir;
-    if (volume->v_cnidscheme == NULL) {
-        volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
-        LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
-    }
-    if (volume->v_dbpath)
-        volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
-    else
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, (volume->v_flags & AFPVOL_NODEV));
-    if (volume->v_cdb == NULL) {
+    if (volume_openDB(volume) < 0) {
         LOG(log_error, logtype_afpd, "Fatal error: cannot open CNID or invalid CNID backend for %s: %s", 
 	    volume->v_path, volume->v_cnidscheme);
         ret = AFPERR_MISC;
         goto openvol_err;
     }
-
-    /* Codepages */
-
-    if (!volume->v_volcodepage)
-	volume->v_volcodepage = strdup("UTF8");
-
-    if ( (charset_t) -1 == ( volume->v_volcharset = add_charset(volume->v_volcodepage)) ) {
-	LOG (log_error, logtype_afpd, "Setting codepage %s as volume codepage failed", volume->v_volcodepage);
-	ret = AFPERR_MISC;
-	goto openvol_err;
-    }
-
-    if ( NULL == (charset = find_charset_functions(volume->v_volcodepage)) || charset->flags & CHARSET_ICONV ) {
-	LOG (log_warning, logtype_afpd, "WARNING: volume encoding %s is *not* supported by netatalk, expect problems !!!!", volume->v_volcodepage);
-    }	
-
-    if (!volume->v_maccodepage)
-	volume->v_maccodepage = strdup(obj->options.maccodepage);
-
-    if ( (charset_t) -1 == ( volume->v_maccharset = add_charset(volume->v_maccodepage)) ) {
-	LOG (log_error, logtype_afpd, "Setting codepage %s as mac codepage failed", volume->v_maccodepage);
-	ret = AFPERR_MISC;
-	goto openvol_err;
-    }
-
-    if ( NULL == ( charset = find_charset_functions(volume->v_maccodepage)) || ! (charset->flags & CHARSET_CLIENT) ) {
-	LOG (log_error, logtype_afpd, "Fatal error: mac charset %s not supported", volume->v_maccodepage);
-	ret = AFPERR_MISC;
-	goto openvol_err;
-    }
-    volume->v_kTextEncoding = htonl(charset->kTextEncoding);
 
     ret  = stat_vol(bitmap, volume, rbuf, rbuflen);
     if (ret == AFP_OK) {
