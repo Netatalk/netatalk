@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_add.c,v 1.6 2009-05-14 13:46:08 franklahm Exp $
+ * $Id: dbd_add.c,v 1.7 2009-11-25 14:59:15 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -159,18 +159,21 @@ int dbd_stamp(DBD *dbd)
 }
 
 /* ------------------------ */
-int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
+/* We need a nolookup version for `dbd` */
+int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int nolookup)
 {
     rply->namelen = 0;
 
     /* See if we have an entry already and return it if yes */
-    if (dbd_lookup(dbd, rqst, rply) < 0)
-        return -1;
+    if (! nolookup) {
+        if (dbd_lookup(dbd, rqst, rply, 0) < 0)
+            return -1;
 
-    if (rply->result == CNID_DBD_RES_OK) {
-        /* Found it. rply->cnid is the correct CNID now. */
-        LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success, cnid %u", ntohl(rply->cnid));
-        return 1;
+        if (rply->result == CNID_DBD_RES_OK) {
+            /* Found it. rply->cnid is the correct CNID now. */
+            LOG(log_debug, logtype_cnid, "dbd_add: dbd_lookup success --> CNID: %u", ntohl(rply->cnid));
+            return 1;
+        }
     }
 
     if (get_cnid(dbd, rply) < 0) {
@@ -186,7 +189,8 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     
     if (add_cnid(dbd, rqst, rply) < 0) {
         if (rply->result == CNID_DBD_RES_ERR_DUPLCNID) {
-            LOG(log_error, logtype_cnid, "dbd_add: Cannot add CNID %u. Corrupt/invalid Rootkey?.", ntohl(rply->cnid));
+            LOG(log_error, logtype_cnid, "dbd_add(DID: %u/\"%s\", dev/ino 0x%llx/0x%llx): Cannot add CNID: %u",
+                ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rply->cnid));
             /* abort/rollback, see above */
             return 0;
         } else {
@@ -194,9 +198,8 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             return -1;
         }
     }
-    LOG(log_debug, logtype_cnid, "dbd_add: Added dev/ino 0x%llx/0x%llx did %u name %s cnid %u",
-        (unsigned long long)rqst->dev, (unsigned long long)rqst->ino,
-        ntohl(rqst->did), rqst->name, ntohl(rply->cnid));
+    LOG(log_debug, logtype_cnid, "dbd_add(DID: %u/\"%s\", dev/ino 0x%llx/0x%llx): Added with CNID: %u",
+        ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rply->cnid));
 
     rply->result = CNID_DBD_RES_OK;
     return 1;

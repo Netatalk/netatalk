@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.10 2009-10-14 01:38:28 didg Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.11 2009-11-25 14:59:15 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -443,7 +443,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     rqst.namelen = strlen(name);
 
     /* Query the database */
-    ret = cmd_dbd_lookup(dbd, &rqst, &rply, (dbd_flags & DBD_FLAGS_SCAN) ? 1 : 0);
+    ret = dbd_lookup(dbd, &rqst, &rply, (dbd_flags & DBD_FLAGS_SCAN) ? 1 : 0);
     dbif_txn_close(dbd, ret);
     if (rply.result == CNID_DBD_RES_OK) {
         db_cnid = rply.cnid;
@@ -492,7 +492,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         /* Note: the next test will use this new CNID too! */
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
             /* add to db */
-            ret = cmd_dbd_add(dbd, &rqst, &rply);
+            ret = dbd_add(dbd, &rqst, &rply, 1);
             dbif_txn_close(dbd, ret);
             db_cnid = rply.cnid;
             dbd_log( LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));

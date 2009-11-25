@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.14 2009-11-24 14:48:07 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.15 2009-11-25 14:59:15 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -266,9 +266,8 @@ static void usage (void)
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
            "   -v verbose\n\n"
            "WARNING:\n"
-           "If you want/need to run an -r -f rebuild after adding 'cachecnid' to a volume configuration,\n"
-           "you must run a rebuild with -r alone at first in order to sync all existing CNIDs from the db\n"
-           "to the AppleDouble files!\n"
+           "For -r -f restore of the CNID database from the adouble files, the CNID must of course\n"
+           "be synched to them files first with a plain -r rebuild !\n"
         );
 }
 

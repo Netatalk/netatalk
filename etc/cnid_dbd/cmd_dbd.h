@@ -34,6 +34,5 @@ extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags)
   Functions for querying the database which couldn't be reused from the existing
   funcs pool of dbd_* for one reason or another
 */
-extern int cmd_dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int roflag);
 extern int cmd_dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply);
 #endif /* CMD_DBD_H */

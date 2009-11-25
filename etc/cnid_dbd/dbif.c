@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.16 2009-10-14 01:38:28 didg Exp $
+ * $Id: dbif.c,v 1.17 2009-11-25 14:59:15 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -299,7 +299,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
         }
         
         if ((stat(dbd->db_filename, &st)) == 0) {
-            LOG(log_debug, logtype_cnid, "See if we can upgrade the CNID database");
+            LOG(log_debug, logtype_cnid, "See if we can upgrade the CNID database...");
             if ((ret = db_create(&upgrade_db, dbd->db_env, 0))) {
                 LOG(log_error, logtype_cnid, "error creating handle for database: %s", db_strerror(ret));
                 return -1;
@@ -316,6 +316,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
                 LOG(log_error, logtype_cnid, "error forcing checkpoint: %s", db_strerror(ret));
                 return -1;
             }
+            LOG(log_debug, logtype_cnid, "Finished CNID database upgrade check");
         }
         
         if ((fchdir(cwd)) != 0) {

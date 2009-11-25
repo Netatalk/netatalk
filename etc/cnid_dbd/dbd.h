@@ -1,5 +1,5 @@
 /*
- * $Id: dbd.h,v 1.6 2009-10-14 01:38:28 didg Exp $
+ * $Id: dbd.h,v 1.7 2009-11-25 14:59:15 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -15,10 +15,10 @@ extern int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *
 extern int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply);
 
 extern int dbd_stamp(DBD *dbd);
-extern int dbd_add(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
+extern int dbd_add(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *, int nolookup);
+extern int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *, int roflag);
 extern int dbd_get(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 extern int dbd_resolve(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
-extern int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 extern int dbd_update(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 extern int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *, int idx);
 extern int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);

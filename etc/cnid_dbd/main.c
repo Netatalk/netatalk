@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.15 2009-10-19 08:09:07 didg Exp $
+ * $Id: main.c,v 1.16 2009-11-25 14:59:15 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
@@ -153,7 +153,7 @@ static int loop(struct db_param *dbp)
                 ret = 1;
                 break;
             case CNID_DBD_OP_ADD:
-                ret = dbd_add(dbd, &rqst, &rply);
+                ret = dbd_add(dbd, &rqst, &rply, 0);
                 break;
             case CNID_DBD_OP_GET:
                 ret = dbd_get(dbd, &rqst, &rply);
@@ -162,7 +162,7 @@ static int loop(struct db_param *dbp)
                 ret = dbd_resolve(dbd, &rqst, &rply);
                 break;
             case CNID_DBD_OP_LOOKUP:
-                ret = dbd_lookup(dbd, &rqst, &rply);
+                ret = dbd_lookup(dbd, &rqst, &rply, 0);
                 break;
             case CNID_DBD_OP_UPDATE:
                 ret = dbd_update(dbd, &rqst, &rply);
