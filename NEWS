@@ -1,31 +1,36 @@
-Changes in 2.1
-==============
-* UPD: atalkd and papd are now disabled by default.
-       AppleTalk is legacy.
-* UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
-* FIX: rewritten logger
-* FIX: afpd: UNIX permissions handling
-* NEW: configure args to download and install a "private" Webmin instance
-       including only basic Webmin modules plus our netatalk.wbm.
+Changes in 2.1-beta1
+====================
+
+* NEW: afpd: AFP 3.2 support
+* NEW: afpd: Extended Attributes support using native attributes or
+             AppleDouble files
+* NEW: afpd: ACL support with ZFS
+* NEW: afpd: IPv6 support
+* NEW: cnd_metad: IPv6 support
 * NEW: cnid_metad: options -l and -f to configure logging
-* NEW: cnid_metad: IPv6 support
-* FIX: cnid_dbd: always use BerkeleyDB transactions
+* NEW: AppleDouble compatible UNIX files utility suite `ad ...`.
+       With 2.1 only `ad ls`.
 * NEW: CNID database maintanance utility dbd
 * NEW: support BerkeleyDB upgrade. Starting with the next release
        after 2.1 in case of BerkeleyDB library updates, Netatalk
        will be able to upgrade the CNID databases.
-* NEW: AppleDouble compatible UNIX files utility suite `ad ...`.
-       With 2.1 only `ad ls`.
-* NEW: afpd: AFP 3.2 support
-* NEW: afpd: Extended Attributes support using AppleDouble files
-* NEW: afpd: ACL support with ZFS
-* NEW: afpd: ExtendedAttributes support with ZFS
 * NEW: afpd: store and read CNIDs to/from AppleDouble files by default.
        This is used as a cache and as a backup in case the database
        is deleted or corrupted. It can be disabled with a new volume
        option "nocnidcache".
-* NEW: afpd: IPv6 support
+* NEW: configure args to download and install a "private" Webmin instance
+       including only basic Webmin modules plus our netatalk.wbm.
+* NEW: fallback to a temporary in memory tdb CNID database if the volume
+       database can't be open.
+* UPD: atalkd and papd are now disabled by default.
+       AppleTalk is legacy.
+* UPD: slp advertisement is now disabled by default. server option -slp
+       SRVLOC is legacy.
+* UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
 * UPD: afpd: try to install PAM config that pulls in system|common auth
+* FIX: rewritten logger
+* FIX: afpd: UNIX permissions handling
+* FIX: cnid_dbd: always use BerkeleyDB transactions
 
 Changes in 2.0.5
 ================
@@ -268,7 +273,7 @@ Changes in 2.0-beta2
 * FIX: numerous small bugfixes.
 
 Changes in 2.0-beta1
-=====================
+====================
 
 * NEW: OSX style adouble scheme
 * NEW: japanese SHIFT_JIS codepage (iconv supplied)
