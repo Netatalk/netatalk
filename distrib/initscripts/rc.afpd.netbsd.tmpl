@@ -1,10 +1,11 @@
 #!/bin/sh
 #
 # PROVIDE: afpd
-# REQUIRE: atalkd
+# REQUIRE: cnid_metad
 # KEYWORD: shutdown
 #
-# AppleTalk daemons. Make sure not to start atalkd in the background:
+# Apple Filing Protocol daemon.
+# If you use AppleTalk, Make sure not to start atalkd in the background:
 # its data structures must have time to stablize before running the
 # other processes.
 #

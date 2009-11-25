@@ -2,7 +2,8 @@
 #
 # Start/stop the Netatalk daemons.
 #
-# AppleTalk daemons. Make sure not to start atalkd in the background:
+# Netatalk daemons.
+# If you use AppleTalk, Make sure not to start atalkd in the background:
 # its data structures must have time to stablize before running the
 # other processes.
 #
@@ -24,11 +25,11 @@ HOSTNAME=`hostname`
 
 
 #
-# Start the appletalk server processes.
+# Start the netatalk server processes.
 #
 
 atalk_startup() {
-	echo 'starting appletalk daemons: \c'
+	echo 'starting netatalk daemons: \c'
 	if [ x"${ATALKD_RUN}" != x"no" ]; then
 		if [ -x :SBINDIR:/atalkd ]; then
 			:SBINDIR:/atalkd;		echo ' atalkd\c'
@@ -75,11 +76,11 @@ case "$1" in
         ;;
 
 #
-# Stop the appletalk server processes.
+# Stop the netatalk server processes.
 #
 'stop')
 
-	echo 'stopping appletalk daemons:\c'
+	echo 'stopping netatalk daemons:\c'
 
 	if [ -x :SBINDIR:/papd ]; then
 		killproc papd;			echo ' papd\c'

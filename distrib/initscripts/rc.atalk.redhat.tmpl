@@ -1,11 +1,11 @@
 #! /bin/sh
 # chkconfig: - 91 35
-# description: This package enables Linux to talk to Macintosh
-#              computers via the AppleTalk networking protocol and 
-#              provides printer, file sharing, and AppleTalk routing 
-#              services.   
+# description: This package is an implementation of "AFP over TCP"
+#              and provides printer, file sharing, and routing 
+#              services via legacy AppleTalk networking protocol.
 #
-# AppleTalk daemons. Make sure not to start atalkd in the background:
+# Netatalk daemons.
+# If you use AppleTalk, Make sure not to start atalkd in the background:
 # its data structures must have time to stablize before running the
 # other processes.
 
@@ -122,7 +122,7 @@ atalk_startup() {
 
 case "$1" in
 'start')
-	echo -n 'Starting AppleTalk services: '
+	echo -n 'Starting Netatalk services: '
 	if [ x"${ATALK_BGROUND}" = x"yes" ]; then 
 	    echo -n "(backgrounded)"
 	    atalk_startup >& /dev/null &
@@ -133,7 +133,7 @@ case "$1" in
 	echo 
 	;;
 'stop')
-	echo 'Shutting down AppleTalk services: '
+	echo 'Shutting down Netatalk services: '
 	if [ x"${ATALKD_RUN}" != x"no" ]; then
 	    if [ x"${PAPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/papd ]; then
 		echo -n "  Stopping papd:"

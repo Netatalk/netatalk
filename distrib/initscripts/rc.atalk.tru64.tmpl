@@ -1,8 +1,9 @@
 #! /bin/sh
 #
-# Start/stop the AppleTalk daemons.
+# Start/stop the Netatalk daemons.
 #
-# AppleTalk daemons. Make sure not to start atalkd in the background:
+# Netatalk daemons.
+# If you use AppleTalk, Make sure not to start atalkd in the background:
 # its data structures must have time to stablize before running the
 # other processes.
 #
@@ -32,12 +33,12 @@ killproc() {
 case "$1" in
 
 #
-# Start the appletalk server processes.
+# Start the netatalk server processes.
 #
 
 'start')
 
-	echo 'starting appletalk daemons: \c'
+	echo 'starting netatalk daemons: \c'
 	if [ ${ATALK_START_ATALKD} -eq 1 -a -x ${ATALK_SBIN}/atalkd ]; then
 		${ATALK_SBIN}/atalkd;		echo ' atalkd\c'
 	fi
@@ -69,12 +70,12 @@ case "$1" in
 	;;
 
 #
-# Stop the appletalk server processes.
+# Stop the netatalk server processes.
 #
 
 'stop')
 
-	echo 'stopping appletalk daemons:\c'
+	echo 'stopping netatalk daemons:\c'
 
 	if [ -x ${ATALK_SBIN}/papd ]; then
 		killproc papd;			echo ' papd\c'
