@@ -6,7 +6,7 @@ GENERATED_FILES = lp2pap.sh
 TEMPLATE_FILES = lp2pap.sh.tmpl
 PERLSCRIPTS = \
 	afpd-mtab.pl \
-	apple_cp apple_mv apple_rm apple_cleanup \
+	apple_cp apple_mv apple_rm  \
 	asip-status.pl
 
 SUFFIXES = .tmpl .

@@ -31,6 +31,8 @@ Changes in 2.1-beta1
 * FIX: rewritten logger
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
+* REM: cnid_maint: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
+ *REM: apple_cleanup: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
 
 Changes in 2.0.5
 ================
