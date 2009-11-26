@@ -1,5 +1,5 @@
 /*
-   $Id: acls.c,v 1.5 2009-10-15 10:43:13 didg Exp $
+   $Id: acls.c,v 1.6 2009-11-26 18:17:12 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
 #include <atalk/uuid.h>
+#include <atalk/acl.h>
 
 #include "directory.h"
 #include "desktop.h"
@@ -434,7 +435,7 @@ static int remove_acl_vfs(const struct vol *vol,const char *path, int dir)
     int ret;
 
     /* Ressource etc. first */
-    if ((ret = vol->vfs->rf_remove_acl(vol, path, dir)) != AFP_OK)
+    if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK)
 	return ret;
     /* now the data fork or dir */
     return (remove_acl(path));
@@ -520,7 +521,7 @@ static int set_acl_vfs(const struct vol *vol, char *name, int inherit, char *ibu
     /* Ressourcefork first.
        Note: for dirs we set the same ACL on the .AppleDouble/.Parent _file_. This
        might be strange for ACE_DELETE_CHILD and for inheritance flags. */
-    if ( (ret = vol->vfs->rf_acl(vol, name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
+    if ( (ret = vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
 	LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
 	if (errno == (EACCES | EPERM))
 	    ret = AFPERR_ACCESS;

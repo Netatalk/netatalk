@@ -336,11 +336,11 @@ static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
 	if ((acl(buf, cmd, count, aces)) != 0)
 	    return -1;
 	/* now set ACL on ressource fork */
-	if ((acl(vol->vfs->ad_path(path, ADFLAGS_DIR), cmd, count, aces)) != 0)
+	if ((acl(vol->ad_path(path, ADFLAGS_DIR), cmd, count, aces)) != 0)
 	    return -1;
     } else
 	/* set ACL on ressource fork */
-	if ((acl(vol->vfs->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
+	if ((acl(vol->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
 	    return -1;
 
     return 0;
@@ -357,14 +357,14 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 	if (len < 0 || len >=  MAXPATHLEN)
 	    return AFPERR_MISC;
 	/* remove ACL from .AppleDouble/.Parent first */
-	if ((ret = remove_acl(vol->vfs->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
+	if ((ret = remove_acl(vol->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
 	    return ret;
 	/* now remove from .AppleDouble dir */
 	if ((ret = remove_acl(buf)) != AFP_OK)
 	    return ret;
     } else
 	/* remove ACL from ressource fork */
-	if ((ret = remove_acl(vol->vfs->ad_path(path, ADFLAGS_HF))) != AFP_OK)
+	if ((ret = remove_acl(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK)
 	    return ret;
 
     return AFP_OK;
@@ -964,7 +964,7 @@ static struct vfs_ops netatalk_solaris_acl_adouble = {
     /* rf_renamefile:     */ NULL,
     /* vfs_copyfile       */ NULL,
     /* rf_acl:            */ RF_solaris_acl,
-    /* rf_remove_acl      */ RF_remove_acl,
+    /* rf_remove_acl      */ RF_solaris_remove_acl,
     NULL
 };
 #endif

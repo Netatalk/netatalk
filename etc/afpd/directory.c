@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.119 2009-11-19 10:41:23 franklahm Exp $
+ * $Id: directory.c,v 1.120 2009-11-26 18:17:12 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2689,6 +2689,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
             return AFPERR_PARAM;
         LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
+        uuidtype_t type;
         len = getnamefromuuid( ibuf, &name, &type);
         if (len != 0)       /* its a error code, not len */
             return AFPERR_NOITEM;

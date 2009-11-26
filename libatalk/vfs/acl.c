@@ -1,5 +1,5 @@
 /*
-  $Id: acl.c,v 1.1 2009-10-02 09:32:41 franklahm Exp $
+  $Id: acl.c,v 1.2 2009-11-26 18:17:12 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -17,9 +17,13 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/acl.h>
 
+#include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
 
