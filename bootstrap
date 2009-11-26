@@ -19,7 +19,7 @@ autoconf || exit 1
 # this feature.  It's not there at the moment, so I'm changing the
 # configure call.
 # And sometimes I don't want this to run.
-[ -z "$NOEXECCONFIGURE" ] && ./configure "$@"
+# [ -z "$NOEXECCONFIGURE" ] && ./configure "$@"
 
 # Let's not fall off the end...
 exit 0
