@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.122 2009-11-26 11:09:08 franklahm Exp $
+ * $Id: file.c,v 1.123 2009-11-26 15:02:58 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -195,12 +195,11 @@ u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
 {
 u_int32_t aint = 0;
 
-#if 0
 #if AD_VERSION > AD_VERSION1
+
     if ((aint = ad_getid(adp, st->st_dev, st->st_ino, did, vol->v_stamp))) {
     	return aint;
     }
-#endif
 #endif
 
     if (vol->v_cdb != NULL) {
