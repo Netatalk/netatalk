@@ -36,6 +36,15 @@ webminport = @WEBMIN_PORT@
 # install configuration files
 #
 
+install-data-local: install-config-files install-webmin
+
+uninstall-local:
+	for f in $(CONFFILES) $(GENFILES); do \
+		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
+	done
+
+
 install-config-files: $(CONFFILES) $(GENFILES)
 	$(mkinstalldirs) $(DESTDIR)$(pkgconfdir)
 	for f in $(CONFFILES) $(GENFILES); do \
