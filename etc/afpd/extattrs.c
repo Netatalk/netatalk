@@ -1,5 +1,5 @@
 /*
-  $Id: extattrs.c,v 1.27 2009-11-17 18:10:48 franklahm Exp $
+  $Id: extattrs.c,v 1.28 2009-11-27 12:37:24 didg Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -150,7 +150,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if (S_ISDIR(st->st_mode))
             adflags = ADFLAGS_DIR;
 
-        if ( ad_metadata( uname, adflags, adp) < 0 ) {
+        if ( ad_metadata( uname, vol_noadouble(vol) | adflags, adp) < 0 ) {
             switch (errno) {
             case ENOENT:
                 adp = NULL;

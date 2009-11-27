@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.120 2009-11-26 18:17:12 franklahm Exp $
+ * $Id: directory.c,v 1.121 2009-11-27 12:37:24 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1645,7 +1645,7 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_FINFO)))) {
 
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
+        if ( !ad_metadata( upath, vol_noadouble(vol) | ADFLAGS_DIR, &ad) ) {
             isad = 1;
         }
     }
@@ -2576,7 +2576,8 @@ int deletecurdir(struct vol *vol)
     fdir = curdir;
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
+    /* we never want to create a resource fork here, we are going to delete it */
+    if ( ad_metadata( ".", ADFLAGS_NOADOUBLE | ADFLAGS_DIR, &ad) == 0 ) {
 
         ad_getattr(&ad, &ashort);
         ad_close( &ad, ADFLAGS_HF );
