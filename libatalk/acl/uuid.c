@@ -1,5 +1,5 @@
 /*
-   $Id: uuid.c,v 1.2 2009-10-29 13:38:15 didg Exp $
+   $Id: uuid.c,v 1.3 2009-11-27 16:33:49 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -65,7 +65,7 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
 }
 
 int uuid_bin2string( uuidp_t uuid, char **uuidstring) {
-    char ascii[16] = { "0123456789abcdef" };
+    char ascii[16] = { "0123456789ABCDEF" };
     int nibble = 1;
     int i = 0;
     unsigned char c;
