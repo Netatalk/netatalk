@@ -3,3 +3,5 @@ Makefile.in
 netacnv
 .deps
 .libs
+*.o
+afpldaptest
