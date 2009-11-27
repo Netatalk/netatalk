@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.124 2009-11-27 12:37:24 didg Exp $
+ * $Id: file.c,v 1.125 2009-11-27 15:45:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -191,16 +191,9 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 
 /* -------------------------- */
 u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
-             const cnid_t did, char *upath, const int len) 
+                 const cnid_t did, char *upath, const int len) 
 {
-u_int32_t aint = 0;
-
-#if AD_VERSION > AD_VERSION1
-
-    if ((aint = ad_getid(adp, st->st_dev, st->st_ino, did, vol->v_stamp))) {
-    	return aint;
-    }
-#endif
+    u_int32_t aint = 0;
 
     if (vol->v_cdb != NULL) {
 	    aint = cnid_add(vol->v_cdb, st, did, upath, len, aint);
@@ -221,7 +214,6 @@ u_int32_t aint = 0;
                 return CNID_INVALID;
             }
         }
-#if AD_VERSION > AD_VERSION1
         else if (adp ) {
             /* update the ressource fork
              * for a folder adp is always null
@@ -230,7 +222,6 @@ u_int32_t aint = 0;
                 ad_flush(adp);
             }
         }
-#endif    
     }
     return aint;
 }

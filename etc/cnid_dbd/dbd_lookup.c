@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.11 2009-11-25 14:59:15 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.12 2009-11-27 15:45:41 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -63,8 +63,9 @@ Result in dbd_lookup:
 Possible solution:
 strcmp names, if they match keep CNID.
 
-3) Restore from backup
-----------------------
+3) Restore from backup ie change of inode number -- or emacs
+------------------------------------------------------------
+
 15  2   f   1   1       file
 -->
 15  2   f   1   2       file
@@ -74,29 +75,18 @@ Result in dbd_lookup:
 + didname
 
 Possible fixup solution:
-Update.
+test-suite test235 tests and ensures that the CNID is _changed_. The reason for
+this is somewhat lost in time, but nevertheless we believe our test suite.
 
-4) emacs
---------
-emacs uses a backup file (file~). When saving because of inode reusage of the fs,
-both files exchange inodes.
+Similar things happen with emas: emacs uses a backup file (file~). When saving
+because of inode reusage of the fs, both files most likely exchange inodes.
 
-General case for inode reusage:
-15  2   f   1   1       file
--->
-16  2   f   1   1       new_file_with_reused_inode
-
-Result in dbd_lookup:
-+ devino
-- didname
-
-Emacs case:
 15  2   f   1   1       file
 16  2   f   1   2       file~
 --> this would be nice:
 15  2   f   1   2       file
 16  2   f   1   1       file~
---> but because we must follow the general case you get this:
+--> but for the reasons described above we must implement
 17  2   f   1   2       file
 18  2   f   1   1       file~
 
@@ -106,7 +96,7 @@ Result in dbd_lookup for the emacs case:
 devino search and didname search result in different CNIDs !!
 
 Possible fixup solution:
-to be safe we must implement the general case, sorry emacs.
+to be safe we must assign new CNIDs to both files.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -201,18 +191,20 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     /* Check for type (file/dir) mismatch */
     if (devino && (type_devino != rqst->type)) {
         /* one is a dir one is a file, remove from db */
-        rqst->cnid = id_devino;
-        if (! roflag)
+        if (! roflag) {
+            rqst->cnid = id_devino;
             if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
                 return -1;
+        }
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     } else if (didname && (type_didname != rqst->type)) {
         /* same: one is a dir one is a file, remove from db */
-        rqst->cnid = id_didname;
-        if (! roflag)
+        if (! roflag) {
+            rqst->cnid = id_didname;
             if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
                 return -1;
+        }
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }
@@ -227,12 +219,11 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     }
 
     if (devino && didname && id_devino != id_didname) {
-        /* CNIDs don't match, something of a worst case! */
+        /* CNIDs don't match, something of a worst case, or possibly 3) emacs! */
         LOG(log_debug, logtype_cnid, "dbd_lookup: CNID mismatch: (DID:%u/'%s') --> %u , (0x%llx/0x%llx) --> %u",
             ntohl(rqst->did), rqst->name, ntohl(id_didname),
             (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(id_devino));
 
-        /* Something like 5), the emacs case (see above), remove it all */
         if (! roflag) {
             rqst->cnid = id_devino;
             if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
@@ -249,15 +240,16 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     if ( ! didname) {
         LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): CNID resolve problem: server side rename oder reused inode",
             ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-        rqst->cnid = id_devino;
         /* Case 2) ? */
         if (strcmp(rqst->name, (char *)devdata.data + CNID_NAME_OFS) == 0) {
             LOG(log_debug, logtype_cnid, "dbd_lookup: server side mv from one dir to another");
             update = 1;
         } else {
-            if ( ! roflag)
+            if ( ! roflag) {
+                rqst->cnid = id_devino;
                 if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
                     return -1;
+            }
             rply->result = CNID_DBD_RES_NOTFOUND;
             return 1;
         }
@@ -266,8 +258,13 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     if ( ! devino) {
         LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): CNID resolve problem: changed dev/ino",
             ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-        rqst->cnid = id_didname;
-        update = 1;
+        if ( ! roflag) {
+            rqst->cnid = id_didname;
+            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
+                return -1;
+        }
+        rply->result = CNID_DBD_RES_NOTFOUND;
+        return 1;
     }
 
     /* This is also a catch all if we've forgot to catch some possibility with the preceding ifs*/
