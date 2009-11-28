@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.12 2009-11-27 15:45:41 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.13 2009-11-28 15:42:05 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -242,6 +242,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
             ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
         /* Case 2) ? */
         if (strcmp(rqst->name, (char *)devdata.data + CNID_NAME_OFS) == 0) {
+            rqst->cnid = id_devino;
             LOG(log_debug, logtype_cnid, "dbd_lookup: server side mv from one dir to another");
             update = 1;
         } else {
