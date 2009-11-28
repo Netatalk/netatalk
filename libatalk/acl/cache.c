@@ -1,17 +1,17 @@
 /*
-   $Id: cache.c,v 1.1 2009-02-02 11:55:01 franklahm Exp $
-   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
+  $Id: cache.c,v 1.2 2009-11-28 12:30:12 franklahm Exp $
+  Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
- 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
- */
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+*/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -29,7 +29,7 @@
 #include "cache.h"
 
 typedef struct cacheduser {
-    unsigned long uid;		/* for future use */
+    unsigned long uid;      /* for future use */
     uuidtype_t type;
     uuidp_t uuid;
     char *name;
@@ -38,8 +38,8 @@ typedef struct cacheduser {
     struct cacheduser *next;
 } cacheduser_t;
 
-cacheduser_t *namecache[256];	/* indexed by hash of name */
-cacheduser_t *uuidcache[256];	/* indexed by hash of uuid */
+cacheduser_t *namecache[256];   /* indexed by hash of name */
+cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
 
 /********************************************************
  * helper function
@@ -54,18 +54,18 @@ static int dumpcache() {
     struct tm *tmp = NULL;
 
     for ( i=0 ; i<256; i++) {
-	if ((entry = namecache[i]) != NULL) {
-	    do {
-		uuid_bin2string(entry->uuid, &uuidstring);
-		tmp = localtime(&entry->creationtime);
-		if (tmp == NULL)
-		    continue;
-		if (strftime(timestr, 200, "%c", tmp) == 0)
-		    continue;
-		LOG(log_debug9, logtype_default, "namecache{%d}]: name:%s, uuid:%s, cached: %s", i, entry->name, uuidstring, timestr);
-		free(uuidstring);
-	    } while ((entry = entry->next) != NULL);
-	}
+        if ((entry = namecache[i]) != NULL) {
+            do {
+                uuid_bin2string(entry->uuid, &uuidstring);
+                tmp = localtime(&entry->creationtime);
+                if (tmp == NULL)
+                    continue;
+                if (strftime(timestr, 200, "%c", tmp) == 0)
+                    continue;
+                LOG(log_debug9, logtype_default, "namecache{%d}]: name:%s, uuid:%s, cached: %s", i, entry->name, uuidstring, timestr);
+                free(uuidstring);
+            } while ((entry = entry->next) != NULL);
+        }
     }
 
     for ( i=0; i<256; i++) {
@@ -78,7 +78,7 @@ static int dumpcache() {
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
                 LOG(log_debug9, logtype_default, "uuidcache{%d}: uuid:%s, name:%s, type:%d, cached: %s", i, uuidstring, entry->name, entry->type,timestr);
-		free(uuidstring);
+                free(uuidstring);
             } while ((entry = entry->next) != NULL);
         }
     }
@@ -92,12 +92,12 @@ static unsigned char hashstring(unsigned char *str) {
     unsigned char index;
     int c;
     while ((c = *str++) != 0)
-	hash = ((hash << 5) + hash) ^ c; /* (hash * 33) ^ c */
+        hash = ((hash << 5) + hash) ^ c; /* (hash * 33) ^ c */
 
     index = 85 ^ (hash & 0xff);
     while ((hash = hash >> 8) != 0)
-	index ^= (hash & 0xff);
-    
+        index ^= (hash & 0xff);
+
     return index;
 }
 
@@ -107,13 +107,13 @@ static unsigned char hashuuid(uuidp_t uuid) {
     int i;
 
     for (i=0; i<16; i++) {
-	index ^= uuid[i];
-	index += uuid[i];
+        index ^= uuid[i];
+        index += uuid[i];
     }
     return index;
 }
 
-/******************************************************** 
+/********************************************************
  * Interface
  ********************************************************/
 
@@ -128,23 +128,23 @@ int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t 
     /* allocate mem and copy values */
     name = malloc(strlen(inname)+1);
     if (!name) {
-	LOG(log_error, logtype_default, "add_cachebyname: mallor error");
-	ret = -1;
-	goto cleanup;
+        LOG(log_error, logtype_default, "add_cachebyname: mallor error");
+        ret = -1;
+        goto cleanup;
     }
-    
+
     uuid = malloc(UUID_BINSIZE);
     if (!uuid) {
-	LOG(log_error, logtype_default, "add_cachebyname: mallor error");
-	ret = -1;
-	goto cleanup;
+        LOG(log_error, logtype_default, "add_cachebyname: mallor error");
+        ret = -1;
+        goto cleanup;
     }
 
     cacheduser = malloc(sizeof(cacheduser_t));
     if (!cacheduser) {
-	LOG(log_error, logtype_default, "add_cachebyname: mallor error");
-	ret = -1;
-	goto cleanup;
+        LOG(log_error, logtype_default, "add_cachebyname: mallor error");
+        ret = -1;
+        goto cleanup;
     }
 
     strcpy(name, inname);
@@ -163,23 +163,23 @@ int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t 
 
     /* insert cache entry into cache array */
     if (namecache[hash] == NULL) { /* this queue is empty */
-	namecache[hash] = cacheduser;
-    } else {			/* queue is not empty, search end of queue*/
-	entry = namecache[hash];
-	while( entry->next != NULL)
-	    entry = entry->next;
-	cacheduser->prev = entry;
-	entry->next = cacheduser;
+        namecache[hash] = cacheduser;
+    } else {            /* queue is not empty, search end of queue*/
+        entry = namecache[hash];
+        while( entry->next != NULL)
+            entry = entry->next;
+        cacheduser->prev = entry;
+        entry->next = cacheduser;
     }
 
 cleanup:
     if (ret != 0) {
-	if (name)
-	    free(name);
-	if (uuid)
-	    free(uuid);
-	if (cacheduser)
-	    free(cacheduser);
+        if (name)
+            free(name);
+        if (uuid)
+            free(uuid);
+        if (cacheduser)
+            free(cacheduser);
     }
     return ret;
 }
@@ -193,30 +193,30 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
     hash = hashstring((unsigned char *)name);
 
     if (! namecache[hash])
-	return -1;
+        return -1;
 
     entry = namecache[hash];
     while (entry) {
-	ret = strcmp(entry->name, name);
-	if (ret == 0 && type == entry->type) {
-	    /* found, now check if expired */
-	    tim = time(NULL);
-	    if ((tim - entry->creationtime) > CACHESECONDS) {
-		/* remove item */
-		if (entry->prev) /* 2nd to last in queue */
-		    entry->prev->next = entry->next;
-		else		/* queue head */
-		    namecache[hash] = entry->next;
-		free(entry->name);
-		free(entry->uuid);
-		free(entry);
-		return -1;
-	    } else {
-		memcpy(uuid, entry->uuid, UUID_BINSIZE);
-		    return 0;
-	    }
-	}
-	entry = entry->next;
+        ret = strcmp(entry->name, name);
+        if (ret == 0 && type == entry->type) {
+            /* found, now check if expired */
+            tim = time(NULL);
+            if ((tim - entry->creationtime) > CACHESECONDS) {
+                /* remove item */
+                if (entry->prev) /* 2nd to last in queue */
+                    entry->prev->next = entry->next;
+                else        /* queue head */
+                    namecache[hash] = entry->next;
+                free(entry->name);
+                free(entry->uuid);
+                free(entry);
+                return -1;
+            } else {
+                memcpy(uuid, entry->uuid, UUID_BINSIZE);
+                return 0;
+            }
+        }
+        entry = entry->next;
     }
     return -1;
 }
@@ -248,9 +248,9 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
                 free(entry);
                 return -1;
             } else {
-		*name = malloc(strlen(entry->name)+1);
-		strcpy(*name, entry->name);
-		*type = entry->type;
+                *name = malloc(strlen(entry->name)+1);
+                strcpy(*name, entry->name);
+                *type = entry->type;
                 return 0;
             }
         }
@@ -271,23 +271,23 @@ int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const 
     /* allocate mem and copy values */
     name = malloc(strlen(inname)+1);
     if (!name) {
-	LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");
-	ret = -1;
-	goto cleanup;
+        LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");
+        ret = -1;
+        goto cleanup;
     }
-    
+
     uuid = malloc(UUID_BINSIZE);
     if (!uuid) {
-	LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");
-	ret = -1;
-	goto cleanup;
+        LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");
+        ret = -1;
+        goto cleanup;
     }
 
     cacheduser = malloc(sizeof(cacheduser_t));
     if (!cacheduser) {
-	LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");
-	ret = -1;
-	goto cleanup;
+        LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");
+        ret = -1;
+        goto cleanup;
     }
 
     strcpy(name, inname);
@@ -306,23 +306,23 @@ int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const 
 
     /* insert cache entry into cache array */
     if (uuidcache[hash] == NULL) { /* this queue is empty */
-	uuidcache[hash] = cacheduser;
-    } else {			/* queue is not empty, search end of queue*/
-	entry = uuidcache[hash];
-	while( entry->next != NULL)
-	    entry = entry->next;
-	cacheduser->prev = entry;
-	entry->next = cacheduser;
+        uuidcache[hash] = cacheduser;
+    } else {            /* queue is not empty, search end of queue*/
+        entry = uuidcache[hash];
+        while( entry->next != NULL)
+            entry = entry->next;
+        cacheduser->prev = entry;
+        entry->next = cacheduser;
     }
 
 cleanup:
     if (ret != 0) {
-	if (name)
-	    free(name);
-	if (uuid)
-	    free(uuid);
-	if (cacheduser)
-	    free(cacheduser);
+        if (name)
+            free(name);
+        if (uuid)
+            free(uuid);
+        if (cacheduser)
+            free(cacheduser);
     }
     return ret;
 }
