@@ -1,5 +1,5 @@
 /*
-  $Id: ldap.c,v 1.2 2009-11-27 15:16:26 franklahm Exp $
+  $Id: ldap.c,v 1.3 2009-11-28 10:03:01 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,9 @@ int  ldap_auth_method;
 char *ldap_auth_dn;
 char *ldap_auth_pw;
 char *ldap_userbase;
+int  ldap_userscope;
 char *ldap_groupbase;
+int  ldap_groupscope;
 char *ldap_uuid_attr;
 char *ldap_name_attr;
 char *ldap_group_attr;
@@ -55,7 +57,9 @@ struct ldap_pref ldap_prefs[] = {
     {&ldap_auth_dn,    "ldap_auth_dn",     0, 0,  0},
     {&ldap_auth_pw,    "ldap_auth_pw",     0, 0,  0},
     {&ldap_userbase,   "ldap_userbase",    0, 0, -1},
+    {&ldap_userscope}, "ldap_userscope",   1 ,1, -1},
     {&ldap_groupbase,  "ldap_groupbase",   0, 0, -1},
+    {&ldap_groupscope},"ldap_groupscope",  1 ,1, -1},
     {&ldap_uuid_attr,  "ldap_uuid_attr",   0, 0, -1},
     {&ldap_name_attr,  "ldap_name_attr",   0, 0, -1},
     {&ldap_group_attr, "ldap_group_attr",  0, 0, -1},
@@ -67,6 +71,9 @@ struct pref_array prefs_array[] = {
     {"ldap_auth_method", "none",   LDAP_AUTH_NONE},
     {"ldap_auth_method", "simple", LDAP_AUTH_SIMPLE},
     {"ldap_auth_method", "sasl",   LDAP_AUTH_SASL},
+    {"ldap_userscope",   "base",   LDAP_SCOPE_BASE},
+    {"ldap_userscope",   "one",    LDAP_SCOPE_ONELEVEL},
+    {"ldap_userscope",   "sub",    LDAP_SCOPE_SUBTREE},
     {NULL,               NULL,     0}
 };
 
@@ -228,9 +235,9 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
     }
 
     if (type == UUID_GROUP) {
-        ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, LDAP_SCOPE_ONELEVEL, KEEPALIVE, uuid_string);
+        ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, ldap_userscope, KEEPALIVE, uuid_string);
     } else  { /* type hopefully == UUID_USER */
-        ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, LDAP_SCOPE_ONELEVEL, 0, uuid_string);
+        ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_groupscope, 0, uuid_string);
     }
     return ret;
 }
@@ -249,13 +256,13 @@ int ldap_getnamefromuuid( char *uuidstr, char **name, uuidtype_t *type) {
     }
     /* search groups first. group acls are probably used more often */
     attributes[0] = ldap_group_attr;
-    ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, LDAP_SCOPE_ONELEVEL, KEEPALIVE, name);
+    ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, ldap_groupscope, KEEPALIVE, name);
     if (ret == 0) {
         *type = UUID_GROUP;
         return 0;
     }
     attributes[0] = ldap_name_attr;
-    ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, LDAP_SCOPE_ONELEVEL, 0, name);
+    ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, 0, name);
     if (ret == 0) {
         *type = UUID_USER;
         return 0;

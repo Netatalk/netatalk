@@ -1,17 +1,17 @@
 ## Makefile.am for config/
 
 SUBDIRS = pam
-
 SUFFIXES = .tmpl .
 
 GENFILES = afpd.conf AppleVolumes.default
 TMPLFILES = afpd.conf.tmpl AppleVolumes.default.tmpl
-CONFFILES = AppleVolumes.system \
-	atalkd.conf netatalk.conf papd.conf
+CONFFILES = AppleVolumes.system atalkd.conf netatalk.conf papd.conf
+if USE_NFSv4_ACLS
+CONFFILES += afp_ldap.conf
+endif
+
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
-
 EXTRA_DIST = $(CONFFILES) $(TMPLFILES)
-
 CLEANFILES = $(GENFILES)
 
 pkgconfdir = @PKGCONFDIR@
