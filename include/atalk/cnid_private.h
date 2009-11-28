@@ -29,8 +29,6 @@
 #define CNID_NAME_OFS            (CNID_DID_OFS + CNID_DID_LEN)
 #define CNID_HEADER_LEN          (CNID_NAME_OFS)
 
-#define CNID_START               17
-
 #define CNIDFLAG_ROOTINFO_RO     (1 << 0)
 #define CNIDFLAG_DB_RO           (1 << 1)
 

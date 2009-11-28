@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.10 2009-11-24 15:44:56 didg Exp $
+ * $Id: cnid.c,v 1.11 2009-11-28 13:09:26 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -176,6 +176,23 @@ static void unblock_signal(u_int32_t flags)
     }
 }
 
+/* ------------------- 
+  protect against bogus value from the DB.
+  adddir really doesn't like 2
+*/
+static cnid_t valide(cnid_t id)
+{
+  if (id < CNID_START) {
+    static int err = 0;
+    if (!err) {
+        err = 1;
+        LOG(log_error, logtype_afpd, "Error: Invalid cnid, corrupted DB?");
+    }
+    return CNID_INVALID;
+  }
+  return id;
+}
+
 /* Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
 void cnid_close(struct _cnid_db *db)
 {
@@ -199,7 +216,7 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
 cnid_t ret;
 
     block_signal(cdb->flags);
-    ret = cdb->cnid_add(cdb, st, did, name, len, hint);
+    ret = valide(cdb->cnid_add(cdb, st, did, name, len, hint));
     unblock_signal(cdb->flags);
     return ret;
 }
@@ -222,7 +239,7 @@ cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,const size_t 
 cnid_t ret;
 
     block_signal(cdb->flags);
-    ret = cdb->cnid_get(cdb, did, name, len);
+    ret = valide(cdb->cnid_get(cdb, did, name, len));
     unblock_signal(cdb->flags);
     return ret;
 }
@@ -255,7 +272,7 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did
 cnid_t ret;
 
     block_signal(cdb->flags);
-    ret = cdb->cnid_lookup(cdb, st, did, name, len);
+    ret = valide(cdb->cnid_lookup(cdb, st, did, name, len));
     unblock_signal(cdb->flags);
     return ret;
 }

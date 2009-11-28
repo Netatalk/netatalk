@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.h,v 1.13 2009-11-24 12:18:19 didg Exp $
+ * $Id: cnid.h,v 1.14 2009-11-28 13:09:25 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -37,6 +37,8 @@
 #define CNID_FLAG_INODE        0x80	 /* in cnid_add the inode is authoritative */
 
 #define CNID_INVALID   0
+/* first valid ID */
+#define CNID_START     17
 
 #define CNID_ERR_PARAM 0x80000001
 #define CNID_ERR_PATH  0x80000002
@@ -119,7 +121,10 @@ void cnid_close(struct _cnid_db *db);
 
 /*
  * $Log: cnid.h,v $
- * Revision 1.13  2009-11-24 12:18:19  didg
+ * Revision 1.14  2009-11-28 13:09:25  didg
+ * guard against confused DB returning junk values
+ *
+ * Revision 1.13  2009/11/24 12:18:19  didg
  * add a flag parameter to cnid open functions
  *
  * Revision 1.12  2005/09/07 15:23:21  didg
