@@ -1,5 +1,5 @@
 /*
-  $Id: ldap_config.c,v 1.3 2009-11-27 22:57:27 franklahm Exp $
+  $Id: ldap_config.c,v 1.4 2009-11-28 11:10:37 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -109,10 +109,13 @@ int acl_ldap_readconfig(char *name)
                         }
                         j++;
                     } /* while j*/
-                } /* else */
-            }
+                } /* if else 0 == ldap_prefs*/
+                break;
+            } /* if strcmp */
             i++;
         } /* while i */
+        if (ldap_prefs[i].pref == NULL)
+            LOG(log_error, logtype_afpd,"afp_ldap.conf: Unknown option: \"%s\"", pref);
     }  /*  EOF */
 
     /* check if the config is sane and complete */
@@ -121,6 +124,7 @@ int acl_ldap_readconfig(char *name)
 
     while(ldap_prefs[i].pref != NULL) {
         if ( ldap_prefs[i].valid != 0) {
+            LOG(log_error, logtype_afpd,"afp_ldap.conf: Missing option: \"%s\"", ldap_prefs[i].name);
             ldap_config_valid = 0;
             break;
         }

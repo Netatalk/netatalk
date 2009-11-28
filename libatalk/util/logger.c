@@ -349,20 +349,25 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
 
 
     /* Open log file as OPEN_LOGS_AS_UID*/
-    process_uid = geteuid();
-    if (process_uid) {
-        if (seteuid(OPEN_LOGS_AS_UID) == -1) {
-            /* XXX failing silently */
-            return;
+    /* Is it /dev/tty ? */
+    if (strcmp(file_configs[logtype].filename, "/dev/tty") == 0) {
+        file_configs[logtype].fd = open( file_configs[logtype].filename, O_WRONLY);
+    } else {
+        process_uid = geteuid();
+        if (process_uid) {
+            if (seteuid(OPEN_LOGS_AS_UID) == -1) {
+                /* XXX failing silently */
+                return;
+            }
         }
-    }
-    file_configs[logtype].fd = open( file_configs[logtype].filename,
-                                     O_CREAT | O_WRONLY | O_APPEND,
-                                     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (process_uid) {
-        if (seteuid(process_uid) == -1) {
-            LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
-            exit(EXITERR_SYS);
+        file_configs[logtype].fd = open( file_configs[logtype].filename,
+                                         O_CREAT | O_WRONLY | O_APPEND,
+                                         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        if (process_uid) {
+            if (seteuid(process_uid) == -1) {
+                LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+                exit(EXITERR_SYS);
+            }
         }
     }
 
