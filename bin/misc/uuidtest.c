@@ -1,5 +1,5 @@
 /*
-  $Id: uuidtest.c,v 1.2 2009-11-28 12:20:12 franklahm Exp $
+  $Id: uuidtest.c,v 1.3 2009-11-28 12:27:24 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 
 static void usage()
 {
-    printf("Usage: uuidtest -u <user> | -g <group> | -i <UUID>\n");
+    printf("Usage: afpldaptest -u <user> | -g <group> | -i <UUID>\n");
 }
 
 static void parse_ldapconf()
@@ -129,6 +129,7 @@ int main( int argc, char **argv)
 
         case ':':
         case '?':
+        case 'h':
             usage();
             exit(EXIT_FAILURE);
         }
