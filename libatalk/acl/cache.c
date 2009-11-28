@@ -1,5 +1,5 @@
 /*
-  $Id: cache.c,v 1.2 2009-11-28 12:30:12 franklahm Exp $
+  $Id: cache.c,v 1.3 2009-11-28 12:37:30 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -202,6 +202,7 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
             /* found, now check if expired */
             tim = time(NULL);
             if ((tim - entry->creationtime) > CACHESECONDS) {
+                LOG(log_debug, logtype_default, "search_cachebyname: expired: name:\'%s\' in queue {%d}", entry->name, hash);
                 /* remove item */
                 if (entry->prev) /* 2nd to last in queue */
                     entry->prev->next = entry->next;
