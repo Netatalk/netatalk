@@ -63,7 +63,7 @@ Netatalk 2001 (c)
   "ATalkDaemon",                     \
   "PAPDaemon",                       \
   "UAMSDaemon",                      \
-                                     \
+  "Console",                         \
   "end_of_list_marker"}              \
 
 /* ========================================================================= 
@@ -80,6 +80,7 @@ typedef struct {
     int            facility;               /* syslog facility to use */
     int            syslog_display_options;
     enum loglevels syslog_level;           /* Log Level to send to syslog */
+    int            console;                /* if logging to console from a cli util */
 } log_config_t;
 
 /* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
@@ -96,7 +97,7 @@ typedef struct {
    Config
    ========================================================================= */
 
-/* Main log config container, must be globally visible */
+/* Main log config container */
 static log_config_t log_config = {
     0,                  /* Initialized ? 0 = no */
     0,                  /* No filelogging setup yet */
@@ -104,7 +105,8 @@ static log_config_t log_config = {
     0,                  /* syslog opened ? */
     logfacility_daemon,         /* syslog facility to use */
     logoption_ndelay|logoption_pid, /* logging options for syslog */
-    0                               /* log level for syslog */
+    0,                              /* log level for syslog */
+    0                               /* not logging to console */
 };
 
 /* Default log config: log nothing to files.
@@ -123,7 +125,8 @@ static filelog_conf_t file_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_afpd */
     DEFAULT_LOG_CONFIG, /* logtype_atalkd */
     DEFAULT_LOG_CONFIG, /* logtype_papd */
-    DEFAULT_LOG_CONFIG  /* logtype_uams */
+    DEFAULT_LOG_CONFIG, /* logtype_uams */
+    DEFAULT_LOG_CONFIG  /* logtype_console */
 };
 
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
@@ -343,6 +346,12 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
         file_configs[logtype].set = 0;
     }
 
+    /* Check if logging to a console */
+    if (logtype == logtype_console) {
+        log_config.console = 1;
+        logtype = logtype_default;
+    }
+
     /* Set new values */
     file_configs[logtype].filename = strdup(filename);
     file_configs[logtype].level = loglevel;
@@ -393,12 +402,12 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
     /* in order to make it easy and fast to check the loglevels in the LOG macro! */
 
     if (logtype == logtype_default) {
-        while (logtype != logtype_end_of_list_marker) {
-            if ( ! (file_configs[logtype].set))
-                file_configs[logtype].level = loglevel;
-            logtype++;
+        int typeiter = 0;
+        while (typeiter != logtype_end_of_list_marker) {
+            if ( ! (file_configs[typeiter].set))
+                file_configs[typeiter].level = loglevel;
+            typeiter++;
         }
-        logtype = logtype_default;
     }
 
     LOG(log_debug, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
@@ -517,19 +526,22 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         temp_buffer[len+1] = 0;
     }
 
-    generate_message_details(log_details_buffer, sizeof(log_details_buffer),
-                             file_configs[logtype].set ?
-                             file_configs[logtype].display_options :
-                             file_configs[logtype_default].display_options,
-                             loglevel, logtype);
+    if ( ! log_config.console) {
+        generate_message_details(log_details_buffer, sizeof(log_details_buffer),
+                                 file_configs[logtype].set ?
+                                 file_configs[logtype].display_options :
+                                 file_configs[logtype_default].display_options,
+                                 loglevel, logtype);
 
-
-    /* If default wasnt setup its fd is -1 */
-    iov[0].iov_base = log_details_buffer;
-    iov[0].iov_len = strlen(log_details_buffer);
-    iov[1].iov_base = temp_buffer;
-    iov[1].iov_len = strlen(temp_buffer);
-    writev( fd,  iov, 2);
+        /* If default wasnt setup its fd is -1 */
+        iov[0].iov_base = log_details_buffer;
+        iov[0].iov_len = strlen(log_details_buffer);
+        iov[1].iov_base = temp_buffer;
+        iov[1].iov_len = strlen(temp_buffer);
+        writev( fd,  iov, 2);
+    } else {
+        write(fd, temp_buffer, strlen(temp_buffer));
+    }
 
     inlog = 0;
 }

@@ -1,5 +1,5 @@
 /*
-  $Id: uuidtest.c,v 1.1 2009-11-27 21:15:48 franklahm Exp $
+  $Id: uuidtest.c,v 1.2 2009-11-28 12:20:12 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -73,7 +73,7 @@ int main( int argc, char **argv)
     char *uuidstring = NULL;
     char *name = NULL;
 
-    setuplog("default log_error /dev/tty");
+    setuplog("console log_error /dev/tty");
 
     while ((c = getopt(argc, argv, ":vu:g:i:")) != -1) {
         switch(c) {
@@ -81,7 +81,7 @@ int main( int argc, char **argv)
         case 'v':
             if (! verbose) {
                 verbose = 1;
-                setuplog("default log_debug /dev/tty");
+                setuplog("console log_debug /dev/tty");
             }
             break;
 

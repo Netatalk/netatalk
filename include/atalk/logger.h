@@ -94,7 +94,7 @@ enum logtypes {
   logtype_atalkd,
   logtype_papd,
   logtype_uams,
-
+  logtype_console,
   logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
 

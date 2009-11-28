@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.15 2009-11-25 14:59:15 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.16 2009-11-28 12:20:12 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -351,9 +351,9 @@ int main(int argc, char **argv)
 
     /* Setup logging. Should be portable among *NIXes */
     if (!verbose)
-        setuplog("default log_info /dev/tty");
+        setuplog("console log_info /dev/tty");
     else
-        setuplog("default log_debug /dev/tty");
+        setuplog("console log_debug /dev/tty");
 
     /* Load .volinfo file */
     if (loadvolinfo(volpath, &volinfo) == -1) {
