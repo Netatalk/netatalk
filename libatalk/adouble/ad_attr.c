@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.10 2009-07-21 13:41:16 didg Exp $
+ * $Id: ad_attr.c,v 1.11 2009-11-30 15:27:48 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -168,7 +168,7 @@ u_int32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino 
         memcpy(&a_did, ad_entry(adp, ADEID_DID), sizeof(cnid_t));
 
         if (  ((adp->ad_options & ADVOL_NODEV) || dev == st_dev)
-              && ino == st_ino && a_did == did
+              && ino == st_ino && (!did || a_did == did)
               && !memcmp(stamp, temp, sizeof(temp))) {
             memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
             return aint;

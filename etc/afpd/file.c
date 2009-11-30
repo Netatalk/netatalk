@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.125 2009-11-27 15:45:40 franklahm Exp $
+ * $Id: file.c,v 1.126 2009-11-30 15:27:48 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -187,6 +187,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 				  (1 << FILPBIT_RFLEN) |\
 				  (1 << FILPBIT_EXTRFLEN) |\
 				  (1 << FILPBIT_PDINFO) |\
+				  (1 << FILPBIT_FNUM) |\
 				  (1 << FILPBIT_UNIXPR)))
 
 /* -------------------------- */
@@ -196,6 +197,10 @@ u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
     u_int32_t aint = 0;
 
     if (vol->v_cdb != NULL) {
+        /* prime aint with what we think is the cnid, set did to zero for
+           catching moved files */
+        aint = ad_getid(adp, st->st_dev, st->st_ino, 0, vol->v_stamp);
+
 	    aint = cnid_add(vol->v_cdb, st, did, upath, len, aint);
 	    /* Throw errors if cnid_add fails. */
 	    if (aint == CNID_INVALID) {

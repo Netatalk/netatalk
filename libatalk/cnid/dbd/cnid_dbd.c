@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.14 2009-11-24 12:18:19 didg Exp $
+ * $Id: cnid_dbd.c,v 1.15 2009-11-30 15:27:48 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -513,7 +513,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 /* ---------------------- */
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
                     const cnid_t did, char *name, const size_t len,
-                    cnid_t hint _U_)
+                    cnid_t hint)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -541,6 +541,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
 
     rqst.ino = st->st_ino;
     rqst.type = S_ISDIR(st->st_mode)?1:0;
+    rqst.cnid = hint;
     rqst.did = did;
     rqst.name = name;
     rqst.namelen = len;
