@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.16 2009-11-28 12:20:12 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.17 2009-11-30 15:51:30 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -442,7 +442,7 @@ int main(int argc, char **argv)
         if (dbif_dump(dbd, dumpindexes) < 0) {
             dbd_log( LOGSTD, "Error dumping database");
         }
-    } else if ((rebuild && ! nocniddb) || (scan && nocniddb)) {
+    } else if ((rebuild && ! nocniddb) || scan) {
         if (cmd_dbd_scanvol(dbd, &volinfo, flags) < 0) {
             dbd_log( LOGSTD, "Error repairing database.");
         }
