@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.106 2009-11-24 15:44:40 didg Exp $
+ * $Id: volume.c,v 1.107 2009-11-30 15:24:37 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1486,10 +1486,6 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
         switch ( bit ) {
         case VOLPBIT_ATTR :
             ashort = 0;
-            if (0 == (vol->v_flags & AFPVOL_NOFILEID) && vol->v_cdb != NULL &&
-                           (vol->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
-                ashort = VOLPBIT_ATTR_FILEID;
-            }
             /* check for read-only.
              * NOTE: we don't actually set the read-only flag unless
              *       it's passed in that way as it's possible to mount
@@ -1498,18 +1494,27 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
                     ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
                 ashort |= VOLPBIT_ATTR_RO;
             }
-            ashort |= VOLPBIT_ATTR_CATSEARCH;
-            ashort |= VOLPBIT_ATTR_EXT_ATTRS;
-            if (afp_version >= 30) {
-                ashort |= VOLPBIT_ATTR_UTF8;
-                if (vol->v_flags & AFPVOL_UNIX_PRIV)
-                    ashort |= VOLPBIT_ATTR_UNIXPRIV;
-                if (vol->v_flags & AFPVOL_TM)
-                    ashort |= VOLPBIT_ATTR_TM;
-            }
-            if (afp_version >= 32) {
-	        if (vol->v_flags & AFPVOL_ACLS)
-                ashort |= VOLPBIT_ATTR_ACLS;
+            /* prior 2.1 only VOLPBIT_ATTR_RO is defined */
+            if (afp_version > 20) {
+                if (0 == (vol->v_flags & AFPVOL_NOFILEID) && vol->v_cdb != NULL &&
+                           (vol->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
+                    ashort |= VOLPBIT_ATTR_FILEID;
+                }
+                ashort |= VOLPBIT_ATTR_CATSEARCH;
+
+                if (afp_version >= 30) {
+                    ashort |= VOLPBIT_ATTR_UTF8;
+                    if (vol->v_flags & AFPVOL_UNIX_PRIV)
+                        ashort |= VOLPBIT_ATTR_UNIXPRIV;
+                    if (vol->v_flags & AFPVOL_TM)
+                        ashort |= VOLPBIT_ATTR_TM;
+
+                    if (afp_version >= 32) {
+                        ashort |= VOLPBIT_ATTR_EXT_ATTRS;
+                        if (vol->v_flags & AFPVOL_ACLS)
+	                    ashort |= VOLPBIT_ATTR_ACLS;
+                    }
+                }
             }
             ashort = htons(ashort);
             memcpy(data, &ashort, sizeof( ashort ));
