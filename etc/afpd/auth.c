@@ -1,5 +1,5 @@
 /*
- * $Id: auth.c,v 1.70 2009-11-22 11:52:38 franklahm Exp $
+ * $Id: auth.c,v 1.71 2009-11-30 15:30:47 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -389,11 +389,33 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
 #endif /* TRU64 */
 
-    /* There's probably a better way to do this, but for now, we just
-       play root */
+    if (ngroups > 0) {
+        #define GROUPSTR_BUFSIZE 1024
+        char groupsstr[GROUPSTR_BUFSIZE];
+        char *s = groupsstr;
+        int j = GROUPSTR_BUFSIZE;
 
+        int n = snprintf(groupsstr, GROUPSTR_BUFSIZE, "%u", groups[0]);
+        j -= n;
+        s += n;
+
+        for (int i = 1; i < ngroups; i++) {
+            n = snprintf(s, j, ", %u", groups[i]);
+            if (n == j) {
+                /* Buffer full */
+                LOG(log_debug, logtype_afpd, "login: group string buffer overflow");
+                break;
+            }
+            j -= n;
+            s += n;
+        }
+        LOG(log_debug, logtype_afpd, "login: %u supplementary groups: %s", ngroups, groupsstr);
+    }
+
+    /* There's probably a better way to do this, but for now, we just play root */
 #ifdef ADMIN_GRP
-    if (admin) uuid = 0;
+    if (admin)
+        uuid = 0;
     else
 #endif /* ADMIN_GRP */
         uuid = pwd->pw_uid;
