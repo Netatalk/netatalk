@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.17 2009-11-30 15:51:30 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.18 2009-12-01 13:37:20 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -284,6 +284,8 @@ int main(int argc, char **argv)
         usage();
         exit(EXIT_FAILURE);
     }
+    /* Inhereting perms in ad_mkdir etc requires this */
+    ad_setfuid(0);
 
     while ((c = getopt(argc, argv, ":dsnruvxife")) != -1) {
         switch(c) {
