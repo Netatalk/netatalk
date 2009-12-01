@@ -39,44 +39,14 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/volinfo.h>
+#include <atalk/volume.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/
 
-#define MAC_CHARSET 0
-#define VOL_CHARSET 1
-#define ADOUBLE_VER 2
-#define CNIDBACKEND 3
-#define CNIDDBDHOST 4
-#define CNIDDBDPORT 5
-#define CNID_DBPATH 6
-#define VOLUME_OPTS 7
-#define VOLCASEFOLD 8
+/* Global: eg volume.c needs em */
 
-typedef struct _info_option {
-    const char *name;
-    int type;
-} _info_option;
-
-static const _info_option info_options[] = {
-    {"MAC_CHARSET", MAC_CHARSET},
-    {"VOL_CHARSET", VOL_CHARSET},
-    {"ADOUBLE_VER", ADOUBLE_VER},
-    {"CNIDBACKEND", CNIDBACKEND},
-    {"CNIDDBDHOST", CNIDDBDHOST},
-    {"CNIDDBDPORT", CNIDDBDPORT},
-    {"CNID_DBPATH", CNID_DBPATH},
-    {"VOLUME_OPTS", VOLUME_OPTS},
-    {"VOLCASEFOLD", VOLCASEFOLD},
-    {NULL, 0}
-};
-
-typedef struct _vol_opt_name {
-    const u_int32_t option;
-    const char      *name;
-} _vol_opt_name;
-
-static const _vol_opt_name vol_opt_names[] = {
+const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_A2VOL,      "PRODOS"},      /* prodos volume */
     {AFPVOL_CRLF,       "CRLF"},        /* cr/lf translation */
     {AFPVOL_NOADOUBLE,  "NOADOUBLE"},   /* don't create .AppleDouble by default */
@@ -101,12 +71,40 @@ static const _vol_opt_name vol_opt_names[] = {
     {0, NULL}
 };
 
-static const _vol_opt_name vol_opt_casefold[] = {
+const vol_opt_name_t vol_opt_casefold[] = {
     {AFPVOL_MTOUUPPER,  "MTOULOWER"},
     {AFPVOL_MTOULOWER,  "MTOULOWER"},
     {AFPVOL_UTOMUPPER,  "UTOMUPPER"},
     {AFPVOL_UTOMLOWER,  "UTOMLOWER"},
     {0, NULL}
+};
+
+typedef struct {
+    const char *name;
+    int type;
+} info_option_t;
+
+#define MAC_CHARSET 0
+#define VOL_CHARSET 1
+#define ADOUBLE_VER 2
+#define CNIDBACKEND 3
+#define CNIDDBDHOST 4
+#define CNIDDBDPORT 5
+#define CNID_DBPATH 6
+#define VOLUME_OPTS 7
+#define VOLCASEFOLD 8
+
+static const info_option_t info_options[] = {
+    {"MAC_CHARSET", MAC_CHARSET},
+    {"VOL_CHARSET", VOL_CHARSET},
+    {"ADOUBLE_VER", ADOUBLE_VER},
+    {"CNIDBACKEND", CNIDBACKEND},
+    {"CNIDDBDHOST", CNIDDBDHOST},
+    {"CNIDDBDPORT", CNIDDBDPORT},
+    {"CNID_DBPATH", CNID_DBPATH},
+    {"VOLUME_OPTS", VOLUME_OPTS},
+    {"VOLCASEFOLD", VOLCASEFOLD},
+    {NULL, 0}
 };
 
 static char* find_in_path( char *path, char *subdir, size_t maxlen)
@@ -195,10 +193,10 @@ int vol_load_charsets( struct volinfo *vol)
     return 0;
 }
 
-static int parse_options (char *buf, int *flags, const _vol_opt_name* options)
+static int parse_options (char *buf, int *flags, const vol_opt_name_t *options)
 {
     char *p, *q;
-    const _vol_opt_name *op;
+    const vol_opt_name_t *op;
 
     q = p = buf; 
 
@@ -227,7 +225,7 @@ static int parseline ( char *buf, struct volinfo *vol)
     char *value;
     size_t len;
     int  option=-1;
-    const _info_option  *p  = &info_options[0];
+    const info_option_t  *p  = &info_options[0];
 
     if (NULL == ( value = strchr(buf, ':')) )
 	return 1;
@@ -385,4 +383,119 @@ int loadvolinfo (char *path, struct volinfo *vol)
 
     fclose(fp);
     return 0;
+}
+
+/*
+ * Save the volume options to a file, used by shell utilities. Writing the file
+ * everytime a volume is opened is unnecessary, but it shouldn't hurt much.
+ */
+int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_port)
+{
+    char buf[16348];
+    char item[MAXPATHLEN];
+    int fd;
+    int ret = 0;
+    struct flock lock;
+    const vol_opt_name_t *op = &vol_opt_names[0];
+    const vol_opt_name_t *cf = &vol_opt_casefold[0];
+
+    strlcpy (item, vol->v_path, sizeof(item));
+    strlcat (item, "/.AppleDesktop/", sizeof(item));
+    strlcat (item, VOLINFOFILE, sizeof(item));
+
+    if ((fd = open( item, O_RDWR | O_CREAT , 0666)) <0 ) {
+        LOG(log_debug, logtype_afpd,"Error opening %s: %s", item, strerror(errno));
+        return (-1);
+    }
+
+    /* try to get a lock */
+    lock.l_start  = 0;
+    lock.l_whence = SEEK_SET;
+    lock.l_len    = 0;
+    lock.l_type   = F_WRLCK;
+
+    if (fcntl(fd, F_SETLK, &lock) < 0) {
+        if (errno == EACCES || errno == EAGAIN) {
+            /* ignore, other process already writing the file */
+            return 0;
+        } else {
+            LOG(log_error, logtype_cnid, "savevoloptions: cannot get lock: %s", strerror(errno));
+            return (-1);
+        }
+    }
+
+    /* write volume options */
+    snprintf(buf, sizeof(buf), "MAC_CHARSET:%s\n", vol->v_maccodepage);
+    snprintf(item, sizeof(item), "VOL_CHARSET:%s\n", vol->v_volcodepage);
+    strlcat(buf, item, sizeof(buf));
+
+    switch (vol->v_adouble) {
+        case AD_VERSION1:
+            strlcat(buf, "ADOUBLE_VER:v1\n", sizeof(buf));
+            break;
+        case AD_VERSION2:
+            strlcat(buf, "ADOUBLE_VER:v2\n", sizeof(buf));
+            break;
+        case AD_VERSION2_OSX:
+            strlcat(buf, "ADOUBLE_VER:osx\n", sizeof(buf));
+            break;
+        case AD_VERSION1_SFM:
+            strlcat(buf, "ADOUBLE_VER:sfm\n", sizeof(buf));
+            break;
+    }
+
+    strlcat(buf, "CNIDBACKEND:", sizeof(buf));
+    strlcat(buf, vol->v_cnidscheme, sizeof(buf));
+    strlcat(buf, "\n", sizeof(buf));
+
+    strlcat(buf, "CNIDDBDHOST:", sizeof(buf));
+    strlcat(buf, Cnid_srv, sizeof(buf));
+    strlcat(buf, "\n", sizeof(buf));
+
+    strlcat(buf, "CNIDDBDPORT:", sizeof(buf));
+    strlcat(buf, Cnid_port, sizeof(buf));
+    strlcat(buf, "\n", sizeof(buf));
+
+    strcpy(item, "CNID_DBPATH:");
+    if (vol->v_dbpath)
+        strlcat(item, vol->v_dbpath, sizeof(item));
+    else
+        strlcat(item, vol->v_path, sizeof(item));
+    strlcat(item, "\n", sizeof(item));
+    strlcat(buf, item, sizeof(buf));
+
+    /* volume flags */
+    strcpy(item, "VOLUME_OPTS:");
+    for (;op->name; op++) {
+	if ( (vol->v_flags & op->option) ) {
+            strlcat(item, op->name, sizeof(item));
+            strlcat(item, " ", sizeof(item));
+        }
+    }
+    strlcat(item, "\n", sizeof(item));
+    strlcat(buf, item, sizeof(buf));
+
+    /* casefold flags */
+    strcpy(item, "VOLCASEFOLD:");
+    for (;cf->name; cf++) {
+        if ( (vol->v_casefold & cf->option) ) {
+            strlcat(item, cf->name, sizeof(item));
+            strlcat(item, " ", sizeof(item));
+        }
+    }
+    strlcat(item, "\n", sizeof(item));
+    strlcat(buf, item, sizeof(buf));
+
+    if (strlen(buf) >= sizeof(buf)-1)
+        LOG(log_debug, logtype_afpd,"Error writing .volinfo file: buffer too small, %s", buf);
+
+
+   if (write( fd, buf, strlen(buf)) < 0 || ftruncate(fd, strlen(buf)) < 0 ) {
+       LOG(log_debug, logtype_afpd,"Error writing .volinfo file: %s", strerror(errno));
+   }
+
+   lock.l_type = F_UNLCK;
+   fcntl(fd, F_SETLK, &lock);
+   close (fd);
+   return ret;
 }
