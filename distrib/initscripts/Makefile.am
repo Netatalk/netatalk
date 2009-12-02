@@ -236,11 +236,11 @@ $(sysv_SCRIPTS): rc.atalk.debian
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
-	update-rc.d $(sysv_SCRIPTS) defaults 90 10
+#	update-rc.d $(sysv_SCRIPTS) defaults 90 10
 
 uninstall-startup:
-	rm -f $(sysvdir)/$(sysv_SCRIPTS)
-	update-rc.d netatalk remove
+#	rm -f $(sysvdir)/$(sysv_SCRIPTS)
+#	update-rc.d netatalk remove
 
 endif
 
