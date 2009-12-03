@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.7 2009-11-17 12:33:30 franklahm Exp $
+ * $Id: volume.h,v 1.8 2009-12-03 12:47:37 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -157,8 +157,8 @@ this is going away. */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
 
 /* Extended Attributes vfs indirection  */
-#define AFPVOL_EA_AD             0   /* Store them in adouble files. Default. */
-#define AFPVOL_EA_SYS            1   /* Store them in native EAs */
+#define AFPVOL_EA_AD             1   /* Store them in adouble files. Default. */
+#define AFPVOL_EA_SYS            2   /* Store them in native EAs */
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)

@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.18 2009-12-01 13:37:20 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.19 2009-12-03 12:47:36 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -365,6 +365,12 @@ int main(int argc, char **argv)
     if (vol_load_charsets(&volinfo) == -1) {
         dbd_log( LOGSTD, "Error loading charsets!");
         exit(EXIT_FAILURE);
+    }
+
+    /* Sanity checks to ensure we can touch this volume */
+    if (volinfo.v_vfs_ea != AFPVOL_EA_AD && volinfo.v_vfs_ea != AFPVOL_EA_SYS) {
+        dbd_log( LOGSTD, "Unknown Extended Attributes option: %u", volinfo.v_vfs_ea);
+        exit(EXIT_FAILURE);        
     }
 
     /* Put "/.AppleDB" at end of volpath, get path from volinfo file */

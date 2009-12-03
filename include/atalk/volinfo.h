@@ -1,5 +1,5 @@
 /*
- * $Id: volinfo.h,v 1.9 2009-12-01 16:36:14 franklahm Exp $
+ * $Id: volinfo.h,v 1.10 2009-12-03 12:47:37 franklahm Exp $
  */
 
 #ifndef _ATALK_VOLINFO_H
@@ -30,13 +30,11 @@ struct volinfo {
     charset_t           v_maccharset;
     int                 v_adouble;  /* default adouble format */
     int                 v_ad_options;
+    int                 v_vfs_ea;
     char                *(*ad_path)(const char *, int);
     char                *v_dbd_host;
     int                 v_dbd_port;
 };
-
-extern const vol_opt_name_t vol_opt_names[];
-extern const vol_opt_name_t vol_opt_casefold[];
 
 extern int loadvolinfo(char *path, struct volinfo *vol);
 extern int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_port);

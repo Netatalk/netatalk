@@ -44,9 +44,7 @@
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/
 
-/* Global: eg volume.c needs em */
-
-const vol_opt_name_t vol_opt_names[] = {
+static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_A2VOL,      "PRODOS"},      /* prodos volume */
     {AFPVOL_CRLF,       "CRLF"},        /* cr/lf translation */
     {AFPVOL_NOADOUBLE,  "NOADOUBLE"},   /* don't create .AppleDouble by default */
@@ -71,7 +69,7 @@ const vol_opt_name_t vol_opt_names[] = {
     {0, NULL}
 };
 
-const vol_opt_name_t vol_opt_casefold[] = {
+static const vol_opt_name_t vol_opt_casefold[] = {
     {AFPVOL_MTOUUPPER,  "MTOULOWER"},
     {AFPVOL_MTOULOWER,  "MTOULOWER"},
     {AFPVOL_UTOMUPPER,  "UTOMUPPER"},
@@ -93,6 +91,7 @@ typedef struct {
 #define CNID_DBPATH 6
 #define VOLUME_OPTS 7
 #define VOLCASEFOLD 8
+#define EXTATTRTYPE 9
 
 static const info_option_t info_options[] = {
     {"MAC_CHARSET", MAC_CHARSET},
@@ -104,7 +103,8 @@ static const info_option_t info_options[] = {
     {"CNID_DBPATH", CNID_DBPATH},
     {"VOLUME_OPTS", VOLUME_OPTS},
     {"VOLCASEFOLD", VOLCASEFOLD},
-    {NULL, 0}
+    {"EXTATTRTYPE", EXTATTRTYPE},
+   {NULL, 0}
 };
 
 static char* find_in_path( char *path, char *subdir, size_t maxlen)
@@ -306,6 +306,12 @@ static int parseline ( char *buf, struct volinfo *vol)
       case VOLCASEFOLD:
         parse_options(value, &vol->v_casefold, &vol_opt_casefold[0]);
         break;
+    case EXTATTRTYPE:
+        if (strcasecmp(value, "AFPVOL_EA_AD") == 0)    
+            vol->v_vfs_ea = AFPVOL_EA_AD;
+        else if (strcasecmp(value, "AFPVOL_EA_SYS") == 0)
+            vol->v_vfs_ea = AFPVOL_EA_SYS;
+        break;
       default:
 	fprintf (stderr, "unknown volume information: %s, %s", buf, value);
 	return (-1);
@@ -486,10 +492,18 @@ int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_po
     strlcat(item, "\n", sizeof(item));
     strlcat(buf, item, sizeof(buf));
 
+    /* ExtendedAttrbutes */
+    strcpy(item, "EXTATTRTYPE:");
+    if (vol->v_vfs_ea & AFPVOL_EA_AD)
+        strlcat(item, "AFPVOL_EA_AD", sizeof(item));
+    else if (vol->v_vfs_ea & AFPVOL_EA_SYS)
+        strlcat(item, "AFPVOL_EA_SYS", sizeof(item));
+    else
+        strlcat(item, "AFPVOL_EA_UNKNOWN", sizeof(item));
+    strlcat(buf, item, sizeof(buf));
+
     if (strlen(buf) >= sizeof(buf)-1)
         LOG(log_debug, logtype_afpd,"Error writing .volinfo file: buffer too small, %s", buf);
-
-
    if (write( fd, buf, strlen(buf)) < 0 || ftruncate(fd, strlen(buf)) < 0 ) {
        LOG(log_debug, logtype_afpd,"Error writing .volinfo file: %s", strerror(errno));
    }
