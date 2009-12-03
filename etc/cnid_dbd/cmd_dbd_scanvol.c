@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.11 2009-11-25 14:59:15 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.12 2009-12-03 13:33:44 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -387,7 +387,7 @@ static int read_addir(void)
         dbd_log(LOGSTD, "Couldn't chdir back to '%s' from AppleDouble dir: %s",
                 cwdbuf, strerror(errno));
         /* This really is EOT! */
-        exit(1);
+        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
     }
 
     closedir(dp);
@@ -609,7 +609,7 @@ static int dbd_readdir(int volroot, cnid_t did)
                 if (rply.result != CNID_DBD_RES_OK) {
                     dbd_log( LOGDEBUG, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
                              cnid, cwdbuf, ep->d_name);
-                    exit(EXIT_FAILURE);
+                    longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
                 }
             }
         }
