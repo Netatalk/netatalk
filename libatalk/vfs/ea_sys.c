@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.3 2009-11-20 16:26:23 franklahm Exp $
+  $Id: ea_sys.c,v 1.4 2009-12-04 10:26:10 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,10 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 
+#ifndef ENOATTR
+#define ENOATTR ENODATA
+#endif
+
 
 /**********************************************************************************
  * EA VFS funcs for storing EAs in nativa filesystem EAs
@@ -90,15 +94,17 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     }
     
     if (ret == -1) {
+        memset(rbuf, 0, 4);
+        *rbuflen += 4;
         switch(errno) {
         case ELOOP:
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
-
-            memset(rbuf, 0, 4);
-            *rbuflen += 4;
-
             return AFP_OK;
+
+        case ENOATTR:
+            return AFPERR_MISC;
+
         default:
             LOG(log_error, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
             return AFPERR_MISC;
@@ -162,18 +168,22 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
         ret = sys_getxattr(uname, attruname,  rbuf +4, maxreply);
     }
     
-    if (ret == -1) switch(errno) {
-    case ELOOP:
-        /* its a symlink and client requested O_NOFOLLOW  */
-        LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
-
+    if (ret == -1) {
         memset(rbuf, 0, 4);
         *rbuflen += 4;
+        switch(errno) {
+        case ELOOP:
+            /* its a symlink and client requested O_NOFOLLOW  */
+            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
+            return AFP_OK;
 
-        return AFP_OK;
-    default:
-        LOG(log_error, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
-        return AFPERR_MISC;
+        case ENOATTR:
+            return AFPERR_MISC;
+
+        default:
+            LOG(log_error, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
+            return AFPERR_MISC;
+        }
     }
 
     /* remember where we must store length of attribute data in rbuf */

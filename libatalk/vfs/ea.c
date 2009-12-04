@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.16 2009-11-18 10:52:00 franklahm Exp $
+  $Id: ea.c,v 1.17 2009-12-04 10:26:10 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -915,8 +915,12 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     LOG(log_debug, logtype_afpd, "get_easize: file: %s", uname);
 
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
-        LOG(log_error, logtype_afpd, "get_easize: error calling ea_open for file: %s", uname);
-        return AFPERR_MISC;
+        if (errno != ENOENT)
+            LOG(log_error, logtype_afpd, "get_easize: error calling ea_open for file: %s", uname);
+
+        memset(rbuf, 0, 4);
+        *rbuflen += 4;
+        return ret;
     }
 
     while (count < ea.ea_count) {
@@ -974,8 +978,11 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     LOG(log_debug, logtype_afpd, "get_eacontent('%s/%s')", uname, attruname);
 
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
-        LOG(log_error, logtype_afpd, "get_eacontent('%s'): ea_open error", uname);
-        return AFPERR_MISC;
+        if (errno != ENOENT)
+            LOG(log_error, logtype_afpd, "get_eacontent('%s'): ea_open error", uname);
+        memset(rbuf, 0, 4);
+        *rbuflen += 4;
+        return ret;
     }
 
     while (count < ea.ea_count) {

@@ -25,7 +25,7 @@
    Copyright (C) 2001 Andreas Gruenbacher.
       
    Samba 3.0.28, modified for netatalk.
-   $Id: sys_ea.c,v 1.5 2009-11-23 19:04:15 franklahm Exp $
+   $Id: sys_ea.c,v 1.6 2009-12-04 10:26:10 franklahm Exp $
    
 */
 
@@ -61,6 +61,10 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/ea.h>
+
+#ifndef ENOATTR
+#define ENOATTR ENODATA
+#endif
 
 /******** Solaris EA helper function prototypes ********/
 #ifdef HAVE_ATTROPEN
@@ -755,6 +759,7 @@ static int solaris_attropen(const char *path, const char *attrpath, int oflag, m
 	int filedes = attropen(path, attrpath, oflag, mode);
 	if (filedes == -1) {
 		LOG(log_maxdebug, logtype_default, "attropen FAILED: path: %s, name: %s, errno: %s\n",path,attrpath,strerror(errno));
+        errno = ENOATTR;
 	}
 	return filedes;
 }
