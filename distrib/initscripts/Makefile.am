@@ -181,17 +181,17 @@ endif
 if USE_SOLARIS
 
 sysvdir = $(DESTDIR)/etc/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.sysv
 	cp -f rc.atalk.sysv $@
 	chmod a+x $@
 
 install-data-hook:
-	rm -f $(DESTDIR)/etc/rc2.d/S90atalk
+	rm -f $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
 	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS)
 	rm -f $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
-	-ln -s ../init.d/atalk $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
+	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
 
 uninstall-startup:
 	rm -f $(sysvdir)/$(sysv_SCRIPTS) \
