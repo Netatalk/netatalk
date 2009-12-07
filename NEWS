@@ -3,11 +3,10 @@ Changes in 2.1-beta1
 
 * NEW: afpd: AFP 3.2 support
 * NEW: afpd: Extended Attributes support using native attributes or
-             AppleDouble files
+             using files inside .AppleDouble directories.
 * NEW: afpd: ACL support with ZFS
-* NEW: afpd: IPv6 support
-* NEW: cnd_metad: IPv6 support
 * NEW: cnid_metad: options -l and -f to configure logging
+* NEW: IPv6 support
 * NEW: AppleDouble compatible UNIX files utility suite `ad ...`.
        With 2.1 only `ad ls`.
 * NEW: CNID database maintanance utility dbd
@@ -22,8 +21,9 @@ Changes in 2.1-beta1
        including only basic Webmin modules plus our netatalk.wbm.
 * NEW: fallback to a temporary in memory tdb CNID database if the volume
        database can't be open.
-* UPD: atalkd and papd are now disabled by default.
-       AppleTalk is legacy.
+* NEW: support for Unicode characters in the range above U+010000 using
+       internal surrogate pairs
+* UPD: atalkd and papd are now disabled by default. AppleTalk is legacy.
 * UPD: slp advertisement is now disabled by default. server option -slp
        SRVLOC is legacy.
 * UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
@@ -31,8 +31,11 @@ Changes in 2.1-beta1
 * FIX: rewritten logger
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
+* FIX: initscripts installation now correctly uses autoconf paths,
+       ie they're installed to --sysconfdir.
+* FIX: UTF-8 volume name length
 * REM: cnid_maint: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
- *REM: apple_cleanup: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
+ *REM: cleanappledouble.pl: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
 
 Changes in 2.0.5
 ================
@@ -44,8 +47,6 @@ Changes in 2.0.5
 * FIX: afpd: vetoed files/dirs where still accessible
 * FIX: afpd: cnid_resolve: don't return '..' as a valid name.
 * FIX: uniconv: -d option wasn't working
-* FIX: initscripts installation now correctly uses autoconf paths,
-       ie they're installed to --sysconfdir.
 
 Changes in 2.0.4
 ================
