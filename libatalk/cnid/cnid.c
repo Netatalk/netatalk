@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.11 2009-11-28 13:09:26 didg Exp $
+ * $Id: cnid.c,v 1.12 2009-12-08 22:33:33 didg Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -182,6 +182,9 @@ static void unblock_signal(u_int32_t flags)
 */
 static cnid_t valide(cnid_t id)
 {
+  if (id == CNID_INVALID)
+      return id;
+      
   if (id < CNID_START) {
     static int err = 0;
     if (!err) {
