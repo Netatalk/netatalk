@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.14 2009-11-30 15:27:48 didg Exp $
+ * $Id: dbd_lookup.c,v 1.15 2009-12-08 10:26:12 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -61,7 +61,9 @@ Result in dbd_lookup:
 - didname
 
 Possible solution:
-strcmp names, if they match keep CNID.
+strcmp names, if they match keep CNID. Unfortunately this also can't be
+distinguished from a new file with a reused inode. So me must assign
+a new CNID.
 
 3) Restore from backup ie change of inode number -- or emacs
 ------------------------------------------------------------
@@ -240,7 +242,6 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     if ( ! didname) {
         LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): CNID resolve problem: server side rename oder reused inode",
             ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
-        /* Case 2) ? */
         if (rqst->cnid == id_devino) {
             LOG(log_debug, logtype_cnid, "dbd_lookup: server side mv (with resource fork)");
             update = 1;
