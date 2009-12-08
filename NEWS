@@ -34,6 +34,11 @@ Changes in 2.1-beta1
 * FIX: initscripts installation now correctly uses autoconf paths,
        ie they're installed to --sysconfdir.
 * FIX: UTF-8 volume name length
+* FIX: atalkd: workaround for broken Linux 2.6 AT kernel module:
+       Linux 2.6 sends broadcast queries to the first available socket
+       which is in our case the last configured one. atalkd now tries to
+       find the right one.
+       Note: now a misconfigured or plugged router can broadcast a wrong route !
 * REM: cnid_maint: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
  *REM: cleanappledouble.pl: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
 
