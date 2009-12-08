@@ -1,5 +1,5 @@
 /*
- * $Id: rtmp.c,v 1.16 2009-10-14 02:24:05 didg Exp $
+ * $Id: rtmp.c,v 1.17 2009-12-08 03:21:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -400,6 +400,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
     struct rtmp_tuple	rt, xrt;
     struct gate		*gate;
     struct interface	*iface;
+    struct interface 	*iface2;
     struct rtmptab	*rtmp;
     char		*end, packet[ ATP_BUFSIZ ];
     int                 cc;
@@ -413,6 +414,21 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
 
     iface = ap->ap_iface;
 
+    /* linux 2.6 sends broadcast queries to the first available socket 
+       (in our case the last configured) 
+       try to find the right one.
+       Note: now a misconfigured or plugged router can broadcast
+       a wrong route
+    */
+    for ( iface2 = interfaces; iface2; iface2 = iface2->i_next ) {
+        if ( iface2->i_rt && from->sat_addr.s_net >= iface2->i_rt->rt_firstnet && 
+                from->sat_addr.s_net <= iface2->i_rt->rt_lastnet) 
+        {
+              iface = iface2;
+        }
+    }
+    /* end of linux 2.6 workaround */
+    
     /* ignore our own packets */
     if ( from->sat_addr.s_net == iface->i_addr.sat_addr.s_net &&
 	    from->sat_addr.s_node == iface->i_addr.sat_addr.s_node  ) {
