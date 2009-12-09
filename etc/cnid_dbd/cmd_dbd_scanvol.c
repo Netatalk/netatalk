@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.12 2009-12-03 13:33:44 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.13 2009-12-09 15:25:28 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -435,6 +435,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     memset(&rqst, 0, sizeof(struct cnid_dbd_rqst));
     memset(&rply, 0, sizeof(struct cnid_dbd_rply));
     rqst.did = did;
+    rqst.cnid = ad_cnid;
     if ( ! (volinfo->v_flags & AFPVOL_NODEV))
         rqst.dev = st->st_dev;
     rqst.ino = st->st_ino;

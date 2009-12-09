@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.15 2009-12-08 10:26:12 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.16 2009-12-09 15:25:28 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -240,8 +240,8 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     }
 
     if ( ! didname) {
-        LOG(log_debug, logtype_cnid, "dbd_lookup(DID:%u/'%s',0x%llx/0x%llx): CNID resolve problem: server side rename oder reused inode",
-            ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+        LOG(log_debug, logtype_cnid, "dbd_lookup(CNID hint: %u, DID:%u, \"%s\", 0x%llx/0x%llx): CNID resolve problem: server side rename oder reused inode",
+            ntohl(rqst->cnid), ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
         if (rqst->cnid == id_devino) {
             LOG(log_debug, logtype_cnid, "dbd_lookup: server side mv (with resource fork)");
             update = 1;
