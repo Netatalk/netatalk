@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.16 2009-12-09 15:25:28 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.17 2009-12-09 15:37:32 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -8,8 +8,10 @@
 
 /* 
 CNID salvation spec:
-general rule: better safe then sorry, so we always delete CNIDs and assing
-new ones in case of a lookup mismatch.
+general rule: better safe then sorry, so we always delete CNIDs and assign
+new ones in case of a lookup mismatch. afpd also sends us the CNID found
+in the adouble file (for AFPVOL_CACHE volumes). In certain cases we can
+use this hint to determince the right CNID.
 
 
 The lines...
@@ -46,6 +48,8 @@ Result in dbd_lookup (-: not found, +: found):
 
 Possible solution:
 None. Delete old data, file gets new CNID in both cases (rename and inode).
+If we got a hint and hint matches the CNID from devino we keep it and update
+the record.
 
 2) UNIX mv from one folder to another
 ----------------------------------------
@@ -64,6 +68,8 @@ Possible solution:
 strcmp names, if they match keep CNID. Unfortunately this also can't be
 distinguished from a new file with a reused inode. So me must assign
 a new CNID.
+If we got a hint and hint matches the CNID from devino we keep it and update
+the record.
 
 3) Restore from backup ie change of inode number -- or emacs
 ------------------------------------------------------------
