@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.17 2009-12-04 10:26:10 franklahm Exp $
+  $Id: ea.c,v 1.18 2009-12-10 17:40:25 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -276,48 +276,6 @@ static int pack_header(struct ea * restrict ea)
 }
 
 /*
- * Function: ea_path
- *
- * Purpose: return name of ea header filename
- *
- * Arguments:
- *
- *    ea           (r) ea handle
- *    eaname       (r) name of EA or NULL
- *
- * Returns: pointer to name in static buffer, NULL on error
- *
- * Effects:
- *
- * Calls ad_open, copies buffer, appends "::EA" and if supplied append eanme
- * Files: "file" -> "file/.AppleDouble/file::EA"
- * Dirs: "dir" -> "dir/.AppleDouble/.Parent::EA"
- * "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
- */
-static char * ea_path(const struct ea * restrict ea,
-                      const char * restrict eaname)
-{
-    char *adname;
-    static char pathbuf[MAXPATHLEN + 1];
-
-    /* get name of a adouble file from uname */
-    adname = ea->vol->ad_path(ea->filename, (ea->ea_flags & EA_DIR) ? ADFLAGS_DIR : 0);
-    /* copy it so we can work with it */
-    strlcpy(pathbuf, adname, MAXPATHLEN + 1);
-    /* append "::EA" */
-    strlcat(pathbuf, "::EA", MAXPATHLEN + 1);
-
-    if (eaname) {
-        strlcat(pathbuf, "::", MAXPATHLEN + 1);
-        if ((eaname = mtoupath(ea->vol, eaname)) == NULL)
-            return NULL;
-        strlcat(pathbuf, eaname, MAXPATHLEN + 1);
-    }
-
-    return pathbuf;
-}
-
-/*
  * Function: ea_addentry
  *
  * Purpose: add one EA into ea->ea_entries[]
@@ -396,52 +354,6 @@ error:
     }
     ea->ea_count = 0;
     return -1;
-}
-
-/*
- * Function: ea_delentry
- *
- * Purpose: delete one EA from ea->ea_entries[]
- *
- * Arguments:
- *
- *    ea            (rw) pointer to struct ea
- *    attruname     (r) EA name
- *
- * Returns: new number of EA entries, -1 on error
- *
- * Effects:
- *
- * Remove entry from  ea->ea_entries[]. Decrement ea->ea_count.
- * Marks it as unused just by freeing name and setting it to NULL.
- * ea_close and pack_buffer must honor this.
- */
-static int ea_delentry(struct ea * restrict ea,
-                       const char * restrict attruname)
-{
-    int ret = 0;
-    unsigned int count = 0;
-
-    if (ea->ea_count == 0) {
-        LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion");
-        return -1;
-    }
-
-    while (count < ea->ea_count) {
-        /* search matching EA */
-        if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
-            free((*ea->ea_entries)[count].ea_name);
-            (*ea->ea_entries)[count].ea_name = NULL;
-
-            LOG(log_debug, logtype_afpd, "ea_delentry('%s'): deleted no %u/%u",
-                attruname, count + 1, ea->ea_count);
-
-            break;
-        }
-        count++;
-    }
-
-    return ret;
 }
 
 /*
@@ -534,7 +446,7 @@ static int write_ea(const struct ea * restrict ea,
     struct stat st;
     char *eaname;
 
-    if ((eaname = ea_path(ea, attruname)) == NULL) {
+    if ((eaname = ea_path(ea, attruname, 1)) == NULL) {
         LOG(log_error, logtype_afpd, "write_ea('%s'): ea_path error", attruname);
         return AFPERR_MISC;
     }
@@ -576,6 +488,51 @@ exit:
 }
 
 /*
+ * Function: ea_delentry
+ *
+ * Purpose: delete one EA from ea->ea_entries[]
+ *
+ * Arguments:
+ *
+ *    ea            (rw) pointer to struct ea
+ *    attruname     (r) EA name
+ *
+ * Returns: new number of EA entries, -1 on error
+ *
+ * Effects:
+ *
+ * Remove entry from  ea->ea_entries[]. Decrement ea->ea_count.
+ * Marks it as unused just by freeing name and setting it to NULL.
+ * ea_close and pack_buffer must honor this.
+ */
+static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
+{
+    int ret = 0;
+    unsigned int count = 0;
+
+    if (ea->ea_count == 0) {
+        LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion");
+        return -1;
+    }
+
+    while (count < ea->ea_count) {
+        /* search matching EA */
+        if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
+            free((*ea->ea_entries)[count].ea_name);
+            (*ea->ea_entries)[count].ea_name = NULL;
+
+            LOG(log_debug, logtype_afpd, "ea_delentry('%s'): deleted no %u/%u",
+                attruname, count + 1, ea->ea_count);
+
+            break;
+        }
+        count++;
+    }
+
+    return ret;
+}
+
+/*
  * Function: delete_ea_file
  *
  * Purpose: delete EA file from disk
@@ -587,14 +544,13 @@ exit:
  *
  * Returns: 0 on success, -1 on error
  */
-static int delete_ea_file(const struct ea * restrict ea,
-                          const char *eaname)
+static int delete_ea_file(const struct ea * restrict ea, const char *eaname)
 {
     int ret = 0;
     char *eafile;
     struct stat st;
 
-    if ((eafile = ea_path(ea, eaname)) == NULL) {
+    if ((eafile = ea_path(ea, eaname, 1)) == NULL) {
         LOG(log_error, logtype_afpd, "delete_ea_file('%s'): ea_path error", eaname);
         return -1;
     }
@@ -612,6 +568,53 @@ static int delete_ea_file(const struct ea * restrict ea,
     return ret;
 }
 
+/*************************************************************************************
+ * ea_path, ea_open and ea_close are only global so that dbd can call them
+ *************************************************************************************/
+
+/*
+ * Function: ea_path
+ *
+ * Purpose: return name of ea header filename
+ *
+ * Arguments:
+ *
+ *    ea           (r) ea handle
+ *    eaname       (r) name of EA or NULL
+ *    macname      (r) if != 0 call mtoupath on eaname
+ *
+ * Returns: pointer to name in static buffer, NULL on error
+ *
+ * Effects:
+ *
+ * Calls ad_open, copies buffer, appends "::EA" and if supplied append eanme
+ * Files: "file" -> "file/.AppleDouble/file::EA"
+ * Dirs: "dir" -> "dir/.AppleDouble/.Parent::EA"
+ * "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
+ */
+char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int macname)
+{
+    char *adname;
+    static char pathbuf[MAXPATHLEN + 1];
+
+    /* get name of a adouble file from uname */
+    adname = ea->vol->ad_path(ea->filename, (ea->ea_flags & EA_DIR) ? ADFLAGS_DIR : 0);
+    /* copy it so we can work with it */
+    strlcpy(pathbuf, adname, MAXPATHLEN + 1);
+    /* append "::EA" */
+    strlcat(pathbuf, "::EA", MAXPATHLEN + 1);
+
+    if (eaname) {
+        strlcat(pathbuf, "::", MAXPATHLEN + 1);
+        if (macname)
+            if ((eaname = mtoupath(ea->vol, eaname)) == NULL)
+                return NULL;
+        strlcat(pathbuf, eaname, MAXPATHLEN + 1);
+    }
+
+    return pathbuf;
+}
+
 /*
  * Function: ea_open
  *
@@ -627,7 +630,9 @@ static int delete_ea_file(const struct ea * restrict ea,
  *                    Eiterh EA_RDONLY or EA_RDWR MUST be requested
  *    ea          (w) pointer to a struct ea that we fill
  *
- * Returns: 0 on success, -1 on error
+ * Returns: 0 on success
+ *         -1 on misc error with errno = EFAULT
+ *         -2 if no EA header exists with errno = ENOENT
  *
  * Effects:
  *
@@ -636,10 +641,10 @@ static int delete_ea_file(const struct ea * restrict ea,
  * file is either read or write locked depending on the open flags.
  * When you're done with struct ea you must call ea_close on it.
  */
-static int ea_open(const struct vol * restrict vol,
-                   const char * restrict uname,
-                   eaflags_t eaflags,
-                   struct ea * restrict ea)
+int ea_open(const struct vol * restrict vol,
+            const char * restrict uname,
+            eaflags_t eaflags,
+            struct ea * restrict ea)
 {
     int ret = 0;
     char *eaname;
@@ -665,7 +670,7 @@ static int ea_open(const struct vol * restrict vol,
         return -1;
     }
 
-    eaname = ea_path(ea, NULL);
+    eaname = ea_path(ea, NULL, 0);
     LOG(log_maxdebug, logtype_afpd, "ea_open: ea_path: %s", eaname);
 
     /* Check if it exists, if not create it if EA_CREATE is in eaflags */
@@ -676,7 +681,7 @@ static int ea_open(const struct vol * restrict vol,
 
             if ( ! (eaflags & EA_CREATE)) {
                 /* creation was not requested, so return with error */
-                ret = -1;
+                ret = -2;
                 goto exit;
             }
 
@@ -708,6 +713,11 @@ static int ea_open(const struct vol * restrict vol,
     /* header file exists, so read and parse it */
 
     /* malloc buffer where we read disk file into */
+    if (st.st_size < EA_HEADER_SIZE) {
+        LOG(log_error, logtype_afpd, "ea_open('%s'): bogus EA header file", eaname);
+        ret = -1;
+        goto exit;
+    }
     ea->ea_size = st.st_size;
     ea->ea_data = malloc(st.st_size);
     if (! ea->ea_data) {
@@ -754,9 +764,14 @@ static int ea_open(const struct vol * restrict vol,
     }
 
 exit:
-    if (ret == 0) {
+    switch (ret) {
+    case 0:
         ea->ea_inited = EA_INITED;
-    } else {
+        break;
+    case -1:
+        errno = EFAULT; /* force some errno distinguishable from ENOENT */
+        /* fall through */
+    case -2:
         if (ea->ea_data) {
             free(ea->ea_data);
             ea->ea_data = NULL;
@@ -765,6 +780,7 @@ exit:
             close(ea->ea_fd);
             ea->ea_fd = -1;
         }
+        break;
     }
 
     return ret;
@@ -786,7 +802,7 @@ exit:
  * Flushes and then closes and frees all resouces held by ea handle.
  * Pack data in ea into ea_data, then write ea_data to disk
  */
-static int ea_close(struct ea * restrict ea)
+int ea_close(struct ea * restrict ea)
 {
     int ret = 0; 
     unsigned int count = 0;
@@ -808,7 +824,7 @@ static int ea_close(struct ea * restrict ea)
         } else {
             if (ea->ea_count == 0) {
                 /* Check if EA header exists and remove it */
-                eaname = ea_path(ea, NULL);
+                eaname = ea_path(ea, NULL, 0);
                 if ((stat(eaname, &st)) == 0) {
                     if ((unlink(eaname)) != 0) {
                         LOG(log_error, logtype_afpd, "ea_close('%s'): unlink: %s",
@@ -987,7 +1003,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 
     while (count < ea.ea_count) {
         if (strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
-            if ( (eafile = ea_path(&ea, attruname)) == NULL) {
+            if ( (eafile = ea_path(&ea, attruname, 1)) == NULL) {
                 ret = AFPERR_MISC;
                 break;
             }
@@ -1312,12 +1328,12 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         easize = (*srcea.ea_entries)[count].ea_size;
 
         /* Build src and dst paths for rename() */
-        if ((eapath = ea_path(&srcea, eaname)) == NULL) {
+        if ((eapath = ea_path(&srcea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
         strcpy(srceapath, eapath);
-        if ((eapath = ea_path(&dstea, eaname)) == NULL) {
+        if ((eapath = ea_path(&dstea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
@@ -1409,12 +1425,12 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
         easize = (*srcea.ea_entries)[count].ea_size;
 
         /* Build src and dst paths for copy_file() */
-        if ((eapath = ea_path(&srcea, eaname)) == NULL) {
+        if ((eapath = ea_path(&srcea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
         strcpy(srceapath, eapath);
-        if ((eapath = ea_path(&dstea, eaname)) == NULL) {
+        if ((eapath = ea_path(&dstea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
@@ -1467,7 +1483,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
         }
     }
 
-    if ((chown(ea_path(&ea, NULL), uid, gid)) != 0) {
+    if ((chown(ea_path(&ea, NULL, 0), uid, gid)) != 0) {
         switch (errno) {
         case EPERM:
         case EACCES:
@@ -1480,7 +1496,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
     }
 
     while (count < ea.ea_count) {
-        if ((eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name)) == NULL) {
+        if ((eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
@@ -1528,8 +1544,8 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
     }
 
     /* Set mode on EA header file */
-    if ((setfilmode(ea_path(&ea, NULL), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL), strerror(errno));
+    if ((setfilmode(ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL, 0), strerror(errno));
         switch (errno) {
         case EPERM:
         case EACCES:
@@ -1543,7 +1559,7 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
 
     /* Set mode on EA files */
     while (count < ea.ea_count) {
-        if ((eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name)) == NULL) {
+        if ((eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
@@ -1604,8 +1620,8 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     }
 
     /* Set mode on EA header */
-    if ((setfilmode(ea_path(&ea, NULL), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", ea_path(&ea, NULL), strerror(errno));
+    if ((setfilmode(ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL, vol->v_umask)) != 0) {
+        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", ea_path(&ea, NULL, 0), strerror(errno));
         switch (errno) {
         case EPERM:
         case EACCES:
@@ -1630,7 +1646,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             LOG(log_warning, logtype_afpd, "ea_chmod_dir('%s'): contains a slash", eaname);
             eaname = eaname_safe;
         }
-        if ((eaname = ea_path(&ea, eaname)) == NULL) {
+        if ((eaname = ea_path(&ea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }

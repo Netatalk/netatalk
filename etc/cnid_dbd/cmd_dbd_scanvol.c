@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.13 2009-12-09 15:25:28 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.14 2009-12-10 17:40:25 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -27,10 +27,15 @@
 #include <string.h>
 #include <errno.h>
 #include <setjmp.h>
+
 #include <atalk/adouble.h>
 #include <atalk/unicode.h>
 #include <atalk/volinfo.h>
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/volume.h>
+#include <atalk/ea.h>
+#include <atalk/util.h>
+
 #include "cmd_dbd.h"
 #include "dbif.h"
 #include "db_param.h"
@@ -57,6 +62,8 @@ static char           *netatalk_dirs[] = {
 static struct cnid_dbd_rqst rqst;
 static struct cnid_dbd_rply rply;
 static jmp_buf jmp;
+static struct vol volume; /* fake it for ea_open */
+static char pname[MAXPATHLEN] = "../";
 
 /*
   Taken form afpd/desktop.c
@@ -245,6 +252,104 @@ static int check_adfile(const char *fname, const struct stat *st)
     return 0;
 }
 
+/* 
+   Remove all files with file::EA* from adouble dir
+*/
+static void remove_eafiles(const char *name, struct ea *ea)
+{
+    DIR *dp = NULL;
+    struct dirent *ep;
+    char eaname[MAXPATHLEN];
+
+    strlcpy(eaname, name, sizeof(eaname));
+    if (strlcat(eaname, "::EA", sizeof(eaname)) >= sizeof(eaname)) {
+        dbd_log(LOGSTD, "name too long: '%s/%s/%s'", cwdbuf, ADv2_DIRNAME, name);
+        return;
+    }
+
+    if ((chdir(ADv2_DIRNAME)) != 0) {
+        dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
+                cwdbuf, ADv2_DIRNAME, strerror(errno));
+        return;
+    }
+
+    if ((dp = opendir(".")) == NULL) {
+        dbd_log(LOGSTD, "Couldn't open the directory '%s/%s': %s",
+                cwdbuf, ADv2_DIRNAME, strerror(errno));
+        return;
+    }
+
+    while ((ep = readdir(dp))) {
+        if (strstr(ep->d_name, eaname) != NULL) {
+            dbd_log(LOGSTD, "Removing EA file: '%s/%s/%s'",
+                    cwdbuf, ADv2_DIRNAME, ep->d_name);
+            if ((unlink(ep->d_name)) != 0) {
+                dbd_log(LOGSTD, "Error unlinking EA file '%s/%s/%s': %s",
+                        cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
+            }
+        } /* if */
+    } /* while */
+
+    if (dp)
+        closedir(dp);
+
+}
+
+/*
+  Check Extended Attributes files
+*/
+static int check_eafiles(const char *fname)
+{
+    unsigned int  count = 0;
+    int ret = 0, remove;
+    struct ea ea;
+    struct stat st;
+    char *eaname;
+
+    if ((ret = ea_open(&volume, fname, EA_RDWR, &ea)) != 0) {
+        if (errno == ENOENT)
+            return 0;
+        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files",
+                cwdbuf, fname);
+        if ( ! (dbd_flags & DBD_FLAGS_SCAN))
+            remove_eafiles(fname, &ea);
+        return -1;
+    }
+
+    /* Check all EAs */
+    while (count < ea.ea_count) {        
+        dbd_log(LOGDEBUG, "EA: %s", (*ea.ea_entries)[count].ea_name);
+        remove = 0;
+
+        eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name, 0);
+
+        if (stat(eaname, &st) != 0) {
+            if (errno == ENOENT)
+                dbd_log(LOGSTD, "Missing EA: %s/%s", cwdbuf, eaname);
+            else
+                dbd_log(LOGSTD, "Bogus EA: %s/%s", cwdbuf, eaname);
+            remove = 1;
+        } else if (st.st_size != (*ea.ea_entries)[count].ea_size) {
+            dbd_log(LOGSTD, "Bogus EA: %s/%s, removing it...", cwdbuf, eaname);
+            remove = 1;
+            if ((unlink(eaname)) != 0)
+                dbd_log(LOGSTD, "Error removing EA file '%s/%s': %s",
+                        cwdbuf, eaname, strerror(errno));
+        }
+
+        if (remove) {
+            /* Be CAREFUL here! This should do what ea_delentry does. ea_close relies on it !*/
+            free((*ea.ea_entries)[count].ea_name);
+            (*ea.ea_entries)[count].ea_name = NULL;
+        }
+
+        count++;
+    } /* while */
+
+    ea_close(&ea);
+    return ret;
+}
+
 /*
   Check for .AppleDouble folder and .Parent, create if missing
 */
@@ -253,8 +358,8 @@ static int check_addir(int volroot)
     int addir_ok, adpar_ok;
     struct stat st;
     struct adouble ad;
-    char *mname;
-    
+    char *mname = NULL;
+
     /* Check for ad-dir */
     if ( (addir_ok = access(ADv2_DIRNAME, F_OK)) != 0) {
         if (errno != ENOENT) {
@@ -295,7 +400,7 @@ static int check_addir(int volroot)
         }
 
         /* Get basename of cwd from cwdbuf */
-        utompath(strrchr(cwdbuf, '/') + 1);
+        mname = utompath(strrchr(cwdbuf, '/') + 1);
 
         /* Update name in ad file */
         ad_setname(&ad, mname);
@@ -314,7 +419,67 @@ static int check_addir(int volroot)
     return 0;
 }
 
-/* 
+/*
+  Check if file cotains "::EA" and if it does check if its correspondig data fork exists.
+  Returns:
+  0 = name is not an EA file
+  1 = name is an EA file and no problem was found
+  -1 = name is an EA file and data fork is gone
+ */
+static int check_eafile_in_adouble(const char *name)
+{
+    int ret = 0;
+    char *namep, *namedup = NULL;
+
+    /* Check if this is an AFPVOL_EA_AD vol */
+    if (volinfo->v_vfs_ea == AFPVOL_EA_AD) {
+        /* Does the filename contain "::EA" ? */
+        namedup = strdup(name);
+        if ((namep = strstr(namedup, "::EA")) == NULL) {
+            ret = 0;
+            goto ea_check_done;
+        } else {
+            /* File contains "::EA" so it's an EA file. Check for data file  */
+
+            /* Get string before "::EA" from EA filename */
+            namep[0] = 0;
+            strlcpy(pname + 3, namedup, sizeof(pname)); /* Prepends "../" */
+
+            if ((access( pname, F_OK)) == 0) {
+                ret = 1;
+                goto ea_check_done;
+            } else {
+                ret = -1;
+                if (errno != ENOENT) {
+                    dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
+                            cwdbuf, name, strerror(errno));
+                    goto ea_check_done;
+                }
+
+                /* Orphaned EA file*/
+                dbd_log(LOGSTD, "Orphaned Extended Attribute file '%s/%s/%s'",
+                        cwdbuf, ADv2_DIRNAME, name);
+
+                if (dbd_flags & DBD_FLAGS_SCAN)
+                    /* Scan only requested, dont change anything */
+                    goto ea_check_done;
+
+                if ((unlink(name)) != 0) {
+                    dbd_log(LOGSTD, "Error unlinking orphaned Extended Attribute file '%s/%s/%s'",
+                            cwdbuf, ADv2_DIRNAME, name);
+                }
+            } /* if (access) */
+        } /* if strstr */
+    } /* if AFPVOL_EA_AD */
+
+ea_check_done:
+    if (namedup)
+        free(namedup);
+
+    return ret;
+}
+
+/*
   Check files and dirs inside .AppleDouble folder:
   - remove orphaned files
   - bail on dirs
@@ -324,7 +489,6 @@ static int read_addir(void)
     DIR *dp;
     struct dirent *ep;
     struct stat st;
-    static char fname[MAXPATHLEN] = "../";
 
     if ((chdir(ADv2_DIRNAME)) != 0) {
         dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
@@ -359,12 +523,16 @@ static int read_addir(void)
             continue;
         }
 
+        /* Check if for orphaned and corrupt Extended Attributes file */
+        if (check_eafile_in_adouble(ep->d_name) != 0)
+            continue;
+
         /* Check for data file */
-        strcpy(fname+3, ep->d_name);
-        if ((access( fname, F_OK)) != 0) {
+        strcpy(pname + 3, ep->d_name);
+        if ((access( pname, F_OK)) != 0) {
             if (errno != ENOENT) {
                 dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
-                        cwdbuf, ep->d_name, strerror(errno));
+                        cwdbuf, pname, strerror(errno));
                 continue;
             }
             /* Orphaned ad-file*/
@@ -395,9 +563,9 @@ static int read_addir(void)
     return 0;
 }
 
-/* 
-   Check CNID for a file/dir, both from db and from ad-file.
-   For detailed specs see intro.
+/*
+  Check CNID for a file/dir, both from db and from ad-file.
+  For detailed specs see intro.
 */
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok, int adflags)
 {
@@ -421,7 +589,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             ad_flush(&ad);
         }
         else
-            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);            
+            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);
 
         if (ad_cnid == 0)
             dbd_log( LOGSTD, "Incorrect CNID data in .AppleDouble data for '%s/%s' (bad stamp?)", cwdbuf, name);
@@ -499,7 +667,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             dbd_log( LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
         }
     }
-    
+
     if ((ad_cnid == 0) && db_cnid) {
         /* in db but zeroID in ad-file, write it to ad-file if AFPVOL_CACHE */
         if ((volinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
@@ -615,6 +783,10 @@ static int dbd_readdir(int volroot, cnid_t did)
             }
         }
 
+        /* Check EA files */
+        if (volinfo->v_vfs_ea == AFPVOL_EA_AD)
+            check_eafiles(ep->d_name);
+
         /**************************************************************************
           Recursion
         **************************************************************************/
@@ -662,6 +834,11 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     volinfo = vi;
     dbd_flags = flags;
 
+    /* Init a fake struct vol with just enough so we can call ea_open and friends */
+    volume.v_adouble = AD_VERSION2;
+    volume.v_vfs_ea = volinfo->v_vfs_ea;
+    initvol_vfs(&volume);
+
     /* Run with umask 0 */
     umask(0);
 
@@ -678,8 +855,8 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     return 0;
 }
 
-/* 
-   Remove all CNIDs from dbd that are not in dbd_rebuild
+/*
+  Remove all CNIDs from dbd that are not in dbd_rebuild
 */
 static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
 {
@@ -801,8 +978,8 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
         return -1;
 
     if (! nocniddb) {
-    /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
-       other clients in between our pass 1 and 2 */
+        /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
+           other clients in between our pass 1 and 2 */
         if (flags & DBD_FLAGS_EXCL)
             delete_orphaned_cnids(dbd, dbd_rebuild, flags);
     }

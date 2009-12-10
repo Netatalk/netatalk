@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.9 2009-11-18 11:14:59 didg Exp $
+   $Id: ea.h,v 1.10 2009-12-10 17:40:25 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -148,5 +148,13 @@ extern int sys_set_ea(VFS_FUNC_ARGS_EA_SET);
 extern int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE);
 /* native EA VFSfile/dir cp/mv/rm */
 extern int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE);
+
+/* dbd needs access to these */
+extern int ea_open(const struct vol * restrict vol,
+                   const char * restrict uname,
+                   eaflags_t eaflags,
+                   struct ea * restrict ea);
+extern int ea_close(struct ea * restrict ea);
+extern char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int macname);
 
 #endif /* ATALK_EA_H */
