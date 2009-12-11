@@ -165,7 +165,7 @@ typedef enum {
 #define AFP_GETFLDRPARAM	34
 #define AFP_SETFLDRPARAM	35
 #define AFP_CHANGEPW    	36
-
+#define AFP_GETUSERINFO     37
 #define AFP_GETSRVRMSG		38
 #define AFP_CREATEID		39
 #define AFP_DELETEID		40

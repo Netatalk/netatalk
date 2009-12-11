@@ -1,5 +1,5 @@
 /*
- * $Id: afp_util.c,v 1.7 2009-10-14 01:38:28 didg Exp $
+ * $Id: afp_util.c,v 1.8 2009-12-11 13:11:19 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -55,7 +55,7 @@ const char *AfpNum2name(int num)
 	case AFP_GETFLDRPARAM  : return "AFP_GETFLDRPARAM";	    /*  34 */	
 	case AFP_SETFLDRPARAM  : return "AFP_SETFLDRPARAM";	    /*  35 */	
 	case AFP_CHANGEPW      : return "AFP_CHANGEPW";	        /*  36 */	
-
+    case AFP_GETUSERINFO   : return "AFP_GETUSERINFO";      /*  37 */
     case AFP_GETSRVRMSG    : return "AFP_GETSRVRMSG";       /*  38 */
     case AFP_CREATEID      : return "AFP_CREATEID";         /*  39 */
     case AFP_DELETEID      : return "AFP_DELETEID";         /*  40 */
