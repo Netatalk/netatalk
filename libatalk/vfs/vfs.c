@@ -993,7 +993,6 @@ void initvol_vfs(struct vol *vol)
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with native EAs.");
         vol->vfs_modules[1] = &netatalk_ea_sys;
     } else {
-        /* default: AFPVOL_EA_AD */
         LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with adouble files.");
         vol->vfs_modules[1] = &netatalk_ea_adouble;
     }

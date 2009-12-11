@@ -110,17 +110,13 @@ dbpath:\fI[path]\fR
 Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&.
 .RE
 .PP
-ea:\fI[ad|solaris]\fR
+ea:\fI[sys|ad]\fR
 .RS 4
 Specify the format of the metadata files which are used for saving Extended Attributes\&.
+\fBsys\fR
+is the default and stores the EAs in native filesystem Extended Attributes\&.
 \fBad\fR
-is the default and stores the EAs inside the
-\&.AppleDouble
-directories\&.
-\fBsolaris\fR
-uses native
-\fI[Open]Solaris\fR
-EAs if available\&.
+uses ordinary files inside the \&.AppleDouble directories\&.
 .RE
 .PP
 maccharset:\fI[charset]\fR

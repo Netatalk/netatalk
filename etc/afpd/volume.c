@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.109 2009-12-11 10:14:02 franklahm Exp $
+ * $Id: volume.c,v 1.110 2009-12-11 13:26:44 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -45,6 +45,7 @@ char *strchr (), *strrchr ();
 #include <atalk/volinfo.h>
 #include <atalk/logger.h>
 #include <atalk/vfs.h>
+#include <atalk/ea.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/
@@ -513,10 +514,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
         setoption(options, save, VOLOPT_DENIED_HOSTS, val);
 
     } else if (optionok(tmp, "ea:", val)) {
-        if (strcasecmp(val + 1, "ad") == 0) /* the default anyway */
+        if (strcasecmp(val + 1, "ad") == 0)
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AD;
-        else if (strcasecmp(val + 1, "sys") == 0)
-            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_SYS;
 
     } else {
         /* ignore unknown options */
@@ -671,7 +670,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     /* os X start at 1 and use network order ie. 1 2 3 */
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
-    volume->v_vfs_ea = AFPVOL_EA_AD;
+    volume->v_vfs_ea = AFPVOL_EA_SYS;
 
     /* handle options */
     if (options) {
@@ -681,7 +680,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         /* shift in some flags */
         volume->v_flags = options[VOLOPT_FLAGS].i_value;
 
-        if (options[VOLOPT_EA_VFS].i_value != AFPVOL_EA_AD)
+        if (options[VOLOPT_EA_VFS].i_value)
             volume->v_vfs_ea = options[VOLOPT_EA_VFS].i_value;
 
         volume->v_ad_options = 0;
@@ -1827,6 +1826,25 @@ static int volume_openDB(struct vol *volume)
     return (!volume->v_cdb)?-1:0;
 }
 
+/* 
+   Check if the underlying filesystem supports EAs for ea:sys volumes.
+   If not, switch to ea:ad.
+*/
+static void check_ea_sys_support(struct vol *vol)
+{
+    char buf[ATTRNAMEBUFSIZ];
+
+    if (vol->v_vfs_ea == AFPVOL_EA_SYS) {
+        if ((sys_llistxattr(".AppleDesktop", buf, ATTRNAMEBUFSIZ)) == -1
+) {
+            LOG(log_warning, logtype_afpd, "Volume \"%s\" does not support Extended Attributes. Using ad format instead.",
+                vol->v_localname);
+            vol->v_vfs_ea = AFPVOL_EA_AD;
+            initvol_vfs(vol);
+        }
+    }
+}
+
 /* -------------------------
  * we are the user here
  */
@@ -1997,6 +2015,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
         if (!(volume->v_flags & AFPVOL_RO)) {
             handle_special_folders( volume );
+            check_ea_sys_support(volume);
             savevolinfo(volume, Cnid_srv, Cnid_port);
         }
 
