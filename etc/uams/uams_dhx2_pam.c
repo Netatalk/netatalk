@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.9 2009-11-05 14:38:07 franklahm Exp $
+ * $Id: uams_dhx2_pam.c,v 1.10 2009-12-13 17:33:09 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -622,8 +622,6 @@ static int logincont2(void *obj, struct passwd **uam_pwd,
         goto error_ctx;
     }
     ibuf += 16;
-
-    LOG(log_info, logtype_uams, "DHX2: logincont2 alive!");
 
     /* ---- Start authentication with PAM --- */
 
