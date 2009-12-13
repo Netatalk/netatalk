@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.23 2009-12-13 00:33:58 didg Exp $
+ * $Id: main.c,v 1.24 2009-12-13 01:17:16 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -196,8 +196,7 @@ static void as_timer(int sig _U_)
 	    }
 	}
 
-	if (( iface->i_flags & ( IFACE_ADDR|IFACE_CONFIG|IFACE_NOROUTER )) ==
-		IFACE_ADDR ) {
+	if (( iface->i_flags & ( IFACE_ADDR|IFACE_CONFIG|IFACE_NOROUTER )) == IFACE_ADDR ) {
 	    if ( iface->i_time < 3 ) {
 		if ( iface->i_flags & IFACE_PHASE1 ) {
 		  if (rtmp_request( iface ) < 0) {
@@ -221,10 +220,8 @@ static void as_timer(int sig _U_)
 			 * No seed info, and we've got multiple interfaces.
 			 * Wait forever.
 			 */
-			LOG(log_info, logtype_atalkd,
-				"as_timer multiple interfaces, no seed" );
-			LOG(log_info, logtype_atalkd, "as_timer can't configure %s",
-				iface->i_name );
+			LOG(log_info, logtype_atalkd, "as_timer multiple interfaces, no seed" );
+			LOG(log_info, logtype_atalkd, "as_timer can't configure %s", iface->i_name );
 			LOG(log_info, logtype_atalkd, "as_timer waiting for router" );
 			iface->i_time = 0;
 			continue;
@@ -235,8 +232,7 @@ static void as_timer(int sig _U_)
 			 */
 			iface->i_flags |= IFACE_CONFIG;
 			for ( zt = iface->i_czt; zt; zt = zt->zt_next ) {
-			    if (addzone( iface->i_rt, zt->zt_len, 
-					 zt->zt_name) < 0) {
+			    if (addzone( iface->i_rt, zt->zt_len, zt->zt_name) < 0) {
 			      LOG(log_error, logtype_atalkd, "addzone: %s", strerror(errno));
 			      atalkd_exit(1);
 			    }
@@ -246,26 +242,20 @@ static void as_timer(int sig _U_)
 			    iface->i_rt->rt_flags |= RTMPTAB_HASZONES;
 			}
 			if ( iface->i_flags & IFACE_PHASE1 ) {
-			    LOG(log_info, logtype_atalkd,
-				    "as_timer configured %s phase 1 from seed",
-				    iface->i_name );
+			    LOG(log_info, logtype_atalkd, "as_timer configured %s phase 1 from seed", iface->i_name );
 			    setaddr( iface, IFACE_PHASE1,
 				    iface->i_caddr.sat_addr.s_net,
 				    iface->i_addr.sat_addr.s_node,
 				    iface->i_caddr.sat_addr.s_net,
 				    iface->i_caddr.sat_addr.s_net );
 			} else {
-			    LOG(log_info, logtype_atalkd,
-				    "as_timer configured %s phase 2 from seed",
-				    iface->i_name );
+			    LOG(log_info, logtype_atalkd, "as_timer configured %s phase 2 from seed", iface->i_name );
 			}
 
 			if ( looproute( iface, RTMP_ADD )) { /* -1 or 1 */
-			    LOG(log_error, logtype_atalkd,
-				    "as_timer: can't route %u.%u to loop: %s",
-				    ntohs( iface->i_addr.sat_addr.s_net ),
-				    iface->i_addr.sat_addr.s_node,
-				    strerror(errno) );
+			    LOG(log_error, logtype_atalkd, "as_timer: can't route %u.%u to loop: %s", 
+			            ntohs( iface->i_addr.sat_addr.s_net ),
+				    iface->i_addr.sat_addr.s_node, strerror(errno) );
 			    atalkd_exit( 1 );
 			}
 			if ( iface == ciface ) {
@@ -283,16 +273,12 @@ static void as_timer(int sig _U_)
 		    if ( iface->i_flags & IFACE_PHASE2 ) {
 			iface->i_rt->rt_firstnet = 0;
 			iface->i_rt->rt_lastnet = htons( STARTUP_LASTNET );
-			setaddr( iface, IFACE_PHASE2,
-				iface->i_addr.sat_addr.s_net,
-				iface->i_addr.sat_addr.s_node,
+			setaddr( iface, IFACE_PHASE2, iface->i_addr.sat_addr.s_net, iface->i_addr.sat_addr.s_node,
 				0, htons( STARTUP_LASTNET ));
 		    }
 		    if ( looproute( iface, RTMP_ADD ) ) { /* -1 or 1 */
-			LOG(log_error, logtype_atalkd,
-				"as_timer: can't route %u.%u to loopback: %s",
-				ntohs( iface->i_addr.sat_addr.s_net ),
-				iface->i_addr.sat_addr.s_node,
+			LOG(log_error, logtype_atalkd, "as_timer: can't route %u.%u to loopback: %s",
+				ntohs( iface->i_addr.sat_addr.s_net ), iface->i_addr.sat_addr.s_node,
 				strerror(errno) );
 			atalkd_exit( 1 );
 		    }
@@ -324,14 +310,12 @@ static void as_timer(int sig _U_)
 	     * our zone has gone away.
 	     */
 	    if ( ++gate->g_state >= RTMPTAB_BAD ) {
-		LOG(log_info, logtype_atalkd, "as_timer gateway %u.%u down",
-			ntohs( gate->g_sat.sat_addr.s_net ),
+		LOG(log_info, logtype_atalkd, "as_timer gateway %u.%u down", ntohs( gate->g_sat.sat_addr.s_net ),
 			gate->g_sat.sat_addr.s_node );
 		rtmp = gate->g_rt;
 		while ( rtmp ) {
 		    frtmp = rtmp->rt_next;
-		    if ( rtmp->rt_hops == RTMPHOPS_POISON ||
-			    rtmp->rt_iprev == NULL ) {
+		    if ( rtmp->rt_hops == RTMPHOPS_POISON || rtmp->rt_iprev == NULL ) {
 			rtmp_free( rtmp );
 		    } else {
 			rtmp->rt_hops = RTMPHOPS_POISON;
@@ -366,8 +350,7 @@ static void as_timer(int sig _U_)
 		 * if we're not a seed router.
 		 */
 
-		if ( gate->g_iface->i_gate == NULL && 
-		     ((iface->i_flags & IFACE_SEED) == 0)) {
+		if ( gate->g_iface->i_gate == NULL && ((iface->i_flags & IFACE_SEED) == 0)) {
 		    gate->g_iface->i_flags |= IFACE_NOROUTER;
 		    gate->g_iface->i_flags &= ~IFACE_CONFIG;
 
@@ -446,8 +429,7 @@ static void as_timer(int sig _U_)
 		/*
 		 * Do ZIP lookups.
 		 */
-		if ( rtmp->rt_iprev &&
-			( rtmp->rt_flags & RTMPTAB_HASZONES ) == 0 ) {
+		if ( rtmp->rt_iprev && ( rtmp->rt_flags & RTMPTAB_HASZONES ) == 0 ) {
 		    if ( data + sizeof( u_short ) > end || n == 255 ) {
 			/* send what we've got */
 			zh.zh_op = ZIPOP_QUERY;
@@ -479,8 +461,7 @@ static void as_timer(int sig _U_)
 		     * ask about, and warn that we can't get it's zone.
 		     */
 		    if ( rtmp->rt_nzq++ == 3 ) {
-			LOG(log_info, logtype_atalkd, "as_timer can't get zone for %u",
-				ntohs( rtmp->rt_firstnet ));
+			LOG(log_info, logtype_atalkd, "as_timer can't get zone for %u", ntohs( rtmp->rt_firstnet ));
 		    }
 		    if ( rtmp->rt_nzq > 3 ) {
 			if ( ziptimeout ) {
@@ -507,8 +488,7 @@ static void as_timer(int sig _U_)
 		*data++ = DDPTYPE_ZIP;
 		memcpy( data, &zh, sizeof( struct ziphdr ));
 
-		if ( sendto( zap->ap_fd, packet, cc, 0, (struct sockaddr *)&sat,
-			sizeof( struct sockaddr_at )) < 0 ) {
+		if ( sendto( zap->ap_fd, packet, cc, 0, (struct sockaddr *)&sat, sizeof( struct sockaddr_at )) < 0 ) {
 		    LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
 		}
 	    }
@@ -601,11 +581,9 @@ static void as_timer(int sig _U_)
 			}
 
 			if ( iface->i_flags & IFACE_PHASE2 ) {
-			    data = packet + 1 + sizeof( struct rtmp_head ) +
-				    2 * SZ_RTMPTUPLE;
+			    data = packet + 1 + sizeof( struct rtmp_head ) + 2 * SZ_RTMPTUPLE;
 			} else {
-			    data = packet + 1 + sizeof( struct rtmp_head ) +
-				    SZ_RTMPTUPLE;
+			    data = packet + 1 + sizeof( struct rtmp_head ) + SZ_RTMPTUPLE;
 			}
 			n = 0;
 		    }
@@ -630,8 +608,7 @@ static void as_timer(int sig _U_)
 
 	    /* send rest */
 	    if ( n ) {
-		if ( sendto( rap->ap_fd, packet, data - packet, 0,
-			(struct sockaddr *)&sat,
+		if ( sendto( rap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
 			sizeof( struct sockaddr_at )) < 0 ) {
 		    LOG(log_error, logtype_atalkd, "as_timer sendto %u.%u (%u): %s",
 			    ntohs( sat.sat_addr.s_net ),
