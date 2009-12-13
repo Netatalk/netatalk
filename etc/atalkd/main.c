@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.22 2009-10-14 02:24:05 didg Exp $
+ * $Id: main.c,v 1.23 2009-12-13 00:33:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -580,6 +580,11 @@ static void as_timer(int sig _U_)
 			    ( rtmp->rt_flags & RTMPTAB_ZIPQUERY ) ||
 			    ( rtmp->rt_flags & RTMPTAB_HASZONES ) == 0 ) {
 			continue;
+		    }
+
+		    /* split horizon */
+		    if (rtmp->rt_iface == iface) {
+		        continue;
 		    }
 
 		    if ((( rtmp->rt_flags & RTMPTAB_EXTENDED ) &&
