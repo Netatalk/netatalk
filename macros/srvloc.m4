@@ -1,6 +1,6 @@
 dnl Check for optional server location protocol support (used by MacOS X)
 
-dnl $Id: srvloc.m4,v 1.9 2005-04-28 20:50:05 bfernhomberg Exp $
+dnl $Id: srvloc.m4,v 1.10 2009-12-13 11:58:30 franklahm Exp $
 
 AC_DEFUN([NETATALK_SRVLOC], [
 
@@ -10,9 +10,9 @@ AC_DEFUN([NETATALK_SRVLOC], [
 	srvlocdir=""
 
 	AC_ARG_ENABLE(srvloc,
-		[  --enable-srvloc[[=DIR]]   enable Server Location Protocol (SLP) support [[auto]]],
+		[  --enable-srvloc[[=DIR]]   enable Server Location Protocol (SLP) support],
 		[srvloc=$enableval],
-		[srvloc=try]
+		[srvloc=no]
 	)
 
     dnl make sure atalk_libname is defined beforehand
@@ -22,7 +22,7 @@ AC_DEFUN([NETATALK_SRVLOC], [
 
 		savedcppflags="$CPPFLAGS"
 		savedldflags="$LDFLAGS"
-		if test "x$srvloc" = "xyes" -o "x$srvloc" = "xtry"; then
+		if test "x$srvloc" = "xyes" ; then
 			srvlocdir="/usr"
 		else
 			srvlocdir="$srvloc"
@@ -63,7 +63,7 @@ AC_DEFUN([NETATALK_SRVLOC], [
 		netatalk_cv_srvloc=yes
 	else
 		AC_MSG_RESULT([no])
-		if test "x$srvloc" != "xno" -a "x$srvloc" != "xtry"; then
+		if test "x$srvloc" != "xno" -a "x$srvloc" != "xyes"; then
 			AC_MSG_ERROR([SLP installation not found])
 		fi
 	fi
