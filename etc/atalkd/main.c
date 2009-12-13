@@ -1,5 +1,5 @@
 /*
- * $Id: main.c,v 1.24 2009-12-13 01:17:16 didg Exp $
+ * $Id: main.c,v 1.25 2009-12-13 02:21:47 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -164,6 +164,30 @@ static void atalkd_exit(const int i)
   exit(i);
 }
 
+/* XXX need better error handling for gone interfaces, delete routes and so on 
+ * moreover there's no way to put an interface back short of restarting atalkd
+ * thus after the first time, silently fail
+*/
+static ssize_t sendto_iface(struct interface *iface, int sockfd, const void *buf, size_t len, 
+                       const struct sockaddr_at	 *dest_addr)
+{
+    ssize_t ret = sendto( sockfd, buf, len, 0, (struct sockaddr *)dest_addr, sizeof( struct sockaddr_at ));
+
+    if (ret < 0 ) {
+        if (!(iface->i_flags & IFACE_ERROR)) {
+            LOG(log_error, logtype_atalkd, "as_timer sendto %u.%u (%u): %s",
+				    ntohs( dest_addr->sat_addr.s_net ),
+				    dest_addr->sat_addr.s_node,
+				    ntohs( iface->i_rt->rt_firstnet ),
+				    strerror(errno) );
+        }
+        iface->i_flags |= IFACE_ERROR;
+    }
+    else {
+        iface->i_flags &= ~IFACE_ERROR;
+    }
+    return ret;
+}
 
 static void as_timer(int sig _U_)
 {
@@ -183,6 +207,7 @@ static void as_timer(int sig _U_)
     ap=zap=rap=NULL;
 
     memset(&sat, 0, sizeof( struct sockaddr_at ));
+
     for ( iface = interfaces; iface; iface = iface->i_next ) {
 	if ( iface->i_flags & IFACE_LOOPBACK ) {
 	    continue;
@@ -439,11 +464,7 @@ static void as_timer(int sig _U_)
 			*data++ = DDPTYPE_ZIP;
 			memcpy( data, &zh, sizeof( struct ziphdr ));
 
-			if ( sendto( zap->ap_fd, packet, cc, 0,
-				(struct sockaddr *)&sat,
-				sizeof( struct sockaddr_at )) < 0 ) {
-			    LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
-			}
+			sendto_iface(iface,  zap->ap_fd, packet, cc, &sat);
 			sentzipq = 1;
 
 			n = 0;
@@ -488,9 +509,7 @@ static void as_timer(int sig _U_)
 		*data++ = DDPTYPE_ZIP;
 		memcpy( data, &zh, sizeof( struct ziphdr ));
 
-		if ( sendto( zap->ap_fd, packet, cc, 0, (struct sockaddr *)&sat, sizeof( struct sockaddr_at )) < 0 ) {
-		    LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
-		}
+		sendto_iface( iface, zap->ap_fd, packet, cc, &sat);
 	    }
 	}
 	if ( fgate ) {
@@ -570,15 +589,8 @@ static void as_timer(int sig _U_)
 		    if ((( rtmp->rt_flags & RTMPTAB_EXTENDED ) &&
 			    data + 2 * SZ_RTMPTUPLE > end ) ||
 			    data + SZ_RTMPTUPLE > end ) {
-			if ( sendto( rap->ap_fd, packet, data - packet, 0,
-				(struct sockaddr *)&sat,
-				sizeof( struct sockaddr_at )) < 0 ) {
-			    LOG(log_error, logtype_atalkd, "as_timer sendto %u.%u (%u): %s",
-				    ntohs( sat.sat_addr.s_net ),
-				    sat.sat_addr.s_node,
-				    ntohs( iface->i_rt->rt_firstnet ),
-				    strerror(errno) );
-			}
+
+			sendto_iface(iface,rap->ap_fd, packet, data - packet, &sat);
 
 			if ( iface->i_flags & IFACE_PHASE2 ) {
 			    data = packet + 1 + sizeof( struct rtmp_head ) + 2 * SZ_RTMPTUPLE;
@@ -608,14 +620,7 @@ static void as_timer(int sig _U_)
 
 	    /* send rest */
 	    if ( n ) {
-		if ( sendto( rap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
-			sizeof( struct sockaddr_at )) < 0 ) {
-		    LOG(log_error, logtype_atalkd, "as_timer sendto %u.%u (%u): %s",
-			    ntohs( sat.sat_addr.s_net ),
-			    sat.sat_addr.s_node,
-			    ntohs( iface->i_rt->rt_firstnet ),
-			    strerror(errno) );
-		}
+		sendto_iface(iface, rap->ap_fd, packet, data - packet, &sat);
 	    }
 	}
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: interface.h,v 1.5 2009-10-13 22:55:37 didg Exp $
+ * $Id: interface.h,v 1.6 2009-12-13 02:21:47 didg Exp $
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
@@ -38,6 +38,7 @@ struct interface {
 #define IFACE_ISROUTER  0x400           /* act as a router. */
 #define IFACE_ALLMULTI  0x800		/* set allmulti on this interface, linux only */
 #define IFACE_WASALLMULTI 0x1000	/* don't unset allmulti on this interface on shutdown, linux only */
+#define IFACE_ERROR 	0x2000		/* sendto returned an error */
 
 #define UNSTABLE	2
 #define STABLE		0
