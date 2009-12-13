@@ -1,5 +1,5 @@
 /*
- * $Id: zip.c,v 1.14 2009-10-14 02:24:05 didg Exp $
+ * $Id: zip.c,v 1.15 2009-12-13 00:31:50 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
@@ -659,7 +659,7 @@ int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len)
 	     * interface structure, not in the zone table.  This allows us
 	     * to check that the net is giving us good zones.
 	     */
-	    if ( iface->i_flags & IFACE_SEED ) {
+	    if ( (iface->i_flags & IFACE_SEED) && iface->i_czt) {
 		if ( iface->i_czt->zt_len != *data ||
 			strndiacasecmp( iface->i_czt->zt_name,
 			data + 1, *data ) != 0 ) {
