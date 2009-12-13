@@ -1,0 +1,124 @@
+Draft 2.1
+
+NEW
+===
+Protocol level:
+AFP3.2
+IPV6
+
+afpd uses an in memory temporary DB if can't open the volume's database
+
+Tools:
+
+
+NOT NEW
+=======
+Bonjour
+with avahi you can add an afpd.service file in
+/etc/avahi/services/
+
+drawback:
+AFP is advertised even if the server is down.
+
+Upgrading from a 2.0 version
+============================
+As usual backup and use new volumes.
+
+2.1 and 2.0 filenames encoding and adouble headers are compatible thus
+it's possible to upgrade and downgrade between 2.0 and 2.1, you may have 
+to (must?) delete your .AppleDB folders.
+
+Requirements
+============
+DB 2.6? 
+
+configure
+=========
+new default
+sendfile is enable on linux
+
+new options
+--disable-sendfile
+--enable-nfsv4acls	NFSv4 ACL Support (only Solaris?)
+
+			Webmin 
+--with-webmin      	path where webmin is installed [$PKGCONFDIR/webmin]
+--with-webminuser      	name for the webmin admin user
+--with-webminversion   	Webmin version to fetch from sf.net [1.490]
+--with-webminpass  	password for the webmin admin user
+--with-webminport  	TCP port for webmin
+
+removed options
+--with-logfile
+--with-cnid-dbd-txn 	 dbd always use transaction
+--with-cnid-db3-backend  use dbd for transaction
+--with-cnid-hash-backend never really work
+
+afpd.conf
+=========
+new default
+slp is disable by default
+ddp is disable by default
+
+new options
+-slp 			 advertise with SRVLOC
+-hostname 
+-volnamelen
+-setuplog
+-closevol
+-ntdomain
+-ntseparator
+
+removed options
+-noslp
+
+AppleVolume.default
+===================
+new default
+
+new options
+acl
+caseinsensitive		volume is case insensitive (JFS in OS2 mode)
+nocnidcache		XXX remove?
+ea:sys/ad
+
+removed options
+cachecnid
+
+Regressions:
+===========
+None known
+
+Known Bugs:
+==========
+1- doesn't like symlinks/hardlinks
+2- hates dangling symlinks
+3- if a DB is open readonly afpd will fails here and there in strange ways.
+ 
+
+Todo:
+=====
+- Clean up error messages, many messages should be move to the info/debug level
+rather than error.
+- Are all options documented in the man pages/configuration files?
+- update dbd logic to others db.
+
+Best Practices:
+===============
+
+- use a separate user group for cnid_dbd daemons
+  cnid_metad -u afpd -g afpd
+
+- All CNID databases in the same directory
+AppleVolumes.default
+
+		:DEFAUT: dbpath:/var/lib/afpd/$v
+
+with /var/lib/afpd
+drwxr-xr-x  afpd afpd 4096 2009-11-24 15:12 /var/lib/afpd
+
+afpd or cnid_metad will create the right subdirectory ($v is replaced by the
+volume name)
+
+- Best volumes options by clients version/usage
+
