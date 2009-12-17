@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.110 2009-12-11 13:26:44 franklahm Exp $
+ * $Id: volume.c,v 1.111 2009-12-17 09:25:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1468,7 +1468,8 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
                         ashort |= VOLPBIT_ATTR_TM;
 
                     if (afp_version >= 32) {
-                        ashort |= VOLPBIT_ATTR_EXT_ATTRS;
+                        if (vol->v_vfs_ea)
+                            ashort |= VOLPBIT_ATTR_EXT_ATTRS;
                         if (vol->v_flags & AFPVOL_ACLS)
                             ashort |= VOLPBIT_ATTR_ACLS;
                     }
@@ -1832,15 +1833,35 @@ static int volume_openDB(struct vol *volume)
 */
 static void check_ea_sys_support(struct vol *vol)
 {
-    char buf[ATTRNAMEBUFSIZ];
+    uid_t process_uid = 0;
+    const char *fname = ".";
+    char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
+    const char *eacontent = "yes";
 
     if (vol->v_vfs_ea == AFPVOL_EA_SYS) {
-        if ((sys_llistxattr(".AppleDesktop", buf, ATTRNAMEBUFSIZ)) == -1
-) {
-            LOG(log_warning, logtype_afpd, "Volume \"%s\" does not support Extended Attributes. Using ad format instead.",
+        mktemp(eaname);
+
+        process_uid = geteuid();
+        if (process_uid)
+            if (seteuid(0) == -1) {
+                LOG(log_error, logtype_logger, "check_ea_sys_support: can't seteuid(0): %s", strerror(errno));
+                exit(EXITERR_SYS);
+            }
+
+        if ((sys_setxattr(fname, eaname, eacontent, 4, 0)) == -1) {
+            LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes, using ea:ad instead",
                 vol->v_localname);
             vol->v_vfs_ea = AFPVOL_EA_AD;
             initvol_vfs(vol);
+        }
+
+        sys_removexattr(fname, eaname);
+
+        if (process_uid) {
+            if (seteuid(process_uid) == -1) {
+                LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+                exit(EXITERR_SYS);
+            }
         }
     }
 }
