@@ -1,7 +1,8 @@
 # This file looks empty when viewed with "vi".  In fact, there is one
 # '~', so users with no AppleVolumes file in their home directory get
 # their home directory by default.
-# 
+
+#
 # volume format:
 # :DEFAULT: [all of the default options except volume name]
 # path [name] [casefold:x] [options:z,l,j] \
@@ -12,6 +13,8 @@
 #   [denied_hosts:IPv4 address[/IPv4 netmask bits]] \
 #   
 # name:      volume name. it can't include the ':' character
+#
+
 #
 # variable substitutions:
 # you can use variables for both <path> and <name> now. here are the
@@ -60,16 +63,27 @@
 #                        ignore for user defined volumes
 #
 # codepage options [syntax: options:charsetname]
-# volcharset          -> specifies the charset to be used as the volume codepage
+# volcharset          -> specifies the charset to be used
+#                        as the volume codepage
 #                        e.g. "UTF8", "UTF8-MAC", "ISO-8859-15"
-# maccharset          -> specifies the charset to be used as the mac client codepage
+# maccharset          -> specifies the charset to be used
+#                        as the mac client codepage
 #                        e.g. "MAC_ROMAN", "MAC_CYRILLIC"
 #
-# perm                -> default permission value OR with the client requested perm
-# dperm               -> default permission value for directories OR with the client 
-#                        requested perm
-# fperm               -> default permission value for filesOR with the client 
-#                        requested perm
+# perm                -> default permission value
+#                        OR with the client requested perm
+# dperm               -> default permission value for directories
+#                        OR with the client requested perm
+# fperm               -> default permission value for files
+#                        OR with the client requested perm
+#
+# dbpath:path         -> store the database stuff in the following path.
+# password:password   -> set a volume password (8 characters max)
+# cnidscheme:scheme   -> set the cnid scheme for the volume,
+#                        default is [:DEFAULT_CNID_SCHEME:]
+#                        available schemes: [:COMPILED_BACKENDS:]
+#
+
 #
 # miscellaneous options [syntax: options:option1,option2]:
 # tm                  -> enable TimeMachine support
@@ -106,8 +120,9 @@
 #                        volume being mounted.
 # nostat              -> don't stat volume path when enumerating volumes list
 # upriv               -> use unix privilege.  
-# illegalseq          -> encode illegal sequence in filename asis, ex "\217-", which is not
-#                        a valid SHIFT-JIS char, is encoded  as U\217 -
+# illegalseq          -> encode illegal sequence in filename asis,
+#                        ex "\217-", which is not a valid SHIFT-JIS char,
+#                        is encoded  as U\217 -
 # acls                -> Enable ACLs on this volume. Requires a NFSv4 ACLs
 #                        compatible filesystem (e.g. ZFS) and an ACL API
 #                        compatible to *Solaris. In other words: this requires
@@ -116,13 +131,12 @@
 #                        This should not be used as it also prevents a CNID
 #                        database rebuild with `dbd`!
 # caseinsensitive     -> The underlying FS is case insensitive (only 
-                         test with JFS in OS2 mode)
-# dbpath:path         -> store the database stuff in the following path.
-# password:password   -> set a volume password (8 characters max)
-# cnidscheme:scheme   -> set the cnid scheme for the volume, default is [:DEFAULT_CNID_SCHEME:]
-#                        available schemes: [:COMPILED_BACKENDS:]
+#                        test with JFS in OS2 mode)
 #
+
 # The "~" below indicates that Home directories are visible by default.
 # If you do not wish to have people accessing their Home directories,
 # please put a pound sign in front of the tilde or delete it.
 ~
+
+# End of File
