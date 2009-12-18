@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.111 2009-12-17 09:25:40 franklahm Exp $
+ * $Id: volume.c,v 1.112 2009-12-18 19:18:40 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -158,12 +158,13 @@ static const _special_folder special_folders[] = {
 #endif
     {NULL, 0, 0, 0}};
 
+/* Forward declarations */
 static void handle_special_folders (const struct vol *);
 static void deletevol(struct vol *vol);
 static void volume_free(struct vol *vol);
+static void check_ea_sys_support(struct vol *vol);
 
-static void volfree(struct vol_option *options,
-                    const struct vol_option *save)
+static void volfree(struct vol_option *options, const struct vol_option *save)
 {
     int i;
 
@@ -516,6 +517,10 @@ static void volset(struct vol_option *options, struct vol_option *save,
     } else if (optionok(tmp, "ea:", val)) {
         if (strcasecmp(val + 1, "ad") == 0)
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AD;
+        else if (strcasecmp(val + 1, "sys") == 0)
+            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_SYS;
+        else if (strcasecmp(val + 1, "none") == 0)
+            options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_NONE;
 
     } else {
         /* ignore unknown options */
@@ -670,7 +675,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     /* os X start at 1 and use network order ie. 1 2 3 */
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
-    volume->v_vfs_ea = AFPVOL_EA_SYS;
 
     /* handle options */
     if (options) {
@@ -752,8 +756,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         if ((volume->v_flags & AFPVOL_EILSEQ))
             volume->v_utom_flags |= CONV__EILSEQ;
 
-        initvol_vfs(volume);
-
 #ifdef FORCE_UIDGID
         if (options[VOLOPT_FORCEUID].c_value) {
             volume->v_forceuid = strdup(options[VOLOPT_FORCEUID].c_value);
@@ -785,6 +787,11 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     }
     volume->v_dperm |= volume->v_perm;
     volume->v_fperm |= volume->v_perm;
+
+    /* Check EA support on volume */
+    if (volume->v_vfs_ea == AFPVOL_EA_AUTO)
+        check_ea_sys_support(volume);
+    initvol_vfs(volume);
 
     volume->v_next = Volumes;
     Volumes = volume;
@@ -1065,12 +1072,15 @@ static int volfile_changed(struct afp_volume_name *p)
 static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
 {
     FILE        *fp;
-    char        path[ MAXPATHLEN + 1], tmp[ MAXPATHLEN + 1],
-        volname[ AFPVOL_U8MNAMELEN + 1 ], buf[ BUFSIZ ],
-        type[ 5 ], creator[ 5 ];
+    char        path[MAXPATHLEN + 1];
+    char        tmp[MAXPATHLEN + 1];
+    char        volname[AFPVOL_U8MNAMELEN + 1];
+    char        buf[BUFSIZ];
+    char        type[5], creator[5];
     char        *u, *p;
     struct passwd   *pw;
-    struct vol_option   options[VOLOPT_NUM], save_options[VOLOPT_NUM];
+    struct vol_option   save_options[VOLOPT_NUM];
+    struct vol_option   options[VOLOPT_NUM];
     int                 i;
     struct stat         st;
     int                 fd;
@@ -1100,6 +1110,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
 
     /* Enable some default options for all volumes */
     save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+    save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
 
     while ( myfgets( buf, sizeof( buf ), fp ) != NULL ) {
         initline( strlen( buf ), buf );
@@ -1830,15 +1841,23 @@ static int volume_openDB(struct vol *volume)
 /* 
    Check if the underlying filesystem supports EAs for ea:sys volumes.
    If not, switch to ea:ad.
+   As we can't check (requires write access) on ro-volumes, we switch ea:auto
+   volumes that are options:ro to ea:none.
 */
 static void check_ea_sys_support(struct vol *vol)
 {
     uid_t process_uid = 0;
-    const char *fname = ".";
     char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
     const char *eacontent = "yes";
 
-    if (vol->v_vfs_ea == AFPVOL_EA_SYS) {
+    if (vol->v_vfs_ea == AFPVOL_EA_AUTO) {
+
+        if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
+            LOG(log_info, logtype_logger, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
+            vol->v_vfs_ea = AFPVOL_EA_NONE;
+            return;
+        }
+
         mktemp(eaname);
 
         process_uid = geteuid();
@@ -1848,14 +1867,14 @@ static void check_ea_sys_support(struct vol *vol)
                 exit(EXITERR_SYS);
             }
 
-        if ((sys_setxattr(fname, eaname, eacontent, 4, 0)) == -1) {
+        if ((sys_setxattr(vol->v_path, eaname, eacontent, 4, 0)) == 0) {
+            sys_removexattr(vol->v_path, eaname);
+            vol->v_vfs_ea = AFPVOL_EA_SYS;
+        } else {
             LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes, using ea:ad instead",
                 vol->v_localname);
             vol->v_vfs_ea = AFPVOL_EA_AD;
-            initvol_vfs(vol);
         }
-
-        sys_removexattr(fname, eaname);
 
         if (process_uid) {
             if (seteuid(process_uid) == -1) {
@@ -2036,7 +2055,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
         if (!(volume->v_flags & AFPVOL_RO)) {
             handle_special_folders( volume );
-            check_ea_sys_support(volume);
             savevolinfo(volume, Cnid_srv, Cnid_port);
         }
 

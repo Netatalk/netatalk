@@ -990,11 +990,13 @@ void initvol_vfs(struct vol *vol)
 
     /* Extended Attributes */
     if (vol->v_vfs_ea == AFPVOL_EA_SYS) {
-        LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with native EAs.");
+        LOG(log_debug, logtype_afpd, "initvol_vfs: enabling EA support with native EAs");
         vol->vfs_modules[1] = &netatalk_ea_sys;
-    } else {
-        LOG(log_debug, logtype_afpd, "initvol_vfs: Enabling EA support with adouble files.");
+    } else if (vol->v_vfs_ea == AFPVOL_EA_AD) {
+        LOG(log_debug, logtype_afpd, "initvol_vfs: enabling EA support with adouble files");
         vol->vfs_modules[1] = &netatalk_ea_adouble;
+    } else {
+        LOG(log_debug, logtype_afpd, "initvol_vfs: volume without EA support");
     }
 
     /* ACLs */
