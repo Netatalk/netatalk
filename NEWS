@@ -40,7 +40,8 @@ Changes in 2.1-beta1
        find the right one.
        Note: now a misconfigured or plugged router can broadcast a wrong route !
 * REM: cnid_maint: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
- *REM: cleanappledouble.pl: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
+* REM: cleanappledouble.pl: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
+* REM: nu: use `macusers` instead
 
 Changes in 2.0.5
 ================
