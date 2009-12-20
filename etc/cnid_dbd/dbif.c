@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.17 2009-11-25 14:59:15 franklahm Exp $
+ * $Id: dbif.c,v 1.18 2009-12-20 16:04:21 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -247,10 +247,29 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
             return -1;
         }
         if (logfiles != NULL) {
+            /* Remember cwd */
+            if ((cwd = open(".", O_RDONLY)) < 0) {
+                LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
+                goto logfiles_done;
+            }
+            /* chdir to db_envhome */
+            if ((chdir(dbd->db_envhome)) != 0) {
+                LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
+                goto logfiles_done;
+            }
+
             for (file = logfiles; *file != NULL; file++) {
                 if (unlink(*file) < 0)
                     LOG(log_warning, logtype_cnid, "Error removing stale logfile %s: %s", *file, strerror(errno));
             }
+
+            /* chdir back */
+            if ((fchdir(cwd)) != 0) {
+                LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+                return -1;
+            }
+
+        logfiles_done:
             free(logfiles);
         }
 
