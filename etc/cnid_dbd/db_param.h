@@ -1,5 +1,5 @@
 /*
- * $Id: db_param.h,v 1.5 2009-10-13 22:55:37 didg Exp $
+ * $Id: db_param.h,v 1.6 2009-12-21 07:32:01 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -19,7 +19,7 @@ enum identity {
 struct db_param {
     char *dir;
     int logfile_autoremove;
-    int cachesize;
+    int cachesize;              /* in KB */
     int flush_interval;
     int flush_frequency;
     char usock_file[MAXPATHLEN + 1];    

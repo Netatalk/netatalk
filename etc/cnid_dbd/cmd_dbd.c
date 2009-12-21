@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.21 2009-12-21 06:41:09 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.22 2009-12-21 07:32:01 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -91,7 +91,7 @@ static int exclusive;           /* Exclusive volume access */
 static struct db_param db_param = {
     NULL,                       /* Volume dirpath */
     1,                          /* bdb logfile autoremove */
-    64 * 1024 * 1024,           /* bdb cachesize */
+    64 * 1024,                  /* bdb cachesize (64 MB) */
     -1,                         /* not used ... */
     -1,
     "",
