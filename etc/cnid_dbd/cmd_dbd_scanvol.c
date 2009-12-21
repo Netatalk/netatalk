@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.16 2009-12-21 09:35:55 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.17 2009-12-21 14:41:00 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -154,6 +154,86 @@ static char *mtoupath(char *mpath)
 
     return( upath );
 }
+
+
+/* 
+   Check if "name" is pointing to
+   a) an object inside the current volume (return 0)
+   b) an object outside the current volume (return 1)
+   Then stats the pointed to object and if it is a dir ors ADFLAGS_DIR to *adflags
+   Return -1 on any serious error.
+ */
+
+static int check_symlink(const char *name, int *adflags)
+{
+    int cwd;
+    ssize_t len;
+    char pathbuf[MAXPATHLEN + 1];
+    char *sep;
+    struct stat st;
+
+    if ((len = readlink(name, pathbuf, MAXPATHLEN)) == -1) {
+        dbd_log(LOGSTD, "Error reading link info for '%s/%s': %s", 
+                cwdbuf, name, strerror(errno));
+        return -1;
+    }
+    pathbuf[len] = 0;
+
+    if ((stat(pathbuf, &st)) != 0) {
+        dbd_log(LOGSTD, "stat error '%s': %s", pathbuf, strerror(errno));
+    }
+
+    /* Remember cwd */
+    if ((cwd = open(".", O_RDONLY)) < 0) {
+        dbd_log(LOGSTD, "error opening cwd '%s': %s", cwdbuf, strerror(errno));
+        return -1;
+    }
+
+    if (S_ISDIR(st.st_mode)) {
+        *adflags |= ADFLAGS_DIR;
+    } else { /* file */
+        /* get basename from path */
+        if ((sep = strrchr(pathbuf, '/')) == NULL)
+            /* just a file at the same level */
+            return 0;
+        sep = 0; /* pathbuf now contains the directory*/
+    }
+
+    /* fchdir() to pathbuf so we can easily get its path with getcwd() */
+    if ((chdir(pathbuf)) != 0) {
+        dbd_log(LOGSTD, "Cant chdir to '%s': %s", pathbuf, strerror(errno));
+        return -1;
+    }
+
+    if ((getcwd(pathbuf, MAXPATHLEN)) == NULL) {
+        dbd_log(LOGSTD, "Cant get symlink'ed dir '%s/%s': %s", cwdbuf, pathbuf, strerror(errno));
+        if ((fchdir(cwd)) != 0)
+            /* We're foobared */
+            longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+        return -1;
+    }
+
+    if ((fchdir(cwd)) != 0)
+        /* We're foobared */
+        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+
+    /*
+      We now have the symlink target dir as absoulte path in pathbuf
+      and can compare it with the currents volume path
+    */
+    int i = 0;
+    while (volinfo->v_path[i]) {
+        if ((pathbuf[i] == 0) || (volinfo->v_path[i] != pathbuf[i])) {
+            dbd_log( LOGDEBUG, "extra-share symlink '%s/%s', following", cwdbuf, name);
+            return 1;
+        }
+        i++;
+    }
+
+    dbd_log( LOGDEBUG, "intra-share symlink '%s/%s', not following", cwdbuf, name);
+    return 0;
+}
+
 
 /*
   Check for wrong encoding e.g. "." at the beginning is not CAP encoded (:2e) although volume is default !AFPVOL_USEDOTS.
@@ -755,7 +835,12 @@ static int dbd_readdir(int volroot, cnid_t did)
             adflags = ADFLAGS_DIR;
             break;
         case S_IFLNK:
-            dbd_log(LOGDEBUG, "Ignoring symlink %s/%s", cwdbuf, ep->d_name);
+            dbd_log(LOGDEBUG, "Checking symlink %s/%s", cwdbuf, ep->d_name);
+            ret = check_symlink(ep->d_name, &adflags);
+            if (ret == 1)
+                break;
+            if (ret == -1)
+                dbd_log(LOGSTD, "Error checking symlink %s/%s", cwdbuf, ep->d_name);
             continue;
         default:
             dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
@@ -858,10 +943,10 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     /* Run with umask 0 */
     umask(0);
 
-    /* chdir to vol */
+    /* Remove trailing slash from volume, chdir to vol */
+    if (volinfo->v_path[strlen(volinfo->v_path) - 1] == '/')
+        volinfo->v_path[strlen(volinfo->v_path) - 1] = 0;
     strcpy(cwdbuf, volinfo->v_path);
-    if (cwdbuf[strlen(cwdbuf) - 1] == '/')
-        cwdbuf[strlen(cwdbuf) - 1] = 0;
     chdir(volinfo->v_path);
 
     /* Start recursion */
