@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.15 2009-12-21 06:41:09 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.16 2009-12-21 09:35:55 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -323,7 +323,7 @@ static int check_eafiles(const char *fname)
 
         eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name, 0);
 
-        if (stat(eaname, &st) != 0) {
+        if (lstat(eaname, &st) != 0) {
             if (errno == ENOENT)
                 dbd_log(LOGSTD, "Missing EA: %s/%s", cwdbuf, eaname);
             else
@@ -408,7 +408,7 @@ static int check_addir(int volroot)
         ad_close_metadata(&ad);
 
         /* Inherit owner/group from "." to ".AppleDouble" and ".Parent" */
-        if ((stat(".", &st)) != 0) {
+        if ((lstat(".", &st)) != 0) {
             dbd_log( LOGSTD, "Couldnt stat %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
@@ -510,7 +510,7 @@ static int read_addir(void)
         if (STRCMP(ep->d_name, ==, ".Parent"))
             continue;
 
-        if ((stat(ep->d_name, &st)) < 0) {
+        if ((lstat(ep->d_name, &st)) < 0) {
             dbd_log( LOGSTD, "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
                      cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
             continue;
@@ -742,14 +742,30 @@ static int dbd_readdir(int volroot, cnid_t did)
         if (STRCMP(ep->d_name, == , ADv2_DIRNAME))
             continue;
 
-        if ((ret = stat(ep->d_name, &st)) < 0) {
+        if ((ret = lstat(ep->d_name, &st)) < 0) {
             dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s", cwdbuf, ep->d_name, strerror(errno));
             continue;
         }
-        if (S_ISREG(st.st_mode))
+        
+        switch (st.st_mode & S_IFMT) {
+        case S_IFREG:
             adflags = 0;
-        else
+            break;
+        case S_IFDIR:
             adflags = ADFLAGS_DIR;
+            break;
+        case S_IFLNK:
+            dbd_log(LOGDEBUG, "Ignoring symlink %s/%s", cwdbuf, ep->d_name);
+            continue;
+        default:
+            dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
+            if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+                if ((unlink(ep->d_name)) != 0) {
+                    dbd_log(LOGSTD, "Error removing: %s/%s: %s", cwdbuf, ep->d_name, strerror(errno));
+                }
+            }
+            continue;
+        }
 
         /**************************************************************************
            Tests
