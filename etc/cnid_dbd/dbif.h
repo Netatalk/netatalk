@@ -1,5 +1,5 @@
 /*
-  $Id: dbif.h,v 1.8 2009-09-03 08:35:15 franklahm Exp $
+  $Id: dbif.h,v 1.9 2009-12-21 06:41:09 franklahm Exp $
  
   Copyright (C) Joerg Lenneis 2003
   Copyright (C) Frank Lahm 2009
@@ -18,8 +18,9 @@
      Pass NULL to create an in-memory db.
      Note: the DBD type is NOT from BerkeleyDB ! We've defined it.
   3. Call dbif_env_open to open an dbd environment if you called dbif_init
-     with a filename.
-  4. Call dbif_open to finally open the CNID database itself
+     with a filename. Pass a db_param here for on-disk databases.
+  4. Call dbif_open to finally open the CNID database itself. Pass db_param
+     here for in-memory database.
   
   Querying the CNID database
   --------------------------

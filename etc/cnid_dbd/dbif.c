@@ -1,5 +1,5 @@
 /*
- * $Id: dbif.c,v 1.18 2009-12-20 16:04:21 franklahm Exp $
+ * $Id: dbif.c,v 1.19 2009-12-21 06:41:09 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -296,7 +296,7 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 }
 
 /* --------------- */
-int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
+int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
 {
     int ret, i, cwd;
     u_int32_t count;
@@ -357,6 +357,18 @@ int dbif_open(DBD *dbd, struct db_param *dbp _U_, int reindex)
                                                       dbd->db_table[i].flags))) {
                 LOG(log_error, logtype_cnid, "error setting flags for database %s: %s",
                     dbd->db_table[i].name, db_strerror(ret));
+                return -1;
+            }
+        }
+
+        if ( ! dbd->db_env) {   /* In memory db */
+            if ((ret = dbd->db_table[i].db->set_cachesize(dbd->db_table[i].db,
+                                                          0,
+                                                          dbp->cachesize,
+                                                          4)) /* split in 4 memory chunks */
+                < 0)  {
+                LOG(log_error, logtype_cnid, "error setting cachesize %u KB for database %s: %s",
+                    dbp->cachesize / 1024, dbd->db_table[i].name, db_strerror(ret));
                 return -1;
             }
         }

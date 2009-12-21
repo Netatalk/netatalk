@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.14 2009-12-10 17:40:25 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.15 2009-12-21 06:41:09 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -944,6 +944,10 @@ cleanup:
 int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
 {
     int ret = 0;
+    struct db_param db_param = { 0 };
+
+    /* Set cachesize for in-memory rebuild db */
+    db_param.cachesize = 128 * 1024 * 1024; /* 128 MB */
 
     /* Make it accessible for all funcs */
     dbd = dbd_ref;
@@ -964,7 +968,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
         /* open/create rebuild dbd, copy rootinfo key */
         if (NULL == (dbd_rebuild = dbif_init(NULL, NULL)))
             return -1;
-        if (0 != (dbif_open(dbd_rebuild, NULL, 0)))
+        if (0 != (dbif_open(dbd_rebuild, &db_param, 0)))
             return -1;
         if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild)))
             goto exit_cleanup;

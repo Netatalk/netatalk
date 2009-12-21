@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.20 2009-12-20 14:17:23 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.21 2009-12-21 06:41:09 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -434,7 +434,7 @@ int main(int argc, char **argv)
         if (exclusive)
             dbd_log( LOGDEBUG, "Finished recovery.");
 
-        if (dbif_open(dbd, &db_param, rebuildindexes) < 0) {
+        if (dbif_open(dbd, NULL, rebuildindexes) < 0) {
             dbif_close(dbd);
             goto exit_failure;
         }
