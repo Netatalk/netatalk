@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.22 2009-12-21 07:32:01 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.23 2009-12-21 07:49:44 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -341,6 +341,8 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     volpath = argv[optind];
+
+    setvbuf(stdout, (char *) NULL, _IONBF, 0);
 
     /* Remember cwd */
     if ((cdir = open(".", O_RDONLY)) < 0) {

@@ -360,7 +360,7 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
     /* Open log file as OPEN_LOGS_AS_UID*/
     /* Is it /dev/tty ? */
     if (strcmp(file_configs[logtype].filename, "/dev/tty") == 0) {
-        file_configs[logtype].fd = open( file_configs[logtype].filename, O_WRONLY);
+        file_configs[logtype].fd = 1; /* stdout */
     } else {
         process_uid = geteuid();
         if (process_uid) {
