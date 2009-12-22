@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.17 2009-12-21 14:41:00 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.18 2009-12-22 09:43:15 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -155,7 +155,7 @@ static char *mtoupath(char *mpath)
     return( upath );
 }
 
-
+#if 0
 /* 
    Check if "name" is pointing to
    a) an object inside the current volume (return 0)
@@ -163,7 +163,6 @@ static char *mtoupath(char *mpath)
    Then stats the pointed to object and if it is a dir ors ADFLAGS_DIR to *adflags
    Return -1 on any serious error.
  */
-
 static int check_symlink(const char *name, int *adflags)
 {
     int cwd;
@@ -233,7 +232,7 @@ static int check_symlink(const char *name, int *adflags)
     dbd_log( LOGDEBUG, "intra-share symlink '%s/%s', not following", cwdbuf, name);
     return 0;
 }
-
+#endif
 
 /*
   Check for wrong encoding e.g. "." at the beginning is not CAP encoded (:2e) although volume is default !AFPVOL_USEDOTS.
@@ -835,12 +834,14 @@ static int dbd_readdir(int volroot, cnid_t did)
             adflags = ADFLAGS_DIR;
             break;
         case S_IFLNK:
-            dbd_log(LOGDEBUG, "Checking symlink %s/%s", cwdbuf, ep->d_name);
+            dbd_log(LOGDEBUG, "Ignoring symlink %s/%s", cwdbuf, ep->d_name);
+#if 0
             ret = check_symlink(ep->d_name, &adflags);
             if (ret == 1)
                 break;
             if (ret == -1)
                 dbd_log(LOGSTD, "Error checking symlink %s/%s", cwdbuf, ep->d_name);
+#endif
             continue;
         default:
             dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
