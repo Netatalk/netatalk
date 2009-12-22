@@ -492,14 +492,22 @@ int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_po
     strlcat(item, "\n", sizeof(item));
     strlcat(buf, item, sizeof(buf));
 
-    /* ExtendedAttrbutes */
+    /* ExtendedAttributes */
     strcpy(item, "EXTATTRTYPE:");
-    if (vol->v_vfs_ea & AFPVOL_EA_AD)
-        strlcat(item, "AFPVOL_EA_AD\n", sizeof(item));
-    else if (vol->v_vfs_ea & AFPVOL_EA_SYS)
+    switch (vol->v_vfs_ea) {
+    case AFPVOL_EA_SYS:
         strlcat(item, "AFPVOL_EA_SYS\n", sizeof(item));
-    else
+        break;
+    case AFPVOL_EA_AD:
+        strlcat(item, "AFPVOL_EA_AD\n", sizeof(item));
+        break;
+    case AFPVOL_EA_NONE:
+        strlcat(item, "AFPVOL_EA_NONE\n", sizeof(item));
+        break;
+    default:
         strlcat(item, "AFPVOL_EA_UNKNOWN\n", sizeof(item));
+    }
+
     strlcat(buf, item, sizeof(buf));
 
     if (strlen(buf) >= sizeof(buf)-1)
