@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.18 2009-12-22 09:43:15 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.19 2009-12-22 13:37:27 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -672,6 +672,8 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 
         if (ad_cnid == 0)
             dbd_log( LOGSTD, "Incorrect CNID data in .AppleDouble data for '%s/%s' (bad stamp?)", cwdbuf, name);
+        else
+            dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
 
         ad_close_metadata(&ad);
     }
