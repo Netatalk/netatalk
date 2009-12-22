@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.11 2009-11-30 15:27:48 didg Exp $
+ * $Id: ad_attr.c,v 1.12 2009-12-22 14:45:38 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -114,15 +114,12 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
 #if AD_VERSION == AD_VERSION2
 int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const u_int32_t id, const cnid_t did, const void *stamp)
 {
-    if (adp->ad_flags == AD_VERSION2  && ( adp->ad_options & ADVOL_CACHE) &&
-        ad_getentryoff(adp, ADEID_PRIVDEV) &&
-        sizeof(dev_t) == ADEDLEN_PRIVDEV && sizeof(ino_t) == ADEDLEN_PRIVINO)
-    {
+    if ((adp->ad_flags == AD_VERSION2) && (adp->ad_options & ADVOL_CACHE)) {
+
         ad_setentrylen( adp, ADEID_PRIVDEV, sizeof(dev_t));
         if ((adp->ad_options & ADVOL_NODEV)) {
             memset(ad_entry( adp, ADEID_PRIVDEV ), 0, sizeof(dev_t));
-        }
-        else {
+        } else {
             memcpy(ad_entry( adp, ADEID_PRIVDEV ), &dev, sizeof(dev_t));
         }
 
@@ -155,21 +152,16 @@ u_int32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino 
      * note inode and device are opaques and not in network order
      * only use the ID if adouble is writable for us.
      */
-    if (adp && ( adp->ad_options & ADVOL_CACHE) && ( adp->ad_md->adf_flags & O_RDWR )
-        && sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)
-        && sizeof(ino_t) == ad_getentrylen(adp,ADEID_PRIVINO)
-        && sizeof(temp) == ad_getentrylen(adp,ADEID_PRIVSYN)
-        && sizeof(cnid_t) == ad_getentrylen(adp, ADEID_DID)
-        && sizeof(cnid_t) == ad_getentrylen(adp, ADEID_PRIVID)
-        ) {
+    if (adp && ( adp->ad_options & ADVOL_CACHE) && (adp->ad_md->adf_flags & O_RDWR )) {
         memcpy(&dev, ad_entry(adp, ADEID_PRIVDEV), sizeof(dev_t));
         memcpy(&ino, ad_entry(adp, ADEID_PRIVINO), sizeof(ino_t));
         memcpy(temp, ad_entry(adp, ADEID_PRIVSYN), sizeof(temp));
         memcpy(&a_did, ad_entry(adp, ADEID_DID), sizeof(cnid_t));
 
-        if (  ((adp->ad_options & ADVOL_NODEV) || dev == st_dev)
-              && ino == st_ino && (!did || a_did == did)
-              && !memcmp(stamp, temp, sizeof(temp))) {
+        if ( ((adp->ad_options & ADVOL_NODEV) || dev == st_dev)
+             && ino == st_ino
+             && (!did || a_did == did)
+             && (memcmp(stamp, temp, sizeof(temp)) == 0) ) {
             memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
             return aint;
         }
@@ -182,12 +174,7 @@ u_int32_t ad_forcegetid (struct adouble *adp)
 {
     u_int32_t aint = 0;
 
-    if (adp && ( adp->ad_options & ADVOL_CACHE)
-        && sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)
-        && sizeof(ino_t) == ad_getentrylen(adp,ADEID_PRIVINO)
-        && sizeof(cnid_t) == ad_getentrylen(adp, ADEID_DID)
-        && sizeof(cnid_t) == ad_getentrylen(adp, ADEID_PRIVID)
-        ) {
+    if (adp && (adp->ad_options & ADVOL_CACHE)) {
         memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
         return aint;
     }
