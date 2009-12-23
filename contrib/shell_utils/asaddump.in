@@ -1,0 +1,349 @@
+#!@PERL@
+#
+# AppleSingle/AppleDouble dump
+#
+# (c) 2009 by HAT <hat@fa2.so-net.ne.jp>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+
+open(INFILE, "<$ARGV[0]");
+
+binmode(INFILE);     # for DOS/Win
+
+$addr = 0;
+
+# Magic Number -----------------------------------------------
+
+$rc = read(INFILE,$buf,4);
+$val = unpack("N", $buf );
+printf("Magic Num. : %08X", $val);
+if    ( $val == 0x00051600 ) {
+    printf("                                        : AppleSingle");
+}
+elsif ( $val == 0x00051607 ) {
+    printf("                                        : AppleDouble");
+}
+else                         {
+    printf("                                        : Unknown"    );
+}
+print "\n";
+
+# Version Number ---------------------------------------------
+
+$rc = read(INFILE,$buf,4);
+$val = unpack("N", $buf );
+printf("Ver. Num.  : %08X", $val);
+if    ( $val == 0x00010000 ) {
+    printf("                                        : Version 1");
+}
+elsif ( $val == 0x00020000 ) {
+    printf("                                        : Version 2");
+}
+else                         {
+    printf("                                        : Unknown"  );
+}
+print "\n";
+
+# v1:Home file system / v2:Filler ----------------------------
+
+$rc = read(INFILE,$buf,16);
+print "Filler     :";
+hexdump($buf, 16, 16, " ");
+
+# Number of entities -----------------------------------------
+
+$rc = read(INFILE,$buf,2);
+$entnum = unpack("n", $buf );
+printf("Num. of ent: %04X    ", $entnum);
+printf("                                        : %d", $entnum);
+print "\n";
+
+# data -------------------------------------------------------
+
+for ( $num = 0 ; $num < $entnum ; $num++) {
+
+    seek(INFILE, ($num * 12 + 26), 0);
+
+#    Entry ---------------------------------------------------
+
+    $rc = read(INFILE,$buf,4);
+    $entid = unpack("N", $buf );
+    printf("\nEntry ID   : %08X", $entid);
+    if    ( $entid ==  1 ) { printf(" : Data Fork"); }
+    elsif ( $entid ==  2 ) { printf(" : Resource Fork"); }
+    elsif ( $entid ==  3 ) { printf(" : Real Name"); }
+    elsif ( $entid ==  4 ) { printf(" : Comment"); }
+    elsif ( $entid ==  5 ) { printf(" : Icon, B&W"); }
+    elsif ( $entid ==  6 ) { printf(" : Icon Color"); }
+    elsif ( $entid ==  7 ) { printf(" : File Info"); }
+    elsif ( $entid ==  8 ) { printf(" : File Dates Info"); }
+    elsif ( $entid ==  9 ) { printf(" : Finder Info"); }
+    elsif ( $entid == 10 ) { printf(" : Macintosh File Info"); }
+    elsif ( $entid == 11 ) { printf(" : ProDOS File Info"); }
+    elsif ( $entid == 12 ) { printf(" : MS-DOS File Info"); }
+    elsif ( $entid == 13 ) { printf(" : Short Name"); }
+    elsif ( $entid == 14 ) { printf(" : AFP File Info"); }
+    elsif ( $entid == 15 ) { printf(" : Directory ID"); }
+    elsif ( $entid == 0x8053567E ) { printf(" : CNID (Netatalk Extended)"); }
+    elsif ( $entid == 0x8053594E ) { printf(" : DB stamp (Netatalk Extended)"); }
+    elsif ( $entid == 0x80444556 ) { printf(" : dev (Netatalk Extended)"); }
+    elsif ( $entid == 0x80494E4F ) { printf(" : inode (Netatalk Extended)"); }
+    else { printf(" : Unknown"); }
+    print "\n";
+
+#    Offset -------------------------------------------------
+
+    $rc = read(INFILE,$buf,4);
+    $ofst = unpack("N", $buf );
+    printf("Offset     : %08X", $ofst);
+    printf(" : %d ", $ofst);
+
+#    Length -------------------------------------------------
+
+    $rc = read(INFILE,$buf,4);
+    $len = unpack("N", $buf );
+    printf("\nLength     : %08X", $len);
+    printf(" : %d", $len);
+    $quo = $len >> 4;
+    $rem = $len & 0xF;
+    print "\n";
+
+#    if ( $entid ==  1 ) { ; } # Data Fork
+#    if ( $entid ==  2 ) { ; } # Resource Fork
+#    if ( $entid ==  3 ) { ; } # Real Name
+#    if ( $entid ==  4 ) { ; } # Comment
+#    if ( $entid ==  5 ) { ; } # Icon, B&W
+#    if ( $entid ==  6 ) { ; } # Icon Color
+#    if ( $entid ==  7 ) { ; } # File Info
+    if ( $entid ==  8 ) { filedatesdump($ofst,$len); }
+    elsif ( $entid ==  9 ) { finderinfodump($ofst,$len); }
+#    if ( $entid == 10 ) { ; } # Macintosh File Info
+#    if ( $entid == 11 ) { ; } # ProDOS File Info
+#    if ( $entid == 12 ) { ; } # MS-DOS File Info
+#    if ( $entid == 13 ) { ; } # Short Name
+#    if ( $entid == 14 ) { ; } # AFP File Info 
+#    if ( $entid == 15 ) { ; } # Directory ID
+#    if ( $entid == 0x8053567E  ) { ; } # CNID (Netatalk Extended)
+#    if ( $entid == 0x8053594E  ) { ; } # DB stamp (Netatalk Extended)
+#    if ( $entid == 0x80444556  ) { ; } # dev (Netatalk Extended)
+#    if ( $entid == 0x80494E4F  ) { ; } # inode (Netatalk Extended)
+
+#    Dump ---------------------------------------------------
+
+    seek(INFILE, $ofst, 0);
+    $addrs = 0;
+    for ( $line = 0 ; $line < $quo ; $line++) {
+        $rc = read(INFILE, $buf, 16);
+        printf ( "%08X   :", $addrs);
+        hexdump($buf, 16, 16, " ");
+        $addrs = $addrs + 0x10;
+    }
+    if ( $rem != 0 ) {
+        $rc = read(INFILE, $buf, $rem);
+        printf ( "%08X   :", $addrs);
+        hexdump($buf, $rem, 16, " ");
+    }
+}
+
+close(INFILE);
+
+
+#sub -----------------------------------------------------------
+
+sub filedatesdump {
+    my ($ofst, $len) = @_;
+    my ($datedata);
+    my ($i);
+    my ($datestr);
+
+    @datetype =('create    ', 'modify    ', 'backup    ', 'access    ');
+
+    seek(INFILE, $ofst, 0);
+
+    for ( $i = 0 ; $i < 4 ; $i++) {
+        $rc = read(INFILE,$buf,4);
+        $datedata = unpack("N", $buf );
+        if ($datedata < 0x80000000) {
+            $datestr = gmtime( $datedata + 946684800)
+                ." (GMT)\n                        "
+                .localtime( $datedata + 946684800)
+                ." (local)";
+        } elsif ($datedata == 0x80000000) {
+            $datestr = "Unknown or Initial";
+        } else {
+            $datestr = gmtime( $datedata - 3348282496)
+                ." (GMT) / "
+                .localtime( $datedata - 3348282496)
+                ." (local)";
+        }
+        printf ("%s : %08X : %s\n",$datetype[$i], $datedata, $datestr);
+    }
+}
+
+sub finderinfodump {
+    my ($ofst, $len) = @_;
+
+    seek(INFILE, $ofst, 0);
+
+    $rc = read(INFILE,$buf,4);
+    print "Type       : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "Creator    : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    $flags = unpack("n", $buf );
+    printf ("isAlias    : %d\n", ($flags >> 15) & 1);
+    printf ("Invisible  : %d\n", ($flags >> 14) & 1);
+    printf ("hasBundle  : %d\n", ($flags >> 13) & 1);
+    printf ("nameLocked : %d\n", ($flags >> 12) & 1);
+    printf ("Stationery : %d\n", ($flags >> 11) & 1);
+    printf ("CustomIcon : %d\n", ($flags >> 10) & 1);
+    printf ("Reserved   : %d\n", ($flags >>  9) & 1);
+    printf ("Inited     : %d\n", ($flags >>  8) & 1);
+    printf ("NoINITS    : %d\n", ($flags >>  7) & 1);
+    printf ("Shared     : %d\n", ($flags >>  6) & 1);
+    printf ("SwitchLaunc: %d\n", ($flags >>  5) & 1);
+    printf ("colorReserv: %d\n", ($flags >>  4) & 1);
+    printf ("color      : %d%d%d\n", ($flags >>  3) & 1,
+            ($flags >>  2) & 1,
+            ($flags >>  1) & 1);
+    printf ("isOnDesk   : %d\n", ($flags >>  0) & 1);
+
+    $rc = read(INFILE,$buf,4);
+    print "Location   : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    print "Fldr       : ";
+    hexdump($buf, 2, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    print "IconID     : ";
+    hexdump($buf, 2, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    print "Unused     : ";
+    hexdump($buf, 2, 4, "");
+    $rc = read(INFILE,$buf,2);
+    print "Unused     : ";
+    hexdump($buf, 2, 4, "");
+    $rc = read(INFILE,$buf,2);
+    print "Unused     : ";
+    hexdump($buf, 2, 4, "");
+
+    $rc = read(INFILE,$buf,1);
+    print "Script     : ";
+    hexdump($buf, 1, 4, "");
+
+    $rc = read(INFILE,$buf,1);
+    print "XFlags     : ";
+    hexdump($buf, 1, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    print "Comment    : ";
+    hexdump($buf, 2, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "PutAway    : ";
+    hexdump($buf, 4, 4, "");
+
+    if ($len > 32) {
+        eadump();
+    }
+
+}
+
+sub eadump {
+    my ($eaofst, $ealen);
+
+    $rc = read(INFILE,$buf,2);
+    print "pad        : ";
+    hexdump($buf, 2, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "magic      : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "debug_tag  : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "total_size : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "data_start : ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "data_length: ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "reserved[2]: ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "reserved[1]: ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,4);
+    print "reserved[0]: ";
+    hexdump($buf, 4, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    print "flags      : ";
+    hexdump($buf, 2, 4, "");
+
+    $rc = read(INFILE,$buf,2);
+    print "num_attrs  : ";
+    hexdump($buf, 2, 4, "");
+
+}
+
+sub hexdump {
+    my ($buf, $len, $col, $delimit) = @_;
+    my ($i);
+
+    $hexstr = "";
+    $ascstr = "";
+
+    for ( $i=0 ; $i < $len ; $i++ ) {
+        $val = substr($buf, $i, 1);
+        $ascval = ord($val);
+        $hexstr .= sprintf("%s%02X", $delimit, $ascval);
+
+        if (($ascval < 32) || (  $ascval > 126 )) {
+            $val = ".";
+        }
+        $ascstr .= $val;
+    }
+    for ( ; $i < $col ; $i++) {
+        $hexstr .= "  ".$delimit;
+        $ascstr .= " ";
+    }
+
+    printf("%s : %s", $hexstr,$ascstr);
+
+    print "\n";
+}
+
+sub htonl { unpack("N",pack("L",shift)) }
+sub htons { unpack("n",pack("S",shift)) }
+sub ntohl { unpack("L",pack("N",shift)) }
+sub ntohs { unpack("S",pack("n",shift)) }
+
+#EOF
