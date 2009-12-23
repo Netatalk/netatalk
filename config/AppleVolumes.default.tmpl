@@ -82,7 +82,16 @@
 # cnidscheme:scheme   -> set the cnid scheme for the volume,
 #                        default is [:DEFAULT_CNID_SCHEME:]
 #                        available schemes: [:COMPILED_BACKENDS:]
-#
+# ea                  -> none|auto|sys|ad
+#                        Specify how Extended Attributes are stores. default
+#                        is auto.
+#                        auto: try "sys" (by setting an EA on the shared
+#                              directory itself), fallback to "ad".  Requires
+#                              writable volume for performing the test.
+#                              Note: options:ro overwrites "auto" with "none."
+#                        sys:  Use filesystem EAs
+#                        ad:   Use files in AppleDouble directories
+#                        none: No EA support
 
 #
 # miscellaneous options [syntax: options:option1,option2]:
