@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.12 2009-12-22 14:45:38 franklahm Exp $
+ * $Id: ad_attr.c,v 1.13 2009-12-23 07:21:08 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -116,6 +116,10 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const u_in
 {
     if ((adp->ad_flags == AD_VERSION2) && (adp->ad_options & ADVOL_CACHE)) {
 
+        /* ad_getid depends on this to detect presence of ALL entries */
+        ad_setentrylen( adp, ADEID_PRIVID, sizeof(id));
+        memcpy(ad_entry( adp, ADEID_PRIVID ), &id, sizeof(id));
+
         ad_setentrylen( adp, ADEID_PRIVDEV, sizeof(dev_t));
         if ((adp->ad_options & ADVOL_NODEV)) {
             memset(ad_entry( adp, ADEID_PRIVDEV ), 0, sizeof(dev_t));
@@ -125,9 +129,6 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const u_in
 
         ad_setentrylen( adp, ADEID_PRIVINO, sizeof(ino_t));
         memcpy(ad_entry( adp, ADEID_PRIVINO ), &ino, sizeof(ino_t));
-
-        ad_setentrylen( adp, ADEID_PRIVID, sizeof(id));
-        memcpy(ad_entry( adp, ADEID_PRIVID ), &id, sizeof(id));
 
         ad_setentrylen( adp, ADEID_DID, sizeof(did));
         memcpy(ad_entry( adp, ADEID_DID ), &did, sizeof(did));
@@ -152,7 +153,11 @@ u_int32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino 
      * note inode and device are opaques and not in network order
      * only use the ID if adouble is writable for us.
      */
-    if (adp && ( adp->ad_options & ADVOL_CACHE) && (adp->ad_md->adf_flags & O_RDWR )) {
+    if (adp
+        && ( adp->ad_options & ADVOL_CACHE)
+        && (adp->ad_md->adf_flags & O_RDWR )
+        && (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVID)) /* One check to ensure ALL values are there */
+        ) {
         memcpy(&dev, ad_entry(adp, ADEID_PRIVDEV), sizeof(dev_t));
         memcpy(&ino, ad_entry(adp, ADEID_PRIVINO), sizeof(ino_t));
         memcpy(temp, ad_entry(adp, ADEID_PRIVSYN), sizeof(temp));
