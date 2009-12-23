@@ -21,7 +21,7 @@ if ($^O eq "freebsd" || $^O eq "openbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
         $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
 } else {
-        $PS_STR    = "-ef";
+        $PS_STR    = "-eo user:32,pid,ppid,c,stime,tty,time,cmd";
         $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 }
 $ASIP_PORT    = "afpovertcp";
