@@ -1,83 +1,13 @@
+'\" t
 .\"     Title: afp_acls
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.74.0 <http://docbook.sf.net/>
-.\"      Date: 31-01-2009
-.\"    Manual: Netatalk 2.0 Manual
-.\"    Source: :NETATALK_VERSION:
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 02 Feb 2009
+.\"    Manual: Netatalk 2.1beta
+.\"    Source: Netatalk 2.1beta
 .\"  Language: English
 .\"
-.TH "AFP_ACLS" "8" "31-01-2009" ":NETATALK_VERSION:" "Netatalk 2.0 Manual"
-.\" -----------------------------------------------------------------
-.\" * (re)Define some macros
-.\" -----------------------------------------------------------------
-.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.\" BB/BE - put background/screen (filled box) around block of text
-.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.de BB
-.if t \{\
-.sp -.5
-.br
-.in +2n
-.ll -2n
-.gcolor red
-.di BX
-.\}
-..
-.de EB
-.if t \{\
-.if "\\$2"adjust-for-leading-newline" \{\
-.sp -1
-.\}
-.br
-.di
-.in
-.ll
-.gcolor
-.nr BW \\n(.lu-\\n(.i
-.nr BH \\n(dn+.5v
-.ne \\n(BHu+.5v
-.ie "\\$2"adjust-for-leading-newline" \{\
-\M[\\$1]\h'1n'\v'+.5v'\D'P \\n(BWu 0 0 \\n(BHu -\\n(BWu 0 0 -\\n(BHu'\M[]
-.\}
-.el \{\
-\M[\\$1]\h'1n'\v'-.5v'\D'P \\n(BWu 0 0 \\n(BHu -\\n(BWu 0 0 -\\n(BHu'\M[]
-.\}
-.in 0
-.sp -.5v
-.nf
-.BX
-.in
-.sp .5v
-.fi
-.\}
-..
-.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.\" BM/EM - put colored marker in margin next to block of text
-.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.de BM
-.if t \{\
-.br
-.ll -2n
-.gcolor red
-.di BX
-.\}
-..
-.de EM
-.if t \{\
-.br
-.di
-.ll
-.gcolor
-.nr BH \\n(dn
-.ne \\n(BHu
-\M[\\$1]\D'P -.75n 0 0 \\n(BHu -(\\n[.i]u - \\n(INu - .75n) 0 0 -\\n(BHu'\M[]
-.in 0
-.nf
-.BX
-.in
-.fi
-.\}
-..
+.TH "AFP_ACLS" "8" "02 Feb 2009" "Netatalk 2.1beta" "Netatalk 2.1beta"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -88,12 +18,12 @@
 .\" -----------------------------------------------------------------
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
-.SH "Name"
+.SH "NAME"
 afp_acls \- Setup and Usage Howto for ACLs with Netatalk
-.SH "Description"
+.SH "DESCRIPTION"
 .PP
 ACL support for AFP is implemented with NFSv4 ACLs\&. Few filesystems and fewer OSes support these\&. At the time of implementation its only provided with ZFS on Solaris, Opensolaris and derived distributions\&.
-.SH "Configuration"
+.SH "CONFIGURATION"
 .PP
 In order to be able to support ACLs, the following things have to be configured:
 .sp
@@ -112,16 +42,10 @@ You MUST configure two ACL parameters for any volume you want to use with Netata
 .if n \{\
 .RS 4
 .\}
-.fam C
-.ps -1
 .nf
-.BB lightgray
 aclinherit = passthrough
 aclmode = passthrough
-.EB lightgray
 .fi
-.fam
-.ps +1
 .if n \{\
 .RE
 .\}
@@ -178,7 +102,6 @@ your server should be configured to use this server via nsswitch and PAM\&.
 .sp
 .\}
 .RS 4
-.BM yellow
 .it 1 an-trap
 .nr an-no-space-flag 1
 .nr an-break-flag 1
@@ -190,7 +113,6 @@ your server should be configured to use this server via nsswitch and PAM\&.
 This however is not a strict requirement: if you create duplicates of every LDAP/OD user and group with identic attributes (name, uid, gid) in your local data store (/etc/[passwd|group]) ACLs will work
 \fIas long as user/group names/ids in the filesystem are equal to their counterparts in the LDAP/OD datastore\fR\&.
 .sp .5v
-.EM yellow
 .RE
 .RE
 .sp
@@ -202,7 +124,7 @@ This however is not a strict requirement: if you create duplicates of every LDAP
 .sp -1
 .IP \(bu 2.3
 .\}
-configure Netatalk via ldap\&.conf so that Netatalk is able to retrieve the UUID for users and groups via LDAP search queries
+configure Netatalk via afp_ldap\&.conf so that Netatalk is able to retrieve the UUID for users and groups via LDAP search queries
 .RE
 .RE
 .sp

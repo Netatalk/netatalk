@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 02 Octobre 2009
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"      Date: 23 Dec 2009
+.\"    Manual: Netatalk 2.1beta
+.\"    Source: Netatalk 2.1beta
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "02 Octobre 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "23 Dec 2009" "Netatalk 2.1beta" "Netatalk 2.1beta"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -54,6 +54,9 @@ line\&. Though newline escaping is supported\&.
 .sp .5v
 .RE
 .PP
+It is possible to specify default options for all volumes with a
+\fI:DEFAULT: \fRline preceeding these volume definitions:.PP \fBExample.\ \&:DEFAULT: configuration line\fR .PP :DEFAULT: options:upriv,usedots dbpath:/var/dbd/AppleDB/$v dperm:0775 fperm:0664
+.PP
 The possible options and their meanings are:
 .PP
 adouble:\fI[v1|v2|osx]\fR
@@ -90,14 +93,18 @@ deny:\fI[users/groups]\fR
 The deny option specifies users and groups who are not allowed access to the share\&. It follows the same format as the allow option\&.
 .RE
 .PP
-allowed_hosts:\fI[IPv4 host address/IPv4 netmask bits[, \&.\&.\&. ]]\fR
+allowed_hosts:\fI[IP host address/IP netmask bits[, \&.\&.\&. ]]\fR
 .RS 4
-Only listed hosts and networks are allowed, all others are rejected\&. Example: allowed_hosts:10\&.1\&.0\&.0/16,10\&.2\&.1\&.100
+Only listed hosts and networks are allowed, all others are rejected\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+.sp
+Example: allowed_hosts:10\&.1\&.0\&.0/16,10\&.2\&.1\&.100,2001:0db8:1234::/48
 .RE
 .PP
-denied_hosts:\fI[IPv4 host address/IPv4 netmask bits[, \&.\&.\&.]]\fR
+denied_hosts:\fI[IP host address/IP netmask bits[, \&.\&.\&.]]\fR
 .RS 4
-Listed hosts and nets are rejected, all others are allowed\&. Example: denied_hosts: 192\&.168\&.100/24,10\&.1\&.1\&.1
+Listed hosts and nets are rejected, all others are allowed\&.
+.sp
+Example: denied_hosts: 192\&.168\&.100/24,10\&.1\&.1\&.1,2001:db8::1428:57ab
 .RE
 .PP
 cnidscheme:\fI[backend]\fR
@@ -110,13 +117,44 @@ dbpath:\fI[path]\fR
 Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&.
 .RE
 .PP
-ea:\fI[sys|ad]\fR
+ea:\fI[none|auto|sys|ad]\fR
 .RS 4
-Specify the format of the metadata files which are used for saving Extended Attributes\&.
+Specify how Extended Attributes
+are stored\&.
+\fBauto\fR
+is the default\&.
+.PP
+auto
+.RS 4
+Try
 \fBsys\fR
-is the default and stores the EAs in native filesystem Extended Attributes\&.
-\fBad\fR
-uses ordinary files inside the \&.AppleDouble directories\&.
+(by setting an EA on the shared directory itself), fallback to
+\fBad\fR\&. Requires writeable volume for perfoming test\&.
+\fBoptions:ro\fR
+overwrites
+\fBauto\fR
+with
+\fBnone\fR\&. Use explicit
+\fBea:sys|ad\fR
+for read\-only volumes where appropiate\&.
+.RE
+.PP
+sys
+.RS 4
+Use filesystem Extended Attributes\&.
+.RE
+.PP
+ad
+.RS 4
+Use files in
+\fIAppleDouble\fR
+directories\&.
+.RE
+.PP
+none
+.RS 4
+No Extended Attributes support\&.
+.RE
 .RE
 .PP
 maccharset:\fI[charset]\fR
@@ -163,7 +201,10 @@ ro
 .RS 4
 Specifies the share as being read only for all users\&. The \&.AppleDB directory has to be writeable, you can use the
 \fB\-dbpath\fR
-option to relocate it\&.
+option to relocate it\&. Overwrites
+\fBea:auto\fR
+with
+\fBea:none\fR
 .RE
 .PP
 root_preexec_close
@@ -493,11 +534,9 @@ options:[\fBoption\fR]
 .RS 4
 This allows multiple options to be specified in a comma delimited format\&. The available options are:
 .PP
-nocnidcache
+caseinsensitive
 .RS 4
-If set
-\fBafpd\fR
-doesn\'t store the ID information in AppleDouble V2 header files\&. As these IDs are used for caching and as a database backup, this option normally shouldn\'t be set\&.
+The underlying filesystem is case insensitive (only tested with JFS in OS2 mode)\&.
 .RE
 .PP
 crlf
@@ -551,6 +590,13 @@ Try to avoid
 whenever possible\&.
 .RE
 .PP
+nocnidcache
+.RS 4
+If set
+\fBafpd\fR
+doesn\'t store the ID information in AppleDouble V2 header files\&. As these IDs are used for caching and as a database backup, this option normally shouldn\'t be set\&.
+.RE
+.PP
 nodev
 .RS 4
 always use 0 for device number, helps when the device number is not constant across a reboot, cluster, \&.\&.\&.
@@ -580,4 +626,6 @@ Provides compatibility with Apple II clients\&.
 .SH "SEE ALSO"
 .PP
 \fBafpd.conf\fR(5),
-\fBafpd\fR(8)
+\fBafpd\fR(8),
+\fBafp_ldap.conf\fR(5),
+\fBafp_acls\fR(8)

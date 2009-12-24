@@ -2,12 +2,12 @@
 .\"     Title: dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 26 May 2009
-.\"    Manual: Netatalk
-.\"    Source: Netatalk
+.\"      Date: 23 Dec 2009
+.\"    Manual: Netatalk 2.1beta
+.\"    Source: Netatalk 2.1beta
 .\"  Language: English
 .\"
-.TH "DBD" "1" "26 May 2009" "2.1dev" "Netatalk"
+.TH "DBD" "1" "23 Dec 2009" "Netatalk 2.1beta" "Netatalk 2.1beta"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -22,7 +22,7 @@
 dbd \- CNID database maintanance
 .SH "SYNOPSIS"
 .HP \w'\fBdbd\fR\fB\fR\ 'u
-\fBdbd\fR\fB\fR [\-evx] \-d\ [\-i]  | \-s | \-r\ [\-f]   \fIvolumepath\fR
+\fBdbd\fR\fB\fR [\-evx] {\-d\ [\-i]  | \-s\ [n]  | \-r\ [\-f]  | \-u} \fIvolumepath\fR
 .SH "DESCRIPTION"
 .PP
 \fBdbd\fR
@@ -118,14 +118,31 @@ Check name encoding by roundtripping, log on error
 Check for orphaned CNIDs in database (requires
 \fB\-e\fR)
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Open and close adouble files
+.RE
+.RS 4
+.PP
+Options:
+.RS 4
+\fB\-n\fR
+Don\'t open CNID database, skip CNID checks, only traverse filesystem
+.RE
 .RE
 .PP
 \-r
 .RS 4
 Rebuild volume\&. With
 \fB\-f\fR
-wipe database and rebuild from CNIIDs stored in AppleDouble files, only available for volumes with \'cachecnid\' option\&. Implies
-\fB\-e\fR\&.
+wipe database and rebuild from CNIIDs stored in AppleDouble files\&.
 .sp
 .RS 4
 .ie n \{\
@@ -204,6 +221,34 @@ Check name encoding by roundtripping, log on error
 Delete orphaned CNIDs in database (requires
 \fB\-e\fR)
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Open and close adouble files
+.RE
+.RS 4
+.PP
+Options:
+.RS 4
+\fB\-f\fR
+Wipe database and rebuild from IDs stored in AppleDouble files, only available for volumes without
+\fBnocnidcache\fR
+option\&. Implies
+\fB\-e\fR\&.
+.RE
+.RE
+.PP
+\-u
+.RS 4
+Prepare upgrade:
+.sp
+Before installing an upgraded version of Netatalk that is linked against a newer BerkeleyDB lib, run `dbd \-u \&.\&.\&.` from the OLD Netatalk pior to upgrading on all volumes\&. This removes the BerkleyDB environment\&. On exit cnid_dbd does this automatically, so normally calling dbd \-u should not be necessary !
 .RE
 .SH "OPTIONS"
 .PP
@@ -223,10 +268,22 @@ verbose
 .RE
 .SH "WARNING"
 .PP
-If you want/need to run an \-r \-f rebuild after adding \'cachecnid\' to a volume configuration, you must run a rebuild with \-r alone at first in order to sync all existing CNIDs from the db to the AppleDouble files!
+In order to be able to run
+\fB\-rf\fR
+reconstructing the CNIDs in the database from the
+\fIAppleDouble\fR
+files, make sure you\'ve run a
+\fB\-r\fR
+rebuild sometimes before, where the CNIDs then would have been synched between database and
+\fIAppleDouble\fR
+files\&.
+.PP
+Also be careful about the option
+\fBnocnidcache\fR\&. Avoid this option if at all possible, because if prevents you from being able to use
+\fB\-f\fR\&.
 .SH "CNID BACKGROUND"
 .PP
-The CNID backends maintains name to ID mappings\&. If you change a filename outside afpd(8) (shell, samba), the CNID db will not know and doesn\'t reflect that change\&. Netatalk tries to recover from such inconsistencies as gracefully as possible\&. The mechanisms to resolve such inconsistencies may fail sometimes, though, as this is not an easy task to accomplish\&. E\&.g\&. if several names in the path to the file or directory have changed, things may go wrong\&.
+The CNID backends maintains name to ID mappings\&. If you change a filename outside afpd(8) (shell, samba), the CNID db will not know and not reflect that change\&. Netatalk tries to recover from such inconsistencies as gracefully as possible\&. The mechanisms to resolve such inconsistencies may fail sometimes, though, as this is not an easy task to accomplish\&. E\&.g\&. if several names in the path to the file or directory have changed, things may go wrong\&.
 .PP
 If you change a lot of filenames at once, chances are higher that the afpds fallback mechanisms fail, i\&.e\&. files will be assigned new IDs, even though the file hasn\'t changed\&.
 .SH "SEE ALSO"

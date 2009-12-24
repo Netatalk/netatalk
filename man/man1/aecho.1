@@ -1,50 +1,90 @@
-.TH aecho 1 "17 Dec 1991" 2.0.0 Netatalk 
-.SH NAME
+'\" t
+.\"     Title: aecho
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 17 Dec 1991
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
+.\"  Language: English
+.\"
+.TH "AECHO" "1" "17 Dec 1991" "Netatalk 2.1" "Netatalk 2.1"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
 aecho \- send AppleTalk Echo Protocol packets to network hosts
-.SH SYNOPSIS
-aecho [ \fB\-c\fR\fI count\fR
-] ( address | nbpname )
-.SH DESCRIPTION
-aecho repeatedly sends an Apple Echo Protocol
-(AEP) packet to the host specified by the given AppleTalk
-address or nbpname and reports
-whether a reply was received. Requests are sent at the rate of one per
-second.
+.SH "SYNOPSIS"
 .PP
-address is parsed by
-\fBatalk_aton\fR(3).
-nbpname is parsed by \fBnbp_name\fR(3).
-The nbp type defaults to `\fIWorkstation\fR'.
+\fBaecho\fR\fB\fR\fB\fR
+[
+\fB\-c\fR\fI count\fR
+] (
+\fBaddress\fR
+|
+\fBnbpname\fR
+)
+.SH "DESCRIPTION"
 .PP
-When aecho is terminated, it reports the number
-of packets sent, the number of responses received, and the percentage of
-packets lost. If any responses were received, the minimum, average, and
-maximum round trip times are reported.
-.SH EXAMPLE
-Check to see if a particular host is up and responding to AEP
-packets:
+\fBaecho\fR
+repeatedly sends an Apple Echo Protocol (AEP) packet to the host specified by the given AppleTalk
+\fBaddress\fR
+or
+\fBnbpname\fR
+and reports whether a reply was received\&. Requests are sent at the rate of one per second\&.
 .PP
+\fBaddress\fR
+is parsed by
+\fBatalk_aton\fR(3)\&.
+\fBnbpname\fR
+is parsed by
+\fBnbp_name\fR(3)\&. The nbp type defaults to `\fBWorkstation\fR\'\&.
+.PP
+When
+\fBaecho\fR
+is terminated, it reports the number of packets sent, the number of responses received, and the percentage of packets lost\&. If any responses were received, the minimum, average, and maximum round trip times are reported\&.
+.SH "EXAMPLE"
+.PP
+Check to see if a particular host is up and responding to AEP packets:
+.sp
+.if n \{\
+.RS 4
+.\}
 .nf
 example% \fBaecho bloodsport
-11 bytes from 8195.13: aep_seq=0. time=10. ms
-11 bytes from 8195.13: aep_seq=1. time=10. ms
-11 bytes from 8195.13: aep_seq=2. time=10. ms
-11 bytes from 8195.13: aep_seq=3. time=10. ms
-11 bytes from 8195.13: aep_seq=4. time=10. ms
-11 bytes from 8195.13: aep_seq=5. time=9. ms
-^C
-\-\-\-\-8195.13 AEP Statistics\-\-\-\-
+\fR\fB11 bytes from 8195\&.13: aep_seq=0\&. time=10\&. ms
+11 bytes from 8195\&.13: aep_seq=1\&. time=10\&. ms
+11 bytes from 8195\&.13: aep_seq=2\&. time=10\&. ms
+11 bytes from 8195\&.13: aep_seq=3\&. time=10\&. ms
+11 bytes from 8195\&.13: aep_seq=4\&. time=10\&. ms
+11 bytes from 8195\&.13: aep_seq=5\&. time=9\&. ms\fR\fB
+\fR\fB\fB^C\fR\fR\fB
+\fR\fB\-\-\-\-8195\&.13 AEP Statistics\-\-\-\-
 6 packets sent, 6 packets received, 0% packet loss
 round\-trip (ms)  min/avg/max = 9/9/10
-\fR.fi
-.SH OPTIONS
-.TP 
+\fR
+.fi
+.if n \{\
+.RE
+.\}
+.SH "OPTIONS"
+.PP
 \fB\-c\fR\fI count\fR
-Stop after \fIcount\fR packets.
+.RS 4
+Stop after
+\fIcount\fR
+packets\&.
+.RE
 .SH "SEE ALSO"
+.PP
 \fBping\fR(1),
 \fBatalk_aton\fR(3),
 \fBnbp_name\fR(3),
 \fBaep\fR(4),
-\fBatalkd\fR(8).
-
+\fBatalkd\fR(8)\&.

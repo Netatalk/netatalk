@@ -1,28 +1,50 @@
-.TH apple_mv 1 "22 Aug 2004" 2.0.0 Netatalk 
-.SH NAME
+'\" t
+.\"     Title: apple_mv
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 22 Aug 2004
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
+.\"  Language: English
+.\"
+.TH "APPLE_MV" "1" "22 Aug 2004" "Netatalk 2.1" "Netatalk 2.1"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
 apple_mv \- Do an apple move, moving metadata and the resource fork as well
-.SH SYNOPSIS
-\fI:BINDIR:/apple_mv\fR \fISOURCE
-DEST\fR \fI:BINDIR:/apple_mv\fR \fISOURCE\fR... \fIDIRECTORY\fR
-.SH DESCRIPTION
-\fIapple_mv\fR is a perl script to move
-SOURCE to DEST or multiple SOURCE(s) to DIRECTORY. It also moves the file 
-specific metadata (including resource forks) to the .AppleDouble directory
-for DEST or DIRECTORY. If the .AppleDouble directory doesn't exist for 
-DEST or DIRECTORY it will create it.
-.SH EXAMPLES
-\fI:BINDIR:/apple_mv\fR test.text
-/target/directory/
+.SH "SYNOPSIS"
 .PP
-\fI:BINDIR:/apple_mv\fR test.text
-/target/directory/test2.text
+\fB:BINDIR:/apple_mv\fR\fB\fR
+\fISOURCE DEST\fR
+\fB:BINDIR:/apple_mv\fR
+\fISOURCE\fR\&.\&.\&.
+\fIDIRECTORY\fR
+.SH "DESCRIPTION"
 .PP
-\fI:BINDIR:/apple_mv\fR test.text
-testing.text /target/directory/
+\fBapple_mv\fR
+is a perl script to move SOURCE to DEST or multiple SOURCE(s) to DIRECTORY\&. It also moves the file specific metadata (including resource forks) to the \&.AppleDouble directory for DEST or DIRECTORY\&. If the \&.AppleDouble directory doesn\'t exist for DEST or DIRECTORY it will create it\&.
+.SH "EXAMPLES"
+.PP
+\fB:BINDIR:/apple_mv\fR
+test\&.text /target/directory/
+.PP
+\fB:BINDIR:/apple_mv\fR
+test\&.text /target/directory/test2\&.text
+.PP
+\fB:BINDIR:/apple_mv\fR
+test\&.text testing\&.text /target/directory/
 .SH "REPORTING BUGS"
-Report bugs to the Netatalk\-devel list
-<netatalk\-devel@lists.sourceforge.net>.
+.PP
+Report bugs to the Netatalk\-devel list <netatalk\-devel@lists\&.sourceforge\&.net>\&.
 .SH "SEE ALSO"
+.PP
 \fBapple_cp\fR(1),
-\fBapple_rm\fR(1).
-
+\fBapple_rm\fR(1)\&.
