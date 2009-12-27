@@ -15,11 +15,11 @@
 #  GNU General Public License for more details.
 #
 
+use bigint; # require perl >= 5.8
+
 open(INFILE, "<$ARGV[0]");
 
 binmode(INFILE);     # for DOS/Win
-
-$addr = 0;
 
 # Magic Number -----------------------------------------------
 
@@ -117,6 +117,8 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
     $rem = $len & 0xF;
     print "\n";
 
+#     Dump for each Entry ID --------------------------------
+
 #    if ( $entid ==  1 ) { ; } # Data Fork
 #    if ( $entid ==  2 ) { ; } # Resource Fork
 #    if ( $entid ==  3 ) { ; } # Real Name
@@ -131,13 +133,13 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
 #    if ( $entid == 12 ) { ; } # MS-DOS File Info
 #    if ( $entid == 13 ) { ; } # Short Name
 #    if ( $entid == 14 ) { ; } # AFP File Info 
-#    if ( $entid == 15 ) { ; } # Directory ID
-#    if ( $entid == 0x8053567E  ) { ; } # CNID (Netatalk Extended)
-#    if ( $entid == 0x8053594E  ) { ; } # DB stamp (Netatalk Extended)
-#    if ( $entid == 0x80444556  ) { ; } # dev (Netatalk Extended)
-#    if ( $entid == 0x80494E4F  ) { ; } # inode (Netatalk Extended)
+    elsif ( $entid == 15 ) { bedump($ofst,$len); } # Directory ID
+    elsif ( $entid == 0x8053567E  ) { bedump($ofst,$len); } # CNID (Netatalk Extended)
+    elsif ( $entid == 0x8053594E  ) { bedump($ofst,$len); ledump($ofst,$len); } # DB stamp (Netatalk Extended)
+    elsif ( $entid == 0x80444556  ) { bedump($ofst,$len); ledump($ofst,$len); } # dev (Netatalk Extended)
+    elsif ( $entid == 0x80494E4F  ) { bedump($ofst,$len); ledump($ofst,$len); } # inode (Netatalk Extended)
 
-#    Dump ---------------------------------------------------
+#    Hex Dump ---------------------------------------------------
 
     seek(INFILE, $ofst, 0);
     $addrs = 0;
@@ -259,14 +261,7 @@ sub finderinfodump {
     print "PutAway    : ";
     hexdump($buf, 4, 4, "");
 
-    if ($len > 32) {
-        eadump();
-    }
-
-}
-
-sub eadump {
-    my ($eaofst, $ealen);
+    if ($len <= 32) { return; }
 
     $rc = read(INFILE,$buf,2);
     print "pad        : ";
@@ -281,19 +276,22 @@ sub eadump {
     hexdump($buf, 4, 4, "");
 
     $rc = read(INFILE,$buf,4);
-    print "total_size : ";
-    hexdump($buf, 4, 4, "");
+    $ofst = unpack("N", $buf );
+    printf("total_size : %08X", $ofst);
+    printf(" : %d \n", $ofst);
 
     $rc = read(INFILE,$buf,4);
-    print "data_start : ";
-    hexdump($buf, 4, 4, "");
+    $ofst = unpack("N", $buf );
+    printf("data_start : %08X", $ofst);
+    printf(" : %d \n", $ofst);
 
     $rc = read(INFILE,$buf,4);
-    print "data_length: ";
-    hexdump($buf, 4, 4, "");
+    $ofst = unpack("N", $buf );
+    printf("data_length: %08X", $ofst);
+    printf(" : %d \n", $ofst);
 
     $rc = read(INFILE,$buf,4);
-    print "reserved[2]: ";
+    print "reserved[0]: ";
     hexdump($buf, 4, 4, "");
 
     $rc = read(INFILE,$buf,4);
@@ -301,7 +299,7 @@ sub eadump {
     hexdump($buf, 4, 4, "");
 
     $rc = read(INFILE,$buf,4);
-    print "reserved[0]: ";
+    print "reserved[2]: ";
     hexdump($buf, 4, 4, "");
 
     $rc = read(INFILE,$buf,2);
@@ -309,9 +307,60 @@ sub eadump {
     hexdump($buf, 2, 4, "");
 
     $rc = read(INFILE,$buf,2);
-    print "num_attrs  : ";
-    hexdump($buf, 2, 4, "");
+    $ofst = unpack("n", $buf );
+    printf("num_attrs  : %04X", $ofst);
+    printf("     : %d \n", $ofst);
 
+}
+
+sub bedump  {
+    my ($ofst, $len) = @_;
+    my ($i);
+    my ($value);
+    
+    seek(INFILE, $ofst, 0);
+    
+    printf("%2dbit-BE   : ", $len * 8 );
+    
+    $value = 0;
+    for ( $i=0 ; $i < $len ; $i++ ) {
+	$rc = read(INFILE,$buf,1);
+	$bytedata[$i] = unpack("C", $buf );
+  	$value += $bytedata[$i] << (($len - $i -1) * 8) ;
+    }
+
+    for ( $i=0 ; $i < $len ; $i++ ) {
+	printf("%02X", $bytedata[$i]);
+    }
+
+    printf(" : %s", $value);
+    print "\n";
+    
+}
+
+sub ledump  {
+    my ($ofst, $len) = @_;
+    my ($i);
+    my ($value);
+    
+    seek(INFILE, $ofst, 0);
+    
+    printf("%2dbit-LE   : ", $len * 8 );
+    
+    $value = 0;
+    for ( $i=0 ; $i < $len ; $i++ ) {
+	$rc = read(INFILE,$buf,1);
+	$bytedata[$len - $i - 1] = unpack("C", $buf );
+  	$value += $bytedata[$len - $i -1] << ($i * 8) ;
+    }
+
+    for ( $i=0 ; $i < $len ; $i++ ) {
+	printf("%02X", $bytedata[$i]);
+    }
+
+    printf(" : %s", $value);
+    print "\n";
+    
 }
 
 sub hexdump {
@@ -340,10 +389,5 @@ sub hexdump {
 
     print "\n";
 }
-
-sub htonl { unpack("N",pack("L",shift)) }
-sub htons { unpack("n",pack("S",shift)) }
-sub ntohl { unpack("L",pack("N",shift)) }
-sub ntohs { unpack("S",pack("n",shift)) }
 
 #EOF
