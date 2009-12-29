@@ -1,5 +1,4 @@
 AC_DEFUN([AC_NETATALK_CNID], [
-
     dnl Don't use BDB unless it's needed
     bdb_required=no
     compiled_backends=""
