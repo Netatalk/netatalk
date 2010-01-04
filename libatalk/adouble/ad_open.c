@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.60 2009-11-27 12:37:25 didg Exp $
+ * $Id: ad_open.c,v 1.61 2010-01-04 13:49:48 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -23,8 +23,14 @@
  *  +1-313-763-0525
  *  netatalk@itd.umich.edu
  *
- * NOTE: I don't use inline because a good compiler should be
- * able to optimize all the static below. Didier
+ */
+
+/*!
+ * @file
+ * Part of Netatalk's AppleDouble implementatation
+ * @note We don't use inlines because a good compiler should be
+ *       able to optimize all the static funcs below.
+ * @sa include/atalk/adouble.h
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1204,9 +1210,43 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad->ad_rlen = 0;
 }
 
-/* -------------------
- * It's not possible to open the header file O_RDONLY -- the read
- * will fail and return an error. this refcounts things now.
+/*!
+ * Open data-, metadata(header)- or ressource fork
+ *
+ * You must call ad_init() before ad_open, usually you'll just call it like this: \n
+ * @code
+ *      struct adoube ad;
+ *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+ * @endcode
+ *
+ * @param path    Path to file or directory
+ *
+ * @param adflags ADFLAGS_DF: open data file/fork\n
+ *                ADFLAGS_HF: open header (metadata) file\n
+ *                ADFLAGS_RF: open ressource fork *** FIXME: not used ?! *** \n
+ *                ADFLAGS_CREATE: indicate creation\n
+ *                ADFLAGS_NOHF: it's not an error if header file couldn't be created\n
+ *                ADFLAGS_DIR: if path is a directory you MUST or ADFLAGS_DIR to adflags\n
+ *                ADFLAGS_NOADOUBLE: dont create adouble files if not necessary\n
+ *                ADFLAGS_RDONLY: open read only\n
+ *                ADFLAGS_OPENFORKS: check for open forks from other processes\n
+ *                ADFLAGS_MD: alias for ADFLAGS_HF\n
+ *                ADFLAGS_V1COMPAT: obsolete
+ *
+ * @param oflags  flags passed through to open syscall: \n
+ *                O_RDONLY: *** FIXME *** \n
+ *                O_RDWR: *** FIXME *** \n
+ *                O_CREAT: create fork\n
+ *                O_EXCL: fail if exists with O_CREAT
+ *
+ * @param mode    passed to open with O_CREAT
+ *
+ * @param ad      pointer to struct adouble
+ *
+ * @returns 0 on success
+ *
+ * @note It's not possible to open the header file O_RDONLY -- the read
+ *       will fail and return an error. this refcounts things now.
  */
 int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
 {

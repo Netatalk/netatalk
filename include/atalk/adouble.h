@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.50 2009-11-18 11:14:59 didg Exp $
+ * $Id: adouble.h,v 1.51 2010-01-04 13:49:48 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -20,6 +20,11 @@
  *  Ann Arbor, Michigan
  *  +1-313-763-0525
  *  netatalk@itd.umich.edu
+ */
+
+/*!
+ * @file
+ * @brief Part of Netatalk's AppleDouble implementatation
  */
 
 #ifndef _ATALK_ADOUBLE_H
