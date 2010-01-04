@@ -8,7 +8,7 @@ PERLSCRIPTS = \
 	afpd-mtab.pl \
 	apple_cp apple_mv apple_rm  \
 	asip-status.pl \
-	asaddump
+	apple_dump
 
 SUFFIXES = .tmpl .
 

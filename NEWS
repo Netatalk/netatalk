@@ -23,7 +23,7 @@ Changes in 2.1-beta1
        database can't be open.
 * NEW: support for Unicode characters in the range above U+010000 using
        internal surrogate pairs
-* NEW: asaddump: utility to dump AppleSingle and AppleDouble files
+* NEW: apple_dump: utility to dump AppleSingle and AppleDouble files
 * UPD: atalkd and papd are now disabled by default. AppleTalk is legacy.
 * UPD: slp advertisement is now disabled by default. server option -slp
        SRVLOC is legacy.
