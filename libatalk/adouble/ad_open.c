@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.64 2010-01-05 14:31:58 franklahm Exp $
+ * $Id: ad_open.c,v 1.65 2010-01-05 15:46:13 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1080,9 +1080,8 @@ ad_mkdir( const char *path, int mode)
     int st_invalid;
     struct stat stbuf;
 
-#ifdef DEBUG
-    LOG(log_debug9, logtype_default, "ad_mkdir: Creating directory with mode %d", mode);
-#endif
+    LOG(log_debug, logtype_default, "ad_mkdir: creating ad-directory '%s/%s' with mode %04o",
+        getcwdpath(), path, mode);
 
     st_invalid = ad_mode_st(path, &mode, &stbuf);
     ret = mkdir( path, mode );
@@ -1373,7 +1372,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 admode = mode;
             }
             admode = ad_hf_mode(admode);
-            if ( errno == ENOENT && !(ad->ad_options & ADVOL_NOADOUBLE) && ad->ad_flags != AD_VERSION2_OSX) {
+            if ((errno == ENOENT) && (ad->ad_flags != AD_VERSION2_OSX)) {
                 if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
                     return ad_error(ad, adflags);
                 }
