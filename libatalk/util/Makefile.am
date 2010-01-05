@@ -21,4 +21,5 @@ libutil_la_SOURCES = \
 	strcasestr.c    \
 	strdicasecmp.c	\
 	strlcpy.c	\
-	volinfo.c
+	volinfo.c \
+	unix.c

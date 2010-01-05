@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.16 2009-11-23 18:17:30 didg Exp $
+ * $Id: util.h,v 1.17 2010-01-05 13:48:47 franklahm Exp $
  */
 
 #ifndef _ATALK_UTIL_H
@@ -236,3 +236,14 @@ extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
  * IPv6 mapped IPv4 addresses are treated as IPv4 addresses.
  */
 extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
+
+/******************************************************************
+ * unix.c
+ *****************************************************************/
+
+/*!
+ * @brief get cwd in static buffer
+ *
+ * @returns pointer to path or pointer to error messages on error
+ */
+extern const char *getcwdpath(void);

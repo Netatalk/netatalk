@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.62 2010-01-05 12:06:34 franklahm Exp $
+ * $Id: ad_open.c,v 1.63 2010-01-05 13:48:47 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1365,6 +1365,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
              * here.
              * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
              */
+            LOG(logtype_default, log_debug, "ad_open: creating new adouble file: %s/%s", getcwdpath(), ad_p);
             admode = mode;
             errno = 0;
             st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
