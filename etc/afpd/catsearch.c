@@ -215,7 +215,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
 		adp = &ad;
 	} 
 
-    if ( ad_metadata( path->u_name, vol_noadouble(vol) | ((isdir)?ADFLAGS_DIR:0), adp) < 0 ) {
+    if ( ad_metadata( path->u_name, ((isdir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
         adp = NULL; /* FIXME without resource fork adl_lkup will be call again */
     }
     

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.47 2009-11-27 12:37:24 didg Exp $
+ * $Id: desktop.c,v 1.48 2010-01-05 12:06:33 franklahm Exp $
  *
  * See COPYRIGHT.
  *
@@ -693,7 +693,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     } else
         adp = of->of_ad;
 
-    if (ad_open_metadata( upath , vol_noadouble(vol) | ( (isadir) ? ADFLAGS_DIR :0),O_CREAT, adp) < 0 ) {
+    if (ad_open_metadata( upath , ( (isadir) ? ADFLAGS_DIR : 0), O_CREAT, adp) < 0 ) {
         return( AFPERR_ACCESS );
     }
 
@@ -766,7 +766,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     } else
         adp = of->of_ad;
         
-    if ( ad_metadata( upath,vol_noadouble(vol) | ((isadir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
+    if ( ad_metadata( upath, ((isadir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
         return( AFPERR_NOITEM );
     }
 

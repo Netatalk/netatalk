@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.121 2009-11-27 12:37:24 didg Exp $
+ * $Id: directory.c,v 1.122 2010-01-05 12:06:33 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1645,7 +1645,7 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_FINFO)))) {
 
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if ( !ad_metadata( upath, vol_noadouble(vol) | ADFLAGS_DIR, &ad) ) {
+        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
             isad = 1;
         }
     }
@@ -2079,7 +2079,7 @@ int setdirparams(struct vol *vol,
     }
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (ad_open_metadata( upath, vol_noadouble(vol)|ADFLAGS_DIR, O_CREAT, &ad) < 0) {
+    if (ad_open_metadata( upath, ADFLAGS_DIR, O_CREAT, &ad) < 0) {
         /*
          * Check to see what we're trying to set.  If it's anything
          * but ACCESS, UID, or GID, give an error.  If it's any of those
@@ -2577,7 +2577,7 @@ int deletecurdir(struct vol *vol)
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
     /* we never want to create a resource fork here, we are going to delete it */
-    if ( ad_metadata( ".", ADFLAGS_NOADOUBLE | ADFLAGS_DIR, &ad) == 0 ) {
+    if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
 
         ad_getattr(&ad, &ashort);
         ad_close( &ad, ADFLAGS_HF );

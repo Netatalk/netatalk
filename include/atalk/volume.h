@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.10 2010-01-05 10:37:29 franklahm Exp $
+ * $Id: volume.h,v 1.11 2010-01-05 12:06:34 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -195,15 +195,13 @@ int wincheck(const struct vol *vol, const char *path);
 #define VOLPBIT_XBTOTAL 10
 #define VOLPBIT_BSIZE   11        /* block size */
 
-
-#define vol_noadouble(vol) (((vol)->v_flags & AFPVOL_NOADOUBLE) ?   \
-                            ADFLAGS_NOADOUBLE : 0)
 #ifdef AFP3x
 #define utf8_encoding() (afp_version >= 30)
 #else
 #define utf8_encoding() (0)
 #endif
 
+#define vol_noadouble(vol) (((vol)->v_flags & AFPVOL_NOADOUBLE) ? 1 : 0)
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
 #define vol_unix_priv(vol) (afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)

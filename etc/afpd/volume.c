@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.112 2009-12-18 19:18:40 franklahm Exp $
+ * $Id: volume.c,v 1.113 2010-01-05 12:06:33 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -696,6 +696,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_ad_options |= ADVOL_UNIXPRIV;
         if ((volume->v_flags & AFPVOL_INV_DOTS))
             volume->v_ad_options |= ADVOL_INVDOTS;
+        if ((volume->v_flags & AFPVOL_NOADOUBLE))
+            volume->v_ad_options |= ADVOL_NOADOUBLE;
 
         if (options[VOLOPT_PASSWORD].c_value)
             volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);
@@ -1408,7 +1410,7 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
      * .Parent file here if it doesn't exist. */
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ( ad_open_metadata( vol->v_path, vol_noadouble(vol) | ADFLAGS_DIR, O_CREAT, &ad) < 0 ) {
+    if ( ad_open_metadata( vol->v_path, ADFLAGS_DIR, O_CREAT, &ad) < 0 ) {
         isad = 0;
         vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
 
@@ -2450,8 +2452,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
     if ( !ret && folder->hide) {
         /* Hide it */
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if (ad_open( p, vol_noadouble(vol) | ADFLAGS_HF|ADFLAGS_DIR,
-                     O_RDWR|O_CREAT, 0666, &ad) < 0) {
+        if (ad_open( p, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR|O_CREAT, 0666, &ad) < 0) {
             free (p);
             free(q);
             return (-1);

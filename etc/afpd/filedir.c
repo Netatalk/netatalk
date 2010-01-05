@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.65 2009-11-27 12:37:24 didg Exp $
+ * $Id: filedir.c,v 1.66 2010-01-05 12:06:33 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -360,7 +360,7 @@ static int moveandrename(const struct vol *vol, struct dir *sdir, char *oldname,
      * we are in the dest folder so we need to use p for ad_open
     */
     
-    if (!ad_metadata(p, vol_noadouble(vol) | adflags, adp)) {
+    if (!ad_metadata(p, adflags, adp)) {
         u_int16_t bshort;
 
         ad_getattr(adp, &bshort);

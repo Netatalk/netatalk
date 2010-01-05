@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.51 2010-01-04 13:49:48 franklahm Exp $
+ * $Id: adouble.h,v 1.52 2010-01-05 12:06:34 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -300,7 +300,9 @@ struct adouble_fops {
 #define ADFLAGS_DF        (1<<0)
 #define ADFLAGS_HF        (1<<1)
 #define ADFLAGS_DIR       (1<<2)
+/*
 #define ADFLAGS_NOADOUBLE (1<<3)
+*/
 #define ADFLAGS_V1COMPAT  (1<<4)
 #define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
 #define ADFLAGS_RDONLY    (1<<6)  /* don't try readwrite */
@@ -312,10 +314,9 @@ struct adouble_fops {
 /* adouble v2 cnid cache */
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)
-/* adouble unix priv */
-#define ADVOL_UNIXPRIV   (1 << 2)
-/* dot files (.DS_Store) are invisible) */
-#define ADVOL_INVDOTS    (1 << 3)
+#define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
+#define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
+#define ADVOL_NOADOUBLE  (1 << 4)
 
 /* lock flags */
 #define ADLOCK_CLR      (0)

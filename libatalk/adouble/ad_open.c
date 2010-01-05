@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.61 2010-01-04 13:49:48 franklahm Exp $
+ * $Id: ad_open.c,v 1.62 2010-01-05 12:06:34 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1246,7 +1246,8 @@ void ad_init(struct adouble *ad, int flags, int options)
  * @returns 0 on success
  *
  * @note It's not possible to open the header file O_RDONLY -- the read
- *       will fail and return an error. this refcounts things now.
+ *       will fail and return an error. this refcounts things now.\n
+ *       metadata(ressource)-fork only gets created with O_CREAT.
  */
 int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
 {
@@ -1371,7 +1372,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 admode = mode;
             }
             admode = ad_hf_mode(admode);
-            if ( errno == ENOENT && !(adflags & ADFLAGS_NOADOUBLE) && ad->ad_flags != AD_VERSION2_OSX) {
+            if ( errno == ENOENT && !(ad->ad_options & ADVOL_NOADOUBLE) && ad->ad_flags != AD_VERSION2_OSX) {
                 if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
                     return ad_error(ad, adflags);
                 }
@@ -1505,22 +1506,15 @@ sfm:
 }
 
 /* -----------------------------------
- * return only metadata but try very hard
+ * return only metadata but try very hard ie at first try as user, then try as root
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
     uid_t uid;
     int   ret, err;
     int   dir = flags & ADFLAGS_DIR;
-    int   adouble = 0;
     
-    if (!(flags & ADFLAGS_NOADOUBLE)) {
-      adouble = O_CREAT;
-    }
-    
-    /* Open with O_CREAT, thus enumarating a dir will create missing adouble files, see: */
-    /* http://marc.info/?l=netatalk-devel&m=124039156832408&w=2 */
-    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR | adouble, 0666, adp)) < 0 && errno == EACCES) {
+    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR, 0666, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));

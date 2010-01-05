@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.126 2009-11-30 15:27:48 didg Exp $
+ * $Id: file.c,v 1.127 2010-01-05 12:06:33 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -527,7 +527,7 @@ int getfilparams(struct vol *vol,
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
 
-        if ( ad_metadata( upath, vol_noadouble(vol) | flags, adp) < 0 ) {
+        if ( ad_metadata( upath, flags, adp) < 0 ) {
             switch (errno) {
             case EACCES:
                 LOG(log_error, logtype_afpd, "getfilparams(%s): %s: check resource fork permission?",
@@ -619,7 +619,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         openf = O_RDWR|O_CREAT|O_EXCL;
     }
 
-    if ( ad_open( upath, vol_noadouble(vol)|ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF|ADFLAGS_CREATE,
+    if ( ad_open( upath, ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF|ADFLAGS_CREATE,
                   openf, 0666, adp) < 0 ) {
         switch ( errno ) {
         case EROFS:
@@ -1498,7 +1498,7 @@ int deletefile(const struct vol *vol, char *file, int checkAttrib)
          * moreover sometimes deletefile is called with a no existent file and 
          * ad_open would create a 0 byte resource fork
         */
-        if ( ad_metadata( file , ADFLAGS_NOADOUBLE | ADFLAGS_OPENFORKS, &ad) == 0 ) {
+        if ( ad_metadata( file, ADFLAGS_OPENFORKS, &ad) == 0 ) {
             ad_close( &ad, adflags );
             if ((err = check_attrib(&ad))) {
                return err;
