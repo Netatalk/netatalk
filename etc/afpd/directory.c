@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.122 2010-01-05 12:06:33 franklahm Exp $
+ * $Id: directory.c,v 1.123 2010-01-05 15:12:19 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2430,7 +2430,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     }
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if (ad_open_metadata( ".", vol_noadouble(vol)|ADFLAGS_DIR, O_CREAT, &ad ) < 0)  {
+    if (ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad ) < 0)  {
         if (vol_noadouble(vol))
             goto createdir_done;
         return( AFPERR_ACCESS );

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.127 2010-01-05 12:06:33 franklahm Exp $
+ * $Id: file.c,v 1.128 2010-01-05 15:12:19 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -857,7 +857,7 @@ int setfilparams(struct vol *vol,
 
     /* second try with adouble open 
     */
-    if ( ad_open_metadata( upath, vol_noadouble(vol), O_CREAT, adp) < 0) {
+    if ( ad_open_metadata( upath, 0, O_CREAT, adp) < 0) {
         LOG(log_debug, logtype_afpd, "setfilparams: ad_open_metadata error");
         /*
          * For some things, we don't need an adouble header:
