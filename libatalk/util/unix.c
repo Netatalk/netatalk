@@ -1,5 +1,5 @@
 /*
-  $Id: unix.c,v 1.1 2010-01-05 13:48:47 franklahm Exp $
+  $Id: unix.c,v 1.2 2010-01-05 19:05:52 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -12,6 +12,11 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+
+/*!
+ * @file
+ * Netatalk utility functions
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -36,6 +41,11 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 
+/*!
+ * @brief get cwd in static buffer
+ *
+ * @returns pointer to path or pointer to error messages on error
+ */
 extern const char *getcwdpath(void)
 {
     static char cwd[MAXPATHLEN + 1];

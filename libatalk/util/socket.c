@@ -1,5 +1,5 @@
 /*
-   $Id: socket.c,v 1.5 2009-11-23 19:04:15 franklahm Exp $
+   $Id: socket.c,v 1.6 2010-01-05 19:05:52 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -12,6 +12,11 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 */
+
+/*!
+ * @file
+ * Netatalk utility functions
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -28,6 +33,15 @@
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 
+/*!
+ * @brief set or unset non-blocking IO on a fd
+ *
+ * @param     fd         (r) File descriptor
+ * @param     cmd        (r) 0: disable non-blocking IO, ie block\n
+ *                           <>0: enable non-blocking IO
+ *
+ * @returns   0 on success, -1 on failure
+ */
 int setnonblock(int fd, int cmd)
 {
     int ofdflags;
@@ -48,6 +62,17 @@ int setnonblock(int fd, int cmd)
     return 0;
 }
 
+/*!
+ * @brief convert an IPv4 or IPv6 address to a static string using inet_ntop
+ *
+ * IPv6 mapped IPv4 addresses are returned as IPv4 addreses eg
+ * ::ffff:10.0.0.0 is returned as "10.0.0.0".
+ *
+ * @param  sa        (r) pointer to an struct sockaddr
+ *
+ * @returns pointer to a static string cotaining the converted address as string.\n
+ *          On error pointers to "0.0.0.0" or "::0" are returned.
+ */
 const char *getip_string(const struct sockaddr *sa)
 {
     static char ip4[INET_ADDRSTRLEN];
@@ -78,6 +103,13 @@ const char *getip_string(const struct sockaddr *sa)
     /* We never get here */
 }
 
+/*!
+ * @brief return port number from struct sockaddr
+ *
+ * @param  sa        (r) pointer to an struct sockaddr
+ *
+ * @returns port as unsigned int
+ */
 unsigned int getip_port(const struct sockaddr  *sa)
 {
     if (sa->sa_family == AF_INET) { /* IPv4 */
@@ -91,6 +123,17 @@ unsigned int getip_port(const struct sockaddr  *sa)
     /* We never get here */
 }
 
+/*!
+ * @brief apply netmask to IP (v4 or v6)
+ *
+ * Modifies IP address in sa->sin[6]_addr-s[6]_addr. The caller is responsible
+ * for passing a value for mask that is sensible to the passed address,
+ * eg 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
+ * IPv4 is treated as mask = 32, mask > 128 is set to 128 for IPv6.
+ *
+ * @param  ai        (rw) pointer to an struct sockaddr
+ * @parma  mask      (r) number of maskbits
+ */
 void apply_ip_mask(struct sockaddr *sa, uint32_t mask)
 {
 
@@ -132,6 +175,17 @@ void apply_ip_mask(struct sockaddr *sa, uint32_t mask)
     }
 }
 
+/*!
+ * @brief compare IP addresses for equality
+ *
+ * @param  sa1       (r) pointer to an struct sockaddr
+ * @param  sa2       (r) pointer to an struct sockaddr
+ *
+ * @returns Addresses are converted to strings and compared with strcmp and
+ *          the result of strcmp is returned.
+ *
+ * @note IPv6 mapped IPv4 addresses are treated as IPv4 addresses.
+ */
 int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
 {
     int ret;
