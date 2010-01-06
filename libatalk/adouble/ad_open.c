@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.65 2010-01-05 15:46:13 franklahm Exp $
+ * $Id: ad_open.c,v 1.66 2010-01-06 11:08:53 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1505,16 +1505,27 @@ sfm:
     return 0 ;
 }
 
-/* -----------------------------------
- * return only metadata but try very hard ie at first try as user, then try as root
+/*!
+ * @brief open metadata, possibly as root
+ *
+ * Return only metadata but try very hard ie at first try as user, then try as root.
+ *
+ * @param name  name of file/dir
+ * @param flags ADFLAGS_DIR: name is a directory \n
+ *              ADFLAGS_CREATE: force creation of header file, but only as use, not as root
+ * @param adp   pointer to struct adouble
+ *
+ * @note caller MUST pass ADFLAGS_DIR for directories
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
     uid_t uid;
-    int   ret, err;
-    int   dir = flags & ADFLAGS_DIR;
-    
-    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR, 0666, adp)) < 0 && errno == EACCES) {
+    int   ret, err, dir, create;
+
+    dir = flags & ADFLAGS_DIR;
+    create = (flags & ADFLAGS_CREATE) ? O_CREAT : 0;
+
+    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR | create, 0666, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));

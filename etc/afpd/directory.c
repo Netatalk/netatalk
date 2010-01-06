@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.124 2010-01-06 06:06:20 didg Exp $
+ * $Id: directory.c,v 1.125 2010-01-06 11:08:53 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1646,7 +1646,7 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_FINFO)))) {
 
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
+        if ( !ad_metadata( upath, ADFLAGS_CREATE|ADFLAGS_DIR, &ad) ) {
             isad = 1;
         }
     }

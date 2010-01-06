@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.128 2010-01-05 15:12:19 franklahm Exp $
+ * $Id: file.c,v 1.129 2010-01-06 11:08:53 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -527,7 +527,7 @@ int getfilparams(struct vol *vol,
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
 
-        if ( ad_metadata( upath, flags, adp) < 0 ) {
+        if ( ad_metadata( upath, flags|ADFLAGS_CREATE, adp) < 0 ) {
             switch (errno) {
             case EACCES:
                 LOG(log_error, logtype_afpd, "getfilparams(%s): %s: check resource fork permission?",
