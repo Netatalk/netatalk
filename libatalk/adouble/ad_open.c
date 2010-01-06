@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.66 2010-01-06 11:08:53 franklahm Exp $
+ * $Id: ad_open.c,v 1.67 2010-01-06 12:59:10 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1520,10 +1520,14 @@ sfm:
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
     uid_t uid;
-    int   ret, err, dir, create;
+    int   ret, err, dir;
+    int   create = 0;
 
     dir = flags & ADFLAGS_DIR;
-    create = (flags & ADFLAGS_CREATE) ? O_CREAT : 0;
+
+    /* Check if we shall call ad_open with O_CREAT */
+    if ( ! (adp->ad_options & ADVOL_NOADOUBLE) && (flags & ADFLAGS_CREATE) )
+        create = O_CREAT;
 
     if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR | create, 0666, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
