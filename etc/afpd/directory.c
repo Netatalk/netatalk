@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.125 2010-01-06 11:08:53 franklahm Exp $
+ * $Id: directory.c,v 1.126 2010-01-06 15:37:01 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -61,6 +61,41 @@ char *strchr (), *strrchr ();
 #ifdef HAVE_NFSv4_ACLS
 extern void addir_inherit_acl(const struct vol *vol);
 #endif
+
+/* 
+ * Directory caches
+ * ================
+ *
+ * There are currently two cache structures where afpd caches directory information
+ * a) a DID/dirname cache in a hashtable 
+ * b) a (red-black) tree with CNIDs as key
+ *
+ * a) is for searching by DID/dirname
+ * b) is for searching by CNID
+ *
+ * Through additional parent, child, previous and next pointers, b) is also used to
+ * represent the on-disk layout of the filesystem. parent and child point to parent
+ * and child directory respectively, linking 2 or more subdirectories in one
+ * directory with previous and next pointers.
+ *
+ * Usage examples, highlighting the main functions:
+ * 
+ * a) is eg used in enumerate():
+ * if IS_DIR
+ *     dir = dirsearch_byname() // search in cache
+ *     if (dir == NULL)         // not found
+ *         dir = adddir()       // add to cache
+ *      getdirparams()
+ *
+ * b) is eg used in afp_getfildirparams()
+ * dirlookup()             // wrapper for cache and db search
+ *   => dir = dirsearch()  // search in cache
+ *      if (dir)           // found
+ *          return
+ *      else               // not found,
+ *          cnid_resolve() // resolve with CNID database
+ *      cname()            // add to cache
+ */
 
 struct dir  *curdir;
 int             afp_errno;
