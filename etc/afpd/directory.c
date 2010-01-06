@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.123 2010-01-05 15:12:19 franklahm Exp $
+ * $Id: directory.c,v 1.124 2010-01-06 06:06:20 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -988,6 +988,7 @@ adddir(struct vol *vol, struct dir *dir, struct path *path)
         dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
+        edir->d_u_name_len = cdir->d_u_name_len;
         edir->d_m_name_ucs2 = cdir->d_m_name_ucs2;
         free(cdir);
         cdir = edir;
@@ -2535,6 +2536,7 @@ int renamedir(const struct vol *vol, char *src, char *dst,
         dir->d_u_name = buf;
         strcpy( dir->d_u_name, dst );
     }
+    dir->d_u_name_len = strlen(dir->d_u_name);
 
     if (dir->d_m_name_ucs2)
         free(dir->d_m_name_ucs2);
