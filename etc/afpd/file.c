@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.129 2010-01-06 11:08:53 franklahm Exp $
+ * $Id: file.c,v 1.130 2010-01-06 14:05:15 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -194,16 +194,17 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
                  const cnid_t did, char *upath, const int len) 
 {
-    u_int32_t aint = 0;
+    u_int32_t adcnid;
+    u_int32_t dbcnid = CNID_INVALID;
 
     if (vol->v_cdb != NULL) {
         /* prime aint with what we think is the cnid, set did to zero for
            catching moved files */
-        aint = ad_getid(adp, st->st_dev, st->st_ino, 0, vol->v_stamp);
+        adcnid = ad_getid(adp, st->st_dev, st->st_ino, 0, vol->v_stamp);
 
-	    aint = cnid_add(vol->v_cdb, st, did, upath, len, aint);
+	    dbcnid = cnid_add(vol->v_cdb, st, did, upath, len, adcnid);
 	    /* Throw errors if cnid_add fails. */
-	    if (aint == CNID_INVALID) {
+	    if (dbcnid == CNID_INVALID) {
             switch (errno) {
             case CNID_ERR_CLOSE: /* the db is closed */
                 break;
@@ -219,16 +220,15 @@ u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
                 return CNID_INVALID;
             }
         }
-        else if (adp ) {
-            /* update the ressource fork
-             * for a folder adp is always null
-             */
-            if (ad_setid(adp, st->st_dev, st->st_ino, aint, did, vol->v_stamp)) {
+        else if (adp && (adcnid != dbcnid)) {
+            /* Update the ressource fork. For a folder adp is always null */
+            LOG(log_debug, logtype_afpd, "get_id: calling ad_setid. adcnid: %u, dbcnid: %u", htonl(adcnid), htonl(dbcnid));
+            if (ad_setid(adp, st->st_dev, st->st_ino, dbcnid, did, vol->v_stamp)) {
                 ad_flush(adp);
             }
         }
     }
-    return aint;
+    return dbcnid;
 }
              
 /* -------------------------- */
@@ -264,7 +264,7 @@ int getmetadata(struct vol *vol,
             id = get_id(vol, adp, st, dir->d_did, upath, strlen(upath));
         else 
             id = path->id;
-        if (id == 0)
+        if (id == CNID_INVALID)
             return afp_errno;
         if (!path->m_name) {
             path->m_name = utompath(vol, upath, id, utf8_encoding());

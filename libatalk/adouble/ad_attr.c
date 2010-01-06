@@ -1,5 +1,5 @@
 /*
- * $Id: ad_attr.c,v 1.13 2009-12-23 07:21:08 franklahm Exp $
+ * $Id: ad_attr.c,v 1.14 2010-01-06 14:05:15 franklahm Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -154,9 +154,9 @@ u_int32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino 
      * only use the ID if adouble is writable for us.
      */
     if (adp
-        && ( adp->ad_options & ADVOL_CACHE)
+        && (adp->ad_options & ADVOL_CACHE)
         && (adp->ad_md->adf_flags & O_RDWR )
-        && (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVID)) /* One check to ensure ALL values are there */
+        && (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)) /* One check to ensure ALL values are there */
         ) {
         memcpy(&dev, ad_entry(adp, ADEID_PRIVDEV), sizeof(dev_t));
         memcpy(&ino, ad_entry(adp, ADEID_PRIVINO), sizeof(ino_t));

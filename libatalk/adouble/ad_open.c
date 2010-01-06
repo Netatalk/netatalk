@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.67 2010-01-06 12:59:10 franklahm Exp $
+ * $Id: ad_open.c,v 1.68 2010-01-06 14:05:15 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1515,7 +1515,8 @@ sfm:
  *              ADFLAGS_CREATE: force creation of header file, but only as use, not as root
  * @param adp   pointer to struct adouble
  *
- * @note caller MUST pass ADFLAGS_DIR for directories
+ * @note caller MUST pass ADFLAGS_DIR for directories. Whether ADFLAGS_CREATE really creates
+ *       a adouble file depends on various other volume options, eg. ADVOL_CACHE
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
@@ -1526,7 +1527,9 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     dir = flags & ADFLAGS_DIR;
 
     /* Check if we shall call ad_open with O_CREAT */
-    if ( ! (adp->ad_options & ADVOL_NOADOUBLE) && (flags & ADFLAGS_CREATE) )
+    if ( (adp->ad_options & ADVOL_CACHE)
+         && ! (adp->ad_options & ADVOL_NOADOUBLE)
+         && (flags & ADFLAGS_CREATE) )
         create = O_CREAT;
 
     if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR | create, 0666, adp)) < 0 && errno == EACCES) {
