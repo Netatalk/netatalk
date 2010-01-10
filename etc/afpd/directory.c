@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.126 2010-01-06 15:37:01 franklahm Exp $
+ * $Id: directory.c,v 1.127 2010-01-10 10:58:24 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -101,12 +101,20 @@ struct dir  *curdir;
 int             afp_errno;
 
 #define SENTINEL (&sentinel)
-static struct dir sentinel = { SENTINEL, SENTINEL, NULL, DIRTREE_COLOR_BLACK,
-                               NULL, NULL, NULL, NULL, NULL, 0, 0,
-                               0, 0, NULL, NULL, 0, NULL};
-static struct dir rootpar  = { SENTINEL, SENTINEL, NULL, 0,
-                               NULL, NULL, NULL, NULL, NULL, 0, 0,
-                               0, 0, NULL, NULL, 0, NULL};
+static struct dir sentinel = { SENTINEL, SENTINEL, NULL, /* left, right, back */
+                               DIRTREE_COLOR_BLACK,      /* color */
+                               NULL, NULL,               /* parent, child */
+                               NULL, NULL,               /* previous, next */
+                               NULL, 0, 0,               /* oforks, did, flags */
+                               0, 0,                     /* ctime, offcnt */
+                               NULL, NULL, NULL};        /* mname, uname, ucs2-name */
+static struct dir rootpar  = { SENTINEL, SENTINEL, NULL,
+                               0,
+                               NULL, NULL,
+                               NULL, NULL,
+                               NULL, 0, 0,
+                               0, 0,
+                               NULL, NULL, NULL};
 
 /* (from IM: Toolbox Essentials)
  * dirFinderInfo (DInfo) fields:
@@ -192,7 +200,6 @@ dirsearch_byname( const struct vol *vol, struct dir *cdir, char *name)
 
         key.d_parent = cdir;
         key.d_u_name = name;
-        key.d_u_name_len = strlen(name);
         hn = hash_lookup(vol->v_hash, &key);
         if (hn) {
             dir = hnode_get(hn);
@@ -1023,7 +1030,6 @@ adddir(struct vol *vol, struct dir *dir, struct path *path)
         dirfreename(edir);
         edir->d_m_name = cdir->d_m_name;
         edir->d_u_name = cdir->d_u_name;
-        edir->d_u_name_len = cdir->d_u_name_len;
         edir->d_m_name_ucs2 = cdir->d_m_name_ucs2;
         free(cdir);
         cdir = edir;
@@ -1099,7 +1105,6 @@ struct dir *dirnew(const char *m_name, const char *u_name)
         return NULL;
     }
 
-    dir->d_u_name_len = strlen(dir->d_u_name);
     dir->d_m_name_ucs2 = NULL;
     dir->d_left = dir->d_right = SENTINEL;
     dir->d_next = dir->d_prev = dir;
@@ -1147,7 +1152,7 @@ static hash_val_t hash_fun2_dir(const void *key)
 {
     const struct dir *k = key;
     const char *data = k->d_u_name;
-    int len = k->d_u_name_len;
+    int len = strlen(k->d_u_name);
     hash_val_t hash = k->d_parent->d_did, tmp;
 
     int rem = len & 3;
@@ -2571,7 +2576,6 @@ int renamedir(const struct vol *vol, char *src, char *dst,
         dir->d_u_name = buf;
         strcpy( dir->d_u_name, dst );
     }
-    dir->d_u_name_len = strlen(dir->d_u_name);
 
     if (dir->d_m_name_ucs2)
         free(dir->d_m_name_ucs2);
