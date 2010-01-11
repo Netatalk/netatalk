@@ -1,4 +1,4 @@
-dnl $Id: pam-check.m4,v 1.5 2009-11-23 20:09:50 franklahm Exp $
+dnl $Id: pam-check.m4,v 1.6 2010-01-11 13:06:02 franklahm Exp $
 dnl PAM finding macro
 
 AC_DEFUN([AC_PATH_PAM], [
@@ -115,6 +115,7 @@ AC_DEFUN([AC_PATH_PAM], [
 
 	AC_MSG_CHECKING([whether to enable PAM support])
 	if test "x$pam_found" = "xno"; then
+		netatalk_cv_install_pam=no
 		if test "x$require_pam" = "xyes"; then
 			AC_MSG_ERROR([PAM support missing])
 		else
@@ -126,8 +127,8 @@ AC_DEFUN([AC_PATH_PAM], [
 		ifelse([$1], , :, [$1])
 	fi
 
-        LIB_REMOVE_USR_LIB(PAM_LIBS)
-        CFLAGS_REMOVE_USR_INCLUDE(PAM_CFLAGS)
+    LIB_REMOVE_USR_LIB(PAM_LIBS)
+    CFLAGS_REMOVE_USR_INCLUDE(PAM_CFLAGS)
 	AC_SUBST(PAMDIR)
 	AC_SUBST(PAM_CFLAGS)
 	AC_SUBST(PAM_LIBS)
