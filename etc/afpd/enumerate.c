@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.47 2009-10-15 10:43:13 didg Exp $
+ * $Id: enumerate.c,v 1.48 2010-01-11 11:09:36 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -265,6 +265,9 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         /* it's a file or it's a dir and extendir() was unable to chdir in it */
         return path_error(o_path, AFPERR_NODIR );
     }
+
+    LOG(log_debug, logtype_afpd, "enumerate(vid:%u, did:%u, name:'%s', f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
+        ntohs(vid), ntohl(did), o_path->u_name, fbitmap, dbitmap, reqcnt, sindex, maxsz);
 
     data = rbuf + 3 * sizeof( u_int16_t );
     sz = 3 * sizeof( u_int16_t );	/* fbitmap, dbitmap, reqcount */
