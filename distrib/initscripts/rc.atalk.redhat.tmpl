@@ -210,6 +210,11 @@ case "$1" in
 	;;
   'status')
 	status atalkd
+    status papd
+    status timelord
+    status a2boot
+    status cnid_metad
+    status afpd
 	RETVAL=$?
 	;;
   *)
