@@ -2,7 +2,7 @@
 #
 # AppleSingle/AppleDouble dump
 #
-# (c) 2009 by HAT <hat@fa2.so-net.ne.jp>
+# (c) 2009-2010 by HAT <hat@fa2.so-net.ne.jp>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -13,7 +13,38 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#
+# 
+
+# 
+# References:
+# 
+# Applesingle and AppleDouble format internals (version 1)
+# http://users.phg-online.de/tk/netatalk/doc/Apple/v1/
+# 
+# AppleSingle/AppleDouble Formats for Foreign Files Developer's Note (version2)
+# http://users.phg-online.de/tk/netatalk/doc/Apple/v2/AppleSingle_AppleDouble.pdf
+# 
+# Inside Macintosh: Macintosh Toolbox Essentials /
+# Chapter 7 - Finder Interface / Finder Interface Reference
+# http://developer.apple.com/legacy/mac/library/documentation/mac/toolbox/Toolbox-463.html
+# 
+# Finder Interface Reference
+# http://developer.apple.com/legacy/mac/library/documentation/Carbon/Reference/Finder_Interface/Reference/reference.html
+# 
+# Technical Note TN1150  HFS Plus Volume Format
+# http://developer.apple.com/mac/library/technotes/tn/tn1150.html#FinderInfo
+# 
+# CarbonHeaders source
+# http://www.opensource.apple.com/source/CarbonHeaders/CarbonHeaders-8A428/Finder.h
+# http://www.opensource.apple.com/source/CarbonHeaders/CarbonHeaders-9A581/Finder.h
+# 
+# Xcode 3.2.1
+# /usr/bin/SetFile
+# /usr/bin/GetFileInfo
+# 
+# Mac OS X 10.6.2 kernel source
+# http://www.opensource.apple.com/source/xnu/xnu-1486.2.11/bsd/vfs/vfs_xattr.c
+# 
 
 use File::Basename;
 use File::Spec;
@@ -105,11 +136,16 @@ if ( $finderinfo != 0 ) {
 	$finderinfo = 1;
 	$netatalkfile = $path.".AppleDouble/".$basename;
 	$osxfile = $path."._".$basename;
-	if ( -e $netatalkfile ) {
+
+	if (( -e $netatalkfile ) && !( -e $osxfile )) {
 	    $afile = $netatalkfile;
-	} elsif ( -e $osxfile )  {
-	    printf ("\"%s\" not found.\n", $netatalkfile);
+	} elsif (!( -e $netatalkfile ) && ( -e $osxfile )) {
 	    $afile = $osxfile;
+	} elsif (( -e $netatalkfile ) && ( -e $osxfile )) {
+	    printf ("\"%s\" found.\n", $netatalkfile);
+	    printf ("\"%s\" found.\n", $osxfile);
+	    printf ("Specify which of file.\n");
+	    exit 1;
 	} else {
 	    printf ("\"%s\" not found.\n", $netatalkfile);
 	    printf ("\"%s\" not found.\n", $osxfile);
@@ -117,15 +153,20 @@ if ( $finderinfo != 0 ) {
 	}
     }
 } elsif ( -d $afile) {
-    printf ("\"%s\" is directory.\n", $afile);
+    printf ("\"%s\" is a directory.\n", $afile);
     $finderinfo =2;
     $netatalkfile = $path.$basename."/.AppleDouble/.Parent";
     $osxfile = $path."._".$basename;
-    if ( -e $netatalkfile ) {
+
+    if (( -e $netatalkfile ) && !( -e $osxfile )) {
 	$afile = $netatalkfile;
-    } elsif ( -e $osxfile )  {
-	printf ("\"%s\" not found.\n", $netatalkfile);
+    } elsif (!( -e $netatalkfile ) && ( -e $osxfile )) {
 	$afile = $osxfile;
+    } elsif (( -e $netatalkfile ) && ( -e $osxfile )) {
+	printf ("\"%s\" found.\n", $netatalkfile);
+	printf ("\"%s\" found.\n", $osxfile);
+	printf ("Specify which of file.\n");
+	exit 1;
     } else {
 	printf ("\"%s\" not found.\n", $netatalkfile);
 	printf ("\"%s\" not found.\n", $osxfile);
@@ -144,9 +185,11 @@ printf ("%s:\n\n", $afile);
 
 # Magic Number -----------------------------------------------
 
+print "-------------------------------------------------------------------------------\n";
+
 read(INFILE,$buf,4);
 $val = unpack("N", $buf );
-printf("Magic Num. : %08X", $val);
+printf("MagicNumber: %08X", $val);
 if    ( $val == 0x00051600 ) {
     printf("                                        : AppleSingle");
 }
@@ -161,15 +204,13 @@ print "\n";
 # Version Number ---------------------------------------------
 
 read(INFILE,$buf,4);
-$val = unpack("N", $buf );
-printf("Ver. Num.  : %08X", $val);
-if    ( $val == 0x00010000 ) {
+$version = unpack("N", $buf );
+printf("Version    : %08X", $version);
+if ( $version == 0x00010000 ) {
     printf("                                        : Version 1");
-}
-elsif ( $val == 0x00020000 ) {
+} elsif ( $version == 0x00020000 ) {
     printf("                                        : Version 2");
-}
-else                         {
+} else {
     printf("                                        : Unknown"  );
 }
 print "\n";
@@ -177,7 +218,11 @@ print "\n";
 # v1:Home file system / v2:Filler ----------------------------
 
 read(INFILE,$buf,16);
-print "Filler     :";
+if ( $version == 0x00010000 ) {
+    print "HomeFileSys:";
+} else {
+    print "Filler     :";
+}
 hexdump($buf, 16, 16, " ");
 
 # Number of entities -----------------------------------------
@@ -198,27 +243,28 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
 
     read(INFILE,$buf,4);
     $entid = unpack("N", $buf );
-    printf("\nEntry ID   : %08X", $entid);
-    if    ( $entid ==  1 )         { printf(" : Data Fork ---------------------------------------------"); }
-    elsif ( $entid ==  2 )         { printf(" : Resource Fork -----------------------------------------"); }
-    elsif ( $entid ==  3 )         { printf(" : Real Name ---------------------------------------------"); }
-    elsif ( $entid ==  4 )         { printf(" : Comment -----------------------------------------------"); }
-    elsif ( $entid ==  5 )         { printf(" : Icon, B&W ---------------------------------------------"); }
-    elsif ( $entid ==  6 )         { printf(" : Icon Color --------------------------------------------"); }
-    elsif ( $entid ==  7 )         { printf(" : File Info ---------------------------------------------"); }
-    elsif ( $entid ==  8 )         { printf(" : File Dates Info ---------------------------------------"); }
-    elsif ( $entid ==  9 )         { printf(" : Finder Info -------------------------------------------"); }
-    elsif ( $entid == 10 )         { printf(" : Macintosh File Info -----------------------------------"); }
-    elsif ( $entid == 11 )         { printf(" : ProDOS File Info --------------------------------------"); }
-    elsif ( $entid == 12 )         { printf(" : MS-DOS File Info --------------------------------------"); }
-    elsif ( $entid == 13 )         { printf(" : Short Name --------------------------------------------"); }
-    elsif ( $entid == 14 )         { printf(" : AFP File Info -----------------------------------------"); }
-    elsif ( $entid == 15 )         { printf(" : Directory ID ------------------------------------------"); }
-    elsif ( $entid == 0x8053567E ) { printf(" : CNID (Netatalk Extended) ------------------------------"); }
-    elsif ( $entid == 0x8053594E ) { printf(" : DB stamp (Netatalk Extended) --------------------------"); }
-    elsif ( $entid == 0x80444556 ) { printf(" : dev (Netatalk Extended) -------------------------------"); }
-    elsif ( $entid == 0x80494E4F ) { printf(" : inode (Netatalk Extended) -----------------------------"); }
-    else                           { printf(" : Unknown -----------------------------------------------"); }
+    print "\n-------------------------------------------------------------------------------\n";
+    printf("Entry ID   : %08X", $entid);
+    if    ( $entid ==  1 )         { printf(" : Data Fork"); }
+    elsif ( $entid ==  2 )         { printf(" : Resource Fork"); }
+    elsif ( $entid ==  3 )         { printf(" : Real Name"); }
+    elsif ( $entid ==  4 )         { printf(" : Comment"); }
+    elsif ( $entid ==  5 )         { printf(" : Icon, B&W"); }
+    elsif ( $entid ==  6 )         { printf(" : Icon Color"); }
+    elsif ( $entid ==  7 )         { printf(" : File Info"); }
+    elsif ( $entid ==  8 )         { printf(" : File Dates Info"); }
+    elsif ( $entid ==  9 )         { printf(" : Finder Info"); }
+    elsif ( $entid == 10 )         { printf(" : Macintosh File Info"); }
+    elsif ( $entid == 11 )         { printf(" : ProDOS File Info"); }
+    elsif ( $entid == 12 )         { printf(" : MS-DOS File Info"); }
+    elsif ( $entid == 13 )         { printf(" : Short Name"); }
+    elsif ( $entid == 14 )         { printf(" : AFP File Info"); }
+    elsif ( $entid == 15 )         { printf(" : Directory ID"); }
+    elsif ( $entid == 0x8053567E ) { printf(" : CNID (Netatalk Extended)"); }
+    elsif ( $entid == 0x8053594E ) { printf(" : DB stamp (Netatalk Extended)"); }
+    elsif ( $entid == 0x80444556 ) { printf(" : dev (Netatalk Extended)"); }
+    elsif ( $entid == 0x80494E4F ) { printf(" : inode (Netatalk Extended)"); }
+    else                           { printf(" : Unknown"); }
     print "\n";
 
 #    Offset -------------------------------------------------
@@ -254,31 +300,22 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
 #    if ( $entid == 12 ) { ; } # MS-DOS File Info
 #    if ( $entid == 13 ) { ; } # Short Name
 #    if ( $entid == 14 ) { ; } # AFP File Info 
-    elsif ( $entid == 15 ) { bedump($ofst,$len); } # Directory ID
-    elsif ( $entid == 0x8053567E  ) { bedump($ofst,$len); } # CNID (Netatalk Extended)
-    elsif ( $entid == 0x8053594E  ) { bedump($ofst,$len); ledump($ofst,$len); } # DB stamp (Netatalk Extended)
-    elsif ( $entid == 0x80444556  ) { bedump($ofst,$len); ledump($ofst,$len); } # dev (Netatalk Extended)
-    elsif ( $entid == 0x80494E4F  ) { bedump($ofst,$len); ledump($ofst,$len); } # inode (Netatalk Extended)
+    elsif ( $entid == 15 ) { print "\n"; bedump($ofst,$len); } # Directory ID
+    elsif ( $entid == 0x8053567E  ) { print "\n"; bedump($ofst,$len); } # CNID (Netatalk Extended)
+    elsif ( $entid == 0x8053594E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # DB stamp (Netatalk Extended)
+    elsif ( $entid == 0x80444556  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # dev (Netatalk Extended)
+    elsif ( $entid == 0x80494E4F  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # inode (Netatalk Extended)
 
 #    RAW Dump ---------------------------------------------------
 
     if ( ($quo > 0) || ($rem > 0)) {
+	print "\n";
 	print "-RAW DUMP--:  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F : (ASCII)\n";
     }
 
     seek(INFILE, $ofst, 0);
-    $addrs = 0;
-    for ( $line = 0 ; $line < $quo ; $line++) {
-        read(INFILE, $buf, 16);
-        printf ( "%08X   :", $addrs);
-        hexdump($buf, 16, 16, " ");
-        $addrs = $addrs + 0x10;
-    }
-    if ( $rem != 0 ) {
-        read(INFILE, $buf, $rem);
-        printf ( "%08X   :", $addrs);
-        hexdump($buf, $rem, 16, " ");
-    }
+    rawdump($quo, $rem);
+
 }
 
 close(INFILE);
@@ -296,6 +333,7 @@ sub filedatesdump {
 
     seek(INFILE, $ofst, 0);
 
+    print "\n";
     printf ("-DATE------:          : (GMT)                    : (Local)\n");
 
     for ( $i = 0 ; $i < 4 ; $i++) {
@@ -322,6 +360,7 @@ sub finderinfodump {
     seek(INFILE, $ofst, 0);
 
     if ($finderinfo == 0) {
+	print "\n";
 	print "-NOTE------: cannot detect whether FInfo or DInfo. assume FInfo.\n";
     }
 
@@ -338,6 +377,7 @@ sub finderinfodump {
 
 sub filefinderinfodump {
 
+    print "\n";
     print "-FInfo-----:\n";
 
     read(INFILE,$buf,4);
@@ -348,96 +388,128 @@ sub filefinderinfodump {
     print "Creator    : ";
     hexdump($buf, 4, 4, "");
 
-    read(INFILE,$buf,2);
-    $flags = unpack("n", $buf );
-    printf ("isAlias    : %d\n", ($flags >> 15) & 1);
-    printf ("Invisible  : %d\n", ($flags >> 14) & 1);
-    printf ("hasBundle  : %d\n", ($flags >> 13) & 1);
-    printf ("nameLocked : %d\n", ($flags >> 12) & 1);
-    printf ("Stationery : %d\n", ($flags >> 11) & 1);
-    printf ("CustomIcon : %d\n", ($flags >> 10) & 1);
-    printf ("Reserved   : %d\n", ($flags >>  9) & 1);
-    printf ("Inited     : %d\n", ($flags >>  8) & 1);
-    printf ("NoINITS    : %d\n", ($flags >>  7) & 1);
-    printf ("Shared     : %d\n", ($flags >>  6) & 1);
-    printf ("SwitchLaunc: %d\n", ($flags >>  5) & 1);
-    printf ("ExtHidden  : %d\n", ($flags >>  4) & 1);
-    printf ("color      : %d%d%d\n", ($flags >>  3) & 1,
-            ($flags >>  2) & 1,
-            ($flags >>  1) & 1);
-    printf ("isOnDesk   : %d\n", ($flags >>  0) & 1);
+    flagsdump();
 
     read(INFILE,$buf,2);
     $val = unpack("n", $buf );
     printf("Location v : %04X", $val);
-    printf("     : %d \n", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
 
     read(INFILE,$buf,2);
     $val = unpack("n", $buf );
     printf("Location h : %04X", $val);
-    printf("     : %d \n", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
 
     read(INFILE,$buf,2);
     print "Fldr       : ";
     hexdump($buf, 2, 4, "");
 
+    print "\n";
     print "-FXInfo----:\n";
 
     read(INFILE,$buf,2);
-    print "IconID     : ";
-    hexdump($buf, 2, 4, "");
+    $val = unpack("n", $buf );
+    printf("Rsvd|IconID: %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
 
     read(INFILE,$buf,2);
-    print "Unused     : ";
+    print "Rsvd       : ";
     hexdump($buf, 2, 4, "");
     read(INFILE,$buf,2);
-    print "Unused     : ";
+    print "Rsvd       : ";
     hexdump($buf, 2, 4, "");
     read(INFILE,$buf,2);
-    print "Unused     : ";
+    print "Rsvd       : ";
     hexdump($buf, 2, 4, "");
 
-    read(INFILE,$buf,1);
-    print "Script     : ";
-    hexdump($buf, 1, 4, "");
+    xflagsdump();
 
-    read(INFILE,$buf,1);
-    print "XFlags     : ";
-    hexdump($buf, 1, 4, "");
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Rsvd|commnt: %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,4);
+    $val = unpack("N", $buf );
+    printf("PutAway    : %08X", $val);
+    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val); # Why SInt32?
+
+}
+
+sub dirfinderinfodump {
+
+    print "\n";
+    print "-DInfo-----:\n";
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Rect top   : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Rect left  : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Rect bottom: %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Rect right : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    flagsdump();
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Location v : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Location h : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,2);
+    print "View       : ";
+    hexdump($buf, 2, 4, "");
+
+    print "\n";
+    print "-DXInfo----:\n";
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Scroll v   : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,2);
+    $val = unpack("n", $buf );
+    printf("Scroll h   : %04X", $val);
+    printf("     : %d\n", $val>0x7FFF?$val-0x10000:$val);
+
+    read(INFILE,$buf,4);
+    $val = unpack("N", $buf );
+    printf("Rsvd|OpnChn: %08X", $val);
+    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val); # Why SInt32?
+
+    xflagsdump();
 
     read(INFILE,$buf,2);
     print "Comment    : ";
     hexdump($buf, 2, 4, "");
 
     read(INFILE,$buf,4);
-    print "PutAway    : ";
-    hexdump($buf, 4, 4, "");
+    $val = unpack("N", $buf );
+    printf("PutAway    : %08X", $val);
+    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val); # Why SInt32?
 
 }
+sub flagsdump {
 
-sub dirfinderinfodump {
-
-    print "-DInfo-----:\n";
-
-    read(INFILE,$buf,2);
-    $val = unpack("n", $buf );
-    printf("Rect top   : %04X", $val);
-    printf("     : %d \n", $val);
-
-    read(INFILE,$buf,2);
-    $val = unpack("n", $buf );
-    printf("Rect left  : %04X", $val);
-    printf("     : %d \n", $val);
-
-    read(INFILE,$buf,2);
-    $val = unpack("n", $buf );
-    printf("Rect bottom: %04X", $val);
-    printf("     : %d \n", $val);
-
-    read(INFILE,$buf,2);
-    $val = unpack("n", $buf );
-    printf("Rect right : %04X", $val);
-    printf("     : %d \n", $val);
+    @colortype =('none', 'gray', 'green', 'purple', 'blue', 'yellow', 'red', 'orange');
 
     read(INFILE,$buf,2);
     $flags = unpack("n", $buf );
@@ -452,56 +524,48 @@ sub dirfinderinfodump {
     printf ("NoINITS    : %d\n", ($flags >>  7) & 1);
     printf ("Shared     : %d\n", ($flags >>  6) & 1);
     printf ("SwitchLaunc: %d\n", ($flags >>  5) & 1);
-    printf ("ExtHidden  : %d\n", ($flags >>  4) & 1);
-    printf ("color      : %d%d%d\n", ($flags >>  3) & 1,
+    printf ("Hidden Ext : %d\n", ($flags >>  4) & 1);
+    printf ("color      : %d%d%d      : %s\n", ($flags >>  3) & 1,
             ($flags >>  2) & 1,
-            ($flags >>  1) & 1);
+            ($flags >>  1) & 1,
+	    @colortype[($flags & 0xE)>>1]);
     printf ("isOnDesk   : %d\n", ($flags >>  0) & 1);
 
+}
+
+sub xflagsdump {
+    
     read(INFILE,$buf,2);
-    $val = unpack("n", $buf );
-    printf("Location v : %04X", $val);
-    printf("     : %d \n", $val);
+    $flags = unpack("n", $buf );
+    
+    if (($flags >> 15) == 1) {
+	print "Script     : ";
+	hexdump($buf, 1, 4, "");
+    } else {
+	printf ("AreInvalid : %d\n", ($flags >> 15) & 1);
+	printf ("unknown bit: %d\n", ($flags >> 14) & 1);
+	printf ("unknown bit: %d\n", ($flags >> 13) & 1);
+	printf ("unknown bit: %d\n", ($flags >> 12) & 1);
+	printf ("unknown bit: %d\n", ($flags >> 11) & 1);
+	printf ("unknown bit: %d\n", ($flags >> 10) & 1);
+	printf ("unknown bit: %d\n", ($flags >>  9) & 1);
+    }
 
-    read(INFILE,$buf,2);
-    $val = unpack("n", $buf );
-    printf("Location h : %04X", $val);
-    printf("     : %d \n", $val);
-
-    read(INFILE,$buf,2);
-    print "View       : ";
-    hexdump($buf, 2, 4, "");
-
-    print "-DXInfo----:\n";
-
-    read(INFILE,$buf,4);
-    print "Scroll     : ";
-    hexdump($buf, 4, 4, "");
-
-    read(INFILE,$buf,4);
-    print "OpenChain  : ";
-    hexdump($buf, 4, 4, "");
-
-    read(INFILE,$buf,1);
-    print "Script     : ";
-    hexdump($buf, 1, 4, "");
-
-    read(INFILE,$buf,1);
-    print "XFlags     : ";
-    hexdump($buf, 1, 4, "");
-
-    read(INFILE,$buf,2);
-    print "Comment    : ";
-    hexdump($buf, 2, 4, "");
-
-    read(INFILE,$buf,4);
-    print "PutAway    : ";
-    hexdump($buf, 4, 4, "");
+    printf ("CustomBadge: %d\n", ($flags >>  8) & 1);
+    printf ("ObjctIsBusy: %d\n", ($flags >>  7) & 1);
+    printf ("unknown bit: %d\n", ($flags >>  6) & 1);
+    printf ("unknown bit: %d\n", ($flags >>  5) & 1);
+    printf ("unknown bit: %d\n", ($flags >>  4) & 1);
+    printf ("unknown bit: %d\n", ($flags >>  3) & 1);
+    printf ("RoutingInfo: %d\n", ($flags >>  2) & 1);
+    printf ("unknown bit: %d\n", ($flags >>  1) & 1);
+    printf ("unknown bit: %d\n", ($flags >>  0) & 1);
 
 }
 
 sub eadump {
     
+    print "\n";
     print "-EA--------:\n";
 
     read(INFILE,$buf,2);
@@ -513,23 +577,24 @@ sub eadump {
     hexdump($buf, 4, 4, "");
 
     read(INFILE,$buf,4);
-    print "debug_tag  : ";
-    hexdump($buf, 4, 4, "");
+    $ea_debug_tag = unpack("N", $buf );
+    printf("debug_tag  : %08X", $ea_debug_tag);
+    printf(" : %d\n", $ea_debug_tag);
 
     read(INFILE,$buf,4);
     $ea_total_size = unpack("N", $buf );
     printf("total_size : %08X", $ea_total_size);
-    printf(" : %d \n", $ea_total_size);
+    printf(" : %d\n", $ea_total_size);
 
     read(INFILE,$buf,4);
     $ea_data_start = unpack("N", $buf );
     printf("data_start : %08X", $ea_data_start);
-    printf(" : %d \n", $ea_data_start);
+    printf(" : %d\n", $ea_data_start);
 
     read(INFILE,$buf,4);
     $ea_data_length = unpack("N", $buf );
     printf("data_length: %08X", $ea_data_length);
-    printf(" : %d \n", $ea_data_length);
+    printf(" : %d\n", $ea_data_length);
 
     read(INFILE,$buf,4);
     print "reserved[0]: ";
@@ -550,8 +615,49 @@ sub eadump {
     read(INFILE,$buf,2);
     $ea_num_attrs = unpack("n", $buf );
     printf("num_attrs  : %04X", $ea_num_attrs);
-    printf("     : %d \n", $ea_num_attrs);
+    printf("     : %d\n", $ea_num_attrs);
 
+    $pos = tell(INFILE);
+    
+    for ($i = 0 ; $i < $ea_num_attrs ; $i++) {
+	
+	$pos = (($pos & 0x3) == 0) ? ($pos) : ((($pos >> 2) + 1) << 2);
+	seek(INFILE, $pos, 0);
+
+	print "-EA ENTRY--:\n";
+	
+	read(INFILE,$buf,4);
+	$ea_offset = unpack("N", $buf );
+	printf("offset     : %08X", $ea_offset);
+	printf(" : %d\n", $ea_offset);
+	
+	read(INFILE,$buf,4);
+	$ea_length = unpack("N", $buf );
+	printf("length     : %08X", $ea_length);
+	printf(" : %d\n", $ea_length);
+	
+	read(INFILE,$buf,2);
+	print "flags      : ";
+	hexdump($buf, 2, 4, "");
+	
+	read(INFILE,$buf,1);
+	$ea_namelen = unpack("C", $buf );
+	printf("namelen    : %02X", $ea_namelen);
+	printf("       : %d\n", $ea_namelen);
+
+	$ea_namequo = $ea_namelen >> 4;
+	$ea_namerem = $ea_namelen & 0xF;
+	print "-EA NAME---:  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F : (ASCII)\n";
+	rawdump($ea_namequo, $ea_namerem);
+
+	$pos = tell(INFILE);
+
+	seek(INFILE, $ea_offset, 0);
+	$ea_quo = $ea_length >> 4;
+	$ea_rem = $ea_length & 0xF;
+	print "-EA VALUE--:  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F : (ASCII)\n";
+	rawdump($ea_quo, $ea_rem);
+    }
 }
 
 sub bedump  {
@@ -601,6 +707,25 @@ sub ledump  {
 
     printf(" : %s", $value);
     print "\n";
+    
+}
+
+sub rawdump {
+    my ($quo, $rem) = @_;
+    my ($addrs, $line, $buf);
+    
+    $addrs = 0;
+    for ( $line = 0 ; $line < $quo ; $line++) {
+        read(INFILE, $buf, 16);
+        printf ( "%08X   :", $addrs);
+        hexdump($buf, 16, 16, " ");
+        $addrs = $addrs + 0x10;
+    }
+    if ( $rem != 0 ) {
+        read(INFILE, $buf, $rem);
+        printf ( "%08X   :", $addrs);
+        hexdump($buf, $rem, 16, " ");
+    }
     
 }
 
