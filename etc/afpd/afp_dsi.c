@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.48 2009-11-14 05:18:50 didg Exp $
+ * $Id: afp_dsi.c,v 1.49 2010-01-18 12:55:28 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -381,13 +381,14 @@ void afp_over_dsi(AFPObj *obj)
                 dsi->datalen = DSI_DATASIZ;
                 child.flags |= CHILD_RUNNING;
 
-                LOG(log_debug, logtype_afpd, "=> Start AFP command: %s", AfpNum2name(function));
+                LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
                 err = (*afp_switch[function])(obj,
                                               (char *)&dsi->commands, dsi->cmdlen,
                                               (char *)&dsi->data, &dsi->datalen);
 
-                LOG(log_debug, logtype_afpd, "=> Finished AFP command: %s", AfpNum2name(function));
+                LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
+                    AfpNum2name(function), AfpErr2name(err));
 #ifdef FORCE_UIDGID
             	/* bring everything back to old euid, egid */
                 if (obj->force_uid)

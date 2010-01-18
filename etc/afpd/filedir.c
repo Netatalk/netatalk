@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.66 2010-01-05 12:06:33 franklahm Exp $
+ * $Id: filedir.c,v 1.67 2010-01-18 12:55:28 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -171,6 +171,9 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
         return get_afp_errno(AFPERR_NOOBJ); 
     }
 
+    LOG(log_debug, logtype_afpd, "getfildirparams(vid:%u, did:%u, name:'%s', f/d:%04x/%04x) {cwd: %s}",
+        ntohs(vid), ntohl(did), s_path->u_name, fbitmap, dbitmap, getcwdpath());
+
     st   = &s_path->st;
     if (!s_path->st_valid) {
         /* it's a dir and it should be there
@@ -183,6 +186,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     if ( s_path->st_errno != 0 ) {
         return( AFPERR_NOOBJ );
     }
+
 
     buflen = 0;
     if (S_ISDIR(st->st_mode)) {
