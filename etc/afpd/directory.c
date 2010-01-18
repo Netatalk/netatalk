@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.127 2010-01-10 10:58:24 franklahm Exp $
+ * $Id: directory.c,v 1.128 2010-01-18 11:45:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1688,6 +1688,17 @@ int getdirparams(const struct vol *vol,
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         if ( !ad_metadata( upath, ADFLAGS_CREATE|ADFLAGS_DIR, &ad) ) {
             isad = 1;
+            if (ad.ad_md->adf_flags & O_CREAT) {
+                /* We just created it */
+                ad_setname(&ad, s_path->m_name);
+                ad_setid( &ad,
+                          s_path->st.st_dev,
+                          s_path->st.st_ino,
+                          dir->d_did,
+                          dir->d_parent->d_did,
+                          vol->v_stamp);
+                ad_flush( &ad);
+            }
         }
     }
 
