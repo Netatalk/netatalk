@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_add.c,v 1.7 2009-11-25 14:59:15 franklahm Exp $
+ * $Id: dbd_add.c,v 1.8 2010-01-19 14:57:11 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -164,10 +164,16 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, in
 {
     rply->namelen = 0;
 
+    LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx) {start}",
+        ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+
     /* See if we have an entry already and return it if yes */
     if (! nolookup) {
-        if (dbd_lookup(dbd, rqst, rply, 0) < 0)
+        if (dbd_lookup(dbd, rqst, rply, 0) < 0) {
+            LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): error in dbd_lookup",
+                ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
             return -1;
+        }
 
         if (rply->result == CNID_DBD_RES_OK) {
             /* Found it. rply->cnid is the correct CNID now. */
@@ -175,6 +181,10 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, in
             return 1;
         }
     }
+
+    LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): {adding to database ...}",
+        ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+
 
     if (get_cnid(dbd, rply) < 0) {
         if (rply->result == CNID_DBD_RES_ERR_MAX) {
@@ -198,7 +208,7 @@ int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, in
             return -1;
         }
     }
-    LOG(log_debug, logtype_cnid, "dbd_add(DID: %u/\"%s\", dev/ino 0x%llx/0x%llx): Added with CNID: %u",
+    LOG(log_debug, logtype_cnid, "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx): Added with CNID: %u",
         ntohl(rqst->did), rqst->name, (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rply->cnid));
 
     rply->result = CNID_DBD_RES_OK;

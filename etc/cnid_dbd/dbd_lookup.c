@@ -1,5 +1,5 @@
 /*
- * $Id: dbd_lookup.c,v 1.17 2009-12-09 15:37:32 franklahm Exp $
+ * $Id: dbd_lookup.c,v 1.18 2010-01-19 14:57:11 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
@@ -146,6 +146,8 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
 
     rply->namelen = 0;
     rply->cnid = 0;
+
+    LOG(log_maxdebug, logtype_cnid, "dbd_lookup(): START");
     
     buf = pack_cnid_data(rqst); 
 
@@ -187,6 +189,9 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
         type_didname = ntohl(type_didname);
     }
 
+    LOG(log_maxdebug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx) {devino: %u, didname: %u}", 
+        rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, devino, didname);
+
     /* Have we found anything at all ? */
     if (!devino && !didname) {  
         /* nothing found */
@@ -197,22 +202,46 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
     }
 
     /* Check for type (file/dir) mismatch */
-    if (devino && (type_devino != rqst->type)) {
-        /* one is a dir one is a file, remove from db */
-        if (! roflag) {
-            rqst->cnid = id_devino;
-            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
-                return -1;
+    if ((devino && (type_devino != rqst->type)) || (didname && (type_didname != rqst->type))) {
+
+        if (devino && (type_devino != rqst->type)) {
+            /* one is a dir one is a file, remove from db */
+
+            LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for devino", 
+                rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+
+            if (! roflag) {
+                rqst->cnid = id_devino;
+                rc = dbd_delete(dbd, rqst, rply, DBIF_CNID);
+                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
+                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
+                if (rc < 0) {
+                    LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for devino", 
+                        rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+                    return -1;
+                }
+            }
         }
-        rply->result = CNID_DBD_RES_NOTFOUND;
-        return 1;
-    } else if (didname && (type_didname != rqst->type)) {
-        /* same: one is a dir one is a file, remove from db */
-        if (! roflag) {
-            rqst->cnid = id_didname;
-            if (dbd_delete(dbd, rqst, rply, DBIF_CNID) < 0)
-                return -1;
+
+        if (didname && (type_didname != rqst->type)) {
+            /* same: one is a dir one is a file, remove from db */
+
+            LOG(log_debug, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): type mismatch for didname", 
+                rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+
+            if (! roflag) {
+                rqst->cnid = id_didname;
+                rc = dbd_delete(dbd, rqst, rply, DBIF_CNID);
+                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DEVINO);
+                rc += dbd_delete(dbd, rqst, rply, DBIF_IDX_DIDNAME);
+                if (rc < 0) {
+                    LOG(log_error, logtype_cnid, "dbd_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx): error deleting type mismatch for didname", 
+                        rqst->name, ntohl(rqst->did), (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+                    return -1;
+                }
+            }
         }
+
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }
