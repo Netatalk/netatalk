@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.59 2009-10-29 10:04:35 didg Exp $
+ * $Id: unix.c,v 1.60 2010-01-20 13:22:13 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -338,6 +338,10 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 {
 
     int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
+
+    LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
+        fullpathname(name), mode, vol->v_dperm);
+
     mode |= vol->v_dperm;
 
     if (dir_rx_set(mode)) {

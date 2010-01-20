@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.6 2009-10-27 10:24:02 franklahm Exp $
+ * $Id: unix.c,v 1.7 2010-01-20 13:22:13 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,6 +80,7 @@ int dir_rx_set(mode_t mode)
 int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
 {
     struct stat sb;
+    mode_t result = mode;
     mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;  /* rwx for owner group and other, by default */
 
     if (!st) {
@@ -88,7 +89,11 @@ int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
         st = &sb;
     }
 
-    mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
+    result |= st->st_mode & ~mask; /* keep other bits from previous mode */
+
+    LOG(log_debug, logtype_afpd, "setfilmode('%s', mode:%04o, vmask:%04o) {st_mode:%04o, chmod:%04o}",
+        fullpathname(name), mode, v_umask, st->st_mode, result);
+
     if ( chmod( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
         return -1;
     }
