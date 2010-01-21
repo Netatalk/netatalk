@@ -1,5 +1,5 @@
 /*
- * $Id: ad_sendfile.c,v 1.10 2009-10-25 09:47:04 didg Exp $
+ * $Id: ad_sendfile.c,v 1.11 2010-01-21 14:14:49 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -82,7 +82,6 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 {
     return sendfile(tofd, fromfd, offset, count);
 }
-
 
 #elif defined(SENDFILE_FLAVOR_BSD )
 /* FIXME untested */

@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.48 2010-01-05 12:06:33 franklahm Exp $
+ * $Id: desktop.c,v 1.49 2010-01-21 14:14:49 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -536,7 +536,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return AFP_OK;
 
 geticon_exit:
-        LOG(log_info, logtype_afpd, "afp_geticon(%s): %s", icon_dtfile(vol, fcreator), strerror(errno));
+        LOG(log_error, logtype_afpd, "afp_geticon(%s): %s", icon_dtfile(vol, fcreator), strerror(errno));
         dsi_readdone(dsi);
         obj->exit(EXITERR_SYS);
         return AFP_OK;

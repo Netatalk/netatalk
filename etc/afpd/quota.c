@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.32 2009-10-14 02:24:05 didg Exp $
+ * $Id: quota.c,v 1.33 2010-01-21 14:14:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -695,19 +695,19 @@ int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, cons
 #endif
 
 #ifdef DEBUG_QUOTA
-        LOG(log_info, logtype_afpd, "after calling getquota in uquota_getvolspace!" );
-        LOG(log_info, logtype_afpd, "dqb_ihardlimit: %u", dqblk.dqb_ihardlimit );
-        LOG(log_info, logtype_afpd, "dqb_isoftlimit: %u", dqblk.dqb_isoftlimit );
-        LOG(log_info, logtype_afpd, "dqb_curinodes : %u", dqblk.dqb_curinodes );
-        LOG(log_info, logtype_afpd, "dqb_bhardlimit: %u", dqblk.dqb_bhardlimit );
-        LOG(log_info, logtype_afpd, "dqb_bsoftlimit: %u", dqblk.dqb_bsoftlimit );
-        LOG(log_info, logtype_afpd, "dqb_curblocks : %u", dqblk.dqb_curblocks );
-        LOG(log_info, logtype_afpd, "dqb_btime     : %u", dqblk.dqb_btime );
-        LOG(log_info, logtype_afpd, "dqb_itime     : %u", dqblk.dqb_itime );
-        LOG(log_info, logtype_afpd, "bsize/this_bsize : %u/%u", bsize, this_bsize );
-	LOG(log_info, logtype_afpd, "dqblk.dqb_bhardlimit size: %u", tobytes( dqblk.dqb_bhardlimit, this_bsize ));
-	LOG(log_info, logtype_afpd, "dqblk.dqb_bsoftlimit size: %u", tobytes( dqblk.dqb_bsoftlimit, this_bsize ));
-	LOG(log_info, logtype_afpd, "dqblk.dqb_curblocks  size: %u", tobytes( dqblk.dqb_curblocks, this_bsize ));
+        LOG(log_debug, logtype_afpd, "after calling getquota in uquota_getvolspace!" );
+        LOG(log_debug, logtype_afpd, "dqb_ihardlimit: %u", dqblk.dqb_ihardlimit );
+        LOG(log_debug, logtype_afpd, "dqb_isoftlimit: %u", dqblk.dqb_isoftlimit );
+        LOG(log_debug, logtype_afpd, "dqb_curinodes : %u", dqblk.dqb_curinodes );
+        LOG(log_debug, logtype_afpd, "dqb_bhardlimit: %u", dqblk.dqb_bhardlimit );
+        LOG(log_debug, logtype_afpd, "dqb_bsoftlimit: %u", dqblk.dqb_bsoftlimit );
+        LOG(log_debug, logtype_afpd, "dqb_curblocks : %u", dqblk.dqb_curblocks );
+        LOG(log_debug, logtype_afpd, "dqb_btime     : %u", dqblk.dqb_btime );
+        LOG(log_debug, logtype_afpd, "dqb_itime     : %u", dqblk.dqb_itime );
+        LOG(log_debug, logtype_afpd, "bsize/this_bsize : %u/%u", bsize, this_bsize );
+	LOG(log_debug, logtype_afpd, "dqblk.dqb_bhardlimit size: %u", tobytes( dqblk.dqb_bhardlimit, this_bsize ));
+	LOG(log_debug, logtype_afpd, "dqblk.dqb_bsoftlimit size: %u", tobytes( dqblk.dqb_bsoftlimit, this_bsize ));
+	LOG(log_debug, logtype_afpd, "dqblk.dqb_curblocks  size: %u", tobytes( dqblk.dqb_curblocks, this_bsize ));
 #endif /* DEBUG_QUOTA */ 
 
 	/* no limit set for this user. it might be set in the future. */
@@ -730,10 +730,10 @@ int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, cons
     	}
 
 #ifdef DEBUG_QUOTA
-        LOG(log_info, logtype_afpd, "bfree          : %u", *bfree );
-        LOG(log_info, logtype_afpd, "btotal         : %u", *btotal );
-        LOG(log_info, logtype_afpd, "bfree          : %uKB", *bfree/1024 );
-        LOG(log_info, logtype_afpd, "btotal         : %uKB", *btotal/1024 );
+        LOG(log_debug, logtype_afpd, "bfree          : %u", *bfree );
+        LOG(log_debug, logtype_afpd, "btotal         : %u", *btotal );
+        LOG(log_debug, logtype_afpd, "bfree          : %uKB", *bfree/1024 );
+        LOG(log_debug, logtype_afpd, "btotal         : %uKB", *btotal/1024 );
 #endif
 
 	return( AFP_OK );

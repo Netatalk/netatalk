@@ -1,5 +1,5 @@
 /*
- * $Id: server_child.c,v 1.11 2009-10-14 02:24:05 didg Exp $
+ * $Id: server_child.c,v 1.12 2010-01-21 14:14:49 didg Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
@@ -341,7 +341,7 @@ void server_child_kill_one_by_id(server_child *children, const int forkid, const
           child->valid = 1;
 	  child->idlen = idlen;
           child->clientid = id;
-	  LOG(log_info, logtype_default, "Setting clientid (len %d) for %d, boottime %X", idlen, child->pid, boottime);
+	  LOG(log_debug, logtype_default, "Setting clientid (len %d) for %d, boottime %X", idlen, child->pid, boottime);
       }
       child = tmp;
     }

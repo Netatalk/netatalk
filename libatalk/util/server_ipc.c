@@ -1,5 +1,5 @@
 /*
- * $Id: server_ipc.c,v 1.3 2009-10-14 01:38:29 didg Exp $
+ * $Id: server_ipc.c,v 1.4 2010-01-21 14:14:49 didg Exp $
  *
  * All rights reserved. See COPYRIGHT.
  *
@@ -100,7 +100,7 @@ static int ipc_get_session (struct ipc_header *ipc, server_child *children)
   
     server_child_kill_one_by_id (children, CHILD_DSIFORK, ipc->child_pid, ipc->uid, idlen, clientid, boottime);
     /* FIXME byte to ascii if we want to log clientid */
-    LOG (log_info, logtype_afpd, "ipc_get_session: len: %u, idlen %d, time %x", ipc->len, idlen, boottime); 
+    LOG (log_debug, logtype_afpd, "ipc_get_session: len: %u, idlen %d, time %x", ipc->len, idlen, boottime); 
     return 0;
 }
 
@@ -154,7 +154,7 @@ int server_ipc_read(server_child *children)
     }
     ipc.msg = buf;
     
-    LOG (log_info, logtype_afpd, "ipc_read: command: %u, pid: %u, len: %u", ipc.command, ipc.child_pid, ipc.len); 
+    LOG (log_debug, logtype_afpd, "ipc_read: command: %u, pid: %u, len: %u", ipc.command, ipc.child_pid, ipc.len); 
 
     switch (ipc.command)
     {
@@ -204,7 +204,7 @@ int server_ipc_write( u_int16_t command, int len, void *msg)
 
    memcpy(p, msg, len);
 
-   LOG (log_info, logtype_afpd, "ipc_write: command: %u, pid: %u, msglen: %u", command, pid, len); 
+   LOG (log_debug, logtype_afpd, "ipc_write: command: %u, pid: %u, msglen: %u", command, pid, len); 
    return write(pipe_fd[1], block, len+IPC_HEADERLEN );
 }
 

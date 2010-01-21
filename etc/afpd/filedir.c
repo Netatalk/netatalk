@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.68 2010-01-19 14:51:18 franklahm Exp $
+ * $Id: filedir.c,v 1.69 2010-01-21 14:14:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -301,7 +301,7 @@ int check_name(const struct vol *vol, char *name)
         return AFPERR_PARAM;
 
     if (!vol->vfs->vfs_validupath(vol, name)) {
-        LOG(log_info, logtype_afpd, "check_name: illegal name: '%s'", name);
+        LOG(log_error, logtype_afpd, "check_name: illegal name: '%s'", name);
         return AFPERR_EXIST;
     }
 
@@ -734,7 +734,7 @@ int veto_file(const char*veto_str, const char*path)
     for(i=0, j=0; veto_str[i] != '\0'; i++) {
         if (veto_str[i] == '/') {
             if ((j>0) && (path[j] == '\0')) {
-                LOG(log_info, logtype_afpd, "vetoed file:'%s'", path);
+                LOG(log_debug, logtype_afpd, "vetoed file:'%s'", path);
                 return 1;
             }
             j = 0;

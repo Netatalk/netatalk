@@ -298,7 +298,7 @@ static int get_syslog_equivalent(enum loglevels loglevel)
 
 void log_init(void)
 {
-    syslog_setup(log_note, 0,
+    syslog_setup(log_info, 0,
                  log_config.syslog_display_options,
                  log_config.facility);
 }

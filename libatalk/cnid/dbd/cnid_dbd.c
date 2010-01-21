@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.15 2009-11-30 15:27:48 didg Exp $
+ * $Id: cnid_dbd.c,v 1.16 2010-01-21 14:14:49 didg Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -497,7 +497,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
     }
 
     if ((db = cdb->_private) != NULL) {
-        LOG(log_info, logtype_cnid, "closing database connection for volume '%s'", db->db_dir);
+        LOG(log_debug, logtype_cnid, "closing database connection for volume '%s'", db->db_dir);
 
         if (db->fd >= 0)
             close(db->fd);
