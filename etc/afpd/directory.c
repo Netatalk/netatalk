@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.128 2010-01-18 11:45:37 franklahm Exp $
+ * $Id: directory.c,v 1.129 2010-01-21 12:10:19 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -986,13 +986,24 @@ adddir(struct vol *vol, struct dir *dir, struct path *path)
     char        *upath;
     struct stat *st;
     int         deleted;
+    struct adouble  ad;
+    struct adouble *adp = NULL;
     cnid_t      id;
 
     upath = path->u_name;
     st    = &path->st;
     upathlen = strlen(upath);
 
-    id = get_id(vol, NULL, st, dir->d_did, upath, upathlen);
+    /* get_id needs adp for reading CNID from adouble file */
+    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    if ((ad_open_metadata(upath, ADFLAGS_DIR, 0, &ad)) == 0)
+        adp = &ad;
+
+    id = get_id(vol, adp, st, dir->d_did, upath, upathlen);
+
+    if (adp)
+        ad_close_metadata(adp);
+
     if (id == 0) {
         return NULL;
     }
