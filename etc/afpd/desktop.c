@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.49 2010-01-21 14:14:49 didg Exp $
+ * $Id: desktop.c,v 1.50 2010-01-22 04:40:38 didg Exp $
  *
  * See COPYRIGHT.
  *
@@ -682,7 +682,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     clen = min( clen, 199 );
 
     upath = path->u_name;
-    if (!vol_unix_priv(vol) && check_access(upath, OPENACC_WR ) < 0) {
+    if (check_access(upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
     
@@ -832,7 +832,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     char		*upath;
 
     upath = path->u_name;
-    if (!vol_unix_priv(vol) && check_access(upath, OPENACC_WR ) < 0) {
+    if (check_access(upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
 
