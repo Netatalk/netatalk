@@ -1,5 +1,5 @@
 /*
- * $Id: afp_util.c,v 1.9 2010-01-18 12:55:28 franklahm Exp $
+ * $Id: afp_util.c,v 1.10 2010-01-23 14:44:42 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -122,6 +122,8 @@ const char *AfpErr2name(int err)
         AFPERR2NAME(AFPERR_FLATVOL);
         AFPERR2NAME(AFPERR_NOITEM);
         AFPERR2NAME(AFPERR_LOCK);
+        AFPERR2NAME(AFPERR_MISC);
+        AFPERR2NAME(AFPERR_NLOCK);
         AFPERR2NAME(AFPERR_NOSRVR);
         AFPERR2NAME(AFPERR_EXIST);
         AFPERR2NAME(AFPERR_NOOBJ);
@@ -148,6 +150,8 @@ const char *AfpErr2name(int err)
         AFPERR2NAME(AFPERR_BADID);
         AFPERR2NAME(AFPERR_PWDSAME);
         AFPERR2NAME(AFPERR_PWDSHORT);
+        AFPERR2NAME(AFPERR_PWDEXPR);
+        AFPERR2NAME(AFPERR_INSHRD);
         AFPERR2NAME(AFPERR_INTRASH);
         AFPERR2NAME(AFPERR_PWDCHNG);
         AFPERR2NAME(AFPERR_PWDPOLCY);
