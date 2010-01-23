@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.4 2009-12-04 10:26:10 franklahm Exp $
+  $Id: ea_sys.c,v 1.5 2010-01-23 14:54:43 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -320,6 +320,10 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
             LOG(log_debug, logtype_afpd, "sys_set_ea(%s/%s): encountered symlink with kXAttrNoFollow",
                 uname, attruname);
             return AFP_OK;
+        case EEXIST:
+            LOG(log_debug, logtype_afpd, "sys_set_ea(%s/%s): EA already exists",
+                uname, attruname);
+            return AFPERR_EXIST;
         default:
             LOG(log_error, logtype_afpd, "sys_set_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
             return AFPERR_MISC;
