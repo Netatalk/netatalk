@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.113 2010-01-05 12:06:33 franklahm Exp $
+ * $Id: volume.c,v 1.114 2010-01-25 18:39:05 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2299,9 +2299,9 @@ void setvoltime(AFPObj *obj, struct vol *vol)
     if (vol->v_mtime < tv.tv_sec) {
         vol->v_mtime = tv.tv_sec;
         /* or finder doesn't update free space
-         * XXX is it still true with newer OSX?
+         * AFP 3.2 and above clients seem to be ok without so many notification
          */
-        if (afp_version > 21 && obj->options.server_notif) {
+        if (afp_version > 31 && obj->options.server_notif) {
             obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
         }
     }
