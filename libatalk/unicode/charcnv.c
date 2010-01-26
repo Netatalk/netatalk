@@ -191,7 +191,7 @@ static void lazy_initialize_conv(void)
     }
 }
 
-charset_t add_charset(char* name)
+charset_t add_charset(const char* name)
 {
     static charset_t max_charset_t = NUM_CHARSETS-1;
     charset_t cur_charset_t = max_charset_t+1;

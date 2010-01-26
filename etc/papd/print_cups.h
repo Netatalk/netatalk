@@ -16,6 +16,6 @@ int 		cups_get_printer_status (struct printer *pr);
 int 		cups_print_job ( char *, char *, char *, char *, char *);
 struct printer * cups_autoadd_printers ( struct printer *, struct printer *);
 int 		cups_check_printer ( struct printer *, struct printer *, int);
-char		*cups_get_language ( void );
+const char	*cups_get_language ( void );
 #endif /* HAVE_CUPS */
 #endif /* PAPD_CUPS_H */

@@ -1,5 +1,5 @@
 /*
- * $Id: print_cups.c,v 1.5 2009-10-29 11:35:58 didg Exp $
+ * $Id: print_cups.c,v 1.6 2010-01-26 20:43:11 didg Exp $
  *
  * Copyright 2004 Bjoern Fernhomberg.
  *
@@ -60,13 +60,13 @@ static const char* cups_status_msg[] = {
 };
 
 /* Local functions */
-static int 	convert_to_mac_name ( char *encoding, char * inptr, char * outptr, size_t outlen);
+static int 	convert_to_mac_name ( const char *encoding, char * inptr, char * outptr, size_t outlen);
 static size_t	to_ascii ( char *inbuf, char **outbuf);
 static int 	cups_mangle_printer_name ( struct printer *pr, struct printer *printers);
 static void     cups_free_printer ( struct printer *pr);
 
 
-char * cups_get_language (void)
+const char * cups_get_language (void)
 {
         cups_lang_t *language;
 
@@ -523,7 +523,7 @@ to_ascii ( char  *inptr, char **outptr)
  * Returns: -1 on failure, length of name on success; outpr contains name in MacRoman
  */
 
-static int convert_to_mac_name ( char * encoding, char * inptr, char * outptr, size_t outlen)
+static int convert_to_mac_name ( const char * encoding, char * inptr, char * outptr, size_t outlen)
 {
 	char   	*outbuf;
 	char	*soptr;

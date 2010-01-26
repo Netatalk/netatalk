@@ -143,6 +143,6 @@ extern size_t   charset_decompose  ( charset_t, char *, size_t, char *, size_t);
 extern size_t   utf8_precompose ( char *, size_t, char *, size_t);
 extern size_t   utf8_decompose  ( char *, size_t, char *, size_t);
 
-extern charset_t add_charset (char* name);
+extern charset_t add_charset (const char* name);
 
 #endif  /* _ATALK_UNICODE_H */
