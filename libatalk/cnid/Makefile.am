@@ -1,6 +1,6 @@
 # Makefile.am for libatalk/cnid/
 
-SUBDIRS = last mtab cdb dbd tdb
+SUBDIRS = last cdb dbd tdb
 
 noinst_LTLIBRARIES = libcnid.la
 LIBCNID_DEPS = dbd/libcnid_dbd.la
@@ -15,10 +15,6 @@ endif
 
 if USE_TDB_BACKEND
 LIBCNID_DEPS += tdb/libcnid_tdb.la
-endif
-
-if USE_MTAB_BACKEND
-LIBCNID_DEPS += mtab/libcnid_mtab.la
 endif
 
 libcnid_la_SOURCES = cnid.c cnid_init.c

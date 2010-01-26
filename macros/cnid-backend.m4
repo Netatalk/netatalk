@@ -106,32 +106,6 @@ AC_DEFUN([AC_NETATALK_CNID], [
     fi
     AM_CONDITIONAL(USE_TDB_BACKEND, test x"$use_tdb_backend" = x"yes")
 
-    dnl Determine whether or not to use MTAB DID scheme
-    AC_MSG_CHECKING([whether or not to use MTAB DID scheme])
-    AC_ARG_WITH(cnid-mtab-backend,
-	[  --with-cnid-mtab-backend	build MTAB CNID scheme],
-    [
-        if test x"$withval" = x"no"; then
-            use_mtab_backend=no
-        else
-            use_mtab_backend=yes
-        fi
-    ],[
-        use_mtab_backend=no
-    ])
-
-    if test $use_mtab_backend = yes; then
-        AC_MSG_RESULT([yes])
-        AC_DEFINE(CNID_BACKEND_MTAB, 1, [Define if CNID MTAB scheme backend should be compiled.])
-        if test x"$DEFAULT_CNID_SCHEME" = x; then
-            DEFAULT_CNID_SCHEME=mtab
-        fi
-        compiled_backends="$compiled_backends mtab"
-    else		
-        AC_MSG_RESULT([no])
-    fi
-    AM_CONDITIONAL(USE_MTAB_BACKEND, test x"$use_mtab_backend" = x"yes")
-
     dnl Set default DID scheme
     AC_MSG_CHECKING([default DID scheme])
     AC_ARG_WITH(cnid-default-backend,
