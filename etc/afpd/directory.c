@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.129 2010-01-21 12:10:19 didg Exp $
+ * $Id: directory.c,v 1.130 2010-01-26 08:14:09 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2678,11 +2678,11 @@ int deletecurdir(struct vol *vol)
         goto delete_done;
     }
 
-    if ( !(err = netatalk_rmdir(fdir->d_u_name))) {
+    err = netatalk_rmdir_all_errors(fdir->d_u_name);
+    if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
         dirchildremove(curdir, fdir);
         cnid_delete(vol->v_cdb, fdir->d_did);
         dir_remove( vol, fdir );
-        err = AFP_OK;
     }
 delete_done:
     if (dp) {

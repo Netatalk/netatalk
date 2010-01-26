@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.7 2010-01-20 13:22:13 franklahm Exp $
+ * $Id: unix.c,v 1.8 2010-01-26 08:14:09 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -102,14 +102,13 @@ int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
 
 /* -------------------
    system rmdir with afp error code.
-   ENOENT is not an error.
 */
-int netatalk_rmdir(const char *name)
+int netatalk_rmdir_all_errors(const char *name)
 {
     if (rmdir(name) < 0) {
         switch ( errno ) {
         case ENOENT :
-            break;
+            return AFPERR_NOOBJ;
         case ENOTEMPTY :
             return AFPERR_DIRNEMPT;
         case EPERM:
@@ -122,6 +121,18 @@ int netatalk_rmdir(const char *name)
         }
     }
     return AFP_OK;
+}
+
+/* -------------------
+   system rmdir with afp error code.
+   ENOENT is not an error.
+*/
+int netatalk_rmdir(const char *name)
+{
+    int ret = netatalk_rmdir_all_errors(name);
+    if (ret == AFPERR_NOOBJ)
+        return AFP_OK;
+    return ret;
 }
 
 /* -------------------

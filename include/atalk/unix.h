@@ -1,5 +1,5 @@
 /*
-   $Id: unix.h,v 1.1 2009-10-15 12:06:07 franklahm Exp $
+   $Id: unix.h,v 1.2 2010-01-26 08:14:09 didg Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,12 @@
 /* vfs/unix.c */
 extern int netatalk_unlink(const char *name);
 extern char *fullpathname(const char *);
+
+/* rmdir ENOENT not an error */
 extern int netatalk_rmdir(const char *name);
+
+extern int netatalk_rmdir_all_errors(const char *name);
+
 extern int setfilmode(const char *, mode_t, struct stat *, mode_t);
 extern int dir_rx_set(mode_t mode);
 extern int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask);
