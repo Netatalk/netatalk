@@ -1,5 +1,5 @@
 /*
-  $Id: unix.c,v 1.2 2010-01-05 19:05:52 franklahm Exp $
+  $Id: unix.c,v 1.3 2010-01-26 08:05:17 didg Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,7 @@ extern const char *getcwdpath(void)
     static char cwd[MAXPATHLEN + 1];
     char *p;
 
-    if ((p = getcwd(&cwd, MAXPATHLEN)) != NULL)
+    if ((p = getcwd(cwd, MAXPATHLEN)) != NULL)
         return p;
     else
         return strerror(errno);
