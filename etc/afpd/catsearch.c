@@ -495,13 +495,12 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	int result = AFP_OK;
 	int ccr;
     struct path path;
-	char *orig_dir = NULL;
-	int orig_dir_len = 128;
 	char *vpath = vol->v_path;
 	char *rrbuf = rbuf;
     time_t start_time;
     int num_rounds = NUM_ROUNDS;
     int cached;
+    int cwd = -1;
         
 	if (*pos != 0 && *pos != cur_pos) {
 		result = AFPERR_CATCHNG;
@@ -529,15 +528,10 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	}
 
 	/* Save current path */
-	orig_dir = (char*)malloc(orig_dir_len);
-	while (getcwd(orig_dir, orig_dir_len-1)==NULL) {
-		if (errno != ERANGE) {
-			result = AFPERR_MISC;
-			goto catsearch_end;
-		}
-		orig_dir_len += 128; 
-		orig_dir = realloc(orig_dir, orig_dir_len);
-	} /* while() */
+    if ((cwd = open(".", O_RDONLY)) < 0) {
+        result = AFPERR_MISC;
+        goto catsearch_end;
+    }
 	
 	while ((cidx = reducestack()) != -1) {
 		cached = 1;
@@ -658,10 +652,12 @@ catsearch_pause:
 
 catsearch_end: /* Exiting catsearch: error condition */
 	*rsize = rrbuf - rbuf;
-	if (orig_dir != NULL) {
-		chdir(orig_dir);
-		free(orig_dir);
-	}
+    if (cwd != -1) {
+        if ((fchdir(cwd)) != 0) {
+            LOG(log_debug, logtype_afpd, "error chdiring back: %s", strerror(errno));        
+        }
+        close(cwd);
+    }
 	return result;
 } /* catsearch() */
 
