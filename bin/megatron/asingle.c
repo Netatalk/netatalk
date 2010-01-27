@@ -1,5 +1,5 @@
 /*
- * $Id: asingle.c,v 1.13 2009-10-14 01:38:28 didg Exp $
+ * $Id: asingle.c,v 1.14 2010-01-27 21:27:53 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -389,12 +389,12 @@ int single_header_test(void)
  *
  */
 
-int single_read( int fork, char *buffer, u_int32_t length)
+ssize_t single_read( int fork, char *buffer, size_t length)
 {
     u_int32_t		entry_id;
     char		*buf_ptr;
-    int			readlen;
-    int			cc = 1;
+    size_t		readlen;
+    ssize_t		cc = 1;
     off_t		pos;
 
     switch ( fork ) {
@@ -409,9 +409,9 @@ int single_read( int fork, char *buffer, u_int32_t length)
 	    break;
     }
 
-    if (single.entry[entry_id].ade_len > length) {
-	fprintf(stderr, "single_read: Trying to read past end of fork!, length %d, ade_len == %u\n", length, single.entry[entry_id].ade_len);
-	return single.entry[entry_id].ade_len;
+    if (single.entry[entry_id].ade_len > 0x7FFFFFFF) {
+	fprintf(stderr, "single_read: Trying to read past end of fork!, ade_len == %u\n", single.entry[entry_id].ade_len);
+	return -1;
     }
     if ( single.entry[ entry_id ].ade_len == 0 ) {
 	if ( fork == DATA ) {

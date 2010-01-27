@@ -1,5 +1,5 @@
 /*
- * $Id: nad.h,v 1.4 2005-04-28 20:49:20 bfernhomberg Exp $
+ * $Id: nad.h,v 1.5 2010-01-27 21:27:53 didg Exp $
  */
 
 #ifndef _NAD_H
@@ -11,8 +11,8 @@ struct FHeader;
 int nad_open(char *path, int openflags, struct FHeader *fh, int options);
 int nad_header_read(struct FHeader *fh);
 int nad_header_write(struct FHeader *fh);
-int nad_read(int fork, char *forkbuf, int bufc);
-int nad_write(int fork, char *forkbuf, int bufc);
+ssize_t nad_read(int fork, char *forkbuf, size_t bufc);
+ssize_t nad_write(int fork, char *forkbuf, size_t bufc);
 int nad_close(int status);
 
 void select_charset(int options);

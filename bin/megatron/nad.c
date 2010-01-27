@@ -1,5 +1,5 @@
 /*
- * $Id: nad.c,v 1.17 2009-10-14 01:38:28 didg Exp $
+ * $Id: nad.c,v 1.18 2010-01-27 21:27:53 didg Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -691,9 +691,9 @@ int nad_header_write(struct FHeader *fh)
 
 static int		forkeid[] = { ADEID_DFORK, ADEID_RFORK };
 
-int nad_read(int fork, char *forkbuf, int bufc)
+ssize_t nad_read(int fork, char *forkbuf, size_t bufc)
 {
-    int			cc = 0;
+    ssize_t		cc = 0;
 
 #if DEBUG
     fprintf( stderr, "Entering nad_read\n" );
@@ -713,11 +713,11 @@ int nad_read(int fork, char *forkbuf, int bufc)
     return( cc );
 }
 
-int nad_write(int fork, char *forkbuf, int bufc)
+ssize_t nad_write(int fork, char *forkbuf, size_t bufc)
 {
     char		*buf_ptr;
-    int			writelen;
-    int			cc = 0;
+    size_t		writelen;
+    ssize_t		cc = 0;
 
 #if DEBUG
     fprintf( stderr, "Entering nad_write\n" );
