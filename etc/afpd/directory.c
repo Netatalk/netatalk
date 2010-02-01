@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.3 2010-02-01 14:25:45 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.4 2010-02-01 16:13:52 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -363,8 +363,16 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
         }
 
         ret->d_dir = dir;
+#if 0
         ret->st_valid = 1;
         ret->st_errno = EACCES;
+#endif
+
+        LOG(log_debug, logtype_afpd, "cname(AFPERR_ACCESS:'%s') {path-from-dir: curdir:'%s', path:'%s'}",
+            cfrombstring(dir->d_fullpath),
+            cfrombstring(curdir->d_fullpath),
+            ret->u_name);
+
         return ret;
 
     case AFPERR_NOOBJ:
@@ -379,8 +387,10 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
             memcpy(ret->u_name, cfrombstring(dir->d_u_name), blength(dir->d_u_name) + 1);
         }
 
+#if 0
         ret->st_valid = 1;
         ret->st_errno = ENOENT;
+#endif
         ret->d_dir = NULL;
         dir_remove(vol, dir);
         return ret;

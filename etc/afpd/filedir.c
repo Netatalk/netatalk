@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.69.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: filedir.c,v 1.69.2.2 2010-02-01 16:13:52 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -188,7 +188,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
         of_statdir(vol, s_path);
     }
     if ( s_path->st_errno != 0 ) {
-        if (s_path->st_errno != EACCES) {
+        if (afp_errno != AFPERR_ACCESS) {
             LOG(log_debug, logtype_afpd, "getfildirparams: s_path->st_errno != 0");
             return( AFPERR_NOOBJ );
         }
@@ -274,7 +274,8 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     }
 
     if ( path->st_errno != 0 ) {
-        return( AFPERR_NOOBJ );
+        if (afp_errno != AFPERR_ACCESS)
+            return( AFPERR_NOOBJ );
     }
     /*
      * If ibuf is odd, make it even.
