@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.3 2010-01-10 10:58:25 franklahm Exp $
+ * $Id: directory.h,v 1.3.2.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -30,9 +30,11 @@
 #include <sys/types.h>
 #include <netatalk/endian.h>
 #include <dirent.h>
+#include <stdint.h>
 
 #include <atalk/cnid.h>
-#include <atalk/directory.h>
+#include <atalk/bstrlib.h>
+#include <atalk/queue.h>
 
 /* setgid directories */
 #ifndef DIRBITS
@@ -43,30 +45,33 @@
 # endif /* AFS */
 #endif /* DIRBITS */
 
-/* the did tree is now a red-black tree while the parent/child
- * tree is a circular doubly-linked list. how exciting. */
+/* reserved directory id's */
+#define DIRDID_ROOT_PARENT    htonl(1)  /* parent directory of root */
+#define DIRDID_ROOT           htonl(2)  /* root directory */
+
 struct dir {
-    struct dir	*d_left, *d_right, *d_back; /* for red-black tree */
-    int		d_color;
-    struct dir  *d_parent, *d_child; /* parent-child */
-    struct dir  *d_prev, *d_next;    /* siblings */
-    void        *d_ofork;            /* oforks using this directory. */
-    u_int32_t   d_did;
-    int	        d_flags;
-
+    bstring     d_fullpath;          /* complete unix path to dir */
+    bstring     d_m_name;            /* mac name */
+    bstring     d_u_name;            /* unix name                                          */
+                                     /* be careful here! if d_m_name == d_u_name, d_u_name */
+                                     /* will just point to the same storage as d_m_name !! */
+    ucs2_t      *d_m_name_ucs2;       /* mac name as UCS2 */
+    qnode_t     *qidx_node;           /* pointer to position in queue index */
+    void        *d_ofork;             /* oforks using this directory. */
     time_t      ctime;                /* inode ctime */
-    u_int32_t   offcnt;               /* offspring count */
-
-    char	*d_m_name;            /* mac name */
-    char        *d_u_name;            /* unix name */
-    ucs2_t	*d_m_name_ucs2;	      /* mac name as UCS2 */
+    int         d_flags;              /* directory flags */
+    cnid_t      d_pdid;               /* CNID of parent directory */
+    cnid_t      d_did;                /* CNID of directory */
+    uint32_t    offcnt;               /* offspring count */
+    uint16_t    d_vid;                /* only needed in the dircache, because
+                                         we put all directories in one cache. */
 };
 
 struct path {
     int         m_type;             /* mac name type (long name, unicode */
-    char	*m_name;            /* mac name */
+    char        *m_name;            /* mac name */
     char        *u_name;            /* unix name */
-    cnid_t	id;                 /* file id (only for getmetadata) */
+    cnid_t      id;                 /* file id (only for getmetadata) */
     struct dir  *d_dir;             /* */
     int         st_valid;           /* does st_errno and st set */
     int         st_errno;
@@ -82,6 +87,5 @@ static inline int path_isadir(struct path *o_path)
            (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
 #endif
 }
-
 
 #endif /* ATALK_DIRECTORY_H */

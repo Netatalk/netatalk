@@ -1,5 +1,5 @@
 /*
- * $Id: appl.c,v 1.18 2009-10-15 10:43:13 didg Exp $
+ * $Id: appl.c,v 1.18.4.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -20,6 +20,8 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include "volume.h"
 #include "globals.h"
@@ -122,7 +124,7 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
  * See afp_getappl() for the backward compatiblity code.
  */
 static char *
-makemacpath(char *mpath, int mpathlen, struct dir *dir, char *path)
+makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, char *path)
 {
     char	*p;
 
@@ -130,16 +132,65 @@ makemacpath(char *mpath, int mpathlen, struct dir *dir, char *path)
     p -= strlen( path );
     memcpy( p, path, strlen( path )); 
 
-    while ( dir->d_parent != NULL ) {
-        p -= strlen( dir->d_m_name ) + 1;
+    while ( dir->d_did != DIRDID_ROOT ) {
+        p -= blength(dir->d_m_name) + 1;
         if (p < mpath) {
             /* FIXME: pathname too long */
             return NULL;
         }
-        strcpy( p, dir->d_m_name );
-        dir = dir->d_parent;
+        memcpy(p, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1);
+        if ((dir = dirlookup(vol, dir->d_pdid)) == NULL)
+            return NULL;
     }
     return( p );
+
+
+#if 0
+    char buffer[12 + MAXPATHLEN + 1];
+    int buflen = 12 + MAXPATHLEN + 1;
+    char *ret = mpath;
+    char *path = name;
+    char *uname = NULL;
+    struct bstrList *pathlist = NULL;
+    cnid_t cnid = dir->d_pdid;
+
+    /* Create list for path elements, request 16 list elements for now*/
+    if ((pathlist = bstListCreateMin(16)) == NULL) {
+        LOG(log_error, logtype_afpd, "makemacpath: OOM: %s", strerror(errno));
+        return NULL;
+    }
+
+    while ( cnid != DIRDID_ROOT ) {
+
+        /* construct path, copy already found uname to path element list*/
+        if ((bstrListPush(pathlist, bfromcstr(path))) != BSTR_OK) {
+            afp_errno = AFPERR_MISC;
+            ret = NULL;
+            goto exit;
+        }
+
+        /* next part */
+        if ((uname = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) {
+            afp_errno = AFPERR_NOOBJ;
+            ret = NULL;
+            goto exit;
+        }
+
+        if ((path = utompath(vol, uname, cnid, utf8_encoding())) == NULL) {
+            afp_errno = AFPERR_MISC;
+            ret = NULL;
+            goto exit;
+        }
+    }
+
+
+
+exit:
+    if (pathlist)
+        bstrListDestroy(pathlist);
+
+    return(ret);
+#endif
 }
 
 
@@ -197,7 +248,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         return( AFPERR_PARAM );
     }
     mpath = obj->newtmp;
-    mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
+    mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     if (!mp) {
         return AFPERR_PARAM;
     }
@@ -280,7 +331,7 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         return( AFPERR_PARAM );
     }
     mpath = obj->newtmp;
-    mp = makemacpath( mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
+    mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     if (!mp) {
         return AFPERR_PARAM ;
     }
@@ -418,7 +469,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     memcpy( q, p, len );
     q = cbuf;
 
-    if (( path = cname( vol, vol->v_dir, &q )) == NULL ) {
+    if (( path = cname( vol, vol->v_root, &q )) == NULL ) {
         *rbuflen = 0;
         return( AFPERR_NOITEM );
     }

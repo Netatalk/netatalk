@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.19 2006-09-19 01:35:45 didg Exp $ 
+ * $Id: mangle.c,v 1.19.4.1 2010-02-01 10:56:08 franklahm Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -169,8 +169,8 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
     }
 
     /* is it a dir?, there's a conflict with pre OSX 'trash #2'  */
-    if ((dir = dirsearch(vol, id))) {
-        if (dir->d_parent && dir->d_parent->d_did != did) {
+    if ((dir = dirlookup(vol, id))) {
+        if (dir->d_did != did) {
             /* not in the same folder, there's a race with outdate cache
              * but we have to live with it, hopefully client will recover
             */
@@ -178,12 +178,12 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
         }
         if (!osx) {
             /* it's not from cname so mfilename and dir must be the same */
-            if (!strcmp(dir->d_m_name, mfilename)) {
-                return dir->d_u_name;
+            if (strcmp((char *)dir->d_m_name->data, mfilename) == 0) {
+                return (char *)dir->d_u_name->data;
             }
         } 
         else {
-	    return demangle_checks (vol, dir->d_u_name, mfilename, prefix, t);
+            return demangle_checks (vol, (char *)dir->d_u_name->data, mfilename, prefix, t);
 	}
     }
     else if (NULL != (u_name = cnid_resolve(vol->v_cdb, &id, buffer, len)) ) {

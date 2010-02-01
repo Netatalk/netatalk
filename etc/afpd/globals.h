@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.31 2010-01-18 12:55:28 franklahm Exp $
+ * $Id: globals.h,v 1.31.2.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -138,6 +138,9 @@ extern int  parseline  (int, char *);
 /* afp_util.c */
 extern const char *AfpNum2name (int );
 extern const char *AfpErr2name(int err);
+
+/* directory.c */
+extern struct dir rootParent;
 
 #ifndef NO_DDP
 extern void afp_over_asp (AFPObj *);

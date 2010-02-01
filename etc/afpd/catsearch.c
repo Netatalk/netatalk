@@ -51,6 +51,7 @@
 #endif /* CNID_DB */
 #include "desktop.h"
 #include "directory.h"
+#include "dircache.h"
 #include "file.h"
 #include "volume.h"
 #include "globals.h"
@@ -537,7 +538,8 @@ static int catsearch(struct vol *vol, struct dir *dir,
 		cached = 1;
 		if (dirpos == NULL) {
 			dirpos = opendir(dstack[cidx].path);
-			cached = (dstack[cidx].dir->d_child != NULL);
+// FIXME dircache rewrite
+//			cached = (dstack[cidx].dir->d_child != NULL);
 		}
 		if (dirpos == NULL) {
 			switch (errno) {
@@ -588,18 +590,19 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				   ie if in the same loop the parent dir wasn't in the cache
 				   ALL dirsearch_byname will fail.
 				*/
+                int unlen = strlen(path.u_name);
 				if (cached)
-            		path.d_dir = dirsearch_byname(vol, dstack[cidx].dir, path.u_name);
+            		path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir->d_did, path.u_name, unlen);
             	else
             		path.d_dir = NULL;
             	if (!path.d_dir) {
                 	/* path.m_name is set by adddir */
-            	    if (NULL == (path.d_dir = adddir( vol, dstack[cidx].dir, &path) ) ) {
+            	    if (NULL == (path.d_dir = dir_add( vol, dstack[cidx].dir, &path, unlen) ) ) {
 						result = AFPERR_MISC;
 						goto catsearch_end;
 					}
                 }
-                path.m_name = path.d_dir->d_m_name; 
+                path.m_name = (char *)path.d_dir->d_m_name->data;
                 	
 				if (addstack(path.u_name, path.d_dir, cidx) == -1) {
 					result = AFPERR_MISC;
@@ -863,7 +866,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     
     /* Call search */
     *rbuflen = 24;
-    ret = catsearch(vol, vol->v_dir, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
+    ret = catsearch(vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
     memcpy(rbuf, catpos, sizeof(catpos));
     rbuf += sizeof(catpos);
 

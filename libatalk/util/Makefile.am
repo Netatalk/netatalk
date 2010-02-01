@@ -14,6 +14,7 @@ libutil_la_SOURCES = \
 	locking.c   \
 	logger.c	\
 	module.c	\
+	queue.c     \
 	server_child.c	\
 	server_ipc.c	\
 	server_lock.c	\

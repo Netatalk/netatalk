@@ -1,5 +1,5 @@
 /*
- * $Id: desktop.c,v 1.50 2010-01-22 04:40:38 didg Exp $
+ * $Id: desktop.c,v 1.50.2.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * See COPYRIGHT.
  *
@@ -600,7 +600,8 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     u_int16_t	 flags;
         
     if ( *mpath == '\0' ) {
-        return( "." );
+        strcpy(upath, ".");
+        return upath;
     }
 
     /* set conversion flags */
@@ -700,7 +701,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     if (ad_getentryoff(adp, ADEID_COMMENT)) {
         if ( (ad_get_MD_flags( adp ) & O_CREAT) ) {
             if ( *path->m_name == '\0' ) {
-                name = curdir->d_m_name;
+                name = (char *)curdir->d_m_name->data;
             } else {
                 name = path->m_name;
             }

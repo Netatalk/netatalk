@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.48 2010-01-11 11:09:36 franklahm Exp $
+ * $Id: enumerate.c,v 1.48.2.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -21,8 +21,12 @@
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
 #include <atalk/cnid.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+
 #include "desktop.h"
 #include "directory.h"
+#include "dircache.h"
 #include "volume.h"
 #include "globals.h"
 #include "file.h"
@@ -266,8 +270,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         return path_error(o_path, AFPERR_NODIR );
     }
 
-    LOG(log_debug, logtype_afpd, "enumerate(vid:%u, did:%u, name:'%s', f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
-        ntohs(vid), ntohl(did), o_path->u_name, fbitmap, dbitmap, reqcnt, sindex, maxsz);
+    LOG(log_debug, logtype_afpd, "enumerate(vid:%u, did:%u, cwddid:%u, cwd:'%s', name:'%s', f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
+        ntohs(vid), ntohl(did), ntohl(curdir->d_did),
+        cfrombstring(curdir->d_fullpath), o_path->u_name,
+        fbitmap, dbitmap, reqcnt, sindex, maxsz);
 
     data = rbuf + 3 * sizeof( u_int16_t );
     sz = 3 * sizeof( u_int16_t );	/* fbitmap, dbitmap, reqcount */
@@ -370,14 +376,16 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             if ( dbitmap == 0 ) {
                 continue;
             }
-            dir = dirsearch_byname(vol, curdir, s_path.u_name);
-            if (!dir && NULL == (dir = adddir( vol, curdir, &s_path) ) ) {
+            int len = strlen(s_path.u_name);
+            if ((dir = dircache_search_by_name(vol, curdir->d_did, s_path.u_name, len)) == NULL) {
+                if ((dir = dir_add(vol, curdir, &s_path, len)) == NULL) {
+                    LOG(log_error, logtype_afpd, "enumerate(vid:%u, did:%u, name:'%s'): error adding dir: '%s'",
+                        ntohs(vid), ntohl(did), o_path->u_name, s_path.u_name);
                     return AFPERR_MISC;
                 }
-            if (AFP_OK != ( ret = getdirparams(vol, dbitmap, &s_path, dir,
-                                     data + header , &esz ))) {
-                return( ret );
             }
+            if ((ret = getdirparams(vol, dbitmap, &s_path, dir, data + header , &esz)) != AFP_OK)
+                return( ret );
 
         } else {
             if ( fbitmap == 0 ) {

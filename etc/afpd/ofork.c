@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.30 2009-11-13 00:27:36 didg Exp $
+ * $Id: ofork.c,v 1.30.4.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -17,10 +17,12 @@
 #include <string.h>
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
-#include <atalk/logger.h>
 #include <errno.h>
 
+#include <atalk/logger.h>
 #include <atalk/util.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include "globals.h"
 #include "volume.h"
@@ -280,14 +282,17 @@ struct ofork *of_find(const u_int16_t ofrefnum )
 }
 
 /* -------------------------- */
-int of_stat  (struct path *path)
+int of_stat(struct path *path)
 {
-int ret;
+    int ret;
+
+    LOG(log_maxdebug, logtype_afpd, "of_stat: {stat:'%s/%s'}", getcwdpath(), path->u_name);
+
     path->st_errno = 0;
     path->st_valid = 1;
     if ((ret = stat(path->u_name, &path->st)) < 0)
     	path->st_errno = errno;
-   return ret;
+    return ret;
 }
 
 /* -------------------------- 
@@ -295,10 +300,12 @@ int ret;
    stat(".") works even if "." is deleted thus
    we have to stat ../name because we want to know if it's there
 */
-int of_statdir  (struct vol *vol, struct path *path)
+int of_statdir(struct vol *vol, struct path *path)
 {
-static char pathname[ MAXPATHLEN + 1] = "../";
-int ret;
+    static char pathname[ MAXPATHLEN + 1] = "../";
+    int ret;
+    size_t len;
+    struct dir *dir;
 
     if (*path->m_name) {
         /* not curdir */
@@ -307,26 +314,32 @@ int ret;
     path->st_errno = 0;
     path->st_valid = 1;
     /* FIXME, what about: we don't have r-x perm anymore ? */
-    strlcpy(pathname +3, path->d_dir->d_u_name, sizeof (pathname) -3);
+    len = blength(path->d_dir->d_u_name);
+    if (len > (MAXPATHLEN - 3))
+        len = MAXPATHLEN - 3;
+    strncpy(pathname + 3, cfrombstring(path->d_dir->d_u_name), len + 1);
+
+    LOG(log_debug, logtype_afpd, "of_statdir: stating: '%s'", pathname);
 
     if (!(ret = stat(pathname, &path->st)))
         return 0;
         
     path->st_errno = errno;
+
     /* hmm, can't stat curdir anymore */
-    if (errno == EACCES && curdir->d_parent ) {
-       if (movecwd(vol, curdir->d_parent)) 
+    if (errno == EACCES && (dir = dirlookup(vol, curdir->d_pdid))) {
+       if (movecwd(vol, dir)) 
            return -1;
        path->st_errno = 0;
-       if ((ret = stat(path->d_dir->d_u_name, &path->st)) < 0) 
+       if ((ret = stat(cfrombstring(path->d_dir->d_u_name), &path->st)) < 0) 
            path->st_errno = errno;
     }
+
     return ret;
 }
 
 /* -------------------------- */
-struct ofork *
-            of_findname(struct path *path)
+struct ofork *of_findname(struct path *path)
 {
     struct ofork *of;
     struct file_key key;

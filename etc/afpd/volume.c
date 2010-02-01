@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.115 2010-01-26 09:31:59 didg Exp $
+ * $Id: volume.c,v 1.115.2.1 2010-02-01 10:56:08 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2008,9 +2008,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         volume->max_filename = MACFILELEN;
     }
 
-    volume->v_dir = volume->v_root = NULL;
-    volume->v_hash = NULL;
-
     volume->v_flags |= AFPVOL_OPEN;
     volume->v_cdb = NULL;
 
@@ -2029,7 +2026,13 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     else if (*(vol_uname + 1) != '\0')
         vol_uname++;
 
-    if ((dir = dirnew(vol_mname, vol_uname) ) == NULL) {
+    if ((dir = dir_new(vol_mname,
+                       vol_uname,
+                       volume,
+                       DIRDID_ROOT_PARENT,
+                       DIRDID_ROOT,
+                       bfromcstr(volume->v_path))
+            ) == NULL) {
         free(vol_mname);
         LOG(log_error, logtype_afpd, "afp_openvol(%s): malloc: %s", volume->v_path, strerror(errno) );
         ret = AFPERR_MISC;
@@ -2037,14 +2040,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
     free(vol_mname);
 
-    dir->d_did = DIRDID_ROOT;
-    dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
-    dir->d_m_name_ucs2 = strdup_w(volume->v_name);
-    volume->v_dir = volume->v_root = dir;
-    volume->v_curdir = NULL;
-    volume->v_hash = dirhash();
+    volume->v_root = dir;
+    curdir = dir;
 
-    curdir = volume->v_dir;
     if (volume_openDB(volume) < 0) {
         LOG(log_error, logtype_afpd, "Fatal error: cannot open CNID or invalid CNID backend for %s: %s",
             volume->v_path, volume->v_cnidscheme);
@@ -2081,16 +2079,15 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         }
         else {
             p = Trash;
-            cname( volume, volume->v_dir, &p );
+            cname( volume, volume->v_root, &p );
         }
         return( AFP_OK );
     }
 
 openvol_err:
-    if (volume->v_dir) {
-        hash_free( volume->v_hash);
-        dirfree( volume->v_dir );
-        volume->v_dir = volume->v_root = NULL;
+    if (volume->v_root) {
+        dir_free( volume->v_root );
+        volume->v_root = NULL;
     }
 
     volume->v_flags &= ~AFPVOL_OPEN;
@@ -2108,9 +2105,8 @@ static void closevol(struct vol *vol)
     if (!vol)
         return;
 
-    hash_free( vol->v_hash);
-    dirfree( vol->v_root );
-    vol->v_dir = NULL;
+    dir_free( vol->v_root );
+    vol->v_root = NULL;
     if (vol->v_cdb != NULL) {
         cnid_close(vol->v_cdb);
         vol->v_cdb = NULL;
@@ -2151,7 +2147,7 @@ static void deletevol(struct vol *vol)
     if ( ovol != NULL ) {
         /* Even if chdir fails, we can't say afp_closevol fails. */
         if ( chdir( ovol->v_path ) == 0 ) {
-            curdir = ovol->v_dir;
+            curdir = ovol->v_root;
         }
     }
 
