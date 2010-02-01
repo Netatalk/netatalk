@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.4 2010-02-01 16:13:52 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.5 2010-02-01 19:11:01 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -782,7 +782,17 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
     assert(dir);
     assert(path);
     assert(len > 0);
-    assert(dircache_search_by_name(vol, dir->d_did, path->u_name, strlen(path->u_name)) == NULL);
+
+    if ((cdir = dircache_search_by_name(vol, dir->d_did, path->u_name, strlen(path->u_name))) != NULL) {
+        /* there's a stray entry in the dircache */
+        LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
+            ntohl(dir->d_did), cfrombstring(dir->d_fullpath), path->u_name,
+            ntohl(cdir->d_did), cfrombstring(dir->d_fullpath));
+        if (dir_remove(vol, cdir) != 0) {
+            dircache_dump();
+            exit(EXITERR_SYS);
+        }
+    }
 
     /* get_id needs adp for reading CNID from adouble file */
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
@@ -801,7 +811,7 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
     /* Get macname from unixname */
     if (path->m_name == NULL) {
         if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding())) == NULL) {
-            err = 1;
+            err = 2;
             goto exit;
         }
     }
@@ -811,13 +821,13 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
          || (bconchar(fullpath, '/') != BSTR_OK)
          || (bcatcstr(fullpath, path->u_name)) != BSTR_OK) {
         LOG(log_error, logtype_afpd, "dir_add: fullpath: %s", strerror(errno) );
-        err = 1;
+        err = 3;
         goto exit;
     }
 
     /* Allocate and initialize struct dir */
     if ((cdir = dir_new( path->m_name, path->u_name, vol, dir->d_did, id, fullpath)) == NULL) { /* 3 */
-        err = 1;
+        err = 4;
         goto exit;
     }
 
@@ -828,6 +838,9 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
 
 exit:
     if (err != 0) {
+        LOG(log_debug, logtype_afpd, "dir_add('%s/%s'): error: %u",
+            cfrombstring(dir->d_u_name), path->u_name, err);
+
         if (adp)
             ad_close_metadata(adp);
         if (!cdir && fullpath)
@@ -835,6 +848,10 @@ exit:
         if (cdir)
             dir_free(cdir);
         cdir = NULL;
+    } else {
+        /* no error */
+        LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): now cached",
+            ntohl(dir->d_did), cfrombstring(dir->d_u_name), path->u_name);
     }
 
     return(cdir);
@@ -859,6 +876,10 @@ int dir_remove(const struct vol *vol, struct dir *dir)
             LOG(log_error, logtype_afpd, "dir_remove: can't chdir to : %s", vol->v_root);
         }
     }
+
+
+    LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
+        ntohl(dir->d_did), cfrombstring(dir->d_u_name));
 
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
     dir_free(dir);
