@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.2 2010-02-01 12:59:09 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.3 2010-02-01 14:25:45 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -53,6 +53,7 @@ extern void addir_inherit_acl(const struct vol *vol);
  * o setdirparams doesn't change parent mdate anymore
  * o catsearch doesn't work, see FIXMEs in catsearch.c
  * o curdir per volume caching is gone
+ * o directory offspring count calculation probably broken
  */
 
 
@@ -282,8 +283,6 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
     char *t;
     cnid_t fileid;
 
-    LOG(log_maxdebug, logtype_afpd, "cname_mtouname('%s', toUTF8:%u)", ret->m_name, toUTF8);
-
     if (afp_version >= 30) {
         if (toUTF8) {
             if (dir->d_did == DIRDID_ROOT_PARENT) {
@@ -308,6 +307,9 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
 
         /* check for OS X mangled filename :( */
         t = demangle_osx(vol, ret->m_name, dir->d_did, &fileid);
+        LOG(log_maxdebug, logtype_afpd, "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
+            ret->m_name, ntohl(dir->d_did), t, ntohl(fileid));
+
         if (t != ret->m_name) {
             ret->u_name = t;
             /* duplicate work but we can't reuse all convert_char we did in demangle_osx
@@ -2071,22 +2073,20 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return err;
     }
 
-    LOG(log_debug, logtype_afpd, "afp_createdir: alive1");
-
     if (of_stat(s_path) < 0) {
         return AFPERR_MISC;
     }
-    LOG(log_debug, logtype_afpd, "afp_createdir: alive2");
+
     curdir->offcnt++;
-    LOG(log_debug, logtype_afpd, "afp_createdir: alive3");
+
     if ((dir = dir_add(vol, curdir, s_path, strlen(s_path->u_name))) == NULL) {
         return AFPERR_MISC;
     }
-    LOG(log_debug, logtype_afpd, "afp_createdir: alive4");
+
     if ( movecwd( vol, dir ) < 0 ) {
         return( AFPERR_PARAM );
     }
-    LOG(log_debug, logtype_afpd, "afp_createdir: alive5");
+
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
     if (ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad ) < 0)  {
         if (vol_noadouble(vol))
