@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.2 2010-02-01 12:59:09 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -282,6 +282,8 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
     char *t;
     cnid_t fileid;
 
+    LOG(log_maxdebug, logtype_afpd, "cname_mtouname('%s', toUTF8:%u)", ret->m_name, toUTF8);
+
     if (afp_version >= 30) {
         if (toUTF8) {
             if (dir->d_did == DIRDID_ROOT_PARENT) {
@@ -435,7 +437,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     int          utf8;
     int          err = 0;
 
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u)", ntohl(did));
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {start}", ntohl(did));
 
     /* check for did 0, 1 and 2 */
     if (did == 0 || vol == NULL) { /* 1 */
@@ -471,6 +473,13 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
     pdid = cnid;
 
+    /* construct path, copy already found uname to path element list*/
+    if ((bstrListPush(pathlist, bfromcstr(upath))) != BSTR_OK) { /* 4 */
+        afp_errno = AFPERR_MISC;
+        err = 1;
+        goto exit;
+    }
+
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {%u, %s}", ntohl(did), ntohl(pdid), upath);
 
     /* The stuff that follows is for building the full path to the directory */
@@ -505,7 +514,9 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
     /* Finished building the fullpath */
 
-    /* stat it and check if it's a dir*/
+    /* stat it and check if it's a dir */
+    LOG(log_debug, logtype_afpd, "dirlookup: {stating %s}", cfrombstring(fullpath));
+
     if (stat(cfrombstring(fullpath), &st) != 0) { /* 5a */
         switch (errno) {
         case ENOENT:
@@ -543,21 +554,22 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         goto exit;
     }
 
-    /* Add it to the cache */
+    /* Add it to the cache only if it's a dir */
     if (dircache_add(ret) != 0) { /* 7 */
         err = 1;
         goto exit;
     }
 
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {%u, %s}",
-        ntohl(pdid), ntohl(did), ret->d_fullpath);
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {end: did:%u, path:'%s'}",
+        ntohl(did), ntohl(pdid), cfrombstring(ret->d_fullpath));
 
 exit:
     if (pathlist)
         bstrListDestroy(pathlist);
 
     if (err) {
-        LOG(log_error, logtype_afpd, "dirlookup(did: %u)", ntohl(did));
+        LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {exit_error: %s}",
+            ntohl(did), AfpErr2name(afp_errno));
         if (fullpath)
             bdestroy(fullpath);
         if (ret) {
