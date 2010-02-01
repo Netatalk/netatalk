@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.5 2010-02-01 19:11:01 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.6 2010-02-01 19:40:43 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -54,6 +54,8 @@ extern void addir_inherit_acl(const struct vol *vol);
  * o catsearch doesn't work, see FIXMEs in catsearch.c
  * o curdir per volume caching is gone
  * o directory offspring count calculation probably broken
+ * o doesn't work with CNID backend last and the like.
+ *   CNID backend must support persistent CNIDs.
  */
 
 
