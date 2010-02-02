@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.131.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: file.c,v 1.131.2.2 2010-02-02 13:15:30 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1865,6 +1865,10 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     if (NULL == ( dir = dirlookup( vol, id )) ) {
+        if (afp_errno == AFPERR_NOOBJ) {
+            err = AFPERR_NOOBJ;
+            goto delete;
+        }
         return( AFPERR_PARAM );
     }
 
@@ -1888,6 +1892,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     else if (S_ISDIR(st.st_mode)) /* directories are bad */
         return AFPERR_BADTYPE;
 
+delete:
     if (cnid_delete(vol->v_cdb, fileid)) {
         switch (errno) {
         case EROFS:
