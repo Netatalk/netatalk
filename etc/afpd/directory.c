@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.7 2010-02-02 13:16:15 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.8 2010-02-02 14:39:48 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -50,14 +50,11 @@ extern void addir_inherit_acl(const struct vol *vol);
 /*
  * FIXMEs, loose ends after the dircache rewrite:
  * o case-insensitivity is gone
- * o setdirparams doesn't change parent mdate anymore
  * o catsearch doesn't work, see FIXMEs in catsearch.c
  * o curdir per volume caching is gone
  * o directory offspring count calculation probably broken
  * o doesn't work with CNID backend last and the like.
  *   CNID backend must support persistent CNIDs.
- * o dirs and open-forks probably broken, eg. cache eviction
- *   ignores it
  */
 
 
@@ -909,7 +906,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 }
 
 /*!
- * @brief Modify a struct dir, adust cache
+ * @brief Modify a struct dir, adjust cache
  *
  * Any value that is 0 or NULL is not changed. If new_uname is NULL it is set to new_mname.
  * If given new_uname == new_mname, new_uname will point to new_mname.
@@ -1974,10 +1971,9 @@ setdirparam_done:
         ad_close_metadata( &ad);
     }
 
-#if 0
     if (change_parent_mdate && dir->d_did != DIRDID_ROOT
         && gettimeofday(&tv, NULL) == 0) {
-        if (!movecwd(vol, dir->d_parent)) {
+        if (movecwd(vol, dirlookup(vol, dir->d_pdid)) == 0) {
             newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
             /* be careful with bitmap because now dir is null */
             bitmap = 1<<DIRPBIT_MDATE;
@@ -1985,7 +1981,7 @@ setdirparam_done:
             /* should we reset curdir ?*/
         }
     }
-#endif
+
     return err;
 }
 

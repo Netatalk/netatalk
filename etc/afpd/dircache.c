@@ -1,5 +1,5 @@
 /*
-  $Id: dircache.c,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
+  $Id: dircache.c,v 1.1.2.2 2010-02-02 14:39:48 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -179,7 +179,7 @@ static const int dircache_free_quantum = 256; /* number of entries to free */
  *
  * The default is to remove the 256 oldest entries from the cache.
  * 1. Get the oldest entry
- * 2. If it's in use ie open forks reference it, requeue it, dont remove it
+ * 2. If it's in use ie open forks reference it or it's curdir requeue it, dont remove it
  * 3. Remove the dir from the main cache and the didname index
  * 4. Free the struct dir structure and all its members
  */
@@ -195,7 +195,7 @@ static void dircache_evict(void)
         }
         queue_count--;
 
-        if (dir->d_ofork) {     /* 2 */
+        if (curdir == dir || dir->d_ofork) {     /* 2 */
             if ((dir->qidx_node = enqueue(index_queue, dir)) == NULL) {
                 dircache_dump();
                 exit(EXITERR_SYS);
