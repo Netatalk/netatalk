@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.6 2010-02-01 19:40:43 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.7 2010-02-02 13:16:15 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,6 +56,8 @@ extern void addir_inherit_acl(const struct vol *vol);
  * o directory offspring count calculation probably broken
  * o doesn't work with CNID backend last and the like.
  *   CNID backend must support persistent CNIDs.
+ * o dirs and open-forks probably broken, eg. cache eviction
+ *   ignores it
  */
 
 
@@ -466,6 +468,22 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
     /* Search the cache */
     if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2 */
+        if (lstat(cfrombstring(ret->d_fullpath), &st) != 0) {
+            LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {lstat: %s}", ntohl(did), strerror(errno));
+            switch (errno) {
+            case ENOENT:
+            case ENOTDIR:
+                /* It's not there anymore, so remove it */
+                LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {calling dir_remove()}", ntohl(did));
+                dir_remove(vol, ret);
+                afp_errno = AFPERR_NOOBJ;
+                return NULL;
+            default:
+                return ret;
+            }
+            /* DEADC0DE */
+            return NULL;
+        }
         return ret;
     }
 
@@ -852,8 +870,9 @@ exit:
         cdir = NULL;
     } else {
         /* no error */
-        LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): now cached",
-            ntohl(dir->d_did), cfrombstring(dir->d_u_name), path->u_name);
+        LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {cached: %u,'%s'}",
+            ntohl(dir->d_did), cfrombstring(dir->d_fullpath), path->u_name,
+            ntohl(cdir->d_did), cfrombstring(cdir->d_fullpath));
     }
 
     return(cdir);
@@ -881,7 +900,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
-        ntohl(dir->d_did), cfrombstring(dir->d_u_name));
+        ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
 
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
     dir_free(dir);
