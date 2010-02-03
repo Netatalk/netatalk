@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.51 2009-11-24 21:01:45 didg Exp $
+ * $Id: afp_options.c,v 1.52 2010-02-03 11:35:58 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -584,6 +584,7 @@ static void show_paths( void )
 	printf( "   AppleVolumes.system:\t%s\n", _PATH_AFPDSYSVOL );
 	printf( "  AppleVolumes.default:\t%s\n", _PATH_AFPDDEFVOL );
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );
+    printf( "  Server messages path:\t%s\n", SERVERTEXT);
 }
 
 /*
