@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.131 2010-01-26 20:39:52 didg Exp $
+ * $Id: file.c,v 1.132 2010-02-04 10:52:29 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -596,7 +596,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     }
 
     upath = s_path->u_name;
-    
+
     /* if upath is deleted we already in trouble anyway */
     if ((of = of_findname(s_path))) {
         adp = of->of_ad;
@@ -666,6 +666,18 @@ createfile_done:
 #endif /* DROPKLUDGE */
 
     setvoltime(obj, vol );
+
+    /* Check if this is the magic debugfile  */
+    if (retvalue == AFP_OK
+        && curdir->d_did == htonl(2)
+        && vol->v_debugfile
+        && strcmp(upath, vol->v_debugfile) == 0) {
+        char *path = absupath(vol, curdir, upath);
+        char *logstring = malloc(strlen("default log_maxdebug ") + strlen(path) + 1);
+        sprintf(logstring, "default log_maxdebug %s", path);
+        setuplog(logstring);
+        free(logstring);
+    }
 
     return (retvalue);
 }

@@ -24,6 +24,10 @@ Changes in 2.1-beta1
 * NEW: support for Unicode characters in the range above U+010000 using
        internal surrogate pairs
 * NEW: apple_dump: utility to dump AppleSingle and AppleDouble files
+* NEW: afpd: new volume option to enable live debugging of AFP connections:
+       debugfile:FILE. When FILE is created in volume root from the AFP
+       client, the afpd process raises its debug level to log_maxdebug
+       and writes to FILE.
 * UPD: atalkd and papd are now disabled by default. AppleTalk is legacy.
 * UPD: slp advertisement is now disabled by default. server option -slp
        SRVLOC is legacy.
