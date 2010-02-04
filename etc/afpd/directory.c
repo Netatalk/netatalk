@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.8 2010-02-02 14:39:48 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.9 2010-02-04 14:34:31 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,11 +49,13 @@ extern void addir_inherit_acl(const struct vol *vol);
 
 /*
  * FIXMEs, loose ends after the dircache rewrite:
- * o case-insensitivity is gone
+ * o dircache aging, place dirlookup'ed dirs on front of queue ??
+ * o merge dircache_search_by_name and dir_add ??
+ * o case-insensitivity is gone from cname
  * o catsearch doesn't work, see FIXMEs in catsearch.c
  * o curdir per volume caching is gone
  * o directory offspring count calculation probably broken
- * o doesn't work with CNID backend last and the like.
+ * o doesn't work with CNID backend last and the like,
  *   CNID backend must support persistent CNIDs.
  */
 
@@ -800,7 +802,7 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
     assert(path);
     assert(len > 0);
 
-    if ((cdir = dircache_search_by_name(vol, dir->d_did, path->u_name, strlen(path->u_name))) != NULL) {
+    if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name))) != NULL) {
         /* there's a stray entry in the dircache */
         LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstring(dir->d_fullpath), path->u_name,
@@ -1032,7 +1034,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     int         size = 0;
     int         toUTF8 = 0;
 
-    LOG(log_debug, logtype_afpd, "came('%s'): {start}", cfrombstring(dir->d_fullpath));
+    LOG(log_maxdebug, logtype_afpd, "came('%s'): {start}", cfrombstring(dir->d_fullpath));
 
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
@@ -1197,7 +1199,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
             /* Search the cache */
             int unamelen = strlen(ret.u_name);
-            cdir = dircache_search_by_name(vol, dir->d_did, ret.u_name, unamelen);
+            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen);
             if (cdir == NULL) {
                 /* Not in cache, create one */
                 if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) {
@@ -1411,6 +1413,8 @@ int getdirparams(const struct vol *vol,
         case DIRPBIT_PDID :
             memcpy( data, &pdid, sizeof( pdid ));
             data += sizeof( pdid );
+            LOG(log_debug, logtype_afpd, "metadata('%s'):     Parent DID: %u",
+                s_path->u_name, ntohl(pdid));
             break;
 
         case DIRPBIT_CDATE :
@@ -1467,6 +1471,8 @@ int getdirparams(const struct vol *vol,
         case DIRPBIT_DID :
             memcpy( data, &dir->d_did, sizeof( aint ));
             data += sizeof( aint );
+            LOG(log_debug, logtype_afpd, "metadata('%s'):            DID: %u",
+                s_path->u_name, ntohl(dir->d_did));
             break;
 
         case DIRPBIT_OFFCNT :

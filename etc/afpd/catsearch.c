@@ -592,7 +592,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				*/
                 int unlen = strlen(path.u_name);
 				if (cached)
-            		path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir->d_did, path.u_name, unlen);
+            		path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir, path.u_name, unlen);
             	else
             		path.d_dir = NULL;
             	if (!path.d_dir) {

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.51 2009-11-24 21:01:45 didg Exp $
+ * $Id: afp_options.c,v 1.51.4.1 2010-02-04 14:34:31 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -195,6 +195,7 @@ void afp_options_init(struct afp_options *options)
     /* don't advertize slp by default */
     options->flags |= OPTION_NOSLP;
 #endif
+    options->dircachesize = 8192;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -448,6 +449,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-ntseparator")) && (opt = strdup(c)))
        options->ntseparator = opt;
+
+    if ((c = getoption(buf, "-dircachesize")))
+        options->dircachesize = atoi(c);
      
     return 1;
 }

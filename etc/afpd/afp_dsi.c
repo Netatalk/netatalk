@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.49.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.49.2.2 2010-02-04 14:34:31 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -338,7 +338,7 @@ void afp_over_dsi(AFPObj *obj)
     }
 #endif /* DEBUGGING */
 
-    if (dircache_init(0) != 0)
+    if (dircache_init(obj->options.dircachesize) != 0)
         afp_dsi_die(EXITERR_SYS);
 
     /* get stuck here until the end */
@@ -349,6 +349,7 @@ void afp_over_dsi(AFPObj *obj)
         if (reload_request) {
             reload_request = 0;
             load_volumes(child.obj);
+            dircache_dump();
         }
 
         if (cmd == DSIFUNC_TICKLE) {

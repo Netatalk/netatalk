@@ -1,5 +1,5 @@
 /*
-   $Id: dircache.h,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
+   $Id: dircache.h,v 1.1.2.2 2010-02-04 14:34:31 franklahm Exp $
    Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@ extern int        dircache_init(int reqsize);
 extern int        dircache_add(struct dir *);
 extern void       dircache_remove(const struct vol *, struct dir *, int flag);
 extern struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did);
-extern struct dir *dircache_search_by_name(const struct vol *, cnid_t did, char *name, int len);
+extern struct dir *dircache_search_by_name(const struct vol *, const struct dir *dir, char *name, int len);
 extern void       dircache_dump(void);
 
 #endif /* DIRCACHE_H */

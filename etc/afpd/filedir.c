@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.69.2.2 2010-02-01 16:13:52 franklahm Exp $
+ * $Id: filedir.c,v 1.69.2.3 2010-02-04 14:34:31 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -179,7 +179,6 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
 
     st   = &s_path->st;
     if (!s_path->st_valid) {
-        LOG(log_debug, logtype_afpd, "getfildirparams: !s_path->st_valid");
         /* it's a dir and it should be there
          * because we chdir in it in cname or
          * it's curdir (maybe deleted, but then we can't know).
@@ -189,7 +188,6 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     }
     if ( s_path->st_errno != 0 ) {
         if (afp_errno != AFPERR_ACCESS) {
-            LOG(log_debug, logtype_afpd, "getfildirparams: s_path->st_errno != 0");
             return( AFPERR_NOOBJ );
         }
     }

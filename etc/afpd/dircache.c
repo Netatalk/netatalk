@@ -1,5 +1,5 @@
 /*
-  $Id: dircache.c,v 1.1.2.2 2010-02-02 14:39:48 franklahm Exp $
+  $Id: dircache.c,v 1.1.2.3 2010-02-04 14:34:31 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -188,6 +188,8 @@ static void dircache_evict(void)
     int i = dircache_free_quantum;
     struct dir *dir;
 
+    LOG(log_debug, logtype_afpd, "dircache: {starting cache eviction}");
+
     while (i--) {
         if ((dir = (struct dir *)dequeue(index_queue)) == NULL) { /* 1 */
             dircache_dump();
@@ -210,6 +212,8 @@ static void dircache_evict(void)
 
     assert(queue_count == dircache->hash_nodecount);
     assert(queue_count + dircache_free_quantum <= dircache_maxsize);
+
+    LOG(log_debug, logtype_afpd, "dircache: {finished cache eviction}");
 }
 
 
@@ -251,24 +255,28 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did)
  * @brief Search the cache via did/name hashtable
  *
  * @param vol    (r) volume
- * @param did    (r) directory CNID
+ * @param dir    (r) directory
  * @param name   (r) name (server side encoding)
  * @parma len    (r) strlen of name
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
-struct dir *dircache_search_by_name(const struct vol *vol, cnid_t did, char *name, int len)
+struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir, char *name, int len)
 {
     struct dir *cdir = NULL;
     struct dir key;
     hnode_t *hn;
     static_bstring uname = {-1, len, (unsigned char *)name};
 
-    assert(vol != NULL && name != NULL && len && len < 256);
+    assert(vol);
+    assert(dir);
+    assert(name);
+    assert(len == strlen(name));
+    assert(len < 256);
 
-    if ((did && did != DIRDID_ROOT_PARENT)) {
+    if (dir->d_did != DIRDID_ROOT_PARENT) {
         key.d_vid = vol->v_vid;
-        key.d_pdid = did;
+        key.d_pdid = dir->d_did;
         key.d_u_name = &uname;
 
         if ((hn = hash_lookup(index_didname, &key)))
@@ -276,9 +284,11 @@ struct dir *dircache_search_by_name(const struct vol *vol, cnid_t did, char *nam
     }
 
     if (cdir)
-        LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {cached: path:'%s'}", ntohl(did), name, cfrombstring(cdir->d_fullpath));
+        LOG(log_debug, logtype_afpd, "dircache(pdid:%u, did:%u, '%s'): {found in cache}",
+            ntohl(dir->d_did), ntohl(cdir->d_did), cfrombstring(cdir->d_fullpath));
     else
-        LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {not in cache}", ntohl(did), name);
+        LOG(log_debug, logtype_afpd, "dircache(pdid:%u,'%s/%s'): {not in cache}",
+            ntohl(dir->d_did), cfrombstring(dir->d_fullpath), name);
 
     return cdir;
 }
@@ -294,13 +304,13 @@ struct dir *dircache_search_by_name(const struct vol *vol, cnid_t did, char *nam
  */
 int dircache_add(struct dir *dir)
 {
-    assert(dir != NULL
-           && ntohl(dir->d_pdid) >= 2
-           && ntohl(dir->d_did) >= CNID_START
-           && dir->d_fullpath != NULL
-           && dir->d_u_name != NULL
-           && dir->d_vid != 0
-           && dircache->hash_nodecount <= dircache_maxsize);
+    assert(dir);
+    assert(ntohl(dir->d_pdid) >= 2);
+    assert(ntohl(dir->d_did) >= CNID_START);
+    assert(dir->d_fullpath);
+    assert(dir->d_u_name);
+    assert(dir->d_vid);
+    assert(dircache->hash_nodecount <= dircache_maxsize);
 
     /* Check if cache is full */
     if (dircache->hash_nodecount == dircache_maxsize)
@@ -325,6 +335,8 @@ int dircache_add(struct dir *dir)
     } else {
         queue_count++;
     }
+
+    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}", ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
 
     assert(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
@@ -373,6 +385,8 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
         }
         hash_delete(dircache, hn);
     }
+
+    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {removed}", ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
 
     assert(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
@@ -434,7 +448,33 @@ int dircache_init(int reqsize)
  */
 void dircache_dump(void)
 {
-    LOG(log_error, logtype_afpd, "Fatal directory cache corruption. Dumping...\n");
+    char tmpnam[64];
+    FILE *dump;
+    qnode_t *n = index_queue->next;
+    const struct dir *dir;
 
+    LOG(log_warning, logtype_afpd, "Dumping directory cache...");
+
+    sprintf(tmpnam, "/tmp/dircache.%u", getpid());
+    if ((dump = fopen(tmpnam, "w+")) == NULL) {
+        LOG(log_error, logtype_afpd, "dircache_dump: %s", strerror(errno));
+        return;
+    }
+    setbuf(dump, NULL);
+
+    fprintf(dump, "Number of cache entries: %u\n", queue_count);
+    fprintf(dump, "Configured maximum cache size: %u\n", dircache_maxsize);
+    fprintf(dump, "==================================================\n\n");
+
+    for (int i = 1; i <= queue_count; i++) {
+        if (n == index_queue)
+            break;
+        dir = (struct dir *)n->data;
+        fprintf(dump, "%05u: vid:%u, pdid:%u, did:%u, path:%s\n",
+                i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+        n = n->next;
+    }
+
+    fprintf(dump, "\n");
     return;
 }

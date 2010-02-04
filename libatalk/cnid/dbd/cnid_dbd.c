@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.16 2010-01-21 14:14:49 didg Exp $
+ * $Id: cnid_dbd.c,v 1.16.2.1 2010-02-04 14:34:31 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -146,8 +146,6 @@ static int write_vec(int fd, struct iovec *iov, size_t towrite)
     ssize_t len;
     size_t len1;
 
-    LOG(log_maxdebug, logtype_cnid, "write_vec: request to write %d bytes", towrite);
-
     len1 =  iov[1].iov_len;
     while (towrite > 0) {
         if (((len = writev(fd, iov, 2)) == -1 && errno == EINTR) || !len)
@@ -185,8 +183,6 @@ static int init_tsock(CNID_private *db)
     int len;
     struct iovec iov[2];
 
-    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s", db->db_dir, Cnid_srv, Cnid_port);
-
     if ((fd = tsock_getfd(Cnid_srv, Cnid_port)) < 0)
         return -1;
 
@@ -204,7 +200,8 @@ static int init_tsock(CNID_private *db)
         return -1;
     }
 
-    LOG(log_debug, logtype_cnid, "init_tsock: ok");
+    LOG(log_maxdebug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s",
+        db->db_dir, Cnid_srv, Cnid_port);
 
     return fd;
 }
@@ -214,8 +211,6 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
 {
     struct iovec iov[2];
     size_t towrite;
-
-    LOG(log_maxdebug, logtype_cnid, "send_packet: BEGIN");
 
     if (!rqst->namelen) {
         if (write(db->fd, rqst, sizeof(struct cnid_dbd_rqst)) != sizeof(struct cnid_dbd_rqst)) {
@@ -241,7 +236,7 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
         return -1;
     }
     
-    LOG(log_maxdebug, logtype_cnid, "send_packet: OK");
+    LOG(log_maxdebug, logtype_cnid, "send_packet: {done}");
     return 0;
 }
 
@@ -301,8 +296,6 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
     char *nametmp;
     size_t len;
 
-    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: BEGIN");
-
     if (send_packet(db, rqst) < 0) {
         return -1;
     }
@@ -330,7 +323,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
         return -1;
     }
 
-    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: END");
+    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: {done}");
 
     return 0;
 }
@@ -340,8 +333,6 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
 {
     time_t orig, t;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
-
-    LOG(log_debug7, logtype_cnid, "transmit: BEGIN");
 
     if (db->changed) {
         /* volume and db don't have the same timestamp
@@ -354,7 +345,7 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
             struct cnid_dbd_rply rply_stamp;
             char  stamp[ADEDLEN_PRIVSYN];
 
-            LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
+            LOG(log_maxdebug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             if ((db->fd = init_tsock(db)) < 0) {
                 goto transmit_fail;
             }
@@ -383,11 +374,11 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
                     memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
                 memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
             }
-            LOG(log_debug, logtype_cnid, "transmit: succesfully attached to cnid_dbd for volume '%s' with stamp '%08lx'.", 
+            LOG(log_debug, logtype_cnid, "transmit: attached to '%s', stamp: '%08lx'.", 
                 db->db_dir, *(uint64_t *)stamp);
         }
         if (!dbd_rpc(db, rqst, rply)) {
-            LOG(log_debug7, logtype_cnid, "transmit: END OK");
+            LOG(log_maxdebug, logtype_cnid, "transmit: {done}");
             return 0;
         }
     transmit_fail:

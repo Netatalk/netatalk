@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.48.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: enumerate.c,v 1.48.2.2 2010-02-04 14:34:31 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -377,7 +377,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
             int len = strlen(s_path.u_name);
-            if ((dir = dircache_search_by_name(vol, curdir->d_did, s_path.u_name, len)) == NULL) {
+            if ((dir = dircache_search_by_name(vol, curdir, s_path.u_name, len)) == NULL) {
                 if ((dir = dir_add(vol, curdir, &s_path, len)) == NULL) {
                     LOG(log_error, logtype_afpd, "enumerate(vid:%u, did:%u, name:'%s'): error adding dir: '%s'",
                         ntohs(vid), ntohl(did), o_path->u_name, s_path.u_name);
