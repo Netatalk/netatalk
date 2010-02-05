@@ -1,5 +1,5 @@
 /*
-  $Id: dircache.c,v 1.1.2.4 2010-02-05 10:27:58 franklahm Exp $
+  $Id: dircache.c,v 1.1.2.5 2010-02-05 12:56:13 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -436,9 +436,9 @@ int dircache_init(int reqsize)
 
     /* As long as directory.c hasn't got its own initializer call, we do it for it */
     rootParent.d_did = DIRDID_ROOT_PARENT;
-    rootParent.d_fullpath = bfromcstr("");
-    rootParent.d_u_name = bfromcstr("");
-    rootParent.d_m_name = bfromcstr("");
+    rootParent.d_fullpath = bfromcstr("ROOT_PARENT");
+    rootParent.d_m_name = bfromcstr("ROOT_PARENT");
+    rootParent.d_u_name = rootParent.d_m_name;
 
     return 0;
 }
@@ -470,9 +470,10 @@ void dircache_dump(void)
         if (n == index_queue)
             break;
         dir = (struct dir *)n->data;
-        fprintf(dump, "%05u: vid:%u, pdid:%6u, did:%6u, path:%s, locked:%s\n",
+        fprintf(dump, "%05u: vid:%u, pdid:%6u, did:%6u, path:%s, locked:%3s, oforks:%s\n",
                 i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did), cfrombstring(dir->d_fullpath),
-                (dir->d_flags & DIRF_CACHELOCK) ? "yes" : "no");
+                (dir->d_flags & DIRF_CACHELOCK) ? "yes" : "no",
+                dir->d_ofork ? "yes" : "no");
         n = n->next;
     }
 

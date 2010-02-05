@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.10 2010-02-05 10:27:58 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.11 2010-02-05 12:56:13 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -869,10 +869,12 @@ exit:
 }
 
 /*!
-
-  FIXME: open forks ??!!!
-
  * @brief Remove a dir from a cache and free it and any ressources with it
+ *
+ * 1. Check if the dir is locked or has opened forks
+ * 2. If it's a request to remove curdir, just chdir to volume root
+ * 3. Remove it from the cache
+ * 4. Remove the dir plus any allocated resources it references
  *
  * @param (r) pointer to struct vol
  * @param (rw) pointer to struct dir
@@ -885,13 +887,13 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
         return 0;
 
-    if (dir->d_flags & DIRF_CACHELOCK) {
-        LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): attempt to remove a locked dir",
+    if (dir->d_flags & DIRF_CACHELOCK || dir->d_ofork) { /* 1 */
+        LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): dir is locked or has opened forks",
             ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
         return 0;
     }
 
-    if (curdir == dir) {
+    if (curdir == dir) {        /* 2 */
         if (movecwd(vol, vol->v_root) < 0) {
             LOG(log_error, logtype_afpd, "dir_remove: can't chdir to : %s", vol->v_root);
         }
@@ -900,8 +902,8 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
         ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
 
-    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
-    dir_free(dir);
+    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 3 */
+    dir_free(dir);              /* 4 */
 
     return 0;
 }
@@ -987,39 +989,29 @@ int dir_modify(const struct vol *vol,
 /*!
  * @brief Resolve a catalog node name path
  *
- * If it's a filename:
- * 1. compute unix name
- * 2. stat the file, storing struct stat or errno in struct path
- * 3. cwd (and curdir) is filename parent directory
- * 4. return path with with filename
- *
- * If it's a dirname:
- * 5. search the dircache
- * 6. if not in the cache:
- * 7.     compute unix name
- * 8.     stat the dir, storing struct stat or errno in struct path
- * 9.     chdir dirname
- * 10.    if chdir failed, return path with dirname
- *                         cwd is dir parent directory
- *        if chdir succeeded, add to dircache
- *                            return path with "" and "."
- *                            cwd is dirname
- * 11. else in the cache:
- * 12.     stat the dir, storing struct stat or errno in struct path
- * 13.     chdir dirname
- * 14.     if chdir failed
- *             if ENOENT
- *                 remove from cache
- *             if not last path part, return NULL
- *             else 
-   return
-   if chdir error
-   dirname
-   curdir: dir parent directory
-   else
-   dirname: ""
-   curdir: dir
-*/
+ * 1. Evaluate path type
+ * 2. Move to start dir, if we cant, it might eg because of EACCES, build
+ *    path from dirname, so eg getdirparams has sth it can chew on. curdir
+ *    is dir parent then. All this is done in path_from_dir().
+ * 3. Parse next cnode name in path, cases:
+ * 4.   single "\0" -> do nothing
+ * 5.   two or more consecutive "\0" -> chdir("..") one or more times
+ * 6.   cnode name -> copy it to path.m_name
+ * 7. Get unix name from mac name
+ * 8. Special handling of request with did 1
+ * 9. stat the cnode name
+ * 10. If it's not there, it's probably an afp_createfile|dir,
+ *     return with curdir = dir parent, struct path = dirname
+ * 11. If it's there and it's a file, it must should be the last element of the requested
+ *     path. Return with curdir = cnode name parent dir, struct path = filename
+ * 12. Treat symlinks like files, dont follow them
+ * 13. If it's a dir:
+ * 14. Search the dircache for it
+ * 15. If it's not in the cache, create a struct dir for it and add it to the cache
+ * 16. chdir into the dir and
+ * 17. set m_name to the mac equivalent of "."
+ * 18. goto 3
+ */
 struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 {
     static char        path[ MAXPATHLEN + 1];
@@ -1039,7 +1031,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     afp_errno = AFPERR_NOOBJ;
     memset(&ret, 0, sizeof(ret));
 
-    switch (ret.m_type = *data) { /* path type */
+    switch (ret.m_type = *data) { /* 1 */
     case 2:
         data++;
         len = (unsigned char) *data++;
@@ -1081,19 +1073,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             return NULL;
     }
 
-    while (len) {
-        /*
-         * Three cases:
-         * 1. single 0 -> delimiter
-         * 2. additional 0 -> chdir(..)
-         * 3. a name
-         *    a) name is a file, build struct path from it etc., exit while loop
-         *    b) name is a dir, add it to the dircache, chdir to it, continue
-         */
-        if (*data == 0) { /* case 1 or 2 */
+    while (len) {         /* 3 */
+        if (*data == 0) { /* 4 or 5 */
             data++;
             len--;
-            while (len > 0 && *data == 0) { /* case 2 */
+            while (len > 0 && *data == 0) { /* 5 */
                 /* chdir to parrent dir */
                 if ((dir = dirlookup(vol, dir->d_pdid)) == NULL)
                     return NULL;
@@ -1107,7 +1091,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             continue;
         }
 
-        /* case 3: copy name from packet buffer to ret.m_name and process it */
+        /* 6*/
         for ( p = path; *data != 0 && len > 0; len-- ) {
             *p++ = *data++;
             if (p > &path[ MAXPATHLEN]) {
@@ -1118,8 +1102,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         *p = 0;            /* Terminate string */
         ret.u_name = NULL;
 
-        /* Get u_name from m_name */
-        if (cname_mtouname(vol, dir, &ret, toUTF8) != 0) {
+        if (cname_mtouname(vol, dir, &ret, toUTF8) != 0) { /* 7 */
             LOG(log_error, logtype_afpd, "cname('%s'): error from cname_mtouname", path);
             return NULL;
         }
@@ -1134,7 +1117,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             return NULL;
         }
 
-        if (dir->d_did == DIRDID_ROOT_PARENT) {
+        if (dir->d_did == DIRDID_ROOT_PARENT) { /* 8 */
             /*
              * Special case: CNID 1
              * root parent (did 1) has one child: the volume. Requests for did=1 with
@@ -1153,7 +1136,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
              *   and thus call continue which should terminate the while loop because
              *   len = 0. Ok?
              */
-            if (of_stat(&ret) != 0) {
+            if (of_stat(&ret) != 0) { /* 9 */
                 /*
                  * ret.u_name doesn't exist, might be afp_createfile|dir
                  * that means it should have been the last part
@@ -1168,11 +1151,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                  * probably afp_createfile|dir
                  */
                 LOG(log_maxdebug, logtype_afpd, "came('%s'): {leave-cnode ENOENT (possile create request): '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
-                continue;
+                continue; /* 10 */
             }
 
             switch (ret.st.st_mode & S_IFMT) {
-            case S_IFREG:
+            case S_IFREG: /* 11 */
                 LOG(log_debug, logtype_afpd, "came('%s'): {file: '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
                 if (len > 0) {
                     /* it wasn't the last part, so we have a bogus path request */
@@ -1180,7 +1163,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                     return NULL;
                 }
                 continue; /* continues while loop */
-            case S_IFLNK:
+            case S_IFLNK: /* 12 */
                 LOG(log_debug, logtype_afpd, "came('%s'): {link: '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
                 if (len > 0) {
                     LOG(log_warning, logtype_afpd, "came('%s'): {symlinked dir: '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
@@ -1188,7 +1171,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                     return NULL;
                 }
                 continue; /* continues while loop */
-            case S_IFDIR:
+            case S_IFDIR: /* 13 */
                 break;
             default:
                 LOG(log_info, logtype_afpd, "cname: special file: '%s'", ret.u_name);
@@ -1198,10 +1181,10 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
             /* Search the cache */
             int unamelen = strlen(ret.u_name);
-            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen);
+            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen); /* 14 */
             if (cdir == NULL) {
                 /* Not in cache, create one */
-                if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) {
+                if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) { /* 15 */
                     LOG(log_error, logtype_afpd, "cname(did:%u, name:'%s', cwd:'%s'): failed to add dir",
                         ntohl(dir->d_did), ret.u_name, getcwdpath());
                     return NULL;
@@ -1210,7 +1193,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         } /* if/else cnid==1 */
 
         /* Now chdir to the evaluated dir */
-        if (movecwd( vol, cdir ) < 0 ) {
+        if (movecwd( vol, cdir ) < 0 ) { /* 16 */
             LOG(log_debug, logtype_afpd, "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
                 cfrombstring(curdir->d_fullpath), cfrombstring(cdir->d_fullpath), strerror(errno));
             if (len == 0)
@@ -1219,7 +1202,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                 return NULL;
         }
         dir = cdir;
-        ret.m_name[0] = 0;      /* so we later know last token was a dir */
+        ret.m_name[0] = 0;      /* 17, so we later know last token was a dir */
     } /* while (len) */
 
     if (curdir->d_did == DIRDID_ROOT_PARENT) {
