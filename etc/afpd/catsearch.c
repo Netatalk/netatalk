@@ -49,6 +49,8 @@
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB */
+#include <atalk/bstradd.h>
+
 #include "desktop.h"
 #include "directory.h"
 #include "dircache.h"
@@ -145,6 +147,7 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 	/* Put new element. Allocate and copy lname and path. */
 	ds = dstack + dsidx++;
 	ds->dir = dir;
+    dir->d_flags |= DIRF_CACHELOCK;
 	ds->pidx = pidx;
 	ds->checked = 0;
 	if (pidx >= 0) {
@@ -177,6 +180,7 @@ static int reducestack(void)
 	while (dsidx > 0) {
 		if (dstack[dsidx-1].checked) {
 			dsidx--;
+            dstack[dsidx].dir->d_flags &= ~DIRF_CACHELOCK;
 			free(dstack[dsidx].path);
 		} else
 			return dsidx - 1;
@@ -190,6 +194,7 @@ static void clearstack(void)
 	save_cidx = -1;
 	while (dsidx > 0) {
 		dsidx--;
+        dstack[dsidx].dir->d_flags &= ~DIRF_CACHELOCK;
 		free(dstack[dsidx].path);
 	}
 } 
@@ -500,7 +505,6 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	char *rrbuf = rbuf;
     time_t start_time;
     int num_rounds = NUM_ROUNDS;
-    int cached;
     int cwd = -1;
         
 	if (*pos != 0 && *pos != cur_pos) {
@@ -535,11 +539,8 @@ static int catsearch(struct vol *vol, struct dir *dir,
     }
 	
 	while ((cidx = reducestack()) != -1) {
-		cached = 1;
 		if (dirpos == NULL) {
 			dirpos = opendir(dstack[cidx].path);
-// FIXME dircache rewrite
-//			cached = (dstack[cidx].dir->d_child != NULL);
 		}
 		if (dirpos == NULL) {
 			switch (errno) {
@@ -558,8 +559,11 @@ static int catsearch(struct vol *vol, struct dir *dir,
 			} /* switch (errno) */
 			goto catsearch_end;
 		}
-		/* FIXME error in chdir, what do we do? */
-		chdir(dstack[cidx].path);
+
+		if (chdir(dstack[cidx].path) != 0) {
+				result = AFPERR_NFILE;
+                goto catsearch_end;
+        }
 		
 
 		while ((entry=readdir(dirpos)) != NULL) {
@@ -591,18 +595,15 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				   ALL dirsearch_byname will fail.
 				*/
                 int unlen = strlen(path.u_name);
-				if (cached)
-            		path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir, path.u_name, unlen);
-            	else
-            		path.d_dir = NULL;
-            	if (!path.d_dir) {
+                path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir, path.u_name, unlen);
+            	if (path.d_dir == NULL) {
                 	/* path.m_name is set by adddir */
             	    if (NULL == (path.d_dir = dir_add( vol, dstack[cidx].dir, &path, unlen) ) ) {
 						result = AFPERR_MISC;
 						goto catsearch_end;
 					}
                 }
-                path.m_name = (char *)path.d_dir->d_m_name->data;
+                path.m_name = cfrombstring(path.d_dir->d_m_name);
                 	
 				if (addstack(path.u_name, path.d_dir, cidx) == -1) {
 					result = AFPERR_MISC;

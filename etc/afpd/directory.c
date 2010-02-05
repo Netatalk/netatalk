@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.9 2010-02-04 14:34:31 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.10 2010-02-05 10:27:58 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -49,11 +49,8 @@ extern void addir_inherit_acl(const struct vol *vol);
 
 /*
  * FIXMEs, loose ends after the dircache rewrite:
- * o dircache aging, place dirlookup'ed dirs on front of queue ??
  * o merge dircache_search_by_name and dir_add ??
  * o case-insensitivity is gone from cname
- * o catsearch doesn't work, see FIXMEs in catsearch.c
- * o curdir per volume caching is gone
  * o directory offspring count calculation probably broken
  * o doesn't work with CNID backend last and the like,
  *   CNID backend must support persistent CNIDs.
@@ -341,23 +338,25 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
  *
  * The final movecwd in cname failed, possibly with EPERM or ENOENT. We:
  * 1. move cwd into parent dir (we're often already there, but not always)
+ * 2. set struct path to the dirname
+ * 3. in case of
+ *    AFPERR_ACCESS: the dir is there, we just cant chdir into it
+ *    AFPERR_NOOBJ: the dir was there when we stated it in cname, so we have a race
+ *                  4. indicate there's no dir for this path
+ *                  5. remove the dir
  */
 static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path *ret)
 {
-    /*
-     * it's tricky: movecwd failed some of dir path are not there anymore.
-     * FIXME: Is it true with other errors?
-     */
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
         return NULL;
 
     switch (afp_errno) {
 
     case AFPERR_ACCESS:
-        if (movecwd( vol, dirlookup(vol, dir->d_pdid)) < 0 )
+        if (movecwd( vol, dirlookup(vol, dir->d_pdid)) < 0 ) /* 1 */
             return NULL;
 
-        memcpy(ret->m_name, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1);
+        memcpy(ret->m_name, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1); /* 3 */
         if (dir->d_m_name == dir->d_u_name) {
             ret->u_name = ret->m_name;
         } else {
@@ -366,12 +365,8 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
         }
 
         ret->d_dir = dir;
-#if 0
-        ret->st_valid = 1;
-        ret->st_errno = EACCES;
-#endif
 
-        LOG(log_debug, logtype_afpd, "cname(AFPERR_ACCESS:'%s') {path-from-dir: curdir:'%s', path:'%s'}",
+        LOG(log_debug, logtype_afpd, "cname('%s') {path-from-dir: AFPERR_ACCESS. curdir:'%s', path:'%s'}",
             cfrombstring(dir->d_fullpath),
             cfrombstring(curdir->d_fullpath),
             ret->u_name);
@@ -379,7 +374,7 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
         return ret;
 
     case AFPERR_NOOBJ:
-        if (movecwd(vol, dirlookup(vol, dir->d_pdid)) < 0 )
+        if (movecwd(vol, dirlookup(vol, dir->d_pdid)) < 0 ) /* 1 */
             return NULL;
 
         memcpy(ret->m_name, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1);
@@ -390,12 +385,8 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
             memcpy(ret->u_name, cfrombstring(dir->d_u_name), blength(dir->d_u_name) + 1);
         }
 
-#if 0
-        ret->st_valid = 1;
-        ret->st_errno = ENOENT;
-#endif
-        ret->d_dir = NULL;
-        dir_remove(vol, dir);
+        ret->d_dir = NULL;      /* 4 */
+        dir_remove(vol, dir);   /* 5 */
         return ret;
 
     default:
@@ -878,6 +869,9 @@ exit:
 }
 
 /*!
+
+  FIXME: open forks ??!!!
+
  * @brief Remove a dir from a cache and free it and any ressources with it
  *
  * @param (r) pointer to struct vol
@@ -891,12 +885,17 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
         return 0;
 
+    if (dir->d_flags & DIRF_CACHELOCK) {
+        LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): attempt to remove a locked dir",
+            ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+        return 0;
+    }
+
     if (curdir == dir) {
         if (movecwd(vol, vol->v_root) < 0) {
             LOG(log_error, logtype_afpd, "dir_remove: can't chdir to : %s", vol->v_root);
         }
     }
-
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
         ntohl(dir->d_did), cfrombstring(dir->d_fullpath));

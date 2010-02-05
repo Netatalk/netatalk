@@ -1,5 +1,5 @@
 /*
-   $Id: dircache.h,v 1.1.2.2 2010-02-04 14:34:31 franklahm Exp $
+   $Id: dircache.h,v 1.1.2.3 2010-02-05 10:27:58 franklahm Exp $
    Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,10 @@
 
 #include <atalk/volume.h>
 #include <atalk/directory.h>
+
+/* Maximum size of the dircache hashtable */
+#define DEFAULT_MAX_DIRCACHE_SIZE 8192
+#define MAX_POSSIBLE_DIRCACHE_SIZE 131072
 
 /* flags for dircache_remove */
 #define DIRCACHE      (1 << 0)

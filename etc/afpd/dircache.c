@@ -1,5 +1,5 @@
 /*
-  $Id: dircache.c,v 1.1.2.3 2010-02-04 14:34:31 franklahm Exp $
+  $Id: dircache.c,v 1.1.2.4 2010-02-05 10:27:58 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -47,6 +47,8 @@
  * We have/need two indexes:
  * - a DID/name index on the main dircache, another hashtable
  * - a queue index on the dircache, for evicting the oldest entries
+ * The cache supports locking of struct dir elements through the DIRF_CACHELOCK flag. A dir
+ * locked this way wont ever be removed from the cache, so be careful.
  */
 
 /********************************************************
@@ -55,10 +57,6 @@
 
 /*****************************
  *       THE dircache        */
-
-/* Maximum size of the dircache hashtable */
-#define DEFAULT_MAX_DIRCACHE_SIZE 8192 /* FIXME: make it a afpd.conf option */
-#define MAX_POSSIBLE_DIRCACHE_SIZE 131072
 
 static hash_t       *dircache;        /* The actual cache */
 static unsigned int dircache_maxsize; /* cache maximum size */
@@ -179,7 +177,8 @@ static const int dircache_free_quantum = 256; /* number of entries to free */
  *
  * The default is to remove the 256 oldest entries from the cache.
  * 1. Get the oldest entry
- * 2. If it's in use ie open forks reference it or it's curdir requeue it, dont remove it
+ * 2. If it's in use ie open forks reference it or it's curdir requeue it,
+ *    or it's locked (from catsearch) dont remove it
  * 3. Remove the dir from the main cache and the didname index
  * 4. Free the struct dir structure and all its members
  */
@@ -197,7 +196,9 @@ static void dircache_evict(void)
         }
         queue_count--;
 
-        if (curdir == dir || dir->d_ofork) {     /* 2 */
+        if (curdir == dir
+            || dir->d_ofork
+            || (dir->d_flags & DIRF_CACHELOCK)) {     /* 2 */
             if ((dir->qidx_node = enqueue(index_queue, dir)) == NULL) {
                 dircache_dump();
                 exit(EXITERR_SYS);
@@ -360,6 +361,9 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
     assert(dir);
     assert((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
 
+    if (dir->d_flags & DIRF_CACHELOCK)
+        return;
+
     if (flags & QUEUE_INDEX) {
         /* remove it from the queue index */
         dequeue(dir->qidx_node->prev); /* this effectively deletes the dequeued node */
@@ -440,11 +444,7 @@ int dircache_init(int reqsize)
 }
 
 /*!
-
-   FIXME: TO DO !!!
-
  * @brief Dump dircache to /tmp/dircache.PID
-
  */
 void dircache_dump(void)
 {
@@ -470,8 +470,9 @@ void dircache_dump(void)
         if (n == index_queue)
             break;
         dir = (struct dir *)n->data;
-        fprintf(dump, "%05u: vid:%u, pdid:%u, did:%u, path:%s\n",
-                i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+        fprintf(dump, "%05u: vid:%u, pdid:%6u, did:%6u, path:%s, locked:%s\n",
+                i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did), cfrombstring(dir->d_fullpath),
+                (dir->d_flags & DIRF_CACHELOCK) ? "yes" : "no");
         n = n->next;
     }
 

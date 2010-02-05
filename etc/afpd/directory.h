@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.33.4.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: directory.h,v 1.33.4.2 2010-02-05 10:27:59 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -48,8 +48,9 @@
 #define DIRF_AFS	(1<<0)
 #define DIRF_UFS	(2<<0)
 
-#define DIRF_OFFCNT     (1<<4)	/* offsprings count is valid */
-#define DIRF_CNID	(1<<5)  /* renumerate id */
+#define DIRF_OFFCNT    (1<<4) /* offsprings count is valid */
+#define DIRF_CNID	   (1<<5) /* renumerate id */
+#define DIRF_CACHELOCK (1<<6) /* lock in cache, don't remove in dircache_eviction, for catsearch */
 
 #define AFPDIR_READ	(1<<0)
 
