@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_passwd.c,v 1.6 2009-10-15 11:39:48 didg Exp $
+ * $Id: uams_dhx2_passwd.c,v 1.7 2010-02-06 09:53:02 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -99,9 +99,9 @@ dh_params_generate (gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits) {
     /* Version check should be the very first call because it
        makes sure that important subsystems are intialized. */
     if (!gcry_check_version (GCRYPT_VERSION)) {
-        LOG(log_info, logtype_uams, "PAM DHX2: libgcrypt versions mismatch. Need: %u", GCRYPT_VERSION);
-	result = AFPERR_MISC;
-	goto error;
+        LOG(log_info, logtype_uams, "PAM DHX2: libgcrypt versions mismatch. Need: %s", GCRYPT_VERSION);
+        result = AFPERR_MISC;
+        goto error;
     }
 
     if (bits < 256)
