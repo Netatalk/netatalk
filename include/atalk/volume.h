@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.12 2010-02-04 10:52:29 franklahm Exp $
+ * $Id: volume.h,v 1.13 2010-02-08 10:29:22 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -82,7 +82,7 @@ struct vol {
     char            *v_postexec;
     int             v_root_preexec_close;
     int             v_preexec_close;
-    char            *v_debugfile; /* magic file that enables debugging when created in did 2 */
+
 #ifdef FORCE_UIDGID
     char            *v_forceuid;
     char            *v_forcegid;

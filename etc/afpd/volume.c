@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.116 2010-02-04 10:52:29 franklahm Exp $
+ * $Id: volume.c,v 1.117 2010-02-08 10:29:22 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -128,8 +128,8 @@ static void             free_extmap(void);
 #define VOLOPT_FPERM     25  /* fperm default files perms */
 #define VOLOPT_DFLTPERM  26  /* perm */
 #define VOLOPT_EA_VFS    27  /* Extended Attributes vfs indirection */
-#define VOLOPT_DEBUG_FILE  28 /* Enable debugging for one AFP process */
-#define VOLOPT_MAX       29  /* <== IMPORTANT !!!!!! */
+
+#define VOLOPT_MAX       28  /* <== IMPORTANT !!!!!! */
 #define VOLOPT_NUM       (VOLOPT_MAX + 1)
 
 #define VOLPASSLEN  8
@@ -522,9 +522,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
         else if (strcasecmp(val + 1, "none") == 0)
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_NONE;
 
-    } else if (optionok(tmp, "debugfile:", val)) {
-        setoption(options, save, VOLOPT_DEBUG_FILE, val);
-
     } else {
         /* ignore unknown options */
         LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
@@ -789,10 +786,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             if (options[VOLOPT_ROOTPOSTEXEC].c_value)
                 volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_ROOTPOSTEXEC].c_value, pwd, path,  name);
         }
-
-        if (options[VOLOPT_DEBUG_FILE].c_value)
-            volume->v_debugfile = strdup(options[VOLOPT_DEBUG_FILE].c_value);
-
     }
     volume->v_dperm |= volume->v_perm;
     volume->v_fperm |= volume->v_perm;
