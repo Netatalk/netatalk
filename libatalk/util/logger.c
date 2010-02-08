@@ -358,9 +358,15 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
 
 
     /* Open log file as OPEN_LOGS_AS_UID*/
+
     /* Is it /dev/tty ? */
     if (strcmp(file_configs[logtype].filename, "/dev/tty") == 0) {
         file_configs[logtype].fd = 1; /* stdout */
+
+        /* Does it end in "XXXXXX" ? */
+    } else if (strcmp(file_configs[logtype].filename + strlen(file_configs[logtype].filename) - 6, "XXXXXX") == 0) {
+        /* debug reguest via SIGINT */
+        file_configs[logtype].fd = mkstemp(file_configs[logtype].filename);
     } else {
         process_uid = geteuid();
         if (process_uid) {

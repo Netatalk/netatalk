@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.49 2010-01-18 12:55:28 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.50 2010-02-08 13:39:56 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -170,6 +170,16 @@ static void afp_dsi_reload(int sig _U_)
     reload_request = 1;
 }
 
+/* ---------------------------------
+ * SIGINT: enable max_debug LOGging
+ */
+volatile static sig_atomic_t debug_request = 0;
+
+static void afp_dsi_debug(int sig _U_)
+{
+    debug_request = 1;
+}
+
 /* ---------------------- */
 #ifdef SERVERTEXT
 static void afp_dsi_getmesg (int sig _U_)
@@ -266,6 +276,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGALRM);
     sigaddset(&action.sa_mask, SIGTERM);
     sigaddset(&action.sa_mask, SIGUSR1);
+    sigaddset(&action.sa_mask, SIGINT);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
@@ -281,6 +292,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGALRM);
     sigaddset(&action.sa_mask, SIGHUP);
     sigaddset(&action.sa_mask, SIGUSR1);
+    sigaddset(&action.sa_mask, SIGINT);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
@@ -298,6 +310,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGTERM);
     sigaddset(&action.sa_mask, SIGUSR1);
     sigaddset(&action.sa_mask, SIGHUP);
+    sigaddset(&action.sa_mask, SIGINT);
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR2, &action, NULL) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
@@ -311,11 +324,21 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGALRM);
     sigaddset(&action.sa_mask, SIGHUP);
     sigaddset(&action.sa_mask, SIGTERM);
+    sigaddset(&action.sa_mask, SIGINT);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &action, NULL) < 0 ) {
+        LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
+        afp_dsi_die(EXITERR_SYS);
+    }
+
+    /*  SIGINT - enable max_debug LOGging to /tmp/afpd.PID.XXXXXX */
+    action.sa_handler = afp_dsi_debug;
+    sigfillset( &action.sa_mask );
+    action.sa_flags = SA_RESTART;
+    if ( sigaction( SIGINT, &action, NULL) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }
@@ -327,6 +350,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGHUP);
     sigaddset(&action.sa_mask, SIGTERM);
     sigaddset(&action.sa_mask, SIGUSR1);
+    sigaddset(&action.sa_mask, SIGINT);
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
@@ -342,9 +366,27 @@ void afp_over_dsi(AFPObj *obj)
         child.tickle = 0;
         child.flags &= ~CHILD_SLEEPING;
         dsi_sleep(dsi, 0); /* wake up */
+
         if (reload_request) {
             reload_request = 0;
             load_volumes(child.obj);
+        }
+
+        if (debug_request) {
+            char logstr[50];
+            debug_request = 0;
+
+            /* The first SIGINT enables debugging, the second one kills us */
+            action.sa_handler = afp_dsi_die;
+            sigfillset( &action.sa_mask );
+            action.sa_flags = SA_RESTART;
+            if ( sigaction( SIGINT, &action, NULL ) < 0 ) {
+                LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
+                afp_dsi_die(EXITERR_SYS);
+            }
+
+            sprintf(logstr, "default log_maxdebug /tmp/afpd.%u.XXXXXX", getpid());
+            setuplog(logstr);
         }
 
         if (cmd == DSIFUNC_TICKLE) {

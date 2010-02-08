@@ -2,12 +2,12 @@
 .\"     Title: afpd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 06 Jan 2004
+.\"      Date: 08 Feb 2010
 .\"    Manual: Netatalk 2.1beta
 .\"    Source: Netatalk 2.1beta
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "06 Jan 2004" "Netatalk 2.1beta" "Netatalk 2.1beta"
+.TH "AFPD" "8" "08 Feb 2010" "Netatalk 2.1beta" "Netatalk 2.1beta"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -190,7 +190,25 @@ SIGHUP
 .RS 4
 Sending a
 \fBSIGHUP\fR
-to afpd will cause it to reload its configuration files\&.
+to afpd will cause it to reload its configuration files\&. The master
+\fBafpd\fR
+process will reread all files while the children
+\fBafpd\fR
+processes will only reread the volume configuration\&.
+.RE
+.PP
+SIGINT
+.RS 4
+Sending a
+\fBSIGINT\fR
+to a child
+\fBafpd\fR
+enables
+\fImax_debug\fR
+logging for this process\&. The log is sent to fhe file
+/tmp/afpd\&.PID\&.XXXXXX\&. Sending another
+\fBSIGINT\fR
+will terminate the process\&.
 .RE
 .PP
 SIGUSR1
@@ -205,9 +223,7 @@ SIGUSR2
 The
 \fBafpd\fR
 process will look in the message directory configured at build time for a file named message\&.pid\&. For each one found, a the contents will be sent as a message to the associated AFP client\&. The file is removed after the message is sent\&. This should only be sent to a child
-\fBafpd\fR\&. Warning: If the \-\-with\-message\-dir option was not used, this will kill the
-\fBafpd\fR
-process
+\fBafpd\fR\&.
 .sp
 To shut down a user\'s
 \fBafpd\fR
