@@ -6,7 +6,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     dnl Determine whether or not to use Database Daemon CNID backend
     AC_MSG_CHECKING([whether or not to use Database Daemon CNID backend])
     AC_ARG_WITH(cnid-dbd-backend,
-    [  --with-cnid-dbd-backend       build CNID with Database Daemon Data Store],
+    [  --with-cnid-dbd-backend       build CNID with Database Daemon Data Store [[yes]]],
     [   if test x"$withval" = x"no"; then
             use_dbd_backend=no
             AC_MSG_RESULT([no])
@@ -32,7 +32,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     dnl Determine whether or not to use BDB Concurrent Data Store
     AC_MSG_CHECKING([whether or not to use BDB Concurrent Data Store])
     AC_ARG_WITH(cnid-cdb-backend,
-	[  --with-cnid-cdb-backend	build CNID with Concurrent BDB Data Store],[
+	[  --with-cnid-cdb-backend	build CNID with Concurrent BDB Data Store  [[no]]],[
 	    if test x"$withval" = x"no"; then
 	        use_cdb_backend=no
         else
@@ -59,7 +59,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     dnl Determine whether or not to use LAST DID scheme
     AC_MSG_CHECKING([whether or not to use LAST DID scheme])
     AC_ARG_WITH(cnid-last-backend,
-	[  --with-cnid-last-backend	build LAST CNID scheme],
+	[  --with-cnid-last-backend	build LAST CNID scheme                     [[yes]]],
 	[
         if test x"$withval" = x"no"; then
             use_last_backend=no
@@ -85,7 +85,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     dnl Determine whether or not to use TDB DID scheme
     AC_MSG_CHECKING([whether or not to use TDB DID scheme])
     AC_ARG_WITH(cnid-tdb-backend,
-	[  --with-cnid-tdb-backend	build DID CNID scheme],
+	[  --with-cnid-tdb-backend	build TDB CNID scheme                      [[yes]]],
     [
         if test x"$withval" = x"no"; then
             use_tdb_backend=no
@@ -111,7 +111,7 @@ AC_DEFUN([AC_NETATALK_CNID], [
     dnl Set default DID scheme
     AC_MSG_CHECKING([default DID scheme])
     AC_ARG_WITH(cnid-default-backend,
-	[  --with-cnid-default-backend=val	set default DID scheme],
+	[  --with-cnid-default-backend=val	set default DID scheme [[dbd]]],
     [
         if test x"$withval" = x; then
             AC_MSG_RESULT([ignored])
