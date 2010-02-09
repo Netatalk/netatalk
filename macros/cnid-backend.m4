@@ -8,8 +8,8 @@ AC_DEFUN([AC_NETATALK_CNID], [
     AC_ARG_WITH(cnid-dbd-backend,
     [  --with-cnid-dbd-backend       build CNID with Database Daemon Data Store],
     [   if test x"$withval" = x"no"; then
-            AC_MSG_RESULT([no])
             use_dbd_backend=no
+            AC_MSG_RESULT([no])
         else
             use_dbd_backend=yes
             AC_MSG_RESULT([yes])
@@ -38,8 +38,10 @@ AC_DEFUN([AC_NETATALK_CNID], [
         else
             use_cdb_backend=yes
         fi
-    ],[use_cdb_backend=no]
-    )
+    ],[
+        use_cdb_backend=no
+    ])
+
 
     if test $use_cdb_backend = yes; then
         AC_MSG_RESULT([yes])
@@ -91,13 +93,13 @@ AC_DEFUN([AC_NETATALK_CNID], [
             use_tdb_backend=yes
         fi
     ],[
-        use_tdb_backend=no
+        use_tdb_backend=yes
     ])
 
     if test $use_tdb_backend = yes; then
         AC_MSG_RESULT([yes])
         AC_DEFINE(CNID_BACKEND_TDB, 1, [Define if CNID TDB scheme backend should be compiled.])
-        if test x"$DEFAULT_TDB_SCHEME" = x; then
+        if test x"$DEFAULT_CNID_SCHEME" = x; then
             DEFAULT_CNID_SCHEME=tdb
         fi
         compiled_backends="$compiled_backends tdb"
