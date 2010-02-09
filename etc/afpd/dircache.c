@@ -1,5 +1,5 @@
 /*
-  $Id: dircache.c,v 1.1.2.5 2010-02-05 12:56:13 franklahm Exp $
+  $Id: dircache.c,v 1.1.2.6 2010-02-09 14:56:30 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -348,11 +348,8 @@ int dircache_add(struct dir *dir)
 /*!
   * @brief Remove an entry from the dircache
   *
-  * FIXME what about opened forks with refs to it?
-  * it's an afp specs violation because you can't delete
-  * an opened forks. Now afpd doesn't care about forks opened by other
-  * process. It's fixable within afpd if fnctl_lock, doable with smb and
-  * next to impossible for nfs and local filesystem access.
+  * Callers outside of dircache.c should call this with
+  * flags = QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE.
   */
 void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 {

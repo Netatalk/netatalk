@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.115.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: volume.c,v 1.115.2.2 2010-02-09 14:56:30 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -466,6 +466,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value &= ~AFPVOL_CACHE;
             else if (strcasecmp(p, "tm") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_TM;
+            else if (strcasecmp(p, "eject") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_EJECT | AFPVOL_RO;
 
             p = strtok(NULL, ",");
         }
@@ -1818,12 +1820,32 @@ static int volume_openDB(struct vol *volume)
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
         LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
     }
+
+    /* Legacy pre 2.1 way of sharing eg CD-ROM */
+    if (strcmp(volume->v_cnidscheme, "last") == 0) {
+        /* "last" is gone. We support it by switching to in-memory "tdb" */
+        volume->v_cnidscheme = strdup("tdb");
+        flags |= CNID_FLAG_MEMORY;
+    }
+
+    /* New way of sharing CD-ROM */
+    if (volume->v_flags & AFPVOL_EJECT) {
+        flags |= CNID_FLAG_MEMORY;
+        if (strcmp(volume->v_cnidscheme, "tdb") != 0) {
+            free(volume->v_cnidscheme);
+            volume->v_cnidscheme = strdup("tdb");
+            LOG(log_info, logtype_afpd, "Volume %s is ejectable, switching to scheme %s.",
+                volume->v_path, volume->v_cnidscheme);
+        }
+    }
+
     if (volume->v_dbpath)
         volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, flags);
     else
         volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, flags);
 
-    if (!volume->v_cdb) {
+    if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
+        /* The first attempt failed and it wasn't yet an attempt to open in-memory */
         flags |= CNID_FLAG_MEMORY;
         LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.", volume->v_path);
         volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags);

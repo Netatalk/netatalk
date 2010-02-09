@@ -66,6 +66,7 @@ static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"}, 
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
+    {AFPVOL_EJECT,      "EJECT"},       /* Ejectable media eg CD -> in memory CNID db */
     {0, NULL}
 };
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.30.4.3 2010-02-05 10:38:53 franklahm Exp $
+ * $Id: ofork.c,v 1.30.4.4 2010-02-09 14:56:30 franklahm Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -290,7 +290,7 @@ int of_stat(struct path *path)
     path->st_valid = 1;
     if ((ret = stat(path->u_name, &path->st)) < 0) {
         LOG(log_debug, logtype_afpd, "of_stat: {'%s/%s': %s}",
-            getcwdpath(), path->u_name, strerror(errno));
+            cfrombstring(curdir->d_fullpath), path->u_name, strerror(errno));
         path->st_errno = errno;
     }
     return ret;

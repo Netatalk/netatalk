@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.11.2.1 2010-02-01 10:56:08 franklahm Exp $
+ * $Id: volume.h,v 1.11.2.2 2010-02-09 14:56:30 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -107,7 +107,7 @@ typedef u_int64_t VolSpace;
 
 /*
   Flags that alter volume behaviour.
-  Keep in sync with include/atalk/volinfo.h and libatalk/util/volinfo.c
+  Keep in sync with libatalk/util/volinfo.c
 */
 #define AFPVOL_A2VOL     (1 << 5)   /* prodos volume */
 #define AFPVOL_CRLF      (1 << 6)   /* cr/lf translation */
@@ -136,6 +136,7 @@ typedef u_int64_t VolSpace;
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
 #define AFPVOL_TM        (1 << 24)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
+#define AFPVOL_EJECT     (1 << 25)   /* Ejectable media eg CD -> in memory CNID db */
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_NONE           0   /* No EAs */

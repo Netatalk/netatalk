@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.11 2010-02-05 12:56:13 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.12 2010-02-09 14:56:30 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -51,9 +51,6 @@ extern void addir_inherit_acl(const struct vol *vol);
  * FIXMEs, loose ends after the dircache rewrite:
  * o merge dircache_search_by_name and dir_add ??
  * o case-insensitivity is gone from cname
- * o directory offspring count calculation probably broken
- * o doesn't work with CNID backend last and the like,
- *   CNID backend must support persistent CNIDs.
  */
 
 
