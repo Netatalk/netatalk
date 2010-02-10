@@ -3,7 +3,7 @@ Changes in 2.1-beta1
 
 * NEW: afpd: AFP 3.2 support
 * NEW: afpd: Extended Attributes support using native attributes or
-             using files inside .AppleDouble directories.
+       using files inside .AppleDouble directories.
 * NEW: afpd: ACL support with ZFS
 * NEW: cnid_metad: options -l and -f to configure logging
 * NEW: IPv6 support
@@ -20,7 +20,7 @@ Changes in 2.1-beta1
 * NEW: configure args to download and install a "private" Webmin instance
        including only basic Webmin modules plus our netatalk.wbm.
 * NEW: fallback to a temporary in memory tdb CNID database if the volume
-       database can't be open.
+       database can't be opened.
 * NEW: support for Unicode characters in the range above U+010000 using
        internal surrogate pairs
 * NEW: apple_dump: utility to dump AppleSingle and AppleDouble files
@@ -29,6 +29,8 @@ Changes in 2.1-beta1
        SRVLOC is legacy.
 * UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
 * UPD: afpd: try to install PAM config that pulls in system|common auth
+* UPD: afpd: symlink handling: never followed server side, client resolves
+       them, so it's safe to use them now.
 * FIX: rewritten logger
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
@@ -40,8 +42,8 @@ Changes in 2.1-beta1
        which is in our case the last configured one. atalkd now tries to
        find the right one.
        Note: now a misconfigured or plugged router can broadcast a wrong route !
-* REM: cnid_maint: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
-* REM: cleanappledouble.pl: use dbd [FIXME: s/dbd/INSERT NAME HERE/]
+* REM: cnid_maint: use dbd
+* REM: cleanappledouble.pl: use dbd
 * REM: nu: use `macusers` instead
 
 Changes in 2.0.5

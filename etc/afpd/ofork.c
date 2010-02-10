@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.30 2009-11-13 00:27:36 didg Exp $
+ * $Id: ofork.c,v 1.31 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -285,7 +285,7 @@ int of_stat  (struct path *path)
 int ret;
     path->st_errno = 0;
     path->st_valid = 1;
-    if ((ret = stat(path->u_name, &path->st)) < 0)
+    if ((ret = lstat(path->u_name, &path->st)) < 0)
     	path->st_errno = errno;
    return ret;
 }
@@ -309,7 +309,7 @@ int ret;
     /* FIXME, what about: we don't have r-x perm anymore ? */
     strlcpy(pathname +3, path->d_dir->d_u_name, sizeof (pathname) -3);
 
-    if (!(ret = stat(pathname, &path->st)))
+    if (!(ret = lstat(pathname, &path->st)))
         return 0;
         
     path->st_errno = errno;
@@ -318,7 +318,7 @@ int ret;
        if (movecwd(vol, curdir->d_parent)) 
            return -1;
        path->st_errno = 0;
-       if ((ret = stat(path->d_dir->d_u_name, &path->st)) < 0) 
+       if ((ret = lstat(path->d_dir->d_u_name, &path->st)) < 0) 
            path->st_errno = errno;
     }
     return ret;

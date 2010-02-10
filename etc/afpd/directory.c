@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131 2010-01-26 20:39:52 didg Exp $
+ * $Id: directory.c,v 1.132 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -132,6 +132,76 @@ static struct dir rootpar  = { SENTINEL, SENTINEL, NULL,
  * frComment:   2    comment ID
  * frPutAway:   4    home directory ID
  */
+
+/*!
+ * @brief symlink safe chdir replacement
+ *
+ * Only chdirs to dir if it doesn't contain symlinks.
+ *
+ * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
+ */
+static int lchdir(const char *dir)
+{
+    int ret = 0;
+    char buf[MAXPATHLEN+1];
+#ifdef REALPATH_TAKES_NULL
+    char *rpath = NULL;
+#else
+    char rpath[MAXPATHLEN+1];
+#endif
+
+    /* dir might be an relative or an absolute path */
+    if (dir[0] == '/') {
+        /* absolute path, just make sure buf is prepared for strlcat */
+        buf[0] = 0;
+    } else {
+        /* relative path, push cwd int buf */
+        if (getcwd(buf, MAXPATHLEN) == NULL)
+            return -1;
+        if (strlcat(buf, "/", MAXPATHLEN) >= MAXPATHLEN)
+            return -1;
+    }
+
+    if (strlcat(buf, dir, MAXPATHLEN) >= MAXPATHLEN)
+        return -1;
+
+#ifdef REALPATH_TAKES_NULL
+    if ((rpath = realpath(dir, NULL)) == NULL) {
+#else
+    if (realpath(dir, rpath) == NULL) {
+#endif
+        ret = -1;
+        goto exit;
+    }
+
+    /* 
+     * Cases:
+     * chdir request   | realpath result | ret
+     * (after getwcwd) |                 |
+     * =======================================
+     * /a/b/.          | /a/b            | 0
+     * /a/b/.          | /c              | 1
+     * /a/b/.          | /c/d/e/f        | 1
+     */
+    ret = 0;
+    for (int i = 0; rpath[i]; i++) {
+        if (buf[i] != rpath[i]) {
+            ret = 1;
+            goto exit;
+        }
+    }
+
+    if (chdir(dir) != 0) {
+        ret = -1;
+        goto exit;
+    }
+
+exit:
+#ifdef REALPATH_TAKES_NULL
+    free(rpath);
+#endif
+    return ret;
+}
 
 static struct dir *
 vol_tree_root(const struct vol *vol, u_int32_t did)
@@ -818,7 +888,7 @@ static int deletedir(char *dir)
             break;
         }
         strcpy(path + len, de->d_name);
-        if (stat(path, &st)) {
+        if (lstat(path, &st)) {
             continue;
         }
         if (S_ISDIR(st.st_mode)) {
@@ -884,7 +954,7 @@ static int copydir(const struct vol *vol, char *src, char *dst)
         }
         strcpy(spath + slen, de->d_name);
 
-        if (stat(spath, &st) == 0) {
+        if (lstat(spath, &st) == 0) {
             if (strlen(de->d_name) > drem) {
                 err = AFPERR_PARAM;
                 break;
@@ -906,7 +976,7 @@ static int copydir(const struct vol *vol, char *src, char *dst)
     }
 
     /* keep the same time stamp. */
-    if (stat(src, &st) == 0) {
+    if (lstat(src, &st) == 0) {
         ut.actime = ut.modtime = st.st_mtime;
         utime(dst, &ut);
     }
@@ -1542,6 +1612,7 @@ int movecwd(struct vol *vol, struct dir *dir)
     struct dir  *d;
     char    *p, *u;
     int     n;
+    int     ret;
 
     if ( dir == curdir ) {
         return( 0 );
@@ -1580,7 +1651,14 @@ int movecwd(struct vol *vol, struct dir *dir)
         p -= n;
         memcpy( p, vol->v_path, n );
     }
-    if ( chdir( p ) < 0 ) {
+    if ( (ret = lchdir( p )) != 0 ) {
+        LOG(log_debug, logtype_afpd, "movecwd('%s'): ret:%d, %u/%s", p, ret, errno, strerror(errno));
+
+        if (ret == 1) {
+            /* p is a symlink */
+            afp_errno = AFPERR_BADTYPE;
+            return -1;
+        }
         switch (errno) {
         case EACCES:
         case EPERM:

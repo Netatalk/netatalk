@@ -1,5 +1,5 @@
 /*
- * $Id: ad_read.c,v 1.9 2009-10-13 22:55:37 didg Exp $
+ * $Id: ad_read.c,v 1.10 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -66,7 +66,16 @@ ssize_t ad_read( struct adouble *ad, const u_int32_t eid, off_t off, char *buf, 
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
     if ( eid == ADEID_DFORK ) {
-        cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
+        if (ad->ad_data_fork.adf_syml !=0 ) {
+            /* It's a symlink, we already have the target in adf_syml */
+            cc = strlen(ad->ad_data_fork.adf_syml);
+            if (buflen < cc)
+                /* Request buffersize is too small, force AFPERR_PARAM */
+                return -1;
+            memcpy(buf, ad->ad_data_fork.adf_syml, cc);
+        } else {
+            cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
+        }
     } else {
         off_t r_off;
 

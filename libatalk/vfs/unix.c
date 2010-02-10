@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.8 2010-01-26 08:14:09 didg Exp $
+ * $Id: unix.c,v 1.9 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -80,19 +80,18 @@ int dir_rx_set(mode_t mode)
 int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
 {
     struct stat sb;
-    mode_t result = mode;
     mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;  /* rwx for owner group and other, by default */
 
     if (!st) {
-        if (stat(name, &sb) != 0)
+        if (lstat(name, &sb) != 0)
             return -1;
         st = &sb;
     }
 
-    result |= st->st_mode & ~mask; /* keep other bits from previous mode */
-
-    LOG(log_debug, logtype_afpd, "setfilmode('%s', mode:%04o, vmask:%04o) {st_mode:%04o, chmod:%04o}",
-        fullpathname(name), mode, v_umask, st->st_mode, result);
+    if (S_ISLNK(st->st_mode))
+        return 0; /* we don't want to change link permissions */
+    
+    mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
 
     if ( chmod( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
         return -1;

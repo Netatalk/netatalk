@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.237 2010-01-26 18:13:48 franklahm Exp $
+dnl $Id: configure.in,v 1.238 2010-02-10 14:05:36 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1150,6 +1150,35 @@ if test "x$neta_cv_eas_sys_found" = "xyes" ; then
    if test "x$neta_cv_eas_sys_not_found" != "xyes" ; then
       neta_cv_eas="$neta_cv_eas | native"
    fi
+fi
+
+dnl --------------------- Check if realpath() takes NULL
+AC_CACHE_CHECK([if the realpath function allows a NULL argument],
+    neta_cv_REALPATH_TAKES_NULL, [
+        AC_TRY_RUN([
+            #include <stdio.h>
+            #include <limits.h>
+            #include <signal.h>
+
+            void exit_on_core(int ignored) {
+                 exit(1);
+            }
+
+            main() {
+                char *newpath;
+                signal(SIGSEGV, exit_on_core);
+                newpath = realpath("/tmp", NULL);
+                exit((newpath != NULL) ? 0 : 1);
+            }],
+            neta_cv_REALPATH_TAKES_NULL=yes,
+            neta_cv_REALPATH_TAKES_NULL=no,
+            neta_cv_REALPATH_TAKES_NULL=cross
+        )
+    ]
+)
+
+if test x"$neta_cv_REALPATH_TAKES_NULL" = x"yes"; then
+    AC_DEFINE(REALPATH_TAKES_NULL,1,[Whether the realpath function allows NULL])
 fi
 
 dnl --------------------- Netatalk Webmin

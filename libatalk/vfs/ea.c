@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.18 2009-12-10 17:40:25 franklahm Exp $
+  $Id: ea.c,v 1.19 2010-02-10 14:05:37 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -1483,7 +1483,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
         }
     }
 
-    if ((chown(ea_path(&ea, NULL, 0), uid, gid)) != 0) {
+    if ((lchown(ea_path(&ea, NULL, 0), uid, gid)) != 0) {
         switch (errno) {
         case EPERM:
         case EACCES:
@@ -1500,7 +1500,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
             ret = AFPERR_MISC;
             goto exit;
         }
-        if ((chown(eaname, uid, gid)) != 0) {
+        if ((lchown(eaname, uid, gid)) != 0) {
             switch (errno) {
             case EPERM:
             case EACCES:

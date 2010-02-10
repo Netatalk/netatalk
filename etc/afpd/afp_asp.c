@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.27 2009-10-25 07:18:11 didg Exp $
+ * $Id: afp_asp.c,v 1.28 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -81,7 +81,7 @@ static void afp_authprint_remove(AFPObj *obj)
 
     memset( addr_filename_buff, 0, 256 );
 
-    if(stat(addr_filename, &cap_st) == 0) {
+    if(lstat(addr_filename, &cap_st) == 0) {
 	if( S_ISREG(cap_st.st_mode) ) {
 	    int len;
 	    int capfd = open( addr_filename, O_RDONLY );

@@ -1,5 +1,5 @@
 /*
- * $Id: enumerate.c,v 1.48 2010-01-11 11:09:36 franklahm Exp $
+ * $Id: enumerate.c,v 1.49 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -280,7 +280,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     if ( sindex == 1 || curdir->d_did != sd.sd_did || vid != sd.sd_vid ) {
         sd.sd_last = sd.sd_buf;
         /* if dir was in the cache we don't have the inode */
-        if (( !o_path->st_valid && stat( ".", &o_path->st ) < 0 ) ||
+        if (( !o_path->st_valid && lstat( ".", &o_path->st ) < 0 ) ||
               (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
         {
             switch (errno) {

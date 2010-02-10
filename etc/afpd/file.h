@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.24 2009-10-15 10:43:13 didg Exp $
+ * $Id: file.h,v 1.25 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -122,7 +122,7 @@ extern int deletefile   (const struct vol *, char *, int);
 extern int getmetadata  (struct vol *vol, u_int16_t bitmap, struct path *path, 
                          struct dir *dir, char *buf, size_t *buflen, struct adouble *adp);
 
-extern void *get_finderinfo (const struct vol *, const char *, struct adouble *, void *);
+extern void *get_finderinfo (const struct vol *, const char *, struct adouble *, void *, int);
 
 extern size_t mtoUTF8   (const struct vol *, const char *, size_t , char *, size_t );
 extern int  copy_path_name (const struct vol *, char *, char *i);

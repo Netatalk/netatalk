@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.69 2010-01-21 14:14:49 didg Exp $
+ * $Id: filedir.c,v 1.70 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -98,7 +98,7 @@ more information */
                     upath, strerror(errno));
                 ret = AFPERR_ACCESS;
             }
-            else if (chmod(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
+            else if ((!S_ISLNK(st->st_mode)) && (chmod(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0))
             {
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms(%s): Error adding file read permissions: %s",

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_flush.c,v 1.12 2009-10-13 22:55:37 didg Exp $
+ * $Id: ad_flush.c,v 1.13 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -200,8 +200,13 @@ int ad_close( struct adouble *ad, int adflags)
 
     if (( adflags & ADFLAGS_DF ) && ad_data_fileno(ad) != -1 &&
         !(--ad->ad_data_fork.adf_refcount)) {
+        if (ad->ad_data_fork.adf_syml!=0){
+            free(ad->ad_data_fork.adf_syml);
+            ad->ad_data_fork.adf_syml=0;
+        }else{     
         if ( close( ad_data_fileno(ad) ) < 0 ) {
             err = -1;
+        }
         }
         ad_data_fileno(ad) = -1;
         adf_lock_free(&ad->ad_data_fork);

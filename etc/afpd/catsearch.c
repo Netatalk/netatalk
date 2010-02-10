@@ -237,13 +237,13 @@ static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
 
 /* -------------------- */
 static struct finderinfo *
-unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, struct finderinfo *finfo)
+unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, struct finderinfo *finfo, int islnk)
 {
 	packed_finder  buf;
 	void           *ptr;
 	
     *adp = adl_lkup(vol, path, *adp);
-	ptr = get_finderinfo(vol, path->u_name, *adp, &buf);
+	ptr = get_finderinfo(vol, path->u_name, *adp, &buf,islnk);
 	return unpack_buffer(finfo, ptr);
 }
 
@@ -265,6 +265,8 @@ static int crit_check(struct vol *vol, struct path *path) {
 	u_int32_t ac_date, ab_date;
 	static char convbuf[514]; /* for convert_charset dest_len parameter +2 */
 	size_t len;
+    int islnk;
+    islnk=S_ISLNK(path->st.st_mode);
 
 	if (S_ISDIR(path->st.st_mode)) {
 		if (!c1.dbitmap)
@@ -379,7 +381,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 
         /* Check file type ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.f_type != 0) {
-	    finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
+	    finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		if (finfo->f_type != c1.finfo.f_type)
 			goto crit_check_ret;
 	}
@@ -387,7 +389,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	/* Check creator ID */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.creator != 0) {
 		if (!finfo) {
-			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
+			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
 		if (finfo->creator != c1.finfo.creator)
 			goto crit_check_ret;
@@ -396,7 +398,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	/* Check finder info attributes */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.attrs != 0) {
 		if (!finfo) {
-			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
+			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
 
 		if ((finfo->attrs & c2.finfo.attrs) != c1.finfo.attrs)
@@ -406,7 +408,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	/* Check label */
 	if ((c1.rbitmap & (1<<DIRPBIT_FINFO)) && c2.finfo.label != 0) {
 		if (!finfo) {
-			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo);
+			finfo = unpack_finderinfo(vol, path, &adp, &finderinfo,islnk);
 		}
 		if ((finfo->label & c2.finfo.label) != c1.finfo.label)
 			goto crit_check_ret;

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.133 2010-02-08 10:29:22 franklahm Exp $
+ * $Id: file.c,v 1.134 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -89,7 +89,7 @@ static int default_type(void *finder)
 }
 
 /* FIXME path : unix or mac name ? (for now it's unix name ) */
-void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data)
+void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data, int islink)
 {
     struct extmap	*em;
     void                *ad_finder = NULL;
@@ -114,6 +114,17 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
             memcpy((char *)data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
         }
     }
+
+    if (islink){
+        u_int16_t linkflag;
+        memcpy(&linkflag, (char *)data + FINDERINFO_FRFLAGOFF, 2);
+        linkflag |= htons(FINDERINFO_ISALIAS);
+        memcpy((char *)data + FINDERINFO_FRFLAGOFF, &linkflag, 2);
+        memcpy((char *)data + FINDERINFO_FRTYPEOFF,"slnk",4); 
+        memcpy((char *)data + FINDERINFO_FRCREATOFF,"rhap",4); 
+        chk_ext = 0;
+    }
+
     /** Only enter if no appledouble information and no finder information found. */
     if (chk_ext && (em = getextmap( upath ))) {
         memcpy(data, em->em_type, sizeof( em->em_type ));
@@ -332,7 +343,7 @@ int getmetadata(struct vol *vol,
             break;
 
         case FILPBIT_FINFO :
-	    get_finderinfo(vol, upath, adp, (char *)data);
+	        get_finderinfo(vol, upath, adp, (char *)data,S_ISLNK(st->st_mode));
             data += ADEDLEN_FINDERI;
             break;
 
@@ -795,6 +806,27 @@ int setfilparams(struct vol *vol,
         case FILPBIT_FINFO :
             change_mdate = 1;
             memcpy(finder_buf, buf, 32 );
+            if (memcmp(buf,"slnkrhap",8)==0 && !S_ISLNK(path->st.st_mode)){
+            // SLFINFO
+                int fp;
+                ssize_t len;
+                int erc=1;
+                char buf[PATH_MAX+1];
+                if ((fp=open(path->u_name,O_RDONLY))>=0){
+                    if (len=read(fp,buf,PATH_MAX+1)){
+                        if (unlink(path->u_name)==0){
+                            buf[len]=0;
+                            erc=symlink(buf,path->u_name);  
+                            lstat(path->u_name,&(path->st));
+                        }
+                    }
+                    close(fp);
+                }
+                if (erc!=0){
+                    err=AFPERR_BITMAP;
+                    goto setfilparam_done;
+                }
+            }
             buf += 32;
             break;
         case FILPBIT_UNIXPR :
@@ -1654,7 +1686,7 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
     cnid_t        did  = param->did;
     cnid_t	  aint;
     
-    if ( stat(de->d_name, &path.st)<0 )
+    if ( lstat(de->d_name, &path.st)<0 )
         return 0;
     
     /* update or add to cnid */
@@ -1699,7 +1731,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     }
     
     /* FIXME use of_statdir ? */
-    if (stat(name, &st)) {
+    if (lstat(name, &st)) {
 	return -1;
     }
 
@@ -1869,7 +1901,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     err = AFP_OK;
-    if ((movecwd(vol, dir) < 0) || (stat(upath, &st) < 0)) {
+    if ((movecwd(vol, dir) < 0) || (lstat(upath, &st) < 0)) {
         switch (errno) {
         case EACCES:
         case EPERM:
@@ -2114,10 +2146,10 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     if (did) {
 	cnid_delete(vol->v_cdb, did);
     }
-    if ((did && ( (crossdev && stat( upath, &srcst) < 0) || 
+    if ((did && ( (crossdev && lstat( upath, &srcst) < 0) || 
                 cnid_update(vol->v_cdb, did, &srcst, curdir->d_did,upath, dlen) < 0))
        ||
-       (sid && ( (crossdev && stat(p, &destst) < 0) ||
+       (sid && ( (crossdev && lstat(p, &destst) < 0) ||
                 cnid_update(vol->v_cdb, sid, &destst, sdir->d_did,supath, slen) < 0))
     ) {
         switch (errno) {

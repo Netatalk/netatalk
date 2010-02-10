@@ -1,5 +1,5 @@
 /*
-  $Id: acls.c,v 1.7 2009-11-28 13:06:30 franklahm Exp $
+  $Id: acls.c,v 1.8 2010-02-10 14:05:37 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -583,7 +583,7 @@ static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t reque
     }
 
     /* File or dir */
-    if ((stat(path, &st)) != 0) {
+    if ((lstat(path, &st)) != 0) {
         LOG(log_error, logtype_afpd, "check_access: stat: %s", strerror(errno));
         ret = AFPERR_PARAM;
         goto exit;

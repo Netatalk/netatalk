@@ -1,5 +1,5 @@
 /*
- * $Id: quota.c,v 1.33 2010-01-21 14:14:49 didg Exp $
+ * $Id: quota.c,v 1.34 2010-02-10 14:05:37 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -296,7 +296,7 @@ mountp( char *file, int *nfs)
     dev_t			devno;
     static struct mnttab	mnt;
 
-    if ( stat( file, &sb ) < 0 ) {
+    if ( lstat( file, &sb ) < 0 ) {
         return( NULL );
     }
     devno = sb.st_dev;
@@ -307,14 +307,14 @@ mountp( char *file, int *nfs)
 
     while ( getmntent( mtab, &mnt ) == 0 ) {
         /* local fs */
-        if ( (stat( mnt.mnt_special, &sb ) == 0) && (devno == sb.st_rdev)) {
+        if ( (lstat( mnt.mnt_special, &sb ) == 0) && (devno == sb.st_rdev)) {
             fclose( mtab );
             return mnt.mnt_mountp;
         }
 
         /* check for nfs. we probably should use
          * strcmp(mnt.mnt_fstype, MNTTYPE_NFS), but that's not as fast. */
-        if ((stat(mnt.mnt_mountp, &sb) == 0) && (devno == sb.st_dev) &&
+        if ((lstat(mnt.mnt_mountp, &sb) == 0) && (devno == sb.st_dev) &&
                 strchr(mnt.mnt_special, ':')) {
             *nfs = 1;
             fclose( mtab );
@@ -384,7 +384,7 @@ special(char *file, int *nfs)
     struct mntent	*mnt;
     int 		found=0;
 
-    if ( stat( file, &sb ) < 0 ) {
+    if ( lstat( file, &sb ) < 0 ) {
         return( NULL );
     }
     devno = sb.st_dev;
@@ -395,14 +395,14 @@ special(char *file, int *nfs)
 
     while (( mnt = getmntent( mtab )) != NULL ) {
         /* check for local fs */
-        if ( (stat( mnt->mnt_fsname, &sb ) == 0) && devno == sb.st_rdev) {
+        if ( (lstat( mnt->mnt_fsname, &sb ) == 0) && devno == sb.st_rdev) {
 	    found = 1;
 	    break;
         }
 
         /* check for an nfs mount entry. the alternative is to use
         * strcmp(mnt->mnt_type, MNTTYPE_NFS) instead of the strchr. */
-        if ((stat(mnt->mnt_dir, &sb) == 0) && (devno == sb.st_dev) &&
+        if ((lstat(mnt->mnt_dir, &sb) == 0) && (devno == sb.st_dev) &&
                 strchr(mnt->mnt_fsname, ':')) {
             *nfs = 1;
 	    found = 1;
