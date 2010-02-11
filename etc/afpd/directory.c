@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.13 2010-02-11 13:06:54 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.14 2010-02-11 14:13:06 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -429,18 +429,15 @@ int get_afp_errno(const int param)
 struct dir *dirlookup(const struct vol *vol, cnid_t did)
 {
     static char  buffer[12 + MAXPATHLEN + 1];
-    struct bstrList *pathlist = NULL;
-    bstring      fullpath = NULL;
     struct stat  st;
-    struct dir   *ret = NULL;
-    char         *upath, *mpath;
+    struct dir   *ret = NULL, *pdir;
+    bstring      fullpath = NULL;
+    char         *upath = NULL, *mpath;
     cnid_t       cnid, pdid;
     size_t       maxpath;
     int          buflen = 12 + MAXPATHLEN + 1;
     int          utf8;
     int          err = 0;
-
-    AFP_ASSERT(err == 1);
 
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {start}", ntohl(did));
 
@@ -479,61 +476,33 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     utf8 = utf8_encoding();
     maxpath = (utf8) ? MAXPATHLEN - 7 : 255;
 
-    /* Create list for path elements, request 16 list elements for now*/
-    if ((pathlist = bstListCreateMin(16)) == NULL) { /* 4 */
-        LOG(log_error, logtype_afpd, "dirlookup(did: %u): OOM: %s", ntohl(did), strerror(errno));
-        return NULL;
-    }
-
     /* Get it from the database */
     cnid = did;
-    if ( (upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) { /* 3 */
+    if ( (upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL 
+         || (upath = strdup(upath)) == NULL) { /* 3 */
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
     pdid = cnid;
 
-    /* construct path, copy already found uname to path element list*/
-    if ((bstrListPush(pathlist, bfromcstr(upath))) != BSTR_OK) { /* 4 */
-        afp_errno = AFPERR_MISC;
+    /*
+     * Recurse up the tree, terminates in dirlookup when either
+     * - DIRDID_ROOT is hit
+     * - a cached entry is found
+     */
+    if ((pdir = dirlookup(vol, pdid)) == NULL) {
         err = 1;
         goto exit;
     }
 
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {%u, %s}", ntohl(did), ntohl(pdid), upath);
-
-    /* The stuff that follows is for building the full path to the directory */
-
-    /* work upwards until we reach volume root */
-    while (cnid != DIRDID_ROOT) {
-        /* next part */
-        if ((upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) { /* 3 */
-            afp_errno = AFPERR_NOOBJ;
-            err = 1;
-            goto exit;
-        }
-
-        /* construct path, copy already found uname to path element list*/
-        if ((bstrListPush(pathlist, bfromcstr(upath))) != BSTR_OK) { /* 4 */
-            afp_errno = AFPERR_MISC;
-            err = 1;
-            goto exit;
-        }
-    }
-
-    if ((bstrListPush(pathlist, bfromcstr(vol->v_path))) != BSTR_OK) { /* 4 */
-        afp_errno = AFPERR_MISC;
+    /* build the fullpath */
+    if ((fullpath = bstrcpy(pdir->d_fullpath)) == NULL
+        || bconchar(fullpath, '/') != BSTR_OK
+        || bcatcstr(fullpath, upath) != BSTR_OK) {
         err = 1;
         goto exit;
     }
-
-    if ((fullpath = bjoinInv(pathlist, bfromcstr("/"))) == NULL) { /* 4 */
-        afp_errno = AFPERR_MISC;
-        err = 1;
-        goto exit;
-    }
-    /* Finished building the fullpath */
 
     /* stat it and check if it's a dir */
     LOG(log_debug, logtype_afpd, "dirlookup: {stating %s}", cfrombstring(fullpath));
@@ -585,12 +554,10 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         ntohl(did), ntohl(pdid), cfrombstring(ret->d_fullpath));
 
 exit:
-    if (pathlist)
-        bstrListDestroy(pathlist);
-
     if (err) {
         LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {exit_error: %s}",
             ntohl(did), AfpErr2name(afp_errno));
+        free(upath);
         if (fullpath)
             bdestroy(fullpath);
         if (ret) {
