@@ -1,5 +1,5 @@
 /*
-  $Id: dircache.c,v 1.1.2.6 2010-02-09 14:56:30 franklahm Exp $
+  $Id: dircache.c,v 1.1.2.7 2010-02-11 13:06:54 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -211,8 +211,7 @@ static void dircache_evict(void)
         dir_free(dir);                                        /* 4 */
     }
 
-    assert(queue_count == dircache->hash_nodecount);
-    assert(queue_count + dircache_free_quantum <= dircache_maxsize);
+   AFP_ASSERT(queue_count == dircache->hash_nodecount);
 
     LOG(log_debug, logtype_afpd, "dircache: {finished cache eviction}");
 }
@@ -236,8 +235,8 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did)
     struct dir key;
     hnode_t *hn;
 
-    assert(vol);
-    assert(ntohl(did) >= CNID_START);
+   AFP_ASSERT(vol);
+   AFP_ASSERT(ntohl(did) >= CNID_START);
 
     key.d_vid = vol->v_vid;
     key.d_did = did;
@@ -269,11 +268,11 @@ struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir
     hnode_t *hn;
     static_bstring uname = {-1, len, (unsigned char *)name};
 
-    assert(vol);
-    assert(dir);
-    assert(name);
-    assert(len == strlen(name));
-    assert(len < 256);
+   AFP_ASSERT(vol);
+   AFP_ASSERT(dir);
+   AFP_ASSERT(name);
+   AFP_ASSERT(len == strlen(name));
+   AFP_ASSERT(len < 256);
 
     if (dir->d_did != DIRDID_ROOT_PARENT) {
         key.d_vid = vol->v_vid;
@@ -305,13 +304,13 @@ struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir
  */
 int dircache_add(struct dir *dir)
 {
-    assert(dir);
-    assert(ntohl(dir->d_pdid) >= 2);
-    assert(ntohl(dir->d_did) >= CNID_START);
-    assert(dir->d_fullpath);
-    assert(dir->d_u_name);
-    assert(dir->d_vid);
-    assert(dircache->hash_nodecount <= dircache_maxsize);
+   AFP_ASSERT(dir);
+   AFP_ASSERT(ntohl(dir->d_pdid) >= 2);
+   AFP_ASSERT(ntohl(dir->d_did) >= CNID_START);
+   AFP_ASSERT(dir->d_fullpath);
+   AFP_ASSERT(dir->d_u_name);
+   AFP_ASSERT(dir->d_vid);
+   AFP_ASSERT(dircache->hash_nodecount <= dircache_maxsize);
 
     /* Check if cache is full */
     if (dircache->hash_nodecount == dircache_maxsize)
@@ -339,7 +338,7 @@ int dircache_add(struct dir *dir)
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}", ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
 
-    assert(queue_count == index_didname->hash_nodecount 
+   AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
 
     return 0;
@@ -355,8 +354,8 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 {
     hnode_t *hn;
 
-    assert(dir);
-    assert((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
+   AFP_ASSERT(dir);
+   AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
 
     if (dir->d_flags & DIRF_CACHELOCK)
         return;
@@ -389,7 +388,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {removed}", ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
 
-    assert(queue_count == index_didname->hash_nodecount 
+   AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
 }
 

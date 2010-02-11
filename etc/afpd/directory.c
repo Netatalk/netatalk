@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.131.2.12 2010-02-09 14:56:30 franklahm Exp $
+ * $Id: directory.c,v 1.131.2.13 2010-02-11 13:06:54 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -440,6 +440,8 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     int          utf8;
     int          err = 0;
 
+    AFP_ASSERT(err == 1);
+
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {start}", ntohl(did));
 
     /* check for did 0, 1 and 2 */
@@ -505,16 +507,16 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
     /* work upwards until we reach volume root */
     while (cnid != DIRDID_ROOT) {
-        /* construct path, copy already found uname to path element list*/
-        if ((bstrListPush(pathlist, bfromcstr(upath))) != BSTR_OK) { /* 4 */
-            afp_errno = AFPERR_MISC;
+        /* next part */
+        if ((upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) { /* 3 */
+            afp_errno = AFPERR_NOOBJ;
             err = 1;
             goto exit;
         }
 
-        /* next part */
-        if ((upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL ) { /* 3 */
-            afp_errno = AFPERR_NOOBJ;
+        /* construct path, copy already found uname to path element list*/
+        if ((bstrListPush(pathlist, bfromcstr(upath))) != BSTR_OK) { /* 4 */
+            afp_errno = AFPERR_MISC;
             err = 1;
             goto exit;
         }
@@ -761,7 +763,7 @@ void dir_free(struct dir *dir)
  *
  * Create a new struct dir from struct path. Then add it to the cache.
  * The caller must have assured that the dir is not already in the cache,
- * cf the assertion.
+ * cf theAFP_ASSERTion.
  * 1. Open adouble file, get CNID from it.
  * 2. Search the database, hinting with the CNID from (1).
  * 3. Build fullpath and create struct dir.
@@ -785,10 +787,10 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
     struct adouble *adp = NULL;
     bstring fullpath;
 
-    assert(vol);
-    assert(dir);
-    assert(path);
-    assert(len > 0);
+    AFP_ASSERT(vol);
+    AFP_ASSERT(dir);
+    AFP_ASSERT(path);
+    AFP_ASSERT(len > 0);
 
     if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name))) != NULL) {
         /* there's a stray entry in the dircache */
@@ -878,8 +880,8 @@ exit:
  */
 int dir_remove(const struct vol *vol, struct dir *dir)
 {
-    assert(vol);
-    assert(dir);
+    AFP_ASSERT(vol);
+    AFP_ASSERT(dir);
 
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
         return 0;
@@ -1231,12 +1233,12 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
  */
 int movecwd(const struct vol *vol, struct dir *dir)
 {
-    assert(vol);
+    AFP_ASSERT(vol);
 
     if (dir == NULL)
         return -1;
 
-    LOG(log_maxdebug, logtype_afpd, "movecwd(curdir:'%s', cwd:'%s')", 
+    LOG(log_maxdebug, logtype_afpd, "movecwd(curdir:'%s', cwd:'%s')",
         cfrombstring(curdir->d_fullpath), getcwdpath());
 
     if ( dir == curdir)
