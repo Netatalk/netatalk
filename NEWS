@@ -17,6 +17,8 @@ Changes in 2.1-beta1
        This is used as a cache and as a backup in case the database
        is deleted or corrupted. It can be disabled with a new volume
        option "nocnidcache".
+* NEW: afpd: sending SIGINT to a child afpd process enables debug logging
+       to /tmp/afpd.PID.XXXXXX.
 * NEW: configure args to download and install a "private" Webmin instance
        including only basic Webmin modules plus our netatalk.wbm.
 * NEW: fallback to a temporary in memory tdb CNID database if the volume
@@ -24,13 +26,18 @@ Changes in 2.1-beta1
 * NEW: support for Unicode characters in the range above U+010000 using
        internal surrogate pairs
 * NEW: apple_dump: utility to dump AppleSingle and AppleDouble files
+* NEW: afpldaptest: utility to check afp_ldap.conf.
 * UPD: atalkd and papd are now disabled by default. AppleTalk is legacy.
 * UPD: slp advertisement is now disabled by default. server option -slp
        SRVLOC is legacy.
 * UPD: cdb/dbd CNID backend requires BerkeleyDB >= 4.6
+* UPD: afpd: default CNID backend is "dbd"
 * UPD: afpd: try to install PAM config that pulls in system|common auth
 * UPD: afpd: symlink handling: never followed server side, client resolves
        them, so it's safe to use them now.
+* UPD: afpd: Comment out all extension->type/creator mappings in
+       AppleVolumes.system. They're unmaintained, possibly wrong and
+       do not fit for OS X.
 * FIX: rewritten logger
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
@@ -42,6 +49,7 @@ Changes in 2.1-beta1
        which is in our case the last configured one. atalkd now tries to
        find the right one.
        Note: now a misconfigured or plugged router can broadcast a wrong route !
+* REM: afpd: removed CNID backends "db3", "hash" and "mtab"
 * REM: cnid_maint: use dbd
 * REM: cleanappledouble.pl: use dbd
 * REM: nu: use `macusers` instead
