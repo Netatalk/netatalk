@@ -1,47 +1,49 @@
-Draft 2.1
-
 NEW
 ===
 Protocol level:
-AFP3.2
-IPV6
+* AFP 3.2
+* IPv6
+* Extended Attributes support
+* ACL support with ZFS
+* AppleTalk support in afpd and AppleTalk daemons (atalkd and papd) are disabled by default
 
-afpd uses an in memory temporary DB if can't open the volume's database
+afpd:
+* default CNID backend is "dbd"
+* enable live debugging with SIGINT
+* afpd uses an in memory temporary DB if can't open the volume's database, but currently this only
+  works with the "cbd" or "tdb" backends not with the default "dbd".
+
+atalkd:
+* atalkd: workaround for broken Linux 2.6 AT kernel module:
+  Linux 2.6 sends broadcast queries to the first available socket which is in our case
+  the last configured one. atalkd now tries to find the right one.
+  Note: now a misconfigured or plugged router can broadcast a wrong route !
 
 Tools:
+* dbd: "dbd" CNID database and volume maintanance and intergrity check utility
+* apple_dump: dump AppleDouble files
 
-
-NOT NEW
-=======
-Bonjour
-with avahi you can add an afpd.service file in
-/etc/avahi/services/
-
-drawback:
-AFP is advertised even if the server is down.
 
 Upgrading from a 2.0 version
 ============================
-As usual backup and use new volumes.
-
 2.1 and 2.0 filenames encoding and adouble headers are compatible thus
 it's possible to upgrade and downgrade between 2.0 and 2.1, you may have 
-to (must?) delete your .AppleDB folders.
+to upgrade/downgrade (or delete) your .AppleDB folders in case the bdb versions differ.
 
 Requirements
 ============
-DB 2.6? 
+BerkeleyDB 4.6
 
 configure
 =========
-new default
-sendfile is enable on linux
+new default:
+* sendfile is enable on linux
 
 new options
 --disable-sendfile
 --enable-nfsv4acls	NFSv4 ACL Support (only Solaris?)
 
-			Webmin 
+Webmin:
 --with-webmin      	path where webmin is installed [$PKGCONFDIR/webmin]
 --with-webminuser      	name for the webmin admin user
 --with-webminversion   	Webmin version to fetch from sf.net [1.490]
@@ -56,11 +58,11 @@ removed options
 
 afpd.conf
 =========
-new default
-slp is disable by default
-ddp is disable by default
+new defaults:
+* slp is disable by default
+* ddp is disable by default
 
-new options
+new options:
 -slp 			 advertise with SRVLOC
 -hostname 
 -volnamelen
@@ -74,32 +76,19 @@ removed options
 
 AppleVolume.default
 ===================
-new default
-
-new options
+new options:
 acl
 caseinsensitive		volume is case insensitive (JFS in OS2 mode)
-nocnidcache		XXX remove?
-ea:sys/ad
+nocnidcache
+ea:sys|ad
 
-removed options
+removed options:
 cachecnid
-
-Regressions:
-===========
-None known
-
-Known Bugs:
-==========
-1- doesn't like symlinks/hardlinks
-2- hates dangling symlinks
-3- if a DB is open readonly afpd will fails here and there in strange ways.
- 
 
 Todo:
 =====
 - Clean up error messages, many messages should be move to the info/debug level
-rather than error.
+  rather than error.
 - Are all options documented in the man pages/configuration files?
 - update dbd logic to others db.
 
@@ -110,15 +99,20 @@ Best Practices:
   cnid_metad -u afpd -g afpd
 
 - All CNID databases in the same directory
-AppleVolumes.default
 
-		:DEFAUT: dbpath:/var/lib/afpd/$v
+  AppleVolumes.default
 
-with /var/lib/afpd
-drwxr-xr-x  afpd afpd 4096 2009-11-24 15:12 /var/lib/afpd
+    :DEFAUT: dbpath:/var/lib/afpd/$v
 
-afpd or cnid_metad will create the right subdirectory ($v is replaced by the
-volume name)
+  with /var/lib/afpd
 
-- Best volumes options by clients version/usage
+     drwxr-xr-x  afpd afpd 4096 2009-11-24 15:12 /var/lib/afpd
 
+  afpd or cnid_metad will create the right subdirectory ($v is replaced by the
+  volume name)
+
+MISC
+====
+Bonjour:
+with avahi you can add an afpd.service file in "/etc/avahi/services/".
+Drawback: AFP is advertised even if the server is down.
