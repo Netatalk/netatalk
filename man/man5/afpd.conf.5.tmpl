@@ -256,30 +256,24 @@ listens to\&. The default is advertise the first IP address of the system, but t
 when used together with the
 \fB\-proxy\fR
 option\&.
-.sp
-\fIExample IP/hostname configuration:\fR
-.sp
-fluxxus
-\fB\-hostname\fR
-afp\&.apple\&.com
-\fB\-ipaddr\fR
-127\&.0\&.0\&.1
-\fB\-fqdn\fR
-www\&.microsoft\&.com
-.sp
-Result:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-(UTF8) Server name: "fluxxus"
-Listening and advertised network address: "127\&.0\&.0\&.1"
-Advertised network address: "www\&.microsoft\&.com"
-.fi
-.if n \{\
-.RE
-.\}
+.PP \fBExample.\ \&IP/hostname example configuration\fR fluxxus \fB\-hostname\fR afp\&.apple\&.com \fB\-ipaddr\fR 127\&.0\&.0\&.1 \fB\-fqdn\fR www\&.microsoft\&.comResult:.TS
+allbox tab(:);
+l
+l
+l.
+T{
+(UTF8) Server name: fluxxus
+T}
+T{
+Listening and advertised network address:
+                    127\&.0\&.0\&.1
+T}
+T{
+Advertised network address:
+                    www\&.microsoft\&.com
+T}
+.TE
+.sp 1
 .RE
 .PP
 \-port \fI[port number]\fR
@@ -445,14 +439,14 @@ By default (no explicit
 \fB\-setuplog\fR
 and no buildtime configure flag
 \fB\-\-with\-logfile\fR) afpd logs to syslog with a default logging setup equivalent to
-\fB"\-setuplog default log_note\fR"\&.
+\fB"\-setuplog default log_info\fR"\&.
 .sp
 If build with
 \fB\-\-with\-logfile\fR
 (default logfile
 \fI/var/log/netatalk\&.log\fR) or
 \fB\-\-with\-logfile=somefile\fR
-afpd defaults to a setup that is equivalent to "\fB\-setuplog default log_note [\fR\fB\fInetatalk\&.log|somefile]\fR\fR"\&.
+afpd defaults to a setup that is equivalent to "\fB\-setuplog default log_info [\fR\fB\fInetatalk\&.log|somefile]\fR\fR"\&.
 .sp
 logtypes: Default, AFPDaemon, Logger, UAMSDaemon
 .sp
