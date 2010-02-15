@@ -66,58 +66,23 @@ Netatalk 2001 (c)
   "Console",                         \
   "end_of_list_marker"}              \
 
-/* ========================================================================= 
-    Structure definitions
-   ========================================================================= */
-
-/* Main log config */
-typedef struct {
-    int            inited;		   /* file log config initialized ? */
-    int            filelogging;		   /* Any level set to filelogging ? */
-                                           /* Deactivates syslog logging */
-    char           processname[16];
-    int            syslog_opened;	   /* syslog opened ? */
-    int            facility;               /* syslog facility to use */
-    int            syslog_display_options;
-    enum loglevels syslog_level;           /* Log Level to send to syslog */
-    int            console;                /* if logging to console from a cli util */
-} log_config_t;
-
-/* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
-typedef struct {
-    int            set;		  /* set individually ? yes: changing default
-				   * doesnt change it. no: it changes it.*/
-    char           *filename;     /* Name of file */
-    int            fd;            /* logfiles fd */
-    enum loglevels level;         /* Log Level to put in this file */
-    int            display_options;
-} filelog_conf_t;
-
 /* =========================================================================
    Config
    ========================================================================= */
 
 /* Main log config container */
-static log_config_t log_config = {
-    0,                  /* Initialized ? 0 = no */
-    0,                  /* No filelogging setup yet */
-    {0},                /* processname */
-    0,                  /* syslog opened ? */
-    logfacility_daemon,         /* syslog facility to use */
-    logoption_ndelay|logoption_pid, /* logging options for syslog */
-    0,                              /* log level for syslog */
-    0                               /* not logging to console */
-};
+log_config_t log_config = { 0 };
 
 /* Default log config: log nothing to files.
-   0:    not set individually
-   NULL: Name of file
-   -1:   logfiles fd
-   0:   Log Level
-   0:    Display options */
-#define DEFAULT_LOG_CONFIG {0, NULL, -1, 0, 0}
+   0:               set ?
+   0:               syslog ?
+   -1:              logfiles fd
+   log_maxdebug:    force first LOG call to call make_log_entry which
+                    then calls log_init because "inited" is still 0
+   0:               Display options */
+#define DEFAULT_LOG_CONFIG {0, 0, -1, log_maxdebug, 0}
 
-static filelog_conf_t file_configs[logtype_end_of_list_marker] = {
+logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
     DEFAULT_LOG_CONFIG, /* logtype_core */
     DEFAULT_LOG_CONFIG, /* logtype_logger */
@@ -157,8 +122,6 @@ static const unsigned int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_string
  *    else
  *       set to default logging
  */
-
-/* -[un]setuplog <logtype> <loglevel> [<filename>]*/
 static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename)
 {
     unsigned int typenum, levelnum;
@@ -188,9 +151,10 @@ static void setuplog_internal(const char *loglevel, const char *logtype, const c
     /* is this a syslog setup or a filelog setup ? */
     if (filename == NULL) {
         /* must be syslog */
-        syslog_setup(levelnum, 0,
-                     log_config.syslog_display_options,
-                     log_config.facility);
+        syslog_setup(levelnum,
+                     typenum,
+                     logoption_ndelay | logoption_pid,
+                     logfacility_daemon);
     } else {
         /* this must be a filelog */
         log_setup(filename, levelnum, typenum);
@@ -298,9 +262,10 @@ static int get_syslog_equivalent(enum loglevels loglevel)
 
 void log_init(void)
 {
-    syslog_setup(log_info, 0,
-                 log_config.syslog_display_options,
-                 log_config.facility);
+    syslog_setup(log_info,
+                 logtype_default,
+                 logoption_ndelay | logoption_pid,
+                 logfacility_daemon);
 }
 
 void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype)
@@ -309,26 +274,22 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
 
     if (loglevel == 0) {
         /* Disable */
-        if (file_configs[logtype].set) {
-            if (file_configs[logtype].filename) {
-                free(file_configs[logtype].filename);
-                file_configs[logtype].filename = NULL;
-            }
-            close(file_configs[logtype].fd);
-            file_configs[logtype].fd = -1;
-            file_configs[logtype].level = 0;
-            file_configs[logtype].set = 0;
+        if (type_configs[logtype].set) {
+            if (type_configs[logtype].fd != -1)
+                close(type_configs[logtype].fd);
+            type_configs[logtype].fd = -1;
+            type_configs[logtype].level = -1;
+            type_configs[logtype].set = false;
 
             /* if disabling default also set all "default using" levels to 0 */
             if (logtype == logtype_default) {
                 while (logtype != logtype_end_of_list_marker) {
-                    if ( ! (file_configs[logtype].set))
-                        file_configs[logtype].level = 0;
+                    if ( ! (type_configs[logtype].set))
+                        type_configs[logtype].level = -1;
                     logtype++;
                 }
             }
         }
-
         return;
     }
 
@@ -337,13 +298,25 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
         return;
 
     /* Resetting existing config ? */
-    if (file_configs[logtype].set && file_configs[logtype].filename) {
-        free(file_configs[logtype].filename);
-        file_configs[logtype].filename = NULL;
-        close(file_configs[logtype].fd);
-        file_configs[logtype].fd = -1;
-        file_configs[logtype].level = 0;
-        file_configs[logtype].set = 0;
+    if (type_configs[logtype].set) {
+        if (type_configs[logtype].fd != -1)
+            close(type_configs[logtype].fd);
+        type_configs[logtype].fd = -1;
+        type_configs[logtype].level = -1;
+        type_configs[logtype].set = false;
+        type_configs[logtype].syslog = false;
+
+        /* Reset configs using default */
+        if (logtype == logtype_default) {
+            int typeiter = 0;
+            while (typeiter != logtype_end_of_list_marker) {
+                if (type_configs[typeiter].set == false) {
+                    type_configs[typeiter].level = -1;
+                    type_configs[typeiter].syslog = false;
+                }
+                typeiter++;
+            }
+        }
     }
 
     /* Check if logging to a console */
@@ -353,20 +326,20 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
     }
 
     /* Set new values */
-    file_configs[logtype].filename = strdup(filename);
-    file_configs[logtype].level = loglevel;
-
+    type_configs[logtype].level = loglevel;
 
     /* Open log file as OPEN_LOGS_AS_UID*/
 
     /* Is it /dev/tty ? */
-    if (strcmp(file_configs[logtype].filename, "/dev/tty") == 0) {
-        file_configs[logtype].fd = 1; /* stdout */
+    if (strcmp(filename, "/dev/tty") == 0) {
+        type_configs[logtype].fd = 1; /* stdout */
 
-        /* Does it end in "XXXXXX" ? */
-    } else if (strcmp(file_configs[logtype].filename + strlen(file_configs[logtype].filename) - 6, "XXXXXX") == 0) {
-        /* debug reguest via SIGINT */
-        file_configs[logtype].fd = mkstemp(file_configs[logtype].filename);
+    /* Does it end in "XXXXXX" ? debug reguest via SIGINT */
+    } else if (strcmp(filename + strlen(filename) - 6, "XXXXXX") == 0) {
+        char *tmp = strdup(filename);
+        type_configs[logtype].fd = mkstemp(tmp);
+        free(tmp);
+
     } else {
         process_uid = geteuid();
         if (process_uid) {
@@ -375,9 +348,9 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
                 return;
             }
         }
-        file_configs[logtype].fd = open( file_configs[logtype].filename,
-                                         O_CREAT | O_WRONLY | O_APPEND,
-                                         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        type_configs[logtype].fd = open(filename,
+                                        O_CREAT | O_WRONLY | O_APPEND,
+                                        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         if (process_uid) {
             if (seteuid(process_uid) == -1) {
                 LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
@@ -387,18 +360,15 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
     }
 
     /* Check for error opening/creating logfile */
-    if (-1 == file_configs[logtype].fd) {
-        free(file_configs[logtype].filename);
-        file_configs[logtype].filename = NULL;
-        file_configs[logtype].level = -1;
-        file_configs[logtype].set = 0;
+    if (type_configs[logtype].fd == -1) {
+        type_configs[logtype].level = -1;
+        type_configs[logtype].set = false;
         return;
     }
 
-    fcntl(file_configs[logtype].fd, F_SETFD, FD_CLOEXEC);
-    file_configs[logtype].set = 1;
-    log_config.filelogging = 1;
-    log_config.inited = 1;
+    fcntl(type_configs[logtype].fd, F_SETFD, FD_CLOEXEC);
+    type_configs[logtype].set = true;
+    log_config.inited = true;
 
     /* Here's how we make it possible to LOG to a logtype like "logtype_afpd" */
     /* which then uses the default logtype setup if it isn't setup itself: */
@@ -410,23 +380,43 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
     if (logtype == logtype_default) {
         int typeiter = 0;
         while (typeiter != logtype_end_of_list_marker) {
-            if ( ! (file_configs[typeiter].set))
-                file_configs[typeiter].level = loglevel;
+            if ( ! (type_configs[typeiter].set))
+                type_configs[typeiter].level = loglevel;
             typeiter++;
         }
     }
 
     LOG(log_debug, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s",
-        arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], file_configs[logtype].filename);
+        arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], filename);
 }
 
-/* logtype is ignored, it's just one for all */
-void syslog_setup(int loglevel, enum logtypes logtype _U_,
-                  int display_options, int facility)
+/* Setup syslog logging */
+void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
 {
-    log_config.syslog_level = loglevel;
+    /* 
+     * FIXME:
+     * this currently doesn't care if logtype is already logging to a file.
+     * Fortunately currently there's no way a user could trigger this as afpd.conf
+     * is not re-read on SIGHUP.
+     */
+
+    type_configs[logtype].level = loglevel;
+    type_configs[logtype].set = true;
+    type_configs[logtype].syslog = true;
     log_config.syslog_display_options = display_options;
-    log_config.facility = facility;
+    log_config.syslog_facility = facility;
+
+    /* Setting default logging? Then set all logtype not set individually */
+    if (logtype == logtype_default) {
+        int typeiter = 0;
+        while (typeiter != logtype_end_of_list_marker) {
+            if ( ! (type_configs[typeiter].set)) {
+                type_configs[typeiter].level = loglevel;
+                type_configs[typeiter].syslog = true;
+            }
+            typeiter++;
+        }
+    }
 
     log_config.inited = 1;
 
@@ -449,9 +439,10 @@ void set_processname(const char *processname)
 static void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message)
 {
     if ( !log_config.syslog_opened ) {
-        openlog(log_config.processname, log_config.syslog_display_options,
-                log_config.facility);
-        log_config.syslog_opened = 1;
+        openlog(log_config.processname,
+                log_config.syslog_display_options,
+                log_config.syslog_facility);
+        log_config.syslog_opened = true;
     }
 
     syslog(get_syslog_equivalent(loglevel), "%s", message);
@@ -484,32 +475,31 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
       log_init();
     }
     
-    if (file_configs[logtype].level >= loglevel) {
-      log_src_filename = file;
-      log_src_linenumber = line;
-    }
-    else if (!log_config.filelogging && log_config.syslog_level >= loglevel) {
-       /* Initialise the Messages */
-       va_start(args, message);
-       vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
-       va_end(args);
-       temp_buffer[MAXLOGSIZE -1] = 0;
-       make_syslog_entry(loglevel, logtype, temp_buffer);
-       inlog = 0;
-       return;
-    }
-    else {
-       inlog = 0;
-       return;
+    if (type_configs[logtype].syslog) {
+        if (type_configs[logtype].level >= loglevel) {
+            /* Initialise the Messages and send it to syslog */
+            va_start(args, message);
+            vsnprintf(temp_buffer, MAXLOGSIZE -1, message, args);
+            va_end(args);
+            temp_buffer[MAXLOGSIZE -1] = 0;
+            make_syslog_entry(loglevel, logtype, temp_buffer);
+        }
+        inlog = 0;
+        return;
     }
 
+    /* logging to a file */
+
+    log_src_filename = file;
+    log_src_linenumber = line;
+
     /* Check if requested logtype is setup */
-    if (file_configs[logtype].set)
+    if (type_configs[logtype].set)
         /* Yes */
-        fd = file_configs[logtype].fd;
+        fd = type_configs[logtype].fd;
     else
         /* No: use default */
-        fd = file_configs[logtype_default].fd;
+        fd = type_configs[logtype_default].fd;
 
     if (fd < 0) {
         /* no where to send the output, give up */
@@ -534,9 +524,9 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 
     if ( ! log_config.console) {
         generate_message_details(log_details_buffer, sizeof(log_details_buffer),
-                                 file_configs[logtype].set ?
-                                 file_configs[logtype].display_options :
-                                 file_configs[logtype_default].display_options,
+                                 type_configs[logtype].set ?
+                                     type_configs[logtype].display_options :
+                                     type_configs[logtype_default].display_options,
                                  loglevel, logtype);
 
         /* If default wasnt setup its fd is -1 */

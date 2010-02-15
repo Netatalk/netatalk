@@ -123,6 +123,39 @@ enum logtypes {
 #define logfacility_authpriv    (10<<3) /* security/auth messages (private) */
 #define logfacility_ftp         (11<<3) /* ftp daemon */
 
+/* ========================================================================= 
+    Structure definitions
+   ========================================================================= */
+
+/* Main log config */
+typedef struct {
+    bool           inited;                 /* file log config initialized ? */
+    bool           syslog_opened;          /* syslog opened ? */
+    bool           console;                /* if logging to console from a cli util */
+    char           processname[16];
+    int            syslog_facility;
+    int            syslog_display_options;
+} log_config_t;
+
+/* This stores the config and options for one filelog type (e.g. logger, afpd etc.) */
+typedef struct {
+    bool           set;           /* set individually ? yes: changing default
+			                       * doesnt change it. no: it changes it.*/
+    bool           syslog;        /* This type logs to syslog */
+    int            fd;            /* logfiles fd */
+    enum loglevels level;         /* Log Level to put in this file */
+    int            display_options;
+} logtype_conf_t;
+
+
+/* ========================================================================= 
+    Global variables
+    ========================================================================= */
+
+/* Make config accessible for LOG macro */
+extern log_config_t log_config;
+extern logtype_conf_t type_configs[logtype_end_of_list_marker];
+
 /* =========================================================================
     Global function decarations
    ========================================================================= */
@@ -151,6 +184,9 @@ void log_close(void);
 /* This function sets up the ProcessName */
 void set_processname(const char *processname);
 
+/* LOG macro func no.1: log the message to file */
+UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
+
 /*
  * How to write a LOG macro:
  * http://c-faq.com/cpp/debugmacs.html
@@ -163,25 +199,25 @@ void set_processname(const char *processname);
  * http://en.wikipedia.org/wiki/C_macro#Multiple_statements
  */
 
-/* LOG macro func no.1: log the message to file */
-UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, int line, char *message, ...);
-
-/* 
-   Note:
-   any configured file-logging deactivates syslog logging
-   log_level is always a constant with O2 a sane compiler will remove the call to
-   make_log_entry
- */
-#ifdef NO_DEBUG
 #define LOG_MAX log_info
-#else 
-#define LOG_MAX log_maxdebug
-#endif
 
-#define LOG(log_level, type, ...)  \
-  do { \
-    if (log_level > LOG_MAX) \
-      break; \
-    make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
-  } while(0)  
+#ifdef NO_DEBUG
+
+#define LOG(log_level, type, ...)                                       \
+    do {                                                                \
+        if (log_level <= LOG_MAX)                                       \
+            if (log_level <= type_configs[type].level)                  \
+                make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
+    } while(0)  
+
+#else  /* ! NO_DEBUG */
+
+#define LOG(log_level, type, ...)               \
+    do {                                                                \
+        if (log_level <= type_configs[type].level)                      \
+            make_log_entry((log_level), (type), __FILE__, __LINE__,  __VA_ARGS__); \
+    } while(0)
+
+#endif  /* NO_DEBUG */
+
 #endif /* _ATALK_LOGGER_H */

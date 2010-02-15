@@ -1,5 +1,5 @@
 /*
- * $Id: uams_gss.c,v 1.10 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: uams_gss.c,v 1.11 2010-02-15 12:00:36 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -552,7 +552,7 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
 
     if ((ibuf - p + 1) % 2) ibuf++, ibuflen--; /* deal with potential padding */
 
-    LOG(log_info, logtype_uams, "uams_gss.c :LoginCont: client thinks user is %s", p);
+    LOG(log_debug, logtype_uams, "uams_gss.c :LoginCont: client thinks user is %s", p);
 
     /* get the length of the ticket the client sends us */
     memcpy(&ticket_len, ibuf, sizeof(ticket_len));
