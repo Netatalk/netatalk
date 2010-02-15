@@ -889,7 +889,7 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
     char* outbuf = (char*)dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
-    char escch;
+    char escch;                 /* 150210: uninitialized OK, depends on j */
 
     descriptor = conv_handles[CH_UCS2][to_set];
     descriptor_cap = conv_handles[CH_UCS2][cap_set];

@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.19 2009-12-22 13:37:27 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.20 2010-02-15 13:58:38 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -779,7 +779,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 static int dbd_readdir(int volroot, cnid_t did)
 {
     int cwd, ret = 0, adflags, adfile_ok, addir_ok, encoding_ok;
-    cnid_t cnid;
+    cnid_t cnid = 0;
     const char *name;
     DIR *dp;
     struct dirent *ep;
