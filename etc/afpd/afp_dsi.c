@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.50 2010-02-08 13:39:56 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.51 2010-02-16 02:37:38 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -173,7 +173,7 @@ static void afp_dsi_reload(int sig _U_)
 /* ---------------------------------
  * SIGINT: enable max_debug LOGging
  */
-volatile static sig_atomic_t debug_request = 0;
+static volatile sig_atomic_t debug_request = 0;
 
 static void afp_dsi_debug(int sig _U_)
 {
