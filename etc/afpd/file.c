@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.134 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: file.c,v 1.135 2010-02-16 02:43:36 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -896,9 +896,9 @@ int setfilparams(struct vol *vol,
          * - change of modification date
          * - UNIX privs (Bug-ID #2863424)
          */
-        if ( (f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR))) {
+        if (!vol_noadouble(vol) && (f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR))) {
             LOG(log_debug, logtype_afpd, "setfilparams: need adouble access");
-            return vol_noadouble(vol) ? AFP_OK : AFPERR_ACCESS;
+            return AFPERR_ACCESS;
         }
         LOG(log_debug, logtype_afpd, "setfilparams: no adouble perms, but only FILPBIT_MDATE and/or FILPBIT_UNIXPR");
         isad = 0;
