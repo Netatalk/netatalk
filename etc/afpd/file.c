@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.136 2010-02-17 01:19:51 didg Exp $
+ * $Id: file.c,v 1.137 2010-02-17 01:41:58 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -816,8 +816,9 @@ int setfilparams(struct vol *vol,
                     if ((len=read(fp,buf,PATH_MAX+1))){
                         if (unlink(path->u_name)==0){
                             buf[len]=0;
-                            erc=symlink(buf,path->u_name);  
-                            lstat(path->u_name,&(path->st));
+                            erc = symlink(buf, path->u_name);
+                            if (!erc)
+                                of_stat(path);
                         }
                     }
                     close(fp);
