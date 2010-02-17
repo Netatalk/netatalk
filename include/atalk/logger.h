@@ -154,7 +154,8 @@ typedef struct {
 
 /* Make config accessible for LOG macro */
 extern log_config_t log_config;
-extern logtype_conf_t type_configs[logtype_end_of_list_marker];
+
+extern UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker];
 
 /* =========================================================================
     Global function decarations

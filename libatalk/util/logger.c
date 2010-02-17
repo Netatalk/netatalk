@@ -82,7 +82,7 @@ log_config_t log_config = { 0 };
    0:               Display options */
 #define DEFAULT_LOG_CONFIG {0, 0, -1, log_maxdebug, 0}
 
-logtype_conf_t type_configs[logtype_end_of_list_marker] = {
+UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
     DEFAULT_LOG_CONFIG, /* logtype_core */
     DEFAULT_LOG_CONFIG, /* logtype_logger */
