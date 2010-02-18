@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.138 2010-02-18 02:02:30 didg Exp $
+ * $Id: file.c,v 1.139 2010-02-18 08:08:01 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1246,7 +1246,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     }
     
     if ( *s_path->m_name != '\0' ) {
-	retvalue = path_error(s_path, AFPERR_PARAM);
+	retvalue =path_error(s_path, AFPERR_NOOBJ);
         goto copy_exit;
     }
 
