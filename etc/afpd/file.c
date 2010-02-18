@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.137 2010-02-17 01:41:58 didg Exp $
+ * $Id: file.c,v 1.138 2010-02-18 02:02:30 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1207,9 +1207,10 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     }
     denyreadset = (getforkmode(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
                   getforkmode(adp, ADEID_RFORK, AD_FILELOCK_DENY_RD) != 0 );
-    ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
+
     if (denyreadset) {
-        return AFPERR_DENYCONF;
+        retvalue = AFPERR_DENYCONF;
+        goto copy_exit;
     }
 
     newname = obj->newtmp;
@@ -1217,42 +1218,54 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
 
     p = ctoupath( s_vol, curdir, newname );
     if (!p) {
-        return AFPERR_PARAM;
-    
+        retvalue = AFPERR_PARAM;
+        goto copy_exit;
     }
+
 #ifdef FORCE_UIDGID
     /* FIXME svid != dvid && dvid's user can't read svid */
 #endif
     if (NULL == ( d_vol = getvolbyvid( dvid )) ) {
-        return( AFPERR_PARAM );
+        retvalue = AFPERR_PARAM;
+        goto copy_exit;
     }
 
-    if (d_vol->v_flags & AFPVOL_RO)
-        return AFPERR_VLOCK;
+    if (d_vol->v_flags & AFPVOL_RO) {
+        retvalue = AFPERR_VLOCK;
+        goto copy_exit;
+    }
 
     if (NULL == ( dir = dirlookup( d_vol, ddid )) ) {
-        return afp_errno;
+        retvalue = afp_errno;
+        goto copy_exit;
     }
 
     if (( s_path = cname( d_vol, dir, &ibuf )) == NULL ) {
-        return get_afp_errno(AFPERR_NOOBJ); 
+        retvalue = get_afp_errno(AFPERR_NOOBJ);
+        goto copy_exit;
     }
+    
     if ( *s_path->m_name != '\0' ) {
-	path_error(s_path, AFPERR_PARAM);
+	retvalue = path_error(s_path, AFPERR_PARAM);
+        goto copy_exit;
     }
 
     /* one of the handful of places that knows about the path type */
     if (copy_path_name(d_vol, newname, ibuf) < 0) {
-        return( AFPERR_PARAM );
+        retvalue = AFPERR_PARAM;
+        goto copy_exit;
     }
     /* newname is always only a filename so curdir *is* its
      * parent folder
     */
     if (NULL == (upath = mtoupath(d_vol, newname, curdir->d_did, utf8_encoding()))) {
-        return( AFPERR_PARAM );
+        retvalue =AFPERR_PARAM;
+        goto copy_exit;
     }
+
     if ( (err = copyfile(s_vol, d_vol, p, upath , newname, adp)) < 0 ) {
-        return err;
+        retvalue = err;
+        goto copy_exit;
     }
     curdir->offcnt++;
 
@@ -1264,6 +1277,8 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
 
     setvoltime(obj, d_vol );
 
+copy_exit:
+    ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
     return( retvalue );
 }
 
@@ -1388,7 +1403,7 @@ int copyfile(const struct vol *s_vol, const struct vol*d_vol,
         ad_init(&ads, s_vol->v_adouble, s_vol->v_ad_options); 
         adp = &ads;
     }
-    ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
+
     adflags = ADFLAGS_DF;
     if (newname) {
         adflags |= ADFLAGS_HF;
@@ -1411,6 +1426,7 @@ int copyfile(const struct vol *s_vol, const struct vol*d_vol,
       st.st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     }
 
+    ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
     if (ad_open(dst , adflags, O_RDWR|O_CREAT|O_EXCL, st.st_mode, &add) < 0) {
         ret_err = errno;
         ad_close( adp, adflags );
