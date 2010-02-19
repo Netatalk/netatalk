@@ -117,8 +117,6 @@ struct dsitem {
  
 
 #define DS_BSIZE 128
-static u_int32_t cur_pos = 0;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
-static DIR *dirpos = NULL; /* UNIX structure describing currently opened directory. */
 static int save_cidx = -1; /* Saved index of currently scanned directory. */
 
 static struct dsitem *dstack = NULL; /* Directory stack data... */
@@ -492,6 +490,8 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
 static int catsearch(struct vol *vol, struct dir *dir,  
 		     int rmatches, u_int32_t *pos, char *rbuf, u_int32_t *nrecs, int *rsize, int ext)
 {
+    static u_int32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
+    static DIR *dirpos; 		 /* UNIX structure describing currently opened directory. */
 	int cidx, r;
 	struct dirent *entry;
 	int result = AFP_OK;
@@ -503,6 +503,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
     int num_rounds = NUM_ROUNDS;
     int cached;
     int cwd = -1;
+    int error;
         
 	if (*pos != 0 && *pos != cur_pos) {
 		result = AFPERR_CATCHNG;
@@ -511,8 +512,6 @@ static int catsearch(struct vol *vol, struct dir *dir,
 
 	/* FIXME: Category "offspring count ! */
 
-	/* So we are beginning... */
-    start_time = time(NULL);
 
 	/* We need to initialize all mandatory structures/variables and change working directory appropriate... */
 	if (*pos == 0) {
@@ -535,13 +534,20 @@ static int catsearch(struct vol *vol, struct dir *dir,
         goto catsearch_end;
     }
 	
+	/* So we are beginning... */
+    start_time = time(NULL);
+
 	while ((cidx = reducestack()) != -1) {
 		cached = 1;
-		if (dirpos == NULL) {
-			dirpos = opendir(dstack[cidx].path);
+
+		/* XXX use lchdir */
+		error = chdir(dstack[cidx].path);
+
+		if (!error && dirpos == NULL) {
+			dirpos = opendir(".");
 			cached = (dstack[cidx].dir->d_child != NULL);
 		}
-		if (dirpos == NULL) {
+		if (error || dirpos == NULL) {
 			switch (errno) {
 			case EACCES:
 				dstack[cidx].checked = 1;
@@ -558,10 +564,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 			} /* switch (errno) */
 			goto catsearch_end;
 		}
-		/* FIXME error in chdir, what do we do? */
-		chdir(dstack[cidx].path);
 		
-
 		while ((entry=readdir(dirpos)) != NULL) {
 			(*pos)++;
 
