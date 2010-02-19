@@ -497,7 +497,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	int result = AFP_OK;
 	int ccr;
     struct path path;
-	char *vpath = vol->v_realpath;
+	char *vpath = vol->v_path;
 	char *rrbuf = rbuf;
     time_t start_time;
     int num_rounds = NUM_ROUNDS;

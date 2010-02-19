@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.118 2010-02-19 01:26:03 didg Exp $
+ * $Id: volume.c,v 1.119 2010-02-19 10:51:59 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1252,7 +1252,6 @@ static void volume_free(struct vol *vol)
     free(vol->v_macname);
     vol->v_macname = NULL;
     free(vol->v_path);
-    free(vol->v_realpath);
     free(vol->v_password);
     free(vol->v_veto);
     free(vol->v_volcodepage);
@@ -1993,7 +1992,27 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         LOG(log_error, logtype_afpd, "afp_openvol(%s): volume pathlen too long", volume->v_path);
         return AFPERR_MISC;
     }
-    volume->v_realpath = strdup(path);
+
+    /* Normalize volume path */
+#ifdef REALPATH_TAKES_NULL
+    if ((volume->v_path = realpath(path, NULL)) == NULL)
+        return AFPERR_MISC;
+#else
+    if ((volume->v_path = malloc(MAXPATHLEN+1)) == NULL)
+        return AFPERR_MISC;
+    if (realpath(path, volume->v_path) == NULL) {
+        free(volume->v_path);
+        return AFPERR_MISC;
+    }
+    /* Safe some memory */
+    char *tmp;
+    if ((tmp = strdup(volume->v_path)) == NULL) {
+        free(volume->v_path);
+        return AFPERR_MISC;
+    } 
+    free(volume->v_path);
+    volume->v_path = tmp;
+#endif
 
     if (volume_codepage(obj, volume) < 0) {
         ret = AFPERR_MISC;
