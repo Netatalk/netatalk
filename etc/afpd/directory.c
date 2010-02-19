@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.132 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: directory.c,v 1.133 2010-02-19 01:26:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1642,14 +1642,14 @@ int movecwd(struct vol *vol, struct dir *dir)
         memcpy( p, u, n );
     }
     if ( d != curdir ) {
-        n = strlen( vol->v_path );
+        n = strlen( vol->v_realpath );
         if (p -n -1 < path) {
             afp_errno = AFPERR_PARAM;
             return -1;
         }
         *--p = '/';
         p -= n;
-        memcpy( p, vol->v_path, n );
+        memcpy( p, vol->v_realpath, n );
     }
     if ( (ret = lchdir( p )) != 0 ) {
         LOG(log_debug, logtype_afpd, "movecwd('%s'): ret:%d, %u/%s", p, ret, errno, strerror(errno));

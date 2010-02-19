@@ -1,5 +1,5 @@
 /*
- * $Id: filedir.c,v 1.70 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: filedir.c,v 1.71 2010-02-19 01:26:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -588,13 +588,13 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
         p -= len;
         memcpy( p, u, len );
     }
-    len = strlen( vol->v_path );
+    len = strlen( vol->v_realpath );
     if (p -len -1 < path) {
         return NULL;
     }
     *--p = '/';
     p -= len;
-    memcpy( p, vol->v_path, len );
+    memcpy( p, vol->v_realpath, len );
 
     return( p );
 }

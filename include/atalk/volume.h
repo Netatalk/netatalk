@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.13 2010-02-08 10:29:22 franklahm Exp $
+ * $Id: volume.h,v 1.14 2010-02-19 01:26:03 didg Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -25,6 +25,7 @@ struct vol {
     u_int16_t       v_vid;
     int             v_flags;
     char            *v_path;
+    char            *v_realpath; /* canonical path */
     struct dir      *v_dir, *v_root;
     struct dir      *v_curdir;  /* cache */
     hash_t          *v_hash;

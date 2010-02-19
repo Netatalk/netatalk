@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.117 2010-02-08 10:29:22 franklahm Exp $
+ * $Id: volume.c,v 1.118 2010-02-19 01:26:03 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1252,6 +1252,7 @@ static void volume_free(struct vol *vol)
     free(vol->v_macname);
     vol->v_macname = NULL;
     free(vol->v_path);
+    free(vol->v_realpath);
     free(vol->v_password);
     free(vol->v_veto);
     free(vol->v_volcodepage);
@@ -1992,6 +1993,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         LOG(log_error, logtype_afpd, "afp_openvol(%s): volume pathlen too long", volume->v_path);
         return AFPERR_MISC;
     }
+    volume->v_realpath = strdup(path);
 
     if (volume_codepage(obj, volume) < 0) {
         ret = AFPERR_MISC;
