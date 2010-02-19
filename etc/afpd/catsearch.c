@@ -49,6 +49,8 @@
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB */
+#include <atalk/util.h>
+
 #include "desktop.h"
 #include "directory.h"
 #include "file.h"
@@ -540,8 +542,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	while ((cidx = reducestack()) != -1) {
 		cached = 1;
 
-		/* XXX use lchdir */
-		error = chdir(dstack[cidx].path);
+		error = lchdir(dstack[cidx].path);
 
 		if (!error && dirpos == NULL) {
 			dirpos = opendir(".");

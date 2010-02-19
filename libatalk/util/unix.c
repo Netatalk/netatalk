@@ -1,5 +1,5 @@
 /*
-  $Id: unix.c,v 1.3 2010-01-26 08:05:17 didg Exp $
+  $Id: unix.c,v 1.4 2010-02-19 11:29:52 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -46,7 +46,7 @@
  *
  * @returns pointer to path or pointer to error messages on error
  */
-extern const char *getcwdpath(void)
+const char *getcwdpath(void)
 {
     static char cwd[MAXPATHLEN + 1];
     char *p;
@@ -55,4 +55,74 @@ extern const char *getcwdpath(void)
         return p;
     else
         return strerror(errno);
+}
+
+/*!
+ * @brief symlink safe chdir replacement
+ *
+ * Only chdirs to dir if it doesn't contain symlinks.
+ *
+ * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
+ */
+int lchdir(const char *dir)
+{
+    int ret = 0;
+    char buf[MAXPATHLEN+1];
+#ifdef REALPATH_TAKES_NULL
+    char *rpath = NULL;
+#else
+    char rpath[MAXPATHLEN+1];
+#endif
+
+    /* dir might be an relative or an absolute path */
+    if (dir[0] == '/') {
+        /* absolute path, just make sure buf is prepared for strlcat */
+        buf[0] = 0;
+    } else {
+        /* relative path, push cwd int buf */
+        if (getcwd(buf, MAXPATHLEN) == NULL)
+            return -1;
+        if (strlcat(buf, "/", MAXPATHLEN) >= MAXPATHLEN)
+            return -1;
+    }
+
+    if (strlcat(buf, dir, MAXPATHLEN) >= MAXPATHLEN)
+        return -1;
+
+#ifdef REALPATH_TAKES_NULL
+    if ((rpath = realpath(dir, NULL)) == NULL) {
+#else
+    if (realpath(dir, rpath) == NULL) {
+#endif
+        ret = -1;
+        goto exit;
+    }
+
+    /* 
+     * Cases:
+     * chdir request   | realpath result | ret
+     * (after getwcwd) |                 |
+     * =======================================
+     * /a/b/.          | /a/b            | 0
+     * /a/b/.          | /c              | 1
+     * /a/b/.          | /c/d/e/f        | 1
+     */
+    ret = 0;
+    for (int i = 0; rpath[i]; i++) {
+        if (buf[i] != rpath[i]) {
+            ret = 1;
+            goto exit;
+        }
+    }
+
+    if (chdir(dir) != 0) {
+        ret = -1;
+        goto exit;
+    }
+
+exit:
+#ifdef REALPATH_TAKES_NULL
+    free(rpath);
+#endif
+    return ret;
 }

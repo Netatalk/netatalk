@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.134 2010-02-19 10:51:59 franklahm Exp $
+ * $Id: directory.c,v 1.135 2010-02-19 11:29:51 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -132,76 +132,6 @@ static struct dir rootpar  = { SENTINEL, SENTINEL, NULL,
  * frComment:   2    comment ID
  * frPutAway:   4    home directory ID
  */
-
-/*!
- * @brief symlink safe chdir replacement
- *
- * Only chdirs to dir if it doesn't contain symlinks.
- *
- * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
- */
-static int lchdir(const char *dir)
-{
-    int ret = 0;
-    char buf[MAXPATHLEN+1];
-#ifdef REALPATH_TAKES_NULL
-    char *rpath = NULL;
-#else
-    char rpath[MAXPATHLEN+1];
-#endif
-
-    /* dir might be an relative or an absolute path */
-    if (dir[0] == '/') {
-        /* absolute path, just make sure buf is prepared for strlcat */
-        buf[0] = 0;
-    } else {
-        /* relative path, push cwd int buf */
-        if (getcwd(buf, MAXPATHLEN) == NULL)
-            return -1;
-        if (strlcat(buf, "/", MAXPATHLEN) >= MAXPATHLEN)
-            return -1;
-    }
-
-    if (strlcat(buf, dir, MAXPATHLEN) >= MAXPATHLEN)
-        return -1;
-
-#ifdef REALPATH_TAKES_NULL
-    if ((rpath = realpath(dir, NULL)) == NULL) {
-#else
-    if (realpath(dir, rpath) == NULL) {
-#endif
-        ret = -1;
-        goto exit;
-    }
-
-    /* 
-     * Cases:
-     * chdir request   | realpath result | ret
-     * (after getwcwd) |                 |
-     * =======================================
-     * /a/b/.          | /a/b            | 0
-     * /a/b/.          | /c              | 1
-     * /a/b/.          | /c/d/e/f        | 1
-     */
-    ret = 0;
-    for (int i = 0; rpath[i]; i++) {
-        if (buf[i] != rpath[i]) {
-            ret = 1;
-            goto exit;
-        }
-    }
-
-    if (chdir(dir) != 0) {
-        ret = -1;
-        goto exit;
-    }
-
-exit:
-#ifdef REALPATH_TAKES_NULL
-    free(rpath);
-#endif
-    return ret;
-}
 
 static struct dir *
 vol_tree_root(const struct vol *vol, u_int32_t did)

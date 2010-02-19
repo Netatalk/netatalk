@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.18 2010-01-05 19:05:52 franklahm Exp $
+ * $Id: util.h,v 1.19 2010-02-19 11:29:52 franklahm Exp $
  */
 
 /*!
@@ -121,5 +121,6 @@ extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
  *****************************************************************/
 
 extern const char *getcwdpath(void);
+extern int lchdir(const char *dir);
 
 #endif  /* _ATALK_UTIL_H */
