@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.119 2010-02-19 10:51:59 franklahm Exp $
+ * $Id: volume.c,v 1.120 2010-02-22 08:51:03 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -982,12 +982,12 @@ static void setextmap(char *ext, char *type, char *creator, int user)
     }
 
     if ( *type == '\0' ) {
-        memcpy(em->em_type, "????", sizeof( em->em_type ));
+        memcpy(em->em_type, "\0\0\0\0", sizeof( em->em_type ));
     } else {
         memcpy(em->em_type, type, sizeof( em->em_type ));
     }
     if ( *creator == '\0' ) {
-        memcpy(em->em_creator, "UNIX", sizeof( em->em_creator ));
+        memcpy(em->em_creator, "\0\0\0\0", sizeof( em->em_creator ));
     } else {
         memcpy(em->em_creator, creator, sizeof( em->em_creator ));
     }
