@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.18 2009-11-12 06:28:40 didg Exp $
+ * $Id: ad_lock.c,v 1.19 2010-02-26 12:57:50 didg Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -40,6 +40,18 @@
 #endif
 
 /* ----------------------- */
+static int set_lock(int fd, int cmd,  struct flock *lock)
+{
+  if (!fd) {
+      /* We assign fd = 0 for symlinks -> do nothing */
+      if (cmd == F_GETLK)
+	    lock->l_type = F_UNLCK;
+      return 0;
+  }
+  return fcntl(fd, cmd, lock);
+}
+
+/* ----------------------- */
 static int XLATE_FCNTL_LOCK(int type) 
 {
     switch(type) {
@@ -75,7 +87,7 @@ static void adf_freelock(struct ad_fd *ad, const int i)
 	free(lock->refcount); 
 	if (!ad->adf_excl) {
 	    lock->lock.l_type = F_UNLCK;
-	    fcntl(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
+	    set_lock(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
 	}
     }
 
@@ -139,7 +151,7 @@ static void adf_relockrange(struct ad_fd *ad, int fd,
     
     if (!ad->adf_excl) for (i = 0; i < ad->adf_lockcount; i++) {
       if (OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
-	fcntl(fd, F_SETLK, &lock[i].lock);
+	set_lock(fd, F_SETLK, &lock[i].lock);
     }
 }
 
@@ -343,7 +355,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
   }
 
   /* attempt to lock the file. */
-  if (!adf->adf_excl && fcntl(adf->adf_fd, F_SETLK, &lock) < 0) 
+  if (!adf->adf_excl && set_lock(adf->adf_fd, F_SETLK, &lock) < 0) 
     return -1;
 
   /* we upgraded this lock. */
@@ -385,7 +397,7 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
 
 fcntl_lock_err:
   lock.l_type = F_UNLCK;
-  if (!adf->adf_excl) fcntl(adf->adf_fd, F_SETLK, &lock);
+  if (!adf->adf_excl) set_lock(adf->adf_fd, F_SETLK, &lock);
   return -1;
 }
 
@@ -418,7 +430,7 @@ static int testlock(struct ad_fd *adf, off_t off, off_t len)
   */
   lock.l_type = (adf->adf_flags & O_RDWR) ?F_WRLCK : F_RDLCK;
 
-  if (fcntl(adf->adf_fd, F_GETLK, &lock) < 0) {
+  if (set_lock(adf->adf_fd, F_GETLK, &lock) < 0) {
       /* is that kind of error possible ?*/
       return (errno == EACCES || errno == EAGAIN)?1:-1;
   }
@@ -569,7 +581,7 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
    *      we just want to upgrade all the locks and then downgrade them
    *      here. */
   if (!adf->adf_excl) {
-       err = fcntl(adf->adf_fd, F_SETLK, &lock);
+       err = set_lock(adf->adf_fd, F_SETLK, &lock);
   }
   else {
       err = 0;
@@ -602,7 +614,7 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
     lock.l_start = ad_getentryoff(ad, eid);
   }
   
-  err = fcntl(adf->adf_fd, F_SETLK, &lock);
+  err = set_lock(adf->adf_fd, F_SETLK, &lock);
   if (!err)
       adf->adf_excl = 1;
   return err;
