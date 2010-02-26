@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.71 2009-11-12 02:33:13 didg Exp $
+ * $Id: fork.c,v 1.72 2010-02-26 12:31:02 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -84,10 +84,11 @@ static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) | 
                     (1<<FILPBIT_FNUM) | (1 << FILPBIT_CDATE) | 
                     (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE))) {
-        if ( ad_data_fileno( ofork->of_ad ) == -1 ) {
+        if ( ad_data_fileno( ofork->of_ad ) <= 0 ) {
+            /* 0 is for symlink */
             if (movecwd(vol, dir) < 0)
                 return( AFPERR_NOOBJ );
-            if ( stat( path.u_name, st ) < 0 )
+            if ( lstat( path.u_name, st ) < 0 )
                 return( AFPERR_NOOBJ );
         } else {
             if ( fstat( ad_data_fileno( ofork->of_ad ), st ) < 0 ) {
