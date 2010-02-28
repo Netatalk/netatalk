@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.19 2010-02-19 11:29:52 franklahm Exp $
+ * $Id: util.h,v 1.20 2010-02-28 17:02:49 didg Exp $
  */
 
 /*!
@@ -22,6 +22,7 @@
 #endif /* HAVE_UNISTD_H */
 #include <netatalk/at.h>
 #include <atalk/unicode.h>
+#include <atalk/volume.h>
 
 /* exit error codes */
 #define EXITERR_CLNT 1  /* client related error */
@@ -121,6 +122,6 @@ extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
  *****************************************************************/
 
 extern const char *getcwdpath(void);
-extern int lchdir(const char *dir);
+extern int lchdir(struct vol *vol, const char *dir);
 
 #endif  /* _ATALK_UTIL_H */

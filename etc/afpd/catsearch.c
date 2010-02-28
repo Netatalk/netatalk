@@ -542,7 +542,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 	while ((cidx = reducestack()) != -1) {
 		cached = 1;
 
-		error = lchdir(dstack[cidx].path);
+		error = lchdir(vol, dstack[cidx].path);
 
 		if (!error && dirpos == NULL) {
 			dirpos = opendir(".");

@@ -1,5 +1,5 @@
 /*
-  $Id: unix.c,v 1.4 2010-02-19 11:29:52 franklahm Exp $
+  $Id: unix.c,v 1.5 2010-02-28 17:02:49 didg Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -64,39 +64,12 @@ const char *getcwdpath(void)
  *
  * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
  */
-int lchdir(const char *dir)
+int lchdir(struct vol *vol, const char *dir)
 {
-    int ret = 0;
     char buf[MAXPATHLEN+1];
-#ifdef REALPATH_TAKES_NULL
-    char *rpath = NULL;
-#else
-    char rpath[MAXPATHLEN+1];
-#endif
 
-    /* dir might be an relative or an absolute path */
-    if (dir[0] == '/') {
-        /* absolute path, just make sure buf is prepared for strlcat */
-        buf[0] = 0;
-    } else {
-        /* relative path, push cwd int buf */
-        if (getcwd(buf, MAXPATHLEN) == NULL)
-            return -1;
-        if (strlcat(buf, "/", MAXPATHLEN) >= MAXPATHLEN)
-            return -1;
-    }
-
-    if (strlcat(buf, dir, MAXPATHLEN) >= MAXPATHLEN)
+    if (chdir(dir) != 0)
         return -1;
-
-#ifdef REALPATH_TAKES_NULL
-    if ((rpath = realpath(dir, NULL)) == NULL) {
-#else
-    if (realpath(dir, rpath) == NULL) {
-#endif
-        ret = -1;
-        goto exit;
-    }
 
     /* 
      * Cases:
@@ -107,22 +80,14 @@ int lchdir(const char *dir)
      * /a/b/.          | /c              | 1
      * /a/b/.          | /c/d/e/f        | 1
      */
-    ret = 0;
-    for (int i = 0; rpath[i]; i++) {
-        if (buf[i] != rpath[i]) {
-            ret = 1;
-            goto exit;
+    if (getcwd(buf, MAXPATHLEN) == NULL)
+        return 1;
+
+    for (int i = 0; vol->v_path[i]; i++) {
+        if (buf[i] != vol->v_path[i]) {
+            return 1;
         }
     }
-
-    if (chdir(dir) != 0) {
-        ret = -1;
-        goto exit;
-    }
-
-exit:
-#ifdef REALPATH_TAKES_NULL
-    free(rpath);
-#endif
-    return ret;
+        
+    return 0;
 }

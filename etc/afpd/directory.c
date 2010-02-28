@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.135 2010-02-19 11:29:51 franklahm Exp $
+ * $Id: directory.c,v 1.136 2010-02-28 17:02:49 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1581,12 +1581,17 @@ int movecwd(struct vol *vol, struct dir *dir)
         p -= n;
         memcpy( p, vol->v_path, n );
     }
-    if ( (ret = lchdir( p )) != 0 ) {
+    if ( (ret = lchdir(vol, p )) != 0 ) {
         LOG(log_debug, logtype_afpd, "movecwd('%s'): ret:%d, %u/%s", p, ret, errno, strerror(errno));
 
         if (ret == 1) {
-            /* p is a symlink */
+            /* p is a symlink or getcwd failed */
             afp_errno = AFPERR_BADTYPE;
+            vol->v_curdir = curdir = vol->v_dir;
+            if (chdir(vol->v_path ) < 0) {
+                LOG(log_debug, logtype_afpd, "can't chdir back'%s': %s", vol->v_path, strerror(errno));
+                /* XXX what do we do here? */
+            }
             return -1;
         }
         switch (errno) {
