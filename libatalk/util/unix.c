@@ -1,5 +1,5 @@
 /*
-  $Id: unix.c,v 1.5 2010-02-28 17:02:49 didg Exp $
+  $Id: unix.c,v 1.6 2010-02-28 22:29:16 didg Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,6 @@
 #include <atalk/ea.h>
 #include <atalk/afp.h>
 #include <atalk/logger.h>
-#include <atalk/volume.h>
 #include <atalk/vfs.h>
 #include <atalk/util.h>
 #include <atalk/unix.h>
@@ -64,10 +63,22 @@ const char *getcwdpath(void)
  *
  * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
  */
-int lchdir(struct vol *vol, const char *dir)
+int lchdir(const char *dir)
 {
     char buf[MAXPATHLEN+1];
+    char cwd[MAXPATHLEN+1];
+    char *test;
+    int  i;
 
+    /*
+     dir is a canonical path (without "../" "./" "//" )
+     but may end with a / 
+    */
+    *cwd = 0;
+    if (*dir != '/') {
+        if (getcwd(cwd, MAXPATHLEN) == NULL)
+            return -1;
+    }
     if (chdir(dir) != 0)
         return -1;
 
@@ -83,11 +94,38 @@ int lchdir(struct vol *vol, const char *dir)
     if (getcwd(buf, MAXPATHLEN) == NULL)
         return 1;
 
-    for (int i = 0; vol->v_path[i]; i++) {
-        if (buf[i] != vol->v_path[i]) {
+    i = 0;
+    if (*cwd) {
+        /* relative path requested, 
+         * Same directory?
+        */
+        for (; cwd[i]; i++) {
+            if (buf[i] != cwd[i])
+                return 1;
+        }
+        if (buf[i]) {
+            if (buf[i] != '/')
+                return 1;
+            i++;
+        }                    
+    }
+
+    test = &buf[i];    
+    for (i = 0; test[i]; i++) {
+        if (test[i] != dir[i]) {
             return 1;
         }
     }
-        
+    /* trailing '/' ? */
+    if (!dir[i])
+        return 0;
+
+    if (dir[i] != '/')
+        return 1;
+
+    i++;
+    if (dir[i])
+        return 1;
+
     return 0;
 }
