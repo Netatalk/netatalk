@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.120 2010-02-22 08:51:03 franklahm Exp $
+ * $Id: volume.c,v 1.121 2010-03-01 05:05:46 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2473,18 +2473,13 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
     if ( !ret && folder->hide) {
         /* Hide it */
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if (ad_open( p, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR|O_CREAT, 0666, &ad) < 0) {
+        if (ad_open_metadata( p, ADFLAGS_DIR, O_CREAT, &ad) < 0) {
             free (p);
             free(q);
             return (-1);
         }
-        if ((ad_get_HF_flags( &ad ) & O_CREAT) ) {
-            if (ad_getentryoff(&ad, ADEID_NAME)) {
-                ad_setentrylen( &ad, ADEID_NAME, strlen(folder->name));
-                memcpy(ad_entry( &ad, ADEID_NAME ), folder->name,
-                       ad_getentrylen( &ad, ADEID_NAME ));
-            }
-        }
+        
+        ad_setname(&ad, folder->name);
 
         ad_getattr(&ad, &attr);
         attr |= htons( ntohs( attr ) | ATTRBIT_INVISIBLE );
@@ -2498,7 +2493,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
         }
 
         ad_flush( &ad );
-        ad_close( &ad, ADFLAGS_HF );
+        ad_close_metadata( &ad);
     }
     free(p);
     free(q);
