@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.69 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: ad_open.c,v 1.70 2010-03-01 21:11:06 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1358,6 +1358,8 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
             return -1;
         }
         ad_refresh(ad);
+        /* it's not new anymore */
+        ad->ad_md->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_md->adf_refcount++;
         goto sfm;
     }
