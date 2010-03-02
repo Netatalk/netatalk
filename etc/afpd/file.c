@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.139 2010-02-18 08:08:01 didg Exp $
+ * $Id: file.c,v 1.140 2010-03-02 12:45:31 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1531,55 +1531,53 @@ u_int16_t   bshort = 0;
 int deletefile(const struct vol *vol, char *file, int checkAttrib)
 {
     struct adouble	ad;
-    struct adouble      *adp = &ad;
+    struct adouble      *adp = NULL;
     int			adflags, err = AFP_OK;
+    int			meta = 0;
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin deletefile:");
 #endif /* DEBUG */
 
-    /* try to open both forks at once */
-    adflags = ADFLAGS_DF|ADFLAGS_HF;
+    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
     if (checkAttrib) {
         /* was EACCESS error try to get only metadata */
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         /* we never want to create a resource fork here, we are going to delete it 
          * moreover sometimes deletefile is called with a no existent file and 
          * ad_open would create a 0 byte resource fork
         */
         if ( ad_metadata( file, ADFLAGS_OPENFORKS, &ad) == 0 ) {
-            ad_close( &ad, adflags );
             if ((err = check_attrib(&ad))) {
+               ad_close_metadata(&ad);
                return err;
             }
+            meta = 1;
         }
     }
  
-    while(1) {
-    	ad_init(&ad, vol->v_adouble, vol->v_ad_options);  /* OK */
-        if ( ad_open( file, adflags, O_RDONLY, 0, &ad ) < 0 ) {
-            switch (errno) {
-            case ENOENT:
-                if (adflags == ADFLAGS_DF)
-                    return AFPERR_NOOBJ;
-                   
-                /* that failed. now try to open just the data fork */
-                adflags = ADFLAGS_DF;
-                continue;
-
-            case EACCES:
-                adp = NULL; /* maybe it's a file with no write mode for us */
-                break;      /* was return AFPERR_ACCESS;*/
-            case EROFS:
-                return AFPERR_VLOCK;
-            default:
-                return( AFPERR_PARAM );
-            }
+    /* try to open both forks at once */
+    adflags = ADFLAGS_DF;
+    if ( ad_open( file, adflags |ADFLAGS_HF|ADFLAGS_NOHF, O_RDONLY, 0, &ad ) < 0 ) {
+        switch (errno) {
+        case ENOENT:
+            err = AFPERR_NOOBJ;
+            goto end;
+        case EACCES: /* maybe it's a file with no write mode for us */
+            break;   /* was return AFPERR_ACCESS;*/
+        case EROFS:
+            err = AFPERR_VLOCK;
+            goto end;
+        default:
+            err = AFPERR_PARAM;
+            goto end;
         }
-        break;	/* from the while */
+    }
+    else {
+        adp = &ad;
     }
 
-    if (adp && (adflags & ADFLAGS_HF) ) {
+    if ( adp && ad_reso_fileno( adp ) != -1 ) { /* there's a resource fork */
+        adflags |= ADFLAGS_HF;
         /* FIXME we have a pb here because we want to know if a file is open 
          * there's a 'priority inversion' if you can't open the ressource fork RW
          * you can delete it if it's open because you can't get a write lock.
@@ -1590,8 +1588,8 @@ int deletefile(const struct vol *vol, char *file, int checkAttrib)
          * FIXME it doesn't work for RFORK open read only and fork open without deny mode
          */
         if (ad_tmplock(&ad, ADEID_RFORK, ADLOCK_WR |ADLOCK_FILELOCK, 0, 0, 0) < 0 ) {
-            ad_close( &ad, adflags );
-            return( AFPERR_BUSY );
+            err = AFPERR_BUSY;
+            goto end;
         }
     }
 
@@ -1605,8 +1603,14 @@ int deletefile(const struct vol *vol, char *file, int checkAttrib)
             cnid_delete(vol->v_cdb, id);
         }
     }
+
+end:
+    if (meta)
+        ad_close_metadata(&ad);
+
     if (adp)
         ad_close( &ad, adflags );  /* ad_close removes locks if any */
+
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "end deletefile:");
