@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.137 2010-02-28 22:29:15 didg Exp $
+ * $Id: directory.c,v 1.138 2010-03-02 13:29:31 didg Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -2655,7 +2655,7 @@ int deletecurdir(struct vol *vol)
     if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
 
         ad_getattr(&ad, &ashort);
-        ad_close( &ad, ADFLAGS_HF );
+        ad_close_metadata(adp);
         if ((ashort & htons(ATTRBIT_NODELETE))) {
             return  AFPERR_OLOCK;
         }
