@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.70 2010-03-01 21:11:06 didg Exp $
+ * $Id: ad_open.c,v 1.71 2010-03-07 18:27:59 didg Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1535,7 +1535,9 @@ sfm:
  *
  * @param name  name of file/dir
  * @param flags ADFLAGS_DIR: name is a directory \n
- *              ADFLAGS_CREATE: force creation of header file, but only as use, not as root
+ *              ADFLAGS_CREATE: force creation of header file, but only as user, not as root\n
+ *              ADFLAGS_OPENFORKS: test if name is open by another afpd process
+ *
  * @param adp   pointer to struct adouble
  *
  * @note caller MUST pass ADFLAGS_DIR for directories. Whether ADFLAGS_CREATE really creates
@@ -1545,17 +1547,17 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
     uid_t uid;
     int   ret, err, dir;
-    int   create = 0;
+    int   create = O_RDONLY;
 
     dir = flags & ADFLAGS_DIR;
 
     /* Check if we shall call ad_open with O_CREAT */
     if ( (adp->ad_options & ADVOL_CACHE)
          && ! (adp->ad_options & ADVOL_NOADOUBLE)
-         && (flags & ADFLAGS_CREATE) )
-        create = O_CREAT;
-
-    if ((ret = ad_open(name, ADFLAGS_HF | dir, O_RDWR | create, 0666, adp)) < 0 && errno == EACCES) {
+         && (flags & ADFLAGS_CREATE) ) {
+        create = O_CREAT | O_RDWR;
+    }
+    if ((ret = ad_open(name, ADFLAGS_HF | dir, create, 0666, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
