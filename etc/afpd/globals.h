@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.31 2010-01-18 12:55:28 franklahm Exp $
+ * $Id: globals.h,v 1.32 2010-03-08 19:49:59 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -111,6 +111,9 @@ typedef struct _AFPObj {
 
 /* typedef for AFP functions handlers */
 typedef int (*AFPCmd)(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+
+/* afp_dsi.c */
+extern AFPObj *AFPobj;
 
 extern int		afp_version;
 extern int		afp_errno;

@@ -1,5 +1,5 @@
 /*
-  $Id: acls.c,v 1.8 2010-02-10 14:05:37 franklahm Exp $
+  $Id: acls.c,v 1.9 2010-03-08 19:49:59 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -960,6 +960,11 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     struct passwd *pw;
     uuid_t uuid;
     int dir, r_ok, w_ok, x_ok;
+
+    if ( ! (AFPobj->options.flags & OPTION_UUID))
+        return;
+
+    LOG(log_maxdebug, logtype_afpd, "acltoownermode('%s')", path);
 
     if ((pw = getpwuid(uid)) == NULL) {
         LOG(log_error, logtype_afpd, "acltoownermode: %s", strerror(errno));

@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.51 2010-02-16 02:37:38 didg Exp $
+ * $Id: afp_dsi.c,v 1.52 2010-03-08 19:49:59 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -47,6 +47,16 @@
 #define CHILD_RUNNING     (1 << 1)
 #define CHILD_SLEEPING    (1 << 2)
 #define CHILD_DATA        (1 << 3)
+
+/* 
+ * We generally pass this from afp_over_dsi to all afp_* funcs, so it should already be
+ * available everywhere. Unfortunately some funcs (eg acltoownermode) need acces to it
+ * but are deeply nested in the function chain with the caller already without acces to it.
+ * Changing this would require adding a reference to the caller which itself might be
+ * called in many places (eg acltoownermode is called from accessmode).
+ * The only sane way out is providing a copy of it here:
+ */
+AFPObj *AFPobj = NULL;
 
 static struct {
     AFPObj *obj;
@@ -260,6 +270,7 @@ void afp_over_dsi(AFPObj *obj)
     u_int8_t function;
     struct sigaction action;
 
+    AFPobj = obj;
     obj->exit = afp_dsi_die;
     obj->reply = (int (*)()) dsi_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
