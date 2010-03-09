@@ -1,5 +1,5 @@
 /*
- * $Id: afp_asp.c,v 1.28 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: afp_asp.c,v 1.29 2010-03-09 06:55:12 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -215,6 +215,7 @@ void afp_over_asp(AFPObj *obj)
     int ccnt = 0;
 #endif    
 
+    AFPobj = obj;
     obj->exit = afp_asp_die;
     obj->reply = (int (*)()) asp_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes)) asp_attention;
