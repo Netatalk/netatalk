@@ -1,5 +1,5 @@
 /*
-   $Id: ea.h,v 1.10 2009-12-10 17:40:25 franklahm Exp $
+   $Id: ea.h,v 1.11 2010-03-12 15:16:49 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -99,6 +99,7 @@ struct ea_entry {
 struct ea {
     uint32_t             ea_inited;       /* needed for interfacing ea_open w. ea_close */
     const struct vol     *vol;            /* vol handle, ea_close needs it */
+    int                  dirfd;           /* for *at (cf openat) semantics, -1 means ignore */
     char                 *filename;       /* name of file, needed by ea_close too */
     unsigned int         ea_count;        /* number of EAs in ea_entries array */
     struct ea_entry      (*ea_entries)[]; /* malloced and realloced as needed by ea_count*/
@@ -154,6 +155,11 @@ extern int ea_open(const struct vol * restrict vol,
                    const char * restrict uname,
                    eaflags_t eaflags,
                    struct ea * restrict ea);
+extern int ea_openat(const struct vol * restrict vol,
+                     int dirfd,
+                     const char * restrict uname,
+                     eaflags_t eaflags,
+                     struct ea * restrict ea);
 extern int ea_close(struct ea * restrict ea);
 extern char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int macname);
 

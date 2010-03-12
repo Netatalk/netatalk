@@ -1,5 +1,5 @@
 /*
- * $Id: directory.c,v 1.139 2010-03-02 18:07:13 didg Exp $
+ * $Id: directory.c,v 1.140 2010-03-12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -98,7 +98,7 @@ extern void addir_inherit_acl(const struct vol *vol);
  */
 
 struct dir  *curdir;
-int             afp_errno;
+int         afp_errno;
 
 #define SENTINEL (&sentinel)
 static struct dir sentinel = { SENTINEL, SENTINEL, NULL, /* left, right, back */
@@ -787,7 +787,7 @@ static int netatalk_mkdir(const char *name)
 }
 
 /* ------------------- */
-static int deletedir(char *dir)
+static int deletedir(int dirfd, char *dir)
 {
     char path[MAXPATHLEN + 1];
     DIR *dp;
@@ -801,7 +801,7 @@ static int deletedir(char *dir)
         return AFPERR_PARAM;
 
     /* already gone */
-    if ((dp = opendir(dir)) == NULL)
+    if ((dp = opendirat(dirfd, dir)) == NULL)
         return AFP_OK;
 
     strcpy(path, dir);
@@ -818,13 +818,13 @@ static int deletedir(char *dir)
             break;
         }
         strcpy(path + len, de->d_name);
-        if (lstat(path, &st)) {
+        if (lstatat(dirfd, path, &st)) {
             continue;
         }
         if (S_ISDIR(st.st_mode)) {
-            err = deletedir(path);
+            err = deletedir(dirfd, path);
         } else {
-            err = netatalk_unlink(path);
+            err = netatalk_unlinkat(dirfd, path);
         }
     }
     closedir(dp);
@@ -832,13 +832,13 @@ static int deletedir(char *dir)
     /* okay. the directory is empty. delete it. note: we already got rid
        of .AppleDouble.  */
     if (err == AFP_OK) {
-        err = netatalk_rmdir(dir);
+        err = netatalk_rmdir(dirfd, dir);
     }
     return err;
 }
 
 /* do a recursive copy. */
-static int copydir(const struct vol *vol, char *src, char *dst)
+static int copydir(const struct vol *vol, int dirfd, char *src, char *dst)
 {
     char spath[MAXPATHLEN + 1], dpath[MAXPATHLEN + 1];
     DIR *dp;
@@ -852,7 +852,7 @@ static int copydir(const struct vol *vol, char *src, char *dst)
     /* doesn't exist or the path is too long. */
     if (((slen = strlen(src)) > sizeof(spath) - 2) ||
         ((dlen = strlen(dst)) > sizeof(dpath) - 2) ||
-        ((dp = opendir(src)) == NULL))
+        ((dp = opendirat(dirfd, src)) == NULL))
         return AFPERR_PARAM;
 
     /* try to create the destination directory */
@@ -884,7 +884,7 @@ static int copydir(const struct vol *vol, char *src, char *dst)
         }
         strcpy(spath + slen, de->d_name);
 
-        if (lstat(spath, &st) == 0) {
+        if (lstatat(dirfd, spath, &st) == 0) {
             if (strlen(de->d_name) > drem) {
                 err = AFPERR_PARAM;
                 break;
@@ -892,9 +892,9 @@ static int copydir(const struct vol *vol, char *src, char *dst)
             strcpy(dpath + dlen, de->d_name);
 
             if (S_ISDIR(st.st_mode)) {
-                if (AFP_OK != (err = copydir(vol, spath, dpath)))
+                if (AFP_OK != (err = copydir(vol, dirfd, spath, dpath)))
                     goto copydir_done;
-            } else if (AFP_OK != (err = copyfile(vol, vol, spath, dpath, NULL, NULL))) {
+            } else if (AFP_OK != (err = copyfile(vol, vol, dirfd, spath, dpath, NULL, NULL))) {
                 goto copydir_done;
 
             } else {
@@ -906,7 +906,7 @@ static int copydir(const struct vol *vol, char *src, char *dst)
     }
 
     /* keep the same time stamp. */
-    if (lstat(src, &st) == 0) {
+    if (lstatat(dirfd, src, &st) == 0) {
         ut.actime = ut.modtime = st.st_mtime;
         utime(dst, &ut);
     }
@@ -1122,6 +1122,7 @@ struct dir *dirnew(const char *m_name, const char *u_name)
     return dir;
 }
 
+#if 0
 /* ------------------ */
 static hash_val_t hash_fun_dir(const void *key)
 {
@@ -1147,6 +1148,7 @@ static hash_val_t hash_fun_dir(const void *key)
     }
     return acc;
 }
+#endif
 
 #undef get16bits
 #if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__)    \
@@ -2532,9 +2534,12 @@ createdir_done:
  * dst       new unix filename (not a pathname)
  * newname   new mac name
  * newparent curdir
- *
+ * dirfd     -1 means ignore dirfd (or use AT_FDCWD), otherwise src is relative to dirfd
  */
-int renamedir(const struct vol *vol, char *src, char *dst,
+int renamedir(const struct vol *vol,
+              int dirfd,
+              char *src,
+              char *dst,
               struct dir *dir,
               struct dir *newparent,
               char *newname)
@@ -2545,7 +2550,7 @@ int renamedir(const struct vol *vol, char *src, char *dst,
     int         len, err;
 
     /* existence check moved to afp_moveandrename */
-    if ( unix_rename( src, dst ) < 0 ) {
+    if ( unix_rename(dirfd, src, -1, dst ) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
@@ -2559,11 +2564,11 @@ int renamedir(const struct vol *vol, char *src, char *dst,
         case EXDEV:
             /* this needs to copy and delete. bleah. that means we have
              * to deal with entire directory hierarchies. */
-            if ((err = copydir(vol, src, dst)) < 0) {
-                deletedir(dst);
+            if ((err = copydir(vol, dirfd, src, dst)) < 0) {
+                deletedir(-1, dst);
                 return err;
             }
-            if ((err = deletedir(src)) < 0)
+            if ((err = deletedir(dirfd, src)) < 0)
                 return err;
             break;
         default :
@@ -2571,7 +2576,7 @@ int renamedir(const struct vol *vol, char *src, char *dst,
         }
     }
 
-    vol->vfs->vfs_renamedir(vol, src, dst);
+    vol->vfs->vfs_renamedir(vol, dirfd, src, dst);
 
     len = strlen( newname );
     /* rename() succeeded so we need to update our tree even if we can't open
@@ -2690,7 +2695,7 @@ int deletecurdir(struct vol *vol)
         goto delete_done;
     }
 
-    err = netatalk_rmdir_all_errors(fdir->d_u_name);
+    err = netatalk_rmdir_all_errors(-1, fdir->d_u_name);
     if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
         dirchildremove(curdir, fdir);
         cnid_delete(vol->v_cdb, fdir->d_did);

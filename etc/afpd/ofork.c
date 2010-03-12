@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.31 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: ofork.c,v 1.32 2010-03-12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -101,11 +101,10 @@ int of_flush(const struct vol *vol)
     return( 0 );
 }
 
-int of_rename(
-    const struct vol *vol,
-    struct ofork *s_of,
-    struct dir *olddir, const char *oldpath _U_,
-    struct dir *newdir, const char *newpath)
+int of_rename(const struct vol *vol,
+              struct ofork *s_of,
+              struct dir *olddir, const char *oldpath _U_,
+              struct dir *newdir, const char *newpath)
 {
     struct ofork *of, *next, *d_ofork;
     int done = 0;
@@ -290,6 +289,21 @@ int ret;
    return ret;
 }
 
+#ifdef HAVE_RENAMEAT
+int of_fstatat(int dirfd, struct path *path)
+{
+    int ret;
+
+    path->st_errno = 0;
+    path->st_valid = 1;
+
+    if ((ret = fstatat(dirfd, path->u_name, &path->st, AT_SYMLINK_NOFOLLOW)) < 0)
+    	path->st_errno = errno;
+
+   return ret;
+}
+#endif /* HAVE_RENAMEAT */
+
 /* -------------------------- 
    stat the current directory.
    stat(".") works even if "." is deleted thus
@@ -325,8 +339,7 @@ int ret;
 }
 
 /* -------------------------- */
-struct ofork *
-            of_findname(struct path *path)
+struct ofork *of_findname(struct path *path)
 {
     struct ofork *of;
     struct file_key key;
@@ -349,6 +362,41 @@ struct ofork *
 
     return NULL;
 }
+
+/*!
+ * @brief Search for open fork by dirfd/name
+ *
+ * Function call of_fstatat with dirfd and path and uses dev and ino
+ * to search the open fork table.
+ *
+ * @param dirfd     (r) directory fd
+ * @param path      (rw) pointer to struct path
+ */
+#ifdef HAVE_RENAMEAT
+struct ofork *of_findnameat(int dirfd, struct path *path)
+{
+    struct ofork *of;
+    struct file_key key;
+    
+    if ( ! path->st_valid) {
+        of_fstatat(dirfd, path);
+    }
+    	
+    if (path->st_errno)
+        return NULL;
+
+    key.dev = path->st.st_dev;
+    key.inode = path->st.st_ino;
+
+    for (of = ofork_table[hashfn(&key)]; of; of = of->next) {
+        if (key.dev == of->key.dev && key.inode == of->key.inode ) {
+            return of;
+        }
+    }
+
+    return NULL;
+}
+#endif
 
 void of_dealloc( struct ofork *of)
 {

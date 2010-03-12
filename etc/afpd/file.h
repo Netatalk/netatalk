@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.25 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: file.h,v 1.26 2010-03-12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -115,9 +115,9 @@ extern int getfilparams (struct vol *, u_int16_t, struct path *,
                                  struct dir *, char *buf, size_t *);
 
 extern int setfilparams (struct vol *, struct path *, u_int16_t, char *);
-extern int renamefile   (const struct vol *, char *, char *, char *, struct adouble *);
-extern int copyfile     (const struct vol *, const struct vol *, char *, char *, char *, struct adouble *);
-extern int deletefile   (const struct vol *, char *, int);
+extern int renamefile   (const struct vol *, int, char *, char *, char *, struct adouble *);
+extern int copyfile     (const struct vol *, const struct vol *, int, char *, char *, char *, struct adouble *);
+extern int deletefile   (const struct vol *, int, char *, int);
 
 extern int getmetadata  (struct vol *vol, u_int16_t bitmap, struct path *path, 
                          struct dir *dir, char *buf, size_t *buflen, struct adouble *adp);

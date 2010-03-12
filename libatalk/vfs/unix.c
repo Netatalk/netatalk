@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.9 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: unix.c,v 1.10 2010-03-12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -99,12 +99,24 @@ int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
     return 0;
 }
 
-/* -------------------
-   system rmdir with afp error code.
-*/
-int netatalk_rmdir_all_errors(const char *name)
+/*
+ * @brief system rmdir with afp error code.
+ *
+ * Supports *at semantics (cf openat) if HAVE_RENAMEAT. Pass dirfd=-1 to ignore this.
+ */
+int netatalk_rmdir_all_errors(int dirfd, const char *name)
 {
-    if (rmdir(name) < 0) {
+    int err;
+
+#ifdef HAVE_RENAMEAT
+    if (dirfd == -1)
+        dirfd = ATFD_CWD;
+    err = unlinkat(dirfd, name, AT_REMOVEDIR);
+#else
+    err = rmdir(name);
+#endif
+
+    if (err < 0) {
         switch ( errno ) {
         case ENOENT :
             return AFPERR_NOOBJ;
@@ -122,13 +134,14 @@ int netatalk_rmdir_all_errors(const char *name)
     return AFP_OK;
 }
 
-/* -------------------
-   system rmdir with afp error code.
-   ENOENT is not an error.
-*/
-int netatalk_rmdir(const char *name)
+/*
+ * @brief System rmdir with afp error code, but ENOENT is not an error.
+ *
+ * Supports *at semantics (cf openat) if HAVE_RENAMEAT. Pass dirfd=-1 to ignore this.
+ */
+int netatalk_rmdir(int dirfd, const char *name)
 {
-    int ret = netatalk_rmdir_all_errors(name);
+    int ret = netatalk_rmdir_all_errors(dirfd, name);
     if (ret == AFPERR_NOOBJ)
         return AFP_OK;
     return ret;
@@ -170,7 +183,15 @@ char *fullpathname(const char *name)
     return wd;
 }
 
-int copy_file(const char *src, const char *dst, mode_t mode)
+
+/**************************************************************************
+ * *at semnatics support functions (like openat, renameat standard funcs)
+ **************************************************************************/
+
+/* 
+ * Supports *at semantics if HAVE_RENAMEAT, pass dirfd=-1 to ignore this
+ */
+int copy_file(int dirfd, const char *src, const char *dst, mode_t mode)
 {
     int    ret = 0;
     int    sfd = -1;
@@ -179,7 +200,14 @@ int copy_file(const char *src, const char *dst, mode_t mode)
     size_t  buflen;
     char   filebuf[8192];
 
-    if ((sfd = open(src, O_RDONLY)) < 0) {
+#ifdef HAVE_RENAMEAT
+    if (dirfd == -1)
+        dirfd = ATFD_CWD;
+    sfd = openat(dirfd, src, O_RDONLY);
+#else
+    sfd = open(src, O_RDONLY);
+#endif
+    if (sfd < 0) {
         LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, src, strerror(errno));
         return -1;
@@ -235,44 +263,142 @@ exit:
     return ret;
 }
 
-/* This is equivalent of unix rename(). */
-int unix_rename(const char *oldpath, const char *newpath)
+/* 
+ * at wrapper for netatalk_unlink
+ */
+int netatalk_unlinkat(int dirfd, const char *name)
 {
-#if 0
-    char pd_name[PATH_MAX+1];
-    int i;
-    struct stat pd_stat;
-    uid_t uid;
+#ifdef HAVE_RENAMEAT
+    if (dirfd == -1)
+        dirfd = AT_FDCWD;
+
+    if (unlinkat(dirfd, name, 0) < 0) {
+        switch (errno) {
+        case ENOENT :
+            break;
+        case EROFS:
+            return AFPERR_VLOCK;
+        case EPERM:
+        case EACCES :
+            return AFPERR_ACCESS;
+        default :
+            return AFPERR_PARAM;
+        }
+    }
+    return AFP_OK;
+#else
+    return netatalk_unlink(name);
 #endif
 
+    /* DEADC0DE */
+    return 0;
+}
+
+/*
+ * @brief This is equivalent of unix rename()
+ *
+ * unix_rename mulitplexes rename and renameat. If we dont HAVE_RENAMEAT, sfd and dfd
+ * are ignored.
+ *
+ * @param sfd        (r) if we HAVE_RENAMEAT, -1 gives AT_FDCWD
+ * @param oldpath    (r) guess what
+ * @param dfd        (r) same as sfd
+ * @param newpath    (r) guess what
+ */
+int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
+{
+#ifdef HAVE_RENAMEAT
+    if (sfd == -1)
+        sfd = AT_FDCWD;
+    if (dfd == -1)
+        dfd = AT_FDCWD;
+
+    if (renameat(sfd, oldpath, dfd, newpath) < 0)
+        return -1;        
+#else
     if (rename(oldpath, newpath) < 0)
         return -1;
-#if 0
-    for (i = 0; i <= PATH_MAX && newpath[i] != '\0'; i++)
-        pd_name[i] = newpath[i];
-    pd_name[i] = '\0';
+#endif  /* HAVE_RENAMEAT */
 
-    while (i > 0 && pd_name[i] != '/') i--;
-    if (pd_name[i] == '/') i++;
-
-    pd_name[i++] = '.'; pd_name[i++] = '\0';
-
-    if (stat(pd_name, &pd_stat) < 0) {
-        LOG(log_error, logtype_afpd, "stat() of parent dir failed: pd_name = %s, uid = %d: %s",
-            pd_name, geteuid(), strerror(errno));
-        return 0;
-    }
-
-    /* So we have SGID bit set... */
-    if ((S_ISGID & pd_stat.st_mode) != 0) {
-        uid = geteuid();
-        if (seteuid(0) < 0)
-            LOG(log_error, logtype_afpd, "seteuid() failed: %s", strerror(errno));
-        if (recursive_chown(newpath, uid, pd_stat.st_gid) < 0)
-            LOG(log_error, logtype_afpd, "chown() of parent dir failed: newpath=%s, uid=%d: %s",
-                pd_name, geteuid(), strerror(errno));
-        seteuid(uid);
-    }
-#endif
     return 0;
+}
+
+/* 
+ * @brief stat/fsstatat multiplexer
+ *
+ * statat mulitplexes stat and fstatat. If we dont HAVE_RENAMEAT, dirfd is ignored.
+ *
+ * @param dirfd   (r) Only used if HAVE_RENAMEAT, ignored else, -1 gives AT_FDCWD
+ * @param path    (r) pathname
+ * @param st      (rw) pointer to struct stat
+ */
+int statat(int dirfd, const char *path, struct stat *st)
+{
+#ifdef HAVE_RENAMEAT
+    if (dirfd == -1)
+        dirfd = AT_FDCWD;
+    return (fstatat(dirfd, path, st, 0));
+#else
+    return (stat(path, st));
+#endif            
+
+    /* DEADC0DE */
+    return -1;
+}
+
+/* 
+ * @brief lstat/fsstatat multiplexer
+ *
+ * lstatat mulitplexes lstat and fstatat. If we dont HAVE_RENAMEAT, dirfd is ignored.
+ *
+ * @param dirfd   (r) Only used if HAVE_RENAMEAT, ignored else, -1 gives AT_FDCWD
+ * @param path    (r) pathname
+ * @param st      (rw) pointer to struct stat
+ */
+int lstatat(int dirfd, const char *path, struct stat *st)
+{
+#ifdef HAVE_RENAMEAT
+    if (dirfd == -1)
+        dirfd = AT_FDCWD;
+    return (fstatat(dirfd, path, st, AT_SYMLINK_NOFOLLOW));
+#else
+    return (lstat(path, st));
+#endif            
+
+    /* DEADC0DE */
+    return -1;
+}
+
+/* 
+ * @brief opendir wrapper for *at semantics support
+ *
+ * opendirat chdirs to dirfd if dirfd != -1 before calling opendir on path.
+ *
+ * @param dirfd   (r) if != -1, chdir(dirfd) before opendir(path)
+ * @param path    (r) pathname
+ */
+DIR *opendirat(int dirfd, const char *path)
+{
+    DIR *ret;
+    int cwd = -1;
+
+    if (dirfd != -1) {
+        if (((cwd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
+            ret = NULL;
+            goto exit;
+        }
+    }
+
+    ret = opendir(path);
+
+    if (dirfd != -1 && fchdir(cwd) != 0) {
+        LOG(log_error, logtype_afpd, "opendirat: cant chdir back. exit!");
+        exit(EXITERR_SYS);
+    }
+
+exit:
+    if (cwd != -1)
+        close(cwd);
+
+    return ret;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.71 2010-03-07 18:27:59 didg Exp $
+ * $Id: ad_open.c,v 1.72 2010-03-12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1586,6 +1586,41 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     return ret;
 }
 
+/*
+ * @brief openat like wrapper for ad_metadata
+ */
+int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
+{
+    int ret = 0;
+    int cwdfd = -1;
+
+    if (dirfd != -1) {
+        if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0)) {
+            ret = -1;
+            goto exit;
+        }
+    }
+
+    if (ad_metadata(name, flags, adp) < 0) {
+        ret = -1;
+        goto exit;
+    }
+
+    if (dirfd != -1) {
+        if (fchdir(cwdfd) != 0) {
+            LOG(log_error, logtype_afpd, "ad_openat: cant chdir back, exiting");
+            exit(EXITERR_SYS);
+        }
+    }
+
+exit:
+    if (cwdfd != -1)
+        close(cwdfd);
+
+    return ret;
+
+}
+
 /* ----------------------------------- */
 static int new_rfork(const char *path, struct adouble *ad, int adflags)
 {
@@ -1664,4 +1699,40 @@ int ad_refresh(struct adouble *ad)
         return -1;
 
     return ad->ad_ops->ad_header_read(ad, NULL);
+}
+
+int ad_openat(int dirfd,  /* dir fd openat like */
+              const char *path,
+              int adflags,
+              int oflags,
+              int mode,
+              struct adouble  *ad)
+{
+    int ret = 0;
+    int cwdfd = -1;
+
+    if (dirfd != -1) {
+        if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0)) {
+            ret = -1;
+            goto exit;
+        }
+    }
+
+    if (ad_open(path, adflags, oflags, mode, ad) < 0) {
+        ret = -1;
+        goto exit;
+    }
+
+    if (dirfd != -1) {
+        if (fchdir(cwdfd) != 0) {
+            LOG(log_error, logtype_afpd, "ad_openat: cant chdir back, exiting");
+            exit(EXITERR_SYS);
+        }
+    }
+
+exit:
+    if (cwdfd != -1)
+        close(cwdfd);
+
+    return ret;
 }

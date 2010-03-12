@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <atalk/afp.h>    
 #include <atalk/adouble.h>
@@ -148,7 +149,7 @@ static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
        as well. */
     if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_adouble_loop, NULL, 1, vol->v_umask))) 
         return err;
-    return netatalk_rmdir( ".AppleDouble" );
+    return netatalk_rmdir(-1, ".AppleDouble" );
 }
 
 /* ----------------- */
@@ -272,7 +273,7 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 /* ----------------- */
 static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE)
 {
-	return netatalk_unlink(vol->ad_path(file, ADFLAGS_HF));
+	return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 }
 
 /* ----------------- */
@@ -282,16 +283,16 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
     int   err = 0;
 
     strcpy( adsrc, vol->ad_path(src, 0 ));
-    if (unix_rename( adsrc, vol->ad_path(dst, 0 )) < 0) {
+    if (unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) < 0) {
         struct stat st;
 
         err = errno;
         if (errno == ENOENT) {
 	        struct adouble    ad;
 
-            if (stat(adsrc, &st)) /* source has no ressource fork, */
+            if (lstatat(dirfd, adsrc, &st)) /* source has no ressource fork, */
                 return 0;
-            
+
             /* We are here  because :
              * -there's no dest folder. 
              * -there's no .AppleDouble in the dest folder.
@@ -302,7 +303,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
             ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
             if (!ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) {
             	ad_close(&ad, ADFLAGS_HF);
-    	        if (!unix_rename( adsrc, vol->ad_path(dst, 0 )) ) 
+    	        if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) ) 
                    err = 0;
                 else 
                    err = errno;
@@ -426,7 +427,7 @@ static int ads_delete_rf(char *name)
     */
     if ((err = for_each_adouble("deletecurdir", name, deletecurdir_ads1_loop, NULL, 1, 0))) 
         return err;
-    return netatalk_rmdir(name);
+    return netatalk_rmdir(-1, name);
 }
 
 static int deletecurdir_ads_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
@@ -445,11 +446,12 @@ static int deletecurdir_ads_loop(struct dirent *de, char *name, void *data _U_, 
 static int RF_deletecurdir_ads(VFS_FUNC_ARGS_DELETECURDIR)
 {
     int err;
-    
+
     /* delete stray .AppleDouble files. this happens to get .Parent files as well. */
     if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_ads_loop, NULL, 1, 0))) 
         return err;
-    return netatalk_rmdir( ".AppleDouble" );
+
+    return netatalk_rmdir(-1, ".AppleDouble" );
 }
 
 /* ------------------- */
@@ -658,9 +660,31 @@ static int RF_setdirowner_ads(VFS_FUNC_ARGS_SETDIROWNER)
 /* ------------------- */
 static int RF_deletefile_ads(VFS_FUNC_ARGS_DELETEFILE)
 {
-    char *ad_p = ad_dir(vol->ad_path(file, ADFLAGS_HF ));
+    int ret = 0;
+    int cwd = -1;
+    char *ad_p;
 
-    return ads_delete_rf(ad_p);
+    ad_p = ad_dir(vol->ad_path(file, ADFLAGS_HF ));
+
+    if (dirfd != -1) {
+        if (((cwd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
+            ret = AFPERR_MISC;
+            goto exit;
+        }
+    }
+
+    ret = ads_delete_rf(ad_p);
+
+    if (dirfd != -1 && fchdir(cwd) != 0) {
+        LOG(log_error, logtype_afpd, "RF_deletefile_ads: cant chdir back. exit!");
+        exit(EXITERR_SYS);
+    }
+
+exit:
+    if (cwd != -1)
+        close(cwd);
+
+    return ret;
 }
 
 /* --------------------------- */
@@ -670,14 +694,14 @@ static int RF_renamefile_ads(VFS_FUNC_ARGS_RENAMEFILE)
     int   err = 0;
 
     strcpy( adsrc, ad_dir(vol->ad_path(src, 0 )));
-    if (unix_rename( adsrc, ad_dir(vol->ad_path(dst, 0 ))) < 0) {
+    if (unix_rename(dirfd, adsrc, -1, ad_dir(vol->ad_path(dst, 0 ))) < 0) {
         struct stat st;
 
         err = errno;
         if (errno == ENOENT) {
 	        struct adouble    ad;
 
-            if (stat(adsrc, &st)) /* source has no ressource fork, */
+            if (lstatat(dirfd, adsrc, &st)) /* source has no ressource fork, */
                 return 0;
             
             /* We are here  because :
@@ -692,8 +716,8 @@ static int RF_renamefile_ads(VFS_FUNC_ARGS_RENAMEFILE)
             	ad_close(&ad, ADFLAGS_HF);
 
             	/* We must delete it */
-            	RF_deletefile_ads(vol, dst );
-    	        if (!unix_rename( adsrc, ad_dir(vol->ad_path(dst, 0 ))) ) 
+            	RF_deletefile_ads(vol, -1, dst );
+    	        if (!unix_rename(dirfd, adsrc, -1, ad_dir(vol->ad_path(dst, 0 ))) ) 
                    err = 0;
                 else 
                    err = errno;
@@ -724,7 +748,7 @@ static int RF_renamedir_osx(VFS_FUNC_ARGS_RENAMEDIR)
 {
     /* We simply move the corresponding ad file as well */
     char   tempbuf[258]="._";
-    return rename(vol->ad_path(oldpath,0),strcat(tempbuf,newpath));
+    return unix_rename(dirfd, vol->ad_path(oldpath,0), -1, strcat(tempbuf,newpath));
 }
 
 /* ---------------- */
@@ -759,11 +783,11 @@ static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
 
     strcpy( adsrc, vol->ad_path(src, 0 ));
 
-    if (unix_rename( adsrc, vol->ad_path(dst, 0 )) < 0) {
+    if (unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) < 0) {
         struct stat st;
 
         err = errno;
-        if (errno == ENOENT && stat(adsrc, &st)) /* source has no ressource fork, */
+        if (errno == ENOENT && lstatat(dirfd, adsrc, &st)) /* source has no ressource fork, */
             return 0;
         errno = err;
         return -1;
@@ -868,6 +892,7 @@ static struct vfs_ops netatalk_adouble = {
     /* vfs_setdirowner:   */ RF_setdirowner_adouble,
     /* vfs_deletefile:    */ RF_deletefile_adouble,
     /* vfs_renamefile:    */ RF_renamefile_adouble,
+    /* vfs_copyfile:      */ NULL,
     NULL
 };
 
@@ -882,6 +907,7 @@ static struct vfs_ops netatalk_adouble_osx = {
     /* vfs_setdirowner:   */ RF_setdirowner_osx,
     /* vfs_deletefile:    */ RF_deletefile_adouble,
     /* vfs_renamefile:    */ RF_renamefile_osx,
+    /* vfs_copyfile:      */ NULL,
     NULL
 };
 
@@ -897,6 +923,7 @@ static struct vfs_ops netatalk_adouble_sfm = {
     /* vfs_setdirowner:   */ RF_setdirowner_ads,
     /* vfs_deletefile:    */ RF_deletefile_ads,
     /* vfs_renamefile:    */ RF_renamefile_ads,
+    /* vfs_copyfile:      */ NULL,
     NULL
 };
 

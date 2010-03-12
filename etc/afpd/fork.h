@@ -1,5 +1,5 @@
 /*
- * $Id: fork.h,v 1.17 2009-11-13 00:27:35 didg Exp $
+ * $Id: fork.h,v 1.18 2010-03-12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -75,6 +75,13 @@ extern int          of_statdir   (struct vol *vol, struct path *);
 extern int          of_closefork (struct ofork *ofork);
 extern void         of_closevol  (const struct vol *vol);
 extern struct adouble *of_ad     (const struct vol *, struct path *, struct adouble *);
+
+#ifdef HAVE_RENAMEAT
+extern struct ofork *of_findnameat(int dirfd, struct path *path);
+extern int of_fstatat(int dirfd, struct path *path);
+#endif  /* HAVE_RENAMEAT */
+
+
 /* in fork.c */
 extern int          flushfork    (struct ofork *);
 extern int          getforkmode  (struct adouble *, int , int );

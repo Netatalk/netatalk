@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.53 2010-02-10 14:05:37 franklahm Exp $
+ * $Id: adouble.h,v 1.54 2010-03-12 15:16:49 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -474,9 +474,11 @@ extern int ad_mode        (const char *, int);
 extern int ad_mkdir       (const char *, int);
 extern void ad_init       (struct adouble *, int, int );
 extern int ad_open        (const char *, int, int, int, struct adouble *);
+extern int ad_openat      (int dirfd, const char *, int, int, int, struct adouble *);
 extern int ad_refresh     (struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
 extern int ad_metadata    (const char *, int, struct adouble *);
+extern int ad_metadataat  (int, const char *, int, struct adouble *);
 
 #define ad_open_metadata(name, flags, mode, adp)\
    ad_open(name, ADFLAGS_MD|(flags), O_RDWR |(mode), 0666, (adp))

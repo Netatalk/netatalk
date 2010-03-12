@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.5 2010-01-23 14:54:43 franklahm Exp $
+  $Id: ea_sys.c,v 1.6 2010-03-12 15:16:49 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -380,15 +380,36 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
     return AFP_OK;
 }
 
-/* --------------------- 
-   copy EA 
-*/
+/*
+ * @brief Copy EAs
+ *
+ * @note Supports *at semantics, therfor switches back and forth between sfd and cwd
+ */
 int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {
   	int ret = 0;
+    int cwd = -1;
 	ssize_t size;
 	char *names = NULL, *end_names, *name, *value = NULL;
 	unsigned int setxattr_ENOTSUP = 0;
+
+    if (sfd != -1) {
+        if ((cwd = open(".", O_RDONLY)) == -1) {
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant open cwd: %s",
+                strerror(errno));
+            ret = -1;
+            goto getout;
+        }
+    }
+
+    if (sfd != -1) {
+        if (fchdir(sfd) == -1) {
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to sfd: %s",
+                strerror(errno));
+            ret = -1;
+            goto getout;
+        }
+    }
 
 	size = sys_listxattr(src, NULL, 0);
 	if (size < 0) {
@@ -411,12 +432,30 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 		end_names = names + size;
 	}
 
+    if (sfd != -1) {
+        if (fchdir(cwd) == -1) {
+            LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to cwd: %s",
+                strerror(errno));
+            ret = -1;
+            goto getout;
+        }
+    }
+
 	for (name = names; name != end_names; name = strchr(name, '\0') + 1) {
 		void *old_value;
 
 		/* check if this attribute shall be preserved */
 		if (!*name)
 			continue;
+
+        if (sfd != -1) {
+            if (fchdir(sfd) == -1) {
+                LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to sfd: %s",
+                    strerror(errno));
+                ret = -1;
+                goto getout;
+            }
+        }
 
 		size = sys_getxattr (src, name, NULL, 0);
 		if (size < 0) {
@@ -433,6 +472,16 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 			ret = -1;
 			continue;
 		}
+
+        if (sfd != -1) {
+            if (fchdir(cwd) == -1) {
+                LOG(log_error, logtype_afpd, "sys_ea_copyfile: cant chdir to cwd: %s",
+                    strerror(errno));
+                ret = -1;
+                goto getout;
+            }
+        }
+
 		if (sys_setxattr(dst, name, value, size, 0) != 0) {
 			if (errno == ENOTSUP)
 				setxattr_ENOTSUP++;
@@ -453,6 +502,9 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 	}
 
 getout:
+    if (cwd != -1)
+        close(cwd);
+        
 	free(value);
 	free(names);
 

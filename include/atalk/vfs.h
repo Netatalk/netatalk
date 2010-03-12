@@ -34,8 +34,8 @@
 #define VFS_FUNC_ARGS_CHOWN const struct vol *vol, const char *path, uid_t uid, gid_t gid
 #define VFS_FUNC_VARS_CHOWN vol, path, uid, gid
 
-#define VFS_FUNC_ARGS_RENAMEDIR const struct vol *vol, const char *oldpath, const char *newpath
-#define VFS_FUNC_VARS_RENAMEDIR vol, oldpath, newpath
+#define VFS_FUNC_ARGS_RENAMEDIR const struct vol *vol, int dirfd, const char *oldpath, const char *newpath
+#define VFS_FUNC_VARS_RENAMEDIR vol, dirfd, oldpath, newpath
 
 #define VFS_FUNC_ARGS_DELETECURDIR const struct vol *vol
 #define VFS_FUNC_VARS_DELETECURDIR vol
@@ -52,14 +52,14 @@
 #define VFS_FUNC_ARGS_SETDIROWNER const struct vol *vol, const char *name, uid_t uid, gid_t gid
 #define VFS_FUNC_VARS_SETDIROWNER vol, name, uid, gid
 
-#define VFS_FUNC_ARGS_DELETEFILE const struct vol *vol, const char *file
-#define VFS_FUNC_VARS_DELETEFILE vol, file
+#define VFS_FUNC_ARGS_DELETEFILE const struct vol *vol, int dirfd, const char *file
+#define VFS_FUNC_VARS_DELETEFILE vol, dirfd, file
 
-#define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, const char *src, const char *dst
-#define VFS_FUNC_VARS_RENAMEFILE vol, src, dst
+#define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, int dirfd, const char *src, const char *dst
+#define VFS_FUNC_VARS_RENAMEFILE vol, dirfd, src, dst
 
-#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, const char *src, const char *dst
-#define VFS_FUNC_VARS_COPYFILE vol, src, dst
+#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, int sfd, const char *src, const char *dst
+#define VFS_FUNC_VARS_COPYFILE vol, sfd, src, dst
 
 #define VFS_FUNC_ARGS_ACL const struct vol *vol, const char *path, int cmd, int count, void *aces
 #define VFS_FUNC_VARS_ACL vol, path, cmd, count, aces

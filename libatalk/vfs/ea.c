@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.19 2010-02-10 14:05:37 franklahm Exp $
+  $Id: ea.c,v 1.20 2010-03-12 15:16:49 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -661,6 +661,8 @@ int ea_open(const struct vol * restrict vol,
 
     ea->vol = vol;              /* ea_close needs it */
     ea->ea_flags = eaflags;
+    ea->dirfd = -1;             /* no *at (cf openat) semantics by default */
+
     /* Dont care for errors, eg when removing the file is already gone */
     if (!stat(uname, &st) && S_ISDIR(st.st_mode))
         ea->ea_flags |=  EA_DIR;
@@ -787,6 +789,68 @@ exit:
 }
 
 /*
+ * Function: ea_openat
+ *
+ * Purpose: openat like wrapper for ea_open, takes a additional file descriptor
+ *
+ * Arguments:
+ *
+ *    vol         (r) current volume
+ *    sfd         (r) openat like file descriptor
+ *    uname       (r) filename for which we have to open a header
+ *    flags       (r) EA_CREATE: create if it doesn't exist (without it won't be created)
+ *                    EA_RDONLY: open read only
+ *                    EA_RDWR: open read/write
+ *                    Eiterh EA_RDONLY or EA_RDWR MUST be requested
+ *    ea          (w) pointer to a struct ea that we fill
+ *
+ * Returns: 0 on success
+ *         -1 on misc error with errno = EFAULT
+ *         -2 if no EA header exists with errno = ENOENT
+ *
+ * Effects:
+ *
+ * opens header file and stores fd in ea->ea_fd. Size of file is put into ea->ea_size.
+ * number of EAs is stored in ea->ea_count. flags are remembered in ea->ea_flags.
+ * file is either read or write locked depending on the open flags.
+ * When you're done with struct ea you must call ea_close on it.
+ */
+int ea_openat(const struct vol * restrict vol,
+              int dirfd,
+              const char * restrict uname,
+              eaflags_t eaflags,
+              struct ea * restrict ea)
+{
+    int ret = 0;
+    int cwdfd = -1;
+
+    if (dirfd != -1) {
+        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
+            ret = -1;
+            goto exit;
+        }
+    }
+
+    ret = ea_open(vol, uname, eaflags, ea);
+    ea->dirfd = dirfd;
+
+    if (dirfd != -1) {
+        if (fchdir(cwdfd) != 0) {
+            LOG(log_error, logtype_afpd, "ea_openat: cant chdir back, exiting");
+            exit(EXITERR_SYS);
+        }
+    }
+
+
+exit:
+    if (cwdfd != -1)
+        close(cwdfd);
+
+    return ret;
+
+}
+
+/*
  * Function: ea_close
  *
  * Purpose: flushes and closes an ea handle
@@ -825,8 +889,8 @@ int ea_close(struct ea * restrict ea)
             if (ea->ea_count == 0) {
                 /* Check if EA header exists and remove it */
                 eaname = ea_path(ea, NULL, 0);
-                if ((stat(eaname, &st)) == 0) {
-                    if ((unlink(eaname)) != 0) {
+                if ((lstatat(ea->dirfd, eaname, &st)) == 0) {
+                    if ((netatalk_unlinkat(ea->dirfd, eaname)) != 0) {
                         LOG(log_error, logtype_afpd, "ea_close('%s'): unlink: %s",
                             eaname, strerror(errno));
                         ret = -1;
@@ -1244,18 +1308,26 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
 {
     unsigned int count = 0;
     int ret = AFP_OK;
+    int cwd = -1;
     struct ea ea;
 
     LOG(log_debug, logtype_afpd, "ea_deletefile('%s')", file);
 
     /* Open EA stuff */
-    if ((ea_open(vol, file, EA_RDWR, &ea)) != 0) {
+    if ((ea_openat(vol, dirfd, file, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
             return AFP_OK;
         else {
             LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error calling ea_open", file);
             return AFPERR_MISC;
+        }
+    }
+
+    if (dirfd != -1) {
+        if (((cwd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
+            ret = AFPERR_MISC;
+            goto exit;
         }
     }
 
@@ -1272,8 +1344,17 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
     /* ea_close removes the EA header file for us because all names are NULL */
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error closing ea handle", file);
-        return AFPERR_MISC;
+        ret = AFPERR_MISC;
     }
+
+    if (dirfd != -1 && fchdir(cwd) != 0) {
+        LOG(log_error, logtype_afpd, "ea_deletefile: cant chdir back. exit!");
+        exit(EXITERR_SYS);
+    }
+
+exit:
+    if (cwd != -1)
+        close(cwd);
 
     return ret;
 }
@@ -1294,7 +1375,7 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
             
 
     /* Open EA stuff */
-    if ((ea_open(vol, src, EA_RDWR, &srcea)) != 0) {
+    if ((ea_openat(vol, dirfd, src, EA_RDWR, &srcea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
             return AFP_OK;
@@ -1359,7 +1440,7 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         }
 
         /* Now rename the EA */
-        if ((rename( srceapath, eapath)) < 0) {
+        if ((unix_rename(dirfd, srceapath, -1, eapath)) < 0) {
             LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
                 src, dst, srceapath, eapath);
             ret = AFPERR_MISC;
@@ -1391,7 +1472,7 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
     LOG(log_debug, logtype_afpd, "ea_copyfile('%s'/'%s')", src, dst);
 
     /* Open EA stuff */
-    if ((ea_open(vol, src, EA_RDWR, &srcea)) != 0) {
+    if ((ea_openat(vol, sfd, src, EA_RDWR, &srcea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
             return AFP_OK;
@@ -1447,7 +1528,7 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
         }
 
         /* Now copy the EA */
-        if ((copy_file( srceapath, eapath, (0666 & ~vol->v_umask))) < 0) {
+        if ((copy_file(sfd, srceapath, eapath, (0666 & ~vol->v_umask))) < 0) {
             LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): copying EA '%s' to '%s'",
                 src, dst, srceapath, eapath);
             ret = AFPERR_MISC;
