@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.52 2010-02-03 11:35:58 franklahm Exp $
+ * $Id: afp_options.c,v 1.53 2010-03-29 15:22:57 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -165,6 +165,7 @@ void afp_options_init(struct afp_options *options)
     options->defaultvol.name = _PATH_AFPDDEFVOL;
     options->systemvol.name = _PATH_AFPDSYSVOL;
     options->configfile = _PATH_AFPDCONF;
+    options->sigconffile = _PATH_AFPDSIGCONF;
     options->uampath = _PATH_AFPDUAMPATH;
     options->uamlist = "uams_dhx.so,uams_dhx2.so";
     options->guest = "nobody";
@@ -176,7 +177,6 @@ void afp_options_init(struct afp_options *options)
     options->sleep = 10* 120; /* 10 h in 30 seconds tick */
     options->server_notif = 1;
     options->authprintdir = NULL;
-    options->signature = "host";
     options->umask = 0;
 #ifdef ADMIN_GRP
     options->admingid = 0;
@@ -398,8 +398,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->port = strdup(c);
     if ((c = getoption(buf, "-ddpaddr")))
         atalk_aton(c, &options->ddpaddr);
-    if ((c = getoption(buf, "-signature")) && (opt = strdup(c)))
-        options->signature = opt;
 
     /* do a little checking for the domain name. */
     if ((c = getoption(buf, "-fqdn"))) {
@@ -449,6 +447,13 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if ((c = getoption(buf, "-ntseparator")) && (opt = strdup(c)))
        options->ntseparator = opt;
      
+    if ((c = getoption(buf, "-signature")) && (opt = strdup(c))) {
+        set_signature(opt, options);
+    }
+    else {
+        set_signature("auto", options);
+    }
+
     return 1;
 }
 
@@ -581,6 +586,7 @@ static void show_version_extended(void )
 static void show_paths( void )
 {
 	printf( "             afpd.conf:\t%s\n", _PATH_AFPDCONF );
+	printf( "    afp_signature.conf:\t%s\n", _PATH_AFPDSIGCONF );
 	printf( "   AppleVolumes.system:\t%s\n", _PATH_AFPDSYSVOL );
 	printf( "  AppleVolumes.default:\t%s\n", _PATH_AFPDDEFVOL );
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );

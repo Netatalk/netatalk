@@ -23,6 +23,7 @@ afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \
 	 -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
 	 -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
+	 -D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
 	 -DAPPLCNAME \

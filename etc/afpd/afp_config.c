@@ -1,5 +1,5 @@
 /*
- * $Id: afp_config.c,v 1.31 2009-11-20 17:45:47 franklahm Exp $
+ * $Id: afp_config.c,v 1.32 2010-03-29 15:22:57 franklahm Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -548,7 +548,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
     LOG(log_debug, logtype_afpd, "Finished parsing afp_ldap.conf");
 #endif
 
-    status_reset();
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
     {

@@ -166,12 +166,15 @@
 #                         Debugging config
 #                         -setuplog "default log_maxdebug /var/log/afpd.log"
 #
-#     -signature { user:<text> | host }
+#     -signature { user:<text> | auto }
 #                         Specify a server signature. This option is useful while
 #                         running multiple independent instances of afpd on one 
 #                         machine (eg. in clustered environments, to provide fault
-#                         isolation etc.). "host" signature type allows afpd generating
-#                         signature automatically (based on machine primary IP address).
+#                         isolation etc.).
+#                         Default is "auto".
+#                         "auto" signature type allows afpd generating signature and
+#                         saving it to afp_signature.conf automatically (based on random number).
+#                         "host" signature type is obsoleted. (switch back to auto)
 #                         "user" signature type allows administrator to set up a signature
 #                         string manually. Examples: three servers running on one machine:
 #           first       -signature user:USERS

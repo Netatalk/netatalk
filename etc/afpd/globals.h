@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.32 2010-03-08 19:49:59 franklahm Exp $
+ * $Id: globals.h,v 1.33 2010-03-29 15:22:57 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -63,13 +63,14 @@ struct afp_options {
     struct at_addr ddpaddr;
     char *uampath, *fqdn;
     char *pidfile;
+    char *sigconffile;
     struct afp_volume_name defaultvol, systemvol, uservol;
     int  closevol;
 
     char *guest, *loginmesg, *keyfile, *passwdfile;
     char *uamlist;
     char *authprintdir;
-    char *signature;
+    unsigned char signature[16];
     char *k5service, *k5realm, *k5keytab;
     char *unixcodepage,*maccodepage;
     charset_t maccharset, unixcharset; 
