@@ -1,3 +1,8 @@
+Changes in 2.1-beta2
+====================
+* NEW: afpd: static generated AFP signature stored in afp_signature.conf,
+       cf man 5 afp_signature.conf
+
 Changes in 2.1-beta1
 ====================
 

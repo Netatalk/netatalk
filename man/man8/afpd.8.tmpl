@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
 .\"      Date: 08 Feb 2010
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"    Manual: Netatalk 2.1beta2
+.\"    Source: Netatalk 2.1beta2
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "08 Feb 2010" "Netatalk 2.1" "Netatalk 2.1"
+.TH "AFPD" "8" "08 Feb 2010" "Netatalk 2.1beta2" "Netatalk 2.1beta2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -35,7 +35,7 @@ and one of
 ~/AppleVolumes, or
 ~/\&.AppleVolumes\&. The
 AppleVolumes
-files is used to specify volumes to mount and file name extension mappings\&. It is formatted as follows, one specification per line: pathname [ volumename ] \&.extension [ type [ creator ] ] If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If type is unspecified \'????\' is used\&. If creator is unspecified \'UNIX\' is used\&. The extension \'\&.\' sets the default creator and type for otherwise untyped Unix files\&. Blank lines and lines beginning with `#\' are ignored\&.
+files is used to specify volumes to mount and file name extension mappings\&. It is formatted as follows, one specification per line: pathname [ volumename ] \&.extension [ type [ creator ] ] If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. The extension \'\&.\' sets the default creator and type for otherwise untyped Unix files\&. Blank lines and lines beginning with `#\' are ignored\&.
 .PP
 .SH "OPTIONS"
 .PP
@@ -81,12 +81,17 @@ afpd\&.conf\&.)
 Print version information and exit\&.
 .RE
 .PP
+\-V
+.RS 4
+Print verbose information and exit\&.
+.RE
+.PP
 \-I
 .RS 4
 Use a platform specific icon\&. (Equivalent to
 \fB\-icon\fR
 in
-afpd\&.conf\&.)
+afpd\&.conf\&.) (Recent Mac OS don\'t display it\&.)
 .RE
 .PP
 \-f \fIdefaultvolumes\fR
@@ -261,4 +266,5 @@ contains messages to be sent to users\&.
 \fBafpd.conf\fR(5),
 \fBAppleVolumes.default\fR(5),
 \fBAppleVolumes.system\fR(5),
+\fBafp_signature.conf\fR(5),
 \fBdbd\fR(1)\&.

@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
 .\"      Date: 23 Dec 2009
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"    Manual: Netatalk 2.1beta2
+.\"    Source: Netatalk 2.1beta2
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "23 Dec 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "23 Dec 2009" "Netatalk 2.1beta2" "Netatalk 2.1beta2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -32,9 +32,9 @@ path
 .PP
 The path name must be a fully qualified path name, or a path name using either the ~ shell shorthand or any of the substitution variables, which are listed below\&.
 .PP
-The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name may not exceed 27 characters in length, and cannot contain the
+The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
 \':\'
-character\&.
+character\&. The volume name is mangled if it is very long\&. Mac codepage volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
 .if n \{\
 .sp
 .\}
@@ -61,7 +61,7 @@ The possible options and their meanings are:
 .PP
 adouble:\fI[v1|v2|osx]\fR
 .RS 4
-Specify the format of the metadata files, which are used for saving Mac resource fork as well\&. Earlier versions used AppleDouble V1, the new default format is V2\&. Starting with Netatalk 2\&.0, the scheme MacOS X uses currently (10\&.3\&.x), is also supported
+Specify the format of the metadata files, which are used for saving Mac resource fork as well\&. Earlier versions used AppleDouble V1, the new default format is V2\&. Starting with Netatalk 2\&.0, the scheme MacOS X 10\&.3\&.x uses, is also supported\&.
 .if n \{\
 .sp
 .\}
@@ -74,11 +74,9 @@ Specify the format of the metadata files, which are used for saving Mac resource
 \fBNote\fR
 .ps -1
 .br
-Using
 \fBadouble:osx\fR
-is
-\fBnot\fR
-recommended for production use\&. Its only aim is to temporarely share eg\&. FAT32 formatted FireWire harddrives written on a Macintosh with afpd\&. Apple\'s metadata scheme lacks several essential features, so using it on the server\'s side will break both CNIDs and MacOS 9 compatibility
+\fBcannot\fR
+be treated normally any longer\&. Its only aim was to temporarely share eg\&. FAT32 formatted FireWire harddrives written on a Macintosh with afpd\&. Apple\'s metadata scheme lacks several essential features, so using it on the server\'s side will break both CNIDs and MacOS 9 compatibility\&. AppleDouble file of Mac OS X 10\&.6 is incompatible to V1 and V2\&.
 .sp .5v
 .RE
 .RE
@@ -383,8 +381,6 @@ $$
 prints dollar sign ($)
 .RE
 .PP
-When using variable substitution in the volume name, always keep in mind, not to exceed the 27 characters limit
-.PP
 \fBExample.\ \&Using variable substitution when defining volumes\fR
 .PP
 .if n \{\
@@ -620,7 +616,7 @@ don\'t stat volume path when enumerating volumes list, useful for automounting o
 .PP
 prodos
 .RS 4
-Provides compatibility with Apple II clients\&.
+Provides compatibility with Apple II clients\&. (legacy)
 .RE
 .RE
 .SH "SEE ALSO"

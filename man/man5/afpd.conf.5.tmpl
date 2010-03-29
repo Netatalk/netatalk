@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
 .\"      Date: 23 December 2009
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"    Manual: Netatalk 2.1beta2
+.\"    Source: Netatalk 2.1beta2
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "23 December 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "AFPD\&.CONF" "5" "23 December 2009" "Netatalk 2.1beta2" "Netatalk 2.1beta2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -133,7 +133,7 @@ Use for eg\&. winbind authentication, prepends both strings before the username 
 .RE
 .SH "CODEPAGE OPTIONS"
 .PP
-With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that AFP3 uses Unicode names encoded as UTF\-8 decomposed\&. Previous AFP/OS versions used codepages like MacRoman, MacCentralEurope, etc\&.
+With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that AFP3 uses Unicode names encoded as Decomposed UTF\-8 (UTF8\-MAC)\&. Previous AFP/OS versions used codepages like MacRoman, MacCentralEurope, etc\&.
 .PP
 To be able to serve AFP3 and older clients at the same time,
 \fBafpd\fR
@@ -145,7 +145,7 @@ option\&. The default is MacRoman, which should be fine for most western users\&
 .PP
 As
 \fBafpd\fR
-needs to interact with unix operating system as well, it need\'s to be able to convert from UTF\-8/MacCodepage to the unix codepage\&. By default
+needs to interact with unix operating system as well, it need\'s to be able to convert from UTF8\-MAC/MacCodepage to the unix codepage\&. By default
 \fBafpd\fR
 uses the systems LOCALE, or ASCII if your system doesn\'t support locales\&. You can set the unix codepage using the
 \fB\-unixcodepage\fR
@@ -196,23 +196,23 @@ Enables or disables AFP\-over\-Appletalk\&. If
 \fB\-proxy\fR
 is specified, you must instead use
 \fB\-uamlist ""\fR
-to prevent DDP connections from working\&.
+to prevent DDP connections from working\&. (default is \-noddp)
 .RE
 .PP
 \-[no]tcp
 .RS 4
-Enables or disables AFP\-over\-TCP
+Enables or disables AFP\-over\-TCP (default is \-tcp)
 .RE
 .PP
 \-transall
 .RS 4
-Make both available (default)
+Make both available
 .RE
 .SH "TRANSPORT OPTIONS"
 .PP
 \-advertise_ssh
 .RS 4
-Allows Mac OS X clients (10\&.3\&.3 or above) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
+Allows Mac OS X clients (10\&.3\&.3\-10\&.4) to automagically establish a tunneled AFP connection through SSH\&. If this option is set, the server\'s answers to client\'s FPGetSrvrInfo requests contain an additional entry\&. It depends on both client\'s settings and a correctly configured and running
 \fBsshd\fR(8)
 on the server to let things work\&.
 .if n \{\
@@ -342,7 +342,7 @@ With this switch enabled, afpd won\'t advertise that it is capable of server not
 \fBNote\fR
 .ps -1
 .br
-Do not use this option any longer as Netatalk 2\&.0 correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
+Do not use this option any longer as Netatalk 2\&.x correctly supports server notifications, allowing connected clients to update folder listings in case another client changed the contents\&.
 .sp .5v
 .RE
 .RE
@@ -364,7 +364,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 .PP
 \-[no]icon
 .RS 4
-[Dont\'t] Use the platform\-specific icon
+[Dont\'t] Use the platform\-specific icon\&. Recent Mac OS don\'t display it any longer\&.
 .RE
 .PP
 \-loginmesg \fI[message]\fR
@@ -386,9 +386,11 @@ AFP 3\&.x waits
 hours before disconnecting clients in sleep mode\&. Default is 10 hours\&.
 .RE
 .PP
-\-signature { user:<text> | host }
+\-signature { user:<text> | auto }
 .RS 4
-Specify a server signature\&. This option is useful while running multiple independent instances of afpd on one machine (eg\&. in clustered environments, to provide fault isolation etc\&.)\&. "host" signature type allows afpd generating signature automatically (based on machine primary IP address)\&. "user" signature type allows administrator to set up a signature string manually\&. The maximum length is 16 characters
+Specify a server signature\&. This option is useful while running multiple independent instances of afpd on one machine (eg\&. in clustered environments, to provide fault isolation etc\&.)\&. Default is "auto"\&. "auto" signature type allows afpd generating signature and saving it to
+:ETCDIR:/afp_signature\&.conf
+automatically (based on random number)\&. "host" signature type switches back to "auto" because it is obsoleted\&. "user" signature type allows administrator to set up a signature string manually\&. The maximum length is 16 characters\&.
 .PP
 \fBExample.\ \&Three server definitions using 2 different server signatures\fR
 .sp
@@ -593,4 +595,5 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .PP
 \fBafpd\fR(8),
 \fBafppasswd\fR(1),
-\fBAppleVolumes.default\fR(5)
+\fBAppleVolumes.default\fR(5),
+\fBafp_signature.conf\fR(5)
