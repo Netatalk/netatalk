@@ -2,6 +2,7 @@
 
 (Originally by ali@gwc.org.uk 2001-10-20)
 (Amended by Sebastian Rittau 2001-11-03)
+(Amended by HAT 2010-03-30)
 
 Inside netatalk share points you will find several files and directories
 which are created automatically by the afpd process either for its own
@@ -90,8 +91,9 @@ and is working on a solution.
 
 
 Temporary\ Items/
+:2eTemporaryItems/ (.TemporaryItems/)
 
-This folder may exist at the top level of a sharepoint. This folder is
+These folder may exist at the top level of a sharepoint. These folder is
 used by certain applications (Adobe PhotoShop among others) to store,
 well, temporary items. These programs may not work correctly if this
 folder is missing or not writeable, when a user tries to work on a
@@ -119,7 +121,10 @@ This file may appear in share points which have been accessed by a
 machine running Mac OS X. Its permissions should be set to match
 those of the enclosing directory.
 
-For more info on how this file could pose a potential security risk
-if you are sharing the same folder by HTTP, see:
 
-http://cert.uni-stuttgart.de/archive/bugtraq/2001/09/msg00106.html
+:2eFBCIndex (.FBCIndex)
+:2eFBCLockFolder/:2eFBCSemaphoreFile (.FBCLockFolder/.FBCSemaphoreFile)
+
+These are created to preserve retrieval information by Sherlock
+on Mac OS X 10.1. If these are removed, the next retrieval will slow.
+Mac OS X 10.2 and later do not use these.
