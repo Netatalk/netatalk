@@ -1,5 +1,5 @@
 /* 
- * $Id: uams_randnum.c,v 1.20 2009-10-22 13:40:11 franklahm Exp $
+ * $Id: uams_randnum.c,v 1.21 2010-03-30 10:25:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -310,7 +310,7 @@ static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_p
   int err;
  
   if (( randpwd = uam_getname(obj, username, ulen)) == NULL )
-    return AFPERR_PARAM; /* unknown user */
+    return AFPERR_NOTAUTH; /* unknown user */
   
   LOG(log_info, logtype_uams, "randnum/rand2num login: %s", username);
   if (uam_checkuser(randpwd) < 0)

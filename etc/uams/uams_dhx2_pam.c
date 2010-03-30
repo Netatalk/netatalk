@@ -1,5 +1,5 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.11 2010-02-06 09:53:02 franklahm Exp $
+ * $Id: uams_dhx2_pam.c,v 1.12 2010-03-30 10:25:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
@@ -343,7 +343,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _
 {
     if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
         LOG(log_info, logtype_uams, "DHX2: unknown username");
-        return AFPERR_PARAM;
+        return AFPERR_NOTAUTH;
     }
 
     PAM_username = username;

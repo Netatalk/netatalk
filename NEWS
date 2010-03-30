@@ -2,6 +2,8 @@ Changes in 2.1-beta2
 ====================
 * NEW: afpd: static generated AFP signature stored in afp_signature.conf,
        cf man 5 afp_signature.conf
+* FIX: afpd: prevent security attack guessing valid server accounts. afpd
+       now returns error -5023 for unknown users, as does AppleFileServer.
 
 Changes in 2.1-beta1
 ====================

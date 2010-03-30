@@ -1,5 +1,5 @@
-/*
- * $Id: uams_dhx_passwd.c,v 1.27 2009-11-05 14:38:07 franklahm Exp $
+a/*
+ * $Id: uams_dhx_passwd.c,v 1.28 2010-03-30 10:25:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -106,7 +106,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* TRU64 */
 
     if (( dhxpwd = uam_getname(obj, username, ulen)) == NULL ) {
-	return AFPERR_PARAM;
+        return AFPERR_NOTAUTH;
     }
     
     LOG(log_info, logtype_uams, "dhx login: %s", username);
