@@ -6,9 +6,15 @@
 # Options in this file will override both compiled-in defaults
 # and command line options.
 #
+
+
+#
 # Format:
 #  - [options]	              to specify options for the default server
 #  "Server name" [options]   to specify an additional server
+#
+
+
 #
 # The following options are available:
 #   Transport Protocols:
@@ -30,64 +36,65 @@
 #                         specify a value that is out of range, you'll get 
 #                         the default value (currently the minimum).
 #     -admingroup <groupname>
-#                         Specifies the group of administrators who should all
-#                         be seen as the superuser when they log in.  Default
-#                         is disabled.
-#     -ddpaddr x.y        Specifies the DDP address of the server. the 
-#			  default is to auto-assign an address
-#                         (0.0). this is only useful if you're running
-#			  on a multihomed host.
+#                         Specifies the group of administrators who should
+#                         all be seen as the superuser when they log in.
+#                         Default is disabled.
+#     -ddpaddr x.y        Specifies the DDP address of the server.
+#                         the  default is to auto-assign an address (0.0).
+#                         this is only useful if you're running on
+#                         a multihomed host.
 #     -port <number>      Specifies the TCP port the server should respond
 #                         to (default is 548)
-#     -fqdn <name:port>   specify a fully-qualified domain name (+
-#                         optional port). this gets discarded if the
-#			  server can't resolve it. this is not honored
-#                         by appleshare clients <= 3.8.3 (default: none)
-#     -proxy              Run an AppleTalk proxy server for specified AFP/TCP
-#                         server (if address/port aren't given, then
-#			  first IP address of the system/548 will be used).
+#     -fqdn <name:port>   specify a fully-qualified domain name (+optional
+#                         port). this gets discarded if the server can't
+#                         resolve it. this is not honored by appleshare
+#                         clients <= 3.8.3 (default: none)
+#     -proxy              Run an AppleTalk proxy server for specified
+#                         AFP/TCP server (if address/port aren't given,
+#                         then first IP address of the system/548 will
+#                         be used).
 #                         if you don't want the proxy server to act as
-#                         a ddp server as well, set -uamlist to an
-#			  empty string.
-#     -slp                Register this server with the Service
-#			  Location Protocol.
+#                         a ddp server as well, set -uamlist to an empty
+#                         string.
+#     -slp                Register this server with the Service Location
+#                         Protocol.
 #
 #
 #   Authentication Methods:
 #     -uampath <path>  Use this path to look for User Authentication Modules.
-#		       (default: :UAMS_PATH:)
-#     -uamlist <a,b,c> Comma-separated list of UAMs. (default:
-#		       uams_dhx.so,uams_dhx2.so) 
+#                      (default: :UAMS_PATH:)
+#     -uamlist <a,b,c> Comma-separated list of UAMs.
+#                      (default: uams_dhx.so,uams_dhx2.so)
 #
-#		       some commonly available UAMs:
+#                      some commonly available UAMs:
 #                      uams_guest.so: Allow guest logins
 #
-#		       uams_clrtxt.so: (uams_pam.so or uams_passwd.so)
-#				      Allow logins with passwords
-#				      transmitted in the clear. 
+#                      uams_clrtxt.so: (uams_pam.so or uams_passwd.so)
+#                                     Allow logins with passwords
+#                                     transmitted in the clear. 
 #
-#		       uams_randnum.so: Allow Random Number and Two-Way
-#				       Random Number exchange for
-#				       authentication.
+#                      uams_randnum.so: Allow Random Number and Two-Way
+#                                      Random Number exchange for
+#                                      authentication.
 #
-#		       uams_dhx.so: (uams_dhx_pam.so or uams_dhx_passwd.so)
-#		                    Allow Diffie-Hellman eXchange
-#				    (DHX) for authentication.
+#                      uams_dhx.so: (uams_dhx_pam.so or uams_dhx_passwd.so)
+#                                  Allow Diffie-Hellman eXchange
+#                                  (DHX) for authentication.
 #
-#		       uams_dhx2.so: (uams_dhx2_pam.so or uams_dhx2_passwd.so)
-#		                     Allow Diffie-Hellman eXchange 2
-#				     (DHX2) for authentication.
+#                      uams_dhx2.so: (uams_dhx2_pam.so or uams_dhx2_passwd.so)
+#                                   Allow Diffie-Hellman eXchange 2
+#                                   (DHX2) for authentication.
 #
 #   Password Options:
 #     -[no]savepassword   [Don't] Allow clients to save password locally
-#     -passwdfile <path>  Use this path to store Randnum
-#			  passwords. (Default: :ETCDIR:/afppasswd. The only
-#                         other useful value is ~/.passwd. See 'man afppasswd'
+#     -passwdfile <path>  Use this path to store Randnum passwords.
+#                         (Default: :ETCDIR:/afppasswd. The only other
+#                         useful value is ~/.passwd. See 'man afppasswd'
 #                         for details.)
 #     -passwdminlen <#>   minimum password length. may be ignored.
 #     -[no]setpassword    [Don't] Allow clients to change their passwords.
 #     -loginmaxfail <#>   maximum number of failed logins. this may be
-#			  ignored if the uam can't handle it.
+#                         ignored if the uam can't handle it.
 #
 #   AppleVolumes files:
 #     -defaultvol <path>  Specifies path to AppleVolumes.default file
@@ -101,17 +108,18 @@
 #                         :ETCDIR:/AppleVolumes.default
 #                         (same as -u on command line)
 #     -[no]uservol        [Don't] Read the user's volume file
-#     -closevol           Immediately unmount volumes removed from AppleVolumes
-#                         files on SIGHUP sent to the afp master process.
+#     -closevol           Immediately unmount volumes removed from
+#                         AppleVolumes files on SIGHUP sent to the afp
+#                         master process.
 #
 #   Miscellaneous:
 #     -authprintdir <path> Specifies the path to be used (per server) to 
-#			   store the files required to do CAP-style
-#			   print authentication which papd will examine
-#			   to determine if a print job should be allowed.
-#			   These files are created at login and if they
-#			   are to be properly removed, this directory
-#			   probably needs to be umode 1777
+#                          store the files required to do CAP-style
+#                          print authentication which papd will examine
+#                          to determine if a print job should be allowed.
+#                          These files are created at login and if they
+#                          are to be properly removed, this directory
+#                          probably needs to be umode 1777
 #     -guestname "user"   Specifies the user name for the guest login
 #                         (default "nobody", same as -g on command line)
 #     -loginmesg "Message"  Client will display "Message" upon logging in
@@ -131,8 +139,9 @@
 #                         shouldn't be changed.  If you want to control
 #                         the server idle timeout, use the -timeout option.
 #     -timeout <number>   Specify the number of tickles to send before
-#                         timing out a connection.  The default is 4, therefore
-#                         a connection will timeout in 2 minutes.
+#                         timing out a connection.
+#                         The default is 4, therefore a connection will
+#                         timeout in 2 minutes.
 #     -icon               Use the platform-specific icon.
 #     -volnamelen <number>
 #                         Max length of UTF8-MAC volume name for Mac OS X.
@@ -144,21 +153,26 @@
 #                         Mac OS 9 and earlier is not influenced by this,
 #                         Maccharset volume names are always limitted to 27.
 #     -[un]setuplog "<logtype> <loglevel> [<filename>]"
-#                         Specify that any message of a loglevel up to the given loglevel
-#                         should be logged to the given file. If the filename is ommited the
-#                         loglevel applies to messages passed to syslog.
+#                         Specify that any message of a loglevel up to the
+#                         given loglevel should be logged to the given file.
+#                         If the filename is ommited the loglevel applies to
+#                         messages passed to syslog.
 #
-#                         By default (no explicit -setuplog and no buildtime configure flag
-#                         --with-logfile) afpd logs to syslog with a default
-#                         logging setup equivalent to "-setuplog default log_info".
-#               
-#                         If build with --with-logfile[=somefile] (default logfile
-#                         /var/log/netatalk.log) afpd defaults to a setup that is equivalent
-#                         to "-setuplog default log_info [netatalk.log|somefile]"
+#                         By default (no explicit -setuplog and no buildtime
+#                         configure flag --with-logfile) afpd logs to syslog
+#                         with a default logging setup equivalent to
+#                         "-setuplog default log_info".
+#
+#                         If build with --with-logfile[=somefile]
+#                         (default logfile /var/log/netatalk.log) afpd
+#                         defaults to a setup that is equivalent to
+#                         "-setuplog default log_info [netatalk.log|somefile]"
 #
 #                         logtypes:  Default, AFPDaemon, Logger, UAMSDaemon
-#                         loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN, LOG_NOTE, LOG_INFO, LOG_DEBUG,
-#                                    LOG_DEBUG6, LOG_DEBUG7, LOG_DEBUG8, LOG_DEBUG9, LOG_MAXDEBUG
+#                         loglevels: LOG_SEVERE, LOG_ERROR, LOG_WARN,
+#                                    LOG_NOTE, LOG_INFO, LOG_DEBUG,
+#                                    LOG_DEBUG6, LOG_DEBUG7, LOG_DEBUG8,
+#                                    LOG_DEBUG9, LOG_MAXDEBUG
 #
 #                Example: Useful default config
 #                         -setuplog "default log_info /var/log/afpd.log"
@@ -167,65 +181,78 @@
 #                         -setuplog "default log_maxdebug /var/log/afpd.log"
 #
 #     -signature { user:<text> | auto }
-#                         Specify a server signature. This option is useful while
-#                         running multiple independent instances of afpd on one 
-#                         machine (eg. in clustered environments, to provide fault
-#                         isolation etc.).
+#                         Specify a server signature. This option is useful
+#                         while running multiple independent instances of
+#                         afpd on one machine (eg. in clustered environments,
+#                         to provide fault isolation etc.).
 #                         Default is "auto".
-#                         "auto" signature type allows afpd generating signature and
-#                         saving it to afp_signature.conf automatically (based on random number).
-#                         "host" signature type is obsoleted. (switch back to auto)
-#                         "user" signature type allows administrator to set up a signature
-#                         string manually. Examples: three servers running on one machine:
+#                         "auto" signature type allows afpd generating
+#                         signature and saving it to afp_signature.conf
+#                         automatically (based on random number).
+#                         "host" signature type switches back to "auto"
+#                         because it is obsoleted.
+#                         "user" signature type allows administrator to
+#                         set up a signature string manually.
+#                         Examples: three servers running on one machine:
 #           first       -signature user:USERS
 #           second      -signature user:USERS
 #           third       -signature user:ADMINS
-#                First two servers will act as one logical AFP service - if user logs in to 
-#                first one and then  connects to second one, session will be automatically 
-#                redirected to the first one. But if client connects to first and then to third, 
-#                will be asked for password twice and will see  resources of both servers. 
-#                Traditional method of signature generation causes two independent afpd instances
-#                to have the same signature and thus cause clients to be redirected automatically
-#                to server (s)he logged in first.
+#                First two servers will act as one logical AFP service.
+#                If user logs in to first one and then  connects to second
+#                one, session will be automatically redirected to the first
+#                one. But if client connects to first and then to third, 
+#                will be asked for password twice and will see resources of
+#                both servers.
+#                Traditional method of signature generation causes two
+#                independent afpd instances to have the same signature and
+#                thus cause clients to be redirected automatically to
+#                server (s)he logged in first.
 #     -k5service <service>
 #     -k5realm <realm>
-#		 These are required if the server supports Kerberos 5 authentication
+#                These are required if the server supports Kerberos 5
+#                authentication
 #
 #   Codepage Options:
-#      -unixcodepage <CODEPAGE>     Specifies the servers unix codepage, e.g. "ISO-8859-15" or "UTF8".
-#			            This is used to convert strings to/from the systems locale, e.g.
-#                                   for authenthication. Defaults to LOCALE if your system supports it, 
-#                                   otherwise ASCII will be used.
+#     -unixcodepage <CODEPAGE>  Specifies the servers unix codepage,
+#                               e.g. "ISO-8859-15" or "UTF8".
+#                               This is used to convert strings to/from
+#                               the systems locale, e.g. for authenthication.
+#                               Defaults to LOCALE if your system supports it,
+#                               otherwise ASCII will be used.
 #
-#      -maccodepage <CODEPAGE>      Specifies the mac clients codepage, e.g. "MAC_ROMAN".
-#			            This is used to convert strings to the systems locale, e.g. 
-#                                   for authenthication and SIGUSR2 messaging. This will also be
-#                                   the default for volumes maccharset.
+#     -maccodepage <CODEPAGE>   Specifies the mac clients codepage,
+#                               e.g. "MAC_ROMAN".
+#                               This is used to convert strings to the
+#                               systems locale, e.g. for authenthication
+#                               and SIGUSR2 messaging. This will also be
+#                               the default for volumes maccharset.
 #
 #   CNID related options:
-#      -cnidserver ipaddress:port   Specifies the IP address and port of a cnid_metad server.
+#     -cnidserver ipaddress:port   Specifies the IP address and port of
+#                                  a cnid_metad server.
 #
 
- 
-#		
+
+#
 # Some examples:
 #
-#	The simplest case is to not have an afpd.conf.
+#       The simplest case is to not have an afpd.conf.
 #
-#	4 servers w/ names server1-3 and one w/ the hostname. servers
+#       4 servers w/ names server1-3 and one w/ the hostname. servers
 #       1-3 get routed to different ports with server 3 being bound 
 #       specifically to address 192.168.1.3
-#		-
-#		server1 -port 12000
-#		server2 -port 12001
-#		server3 -port 12002 -ipaddr 192.168.1.3
+#           -
+#           server1 -port 12000
+#           server2 -port 12001
+#           server3 -port 12002 -ipaddr 192.168.1.3
 #
-#	a dedicated guest server, a user server, and a special
-#	ddp-only server:
-#		"Guest Volume" -uamlist uams_guest.so -loginmesg "Welcome guest!"
-#		"User Volume" -uamlist uams_clrtxt.so -port 12000
-#		"special" -notcp -defaultvol <path> -systemvol <path>
+#       a dedicated guest server, a user server, and a special
+#       ddp-only server:
+#           "Guest Volume" -uamlist uams_guest.so -loginmesg "Welcome guest!"
+#           "User Volume" -uamlist uams_clrtxt.so -port 12000
+#           "special" -notcp -defaultvol <path> -systemvol <path>
 #
+
 
 # default:
 # - -tcp -noddp -uamlist uams_dhx.so,uams_dhx2.so -nosavepassword
