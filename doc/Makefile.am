@@ -6,4 +6,5 @@ EXTRA_DIST = \
 	README.documentation \
 	README.hidden-items \
 	README.ids \
-	README.platforms
+	README.AppleTalk \
+	README.ACLs
