@@ -1,5 +1,5 @@
 /*
- * $Id: uams_passwd.c,v 1.30 2010-03-30 10:25:49 franklahm Exp $
+ * $Id: uams_passwd.c,v 1.31 2010-03-30 12:44:35 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
@@ -98,7 +98,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     ibuf[ PASSWDLEN ] = '\0';
 
     if (( pwd = uam_getname(obj, username, ulen)) == NULL ) {
-        return AFPERR_NOTAUTH
+        return AFPERR_NOTAUTH;
     }
 
     LOG(log_info, logtype_uams, "cleartext login: %s", username);
