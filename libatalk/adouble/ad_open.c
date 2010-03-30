@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.72 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: ad_open.c,v 1.73 2010-03-30 12:55:26 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1287,16 +1287,13 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 
             ad->ad_data_fork.adf_fd =open( path, hoflags | O_NOFOLLOW, admode );
             
-            if (ad->ad_data_fork.adf_fd < 0 ) {
+            if (ad->ad_data_fork.adf_fd == -1) {
                 if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
                     hoflags = oflags;
                     ad->ad_data_fork.adf_fd = open( path, hoflags | O_NOFOLLOW, admode );
                 }
-                if (ad->ad_data_fork.adf_fd < 0 && errno == ELOOP) {
+                if (ad->ad_data_fork.adf_fd == -1 && errno == ELOOP) {
                     int lsz;
-
-                    if (oflags != O_RDONLY)
-                         return -1;
 
                     ad->ad_data_fork.adf_syml = malloc(PATH_MAX+1);
                     lsz = readlink(path, ad->ad_data_fork.adf_syml, PATH_MAX);
@@ -1304,14 +1301,13 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                         free(ad->ad_data_fork.adf_syml);
                         return -1;
                     }
-                    ad->ad_data_fork.adf_syml[lsz]=0;
+                    ad->ad_data_fork.adf_syml[lsz] = 0;
                     ad->ad_data_fork.adf_syml = realloc(ad->ad_data_fork.adf_syml,lsz+1);
-                    // XX
-                    ad->ad_data_fork.adf_fd = 0;
+                    ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
                 }
             }
 
-            if ( ad->ad_data_fork.adf_fd < 0)
+            if ( ad->ad_data_fork.adf_fd == -1 )
                 return -1;
 
             AD_SET(ad->ad_data_fork.adf_off);

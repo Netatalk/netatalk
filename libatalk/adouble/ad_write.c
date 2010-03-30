@@ -1,5 +1,5 @@
 /*
- * $Id: ad_write.c,v 1.10 2009-10-13 22:55:37 didg Exp $
+ * $Id: ad_write.c,v 1.11 2010-03-30 12:55:26 franklahm Exp $
  *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -51,6 +51,12 @@ ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int e
 {
     struct stat		st;
     ssize_t		cc;
+
+    if (ad_data_fileno(ad) == -2) {
+        /* It's a symlink */
+        errno = EACCES;
+        return -1;
+    }
     
     if ( eid == ADEID_DFORK ) {
 	if ( end ) {

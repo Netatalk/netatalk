@@ -1,5 +1,5 @@
 /* 
- * $Id: ad_lock.c,v 1.19 2010-02-26 12:57:50 didg Exp $
+ * $Id: ad_lock.c,v 1.20 2010-03-30 12:55:26 franklahm Exp $
  *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
@@ -42,8 +42,8 @@
 /* ----------------------- */
 static int set_lock(int fd, int cmd,  struct flock *lock)
 {
-  if (!fd) {
-      /* We assign fd = 0 for symlinks -> do nothing */
+  if (fd == -2) {
+      /* We assign fd = -2 for symlinks -> do nothing */
       if (cmd == F_GETLK)
 	    lock->l_type = F_UNLCK;
       return 0;

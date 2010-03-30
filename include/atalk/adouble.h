@@ -1,5 +1,5 @@
 /*
- * $Id: adouble.h,v 1.54 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: adouble.h,v 1.55 2010-03-30 12:55:26 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -243,7 +243,7 @@ typedef struct adf_lock_t {
 } adf_lock_t;
 
 struct ad_fd {
-    int          adf_fd;
+    int          adf_fd;        /* -1: invalid, -2: symlink */
 
 #ifndef HAVE_PREAD
     off_t        adf_off;

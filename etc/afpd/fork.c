@@ -1,5 +1,5 @@
 /*
- * $Id: fork.c,v 1.72 2010-02-26 12:31:02 didg Exp $
+ * $Id: fork.c,v 1.73 2010-03-30 12:55:26 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1163,6 +1163,8 @@ static ssize_t write_file(struct ofork *ofork, int eid,
         case EFBIG :
         case ENOSPC :
             return( AFPERR_DFULL );
+        case EACCES:
+            return AFPERR_ACCESS;
         default :
             LOG(log_error, logtype_afpd, "afp_write(%s): ad_write: %s", of_name(ofork), strerror(errno) );
             return( AFPERR_PARAM );
