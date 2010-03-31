@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.121 2010-03-01 05:05:46 didg Exp $
+ * $Id: volume.c,v 1.122 2010-03-31 09:47:32 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -105,32 +105,33 @@ static void             free_extmap(void);
 #define VOLOPT_VETO          10  /* list of veto filespec */
 #define VOLOPT_PREEXEC       11  /* preexec command */
 #define VOLOPT_ROOTPREEXEC   12  /* root preexec command */
-
 #define VOLOPT_POSTEXEC      13  /* postexec command */
 #define VOLOPT_ROOTPOSTEXEC  14  /* root postexec command */
-
 #define VOLOPT_ENCODING      15  /* mac encoding (pre OSX)*/
 #define VOLOPT_MACCHARSET    16
 #define VOLOPT_CNIDSCHEME    17
 #define VOLOPT_ADOUBLE       18  /* adouble version */
+
 #ifdef FORCE_UIDGID
 #warning UIDGID
 #include "uid.h"
 
-#define VOLOPT_FORCEUID  19  /* force uid for username x */
-#define VOLOPT_FORCEGID  20  /* force gid for group x */
+#define VOLOPT_FORCEUID      19  /* force uid for username x */
+#define VOLOPT_FORCEGID      20  /* force gid for group x */
 #endif /* FORCE_UIDGID */
 
-#define VOLOPT_UMASK     21
+#define VOLOPT_UMASK         21
 #define VOLOPT_ALLOWED_HOSTS 22
 #define VOLOPT_DENIED_HOSTS  23
-#define VOLOPT_DPERM     24  /* dperm default directories perms */
-#define VOLOPT_FPERM     25  /* fperm default files perms */
-#define VOLOPT_DFLTPERM  26  /* perm */
-#define VOLOPT_EA_VFS    27  /* Extended Attributes vfs indirection */
+#define VOLOPT_DPERM         24  /* dperm default directories perms */
+#define VOLOPT_FPERM         25  /* fperm default files perms */
+#define VOLOPT_DFLTPERM      26  /* perm */
+#define VOLOPT_EA_VFS        27  /* Extended Attributes vfs indirection */
+#define VOLOPT_CNIDSERVER    28  /* CNID Server ip address*/
+#define VOLOPT_CNIDPORT      30  /* CNID server tcp port */
 
-#define VOLOPT_MAX       28  /* <== IMPORTANT !!!!!! */
-#define VOLOPT_NUM       (VOLOPT_MAX + 1)
+#define VOLOPT_MAX           31  /* <== IMPORTANT !!!!!! */
+#define VOLOPT_NUM           (VOLOPT_MAX + 1)
 
 #define VOLPASSLEN  8
 #define VOLOPT_DEFAULT     ":DEFAULT:"
@@ -470,6 +471,18 @@ static void volset(struct vol_option *options, struct vol_option *save,
             p = strtok(NULL, ",");
         }
 
+    } else if (optionok(tmp, "cnidserver:", val)) {
+        setoption(options, save, VOLOPT_CNIDSERVER, val);
+
+        char *p = strrchr(val + 1, ':');
+        if (p) {
+            *p = 0;
+            setoption(options, save, VOLOPT_CNIDPORT, p);
+        }
+
+        LOG(log_debug, logtype_afpd, "CNID Server for volume '%s': %s:%s",
+            volname, val + 1, p ? p + 1 : Cnid_port);
+
     } else if (optionok(tmp, "dbpath:", val)) {
         setoption(options, save, VOLOPT_DBPATH, val);
 
@@ -716,6 +729,12 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
         if (options[VOLOPT_CNIDSCHEME].c_value)
             volume->v_cnidscheme = strdup(options[VOLOPT_CNIDSCHEME].c_value);
+
+        if (options[VOLOPT_CNIDSERVER].c_value)
+            volume->v_cnidserver = strdup(options[VOLOPT_CNIDSERVER].c_value);
+
+        if (options[VOLOPT_CNIDPORT].c_value)
+            volume->v_cnidport = strdup(options[VOLOPT_CNIDPORT].c_value);
 
         if (options[VOLOPT_UMASK].i_value)
             volume->v_umask = (mode_t)options[VOLOPT_UMASK].i_value;
@@ -1818,15 +1837,20 @@ static int volume_openDB(struct vol *volume)
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
         LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
     }
-    if (volume->v_dbpath)
-        volume->v_cdb = cnid_open (volume->v_dbpath, volume->v_umask, volume->v_cnidscheme, flags);
-    else
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, volume->v_cnidscheme, flags);
+
+    LOG(log_info, logtype_afpd, "%s:%s", volume->v_cnidserver, volume->v_cnidport);
+    
+    volume->v_cdb = cnid_open(volume->v_dbpath ? volume->v_dbpath : volume->v_path,
+                              volume->v_umask,
+                              volume->v_cnidscheme,
+                              flags,
+                              volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
+                              volume->v_cnidport ? volume->v_cnidport : Cnid_port);
 
     if (!volume->v_cdb) {
         flags |= CNID_FLAG_MEMORY;
         LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.", volume->v_path);
-        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags);
+        volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL);
 #ifdef SERVERTEXT
         /* kill ourself with SIGUSR2 aka msg pending */
         if (volume->v_cdb) {
@@ -2078,7 +2102,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
         if (!(volume->v_flags & AFPVOL_RO)) {
             handle_special_folders( volume );
-            savevolinfo(volume, Cnid_srv, Cnid_port);
+            savevolinfo(volume,
+                        volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
+                        volume->v_cnidport   ? volume->v_cnidport   : Cnid_port);
         }
 
         /*

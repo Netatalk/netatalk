@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.15 2010-02-19 10:51:59 franklahm Exp $
+ * $Id: volume.h,v 1.16 2010-03-31 09:47:32 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -73,6 +73,8 @@ struct vol {
     char            *v_password;
     char            *v_cnidscheme;
     char            *v_dbpath;
+    char            *v_cnidserver;
+    char            *v_cnidport;
     int             v_hide;       /* new volume wait until old volume is closed */
     int             v_new;        /* volume deleted but there's a new one with the same name */
     int             v_deleted;    /* volume open but deleted in new config file */

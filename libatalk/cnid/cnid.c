@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.c,v 1.12 2009-12-08 22:33:33 didg Exp $
+ * $Id: cnid.c,v 1.13 2010-03-31 09:47:32 franklahm Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -92,14 +92,15 @@ static int cnid_dir(const char *dir, mode_t mask)
 }
 
 /* Opens CNID database using particular back-end */
-struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int flags)
+struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int flags,
+                           const char *cnidsrv, const char *cnidport)
 {
     struct _cnid_db *db;
     cnid_module *mod = NULL;
     struct list_head *ptr;
     uid_t uid = -1;  
     gid_t gid = -1;
-    
+
     list_for_each(ptr, &modules) {
         if (0 == strcmp(list_entry(ptr, cnid_module, db_list)->name, type)) {
 	    mod = list_entry(ptr, cnid_module, db_list);
@@ -128,7 +129,8 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
         }
     }
 
-    db = mod->cnid_open(volpath, mask, flags);
+    struct cnid_open_args args = {volpath, mask, flags, cnidsrv, cnidport};
+    db = mod->cnid_open(&args);
 
     if ((mod->flags & CNID_FLAG_SETUID) && !(flags & CNID_FLAG_MEMORY)) {
         seteuid(0);

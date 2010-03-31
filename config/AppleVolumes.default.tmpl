@@ -11,6 +11,7 @@
 #   [preexec:cmd] [root_preexec:cmd] [postexec:cmd]  [root_postexec:cmd] \
 #   [allowed_hosts:IPv4 address[/IPv4 netmask bits]] \
 #   [denied_hosts:IPv4 address[/IPv4 netmask bits]] \
+#   ... more, see below ...
 #   
 # name:      volume name. it can't include the ':' character
 #
@@ -80,6 +81,11 @@
 #                        OR with the client requested perm
 #
 # dbpath:path         -> store the database stuff in the following path.
+# cnidserver:server[:port]
+#                     -> Query this servername or IP address (default:localhost)
+#                        and port (default: 4700) for CNIDs. Only used with
+#                        CNID backend "dbd". This option here overrides any
+#                        setting from afpd.conf:cnidserver.
 # password:password   -> set a volume password (8 characters max)
 # cnidscheme:scheme   -> set the cnid scheme for the volume,
 #                        default is [:DEFAULT_CNID_SCHEME:]

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_tdb_open.c,v 1.7 2009-11-24 15:44:56 didg Exp $
+ * $Id: cnid_tdb_open.c,v 1.8 2010-03-31 09:47:32 franklahm Exp $
  *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
@@ -63,7 +63,7 @@ static struct _cnid_db *cnid_tdb_new(const char *volpath)
 }
 
 /* ---------------------------- */
-struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask, u_int32_t flags)
+struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
 {
     struct stat               st;
     struct _cnid_db           *cdb;
@@ -74,30 +74,30 @@ struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask, u_int32_t flags)
     int 		      hash_size = 131071;
     int                       tdb_flags = 0;
 
-    if (!dir) {
+    if (!args->dir) {
         /* note: dir and path are not used for in memory db */
         return NULL;
     }
 
-    if ((len = strlen(dir)) > (MAXPATHLEN - DBLEN - 1)) {
-        LOG(log_error, logtype_default, "tdb_open: Pathname too large: %s", dir);
+    if ((len = strlen(args->dir)) > (MAXPATHLEN - DBLEN - 1)) {
+        LOG(log_error, logtype_default, "tdb_open: Pathname too large: %s", args->dir);
         return NULL;
     }
     
-    if ((cdb = cnid_tdb_new(dir)) == NULL) {
+    if ((cdb = cnid_tdb_new(args->dir)) == NULL) {
         LOG(log_error, logtype_default, "tdb_open: Unable to allocate memory for tdb");
         return NULL;
     }
     
-    strcpy(path, dir);
+    strcpy(path, args->dir);
     if (path[len - 1] != '/') {
         strcat(path, "/");
         len++;
     }
  
     strcpy(path + len, DBHOME);
-    if (!(flags & CNID_FLAG_MEMORY)) {
-        if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777 & ~mask) < 0)) {
+    if (!(args->flags & CNID_FLAG_MEMORY)) {
+        if ((stat(path, &st) < 0) && (ad_mkdir(path, 0777 & ~args->mask) < 0)) {
             LOG(log_error, logtype_default, "tdb_open: DBHOME mkdir failed for %s", path);
             goto fail;
         }
@@ -113,7 +113,7 @@ struct _cnid_db *cnid_tdb_open(const char *dir, mode_t mask, u_int32_t flags)
     path[len + DBHOMELEN] = '\0';
     strcat(path, DBCNID);
 
-    db->tdb_cnid = tdb_open(path, hash_size, tdb_flags , O_RDWR | O_CREAT, 0666 & ~mask);
+    db->tdb_cnid = tdb_open(path, hash_size, tdb_flags , O_RDWR | O_CREAT, 0666 & ~args->mask);
     if (!db->tdb_cnid) {
         LOG(log_error, logtype_default, "tdb_open: unable to open tdb", path);
         goto fail;

@@ -1,5 +1,5 @@
 /*
- * $Id: cnid_dbd.c,v 1.16 2010-01-21 14:14:49 didg Exp $
+ * $Id: cnid_dbd.c,v 1.17 2010-03-31 09:47:32 franklahm Exp $
  *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
@@ -52,9 +52,6 @@ static void RQST_RESET(struct cnid_dbd_rqst  *r)
 }
 
 /* ----------- */
-extern char *Cnid_srv;
-extern char *Cnid_port;
-
 #define MAX_DELAY 40
 
 /* *MUST* be < afp tickle or it's never triggered (got EINTR first) */
@@ -185,9 +182,10 @@ static int init_tsock(CNID_private *db)
     int len;
     struct iovec iov[2];
 
-    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s", db->db_dir, Cnid_srv, Cnid_port);
+    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s", 
+        db->db_dir, db->cnidserver, db->cnidport);
 
-    if ((fd = tsock_getfd(Cnid_srv, Cnid_port)) < 0)
+    if ((fd = tsock_getfd(db->cnidserver, db->cnidport)) < 0)
         return -1;
 
     len = strlen(db->db_dir);
@@ -442,16 +440,16 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
 }
 
 /* ---------------------- */
-struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_, u_int32_t flags _U_)
+struct _cnid_db *cnid_dbd_open(struct cnid_open_args *args)
 {
     CNID_private *db = NULL;
     struct _cnid_db *cdb = NULL;
 
-    if (!dir) {
+    if (!args->dir) {
         return NULL;
     }
 
-    if ((cdb = cnid_dbd_new(dir)) == NULL) {
+    if ((cdb = cnid_dbd_new(args->dir)) == NULL) {
         LOG(log_error, logtype_cnid, "cnid_open: Unable to allocate memory for database");
         return NULL;
     }
@@ -465,9 +463,11 @@ struct _cnid_db *cnid_dbd_open(const char *dir, mode_t mask _U_, u_int32_t flags
 
     /* We keep a copy of the directory in the db structure so that we can
        transparently reconnect later. */
-    strcpy(db->db_dir, dir);
+    strcpy(db->db_dir, args->dir);
     db->magic = CNID_DB_MAGIC;
     db->fd = -1;
+    db->cnidserver = strdup(args->cnidserver);
+    db->cnidport = strdup(args->cnidport);
 
     LOG(log_debug, logtype_cnid, "cnid_dbd_open: Finished initializing cnid dbd module for volume '%s'", db->db_dir);
 

@@ -386,7 +386,7 @@ static int init(char* path)
 {
 	DIR* startdir;
 
-        if (NULL == (cdb = cnid_open (path, 0, cnid_type, 0)) ) {
+    if (NULL == (cdb = cnid_open (path, 0, cnid_type, 0, NULL, NULL)) ) {
                 fprintf (stderr, "ERROR: cannot open CNID database in '%s'\n", path);
                 fprintf (stderr, "ERROR: check the logs for reasons, aborting\n");
 		return -1;

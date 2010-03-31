@@ -16,7 +16,7 @@
 
 /* cnid_open.c */
 extern struct _cnid_module cnid_cdb_module;
-extern struct _cnid_db *cnid_cdb_open (const char *, mode_t, u_int32_t flags);
+extern struct _cnid_db *cnid_cdb_open (struct cnid_open_args *args);
 
 /* cnid_close.c */
 extern void cnid_cdb_close (struct _cnid_db *);

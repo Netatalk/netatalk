@@ -1,5 +1,5 @@
 /* 
- * $Id: cnid.h,v 1.14 2009-11-28 13:09:25 didg Exp $
+ * $Id: cnid.h,v 1.15 2010-03-31 09:47:32 franklahm Exp $
  *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -72,13 +72,25 @@ struct _cnid_db {
 };
 typedef struct _cnid_db cnid_db;
 
+/* 
+ * Consolidation of args passedn from main cnid_open to modules cnid_XXX_open, so
+ * that it's easier to add aditional args as required.
+ */
+struct cnid_open_args {
+    const char *dir;
+    mode_t mask;
+    uint32_t flags;
+    const char *cnidserver;      /* for dbd */
+    const char *cnidport;        /* for dbd */
+};
+
 /*
  * CNID module - represents particular CNID implementation
  */
 struct _cnid_module {
 	char *name;
 	struct list_head db_list;   /* CNID modules are also stored on a bidirectional list. */
-	struct _cnid_db *(*cnid_open)(const char *dir, mode_t mask, u_int32_t flags);
+	struct _cnid_db *(*cnid_open)(struct cnid_open_args *args);
 	u_int32_t flags;            /* Flags describing some CNID backend aspects. */
 
 };
@@ -91,7 +103,12 @@ void cnid_init();
 void cnid_register(struct _cnid_module *module);
 
 /* This function opens a CNID database for selected volume. */
-struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int flags);
+struct _cnid_db *cnid_open(const char *volpath,
+                           mode_t mask,
+                           char *type,
+                           int flags,
+                           const char *cnidsrv, /* Only for dbd */
+                           const char *cnidport); /* Only for dbd */
 
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
 			char *name, const size_t len, cnid_t hint);
@@ -121,7 +138,10 @@ void cnid_close(struct _cnid_db *db);
 
 /*
  * $Log: cnid.h,v $
- * Revision 1.14  2009-11-28 13:09:25  didg
+ * Revision 1.15  2010-03-31 09:47:32  franklahm
+ * clustering support: new per volume option cnidserver
+ *
+ * Revision 1.14  2009/11/28 13:09:25  didg
  * guard against confused DB returning junk values
  *
  * Revision 1.13  2009/11/24 12:18:19  didg
