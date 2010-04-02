@@ -26,10 +26,16 @@
 #     -transall      Make both available
 #
 #   Transport Options:
-#     -ipaddr <w.x.y.z>   Specifies the IP address the server should respond
-#                         to (default is the first IP address of the system)
-#                         This option also allows one machine to advertise
-#                         TCP/IP for another machine.
+#     -ipaddr <ipaddress> Specifies the IP address that the server should
+#                         advertise and listens to. The default is advertise
+#                         the first IP address of the system, but to listen
+#                         for any incoming request. The network address may
+#                         be specified either in dotted-decimal format for
+#                         IPv4 or in hexadecimal format for IPv6.
+#                         This option also allows to use one machine to
+#                         advertise the AFP-over-TCP/IP settings of another
+#                         machine via NBP when used together with the -proxy
+#                         option.
 #     -server_quantum <number> 
 #                         Specifies the DSI server quantum. The minimum
 #                         value is 1MB. The max value is 0xFFFFFFFF. If you 
@@ -49,6 +55,11 @@
 #                         port). this gets discarded if the server can't
 #                         resolve it. this is not honored by appleshare
 #                         clients <= 3.8.3 (default: none)
+#     -hostname <name>    Use this instead of the result from calling
+#                         hostname for dertermening which IP address to
+#                         advertise, therfore the hostname is resolved to
+#                         an IP which is the advertised. This is NOT used for
+#                         listening and it is also overwritten by -ipaddr.
 #     -proxy              Run an AppleTalk proxy server for specified
 #                         AFP/TCP server (if address/port aren't given,
 #                         then first IP address of the system/548 will
@@ -57,7 +68,12 @@
 #                         a ddp server as well, set -uamlist to an empty
 #                         string.
 #     -slp                Register this server with the Service Location
-#                         Protocol.
+#                         Protocol (if SLP support was compiled in).
+#     -advertise_ssh      Allows Mac OS X clients (10.3.3-10.4) to
+#                         automagically establish a tunneled AFP connection
+#                         through SSH. This option is not so significant
+#                         for the recent Mac OS X. See the Netatalk Manual
+#                         in detail.
 #
 #
 #   Authentication Methods:
@@ -142,7 +158,8 @@
 #                         timing out a connection.
 #                         The default is 4, therefore a connection will
 #                         timeout in 2 minutes.
-#     -icon               Use the platform-specific icon.
+#     -[no]icon           [Don't] Use the platform-specific icon. Recent
+#                         Mac OS don't display it any longer.
 #     -volnamelen <number>
 #                         Max length of UTF8-MAC volume name for Mac OS X.
 #                         Note that Hangul is especially sensitive to this.
@@ -194,23 +211,32 @@
 #                         "user" signature type allows administrator to
 #                         set up a signature string manually.
 #                         Examples: three servers running on one machine:
-#           first       -signature user:USERS
-#           second      -signature user:USERS
-#           third       -signature user:ADMINS
-#                First two servers will act as one logical AFP service.
-#                If user logs in to first one and then  connects to second
-#                one, session will be automatically redirected to the first
-#                one. But if client connects to first and then to third, 
-#                will be asked for password twice and will see resources of
-#                both servers.
-#                Traditional method of signature generation causes two
-#                independent afpd instances to have the same signature and
-#                thus cause clients to be redirected automatically to
-#                server (s)he logged in first.
+#                               first   -signature user:USERS
+#                               second  -signature user:USERS
+#                               third   -signature user:ADMINS
+#                         First two servers will act as one logical AFP
+#                         service. If user logs in to first one and then
+#                         connects to second one, session will be
+#                         automatically redirected to the first one. But if
+#                         client connects to first and then to third, 
+#                         will be asked for password twice and will see
+#                         resources of both servers.
+#                         Traditional method of signature generation causes
+#                         two independent afpd instances to have the same
+#                         signature and thus cause clients to be redirected
+#                         automatically to server (s)he logged in first.
+#     -k5keytab <path>
 #     -k5service <service>
 #     -k5realm <realm>
-#                These are required if the server supports Kerberos 5
-#                authentication
+#                         These are required if the server supports
+#                         Kerberos 5 authentication
+#     -ntdomain
+#     -ntseparator
+#                         Use for eg. winbind authentication, prepends
+#                         both strings before the username from login and
+#                         then tries to authenticate with the result
+#                         through the availabel and active UAM authentication
+#                         modules.
 #
 #   Codepage Options:
 #     -unixcodepage <CODEPAGE>  Specifies the servers unix codepage,
@@ -228,8 +254,13 @@
 #                               the default for volumes maccharset.
 #
 #   CNID related options:
-#     -cnidserver ipaddress:port   Specifies the IP address and port of
-#                                  a cnid_metad server.
+#     -cnidserver <ipaddress:port>
+#                               Specifies the IP address and port of a
+#                               cnid_metad server, required for CNID dbd
+#                               backend. Defaults to localhost:4700.
+#                               The network address may be specified either
+#                               in dotted-decimal format for IPv4 or in
+#                               hexadecimal format for IPv6.
 #
 
 

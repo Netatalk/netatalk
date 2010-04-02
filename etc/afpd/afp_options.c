@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.53 2010-03-29 15:22:57 franklahm Exp $
+ * $Id: afp_options.c,v 1.54 2010-04-02 16:17:22 hat001 Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -594,13 +594,13 @@ static void show_paths( void )
 }
 
 /*
- * Display usage information about adpd.
+ * Display usage information about afpd.
  */
 static void show_usage( char *name )
 {
-	fprintf( stderr, "Usage:\t%s [-dDIptTu] [-c maxconnections] [-f defaultvolumes] [-F config]\n", name );
-	fprintf( stderr, "\t     [-g guest] [-L message] [-m umask][-n nbpname] [-P pidfile]\n" );
-	fprintf( stderr, "\t     [-s systemvolumes] [-S port] [-U uams]\n" );
+	fprintf( stderr, "Usage:\t%s [-duptDTI] [-f defaultvolumes] [-s systemvolumes] [-n nbpname]\n", name );
+	fprintf( stderr, "\t     [-c maxconnections] [-g guest] [-P pidfile] [-S port] [-L message]\n" );
+	fprintf( stderr, "\t     [-F configfile] [-U uams] [-m umask]\n" );
 	fprintf( stderr, "\t%s -h|-v|-V\n", name );
 }
 
