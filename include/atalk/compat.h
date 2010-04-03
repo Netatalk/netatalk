@@ -92,3 +92,14 @@ int snprintf (char *str,size_t count,const char *fmt,...);
 #ifndef HAVE_VSNPRINTF
 int vsnprintf(char *str, size_t count, const char *fmt, va_list args);
 #endif
+
+/* OpenBSD */
+#if defined(__OpenBSD__) && !defined(ENOTSUP)
+#define ENOTSUP EOPNOTSUPP
+#endif
+
+#if !defined(HAVE_PSELECT) || defined(__OpenBSD__)
+extern int pselect(int, fd_set * restrict, fd_set * restrict,
+                   fd_set * restrict, const struct timespec * restrict,
+                   const sigset_t * restrict);
+#endif

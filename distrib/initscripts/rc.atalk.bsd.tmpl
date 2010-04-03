@@ -15,7 +15,12 @@
 ##	/usr/etc/modload -sym :ETCDIR:/netatalk.o;
 ##fi
 
+netatalk_conf=":ETCDIR:/netatalk.conf"
+
+[ -f ${netatalk_conf} ] && . ${netatalk_conf}
+
 echo -n 'starting netatalk daemons:'
+if [ X"${ATALKD_RUN}" != X"no" ]; then
 if [ -x :SBINDIR:/atalkd ]; then
 	:SBINDIR:/atalkd;		echo -n ' atalkd'
 fi
@@ -25,21 +30,22 @@ if [ -x :BINDIR:/nbprgstr ]; then
 	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
 	echo -n ' nbprgstr'
 fi
+fi
 
-if [ -x :SBINDIR:/papd ]; then
+if [ -x :SBINDIR:/papd -a X"${PAPD_RUN}" != X"no" ]; then
 	:SBINDIR:/papd;		echo -n ' papd'
 fi
 
-if [ -x :SBINDIR:/cnid_metad ]; then
+if [ -x :SBINDIR:/cnid_metad -a X"${CNID_METAD_RUN}" != X"no" ]; then
     :SBINDIR:/cnid_metad $CNID_CONFIG
     echo -n ' cnid_metad'
 fi
 
-if [ -x :SBINDIR:/afpd ]; then
+if [ -x :SBINDIR:/afpd -a X"${AFPD_RUN}" != X"no" ]; then
 	:SBINDIR:/afpd;		echo -n ' afpd'
 fi
 
-if [ -x :SBINDIR:/timelord ]; then
+if [ -x :SBINDIR:/timelord -a X"${TIMELORD_RUN}" != X"no" ]; then
 	:SBINDIR:/timelord;		echo -n ' timelord'
 fi
 

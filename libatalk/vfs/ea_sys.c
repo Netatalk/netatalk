@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.6 2010-03-12 15:16:49 franklahm Exp $
+  $Id: ea_sys.c,v 1.7 2010-04-03 07:11:36 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@
 #include <atalk/vfs.h>
 #include <atalk/util.h>
 #include <atalk/unix.h>
+#include <atalk/compat.h>
 
 #ifndef ENOATTR
 #define ENOATTR ENODATA

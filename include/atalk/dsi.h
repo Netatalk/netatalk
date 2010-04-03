@@ -16,6 +16,10 @@
 #include <atalk/server_child.h>
 #include <netatalk/endian.h>
 
+#ifdef __OpenBSD__
+#include <sys/socket.h>
+#endif
+
 /* What a DSI packet looks like:
  0                               32
  |-------------------------------|
