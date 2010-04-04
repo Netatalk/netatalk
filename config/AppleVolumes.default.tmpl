@@ -64,6 +64,15 @@
 #                        ignore for user defined volumes
 # root_postexec       -> command to be run as root when the volume is closed,
 #                        ignore for user defined volumes
+# veto                -> hide files and directories,where the path matches
+#                        one of the "/" delimited vetoed names. Matches are
+#                        partial, e.g. path is /abc/def/file and veto:/abc/
+#                        will hide the file.
+# adouble             -> specify the format of the metadata files.
+#                        default is "v2". netatalk 1.x used "v1".
+#                        "osx" cannot be treated normally any longer.
+
+
 #
 # codepage options [syntax: options:charsetname]
 # volcharset          -> specifies the charset to be used
@@ -79,7 +88,7 @@
 #                        OR with the client requested perm
 # fperm               -> default permission value for files
 #                        OR with the client requested perm
-#
+# umask               -> set perm mask
 # dbpath:path         -> store the database stuff in the following path.
 # cnidserver:server[:port]
 #                     -> Query this servername or IP address (default:localhost)
@@ -150,6 +159,13 @@
 #                        database rebuild with `dbd`!
 # caseinsensitive     -> The underlying FS is case insensitive (only 
 #                        test with JFS in OS2 mode)
+# dropbox             -> Allows a volume to be declared as being a "dropbox."
+#                        Note that netatalk must be compiled with dropkludge
+#                        support for this to function. Warning: This option
+#                        is deprecated and might not work as expected.
+# nodev               -> always use 0 for device number, helps when the
+#                        device number is not constant across a reboot,
+#                        cluster, ...
 #
 
 # The "~" below indicates that Home directories are visible by default.
