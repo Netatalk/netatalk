@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.20 2010-03-12 15:16:49 franklahm Exp $
+  $Id: ea.c,v 1.21 2010-04-04 08:24:38 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -1073,6 +1073,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             }
 
             if ((fd = open(eafile, O_RDONLY)) == -1) {
+                LOG(log_error, logtype_afpd, "get_eacontent('%s'): open error: %s", uname, strerror(errno));
                 ret = AFPERR_MISC;
                 break;
             }
