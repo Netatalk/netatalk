@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.122 2010-03-31 09:47:32 franklahm Exp $
+ * $Id: volume.c,v 1.123 2010-04-04 15:04:45 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -92,16 +92,7 @@ static void             free_extmap(void);
 #define VOLOPT_CASEFOLD   5  /* character case mangling */
 #define VOLOPT_FLAGS      6  /* various flags */
 #define VOLOPT_DBPATH     7  /* path to database */
-#define VOLOPT_MAPCHARS   8  /* does mtou and utom mappings. syntax:
-                                m and u can be double-byte hex
-                                strings if necessary.
-                                m=u -> map both ways
-                                m>u -> map m to u
-                                m<u -> map u to m
-                                !u  -> make u illegal always
-                                ~u  -> make u illegal only as the first
-                                part of a double-byte character.
-                             */
+/* Usable slots: 8 and 9 */
 #define VOLOPT_VETO          10  /* list of veto filespec */
 #define VOLOPT_PREEXEC       11  /* preexec command */
 #define VOLOPT_ROOTPREEXEC   12  /* root preexec command */
@@ -494,9 +485,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
         options[VOLOPT_FPERM].i_value = (int)strtol(val+1, NULL, 8);
     } else if (optionok(tmp, "perm:", val)) {
         options[VOLOPT_DFLTPERM].i_value = (int)strtol(val+1, NULL, 8);
-    } else if (optionok(tmp, "mapchars:",val)) {
-        setoption(options, save, VOLOPT_MAPCHARS, val);
-
     } else if (optionok(tmp, "password:", val)) {
         setoption(options, save, VOLOPT_PASSWORD, val);
 
