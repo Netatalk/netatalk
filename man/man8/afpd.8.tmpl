@@ -3,11 +3,11 @@
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
 .\"      Date: 08 Feb 2010
-.\"    Manual: Netatalk 2.1beta2
-.\"    Source: Netatalk 2.1beta2
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
 .\"  Language: English
 .\"
-.TH "AFPD" "8" "08 Feb 2010" "Netatalk 2.1beta2" "Netatalk 2.1beta2"
+.TH "AFPD" "8" "08 Feb 2010" "Netatalk 2.1" "Netatalk 2.1"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,8 +21,10 @@
 .SH "NAME"
 afpd \- AppleTalk Filing Protocol daemon
 .SH "SYNOPSIS"
-.HP \w'\fBafpd\fR\fB\fR\ 'u
-\fBafpd\fR\fB\fR [\-duptDTvI] [\-f\ \fIdefaultvolumes\fR] [\-s\ \fIsystemvolumes\fR] [\-n\ \fInbpname\fR] [\-c\ \fImaxconnections\fR] [\-g\ \fIguest\fR] [\-P\ \fIpidfile\fR] [\-S\ \fIport\fR] [\-L\ \fImessage\fR] [\-F\ \fIconfig\fR] [\-U\ \fIuamsv\fR] [\-m\ \fIumask\fR]
+.HP \w'\fBafpd\fR\fB\fR\fBafpd\fR\fB\fR\ 'u
+\fBafpd\fR\fB\fR [\-duptDTI] [\-f\ \fIdefaultvolumes\fR] [\-s\ \fIsystemvolumes\fR] [\-n\ \fInbpname\fR] [\-c\ \fImaxconnections\fR] [\-g\ \fIguest\fR] [\-P\ \fIpidfile\fR] [\-S\ \fIport\fR] [\-L\ \fImessage\fR] [\-F\ \fIconfigfile\fR] [\-U\ \fIuams\fR] [\-m\ \fIumask\fR]
+.br
+\fBafpd\fR\fB\fR \-v | \-V | \-h 
 .SH "DESCRIPTION"
 .PP
 \fBafpd\fR
@@ -84,6 +86,11 @@ Print version information and exit\&.
 \-V
 .RS 4
 Print verbose information and exit\&.
+.RE
+.PP
+\-h
+.RS 4
+Print help and exit\&.
 .RE
 .PP
 \-I
@@ -249,7 +256,7 @@ list of default volumes to mount
 list of volumes to offer all users
 .RE
 .PP
-~/AppleVolumes
+~/AppleVolumes, ~/\&.AppleVolumes
 .RS 4
 user\'s list of volumes to mount
 .RE

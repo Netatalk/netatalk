@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 23 Dec 2009
-.\"    Manual: Netatalk 2.1beta2
-.\"    Source: Netatalk 2.1beta2
+.\"      Date: 31 Mar 2010
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "23 Dec 2009" "Netatalk 2.1beta2" "Netatalk 2.1beta2"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "31 Mar 2010" "Netatalk 2.1" "Netatalk 2.1"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -115,6 +115,13 @@ dbpath:\fI[path]\fR
 Sets the database information to be stored in path\&. You have to specifiy a writable location, even if the volume is read only\&.
 .RE
 .PP
+cnidserver:\fI[fqdn|IP[:port]]\fR
+.RS 4
+Query this servername or IP address (default:\fIlocalhost\fR) and port (default:
+\fI4700\fR) for CNIDs\&. Only used with CNID backend "\fIdbd\fR"\&. This option here overrides any setting from
+afpd\&.conf:\fBcnidserver\fR\&.
+.RE
+.PP
 ea:\fI[none|auto|sys|ad]\fR
 .RS 4
 Specify how Extended Attributes
@@ -145,7 +152,7 @@ Use filesystem Extended Attributes\&.
 ad
 .RS 4
 Use files in
-\fIAppleDouble\fR
+\fI\&.AppleDouble\fR
 directories\&.
 .RE
 .PP
@@ -228,7 +235,7 @@ password:\fI[password]\fR
 This option allows you to set a volume password, which can be a maximum of 8 characters long (using ASCII strongly recommended at the time of this writing)\&.
 .RE
 .PP
-perm|fperm|dperm:[mode]
+perm|fperm|dperm:\fI[mode]\fR
 .RS 4
 Add(or) with the client requested permissions:
 \fBperm\fR
@@ -250,6 +257,11 @@ is for directories only\&. Use with
 .if n \{\
 .RE
 .\}
+.RE
+.PP
+umask:\fI[mode]\fR
+.RS 4
+set perm mask\&.
 .RE
 .PP
 preexec:\fI[command]\fR
@@ -546,6 +558,11 @@ dropbox
 .RS 4
 Allows a volume to be declared as being a "dropbox\&." Note that netatalk must be compiled with dropkludge support for this to function\&.
 \fIWarning\fR: This option is deprecated and might not work as expected\&.
+.RE
+.PP
+dropkludge
+.RS 4
+same as "dropbox"\&.
 .RE
 .PP
 mswindows
