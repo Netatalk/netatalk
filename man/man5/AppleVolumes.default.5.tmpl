@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 31 Mar 2010
+.\"      Date: 06 Apr 2010
 .\"    Manual: Netatalk 2.1
 .\"    Source: Netatalk 2.1
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "31 Mar 2010" "Netatalk 2.1" "Netatalk 2.1"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "06 Apr 2010" "Netatalk 2.1" "Netatalk 2.1"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -55,7 +55,11 @@ line\&. Though newline escaping is supported\&.
 .RE
 .PP
 It is possible to specify default options for all volumes with a
-\fI:DEFAULT: \fRline preceeding these volume definitions:.PP \fBExample.\ \&:DEFAULT: configuration line\fR .PP :DEFAULT: options:upriv,usedots dbpath:/var/dbd/AppleDB/$v dperm:0775 fperm:0664
+\fI:DEFAULT: \fRline preceeding these volume definitions:
+.PP
+\fBExample.\ \&:DEFAULT: configuration line\fR
+.PP
+:DEFAULT: options:usedots dbpath:/var/dbd/AppleDB/$v dperm:0775 fperm:0664
 .PP
 The possible options and their meanings are:
 .PP
@@ -217,9 +221,9 @@ root_preexec_close
 a non\-zero return code from root_preexec closes the volume immediately, preventing clients to mount/see the volume in question\&.
 .RE
 .PP
-upriv
+noupriv
 .RS 4
-use AFP3 unix privileges\&. Become familiar with the new "unix privileges" AFP permissions concepts in MacOS X before using this option\&. See also:
+Don\'t use AFP3 unix privileges\&. See also:
 \fBperm|fperm|dperm\fR\&.
 .RE
 .PP
