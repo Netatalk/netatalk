@@ -6,8 +6,8 @@ The documentation for Netatalk is arranged as follows:
   information for developers and additional requirements for compiling
 * doc/FAQ
   FAQ in progress
-* doc/README.platforms
-  additional instructions for various operating systems.
+* doc/README.AppleTalk
+  additional instructions for AppleTalk on various operating systems.
 * doc/README.hidden-items
   documents the various special files created by netatalk in file shares
 
