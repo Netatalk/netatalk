@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.241 2010-04-03 07:11:33 franklahm Exp $
+dnl $Id: configure.in,v 1.242 2010-04-07 14:25:24 hat001 Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -1055,7 +1055,7 @@ fi
 AC_SUBST(LIBATALK_ACLS)
 
 dnl --------------------- check for Extended Attributes support
-neta_cv_eas="files"
+neta_cv_eas="ad"
 neta_cv_eas_sys_found=no
 neta_cv_eas_sys_not_found=no
 
@@ -1148,7 +1148,7 @@ esac
 
 if test "x$neta_cv_eas_sys_found" = "xyes" ; then
    if test "x$neta_cv_eas_sys_not_found" != "xyes" ; then
-      neta_cv_eas="$neta_cv_eas | native"
+      neta_cv_eas="$neta_cv_eas | sys"
    fi
 fi
 
