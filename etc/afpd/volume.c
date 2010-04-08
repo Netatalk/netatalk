@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.124 2010-04-06 12:00:27 franklahm Exp $
+ * $Id: volume.c,v 1.125 2010-04-08 05:51:16 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -444,8 +444,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_PREEXEC].i_value = 1;
             else if (strcasecmp(p, "root_preexec_close") == 0)
                 options[VOLOPT_ROOTPREEXEC].i_value = 1;
-            else if (strcasecmp(p, "noupriv") == 0)
-                options[VOLOPT_FLAGS].i_value &= ~AFPVOL_UNIX_PRIV;
+            else if (strcasecmp(p, "upriv") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
             else if (strcasecmp(p, "acls") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
             else if (strcasecmp(p, "nodev") == 0)
@@ -1119,7 +1119,6 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
 
     /* Enable some default options for all volumes */
     save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
-    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
     save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
 
     while ( myfgets( buf, sizeof( buf ), fp ) != NULL ) {
