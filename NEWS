@@ -3,6 +3,9 @@ Changes in 2.1-beta2
 * NEW: afpd: static generated AFP signature stored in afp_signature.conf,
        cf man 5 afp_signature.conf
 * NEW: afpd: clustering support: new per volume option "cnidserver".
+* UPD: afpd: set volume defaults options "upriv" and "usedots" in the
+       volume config file AppleVolumes.default. This will only affect
+       new installations, but not upgrades.
 * FIX: afpd: prevent security attack guessing valid server accounts. afpd
        now returns error -5023 for unknown users, as does AppleFileServer.
 
