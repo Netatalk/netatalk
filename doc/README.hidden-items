@@ -91,7 +91,7 @@ and is working on a solution.
 
 
 Temporary\ Items/
-:2eTemporaryItems/ (.TemporaryItems/)
+.TemporaryItems/ (:2eTemporaryItems/)
 
 These folder may exist at the top level of a sharepoint. These folder is
 used by certain applications (Adobe PhotoShop among others) to store,
@@ -115,15 +115,15 @@ always appears to be empty. It would be wise to set its permissions
 the same as the top level of the sharepoint.
 
 
-:2eDS_Store (.DS_Store)
+.DS_Store (:2eDS_Store)
 
 This file may appear in share points which have been accessed by a
 machine running Mac OS X. Its permissions should be set to match
 those of the enclosing directory.
 
 
-:2eFBCIndex (.FBCIndex)
-:2eFBCLockFolder/:2eFBCSemaphoreFile (.FBCLockFolder/.FBCSemaphoreFile)
+.FBCIndex (.FBCIndex)
+.FBCLockFolder/.FBCSemaphoreFile (:2eFBCLockFolder/:2eFBCSemaphoreFile)
 
 These are created to preserve retrieval information by Sherlock
 on Mac OS X 10.1. If these are removed, the next retrieval will slow.
