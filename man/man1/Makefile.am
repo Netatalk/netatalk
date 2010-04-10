@@ -19,6 +19,7 @@ NONGENERATED_MANS	=	achfile.1  \
 				aecho.1 \
 				afile.1 \
 				afppasswd.1 \
+				apple_dump.1 \
 				dbd.1 \
 				getzones.1 \
 				hqx2bin.1 \
