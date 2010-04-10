@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.16 2010-03-31 09:47:32 franklahm Exp $
+ * $Id: volume.h,v 1.17 2010-04-10 08:24:54 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -19,6 +19,8 @@
 
 #define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
 #define AFPVOL_MACNAMELEN    27 /* AFP2 spec */
+
+typedef u_int64_t VolSpace;
 
 struct vol {
     struct vol      *v_next;
@@ -43,6 +45,7 @@ struct vol {
     char            *(*ad_path)(const char *, int);
     struct _cnid_db *v_cdb;
     char            v_stamp[ADEDLEN_PRIVSYN];
+    VolSpace        v_limitsize; /* Size limit, if any, in MiB */
     mode_t          v_umask;
     mode_t          v_perm;  /* default permission value OR with requested perm*/
     mode_t          v_dperm; /* default directories permission value OR with requested perm*/
@@ -93,12 +96,6 @@ struct vol {
     int         v_qfd;
 #endif /*__svr4__*/
 };
-
-#ifdef NO_LARGE_VOL_SUPPORT
-typedef u_int32_t VolSpace;
-#else /* NO_LARGE_VOL_SUPPORT */
-typedef u_int64_t VolSpace;
-#endif /* NO_LARGE_VOL_SUPPORT */
 
 #define AFPVOL_OPEN (1<<0)
 

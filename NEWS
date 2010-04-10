@@ -1,3 +1,9 @@
+Changes in 2.1-release
+======================
+
+* NEW: afpd: new volume option "volsizelimit" for limitting reported volume
+       size. Useful for limitting TM backup size.
+
 Changes in 2.1-beta2
 ====================
 * NEW: afpd: static generated AFP signature stored in afp_signature.conf,

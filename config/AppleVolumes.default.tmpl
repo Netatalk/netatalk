@@ -71,6 +71,11 @@
 # adouble             -> specify the format of the metadata files.
 #                        default is "v2". netatalk 1.x used "v1".
 #                        "osx" cannot be treated normally any longer.
+# volsizelimit        -> size in MiB.  Useful for TimeMachine: limits the
+#                         reported volume size, thus preventing TM from using
+#                         the whole real disk space for backup.
+#                         Example: "volsizelimit:1000" would limit the
+#                         reported disk space to 1 GB.
 
 
 #

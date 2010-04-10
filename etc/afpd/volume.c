@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.125 2010-04-08 05:51:16 franklahm Exp $
+ * $Id: volume.c,v 1.126 2010-04-10 08:24:54 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -92,7 +92,8 @@ static void             free_extmap(void);
 #define VOLOPT_CASEFOLD   5  /* character case mangling */
 #define VOLOPT_FLAGS      6  /* various flags */
 #define VOLOPT_DBPATH     7  /* path to database */
-/* Usable slots: 8 and 9 */
+#define VOLOPT_LIMITSIZE  8  /* Limit the size of the volume */
+/* Usable slot: 9 */
 #define VOLOPT_VETO          10  /* list of veto filespec */
 #define VOLOPT_PREEXEC       11  /* preexec command */
 #define VOLOPT_ROOTPREEXEC   12  /* root preexec command */
@@ -523,6 +524,9 @@ static void volset(struct vol_option *options, struct vol_option *save,
         else if (strcasecmp(val + 1, "none") == 0)
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_NONE;
 
+    } else if (optionok(tmp, "volsizelimit:", val)) {
+        options[VOLOPT_LIMITSIZE].i_value = (uint32_t)strtoul(val + 1, NULL, 10);
+
     } else {
         /* ignore unknown options */
         LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
@@ -740,6 +744,9 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_adouble = options[VOLOPT_ADOUBLE].i_value;
         else
             volume->v_adouble = AD_VERSION;
+
+        if (options[VOLOPT_LIMITSIZE].i_value)
+            volume->v_limitsize = options[VOLOPT_LIMITSIZE].i_value;
 
         /* Mac to Unix conversion flags*/
         volume->v_mtou_flags = 0;
@@ -1352,8 +1359,7 @@ static int getvolspace(struct vol *vol,
     }
 #endif
 
-    if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal,
-                                    bsize)) != AFP_OK ) {
+    if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
         return( rc );
     }
 
@@ -1371,6 +1377,13 @@ static int getvolspace(struct vol *vol,
     vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_USTATFS;
 
 getvolspace_done:
+    if (vol->v_limitsize) {
+        /* FIXME: Free could be limit minus (total minus used), */
+        /* which will confuse the client less ? */
+        *xbfree = min(*xbfree, (vol->v_limitsize * 1024 * 1024));
+        *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
+    }
+
     *bfree = min( *xbfree, maxsize);
     *btotal = min( *xbtotal, maxsize);
     return( AFP_OK );
