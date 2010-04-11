@@ -1,5 +1,5 @@
 /* 
-   $Id: cmd_dbd.c,v 1.24 2009-12-21 17:00:17 franklahm Exp $
+   $Id: cmd_dbd.c,v 1.25 2010-04-11 07:01:23 franklahm Exp $
 
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
@@ -229,12 +229,12 @@ static void free_lock(int lockfd)
 
 static void usage (void)
 {
-    printf("Usage: dbd [-e|-v|-x] -d [-i] | -s [-n]| -r [-f] | -u <path to netatalk volume>\n"
+    printf("Usage: dbd [-e|-v|-x] -d [-i] | -s [-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
            "   -d Dump CNID database\n"
-           "      Option: -i dump indexes too\n"
+           "      Option: -i dump indexes too\n\n"
            "   -s Scan volume:\n"
            "      1. Compare CNIDs in database with volume\n"
            "      2. Check if .AppleDouble dirs exist\n"
@@ -244,7 +244,7 @@ static void usage (void)
            "      6. Check name encoding by roundtripping, log on error\n"
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
-           "      Option: -n Don't open CNID database, skip CNID checks\n"
+           "      Options: -n Don't open CNID database, skip CNID checks\n\n"
            "   -r Rebuild volume:\n"
            "      1. Sync CNIDSs in database with volume\n"
            "      2. Make sure .AppleDouble dir exist, create if missing\n"
@@ -254,8 +254,9 @@ static void usage (void)
            "      6. Check name encoding by roundtripping, log on error\n"
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
-           "      Option: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
-           "                 only available for volumes without 'nocnidcache' option. Implies -e.\n"
+           "      Options: -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
+           "                  only available for volumes without 'nocnidcache' option. Implies -e.\n"
+           "               -c Dont create .AppleDouble stuff, only cleanup orphaned.\n\n"
            "   -u Prepare upgrade:\n"
            "      Before installing an upgraded version of Netatalk that is linked against\n"
            "      a newer BerkeleyDB lib, run `dbd -u ...` from the OLD Netatalk pior to\n"
@@ -287,8 +288,11 @@ int main(int argc, char **argv)
     /* Inhereting perms in ad_mkdir etc requires this */
     ad_setfuid(0);
 
-    while ((c = getopt(argc, argv, ":dsnruvxife")) != -1) {
+    while ((c = getopt(argc, argv, ":cdefinrsuvx")) != -1) {
         switch(c) {
+        case 'c':
+            flags |= DBD_FLAGS_CLEANUP;
+            break;
         case 'd':
             dump = 1;
             break;
@@ -300,7 +304,7 @@ int main(int argc, char **argv)
             flags |= DBD_FLAGS_SCAN;
             break;
         case 'n':
-            nocniddb = 1;
+            nocniddb = 1; /* FIXME: this could/should be a flag too for consistency */
             break;
         case 'r':
             rebuild = 1;

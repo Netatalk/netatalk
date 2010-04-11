@@ -3,6 +3,8 @@ Changes in 2.1-release
 
 * NEW: afpd: new volume option "volsizelimit" for limitting reported volume
        size. Useful for limitting TM backup size.
+* UPD: dbd: -c option for rebuilding volumes which prevents the creation
+       of .AppleDouble stuff, only removes orphaned files.
 
 Changes in 2.1-beta2
 ====================

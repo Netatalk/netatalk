@@ -1,5 +1,5 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.20 2010-02-15 13:58:38 franklahm Exp $
+  $Id: cmd_dbd_scanvol.c,v 1.21 2010-04-11 07:01:23 franklahm Exp $
 
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
@@ -280,6 +280,9 @@ static int check_adfile(const char *fname, const struct stat *st)
     struct adouble ad;
     char *adname;
 
+    if (dbd_flags & DBD_FLAGS_CLEANUP)
+        return 0;
+
     if (S_ISREG(st->st_mode))
         adflags = 0;
     else
@@ -388,8 +391,7 @@ static int check_eafiles(const char *fname)
     if ((ret = ea_open(&volume, fname, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             return 0;
-        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files",
-                cwdbuf, fname);
+        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files", cwdbuf, fname);
         if ( ! (dbd_flags & DBD_FLAGS_SCAN))
             remove_eafiles(fname, &ea);
         return -1;
@@ -438,6 +440,9 @@ static int check_addir(int volroot)
     struct stat st;
     struct adouble ad;
     char *mname = NULL;
+
+    if (dbd_flags & DBD_FLAGS_CLEANUP)
+        return 0;
 
     /* Check for ad-dir */
     if ( (addir_ok = access(ADv2_DIRNAME, F_OK)) != 0) {
@@ -657,6 +662,10 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     if ( (volinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
         ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
         if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+            
+            if (dbd_flags & DBD_FLAGS_CLEANUP)
+                return 0;
+
             dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
             return 0;
         }

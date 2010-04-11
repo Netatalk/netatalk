@@ -13,6 +13,7 @@ typedef unsigned int dbd_flags_t;
 #define DBD_FLAGS_SCAN     (1 << 0)
 #define DBD_FLAGS_FORCE    (1 << 1)
 #define DBD_FLAGS_EXCL     (1 << 2)
+#define DBD_FLAGS_CLEANUP  (1 << 3) /* Dont create AD stuff, but cleanup orphaned */
 
 #define ADv2_DIRNAME ".AppleDouble"
 

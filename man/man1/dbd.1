@@ -22,7 +22,7 @@
 dbd \- CNID database maintanance
 .SH "SYNOPSIS"
 .HP \w'\fBdbd\fR\fB\fR\ 'u
-\fBdbd\fR\fB\fR [\-evx] {\-d\ [\-i]  | \-s\ [n]  | \-r\ [\-f]  | \-u} \fIvolumepath\fR
+\fBdbd\fR\fB\fR [\-evx] {\-d\ [\-i]  | \-s\ [n]  | \-r\ [\-c|\-f]  | \-u} \fIvolumepath\fR
 .SH "DESCRIPTION"
 .PP
 \fBdbd\fR
@@ -236,6 +236,9 @@ Open and close adouble files
 .PP
 Options:
 .RS 4
+\fB\-c\fR
+Dont create \&.AppleDouble stuff, only cleanup orphaned\&.
+
 \fB\-f\fR
 Wipe database and rebuild from IDs stored in AppleDouble files, only available for volumes without
 \fBnocnidcache\fR
