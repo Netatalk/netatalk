@@ -1,5 +1,5 @@
 /*
- * $Id: unix.h,v 1.22 2009-10-13 22:55:37 didg Exp $
+ * $Id: unix.h,v 1.23 2010-04-12 14:28:47 franklahm Exp $
  */
 
 #ifndef AFPD_UNIX_H
@@ -44,7 +44,9 @@ typedef int	mode_t;
 #include <sys/mnttab.h>
 #endif /* __svr4__ || HAVE_SYS_MNTTAB_H */
 
-
+#if defined(__DragonFly__)
+#define dqblk ufs_dqblk
+#endif
 
 #if defined(HAVE_SYS_MOUNT_H) || defined(BSD4_4) || \
     defined(linux) || defined(ultrix)

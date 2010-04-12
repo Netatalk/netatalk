@@ -1,4 +1,4 @@
-dnl $Id: cups.m4,v 1.2 2005-04-28 20:50:05 bfernhomberg Exp $
+dnl $Id: cups.m4,v 1.3 2010-04-12 14:28:47 franklahm Exp $
 dnl Autoconf macros to check for CUPS
 
 AC_DEFUN([NETATALK_AC_CUPS], [
@@ -45,7 +45,7 @@ AC_DEFUN([NETATALK_AC_CUPS], [
        	[  --with-spooldir=PATH     path for spooldir used for CUPS support (LOCALSTATEDIR/spool/netatalk)],[
 
 	        if test "$withval" = "no"; then
-        	       if test x"$spool_required" == x"yes"; then
+        	       if test x"$spool_required" = x"yes"; then
                 	       AC_MSG_ERROR([*** CUPS support requires a spooldir ***])
 	               else
         	               AC_DEFINE(DISABLE_SPOOL, 1, [Define to enable spooldir support])

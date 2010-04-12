@@ -16,7 +16,7 @@
 
 /* lock file path. this should be re-organized a bit. */
 #if ! defined (_PATH_LOCKDIR)
-#  if defined (FHS_COMPATIBILITY)
+#  if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
 #    define _PATH_LOCKDIR	"/var/run/"
 #  elif defined (BSD4_4)
 #    ifdef MACOSX_SERVER
@@ -51,7 +51,7 @@
  */
 #define _PATH_ATALKDEBUG	"/tmp/atalkd.debug"
 #define _PATH_ATALKDTMP		"atalkd.tmp"
-#ifdef FHS_COMPATIBILITY
+#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
 #  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd.pid")
 #else
 #  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd")
@@ -61,7 +61,7 @@
  * psorder paths
  */
 #define _PATH_TMPPAGEORDER	"/tmp/psorderXXXXXX"
-#ifdef FHS_COMPATIBILITY
+#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
 #  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd.pid")
 #else
 #  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd")
@@ -71,7 +71,7 @@
  * afpd paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
-#ifdef FHS_COMPATIBILITY
+#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
 #  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
 #else
 #  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")

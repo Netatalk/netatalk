@@ -1,5 +1,5 @@
 /*
- * $Id: psorder.c,v 1.9 2009-10-14 02:24:05 didg Exp $
+ * $Id: psorder.c,v 1.10 2010-04-12 14:28:47 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -35,6 +35,7 @@
 #include <sys/uio.h>
 #include <sys/file.h>
 #include <ctype.h>
+#include <limits.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -111,7 +112,11 @@ filesetup( char *inputfile, int *infd, char *tfile, int *tfd)
 	make temporary file
  */
 
-    strncpy( tfile, template, MAXNAMLEN );
+#if defined(NAME_MAX)
+    (void *)strncpy( tfile, template, NAME_MAX );
+#else
+    (void *)strncpy( tfile, template, MAXNAMLEN );
+#endif
     if (( *tfd = mkstemp( tfile )) == -1 ) {
 	fprintf( stderr, "can't create temporary file %s\n", tfile );
 	filecleanup( -1, -1, "" );
@@ -494,7 +499,11 @@ psorder(char *path)
 {
     int			tempfd;
     int			inputfd;
+#if defined(NAME_MAX)
+    char		tempfile[NAME_MAX];
+#else
     char		tempfile[MAXNAMLEN];
+#endif
 
     filesetup( path, &inputfd, tempfile, &tempfd );
     readps( inputfd, tempfd, tempfile );

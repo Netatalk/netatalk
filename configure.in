@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.242 2010-04-07 14:25:24 hat001 Exp $
+dnl $Id: configure.in,v 1.243 2010-04-12 14:28:42 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -795,8 +795,8 @@ dnl ----- NetBSD specific -----
 if test x"$this_os" = "xnetbsd"; then 
 	AC_MSG_RESULT([ * NetBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(NETBSD, 1, [Define if OS is FreeBSD])
-	CFLAGS="-I\$(top_srcdir)/sys/netbsd -I/usr/include/kerberosIV $CFLAGS"
+	AC_DEFINE(NETBSD, 1, [Define if OS is NetBSD])
+	CFLAGS="-I\$(top_srcdir)/sys/netbsd $CFLAGS"
 	need_dash_r=yes 
 
 	dnl ----- NetBSD does not have crypt.h, uses unistd.h -----
