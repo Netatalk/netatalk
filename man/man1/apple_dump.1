@@ -1,0 +1,77 @@
+'\" t
+.\"     Title: apple_dump
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 31 Mar 2010
+.\"    Manual: Netatalk 2.1
+.\"    Source: Netatalk 2.1
+.\"  Language: English
+.\"
+.TH "APPLE_DUMP" "1" "31 Mar 2010" "Netatalk 2.1" "Netatalk 2.1"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+apple_dump \- Dump AppleSingle/AppleDouble format file
+.SH "SYNOPSIS"
+.HP \w'\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\fBapple_dump\fR\fB\fR\ 'u
+\fBapple_dump\fR\fB\fR [\-a] \fIFILE\fR | \fIDIR\fR 
+.br
+\fBapple_dump\fR\fB\fR \-f \fIFILE\fR
+.br
+\fBapple_dump\fR\fB\fR \-d \fIFILE\fR
+.br
+\fBapple_dump\fR\fB\fR \-h | \-help | \-\-help 
+.SH "DESCRIPTION"
+.PP
+\fBapple_dump\fR
+dump AppleSingle/AppleDouble format file\&.
+.SH "OPTIONS"
+.PP
+\fB\-a\fR \fIFILE\fR|\fIDIR\fR
+.RS 4
+This is default\&. Dump a AppleSingle/AppleDouble file for
+\fIFILE\fR
+or
+\fIDIR\fR
+automatically\&. Extrapolate FinderInfo type from absolute path\&. If FILE is not AppleSingle/AppleDouble format, look for
+\fI\&.AppleDouble/FILE\fR
+and
+\fI\&._FILE\fR\&. If
+\fIDIR\fR, look for
+\fIDIR/\&.AppleDouble/\&.Parent\fR
+and
+\fI\&._DIR\fR\&.
+.RE
+.PP
+\fB\-f\fR \fIFILE\fR
+.RS 4
+Dump
+\fIFILE\fR\&. Assume FinderInfo to be FileInfo\&.
+.RE
+.PP
+\fB\-d\fR \fIFILE\fR
+.RS 4
+Dump
+\fIFILE\fR\&. Assume FinderInfo to be DirInfo\&.
+.RE
+.PP
+\fB\-h, \-help, \-\-help\fR
+.RS 4
+Display the help and exit
+.RE
+.SH "NOTE"
+.PP
+There is no way to detect whether FinderInfo is FileInfo or DirInfo\&. By default, apple_dump examins whether file or directory, a parent directory is \&.AppleDouble, filename is \&._*, filename is \&.Parent, and so on\&.
+.PP
+If setting option \-f or \-d, assume FinderInfo and doesn\'t look for another file\&.
+.SH "SEE ALSO"
+.PP
+\fBafile\fR(1)
