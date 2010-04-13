@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.243 2010-04-12 14:28:42 franklahm Exp $
+dnl $Id: configure.in,v 1.244 2010-04-13 08:05:06 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -597,6 +597,8 @@ dnl       /usr/include or similar places.
 LIBS="$LIBS -L\$(top_srcdir)/libatalk"
 CFLAGS="-I\$(top_srcdir)/include $CFLAGS -I\$(top_srcdir)/sys"
 
+AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
+
 dnl --------------------------------------------------------------------------
 dnl specific configuration comes in here:
 dnl --------------------------------------------------------------------------
@@ -650,6 +652,7 @@ if test x"$this_os" = "xfreebsd"; then
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
 	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
+    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
 fi
 
 dnl ----- HP-UX 11 specific -----
@@ -796,6 +799,8 @@ if test x"$this_os" = "xnetbsd"; then
 	AC_MSG_RESULT([ * NetBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(NETBSD, 1, [Define if OS is NetBSD])
+    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EFTYPE, errno returned by open with O_NOFOLLOW)
+
 	CFLAGS="-I\$(top_srcdir)/sys/netbsd $CFLAGS"
 	need_dash_r=yes 
 

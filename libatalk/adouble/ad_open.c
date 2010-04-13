@@ -1,5 +1,5 @@
 /*
- * $Id: ad_open.c,v 1.73 2010-03-30 12:55:26 franklahm Exp $
+ * $Id: ad_open.c,v 1.74 2010-04-13 08:05:06 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
@@ -1292,7 +1292,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                     hoflags = oflags;
                     ad->ad_data_fork.adf_fd = open( path, hoflags | O_NOFOLLOW, admode );
                 }
-                if (ad->ad_data_fork.adf_fd == -1 && errno == ELOOP) {
+                if (ad->ad_data_fork.adf_fd == -1 && errno == OPEN_NOFOLLOW_ERRNO) {
                     int lsz;
 
                     ad->ad_data_fork.adf_syml = malloc(PATH_MAX+1);

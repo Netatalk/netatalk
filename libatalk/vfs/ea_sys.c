@@ -1,5 +1,5 @@
 /*
-  $Id: ea_sys.c,v 1.7 2010-04-03 07:11:36 franklahm Exp $
+  $Id: ea_sys.c,v 1.8 2010-04-13 08:05:06 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -98,7 +98,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
         memset(rbuf, 0, 4);
         *rbuflen += 4;
         switch(errno) {
-        case ELOOP:
+        case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
             return AFP_OK;
@@ -173,7 +173,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
         memset(rbuf, 0, 4);
         *rbuflen += 4;
         switch(errno) {
-        case ELOOP:
+        case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
             return AFP_OK;
@@ -235,7 +235,7 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
     }
 
     if (ret == -1) switch(errno) {
-        case ELOOP:
+        case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW */
             ret = AFPERR_BADTYPE;
         default:
@@ -316,7 +316,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
 
     if (ret == -1) {
         switch(errno) {
-        case ELOOP:
+        case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "sys_set_ea(%s/%s): encountered symlink with kXAttrNoFollow",
                 uname, attruname);
@@ -365,7 +365,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 
     if (ret == -1) {
         switch(errno) {
-        case ELOOP:
+        case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
             LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): encountered symlink with kXAttrNoFollow", uname);
             return AFP_OK;
