@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.126 2010-04-10 08:24:54 franklahm Exp $
+ * $Id: volume.c,v 1.127 2010-04-16 18:28:45 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -1839,7 +1839,9 @@ static int volume_openDB(struct vol *volume)
         LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
     }
 
-    LOG(log_info, logtype_afpd, "%s:%s", volume->v_cnidserver, volume->v_cnidport);
+    LOG(log_info, logtype_afpd, "%s:%s",
+        volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
+        volume->v_cnidport ? volume->v_cnidport : Cnid_port);
     
     volume->v_cdb = cnid_open(volume->v_dbpath ? volume->v_dbpath : volume->v_path,
                               volume->v_umask,
