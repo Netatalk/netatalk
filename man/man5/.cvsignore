@@ -1,3 +1,4 @@
 Makefile
 Makefile.in
 *.5
+.gitignore

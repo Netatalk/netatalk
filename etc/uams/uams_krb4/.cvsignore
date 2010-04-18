@@ -6,3 +6,4 @@
 core
 Makefile.in
 Makefile
+.gitignore

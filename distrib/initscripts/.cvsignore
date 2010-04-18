@@ -5,3 +5,4 @@ rc.atalk.redhat
 rc.atalk.suse
 rc.atalk.tru64
 atalk
+.gitignore

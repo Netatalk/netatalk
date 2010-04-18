@@ -6,3 +6,4 @@ cnid_maint
 cnid_index
 .deps
 .libs
+.gitignore

@@ -4,3 +4,4 @@ papd
 showppd
 .deps
 .libs
+.gitignore

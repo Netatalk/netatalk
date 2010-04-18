@@ -5,3 +5,4 @@ hash
 test_parse_mtab
 .deps
 .libs
+.gitignore

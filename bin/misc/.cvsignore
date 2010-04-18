@@ -5,3 +5,4 @@ netacnv
 .libs
 *.o
 afpldaptest
+.gitignore

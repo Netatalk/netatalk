@@ -5,3 +5,4 @@ cnid_dbd
 dbd
 .deps
 .libs
+.gitignore

@@ -4,3 +4,4 @@ psf
 psa
 .deps
 .libs
+.gitignore
