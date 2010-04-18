@@ -1,5 +1,5 @@
 /*
-  $Id: ea.c,v 1.21 2010-04-04 08:24:38 franklahm Exp $
+  $Id: ea.c,v 1.22 2010-04-18 11:11:17 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -299,6 +299,7 @@ static int ea_addentry(struct ea * restrict ea,
                        size_t attrsize,
                        int bitmap)
 {
+    int ea_existed = 0;
     unsigned int count = 0;
     void *tmprealloc;
 
@@ -306,18 +307,21 @@ static int ea_addentry(struct ea * restrict ea,
     if (ea->ea_count > 0) {
         while (count < ea->ea_count) {
             if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
-                LOG(log_debug, logtype_afpd, "ea_addentry('%s'): exists", attruname);
+                ea_existed = 1;
+                LOG(log_debug, logtype_afpd, "ea_addentry('%s', bitmap:0x%x): exists", attruname, bitmap);
                 if (bitmap & kXAttrCreate)
                     /* its like O_CREAT|O_EXCL -> fail */
                     return -1;
-                if ( ! (bitmap & kXAttrReplace))
-                    /* replace was not requested, then its an error */
-                    return -1;
-                break;
+                (*(ea->ea_entries))[count].ea_size = attrsize;
+                return 0;
             }
             count++;
         }
     }
+
+    if ((bitmap & kXAttrReplace) && ! ea_existed)
+        /* replace was requested, but EA didn't exist */
+        return -1;
 
     if (ea->ea_count == 0) {
         ea->ea_entries = malloc(sizeof(struct ea_entry));
@@ -325,7 +329,7 @@ static int ea_addentry(struct ea * restrict ea,
             LOG(log_error, logtype_afpd, "ea_addentry: OOM");
             return -1;
         }
-    } else {
+    } else if (! ea_existed) {
         tmprealloc = realloc(ea->ea_entries, sizeof(struct ea_entry) * (ea->ea_count + 1));
         if ( ! tmprealloc) {
             LOG(log_error, logtype_afpd, "ea_addentry: OOM");
