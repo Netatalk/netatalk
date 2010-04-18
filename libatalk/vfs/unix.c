@@ -1,5 +1,5 @@
 /*
- * $Id: unix.c,v 1.10 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: unix.c,v 1.11 2010-04-18 16:14:51 hat001 Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -12,6 +12,7 @@
 
 #include <unistd.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
