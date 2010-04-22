@@ -1,5 +1,5 @@
 /*
-  $Id: ldap.c,v 1.4 2009-11-28 10:13:04 franklahm Exp $
+  $Id: ldap.c,v 1.5 2010-04-22 10:17:57 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ typedef enum {
 } ldapcon_t;
 
 /********************************************************
- * LDAP config stuff. Filled by etc/afpd/acl_config.c
+ * LDAP config stuff. Filled by libatalk/acl/ldap_config.c
  ********************************************************/
 int ldap_config_valid;
 
@@ -102,6 +102,7 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
                                                    char **result) {
     int ret = 0;
     int ldaperr;
+    int ldap_results = -1;
     int desired_version  = LDAP_VERSION3;
     static int ldapconnected = 0;
     static LDAP *ld     = NULL;
@@ -111,14 +112,15 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     char **attribute_values;
     struct timeval timeout;
 
-//    LOG(log_debug, logtype_afpd,"ldap_getattr_fromfilter_withbase_scope: BEGIN");
+    LOG(log_maxdebug, logtype_afpd,"ldap_getattr_fromfilter_withbase_scope: BEGIN");
 
     timeout.tv_sec = 3;
     timeout.tv_usec = 0;
 
     /* init LDAP if necessary */
-    if (!ldapconnected) {
-//  LOG(log_debug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \'%s\'", ldap_server);
+    if (!ld) {
+        LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \"%s\"",
+            ldap_server);
         if ((ld = ldap_init(ldap_server, LDAP_PORT)) == NULL ) {
             LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_init error");
             return -1;
@@ -153,7 +155,8 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
         }
     }
 
-//    LOG(log_debug, logtype_afpd,"LDAP start search: base: %s, filter: %s, attr: %s", searchbase, filter, attributes[0]);
+    LOG(log_maxdebug, logtype_afpd, "LDAP start search: base: %s, filter: %s, attr: %s",
+        searchbase, filter, attributes[0]);
 
     /* start LDAP search */
     ldaperr = ldap_search_st(ld, searchbase, scope, filter, attributes, 0, &timeout, &msg);
@@ -164,11 +167,13 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     }
 
     /* parse search result */
-//    LOG(log_debug, logtype_default, "ldap_getuuidfromname: got %d entries from ldap search", ldap_count_entries(ld, msg));
-    if (ldap_count_entries(ld, msg) != 1) {
+    LOG(log_maxdebug, logtype_default, "ldap_getuuidfromname: got %d entries from ldap search",
+        ldap_count_entries(ld, msg));
+    if ((ldap_results = ldap_count_entries(ld, msg)) != 1) {
         ret = -1;
         goto cleanup;
     }
+
     entry = ldap_first_entry(ld, msg);
     if (entry == NULL) {
         LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: error in ldap_first_entry");
@@ -182,7 +187,8 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
         goto cleanup;
     }
 
-//    LOG(log_debug, logtype_afpd,"LDAP Search result: %s: %s", attributes[0], attribute_values[0]);
+    LOG(log_maxdebug, logtype_afpd,"LDAP Search result: %s: %s",
+        attributes[0], attribute_values[0]);
 
     /* allocate place for uuid as string */
     *result = calloc( 1, strlen(attribute_values[0]) + 1);
@@ -200,12 +206,17 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
         entry = ldap_next_entry(ld, entry);
 
 cleanup:
-    if(msg)
+    if (msg)
         ldap_msgfree(msg);
-    if(ld) {
-        if ((ldapconnected && !(conflags & KEEPALIVE)) || (*result != NULL)) {
+    if (ld) {
+        if (ldapconnected
+            && ( !(conflags & KEEPALIVE)
+                 ||
+                 ((ret == -1) && (ldaperr != LDAP_NO_RESULTS_RETURNED)))
+            ) {
+
             ldapconnected = 0;  /* regardless of unbind errors */
-//      LOG(log_debug, logtype_default,"LDAP unbind!");
+            LOG(log_maxdebug, logtype_default,"LDAP unbind");
             if (ldap_unbind_s(ld) != 0) {
                 LOG(log_error, logtype_default, "ldap_unbind_s: %s\n", ldap_err2string(ldaperr));
                 return -1;
@@ -238,9 +249,9 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
     }
 
     if (type == UUID_GROUP) {
-        ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, ldap_userscope, KEEPALIVE, uuid_string);
+        ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, ldap_groupscope, KEEPALIVE, uuid_string);
     } else  { /* type hopefully == UUID_USER */
-        ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_groupscope, 0, uuid_string);
+        ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, KEEPALIVE, uuid_string);
     }
     return ret;
 }
@@ -265,7 +276,7 @@ int ldap_getnamefromuuid( char *uuidstr, char **name, uuidtype_t *type) {
         return 0;
     }
     attributes[0] = ldap_name_attr;
-    ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, 0, name);
+    ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, KEEPALIVE, name);
     if (ret == 0) {
         *type = UUID_USER;
         return 0;
@@ -273,4 +284,3 @@ int ldap_getnamefromuuid( char *uuidstr, char **name, uuidtype_t *type) {
 
     return ret;
 }
-
