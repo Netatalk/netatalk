@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 31 Mar 2010
+.\"      Date: 22 Apr 2010
 .\"    Manual: Netatalk 2.1
 .\"    Source: Netatalk 2.1
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "31 Mar 2010" "Netatalk 2.1" "Netatalk 2.1"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "22 Apr 2010" "Netatalk 2.1" "Netatalk 2.1"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -19,20 +19,45 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-AppleVolumes.default \- Configuration file used by \fBafpd\fR(8) to determine the shares made available through AFP
+AppleVolumes.default, AppleVolumes.system, AppleVolumes \- Configuration file used by \fBafpd\fR(8) to determine the shares made available through AFP and specify file name extension mappings\&.
+.SH "SYNOPSIS"
+.HP \w'\fB:ETCDIR:/AppleVolumes\&.default\fR\fB\fR\fB:ETCDIR:/AppleVolumes\&.system\fR\fB\fR\fB~/AppleVolumes\fR\fB\fR\fB~/\&.AppleVolumes\fR\fB\fR\fB~/applevolumes\fR\fB\fR\fB~/\&.applevolumes\fR\fB\fR\ 'u
+\fB:ETCDIR:/AppleVolumes\&.default\fR\fB\fR
+.br
+\fB:ETCDIR:/AppleVolumes\&.system\fR\fB\fR
+.br
+\fB~/AppleVolumes\fR\fB\fR
+.br
+\fB~/\&.AppleVolumes\fR\fB\fR
+.br
+\fB~/applevolumes\fR\fB\fR
+.br
+\fB~/\&.applevolumes\fR\fB\fR
 .SH "DESCRIPTION"
 .PP
-:ETCDIR:/AppleVolumes\&.default
-is the configuration file used by
+
+:ETCDIR:/AppleVolumes\&.system
+and one of
+:ETCDIR:/AppleVolumes\&.default,
+~/AppleVolumes,
+~/\&.AppleVolumes,
+~/applevolumes, or
+~/\&.applevolumes
+are the configuration files used by
 \fBafpd\fR
-to determine what portions of the file system will be shared via Apple Filing Protocol, as well as their behaviour\&. Any line not prefixed with # is interpreted\&. Newline escaping is supported\&. The configuration lines are composed like:
+to determine what portions of the file system will be shared via Apple Filing Protocol, as well as their behaviour\&.
+.PP
+Any line not prefixed with # is interpreted\&. Newline escaping is supported\&. The configuration lines are composed like:
 .PP
 path
 \fI[ volume name ] [ options ]\fR
 .PP
+\&.extension
+\fI[ type [ creator ] ]\fR
+.PP
 The path name must be a fully qualified path name, or a path name using either the ~ shell shorthand or any of the substitution variables, which are listed below\&.
 .PP
-The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
+The volume name is the name that appears in the Chooser ot the "connect to server" dialog on Macintoshes to represent the appropriate share\&. If volumename is unspecified, the last component of pathname is used\&. No two volumes may have the same name\&. If there are spaces in the name, it should be in quotes (i\&.e\&. "File Share")\&. The volume name cannot contain the
 \':\'
 character\&. The volume name is mangled if it is very long\&. Mac codepage volume name is limited to 27 characters\&. UTF8\-MAC volume name is limited to \-volnamelen parameter in afpd\&.conf
 .if n \{\
@@ -51,6 +76,24 @@ character\&. The volume name is mangled if it is very long\&. Mac codepage volum
 Each volume has to be configured on a
 \fBsingle\fR
 line\&. Though newline escaping is supported\&.
+.sp .5v
+.RE
+.PP
+The leading\-dot lines specify file name extension mappings\&. The extension \'\&.\' sets the default creator and type for otherwise untyped Unix files\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+file name extension mapping is useful for Mac OS 9 and earlier\&. But it should not use for Mac OS X\&.
 .sp .5v
 .RE
 .PP
@@ -641,6 +684,31 @@ prodos
 Provides compatibility with Apple II clients\&. (legacy)
 .RE
 .RE
+.SH "FILE NAME EXTENSION MAPPINGS"
+.PP
+\fBExample.\ \&Extension is jpg. Type is "JPEG". Creator is "ogle".\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&.jpg "JPEG" "ogle"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample.\ \&Extension is lzh. Type is "LHA ". Creator is not defined.\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&.lzh "LHA "
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBafpd.conf\fR(5),
