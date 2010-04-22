@@ -1,5 +1,5 @@
 /*
-  $Id: ldap.c,v 1.5 2010-04-22 10:17:57 franklahm Exp $
+  $Id: ldap.c,v 1.6 2010-04-22 12:08:14 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -102,7 +102,7 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
                                                    char **result) {
     int ret = 0;
     int ldaperr;
-    int ldap_results = -1;
+    int retrycount = 0;
     int desired_version  = LDAP_VERSION3;
     static int ldapconnected = 0;
     static LDAP *ld     = NULL;
@@ -118,7 +118,8 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     timeout.tv_usec = 0;
 
     /* init LDAP if necessary */
-    if (!ld) {
+retry:
+    if (!ldapconnected) {
         LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \"%s\"",
             ldap_server);
         if ((ld = ldap_init(ldap_server, LDAP_PORT)) == NULL ) {
@@ -160,8 +161,11 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
 
     /* start LDAP search */
     ldaperr = ldap_search_st(ld, searchbase, scope, filter, attributes, 0, &timeout, &msg);
+    LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st returned: %s, %u",
+        ldap_err2string(ldaperr), ldaperr);
     if (ldaperr != LDAP_SUCCESS) {
-        LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st failed: %s", ldap_err2string(ldaperr));
+        if (retrycount ==1)
+            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st failed: %s", ldap_err2string(ldaperr));
         ret = -1;
         goto cleanup;
     }
@@ -169,7 +173,7 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     /* parse search result */
     LOG(log_maxdebug, logtype_default, "ldap_getuuidfromname: got %d entries from ldap search",
         ldap_count_entries(ld, msg));
-    if ((ldap_results = ldap_count_entries(ld, msg)) != 1) {
+    if (ldap_count_entries(ld, msg) != 1) {
         ret = -1;
         goto cleanup;
     }
@@ -212,7 +216,7 @@ cleanup:
         if (ldapconnected
             && ( !(conflags & KEEPALIVE)
                  ||
-                 ((ret == -1) && (ldaperr != LDAP_NO_RESULTS_RETURNED)))
+                 ((ret == -1) && (ldaperr != LDAP_SUCCESS))) /* ie ldapsearch got 0 results */
             ) {
 
             ldapconnected = 0;  /* regardless of unbind errors */
@@ -221,6 +225,9 @@ cleanup:
                 LOG(log_error, logtype_default, "ldap_unbind_s: %s\n", ldap_err2string(ldaperr));
                 return -1;
             }
+            retrycount++;
+            if (retrycount < 2)
+                goto retry;
         }
     }
     return ret;
