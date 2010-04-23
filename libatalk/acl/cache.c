@@ -1,5 +1,5 @@
 /*
-  $Id: cache.c,v 1.5 2010-04-23 10:31:40 franklahm Exp $
+  $Id: cache.c,v 1.6 2010-04-23 11:37:05 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -221,8 +221,10 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
                 /* remove item */
                 if (entry->prev) /* 2nd to last in queue */
                     entry->prev->next = entry->next;
-                else        /* queue head */
-                    namecache[hash] = entry->next;
+                else  { /* queue head */
+                    if ((namecache[hash] = entry->next) != NULL)
+                        namecache[hash]->prev = NULL;
+                }
                 free(entry->name);
                 free(entry->uuid);
                 free(entry);
@@ -267,11 +269,13 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
         if (ret == 0) {
             tim = time(NULL);
             if ((tim - entry->creationtime) > CACHESECONDS) {
-                LOG(log_info, logtype_default, "search_cachebyuuid: expired: name:\'%s\' in queue {%d}", entry->name, hash);
-                if (entry->prev)
+                LOG(log_debug, logtype_default, "search_cachebyuuid: expired: name:\'%s\' in queue {%d}", entry->name, hash);
+                if (entry->prev) /* 2nd to last in queue */
                     entry->prev->next = entry->next;
-                else
-                    uuidcache[hash] = entry->next;
+                else { /* queue head  */
+                    if ((uuidcache[hash] = entry->next) != NULL)
+                        uuidcache[hash]->prev = NULL;
+                }
                 free(entry->name);
                 free(entry->uuid);
                 free(entry);

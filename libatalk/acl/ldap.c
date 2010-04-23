@@ -1,5 +1,5 @@
 /*
-  $Id: ldap.c,v 1.6 2010-04-22 12:08:14 franklahm Exp $
+  $Id: ldap.c,v 1.7 2010-04-23 11:37:06 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -100,7 +100,7 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
                                                    int scope,
                                                    ldapcon_t conflags,
                                                    char **result) {
-    int ret = 0;
+    int ret;
     int ldaperr;
     int retrycount = 0;
     int desired_version  = LDAP_VERSION3;
@@ -119,6 +119,8 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
 
     /* init LDAP if necessary */
 retry:
+    ret = 0;
+
     if (!ldapconnected) {
         LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \"%s\"",
             ldap_server);
