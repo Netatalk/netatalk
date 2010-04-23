@@ -1,5 +1,5 @@
 /*
-  $Id: cache.c,v 1.3 2009-11-28 12:37:30 franklahm Exp $
+  $Id: cache.c,v 1.4 2010-04-23 05:54:54 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -62,7 +62,8 @@ static int dumpcache() {
                     continue;
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
-                LOG(log_debug9, logtype_default, "namecache{%d}]: name:%s, uuid:%s, cached: %s", i, entry->name, uuidstring, timestr);
+                LOG(log_debug9, logtype_default, "namecache{%d}: name:%s, uuid:%s, type: %s, cached: %s",
+                    i, entry->name, uuidstring, uuidtype[entry->type], timestr);
                 free(uuidstring);
             } while ((entry = entry->next) != NULL);
         }
@@ -77,7 +78,8 @@ static int dumpcache() {
                     continue;
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
-                LOG(log_debug9, logtype_default, "uuidcache{%d}: uuid:%s, name:%s, type:%d, cached: %s", i, uuidstring, entry->name, entry->type,timestr);
+                LOG(log_debug9, logtype_default, "uuidcache{%d}: uuid:%s, name:%s, type: %s, cached: %s",
+                    i, uuidstring, entry->name, uuidtype[entry->type], timestr);
                 free(uuidstring);
             } while ((entry = entry->next) != NULL);
         }
