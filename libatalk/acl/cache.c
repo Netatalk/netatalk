@@ -1,5 +1,5 @@
 /*
-  $Id: cache.c,v 1.4 2010-04-23 05:54:54 franklahm Exp $
+  $Id: cache.c,v 1.5 2010-04-23 10:31:40 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -127,6 +127,10 @@ int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t 
     cacheduser_t *entry;
     unsigned char hash;
 
+#ifdef DEBUG
+    dumpcache();
+#endif
+
     /* allocate mem and copy values */
     name = malloc(strlen(inname)+1);
     if (!name) {
@@ -183,6 +187,11 @@ cleanup:
         if (cacheduser)
             free(cacheduser);
     }
+
+#ifdef DEBUG
+    dumpcache();
+#endif
+
     return ret;
 }
 
@@ -191,6 +200,10 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
     unsigned char hash;
     cacheduser_t *entry;
     time_t tim;
+
+#ifdef DEBUG
+    dumpcache();
+#endif
 
     hash = hashstring((unsigned char *)name);
 
@@ -213,14 +226,23 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
                 free(entry->name);
                 free(entry->uuid);
                 free(entry);
+#ifdef DEBUG
+                dumpcache();
+#endif
                 return -1;
             } else {
                 memcpy(uuid, entry->uuid, UUID_BINSIZE);
+#ifdef DEBUG
+                dumpcache();
+#endif
                 return 0;
             }
         }
         entry = entry->next;
     }
+#ifdef DEBUG
+    dumpcache();
+#endif
     return -1;
 }
 
@@ -229,6 +251,10 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     unsigned char hash;
     cacheduser_t *entry;
     time_t tim;
+
+#ifdef DEBUG
+    dumpcache();
+#endif
 
     hash = hashuuid(uuidp);
 
@@ -249,16 +275,26 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
                 free(entry->name);
                 free(entry->uuid);
                 free(entry);
+#ifdef DEBUG
+                dumpcache();
+#endif
                 return -1;
             } else {
                 *name = malloc(strlen(entry->name)+1);
                 strcpy(*name, entry->name);
                 *type = entry->type;
+#ifdef DEBUG
+                dumpcache();
+#endif
                 return 0;
             }
         }
         entry = entry->next;
     }
+
+#ifdef DEBUG
+    dumpcache();
+#endif
 
     return -1;
 }
@@ -270,6 +306,10 @@ int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const 
     cacheduser_t *cacheduser = NULL;
     cacheduser_t *entry;
     unsigned char hash;
+
+#ifdef DEBUG
+    dumpcache();
+#endif
 
     /* allocate mem and copy values */
     name = malloc(strlen(inname)+1);
@@ -327,5 +367,10 @@ cleanup:
         if (cacheduser)
             free(cacheduser);
     }
+
+#ifdef DEBUG
+    dumpcache();
+#endif
+
     return ret;
 }
