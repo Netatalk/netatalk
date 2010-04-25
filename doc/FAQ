@@ -1,12 +1,12 @@
 Netatalk Frequently Asked Questions
-($Id: FAQ,v 1.13 2009-04-30 10:48:38 franklahm Exp $)
+($Id: FAQ,v 1.14 2010-04-25 13:59:53 hat001 Exp $)
 
 -----------------------------------------------------------------------------
 
 Q1: Where can I get more information on Netatalk?
 Q2: What is this I keep seeing about asun?
 Q3: How do I get the most recent version of Netatalk?
-Q4: Can I get an almost current version of Netatalk without having to learn CVS?
+Q4: Can I get an almost current version of Netatalk without having to learn Git?
 Q4a: Is there an RPM, package, or tarball for my platform?
 Q5: I'm having massive file deletion problems!
 Q6: I am having lots of file locking problems!
@@ -112,65 +112,53 @@ A:  Before Netatalk moved to SourceForge, Adrian Sun (asun) had written
 
 Q3: How do I get the most recent version of Netatalk?
 
-A:  Via CVS from SourceForge.net. This is the actively maintained version
+A:  Via Git from SourceForge.net. This is the actively maintained version
     of Netatalk, changes are being made constantly, and therefore it is not
     suitable for production environments. The netatalk at SourceForge is in
     Beta, so keep that in mind.
 
-    To create the CVS tree - from the directory you want to use as your CVS
-    root, run:
+    Downloading the Git repository can be done quickly and easily.
 
-      % cvs -d:pserver:anonymous@cvs.netatalk.sf.net:/cvsroot/netatalk login
+    Make sure you have Git installed. which git should produce a path to git.
 
-    hit <enter> at the Password: prompt
+     $> which git
+     /usr/bin/git
 
-      % cvs -z3
-      -d:pserver:anonymous@cvs.netatalk.sf.net:/cvsroot/netatalk co
-      netatalk
+    If you don't have one make a source directory. cd to this directory.
 
-    This will create a netatalk subdirectory, and check out all of the files.
-    If you run this same command subsequently, you will update any files which
-    have changed (on the CVS server) since your last checkout.
+     $> mkdir /path/to/new/source/dir
+     $> cd /path/to/new/source/dir
 
-    Once you've done that, read the INSTALL file in the netatalk/ directory,
-    plus the CONFIGURE file. If you're installing from CVS, you'll most likely
-    need have some supplementary software installed, such as gmake. Some
-    systems work fine with make. Additional information can be found in doc/.
+    Now get the source:
 
-    The main things to know, though, are this: you must run
+     $> git clone git://netatalk.git.sourceforge.net/gitroot/netatalk/netatalk
+     Initialized empty Git repository in /path/to/new/source/dir/netatalk/.git/
+     remote: Counting objects: 2503, done.
+     ...
 
-      % ./autogen.sh
+    This will create a local directory called "netatalk" containing a complete
+    and fresh copy of the whole Netatalk source from the Git repository.
 
-    in the netatalk/ directory first, in order to create your configure file. 
-    
-    Then run 
+    In order to keep your repository copy updated, occasionally run:
 
-      % ./configure --help | more
+     $> git pull
 
-    in order to get a feel for which compile flags are available. Some of these
-    flags are summarized below, some are summarized in the INSTALL file, and
-    some have individual README files.
-    
-    To learn more about CVS, good places to start are:
+    Now cd to the netatalk directory and run ./bootstrap. This will create the
+    configure script required in the next step.
 
-      http://www.cvshome.org
-      http://www.cvshome.org/docs/manual
-      http://www.cvshome.org/form/form.cgi (this is the FAQ)
-
-    There are GUI CVS systems for Windows and MacOS. Search on SourceForge for
-    WinCVS or MacCVS.
+     $> ./bootstrap
 
 
-Q4: Can I get an almost current version of Netatalk without having to learn CVS?
+Q4: Can I get an almost current version of Netatalk without having to learn Git?
 
-A:  Yes.  Daily snapshots of the CVS tree should be posted for the benefit of
-    those that don't want to / can't use CVS. They are available at:
+A:  Yes.  Snapshots of the Git tree should be posted for the benefit of
+    those that don't want to / can't use Git. They are available at:
 
-      http://www.marcuscom.com/netatalk/nightly/
+      http://netatalk.git.sourceforge.net/git/gitweb-index.cgi
     
     You should be able to treat these images as you would a release.  Just
     configure as you normally work, then run make (or gmake as the case may
-    be).  There is no need to run autogen.sh on these images.
+    be).  There is no need to run ./bootstrap on these images.
 
 
 Q4a: Is there an RPM, package, or tarball for my platform?
