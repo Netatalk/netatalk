@@ -93,12 +93,24 @@ The leading\-dot lines specify file name extension mappings\&. The extension \'\
 .ps -1
 .br
 .PP
-file name extension mapping is useful for Mac OS 9 and earlier\&. But it should not use for Mac OS X\&.
+File name extension mapping is useful for Mac OS 9 and earlier\&. But it should not use for Mac OS X\&.
 .sp .5v
 .RE
 .PP
 It is possible to specify default options for all volumes with a
-\fI:DEFAULT: \fRline preceeding these volume definitions:.PP \fBExample.\ \&:DEFAULT: configuration line\fR .PP :DEFAULT: options:upriv,usedots dbpath:/var/dbd/AppleDB/$v dperm:0775 fperm:0664
+\fI:DEFAULT: \fRline preceeding these volume definitions:
+.PP
+\fBExample.\ \&:DEFAULT: configuration line\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+:DEFAULT: options:upriv,usedots dbpath:/var/dbd/AppleDB/$v dperm:0775 fperm:0664
+.fi
+.if n \{\
+.RE
+.\}
 .PP
 The possible options and their meanings are:
 .PP
