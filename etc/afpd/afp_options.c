@@ -1,5 +1,5 @@
 /*
- * $Id: afp_options.c,v 1.54 2010-04-02 16:17:22 hat001 Exp $
+ * $Id: afp_options.c,v 1.54 2010/04/02 16:17:22 hat001 Exp $
  *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -49,6 +49,7 @@ char *strchr (), *strrchr ();
 #include "globals.h"
 #include "status.h"
 #include "auth.h"
+#include "dircache.h"
 
 #include <atalk/compat.h>
 
@@ -195,6 +196,7 @@ void afp_options_init(struct afp_options *options)
     /* don't advertize slp by default */
     options->flags |= OPTION_NOSLP;
 #endif
+    options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -446,6 +448,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-ntseparator")) && (opt = strdup(c)))
        options->ntseparator = opt;
+
+    if ((c = getoption(buf, "-dircachesize")))
+        options->dircachesize = atoi(c);
      
     if ((c = getoption(buf, "-signature")) && (opt = strdup(c))) {
         set_signature(opt, options);

@@ -1,5 +1,5 @@
 /*
- * $Id: volume.c,v 1.127 2010-04-16 18:28:45 franklahm Exp $
+ * $Id$
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -459,7 +459,11 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value &= ~AFPVOL_CACHE;
             else if (strcasecmp(p, "tm") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_TM;
-
+/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
+#if 0
+            else if (strcasecmp(p, "cdrom") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_CDROM | AFPVOL_RO;
+#endif
             p = strtok(NULL, ",");
         }
 
@@ -1843,6 +1847,28 @@ static int volume_openDB(struct vol *volume)
         volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
         volume->v_cnidport ? volume->v_cnidport : Cnid_port);
     
+#if 0
+/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
+
+    /* Legacy pre 2.1 way of sharing eg CD-ROM */
+    if (strcmp(volume->v_cnidscheme, "last") == 0) {
+        /* "last" is gone. We support it by switching to in-memory "tdb" */
+        volume->v_cnidscheme = strdup("tdb");
+        flags |= CNID_FLAG_MEMORY;
+    }
+
+    /* New way of sharing CD-ROM */
+    if (volume->v_flags & AFPVOL_CDROM) {
+        flags |= CNID_FLAG_MEMORY;
+        if (strcmp(volume->v_cnidscheme, "tdb") != 0) {
+            free(volume->v_cnidscheme);
+            volume->v_cnidscheme = strdup("tdb");
+            LOG(log_info, logtype_afpd, "Volume %s is ejectable, switching to scheme %s.",
+                volume->v_path, volume->v_cnidscheme);
+        }
+    }
+#endif
+
     volume->v_cdb = cnid_open(volume->v_dbpath ? volume->v_dbpath : volume->v_path,
                               volume->v_umask,
                               volume->v_cnidscheme,
@@ -1850,7 +1876,9 @@ static int volume_openDB(struct vol *volume)
                               volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
                               volume->v_cnidport ? volume->v_cnidport : Cnid_port);
 
-    if (!volume->v_cdb) {
+
+    if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
+        /* The first attempt failed and it wasn't yet an attempt to open in-memory */
         flags |= CNID_FLAG_MEMORY;
         LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.", volume->v_path);
         volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL);
@@ -2056,9 +2084,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         volume->max_filename = MACFILELEN;
     }
 
-    volume->v_dir = volume->v_root = NULL;
-    volume->v_hash = NULL;
-
     volume->v_flags |= AFPVOL_OPEN;
     volume->v_cdb = NULL;
 
@@ -2077,7 +2102,13 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     else if (*(vol_uname + 1) != '\0')
         vol_uname++;
 
-    if ((dir = dirnew(vol_mname, vol_uname) ) == NULL) {
+    if ((dir = dir_new(vol_mname,
+                       vol_uname,
+                       volume,
+                       DIRDID_ROOT_PARENT,
+                       DIRDID_ROOT,
+                       bfromcstr(volume->v_path))
+            ) == NULL) {
         free(vol_mname);
         LOG(log_error, logtype_afpd, "afp_openvol(%s): malloc: %s", volume->v_path, strerror(errno) );
         ret = AFPERR_MISC;
@@ -2085,14 +2116,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
     free(vol_mname);
 
-    dir->d_did = DIRDID_ROOT;
-    dir->d_color = DIRTREE_COLOR_BLACK; /* root node is black */
-    dir->d_m_name_ucs2 = strdup_w(volume->v_name);
-    volume->v_dir = volume->v_root = dir;
-    volume->v_curdir = NULL;
-    volume->v_hash = dirhash();
+    volume->v_root = dir;
+    curdir = dir;
 
-    curdir = volume->v_dir;
     if (volume_openDB(volume) < 0) {
         LOG(log_error, logtype_afpd, "Fatal error: cannot open CNID or invalid CNID backend for %s: %s",
             volume->v_path, volume->v_cnidscheme);
@@ -2131,16 +2157,15 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         }
         else {
             p = Trash;
-            cname( volume, volume->v_dir, &p );
+            cname( volume, volume->v_root, &p );
         }
         return( AFP_OK );
     }
 
 openvol_err:
-    if (volume->v_dir) {
-        hash_free( volume->v_hash);
-        dirfree( volume->v_dir );
-        volume->v_dir = volume->v_root = NULL;
+    if (volume->v_root) {
+        dir_free( volume->v_root );
+        volume->v_root = NULL;
     }
 
     volume->v_flags &= ~AFPVOL_OPEN;
@@ -2158,9 +2183,8 @@ static void closevol(struct vol *vol)
     if (!vol)
         return;
 
-    hash_free( vol->v_hash);
-    dirfree( vol->v_root );
-    vol->v_dir = NULL;
+    dir_free( vol->v_root );
+    vol->v_root = NULL;
     if (vol->v_cdb != NULL) {
         cnid_close(vol->v_cdb);
         vol->v_cdb = NULL;
@@ -2201,7 +2225,7 @@ static void deletevol(struct vol *vol)
     if ( ovol != NULL ) {
         /* Even if chdir fails, we can't say afp_closevol fails. */
         if ( chdir( ovol->v_path ) == 0 ) {
-            curdir = ovol->v_dir;
+            curdir = ovol->v_root;
         }
     }
 

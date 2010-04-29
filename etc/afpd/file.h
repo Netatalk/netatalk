@@ -1,5 +1,5 @@
 /*
- * $Id: file.h,v 1.26 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: file.h,v 1.26 2010/03/12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -127,7 +127,7 @@ extern void *get_finderinfo (const struct vol *, const char *, struct adouble *,
 extern size_t mtoUTF8   (const struct vol *, const char *, size_t , char *, size_t );
 extern int  copy_path_name (const struct vol *, char *, char *i);
 
-extern u_int32_t get_id  (struct vol *, struct adouble *, const struct stat *,
+extern u_int32_t get_id  (const struct vol *, struct adouble *, const struct stat *,
                                 const cnid_t , char *, const int );
 
 /* FP functions */

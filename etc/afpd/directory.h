@@ -1,5 +1,5 @@
 /*
- * $Id: directory.h,v 1.34 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: directory.h,v 1.34 2010/03/12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -43,16 +43,14 @@
 #include "globals.h"
 #include "volume.h"
 
-#define DIRTREE_COLOR_RED    0
-#define DIRTREE_COLOR_BLACK  1
-
 #define DIRF_FSMASK	(3<<0)
 #define DIRF_NOFS	(0<<0)
 #define DIRF_AFS	(1<<0)
 #define DIRF_UFS	(2<<0)
 
-#define DIRF_OFFCNT     (1<<4)	/* offsprings count is valid */
-#define DIRF_CNID	(1<<5)  /* renumerate id */
+#define DIRF_OFFCNT    (1<<4) /* offsprings count is valid */
+#define DIRF_CNID	   (1<<5) /* renumerate id */
+#define DIRF_CACHELOCK (1<<6) /* lock in cache, don't remove in dircache_eviction, for catsearch */
 
 #define AFPDIR_READ	(1<<0)
 
@@ -76,10 +74,6 @@
 #define FILDIRBIT_ISDIR        (1 << 7) /* is a directory */
 #define FILDIRBIT_ISFILE       (0)      /* is a file */
 
-/* reserved directory id's */
-#define DIRDID_ROOT_PARENT    htonl(1)  /* parent directory of root */
-#define DIRDID_ROOT           htonl(2)  /* root directory */
-
 /* file/directory ids. what a mess. we scramble things in a vain attempt
  * to get something meaningful */
 #ifndef AFS
@@ -100,7 +94,6 @@
 #define CNID(a,b)     (((a)->st_ino & 0x7fffffff) | CNID_FILE(b))
 #endif /* AFS */
 
-
 struct maccess {
     u_char	ma_user;
     u_char	ma_world;
@@ -113,46 +106,39 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
-extern struct dir       *dirnew (const char *, const char *);
-extern void             dirfreename (struct dir *);
-extern void             dirfree (struct dir *);
-extern struct dir	*dirsearch (const struct vol *, u_int32_t);
-extern struct dir	*dirlookup (struct vol *, u_int32_t);
-extern struct dir       *dirsearch_byname (const struct vol *, struct dir *,char *);
-
-extern struct dir	*adddir (struct vol *, struct dir *, 
-                                               struct path *);
-
-extern int              movecwd (struct vol *, struct dir *);
-extern int              deletecurdir (struct vol *);
-extern struct path      *cname (struct vol *, struct dir *,
-                             char **);
-extern mode_t           mtoumode (struct maccess *);
-extern void             utommode (struct stat *, struct maccess *);
-extern int getdirparams (const struct vol *, u_int16_t, struct path *,
-                                 struct dir *, char *, size_t *);
-extern int setdirparams (struct vol *, struct path *, u_int16_t, char *);
-extern int renamedir(const struct vol *, int, char *, char *, struct dir *,
-                     struct dir *, char *);
-extern int path_error (struct path *, int error);
-
-extern void setdiroffcnt (struct dir *dir, struct stat *st,  u_int32_t count);
-extern int dirreenumerate (struct dir *dir, struct stat *st);
-
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
-extern int  for_each_dirent (const struct vol *, char *, dir_loop , void *);
+extern struct dir *dir_new(const char *mname, const char *uname, const struct vol *,
+                           cnid_t pdid, cnid_t did, bstring fullpath); /* volume.c needs it once */
+extern void        dir_free (struct dir *);
+extern struct dir  *dir_add(const struct vol *, const struct dir *, struct path *, int);
+extern int         dir_modify(const struct vol *vol, struct dir *dir, cnid_t pdid, cnid_t did,
+                              const char *new_mname, const char *new_uname, bstring pdir_fullpath);
+extern int         dir_remove(const struct vol *vol, struct dir *dir);
+extern struct dir  *dirlookup (const struct vol *, cnid_t);
+extern int         movecwd (const struct vol *, struct dir *);
+extern struct path *cname (struct vol *, struct dir *, char **);
 
-extern int  check_access (char *name , int mode);
-extern int file_access   (struct path *path, int mode);
+extern int         deletecurdir (struct vol *);
+extern mode_t      mtoumode (struct maccess *);
+extern void        utommode (struct stat *, struct maccess *);
+extern int         getdirparams (const struct vol *, u_int16_t, struct path *,
+                                 struct dir *, char *, size_t *);
 
-extern int netatalk_unlink (const char *name);
+extern int         setdirparams(struct vol *, struct path *, u_int16_t, char *);
+extern int         renamedir(const struct vol *, int, char *, char *, struct dir *,
+                             struct dir *, char *);
+extern int         path_error(struct path *, int error);
+extern void        setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count);
+extern int         dirreenumerate(struct dir *dir, struct stat *st);
+extern int         for_each_dirent(const struct vol *, char *, dir_loop , void *);
+extern int         check_access(char *name , int mode);
+extern int         file_access(struct path *path, int mode);
+extern int         netatalk_unlink (const char *name);
+extern int         caseenumerate (const struct vol *, struct path *, struct dir *);
 
-extern int caseenumerate (const struct vol *, struct path *, struct dir *);
-
-extern hash_t *dirhash (void);
 /* from enumerate.c */
-extern char *check_dirent (const struct vol *, char *);
+extern char        *check_dirent (const struct vol *, char *);
 
 /* FP functions */
 int afp_createdir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

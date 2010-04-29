@@ -1,5 +1,5 @@
 /*
- * $Id: util.h,v 1.21 2010-02-28 22:29:16 didg Exp $
+ * $Id: util.h,v 1.21 2010/02/28 22:29:16 didg Exp $
  */
 
 /*!
@@ -28,6 +28,18 @@
 #define EXITERR_CONF 2  /* error in config files/cmd line parameters */
 #define EXITERR_SYS  3  /* local system error */
 
+/* LOG assert errors */
+#ifndef NDEBUG
+#define AFP_ASSERT(b) \
+    do {                                                                \
+        if (!(b)) {                                                     \
+            LOG(log_error, logtype_default, "PANIC, assert failed: %s", #b); \
+            abort();                                                    \
+        } \
+    } while(0);
+#else
+#define AFP_ASSERT(b)
+#endif /* NDEBUG */
 
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);

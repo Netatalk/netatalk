@@ -1,5 +1,5 @@
 /*
- * $Id: volume.h,v 1.17 2010-04-10 08:24:54 franklahm Exp $
+ * $Id: volume.h,v 1.16 2010/03/31 09:47:32 franklahm Exp $
  *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -27,9 +27,7 @@ struct vol {
     u_int16_t       v_vid;
     int             v_flags;
     char            *v_path;
-    struct dir      *v_dir, *v_root;
-    struct dir      *v_curdir;  /* cache */
-    hash_t          *v_hash;
+    struct dir      *v_root;
     time_t          v_mtime;
 
     charset_t       v_volcharset;
@@ -108,7 +106,7 @@ struct vol {
 
 /*
   Flags that alter volume behaviour.
-  Keep in sync with include/atalk/volinfo.h and libatalk/util/volinfo.c
+  Keep in sync with libatalk/util/volinfo.c
 */
 #define AFPVOL_A2VOL     (1 << 5)   /* prodos volume */
 #define AFPVOL_CRLF      (1 << 6)   /* cr/lf translation */
@@ -137,6 +135,7 @@ struct vol {
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
 #define AFPVOL_TM        (1 << 24)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
+#define AFPVOL_CDROM     (1 << 25)   /* Ejectable media eg CD -> in memory CNID db */
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_NONE           0   /* No EAs */

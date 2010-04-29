@@ -1,5 +1,5 @@
 /*
- * $Id: afp_dsi.c,v 1.53 2010-03-30 12:55:26 franklahm Exp $
+ * $Id: afp_dsi.c,v 1.53 2010/03/30 12:55:26 franklahm Exp $
  *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
@@ -37,6 +37,7 @@
 #include "switch.h"
 #include "auth.h"
 #include "fork.h"
+#include "dircache.h"
 
 #ifdef FORCE_UIDGID
 #warning UIDGID
@@ -372,6 +373,9 @@ void afp_over_dsi(AFPObj *obj)
     }
 #endif /* DEBUGGING */
 
+    if (dircache_init(obj->options.dircachesize) != 0)
+        afp_dsi_die(EXITERR_SYS);
+
     /* get stuck here until the end */
     while ((cmd = dsi_receive(dsi))) {
         child.tickle = 0;
@@ -381,6 +385,7 @@ void afp_over_dsi(AFPObj *obj)
         if (reload_request) {
             reload_request = 0;
             load_volumes(child.obj);
+            dircache_dump();
         }
 
         if (debug_request) {

@@ -1,5 +1,5 @@
 /*
- * $Id: file.c,v 1.141 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: file.c,v 1.141 2010/03/12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -202,7 +202,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 				  (1 << FILPBIT_UNIXPR)))
 
 /* -------------------------- */
-u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
+u_int32_t get_id(const struct vol *vol, struct adouble *adp,  const struct stat *st,
                  const cnid_t did, char *upath, const int len) 
 {
     u_int32_t adcnid;
@@ -259,9 +259,6 @@ int getmetadata(struct vol *vol,
     struct stat         *st;
     struct maccess	ma;
 
-#ifdef DEBUG
-    LOG(log_debug9, logtype_afpd, "begin getmetadata:");
-#endif /* DEBUG */
 
     upath = path->u_name;
     st = &path->st;
@@ -309,11 +306,15 @@ int getmetadata(struct vol *vol,
 #endif
             memcpy(data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
+            LOG(log_debug, logtype_afpd, "metadata('%s'): AFP Attributes: %04x",
+                path->u_name, ntohs(ashort));
             break;
 
         case FILPBIT_PDID :
             memcpy(data, &dir->d_did, sizeof( u_int32_t ));
             data += sizeof( u_int32_t );
+            LOG(log_debug, logtype_afpd, "metadata('%s'):     Parent DID: %u",
+                path->u_name, ntohl(dir->d_did));
             break;
 
         case FILPBIT_CDATE :
@@ -360,6 +361,8 @@ int getmetadata(struct vol *vol,
         case FILPBIT_FNUM :
             memcpy(data, &id, sizeof( id ));
             data += sizeof( id );
+            LOG(log_debug, logtype_afpd, "metadata('%s'):           CNID: %u",
+                path->u_name, ntohl(id));
             break;
 
         case FILPBIT_DFLEN :
@@ -524,10 +527,6 @@ int getfilparams(struct vol *vol,
     int                 opened = 0;
     int rc;    
 
-#ifdef DEBUG
-    LOG(log_debug9, logtype_default, "begin getfilparams:");
-#endif /* DEBUG */
-
     opened = PARAM_NEED_ADP(bitmap);
     adp = NULL;
 
@@ -558,9 +557,6 @@ int getfilparams(struct vol *vol,
     if ( adp ) {
         ad_close_metadata( adp);
     }
-#ifdef DEBUG
-    LOG(log_debug9, logtype_afpd, "end getfilparams:");
-#endif /* DEBUG */
 
     return( rc );
 }
@@ -1906,6 +1902,10 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     if (NULL == ( dir = dirlookup( vol, id )) ) {
+        if (afp_errno == AFPERR_NOOBJ) {
+            err = AFPERR_NOOBJ;
+            goto delete;
+        }
         return( AFPERR_PARAM );
     }
 
@@ -1929,6 +1929,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     else if (S_ISDIR(st.st_mode)) /* directories are bad */
         return AFPERR_BADTYPE;
 
+delete:
     if (cnid_delete(vol->v_cdb, fileid)) {
         switch (errno) {
         case EROFS:

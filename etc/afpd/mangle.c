@@ -1,5 +1,5 @@
 /* 
- * $Id: mangle.c,v 1.19 2006-09-19 01:35:45 didg Exp $ 
+ * $Id: mangle.c,v 1.19.4.2 2010-02-01 14:25:45 franklahm Exp $ 
  *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
@@ -15,9 +15,13 @@
 
 #include <stdio.h>
 #include <ctype.h>
+
+#include <atalk/util.h>
+#include <atalk/bstradd.h>
+
 #include "mangle.h"
 #include "desktop.h"
-#include <atalk/util.h>  
+
 
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'A' )
 #define isuxdigit(x)    (isdigit(x) || (isupper(x) && isxdigit(x)))
@@ -38,7 +42,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
   return 0;
 }
 
-static char *demangle_checks ( const struct vol *vol, char* uname, char * mfilename, size_t prefix, char * ext)
+static char *demangle_checks(const struct vol *vol, char* uname, char * mfilename, size_t prefix, char * ext)
 {
     u_int16_t flags;
     static char buffer[MAXPATHLEN +2];  /* for convert_charset dest_len parameter +2 */
@@ -48,18 +52,18 @@ static char *demangle_checks ( const struct vol *vol, char* uname, char * mfilen
     /* We need to check, whether we really need to demangle the filename 	*/
     /* i.e. it's not just a file with a valid #HEX in the name ...		*/
     /* but we don't want to miss valid demangle as well.			*/
-
     /* check whether file extensions match */
-    {
-      char buf[MAX_EXT_LENGTH + 2];  /* for convert_charset dest_len parameter +2 */
-      size_t ext_len = mangle_extension(vol, uname, buf, CH_UTF8_MAC);
 
-      if (ext_len) {
-	buf[ext_len] = '\0';
-	if (strcmp(ext, buf)) return mfilename;
-      } else {
-	if (*ext) return mfilename;
-      }
+    char buf[MAX_EXT_LENGTH + 2];  /* for convert_charset dest_len parameter +2 */
+    size_t ext_len = mangle_extension(vol, uname, buf, CH_UTF8_MAC);
+
+    if (ext_len) {
+        buf[ext_len] = '\0';
+        if (strcmp(ext, buf))
+            return mfilename;
+    } else {
+        if (*ext)
+            return mfilename;
     }
 
     /* First we convert the unix name to our volume maccharset     	*/
@@ -169,8 +173,8 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
     }
 
     /* is it a dir?, there's a conflict with pre OSX 'trash #2'  */
-    if ((dir = dirsearch(vol, id))) {
-        if (dir->d_parent && dir->d_parent->d_did != did) {
+    if ((dir = dirlookup(vol, id))) {
+        if (dir->d_pdid != did) {
             /* not in the same folder, there's a race with outdate cache
              * but we have to live with it, hopefully client will recover
             */
@@ -178,13 +182,12 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
         }
         if (!osx) {
             /* it's not from cname so mfilename and dir must be the same */
-            if (!strcmp(dir->d_m_name, mfilename)) {
-                return dir->d_u_name;
+            if (strcmp(cfrombstring(dir->d_m_name), mfilename) == 0) {
+                return cfrombstring(dir->d_u_name);
             }
-        } 
-        else {
-	    return demangle_checks (vol, dir->d_u_name, mfilename, prefix, t);
-	}
+        } else {
+            return demangle_checks(vol, cfrombstring(dir->d_u_name), mfilename, prefix, t);
+        }
     }
     else if (NULL != (u_name = cnid_resolve(vol->v_cdb, &id, buffer, len)) ) {
         if (id != did) {

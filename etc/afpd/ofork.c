@@ -1,5 +1,5 @@
 /*
- * $Id: ofork.c,v 1.32 2010-03-12 15:16:49 franklahm Exp $
+ * $Id: ofork.c,v 1.32 2010/03/12 15:16:49 franklahm Exp $
  *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -17,10 +17,12 @@
 #include <string.h>
 #include <sys/stat.h> /* works around a bug */
 #include <sys/param.h>
-#include <atalk/logger.h>
 #include <errno.h>
 
+#include <atalk/logger.h>
 #include <atalk/util.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include "globals.h"
 #include "volume.h"
@@ -32,9 +34,9 @@
 #define OFORK_HASHSIZE  64
 static struct ofork     *ofork_table[OFORK_HASHSIZE];
 
-static struct ofork	**oforks = NULL;
-static int	        nforks = 0;
-static u_short		lastrefnum = 0;
+static struct ofork **oforks = NULL;
+static int          nforks = 0;
+static u_short      lastrefnum = 0;
 
 
 /* OR some of each character for the hash*/
@@ -45,7 +47,7 @@ static unsigned long hashfn(const struct file_key *key)
     while (*name) {
         i = ((i << 4) | (8*sizeof(i) - 4)) ^ *name++;
     }
-#endif    
+#endif
     return key->inode & (OFORK_HASHSIZE - 1);
 }
 
@@ -72,7 +74,7 @@ static void of_unhash(struct ofork *of)
 #ifdef DEBUG1
 void of_pforkdesc( FILE *f)
 {
-    int	ofrefnum;
+    int ofrefnum;
 
     if (!oforks)
         return;
@@ -87,14 +89,14 @@ void of_pforkdesc( FILE *f)
 
 int of_flush(const struct vol *vol)
 {
-    int	refnum;
+    int refnum;
 
     if (!oforks)
         return 0;
 
     for ( refnum = 0; refnum < nforks; refnum++ ) {
         if (oforks[ refnum ] != NULL && (oforks[refnum]->of_vol == vol) &&
-                flushfork( oforks[ refnum ] ) < 0 ) {
+            flushfork( oforks[ refnum ] ) < 0 ) {
             LOG(log_error, logtype_afpd, "of_flush: %s", strerror(errno) );
         }
     }
@@ -111,24 +113,24 @@ int of_rename(const struct vol *vol,
 
     if (!s_of)
         return AFP_OK;
-        
+
     next = ofork_table[hashfn(&s_of->key)];
     while ((of = next)) {
         next = next->next; /* so we can unhash and still be all right. */
 
         if (vol == of->of_vol && olddir == of->of_dir &&
-	         s_of->key.dev == of->key.dev && 
-	         s_of->key.inode == of->key.inode ) {
-	    if (!done) {
-	        strlcpy( of_name(of), newpath, of->of_ad->ad_m_namelen);
-	        done = 1;
-	    }
+            s_of->key.dev == of->key.dev &&
+            s_of->key.inode == of->key.inode ) {
+            if (!done) {
+                strlcpy( of_name(of), newpath, of->of_ad->ad_m_namelen);
+                done = 1;
+            }
             if (newdir != olddir) {
                 of->of_d_prev->of_d_next = of->of_d_next;
                 of->of_d_next->of_d_prev = of->of_d_prev;
                 if (of->of_dir->d_ofork == of) {
                     of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
-                }	    
+                }
                 of->of_dir = newdir;
                 if (!(d_ofork = newdir->d_ofork)) {
                     newdir->d_ofork = of;
@@ -146,25 +148,25 @@ int of_rename(const struct vol *vol,
     return AFP_OK;
 }
 
-#define min(a,b)	((a)<(b)?(a):(b))
+#define min(a,b)    ((a)<(b)?(a):(b))
 
 struct ofork *
 of_alloc(struct vol *vol,
-    struct dir	   *dir,
-    char	   *path,
-    u_int16_t	   *ofrefnum,
-    const int      eid,
-    struct adouble *ad,
-    struct stat    *st)
+         struct dir    *dir,
+         char      *path,
+         u_int16_t     *ofrefnum,
+         const int      eid,
+         struct adouble *ad,
+         struct stat    *st)
 {
     struct ofork        *of, *d_ofork;
-    u_int16_t		refnum, of_refnum;
+    u_int16_t       refnum, of_refnum;
 
-    int			i;
+    int         i;
 
     if (!oforks) {
         nforks = getdtablesize() - 10;
-	/* protect against insane ulimit -n */
+        /* protect against insane ulimit -n */
         nforks = min(nforks, 0xffff);
         oforks = (struct ofork **) calloc(nforks, sizeof(struct ofork *));
         if (!oforks)
@@ -180,22 +182,22 @@ of_alloc(struct vol *vol,
         }
     }
     /* grr, Apple and their 'uniquely identifies'
-          the next line is a protection against 
-          of_alloc()
-             refnum % nforks = 3 
-             lastrefnum = 3
-             oforks[3] != NULL 
-             refnum = 4
-             oforks[4] == NULL
-             return 4
-         
-          close(oforks[4])
-      
-          of_alloc()
-             refnum % nforks = 4
-             ...
-             return 4
-         same if lastrefnum++ rather than ++lastrefnum. 
+       the next line is a protection against
+       of_alloc()
+       refnum % nforks = 3
+       lastrefnum = 3
+       oforks[3] != NULL
+       refnum = 4
+       oforks[4] == NULL
+       return 4
+
+       close(oforks[4])
+
+       of_alloc()
+       refnum % nforks = 4
+       ...
+       return 4
+       same if lastrefnum++ rather than ++lastrefnum.
     */
     lastrefnum = refnum;
     if ( i == nforks ) {
@@ -205,7 +207,7 @@ of_alloc(struct vol *vol,
 
     of_refnum = refnum % nforks;
     if (( oforks[ of_refnum ] =
-                (struct ofork *)malloc( sizeof( struct ofork ))) == NULL ) {
+          (struct ofork *)malloc( sizeof( struct ofork ))) == NULL ) {
         LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
         return NULL;
     }
@@ -279,15 +281,22 @@ struct ofork *of_find(const u_int16_t ofrefnum )
 }
 
 /* -------------------------- */
-int of_stat  (struct path *path)
+int of_stat(struct path *path)
 {
-int ret;
+    int ret;
+
     path->st_errno = 0;
     path->st_valid = 1;
-    if ((ret = lstat(path->u_name, &path->st)) < 0)
+
+    if ((ret = lstat(path->u_name, &path->st)) < 0) {
+        LOG(log_debug, logtype_afpd, "of_stat('%s/%s': %s)",
+            cfrombstring(curdir->d_fullpath), path->u_name, strerror(errno));
     	path->st_errno = errno;
-   return ret;
+    }
+
+    return ret;
 }
+
 
 #ifdef HAVE_RENAMEAT
 int of_fstatat(int dirfd, struct path *path)
@@ -309,10 +318,12 @@ int of_fstatat(int dirfd, struct path *path)
    stat(".") works even if "." is deleted thus
    we have to stat ../name because we want to know if it's there
 */
-int of_statdir  (struct vol *vol, struct path *path)
+int of_statdir(struct vol *vol, struct path *path)
 {
-static char pathname[ MAXPATHLEN + 1] = "../";
-int ret;
+    static char pathname[ MAXPATHLEN + 1] = "../";
+    int ret;
+    size_t len;
+    struct dir *dir;
 
     if (*path->m_name) {
         /* not curdir */
@@ -321,20 +332,28 @@ int ret;
     path->st_errno = 0;
     path->st_valid = 1;
     /* FIXME, what about: we don't have r-x perm anymore ? */
-    strlcpy(pathname +3, path->d_dir->d_u_name, sizeof (pathname) -3);
+    len = blength(path->d_dir->d_u_name);
+    if (len > (MAXPATHLEN - 3))
+        len = MAXPATHLEN - 3;
+    strncpy(pathname + 3, cfrombstring(path->d_dir->d_u_name), len + 1);
+
+    LOG(log_debug, logtype_afpd, "of_statdir: stating: '%s'", pathname);
 
     if (!(ret = lstat(pathname, &path->st)))
         return 0;
-        
+
     path->st_errno = errno;
+
     /* hmm, can't stat curdir anymore */
-    if (errno == EACCES && curdir->d_parent ) {
-       if (movecwd(vol, curdir->d_parent)) 
+    if (errno == EACCES && (dir = dirlookup(vol, curdir->d_pdid))) {
+       if (movecwd(vol, dir)) 
            return -1;
        path->st_errno = 0;
-       if ((ret = lstat(path->d_dir->d_u_name, &path->st)) < 0) 
+
+       if ((ret = lstat(cfrombstring(path->d_dir->d_u_name), &path->st)) < 0) 
            path->st_errno = errno;
     }
+
     return ret;
 }
 
@@ -343,11 +362,11 @@ struct ofork *of_findname(struct path *path)
 {
     struct ofork *of;
     struct file_key key;
-    
+
     if (!path->st_valid) {
-       of_stat(path);
+        of_stat(path);
     }
-    	
+
     if (path->st_errno)
         return NULL;
 
@@ -431,12 +450,12 @@ void of_dealloc( struct ofork *of)
 int of_closefork(struct ofork *ofork)
 {
     struct timeval      tv;
-    int			adflags, doflush = 0;
+    int         adflags, doflush = 0;
     int                 ret;
 
     adflags = 0;
     if ((ofork->of_flags & AFPFORK_DATA) && (ad_data_fileno( ofork->of_ad ) != -1)) {
-            adflags |= ADFLAGS_DF;
+        adflags |= ADFLAGS_DF;
     }
     if ( (ofork->of_flags & AFPFORK_OPEN) && ad_reso_fileno( ofork->of_ad ) != -1 ) {
         adflags |= ADFLAGS_HF;
@@ -447,10 +466,10 @@ int of_closefork(struct ofork *ofork)
             ad_refresh( ofork->of_ad );
             if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
                 ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
-            	doflush++;
+                doflush++;
             }
             if ( doflush ) {
-                 ad_flush( ofork->of_ad );
+                ad_flush( ofork->of_ad );
             }
         }
     }
@@ -458,14 +477,14 @@ int of_closefork(struct ofork *ofork)
     if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
         ret = -1;
     }
- 
+
     of_dealloc( ofork );
     return ret;
 }
 
 /* ----------------------
 
-*/
+ */
 struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *ad)
 {
     struct ofork        *of;
@@ -480,12 +499,12 @@ struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *
     return adp;
 }
 
-/* ---------------------- 
+/* ----------------------
    close all forks for a volume
 */
 void of_closevol(const struct vol *vol)
 {
-    int	refnum;
+    int refnum;
 
     if (!oforks)
         return;

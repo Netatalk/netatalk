@@ -1,4 +1,4 @@
-dnl $Id: configure.in,v 1.244 2010-04-13 08:05:06 franklahm Exp $
+dnl $Id: configure.in,v 1.241 2010/04/03 07:11:33 franklahm Exp $
 dnl configure.in for netatalk
 
 AC_INIT(etc/afpd/main.c)
@@ -278,9 +278,11 @@ AC_ARG_ENABLE(debug,
 		AC_MSG_RESULT([yes])
 	else
 		AC_MSG_RESULT([no])
+        AC_DEFINE(NDEBUG, 1, [Disable assertions])
 	fi
 	],[
 		AC_MSG_RESULT([no])
+        AC_DEFINE(NDEBUG, 1, [Disable assertions])
 	]
 )
 
@@ -1275,6 +1277,7 @@ AC_OUTPUT([Makefile
 	libatalk/adouble/Makefile
 	libatalk/asp/Makefile
 	libatalk/atp/Makefile
+	libatalk/bstring/Makefile
 	libatalk/cnid/Makefile
 	libatalk/cnid/cdb/Makefile
 	libatalk/cnid/last/Makefile
@@ -1306,6 +1309,8 @@ AC_OUTPUT([Makefile
 	sys/solaris/Makefile
 	sys/sunos/Makefile
 	sys/ultrix/Makefile
+    test/Makefile
+    test/afpd/Makefile
 	],
 	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
 )

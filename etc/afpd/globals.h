@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.33 2010-03-29 15:22:57 franklahm Exp $
+ * $Id: globals.h,v 1.33 2010/03/29 15:22:57 franklahm Exp $
  *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -56,7 +56,7 @@ struct afp_volume_name {
 };
 
 struct afp_options {
-    int connections, transports, tickleval, timeout, server_notif, flags;
+    int connections, transports, tickleval, timeout, server_notif, flags, dircachesize;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
@@ -142,6 +142,9 @@ extern int  parseline  (int, char *);
 /* afp_util.c */
 extern const char *AfpNum2name (int );
 extern const char *AfpErr2name(int err);
+
+/* directory.c */
+extern struct dir rootParent;
 
 #ifndef NO_DDP
 extern void afp_over_asp (AFPObj *);
