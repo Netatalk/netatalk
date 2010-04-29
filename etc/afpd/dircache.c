@@ -49,6 +49,9 @@
  * - a queue index on the dircache, for evicting the oldest entries
  * The cache supports locking of struct dir elements through the DIRF_CACHELOCK flag. A dir
  * locked this way wont ever be removed from the cache, so be careful.
+ *
+ * Sending SIGHUP to a afpd child causes it to dump the dircache to a file
+ * "/tmp/dircache.PID".
  */
 
 /********************************************************
