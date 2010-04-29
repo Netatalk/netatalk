@@ -4,3 +4,4 @@ psorder
 .deps
 .libs
 .gitignore
+pa.o psorder.o

@@ -4,3 +4,4 @@ afppasswd
 .deps
 .libs
 .gitignore
+afppasswd.o

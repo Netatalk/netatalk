@@ -5,3 +5,4 @@ Makefile.in
 .deps
 .libs
 .gitignore
+spinlock.o tdb.o

@@ -27,3 +27,4 @@ autoscan.log
 *.diff.gz
 *~
 .gitignore
+*.o

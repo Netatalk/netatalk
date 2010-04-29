@@ -4,3 +4,4 @@ timelord
 .deps
 .libs
 .gitignore
+*.o

@@ -9,3 +9,4 @@ papd.8
 papstatus.8
 psf.8
 .gitignore
+*.o

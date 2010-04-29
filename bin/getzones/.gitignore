@@ -4,3 +4,4 @@ getzones
 .deps
 .libs
 .gitignore
+getzones.o

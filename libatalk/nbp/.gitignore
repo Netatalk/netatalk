@@ -5,3 +5,4 @@ Makefile.in
 .deps
 .libs
 .gitignore
+nbp_lkup.o nbp_rgstr.o nbp_unrgstr.o nbp_util.o

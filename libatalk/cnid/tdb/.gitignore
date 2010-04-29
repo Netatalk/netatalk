@@ -5,3 +5,4 @@ Makefile.in
 .deps
 .libs
 .gitignore
+cnid_tdb_add.o cnid_tdb_close.o cnid_tdb_delete.o cnid_tdb_get.o cnid_tdb_lookup.o cnid_tdb_open.o cnid_tdb_resolve.o cnid_tdb_update.o

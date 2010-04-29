@@ -6,3 +6,4 @@ netacnv
 *.o
 afpldaptest
 .gitignore
+netacnv.o

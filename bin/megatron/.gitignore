@@ -4,3 +4,4 @@ megatron
 .deps
 .libs
 .gitignore
+asingle.o hqx.o macbin.o megatron.o nad.o updcrc.o

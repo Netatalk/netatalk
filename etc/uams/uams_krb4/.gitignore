@@ -7,3 +7,4 @@ core
 Makefile.in
 Makefile
 .gitignore
+*.o

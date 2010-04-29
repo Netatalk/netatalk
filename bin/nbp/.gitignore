@@ -6,3 +6,4 @@ nbpunrgstr
 .deps
 .libs
 .gitignore
+nbplkup.o nbprgstr.o nbpunrgstr.o

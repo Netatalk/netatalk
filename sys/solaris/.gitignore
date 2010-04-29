@@ -1,3 +1,4 @@
 Makefile
 ddp
 .gitignore
+*.o

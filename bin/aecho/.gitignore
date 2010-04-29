@@ -4,3 +4,4 @@ aecho
 .deps
 .libs
 .gitignore
+aecho.o
