@@ -40,9 +40,9 @@ static qnode_t *alloc_init_node(void *data)
  * Interface
  *******************************************************************************/
 
-queue_t *queue_init(void)
+q_t *queue_init(void)
 {
-    queue_t *queue;
+    q_t *queue;
 
     if ((queue = alloc_init_node(NULL)) == NULL)
         return NULL;
@@ -51,7 +51,7 @@ queue_t *queue_init(void)
     return queue;
 }
 
-qnode_t *enqueue(queue_t *q, void *data)
+qnode_t *enqueue(q_t *q, void *data)
 {
     qnode_t *node;
 
@@ -67,7 +67,7 @@ qnode_t *enqueue(queue_t *q, void *data)
     return node;
 }
 
-void *dequeue(queue_t *q)
+void *dequeue(q_t *q)
 {
     qnode_t *node;
     void *data;
@@ -85,7 +85,7 @@ void *dequeue(queue_t *q)
     return data;    
 }
 
-void queue_destroy(queue_t *q, void (*callback)(void *))
+void queue_destroy(q_t *q, void (*callback)(void *))
 {
     void *p;
 

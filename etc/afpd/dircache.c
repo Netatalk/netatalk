@@ -171,7 +171,7 @@ static int hash_comp_didname(const void *k1, const void *k2)
 /***************************
  * queue index on dircache */
 
-static queue_t *index_queue;    /* the index itself */
+static q_t *index_queue;    /* the index itself */
 static unsigned int queue_count;
 static const int dircache_free_quantum = 256; /* number of entries to free */
 
