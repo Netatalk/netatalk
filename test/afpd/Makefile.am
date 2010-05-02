@@ -45,8 +45,12 @@ test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
 	 -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
+	 -D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\"
 
-test_LDADD = $(top_builddir)/libatalk/libatalk.la $(top_builddir)/libatalk/cnid/libcnid.la @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
+test_LDADD = $(top_builddir)/libatalk/cnid/libcnid.la \
+	$(top_builddir)/libatalk/libatalk.la \
+	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@
+
 test_LDFLAGS = -export-dynamic
