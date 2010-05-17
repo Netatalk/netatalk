@@ -57,7 +57,7 @@ uninstall: uninstall-startup
 
 if USE_REDHAT
 
-sysvdir	= $(DESTDIR)/etc/rc.d/init.d
+sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = atalk
 
 $(sysv_SCRIPTS): rc.atalk.redhat
@@ -69,7 +69,7 @@ install-data-hook:
 
 uninstall-startup:
 	-chkconfig --del $(sysv_SCRIPTS)
-	rm -f $(sysvdir)/$(sysv_SCRIPTS)
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 
 endif
 
@@ -79,7 +79,7 @@ endif
 
 if USE_SUSE
 
-sysvdir	= $(DESTDIR)/etc/init.d
+sysvdir	= /etc/init.d
 sysv_SCRIPTS = atalk
 
 $(sysv_SCRIPTS): rc.atalk.suse
@@ -91,7 +91,7 @@ install-data-hook:
 
 uninstall-startup:
 	-insserv -d $(sysv_SCRIPTS)
-	rm -f $(sysvdir)/$(sysv_SCRIPTS)
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 
 endif
 
@@ -101,7 +101,7 @@ endif
 
 if USE_COBALT
 
-sysvdir	= $(DESTDIR)/etc/rc.d/init.d
+sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = atalk
 
 $(sysv_SCRIPTS): rc.atalk.cobalt
@@ -122,7 +122,7 @@ endif
 
 if USE_TRU64
 
-sysvdir	= $(DESTDIR)/etc/init.d
+sysvdir	= /etc/init.d
 sysv_SCRIPTS = atalk
 
 $(sysv_SCRIPTS): rc.atalk.tru64
@@ -143,7 +143,7 @@ endif
 
 if USE_NETBSD
 
-sysvdir = $(DESTDIR)/etc/rc.d
+sysvdir = /etc/rc.d
 sysv_SCRIPTS = afpd atalkd cnid_metad papd timelord
 
 afpd: rc.afpd.netbsd
@@ -180,7 +180,7 @@ endif
 
 if USE_SOLARIS
 
-sysvdir = $(DESTDIR)/etc/init.d
+sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.sysv
@@ -194,7 +194,7 @@ install-data-hook:
 	-ln -s ../init.d/$(sysv_SCRIPTS) $(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
 
 uninstall-startup:
-	rm -f $(sysvdir)/$(sysv_SCRIPTS) \
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS) \
 		$(DESTDIR)/etc/rc2.d/S90$(sysv_SCRIPTS) \
 		$(DESTDIR)/etc/rc0.d/K04$(sysv_SCRIPTS)
 
@@ -206,7 +206,7 @@ endif
 
 if USE_GENTOO
 
-sysvdir = $(DESTDIR)/etc/init.d
+sysvdir = /etc/init.d
 sysv_SCRIPTS = atalk
 
 $(sysv_SCRIPTS): rc.atalk.gentoo
@@ -218,7 +218,7 @@ install-data-hook:
 
 uninstall-startup:
 	-rc-update del $(sysv_SCRIPTS) default
-	rm -f $(sysvdir)/$(sysv_SCRIPTS)
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 
 endif
 
@@ -228,7 +228,7 @@ endif
 
 if USE_DEBIAN
 
-sysvdir = $(DESTDIR)/etc/init.d
+sysvdir = /etc/init.d
 sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.debian
@@ -239,7 +239,7 @@ install-data-hook:
 #	update-rc.d $(sysv_SCRIPTS) defaults 90 10
 
 uninstall-startup:
-#	rm -f $(sysvdir)/$(sysv_SCRIPTS)
+#	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 #	update-rc.d netatalk remove
 
 endif
