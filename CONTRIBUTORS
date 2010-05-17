@@ -59,6 +59,7 @@ Webmin Module:
 
 Package Maintainers and Contributors:
 	Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
+    Jonas Smedegaard <dr@jones.dk> (Debian GNU systems)
 	Joe Clarke <marcus@FreeBSD.org> (FreeBSD)
 	David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)
 
@@ -113,7 +114,7 @@ Bug Reports: Version 1.4.99 - 2.0
 
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
-lists. If you feel you should be listed here and aren't, please let me
-know, Lance Levsen, l.levsen@printwest.com
+lists. If you feel you should be listed here and aren't, please let 
+us know.
 
-Cheers.
+Cheers!
