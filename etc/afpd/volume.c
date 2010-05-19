@@ -1836,7 +1836,8 @@ static int volume_openDB(struct vol *volume)
 
     if (volume->v_cnidscheme == NULL) {
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
-        LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.", volume->v_path, volume->v_cnidscheme);
+        LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.",
+            volume->v_path, volume->v_cnidscheme);
     }
 
     LOG(log_info, logtype_afpd, "%s:%s",
@@ -1851,15 +1852,20 @@ static int volume_openDB(struct vol *volume)
                               volume->v_cnidport ? volume->v_cnidport : Cnid_port);
 
     if (!volume->v_cdb) {
+        LOG(log_error, logtype_afpd, "Can't open volume \"%s\" CNID backend \"%s\" ",
+            volume->v_path, volume->v_cnidscheme);
         flags |= CNID_FLAG_MEMORY;
-        LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.", volume->v_path);
+        LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
+            volume->v_path);
         volume->v_cdb = cnid_open (volume->v_path, volume->v_umask, "tdb", flags, NULL, NULL);
 #ifdef SERVERTEXT
         /* kill ourself with SIGUSR2 aka msg pending */
         if (volume->v_cdb) {
-            setmessage("Something wrong with the volume's DB ... FIXME with a better msg");
+            setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
+                       "Check server messages for details!");
             kill(getpid(), SIGUSR2);
-            /* XXX desactivate cachecnid ? */
+            /* deactivate cnid caching/storing in AppleDouble files */
+            volume->v_flags &= ~AFPVOL_CACHE;
         }
 #endif
     }
