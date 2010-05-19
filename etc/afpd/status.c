@@ -560,7 +560,9 @@ void set_signature(char *opt, struct afp_options *options) {
     char buf[1024], *p;
     FILE *fp, *randomp;
     size_t len;
+    char *server_tmp;
     
+    server_tmp = (options->server ? options->server : options->hostname);
     if (strcmp(opt, "auto") == 0) {
         goto server_signature_auto;   /* default */
     } else if (strcmp(opt, "host") == 0) {
@@ -615,12 +617,12 @@ server_signature_auto:
                     if ((servername_conf = strtok( p, " \t" )) == NULL)
                         continue;                         /* syntax error: invalid servername */
                 }
-                p = index(p, '\0');
+                p = strchr(p, '\0');
                 p++;
                 if (*p == '\0')
                     continue;                             /* syntax error: missing signature */
                 
-                if (strcmp(options->server, servername_conf))
+                if (strcmp(server_tmp, servername_conf))
                     continue;                             /* another servername */
                 
                 while (p && isblank(*p))
@@ -684,7 +686,7 @@ server_signature_random:
         }
         LOG(log_note, logtype_afpd,
             "generate %s's signature %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X from /dev/urandom",
-            options->server,
+            server_tmp,
             (options->signature)[ 0], (options->signature)[ 1],
             (options->signature)[ 2], (options->signature)[ 3],
             (options->signature)[ 4], (options->signature)[ 5],
@@ -695,13 +697,13 @@ server_signature_random:
             (options->signature)[14], (options->signature)[15]);
         
     } else {                                   /* genarate from random() because cannot open /dev/urandom */
-        srandom((unsigned int)time(NULL) + (unsigned int)options + (unsigned int)options->server);
+        srandom((unsigned int)time(NULL) + (unsigned int)options + (unsigned int)server_tmp);
         for (i=0 ; i<16 ; i++) {
             (options->signature)[i] = random() & 0xFF;
         }
         LOG(log_note, logtype_afpd,
             "generate %s's signature %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X from random()",
-            options->server,
+            server_tmp,
             (options->signature)[ 0], (options->signature)[ 1],
             (options->signature)[ 2], (options->signature)[ 3],
             (options->signature)[ 4], (options->signature)[ 5],
@@ -723,7 +725,7 @@ server_signature_random:
     }
     
     if (fp) {
-        fprintf(fp, "\"%s\"\t", options->server);
+        fprintf(fp, "\"%s\"\t", server_tmp);
         for (i=0 ; i<16 ; i++) {
             fprintf(fp, "%02X", (options->signature)[i]);
         }
@@ -736,7 +738,7 @@ server_signature_done:
     /* retrun */
     LOG(log_info, logtype_afpd,
         " \"%s\"'s signature is  %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-        options->server,
+        server_tmp,
         (options->signature)[ 0], (options->signature)[ 1],
         (options->signature)[ 2], (options->signature)[ 3],
         (options->signature)[ 4], (options->signature)[ 5],
