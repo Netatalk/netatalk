@@ -1,3 +1,12 @@
+Changes in 2.1.1
+================
+
+* FIX: afpd: afp_ldap.conf was missing from tarball. This only effected
+       [Open]Solaris.
+* FIX: afpd: Check if options->server is set in set_signature, preventing
+       SIGSEGV.
+* FIX: DESTDIR support: DESTDIR was expanded twice
+
 Changes in 2.1-release
 ======================
 
