@@ -205,9 +205,11 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
                  const cnid_t did, char *upath, const int len) 
 {
+    static int first = 1;       /* mark if this func is called the first time */
     u_int32_t adcnid;
     u_int32_t dbcnid = CNID_INVALID;
 
+restart:
     if (vol->v_cdb != NULL) {
         /* prime aint with what we think is the cnid, set did to zero for
            catching moved files */
@@ -222,13 +224,47 @@ u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
             case CNID_ERR_PARAM:
                 LOG(log_error, logtype_afpd, "get_id: Incorrect parameters passed to cnid_add");
                 afp_errno = AFPERR_PARAM;
-                return CNID_INVALID;
+                goto exit;
             case CNID_ERR_PATH:
                 afp_errno = AFPERR_PARAM;
-                return CNID_INVALID;
+                goto exit;
             default:
+                /* Close CNID backend if "dbd" and switch to temp in-memory "tdb" */
+                /* we have to do it here for "dbd" because it uses "lazy opening" */
+                /* In order to not end in a loop somehow with goto restart below  */
+                /*  */
+                if (first && (strcmp(vol->v_cnidscheme, "dbd") == 0)) {
+                    cnid_close(vol->v_cdb);
+                    free(vol->v_cnidscheme);
+                    vol->v_cnidscheme = strdup("tdb");
+
+                    int flags = CNID_FLAG_MEMORY;
+                    if ((vol->v_flags & AFPVOL_NODEV)) {
+                        flags |= CNID_FLAG_NODEV;
+                    }
+                    LOG(log_error, logtype_afpd, "Reopen volume %s using in memory temporary CNID DB.",
+                        vol->v_path);
+                    vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL);
+                    if (vol->v_cdb) {
+                        /* deactivate cnid caching/storing in AppleDouble files and set ro mode*/
+                        vol->v_flags &= ~AFPVOL_CACHE;
+                        vol->v_flags |= AFPVOL_RO;
+#ifdef SERVERTEXT
+                        /* kill ourself with SIGUSR2 aka msg pending */
+                        setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB instead."
+                                   "Check server messages for details. Switching to read-only mode.");
+                        kill(getpid(), SIGUSR2);
+#endif
+                        goto restart; /* not try again with the temp CNID db */
+                    } else {
+#ifdef SERVERTEXT
+                        setmessage("Something wrong with the volume's CNID DB, using temporary CNID DB failed too!"
+                                   "Check server messages for details, can't recover from this state!");
+#endif
+                    }
+                }
                 afp_errno = AFPERR_MISC;
-                return CNID_INVALID;
+                goto exit;
             }
         }
         else if (adp && (adcnid != dbcnid)) {
@@ -239,6 +275,9 @@ u_int32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
             }
         }
     }
+
+exit:
+    first = 0;
     return dbcnid;
 }
              
