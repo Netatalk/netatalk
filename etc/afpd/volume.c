@@ -1844,7 +1844,7 @@ static int volume_openDB(struct vol *volume)
             volume->v_path, volume->v_cnidscheme);
     }
 
-    LOG(log_info, logtype_afpd, "%s:%s",
+    LOG(log_info, logtype_afpd, "CNID server: %s:%s",
         volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
         volume->v_cnidport ? volume->v_cnidport : Cnid_port);
     
