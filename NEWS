@@ -1,6 +1,8 @@
 Changes in 2.1.1
 ================
 
+* UPD: fallback to a temporary in memory tdb CNID database if the volume
+       database can't be opened now works with the default backend "dbd" too.
 * FIX: afpd: afp_ldap.conf was missing from tarball. This only effected
        [Open]Solaris.
 * FIX: afpd: Check if options->server is set in set_signature, preventing
