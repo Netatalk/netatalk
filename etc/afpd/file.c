@@ -202,8 +202,8 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 				  (1 << FILPBIT_UNIXPR)))
 
 /* -------------------------- */
-u_int32_t get_id(const struct vol *vol, struct adouble *adp,  const struct stat *st,
-                 const cnid_t did, char *upath, const int len) 
+uint32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
+                const cnid_t did, char *upath, const int len) 
 {
     static int first = 1;       /* mark if this func is called the first time */
     u_int32_t adcnid;

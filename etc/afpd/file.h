@@ -127,8 +127,8 @@ extern void *get_finderinfo (const struct vol *, const char *, struct adouble *,
 extern size_t mtoUTF8   (const struct vol *, const char *, size_t , char *, size_t );
 extern int  copy_path_name (const struct vol *, char *, char *i);
 
-extern u_int32_t get_id  (const struct vol *, struct adouble *, const struct stat *,
-                                const cnid_t , char *, const int );
+extern uint32_t get_id  (struct vol *, struct adouble *, const struct stat *,
+                         const cnid_t , char *, const int );
 
 /* FP functions */
 int afp_exchangefiles (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
