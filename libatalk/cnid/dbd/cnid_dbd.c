@@ -81,20 +81,20 @@ static int tsock_getfd(const char *host, const char *port)
     hints.ai_flags = AI_NUMERICSERV;
 
     if ((err = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_default, "tsock_getfd: getaddrinfo: %s:%s : %s\n", host, port, gai_strerror(err));
+        LOG(log_error, logtype_default, "tsock_getfd: getaddrinfo: CNID server %s:%s : %s\n", host, port, gai_strerror(err));
         return -1;
     }
 
     /* loop through all the results and bind to the first we can */
     for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            LOG(log_info, logtype_default, "tsock_getfd: socket %s:: %s", host, strerror(errno));
+            LOG(log_info, logtype_default, "tsock_getfd: socket CNID server %s:: %s", host, strerror(errno));
                 continue;
         }
 
         attr = 1;
         if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &attr, sizeof(attr)) == -1) {
-            LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY %s: %s", host, strerror(errno));
+            LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY CNID server %s: %s", host, strerror(errno));
             close(sock);
             continue;
         }
@@ -102,7 +102,7 @@ static int tsock_getfd(const char *host, const char *port)
         tv.tv_sec = SOCK_DELAY;
         tv.tv_usec = 0;
         if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-            LOG(log_error, logtype_cnid, "getfd: set SO_RCVTIMEO %s: %s", host, strerror(errno));
+            LOG(log_error, logtype_cnid, "getfd: set SO_RCVTIMEO CNID server %s: %s", host, strerror(errno));
             close(sock);
             continue;
         }
@@ -110,7 +110,7 @@ static int tsock_getfd(const char *host, const char *port)
         tv.tv_sec = SOCK_DELAY;
         tv.tv_usec = 0;
         if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-            LOG(log_error, logtype_cnid, "getfd: set SO_SNDTIMEO %s: %s", host, strerror(errno));
+            LOG(log_error, logtype_cnid, "getfd: set SO_SNDTIMEO CNID server %s: %s", host, strerror(errno));
             close(sock);
             continue;
         }
@@ -119,7 +119,7 @@ static int tsock_getfd(const char *host, const char *port)
             err = errno;
             close(sock);
             sock=-1;
-            LOG(log_error, logtype_cnid, "getfd: connect %s: %s", host, strerror(err));
+            LOG(log_error, logtype_cnid, "getfd: connect CNID server %s: %s", host, strerror(err));
             continue;
         }
         
@@ -130,7 +130,7 @@ static int tsock_getfd(const char *host, const char *port)
     freeaddrinfo(servinfo);
 
     if (p == NULL) {
-        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from %s:%s", host, port);
+        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from CNID server %s:%s", host, port);
         return -1;
     }
 
