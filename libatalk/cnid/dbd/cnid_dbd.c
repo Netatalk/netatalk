@@ -52,7 +52,7 @@ static void RQST_RESET(struct cnid_dbd_rqst  *r)
 }
 
 /* ----------- */
-#define MAX_DELAY 40
+#define MAX_DELAY 10
 
 /* *MUST* be < afp tickle or it's never triggered (got EINTR first) */
 #define SOCK_DELAY 11
@@ -401,7 +401,7 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
                 return -1;
             }
             /* sleep a little before retry */
-            delay(5);
+            delay(2);
         } else {
             clean = 0; /* false... next time sleep */
             time(&orig);
