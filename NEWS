@@ -8,6 +8,8 @@ Changes in 2.1.1
 * FIX: afpd: Check if options->server is set in set_signature, preventing
        SIGSEGV.
 * FIX: DESTDIR support: DESTDIR was expanded twice
+* FIX: Fix for compilation error if header files of an older Netatalk
+       version are installed.
 
 Changes in 2.1-release
 ======================
