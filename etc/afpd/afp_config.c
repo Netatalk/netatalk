@@ -1,6 +1,4 @@
 /*
- * $Id: afp_config.c,v 1.32 2010-03-29 15:22:57 franklahm Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -496,6 +494,10 @@ static AFPConfig *AFPConfigInit(const struct afp_options *options,
             (config = ASPConfigInit(options, refcount)))
         config->defoptions = defoptions;
 #endif /* NO_DDP */
+
+
+    /* set signature */
+    set_signature(options);
 
     /* handle dsi transports and dsi proxies. we only proxy
      * for DSI connections. */

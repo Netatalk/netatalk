@@ -1,6 +1,4 @@
 /*
- * $Id: globals.h,v 1.33 2010-03-29 15:22:57 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -70,6 +68,7 @@ struct afp_options {
     char *guest, *loginmesg, *keyfile, *passwdfile;
     char *uamlist;
     char *authprintdir;
+    char *signatureopt;
     unsigned char signature[16];
     char *k5service, *k5realm, *k5keytab;
     char *unixcodepage,*maccodepage;

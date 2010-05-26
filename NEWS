@@ -7,6 +7,7 @@ Changes in 2.1.1
        [Open]Solaris.
 * FIX: afpd: Check if options->server is set in set_signature, preventing
        SIGSEGV.
+* FIX: afpd: server signature wasn't initialized in some cases
 * FIX: DESTDIR support: DESTDIR was expanded twice
 * FIX: Fix for compilation error if header files of an older Netatalk
        version are installed.
