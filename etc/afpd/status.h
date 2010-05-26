@@ -1,7 +1,3 @@
-/*
- * $Id: status.h,v 1.11 2010-03-29 15:22:57 franklahm Exp $
- */
-
 #ifndef AFPD_STATUS_H
 #define AFPD_STATUS_H 1
 
@@ -43,7 +39,7 @@ extern void status_versions (char * /*status*/, const ASP, const DSI *);
 extern void status_uams (char * /*status*/, const char * /*authlist*/);
 extern void status_init (AFPConfig *, AFPConfig *,
                                  const struct afp_options *);
-extern void set_signature(char *, struct afp_options *);
+extern void set_signature(struct afp_options *);
 
 /* FP functions */
 int afp_getsrvrinfo (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

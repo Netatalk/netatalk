@@ -1,6 +1,4 @@
 /*
- * $Id: status.c,v 1.31 2010-03-29 15:22:57 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -551,7 +549,7 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
 /* If cannot open conf file, use one-time signature.                  */
 /* If -signature user:xxxxx, use it.                                  */
 
-void set_signature(char *opt, struct afp_options *options) {
+void set_signature(struct afp_options *options) {
     char *usersign;
     int fd, i;
     struct stat tmpstat;
@@ -563,27 +561,27 @@ void set_signature(char *opt, struct afp_options *options) {
     char *server_tmp;
     
     server_tmp = (options->server ? options->server : options->hostname);
-    if (strcmp(opt, "auto") == 0) {
+    if (strcmp(options->signatureopt, "auto") == 0) {
         goto server_signature_auto;   /* default */
-    } else if (strcmp(opt, "host") == 0) {
-        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature host\" is obsoleted. Switching back to auto.", opt);
+    } else if (strcmp(options->signatureopt, "host") == 0) {
+        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature host\" is obsoleted. Switching back to auto.", options->signatureopt);
         goto server_signature_auto;   /* same as auto */
-    } else if (strncmp(opt, "user", 4) == 0) {
+    } else if (strncmp(options->signatureopt, "user", 4) == 0) {
         goto server_signature_user;   /*  user string */
     } else {
-        LOG(log_error, logtype_afpd, "ERROR: option \"-signature %s\" is not valid. Switching back to auto.", opt);
+        LOG(log_error, logtype_afpd, "ERROR: option \"-signature %s\" is not valid. Switching back to auto.", options->signatureopt);
         goto server_signature_auto;   /* switch back to auto*/
     }
     
 server_signature_user:
     
     /* Signature type is user string */
-    len = strlen(opt);
+    len = strlen(options->signatureopt);
     if (len <= 5) {
-        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature %s\" is not valid. Switching back to auto.", opt);
+        LOG(log_warning, logtype_afpd, "WARNING: option \"-signature %s\" is not valid. Switching back to auto.", options->signatureopt);
         goto server_signature_auto;
     }
-    usersign = opt + 5;
+    usersign = options->signatureopt + 5;
     len = len - 5;
     if (len > 16) {
         LOG(log_warning, logtype_afpd, "WARNING: signature user string %s is very long !",  usersign);
