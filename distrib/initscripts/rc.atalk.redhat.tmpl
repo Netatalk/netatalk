@@ -19,27 +19,9 @@ ATALK_SBIN=:SBINDIR:
 # Source networking configuration.
 . /etc/sysconfig/network
 
-if [ ! -x ${ATALK_SBIN}/atalkd ]; then
-     # Quickly probe for appletalk and warn if we can't find it
-     #/sbin/modprobe appletalk || echo "[could not load appletalk module]"
-     # Check for IP Encapsulation support
-     #/sbin/modprobe ipddp || echo "[could not load IP encapsulation]"
-     echo "[${ATALK_SBIN}/atalkd not found.  Did it compile?]";
-     exit 0;
-fi
-
-if [ ! -f ${ATALK_CONF_DIR}/netatalk.conf ]; then
-     echo "[${ATALK_CONF_DIR}/netatalk.conf not found]";
-     exit 0;
-fi
-
 # read in netatalk configuration
-. ${ATALK_CONF_DIR}/netatalk.conf
-
-# Check that networking is up.
-if [ ${NETWORKING} = "no" ]; then
-     echo "[Network isn't started]"; 
-     exit 0;
+if [ -f ${ATALK_CONF_DIR}/netatalk.conf ]; then
+    . ${ATALK_CONF_DIR}/netatalk.conf
 fi
 
 # initialize return values
@@ -51,6 +33,26 @@ RETVAL_AFPD=0
 
 # startup code for everything
 atalk_startup() {
+    # Check that networking is up.
+    if [ ${NETWORKING} = "no" ]; then
+         echo "[Network isn't started]"; 
+         exit 1;
+    fi
+
+    if [ ! -x ${ATALK_SBIN}/atalkd ]; then
+         # Quickly probe for appletalk and warn if we can't find it
+         #/sbin/modprobe appletalk || echo "[could not load appletalk module]"
+         # Check for IP Encapsulation support
+         #/sbin/modprobe ipddp || echo "[could not load IP encapsulation]"
+         echo "[${ATALK_SBIN}/atalkd not found. Check for permissions]";
+         exit 4;
+    fi
+
+    if [ ! -f ${ATALK_CONF_DIR}/netatalk.conf ]; then
+         echo "[${ATALK_CONF_DIR}/netatalk.conf not found]";
+         exit 6;
+    fi
+
     if [ x"${ATALKD_RUN}" != x"no" ]; then 
 	echo -n "  Starting atalkd:"
 	daemon ${ATALK_SBIN}/atalkd
@@ -210,16 +212,16 @@ case "$1" in
 	;;
   'status')
 	status atalkd
-    status papd
-    status timelord
-    status a2boot
-    status cnid_metad
-    status afpd
+	status papd
+	status timelord
+	status a2boot
+	status cnid_metad
+	status afpd
 	RETVAL=$?
 	;;
   *)
-	echo "Usage: atalk {start|stop|restart|status}"
-	exit 1
+	echo "Usage: $0 {start|stop|restart|reload|status}"
+	exit 2
 esac
 
 exit $RETVAL

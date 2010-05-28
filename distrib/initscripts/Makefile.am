@@ -58,7 +58,7 @@ uninstall: uninstall-startup
 if USE_REDHAT
 
 sysvdir	= /etc/rc.d/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.redhat
 	cp -f rc.atalk.redhat $(sysv_SCRIPTS)
