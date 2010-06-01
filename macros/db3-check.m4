@@ -84,7 +84,7 @@ AC_DEFUN([AC_PATH_BDB],[
     trybdbdir=""
     dobdbsearch=yes
     bdb_search_dirs="/usr/local /usr"
-    search_subdirs="/ /db4.7 /db47 /db4.6 /db46 /db4.5 /db45 /db4.4 /db44 /db4"
+    search_subdirs="/ /db4.8 /db48 /db4.7 /db47 /db4.6 /db46 /db4"
 
     bdbfound=no
     savedcflags="$CFLAGS"
@@ -115,7 +115,6 @@ AC_DEFUN([AC_PATH_BDB],[
             dobdbsearch=yes
         else
             bdb_search_dirs="$withval"
-            atalk_libname=lib
         fi
     )
 
@@ -157,6 +156,28 @@ AC_DEFUN([AC_PATH_BDB],[
                             BDB_PATH="$bdbdir"
                             bdbfound=yes
                             break;
+                        fi
+
+                        dnl -- Search for 64bit lib in "lib" too
+                        if test x"$atalk_libname" = x"lib64" ; then
+                           bdblibdir="${bdbdir}/lib"
+                           bdbbindir="${bdbdir}/bin"
+
+                           CPPFLAGS="-I${bdbdir}/include${subdir} $CPPFLAGS"
+                           LDFLAGS="-L$bdblibdir $LDFLAGS"
+
+                           eval export $shlibpath_var=$bdblibdir
+                           NETATALK_BDB_TRY_LINK
+                           eval export $shlibpath_var=$saved_shlibpath_var
+
+                           if test x"${atalk_cv_bdb_version}" = x"yes"; then
+                              BDB_CFLAGS="-I${bdbdir}/include${subdir}"
+                              BDB_LIBS="-L${bdblibdir} ${atalk_cv_lib_db}"
+                              BDB_BIN="$bdbbindir"
+                              BDB_PATH="$bdbdir"
+                              bdbfound=yes
+                              break;
+                           fi
                         fi
                     fi
                     CFLAGS="$savedcflags"
