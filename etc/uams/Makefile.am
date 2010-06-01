@@ -89,12 +89,12 @@ uams_gss_la_SOURCES   = uams_gss.c
 # flags
 #
 
-# do that on behalf of the brokeness of automake 1.4
+# these should be sorted out, applying both to AM_CFLAGS is senseless
 AM_CFLAGS = @SSL_CFLAGS@ @LIBGCRYPT_CFLAGS@
 
 uams_pam_la_CFLAGS         = @PAM_CFLAGS@
-uams_dhx_pam_la_CFLAGS     = @PAM_CFLAGS@
-uams_dhx2_pam_la_CFLAGS    = @PAM_CFLAGS@
+uams_dhx_pam_la_CFLAGS     = @SSL_CFLAGS@ @PAM_CFLAGS@
+uams_dhx2_pam_la_CFLAGS    = @LIBGCRYPT_CFLAGS@ @PAM_CFLAGS@
 uams_gss_la_CFLAGS   	   = @GSSAPI_CFLAGS@
 
 uams_guest_la_LDFLAGS      = -module -avoid-version
