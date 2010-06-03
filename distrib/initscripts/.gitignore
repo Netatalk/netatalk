@@ -4,6 +4,8 @@ rc.atalk.bsd
 rc.atalk.redhat
 rc.atalk.suse
 rc.atalk.tru64
+rc.atalk.sysv
+netatalk
 atalk
 .gitignore
 *.o
