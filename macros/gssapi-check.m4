@@ -109,6 +109,7 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 
 	AC_CHECK_LIB(gssapi, gss_display_status) 
 	AC_CHECK_LIB(gssapi_krb5, gss_display_status) 
+	AC_CHECK_LIB(gss, gss_display_status) 
 
 	# check for functions
 
