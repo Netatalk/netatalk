@@ -1295,8 +1295,8 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                 if (ad->ad_data_fork.adf_fd == -1 && errno == OPEN_NOFOLLOW_ERRNO) {
                     int lsz;
 
-                    ad->ad_data_fork.adf_syml = malloc(PATH_MAX+1);
-                    lsz = readlink(path, ad->ad_data_fork.adf_syml, PATH_MAX);
+                    ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
+                    lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN);
                     if (lsz <= 0) {
                         free(ad->ad_data_fork.adf_syml);
                         return -1;
