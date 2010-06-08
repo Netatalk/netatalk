@@ -95,7 +95,7 @@ static const char *prefix(const char *uname)
 
 ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t size)
 {
-//	const char *name = prefix(uname);
+	const char *name = prefix(uname);
 
 #if defined(HAVE_GETXATTR)
 #ifndef XATTR_ADD_OPT
