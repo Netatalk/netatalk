@@ -3,6 +3,7 @@ Changes in 2.1.2
 
 * FIX: afpd: fix for possible crash in case more then one server is
        configured in afpd.conf.
+* FIX: afpd: ExtendedAttributes in FreeBSD
 
 Changes in 2.1.1
 ================

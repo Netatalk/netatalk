@@ -95,7 +95,7 @@ static const char *prefix(const char *uname)
 
 ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t size)
 {
-	const char *name = prefix(uname);
+//	const char *name = prefix(uname);
 
 #if defined(HAVE_GETXATTR)
 #ifndef XATTR_ADD_OPT
@@ -107,22 +107,21 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 #elif defined(HAVE_GETEA)
 	return getea(path, name, value, size);
 #elif defined(HAVE_EXTATTR_GET_FILE)
-	char *s;
 	ssize_t retval;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 	/*
 	 * The BSD implementation has a nasty habit of silently truncating
 	 * the returned value to the size of the buffer, so we have to check
 	 * that the buffer is large enough to fit the returned value.
 	 */
-	if((retval=extattr_get_file(path, attrnamespace, attrname, NULL, 0)) >= 0) {
-		if(retval > size) {
+	if((retval = extattr_get_file(path, EXTATTR_NAMESPACE_USER, uname, NULL, 0)) >= 0) {
+        if (size == 0)
+            /* size == 0 means only return size */
+            return retval;
+		if (retval > size) {
 			errno = ERANGE;
 			return -1;
 		}
-		if((retval=extattr_get_file(path, attrnamespace, attrname, value, size)) >= 0)
+		if ((retval = extattr_get_file(path, EXTATTR_NAMESPACE_USER, uname, value, size)) >= 0)
 			return retval;
 	}
 
@@ -164,18 +163,13 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 #elif defined(HAVE_LGETEA)
 	return lgetea(path, name, value, size);
 #elif defined(HAVE_EXTATTR_GET_LINK)
-	char *s;
 	ssize_t retval;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
-
-	if((retval=extattr_get_link(path, attrnamespace, attrname, NULL, 0)) >= 0) {
+	if((retval=extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, NULL, 0)) >= 0) {
 		if(retval > size) {
 			errno = ERANGE;
 			return -1;
 		}
-		if((retval=extattr_get_link(path, attrnamespace, attrname, value, size)) >= 0)
+		if((retval=extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, value, size)) >= 0)
 			return retval;
 	}
 	
@@ -215,8 +209,8 @@ static struct {
 	size_t len;
 } 
 extattr[] = {
-	{ EXTATTR_NAMESPACE_SYSTEM, EXTATTR_PREFIX("system.") },
-        { EXTATTR_NAMESPACE_USER, EXTATTR_PREFIX("user.") },
+	{ EXTATTR_NAMESPACE_SYSTEM, EXTATTR_PREFIX("") },
+        { EXTATTR_NAMESPACE_USER, EXTATTR_PREFIX("") },
 };
 
 typedef union {
@@ -226,74 +220,65 @@ typedef union {
 
 static ssize_t bsd_attr_list (int type, extattr_arg arg, char *list, size_t size)
 {
-	ssize_t list_size, total_size = 0;
-	int i, t, len;
-	char *buf;
-	/* Iterate through extattr(2) namespaces */
-	for(t = 0; t < (sizeof(extattr)/sizeof(extattr[0])); t++) {
-		switch(type) {
+	ssize_t list_size;
+	int i, len;
+
+    switch(type) {
 #if defined(HAVE_EXTATTR_LIST_FILE)
-			case 0:
-				list_size = extattr_list_file(arg.path, extattr[t].space, list, size);
-				break;
+    case 0:
+        list_size = extattr_list_file(arg.path, EXTATTR_NAMESPACE_USER, list, size);
+        break;
 #endif
 #if defined(HAVE_EXTATTR_LIST_LINK)
-			case 1:
-				list_size = extattr_list_link(arg.path, extattr[t].space, list, size);
-				break;
+    case 1:
+        list_size = extattr_list_link(arg.path, EXTATTR_NAMESPACE_USER, list, size);
+        break;
 #endif
 #if defined(HAVE_EXTATTR_LIST_FD)
-			case 2:
-				list_size = extattr_list_fd(arg.filedes, extattr[t].space, list, size);
-				break;
+    case 2:
+        list_size = extattr_list_fd(arg.filedes, EXTATTR_NAMESPACE_USER, list, size);
+        break;
 #endif
-			default:
-				errno = ENOSYS;
-				return -1;
-		}
-		/* Some error happend. Errno should be set by the previous call */
-		if(list_size < 0)
-			return -1;
-		/* No attributes */
-		if(list_size == 0)
-			continue;
-		/* XXX: Call with an empty buffer may be used to calculate
-		   necessary buffer size. Unfortunately, we can't say, how
-		   many attributes were returned, so here is the potential
-		   problem with the emulation.
-		*/
-		if(list == NULL) {
-			/* Take the worse case of one char attribute names - 
-			   two bytes per name plus one more for sanity.
-			*/
-			total_size += list_size + (list_size/2 + 1)*extattr[t].len;
-			continue;
-		}
-		/* Count necessary offset to fit namespace prefixes */
-		len = 0;
-		for(i = 0; i < list_size; i += list[i] + 1)
-			len += extattr[t].len;
+    default:
+        errno = ENOSYS;
+        return -1;
+    }
 
-		total_size += list_size + len;
-		/* Buffer is too small to fit the results */
-		if(total_size > size) {
-			errno = ERANGE;
-			return -1;
-		}
-		/* Shift results back, so we can prepend prefixes */
-		buf = memmove(list + len, list, list_size);
+    /* Some error happend. Errno should be set by the previous call */
+    if(list_size < 0)
+        return -1;
 
-		for(i = 0; i < list_size; i += len + 1) {
-			len = buf[i];
-			strncpy(list, extattr[t].name, extattr[t].len + 1);
-			list += extattr[t].len;
-			strncpy(list, buf + i + 1, len);
-			list[len] = '\0';
-			list += len + 1;
-		}
-		size -= total_size;
-	}
-	return total_size;
+    /* No attributes */
+    if(list_size == 0)
+        return 0;
+
+    /* XXX: Call with an empty buffer may be used to calculate
+       necessary buffer size. Unfortunately, we can't say, how
+       many attributes were returned, so here is the potential
+       problem with the emulation.
+    */
+    if(list == NULL)
+        return list_size;
+
+    /* Buffer is too small to fit the results */
+    if(list_size > size) {
+        errno = ERANGE;
+        return -1;
+    }
+
+    /* Convert from pascal strings to C strings */
+    len = list[0];
+    memmove(list, list + 1, list_size);
+
+    for(i = len; i < list_size; ) {
+        LOG(log_maxdebug, logtype_afpd, "len: %d, i: %d", len, i);
+
+        len = list[i];
+        list[i] = '\0';
+        i += len + 1;
+    }
+
+	return list_size;
 }
 
 #endif
@@ -477,12 +462,7 @@ int sys_removexattr (const char *path, const char *uname)
 #elif defined(HAVE_REMOVEEA)
 	return removeea(path, name);
 #elif defined(HAVE_EXTATTR_DELETE_FILE)
-	char *s;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
-
-	return extattr_delete_file(path, attrnamespace, attrname);
+	return extattr_delete_file(path, EXTATTR_NAMESPACE_USER, uname);
 #elif defined(HAVE_ATTR_REMOVE)
 	int flags = 0;
 	char *attrname = strchr(name,'.') + 1;
@@ -515,12 +495,7 @@ int sys_lremovexattr (const char *path, const char *uname)
 #elif defined(HAVE_LREMOVEEA)
 	return lremoveea(path, name);
 #elif defined(HAVE_EXTATTR_DELETE_LINK)
-	char *s;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
-
-	return extattr_delete_link(path, attrnamespace, attrname);
+	return extattr_delete_link(path, EXTATTR_NAMESPACE_USER, uname);
 #elif defined(HAVE_ATTR_REMOVE)
 	int flags = ATTR_DONTFOLLOW;
 	char *attrname = strchr(name,'.') + 1;
@@ -555,14 +530,10 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 #elif defined(HAVE_SETEA)
 	return setea(path, name, value, size, flags);
 #elif defined(HAVE_EXTATTR_SET_FILE)
-	char *s;
 	int retval = 0;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 	if (flags) {
 		/* Check attribute existence */
-		retval = extattr_get_file(path, attrnamespace, attrname, NULL, 0);
+		retval = extattr_get_file(path, EXTATTR_NAMESPACE_USER, uname, NULL, 0);
 		if (retval < 0) {
 			/* REPLACE attribute, that doesn't exist */
 			if (flags & XATTR_REPLACE && errno == ENOATTR) {
@@ -579,7 +550,7 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 			}
 		}
 	}
-	retval = extattr_set_file(path, attrnamespace, attrname, value, size);
+	retval = extattr_set_file(path, EXTATTR_NAMESPACE_USER, uname, value, size);
 	return (retval < 0) ? -1 : 0;
 #elif defined(HAVE_ATTR_SET)
 	int myflags = 0;
@@ -619,14 +590,10 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 #elif defined(LSETEA)
 	return lsetea(path, name, value, size, flags);
 #elif defined(HAVE_EXTATTR_SET_LINK)
-	char *s;
 	int retval = 0;
-	int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
-		EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
-	const char *attrname = ((s=strchr(name, '.')) == NULL) ? name : s + 1;
 	if (flags) {
 		/* Check attribute existence */
-		retval = extattr_get_link(path, attrnamespace, attrname, NULL, 0);
+		retval = extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, NULL, 0);
 		if (retval < 0) {
 			/* REPLACE attribute, that doesn't exist */
 			if (flags & XATTR_REPLACE && errno == ENOATTR) {
@@ -644,7 +611,7 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 		}
 	}
 
-	retval = extattr_set_link(path, attrnamespace, attrname, value, size);
+	retval = extattr_set_link(path, EXTATTR_NAMESPACE_USER, uname, value, size);
 	return (retval < 0) ? -1 : 0;
 #elif defined(HAVE_ATTR_SET)
 	int myflags = ATTR_DONTFOLLOW;
