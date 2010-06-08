@@ -1085,6 +1085,22 @@ case "$this_os" in
                    [neta_cv_eas_sys_not_found=yes])
   ;;
 
+  'freebsd')
+    AC_CHECK_FUNCS([extattr_delete_fd extattr_delete_file extattr_delete_link],
+                   [neta_cv_eas_sys_found=yes],
+                   [neta_cv_eas_sys_not_found=yes])
+    AC_CHECK_FUNCS([extattr_get_fd extattr_get_file extattr_get_link],,
+                   [neta_cv_eas_sys_not_found=yes])
+    AC_CHECK_FUNCS([extattr_list_fd extattr_list_file extattr_list_link],,
+                   [neta_cv_eas_sys_not_found=yes])
+    AC_CHECK_FUNCS([extattr_set_fd extattr_set_file extattr_set_link],,
+                   [neta_cv_eas_sys_not_found=yes])
+  ;;
+
+  *freebsd4* | *dragonfly* )
+    AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
+  ;;
+
   *)
 	AC_SEARCH_LIBS(getxattr, [attr])
 
@@ -1137,19 +1153,6 @@ if test x"$ac_cv_func_getxattr" = x"yes" ; then
 		AC_DEFINE(XATTR_ADD_OPT, 1, [xattr functions have additional options])
 	fi
 fi
-
-# Check if we have extattr
-case "$this_os" in
-  *freebsd4* | *dragonfly* )
-    AC_DEFINE(BROKEN_EXTATTR, 1, [Does extattr API work])
-    ;;
-  *)
-    AC_CHECK_FUNCS(extattr_delete_fd extattr_delete_file extattr_delete_link)
-    AC_CHECK_FUNCS(extattr_get_fd extattr_get_file extattr_get_link)
-    AC_CHECK_FUNCS(extattr_list_fd extattr_list_file extattr_list_link)
-    AC_CHECK_FUNCS(extattr_set_fd extattr_set_file extattr_set_link)
-    ;;
-esac
 
 if test "x$neta_cv_eas_sys_found" = "xyes" ; then
    if test "x$neta_cv_eas_sys_not_found" != "xyes" ; then
