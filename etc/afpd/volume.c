@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -1131,6 +1129,9 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
     /* Enable some default options for all volumes */
     save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
     save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
+    LOG(log_maxdebug, logtype_afpd, "readvolfile: seeding default umask: %04o",
+        obj->options.umask);
+    save_options[VOLOPT_UMASK].i_value = obj->options.umask;
 
     while ( myfgets( buf, sizeof( buf ), fp ) != NULL ) {
         initline( strlen( buf ), buf );
@@ -1171,10 +1172,6 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
                 strcat( tmp, "/" );
                 strcat( tmp, p );
             }
-            /* Tag a user's home directory with their umask.  Note, this will
-             * be overwritten if the user actually specifies a umask: option
-             * for a '~' volume. */
-            save_options[VOLOPT_UMASK].i_value = obj->options.save_mask;
             /* fall through */
 
         case '/' :

@@ -4,7 +4,11 @@ Changes in 2.1.2
 * FIX: afpd: fix for possible crash in case more then one server is
        configured in afpd.conf.
 * FIX: afpd: ExtendedAttributes in FreeBSD
-
+* FIX: afpd: sharing home folders corrupted the per volume umask.
+* UPD: afpd: umask for home folders is no longer taken from startup umask.
+* UPD: afpd: dont and permissions with parent folder when creating new
+       directories on "upriv" volumes.
+ 
 Changes in 2.1.1
 ================
 
