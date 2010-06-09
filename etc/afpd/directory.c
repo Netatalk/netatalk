@@ -763,9 +763,24 @@ extenddir(struct vol *vol, struct dir *dir, struct path *path)
 /* -------------------------
    appledouble mkdir afp error code.
 */
-static int netatalk_mkdir(const char *name)
+static int netatalk_mkdir(const struct vol *vol, const char *name)
 {
-    if (ad_mkdir(name, DIRBITS | 0777) < 0) {
+    int ret;
+    struct stat st;
+
+    if (vol->v_flags & AFPVOL_UNIX_PRIV) {
+        if (lstat(".", &st) < 0)
+            return AFPERR_MISC;
+        int mode = (DIRBITS & (~S_ISGID & st.st_mode)) | (0777 & ~vol->v_umask);
+        LOG(log_maxdebug, logtype_afpd, "netatalk_mkdir(\"%s\") {parent mode: %04o, vol umask: %04o}",
+            name, st.st_mode, vol->v_umask);
+
+        ret = mkdir(name, mode);
+    } else {
+        ret = ad_mkdir(name, DIRBITS | 0777);
+    }
+
+    if (ret < 0) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOOBJ );
@@ -856,7 +871,7 @@ static int copydir(const struct vol *vol, int dirfd, char *src, char *dst)
         return AFPERR_PARAM;
 
     /* try to create the destination directory */
-    if (AFP_OK != (err = netatalk_mkdir(dst)) ) {
+    if (AFP_OK != (err = netatalk_mkdir(vol, dst)) ) {
         closedir(dp);
         return err;
     }
@@ -2490,7 +2505,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
 
     upath = s_path->u_name;
 
-    if (AFP_OK != (err = netatalk_mkdir( upath))) {
+    if (AFP_OK != (err = netatalk_mkdir(vol, upath))) {
         return err;
     }
 
