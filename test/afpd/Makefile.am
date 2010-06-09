@@ -6,6 +6,8 @@ TESTS = test.sh test
 
 check_PROGRAMS = test
 noinst_HEADERS = test.h subtests.h afpfunc_helpers.h
+EXTRA_DIST = test.sh
+CLEANFILES = test.default test.conf
 
 test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_builddir)/etc/afpd/afp_config.c \

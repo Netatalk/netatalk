@@ -232,19 +232,20 @@ AC_ARG_WITH(cracklib,
 AC_MSG_CHECKING([for cracklib support])
 AC_MSG_RESULT([$netatalk_cv_with_cracklib])
 
-netatalk_cv_ddp_enabled=yes
+netatalk_cv_ddp_enabled=no
 AC_MSG_CHECKING([whether to enable DDP])
 AC_ARG_ENABLE(ddp,
-	[  --disable-ddp           disable DDP],[
-	if test "$enableval" = "no"; then 
-		AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
-		AC_MSG_RESULT([no])
-		netatalk_cv_ddp_enabled=no
+	[  --enable-ddp           enable DDP],[
+	if test "$enableval" = "yes"; then 
+		AC_MSG_RESULT([yes])
+		netatalk_cv_ddp_enabled=yes
 	else
 		AC_MSG_RESULT([yes])
+		AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 	fi
 	],[
-		AC_MSG_RESULT([yes])
+		AC_MSG_RESULT([no])
+		AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 	]
 )
 
@@ -1226,6 +1227,7 @@ AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
+AM_CONDITIONAL(USE_APPLETALK, test x$netatalk_cv_ddp_enabled = xyes)
 
 dnl --------------------- generate files
 

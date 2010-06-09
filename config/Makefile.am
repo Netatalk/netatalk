@@ -5,9 +5,14 @@ SUFFIXES = .tmpl .
 
 GENFILES = afpd.conf AppleVolumes.default
 TMPLFILES = afpd.conf.tmpl AppleVolumes.default.tmpl
-CONFFILES = AppleVolumes.system atalkd.conf netatalk.conf papd.conf
+CONFFILES = AppleVolumes.system netatalk.conf
+
 if USE_NFSv4_ACLS
 CONFFILES += afp_ldap.conf
+endif
+
+if USE_APPLETALK
+CONFFILES += atalkd.conf papd.conf
 endif
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
