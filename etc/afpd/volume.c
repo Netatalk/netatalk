@@ -1,6 +1,4 @@
 /*
- * $Id: volume.c,v 1.127 2010-04-16 18:28:45 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -1167,10 +1165,6 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
                 strcat( tmp, "/" );
                 strcat( tmp, p );
             }
-            /* Tag a user's home directory with their umask.  Note, this will
-             * be overwritten if the user actually specifies a umask: option
-             * for a '~' volume. */
-            save_options[VOLOPT_UMASK].i_value = obj->options.save_mask;
             /* fall through */
 
         case '/' :
