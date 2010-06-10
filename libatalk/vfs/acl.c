@@ -37,20 +37,20 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     *retAces = NULL;
     ace_count = acl(name, ACE_GETACLCNT, 0, NULL);
     if (ace_count <= 0) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error");
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error");
         return -1;
     }
 
     aces = malloc(ace_count * sizeof(ace_t));
     if (aces == NULL) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
-	return -1;
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
+        return -1;
     }
 
     if ( (acl(name, ACE_GETACL, ace_count, aces)) == -1 ) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
-	free(aces);
-	return -1;
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
+        free(aces);
+        return -1;
     }
 
     LOG(log_debug9, logtype_afpd, "get_nfsv4_acl: file: %s -> No. of ACEs: %d", name, ace_count);
