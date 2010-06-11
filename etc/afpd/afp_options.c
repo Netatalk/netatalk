@@ -238,6 +238,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->flags |= OPTION_CUSTOMICON;
     if (strstr(buf, " -advertise_ssh"))
         options->flags |= OPTION_ANNOUNCESSH;
+    if (strstr(buf, " -acl2os9mode"))
+        options->flags |= OPTION_ACL2OS9MODE;
 
     /* passwd bits */
     if (strstr(buf, " -nosavepassword"))

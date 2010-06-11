@@ -16,7 +16,10 @@
 #ifndef ACL_MAPPINGS
 #define ACL_MAPPINGS
 
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif
+
 #include "acls.h"
 
 /* 
@@ -28,6 +31,7 @@ struct ace_rights_map {
     u_int32_t to;
 };
 
+#ifdef HAVE_SOLARIS_ACLS
 struct ace_rights_map nfsv4_to_darwin_rights[] = {
     {ACE_READ_DATA,         DARWIN_ACE_READ_DATA},
     {ACE_WRITE_DATA,        DARWIN_ACE_WRITE_DATA},
@@ -89,5 +93,6 @@ struct darwin_to_nfsv4_flags_map darwin_to_nfsv4_flags[] = {
     {DARWIN_ACE_FLAGS_INHERITED,         ACE_INHERITED_ACE},
     {0,0}
 };
+#endif /* HAVE_SOLARIS_ACLS */
 
 #endif	/* ACL_MAPPINGS */

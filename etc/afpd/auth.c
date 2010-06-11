@@ -48,7 +48,7 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "status.h"
 #include "fork.h"
 #include "extattrs.h"
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 #include "acls.h"
 #endif
 
@@ -210,11 +210,11 @@ static int set_auth_switch(int expired)
         afp_switch = postauth_switch;
         switch (afp_version) {
         case 32:
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
             uam_afpserver_action(AFP_GETACL, UAM_AFPSERVER_POSTAUTH, afp_getacl, NULL);
             uam_afpserver_action(AFP_SETACL, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
             uam_afpserver_action(AFP_ACCESS, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
-#endif
+#endif /* HAVE_ACLS */
             uam_afpserver_action(AFP_GETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_getextattr, NULL);
             uam_afpserver_action(AFP_SETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_setextattr, NULL);
             uam_afpserver_action(AFP_REMOVEATTR, UAM_AFPSERVER_POSTAUTH, afp_remextattr, NULL);
@@ -999,7 +999,7 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         *rbuflen += sizeof(id);
     }
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
     if (bitmap & USERIBIT_UUID) {
         int ret;
         uuid_t uuid;
@@ -1021,7 +1021,7 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         rbuf += UUID_BINSIZE;
         *rbuflen += UUID_BINSIZE;
     }
-#endif
+#endif /* HAVE_ACLS */
 
     LOG(log_debug, logtype_afpd, "END afp_getuserinfo:");
     return AFP_OK;

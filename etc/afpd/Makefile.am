@@ -11,7 +11,7 @@ afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 	 afp_config.c nfsquota.c quota.c uam.c afs.c uid.c afp_util.c \
 	catsearch.c afprun.c hash.c extattrs.c dircache.c
 
-if USE_NFSv4_ACLS
+if HAVE_ACLS
 afpd_SOURCES += acls.c
 endif
 

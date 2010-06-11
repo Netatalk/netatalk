@@ -1,6 +1,6 @@
 /*
-  $Id: acls.c,v 1.9 2010-03-08 19:49:59 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@
   Takes a users name, uid and primary gid and checks if user is member of any group
   Returns -1 if no or error, 0 if yes
 */
-static int check_group(char *name, uid_t uid, gid_t pgid, gid_t path_gid)
+static int check_group(char *name, uid_t uid _U_, gid_t pgid, gid_t path_gid)
 {
     int i;
     struct group *grp;
@@ -79,6 +79,11 @@ static int check_group(char *name, uid_t uid, gid_t pgid, gid_t path_gid)
     return -1;
 }
 
+/********************************************************
+ * Solaris funcs
+ ********************************************************/
+
+#ifdef HAVE_SOLARIS_ACLS
 /*
   Remove any trivial ACE "in-place". Returns no of non-trivial ACEs
 */
@@ -352,9 +357,6 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
     return mapped_aces;
 }
 
-/********************************************************
- * 2nd level funcs
- ********************************************************/
 
 /*  Map between ACL styles (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS).
     Reads from 'aces' buffer, writes to 'rbuf' buffer.
@@ -385,20 +387,18 @@ static int map_acl(int type, ace_t *nfsv4_aces, darwin_ace_t *buf, int ace_count
     LOG(log_debug9, logtype_afpd, "map_acl: END");
     return mapped_aces;
 }
-
-/********************************************************
- * 1st level funcs
- ********************************************************/
-
+#endif /* HAVE_SOLARIS_ACLS */
 
 /* Get ACL from object omitting trivial ACEs. Map to Darwin ACL style and
    store Darwin ACL at rbuf. Add length of ACL written to rbuf to *rbuflen.
    Returns 0 on success, -1 on error. */
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 {
-    int ace_count, mapped_aces, err;
-    ace_t *aces;
+    int ace_count = 0, mapped_aces = 0, err;
     uint32_t *darwin_ace_count = (u_int32_t *)rbuf;
+#ifdef HAVE_SOLARIS_ACLS
+    ace_t *aces;
+#endif
 
     LOG(log_debug9, logtype_afpd, "get_and_map_acl: BEGIN");
 
@@ -407,6 +407,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     *rbuf = 0;
     rbuf += 4;
 
+#ifdef HAVE_SOLARIS_ACLS
     if ( (ace_count = get_nfsv4_acl(name, &aces)) == -1) {
         LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get ACL");
         return -1;
@@ -416,21 +417,25 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
         err = -1;
         goto cleanup;
     }
+#endif /* HAVE_SOLARIS_ACLS */
+
     LOG(log_debug, logtype_afpd, "get_and_map_acl: mapped %d ACEs", mapped_aces);
 
     err = 0;
     *darwin_ace_count = htonl(mapped_aces);
     *rbuflen += sizeof(darwin_acl_header_t) + (mapped_aces * sizeof(darwin_ace_t));
 
+#ifdef HAVE_SOLARIS_ACLS
 cleanup:
-    free(aces);
+   free(aces);
+#endif
 
     LOG(log_debug9, logtype_afpd, "get_and_map_acl: END");
     return err;
 }
 
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
-static int remove_acl_vfs(const struct vol *vol,const char *path, int dir)
+static int remove_acl(const struct vol *vol,const char *path, int dir)
 {
     int ret;
 
@@ -438,7 +443,7 @@ static int remove_acl_vfs(const struct vol *vol,const char *path, int dir)
     if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK)
         return ret;
     /* now the data fork or dir */
-    return (remove_acl(path));
+    return (remove_acl_vfs(path));
 }
 
 /*
@@ -449,7 +454,8 @@ static int remove_acl_vfs(const struct vol *vol,const char *path, int dir)
   We will store inherited ACEs first, which is Darwins canonical order.
   - returns AFPerror code
 */
-static int set_acl_vfs(const struct vol *vol, char *name, int inherit, char *ibuf)
+#ifdef HAVE_SOLARIS_ACLS
+static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
 {
     int ret, i, nfsv4_ace_count, tocopy_aces_count = 0, new_aces_count = 0, trivial_ace_count = 0;
     ace_t *old_aces, *new_aces = NULL;
@@ -551,11 +557,20 @@ cleanup:
     LOG(log_debug9, logtype_afpd, "set_acl: END");
     return ret;
 }
+#endif /* HAVE_SOLARIS_ACLS */
+
+#ifdef HAVE_POSIX_ACLS
+static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
+{
+    return AFP_OK;
+}
+#endif /* HAVE_POSIX_ACLS */
 
 /*
   Checks if a given UUID has requested_rights(type darwin_ace_rights) for path.
   Note: this gets called frequently and is a good place for optimizations !
 */
+#ifdef HAVE_SOLARIS_ACLS
 static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
 {
     int                 ret, i, ace_count, dir, checkgroup;
@@ -713,6 +728,14 @@ exit:
 #endif
     return ret;
 }
+#endif /* HAVE_SOLARIS_ACLS */
+
+#ifdef HAVE_POSIX_ACLS
+static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
+{
+    return AFP_OK;
+}
+#endif /* HAVE_POSIX_ACLS */
 
 /********************************************************
  * Interface
@@ -929,7 +952,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     /* Remove ACL ? */
     if (bitmap & kFileSec_REMOVEACL) {
         LOG(log_debug, logtype_afpd, "afp_setacl: Remove ACL request.");
-        if ((ret = remove_acl_vfs(vol, s_path->u_name, S_ISDIR(s_path->st.st_mode))) != AFP_OK)
+        if ((ret = remove_acl(vol, s_path->u_name, S_ISDIR(s_path->st.st_mode))) != AFP_OK)
             LOG(log_error, logtype_afpd, "afp_setacl: error from remove_acl");
     }
 
@@ -939,9 +962,9 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 
         /* Check if its our job to preserve inherited ACEs */
         if (bitmap & kFileSec_Inherit)
-            ret = set_acl_vfs(vol, s_path->u_name, 1, ibuf);
+            ret = set_acl(vol, s_path->u_name, 1, ibuf);
         else
-            ret = set_acl_vfs(vol, s_path->u_name, 0, ibuf);
+            ret = set_acl(vol, s_path->u_name, 0, ibuf);
         if (ret == 0)
             ret = AFP_OK;
         else
@@ -959,9 +982,9 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
 {
     struct passwd *pw;
     uuid_t uuid;
-    int dir, r_ok, w_ok, x_ok;
+    int r_ok, w_ok, x_ok;
 
-    if ( ! (AFPobj->options.flags & OPTION_UUID))
+    if ( ! (AFPobj->options.flags & OPTION_UUID) || (AFPobj->options.flags & OPTION_ACL2OS9MODE))
         return;
 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode('%s')", path);
@@ -998,6 +1021,7 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
   We then inherit any explicit ACE from "." to ".AppleDouble" and ".AppleDouble/.Parent".
   FIXME: add to VFS layer ?
 */
+#ifdef HAVE_SOLARIS_ACLS
 void addir_inherit_acl(const struct vol *vol)
 {
     ace_t *diraces = NULL, *adaces = NULL, *combinedaces = NULL;
@@ -1064,3 +1088,11 @@ cleanup:
     free(adaces);
     free(combinedaces);
 }
+#endif /* HAVE_SOLARIS_ACLS */
+
+#ifdef HAVE_POSIX_ACLS
+void addir_inherit_acl(const struct vol *vol)
+{
+    return;
+}
+#endif /* HAVE_POSIX_ACLS */

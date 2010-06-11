@@ -17,7 +17,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 
 #include <stdio.h>
 #include <errno.h>
@@ -145,4 +145,4 @@ int acl_ldap_readconfig(char *name)
     fclose(f);
     return 0;
 }
-#endif
+#endif /* HAVE_ACLS */

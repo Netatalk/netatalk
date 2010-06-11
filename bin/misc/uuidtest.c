@@ -17,7 +17,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -138,4 +138,4 @@ int main( int argc, char **argv)
     return 0;
 }
 
-#endif  /* HAVE_NFSv4_ACLS */
+#endif  /* HAVE_ACLS */

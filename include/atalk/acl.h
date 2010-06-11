@@ -1,5 +1,4 @@
 /*
-   $Id: acl.h,v 1.1 2009-10-14 15:04:01 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -20,15 +19,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
-#endif  /* HAVE_NFSv4_ACLS */
+#endif  /* HAVE_SOLARIS_ACLS */
 
-/* Solaris NFSv4 ACL stuff */
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 extern int get_nfsv4_acl(const char *name, ace_t **retAces);
-extern int remove_acl(const char *name);
-#endif /* HAVE_NFSv4_ACLS */
+#endif /* HAVE_SOLARIS_ACLS */
 
+extern int remove_acl_vfs(const char *name);
 
 #endif  /* ATALK_ACL_H */

@@ -2,8 +2,7 @@
 
 noinst_HEADERS = aclldap.h cache.h
 
-if USE_NFSv4_ACLS
-
+if HAVE_ACLS
 noinst_LTLIBRARIES = libacl.la
 libacl_la_SOURCES = \
 	ldap.c		\
@@ -11,6 +10,5 @@ libacl_la_SOURCES = \
 	cache.c		\
 	ldap_config.c
 libacl_la_LDFLAGS = -lldap
-
 endif
 

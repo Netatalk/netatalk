@@ -20,7 +20,7 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
 #endif
 

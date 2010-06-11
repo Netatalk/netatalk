@@ -43,7 +43,7 @@
 #include "mangle.h"
 #include "hash.h"
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 extern void addir_inherit_acl(const struct vol *vol);
 #endif
 
@@ -2132,10 +2132,10 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     ad_close_metadata( &ad);
 
 createdir_done:
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
     /* FIXME: are we really inside the created dir? */
     addir_inherit_acl(vol);
-#endif
+#endif /* HAVE_ACLS */
 
     memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));
     *rbuflen = sizeof( u_int32_t );
@@ -2330,7 +2330,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             name = NULL;
         }
         break;
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
     case 5 : /* UUID -> username */
     case 6 : /* UUID -> groupname */
         if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
@@ -2364,7 +2364,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             *rbuflen = 2 * sizeof( id );
         }
         break;
-#endif
+#endif /* HAVE_ACLS */
     default :
         return( AFPERR_PARAM );
     }
@@ -2418,7 +2418,7 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     case 4 :
         len = (unsigned char) *ibuf++;
         break;
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
     case 5 : /* username -> UUID  */
     case 6 : /* groupname -> UUID */
         if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
@@ -2427,7 +2427,7 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         len = ntohs(ulen);
         ibuf += 2;
         break;
-#endif
+#endif /* HAVE_ACLS */
     default :
         return( AFPERR_PARAM );
     }
@@ -2461,7 +2461,7 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
             memcpy( rbuf, &id, sizeof( id ));
             *rbuflen = sizeof( id );
             break;
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
         case 5 :        /* username -> UUID */
             LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);
             if (0 != getuuidfromname(ibuf, UUID_USER, rbuf))
@@ -2474,7 +2474,7 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
                 return AFPERR_NOITEM;
             *rbuflen = UUID_BINSIZE;
             break;
-#endif
+#endif /* HAVE_ACLS */
         }
     }
     return( AFP_OK );
