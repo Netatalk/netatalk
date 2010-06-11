@@ -545,9 +545,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
 #ifdef HAVE_ACLS
     /* Parse afp_ldap.conf first so we can set the uuid option */
-    LOG(log_debug, logtype_afpd, "Start parsing afp_ldap.conf");
     acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-    LOG(log_debug, logtype_afpd, "Finished parsing afp_ldap.conf");
 #endif /* HAVE_ACLS */
 
     /* if config file doesn't exist, load defaults */
@@ -557,8 +555,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
             cmdline->configfile);
         return AFPConfigInit(cmdline, cmdline);
     }
-
-    LOG(log_debug, logtype_afpd, "Loading ConfigFile"); 
 
     /* scan in the configuration file */
     len = 0;
@@ -587,8 +583,10 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
 #ifdef HAVE_ACLS
 	/* Enable UUID support if LDAP config is complete */
-	if (ldap_config_valid)
-	    options.flags |= OPTION_UUID;
+        if (ldap_config_valid) {
+            LOG(log_info, logtype_afpd, "Enabling UUID support");
+            options.flags |= OPTION_UUID;
+        }
 #endif /* HAVE_ACLS */
 
         /* this should really get a head and a tail to simplify things. */
