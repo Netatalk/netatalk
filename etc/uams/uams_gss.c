@@ -125,7 +125,8 @@ static void log_ctx_flags( OM_uint32 flags )
 
 static void log_principal(gss_name_t server_name)
 {
-#ifdef DEBUG1
+#if 0
+    /* FIXME: must call gss_canonicalize_name before gss_export_name */
     OM_uint32 major_status = 0, minor_status = 0;
     gss_buffer_desc exported_name;
 
@@ -140,16 +141,12 @@ static void log_principal(gss_name_t server_name)
 static int get_afpd_principal(void *obj, gss_name_t *server_name)
 {
     OM_uint32 major_status = 0, minor_status = 0;
-    char *realm, *fqdn, *service, *principal, *p;
-    size_t realmlen=0, fqdnlen=0, servicelen=0;
+    char *fqdn, *service, *principal, *p;
+    size_t fqdnlen=0, servicelen=0;
     size_t principal_length;
     gss_buffer_desc s_princ_buffer;
 
     /* get all the required information from afpd */
-    if (uam_afpserver_option(obj, UAM_OPTION_KRB5REALM, (void*) &realm, &realmlen) < 0)
-        return 1;
-    LOG(log_debug, logtype_uams, "get_afpd_principal: REALM: %s", realm);
-
     if (uam_afpserver_option(obj, UAM_OPTION_FQDN, (void*) &fqdn, &fqdnlen) < 0)
         return 1;
     LOG(log_debug, logtype_uams, "get_afpd_principal: fqdn: %s", fqdn);
@@ -159,14 +156,14 @@ static int get_afpd_principal(void *obj, gss_name_t *server_name)
     LOG(log_debug, logtype_uams, "get_afpd_principal: service: %s", service);
 
     /* we need all the info, log error and return if one's missing */
-    if (!service || !servicelen || !fqdn || !fqdnlen || !realm || !realmlen) {
+    if (!service || !servicelen || !fqdn || !fqdnlen) {
         LOG(log_error, logtype_uams,
             "get_afpd_principal: could not retrieve required information from afpd.");
         return 1;
     }
 
     /* allocate memory to hold the temporary principal string */
-    principal_length = servicelen + 1 + fqdnlen + 1 + realmlen + 1;
+    principal_length = servicelen + 1 + fqdnlen + 1;
     if ( NULL == (principal = (char*) malloc( principal_length)) ) {
         LOG(log_error, logtype_uams,
             "get_afpd_principal: out of memory allocating %u bytes",
@@ -176,24 +173,21 @@ static int get_afpd_principal(void *obj, gss_name_t *server_name)
 
     /*
      * Build the principal string.
-     * Format: 'service/fqdn@realm'
+     * Format: 'service@fqdn'
      */
     strlcpy( principal, service, principal_length);
-    strlcat( principal, "/", principal_length);
+    strlcat( principal, "@", principal_length);
 
     /*
      * The fqdn we get from afpd may contain a port.
      * We need to strip the port from fqdn for principal.
      */
-    p = strchr(fqdn, ':');
-    if (p)
+    if ((p = strchr(fqdn, ':')))
         *p = '\0';
+
     strlcat( principal, fqdn, principal_length);
     if (p)
         *p = ':';
-    strlcat( principal, "@", principal_length);
-    strlcat( principal, realm, principal_length);
-
     /*
      * Import our principal into the gssapi internal representation
      * stored in server_name.
@@ -204,7 +198,7 @@ static int get_afpd_principal(void *obj, gss_name_t *server_name)
     LOG(log_debug, logtype_uams, "get_afpd_principal: importing principal `%s'", principal);
     major_status = gss_import_name( &minor_status,
                                     &s_princ_buffer,
-                                    GSS_C_NO_OID,
+                                    GSS_C_NT_HOSTBASED_SERVICE,
                                     server_name );
 
     /*
