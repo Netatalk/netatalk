@@ -369,7 +369,7 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
 }
 #endif /* HAVE_SOLARIS_ACLS */
 
-/* 
+/*
  * Map ACEs from POSIX to Darwin.
  * type is either POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, cf. acl_get_file.
  * Return number of mapped ACES, -1 on error.
@@ -378,6 +378,7 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
 static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darwin_aces)
 {
     int mapped_aces = 0;
+    int havemask = 0;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t e;
     acl_tag_t tag;
@@ -390,8 +391,8 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
     uint32_t rights;
     darwin_ace_t *saved_darwin_aces = darwin_aces;
 
-    LOG(log_maxdebug, logtype_afpd, "map_aces_posix_to_darwin(%s)", 
-        type == POSIX_DEFAULT_2_DARWIN ?
+    LOG(log_maxdebug, logtype_afpd, "map_aces_posix_to_darwin(%s)",
+        (type & MAP_MASK) == POSIX_DEFAULT_2_DARWIN ?
         "POSIX_DEFAULT_2_DARWIN" : "POSIX_ACCESS_2_DARWIN");
 
     /* itereate through all ACEs */
@@ -403,26 +404,25 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
             LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_tag_type: %s", strerror(errno));
             mapped_aces = -1;
             goto exit;
-        }            
+        }
 
         /* we return user and group ACE */
         switch (tag) {
         case ACL_USER:
             if ((uid = (uid_t *)acl_get_qualifier(e)) == NULL) {
-                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s", 
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s",
                     strerror(errno));
                 mapped_aces = -1;
                 goto exit;
             }
-            pwd = getpwuid(*uid);
-            if (!pwd) {
+            if ((pwd = getpwuid(*uid)) == NULL) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getpwuid error: %s",
                     strerror(errno));
                 mapped_aces = -1;
                 goto exit;
             }
             LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: uid: %d -> name: %s",
-               *uid, pwd->pw_name);
+                *uid, pwd->pw_name);
             if (getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid) != 0) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getuuidfromname error");
                 mapped_aces = -1;
@@ -434,13 +434,12 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
 
         case ACL_GROUP:
             if ((gid = (gid_t *)acl_get_qualifier(e)) == NULL) {
-                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s", 
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s",
                     strerror(errno));
                 mapped_aces = -1;
                 goto exit;
             }
-            grp = getgrgid(*gid);
-            if (!grp) {
+            if ((grp = getgrgid(*gid)) == NULL) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getgrgid error: %s",
                     strerror(errno));
                 mapped_aces = -1;
@@ -463,6 +462,7 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
                 LOG(log_error, logtype_afpd, "map_aces_solaris_to_darwin: acl_get_permset: %s", strerror(errno));
                 return -1;
             }
+            havemask = 1;
             continue;
 
         default:
@@ -483,6 +483,7 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
             return -1;
         }
 
+        rights = 0;
         if (acl_get_perm(permset, ACL_READ))
             rights = DARWIN_ACE_READ_DATA
                 | DARWIN_ACE_READ_EXTATTRIBUTES
@@ -503,29 +504,31 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
 
         darwin_aces++;
         mapped_aces++;
-    }
+    } /* while */
 
-    /* Loop through the mapped ACE buffer once again, applying the mask */
-    /* Map the mask to Darwin ACE rights first */
-    if (acl_get_perm(mask, ACL_READ))
-        rights = DARWIN_ACE_READ_DATA
-            | DARWIN_ACE_READ_EXTATTRIBUTES
-            | DARWIN_ACE_READ_ATTRIBUTES
-            | DARWIN_ACE_READ_SECURITY;
-    if (acl_get_perm(mask, ACL_WRITE)) {
-        rights |= DARWIN_ACE_WRITE_DATA
-            | DARWIN_ACE_APPEND_DATA
-            | DARWIN_ACE_WRITE_EXTATTRIBUTES
-            | DARWIN_ACE_WRITE_ATTRIBUTES;
-        if ((type & ~MAP_MASK) == IS_DIR)
-            rights |= DARWIN_ACE_DELETE;
-    }
-    if (acl_get_perm(mask, ACL_EXECUTE))
-        rights |= DARWIN_ACE_EXECUTE;
-    int i = mapped_aces;
-    while (i--) {
-        saved_darwin_aces->darwin_ace_rights &= htonl(rights);
-        saved_darwin_aces++;
+    if (havemask) {
+        /* Loop through the mapped ACE buffer once again, applying the mask */
+        /* Map the mask to Darwin ACE rights first */
+        rights = 0;
+        if (acl_get_perm(mask, ACL_READ))
+            rights = DARWIN_ACE_READ_DATA
+                | DARWIN_ACE_READ_EXTATTRIBUTES
+                | DARWIN_ACE_READ_ATTRIBUTES
+                | DARWIN_ACE_READ_SECURITY;
+        if (acl_get_perm(mask, ACL_WRITE)) {
+            rights |= DARWIN_ACE_WRITE_DATA
+                | DARWIN_ACE_APPEND_DATA
+                | DARWIN_ACE_WRITE_EXTATTRIBUTES
+                | DARWIN_ACE_WRITE_ATTRIBUTES;
+            if ((type & ~MAP_MASK) == IS_DIR)
+                rights |= DARWIN_ACE_DELETE;
+        }
+        if (acl_get_perm(mask, ACL_EXECUTE))
+            rights |= DARWIN_ACE_EXECUTE;
+        for (int i = mapped_aces; i > 0; i--) {
+            saved_darwin_aces->darwin_ace_rights &= htonl(rights);
+            saved_darwin_aces++;
+        }
     }
 
 exit:
@@ -536,7 +539,7 @@ exit:
 }
 #endif
 
-/*  
+/*
  * Multiplex ACL mapping (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
  * Reads from 'aces' buffer, writes to 'rbuf' buffer.
  * Caller must provide buffer.
@@ -628,37 +631,31 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
         err = -1;
         goto cleanup;
     }
-    
+
     /* if its a dir, check for default acl too */
     dirflag = 0;
     if (S_ISDIR(st.st_mode)) {
         dirflag = IS_DIR;
-        if ((defacl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL && errno != ENOTDIR) {
-            LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get default ACL");
-            err = -1;
-            goto cleanup;
-        }
+        if ((defacl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL) {
+            LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get default ACL"); err = -1; goto cleanup;
+        }        
         if (defacl && (mapped_aces = map_acl(POSIX_DEFAULT_2_DARWIN | dirflag,
                                              defacl,
                                              (darwin_ace_t *)rbuf,
                                              0)) == -1) {
-            err = -1;
-            goto cleanup;
+            err = -1; goto cleanup;
         }
     }
 
     if ((accacl = acl_get_file(name, ACL_TYPE_ACCESS)) == NULL) {
-        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get access ACL");
-        err = -1;
-        goto cleanup;
+        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get access ACL"); err = -1; goto cleanup;
     }
 
     if (accacl && (mapped_aces += map_acl(POSIX_ACCESS_2_DARWIN | dirflag,
                                           accacl,
-                                          (darwin_ace_t *)rbuf + mapped_aces * sizeof(darwin_ace_t),
+                                          (darwin_ace_t *)(rbuf + mapped_aces * sizeof(darwin_ace_t)),
                                           0)) == -1) {
-        err = -1;
-        goto cleanup;
+        err = -1; goto cleanup;
     }
 #endif /* HAVE_POSIX_ACLS */
 
@@ -670,11 +667,11 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 
 cleanup:
 #ifdef HAVE_SOLARIS_ACLS
-   free(aces);
+    free(aces);
 #endif
 #ifdef HAVE_POSIX_ACLS
-   if (defacl) acl_free(defacl);
-   if (accacl) acl_free(accacl);
+    if (defacl) acl_free(defacl);
+    if (accacl) acl_free(accacl);
 #endif /* HAVE_POSIX_ACLS */
 
     LOG(log_debug9, logtype_afpd, "get_and_map_acl: END");
