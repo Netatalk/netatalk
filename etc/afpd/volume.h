@@ -21,7 +21,7 @@
 #include "hash.h"
 #endif
 
-extern struct vol	*getvolbyvid (const u_int16_t);
+extern struct vol       *getvolbyvid (const u_int16_t);
 extern int              ustatfs_getvolspace (const struct vol *,
             VolSpace *, VolSpace *,
             u_int32_t *);
@@ -33,6 +33,7 @@ extern int              readvolfile(AFPObj *obj,
                                     char *p2,
                                     int user,
                                     struct passwd *pwent);
+extern const struct vol *getvolumes(void);
 
 /* FP functions */
 int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

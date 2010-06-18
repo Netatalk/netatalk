@@ -606,8 +606,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
         first = AFPConfigInit(cmdline, cmdline);
 
     /* Now register with zeroconf, we also need the volumes for that */
-    readvolfile(&first->obj, &first->obj.options.systemvol, NULL, 0, NULL);
-
+    load_volumes(&first->obj);
     zeroconf_register(first);
 
     return first;

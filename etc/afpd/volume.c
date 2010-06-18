@@ -2571,3 +2571,7 @@ static void handle_special_folders (const struct vol * vol)
     }
 }
 
+const struct vol *getvolumes(void)
+{
+    return Volumes;
+}

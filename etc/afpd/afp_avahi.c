@@ -14,12 +14,16 @@
 
 #include <unistd.h>
 
+#include <avahi-common/strlst.h>
+
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/dsi.h>
+#include <atalk/unicode.h>
 
 #include "afp_avahi.h"
 #include "afp_config.h"
+#include "volume.h"
 
 /*****************************************************************
  * Global variables
@@ -39,8 +43,14 @@ static void publish_reply(AvahiEntryGroup *g,
  * SRV service type.
  */
 static void register_stuff(void) {
+	uint port;
 	const AFPConfig *config;
+	const struct vol *volume;
 	DSI *dsi;
+	const char *name;
+	AvahiStringList *strlist = NULL;
+	char        tmpname[256];
+
   assert(ctx->client);
 
   if (!ctx->group) {
@@ -54,29 +64,55 @@ static void register_stuff(void) {
   if (avahi_entry_group_is_empty(ctx->group)) {
     /* Register our service */
 
+		/* Build AFP volumes list */
+		int i = 0;
+		strlist = avahi_string_list_add_printf(strlist, "sys=waMa=0,adVF=0x100");
+		
+		for (volume = getvolumes(); volume; volume = volume->v_next, i++) {
+			if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_name, -1, tmpname, 255) <= 0)
+				goto fail;
+			LOG(log_debug, logtype_afpd, "Adding volume '%s'", volume->v_localname);
+			strlist = avahi_string_list_add_printf(strlist, "dk%u=adVN=%s,adVF=0x01", i, tmpname);
+		}
+
 		/* AFP server */
 		for (config = ctx->configs; config; config = config->next) {
+
 			dsi = (DSI *)config->obj.handle;
+			name = config->obj.options.server ?
+				config->obj.options.server : config->obj.options.hostname;
+			port = getip_port((struct sockaddr *)&dsi->server);
+
 			if (avahi_entry_group_add_service(ctx->group,
 																				AVAHI_IF_UNSPEC,
 																				AVAHI_PROTO_UNSPEC,
 																				0,
-																				config->obj.options.server ?
-																				    config->obj.options.server
-																				    : config->obj.options.hostname,
+																				name,
 																				AFP_DNS_SERVICE_TYPE,
 																				NULL,
 																				NULL,
-																				getip_port((struct sockaddr *)&dsi->server),
+																				port,
 																				NULL) < 0) {
 				LOG(log_error, logtype_afpd, "Failed to add service: %s",
 						avahi_strerror(avahi_client_errno(ctx->client)));
 				goto fail;
 			}
 
+			if (avahi_entry_group_add_service_strlst(ctx->group,
+																							 AVAHI_IF_UNSPEC,
+																							 AVAHI_PROTO_UNSPEC,
+																							 0,
+																							 name,
+																							 "_adisk._tcp",
+																							 NULL,
+																							 NULL,
+																							 port,
+																							 strlist) < 0) {
+				LOG(log_error, logtype_afpd, "Failed to add service: %s",
+						avahi_strerror(avahi_client_errno(ctx->client)));
+				goto fail;
+			}	/* if */
 		}	/* for config*/
-
-		/* AFP volumes */
 
 		if (avahi_entry_group_commit(ctx->group) < 0) {
 			LOG(log_error, logtype_afpd, "Failed to commit entry group: %s",
