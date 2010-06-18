@@ -573,28 +573,30 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 
 #ifdef HAVE_POSIX_ACLS
     acl_t defacl = NULL , accacl = NULL;
-    if ((defacl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL && errno != ENOTDIR) {
-        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get default ACL");
-        err = -1;
-        goto cleanup;
-    }
 
+    /* stat to check if its a dir */
     if (stat(name, &st) != 0) {
         LOG(log_error, logtype_afpd, "get_and_map_acl: stat: %s", strerror(errno));
         err = -1;
         goto cleanup;
     }
-
-    /* must pass info if its a dir down to the mapping func */
+    
+    /* if its a dir, check for default acl too */
     dirflag = 0;
-    if (S_ISDIR(st.st_mode))
+    if (S_ISDIR(st.st_mode)) {
         dirflag = IS_DIR;
-    if (defacl && (mapped_aces = map_acl(POSIX_DEFAULT_2_DARWIN | dirflag,
-                                         defacl,
-                                         (darwin_ace_t *)rbuf,
-                                         0)) == -1) {
-        err = -1;
-        goto cleanup;
+        if ((defacl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL && errno != ENOTDIR) {
+            LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get default ACL");
+            err = -1;
+            goto cleanup;
+        }
+        if (defacl && (mapped_aces = map_acl(POSIX_DEFAULT_2_DARWIN | dirflag,
+                                             defacl,
+                                             (darwin_ace_t *)rbuf,
+                                             0)) == -1) {
+            err = -1;
+            goto cleanup;
+        }
     }
 
     if ((accacl = acl_get_file(name, ACL_TYPE_ACCESS)) == NULL) {
