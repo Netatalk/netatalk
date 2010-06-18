@@ -1,6 +1,5 @@
 /*
-  Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
-  Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2008, 2009, 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,8 +23,12 @@
 #include <grp.h>
 #include <pwd.h>
 #include <errno.h>
-#if defined HAVE_SOLARIS_ACLS || defined HAVE_POSIX_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif
+#ifdef HAVE_POSIX_ACLS
+#include <sys/acl.h>
+#include <acl/libacl.h>
 #endif
 
 #include <atalk/adouble.h>
@@ -46,10 +49,14 @@
 #include "acl_mappings.h"
 
 /* for map_acl() */
-#define SOLARIS_2_DARWIN 1
-#define DARWIN_2_SOLARIS 2
-#define POSIX_2_DARWIN   3
-#define DARWIN_2_POSIX   4
+#define SOLARIS_2_DARWIN       1
+#define DARWIN_2_SOLARIS       2
+#define POSIX_DEFAULT_2_DARWIN 3
+#define POSIX_ACCESS_2_DARWIN  4
+#define DARWIN_2_POSIX         5
+
+#define MAP_MASK               31
+#define IS_DIR                 32
 
 /********************************************************
  * Basic and helper funcs
@@ -362,34 +369,159 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
 }
 #endif /* HAVE_SOLARIS_ACLS */
 
-/*  Map between ACL styles (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
-    Reads from 'aces' buffer, writes to 'rbuf' buffer.
-    Caller must provide buffer.
-    Darwin ACEs are read and written in network byte order.
-    Needs to know how many ACEs are in the ACL (ace_count). Ignores trivial ACEs.
-    Return no of mapped ACEs or -1 on error. */
-static int map_acl(int type, const void *aces, darwin_ace_t *buf, int ace_count)
+/* 
+ * Map ACEs from POSIX to Darwin.
+ * type is either POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, cf. acl_get_file.
+ * Return number of mapped ACES, -1 on error.
+ */
+#ifdef HAVE_POSIX_ACLS
+static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darwin_aces)
+{
+    int mapped_aces = 0;
+    int entry_id = ACL_FIRST_ENTRY;
+    acl_entry_t e;
+    acl_tag_t tag;
+    acl_permset_t permset;
+    uid_t *uid;
+    gid_t *gid;
+    struct passwd *pwd = NULL;
+    struct group *grp = NULL;
+    uint32_t flags;
+    uint32_t rights;
+
+    LOG(log_maxdebug, logtype_afpd, "map_aces_posix_to_darwin(%s)", 
+        type == POSIX_DEFAULT_2_DARWIN ?
+        "POSIX_DEFAULT_2_DARWIN" : "POSIX_ACCESS_2_DARWIN");
+
+    while (acl_get_entry(acl, entry_id, &e) == 1) {
+        entry_id = ACL_NEXT_ENTRY;
+
+        if (acl_get_tag_type(e, &tag) != 0) {
+            LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_tag_type: %s",
+                strerror(errno));
+        }            
+
+        switch (tag) {
+        case ACL_USER:
+            if ((uid = (uid_t *)acl_get_qualifier(e)) == NULL) {
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s", 
+                    strerror(errno));
+                return -1;
+            }
+            pwd = getpwuid(*uid);
+            if (!pwd) {
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getpwuid error: %s",
+                    strerror(errno));
+                return -1;
+            }
+            LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: uid: %d -> name: %s",
+               *uid, pwd->pw_name);
+            if (getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid) != 0) {
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getuuidfromname error");
+                return -1;
+            }
+            acl_free(uid);
+            break;
+
+        case ACL_GROUP:
+            if ((gid = (gid_t *)acl_get_qualifier(e)) == NULL) {
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s", 
+                    strerror(errno));
+                return -1;
+            }
+            grp = getgrgid(*gid);
+            if (!grp) {
+                LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getgrgid error: %s",
+                    strerror(errno));
+                return -1;
+            }
+            LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: gid: %d -> name: %s",
+                *gid, grp->gr_name);
+            if (getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid) != 0) {
+                LOG(log_error, logtype_afpd, "map_aces_solaris_to_darwin: getuuidfromname error");
+                return -1;
+            }
+
+            break;
+
+        default:
+            continue;
+        }
+
+        /* flags */
+        flags = DARWIN_ACE_FLAGS_PERMIT;
+        if ((type & MAP_MASK) == POSIX_DEFAULT_2_DARWIN)
+            flags |= DARWIN_ACE_FLAGS_FILE_INHERIT
+                | DARWIN_ACE_FLAGS_DIRECTORY_INHERIT
+                | DARWIN_ACE_FLAGS_ONLY_INHERIT;
+        darwin_aces->darwin_ace_flags = htonl(flags);
+
+        /* rights */
+        rights = 0;
+        if (acl_get_permset(e, &permset) != 0) {
+            return -1;
+        }
+
+        if (acl_get_perm(permset, ACL_READ))
+            rights |= DARWIN_ACE_READ_DATA
+                | DARWIN_ACE_READ_EXTATTRIBUTES
+                | DARWIN_ACE_READ_ATTRIBUTES
+                | DARWIN_ACE_READ_SECURITY;
+        if (acl_get_perm(permset, ACL_WRITE)) {
+            rights |= DARWIN_ACE_WRITE_DATA
+                | DARWIN_ACE_APPEND_DATA
+                | DARWIN_ACE_WRITE_EXTATTRIBUTES
+                | DARWIN_ACE_WRITE_ATTRIBUTES;
+            if ((type & MAP_MASK) == IS_DIR)
+                rights |= DARWIN_ACE_DELETE;
+        }
+        if (acl_get_perm(permset, ACL_EXECUTE))
+            rights |= DARWIN_ACE_EXECUTE;
+
+        darwin_aces->darwin_ace_rights = htonl(rights);
+
+        darwin_aces++;
+        mapped_aces++;
+    }
+
+    return mapped_aces;
+}
+#endif
+
+/*  
+ * Multiplex ACL mapping (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
+ * Reads from 'aces' buffer, writes to 'rbuf' buffer.
+ * Caller must provide buffer.
+ * Darwin ACEs are read and written in network byte order.
+ * Needs to know how many ACEs are in the ACL (ace_count) for Solaris ACLs.
+ * Ignores trivial ACEs.
+ * Return no of mapped ACEs or -1 on error.
+ */
+static int map_acl(int type, const void *acl, darwin_ace_t *buf, int ace_count)
 {
     int mapped_aces;
-#ifdef HAVE_SOLARIS_ACLS
-    ace_t *nfsv4_aces = (ace_t *)aces;
-#endif
+
     LOG(log_debug9, logtype_afpd, "map_acl: BEGIN");
 
-    switch (type) {
+    switch (type & MAP_MASK) {
 
 #ifdef HAVE_SOLARIS_ACLS
     case SOLARIS_2_DARWIN:
-        mapped_aces = map_aces_solaris_to_darwin( nfsv4_aces, buf, ace_count);
+        mapped_aces = map_aces_solaris_to_darwin( acl, buf, ace_count);
         break;
 
     case DARWIN_2_SOLARIS:
-        mapped_aces = map_aces_darwin_to_solaris( buf, nfsv4_aces, ace_count);
+        mapped_aces = map_aces_darwin_to_solaris( buf, acl, ace_count);
         break;
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
-    case POSIX_2_DARWIN:
+    case POSIX_DEFAULT_2_DARWIN:
+        mapped_aces = map_acl_posix_to_darwin(type, (const acl_t)acl, buf);
+        break;
+
+    case POSIX_ACCESS_2_DARWIN:
+        mapped_aces = map_acl_posix_to_darwin(type, (const acl_t)acl, buf);
         break;
 
     case DARWIN_2_POSIX:
@@ -410,12 +542,16 @@ static int map_acl(int type, const void *aces, darwin_ace_t *buf, int ace_count)
    Returns 0 on success, -1 on error. */
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 {
-    int ace_count = 0, mapped_aces = 0, err;
+    int ace_count = 0;
+    int mapped_aces = 0;
+    int err, dirflag;
     uint32_t *darwin_ace_count = (u_int32_t *)rbuf;
 #ifdef HAVE_SOLARIS_ACLS
     ace_t *aces;
 #endif
-
+#ifdef HAVE_POSIX_ACLS
+    struct stat st;
+#endif
     LOG(log_debug9, logtype_afpd, "get_and_map_acl: BEGIN");
 
     /* Skip length and flags */
@@ -443,7 +579,17 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
         goto cleanup;
     }
 
-    if (defacl && (mapped_aces = map_acl(POSIX_2_DARWIN,
+    if (stat(name, &st) != 0) {
+        LOG(log_error, logtype_afpd, "get_and_map_acl: stat: %s", strerror(errno));
+        err = -1;
+        goto cleanup;
+    }
+
+    /* must pass info if its a dir down to the mapping func */
+    dirflag = 0;
+    if (S_ISDIR(st.st_mode))
+        dirflag = IS_DIR;
+    if (defacl && (mapped_aces = map_acl(POSIX_DEFAULT_2_DARWIN | dirflag,
                                          defacl,
                                          (darwin_ace_t *)rbuf,
                                          0)) == -1) {
@@ -457,7 +603,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
         goto cleanup;
     }
 
-    if (accacl && (mapped_aces += map_acl(POSIX_2_DARWIN,
+    if (accacl && (mapped_aces += map_acl(POSIX_ACCESS_2_DARWIN | dirflag,
                                           accacl,
                                           (darwin_ace_t *)rbuf + mapped_aces * sizeof(darwin_ace_t),
                                           0)) == -1) {
