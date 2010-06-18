@@ -1144,6 +1144,7 @@ fi
 
 if test x"$with_acl_support" = x"yes" ; then
     AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
+    AC_SUBST(ACL_LIBS)
 fi
 
 dnl --------------------- check for Extended Attributes support

@@ -24,7 +24,9 @@
 #include <grp.h>
 #include <pwd.h>
 #include <errno.h>
+#if defined HAVE_SOLARIS_ACLS || defined HAVE_POSIX_ACLS
 #include <sys/acl.h>
+#endif
 
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
@@ -46,6 +48,8 @@
 /* for map_acl() */
 #define SOLARIS_2_DARWIN 1
 #define DARWIN_2_SOLARIS 2
+#define POSIX_2_DARWIN   3
+#define DARWIN_2_POSIX   4
 
 /********************************************************
  * Basic and helper funcs
@@ -356,21 +360,25 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
 
     return mapped_aces;
 }
+#endif /* HAVE_SOLARIS_ACLS */
 
-
-/*  Map between ACL styles (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS).
+/*  Map between ACL styles (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
     Reads from 'aces' buffer, writes to 'rbuf' buffer.
     Caller must provide buffer.
     Darwin ACEs are read and written in network byte order.
     Needs to know how many ACEs are in the ACL (ace_count). Ignores trivial ACEs.
     Return no of mapped ACEs or -1 on error. */
-static int map_acl(int type, ace_t *nfsv4_aces, darwin_ace_t *buf, int ace_count)
+static int map_acl(int type, const void *aces, darwin_ace_t *buf, int ace_count)
 {
     int mapped_aces;
-
+#ifdef HAVE_SOLARIS_ACLS
+    ace_t *nfsv4_aces = (ace_t *)aces;
+#endif
     LOG(log_debug9, logtype_afpd, "map_acl: BEGIN");
 
     switch (type) {
+
+#ifdef HAVE_SOLARIS_ACLS
     case SOLARIS_2_DARWIN:
         mapped_aces = map_aces_solaris_to_darwin( nfsv4_aces, buf, ace_count);
         break;
@@ -378,6 +386,15 @@ static int map_acl(int type, ace_t *nfsv4_aces, darwin_ace_t *buf, int ace_count
     case DARWIN_2_SOLARIS:
         mapped_aces = map_aces_darwin_to_solaris( buf, nfsv4_aces, ace_count);
         break;
+#endif /* HAVE_SOLARIS_ACLS */
+
+#ifdef HAVE_POSIX_ACLS
+    case POSIX_2_DARWIN:
+        break;
+
+    case DARWIN_2_POSIX:
+        break;
+#endif /* HAVE_POSIX_ACLS */
 
     default:
         mapped_aces = -1;
@@ -387,7 +404,6 @@ static int map_acl(int type, ace_t *nfsv4_aces, darwin_ace_t *buf, int ace_count
     LOG(log_debug9, logtype_afpd, "map_acl: END");
     return mapped_aces;
 }
-#endif /* HAVE_SOLARIS_ACLS */
 
 /* Get ACL from object omitting trivial ACEs. Map to Darwin ACL style and
    store Darwin ACL at rbuf. Add length of ACL written to rbuf to *rbuflen.
@@ -419,16 +435,51 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     }
 #endif /* HAVE_SOLARIS_ACLS */
 
+#ifdef HAVE_POSIX_ACLS
+    acl_t defacl = NULL , accacl = NULL;
+    if ((defacl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL && errno != ENOTDIR) {
+        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get default ACL");
+        err = -1;
+        goto cleanup;
+    }
+
+    if (defacl && (mapped_aces = map_acl(POSIX_2_DARWIN,
+                                         defacl,
+                                         (darwin_ace_t *)rbuf,
+                                         0)) == -1) {
+        err = -1;
+        goto cleanup;
+    }
+
+    if ((accacl = acl_get_file(name, ACL_TYPE_ACCESS)) == NULL) {
+        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get access ACL");
+        err = -1;
+        goto cleanup;
+    }
+
+    if (accacl && (mapped_aces += map_acl(POSIX_2_DARWIN,
+                                          accacl,
+                                          (darwin_ace_t *)rbuf + mapped_aces * sizeof(darwin_ace_t),
+                                          0)) == -1) {
+        err = -1;
+        goto cleanup;
+    }
+#endif /* HAVE_POSIX_ACLS */
+
     LOG(log_debug, logtype_afpd, "get_and_map_acl: mapped %d ACEs", mapped_aces);
 
     err = 0;
     *darwin_ace_count = htonl(mapped_aces);
     *rbuflen += sizeof(darwin_acl_header_t) + (mapped_aces * sizeof(darwin_ace_t));
 
-#ifdef HAVE_SOLARIS_ACLS
 cleanup:
+#ifdef HAVE_SOLARIS_ACLS
    free(aces);
 #endif
+#ifdef HAVE_POSIX_ACLS
+   if (defacl) acl_free(defacl);
+   if (accacl) acl_free(accacl);
+#endif /* HAVE_POSIX_ACLS */
 
     LOG(log_debug9, logtype_afpd, "get_and_map_acl: END");
     return err;
