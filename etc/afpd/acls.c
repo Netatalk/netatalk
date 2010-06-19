@@ -381,68 +381,89 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t e;
     acl_tag_t tag;
-    acl_permset_t permset;
-    uid_t *uid;
-    gid_t *gid;
+    acl_permset_t permset, mask;
+    uid_t *uid = NULL;
+    gid_t *gid = NULL;
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
     uint32_t flags;
     uint32_t rights;
+    darwin_ace_t *saved_darwin_aces = darwin_aces;
 
     LOG(log_maxdebug, logtype_afpd, "map_aces_posix_to_darwin(%s)", 
         type == POSIX_DEFAULT_2_DARWIN ?
         "POSIX_DEFAULT_2_DARWIN" : "POSIX_ACCESS_2_DARWIN");
 
+    /* itereate through all ACEs */
     while (acl_get_entry(acl, entry_id, &e) == 1) {
         entry_id = ACL_NEXT_ENTRY;
 
+        /* get ACE type */
         if (acl_get_tag_type(e, &tag) != 0) {
-            LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_tag_type: %s",
-                strerror(errno));
+            LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_tag_type: %s", strerror(errno));
+            mapped_aces = -1;
+            goto exit;
         }            
 
+        /* we return user and group ACE */
         switch (tag) {
         case ACL_USER:
             if ((uid = (uid_t *)acl_get_qualifier(e)) == NULL) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s", 
                     strerror(errno));
-                return -1;
+                mapped_aces = -1;
+                goto exit;
             }
             pwd = getpwuid(*uid);
             if (!pwd) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getpwuid error: %s",
                     strerror(errno));
-                return -1;
+                mapped_aces = -1;
+                goto exit;
             }
             LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: uid: %d -> name: %s",
                *uid, pwd->pw_name);
             if (getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid) != 0) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getuuidfromname error");
-                return -1;
+                mapped_aces = -1;
+                goto exit;
             }
             acl_free(uid);
+            uid = NULL;
             break;
 
         case ACL_GROUP:
             if ((gid = (gid_t *)acl_get_qualifier(e)) == NULL) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: acl_get_qualifier: %s", 
                     strerror(errno));
-                return -1;
+                mapped_aces = -1;
+                goto exit;
             }
             grp = getgrgid(*gid);
             if (!grp) {
                 LOG(log_error, logtype_afpd, "map_aces_posix_to_darwin: getgrgid error: %s",
                     strerror(errno));
-                return -1;
+                mapped_aces = -1;
+                goto exit;
             }
             LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: gid: %d -> name: %s",
                 *gid, grp->gr_name);
             if (getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid) != 0) {
                 LOG(log_error, logtype_afpd, "map_aces_solaris_to_darwin: getuuidfromname error");
+                mapped_aces = -1;
+                goto exit;
+            }
+            acl_free(gid);
+            gid = NULL;
+            break;
+
+            /* store mask so we can apply it later in a second loop */
+        case ACL_MASK:
+            if (acl_get_permset(e, &mask) != 0) {
+                LOG(log_error, logtype_afpd, "map_aces_solaris_to_darwin: acl_get_permset: %s", strerror(errno));
                 return -1;
             }
-
-            break;
+            continue;
 
         default:
             continue;
@@ -457,13 +478,13 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
         darwin_aces->darwin_ace_flags = htonl(flags);
 
         /* rights */
-        rights = 0;
         if (acl_get_permset(e, &permset) != 0) {
+            LOG(log_error, logtype_afpd, "map_aces_solaris_to_darwin: acl_get_permset: %s", strerror(errno));
             return -1;
         }
 
         if (acl_get_perm(permset, ACL_READ))
-            rights |= DARWIN_ACE_READ_DATA
+            rights = DARWIN_ACE_READ_DATA
                 | DARWIN_ACE_READ_EXTATTRIBUTES
                 | DARWIN_ACE_READ_ATTRIBUTES
                 | DARWIN_ACE_READ_SECURITY;
@@ -472,7 +493,7 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
                 | DARWIN_ACE_APPEND_DATA
                 | DARWIN_ACE_WRITE_EXTATTRIBUTES
                 | DARWIN_ACE_WRITE_ATTRIBUTES;
-            if ((type & MAP_MASK) == IS_DIR)
+            if ((type & ~MAP_MASK) == IS_DIR)
                 rights |= DARWIN_ACE_DELETE;
         }
         if (acl_get_perm(permset, ACL_EXECUTE))
@@ -483,6 +504,33 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
         darwin_aces++;
         mapped_aces++;
     }
+
+    /* Loop through the mapped ACE buffer once again, applying the mask */
+    /* Map the mask to Darwin ACE rights first */
+    if (acl_get_perm(mask, ACL_READ))
+        rights = DARWIN_ACE_READ_DATA
+            | DARWIN_ACE_READ_EXTATTRIBUTES
+            | DARWIN_ACE_READ_ATTRIBUTES
+            | DARWIN_ACE_READ_SECURITY;
+    if (acl_get_perm(mask, ACL_WRITE)) {
+        rights |= DARWIN_ACE_WRITE_DATA
+            | DARWIN_ACE_APPEND_DATA
+            | DARWIN_ACE_WRITE_EXTATTRIBUTES
+            | DARWIN_ACE_WRITE_ATTRIBUTES;
+        if ((type & ~MAP_MASK) == IS_DIR)
+            rights |= DARWIN_ACE_DELETE;
+    }
+    if (acl_get_perm(mask, ACL_EXECUTE))
+        rights |= DARWIN_ACE_EXECUTE;
+    int i = mapped_aces;
+    while (i--) {
+        saved_darwin_aces->darwin_ace_rights &= htonl(rights);
+        saved_darwin_aces++;
+    }
+
+exit:
+    if (uid) acl_free(uid);
+    if (gid) acl_free(gid);
 
     return mapped_aces;
 }
