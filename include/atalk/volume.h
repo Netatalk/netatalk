@@ -85,7 +85,7 @@ struct vol {
     char            *v_postexec;
     int             v_root_preexec_close;
     int             v_preexec_close;
-
+    char            *v_uuid;    /* For TimeMachine zeroconf record */
 #ifdef FORCE_UIDGID
     char            *v_forceuid;
     char            *v_forcegid;

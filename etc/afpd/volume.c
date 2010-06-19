@@ -119,8 +119,9 @@ static void             free_extmap(void);
 #define VOLOPT_EA_VFS        27  /* Extended Attributes vfs indirection */
 #define VOLOPT_CNIDSERVER    28  /* CNID Server ip address*/
 #define VOLOPT_CNIDPORT      30  /* CNID server tcp port */
+#define VOLOPT_UUID          31  /* CNID server tcp port */
 
-#define VOLOPT_MAX           31  /* <== IMPORTANT !!!!!! */
+#define VOLOPT_MAX           32  /* <== IMPORTANT !!!!!! */
 #define VOLOPT_NUM           (VOLOPT_MAX + 1)
 
 #define VOLPASSLEN  8
@@ -529,6 +530,9 @@ static void volset(struct vol_option *options, struct vol_option *save,
     } else if (optionok(tmp, "volsizelimit:", val)) {
         options[VOLOPT_LIMITSIZE].i_value = (uint32_t)strtoul(val + 1, NULL, 10);
 
+    } else if (optionok(tmp, "uuid:", val)) {
+        setoption(options, save, VOLOPT_UUID, val);
+
     } else {
         /* ignore unknown options */
         LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
@@ -749,6 +753,9 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
         if (options[VOLOPT_LIMITSIZE].i_value)
             volume->v_limitsize = options[VOLOPT_LIMITSIZE].i_value;
+
+        if (options[VOLOPT_UUID].c_value)
+            volume->v_uuid = strdup(options[VOLOPT_UUID].c_value);
 
         /* Mac to Unix conversion flags*/
         volume->v_mtou_flags = 0;
