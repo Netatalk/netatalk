@@ -68,7 +68,7 @@ static void register_stuff(void) {
 		int i = 0;
 		strlist = avahi_string_list_add_printf(strlist, "sys=waMa=0,adVF=0x100");
 		
-		for (volume = getvolumes(); volume; volume = volume->v_next, i++) {
+		for (volume = getvolumes(); volume; volume = volume->v_next) {
 
 			if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_name, -1, tmpname, 255) <= 0)
 				goto fail;
@@ -77,7 +77,7 @@ static void register_stuff(void) {
 				LOG(log_info, logtype_afpd, "Registering volume '%s' with UUID: '%s' for TimeMachine",
 						volume->v_localname, volume->v_uuid);
 				strlist = avahi_string_list_add_printf(strlist, "dk%u=adVN=%s,adVF=0xa1,adVU=%s",
-																							 i, tmpname, volume->v_uuid);
+																							 i++, tmpname, volume->v_uuid);
 			}
 		}
 
