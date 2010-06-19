@@ -112,7 +112,7 @@ static void register_stuff(void) {
 																							 "_adisk._tcp",
 																							 NULL,
 																							 NULL,
-																							 port,
+																							 311, /* serveradmin, peaked from os x 10.6 server */
 																							 strlist) < 0) {
 				LOG(log_error, logtype_afpd, "Failed to add service: %s",
 						avahi_strerror(avahi_client_errno(ctx->client)));
