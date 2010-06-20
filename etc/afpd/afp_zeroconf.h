@@ -13,7 +13,7 @@
 #include <netinet/in.h> /* htons() */
 #include <atalk/logger.h>
 
-#ifdef (HAVE_AVAHI)
+#ifdef HAVE_AVAHI
 #include "afp_avahi.h"
 #endif
 
@@ -26,11 +26,11 @@
 /*
  * registers the ntpd service with a particular Zerconf implemenation.
  */
-void zeroconf_register(int port, char *hostname);
+void zeroconf_register(int port, const char *hostname);
 
 /*
  * de-registers the ntpd service with a particular Zerconf implemenation.
  */
 void zeroconf_deregister(void);
 
-#endif AFPD_ZEROCONF_H
+#endif /* AFPD_ZEROCONF_H */

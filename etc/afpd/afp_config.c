@@ -465,9 +465,8 @@ srvloc_reg_err:
 #endif /* USE_SRVLOC */
 
 #ifdef USE_ZEROCONF
-     struct servent *afpovertcp;
-     int afp_port = 548;
-     char *hostname = NULL;
+    uint afp_port;
+    const char *hostname = NULL;
 
     dsi->zeroconf_registered = 0; /*  Mark that we haven't registered.  */
 
@@ -478,26 +477,21 @@ srvloc_reg_err:
     	   * use a non-default port, they can, but be aware, this server might
     	   * not show up int the Network Browser.
     	   */
-        afpovertcp = getservbyname("afpovertcp", "tcp");
-        if (afpovertcp != NULL) {
-    	      afp_port = ntohs(afpovertcp->s_port);
-        }
+        afp_port = getip_port((struct sockaddr *)&dsi->server);
 
         /* If specified use the FQDN to register with srvloc, otherwise use IP. */
         p = NULL;
         if (options->fqdn) {
             hostname = options->fqdn;
             p = strchr(hostname, ':');
-        }	
-        else 
-            hostname = inet_ntoa(dsi->server.sin_addr);
-
-        if (!(options->flags & OPTION_NOSLP)) {
-            zeroconf_register(afp_port, hostname);
-            dsi->zeroconf_registered = 1; /*  Mark that we have registered.  */
+        }  else {
+            hostname = getip_string((struct sockaddr *)&dsi->server);
         }
+
+        zeroconf_register(afp_port, hostname);
+        dsi->zeroconf_registered = 1; /*  Mark that we have registered.  */
+        config->server_cleanup = dsi_cleanup;
     }
-    config->server_cleanup = dsi_cleanup;
 #endif /* USE_ZEROCONF */
 
     config->fd = dsi->serversock;

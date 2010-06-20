@@ -23,7 +23,7 @@ struct context *ctx = NULL;
 /*
  * Functions (actually they are just facades)
  */
-void zeroconf_register(int port, char *hostname)
+void zeroconf_register(int port, const char *hostname)
 {
 #if defined (HAVE_AVAHI)
   LOG(log_info, logtype_afpd, "Attempting to register with mDNS using Avahi\n");

@@ -1,7 +1,6 @@
 dnl Check for optional Zeroconf support
 
 AC_DEFUN([NETATALK_ZEROCONF], [
-
 	ZEROCONF_LIBS=""
 	ZEROCONF_CFLAGS=""
 	found_zeroconf=no
@@ -17,7 +16,6 @@ AC_DEFUN([NETATALK_ZEROCONF], [
     [[ -n "$atalk_libname" ]] || AC_MSG_ERROR([internal error, atalk_libname undefined])
 
 	if test "x$zeroconf" != "xno"; then
-
 		savedcppflags="$CPPFLAGS"
 		savedldflags="$LDFLAGS"
 
@@ -28,11 +26,14 @@ AC_DEFUN([NETATALK_ZEROCONF], [
 		fi
 
     # mDNS support using Avahi
-    AC_CHECK_HEADER(avahi-client/client.h,
-      [AC_CHECK_LIB(avahi-client,
-        avahi_client_new,
-				[AC_DEFINE(USE_ZEROCONF, 1,
-          [Use DNS-SD registration])])])
+    AC_CHECK_HEADER(
+        avahi-client/client.h,
+        AC_CHECK_LIB(
+           avahi-client,
+           avahi_client_new,
+           AC_DEFINE(USE_ZEROCONF, 1, [Use DNS-SD registration]))
+    )
+
     case "$ac_cv_lib_avahi_client_avahi_client_new" in
       yes)
       PKG_CHECK_MODULES(AVAHI, [ avahi-client >= 0.6 ])
