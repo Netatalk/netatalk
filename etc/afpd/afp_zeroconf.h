@@ -24,9 +24,14 @@
  */
 
 /*
- * registers the ntpd service with a particular Zerconf implemenation.
+ * registers service with a particular Zerconf implemenation.
  */
 void zeroconf_register(int port, const char *hostname);
+
+/*
+ * registers volume name with a particular Zerconf implemenation.
+ */
+void zeroconf_register_volume(const char *volname);
 
 /*
  * de-registers the ntpd service with a particular Zerconf implemenation.

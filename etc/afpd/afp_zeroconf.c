@@ -26,27 +26,30 @@ struct context *ctx = NULL;
 void zeroconf_register(int port, const char *hostname)
 {
 #if defined (HAVE_AVAHI)
-  LOG(log_info, logtype_afpd, "Attempting to register with mDNS using Avahi\n");
-  if (hostname && strlen(hostname) > 0 && port)
-  {
-    ctx = av_zeroconf_setup(port, hostname);
-  }
-  else if (hostname && strlen(hostname) > 0)
-  {
-    ctx = av_zeroconf_setup(AFP_PORT, hostname);
-  }
-  else
-  {
-    ctx = av_zeroconf_setup(AFP_PORT, NULL);
-  }
+  LOG(log_debug, logtype_afpd, "Attempting to register with mDNS using Avahi");
+
+	ctx = av_zeroconf_setup(port ? port : AFP_PORT, 
+													(hostname && strlen(hostname) > 0) ? hostname : NULL);
   av_zeroconf_run(ctx);
 #endif
 }
 
+void zeroconf_register_volume(const char *volname)
+{
+#if defined (HAVE_AVAHI)
+  LOG(log_debug, logtype_afpd, "Attempting to register volume with mDNS using Avahi");
+
+	ctx = av_zeroconf_setup(-1, volname);
+
+  av_zeroconf_run(ctx);
+#endif
+}
+
+
 void zeroconf_deregister(void)
 {
 #if defined (HAVE_AVAHI)
-  LOG(log_error, logtype_afpd, "Attempting to de-register mDNS using Avahi\n");
+  LOG(log_debug, logtype_afpd, "Attempting to de-register mDNS using Avahi");
   if (ctx)
     av_zeroconf_shutdown(ctx);
 #endif
