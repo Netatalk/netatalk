@@ -154,10 +154,13 @@ static char * srvloc_encode(const struct afp_options *options, const char *name)
 	return buf;
 }
 #endif /* USE_SRVLOC */
+#ifdef USE_ZEROCONF
+#include "afp_zeroconf.h"
+#endif /* USE_ZEROCONF */
 
-#ifdef USE_SRVLOC
 static void dsi_cleanup(const AFPConfig *config)
 {
+#ifdef USE_SRVLOC
     SLPError err;
     SLPError callbackerr;
     SLPHandle hslp;
@@ -190,8 +193,16 @@ static void dsi_cleanup(const AFPConfig *config)
 srvloc_dereg_err:
     dsi->srvloc_url[0] = '\0';
     SLPClose(hslp);
-}
+#elif defined (USE_ZEROCONF)
+    DSI *dsi = (DSI *)config->obj.handle;
+
+    /*  Do nothing if we didn't register.  */
+    if (!dsi || dsi->zeroconf_registered == 0)
+        return;
+
+    zeroconf_deregister();
 #endif /* USE_SRVLOC */
+}
 
 #ifndef NO_DDP
 static void asp_cleanup(const AFPConfig *config)
@@ -453,6 +464,41 @@ srvloc_reg_err:
     }
 #endif /* USE_SRVLOC */
 
+#ifdef USE_ZEROCONF
+     struct servent *afpovertcp;
+     int afp_port = 548;
+     char *hostname = NULL;
+
+    dsi->zeroconf_registered = 0; /*  Mark that we haven't registered.  */
+
+    if (!(options->flags & OPTION_NOZEROCONF)) {
+        /* XXX We don't want to tack on the port number if we don't have to.
+    	   * Why?
+    	   * Well, this seems to break MacOS < 10.  If the user _really_ wants to
+    	   * use a non-default port, they can, but be aware, this server might
+    	   * not show up int the Network Browser.
+    	   */
+        afpovertcp = getservbyname("afpovertcp", "tcp");
+        if (afpovertcp != NULL) {
+    	      afp_port = ntohs(afpovertcp->s_port);
+        }
+
+        /* If specified use the FQDN to register with srvloc, otherwise use IP. */
+        p = NULL;
+        if (options->fqdn) {
+            hostname = options->fqdn;
+            p = strchr(hostname, ':');
+        }	
+        else 
+            hostname = inet_ntoa(dsi->server.sin_addr);
+
+        if (!(options->flags & OPTION_NOSLP)) {
+            zeroconf_register(afp_port, hostname);
+            dsi->zeroconf_registered = 1; /*  Mark that we have registered.  */
+        }
+    }
+    config->server_cleanup = dsi_cleanup;
+#endif /* USE_ZEROCONF */
 
     config->fd = dsi->serversock;
     config->obj.handle = dsi;

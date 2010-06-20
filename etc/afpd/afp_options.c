@@ -221,7 +221,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if (strstr(buf, " -slp"))
         options->flags &= ~OPTION_NOSLP;
 #endif
-
+#ifdef USE_ZEROCONF
+    if (strstr(buf, " -nozeroconf"))
+        options->flags |= OPTION_NOZEROCONF;
+#endif
     if (strstr(buf, " -nouservolfirst"))
         options->flags &= ~OPTION_USERVOLFIRST;
     if (strstr(buf, " -uservolfirst"))
@@ -526,6 +529,12 @@ static void show_version_extended(void )
 
 	printf( "           SLP support:\t" );
 #ifdef USE_SRVLOC
+	puts( "Yes" );
+#else
+	puts( "No" );
+#endif
+
+#ifdef USE_ZEROCONF
 	puts( "Yes" );
 #else
 	puts( "No" );

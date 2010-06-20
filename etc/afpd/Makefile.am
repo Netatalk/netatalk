@@ -9,14 +9,15 @@ afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 	 file.c enumerate.c desktop.c filedir.c fork.c appl.c gettok.c \
 	 mangle.c status.c afp_options.c afp_asp.c afp_dsi.c messages.c  \
 	 afp_config.c nfsquota.c quota.c uam.c afs.c uid.c afp_util.c \
-	catsearch.c afprun.c hash.c extattrs.c dircache.c
+	catsearch.c afprun.c hash.c extattrs.c dircache.c \
+	afp_zeroconf.c afp_avahi.c
 
 afpd_LDADD =  $(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@
+	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@
 afpd_LDFLAGS = -export-dynamic 
 afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
-	 @SLP_CFLAGS@ \
+	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
 	 -D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \
 	 -D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \

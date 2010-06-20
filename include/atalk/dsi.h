@@ -94,6 +94,10 @@ typedef struct DSI {
   char srvloc_url[512];
 #endif 
 
+#ifdef USE_ZEROCONF
+  int zeroconf_registered;
+#endif
+
   /* buffer for OSX deadlock */
   char *buffer;
   char *start;
