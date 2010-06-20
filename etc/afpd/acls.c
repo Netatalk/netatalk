@@ -977,6 +977,14 @@ exit:
 #ifdef HAVE_POSIX_ACLS
 static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
 {
+    /*
+     * FIXME: for OS X >= 10.6 it seems fp_access isn't called anymore, instead
+     * the client just tries to perform any action, relying on the server
+     * to enforce permission (which the OS does for us), returning appropiate
+     * error codes in case the action failed.
+     * So to summarize: I think it's safe to not implement this function and
+     * just always return AFP_OK.
+     */
     return AFP_OK;
 }
 #endif /* HAVE_POSIX_ACLS */

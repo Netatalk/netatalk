@@ -2,16 +2,14 @@
                  ACLs - Konfiguration and Infos vor Developpers
                  ==============================================
 
-ACL support for AFP is implemented with NFSv4 ACLs. Few filesystems and fewer OSes support
-these. At the time of implementation its only provided with ZFS on Solaris, Opensolaris and
-derived distributions.
+ACL support for AFP is implemented for Solaris/ZFS/NFSv4 ACLs and POSIX 1e ACLs.
 
   Configuration
   -------------
 
 In order to be able to support ACLs, the following things have to be configured:
 
-1. ZFS Volumes
+1. For Solaris/ZFS: ZFS Volumes
 2. Authentication Domain
 3. Netatalk Volumes
 
@@ -34,18 +32,11 @@ In order to be able to support ACLs, the following things have to be configured:
 
      In other words:
       - you need an Open Directory Server or an LDAP server where you store UUIDs in some
-      	attribute
+        attribute
       - your clients must be configured to use this server 
-      - your server should be configured to use this server via nsswitch and PAM. This
-      	however is not a strict requirement: 
-	if you create duplicates of every LDAP/OD user and group with identic attributes
-	(name, uid, gid) in your local data store (/etc/[passwd|group]) things will work
-
-	      *  as long as user/group names/ids in the filesystem are equal  *
-	      *         to their counterparts in the LDAP/OD datastore        *
-
+      - your server should be configured to use this server via nsswitch and PAM
       - configure Netatalk via afp_ldap.conf so that Netatalk is able to retrieve the UUID
-      	for users and groups via LDAP search queries
+        for users and groups via LDAP search queries
 
   3. Netatalk Volumes
 
@@ -66,19 +57,17 @@ Some implementation details that are buried in the code are worthwhile to be doc
      Basically as far as implementing AFP support is concerned they're equivalent.
      Subtleties arise at other places:
 
-     FPAccess
+     * FPAccess:
+     The (10.5) AFP client frequently checks the (DARWIN_)ACE_DELETE_CHILD right. This is most
+     often not explicitly granted via an ACE. Therefor the client would get an no access
+     error. The client in turn then declares the object in question read only.
+     Thus we have to the check the mode for every directory and add ACE_DELETE_CHILD if
+     the requestor has write permissions.
 
-	The AFP client frequently checks the (DARWIN_)ACE_DELETE_CHILD right. This is most
-	often not explicitly granted via an ACE. Therefor the client would get an no access
-        error. The client in turn then declares the object in question read only.
-	Thus we have to the check the mode for every directory and add ACE_DELETE_CHILD if
-	the requestor has write permissions.
-
-     FPGetFileDirParms
-
-	10.5 does not only use unix mode and FPAccess for permission check, but also OS 9
-	access bits from FPGetFileDirParms. Thus we have to adjust the Access Rights bitmap
-	user bits by including any ACL rigths.
+     * FPGetFileDirParms:
+     10.5 does not only use unix mode and FPAccess for permission check, but also OS 9
+     access bits from FPGetFileDirParms. Thus we have to adjust the Access Rights bitmap
+     user bits by including any ACL rigths.
 
   2. .AppleDouble VFS integration
 

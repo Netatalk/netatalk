@@ -1,3 +1,9 @@
+Changes in 2.2
+==============
+
+* NEW: afpd: dynamic directoy cache
+* NEW: afpd: POSIX 1e ACL support
+
 Changes in 2.1.2
 ================
 
