@@ -391,6 +391,7 @@ sub parse_afp_flags
 	push (@flags, "SupportsReconnect") if ($flags & (1<<7));
 	push (@flags, "SupportsOpenDirectory") if ($flags & (1<<8));
 	push (@flags, "SupportsUTF8Servername") if ($flags & (1<<9));
+	push (@flags, "SupportsUUIDs") if ($flags & (1<<10));
 	push (@flags, "SupportsSuperClient") if ($flags & (1<<15));
 
 	return @flags;

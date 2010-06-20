@@ -320,7 +320,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
 	return 0;
 }
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
 {
     static char buf[ MAXPATHLEN + 1];
@@ -358,14 +358,14 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 	if (len < 0 || len >=  MAXPATHLEN)
 	    return AFPERR_MISC;
 	/* remove ACL from .AppleDouble/.Parent first */
-	if ((ret = remove_acl(vol->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
+	if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
 	    return ret;
 	/* now remove from .AppleDouble dir */
-	if ((ret = remove_acl(buf)) != AFP_OK)
+	if ((ret = remove_acl_vfs(buf)) != AFP_OK)
 	    return ret;
     } else
 	/* remove ACL from ressource fork */
-	if ((ret = remove_acl(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK)
+	if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK)
 	    return ret;
 
     return AFP_OK;
@@ -977,7 +977,7 @@ static struct vfs_ops netatalk_ea_sys = {
  * Tertiary VFS modules for ACLs
  */
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 static struct vfs_ops netatalk_solaris_acl_adouble = {
     /* validupath:        */ NULL,
     /* rf_chown:          */ NULL,
@@ -1027,7 +1027,7 @@ void initvol_vfs(struct vol *vol)
     }
 
     /* ACLs */
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
     vol->vfs_modules[2] = &netatalk_solaris_acl_adouble;
 #endif
 }

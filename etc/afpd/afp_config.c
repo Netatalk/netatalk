@@ -48,7 +48,7 @@ char *strchr (), *strrchr ();
 #ifdef USE_SRVLOC
 #include <slp.h>
 #endif /* USE_SRVLOC */
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 #include <atalk/ldapconfig.h>
 #endif
 
@@ -543,12 +543,10 @@ AFPConfig *configinit(struct afp_options *cmdline)
     struct afp_options options;
     AFPConfig *config=NULL, *first = NULL; 
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
     /* Parse afp_ldap.conf first so we can set the uuid option */
-    LOG(log_debug, logtype_afpd, "Start parsing afp_ldap.conf");
     acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-    LOG(log_debug, logtype_afpd, "Finished parsing afp_ldap.conf");
-#endif
+#endif /* HAVE_ACLS */
 
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
@@ -557,8 +555,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
             cmdline->configfile);
         return AFPConfigInit(cmdline, cmdline);
     }
-
-    LOG(log_debug, logtype_afpd, "Loading ConfigFile"); 
 
     /* scan in the configuration file */
     len = 0;
@@ -585,11 +581,13 @@ AFPConfig *configinit(struct afp_options *cmdline)
         if (!afp_options_parseline(p, &options))
             continue;
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 	/* Enable UUID support if LDAP config is complete */
-	if (ldap_config_valid)
-	    options.flags |= OPTION_UUID;
-#endif
+        if (ldap_config_valid) {
+            LOG(log_info, logtype_afpd, "Enabling UUID support");
+            options.flags |= OPTION_UUID;
+        }
+#endif /* HAVE_ACLS */
 
         /* this should really get a head and a tail to simplify things. */
         if (!first) {

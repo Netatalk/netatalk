@@ -1026,41 +1026,126 @@ AC_ARG_ENABLE(overwrite,
 AC_MSG_RESULT([$OVERWRITE_CONFIG])
 
 dnl --------------------- check for ACL support
-neta_cv_nfsv4acl="no"
-AC_MSG_CHECKING([if NFSv4 ACL Support should be enabled])
-AC_ARG_ENABLE(nfsv4acls,
-	[  --enable-nfsv4acls      enable NFSv4 ACL Support],[
-	if test x"$enableval" = x"yes"; then
-	   AC_MSG_RESULT([yes])
-	   neta_cv_nfsv4acl="yes"
-	else
-	   AC_MSG_RESULT([no])
-	fi],[
-	   AC_MSG_RESULT([no])
-	]
-)
-if test x$neta_cv_nfsv4acl = xyes; then
-   	AC_CHECK_HEADER([ldap.h],,[
-		AC_MSG_ERROR([ACL Support need the LDAP client headers not found.])
-		neta_cv_nfsv4acl=no
-		]
-	)
-	AC_CHECK_LIB(ldap,ldap_init,neta_cv_nfsv4acl=yes,neta_cv_nfsv4acl=no)
-fi
-if test x$neta_cv_nfsv4acl = xyes; then
-   	AC_CHECK_HEADER([sys/acl.h],[
-		AC_DEFINE([HAVE_NFSv4_ACLS], 1, [Enable ACL code])
-		AC_MSG_NOTICE([Enabling ACL support])
-		],
-		neta_cv_nfsv4acl=no
-	)
-fi
-if test x$neta_cv_nfsv4acl = xyes; then
-   	LIBATALK_ACLS="acl/libacl.la"
+AC_MSG_CHECKING(whether to support ACLs)
+AC_ARG_WITH(acl-support,
+    [AS_HELP_STRING([--with-acl-support],
+        [Include ACL support (default=auto)])],
+    [ case "$withval" in
+      yes|no)
+          with_acl_support="$withval"
+		  ;;
+      *)
+          with_acl_support=auto
+          ;;
+      esac ],
+    [with_acl_support=auto])
+AC_MSG_RESULT($with_acl_support)
+
+if test x"$with_acl_support" = x"no"; then
+	AC_MSG_RESULT(Disabling ACL support)
+	AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support should be built in])
 else
-	LIBATALK_ACLS=""
+    with_acl_support=yes
+    AC_MSG_NOTICE([ACL support requires LDAP support, checking whether that's available])
+   	AC_CHECK_HEADER([ldap.h],,
+        [AC_MSG_ERROR([ACL Support prerequisite LDAP client headers not found.])
+		    with_acl_support=no])
+
+	AC_CHECK_LIB(ldap, ldap_init,, 
+        [AC_MSG_ERROR([ACL Support prerequisite LDAP client libs not found.])
+		    with_acl_support=no])
 fi
-AC_SUBST(LIBATALK_ACLS)
+
+if test x"$with_acl_support" = x"yes" ; then
+	AC_MSG_NOTICE(checking whether ACL support is available:)
+	case "$host_os" in
+	*sysv5*)
+		AC_MSG_NOTICE(Using UnixWare ACLs)
+		AC_DEFINE(HAVE_UNIXWARE_ACLS,1,[Whether UnixWare ACLs are available])
+		;;
+	*solaris*)
+		AC_MSG_NOTICE(Using solaris ACLs)
+		AC_DEFINE(HAVE_SOLARIS_ACLS,1,[Whether solaris ACLs are available])
+		ACL_LIBS="$ACL_LIBS -lsec"
+		;;
+	*hpux*)
+		AC_MSG_NOTICE(Using HPUX ACLs)
+		AC_DEFINE(HAVE_HPUX_ACLS,1,[Whether HPUX ACLs are available])
+		;;
+	*irix*)
+		AC_MSG_NOTICE(Using IRIX ACLs)
+		AC_DEFINE(HAVE_IRIX_ACLS,1,[Whether IRIX ACLs are available])
+		;;
+	*aix*)
+		AC_MSG_NOTICE(Using AIX ACLs)
+		AC_DEFINE(HAVE_AIX_ACLS,1,[Whether AIX ACLs are available])
+		;;
+	*osf*)
+		AC_MSG_NOTICE(Using Tru64 ACLs)
+		AC_DEFINE(HAVE_TRU64_ACLS,1,[Whether Tru64 ACLs are available])
+		ACL_LIBS="$ACL_LIBS -lpacl"
+		;;
+	*darwin*)
+		AC_MSG_NOTICE(ACLs on Darwin currently not supported)
+		AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
+		;;
+	*)
+		AC_CHECK_LIB(acl,acl_get_file,[ACL_LIBS="$ACL_LIBS -lacl"])
+		case "$host_os" in
+		*linux*)
+			AC_CHECK_LIB(attr,getxattr,[ACL_LIBS="$ACL_LIBS -lattr"])
+			;;
+		esac
+		AC_CACHE_CHECK([for POSIX ACL support],netatalk_cv_HAVE_POSIX_ACLS,[
+			acl_LIBS=$LIBS
+			LIBS="$LIBS $ACL_LIBS"
+			AC_TRY_LINK([
+				#include <sys/types.h>
+				#include <sys/acl.h>
+			],[
+				acl_t acl;
+				int entry_id;
+				acl_entry_t *entry_p;
+				return acl_get_entry(acl, entry_id, entry_p);
+			],
+			[netatalk_cv_HAVE_POSIX_ACLS=yes],
+			[netatalk_cv_HAVE_POSIX_ACLS=no
+                with_acl_support=no])
+			LIBS=$acl_LIBS
+		])
+		if test x"$netatalk_cv_HAVE_POSIX_ACLS" = x"yes"; then
+			AC_MSG_NOTICE(Using POSIX ACLs)
+			AC_DEFINE(HAVE_POSIX_ACLS,1,[Whether POSIX ACLs are available])
+			AC_CACHE_CHECK([for acl_get_perm_np],netatalk_cv_HAVE_ACL_GET_PERM_NP,[
+				acl_LIBS=$LIBS
+				LIBS="$LIBS $ACL_LIBS"
+				AC_TRY_LINK([
+					#include <sys/types.h>
+					#include <sys/acl.h>
+				],[
+					acl_permset_t permset_d;
+					acl_perm_t perm;
+					return acl_get_perm_np(permset_d, perm);
+				],
+				[samba_cv_HAVE_ACL_GET_PERM_NP=yes],
+				[samba_cv_HAVE_ACL_GET_PERM_NP=no])
+				LIBS=$acl_LIBS
+			])
+			if test x"netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
+				AC_DEFINE(HAVE_ACL_GET_PERM_NP,1,[Whether acl_get_perm_np() is available])
+			fi
+		else
+			AC_MSG_NOTICE(ACL support is not avaliable)
+			AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
+		fi
+		;;
+    esac
+fi
+
+if test x"$with_acl_support" = x"yes" ; then
+    AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
+    AC_SUBST(ACL_LIBS)
+fi
 
 dnl --------------------- check for Extended Attributes support
 neta_cv_eas="ad"
@@ -1206,7 +1291,7 @@ AM_CONDITIONAL(COMPILE_TIMELORD, test x$compile_timelord = xyes)
 AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
-AM_CONDITIONAL(USE_NFSv4_ACLS, test x$neta_cv_nfsv4acl = xyes)
+AM_CONDITIONAL(HAVE_ACLS, test x"$with_acl_support" = x"yes")
 AM_CONDITIONAL(USE_DHX, test x$neta_cv_compile_dhx = xyes)
 AM_CONDITIONAL(USE_DHX2, test x$neta_cv_compile_dhx2 = xyes)
 AM_CONDITIONAL(USE_RANDNUM, test x$neta_cv_have_openssl = xyes)

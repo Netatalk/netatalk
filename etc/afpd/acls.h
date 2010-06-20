@@ -1,5 +1,4 @@
 /*
-   $Id: acls.h,v 1.3 2009-11-20 17:45:47 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -16,7 +15,10 @@
 #ifndef AFPD_ACLS_H 
 #define AFPD_ACLS_H
 
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif
+
 #include <atalk/uuid.h>		/* for uuid_t */
 
 /*
@@ -32,8 +34,10 @@
  * the wire! We will ignore and spoil em.
  */
 
+#ifdef HAVE_SOLARIS_ACLS
 /* Some stuff for the handling of NFSv4 ACLs */
 #define ACE_TRIVIAL (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)
+#endif /* HAVE_SOLARIS_ACLS */
 
 /* FPGet|Set Bitmap */
 enum {
@@ -107,5 +111,6 @@ int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rb
 
 /* Parse afp_ldap.conf */
 extern int acl_ldap_readconfig(char *name);
+extern void acltoownermode(char *path, struct stat *st,uid_t uid, struct maccess *ma);
 
 #endif

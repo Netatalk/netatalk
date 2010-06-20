@@ -1,6 +1,6 @@
 /*
-  $Id: acl.c,v 1.2 2009-11-26 18:17:12 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,11 +21,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
+#endif
 
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
+
+#ifdef HAVE_SOLARIS_ACLS
 
 /* Get ACL. Allocates storage as needed. Caller must free.
  * Returns no of ACEs or -1 on error.  */
@@ -37,20 +42,20 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     *retAces = NULL;
     ace_count = acl(name, ACE_GETACLCNT, 0, NULL);
     if (ace_count <= 0) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error");
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error");
         return -1;
     }
 
     aces = malloc(ace_count * sizeof(ace_t));
     if (aces == NULL) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
-	return -1;
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
+        return -1;
     }
 
     if ( (acl(name, ACE_GETACL, ace_count, aces)) == -1 ) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
-	free(aces);
-	return -1;
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
+        free(aces);
+        return -1;
     }
 
     LOG(log_debug9, logtype_afpd, "get_nfsv4_acl: file: %s -> No. of ACEs: %d", name, ace_count);
@@ -60,7 +65,7 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
 }
 
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
-int remove_acl(const char *name)
+int remove_acl_vfs(const char *name)
 {
     int ret,i, ace_count, trivial_aces, new_aces_count;
     ace_t *old_aces = NULL;
@@ -112,3 +117,12 @@ exit:
     LOG(log_debug9, logtype_afpd, "remove_acl: END");
     return ret;
 }
+
+#endif  /* HAVE_SOLARIS_ACLS */
+
+#ifdef HAVE_POSIX_ACLS
+int remove_acl_vfs(const char *name)
+{
+    return AFP_OK;
+}
+#endif /* HAVE_POSIX_ACLS */

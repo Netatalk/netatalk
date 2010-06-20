@@ -46,7 +46,7 @@
 #include "filedir.h"
 #include "status.h"
 #include "misc.h"
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_ACLS
 #include "acls.h"
 #endif
 

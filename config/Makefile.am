@@ -7,7 +7,7 @@ GENFILES = afpd.conf AppleVolumes.default
 TMPLFILES = afpd.conf.tmpl AppleVolumes.default.tmpl
 CONFFILES = AppleVolumes.system netatalk.conf
 
-if USE_NFSv4_ACLS
+if HAVE_ACLS
 CONFFILES += afp_ldap.conf
 endif
 
