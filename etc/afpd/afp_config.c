@@ -465,30 +465,10 @@ srvloc_reg_err:
 #endif /* USE_SRVLOC */
 
 #ifdef USE_ZEROCONF
-    uint afp_port;
-    const char *hostname = NULL;
-
     dsi->zeroconf_registered = 0; /*  Mark that we haven't registered.  */
-
     if (!(options->flags & OPTION_NOZEROCONF)) {
-        /* XXX We don't want to tack on the port number if we don't have to.
-    	   * Why?
-    	   * Well, this seems to break MacOS < 10.  If the user _really_ wants to
-    	   * use a non-default port, they can, but be aware, this server might
-    	   * not show up int the Network Browser.
-    	   */
-        afp_port = getip_port((struct sockaddr *)&dsi->server);
-
-        /* If specified use the FQDN to register with srvloc, otherwise use IP. */
-        p = NULL;
-        if (options->fqdn) {
-            hostname = options->fqdn;
-            p = strchr(hostname, ':');
-        }  else {
-            hostname = getip_string((struct sockaddr *)&dsi->server);
-        }
-
-        zeroconf_register(afp_port, hostname);
+        zeroconf_register(getip_port((struct sockaddr *)&dsi->server),
+                          options->server ? options->server : options->hostname);
         dsi->zeroconf_registered = 1; /*  Mark that we have registered.  */
         config->server_cleanup = dsi_cleanup;
     }
