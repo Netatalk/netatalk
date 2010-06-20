@@ -358,14 +358,14 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 	if (len < 0 || len >=  MAXPATHLEN)
 	    return AFPERR_MISC;
 	/* remove ACL from .AppleDouble/.Parent first */
-	if ((ret = remove_acl(vol->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
+	if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_DIR))) != AFP_OK)
 	    return ret;
 	/* now remove from .AppleDouble dir */
-	if ((ret = remove_acl(buf)) != AFP_OK)
+	if ((ret = remove_acl_vfs(buf)) != AFP_OK)
 	    return ret;
     } else
 	/* remove ACL from ressource fork */
-	if ((ret = remove_acl(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK)
+	if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK)
 	    return ret;
 
     return AFP_OK;
