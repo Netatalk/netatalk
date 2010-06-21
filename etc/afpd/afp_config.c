@@ -56,6 +56,8 @@ char *strchr (), *strrchr ();
 #include "afp_config.h"
 #include "uam_auth.h"
 #include "status.h"
+#include "volume.h"
+#include "afp_zeroconf.h"
 
 #define LINESIZE 1024  
 
@@ -154,9 +156,6 @@ static char * srvloc_encode(const struct afp_options *options, const char *name)
 	return buf;
 }
 #endif /* USE_SRVLOC */
-#ifdef USE_ZEROCONF
-#include "afp_zeroconf.h"
-#endif /* USE_ZEROCONF */
 
 static void dsi_cleanup(const AFPConfig *config)
 {
@@ -193,14 +192,6 @@ static void dsi_cleanup(const AFPConfig *config)
 srvloc_dereg_err:
     dsi->srvloc_url[0] = '\0';
     SLPClose(hslp);
-#elif defined (USE_ZEROCONF)
-    DSI *dsi = (DSI *)config->obj.handle;
-
-    /*  Do nothing if we didn't register.  */
-    if (!dsi || dsi->zeroconf_registered == 0)
-        return;
-
-    zeroconf_deregister();
 #endif /* USE_SRVLOC */
 }
 
@@ -464,16 +455,6 @@ srvloc_reg_err:
     }
 #endif /* USE_SRVLOC */
 
-#ifdef USE_ZEROCONF
-    dsi->zeroconf_registered = 0; /*  Mark that we haven't registered.  */
-    if (!(options->flags & OPTION_NOZEROCONF)) {
-        zeroconf_register(getip_port((struct sockaddr *)&dsi->server),
-                          options->server ? options->server : options->hostname);
-        dsi->zeroconf_registered = 1; /*  Mark that we have registered.  */
-        config->server_cleanup = dsi_cleanup;
-    }
-#endif /* USE_ZEROCONF */
-
     config->fd = dsi->serversock;
     config->obj.handle = dsi;
     config->obj.config = config;
@@ -496,7 +477,7 @@ srvloc_reg_err:
 /* allocate server configurations. this should really store the last
  * entry in config->last or something like that. that would make
  * supporting multiple dsi transports easier. */
-static AFPConfig *AFPConfigInit(const struct afp_options *options,
+static AFPConfig *AFPConfigInit(struct afp_options *options,
                                 const struct afp_options *defoptions)
 {
     AFPConfig *config = NULL, *next = NULL;
@@ -609,7 +590,7 @@ AFPConfig *configinit(struct afp_options *cmdline)
         }
 #endif /* HAVE_ACLS */
 
-        /* this should really get a head and a tail to simplify things. */
+        /* AFPConfigInit can return two linked configs due to DSI and ASP */
         if (!first) {
             if ((first = AFPConfigInit(&options, cmdline)))
                 config = first->next ? first->next : first;
@@ -623,6 +604,11 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
     if (!have_option)
         first = AFPConfigInit(cmdline, cmdline);
+
+    /* Now register with zeroconf, we also need the volumes for that */
+    readvolfile(&first->obj, &first->obj.options.systemvol, NULL, 0, NULL);
+
+    zeroconf_register(first);
 
     return first;
 }

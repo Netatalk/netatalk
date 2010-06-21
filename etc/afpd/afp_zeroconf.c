@@ -12,45 +12,30 @@
 #endif
 
 #include "afp_zeroconf.h"
+#include "afp_config.h"
 
-/*
- * Global Definitions
- */
 #ifdef HAVE_AVAHI
-struct context *ctx = NULL;
+#include "afp_avahi.h"
 #endif
+
 
 /*
  * Functions (actually they are just facades)
  */
-void zeroconf_register(int port, const char *hostname)
+void zeroconf_register(const AFPConfig *configs)
 {
 #if defined (HAVE_AVAHI)
   LOG(log_debug, logtype_afpd, "Attempting to register with mDNS using Avahi");
 
-	ctx = av_zeroconf_setup(port ? port : AFP_PORT, 
-													(hostname && strlen(hostname) > 0) ? hostname : NULL);
-  av_zeroconf_run(ctx);
+	av_zeroconf_setup(configs);
+  av_zeroconf_run();
 #endif
 }
-
-void zeroconf_register_volume(const char *volname)
-{
-#if defined (HAVE_AVAHI)
-  LOG(log_debug, logtype_afpd, "Attempting to register volume with mDNS using Avahi");
-
-	ctx = av_zeroconf_setup(-1, volname);
-
-  av_zeroconf_run(ctx);
-#endif
-}
-
 
 void zeroconf_deregister(void)
 {
 #if defined (HAVE_AVAHI)
   LOG(log_debug, logtype_afpd, "Attempting to de-register mDNS using Avahi");
-  if (ctx)
-    av_zeroconf_shutdown(ctx);
+	av_zeroconf_shutdown();
 #endif
 }

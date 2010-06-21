@@ -28,6 +28,11 @@ extern int              ustatfs_getvolspace (const struct vol *,
 extern void             setvoltime (AFPObj *, struct vol *);
 extern int              pollvoltime (AFPObj *);
 extern void             load_volumes (AFPObj *obj);
+extern int              readvolfile(AFPObj *obj,
+                                    struct afp_volume_name *p1,
+                                    char *p2,
+                                    int user,
+                                    struct passwd *pwent);
 
 /* FP functions */
 int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

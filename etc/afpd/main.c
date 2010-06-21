@@ -188,11 +188,6 @@ int main(int ac, char **av)
         exit(0);
     }
 
-#if 0
-    /* Register CNID  */
-    cnid_init();
-#endif
-
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here. 
      * XXX: this should really be setup after the initial connections. */

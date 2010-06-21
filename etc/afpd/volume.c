@@ -249,11 +249,11 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
             }
         } else if (is_var(p, "$d")) {
             q = path;
-        } else if (is_var(p, "$f")) {
+        } else if (pwd && is_var(p, "$f")) {
             if ((r = strchr(pwd->pw_gecos, ',')))
                 *r = '\0';
             q = pwd->pw_gecos;
-        } else if (is_var(p, "$g")) {
+        } else if (pwd && is_var(p, "$g")) {
             struct group *grp = getgrgid(pwd->pw_gid);
             if (grp)
                 q = grp->gr_name;
@@ -278,7 +278,7 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
                 q = obj->options.server;
             } else
                 q = obj->options.hostname;
-        } else if (is_var(p, "$u")) {
+        } else if (obj->username && is_var(p, "$u")) {
             char* sep = NULL;
             if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
                 q = sep+1;
@@ -1078,7 +1078,10 @@ static int volfile_changed(struct afp_volume_name *p)
 
 /* ----------------------
  * Read a volume configuration file and add the volumes contained within to
- * the global volume list.  If p2 is non-NULL, the file that is opened is
+ * the global volume list. This gets called from the forked afpd childs.
+ * The master now reads this too for Zeroconf announcements.
+ *
+ * If p2 is non-NULL, the file that is opened is
  * p1/p2
  *
  * Lines that begin with # and blank lines are ignored.
@@ -1086,8 +1089,9 @@ static int volfile_changed(struct afp_volume_name *p)
  *      <unix path> [<volume name>] [allow:<user>,<@group>,...] \
  *                           [codepage:<file>] [casefold:<num>]
  *      <extension> TYPE [CREATOR]
+ *
  */
-static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
+int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
 {
     FILE        *fp;
     char        path[MAXPATHLEN + 1];
@@ -1178,7 +1182,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
             /* send path through variable substitution */
             if (*path != '~') /* need to copy path to tmp */
                 strcpy(tmp, path);
-            if (!pwent)
+            if (!pwent && obj->username)
                 pwent = getpwnam(obj->username);
             volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL);
 

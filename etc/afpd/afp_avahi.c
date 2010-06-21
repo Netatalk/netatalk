@@ -13,7 +13,22 @@
 #ifdef HAVE_AVAHI
 
 #include <unistd.h>
+
+#include <atalk/logger.h>
+#include <atalk/util.h>
+#include <atalk/dsi.h>
+
 #include "afp_avahi.h"
+#include "afp_config.h"
+
+/*****************************************************************
+ * Global variables
+ *****************************************************************/
+struct context *ctx = NULL;
+
+/*****************************************************************
+ * Private functions
+ *****************************************************************/
 
 static void publish_reply(AvahiEntryGroup *g,
                           AvahiEntryGroupState state,
@@ -23,49 +38,53 @@ static void publish_reply(AvahiEntryGroup *g,
  * This function tries to register the AFP DNS
  * SRV service type.
  */
-static void register_stuff(struct context *ctx) {
-  char r[128];
-  int ret;
-
+static void register_stuff(void) {
+	const AFPConfig *config;
+	DSI *dsi;
   assert(ctx->client);
 
   if (!ctx->group) {
-    if (!(ctx->group = avahi_entry_group_new(ctx->client,
-                                             publish_reply,
-                                             ctx))) {
+    if (!(ctx->group = avahi_entry_group_new(ctx->client, publish_reply, ctx))) {
       LOG(log_error, logtype_afpd, "Failed to create entry group: %s",
           avahi_strerror(avahi_client_errno(ctx->client)));
       goto fail;
     }
-
   }
-
-  LOG(log_info, logtype_afpd, "Adding service '%s'", ctx->name);
 
   if (avahi_entry_group_is_empty(ctx->group)) {
     /* Register our service */
 
-    if (avahi_entry_group_add_service(ctx->group,
-                                      AVAHI_IF_UNSPEC,
-                                      AVAHI_PROTO_UNSPEC,
-                                      0,
-                                      ctx->name,
-                                      AFP_DNS_SERVICE_TYPE,
-                                      NULL,
-                                      NULL,
-                                      ctx->port,
-                                      NULL) < 0) {
-      LOG(log_error, logtype_afpd, "Failed to add service: %s",
-          avahi_strerror(avahi_client_errno(ctx->client)));
-      goto fail;
-    }
+		/* AFP server */
+		for (config = ctx->configs; config; config = config->next) {
+			dsi = (DSI *)config->obj.handle;
+			if (avahi_entry_group_add_service(ctx->group,
+																				AVAHI_IF_UNSPEC,
+																				AVAHI_PROTO_UNSPEC,
+																				0,
+																				config->obj.options.server ?
+																				    config->obj.options.server
+																				    : config->obj.options.hostname,
+																				AFP_DNS_SERVICE_TYPE,
+																				NULL,
+																				NULL,
+																				getip_port((struct sockaddr *)&dsi->server),
+																				NULL) < 0) {
+				LOG(log_error, logtype_afpd, "Failed to add service: %s",
+						avahi_strerror(avahi_client_errno(ctx->client)));
+				goto fail;
+			}
 
-    if (avahi_entry_group_commit(ctx->group) < 0) {
-      LOG(log_error, logtype_afpd, "Failed to commit entry group: %s",
-          avahi_strerror(avahi_client_errno(ctx->client)));
-      goto fail;
-    }
-  }
+		}	/* for config*/
+
+		/* AFP volumes */
+
+		if (avahi_entry_group_commit(ctx->group) < 0) {
+			LOG(log_error, logtype_afpd, "Failed to commit entry group: %s",
+					avahi_strerror(avahi_client_errno(ctx->client)));
+			goto fail;
+		}
+
+	}	/* if avahi_entry_group_is_empty*/
 
   return;
 
@@ -79,24 +98,21 @@ static void publish_reply(AvahiEntryGroup *g,
                           AvahiEntryGroupState state,
                           AVAHI_GCC_UNUSED void *userdata)
 {
-  struct context *ctx = userdata;
-	char *n;
-
-  assert(g == ctx->group);
+  assert(ctx->group == NULL || g == ctx->group);
 
   switch (state) {
 
   case AVAHI_ENTRY_GROUP_ESTABLISHED :
     /* The entry group has been established successfully */
+		LOG(log_debug, logtype_afpd, "publish_reply: AVAHI_ENTRY_GROUP_ESTABLISHED");
     break;
 
   case AVAHI_ENTRY_GROUP_COLLISION:
-    /* Pick a new name for our service */
-    n = avahi_alternative_service_name(ctx->name);
-    assert(n);
-    avahi_free(ctx->name);
-    ctx->name = n;
-    register_stuff(ctx);
+		/* With multiple names there's no way to know which one collided */
+    LOG(log_error, logtype_afpd, "publish_reply: AVAHI_ENTRY_GROUP_COLLISION",
+				avahi_strerror(avahi_client_errno(ctx->client)));
+		avahi_client_free(avahi_entry_group_get_client(g));
+		avahi_threaded_poll_quit(ctx->threaded_poll);
     break;
 		
   case AVAHI_ENTRY_GROUP_FAILURE:
@@ -117,8 +133,6 @@ static void client_callback(AvahiClient *client,
                             AvahiClientState state,
                             void *userdata)
 {
-  struct context *ctx = userdata;
-
   ctx->client = client;
 
   switch (state) {
@@ -126,7 +140,7 @@ static void client_callback(AvahiClient *client,
     /* The server has startup successfully and registered its host
      * name on the network, so it's time to create our services */
     if (!ctx->group)
-      register_stuff(ctx);
+      register_stuff();
     break;
 
   case AVAHI_CLIENT_S_COLLISION:
@@ -149,7 +163,7 @@ static void client_callback(AvahiClient *client,
                                            ctx,
                                            &error))) {
 
-        LOG(log_error, logtype_afpd, "Failed to contact server: %s\n",
+        LOG(log_error, logtype_afpd, "Failed to contact server: %s",
             avahi_strerror(error));
 
         avahi_client_free (ctx->client);
@@ -157,7 +171,7 @@ static void client_callback(AvahiClient *client,
       }
 
 		} else {
-			LOG(log_error, logtype_afpd, "Client failure: %s\n",
+			LOG(log_error, logtype_afpd, "Client failure: %s",
 					avahi_strerror(avahi_client_errno(client)));
 			avahi_client_free (ctx->client);
 			avahi_threaded_poll_quit(ctx->threaded_poll);
@@ -172,43 +186,23 @@ static void client_callback(AvahiClient *client,
   }
 }
 
+/************************************************************************
+ * Public funcions
+ ************************************************************************/
+
 /*
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
-void* av_zeroconf_setup(unsigned long port, const char *name) {
-  struct context *ctx = NULL;
-
-  /* default service name, if there's none in
-   * the config file.
-   */
-  char service[256] = "AFP Server on ";
+void av_zeroconf_setup(const AFPConfig *configs) {
   int error, ret;
 
-  /* initialize the struct that holds our
-   * config settings.
-   */
-  ctx = malloc(sizeof(struct context));
+  /* initialize the struct that holds our config settings. */
+  if (!ctx) {
+		ctx = calloc(1, sizeof(struct context));
+		ctx->configs = configs;
+	}
   assert(ctx);
-  ctx->client = NULL;
-  ctx->group = NULL;
-  ctx->threaded_poll = NULL;
-  ctx->thread_running = 0;
-
-  LOG(log_debug, logtype_afpd, "Setting port for Zeroconf service to: %i.", port);  
-  ctx->port = port;
-
-  /* Prepare service name */
-  if (!name) {
-    LOG(log_debug, logtype_afpd, "Assigning default service name.");
-    gethostname(service+14, sizeof(service)-15);
-    service[sizeof(service)-1] = 0;
-    ctx->name = strdup(service);
-  } else {
-    ctx->name = strdup(name);
-  }
-
-  assert(ctx->name);
 
 /* first of all we need to initialize our threading env */
   if (!(ctx->threaded_poll = avahi_threaded_poll_new())) {
@@ -219,34 +213,31 @@ void* av_zeroconf_setup(unsigned long port, const char *name) {
   if (!(ctx->client = avahi_client_new(avahi_threaded_poll_get(ctx->threaded_poll),
                                        AVAHI_CLIENT_NO_FAIL,
                                        client_callback,
-                                       ctx,
+                                       NULL,
                                        &error))) {
     LOG(log_error, logtype_afpd, "Failed to create client object: %s",
         avahi_strerror(avahi_client_errno(ctx->client)));
     goto fail;
   }
 
-  return ctx;
+  return;
 
 fail:
   if (ctx)
-    av_zeroconf_unregister(ctx);
+    av_zeroconf_unregister();
 
-  return NULL;
+  return;
 }
 
 /*
  * This function finally runs the loop impl.
  */
-int av_zeroconf_run(void *u) {
-  struct context *ctx = u;
+int av_zeroconf_run(void) {
   int ret;
 
   /* Finally, start the event loop thread */
   if (avahi_threaded_poll_start(ctx->threaded_poll) < 0) {
-    LOG(log_error,
-        logtype_afpd,
-        "Failed to create thread: %s",
+    LOG(log_error, logtype_afpd, "Failed to create thread: %s",
         avahi_strerror(avahi_client_errno(ctx->client)));
     goto fail;
   } else {
@@ -258,7 +249,7 @@ int av_zeroconf_run(void *u) {
 
 fail:
 	if (ctx)
-    av_zeroconf_unregister(ctx);
+    av_zeroconf_unregister();
 
   return -1;
 }
@@ -267,12 +258,9 @@ fail:
  * Tries to shutdown this loop impl.
  * Call this function from outside this thread.
  */
-void av_zeroconf_shutdown(void *u) {
-  struct context *ctx = u;
-
+void av_zeroconf_shutdown() {
   /* Call this when the app shuts down */
   avahi_threaded_poll_stop(ctx->threaded_poll);
-  avahi_free(ctx->name);
   avahi_client_free(ctx->client);
   avahi_threaded_poll_free(ctx->threaded_poll);
 }
@@ -281,9 +269,7 @@ void av_zeroconf_shutdown(void *u) {
  * Tries to shutdown this loop impl.
  * Call this function from inside this thread.
  */
-int av_zeroconf_unregister(void *u) {
-  struct context *ctx = u;
-
+int av_zeroconf_unregister() {
   if (ctx->thread_running) {
     /* First, block the event loop */
     avahi_threaded_poll_lock(ctx->threaded_poll);
@@ -295,8 +281,6 @@ int av_zeroconf_unregister(void *u) {
     avahi_threaded_poll_unlock(ctx->threaded_poll);
     ctx->thread_running = 0;
   }
-
-  avahi_free(ctx->name);
 
   if (ctx->client)
     avahi_client_free(ctx->client);

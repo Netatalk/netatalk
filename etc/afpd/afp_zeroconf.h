@@ -10,14 +10,7 @@
 #ifndef AFPD_ZEROCONF_H
 #define AFPD_ZEROCONF_H
 
-#include <netinet/in.h> /* htons() */
-#include <atalk/logger.h>
-
-#ifdef HAVE_AVAHI
-#include "afp_avahi.h"
-#endif
-
-#define AFP_PORT 548
+#include "afp_config.h"
 
 /*
  * Prototype Definitions
@@ -26,12 +19,7 @@
 /*
  * registers service with a particular Zerconf implemenation.
  */
-void zeroconf_register(int port, const char *hostname);
-
-/*
- * registers volume name with a particular Zerconf implemenation.
- */
-void zeroconf_register_volume(const char *volname);
+void zeroconf_register(const AFPConfig *configs);
 
 /*
  * de-registers the ntpd service with a particular Zerconf implemenation.

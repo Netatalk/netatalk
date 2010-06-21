@@ -534,6 +534,7 @@ static void show_version_extended(void )
 	puts( "No" );
 #endif
 
+	printf( "      Zeroconf support:\t" );
 #ifdef USE_ZEROCONF
 	puts( "Yes" );
 #else

@@ -91,7 +91,8 @@ struct afp_options {
 typedef struct _AFPObj {
     int proto;
     unsigned long servernum;
-    void *handle, *config;
+    void *handle;               /* either (DSI *) or (ASP *) */
+    void *config; 
     struct afp_options options;
     char *Obj, *Type, *Zone;
     char username[MAXUSERLEN];
