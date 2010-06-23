@@ -96,6 +96,9 @@ void configfree(AFPConfig *configs, const AFPConfig *config)
         }
         free(p);
     }
+
+    /* the master loaded the volumes for zeroconf, get rid of that */
+    unload_volumes_and_extmap();
 }
 
 #ifdef USE_SRVLOC

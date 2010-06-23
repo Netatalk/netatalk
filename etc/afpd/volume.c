@@ -1107,12 +1107,16 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
     char        buf[BUFSIZ];
     char        type[5], creator[5];
     char        *u, *p;
+    int         fd;
+    int         afpmaster = 0;
+    int         i;
     struct passwd   *pw;
     struct vol_option   save_options[VOLOPT_NUM];
     struct vol_option   options[VOLOPT_NUM];
-    int                 i;
     struct stat         st;
-    int                 fd;
+
+    if (! ((DSI *)obj->handle)->child)
+        afpmaster = 1;
 
     if (!p1->name)
         return -1;
@@ -1191,7 +1195,11 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
                 strcpy(tmp, path);
             if (!pwent && obj->username)
                 pwent = getpwnam(obj->username);
-            volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL);
+
+            if (! afpmaster)
+                strcpy(tmp, path);
+            else
+                volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL);
 
             /* this is sort of braindead. basically, i want to be
              * able to specify things in any order, but i don't want to
@@ -1243,7 +1251,11 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
 
                 /* do variable substitution for volname */
-                volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL);
+                if (!afpmaster)
+                    strcpy(volname, tmp);
+                else
+                    volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL);
+
                 creatvol(obj, pwent, path, tmp, options, p2 != NULL);
             }
             volfree(options, save_options);
@@ -1684,6 +1696,12 @@ void load_volumes(AFPObj *obj)
         free_volumes();
     }
 
+    if (! ((DSI *)obj->handle)->child) {
+        LOG(log_debug, logtype_afpd, "load_volumes: AFP MASTER");
+    } else {
+        LOG(log_debug, logtype_afpd, "load_volumes: user: %s", obj->username);
+    }
+
     pwent = getpwnam(obj->username);
     if ( (obj->options.flags & OPTION_USERVOLFIRST) == 0 ) {
         readvolfile(obj, &obj->options.systemvol, NULL, 0, pwent);
@@ -1713,7 +1731,7 @@ void load_volumes(AFPObj *obj)
     if ( obj->options.flags & OPTION_USERVOLFIRST ) {
         readvolfile(obj, &obj->options.systemvol, NULL, 0, pwent );
     }
-
+    
     if ( obj->options.closevol ) {
         struct vol *vol;
 
@@ -2581,4 +2599,11 @@ static void handle_special_folders (const struct vol * vol)
 const struct vol *getvolumes(void)
 {
     return Volumes;
+}
+
+void unload_volumes_and_extmap(void)
+{
+    LOG(log_debug, logtype_afpd, "unload_volumes_and_extmap");
+    free_extmap();
+    free_volumes();
 }

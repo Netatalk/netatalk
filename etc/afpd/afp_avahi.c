@@ -104,16 +104,16 @@ static void register_stuff(void) {
 				goto fail;
 			}
 
-			if (avahi_entry_group_add_service_strlst(ctx->group,
-																							 AVAHI_IF_UNSPEC,
-																							 AVAHI_PROTO_UNSPEC,
-																							 0,
-																							 name,
-																							 "_adisk._tcp",
-																							 NULL,
-																							 NULL,
-																							 311, /* serveradmin, peaked from os x 10.6 server */
-																							 strlist) < 0) {
+			if (i && avahi_entry_group_add_service_strlst(ctx->group,
+																										AVAHI_IF_UNSPEC,
+																										AVAHI_PROTO_UNSPEC,
+																										0,
+																										name,
+																										"_adisk._tcp",
+																										NULL,
+																										NULL,
+																										9, /* discard */
+																										strlist) < 0) {
 				LOG(log_error, logtype_afpd, "Failed to add service: %s",
 						avahi_strerror(avahi_client_errno(ctx->client)));
 				goto fail;
