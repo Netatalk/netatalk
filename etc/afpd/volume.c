@@ -2648,16 +2648,9 @@ void unload_volumes_and_extmap(void)
  */
 char *get_uuid(const AFPObj *obj, const char *volname)
 {
-    struct stat st;
-
-    char *usersign;
-    int fd, i;
-    struct stat tmpstat;
     char *volname_conf;
-    int header = 0;
     char buf[1024], uuid[UUID_PRINTABLE_STRING_LENGTH], *p;
-    FILE *fp, *randomp;
-    size_t len;
+    FILE *fp;
     
     if ((fp = fopen(obj->options.uuidconf, "r")) != NULL) {  /* read open? */
         /* scan in the conf file */
