@@ -1196,7 +1196,7 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
             if (!pwent && obj->username)
                 pwent = getpwnam(obj->username);
 
-            if (! afpmaster)
+            if (afpmaster)
                 strcpy(tmp, path);
             else
                 volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL);
@@ -1251,7 +1251,7 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
 
                 /* do variable substitution for volname */
-                if (!afpmaster)
+                if (afpmaster)
                     strcpy(volname, tmp);
                 else
                     volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL);
