@@ -77,6 +77,10 @@ extern int afprun(int root, char *cmd, int *outfd);
 #endif /* BYTE_ORDER == BIG_ENDIAN */
 #endif /* ! NO_LARGE_VOL_SUPPORT */
 
+#ifndef UUID_PRINTABLE_STRING_LENGTH
+#define UUID_PRINTABLE_STRING_LENGTH 37
+#endif
+
 static struct vol *Volumes = NULL;
 static u_int16_t    lastvid = 0;
 static char     *Trash = "\02\024Network Trash Folder";
