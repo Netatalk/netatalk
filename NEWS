@@ -5,6 +5,7 @@ Changes in 2.2
 * NEW: afpd: POSIX 1e ACL support
 * NEW: afpd: automagic Zeroconf registration with avahi, registering both
        the service _afpovertcp._tcp and TimeMachine volumes with _adisk._tcp.
+* UPD: Support for BerkeleyDB 5.0.
 
 Changes in 2.1.2
 ================
