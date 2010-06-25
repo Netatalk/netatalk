@@ -484,11 +484,14 @@ static void show_version( void )
 	puts( "No" );
 #endif
 
-	printf( "      Transport layers:\t" );
+        printf( "        TCP/IP Support:\t" );
+        puts( "Yes" );
+
+	printf( "DDP(AppleTalk) Support:\t" );
 #ifdef NO_DDP
-	puts( "TCP/IP" );
+	puts( "No" );
 #else
-	puts( "TCP/IP DDP" );
+	puts( "Yes" );
 #endif
 
 	printf( "         CNID backends:\t" );

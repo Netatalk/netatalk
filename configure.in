@@ -235,7 +235,7 @@ AC_MSG_RESULT([$netatalk_cv_with_cracklib])
 netatalk_cv_ddp_enabled=no
 AC_MSG_CHECKING([whether to enable DDP])
 AC_ARG_ENABLE(ddp,
-	[  --enable-ddp           enable DDP],[
+	[  --enable-ddp            enable DDP (AppleTalk)],[
 	if test "$enableval" = "yes"; then 
 		AC_MSG_RESULT([yes])
 		netatalk_cv_ddp_enabled=yes
@@ -1410,8 +1410,8 @@ AC_OUTPUT([Makefile
 	sys/solaris/Makefile
 	sys/sunos/Makefile
 	sys/ultrix/Makefile
-    test/Makefile
-    test/afpd/Makefile
+	test/Makefile
+	test/afpd/Makefile
 	],
 	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
 )

@@ -1,6 +1,7 @@
 Changes in 2.2
 ==============
 
+* UPD: AppleTalk are disabled by configure script. if use, --enable-ddp.
 * NEW: afpd: dynamic directoy cache
 * NEW: afpd: POSIX 1e ACL support
 * NEW: afpd: automagic Zeroconf registration with avahi, registering both
