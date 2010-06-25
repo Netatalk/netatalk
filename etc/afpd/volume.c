@@ -174,7 +174,10 @@ static void volfree(struct vol_option *options, const struct vol_option *save)
 }
 
 
-/* handle variable substitutions. here's what we understand:
+#define is_var(a, b) (strncmp((a), (b), 2) == 0)
+
+/*
+ * Handle variable substitutions. here's what we understand:
  * $b   -> basename of path
  * $c   -> client ip/appletalk address
  * $d   -> volume pathname on server
@@ -188,17 +191,37 @@ static void volfree(struct vol_option *options, const struct vol_option *save)
  * $z   -> zone (may not exist)
  * $$   -> $
  *
+ * This get's called from readvolfile with
+ * path = NULL, volname = NULL for xlating the volumes path
+ * path = path, volname = NULL for xlating the volumes name
+ * ... and from volumes options parsing code when xlating eg dbpath with
+ * path = path, volname = volname
  *
+ * Using this information we can reject xlation of any variable depeninding on a login
+ * context which is not given in the afp master, where we must evaluate this whole stuff
+ * too for the Zeroconf announcements.
  */
-#define is_var(a, b) (strncmp((a), (b), 2) == 0)
-
-static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
-                      char *src, struct passwd *pwd, char *path, char *volname)
+static char *volxlate(AFPObj *obj,
+                      char *dest,
+                      size_t destlen,
+                      char *src,
+                      struct passwd *pwd,
+                      char *path,
+                      char *volname)
 {
     char *p, *r;
     const char *q;
     int len;
     char *ret;
+    int afpmaster = 0;
+    int xlatevolname = 0;
+
+    if (! ((DSI *)obj->handle)->child)
+        afpmaster = 1;
+
+    if (path && !volname)
+        /* cf above */
+        xlatevolname = 1;
 
     if (!src) {
         return NULL;
@@ -225,6 +248,8 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
         /* now figure out what the variable is */
         q = NULL;
         if (is_var(p, "$b")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             if (path) {
                 if ((q = strrchr(path, '/')) == NULL)
                     q = path;
@@ -232,6 +257,8 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
                     q++;
             }
         } else if (is_var(p, "$c")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             if (obj->proto == AFPPROTO_ASP) {
                 ASP asp = obj->handle;
 
@@ -249,18 +276,26 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
                 destlen -= len;
             }
         } else if (is_var(p, "$d")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             q = path;
         } else if (pwd && is_var(p, "$f")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             if ((r = strchr(pwd->pw_gecos, ',')))
                 *r = '\0';
             q = pwd->pw_gecos;
         } else if (pwd && is_var(p, "$g")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             struct group *grp = getgrgid(pwd->pw_gid);
             if (grp)
                 q = grp->gr_name;
         } else if (is_var(p, "$h")) {
             q = obj->options.hostname;
         } else if (is_var(p, "$i")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             if (obj->proto == AFPPROTO_ASP) {
                 ASP asp = obj->handle;
 
@@ -280,12 +315,16 @@ static char *volxlate(AFPObj *obj, char *dest, size_t destlen,
             } else
                 q = obj->options.hostname;
         } else if (obj->username && is_var(p, "$u")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             char* sep = NULL;
             if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
                 q = sep+1;
             else
                 q = obj->username;
         } else if (is_var(p, "$v")) {
+            if (afpmaster && xlatevolname)
+                return NULL;
             if (volname) {
                 q = volname;
             }
@@ -1108,15 +1147,11 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
     char        type[5], creator[5];
     char        *u, *p;
     int         fd;
-    int         afpmaster = 0;
     int         i;
     struct passwd   *pw;
     struct vol_option   save_options[VOLOPT_NUM];
     struct vol_option   options[VOLOPT_NUM];
     struct stat         st;
-
-    if (! ((DSI *)obj->handle)->child)
-        afpmaster = 1;
 
     if (!p1->name)
         return -1;
@@ -1196,30 +1231,13 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
             if (!pwent && obj->username)
                 pwent = getpwnam(obj->username);
 
-            if (afpmaster)
-                strcpy(tmp, path);
-            else
-                volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL);
+            if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
+                continue;
 
             /* this is sort of braindead. basically, i want to be
              * able to specify things in any order, but i don't want to
-             * re-write everything.
-             *
-             * currently we have options:
-             *   volname
-             *   codepage:x
-             *   casefold:x
-             *   allow:x,y,@z
-             *   deny:x,y,@z
-             *   rwlist:x,y,@z
-             *   rolist:x,y,@z
-             *   options:prodos,crlf,noadouble,ro...
-             *   dbpath:x
-             *   password:x
-             *   preexec:x
-             *
-             *   namemask:x,y,!z  (not implemented yet)
-             */
+             * re-write everything. */
+
             memcpy(options, save_options, sizeof(options));
             *volname = '\0';
 
@@ -1251,10 +1269,8 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
 
                 /* do variable substitution for volname */
-                if (afpmaster)
-                    strcpy(volname, tmp);
-                else
-                    volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL);
+                if (volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL) == NULL)
+                    continue;
 
                 creatvol(obj, pwent, path, tmp, options, p2 != NULL);
             }
