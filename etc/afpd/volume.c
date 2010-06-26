@@ -861,9 +861,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     if (volume->v_flags & AFPVOL_TM) {
         char *uuid = get_uuid(obj, volume->v_localname);
         if (!uuid) {
-            LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID, disabling TM support",
+            LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
                 volume->v_localname);
-            volume->v_flags &= ~AFPVOL_TM;
         } else {
             volume->v_uuid = uuid;
             LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
