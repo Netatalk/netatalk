@@ -3,6 +3,8 @@ Changes in 2.2
 
 * NEW: afpd: dynamic directoy cache
 * NEW: afpd: POSIX 1e ACL support
+* NEW: afpd: automagic Zeroconf registration with avahi, registering both
+       the service _afpovertcp._tcp and TimeMachine volumes with _adisk._tcp.
 
 Changes in 2.1.2
 ================
