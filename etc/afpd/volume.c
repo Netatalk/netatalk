@@ -2710,6 +2710,8 @@ char *get_uuid(const AFPObj *obj, const char *volname)
     uuid_t id;
     uuid_generate(id);
     uuid_unparse(id, uuid);
+    for (int i=0; uuid[i]; i++)
+        uuid[i] = toupper(uuid[i]);
     LOG(log_debug, logtype_afpd, "get_uuid('%s'): generated UUID '%s'", volname, uuid);
 
     fprintf(fp, "\"%s\"\t%36s\n", volname, uuid);
