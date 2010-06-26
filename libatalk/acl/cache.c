@@ -103,7 +103,7 @@ static unsigned char hashstring(unsigned char *str) {
     return index;
 }
 
-/* hash uuid_t into unsigned char */
+/* hash atalk_uuid_t into unsigned char */
 static unsigned char hashuuid(uuidp_t uuid) {
     unsigned char index = 83;
     int i;

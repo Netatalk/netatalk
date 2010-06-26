@@ -35,6 +35,7 @@ extern int              readvolfile(AFPObj *obj,
                                     struct passwd *pwent);
 extern const struct vol *getvolumes(void);
 extern void             unload_volumes_and_extmap(void);
+extern char             *get_uuid(const AFPObj *obj, const char *volname);
 
 /* FP functions */
 int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

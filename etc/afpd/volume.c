@@ -35,6 +35,9 @@ char *strchr (), *strrchr ();
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#include <uuid/uuid.h>
+
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/adouble.h>
@@ -119,9 +122,8 @@ static void             free_extmap(void);
 #define VOLOPT_EA_VFS        27  /* Extended Attributes vfs indirection */
 #define VOLOPT_CNIDSERVER    28  /* CNID Server ip address*/
 #define VOLOPT_CNIDPORT      30  /* CNID server tcp port */
-#define VOLOPT_UUID          31  /* CNID server tcp port */
 
-#define VOLOPT_MAX           32  /* <== IMPORTANT !!!!!! */
+#define VOLOPT_MAX           31  /* <== IMPORTANT !!!!!! */
 #define VOLOPT_NUM           (VOLOPT_MAX + 1)
 
 #define VOLPASSLEN  8
@@ -569,9 +571,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
     } else if (optionok(tmp, "volsizelimit:", val)) {
         options[VOLOPT_LIMITSIZE].i_value = (uint32_t)strtoul(val + 1, NULL, 10);
 
-    } else if (optionok(tmp, "uuid:", val)) {
-        setoption(options, save, VOLOPT_UUID, val);
-
     } else {
         /* ignore unknown options */
         LOG(log_debug, logtype_afpd, "ignoring unknown volume option: %s", tmp);
@@ -793,9 +792,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         if (options[VOLOPT_LIMITSIZE].i_value)
             volume->v_limitsize = options[VOLOPT_LIMITSIZE].i_value;
 
-        if (options[VOLOPT_UUID].c_value)
-            volume->v_uuid = strdup(options[VOLOPT_UUID].c_value);
-
         /* Mac to Unix conversion flags*/
         volume->v_mtou_flags = 0;
         if (!(volume->v_flags & AFPVOL_NOHEX))
@@ -856,6 +852,20 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     if (volume->v_vfs_ea == AFPVOL_EA_AUTO)
         check_ea_sys_support(volume);
     initvol_vfs(volume);
+
+    /* get/store uuid from file */
+    if (volume->v_flags & AFPVOL_TM) {
+        char *uuid = get_uuid(obj, volume->v_localname);
+        if (!uuid) {
+            LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID, disabling TM support",
+                volume->v_localname);
+            volume->v_flags &= ~AFPVOL_TM;
+        } else {
+            volume->v_uuid = uuid;
+            LOG(log_debug, logtype_afpd, "Volume '%s': UUID '%s'",
+                volume->v_localname, volume->v_uuid);
+        }
+    }
 
     volume->v_next = Volumes;
     Volumes = volume;
@@ -1317,6 +1327,8 @@ static void volume_free(struct vol *vol)
     free(vol->v_forceuid);
     free(vol->v_forcegid);
 #endif /* FORCE_UIDGID */
+    if (vol->v_uuid)
+        free(vol->v_uuid);
 }
 
 /* ------------------------------- */
@@ -1747,7 +1759,7 @@ void load_volumes(AFPObj *obj)
     if ( obj->options.flags & OPTION_USERVOLFIRST ) {
         readvolfile(obj, &obj->options.systemvol, NULL, 0, pwent );
     }
-    
+
     if ( obj->options.closevol ) {
         struct vol *vol;
 
@@ -1889,7 +1901,7 @@ static int volume_openDB(struct vol *volume)
     LOG(log_info, logtype_afpd, "CNID server: %s:%s",
         volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
         volume->v_cnidport ? volume->v_cnidport : Cnid_port);
-    
+
 #if 0
 /* Found this in branch dir-rewrite, maybe we want to use it sometimes */
 
@@ -1942,11 +1954,11 @@ static int volume_openDB(struct vol *volume)
     return (!volume->v_cdb)?-1:0;
 }
 
-/* 
-   Check if the underlying filesystem supports EAs for ea:sys volumes.
-   If not, switch to ea:ad.
-   As we can't check (requires write access) on ro-volumes, we switch ea:auto
-   volumes that are options:ro to ea:none.
+/*
+  Check if the underlying filesystem supports EAs for ea:sys volumes.
+  If not, switch to ea:ad.
+  As we can't check (requires write access) on ro-volumes, we switch ea:auto
+  volumes that are options:ro to ea:none.
 */
 static void check_ea_sys_support(struct vol *vol)
 {
@@ -2111,7 +2123,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if ((tmp = strdup(volume->v_path)) == NULL) {
         free(volume->v_path);
         return AFPERR_MISC;
-    } 
+    }
     free(volume->v_path);
     volume->v_path = tmp;
 #endif
@@ -2578,7 +2590,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
             free(q);
             return (-1);
         }
-        
+
         ad_setname(&ad, folder->name);
 
         ad_getattr(&ad, &attr);
@@ -2622,4 +2634,93 @@ void unload_volumes_and_extmap(void)
     LOG(log_debug, logtype_afpd, "unload_volumes_and_extmap");
     free_extmap();
     free_volumes();
+}
+
+/* 
+ * Get a volumes UUID from the config file.
+ * If there is none, it is generated and stored there.
+ *
+ * Returns pointer to allocated storage on success, NULL on error.
+ */
+char *get_uuid(const AFPObj *obj, const char *volname)
+{
+    struct stat st;
+
+    char *usersign;
+    int fd, i;
+    struct stat tmpstat;
+    char *volname_conf;
+    int header = 0;
+    char buf[1024], uuid[UUID_PRINTABLE_STRING_LENGTH], *p;
+    FILE *fp, *randomp;
+    size_t len;
+    
+    if ((fp = fopen(obj->options.uuidconf, "r")) != NULL) {  /* read open? */
+        /* scan in the conf file */
+        while (fgets(buf, sizeof(buf), fp) != NULL) { 
+            p = buf;
+            while (p && isblank(*p))
+                p++;
+            if (!p || (*p == '#') || (*p == '\n'))
+                continue;                             /* invalid line */
+            if (*p == '"') {
+                p++;
+                if ((volname_conf = strtok( p, "\"" )) == NULL)
+                    continue;                         /* syntax error */
+            } else {
+                if ((volname_conf = strtok( p, " \t" )) == NULL)
+                    continue;                         /* syntax error: invalid name */
+            }
+            p = strchr(p, '\0');
+            p++;
+            if (*p == '\0')
+                continue;                             /* syntax error */
+            
+            if (strcmp(volname, volname_conf) != 0)
+                continue;                             /* another volume name */
+                
+            while (p && isblank(*p))
+                p++;
+
+            if (sscanf(p, "%36s", uuid) == 1 ) {
+                LOG(log_debug, logtype_afpd, "get_uuid('%s'): UUID: '%s'", volname, uuid);
+                fclose(fp);
+                return strdup(uuid);
+            }
+        }
+    }
+
+    if (fp)
+        fclose(fp);
+
+    /*  not found or no file, reopen in append mode */
+    if ((fp = fopen(obj->options.uuidconf, "a+")) == NULL) {
+        LOG(log_error, logtype_afpd, "Cannot create or append to %s (%s).",
+            obj->options.uuidconf, strerror(errno));
+        return NULL;
+    }
+    fseek(fp, 0L, SEEK_END);
+    if(ftell(fp) == 0) {                     /* size = 0 */
+        fprintf(fp, "# DON'T TOUCH NOR COPY THOUGHTLESSLY!\n");
+        fprintf(fp, "# This file is auto-generated by afpd.\n");
+        fprintf(fp, "# \n");
+        fprintf(fp, "# This file stores UUIDs for all volumes, either auto-generated ones\n");
+        fprintf(fp, "# or the value from AppleVolumes.default:uuid\n");
+        fprintf(fp, "# \n");
+        fprintf(fp, "# If both values differ, the one from AppleVolumes.default is used.\n\n");
+    } else {
+        fseek(fp, -1L, SEEK_END);
+        if(fgetc(fp) != '\n') fputc('\n', fp); /* last char is \n? */
+    }                    
+    
+    /* generate uuid and write to file */
+    uuid_t id;
+    uuid_generate(id);
+    uuid_unparse(id, uuid);
+    LOG(log_debug, logtype_afpd, "get_uuid('%s'): generated UUID '%s'", volname, uuid);
+
+    fprintf(fp, "\"%s\"\t%36s\n", volname, uuid);
+    fclose(fp);
+    
+    return strdup(uuid);
 }

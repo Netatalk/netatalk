@@ -19,7 +19,7 @@
 #include <sys/acl.h>
 #endif
 
-#include <atalk/uuid.h>		/* for uuid_t */
+#include <atalk/uuid.h>		/* for atalk_uuid_t */
 
 /*
  * This is what Apple says about ACL flags in sys/kauth.h:
@@ -93,7 +93,7 @@ enum {
 
 /* Access Control List Entry (ACE) */
 typedef struct {
-    uuid_t      darwin_ace_uuid;
+    atalk_uuid_t      darwin_ace_uuid;
     uint32_t    darwin_ace_flags;
     uint32_t    darwin_ace_rights;
 } darwin_ace_t;

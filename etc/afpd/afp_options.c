@@ -165,6 +165,7 @@ void afp_options_init(struct afp_options *options)
     options->systemvol.name = _PATH_AFPDSYSVOL;
     options->configfile = _PATH_AFPDCONF;
     options->sigconffile = _PATH_AFPDSIGCONF;
+    options->uuidconf = _PATH_AFPDUUIDCONF;
     options->uampath = _PATH_AFPDUAMPATH;
     options->uamlist = "uams_dhx.so,uams_dhx2.so";
     options->guest = "nobody";

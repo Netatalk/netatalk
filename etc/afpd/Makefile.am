@@ -25,6 +25,7 @@ afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 -D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	 -D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	 -D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
+	 -D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\" \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\"
 

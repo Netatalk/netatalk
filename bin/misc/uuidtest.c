@@ -68,7 +68,7 @@ int main( int argc, char **argv)
 {
     int ret, i, c;
     int verbose = 0;
-    uuid_t uuid;
+    atalk_uuid_t uuid;
     uuidtype_t type;
     char *uuidstring = NULL;
     char *name = NULL;

@@ -1002,7 +1002,7 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 #ifdef HAVE_ACLS
     if (bitmap & USERIBIT_UUID) {
         int ret;
-        uuid_t uuid;
+        atalk_uuid_t uuid;
         char *uuidstring;
 
         if ( ! (obj->options.flags & OPTION_UUID))

@@ -20,7 +20,7 @@
 #define UUID_STRINGSIZE 36
 
 typedef char *uuidp_t;
-typedef char uuid_t[UUID_BINSIZE];
+typedef char atalk_uuid_t[UUID_BINSIZE];
 
 typedef enum {UUID_USER = 1, UUID_GROUP} uuidtype_t;
 extern char *uuidtype[];

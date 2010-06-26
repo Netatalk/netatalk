@@ -64,6 +64,7 @@ struct afp_options {
     char *uampath, *fqdn;
     char *pidfile;
     char *sigconffile;
+    char *uuidconf;
     struct afp_volume_name defaultvol, systemvol, uservol;
     int  closevol;
 
