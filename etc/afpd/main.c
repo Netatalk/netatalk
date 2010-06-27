@@ -40,6 +40,7 @@
 #include "status.h"
 #include "fork.h"
 #include "uam_auth.h"
+#include "afp_zeroconf.h"
 
 #ifdef TRU64
 #include <sys/security.h>
@@ -57,6 +58,7 @@ static AFPConfig *configs;
 static server_child *server_children;
 static fd_set save_rfds;
 static int    Ipc_fd = -1;
+static sig_atomic_t reloadconfig = 0;
 
 #ifdef TRU64
 void afp_get_cmdline( int *ac, char ***av)
@@ -100,49 +102,29 @@ static void afp_goaway(int sig)
 
     dsi_kill(sig);
     switch( sig ) {
+
     case SIGTERM :
         LOG(log_info, logtype_afpd, "shutting down on signal %d", sig );
-        break;
-    case SIGUSR1 :
-    case SIGHUP :
-        /* w/ a configuration file, we can force a re-read if we want */
-        nologin++;
-        auth_unload();
-        if (sig == SIGHUP || ((nologin + 1) & 1)) {
-            AFPConfig *config;
-
-            LOG(log_info, logtype_afpd, "re-reading configuration file");
-            for (config = configs; config; config = config->next)
-                if (config->server_cleanup)
-                    config->server_cleanup(config);
-
-            /* configfree close atp socket used for DDP tickle, there's an issue
-             * with atp tid.
-            */
-            configfree(configs, NULL);
-            if (!(configs = configinit(&default_options))) {
-                LOG(log_error, logtype_afpd, "config re-read: no servers configured");
-                afp_exit(EXITERR_CONF);
-            }
-            set_fd(Ipc_fd);
-        } else {
-            LOG(log_info, logtype_afpd, "disallowing logins");
-        }
-        if (sig == SIGHUP) {
-            nologin = 0;
-        }
-        break;
-    default :
-        LOG(log_error, logtype_afpd, "afp_goaway: bad signal" );
-    }
-    if ( sig == SIGTERM ) {
         AFPConfig *config;
-
         for (config = configs; config; config = config->next)
             if (config->server_cleanup)
                 config->server_cleanup(config);
-
         afp_exit(0);
+        break;
+
+    case SIGUSR1 :
+        nologin++;
+        auth_unload();
+        LOG(log_info, logtype_afpd, "disallowing logins");        
+        break;
+
+    case SIGHUP :
+        /* w/ a configuration file, we can force a re-read if we want */
+        reloadconfig = 1;
+        break;
+
+    default :
+        LOG(log_error, logtype_afpd, "afp_goaway: bad signal" );
     }
     return;
 }
@@ -272,12 +254,12 @@ int main(int ac, char **av)
 #endif
     sigaddset(&sigs, SIGCHLD);
 
-    sigprocmask(SIG_BLOCK, &sigs, NULL);
+    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
     if (!(configs = configinit(&default_options))) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
         afp_exit(EXITERR_CONF);
     }
-    sigprocmask(SIG_UNBLOCK, &sigs, NULL);
+    pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
 
     /* Register CNID  */
     cnid_init();
@@ -296,9 +278,34 @@ int main(int ac, char **av)
      * solution. */
     while (1) {
         rfds = save_rfds;
-        sigprocmask(SIG_UNBLOCK, &sigs, NULL);
+        pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
         ret = select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
-        sigprocmask(SIG_BLOCK, &sigs, NULL);
+        pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+        int saveerrno = errno;
+
+        if (reloadconfig) {
+            nologin++;
+            auth_unload();
+            AFPConfig *config;
+
+            LOG(log_info, logtype_afpd, "re-reading configuration file");
+            for (config = configs; config; config = config->next)
+                if (config->server_cleanup)
+                    config->server_cleanup(config);
+
+            /* configfree close atp socket used for DDP tickle, there's an issue
+             * with atp tid. */
+            configfree(configs, NULL);
+            if (!(configs = configinit(&default_options))) {
+                LOG(log_error, logtype_afpd, "config re-read: no servers configured");
+                afp_exit(EXITERR_CONF);
+            }
+            set_fd(Ipc_fd);
+            nologin = 0;
+            reloadconfig = 0;
+            errno = saveerrno;
+        }
+        
         if (ret < 0) {
             if (errno == EINTR)
                 continue;

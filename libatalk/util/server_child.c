@@ -141,12 +141,12 @@ int server_child_add(server_child *children, const int forkid,
    * chance to add the child in. */
   sigemptyset(&sig);
   sigaddset(&sig, SIGCHLD);
-  sigprocmask(SIG_BLOCK, &sig, &oldsig);
+  pthread_sigmask(SIG_BLOCK, &sig, &oldsig);
 
   /* it's possible that the child could have already died before the
-   * sigprocmask. we need to check for this. */
+   * pthread_sigmask. we need to check for this. */
   if (kill(pid, 0) < 0) {
-    sigprocmask(SIG_SETMASK, &oldsig, NULL);
+    pthread_sigmask(SIG_SETMASK, &oldsig, NULL);
     return 1;
   }
 
@@ -154,13 +154,13 @@ int server_child_add(server_child *children, const int forkid,
 
   /* if we already have an entry. just return. */
   if (resolve_child(fork->table, pid)) {
-    sigprocmask(SIG_SETMASK, &oldsig, NULL);
+    pthread_sigmask(SIG_SETMASK, &oldsig, NULL);
     return 0;
   }
 
   if ((child = (struct server_child_data *) 
        calloc(1, sizeof(struct server_child_data))) == NULL) {
-    sigprocmask(SIG_SETMASK, &oldsig, NULL);
+    pthread_sigmask(SIG_SETMASK, &oldsig, NULL);
     return -1;
   }
 
@@ -169,7 +169,7 @@ int server_child_add(server_child *children, const int forkid,
   child->killed = 0;
   hash_child(fork->table, child);
   children->count++;
-  sigprocmask(SIG_SETMASK, &oldsig, NULL);
+  pthread_sigmask(SIG_SETMASK, &oldsig, NULL);
 
   return 0;
 }
@@ -427,6 +427,6 @@ void server_reset_signal(void)
     sigaddset(&sigs, SIGHUP);
     sigaddset(&sigs, SIGUSR1);
     sigaddset(&sigs, SIGCHLD);
-    sigprocmask(SIG_UNBLOCK, &sigs, NULL);
+    pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
         
 }

@@ -166,7 +166,7 @@ struct _cnid_db *cnid_open(const char *volpath, mode_t mask, char *type, int fla
 static void block_signal( u_int32_t flags)
 {
     if ((flags & CNID_FLAG_BLOCK)) {
-        sigprocmask(SIG_BLOCK, &sigblockset, NULL);
+        pthread_sigmask(SIG_BLOCK, &sigblockset, NULL);
     }
 }
 
@@ -174,7 +174,7 @@ static void block_signal( u_int32_t flags)
 static void unblock_signal(u_int32_t flags)
 {
     if ((flags & CNID_FLAG_BLOCK)) {
-        sigprocmask(SIG_UNBLOCK, &sigblockset, NULL);
+        pthread_sigmask(SIG_UNBLOCK, &sigblockset, NULL);
     }
 }
 

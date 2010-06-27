@@ -63,7 +63,7 @@ pselect(int count, fd_set * restrict rfds, fd_set * restrict wfds,
         tvp = 0;
 
     if (mask != 0) {
-        rv = sigprocmask(SIG_SETMASK, mask, &omask);
+        rv = pthread_sigmask(SIG_SETMASK, mask, &omask);
         if (rv != 0)
             return rv;
     }
@@ -71,7 +71,7 @@ pselect(int count, fd_set * restrict rfds, fd_set * restrict wfds,
     rv = select(count, rfds, wfds, efds, tvp);
     if (mask != 0) {
         sverrno = errno;
-        sigprocmask(SIG_SETMASK, &omask, (sigset_t *)0);
+        pthread_sigmask(SIG_SETMASK, &omask, (sigset_t *)0);
         errno = sverrno;
     }
 

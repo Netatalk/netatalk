@@ -247,11 +247,14 @@ void av_zeroconf_setup(const AFPConfig *configs) {
   int error, ret;
 
   /* initialize the struct that holds our config settings. */
-  if (!ctx) {
+  if (ctx) {
+		LOG(log_debug, logtype_afpd, "Resetting zeroconf records");
+		avahi_entry_group_reset(ctx->group);
+	} else {
 		ctx = calloc(1, sizeof(struct context));
 		ctx->configs = configs;
+		assert(ctx);
 	}
-  assert(ctx);
 
 /* first of all we need to initialize our threading env */
   if (!(ctx->threaded_poll = avahi_threaded_poll_new())) {
@@ -312,6 +315,8 @@ void av_zeroconf_shutdown() {
   avahi_threaded_poll_stop(ctx->threaded_poll);
   avahi_client_free(ctx->client);
   avahi_threaded_poll_free(ctx->threaded_poll);
+  free(ctx);
+	ctx = NULL;
 }
 
 /*
@@ -338,8 +343,10 @@ int av_zeroconf_unregister() {
     avahi_threaded_poll_free(ctx->threaded_poll);
 
   free(ctx);
+	ctx = NULL;
 
   return 0;
 }
 
 #endif /* USE_AVAHI */
+
