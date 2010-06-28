@@ -14,7 +14,7 @@ afpd_SOURCES = unix.c ofork.c main.c switch.c auth.c volume.c directory.c \
 
 afpd_LDADD =  $(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@
+	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@
 afpd_LDFLAGS = -export-dynamic 
 afpd_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/sys \
 	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
