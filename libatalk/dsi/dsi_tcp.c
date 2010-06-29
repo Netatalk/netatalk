@@ -239,7 +239,7 @@ static int dsi_tcp_open(DSI *dsi)
 #define IFF_SLAVE 0
 #endif
 
-static void guess_interface(DSI *dsi, const char *hostname)
+static void guess_interface(DSI *dsi, const char *hostname, const char *port)
 {
     int fd;
     char **start, **list;
@@ -271,11 +271,11 @@ static void guess_interface(DSI *dsi, const char *hostname)
 
         memset(&dsi->server, 0, sizeof(struct sockaddr_storage));
         sa->sin_family = AF_INET;
-        sa->sin_port = htons(548);
+        sa->sin_port = htons(atoi(port));
         sa->sin_addr = ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr;
 
-        LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
-                  getip_string((struct sockaddr *)&dsi->server), ifr.ifr_name);
+        LOG(log_info, logtype_default, "dsi_tcp: '%s:%s' on interface '%s' will be used instead.",
+            getip_string((struct sockaddr *)&dsi->server), port, ifr.ifr_name);
         goto iflist_done;
     }
     LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) "
@@ -416,7 +416,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     freeaddrinfo(servinfo);
 
 interfaces:
-    guess_interface(dsi, hostname);
+    guess_interface(dsi, hostname, port ? port : "548");
     return 1;
 }
 
