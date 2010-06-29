@@ -271,11 +271,14 @@ struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir
     hnode_t *hn;
     static_bstring uname = {-1, len, (unsigned char *)name};
 
-   AFP_ASSERT(vol);
-   AFP_ASSERT(dir);
-   AFP_ASSERT(name);
-   AFP_ASSERT(len == strlen(name));
-   AFP_ASSERT(len < 256);
+    AFP_ASSERT(vol);
+    AFP_ASSERT(dir);
+    AFP_ASSERT(name);
+    AFP_ASSERT(len == strlen(name));
+    AFP_ASSERT(len < 256);
+
+    LOG(log_debug, logtype_afpd, "dircache_search_by_name(did:%u, \"%s\")",
+        ntohl(dir->d_did), name);
 
     if (dir->d_did != DIRDID_ROOT_PARENT) {
         key.d_vid = vol->v_vid;
@@ -287,11 +290,11 @@ struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir
     }
 
     if (cdir)
-        LOG(log_debug, logtype_afpd, "dircache(pdid:%u, did:%u, '%s'): {found in cache}",
-            ntohl(dir->d_did), ntohl(cdir->d_did), cfrombstring(cdir->d_fullpath));
+        LOG(log_debug, logtype_afpd, "dircache(did:%u, '%s'): {found in cache}",
+            ntohl(dir->d_did), name);
     else
-        LOG(log_debug, logtype_afpd, "dircache(pdid:%u,'%s/%s'): {not in cache}",
-            ntohl(dir->d_did), cfrombstring(dir->d_fullpath), name);
+        LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {not in cache}",
+            ntohl(dir->d_did), name);
 
     return cdir;
 }
@@ -310,7 +313,6 @@ int dircache_add(struct dir *dir)
    AFP_ASSERT(dir);
    AFP_ASSERT(ntohl(dir->d_pdid) >= 2);
    AFP_ASSERT(ntohl(dir->d_did) >= CNID_START);
-   AFP_ASSERT(dir->d_fullpath);
    AFP_ASSERT(dir->d_u_name);
    AFP_ASSERT(dir->d_vid);
    AFP_ASSERT(dircache->hash_nodecount <= dircache_maxsize);
@@ -339,7 +341,7 @@ int dircache_add(struct dir *dir)
         queue_count++;
     }
 
-    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}", ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}", ntohl(dir->d_did), cfrombstring(dir->d_u_name));
 
    AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);

@@ -298,21 +298,49 @@ int getmetadata(struct vol *vol,
     struct stat         *st;
     struct maccess	ma;
 
-
     upath = path->u_name;
     st = &path->st;
-
     data = buf;
 
     if ( ((bitmap & ( (1 << FILPBIT_FINFO)|(1 << FILPBIT_LNAME)|(1 <<FILPBIT_PDINFO) ) ) && !path->m_name)
          || (bitmap & ( (1 << FILPBIT_LNAME) ) && utf8_encoding()) /* FIXME should be m_name utf8 filename */
          || (bitmap & (1 << FILPBIT_FNUM))) {
-        if (!path->id)
-            id = get_id(vol, adp, st, dir->d_did, upath, strlen(upath));
-        else 
+        if (!path->id) {
+            struct dir *cachedfile;
+            int len = strlen(upath);
+            if (cachedfile = dircache_search_by_name(vol, dir, upath, len))
+                id = cachedfile->d_did;
+            else {
+                id = get_id(vol, adp, st, dir->d_did, upath, len);
+
+                /* Add it to the cache */
+                LOG(log_debug, logtype_afpd, "getmetadata: caching: did:%u, \"%s\", cnid:%u",
+                    ntohl(dir->d_did), upath, ntohl(id));
+
+                /* Get macname from unixname first */
+                if (path->m_name == NULL) {
+                    if ((path->m_name = utompath(vol, upath, id, utf8_encoding())) == NULL) {
+                        LOG(log_error, logtype_afpd, "getmetadata: utompath error");
+                        exit(EXITERR_SYS);
+                    }
+                }
+                
+                if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, NULL)) == NULL) {
+                    LOG(log_error, logtype_afpd, "getmetadata: error from dir_new");
+                    exit(EXITERR_SYS);
+                }
+                if ((dircache_add(cachedfile)) != 0) {
+                    LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
+                    exit(EXITERR_SYS);
+                }
+            }
+        } else {
             id = path->id;
+        }
+
         if (id == CNID_INVALID)
             return afp_errno;
+
         if (!path->m_name) {
             path->m_name = utompath(vol, upath, id, utf8_encoding());
         }
