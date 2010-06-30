@@ -11,7 +11,7 @@ libcnid_cdb_la_SOURCES = cnid_cdb_add.c \
 			 cnid_cdb_rebuild_add.c \
 			 cnid_cdb.h
 libcnid_cdb_la_CFLAGS = @BDB_CFLAGS@
-libcnid_cdb_la_LIBADD = @BDB_LIBS@
+libcnid_cdb_la_LIBADD = @BDB_LIBS@ @PTHREAD_LIBS@
 
 if USE_CDB_BACKEND
 noinst_LTLIBRARIES = libcnid_cdb.la
