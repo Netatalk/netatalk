@@ -1,3 +1,8 @@
+Changes in 2.1.3
+================
+
+* FIX: afpd: fix a serious error in networking IO code
+
 Changes in 2.1.2
 ================
 
