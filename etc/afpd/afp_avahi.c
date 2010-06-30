@@ -46,7 +46,7 @@ static void register_stuff(void) {
     const AFPConfig *config;
     const struct vol *volume;
     DSI *dsi;
-    const char *name;
+    char name[MAXINSTANCENAMELEN+1];
     AvahiStringList *strlist = NULL;
     char tmpname[256];
 
@@ -69,8 +69,10 @@ static void register_stuff(void) {
 		
         for (volume = getvolumes(); volume; volume = volume->v_next) {
 
-            if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_name, -1, tmpname, 255) <= 0)
+            if (convert_string(CH_UCS2, CH_UTF8_MAC, volume->v_name, -1, tmpname, 255) <= 0) {
+                LOG ( log_error, logtype_afpd, "Could not set Zeroconf volume name for TimeMachine");
                 goto fail;
+            }
 
             if (volume->v_flags & AFPVOL_TM) {
                 if (volume->v_uuid) {
@@ -91,9 +93,14 @@ static void register_stuff(void) {
         for (config = ctx->configs; config; config = config->next) {
 
             dsi = (DSI *)config->obj.handle;
-            name = config->obj.options.server ?
-                config->obj.options.server : config->obj.options.hostname;
             port = getip_port((struct sockaddr *)&dsi->server);
+            
+            if (convert_string(config->obj.options.unixcharset, CH_UTF8,
+                               config->obj.options.server ? config->obj.options.server : config->obj.options.hostname, -1,
+                               name, MAXINSTANCENAMELEN) <= 0) {
+                LOG ( log_error, logtype_afpd, "Could not set Zeroconf instance name");
+                goto fail;
+            }
 
             if (avahi_entry_group_add_service(ctx->group,
                                               AVAHI_IF_UNSPEC,
@@ -115,7 +122,7 @@ static void register_stuff(void) {
                                                           AVAHI_PROTO_UNSPEC,
                                                           0,
                                                           name,
-                                                          "_adisk._tcp",
+                                                          ADISK_SERVICE_TYPE,
                                                           NULL,
                                                           NULL,
                                                           9, /* discard */
