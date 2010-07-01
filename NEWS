@@ -2,6 +2,7 @@ Changes in 2.1.3
 ================
 
 * FIX: afpd: fix a serious error in networking IO code
+* UPD: Support for BerkeleyDB 5.0.
 
 Changes in 2.1.2
 ================

@@ -10,7 +10,10 @@ AC_DEFUN([NETATALK_BDB_HEADER],[
     atalk_cv_bdb_MAJOR=`grep DB_VERSION_MAJOR "$1/db.h" | cut -f 3`
     atalk_cv_bdb_MINOR=`grep DB_VERSION_MINOR "$1/db.h" | cut -f 3`
 
-    if test $DB_MAJOR_REQ -gt $atalk_cv_bdb_MAJOR ; then
+    if test $atalk_cv_bdb_MAJOR -gt $DB_MAJOR_REQ ; then
+        AC_MSG_RESULT([yes])
+        atalk_cv_bdbheader=yes
+    elif test $DB_MAJOR_REQ -gt $atalk_cv_bdb_MAJOR ; then
         AC_MSG_RESULT([no])
         atalk_cv_bdbheader=no
     elif test $DB_MINOR_REQ -gt $atalk_cv_bdb_MINOR ; then
@@ -40,7 +43,7 @@ AC_DEFUN([NETATALK_BDB_TRY_LINK],[
                 int major, minor, patch;
                 char *version_str;
                 version_str = db_version(&major, &minor, &patch);
-                if (major < DB_MAJOR_REQ || minor < DB_MINOR_REQ || patch < DB_PATCH_REQ) {
+                if ((major*100 + minor*10 + patch) < (DB_MAJOR_REQ*100 + DB_MINOR_REQ*10 + DB_PATCH_REQ)) {
                     printf("linking wrong library version (%d.%d.%d), ",major, minor, patch);
                     return (2);
                 }
@@ -84,7 +87,7 @@ AC_DEFUN([AC_PATH_BDB],[
     trybdbdir=""
     dobdbsearch=yes
     bdb_search_dirs="/usr/local /usr"
-    search_subdirs="/ /db4.8 /db48 /db4.7 /db47 /db4.6 /db46 /db4"
+    search_subdirs="/ /db5 /db5.0 /db50 /db4.8 /db48 /db4.7 /db47 /db4.6 /db46 /db4"
 
     bdbfound=no
     savedcflags="$CFLAGS"
