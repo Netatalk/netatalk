@@ -56,14 +56,13 @@ Netatalk 2001 (c)
 /* these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \
   "Default",                         \
-  "Core",                            \
   "Logger",                          \
   "CNID",                            \
   "AFPDaemon",                       \
+  "DSI",                             \
   "ATalkDaemon",                     \
   "PAPDaemon",                       \
-  "UAMSDaemon",                      \
-  "Console",                         \
+  "UAMS",                            \
   "end_of_list_marker"}              \
 
 /* =========================================================================
@@ -84,14 +83,13 @@ log_config_t log_config = { 0 };
 
 UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
-    DEFAULT_LOG_CONFIG, /* logtype_core */
     DEFAULT_LOG_CONFIG, /* logtype_logger */
     DEFAULT_LOG_CONFIG, /* logtype_cnid */
     DEFAULT_LOG_CONFIG, /* logtype_afpd */
+    DEFAULT_LOG_CONFIG, /* logtype_dsi */
     DEFAULT_LOG_CONFIG, /* logtype_atalkd */
     DEFAULT_LOG_CONFIG, /* logtype_papd */
-    DEFAULT_LOG_CONFIG, /* logtype_uams */
-    DEFAULT_LOG_CONFIG  /* logtype_console */
+    DEFAULT_LOG_CONFIG /* logtype_uams */
 };
 
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
@@ -317,12 +315,6 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
                 typeiter++;
             }
         }
-    }
-
-    /* Check if logging to a console */
-    if (logtype == logtype_console) {
-        log_config.console = 1;
-        logtype = logtype_default;
     }
 
     /* Set new values */

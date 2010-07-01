@@ -83,7 +83,7 @@ static int dsi_buffer(DSI *dsi)
     /* non blocking mode */
     if (setnonblock(dsi->socket, 1) < 0) {
         /* can't do it! exit without error it will sleep to death below */
-        LOG(log_error, logtype_default, "dsi_buffer: ioctl non blocking mode %s", strerror(errno));
+        LOG(log_error, logtype_dsi, "dsi_buffer: ioctl non blocking mode %s", strerror(errno));
         return 0;
     }
     
@@ -124,7 +124,7 @@ static int dsi_buffer(DSI *dsi)
     }
     if (setnonblock(dsi->socket, 0) < 0) {
         /* can't do it! afpd will fail very quickly */
-        LOG(log_error, logtype_default, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
+        LOG(log_error, logtype_dsi, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
         return -1;
     }
     return 0;
@@ -153,17 +153,14 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
   dsi->in_write++;
   written = 0;
   while (written < length) {
-    if ((-1 == (len = send(dsi->socket, (u_int8_t *) data + written,
-		      length - written, flags)) && errno == EINTR) ||
-	!len)
-      continue;
+      len = send(dsi->socket, (u_int8_t *) data + written, length - written, flags);
+      if ((len == 0) || (len == -1 && errno == EINTR))
+          continue;
 
     if (len < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
           if (mode == DSI_NOWAIT && written == 0) {
-              /* DSI_NOWAIT is used by attention
-                 give up in this case.
-              */
+              /* DSI_NOWAIT is used by attention give up in this case. */
               return -1;
           }
           if (dsi_buffer(dsi)) {
@@ -174,7 +171,7 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
           }
           continue;
       }
-      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_write: %s", strerror(errno));
       break;
     }
     else {
@@ -217,7 +214,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
           }
           continue;
       }
-      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_write: %s", strerror(errno));
       break;
     }
     else if (!len) {
@@ -299,7 +296,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     else { /* eof or error */
       /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
       if (len || stored || dsi->read_count) {
-          LOG(log_error, logtype_default, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
+          LOG(log_error, logtype_dsi, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
       }
       break;
     }
@@ -410,7 +407,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
               continue;
           }
       }
-      LOG(log_error, logtype_default, "dsi_stream_send: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_send: %s", strerror(errno));
       unblock_sig(dsi);
       return 0;
     }
@@ -462,7 +459,7 @@ int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
      but we get a server disconnect without reason in the log
   */
   if (!block[1]) {
-      LOG(log_error, logtype_default, "dsi_stream_receive: invalid packet, fatal");
+      LOG(log_error, logtype_dsi, "dsi_stream_receive: invalid packet, fatal");
       return 0;
   }
 

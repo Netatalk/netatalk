@@ -61,7 +61,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
   switch (pid = dsi->proto_open(dsi)) {
   case -1:
     /* if we fail, just return. it might work later */
-    LOG(log_error, logtype_default, "dsi_getsess: %s", strerror(errno));
+    LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
     return dsi;
 
   case 0: /* child. mostly handled below. */
@@ -72,7 +72,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     /* using SIGQUIT is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
     if (server_child_add(children, CHILD_DSIFORK, pid) < 0) {
-      LOG(log_error, logtype_default, "dsi_getsess: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
       dsi->header.dsi_flags = DSIFL_REPLY;
       dsi->header.dsi_code = DSIERR_SERVBUSY;
       dsi_send(dsi);
@@ -88,7 +88,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
    * actual count. */
   if ((children->count >= children->nsessions) &&
       (dsi->header.dsi_command == DSIFUNC_OPEN)) {
-    LOG(log_info, logtype_default, "dsi_getsess: too many connections");
+    LOG(log_info, logtype_dsi, "dsi_getsess: too many connections");
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_code = DSIERR_TOOMANY;
     dsi_send(dsi);
@@ -133,7 +133,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     break;
 
   default: /* just close */
-    LOG(log_info, logtype_default, "DSIUnknown %d", dsi->header.dsi_command);
+    LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);
     dsi->proto_close(dsi);
     exit(EXITERR_CLNT);
   }
