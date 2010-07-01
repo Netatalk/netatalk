@@ -56,14 +56,13 @@ Netatalk 2001 (c)
 /* these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \
   "Default",                         \
-  "Core",                            \
   "Logger",                          \
   "CNID",                            \
   "AFPDaemon",                       \
+  "DSI",                             \
   "ATalkDaemon",                     \
   "PAPDaemon",                       \
-  "UAMSDaemon",                      \
-  "Console",                         \
+  "UAMS",                            \
   "end_of_list_marker"}              \
 
 /* =========================================================================
@@ -77,21 +76,19 @@ log_config_t log_config = { 0 };
    0:               set ?
    0:               syslog ?
    -1:              logfiles fd
-   log_maxdebug:    force first LOG call to call make_log_entry which
-                    then calls log_init because "inited" is still 0
+   log_none:        no logging by default
    0:               Display options */
-#define DEFAULT_LOG_CONFIG {0, 0, -1, log_maxdebug, 0}
+#define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0}
 
 UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
-    DEFAULT_LOG_CONFIG, /* logtype_core */
     DEFAULT_LOG_CONFIG, /* logtype_logger */
     DEFAULT_LOG_CONFIG, /* logtype_cnid */
     DEFAULT_LOG_CONFIG, /* logtype_afpd */
+    DEFAULT_LOG_CONFIG, /* logtype_dsi */
     DEFAULT_LOG_CONFIG, /* logtype_atalkd */
     DEFAULT_LOG_CONFIG, /* logtype_papd */
-    DEFAULT_LOG_CONFIG, /* logtype_uams */
-    DEFAULT_LOG_CONFIG  /* logtype_console */
+    DEFAULT_LOG_CONFIG /* logtype_uams */
 };
 
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
@@ -319,12 +316,6 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
         }
     }
 
-    /* Check if logging to a console */
-    if (logtype == logtype_console) {
-        log_config.console = 1;
-        logtype = logtype_default;
-    }
-
     /* Set new values */
     type_configs[logtype].level = loglevel;
 
@@ -344,8 +335,7 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
         process_uid = geteuid();
         if (process_uid) {
             if (seteuid(OPEN_LOGS_AS_UID) == -1) {
-                /* XXX failing silently */
-                return;
+                process_uid = 0;
             }
         }
         type_configs[logtype].fd = open(filename,

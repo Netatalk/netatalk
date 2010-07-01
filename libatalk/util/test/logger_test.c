@@ -24,15 +24,16 @@ int main(int argc, char *argv[])
   unsetuplog("Default");
 #endif
   /* filelog testing */
-  setuplog("Default LOG_INFO test.log");
-  LOG(log_info, logtype_logger, "This should log.");
-  LOG(log_info, logtype_default, "This should log.");
-  LOG(log_error, logtype_logger, "This should log.");
-  LOG(log_error, logtype_default, "This should log.");
-  LOG(log_debug, logtype_logger, "This should not log.");
-  LOG(log_debug, logtype_default, "This should not log.");
 
-  LOG(log_severe, logtype_logger, "Logging Test finishing");
+  setuplog("DSI log_maxdebug test.log");
+  LOG(log_info, logtype_dsi, "This should log.");
+  LOG(log_error, logtype_default, "This should not log.");
+
+  setuplog("Default log_debug test.log");
+  LOG(log_debug, logtype_default, "This should log.");
+  LOG(log_maxdebug, logtype_default, "This should not log.");
+
+  LOG(log_maxdebug, logtype_dsi, "This should still log.");
 
   return 0;
 }
