@@ -80,6 +80,8 @@ static int dsi_buffer(DSI *dsi)
     int    len;
     int    maxfd;
 
+    LOG(log_maxdebug, logtype_dsi, "dsi_buffer: switching to non-blocking IO");
+
     /* non blocking mode */
     if (setnonblock(dsi->socket, 1) < 0) {
         /* can't do it! exit without error it will sleep to death below */
@@ -122,6 +124,9 @@ static int dsi_buffer(DSI *dsi)
             break;
         }
     }
+
+    LOG(log_maxdebug, logtype_dsi, "dsi_buffer: switching back to blocking IO");
+
     if (setnonblock(dsi->socket, 0) < 0) {
         /* can't do it! afpd will fail very quickly */
         LOG(log_error, logtype_dsi, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
@@ -152,6 +157,9 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
   
   dsi->in_write++;
   written = 0;
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_write: sending %u bytes", length);
+
   while (written < length) {
       len = send(dsi->socket, (u_int8_t *) data + written, length - written, flags);
       if ((len == 0) || (len == -1 && errno == EINTR))

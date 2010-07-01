@@ -76,10 +76,9 @@ log_config_t log_config = { 0 };
    0:               set ?
    0:               syslog ?
    -1:              logfiles fd
-   log_maxdebug:    force first LOG call to call make_log_entry which
-                    then calls log_init because "inited" is still 0
+   log_none:        no logging by default
    0:               Display options */
-#define DEFAULT_LOG_CONFIG {0, 0, -1, log_maxdebug, 0}
+#define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0}
 
 UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG, /* logtype_default */
@@ -336,8 +335,7 @@ void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logt
         process_uid = geteuid();
         if (process_uid) {
             if (seteuid(OPEN_LOGS_AS_UID) == -1) {
-                /* XXX failing silently */
-                return;
+                process_uid = 0;
             }
         }
         type_configs[logtype].fd = open(filename,
