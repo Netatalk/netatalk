@@ -86,25 +86,6 @@ static void dsi_tcp_close(DSI *dsi)
     dsi->socket = -1;
 }
 
-static void dsi_tcp_timeout(DSI *dsi)
-{
-    struct timeval tv;
-    /* 2 seconds delay, most of the time it translates to 4 seconds:
-     * send/write returns first with whatever it has written and the
-     * second time it returns EAGAIN
-     */
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
-
-    /* Note: write isn't a restartable syscall if there's a timeout on the socket
-     * we have to test for EINTR
-     */
-    if (setsockopt(dsi->socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-        LOG(log_error, logtype_dsi, "dsi_tcp_open: unable to set timeout %s", strerror(errno));
-        exit(EXITERR_CLNT);
-    }
-}
-
 /* alarm handler for tcp_open */
 static void timeout_handler(int sig _U_)
 {
@@ -222,8 +203,6 @@ static int dsi_tcp_open(DSI *dsi)
         setitimer(ITIMER_REAL, &timer, NULL);
         sigaction(SIGALRM, &oldact, NULL);
 #endif
-
-        dsi_tcp_timeout(dsi);
 
         LOG(log_info, logtype_dsi, "AFP/TCP session from %s:%u",
             getip_string((struct sockaddr *)&dsi->client),
