@@ -178,15 +178,14 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
       goto exit;
   }
 
-  if (setnonblock(dsi->socket, 0) < 0) {
-      LOG(log_error, logtype_dsi, "dsi_stream_write: setnonblock: %s", strerror(errno));
-      written = -1;
-      goto exit;
-  }
-
   dsi->write_count += written;
 
 exit:
+  if (setnonblock(dsi->socket, 0) < 0) {
+      LOG(log_error, logtype_dsi, "dsi_stream_write: setnonblock: %s", strerror(errno));
+      written = -1;
+  }
+
   dsi->in_write--;
   return written;
 }
