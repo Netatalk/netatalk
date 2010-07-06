@@ -248,7 +248,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did)
 
     if (cdir)
         LOG(log_debug, logtype_afpd, "dircache(did:%u): {cached: path:'%s'}",
-            ntohl(did), cdir->d_u_name);
+            ntohl(did), cfrombstring(cdir->d_u_name));
     else
         LOG(log_debug, logtype_afpd, "dircache(did:%u): {not in cache}", ntohl(did));
 
@@ -473,7 +473,8 @@ void dircache_dump(void)
             break;
         dir = (struct dir *)n->data;
         fprintf(dump, "%05u: vid:%u, pdid:%6u, did:%6u, path:%s, locked:%3s, oforks:%s\n",
-                i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did), dir->d_u_name,
+                i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did),
+                cfrombstring(dir->d_u_name),
                 (dir->d_flags & DIRF_CACHELOCK) ? "yes" : "no",
                 dir->d_ofork ? "yes" : "no");
         n = n->next;
