@@ -41,6 +41,7 @@ char *strchr (), *strrchr ();
 #include <atalk/unix.h>
 
 #include "directory.h"
+#include "dircache.h"
 #include "desktop.h"
 #include "volume.h"
 #include "fork.h"
@@ -308,7 +309,7 @@ int getmetadata(struct vol *vol,
         if (!path->id) {
             struct dir *cachedfile;
             int len = strlen(upath);
-            if (cachedfile = dircache_search_by_name(vol, dir, upath, len))
+            if ((cachedfile = dircache_search_by_name(vol, dir, upath, len)) != NULL)
                 id = cachedfile->d_did;
             else {
                 id = get_id(vol, adp, st, dir->d_did, upath, len);
