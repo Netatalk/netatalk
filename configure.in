@@ -975,7 +975,6 @@ AC_ARG_ENABLE(overwrite,
 AC_MSG_RESULT([$OVERWRITE_CONFIG])
 
 dnl --------------------- check for ACL support
-<<<<<<< HEAD
 AC_MSG_CHECKING(whether to support ACLs)
 AC_ARG_WITH(acls,
     [AS_HELP_STRING([--with-acls],
