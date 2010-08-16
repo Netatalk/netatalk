@@ -283,14 +283,23 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
+#if !defined(FREEBSD)
     hints.ai_family = AF_UNSPEC;
+#endif
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_NUMERICSERV;
-    if ( ! address)
-        hints.ai_flags |= AI_PASSIVE;
-    else
-        hints.ai_flags |= AI_NUMERICHOST;
 
+    if ( ! address) {
+        hints.ai_flags |= AI_PASSIVE;
+#if defined(FREEBSD)
+        hints.ai_family = AF_INET6;
+#endif
+    } else {
+        hints.ai_flags |= AI_NUMERICHOST;
+#if defined(FREEBSD)
+        hints.ai_family = AF_UNSPEC;
+#endif
+    }
     if ((ret = getaddrinfo(address ? address : NULL, port ? port : "548", &hints, &servinfo)) != 0) {
         LOG(log_error, logtype_dsi, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
         return 0;
@@ -315,6 +324,10 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 #ifdef SO_REUSEADDR
             flag = 1;
             setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+#endif
+#if defined(FREEBSD) && defined(IPV6_BINDV6ONLY)
+            int on = 0;
+            setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
 #endif
 
 #ifdef USE_TCP_NODELAY
