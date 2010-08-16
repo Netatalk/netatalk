@@ -1,3 +1,8 @@
+Changes in 2.1.4
+================
+
+* FIX: afpd: Downstream fix for FreeBSD PR 148022
+
 Changes in 2.1.3
 ================
 
