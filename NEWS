@@ -7,6 +7,11 @@ Changes in 2.2
 * NEW: afpd: automagic Zeroconf registration with avahi, registering both
        the service _afpovertcp._tcp and TimeMachine volumes with _adisk._tcp.
 
+Changes in 2.1.4
+================
+
+* FIX: afpd: Downstream fix for FreeBSD PR 148022
+
 Changes in 2.1.3
 ================
 
