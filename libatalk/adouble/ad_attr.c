@@ -1,7 +1,3 @@
-/*
- * $Id: ad_attr.c,v 1.14 2010-01-06 14:05:15 franklahm Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -192,7 +188,7 @@ u_int32_t ad_forcegetid (struct adouble *adp)
  */
 int ad_setname(struct adouble *ad, const char *path)
 {
-    if (ad_getentryoff(ad, ADEID_NAME)) {
+    if (path && ad_getentryoff(ad, ADEID_NAME)) {
         ad_setentrylen( ad, ADEID_NAME, strlen( path ));
         memcpy(ad_entry( ad, ADEID_NAME ), path, ad_getentrylen( ad, ADEID_NAME ));
         return 1;
