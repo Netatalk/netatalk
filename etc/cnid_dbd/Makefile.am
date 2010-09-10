@@ -16,10 +16,16 @@ cnid_dbd_LDADD = $(top_builddir)/libatalk/libatalk.la @BDB_LIBS@
 cnid_metad_SOURCES = cnid_metad.c usockfd.c db_param.c
 cnid_metad_LDADD = $(top_builddir)/libatalk/libatalk.la
 
-dbd_SOURCES = cmd_dbd.c cmd_dbd_scanvol.c \
-			  dbif.c pack.c \
-			  dbd_delete.c dbd_update.c dbd_add.c dbd_lookup.c \
-			  dbd_rebuild_add.c dbd_getstamp.c
+dbd_SOURCES = cmd_dbd.c \
+	cmd_dbd_scanvol.c \
+	dbif.c pack.c \
+	dbd_add.c \
+	dbd_delete.c \
+	dbd_getstamp.c \
+	dbd_lookup.c \
+	dbd_rebuild_add.c \
+	dbd_resolve.c \
+	dbd_update.c
 dbd_LDADD = $(top_builddir)/libatalk/libatalk.la @BDB_LIBS@
 
 noinst_HEADERS = dbif.h pack.h db_param.h dbd.h usockfd.h comm.h cmd_dbd.h

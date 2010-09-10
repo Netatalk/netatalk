@@ -1,6 +1,4 @@
 /*
-  $Id: cmd_dbd_scanvol.c,v 1.21 2010-04-11 07:01:23 franklahm Exp $
-
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -680,7 +678,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);
 
         if (ad_cnid == 0)
-            dbd_log( LOGSTD, "Incorrect CNID data in .AppleDouble data for '%s/%s' (bad stamp?)", cwdbuf, name);
+            dbd_log( LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);
         else
             dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
 
@@ -738,10 +736,40 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     } else if (ad_cnid && (db_cnid == 0)) {
         /* in ad-file but not in db */
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-            dbd_log( LOGDEBUG, "CNID rebuild add for '%s/%s', adding with CNID from ad-file: %u", cwdbuf, name, ntohl(ad_cnid));
+            /* Ensure the cnid from the ad-file is not already occupied by another file */
+            dbd_log(LOGDEBUG, "Checking whether CNID %u from ad-file is occupied",
+                    ntohl(ad_cnid));
+
             rqst.cnid = ad_cnid;
-            ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
-            dbif_txn_close(dbd, ret);
+            ret = dbd_resolve(dbd, &rqst, &rply);
+            if (ret == CNID_DBD_RES_OK) {
+                /* Occupied! Choose another, update ad-file */
+                ret = dbd_add(dbd, &rqst, &rply, 1);
+                dbif_txn_close(dbd, ret);
+                db_cnid = rply.cnid;
+                dbd_log(LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
+
+                if ((volinfo->v_flags & AFPVOL_CACHE)
+                    && ADFILE_OK
+                    && ( ! (dbd_flags & DBD_FLAGS_SCAN))) {
+                    dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
+                            cwdbuf, name, ntohl(db_cnid));
+                    ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
+                    if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+                        dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
+                                cwdbuf, name, strerror(errno));
+                        return 0;
+                    }
+                    ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+                    ad_flush(&ad);
+                    ad_close_metadata(&ad);
+                }
+                return db_cnid;
+            }
+
+            dbd_log(LOGDEBUG, "CNID rebuild add '%s/%s' with CNID from ad-file %u",
+                    cwdbuf, name, ntohl(ad_cnid));
+            rqst.cnid = ad_cnid;
             ret = dbd_rebuild_add(dbd, &rqst, &rply);
             dbif_txn_close(dbd, ret);
         }
@@ -754,7 +782,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             ret = dbd_add(dbd, &rqst, &rply, 1);
             dbif_txn_close(dbd, ret);
             db_cnid = rply.cnid;
-            dbd_log( LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
+            dbd_log(LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
         }
     }
 
@@ -762,10 +790,12 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         /* in db but zeroID in ad-file, write it to ad-file if AFPVOL_CACHE */
         if ((volinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
             if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-                dbd_log( LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file", cwdbuf, name, ntohl(db_cnid));
+                dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
+                        cwdbuf, name, ntohl(db_cnid));
                 ad_init(&ad, volinfo->v_adouble, volinfo->v_ad_options);
                 if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
-                    dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
+                    dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
+                            cwdbuf, name, strerror(errno));
                     return 0;
                 }
                 ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
