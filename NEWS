@@ -2,6 +2,8 @@ Changes in 2.1.4
 ================
 
 * FIX: afpd: Downstream fix for FreeBSD PR 148022
+* FIX: dbd: Adding a file with the CNID from it's adouble file did
+       not work in case that CNID was alread occoupied in the database
 
 Changes in 2.1.3
 ================
