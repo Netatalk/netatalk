@@ -77,4 +77,13 @@
 #  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
 #endif
 
+/*
+ * cnid_metad paths
+ */
+#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
+#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad.pid")
+#else
+#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad")
+#endif
+
 #endif /* atalk/paths.h */

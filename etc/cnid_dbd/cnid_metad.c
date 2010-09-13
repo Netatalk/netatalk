@@ -95,6 +95,7 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/paths.h>
 
 #include "db_param.h"
 #include "usockfd.h"
@@ -484,7 +485,7 @@ int main(int argc, char *argv[])
     }
 
     /* Check PID lockfile and become a daemon */
-    switch(server_lock("cnid_metad", _PATH_LOCKDIR, 0)) {
+    switch(server_lock("cnid_metad", _PATH_CNID_METAD_LOCK, 0)) {
     case -1: /* error */
         exit(EXITERR_SYS);
     case 0: /* child */
