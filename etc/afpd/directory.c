@@ -428,7 +428,8 @@ int get_afp_errno(const int param)
  *
  * Resolve a DID, allocate a struct dir for it
  * 1. Check for special CNIDs 0 (invalid), 1 and 2.
- * 2. Check if the DID is in the cache.
+ * 2a. Check if the DID is in the cache.
+ * 2b. Check if it's really a dir (d_fullpath != NULL) because we cache files too.
  * 3. If it's not in the cache resolve it via the database.
  * 4. Build complete server-side path to the dir.
  * 5. Check if it exists and is a directory.
@@ -470,7 +471,11 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* Search the cache */
-    if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2 */
+    if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2a */
+        if (ret->d_fullpath == NULL) {                      /* 2b */
+            afp_errno = AFPERR_BADTYPE;
+            return NULL;
+        }
         if (lstat(cfrombstring(ret->d_fullpath), &st) != 0) {
             LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {lstat: %s}", ntohl(did), strerror(errno));
             switch (errno) {
@@ -677,7 +682,7 @@ int caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
  * @param vol      (r) pointer to struct vol
  * @param pdid     (r) Parent CNID
  * @param did      (r) CNID
- * @param fullpath (r) Full unix path to dir
+ * @param fullpath (r) Full unix path to dir or NULL for files
  *
  * @returns pointer to new struct dir or NULL on error
  *

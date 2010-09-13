@@ -264,6 +264,9 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
 
     if (!cur_fd)
         return 0;
+
+    LOG(log_maxdebug, logtype_cnid, "comm_rcv: got data on fd %u", cur_fd);
+
     nametmp = rqst->name;
     if ((b = read(cur_fd, rqst, sizeof(struct cnid_dbd_rqst))) != sizeof(struct cnid_dbd_rqst)) {
         if (b)
@@ -281,6 +284,8 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
     /* We set this to make life easier for logging. None of the other stuff
        needs zero terminated strings. */
     rqst->name[rqst->namelen] = '\0';
+
+    LOG(log_maxdebug, logtype_cnid, "comm_rcv: got %u bytes", b + rqst->namelen);
 
     return 1;
 }

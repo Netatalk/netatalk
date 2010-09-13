@@ -1,6 +1,4 @@
 /*
- * $Id: main.c,v 1.16 2009-11-25 14:59:15 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (c) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
@@ -181,7 +179,7 @@ static int loop(struct db_param *dbp)
                 ret = -1;
                 break;
             }
-            
+
             if ((cret = comm_snd(&rply)) < 0 || ret < 0) {
                 dbif_txn_abort(dbd);
                 return -1;

@@ -43,6 +43,7 @@ char *strchr (), *strrchr ();
 #include <atalk/bstradd.h>
 
 #include "directory.h"
+#include "dircache.h"
 #include "desktop.h"
 #include "volume.h"
 #include "fork.h"
@@ -581,6 +582,12 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         }
         else {
             rc = deletefile(vol, -1, upath, 1);
+
+            struct dir *cachedfile;
+            if (cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath))) {
+                dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
+                dir_free(cachedfile);
+            }
         }
     }
     if ( rc == AFP_OK ) {
