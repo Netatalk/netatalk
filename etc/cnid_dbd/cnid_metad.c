@@ -483,33 +483,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (!debug) {
-
-        switch (fork()) {
-        case 0 :
-            fclose(stdin);
-            fclose(stdout);
-            fclose(stderr);
-
-#ifdef TIOCNOTTY
-            {
-                int i;
-                if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
-                    (void)ioctl( i, TIOCNOTTY, 0 );
-                    setpgid( 0, getpid());
-                    (void) close(i);
-                }
-            }
-#else
-            setpgid( 0, getpid());
-#endif
-            break;
-        case -1 :  /* error */
-            LOG(log_error, logtype_cnid, "detach from terminal: %s", strerror(errno));
-            exit(1);
-        default :  /* server */
-            exit(0);
-        }
+    /* Check PID lockfile and become a daemon */
+    switch(server_lock("cnid_metad", _PATH_LOCKDIR, 0)) {
+    case -1: /* error */
+        exit(EXITERR_SYS);
+    case 0: /* child */
+        break;
+    default: /* server */
+        exit(0);
     }
 
     if ((srvfd = tsockfd_create(host, port, 10)) < 0)
@@ -517,7 +498,7 @@ int main(int argc, char *argv[])
 
     /* switch uid/gid */
     if (uid || gid) {
-        LOG(log_info, logtype_cnid, "Setting uid/gid to %i/%i", uid, gid);
+        LOG(log_debug, logtype_cnid, "Setting uid/gid to %i/%i", uid, gid);
         if (gid) {
             if (SWITCH_TO_GID(gid) < 0) {
                 LOG(log_info, logtype_cnid, "unable to switch to group %d", gid);
