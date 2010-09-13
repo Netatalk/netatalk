@@ -100,7 +100,7 @@ static void dsi_tcp_timeout(DSI *dsi)
      * we have to test for EINTR
      */
     if (setsockopt(dsi->socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-        LOG(log_error, logtype_default, "dsi_tcp_open: unable to set timeout %s", strerror(errno));
+        LOG(log_error, logtype_dsi, "dsi_tcp_open: unable to set timeout %s", strerror(errno));
         exit(EXITERR_CLNT);
     }
 }
@@ -108,7 +108,7 @@ static void dsi_tcp_timeout(DSI *dsi)
 /* alarm handler for tcp_open */
 static void timeout_handler(int sig _U_)
 {
-    LOG(log_error, logtype_default, "dsi_tcp_open: connection timed out");
+    LOG(log_error, logtype_dsi, "dsi_tcp_open: connection timed out");
     exit(EXITERR_CLNT);
 }
 
@@ -128,7 +128,7 @@ static int dsi_tcp_open(DSI *dsi)
         request_init(&req, RQ_DAEMON, dsi->program, RQ_FILE, dsi->socket, NULL);
         fromhost(&req);
         if (!hosts_access(&req)) {
-            LOG(deny_severity, logtype_default, "refused connect from %s", eval_client(&req));
+            LOG(deny_severity, logtype_dsi, "refused connect from %s", eval_client(&req));
             close(dsi->socket);
             errno = ECONNREFUSED;
             dsi->socket = -1;
@@ -160,7 +160,7 @@ static int dsi_tcp_open(DSI *dsi)
 
         if ((sigaction(SIGALRM, &newact, &oldact) < 0) ||
             (setitimer(ITIMER_REAL, &timer, NULL) < 0)) {
-            LOG(log_error, logtype_default, "dsi_tcp_open: %s", strerror(errno));
+            LOG(log_error, logtype_dsi, "dsi_tcp_open: %s", strerror(errno));
             exit(EXITERR_SYS);
         }
 #endif
@@ -176,7 +176,7 @@ static int dsi_tcp_open(DSI *dsi)
             exit(EXITERR_CLNT);
         }
         if (len < 2 || (block[0] > DSIFL_MAX) || (block[1] > DSIFUNC_MAX)) {
-            LOG(log_error, logtype_default, "dsi_tcp_open: invalid header");
+            LOG(log_error, logtype_dsi, "dsi_tcp_open: invalid header");
             exit(EXITERR_CLNT);
         }
 
@@ -187,7 +187,7 @@ static int dsi_tcp_open(DSI *dsi)
             if (len > 0)
                 stored += len;
             else {
-                LOG(log_error, logtype_default, "dsi_tcp_open: stream_read: %s", strerror(errno));
+                LOG(log_error, logtype_dsi, "dsi_tcp_open: stream_read: %s", strerror(errno));
                 exit(EXITERR_CLNT);
             }
         }
@@ -211,7 +211,7 @@ static int dsi_tcp_open(DSI *dsi)
             if (len > 0)
                 stored += len;
             else {
-                LOG(log_error, logtype_default, "dsi_tcp_open: stream_read: %s", strerror(errno));
+                LOG(log_error, logtype_dsi, "dsi_tcp_open: stream_read: %s", strerror(errno));
                 exit(EXITERR_CLNT);
             }
         }
@@ -225,7 +225,7 @@ static int dsi_tcp_open(DSI *dsi)
 
         dsi_tcp_timeout(dsi);
 
-        LOG(log_info, logtype_default, "AFP/TCP session from %s:%u",
+        LOG(log_info, logtype_dsi, "AFP/TCP session from %s:%u",
             getip_string((struct sockaddr *)&dsi->client),
             getip_port((struct sockaddr *)&dsi->client));
     }
@@ -239,7 +239,7 @@ static int dsi_tcp_open(DSI *dsi)
 #define IFF_SLAVE 0
 #endif
 
-static void guess_interface(DSI *dsi, const char *hostname)
+static void guess_interface(DSI *dsi, const char *hostname, const char *port)
 {
     int fd;
     char **start, **list;
@@ -271,14 +271,14 @@ static void guess_interface(DSI *dsi, const char *hostname)
 
         memset(&dsi->server, 0, sizeof(struct sockaddr_storage));
         sa->sin_family = AF_INET;
-        sa->sin_port = htons(548);
+        sa->sin_port = htons(atoi(port));
         sa->sin_addr = ((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr;
 
-        LOG(log_info, logtype_default, "dsi_tcp: '%s' on interface '%s' will be used instead.",
-                  getip_string((struct sockaddr *)&dsi->server), ifr.ifr_name);
+        LOG(log_info, logtype_dsi, "dsi_tcp: '%s:%s' on interface '%s' will be used instead.",
+            getip_string((struct sockaddr *)&dsi->server), port, ifr.ifr_name);
         goto iflist_done;
     }
-    LOG(log_info, logtype_default, "dsi_tcp (Chooser will not select afp/tcp) "
+    LOG(log_info, logtype_dsi, "dsi_tcp (Chooser will not select afp/tcp) "
         "Check to make sure %s is in /etc/hosts and the correct domain is in "
         "/etc/resolv.conf: %s", hostname, strerror(errno));
 
@@ -313,7 +313,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         hints.ai_flags |= AI_NUMERICHOST;
 
     if ((ret = getaddrinfo(address ? address : NULL, port ? port : "548", &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_default, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
+        LOG(log_error, logtype_dsi, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
         return 0;
     }
 
@@ -324,7 +324,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         /* loop through all the results and bind to the first we can */
         for (p = servinfo; p != NULL; p = p->ai_next) {
             if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                LOG(log_info, logtype_default, "dsi_tcp_init: socket: %s", strerror(errno));
+                LOG(log_info, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
                 continue;
             }
 
@@ -348,13 +348,13 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
             
             if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
                 close(dsi->serversock);
-                LOG(log_info, logtype_default, "dsi_tcp_init: bind: %s\n", strerror(errno));
+                LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
                 continue;
             }
 
             if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
                 close(dsi->serversock);
-                LOG(log_info, logtype_default, "dsi_tcp_init: listen: %s\n", strerror(errno));
+                LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
                 continue;
             }
             
@@ -362,7 +362,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         }
 
         if (p == NULL)  {
-            LOG(log_error, logtype_default, "dsi_tcp_init: no suitable network config for TCP socket");
+            LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
             freeaddrinfo(servinfo);
             return 0;
         }
@@ -389,7 +389,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     hints.ai_socktype = SOCK_STREAM;
 
     if ((ret = getaddrinfo(hostname, port ? port : "548", &hints, &servinfo)) != 0) {
-        LOG(log_info, logtype_default, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
+        LOG(log_info, logtype_dsi, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
         goto interfaces;
     }
 
@@ -412,11 +412,11 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         freeaddrinfo(servinfo);
         return 1;
     }
-    LOG(log_info, logtype_default, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
+    LOG(log_info, logtype_dsi, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
     freeaddrinfo(servinfo);
 
 interfaces:
-    guess_interface(dsi, hostname);
+    guess_interface(dsi, hostname, port ? port : "548");
     return 1;
 }
 

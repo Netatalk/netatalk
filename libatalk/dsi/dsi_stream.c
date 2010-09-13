@@ -80,10 +80,12 @@ static int dsi_buffer(DSI *dsi)
     int    len;
     int    maxfd;
 
+    LOG(log_maxdebug, logtype_dsi, "dsi_buffer: switching to non-blocking IO");
+
     /* non blocking mode */
     if (setnonblock(dsi->socket, 1) < 0) {
         /* can't do it! exit without error it will sleep to death below */
-        LOG(log_error, logtype_default, "dsi_buffer: ioctl non blocking mode %s", strerror(errno));
+        LOG(log_error, logtype_dsi, "dsi_buffer: ioctl non blocking mode %s", strerror(errno));
         return 0;
     }
     
@@ -122,9 +124,12 @@ static int dsi_buffer(DSI *dsi)
             break;
         }
     }
+
+    LOG(log_maxdebug, logtype_dsi, "dsi_buffer: switching back to blocking IO");
+
     if (setnonblock(dsi->socket, 0) < 0) {
         /* can't do it! afpd will fail very quickly */
-        LOG(log_error, logtype_default, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
+        LOG(log_error, logtype_dsi, "dsi_buffer: ioctl blocking mode %s", strerror(errno));
         return -1;
     }
     return 0;
@@ -152,18 +157,18 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
   
   dsi->in_write++;
   written = 0;
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_write: sending %u bytes", length);
+
   while (written < length) {
-    if ((-1 == (len = send(dsi->socket, (u_int8_t *) data + written,
-		      length - written, flags)) && errno == EINTR) ||
-	!len)
-      continue;
+      len = send(dsi->socket, (u_int8_t *) data + written, length - written, flags);
+      if ((len == 0) || (len == -1 && errno == EINTR))
+          continue;
 
     if (len < 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
           if (mode == DSI_NOWAIT && written == 0) {
-              /* DSI_NOWAIT is used by attention
-                 give up in this case.
-              */
+              /* DSI_NOWAIT is used by attention give up in this case. */
               return -1;
           }
           if (dsi_buffer(dsi)) {
@@ -174,7 +179,7 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
           }
           continue;
       }
-      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_write: %s", strerror(errno));
       break;
     }
     else {
@@ -217,7 +222,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
           }
           continue;
       }
-      LOG(log_error, logtype_default, "dsi_stream_write: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_write: %s", strerror(errno));
       break;
     }
     else if (!len) {
@@ -235,8 +240,9 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
 }
 #endif
 
-/* ---------------------------------
-*/
+/* 
+ * Return all bytes up to count from dsi->buffer if there are any buffered there
+ */
 static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
 {
     size_t nbe = 0;
@@ -257,6 +263,14 @@ static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
     return nbe;
 }
 
+/*
+ * Get bytes from buffer dsi->buffer or read from socket
+ *
+ * 1. Check if there are bytes in the the dsi->buffer buffer.
+ * 2. Return bytes from (1) if yes.
+ *    Note: this may return fewer bytes then requested in count !!
+ * 3. If the buffer was empty, read from the socket.
+ */
 static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
 {
     ssize_t nbe;
@@ -264,17 +278,16 @@ static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
     if (!count)
         return 0;
 
-    nbe = from_buf(dsi, buf, count);
+    nbe = from_buf(dsi, buf, count); /* 1. */
     if (nbe)
-        return nbe;
+        return nbe;             /* 2. */
   
-    return read(dsi->socket, buf, count);
-
+    return read(dsi->socket, buf, count); /* 3. */
 }
 
-/* ---------------------------------------
- * read raw data. return actual bytes read. this will wait until 
- * it gets length bytes 
+/*
+ * Essentially a loop around buf_read() to ensure "length" bytes are read
+ * from dsi->buffer and/or the socket.
  */
 size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
@@ -291,7 +304,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     else { /* eof or error */
       /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
       if (len || stored || dsi->read_count) {
-          LOG(log_error, logtype_default, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
+          LOG(log_error, logtype_dsi, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
       }
       break;
     }
@@ -301,9 +314,9 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
   return stored;
 }
 
-/* ---------------------------------------
- * read raw data. return actual bytes read. this will wait until 
- * it gets length bytes 
+/*
+ * Get "length" bytes from buffer and/or socket. In order to avoid frequent small reads
+ * this tries to read larger chunks (8192 bytes) into a buffer.
  */
 static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t length)
 {
@@ -311,12 +324,13 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
   size_t buflen;
   
   dsi_init_buffer(dsi);
-  len = from_buf(dsi, data, length);
+  len = from_buf(dsi, data, length); /* read from buffer dsi->buffer */
   dsi->read_count += len;
-  if (len == length) {
-      return len;
+  if (len == length) {          /* got enough bytes from there ? */
+      return len;               /* yes */
   }
-  
+
+  /* fill the buffer with 8192 bytes or until buffer is full */
   buflen = min(8192, dsi->end - dsi->eof);
   if (buflen > 0) {
       ssize_t ret;
@@ -324,7 +338,10 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
       if (ret > 0)
           dsi->eof += ret;
   }
-  return dsi_stream_read(dsi, data, length -len);
+
+  /* now get the remaining data */
+  len += dsi_stream_read(dsi, data + len, length - len);
+  return len;
 }
 
 /* ---------------------------------------
@@ -398,7 +415,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
               continue;
           }
       }
-      LOG(log_error, logtype_default, "dsi_stream_send: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_send: %s", strerror(errno));
       unblock_sig(dsi);
       return 0;
     }
@@ -450,7 +467,7 @@ int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
      but we get a server disconnect without reason in the log
   */
   if (!block[1]) {
-      LOG(log_error, logtype_default, "dsi_stream_receive: invalid packet, fatal");
+      LOG(log_error, logtype_dsi, "dsi_stream_receive: invalid packet, fatal");
       return 0;
   }
 
