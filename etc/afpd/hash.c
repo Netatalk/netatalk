@@ -854,7 +854,7 @@ static hash_val_t hash_fun2(const void *key)
 {
     int len, rem;
     const unsigned char *data = key;
-    hash_val_t hash, tmp;
+    hash_val_t hash = 0, tmp = 0;
 
     len = strlen((char *)data);
 
