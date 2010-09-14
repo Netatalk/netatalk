@@ -118,7 +118,7 @@ int single_header_read( struct FHeader *fh, int version)
  * entry_buf is used for reading in entry descriptors, and for reading in
  * 	the actual entries of FILEINFO, FINDERINFO, and DATES.
  */
-    u_char		entry_buf[ 16 ];
+    u_char		entry_buf[ADEDLEN_FINDERI];
     u_int32_t		entry_id;
     u_int32_t		time_seconds;
     u_short		mask = 0xfcee;
@@ -204,15 +204,14 @@ int single_header_read( struct FHeader *fh, int version)
 	    return( -1 );
 	}
     }
-    if (( single.entry[ ADEID_FINDERI ].ade_len < 16 ) ||
+    if (( single.entry[ ADEID_FINDERI ].ade_len < ADEDLEN_FINDERI ) ||
 	    ( single.entry[ ADEID_FINDERI ].ade_off <= AD_HEADER_LEN )) {
 	fprintf( stderr, "%s has bogus FinderInfo.\n", single.path );
 	return( -1 );
     } else {
 	pos = lseek( single.filed,
 		single.entry[ ADEID_FINDERI ].ade_off, SEEK_SET );
-	if ( read( single.filed, (char *)entry_buf, sizeof( entry_buf )) !=
-		sizeof( entry_buf )) {
+	if ( read( single.filed, (char *)entry_buf, ADEDLEN_FINDERI) != ADEDLEN_FINDERI) {
 	    perror( "Premature end of file :" );
 	    return( -1 );
 	}
