@@ -523,7 +523,7 @@ int bin_header_write(struct FHeader *fh)
 int test_header(void)
 {
     const char          zeros[25] = "";
-    u_int32_t		cc;
+    ssize_t		cc;
     u_short		header_crc;
     u_char		namelen;
 
