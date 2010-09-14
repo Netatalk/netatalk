@@ -400,6 +400,8 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
                     break;
                 }
             }
+            if (ap == NULL)
+                return 0;
 
             if ( sendto( ap->ap_fd, data - len, len, 0, (struct sockaddr *)&sat,
                          sizeof( struct sockaddr_at )) < 0 ) {
