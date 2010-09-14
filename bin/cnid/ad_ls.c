@@ -520,9 +520,9 @@ static int ad_ls_r(char *path, afpvol_t *vol)
             if ((name = check_netatalk_dirs(ep->d_name)) != NULL)
                 continue;
 
-            if (lstat(ep->d_name, &st) < 0) {
+            if ((ret = lstat(ep->d_name, &st)) < 0) {
                 perror("Can't stat");
-                return -1;
+                goto exit;
             }
 
             /* Recursion */
