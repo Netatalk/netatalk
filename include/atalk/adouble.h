@@ -549,7 +549,7 @@ extern void *ad_mmapwrite (struct adouble *, const u_int32_t,
 #define ad_munmap(buf, len)  (munmap((buf), (len)))
 
 /* ad_date.c */
-extern int ad_setdate (const struct adouble *, unsigned int, u_int32_t);
+extern int ad_setdate (struct adouble *, unsigned int, u_int32_t);
 extern int ad_getdate (const struct adouble *, unsigned int, u_int32_t *);
 
 /* ad_attr.c */
