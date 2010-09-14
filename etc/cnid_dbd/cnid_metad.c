@@ -319,10 +319,9 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
         else {
             ret = execlp(dbdpn, dbdpn, dbdir, buf1, buf2, logconfig, NULL);
         }
-        if (ret < 0) {
-            LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
-            daemon_exit(0);
-        }
+        /* Yikes! We're still here, so exec failed... */
+        LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
+        daemon_exit(0);
     }
     /*
      *  Parent.
