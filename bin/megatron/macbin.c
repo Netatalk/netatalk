@@ -239,7 +239,7 @@ ssize_t bin_read( int fork, char *buffer, size_t length)
 ssize_t bin_write(int fork, char *buffer, size_t length)
 {
     char		*buf_ptr;
-    size_t		writelen;
+    ssize_t		writelen;
     ssize_t		cc = 0;
     off_t		pos;
     u_char		padchar = 0x7f;
