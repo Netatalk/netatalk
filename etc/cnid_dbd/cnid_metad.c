@@ -95,6 +95,7 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/paths.h>
 
 #include "db_param.h"
 #include "usockfd.h"
@@ -125,6 +126,25 @@ static struct server srv[MAXVOLS];
 
 /* Default logging config: log to syslog with level log_note */
 static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
+
+static void daemon_exit(int i)
+{
+    server_unlock(_PATH_CNID_METAD_LOCK);
+    exit(i);
+}
+
+/* ------------------ */
+static void sigterm_handler(int sig)
+{
+    switch( sig ) {
+    case SIGTERM :
+        LOG(log_info, logtype_afpd, "shutting down on signal %d", sig );
+        break;
+    default :
+        LOG(log_error, logtype_afpd, "unexpected signal: %d", sig);
+    }
+    daemon_exit(0);
+}
 
 static struct server *test_usockfn(char *dir)
 {
@@ -301,7 +321,7 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
         }
         if (ret < 0) {
             LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
-            exit(0);
+            daemon_exit(0);
         }
     }
     /*
@@ -388,15 +408,57 @@ static void set_signal(void)
     struct sigaction sv;
     sigset_t set;
 
-    signal(SIGPIPE, SIG_IGN);
+    memset(&sv, 0, sizeof(sv));
 
+    /* Catch SIGCHLD */
     sv.sa_handler = catch_child;
     sv.sa_flags = SA_NOCLDSTOP;
     sigemptyset(&sv.sa_mask);
     if (sigaction(SIGCHLD, &sv, NULL) < 0) {
         LOG(log_error, logtype_cnid, "cnid_metad: sigaction: %s", strerror(errno));
-        exit(1);
+        daemon_exit(EXITERR_SYS);
     }
+
+    /* Catch SIGTERM */
+    sv.sa_handler = sigterm_handler;
+    sigfillset(&sv.sa_mask );
+    if (sigaction(SIGTERM, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+
+    /* Ignore the rest */
+    sv.sa_handler = SIG_IGN;
+    sigemptyset(&sv.sa_mask );
+    if (sigaction(SIGALRM, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+    sv.sa_handler = SIG_IGN;
+    sigemptyset(&sv.sa_mask );
+    if (sigaction(SIGHUP, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+    sv.sa_handler = SIG_IGN;
+    sigemptyset(&sv.sa_mask );
+    if (sigaction(SIGUSR1, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+    sv.sa_handler = SIG_IGN;
+    sigemptyset(&sv.sa_mask );
+    if (sigaction(SIGUSR2, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+    sv.sa_handler = SIG_IGN;
+    sigemptyset(&sv.sa_mask );
+    if (sigaction(SIGPIPE, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+        daemon_exit(EXITERR_SYS);
+    }
+
     /* block everywhere but in pselect */
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
@@ -480,54 +542,35 @@ int main(int argc, char *argv[])
 
     if (err) {
         LOG(log_error, logtype_cnid, "main: bad arguments");
-        exit(1);
+        daemon_exit(1);
     }
 
-    if (!debug) {
-
-        switch (fork()) {
-        case 0 :
-            fclose(stdin);
-            fclose(stdout);
-            fclose(stderr);
-
-#ifdef TIOCNOTTY
-            {
-                int i;
-                if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
-                    (void)ioctl( i, TIOCNOTTY, 0 );
-                    setpgid( 0, getpid());
-                    (void) close(i);
-                }
-            }
-#else
-            setpgid( 0, getpid());
-#endif
-            break;
-        case -1 :  /* error */
-            LOG(log_error, logtype_cnid, "detach from terminal: %s", strerror(errno));
-            exit(1);
-        default :  /* server */
-            exit(0);
-        }
+    /* Check PID lockfile and become a daemon */
+    switch(server_lock("cnid_metad", _PATH_CNID_METAD_LOCK, 0)) {
+    case -1: /* error */
+        daemon_exit(EXITERR_SYS);
+    case 0: /* child */
+        break;
+    default: /* server */
+        exit(0);
     }
 
     if ((srvfd = tsockfd_create(host, port, 10)) < 0)
-        exit(1);
+        daemon_exit(1);
 
     /* switch uid/gid */
     if (uid || gid) {
-        LOG(log_info, logtype_cnid, "Setting uid/gid to %i/%i", uid, gid);
+        LOG(log_debug, logtype_cnid, "Setting uid/gid to %i/%i", uid, gid);
         if (gid) {
             if (SWITCH_TO_GID(gid) < 0) {
                 LOG(log_info, logtype_cnid, "unable to switch to group %d", gid);
-                exit(1);
+                daemon_exit(1);
             }
         }
         if (uid) {
             if (SWITCH_TO_UID(uid) < 0) {
                 LOG(log_info, logtype_cnid, "unable to switch to user %d", uid);
-                exit(1);
+                daemon_exit(1);
             }
         }
     }
