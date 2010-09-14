@@ -178,16 +178,21 @@ int main(int ac, char **av)
         LOG(log_error, logtype_afpd, "main: server_child alloc: %s", strerror(errno) );
         afp_exit(EXITERR_SYS);
     }
-    
+
+    memset(&sv, 0, sizeof(sv));    
 #ifdef AFP3x
     /* linux at least up to 2.4.22 send a SIGXFZ for vfat fs,
        even if the file is open with O_LARGEFILE ! */
 #ifdef SIGXFSZ
-    signal(SIGXFSZ , SIG_IGN); 
+    sv.sa_handler = SIG_IGN;
+    sigemptyset( &sv.sa_mask );
+    if (sigaction(SIGXFSZ, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
+        afp_exit(EXITERR_SYS);
+    }
 #endif
-#endif    
+#endif
     
-    memset(&sv, 0, sizeof(sv));
     sv.sa_handler = child_handler;
     sigemptyset( &sv.sa_mask );
     sigaddset(&sv.sa_mask, SIGALRM);

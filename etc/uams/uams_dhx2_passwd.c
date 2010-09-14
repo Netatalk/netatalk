@@ -501,14 +501,14 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     gcry_error_t ctxerror;
 
     *rbuflen = 0;
+    retServerNonce = gcry_mpi_new(0);
+
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs)*/
     if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
         LOG(log_error, logtype_uams, "DHX2: Paket length not correct: %d. Should be 274 or 284.", ibuflen);
         ret = AFPERR_PARAM;
         goto error_noctx;
     }
-
-    retServerNonce = gcry_mpi_new(0);
 
     /* Set up our encryption context. */
     ctxerror = gcry_cipher_open( &ctx, GCRY_CIPHER_CAST5, GCRY_CIPHER_MODE_CBC, 0);

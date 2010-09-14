@@ -1,7 +1,3 @@
-/*
- * $Id: ad_date.c,v 1.5 2006-09-29 09:39:16 didg Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -9,7 +5,7 @@
 #include <string.h>
 #include <atalk/adouble.h>
 
-int ad_setdate(const struct adouble *ad, 
+int ad_setdate(struct adouble *ad, 
 	       unsigned int dateoff, u_int32_t date)
 {
   int xlate = (dateoff & AD_DATE_UNIX);

@@ -428,7 +428,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
     {
         struct DSI *dsi = obj->handle;
         const struct sockaddr *sa;
-        char hbuf[NI_MAXHOST];
+        static char hbuf[NI_MAXHOST];
         
         sa = (struct sockaddr *)&dsi->client;
         if (getnameinfo(sa, sizeof(dsi->client), hbuf, sizeof(hbuf), NULL, 0, 0) == 0)

@@ -239,7 +239,7 @@ ssize_t bin_read( int fork, char *buffer, size_t length)
 ssize_t bin_write(int fork, char *buffer, size_t length)
 {
     char		*buf_ptr;
-    size_t		writelen;
+    ssize_t		writelen;
     ssize_t		cc = 0;
     off_t		pos;
     u_char		padchar = 0x7f;
@@ -523,7 +523,7 @@ int bin_header_write(struct FHeader *fh)
 int test_header(void)
 {
     const char          zeros[25] = "";
-    u_int32_t		cc;
+    ssize_t		cc;
     u_short		header_crc;
     u_char		namelen;
 
