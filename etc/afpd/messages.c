@@ -89,7 +89,7 @@ void readmessage(AFPObj *obj)
 				strerror(errno));
         }
 
-        if ( 0 < (rc = unlink(filename)) )
+        if ((rc = unlink(filename)) != 0)
 	    LOG(log_error, logtype_afpd, "File '%s' could not be deleted", strerror(errno));
 
         /* Drop privs again, failing this is very bad */
