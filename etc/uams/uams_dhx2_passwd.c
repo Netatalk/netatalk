@@ -401,6 +401,8 @@ static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
     K_MD5hash = calloc(1, K_hash_len = gcry_md_get_algo_dlen(GCRY_MD_MD5));
     if (K_MD5hash == NULL) {
         ret = AFPERR_MISC;
+        free(K_bin);
+        K_bin = NULL;
         goto error_noctx;
     }
     gcry_md_hash_buffer(GCRY_MD_MD5, K_MD5hash, K_bin, PRIMEBITS/8);
