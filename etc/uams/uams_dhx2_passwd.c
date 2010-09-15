@@ -57,7 +57,7 @@
 #define PRIMEBITS 1024
 
 /* hash a number to a 16-bit quantity */
-#define dhxhash(a) ((((unsigned long) (a) >> 8) ^ \
+#define dhxhash(a) ((((unsigned long) (a) >> 8) ^   \
                      (unsigned long) (a)) & 0xffff)
 
 /* Some parameters need be maintained across calls */
@@ -78,7 +78,7 @@ static struct passwd *dhxpwd;
 /*********************************************************
  * Crypto helper func to generate p and g for use in DH.
  * libgcrypt doesn't provide one directly.
- * Algorithm taken from GNUTLS:gnutls_dh_primes.c 
+ * Algorithm taken from GNUTLS:gnutls_dh_primes.c
  *********************************************************/
 
 /**
@@ -105,53 +105,53 @@ dh_params_generate (gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits) {
     }
 
     if (bits < 256)
-	qbits = bits / 2;
+        qbits = bits / 2;
     else
-	qbits = (bits / 40) + 105;
+        qbits = (bits / 40) + 105;
 
     if (qbits & 1) /* better have an even number */
-	qbits++;
+        qbits++;
 
     /* find a prime number of size bits. */
     do {
-	if (times) {
-	    gcry_mpi_release (prime);
-	    gcry_prime_release_factors (factors);
-	}
-	err = gcry_prime_generate (&prime, bits, qbits, &factors, NULL, NULL,
-				   GCRY_STRONG_RANDOM, GCRY_PRIME_FLAG_SPECIAL_FACTOR);
-	if (err != 0) {
-	    result = AFPERR_MISC;
-	    goto error;
-	}
-	err = gcry_prime_check (prime, 0);
-	times++;
+        if (times) {
+            gcry_mpi_release (prime);
+            gcry_prime_release_factors (factors);
+        }
+        err = gcry_prime_generate (&prime, bits, qbits, &factors, NULL, NULL,
+                                   GCRY_STRONG_RANDOM, GCRY_PRIME_FLAG_SPECIAL_FACTOR);
+        if (err != 0) {
+            result = AFPERR_MISC;
+            goto error;
+        }
+        err = gcry_prime_check (prime, 0);
+        times++;
     } while (err != 0 && times < 10);
-    
+
     if (err != 0) {
-	result = AFPERR_MISC;
-	goto error;
+        result = AFPERR_MISC;
+        goto error;
     }
 
     /* generate the group generator. */
     err = gcry_prime_group_generator (&g, prime, factors, NULL);
     if (err != 0) {
-	result = AFPERR_MISC;
-	goto error;
+        result = AFPERR_MISC;
+        goto error;
     }
-    
+
     gcry_prime_release_factors (factors);
     factors = NULL;
-    
+
     if (ret_g)
-	*ret_g = g;
+        *ret_g = g;
     else
-	gcry_mpi_release (g);
+        gcry_mpi_release (g);
     if (ret_p)
-	*ret_p = prime;
+        *ret_p = prime;
     else
-	gcry_mpi_release (prime);
-    
+        gcry_mpi_release (prime);
+
     return 0;
 
 error:
@@ -163,7 +163,7 @@ error:
 }
 
 static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
-		      char *rbuf, size_t *rbuflen)
+                      char *rbuf, size_t *rbuflen)
 {
     int ret;
     size_t nwritten;
@@ -185,7 +185,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
 #endif /* SHADOWPW */
 
     if (!dhxpwd->pw_passwd)
-	return AFPERR_NOTAUTH;
+        return AFPERR_NOTAUTH;
 
     /* Initialize DH params */
 
@@ -197,16 +197,16 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     /* Generate p and g for DH */
     ret = dh_params_generate( &p, &g, PRIMEBITS);
     if (ret != 0) {
-	LOG(log_info, logtype_uams, "DHX2: Couldn't generate p and g");
-	ret = AFPERR_MISC;
-	goto error;
+        LOG(log_info, logtype_uams, "DHX2: Couldn't generate p and g");
+        ret = AFPERR_MISC;
+        goto error;
     }
 
     /* Generate our random number Ra. */
     Ra_binary = calloc(1, PRIMEBITS/8);
     if (Ra_binary == NULL) {
-	ret = AFPERR_MISC;
-	goto error;
+        ret = AFPERR_MISC;
+        goto error;
     }
     gcry_randomize(Ra_binary, PRIMEBITS/8, GCRY_STRONG_RANDOM);
     gcry_mpi_scan(&Ra, GCRYMPI_FMT_USG, Ra_binary, PRIMEBITS/8, NULL);
@@ -228,8 +228,8 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     /* g is next */
     gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten, g);
     if (nwritten < 4) {
-	memmove( rbuf+4-nwritten, rbuf, nwritten);
-	memset( rbuf, 0, 4-nwritten);
+        memmove( rbuf+4-nwritten, rbuf, nwritten);
+        memset( rbuf, 0, 4-nwritten);
     }
     rbuf += 4;
     *rbuflen += 4;
@@ -247,15 +247,15 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     /* Ma */
     gcry_mpi_print( GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS/8, &nwritten, Ma);
     if (nwritten < PRIMEBITS/8) {
-	memmove(rbuf + (PRIMEBITS/8) - nwritten, rbuf, nwritten);
-	memset(rbuf, 0, (PRIMEBITS/8) - nwritten);
+        memmove(rbuf + (PRIMEBITS/8) - nwritten, rbuf, nwritten);
+        memset(rbuf, 0, (PRIMEBITS/8) - nwritten);
     }
     rbuf += PRIMEBITS/8;
     *rbuflen += PRIMEBITS/8;
 
     ret = AFPERR_AUTHCONT;
 
-error:				/* We exit here anyway */
+error:              /* We exit here anyway */
     /* We will only need p and Ra later, but mustn't forget to release it ! */
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
@@ -280,8 +280,8 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd _
 /* dhx login: things are done in a slightly bizarre order to avoid
  * having to clean things up if there's an error. */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
-                     char *ibuf, size_t ibuflen,
-                     char *rbuf, size_t *rbuflen)
+                        char *ibuf, size_t ibuflen,
+                        char *rbuf, size_t *rbuflen)
 {
     char *username;
     size_t len, ulen;
@@ -314,8 +314,8 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 
 /* ----------------------------- */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-                         char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
+                            char *ibuf, size_t ibuflen,
+                            char *rbuf, size_t *rbuflen)
 {
     char *username;
     size_t len, ulen;
@@ -350,8 +350,8 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* -------------------------------- */
 
 static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
-                         char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
+                      char *ibuf, size_t ibuflen,
+                      char *rbuf, size_t *rbuflen)
 {
     size_t nwritten;
     int ret;
@@ -370,9 +370,9 @@ static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
 
     /* Packet size should be: Session ID + Ma + Encrypted client nonce */
     if (ibuflen != 2 + PRIMEBITS/8 + 16) {
-	LOG(log_error, logtype_uams, "DHX2: Paket length not correct");
+        LOG(log_error, logtype_uams, "DHX2: Paket length not correct");
         ret = AFPERR_PARAM;
-	goto error_noctx;
+        goto error_noctx;
     }
 
     /* Skip session id */
@@ -388,49 +388,49 @@ static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
     /* We need K in binary form in order to ... */
     K_bin = calloc(1, PRIMEBITS/8);
     if (K_bin == NULL) {
-	ret = AFPERR_MISC;
-	goto error_noctx;
+        ret = AFPERR_MISC;
+        goto error_noctx;
     }
     gcry_mpi_print(GCRYMPI_FMT_USG, K_bin, PRIMEBITS/8, &nwritten, K);
     if (nwritten < PRIMEBITS/8) {
-	memmove(K_bin + PRIMEBITS/8 - nwritten, K_bin, nwritten);
-	memset(K_bin, 0, PRIMEBITS/8 - nwritten);
+        memmove(K_bin + PRIMEBITS/8 - nwritten, K_bin, nwritten);
+        memset(K_bin, 0, PRIMEBITS/8 - nwritten);
     }
 
     /* ... generate the MD5 hash of K. K_MD5hash is what we actually use ! */
     K_MD5hash = calloc(1, K_hash_len = gcry_md_get_algo_dlen(GCRY_MD_MD5));
     if (K_MD5hash == NULL) {
-	ret = AFPERR_MISC;
-	goto error_noctx;
+        ret = AFPERR_MISC;
+        goto error_noctx;
     }
     gcry_md_hash_buffer(GCRY_MD_MD5, K_MD5hash, K_bin, PRIMEBITS/8);
-    free(K_bin); 
-    K_bin = NULL; 
+    free(K_bin);
+    K_bin = NULL;
 
     /* FIXME: To support the Reconnect UAM, we need to store this key somewhere */
 
     /* Set up our encryption context. */
     ctxerror = gcry_cipher_open( &ctx, GCRY_CIPHER_CAST5, GCRY_CIPHER_MODE_CBC, 0);
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-	ret = AFPERR_MISC;
+        ret = AFPERR_MISC;
         goto error_ctx;
     }
     /* Set key */
     ctxerror = gcry_cipher_setkey(ctx, K_MD5hash, K_hash_len);
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-	ret = AFPERR_MISC;
+        ret = AFPERR_MISC;
         goto error_ctx;
     }
     /* Set the initialization vector for client->server transfer. */
     ctxerror = gcry_cipher_setiv(ctx, dhx_c2siv, sizeof(dhx_c2siv));
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-	ret = AFPERR_MISC;
+        ret = AFPERR_MISC;
         goto error_ctx;
     }
     /* Finally: decrypt client's md5_K(client nonce, C2SIV) inplace */
     ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16, NULL, 0);
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-	ret = AFPERR_MISC;
+        ret = AFPERR_MISC;
         goto error_ctx;
     }
     /* Pull out clients nonce */
@@ -457,14 +457,14 @@ static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
     /* Set the initialization vector for server->client transfer. */
     ctxerror = gcry_cipher_setiv(ctx, dhx_s2civ, sizeof(dhx_s2civ));
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-	ret = AFPERR_MISC;
+        ret = AFPERR_MISC;
         goto error_ctx;
     }
     /* Encrypt md5_K(clientNonce+1, serverNonce) inplace */
     ctxerror = gcry_cipher_encrypt(ctx, rbuf, 32, NULL, 0);
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-	ret = AFPERR_MISC;
-	goto error_ctx;
+        ret = AFPERR_MISC;
+        goto error_ctx;
     }
     rbuf += 32;
     *rbuflen += 32;
@@ -488,8 +488,8 @@ exit:
 }
 
 static int logincont2(void *obj _U_, struct passwd **uam_pwd,
-		      char *ibuf, size_t ibuflen,
-		      char *rbuf _U_, size_t *rbuflen)
+                      char *ibuf, size_t ibuflen,
+                      char *rbuf _U_, size_t *rbuflen)
 {
 #ifdef SHADOWPW
     struct spwd *sp;
@@ -542,11 +542,11 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
     gcry_mpi_sub_ui(retServerNonce, retServerNonce, 1);
     if ( gcry_mpi_cmp( serverNonce, retServerNonce) != 0) {
-	/* We're hacked!  */
+        /* We're hacked!  */
         ret = AFPERR_NOTAUTH;
         goto error_ctx;
     }
-    ibuf += 16;			/* ibuf now point to passwd in cleartext */
+    ibuf += 16;         /* ibuf now point to passwd in cleartext */
 
     /* ---- Start authentication --- */
     ret = AFPERR_NOTAUTH;
@@ -554,15 +554,15 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     p = crypt( ibuf, dhxpwd->pw_passwd );
     memset(ibuf, 0, 255);
     if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
-	*uam_pwd = dhxpwd;
-	ret = AFP_OK;
+        *uam_pwd = dhxpwd;
+        ret = AFP_OK;
     }
 
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
         LOG(log_info, logtype_uams, "no shadow passwd entry for %s", dhxpwd->pw_name);
         ret = AFPERR_NOTAUTH;
-	goto exit;
+        goto exit;
     }
 
     /* check for expired password */
@@ -570,9 +570,9 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
         time_t now = time(NULL) / (60*60*24);
         int32_t expire_days = sp->sp_lstchg - now + sp->sp_max;
         if ( expire_days < 0 ) {
-	    LOG(log_info, logtype_uams, "password for user %s expired", dhxpwd->pw_name);
-	    ret = AFPERR_PWDEXPR;
-	    goto exit;
+            LOG(log_info, logtype_uams, "password for user %s expired", dhxpwd->pw_name);
+            ret = AFPERR_PWDEXPR;
+            goto exit;
         }
     }
 #endif /* SHADOWPW */
@@ -589,8 +589,8 @@ exit:
 }
 
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
-                         char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
+                            char *ibuf, size_t ibuflen,
+                            char *rbuf, size_t *rbuflen)
 {
     u_int16_t retID;
     int ret;
