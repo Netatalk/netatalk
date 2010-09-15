@@ -1,6 +1,4 @@
 /*
- * $Id: ad_open.c,v 1.74 2010-04-13 08:05:06 franklahm Exp $
- *
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
@@ -283,6 +281,7 @@ static int ad_update(struct adouble *ad, const char *path)
 
     /* last place for failure. */
     if (sys_ftruncate(fd, st.st_size + shiftdata) < 0) {
+        munmap(buf, st.st_size + shiftdata);
         goto bail_lock;
     }
 
