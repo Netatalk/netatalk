@@ -1,5 +1,4 @@
 /*
-  $Id: ea.c,v 1.22 2010-04-18 11:11:17 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -1097,6 +1096,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 
             if (read(fd, rbuf, toread) != (ssize_t)toread) {
                 LOG(log_error, logtype_afpd, "get_eacontent('%s/%s'): short read", uname, attruname);
+                close(fd);
                 ret = AFPERR_MISC;
                 break;
             }
