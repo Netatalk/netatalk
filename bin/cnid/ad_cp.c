@@ -1,6 +1,4 @@
 /* 
-   $Id: ad_cp.c,v 1.2 2009-10-13 22:55:36 didg Exp $
-
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
    This program is free software; you can redistribute it and/or modify
@@ -90,11 +88,11 @@ static int ad_cp_copy(const afpvol_t *srcvol, const afpvol_t *dstvol,
 
 static int ad_cp_r(const afpvol_t *srcvol, const afpvol_t *dstvol, char *srcdir, char *dstdir)
 {
-    int ret = 0, cwd, dirprinted = 0, dirempty;
+    int ret = 0, dirprinted = 0, dirempty;
     static char srcpath[MAXPATHLEN+1];
     static char dstpath[MAXPATHLEN+1];
-    char *tmp;
-    DIR *dp;
+    char *tmp1;
+    DIR *dp = NULL
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
 
@@ -165,10 +163,9 @@ static int ad_cp_r(const afpvol_t *srcvol, const afpvol_t *dstvol, char *srcdir,
     }
 
 exit:
-    closedir(dp);
-    fchdir(cwd);
-    close(cwd);
-
+    if (dp)
+        closedir(dp);
+ 
     if ((tmp = strrchr(srcpath, '/')))
         *tmp = 0;
     if ((tmp = strrchr(dstpath, '/')))
