@@ -681,13 +681,16 @@ cleanup:
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
 static int remove_acl(const struct vol *vol,const char *path, int dir)
 {
-    int ret;
+    int ret = AFP_OK;
 
+#ifdef HAVE_SOLARIS_ACLS
     /* Ressource etc. first */
     if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK)
         return ret;
     /* now the data fork or dir */
-    return (remove_acl_vfs(path));
+    ret = remove_acl_vfs(path);
+#endif
+    return ret;
 }
 
 /*
