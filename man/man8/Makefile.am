@@ -14,8 +14,8 @@ SUFFIXES = .tmpl .
 	    <$< >$@
 
 NONGENERATED_MANS = timelord.8
-GENERATED_MANS    = afp_acls.8 afpd.8 cnid_dbd.8 cnid_metad.8
-TEMPLATE_FILES    = afp_acls.8.tmpl afpd.8.tmpl cnid_dbd.8.tmpl cnid_metad.8.tmpl
+GENERATED_MANS    = afpd.8 cnid_dbd.8 cnid_metad.8
+TEMPLATE_FILES    = afpd.8.tmpl cnid_dbd.8.tmpl cnid_metad.8.tmpl
 
 if USE_APPLETALK
 GENERATED_MANS += atalkd.8 papd.8 papstatus.8 psf.8
