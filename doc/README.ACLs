@@ -38,6 +38,9 @@ In order to be able to support ACLs, the following things have to be configured:
       - configure Netatalk via afp_ldap.conf so that Netatalk is able to retrieve the UUID
         for users and groups via LDAP search queries
 
+      ALL USERS AND GROUPS USED ON VOLUMES WHERE ACLS ARE USED SHOULD THEN COME FROM
+      THE SHARED AUTHENTICATION DOMAIN !
+
   3. Netatalk Volumes
 
      Finally you can add "options:acls" to your volume defintions to add ACL support.
@@ -77,7 +80,4 @@ Some implementation details that are buried in the code are worthwhile to be doc
      Thereafter ACLs for created files is taken care of by ACLs own inheritance rules.
 
      For dirs on the other hand whe have to make sure that any ACL the dir inherits is
-     copied verbatim to its .AppleDouble dir. 
-
-
-                                                                    January 2009, Frank Lahm
+     copied verbatim to its .AppleDouble dir.
