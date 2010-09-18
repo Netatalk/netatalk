@@ -91,8 +91,8 @@ static int ad_cp_r(const afpvol_t *srcvol, const afpvol_t *dstvol, char *srcdir,
     int ret = 0, dirprinted = 0, dirempty;
     static char srcpath[MAXPATHLEN+1];
     static char dstpath[MAXPATHLEN+1];
-    char *tmp1;
-    DIR *dp = NULL
+    char *tmp;
+    DIR *dp = NULL;
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
 
