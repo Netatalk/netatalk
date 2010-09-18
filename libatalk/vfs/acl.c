@@ -37,7 +37,8 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     *retAces = NULL;
     ace_count = acl(name, ACE_GETACLCNT, 0, NULL);
     if (ace_count <= 0) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error");
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error: ace_count %i, error: %s",
+            ace_count, strerror(errno));
         return -1;
     }
 
