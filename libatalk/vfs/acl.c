@@ -35,8 +35,10 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     ace_t *aces;
 
     *retAces = NULL;
-    ace_count = acl(name, ACE_GETACLCNT, 0, NULL);
-    if (ace_count <= 0) {
+    if ((ace_count = acl(name, ACE_GETACLCNT, 0, NULL)) == 0)
+        return 0;
+
+    if (ace_count == -1) {
         LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
             getcwdpath(), name, ace_count, strerror(errno));
         return -1;

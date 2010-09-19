@@ -636,6 +636,12 @@ static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t reque
         ret = AFPERR_MISC;
         goto exit;
     }
+    if (ace_count == 0) {
+        LOG(log_debug, logtype_afpd, "check_access: 0 ACEs from get_nfsv4_acl");
+        ret = AFPERR_MISC;
+        goto exit;
+    }
+
     /* Now check requested rights */
     ret = AFPERR_ACCESS;
     i = 0;
