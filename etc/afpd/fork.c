@@ -433,7 +433,8 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                 goto openfork_err;
                 break;
             default:
-                LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_open: %s", s_path->m_name, strerror(errno) );
+                LOG(log_error, logtype_afpd, "afp_openfork('%s/%s'): ad_open: %s",
+                    getcwdpath, s_path->m_name, strerror(errno) );
                 goto openfork_err;
                 break;
             }
