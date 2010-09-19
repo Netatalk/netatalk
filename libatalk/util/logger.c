@@ -91,6 +91,17 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG /* logtype_uams */
 };
 
+/* We use this in order to track the last n log messages in order to prevent flooding */
+#define LOG_FLOODING_MAXCOUNT 10 /* this controls after how many consecutive messages we force a 
+                                    "repeated x times" message */
+#define LOG_FLOODING_ARRAY_SIZE 3 /* this contols how many messages in flow we track */
+struct log_flood_entry {
+    int count;
+    unsigned int hash;
+};
+static struct log_flood_entry log_flood_array[LOG_FLOODING_ARRAY_SIZE];
+static int log_flood_entries;
+
 /* These are used by the LOG macro to store __FILE__ and __LINE__ */
 static const char *log_src_filename;
 static int  log_src_linenumber;
@@ -109,6 +120,20 @@ static const unsigned int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_string
 /* =========================================================================
    Internal function definitions
    ========================================================================= */
+
+/* Hash a log message */
+static unsigned int hash_message(const char *message)
+{
+    const char *p = message;
+    unsigned int hash = 0, i = 7;
+
+    while (*p) {
+        hash += *p * i;
+        i++;
+        p++;
+    }
+    return hash;
+}
 
 /*
  * If filename == NULL its for syslog logging, otherwise its for file-logging.
@@ -493,7 +518,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 
     if (fd < 0) {
         /* no where to send the output, give up */
-        return;
+        goto exit;
     }
 
     /* Initialise the Messages */
@@ -512,6 +537,67 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         temp_buffer[len+1] = 0;
     }
 
+    /* Prevent flooding: hash the message and check if we got the same one recently */
+    int hash = hash_message(temp_buffer);
+
+    /* Search for the same message by hash */
+    for (int i = log_flood_entries - 1; i >= 0; i--) {
+        if (log_flood_array[i].hash == hash) {
+
+            /* found same message */
+            log_flood_array[i].count++;
+
+            /* Check if that message has reached LOG_FLOODING_MAXCOUNT */
+            if (log_flood_array[i].count >= LOG_FLOODING_MAXCOUNT) {
+                /* yes, log it and remove from array */
+
+                /* reusing log_details_buffer */
+                sprintf(log_details_buffer, "message repeated %i times: ", log_flood_array[i].count);
+                iov[0].iov_base = log_details_buffer;
+                iov[0].iov_len = strlen(log_details_buffer);
+                iov[1].iov_base = temp_buffer;
+                iov[1].iov_len = strlen(temp_buffer);
+
+                /* Write "message repeated x times: ..." to log */
+                writev( fd, iov, 2);
+
+                if ((i + 1) == LOG_FLOODING_ARRAY_SIZE) {
+                    /* last array element, just decrement count */
+                    log_flood_entries--;
+                    goto exit;
+                }
+                /* move array elements down */
+                for (int j = i + 1; j != LOG_FLOODING_ARRAY_SIZE ; j++)
+                    log_flood_array[j-1] = log_flood_array[j];
+                log_flood_entries--;
+            }
+            goto exit;
+        } /* if */
+    }  /* for */
+
+    /* No matching message found, add this message to array*/
+    if (log_flood_entries == LOG_FLOODING_ARRAY_SIZE) {
+        /* array is full, discard oldest entry printing "message repeated..." if count > 1 */
+        if (log_flood_array[0].count > 1) {
+                /* reusing log_details_buffer */
+                sprintf(log_details_buffer, "message repeated %i times: ", log_flood_array[0].count);
+                iov[0].iov_base = log_details_buffer;
+                iov[0].iov_len = strlen(log_details_buffer);
+                iov[1].iov_base = temp_buffer;
+                iov[1].iov_len = strlen(temp_buffer);
+
+                /* Write "message repeated x times: ..." to log */
+                writev( fd, iov, 2);
+        }
+        for (int i = 1; i < LOG_FLOODING_ARRAY_SIZE; i++) {
+            log_flood_array[i-1] = log_flood_array[i];
+        }
+        log_flood_entries--;
+    }
+    log_flood_array[log_flood_entries-1].count = 1;
+    log_flood_array[log_flood_entries-1].hash = hash;
+    log_flood_entries++;
+
     if ( ! log_config.console) {
         generate_message_details(log_details_buffer, sizeof(log_details_buffer),
                                  type_configs[logtype].set ?
@@ -529,6 +615,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         write(fd, temp_buffer, strlen(temp_buffer));
     }
 
+exit:
     inlog = 0;
 }
 
