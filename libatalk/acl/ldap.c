@@ -125,7 +125,8 @@ retry:
         LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \"%s\"",
             ldap_server);
         if ((ld = ldap_init(ldap_server, LDAP_PORT)) == NULL ) {
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_init error");
+            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_init error: %s",
+                strerror(errno));
             return -1;
         }
         if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &desired_version) != 0) {
