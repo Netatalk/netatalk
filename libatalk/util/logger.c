@@ -587,8 +587,8 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         /* array is full, discard oldest entry printing "message repeated..." if count > 1 */
         if (log_flood_array[0].count >= LOG_FLOODING_MINCOUNT) {
             /* reusing log_details_buffer */
-            sprintf(log_details_buffer, "message %i lines before repeated %i times\n",
-                    LOG_FLOODING_ARRAY_SIZE , log_flood_array[0].count - 1);
+            sprintf(log_details_buffer, "message repeated %i times\n",
+                    log_flood_array[0].count - LOG_FLOODING_MINCOUNT + 1);
             /* Write "message repeated x times: ..." to log */
             write(fd, log_details_buffer, strlen(log_details_buffer));
         }

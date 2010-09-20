@@ -44,6 +44,15 @@ int main(int argc, char *argv[])
   LOG(log_debug, logtype_default, "2");
   LOG(log_debug, logtype_default, "3");
 
+  LOG(log_debug, logtype_default, "-============");
+  LOG(log_debug, logtype_default, "Flooding 5x");
+  for (int i = 0; i < 5; i++) {
+      LOG(log_debug, logtype_default, "Flooding...");
+  }
+  LOG(log_debug, logtype_default, "1");
+  LOG(log_debug, logtype_default, "2");
+  LOG(log_debug, logtype_default, "3");
+
   LOG(log_debug, logtype_default, "0============");
   LOG(log_debug, logtype_default, "Flooding 11x1");
   for (int i = 0; i < 11; i++) {
