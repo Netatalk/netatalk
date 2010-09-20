@@ -35,6 +35,10 @@ char *uuidtype[] = {"NULL","USER", "GROUP"};
  * Public helper function
  ********************************************************/
 
+/* 
+ * convert ascii string that can include dashes to binary uuid.
+ * caller must provide a buffer.
+ */
 void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
     int nibble = 1;
     int i = 0;
@@ -64,6 +68,10 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
 
 }
 
+/* 
+ * convert 16 byte binary uuid to neat ascii represantation including dashes
+ * string is allocated and pointer returned. caller must freee.
+ */
 int uuid_bin2string( uuidp_t uuid, char **uuidstring) {
     char ascii[16] = { "0123456789ABCDEF" };
     int nibble = 1;
@@ -99,14 +107,26 @@ int uuid_bin2string( uuidp_t uuid, char **uuidstring) {
  * Interface
  ********************************************************/
 
+/*
+ *   name: give me his name
+ *   type: and type (UUID_USER or UUID_GROUP)
+ *   uuid: pointer to uuid_t storage that the caller must provide
+ * returns 0 on success !=0 on errror
+ */  
 int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
     int ret = 0;
     char *uuid_string = NULL;
 
     ret = search_cachebyname( name, type, uuid);
     if (ret == 0) {     /* found in cache */
+#ifdef DEBUG
         uuid_bin2string( uuid, &uuid_string);
-        LOG(log_debug, logtype_afpd, "getuuidfromname{cache}: name: %s, type: %s -> UUID: %s",name, uuidtype[type], uuid_string);
+        LOG(log_debug, logtype_afpd, "getuuidfromname{cache}: name: %s, type: %s -> UUID: %s",
+            name, uuidtype[type], uuid_string);
+#else
+        LOG(log_debug, logtype_afpd, "getuuidfromname{cache}: name: %s, type: %s",
+            name, uuidtype[type]);
+#endif
     } else  {                   /* if not found in cache */
         ret = ldap_getuuidfromname( name, type, &uuid_string);
         if (ret != 0) {
@@ -123,6 +143,12 @@ cleanup:
     return ret;
 }
 
+/* 
+ *   uuidp: give me a pointer to a uuid
+ *   name: and I'll allocate a buf with his name and store a pointer to buf
+ *   type: returns USER or GROUP
+ * return 0 on success !=0 on errror
+ */
 int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     char *uuid_string = NULL;
@@ -132,6 +158,8 @@ int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
 #ifdef DEBUG
         uuid_bin2string( uuidp, &uuid_string);
         LOG(log_debug9, logtype_afpd, "getnamefromuuid{cache}: UUID: %s -> name: %s, type:%s", uuid_string, *name, uuidtype[*type]);
+        free(uuid_string);
+        uuid_string = NULL;
 #endif
     } else  {                   /* if not found in cache */
         uuid_bin2string( uuidp, &uuid_string);

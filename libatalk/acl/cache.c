@@ -195,6 +195,9 @@ cleanup:
     return ret;
 }
 
+/* 
+ * Caller provides buffer uuid for result
+ */
 int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
     int ret;
     unsigned char hash;
@@ -248,6 +251,9 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
     return -1;
 }
 
+/* 
+ * Caller must free allocated name
+ */
 int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     unsigned char hash;
