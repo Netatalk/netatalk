@@ -554,14 +554,9 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
                 /* yes, log it and remove from array */
 
                 /* reusing log_details_buffer */
-                sprintf(log_details_buffer, "message repeated %i times: ", LOG_FLOODING_MAXCOUNT - 1);
-                iov[0].iov_base = log_details_buffer;
-                iov[0].iov_len = strlen(log_details_buffer);
-                iov[1].iov_base = temp_buffer;
-                iov[1].iov_len = strlen(temp_buffer);
-
-                /* Write "message repeated x times: ..." to log */
-                writev( fd, iov, 2);
+                sprintf(log_details_buffer, "message repeated %i times\n",
+                        LOG_FLOODING_MAXCOUNT - 1);
+                write(fd, log_details_buffer, strlen(log_details_buffer));
 
                 if ((i + 1) == LOG_FLOODING_ARRAY_SIZE) {
                     /* last array element, just decrement count */
@@ -589,7 +584,6 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
             /* reusing log_details_buffer */
             sprintf(log_details_buffer, "message repeated %i times\n",
                     log_flood_array[0].count - LOG_FLOODING_MINCOUNT + 1);
-            /* Write "message repeated x times: ..." to log */
             write(fd, log_details_buffer, strlen(log_details_buffer));
         }
         for (int i = 1; i < LOG_FLOODING_ARRAY_SIZE; i++) {
