@@ -5,6 +5,7 @@ Changes in 2.1.4
 * FIX: dbd: Adding a file with the CNID from it's adouble file did
        not work in case that CNID was alread occoupied in the database
 * NEW: cnid_metad: use a PID lockfile
+* NEW: afpd: prevent log flooding
 
 Changes in 2.1.3
 ================
