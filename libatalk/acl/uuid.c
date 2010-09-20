@@ -1,5 +1,4 @@
 /*
-  $Id: uuid.c,v 1.3 2009-11-27 16:33:49 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -144,10 +143,12 @@ cleanup:
 }
 
 /* 
- *   uuidp: give me a pointer to a uuid
- *   name: and I'll allocate a buf with his name and store a pointer to buf
- *   type: returns USER or GROUP
+ * uuidp: pointer to a uuid
+ * name: returns allocated buffer from ldap_getnamefromuuid
+ * type: returns USER or GROUP
  * return 0 on success !=0 on errror
+ *
+ * Caller must free name appropiately.
  */
 int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;

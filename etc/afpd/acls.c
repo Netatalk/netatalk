@@ -1,5 +1,4 @@
 /*
-  $Id: acls.c,v 1.9 2010-03-08 19:49:59 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -300,6 +299,7 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
             pwd = getpwnam(name);
             if (!pwd) {
                 LOG(log_error, logtype_afpd, "map_aces_darwin_to_solaris: getpwnam: %s", strerror(errno));
+                free(name);
                 return -1;
             }
             nfsv4_aces->a_who = pwd->pw_uid;
@@ -307,6 +307,7 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
             grp = getgrnam(name);
             if (!grp) {
                 LOG(log_error, logtype_afpd, "map_aces_darwin_to_solaris: getgrnam: %s", strerror(errno));
+                free(name);
                 return -1;
             }
             nfsv4_aces->a_who = (uid_t)(grp->gr_gid);
@@ -559,7 +560,7 @@ cleanup:
 static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
 {
     int                 ret, i, ace_count, dir, checkgroup;
-    char                *username; /* might be group too */
+    char                *username = NULL; /* might be group too */
     uuidtype_t          uuidtype;
     uid_t               uid;
     gid_t               pgid;
