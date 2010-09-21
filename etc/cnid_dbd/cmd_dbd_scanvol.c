@@ -57,6 +57,10 @@ static char           *netatalk_dirs[] = {
     ".AppleDesktop",
     NULL
 };
+static char           *special_dirs[] = {
+    ".zfs",
+    NULL
+};
 static struct cnid_dbd_rqst rqst;
 static struct cnid_dbd_rply rply;
 static jmp_buf jmp;
@@ -265,6 +269,21 @@ static const char *check_netatalk_dirs(const char *name)
     for (c=0; netatalk_dirs[c]; c++) {
         if ((strcmp(name, netatalk_dirs[c])) == 0)
             return netatalk_dirs[c];
+    }
+    return NULL;
+}
+
+/*
+  Check for special names
+  Returns pointer to name or NULL.
+*/
+static const char *check_special_dirs(const char *name)
+{
+    int c;
+
+    for (c=0; special_dirs[c]; c++) {
+        if ((strcmp(name, special_dirs[c])) == 0)
+            return special_dirs[c];
     }
     return NULL;
 }
@@ -858,12 +877,20 @@ static int dbd_readdir(int volroot, cnid_t did)
             continue;
         }
 
+        /* Check for special folders in volume root e.g. ".zfs" */
+        if (volroot) {
+            if ((name = check_special_dirs(ep->d_name)) != NULL)
+                dbd_log(LOGSTD, "Ignoring special dir \"%s\"", name);
+            continue;
+        }
+
         /* Skip .AppleDouble dir in this loop */
         if (STRCMP(ep->d_name, == , ADv2_DIRNAME))
             continue;
 
         if ((ret = lstat(ep->d_name, &st)) < 0) {
-            dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s", cwdbuf, ep->d_name, strerror(errno));
+            dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s",
+                     cwdbuf, ep->d_name, strerror(errno));
             continue;
         }
         
