@@ -6,6 +6,7 @@ Changes in 2.1.4
        not work in case that CNID was alread occoupied in the database
 * NEW: cnid_metad: use a PID lockfile
 * NEW: afpd: prevent log flooding
+* UPD: dbd: ignore ".zfs" snapshot directories
 
 Changes in 2.1.3
 ================
