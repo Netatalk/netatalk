@@ -68,12 +68,11 @@ int main( int argc, char **argv)
 {
     int ret, i, c;
     int verbose = 0;
+    int logsetup = 0;
     uuid_t uuid;
     uuidtype_t type;
     char *uuidstring = NULL;
     char *name = NULL;
-
-    setuplog("console log_error /dev/tty");
 
     while ((c = getopt(argc, argv, ":vu:g:i:")) != -1) {
         switch(c) {
@@ -81,11 +80,14 @@ int main( int argc, char **argv)
         case 'v':
             if (! verbose) {
                 verbose = 1;
-                setuplog("console log_debug /dev/tty");
+                setuplog("default log_maxdebug /dev/tty");
+                logsetup = 1;
             }
             break;
 
         case 'u':
+            if (! logsetup)
+                setuplog("default log_info /dev/tty");
             parse_ldapconf();
             printf("Searching user: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_USER, uuid);
@@ -99,6 +101,8 @@ int main( int argc, char **argv)
             break;
 
         case 'g':
+            if (! logsetup)
+                setuplog("default log_info /dev/tty");
             parse_ldapconf();
             printf("Searching group: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_GROUP, uuid);
@@ -112,6 +116,8 @@ int main( int argc, char **argv)
             break;
 
         case 'i':
+            if (! logsetup)
+                setuplog("default log_info /dev/tty");
             parse_ldapconf();
             printf("Searching uuid: %s\n", optarg);
             uuid_string2bin(optarg, uuid);
