@@ -157,7 +157,7 @@ retry:
         } else if (LDAP_AUTH_SIMPLE == ldap_auth_method) {
             if (ldap_bind_s(ld, ldap_auth_dn, ldap_auth_pw, ldap_auth_method) != LDAP_SUCCESS ) {
                 LOG(log_error, logtype_default,
-                    "ldap: ldap_bind failed: ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'");
+                    "ldap: ldap_bind failed: ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'",
                     ldap_auth_dn, ldap_auth_pw, ldap_auth_method);
                 free(ld);
                 ld = NULL;
@@ -166,18 +166,17 @@ retry:
             ldapconnected = 1;
         }
     }
-    /* ldapconnected and ld are now always 1 and != NULL which is important when dealing w. errors*/
 
     LOG(log_maxdebug, logtype_afpd, "ldap: start search: base: %s, filter: %s, attr: %s",
         searchbase, filter, attributes[0]);
 
     /* start LDAP search */
     ldaperr = ldap_search_st(ld, searchbase, scope, filter, attributes, 0, &timeout, &msg);
-    LOG(log_maxdebug, logtype_default, "ldap: ldap_search_st returned: %s, %u",
-        ldap_err2string(ldaperr), ldaperr);
+    LOG(log_maxdebug, logtype_default, "ldap: ldap_search_st returned: %s",
+        ldap_err2string(ldaperr));
     if (ldaperr != LDAP_SUCCESS) {
-        if (retrycount >= 1)
-            LOG(log_error, logtype_default, "ldap: ldap_search_st failed: %s", ldap_err2string(ldaperr));
+        LOG(log_error, logtype_default, "ldap: ldap_search_st failed: %s, retrycount: %i",
+            ldap_err2string(ldaperr), retrycount);
         ret = -1;
         goto cleanup;
     }
@@ -185,7 +184,7 @@ retry:
     /* parse search result */
     LOG(log_maxdebug, logtype_default, "ldap: got %d entries from ldap search",
         ldap_count_entries(ld, msg));
-    if (ldap_count_entries(ld, msg) != 1) {
+    if ((ret = ldap_count_entries(ld, msg)) != 1) {
         ret = 0;
         goto cleanup;
     }
