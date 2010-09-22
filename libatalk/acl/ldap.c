@@ -115,7 +115,7 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     char **attribute_values = NULL;
     struct timeval timeout;
 
-    LOG(log_maxdebug, logtype_afpd,"ldap_getattr_fromfilter_withbase_scope: BEGIN");
+    LOG(log_maxdebug, logtype_afpd,"ldap: BEGIN");
 
     timeout.tv_sec = 3;
     timeout.tv_usec = 0;
@@ -125,17 +125,17 @@ retry:
     ret = 0;
 
     if (ld == NULL) {
-        LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \"%s\"",
+        LOG(log_maxdebug, logtype_default, "ldap: server: \"%s\"",
             ldap_server);
         if ((ld = ldap_init(ldap_server, LDAP_PORT)) == NULL ) {
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_init error: %s",
+            LOG(log_error, logtype_default, "ldap: ldap_init error: %s",
                 strerror(errno));
             return -1;
         }
         if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &desired_version) != 0) {
             /* LDAP_OPT_SUCCESS is not in the proposed standard, so we check for 0
                http://tools.ietf.org/id/draft-ietf-ldapext-ldap-c-api-05.txt */
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_set_option failed!");
+            LOG(log_error, logtype_default, "ldap: ldap_set_option failed!");
             free(ld);
             ld = NULL;
             return -1;
@@ -146,8 +146,8 @@ retry:
     if (!ldapconnected) {
         if (LDAP_AUTH_NONE == ldap_auth_method) {
             if (ldap_bind_s(ld, "", "", LDAP_AUTH_SIMPLE) != LDAP_SUCCESS ) {
-                LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_bind failed!");
-                LOG(log_error, logtype_default, "ldap_auth_method: \'%d\'", ldap_auth_method);
+                LOG(log_error, logtype_default, "ldap: ldap_bind failed, auth_method: \'%d\'",
+                    ldap_auth_method);
                 free(ld);
                 ld = NULL;
                 return -1;
@@ -156,8 +156,8 @@ retry:
 
         } else if (LDAP_AUTH_SIMPLE == ldap_auth_method) {
             if (ldap_bind_s(ld, ldap_auth_dn, ldap_auth_pw, ldap_auth_method) != LDAP_SUCCESS ) {
-                LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_bind failed!");
-                LOG(log_error, logtype_default, "ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'",
+                LOG(log_error, logtype_default,
+                    "ldap: ldap_bind failed: ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'");
                     ldap_auth_dn, ldap_auth_pw, ldap_auth_method);
                 free(ld);
                 ld = NULL;
@@ -168,22 +168,22 @@ retry:
     }
     /* ldapconnected and ld are now always 1 and != NULL which is important when dealing w. errors*/
 
-    LOG(log_maxdebug, logtype_afpd, "LDAP start search: base: %s, filter: %s, attr: %s",
+    LOG(log_maxdebug, logtype_afpd, "ldap: start search: base: %s, filter: %s, attr: %s",
         searchbase, filter, attributes[0]);
 
     /* start LDAP search */
     ldaperr = ldap_search_st(ld, searchbase, scope, filter, attributes, 0, &timeout, &msg);
-    LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st returned: %s, %u",
+    LOG(log_maxdebug, logtype_default, "ldap: ldap_search_st returned: %s, %u",
         ldap_err2string(ldaperr), ldaperr);
     if (ldaperr != LDAP_SUCCESS) {
         if (retrycount >= 1)
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st failed: %s", ldap_err2string(ldaperr));
+            LOG(log_error, logtype_default, "ldap: ldap_search_st failed: %s", ldap_err2string(ldaperr));
         ret = -1;
         goto cleanup;
     }
 
     /* parse search result */
-    LOG(log_maxdebug, logtype_default, "ldap_getuuidfromname: got %d entries from ldap search",
+    LOG(log_maxdebug, logtype_default, "ldap: got %d entries from ldap search",
         ldap_count_entries(ld, msg));
     if (ldap_count_entries(ld, msg) != 1) {
         ret = 0;
@@ -192,13 +192,13 @@ retry:
 
     entry = ldap_first_entry(ld, msg);
     if (entry == NULL) {
-        LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: error in ldap_first_entry");
+        LOG(log_error, logtype_default, "ldap: ldap_first_entry error");
         ret = -1;
         goto cleanup;
     }
     attribute_values = ldap_get_values(ld, entry, attributes[0]);
     if (attribute_values == NULL) {
-        LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: error in ldap_get_values");
+        LOG(log_error, logtype_default, "ldap: ldap_get_values error");
         ret = -1;
         goto cleanup;
     }
