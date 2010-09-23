@@ -129,7 +129,7 @@ int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
     } else  {                   /* if not found in cache */
         ret = ldap_getuuidfromname( name, type, &uuid_string);
         if (ret != 0) {
-            LOG(log_error, logtype_afpd, "getuuidfromname: no result from ldap_getuuidfromname");
+            LOG(log_info, logtype_afpd, "getuuidfromname: no result from ldap_getuuidfromname");
             goto cleanup;
         }
         uuid_string2bin( uuid_string, uuid);
