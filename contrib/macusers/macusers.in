@@ -5,21 +5,17 @@ use Socket;
 use vars qw($MAC_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
 
 # Written for linux; may have to be modified for your brand of Unix.
-
 # Support for FreeBSD added by Joe Clarke <marcus@marcuscom.com>.
-# Support could probably be extended for *BSD, but I do not have Net or
-# OpenBSD machines to test with.  Code has also been cleaned up and made
-# to compile under strict.
-#
-# The new lsof call should also be quicker as it does not involve a 
-# second pipeline.
-#
+# Support Solaris added by Frank Lahm <franklahm@googlemail.com>.
 # Support has also been added for 16 character usernames.
 
 $MAC_PROCESS = "afpd";
 if ($^O eq "freebsd" || $^O eq "openbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
         $MATCH_STR = '(\w+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
+} elsif ($^O eq "solaris") {
+        $PS_STR    = "-eo user,pid,ppid,c,stime,tty,time,comm";
+        $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
 } else {
         $PS_STR    = "-eo user:32,pid,ppid,c,stime,tty,time,cmd";
         $MATCH_STR = '\s*(\w+)\s+(\d+)\s+(\d+)\s+\d+\s+([\d\w:]+)';
@@ -48,6 +44,12 @@ if ($^O eq "freebsd") {
         print
             "PID      UID      Username         Name                 Logintime Mac\n";
         close(SOCKSTAT);
+} elsif ($^O eq "solaris") {
+        if ($< != 0) {
+            print "must be run as root\n";
+            exit(1);
+        }
+        print "PID      UID      Username         Name                 Logintime Mac\n";
 } elsif ($LSOF == 1) {
         open(LSOF, "lsof -i :$ASIP_PORT |");
 
@@ -72,7 +74,7 @@ open(PS, "ps $PS_STR |") || die "Unable to open a pipe to ``ps''";
 
 while (<PS>) {
         next if ($_ !~ /$MAC_PROCESS/);
-        my ($user, $pid, $ppid, $time, $name, $uid, $t);
+        my ($user, $pid, $ppid, $time, $name, $uid, $t, $ip);
         $_ =~ /$MATCH_STR/;
         $user = $1;
         $pid  = $2;
@@ -80,6 +82,26 @@ while (<PS>) {
         $time = $4;
 
         if ($ppid != 1) {
+                if ($^O eq "solaris") {
+                        open(PFILES, "pfiles $pid |");
+                        while (<PFILES>) {
+                                next if ($_ !~ /port: $ASIP_PORT_NO/);
+                                while (<PFILES>) {
+                                        next if ($_ !~ /peername/);
+                                        if ($_ =~ /AF_INET. (.*) port/) {
+                                            $ip = $1;
+                                            if ($ip =~ /::ffff:(.*)/ ) {
+                                                $ip = $1;
+                                            }
+                                        }
+                                        $mac{$pid} = $ip;
+                                        last;
+                                }
+                                last;
+                        }
+                        close(PFILES);
+                }
+
                 ($t, $t, $uid, $t, $t, $t, $name, $t, $t) = getpwnam($user);
                 ($name) = ( $name =~ /(^[^,]+)/ );
                 printf "%-8d %-8d %-16s %-20s %-9s %s\n", $pid, $uid, $user,
