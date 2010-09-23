@@ -1301,7 +1301,6 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
                         return -1;
                     }
                     ad->ad_data_fork.adf_syml[lsz] = 0;
-                    ad->ad_data_fork.adf_syml = realloc(ad->ad_data_fork.adf_syml,lsz+1);
                     ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
                 }
             }
