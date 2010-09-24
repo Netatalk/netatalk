@@ -261,7 +261,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         return AFPERR_NOTAUTH;
     }
 
-    LOG(log_note, logtype_afpd, "%2 Login by %s",
+    LOG(log_note, logtype_afpd, "%s Login by %s",
         afp_versions[afp_version_index].av_name, pwd->pw_name);
 
 #ifndef NO_DDP
