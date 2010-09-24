@@ -355,9 +355,9 @@ rwlist:\fI[users/groups]\fR
 Allows certain users and groups to have read/write access to a share\&. This follows the allow option format\&.
 .RE
 .PP
-veto:\fI[vetoed name]\fR
+veto:\fI[vetoed names]\fR
 .RS 4
-hide files and directories,where the path matches one of the \'/\' delimited vetoed names\&. If the veto string contains more then one element, it must end with a \'/\', eg \'veto1/veto2/veto3/\'\&.
+hide files and directories,where the path matches one of the \'/\' delimited vetoed names\&. The veto string must always be terminated with a \'/\', eg\&. "veto1/", "veto1/veto2/"\&.
 .RE
 .PP
 volcharset:\fI[charset]\fR
