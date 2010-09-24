@@ -1,6 +1,4 @@
 /*
- * $Id: main.c,v 1.26 2009-10-14 02:24:05 didg Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -101,7 +99,7 @@ static void afp_goaway(int sig)
     dsi_kill(sig);
     switch( sig ) {
     case SIGTERM :
-        LOG(log_info, logtype_afpd, "shutting down on signal %d", sig );
+        LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
         break;
     case SIGUSR1 :
     case SIGHUP :
