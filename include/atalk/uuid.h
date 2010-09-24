@@ -41,33 +41,9 @@ extern char *ldap_uid_attr;
  * Interface
  ********************************************************/
 
-/*
- *   name: give me his name
- *   type: and type (UUID_USER or UUID_GROUP)
- *   uuid: and I'll try to return you his uuid
- * returns 0 on success !=0 on errror
- */  
 extern int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid);
-
-/* 
- *   uuidp: give me a pointer to a uuid
- *   name: and I'll allocate a buf with his name and store a pointer to buf
- *   type: returns USER or GROUP
- * return 0 on success !=0 on errror
- */
 extern int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type);
-
-/* 
- * convert 16 byte binary uuid to neat ascii represantation including dashes
- * string is allocated and pointer returned. caller must freee.
- */
 extern int uuid_bin2string( uuidp_t uuidp, char **uuidstring);
-
-
-/* 
- * convert ascii string that can include dashes to binary uuid.
- * caller must provide a buffer.
- */
 extern void uuid_string2bin( const char *uuidstring, uuidp_t uuid);
 
 #endif /* AFP_UUID_H */

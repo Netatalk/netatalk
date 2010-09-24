@@ -316,6 +316,7 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
             pwd = getpwnam(name);
             if (!pwd) {
                 LOG(log_error, logtype_afpd, "map_aces_darwin_to_solaris: getpwnam: %s", strerror(errno));
+                free(name);
                 return -1;
             }
             nfsv4_aces->a_who = pwd->pw_uid;
@@ -323,6 +324,7 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
             grp = getgrnam(name);
             if (!grp) {
                 LOG(log_error, logtype_afpd, "map_aces_darwin_to_solaris: getgrnam: %s", strerror(errno));
+                free(name);
                 return -1;
             }
             nfsv4_aces->a_who = (uid_t)(grp->gr_gid);
@@ -821,7 +823,7 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
 static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
 {
     int                 ret, i, ace_count, dir, checkgroup;
-    char                *username; /* might be group too */
+    char                *username = NULL; /* might be group too */
     uuidtype_t          uuidtype;
     uid_t               uid;
     gid_t               pgid;
@@ -898,6 +900,12 @@ static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t reque
         ret = AFPERR_MISC;
         goto exit;
     }
+    if (ace_count == 0) {
+        LOG(log_debug, logtype_afpd, "check_access: 0 ACEs from get_nfsv4_acl");
+        ret = AFPERR_MISC;
+        goto exit;
+    }
+
     /* Now check requested rights */
     ret = AFPERR_ACCESS;
     i = 0;

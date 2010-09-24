@@ -12,9 +12,15 @@ Changes in 2.1.4
 ================
 
 * FIX: afpd: Downstream fix for FreeBSD PR 148022
+* FIX: afpd: Fixes for bugs 3074077 and 3074078
+* FIX: afpd: Better handling of symlinks in combination with ACLs and EAs.
+       Fixes bug 3074076.
 * FIX: dbd: Adding a file with the CNID from it's adouble file did
-       not work in case that CNID was alread occoupied in the database
+       not work in case that CNID was alread occupied in the database
+* FIX: macusers: add support for Solaris
 * NEW: cnid_metad: use a PID lockfile
+* NEW: afpd: prevent log flooding
+* UPD: dbd: ignore ".zfs" snapshot directories
 
 Changes in 2.1.3
 ================

@@ -1,6 +1,4 @@
 /* 
- * $Id: ad_lock.c,v 1.20 2010-03-30 12:55:26 franklahm Exp $
- *
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
  *
@@ -338,12 +336,16 @@ int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
      1) we're trying to re-lock a lock, but we didn't specify an update.
      2) we're trying to free only part of a lock. 
      3) we're trying to free a non-existent lock. */
-  if ((!adflock && (lock.l_type == F_UNLCK)) ||
-      (adflock && !(type & ADLOCK_UPGRADE) && 
-       ((lock.l_type != F_UNLCK) || (adflock->lock.l_start != lock.l_start) ||
-	(adflock->lock.l_len != lock.l_len)))) {
-    errno = EINVAL;
-    return -1;
+  if ( (!adflock && (lock.l_type == F_UNLCK))
+       ||
+       (adflock
+        && !(type & ADLOCK_UPGRADE)
+        && ((lock.l_type != F_UNLCK)
+            || (adflock->lock.l_start != lock.l_start)
+            || (adflock->lock.l_len != lock.l_len) ))
+      ) {
+      errno = EINVAL;
+      return -1;
   }
 
 

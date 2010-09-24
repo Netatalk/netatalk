@@ -18,6 +18,8 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -38,11 +40,20 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
 {
     int ace_count = -1;
     ace_t *aces;
+    struct stat st;
 
     *retAces = NULL;
-    ace_count = acl(name, ACE_GETACLCNT, 0, NULL);
-    if (ace_count <= 0) {
-        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACLCNT) error");
+    /* Only call acl() for regular files and directories, otherwise just return 0 */
+    if (lstat(name, &st) != 0)
+        return -1;
+    if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode)))
+        return 0;
+    if ((ace_count = acl(name, ACE_GETACLCNT, 0, NULL)) == 0)
+        return 0;
+
+    if (ace_count == -1) {
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
+            getcwdpath(), name, ace_count, strerror(errno));
         return -1;
     }
 

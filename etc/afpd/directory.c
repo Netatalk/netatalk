@@ -1,6 +1,4 @@
 /*
- * $Id: directory.c,v 1.140 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */

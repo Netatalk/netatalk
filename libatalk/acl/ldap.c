@@ -90,6 +90,10 @@ struct pref_array prefs_array[] = {
  *   scope: LDAP_SCOPE_BASE, LDAP_SCOPE_ONELEVEL, LDAP_SCOPE_SUBTREE
  *   result: return unique search result here, allocated here, caller must free
  *
+ * returns: -1 on error
+ *           0 nothing found
+ *           1 successfull search, result int 'result'
+ *
  * All connection managment to the LDAP server is done here. Just set KEEPALIVE if you know
  * you will be dispatching more than one search in a row, then don't set it with the last search.
  * You MUST dispatch the queries timely, otherwise the LDAP handle might timeout.
@@ -108,11 +112,10 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
     static LDAP *ld     = NULL;
     LDAPMessage* msg    = NULL;
     LDAPMessage* entry  = NULL;
-
-    char **attribute_values;
+    char **attribute_values = NULL;
     struct timeval timeout;
 
-    LOG(log_maxdebug, logtype_afpd,"ldap_getattr_fromfilter_withbase_scope: BEGIN");
+    LOG(log_maxdebug, logtype_afpd,"ldap: BEGIN");
 
     timeout.tv_sec = 3;
     timeout.tv_usec = 0;
@@ -121,19 +124,21 @@ static int ldap_getattr_fromfilter_withbase_scope( const char *searchbase,
 retry:
     ret = 0;
 
-    if (!ldapconnected) {
-        LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: LDAP server: \"%s\"",
+    if (ld == NULL) {
+        LOG(log_maxdebug, logtype_default, "ldap: server: \"%s\"",
             ldap_server);
         if ((ld = ldap_init(ldap_server, LDAP_PORT)) == NULL ) {
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_init error");
+            LOG(log_error, logtype_default, "ldap: ldap_init error: %s",
+                strerror(errno));
             return -1;
         }
         if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &desired_version) != 0) {
             /* LDAP_OPT_SUCCESS is not in the proposed standard, so we check for 0
                http://tools.ietf.org/id/draft-ietf-ldapext-ldap-c-api-05.txt */
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_set_option failed!");
-            ret = -1;
-            goto cleanup;
+            LOG(log_error, logtype_default, "ldap: ldap_set_option failed!");
+            free(ld);
+            ld = NULL;
+            return -1;
         }
     }
 
@@ -141,95 +146,98 @@ retry:
     if (!ldapconnected) {
         if (LDAP_AUTH_NONE == ldap_auth_method) {
             if (ldap_bind_s(ld, "", "", LDAP_AUTH_SIMPLE) != LDAP_SUCCESS ) {
-                LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_bind failed!");
-                LOG(log_error, logtype_default, "ldap_auth_method: \'%d\'", ldap_auth_method);
+                LOG(log_error, logtype_default, "ldap: ldap_bind failed, auth_method: \'%d\'",
+                    ldap_auth_method);
+                free(ld);
+                ld = NULL;
                 return -1;
             }
             ldapconnected = 1;
 
         } else if (LDAP_AUTH_SIMPLE == ldap_auth_method) {
             if (ldap_bind_s(ld, ldap_auth_dn, ldap_auth_pw, ldap_auth_method) != LDAP_SUCCESS ) {
-                LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_bind failed!");
-                LOG(log_error, logtype_default, "ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'",
+                LOG(log_error, logtype_default,
+                    "ldap: ldap_bind failed: ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'",
                     ldap_auth_dn, ldap_auth_pw, ldap_auth_method);
+                free(ld);
+                ld = NULL;
                 return -1;
             }
             ldapconnected = 1;
         }
     }
 
-    LOG(log_maxdebug, logtype_afpd, "LDAP start search: base: %s, filter: %s, attr: %s",
+    LOG(log_maxdebug, logtype_afpd, "ldap: start search: base: %s, filter: %s, attr: %s",
         searchbase, filter, attributes[0]);
 
     /* start LDAP search */
     ldaperr = ldap_search_st(ld, searchbase, scope, filter, attributes, 0, &timeout, &msg);
-    LOG(log_maxdebug, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st returned: %s, %u",
-        ldap_err2string(ldaperr), ldaperr);
+    LOG(log_maxdebug, logtype_default, "ldap: ldap_search_st returned: %s",
+        ldap_err2string(ldaperr));
     if (ldaperr != LDAP_SUCCESS) {
-        if (retrycount ==1)
-            LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: ldap_search_st failed: %s", ldap_err2string(ldaperr));
+        LOG(log_error, logtype_default, "ldap: ldap_search_st failed: %s, retrycount: %i",
+            ldap_err2string(ldaperr), retrycount);
         ret = -1;
         goto cleanup;
     }
 
     /* parse search result */
-    LOG(log_maxdebug, logtype_default, "ldap_getuuidfromname: got %d entries from ldap search",
+    LOG(log_maxdebug, logtype_default, "ldap: got %d entries from ldap search",
         ldap_count_entries(ld, msg));
-    if (ldap_count_entries(ld, msg) != 1) {
-        ret = -1;
+    if ((ret = ldap_count_entries(ld, msg)) != 1) {
+        ret = 0;
         goto cleanup;
     }
 
     entry = ldap_first_entry(ld, msg);
     if (entry == NULL) {
-        LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: error in ldap_first_entry");
+        LOG(log_error, logtype_default, "ldap: ldap_first_entry error");
         ret = -1;
         goto cleanup;
     }
     attribute_values = ldap_get_values(ld, entry, attributes[0]);
     if (attribute_values == NULL) {
-        LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: error in ldap_get_values");
+        LOG(log_error, logtype_default, "ldap: ldap_get_values error");
         ret = -1;
         goto cleanup;
     }
 
-    LOG(log_maxdebug, logtype_afpd,"LDAP Search result: %s: %s",
+    LOG(log_maxdebug, logtype_afpd,"ldap: search result: %s: %s",
         attributes[0], attribute_values[0]);
 
-    /* allocate place for uuid as string */
-    *result = calloc( 1, strlen(attribute_values[0]) + 1);
+    /* allocate result */
+    *result = strdup(attribute_values[0]);
     if (*result == NULL) {
-        LOG(log_error, logtype_default, "ldap_getattr_fromfilter_withbase_scope: %s: error calloc'ing",strerror(errno));
+        LOG(log_error, logtype_default, "ldap: strdup error: %s",strerror(errno));
         ret = -1;
         goto cleanup;
     }
-    /* get value */
-    strcpy( *result, attribute_values[0]);
-    ldap_value_free(attribute_values);
 
+cleanup:
+    if (attribute_values)
+        ldap_value_free(attribute_values);
     /* FIXME: is there another way to free entry ? */
     while (entry != NULL)
         entry = ldap_next_entry(ld, entry);
-
-cleanup:
     if (msg)
         ldap_msgfree(msg);
-    if (ld) {
-        if (ldapconnected
-            && ( !(conflags & KEEPALIVE)
-                 ||
-                 ((ret == -1) && (ldaperr != LDAP_SUCCESS))) /* ie ldapsearch got 0 results */
-            ) {
 
-            ldapconnected = 0;  /* regardless of unbind errors */
-            LOG(log_maxdebug, logtype_default,"LDAP unbind");
+    if (ldapconnected) {
+        if ((ret == -1) || !(conflags & KEEPALIVE)) {
+            LOG(log_maxdebug, logtype_default,"ldap: unbind");
             if (ldap_unbind_s(ld) != 0) {
-                LOG(log_error, logtype_default, "ldap_unbind_s: %s\n", ldap_err2string(ldaperr));
+                LOG(log_error, logtype_default, "ldap: unbind: %s\n", ldap_err2string(ldaperr));
                 return -1;
             }
-            retrycount++;
-            if (retrycount < 2)
-                goto retry;
+            ld = NULL;
+            ldapconnected = 0;
+
+            /* In case of error we try twice */
+            if (ret == -1) {
+                retrycount++;
+                if (retrycount < 2)
+                    goto retry;
+            }
         }
     }
     return ret;
@@ -239,6 +247,10 @@ cleanup:
  * Interface
  ********************************************************/
 
+/* 
+ * returns allocated storage in uuid_string, caller must free it
+ * returns 0 on success, -1 on error or not found
+ */
 int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string) {
     int ret;
     int len;
@@ -262,9 +274,16 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
     } else  { /* type hopefully == UUID_USER */
         ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, KEEPALIVE, uuid_string);
     }
-    return ret;
+    if (ret != 1)
+        return -1;
+    return 0;
 }
 
+/*
+ * LDAP search wrapper
+ * returns allocated storage in name, caller must free it
+ * returns 0 on success, -1 on error or not found
+ */
 int ldap_getnamefromuuid( char *uuidstr, char **name, uuidtype_t *type) {
     int ret;
     int len;
@@ -280,16 +299,19 @@ int ldap_getnamefromuuid( char *uuidstr, char **name, uuidtype_t *type) {
     /* search groups first. group acls are probably used more often */
     attributes[0] = ldap_group_attr;
     ret = ldap_getattr_fromfilter_withbase_scope( ldap_groupbase, filter, attributes, ldap_groupscope, KEEPALIVE, name);
-    if (ret == 0) {
+    if (ret == -1)
+        return -1;
+    if (ret == 1) {
         *type = UUID_GROUP;
         return 0;
     }
+
     attributes[0] = ldap_name_attr;
     ret = ldap_getattr_fromfilter_withbase_scope( ldap_userbase, filter, attributes, ldap_userscope, KEEPALIVE, name);
-    if (ret == 0) {
+    if (ret == 1) {
         *type = UUID_USER;
         return 0;
     }
 
-    return ret;
+    return -1;
 }
