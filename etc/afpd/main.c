@@ -147,9 +147,9 @@ int main(int ac, char **av)
     set_auth_parameters( ac, av );
 #endif /* TRU64 */
 
-#ifdef DEBUG1
+    /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
-#endif
+
     afp_options_init(&default_options);
     if (!afp_options_parse(ac, av, &default_options))
         exit(EXITERR_CONF);

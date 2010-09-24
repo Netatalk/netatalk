@@ -28,13 +28,19 @@
 #define EXITERR_CONF 2  /* error in config files/cmd line parameters */
 #define EXITERR_SYS  3  /* local system error */
 
+/* Print a SBT and exit */
+#define AFP_PANIC(why) \
+    do {                                            \
+        netatalk_panic(why);                        \
+        exit(1);                                    \
+    } while(0);
+
 /* LOG assert errors */
 #ifndef NDEBUG
 #define AFP_ASSERT(b) \
     do {                                                                \
         if (!(b)) {                                                     \
-            LOG(log_error, logtype_default, "PANIC, assert failed: %s", #b); \
-            abort();                                                    \
+            AFP_PANIC(#b);                                              \
         } \
     } while(0);
 #else
@@ -56,9 +62,9 @@ extern int atalk_aton     (char *, struct at_addr *);
 extern void bprint        (char *, int);
 extern int strdiacasecmp  (const char *, const char *);
 extern int strndiacasecmp (const char *, const char *, size_t);
-extern pid_t server_lock  (char * /*program*/, char * /*file*/, 
-			       int /*debug*/);
+extern pid_t server_lock  (char * /*program*/, char * /*file*/, int /*debug*/);
 extern void fault_setup	  (void (*fn)(void *));
+extern void netatalk_panic(const char *why);
 #define server_unlock(x)  (unlink(x))
 
 /* strlcpy and strlcat are used by pam modules */

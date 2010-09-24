@@ -786,7 +786,7 @@ struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *p
             ntohl(cdir->d_did), cfrombstring(dir->d_fullpath));
         if (dir_remove(vol, cdir) != 0) {
             dircache_dump();
-            exit(EXITERR_SYS);
+            AFP_PANIC("dir_add");
         }
     }
 
@@ -966,7 +966,7 @@ int dir_modify(const struct vol *vol,
     /* Re-add it to the cache */
     if ((dircache_add(dir)) != 0) {
         dircache_dump();
-        exit(EXITERR_SYS);
+        AFP_PANIC("dir_modify");
     }
 
     return ret;
@@ -2293,7 +2293,6 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     *rbuflen = 0;
-
 
     if (sfunc >= 3 && sfunc <= 6) {
         if (afp_version < 30) {

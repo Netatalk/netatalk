@@ -1,5 +1,4 @@
 /*
-  $Id: dircache.c,v 1.1.2.7 2010-02-11 13:06:54 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -173,7 +172,6 @@ static int hash_comp_didname(const void *k1, const void *k2)
 
 static q_t *index_queue;    /* the index itself */
 static unsigned int queue_count;
-static const int dircache_free_quantum = 256; /* number of entries to free */
 
 /*!
  * @brief Remove a fixed number of (oldest) entries from the cache and indexes
@@ -187,7 +185,7 @@ static const int dircache_free_quantum = 256; /* number of entries to free */
  */
 static void dircache_evict(void)
 {
-    int i = dircache_free_quantum;
+    int i = DIRCACHE_FREE_QUANTUM;
     struct dir *dir;
 
     LOG(log_debug, logtype_afpd, "dircache: {starting cache eviction}");
@@ -195,7 +193,7 @@ static void dircache_evict(void)
     while (i--) {
         if ((dir = (struct dir *)dequeue(index_queue)) == NULL) { /* 1 */
             dircache_dump();
-            exit(EXITERR_SYS);
+            AFP_PANIC("dircache_evict");
         }
         queue_count--;
 
@@ -204,7 +202,7 @@ static void dircache_evict(void)
             || (dir->d_flags & DIRF_CACHELOCK)) {     /* 2 */
             if ((dir->qidx_node = enqueue(index_queue, dir)) == NULL) {
                 dircache_dump();
-                exit(EXITERR_SYS);
+                AFP_PANIC("dircache_evict");
             }
             queue_count++;
             continue;
@@ -377,7 +375,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
             LOG(log_error, logtype_default, "dircache_remove(%u,%s): not in didname index", 
                 ntohl(dir->d_did), dir->d_u_name);
             dircache_dump();
-            exit(EXITERR_SYS);
+            AFP_PANIC("dircache_remove");
         }
         hash_delete(index_didname, hn);
     }
@@ -387,7 +385,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
             LOG(log_error, logtype_default, "dircache_remove(%u,%s): not in dircache", 
                 ntohl(dir->d_did), dir->d_u_name);
             dircache_dump();
-            exit(EXITERR_SYS);
+            AFP_PANIC("dircache_remove");
         }
         hash_delete(dircache, hn);
     }

@@ -22,8 +22,6 @@
 #include "config.h"
 #endif
 
-#ifdef DEBUG1
-
 #include <sys/types.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -84,65 +82,28 @@ static void (*CatchSignal(int signum,void (*handler)(int )))(int)
  Something really nasty happened - panic !
 ********************************************************************/
 
-static void smb_panic(const char *why)
+void netatalk_panic(const char *why)
 {
-#if 0
-	char *cmd;
-	int result;
-#endif
 #ifdef HAVE_BACKTRACE_SYMBOLS
 	void *backtrace_stack[BACKTRACE_STACK_SIZE];
 	size_t backtrace_size;
 	char **backtrace_strings;
-#endif
 
-#ifdef DEVELOPER
-	{
-		extern char *global_clobber_region_function;
-		extern unsigned int global_clobber_region_line;
-
-		if (global_clobber_region_function) {
-			DEBUG(0,("smb_panic: clobber_region() last called from [%s(%u)]",
-					 global_clobber_region_function,
-					 global_clobber_region_line));
-		} 
-	}
-#endif
-
-#if 0
-	cmd = lp_panic_action();
-	if (cmd && *cmd) {
-		DEBUG(0, ("smb_panic(): calling panic action [%s]\n", cmd));
-		result = system(cmd);
-
-		if (result == -1)
-			DEBUG(0, ("smb_panic(): fork failed in panic action: %s\n",
-					  strerror(errno)));
-		else
-			DEBUG(0, ("smb_panic(): action returned status %d\n",
-					  WEXITSTATUS(result)));
-	}
-	DEBUG(0,("PANIC: %s\n", why));
-#endif
-
-#ifdef HAVE_BACKTRACE_SYMBOLS
 	/* get the backtrace (stack frames) */
 	backtrace_size = backtrace(backtrace_stack,BACKTRACE_STACK_SIZE);
 	backtrace_strings = backtrace_symbols(backtrace_stack, backtrace_size);
 
-	LOG(log_error, logtype_default, "BACKTRACE: %d stack frames:\n", backtrace_size);
+	LOG(log_severe, logtype_default, "BACKTRACE: %d stack frames:", backtrace_size);
 	
 	if (backtrace_strings) {
 		size_t i;
 
 		for (i = 0; i < backtrace_size; i++)
-			LOG(log_error, logtype_default, " #%u %s", i, backtrace_strings[i]);
+			LOG(log_severe, logtype_default, " #%u %s", i, backtrace_strings[i]);
 
 		SAFE_FREE(backtrace_strings);
 	}
-
 #endif
-
 }
 
 
@@ -157,11 +118,11 @@ static void fault_report(int sig)
 
 	counter++;
 
-	LOG(log_error, logtype_default, "===============================================================");
-	LOG(log_error, logtype_default, "INTERNAL ERROR: Signal %d in pid %d (%s)",sig,(int)getpid(),VERSION);
-	LOG(log_error, logtype_default, "===============================================================");
+	LOG(log_severe, logtype_default, "===============================================================");
+	LOG(log_severe, logtype_default, "INTERNAL ERROR: Signal %d in pid %d (%s)",sig,(int)getpid(),VERSION);
+	LOG(log_severe, logtype_default, "===============================================================");
   
-	smb_panic("internal error");
+	netatalk_panic("internal error");
 
 	if (cont_fn) {
 		cont_fn(NULL);
@@ -199,4 +160,3 @@ void fault_setup(void (*fn)(void *))
 #endif
 }
 
-#endif
