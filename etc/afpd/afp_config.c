@@ -370,10 +370,10 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
     }
 
     if (options->flags & OPTION_PROXY) {
-        LOG(log_info, logtype_afpd, "AFP/TCP proxy initialized for %s:%d (%s)",
+        LOG(log_note, logtype_afpd, "AFP/TCP proxy initialized for %s:%d (%s)",
             getip_string((struct sockaddr *)&dsi->server), getip_port((struct sockaddr *)&dsi->server), VERSION);
     } else {
-        LOG(log_info, logtype_afpd, "AFP/TCP started, advertising %s:%d (%s)",
+        LOG(log_note, logtype_afpd, "AFP/TCP started, advertising %s:%d (%s)",
             getip_string((struct sockaddr *)&dsi->server), getip_port((struct sockaddr *)&dsi->server), VERSION);
     }
 

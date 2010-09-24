@@ -1,6 +1,4 @@
 /*
- * $Id: auth.c,v 1.71 2009-11-30 15:30:47 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -263,8 +261,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
         return AFPERR_NOTAUTH;
     }
 
-    LOG(log_info, logtype_afpd, "login %s (uid %d, gid %d) %s", pwd->pw_name,
-        pwd->pw_uid, pwd->pw_gid , afp_versions[afp_version_index].av_name);
+    LOG(log_note, logtype_afpd, "%2 Login by %s",
+        afp_versions[afp_version_index].av_name, pwd->pw_name);
 
 #ifndef NO_DDP
     if (obj->proto == AFPPROTO_ASP) {
@@ -873,7 +871,7 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen  _U_)
 {
-    LOG(log_info, logtype_afpd, "logout %s", obj->username);
+    LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
     close_all_vol();
     obj->exit(0);
     return AFP_OK;
@@ -1093,9 +1091,9 @@ int auth_load(const char *path, const char *list)
         if (stat(name, &st) == 0) {
             if ((mod = uam_load(name, p))) {
                 uam_attach(&uam_modules, mod);
-                LOG(log_info, logtype_afpd, "uam: %s loaded", p);
+                LOG(log_debug, logtype_afpd, "uam: %s loaded", p);
             } else {
-                LOG(log_info, logtype_afpd, "uam: %s load failure",p);
+                LOG(log_error, logtype_afpd, "uam: %s load failure",p);
             }
         } else {
             LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
