@@ -951,8 +951,11 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             ret = set_acl_vfs(vol, s_path->u_name, 0, ibuf);
         if (ret == 0)
             ret = AFP_OK;
-        else
+        else {
+            LOG(log_warning, logtype_afpd, "afp_setacl(\"%s/%s\"): error",
+                getcwdpath(), s_path->u_name);
             ret = AFPERR_MISC;
+        }
     }
 
     LOG(log_debug9, logtype_afpd, "afp_setacl: END");

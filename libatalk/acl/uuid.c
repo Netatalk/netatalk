@@ -24,6 +24,7 @@
 #include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/uuid.h>
+#include <atalk/util.h>
 
 #include "aclldap.h"
 #include "cache.h"
@@ -158,7 +159,8 @@ int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     if (ret == 0) {     /* found in cache */
 #ifdef DEBUG
         uuid_bin2string( uuidp, &uuid_string);
-        LOG(log_debug9, logtype_afpd, "getnamefromuuid{cache}: UUID: %s -> name: %s, type:%s", uuid_string, *name, uuidtype[*type]);
+        LOG(log_debug9, logtype_afpd, "getnamefromuuid{cache}: UUID: %s -> name: %s, type:%s",
+            uuid_string, *name, uuidtype[*type]);
         free(uuid_string);
         uuid_string = NULL;
 #endif
@@ -166,11 +168,13 @@ int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
         uuid_bin2string( uuidp, &uuid_string);
         ret = ldap_getnamefromuuid( uuid_string, name, type);
         if (ret != 0) {
-            LOG(log_error, logtype_afpd, "getnamefromuuid: no result from ldap_getnamefromuuid");
+            LOG(log_warning, logtype_afpd, "getnamefromuuid(%s): no result from ldap_getnamefromuuid",
+                uuid_string);
             goto cleanup;
         }
         add_cachebyuuid( uuidp, *name, *type, 0);
-        LOG(log_debug, logtype_afpd, "getnamefromuuid{LDAP}: UUID: %s -> name: %s, type:%s",uuid_string, *name, uuidtype[*type]);
+        LOG(log_debug, logtype_afpd, "getnamefromuuid{LDAP}: UUID: %s -> name: %s, type:%s",
+            uuid_string, *name, uuidtype[*type]);
     }
 
 cleanup:
