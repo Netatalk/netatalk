@@ -32,7 +32,7 @@
 #define AFP_PANIC(why) \
     do {                                            \
         netatalk_panic(why);                        \
-        exit(1);                                    \
+        abort();                                    \
     } while(0);
 
 /* LOG assert errors */
