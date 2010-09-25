@@ -377,7 +377,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
             dircache_dump();
             AFP_PANIC("dircache_remove");
         }
-        hash_delete(index_didname, hn);
+        hash_delete_free(index_didname, hn);
     }
 
     if (flags & DIRCACHE) {
@@ -387,7 +387,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
             dircache_dump();
             AFP_PANIC("dircache_remove");
         }
-        hash_delete(dircache, hn);
+        hash_delete_free(dircache, hn);
     }
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {removed}", ntohl(dir->d_did), dir->d_u_name);
