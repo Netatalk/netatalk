@@ -150,6 +150,9 @@ int main(int ac, char **av)
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
+    /* Default log setup: log to syslog */
+    setuplog("default log_note");
+
     afp_options_init(&default_options);
     if (!afp_options_parse(ac, av, &default_options))
         exit(EXITERR_CONF);

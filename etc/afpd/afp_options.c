@@ -153,6 +153,8 @@ void afp_options_free(struct afp_options *opt,
 	free(opt->ntdomain);
     if (opt->ntseparator && (opt->ntseparator != save->ntseparator))
 	free(opt->ntseparator);
+    if (opt->logconfig && (opt->logconfig != save->logconfig))
+	free(opt->logconfig);
 }
 
 /* initialize options */
@@ -339,6 +341,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         char *optstr;
         if ((optstr = getoption(c, "-setuplog"))) {
             setuplog(optstr);
+            options->logconfig = optstr; /* at least store the last (possibly only) one */
             c += sizeof("-setuplog");
         }
     }

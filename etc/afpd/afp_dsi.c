@@ -1,6 +1,4 @@
 /*
- * $Id: afp_dsi.c,v 1.53 2010/03/30 12:55:26 franklahm Exp $
- *
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
@@ -392,21 +390,23 @@ void afp_over_dsi(AFPObj *obj)
             dircache_dump();
         }
 
+        /* The first SIGINT enables debugging, the next restores the config */
         if (debug_request) {
-            char logstr[50];
+            static int debugging = 0;
             debug_request = 0;
 
-            /* The first SIGINT enables debugging, the second one kills us */
-            action.sa_handler = afp_dsi_die;
-            sigfillset( &action.sa_mask );
-            action.sa_flags = SA_RESTART;
-            if ( sigaction( SIGINT, &action, NULL ) < 0 ) {
-                LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
-                afp_dsi_die(EXITERR_SYS);
+            if (debugging) {
+                if (obj->options.logconfig)
+                    setuplog(obj->options.logconfig);
+                else
+                    setuplog("default log_note");
+                debugging = 0;
+            } else {
+                char logstr[50];
+                debugging = 1;
+                sprintf(logstr, "default log_maxdebug /tmp/afpd.%u.XXXXXX", getpid());
+                setuplog(logstr);
             }
-
-            sprintf(logstr, "default log_maxdebug /tmp/afpd.%u.XXXXXX", getpid());
-            setuplog(logstr);
         }
 
         if (cmd == DSIFUNC_TICKLE) {

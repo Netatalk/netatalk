@@ -86,6 +86,7 @@ struct afp_options {
 
     /* default value for winbind authentication */
     char *ntdomain, *ntseparator;
+    char *logconfig;
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
