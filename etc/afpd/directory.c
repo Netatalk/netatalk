@@ -57,6 +57,7 @@ extern void addir_inherit_acl(const struct vol *vol);
  ******************************************************************************************/
 
 int         afp_errno;
+/* As long as directory.c hasn't got its own init call, this get initialized in dircache_init */
 struct dir rootParent  = {
     NULL, NULL, NULL, NULL,          /* path, d_m_name, d_u_name, d_m_name_ucs2 */
     NULL, NULL, 0, 0,                /* qidx_node, d_ofork, ctime, d_flags */

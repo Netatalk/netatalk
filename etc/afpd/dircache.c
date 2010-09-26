@@ -379,7 +379,8 @@ int dircache_add(struct dir *dir)
         queue_count++;
     }
 
-    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}", ntohl(dir->d_did), cfrombstring(dir->d_u_name));
+    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}",
+        ntohl(dir->d_did), cfrombstring(dir->d_u_name));
 
    AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
@@ -411,8 +412,8 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     if (flags & DIDNAME_INDEX) {
         if ((hn = hash_lookup(index_didname, dir)) == NULL) {
-            LOG(log_error, logtype_default, "dircache_remove(%u,%s): not in didname index", 
-                ntohl(dir->d_did), dir->d_u_name);
+            LOG(log_error, logtype_default, "dircache_remove(%u,\"%s\"): not in didname index", 
+                ntohl(dir->d_did), cfrombstring(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
         }
@@ -421,15 +422,16 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     if (flags & DIRCACHE) {
         if ((hn = hash_lookup(dircache, dir)) == NULL) {
-            LOG(log_error, logtype_default, "dircache_remove(%u,%s): not in dircache", 
-                ntohl(dir->d_did), dir->d_u_name);
+            LOG(log_error, logtype_default, "dircache_remove(%u,\"%s\"): not in dircache", 
+                ntohl(dir->d_did), cfrombstring(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
         }
         hash_delete_free(dircache, hn);
     }
 
-    LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {removed}", ntohl(dir->d_did), dir->d_u_name);
+    LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {removed}",
+        ntohl(dir->d_did), cfrombstring(dir->d_u_name));
 
    AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
