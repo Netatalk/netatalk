@@ -1,6 +1,4 @@
 /*
-  $Id: dbif.h,v 1.9 2009-12-21 06:41:09 franklahm Exp $
- 
   Copyright (C) Joerg Lenneis 2003
   Copyright (C) Frank Lahm 2009
   All Rights Reserved.  See COPYING.

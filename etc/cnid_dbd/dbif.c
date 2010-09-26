@@ -1,6 +1,4 @@
 /*
- * $Id: dbif.c,v 1.20 2010-01-19 14:57:11 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * Copyright (C) Frank Lahm 2009
  * All Rights Reserved.  See COPYING.
@@ -1049,9 +1047,11 @@ int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close)
     static DBT key = { 0 }, data = { 0 };
     DB *db = dbd->db_table[DBIF_CNID].db;
 
-    if (close && dbd->db_cur) {
-        dbd->db_cur->close(dbd->db_cur);
-        dbd->db_cur = NULL;
+    if (close) {
+        if (dbd->db_cur) {
+            dbd->db_cur->close(dbd->db_cur);
+            dbd->db_cur = NULL;
+        }
         return 0;
     }
 
