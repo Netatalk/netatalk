@@ -492,7 +492,10 @@ void dircache_dump(void)
     char tmpnam[64];
     FILE *dump;
     qnode_t *n = index_queue->next;
+    hnode_t *hn;
+    hscan_t hs;
     const struct dir *dir;
+    int i;
 
     LOG(log_warning, logtype_afpd, "Dumping directory cache...");
 
@@ -503,12 +506,50 @@ void dircache_dump(void)
     }
     setbuf(dump, NULL);
 
-    fprintf(dump, "Number of cache entries: %u\n", queue_count);
+    fprintf(dump, "Number of cache entries in LRU queue: %u\n", queue_count);
     fprintf(dump, "Configured maximum cache size: %u\n\n", dircache_maxsize);
+
+    fprintf(dump, "Primary CNID index:\n");
+    fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
+    fprintf(dump, "====================================================================\n");
+    hash_scan_begin(&hs, dircache);
+    i = 1;
+    while ((hn = hash_scan_next(&hs))) {
+        dir = hnode_get(hn);
+        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s%s  %s\n",
+                i++,
+                ntohs(dir->d_vid),
+                ntohl(dir->d_pdid),
+                ntohl(dir->d_did),
+                dir->d_fullpath ? "d" : "f",
+                (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
+                dir->d_ofork ? "o" : "-",
+                cfrombstring(dir->d_u_name));
+    }
+
+    fprintf(dump, "\Secondary DID/name index:\n");
+    fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
+    fprintf(dump, "====================================================================\n");
+    hash_scan_begin(&hs, index_didname);
+    i = 1;
+    while ((hn = hash_scan_next(&hs))) {
+        dir = hnode_get(hn);
+        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s%s  %s\n",
+                i++,
+                ntohs(dir->d_vid),
+                ntohl(dir->d_pdid),
+                ntohl(dir->d_did),
+                dir->d_fullpath ? "d" : "f",
+                (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
+                dir->d_ofork ? "o" : "-",
+                cfrombstring(dir->d_u_name));
+    }
+
+    fprintf(dump, "\nLRU Queue:\n");
     fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
     fprintf(dump, "====================================================================\n");
 
-    for (int i = 1; i <= queue_count; i++) {
+    for (i = 1; i <= queue_count; i++) {
         if (n == index_queue)
             break;
         dir = (struct dir *)n->data;
