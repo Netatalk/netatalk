@@ -37,20 +37,59 @@
 #include "globals.h"
 
 /*
- * Dircache and indexes
- * ====================
+ * Directory Cache
+ * ===============
+ *
+ * Cache files and directories in a LRU cache.
+ *
+ * The directory cache caches directories and files(!). The main reason for having the cache
+ * is to avoid recursively walking up the CNID patch, querying the CNID database each time, when
+ * we have to calculate the location of eg directory with CNID 30, which is located in a dir with
+ * CNID 25, next CNID 20 and then CNID 2 (the volume root as per AFP spec).
+ * If all these dirs where in the cache, each database look up can be avoided. Additionally there's
+ * the element "fullpath" in struct dir, which is used to avoid the recursion in any case. Wheneveer
+ * a struct dir is initialized, the fullpath to the directory is stored there.
+ *
+ * In order to speed up the CNID query for files too, which eg happens when a directory is enumerated,
+ * files are stored too in the dircache. In order to differentiate between files and dirs, we re-use
+ * the element fullpath, which for files is always NULL.
+ *
+ * The most frequent codepatch that leads to caching is directory enumeration (cf enumerate.c):
+ * - if a element is a directory:
+ *   (1) the cache is searched by dircache_search_by_name()
+ *   (2) if it wasn't found a new struct dir is created and cached both from within dir_add()
+ * - for files the caching happens a little bit down the call chain:
+ *   (3) first getfilparams() is called, which calls
+ *   (4) getmetadata() where the cache is searched with dircache_search_by_name()
+ *   (5) if the element is not found
+ *   (6) get_id() queries the CNID from the database
+ *   (7) then a struct dir is initialized via dir_new() (note the fullpath arg is NULL)
+ *   (8) finally added to the cache with dircache_add()
+ * (2) of course does contain the steps 6,7 and 8.
+ *
+ * The dircache is a LRU cache, whenever it fills up we call dircache_evict internally which removes
+ * DIRCACHE_FREE_QUANTUM elements from the cache.
+ *
+ * There is only one cache for all volumes, so of course we use the volume is in hashing calculations.
+ *
+ * Indexes
+ * =======
+ *
  * The maximum dircache size is:
  * max(DEFAULT_MAX_DIRCACHE_SIZE, min(size, MAX_POSSIBLE_DIRCACHE_SIZE)).
  * It is a hashtable which we use to store "struct dir"s in. If the cache get full, oldest
  * entries are evicted in chunks of DIRCACHE_FREE.
+ *
  * We have/need two indexes:
  * - a DID/name index on the main dircache, another hashtable
  * - a queue index on the dircache, for evicting the oldest entries
  * The cache supports locking of struct dir elements through the DIRF_CACHELOCK flag. A dir
  * locked this way wont ever be removed from the cache, so be careful.
  *
- * Sending SIGHUP to a afpd child causes it to dump the dircache to a file
- * "/tmp/dircache.PID".
+ * Debugging
+ * =========
+ *
+ * Sending SIGHUP to a afpd child causes it to dump the dircache to a file "/tmp/dircache.PID".
  */
 
 /********************************************************
@@ -58,7 +97,7 @@
  ********************************************************/
 
 /*****************************
- *       THE dircache        */
+ *       the dircache        */
 
 static hash_t       *dircache;        /* The actual cache */
 static unsigned int dircache_maxsize; /* cache maximum size */
