@@ -879,9 +879,10 @@ static int dbd_readdir(int volroot, cnid_t did)
 
         /* Check for special folders in volume root e.g. ".zfs" */
         if (volroot) {
-            if ((name = check_special_dirs(ep->d_name)) != NULL)
+            if ((name = check_special_dirs(ep->d_name)) != NULL) {
                 dbd_log(LOGSTD, "Ignoring special dir \"%s\"", name);
-            continue;
+                continue;
+            }
         }
 
         /* Skip .AppleDouble dir in this loop */
