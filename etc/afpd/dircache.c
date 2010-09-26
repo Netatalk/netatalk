@@ -502,18 +502,23 @@ void dircache_dump(void)
     setbuf(dump, NULL);
 
     fprintf(dump, "Number of cache entries: %u\n", queue_count);
-    fprintf(dump, "Configured maximum cache size: %u\n", dircache_maxsize);
-    fprintf(dump, "==================================================\n\n");
+    fprintf(dump, "Configured maximum cache size: %u\n\n", dircache_maxsize);
+    fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
+    fprintf(dump, "====================================================================\n");
 
     for (int i = 1; i <= queue_count; i++) {
         if (n == index_queue)
             break;
         dir = (struct dir *)n->data;
-        fprintf(dump, "%05u: vid:%u, pdid:%6u, did:%6u, path:%s, locked:%3s, oforks:%s\n",
-                i, ntohs(dir->d_vid), ntohl(dir->d_pdid), ntohl(dir->d_did),
-                cfrombstring(dir->d_u_name),
-                (dir->d_flags & DIRF_CACHELOCK) ? "yes" : "no",
-                dir->d_ofork ? "yes" : "no");
+        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s%s  %s\n",
+                i,
+                ntohs(dir->d_vid),
+                ntohl(dir->d_pdid),
+                ntohl(dir->d_did),
+                dir->d_fullpath ? "d" : "f",
+                (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
+                dir->d_ofork ? "o" : "-",
+                cfrombstring(dir->d_u_name));
         n = n->next;
     }
 
