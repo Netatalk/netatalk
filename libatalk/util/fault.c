@@ -114,7 +114,8 @@ static void fault_report(int sig)
 {
 	static int counter;
 
-	if (counter) _exit(1);
+	if (counter)
+        abort();
 
 	counter++;
 
@@ -134,7 +135,7 @@ static void fault_report(int sig)
 #endif
 		return; /* this should cause a core dump */
 	}
-	exit(1);
+    abort();
 }
 
 /****************************************************************************
