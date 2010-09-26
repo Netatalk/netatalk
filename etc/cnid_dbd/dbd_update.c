@@ -1,7 +1,6 @@
 /*
- * $Id: dbd_update.c,v 1.7 2009-07-12 09:21:34 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2009,2010
  * All Rights Reserved.  See COPYING.
  */
 
@@ -52,7 +51,7 @@ int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)
         goto err_db;
 
-    LOG(log_info, logtype_cnid, "dbd_update: Updated dbd with dev/ino: 0x%llx/0x%llx, did: %u, name: %s, cnid: %u",
+    LOG(log_debug, logtype_cnid, "dbd_update: Updated dbd with dev/ino: 0x%llx/0x%llx, did: %u, name: %s, cnid: %u",
         (unsigned long long)rqst->dev, (unsigned long long)rqst->ino, ntohl(rqst->did), rqst->name, ntohl(rqst->cnid));
 
     rply->result = CNID_DBD_RES_OK;
