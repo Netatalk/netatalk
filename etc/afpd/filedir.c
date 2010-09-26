@@ -585,7 +585,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 
             struct dir *cachedfile;
             if (cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath))) {
-                dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
+                dircache_remove(vol, cachedfile, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
                 dir_free(cachedfile);
             }
         }
