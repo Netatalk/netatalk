@@ -1048,6 +1048,9 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
 
     /* Start main loop through dbd: get CNID from dbd */
     while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) {
+        /* Check if we got a termination signal */
+        if (alarmed)
+            longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
 
         if (deleted > 50) {
             deleted = 0;
@@ -1073,6 +1076,9 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
                         dbif_txn_close(dbd, ret);
                         deleted++;
                     }
+                    /* Check if we got a termination signal */
+                    if (alarmed)
+                        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
                 }
                 return;
             } else

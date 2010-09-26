@@ -21,6 +21,7 @@ Changes in 2.1.4
 * NEW: cnid_metad: use a PID lockfile
 * NEW: afpd: prevent log flooding
 * UPD: dbd: ignore ".zfs" snapshot directories
+* UPD: dbd: support interrupting -re mode
 
 Changes in 2.1.3
 ================
