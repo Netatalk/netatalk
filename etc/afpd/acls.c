@@ -115,7 +115,7 @@ static int strip_trivial_aces(ace_t **saces, int sacecount)
         i++;
     }
     /* malloc buffer for new ACL */
-    EC_NULL_PRINT(new_aces = malloc(nontrivaces * sizeof(ace_t)));
+    EC_NULL_LOG(new_aces = malloc(nontrivaces * sizeof(ace_t)));
 
     /* Copy non-trivial ACEs */
     for (i=0, j=0; i < sacecount; ) {
@@ -154,7 +154,7 @@ static int strip_nontrivial_aces(ace_t **saces, int sacecount)
         i++;
     }
     /* malloc buffer for new ACL */
-    EC_NULL_PRINT(new_aces = malloc(trivaces * sizeof(ace_t)));
+    EC_NULL_LOG(new_aces = malloc(trivaces * sizeof(ace_t)));
 
     /* Copy trivial ACEs */
     for (i=0, j=0; i < sacecount; ) {
@@ -185,7 +185,7 @@ static ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2cou
     int i, j;
 
     /* malloc buffer for new ACL */
-    EC_NULL_PRINT(new_aces = malloc((ace1count + ace2count) * sizeof(ace_t)));
+    EC_NULL_LOG(new_aces = malloc((ace1count + ace2count) * sizeof(ace_t)));
 
     /* Copy ACEs from buf1 */
     for (i=0; i < ace1count; ) {
@@ -236,17 +236,17 @@ static int map_aces_solaris_to_darwin(ace_t *aces, darwin_ace_t *darwin_aces, in
             /* its a user ace */
             LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: found user ACE with uid: %d", aces->a_who);
 
-            EC_NULL_PRINT(pwd = getpwuid(aces->a_who));
+            EC_NULL_LOG(pwd = getpwuid(aces->a_who));
             LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: uid: %d -> name: %s", aces->a_who, pwd->pw_name);
 
-            EC_ZERO_PRINT(getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid));
+            EC_ZERO_LOG(getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid));
         } else {
             /* its a group ace */
             LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: found group ACE with gid: %d", aces->a_who);
 
-            EC_NULL_PRINT(grp = getgrgid(aces->a_who));
+            EC_NULL_LOG(grp = getgrgid(aces->a_who));
             LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: gid: %d -> name: %s", aces->a_who, grp->gr_name);
-            EC_ZERO_PRINT(getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid));
+            EC_ZERO_LOG(getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid));
         }
 
         /* map flags */
@@ -308,10 +308,10 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
         EC_ZERO(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
 
         if (uuidtype == UUID_USER) {
-            EC_NULL_PRINT(pwd = getpwnam(name));
+            EC_NULL_LOG(pwd = getpwnam(name));
             nfsv4_aces->a_who = pwd->pw_uid;
         } else { /* hopefully UUID_GROUP*/
-            EC_NULL_PRINT(grp = getgrnam(name));
+            EC_NULL_LOG(grp = getgrnam(name));
             nfsv4_aces->a_who = (uid_t)(grp->gr_gid);
             nfsv4_ace_flags |= ACE_IDENTIFIER_GROUP;
         }
@@ -430,30 +430,30 @@ static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
 
         acl_entry_t e;
         acl_tag_t tag;
-        EC_ZERO_PRINT(acl_create_entry(aclp, &e));
+        EC_ZERO_LOG(acl_create_entry(aclp, &e));
 
          /* uid/gid */
-        EC_ZERO_PRINT(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
+        EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         if (uuidtype == UUID_USER) {
-            EC_ZERO_PRINT(pwd = getpwnam(name));
+            EC_ZERO_LOG(pwd = getpwnam(name));
             tag = ACL_USER_OBJ;
             id = pwd->pw_uid;
         } else { /* hopefully UUID_GROUP*/
-            EC_ZERO_PRINT(getgrnam(name));
+            EC_ZERO_LOG(getgrnam(name));
             tag = ACL_GROUP_OBJ;
             id = (uid_t)(grp->gr_gid);
         }
         free(name);
         name = NULL;
 
-        EC_ZERO_PRINT(acl_set_tag_type(e, tag));
-        EC_ZERO_PRINT(acl_set_qualifier(e, &id));
+        EC_ZERO_LOG(acl_set_tag_type(e, tag));
+        EC_ZERO_LOG(acl_set_qualifier(e, &id));
         posix_ace_set_mode(e, ntohl(darwin_aces->darwin_ace_rights), is_dir);
 
         darwin_aces++;
     }
 
-    EC_ZERO_PRINT(acl_valid(*aclp));
+    EC_ZERO_LOG(acl_valid(*aclp));
 
 EC_CLEANUP:
     if (name)
@@ -493,33 +493,33 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
         entry_id = ACL_NEXT_ENTRY;
 
         /* get ACE type */
-        EC_ZERO_PRINT(acl_get_tag_type(e, &tag));
+        EC_ZERO_LOG(acl_get_tag_type(e, &tag));
 
         /* we return user and group ACE */
         switch (tag) {
         case ACL_USER:
-            EC_NULL_PRINT(uid = (uid_t *)acl_get_qualifier(e));
-            EC_NULL_PRINT(pwd = getpwuid(*uid));
+            EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
+            EC_NULL_LOG(pwd = getpwuid(*uid));
             LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: uid: %d -> name: %s",
                 *uid, pwd->pw_name);
-            EC_ZERO_PRINT(getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid));
+            EC_ZERO_LOG(getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid));
             acl_free(uid);
             uid = NULL;
             break;
 
         case ACL_GROUP:
-            EC_NULL_PRINT(gid = (gid_t *)acl_get_qualifier(e));
-            EC_NULL_PRINT(grp = getgrgid(*gid));
+            EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
+            EC_NULL_LOG(grp = getgrgid(*gid));
             LOG(log_debug, logtype_afpd, "map_aces_posix_to_darwin: gid: %d -> name: %s",
                 *gid, grp->gr_name);
-            EC_ZERO_PRINT(getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid));
+            EC_ZERO_LOG(getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid));
             acl_free(gid);
             gid = NULL;
             break;
 
             /* store mask so we can apply it later in a second loop */
         case ACL_MASK:
-            EC_ZERO_PRINT(acl_get_permset(e, &mask));
+            EC_ZERO_LOG(acl_get_permset(e, &mask));
             havemask = 1;
             continue;
 
@@ -536,7 +536,7 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
         darwin_aces->darwin_ace_flags = htonl(flags);
 
         /* rights */
-        EC_ZERO_PRINT(acl_get_permset(e, &permset));
+        EC_ZERO_LOG(acl_get_permset(e, &permset));
 
         rights = 0;
         if (acl_get_perm(permset, ACL_READ))

@@ -21,16 +21,16 @@
 
 /* 
  * We have these macros:
- * EC_ZERO_PRINT
+ * EC_ZERO_LOG
  * EC_ZERO
- * EC_NEG1_PRINT
+ * EC_NEG1_LOG
  * EC_NEG1
- * EC_NULL_PRINT
+ * EC_NULL_LOG
  * EC_NULL
  */
 
 /* check for return val 0 which is ok, every other is an error, prints errno */
-#define EC_ZERO_PRINT(a) \
+#define EC_ZERO_LOG(a) \
     do { \
         if ((a) != 0) { \
             LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
@@ -49,7 +49,7 @@
     } while (0)
 
 /* check for return val 0 which is ok, every other is an error, prints errno */
-#define EC_NEG1_PRINT(a) \
+#define EC_NEG1_LOG(a) \
     do { \
         if ((a) == -1) { \
             LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
@@ -68,7 +68,7 @@
     } while (0)
 
 /* check for return val != NULL, prints errno */
-#define EC_NULL_PRINT(a) \
+#define EC_NULL_LOG(a) \
     do { \
         if ((a) == NULL) { \
             LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
