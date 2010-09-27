@@ -43,7 +43,7 @@
  * Cache files and directories in a LRU cache.
  *
  * The directory cache caches directories and files(!). The main reason for having the cache
- * is to avoid recursively walking up the CNID patch, querying the CNID database each time, when
+ * is avoiding recursive walks up the path, querying the CNID database each time, when
  * we have to calculate the location of eg directory with CNID 30, which is located in a dir with
  * CNID 25, next CNID 20 and then CNID 2 (the volume root as per AFP spec).
  * If all these dirs where in the cache, each database look up can be avoided. Additionally there's
