@@ -31,7 +31,7 @@
 #include <acl/libacl.h>
 #endif
 
-#include <atalk/errcheck.h>
+#include <atalk/errchk.h>
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
 #include <atalk/afp.h>

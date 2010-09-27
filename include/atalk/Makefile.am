@@ -8,4 +8,4 @@ atalkinclude_HEADERS = \
 	server_ipc.h tdb.h uam.h unicode.h util.h uuid.h volinfo.h \
 	zip.h ea.h acl.h unix.h directory.h hash.h volume.h
 
-noinst_HEADERS = cnid_dbd_private.h cnid_private.h bstrlib.h
+noinst_HEADERS = cnid_dbd_private.h cnid_private.h bstrlib.h errchk.h
