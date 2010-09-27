@@ -1,5 +1,4 @@
 /*
-   $Id: uuid.h,v 1.1 2009-02-02 11:55:01 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -42,7 +41,7 @@ extern char *ldap_uid_attr;
  ********************************************************/
 
 extern int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid);
-extern int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type);
+extern int getnamefromuuid( const uuidp_t uuidp, char **name, uuidtype_t *type);
 extern int uuid_bin2string( uuidp_t uuidp, char **uuidstring);
 extern void uuid_string2bin( const char *uuidstring, uuidp_t uuid);
 

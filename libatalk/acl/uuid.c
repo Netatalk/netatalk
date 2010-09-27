@@ -151,7 +151,7 @@ cleanup:
  *
  * Caller must free name appropiately.
  */
-int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
+int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     char *uuid_string = NULL;
 
