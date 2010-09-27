@@ -144,16 +144,70 @@ Author: Andrew Morgan <morgan@linux.kernel.org>
 
 Linux-PAM is a suite of shared libraries that enable the local system
 administrator to choose how applications authenticate users.
-
 You can get the Linux PAM documentation and sources from
 http://www.kernel.org/pub/linux/libs/pam/
-
 Netatalk also supports other standard PAM implementations such as OpenPAM.
 
-8 Berkeley DB
+8. Berkeley DB
 Berkeley DB is a programmatic toolkit that provides fast, reliable,
 scalable, and mission-critical database support to software
 developers. BDB can downloaded from
 http://www.oracle.com/database/berkeley-db/index.html
 Netatalk's CNID database uses the library and header files from BDB.
 Currently, Netatalk supports BDB 4.6 and later.
+
+Error checking and logging
+==========================
+We wan't rigid error checking and concise log messages. This often leads
+to signifant code bloat where the relevant function call is buried in error
+checking and logging statements.
+In order to alleviate error checking and code readability, we provide a set
+of error checking macros in <atalk/errchk.h>. These macros compare the return
+value of statements againt 0, NULL, -1 (and maybe more, check it out).
+Every macro comes in two flavours: EC_CHECK and EC_CHECK_LOG, the difference
+being that the *LOG macro logs the error.
+Both macros unconditionally jump to a cleanup label where the neccessary
+cleanup can be done alongside controlling the return value.
+
+Example:
+- stat() without EC macro:
+  static int func(const char *name) {
+    int ret = 0;
+    ...
+    if ((ret = stat(name, &some_struct_stat)) != 0) {
+      LOG(...);
+      ret = -1; /* often needed to explicitly set the error indicating return value */
+      goto cleanup;
+    }
+
+    return ret;
+
+  cleanup:
+    ...
+    return ret;
+  }
+
+- stat() with EC macro:
+  static int func(const char *name) {
+    EC_INIT; /* expands to int ret = 0; */
+
+    EC_ZERO(stat(name, &some_struct_stat)); /* expands to complete if block from above */
+
+    return 0; /* ret is hidden, so return explicit success value */
+
+EC_CLEANUP:
+    ...
+    EC_EXIT;
+  }
+
+A boileplate function template is:
+
+int func(void)
+{
+    EC_INIT;
+
+    ...your code here...
+
+EC_CLEANUP:
+    EC_EXIT;
+}
