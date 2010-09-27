@@ -250,7 +250,7 @@ static void client_callback(AvahiClient *client,
  * neccessary config setting.
  */
 void av_zeroconf_setup(const AFPConfig *configs) {
-    int error, ret;
+    int error;
 
     /* initialize the struct that holds our config settings. */
     if (ctx) {
@@ -291,8 +291,6 @@ fail:
  * This function finally runs the loop impl.
  */
 int av_zeroconf_run(void) {
-    int ret;
-
     /* Finally, start the event loop thread */
     if (avahi_threaded_poll_start(ctx->threaded_poll) < 0) {
         LOG(log_error, logtype_afpd, "Failed to create thread: %s",

@@ -202,9 +202,27 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 				  (1 << FILPBIT_FNUM) |\
 				  (1 << FILPBIT_UNIXPR)))
 
-/* -------------------------- */
-uint32_t get_id(struct vol *vol, struct adouble *adp,  const struct stat *st,
-                const cnid_t did, char *upath, const int len) 
+/*!
+ * @brief Get CNID for did/upath args both from database and adouble file
+ *
+ * 1. Get the objects CNID as stored in its adouble file
+ * 2. Get the objects CNID from the database
+ * 3. If there's a problem with a "dbd" database, fallback to "tdb" in memory
+ * 4. In case 2 and 3 differ, store 3 in the adouble file
+ *
+ * @param vol    (rw) volume
+ * @param adp    (rw) adouble struct of object upath, might be NULL
+ * @param st     (r) stat of upath, must NOT be NULL
+ * @param did    (r) parent CNID of upath
+ * @param upath  (r) name of object
+ * @param len    (r) strlen of upath
+ */
+uint32_t get_id(struct vol *vol,
+                struct adouble *adp, 
+                const struct stat *st,
+                const cnid_t did,
+                const char *upath,
+                const int len) 
 {
     static int first = 1;       /* mark if this func is called the first time */
     u_int32_t adcnid;
@@ -214,9 +232,9 @@ restart:
     if (vol->v_cdb != NULL) {
         /* prime aint with what we think is the cnid, set did to zero for
            catching moved files */
-        adcnid = ad_getid(adp, st->st_dev, st->st_ino, 0, vol->v_stamp);
+        adcnid = ad_getid(adp, st->st_dev, st->st_ino, 0, vol->v_stamp); /* (1) */
 
-	    dbcnid = cnid_add(vol->v_cdb, st, did, upath, len, adcnid);
+	    dbcnid = cnid_add(vol->v_cdb, st, did, upath, len, adcnid); /* (2) */
 	    /* Throw errors if cnid_add fails. */
 	    if (dbcnid == CNID_INVALID) {
             switch (errno) {
@@ -234,7 +252,7 @@ restart:
                 /* we have to do it here for "dbd" because it uses "lazy opening" */
                 /* In order to not end in a loop somehow with goto restart below  */
                 /*  */
-                if (first && (strcmp(vol->v_cnidscheme, "dbd") == 0)) {
+                if (first && (strcmp(vol->v_cnidscheme, "dbd") == 0)) { /* (3) */
                     cnid_close(vol->v_cdb);
                     free(vol->v_cnidscheme);
                     vol->v_cnidscheme = strdup("tdb");
@@ -268,9 +286,10 @@ restart:
                 goto exit;
             }
         }
-        else if (adp && (adcnid != dbcnid)) {
+        else if (adp && (adcnid != dbcnid)) { /* 4 */
             /* Update the ressource fork. For a folder adp is always null */
-            LOG(log_debug, logtype_afpd, "get_id: calling ad_setid. adcnid: %u, dbcnid: %u", htonl(adcnid), htonl(dbcnid));
+            LOG(log_note, logtype_afpd, "get_id: calling ad_setid(old: %u, new: %u)",
+                htonl(adcnid), htonl(dbcnid));
             if (ad_setid(adp, st->st_dev, st->st_ino, dbcnid, did, vol->v_stamp)) {
                 ad_flush(adp);
             }

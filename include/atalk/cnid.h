@@ -111,7 +111,7 @@ struct _cnid_db *cnid_open(const char *volpath,
                            const char *cnidport); /* Only for dbd */
 
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
-			char *name, const size_t len, cnid_t hint);
+			const char *name, const size_t len, cnid_t hint);
 
 int    cnid_delete(struct _cnid_db *cdb, cnid_t id);
 

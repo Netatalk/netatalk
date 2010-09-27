@@ -527,7 +527,7 @@ void dircache_dump(void)
                 cfrombstring(dir->d_u_name));
     }
 
-    fprintf(dump, "\Secondary DID/name index:\n");
+    fprintf(dump, "\nSecondary DID/name index:\n");
     fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
     fprintf(dump, "====================================================================\n");
     hash_scan_begin(&hs, index_didname);

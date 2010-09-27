@@ -111,7 +111,7 @@ typedef int (*dir_loop)(struct dirent *, char *, void *);
 extern struct dir *dir_new(const char *mname, const char *uname, const struct vol *,
                            cnid_t pdid, cnid_t did, bstring fullpath); /* volume.c needs it once */
 extern void        dir_free (struct dir *);
-extern struct dir  *dir_add(const struct vol *, const struct dir *, struct path *, int);
+extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *, int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir, cnid_t pdid, cnid_t did,
                               const char *new_mname, const char *new_uname, bstring pdir_fullpath);
 extern int         dir_remove(const struct vol *vol, struct dir *dir);

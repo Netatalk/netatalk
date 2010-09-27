@@ -1,6 +1,4 @@
 /* 
- * $Id: cnid.c,v 1.13 2010-03-31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
  * 
@@ -216,7 +214,7 @@ u_int32_t flags;
 
 /* --------------- */
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
-			char *name, const size_t len, cnid_t hint)
+                const char *name, const size_t len, cnid_t hint)
 {
 cnid_t ret;
 

@@ -757,7 +757,7 @@ void dir_free(struct dir *dir)
  * 3. Build fullpath and create struct dir.
  * 4. Add it to the cache.
  *
- * @param vol   (r) pointer to struct vol
+ * @param vol   (r) pointer to struct vol, possibly modified in callee
  * @param dir   (r) pointer to parrent directory
  * @param path  (rw) pointer to struct path with valid path->u_name
  * @param len   (r) strlen of path->u_name
@@ -766,7 +766,7 @@ void dir_free(struct dir *dir)
  *
  * @note Function also assigns path->m_name from path->u_name.
  */
-struct dir *dir_add(const struct vol *vol, const struct dir *dir, struct path *path, int len)
+struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, int len)
 {
     int err = 0;
     struct dir  *cdir = NULL;
@@ -907,6 +907,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
  * @param did       (r) new DID
  * @param new_mname (r) new mac-name
  * @param new_uname (r) new unix-name
+ * @param pdir_fullpath (r) new fullpath of parent dir
  */
 int dir_modify(const struct vol *vol,
                struct dir *dir,
@@ -944,7 +945,7 @@ int dir_modify(const struct vol *vol,
             dir->d_u_name = dir->d_m_name;
         } else {
             if ((dir->d_u_name = bfromcstr(new_uname)) == NULL) {
-                LOG(log_error, logtype_afpd, "renamedir: bassigncstr: %s", strerror(errno) );
+                LOG(log_error, logtype_afpd, "dir_modify: bassigncstr: %s", strerror(errno) );
                 return -1;
             }
         }
@@ -2199,11 +2200,6 @@ int renamedir(const struct vol *vol,
         ad_setname(&ad, newname);
         ad_flush( &ad);
         ad_close_metadata( &ad);
-    }
-
-    if (dir_modify(vol, dir, curdir->d_did, 0, newname, dst, curdir->d_fullpath) != 0) {
-        LOG(log_error, logtype_afpd, "renamedir: fatal error from dir_modify: %s -> %s", src, dst);
-        return AFPERR_MISC;
     }
 
     return( AFP_OK );
