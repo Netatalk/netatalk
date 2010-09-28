@@ -164,10 +164,16 @@ checking and logging statements.
 In order to alleviate error checking and code readability, we provide a set
 of error checking macros in <atalk/errchk.h>. These macros compare the return
 value of statements againt 0, NULL, -1 (and maybe more, check it out).
-Every macro comes in two flavours: EC_CHECK and EC_CHECK_LOG, the difference
-being that the *LOG macro logs the error.
-Both macros unconditionally jump to a cleanup label where the neccessary
-cleanup can be done alongside controlling the return value.
+Every macro comes in four flavours: EC_CHECK, EC_CHECK_LOG, EC_CHECK_LOG_ERR
+and EC_CHECK_CUSTOM:
+- EC_CHECK just checks the CHECK
+- EC_CHECK_LOG additionally logs the stringified function call.
+- EC_CHECK_LOG_ERR allows specifying the return value
+- EC_CHECK_CUSTOM allows custom actions
+The macros EC_CHECK* unconditionally jump to a cleanup label where the
+neccessary cleanup can be done alongside controlling the return value.
+EC_CHECK_CUSTOM doesn't do that, so an extra "goto EC_CLEANUP" may be
+performed as appropiate.
 
 Example:
 - stat() without EC macro:
@@ -191,12 +197,16 @@ Example:
   static int func(const char *name) {
     EC_INIT; /* expands to int ret = 0; */
 
-    EC_ZERO(stat(name, &some_struct_stat)); /* expands to complete if block from above */
+    char *uppername = NULL
+    EC_NULL(uppername = strdup(name));
+    EC_ZERO(strtoupper(uppername));
 
-    return 0; /* ret is hidden, so return explicit success value */
+    EC_ZERO(stat(uppername, &some_struct_stat)); /* expands to complete if block from above */
+
+    EC_STATUS(0);
 
 EC_CLEANUP:
-    ...
+    if (uppername) free(uppername);
     EC_EXIT;
   }
 
@@ -207,6 +217,8 @@ int func(void)
     EC_INIT;
 
     ...your code here...
+
+    EC_STATUS(0);
 
 EC_CLEANUP:
     EC_EXIT;

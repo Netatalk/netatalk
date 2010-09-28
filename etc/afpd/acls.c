@@ -648,12 +648,13 @@ static int map_acl(int type, const void *acl, darwin_ace_t *buf, int ace_count)
    Returns 0 on success, -1 on error. */
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 {
-    int ace_count = 0;
+    EC_INIT;
     int mapped_aces = 0;
-    int err, dirflag;
+    int dirflag;
     uint32_t *darwin_ace_count = (u_int32_t *)rbuf;
 #ifdef HAVE_SOLARIS_ACLS
-    ace_t *aces;
+    int ace_count = 0;
+    ace_t *aces = NULL;
 #endif
 #ifdef HAVE_POSIX_ACLS
     struct stat st;
@@ -666,71 +667,47 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     rbuf += 4;
 
 #ifdef HAVE_SOLARIS_ACLS
-    if ( (ace_count = get_nfsv4_acl(name, &aces)) == -1) {
-        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get ACL");
-        return -1;
-    }
-
-    if ( (mapped_aces = map_acl(SOLARIS_2_DARWIN, aces, (darwin_ace_t *)rbuf, ace_count)) == -1) {
-        err = -1;
-        goto cleanup;
-    }
+    EC_NEG1(ace_count = get_nfsv4_acl(name, &aces));
+    EC_NEG1(mapped_aces = map_acl(SOLARIS_2_DARWIN, aces, (darwin_ace_t *)rbuf, ace_count));
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
     acl_t defacl = NULL , accacl = NULL;
 
     /* stat to check if its a dir */
-    if (stat(name, &st) != 0) {
-        LOG(log_error, logtype_afpd, "get_and_map_acl: stat: %s", strerror(errno));
-        err = -1;
-        goto cleanup;
-    }
+    EC_ZERO_LOG(stat(name, &st));
 
     /* if its a dir, check for default acl too */
     dirflag = 0;
     if (S_ISDIR(st.st_mode)) {
         dirflag = IS_DIR;
-        if ((defacl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL) {
-            LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get default ACL");
-            err = -1;
-            goto cleanup;
-        }        
-        if ((mapped_aces = map_acl(POSIX_DEFAULT_2_DARWIN | dirflag,
-                                   defacl,
-                                   (darwin_ace_t *)rbuf,
-                                   0)) == -1) {
-            err = -1;
-            goto cleanup;
-        }
+        EC_NULL_LOG(defacl = acl_get_file(name, ACL_TYPE_DEFAULT));
+        EC_NEG1(mapped_aces = map_acl(POSIX_DEFAULT_2_DARWIN | dirflag,
+                                      defacl,
+                                      (darwin_ace_t *)rbuf,
+                                      0));
     }
 
-    if ((accacl = acl_get_file(name, ACL_TYPE_ACCESS)) == NULL) {
-        LOG(log_error, logtype_afpd, "get_and_map_acl: couldnt get access ACL");
-        err = -1;
-        goto cleanup;
-    }
+    EC_NULL_LOG(accacl = acl_get_file(name, ACL_TYPE_ACCESS));
 
     int tmp;
-    if ((tmp = map_acl(POSIX_ACCESS_2_DARWIN | dirflag,
-                      accacl,
-                      (darwin_ace_t *)(rbuf + mapped_aces * sizeof(darwin_ace_t)),
-                       0)) == -1) {
-        err = -1;
-        goto cleanup;
-    }
+    EC_NEG1(tmp = map_acl(POSIX_ACCESS_2_DARWIN | dirflag,
+                          accacl,
+                          (darwin_ace_t *)(rbuf + mapped_aces * sizeof(darwin_ace_t)),
+                          0));
     mapped_aces += tmp;
 #endif /* HAVE_POSIX_ACLS */
 
     LOG(log_debug, logtype_afpd, "get_and_map_acl: mapped %d ACEs", mapped_aces);
 
-    err = 0;
     *darwin_ace_count = htonl(mapped_aces);
     *rbuflen += sizeof(darwin_acl_header_t) + (mapped_aces * sizeof(darwin_ace_t));
 
-cleanup:
+    EC_STATUS(0);
+
+EC_CLEANUP:
 #ifdef HAVE_SOLARIS_ACLS
-    free(aces);
+    if (aces) free(aces);
 #endif
 #ifdef HAVE_POSIX_ACLS
     if (defacl) acl_free(defacl);
@@ -738,7 +715,8 @@ cleanup:
 #endif /* HAVE_POSIX_ACLS */
 
     LOG(log_debug9, logtype_afpd, "get_and_map_acl: END");
-    return err;
+
+    EC_EXIT;
 }
 
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
@@ -767,7 +745,8 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
 #ifdef HAVE_SOLARIS_ACLS
 static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
 {
-    int ret, i, nfsv4_ace_count;
+    EC_INIT;
+    int i, nfsv4_ace_count;
     int tocopy_aces_count = 0, new_aces_count = 0, trivial_ace_count = 0;
     ace_t *old_aces, *new_aces = NULL;
     uint16_t flags;
@@ -795,11 +774,10 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     }
 
     /* Now malloc buffer exactly sized to fit all new ACEs */
-    new_aces = malloc( (ace_count + tocopy_aces_count) * sizeof(ace_t) );
-    if (new_aces == NULL) {
+    if (EC_NULL_CUSTOM(new_aces = malloc((ace_count + tocopy_aces_count) * sizeof(ace_t)))) {
         LOG(log_error, logtype_afpd, "set_acl: malloc %s", strerror(errno));
-        ret = AFPERR_MISC;
-        goto cleanup;
+        EC_STATUS(AFPERR_MISC);
+        goto EC_CLEANUP;
     }
 
     /* Start building new ACL */
@@ -817,10 +795,12 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     LOG(log_debug7, logtype_afpd, "set_acl: copied %d inherited ACEs", new_aces_count);
 
     /* Now the ACEs from the client */
-    ret = map_acl(DARWIN_2_SOLARIS, &new_aces[new_aces_count], (darwin_ace_t *)ibuf, ace_count);
-    if (ret == -1) {
-        ret = AFPERR_PARAM;
-        goto cleanup;
+    if (EC_NEG1_CUSTOM(map_acl(DARWIN_2_SOLARIS,
+                               &new_aces[new_aces_count],
+                               (darwin_ace_t *)ibuf,
+                               ace_count))) {
+        EC_STATUS(AFPERR_PARAM);
+        goto EC_CLEANUP;
     }
     new_aces_count += ace_count;
     LOG(log_debug7, logtype_afpd, "set_acl: mapped %d ACEs from client", ace_count);
@@ -838,42 +818,43 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     /* Ressourcefork first.
        Note: for dirs we set the same ACL on the .AppleDouble/.Parent _file_. This
        might be strange for ACE_DELETE_CHILD and for inheritance flags. */
-    if ( (ret = vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
+    if (EC_ZERO_CUSTOM(vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces))) {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         if (errno == (EACCES | EPERM))
-            ret = AFPERR_ACCESS;
+            EC_STATUS(AFPERR_ACCESS);
         else if (errno == ENOENT)
-            ret = AFPERR_NOITEM;
+            EC_STATUS(AFPERR_NOITEM);
         else
-            ret = AFPERR_MISC;
-        goto cleanup;
+            EC_STATUS(AFPERR_MISC);
+        goto EC_CLEANUP;
     }
-    if ( (ret = acl(name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
+    if (EC_ZERO_CUSTOM(acl(name, ACE_SETACL, new_aces_count, new_aces))) {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         if (errno == (EACCES | EPERM))
-            ret = AFPERR_ACCESS;
+            EC_STATUS(AFPERR_ACCESS);
         else if (errno == ENOENT)
-            ret = AFPERR_NOITEM;
+            EC_STATUS(AFPERR_NOITEM);
         else
-            ret = AFPERR_MISC;
-        goto cleanup;
+            EC_STATUS(AFPERR_MISC);
+        goto EC_CLEANUP;
     }
 
-    ret = AFP_OK;
+    EC_STATUS(AFP_OK);
 
-cleanup:
-    free(old_aces);
-    free(new_aces);
+EC_CLEANUP:
+    if (old_aces) free(old_aces);
+    if (new_aces) free(new_aces);
 
     LOG(log_debug9, logtype_afpd, "set_acl: END");
-    return ret;
+    EC_EXIT;
 }
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
 static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
 {
-    int ret = AFP_OK;
+    EC_INIT;
+    int is_dir = 0;
 
     LOG(log_maxdebug, logtype_afpd, "set_acl: BEGIN");
 
@@ -885,39 +866,24 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     if (inherit) {
         /* get default ACEs */
         struct stat st;
-        if (stat(name, &st) != 0) {
-            LOG(log_error, logtype_afpd, "set_acl: stat: %s", strerror(errno));
-            ret = AFPERR_NOOBJ;
-            goto exit;
-        }
+        EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_NOOBJ);
         if (S_ISDIR(st.st_mode)) {
-            if ((acl = acl_get_file(name, ACL_TYPE_DEFAULT)) == NULL) {
-                LOG(log_error, logtype_afpd, "set_acl: acl_get_file error: %s",
-                    strerror(errno));
-                ret = AFPERR_MISC;
-                goto exit;
-            }
+            is_dir = 1;
+            EC_NULL_LOG_ERR(acl = acl_get_file(name, ACL_TYPE_DEFAULT), AFPERR_MISC);
         }
+    } else {
+        EC_NULL_LOG_ERR(acl = acl_init(0), AFPERR_MISC);
     }
 
-    /*  */
-    if (acl == NULL && (acl = acl_init(0)) == NULL) {
-        LOG(log_error, logtype_afpd, "set_acl: acl_get_file error: %s",
-            strerror(errno));
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-    /* acl now can take the additional ACEs as requested by the client */
+    EC_ZERO_LOG(map_acl_darwin_to_posix((darwin_ace_t *)ibuf, &acl, is_dir, ace_count));
 
-    while (ace_count) {
-        
-    }
+    EC_STATUS(AFP_OK);
 
-exit:
+EC_CLEANUP:
     if (acl)
         acl_free(acl);
     LOG(log_maxdebug, logtype_afpd, "set_acl: END: %u", ret);
-    return ret;
+    EC_EXIT;
 }
 #endif /* HAVE_POSIX_ACLS */
 
