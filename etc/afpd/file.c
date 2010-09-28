@@ -1,6 +1,4 @@
 /*
- * $Id: file.c,v 1.141 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -288,8 +286,9 @@ restart:
         }
         else if (adp && (adcnid != dbcnid)) { /* 4 */
             /* Update the ressource fork. For a folder adp is always null */
-            LOG(log_note, logtype_afpd, "get_id: calling ad_setid(old: %u, new: %u)",
-                htonl(adcnid), htonl(dbcnid));
+            
+            LOG(log_note, logtype_afpd, "get_id(%s/%s): calling ad_setid(old: %u, new: %u)",
+                getcwdpath(), upath, htonl(adcnid), htonl(dbcnid));
             if (ad_setid(adp, st->st_dev, st->st_ino, dbcnid, did, vol->v_stamp)) {
                 ad_flush(adp);
             }
