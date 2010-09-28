@@ -47,7 +47,7 @@
 #define EC_ZERO_LOG(a)                          \
     do {                                        \
         if ((a) != 0) {                                                 \
-            LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
+            LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = -1;                                                   \
             goto cleanup;                                               \
         } \
@@ -56,7 +56,7 @@
 #define EC_ZERO_LOG_ERR(a, b)                   \
     do { \
         if ((a) != 0) {                                                 \
-            LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
+            LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = (b);                                                  \
             goto cleanup;                                               \
         }                                                               \
@@ -79,7 +79,7 @@
 #define EC_NEG1_LOG(a) \
     do { \
         if ((a) == -1) { \
-            LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
+            LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = -1; \
             goto cleanup; \
         } \
@@ -88,7 +88,7 @@
 #define EC_NEG1_LOG_ERR(a, b)                   \
     do {                                        \
         if ((a) == -1) {                                                \
-            LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
+            LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = b;                                                    \
             goto cleanup;                                               \
         }                                                               \
@@ -110,7 +110,7 @@
 #define EC_NULL_LOG(a) \
     do { \
         if ((a) == NULL) { \
-            LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
+            LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = -1; \
             goto cleanup; \
         } \
@@ -119,7 +119,7 @@
 #define EC_NULL_LOG_ERR(a, b)                   \
     do {                                        \
         if ((a) == NULL) {                                              \
-            LOG(log_error, logtype_default, "%s failed: %s" #a, strerror(errno)); \
+            LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = b;                                                    \
             goto cleanup;                                               \
         }                                                               \

@@ -435,11 +435,11 @@ static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         if (uuidtype == UUID_USER) {
-            EC_ZERO_LOG(pwd = getpwnam(name));
+            EC_NULL_LOG(pwd = getpwnam(name));
             tag = ACL_USER_OBJ;
             id = pwd->pw_uid;
         } else { /* hopefully UUID_GROUP*/
-            EC_ZERO_LOG(getgrnam(name));
+            EC_NULL_LOG(getgrnam(name));
             tag = ACL_GROUP_OBJ;
             id = (uid_t)(grp->gr_gid);
         }
