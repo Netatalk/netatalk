@@ -955,7 +955,7 @@ static int set_acl(const struct vol *vol,
 
     /* set it */
     if (def_acl)
-        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, def_acl), AFPERR_MISC);
+        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, def_acl), AFPERR_MISC);
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acc_acl), AFPERR_MISC);
 
 EC_CLEANUP:
