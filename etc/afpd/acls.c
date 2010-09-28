@@ -436,11 +436,11 @@ static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         if (uuidtype == UUID_USER) {
             EC_NULL_LOG(pwd = getpwnam(name));
-            tag = ACL_USER_OBJ;
+            tag = ACL_USER;
             id = pwd->pw_uid;
         } else { /* hopefully UUID_GROUP*/
             EC_NULL_LOG(getgrnam(name));
-            tag = ACL_GROUP_OBJ;
+            tag = ACL_GROUP;
             id = (uid_t)(grp->gr_gid);
         }
         free(name);
@@ -452,8 +452,6 @@ static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
 
         darwin_aces++;
     }
-
-    EC_ZERO_LOG(acl_valid(*aclp));
 
 EC_CLEANUP:
     if (name)
@@ -851,10 +849,12 @@ EC_CLEANUP:
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
-static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
+static int set_acl(const struct vol *vol, const char *name, int inherit, char *ibuf)
 {
     EC_INIT;
     int is_dir = 0;
+    acl_t acl = NULL;
+    acl_t mode_acl = NULL;
 
     LOG(log_maxdebug, logtype_afpd, "set_acl: BEGIN");
 
@@ -862,11 +862,11 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     uint32_t ace_count = htonl(*((uint32_t *)ibuf));
     ibuf += 8;      /* skip ACL flags (see acls.h) */
 
-    acl_t acl = NULL;
+    struct stat st;
+    EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_NOOBJ);
+
     if (inherit) {
         /* get default ACEs */
-        struct stat st;
-        EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_NOOBJ);
         if (S_ISDIR(st.st_mode)) {
             is_dir = 1;
             EC_NULL_LOG_ERR(acl = acl_get_file(name, ACL_TYPE_DEFAULT), AFPERR_MISC);
@@ -875,13 +875,31 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
         EC_NULL_LOG_ERR(acl = acl_init(0), AFPERR_MISC);
     }
 
-    EC_ZERO_LOG(map_acl_darwin_to_posix((darwin_ace_t *)ibuf, &acl, is_dir, ace_count));
+    /* Now combine acl with aces from mode */
+    EC_NULL_LOG_ERR(mode_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
+    int entry_id = ACL_FIRST_ENTRY;
+    acl_entry_t se, de;
+    while (acl_get_entry(mode_acl, entry_id, &se) == 1) {
+        EC_ZERO_LOG_ERR(acl_create_entry(&acl, &de), AFPERR_MISC);
+        EC_ZERO_LOG_ERR(acl_copy_entry(de, se), AFPERR_MISC);
+        entry_id = ACL_NEXT_ENTRY;
+    }
 
-    EC_STATUS(AFP_OK);
+    /* map_acl_darwin_to_posix adds the clients aces */
+    EC_ZERO_ERR(map_acl_darwin_to_posix((darwin_ace_t *)ibuf, &acl, is_dir, ace_count), AFPERR_MISC);
+
+    /* calcuate ACL mask */
+    EC_ZERO_LOG_ERR(acl_calc_mask(&acl), AFPERR_MISC);
+
+    /* is it ok? */
+    EC_ZERO_LOG_ERR(acl_valid(acl), AFPERR_MISC);
+
+    /* set it */
+    EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acl), AFPERR_MISC);
 
 EC_CLEANUP:
-    if (acl)
-        acl_free(acl);
+    if (acl) acl_free(acl);
+    if (mode_acl) acl_free(mode_acl);
     LOG(log_maxdebug, logtype_afpd, "set_acl: END: %u", ret);
     EC_EXIT;
 }

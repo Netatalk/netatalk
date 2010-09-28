@@ -62,7 +62,6 @@
         }                                                               \
     } while (0)
 
-/* check for return val 0 which is ok, every other is an error */
 #define EC_ZERO(a) \
     do { \
         if ((a) != 0) { \
@@ -71,7 +70,14 @@
         } \
     } while (0)
 
-/* check for return val 0 which is ok, every other is an error */
+#define EC_ZERO_ERR(a,b )                       \
+    do {                                        \
+        if ((a) != 0) {                         \
+            ret = b;                            \
+            goto cleanup;                       \
+        }                                       \
+    } while (0)
+
 #define EC_ZERO_CUSTOM(a) \
     (ret = (a)) != 0
 
