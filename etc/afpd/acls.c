@@ -391,7 +391,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Map Darwin ACE rights to POSIX 1e permset
+ * Map Darwin ACE rights to POSIX 1e perm
  *
  * We can only map few rights:
  *   DARWIN_ACE_READ_DATA                    -> ACL_READ
@@ -400,33 +400,79 @@ EC_CLEANUP:
  *   DARWIN_ACE_EXECUTE                      -> ACL_EXECUTE
  *
  * @param entry             (rw) result of the mapping
- * @param darwin_ace_rights (r) Darwin ACE rights
  * @param is_dir            (r) 1 for dirs, 0 for files
  *
- * @returns 0 on successfull mapping, -1 on error
+ * @returns mapping result as acl_perm_t, -1 on error
  */
-static int map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
-                                             acl_entry_t entry,
-                                             int is_dir)
+static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights, int is_dir)
 {
-    EC_INIT;
-    acl_permset_t permset;
-
-    EC_ZERO_LOG(acl_get_permset(entry, &permset));
-    EC_ZERO_LOG(acl_clear_perms(permset));
+    acl_perm_t perm = 0;
 
     if (darwin_ace_rights & DARWIN_ACE_READ_DATA)
-        EC_ZERO_LOG(acl_add_perm(permset, ACL_READ));
+        perm |= ACL_READ;
 
     if (darwin_ace_rights & (DARWIN_ACE_WRITE_DATA | (DARWIN_ACE_DELETE_CHILD & is_dir)))
-        EC_ZERO_LOG(acl_add_perm(permset, ACL_WRITE));
+        perm |= ACL_WRITE;
 
     if (darwin_ace_rights & DARWIN_ACE_EXECUTE)
-        EC_ZERO_LOG(acl_add_perm(permset, ACL_EXECUTE));
+        perm |= ACL_EXECUTE;
 
-    EC_ZERO_LOG(acl_set_permset(entry, permset));
+    return perm;
+}
 
+/*!
+ * Add a ACL_USER or ACL_GROUP permission to an ACL, extending existing ACEs
+ *
+ * Add a permission of "type" for user or group "id" to an ACL. Scan the ACL
+ * for existing permissions for this type/id, if there is one add the perm,
+ * otherwise create a new ACL entry.
+ * perm can be or'ed ACL_READ, ACL_WRITE and ACL_EXECUTE.  
+ *
+ * @param aclp     (rw) pointer to ACL
+ * @param type     (r)  acl_tag_t of ACL_USER or ACL_GROUP
+ * @param id       (r)  uid_t uid for ACL_USER, or gid casted to uid_t for ACL_GROUP
+ * @param perm     (r)  acl_perm_t permissions to add
+ *
+ * @returns 0 on success, -1 on failure
+ */
+static int posix_acl_add_perm(acl_t *aclp, acl_tag_t type, uid_t id, acl_perm_t perm)
+{
+    EC_INIT;
+    uid_t *eid = NULL;
+    acl_entry_t e;
+    acl_tag_t tag;
+    int entry_id = ACL_FIRST_ENTRY;
+    acl_permset_t permset;
+
+    int found = 0;
+    for ( ; (! found) && acl_get_entry(*aclp, entry_id, &e) == 1; entry_id = ACL_NEXT_ENTRY) {
+        EC_ZERO_LOG(acl_get_tag_type(e, &tag));
+        EC_NULL_LOG(eid = (uid_t *)acl_get_qualifier(e));
+        if ((*eid == id) && (type == tag)) {
+            /* found an ACE for this type/id */
+            found = 1;
+            EC_ZERO_LOG(acl_get_permset(e, &permset));
+            EC_ZERO_LOG(acl_add_perm(permset, perm));
+        }
+
+        acl_free(eid);
+        eid = NULL;
+    }
+
+    if ( ! found) {
+        /* there was no existing ACE for this type/id */
+        EC_ZERO_LOG(acl_create_entry(aclp, &e));
+        EC_ZERO_LOG(acl_set_tag_type(e, type));
+        EC_ZERO_LOG(acl_set_qualifier(e, &id));
+        EC_ZERO_LOG(acl_get_permset(e, &permset));
+        EC_ZERO_LOG(acl_clear_perms(permset));
+        EC_ZERO_LOG(acl_add_perm(permset, perm));
+        EC_ZERO_LOG(acl_set_permset(e, permset));
+    }
+    
 EC_CLEANUP:
+    if (eid) acl_free(eid);
+
     EC_EXIT;
 }
 
@@ -435,9 +481,10 @@ EC_CLEANUP:
  *
  * aclp must point to a acl_init'ed acl_t or an acl_t that can eg contain default ACEs.
  * Mapping pecularities:
- * - we create a default ace (which inherits to files and dirs) if either DARWIN_ACE_FLAGS_FILE_INHERIT
- *   or DARWIN_ACE_FLAGS_DIRECTORY_INHERIT is requested
- * - we throw away DARWIN_ACE_FLAGS_LIMIT_INHERIT (can't be mapped), thus the ACL will not be limited
+ * - we create a default ace (which inherits to files and dirs) if either
+     DARWIN_ACE_FLAGS_FILE_INHERIT or DARWIN_ACE_FLAGS_DIRECTORY_INHERIT is requested
+ * - we throw away DARWIN_ACE_FLAGS_LIMIT_INHERIT (can't be mapped), thus the ACL will
+ *   not be limited
  *
  * @param darwin_aces  (r)  pointer to darwin_aces buffer
  * @param def_aclp     (rw) directories: pointer to an initialized acl_t with the default acl
@@ -458,9 +505,12 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
     struct passwd *pwd;
     struct group *grp;
     uid_t id;
-    uint32_t darwin_ace_flags;
+    uint32_t darwin_ace_flags, darwin_ace_rights;
     acl_entry_t e;
     acl_tag_t tag;
+    acl_perm_t perm;
+
+    LOG(log_info, logtype_afpd, "map_ace: %u ACEs", ace_count);
 
     for ( ; ace_count != 0; ace_count--, darwin_aces++) {
         /* type: allow/deny, posix only has allow */
@@ -468,16 +518,26 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
         if ( ! (darwin_ace_flags & DARWIN_ACE_FLAGS_PERMIT))
             continue;
 
+        darwin_ace_rights = ntohl(darwin_aces->darwin_ace_rights);
+        perm = map_darwin_right_to_posix_permset(darwin_ace_rights, (*def_aclp != NULL));
+        if (perm == 0)
+            continue;       /* dont add empty perm */
+
+        LOG(log_info, logtype_afpd, "map_ace: no: %u, flags: %08x, darwin: %08x, posix: %02x",
+            ace_count, darwin_ace_flags, darwin_ace_rights);
+
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         if (uuidtype == UUID_USER) {
             EC_NULL_LOG(pwd = getpwnam(name));
             tag = ACL_USER;
             id = pwd->pw_uid;
+            LOG(log_info, logtype_afpd, "map_ace: name: %s, uid: %u", name, id);
         } else { /* hopefully UUID_GROUP*/
             EC_NULL_LOG(grp = getgrnam(name));
             tag = ACL_GROUP;
             id = (uid_t)(grp->gr_gid);
+            LOG(log_info, logtype_afpd, "map_ace: name: %s, gid: %u", name, id);
         }
         free(name);
         name = NULL;
@@ -489,30 +549,15 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
                     darwin_ace_flags);
                 EC_FAIL;
             }
-            /* add it as default aces */
-            EC_ZERO_LOG(acl_create_entry(def_aclp, &e));
-            EC_ZERO_LOG(acl_set_tag_type(e, tag));
-            EC_ZERO_LOG(acl_set_qualifier(e, &id));
-            EC_ZERO(map_darwin_right_to_posix_permset(ntohl(darwin_aces->darwin_ace_rights),
-                                                      e,
-                                                      (*def_aclp != NULL)));
+            /* add it as default ace */
+            EC_ZERO_LOG(posix_acl_add_perm(def_aclp, tag, id, perm));
 
-            if (! (darwin_ace_flags & DARWIN_ACE_FLAGS_ONLY_INHERIT)) {
+
+            if (! (darwin_ace_flags & DARWIN_ACE_FLAGS_ONLY_INHERIT))
                 /* if it not a "inherit only" ace, it must be added as access aces too */
-                EC_ZERO_LOG(acl_create_entry(def_aclp, &e));
-                EC_ZERO_LOG(acl_set_tag_type(e, tag));
-                EC_ZERO_LOG(acl_set_qualifier(e, &id));
-                EC_ZERO(map_darwin_right_to_posix_permset(ntohl(darwin_aces->darwin_ace_rights),
-                                                          e,
-                                                          (*def_aclp != NULL)));
-            }
+                EC_ZERO_LOG(posix_acl_add_perm(acc_aclp, tag, id, perm));
         } else {
-            EC_ZERO_LOG(acl_create_entry(acc_aclp, &e));
-            EC_ZERO_LOG(acl_set_tag_type(e, tag));
-            EC_ZERO_LOG(acl_set_qualifier(e, &id));
-            EC_ZERO(map_darwin_right_to_posix_permset(ntohl(darwin_aces->darwin_ace_rights),
-                                                      e,
-                                                      (*def_aclp != NULL)));
+            EC_ZERO_LOG(posix_acl_add_perm(acc_aclp, tag, id, perm));
         }
     }
 
@@ -646,7 +691,7 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
             saved_darwin_aces++;
         }
     }
-    return mapped_aces;
+    EC_STATUS(mapped_aces);
 
 EC_CLEANUP:
     if (uid) acl_free(uid);
@@ -935,6 +980,8 @@ static int set_acl(const struct vol *vol,
         /* get default ACEs */
         if (S_ISDIR(st.st_mode)) {
             EC_NULL_LOG_ERR(def_acl = acl_get_file(name, ACL_TYPE_DEFAULT), AFPERR_MISC);
+            LOG(log_info, logtype_afpd, "set_acl(\"%s/%s\"): reading default ACL",
+                getcwdpath(), name);
         }
     }
     if (S_ISDIR(st.st_mode))
