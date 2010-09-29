@@ -17,6 +17,7 @@
 
 #define EC_INIT int ret = 0
 #define EC_STATUS(a) ret = (a)
+#define EC_FAIL ret = -1; goto cleanup
 #define EC_CLEANUP cleanup
 #define EC_EXIT return ret
 

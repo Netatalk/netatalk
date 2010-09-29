@@ -54,7 +54,8 @@
 #define DARWIN_2_SOLARIS       2
 #define POSIX_DEFAULT_2_DARWIN 3
 #define POSIX_ACCESS_2_DARWIN  4
-#define DARWIN_2_POSIX         5
+#define DARWIN_2_POSIX_DEFAULT 5
+#define DARWIN_2_POSIX_ACCESS  6
 
 #define MAP_MASK               31
 #define IS_DIR                 32
@@ -360,49 +361,96 @@ EC_CLEANUP:
 }
 #endif /* HAVE_SOLARIS_ACLS */
 
+/********************************************************
+ * POSIX 1e funcs
+ ********************************************************/
+
 #ifdef HAVE_POSIX_ACLS
-static int posix_ace_set_mode(acl_entry_t entry, uint32_t darwin_ace_rights, int is_dir)
+
+/*!
+ * Add entries of one acl to another acl
+ *
+ * @param aclp   (rw) destination acl where new aces will be added
+ * @param acl    (r)  source acl where aces will be copied from
+ *
+ * @returns 0 on success, -1 on error
+ */
+static int acl_add_acl(acl_t *aclp, const acl_t acl)
 {
-    int ret;
+    EC_INIT;
+    int id;
+    acl_entry_t se, de;
+
+    for (id = ACL_FIRST_ENTRY; acl_get_entry(acl, id, &se) == 1; id = ACL_NEXT_ENTRY) {
+        EC_ZERO_LOG_ERR(acl_create_entry(aclp, &de), AFPERR_MISC);
+        EC_ZERO_LOG_ERR(acl_copy_entry(de, se), AFPERR_MISC);
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+/*!
+ * Map Darwin ACE rights to POSIX 1e permset
+ *
+ * We can only map few rights:
+ *   DARWIN_ACE_READ_DATA                    -> ACL_READ
+ *   DARWIN_ACE_WRITE_DATA                   -> ACL_WRITE
+ *   DARWIN_ACE_DELETE_CHILD & (is_dir == 1) -> ACL_WRITE
+ *   DARWIN_ACE_EXECUTE                      -> ACL_EXECUTE
+ *
+ * @param entry             (rw) result of the mapping
+ * @param darwin_ace_rights (r) Darwin ACE rights
+ * @param is_dir            (r) 1 for dirs, 0 for files
+ *
+ * @returns 0 on successfull mapping, -1 on error
+ */
+static int map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
+                                             acl_entry_t entry,
+                                             int is_dir)
+{
+    EC_INIT;
     acl_permset_t permset;
 
-    if ((ret = acl_get_permset(entry, &permset)) != 0) {
-        return ret;
-    }
-    if ((ret = acl_clear_perms(permset)) != 0) {
-        return ret;
-    }
-    if ((darwin_ace_rights & DARWIN_ACE_READ_DATA)
-        && ((ret = acl_add_perm(permset, ACL_READ)) != 0)) {
-        return ret;
-    }
-    if ((darwin_ace_rights & (DARWIN_ACE_WRITE_DATA | (DARWIN_ACE_DELETE_CHILD & is_dir)))
-        && ((ret = acl_add_perm(permset, ACL_WRITE)) != 0)) {
-        return ret;
-    }
-    if ((darwin_ace_rights & DARWIN_ACE_EXECUTE)
-        && ((ret = acl_add_perm(permset, ACL_EXECUTE)) != 0)) {
-        return ret;
-    }
-    return acl_set_permset(entry, permset);
+    EC_ZERO_LOG(acl_get_permset(entry, &permset));
+    EC_ZERO_LOG(acl_clear_perms(permset));
+
+    if (darwin_ace_rights & DARWIN_ACE_READ_DATA)
+        EC_ZERO_LOG(acl_add_perm(permset, ACL_READ));
+
+    if (darwin_ace_rights & (DARWIN_ACE_WRITE_DATA | (DARWIN_ACE_DELETE_CHILD & is_dir)))
+        EC_ZERO_LOG(acl_add_perm(permset, ACL_WRITE));
+
+    if (darwin_ace_rights & DARWIN_ACE_EXECUTE)
+        EC_ZERO_LOG(acl_add_perm(permset, ACL_EXECUTE));
+
+    EC_ZERO_LOG(acl_set_permset(entry, permset));
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 
 /*!
  * Map Darwin ACL to POSIX ACL.
  *
  * aclp must point to a acl_init'ed acl_t or an acl_t that can eg contain default ACEs.
+ * Mapping pecularities:
+ * - we create a default ace (which inherits to files and dirs) if either DARWIN_ACE_FLAGS_FILE_INHERIT
+ *   or DARWIN_ACE_FLAGS_DIRECTORY_INHERIT is requested
+ * - we throw away DARWIN_ACE_FLAGS_LIMIT_INHERIT (can't be mapped), thus the ACL will not be limited
  *
- * @param darwin_aces  (r) pointer to darwin_aces buffer
- * @param aclp         (rw) pointer to an initialized acl_t
- * @param is_dir       (r) 1 for directories, 0 for files
- * @param ace_count    (r) number of ACEs in darwin_aces buffer
+ * @param darwin_aces  (r)  pointer to darwin_aces buffer
+ * @param def_aclp     (rw) directories: pointer to an initialized acl_t with the default acl
+ *                          files: NULL
+ * @param acc_aclp     (rw) pointer to an initialized acl_t with the access acl
+ * @param ace_count    (r)  number of ACEs in darwin_aces buffer
  *
  * @returns 0 on success storing the result in aclp, -1 on error.
  */
-static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
-                                   acl_t *aclp,
-                                   int is_dir,
-                                   int ace_count)
+static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
+                                    acl_t *def_aclp,
+                                    acl_t *acc_aclp,
+                                    int ace_count)
 {
     EC_INIT;
     char *name = NULL;
@@ -411,26 +459,14 @@ static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
     struct group *grp;
     uid_t id;
     uint32_t darwin_ace_flags;
+    acl_entry_t e;
+    acl_tag_t tag;
 
-    while (ace_count--) {
+    for ( ; ace_count != 0; ace_count--, darwin_aces++) {
         /* type: allow/deny, posix only has allow */
         darwin_ace_flags = ntohl(darwin_aces->darwin_ace_flags);
-        if ( ! (darwin_ace_flags & DARWIN_ACE_FLAGS_PERMIT)) {
-            darwin_aces++;
+        if ( ! (darwin_ace_flags & DARWIN_ACE_FLAGS_PERMIT))
             continue;
-        }
-
-        /* POSIX ACLs don't have all the inherit stuff */
-        if ( ! is_dir
-             && (darwin_ace_flags & (DARWIN_ACE_FLAGS_FILE_INHERIT
-                                     | DARWIN_ACE_FLAGS_DIRECTORY_INHERIT))) {
-            darwin_aces++;
-            continue;
-        }
-
-        acl_entry_t e;
-        acl_tag_t tag;
-        EC_ZERO_LOG(acl_create_entry(aclp, &e));
 
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
@@ -446,11 +482,38 @@ static int map_acl_darwin_to_posix(const darwin_ace_t *darwin_aces,
         free(name);
         name = NULL;
 
-        EC_ZERO_LOG(acl_set_tag_type(e, tag));
-        EC_ZERO_LOG(acl_set_qualifier(e, &id));
-        posix_ace_set_mode(e, ntohl(darwin_aces->darwin_ace_rights), is_dir);
+        if (darwin_ace_flags & DARWIN_ACE_INHERIT_CONTROL_FLAGS) {
+            if (def_aclp == NULL) {
+                /* ace request inheritane but we haven't got a default acl pointer */
+                LOG(log_warning, logtype_afpd, "map_acl: unexpected ACE, flags: 0x%04x",
+                    darwin_ace_flags);
+                EC_FAIL;
+            }
+            /* add it as default aces */
+            EC_ZERO_LOG(acl_create_entry(def_aclp, &e));
+            EC_ZERO_LOG(acl_set_tag_type(e, tag));
+            EC_ZERO_LOG(acl_set_qualifier(e, &id));
+            EC_ZERO(map_darwin_right_to_posix_permset(ntohl(darwin_aces->darwin_ace_rights),
+                                                      e,
+                                                      (def_aclp != NULL)));
 
-        darwin_aces++;
+            if (! (darwin_ace_flags & DARWIN_ACE_FLAGS_ONLY_INHERIT)) {
+                /* if it not a "inherit only" ace, it must be added as access aces too */
+                EC_ZERO_LOG(acl_create_entry(def_aclp, &e));
+                EC_ZERO_LOG(acl_set_tag_type(e, tag));
+                EC_ZERO_LOG(acl_set_qualifier(e, &id));
+                EC_ZERO(map_darwin_right_to_posix_permset(ntohl(darwin_aces->darwin_ace_rights),
+                                                          e,
+                                                          (def_aclp != NULL)));
+            }
+        } else {
+            EC_ZERO_LOG(acl_create_entry(acc_aclp, &e));
+            EC_ZERO_LOG(acl_set_tag_type(e, tag));
+            EC_ZERO_LOG(acl_set_qualifier(e, &id));
+            EC_ZERO(map_darwin_right_to_posix_permset(ntohl(darwin_aces->darwin_ace_rights),
+                                                      e,
+                                                      (def_aclp != NULL)));
+        }
     }
 
 EC_CLEANUP:
@@ -628,7 +691,10 @@ static int map_acl(int type, const void *acl, darwin_ace_t *buf, int ace_count)
         mapped_aces = map_acl_posix_to_darwin(type, (const acl_t)acl, buf);
         break;
 
-    case DARWIN_2_POSIX:
+    case DARWIN_2_POSIX_DEFAULT:
+        break;
+
+    case DARWIN_2_POSIX_ACCESS:
         break;
 #endif /* HAVE_POSIX_ACLS */
 
@@ -741,7 +807,11 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
   - returns AFPerror code
 */
 #ifdef HAVE_SOLARIS_ACLS
-static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
+static int set_acl(const struct vol *vol,
+                   char *name,
+                   int inherit,
+                   darwin_ace_t *daces,
+                   uint32_t ace_count)
 {
     EC_INIT;
     int i, nfsv4_ace_count;
@@ -751,10 +821,6 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     uint32_t ace_count;
 
     LOG(log_debug9, logtype_afpd, "set_acl: BEGIN");
-
-     /*  Get no of ACEs the client put on the wire */
-    ace_count = htonl(*((uint32_t *)ibuf));
-    ibuf += 8;      /* skip ACL flags (see acls.h) */
 
     if (inherit)
         /* inherited + trivial ACEs */
@@ -795,7 +861,7 @@ static int set_acl(const struct vol *vol, char *name, int inherit, char *ibuf)
     /* Now the ACEs from the client */
     if (EC_NEG1_CUSTOM(map_acl(DARWIN_2_SOLARIS,
                                &new_aces[new_aces_count],
-                               (darwin_ace_t *)ibuf,
+                               daces,
                                ace_count))) {
         EC_STATUS(AFPERR_PARAM);
         goto EC_CLEANUP;
@@ -849,58 +915,56 @@ EC_CLEANUP:
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
-static int set_acl(const struct vol *vol, const char *name, int inherit, char *ibuf)
+static int set_acl(const struct vol *vol,
+                   const char *name,
+                   int inherit,
+                   darwin_ace_t *daces,
+                   uint32_t ace_count)
 {
     EC_INIT;
-    int is_dir = 0;
-    acl_t acl = NULL;
-    acl_t mode_acl = NULL;
+    acl_t def_acl = NULL;
+    acl_t acc_acl = NULL;
 
     LOG(log_maxdebug, logtype_afpd, "set_acl: BEGIN");
-
-    /*  Get no of ACEs the client put on the wire */
-    uint32_t ace_count = htonl(*((uint32_t *)ibuf));
-    ibuf += 8;      /* skip ACL flags (see acls.h) */
 
     struct stat st;
     EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_NOOBJ);
 
+    /* initialize or read default acl */
     if (inherit) {
         /* get default ACEs */
         if (S_ISDIR(st.st_mode)) {
-            is_dir = 1;
-            EC_NULL_LOG_ERR(acl = acl_get_file(name, ACL_TYPE_DEFAULT), AFPERR_MISC);
+            EC_NULL_LOG_ERR(def_acl = acl_get_file(name, ACL_TYPE_DEFAULT), AFPERR_MISC);
         }
-    } else {
-        EC_NULL_LOG_ERR(acl = acl_init(0), AFPERR_MISC);
     }
+    if (S_ISDIR(st.st_mode))
+        EC_NULL_LOG_ERR(def_acl = acl_init(0), AFPERR_MISC);
+    /* for files def_acl will be NULL */
 
-    /* Now combine acl with aces from mode */
-    EC_NULL_LOG_ERR(mode_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
-    int entry_id = ACL_FIRST_ENTRY;
-    acl_entry_t se, de;
-    while (acl_get_entry(mode_acl, entry_id, &se) == 1) {
-        EC_ZERO_LOG_ERR(acl_create_entry(&acl, &de), AFPERR_MISC);
-        EC_ZERO_LOG_ERR(acl_copy_entry(de, se), AFPERR_MISC);
-        entry_id = ACL_NEXT_ENTRY;
-    }
+    /* create default acl from mode */
+    EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
 
-    /* map_acl_darwin_to_posix adds the clients aces */
-    EC_ZERO_ERR(map_acl_darwin_to_posix((darwin_ace_t *)ibuf, &acl, is_dir, ace_count), AFPERR_MISC);
+    /* adds the clients aces */
+    EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &def_acl, &acc_acl, ace_count), AFPERR_MISC);
 
     /* calcuate ACL mask */
-    EC_ZERO_LOG_ERR(acl_calc_mask(&acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_calc_mask(&acc_acl), AFPERR_MISC);
 
     /* is it ok? */
-    EC_ZERO_LOG_ERR(acl_valid(acl), AFPERR_MISC);
+    if (def_acl)
+        EC_ZERO_LOG_ERR(acl_valid(def_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_valid(acc_acl), AFPERR_MISC);
 
     /* set it */
-    EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acl), AFPERR_MISC);
+    if (def_acl)
+        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, def_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acc_acl), AFPERR_MISC);
 
 EC_CLEANUP:
-    if (acl) acl_free(acl);
-    if (mode_acl) acl_free(mode_acl);
-    LOG(log_maxdebug, logtype_afpd, "set_acl: END: %u", ret);
+    acl_free(acc_acl);
+    acl_free(def_acl);
+
+    LOG(log_maxdebug, logtype_afpd, "set_acl: END");
     EC_EXIT;
 }
 #endif /* HAVE_POSIX_ACLS */
@@ -1290,14 +1354,14 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 
     /* Change owner: dont even try */
     if (bitmap & kFileSec_UUID) {
-        LOG(log_debug, logtype_afpd, "afp_setacl: change owner request. discarded.");
+        LOG(log_note, logtype_afpd, "afp_setacl: change owner request, discarded");
         ret = AFPERR_ACCESS;
         ibuf += UUID_BINSIZE;
     }
 
     /* Change group: certain changes might be allowed, so try it. FIXME: not implemented yet. */
     if (bitmap & kFileSec_UUID) {
-        LOG(log_debug, logtype_afpd, "afp_setacl: change group request. not supported this time.");
+        LOG(log_note, logtype_afpd, "afp_setacl: change group request, not supported");
         ret = AFPERR_PARAM;
         ibuf += UUID_BINSIZE;
     }
@@ -1312,12 +1376,15 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     /* Change ACL ? */
     if (bitmap & kFileSec_ACL) {
         LOG(log_debug, logtype_afpd, "afp_setacl: Change ACL request.");
+        /*  Get no of ACEs the client put on the wire */
+        uint32_t ace_count = htonl(*((uint32_t *)ibuf));
+        ibuf += 8;      /* skip ACL flags (see acls.h) */
 
-        /* Check if its our job to preserve inherited ACEs */
-        if (bitmap & kFileSec_Inherit)
-            ret = set_acl(vol, s_path->u_name, 1, ibuf);
-        else
-            ret = set_acl(vol, s_path->u_name, 0, ibuf);
+        ret = set_acl(vol,
+                      s_path->u_name,
+                      (bitmap & kFileSec_Inherit),
+                      (darwin_ace_t *)ibuf,
+                      ace_count);
         if (ret == 0)
             ret = AFP_OK;
         else {
