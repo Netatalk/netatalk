@@ -447,6 +447,8 @@ static int posix_acl_add_perm(acl_t *aclp, acl_tag_t type, uid_t id, acl_perm_t 
     int found = 0;
     for ( ; (! found) && acl_get_entry(*aclp, entry_id, &e) == 1; entry_id = ACL_NEXT_ENTRY) {
         EC_ZERO_LOG(acl_get_tag_type(e, &tag));
+        if (tag != ACL_USER && tag != ACL_GROUP)
+            continue;
         EC_NULL_LOG(eid = (uid_t *)acl_get_qualifier(e));
         if ((*eid == id) && (type == tag)) {
             /* found an ACE for this type/id */
@@ -510,8 +512,6 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
     acl_tag_t tag;
     acl_perm_t perm;
 
-    LOG(log_info, logtype_afpd, "map_ace: %u ACEs", ace_count);
-
     for ( ; ace_count != 0; ace_count--, darwin_aces++) {
         /* type: allow/deny, posix only has allow */
         darwin_ace_flags = ntohl(darwin_aces->darwin_ace_flags);
@@ -523,8 +523,8 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
         if (perm == 0)
             continue;       /* dont add empty perm */
 
-        LOG(log_info, logtype_afpd, "map_ace: no: %u, flags: %08x, darwin: %08x, posix: %02x",
-            ace_count, darwin_ace_flags, darwin_ace_rights);
+        LOG(log_debug, logtype_afpd, "map_ace: no: %u, flags: %08x, darwin: %08x, posix: %02x",
+            ace_count, darwin_ace_flags, darwin_ace_rights, perm);
 
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
@@ -532,12 +532,12 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
             EC_NULL_LOG(pwd = getpwnam(name));
             tag = ACL_USER;
             id = pwd->pw_uid;
-            LOG(log_info, logtype_afpd, "map_ace: name: %s, uid: %u", name, id);
+            LOG(log_debug, logtype_afpd, "map_ace: name: %s, uid: %u", name, id);
         } else { /* hopefully UUID_GROUP*/
             EC_NULL_LOG(grp = getgrnam(name));
             tag = ACL_GROUP;
             id = (uid_t)(grp->gr_gid);
-            LOG(log_info, logtype_afpd, "map_ace: name: %s, gid: %u", name, id);
+            LOG(log_debug, logtype_afpd, "map_ace: name: %s, gid: %u", name, id);
         }
         free(name);
         name = NULL;
@@ -962,7 +962,7 @@ EC_CLEANUP:
 #ifdef HAVE_POSIX_ACLS
 static int set_acl(const struct vol *vol,
                    const char *name,
-                   int inherit,
+                   int inherit _U_,
                    darwin_ace_t *daces,
                    uint32_t ace_count)
 {
@@ -975,20 +975,13 @@ static int set_acl(const struct vol *vol,
     struct stat st;
     EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_NOOBJ);
 
-    /* initialize or read default acl */
-    if (inherit) {
-        /* get default ACEs */
-        if (S_ISDIR(st.st_mode)) {
-            EC_NULL_LOG_ERR(def_acl = acl_get_file(name, ACL_TYPE_DEFAULT), AFPERR_MISC);
-            LOG(log_info, logtype_afpd, "set_acl(\"%s/%s\"): reading default ACL",
-                getcwdpath(), name);
-        }
-    }
+    /* seed default ACL with access ACL */
     if (S_ISDIR(st.st_mode))
-        EC_NULL_LOG_ERR(def_acl = acl_init(0), AFPERR_MISC);
+        EC_NULL_LOG_ERR(def_acl = acl_get_file(name, ACL_TYPE_ACCESS), AFPERR_MISC);
+
     /* for files def_acl will be NULL */
 
-    /* create default acl from mode */
+    /* create access acl from mode */
     EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
 
     /* adds the clients aces */
@@ -1003,6 +996,7 @@ static int set_acl(const struct vol *vol,
     /* set it */
     if (def_acl)
         EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, def_acl), AFPERR_MISC);
+
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acc_acl), AFPERR_MISC);
 
 EC_CLEANUP:
