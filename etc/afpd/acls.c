@@ -951,8 +951,6 @@ static int set_acl(const struct vol *vol,
     EC_ZERO_LOG_ERR(acl_calc_mask(&acc_acl), AFPERR_MISC);
 
     /* is it ok? */
-    if (def_acl)
-        EC_ZERO_LOG_ERR(acl_valid(def_acl), AFPERR_MISC);
     EC_ZERO_LOG_ERR(acl_valid(acc_acl), AFPERR_MISC);
 
     /* set it */
