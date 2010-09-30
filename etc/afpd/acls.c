@@ -508,7 +508,6 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
     struct group *grp;
     uid_t id;
     uint32_t darwin_ace_flags, darwin_ace_rights;
-    acl_entry_t e;
     acl_tag_t tag;
     acl_perm_t perm;
 
@@ -833,7 +832,7 @@ static int remove_acl(const struct vol *vol,const char *path, int dir)
 {
     int ret = AFP_OK;
 
-#ifdef HAVE_SOLARIS_ACLS
+#if (defined HAVE_SOLARIS_ACLS || defined HAVE_POSIX_ACLS)
     /* Ressource etc. first */
     if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK)
         return ret;
@@ -994,10 +993,13 @@ static int set_acl(const struct vol *vol,
     EC_ZERO_LOG_ERR(acl_valid(acc_acl), AFPERR_MISC);
 
     /* set it */
-    if (def_acl)
-        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, def_acl), AFPERR_MISC);
-
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acc_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_ACCESS, 0, acc_acl), AFPERR_MISC);
+
+    if (def_acl) {
+        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, def_acl), AFPERR_MISC);
+        EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_DEFAULT, 0, def_acl), AFPERR_MISC);
+    }
 
 EC_CLEANUP:
     acl_free(acc_acl);

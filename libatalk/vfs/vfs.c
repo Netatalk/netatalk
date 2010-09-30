@@ -35,6 +35,7 @@
 #include <atalk/vfs.h>
 #include <atalk/directory.h>
 #include <atalk/unix.h>
+#include <atalk/errchk.h>
 
 struct perm {
     uid_t uid;
@@ -369,6 +370,60 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 	    return ret;
 
     return AFP_OK;
+}
+#endif
+
+#ifdef HAVE_POSIX_ACLS
+static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
+{
+    EC_INIT;
+    static char buf[ MAXPATHLEN + 1];
+    struct stat st;
+    int len;
+
+    if (S_ISDIR(st.st_mode)) {
+        len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
+        if (len < 0 || len >=  MAXPATHLEN)
+            EC_FAIL;
+        /* set acl on .AppleDouble dir first */
+        EC_ZERO_LOG(acl_set_file(buf, type, acl));
+
+        if (type == ACL_TYPE_ACCESS)
+            /* set ACL on ressource fork (".Parent") too */
+            EC_ZERO_LOG(acl_set_file(vol->ad_path(path, ADFLAGS_DIR), type, acl));
+    } else {
+        /* set ACL on ressource fork */
+        EC_ZERO_LOG(acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl));
+    }
+    
+EC_CLEANUP:
+    if (ret != 0)
+        return AFPERR_MISC;
+    return AFP_OK;
+}
+
+static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
+{
+    EC_INIT;
+    static char buf[ MAXPATHLEN + 1];
+    int len;
+
+    if (dir) {
+        len = snprintf(buf, MAXPATHLEN, "%s/.AppleDouble",path);
+        if (len < 0 || len >=  MAXPATHLEN)
+            return AFPERR_MISC;
+        /* remove ACL from .AppleDouble/.Parent first */
+        EC_ZERO_LOG_ERR(remove_acl_vfs(vol->ad_path(path, ADFLAGS_DIR)), AFPERR_MISC);
+
+        /* now remove from .AppleDouble dir */
+        EC_ZERO_LOG_ERR(remove_acl_vfs(buf), AFPERR_MISC);
+    } else {
+        /* remove ACL from ressource fork */
+        EC_ZERO_LOG_ERR(remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC);
+    }
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 #endif
 
@@ -996,6 +1051,25 @@ static struct vfs_ops netatalk_solaris_acl_adouble = {
 };
 #endif
 
+#ifdef HAVE_POSIX_ACLS
+static struct vfs_ops netatalk_posix_acl_adouble = {
+    /* validupath:        */ NULL,
+    /* rf_chown:          */ NULL,
+    /* rf_renamedir:      */ NULL,
+    /* rf_deletecurdir:   */ NULL,
+    /* rf_setfilmode:     */ NULL,
+    /* rf_setdirmode:     */ NULL,
+    /* rf_setdirunixmode: */ NULL,
+    /* rf_setdirowner:    */ NULL,
+    /* rf_deletefile:     */ NULL,
+    /* rf_renamefile:     */ NULL,
+    /* vfs_copyfile       */ NULL,
+    /* rf_acl:            */ RF_posix_acl,
+    /* rf_remove_acl      */ RF_posix_remove_acl,
+    NULL
+};
+#endif
+
 /* ---------------- */
 void initvol_vfs(struct vol *vol)
 {
@@ -1030,4 +1104,8 @@ void initvol_vfs(struct vol *vol)
 #ifdef HAVE_SOLARIS_ACLS
     vol->vfs_modules[2] = &netatalk_solaris_acl_adouble;
 #endif
+#ifdef HAVE_POSIX_ACLS
+    vol->vfs_modules[2] = &netatalk_posix_acl_adouble;
+#endif
+
 }
