@@ -182,7 +182,7 @@ EC_CLEANUP:
 static ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 {
     EC_INIT;
-    ace_t *new_aces;
+    ace_t *new_aces = NULL;
     int i, j;
 
     /* malloc buffer for new ACL */
@@ -203,8 +203,11 @@ static ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2cou
         j++;
     }
     return new_aces;
+
 EC_CLEANUP:
-    EC_EXIT;
+    if (new_aces)
+        free(new_aces);
+    return NULL;
 }
 
 
@@ -708,7 +711,7 @@ EC_CLEANUP:
  * Ignores trivial ACEs.
  * Return no of mapped ACEs or -1 on error.
  */
-static int map_acl(int type, const void *acl, darwin_ace_t *buf, int ace_count)
+static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 {
     int mapped_aces;
 
@@ -862,7 +865,6 @@ static int set_acl(const struct vol *vol,
     int tocopy_aces_count = 0, new_aces_count = 0, trivial_ace_count = 0;
     ace_t *old_aces, *new_aces = NULL;
     uint16_t flags;
-    uint32_t ace_count;
 
     LOG(log_debug9, logtype_afpd, "set_acl: BEGIN");
 
@@ -882,7 +884,7 @@ static int set_acl(const struct vol *vol,
     }
 
     /* Now malloc buffer exactly sized to fit all new ACEs */
-    if (EC_NULL_CUSTOM(new_aces = malloc((ace_count + tocopy_aces_count) * sizeof(ace_t)))) {
+    if ((new_aces = malloc((ace_count + tocopy_aces_count) * sizeof(ace_t))) == NULL) {
         LOG(log_error, logtype_afpd, "set_acl: malloc %s", strerror(errno));
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
