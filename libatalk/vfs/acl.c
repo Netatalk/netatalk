@@ -24,13 +24,11 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef HAVE_SOLARIS_ACLS
-#include <sys/acl.h>
-#endif
-
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/errchk.h>
+#include <atalk/acl.h>
 
 #ifdef HAVE_SOLARIS_ACLS
 
@@ -132,8 +130,47 @@ exit:
 #endif  /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
+/*!
+ * Remove any ACL_USER, ACL_GROUP or ACL_TYPE_DEFAULT ACEs from an object
+ *
+ * @param name  (r) filesystem object name
+ *
+ * @returns AFP error code, AFP_OK (= 0) on success, AFPERR_MISC on error
+ */
 int remove_acl_vfs(const char *name)
 {
-    return AFP_OK;
+    EC_INIT;
+
+    struct stat st;
+    acl_t acl = NULL;
+    acl_entry_t e;
+    acl_tag_t tag;
+    int entry_id = ACL_FIRST_ENTRY;
+
+
+    /* Remove default ACL if it's a dir */
+    EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_MISC);
+    if (S_ISDIR(st.st_mode)) {
+        EC_NULL_LOG_ERR(acl = acl_init(0), AFPERR_MISC);
+        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, acl), AFPERR_MISC);
+        EC_ZERO_LOG_ERR(acl_free(acl), AFPERR_MISC);
+        acl = NULL;
+    }
+
+    /* Now get ACL and remove ACL_USER or ACL_GROUP entries, then re-set the ACL again */
+    EC_NULL_LOG_ERR(acl = acl_get_file(name, ACL_TYPE_ACCESS), AFPERR_MISC);
+    for ( ; acl_get_entry(acl, entry_id, &e) == 1; entry_id = ACL_NEXT_ENTRY) {
+        EC_ZERO_LOG_ERR(acl_get_tag_type(e, &tag), AFPERR_MISC);
+        if (tag == ACL_USER || tag == ACL_GROUP)
+            EC_ZERO_LOG_ERR(acl_delete_entry(acl, e), AFPERR_MISC);
+    }
+    EC_ZERO_LOG_ERR(acl_calc_mask(&acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_valid(acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acl), AFPERR_MISC);
+
+EC_CLEANUP:
+    if (acl) acl_free(acl);
+
+    EC_EXIT;
 }
 #endif /* HAVE_POSIX_ACLS */
