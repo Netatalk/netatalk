@@ -36,6 +36,10 @@
 #include <atalk/cnid.h>
 #include <atalk/volinfo.h>
 #include <atalk/util.h>
+#include <atalk/errchk.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+#include <atalk/logger.h>
 #include "ad.h"
 
 #define ADv2_DIRNAME ".AppleDouble"
@@ -79,8 +83,11 @@ static void usage_cp(void)
         );
 }
 
-static int ad_cp_copy(const afpvol_t *srcvol, const afpvol_t *dstvol,
-                      char *srcfile, char *dstfile, struct stat *st)
+static int ad_cp_copy(const afpvol_t *srcvol,
+                      const afpvol_t *dstvol,
+                      char *srcfile,
+                      char *dstfile,
+                      struct stat *st)
 {
     printf("copy: '%s' -> '%s'\n", srcfile, dstfile);
     return 0;
@@ -176,6 +183,7 @@ exit:
 
 int ad_cp(int argc, char **argv)
 {
+    EC_INIT;
     int c, numpaths;
     afpvol_t srcvvol;
     struct stat sst;
@@ -184,7 +192,7 @@ int ad_cp(int argc, char **argv)
     afpvol_t dstvol;
     char *srcfile = NULL;
     char *srcdir = NULL;    
-    char *dstfile = NULL;
+    bstring dstfile;
     char *dstdir = NULL;
     char path[MAXPATHLEN+1];
     char *basenametmp;
@@ -227,19 +235,38 @@ int ad_cp(int argc, char **argv)
 
     while ( argv[argc-1][(strlen(argv[argc-1]) - 1)] == '/')
         argv[argc-1][(strlen(argv[argc-1]) - 1)] = 0;
-    printf("Destination is: %s\n", argv[argc-1]);
 
     /* Create vol for destination */
     newvol(argv[argc-1], &dstvol);
 
     if (numpaths == 2) {
         /* Case 1: 2 paths */
-        if (stat(argv[optind], &sst) != 0)
-            goto next;
+
+        /* stat source */
+        EC_ZERO(stat(argv[optind], &sst));
+
         if (S_ISREG(sst.st_mode)) {
+            /* source is just a file, thats easy */
             /* Either file to file or file to dir copy */
+
+            /* stat destination */
+            if (stat(argv[argc-1], &dst) == 0) {
+                if (S_ISDIR(dst.st_mode)) {
+                    /* its a dir, build dest path: "dest" + "/" + basename("source") */
+                    EC_NULL(dstfile = bfromcstr(argv[argc-1]));
+                    EC_ZERO(bcatcstr(dstfile, "/"));
+                    EC_ZERO(bcatcstr(dstfile, basename(argv[optind])));
+                } else {
+                    /* its an existing file, truncate */
+                    EC_ZERO_LOG(truncate(argv[argc-1], 0));
+                    EC_NULL(dstfile = bfromcstr(argv[argc-1]));
+                }
+            } else {
+                EC_NULL(dstfile = bfromcstr(argv[argc-1]));
+            }
             newvol(argv[optind], &srcvol);
-            ad_cp_copy(&srcvol, &dstvol, srcfile, path, &sst);
+            printf("Source: %s, Destination: %s\n", argv[optind], cfrombstring(dstfile));
+            ad_cp_copy(&srcvol, &dstvol, argv[optind], cfrombstring(dstfile), &sst);
             freevol(&srcvol);
             freevol(&dstvol);
             
@@ -293,8 +320,8 @@ int ad_cp(int argc, char **argv)
         } /* while */
     } /* else (numpath>2) */
 
+EC_CLEANUP:
     freevol(&dstvol);
 
-    return 0;
-
+    EC_EXIT;
 }

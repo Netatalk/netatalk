@@ -1,6 +1,4 @@
 /* 
-   $Id: ad.c,v 1.2 2009-10-13 22:55:36 didg Exp $
-
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
    This program is free software; you can redistribute it and/or modify
@@ -42,6 +40,8 @@ static void usage_main(void)
 
 int main(int argc, char **argv)
 {
+    setuplog("default log_info /dev/tty");
+
     if (argc < 2) {
         usage_main();
         return 1;
