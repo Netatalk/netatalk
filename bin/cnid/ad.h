@@ -15,6 +15,13 @@
 #ifndef AD_H
 #define AD_H
 
+#define _XOPEN_SOURCE 600
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <signal.h>
+#include <ftw.h>
+
 #include <atalk/volinfo.h>
 
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
@@ -29,11 +36,48 @@ typedef struct {
 //    int adflags;                /* file:0, dir:ADFLAGS_DIR */
 } afpvol_t;
 
+enum logtype {STD, DBG};
+
+#define SLOG(...)                             \
+    _log(STD, __VA_ARGS__)
+
+#define ERROR(...)                              \
+    do {                                        \
+        _log(STD, __VA_ARGS__);                 \
+        exit(1);                                \
+    } while (0)
+
+extern int log_verbose;             /* Logging flag */
+extern void _log(enum logtype lt, char *fmt, ...);
 
 extern int newvol(const char *path, afpvol_t *vol);
 extern void freevol(afpvol_t *vol);
 
 extern int ad_ls(int argc, char **argv);
 extern int ad_cp(int argc, char **argv);
+
+struct FTWELEM {
+    const struct FTW  *ftw;
+    const char        *ftw_path;
+    int               ftw_base_off;
+    int               ftw_tflag;
+    const struct stat *ftw_statp;
+};
+
+typedef struct {
+    char *p_end;/* pointer to NULL at end of path */
+    char *target_end;/* pointer to end of target base */
+    char p_path[PATH_MAX];/* pointer to the start of a path */
+} PATH_T;
+
+extern PATH_T to;
+extern int fflag, iflag, lflag, nflag, pflag, vflag;
+extern volatile sig_atomic_t info;
+
+extern int copy_file(const struct FTW *, const char *, const struct stat *, int);
+extern int copy_link(const struct FTW *, const char *, const struct stat *, int);
+extern int setfile(const struct stat *, int);
+extern int preserve_dir_acls(const struct stat *, char *, char *);
+extern int preserve_fd_acls(int, int);
 
 #endif /* AD_H */

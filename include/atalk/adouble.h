@@ -56,10 +56,9 @@
   need _XOPEN_SOURCE defined for pread.
 */
 #if defined(HAVE_PREAD) && !defined(SOLARIS) && !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(TRU64)
-#ifdef _XOPEN_SOURCE
-#undef _XOPEN_SOURCE
-#endif
+#ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 500
+#endif
 #endif
 
 #include <sys/types.h>
