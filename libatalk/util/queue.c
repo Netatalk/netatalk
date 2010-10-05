@@ -1,5 +1,4 @@
 /*
-  $Id: queue.c,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -51,6 +50,7 @@ q_t *queue_init(void)
     return queue;
 }
 
+/* Insert at tail */
 qnode_t *enqueue(q_t *q, void *data)
 {
     qnode_t *node;
@@ -67,6 +67,24 @@ qnode_t *enqueue(q_t *q, void *data)
     return node;
 }
 
+/* Insert at head */
+qnode_t *prequeue(q_t *q, void *data)
+{
+    qnode_t *node;
+
+    if ((node = alloc_init_node(data)) == NULL)
+        return NULL;
+
+    /* insert at head */
+    q->next->prev = node;
+    node->next = q->next;
+    node->prev = q;
+    q->next = node;
+
+    return node;
+}
+
+/* Take from head */
 void *dequeue(q_t *q)
 {
     qnode_t *node;

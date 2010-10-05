@@ -139,16 +139,32 @@ static char * make_path_absolute(char *path, size_t bufsize)
     char 	abspath[MAXPATHLEN];
     char	*p;
 
-    if (stat(path, &st) != 0) {
-        return NULL;
-    }
+    strlcpy(abspath, path, sizeof(abspath));
 
-    strlcpy (abspath, path, sizeof(abspath));
+    /* we might be called from `ad cp ...` with non existing target */
+    if (stat(abspath, &st) != 0) {
+        if (errno != ENOENT)
+            return NULL;
 
-    if (!S_ISDIR(st.st_mode)) {
-        if (NULL == (p=strrchr(abspath, '/')) )
+        if (NULL == (p = strrchr(abspath, '/')) )
+            /* single component `ad cp SOURCEFILE TARGETFILE`, use "." instead */
             strcpy(abspath, ".");
         else
+            /* try without the last path element */
+            *p = '\0';
+
+        if (stat(abspath, &st) != 0) {
+            return NULL;
+        }
+    }
+
+    if (S_ISREG(st.st_mode)) {
+        /* single file copy SOURCE */
+        if (NULL == (p = strrchr(abspath, '/')) )
+            /* no path, use "." instead */
+            strcpy(abspath, ".");
+        else
+            /* try without the last path element */
             *p = '\0';
     }
 
@@ -272,7 +288,10 @@ static int parseline ( char *buf, struct volinfo *vol)
         }
         break;
       case CNIDDBDPORT:
-        vol->v_dbd_port = atoi(value);
+        if ((vol->v_dbd_port = strdup(value)) == NULL) {
+	    fprintf (stderr, "strdup: %s", strerror(errno));
+            return -1;            
+        }
         break;
       case CNID_DBPATH:
         if ((vol->v_dbpath = strdup(value)) == NULL) {

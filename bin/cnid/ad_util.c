@@ -40,7 +40,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <ftw.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,17 +86,17 @@ void _log(enum logtype lt, char *fmt, ...)
 
 int newvol(const char *path, afpvol_t *vol)
 {
-//    char *pathdup;
-
+    //    char *pathdup;
+    
     memset(vol, 0, sizeof(afpvol_t));
 
-//    pathdup = strdup(path);
-//    vol->dirname = strdup(dirname(pathdup));
-//    free(pathdup);
-
-//    pathdup = strdup(path);
-//    vol->basename = strdup(basename(pathdup));
-//    free(pathdup);
+    //    pathdup = strdup(path);
+    //    vol->dirname = strdup(dirname(pathdup));
+    //    free(pathdup);
+    
+    //    pathdup = strdup(path);
+    //    vol->basename = strdup(basename(pathdup));
+    //    free(pathdup);
 
     loadvolinfo((char *)path, &vol->volinfo);
 
@@ -118,7 +117,73 @@ void freevol(afpvol_t *vol)
 #endif
 }
 
-int copy_file(const struct FTW *entp,
+/*
+  Taken form afpd/desktop.c
+*/
+char *utompath(const struct volinfo *volinfo, char *upath)
+{
+    static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
+    char         *m, *u;
+    uint16_t     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
+    size_t       outlen;
+
+    if (!upath)
+        return NULL;
+
+    m = mpath;
+    u = upath;
+    outlen = strlen(upath);
+
+    if ((volinfo->v_casefold & AFPVOL_UTOMUPPER))
+        flags |= CONV_TOUPPER;
+    else if ((volinfo->v_casefold & AFPVOL_UTOMLOWER))
+        flags |= CONV_TOLOWER;
+
+    if ((volinfo->v_flags & AFPVOL_EILSEQ)) {
+        flags |= CONV__EILSEQ;
+    }
+
+    /* convert charsets */
+    if ((size_t)-1 == ( outlen = convert_charset(volinfo->v_volcharset,
+                                                 CH_UTF8_MAC,
+                                                 volinfo->v_maccharset,
+                                                 u, outlen, mpath, MAXPATHLEN, &flags)) ) {
+        SLOG("Conversion from %s to %s for %s failed.",
+            volinfo->v_volcodepage, volinfo->v_maccodepage, u);
+        return NULL;
+    }
+
+    return(m);
+}
+
+/*!
+ * Resolves CNID of a given paths parent directory
+ *
+ * path might be:
+ * (a) relative:
+ *     "dir/subdir" with cwd: "/afp_volume/topdir"
+ * (b) absolute:
+ *     "/afp_volume/dir/subdir"
+ *
+ * 1) in case a) concatenate both paths
+ * 2) strip last element
+ * 3) strip volume root
+ * 4) start recursive CNID search with
+ *    a) DID:2, "topdir"
+ *    b) DID:2, "dir"
+ * 5) ...until we have the CNID for
+ *    a) "/afp_volume/topdir/dir"
+ *    b) "/afp_volume/dir" (no recursion required)
+ */
+cnid_t get_parent_cnid_for_path(const struct volinfo *vi,
+                                const struct vol *vol,
+                                const char *path)
+{
+
+    return 0;
+}
+
+int ftw_copy_file(const struct FTW *entp,
               const char *spath,
               const struct stat *sp,
               int dne)

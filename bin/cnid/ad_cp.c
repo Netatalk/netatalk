@@ -52,9 +52,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-// #include <err.h>
 #include <errno.h>
-#include <ftw.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
@@ -62,7 +60,16 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <atalk/ftw.h>
+#include <atalk/adouble.h>
+#include <atalk/vfs.h>
 #include <atalk/util.h>
+#include <atalk/unix.h>
+#include <atalk/volume.h>
+#include <atalk/volinfo.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+#include <atalk/queue.h>
 
 #include "ad.h"
 
@@ -77,10 +84,16 @@ PATH_T to = { to.p_path, emptystring, "" };
 
 int fflag, iflag, lflag, nflag, pflag, vflag;
 mode_t mask;
-static int Rflag, rflag;
+struct volinfo svolinfo, dvolinfo;
+struct vol svolume, dvolume;
+cnid_t did = 0; /* current dir CNID */
+
+static enum op type;
+static int Rflag;
 volatile sig_atomic_t sigint;
-static int type, badcp, rval;
-static int ftw_options = FTW_MOUNT | FTW_PHYS;
+static int badcp, rval;
+static int ftw_options = FTW_MOUNT | FTW_PHYS | FTW_ACTIONRETVAL;
+static q_t *cnidq;              /* CNID dir stack */
 
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
 
@@ -93,7 +106,6 @@ static char           *netatalk_dirs[] = {
 
 static int copy(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
 static void siginfo(int _U_);
-
 
 /*
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
@@ -114,34 +126,39 @@ static const char *check_netatalk_dirs(const char *name)
 static void usage_cp(void)
 {
     printf(
-        "Usage: ad cp [-R [-L | -P]] [-pvf] <source_file> <target_file>\n"
-        "Usage: ad cp [-R [-L | -P]] [-pvf] <source_file [source_file ...]> <target_directory>\n"
+        "Usage: ad cp [-R [-P]] [-pvf] <source_file> <target_file>\n"
+        "Usage: ad cp [-R [-P]] [-pvfx] <source_file [source_file ...]> <target_directory>\n"
         );
+    exit(EXIT_FAILURE);
+}
+
+static void upfunc(void)
+{
+    if (cnidq) {
+        cnid_t *cnid = dequeue(cnidq);
+        if (cnid) {
+            did = *cnid;
+            free(cnid);
+        }
+    }
 }
 
 int ad_cp(int argc, char *argv[])
 {
     struct stat to_stat, tmp_stat;
-    enum op type;
-    int Pflag, ch, r, have_trailing_slash;
+    int r, ch, have_trailing_slash;
     char *target;
 #if 0
     afpvol_t srcvol;
     afpvol_t dstvol;
 #endif
 
-    Pflag = 0;
-
-    while ((ch = getopt(argc, argv, "PRafilnprvx")) != -1)
+    while ((ch = getopt(argc, argv, "Rafilnpvx")) != -1)
         switch (ch) {
-        case 'P':
-            Pflag = 1;
-            break;
         case 'R':
             Rflag = 1;
             break;
         case 'a':
-            Pflag = 1;
             pflag = 1;
             Rflag = 1;
             break;
@@ -163,10 +180,6 @@ int ad_cp(int argc, char *argv[])
         case 'p':
             pflag = 1;
             break;
-        case 'r':
-            rflag = 1;
-            Pflag = 0;
-            break;
         case 'v':
             vflag = 1;
             break;
@@ -183,13 +196,9 @@ int ad_cp(int argc, char *argv[])
     if (argc < 2)
         usage_cp();
 
-    if (Rflag && rflag)
-        ERROR("the -R and -r options may not be specified together");
-
-    if (rflag)
-        Rflag = 1;
-
     (void)signal(SIGINT, siginfo);
+
+    cnid_init();
 
     /* Save the target base in "to". */
     target = argv[--argc];
@@ -206,7 +215,7 @@ int ad_cp(int argc, char *argv[])
         STRIP_TRAILING_SLASH(to);
     to.target_end = to.p_end;
 
-    /* Set end of argument list for fts(3). */
+    /* Set end of argument list */
     argv[argc] = NULL;
 
     /*
@@ -269,13 +278,77 @@ int ad_cp(int argc, char *argv[])
     mask = ~umask(0777);
     umask(~mask);
 
+#if 0
+    /* Inhereting perms in ad_mkdir etc requires this */
+    ad_setfuid(0);
+#endif
+
+    /* Load .volinfo file for destination*/
+    if (loadvolinfo(to.p_path, &dvolinfo) == 0) {
+        if (vol_load_charsets(&dvolinfo) == -1)
+            ERROR("Error loading charsets!");
+        /* Sanity checks to ensure we can touch this volume */
+        if (dvolinfo.v_vfs_ea != AFPVOL_EA_SYS)
+            ERROR("Unsupported Extended Attributes option: %u", dvolinfo.v_vfs_ea);
+
+        /* initialize sufficient struct vol and initialize CNID connection */
+        dvolume.v_adouble = AD_VERSION2;
+        dvolume.v_vfs_ea = AFPVOL_EA_SYS;
+        initvol_vfs(&dvolume);
+        int flags = 0;
+        if ((dvolinfo.v_flags & AFPVOL_NODEV))
+            flags |= CNID_FLAG_NODEV;
+
+        if ((dvolume.v_cdb = cnid_open(dvolinfo.v_path,
+                                       0000,
+                                       "dbd",
+                                       flags,
+                                       dvolinfo.v_dbd_host,
+                                       dvolinfo.v_dbd_port)) == NULL)
+            ERROR("Cant initialize CNID database connection for %s", dvolinfo.v_path);
+
+        /* setup a list for storing the CNID stack of dirs in destination path */
+        if ((cnidq = queue_init()) == NULL)
+            ERROR("Cant initialize CNID stack");
+    }
+
     for (int i = 0; argv[i] != NULL; i++) { 
-        if (nftw(argv[i], copy, 20, ftw_options) == -1) {
-            ERROR("nftw: %s", strerror(errno));
+        /* Load .volinfo file for source */
+        if (loadvolinfo(to.p_path, &svolinfo) == 0) {
+            if (vol_load_charsets(&svolinfo) == -1)
+                ERROR("Error loading charsets!");
+            /* Sanity checks to ensure we can touch this volume */
+            if (svolinfo.v_vfs_ea != AFPVOL_EA_SYS)
+                ERROR("Unsupported Extended Attributes option: %u", svolinfo.v_vfs_ea);
+
+            /* initialize sufficient struct vol and initialize CNID connection */
+            svolume.v_adouble = AD_VERSION2;
+            svolume.v_vfs_ea = AFPVOL_EA_SYS;
+            initvol_vfs(&svolume);
+            int flags = 0;
+            if ((svolinfo.v_flags & AFPVOL_NODEV))
+                flags |= CNID_FLAG_NODEV;
+
+            if ((svolume.v_cdb = cnid_open(svolinfo.v_path,
+                                           0000,
+                                           "dbd",
+                                           flags,
+                                           svolinfo.v_dbd_host,
+                                           svolinfo.v_dbd_port)) == NULL)
+                ERROR("Cant initialize CNID database connection for %s", svolinfo.v_path);
+        }
+
+        if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
+            ERROR("%s: %s", argv[i], strerror(errno));
             exit(EXIT_FAILURE);
         }
+
+        if (svolume.v_cdb)
+            cnid_close(svolume.v_cdb);
+        svolume.v_cdb = NULL;
+
     }
-    return 0;
+    return rval;
 }
 
 static int copy(const char *path,
@@ -288,6 +361,16 @@ static int copy(const char *path,
     size_t nlen;
     const char *p;
     char *target_mid;
+
+    const char *dir = strrchr(path, '/');
+    if (dir == NULL)
+        dir = path;
+    else
+        dir++;
+    if (check_netatalk_dirs(dir) != NULL) {
+        SLOG("Skipping Netatalk dir %s", path);
+        return FTW_SKIP_SIBLINGS;
+    }
 
     /*
      * If we are in case (2) above, we need to append the
@@ -320,7 +403,7 @@ static int copy(const char *path,
                 if (strcmp(&path[base], "..") == 0)
                     base += 1;
             } else
-                base = ftw->base;
+                base = strlen(path);
         }
 
         p = &path[base];
@@ -391,6 +474,30 @@ static int copy(const char *path,
             ERROR("%s", to.p_path);
         }
 
+        /* Create ad dir and copy ".Parent" */
+        if (svolinfo.v_path && svolinfo.v_adouble == AD_VERSION2 &&
+            dvolinfo.v_path && dvolinfo.v_adouble == AD_VERSION2) {
+            /* Create ".AppleDouble" dir */
+            mode_t omask = umask(0);
+            bstring addir = bfromcstr(to.p_path);
+            bcatcstr(addir, "/.AppleDouble");
+            mkdir(cfrombstring(addir), 02777);
+
+            /* copy ".Parent" file */
+            bcatcstr(addir, "/.Parent");
+            bstring sdir = bfromcstr(path);
+            bcatcstr(sdir, "/.AppleDouble/.Parent");
+            if (copy_file(-1, cfrombstring(sdir), cfrombstring(addir), 0666) != 0) {
+                SLOG("Error copying %s -> %s", cfrombstring(sdir), cfrombstring(addir));
+                badcp = rval = 1;
+                break;
+            }
+            umask(omask);
+
+            /* Get CNID of Parent and add new childir to CNID database */
+            did = get_parent_cnid_for_path(&dvolinfo, &dvolume, to.p_path);
+        }
+
         if (pflag) {
             if (setfile(statp, -1))
                 rval = 1;
@@ -412,7 +519,7 @@ static int copy(const char *path,
         SLOG("%s is a FIFO (not copied).", path);
         break;
     default:
-        if (copy_file(ftw, path, statp, dne))
+        if (ftw_copy_file(ftw, path, statp, dne))
             badcp = rval = 1;
         break;
     }

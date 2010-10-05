@@ -33,7 +33,7 @@ struct volinfo {
     int                 v_vfs_ea;
     char                *(*ad_path)(const char *, int);
     char                *v_dbd_host;
-    int                 v_dbd_port;
+    char                *v_dbd_port;
 };
 
 extern int loadvolinfo(char *path, struct volinfo *vol);
