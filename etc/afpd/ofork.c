@@ -290,7 +290,7 @@ int of_stat(struct path *path)
 
     if ((ret = lstat(path->u_name, &path->st)) < 0) {
         LOG(log_debug, logtype_afpd, "of_stat('%s/%s': %s)",
-            cfrombstring(curdir->d_fullpath), path->u_name, strerror(errno));
+            cfrombstr(curdir->d_fullpath), path->u_name, strerror(errno));
     	path->st_errno = errno;
     }
 
@@ -335,7 +335,7 @@ int of_statdir(struct vol *vol, struct path *path)
     len = blength(path->d_dir->d_u_name);
     if (len > (MAXPATHLEN - 3))
         len = MAXPATHLEN - 3;
-    strncpy(pathname + 3, cfrombstring(path->d_dir->d_u_name), len + 1);
+    strncpy(pathname + 3, cfrombstr(path->d_dir->d_u_name), len + 1);
 
     LOG(log_debug, logtype_afpd, "of_statdir: stating: '%s'", pathname);
 
@@ -350,7 +350,7 @@ int of_statdir(struct vol *vol, struct path *path)
            return -1;
        path->st_errno = 0;
 
-       if ((ret = lstat(cfrombstring(path->d_dir->d_u_name), &path->st)) < 0) 
+       if ((ret = lstat(cfrombstr(path->d_dir->d_u_name), &path->st)) < 0) 
            path->st_errno = errno;
     }
 

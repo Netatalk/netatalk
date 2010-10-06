@@ -608,7 +608,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 						goto catsearch_end;
 					}
                 }
-                path.m_name = cfrombstring(path.d_dir->d_m_name);
+                path.m_name = cfrombstr(path.d_dir->d_m_name);
                 	
 				if (addstack(path.u_name, path.d_dir, cidx) == -1) {
 					result = AFPERR_MISC;

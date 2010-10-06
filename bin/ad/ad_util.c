@@ -50,6 +50,9 @@
 
 #include <atalk/cnid.h>
 #include <atalk/volinfo.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+#include <atalk/util.h>
 #include "ad.h"
 
 #define cp_pct(x, y)((y == 0) ? 0 : (int)(100.0 * (x) / (y)))
@@ -156,8 +159,38 @@ char *utompath(const struct volinfo *volinfo, char *upath)
     return(m);
 }
 
+/*
+ * path might be:
+ * (a) relative:
+ *     "dir/subdir" with cwd: "/afp_volume/topdir"
+ * (b) absolute:
+ *     "/afp_volume/dir/subdir"
+ */
+static const char *relative_path_for_volume(const char *path, const char *volpath)
+{
+    static char buf[MAXPATHLEN+1];
+    bstring fpath;
+
+    /* Make path absolute by concetanating for case (a) */
+    if (path[0] != '/') {
+        fpath = bfromcstr(getcwdpath());
+        if (fpath->data[fpath->slen - 1] != '/')
+            bcatcstr(fpath, "/");
+        bcatcstr(fpath, path);
+        if (fpath->data[fpath->slen - 1] == '/')
+            bdelete(fpath, fpath->slen - 1, 1);
+    } else {
+        fpath = bfromcstr(path);
+        if (fpath->data[fpath->slen - 1] == '/')
+            bdelete(fpath, fpath->slen - 1, 1);
+
+    }
+
+    return NULL;
+}
+
 /*!
- * Resolves CNID of a given paths parent directory
+ * ResolvesCNID of a given paths
  *
  * path might be:
  * (a) relative:
@@ -166,7 +199,6 @@ char *utompath(const struct volinfo *volinfo, char *upath)
  *     "/afp_volume/dir/subdir"
  *
  * 1) in case a) concatenate both paths
- * 2) strip last element
  * 3) strip volume root
  * 4) start recursive CNID search with
  *    a) DID:2, "topdir"
@@ -175,9 +207,9 @@ char *utompath(const struct volinfo *volinfo, char *upath)
  *    a) "/afp_volume/topdir/dir"
  *    b) "/afp_volume/dir" (no recursion required)
  */
-cnid_t get_parent_cnid_for_path(const struct volinfo *vi,
-                                const struct vol *vol,
-                                const char *path)
+cnid_t cnid_for_path(const struct volinfo *vi,
+                     const struct vol *vol,
+                     const char *path)
 {
 
     return 0;

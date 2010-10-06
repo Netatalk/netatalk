@@ -138,7 +138,7 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, c
             /* FIXME: pathname too long */
             return NULL;
         }
-        memcpy(p, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1);
+        memcpy(p, cfrombstr(dir->d_m_name), blength(dir->d_m_name) + 1);
         if ((dir = dirlookup(vol, dir->d_pdid)) == NULL)
             return NULL;
     }

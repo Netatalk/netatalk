@@ -27,7 +27,14 @@
 
 #include <atalk/bstrlib.h>
 
-#define cfrombstring(b) ((char *)((b)->data))
+#define cfrombstr(b) ((char *)((b)->data))
+
+/* strip slashes from end of a bstring */
+#define BSTRING_STRIP_SLASH(a)                      \
+    do {                                            \
+        while ((a)->data[(a)->slen - 1] == '/')     \
+            bdelete((a), (a)->slen - 1, 1);         \
+    } while (0);
 
 typedef struct tagbstring static_bstring;
 

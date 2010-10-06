@@ -369,19 +369,19 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
         if (movecwd( vol, dirlookup(vol, dir->d_pdid)) < 0 ) /* 1 */
             return NULL;
 
-        memcpy(ret->m_name, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1); /* 3 */
+        memcpy(ret->m_name, cfrombstr(dir->d_m_name), blength(dir->d_m_name) + 1); /* 3 */
         if (dir->d_m_name == dir->d_u_name) {
             ret->u_name = ret->m_name;
         } else {
             ret->u_name =  ret->m_name + blength(dir->d_m_name) + 1;
-            memcpy(ret->u_name, cfrombstring(dir->d_u_name), blength(dir->d_u_name) + 1);
+            memcpy(ret->u_name, cfrombstr(dir->d_u_name), blength(dir->d_u_name) + 1);
         }
 
         ret->d_dir = dir;
 
         LOG(log_debug, logtype_afpd, "cname('%s') {path-from-dir: AFPERR_ACCESS. curdir:'%s', path:'%s'}",
-            cfrombstring(dir->d_fullpath),
-            cfrombstring(curdir->d_fullpath),
+            cfrombstr(dir->d_fullpath),
+            cfrombstr(curdir->d_fullpath),
             ret->u_name);
 
         return ret;
@@ -390,12 +390,12 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
         if (movecwd(vol, dirlookup(vol, dir->d_pdid)) < 0 ) /* 1 */
             return NULL;
 
-        memcpy(ret->m_name, cfrombstring(dir->d_m_name), blength(dir->d_m_name) + 1);
+        memcpy(ret->m_name, cfrombstr(dir->d_m_name), blength(dir->d_m_name) + 1);
         if (dir->d_m_name == dir->d_u_name) {
             ret->u_name = ret->m_name;
         } else {
             ret->u_name =  ret->m_name + blength(dir->d_m_name) + 1;
-            memcpy(ret->u_name, cfrombstring(dir->d_u_name), blength(dir->d_u_name) + 1);
+            memcpy(ret->u_name, cfrombstr(dir->d_u_name), blength(dir->d_u_name) + 1);
         }
 
         ret->d_dir = NULL;      /* 4 */
@@ -475,7 +475,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             afp_errno = AFPERR_BADTYPE;
             return NULL;
         }
-        if (lstat(cfrombstring(ret->d_fullpath), &st) != 0) {
+        if (lstat(cfrombstr(ret->d_fullpath), &st) != 0) {
             LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {lstat: %s}", ntohl(did), strerror(errno));
             switch (errno) {
             case ENOENT:
@@ -526,9 +526,9 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* stat it and check if it's a dir */
-    LOG(log_debug, logtype_afpd, "dirlookup: {stating %s}", cfrombstring(fullpath));
+    LOG(log_debug, logtype_afpd, "dirlookup: {stating %s}", cfrombstr(fullpath));
 
-    if (stat(cfrombstring(fullpath), &st) != 0) { /* 5a */
+    if (stat(cfrombstr(fullpath), &st) != 0) { /* 5a */
         switch (errno) {
         case ENOENT:
             afp_errno = AFPERR_NOOBJ;
@@ -572,7 +572,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {end: did:%u, path:'%s'}",
-        ntohl(did), ntohl(pdid), cfrombstring(ret->d_fullpath));
+        ntohl(did), ntohl(pdid), cfrombstr(ret->d_fullpath));
 
 exit:
     if (err) {
@@ -783,8 +783,8 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name))) != NULL) {
         /* there's a stray entry in the dircache */
         LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
-            ntohl(dir->d_did), cfrombstring(dir->d_fullpath), path->u_name,
-            ntohl(cdir->d_did), cfrombstring(dir->d_fullpath));
+            ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
+            ntohl(cdir->d_did), cfrombstr(dir->d_fullpath));
         if (dir_remove(vol, cdir) != 0) {
             dircache_dump();
             AFP_PANIC("dir_add");
@@ -829,14 +829,14 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     if ((dircache_add(cdir)) != 0) { /* 4 */
-        LOG(log_error, logtype_afpd, "dir_add: fatal dircache error: %s", cfrombstring(fullpath));
+        LOG(log_error, logtype_afpd, "dir_add: fatal dircache error: %s", cfrombstr(fullpath));
         exit(EXITERR_SYS);
     }
 
 exit:
     if (err != 0) {
         LOG(log_debug, logtype_afpd, "dir_add('%s/%s'): error: %u",
-            cfrombstring(dir->d_u_name), path->u_name, err);
+            cfrombstr(dir->d_u_name), path->u_name, err);
 
         if (adp)
             ad_close_metadata(adp);
@@ -848,8 +848,8 @@ exit:
     } else {
         /* no error */
         LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {cached: %u,'%s'}",
-            ntohl(dir->d_did), cfrombstring(dir->d_fullpath), path->u_name,
-            ntohl(cdir->d_did), cfrombstring(cdir->d_fullpath));
+            ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
+            ntohl(cdir->d_did), cfrombstr(cdir->d_fullpath));
     }
 
     return(cdir);
@@ -876,7 +876,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
     if (dir->d_flags & DIRF_CACHELOCK || dir->d_ofork) { /* 1 */
         LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): dir is locked or has opened forks",
-            ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+            ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
         return 0;
     }
 
@@ -887,7 +887,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     }
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
-        ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+        ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
 
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 3 */
     dir_free(dir);              /* 4 */
@@ -1013,7 +1013,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     int         size = 0;
     int         toUTF8 = 0;
 
-    LOG(log_maxdebug, logtype_afpd, "came('%s'): {start}", cfrombstring(dir->d_fullpath));
+    LOG(log_maxdebug, logtype_afpd, "came('%s'): {start}", cfrombstr(dir->d_fullpath));
 
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
@@ -1054,7 +1054,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
     if (movecwd(vol, dir) < 0 ) {
         LOG(log_debug, logtype_afpd, "cname(did:%u): failed to chdir to '%s'",
-            ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+            ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
         if (len == 0)
             return path_from_dir(vol, dir, &ret);
         else
@@ -1095,7 +1095,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             return NULL;
         }
 
-        LOG(log_maxdebug, logtype_afpd, "came('%s'): {node: '%s}", cfrombstring(dir->d_fullpath), ret.u_name);
+        LOG(log_maxdebug, logtype_afpd, "came('%s'): {node: '%s}", cfrombstr(dir->d_fullpath), ret.u_name);
 
         /* Prevent access to our special folders like .AppleDouble */
         if (check_name(vol, ret.u_name)) {
@@ -1111,7 +1111,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
              * root parent (did 1) has one child: the volume. Requests for did=1 with
              * some <name> must check against the volume name.
              */
-            if ((strcmp(cfrombstring(vol->v_root->d_m_name), ret.m_name)) == 0)
+            if ((strcmp(cfrombstr(vol->v_root->d_m_name), ret.m_name)) == 0)
                 cdir = vol->v_root;
             else
                 return NULL;
@@ -1138,13 +1138,15 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                  * this will terminate clean in while (1) because len == 0,
                  * probably afp_createfile|dir
                  */
-                LOG(log_maxdebug, logtype_afpd, "came('%s'): {leave-cnode ENOENT (possile create request): '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
+                LOG(log_maxdebug, logtype_afpd, "came('%s'): {leave-cnode ENOENT (possile create request): '%s'}",
+                    cfrombstr(dir->d_fullpath), ret.u_name);
                 continue; /* 10 */
             }
 
             switch (ret.st.st_mode & S_IFMT) {
             case S_IFREG: /* 11 */
-                LOG(log_debug, logtype_afpd, "came('%s'): {file: '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
+                LOG(log_debug, logtype_afpd, "came('%s'): {file: '%s'}",
+                    cfrombstr(dir->d_fullpath), ret.u_name);
                 if (len > 0) {
                     /* it wasn't the last part, so we have a bogus path request */
                     afp_errno = AFPERR_PARAM;
@@ -1152,9 +1154,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                 }
                 continue; /* continues while loop */
             case S_IFLNK: /* 12 */
-                LOG(log_debug, logtype_afpd, "came('%s'): {link: '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
+                LOG(log_debug, logtype_afpd, "came('%s'): {link: '%s'}",
+                    cfrombstr(dir->d_fullpath), ret.u_name);
                 if (len > 0) {
-                    LOG(log_warning, logtype_afpd, "came('%s'): {symlinked dir: '%s'}", cfrombstring(dir->d_fullpath), ret.u_name);
+                    LOG(log_warning, logtype_afpd, "came('%s'): {symlinked dir: '%s'}",
+                        cfrombstr(dir->d_fullpath), ret.u_name);
                     afp_errno = AFPERR_PARAM;
                     return NULL;
                 }
@@ -1183,7 +1187,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         /* Now chdir to the evaluated dir */
         if (movecwd( vol, cdir ) < 0 ) { /* 16 */
             LOG(log_debug, logtype_afpd, "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
-                cfrombstring(curdir->d_fullpath), cfrombstring(cdir->d_fullpath), strerror(errno));
+                cfrombstr(curdir->d_fullpath), cfrombstr(cdir->d_fullpath), strerror(errno));
             if (len == 0)
                 return path_from_dir(vol, cdir, &ret);
             else
@@ -1205,8 +1209,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     }
 
     LOG(log_debug, logtype_afpd, "came('%s') {end: curdir:'%s', path:'%s'}",
-        cfrombstring(dir->d_fullpath),
-        cfrombstring(curdir->d_fullpath),
+        cfrombstr(dir->d_fullpath),
+        cfrombstr(curdir->d_fullpath),
         ret.u_name);
 
     return &ret;
@@ -1228,7 +1232,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     AFP_ASSERT(dir);
 
     LOG(log_maxdebug, logtype_afpd, "movecwd(curdir:'%s', cwd:'%s')",
-        cfrombstring(curdir->d_fullpath), getcwdpath());
+        cfrombstr(curdir->d_fullpath), getcwdpath());
 
     if ( dir == curdir)
         return( 0 );
@@ -1237,11 +1241,12 @@ int movecwd(const struct vol *vol, struct dir *dir)
         return 0;
     }
 
-    LOG(log_debug, logtype_afpd, "movecwd(did:%u, '%s')", ntohl(dir->d_did), cfrombstring(dir->d_fullpath));
+    LOG(log_debug, logtype_afpd, "movecwd(did:%u, '%s')",
+        ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
 
-    if ((ret = lchdir(cfrombstring(dir->d_fullpath))) != 0 ) {
+    if ((ret = lchdir(cfrombstr(dir->d_fullpath))) != 0 ) {
         LOG(log_debug, logtype_afpd, "movecwd('%s'): ret: %u, %s",
-            cfrombstring(dir->d_fullpath), ret, strerror(errno));
+            cfrombstr(dir->d_fullpath), ret, strerror(errno));
         if (ret == 1) {
             /* p is a symlink or getcwd failed */
             afp_errno = AFPERR_BADTYPE;
@@ -1384,7 +1389,7 @@ int getdirparams(const struct vol *vol,
         case DIRPBIT_ATTR :
             if ( isad ) {
                 ad_getattr(&ad, &ashort);
-            } else if (invisible_dots(vol, cfrombstring(dir->d_u_name))) {
+            } else if (invisible_dots(vol, cfrombstr(dir->d_u_name))) {
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
@@ -1430,7 +1435,7 @@ int getdirparams(const struct vol *vol,
                 memcpy(data + FINDERINFO_FRVIEWOFF, &ashort, sizeof(ashort));
 
                 /* dot files are by default visible */
-                if (invisible_dots(vol, cfrombstring(dir->d_u_name))) {
+                if (invisible_dots(vol, cfrombstr(dir->d_u_name))) {
                     ashort = htons(FINDERINFO_INVISIBLE);
                     memcpy(data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
                 }
@@ -1553,12 +1558,12 @@ int getdirparams(const struct vol *vol,
     if ( l_nameoff ) {
         ashort = htons( data - buf );
         memcpy( l_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(vol, data, pdid, cfrombstring(dir->d_m_name), dir->d_did, 0);
+        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, 0);
     }
     if ( utf_nameoff ) {
         ashort = htons( data - buf );
         memcpy( utf_nameoff, &ashort, sizeof( ashort ));
-        data = set_name(vol, data, pdid, cfrombstring(dir->d_m_name), dir->d_did, utf8);
+        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, utf8);
     }
     if ( isad ) {
         ad_close_metadata( &ad );
@@ -1795,7 +1800,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
          * to set our name, etc.
          */
         if ( (ad_get_HF_flags( &ad ) & O_CREAT)) {
-            ad_setname(&ad, cfrombstring(curdir->d_m_name));
+            ad_setname(&ad, cfrombstr(curdir->d_m_name));
         }
     }
 
@@ -2057,7 +2062,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
         if ( fsync(dfd) < 0 )
             LOG(log_error, logtype_afpd, "afp_syncdir(%s): %s",
-                vol->ad_path(cfrombstring(dir->d_u_name), ADFLAGS_DIR), strerror(errno) );
+                vol->ad_path(cfrombstr(dir->d_u_name), ADFLAGS_DIR), strerror(errno) );
         close(dfd);
     }
 
@@ -2262,7 +2267,7 @@ int deletecurdir(struct vol *vol)
         goto delete_done;
     }
 
-    err = netatalk_rmdir_all_errors(-1, cfrombstring(fdir->d_u_name));
+    err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
     if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
         cnid_delete(vol->v_cdb, fdir->d_did);
         dir_remove( vol, fdir );

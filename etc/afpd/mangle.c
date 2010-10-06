@@ -182,11 +182,11 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
         }
         if (!osx) {
             /* it's not from cname so mfilename and dir must be the same */
-            if (strcmp(cfrombstring(dir->d_m_name), mfilename) == 0) {
-                return cfrombstring(dir->d_u_name);
+            if (strcmp(cfrombstr(dir->d_m_name), mfilename) == 0) {
+                return cfrombstr(dir->d_u_name);
             }
         } else {
-            return demangle_checks(vol, cfrombstring(dir->d_u_name), mfilename, prefix, t);
+            return demangle_checks(vol, cfrombstr(dir->d_u_name), mfilename, prefix, t);
         }
     }
     else if (NULL != (u_name = cnid_resolve(vol->v_cdb, &id, buffer, len)) ) {

@@ -57,7 +57,7 @@ extern int ad_cp(int argc, char **argv);
 /* ad_util.c */
 extern int newvol(const char *path, afpvol_t *vol);
 extern void freevol(afpvol_t *vol);
-extern cnid_t get_parent_cnid_for_path(const struct volinfo *vi, const struct vol *vol, const char *path);
+extern cnid_t cnid_for_path(const struct volinfo *vi, const struct vol *vol, const char *path);
 extern char *utompath(const struct volinfo *volinfo, char *upath);
 
 struct FTWELEM {

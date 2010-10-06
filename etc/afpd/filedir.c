@@ -176,7 +176,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
 
     LOG(log_debug, logtype_afpd, "getfildirparams(vid:%u, did:%u, f/d:%04x/%04x) {cwdid:%u, cwd: %s, name:'%s'}",
         ntohs(vid), ntohl(dir->d_did), fbitmap, dbitmap,
-        ntohl(curdir->d_did), cfrombstring(curdir->d_fullpath), s_path->u_name);
+        ntohl(curdir->d_did), cfrombstr(curdir->d_fullpath), s_path->u_name);
 
     st   = &s_path->st;
     if (!s_path->st_valid) {
@@ -523,7 +523,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         if ( movecwd( vol, dirlookup(vol, sdir->d_pdid) ) < 0 ) {
             return afp_errno;
         }
-        memcpy(oldname, cfrombstring(sdir->d_m_name), blength(sdir->d_m_name) +1);
+        memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) +1);
     }
 
     /* another place where we know about the path type */
@@ -596,7 +596,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             rc = deletefile(vol, -1, upath, 1);
 
             struct dir *cachedfile;
-            if (cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath))) {
+            if ((cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath)))) {
                 dircache_remove(vol, cachedfile, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
                 dir_free(cachedfile);
             }
@@ -627,9 +627,9 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
     if (path->slen > MAXPATHLEN)
         return NULL;
 
-    LOG(log_debug, logtype_afpd, "absupath: %s", cfrombstring(path));
+    LOG(log_debug, logtype_afpd, "absupath: %s", cfrombstr(path));
 
-    strncpy(pathbuf, cfrombstring(path), blength(path) + 1);
+    strncpy(pathbuf, cfrombstr(path), blength(path) + 1);
     bdestroy(path);
 
     return(pathbuf);
@@ -699,7 +699,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         }
         strcpy(oldname, path->m_name); /* an extra copy for of_rename */
     } else {
-        memcpy(oldname, cfrombstring(sdir->d_m_name), blength(sdir->d_m_name) + 1);
+        memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) + 1);
     }
 
 #ifdef HAVE_RENAMEAT

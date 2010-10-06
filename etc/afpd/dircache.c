@@ -285,7 +285,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did)
 
     if (cdir)
         LOG(log_debug, logtype_afpd, "dircache(did:%u): {cached: path:'%s'}",
-            ntohl(did), cfrombstring(cdir->d_u_name));
+            ntohl(did), cfrombstr(cdir->d_u_name));
     else
         LOG(log_debug, logtype_afpd, "dircache(did:%u): {not in cache}", ntohl(did));
 
@@ -380,7 +380,7 @@ int dircache_add(struct dir *dir)
     }
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}",
-        ntohl(dir->d_did), cfrombstring(dir->d_u_name));
+        ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
    AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
@@ -413,7 +413,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
     if (flags & DIDNAME_INDEX) {
         if ((hn = hash_lookup(index_didname, dir)) == NULL) {
             LOG(log_error, logtype_default, "dircache_remove(%u,\"%s\"): not in didname index", 
-                ntohl(dir->d_did), cfrombstring(dir->d_u_name));
+                ntohl(dir->d_did), cfrombstr(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
         }
@@ -423,7 +423,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
     if (flags & DIRCACHE) {
         if ((hn = hash_lookup(dircache, dir)) == NULL) {
             LOG(log_error, logtype_default, "dircache_remove(%u,\"%s\"): not in dircache", 
-                ntohl(dir->d_did), cfrombstring(dir->d_u_name));
+                ntohl(dir->d_did), cfrombstr(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
         }
@@ -431,7 +431,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
     }
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {removed}",
-        ntohl(dir->d_did), cfrombstring(dir->d_u_name));
+        ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
    AFP_ASSERT(queue_count == index_didname->hash_nodecount 
            && queue_count == dircache->hash_nodecount);
@@ -524,7 +524,7 @@ void dircache_dump(void)
                 dir->d_fullpath ? "d" : "f",
                 (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
                 dir->d_ofork ? "o" : "-",
-                cfrombstring(dir->d_u_name));
+                cfrombstr(dir->d_u_name));
     }
 
     fprintf(dump, "\nSecondary DID/name index:\n");
@@ -542,7 +542,7 @@ void dircache_dump(void)
                 dir->d_fullpath ? "d" : "f",
                 (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
                 dir->d_ofork ? "o" : "-",
-                cfrombstring(dir->d_u_name));
+                cfrombstr(dir->d_u_name));
     }
 
     fprintf(dump, "\nLRU Queue:\n");
@@ -561,7 +561,7 @@ void dircache_dump(void)
                 dir->d_fullpath ? "d" : "f",
                 (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
                 dir->d_ofork ? "o" : "-",
-                cfrombstring(dir->d_u_name));
+                cfrombstr(dir->d_u_name));
         n = n->next;
     }
 

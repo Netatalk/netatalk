@@ -481,21 +481,21 @@ static int copy(const char *path,
             mode_t omask = umask(0);
             bstring addir = bfromcstr(to.p_path);
             bcatcstr(addir, "/.AppleDouble");
-            mkdir(cfrombstring(addir), 02777);
+            mkdir(cfrombstr(addir), 02777);
 
             /* copy ".Parent" file */
             bcatcstr(addir, "/.Parent");
             bstring sdir = bfromcstr(path);
             bcatcstr(sdir, "/.AppleDouble/.Parent");
-            if (copy_file(-1, cfrombstring(sdir), cfrombstring(addir), 0666) != 0) {
-                SLOG("Error copying %s -> %s", cfrombstring(sdir), cfrombstring(addir));
+            if (copy_file(-1, cfrombstr(sdir), cfrombstr(addir), 0666) != 0) {
+                SLOG("Error copying %s -> %s", cfrombstr(sdir), cfrombstr(addir));
                 badcp = rval = 1;
                 break;
             }
             umask(omask);
 
             /* Get CNID of Parent and add new childir to CNID database */
-            did = get_parent_cnid_for_path(&dvolinfo, &dvolume, to.p_path);
+            did = cnid_for_path(&dvolinfo, &dvolume, to.p_path);
         }
 
         if (pflag) {

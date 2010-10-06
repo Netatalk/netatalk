@@ -270,7 +270,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     LOG(log_debug, logtype_afpd, "enumerate(vid:%u, did:%u, cwddid:%u, cwd:'%s', name:'%s', f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
         ntohs(vid), ntohl(did), ntohl(curdir->d_did),
-        cfrombstring(curdir->d_fullpath), o_path->u_name,
+        cfrombstr(curdir->d_fullpath), o_path->u_name,
         fbitmap, dbitmap, reqcnt, sindex, maxsz);
 
     data = rbuf + 3 * sizeof( u_int16_t );
