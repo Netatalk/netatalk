@@ -1,9 +1,0 @@
-Makefile
-Makefile.in
-logger_test
-test.log
-.deps
-.libs
-
-.gitignore
-logger_test.o

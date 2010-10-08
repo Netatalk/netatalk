@@ -1,9 +1,10 @@
 Makefile
 Makefile.in
 netacnv
+afpldaptest
+logger_test
 .deps
 .libs
 *.o
-afpldaptest
-.gitignore
-netacnv.o
+
+

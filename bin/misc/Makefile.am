@@ -3,9 +3,13 @@
 pkgconfdir = @PKGCONFDIR@
 bin_PROGRAMS =
 
-noinst_PROGRAMS = netacnv
+noinst_PROGRAMS = netacnv logger_test
+
 netacnv_SOURCES = netacnv.c
 netacnv_LDADD = $(top_builddir)/libatalk/libatalk.la
+
+logger_test_SOURCES = logger_test.c
+logger_test_LDADD = $(top_builddir)/libatalk/libatalk.la
 
 if HAVE_ACLS
 bin_PROGRAMS += afpldaptest
