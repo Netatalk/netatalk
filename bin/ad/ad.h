@@ -23,6 +23,7 @@
 
 #include <atalk/ftw.h>
 #include <atalk/volinfo.h>
+#include <atalk/cnid.h>
 
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
 
@@ -42,21 +43,19 @@ enum logtype {STD, DBG};
 
 typedef struct {
     struct volinfo volinfo;
-//    char *basename;
+    struct vol     volume;
+    char           db_stamp[ADEDLEN_PRIVSYN];
 } afpvol_t;
 
 extern int log_verbose;             /* Logging flag */
 extern void _log(enum logtype lt, char *fmt, ...);
 
-extern struct volinfo svolinfo, dvolinfo;
-extern struct vol svolume, dvolume;
-
 extern int ad_ls(int argc, char **argv);
 extern int ad_cp(int argc, char **argv);
 
 /* ad_util.c */
-extern int newvol(const char *path, afpvol_t *vol);
-extern void freevol(afpvol_t *vol);
+extern int openvol(const char *path, afpvol_t *vol);
+extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_path(const struct volinfo *vi, const struct vol *vol, const char *path);
 extern char *utompath(const struct volinfo *volinfo, char *upath);
 
@@ -76,12 +75,5 @@ typedef struct {
 
 extern PATH_T to;
 extern int fflag, iflag, lflag, nflag, pflag, vflag;
-extern volatile sig_atomic_t info;
-
-extern int ftw_copy_file(const struct FTW *, const char *, const struct stat *, int);
-extern int copy_link(const struct FTW *, const char *, const struct stat *, int);
-extern int setfile(const struct stat *, int);
-extern int preserve_dir_acls(const struct stat *, char *, char *);
-extern int preserve_fd_acls(int, int);
 
 #endif /* AD_H */

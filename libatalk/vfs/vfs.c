@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h>
 
 #include <atalk/afp.h>    
 #include <atalk/adouble.h>
@@ -319,6 +320,44 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
 		return -1;
 	}
 	return 0;
+}
+
+static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
+/* const struct vol *vol, int sfd, const char *src, const char *dst */
+{
+    EC_INIT;
+    bstring s = NULL, d = NULL;
+    const char *name;
+    char *dir = NULL;
+
+    /* get basename */
+    EC_NULL(name = strchr(src, '/'));
+    name++;
+
+    /* build src path to AppleDouble file*/
+    EC_NULL(dir = dirname(strdup(src)));
+    EC_NULL(s = bfromcstr(dir));
+    EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
+    EC_ZERO(bcatcstr(s, name));
+    free(dirname);
+    dir = NULL;
+
+    /* build dst path to AppleDouble file*/
+    EC_NULL(dir = dirname(strdup(dst)));
+    EC_NULL(d = bfromcstr(dir));
+    EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
+    EC_ZERO(bcatcstr(d, name));
+
+    free(dirname);
+    dir = NULL;
+
+    EC_ZERO(copy_file(sfd, src, dst, 0666));
+
+EC_CLEANUP:
+    bdestroy(s);
+    bdestroy(d);
+    if (dir) free(dir);
+    EC_EXIT;
 }
 
 #ifdef HAVE_SOLARIS_ACLS
@@ -947,7 +986,7 @@ static struct vfs_ops netatalk_adouble = {
     /* vfs_setdirowner:   */ RF_setdirowner_adouble,
     /* vfs_deletefile:    */ RF_deletefile_adouble,
     /* vfs_renamefile:    */ RF_renamefile_adouble,
-    /* vfs_copyfile:      */ NULL,
+    /* vfs_copyfile:      */ RF_copyfile_adouble,
     NULL
 };
 

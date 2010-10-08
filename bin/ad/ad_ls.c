@@ -578,9 +578,9 @@ int ad_ls(int argc, char **argv)
     }
 
     if ((argc - optind) == 0) {
-        newvol(".", &vol);
+        openvol(".", &vol);
         ad_ls_r(".", &vol);
-        freevol(&vol);
+        closevol(&vol);
     }
     else {
         int havefile = 0;
@@ -598,9 +598,9 @@ int ad_ls(int argc, char **argv)
             first = 1;
             recursion = 0;
 
-            newvol(argv[optind], &vol);
+            openvol(argv[optind], &vol);
             ad_ls_r(argv[optind], &vol);
-            freevol(&vol);
+            closevol(&vol);
         next:
             optind++;
         }
@@ -620,9 +620,9 @@ int ad_ls(int argc, char **argv)
             first = 1;
             recursion = 0;
 
-            newvol(argv[optind], &vol);
+            openvol(argv[optind], &vol);
             ad_ls_r(argv[optind], &vol);
-            freevol(&vol);
+            closevol(&vol);
 
         next2:
             optind++;
