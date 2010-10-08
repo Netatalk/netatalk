@@ -302,8 +302,10 @@ static int copy(const char *path,
                 int tflag,
                 struct FTW *ftw)
 {
+    static int base = 0;
+
     struct stat to_stat;
-    int base = 0, dne;
+    int dne;
     size_t nlen;
     const char *p;
     char *target_mid;
@@ -414,7 +416,7 @@ static int copy(const char *path,
          */
         if (dne) {
             if (mkdir(to.p_path, statp->st_mode | S_IRWXU) < 0)
-                ERROR("%s", to.p_path);
+                ERROR("mkdir: %s: %s", to.p_path, strerror(errno));
         } else if (!S_ISDIR(to_stat.st_mode)) {
             errno = ENOTDIR;
             ERROR("%s", to.p_path);
