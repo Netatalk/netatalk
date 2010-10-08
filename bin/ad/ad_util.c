@@ -53,6 +53,8 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/util.h>
+#include <atalk/logger.h>
+#include <atalk/errchk.h>
 #include "ad.h"
 
 #define cp_pct(x, y)((y == 0) ? 0 : (int)(100.0 * (x) / (y)))
@@ -159,33 +161,55 @@ char *utompath(const struct volinfo *volinfo, char *upath)
     return(m);
 }
 
-/*
+/*!
+ * Build path relativ to volume root
+ *
  * path might be:
  * (a) relative:
  *     "dir/subdir" with cwd: "/afp_volume/topdir"
  * (b) absolute:
  *     "/afp_volume/dir/subdir"
+ *
+ * @param path     (r) path relative to cwd() or absolute
+ * @param volpath  (r) volume path that path is a subdir of (has been computed in volinfo funcs) 
+ *
+ * @returns relative path in new bstring, caller must bdestroy it
  */
-static const char *relative_path_for_volume(const char *path, const char *volpath)
+static bstring rel_path_in_vol(const char *path, const char *volpath)
 {
-    static char buf[MAXPATHLEN+1];
-    bstring fpath;
+    EC_INIT;
+
+    if (path == NULL || volpath == NULL)
+        return NULL;
+
+    bstring fpath = NULL;
 
     /* Make path absolute by concetanating for case (a) */
     if (path[0] != '/') {
-        fpath = bfromcstr(getcwdpath());
-        if (fpath->data[fpath->slen - 1] != '/')
-            bcatcstr(fpath, "/");
-        bcatcstr(fpath, path);
-        if (fpath->data[fpath->slen - 1] == '/')
-            bdelete(fpath, fpath->slen - 1, 1);
+        EC_NULL(fpath = bfromcstr(getcwdpath()));
+        if (bchar(fpath, blength(fpath) - 1) != '/')
+            EC_ZERO(bcatcstr(fpath, "/"));
+        EC_ZERO(bcatcstr(fpath, path));
+        BSTRING_STRIP_SLASH(fpath);
+        SLOG("Built path: %s", cfrombstr(fpath));
     } else {
-        fpath = bfromcstr(path);
-        if (fpath->data[fpath->slen - 1] == '/')
-            bdelete(fpath, fpath->slen - 1, 1);
-
+        EC_NULL(fpath = bfromcstr(path));
+        BSTRING_STRIP_SLASH(fpath);
+        SLOG("Built path: %s", cfrombstr(fpath));
     }
 
+    /*
+     * Now we have eg:
+     *   fpath:   /Volume/netatalk/dir/bla
+     *   volpath: /Volume/netatalk/
+     * we want: "dir/bla"
+     */
+    EC_ZERO(bdelete(fpath, 0, strlen(volpath)));
+    SLOG("rel path: %s", cfrombstr(fpath));    
+    return fpath;
+
+EC_CLEANUP:
+    bdestroy(fpath);
     return NULL;
 }
 
@@ -198,12 +222,10 @@ static const char *relative_path_for_volume(const char *path, const char *volpat
  * (b) absolute:
  *     "/afp_volume/dir/subdir"
  *
- * 1) in case a) concatenate both paths
- * 3) strip volume root
- * 4) start recursive CNID search with
- *    a) DID:2, "topdir"
- *    b) DID:2, "dir"
- * 5) ...until we have the CNID for
+ * 1) start recursive CNID search with
+ *    a) DID:2 / "topdir"
+ *    b) DID:2 / "dir"
+ * 2) ...until we have the CNID for
  *    a) "/afp_volume/topdir/dir"
  *    b) "/afp_volume/dir" (no recursion required)
  */
@@ -211,8 +233,49 @@ cnid_t cnid_for_path(const struct volinfo *vi,
                      const struct vol *vol,
                      const char *path)
 {
+    EC_INIT;
 
-    return 0;
+    cnid_t did;
+    cnid_t cnid;
+    bstring rpath = NULL;
+    bstring statpath = NULL;
+    struct bstrList *l = NULL;
+    struct stat st;
+
+    EC_NULL(rpath = rel_path_in_vol(path, vi->v_path));
+    SLOG("vol:%s, path: %s, rpath: %s", vi->v_path, path, bdata(rpath));
+
+    cnid = htonl(2);
+
+    EC_NULL(statpath = bfromcstr(vi->v_path));
+
+    l = bsplit(rpath, '/');
+    SLOG("elem: %s, qty: %u", cfrombstr(l->entry[0]), l->qty);
+    for(int i = 0; i < l->qty ; i++) {
+        did = cnid;
+        EC_ZERO(bconcat(statpath, l->entry[i]));
+        SLOG("statpath: %s", cfrombstr(statpath));
+        EC_ZERO_LOG(stat(cfrombstr(statpath), &st));
+        SLOG("db query: did: %u, name: %s, dev: %08x, ino: %08x",
+             ntohl(did), cfrombstr(l->entry[i]), st.st_dev, st.st_ino);
+        cnid = cnid_add(vol->v_cdb,
+                        &st,
+                        did,
+                        cfrombstr(l->entry[i]),
+                        blength(l->entry[i]),
+                        0);
+
+        EC_ZERO(bcatcstr(statpath, "/"));
+    }
+
+EC_CLEANUP:
+    bdestroy(rpath);
+    bstrListDestroy(l);
+    bdestroy(statpath);
+    if (ret != 0)
+        return CNID_INVALID;
+
+    return cnid;
 }
 
 int ftw_copy_file(const struct FTW *entp,

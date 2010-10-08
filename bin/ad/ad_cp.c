@@ -299,7 +299,7 @@ int ad_cp(int argc, char *argv[])
         if ((dvolinfo.v_flags & AFPVOL_NODEV))
             flags |= CNID_FLAG_NODEV;
 
-        if ((dvolume.v_cdb = cnid_open(dvolinfo.v_path,
+        if ((dvolume.v_cdb = cnid_open(dvolinfo.v_dbpath,
                                        0000,
                                        "dbd",
                                        flags,
@@ -329,7 +329,7 @@ int ad_cp(int argc, char *argv[])
             if ((svolinfo.v_flags & AFPVOL_NODEV))
                 flags |= CNID_FLAG_NODEV;
 
-            if ((svolume.v_cdb = cnid_open(svolinfo.v_path,
+            if ((svolume.v_cdb = cnid_open(svolinfo.v_dbpath,
                                            0000,
                                            "dbd",
                                            flags,
@@ -496,6 +496,7 @@ static int copy(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             did = cnid_for_path(&dvolinfo, &dvolume, to.p_path);
+            SLOG("got CNID: %u for path: %s", ntohl(did), to.p_path);
         }
 
         if (pflag) {

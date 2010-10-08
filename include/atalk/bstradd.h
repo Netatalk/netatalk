@@ -1,5 +1,4 @@
 /*
-   $Id: bstradd.h,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
    Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -32,8 +31,8 @@
 /* strip slashes from end of a bstring */
 #define BSTRING_STRIP_SLASH(a)                      \
     do {                                            \
-        while ((a)->data[(a)->slen - 1] == '/')     \
-            bdelete((a), (a)->slen - 1, 1);         \
+        while (bchar((a), blength(a) - 1) == '/')   \
+            bdelete((a), blength(a) - 1, 1);        \
     } while (0);
 
 typedef struct tagbstring static_bstring;

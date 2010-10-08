@@ -41,7 +41,7 @@ static void usage_main(void)
 
 int main(int argc, char **argv)
 {
-    setuplog("default log_note /dev/tty");
+    setuplog("default log_debug /dev/tty");
 
     if (argc < 2) {
         usage_main();
