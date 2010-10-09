@@ -37,6 +37,8 @@
 #include <atalk/directory.h>
 #include <atalk/unix.h>
 #include <atalk/errchk.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 struct perm {
     uid_t uid;
@@ -331,7 +333,7 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
     char *dir = NULL;
 
     /* get basename */
-    EC_NULL(name = strchr(src, '/'));
+    EC_NULL(name = strrchr(src, '/'));
     name++;
 
     /* build src path to AppleDouble file*/
@@ -339,7 +341,7 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
     EC_NULL(s = bfromcstr(dir));
     EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
     EC_ZERO(bcatcstr(s, name));
-    free(dirname);
+    free(dir);
     dir = NULL;
 
     /* build dst path to AppleDouble file*/
@@ -348,10 +350,10 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
     EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
     EC_ZERO(bcatcstr(d, name));
 
-    free(dirname);
+    free(dir);
     dir = NULL;
 
-    EC_ZERO(copy_file(sfd, src, dst, 0666));
+    EC_ZERO(copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666));
 
 EC_CLEANUP:
     bdestroy(s);
