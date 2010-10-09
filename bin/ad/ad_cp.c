@@ -86,7 +86,7 @@ enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
 int fflag, iflag, lflag, nflag, pflag, vflag;
 mode_t mask;
 
-cnid_t pdid, did; /* current dir CNID and parent did*/
+cnid_t ppdid, pdid, did; /* current dir CNID and parent did*/
 
 static afpvol_t svolume, dvolume;
 static enum op type;
@@ -129,6 +129,7 @@ static const char *check_netatalk_dirs(const char *name)
 static void upfunc(void)
 {
     did = pdid;
+    pdid = ppdid;
 }
 
 static void usage_cp(void)
@@ -149,6 +150,9 @@ int ad_cp(int argc, char *argv[])
     afpvol_t srcvol;
     afpvol_t dstvol;
 #endif
+
+    ppdid = pdid = htonl(1);
+    did = htonl(2);
 
     while ((ch = getopt(argc, argv, "Rafilnpvx")) != -1)
         switch (ch) {
@@ -285,7 +289,7 @@ int ad_cp(int argc, char *argv[])
 
     for (int i = 0; argv[i] != NULL; i++) { 
         /* Load .volinfo file for source */
-        openvol(to.p_path, &svolume);
+        openvol(argv[i], &svolume);
 
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             ERROR("%s: %s", argv[i], strerror(errno));
@@ -423,25 +427,29 @@ static int copy(const char *path,
         }
 
         /* Create ad dir and copy ".Parent" */
-        if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2 &&
-            dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
+        if (dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
             /* Create ".AppleDouble" dir */
             mode_t omask = umask(0);
             bstring addir = bfromcstr(to.p_path);
             bcatcstr(addir, "/.AppleDouble");
             mkdir(cfrombstr(addir), 02777);
 
-            /* copy ".Parent" file */
-            bcatcstr(addir, "/.Parent");
-            bstring sdir = bfromcstr(path);
-            bcatcstr(sdir, "/.AppleDouble/.Parent");
-            if (copy_file(-1, cfrombstr(sdir), cfrombstr(addir), 0666) != 0) {
-                SLOG("Error copying %s -> %s", cfrombstr(sdir), cfrombstr(addir));
-                badcp = rval = 1;
-                break;
+            if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
+                /* copy ".Parent" file */
+                bcatcstr(addir, "/.Parent");
+                bstring sdir = bfromcstr(path);
+                bcatcstr(sdir, "/.AppleDouble/.Parent");
+                if (copy_file(-1, cfrombstr(sdir), cfrombstr(addir), 0666) != 0) {
+                    SLOG("Error copying %s -> %s", cfrombstr(sdir), cfrombstr(addir));
+                    badcp = rval = 1;
+                    break;
+                }
+                bdestroy(sdir);
             }
+            bdestroy(addir);
 
             /* Get CNID of Parent and add new childir to CNID database */
+            ppdid = pdid;
             pdid = did;
             did = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path);
             SLOG("got CNID: %u for path: %s", ntohl(did), to.p_path);
@@ -453,15 +461,14 @@ static int copy(const char *path,
                 break;
             }
             ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-            if (ad_open_metadata(to.p_path, ADFLAGS_DIR, O_RDWR, &ad) != 0) {
+            if (ad_open_metadata(to.p_path, ADFLAGS_DIR, O_RDWR | O_CREAT, &ad) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
             ad_setid( &ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
+            ad_setname(&ad, utompath(&dvolume.volinfo, path + ftw->base));
             ad_flush(&ad);
             ad_close_metadata(&ad);
 
-            bdestroy(addir);
-            bdestroy(sdir);
             umask(omask);
         }
 
@@ -489,27 +496,35 @@ static int copy(const char *path,
         if (ftw_copy_file(ftw, path, statp, dne))
             badcp = rval = 1;
 
-        SLOG("file: %s", to.p_path);
-
-        if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2 &&
-            dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
+        if (dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
 
             SLOG("ad for file: %s", to.p_path);
+            mode_t omask = umask(0);
+            if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
+                /* copy ad-file */
+                if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path))
+                    badcp = rval = 1;
+            }
 
-            if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path))
-                badcp = rval = 1;
             /* Get CNID of Parent and add new childir to CNID database */
             cnid_t cnid = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path);
             SLOG("got CNID: %u for path: %s", ntohl(cnid), to.p_path);
 
             struct adouble ad;
+            struct stat st;
+            if (stat(to.p_path, &st) != 0) {
+                badcp = rval = 1;
+                break;
+            }
             ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-            if (ad_open_metadata(to.p_path, 0, O_RDWR, &ad) != 0) {
+            if (ad_open_metadata(to.p_path, 0, O_RDWR | O_CREAT, &ad) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
-            ad_setid( &ad, statp->st_dev, statp->st_ino, cnid, did, dvolume.db_stamp);
+            ad_setid( &ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
+            ad_setname(&ad, utompath(&dvolume.volinfo, path + ftw->base));
             ad_flush(&ad);
             ad_close_metadata(&ad);
+            umask(omask);
         }
         break;
     }

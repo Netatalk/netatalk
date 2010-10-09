@@ -57,7 +57,7 @@ extern int ad_cp(int argc, char **argv);
 extern int openvol(const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_path(const struct volinfo *vi, const struct vol *vol, const char *path);
-extern char *utompath(const struct volinfo *volinfo, char *upath);
+extern char *utompath(const struct volinfo *volinfo, const char *upath);
 
 struct FTWELEM {
     const struct FTW  *ftw;

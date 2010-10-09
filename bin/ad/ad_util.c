@@ -137,10 +137,11 @@ void closevol(afpvol_t *vol)
 /*
   Taken form afpd/desktop.c
 */
-char *utompath(const struct volinfo *volinfo, char *upath)
+char *utompath(const struct volinfo *volinfo, const char *upath)
 {
     static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
-    char         *m, *u;
+    char         *m;
+    const char   *u;
     uint16_t     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
     size_t       outlen;
 
