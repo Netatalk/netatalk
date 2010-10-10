@@ -91,7 +91,7 @@ cnid_t ppdid, pdid, did; /* current dir CNID and parent did*/
 static afpvol_t svolume, dvolume;
 static enum op type;
 static int Rflag;
-volatile sig_atomic_t sigint;
+static volatile sig_atomic_t alarmed;
 static int badcp, rval;
 static int ftw_options = FTW_MOUNT | FTW_PHYS | FTW_ACTIONRETVAL;
 
@@ -104,7 +104,6 @@ static char           *netatalk_dirs[] = {
 
 /* Forward declarations */
 static int copy(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
-static void siginfo(int _U_);
 static int ftw_copy_file(const struct FTW *, const char *, const struct stat *, int);
 static int ftw_copy_link(const struct FTW *, const char *, const struct stat *, int);
 static int setfile(const struct stat *, int);
@@ -130,6 +129,44 @@ static void upfunc(void)
 {
     did = pdid;
     pdid = ppdid;
+}
+
+/* 
+   SIGNAL handling:
+   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
+ */
+
+static void sig_handler(int signo)
+{
+    alarmed = 1;
+    return;
+}
+
+static void set_signal(void)
+{
+    struct sigaction sv;
+
+    sv.sa_handler = sig_handler;
+    sv.sa_flags = SA_RESTART;
+    sigemptyset(&sv.sa_mask);
+    if (sigaction(SIGTERM, &sv, NULL) < 0)
+        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
+
+    if (sigaction(SIGINT, &sv, NULL) < 0)
+        ERROR("error in sigaction(SIGINT): %s", strerror(errno));
+
+    memset(&sv, 0, sizeof(struct sigaction));
+    sv.sa_handler = SIG_IGN;
+    sigemptyset(&sv.sa_mask);
+
+    if (sigaction(SIGABRT, &sv, NULL) < 0)
+        ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
+
+    if (sigaction(SIGHUP, &sv, NULL) < 0)
+        ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
+
+    if (sigaction(SIGQUIT, &sv, NULL) < 0)
+        ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
 }
 
 static void usage_cp(void)
@@ -197,8 +234,7 @@ int ad_cp(int argc, char *argv[])
     if (argc < 2)
         usage_cp();
 
-    (void)signal(SIGINT, siginfo);
-
+    set_signal();
     cnid_init();
 
     /* Save the target base in "to". */
@@ -292,11 +328,14 @@ int ad_cp(int argc, char *argv[])
         openvol(argv[i], &svolume);
 
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
-            ERROR("%s: %s", argv[i], strerror(errno));
-            exit(EXIT_FAILURE);
+            if (alarmed) {
+                SLOG("...break");
+            } else {
+                SLOG("Error: %s: %s", argv[i], strerror(errno));
+            }
+            closevol(&svolume);
+            closevol(&dvolume);
         }
-
-
     }
     return rval;
 }
@@ -313,6 +352,9 @@ static int copy(const char *path,
     size_t nlen;
     const char *p;
     char *target_mid;
+
+    if (alarmed)
+        return -1;
 
     const char *dir = strrchr(path, '/');
     if (dir == NULL)
@@ -379,12 +421,12 @@ static int copy(const char *path,
     else {
         if (to_stat.st_dev == statp->st_dev &&
             to_stat.st_ino == statp->st_ino) {
-            SLOG("%s and %s are identical (not copied).",
-                to.p_path, path);
+            SLOG("%s and %s are identical (not copied).", to.p_path, path);
             badcp = rval = 1;
             if (S_ISDIR(statp->st_mode))
                 /* without using glibc extension FTW_ACTIONRETVAL cant handle this */
-                return -1;
+                return FTW_SKIP_SUBTREE;
+            return 0;
         }
         if (!S_ISDIR(statp->st_mode) &&
             S_ISDIR(to_stat.st_mode)) {
@@ -395,6 +437,15 @@ static int copy(const char *path,
                 return 0;
         }
         dne = 0;
+    }
+
+    /* Convert basename to appropiate volume encoding */
+    if (dvolume.volinfo.v_path) {
+        if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
+            SLOG("Error converting name for %s", to.p_path);
+            badcp = rval = 1;
+            return -1;
+        }
     }
 
     switch (statp->st_mode & S_IFMT) {
@@ -492,14 +543,6 @@ static int copy(const char *path,
         SLOG("%s is a FIFO (not copied).", path);
         break;
     default:
-        if (dvolume.volinfo.v_path) {
-            if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
-                SLOG("Error converting name for %s", to.p_path);
-                badcp = rval = 1;
-                break;
-            }
-        }
-
         if (ftw_copy_file(ftw, path, statp, dne))
             badcp = rval = 1;
 
@@ -546,11 +589,6 @@ static int copy(const char *path,
         (void)printf("%s -> %s\n", path, to.p_path);
 
     return 0;
-}
-
-static void siginfo(int sig _U_)
-{
-    sigint = 1;
 }
 
 /* Memory strategy threshold, in pages: if physmem is larger then this, use a large buffer */
