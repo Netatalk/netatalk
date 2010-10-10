@@ -1,7 +1,3 @@
-/*
- * $Id: util.h,v 1.21 2010/02/28 22:29:16 didg Exp $
- */
-
 /*!
  * @file
  * Netatalk utility functions
@@ -47,6 +43,7 @@
 #define AFP_ASSERT(b)
 #endif /* NDEBUG */
 
+#define STRCMP(a,b,c) (strcmp(a,c) b 0)
 
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);

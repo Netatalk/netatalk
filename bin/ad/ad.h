@@ -25,8 +25,6 @@
 #include <atalk/volinfo.h>
 #include <atalk/cnid.h>
 
-#define STRCMP(a,b,c) (strcmp(a,c) b 0)
-
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
 

@@ -48,11 +48,11 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
-#include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
 #include <atalk/unicode.h>
@@ -80,9 +80,11 @@ void _log(enum logtype lt, char *fmt, ...)
 /*!
  * Load volinfo and initialize struct vol
  *
+ * Only opens "dbd" volumes ! 
+ *
  * @param path   (r)  path to evaluate
  * @param vol    (rw) structure to initialize 
-*
+ *
  * @returns 0 on success, exits on error
  */
 int openvol(const char *path, afpvol_t *vol)
@@ -93,6 +95,9 @@ int openvol(const char *path, afpvol_t *vol)
 
     /* try to find a .AppleDesktop/.volinfo */
     if (loadvolinfo((char *)path, &vol->volinfo) == 0) {
+
+        if (STRCMP(vol->volinfo.v_cnidscheme, != , "dbd"))
+            ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->volinfo.v_path);
 
         if (vol_load_charsets(&vol->volinfo) == -1)
             ERROR("Error loading charsets!");

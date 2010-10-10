@@ -1,7 +1,3 @@
-/*
- * $Id: volinfo.h,v 1.10 2009-12-03 12:47:37 franklahm Exp $
- */
-
 #ifndef _ATALK_VOLINFO_H
 #define _ATALK_VOLINFO_H 1
 

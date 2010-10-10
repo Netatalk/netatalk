@@ -29,6 +29,8 @@
 #include <atalk/cnid.h>
 #include <atalk/volinfo.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
+
 #include "ad.h"
 
 static void usage_main(void)
