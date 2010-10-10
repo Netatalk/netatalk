@@ -335,6 +335,7 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
     char *dup1 = NULL;
     char *dup2 = NULL;
     char *dup3 = NULL;
+    char *dup4 = NULL;
     const char *name = NULL;
     const char *dir = NULL;
 
@@ -351,22 +352,25 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
         EC_ZERO(bcatcstr(d, "/.AppleDouble/.Parent"));
     } else {
         /* get basename */
-        EC_NULL(dup1 = strdup(dst));
-        EC_NULL(name = basename(strdup(dup1)));
 
         /* build src path to AppleDouble file*/
+        EC_NULL(dup1 = strdup(src));
+        EC_NULL(name = basename(strdup(dup1)));
+
         EC_NULL(dup2 = strdup(src));
         EC_NULL(dir = dirname(dup2));
         EC_NULL(s = bfromcstr(dir));
+        EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
+        EC_ZERO(bcatcstr(s, name));
 
         /* build dst path to AppleDouble file*/
+        EC_NULL(dup4 = strdup(dst));
+        EC_NULL(name = basename(strdup(dup4)));
+
         EC_NULL(dup3 = strdup(dst));
         EC_NULL(dir = dirname(dup3));
         EC_NULL(d = bfromcstr(dir));
-
-        EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
         EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
-        EC_ZERO(bcatcstr(s, name));
         EC_ZERO(bcatcstr(d, name));
     }
 
@@ -378,6 +382,7 @@ EC_CLEANUP:
     if (dup1) free(dup1);
     if (dup2) free(dup2);
     if (dup3) free(dup3);
+    if (dup4) free(dup4);
 
     EC_EXIT;
 }

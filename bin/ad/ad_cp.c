@@ -492,6 +492,14 @@ static int copy(const char *path,
         SLOG("%s is a FIFO (not copied).", path);
         break;
     default:
+        if (dvolume.volinfo.v_path) {
+            if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
+                SLOG("Error converting name for %s", to.p_path);
+                badcp = rval = 1;
+                break;
+            }
+        }
+
         if (ftw_copy_file(ftw, path, statp, dne))
             badcp = rval = 1;
 

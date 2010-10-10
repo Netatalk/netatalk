@@ -47,6 +47,7 @@
 #define AFP_ASSERT(b)
 #endif /* NDEBUG */
 
+
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);
 #endif
@@ -139,6 +140,7 @@ extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
  *****************************************************************/
 
 extern const char *getcwdpath(void);
+extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 
 #endif  /* _ATALK_UTIL_H */

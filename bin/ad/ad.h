@@ -61,19 +61,12 @@ extern cnid_t cnid_for_path(const struct volinfo *vi,
                             const char *path,
                             cnid_t *did);
 extern char *utompath(const struct volinfo *volinfo, const char *upath);
-
-struct FTWELEM {
-    const struct FTW  *ftw;
-    const char        *ftw_path;
-    int               ftw_base_off;
-    int               ftw_tflag;
-    const struct stat *ftw_statp;
-};
+extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen);
 
 typedef struct {
     char *p_end;/* pointer to NULL at end of path */
     char *target_end;/* pointer to end of target base */
-    char p_path[PATH_MAX];/* pointer to the start of a path */
+    char p_path[MAXPATHLEN + 2];/* pointer to the start of a path */
 } PATH_T;
 
 extern PATH_T to;

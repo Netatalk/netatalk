@@ -1,5 +1,4 @@
 /*
-  $Id: unix.c,v 1.6 2010-02-28 22:29:16 didg Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -54,6 +53,26 @@ const char *getcwdpath(void)
         return p;
     else
         return strerror(errno);
+}
+
+/*!
+ * Takes a buffer with a path, strips slashs, returns basename
+ *
+ * @param p (rw) path
+ *        path may be
+ *          "[/][dir/[...]]file"
+ *        or
+ *          "[/][dir/[...]]dir/[/]"
+ *        Result is "file" or "dir" 
+ *
+ * @returns pointer to basename in path buffer, buffer is possibly modified
+ */
+char *stripped_slashes_basename(char *p)
+{
+    int i = strlen(p) - 1;
+    while (i > 0 && p[i] == '/')
+        p[i--] = 0;
+    return (strrchr(p, '/') ? strrchr(p, '/') + 1 : p);
 }
 
 /*!

@@ -55,6 +55,8 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
+#include <atalk/unicode.h>
+
 #include "ad.h"
 
 int log_verbose;             /* Logging flag */
@@ -221,6 +223,59 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
 EC_CLEANUP:
     bdestroy(fpath);
     return NULL;
+}
+
+/*!
+ * Convert dot encoding of basename _in place_
+ *
+ * path arg can be "[/][dir/ | ...]filename". It will be converted in place
+ * possible encoding ".file" as ":2efile" which means the result will be
+ * longer then the original which means provide a big enough buffer.
+ *
+ * @param svol   (r)  source volume
+ * @param dvol   (r)  destinatio volume
+ * @param path   (rw) path to convert _in place_
+ * @param buflen (r)  size of path buffer (max strlen == buflen -1)
+ *
+ * @returns 0 on sucess, -1 on error
+ */
+int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen)
+{
+    static charset_t from = (charset_t) -1;
+    static char buf[MAXPATHLEN+2];
+    char *bname = stripped_slashes_basename(path);
+    int pos = bname - path;
+    uint16_t flags = 0;
+
+    if ( ! svol->volinfo.v_path) {
+        /* no source volume: escape special chars (eg ':') */
+        from = dvol->volinfo.v_volcharset; /* src = dst charset */
+        flags |= CONV_ESCAPEHEX;
+    } else {
+        from = svol->volinfo.v_volcharset;
+    }
+
+    if ( (svol->volinfo.v_path)
+         && ! (svol->volinfo.v_flags & AFPVOL_USEDOTS)
+         && (dvol->volinfo.v_flags & AFPVOL_USEDOTS)) {
+        /* source is without dots, destination is with */
+        flags |= CONV_UNESCAPEHEX;
+    } else if (! (dvol->volinfo.v_flags & AFPVOL_USEDOTS)) {
+        flags |= CONV_ESCAPEDOTS;
+    }
+
+    int len = convert_charset(from,
+                              dvol->volinfo.v_volcharset,
+                              dvol->volinfo.v_maccharset,
+                              bname, strlen(bname),
+                              buf, MAXPATHLEN,
+                              &flags);
+    if (len == -1)
+        return -1;
+
+    if (strlcpy(bname, buf, MAXPATHLEN - pos) > MAXPATHLEN - pos)
+        return -1;
+    return 0;
 }
 
 /*!
