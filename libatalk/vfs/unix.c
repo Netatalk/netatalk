@@ -1,9 +1,6 @@
 /*
- * $Id: unix.c,v 1.11 2010-04-18 16:14:51 hat001 Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
- *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -214,7 +211,7 @@ int copy_file(int dirfd, const char *src, const char *dst, mode_t mode)
         return -1;
     }
 
-    if ((dfd = open(dst, O_WRONLY | O_CREAT | O_EXCL, mode)) < 0) {
+    if ((dfd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, mode)) < 0) {
         LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, dst, strerror(errno));
         ret = -1;

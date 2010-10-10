@@ -36,7 +36,7 @@ static void usage_main(void)
 /*
     printf("Usage: ad ls|rm|cp|mv|set [file|dir, ...]\n");
 */
-    printf("Usage: ad ls [file|dir, ...]\n");
+    printf("Usage: ad ls|cp [file|dir, ...]\n");
 }
 
 int main(int argc, char **argv)

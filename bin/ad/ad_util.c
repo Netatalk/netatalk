@@ -204,11 +204,9 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
             EC_ZERO(bcatcstr(fpath, "/"));
         EC_ZERO(bcatcstr(fpath, path));
         BSTRING_STRIP_SLASH(fpath);
-        SLOG("Built path: %s", cfrombstr(fpath));
     } else {
         EC_NULL(fpath = bfromcstr(path));
         BSTRING_STRIP_SLASH(fpath);
-        SLOG("Built path: %s", cfrombstr(fpath));
     }
 
     /*
@@ -218,7 +216,6 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
      * we want: "dir/bla"
      */
     EC_ZERO(bdelete(fpath, 0, strlen(volpath)));
-    SLOG("rel path: %s", cfrombstr(fpath));    
     return fpath;
 
 EC_CLEANUP:
@@ -241,44 +238,47 @@ EC_CLEANUP:
  * 2) ...until we have the CNID for
  *    a) "/afp_volume/topdir/dir"
  *    b) "/afp_volume/dir" (no recursion required)
+ *
+ * @param vi   (r) pointer to volinfo struct
+ * @param vol  (r) pointer to vol struct
+ * @param path (r) path, see above
+ * @param did  (rw) parent CNID of returned CNID
+ *
+ * @returns CNID of path
  */
 cnid_t cnid_for_path(const struct volinfo *vi,
                      const struct vol *vol,
-                     const char *path)
+                     const char *path,
+                     cnid_t *did)
 {
     EC_INIT;
 
-    cnid_t did;
     cnid_t cnid;
     bstring rpath = NULL;
     bstring statpath = NULL;
     struct bstrList *l = NULL;
     struct stat st;
 
+    cnid = *did = htonl(2);
+
     EC_NULL(rpath = rel_path_in_vol(path, vi->v_path));
-    SLOG("vol:%s, path: %s, rpath: %s", vi->v_path, path, bdata(rpath));
-
-    cnid = htonl(2);
-
     EC_NULL(statpath = bfromcstr(vi->v_path));
 
     l = bsplit(rpath, '/');
-    SLOG("elem: %s, qty: %u", cfrombstr(l->entry[0]), l->qty);
     for(int i = 0; i < l->qty ; i++) {
-        did = cnid;
+        *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
-        SLOG("statpath: %s", cfrombstr(statpath));
         EC_ZERO_LOG(stat(cfrombstr(statpath), &st));
-        SLOG("db query: did: %u, name: %s, dev: %08x, ino: %08x",
-             ntohl(did), cfrombstr(l->entry[i]), st.st_dev, st.st_ino);
+
         cnid = cnid_add(vol->v_cdb,
                         &st,
-                        did,
+                        *did,
                         cfrombstr(l->entry[i]),
                         blength(l->entry[i]),
                         0);
 
         EC_ZERO(bcatcstr(statpath, "/"));
+        
     }
 
 EC_CLEANUP:

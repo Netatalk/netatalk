@@ -319,10 +319,8 @@ static int copy(const char *path,
         dir = path;
     else
         dir++;
-    if (check_netatalk_dirs(dir) != NULL) {
-        SLOG("Skipping Netatalk dir %s", path);
+    if (check_netatalk_dirs(dir) != NULL)
         return FTW_SKIP_SUBTREE;
-    }
 
     /*
      * If we are in case (2) above, we need to append the
@@ -428,31 +426,27 @@ static int copy(const char *path,
 
         /* Create ad dir and copy ".Parent" */
         if (dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
+
             /* Create ".AppleDouble" dir */
             mode_t omask = umask(0);
             bstring addir = bfromcstr(to.p_path);
             bcatcstr(addir, "/.AppleDouble");
             mkdir(cfrombstr(addir), 02777);
+            bdestroy(addir);
 
             if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
                 /* copy ".Parent" file */
-                bcatcstr(addir, "/.Parent");
-                bstring sdir = bfromcstr(path);
-                bcatcstr(sdir, "/.AppleDouble/.Parent");
-                if (copy_file(-1, cfrombstr(sdir), cfrombstr(addir), 0666) != 0) {
-                    SLOG("Error copying %s -> %s", cfrombstr(sdir), cfrombstr(addir));
+                SLOG("Copying adouble for %s -> %s", path, to.p_path);
+                if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path)) {
+                    SLOG("Error copying adouble for %s -> %s", path, to.p_path);
                     badcp = rval = 1;
                     break;
                 }
-                bdestroy(sdir);
             }
-            bdestroy(addir);
 
             /* Get CNID of Parent and add new childir to CNID database */
             ppdid = pdid;
-            pdid = did;
-            did = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path);
-            SLOG("got CNID: %u for path: %s", ntohl(did), to.p_path);
+            did = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path, &pdid);
 
             struct adouble ad;
             struct stat st;
@@ -464,8 +458,13 @@ static int copy(const char *path,
             if (ad_open_metadata(to.p_path, ADFLAGS_DIR, O_RDWR | O_CREAT, &ad) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
+            SLOG("Setting CNID %u for %s", ntohl(did), to.p_path);
             ad_setid( &ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
-            ad_setname(&ad, utompath(&dvolume.volinfo, path + ftw->base));
+            ad_setname(&ad, utompath(&dvolume.volinfo, basename(to.p_path)));
+            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close_metadata(&ad);
 
@@ -498,17 +497,19 @@ static int copy(const char *path,
 
         if (dvolume.volinfo.v_path && dvolume.volinfo.v_adouble == AD_VERSION2) {
 
-            SLOG("ad for file: %s", to.p_path);
             mode_t omask = umask(0);
             if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
                 /* copy ad-file */
-                if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path))
+                if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path)) {
+                    SLOG("Error copying adouble for %s -> %s", path, to.p_path);
                     badcp = rval = 1;
+                    break;
+                }
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
-            cnid_t cnid = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path);
-            SLOG("got CNID: %u for path: %s", ntohl(cnid), to.p_path);
+            pdid = did;
+            cnid_t cnid = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path, &did);
 
             struct adouble ad;
             struct stat st;
@@ -520,8 +521,13 @@ static int copy(const char *path,
             if (ad_open_metadata(to.p_path, 0, O_RDWR | O_CREAT, &ad) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
+            SLOG("setid: DID: %u, CNID: %u, %s", ntohl(did), ntohl(cnid), to.p_path);
             ad_setid( &ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
-            ad_setname(&ad, utompath(&dvolume.volinfo, path + ftw->base));
+            ad_setname(&ad, utompath(&dvolume.volinfo, basename(to.p_path)));
+            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close_metadata(&ad);
             umask(omask);

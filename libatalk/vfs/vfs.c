@@ -21,6 +21,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -329,36 +332,53 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
 {
     EC_INIT;
     bstring s = NULL, d = NULL;
-    const char *name;
-    char *dir = NULL;
+    char *dup1 = NULL;
+    char *dup2 = NULL;
+    char *dup3 = NULL;
+    const char *name = NULL;
+    const char *dir = NULL;
 
-    /* get basename */
-    EC_NULL(name = strrchr(src, '/'));
-    name++;
+    struct stat st;
+    EC_ZERO(stat(dst, &st));
 
-    /* build src path to AppleDouble file*/
-    EC_NULL(dir = dirname(strdup(src)));
-    EC_NULL(s = bfromcstr(dir));
-    EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
-    EC_ZERO(bcatcstr(s, name));
-    free(dir);
-    dir = NULL;
+    if (S_ISDIR(st.st_mode)) {
+        /* build src path to AppleDouble file*/
+        EC_NULL(s = bfromcstr(src));
+        EC_ZERO(bcatcstr(s, "/.AppleDouble/.Parent"));
 
-    /* build dst path to AppleDouble file*/
-    EC_NULL(dir = dirname(strdup(dst)));
-    EC_NULL(d = bfromcstr(dir));
-    EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
-    EC_ZERO(bcatcstr(d, name));
+        /* build dst path to AppleDouble file*/
+        EC_NULL(d = bfromcstr(dst));
+        EC_ZERO(bcatcstr(d, "/.AppleDouble/.Parent"));
+    } else {
+        /* get basename */
+        EC_NULL(dup1 = strdup(dst));
+        EC_NULL(name = basename(strdup(dup1)));
 
-    free(dir);
-    dir = NULL;
+        /* build src path to AppleDouble file*/
+        EC_NULL(dup2 = strdup(src));
+        EC_NULL(dir = dirname(dup2));
+        EC_NULL(s = bfromcstr(dir));
+
+        /* build dst path to AppleDouble file*/
+        EC_NULL(dup3 = strdup(dst));
+        EC_NULL(dir = dirname(dup3));
+        EC_NULL(d = bfromcstr(dir));
+
+        EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
+        EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
+        EC_ZERO(bcatcstr(s, name));
+        EC_ZERO(bcatcstr(d, name));
+    }
 
     EC_ZERO(copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666));
 
 EC_CLEANUP:
     bdestroy(s);
     bdestroy(d);
-    if (dir) free(dir);
+    if (dup1) free(dup1);
+    if (dup2) free(dup2);
+    if (dup3) free(dup3);
+
     EC_EXIT;
 }
 
