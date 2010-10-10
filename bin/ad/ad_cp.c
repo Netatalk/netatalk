@@ -70,7 +70,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/queue.h>
- 
+
 #include "ad.h"
 
 #define STRIP_TRAILING_SLASH(p) {                                   \
@@ -83,7 +83,7 @@ static char emptystring[] = "";
 PATH_T to = { to.p_path, emptystring, "" };
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
 
-int fflag, iflag, lflag, nflag, pflag, vflag;
+int fflag, iflag, nflag, pflag, vflag;
 mode_t mask;
 
 cnid_t ppdid, pdid, did; /* current dir CNID and parent did*/
@@ -131,10 +131,10 @@ static void upfunc(void)
     pdid = ppdid;
 }
 
-/* 
-   SIGNAL handling:
-   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
- */
+/*
+  SIGNAL handling:
+  catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
+*/
 
 static void sig_handler(int signo)
 {
@@ -172,8 +172,41 @@ static void set_signal(void)
 static void usage_cp(void)
 {
     printf(
-        "Usage: ad cp [-R [-P]] [-pvf] <source_file> <target_file>\n"
-        "Usage: ad cp [-R [-P]] [-pvfx] <source_file [source_file ...]> <target_directory>\n"
+        "Usage: ad cp [-R] [-aipvf] <source_file> <target_file>\n"
+        "       ad cp [-R] [-aipvfx] <source_file [source_file ...]> <target_directory>\n\n"
+        "In the first synopsis form, the cp utility copies the contents of the source_file to the\n"
+        "target_file.  In the second synopsis form, the contents of each named source_file is copied to the\n"
+        "destination target_directory.  The names of the files themselves are not changed.  If cp detects an\n"
+        "attempt to copy a file to itself, the copy will fail.\n\n"
+        "Netatalk AFP volumes are detected by means of their \".AppleDesktop\" directory\n"
+        "which is located in their volume root. When a copy targetting an AFP volume\n"
+        "is detected, its CNID database daemon is connected and all copies will also\n"
+        "go through the CNID database.\n"
+        "AppleDouble files are also copied and created as needed when the target is\n"
+        "an AFP volume.\n\n"
+        "The following options are available:\n\n"
+        "     -a    Archive mode.  Same as -Rp.\n\n"
+        "     -f    For each existing destination pathname, remove it and create a new\n"
+        "           file, without prompting for confirmation regardless of its permis-\n"
+        "           sions.  (The -f option overrides any previous -i or -n options.)\n\n"
+        "     -i    Cause cp to write a prompt to the standard error output before\n"
+        "           copying a file that would overwrite an existing file.  If the\n"
+        "           response from the standard input begins with the character 'y' or\n"
+        "           'Y', the file copy is attempted.  (The -i option overrides any pre-\n"
+        "           vious -f or -n options.)\n\n"
+        "     -n    Do not overwrite an existing file.  (The -n option overrides any\n"
+        "           previous -f or -i options.)\n\n"
+        "     -p    Cause cp to preserve the following attributes of each source file\n"
+        "           in the copy: modification time, access time, file flags, file mode,\n"
+        "           user ID, and group ID, as allowed by permissions.\n"
+        "           If the user ID and group ID cannot be preserved, no error message\n"
+        "           is displayed and the exit value is not altered.\n\n"
+        "     -R    If source_file designates a directory, cp copies the directory and\n"
+        "           the entire subtree connected at that point.If the source_file\n"
+        "           ends in a /, the contents of the directory are copied rather than\n"
+        "           the directory itself.\n\n"
+        "     -v    Cause cp to be verbose, showing files as they are copied.\n\n"
+        "     -x    File system mount points are not traversed.\n\n"
         );
     exit(EXIT_FAILURE);
 }
@@ -191,11 +224,8 @@ int ad_cp(int argc, char *argv[])
     ppdid = pdid = htonl(1);
     did = htonl(2);
 
-    while ((ch = getopt(argc, argv, "Rafilnpvx")) != -1)
+    while ((ch = getopt(argc, argv, "afinpRvx")) != -1)
         switch (ch) {
-        case 'R':
-            Rflag = 1;
-            break;
         case 'a':
             pflag = 1;
             Rflag = 1;
@@ -208,15 +238,15 @@ int ad_cp(int argc, char *argv[])
             iflag = 1;
             fflag = nflag = 0;
             break;
-        case 'l':
-            lflag = 1;
-            break;
         case 'n':
             nflag = 1;
             fflag = iflag = 0;
             break;
         case 'p':
             pflag = 1;
+            break;
+        case 'R':
+            Rflag = 1;
             break;
         case 'v':
             vflag = 1;
@@ -323,7 +353,7 @@ int ad_cp(int argc, char *argv[])
     /* Load .volinfo file for destination*/
     openvol(to.p_path, &dvolume);
 
-    for (int i = 0; argv[i] != NULL; i++) { 
+    for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
         openvol(argv[i], &svolume);
 
@@ -431,10 +461,10 @@ static int copy(const char *path,
         if (!S_ISDIR(statp->st_mode) &&
             S_ISDIR(to_stat.st_mode)) {
             SLOG("cannot overwrite directory %s with "
-                "non-directory %s",
-                to.p_path, path);
-                badcp = rval = 1;
-                return 0;
+                 "non-directory %s",
+                 to.p_path, path);
+            badcp = rval = 1;
+            return 0;
         }
         dne = 0;
     }
@@ -487,7 +517,6 @@ static int copy(const char *path,
 
             if (svolume.volinfo.v_path && svolume.volinfo.v_adouble == AD_VERSION2) {
                 /* copy ".Parent" file */
-                SLOG("Copying adouble for %s -> %s", path, to.p_path);
                 if (dvolume.volume.vfs->vfs_copyfile(&dvolume.volume, -1, path, to.p_path)) {
                     SLOG("Error copying adouble for %s -> %s", path, to.p_path);
                     badcp = rval = 1;
@@ -509,7 +538,6 @@ static int copy(const char *path,
             if (ad_open_metadata(to.p_path, ADFLAGS_DIR, O_RDWR | O_CREAT, &ad) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
-            SLOG("Setting CNID %u for %s", ntohl(did), to.p_path);
             ad_setid( &ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
             ad_setname(&ad, utompath(&dvolume.volinfo, basename(to.p_path)));
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
@@ -572,7 +600,6 @@ static int copy(const char *path,
             if (ad_open_metadata(to.p_path, 0, O_RDWR | O_CREAT, &ad) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
-            SLOG("setid: DID: %u, CNID: %u, %s", ntohl(did), ntohl(cnid), to.p_path);
             ad_setid( &ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
             ad_setname(&ad, utompath(&dvolume.volinfo, basename(to.p_path)));
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
@@ -636,7 +663,7 @@ static int ftw_copy_file(const struct FTW *entp,
             (void)close(from_fd);
             return (0);
         } else if (iflag) {
-            (void)fprintf(stderr, "overwrite %s? %s", 
+            (void)fprintf(stderr, "overwrite %s? %s",
                           to.p_path, YESNO);
             checkch = ch = getchar();
             while (ch != '\n' && ch != EOF)
@@ -647,26 +674,23 @@ static int ftw_copy_file(const struct FTW *entp,
                 return (1);
             }
         }
-        
+
         if (fflag) {
-            /* remove existing destination file name, 
+            /* remove existing destination file name,
              * create a new file  */
             (void)unlink(to.p_path);
             (void)dvolume.volume.vfs->vfs_deletefile(&dvolume.volume, -1, to.p_path);
-            if (!lflag)
-                to_fd = open(to.p_path, O_WRONLY | O_TRUNC | O_CREAT,
-                             sp->st_mode & ~(S_ISUID | S_ISGID));
-        } else {
-            if (!lflag)
-                /* overwrite existing destination file name */
-                to_fd = open(to.p_path, O_WRONLY | O_TRUNC, 0);
-        }
-    } else {
-        if (!lflag)
             to_fd = open(to.p_path, O_WRONLY | O_TRUNC | O_CREAT,
                          sp->st_mode & ~(S_ISUID | S_ISGID));
+        } else {
+            /* overwrite existing destination file name */
+            to_fd = open(to.p_path, O_WRONLY | O_TRUNC, 0);
+        }
+    } else {
+        to_fd = open(to.p_path, O_WRONLY | O_TRUNC | O_CREAT,
+                     sp->st_mode & ~(S_ISUID | S_ISGID));
     }
-    
+
     if (to_fd == -1) {
         SLOG("%s: %s", to.p_path, strerror(errno));
         (void)close(from_fd);
@@ -675,22 +699,58 @@ static int ftw_copy_file(const struct FTW *entp,
 
     rval = 0;
 
-    if (!lflag) {
-        /*
-         * Mmap and write if less than 8M (the limit is so we don't totally
-         * trash memory on big files.  This is really a minor hack, but it
-         * wins some CPU back.
-         * Some filesystems, such as smbnetfs, don't support mmap,
-         * so this is a best-effort attempt.
-         */
+    /*
+     * Mmap and write if less than 8M (the limit is so we don't totally
+     * trash memory on big files.  This is really a minor hack, but it
+     * wins some CPU back.
+     * Some filesystems, such as smbnetfs, don't support mmap,
+     * so this is a best-effort attempt.
+     */
 
-        if (S_ISREG(sp->st_mode) && sp->st_size > 0 &&
-            sp->st_size <= 8 * 1024 * 1024 &&
-            (p = mmap(NULL, (size_t)sp->st_size, PROT_READ,
-                      MAP_SHARED, from_fd, (off_t)0)) != MAP_FAILED) {
-            wtotal = 0;
-            for (bufp = p, wresid = sp->st_size; ;
-                 bufp += wcount, wresid -= (size_t)wcount) {
+    if (S_ISREG(sp->st_mode) && sp->st_size > 0 &&
+        sp->st_size <= 8 * 1024 * 1024 &&
+        (p = mmap(NULL, (size_t)sp->st_size, PROT_READ,
+                  MAP_SHARED, from_fd, (off_t)0)) != MAP_FAILED) {
+        wtotal = 0;
+        for (bufp = p, wresid = sp->st_size; ;
+             bufp += wcount, wresid -= (size_t)wcount) {
+            wcount = write(to_fd, bufp, wresid);
+            if (wcount <= 0)
+                break;
+            wtotal += wcount;
+            if (wcount >= (ssize_t)wresid)
+                break;
+        }
+        if (wcount != (ssize_t)wresid) {
+            SLOG("%s: %s", to.p_path, strerror(errno));
+            rval = 1;
+        }
+        /* Some systems don't unmap on close(2). */
+        if (munmap(p, sp->st_size) < 0) {
+            SLOG("%s: %s", spath, strerror(errno));
+            rval = 1;
+        }
+    } else {
+        if (buf == NULL) {
+            /*
+             * Note that buf and bufsize are static. If
+             * malloc() fails, it will fail at the start
+             * and not copy only some files.
+             */
+            if (sysconf(_SC_PHYS_PAGES) >
+                PHYSPAGES_THRESHOLD)
+                bufsize = MIN(BUFSIZE_MAX, MAXPHYS * 8);
+            else
+                bufsize = BUFSIZE_SMALL;
+            buf = malloc(bufsize);
+            if (buf == NULL)
+                ERROR("Not enough memory");
+
+        }
+        wtotal = 0;
+        while ((rcount = read(from_fd, buf, bufsize)) > 0) {
+            for (bufp = buf, wresid = rcount; ;
+                 bufp += wcount, wresid -= wcount) {
                 wcount = write(to_fd, bufp, wresid);
                 if (wcount <= 0)
                     break;
@@ -701,58 +761,15 @@ static int ftw_copy_file(const struct FTW *entp,
             if (wcount != (ssize_t)wresid) {
                 SLOG("%s: %s", to.p_path, strerror(errno));
                 rval = 1;
-            }
-            /* Some systems don't unmap on close(2). */
-            if (munmap(p, sp->st_size) < 0) {
-                SLOG("%s: %s", spath, strerror(errno));
-                rval = 1;
-            }
-        } else {
-            if (buf == NULL) {
-                /*
-                 * Note that buf and bufsize are static. If
-                 * malloc() fails, it will fail at the start
-                 * and not copy only some files. 
-                 */ 
-                if (sysconf(_SC_PHYS_PAGES) > 
-                    PHYSPAGES_THRESHOLD)
-                    bufsize = MIN(BUFSIZE_MAX, MAXPHYS * 8);
-                else
-                    bufsize = BUFSIZE_SMALL;
-                buf = malloc(bufsize);
-                if (buf == NULL)
-                    ERROR("Not enough memory");
-
-            }
-            wtotal = 0;
-            while ((rcount = read(from_fd, buf, bufsize)) > 0) {
-                for (bufp = buf, wresid = rcount; ;
-                     bufp += wcount, wresid -= wcount) {
-                    wcount = write(to_fd, bufp, wresid);
-                    if (wcount <= 0)
-                        break;
-                    wtotal += wcount;
-                    if (wcount >= (ssize_t)wresid)
-                        break;
-                }
-                if (wcount != (ssize_t)wresid) {
-                    SLOG("%s: %s", to.p_path, strerror(errno));
-                    rval = 1;
-                    break;
-                }
-            }
-            if (rcount < 0) {
-                SLOG("%s: %s", spath, strerror(errno));
-                rval = 1;
+                break;
             }
         }
-    } else {
-        if (link(spath, to.p_path)) {
-            SLOG("%s", to.p_path);
+        if (rcount < 0) {
+            SLOG("%s: %s", spath, strerror(errno));
             rval = 1;
         }
     }
-    
+
     /*
      * Don't remove the target even after an error.  The target might
      * not be a regular file, or its attributes might be important,
@@ -760,15 +777,13 @@ static int ftw_copy_file(const struct FTW *entp,
      * to remove it if we created it and its length is 0.
      */
 
-    if (!lflag) {
-        if (pflag && setfile(sp, to_fd))
-            rval = 1;
-        if (pflag && preserve_fd_acls(from_fd, to_fd) != 0)
-            rval = 1;
-        if (close(to_fd)) {
-            SLOG("%s: %s", to.p_path, strerror(errno));
-            rval = 1;
-        }
+    if (pflag && setfile(sp, to_fd))
+        rval = 1;
+    if (pflag && preserve_fd_acls(from_fd, to_fd) != 0)
+        rval = 1;
+    if (close(to_fd)) {
+        SLOG("%s: %s", to.p_path, strerror(errno));
+        rval = 1;
     }
 
     (void)close(from_fd);
