@@ -1297,10 +1297,7 @@ AC_OUTPUT([Makefile
 	contrib/printing/Makefile
 	contrib/shell_utils/Makefile
 	contrib/shell_utils/afpd-mtab.pl
-	contrib/shell_utils/apple_cp
     contrib/shell_utils/apple_dump
-	contrib/shell_utils/apple_mv
-	contrib/shell_utils/apple_rm
 	contrib/shell_utils/asip-status.pl
 	contrib/timelord/Makefile
 	contrib/a2boot/Makefile
@@ -1336,7 +1333,6 @@ AC_OUTPUT([Makefile
 	libatalk/nbp/Makefile
 	libatalk/netddp/Makefile
 	libatalk/util/Makefile
-	libatalk/util/test/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
