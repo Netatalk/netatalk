@@ -38,7 +38,7 @@ static void usage_main(void)
 /*
     printf("Usage: ad ls|rm|cp|mv|set [file|dir, ...]\n");
 */
-    printf("Usage: ad ls|cp [file|dir, ...]\n");
+    printf("Usage: ad ls|cp|rm [file|dir, ...]\n");
 }
 
 int main(int argc, char **argv)
@@ -54,6 +54,8 @@ int main(int argc, char **argv)
         return ad_ls(argc - 1, argv + 1);
     else if (STRCMP(argv[1], ==, "cp"))
         return ad_cp(argc - 1, argv + 1);
+    else if (STRCMP(argv[1], ==, "rm"))
+        return ad_rm(argc - 1, argv + 1);
     else {
         usage_main();
         return 1;

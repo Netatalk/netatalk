@@ -9,7 +9,8 @@ ad_SOURCES = \
 	ad.c \
 	ad_util.c \
 	ad_ls.c \
-	ad_cp.c
+	ad_cp.c \
+	ad_rm.c
 
 ad_LDADD = \
 	$(top_builddir)/libatalk/cnid/libcnid.la \

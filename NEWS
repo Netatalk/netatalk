@@ -4,6 +4,7 @@ Changes in 2.2
 * UPD: AppleTalk ist disabled by default at configuration time. If needed
        use --enable-ddp.
 * NEW: ad utility: ad cp
+* NEW: ad utility: ad rm
 * NEW: afpd: dynamic directoy and CNID cache
 * NEW: afpd: POSIX 1e ACL support
 * NEW: afpd: automagic Zeroconf registration with avahi, registering both
