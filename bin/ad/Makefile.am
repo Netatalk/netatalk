@@ -10,6 +10,7 @@ ad_SOURCES = \
 	ad_util.c \
 	ad_ls.c \
 	ad_cp.c \
+	ad_mv.c \
 	ad_rm.c
 
 ad_LDADD = \
