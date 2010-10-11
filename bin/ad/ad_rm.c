@@ -203,7 +203,8 @@ static int rm(const char *path,
     case S_IFLNK:
         if (volume.volinfo.v_path) {
             if ((volume.volinfo.v_adouble == AD_VERSION2)
-                && STRCMP(path, == , ".AppleDouble")) {
+                && (strstr(path, ".AppleDouble") != NULL)) {
+                /* symlink inside adouble dir */
                 if (unlink(path) != 0)
                     badrm = rval = 1;
                 break;
@@ -233,7 +234,8 @@ static int rm(const char *path,
 
         if (volume.volinfo.v_path) {
             if ((volume.volinfo.v_adouble == AD_VERSION2)
-                && STRCMP(path, == , ".AppleDouble")) {
+                && (strstr(path, ".AppleDouble") != NULL)) {
+                /* should be adouble dir itself */
                 if (rmdir(path) != 0) {
                     SLOG("Error removing dir \"%s\": %s", path, strerror(errno));
                     badrm = rval = 1;
@@ -277,7 +279,8 @@ static int rm(const char *path,
     default:
         if (volume.volinfo.v_path) {
             if ((volume.volinfo.v_adouble == AD_VERSION2)
-                && STRCMP(path, == , ".AppleDouble")) {
+                && (strstr(path, ".AppleDouble") != NULL)) {
+                /* file in adouble dir */
                 if (unlink(path) != 0)
                     badrm = rval = 1;
                 break;
