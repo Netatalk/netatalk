@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <atalk/ftw.h>
 #include <atalk/adouble.h>
@@ -277,46 +278,106 @@ static int do_move(const char *from, const char *to)
         }
     }
 
-    if (!rename(from, to)) {
+    int mustcopy = 0;
+    /* 
+     * Besides the usual EXDEV we copy instead of moving if
+     * 1) source AFP volume != dest AFP volume
+     * 2) either source or dest isn't even an AFP volume
+     */
+    if (!svolume.volinfo.v_path
+        || !dvolume.volinfo.v_path
+        || strcmp(svolume.volinfo.v_path, dvolume.volinfo.v_path) != 0)
+        mustcopy = 1;
+    
+    cnid_t cnid = 0;
+    if (!mustcopy) {
+        if ((cnid = cnid_for_path(&svolume, from, &did)) == CNID_INVALID) {
+            SLOG("Couldn't resolve CNID for %s", from);
+            return -1;
+        }
+
+        if (stat(from, &sb) != 0) {
+            SLOG("Cant stat %s: %s", to, strerror(errno));
+            return -1;
+        }
+
+        if (rename(from, to) != 0) {
+            if (errno == EXDEV) {
+                mustcopy = 1;
+                char path[MAXPATHLEN];
+
+                /*
+                 * If the source is a symbolic link and is on another
+                 * filesystem, it can be recreated at the destination.
+                 */
+                if (lstat(from, &sb) == -1) {
+                    SLOG("%s: %s", from, strerror(errno));
+                    return (-1);
+                }
+                if (!S_ISLNK(sb.st_mode)) {
+                    /* Can't mv(1) a mount point. */
+                    if (realpath(from, path) == NULL) {
+                        SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
+                        return (1);
+                    }
+                }
+            } else { /* != EXDEV */
+                SLOG("rename %s to %s: %s", from, to, strerror(errno));
+                return (1);
+            }
+        } /* rename != 0*/
+        
+        switch (sb.st_mode & S_IFMT) {
+        case S_IFREG:
+            if (dvolume.volume.vfs->vfs_renamefile(&dvolume.volume, -1, from, to) != 0) {
+                SLOG("Error moving adouble file for %s", from);
+                return -1;
+            }
+            break;
+        case S_IFDIR:
+            break;
+        default:
+            SLOG("Not a file or dir: %s", from);
+            return -1;
+        }
+    
+        char *newdir = strdup(to);
+        cnid_t newdid;
+        if ((newdid = cnid_for_path(&svolume, dirname(newdir), &pdid)) == CNID_INVALID) {
+            SLOG("Couldn't resolve CNID for %s", to);
+        }
+        free(newdir);
+
+        if (stat(to, &sb) != 0) {
+            SLOG("Cant stat %s: %s", to, strerror(errno));
+            return 1;
+        }
+        char *name = strdup(to);
+        if (cnid_update(dvolume.volume.v_cdb, cnid, &sb, newdid, basename(to), strlen(basename(to))) != 0) {
+            SLOG("Cant update CNID for: %s", to);
+            return 1;
+        }
+        free(name);
+
         if (vflg)
             printf("%s -> %s\n", from, to);
         return (0);
     }
 
-    if (errno == EXDEV) {
-        char path[MAXPATHLEN];
-
+    if (mustcopy) {
         /*
-         * If the source is a symbolic link and is on another
-         * filesystem, it can be recreated at the destination.
+         * If rename fails because we're trying to cross devices, and
+         * it's a regular file, do the copy internally; otherwise, use
+         * cp and rm.
          */
-        if (lstat(from, &sb) == -1) {
+        if (lstat(from, &sb)) {
             SLOG("%s: %s", from, strerror(errno));
             return (1);
         }
-        if (!S_ISLNK(sb.st_mode)) {
-            /* Can't mv(1) a mount point. */
-            if (realpath(from, path) == NULL) {
-                SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
-                return (1);
-            }
-        }
-    } else {
-        SLOG("rename %s to %s: %s", from, to, strerror(errno));
-        return (1);
+        return (S_ISREG(sb.st_mode) ?
+                fastcopy(from, to, &sb) : copy(from, to));
     }
-
-    /*
-     * If rename fails because we're trying to cross devices, and
-     * it's a regular file, do the copy internally; otherwise, use
-     * cp and rm.
-     */
-    if (lstat(from, &sb)) {
-        SLOG("%s: %s", from, strerror(errno));
-        return (1);
-    }
-    return (S_ISREG(sb.st_mode) ?
-            fastcopy(from, to, &sb) : copy(from, to));
+    return 1;
 }
 
 static int fastcopy(const char *from, const char *to, struct stat *sbp)

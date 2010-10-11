@@ -526,7 +526,7 @@ static int copy(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             ppdid = pdid;
-            did = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path, &pdid);
+            did = cnid_for_path(&dvolume, to.p_path, &pdid);
 
             struct adouble ad;
             struct stat st;
@@ -588,7 +588,7 @@ static int copy(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
-            cnid_t cnid = cnid_for_path(&dvolume.volinfo, &dvolume.volume, to.p_path, &did);
+            cnid_t cnid = cnid_for_path(&dvolume, to.p_path, &did);
 
             struct adouble ad;
             struct stat st;

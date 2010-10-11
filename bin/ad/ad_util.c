@@ -299,15 +299,13 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
  *    a) "/afp_volume/topdir/dir"
  *    b) "/afp_volume/dir" (no recursion required)
  *
- * @param vi   (r) pointer to volinfo struct
- * @param vol  (r) pointer to vol struct
+ * @param vol  (r) pointer to afpvol_t
  * @param path (r) path, see above
  * @param did  (rw) parent CNID of returned CNID
  *
  * @returns CNID of path
  */
-cnid_t cnid_for_path(const struct volinfo *vi,
-                     const struct vol *vol,
+cnid_t cnid_for_path(const afpvol_t *vol,
                      const char *path,
                      cnid_t *did)
 {
@@ -321,8 +319,8 @@ cnid_t cnid_for_path(const struct volinfo *vi,
 
     cnid = *did = htonl(2);
 
-    EC_NULL(rpath = rel_path_in_vol(path, vi->v_path));
-    EC_NULL(statpath = bfromcstr(vi->v_path));
+    EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
+    EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
 
     l = bsplit(rpath, '/');
     for(int i = 0; i < l->qty ; i++) {
@@ -330,7 +328,7 @@ cnid_t cnid_for_path(const struct volinfo *vi,
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO_LOG(stat(cfrombstr(statpath), &st));
 
-        cnid = cnid_add(vol->v_cdb,
+        cnid = cnid_add(vol->volume.v_cdb,
                         &st,
                         *did,
                         cfrombstr(l->entry[i]),
