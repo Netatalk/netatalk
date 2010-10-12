@@ -2,12 +2,12 @@
 .\"     Title: netatalk.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 9 Jun 2009
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"      Date: 26 Sep 2010
+.\"    Manual: Netatalk 2.2
+.\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "NETATALK\&.CONF" "5" "9 Jun 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "NETATALK\&.CONF" "5" "26 Sep 2010" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -20,10 +20,20 @@
 .\" -----------------------------------------------------------------
 .SH "NAME"
 netatalk.conf \- Configuration file used by netatalk(8) to determine its general configuration
+.SH "SYNOPSIS"
+.HP \w'\fB:ETCDIR:/netatalk\&.conf\fR\fB\fR\fB:DESTDIR:/etc/default/netatalk\fR\fB\fR\ 'u
+\fB:ETCDIR:/netatalk\&.conf\fR\fB\fR
+.br
+\fB:DESTDIR:/etc/default/netatalk\fR\fB\fR
 .SH "DESCRIPTION"
 .PP
 \fB:ETCDIR:/netatalk\&.conf\fR
 is the configuration file used by afpd to determine what portions of the file system will be shared via AFP, as well as their behaviors\&.
+.PP
+If netatalk has been configured with \-\-enable\-debian, it is not
+\fB:ETCDIR:/netatalk\&.conf\fR
+but
+\fB:DESTDIR:/etc/default/netatalk\fR\&.
 .PP
 Any line not prefixed with
 \fB#\fR
