@@ -905,10 +905,10 @@ static int set_acl(const struct vol *vol,
     LOG(log_debug7, logtype_afpd, "set_acl: copied %d inherited ACEs", new_aces_count);
 
     /* Now the ACEs from the client */
-    if (EC_NEG1_CUSTOM(map_acl(DARWIN_2_SOLARIS,
-                               &new_aces[new_aces_count],
-                               daces,
-                               ace_count))) {
+    if ((ret = (map_acl(DARWIN_2_SOLARIS,
+                        &new_aces[new_aces_count],
+                        daces,
+                        ace_count))) == -1) {
         EC_STATUS(AFPERR_PARAM);
         goto EC_CLEANUP;
     }
@@ -928,7 +928,7 @@ static int set_acl(const struct vol *vol,
     /* Ressourcefork first.
        Note: for dirs we set the same ACL on the .AppleDouble/.Parent _file_. This
        might be strange for ACE_DELETE_CHILD and for inheritance flags. */
-    if (EC_ZERO_CUSTOM(vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces))) {
+    if ((ret = (vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         if (errno == (EACCES | EPERM))
             EC_STATUS(AFPERR_ACCESS);
@@ -938,7 +938,7 @@ static int set_acl(const struct vol *vol,
             EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     }
-    if (EC_ZERO_CUSTOM(acl(name, ACE_SETACL, new_aces_count, new_aces))) {
+    if ((ret = (acl(name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         if (errno == (EACCES | EPERM))
             EC_STATUS(AFPERR_ACCESS);

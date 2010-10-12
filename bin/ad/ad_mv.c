@@ -359,6 +359,16 @@ static int do_move(const char *from, const char *to)
         }
         free(name);
 
+        struct adouble ad;
+        ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
+        if (ad_open_metadata(to, S_ISDIR(sb.st_mode) ? ADFLAGS_DIR : 0, O_RDWR, &ad) != 0) {
+            SLOG("Error opening adouble for: %s", to);
+            return 1;
+        }
+        ad_setid(&ad, sb.st_dev, sb.st_ino, cnid, newdid, dvolume.db_stamp);
+        ad_flush(&ad);
+        ad_close_metadata(&ad);
+
         if (vflg)
             printf("%s -> %s\n", from, to);
         return (0);
@@ -492,7 +502,9 @@ static int copy(const char *from, const char *to)
         execl(adexecp, "cp", vflg ? "-Rpv" : "-Rp", "--", from, to, (char *)NULL);
         _exit(1);
     }
-    if (waitpid(pid, &status, 0) == -1) {
+    while ((waitpid(pid, &status, 0)) == -1) {
+        if (errno == EINTR)
+            continue;
         SLOG("%s %s %s: waitpid: %s", adexecp, from, to, strerror(errno));
         return (1);
     }
@@ -504,7 +516,7 @@ static int copy(const char *from, const char *to)
     case 0:
         break;
     default:
-        SLOG("%s %s %s: terminated with %d (non-zero) status",
+        SLOG("%s cp %s %s: terminated with %d (non-zero) status",
               adexecp, from, to, WEXITSTATUS(status));
         return (1);
     }
@@ -514,19 +526,21 @@ static int copy(const char *from, const char *to)
         execl(adexecp, "rm", "-Rf", "--", from, (char *)NULL);
         _exit(1);
     }
-    if (waitpid(pid, &status, 0) == -1) {
-        SLOG("%s %s: waitpid: %s", adexecp, from, strerror(errno));
+    while ((waitpid(pid, &status, 0)) == -1) {
+        if (errno == EINTR)
+            continue;
+        SLOG("%s rm %s: waitpid: %s", adexecp, from, strerror(errno));
         return (1);
     }
     if (!WIFEXITED(status)) {
-        SLOG("%s %s: did not terminate normally", adexecp, from);
+        SLOG("%s rm %s: did not terminate normally", adexecp, from);
         return (1);
     }
     switch (WEXITSTATUS(status)) {
     case 0:
         break;
     default:
-        SLOG("%s %s: terminated with %d (non-zero) status",
+        SLOG("%s rm %s: terminated with %d (non-zero) status",
               adexecp, from, WEXITSTATUS(status));
         return (1);
     }

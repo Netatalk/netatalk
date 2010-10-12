@@ -79,9 +79,6 @@
         }                                       \
     } while (0)
 
-#define EC_ZERO_CUSTOM(a) \
-    (ret = (a)) != 0
-
 /* check for return val 0 which is ok, every other is an error, prints errno */
 #define EC_NEG1_LOG(a) \
     do { \
@@ -110,9 +107,6 @@
         } \
     } while (0)
 
-#define EC_NEG1_CUSTOM(a) \
-    (ret = (a)) == -1
-
 /* check for return val != NULL, prints errno */
 #define EC_NULL_LOG(a) \
     do { \
@@ -140,8 +134,5 @@
             goto cleanup; \
         } \
     } while (0)
-
-#define EC_NULL_CUSTOM(a) \
-    (ret = (a)) == NULL
 
 #endif /* ERRCHECK_H */
