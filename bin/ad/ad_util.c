@@ -198,23 +198,16 @@ char *utompath(const struct volinfo *volinfo, const char *upath)
 static bstring rel_path_in_vol(const char *path, const char *volpath)
 {
     EC_INIT;
+    int cwd = -1;
+    bstring fpath = NULL;
 
     if (path == NULL || volpath == NULL)
         return NULL;
 
-    bstring fpath = NULL;
-
-    /* Make path absolute by concetanating for case (a) */
-    if (path[0] != '/') {
-        EC_NULL(fpath = bfromcstr(getcwdpath()));
-        if (bchar(fpath, blength(fpath) - 1) != '/')
-            EC_ZERO(bcatcstr(fpath, "/"));
-        EC_ZERO(bcatcstr(fpath, path));
-        BSTRING_STRIP_SLASH(fpath);
-    } else {
-        EC_NULL(fpath = bfromcstr(path));
-        BSTRING_STRIP_SLASH(fpath);
-    }
+    EC_NEG1_LOG(cwd = open(".", O_RDONLY));
+    EC_ZERO_LOGSTR(chdir(path), "chdir(%s): %s", path, strerror(errno));
+    EC_NULL(fpath = bfromcstr(getcwdpath()));
+    BSTRING_STRIP_SLASH(fpath);
 
     /*
      * Now we have eg:
@@ -223,11 +216,13 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
      * we want: "dir/bla"
      */
     EC_ZERO(bdelete(fpath, 0, strlen(volpath)));
-    return fpath;
 
 EC_CLEANUP:
-    bdestroy(fpath);
-    return NULL;
+    if (cwd != -1)
+        fchdir(cwd);
+    if (ret != 0)
+        return NULL;
+    return fpath;
 }
 
 /*!
@@ -326,7 +321,10 @@ cnid_t cnid_for_path(const afpvol_t *vol,
     for(int i = 0; i < l->qty ; i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
-        EC_ZERO_LOG(stat(cfrombstr(statpath), &st));
+        EC_ZERO_LOGSTR(stat(cfrombstr(statpath), &st),
+                       "stat(rpath: %s, elem: %s): %s: %s",
+                       cfrombstr(rpath), cfrombstr(l->entry[i]),
+                       cfrombstr(statpath), strerror(errno));
 
         cnid = cnid_add(vol->volume.v_cdb,
                         &st,
