@@ -121,7 +121,23 @@ static void usage_mv(void)
 {
     printf(
         "Usage: ad mv [-f | -i | -n] [-v] source target\n"
-        "       ad mv [-f | -i | -n] [-v] source ... directory\n"
+        "       ad mv [-f | -i | -n] [-v] source ... directory\n\n"
+        "Move files around within an AFP volume, updating the CNID\n"
+        "database as needed. If either:\n"
+        " - source or destination is not an AFP volume\n"
+        " - source volume != destinatio volume\n"
+        "the files are copied and removed from the source.\n\n"
+        "The following options are available:\n\n"
+        "   -f   Do not prompt for confirmation before overwriting the destination\n"
+        "        path.  (The -f option overrides any previous -i or -n options.)\n"
+        "   -i   Cause mv to write a prompt to standard error before moving a file\n"
+        "        that would overwrite an existing file.  If the response from the\n"
+        "        standard input begins with the character `y' or `Y', the move is\n"
+        "        attempted.  (The -i option overrides any previous -f or -n\n"
+        "        options.)\n"
+        "   -n   Do not overwrite an existing file.  (The -n option overrides any\n"
+        "        previous -f or -i options.)\n"
+        "   -v   Cause mv to be verbose, showing files after they are moved.\n"
         );
     exit(EXIT_FAILURE);
 }
@@ -499,7 +515,7 @@ static int copy(const char *from, const char *to)
 
     /* Copy source to destination. */
     if (!(pid = fork())) {
-        execl(adexecp, "cp", vflg ? "-Rpv" : "-Rp", "--", from, to, (char *)NULL);
+        execl(adexecp, "ad", "cp", vflg ? "-Rpv" : "-Rp", from, to, (char *)NULL);
         _exit(1);
     }
     while ((waitpid(pid, &status, 0)) == -1) {
@@ -523,7 +539,7 @@ static int copy(const char *from, const char *to)
 
     /* Delete the source. */
     if (!(pid = fork())) {
-        execl(adexecp, "rm", "-Rf", "--", from, (char *)NULL);
+        execl(adexecp, "ad", "rm", "-R", from, (char *)NULL);
         _exit(1);
     }
     while ((waitpid(pid, &status, 0)) == -1) {
