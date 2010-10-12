@@ -25,9 +25,9 @@
  * Check out doc/DEVELOPER for more infos.
  *
  * We have these macros:
- * EC_ZERO, EC_ZERO_LOG, EC_ZERO_LOG_ERR, EC_ZERO_CUSTOM
- * EC_NEG1, EC_NEG1_LOG, EC_NEG1_LOG_ERR, EC_NEG1_CUSTOM
- * EC_NULL, EC_NULL_LOG, EC_NULL_LOG_ERR, EC_NULL_CUSTOM
+ * EC_ZERO, EC_ZERO_LOG, EC_ZERO_LOGSTR, EC_ZERO_LOG_ERR, EC_ZERO_CUSTOM
+ * EC_NEG1, EC_NEG1_LOG, EC_NEG1_LOGSTR, EC_NEG1_LOG_ERR, EC_NEG1_CUSTOM
+ * EC_NULL, EC_NULL_LOG, EC_NULL_LOGSTR, EC_NULL_LOG_ERR, EC_NULL_CUSTOM
  *
  * A boileplate function template is:
 
@@ -45,17 +45,26 @@
  */
 
 /* check for return val 0 which is ok, every other is an error, prints errno */
-#define EC_ZERO_LOG(a)                          \
-    do {                                        \
+#define EC_ZERO_LOG(a)                                                  \
+    do {                                                                \
         if ((a) != 0) {                                                 \
             LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = -1;                                                   \
             goto cleanup;                                               \
-        } \
+        }                                                               \
     } while (0)
 
-#define EC_ZERO_LOG_ERR(a, b)                   \
-    do { \
+#define EC_ZERO_LOGSTR(a, b, ...)                                       \
+    do {                                                                \
+        if ((a) != 0) {                                                 \
+            LOG(log_error, logtype_default, b, __VA_ARGS__);            \
+            ret = -1;                                                   \
+            goto cleanup;                                               \
+        }                                                               \
+    } while (0)
+
+#define EC_ZERO_LOG_ERR(a, b)                                           \
+    do {                                                                \
         if ((a) != 0) {                                                 \
             LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = (b);                                                  \
@@ -63,12 +72,12 @@
         }                                                               \
     } while (0)
 
-#define EC_ZERO(a) \
-    do { \
-        if ((a) != 0) { \
-            ret = -1; \
-            goto cleanup; \
-        } \
+#define EC_ZERO(a)                              \
+    do {                                        \
+        if ((a) != 0) {                         \
+            ret = -1;                           \
+            goto cleanup;                       \
+        }                                       \
     } while (0)
 
 #define EC_ZERO_ERR(a,b )                       \
@@ -80,17 +89,26 @@
     } while (0)
 
 /* check for return val 0 which is ok, every other is an error, prints errno */
-#define EC_NEG1_LOG(a) \
-    do { \
-        if ((a) == -1) { \
+#define EC_NEG1_LOG(a)                                                  \
+    do {                                                                \
+        if ((a) == -1) {                                                \
             LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
-            ret = -1; \
-            goto cleanup; \
-        } \
+            ret = -1;                                                   \
+            goto cleanup;                                               \
+        }                                                               \
     } while (0)
 
-#define EC_NEG1_LOG_ERR(a, b)                   \
-    do {                                        \
+#define EC_NEG1_LOGSTR(a, b, ...)                               \
+    do {                                                        \
+        if ((a) == -1) {                                        \
+            LOG(log_error, logtype_default, b, __VA_ARGS__);    \
+            ret = -1;                                           \
+            goto cleanup;                                       \
+        }                                                       \
+    } while (0)
+
+#define EC_NEG1_LOG_ERR(a, b)                                           \
+    do {                                                                \
         if ((a) == -1) {                                                \
             LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = b;                                                    \
@@ -98,27 +116,35 @@
         }                                                               \
     } while (0)
 
-/* check for return val 0 which is ok, every other is an error */
-#define EC_NEG1(a) \
-    do { \
-        if ((a) == -1) { \
-            ret = -1; \
-            goto cleanup; \
-        } \
+#define EC_NEG1(a)                              \
+    do {                                        \
+        if ((a) == -1) {                        \
+            ret = -1;                           \
+            goto cleanup;                       \
+        }                                       \
     } while (0)
 
 /* check for return val != NULL, prints errno */
-#define EC_NULL_LOG(a) \
-    do { \
-        if ((a) == NULL) { \
+#define EC_NULL_LOG(a)                                                  \
+    do {                                                                \
+        if ((a) == NULL) {                                              \
             LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
-            ret = -1; \
-            goto cleanup; \
+            ret = -1;                                                   \
+            goto cleanup;                                               \
+        }                                                               \
+    } while (0)
+
+#define EC_NULL_LOGSTR(a, b, ...)                                       \
+    do {                                                                \
+        if ((a) == NULL) {                                              \
+            LOG(log_error, logtype_default, b , __VA_ARGS__);           \
+            ret = -1;                                                   \
+            goto cleanup;                                               \
         } \
     } while (0)
 
-#define EC_NULL_LOG_ERR(a, b)                   \
-    do {                                        \
+#define EC_NULL_LOG_ERR(a, b)                                           \
+    do {                                                                \
         if ((a) == NULL) {                                              \
             LOG(log_error, logtype_default, "%s failed: %s", #a, strerror(errno)); \
             ret = b;                                                    \
@@ -126,13 +152,12 @@
         }                                                               \
     } while (0)
 
-/* check for return val != NULL */
-#define EC_NULL(a) \
-    do { \
-        if ((a) == NULL) { \
-            ret = -1; \
-            goto cleanup; \
-        } \
+#define EC_NULL(a)                              \
+    do {                                        \
+        if ((a) == NULL) {                      \
+            ret = -1;                           \
+            goto cleanup;                       \
+        }                                       \
     } while (0)
 
 #endif /* ERRCHECK_H */
