@@ -2,7 +2,7 @@ Changes in 2.2
 ==============
 
 * UPD: AppleTalk ist disabled by default at configuration time. If needed
-       use --enable-ddp.
+       use configure switch --enable-ddp.
 * NEW: ad utility: ad cp
 * NEW: ad utility: ad rm
 * NEW: ad utility: ad mv
@@ -10,6 +10,10 @@ Changes in 2.2
 * NEW: afpd: POSIX 1e ACL support
 * NEW: afpd: automagic Zeroconf registration with avahi, registering both
        the service _afpovertcp._tcp and TimeMachine volumes with _adisk._tcp.
+* FIX: afpd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
+       use non-blocking IO and select instead.
+* FIX: cnid_dbd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
+       use non-blocking IO and select instead.
 
 Changes in 2.1.4
 ================

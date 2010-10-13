@@ -1,9 +1,8 @@
 /*
- * $Id: cnid_metad.c,v 1.22 2009-11-16 02:04:47 didg Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
- * All Rights Reserved.  See COPYING.
+ * Copyright (C) Frank Lahm 2009, 2010
  *
+ * All Rights Reserved.  See COPYING.
  */
 
 /* 
@@ -22,6 +21,8 @@
    Result:
                        via TCP socket
    4.       afpd          ------->         cnid_dbd
+
+   cnid_metad and cnid_dbd have been converted to non-blocking IO in 2010.
  */
 
 
@@ -37,20 +38,11 @@
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
-#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif
-#ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
-#endif
 #include <sys/un.h>
-#define _XPG4_2 1
 #include <sys/socket.h>
 #include <stdio.h>
 #include <time.h>
@@ -604,8 +596,13 @@ int main(int argc, char *argv[])
         if (rqstfd <= 0)
             continue;
 
-        /* TODO: Check out read errors, broken pipe etc. in libatalk. Is
-           SIGIPE ignored there? Answer: Ignored for dsi, but not for asp ... */
+        /*
+         * Note:
+         * although we're in non-blocking mode, I didn't bother adding EAGAIN/select
+         * loops around read, because we're really reading only very small amounts here,
+         * and as we've just got the connection assuming the sent bytes are
+         * available for reading seems reasonable.
+         */
         ret = read(rqstfd, &len, sizeof(int));
         if (!ret) {
             /* already close */

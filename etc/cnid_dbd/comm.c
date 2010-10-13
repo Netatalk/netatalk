@@ -1,7 +1,7 @@
 /*
- * $Id: comm.c,v 1.6 2009-10-19 08:09:07 didg Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2010
+ *
  * All Rights Reserved.  See COPYING.
  */
 
@@ -13,37 +13,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-
 #include <sys/param.h>
-#define _XPG4_2 1
-#include <sys/socket.h>
-
-#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-
-#ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
-#endif
-
-#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
-
 #include <sys/select.h>
-
 #include <assert.h>
 #include <time.h>
 
 #include <atalk/logger.h>
+#include <atalk/util.h>
 #include <atalk/cnid_dbd_private.h>
 
 #include "db_param.h"
@@ -86,6 +67,62 @@ static void invalidate_fd(int fd)
     close(fd);
     return;
 }
+
+/*!
+ * non-blocking drop-in replacement for read with timeout using select
+ *
+ * @param socket   (r)  must be nonblocking !
+ * @param data     (rw) buffer for the read data
+ * @param lenght   (r)  how many bytes to read
+ * @param timeout  (r)  number of seconds to try reading
+ *
+ * @returns number of bytes actually read or -1 on fatal error
+ */
+static ssize_t readt(int socket, void *data, const size_t length, int timeout)
+{
+    size_t stored;
+    ssize_t len;
+    struct timeval tv;
+    fd_set rfds;
+    int ret;
+
+    stored = 0;
+
+    while (stored < length) {
+        len = read(socket, (u_int8_t *) data + stored, length - stored);
+        if (len == -1) {
+            switch (errno) {
+            case EINTR:
+                continue;
+            case EAGAIN:
+                tv.tv_usec = 0;
+                tv.tv_sec  = timeout;
+
+                FD_ZERO(&rfds);
+                FD_SET(socket, &rfds);
+                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
+                    switch (ret) {
+                    case 0:
+                        LOG(log_warning, logtype_cnid, "select timeout 1s");
+                        return stored;
+                    default: /* -1 */
+                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
+                        return -1;
+                    }
+                }
+                continue;
+            }
+            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
+            return -1;
+        }
+        else if (len > 0)
+            stored += len;
+        else
+            break;
+    }
+    return stored;
+}
+
 
 static int recv_cred(int fd)
 {
@@ -267,8 +304,14 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
 
     LOG(log_maxdebug, logtype_cnid, "comm_rcv: got data on fd %u", cur_fd);
 
+    if (setnonblock(cur_fd, 1) != 0) {
+        LOG(log_error, logtype_cnid, "comm_rcv: setnonblock: %s", strerror(errno));
+        return -1;
+    }
+
     nametmp = rqst->name;
-    if ((b = read(cur_fd, rqst, sizeof(struct cnid_dbd_rqst))) != sizeof(struct cnid_dbd_rqst)) {
+    if ((b = readt(cur_fd, rqst, sizeof(struct cnid_dbd_rqst), CNID_DBD_TIMEOUT))
+        != sizeof(struct cnid_dbd_rqst)) {
         if (b)
             LOG(log_error, logtype_cnid, "error reading message header: %s", strerror(errno));
         invalidate_fd(cur_fd);
@@ -276,7 +319,8 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
         return 0;
     }
     rqst->name = nametmp;
-    if (rqst->namelen && read(cur_fd, rqst->name, rqst->namelen) != rqst->namelen) {
+    if (rqst->namelen && readt(cur_fd, rqst->name, rqst->namelen, CNID_DBD_TIMEOUT)
+        != rqst->namelen) {
         LOG(log_error, logtype_cnid, "error reading message name: %s", strerror(errno));
         invalidate_fd(cur_fd);
         return 0;

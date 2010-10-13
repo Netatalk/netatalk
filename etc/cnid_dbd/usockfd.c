@@ -1,6 +1,4 @@
 /*
- * $Id: usockfd.c,v 1.6 2009-11-05 14:38:07 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
  */
@@ -176,11 +174,8 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
                 strerror(errno));
             return -1;
         }
-        tv.tv_sec = 5;
-        tv.tv_usec = 0;
-        if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-            LOG(log_error, logtype_cnid, "set SO_RCVTIMEO: %s", strerror(errno));
-            close(fd);
+        if (setnonblock(fd, 1) != 0) {
+            LOG(log_error, logtype_cnid, "setnonblock: %s", strerror(errno));
             return -1;
         }
         return fd;
