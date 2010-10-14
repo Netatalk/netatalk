@@ -1,5 +1,4 @@
 /*
-   $Id: socket.c,v 1.6 2010-01-05 19:05:52 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -30,6 +29,9 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+
+#include <atalk/logger.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 
@@ -60,6 +62,61 @@ int setnonblock(int fd, int cmd)
             return -1;
 
     return 0;
+}
+
+/*!
+ * non-blocking drop-in replacement for read with timeout using select
+ *
+ * @param socket   (r)  must be nonblocking !
+ * @param data     (rw) buffer for the read data
+ * @param lenght   (r)  how many bytes to read
+ * @param timeout  (r)  number of seconds to try reading
+ *
+ * @returns number of bytes actually read or -1 on fatal error
+ */
+ssize_t readt(int socket, void *data, const size_t length, int timeout)
+{
+    size_t stored;
+    ssize_t len;
+    struct timeval tv;
+    fd_set rfds;
+    int ret;
+
+    stored = 0;
+
+    while (stored < length) {
+        len = read(socket, (u_int8_t *) data + stored, length - stored);
+        if (len == -1) {
+            switch (errno) {
+            case EINTR:
+                continue;
+            case EAGAIN:
+                tv.tv_usec = 0;
+                tv.tv_sec  = timeout;
+
+                FD_ZERO(&rfds);
+                FD_SET(socket, &rfds);
+                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
+                    switch (ret) {
+                    case 0:
+                        LOG(log_warning, logtype_cnid, "select timeout 1s");
+                        return stored;
+                    default: /* -1 */
+                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
+                        return -1;
+                    }
+                }
+                continue;
+            }
+            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
+            return -1;
+        }
+        else if (len > 0)
+            stored += len;
+        else
+            break;
+    }
+    return stored;
 }
 
 /*!

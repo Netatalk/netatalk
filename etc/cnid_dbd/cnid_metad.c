@@ -597,14 +597,7 @@ int main(int argc, char *argv[])
         if (rqstfd <= 0)
             continue;
 
-        /*
-         * Note:
-         * although we're in non-blocking mode, I didn't bother adding EAGAIN/select
-         * loops around read, because we're really reading only very small amounts here,
-         * and as we've just got the connection assuming the sent bytes are
-         * available for reading seems reasonable.
-         */
-        ret = read(rqstfd, &len, sizeof(int));
+        ret = readt(rqstfd, &len, sizeof(int), 4);
         if (!ret) {
             /* already close */
             goto loop_end;
@@ -626,7 +619,7 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        actual_len = read(rqstfd, dbdir, len);
+        actual_len = readt(rqstfd, dbdir, len, 1);
         if (actual_len < 0) {
             LOG(log_severe, logtype_cnid, "Read(2) error : %s", strerror(errno));
             goto loop_end;

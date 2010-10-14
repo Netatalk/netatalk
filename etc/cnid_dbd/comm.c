@@ -69,62 +69,6 @@ static void invalidate_fd(int fd)
     return;
 }
 
-/*!
- * non-blocking drop-in replacement for read with timeout using select
- *
- * @param socket   (r)  must be nonblocking !
- * @param data     (rw) buffer for the read data
- * @param lenght   (r)  how many bytes to read
- * @param timeout  (r)  number of seconds to try reading
- *
- * @returns number of bytes actually read or -1 on fatal error
- */
-static ssize_t readt(int socket, void *data, const size_t length, int timeout)
-{
-    size_t stored;
-    ssize_t len;
-    struct timeval tv;
-    fd_set rfds;
-    int ret;
-
-    stored = 0;
-
-    while (stored < length) {
-        len = read(socket, (u_int8_t *) data + stored, length - stored);
-        if (len == -1) {
-            switch (errno) {
-            case EINTR:
-                continue;
-            case EAGAIN:
-                tv.tv_usec = 0;
-                tv.tv_sec  = timeout;
-
-                FD_ZERO(&rfds);
-                FD_SET(socket, &rfds);
-                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
-                    switch (ret) {
-                    case 0:
-                        LOG(log_warning, logtype_cnid, "select timeout 1s");
-                        return stored;
-                    default: /* -1 */
-                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
-                        return -1;
-                    }
-                }
-                continue;
-            }
-            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
-            return -1;
-        }
-        else if (len > 0)
-            stored += len;
-        else
-            break;
-    }
-    return stored;
-}
-
-
 static int recv_cred(int fd)
 {
     int ret;
