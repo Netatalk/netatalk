@@ -23,13 +23,8 @@
 #ifndef _ATALK_FTW_H
 #define	_ATALK_FTW_H	1
 
-#include <features.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
-
-
-__BEGIN_DECLS
 
 /* Values for the FLAG argument to the user function passed to `ftw'
    and 'nftw'.  */
@@ -110,7 +105,5 @@ extern int nftw(const char *dir,
                 dir_notification_func_t up,
                 int descriptors,
                 int flag);
-
-__END_DECLS
 
 #endif	/* ATALK_FTW_H */

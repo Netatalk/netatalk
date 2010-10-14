@@ -172,6 +172,33 @@ static dir_notification_func_t upfunc;
 static int ftw_dir (struct ftw_data *data, struct STAT *st,
                     struct dir_data *old_dir) internal_function;
 
+typedef void (*__free_fn_t) (void *__nodep);
+typedef struct node_t {
+    const void *key;
+    struct node_t *left;
+    struct node_t *right;
+    unsigned int red:1;
+} *node;
+
+static void tdestroy_recurse (node root, __free_fn_t freefct)
+{
+    if (root->left != NULL)
+        tdestroy_recurse (root->left, freefct);
+    if (root->right != NULL)
+        tdestroy_recurse (root->right, freefct);
+    (*freefct) ((void *) root->key);
+    /* Free the node itself.  */
+    free (root);
+}
+
+static void __tdestroy (void *vroot, __free_fn_t freefct)
+{
+    node root = (node) vroot;
+
+    if (root != NULL)
+        tdestroy_recurse (root, freefct);
+}
+
 static char *mystpcpy(char *a, const char *b)
 {
     strcpy(a, b);
@@ -316,8 +343,7 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 
         if (dfdp != NULL && *dfdp != -1)
         {
-            int fd = openat(*dfdp, data->dirbuf + data->ftw.base,
-                            O_RDONLY | O_DIRECTORY | O_NDELAY);
+            int fd = openat(*dfdp, data->dirbuf + data->ftw.base, O_RDONLY);
             dirp->stream = NULL;
             if (fd != -1 && (dirp->stream = fdopendir (fd)) == NULL)
                 close(fd);
@@ -356,8 +382,7 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 
 
 static int
-process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
-               size_t namlen, int d_type)
+process_entry (struct ftw_data *data, struct dir_data *dir, const char *name, size_t namlen)
 {
     struct STAT st;
     int result = 0;
@@ -404,8 +429,6 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
             result = -1;
         else if (data->flags & FTW_PHYS)
             flag = FTW_NS;
-        else if (d_type == DT_LNK)
-            flag = FTW_SLN;
         else
         {
             if (dir->streamfd != -1)
@@ -516,7 +539,7 @@ ftw_dir (struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 
     while (dir.stream != NULL && (d = __readdir64 (dir.stream)) != NULL)
     {
-        result = process_entry (data, &dir, d->d_name, NAMLEN (d), d->d_type);
+        result = process_entry (data, &dir, d->d_name, NAMLEN (d));
         if (result != 0)
             break;
     }
@@ -547,7 +570,7 @@ ftw_dir (struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
             char *endp = strchr (runp, '\0');
 
             // XXX Should store the d_type values as well?!
-            result = process_entry (data, &dir, runp, endp - runp, DT_UNKNOWN);
+            result = process_entry (data, &dir, runp, endp - runp);
 
             runp = endp + 1;
         }
@@ -671,7 +694,7 @@ static int ftw_startup (const char *dir,
         /* We have to be able to go back to the current working
            directory.  The best way to do this is to use a file
            descriptor.  */
-        cwdfd = open (".", O_RDONLY | O_DIRECTORY);
+        cwdfd = open (".", O_RDONLY);
         if (cwdfd == -1)
         {
             /* Try getting the directory name.  This can be needed if
@@ -782,7 +805,7 @@ static int ftw_startup (const char *dir,
     /* Free all memory.  */
 out_fail:
     save_err = errno;
-    __tdestroy (data.known_objects, free);
+    tdestroy (data.known_objects, free);
     free (data.dirbuf);
     __set_errno (save_err);
 
