@@ -69,6 +69,8 @@ static int tsock_getfd(const char *host, const char *port)
     int attr;
     int err;
     struct addrinfo hints, *servinfo, *p;
+    int optval;
+    socklen_t optlen = sizeof(optval);
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
@@ -114,20 +116,43 @@ static int tsock_getfd(const char *host, const char *port)
                 fd_set wfds;
                 FD_ZERO(&wfds);
                 FD_SET(sock, &wfds);
-                if (select(sock + 1, NULL, &wfds, NULL, &tv) < 1) {
-                    /* give up */
-                    LOG(log_error, logtype_cnid, "getfd: select timed out for CNID server %s: %s",
-                        host, strerror(errno));
+
+                if ((err = select(sock + 1, NULL, &wfds, NULL, &tv)) == 0) {
+                    /* timeout */
+                    LOG(log_error, logtype_cnid, "getfd: select timed out for CNID server %s",
+                        host);
                     close(sock);
                     sock = -1;
                     continue;
                 }
-                int optval;
-                socklen_t optlen = sizeof(optval);
-                if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) != 0 || optval != 0) {
-                    /* somethings still wrong */
-                    LOG(log_error, logtype_cnid, "getfd: getsockopt error with CNID server %s: %s",
-                        host, strerror(errno));
+                if (err == -1) {
+                    /* select failed */
+                    LOG(log_error, logtype_cnid, "getfd: select failed for CNID server %s",
+                        host);
+                    close(sock);
+                    sock = -1;
+                    continue;
+                }
+
+                if ( ! FD_ISSET(sock, &wfds)) {
+                    /* give up */
+                    LOG(log_error, logtype_cnid, "getfd: socket not ready connecting to %s",
+                        host);
+                    close(sock);
+                    sock = -1;
+                    continue;
+                }
+
+                if ((err = getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen)) != 0 || optval != 0) {
+                    if (err != 0) {
+                        /* somethings very wrong */
+                        LOG(log_error, logtype_cnid, "getfd: getsockopt error with CNID server %s: %s",
+                            host, strerror(errno));
+                    } else {
+                        errno = optval;
+                        LOG(log_error, logtype_cnid, "getfd: getsockopt says: %s",
+                            strerror(errno));
+                    }
                     close(sock);
                     sock = -1;
                     continue;
@@ -148,8 +173,9 @@ static int tsock_getfd(const char *host, const char *port)
     freeaddrinfo(servinfo);
 
     if (p == NULL) {
-        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from CNID server %s:%s",
-            host, port);
+        errno = optval;
+        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from CNID server (%s:%s): %s",
+            host, port, strerror(errno));
         return -1;
     }
 
@@ -428,6 +454,12 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
         if (db->fd != -1) {
             close(db->fd);
             db->fd = -1; /* FD not valid... will need to reconnect */
+        }
+
+        if (errno == ECONNREFUSED) { /* errno carefully injected in tsock_getfd */
+            /* give up */
+            LOG(log_error, logtype_cnid, "transmit: connection refused (db_dir %s)", db->db_dir);
+            return -1;
         }
 
         if (!clean) { /* don't sleep if just got disconnected by cnid server */
