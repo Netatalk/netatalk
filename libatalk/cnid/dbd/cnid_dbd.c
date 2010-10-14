@@ -110,7 +110,7 @@ static int tsock_getfd(const char *host, const char *port)
             if (errno == EINPROGRESS) {
                 struct timeval tv;
                 tv.tv_usec = 0;
-                tv.tv_sec  = 1; /* give it one second ... */
+                tv.tv_sec  = 5; /* give it five seconds ... */
                 fd_set wfds;
                 FD_ZERO(&wfds);
                 FD_SET(sock, &wfds);
@@ -123,7 +123,7 @@ static int tsock_getfd(const char *host, const char *port)
                     continue;
                 }
                 int optval;
-                socklen_t optlen;
+                socklen_t optlen = sizeof(optval);
                 if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen) != 0 || optval != 0) {
                     /* somethings still wrong */
                     LOG(log_error, logtype_cnid, "getfd: getsockopt error with CNID server %s: %s",
