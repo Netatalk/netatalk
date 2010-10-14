@@ -47,6 +47,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
+#include <libgen.h>
 
 #include <atalk/util.h>
 #include <atalk/cnid.h>
@@ -200,12 +201,14 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
     EC_INIT;
     int cwd = -1;
     bstring fpath = NULL;
+    char *dname = NULL;
 
     if (path == NULL || volpath == NULL)
         return NULL;
 
     EC_NEG1_LOG(cwd = open(".", O_RDONLY));
-    EC_ZERO_LOGSTR(chdir(path), "chdir(%s): %s", path, strerror(errno));
+    EC_NULL_LOG(dname = strdup(path));
+    EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname, strerror(errno));
     EC_NULL(fpath = bfromcstr(getcwdpath()));
     BSTRING_STRIP_SLASH(fpath);
 
@@ -218,6 +221,7 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
     EC_ZERO(bdelete(fpath, 0, strlen(volpath)));
 
 EC_CLEANUP:
+    if (dname) free(dname);
     if (cwd != -1)
         fchdir(cwd);
     if (ret != 0)
