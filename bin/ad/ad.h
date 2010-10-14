@@ -28,6 +28,13 @@
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
 
+#ifndef TIMESPEC_TO_TIMEVAL
+#define TIMESPEC_TO_TIMEVAL(tv, ts) { \
+    (tv)->tv_sec = (ts)->tv_sec; \
+    (tv)->tv_usec = (ts)->tv_nsec / 1000; \
+    }
+#endif
+
 enum logtype {STD, DBG};
 
 #define SLOG(...)                             \

@@ -59,6 +59,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <atalk/ftw.h>
 #include <atalk/adouble.h>
@@ -829,8 +830,8 @@ static int setfile(const struct stat *fs, int fd)
 
     TIMESPEC_TO_TIMEVAL(&tv[0], &fs->st_atim);
     TIMESPEC_TO_TIMEVAL(&tv[1], &fs->st_mtim);
-    if (islink ? lutimes(to.p_path, tv) : utimes(to.p_path, tv)) {
-        SLOG("%sutimes: %s", islink ? "l" : "", to.p_path);
+    if (utimes(to.p_path, tv)) {
+        SLOG("utimes: %s", to.p_path);
         rval = 1;
     }
     if (fdval ? fstat(fd, &ts) :
