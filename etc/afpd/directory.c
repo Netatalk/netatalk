@@ -575,10 +575,10 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         ntohl(did), ntohl(pdid), cfrombstr(ret->d_fullpath));
 
 exit:
+    if (upath) free(upath);
     if (err) {
         LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {exit_error: %s}",
             ntohl(did), AfpErr2name(afp_errno));
-        free(upath);
         if (fullpath)
             bdestroy(fullpath);
         if (ret) {
