@@ -16,7 +16,6 @@ GENERATED_MANS	= uniconv.1 asip-status.pl.1
 TEMPLATE_FILES	= uniconv.1.tmpl asip-status.pl.1.tmpl
 NONGENERATED_MANS	=	achfile.1  \
 				ad.1 \
-				afile.1 \
 				afppasswd.1 \
 				apple_dump.1 \
 				dbd.1 \
