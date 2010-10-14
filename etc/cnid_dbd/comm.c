@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#define _XPG4_2 1
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <assert.h>

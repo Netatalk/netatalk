@@ -43,6 +43,7 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <sys/un.h>
+#define _XPG4_2 1
 #include <sys/socket.h>
 #include <stdio.h>
 #include <time.h>
