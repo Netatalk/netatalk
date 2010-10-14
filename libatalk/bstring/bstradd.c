@@ -75,7 +75,7 @@
  * This is usefull if a well know code path uses string, often doing strlen on string.
  * By converting to bstring which carries the strlen, the repeated computation can be avoided.
  */
-bstring brefcstr (const char *str) {
+bstring brefcstr (char *str) {
     bstring b;
     int i;
     size_t j;

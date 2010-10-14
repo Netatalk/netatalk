@@ -1869,7 +1869,7 @@ int c, d, e;
 	return d == 0 && c < 0;
 }
 
-/*  bstring bgets (bNgetc getcPtr, void * parm, char terminator)
+/*  bstring bgetstream (bNgetc getcPtr, void * parm, char terminator)
  *
  *  Use an fgetc-like single character stream reading function (getcPtr) to 
  *  obtain a sequence of characters which are concatenated into a bstring.  
@@ -1880,7 +1880,7 @@ int c, d, e;
  *  result obtained thus far is returned.  If no characters are read, or 
  *  there is some other detectable error, NULL is returned.
  */
-bstring bgets (bNgetc getcPtr, void * parm, char terminator) {
+bstring bgetstream (bNgetc getcPtr, void * parm, char terminator) {
 bstring buff;
 
 	if (0 > bgetsa (buff = bfromcstr (""), getcPtr, parm, terminator) || 0 >= buff->slen) {
