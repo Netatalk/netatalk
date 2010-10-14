@@ -14,7 +14,7 @@ Changes in 2.2
        use non-blocking IO and select instead.
 * FIX: cnid_dbd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
        use non-blocking IO and select instead.
-* REM: afile/apple_cm/apple_mv/apple_rm: use ad
+* REM: afile/achfile/apple_cm/apple_mv/apple_rm: use ad
 
 Changes in 2.1.4
 ================

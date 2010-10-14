@@ -1278,7 +1278,6 @@ AC_OUTPUT([Makefile
 	bin/ad/Makefile
 	bin/adv1tov2/Makefile
 	bin/aecho/Makefile
-	bin/afile/Makefile
 	bin/afppasswd/Makefile
 	bin/cnid/Makefile
 	bin/cnid/cnid2_create
