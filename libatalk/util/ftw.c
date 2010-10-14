@@ -191,7 +191,7 @@ static void tdestroy_recurse (node root, __free_fn_t freefct)
     free (root);
 }
 
-static void __tdestroy (void *vroot, __free_fn_t freefct)
+static void mytdestroy (void *vroot, __free_fn_t freefct)
 {
     node root = (node) vroot;
 
@@ -805,7 +805,7 @@ static int ftw_startup (const char *dir,
     /* Free all memory.  */
 out_fail:
     save_err = errno;
-    tdestroy (data.known_objects, free);
+    mytdestroy (data.known_objects, free);
     free (data.dirbuf);
     __set_errno (save_err);
 
