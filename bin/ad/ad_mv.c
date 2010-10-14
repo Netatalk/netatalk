@@ -207,6 +207,7 @@ int ad_mv(int argc, char *argv[])
         rval = do_move(argv[0], argv[1]);
         closevol(&svolume);
         closevol(&dvolume);
+        return 1;
     }
 
     /* It's a directory, move each file into it. */

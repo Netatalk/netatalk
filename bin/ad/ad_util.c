@@ -202,14 +202,38 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
     int cwd = -1;
     bstring fpath = NULL;
     char *dname = NULL;
+    struct stat st;
 
     if (path == NULL || volpath == NULL)
         return NULL;
 
     EC_NEG1_LOG(cwd = open(".", O_RDONLY));
-    EC_NULL_LOG(dname = strdup(path));
-    EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname, strerror(errno));
-    EC_NULL(fpath = bfromcstr(getcwdpath()));
+
+    EC_ZERO_LOGSTR(stat(path, &st), "stat(%s): %s", path, strerror(errno));
+    switch (S_IFMT & st.st_mode) {
+
+    case S_IFREG:
+        EC_NULL_LOG(dname = strdup(path));
+        EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname, strerror(errno));
+        free(dname);
+        dname = NULL;
+        EC_NULL(fpath = bfromcstr(getcwdpath()));
+        BSTRING_STRIP_SLASH(fpath);
+        EC_ZERO(bcatcstr(fpath, "/"));
+        EC_NULL_LOG(dname = strdup(path));
+        EC_ZERO(bcatcstr(fpath, basename(dname)));
+        break;
+
+    case S_IFDIR:
+        EC_ZERO_LOGSTR(chdir(path), "chdir(%s): %s", path, strerror(errno));
+        EC_NULL(fpath = bfromcstr(getcwdpath()));
+        break;
+
+    default:
+        SLOG("special: %s", path);
+        EC_FAIL;
+    }
+
     BSTRING_STRIP_SLASH(fpath);
 
     /*
