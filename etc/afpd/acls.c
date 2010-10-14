@@ -938,7 +938,7 @@ static int set_acl(const struct vol *vol,
             EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     }
-    if ((ret = (acl(name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
+    if ((ret = (acl(name, ACE_SETACL, new_aces_count, new_aces))) != 0) {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
         if (errno == (EACCES | EPERM))
             EC_STATUS(AFPERR_ACCESS);
