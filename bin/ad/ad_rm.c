@@ -303,13 +303,8 @@ static int rm(const char *path,
                 return -1;
             }
 
-            if (!Rflag) {
-                if (volume.volume.vfs->vfs_deletefile(&volume.volume, -1, path) != 0) {
-                    SLOG("Error removing adouble file for: %s", path);
-                    badrm = rval = 1;
-                    break;
-                }
-            }
+            /* Ignore errors, because with -R adouble stuff is always alread gone */
+            volume.volume.vfs->vfs_deletefile(&volume.volume, -1, path);
         }
 
         if (unlink(path) != 0) {
