@@ -60,7 +60,6 @@ static char           *netatalk_dirs[] = {
 
 static int copy(const char *, const char *);
 static int do_move(const char *, const char *);
-static int fastcopy(const char *, const char *, struct stat *);
 static void preserve_fd_acls(int source_fd, int dest_fd, const char *source_path,
                              const char *dest_path);
 /*
@@ -391,104 +390,11 @@ static int do_move(const char *from, const char *to)
         return (0);
     }
     
-    if (mustcopy) {
-        /*
-         * If rename fails because we're trying to cross devices, and
-         * it's a regular file, do the copy internally; otherwise, use
-         * cp and rm.
-         */
-        if (lstat(from, &sb)) {
-            SLOG("%s: %s", from, strerror(errno));
-            return (1);
-        }
-        return (S_ISREG(sb.st_mode) ?
-                fastcopy(from, to, &sb) : copy(from, to));
-    }
-    return 1;
-}
+    if (mustcopy)
+        return copy(from, to);
 
-static int fastcopy(const char *from, const char *to, struct stat *sbp)
-{
-    struct timeval tval[2];
-    static u_int blen;
-    static char *bp;
-    mode_t oldmode;
-    int nread, from_fd, to_fd;
-
-    if ((from_fd = open(from, O_RDONLY, 0)) < 0) {
-        SLOG("%s: %s", from, strerror(errno));
-        return (1);
-    }
-    if (blen < sbp->st_blksize) {
-        if (bp != NULL)
-            free(bp);
-        if ((bp = malloc((size_t)sbp->st_blksize)) == NULL) {
-            blen = 0;
-            SLOG("malloc failed");
-            return (1);
-        }
-        blen = sbp->st_blksize;
-    }
-    while ((to_fd = open(to, O_CREAT | O_EXCL | O_TRUNC | O_WRONLY, 0)) < 0) {
-        if (errno == EEXIST && unlink(to) == 0)
-            continue;
-        SLOG("%s: %s", to, strerror(errno));
-        (void)close(from_fd);
-        return (1);
-    }
-    while ((nread = read(from_fd, bp, (size_t)blen)) > 0)
-        if (write(to_fd, bp, (size_t)nread) != nread) {
-            SLOG("%s: %s", to, strerror(errno));
-            goto err;
-        }
-    if (nread < 0) {
-        SLOG("%s: %s", from, strerror(errno));
-    err:
-        if (unlink(to))
-            SLOG("%s: remove", to, strerror(errno));
-        (void)close(from_fd);
-        (void)close(to_fd);
-        return (1);
-    }
-
-    oldmode = sbp->st_mode & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID);
-    if (fchown(to_fd, sbp->st_uid, sbp->st_gid)) {
-        SLOG("%s: set owner/group (was: %lu/%lu)", to,
-             (u_long)sbp->st_uid, (u_long)sbp->st_gid, strerror(errno));
-        if (oldmode & S_ISUID) {
-            SLOG("%s: owner/group changed; clearing suid (mode was 0%03o)",
-                 to, oldmode);
-            sbp->st_mode &= ~S_ISUID;
-        }
-    }
-    if (fchmod(to_fd, sbp->st_mode))
-        SLOG("%s: set mode (was: 0%03o): %s", to, oldmode, strerror(errno));
-    /*
-     * POSIX 1003.2c states that if _POSIX_ACL_EXTENDED is in effect
-     * for dest_file, then its ACLs shall reflect the ACLs of the
-     * source_file.
-     */
-    preserve_fd_acls(from_fd, to_fd, from, to);
-    (void)close(from_fd);
-
-    tval[0].tv_sec = sbp->st_atime;
-    tval[1].tv_sec = sbp->st_mtime;
-    tval[0].tv_usec = tval[1].tv_usec = 0;
-    if (utimes(to, tval))
-        SLOG("%s: set times: %s", to, strerror(errno));
-
-    if (close(to_fd)) {
-        SLOG("%s: %s", to, strerror(errno));
-        return (1);
-    }
-
-    if (unlink(from)) {
-        SLOG("%s: remove: %s", from, strerror(errno));
-        return (1);
-    }
-    if (vflg)
-        printf("%s -> %s\n", from, to);
-    return 0;
+    /* If we get here it's an error */
+    return -1;
 }
 
 static int copy(const char *from, const char *to)
