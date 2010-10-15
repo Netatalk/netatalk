@@ -51,7 +51,6 @@ static int fflg, iflg, nflg, vflg;
 static afpvol_t svolume, dvolume;
 static cnid_t did, pdid;
 static volatile sig_atomic_t alarmed;
-static char *adexecp;
 static char           *netatalk_dirs[] = {
     ".AppleDouble",
     ".AppleDB",
@@ -155,7 +154,6 @@ int ad_mv(int argc, char *argv[])
     pdid = htonl(1);
     did = htonl(2);
 
-    adexecp = argv[0];
     argc--;
     argv++;
 
@@ -518,49 +516,49 @@ static int copy(const char *from, const char *to)
 
     /* Copy source to destination. */
     if (!(pid = fork())) {
-        execl(adexecp, "ad", "cp", vflg ? "-Rpv" : "-Rp", from, to, (char *)NULL);
+        execl(_PATH_AD, "ad", "cp", vflg ? "-Rpv" : "-Rp", from, to, (char *)NULL);
         _exit(1);
     }
     while ((waitpid(pid, &status, 0)) == -1) {
         if (errno == EINTR)
             continue;
-        SLOG("%s %s %s: waitpid: %s", adexecp, from, to, strerror(errno));
+        SLOG("%s cp -R %s %s: waitpid: %s", _PATH_AD, from, to, strerror(errno));
         return (1);
     }
     if (!WIFEXITED(status)) {
-        SLOG("%s %s %s: did not terminate normally", adexecp, from, to);
+        SLOG("%s cp -R %s %s: did not terminate normally", _PATH_AD, from, to);
         return (1);
     }
     switch (WEXITSTATUS(status)) {
     case 0:
         break;
     default:
-        SLOG("%s cp %s %s: terminated with %d (non-zero) status",
-              adexecp, from, to, WEXITSTATUS(status));
+        SLOG("%s cp -R %s %s: terminated with %d (non-zero) status",
+             _PATH_AD, from, to, WEXITSTATUS(status));
         return (1);
     }
 
     /* Delete the source. */
     if (!(pid = fork())) {
-        execl(adexecp, "ad", "rm", "-R", from, (char *)NULL);
+        execl(_PATH_AD, "ad", "rm", "-R", from, (char *)NULL);
         _exit(1);
     }
     while ((waitpid(pid, &status, 0)) == -1) {
         if (errno == EINTR)
             continue;
-        SLOG("%s rm %s: waitpid: %s", adexecp, from, strerror(errno));
+        SLOG("%s rm -R %s: waitpid: %s", _PATH_AD, from, strerror(errno));
         return (1);
     }
     if (!WIFEXITED(status)) {
-        SLOG("%s rm %s: did not terminate normally", adexecp, from);
+        SLOG("%s rm -R %s: did not terminate normally", _PATH_AD, from);
         return (1);
     }
     switch (WEXITSTATUS(status)) {
     case 0:
         break;
     default:
-        SLOG("%s rm %s: terminated with %d (non-zero) status",
-              adexecp, from, WEXITSTATUS(status));
+        SLOG("%s rm -R %s: terminated with %d (non-zero) status",
+              _PATH_AD, from, WEXITSTATUS(status));
         return (1);
     }
     return 0;
