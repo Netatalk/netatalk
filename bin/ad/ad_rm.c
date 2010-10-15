@@ -212,7 +212,10 @@ static int rm(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
-            cnid = cnid_for_path(&volume, path, &did);
+            if ((cnid = cnid_for_path(&volume, path, &did)) == CNID_INVALID) {
+                SLOG("Error resolving CNID for %s", path);
+                return -1;
+            }
             if (cnid_delete(volume.volume.v_cdb, cnid) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
@@ -245,7 +248,10 @@ static int rm(const char *path,
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
-            did = cnid_for_path(&volume, path, &pdid);
+            if ((did = cnid_for_path(&volume, path, &pdid)) == CNID_INVALID) {
+                SLOG("Error resolving CNID for %s", path);
+                return -1;
+            }
             if (cnid_delete(volume.volume.v_cdb, did) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(did), path);
                 return -1;
@@ -288,7 +294,10 @@ static int rm(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
-            cnid = cnid_for_path(&volume, path, &did);
+            if ((cnid = cnid_for_path(&volume, path, &did)) == CNID_INVALID) {
+                SLOG("Error resolving CNID for %s", path);
+                return -1;
+            }
             if (cnid_delete(volume.volume.v_cdb, cnid) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;

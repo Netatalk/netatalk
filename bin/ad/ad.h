@@ -64,6 +64,7 @@ extern int ad_mv(int argc, char **argv);
 extern int openvol(const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_path(const afpvol_t *vol, const char *path, cnid_t *did);
+extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path, cnid_t *did);
 extern char *utompath(const struct volinfo *volinfo, const char *upath);
 extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen);
 

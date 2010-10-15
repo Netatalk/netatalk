@@ -358,23 +358,25 @@ static int do_move(const char *from, const char *to)
             return -1;
         }
     
-        char *newdir = strdup(to);
-        cnid_t newdid;
-        if ((newdid = cnid_for_path(&svolume, dirname(newdir), &pdid)) == CNID_INVALID) {
-            SLOG("Couldn't resolve CNID for %s", to);
+        /* get CNID of new parent dir */
+        cnid_t newpdid, newdid;
+        if ((newdid = cnid_for_paths_parent(&dvolume, to, &newpdid)) == CNID_INVALID) {
+            SLOG("Couldn't resolve CNID for parent of %s", to);
+            return -1;
         }
-        free(newdir);
 
         if (stat(to, &sb) != 0) {
             SLOG("Cant stat %s: %s", to, strerror(errno));
             return 1;
         }
-        char *name = strdup(to);
-        if (cnid_update(dvolume.volume.v_cdb, cnid, &sb, newdid, basename(to), strlen(basename(to))) != 0) {
+
+        char *p = strdup(to);
+        char *name = basename(p);
+        if (cnid_update(dvolume.volume.v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
             SLOG("Cant update CNID for: %s", to);
             return 1;
         }
-        free(name);
+        free(p);
 
         struct adouble ad;
         ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
@@ -390,7 +392,7 @@ static int do_move(const char *from, const char *to)
             printf("%s -> %s\n", from, to);
         return (0);
     }
-
+    
     if (mustcopy) {
         /*
          * If rename fails because we're trying to cross devices, and

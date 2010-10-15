@@ -315,12 +315,8 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
  * (b) absolute:
  *     "/afp_volume/dir/subdir"
  *
- * 1) start recursive CNID search with
- *    a) DID:2 / "topdir"
- *    b) DID:2 / "dir"
- * 2) ...until we have the CNID for
- *    a) "/afp_volume/topdir/dir"
- *    b) "/afp_volume/dir" (no recursion required)
+ * path MUST be pointing inside vol, this is usually the case as vol has been build from
+ * path using loadvolinfo and friends.
  *
  * @param vol  (r) pointer to afpvol_t
  * @param path (r) path, see above
@@ -340,13 +336,14 @@ cnid_t cnid_for_path(const afpvol_t *vol,
     struct bstrList *l = NULL;
     struct stat st;
 
-    cnid = *did = htonl(2);
+    *did = htonl(1);
+    cnid = htonl(2);
 
     EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
     EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
 
     l = bsplit(rpath, '/');
-    for(int i = 0; i < l->qty ; i++) {
+    for (int i = 0; i < l->qty ; i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO_LOGSTR(stat(cfrombstr(statpath), &st),
@@ -354,15 +351,15 @@ cnid_t cnid_for_path(const afpvol_t *vol,
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
                        cfrombstr(statpath), strerror(errno));
 
-        cnid = cnid_add(vol->volume.v_cdb,
+        if ((cnid = cnid_add(vol->volume.v_cdb,
                         &st,
                         *did,
                         cfrombstr(l->entry[i]),
                         blength(l->entry[i]),
-                        0);
-
-        EC_ZERO(bcatcstr(statpath, "/"));
-        
+                             0)) == CNID_INVALID) {
+            EC_FAIL;
+        }
+        EC_ZERO(bcatcstr(statpath, "/"));        
     }
 
 EC_CLEANUP:
@@ -375,4 +372,72 @@ EC_CLEANUP:
     return cnid;
 }
 
+/*!
+ * Resolves CNID of a given paths parent directory
+ *
+ * path might be:
+ * (a) relative:
+ *     "dir/subdir" with cwd: "/afp_volume/topdir"
+ * (b) absolute:
+ *     "/afp_volume/dir/subdir"
+ *
+ * path MUST be pointing inside vol, this is usually the case as vol has been build from
+ * path using loadvolinfo and friends.
+ *
+ * @param vol  (r) pointer to afpvol_t
+ * @param path (r) path, see above
+ * @param did  (rw) parent CNID of returned CNID
+ *
+ * @returns CNID of path
+ */
+cnid_t cnid_for_paths_parent(const afpvol_t *vol,
+                             const char *path,
+                             cnid_t *did)
+{
+    EC_INIT;
+
+    cnid_t cnid;
+    bstring rpath = NULL;
+    bstring statpath = NULL;
+    struct bstrList *l = NULL;
+    struct stat st;
+
+    *did = htonl(1);
+    cnid = htonl(2);
+
+    EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
+    EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
+
+    l = bsplit(rpath, '/');
+    if (l->qty == 1)
+        /* only one path element, means parent dir cnid is volume root = 2 */
+        EC_EXIT;
+    for (int i = 0; i < (l->qty - 1); i++) {
+        *did = cnid;
+        EC_ZERO(bconcat(statpath, l->entry[i]));
+        EC_ZERO_LOGSTR(stat(cfrombstr(statpath), &st),
+                       "stat(rpath: %s, elem: %s): %s: %s",
+                       cfrombstr(rpath), cfrombstr(l->entry[i]),
+                       cfrombstr(statpath), strerror(errno));
+
+        if ((cnid = cnid_add(vol->volume.v_cdb,
+                        &st,
+                        *did,
+                        cfrombstr(l->entry[i]),
+                        blength(l->entry[i]),
+                             0)) == CNID_INVALID) {
+            EC_FAIL;
+        }
+        EC_ZERO(bcatcstr(statpath, "/"));        
+    }
+
+EC_CLEANUP:
+    bdestroy(rpath);
+    bstrListDestroy(l);
+    bdestroy(statpath);
+    if (ret != 0)
+        return CNID_INVALID;
+
+    return cnid;
+}
 
