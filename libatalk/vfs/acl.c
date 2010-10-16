@@ -28,47 +28,6 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 
-/* Get ACL. Allocates storage as needed. Caller must free.
- * Returns no of ACEs or -1 on error.  */
-int get_nfsv4_acl(const char *name, ace_t **retAces)
-{
-    int ace_count = -1;
-    ace_t *aces;
-    struct stat st;
-
-    *retAces = NULL;
-    /* Only call acl() for regular files and directories, otherwise just return 0 */
-    if (lstat(name, &st) != 0)
-        return -1;
-    if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode)))
-        return 0;
-    if ((ace_count = acl(name, ACE_GETACLCNT, 0, NULL)) == 0)
-        return 0;
-
-    if (ace_count == -1) {
-        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
-            getcwdpath(), name, ace_count, strerror(errno));
-        return -1;
-    }
-
-    aces = malloc(ace_count * sizeof(ace_t));
-    if (aces == NULL) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
-	return -1;
-    }
-
-    if ( (acl(name, ACE_GETACL, ace_count, aces)) == -1 ) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
-	free(aces);
-	return -1;
-    }
-
-    LOG(log_debug9, logtype_afpd, "get_nfsv4_acl: file: %s -> No. of ACEs: %d", name, ace_count);
-    *retAces = aces;
-
-    return ace_count;
-}
-
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
 int remove_acl(const char *name)
 {
