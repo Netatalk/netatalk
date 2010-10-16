@@ -1,3 +1,7 @@
+Changes in 2.1.5
+================
+* UPD: afpd: support newlines in -loginmesg with \n escaping syntax
+
 Changes in 2.1.4
 ================
 
