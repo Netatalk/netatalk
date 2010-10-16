@@ -30,6 +30,7 @@
 
 #include <atalk/logger.h>
 #include <atalk/afp.h>
+#include <atalk/util.h>
 #include <atalk/acl.h>
 
 /* Get ACL. Allocates storage as needed. Caller must free.
