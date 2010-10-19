@@ -76,45 +76,6 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
 }
 
 /*
-  Remove any trivial ACE "in-place". Returns no of non-trivial ACEs
-*/
-int strip_trivial_aces(ace_t **saces, int sacecount)
-{
-    int i,j;
-    int nontrivaces = 0;
-    ace_t *aces = *saces;
-    ace_t *new_aces;
-
-    /* Count non-trivial ACEs */
-    for (i=0; i < sacecount; ) {
-        if ( ! (aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)))
-            nontrivaces++;
-        i++;
-    }
-    /* malloc buffer for new ACL */
-    if ((new_aces = malloc(nontrivaces * sizeof(ace_t))) == NULL) {
-        LOG(log_error, logtype_afpd, "strip_trivial_aces: malloc %s", strerror(errno));
-        return -1;
-    }
-
-    /* Copy non-trivial ACEs */
-    for (i=0, j=0; i < sacecount; ) {
-        if ( ! (aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
-            memcpy(&new_aces[j], &aces[i], sizeof(ace_t));
-            j++;
-        }
-        i++;
-    }
-
-    free(aces);
-    *saces = new_aces;
-
-    LOG(log_debug7, logtype_afpd, "strip_trivial_aces: non-trivial ACEs: %d", nontrivaces);
-
-    return nontrivaces;
-}
-
-/*
   Concatenate ACEs
 */
 ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
@@ -143,6 +104,48 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
         j++;
     }
     return new_aces;
+}
+
+/*
+  Remove any trivial ACE "in-place". Returns no of non-trivial ACEs
+*/
+int strip_trivial_aces(ace_t **saces, int sacecount)
+{
+    int i,j;
+    int nontrivaces = 0;
+    ace_t *aces = *saces;
+    ace_t *new_aces;
+
+    if (aces == NULL || sacecount <= 0)
+        return 0;
+
+    /* Count non-trivial ACEs */
+    for (i=0; i < sacecount; ) {
+        if ( ! (aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)))
+            nontrivaces++;
+        i++;
+    }
+    /* malloc buffer for new ACL */
+    if ((new_aces = malloc(nontrivaces * sizeof(ace_t))) == NULL) {
+        LOG(log_error, logtype_afpd, "strip_trivial_aces: malloc %s", strerror(errno));
+        return -1;
+    }
+
+    /* Copy non-trivial ACEs */
+    for (i=0, j=0; i < sacecount; ) {
+        if ( ! (aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
+            memcpy(&new_aces[j], &aces[i], sizeof(ace_t));
+            j++;
+        }
+        i++;
+    }
+
+    free(aces);
+    *saces = new_aces;
+
+    LOG(log_debug7, logtype_afpd, "strip_trivial_aces: non-trivial ACEs: %d", nontrivaces);
+
+    return nontrivaces;
 }
 
 /*
@@ -201,7 +204,37 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
  */
 int nfsv4_chmod(char *name, mode_t mode)
 {
+    int ret = -1;
+    int noaces, nnaces;
+    ace_t *oacl = NULL, *nacl = NULL, *cacl;
 
+    if ((noaces = get_nfsv4_acl(name, &oacl)) == -1) /* (1) */
+        goto exit;
+    if ((noaces = strip_trivial_aces(&oacl, noaces)) == -1) /* (2) */
+        goto exit;
+
+    if (chmod(name, mode) != 0) /* (3) */
+        goto exit;
+
+    if ((nnaces = get_nfsv4_acl(name, &nacl)) == -1) /* (4) */
+        goto exit;
+    if ((nnaces = strip_nontrivial_aces(&nacl, nnaces)) == -1) /* (5) */
+        goto exit;
+
+    if ((cacl = concat_aces(oacl, noaces, nacl, nnaces)) == NULL) /* (6) */
+        goto exit;
+
+    if ((ret = acl(name, ACE_SETACL, noaces + nnaces, cacl)) != 0) {
+        LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+        goto exit;
+    }
+
+exit:
+    if (oacl) free(oacl);
+    if (nacl) free(nacl);
+    if (cacl) free(cacl);
+
+    return ret;
 }
 
 #if 0

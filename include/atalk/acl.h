@@ -26,6 +26,9 @@
 
 /* Solaris NFSv4 ACL stuff */
 #ifdef HAVE_NFSv4_ACLS
+
+#define chmod nfsv4_chmod
+
 extern int get_nfsv4_acl(const char *name, ace_t **retAces);
 extern int remove_acl(const char *name);
 extern int strip_trivial_aces(ace_t **saces, int sacecount);
