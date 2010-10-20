@@ -1340,7 +1340,7 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     atalk_uuid_t uuid;
     int r_ok, w_ok, x_ok;
 
-    if ( ! (AFPobj->options.flags & OPTION_UUID) || ! (AFPobj->options.flags & OPTION_ACL2OS9MODE))
+    if ( ! (AFPobj->options.flags & OPTION_UUID) || ! (AFPobj->options.flags & OPTION_ACL2UARIGHTS))
         return;
 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode('%s')", path);
