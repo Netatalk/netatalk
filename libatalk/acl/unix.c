@@ -208,11 +208,17 @@ int nfsv4_chmod(char *name, mode_t mode)
     int noaces, nnaces;
     ace_t *oacl = NULL, *nacl = NULL, *cacl;
 
+    LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o)",
+        getcwdpath(), name, mode);
+
     if ((noaces = get_nfsv4_acl(name, &oacl)) == -1) /* (1) */
         goto exit;
     if ((noaces = strip_trivial_aces(&oacl, noaces)) == -1) /* (2) */
         goto exit;
 
+#ifdef chmod
+#undef chmod
+#endif
     if (chmod(name, mode) != 0) /* (3) */
         goto exit;
 
@@ -234,112 +240,11 @@ exit:
     if (nacl) free(nacl);
     if (cacl) free(cacl);
 
+    LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %u",
+        ret, getcwdpath(), name, mode);
+
     return ret;
 }
 
-#if 0
-static int set_acl_vfs(const struct vol *vol, char *name, int inherit, char *ibuf)
-{
-    int ret, i, nfsv4_ace_count, tocopy_aces_count = 0, new_aces_count = 0, trivial_ace_count = 0;
-    ace_t *old_aces, *new_aces = NULL;
-    uint16_t flags;
-    uint32_t ace_count;
-
-    LOG(log_debug9, logtype_afpd, "set_acl: BEGIN");
-
-    /*  Get no of ACEs the client put on the wire */
-    ace_count = htonl(*((uint32_t *)ibuf));
-    ibuf += 8;      /* skip ACL flags (see acls.h) */
-
-    if (inherit)
-        /* inherited + trivial ACEs */
-        flags = ACE_INHERITED_ACE | ACE_OWNER | ACE_GROUP | ACE_EVERYONE;
-    else
-        /* only trivial ACEs */
-        flags = ACE_OWNER | ACE_GROUP | ACE_EVERYONE;
-
-    /* Get existing ACL and count ACEs which have to be copied */
-    if ((nfsv4_ace_count = get_nfsv4_acl(name, &old_aces)) == -1)
-        return AFPERR_MISC;
-    for ( i=0; i < nfsv4_ace_count; i++) {
-        if (old_aces[i].a_flags & flags)
-            tocopy_aces_count++;
-    }
-
-    /* Now malloc buffer exactly sized to fit all new ACEs */
-    new_aces = malloc( (ace_count + tocopy_aces_count) * sizeof(ace_t) );
-    if (new_aces == NULL) {
-        LOG(log_error, logtype_afpd, "set_acl: malloc %s", strerror(errno));
-        ret = AFPERR_MISC;
-        goto cleanup;
-    }
-
-    /* Start building new ACL */
-
-    /* Copy local inherited ACEs. Therefore we have 'Darwin canonical order' (see chmod there):
-       inherited ACEs first. */
-    if (inherit) {
-        for (i=0; i < nfsv4_ace_count; i++) {
-            if (old_aces[i].a_flags & ACE_INHERITED_ACE) {
-                memcpy(&new_aces[new_aces_count], &old_aces[i], sizeof(ace_t));
-                new_aces_count++;
-            }
-        }
-    }
-    LOG(log_debug7, logtype_afpd, "set_acl: copied %d inherited ACEs", new_aces_count);
-
-    /* Now the ACEs from the client */
-    ret = map_acl(DARWIN_2_SOLARIS, &new_aces[new_aces_count], (darwin_ace_t *)ibuf, ace_count);
-    if (ret == -1) {
-        ret = AFPERR_PARAM;
-        goto cleanup;
-    }
-    new_aces_count += ace_count;
-    LOG(log_debug7, logtype_afpd, "set_acl: mapped %d ACEs from client", ace_count);
-
-    /* Now copy the trivial ACEs */
-    for (i=0; i < nfsv4_ace_count; i++) {
-        if (old_aces[i].a_flags  & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)) {
-            memcpy(&new_aces[new_aces_count], &old_aces[i], sizeof(ace_t));
-            new_aces_count++;
-            trivial_ace_count++;
-        }
-    }
-    LOG(log_debug7, logtype_afpd, "set_acl: copied %d trivial ACEs", trivial_ace_count);
-
-    /* Ressourcefork first.
-       Note: for dirs we set the same ACL on the .AppleDouble/.Parent _file_. This
-       might be strange for ACE_DELETE_CHILD and for inheritance flags. */
-    if ( (ret = vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
-        LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
-        if (errno == (EACCES | EPERM))
-            ret = AFPERR_ACCESS;
-        else if (errno == ENOENT)
-            ret = AFPERR_NOITEM;
-        else
-            ret = AFPERR_MISC;
-        goto cleanup;
-    }
-    if ( (ret = acl(name, ACE_SETACL, new_aces_count, new_aces)) != 0) {
-        LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
-        if (errno == (EACCES | EPERM))
-            ret = AFPERR_ACCESS;
-        else if (errno == ENOENT)
-            ret = AFPERR_NOITEM;
-        else
-            ret = AFPERR_MISC;
-        goto cleanup;
-    }
-
-    ret = AFP_OK;
-
-cleanup:
-    free(old_aces);
-    free(new_aces);
-
-    LOG(log_debug9, logtype_afpd, "set_acl: END");
-    return ret;
-}
-#endif  /* 0 */
 
 #endif /* HAVE_NFSv4_ACLS */
