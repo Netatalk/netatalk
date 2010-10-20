@@ -1,6 +1,4 @@
 /*
- * $Id: filedir.c,v 1.73 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -41,6 +39,7 @@ char *strchr (), *strrchr ();
 #include <atalk/unix.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/acl.h>
 
 #include "directory.h"
 #include "dircache.h"

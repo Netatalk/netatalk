@@ -16,6 +16,12 @@ Changes in 2.2
        use non-blocking IO and select instead.
 * REM: afile/achfile/apple_cm/apple_mv/apple_rm: use ad
 
+Changes in 2.1.5
+================
+* UPD: afpd: support newlines in -loginmesg with \n escaping syntax
+* UPD: afpd: support for changed chmod semantics on ZFS with ACLs
+       in onnv145+
+
 Changes in 2.1.4
 ================
 

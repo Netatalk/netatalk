@@ -290,8 +290,22 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->defaultvol.name = opt;
     if ((c = getoption(buf, "-systemvol")) && (opt = strdup(c)))
         options->systemvol.name = opt;
-    if ((c = getoption(buf, "-loginmesg")) && (opt = strdup(c)))
+    if ((c = getoption(buf, "-loginmesg")) && (opt = strdup(c))) {
+        int i = 0, j = 0;
+        while (c[i]) {
+            if (c[i] != '\\') {
+                opt[j++] = c[i];
+            } else {
+                i++;
+                if (c[i] == 'n')
+                    opt[j++] = '\n';
+            }
+            i++;
+        }
+        opt[j] = 0;
         options->loginmesg = opt;
+        
+    }
     if ((c = getoption(buf, "-guestname")) && (opt = strdup(c)))
         options->guest = opt;
     if ((c = getoption(buf, "-passwdfile")) && (opt = strdup(c)))

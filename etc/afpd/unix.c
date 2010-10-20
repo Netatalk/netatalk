@@ -38,6 +38,7 @@ char *strchr (), *strrchr ();
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/unix.h>
+#include <atalk/acl.h>
 
 #include "auth.h"
 #include "directory.h"

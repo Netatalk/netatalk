@@ -33,6 +33,7 @@
 #include <atalk/volume.h>
 #include <atalk/ea.h>
 #include <atalk/util.h>
+#include <atalk/acl.h>
 
 #include "cmd_dbd.h"
 #include "dbif.h"

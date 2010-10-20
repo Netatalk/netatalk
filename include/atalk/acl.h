@@ -29,7 +29,13 @@
 #endif /* HAVE_POSIX_ACLS */
 
 #ifdef HAVE_SOLARIS_ACLS
+#define chmod nfsv4_chmod
 extern int get_nfsv4_acl(const char *name, ace_t **retAces);
+extern int remove_acl(const char *name);
+extern int strip_trivial_aces(ace_t **saces, int sacecount);
+extern int strip_nontrivial_aces(ace_t **saces, int sacecount);
+extern ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count);
+extern int nfsv4_chmod(char *name, mode_t mode);
 #endif /* HAVE_SOLARIS_ACLS */
 
 extern int remove_acl_vfs(const char *name);

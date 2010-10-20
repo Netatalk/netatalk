@@ -8,7 +8,9 @@ libacl_la_SOURCES = \
 	ldap.c		\
 	uuid.c		\
 	cache.c		\
-	ldap_config.c
+	ldap_config.c \
+	unix.c
+
 libacl_la_LDFLAGS = -lldap
 endif
 
