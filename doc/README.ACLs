@@ -17,10 +17,9 @@ In order to be able to support ACLs, the following things have to be configured:
 
   1. ZFS Volumes:
 
-     You MUST configure two ACL parameters for any volume you want to use with Netatalk:
+     You MUST configure one ACL parameter for any volume you want to use with Netatalk:
 
         aclinherit = passthrough
-        aclmode = passthrough
 
      For an explanation of what these parameters mean and how to apply them see, your hosts
      ZFS documentation (e.g. man zfs).
@@ -36,14 +35,7 @@ In order to be able to support ACLs, the following things have to be configured:
       - you need an Open Directory Server or an LDAP server where you store UUIDs in some
       	attribute
       - your clients must be configured to use this server 
-      - your server should be configured to use this server via nsswitch and PAM. This
-      	however is not a strict requirement: 
-	if you create duplicates of every LDAP/OD user and group with identic attributes
-	(name, uid, gid) in your local data store (/etc/[passwd|group]) things will work
-
-	      *  as long as user/group names/ids in the filesystem are equal  *
-	      *         to their counterparts in the LDAP/OD datastore        *
-
+      - your server should be configured to use this server via nsswitch and PAM
       - configure Netatalk via afp_ldap.conf so that Netatalk is able to retrieve the UUID
       	for users and groups via LDAP search queries
 

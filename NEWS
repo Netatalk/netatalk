@@ -1,6 +1,8 @@
 Changes in 2.1.5
 ================
 * UPD: afpd: support newlines in -loginmesg with \n escaping syntax
+* UPD: afpd: support for changed chmod semantics on ZFS with ACLs
+       in onnv145+
 
 Changes in 2.1.4
 ================
