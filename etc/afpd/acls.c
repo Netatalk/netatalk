@@ -198,14 +198,21 @@ int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int
 
         /* uid/gid first */
         EC_ZERO(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
-
-        if (uuidtype == UUID_USER) {
+        switch (uuidtype) {
+        case UUID_LOCAL:
+            free(name);
+            name = NULL;
+            darwin_aces++;
+            continue;
+        case UUID_USER:
             EC_NULL_LOG(pwd = getpwnam(name));
             nfsv4_aces->a_who = pwd->pw_uid;
-        } else { /* hopefully UUID_GROUP*/
+            break;
+        case UUID_GROUP:
             EC_NULL_LOG(grp = getgrnam(name));
             nfsv4_aces->a_who = (uid_t)(grp->gr_gid);
             nfsv4_ace_flags |= ACE_IDENTIFIER_GROUP;
+            break;
         }
         free(name);
         name = NULL;
@@ -418,16 +425,23 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
 
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
-        if (uuidtype == UUID_USER) {
+        switch (uuidtype) {
+        case UUID_LOCAL:
+            free(name);
+            name = NULL;
+            continue;
+        case UUID_USER:
             EC_NULL_LOG(pwd = getpwnam(name));
             tag = ACL_USER;
             id = pwd->pw_uid;
             LOG(log_debug, logtype_afpd, "map_ace: name: %s, uid: %u", name, id);
-        } else { /* hopefully UUID_GROUP*/
+            break;
+        case UUID_GROUP:
             EC_NULL_LOG(grp = getgrnam(name));
             tag = ACL_GROUP;
             id = (uid_t)(grp->gr_gid);
             LOG(log_debug, logtype_afpd, "map_ace: name: %s, gid: %u", name, id);
+            break;
         }
         free(name);
         name = NULL;
