@@ -2,12 +2,12 @@
 .\"     Title: afp_acls
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02 Feb 2009
+.\"      Date: 20 Oct 2010
 .\"    Manual: Netatalk 2.1
 .\"    Source: Netatalk 2.1
 .\"  Language: English
 .\"
-.TH "AFP_ACLS" "8" "02 Feb 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "AFP_ACLS" "8" "20 Oct 2010" "Netatalk 2.1" "Netatalk 2.1"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -37,20 +37,19 @@ In order to be able to support ACLs, the following things have to be configured:
 .\}
 ZFS Volumes
 .sp
-You MUST configure two ACL parameters for any volume you want to use with Netatalk:
+You MUST configure one ACL parameter for any volume you want to use with Netatalk:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
 aclinherit = passthrough
-aclmode = passthrough
 .fi
 .if n \{\
 .RE
 .\}
 .sp
-For an explanation of what these parameters mean and how to apply them see, your hosts ZFS documentation (e\&.g\&. man zfs)\&.
+For an explanation of what this parameter means and how to apply it see, your hosts ZFS documentation (e\&.g\&. man zfs)\&.
 .RE
 .sp
 .RS 4
@@ -98,22 +97,6 @@ your clients must be configured to use this server
 .IP \(bu 2.3
 .\}
 your server should be configured to use this server via nsswitch and PAM\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBTip\fR
-.ps -1
-.br
-This however is not a strict requirement: if you create duplicates of every LDAP/OD user and group with identic attributes (name, uid, gid) in your local data store (/etc/[passwd|group]) ACLs will work
-\fIas long as user/group names/ids in the filesystem are equal to their counterparts in the LDAP/OD datastore\fR\&.
-.sp .5v
-.RE
 .RE
 .sp
 .RS 4
