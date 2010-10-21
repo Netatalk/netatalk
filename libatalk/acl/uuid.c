@@ -145,11 +145,15 @@ cleanup:
     return ret;
 }
 
-static char local_uuid[] = {0xab, 0xcd, 0xef,
-                            0xab, 0xcd, 0xef,
-                            0xab, 0xcd, 0xef, 
-                            0xab, 0xcd, 0xef};
-/* 
+static char local_group_uuid[] = {0xab, 0xcd, 0xef,
+                                  0xab, 0xcd, 0xef,
+                                  0xab, 0xcd, 0xef, 
+                                  0xab, 0xcd, 0xef};
+
+static char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
+                                 0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa};
+
+/*
  * uuidp: pointer to a uuid
  * name: returns allocated buffer from ldap_getnamefromuuid
  * type: returns USER, GROUP or LOCAL
@@ -161,15 +165,6 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     char *uuid_string = NULL;
 
-    /* Check if UUID is ABCDEFAB-CDEF-ABCD-EFAB-CDEFXXXXXXXX, where X is a client local uid */
-    if (memcmp(uuidp, local_uuid, 12) == 0) {
-        LOG(log_debug, logtype_afpd, "getnamefromuuid: local UUID: %" PRIu32 "",
-            ntohl(*(uint32_t *)(uuid_string+12)));
-        *type = UUID_LOCAL;
-        *name = strdup("UUID_LOCAL");
-        return 0;
-    }
-
     ret = search_cachebyuuid( uuidp, name, type);
     if (ret == 0) {     /* found in cache */
 #ifdef DEBUG
@@ -180,6 +175,17 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
         uuid_string = NULL;
 #endif
     } else  {                   /* if not found in cache */
+
+        /* Check if UUID is a client local one */
+        if (memcmp(uuidp, local_user_uuid, 12) == 0
+            || memcmp(uuidp, local_group_uuid, 12) == 0) {
+            LOG(log_debug, logtype_afpd, "getnamefromuuid: local UUID: %" PRIu32 "",
+                ntohl(*(uint32_t *)(uuid_string+12)));
+            *type = UUID_LOCAL;
+            *name = strdup("UUID_LOCAL");
+            return 0;
+        }
+
         uuid_bin2string( uuidp, &uuid_string);
         ret = ldap_getnamefromuuid( uuid_string, name, type);
         if (ret != 0) {

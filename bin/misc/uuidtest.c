@@ -1,5 +1,4 @@
 /*
-  $Id: uuidtest.c,v 1.3 2009-11-28 12:27:24 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -123,10 +122,17 @@ int main( int argc, char **argv)
             uuid_string2bin(optarg, uuid);
             ret = getnamefromuuid( uuid, &name, &type);
             if (ret == 0) {
-                if (type == UUID_USER)
+                switch (type) {
+                case UUID_LOCAL:
+                    printf("local UUID: %s\n", optarg);
+                    break;
+                case UUID_USER:
                     printf("UUID: %s ==> User: %s\n", optarg, name);
-                else
+                    break;
+                case UUID_GROUP:
                     printf("UUID: %s ==> Group: %s\n", optarg, name);
+                    break;
+                }
                 free(name);
             } else {
                 printf("UUID: %s not found.\n", optarg);

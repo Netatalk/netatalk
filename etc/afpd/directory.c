@@ -2344,7 +2344,8 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         len = getnamefromuuid( ibuf, &name, &type);
         if (len != 0)       /* its a error code, not len */
             return AFPERR_NOITEM;
-        if (type == UUID_USER) {
+        switch (type) {
+        case UUID_USER:
             if (( pw = getpwnam( name )) == NULL )
                 return( AFPERR_NOITEM );
             LOG(log_debug, logtype_afpd, "afp_mapid: name:%s -> uid:%d", name, pw->pw_uid);
@@ -2355,7 +2356,8 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             memcpy( rbuf, &id, sizeof( id ));
             rbuf += sizeof( id );
             *rbuflen = 2 * sizeof( id );
-        } else {        /* type == UUID_GROUP */
+            break;
+        case UUID_GROUP:
             if (( gr = getgrnam( name )) == NULL )
                 return( AFPERR_NOITEM );
             LOG(log_debug, logtype_afpd, "afp_mapid: group:%s -> gid:%d", name, gr->gr_gid);
@@ -2366,6 +2368,12 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             memcpy( rbuf, &id, sizeof( id ));
             rbuf += sizeof( id );
             *rbuflen = 2 * sizeof( id );
+            break;
+        case UUID_LOCAL:
+            free(name);
+            return (AFPERR_NOITEM);
+        default:
+            return AFPERR_MISC;
         }
         break;
 #endif /* HAVE_ACLS */
