@@ -16,7 +16,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_NFSv4_ACLS
+#ifdef HAVE_SOLARIS_ACLS
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -246,5 +246,4 @@ exit:
     return ret;
 }
 
-
-#endif /* HAVE_NFSv4_ACLS */
+#endif /* HAVE_SOLARIS_ACLS */

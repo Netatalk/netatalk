@@ -85,7 +85,7 @@ ssize_t readt(int socket, void *data, const size_t length, int timeout)
     stored = 0;
 
     while (stored < length) {
-        len = read(socket, (u_int8_t *) data + stored, length - stored);
+        len = read(socket, (char *) data + stored, length - stored);
         if (len == -1) {
             switch (errno) {
             case EINTR:
