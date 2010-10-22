@@ -411,7 +411,7 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
     l = bsplit(rpath, '/');
     if (l->qty == 1)
         /* only one path element, means parent dir cnid is volume root = 2 */
-        EC_EXIT;
+        goto EC_CLEANUP;
     for (int i = 0; i < (l->qty - 1); i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));

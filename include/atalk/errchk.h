@@ -19,7 +19,7 @@
 #define EC_STATUS(a) ret = (a)
 #define EC_FAIL ret = -1; goto cleanup
 #define EC_CLEANUP cleanup
-#define EC_EXIT goto cleanup
+#define EC_EXIT return ret
 
 /* 
  * Check out doc/DEVELOPER for more infos.
