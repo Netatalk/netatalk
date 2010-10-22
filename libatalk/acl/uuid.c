@@ -180,7 +180,7 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
         if (memcmp(uuidp, local_user_uuid, 12) == 0
             || memcmp(uuidp, local_group_uuid, 12) == 0) {
             LOG(log_debug, logtype_afpd, "getnamefromuuid: local UUID: %" PRIu32 "",
-                ntohl(*(uint32_t *)(uuid_string+12)));
+                ntohl(*(uint32_t *)(uuidp + 12)));
             *type = UUID_LOCAL;
             *name = strdup("UUID_LOCAL");
             return 0;
