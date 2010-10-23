@@ -814,8 +814,8 @@ static int set_acl(const struct vol *vol,
         EC_STATUS(AFPERR_PARAM);
         goto EC_CLEANUP;
     }
-    new_aces_count += ace_count;
-    LOG(log_debug7, logtype_afpd, "set_acl: mapped %d ACEs from client", ace_count);
+    new_aces_count += ret;
+    LOG(log_debug7, logtype_afpd, "set_acl: mapped %d ACEs from client", ret);
 
     /* Now copy the trivial ACEs */
     for (i=0; i < nfsv4_ace_count; i++) {
