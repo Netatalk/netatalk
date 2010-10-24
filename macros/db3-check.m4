@@ -161,8 +161,10 @@ AC_DEFUN([AC_PATH_BDB],[
                             break;
                         fi
 
-                        dnl -- Search for 64bit lib in "lib" too
-                        if test x"$atalk_libname" = x"lib64" ; then
+                        dnl -- Search lib in "lib" too, as $atalk_libname might be set
+                        dnl -- to "lib64" or "lib/64" which would not be found above
+                        dnl -- if 64bit lib were installed in a dir named "lib"
+                        if test x"$atalk_libname" != x"lib" ; then
                            bdblibdir="${bdbdir}/lib"
                            bdbbindir="${bdbdir}/bin"
 

@@ -95,36 +95,34 @@ dnl 64bit platform check
 dnl --------------------------------------------------------------------------
 
 AC_MSG_CHECKING([whether to check for 64bit libraries])
-dnl Determine libdir name
-case $host in
-*-*-linux*)
-  # Test if the compiler is 64bit
-  echo 'int i;' > conftest.$ac_ext
-  atalk_cv_cc_64bit_output=no
-  if AC_TRY_EVAL(ac_compile); then
+# Test if the compiler is in 64bit mode
+echo 'int i;' > conftest.$ac_ext
+atalk_cv_cc_64bit_output=no
+if AC_TRY_EVAL(ac_compile); then
     case `/usr/bin/file conftest.$ac_objext` in
     *"ELF 64"*)
       atalk_cv_cc_64bit_output=yes
       ;;
     esac
-  fi
-  rm -rf conftest*
-  ;;
-esac
-
-dnl
-dnl FIXME: Do we need something like this for Solaris 64bit?
-dnl
+fi
+rm -rf conftest*
 
 case $host_cpu:$atalk_cv_cc_64bit_output in
-powerpc64:yes | s390x:yes | sparc64:yes | x86_64:yes)
-  atalk_libname="lib64"
-  AC_MSG_RESULT([yes])
-  ;;
+powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
+    AC_MSG_RESULT([yes])
+    case $target_os in
+    solaris2*)
+        atalk_libname="lib/64"
+        ;;
+    *)
+        atalk_libname="lib64"
+        ;;
+    esac
+    ;;
 *:*)
-  atalk_libname="lib"
-  AC_MSG_RESULT([no])
-  ;;
+    AC_MSG_RESULT([no])
+    atalk_libname="lib"
+    ;;
 esac
 
 dnl --------------------------------------------------------------------------
