@@ -241,7 +241,7 @@ exit:
     if (cacl) free(cacl);
 
     LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %u",
-        ret, getcwdpath(), name, mode);
+        getcwdpath(), name, mode, ret);
 
     return ret;
 }

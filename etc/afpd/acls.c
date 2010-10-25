@@ -64,31 +64,36 @@
  * Basic and helper funcs
  ********************************************************/
 
-/*
-  Takes a users name, uid and primary gid and checks if user is member of any group
-  Returns -1 if no or error, 0 if yes
+/*!
+ * Takes a user by pointer to his/her struct passwd entry and checks if user
+ * is member of group "gid".
+ * 
+ * @param   pwd   (r) pointer to struct passwd of user
+ * @returns           1 if user is member, 0 if not, -1 on error
 */
-static int check_group(char *name, uid_t uid _U_, gid_t pgid, gid_t path_gid)
+static int check_group(const struct passwd *pwd, gid_t gid)
 {
     EC_INIT;
     int i;
     struct group *grp;
 
-    if (pgid == path_gid)
-        return 0;
+    if (pwd->pw_gid == gid)
+        return 1;
 
-    EC_NULL(grp = getgrgid(path_gid));
+    EC_NULL(grp = getgrgid(gid));
 
     i = 0;
     while (grp->gr_mem[i] != NULL) {
-        if ( (strcmp(grp->gr_mem[i], name)) == 0 ) {
-            LOG(log_debug, logtype_afpd, "check_group: requested user:%s is member of: %s", name, grp->gr_name);
-            return 0;
+        if ((strcmp(grp->gr_mem[i], pwd->pw_name)) == 0) {
+            LOG(log_debug, logtype_afpd, "user:%s is member of: %s",
+                pwd->pw_name, grp->gr_name);
+            return 1;
         }
         i++;
     }
 
-    return -1;
+    EC_STATUS(0);
+
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -99,12 +104,116 @@ EC_CLEANUP:
 
 #ifdef HAVE_SOLARIS_ACLS
 
+/*! 
+ * Compile access rights for a user to one file-system object
+ *
+ * This combines combines all access rights for a user to one fs-object and
+ * returns the result as a Darwin allowed rights ACE.
+ * This must honor trivial ACEs which are a mode_t mapping.
+ *
+ * @param path           (r) path to filesystem object
+ * @param sb             (r) struct stat of path
+ * @param pwd            (r) struct passwd of user
+ * @param result         (w) resulting Darwin allow ACE
+ *
+ * @returns                  0 or -1 on error
+ */
+static int solaris_acl_rights(const char *path,
+                              const struct stat *sb,
+                              const struct passwd *pwd,
+                              uint32_t *result)
+{
+    EC_INIT;
+    int      i, ace_count, checkgroup;
+    ace_t    *aces = NULL;
+    uid_t    who;
+    uint16_t flags, type;
+    uint32_t rights, allowed_rights = 0, denied_rights = 0, darwin_rights;
+
+    /* Get ACL from file/dir */
+    EC_NEG1_LOG(ace_count = get_nfsv4_acl(path, &aces));
+
+    if (ace_count == 0) {
+        LOG(log_warning, logtype_afpd, "Zero ACEs from get_nfsv4_acl");
+        EC_FAIL;
+    }
+
+    /* Now check requested rights */
+    i = 0;
+    do { /* Loop through ACEs */
+        who = aces[i].a_who;
+        flags = aces[i].a_flags;
+        type = aces[i].a_type;
+        rights = aces[i].a_access_mask;
+
+        if (flags & ACE_INHERIT_ONLY_ACE)
+            continue;
+
+        /* Now the tricky part: decide if ACE effects our user. I'll explain:
+           if its a dedicated (non trivial) ACE for the user
+           OR
+           if its a ACE for a group we're member of
+           OR
+           if its a trivial ACE_OWNER ACE and requested UUID is the owner
+           OR
+           if its a trivial ACE_GROUP ACE and requested UUID is group
+           OR
+           if its a trivial ACE_EVERYONE ACE
+           THEN
+           process ACE */
+        if (((who == pwd->pw_uid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)))
+            ||
+            ((flags & ACE_IDENTIFIER_GROUP)
+             && !(flags & ACE_GROUP)
+             && (check_group(pwd, who) == 1))
+            ||
+            ((flags & ACE_OWNER) && (pwd->pw_uid == sb->st_uid))
+            ||
+            ((flags & ACE_GROUP) && (check_group(pwd, sb->st_gid) == 1))
+            ||
+            (flags & ACE_EVERYONE)
+            ) {
+            /* Found an applicable ACE */
+            if (type == ACE_ACCESS_ALLOWED_ACE_TYPE)
+                allowed_rights |= rights;
+            else if (type == ACE_ACCESS_DENIED_ACE_TYPE)
+                /* Only or to denied rights if not previously allowed !! */
+                denied_rights |= ((!allowed_rights) & rights);
+        }
+    } while (++i < ace_count);
+
+
+    /* Darwin likes to ask for "delete_child" on dir,
+       "write_data" is actually the same, so we add that for dirs */
+    if (S_ISDIR(sb->st_mode) && (allowed_rights & ACE_WRITE_DATA))
+        allowed_rights |= ACE_DELETE_CHILD;
+
+    /* Remove denied from allowed rights */
+    allowed_rights &= ~denied_rights;
+
+    /* map rights */
+    darwin_rights = 0;
+    for (i=0; nfsv4_to_darwin_rights[i].from != 0; i++) {
+        if (allowed_rights & nfsv4_to_darwin_rights[i].from)
+            darwin_rights |= nfsv4_to_darwin_rights[i].to;
+    }
+
+    *result = darwin_rights;
+
+EC_CLEANUP:
+    if (aces) free(aces);
+
+    EC_EXIT;
+}
+
 /*
   Maps ACE array from Solaris to Darwin. Darwin ACEs are stored in network byte order.
   Return numer of mapped ACEs or -1 on error.
   All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
 */
-static int map_aces_solaris_to_darwin(ace_t *aces, darwin_ace_t *darwin_aces, int ace_count)
+static int map_aces_solaris_to_darwin(const ace_t *aces,
+                                      darwin_ace_t *darwin_aces,
+                                      int ace_count)
 {
     EC_INIT;
     int i, count = 0;
@@ -113,32 +222,31 @@ static int map_aces_solaris_to_darwin(ace_t *aces, darwin_ace_t *darwin_aces, in
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
 
-    LOG(log_debug7, logtype_afpd, "map_aces_solaris_to_darwin: parsing %d ACES", ace_count);
+    LOG(log_maxdebug, logtype_afpd, "map_aces_solaris_to_darwin: parsing %d ACES", ace_count);
 
     while(ace_count--) {
-        LOG(log_debug7, logtype_afpd, "map_aces_solaris_to_darwin: parsing ACE No. %d", ace_count + 1);
+        LOG(log_maxdebug, logtype_afpd, "ACE No. %d", ace_count + 1);
         /* if its a ACE resulting from nfsv4 mode mapping, discard it */
         if (aces->a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)) {
-            LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: trivial ACE");
+            LOG(log_debug, logtype_afpd, "trivial ACE");
             aces++;
             continue;
         }
 
-        if ( ! (aces->a_flags & ACE_IDENTIFIER_GROUP) ) {
-            /* its a user ace */
-            LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: found user ACE with uid: %d", aces->a_who);
-
+        if ( ! (aces->a_flags & ACE_IDENTIFIER_GROUP) ) { /* user ace */
+            LOG(log_debug, logtype_afpd, "uid: %d", aces->a_who);
             EC_NULL_LOG(pwd = getpwuid(aces->a_who));
-            LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: uid: %d -> name: %s", aces->a_who, pwd->pw_name);
-
-            EC_ZERO_LOG(getuuidfromname(pwd->pw_name, UUID_USER, darwin_aces->darwin_ace_uuid));
-        } else {
-            /* its a group ace */
-            LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: found group ACE with gid: %d", aces->a_who);
-
+            LOG(log_debug, logtype_afpd, "uid: %d -> name: %s", aces->a_who, pwd->pw_name);
+            EC_ZERO_LOG(getuuidfromname(pwd->pw_name,
+                                        UUID_USER,
+                                        darwin_aces->darwin_ace_uuid));
+        } else { /* group ace */
+            LOG(log_debug, logtype_afpd, "gid: %d", aces->a_who);
             EC_NULL_LOG(grp = getgrgid(aces->a_who));
-            LOG(log_debug, logtype_afpd, "map_aces_solaris_to_darwin: gid: %d -> name: %s", aces->a_who, grp->gr_name);
-            EC_ZERO_LOG(getuuidfromname(grp->gr_name, UUID_GROUP, darwin_aces->darwin_ace_uuid));
+            LOG(log_debug, logtype_afpd, "gid: %d -> name: %s", aces->a_who, grp->gr_name);
+            EC_ZERO_LOG(getuuidfromname(grp->gr_name,
+                                        UUID_GROUP,
+                                        darwin_aces->darwin_ace_uuid));
         }
 
         /* map flags */
@@ -179,7 +287,9 @@ EC_CLEANUP:
   Return numer of mapped ACEs or -1 on error.
   All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
 */
-int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int ace_count)
+static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
+                                      ace_t *nfsv4_aces,
+                                      int ace_count)
 {
     EC_INIT;
     int i, mapped_aces = 0;
@@ -914,190 +1024,74 @@ EC_CLEANUP:
 }
 #endif /* HAVE_POSIX_ACLS */
 
-/*
-  Checks if a given UUID has requested_rights(type darwin_ace_rights) for path.
-  Note: this gets called frequently and is a good place for optimizations !
+/*!
+ * Checks if a given UUID has requested_rights(type darwin_ace_rights) for path.
+ *
+ * Note: this gets called frequently and is a good place for optimizations !
+ *
+ * @param path             (r) path to filesystem object
+ * @param uuid             (r) UUID of user
+ * @param requested_rights (r) requested Darwin ACE
+ *
+ * @returns                    AFP result code
 */
 #ifdef HAVE_SOLARIS_ACLS
-static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
+static int check_acl_access(const char *path,
+                            const uuidp_t uuid,
+                            uint32_t requested_rights)
 {
-    int                 ret, i, ace_count, dir, checkgroup;
-    char                *username = NULL; /* might be group too */
+    int                 ret;
+    uint32_t            allowed_rights;
+    char                *username = NULL;
     uuidtype_t          uuidtype;
-    uid_t               uid;
-    gid_t               pgid;
-    uint32_t            requested_rights = 0, allowed_rights = 0, denied_rights = 0;
-    ace_t               *aces;
     struct passwd       *pwd;
     struct stat         st;
-    int                 check_user_trivace = 0, check_group_trivace = 0;
-    uid_t               who;
-    uint16_t            flags;
-    uint16_t            type;
-    uint32_t            rights;
 
-#ifdef DEBUG
-    LOG(log_debug9, logtype_afpd, "check_access: BEGIN. Request: %08x", requested_darwin_rights);
-#endif
+    LOG(log_maxdebug, logtype_afpd, "check_access: Request: 0x%08x",
+        requested_rights);
+
     /* Get uid or gid from UUID */
-    if ( (getnamefromuuid(uuid, &username, &uuidtype)) != 0) {
-        LOG(log_error, logtype_afpd, "check_access: error getting name from UUID");
-        return AFPERR_PARAM;
+    EC_ZERO_LOG_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
+    EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
+
+    switch (uuidtype) {
+    case UUID_GROUP:
+        LOG(log_warning, logtype_afpd, "check_access: afp_access not supported for groups");
+        EC_STATUS(AFPERR_MISC);
+        goto EC_CLEANUP;
+
+    case UUID_LOCAL:
+        LOG(log_warning, logtype_afpd, "check_access: local UUID");
+        EC_STATUS(AFPERR_MISC);
+        goto EC_CLEANUP;
     }
 
-    /* File or dir */
-    if ((lstat(path, &st)) != 0) {
-        LOG(log_error, logtype_afpd, "check_access: stat: %s", strerror(errno));
-        ret = AFPERR_PARAM;
-        goto exit;
-    }
-    dir = S_ISDIR(st.st_mode);
+    EC_NULL_LOG_ERR(pwd = getpwnam(username), AFPERR_MISC);
 
-    if (uuidtype == UUID_USER) {
-        pwd = getpwnam(username);
-        if (!pwd) {
-            LOG(log_error, logtype_afpd, "check_access: getpwnam: %s", strerror(errno));
-            ret = AFPERR_MISC;
-            goto exit;
-        }
-        uid = pwd->pw_uid;
-        pgid = pwd->pw_gid;
-
-        /* If user is file/dir owner we must check the user trivial ACE */
-        if (uid == st.st_uid) {
-            LOG(log_debug, logtype_afpd, "check_access: user: %s is files owner. Must check trivial user ACE", username);
-            check_user_trivace = 1;
-        }
-
-        /* Now check if requested user is files owning group. If yes we must check the group trivial ACE */
-        if ( (check_group(username, uid, pgid, st.st_gid)) == 0) {
-            LOG(log_debug, logtype_afpd, "check_access: user: %s is in group: %d. Must check trivial group ACE", username, st.st_gid);
-            check_group_trivace = 1;
-        }
-    } else { /* hopefully UUID_GROUP*/
-        LOG(log_error, logtype_afpd, "check_access: afp_access for UUID of groups not supported!");
-#if 0
-        grp = getgrnam(username);
-        if (!grp) {
-            LOG(log_error, logtype_afpd, "check_access: getgrnam: %s", strerror(errno));
-            return -1;
-        }
-        if (st.st_gid == grp->gr_gid )
-            check_group_trivace = 1;
+#ifdef HAVE_SOLARIS_ACLS
+    EC_ZERO_LOG(solaris_acl_rights(path, &st, pwd, &allowed_rights));
 #endif
-    }
+#ifdef HAVE_POSIX_ACLS
+#endif
 
-    /* Map requested rights to Solaris style. */
-    for (i=0; darwin_to_nfsv4_rights[i].from != 0; i++) {
-        if (requested_darwin_rights & darwin_to_nfsv4_rights[i].from)
-            requested_rights |= darwin_to_nfsv4_rights[i].to;
-    }
+    LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
 
-    /* Get ACL from file/dir */
-    if ( (ace_count = get_nfsv4_acl(path, &aces)) == -1) {
-        LOG(log_error, logtype_afpd, "check_access: error getting ACEs");
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-    if (ace_count == 0) {
-        LOG(log_debug, logtype_afpd, "check_access: 0 ACEs from get_nfsv4_acl");
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-
-    /* Now check requested rights */
-    ret = AFPERR_ACCESS;
-    i = 0;
-    do { /* Loop through ACEs */
-        who = aces[i].a_who;
-        flags = aces[i].a_flags;
-        type = aces[i].a_type;
-        rights = aces[i].a_access_mask;
-
-        if (flags & ACE_INHERIT_ONLY_ACE)
-            continue;
-
-        /* Check if its a group ACE and set checkgroup to 1 if yes */
-        checkgroup = 0;
-        if ( (flags & ACE_IDENTIFIER_GROUP) && !(flags & ACE_GROUP) ) {
-            if ( (check_group(username, uid, pgid, who)) == 0)
-                checkgroup = 1;
-            else
-                continue;
-        }
-
-        /* Now the tricky part: decide if ACE effects our user. I'll explain:
-           if its a dedicated (non trivial) ACE for the user
-           OR
-           if its a ACE for a group we're member of
-           OR
-           if its a trivial ACE_OWNER ACE and requested UUID is the owner
-           OR
-           if its a trivial ACE_GROUP ACE and requested UUID is group
-           OR
-           if its a trivial ACE_EVERYONE ACE
-           THEN
-           process ACE */
-        if (
-            ( (who == uid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)) ) ||
-            (checkgroup) ||
-            ( (flags & ACE_OWNER) && check_user_trivace ) ||
-            ( (flags & ACE_GROUP) && check_group_trivace ) ||
-            ( flags & ACE_EVERYONE )
-            ) {
-            /* Found an applicable ACE */
-            if (type == ACE_ACCESS_ALLOWED_ACE_TYPE)
-                allowed_rights |= rights;
-            else if (type == ACE_ACCESS_DENIED_ACE_TYPE)
-                /* Only or to denied rights if not previously allowed !! */
-                denied_rights |= ((!allowed_rights) & rights);
-        }
-    } while (++i < ace_count);
-
-
-    /* Darwin likes to ask for "delete_child" on dir,
-       "write_data" is actually the same, so we add that for dirs */
-    if (dir && (allowed_rights & ACE_WRITE_DATA))
-        allowed_rights |= ACE_DELETE_CHILD;
-
-    if (requested_rights & denied_rights) {
-        LOG(log_debug, logtype_afpd, "check_access: some requested right was denied:");
-        ret = AFPERR_ACCESS;
-    } else if ((requested_rights & allowed_rights) != requested_rights) {
-        LOG(log_debug, logtype_afpd, "check_access: some requested right wasn't allowed:");
-        ret = AFPERR_ACCESS;
+    if ((requested_rights & allowed_rights) != requested_rights) {
+        LOG(log_debug, logtype_afpd, "some requested right wasn't allowed: 0x%08x / 0x%08x",
+            requested_rights, allowed_rights);
+        EC_STATUS(AFPERR_ACCESS);
     } else {
-        LOG(log_debug, logtype_afpd, "check_access: all requested rights are allowed:");
-        ret = AFP_OK;
+        LOG(log_debug, logtype_afpd, "all requested rights are allowed: 0x%08x",
+            requested_rights);
+        EC_STATUS(AFP_OK);
     }
 
-    LOG(log_debug, logtype_afpd, "check_access: Requested rights: %08x, allowed_rights: %08x, denied_rights: %08x, Result: %d",
-        requested_rights, allowed_rights, denied_rights, ret);
+EC_CLEANUP:
+    if (username) free(username);
 
-exit:
-    free(aces);
-    free(username);
-#ifdef DEBUG
-    LOG(log_debug9, logtype_afpd, "check_access: END");
-#endif
-    return ret;
+    EC_EXIT;
 }
 #endif /* HAVE_SOLARIS_ACLS */
-
-#ifdef HAVE_POSIX_ACLS
-static int check_acl_access(const char *path, const uuidp_t uuid, uint32_t requested_darwin_rights)
-{
-    /*
-     * FIXME: for OS X >= 10.6 it seems fp_access isn't called anymore, instead
-     * the client just tries to perform any action, relying on the server
-     * to enforce permission (which the OS does for us), returning appropiate
-     * error codes in case the action failed.
-     * So to summarize: I think it's safe to not implement this function and
-     * just always return AFP_OK.
-     */
-    return AFP_OK;
-}
-#endif /* HAVE_POSIX_ACLS */
 
 /********************************************************
  * Interface
