@@ -40,6 +40,8 @@
 #include <atalk/logger.h>
 #include <atalk/uuid.h>
 #include <atalk/acl.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include "directory.h"
 #include "desktop.h"
@@ -198,7 +200,7 @@ static int solaris_acl_rights(const char *path,
             darwin_rights |= nfsv4_to_darwin_rights[i].to;
     }
 
-    *result = darwin_rights;
+    *result |= darwin_rights;
 
 EC_CLEANUP:
     if (aces) free(aces);
@@ -1029,26 +1031,29 @@ EC_CLEANUP:
  *
  * Note: this gets called frequently and is a good place for optimizations !
  *
+ * @param vol              (r) volume
+ * @param dir              (r) directory
  * @param path             (r) path to filesystem object
  * @param uuid             (r) UUID of user
  * @param requested_rights (r) requested Darwin ACE
  *
  * @returns                    AFP result code
 */
-#ifdef HAVE_SOLARIS_ACLS
-static int check_acl_access(const char *path,
+static int check_acl_access(const struct vol *vol,
+                            const struct dir *dir,
+                            const char *path,
                             const uuidp_t uuid,
                             uint32_t requested_rights)
 {
-    int                 ret;
-    uint32_t            allowed_rights;
-    char                *username = NULL;
-    uuidtype_t          uuidtype;
-    struct passwd       *pwd;
-    struct stat         st;
+    int            ret;
+    uint32_t       allowed_rights = 0;
+    char           *username = NULL;
+    uuidtype_t     uuidtype;
+    struct passwd  *pwd;
+    struct stat    st;
+    bstring        parent = NULL;
 
-    LOG(log_maxdebug, logtype_afpd, "check_access: Request: 0x%08x",
-        requested_rights);
+    LOG(log_maxdebug, logtype_afpd, "check_access: Request: 0x%08x", requested_rights);
 
     /* Get uid or gid from UUID */
     EC_ZERO_LOG_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
@@ -1076,6 +1081,42 @@ static int check_acl_access(const char *path,
 
     LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
 
+    /*
+     * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
+     * directory. As it seems the 10.6 AFP client is puzzled when this right is not
+     * allowed where a delete would succeed because the parent dir gives write perms.
+     * So we check the parent dir for write access and set the right accordingly.
+     * Currentyl acl2ownermode calls us with dir = NULL, because it doesn't make sense
+     * there to do this extra check -- afaict.
+     */
+    if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
+        int i;
+        uint32_t parent_rights = 0;
+
+        if (dir->d_did == DIRDID_ROOT_PARENT) {
+            /* use volume path */
+            EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
+        } else {
+            /* build path for parent */
+            EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
+            EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
+            EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
+            EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
+            EC_ZERO_LOG_ERR(binsertch(parent, i, 1, 0), AFPERR_MISC);
+        }
+
+        LOG(log_debug, logtype_afpd,"parent: %s", cfrombstr(parent));
+        EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
+
+#ifdef HAVE_SOLARIS_ACLS
+        EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, pwd, &parent_rights));
+#endif
+#ifdef HAVE_POSIX_ACLS
+#endif
+        if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
+            allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
+    }
+
     if ((requested_rights & allowed_rights) != requested_rights) {
         LOG(log_debug, logtype_afpd, "some requested right wasn't allowed: 0x%08x / 0x%08x",
             requested_rights, allowed_rights);
@@ -1088,10 +1129,10 @@ static int check_acl_access(const char *path,
 
 EC_CLEANUP:
     if (username) free(username);
+    if (parent) bdestroy(parent);
 
     EC_EXIT;
 }
-#endif /* HAVE_SOLARIS_ACLS */
 
 /********************************************************
  * Interface
@@ -1106,8 +1147,6 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     uint16_t        vid;
     struct path         *s_path;
     uuidp_t             uuid;
-
-    LOG(log_debug9, logtype_afpd, "afp_access: BEGIN");
 
     *rbuflen = 0;
     ibuf += 2;
@@ -1150,9 +1189,8 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         return AFPERR_NOOBJ;
     }
 
-    ret = check_acl_access(s_path->u_name, uuid, darwin_ace_rights);
+    ret = check_acl_access(vol, dir, s_path->u_name, uuid, darwin_ace_rights);
 
-    LOG(log_debug9, logtype_afpd, "afp_access: END");
     return ret;
 }
 
@@ -1348,7 +1386,9 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     atalk_uuid_t uuid;
     int r_ok, w_ok, x_ok;
 
-    if ( ! (AFPobj->options.flags & OPTION_UUID) || ! (AFPobj->options.flags & OPTION_ACL2UARIGHTS))
+    if ( ! (AFPobj->options.flags & OPTION_UUID)
+         ||
+         ! (AFPobj->options.flags & OPTION_ACL2UARIGHTS))
         return;
 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode('%s')", path);
@@ -1363,9 +1403,9 @@ void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
         return;
 
     /* These work for files and dirs */
-    r_ok = check_acl_access(path, uuid, DARWIN_ACE_READ_DATA);
-    w_ok = check_acl_access(path, uuid, (DARWIN_ACE_WRITE_DATA|DARWIN_ACE_APPEND_DATA));
-    x_ok = check_acl_access(path, uuid, DARWIN_ACE_EXECUTE);
+    r_ok = check_acl_access(NULL, NULL, path, uuid, DARWIN_ACE_READ_DATA);
+    w_ok = check_acl_access(NULL, NULL, path, uuid, (DARWIN_ACE_WRITE_DATA|DARWIN_ACE_APPEND_DATA));
+    x_ok = check_acl_access(NULL, NULL, path, uuid, DARWIN_ACE_EXECUTE);
 
     LOG(log_debug7, logtype_afpd, "acltoownermode: ma_user before: %04o",ma->ma_user);
     if (r_ok == 0)
