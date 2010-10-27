@@ -395,7 +395,7 @@ static int posix_acl_rights(const char *path,
 
     EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
 
-    /* itereate through all ACEs, get the mask */
+    /* itereate through all ACEs to get the mask */
     while (acl_get_entry(acl, entry_id, &e) == 1) {
         entry_id = ACL_NEXT_ENTRY;
         switch (tag) {
@@ -417,7 +417,7 @@ static int posix_acl_rights(const char *path,
         case ACL_USER_OBJ:
             EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
             if (*uid == pwd->pw_uid)
-                rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
+                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             acl_free(uid);
             uid = NULL;
             break;
@@ -425,7 +425,7 @@ static int posix_acl_rights(const char *path,
         case ACL_GROUP:
         case ACL_GROUP_OBJ:
             EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
-            if (*gid == pwd->pw_gid || gmem(*gid))
+            if (gmem(*gid))
                 rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
             acl_free(gid);
             gid = NULL;
@@ -439,6 +439,8 @@ static int posix_acl_rights(const char *path,
             continue;
         }
     } /* while */
+
+    *result |= rights;
 
 EC_CLEANUP:
     if (acl) acl_free(acl);
