@@ -209,7 +209,7 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
 
     EC_NEG1_LOG(cwd = open(".", O_RDONLY));
 
-    EC_ZERO_LOGSTR(stat(path, &st), "stat(%s): %s", path, strerror(errno));
+    EC_ZERO_LOGSTR(lstat(path, &st), "lstat(%s): %s", path, strerror(errno));
     switch (S_IFMT & st.st_mode) {
 
     case S_IFREG:
@@ -348,8 +348,8 @@ cnid_t cnid_for_path(const afpvol_t *vol,
     for (int i = 0; i < l->qty ; i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
-        EC_ZERO_LOGSTR(stat(cfrombstr(statpath), &st),
-                       "stat(rpath: %s, elem: %s): %s: %s",
+        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
+                       "lstat(rpath: %s, elem: %s): %s: %s",
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
                        cfrombstr(statpath), strerror(errno));
 
@@ -417,8 +417,8 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
     for (int i = 0; i < (l->qty - 1); i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
-        EC_ZERO_LOGSTR(stat(cfrombstr(statpath), &st),
-                       "stat(rpath: %s, elem: %s): %s: %s",
+        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
+                       "lstat(rpath: %s, elem: %s): %s: %s",
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
                        cfrombstr(statpath), strerror(errno));
 

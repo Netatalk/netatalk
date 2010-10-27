@@ -535,7 +535,7 @@ static int copy(const char *path,
 
             struct adouble ad;
             struct stat st;
-            if (stat(to.p_path, &st) != 0) {
+            if (lstat(to.p_path, &st) != 0) {
                 badcp = rval = 1;
                 break;
             }
@@ -602,7 +602,7 @@ static int copy(const char *path,
 
             struct adouble ad;
             struct stat st;
-            if (stat(to.p_path, &st) != 0) {
+            if (lstat(to.p_path, &st) != 0) {
                 badcp = rval = 1;
                 break;
             }
