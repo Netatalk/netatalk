@@ -414,23 +414,26 @@ static int posix_acl_rights(const char *path,
         EC_ZERO_LOG(acl_get_tag_type(e, &tag));
         switch (tag) {
         case ACL_USER:
-        case ACL_USER_OBJ:
             EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
             if (*uid == pwd->pw_uid)
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             acl_free(uid);
             uid = NULL;
             break;
-
+        case ACL_USER_OBJ:
+            if (sb->st_uid == pwd->pw_uid)
+                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+            break;
         case ACL_GROUP:
-        case ACL_GROUP_OBJ:
             EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
             if (gmem(*gid))
                 rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
             acl_free(gid);
             gid = NULL;
             break;
-
+        case ACL_GROUP_OBJ:
+            if (gmem(sb->st_gid))
+                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));            
         case ACL_OTHER:
             rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             break;
@@ -1308,7 +1311,11 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     /* Shall we return ACL ? */
     if (bitmap & kFileSec_ACL) {
         LOG(log_debug, logtype_afpd, "afp_getacl: client requested files ACL");
-        get_and_map_acl(s_path->u_name, rbuf, rbuflen);
+        if (get_and_map_acl(s_path->u_name, rbuf, rbuflen) != 0) {
+            LOG(log_error, logtype_afpd, "afp_getacl(\"%s/%s\"): mapping error",
+                getcwdpath(), s_path->u_name);
+            return AFPERR_MISC;
+        }
     }
 
     LOG(log_debug9, logtype_afpd, "afp_getacl: END");
