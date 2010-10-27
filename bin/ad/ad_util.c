@@ -246,8 +246,10 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
 
 EC_CLEANUP:
     if (dname) free(dname);
-    if (cwd != -1)
+    if (cwd != -1) {
         fchdir(cwd);
+        close(cwd);
+    }
     if (ret != 0)
         return NULL;
     return fpath;
