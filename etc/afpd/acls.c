@@ -356,12 +356,13 @@ static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
             | DARWIN_ACE_WRITE_EXTATTRIBUTES
             | DARWIN_ACE_WRITE_ATTRIBUTES;
         if (is_dir)
-            rights |= DARWIN_ACE_DELETE;
+            rights |= DARWIN_ACE_DELETE_CHILD;
     }
     if (acl_get_perm(permset, ACL_EXECUTE))
         rights |= DARWIN_ACE_EXECUTE;
 
 EC_CLEANUP:
+    LOG(log_maxdebug, logtype_afpd, "mapped rights: 0x%08x", rights);
     return rights;
 }
 
