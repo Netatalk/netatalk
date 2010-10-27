@@ -200,6 +200,7 @@ void afp_options_init(struct afp_options *options)
 #endif
     options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
     options->flags |= OPTION_ACL2MACCESS;
+    options->flags |= OPTION_UUID; /* gets disabled if LDAP isn't configured */
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -247,6 +248,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->flags |= OPTION_ANNOUNCESSH;
     if (strstr(buf, " -noacl2maccess"))
         options->flags &= ~OPTION_ACL2MACCESS;
+    if (strstr(buf, " -nouuid"))
+        options->flags &= ~OPTION_UUID
 
     /* passwd bits */
     if (strstr(buf, " -nosavepassword"))

@@ -41,10 +41,6 @@
 #include "mangle.h"
 #include "hash.h"
 
-#ifdef HAVE_ACLS
-extern void addir_inherit_acl(const struct vol *vol);
-#endif
-
 /*
  * FIXMEs, loose ends after the dircache rewrite:
  * o merge dircache_search_by_name and dir_add ??
@@ -2144,7 +2140,10 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
 createdir_done:
 #ifdef HAVE_ACLS
     /* FIXME: are we really inside the created dir? */
-    addir_inherit_acl(vol);
+    if (createdir_inherit_acl(vol) != 0) {
+        LOG(log_error, logtype_afpd, "Error inhereting ACL to .AppleDouble directory");
+        return AFPERR_MISC;
+    }
 #endif /* HAVE_ACLS */
 
     memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));

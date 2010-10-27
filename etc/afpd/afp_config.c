@@ -587,9 +587,9 @@ AFPConfig *configinit(struct afp_options *cmdline)
 
 #ifdef HAVE_ACLS
 	/* Enable UUID support if LDAP config is complete */
-        if (ldap_config_valid) {
-            LOG(log_info, logtype_afpd, "Enabling UUID support");
-            options.flags |= OPTION_UUID;
+        if (!ldap_config_valid) {
+            LOG(log_info, logtype_afpd, "Disabling UUID support");
+            options.flags &= ~OPTION_UUID;
         }
 #endif /* HAVE_ACLS */
 

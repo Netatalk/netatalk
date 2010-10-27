@@ -948,7 +948,7 @@ static int set_acl(const struct vol *vol,
     LOG(log_maxdebug, logtype_afpd, "set_acl: BEGIN");
 
     struct stat st;
-    EC_ZERO_LOG_ERR(stat(name, &st), AFPERR_NOOBJ);
+    EC_ZERO_LOG_ERR(lstat(name, &st), AFPERR_NOOBJ);
 
     /* seed default ACL with access ACL */
     if (S_ISDIR(st.st_mode))
@@ -1382,78 +1382,61 @@ EC_CLEANUP:
   We then inherit any explicit ACE from "." to ".AppleDouble" and ".AppleDouble/.Parent".
   FIXME: add to VFS layer ?
 */
-#ifdef HAVE_SOLARIS_ACLS
-void addir_inherit_acl(const struct vol *vol)
+int createdir_inherit_acl(const struct vol *vol)
 {
+    EC_INIT;
+#ifdef HAVE_SOLARIS_ACLS
     ace_t *diraces = NULL, *adaces = NULL, *combinedaces = NULL;
     int diracecount, adacecount;
-
+#endif
+#ifdef HAVE_POSIX_ACLS
+    acl_t def_acl = NULL;
+    acl_t acc_acl = NULL;
+#endif
     LOG(log_debug9, logtype_afpd, "addir_inherit_acl: BEGIN");
 
     /* Check if ACLs are enabled for the volume */
     if (vol->v_flags & AFPVOL_ACLS) {
+#ifdef HAVE_SOLARIS_ACLS
+        /* Get directory ACL */
+        EC_NEG1_LOG(diracecount = get_nfsv4_acl(".", &diraces));
+        EC_NEG1_LOG(diracecount = strip_trivial_aces(&diraces, diracecount));
 
-        if ((diracecount = get_nfsv4_acl(".", &diraces)) <= 0)
-            goto cleanup;
-        /* Remove any trivial ACE from "." */
-        if ((diracecount = strip_trivial_aces(&diraces, diracecount)) <= 0)
-            goto cleanup;
-
-        /*
-          Inherit to ".AppleDouble"
-        */
-
-        if ((adacecount = get_nfsv4_acl(".AppleDouble", &adaces)) <= 0)
-            goto cleanup;
-        /* Remove any non-trivial ACE from ".AppleDouble" */
-        if ((adacecount = strip_nontrivial_aces(&adaces, adacecount)) <= 0)
-            goto cleanup;
-
-        /* Combine ACEs */
-        if ((combinedaces = concat_aces(diraces, diracecount, adaces, adacecount)) == NULL)
-            goto cleanup;
-
-        /* Now set new acl */
-        if ((acl(".AppleDouble", ACE_SETACL, diracecount + adacecount, combinedaces)) != 0)
-            LOG(log_error, logtype_afpd, "addir_inherit_acl: acl: %s", strerror(errno));
-
+        /* Inherit to .AppleDouble directory */
+        EC_NEG1_LOG(adacecount = get_nfsv4_acl(".AppleDouble", &adaces));
+        EC_NEG1_LOG(adacecount = strip_nontrivial_aces(&adaces, adacecount));
+        EC_NULL_LOG(combinedaces = concat_aces(diraces, diracecount, adaces, adacecount));
+        EC_ZERO_LOG(acl(".AppleDouble", ACE_SETACL, diracecount + adacecount, combinedaces));
         free(adaces);
         adaces = NULL;
         free(combinedaces);
         combinedaces = NULL;
 
-        /*
-          Inherit to ".AppleDouble/.Parent"
-        */
-
-        if ((adacecount = get_nfsv4_acl(".AppleDouble/.Parent", &adaces)) <= 0)
-            goto cleanup;
-        if ((adacecount = strip_nontrivial_aces(&adaces, adacecount)) <= 0)
-            goto cleanup;
-
-        /* Combine ACEs */
-        if ((combinedaces = concat_aces(diraces, diracecount, adaces, adacecount)) == NULL)
-            goto cleanup;
-
-        /* Now set new acl */
-        if ((acl(".AppleDouble/.Parent", ACE_SETACL, diracecount + adacecount, combinedaces)) != 0)
-            LOG(log_error, logtype_afpd, "addir_inherit_acl: acl: %s", strerror(errno));
-
-
+        /* Inherit to ".AppleDouble/.Parent" */
+        EC_NEG1_LOG(adacecount = get_nfsv4_acl(".AppleDouble/.Parent", &adaces));
+        EC_NEG1_LOG(adacecount = strip_nontrivial_aces(&adaces, adacecount));
+        EC_NULL_LOG(combinedaces = concat_aces(diraces, diracecount, adaces, adacecount));
+        EC_ZERO_LOG(acl(".AppleDouble/.Parent",
+                        ACE_SETACL,
+                        diracecount + adacecount,
+                        combinedaces));
+#endif
+#ifdef HAVE_POSIX_ACLS
+#endif
     }
 
-cleanup:
     LOG(log_debug9, logtype_afpd, "addir_inherit_acl: END");
 
-    free(diraces);
-    free(adaces);
-    free(combinedaces);
-}
-#endif /* HAVE_SOLARIS_ACLS */
-
+EC_CLEANUP:
+#ifdef HAVE_SOLARIS_ACLS
+    if (diraces) free(diraces);
+    if (adaces) free(adaces);
+    if (combinedaces) free(combinedaces);
+#endif
 #ifdef HAVE_POSIX_ACLS
-void addir_inherit_acl(const struct vol *vol)
-{
-    return;
+    acl_free(acc_acl);
+    acl_free(def_acl);
+#endif
+    EC_EXIT;
 }
-#endif /* HAVE_POSIX_ACLS */
+
