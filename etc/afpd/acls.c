@@ -47,7 +47,7 @@
 #include "desktop.h"
 #include "volume.h"
 #include "fork.h"
-
+#include "unix.h"
 #include "acls.h"
 #include "acl_mappings.h"
 
@@ -61,44 +61,6 @@
 
 #define MAP_MASK               31
 #define IS_DIR                 32
-
-/********************************************************
- * Basic and helper funcs
- ********************************************************/
-
-/*!
- * Takes a user by pointer to his/her struct passwd entry and checks if user
- * is member of group "gid".
- * 
- * @param   pwd   (r) pointer to struct passwd of user
- * @returns           1 if user is member, 0 if not, -1 on error
-*/
-static int check_group(const struct passwd *pwd, gid_t gid)
-{
-    EC_INIT;
-    int i;
-    struct group *grp;
-
-    if (pwd->pw_gid == gid)
-        return 1;
-
-    EC_NULL(grp = getgrgid(gid));
-
-    i = 0;
-    while (grp->gr_mem[i] != NULL) {
-        if ((strcmp(grp->gr_mem[i], pwd->pw_name)) == 0) {
-            LOG(log_debug, logtype_afpd, "user:%s is member of: %s",
-                pwd->pw_name, grp->gr_name);
-            return 1;
-        }
-        i++;
-    }
-
-    EC_STATUS(0);
-
-EC_CLEANUP:
-    EC_EXIT;
-}
 
 /********************************************************
  * Solaris funcs
@@ -165,13 +127,11 @@ static int solaris_acl_rights(const char *path,
            process ACE */
         if (((who == pwd->pw_uid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)))
             ||
-            ((flags & ACE_IDENTIFIER_GROUP)
-             && !(flags & ACE_GROUP)
-             && (check_group(pwd, who) == 1))
+            ((flags & ACE_IDENTIFIER_GROUP) && !(flags & ACE_GROUP) && gmem(who))
             ||
             ((flags & ACE_OWNER) && (pwd->pw_uid == sb->st_uid))
             ||
-            ((flags & ACE_GROUP) && (check_group(pwd, sb->st_gid) == 1))
+            ((flags & ACE_GROUP) && gmem(sb->st_gid))
             ||
             (flags & ACE_EVERYONE)
             ) {
@@ -1380,43 +1340,40 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 /*
   unix.c/accessmode calls this: map ACL to OS 9 mode
 */
-void acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
+int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
 {
+    EC_INIT;
     struct passwd *pw;
-    atalk_uuid_t uuid;
-    int r_ok, w_ok, x_ok;
+    uint32_t rights = 0;
 
     if ( ! (AFPobj->options.flags & OPTION_UUID)
          ||
-         ! (AFPobj->options.flags & OPTION_ACL2UARIGHTS))
-        return;
+         ! (AFPobj->options.flags & OPTION_ACL2MACCESS))
+        return 0;
 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode('%s')", path);
 
-    if ((pw = getpwuid(uid)) == NULL) {
-        LOG(log_error, logtype_afpd, "acltoownermode: %s", strerror(errno));
-        return;
-    }
+    EC_NULL_LOG(pw = getpwuid(uid));
 
-    /* We need the UUID for check_acl_access */
-    if ((getuuidfromname(pw->pw_name, UUID_USER, uuid)) != 0)
-        return;
+#ifdef HAVE_SOLARIS_ACLS
+    EC_ZERO_LOG(solaris_acl_rights(path, st, pw, &rights));
+#endif
+#ifdef HAVE_POSIX_ACLS
+#endif
 
-    /* These work for files and dirs */
-    r_ok = check_acl_access(NULL, NULL, path, uuid, DARWIN_ACE_READ_DATA);
-    w_ok = check_acl_access(NULL, NULL, path, uuid, (DARWIN_ACE_WRITE_DATA|DARWIN_ACE_APPEND_DATA));
-    x_ok = check_acl_access(NULL, NULL, path, uuid, DARWIN_ACE_EXECUTE);
+    LOG(log_debug, logtype_afpd, "rights: 0x%08x", rights);
 
-    LOG(log_debug7, logtype_afpd, "acltoownermode: ma_user before: %04o",ma->ma_user);
-    if (r_ok == 0)
+    LOG(log_maxdebug, logtype_afpd, "acltoownermode: ma_user before: %04o",ma->ma_user);
+    if (rights & DARWIN_ACE_READ_DATA)
         ma->ma_user |= AR_UREAD;
-    if (w_ok == 0)
+    if (rights & DARWIN_ACE_WRITE_DATA)
         ma->ma_user |= AR_UWRITE;
-    if (x_ok == 0)
+    if (rights & (DARWIN_ACE_EXECUTE | DARWIN_ACE_SEARCH))
         ma->ma_user |= AR_USEARCH;
-    LOG(log_debug7, logtype_afpd, "acltoownermode: ma_user after: %04o", ma->ma_user);
+    LOG(log_maxdebug, logtype_afpd, "acltoownermode: ma_user after: %04o", ma->ma_user);
 
-    return;
+EC_CLEANUP:
+    EC_EXIT;
 }
 
 /*

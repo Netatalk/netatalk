@@ -199,6 +199,7 @@ void afp_options_init(struct afp_options *options)
     options->flags |= OPTION_NOSLP;
 #endif
     options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
+    options->flags |= OPTION_ACL2MACCESS;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -244,8 +245,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->flags |= OPTION_CUSTOMICON;
     if (strstr(buf, " -advertise_ssh"))
         options->flags |= OPTION_ANNOUNCESSH;
-    if (strstr(buf, " -acl2uarights"))
-        options->flags |= OPTION_ACL2UARIGHTS;
+    if (strstr(buf, " -noacl2maccess"))
+        options->flags &= ~OPTION_ACL2MACCESS;
 
     /* passwd bits */
     if (strstr(buf, " -nosavepassword"))

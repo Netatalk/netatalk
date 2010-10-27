@@ -35,7 +35,7 @@
 #define OPTION_NOSLP         (1 << 5)
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
-#define OPTION_ACL2UARIGHTS  (1 << 8)
+#define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
 
 #ifdef FORCE_UIDGID
