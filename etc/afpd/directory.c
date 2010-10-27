@@ -2138,14 +2138,6 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     ad_close_metadata( &ad);
 
 createdir_done:
-#if 0
-    /* FIXME: are we really inside the created dir? */
-    if (createdir_inherit_acl(vol) != 0) {
-        LOG(log_error, logtype_afpd, "Error inhereting ACL to .AppleDouble directory");
-        return AFPERR_MISC;
-    }
-#endif
-
     memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));
     *rbuflen = sizeof( u_int32_t );
     setvoltime(obj, vol );

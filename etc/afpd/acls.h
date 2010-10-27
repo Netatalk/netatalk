@@ -114,5 +114,4 @@ extern int acl_ldap_readconfig(char *name);
 
 /* Misc funcs */
 extern int acltoownermode(char *path, struct stat *st,uid_t uid, struct maccess *ma);
-extern int createdir_inherit_acl(const struct vol *vol);
 #endif
