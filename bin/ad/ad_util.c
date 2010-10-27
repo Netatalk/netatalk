@@ -213,6 +213,7 @@ static bstring rel_path_in_vol(const char *path, const char *volpath)
     switch (S_IFMT & st.st_mode) {
 
     case S_IFREG:
+    case S_IFLNK:
         EC_NULL_LOG(dname = strdup(path));
         EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname, strerror(errno));
         free(dname);
