@@ -337,6 +337,113 @@ EC_CLEANUP:
 
 #ifdef HAVE_POSIX_ACLS
 
+static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
+{
+    EC_INIT;
+    uint32_t rights = 0;
+    acl_permset_t permset;
+
+    EC_ZERO_LOG(acl_get_permset(e, &permset));
+
+    if (acl_get_perm(permset, ACL_READ))
+        rights = DARWIN_ACE_READ_DATA
+            | DARWIN_ACE_READ_EXTATTRIBUTES
+            | DARWIN_ACE_READ_ATTRIBUTES
+            | DARWIN_ACE_READ_SECURITY;
+    if (acl_get_perm(permset, ACL_WRITE)) {
+        rights |= DARWIN_ACE_WRITE_DATA
+            | DARWIN_ACE_APPEND_DATA
+            | DARWIN_ACE_WRITE_EXTATTRIBUTES
+            | DARWIN_ACE_WRITE_ATTRIBUTES;
+        if (is_dir)
+            rights |= DARWIN_ACE_DELETE;
+    }
+    if (acl_get_perm(permset, ACL_EXECUTE))
+        rights |= DARWIN_ACE_EXECUTE;
+
+    return rights;
+}
+
+/*! 
+ * Compile access rights for a user to one file-system object
+ *
+ * This combines combines all access rights for a user to one fs-object and
+ * returns the result as a Darwin allowed rights ACE.
+ * This must honor trivial ACEs which are a mode_t mapping.
+ *
+ * @param path           (r) path to filesystem object
+ * @param sb             (r) struct stat of path
+ * @param pwd            (r) struct passwd of user
+ * @param result         (w) resulting Darwin allow ACE
+ *
+ * @returns                  0 or -1 on error
+ */
+static int posix_acl_rights(const char *path,
+                            const struct stat *sb,
+                            const struct passwd *pwd,
+                            uint32_t *result)
+{
+    EC_INIT;
+    int entry_id = ACL_FIRST_ENTRY;
+    int havemask = 0;
+    uint32_t rights = , maskrights = 0;
+    uid_t *uid = NULL;
+    gid_t *gid = NULL;
+    acl_t acl = NULL;
+    acl_entry_t e;
+    acl_tag_t tag;
+    acl_permset_t permset, mask;
+
+    EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
+
+    /* itereate through all ACEs */
+    while (acl_get_entry(acl, entry_id, &e) == 1) {
+        entry_id = ACL_NEXT_ENTRY;
+        EC_ZERO_LOG(acl_get_tag_type(e, &tag));
+        switch (tag) {
+        case ACL_USER:
+        case ACL_USER_OBJ:
+            EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
+            if (*uid == pwd->pw_uid)
+                rights |= posix_permset_to_darwin_rights(e, type & IS_DIR);
+            acl_free(uid);
+            uid = NULL;
+            break;
+
+        case ACL_GROUP:
+        case ACL_GROUP_OBJ:
+            EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
+            if (*gid == pwd->pw_gid || gmem(*gid))
+                rights |= posix_permset_to_darwin_rights(e, type & IS_DIR);
+            acl_free(gid);
+            gid = NULL;
+            break;
+
+        case ACL_OTHER:
+            rights |= posix_permset_to_darwin_rights(e, type & IS_DIR);
+            break;
+
+        case ACL_MASK:
+            maskrights = posix_permset_to_darwin_rights(e, type & IS_DIR);
+            continue;
+
+        default:
+            continue;
+    } /* while */
+
+    /* Loop through the mapped ACE buffer once again, applying the mask */
+    for (int i = mapped_aces; i > 0; i--) {
+        saved_darwin_aces->darwin_ace_rights &= htonl(maskrights);
+        saved_darwin_aces++;
+    }
+
+EC_CLEANUP:
+    if (acl) acl_free(acl);
+    if (uid) acl_free(uid);
+    if (gid) acl_free(gid);
+    EC_EXIT;
+}
+
 /*!
  * Add entries of one acl to another acl
  *
@@ -553,7 +660,6 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
 {
     EC_INIT;
     int mapped_aces = 0;
-    int havemask = 0;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t e;
     acl_tag_t tag;
@@ -563,7 +669,7 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
     struct passwd *pwd = NULL;
     struct group *grp = NULL;
     uint32_t flags;
-    uint32_t rights;
+    uint32_t rights, maskrights = 0;
     darwin_ace_t *saved_darwin_aces = darwin_aces;
 
     LOG(log_maxdebug, logtype_afpd, "map_aces_posix_to_darwin(%s)",
@@ -599,10 +705,8 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
             gid = NULL;
             break;
 
-            /* store mask so we can apply it later in a second loop */
         case ACL_MASK:
-            EC_ZERO_LOG(acl_get_permset(e, &mask));
-            havemask = 1;
+            maskrights = posix_permset_to_darwin_rights(e, type & IS_DIR);
             continue;
 
         default:
@@ -618,55 +722,19 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
         darwin_aces->darwin_ace_flags = htonl(flags);
 
         /* rights */
-        EC_ZERO_LOG(acl_get_permset(e, &permset));
-
-        rights = 0;
-        if (acl_get_perm(permset, ACL_READ))
-            rights = DARWIN_ACE_READ_DATA
-                | DARWIN_ACE_READ_EXTATTRIBUTES
-                | DARWIN_ACE_READ_ATTRIBUTES
-                | DARWIN_ACE_READ_SECURITY;
-        if (acl_get_perm(permset, ACL_WRITE)) {
-            rights |= DARWIN_ACE_WRITE_DATA
-                | DARWIN_ACE_APPEND_DATA
-                | DARWIN_ACE_WRITE_EXTATTRIBUTES
-                | DARWIN_ACE_WRITE_ATTRIBUTES;
-            if ((type & ~MAP_MASK) == IS_DIR)
-                rights |= DARWIN_ACE_DELETE;
-        }
-        if (acl_get_perm(permset, ACL_EXECUTE))
-            rights |= DARWIN_ACE_EXECUTE;
-
+        rights = posix_permset_to_darwin_rights(e, type & IS_DIR);
         darwin_aces->darwin_ace_rights = htonl(rights);
 
         darwin_aces++;
         mapped_aces++;
     } /* while */
 
-    if (havemask) {
-        /* Loop through the mapped ACE buffer once again, applying the mask */
-        /* Map the mask to Darwin ACE rights first */
-        rights = 0;
-        if (acl_get_perm(mask, ACL_READ))
-            rights = DARWIN_ACE_READ_DATA
-                | DARWIN_ACE_READ_EXTATTRIBUTES
-                | DARWIN_ACE_READ_ATTRIBUTES
-                | DARWIN_ACE_READ_SECURITY;
-        if (acl_get_perm(mask, ACL_WRITE)) {
-            rights |= DARWIN_ACE_WRITE_DATA
-                | DARWIN_ACE_APPEND_DATA
-                | DARWIN_ACE_WRITE_EXTATTRIBUTES
-                | DARWIN_ACE_WRITE_ATTRIBUTES;
-            if ((type & ~MAP_MASK) == IS_DIR)
-                rights |= DARWIN_ACE_DELETE;
-        }
-        if (acl_get_perm(mask, ACL_EXECUTE))
-            rights |= DARWIN_ACE_EXECUTE;
-        for (int i = mapped_aces; i > 0; i--) {
-            saved_darwin_aces->darwin_ace_rights &= htonl(rights);
-            saved_darwin_aces++;
-        }
+    /* Loop through the mapped ACE buffer once again, applying the mask */
+    for (int i = mapped_aces; i > 0; i--) {
+        saved_darwin_aces->darwin_ace_rights &= htonl(maskrights);
+        saved_darwin_aces++;
     }
+
     EC_STATUS(mapped_aces);
 
 EC_CLEANUP:
@@ -760,7 +828,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     acl_t defacl = NULL , accacl = NULL;
 
     /* stat to check if its a dir */
-    EC_ZERO_LOG(stat(name, &st));
+    EC_ZERO_LOG(lstat(name, &st));
 
     /* if its a dir, check for default acl too */
     dirflag = 0;
@@ -1037,6 +1105,7 @@ static int check_acl_access(const struct vol *vol,
     EC_ZERO_LOG(solaris_acl_rights(path, &st, pwd, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
+    EC_ZERO_LOG(posix_acl_rights(path, &st, pwd, &allowed_rights));
 #endif
 
     LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
@@ -1072,6 +1141,7 @@ static int check_acl_access(const struct vol *vol,
         EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, pwd, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
+    EC_ZERO_LOG(posix_acl_rights(path, &st, pwd, &allowed_rights));
 #endif
         if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
             allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
