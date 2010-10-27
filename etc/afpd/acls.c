@@ -361,6 +361,7 @@ static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
     if (acl_get_perm(permset, ACL_EXECUTE))
         rights |= DARWIN_ACE_EXECUTE;
 
+EC_CLEANUP:
     return rights;
 }
 
@@ -385,18 +386,29 @@ static int posix_acl_rights(const char *path,
 {
     EC_INIT;
     int entry_id = ACL_FIRST_ENTRY;
-    int havemask = 0;
-    uint32_t rights = , maskrights = 0;
+    uint32_t rights = 0, maskrights = 0;
     uid_t *uid = NULL;
     gid_t *gid = NULL;
     acl_t acl = NULL;
     acl_entry_t e;
     acl_tag_t tag;
-    acl_permset_t permset, mask;
 
     EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
 
+    /* itereate through all ACEs, get the mask */
+    while (acl_get_entry(acl, entry_id, &e) == 1) {
+        entry_id = ACL_NEXT_ENTRY;
+        switch (tag) {
+        case ACL_MASK:
+            maskrights = posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+            continue;
+        default:
+            continue;
+        }
+    }
+
     /* itereate through all ACEs */
+    entry_id = ACL_FIRST_ENTRY;
     while (acl_get_entry(acl, entry_id, &e) == 1) {
         entry_id = ACL_NEXT_ENTRY;
         EC_ZERO_LOG(acl_get_tag_type(e, &tag));
@@ -405,7 +417,7 @@ static int posix_acl_rights(const char *path,
         case ACL_USER_OBJ:
             EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
             if (*uid == pwd->pw_uid)
-                rights |= posix_permset_to_darwin_rights(e, type & IS_DIR);
+                rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
             acl_free(uid);
             uid = NULL;
             break;
@@ -414,28 +426,19 @@ static int posix_acl_rights(const char *path,
         case ACL_GROUP_OBJ:
             EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
             if (*gid == pwd->pw_gid || gmem(*gid))
-                rights |= posix_permset_to_darwin_rights(e, type & IS_DIR);
+                rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
             acl_free(gid);
             gid = NULL;
             break;
 
         case ACL_OTHER:
-            rights |= posix_permset_to_darwin_rights(e, type & IS_DIR);
+            rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             break;
-
-        case ACL_MASK:
-            maskrights = posix_permset_to_darwin_rights(e, type & IS_DIR);
-            continue;
-
+            
         default:
             continue;
+        }
     } /* while */
-
-    /* Loop through the mapped ACE buffer once again, applying the mask */
-    for (int i = mapped_aces; i > 0; i--) {
-        saved_darwin_aces->darwin_ace_rights &= htonl(maskrights);
-        saved_darwin_aces++;
-    }
 
 EC_CLEANUP:
     if (acl) acl_free(acl);
@@ -663,7 +666,6 @@ static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darw
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t e;
     acl_tag_t tag;
-    acl_permset_t permset, mask;
     uid_t *uid = NULL;
     gid_t *gid = NULL;
     struct passwd *pwd = NULL;
@@ -1088,6 +1090,8 @@ static int check_acl_access(const struct vol *vol,
     EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
 
     switch (uuidtype) {
+    case UUID_USER:
+        break;
     case UUID_GROUP:
         LOG(log_warning, logtype_afpd, "check_access: afp_access not supported for groups");
         EC_STATUS(AFPERR_MISC);
