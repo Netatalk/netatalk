@@ -8,6 +8,8 @@ Changes in 2.2
 * NEW: afpd: POSIX 1e ACL support
 * NEW: afpd: automagic Zeroconf registration with avahi, registering both
        the service _afpovertcp._tcp and TimeMachine volumes with _adisk._tcp.
+* UPD: afpd: ACLs usable (though not visible on the client side) without common
+       directory service, by mapping ACLs to UARight
 * UPD: afpd: performance improvements for ACL access calculations
 * UPD: AppleTalk ist disabled by default at configuration time. If needed
        use configure switch --enable-ddp.
