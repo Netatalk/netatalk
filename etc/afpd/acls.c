@@ -1421,21 +1421,25 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     return ret;
 }
 
-/*
-  unix.c/accessmode calls this: map ACL to OS 9 mode
-*/
+/*!
+ * map ACL to user maccess
+ *
+ * This is the magic function that makes ACLs usable by calculating
+ * the access granted by ACEs to the logged in user.
+ */
 int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
 {
     EC_INIT;
     struct passwd *pw;
     uint32_t rights = 0;
 
-    if ( ! (AFPobj->options.flags & OPTION_UUID)
-         ||
-         ! (AFPobj->options.flags & OPTION_ACL2MACCESS))
-        return 0;
+    if ( ! (AFPobj->options.flags & OPTION_ACL2MACCESS)
+         || (current_vol == NULL)
+         || ! (current_vol->v_flags & AFPVOL_ACLS))
+         return 0;
 
-    LOG(log_maxdebug, logtype_afpd, "acltoownermode('%s')", path);
+    LOG(log_error, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",
+        getcwdpath(), path, ma->ma_user);
 
     EC_NULL_LOG(pw = getpwuid(uid));
 
@@ -1443,18 +1447,19 @@ int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     EC_ZERO_LOG(solaris_acl_rights(path, st, pw, &rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
+    EC_ZERO_LOG(posix_acl_rights(path, st, pw, &rights));
 #endif
 
-    LOG(log_debug, logtype_afpd, "rights: 0x%08x", rights);
+    LOG(log_error, logtype_afpd, "rights: 0x%08x", rights);
 
-    LOG(log_maxdebug, logtype_afpd, "acltoownermode: ma_user before: %04o",ma->ma_user);
     if (rights & DARWIN_ACE_READ_DATA)
         ma->ma_user |= AR_UREAD;
     if (rights & DARWIN_ACE_WRITE_DATA)
         ma->ma_user |= AR_UWRITE;
     if (rights & (DARWIN_ACE_EXECUTE | DARWIN_ACE_SEARCH))
         ma->ma_user |= AR_USEARCH;
-    LOG(log_maxdebug, logtype_afpd, "acltoownermode: ma_user after: %04o", ma->ma_user);
+
+    LOG(log_error, logtype_afpd, "resulting user maccess: 0x%02x", ma->ma_user);
 
 EC_CLEANUP:
     EC_EXIT;

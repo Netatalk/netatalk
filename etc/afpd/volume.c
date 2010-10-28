@@ -81,6 +81,9 @@ extern int afprun(int root, char *cmd, int *outfd);
 #define UUID_PRINTABLE_STRING_LENGTH 37
 #endif
 
+/* Globals */
+struct vol *current_vol;        /* last volume from getvolbyvid() */
+
 static struct vol *Volumes = NULL;
 static u_int16_t    lastvid = 0;
 static char     *Trash = "\02\024Network Trash Folder";
@@ -2314,6 +2317,7 @@ int afp_closevol(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     deletevol(vol);
+    current_vol = NULL;
 
     return( AFP_OK );
 }
@@ -2335,6 +2339,8 @@ struct vol *getvolbyvid(const u_int16_t vid )
 #ifdef FORCE_UIDGID
     set_uidgid ( vol );
 #endif /* FORCE_UIDGID */
+
+    current_vol = vol;
 
     return( vol );
 }
