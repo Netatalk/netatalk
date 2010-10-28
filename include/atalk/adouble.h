@@ -75,7 +75,7 @@
 #define ADEID_PRIVINO       17
 #define ADEID_PRIVSYN       18 /* in synch with database */
 #define ADEID_PRIVID        19
-#define ADEID_MAX           19
+#define ADEID_MAX           (ADEID_PRIVID + 1)
 
 /* These are the real ids for these entries, as stored in the adouble file */
 #define AD_DEV              0x80444556

@@ -346,7 +346,6 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     /* figure out all of the entry offsets and lengths. if we aren't
      * able to read a resource fork entry, bail. */
     nentries = len / AD_ENTRY_LEN;
-    LOG(log_error, logtype_default, "nentries: %d", nentries);
     parse_entries(ad, buf, nentries);
     if (!ad_getentryoff(ad, ADEID_RFORK)
         || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
