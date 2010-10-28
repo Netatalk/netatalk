@@ -1438,7 +1438,7 @@ int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
          || ! (current_vol->v_flags & AFPVOL_ACLS))
          return 0;
 
-    LOG(log_error, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",
+    LOG(log_maxdebug, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",
         getcwdpath(), path, ma->ma_user);
 
     EC_NULL_LOG(pw = getpwuid(uid));
@@ -1450,7 +1450,7 @@ int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     EC_ZERO_LOG(posix_acl_rights(path, st, pw, &rights));
 #endif
 
-    LOG(log_error, logtype_afpd, "rights: 0x%08x", rights);
+    LOG(log_maxdebug, logtype_afpd, "rights: 0x%08x", rights);
 
     if (rights & DARWIN_ACE_READ_DATA)
         ma->ma_user |= AR_UREAD;
@@ -1459,7 +1459,7 @@ int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     if (rights & (DARWIN_ACE_EXECUTE | DARWIN_ACE_SEARCH))
         ma->ma_user |= AR_USEARCH;
 
-    LOG(log_error, logtype_afpd, "resulting user maccess: 0x%02x", ma->ma_user);
+    LOG(log_maxdebug, logtype_afpd, "resulting user maccess: 0x%02x", ma->ma_user);
 
 EC_CLEANUP:
     EC_EXIT;
