@@ -363,7 +363,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
     switch (what) {
     case UAM_OPTION_USERNAME:
-        *buf = obj->username;
+        *buf = &(obj->username[0]);
         if (len)
             *len = sizeof(obj->username) - 1;
         break;

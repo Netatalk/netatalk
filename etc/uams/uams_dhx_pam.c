@@ -375,7 +375,8 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 		     char *rbuf, size_t *rbuflen)
 {
     char *username;
-    int len, ulen;
+    int len;
+    size_t ulen;
     u_int16_t  temp16;
 
     *rbuflen = 0;
