@@ -959,6 +959,7 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     u_int8_t  thisuser;
     u_int32_t id;
     u_int16_t bitmap;
+    char *bitmapp;
 
     LOG(log_debug, logtype_afpd, "begin afp_getuserinfo:");
 
@@ -977,8 +978,9 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     if ((bitmap & USERIBIT_ALL) != bitmap)
         return AFPERR_BITMAP;
 
-    /* copy the bitmap back to reply buffer */
+    /* remember place where we store the possibly modified bitmap later */
     memcpy(rbuf, ibuf, sizeof(bitmap));
+    bitmapp = rbuf;
     rbuf += sizeof(bitmap);
     *rbuflen = sizeof(bitmap);
 
@@ -997,27 +999,30 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         *rbuflen += sizeof(id);
     }
 
-#ifdef HAVE_ACLS
     if (bitmap & USERIBIT_UUID) {
-        int ret;
-        atalk_uuid_t uuid;
-        char *uuidstring;
-
-        if ( ! (obj->options.flags & OPTION_UUID))
-            return AFPERR_BITMAP;
-        LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
-        ret = getuuidfromname( obj->username, UUID_USER, uuid);
-        if (ret != 0) {
-            LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
-            return AFPERR_NOITEM;
+        if ( ! (obj->options.flags & OPTION_UUID)) {
+            bitmap &= ~USERIBIT_UUID;
+            bitmap = htons(bitmap);
+            memcpy(bitmapp, &bitmap, sizeof(bitmap));
+        } else {
+            LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
+#ifdef HAVE_ACLS
+            int ret;
+            atalk_uuid_t uuid;
+            char *uuidstring;
+            ret = getuuidfromname( obj->username, UUID_USER, uuid);
+            if (ret != 0) {
+                LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
+                return AFPERR_NOITEM;
+            }
+            if (0 == (uuid_bin2string( uuid, &uuidstring))) {
+                LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuidstring);
+                free(uuidstring);
+            }
+            memcpy(rbuf, uuid, UUID_BINSIZE);
+            rbuf += UUID_BINSIZE;
+            *rbuflen += UUID_BINSIZE;
         }
-        if (0 == (uuid_bin2string( uuid, &uuidstring))) {
-            LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuidstring);
-            free(uuidstring);
-        }
-        memcpy(rbuf, uuid, UUID_BINSIZE);
-        rbuf += UUID_BINSIZE;
-        *rbuflen += UUID_BINSIZE;
     }
 #endif /* HAVE_ACLS */
 
