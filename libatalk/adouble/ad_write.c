@@ -1,6 +1,4 @@
 /*
- * $Id: ad_write.c,v 1.11 2010-03-30 12:55:26 franklahm Exp $
- *
  * Copyright (c) 1990,1995 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -82,8 +80,8 @@ ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int e
 	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
 	    memcpy(ad->ad_data + r_off, buf, MIN(sizeof(ad->ad_data) -r_off, cc));
         }
-        if ( ad->ad_rlen  < r_off + cc ) {
-             ad->ad_rlen = r_off + cc;
+        if ( ad->ad_rlen < off + cc ) {
+             ad->ad_rlen = off + cc;
         }
     }
     else {
