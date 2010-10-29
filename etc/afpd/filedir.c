@@ -331,7 +331,7 @@ static int moveandrename(const struct vol *vol,
     struct ofork	*opened = NULL;
     struct path     path;
     cnid_t          id;
-    int             cwd_fd;
+    int             cwd_fd = -1;
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
     adp = &ad;
@@ -382,47 +382,58 @@ static int moveandrename(const struct vol *vol,
     if (sdir_fd != -1) {
         if ((cwd_fd = open(".", O_RDONLY)) == -1)
             return AFPERR_MISC;
-        if (fchdir(sdir_fd) != 0)
-            return AFPERR_MISC;
+        if (fchdir(sdir_fd) != 0) {
+            rc = AFPERR_MISC;
+            goto exit;
+        }
     }
     if (!ad_metadata(p, adflags, adp)) {
         u_int16_t bshort;
 
         ad_getattr(adp, &bshort);
         ad_close_metadata( adp);
-        if ((bshort & htons(ATTRBIT_NORENAME))) 
-            return(AFPERR_OLOCK);
+        if ((bshort & htons(ATTRBIT_NORENAME))) {
+            rc = AFPERR_OLOCK;
+            goto exit;
+        }
     }
     if (sdir_fd != -1) {
         if (fchdir(cwd_fd) != 0) {
             LOG(log_error, logtype_afpd, "moveandrename: %s", strerror(errno) );
-            return AFPERR_MISC;
+            rc = AFPERR_MISC;
+            goto exit;
         }
     }
 
     if (NULL == (upath = mtoupath(vol, newname, curdir->d_did, utf8_encoding()))){ 
-        return AFPERR_PARAM;
+        rc = AFPERR_PARAM;
+        goto exit;
     }
     path.u_name = upath;
     st = &path.st;    
     if (0 != (rc = check_name(vol, upath))) {
-            return  rc;
+        goto exit;
     }
 
     /* source == destination. we just silently accept this. */
     if ((!isdir && curdir == sdir) || (isdir && curdir == sdir->d_parent)) {
-        if (strcmp(oldname, newname) == 0)
-            return AFP_OK;
+        if (strcmp(oldname, newname) == 0) {
+            rc = AFP_OK;
+            goto exit;
+        }
 
         if (stat(upath, st) == 0 || caseenumerate(vol, &path, curdir) == 0) {
             if (!stat(p, &nst) && !(nst.st_dev == st->st_dev && nst.st_ino == st->st_ino) ) {
                 /* not the same file */
-                return AFPERR_EXIST;
+                rc = AFPERR_EXIST;
+                goto exit;
             }
             errno = 0;
         }
-    } else if (stat(upath, st ) == 0 || caseenumerate(vol, &path, curdir) == 0)
-        return AFPERR_EXIST;
+    } else if (stat(upath, st ) == 0 || caseenumerate(vol, &path, curdir) == 0) {
+        rc = AFPERR_EXIST;
+        goto exit;
+    }
 
     if ( !isdir ) {
         path.st_valid = 1;
@@ -439,13 +450,17 @@ static int moveandrename(const struct vol *vol,
     }
     if ( rc == AFP_OK && id ) {
         /* renaming may have moved the file/dir across a filesystem */
-        if (stat(upath, st) < 0)
-            return AFPERR_MISC;
-
+        if (stat(upath, st) < 0) {
+            rc = AFPERR_MISC;
+            goto exit;
+        }
         /* fix up the catalog entry */
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
     }
 
+exit:
+    if (cwd_fd != -1)
+        close(cwd_fd);
     return rc;
 }
 
