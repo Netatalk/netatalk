@@ -461,17 +461,14 @@ static int moveandrename(const struct vol *vol,
             goto exit;
         }
 
-        if (dir_modify(vol,
-                       sdir,
-                       curdir->d_did,
-                       0,
-                       newname,
-                       upath,
-                       S_ISDIR(st->st_mode) ? curdir->d_fullpath : NULL) != 0) {
-            LOG(log_error, logtype_afpd, "moveandrename: dir_modify error: %s -> %s",
-                p, upath);
-            return AFPERR_MISC;
+        /* Remove it from the cache */
+        struct dir *cacheddir = dircache_search_by_did(vol, id);
+        if (cacheddir == NULL) {
+            LOG(log_warning, logtype_afpd,"Not cached: \"%s/%s\"", getcwdpath(), upath);
+            rc = AFPERR_MISC;
+            goto exit;
         }
+        (void)dir_remove(vol, cacheddir);
 
         /* fix up the catalog entry */
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));

@@ -872,7 +872,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
     if (dir->d_flags & DIRF_CACHELOCK || dir->d_ofork) { /* 1 */
         LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): dir is locked or has opened forks",
-            ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
+            ntohl(dir->d_did), cfrombstr(dir->d_u_name));
         return 0;
     }
 
@@ -883,7 +883,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     }
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
-        ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
+        ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 3 */
     dir_free(dir);              /* 4 */
