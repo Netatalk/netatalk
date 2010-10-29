@@ -91,9 +91,7 @@ int main( int argc, char **argv)
             printf("Searching user: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_USER, uuid);
             if (ret == 0) {
-                uuid_bin2string( uuid, &uuidstring);
-                printf("User: %s ==> UUID: %s\n", optarg, uuidstring);
-                free(uuidstring);
+                printf("User: %s ==> UUID: %s\n", optarg, uuid_bin2string(uuid));
             } else {
                 printf("User %s not found.\n", optarg);
             }
@@ -106,9 +104,7 @@ int main( int argc, char **argv)
             printf("Searching group: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_GROUP, uuid);
             if (ret == 0) {
-                uuid_bin2string( uuid, &uuidstring);
-                printf("Group: %s ==> UUID: %s\n", optarg, uuidstring);
-                free(uuidstring);
+                printf("Group: %s ==> UUID: %s\n", optarg, uuid_bin2string(uuid));
             } else {
                 printf("Group %s not found.\n", optarg);
             }

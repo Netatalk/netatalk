@@ -69,24 +69,18 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
 
 }
 
-/* 
- * convert 16 byte binary uuid to neat ascii represantation including dashes
- * string is allocated and pointer returned. caller must freee.
+/*! 
+ * Convert 16 byte binary uuid to neat ascii represantation including dashes.
+ * 
+ * Returns pointer to static buffer.
  */
-int uuid_bin2string( uuidp_t uuid, char **uuidstring) {
+const char *uuid_bin2string(char *uuid) {
+    static char uuidstring[UUID_STRINGSIZE + 1];
     char ascii[16] = { "0123456789ABCDEF" };
     int nibble = 1;
     int i = 0;
-    unsigned char c;
-    char *s;
-
-    *uuidstring = calloc(1, UUID_STRINGSIZE + 1);
-    if (*uuidstring == NULL) {
-        LOG(log_error, logtype_default, "uuid_bin2string: %s: error calloc'ing",strerror(errno));
-        return -1;
-    }
-    s = *uuidstring;
-
+    int c;
+    
     while (i < UUID_STRINGSIZE) {
         c = *uuid;
         if (nibble)
@@ -95,13 +89,14 @@ int uuid_bin2string( uuidp_t uuid, char **uuidstring) {
             c &= 0x0f;
             uuid++;
         }
-        s[i] = ascii[c];
+        uuidstring[i] = ascii[c];
         nibble ^= 1;
         i++;
         if (i==8 || i==13 || i==18 || i==23)
-            s[i++] = '-';
+            uuidstring[i++] = '-';
     }
-    return 0;
+    uuidstring[i] = 0;
+    return uuidstring;
 }
 
 /********************************************************
@@ -119,16 +114,12 @@ int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
     char *uuid_string = NULL;
 
     ret = search_cachebyname( name, type, uuid);
-    if (ret == 0) {     /* found in cache */
-#ifdef DEBUG
-        uuid_bin2string( uuid, &uuid_string);
+    if (ret == 0) {
+        /* found in cache */
         LOG(log_debug, logtype_afpd, "getuuidfromname{cache}: name: %s, type: %s -> UUID: %s",
-            name, uuidtype[type], uuid_string);
-#else
-        LOG(log_debug, logtype_afpd, "getuuidfromname{cache}: name: %s, type: %s",
-            name, uuidtype[type]);
-#endif
-    } else  {                   /* if not found in cache */
+            name, uuidtype[type], uuid_bin2string(uuid));
+    } else  {
+        /* if not found in cache */
         ret = ldap_getuuidfromname( name, type, &uuid_string);
         if (ret != 0) {
             LOG(log_note, logtype_afpd, "getuuidfromname(\"%s\",t:%u): no result from ldap search",
@@ -141,7 +132,7 @@ int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
     }
 
 cleanup:
-    free(uuid_string);
+    if (uuid_string) free(uuid_string);
     return ret;
 }
 
@@ -163,18 +154,14 @@ static char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
  */
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
-    char *uuid_string = NULL;
 
     ret = search_cachebyuuid( uuidp, name, type);
-    if (ret == 0) {     /* found in cache */
-#ifdef DEBUG
-        uuid_bin2string( uuidp, &uuid_string);
+    if (ret == 0) {
+        /* found in cache */
         LOG(log_debug9, logtype_afpd, "getnamefromuuid{cache}: UUID: %s -> name: %s, type:%s",
-            uuid_string, *name, uuidtype[*type]);
-        free(uuid_string);
-        uuid_string = NULL;
-#endif
-    } else  {                   /* if not found in cache */
+            uuid_bin2string(uuidp), *name, uuidtype[*type]);
+    } else {
+        /* not found in cache */
 
         /* Check if UUID is a client local one */
         if (memcmp(uuidp, local_user_uuid, 12) == 0
@@ -186,19 +173,17 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
             return 0;
         }
 
-        uuid_bin2string( uuidp, &uuid_string);
-        ret = ldap_getnamefromuuid( uuid_string, name, type);
+        ret = ldap_getnamefromuuid(uuid_bin2string(uuidp), name, type);
         if (ret != 0) {
             LOG(log_warning, logtype_afpd, "getnamefromuuid(%s): no result from ldap_getnamefromuuid",
-                uuid_string);
+                uuid_bin2string(uuidp));
             goto cleanup;
         }
         add_cachebyuuid( uuidp, *name, *type, 0);
         LOG(log_debug, logtype_afpd, "getnamefromuuid{LDAP}: UUID: %s -> name: %s, type:%s",
-            uuid_string, *name, uuidtype[*type]);
+            uuid_bin2string(uuidp), *name, uuidtype[*type]);
     }
 
 cleanup:
-    free(uuid_string);
     return ret;
 }

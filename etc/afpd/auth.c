@@ -1009,16 +1009,13 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 #ifdef HAVE_ACLS
             int ret;
             atalk_uuid_t uuid;
-            char *uuidstring;
             ret = getuuidfromname( obj->username, UUID_USER, uuid);
             if (ret != 0) {
                 LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
                 return AFPERR_NOITEM;
             }
-            if (0 == (uuid_bin2string( uuid, &uuidstring))) {
-                LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuidstring);
-                free(uuidstring);
-            }
+            LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuid_bin2string(uuid));
+
             memcpy(rbuf, uuid, UUID_BINSIZE);
             rbuf += UUID_BINSIZE;
             *rbuflen += UUID_BINSIZE;

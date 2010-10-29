@@ -49,22 +49,19 @@ static int dumpcache() {
     int i;
     int ret = 0;
     cacheduser_t *entry;
-    char *uuidstring = NULL;
     char timestr[200];
     struct tm *tmp = NULL;
 
     for ( i=0 ; i<256; i++) {
         if ((entry = namecache[i]) != NULL) {
             do {
-                uuid_bin2string(entry->uuid, &uuidstring);
                 tmp = localtime(&entry->creationtime);
                 if (tmp == NULL)
                     continue;
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
                 LOG(log_debug9, logtype_default, "namecache{%d}: name:%s, uuid:%s, type: %s, cached: %s",
-                    i, entry->name, uuidstring, uuidtype[entry->type], timestr);
-                free(uuidstring);
+                    i, entry->name, uuid_bin2string(entry->uuid), uuidtype[entry->type], timestr);
             } while ((entry = entry->next) != NULL);
         }
     }
@@ -72,15 +69,14 @@ static int dumpcache() {
     for ( i=0; i<256; i++) {
         if ((entry = uuidcache[i]) != NULL) {
             do {
-                uuid_bin2string(entry->uuid, &uuidstring);
+
                 tmp = localtime(&entry->creationtime);
                 if (tmp == NULL)
                     continue;
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
                 LOG(log_debug9, logtype_default, "uuidcache{%d}: uuid:%s, name:%s, type: %s, cached: %s",
-                    i, uuidstring, entry->name, uuidtype[entry->type], timestr);
-                free(uuidstring);
+                    i, uuid_bin2string(entry->uuid), entry->name, uuidtype[entry->type], timestr);
             } while ((entry = entry->next) != NULL);
         }
     }

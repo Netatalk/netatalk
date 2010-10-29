@@ -247,9 +247,16 @@ cleanup:
  * Interface
  ********************************************************/
 
-/* 
- * returns allocated storage in uuid_string, caller must free it
- * returns 0 on success, -1 on error or not found
+/*! 
+ * Search UUID for name in LDAP
+ *
+ * Caller must free uuid_string when done with it
+ *
+ * @param name        (r) name to search
+ * @param type        (r) type of USER or GROUP
+ * @param uuid_string (w) result as pointer to allocated UUID-string
+ *
+ * @returns 0 on success, -1 on error or not found
  */
 int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string) {
     int ret;
@@ -283,8 +290,14 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
  * LDAP search wrapper
  * returns allocated storage in name, caller must free it
  * returns 0 on success, -1 on error or not found
+ * 
+ * @param uuidstr  (r) uuid to search as ascii string
+ * @param name     (w) return pointer to name as allocated string
+ * @param type     (w) return type: USER or GROUP
+ *
+ * returns 0 on success, -1 on errror
  */
-int ldap_getnamefromuuid( char *uuidstr, char **name, uuidtype_t *type) {
+int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type) {
     int ret;
     int len;
     char filter[256];       /* this should really be enough. we dont want to malloc everything! */
