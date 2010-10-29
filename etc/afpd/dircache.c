@@ -262,32 +262,32 @@ static void dircache_evict(void)
  ********************************************************/
 
 /*!
- * @brief Search the dircache via a DID
+ * @brief Search the dircache via a CNID
  *
  * @param vol    (r) pointer to struct vol
- * @param did    (r) CNID of the directory
+ * @param cnid   (r) CNID of the file or directory
  *
  * @returns Pointer to struct dir if found, else NULL
  */
-struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did)
+struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
 {
     struct dir *cdir = NULL;
     struct dir key;
     hnode_t *hn;
 
    AFP_ASSERT(vol);
-   AFP_ASSERT(ntohl(did) >= CNID_START);
+   AFP_ASSERT(ntohl(cnid) >= CNID_START);
 
     key.d_vid = vol->v_vid;
-    key.d_did = did;
+    key.d_did = cnid;
     if ((hn = hash_lookup(dircache, &key)))
         cdir = hnode_get(hn);
 
     if (cdir)
-        LOG(log_debug, logtype_afpd, "dircache(did:%u): {cached: path:'%s'}",
-            ntohl(did), cfrombstr(cdir->d_u_name));
+        LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {cached: path:'%s'}",
+            ntohl(cnid), cfrombstr(cdir->d_u_name));
     else
-        LOG(log_debug, logtype_afpd, "dircache(did:%u): {not in cache}", ntohl(did));
+        LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {not in cache}", ntohl(cnid));
 
     return cdir;
 }
