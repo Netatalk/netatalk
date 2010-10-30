@@ -2325,7 +2325,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             name = NULL;
         }
         break;
-#ifdef HAVE_ACLS
+
     case 5 : /* UUID -> username */
     case 6 : /* UUID -> groupname */
         if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
@@ -2367,7 +2367,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             return AFPERR_MISC;
         }
         break;
-#endif /* HAVE_ACLS */
+
     default :
         return( AFPERR_PARAM );
     }
@@ -2421,7 +2421,6 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     case 4 :
         len = (unsigned char) *ibuf++;
         break;
-#ifdef HAVE_ACLS
     case 5 : /* username -> UUID  */
     case 6 : /* groupname -> UUID */
         if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
@@ -2430,7 +2429,6 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         len = ntohs(ulen);
         ibuf += 2;
         break;
-#endif /* HAVE_ACLS */
     default :
         return( AFPERR_PARAM );
     }
@@ -2464,7 +2462,6 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
             memcpy( rbuf, &id, sizeof( id ));
             *rbuflen = sizeof( id );
             break;
-#ifdef HAVE_ACLS
         case 5 :        /* username -> UUID */
             LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);
             if (0 != getuuidfromname(ibuf, UUID_USER, rbuf))
@@ -2477,7 +2474,6 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
                 return AFPERR_NOITEM;
             *rbuflen = UUID_BINSIZE;
             break;
-#endif /* HAVE_ACLS */
         }
     }
     return( AFP_OK );

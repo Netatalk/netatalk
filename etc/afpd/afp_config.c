@@ -48,7 +48,7 @@ char *strchr (), *strrchr ();
 #ifdef USE_SRVLOC
 #include <slp.h>
 #endif /* USE_SRVLOC */
-#ifdef HAVE_ACLS
+#ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
 #endif
 
@@ -547,10 +547,10 @@ AFPConfig *configinit(struct afp_options *cmdline)
     struct afp_options options;
     AFPConfig *config=NULL, *first = NULL; 
 
-#ifdef HAVE_ACLS
+#ifdef HAVE_LDAP
     /* Parse afp_ldap.conf first so we can set the uuid option */
     acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-#endif /* HAVE_ACLS */
+#endif /* HAVE_LDAP */
 
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
