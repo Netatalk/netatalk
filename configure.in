@@ -984,21 +984,24 @@ AC_ARG_WITH(ldap,
       *)
           with_ldap=auto
           ;;
-      esac ],
-    [with_ldap=auto])
+      esac ])
 AC_MSG_RESULT($with_ldap)
-if test x"$with_ldap" = x"no"; then
-	AC_MSG_RESULT(Disabling LDAP support)
-else
-    with_ldap=yes
-    AC_MSG_NOTICE([Checking for LDAP header and library])
-   	AC_CHECK_HEADER([ldap.h],,
-        [AC_MSG_ERROR([LDAP client headers not found.])
-		    with_ldap=no])
-	AC_CHECK_LIB(ldap, ldap_init,, 
-        [AC_MSG_ERROR([LDAP client libs not found.])
-		    with_ldap=no])
+
+if test x"$with_ldap" != x"no" ; then
+   	AC_CHECK_HEADER([ldap.h], with_ldap=yes,
+        [ if test x"$with_ldap" = x"yes" ; then
+            AC_MSG_ERROR([Missing LDAP headers])
+        fi
+		with_ldap=no
+        ])
+	AC_CHECK_LIB(ldap, ldap_init, with_ldap=yes,
+        [ if test x"$with_ldap" = x"yes" ; then
+            AC_MSG_ERROR([Missing LDAP library])
+        fi
+		with_ldap=no
+        ])
 fi
+
 if test x"$with_ldap" = x"yes"; then
 	AC_DEFINE(HAVE_LDAP,1,[Whether LDAP is available])
 fi

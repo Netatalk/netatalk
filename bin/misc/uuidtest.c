@@ -16,14 +16,11 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_ACLS
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include <ldap.h>
 
 #include <atalk/ldapconfig.h>
 #include <atalk/uuid.h>
@@ -41,6 +38,7 @@ static void parse_ldapconf()
     static int inited = 0;
 
     if (! inited) {
+#ifdef HAVE_LDAP
         /* Parse afp_ldap.conf */
         printf("Start parsing afp_ldap.conf\n");
         acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
@@ -58,6 +56,9 @@ static void parse_ldapconf()
         } else {
             printf("afp_ldap.conf is not ok, not using LDAP. Only local UUID testing available.\n");
         }
+#else
+        printf("Built without LDAP support, only local UUID testing available.\n");
+#endif
         inited = 1;
     }
 }
@@ -144,4 +145,3 @@ int main( int argc, char **argv)
     return 0;
 }
 
-#endif  /* HAVE_ACLS */

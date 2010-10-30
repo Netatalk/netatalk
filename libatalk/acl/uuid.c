@@ -204,6 +204,7 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
             return 0;
         }
 
+#ifdef HAVE_LDAP
         ret = ldap_getnamefromuuid(uuid_bin2string(uuidp), name, type);
         if (ret != 0) {
             LOG(log_warning, logtype_afpd, "getnamefromuuid(%s): no result from ldap_getnamefromuuid",
@@ -213,6 +214,7 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
         add_cachebyuuid( uuidp, *name, *type, 0);
         LOG(log_debug, logtype_afpd, "getnamefromuuid{LDAP}: UUID: %s -> name: %s, type:%s",
             uuid_bin2string(uuidp), *name, uuidtype[*type]);
+#endif
     }
 
 cleanup:
