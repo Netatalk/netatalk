@@ -16,6 +16,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_LDAP
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -265,6 +267,9 @@ int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string)
     char *attributes[]  = { ldap_uuid_attr, NULL};
     char *ldap_attr;
 
+    if (!ldap_config_valid)
+        return -1;
+
     /* make filter */
     if (type == UUID_GROUP)
         ldap_attr = ldap_group_attr;
@@ -303,6 +308,9 @@ int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type) {
     char filter[256];       /* this should really be enough. we dont want to malloc everything! */
     char *attributes[]  = { NULL, NULL};
 
+    if (!ldap_config_valid)
+        return -1;
+
     /* make filter */
     len = snprintf( filter, 256, "%s=%s", ldap_uuid_attr, uuidstr);
     if (len >= 256 || len == -1) {
@@ -328,3 +336,4 @@ int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type) {
 
     return -1;
 }
+#endif  /* HAVE_LDAP */

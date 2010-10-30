@@ -1,13 +1,14 @@
 
 # Makefile.am for libatalk/
 
-SUBDIRS = adouble asp atp bstring compat cnid dsi nbp netddp tdb util unicode vfs
+SUBDIRS = acl adouble asp atp bstring compat cnid dsi nbp netddp tdb util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
 libatalk_la_SOURCES = dummy.c
 
 libatalk_la_LIBADD  = \
+	acl/libacl.la \
 	adouble/libadouble.la	\
 	asp/libasp.la		\
 	atp/libatp.la		\
@@ -22,6 +23,7 @@ libatalk_la_LIBADD  = \
 	vfs/libvfs.la
 
 libatalk_la_DEPENDENCIES = \
+	acl/libacl.la \
 	adouble/libadouble.la	\
 	asp/libasp.la		\
 	atp/libatp.la		\
@@ -34,12 +36,6 @@ libatalk_la_DEPENDENCIES = \
 	tdb/libtdb.la       \
 	unicode/libunicode.la \
 	vfs/libvfs.la
-
-if HAVE_ACLS
-SUBDIRS += acl
-libatalk_la_DEPENDENCIES += acl/libacl.la
-libatalk_la_LIBADD += acl/libacl.la
-endif
 
 libatalk_la_LDFLAGS = -static
 

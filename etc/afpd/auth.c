@@ -26,9 +26,6 @@
 #include <time.h>
 #include <pwd.h>
 #include <grp.h>
-#include <atalk/logger.h>
-#include <atalk/server_ipc.h>
-#include <atalk/uuid.h>
 
 #ifdef TRU64
 #include <netdb.h>
@@ -38,6 +35,10 @@
 
 extern void afp_get_cmdline( int *ac, char ***av );
 #endif /* TRU64 */
+
+#include <atalk/logger.h>
+#include <atalk/server_ipc.h>
+#include <atalk/uuid.h>
 
 #include "globals.h"
 #include "auth.h"
@@ -1006,7 +1007,6 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             memcpy(bitmapp, &bitmap, sizeof(bitmap));
         } else {
             LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
-#ifdef HAVE_ACLS
             int ret;
             atalk_uuid_t uuid;
             ret = getuuidfromname( obj->username, UUID_USER, uuid);
@@ -1021,7 +1021,6 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             *rbuflen += UUID_BINSIZE;
         }
     }
-#endif /* HAVE_ACLS */
 
     LOG(log_debug, logtype_afpd, "END afp_getuserinfo:");
     return AFP_OK;

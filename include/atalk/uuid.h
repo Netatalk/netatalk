@@ -18,8 +18,8 @@
 #define UUID_BINSIZE 16
 #define UUID_STRINGSIZE 36
 
-typedef char *uuidp_t;
-typedef char atalk_uuid_t[UUID_BINSIZE];
+typedef unsigned char *uuidp_t;
+typedef unsigned char atalk_uuid_t[UUID_BINSIZE];
 
 typedef enum {UUID_USER = 1, UUID_GROUP, UUID_LOCAL} uuidtype_t;
 extern char *uuidtype[];
@@ -42,7 +42,7 @@ extern char *ldap_uid_attr;
 
 extern int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid);
 extern int getnamefromuuid( const uuidp_t uuidp, char **name, uuidtype_t *type);
-extern const char *uuid_bin2string( char *uuid);
+extern const char *uuid_bin2string(unsigned char *uuid);
 extern void uuid_string2bin( const char *uuidstring, uuidp_t uuid);
 
 #endif /* AFP_UUID_H */

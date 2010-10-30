@@ -972,6 +972,37 @@ AC_ARG_ENABLE(overwrite,
 )
 AC_MSG_RESULT([$OVERWRITE_CONFIG])
 
+dnl --------------------- check for LDAP support, for client-side ACL visibility
+AC_MSG_CHECKING(for LDAP (necessary for client-side ACL visibility))
+AC_ARG_WITH(ldap,
+    [AS_HELP_STRING([--with-ldap],
+        [LDAP support (default=auto)])],
+    [ case "$withval" in
+      yes|no)
+          with_ldap="$withval"
+		  ;;
+      *)
+          with_ldap=auto
+          ;;
+      esac ],
+    [with_ldap=auto])
+AC_MSG_RESULT($with_ldap)
+if test x"$with_ldap" = x"no"; then
+	AC_MSG_RESULT(Disabling LDAP support)
+else
+    with_ldap=yes
+    AC_MSG_NOTICE([Checking for LDAP header and library])
+   	AC_CHECK_HEADER([ldap.h],,
+        [AC_MSG_ERROR([LDAP client headers not found.])
+		    with_ldap=no])
+	AC_CHECK_LIB(ldap, ldap_init,, 
+        [AC_MSG_ERROR([LDAP client libs not found.])
+		    with_ldap=no])
+fi
+if test x"$with_ldap" = x"yes"; then
+	AC_DEFINE(HAVE_LDAP,1,[Whether LDAP is available])
+fi
+
 dnl --------------------- check for ACL support
 AC_MSG_CHECKING(whether to support ACLs)
 AC_ARG_WITH(acls,
@@ -993,14 +1024,6 @@ if test x"$with_acl_support" = x"no"; then
 	AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support should be built in])
 else
     with_acl_support=yes
-    AC_MSG_NOTICE([ACL support requires LDAP support, checking whether that's available])
-   	AC_CHECK_HEADER([ldap.h],,
-        [AC_MSG_ERROR([ACL Support prerequisite LDAP client headers not found.])
-		    with_acl_support=no])
-
-	AC_CHECK_LIB(ldap, ldap_init,, 
-        [AC_MSG_ERROR([ACL Support prerequisite LDAP client libs not found.])
-		    with_acl_support=no])
 fi
 
 if test x"$with_acl_support" = x"yes" ; then
@@ -1247,6 +1270,7 @@ AM_CONDITIONAL(COMPILE_A2BOOT, test x$compile_a2boot = xyes)
 AM_CONDITIONAL(HAVE_LIBGCRYPT, test x$neta_cv_have_libgcrypt = xyes)
 AM_CONDITIONAL(HAVE_OPENSSL, test x$neta_cv_have_openssl = xyes)
 AM_CONDITIONAL(HAVE_ACLS, test x"$with_acl_support" = x"yes")
+AM_CONDITIONAL(HAVE_LDAP, test x"$with_ldap" = x"yes")
 AM_CONDITIONAL(USE_DHX, test x$neta_cv_compile_dhx = xyes)
 AM_CONDITIONAL(USE_DHX2, test x$neta_cv_compile_dhx2 = xyes)
 AM_CONDITIONAL(USE_RANDNUM, test x$neta_cv_have_openssl = xyes)

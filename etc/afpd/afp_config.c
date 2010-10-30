@@ -585,14 +585,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
         if (!afp_options_parseline(p, &options))
             continue;
 
-#ifdef HAVE_ACLS
-	/* Enable UUID support if LDAP config is complete */
-        if (!ldap_config_valid) {
-            LOG(log_info, logtype_afpd, "Disabling UUID support");
-            options.flags &= ~OPTION_UUID;
-        }
-#endif /* HAVE_ACLS */
-
         /* AFPConfigInit can return two linked configs due to DSI and ASP */
         if (!first) {
             if ((first = AFPConfigInit(&options, cmdline)))

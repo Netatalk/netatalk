@@ -21,6 +21,9 @@
 #include <string.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <atalk/logger.h>
 #include <atalk/afp.h>
@@ -74,24 +77,17 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
  * 
  * Returns pointer to static buffer.
  */
-const char *uuid_bin2string(char *uuid) {
+const char *uuid_bin2string(unsigned char *uuid) {
     static char uuidstring[UUID_STRINGSIZE + 1];
-    char ascii[16] = { "0123456789ABCDEF" };
-    int nibble = 1;
+
     int i = 0;
-    int c;
-    
+    unsigned char c;
+
     while (i < UUID_STRINGSIZE) {
         c = *uuid;
-        if (nibble)
-            c = c >> 4;
-        else {
-            c &= 0x0f;
-            uuid++;
-        }
-        uuidstring[i] = ascii[c];
-        nibble ^= 1;
-        i++;
+        uuid++;
+        sprintf(uuidstring + i, "%02X", c);
+        i += 2;
         if (i==8 || i==13 || i==18 || i==23)
             uuidstring[i++] = '-';
     }
@@ -103,6 +99,14 @@ const char *uuid_bin2string(char *uuid) {
  * Interface
  ********************************************************/
 
+static unsigned char local_group_uuid[] = {0xab, 0xcd, 0xef,
+                                           0xab, 0xcd, 0xef,
+                                           0xab, 0xcd, 0xef, 
+                                           0xab, 0xcd, 0xef};
+
+static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
+                                          0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa};
+
 /*
  *   name: give me his name
  *   type: and type (UUID_USER or UUID_GROUP)
@@ -111,8 +115,9 @@ const char *uuid_bin2string(char *uuid) {
  */  
 int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
     int ret = 0;
+#ifdef HAVE_LDAP
     char *uuid_string = NULL;
-
+#endif
     ret = search_cachebyname( name, type, uuid);
     if (ret == 0) {
         /* found in cache */
@@ -120,29 +125,55 @@ int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
             name, uuidtype[type], uuid_bin2string(uuid));
     } else  {
         /* if not found in cache */
-        ret = ldap_getuuidfromname( name, type, &uuid_string);
-        if (ret != 0) {
-            LOG(log_note, logtype_afpd, "getuuidfromname(\"%s\",t:%u): no result from ldap search",
+#ifdef HAVE_LDAP
+        if ((ret = ldap_getuuidfromname( name, type, &uuid_string)) == 0) {
+            uuid_string2bin( uuid_string, uuid);
+            LOG(log_debug, logtype_afpd, "getuuidfromname{local}: name: %s, type: %s -> UUID: %s",
+                name, uuidtype[type], uuid_bin2string(uuid));
+        } else {
+            LOG(log_debug, logtype_afpd, "getuuidfromname(\"%s\",t:%u): no result from ldap search",
                 name, type);
-            goto cleanup;
         }
-        uuid_string2bin( uuid_string, uuid);
+#endif
+        if (ret != 0) {
+            /* Build a local UUID */
+            if (type == UUID_USER) {
+                memcpy(uuid, local_user_uuid, 12);
+                struct passwd *pwd;
+                if ((pwd = getpwnam(name)) == NULL) {
+                    LOG(log_error, logtype_afpd, "getuuidfromname(\"%s\",t:%u): unknown user",
+                        name, uuidtype[type]);
+                    goto cleanup;
+                }
+                uint32_t id = pwd->pw_uid;
+                id = htonl(id);
+                memcpy(uuid + 12, &id, 4);
+            } else {
+                memcpy(uuid, &local_group_uuid, 12);
+                struct group *grp;
+                if ((grp = getgrnam(name)) == NULL) {
+                    LOG(log_error, logtype_afpd, "getuuidfromname(\"%s\",t:%u): unknown user",
+                        name, uuidtype[type]);
+                    goto cleanup;
+                }
+                uint32_t id = grp->gr_gid;
+                id = htonl(id);
+                memcpy(uuid + 12, &id, 4);
+            }
+            LOG(log_debug, logtype_afpd, "getuuidfromname{local}: name: %s, type: %s -> UUID: %s",
+                name, uuidtype[type], uuid_bin2string(uuid));
+        }
+        ret = 0;
         add_cachebyname( name, uuid, type, 0);
-        LOG(log_debug, logtype_afpd, "getuuidfromname{LDAP}: name: %s, type: %s -> UUID: %s",name, uuidtype[type], uuid_string);
     }
 
 cleanup:
+#ifdef HAVE_LDAP
     if (uuid_string) free(uuid_string);
+#endif
     return ret;
 }
 
-static char local_group_uuid[] = {0xab, 0xcd, 0xef,
-                                  0xab, 0xcd, 0xef,
-                                  0xab, 0xcd, 0xef, 
-                                  0xab, 0xcd, 0xef};
-
-static char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
-                                 0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa};
 
 /*
  * uuidp: pointer to a uuid

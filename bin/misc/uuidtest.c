@@ -56,8 +56,7 @@ static void parse_ldapconf()
                 exit(EXIT_FAILURE);
             }
         } else {
-            printf("afp_ldap.conf is not ok.\n");
-            exit(EXIT_FAILURE);
+            printf("afp_ldap.conf is not ok, not using LDAP. Only local UUID testing available.\n");
         }
         inited = 1;
     }
@@ -65,12 +64,11 @@ static void parse_ldapconf()
 
 int main( int argc, char **argv)
 {
-    int ret, i, c;
+    int ret, c;
     int verbose = 0;
     atalk_uuid_t uuid;
     int logsetup = 0;
     uuidtype_t type;
-    char *uuidstring = NULL;
     char *name = NULL;
 
     while ((c = getopt(argc, argv, ":vu:g:i:")) != -1) {
