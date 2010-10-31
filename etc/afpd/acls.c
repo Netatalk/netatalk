@@ -376,7 +376,7 @@ EC_CLEANUP:
  * @param path           (r) path to filesystem object
  * @param sb             (r) struct stat of path
  * @param pwd            (r) struct passwd of user
- * @param result         (w) resulting Darwin allow ACE
+ * @param result         (rw) resulting Darwin allow ACE
  *
  * @returns                  0 or -1 on error
  */
@@ -386,6 +386,7 @@ static int posix_acl_rights(const char *path,
                             uint32_t *result)
 {
     EC_INIT;
+    int havemask = 0;
     int entry_id = ACL_FIRST_ENTRY;
     uint32_t rights = 0, maskrights = 0;
     uid_t *uid = NULL;
@@ -397,12 +398,15 @@ static int posix_acl_rights(const char *path,
     EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
 
     /* itereate through all ACEs to get the mask */
-    while (acl_get_entry(acl, entry_id, &e) == 1) {
+    while (!havemask && acl_get_entry(acl, entry_id, &e) == 1) {
         entry_id = ACL_NEXT_ENTRY;
+        EC_ZERO_LOG(acl_get_tag_type(e, &tag));
         switch (tag) {
         case ACL_MASK:
             maskrights = posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
-            continue;
+            LOG(log_maxdebug, logtype_afpd, "maskrights: 0x%08x", maskrights);
+            havemask = 1;
+            break;
         default:
             continue;
         }
@@ -416,29 +420,38 @@ static int posix_acl_rights(const char *path,
         switch (tag) {
         case ACL_USER:
             EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
-            if (*uid == pwd->pw_uid)
+            if (*uid == pwd->pw_uid) {
+                LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+            }
             acl_free(uid);
             uid = NULL;
             break;
         case ACL_USER_OBJ:
-            if (sb->st_uid == pwd->pw_uid)
+            if (sb->st_uid == pwd->pw_uid) {
+                LOG(log_maxdebug, logtype_afpd, "ACL_USER_OBJ: %u", sb->st_uid);
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+            }
             break;
         case ACL_GROUP:
             EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
-            if (gmem(*gid))
+            if (gmem(*gid)) {
+                LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
                 rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
+            }
             acl_free(gid);
             gid = NULL;
             break;
         case ACL_GROUP_OBJ:
-            if (gmem(sb->st_gid))
+            if (gmem(sb->st_gid)) {
+                LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));            
+            }
+            break;
         case ACL_OTHER:
+            LOG(log_maxdebug, logtype_afpd, "ACL_OTHER");
             rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             break;
-            
         default:
             continue;
         }

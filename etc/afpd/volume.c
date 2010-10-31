@@ -494,8 +494,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_ROOTPREEXEC].i_value = 1;
             else if (strcasecmp(p, "upriv") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
-            else if (strcasecmp(p, "acls") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
             else if (strcasecmp(p, "nodev") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NODEV;
             else if (strcasecmp(p, "caseinsensitive") == 0)
@@ -731,14 +729,14 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     /* os X start at 1 and use network order ie. 1 2 3 */
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
+#ifdef HAVE_ACLS
+    volume->v_flags |= AFPVOL_ACLS;
+#endif
 
     /* handle options */
     if (options) {
-        /* should we casefold? */
         volume->v_casefold = options[VOLOPT_CASEFOLD].i_value;
-
-        /* shift in some flags */
-        volume->v_flags = options[VOLOPT_FLAGS].i_value;
+        volume->v_flags |= options[VOLOPT_FLAGS].i_value;
 
         if (options[VOLOPT_EA_VFS].i_value)
             volume->v_vfs_ea = options[VOLOPT_EA_VFS].i_value;

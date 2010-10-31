@@ -547,11 +547,6 @@ AFPConfig *configinit(struct afp_options *cmdline)
     struct afp_options options;
     AFPConfig *config=NULL, *first = NULL; 
 
-#ifdef HAVE_LDAP
-    /* Parse afp_ldap.conf first so we can set the uuid option */
-    acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
-#endif /* HAVE_LDAP */
-
     /* if config file doesn't exist, load defaults */
     if ((fp = fopen(cmdline->configfile, "r")) == NULL)
     {
@@ -593,6 +588,11 @@ AFPConfig *configinit(struct afp_options *cmdline)
             config = config->next->next ? config->next->next : config->next;
         }
     }
+
+#ifdef HAVE_LDAP
+    /* Parse afp_ldap.conf */
+    acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
+#endif /* HAVE_LDAP */
 
     LOG(log_debug, logtype_afpd, "Finished parsing Config File");
     fclose(fp);
