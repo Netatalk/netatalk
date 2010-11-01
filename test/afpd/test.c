@@ -56,7 +56,6 @@ int main(int argc, char **argv)
     int reti;
     uint16_t vid;
     struct vol *vol;
-    struct dir *dir;
     struct dir *retdir;
     struct path *path;
 
@@ -78,18 +77,6 @@ int main(int argc, char **argv)
 
     TEST_expr(vid = openvol(&configs->obj, "test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
-
-    /* test dircache.c stuff*/
-    TEST_expr(dir = dir_new("dir", "dir", vol, DIRDID_ROOT, htonl(20), bfromcstr(vol->v_path), 0),
-              dir != NULL);
-    TEST_int(dircache_add(dir), 0);
-    TEST_expr(retdir = dircache_search_by_did(vol, dir->d_did ),
-              retdir != NULL && retdir == dir && bstrcmp(retdir->d_u_name, dir->d_u_name) == 0);
-    TEST_expr(retdir = dircache_search_by_name(vol, vol->v_root, "dir", strlen("dir"), 0),
-              retdir != NULL && retdir == dir && bstrcmp(retdir->d_u_name, dir->d_u_name) == 0);
-    TEST_int(dir_remove(vol, dir), 0);
-    TEST_int(test001_add_x_dirs(vol, 100, 100000), 0);
-    TEST_int(test002_rem_x_dirs(vol, 100, 100000), 0);
 
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL);
