@@ -13,5 +13,3 @@ endif
 if USE_APPLETALK
 SUBDIRS += printing
 endif
-
-EXTRA_DIST = ICDumpSuffixMap
