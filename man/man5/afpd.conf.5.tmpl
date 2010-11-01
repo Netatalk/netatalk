@@ -2,12 +2,12 @@
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 23 December 2009
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"      Date: 1 November 2010
+.\"    Manual: Netatalk 2.2
+.\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "23 December 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "AFPD\&.CONF" "5" "1 November 2010" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -354,7 +354,14 @@ Immediately unmount volumes removed from AppleVolumes files on SIGHUP sent to th
 .PP
 \-cnidserver \fI[ipaddress:port]\fR
 .RS 4
-Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.
+Specifies the IP address and port of a cnid_metad server, required for CNID dbd backend\&. Defaults to localhost:4700\&. The network address may be specified either in dotted\-decimal format for IPv4 or in hexadecimal format for IPv6\&.\-
+.RE
+.PP
+\-dircachesize\fI entries\fR
+.RS 4
+Maximum possible entries in the directory cache\&. The cache stores directories and files\&. It is used to cache the full path to directories and CNIDs which considerably speeds up directory enumeration\&.
+.sp
+Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its cache\&.
 .RE
 .PP
 \-guestname \fI[name]\fR
