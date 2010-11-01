@@ -1,5 +1,4 @@
 /*
-  $Id: test.c,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -81,12 +80,12 @@ int main(int argc, char **argv)
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
 
     /* test dircache.c stuff*/
-    TEST_expr(dir = dir_new("dir", "dir", vol, DIRDID_ROOT, htonl(20), bfromcstr(vol->v_path)),
+    TEST_expr(dir = dir_new("dir", "dir", vol, DIRDID_ROOT, htonl(20), bfromcstr(vol->v_path), 0),
               dir != NULL);
     TEST_int(dircache_add(dir), 0);
     TEST_expr(retdir = dircache_search_by_did(vol, dir->d_did ),
               retdir != NULL && retdir == dir && bstrcmp(retdir->d_u_name, dir->d_u_name) == 0);
-    TEST_expr(retdir = dircache_search_by_name(vol, vol->v_root, "dir", strlen("dir")),
+    TEST_expr(retdir = dircache_search_by_name(vol, vol->v_root, "dir", strlen("dir"), 0),
               retdir != NULL && retdir == dir && bstrcmp(retdir->d_u_name, dir->d_u_name) == 0);
     TEST_int(dir_remove(vol, dir), 0);
     TEST_int(test001_add_x_dirs(vol, 100, 100000), 0);

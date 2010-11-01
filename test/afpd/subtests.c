@@ -48,7 +48,7 @@ int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
     char dirname[20];
     while (start++ < end) {
         sprintf(dirname, "dir%04u", start);
-        dir = dir_new(dirname, dirname, vol, DIRDID_ROOT, htonl(start), bfromcstr(vol->v_path));
+        dir = dir_new(dirname, dirname, vol, DIRDID_ROOT, htonl(start), bfromcstr(vol->v_path), 0);
         if (dir == NULL)
             return -1;
         if (dircache_add(dir) != 0)
