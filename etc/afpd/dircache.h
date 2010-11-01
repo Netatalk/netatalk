@@ -1,5 +1,4 @@
 /*
-   $Id: dircache.h,v 1.1.2.5 2010-02-11 14:13:06 franklahm Exp $
    Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -16,6 +15,8 @@
 #ifndef DIRCACHE_H 
 #define DIRCACHE_H
 
+#include <sys/types.h>
+
 #include <atalk/volume.h>
 #include <atalk/directory.h>
 
@@ -28,12 +29,13 @@
 #define DIRCACHE      (1 << 0)
 #define DIDNAME_INDEX (1 << 1)
 #define QUEUE_INDEX   (1 << 2)
+#define DIRCACHE_ALL  (DIRCACHE|DIDNAME_INDEX|QUEUE_INDEX)
 
 extern int        dircache_init(int reqsize);
 extern int        dircache_add(struct dir *);
 extern void       dircache_remove(const struct vol *, struct dir *, int flag);
 extern struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did);
-extern struct dir *dircache_search_by_name(const struct vol *, const struct dir *dir, char *name, int len);
+extern struct dir *dircache_search_by_name(const struct vol *, const struct dir *dir, char *name, int len, time_t ctime);
 extern void       dircache_dump(void);
-
+extern void       log_dircache_stat(void);
 #endif /* DIRCACHE_H */

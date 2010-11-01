@@ -326,7 +326,7 @@ int getmetadata(struct vol *vol,
         if (!path->id) {
             struct dir *cachedfile;
             int len = strlen(upath);
-            if ((cachedfile = dircache_search_by_name(vol, dir, upath, len)) != NULL)
+            if ((cachedfile = dircache_search_by_name(vol, dir, upath, len, st->st_ctime)) != NULL)
                 id = cachedfile->d_did;
             else {
                 id = get_id(vol, adp, st, dir->d_did, upath, len);
@@ -343,10 +343,11 @@ int getmetadata(struct vol *vol,
                     }
                 }
                 
-                if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, NULL)) == NULL) {
+                if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, NULL, st->st_ctime)) == NULL) {
                     LOG(log_error, logtype_afpd, "getmetadata: error from dir_new");
                     exit(EXITERR_SYS);
                 }
+
                 if ((dircache_add(cachedfile)) != 0) {
                     LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
                     exit(EXITERR_SYS);
@@ -2235,12 +2236,11 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     /* id's need switching. src -> dest and dest -> src. 
      * we need to re-stat() if it was a cross device copy.
     */
-    if (sid) {
-	cnid_delete(vol->v_cdb, sid);
-    }
-    if (did) {
-	cnid_delete(vol->v_cdb, did);
-    }
+    if (sid)
+        cnid_delete(vol->v_cdb, sid);
+    if (did)
+        cnid_delete(vol->v_cdb, did);
+
     if ((did && ( (crossdev && lstat( upath, &srcst) < 0) || 
                 cnid_update(vol->v_cdb, did, &srcst, curdir->d_did,upath, dlen) < 0))
        ||
@@ -2333,6 +2333,12 @@ err_exchangefile:
     if ( !d_of && addp && ad_meta_fileno(addp) != -1 ) {/* META */
        ad_close(addp, ADFLAGS_HF);
     }
+
+    struct dir *cached;
+    if ((cached = dircache_search_by_did(vol, sid)) != NULL)
+        (void)dir_remove(vol, cached);
+    if ((cached = dircache_search_by_did(vol, did)) != NULL)
+        (void)dir_remove(vol, cached);
 
     return err;
 }

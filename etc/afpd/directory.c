@@ -555,12 +555,12 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* Create struct dir */
-    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath)) == NULL) { /* 6 */
+    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath, st.st_ctime)) == NULL) { /* 6 */
         LOG(log_error, logtype_afpd, "dirlookup(did: %u) {%s, %s}: %s", ntohl(did), mpath, upath, strerror(errno));
         err = 1;
         goto exit;
     }
-
+    
     /* Add it to the cache only if it's a dir */
     if (dircache_add(ret) != 0) { /* 7 */
         err = 1;
@@ -677,7 +677,8 @@ int caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
  * @param vol      (r) pointer to struct vol
  * @param pdid     (r) Parent CNID
  * @param did      (r) CNID
- * @param fullpath (r) Full unix path to dir or NULL for files
+ * @param path     (r) Full unix path to dir or NULL for files
+ * @param ctime    (r) st_ctime from stat
  *
  * @returns pointer to new struct dir or NULL on error
  *
@@ -688,7 +689,8 @@ struct dir *dir_new(const char *m_name,
                     const struct vol *vol,
                     cnid_t pdid,
                     cnid_t did,
-                    bstring path)
+                    bstring path,
+                    time_t ctime)
 {
     struct dir *dir;
 
@@ -722,6 +724,7 @@ struct dir *dir_new(const char *m_name,
     dir->d_pdid = pdid;
     dir->d_vid = vol->v_vid;
     dir->d_fullpath = path;
+    dir->ctime_dircache = ctime;
     return dir;
 }
 
@@ -746,8 +749,7 @@ void dir_free(struct dir *dir)
  * @brief Create struct dir from struct path
  *
  * Create a new struct dir from struct path. Then add it to the cache.
- * The caller must have assured that the dir is not already in the cache,
- * cf theAFP_ASSERTion.
+ *
  * 1. Open adouble file, get CNID from it.
  * 2. Search the database, hinting with the CNID from (1).
  * 3. Build fullpath and create struct dir.
@@ -776,7 +778,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     AFP_ASSERT(path);
     AFP_ASSERT(len > 0);
 
-    if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name))) != NULL) {
+    if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name), path->st.st_ctime)) != NULL) {
         /* there's a stray entry in the dircache */
         LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
@@ -819,7 +821,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     /* Allocate and initialize struct dir */
-    if ((cdir = dir_new( path->m_name, path->u_name, vol, dir->d_did, id, fullpath)) == NULL) { /* 3 */
+    if ((cdir = dir_new( path->m_name, path->u_name, vol, dir->d_did, id, fullpath, path->st.st_ctime)) == NULL) { /* 3 */
         err = 4;
         goto exit;
     }
@@ -1169,7 +1171,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
             /* Search the cache */
             int unamelen = strlen(ret.u_name);
-            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen); /* 14 */
+            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen, ret.st.st_ctime); /* 14 */
             if (cdir == NULL) {
                 /* Not in cache, create one */
                 if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) { /* 15 */
@@ -2332,7 +2334,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             return AFPERR_PARAM;
         LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
         uuidtype_t type;
-        len = getnamefromuuid( ibuf, &name, &type);
+        len = getnamefromuuid((unsigned char*) ibuf, &name, &type);
         if (len != 0)       /* its a error code, not len */
             return AFPERR_NOITEM;
         switch (type) {
@@ -2464,13 +2466,13 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
             break;
         case 5 :        /* username -> UUID */
             LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);
-            if (0 != getuuidfromname(ibuf, UUID_USER, rbuf))
+            if (0 != getuuidfromname(ibuf, UUID_USER, (unsigned char *)rbuf))
                 return AFPERR_NOITEM;
             *rbuflen = UUID_BINSIZE;
             break;
         case 6 :        /* groupname -> UUID */
             LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);
-            if (0 != getuuidfromname(ibuf, UUID_GROUP, rbuf))
+            if (0 != getuuidfromname(ibuf, UUID_GROUP, (unsigned char *)rbuf))
                 return AFPERR_NOITEM;
             *rbuflen = UUID_BINSIZE;
             break;

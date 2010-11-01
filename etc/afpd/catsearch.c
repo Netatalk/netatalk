@@ -600,7 +600,7 @@ static int catsearch(struct vol *vol, struct dir *dir,
 				   ALL dirsearch_byname will fail.
 				*/
                 int unlen = strlen(path.u_name);
-                path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir, path.u_name, unlen);
+                path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir, path.u_name, unlen, path.st.st_ctime);
             	if (path.d_dir == NULL) {
                 	/* path.m_name is set by adddir */
             	    if (NULL == (path.d_dir = dir_add( vol, dstack[cidx].dir, &path, unlen) ) ) {

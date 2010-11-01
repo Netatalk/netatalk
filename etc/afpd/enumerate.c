@@ -19,6 +19,7 @@
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
 #include <atalk/cnid.h>
+#include <atalk/util.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 
@@ -268,10 +269,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         return path_error(o_path, AFPERR_NODIR );
     }
 
-    LOG(log_debug, logtype_afpd, "enumerate(vid:%u, did:%u, cwddid:%u, cwd:'%s', name:'%s', f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
-        ntohs(vid), ntohl(did), ntohl(curdir->d_did),
-        cfrombstr(curdir->d_fullpath), o_path->u_name,
-        fbitmap, dbitmap, reqcnt, sindex, maxsz);
+    LOG(log_debug, logtype_afpd, "enumerate(\"%s/%s\", f/d:%04x/%04x, rc:%u, i:%u, max:%u)",
+        getcwdpath(), o_path->u_name, fbitmap, dbitmap, reqcnt, sindex, maxsz);
 
     data = rbuf + 3 * sizeof( u_int16_t );
     sz = 3 * sizeof( u_int16_t );	/* fbitmap, dbitmap, reqcount */
@@ -375,7 +374,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
             int len = strlen(s_path.u_name);
-            if ((dir = dircache_search_by_name(vol, curdir, s_path.u_name, len)) == NULL) {
+            if ((dir = dircache_search_by_name(vol, curdir, s_path.u_name, len, s_path.st.st_ctime)) == NULL) {
                 if ((dir = dir_add(vol, curdir, &s_path, len)) == NULL) {
                     LOG(log_error, logtype_afpd, "enumerate(vid:%u, did:%u, name:'%s'): error adding dir: '%s'",
                         ntohs(vid), ntohl(did), o_path->u_name, s_path.u_name);
@@ -389,6 +388,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             if ( fbitmap == 0 ) {
                 continue;
             }
+            /* files are added to the dircache in getfilparams() -> getmetadata() */
             if (AFP_OK != ( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
                                      data + header , &esz )) ) {
                 return( ret );

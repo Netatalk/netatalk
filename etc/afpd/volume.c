@@ -2172,7 +2172,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
                        volume,
                        DIRDID_ROOT_PARENT,
                        DIRDID_ROOT,
-                       bfromcstr(volume->v_path))
+                       bfromcstr(volume->v_path),
+                       st.st_ctime)
             ) == NULL) {
         free(vol_mname);
         LOG(log_error, logtype_afpd, "afp_openvol(%s): malloc: %s", volume->v_path, strerror(errno) );
@@ -2180,7 +2181,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         goto openvol_err;
     }
     free(vol_mname);
-
     volume->v_root = dir;
     curdir = dir;
 

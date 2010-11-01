@@ -463,12 +463,10 @@ static int moveandrename(const struct vol *vol,
 
         /* Remove it from the cache */
         struct dir *cacheddir = dircache_search_by_did(vol, id);
-        if (cacheddir == NULL) {
-            LOG(log_warning, logtype_afpd,"Not cached: \"%s/%s\"", getcwdpath(), upath);
-            rc = AFPERR_MISC;
-            goto exit;
+        if (cacheddir) {
+            LOG(log_warning, logtype_afpd,"Still cached: \"%s/%s\"", getcwdpath(), upath);
+            (void)dir_remove(vol, cacheddir);
         }
-        (void)dir_remove(vol, cacheddir);
 
         /* fix up the catalog entry */
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
@@ -608,7 +606,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
             rc = deletefile(vol, -1, upath, 1);
 
             struct dir *cachedfile;
-            if ((cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath)))) {
+            if ((cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath), s_path->st.st_ctime))) {
                 dircache_remove(vol, cachedfile, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
                 dir_free(cachedfile);
             }

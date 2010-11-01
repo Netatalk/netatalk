@@ -214,6 +214,8 @@ static void alarm_handler(int sig _U_)
      * may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
 
+    log_dircache_stat();
+
     /* we got some traffic from the client since the previous timer 
      * tick. */
     if ((child.flags & CHILD_DATA)) {
