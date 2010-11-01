@@ -1434,6 +1434,10 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     return ret;
 }
 
+/********************************************************************
+ * ACL funcs interfacing with other parts
+ ********************************************************************/
+
 /*!
  * map ACL to user maccess
  *
@@ -1476,4 +1480,38 @@ int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
 
 EC_CLEANUP:
     EC_EXIT;
+}
+
+/*!
+ * Check whether a volume supports ACLs
+ *
+ * @param vol  (r) volume
+ *
+ * @returns        0 if not, 1 if yes
+ */
+int check_vol_acl_support(const struct vol *vol)
+{
+    int ret = 1;
+
+#ifdef HAVE_SOLARIS_ACLS
+    ace_t *aces = NULL;
+    if (get_nfsv4_acl(vol->v_path, &aces) == -1)
+        ret = 0;
+#endif
+#ifdef HAVE_POSIX_ACLS
+    acl_t acl = NULL;
+    if ((acl = acl_get_file(vol->v_path, ACL_TYPE_ACCESS)) == NULL)
+        ret = 0;
+#endif
+
+#ifdef HAVE_SOLARIS_ACLS
+    if (aces) free(aces);
+#endif
+#ifdef HAVE_POSIX_ACLS
+    if (acl) acl_free(acl);
+#endif /* HAVE_POSIX_ACLS */
+
+    LOG(log_debug, logtype_afpd, "Volume \"%s\" ACL support: %s",
+        vol->v_path, ret ? "yes" : "no");
+    return ret;
 }

@@ -59,6 +59,7 @@ char *strchr (), *strrchr ();
 #include "mangle.h"
 #include "fork.h"
 #include "hash.h"
+#include "acls.h"
 
 extern int afprun(int root, char *cmd, int *outfd);
 
@@ -730,7 +731,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
 #ifdef HAVE_ACLS
-    volume->v_flags |= AFPVOL_ACLS;
+    if (check_vol_acl_support(volume))
+        volume->v_flags |= AFPVOL_ACLS;
 #endif
 
     /* handle options */
