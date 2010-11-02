@@ -22,6 +22,11 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef HAVE_LDAP
+#define LDAP_DEPRECATED 1
+#include <ldap.h>
+#endif
+
 #include <atalk/ldapconfig.h>
 #include <atalk/uuid.h>
 #include <atalk/logger.h>
