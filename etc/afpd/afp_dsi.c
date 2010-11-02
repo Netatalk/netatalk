@@ -84,8 +84,9 @@ static void afp_dsi_close(AFPObj *obj)
     if (obj->logout)
         (*obj->logout)();
 
-    LOG(log_info, logtype_afpd, "%.2fKB read, %.2fKB written",
+    LOG(log_info, logtype_afpd, "AFP statistics: %.2f KB read, %.2f KB written",
         dsi->read_count/1024.0, dsi->write_count/1024.0);
+    log_dircache_stat();
 
     dsi_close(dsi);
 }
@@ -174,8 +175,7 @@ static void afp_dsi_timedown(int sig _U_)
 
 /* ---------------------------------
  * SIGHUP reload configuration file
- * FIXME here or we wait ?
-*/
+ */
 volatile int reload_request = 0;
 
 static void afp_dsi_reload(int sig _U_)
@@ -213,8 +213,6 @@ static void alarm_handler(int sig _U_)
     /* we have to restart the timer because some libraries 
      * may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
-
-    log_dircache_stat();
 
     /* we got some traffic from the client since the previous timer 
      * tick. */
@@ -390,6 +388,7 @@ void afp_over_dsi(AFPObj *obj)
             reload_request = 0;
             load_volumes(child.obj);
             dircache_dump();
+            log_dircache_stat();
         }
 
         /* The first SIGINT enables debugging, the next restores the config */

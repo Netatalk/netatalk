@@ -567,7 +567,7 @@ int dircache_init(int reqsize)
  */
 void log_dircache_stat(void)
 {
-    LOG(log_debug, logtype_afpd, "dircache_stat: "
+    LOG(log_info, logtype_afpd, "dircache statistics: "
         "entries: %lu, lookups: %llu, hits: %llu, misses: %llu, added: %llu, removed: %llu, expunged: %llu, evicted: %llu",
         queue_count,
         dircache_stat.lookups,
