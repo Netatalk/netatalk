@@ -1220,6 +1220,7 @@ if test "x$neta_cv_eas_sys_found" = "xyes" ; then
       neta_cv_eas="$neta_cv_eas | sys"
    fi
 fi
+AC_DEFINE_UNQUOTED(EA_MODULES,["$neta_cv_eas"],[Available Extended Attributes modules])
 
 dnl --------------------- Check if realpath() takes NULL
 AC_CACHE_CHECK([if the realpath function allows a NULL argument],
