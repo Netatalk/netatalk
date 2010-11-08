@@ -1,3 +1,8 @@
+Changes in 2.2alpha2
+====================
+
+* FIX: afpd: fix compilation error when ACL support is not available
+
 Changes in 2.2alpha1
 ====================
 

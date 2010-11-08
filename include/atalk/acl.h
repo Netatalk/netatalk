@@ -19,6 +19,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_ACLS
+
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
 #endif  /* HAVE_SOLARIS_ACLS */
@@ -39,4 +41,6 @@ extern int nfsv4_chmod(char *name, mode_t mode);
 
 extern int remove_acl_vfs(const char *name);
 
-#endif  /* ATALK_ACL_H */
+#endif /* HAVE_ACLS */
+
+#endif /* ATALK_ACL_H */
