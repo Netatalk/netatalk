@@ -2,6 +2,7 @@ Changes in 2.2alpha2
 ====================
 
 * FIX: afpd: fix compilation error when ACL support is not available
+* FIX: Ensure Appletalk manpages and config files are distributed
 
 Changes in 2.2alpha1
 ====================

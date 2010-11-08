@@ -3,8 +3,19 @@
 SUBDIRS = pam
 SUFFIXES = .tmpl .
 
-GENFILES = afpd.conf AppleVolumes.default
 TMPLFILES = afpd.conf.tmpl AppleVolumes.default.tmpl
+GENFILES = afpd.conf AppleVolumes.default
+CLEANFILES = $(GENFILES)
+EXTRA_DIST = \
+	AppleVolumes.default.tmpl \
+	AppleVolumes.system \
+	afp_ldap.conf \
+	afpd.conf.tmpl \
+	atalkd.conf \
+	netatalk.conf \
+	papd.conf
+
+OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
 if USE_DEBIAN
 CONFFILES = AppleVolumes.system
@@ -19,10 +30,6 @@ endif
 if USE_APPLETALK
 CONFFILES += atalkd.conf papd.conf
 endif
-
-OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
-EXTRA_DIST = $(CONFFILES) $(TMPLFILES) afp_ldap.conf
-CLEANFILES = $(GENFILES)
 
 pkgconfdir = @PKGCONFDIR@
 webminpath = @WEBMIN_PATH@
