@@ -113,6 +113,6 @@ int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rb
 extern int acl_ldap_readconfig(char *name);
 
 /* Misc funcs */
-extern int acltoownermode(char *path, struct stat *st,uid_t uid, struct maccess *ma);
+extern int acltoownermode(char *path, struct stat *st, struct maccess *ma);
 extern int check_vol_acl_support(const struct vol *vol);
 #endif

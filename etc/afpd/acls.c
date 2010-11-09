@@ -50,6 +50,7 @@
 #include "unix.h"
 #include "acls.h"
 #include "acl_mappings.h"
+#include "auth.h"
 
 /* for map_acl() */
 #define SOLARIS_2_DARWIN       1
@@ -77,14 +78,12 @@
  *
  * @param path           (r) path to filesystem object
  * @param sb             (r) struct stat of path
- * @param pwd            (r) struct passwd of user
  * @param result         (w) resulting Darwin allow ACE
  *
  * @returns                  0 or -1 on error
  */
 static int solaris_acl_rights(const char *path,
                               const struct stat *sb,
-                              const struct passwd *pwd,
                               uint32_t *result)
 {
     EC_INIT;
@@ -125,11 +124,11 @@ static int solaris_acl_rights(const char *path,
            if its a trivial ACE_EVERYONE ACE
            THEN
            process ACE */
-        if (((who == pwd->pw_uid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)))
+        if (((who == uuid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)))
             ||
             ((flags & ACE_IDENTIFIER_GROUP) && !(flags & ACE_GROUP) && gmem(who))
             ||
-            ((flags & ACE_OWNER) && (pwd->pw_uid == sb->st_uid))
+            ((flags & ACE_OWNER) && (uuid == sb->st_uid))
             ||
             ((flags & ACE_GROUP) && gmem(sb->st_gid))
             ||
@@ -375,14 +374,12 @@ EC_CLEANUP:
  *
  * @param path           (r) path to filesystem object
  * @param sb             (r) struct stat of path
- * @param pwd            (r) struct passwd of user
  * @param result         (rw) resulting Darwin allow ACE
  *
  * @returns                  0 or -1 on error
  */
 static int posix_acl_rights(const char *path,
                             const struct stat *sb,
-                            const struct passwd *pwd,
                             uint32_t *result)
 {
     EC_INIT;
@@ -420,7 +417,7 @@ static int posix_acl_rights(const char *path,
         switch (tag) {
         case ACL_USER:
             EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
-            if (*uid == pwd->pw_uid) {
+            if (*uid == uuid) {
                 LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             }
@@ -428,7 +425,7 @@ static int posix_acl_rights(const char *path,
             uid = NULL;
             break;
         case ACL_USER_OBJ:
-            if (sb->st_uid == pwd->pw_uid) {
+            if (sb->st_uid == uuid) {
                 LOG(log_maxdebug, logtype_afpd, "ACL_USER_OBJ: %u", sb->st_uid);
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
             }
@@ -1098,7 +1095,6 @@ static int check_acl_access(const struct vol *vol,
     uint32_t       allowed_rights = 0;
     char           *username = NULL;
     uuidtype_t     uuidtype;
-    struct passwd  *pwd;
     struct stat    st;
     bstring        parent = NULL;
 
@@ -1122,13 +1118,11 @@ static int check_acl_access(const struct vol *vol,
         goto EC_CLEANUP;
     }
 
-    EC_NULL_LOG_ERR(pwd = getpwnam(username), AFPERR_MISC);
-
 #ifdef HAVE_SOLARIS_ACLS
-    EC_ZERO_LOG(solaris_acl_rights(path, &st, pwd, &allowed_rights));
+    EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, &st, pwd, &allowed_rights));
+    EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
 #endif
 
     LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
@@ -1161,10 +1155,10 @@ static int check_acl_access(const struct vol *vol,
         EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
 
 #ifdef HAVE_SOLARIS_ACLS
-        EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, pwd, &parent_rights));
+        EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, &st, pwd, &allowed_rights));
+    EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
 #endif
         if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
             allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
@@ -1444,10 +1438,9 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
  * This is the magic function that makes ACLs usable by calculating
  * the access granted by ACEs to the logged in user.
  */
-int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
+int acltoownermode(char *path, struct stat *st, struct maccess *ma)
 {
     EC_INIT;
-    struct passwd *pw;
     uint32_t rights = 0;
 
     if ( ! (AFPobj->options.flags & OPTION_ACL2MACCESS)
@@ -1458,13 +1451,11 @@ int acltoownermode(char *path, struct stat *st, uid_t uid, struct maccess *ma)
     LOG(log_maxdebug, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",
         getcwdpath(), path, ma->ma_user);
 
-    EC_NULL_LOG(pw = getpwuid(uid));
-
 #ifdef HAVE_SOLARIS_ACLS
-    EC_ZERO_LOG(solaris_acl_rights(path, st, pw, &rights));
+    EC_ZERO_LOG(solaris_acl_rights(path, st, &rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, st, pw, &rights));
+    EC_ZERO_LOG(posix_acl_rights(path, st, &rights));
 #endif
 
     LOG(log_maxdebug, logtype_afpd, "rights: 0x%08x", rights);

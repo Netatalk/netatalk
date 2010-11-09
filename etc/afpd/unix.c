@@ -180,8 +180,7 @@ void accessmode(char *path, struct maccess *ma, struct dir *dir _U_, struct stat
     }
     utommode( st, ma );
 #ifdef HAVE_ACLS
-    /* 10.5 Finder looks at OS 9 mode, so we must do some mapping */
-    acltoownermode( path, st, uuid, ma);
+    acltoownermode(path, st, ma);
 #endif
 }
 
