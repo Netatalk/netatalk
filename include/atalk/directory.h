@@ -1,6 +1,4 @@
 /*
- * $Id: directory.h,v 1.3.2.1 2010-02-01 10:56:08 franklahm Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -57,7 +55,6 @@ struct dir {
                                      /* will just point to the same storage as d_m_name !! */
     ucs2_t      *d_m_name_ucs2;       /* mac name as UCS2 */
     qnode_t     *qidx_node;           /* pointer to position in queue index */
-    void        *d_ofork;             /* oforks using this directory. */
     time_t      ctime;                /* inode ctime, used and modified by reenumeration */
     time_t      ctime_dircache;       /* inode ctime, used and modified by dircache */
     int         d_flags;              /* directory flags */

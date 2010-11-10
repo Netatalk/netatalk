@@ -108,7 +108,7 @@ int of_rename(const struct vol *vol,
               struct dir *olddir, const char *oldpath _U_,
               struct dir *newdir, const char *newpath)
 {
-    struct ofork *of, *next, *d_ofork;
+    struct ofork *of, *next;
     int done = 0;
 
     if (!s_of)
@@ -118,30 +118,16 @@ int of_rename(const struct vol *vol,
     while ((of = next)) {
         next = next->next; /* so we can unhash and still be all right. */
 
-        if (vol == of->of_vol && olddir == of->of_dir &&
-            s_of->key.dev == of->key.dev &&
-            s_of->key.inode == of->key.inode ) {
+        if (vol == of->of_vol
+            && olddir->d_did == of->of_did
+            && s_of->key.dev == of->key.dev
+            && s_of->key.inode == of->key.inode ) {
             if (!done) {
                 strlcpy( of_name(of), newpath, of->of_ad->ad_m_namelen);
                 done = 1;
             }
-            if (newdir != olddir) {
-                of->of_d_prev->of_d_next = of->of_d_next;
-                of->of_d_next->of_d_prev = of->of_d_prev;
-                if (of->of_dir->d_ofork == of) {
-                    of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
-                }
-                of->of_dir = newdir;
-                if (!(d_ofork = newdir->d_ofork)) {
-                    newdir->d_ofork = of;
-                    of->of_d_next = of->of_d_prev = of;
-                } else {
-                    of->of_d_next = d_ofork;
-                    of->of_d_prev = d_ofork->of_d_prev;
-                    of->of_d_prev->of_d_next = of;
-                    d_ofork->of_d_prev = of;
-                }
-            }
+            if (newdir != olddir)
+                of->of_did = newdir->d_did;
         }
     }
 
@@ -159,7 +145,7 @@ of_alloc(struct vol *vol,
          struct adouble *ad,
          struct stat    *st)
 {
-    struct ofork        *of, *d_ofork;
+    struct ofork        *of;
     u_int16_t       refnum, of_refnum;
 
     int         i;
@@ -247,17 +233,7 @@ of_alloc(struct vol *vol,
 
     of->of_ad = ad;
     of->of_vol = vol;
-    of->of_dir = dir;
-
-    if (!(d_ofork = dir->d_ofork)) {
-        dir->d_ofork = of;
-        of->of_d_next = of->of_d_prev = of;
-    } else {
-        of->of_d_next = d_ofork;
-        of->of_d_prev = d_ofork->of_d_prev;
-        d_ofork->of_d_prev->of_d_next = of;
-        d_ofork->of_d_prev = of;
-    }
+    of->of_did = dir->d_did;
 
     *ofrefnum = refnum;
     of->of_refnum = refnum;
@@ -423,14 +399,6 @@ void of_dealloc( struct ofork *of)
         return;
 
     of_unhash(of);
-
-    /* detach ofork */
-    of->of_d_prev->of_d_next = of->of_d_next;
-    of->of_d_next->of_d_prev = of->of_d_prev;
-    if (of->of_dir->d_ofork == of) {
-        of->of_dir->d_ofork = (of == of->of_d_next) ? NULL : of->of_d_next;
-    }
-
     oforks[ of->of_refnum % nforks ] = NULL;
 
     /* decrease refcount */

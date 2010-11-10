@@ -73,7 +73,7 @@ static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_
     }
 
     vol = ofork->of_vol;
-    dir = ofork->of_dir;
+    dir = dirlookup(vol, ofork->of_did);
 
     if (NULL == (path.u_name = mtoupath(vol, of_name(ofork), dir->d_did, utf8_encoding()))) {
         return( AFPERR_MISC );

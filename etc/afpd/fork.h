@@ -1,6 +1,4 @@
 /*
- * $Id: fork.h,v 1.18 2010-03-12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -17,35 +15,33 @@
 #include "directory.h"
 
 struct file_key {
-    dev_t		dev;
-    ino_t		inode;
+    dev_t       dev;
+    ino_t       inode;
 };
 
 struct ofork {
     struct file_key     key;
-    struct adouble	*of_ad;
+    struct adouble      *of_ad;
     struct vol          *of_vol;
-    struct dir		*of_dir;
-
-    u_int16_t           of_refnum;
+    cnid_t              of_did;
+    uint16_t            of_refnum;
     int                 of_flags;
-
     struct ofork        **prevp, *next;
-    struct ofork        *of_d_prev, *of_d_next;
+//    struct ofork        *of_d_prev, *of_d_next;
 };
 
-#define OPENFORK_DATA	(0)
-#define OPENFORK_RSCS	(1<<7)
+#define OPENFORK_DATA   (0)
+#define OPENFORK_RSCS   (1<<7)
 
-#define OPENACC_RD	(1<<0)
-#define OPENACC_WR	(1<<1)
-#define OPENACC_DRD	(1<<4)
-#define OPENACC_DWR	(1<<5)
+#define OPENACC_RD  (1<<0)
+#define OPENACC_WR  (1<<1)
+#define OPENACC_DRD (1<<4)
+#define OPENACC_DWR (1<<5)
 
 /* ofork.of_flags bits */
-#define AFPFORK_OPEN	(1<<0)
-#define AFPFORK_RSRC	(1<<1)
-#define AFPFORK_DATA	(1<<2)
+#define AFPFORK_OPEN    (1<<0)
+#define AFPFORK_RSRC    (1<<1)
+#define AFPFORK_DATA    (1<<2)
 #define AFPFORK_DIRTY   (1<<3)
 #define AFPFORK_ACCRD   (1<<4)
 #define AFPFORK_ACCWR   (1<<5)

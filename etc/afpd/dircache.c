@@ -260,7 +260,6 @@ static void dircache_evict(void)
         queue_count--;
 
         if (curdir == dir
-            || dir->d_ofork
             || (dir->d_flags & DIRF_CACHELOCK)) {     /* 2 */
             if ((dir->qidx_node = enqueue(index_queue, dir)) == NULL) {
                 dircache_dump();
@@ -605,57 +604,54 @@ void dircache_dump(void)
     fprintf(dump, "Configured maximum cache size: %u\n\n", dircache_maxsize);
 
     fprintf(dump, "Primary CNID index:\n");
-    fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
+    fprintf(dump, "       VID     DID    CNID STAT PATH\n");
     fprintf(dump, "====================================================================\n");
     hash_scan_begin(&hs, dircache);
     i = 1;
     while ((hn = hash_scan_next(&hs))) {
         dir = hnode_get(hn);
-        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s%s  %s\n",
+        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
                 dir->d_fullpath ? "d" : "f",
                 (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
-                dir->d_ofork ? "o" : "-",
                 cfrombstr(dir->d_u_name));
     }
 
     fprintf(dump, "\nSecondary DID/name index:\n");
-    fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
+    fprintf(dump, "       VID     DID    CNID STAT PATH\n");
     fprintf(dump, "====================================================================\n");
     hash_scan_begin(&hs, index_didname);
     i = 1;
     while ((hn = hash_scan_next(&hs))) {
         dir = hnode_get(hn);
-        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s%s  %s\n",
+        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
                 dir->d_fullpath ? "d" : "f",
                 (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
-                dir->d_ofork ? "o" : "-",
                 cfrombstr(dir->d_u_name));
     }
 
     fprintf(dump, "\nLRU Queue:\n");
-    fprintf(dump, "       VID     DID    CNID STAT  PATH\n");
+    fprintf(dump, "       VID     DID    CNID STAT PATH\n");
     fprintf(dump, "====================================================================\n");
 
     for (i = 1; i <= queue_count; i++) {
         if (n == index_queue)
             break;
         dir = (struct dir *)n->data;
-        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s%s  %s\n",
+        fprintf(dump, "%05u: %3u  %6u  %6u  %s%s  %s\n",
                 i,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
                 dir->d_fullpath ? "d" : "f",
                 (dir->d_flags & DIRF_CACHELOCK) ? "l" : "-",
-                dir->d_ofork ? "o" : "-",
                 cfrombstr(dir->d_u_name));
         n = n->next;
     }

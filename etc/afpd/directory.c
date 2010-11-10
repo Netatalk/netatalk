@@ -56,7 +56,7 @@ int         afp_errno;
 /* As long as directory.c hasn't got its own init call, this get initialized in dircache_init */
 struct dir rootParent  = {
     NULL, NULL, NULL, NULL,          /* path, d_m_name, d_u_name, d_m_name_ucs2 */
-    NULL, NULL, 0, 0,                /* qidx_node, d_ofork, ctime, d_flags */
+    NULL, 0, 0,                      /* qidx_node, ctime, d_flags */
     0, 0, 0, 0                       /* pdid, did, offcnt, d_vid */
 };
 struct dir  *curdir = &rootParent;
@@ -872,8 +872,8 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
         return 0;
 
-    if (dir->d_flags & DIRF_CACHELOCK || dir->d_ofork) { /* 1 */
-        LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): dir is locked or has opened forks",
+    if (dir->d_flags & DIRF_CACHELOCK) { /* 1 */
+        LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): dir is locked",
             ntohl(dir->d_did), cfrombstr(dir->d_u_name));
         return 0;
     }
