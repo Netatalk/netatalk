@@ -1,3 +1,8 @@
+Changes in 2.2alpha3
+====================
+
+* FIX: afpd: various fixes
+
 Changes in 2.2alpha2
 ====================
 
@@ -27,6 +32,7 @@ Changes in 2.2alpha1
 
 Changes in 2.1.5
 ================
+
 * UPD: afpd: support newlines in -loginmesg with \n escaping syntax
 * UPD: afpd: support for changed chmod semantics on ZFS with ACLs
        in onnv145+
@@ -92,6 +98,7 @@ Changes in 2.1-release
 
 Changes in 2.1-beta2
 ====================
+
 * NEW: afpd: static generated AFP signature stored in afp_signature.conf,
        cf man 5 afp_signature.conf
 * NEW: afpd: clustering support: new per volume option "cnidserver".
