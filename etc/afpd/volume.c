@@ -611,6 +611,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     char        suffix[6]; /* max is #FFFF */
     u_int16_t   flags;
 
+    LOG(log_debug, logtype_afpd, "createvol: Volume '%s'", name);
+
     if ( name == NULL || *name == '\0' ) {
         if ((name = strrchr( path, '/' )) == NULL) {
             return -1;  /* Obviously not a fully qualified path */
@@ -651,7 +653,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     if ( 0 >= ( u8mvlen = convert_string(CH_UTF8_MAC, CH_UCS2, tmpname, tmpvlen, u8mtmpname, AFPVOL_U8MNAMELEN*2)) )
         return -1;
 
-    LOG(log_debug, logtype_afpd, "createvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
+    LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' -> UTF8-MAC Name: '%s'", name, tmpname);
 
     /* Maccharset Volume Name */
     /* Firsty convert name from unixcharset to maccharset */
@@ -677,7 +679,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     if ( 0 >= ( macvlen = convert_string(obj->options.maccharset, CH_UCS2, tmpname, tmpvlen, mactmpname, AFPVOL_U8MNAMELEN*2)) )
         return -1;
 
-    LOG(log_debug, logtype_afpd, "createvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
+    LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
 
     /* check duplicate */
     for ( volume = Volumes; volume; volume = volume->v_next ) {
@@ -1199,6 +1201,8 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
         obj->options.umask);
     save_options[VOLOPT_UMASK].i_value = obj->options.umask;
 
+    LOG(log_debug, logtype_afpd, "readvolfile: \"%s\"", path);
+
     while ( myfgets( buf, sizeof( buf ), fp ) != NULL ) {
         initline( strlen( buf ), buf );
         parseline( sizeof( path ) - 1, path );
@@ -1265,23 +1269,26 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
                 volset(options, save_options, volname, sizeof(volname) - 1, tmp);
             }
 
-            /* check allow/deny lists:
+            /* check allow/deny lists (if not afpd master loading volumes for Zeroconf reg.):
                allow -> either no list (-1), or in list (1)
                deny -> either no list (-1), or not in list (0) */
-            if (accessvol(options[VOLOPT_ALLOW].c_value, obj->username) &&
-                (accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1) &&
-                hostaccessvol(VOLOPT_ALLOWED_HOSTS, volname, options[VOLOPT_ALLOWED_HOSTS].c_value, obj) &&
-                (hostaccessvol(VOLOPT_DENIED_HOSTS, volname, options[VOLOPT_DENIED_HOSTS].c_value, obj) < 1)) {
+            if (!((DSI *)obj->handle)->child
+                ||
+                (accessvol(options[VOLOPT_ALLOW].c_value, obj->username) &&
+                 (accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1) &&
+                 hostaccessvol(VOLOPT_ALLOWED_HOSTS, volname, options[VOLOPT_ALLOWED_HOSTS].c_value, obj) &&
+                 (hostaccessvol(VOLOPT_DENIED_HOSTS, volname, options[VOLOPT_DENIED_HOSTS].c_value, obj) < 1))) {
 
                 /* handle read-only behaviour. semantics:
                  * 1) neither the rolist nor the rwlist exist -> rw
                  * 2) rolist exists -> ro if user is in it.
                  * 3) rwlist exists -> ro unless user is in it. */
-                if (((options[VOLOPT_FLAGS].i_value & AFPVOL_RO) == 0) &&
-                    ((accessvol(options[VOLOPT_ROLIST].c_value,
-                                obj->username) == 1) ||
-                     !accessvol(options[VOLOPT_RWLIST].c_value,
-                                obj->username)))
+                if (((DSI *)obj->handle)->child
+                    &&
+                    ((options[VOLOPT_FLAGS].i_value & AFPVOL_RO) == 0)
+                    &&
+                    ((accessvol(options[VOLOPT_ROLIST].c_value, obj->username) == 1) ||
+                     !accessvol(options[VOLOPT_RWLIST].c_value, obj->username)))
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
 
                 /* do variable substitution for volname */
