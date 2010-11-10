@@ -1,5 +1,4 @@
 /*
- * $Id: adouble.h,v 1.55 2010-03-30 12:55:26 franklahm Exp $
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -34,72 +33,28 @@
 #include <config.h>
 #endif
 
-/* -------------------
- * need pread() and pwrite()
- */
-#ifdef HAVE_PREAD
-
-#ifndef HAVE_PWRITE
-#undef HAVE_PREAD
-#endif
-
-#endif
-
-#ifdef HAVE_PWRITE
-#ifndef HAVE_PREAD
-#undef HAVE_PWRITE
-#endif
-#endif
-
-/*
-  Still have to figure out which platforms really
-  need _XOPEN_SOURCE defined for pread.
-*/
-#if defined(HAVE_PREAD) && !defined(SOLARIS) && !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(TRU64)
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 500
-#endif
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#ifdef HAVE_UNISTD_H
-#undef __USE_MISC
-#define __USE_MISC
 #include <unistd.h>
-#endif
-
 #include <sys/cdefs.h>
-
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif
-
 #include <sys/mman.h>
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
+
 #include <netatalk/endian.h>
 
 /* version info */
-#define AD_VERSION1     0x00010000
-#define SFM_VERSION     AD_VERSION1
-
 #define AD_VERSION2     0x00020000
 #define AD_VERSION2_OSX 0x00020001
-/*
-  #define AD_VERSION1_ADS 0x00010002
-*/
-#define AD_VERSION1_SFM 0x00010003
-#define AD_VERSION      AD_VERSION2
+#define AD_VERSION2_EA  0x00020002
+#define AD_VERSION      AD_VERSION2_EA
 
 /*
  * AppleDouble entry IDs.
  */
 #define ADEID_DFORK         1
 #define ADEID_RFORK         2
-#define ADEID_NAME          3 /* Note: starting with Netatalk 2.1 we do NOT alway set the name */
+#define ADEID_NAME          3
 #define ADEID_COMMENT       4
 #define ADEID_ICONBW        5
 #define ADEID_ICONCOL       6
@@ -113,48 +68,37 @@
 #define ADEID_AFPFILEI      14 /* where the rest of the FILEI info goes */
 #define ADEID_DID           15
 
-#if AD_VERSION == AD_VERSION1
-#define ADEID_MAX           16
-#else
 /* netatalk private note fileid reused DID */
 #define ADEID_PRIVDEV       16
 #define ADEID_PRIVINO       17
 #define ADEID_PRIVSYN       18 /* in synch with database */
 #define ADEID_PRIVID        19
-#define ADEID_SFMRESERVE1   20
-#define ADEID_SFMRESERVE2   21
+#define ADEID_MAX           19
 
+/* These are the real ids for these entries, as stored in the adouble file */
 #define AD_DEV              0x80444556
 #define AD_INO              0x80494E4F
 #define AD_SYN              0x8053594E
 #define AD_ID               0x8053567E
-#define ADEID_MAX           22
-#endif
 
 /* magic */
 #define AD_APPLESINGLE_MAGIC 0x00051600
 #define AD_APPLEDOUBLE_MAGIC 0x00051607
 #define AD_MAGIC             AD_APPLEDOUBLE_MAGIC
-#define SFM_MAGIC            0x00504641
 
 /* sizes of relevant entry bits */
 #define ADEDLEN_MAGIC       4
 #define ADEDLEN_VERSION     4
 #define ADEDLEN_FILLER      16
 #define ADEDLEN_NENTRIES    2
-
-/* 26 */
-#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + \
-                             ADEDLEN_FILLER + ADEDLEN_NENTRIES)
+#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + ADEDLEN_FILLER + ADEDLEN_NENTRIES)
 #define AD_ENTRY_LEN        12  /* size of a single entry header */
 
-/* v1 field widths */
-#define ADEDLEN_NAME        255
-#define ADEDLEN_COMMENT     200
-#define ADEDLEN_FILEI       16
-#define ADEDLEN_FINDERI     32
-
-/* v2 field widths */
+/* field widths */
+#define ADEDLEN_NAME            255
+#define ADEDLEN_COMMENT         200
+#define ADEDLEN_FILEI           16
+#define ADEDLEN_FINDERI         32
 #define ADEDLEN_FILEDATESI      16
 #define ADEDLEN_SHORTNAME       12 /* length up to 8.3 */
 #define ADEDLEN_AFPFILEI        4
@@ -167,72 +111,35 @@
 #define ADEDLEN_PRIVSYN         8
 #define ADEDLEN_PRIVID          4
 
-#define ADEID_NUM_V1            5
 #define ADEID_NUM_V2            13
-
-// #define ADEID_NUM_SFM        5
-/* sizeof SFM meta data */
-#define AD_SFM_LEN 60
-
-/* 589 */
-#define AD_DATASZ1      (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + ADEDLEN_FINDERI + \
-                         (ADEID_NUM_V1 * AD_ENTRY_LEN))
-
-#if AD_DATASZ1 != 589
-#error bad size for AD_DATASZ1
-#endif
-
-#define AD_NEWSZ2       (ADEDLEN_DID + ADEDLEN_AFPFILEI + ADEDLEN_SHORTNAME + ADEDLEN_PRODOSFILEI \
-                         + ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + ADEDLEN_PRIVSYN + ADEDLEN_PRIVID)
-
-/* 725 */
-#define AD_DATASZ2      (AD_DATASZ1 + AD_NEWSZ2 + ((ADEID_NUM_V2 - ADEID_NUM_V1) * AD_ENTRY_LEN))
-
+#define ADEID_NUM_OSX           2
+#define ADEID_NUM_EA            5
+#define AD_DATASZ2 (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + \
+                    ADEDLEN_FINDERI + ADEDLEN_DID + ADEDLEN_AFPFILEI + ADEDLEN_SHORTNAME + \
+                    ADEDLEN_PRODOSFILEI + ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + \
+                    ADEDLEN_PRIVSYN + ADEDLEN_PRIVID + (ADEID_NUM_V2 * AD_ENTRY_LEN))
 #if AD_DATASZ2 != 741
 #error bad size for AD_DATASZ2
 #endif
 
-#define AD_DATASZ_MAX   1024
-#if AD_VERSION == AD_VERSION1
-#define AD_DATASZ   AD_DATASZ1 /* hold enough for the entries */
-#elif AD_VERSION == AD_VERSION2
-#define AD_DATASZ   AD_DATASZ2
+#define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEID_FINDERI + \
+                      ADEID_COMMENT + ADEID_FILEDATESI + ADEID_AFPFILEI + ADEID_PRIVID)
+#if AD_DATASZ_EA != 342
+#error bad size for AD_DATASZ_EA
 #endif
 
-/*
- * some legacy defines from netatalk-990130
- * (to keep from breaking certain packages)
- *
- */
-
-#define ADEDOFF_RFORK   589
-#define ADEDOFF_NAME    86
-#define ADEDOFF_COMMENT 341
-#define ADEDOFF_FINDERI 557
-#ifndef ADEDOFF_FILEI
-#define ADEDOFF_FILEI   541
+#define AD_DATASZ_MAX   1024
+#if AD_VERSION == AD_VERSION2
+#define AD_DATASZ   AD_DATASZ2
+#elif AD_VERSION == AD_VERSION2_EA
+#define AD_DATASZ   AD_DATASZ_EA
 #endif
 
 typedef u_int32_t cnid_t;
 
-/*
- * The header of the AppleDouble Header File looks like this:
- *
- *  NAME            SIZE
- *  ====            ====
- *  Magic           4
- *  Version         4
- *  Home File System    16  (this becomes filler in ad v2)
- *  Number of Entries   2
- *  Entry Descriptors for each entry:
- *      Entry ID    4
- *      Offset      4
- *      Length      4
- */
-
 struct ad_entry {
-    u_int32_t   ade_off;
-    u_int32_t   ade_len;
+    uint32_t   ade_off;
+    uint32_t   ade_len;
 };
 
 typedef struct adf_lock_t {
@@ -243,11 +150,9 @@ typedef struct adf_lock_t {
 
 struct ad_fd {
     int          adf_fd;        /* -1: invalid, -2: symlink */
-
 #ifndef HAVE_PREAD
     off_t        adf_off;
 #endif
-
     char         *adf_syml;
     int          adf_flags;
     int          adf_excl;
@@ -257,36 +162,6 @@ struct ad_fd {
 
 /* some header protection */
 #define AD_INITED  0xad494e54  /* ad"INT" */
-struct adouble_fops;
-
-struct adouble {
-    u_int32_t           ad_magic;
-    u_int32_t           ad_version;
-    char                ad_filler[ 16 ];
-    struct ad_entry     ad_eid[ ADEID_MAX ];
-    struct ad_fd        ad_data_fork, ad_resource_fork, ad_metadata_fork;
-    struct ad_fd        *ad_md; /* either ad_resource or ad_metadata */
-
-    int                 ad_flags;    /* This really stores version info too (AD_VERSION*) */
-    int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
-    unsigned int        ad_inited;
-    int                 ad_options;
-    int                 ad_fileordir;
-    int                 ad_refcount; /* used in afpd/ofork.c */
-    off_t               ad_rlen;     /* ressource fork len with AFP 3.0
-                                        the header parameter size is too small.
-                                     */
-    char                *ad_m_name;   /* mac name for open fork */
-    int                 ad_m_namelen;
-    struct adouble_fops *ad_ops;
-    u_int16_t       ad_open_forks;      /* open forks (by others) */
-
-#ifdef USE_MMAPPED_HEADERS
-    char                *ad_data;
-#else
-    char        ad_data[AD_DATASZ_MAX];
-#endif
-};
 
 struct adouble_fops {
     char *(*ad_path)(const char *, int);
@@ -297,12 +172,35 @@ struct adouble_fops {
     int  (*ad_header_upgrade)(struct adouble *, char *);
 };
 
+struct adouble {
+    u_int32_t           ad_magic;
+    u_int32_t           ad_version;
+    char                ad_filler[ 16 ];
+    struct ad_entry     ad_eid[ ADEID_MAX ];
+    struct ad_fd        ad_data_fork, ad_resource_fork, ad_metadata_fork;
+    struct ad_fd        *ad_md; /* either ad_resource or ad_metadata */
+    int                 ad_flags;    /* This really stores version info too (AD_VERSION*) */
+    int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
+    unsigned int        ad_inited;
+    int                 ad_options;
+    int                 ad_fileordir;
+    int                 ad_refcount; /* used in afpd/ofork.c */
+    off_t               ad_rlen;     /* ressource fork len with AFP 3.0
+                                        the header parameter size is too small. */
+    char                *ad_m_name;   /* mac name for open fork */
+    int                 ad_m_namelen;
+    struct adouble_fops *ad_ops;
+    u_int16_t       ad_open_forks;      /* open forks (by others) */
+#ifdef USE_MMAPPED_HEADERS
+    char                *ad_data;
+#else
+    char        ad_data[AD_DATASZ_MAX];
+#endif
+};
+
 #define ADFLAGS_DF        (1<<0)
 #define ADFLAGS_HF        (1<<1)
 #define ADFLAGS_DIR       (1<<2)
-/*
-#define ADFLAGS_NOADOUBLE (1<<3)
-*/
 #define ADFLAGS_V1COMPAT  (1<<4)
 #define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
 #define ADFLAGS_RDONLY    (1<<6)  /* don't try readwrite */
@@ -311,7 +209,6 @@ struct adouble_fops {
 #define ADFLAGS_MD        ADFLAGS_HF /* (1<<9) */
 #define ADFLAGS_CREATE    (1<<9)
 
-/* adouble v2 cnid cache */
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
@@ -554,22 +451,15 @@ extern int ad_getdate (const struct adouble *, unsigned int, u_int32_t *);
 /* ad_attr.c */
 extern int       ad_setattr (const struct adouble *, const u_int16_t);
 extern int       ad_getattr (const struct adouble *, u_int16_t *);
-
-/* Note: starting with Netatalk 2.1 we do NOT alway set the name */
 extern int       ad_setname (struct adouble *, const char *);
-
-#if AD_VERSION == AD_VERSION2
 extern int       ad_setid (struct adouble *, const dev_t dev,const ino_t ino, const u_int32_t, const u_int32_t, const void *);
 extern u_int32_t ad_getid (struct adouble *, const dev_t, const ino_t, const cnid_t, const void *);
 extern u_int32_t ad_forcegetid (struct adouble *adp);
-#else
-#define ad_setid(a, b, c)
-#endif
 
 #ifdef WITH_SENDFILE
 extern int ad_readfile_init(const struct adouble *ad, 
-				       const int eid, off_t *off,
-				       const int end);
+                            const int eid, off_t *off,
+                            const int end);
 #endif
 
 #if 0
