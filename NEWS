@@ -22,13 +22,13 @@ Changes in 2.2alpha1
 * UPD: afpd: ACLs usable (though not visible on the client side) without common
        directory service, by mapping ACLs to UARight
 * UPD: afpd: performance improvements for ACL access calculations
-* UPD: AppleTalk ist disabled by default at configuration time. If needed
+* UPD: AppleTalk is disabled by default at configuration time. If needed
        use configure switch --enable-ddp.
 * FIX: afpd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
        use non-blocking IO and select instead.
 * FIX: cnid_dbd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
        use non-blocking IO and select instead.
-* REM: afile/achfile/apple_cm/apple_mv/apple_rm: use ad
+* REM: afile/achfile/apple_cp/apple_mv/apple_rm: use ad
 
 Changes in 2.1.5
 ================
@@ -36,7 +36,7 @@ Changes in 2.1.5
 * UPD: afpd: support newlines in -loginmesg with \n escaping syntax
 * UPD: afpd: support for changed chmod semantics on ZFS with ACLs
        in onnv145+
-* FIX: afpd: fix leaking ressource when moving objects on the server
+* FIX: afpd: fix leaking resource when moving objects on the server
 
 Changes in 2.1.4
 ================
@@ -46,7 +46,7 @@ Changes in 2.1.4
 * FIX: afpd: Better handling of symlinks in combination with ACLs and EAs.
        Fixes bug 3074076.
 * FIX: dbd: Adding a file with the CNID from it's adouble file did
-       not work in case that CNID was alread occupied in the database
+       not work in case that CNID was already occupied in the database
 * FIX: macusers: add support for Solaris
 * NEW: cnid_metad: use a PID lockfile
 * NEW: afpd: prevent log flooding
