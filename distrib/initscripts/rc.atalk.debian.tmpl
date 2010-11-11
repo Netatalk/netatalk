@@ -19,7 +19,7 @@ NAME=netatalk
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Guard to prevent execution if netatalk was removed.
-test -x :SBINDIR:/atalkd || exit 0
+test -x :SBINDIR:/afpd || exit 0
 
 # Set defaults. Please change these options in /etc/default/netatalk
 AFPD_UAMLIST="-U uams_dhx2.so"
@@ -101,16 +101,20 @@ case "$1" in
 		echo -n " cnid_metad"
 		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/cnid_metad
 	
-		echo -n " papd"
-		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/papd
+		if test -x :SBINDIR:/papd; then
+                    echo -n " papd"
+		    start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/papd
+	        fi
 	
 		if test -x :SBINDIR:/timelord; then
                     echo -n " timelord"
 		    start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/timelord
 	        fi
 
-		echo -n " atalkd"
-		start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/atalkd
+		if test -x :SBINDIR:/atalkd; then
+                    echo -n " atalkd"
+		    start-stop-daemon --stop --quiet --oknodo --exec :SBINDIR:/atalkd
+	        fi
 	
 		echo "."
 	;;
