@@ -2,6 +2,7 @@ Changes in 2.2alpha3
 ====================
 
 * FIX: afpd: various fixes
+* FIX: Any daemon did not run if atalkd doesn't exist (redhat/debian)
 
 Changes in 2.2alpha2
 ====================
