@@ -125,7 +125,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                                 goto exit;
                             }
                             if (now.tv_usec > end.tv_usec) {
-                                tv.tv_usec = 1000 + end.tv_usec - now.tv_usec;
+                                tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
                                 tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
                             } else {
                                 tv.tv_usec = end.tv_usec - now.tv_usec;
