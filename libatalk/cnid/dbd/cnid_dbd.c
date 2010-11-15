@@ -1,6 +1,4 @@
 /*
- * $Id: cnid_dbd.c,v 1.17 2010-03-31 09:47:32 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
  * All Rights Reserved.  See COPYING.
  */
@@ -39,23 +37,22 @@
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
-#include "cnid_dbd.h"
 #include <atalk/cnid_dbd_private.h>
+#include <atalk/util.h>
+
+#include "cnid_dbd.h"
 
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif /* ! SOL_TCP */
 
+/* Wait MAX_DELAY seconds before a request to the CNID server times out */
+#define MAX_DELAY 10
+
 static void RQST_RESET(struct cnid_dbd_rqst  *r)
 {
     memset(r, 0, sizeof(struct cnid_dbd_rqst ));
 }
-
-/* ----------- */
-#define MAX_DELAY 10
-
-/* *MUST* be < afp tickle or it's never triggered (got EINTR first) */
-#define SOCK_DELAY 11
 
 static void delay(int sec)
 {
@@ -69,10 +66,11 @@ static void delay(int sec)
 static int tsock_getfd(const char *host, const char *port)
 {
     int sock = -1;
-    struct timeval tv;
     int attr;
     int err;
     struct addrinfo hints, *servinfo, *p;
+    int optval;
+    socklen_t optlen = sizeof(optval);
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
@@ -81,48 +79,93 @@ static int tsock_getfd(const char *host, const char *port)
     hints.ai_flags = AI_NUMERICSERV;
 
     if ((err = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_default, "tsock_getfd: getaddrinfo: CNID server %s:%s : %s\n", host, port, gai_strerror(err));
+        LOG(log_error, logtype_default, "tsock_getfd: getaddrinfo: CNID server %s:%s : %s\n",
+            host, port, gai_strerror(err));
         return -1;
     }
 
     /* loop through all the results and bind to the first we can */
     for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            LOG(log_info, logtype_default, "tsock_getfd: socket CNID server %s:: %s", host, strerror(errno));
-                continue;
+            LOG(log_info, logtype_default, "tsock_getfd: socket CNID server %s:: %s",
+                host, strerror(errno));
+            continue;
         }
 
         attr = 1;
         if (setsockopt(sock, SOL_TCP, TCP_NODELAY, &attr, sizeof(attr)) == -1) {
-            LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY CNID server %s: %s", host, strerror(errno));
+            LOG(log_error, logtype_cnid, "getfd: set TCP_NODELAY CNID server %s: %s",
+                host, strerror(errno));
             close(sock);
-            continue;
-        }
-        
-        tv.tv_sec = SOCK_DELAY;
-        tv.tv_usec = 0;
-        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-            LOG(log_error, logtype_cnid, "getfd: set SO_RCVTIMEO CNID server %s: %s", host, strerror(errno));
-            close(sock);
-            continue;
+            sock = -1;
+            return -1;
         }
 
-        tv.tv_sec = SOCK_DELAY;
-        tv.tv_usec = 0;
-        if (setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-            LOG(log_error, logtype_cnid, "getfd: set SO_SNDTIMEO CNID server %s: %s", host, strerror(errno));
+        if (setnonblock(sock, 1) != 0) {
+            LOG(log_error, logtype_cnid, "getfd: setnonblock: %s", strerror(err));
             close(sock);
-            continue;
+            sock = -1;
+            return -1;
         }
-        
+
         if (connect(sock, p->ai_addr, p->ai_addrlen) == -1) {
-            err = errno;
-            close(sock);
-            sock=-1;
-            LOG(log_error, logtype_cnid, "getfd: connect CNID server %s: %s", host, strerror(err));
-            continue;
+            if (errno == EINPROGRESS) {
+                struct timeval tv;
+                tv.tv_usec = 0;
+                tv.tv_sec  = 5; /* give it five seconds ... */
+                fd_set wfds;
+                FD_ZERO(&wfds);
+                FD_SET(sock, &wfds);
+
+                if ((err = select(sock + 1, NULL, &wfds, NULL, &tv)) == 0) {
+                    /* timeout */
+                    LOG(log_error, logtype_cnid, "getfd: select timed out for CNID server %s",
+                        host);
+                    close(sock);
+                    sock = -1;
+                    continue;
+                }
+                if (err == -1) {
+                    /* select failed */
+                    LOG(log_error, logtype_cnid, "getfd: select failed for CNID server %s",
+                        host);
+                    close(sock);
+                    sock = -1;
+                    continue;
+                }
+
+                if ( ! FD_ISSET(sock, &wfds)) {
+                    /* give up */
+                    LOG(log_error, logtype_cnid, "getfd: socket not ready connecting to %s",
+                        host);
+                    close(sock);
+                    sock = -1;
+                    continue;
+                }
+
+                if ((err = getsockopt(sock, SOL_SOCKET, SO_ERROR, &optval, &optlen)) != 0 || optval != 0) {
+                    if (err != 0) {
+                        /* somethings very wrong */
+                        LOG(log_error, logtype_cnid, "getfd: getsockopt error with CNID server %s: %s",
+                            host, strerror(errno));
+                    } else {
+                        errno = optval;
+                        LOG(log_error, logtype_cnid, "getfd: getsockopt says: %s",
+                            strerror(errno));
+                    }
+                    close(sock);
+                    sock=-1;
+                    continue;
+                }
+            } else {
+                LOG(log_error, logtype_cnid, "getfd: connect CNID server %s: %s",
+                    host, strerror(errno));
+                close(sock);
+                sock = -1;
+                continue;
+            }
         }
-        
+
         /* We've got a socket */
         break;
     }
@@ -130,49 +173,57 @@ static int tsock_getfd(const char *host, const char *port)
     freeaddrinfo(servinfo);
 
     if (p == NULL) {
-        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from CNID server %s:%s", host, port);
+        errno = optval;
+        LOG(log_error, logtype_cnid, "tsock_getfd: no suitable network config from CNID server (%s:%s): %s",
+            host, port, strerror(errno));
         return -1;
     }
 
     return(sock);
 }
 
-/* --------------------- */
-static int write_vec(int fd, struct iovec *iov, size_t towrite)
+/*!
+ * Write "towrite" bytes using writev on non-blocking fd
+ *
+ * Every short write is considered an error, transmit can handle that.
+ *
+ * @param fd      (r) socket fd which must be non-blocking
+ * @param iov     (r) iovec for writev
+ * @param towrite (r) number of bytes in all iovec elements
+ * @param vecs    (r) number of iovecs in array
+ *
+ * @returns "towrite" bytes written or -1 on error
+ */
+static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
 {
     ssize_t len;
-    size_t len1;
+    int slept = 0;
+    int sleepsecs;
 
-    LOG(log_maxdebug, logtype_cnid, "write_vec: request to write %d bytes", towrite);
-
-    len1 =  iov[1].iov_len;
-    while (towrite > 0) {
-        if (((len = writev(fd, iov, 2)) == -1 && errno == EINTR) || !len)
+    while (1) {
+        if (((len = writev(fd, iov, vecs)) == -1 && errno == EINTR))
             continue;
 
-        if ((size_t)len == towrite) /* wrote everything out */
-            break;
-        else if (len < 0) { /* error */
-            return -1;
+        if ((! slept) && len == -1 && errno == EAGAIN) {
+            sleepsecs = 5;
+            while ((sleepsecs = sleep(sleepsecs)));
+            slept = 1;
+            continue;
         }
 
-        towrite -= len;
-        if (towrite > len1) { /* skip part of header */
-            iov[0].iov_base = (char *) iov[0].iov_base + len;
-            iov[0].iov_len -= len;
-        } else { /* skip to data */
-            if (iov[0].iov_len) {
-                len -= iov[0].iov_len;
-                iov[0].iov_len = 0;
-            }
-            iov[1].iov_base = (char *) iov[1].iov_base + len;
-            iov[1].iov_len -= len;
-        }
+        if (len == towrite) /* wrote everything out */
+            break;
+
+        if (len == -1)
+            LOG(log_error, logtype_cnid, "write_vec: short write: %s", strerror(errno));
+        else
+            LOG(log_error, logtype_cnid, "write_vec: short write: %d", len);
+        return len;
     }
 
-    LOG(log_maxdebug, logtype_cnid, "write_vec: wrote %d bytes", towrite);
+    LOG(log_maxdebug, logtype_cnid, "write_vec: wrote %d bytes", len);
 
-    return 0;
+    return len;
 }
 
 /* --------------------- */
@@ -182,7 +233,7 @@ static int init_tsock(CNID_private *db)
     int len;
     struct iovec iov[2];
 
-    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s", 
+    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s",
         db->db_dir, db->cnidserver, db->cnidport);
 
     if ((fd = tsock_getfd(db->cnidserver, db->cnidport)) < 0)
@@ -196,7 +247,7 @@ static int init_tsock(CNID_private *db)
     iov[1].iov_base = db->db_dir;
     iov[1].iov_len  = len;
 
-    if (write_vec(fd, iov, len + sizeof(int)) < 0) {
+    if (write_vec(fd, iov, len + sizeof(int), 2) != len + sizeof(int)) {
         LOG(log_error, logtype_cnid, "init_tsock: Error/short write: %s", strerror(errno));
         close(fd);
         return -1;
@@ -212,34 +263,27 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
 {
     struct iovec iov[2];
     size_t towrite;
-
-    LOG(log_maxdebug, logtype_cnid, "send_packet: BEGIN");
-
-    if (!rqst->namelen) {
-        if (write(db->fd, rqst, sizeof(struct cnid_dbd_rqst)) != sizeof(struct cnid_dbd_rqst)) {
-            LOG(log_warning, logtype_cnid, "send_packet: Error/short write rqst (db_dir %s): %s",
-                db->db_dir, strerror(errno));
-            return -1;
-        }
-        LOG(log_maxdebug, logtype_cnid, "send_packet: OK");
-        return 0;
-    }
+    int vecs;
 
     iov[0].iov_base = rqst;
     iov[0].iov_len  = sizeof(struct cnid_dbd_rqst);
+    towrite = sizeof(struct cnid_dbd_rqst);
+    vecs = 1;
 
-    iov[1].iov_base = rqst->name;
-    iov[1].iov_len  = rqst->namelen;
+    if (rqst->namelen) {
+        iov[1].iov_base = rqst->name;
+        iov[1].iov_len  = rqst->namelen;
+        towrite += rqst->namelen;
+        vecs++;
+    }
 
-    towrite = sizeof(struct cnid_dbd_rqst) +rqst->namelen;
-
-    if (write_vec(db->fd, iov, towrite) < 0) {
+    if (write_vec(db->fd, iov, towrite, vecs) != towrite) {
         LOG(log_warning, logtype_cnid, "send_packet: Error writev rqst (db_dir %s): %s",
             db->db_dir, strerror(errno));
         return -1;
     }
-    
-    LOG(log_maxdebug, logtype_cnid, "send_packet: OK");
+
+    LOG(log_maxdebug, logtype_cnid, "send_packet: {done}");
     return 0;
 }
 
@@ -266,18 +310,50 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
     return 0;
 }
 
-/* ------------------- */
-static ssize_t dbd_read(int socket, void *data, const size_t length)
+/*!
+ * Non-blocking read "length" bytes within 1 second using select
+ *
+ * @param socket   (r)  must be nonblocking !
+ * @param data     (rw) buffer for the read data
+ * @param lenght   (r)  how many bytes to read
+ *
+ * @returns number of bytes actually read or -1 on fatal error
+ */
+static ssize_t read_packet(int socket, void *data, const size_t length)
 {
     size_t stored;
     ssize_t len;
-  
+    struct timeval tv;
+    fd_set rfds;
+    int ret;
+
     stored = 0;
+
     while (stored < length) {
-        len = read(socket, (u_int8_t *) data + stored, length - stored);
+        len = readt(socket, (u_int8_t *) data + stored, length - stored, 0, 5);
         if (len == -1) {
-            if (errno == EINTR)
+            switch (errno) {
+            case EINTR:
                 continue;
+            case EAGAIN:
+                tv.tv_usec = 0;
+                tv.tv_sec  = 1;
+
+                FD_ZERO(&rfds);
+                FD_SET(socket, &rfds);
+                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
+                    switch (ret) {
+                    case 0:
+                        LOG(log_warning, logtype_cnid, "select timeout 1s");
+                        return stored;
+                    default: /* -1 */
+                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
+                        return -1;
+                    }
+                }
+                continue;
+            }
+            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
             return -1;
         }
         else if (len > 0)
@@ -299,15 +375,13 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
     char *nametmp;
     size_t len;
 
-    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: BEGIN");
-
     if (send_packet(db, rqst) < 0) {
         return -1;
     }
     len = rply->namelen;
     nametmp = rply->name;
 
-    ret = dbd_read(db->fd, rply, sizeof(struct cnid_dbd_rply));
+    ret = read_packet(db->fd, rply, sizeof(struct cnid_dbd_rply));
 
     if (ret != sizeof(struct cnid_dbd_rply)) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
@@ -322,13 +396,13 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
             db->db_dir, rply->name, rply->namelen, len);
         return -1;
     }
-    if (rply->namelen && (ret = dbd_read(db->fd, rply->name, rply->namelen)) != (ssize_t)rply->namelen) {
+    if (rply->namelen && (ret = read_packet(db->fd, rply->name, rply->namelen)) != (ssize_t)rply->namelen) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading name from fd (db_dir %s): %s",
             db->db_dir, ret == -1?strerror(errno):"closed");
         return -1;
     }
 
-    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: END");
+    LOG(log_maxdebug, logtype_cnid, "dbd_rpc: {done}");
 
     return 0;
 }
@@ -338,8 +412,6 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
 {
     time_t orig, t;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
-
-    LOG(log_debug7, logtype_cnid, "transmit: BEGIN");
 
     if (db->changed) {
         /* volume and db don't have the same timestamp
@@ -352,7 +424,7 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
             struct cnid_dbd_rply rply_stamp;
             char  stamp[ADEDLEN_PRIVSYN];
 
-            LOG(log_debug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
+            LOG(log_maxdebug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
             if ((db->fd = init_tsock(db)) < 0) {
                 goto transmit_fail;
             }
@@ -374,24 +446,29 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
                     return -1;
                 }
                 LOG(log_debug7, logtype_cnid, "transmit: ... OK.");
-            }
-            else {
+            } else { /* db->notfirst == 0 */
                 db->notfirst = 1;
                 if (db->client_stamp)
                     memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
                 memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
             }
-            LOG(log_debug, logtype_cnid, "transmit: succesfully attached to cnid_dbd for volume '%s' with stamp '%08lx'.", 
+            LOG(log_debug, logtype_cnid, "transmit: attached to '%s', stamp: '%08lx'.",
                 db->db_dir, *(uint64_t *)stamp);
         }
         if (!dbd_rpc(db, rqst, rply)) {
-            LOG(log_debug7, logtype_cnid, "transmit: END OK");
+            LOG(log_maxdebug, logtype_cnid, "transmit: {done}");
             return 0;
         }
     transmit_fail:
         if (db->fd != -1) {
             close(db->fd);
             db->fd = -1; /* FD not valid... will need to reconnect */
+        }
+
+        if (errno == ECONNREFUSED) { /* errno carefully injected in tsock_getfd */
+            /* give up */
+            LOG(log_error, logtype_cnid, "transmit: connection refused (db_dir %s)", db->db_dir);
+            return -1;
         }
 
         if (!clean) { /* don't sleep if just got disconnected by cnid server */
@@ -401,7 +478,7 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
                 return -1;
             }
             /* sleep a little before retry */
-            delay(2);
+            delay(1);
         } else {
             clean = 0; /* false... next time sleep */
             time(&orig);

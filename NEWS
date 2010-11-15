@@ -1,9 +1,14 @@
 Changes in 2.1.5
 ================
+
 * UPD: afpd: support newlines in -loginmesg with \n escaping syntax
 * UPD: afpd: support for changed chmod semantics on ZFS with ACLs
        in onnv145+
 * FIX: afpd: fix leaking ressource when moving objects on the server
+* FIX: afpd: backport Solaris 10 compatibilty fix from 2.2: don't use
+       SO_SNDTIMEO/SO_RCVTIMEO, use non-blocking IO and select instead.
+* FIX: cnid_dbd: backport Solaris 10 compatibilty fix from 2.2: don't
+       use SO_SNDTIMEO/SO_RCVTIMEO, use non-blocking IO and select instead.
 
 Changes in 2.1.4
 ================

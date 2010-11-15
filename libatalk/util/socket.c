@@ -30,6 +30,9 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+
+#include <atalk/logger.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 
@@ -60,6 +63,78 @@ int setnonblock(int fd, int cmd)
             return -1;
 
     return 0;
+}
+
+/*!
+ * non-blocking drop-in replacement for read with timeout using select
+ *
+ * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
+ * @param data            (rw) buffer for the read data
+ * @param lenght          (r)  how many bytes to read
+ * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
+ *                             io mode for the socket
+ * @param timeout         (r)  number of seconds to try reading
+ *
+ * @returns number of bytes actually read or -1 on fatal error
+ */
+ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout)
+{
+    size_t stored;
+    ssize_t len;
+    struct timeval tv;
+    fd_set rfds;
+    int ret;
+
+    stored = 0;
+
+    if (setnonblocking) {
+        if (setnonblock(socket, 1) != 0)
+            return -1;
+    }
+
+    while (stored < length) {
+        len = read(socket, (char *) data + stored, length - stored);
+        if (len == -1) {
+            switch (errno) {
+            case EINTR:
+                continue;
+            case EAGAIN:
+                tv.tv_usec = 0;
+                tv.tv_sec  = timeout;
+
+                FD_ZERO(&rfds);
+                FD_SET(socket, &rfds);
+                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
+                    switch (ret) {
+                    case 0:
+                        LOG(log_warning, logtype_cnid, "select timeout 1s");
+                        goto exit;
+
+                    default: /* -1 */
+                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
+                        stored = -1;
+                        goto exit;
+                    }
+                }
+                continue;
+            }
+            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
+            stored = -1;
+            goto exit;
+        }
+        else if (len > 0)
+            stored += len;
+        else
+            break;
+    }
+
+exit:
+    if (setnonblocking) {
+        if (setnonblock(socket, 0) != 0)
+            return -1;
+    }
+
+    return stored;
 }
 
 /*!

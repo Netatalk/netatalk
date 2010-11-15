@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
 
         /* TODO: Check out read errors, broken pipe etc. in libatalk. Is
            SIGIPE ignored there? Answer: Ignored for dsi, but not for asp ... */
-        ret = read(rqstfd, &len, sizeof(int));
+        ret = readt(rqstfd, &len, sizeof(int), 1, 5);
         if (!ret) {
             /* already close */
             goto loop_end;
