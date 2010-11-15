@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include <atalk/logger.h>
 
@@ -81,7 +83,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
 {
     size_t stored;
     ssize_t len;
-    struct timeval tv;
+    struct timeval now, end, tv;
     fd_set rfds;
     int ret;
 
@@ -92,6 +94,11 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
             return -1;
     }
 
+    /* Calculate end time */
+    (void)gettimeofday(&now, NULL);
+    end = now;
+    end.tv_sec += timeout;
+
     while (stored < length) {
         len = read(socket, (char *) data + stored, length - stored);
         if (len == -1) {
@@ -99,34 +106,50 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
             case EINTR:
                 continue;
             case EAGAIN:
-                tv.tv_usec = 0;
-                tv.tv_sec  = timeout;
 
                 FD_ZERO(&rfds);
                 FD_SET(socket, &rfds);
+                tv.tv_usec = 0;
+                tv.tv_sec  = timeout;
+                        
                 while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
                     switch (ret) {
                     case 0:
-                        LOG(log_warning, logtype_cnid, "select timeout 1s");
+                        LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
                         goto exit;
 
                     default: /* -1 */
-                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
+                        if (errno == EINTR) {
+                            (void)gettimeofday(&now, NULL);
+                            if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
+                                LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                                goto exit;
+                            }
+                            if (now.tv_usec > end.tv_usec) {
+                                tv.tv_usec = 1000 + end.tv_usec - now.tv_usec;
+                                tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
+                            } else {
+                                tv.tv_usec = end.tv_usec - now.tv_usec;
+                                tv.tv_sec  = end.tv_sec - now.tv_sec;
+                            }
+                            continue;
+                        }
+                        LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
                         stored = -1;
                         goto exit;
                     }
-                }
+                } /* while (select) */
                 continue;
-            }
-            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
+            } /* switch (errno) */
+            LOG(log_error, logtype_afpd, "read: %s", strerror(errno));
             stored = -1;
             goto exit;
-        }
+        } /* (len == -1) */
         else if (len > 0)
             stored += len;
         else
             break;
-    }
+    } /* while (stored < length) */
 
 exit:
     if (setnonblocking) {
