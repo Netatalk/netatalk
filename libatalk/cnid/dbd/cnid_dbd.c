@@ -48,7 +48,8 @@
 #endif /* ! SOL_TCP */
 
 /* Wait MAX_DELAY seconds before a request to the CNID server times out */
-#define MAX_DELAY 10
+#define MAX_DELAY 20
+#define ONE_DELAY 5
 
 static void RQST_RESET(struct cnid_dbd_rqst  *r)
 {
@@ -328,7 +329,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
     len = rply->namelen;
     nametmp = rply->name;
 
-    ret = readt(db->fd, rply, sizeof(struct cnid_dbd_rply), 0, 2);
+    ret = readt(db->fd, rply, sizeof(struct cnid_dbd_rply), 0, ONE_DELAY);
 
     if (ret != sizeof(struct cnid_dbd_rply)) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
@@ -343,7 +344,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
             db->db_dir, rply->name, rply->namelen, len);
         return -1;
     }
-    if (rply->namelen && (ret = readt(db->fd, rply->name, rply->namelen, 0, 2)) != (ssize_t)rply->namelen) {
+    if (rply->namelen && (ret = readt(db->fd, rply->name, rply->namelen, 0, ONE_DELAY)) != (ssize_t)rply->namelen) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading name from fd (db_dir %s): %s",
             db->db_dir, ret == -1?strerror(errno):"closed");
         return -1;
