@@ -620,7 +620,7 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        actual_len = readt(rqstfd, dbdir, len, 1);
+        actual_len = readt(rqstfd, dbdir, len, 1, 4);
         if (actual_len < 0) {
             LOG(log_severe, logtype_cnid, "Read(2) error : %s", strerror(errno));
             goto loop_end;
