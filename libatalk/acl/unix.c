@@ -47,7 +47,12 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
         LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name, strerror(errno));
         return -1;
     }
-    if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) || S_ISLNK(st.st_mode))) {
+
+    if (S_ISLNK(st.st_mode))
+        /* sorry, no ACLs for symlinks */
+        return 0;
+
+    if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))) {
         LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): special", getcwdpath(), name);
         return 0;
     }
