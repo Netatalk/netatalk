@@ -597,7 +597,8 @@ int main(int argc, char *argv[])
         if (rqstfd <= 0)
             continue;
 
-        ret = readt(rqstfd, &len, sizeof(int), 4);
+        ret = readt(rqstfd, &len, sizeof(int), 1, 4);
+
         if (!ret) {
             /* already close */
             goto loop_end;

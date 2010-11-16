@@ -127,7 +127,7 @@ extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t l
  ******************************************************************/
 
 extern int setnonblock(int fd, int cmd);
-extern ssize_t readt(int socket, void *data, const size_t length, int timeout);
+extern ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout);
 extern const char *getip_string(const struct sockaddr *sa);
 extern unsigned int getip_port(const struct sockaddr *sa);
 extern void apply_ip_mask(struct sockaddr *ai, int maskbits);

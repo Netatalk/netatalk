@@ -89,7 +89,7 @@ static int tsock_getfd(const char *host, const char *port)
         if ((sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             LOG(log_info, logtype_default, "tsock_getfd: socket CNID server %s:: %s",
                 host, strerror(errno));
-                continue;
+            continue;
         }
 
         attr = 1;
@@ -107,7 +107,7 @@ static int tsock_getfd(const char *host, const char *port)
             sock = -1;
             return -1;
         }
-        
+
         if (connect(sock, p->ai_addr, p->ai_addrlen) == -1) {
             if (errno == EINPROGRESS) {
                 struct timeval tv;
@@ -165,7 +165,7 @@ static int tsock_getfd(const char *host, const char *port)
                 continue;
             }
         }
-        
+
         /* We've got a socket */
         break;
     }
@@ -197,10 +197,19 @@ static int tsock_getfd(const char *host, const char *port)
 static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
 {
     ssize_t len;
+    int slept = 0;
+    int sleepsecs;
 
     while (1) {
         if (((len = writev(fd, iov, vecs)) == -1 && errno == EINTR))
             continue;
+
+        if ((! slept) && len == -1 && errno == EAGAIN) {
+            sleepsecs = 5;
+            while ((sleepsecs = sleep(sleepsecs)));
+            slept = 1;
+            continue;
+        }
 
         if (len == towrite) /* wrote everything out */
             break;
@@ -224,7 +233,7 @@ static int init_tsock(CNID_private *db)
     int len;
     struct iovec iov[2];
 
-    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s", 
+    LOG(log_debug, logtype_cnid, "init_tsock: BEGIN. Opening volume '%s', CNID Server: %s/%s",
         db->db_dir, db->cnidserver, db->cnidport);
 
     if ((fd = tsock_getfd(db->cnidserver, db->cnidport)) < 0)
@@ -273,7 +282,7 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
             db->db_dir, strerror(errno));
         return -1;
     }
-    
+
     LOG(log_maxdebug, logtype_cnid, "send_packet: {done}");
     return 0;
 }
@@ -321,7 +330,7 @@ static ssize_t read_packet(int socket, void *data, const size_t length)
     stored = 0;
 
     while (stored < length) {
-        len = read(socket, (u_int8_t *) data + stored, length - stored);
+        len = readt(socket, (u_int8_t *) data + stored, length - stored, 0, 5);
         if (len == -1) {
             switch (errno) {
             case EINTR:
@@ -443,7 +452,7 @@ static int transmit(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_db
                     memcpy(db->client_stamp, stamp, ADEDLEN_PRIVSYN);
                 memcpy(db->stamp, stamp, ADEDLEN_PRIVSYN);
             }
-            LOG(log_debug, logtype_cnid, "transmit: attached to '%s', stamp: '%08lx'.", 
+            LOG(log_debug, logtype_cnid, "transmit: attached to '%s', stamp: '%08lx'.",
                 db->db_dir, *(uint64_t *)stamp);
         }
         if (!dbd_rpc(db, rqst, rply)) {
