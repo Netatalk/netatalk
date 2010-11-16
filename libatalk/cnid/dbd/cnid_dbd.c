@@ -332,7 +332,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
 
     if (ret != sizeof(struct cnid_dbd_rply)) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
-            db->db_dir, ret == -1?strerror(errno):"closed");
+            db->db_dir, ret == -1 ? strerror(errno) : "closed");
         rply->name = nametmp;
         return -1;
     }

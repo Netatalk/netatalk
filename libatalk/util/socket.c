@@ -158,6 +158,9 @@ exit:
             return -1;
     }
 
+    if (len == -1 && stored == 0)
+        /* last read or select got an error and we haven't got yet anything => return -1*/
+        return -1;
     return stored;
 }
 
