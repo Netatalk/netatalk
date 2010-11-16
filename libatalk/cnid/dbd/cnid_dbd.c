@@ -1,5 +1,6 @@
 /*
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2010
  * All Rights Reserved.  See COPYING.
  */
 
@@ -47,7 +48,8 @@
 #endif /* ! SOL_TCP */
 
 /* Wait MAX_DELAY seconds before a request to the CNID server times out */
-#define MAX_DELAY 10
+#define MAX_DELAY 20
+#define ONE_DELAY 5
 
 static void RQST_RESET(struct cnid_dbd_rqst  *r)
 {
@@ -205,7 +207,7 @@ static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
             continue;
 
         if ((! slept) && len == -1 && errno == EAGAIN) {
-            sleepsecs = 5;
+            sleepsecs = 2;
             while ((sleepsecs = sleep(sleepsecs)));
             slept = 1;
             continue;
@@ -215,7 +217,7 @@ static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
             break;
 
         if (len == -1)
-            LOG(log_error, logtype_cnid, "write_vec: short write: %s", strerror(errno));
+            LOG(log_error, logtype_cnid, "write_vec: %s", strerror(errno));
         else
             LOG(log_error, logtype_cnid, "write_vec: short write: %d", len);
         return len;
@@ -310,60 +312,6 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
     return 0;
 }
 
-/*!
- * Non-blocking read "length" bytes within 1 second using select
- *
- * @param socket   (r)  must be nonblocking !
- * @param data     (rw) buffer for the read data
- * @param lenght   (r)  how many bytes to read
- *
- * @returns number of bytes actually read or -1 on fatal error
- */
-static ssize_t read_packet(int socket, void *data, const size_t length)
-{
-    size_t stored;
-    ssize_t len;
-    struct timeval tv;
-    fd_set rfds;
-    int ret;
-
-    stored = 0;
-
-    while (stored < length) {
-        len = readt(socket, (u_int8_t *) data + stored, length - stored, 0, 5);
-        if (len == -1) {
-            switch (errno) {
-            case EINTR:
-                continue;
-            case EAGAIN:
-                tv.tv_usec = 0;
-                tv.tv_sec  = 1;
-
-                FD_ZERO(&rfds);
-                FD_SET(socket, &rfds);
-                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
-                    switch (ret) {
-                    case 0:
-                        LOG(log_warning, logtype_cnid, "select timeout 1s");
-                        return stored;
-                    default: /* -1 */
-                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
-                        return -1;
-                    }
-                }
-                continue;
-            }
-            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
-            return -1;
-        }
-        else if (len > 0)
-            stored += len;
-        else
-            break;
-    }
-    return stored;
-}
-
 /* ---------------------
  * send a request and get reply
  * assume send is non blocking
@@ -381,11 +329,11 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
     len = rply->namelen;
     nametmp = rply->name;
 
-    ret = read_packet(db->fd, rply, sizeof(struct cnid_dbd_rply));
+    ret = readt(db->fd, rply, sizeof(struct cnid_dbd_rply), 0, ONE_DELAY);
 
     if (ret != sizeof(struct cnid_dbd_rply)) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading header from fd (db_dir %s): %s",
-            db->db_dir, ret == -1?strerror(errno):"closed");
+            db->db_dir, ret == -1 ? strerror(errno) : "closed");
         rply->name = nametmp;
         return -1;
     }
@@ -396,7 +344,7 @@ static int dbd_rpc(CNID_private *db, struct cnid_dbd_rqst *rqst, struct cnid_dbd
             db->db_dir, rply->name, rply->namelen, len);
         return -1;
     }
-    if (rply->namelen && (ret = read_packet(db->fd, rply->name, rply->namelen)) != (ssize_t)rply->namelen) {
+    if (rply->namelen && (ret = readt(db->fd, rply->name, rply->namelen, 0, ONE_DELAY)) != (ssize_t)rply->namelen) {
         LOG(log_error, logtype_cnid, "dbd_rpc: Error reading name from fd (db_dir %s): %s",
             db->db_dir, ret == -1?strerror(errno):"closed");
         return -1;
