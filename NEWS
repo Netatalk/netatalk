@@ -7,6 +7,8 @@ Changes in 2.1.5
 * FIX: afpd: fix leaking ressource when moving objects on the server
 * FIX: afpd: backport Solaris 10 compatibilty fix from 2.2: don't use
        SO_SNDTIMEO/SO_RCVTIMEO, use non-blocking IO and select instead.
+* FIX: afpd: misaligned memory access on Sparc in ad_setattr, fixes
+       bug 3110004.
 * FIX: cnid_dbd: backport Solaris 10 compatibilty fix from 2.2: don't
        use SO_SNDTIMEO/SO_RCVTIMEO, use non-blocking IO and select instead.
 
