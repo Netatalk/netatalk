@@ -1,9 +1,7 @@
 /*
- * $Id: cnid_metad.c,v 1.22 2009-11-16 02:04:47 didg Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2010
  * All Rights Reserved.  See COPYING.
- *
  */
 
 /* 
@@ -628,7 +626,7 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        actual_len = read(rqstfd, dbdir, len);
+        actual_len = readt(rqstfd, dbdir, len, 1, 5);
         if (actual_len < 0) {
             LOG(log_severe, logtype_cnid, "Read(2) error : %s", strerror(errno));
             goto loop_end;
