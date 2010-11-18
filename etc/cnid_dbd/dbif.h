@@ -58,11 +58,12 @@
 #include <atalk/adouble.h>
 #include "db_param.h"
 
-#define DBIF_DB_CNT 3
+#define DBIF_DB_CNT 4
  
 #define DBIF_CNID          0
 #define DBIF_IDX_DEVINO    1
 #define DBIF_IDX_DIDNAME   2
+#define DBIF_IDX_NAME      3
 
 /* Structures */
 typedef struct {
@@ -80,7 +81,7 @@ typedef struct {
     char     *db_envhome;
     char     *db_filename;
     FILE     *db_errlog;
-    db_table db_table[3];
+    db_table db_table[DBIF_DB_CNT];
 } DBD;
 
 /* Functions */

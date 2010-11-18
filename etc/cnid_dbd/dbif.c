@@ -238,14 +238,19 @@ DBD *dbif_init(const char *envhome, const char *filename)
     dbd->db_table[DBIF_CNID].name        = "cnid2.db";
     dbd->db_table[DBIF_IDX_DEVINO].name  = "devino.db";
     dbd->db_table[DBIF_IDX_DIDNAME].name = "didname.db";
+    dbd->db_table[DBIF_IDX_NAME].name    = "name.db";
 
     dbd->db_table[DBIF_CNID].type        = DB_BTREE;
     dbd->db_table[DBIF_IDX_DEVINO].type  = DB_BTREE;
     dbd->db_table[DBIF_IDX_DIDNAME].type = DB_BTREE;
+    dbd->db_table[DBIF_IDX_NAME].type    = DB_BTREE;
 
     dbd->db_table[DBIF_CNID].openflags        = DB_CREATE;
     dbd->db_table[DBIF_IDX_DEVINO].openflags  = DB_CREATE;
     dbd->db_table[DBIF_IDX_DIDNAME].openflags = DB_CREATE;
+    dbd->db_table[DBIF_IDX_NAME].openflags    = DB_CREATE;
+
+    dbd->db_table[DBIF_IDX_NAME].flags = DB_DUPSORT;
 
     return dbd;
 }
@@ -495,6 +500,20 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
     }
     if (reindex)
         LOG(log_info, logtype_cnid, "... done.");
+
+    if (reindex)
+        LOG(log_info, logtype_cnid, "Reindexing name index...");
+    if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db, 
+                                              dbd->db_txn,
+                                              dbd->db_table[DBIF_IDX_NAME].db, 
+                                              idxname,
+                                              (reindex) ? DB_CREATE : 0))
+        != 0) {
+        LOG(log_error, logtype_cnid, "Failed to associate name index: %s",db_strerror(ret));
+        return -1;
+    }
+    if (reindex)
+        LOG(log_info, logtype_cnid, "... done.");
     
     return 0;
 }
@@ -723,6 +742,20 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
         return -1;
     } else
         return 1;
+}
+
+int dbif_search(DBD *dbd, DBT *key, int sindex, char *resbuf, ssize_t bufsize)
+{
+    int ret;
+    DBC *cursorp;
+
+    /* Get a cursor */
+    dbd->db_table[DBIF_IDX_NAME].db->cursor(dbd->db_table[DBIF_IDX_NAME].db,
+                                            NULL,
+                                            &cursorp,
+                                            0);
+
+    return 1;
 }
 
 int dbif_txn_begin(DBD *dbd)
