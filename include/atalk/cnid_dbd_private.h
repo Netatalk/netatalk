@@ -34,31 +34,22 @@
 #define CNID_DBD_RES_SRCH_CNT      0x05
 #define CNID_DBD_RES_SRCH_DONE     0x06
 
-#define DBD_MAX_SRCH_RPLY_PAYLOAD  4096
+#define DBD_MAX_SRCH_RSLTS 100
 
 struct cnid_dbd_rqst {
     int     op;
     cnid_t  cnid;
     dev_t   dev;
     ino_t   ino;
-    union {
-        uint32_t type;
-        uint32_t reqcount;      /* for dbd_search: number of results per query */
-    };
-    union {
-        cnid_t  did;
-        uint32_t sindex;        /* for dbd_search: continuation index */
-    };
+    uint32_t type;
+    cnid_t  did;
     char   *name;
     size_t  namelen;
 };
 
 struct cnid_dbd_rply {
     int     result;    
-    union {
-        cnid_t  cnid;
-        uint32_t count;         /* for dbd_search: number of returned names */
-    };
+    cnid_t  cnid;
     cnid_t  did;
     char   *name;
     size_t  namelen;

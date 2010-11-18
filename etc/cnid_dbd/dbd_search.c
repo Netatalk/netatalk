@@ -20,27 +20,26 @@
 int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     DBT key;
-    int rc;
-    static char resbuf[DBD_MAX_SRCH_RPLY_PAYLOAD];
+    int results;
+    static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
     memset(&key, 0, sizeof(key));
+    rply->name = resbuf;
     rply->namelen = 0;
 
     key.data = rqst->name;
     key.size = rqst->namelen;
 
-    if ((rc = dbif_del(dbd, DBIF_IDX_DEVINO, &key, 0)) < 0) {
-        LOG(log_error, logtype_cnid, "dbd_delete: Unable to delete entry for dev/ino: 0x%llx/0x%llx",
-            (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+    if ((results = dbif_search(dbd, &key, 0)) < 0) {
+        LOG(log_error, logtype_cnid, "dbd_search(\"%s\"): db error", rqst->name);
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;
     }
-    if (rc) {
-        LOG(log_debug, logtype_cnid, "cnid_delete: deleted dev/ino: 0x%llx/0x%llx",
-            (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+    if (results) {
+        LOG(log_debug, logtype_cnid, "dbd_search(\"%s\"): %d matches", rqst->name, results);
+        rply->namelen = results * sizeof(cnid_t);
         rply->result = CNID_DBD_RES_OK;
     } else {
-        LOG(log_debug, logtype_cnid, "cnid_delete: dev/ino: 0x%llx/0x%llx not in database", 
-            (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+        LOG(log_debug, logtype_cnid, "dbd_search(\"%s\"): no matches", rqst->name);
         rply->result = CNID_DBD_RES_NOTFOUND;
     }
 

@@ -97,6 +97,7 @@ extern int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_del(DBD *, const int, DBT *, u_int32_t);
 extern int dbif_count(DBD *, const int, u_int32_t *);
 extern int dbif_stamp(DBD *, void *, int);
+extern int dbif_search(DBD *dbd, DBT *key, char *resbuf);
 extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 extern int dbif_txn_begin(DBD *);
 extern int dbif_txn_commit(DBD *);

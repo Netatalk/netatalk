@@ -744,18 +744,52 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
         return 1;
 }
 
-int dbif_search(DBD *dbd, DBT *key, int sindex, char *resbuf, ssize_t bufsize)
+/*!
+ * Search the database by name
+ *
+ * @param resbuf    (w) buffer for search results CNIDs, maxsize is assumed to be
+ *                      DBD_MAX_SRCH_RSLTS * sizefof(cnid_t)
+ *
+ * @returns -1 on error, 0 when nothing found, else the number of matches
+ */
+int dbif_search(DBD *dbd, DBT *key, char *resbuf)
 {
-    int ret;
-    DBC *cursorp;
+    int ret = 0;
+    int count = 0;
+    DBC *cursorp = NULL;
+    DBT pkey, data;
+    char *cnids = resbuf;
+    cnid_t cnid;
+
+    memset(&pkey, 0, sizeof(DBT));
+    memset(&data, 0, sizeof(DBT));
 
     /* Get a cursor */
-    dbd->db_table[DBIF_IDX_NAME].db->cursor(dbd->db_table[DBIF_IDX_NAME].db,
-                                            NULL,
-                                            &cursorp,
-                                            0);
+    ret = dbd->db_table[DBIF_IDX_NAME].db->cursor(dbd->db_table[DBIF_IDX_NAME].db,
+                                                  NULL,
+                                                  &cursorp,
+                                                  0);
+    if (ret != 0) {
+        LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(ret));
+        ret = -1;
+        goto exit;
+    }
 
-    return 1;
+    ret = cursorp->pget(cursorp, key, &pkey, &data, DB_SET_RANGE);
+    while (count < DBD_MAX_SRCH_RSLTS && ret != DB_NOTFOUND) {
+        count++;
+        memcpy(cnids, pkey.data, sizeof(cnid_t));
+        cnids += sizeof(cnid_t);
+        LOG(log_error, logtype_cnid, "match: CNID %" PRIu32, memcpy(&cnid, pkey.data, sizeof(cnid_t)), ntohl(cnid));
+        ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT_DUP);
+    }
+
+    ret = count;
+
+exit:
+    if (cursorp != NULL)
+        cursorp->close(cursorp);
+    return ret;
 }
 
 int dbif_txn_begin(DBD *dbd)
