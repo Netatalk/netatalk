@@ -7,6 +7,7 @@ bin_PROGRAMS = ad
 
 ad_SOURCES = \
 	ad.c \
+	ad_find.c \
 	ad_util.c \
 	ad_ls.c \
 	ad_cp.c \

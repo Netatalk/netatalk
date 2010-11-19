@@ -454,6 +454,7 @@ static struct _cnid_db *cnid_dbd_new(const char *volpath)
     cdb->cnid_delete = cnid_dbd_delete;
     cdb->cnid_get = cnid_dbd_get;
     cdb->cnid_lookup = cnid_dbd_lookup;
+    cdb->cnid_find = cnid_dbd_find;
     cdb->cnid_nextid = NULL;
     cdb->cnid_resolve = cnid_dbd_resolve;
     cdb->cnid_getstamp = cnid_dbd_getstamp;
@@ -789,6 +790,59 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
     }
 
     return id;
+}
+
+/* ---------------------- */
+int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t len)
+{
+    CNID_private *db;
+    struct cnid_dbd_rqst rqst;
+    struct cnid_dbd_rply rply;
+    int count;
+
+    if (!cdb || !(db = cdb->_private) || !name) {
+        LOG(log_error, logtype_cnid, "cnid_find: Parameter error");
+        errno = CNID_ERR_PARAM;
+        return CNID_INVALID;
+    }
+
+    if (len > MAXPATHLEN) {
+        LOG(log_error, logtype_cnid, "cnid_find: Path name is too long");
+        errno = CNID_ERR_PATH;
+        return CNID_INVALID;
+    }
+
+    RQST_RESET(&rqst);
+    rqst.op = CNID_DBD_OP_SEARCH;
+
+    rqst.name = name;
+    rqst.namelen = len;
+
+    LOG(log_debug, logtype_cnid, "cnid_find(\"%s\")", name);
+
+    rply.namelen = 0;
+    if (transmit(db, &rqst, &rply) < 0) {
+        errno = CNID_ERR_DB;
+        return CNID_INVALID;
+    }
+
+    switch (rply.result) {
+    case CNID_DBD_RES_OK:
+        count = rply.namelen / sizeof(cnid_t);
+        LOG(log_debug, logtype_cnid, "cnid_find: got %d matches", count);
+        break;
+    case CNID_DBD_RES_NOTFOUND:
+        count = 0;
+        break;
+    case CNID_DBD_RES_ERR_DB:
+        errno = CNID_ERR_DB;
+        count = -1;
+        break;
+    default:
+        abort();
+    }
+
+    return count;
 }
 
 /* ---------------------- */

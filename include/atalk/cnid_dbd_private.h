@@ -43,7 +43,7 @@ struct cnid_dbd_rqst {
     ino_t   ino;
     uint32_t type;
     cnid_t  did;
-    char   *name;
+    char    *name;
     size_t  namelen;
 };
 
@@ -51,7 +51,7 @@ struct cnid_dbd_rply {
     int     result;    
     cnid_t  cnid;
     cnid_t  did;
-    char   *name;
+    char    *name;
     size_t  namelen;
 };
 
