@@ -785,8 +785,10 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf)
             memcpy(&cnid, pkey.data, sizeof(cnid_t));
             cnids += sizeof(cnid_t);
             LOG(log_error, logtype_cnid, "match: CNID %" PRIu32, ntohl(cnid));
+        } else {
+            LOG(log_error, logtype_cnid, "ignoring: CNID %" PRIu32, ntohl(cnid));
         }
-        ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT_DUP);
+        ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
     }
 
     ret = count;

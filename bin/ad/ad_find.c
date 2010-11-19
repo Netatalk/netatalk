@@ -35,6 +35,9 @@
 #include <atalk/cnid.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/volinfo.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+#include <atalk/directory.h>
 #include "ad.h"
 
 static volatile sig_atomic_t alarmed;
@@ -89,8 +92,6 @@ int ad_find(int argc, char **argv)
     int c;
     afpvol_t vol;
 
-    printf("argc: %d, argv0: %s\n", argc, argv[0]);
-
     if (argc != 4) {
         usage_find();
         exit(1);
@@ -99,25 +100,43 @@ int ad_find(int argc, char **argv)
     set_signal();
     cnid_init();
 
-    SLOG("opening volume: %s", argv[2]);
     if (openvol(argv[2], &vol) != 0)
         ERROR("Cant open volume \"%s\"", argv[2]);
-
-    SLOG("searching: %s", argv[3]);
 
     int count;
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
     if ((count = cnid_find(vol.volume.v_cdb, argv[3], strlen(argv[3]), resbuf, sizeof(resbuf))) < 1) {
         SLOG("No results");
     } else {
-        SLOG("%d matches", count);
         cnid_t cnid;
         char *bufp = resbuf;
+        bstring sep = bfromcstr("/");
         while (count--) {
             memcpy(&cnid, bufp, sizeof(cnid_t));
             bufp += sizeof(cnid_t);
-            SLOG("Got CNID: %u", ntohl(cnid));
+
+            bstring path = NULL;
+            bstring volpath = bfromcstr(vol.volinfo.v_path);
+            BSTRING_STRIP_SLASH(volpath);
+            char buffer[12 + MAXPATHLEN + 1];
+            int buflen = 12 + MAXPATHLEN + 1;
+            char *name;
+            cnid_t did = cnid;
+            struct bstrList *pathlist = bstrListCreateMin(32);
+
+            while (did != DIRDID_ROOT) {
+                if ((name = cnid_resolve(vol.volume.v_cdb, &did, buffer, buflen)) == NULL)
+                    ERROR("Can't resolve CNID: %u", ntohl(did));
+                bstrListPush(pathlist, bfromcstr(name));
+            }
+            bstrListPush(pathlist, volpath);
+            path = bjoinInv(pathlist, sep);
+            bstrListDestroy(pathlist);
+            
+            printf("%s\n", cfrombstr(path));
+            bdestroy(path);
         }
+        bdestroy(sep);
     }
 
     closevol(&vol);

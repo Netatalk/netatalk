@@ -120,7 +120,7 @@ int bunrefcstr (bstring b) {
 /*!
  * @brief Create an empty list with preallocated storage for at least 'min' members
  */
-struct bstrList *bstListCreateMin(int min)
+struct bstrList *bstrListCreateMin(int min)
 {
     struct bstrList *sl = NULL;
 
