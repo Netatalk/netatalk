@@ -24,12 +24,6 @@
 #include <limits.h>
 #include <string.h>
 #include <errno.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <grp.h>
-#include <time.h>
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
@@ -38,6 +32,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/directory.h>
+#include <atalk/util.h>
 #include "ad.h"
 
 static volatile sig_atomic_t alarmed;
@@ -83,7 +78,7 @@ static void set_signal(void)
 static void usage_find(void)
 {
     printf(
-        "Usage: ad find VOLUME_PATH NAME\n"
+        "Usage: ad find [-v VOLUME_PATH] NAME\n"
         );
 }
 
@@ -91,8 +86,24 @@ int ad_find(int argc, char **argv)
 {
     int c;
     afpvol_t vol;
+    const char *srchvol = getcwdpath();
 
-    if (argc != 4) {
+    while ((c = getopt(argc-1, &argv[1], ":v:")) != -1) {
+        switch(c) {
+        case 'v':
+            srchvol = strdup(optarg);
+            break;
+        case ':':
+        case '?':
+            usage_find();
+            return -1;
+            break;
+        }
+
+    }
+    optind++;
+
+    if ((argc - optind) != 1) {
         usage_find();
         exit(1);
     }
@@ -100,12 +111,12 @@ int ad_find(int argc, char **argv)
     set_signal();
     cnid_init();
 
-    if (openvol(argv[2], &vol) != 0)
-        ERROR("Cant open volume \"%s\"", argv[2]);
+    if (openvol(srchvol, &vol) != 0)
+        ERROR("Cant open volume \"%s\"", srchvol);
 
     int count;
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
-    if ((count = cnid_find(vol.volume.v_cdb, argv[3], strlen(argv[3]), resbuf, sizeof(resbuf))) < 1) {
+    if ((count = cnid_find(vol.volume.v_cdb, argv[optind], strlen(argv[optind]), resbuf, sizeof(resbuf))) < 1) {
         SLOG("No results");
     } else {
         cnid_t cnid;
