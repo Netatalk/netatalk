@@ -1,8 +1,7 @@
 /*
- * $Id: cnid.h,v 1.15 2010-03-31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
+ * Copyright (c) 2010 Frank Lahm
  *
  * This program is free software; you can redistribute and/or modify
  * it under the terms of the GNU General Public License as published
@@ -68,7 +67,8 @@ struct _cnid_db {
     int    (*cnid_getstamp)    (struct _cnid_db *cdb, void *buffer, const size_t len);
     cnid_t (*cnid_rebuild_add) (struct _cnid_db *, const struct stat *, const cnid_t,
                                 char *, const size_t, cnid_t);
-    int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t len);
+    int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t namelen,
+                                void *buffer, size_t buflen);
 };
 typedef struct _cnid_db cnid_db;
 
@@ -121,7 +121,8 @@ int    cnid_update     (struct _cnid_db *cdb, const cnid_t id, const struct stat
                         const cnid_t did, char *name, const size_t len);
 cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
                         char *name, const size_t len, cnid_t hint);
-int    cnid_find       (struct _cnid_db *cdb, const char *name, size_t len);
+int    cnid_find       (struct _cnid_db *cdb, const char *name, size_t namelen,
+                        void *buffer, size_t buflen);
 void   cnid_close      (struct _cnid_db *db);
 
 #endif

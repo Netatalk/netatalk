@@ -22,6 +22,9 @@ int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     DBT key;
     int results;
     static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
+
+    LOG(log_debug, logtype_cnid, "dbd_search(\"%s\"):", rqst->name);
+
     memset(&key, 0, sizeof(key));
     rply->name = resbuf;
     rply->namelen = 0;
@@ -29,7 +32,7 @@ int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     key.data = rqst->name;
     key.size = rqst->namelen;
 
-    if ((results = dbif_search(dbd, &key, 0)) < 0) {
+    if ((results = dbif_search(dbd, &key, resbuf)) < 0) {
         LOG(log_error, logtype_cnid, "dbd_search(\"%s\"): db error", rqst->name);
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;

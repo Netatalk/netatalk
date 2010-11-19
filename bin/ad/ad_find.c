@@ -33,6 +33,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
+#include <atalk/cnid_dbd_private.h>
 #include <atalk/volinfo.h>
 #include "ad.h"
 
@@ -98,8 +99,27 @@ int ad_find(int argc, char **argv)
     set_signal();
     cnid_init();
 
-    openvol(argv[2], &vol);
-    cnid_find(vol.volume.v_cdb, argv[3], strlen(argv[3]) + 1);
+    SLOG("opening volume: %s", argv[2]);
+    if (openvol(argv[2], &vol) != 0)
+        ERROR("Cant open volume \"%s\"", argv[2]);
+
+    SLOG("searching: %s", argv[3]);
+
+    int count;
+    char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
+    if ((count = cnid_find(vol.volume.v_cdb, argv[3], strlen(argv[3]), resbuf, sizeof(resbuf))) < 1) {
+        SLOG("No results");
+    } else {
+        SLOG("%d matches", count);
+        cnid_t cnid;
+        char *bufp = resbuf;
+        while (count--) {
+            memcpy(&cnid, bufp, sizeof(cnid_t));
+            bufp += sizeof(cnid_t);
+            SLOG("Got CNID: %u", ntohl(cnid));
+        }
+    }
+
     closevol(&vol);
 
     return 0;

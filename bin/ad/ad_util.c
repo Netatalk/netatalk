@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
  * Copyright (c) 1991, 1993, 1994
  * The Regents of the University of California.  All rights reserved.
@@ -25,7 +25,7 @@
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.   
+ * SUCH DAMAGE.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -89,10 +89,10 @@ void _log(enum logtype lt, char *fmt, ...)
 /*!
  * Load volinfo and initialize struct vol
  *
- * Only opens "dbd" volumes ! 
+ * Only opens "dbd" volumes !
  *
  * @param path   (r)  path to evaluate
- * @param vol    (rw) structure to initialize 
+ * @param vol    (rw) structure to initialize
  *
  * @returns 0 on success, exits on error
  */
@@ -103,42 +103,42 @@ int openvol(const char *path, afpvol_t *vol)
     memset(vol, 0, sizeof(afpvol_t));
 
     /* try to find a .AppleDesktop/.volinfo */
-    if (loadvolinfo((char *)path, &vol->volinfo) == 0) {
+    if (loadvolinfo((char *)path, &vol->volinfo) != 0)
+        return -1;
 
-        if (STRCMP(vol->volinfo.v_cnidscheme, != , "dbd"))
-            ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->volinfo.v_path);
+    if (STRCMP(vol->volinfo.v_cnidscheme, != , "dbd"))
+        ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->volinfo.v_path);
 
-        if (vol_load_charsets(&vol->volinfo) == -1)
-            ERROR("Error loading charsets!");
+    if (vol_load_charsets(&vol->volinfo) == -1)
+        ERROR("Error loading charsets!");
 
-        /* Sanity checks to ensure we can touch this volume */
-        if (vol->volinfo.v_adouble != AD_VERSION2)
-            ERROR("Unsupported adouble versions: %u", vol->volinfo.v_adouble);
+    /* Sanity checks to ensure we can touch this volume */
+    if (vol->volinfo.v_adouble != AD_VERSION2)
+        ERROR("Unsupported adouble versions: %u", vol->volinfo.v_adouble);
 
-        if (vol->volinfo.v_vfs_ea != AFPVOL_EA_SYS)
-            ERROR("Unsupported Extended Attributes option: %u", vol->volinfo.v_vfs_ea);
+    if (vol->volinfo.v_vfs_ea != AFPVOL_EA_SYS)
+        ERROR("Unsupported Extended Attributes option: %u", vol->volinfo.v_vfs_ea);
 
-        /* initialize sufficient struct vol for VFS initialisation */
-        vol->volume.v_adouble = AD_VERSION2;
-        vol->volume.v_vfs_ea = AFPVOL_EA_SYS;
-        initvol_vfs(&vol->volume);
+    /* initialize sufficient struct vol for VFS initialisation */
+    vol->volume.v_adouble = AD_VERSION2;
+    vol->volume.v_vfs_ea = AFPVOL_EA_SYS;
+    initvol_vfs(&vol->volume);
 
-        if ((vol->volinfo.v_flags & AFPVOL_NODEV))
-            flags |= CNID_FLAG_NODEV;
+    if ((vol->volinfo.v_flags & AFPVOL_NODEV))
+        flags |= CNID_FLAG_NODEV;
 
-        if ((vol->volume.v_cdb = cnid_open(vol->volinfo.v_dbpath,
-                                           0000,
-                                           "dbd",
-                                           flags,
-                                           vol->volinfo.v_dbd_host,
-                                           vol->volinfo.v_dbd_port)) == NULL)
-            ERROR("Cant initialize CNID database connection for %s", vol->volinfo.v_path);
+    if ((vol->volume.v_cdb = cnid_open(vol->volinfo.v_dbpath,
+                                       0000,
+                                       "dbd",
+                                       flags,
+                                       vol->volinfo.v_dbd_host,
+                                       vol->volinfo.v_dbd_port)) == NULL)
+        ERROR("Cant initialize CNID database connection for %s", vol->volinfo.v_path);
 
-        cnid_getstamp(vol->volume.v_cdb,
-                      vol->db_stamp,
-                      sizeof(vol->db_stamp));
-    }
-
+    cnid_getstamp(vol->volume.v_cdb,
+                  vol->db_stamp,
+                  sizeof(vol->db_stamp));
+    
     return 0;
 }
 
@@ -183,7 +183,7 @@ char *utompath(const struct volinfo *volinfo, const char *upath)
                                                  volinfo->v_maccharset,
                                                  u, outlen, mpath, MAXPATHLEN, &flags)) ) {
         SLOG("Conversion from %s to %s for %s failed.",
-            volinfo->v_volcodepage, volinfo->v_maccodepage, u);
+             volinfo->v_volcodepage, volinfo->v_maccodepage, u);
         return NULL;
     }
 
@@ -200,7 +200,7 @@ char *utompath(const struct volinfo *volinfo, const char *upath)
  *     "/afp_volume/dir/subdir"
  *
  * @param path     (r) path relative to cwd() or absolute
- * @param volpath  (r) volume path that path is a subdir of (has been computed in volinfo funcs) 
+ * @param volpath  (r) volume path that path is a subdir of (has been computed in volinfo funcs)
  *
  * @returns relative path in new bstring, caller must bdestroy it
  */
@@ -363,14 +363,14 @@ cnid_t cnid_for_path(const afpvol_t *vol,
                        cfrombstr(statpath), strerror(errno));
 
         if ((cnid = cnid_add(vol->volume.v_cdb,
-                        &st,
-                        *did,
-                        cfrombstr(l->entry[i]),
-                        blength(l->entry[i]),
+                             &st,
+                             *did,
+                             cfrombstr(l->entry[i]),
+                             blength(l->entry[i]),
                              0)) == CNID_INVALID) {
             EC_FAIL;
         }
-        EC_ZERO(bcatcstr(statpath, "/"));        
+        EC_ZERO(bcatcstr(statpath, "/"));
     }
 
 EC_CLEANUP:
@@ -432,14 +432,14 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                        cfrombstr(statpath), strerror(errno));
 
         if ((cnid = cnid_add(vol->volume.v_cdb,
-                        &st,
-                        *did,
-                        cfrombstr(l->entry[i]),
-                        blength(l->entry[i]),
+                             &st,
+                             *did,
+                             cfrombstr(l->entry[i]),
+                             blength(l->entry[i]),
                              0)) == CNID_INVALID) {
             EC_FAIL;
         }
-        EC_ZERO(bcatcstr(statpath, "/"));        
+        EC_ZERO(bcatcstr(statpath, "/"));
     }
 
 EC_CLEANUP:

@@ -793,7 +793,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 }
 
 /* ---------------------- */
-int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t len)
+int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -806,21 +806,23 @@ int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t len)
         return CNID_INVALID;
     }
 
-    if (len > MAXPATHLEN) {
+    if (namelen > MAXPATHLEN) {
         LOG(log_error, logtype_cnid, "cnid_find: Path name is too long");
         errno = CNID_ERR_PATH;
         return CNID_INVALID;
     }
 
+    LOG(log_debug, logtype_cnid, "cnid_find(\"%s\")", name);
+
     RQST_RESET(&rqst);
     rqst.op = CNID_DBD_OP_SEARCH;
 
     rqst.name = name;
-    rqst.namelen = len;
+    rqst.namelen = namelen;
 
-    LOG(log_debug, logtype_cnid, "cnid_find(\"%s\")", name);
+    rply.name = buffer;
+    rply.namelen = buflen;
 
-    rply.namelen = 0;
     if (transmit(db, &rqst, &rply) < 0) {
         errno = CNID_ERR_DB;
         return CNID_INVALID;

@@ -281,7 +281,7 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did
 }
 
 /* --------------- */
-int cnid_find(struct _cnid_db *cdb, const char *name, size_t len)
+int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
 {
     int ret;
     
@@ -291,7 +291,7 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t len)
     }
 
     block_signal(cdb->flags);
-    ret = cdb->cnid_find(cdb, name, len);
+    ret = cdb->cnid_find(cdb, name, namelen, buffer, buflen);
     unblock_signal(cdb->flags);
     return ret;
 }
