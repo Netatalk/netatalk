@@ -84,7 +84,7 @@ static void usage_find(void)
 
 int ad_find(int argc, char **argv)
 {
-    int c;
+    int c, ret;
     afpvol_t vol;
     const char *srchvol = getcwdpath();
 
@@ -117,8 +117,9 @@ int ad_find(int argc, char **argv)
     int count;
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
     if ((count = cnid_find(vol.volume.v_cdb, argv[optind], strlen(argv[optind]), resbuf, sizeof(resbuf))) < 1) {
-        SLOG("No results");
+        ret = 1;
     } else {
+        ret = 0;
         cnid_t cnid;
         char *bufp = resbuf;
         bstring sep = bfromcstr("/");
@@ -152,5 +153,5 @@ int ad_find(int argc, char **argv)
 
     closevol(&vol);
 
-    return 0;
+    return ret;
 }
