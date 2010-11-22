@@ -77,6 +77,33 @@ exit:
     return (ret < 0 ? ret : found);
 }
 
+/*!
+ * Upgrade CNID database versions
+ *
+ * For now this does nothing, as upgrading from ver. 0 to 1 is done in dbif_open
+ */
+static int dbif_upgrade(DBD *dbd)
+{
+    int version;
+
+    if ((version = dbif_getversion(dbd)) == -1)
+        return -1;
+
+    /* 
+     * Do upgrade stuff ...
+     */
+
+    /* Write current version to database */
+    if (version != CNID_VERSION) {
+        if (dbif_setversion(dbd, CNID_VERSION) != 0)
+            return -1;
+    }
+
+    LOG(log_debug, logtype_cnid, "Finished CNID database version upgrade check");
+
+    return 0;
+}
+
 /* --------------- */
 static int dbif_openlog(DBD *dbd)
 {
@@ -411,7 +438,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
                 LOG(log_error, logtype_cnid, "error forcing checkpoint: %s", db_strerror(ret));
                 return -1;
             }
-            LOG(log_debug, logtype_cnid, "Finished CNID database upgrade check");
+            LOG(log_debug, logtype_cnid, "Finished BerkeleyBD upgrade check");
         }
         
         if ((fchdir(cwd)) != 0) {
@@ -507,13 +534,20 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
                                               dbd->db_txn,
                                               dbd->db_table[DBIF_IDX_NAME].db, 
                                               idxname,
-                                              DB_CREATE))
-        != 0) {
-        LOG(log_error, logtype_cnid, "Failed to associate name index: %s",db_strerror(ret));
+                                              (reindex
+                                               || 
+                                               ((CNID_VERSION == CNID_VERSION_1) && (dbif_getversion(dbd) == CNID_VERSION_0)))
+                                              ? DB_CREATE : 0)) != 0) {
+        LOG(log_error, logtype_cnid, "Failed to associate name index: %s", db_strerror(ret));
         return -1;
     }
     if (reindex)
         LOG(log_info, logtype_cnid, "... done.");
+
+    if ((ret = dbif_upgrade(dbd)) != 0) {
+        LOG(log_error, logtype_cnid, "Error upgrading CNID database to version %d", CNID_VERSION);
+        return -1;
+    }
     
     return 0;
 }
@@ -567,7 +601,7 @@ int dbif_close(DBD *dbd)
    In order to support silent database upgrades:
    destroy env at cnid_dbd shutdown.
  */
-int dbif_prep_upgrade(const char *path)
+int dbif_env_remove(const char *path)
 {
     int ret;
     DBD *dbd;
@@ -742,6 +776,67 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
         return -1;
     } else
         return 1;
+}
+
+/*!
+ * Return CNID database version number
+ * @returns -1 on error, version number otherwise
+ */
+int dbif_getversion(DBD *dbd)
+{
+    DBT key, data;
+    uint32_t version;
+    int ret;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.data = ROOTINFO_KEY;
+    key.size = ROOTINFO_KEYLEN;
+
+    switch (dbif_get(dbd, DBIF_CNID, &key, &data, 0)) {
+    case 1:
+        memcpy(&version, (char *)data.data + CNID_DID_OFS, sizeof(version));
+        version = ntohl(version);
+        LOG(log_debug, logtype_cnid, "CNID database version %u", version);
+        ret = version;
+        break;
+    default:
+        ret = -1;
+        break;
+    }
+    return ret;
+}
+
+/*!
+ * Return CNID database version number
+ * @returns -1 on error, version number otherwise
+ */
+int dbif_setversion(DBD *dbd, int version)
+{
+    DBT key, data;
+    uint32_t v;
+
+    v = version;
+    v = htonl(v);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.data = ROOTINFO_KEY;
+    key.size = ROOTINFO_KEYLEN;
+
+    switch (dbif_get(dbd, DBIF_CNID, &key, &data, 0)) {
+    case 1:
+        break;
+    default:
+        return -1;
+    }
+
+    memcpy((char *)data.data + CNID_DID_OFS, &v, sizeof(v));
+    data.size = ROOTINFO_DATALEN;
+    if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)
+        return -1;
+
+    return 0;
 }
 
 /*!

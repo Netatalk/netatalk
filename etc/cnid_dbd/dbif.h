@@ -89,7 +89,9 @@ extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
 extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
 extern int dbif_close(DBD *dbd);
-extern int dbif_prep_upgrade(const char *path);
+extern int dbif_env_remove(const char *path);
+extern int dbif_getversion(DBD *dbd);
+extern int dbif_setversion(DBD *dbd, int);
 
 extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);

@@ -412,7 +412,7 @@ int main(int argc, char **argv)
 
     /* Prepare upgrade ? */
     if (prep_upgrade) {
-        if (dbif_prep_upgrade(dbpath))
+        if (dbif_env_remove(dbpath))
             goto exit_failure;
         goto exit_success;
     }        
