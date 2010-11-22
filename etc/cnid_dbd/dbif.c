@@ -530,13 +530,16 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
 
     if (reindex)
         LOG(log_info, logtype_cnid, "Reindexing name index...");
+    int version = dbif_getversion(dbd);
+    if (version == -1)
+        return -1;
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db, 
                                               dbd->db_txn,
                                               dbd->db_table[DBIF_IDX_NAME].db, 
                                               idxname,
                                               (reindex
                                                || 
-                                               ((CNID_VERSION == CNID_VERSION_1) && (dbif_getversion(dbd) == CNID_VERSION_0)))
+                                               ((CNID_VERSION == CNID_VERSION_1) && (version == CNID_VERSION_0)))
                                               ? DB_CREATE : 0)) != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate name index: %s", db_strerror(ret));
         return -1;
@@ -779,7 +782,7 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
 }
 
 /*!
- * Return CNID database version number
+ * Initialize or return CNID database version number
  * @returns -1 on error, version number otherwise
  */
 int dbif_getversion(DBD *dbd)
@@ -794,15 +797,19 @@ int dbif_getversion(DBD *dbd)
     key.size = ROOTINFO_KEYLEN;
 
     switch (dbif_get(dbd, DBIF_CNID, &key, &data, 0)) {
-    case 1:
+    case 1: /* found */
         memcpy(&version, (char *)data.data + CNID_DID_OFS, sizeof(version));
         version = ntohl(version);
         LOG(log_debug, logtype_cnid, "CNID database version %u", version);
         ret = version;
         break;
-    default:
-        ret = -1;
+    case 0: /* not found */
+        if (dbif_setversion(dbd, CNID_VERSION) != 0)
+            return -1;
+        ret = CNID_VERSION;
         break;
+    default:
+        return -1;
     }
     return ret;
 }
@@ -813,8 +820,12 @@ int dbif_getversion(DBD *dbd)
  */
 int dbif_setversion(DBD *dbd, int version)
 {
+    int ret;
     DBT key, data;
     uint32_t v;
+    char buf[ROOTINFO_DATALEN];
+
+    LOG(log_debug, logtype_cnid, "Setting CNID database version to %u", version);
 
     v = version;
     v = htonl(v);
@@ -824,13 +835,12 @@ int dbif_setversion(DBD *dbd, int version)
     key.data = ROOTINFO_KEY;
     key.size = ROOTINFO_KEYLEN;
 
-    switch (dbif_get(dbd, DBIF_CNID, &key, &data, 0)) {
-    case 1:
-        break;
-    default:
+    if ((ret = dbif_get(dbd, DBIF_CNID, &key, &data, 0)) == -1)
         return -1;
+    if (ret == 0) {
+        memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
+        data.data = buf;
     }
-
     memcpy((char *)data.data + CNID_DID_OFS, &v, sizeof(v));
     data.size = ROOTINFO_DATALEN;
     if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)

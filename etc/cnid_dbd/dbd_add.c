@@ -83,22 +83,32 @@ int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 {
     static cnid_t id;
+    static char buf[ROOTINFO_DATALEN];
     DBT rootinfo_key, rootinfo_data;
     int rc;
     cnid_t hint;
-     
-    if (id == 0) {
-        memset(&rootinfo_key, 0, sizeof(rootinfo_key));
-        memset(&rootinfo_data, 0, sizeof(rootinfo_data));
-        rootinfo_key.data = ROOTINFO_KEY;
-        rootinfo_key.size = ROOTINFO_KEYLEN;
 
-        if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) <= 0) {
+    memset(&rootinfo_key, 0, sizeof(rootinfo_key));
+    memset(&rootinfo_data, 0, sizeof(rootinfo_data));
+    rootinfo_key.data = ROOTINFO_KEY;
+    rootinfo_key.size = ROOTINFO_KEYLEN;
+
+    if (id == 0) {
+        if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) < 0) {
             rply->result = CNID_DBD_RES_ERR_DB;
             return -1;
         }
-        memcpy(&hint, (char *)rootinfo_data.data +CNID_TYPE_OFS, sizeof(hint));
-        id = ntohl(hint);
+        if (rc == 0) {
+            /* no rootinfo key yet */
+            memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
+            id = CNID_START - 1;
+        } else {
+            memcpy(buf, (char *)rootinfo_data.data, ROOTINFO_DATALEN);
+            memcpy(&hint, buf + CNID_TYPE_OFS, sizeof(hint));
+            id = ntohl(hint);
+            if (id < CNID_START - 1)
+                id = CNID_START - 1;
+        }
     }
 
     /* If we've hit the max CNID allowed, we return an error. CNID
@@ -108,9 +118,10 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
         return -1;
     }
 
+    rootinfo_data.data = buf;
     rootinfo_data.size = ROOTINFO_DATALEN;
     hint = htonl(id);
-    memcpy((char *)rootinfo_data.data + CNID_TYPE_OFS, &hint, sizeof(hint));
+    memcpy(buf + CNID_TYPE_OFS, &hint, sizeof(hint));
 
     if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
         rply->result = CNID_DBD_RES_ERR_DB;
