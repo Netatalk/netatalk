@@ -680,11 +680,9 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
     rqst.op = CNID_DBD_OP_RESOLVE;
     rqst.cnid = *id;
 
-    /* This mimicks the behaviour of the "regular" cnid_resolve. So far,
-       nobody uses the content of buffer. It only provides space for the
-       name in the caller. */
-    rply.name = (char *)buffer + CNID_HEADER_LEN;
-    rply.namelen = len - CNID_HEADER_LEN;
+    /* Pass buffer to transmit so it can stuff the reply data there */
+    rply.name = (char *)buffer;
+    rply.namelen = len;
 
     if (transmit(db, &rqst, &rply) < 0) {
         errno = CNID_ERR_DB;
@@ -695,7 +693,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t le
     switch (rply.result) {
     case CNID_DBD_RES_OK:
         *id = rply.did;
-        name = rply.name;
+        name = rply.name + CNID_NAME_OFS;
         LOG(log_debug, logtype_cnid, "cnid_dbd_resolve: resolved did: %u, name: '%s'", ntohl(*id), name);
         break;
     case CNID_DBD_RES_NOTFOUND:
@@ -793,7 +791,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 }
 
 /* ---------------------- */
-int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
+int cnid_dbd_find(struct _cnid_db *cdb, char *name, size_t namelen, void *buffer, size_t buflen)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;

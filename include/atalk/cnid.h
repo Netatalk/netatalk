@@ -67,7 +67,7 @@ struct _cnid_db {
     int    (*cnid_getstamp)    (struct _cnid_db *cdb, void *buffer, const size_t len);
     cnid_t (*cnid_rebuild_add) (struct _cnid_db *, const struct stat *, const cnid_t,
                                 char *, const size_t, cnid_t);
-    int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t namelen,
+    int    (*cnid_find)        (struct _cnid_db *cdb, char *name, size_t namelen,
                                 void *buffer, size_t buflen);
 };
 typedef struct _cnid_db cnid_db;
