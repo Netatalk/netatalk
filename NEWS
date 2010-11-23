@@ -1,3 +1,14 @@
+Changes in 2.2alpha4
+====================
+
+* NEW: Enhanced CNID "dbd" database for fast name search support.
+       Important: this makes cnidscheme "cdb" incompatible with "dbd".
+* NEW: afpd: support for fast catalog searches
+* UPD: afpd: CNID database versioning check for "cdb" scheme
+* UPD: cnid_dbd: CNID database versioning
+* UPD: cnid_dbd: CNID database upgrading
+* UPD: cnid_dbd: additional CNID database index for fast name searches
+
 Changes in 2.2alpha3
 ====================
 
