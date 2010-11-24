@@ -900,15 +900,14 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf)
 
     ret = cursorp->pget(cursorp, key, &pkey, &data, DB_SET_RANGE);
     while (count < DBD_MAX_SRCH_RSLTS && ret != DB_NOTFOUND) {
-        if (namelenbkp <= key->size && strncmp(namebkp, key->data, namelenbkp) == 0) {
-            count++;
-            memcpy(cnids, pkey.data, sizeof(cnid_t));
-            memcpy(&cnid, pkey.data, sizeof(cnid_t));
-            cnids += sizeof(cnid_t);
-            LOG(log_error, logtype_cnid, "match: CNID %" PRIu32, ntohl(cnid));
-        } else {
-            LOG(log_error, logtype_cnid, "ignoring: CNID %" PRIu32, ntohl(cnid));
-        }
+        if (!((namelenbkp <= key->size) && (strncmp(namebkp, key->data, namelenbkp) == 0)))
+            break;
+        count++;
+        memcpy(cnids, pkey.data, sizeof(cnid_t));
+        memcpy(&cnid, pkey.data, sizeof(cnid_t));
+        cnids += sizeof(cnid_t);
+        LOG(log_debug, logtype_cnid, "match: CNID %" PRIu32, ntohl(cnid));
+
         ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
     }
 
