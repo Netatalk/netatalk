@@ -732,22 +732,12 @@ static int catsearch_db(struct vol *vol,
         memcpy(&cnid, resbuf + cur_pos * sizeof(cnid_t), sizeof(cnid_t));
         did = cnid;
 
-        /* We need the parent CNID for files and must determine the type (file or dir) */
-        if ((name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1)) == NULL) {
-            result = AFPERR_NFILE;
-			goto catsearch_end;
-        }
-
-        if ((dir = dirlookup(vol, did)) == NULL) {
-            LOG(log_error, logtype_afpd,"catsearch_db: missing DID: %u", ntohl(did));
-            result = AFPERR_NFILE;
-			goto catsearch_end;
-        }
-        if (movecwd(vol, dir) < 0 ) {
-            LOG(log_error, logtype_afpd,"catsearch_db: movecwd: %s", dir->d_fullpath);
-            result = AFPERR_NFILE;
-			goto catsearch_end;
-        }        
+        if ((name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1)) == NULL)
+            goto next;
+        if ((dir = dirlookup(vol, did)) == NULL)
+            goto next;
+        if (movecwd(vol, dir) < 0 )
+            goto next;
 
         memset(&path, 0, sizeof(path));
         path.u_name = name;
@@ -765,22 +755,19 @@ static int catsearch_db(struct vol *vol,
             } 
         }
         /* For files path.d_dir is the parent dir, for dirs its the dir itself */
-        if (S_ISDIR(path.st.st_mode)) {
-            if ((dir = dirlookup(vol, cnid)) == NULL) {
-                LOG(log_error, logtype_afpd,"catsearch_db: missing DID: %u", ntohl(cnid));
-                result = AFPERR_NFILE;
-                goto catsearch_end;
-            }
-        }
+        if (S_ISDIR(path.st.st_mode))
+            if ((dir = dirlookup(vol, cnid)) == NULL)
+                goto next;
         path.d_dir = dir;
 
-        LOG(log_error, logtype_afpd,"catsearch_db: dir: %s, cwd: %s, name: %s", 
+        LOG(log_maxdebug, logtype_afpd,"catsearch_db: dir: %s, cwd: %s, name: %s", 
             cfrombstr(dir->d_fullpath), getcwdpath(), path.u_name);
-
 
         /* At last we can check the search criteria */
         ccr = crit_check(vol, &path);
         if ((ccr & 1)) {
+            LOG(log_debug, logtype_afpd,"catsearch_db: match: %s/%s",
+                getcwdpath(), path.u_name);
             /* bit 1 means that criteria has been met */
             r = rslt_add(vol, &path, &rrbuf, ext);
             if (r == 0) {
