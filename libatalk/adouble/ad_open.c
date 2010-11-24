@@ -463,11 +463,10 @@ bail_err:
 /* -------------------------------------
    read in the entries
 */
-static void parse_entries(struct adouble *ad, char *buf,
-                          u_int16_t nentries)
+static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
 {
-    u_int32_t   eid, len, off;
-    int         warning = 0;
+    uint32_t   eid, len, off;
+    int        warning = 0;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
@@ -487,15 +486,11 @@ static void parse_entries(struct adouble *ad, char *buf,
             ad->ad_eid[ eid ].ade_len = len;
         } else if (!warning) {
             warning = 1;
-            LOG(log_debug, logtype_default, "ad_refresh: nentries %hd  eid %d",
-                nentries, eid );
+            LOG(log_warning, logtype_default, "parse_entries: bogus eid: %d",
+                nentries, eid);
         }
     }
 }
-
-/***********************************************************************
- * adouble v2 scheme funcs
- ***********************************************************************/
 
 /* this reads enough of the header so that we can figure out all of
  * the entry lengths and offsets. once that's done, we just read/mmap
@@ -508,6 +503,121 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 {
     char                *buf = ad->ad_data;
     u_int16_t           nentries;
+    int                 len;
+    ssize_t             header_len;
+    static int          warning = 0;
+    struct stat         st;
+
+    /* read the header */
+    if ((header_len = adf_pread( ad->ad_md, buf, sizeof(ad->ad_data), 0)) < 0) {
+        return -1;
+    }
+    if (header_len < AD_HEADER_LEN) {
+        errno = EIO;
+        return -1;
+    }
+
+    memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
+    memcpy(&ad->ad_version, buf + ADEDOFF_VERSION, sizeof( ad->ad_version ));
+
+    /* tag broken v1 headers. just assume they're all right.
+     * we detect two cases: null magic/version
+     *                      byte swapped magic/version
+     * XXX: in the future, you'll need the v1compat flag.
+     * (ad->ad_flags & ADFLAGS_V1COMPAT) */
+    if (!ad->ad_magic && !ad->ad_version) {
+        if (!warning) {
+            LOG(log_debug, logtype_default, "notice: fixing up null v1 magic/version.");
+            warning++;
+        }
+        ad->ad_magic = AD_MAGIC;
+        ad->ad_version = AD_VERSION1;
+
+    } else if (ad->ad_magic == AD_MAGIC && ad->ad_version == AD_VERSION1) {
+        if (!warning) {
+            LOG(log_debug, logtype_default, "notice: fixing up byte-swapped v1 magic/version.");
+            warning++;
+        }
+
+    } else {
+        ad->ad_magic = ntohl( ad->ad_magic );
+        ad->ad_version = ntohl( ad->ad_version );
+    }
+
+    if ((ad->ad_magic != AD_MAGIC) ||
+        ((ad->ad_version != AD_VERSION1) && (ad->ad_version != AD_VERSION2))) {
+        LOG(log_debug, logtype_default, "ad_open: can't parse AppleDouble header.");
+        errno = EIO;
+        return -1;
+    }
+
+    memcpy(ad->ad_filler, buf + ADEDOFF_FILLER, sizeof( ad->ad_filler ));
+    memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
+    nentries = ntohs( nentries );
+
+    /* read in all the entry headers. if we have more than the
+     * maximum, just hope that the rfork is specified early on. */
+    len = nentries*AD_ENTRY_LEN;
+
+    if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
+        len = sizeof(ad->ad_data) - AD_HEADER_LEN;
+
+    buf += AD_HEADER_LEN;
+    if (len > header_len - AD_HEADER_LEN) {
+        LOG(log_debug, logtype_default, "ad_header_read: can't read entry info.");
+        errno = EIO;
+        return -1;
+    }
+
+    /* figure out all of the entry offsets and lengths. if we aren't
+     * able to read a resource fork entry, bail. */
+    nentries = len / AD_ENTRY_LEN;
+    parse_entries(ad, buf, nentries);
+    if (!ad_getentryoff(ad, ADEID_RFORK)
+        || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
+        ) {
+        LOG(log_debug, logtype_default, "ad_header_read: problem with rfork entry offset.");
+        errno = EIO;
+        return -1;
+    }
+
+    if (ad_getentryoff(ad, ADEID_RFORK) > header_len) {
+        LOG(log_debug, logtype_default, "ad_header_read: can't read in entries.");
+        errno = EIO;
+        return -1;
+    }
+
+    if (hst == NULL) {
+        hst = &st;
+        if (fstat(ad->ad_md->adf_fd, &st) < 0) {
+            return 1; /* fail silently */
+        }
+    }
+    ad->ad_rlen = hst->st_size - ad_getentryoff(ad, ADEID_RFORK);
+
+    /* fix up broken dates */
+    if (ad->ad_version == AD_VERSION1) {
+        u_int32_t aint;
+
+        /* check to see if the ad date is wrong. just see if we have
+         * a modification date in the future. */
+        if (((ad_getdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, &aint)) == 0) &&
+            (aint > TIMEWARP_DELTA + hst->st_mtime)) {
+            ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, aint - AD_DATE_DELTA);
+            ad_getdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, &aint);
+            ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, aint - AD_DATE_DELTA);
+            ad_getdate(ad, AD_DATE_BACKUP | AD_DATE_UNIX, &aint);
+            ad_setdate(ad, AD_DATE_BACKUP | AD_DATE_UNIX, aint - AD_DATE_DELTA);
+        }
+    }
+
+    return 0;
+}
+
+static int ad_header_read_ea(struct adouble *ad, struct stat *hst)
+{
+    char                *buf = ad->ad_data;
+    uint16_t            nentries;
     int                 len;
     ssize_t             header_len;
     static int          warning = 0;

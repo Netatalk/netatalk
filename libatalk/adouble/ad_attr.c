@@ -19,14 +19,7 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
     u_int16_t fflags;
     *attr = 0;
 
-    if (ad->ad_version == AD_VERSION1) {
-        if (ad_getentryoff(ad, ADEID_FILEI)) {
-            memcpy(attr, ad_entry(ad, ADEID_FILEI) + FILEIOFF_ATTR,
-                   sizeof(u_int16_t));
-        }
-    }
-#if AD_VERSION == AD_VERSION2
-    else if (ad->ad_version == AD_VERSION2) {
+    if (ad->ad_version == AD_VERSION2) {
         if (ad_getentryoff(ad, ADEID_AFPFILEI)) {
             memcpy(attr, ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR, 2);
 
@@ -48,9 +41,6 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
             }
         }
     }
-#endif
-    else
-        return -1;
 
     *attr |= htons(ad->ad_open_forks);
 
@@ -70,14 +60,7 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
     if (ad->ad_adflags & ADFLAGS_DIR)
         attr &= ~(ATTRBIT_MULTIUSER | ATTRBIT_NOWRITE | ATTRBIT_NOCOPY);
 
-    if (ad->ad_version == AD_VERSION1) {
-        if (ad_getentryoff(ad, ADEID_FILEI)) {
-            memcpy(ad_entry(ad, ADEID_FILEI) + FILEIOFF_ATTR, &attr,
-                   sizeof(attr));
-        }
-    }
-#if AD_VERSION == AD_VERSION2
-    else if (ad->ad_version == AD_VERSION2) {
+    if (ad->ad_version == AD_VERSION2) {
         if (ad_getentryoff(ad, ADEID_AFPFILEI)) {
             memcpy(ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR, &attr, sizeof(attr));
             
@@ -96,9 +79,6 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
                     *fflags &= htons(~FINDERINFO_ISHARED);
         }
     }
-#endif
-    else
-        return -1;
 
     return 0;
 }
@@ -107,7 +87,6 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
  * save file/folder ID in AppleDoubleV2 netatalk private parameters
  * return 1 if resource fork has been modified
  */
-#if AD_VERSION == AD_VERSION2
 int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const u_int32_t id, const cnid_t did, const void *stamp)
 {
     if ((adp->ad_flags == AD_VERSION2) && (adp->ad_options & ADVOL_CACHE)) {
@@ -181,7 +160,6 @@ u_int32_t ad_forcegetid (struct adouble *adp)
     }
     return 0;
 }
-#endif
 
 /* -----------------
  * set resource fork filename attribute.
