@@ -138,14 +138,16 @@ int ad_find(int argc, char **argv)
 
             while (did != DIRDID_ROOT) {
                 if ((name = cnid_resolve(vol.volume.v_cdb, &did, buffer, buflen)) == NULL)
-                    ERROR("Can't resolve CNID: %u", ntohl(did));
+                    goto next;
                 bstrListPush(pathlist, bfromcstr(name));
             }
             bstrListPush(pathlist, volpath);
             path = bjoinInv(pathlist, sep);
-            bstrListDestroy(pathlist);
             
             printf("%s\n", cfrombstr(path));
+
+        next:
+            bstrListDestroy(pathlist);
             bdestroy(path);
         }
         bdestroy(sep);
