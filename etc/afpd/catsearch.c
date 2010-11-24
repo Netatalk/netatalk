@@ -682,6 +682,7 @@ catsearch_end: /* Exiting catsearch: error condition */
  *
  * @param vol       (r)  volume we are searching on ...
  * @param dir       (rw) directory we are starting from ...
+ * @param uname     (r)  UNIX name of object to search
  * @param rmatches  (r)  maximum number of matches we can return
  * @param pos       (r)  position we've stopped recently
  * @param rbuf      (w)  output buffer
@@ -689,9 +690,9 @@ catsearch_end: /* Exiting catsearch: error condition */
  * @param rsize     (w)  length of data written to output buffer
  * @param ext       (r)  extended search flag
  */
-#define NUM_ROUNDS 200
 static int catsearch_db(struct vol *vol,
                         struct dir *dir,  
+                        const char *uname,
                         int rmatches,
                         uint32_t *pos,
                         char *rbuf,
@@ -700,11 +701,15 @@ static int catsearch_db(struct vol *vol,
                         int ext)
 {
     static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
-    static uint32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
-    int num_matches, ccr ,r;
+    static uint32_t cur_pos;
+    static int num_matches;
+    int ccr ,r;
 	int result = AFP_OK;
     struct path path;
 	char *rrbuf = rbuf;
+
+    LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u, name: %s}",
+        *pos, cur_pos, uname);
         
 	if (*pos != 0 && *pos != cur_pos) {
 		result = AFPERR_CATCHNG;
@@ -713,8 +718,8 @@ static int catsearch_db(struct vol *vol,
 
     if (cur_pos == 0 || *pos == 0) {
         if ((num_matches = cnid_find(vol->v_cdb,
-                                     c1.utf8name,
-                                     strlen(c1.utf8name),
+                                     uname,
+                                     strlen(uname),
                                      resbuf,
                                      sizeof(resbuf))) == -1) {
             result = AFPERR_MISC;
@@ -734,6 +739,8 @@ static int catsearch_db(struct vol *vol,
 
         if ((name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1)) == NULL)
             goto next;
+        LOG(log_debug, logtype_afpd, "catsearch_db: {pos: %u, name:%s, cnid: %u}",
+            cur_pos, name, ntohl(cnid));
         if ((dir = dirlookup(vol, did)) == NULL)
             goto next;
         if (movecwd(vol, dir) < 0 )
@@ -796,6 +803,7 @@ catsearch_pause:
 
 catsearch_end: /* Exiting catsearch: error condition */
 	*rsize = rrbuf - rbuf;
+    LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u}", *pos, cur_pos);
 	return result;
 }
 
@@ -815,7 +823,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     size_t	len;
     u_int16_t	namelen;
     u_int16_t	flags;
-    char  	tmppath[256];
+    char  	    tmppath[256];
+    char        *uname;
 
     *rbuflen = 0;
 
@@ -991,6 +1000,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
 		memcpy (c1.utf8name, spec1+2, namelen);
 		c1.utf8name[namelen] = 0;
+        if ((uname = mtoupath(vol, c1.utf8name, 0, utf8_encoding())) == NULL)
+            return AFPERR_PARAM;
 
  		/* convert charset */
 		flags = CONV_PRECOMPOSE;
@@ -1003,7 +1014,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     *rbuflen = 24;
     if ((c1.rbitmap & (1 << FILPBIT_PDINFO)) && (strcmp(vol->v_cnidscheme, "dbd") == 0))
         /* we've got a name and it's a dbd volume, so search CNID database */
-        ret = catsearch_db(vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
+        ret = catsearch_db(vol, vol->v_root, uname, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
     else
         /* perform a slow filesystem tree search */
         ret = catsearch(vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
