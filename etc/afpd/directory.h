@@ -1,6 +1,4 @@
 /*
- * $Id: directory.h,v 1.34 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -106,10 +104,13 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
+q_t *invalid_dircache_entries;
+
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
-extern struct dir *dir_new(const char *mname, const char *uname, const struct vol *,
-                           cnid_t pdid, cnid_t did, bstring fullpath, time_t ctime);
+extern void        dir_free_invalid_q(void);
+extern struct dir  *dir_new(const char *mname, const char *uname, const struct vol *,
+                            cnid_t pdid, cnid_t did, bstring fullpath, time_t ctime);
 extern void        dir_free (struct dir *);
 extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *, int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir, cnid_t pdid, cnid_t did,

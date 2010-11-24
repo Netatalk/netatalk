@@ -452,6 +452,9 @@ void afp_over_dsi(AFPObj *obj)
 
                 LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                     AfpNum2name(function), AfpErr2name(err));
+
+                dir_free_invalid_q();
+
 #ifdef FORCE_UIDGID
             	/* bring everything back to old euid, egid */
                 if (obj->force_uid)
