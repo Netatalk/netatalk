@@ -174,6 +174,9 @@ static int loop(struct db_param *dbp)
             case CNID_DBD_OP_REBUILD_ADD:
                 ret = dbd_rebuild_add(dbd, &rqst, &rply);
                 break;
+            case CNID_DBD_OP_SEARCH:
+                ret = dbd_search(dbd, &rqst, &rply);
+                break;
             default:
                 LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
                 ret = -1;
@@ -382,7 +385,7 @@ int main(int argc, char *argv[])
     if (dbif_close(dbd) < 0)
         err++;
 
-    if (dbif_prep_upgrade(dir) < 0)
+    if (dbif_env_remove(dir) < 0)
         err++;
 
     free_lock(lockfd);

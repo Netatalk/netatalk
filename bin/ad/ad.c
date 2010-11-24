@@ -35,7 +35,7 @@
 
 static void usage_main(void)
 {
-    printf("Usage: ad ls|cp|rm|mv [file|dir, ...]\n");
+    printf("Usage: ad ls|cp|rm|mv|find [file|dir, ...]\n");
 }
 
 int main(int argc, char **argv)
@@ -55,6 +55,8 @@ int main(int argc, char **argv)
         return ad_rm(argc - 1, argv + 1);
     else if (STRCMP(argv[1], ==, "mv"))
         return ad_mv(argc, argv);
+    else if (STRCMP(argv[1], ==, "find"))
+        return ad_find(argc, argv);
     else {
         usage_main();
         return 1;

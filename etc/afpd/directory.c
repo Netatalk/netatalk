@@ -71,6 +71,17 @@ struct path Cur_Path = {
     {0} /* struct stat */
 };
 
+/*
+ * dir_remove queues struct dirs to be freed here. We can't just delete them immeidately
+ * eg in dircache_search_by_id, because a caller somewhere up the stack might be
+ * referencing it.
+ * So instead:
+ * - we mark it as invalid by setting d_did to CNID_INVALID (ie 0)
+ * - queue it in "invalid_dircache_entries" queue
+ * - which is finally freed at the end of every AFP func in afp_dsi.c.
+ */
+q_t *invalid_dircache_entries;
+
 
 /*******************************************************************************************
  * Locals
@@ -854,12 +865,25 @@ exit:
 }
 
 /*!
- * @brief Remove a dir from a cache and free it and any ressources with it
+ * Free the queue with invalid struct dirs
+ *
+ * This gets called at the end of every AFP func.
+ */
+void dir_free_invalid_q(void)
+{
+    struct dir *dir;
+    while (dir = (struct dir *)dequeue(invalid_dircache_entries))
+        dir_free(dir);
+}
+
+/*!
+ * @brief Remove a dir from a cache and queue it for freeing
  *
  * 1. Check if the dir is locked or has opened forks
  * 2. If it's a request to remove curdir, just chdir to volume root
  * 3. Remove it from the cache
- * 4. Remove the dir plus any allocated resources it references
+ * 4. Queue it for removal
+ * 5. Mark it as invalid
  *
  * @param (r) pointer to struct vol
  * @param (rw) pointer to struct dir
@@ -888,8 +912,8 @@ int dir_remove(const struct vol *vol, struct dir *dir)
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 3 */
-    dir_free(dir);              /* 4 */
-
+    enqueue(invalid_dircache_entries, dir); /* 4 */
+    dir->d_did = CNID_INVALID;              /* 5 */
     return 0;
 }
 

@@ -96,10 +96,8 @@ static int solaris_acl_rights(const char *path,
     /* Get ACL from file/dir */
     EC_NEG1_LOG(ace_count = get_nfsv4_acl(path, &aces));
 
-    if (ace_count == 0) {
-        LOG(log_warning, logtype_afpd, "Zero ACEs from get_nfsv4_acl");
-        EC_FAIL;
-    }
+    if (ace_count == 0)
+        goto EC_CLEANUP;
 
     /* Now check requested rights */
     i = 0;

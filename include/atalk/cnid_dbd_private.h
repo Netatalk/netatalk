@@ -24,21 +24,26 @@
 #define CNID_DBD_OP_MANGLE_GET  0x0a
 #define CNID_DBD_OP_GETSTAMP    0x0b
 #define CNID_DBD_OP_REBUILD_ADD 0x0c
+#define CNID_DBD_OP_SEARCH      0x0d
 
 #define CNID_DBD_RES_OK            0x00
 #define CNID_DBD_RES_NOTFOUND      0x01
 #define CNID_DBD_RES_ERR_DB        0x02
 #define CNID_DBD_RES_ERR_MAX       0x03
 #define CNID_DBD_RES_ERR_DUPLCNID  0x04
+#define CNID_DBD_RES_SRCH_CNT      0x05
+#define CNID_DBD_RES_SRCH_DONE     0x06
+
+#define DBD_MAX_SRCH_RSLTS 100
 
 struct cnid_dbd_rqst {
     int     op;
     cnid_t  cnid;
     dev_t   dev;
     ino_t   ino;
-    u_int32_t type;
+    uint32_t type;
     cnid_t  did;
-    char   *name;
+    char    *name;
     size_t  namelen;
 };
 
@@ -46,7 +51,7 @@ struct cnid_dbd_rply {
     int     result;    
     cnid_t  cnid;
     cnid_t  did;
-    char   *name;
+    char    *name;
     size_t  namelen;
 };
 

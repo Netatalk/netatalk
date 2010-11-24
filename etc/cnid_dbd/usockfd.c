@@ -155,7 +155,6 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
     socklen_t size;
     fd_set readfds;
     int ret;
-    struct timeval tv;
      
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
@@ -175,10 +174,6 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
                 return 0;
             LOG(log_error, logtype_cnid, "error in accept: %s", 
                 strerror(errno));
-            return -1;
-        }
-        if (setnonblock(fd, 1) != 0) {
-            LOG(log_error, logtype_cnid, "setnonblock: %s", strerror(errno));
             return -1;
         }
         return fd;

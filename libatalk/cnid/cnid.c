@@ -270,12 +270,28 @@ time_t t;
 
 /* --------------- */
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-			char *name, const size_t len)
+                   char *name, const size_t len)
 {
-cnid_t ret;
+    cnid_t ret;
 
     block_signal(cdb->flags);
     ret = valide(cdb->cnid_lookup(cdb, st, did, name, len));
+    unblock_signal(cdb->flags);
+    return ret;
+}
+
+/* --------------- */
+int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
+{
+    int ret;
+    
+    if (cdb->cnid_find == NULL) {
+        LOG(log_error, logtype_cnid, "cnid_find not supported by CNID backend");        
+        return -1;
+    }
+
+    block_signal(cdb->flags);
+    ret = cdb->cnid_find(cdb, name, namelen, buffer, buflen);
     unblock_signal(cdb->flags);
     return ret;
 }

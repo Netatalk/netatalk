@@ -1,7 +1,6 @@
 /*
- * $Id: pack.c,v 1.6 2009-10-13 22:55:37 didg Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2010
  * All Rights Reserved.  See COPYING.
  */
 
@@ -69,6 +68,15 @@ int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DEVINO_OFS;
     skey->size = CNID_DEVINO_LEN;
+    return (0);
+}
+
+/* --------------- */
+int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
+{
+    memset(skey, 0, sizeof(DBT));
+    skey->data = (char *)pdata->data + CNID_NAME_OFS;
+    skey->size = strlen((char *)skey->data) + 1;
     return (0);
 }
 

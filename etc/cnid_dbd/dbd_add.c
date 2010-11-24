@@ -1,7 +1,6 @@
 /*
- * $Id: dbd_add.c,v 1.8 2010-01-19 14:57:11 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2010
  * All Rights Reserved.  See COPYING.
  */
 
@@ -83,21 +82,35 @@ int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 /* ---------------------- */
 int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 {
+    static cnid_t id;
+    static char buf[ROOTINFO_DATALEN];
     DBT rootinfo_key, rootinfo_data;
     int rc;
-    cnid_t hint, id;
-     
+    cnid_t hint;
+
     memset(&rootinfo_key, 0, sizeof(rootinfo_key));
     memset(&rootinfo_data, 0, sizeof(rootinfo_data));
     rootinfo_key.data = ROOTINFO_KEY;
     rootinfo_key.size = ROOTINFO_KEYLEN;
 
-    if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) <= 0) {
-        rply->result = CNID_DBD_RES_ERR_DB;
-        return -1;
+    if (id == 0) {
+        if ((rc = dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) < 0) {
+            rply->result = CNID_DBD_RES_ERR_DB;
+            return -1;
+        }
+        if (rc == 0) {
+            /* no rootinfo key yet */
+            memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
+            id = CNID_START - 1;
+        } else {
+            memcpy(buf, (char *)rootinfo_data.data, ROOTINFO_DATALEN);
+            memcpy(&hint, buf + CNID_TYPE_OFS, sizeof(hint));
+            id = ntohl(hint);
+            if (id < CNID_START - 1)
+                id = CNID_START - 1;
+        }
     }
-    memcpy(&hint, (char *)rootinfo_data.data +CNID_TYPE_OFS, sizeof(hint));
-    id = ntohl(hint);
+
     /* If we've hit the max CNID allowed, we return an error. CNID
      * needs to be recycled before proceding. */
     if (++id == CNID_INVALID) {
@@ -105,12 +118,10 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
         return -1;
     }
 
-#if 0
-    memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
-#endif    
+    rootinfo_data.data = buf;
     rootinfo_data.size = ROOTINFO_DATALEN;
     hint = htonl(id);
-    memcpy((char *)rootinfo_data.data +CNID_TYPE_OFS, &hint, sizeof(hint));
+    memcpy(buf + CNID_TYPE_OFS, &hint, sizeof(hint));
 
     if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
         rply->result = CNID_DBD_RES_ERR_DB;

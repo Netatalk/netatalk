@@ -58,11 +58,12 @@
 #include <atalk/adouble.h>
 #include "db_param.h"
 
-#define DBIF_DB_CNT 3
+#define DBIF_DB_CNT 4
  
 #define DBIF_CNID          0
 #define DBIF_IDX_DEVINO    1
 #define DBIF_IDX_DIDNAME   2
+#define DBIF_IDX_NAME      3
 
 /* Structures */
 typedef struct {
@@ -80,7 +81,7 @@ typedef struct {
     char     *db_envhome;
     char     *db_filename;
     FILE     *db_errlog;
-    db_table db_table[3];
+    db_table db_table[DBIF_DB_CNT];
 } DBD;
 
 /* Functions */
@@ -88,7 +89,9 @@ extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
 extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
 extern int dbif_close(DBD *dbd);
-extern int dbif_prep_upgrade(const char *path);
+extern int dbif_env_remove(const char *path);
+extern int dbif_getversion(DBD *dbd);
+extern int dbif_setversion(DBD *dbd, int);
 
 extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
@@ -96,6 +99,7 @@ extern int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_del(DBD *, const int, DBT *, u_int32_t);
 extern int dbif_count(DBD *, const int, u_int32_t *);
 extern int dbif_stamp(DBD *, void *, int);
+extern int dbif_search(DBD *dbd, DBT *key, char *resbuf);
 extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 extern int dbif_txn_begin(DBD *);
 extern int dbif_txn_commit(DBD *);

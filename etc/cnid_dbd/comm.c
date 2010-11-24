@@ -255,7 +255,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
     }
 
     nametmp = rqst->name;
-    if ((b = readt(cur_fd, rqst, sizeof(struct cnid_dbd_rqst), CNID_DBD_TIMEOUT))
+    if ((b = readt(cur_fd, rqst, sizeof(struct cnid_dbd_rqst), 1, CNID_DBD_TIMEOUT))
         != sizeof(struct cnid_dbd_rqst)) {
         if (b)
             LOG(log_error, logtype_cnid, "error reading message header: %s", strerror(errno));
@@ -264,7 +264,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
         return 0;
     }
     rqst->name = nametmp;
-    if (rqst->namelen && readt(cur_fd, rqst->name, rqst->namelen, CNID_DBD_TIMEOUT)
+    if (rqst->namelen && readt(cur_fd, rqst->name, rqst->namelen, 1, CNID_DBD_TIMEOUT)
         != rqst->namelen) {
         LOG(log_error, logtype_cnid, "error reading message name: %s", strerror(errno));
         invalidate_fd(cur_fd);

@@ -1,5 +1,4 @@
 /*
-   $Id: acl_mappings.h,v 1.1 2009-02-02 11:55:00 franklahm Exp $
    Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -25,6 +24,11 @@
 /* 
  * Stuff for mapping between ACL implementations
  */
+
+/* Solaris 10u8 still hasn't got ACE_INHERITED_ACE */
+#ifndef ACE_INHERITED_ACE
+#define ACE_INHERITED_ACE 0x0080
+#endif
 
 struct ace_rights_map {
     u_int32_t from;

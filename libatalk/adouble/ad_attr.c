@@ -50,7 +50,7 @@ int ad_getattr(const struct adouble *ad, u_int16_t *attr)
 /* ----------------- */
 int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
 {
-    u_int16_t *fflags;
+    uint16_t fflags;
 
     /* we don't save open forks indicator */
     u_int16_t attr = attribute & ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
@@ -61,22 +61,24 @@ int ad_setattr(const struct adouble *ad, const u_int16_t attribute)
         attr &= ~(ATTRBIT_MULTIUSER | ATTRBIT_NOWRITE | ATTRBIT_NOCOPY);
 
     if (ad->ad_version == AD_VERSION2) {
-        if (ad_getentryoff(ad, ADEID_AFPFILEI)) {
+        if (ad_getentryoff(ad, ADEID_AFPFILEI) && ad_getentryoff(ad, ADEID_FINDERI)) {
             memcpy(ad_entry(ad, ADEID_AFPFILEI) + AFPFILEIOFF_ATTR, &attr, sizeof(attr));
             
             /* Now set opaque flags in FinderInfo too */
-            fflags = (u_int16_t *)ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF;
+            memcpy(&fflags, ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, 2);
             if (attr & htons(ATTRBIT_INVISIBLE))
-                *fflags |= htons(FINDERINFO_INVISIBLE);
+                fflags |= htons(FINDERINFO_INVISIBLE);
             else
-                *fflags &= htons(~FINDERINFO_INVISIBLE);
+                fflags &= htons(~FINDERINFO_INVISIBLE);
 
             /* See above comment in ad_getattr() */
             if (attr & htons(ATTRBIT_MULTIUSER)) {
                 if ( ! (ad->ad_adflags & ADFLAGS_DIR) )
-                    *fflags |= htons(FINDERINFO_ISHARED);
+                    fflags |= htons(FINDERINFO_ISHARED);
             } else
-                    *fflags &= htons(~FINDERINFO_ISHARED);
+                    fflags &= htons(~FINDERINFO_ISHARED);
+
+            memcpy(ad_entry(ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, &fflags, 2);
         }
     }
 

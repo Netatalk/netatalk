@@ -1,7 +1,6 @@
 /*
- * $Id: db_param.h,v 1.6 2009-12-21 07:32:01 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
+ * Copyright (C) Frank Lahm 2010
  * All Rights Reserved.  See COPYING.
  */
 
@@ -20,6 +19,8 @@ struct db_param {
     char *dir;
     int logfile_autoremove;
     int cachesize;              /* in KB */
+    int maxlocks;
+    int maxlockobjs;
     int flush_interval;
     int flush_frequency;
     char usock_file[MAXPATHLEN + 1];    

@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include <atalk/logger.h>
 
@@ -67,22 +69,34 @@ int setnonblock(int fd, int cmd)
 /*!
  * non-blocking drop-in replacement for read with timeout using select
  *
- * @param socket   (r)  must be nonblocking !
- * @param data     (rw) buffer for the read data
- * @param lenght   (r)  how many bytes to read
- * @param timeout  (r)  number of seconds to try reading
+ * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
+ * @param data            (rw) buffer for the read data
+ * @param lenght          (r)  how many bytes to read
+ * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
+ *                             io mode for the socket
+ * @param timeout         (r)  number of seconds to try reading
  *
  * @returns number of bytes actually read or -1 on fatal error
  */
-ssize_t readt(int socket, void *data, const size_t length, int timeout)
+ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout)
 {
     size_t stored;
     ssize_t len;
-    struct timeval tv;
+    struct timeval now, end, tv;
     fd_set rfds;
     int ret;
 
     stored = 0;
+
+    if (setnonblocking) {
+        if (setnonblock(socket, 1) != 0)
+            return -1;
+    }
+
+    /* Calculate end time */
+    (void)gettimeofday(&now, NULL);
+    end = now;
+    end.tv_sec += timeout;
 
     while (stored < length) {
         len = read(socket, (char *) data + stored, length - stored);
@@ -91,31 +105,61 @@ ssize_t readt(int socket, void *data, const size_t length, int timeout)
             case EINTR:
                 continue;
             case EAGAIN:
-                tv.tv_usec = 0;
-                tv.tv_sec  = timeout;
-
                 FD_ZERO(&rfds);
                 FD_SET(socket, &rfds);
+                tv.tv_usec = 0;
+                tv.tv_sec  = timeout;
+                        
                 while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
                     switch (ret) {
                     case 0:
-                        LOG(log_warning, logtype_cnid, "select timeout 1s");
-                        return stored;
+                        LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                        goto exit;
+
                     default: /* -1 */
-                        LOG(log_error, logtype_cnid, "select: %s", strerror(errno));
-                        return -1;
+                        if (errno == EINTR) {
+                            (void)gettimeofday(&now, NULL);
+                            if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
+                                LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                                goto exit;
+                            }
+                            if (now.tv_usec > end.tv_usec) {
+                                tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
+                                tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
+                            } else {
+                                tv.tv_usec = end.tv_usec - now.tv_usec;
+                                tv.tv_sec  = end.tv_sec - now.tv_sec;
+                            }
+                            FD_ZERO(&rfds);
+                            FD_SET(socket, &rfds);
+                            continue;
+                        }
+                        LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
+                        stored = -1;
+                        goto exit;
                     }
-                }
+                } /* while (select) */
                 continue;
-            }
-            LOG(log_error, logtype_cnid, "read: %s", strerror(errno));
-            return -1;
-        }
+            } /* switch (errno) */
+            LOG(log_error, logtype_afpd, "read: %s", strerror(errno));
+            stored = -1;
+            goto exit;
+        } /* (len == -1) */
         else if (len > 0)
             stored += len;
         else
             break;
+    } /* while (stored < length) */
+
+exit:
+    if (setnonblocking) {
+        if (setnonblock(socket, 0) != 0)
+            return -1;
     }
+
+    if (len == -1 && stored == 0)
+        /* last read or select got an error and we haven't got yet anything => return -1*/
+        return -1;
     return stored;
 }
 

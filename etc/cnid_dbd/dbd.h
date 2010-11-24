@@ -1,8 +1,6 @@
 /*
- * $Id: dbd.h,v 1.7 2009-11-25 14:59:15 franklahm Exp $
- *
  * Copyright (C) Joerg Lenneis 2003
- * Copyright (C) Frank Lahm 2009
+ * Copyright (C) Frank Lahm 2009, 2010
  * All Rights Reserved.  See COPYING.
  */
 
@@ -23,6 +21,7 @@ extern int dbd_update(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 extern int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *, int idx);
 extern int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 extern int dbd_rebuild_add(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
+extern int dbd_search(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 extern int dbd_check_indexes(DBD *dbd, char *);
 
 #endif /* CNID_DBD_DBD_H */

@@ -26,7 +26,9 @@
 #define MAXKEYLEN         64
 
 #define DEFAULT_LOGFILE_AUTOREMOVE 1
-#define DEFAULT_CACHESIZE          (8 * 1024)
+#define DEFAULT_CACHESIZE          (8 * 1024) /* KB, so 8 MB */
+#define DEFAULT_MAXLOCKS           5000
+#define DEFAULT_MAXLOCKOBJS        5000
 #define DEFAULT_FLUSH_FREQUENCY    1000
 #define DEFAULT_FLUSH_INTERVAL     1800
 #define DEFAULT_USOCK_FILE         "usock"
@@ -66,6 +68,8 @@ static void default_params(struct db_param *dbp, char *dir)
 {        
     dbp->logfile_autoremove  = DEFAULT_LOGFILE_AUTOREMOVE;
     dbp->cachesize           = DEFAULT_CACHESIZE;
+    dbp->maxlocks            = DEFAULT_MAXLOCKS;
+    dbp->maxlockobjs         = DEFAULT_MAXLOCKOBJS;
     dbp->flush_frequency     = DEFAULT_FLUSH_FREQUENCY;
     dbp->flush_interval      = DEFAULT_FLUSH_INTERVAL;
     if (make_pathname(dbp->usock_file, dir, DEFAULT_USOCK_FILE, usock_maxlen()) < 0) {
@@ -161,6 +165,12 @@ struct db_param *db_param_read(char *dir, enum identity id)
             } else if (! strcmp(key, "cachesize")) {
                 params.cachesize = parse_int(val);
                 LOG(log_info, logtype_cnid, "db_param: setting cachesize to %d", params.cachesize);
+            } else if (! strcmp(key, "maxlocks")) {
+                params.maxlocks = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting maxlocks to %d", params.maxlocks);
+            } else if (! strcmp(key, "maxlockobjs")) {
+                params.maxlockobjs = parse_int(val);
+                LOG(log_info, logtype_cnid, "db_param: setting maxlockobjs to %d", params.maxlockobjs);
             } else if (! strcmp(key, "flush_frequency")) {
                 params.flush_frequency = parse_int(val);
                 LOG(log_info, logtype_cnid, "db_param: setting flush_frequency to %d", params.flush_frequency);

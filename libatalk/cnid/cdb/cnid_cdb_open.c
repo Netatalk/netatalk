@@ -1,7 +1,4 @@
 /*
-
- * $Id: cnid_cdb_open.c,v 1.5 2010-03-31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -40,6 +37,8 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef CNID_BACKEND_CDB
+
+#include <atalk/cnid_private.h>
 #include "cnid_cdb_private.h"
 
 #ifndef MIN
@@ -54,14 +53,6 @@
 
 #define DBHOMELEN    8
 #define DBLEN        10
-
-/* we version the did/name database so that we can change the format
- * if necessary. the key is in the form of a did/name pair. in this case,
- * we use 0/0. */
-#define DBVERSION_KEY    "\0\0\0\0\0"
-#define DBVERSION_KEYLEN 5
-#define DBVERSION1       0x00000001U
-#define DBVERSION        DBVERSION1
 
 #define DBOPTIONS    (DB_CREATE | DB_INIT_CDB | DB_INIT_MPOOL)
 
@@ -355,42 +346,27 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         goto fail_appinit;
     }
  
-#if 0
-    DBT key, pkey, data;
     /* ---------------------- */
-    /* Check for version.  This way we can update the database if we need
-     * to change the format in any way. */
+    /* Check for version. "cdb" only supports CNID_VERSION_0, cf cnid_private.h */
+
+    DBT key, data;
+    uint32_t version;
+
     memset(&key, 0, sizeof(key));
-    memset(&pkey, 0, sizeof(DBT));
     memset(&data, 0, sizeof(data));
-    key.data = DBVERSION_KEY;
-    key.size = DBVERSION_KEYLEN;
+    key.data = ROOTINFO_KEY;
+    key.size = ROOTINFO_KEYLEN;
 
-    if ((rc = db->db_didname->pget(db->db_didname, NULL, &key, &pkey, &data, 0)) != 0) {
-        int ret;
-        {
-            u_int32_t version = htonl(DBVERSION);
-
-            data.data = &version;
-            data.size = sizeof(version);
-        }
-        if ((ret = db->db_didname->put(db->db_cnid, NULL, &key, &data,
-                                       DB_NOOVERWRITE))) {
-            LOG(log_error, logtype_default, "cnid_open: Error putting new version: %s",
-                db_strerror(ret));
-            db->db_didname->close(db->db_didname, 0);
+    if ((rc = db->db_cnid->get(db->db_cnid, NULL, &key, &data, 0)) == 0) {
+        /* If not found, ignore it */
+        memcpy(&version, data.data + CNID_DID_OFS, sizeof(version));
+        version = ntohl(version);
+        LOG(log_debug, logtype_default, "CNID db version %u", version);
+        if (version != CNID_VERSION_0) {
+            LOG(log_error, logtype_default, "Unsupported CNID db version %u, use CNID backend \"dbd\"", version);
             goto fail_appinit;
         }
     }
-#endif
-
-    /* TODO In the future we might check for version number here. */
-#if 0
-    memcpy(&version, data.data, sizeof(version));
-    if (version != ntohl(DBVERSION)) {
-        /* Do stuff here. */
-    }
-#endif /* 0 */
 
     db_env_set_func_yield(my_yield);
     return cdb;

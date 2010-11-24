@@ -345,7 +345,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
         dircache_stat.hits++;
     } else {
         LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {not in cache}", ntohl(cnid));
-        dircache_stat.hits++;
+        dircache_stat.misses++;
     }
     
     return cdir;
@@ -551,6 +551,10 @@ int dircache_init(int reqsize)
         return -1;
     else
         queue_count = 0;
+
+    /* Initialize index queue */
+    if ((invalid_dircache_entries = queue_init()) == NULL)
+        return -1;
 
     /* As long as directory.c hasn't got its own initializer call, we do it for it */
     rootParent.d_did = DIRDID_ROOT_PARENT;
