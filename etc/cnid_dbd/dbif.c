@@ -356,6 +356,22 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
         return -1;
     }
 
+    if ((ret = dbd->db_env->set_lk_max_locks(dbd->db_env, dbp->maxlocks))) {
+        LOG(log_error, logtype_cnid, "error setting DB environment maxlocks to %i: %s",
+            10000, db_strerror(ret));
+        dbd->db_env->close(dbd->db_env, 0);
+        dbd->db_env = NULL;
+        return -1;
+    }
+
+    if ((ret = dbd->db_env->set_lk_max_objects(dbd->db_env, dbp->maxlockobjs))) {
+        LOG(log_error, logtype_cnid, "error setting DB environment max lockobjects to %i: %s",
+            10000, db_strerror(ret));
+        dbd->db_env->close(dbd->db_env, 0);
+        dbd->db_env = NULL;
+        return -1;
+    }
+
     if ((ret = dbd->db_env->open(dbd->db_env, dbd->db_envhome, dbenv_oflags, 0))) {
         LOG(log_error, logtype_cnid, "error opening DB environment after recovery: %s",
             db_strerror(ret));
