@@ -162,13 +162,6 @@ static const struct entry entry_order2[ADEID_NUM_V2 + 1] = {
     {0, 0, 0}
 };
 
-/* OS X adouble finder info and resource fork only */
-static const struct entry entry_order_osx[ADEID_NUM_OSX + 1] = {
-    {ADEID_FINDERI, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI},
-    {ADEID_RFORK, ADEDOFF_RFORK_OSX, ADEDLEN_INIT},
-    {0, 0, 0}
-};
-
 /* Using Extended Attributes */
 static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
     {ADEID_FINDERI, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI},
@@ -523,8 +516,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     /* tag broken v1 headers. just assume they're all right.
      * we detect two cases: null magic/version
      *                      byte swapped magic/version
-     * XXX: in the future, you'll need the v1compat flag.
-     * (ad->ad_flags & ADFLAGS_V1COMPAT) */
+     * XXX: in the future, you'll need the v1compat flag. */
     if (!ad->ad_magic && !ad->ad_version) {
         if (!warning) {
             LOG(log_debug, logtype_default, "notice: fixing up null v1 magic/version.");
@@ -546,7 +538,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 
     if ((ad->ad_magic != AD_MAGIC) ||
         ((ad->ad_version != AD_VERSION1) && (ad->ad_version != AD_VERSION2))) {
-        LOG(log_debug, logtype_default, "ad_open: can't parse AppleDouble header.");
+        LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
         errno = EIO;
         return -1;
     }
@@ -564,7 +556,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 
     buf += AD_HEADER_LEN;
     if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_debug, logtype_default, "ad_header_read: can't read entry info.");
+        LOG(log_error, logtype_default, "ad_header_read: can't read entry info.");
         errno = EIO;
         return -1;
     }
@@ -576,13 +568,13 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     if (!ad_getentryoff(ad, ADEID_RFORK)
         || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
         ) {
-        LOG(log_debug, logtype_default, "ad_header_read: problem with rfork entry offset.");
+        LOG(log_error, logtype_default, "ad_header_read: problem with rfork entry offset.");
         errno = EIO;
         return -1;
     }
 
     if (ad_getentryoff(ad, ADEID_RFORK) > header_len) {
-        LOG(log_debug, logtype_default, "ad_header_read: can't read in entries.");
+        LOG(log_error, logtype_default, "ad_header_read: can't read in entries.");
         errno = EIO;
         return -1;
     }
@@ -635,98 +627,43 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst)
     memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
     memcpy(&ad->ad_version, buf + ADEDOFF_VERSION, sizeof( ad->ad_version ));
 
-    /* tag broken v1 headers. just assume they're all right.
-     * we detect two cases: null magic/version
-     *                      byte swapped magic/version
-     * XXX: in the future, you'll need the v1compat flag.
-     * (ad->ad_flags & ADFLAGS_V1COMPAT) */
-    if (!ad->ad_magic && !ad->ad_version) {
-        if (!warning) {
-            LOG(log_debug, logtype_default, "notice: fixing up null v1 magic/version.");
-            warning++;
-        }
-        ad->ad_magic = AD_MAGIC;
-        ad->ad_version = AD_VERSION1;
+    ad->ad_magic = ntohl( ad->ad_magic );
+    ad->ad_version = ntohl( ad->ad_version );
 
-    } else if (ad->ad_magic == AD_MAGIC && ad->ad_version == AD_VERSION1) {
-        if (!warning) {
-            LOG(log_debug, logtype_default, "notice: fixing up byte-swapped v1 magic/version.");
-            warning++;
-        }
+    if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION_EA))) {
+    LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
+    errno = EIO;
+    return -1;
+}
 
-    } else {
-        ad->ad_magic = ntohl( ad->ad_magic );
-        ad->ad_version = ntohl( ad->ad_version );
+memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
+nentries = ntohs( nentries );
+
+len = nentries * AD_ENTRY_LEN;
+if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
+    len = sizeof(ad->ad_data) - AD_HEADER_LEN;
+
+buf += AD_HEADER_LEN;
+if (len > header_len - AD_HEADER_LEN) {
+    LOG(log_error, logtype_default, "ad_header_read: can't read entry info.");
+    errno = EIO;
+    return -1;
+}
+
+/* figure out all of the entry offsets and lengths */
+nentries = len / AD_ENTRY_LEN;
+parse_entries(ad, buf, nentries);
+
+if (hst == NULL) {
+    hst = &st;
+    if (fstat(ad->ad_md->adf_fd, &st) < 0) {
+        return 1; /* fail silently */
     }
+}
 
-    if ((ad->ad_magic != AD_MAGIC) ||
-        ((ad->ad_version != AD_VERSION1) && (ad->ad_version != AD_VERSION2))) {
-        LOG(log_debug, logtype_default, "ad_open: can't parse AppleDouble header.");
-        errno = EIO;
-        return -1;
-    }
+ad->ad_rlen = hst->st_size - ad_getentryoff(ad, ADEID_RFORK);
 
-    memcpy(ad->ad_filler, buf + ADEDOFF_FILLER, sizeof( ad->ad_filler ));
-    memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
-    nentries = ntohs( nentries );
-
-    /* read in all the entry headers. if we have more than the
-     * maximum, just hope that the rfork is specified early on. */
-    len = nentries*AD_ENTRY_LEN;
-
-    if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
-        len = sizeof(ad->ad_data) - AD_HEADER_LEN;
-
-    buf += AD_HEADER_LEN;
-    if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_debug, logtype_default, "ad_header_read: can't read entry info.");
-        errno = EIO;
-        return -1;
-    }
-
-    /* figure out all of the entry offsets and lengths. if we aren't
-     * able to read a resource fork entry, bail. */
-    nentries = len / AD_ENTRY_LEN;
-    parse_entries(ad, buf, nentries);
-    if (!ad_getentryoff(ad, ADEID_RFORK)
-        || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
-        ) {
-        LOG(log_debug, logtype_default, "ad_header_read: problem with rfork entry offset.");
-        errno = EIO;
-        return -1;
-    }
-
-    if (ad_getentryoff(ad, ADEID_RFORK) > header_len) {
-        LOG(log_debug, logtype_default, "ad_header_read: can't read in entries.");
-        errno = EIO;
-        return -1;
-    }
-
-    if (hst == NULL) {
-        hst = &st;
-        if (fstat(ad->ad_md->adf_fd, &st) < 0) {
-            return 1; /* fail silently */
-        }
-    }
-    ad->ad_rlen = hst->st_size - ad_getentryoff(ad, ADEID_RFORK);
-
-    /* fix up broken dates */
-    if (ad->ad_version == AD_VERSION1) {
-        u_int32_t aint;
-
-        /* check to see if the ad date is wrong. just see if we have
-         * a modification date in the future. */
-        if (((ad_getdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, &aint)) == 0) &&
-            (aint > TIMEWARP_DELTA + hst->st_mtime)) {
-            ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, aint - AD_DATE_DELTA);
-            ad_getdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, &aint);
-            ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, aint - AD_DATE_DELTA);
-            ad_getdate(ad, AD_DATE_BACKUP | AD_DATE_UNIX, &aint);
-            ad_setdate(ad, AD_DATE_BACKUP | AD_DATE_UNIX, aint - AD_DATE_DELTA);
-        }
-    }
-
-    return 0;
+return 0;
 }
 
 /*
@@ -785,46 +722,6 @@ static int ad_mkrf(char *path)
         return -1;
     }
     *slash = '/';
-    return 0;
-}
-
-
-/***********************************************************************
- * OS X adouble scheme funcs
- ***********************************************************************/
-
-/*
- * Put the resource fork where it needs to be: ._name
- */
-char *ad_path_osx(const char *path, int adflags _U_)
-{
-    static char pathbuf[ MAXPATHLEN + 1];
-    char    c, *slash, buf[MAXPATHLEN + 1];
-
-    if (!strcmp(path,".")) {
-        /* fixme */
-        getcwd(buf, MAXPATHLEN);
-    }
-    else {
-        strlcpy(buf, path, MAXPATHLEN +1);
-    }
-    if (NULL != ( slash = strrchr( buf, '/' )) ) {
-        c = *++slash;
-        *slash = '\0';
-        strlcpy( pathbuf, buf, MAXPATHLEN +1);
-        *slash = c;
-    } else {
-        pathbuf[ 0 ] = '\0';
-        slash = buf;
-    }
-    strlcat( pathbuf, "._", MAXPATHLEN  +1);
-    strlcat( pathbuf, slash, MAXPATHLEN +1);
-    return pathbuf;
-}
-
-/* -------------------- */
-static int ad_mkrf_osx(char *path _U_)
-{
     return 0;
 }
 
@@ -957,8 +854,7 @@ static int ad_mode_st(const char *path, int *mode, struct stat *stbuf)
 /* ----------------
    return access right of path parent directory
 */
-int
-ad_mode( const char *path, int mode)
+int ad_mode( const char *path, int mode)
 {
     struct stat     stbuf;
     ad_mode_st(path, &mode, &stbuf);
@@ -968,8 +864,7 @@ ad_mode( const char *path, int mode)
 /*
  * Use mkdir() with mode bits taken from ad_mode().
  */
-int
-ad_mkdir( const char *path, int mode)
+int ad_mkdir( const char *path, int mode)
 {
     int ret;
     int st_invalid;
@@ -1043,15 +938,6 @@ static int ad_header_upgrade_none(struct adouble *ad _U_, char *name _U_)
 }
 
 /* --------------------------- */
-static struct adouble_fops ad_osx = {
-    &ad_path_osx,
-    &ad_mkrf_osx,
-    &ad_rebuild_adouble_header,
-    &ad_check_size,
-    &ad_header_read,
-    &ad_header_upgrade,
-};
-
 static struct adouble_fops ad_adouble = {
     &ad_path,
     &ad_mkrf,
@@ -1074,64 +960,32 @@ void ad_init(struct adouble *ad, int flags, int options)
 {
     ad->ad_inited = 0;
     ad->ad_flags = flags;
-    if (flags == AD_VERSION2_OSX) {
-        ad->ad_ops = &ad_osx;
-        ad->ad_md = &ad->ad_resource_fork;
-    }
-    else if (flags == AD_VERSION2) {
+    if (flags == AD_VERSION2) {
         ad->ad_ops = &ad_adouble;
         ad->ad_md = &ad->ad_resource_fork;
     }
-    else {
+    else if (flags == AD_VERSION_EA) {
         ad->ad_ops = &ad_adouble_ea;
         ad->ad_md = &ad->ad_metadata_fork;
+    } else {
+        LOG(log_error, logtype_default, "ad_init: unknown AD version");
+        errno = EIO;
+        return;
     }
+
     ad->ad_options = options;
 
     ad_data_fileno(ad) = -1;
     ad_reso_fileno(ad) = -1;
     ad_meta_fileno(ad) = -1;
+
     /* following can be read even if there's no meda data. */
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
 }
 
-/*!
- * Open data-, metadata(header)- or ressource fork
- *
- * You must call ad_init() before ad_open, usually you'll just call it like this: \n
- * @code
- *      struct adoube ad;
- *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
- * @endcode
- *
- * @param path    Path to file or directory
- * @param adflags ADFLAGS_DF: open data file/fork\n
- *                ADFLAGS_HF: open header (metadata) file\n
- *                ADFLAGS_RF: open ressource fork *** FIXME: not used ?! *** \n
- *                ADFLAGS_CREATE: indicate creation\n
- *                ADFLAGS_NOHF: it's not an error if header file couldn't be created\n
- *                ADFLAGS_DIR: if path is a directory you MUST or ADFLAGS_DIR to adflags\n
- *                ADFLAGS_NOADOUBLE: dont create adouble files if not necessary\n
- *                ADFLAGS_RDONLY: open read only\n
- *                ADFLAGS_OPENFORKS: check for open forks from other processes\n
- *                ADFLAGS_MD: alias for ADFLAGS_HF\n
- *                ADFLAGS_V1COMPAT: obsolete
- * @param oflags  flags passed through to open syscall: \n
- *                O_RDONLY: *** FIXME *** \n
- *                O_RDWR: *** FIXME *** \n
- *                O_CREAT: create fork\n
- *                O_EXCL: fail if exists with O_CREAT
- * @param mode    passed to open with O_CREAT
- * @param ad      pointer to struct adouble
- *
- * @returns 0 on success
- *
- * @note It's not possible to open the header file O_RDONLY -- the read
- *       will fail and return an error. this refcounts things now.\n
- *       metadata(ressource)-fork only gets created with O_CREAT.
- */
-int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
+
+static int ad_open_df(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
     struct stat         st_dir;
     struct stat         st_meta;
@@ -1141,89 +995,78 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
     int                 st_invalid = -1;
     int                 open_df = 0;
 
-    if (ad->ad_inited != AD_INITED) {
-        ad->ad_inited = AD_INITED;
-        ad->ad_refcount = 1;
-        ad->ad_open_forks = 0;
-        ad->ad_adflags = adflags;
-        ad->ad_resource_fork.adf_refcount = 0;
-        ad->ad_data_fork.adf_refcount = 0;
-        ad->ad_data_fork.adf_syml=0;
-    }
-    else {
-        ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
-        /* XXX not true if we have a meta data fork ? */
-        if ((ad->ad_resource_fork.adf_refcount > ad->ad_data_fork.adf_refcount))
-            ad->ad_open_forks |= ATTRBIT_ROPEN;
-    }
-
-    if ((adflags & ADFLAGS_DF)) {
-        if (ad_data_fileno(ad) == -1) {
-            hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-            admode = mode;
-            if ((oflags & O_CREAT)) {
-                st_invalid = ad_mode_st(path, &admode, &st_dir);
-                if ((ad->ad_options & ADVOL_UNIXPRIV)) {
-                    admode = mode;
-                }
+    if (ad_data_fileno(ad) == -1) {
+        hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
+        admode = mode;
+        if ((oflags & O_CREAT)) {
+            st_invalid = ad_mode_st(path, &admode, &st_dir);
+            if ((ad->ad_options & ADVOL_UNIXPRIV)) {
+                admode = mode;
             }
-                
-            ad->ad_data_fork.adf_fd =open( path, hoflags | O_NOFOLLOW, admode );
-            
-            if (ad->ad_data_fork.adf_fd == -1) {
-                if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
-                    hoflags = oflags;
-                    ad->ad_data_fork.adf_fd = open( path, hoflags | O_NOFOLLOW, admode );
-                }
-                if (ad->ad_data_fork.adf_fd == -1 && errno == OPEN_NOFOLLOW_ERRNO) {
-                    int lsz;
-
-                    ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
-                    lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN);
-                    if (lsz <= 0) {
-                        free(ad->ad_data_fork.adf_syml);
-                        return -1;
-                    }
-                    ad->ad_data_fork.adf_syml[lsz] = 0;
-                    ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
-                }
-            }
-
-            if ( ad->ad_data_fork.adf_fd == -1 )
-                return -1;
-
-            AD_SET(ad->ad_data_fork.adf_off);
-            ad->ad_data_fork.adf_flags = hoflags;
-            if (!st_invalid) {
-                /* just created, set owner if admin (root) */
-                ad_chown(path, &st_dir);
-            }
-            adf_lock_init(&ad->ad_data_fork);
         }
-        else {
-            /* the file is already open... but */
-            if ((oflags & ( O_RDWR | O_WRONLY)) &&             /* we want write access */
-                !(ad->ad_data_fork.adf_flags & ( O_RDWR | O_WRONLY))) /* and it was denied the first time */
-            {
-                errno = EACCES;
-                return -1;
+
+        ad->ad_data_fork.adf_fd =open( path, hoflags | O_NOFOLLOW, admode );
+
+        if (ad->ad_data_fork.adf_fd == -1) {
+            if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
+                hoflags = oflags;
+                ad->ad_data_fork.adf_fd = open( path, hoflags | O_NOFOLLOW, admode );
             }
-            /* FIXME
-             * for now ad_open is never called with O_TRUNC or O_EXCL if the file is
-             * already open. Should we check for it? ie
-             * O_EXCL --> error
-             * O_TRUNC --> truncate the fork.
-             * idem for ressource fork.
-             */
+            if (ad->ad_data_fork.adf_fd == -1 && errno == OPEN_NOFOLLOW_ERRNO) {
+                int lsz;
+
+                ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
+                lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN);
+                if (lsz <= 0) {
+                    free(ad->ad_data_fork.adf_syml);
+                    return -1;
+                }
+                ad->ad_data_fork.adf_syml[lsz] = 0;
+                ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
+            }
         }
-        open_df = ADFLAGS_DF;
-        ad->ad_data_fork.adf_refcount++;
+
+        if ( ad->ad_data_fork.adf_fd == -1 )
+            return -1;
+
+        AD_SET(ad->ad_data_fork.adf_off);
+        ad->ad_data_fork.adf_flags = hoflags;
+        if (!st_invalid) {
+            /* just created, set owner if admin (root) */
+            ad_chown(path, &st_dir);
+        }
+        adf_lock_init(&ad->ad_data_fork);
+    } else {
+        /* the file is already open... but */
+        if ((oflags & ( O_RDWR | O_WRONLY)) /* we want write access */
+            &&
+            !(ad->ad_data_fork.adf_flags & ( O_RDWR | O_WRONLY))) { /* and it was denied the first time */
+            errno = EACCES;
+            return -1;
+        }
+        /* FIXME
+         * for now ad_open is never called with O_TRUNC or O_EXCL if the file is
+         * already open. Should we check for it? ie
+         * O_EXCL --> error
+         * O_TRUNC --> truncate the fork.
+         * idem for ressource fork.
+         */
     }
+    open_df = ADFLAGS_DF;
+    ad->ad_data_fork.adf_refcount++;
 
-    if (!(adflags & ADFLAGS_HF))
-        return 0;
+    return 0;
+}
 
-    /* ****************************************** */
+static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
+{
+    struct stat st_dir;
+    struct stat st_meta;
+    struct stat *pst = NULL;
+    char        *ad_p;
+    int         hoflags, admode;
+    int         st_invalid = -1;
+    int         open_df = 0;
 
     if (ad_meta_fileno(ad) != -1) { /* the file is already open */
         if ((oflags & ( O_RDWR | O_WRONLY)) &&
@@ -1239,7 +1082,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         /* it's not new anymore */
         ad->ad_md->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_md->adf_refcount++;
-        goto sfm;
+        return 0;
     }
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
@@ -1295,8 +1138,7 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
             if (!st_invalid) {
                 ad_chown(ad_p, &st_dir);
             }
-        }
-        else {
+        } else {
             return ad_error(ad, adflags);
         }
     } else {
@@ -1304,11 +1146,8 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         if (fstat(ad->ad_md->adf_fd, &st_meta) == 0 && st_meta.st_size == 0) {
             /* for 0 length files, treat them as new. */
             ad->ad_md->adf_flags |= O_TRUNC;
-        } 
-        else {
-            /* we have valid data in st_meta stat structure, reused it
-               in ad_header_read
-            */
+        } else {
+            /* we have valid data in st_meta stat structure, reused it in ad_header_read */
             pst = &st_meta;
         }
     }
@@ -1342,13 +1181,85 @@ int ad_open( const char *path, int adflags, int oflags, int mode, struct adouble
         }
     }
 
-    /* ****************************************** */
-    /* open the resource fork if SFM */
-sfm:
-    if (ad->ad_flags != AD_VERSION1_SFM) {
-        return 0;
+    return 0;
+}
+
+/*!
+ * Open data-, metadata(header)- or ressource fork
+ *
+ * You must call ad_init() before ad_open, usually you'll just call it like this: \n
+ * @code
+ *      struct adoube ad;
+ *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+ * @endcode
+ *
+ * @param path    Path to file or directory
+ *
+ * @param adflags ADFLAGS_DF:        open data file/fork \n
+ *                ADFLAGS_HF:        open header (metadata) file \n
+ *                ADFLAGS_CREATE:    indicate creation \n
+ *                ADFLAGS_NOHF:      it's not an error if header file couldn't be created \n
+ *                ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags \n
+ *                ADFLAGS_NOADOUBLE: dont create adouble files if not necessary \n
+ *                ADFLAGS_RDONLY:    open read only \n
+ *                ADFLAGS_OPENFORKS: check for open forks from other processes
+ *
+ * @param oflags  flags passed through to open syscall: \n
+ *                O_RDONLY: *** FIXME *** \n
+ *                O_RDWR: *** FIXME *** \n
+ *                O_CREAT: create fork \n
+ *                O_EXCL: fail if exists with O_CREAT
+ *
+ * @param mode    passed to open with O_CREAT
+ * @param ad      pointer to struct adouble
+ *
+ * @returns 0 on success
+ *
+ * @note It's not possible to open the header file O_RDONLY -- the read
+ *       will fail and return an error. this refcounts things now.\n
+ *       metadata(ressource)-fork only gets created with O_CREAT.
+ */
+int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
+{
+    struct stat st_dir;
+    struct stat st_meta;
+    struct stat *pst = NULL;
+    char        *ad_p;
+    int         hoflags, admode;
+    int         st_invalid = -1;
+    int         open_df = 0;
+
+    if (ad->ad_inited != AD_INITED) {
+        ad->ad_inited = AD_INITED;
+        ad->ad_refcount = 1;
+        ad->ad_open_forks = 0;
+        ad->ad_adflags = adflags;
+        ad->ad_resource_fork.adf_refcount = 0;
+        ad->ad_data_fork.adf_refcount = 0;
+        ad->ad_data_fork.adf_syml = 0;
+    } else {
+        ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
+        /* XXX not true if we have a meta data fork ? */
+        if ((ad->ad_resource_fork.adf_refcount > ad->ad_data_fork.adf_refcount))
+            ad->ad_open_forks |= ATTRBIT_ROPEN;
     }
 
+    if ((adflags & ADFLAGS_DF)) {
+        if (ad_open_df(path, adflags, oflags, mode, ad) != 0)
+            return -1;
+    }
+
+    if ((adflags & ADFLAGS_HF)) {
+        if (ad_open_hf(path, adflags, oflags, mode, ad) != 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+#if 0
+void sfm(void)
+{
     if ((adflags & ADFLAGS_DIR)) {
         /* no resource fork for directories / volumes XXX it's false! */
         return 0;
@@ -1406,6 +1317,7 @@ sfm:
     }
     return 0 ;
 }
+#endif
 
 /*!
  * @brief open metadata, possibly as root

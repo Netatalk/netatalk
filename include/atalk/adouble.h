@@ -33,6 +33,7 @@
 #include <config.h>
 #endif
 
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -45,7 +46,6 @@
 
 /* version info */
 #define AD_VERSION2     0x00020000
-#define AD_VERSION2_OSX 0x00020001
 #define AD_VERSION2_EA  0x00020002
 #define AD_VERSION      AD_VERSION2_EA
 
@@ -112,8 +112,8 @@
 #define ADEDLEN_PRIVID          4
 
 #define ADEID_NUM_V2            13
-#define ADEID_NUM_OSX           2
 #define ADEID_NUM_EA            5
+
 #define AD_DATASZ2 (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + \
                     ADEDLEN_FINDERI + ADEDLEN_DID + ADEDLEN_AFPFILEI + ADEDLEN_SHORTNAME + \
                     ADEDLEN_PRODOSFILEI + ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + \
@@ -190,23 +190,21 @@ struct adouble {
     char                *ad_m_name;   /* mac name for open fork */
     int                 ad_m_namelen;
     struct adouble_fops *ad_ops;
-    u_int16_t       ad_open_forks;      /* open forks (by others) */
+    uint16_t            ad_open_forks;      /* open forks (by others) */
 #ifdef USE_MMAPPED_HEADERS
     char                *ad_data;
 #else
-    char        ad_data[AD_DATASZ_MAX];
+    char                ad_data[AD_DATASZ_MAX];
 #endif
 };
 
 #define ADFLAGS_DF        (1<<0)
 #define ADFLAGS_HF        (1<<1)
 #define ADFLAGS_DIR       (1<<2)
-#define ADFLAGS_V1COMPAT  (1<<4)
 #define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
 #define ADFLAGS_RDONLY    (1<<6)  /* don't try readwrite */
 #define ADFLAGS_OPENFORKS (1<<7)  /* check for open fork in ad_metadata function */
 #define ADFLAGS_RF        (1<<8)
-#define ADFLAGS_MD        ADFLAGS_HF /* (1<<9) */
 #define ADFLAGS_CREATE    (1<<9)
 
 #define ADVOL_NODEV      (1 << 0)
@@ -377,9 +375,9 @@ extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
 
 #define ad_open_metadata(name, flags, mode, adp)\
-   ad_open(name, ADFLAGS_MD|(flags), O_RDWR |(mode), 0666, (adp))
+   ad_open(name, ADFLAGS_HF | (flags), O_RDWR |(mode), 0666, (adp))
 
-#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_MD)
+#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_HF)
 
 /* build a resource fork mode from the data fork mode:
  * remove X mode and extend header to RW if R or W (W if R for locking),
@@ -406,66 +404,43 @@ static inline mode_t ad_hf_mode (mode_t mode)
     return mode;
 }
 
-/* ad_ea.c */
-ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size);
-ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size);
-ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size);
-ssize_t sys_listxattr (const char *path, char *list, size_t size);
-ssize_t sys_llistxattr (const char *path, char *list, size_t size);
-ssize_t sys_flistxattr (int filedes, char *list, size_t size);
-int sys_removexattr (const char *path, const char *name);
-int sys_lremovexattr (const char *path, const char *name);
-int sys_fremovexattr (int filedes, const char *name);
-int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
-int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
-int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
-int sys_copyxattr (const char *src, const char *dst);
-
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);
-
-extern ssize_t ad_read (struct adouble *, const u_int32_t,
-                            const off_t, char *, const size_t);
-extern ssize_t ad_pread (struct ad_fd *, void *, size_t, off_t);
-extern ssize_t ad_write (struct adouble *, const u_int32_t, off_t,
-                             const int, const char *, const size_t);
-extern ssize_t adf_pread  (struct ad_fd *, void *, size_t, off_t);
-extern ssize_t adf_pwrite (struct ad_fd *, const void *, size_t, off_t);
-extern int     ad_dtruncate (struct adouble *, const off_t);
-extern int     ad_rtruncate (struct adouble *, const off_t);
+extern ssize_t ad_read(struct adouble *, uint32_t, off_t, char *, size_t);
+extern ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t);
+extern ssize_t ad_write(struct adouble *, uint32_t, off_t, int, const char *, size_t);
+extern ssize_t adf_pread(struct ad_fd *, void *, size_t, off_t);
+extern ssize_t adf_pwrite(struct ad_fd *, const void *, size_t, off_t);
+extern int     ad_dtruncate(struct adouble *, off_t);
+extern int     ad_rtruncate(struct adouble *, off_t);
 
 /* ad_size.c */
-extern off_t ad_size (const struct adouble *, const u_int32_t );
+extern off_t ad_size (const struct adouble *, uint32_t );
 
 /* ad_mmap.c */
-extern void *ad_mmapread (struct adouble *, const u_int32_t,
-                              const off_t, const size_t);
-extern void *ad_mmapwrite (struct adouble *, const u_int32_t,
-                               const off_t, const int, const size_t);
+extern void *ad_mmapread(struct adouble *, uint32_t, off_t, size_t);
+extern void *ad_mmapwrite(struct adouble *, uint32_t, off_t, int, size_t);
 #define ad_munmap(buf, len)  (munmap((buf), (len)))
 
 /* ad_date.c */
-extern int ad_setdate (struct adouble *, unsigned int, u_int32_t);
-extern int ad_getdate (const struct adouble *, unsigned int, u_int32_t *);
+extern int ad_setdate(struct adouble *, unsigned int, uint32_t);
+extern int ad_getdate(const struct adouble *, unsigned int, uint32_t *);
 
 /* ad_attr.c */
-extern int       ad_setattr (const struct adouble *, const u_int16_t);
-extern int       ad_getattr (const struct adouble *, u_int16_t *);
-extern int       ad_setname (struct adouble *, const char *);
-extern int       ad_setid (struct adouble *, const dev_t dev,const ino_t ino, const u_int32_t, const u_int32_t, const void *);
-extern u_int32_t ad_getid (struct adouble *, const dev_t, const ino_t, const cnid_t, const void *);
-extern u_int32_t ad_forcegetid (struct adouble *adp);
+extern int       ad_setattr(const struct adouble *, uint16_t);
+extern int       ad_getattr(const struct adouble *, uint16_t *);
+extern int       ad_setname(struct adouble *, const char *);
+extern int       ad_setid(struct adouble *, dev_t dev, ino_t ino, uint32_t, uint32_t, const void *);
+extern u_int32_t ad_getid(struct adouble *, dev_t, ino_t, cnid_t, const void *);
+extern u_int32_t ad_forcegetid(struct adouble *adp);
 
 #ifdef WITH_SENDFILE
-extern int ad_readfile_init(const struct adouble *ad, 
-                            const int eid, off_t *off,
-                            const int end);
+extern int ad_readfile_init(const struct adouble *ad, int eid, off_t *off, int end);
 #endif
 
 #if 0
 #ifdef HAVE_SENDFILE_WRITE
-extern ssize_t ad_writefile (struct adouble *, const int,
-                                 const int, off_t, const int, const size_t);
+extern ssize_t ad_writefile(struct adouble *, int, int, off_t, int, size_t);
 #endif /* HAVE_SENDFILE_WRITE */
 #endif /* 0 */
 

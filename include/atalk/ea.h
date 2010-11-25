@@ -1,5 +1,4 @@
 /*
-   $Id: ea.h,v 1.11 2010-03-12 15:16:49 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -56,6 +55,22 @@ enum {
 #define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
 #endif
 
+/****************************************************************************************
+ * Wrappers for native EA functions taken from Samba
+ ****************************************************************************************/
+ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size);
+ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size);
+ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size);
+ssize_t sys_listxattr (const char *path, char *list, size_t size);
+ssize_t sys_llistxattr (const char *path, char *list, size_t size);
+ssize_t sys_flistxattr (int filedes, char *list, size_t size);
+int sys_removexattr (const char *path, const char *name);
+int sys_lremovexattr (const char *path, const char *name);
+int sys_fremovexattr (int filedes, const char *name);
+int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
+int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
+int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
+int sys_copyxattr (const char *src, const char *dst);
 
 /****************************************************************************************
  * Stuff for our implementation of storing EAs in files in .AppleDouble dirs

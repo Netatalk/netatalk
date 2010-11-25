@@ -25,8 +25,6 @@
    Copyright (C) 2001 Andreas Gruenbacher.
       
    Samba 3.0.28, modified for netatalk.
-   $Id: sys_ea.c,v 1.6 2009-12-04 10:26:10 franklahm Exp $
-   
 */
 
 #ifdef HAVE_CONFIG_H

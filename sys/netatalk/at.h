@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <netinet/in.h> /* so that we can deal with sun's s_net #define */
 
-#ifdef MACOSX_SERVER
+#if defined(MACOSX_SERVER) && (!defined(NO_DDP))
 #include <netat/appletalk.h>
 #endif /* MACOSX_SERVER */
 

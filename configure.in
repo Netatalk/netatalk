@@ -23,9 +23,6 @@ AC_PROG_GREP
 AC_PROG_PS
 AM_PROG_CC_C_O
 
-dnl Request SUSv4 standard interfaces
-CFLAGS="$CFLAGS -D_XOPEN_SOURCE=700"
-
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
@@ -1264,7 +1261,8 @@ AC_CHECK_HEADER([uuid/uuid.h],
                 AC_MSG_ERROR([missing header <uuid/uuid.> from libuuid required for TimeMachine]))
 
 dnl --------------------- last minute substitutions
-
+dnl Request SUSv4 standard interfaces
+CFLAGS="$CFLAGS -D_XOPEN_SOURCE=700"
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(OVERWRITE_CONFIG)

@@ -1,5 +1,4 @@
 /*
-  $Id: ea_sys.c,v 1.8 2010-04-13 08:05:06 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -26,20 +25,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
-
-#if HAVE_ATTR_XATTR_H
-#include <attr/xattr.h>
-#elif HAVE_SYS_XATTR_H
-#include <sys/xattr.h>
-#endif
-
-#ifdef HAVE_SYS_EA_H
-#include <sys/ea.h>
-#endif
-
-#ifdef HAVE_SYS_EXTATTR_H
-#include <sys/extattr.h>
-#endif
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
