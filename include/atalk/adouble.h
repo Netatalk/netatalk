@@ -46,8 +46,8 @@
 
 /* version info */
 #define AD_VERSION2     0x00020000
-#define AD_VERSION2_EA  0x00020002
-#define AD_VERSION      AD_VERSION2_EA
+#define AD_VERSION_EA   0x00020002
+#define AD_VERSION      AD_VERSION_EA
 
 /*
  * AppleDouble entry IDs.
@@ -124,7 +124,7 @@
 
 #define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEID_FINDERI + \
                       ADEID_COMMENT + ADEID_FILEDATESI + ADEID_AFPFILEI + ADEID_PRIVID)
-#if AD_DATASZ_EA != 342
+#if AD_DATASZ_EA != 352
 #error bad size for AD_DATASZ_EA
 #endif
 
@@ -149,7 +149,7 @@ typedef struct adf_lock_t {
 } adf_lock_t;
 
 struct ad_fd {
-    int          adf_fd;        /* -1: invalid, -2: symlink */
+    int          adf_fd;        /* -1: invalid, -2: symlink, -3: Extended Attribute */
 #ifndef HAVE_PREAD
     off_t        adf_off;
 #endif
@@ -199,13 +199,13 @@ struct adouble {
 };
 
 #define ADFLAGS_DF        (1<<0)
-#define ADFLAGS_HF        (1<<1)
-#define ADFLAGS_DIR       (1<<2)
-#define ADFLAGS_NOHF      (1<<5)  /* not an error if no ressource fork */
-#define ADFLAGS_RDONLY    (1<<6)  /* don't try readwrite */
-#define ADFLAGS_OPENFORKS (1<<7)  /* check for open fork in ad_metadata function */
-#define ADFLAGS_RF        (1<<8)
-#define ADFLAGS_CREATE    (1<<9)
+#define ADFLAGS_RF        (1<<1)
+#define ADFLAGS_HF        (1<<2)
+#define ADFLAGS_DIR       (1<<3)
+#define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
+#define ADFLAGS_RDONLY    (1<<5)  /* don't try readwrite */
+#define ADFLAGS_OPENFORKS (1<<6)  /* check for open fork in ad_metadata function */
+#define ADFLAGS_CREATE    (1<<7)
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)

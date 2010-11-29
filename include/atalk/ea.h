@@ -55,6 +55,10 @@ enum {
 #define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
 #endif
 
+/* Names for our Extended Attributes adouble data */
+#define AD_EA_META "org.netatalk.Metadata"
+#define AD_EA_RESO "org.netatalk.ResourceFork"
+
 /****************************************************************************************
  * Wrappers for native EA functions taken from Samba
  ****************************************************************************************/
