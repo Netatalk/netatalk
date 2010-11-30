@@ -6,9 +6,8 @@ Changes in 2.2alpha4
 * NEW: afpd: support for fast catalog searches
 * NEW: ad utility: ad find
 * UPD: afpd: CNID database versioning check for "cdb" scheme
-* UPD: cnid_dbd: CNID database versioning
-* UPD: cnid_dbd: CNID database upgrading
-* UPD: cnid_dbd: additional CNID database index for fast name searches
+* UPD: cnid_dbd: CNID database versioning and upgrading. Additional
+       CNID database index for fast name searches.
 
 Changes in 2.2alpha3
 ====================
