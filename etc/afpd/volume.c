@@ -445,16 +445,10 @@ static void volset(struct vol_option *options, struct vol_option *save,
         else if (strcasecmp(val + 1, "xlateupper") == 0)
             options[VOLOPT_CASEFOLD].i_value = AFPVOL_ULOWERMUPPER;
     } else if (optionok(tmp, "adouble:", val)) {
-        if (strcasecmp(val + 1, "v1") == 0)
-            options[VOLOPT_ADOUBLE].i_value = AD_VERSION1;
-#if AD_VERSION == AD_VERSION2
-        else if (strcasecmp(val + 1, "v2") == 0)
+        if (strcasecmp(val + 1, "v2") == 0)
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION2;
-        else if (strcasecmp(val + 1, "osx") == 0)
-            options[VOLOPT_ADOUBLE].i_value = AD_VERSION2_OSX;
-        else if (strcasecmp(val + 1, "sfm") == 0)
-            options[VOLOPT_ADOUBLE].i_value = AD_VERSION1_SFM;
-#endif
+        else if (strcasecmp(val + 1, "ea") == 0)
+            options[VOLOPT_ADOUBLE].i_value = AD_VERSION_EA;
     } else if (optionok(tmp, "options:", val)) {
         char *p;
 

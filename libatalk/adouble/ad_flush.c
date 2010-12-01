@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
+ * Copyright (c) 2010      Frank Lahm
  * All Rights Reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -26,42 +27,27 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
-#include <atalk/adouble.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 
+#include <atalk/adouble.h>
+#include <atalk/ea.h>
+#include <atalk/logger.h>
+
 #include "ad_private.h"
-#if AD_VERSION == AD_VERSION1
 
-#define EID_DISK(a) (a)
-
-#else
-
-static const u_int32_t set_eid[] = {
-    0,1,2,3,4,5,6,7,8,
-    9,10,11,12,13,14,15,
-    AD_DEV, AD_INO, AD_SYN, AD_ID
-};
-
-#define EID_DISK(a) (set_eid[a])
-#endif
-
-/* rebuild the adouble header
- * XXX should be in a separate file ?
+/*
+ * Rebuild any header information that might have changed.
  */
 int  ad_rebuild_adouble_header(struct adouble *ad)
 {
     u_int32_t       eid;
     u_int32_t       temp;
-
     u_int16_t       nent;
     char        *buf, *nentp;
+    int             len;
 
-    /*
-     * Rebuild any header information that might have changed.
-     */
     buf = ad->ad_data;
 
     temp = htonl( ad->ad_magic );
@@ -72,16 +58,13 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
     memcpy(buf, &temp, sizeof( temp ));
     buf += sizeof( temp );
 
-    memcpy(buf, ad->ad_filler, sizeof( ad->ad_filler ));
-    buf += sizeof( ad->ad_filler );
-
     nentp = buf;
     buf += sizeof( nent );
     for ( eid = 0, nent = 0; eid < ADEID_MAX; eid++ ) {
         if ( ad->ad_eid[ eid ].ade_off == 0 ) {
             continue;
         }
-        temp = htonl( EID_DISK(eid) );
+        temp = htonl( DISK_EID(eid) );
         memcpy(buf, &temp, sizeof( temp ));
         buf += sizeof( temp );
 
@@ -96,7 +79,21 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
     }
     nent = htons( nent );
     memcpy(nentp, &nent, sizeof( nent ));
-    return ad_getentryoff(ad, ADEID_RFORK);
+
+    switch (ad->ad_version) {
+    case AD_VERSION2:
+        len = ad_getentryoff(ad, ADEID_RFORK);
+        break;
+    case AD_VERSION_EA:
+        len = AD_DATASZ_EA;
+        break;
+    default:
+        LOG(log_error, logtype_afpd, "Unexpected adouble version");
+        len = 0;
+        break;
+    }
+
+    return len;
 }
 
 /* -------------------
@@ -134,57 +131,36 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     return 0;
 }
 
-/* ------------------- */
-int  ad_rebuild_sfm_header(struct adouble *ad)
-{
-    u_int32_t       temp;
-
-    u_int16_t       attr;
-    char        *buf;
-
-    /*
-     * Rebuild any header information that might have changed.
-     */
-    buf = ad->ad_data;
-    /* FIXME */
-/*    temp = htonl( ad->ad_magic ); */
-    temp = ad->ad_magic;
-    memcpy(buf, &temp, sizeof( temp ));
-
-/*    temp = htonl( ad->ad_version ); */
-    temp = ad->ad_version;
-    memcpy(buf +4, &temp, sizeof( temp ));
-
-    /* need to save attrib */
-    if (!ad_getattr(ad, &attr)) {
-        attr &= ~htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN);
-
-        memcpy(buf +48 +4, &attr, sizeof(attr));
-
-    }
-    return AD_SFM_LEN;
-}
-
-
-int ad_flush( struct adouble *ad)
+int ad_flush(struct adouble *ad)
 {
     int len;
 
     if (( ad->ad_md->adf_flags & O_RDWR )) {
-        /* sync our header */
-        if (ad->ad_rlen > 0xffffffff) {
-            ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
-        }
-        else {
-            ad_setentrylen(ad, ADEID_RFORK, ad->ad_rlen);
+        if (ad_getentryoff(ad, ADEID_RFORK)) {
+            if (ad->ad_rlen > 0xffffffff)
+                ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
+            else
+                ad_setentrylen(ad, ADEID_RFORK, ad->ad_rlen);
         }
         len = ad->ad_ops->ad_rebuild_header(ad);
 
-        if (adf_pwrite(ad->ad_md, ad->ad_data, len, 0) != len) {
-            if ( errno == 0 ) {
-                errno = EIO;
+        switch (ad->ad_version) {
+        case AD_VERSION2:
+            if (adf_pwrite(ad->ad_md, ad->ad_data, len, 0) != len) {
+                if (errno == 0)
+                    errno = EIO;
+                return( -1 );
             }
-            return( -1 );
+            break;
+        case AD_VERSION_EA:
+            if (sys_fsetxattr(ad->ad_md->adf_fd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
+                LOG(log_error, logtype_afpd, "Unexpected adouble version");
+                return -1;
+            }
+            break;
+        default:
+            LOG(log_error, logtype_afpd, "Unexpected adouble version");
+            return -1;
         }
     }
 
@@ -214,7 +190,7 @@ int ad_close( struct adouble *ad, int adflags)
         return err;
     }
 
-    /* meta /resource fork */
+    /* meta/resource fork */
 
     if ( ad_meta_fileno(ad) != -1 && !(--ad->ad_md->adf_refcount)) {
         if ( close( ad_meta_fileno(ad) ) < 0 ) {
@@ -222,22 +198,6 @@ int ad_close( struct adouble *ad, int adflags)
         }
         ad_meta_fileno(ad) = -1;
         adf_lock_free(ad->ad_md);
-    }
-
-    if (ad->ad_flags != AD_VERSION1_SFM) {
-        return err;
-    }
-
-    if ((adflags & ADFLAGS_DIR)) {
-        return err;
-    }
-
-    if ( ad_reso_fileno(ad) != -1 && !(--ad->ad_resource_fork.adf_refcount)) {
-        if ( close( ad_reso_fileno(ad) ) < 0 ) {
-            err = -1;
-        }
-        ad_reso_fileno(ad) = -1;
-        adf_lock_free(&ad->ad_resource_fork);
     }
 
     return err;

@@ -632,7 +632,7 @@ void ad_fcntl_unlock(struct adouble *ad, const int fork)
     adf_unlock(&ad->ad_resource_fork, fork);
   }
 
-  if (ad->ad_flags != AD_VERSION1_SFM) {
+  if (ad->ad_flags != AD_VERSION_EA) {
     return;
   }
   if (ad_meta_fileno(ad) != -1) {

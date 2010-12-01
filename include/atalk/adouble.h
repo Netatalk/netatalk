@@ -122,16 +122,18 @@
 #error bad size for AD_DATASZ2
 #endif
 
-#define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEID_FINDERI + \
-                      ADEID_COMMENT + ADEID_FILEDATESI + ADEID_AFPFILEI + ADEID_PRIVID)
-#if AD_DATASZ_EA != 352
+#define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEDLEN_FINDERI + \
+                      ADEDLEN_COMMENT + ADEDLEN_FILEDATESI + ADEDLEN_AFPFILEI + ADEDLEN_PRIVID)
+
+#if AD_DATASZ_EA != 342
 #error bad size for AD_DATASZ_EA
 #endif
 
 #define AD_DATASZ_MAX   1024
+
 #if AD_VERSION == AD_VERSION2
 #define AD_DATASZ   AD_DATASZ2
-#elif AD_VERSION == AD_VERSION2_EA
+#elif AD_VERSION == AD_VERSION_EA
 #define AD_DATASZ   AD_DATASZ_EA
 #endif
 
@@ -149,7 +151,7 @@ typedef struct adf_lock_t {
 } adf_lock_t;
 
 struct ad_fd {
-    int          adf_fd;        /* -1: invalid, -2: symlink, -3: Extended Attribute */
+    int          adf_fd;        /* -1: invalid, -2: symlink */
 #ifndef HAVE_PREAD
     off_t        adf_off;
 #endif
@@ -163,11 +165,12 @@ struct ad_fd {
 /* some header protection */
 #define AD_INITED  0xad494e54  /* ad"INT" */
 
+struct adouble;
+
 struct adouble_fops {
     char *(*ad_path)(const char *, int);
     int  (*ad_mkrf)(char *);
     int  (*ad_rebuild_header)(struct adouble *);
-    int  (*ad_check_header)(struct adouble *, struct stat *);
     int  (*ad_header_read)(struct adouble *, struct stat *);
     int  (*ad_header_upgrade)(struct adouble *, char *);
 };
@@ -212,6 +215,9 @@ struct adouble {
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_NOADOUBLE  (1 << 4)
+
+extern uint32_t adv2_disk_eid[];
+#define DISK_EID(a) (adv2_disk_eid[a])
 
 /* lock flags */
 #define ADLOCK_CLR      (0)
@@ -361,9 +367,7 @@ extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);
 extern char *ad_path      (const char *, int);
-extern char *ad_path_osx  (const char *, int);
-extern char *ad_path_ads  (const char *, int);
-extern char *ad_path_sfm  (const char *, int);
+extern char *ad_path_ea   (const char *, int);
 extern int ad_mode        (const char *, int);
 extern int ad_mkdir       (const char *, int);
 extern void ad_init       (struct adouble *, int, int );

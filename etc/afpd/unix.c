@@ -361,7 +361,6 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     struct dirent	*dirp;
     DIR			*dir;
     mode_t              hf_mode;
-    int                 osx = vol->v_adouble == AD_VERSION2_OSX;
     int                 dropbox = (vol->v_flags & AFPVOL_DROPBOX);
     
     mode |= vol->v_dperm;
@@ -380,7 +379,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
 
     for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
         /* FIXME */
-        if ( *dirp->d_name == '.' && (!osx || dirp->d_name[1] != '_')) {
+        if (*dirp->d_name == '.') {
             continue;
         }
         if ( lstat( dirp->d_name, &st ) < 0 ) {
@@ -389,9 +388,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
         }
 
         if (!S_ISDIR(st.st_mode)) {
-           int setmode = (osx && *dirp->d_name == '.')?hf_mode:mode;
-
-           if (setfilmode(dirp->d_name, setmode, &st, vol->v_umask) < 0) {
+           if (setfilmode(dirp->d_name, mode, &st, vol->v_umask) < 0) {
                 LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
                 return -1;
            }
@@ -509,13 +506,12 @@ int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const 
     struct stat		st;
     struct dirent	*dirp;
     DIR			*dir;
-    int                 osx = vol->v_adouble == AD_VERSION2_OSX;
 
     if (( dir = opendir( name )) == NULL ) {
         return( -1 );
     }
     for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        if ( *dirp->d_name == '.' && (!osx || dirp->d_name[1] != '_')) {
+        if ( *dirp->d_name == '.') {
             continue;
         }
         if ( lstat( dirp->d_name, &st ) < 0 ) {

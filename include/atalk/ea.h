@@ -19,6 +19,20 @@
 #include <config.h>
 #endif
 
+#if HAVE_ATTR_XATTR_H
+#include <attr/xattr.h>
+#elif HAVE_SYS_XATTR_H
+#include <sys/xattr.h>
+#endif
+
+#ifdef HAVE_SYS_EA_H
+#include <sys/ea.h>
+#endif
+
+#ifdef HAVE_SYS_EXTATTR_H
+#include <sys/extattr.h>
+#endif
+
 #ifdef HAVE_SOLARIS_ACLS
 #include <sys/acl.h>
 #endif

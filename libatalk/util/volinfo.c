@@ -300,21 +300,14 @@ static int parseline ( char *buf, struct volinfo *vol)
         }
         break;
       case ADOUBLE_VER:
-        if (strcasecmp(value, "v1") == 0) {
-            vol->v_adouble = AD_VERSION1;
-            vol->ad_path = ad_path;
-        }
-#if AD_VERSION == AD_VERSION2
-        else if (strcasecmp(value, "v2") == 0) {
+        if (strcasecmp(value, "v2") == 0) {
             vol->ad_path = ad_path;
             vol->v_adouble = AD_VERSION2;
-        }
-        else if (strcasecmp(value, "osx") == 0) {
-            vol->v_adouble = AD_VERSION2_OSX;
-            vol->ad_path = ad_path_osx;
-        }
-#endif
-        else  {
+        } else if (strcasecmp(value, "ea") == 0) {
+            vol->ad_path = ad_path_ea;
+            vol->v_adouble = AD_VERSION_EA;
+        } else {
+
 	    fprintf (stderr, "unknown adouble version: %s, %s", buf, value);
 	    return -1;
         }
@@ -455,17 +448,11 @@ int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_po
     strlcat(buf, item, sizeof(buf));
 
     switch (vol->v_adouble) {
-        case AD_VERSION1:
-            strlcat(buf, "ADOUBLE_VER:v1\n", sizeof(buf));
-            break;
         case AD_VERSION2:
             strlcat(buf, "ADOUBLE_VER:v2\n", sizeof(buf));
             break;
-        case AD_VERSION2_OSX:
-            strlcat(buf, "ADOUBLE_VER:osx\n", sizeof(buf));
-            break;
-        case AD_VERSION1_SFM:
-            strlcat(buf, "ADOUBLE_VER:sfm\n", sizeof(buf));
+        case AD_VERSION_EA:
+            strlcat(buf, "ADOUBLE_VER:ea\n", sizeof(buf));
             break;
     }
 

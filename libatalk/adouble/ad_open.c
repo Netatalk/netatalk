@@ -45,6 +45,7 @@
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/util.h>
+#include <atalk/ea.h>
 
 #include "ad_private.h"
 
@@ -96,15 +97,11 @@
 #undef ADEDOFF_FILEI
 #endif /* ADEDOFF_FILEI */
 
-#define ADEDOFF_NAME_V1      (AD_HEADER_LEN + ADEID_NUM_V1*AD_ENTRY_LEN)
-#define ADEDOFF_COMMENT_V1   (ADEDOFF_NAME_V1 + ADEDLEN_NAME)
-#define ADEDOFF_FILEI        (ADEDOFF_COMMENT_V1 + ADEDLEN_COMMENT)
-#define ADEDOFF_FINDERI_V1   (ADEDOFF_FILEI + ADEDLEN_FILEI)
-#define ADEDOFF_RFORK_V1     (ADEDOFF_FINDERI_V1 + ADEDLEN_FINDERI)
-
 /* i stick things in a slightly different order than their eid order in
  * case i ever want to separate RootInfo behaviour from the rest of the
  * stuff. */
+
+/* ad:v2 */
 #define ADEDOFF_NAME_V2      (AD_HEADER_LEN + ADEID_NUM_V2*AD_ENTRY_LEN)
 #define ADEDOFF_COMMENT_V2   (ADEDOFF_NAME_V2 + ADEDLEN_NAME)
 #define ADEDOFF_FILEDATESI   (ADEDOFF_COMMENT_V2 + ADEDLEN_COMMENT)
@@ -119,15 +116,14 @@
 #define ADEDOFF_PRIVID       (ADEDOFF_PRIVSYN + ADEDLEN_PRIVSYN)
 #define ADEDOFF_RFORK_V2     (ADEDOFF_PRIVID + ADEDLEN_PRIVID)
 
-#define ADEDOFF_FINDERI_OSX  (AD_HEADER_LEN + ADEID_NUM_OSX*AD_ENTRY_LEN)
-#define ADEDOFF_RFORK_OSX    (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI)
-
-/* we keep local copies of a bunch of stuff so that we can initialize things
- * correctly. */
+/* ad:ea */
+#define ADEDOFF_FINDERI_EA   (AD_HEADER_LEN + ADEID_NUM_EA * AD_ENTRY_LEN)
+#define ADEDOFF_COMMENT_EA   (ADEDOFF_FINDERI_EA + ADEDLEN_FINDERI)
+#define ADEDOFF_FILEDATESI_EA (ADEDOFF_COMMENT_EA + ADEDLEN_COMMENT)
+#define ADEDOFF_AFPFILEI_EA  (ADEDOFF_FILEDATESI_EA + ADEDLEN_FILEDATESI)
 
 /* this is to prevent changing timezones from causing problems with
-   localtime volumes. the screw-up is 30 years. we use a delta of 5
-   years.  */
+   localtime volumes. the screw-up is 30 years. we use a delta of 5 years */
 #define TIMEWARP_DELTA 157680000
 
 struct entry {
@@ -137,68 +133,61 @@ struct entry {
 /* --------------------------- */
 static uid_t default_uid = -1;
 
+/* Forward declarations */
+static int ad_mkrf(char *path);
+static int ad_header_read(struct adouble *ad, struct stat *hst);
+static int ad_header_upgrade(struct adouble *ad, char *name);
+
+static int ad_mkrf_ea(char *path);
+static int ad_header_read_ea(struct adouble *ad, struct stat *hst);
+static int ad_header_upgrade_ea(struct adouble *ad, char *name);
+
 static struct adouble_fops ad_adouble = {
     &ad_path,
     &ad_mkrf,
     &ad_rebuild_adouble_header,
-    &ad_check_size,
     &ad_header_read,
     &ad_header_upgrade,
 };
 
 static struct adouble_fops ad_adouble_ea = {
-    &ad_path,
-    &ad_mkrf,
+    &ad_path_ea,
+    &ad_mkrf_ea,
     &ad_rebuild_adouble_header,
-    &ad_check_size,
     &ad_header_read_ea,
     &ad_header_upgrade_ea,
 };
 
 static const struct entry entry_order2[ADEID_NUM_V2 + 1] = {
-    {ADEID_NAME, ADEDOFF_NAME_V2, ADEDLEN_INIT},
-    {ADEID_COMMENT, ADEDOFF_COMMENT_V2, ADEDLEN_INIT},
-    {ADEID_FILEDATESI, ADEDOFF_FILEDATESI, ADEDLEN_FILEDATESI},
-    {ADEID_FINDERI, ADEDOFF_FINDERI_V2, ADEDLEN_FINDERI},
-    {ADEID_DID, ADEDOFF_DID, ADEDLEN_DID},
-    {ADEID_AFPFILEI, ADEDOFF_AFPFILEI, ADEDLEN_AFPFILEI},
-    {ADEID_SHORTNAME, ADEDOFF_SHORTNAME, ADEDLEN_INIT},
+    {ADEID_NAME,        ADEDOFF_NAME_V2,     ADEDLEN_INIT},
+    {ADEID_COMMENT,     ADEDOFF_COMMENT_V2,  ADEDLEN_INIT},
+    {ADEID_FILEDATESI,  ADEDOFF_FILEDATESI,  ADEDLEN_FILEDATESI},
+    {ADEID_FINDERI,     ADEDOFF_FINDERI_V2,  ADEDLEN_FINDERI},
+    {ADEID_DID,         ADEDOFF_DID,         ADEDLEN_DID},
+    {ADEID_AFPFILEI,    ADEDOFF_AFPFILEI,    ADEDLEN_AFPFILEI},
+    {ADEID_SHORTNAME,   ADEDOFF_SHORTNAME,   ADEDLEN_INIT},
     {ADEID_PRODOSFILEI, ADEDOFF_PRODOSFILEI, ADEDLEN_PRODOSFILEI},
-    {ADEID_PRIVDEV,     ADEDOFF_PRIVDEV, ADEDLEN_INIT},
-    {ADEID_PRIVINO,     ADEDOFF_PRIVINO, ADEDLEN_INIT},
-    {ADEID_PRIVSYN,     ADEDOFF_PRIVSYN, ADEDLEN_INIT},
-    {ADEID_PRIVID,     ADEDOFF_PRIVID, ADEDLEN_INIT},
-    {ADEID_RFORK, ADEDOFF_RFORK_V2, ADEDLEN_INIT},
+    {ADEID_PRIVDEV,     ADEDOFF_PRIVDEV,     ADEDLEN_INIT},
+    {ADEID_PRIVINO,     ADEDOFF_PRIVINO,     ADEDLEN_INIT},
+    {ADEID_PRIVSYN,     ADEDOFF_PRIVSYN,     ADEDLEN_INIT},
+    {ADEID_PRIVID,      ADEDOFF_PRIVID,      ADEDLEN_INIT},
+    {ADEID_RFORK,       ADEDOFF_RFORK_V2,    ADEDLEN_INIT},
     {0, 0, 0}
 };
 
 /* Using Extended Attributes */
 static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
-    {ADEID_FINDERI, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI},
-    {ADEID_COMMENT, ADEDOFF_COMMENT_V2, ADEDLEN_INIT},
-    {ADEID_FILEDATESI, ADEDOFF_FILEDATESI, ADEDLEN_FILEDATESI},
-    {ADEID_AFPFILEI, ADEDOFF_AFPFILEI, ADEDLEN_AFPFILEI},
-    {ADEID_PRIVID,     ADEDOFF_PRIVID, ADEDLEN_INIT},
+    {ADEID_FINDERI,    ADEDOFF_FINDERI_EA,    ADEDLEN_FINDERI},
+    {ADEID_COMMENT,    ADEDOFF_COMMENT_EA,    ADEDLEN_INIT},
+    {ADEID_FILEDATESI, ADEDOFF_FILEDATESI_EA, ADEDLEN_FILEDATESI},
+    {ADEID_AFPFILEI,   ADEDOFF_AFPFILEI_EA,   ADEDLEN_AFPFILEI},
     {0, 0, 0}
 };
 
-#define DISK_EID(ad, a) get_eid(ad, a)
-
-static uint32_t get_eid(struct adouble *ad, u_int32_t eid)
-{
-    if (eid <= 15)
-        return eid;
-    if (eid == AD_DEV)
-        return ADEID_PRIVDEV;
-    if (eid == AD_INO)
-        return ADEID_PRIVINO;
-    if (eid == AD_SYN)
-        return ADEID_PRIVSYN;
-    if (eid == AD_ID)
-        return ADEID_PRIVID;
-
-    return 0;
-}
+uint32_t adv2_disk_eid[] = {
+    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+    AD_DEV, AD_INO, AD_SYN, AD_ID
+};
 
 /* ----------------------------------- */
 static int new_ad_header(const char *path, struct adouble *ad, int adflags)
@@ -242,7 +231,7 @@ static int new_ad_header(const char *path, struct adouble *ad, int adflags)
     }
 
     /* make things invisible */
-    if ((ad->ad_options & ADVOL_INVDOTS) && (adflags & ADFLAGS_CREATE) && (*path == '.')) {
+    if ((ad->ad_options & ADVOL_INVDOTS) && (*path == '.')) {
         ashort = htons(ATTRBIT_INVISIBLE);
         ad_setattr(ad, ashort);
         ashort = htons(FINDERINFO_INVISIBLE);
@@ -260,287 +249,6 @@ static int new_ad_header(const char *path, struct adouble *ad, int adflags)
     return 0;
 }
 
-/* update a version 2 adouble resource fork with our private entries */
-static int ad_update(struct adouble *ad, const char *path)
-{
-    struct stat st;
-    u_int16_t nentries = 0;
-    off_t     off, shiftdata=0;
-    const struct entry  *eid;
-    static off_t entry_len[ADEID_MAX];
-    static char  databuf[ADEID_MAX][256], *buf;
-    int fd;
-    int ret = -1;
-
-    /* check to see if we should convert this header. */
-    if (!path || ad->ad_flags != AD_VERSION2)
-        return 0;
-
-    LOG(log_maxdebug, logtype_default, "ad_update: checking whether '%s' needs an upgrade.", path);
-
-    if (!(ad->ad_md->adf_flags & O_RDWR)) {
-        /* we were unable to open the file read write the last time */
-        return 0;
-    }
-
-    if (ad->ad_eid[ADEID_RFORK].ade_off) {
-        shiftdata = ADEDOFF_RFORK_V2 -ad->ad_eid[ADEID_RFORK].ade_off;
-    }
-
-    memcpy(&nentries, ad->ad_data + ADEDOFF_NENTRIES, sizeof( nentries ));
-    nentries = ntohs( nentries );
-
-    if ( shiftdata == 0 && nentries == ADEID_NUM_V2)
-        return 0;
-
-    memset(entry_len, 0, sizeof(entry_len));
-    memset(databuf, 0, sizeof(databuf));
-
-    /* bail if we can't get a lock */
-    if (ad_tmplock(ad, ADEID_RFORK, ADLOCK_WR, 0, 0, 0) < 0)
-        goto bail_err;
-
-    fd = ad->ad_md->adf_fd;
-
-    if (fstat(fd, &st)) {
-        goto bail_lock;
-    }
-
-    if (st.st_size > 0x7fffffff) {
-        LOG(log_debug, logtype_default, "ad_update: file '%s' too big for update.", path);
-        errno = EIO;
-        goto bail_lock;
-    }
-
-    off = ad->ad_eid[ADEID_RFORK].ade_off;
-    if (off > st.st_size) {
-        LOG(log_error, logtype_default, "ad_update: invalid resource fork offset. (off: %u)", off);
-        errno = EIO;
-        goto bail_lock;
-    }
-
-    if (ad->ad_eid[ADEID_RFORK].ade_len > st.st_size - off) {
-        LOG(log_error, logtype_default, "ad_update: invalid resource fork length. (rfork len: %u)", ad->ad_eid[ADEID_RFORK].ade_len);
-        errno = EIO;
-        goto bail_lock;
-    }
-
-    if ((void *) (buf = (char *)
-                  mmap(NULL, st.st_size + shiftdata,
-                       PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) ==
-        MAP_FAILED) {
-        goto bail_lock;
-    }
-
-    /* last place for failure. */
-    if (sys_ftruncate(fd, st.st_size + shiftdata) < 0) {
-        munmap(buf, st.st_size + shiftdata);
-        goto bail_lock;
-    }
-
-    /* move the RFORK. this assumes that the RFORK is at the end */
-    if (off) {
-        memmove(buf + ADEDOFF_RFORK_V2, buf + off, ad->ad_eid[ADEID_RFORK].ade_len);
-    }
-
-    munmap(buf, st.st_size + shiftdata);
-
-    /* now, fix up our copy of the header */
-    memset(ad->ad_filler, 0, sizeof(ad->ad_filler));
-
-    /* save the header entries */
-    eid = entry_order2;
-    while (eid->id) {
-        if( ad->ad_eid[eid->id].ade_off != 0) {
-            if ( eid->id > 2 && ad->ad_eid[eid->id].ade_len < 256)
-                memcpy( databuf[eid->id], ad->ad_data +ad->ad_eid[eid->id].ade_off, ad->ad_eid[eid->id].ade_len);
-            entry_len[eid->id] = ad->ad_eid[eid->id].ade_len;
-        }
-        eid++;
-    }
-
-    memset(ad->ad_data + AD_HEADER_LEN, 0, AD_DATASZ - AD_HEADER_LEN);
-
-    /* copy the saved entries to the new header */
-    eid = entry_order2;
-    while (eid->id) {
-        if ( eid->id > 2 && entry_len[eid->id] > 0) {
-            memcpy(ad->ad_data+eid->offset, databuf[eid->id], entry_len[eid->id]);
-        }
-        ad->ad_eid[eid->id].ade_off = eid->offset;
-        ad->ad_eid[eid->id].ade_len = entry_len[eid->id];
-        eid++;
-    }
-
-    /* rebuild the header and cleanup */
-    LOG(log_debug, logtype_default, "updated AD2 header %s", path);
-    ad_flush(ad );
-    ret = 0;
-
-bail_lock:
-    ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0, 0);
-bail_err:
-    return ret;
-}
-
-/* ------------------------------------------
-   FIXME work only if < 2GB
-*/
-static int ad_convert(struct adouble *ad, const char *path)
-{
-    struct stat st;
-    u_int16_t attr;
-    char *buf;
-    int fd, off;
-    int ret = -1;
-    /* use resource fork offset from file */
-    int shiftdata;
-    int toV2;
-    int toV1;
-
-    if (!path) {
-        return 0;
-    }
-
-    if (!(ad->ad_md->adf_flags & ( O_RDWR))) {
-        /* we were unable to open the file read write the last time */
-        return 0;
-    }
-
-    /* check to see if we should convert this header. */
-    toV2 = ad->ad_version == AD_VERSION1 && ad->ad_flags == AD_VERSION2;
-    toV1 = ad->ad_version == AD_VERSION2 && ad->ad_flags == AD_VERSION1;
-
-    if (!toV2 && !toV1)
-        return 0;
-
-    /* convert from v1 to v2. what does this mean?
-     *  1) change FILEI into FILEDATESI
-     *  2) create space for SHORTNAME, AFPFILEI, DID, and PRODOSI
-     *  3) move FILEI attributes into AFPFILEI
-     *  4) initialize ACCESS field of FILEDATESI.
-     *  5) move the resource fork
-     */
-
-    /* bail if we can't get a lock */
-    if (ad_tmplock(ad, ADEID_RFORK, ADLOCK_WR, 0, 0, 0) < 0)
-        goto bail_err;
-
-    /* we reuse fd from the resource fork */
-    fd = ad->ad_md->adf_fd;
-
-    if (ad->ad_eid[ADEID_RFORK].ade_off) {
-        shiftdata = ADEDOFF_RFORK_V2 -ad->ad_eid[ADEID_RFORK].ade_off;
-    }
-    else {
-        shiftdata = ADEDOFF_RFORK_V2 -ADEDOFF_RFORK_V1; /* 136 */
-    }
-
-    if (fstat(fd, &st)) {
-        goto bail_lock;
-    }
-
-    if (st.st_size > 0x7fffffff -shiftdata) {
-        LOG(log_debug, logtype_default, "ad_v1tov2: file too big.");
-        errno = EIO;
-        goto bail_lock;
-    }
-
-    off = ad->ad_eid[ADEID_RFORK].ade_off;
-
-    if (off > st.st_size) {
-        LOG(log_error, logtype_default, "ad_v1tov2: invalid resource fork offset. (off: %u)", off);
-        errno = EIO;
-        goto bail_lock;
-    }
-
-    if (ad->ad_eid[ADEID_RFORK].ade_len > st.st_size - off) {
-        LOG(log_error, logtype_default, "ad_v1tov2: invalid resource fork length. (rfork len: %u)", ad->ad_eid[ADEID_RFORK].ade_len);
-        errno = EIO;
-        goto bail_lock;
-    }
-
-    if ((void *) (buf = (char *)
-                  mmap(NULL, st.st_size + shiftdata,
-                       PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) ==
-        MAP_FAILED) {
-        goto bail_lock;
-    }
-
-    /* last place for failure. */
-
-    if (sys_ftruncate(fd, st.st_size + shiftdata) < 0) {
-        goto bail_lock;
-    }
-
-    /* move the RFORK. this assumes that the RFORK is at the end */
-    if (off) {
-        memmove(buf + ADEDOFF_RFORK_V2, buf + off, ad->ad_eid[ADEID_RFORK].ade_len);
-    }
-
-    munmap(buf, st.st_size + shiftdata);
-
-    /* now, fix up our copy of the header */
-    memset(ad->ad_filler, 0, sizeof(ad->ad_filler));
-
-    /* replace FILEI with FILEDATESI */
-    ad_getattr(ad, &attr);
-    ad->ad_eid[ADEID_FILEDATESI].ade_off = ADEDOFF_FILEDATESI;
-    ad->ad_eid[ADEID_FILEDATESI].ade_len = ADEDLEN_FILEDATESI;
-    ad->ad_eid[ADEID_FILEI].ade_off = 0;
-    ad->ad_eid[ADEID_FILEI].ade_len = 0;
-
-    /* add in the new entries */
-    ad->ad_eid[ADEID_DID].ade_off = ADEDOFF_DID;
-    ad->ad_eid[ADEID_DID].ade_len = ADEDLEN_DID;
-    ad->ad_eid[ADEID_AFPFILEI].ade_off = ADEDOFF_AFPFILEI;
-    ad->ad_eid[ADEID_AFPFILEI].ade_len = ADEDLEN_AFPFILEI;
-    ad->ad_eid[ADEID_SHORTNAME].ade_off = ADEDOFF_SHORTNAME;
-    ad->ad_eid[ADEID_SHORTNAME].ade_len = ADEDLEN_INIT;
-    ad->ad_eid[ADEID_PRODOSFILEI].ade_off = ADEDOFF_PRODOSFILEI;
-    ad->ad_eid[ADEID_PRODOSFILEI].ade_len = ADEDLEN_PRODOSFILEI;
-
-    ad->ad_eid[ADEID_PRIVDEV].ade_off = ADEDOFF_PRIVDEV;
-    ad->ad_eid[ADEID_PRIVDEV].ade_len = ADEDLEN_INIT;
-    ad->ad_eid[ADEID_PRIVINO].ade_off = ADEDOFF_PRIVINO;
-    ad->ad_eid[ADEID_PRIVINO].ade_len = ADEDLEN_INIT;
-    ad->ad_eid[ADEID_PRIVSYN].ade_off = ADEDOFF_PRIVSYN;
-    ad->ad_eid[ADEID_PRIVSYN].ade_len = ADEDLEN_INIT;
-    ad->ad_eid[ADEID_PRIVID].ade_off  = ADEDOFF_PRIVID;
-    ad->ad_eid[ADEID_PRIVID].ade_len =  ADEDLEN_INIT;
-
-    /* shift the old entries (NAME, COMMENT, FINDERI, RFORK) */
-    ad->ad_eid[ADEID_NAME].ade_off = ADEDOFF_NAME_V2;
-    ad->ad_eid[ADEID_COMMENT].ade_off = ADEDOFF_COMMENT_V2;
-    ad->ad_eid[ADEID_FINDERI].ade_off = ADEDOFF_FINDERI_V2;
-    ad->ad_eid[ADEID_RFORK].ade_off = ADEDOFF_RFORK_V2;
-
-    /* switch to dest version */
-    ad->ad_version = (toV2)?AD_VERSION2:AD_VERSION1;
-
-    /* move our data buffer to make space for the new entries. */
-    memmove(ad->ad_data + ADEDOFF_NAME_V2, ad->ad_data + ADEDOFF_NAME_V1,
-            ADEDOFF_RFORK_V1 - ADEDOFF_NAME_V1);
-
-    /* now, fill in the space with appropriate stuff. we're
-       operating as a v2 file now. */
-    ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
-    memset(ad_entry(ad, ADEID_DID), 0, ADEDLEN_DID);
-    memset(ad_entry(ad, ADEID_AFPFILEI), 0, ADEDLEN_AFPFILEI);
-    ad_setattr(ad, attr);
-    memset(ad_entry(ad, ADEID_SHORTNAME), 0, ADEDLEN_SHORTNAME);
-    memset(ad_entry(ad, ADEID_PRODOSFILEI), 0, ADEDLEN_PRODOSFILEI);
-
-    /* rebuild the header and cleanup */
-    ad_flush(ad );
-    ret = 0;
-
-bail_lock:
-    ad_tmplock(ad, ADEID_RFORK, ADLOCK_CLR, 0, 0, 0);
-bail_err:
-    return ret;
-}
-
 /* -------------------------------------
    read in the entries
 */
@@ -552,7 +260,7 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
         memcpy(&eid, buf, sizeof( eid ));
-        eid = DISK_EID(ad, ntohl( eid ));
+        eid = DISK_EID(ntohl( eid ));
         buf += sizeof( eid );
         memcpy(&off, buf, sizeof( off ));
         off = ntohl( off );
@@ -585,7 +293,6 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     u_int16_t           nentries;
     int                 len;
     ssize_t             header_len;
-    static int          warning = 0;
     struct stat         st;
 
     /* read the header */
@@ -600,37 +307,12 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
     memcpy(&ad->ad_version, buf + ADEDOFF_VERSION, sizeof( ad->ad_version ));
 
-    /* tag broken v1 headers. just assume they're all right.
-     * we detect two cases: null magic/version
-     *                      byte swapped magic/version
-     * XXX: in the future, you'll need the v1compat flag. */
-    if (!ad->ad_magic && !ad->ad_version) {
-        if (!warning) {
-            LOG(log_debug, logtype_default, "notice: fixing up null v1 magic/version.");
-            warning++;
-        }
-        ad->ad_magic = AD_MAGIC;
-        ad->ad_version = AD_VERSION1;
-
-    } else if (ad->ad_magic == AD_MAGIC && ad->ad_version == AD_VERSION1) {
-        if (!warning) {
-            LOG(log_debug, logtype_default, "notice: fixing up byte-swapped v1 magic/version.");
-            warning++;
-        }
-
-    } else {
-        ad->ad_magic = ntohl( ad->ad_magic );
-        ad->ad_version = ntohl( ad->ad_version );
-    }
-
-    if ((ad->ad_magic != AD_MAGIC) ||
-        ((ad->ad_version != AD_VERSION1) && (ad->ad_version != AD_VERSION2))) {
+    if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION2)) {
         LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
         errno = EIO;
         return -1;
     }
 
-    memcpy(ad->ad_filler, buf + ADEDOFF_FILLER, sizeof( ad->ad_filler ));
     memcpy(&nentries, buf + ADEDOFF_NENTRIES, sizeof( nentries ));
     nentries = ntohs( nentries );
 
@@ -677,16 +359,14 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     return 0;
 }
 
-static int ad_header_read_ea(struct adouble *ad, struct stat *hst)
+static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
 {
-    uint16_t            nentries;
-    int                 len;
-    ssize_t             header_len;
-    static int          warning = 0;
-    struct stat         st;
-
+    uint16_t nentries;
+    int      len;
+    ssize_t  header_len;
+    char     *buf = ad->ad_data;
     /* read the header */
-    if ((header_len = sys_lgetxattr(path, AD_EA_META, ad->ad_data, AD_DATASZ_EA)) < 0) {
+    if ((header_len = sys_fgetxattr(ad->ad_md->adf_fd, AD_EA_META, ad->ad_data, AD_DATASZ_EA)) < 0) {
         LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
         errno = EIO;
         return -1;
@@ -725,6 +405,7 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst)
 
     /* Now parse entries */
     parse_entries(ad, buf + AD_HEADER_LEN, nentries);
+    return 0;
 }
 
 static int ad_mkrf(char *path)
@@ -745,6 +426,11 @@ static int ad_mkrf(char *path)
     return 0;
 }
 
+static int ad_mkrf_ea(char *path _U_)
+{
+    AFP_PANIC("ad_mkrf_ea: dont use");
+    return 0;
+}
 
 /* ----------------
    if we are root change path user/ group
@@ -770,6 +456,8 @@ static int ad_chown(const char *path, struct stat *stbuf)
 #endif
     return ret;
 }
+
+#define DEFMASK 07700   /* be conservative */
 
 /* ----------------
    return access right and inode of path parent directory
@@ -803,43 +491,20 @@ static int ad_error(struct adouble *ad, int adflags)
 }
 
 /* --------------------------- */
-static int ad_check_size(struct adouble *ad _U_, struct stat *st)
+static int ad_header_upgrade(struct adouble *ad _U_, char *name _U_)
 {
-    if (st->st_size > 0 && st->st_size < AD_DATASZ1)
-        return 1;
     return 0;
 }
 
-/* --------------------------- */
-static int ad_check_size_sfm(struct adouble *ad _U_, struct stat *st)
+static int ad_header_upgrade_ea(struct adouble *ad _U_, char *name _U_)
 {
-    if (st->st_size > 0 && st->st_size < AD_SFM_LEN)
-        return 1;
-    return 0;
-}
-
-/* --------------------------- */
-static int ad_header_upgrade(struct adouble *ad, char *name)
-{
-    int ret;
-    if ( (ret = ad_convert(ad, name)) < 0 || (ret = ad_update(ad, name) < 0)) {
-        return ret;
-    }
-    return 0;
-}
-
-/* --------------------------- */
-static int ad_header_upgrade_none(struct adouble *ad _U_, char *name _U_)
-{
+    AFP_PANIC("ad_header_upgrade_ea: dont use");
     return 0;
 }
 
 static int ad_open_df(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
     struct stat st_dir;
-    struct stat st_meta;
-    struct stat *pst = NULL;
-    char        *ad_p;
     int         hoflags, admode;
     int         st_invalid = -1;
 
@@ -980,8 +645,6 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
     }
     AD_SET(ad->ad_md->adf_off);
 
-    ad->ad_md->adf_refcount = 1;
-    adf_lock_init(ad->ad_md);
     if ((ad->ad_md->adf_flags & ( O_TRUNC | O_CREAT ))) {
         /* This is a new adouble header file, create it */
         if (new_ad_header(path, ad, adflags) < 0) {
@@ -1008,10 +671,15 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
 
 static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
-    ad->ad_md->adf_fd = -3;
+    int hoflags;
+    ssize_t rforklen;
+
+    hoflags = (oflags & ~(O_CREAT | O_EXCL)) | O_NOFOLLOW;
+    if ((ad->ad_md->adf_fd = open(path, hoflags)) == -1)
+        return -1;
 
     /* Read the adouble header in and parse it.*/
-    if (ad->ad_ops->ad_header_read(ad, path) != 0) {
+    if (ad->ad_ops->ad_header_read(ad, NULL) != 0) {
         /* It doesnt exist, EPERM or another error */
         if (errno != ENOENT)
             return -1;
@@ -1027,8 +695,12 @@ static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, st
         ad_flush(ad);
     }
 
-    ssize_t rforklen = 
-    
+    if ((rforklen = sys_lgetxattr(path, AD_EA_RESO, NULL, 0)) < 0) {
+        rforklen = 0;
+    }
+
+    ad->ad_rlen = rforklen;
+    return 0;
 }
 
 static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
@@ -1055,7 +727,7 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
     ad->ad_rlen = 0;
 
     switch (ad->ad_version) {
-    case AD_VERSION_2:
+    case AD_VERSION2:
         ret = ad_open_hf_v2(path, adflags, oflags, mode, ad);
         break;
     case AD_VERSION_EA:
@@ -1065,6 +737,9 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
         ret = -1;
         break;
     }
+
+    ad->ad_md->adf_refcount = 1;
+    adf_lock_init(ad->ad_md);
 
     return ret;
 }
@@ -1077,6 +752,11 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
 /***********************************************************************************
  * API functions
  ********************************************************************************* */
+
+char *ad_path_ea( const char *path, int adflags _U_)
+{
+    return path;
+}
 
 /*
  * Put the .AppleDouble where it needs to be:
@@ -1124,9 +804,6 @@ char *ad_path( const char *path, int adflags)
  * mode is ANDed with the parent directory's mask value in lieu of "umask",
  * and that value is returned.
  */
-
-#define DEFMASK 07700   /* be conservative */
-
 char *ad_dir(const char *path)
 {
     static char     modebuf[ MAXPATHLEN + 1];
@@ -1272,7 +949,6 @@ void ad_init(struct adouble *ad, int flags, int options)
  * @param adflags ADFLAGS_DF:        open data fork \n
  *                ADFLAGS_RF:        open ressource fork \n
  *                ADFLAGS_HF:        open header (metadata) file \n
- *                ADFLAGS_CREATE:    indicate creation \n
  *                ADFLAGS_NOHF:      it's not an error if header file couldn't be created \n
  *                ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags \n
  *                ADFLAGS_NOADOUBLE: dont create adouble files if not necessary \n
@@ -1296,14 +972,6 @@ void ad_init(struct adouble *ad, int flags, int options)
  */
 int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
 {
-    struct stat st_dir;
-    struct stat st_meta;
-    struct stat *pst = NULL;
-    char        *ad_p;
-    int         hoflags, admode;
-    int         st_invalid = -1;
-    int         open_df = 0;
-
     if (ad->ad_inited != AD_INITED) {
         ad->ad_inited = AD_INITED;
         ad->ad_refcount = 1;
@@ -1433,7 +1101,7 @@ exit:
 int ad_refresh(struct adouble *ad)
 {
 
-    if (ad_meta_fileno(ad) < 0)
+    if (ad_meta_fileno(ad) == -1)
         return -1;
 
     return ad->ad_ops->ad_header_read(ad, NULL);

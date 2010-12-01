@@ -149,6 +149,59 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 #endif
 }
 
+ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size)
+{
+#if defined(HAVE_FGETXATTR)
+#ifndef XATTR_ADD_OPT
+    return fgetxattr(filedes, name, value, size);
+#else
+    int options = 0;
+    return fgetxattr(filedes, name, value, size, 0, options);
+#endif
+#elif defined(HAVE_FGETEA)
+    return fgetea(filedes, name, value, size);
+#elif defined(HAVE_EXTATTR_GET_FD)
+    char *s;
+    ssize_t retval;
+    int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
+        EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
+    const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+
+    if((retval=extattr_get_fd(filedes, attrnamespace, attrname, NULL, 0)) >= 0) {
+        if(retval > size) {
+            errno = ERANGE;
+            return -1;
+        }
+        if((retval=extattr_get_fd(filedes, attrnamespace, attrname, value, size)) >= 0)
+            return retval;
+    }
+
+    DEBUG(10,("sys_fgetxattr: extattr_get_fd() failed with: %s\n", strerror(errno)));
+    return -1;
+#elif defined(HAVE_ATTR_GETF)
+    int retval, flags = 0;
+    int valuelength = (int)size;
+    char *attrname = strchr(name,'.') + 1;
+
+    if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
+
+    retval = attr_getf(filedes, attrname, (char *)value, &valuelength, flags);
+
+    return retval ? retval : valuelength;
+#elif defined(HAVE_ATTROPEN)
+    ssize_t ret = -1;
+    int attrfd = solaris_openat(filedes, name, O_RDONLY|O_XATTR, 0);
+    if (attrfd >= 0) {
+        ret = solaris_read_xattr(attrfd, value, size);
+        close(attrfd);
+    }
+    return ret;
+#else
+    errno = ENOSYS;
+    return -1;
+#endif
+}
+
 ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t size)
 {
 	const char *name = prefix(uname);
@@ -574,6 +627,71 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 #else
 	errno = ENOSYS;
 	return -1;
+#endif
+}
+
+int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags)
+{
+#if defined(HAVE_FSETXATTR)
+#ifndef XATTR_ADD_OPT
+    return fsetxattr(filedes, name, value, size, flags);
+#else
+    int options = 0;
+    return fsetxattr(filedes, name, value, size, 0, options);
+#endif
+#elif defined(HAVE_FSETEA)
+    return fsetea(filedes, name, value, size, flags);
+#elif defined(HAVE_EXTATTR_SET_FD)
+    char *s;
+    int retval = 0;
+    int attrnamespace = (strncmp(name, "system", 6) == 0) ? 
+        EXTATTR_NAMESPACE_SYSTEM : EXTATTR_NAMESPACE_USER;
+    const char *attrname = ((s=strchr_m(name, '.')) == NULL) ? name : s + 1;
+    if (flags) {
+        /* Check attribute existence */
+        retval = extattr_get_fd(filedes, attrnamespace, attrname, NULL, 0);
+        if (retval < 0) {
+            /* REPLACE attribute, that doesn't exist */
+            if (flags & XATTR_REPLACE && errno == ENOATTR) {
+                errno = ENOATTR;
+                return -1;
+            }
+            /* Ignore other errors */
+        }
+        else {
+            /* CREATE attribute, that already exists */
+            if (flags & XATTR_CREATE) {
+                errno = EEXIST;
+                return -1;
+            }
+        }
+    }
+    retval = extattr_set_fd(filedes, attrnamespace, attrname, value, size);
+    return (retval < 0) ? -1 : 0;
+#elif defined(HAVE_ATTR_SETF)
+    int myflags = 0;
+    char *attrname = strchr(name,'.') + 1;
+
+    if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
+    if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
+    if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
+
+    return attr_setf(filedes, attrname, (const char *)value, size, myflags);
+#elif defined(HAVE_ATTROPEN)
+    int ret = -1;
+    int myflags = O_RDWR | O_XATTR;
+    int attrfd;
+    if (flags & XATTR_CREATE) myflags |= O_EXCL;
+    if (!(flags & XATTR_REPLACE)) myflags |= O_CREAT;
+    attrfd = solaris_openat(filedes, name, myflags, (mode_t) SOLARIS_ATTRMODE);
+    if (attrfd >= 0) {
+        ret = solaris_write_xattr(attrfd, value, size);
+        close(attrfd);
+    }
+    return ret;
+#else
+    errno = ENOSYS;
+    return -1;
 #endif
 }
 
