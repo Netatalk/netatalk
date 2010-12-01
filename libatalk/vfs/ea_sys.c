@@ -36,11 +36,6 @@
 #include <atalk/unix.h>
 #include <atalk/compat.h>
 
-#ifndef ENOATTR
-#define ENOATTR ENODATA
-#endif
-
-
 /**********************************************************************************
  * EA VFS funcs for storing EAs in nativa filesystem EAs
  **********************************************************************************/

@@ -37,6 +37,10 @@
 #include <sys/acl.h>
 #endif
 
+#ifndef ENOATTR
+#define ENOATTR ENODATA
+#endif
+
 #include <atalk/vfs.h>
 
 /*

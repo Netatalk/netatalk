@@ -58,6 +58,8 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
     memcpy(buf, &temp, sizeof( temp ));
     buf += sizeof( temp );
 
+    buf += sizeof( ad->ad_filler );
+
     nentp = buf;
     buf += sizeof( nent );
     for ( eid = 0, nent = 0; eid < ADEID_MAX; eid++ ) {
@@ -80,7 +82,7 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
     nent = htons( nent );
     memcpy(nentp, &nent, sizeof( nent ));
 
-    switch (ad->ad_version) {
+    switch (ad->ad_flags) {
     case AD_VERSION2:
         len = ad_getentryoff(ad, ADEID_RFORK);
         break;
@@ -144,7 +146,7 @@ int ad_flush(struct adouble *ad)
         }
         len = ad->ad_ops->ad_rebuild_header(ad);
 
-        switch (ad->ad_version) {
+        switch (ad->ad_flags) {
         case AD_VERSION2:
             if (adf_pwrite(ad->ad_md, ad->ad_data, len, 0) != len) {
                 if (errno == 0)

@@ -712,7 +712,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         openf = O_RDWR|O_CREAT|O_EXCL;
     }
 
-    if ( ad_open( upath, ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF|ADFLAGS_CREATE,
+    if ( ad_open( upath, ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF,
                   openf, 0666, adp) < 0 ) {
         switch ( errno ) {
         case EROFS:
@@ -730,7 +730,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
             return( AFPERR_PARAM );
         }
     }
-    if ( ad_reso_fileno( adp ) == -1 ) { /* Hard META / HF */
+    if ( ad_meta_fileno( adp ) == -1 ) { /* Hard META / HF */
          /* on noadouble volumes, just creating the data fork is ok */
          if (vol_noadouble(vol)) {
              ad_close( adp, ADFLAGS_DF );

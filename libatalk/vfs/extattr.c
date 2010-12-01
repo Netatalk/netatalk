@@ -60,10 +60,6 @@
 #include <atalk/logger.h>
 #include <atalk/ea.h>
 
-#ifndef ENOATTR
-#define ENOATTR ENODATA
-#endif
-
 /******** Solaris EA helper function prototypes ********/
 #ifdef HAVE_ATTROPEN
 #define SOLARIS_ATTRMODE S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP
@@ -149,8 +145,10 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 #endif
 }
 
-ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size)
+ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
 {
+    const char *name = prefix(uname);
+
 #if defined(HAVE_FGETXATTR)
 #ifndef XATTR_ADD_OPT
     return fgetxattr(filedes, name, value, size);
@@ -176,7 +174,8 @@ ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size)
             return retval;
     }
 
-    DEBUG(10,("sys_fgetxattr: extattr_get_fd() failed with: %s\n", strerror(errno)));
+    LOG(log_debug, logtype_default, "sys_fgetxattr: extattr_get_fd(): %s",
+        strerror(errno)));
     return -1;
 #elif defined(HAVE_ATTR_GETF)
     int retval, flags = 0;
@@ -630,8 +629,10 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 #endif
 }
 
-int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags)
+int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t size, int flags)
 {
+    const char *name = prefix(uname);
+
 #if defined(HAVE_FSETXATTR)
 #ifndef XATTR_ADD_OPT
     return fsetxattr(filedes, name, value, size, flags);
@@ -659,7 +660,7 @@ int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size
             /* Ignore other errors */
         }
         else {
-            /* CREATE attribute, that already exists */
+            log_error, logtype_default            /* CREATE attribute, that already exists */
             if (flags & XATTR_CREATE) {
                 errno = EEXIST;
                 return -1;

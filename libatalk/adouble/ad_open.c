@@ -202,7 +202,7 @@ static int new_ad_header(const char *path, struct adouble *ad, int adflags)
         ad->ad_version = AD_VERSION;
     }
 
-    memset(ad->ad_filler, 0, sizeof( ad->ad_filler ));
+
     memset(ad->ad_data, 0, sizeof(ad->ad_data));
 
     if (ad->ad_flags == AD_VERSION2)
@@ -365,14 +365,15 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
     int      len;
     ssize_t  header_len;
     char     *buf = ad->ad_data;
+
     /* read the header */
-    if ((header_len = sys_fgetxattr(ad->ad_md->adf_fd, AD_EA_META, ad->ad_data, AD_DATASZ_EA)) < 0) {
-        LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
-        errno = EIO;
+    if ((header_len = sys_fgetxattr(ad->ad_md->adf_fd, AD_EA_META, ad->ad_data, AD_DATASZ_EA)) < 1) {
+        LOG(log_debug, logtype_default, "ad_header_read_ea: %s (%u)", strerror(errno), errno);
         return -1;
     }
+
     if (header_len < AD_HEADER_LEN) {
-        LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
+        LOG(log_error, logtype_default, "ad_header_read_ea: bogus AppleDouble header.");
         errno = EIO;
         return -1;
     }
@@ -383,8 +384,8 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
     ad->ad_magic = ntohl( ad->ad_magic );
     ad->ad_version = ntohl( ad->ad_version );
 
-    if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION_EA)) {
-        LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
+    if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION2)) {
+        LOG(log_error, logtype_default, "ad_header_read_ea: wrong magic or version");
         errno = EIO;
         return -1;
     }
@@ -397,7 +398,7 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
     if (len + AD_HEADER_LEN > sizeof(ad->ad_data))
         len = sizeof(ad->ad_data) - AD_HEADER_LEN;
     if (len > header_len - AD_HEADER_LEN) {
-        LOG(log_error, logtype_default, "ad_header_read: can't read entry info.");
+        LOG(log_error, logtype_default, "ad_header_read_ea: can't read entry info.");
         errno = EIO;
         return -1;
     }
@@ -507,6 +508,9 @@ static int ad_open_df(const char *path, int adflags, int oflags, int mode, struc
     struct stat st_dir;
     int         hoflags, admode;
     int         st_invalid = -1;
+
+    LOG(log_maxdebug, logtype_default, "ad_open_df(\"%s/%s\", adf: 0x%04x, of: 0x%04x)",
+        getcwdpath(), path, adflags, oflags);
 
     if (ad_data_fileno(ad) == -1) {
         hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
@@ -671,43 +675,63 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
 
 static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
-    int hoflags;
     ssize_t rforklen;
+    int ret;
+    int err;
 
-    hoflags = (oflags & ~(O_CREAT | O_EXCL)) | O_NOFOLLOW;
-    if ((ad->ad_md->adf_fd = open(path, hoflags)) == -1)
+    LOG(log_maxdebug, logtype_default, "ad_open_hf_ea(\"%s/%s\", adf: 0x%04x, of: 0x%04x)",
+        getcwdpath(), path, adflags, oflags);
+
+    if ((ad->ad_md->adf_fd = open(path, O_RDONLY | O_NOFOLLOW)) == -1)
         return -1;
 
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(ad, NULL) != 0) {
+        if (!(oflags & O_CREAT)) {
+            ret = 0;
+            goto error;
+        }
+
         /* It doesnt exist, EPERM or another error */
-        if (errno != ENOENT)
-            return -1;
+        if (errno != ENOATTR) {
+            LOG(log_maxdebug, logtype_default, "ad_open_hf_ea: unexpected: %s", strerror(errno));
+            ret = -1;
+            goto error;
+        }
 
         /* Create one */
         if (new_ad_header(path, ad, adflags) < 0) {
-            int err = errno;
-            /* the file is already deleted, perm, whatever, so return an error */
-            ad_close(ad, adflags);
-            errno = err;
-            return -1;
+            ret = -1;
+            goto error;
         }
+
         ad_flush(ad);
     }
 
-    if ((rforklen = sys_lgetxattr(path, AD_EA_RESO, NULL, 0)) < 0) {
-        rforklen = 0;
-    }
+    ad->ad_md->adf_flags = O_RDWR; /* Pretend its rw, in fact for the EA API it is */
 
-    ad->ad_rlen = rforklen;
+    if ((rforklen = sys_fgetxattr(ad->ad_md->adf_fd, AD_EA_RESO, NULL, 0)) > 0)
+        ad->ad_rlen = rforklen;
+
     return 0;
+
+error:
+    err = errno;
+    ad_close(ad, adflags);
+    errno = err;
+    LOG(log_error, logtype_default, "ad_open_hf_ea: error: %s", strerror(errno));
+    return ret;
 }
 
 static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
     int ret = 0;
 
+    LOG(log_maxdebug, logtype_default, "ad_open_hf(\"%s/%s\", adf: 0x%04x, of: 0x%04x)",
+        getcwdpath(), path, adflags, oflags);
+
     if (ad_meta_fileno(ad) != -1) { /* the file is already open */
+        LOG(log_maxdebug, logtype_default,"the file is already open");
         if ((oflags & ( O_RDWR | O_WRONLY))
             && !(ad->ad_md->adf_flags & ( O_RDWR | O_WRONLY))) {
             if ((adflags & ADFLAGS_HF) && ad->ad_data_fork.adf_refcount)
@@ -726,7 +750,7 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
 
-    switch (ad->ad_version) {
+    switch (ad->ad_flags) {
     case AD_VERSION2:
         ret = ad_open_hf_v2(path, adflags, oflags, mode, ad);
         break;
@@ -997,10 +1021,12 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
             return -1;
     }
 
+#if 0
     if ((adflags & ADFLAGS_RF)) {
         if (ad_open_rf(path, adflags, oflags, mode, ad) != 0)
             return -1;
     }
+#endif
 
     return 0;
 }
