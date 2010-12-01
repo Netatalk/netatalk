@@ -47,7 +47,9 @@
 /* version info */
 #define AD_VERSION2     0x00020000
 #define AD_VERSION_EA   0x00020002
-#define AD_VERSION      AD_VERSION_EA
+
+/* default */
+#define AD_VERSION      AD_VERSION2
 
 /*
  * AppleDouble entry IDs.
