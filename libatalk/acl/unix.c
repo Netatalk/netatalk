@@ -52,7 +52,7 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
         /* sorry, no ACLs for symlinks */
         return 0;
 
-    if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))) {
+    if ( ! ((S_ISREG(st.st_mode)) || (S_ISDIR(st.st_mode)))) {
         LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): special", getcwdpath(), name);
         return 0;
     }
