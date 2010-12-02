@@ -13,10 +13,12 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#ifdef HAVE_UNISTD_H
+#include <sys/socket.h>
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
+
+#ifndef NO_DDP
 #include <netatalk/at.h>
+#endif
 #include <atalk/unicode.h>
 
 /* exit error codes */
@@ -56,7 +58,9 @@ extern void freeifacelist(char **);
 
 #define diatolower(x)     _dialowermap[(unsigned char) (x)]
 #define diatoupper(x)     _diacasemap[(unsigned char) (x)]
+#ifndef NO_DDP
 extern int atalk_aton     (char *, struct at_addr *);
+#endif
 extern void bprint        (char *, int);
 extern int strdiacasecmp  (const char *, const char *);
 extern int strndiacasecmp (const char *, const char *, size_t);

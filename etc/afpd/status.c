@@ -90,14 +90,16 @@ static int status_server(char *data, const char *server, const struct afp_option
 
     /* extract the obj part of the server */
     Obj = (char *) server;
+#ifndef NO_DDP
     nbp_name(server, &Obj, &Type, &Zone);
+#endif
     if ((size_t)-1 == (len = convert_string( 
-			options->unixcharset, options->maccharset, 
-			Obj, -1, buf, sizeof(buf))) ) {
-	len = MIN(strlen(Obj), 31);
+                           options->unixcharset, options->maccharset, 
+                           Obj, -1, buf, sizeof(buf))) ) {
+        len = MIN(strlen(Obj), 31);
     	*data++ = len;
     	memcpy( data, Obj, len );
-	LOG ( log_error, logtype_afpd, "Could not set servername, using fallback");
+        LOG ( log_error, logtype_afpd, "Could not set servername, using fallback");
     } else {
     	*data++ = len;
     	memcpy( data, buf, len );
@@ -375,18 +377,18 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
     /* extract the obj part of the server */
     Obj = (char *) (options->server ? options->server : options->hostname);
+#ifndef NO_DDP
     nbp_name(options->server ? options->server : options->hostname, &Obj, &Type, &Zone);
-
+#endif
     if ((size_t) -1 == (len = convert_string (
-					options->unixcharset, CH_UTF8_MAC, 
-					Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
-	LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
+                            options->unixcharset, CH_UTF8_MAC, 
+                            Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
+        LOG ( log_error, logtype_afpd, "Could not set utf8 servername");
 
-	/* set offset to 0 */
-	memset(begin + *nameoffset, 0, sizeof(offset));
+        /* set offset to 0 */
+        memset(begin + *nameoffset, 0, sizeof(offset));
         data = begin + offset;
-    }
-    else {
+    } else {
     	namelen = htons(len);
     	memcpy( data, &namelen, sizeof(namelen));
     	data += sizeof(namelen);
@@ -395,11 +397,11 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     	memcpy(begin + *nameoffset, &offset, sizeof(u_int16_t));
         
         /* Now set the flag ... */
-	memcpy(&status, begin + AFPSTATUS_FLAGOFF, sizeof(status));
-	status = ntohs(status);
-	status |= AFPSRVRINFO_SRVUTF8;
-	status = htons(status);
-	memcpy(begin + AFPSTATUS_FLAGOFF, &status, sizeof(status));
+        memcpy(&status, begin + AFPSTATUS_FLAGOFF, sizeof(status));
+        status = ntohs(status);
+        status |= AFPSRVRINFO_SRVUTF8;
+        status = htons(status);
+        memcpy(begin + AFPSTATUS_FLAGOFF, &status, sizeof(status));
     }
 
     /* return length of buffer */
