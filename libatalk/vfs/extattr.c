@@ -842,7 +842,8 @@ static int solaris_attropen(const char *path, const char *attrpath, int oflag, m
 {
 	int filedes = attropen(path, attrpath, oflag, mode);
 	if (filedes == -1) {
-		LOG(log_maxdebug, logtype_default, "attropen FAILED: path: %s, name: %s, errno: %s\n",path,attrpath,strerror(errno));
+		LOG(log_maxdebug, logtype_default, "attropen FAILED: path: %s, name: %s, errno: %s",
+            path, attrpath, strerror(errno));
         errno = ENOATTR;
 	}
 	return filedes;
@@ -852,7 +853,8 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
 {
 	int filedes = openat(fildes, path, oflag, mode);
 	if (filedes == -1) {
-		LOG(log_maxdebug, logtype_default, "openat FAILED: fd: %s, path: %s, errno: %s\n",filedes,path,strerror(errno));
+		LOG(log_maxdebug, logtype_default, "openat FAILED: fd: %d, path: %s, errno: %s",
+            filedes, path, strerror(errno));
 	}
 	return filedes;
 }
@@ -862,7 +864,7 @@ static int solaris_write_xattr(int attrfd, const char *value, size_t size)
 	if ((ftruncate(attrfd, 0) == 0) && (write(attrfd, value, size) == size)) {
 		return 0;
 	} else {
-		LOG(log_maxdebug, logtype_default, "solaris_write_xattr FAILED!\n");
+		LOG(log_maxdebug, logtype_default, "solaris_write_xattr FAILED!");
 		return -1;
 	}
 }

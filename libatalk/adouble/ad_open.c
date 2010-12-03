@@ -688,19 +688,23 @@ static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, st
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(ad, NULL) != 0) {
         if (!(oflags & O_CREAT)) {
-            ret = 0;
-            goto error;
+            err = errno;
+            ad_close(ad, adflags);
+            errno = err;
+            return -1;
         }
 
         /* It doesnt exist, EPERM or another error */
-        if (errno != ENOATTR) {
-            LOG(log_maxdebug, logtype_default, "ad_open_hf_ea: unexpected: %s", strerror(errno));
+        if (errno != ENOATTR && errno != ENOENT) {
+            LOG(log_error, logtype_default, "ad_open_hf_ea: unexpected: %s", strerror(errno));
             ret = -1;
             goto error;
         }
 
         /* Create one */
         if (new_ad_header(path, ad, adflags) < 0) {
+            LOG(log_error, logtype_default, "ad_open_hf_ea: can't create new header: %s/%s",
+                getcwdpath(), path);
             ret = -1;
             goto error;
         }
@@ -719,7 +723,6 @@ error:
     err = errno;
     ad_close(ad, adflags);
     errno = err;
-    LOG(log_error, logtype_default, "ad_open_hf_ea: error: %s", strerror(errno));
     return ret;
 }
 
@@ -749,6 +752,7 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
+    adf_lock_init(ad->ad_md);
 
     switch (ad->ad_flags) {
     case AD_VERSION2:
@@ -763,7 +767,6 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
     }
 
     ad->ad_md->adf_refcount = 1;
-    adf_lock_init(ad->ad_md);
 
     return ret;
 }

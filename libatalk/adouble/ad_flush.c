@@ -156,12 +156,13 @@ int ad_flush(struct adouble *ad)
             break;
         case AD_VERSION_EA:
             if (sys_fsetxattr(ad->ad_md->adf_fd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
-                LOG(log_error, logtype_afpd, "Unexpected adouble version");
+                LOG(log_error, logtype_afpd, "ad_flush: sys_fsetxattr error: %s",
+                    strerror(errno));
                 return -1;
             }
             break;
         default:
-            LOG(log_error, logtype_afpd, "Unexpected adouble version");
+            LOG(log_error, logtype_afpd, "ad_flush: unexpected adouble version");
             return -1;
         }
     }
