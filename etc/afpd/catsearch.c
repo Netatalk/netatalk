@@ -754,8 +754,9 @@ static int catsearch_db(struct vol *vol,
             switch (errno) {
             case EACCES:
             case ELOOP:
-            case ENOENT:
                 goto next;
+            case ENOENT:
+                
             default:
                 result = AFPERR_MISC;
                 goto catsearch_end;

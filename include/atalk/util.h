@@ -140,5 +140,5 @@ extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
 extern const char *getcwdpath(void);
 extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
-
+extern void randombytes(void *buf, int n);
 #endif  /* _ATALK_UTIL_H */

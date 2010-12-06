@@ -36,8 +36,6 @@ char *strchr (), *strrchr ();
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <uuid/uuid.h>
-
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/adouble.h>
@@ -46,7 +44,8 @@ char *strchr (), *strrchr ();
 #include <atalk/volinfo.h>
 #include <atalk/logger.h>
 #include <atalk/vfs.h>
-#include <atalk/ea.h>
+#include <atalk/uuid.h>
+
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/
@@ -2736,14 +2735,14 @@ char *get_uuid(const AFPObj *obj, const char *volname)
     }                    
     
     /* generate uuid and write to file */
-    uuid_t id;
-    uuid_generate(id);
-    uuid_unparse(id, uuid);
-    for (int i=0; uuid[i]; i++)
-        uuid[i] = toupper(uuid[i]);
-    LOG(log_debug, logtype_afpd, "get_uuid('%s'): generated UUID '%s'", volname, uuid);
+    atalk_uuid_t id;
+    const char *cp;
+    randombytes((void *)id, 16);
+    cp = uuid_bin2string(id);
 
-    fprintf(fp, "\"%s\"\t%36s\n", volname, uuid);
+    LOG(log_debug, logtype_afpd, "get_uuid('%s'): generated UUID '%s'", volname, cp);
+
+    fprintf(fp, "\"%s\"\t%36s\n", volname, cp);
     fclose(fp);
     
     return strdup(uuid);
