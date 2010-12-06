@@ -1013,7 +1013,9 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     
     /* Call search */
     *rbuflen = 24;
-    if ((c1.rbitmap & (1 << FILPBIT_PDINFO)) && (strcmp(vol->v_cnidscheme, "dbd") == 0))
+    if ((c1.rbitmap & (1 << FILPBIT_PDINFO))
+        && (strcmp(vol->v_cnidscheme, "dbd") == 0)
+        && (obj->options.flags & OPTION_CATSEARCH_DB))
         /* we've got a name and it's a dbd volume, so search CNID database */
         ret = catsearch_db(vol, vol->v_root, uname, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
     else

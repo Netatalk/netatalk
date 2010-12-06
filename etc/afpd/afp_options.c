@@ -232,6 +232,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->flags |= OPTION_ANNOUNCESSH;
     if (strstr(buf, " -noacl2maccess"))
         options->flags &= ~OPTION_ACL2MACCESS;
+    if ((c = getoption(buf, "-searchtype"))) {
+        if (strcmp(c, "db") == 0)
+            options->flags |= OPTION_CATSEARCH_DB;
+    }
 
     /* passwd bits */
     if (strstr(buf, " -nosavepassword"))

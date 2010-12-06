@@ -37,6 +37,7 @@
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
+#define OPTION_CATSEARCH_DB  (1 << 10)
 
 #ifdef FORCE_UIDGID
 /* set up a structure for this */
