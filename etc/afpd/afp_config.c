@@ -11,33 +11,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <ctype.h>
-#include <atalk/logger.h>
-#include <atalk/util.h>
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifdef USE_SRVLOC
+#include <slp.h>
+#endif /* USE_SRVLOC */
+
+#include <atalk/logger.h>
+#include <atalk/util.h>
 #include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
@@ -45,9 +31,7 @@ char *strchr (), *strrchr ();
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/server_child.h>
-#ifdef USE_SRVLOC
-#include <slp.h>
-#endif /* USE_SRVLOC */
+
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
 #endif
