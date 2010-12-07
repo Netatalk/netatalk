@@ -504,6 +504,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value &= ~AFPVOL_CACHE;
             else if (strcasecmp(p, "tm") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_TM;
+            else if (strcasecmp(p, "searchdb") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_SEARCHDB;
 /* Found this in branch dir-rewrite, maybe we want to use it sometimes */
 #if 0
             else if (strcasecmp(p, "cdrom") == 0)
@@ -733,7 +735,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_vid = htons(volume->v_vid);
 #ifdef HAVE_ACLS
     if (check_vol_acl_support(volume))
-        volume->v_flags |= AFPVOL_ACLS;
+        volume->v_flags |= AFPVOL_ACLS
+;
 #endif
 
     /* handle options */

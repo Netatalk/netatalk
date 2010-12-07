@@ -133,9 +133,13 @@ struct vol {
 
 #define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching. Default: yes */
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
-#define AFPVOL_TM        (1 << 24)   /* Supports TimeMachine */
-#define AFPVOL_ACLS      (1 << 25)   /* Volume supports ACLS */
-#define AFPVOL_CDROM     (1 << 25)   /* Ejectable media eg CD -> in memory CNID db */
+#define AFPVOL_TM        (1 << 23)   /* Supports TimeMachine */
+#define AFPVOL_ACLS      (1 << 24)   /* Volume supports ACLS */
+#define AFPVOL_SEARCHDB  (1 << 25)   /* Use fast CNID db search instead of filesystem */
+/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
+#if 0
+#define AFPVOL_CDROM     (1 << XX)   /* Ejectable media eg CD -> in memory CNID db */
+#endif
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_NONE           0   /* No EAs */

@@ -1,3 +1,9 @@
+Changes in 2.2alpha5
+====================
+
+* UPD: afpd: new option "searchdb" which enables fast catalog searches
+       using the CNID db.
+
 Changes in 2.2alpha4
 ====================
 
