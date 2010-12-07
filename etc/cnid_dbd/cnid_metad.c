@@ -89,6 +89,7 @@
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/paths.h>
+#include <atalk/volinfo.h>
 
 #include "db_param.h"
 #include "usockfd.h"
@@ -204,7 +205,7 @@ static int send_cred(int socket, int fd)
 }
 
 /* -------------------- */
-static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
+static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
 {
     pid_t pid;
     struct server *up;
@@ -214,10 +215,9 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
     char buf1[8];
     char buf2[8];
 
-    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: dbdir: '%s', UNIX socket file: '%s'", 
-        dbdir, usockfn);
+    LOG(log_debug, logtype_cnid, "maybe_start_dbd: Volume: \"%s\"", volpath);
 
-    up = test_usockfn(dbdir);
+    up = test_usockfn(volpath);
     if (up && up->pid) {
         /* we already have a process, send our fd */
         if (send_cred(up->control_fd, rqstfd) < 0) {
@@ -227,7 +227,7 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
         return 0;
     }
 
-    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: no cnid_dbd for that volume yet. Starting one ...");
+    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: no cnid_dbd for that volume yet");
 
     time(&t);
     if (!up) {
@@ -237,7 +237,7 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
                 up = &srv[i];
                 up->tm = t;
                 up->count = 0;
-                up->name = strdup(dbdir);
+                up->name = strdup(volpath);
                 break;
             }
         }
@@ -307,10 +307,10 @@ static int maybe_start_dbd(char *dbdpn, char *dbdir, char *usockfn)
              * it will run recover, delete the db whatever
              */
             LOG(log_error, logtype_cnid, "try with -d %s", up->name);
-            ret = execlp(dbdpn, dbdpn, "-d", dbdir, buf1, buf2, logconfig, NULL);
+            ret = execlp(dbdpn, dbdpn, "-d", volpath, buf1, buf2, logconfig, NULL);
         }
         else {
-            ret = execlp(dbdpn, dbdpn, dbdir, buf1, buf2, logconfig, NULL);
+            ret = execlp(dbdpn, dbdpn, volpath, buf1, buf2, logconfig, NULL);
         }
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
@@ -460,7 +460,7 @@ static void set_signal(void)
 /* ------------------ */
 int main(int argc, char *argv[])
 {
-    char  dbdir[MAXPATHLEN + 1];
+    char  volpath[MAXPATHLEN + 1];
     int   len, actual_len;
     pid_t pid;
     int   status;
@@ -620,7 +620,7 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        actual_len = readt(rqstfd, dbdir, len, 1, 5);
+        actual_len = readt(rqstfd, volpath, len, 1, 5);
         if (actual_len < 0) {
             LOG(log_severe, logtype_cnid, "Read(2) error : %s", strerror(errno));
             goto loop_end;
@@ -629,17 +629,25 @@ int main(int argc, char *argv[])
             LOG(log_error, logtype_cnid, "error/short read (dir): %s", strerror(errno));
             goto loop_end;
         }
-        dbdir[len] = '\0';
+        volpath[len] = '\0';
 
-        if (set_dbdir(dbdir, len) < 0) {
+        /* Load .volinfo file */
+        struct volinfo volinfo;
+        if (loadvolinfo(volpath, &volinfo) == -1) {
+            LOG(log_error, logtype_cnid, "Cant load volinfo for \"%s\"", volpath);
             goto loop_end;
         }
 
-        if ((dbp = db_param_read(dbdir, METAD)) == NULL) {
-            LOG(log_error, logtype_cnid, "Error reading config file");
+        if (set_dbdir(volinfo.v_dbpath, strlen(volinfo.v_dbpath)) < 0) {
             goto loop_end;
         }
-        maybe_start_dbd(dbdpn, dbdir, dbp->usock_file);
+
+        if ((dbp = db_param_read(volinfo.v_dbpath, METAD)) == NULL) {
+            LOG(log_error, logtype_cnid, "Error reading config file for \"%s\"",
+                volinfo.v_dbpath);
+            goto loop_end;
+        }
+        maybe_start_dbd(dbdpn, volpath, dbp->usock_file);
 
     loop_end:
         close(rqstfd);
