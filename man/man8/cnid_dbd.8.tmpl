@@ -2,12 +2,12 @@
 .\"     Title: cnid_dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 21 Mar 2009
-.\"    Manual: Netatalk 2.1
-.\"    Source: Netatalk 2.1
+.\"      Date: 07 Dec 2010
+.\"    Manual: Netatalk 2.2
+.\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "CNID_DBD" "8" "21 Mar 2009" "Netatalk 2.1" "Netatalk 2.1"
+.TH "CNID_DBD" "8" "07 Dec 2010" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -51,11 +51,6 @@ uses the
 database library and uses transactionally protected updates\&. The
 \fBdbd\fR
 backend with transactions will avoid corruption of the CNID database even if the system crashes unexpectedly\&.
-.PP
-\fBcnid_dbd\fR
-uses the same on\-disk database format as the
-\fBcdb\fR
-backend\&. It is therefore possible to switch between the two backends as necessary\&.
 .PP
 \fBcnid_dbd\fR
 inherits the effective userid and groupid from
