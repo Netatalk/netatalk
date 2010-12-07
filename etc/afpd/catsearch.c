@@ -46,6 +46,7 @@
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/util.h>
 #include <atalk/bstradd.h>
+#include <atalk/unicode.h>
 
 #include "desktop.h"
 #include "directory.h"
@@ -707,6 +708,8 @@ static int catsearch_db(struct vol *vol,
 	int result = AFP_OK;
     struct path path;
 	char *rrbuf = rbuf;
+    char buffer[MAXPATHLEN +2];
+    uint16_t flags = CONV_TOLOWER;
 
     LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u, name: %s}",
         *pos, cur_pos, uname);
@@ -717,8 +720,23 @@ static int catsearch_db(struct vol *vol,
 	}
 
     if (cur_pos == 0 || *pos == 0) {
+        if (convert_charset(vol->v_volcharset,
+                            vol->v_volcharset,
+                            vol->v_maccharset,
+                            uname,
+                            strlen(uname),
+                            buffer,
+                            MAXPATHLEN,
+                            &flags) == (size_t)-1) {
+            LOG(log_error, logtype_cnid, "catsearch_db: conversion error");
+            result = AFPERR_MISC;
+            goto catsearch_end;
+        }
+
+        LOG(log_debug, logtype_afpd, "catsearch_db: %s", buffer);
+
         if ((num_matches = cnid_find(vol->v_cdb,
-                                     uname,
+                                     buffer,
                                      strlen(uname),
                                      resbuf,
                                      sizeof(resbuf))) == -1) {

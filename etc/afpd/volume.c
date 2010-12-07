@@ -1939,7 +1939,7 @@ static int volume_openDB(struct vol *volume)
     }
 #endif
 
-    volume->v_cdb = cnid_open(volume->v_dbpath ? volume->v_dbpath : volume->v_path,
+    volume->v_cdb = cnid_open(volume->v_path,
                               volume->v_umask,
                               volume->v_cnidscheme,
                               flags,

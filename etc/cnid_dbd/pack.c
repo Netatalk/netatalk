@@ -11,15 +11,19 @@
 #include <netatalk/endian.h>
 
 #include <string.h>
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
+#include <inttypes.h>
 #include <sys/param.h>
 #include <sys/cdefs.h>
 #include <db.h>
 
+#include <atalk/unicode.h>
+#include <atalk/volinfo.h>
+#include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include "pack.h"
+
+/* in main.c */
+extern struct volinfo volinfo;
 
 /* --------------- */
 /*
@@ -74,9 +78,24 @@ int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 /* --------------- */
 int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 {
+    char buffer[MAXPATHLEN +2];
+    uint16_t flags = CONV_TOLOWER;
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_NAME_OFS;
-    skey->size = strlen((char *)skey->data) + 1;
+
+    if (convert_charset(volinfo.v_volcharset,
+                        volinfo.v_volcharset,
+                        volinfo.v_maccharset,
+                        (char *)pdata->data + CNID_NAME_OFS,
+                        strlen((char *)pdata->data + CNID_NAME_OFS),
+                        buffer,
+                        MAXPATHLEN,
+                        &flags) == (size_t)-1) {
+        LOG(log_error, logtype_cnid, "idxname: conversion error");
+    }
+
+    skey->data = buffer;
+    skey->size = strlen(skey->data);
     return (0);
 }
 

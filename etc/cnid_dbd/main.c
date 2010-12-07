@@ -32,6 +32,7 @@
 #include <netatalk/endian.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/logger.h>
+#include <atalk/volinfo.h>
 
 #include "db_param.h"
 #include "dbif.h"
@@ -46,8 +47,10 @@
  */
 #define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER)
 
-static DBD *dbd;
+/* Global */
+struct volinfo volinfo;
 
+static DBD *dbd;
 static int exit_sig = 0;
 
 static void sig_exit(int signo)
@@ -338,13 +341,23 @@ int main(int argc, char *argv[])
     logconfig = strdup(argv[4]);
     setuplog(logconfig);
 
+    /* Load .volinfo file */
+    if (loadvolinfo(dir, &volinfo) == -1) {
+        LOG(log_error, logtype_cnid, "Cant load volinfo for \"%s\"", dir);
+        exit(EXIT_FAILURE);
+    }
+    dir = volinfo.v_dbpath;
+    if (vol_load_charsets(&volinfo) == -1) {
+        LOG(log_error, logtype_cnid, "Error loading charsets!");
+        exit(EXIT_FAILURE);
+    }
+    LOG(log_note, logtype_cnid, "db dir: \"%s\"", dir);
+
     switch_to_user(dir);
 
     /* Before we do anything else, check if there is an instance of cnid_dbd
        running already and silently exit if yes. */
     lockfd = get_lock();
-
-    LOG(log_info, logtype_cnid, "Startup, DB dir %s", dir);
 
     set_signal();
 
