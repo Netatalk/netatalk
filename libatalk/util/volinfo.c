@@ -347,7 +347,7 @@ int loadvolinfo (char *path, struct volinfo *vol)
     char   volinfofile[MAXPATHLEN];
     char   buf[MAXPATHLEN];
     struct flock lock;
-    int    fd;
+    int    fd, len;
     FILE   *fp;
 
     if ( !path || !vol)
@@ -361,9 +361,16 @@ int loadvolinfo (char *path, struct volinfo *vol)
         return -1;
 
     if ((vol->v_path = strdup(volinfofile)) == NULL ) {
-	fprintf (stderr, "strdup: %s", strerror(errno));
+        fprintf (stderr, "strdup: %s", strerror(errno));
         return (-1);
     }
+    /* Remove trailing slashes */
+    len = strlen(vol->v_path);
+    while (len && (vol->v_path[len-1] == '/')) {
+        vol->v_path[len-1] = 0;
+        len--;
+    }
+
     strlcat(volinfofile, ".AppleDesktop/", sizeof(volinfofile));
     strlcat(volinfofile, VOLINFOFILE, sizeof(volinfofile));
 
