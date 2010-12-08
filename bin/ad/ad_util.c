@@ -127,7 +127,7 @@ int openvol(const char *path, afpvol_t *vol)
     if ((vol->volinfo.v_flags & AFPVOL_NODEV))
         flags |= CNID_FLAG_NODEV;
 
-    if ((vol->volume.v_cdb = cnid_open(vol->volinfo.v_dbpath,
+    if ((vol->volume.v_cdb = cnid_open(vol->volinfo.v_path,
                                        0000,
                                        "dbd",
                                        flags,

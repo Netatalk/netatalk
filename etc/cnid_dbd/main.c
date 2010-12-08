@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
     struct db_param *dbp;
     int err = 0;
     int lockfd, ctrlfd, clntfd;
-    char *dir, *logconfig;
+    char *logconfig;
 
     set_processname("cnid_dbd");
 
@@ -335,25 +335,32 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    dir = argv[1];
     ctrlfd = atoi(argv[2]);
     clntfd = atoi(argv[3]);
     logconfig = strdup(argv[4]);
     setuplog(logconfig);
 
     /* Load .volinfo file */
-    if (loadvolinfo(dir, &volinfo) == -1) {
-        LOG(log_error, logtype_cnid, "Cant load volinfo for \"%s\"", dir);
+    if (loadvolinfo(argv[1], &volinfo) == -1) {
+        LOG(log_error, logtype_cnid, "Cant load volinfo for \"%s\"", argv[1]);
         exit(EXIT_FAILURE);
     }
-    dir = volinfo.v_dbpath;
+    /* Put "/.AppleDB" at end of volpath, get path from volinfo file */
+    char dbpath[MAXPATHLEN+1];
+    if ((strlen(volinfo.v_dbpath) + strlen("/.AppleDB")) > MAXPATHLEN ) {
+        LOG(log_error, logtype_cnid, "CNID db pathname too long: \"%s\"", volinfo.v_dbpath);
+        exit(EXIT_FAILURE);
+    }
+    strncpy(dbpath, volinfo.v_dbpath, MAXPATHLEN - strlen("/.AppleDB"));
+    strcat(dbpath, "/.AppleDB");
+
     if (vol_load_charsets(&volinfo) == -1) {
         LOG(log_error, logtype_cnid, "Error loading charsets!");
         exit(EXIT_FAILURE);
     }
-    LOG(log_note, logtype_cnid, "db dir: \"%s\"", dir);
+    LOG(log_note, logtype_cnid, "db dir: \"%s\"", dbpath);
 
-    switch_to_user(dir);
+    switch_to_user(dbpath);
 
     /* Before we do anything else, check if there is an instance of cnid_dbd
        running already and silently exit if yes. */
@@ -364,7 +371,7 @@ int main(int argc, char *argv[])
     /* SIGINT and SIGTERM are always off, unless we are in pselect */
     block_sigs_onoff(1);
 
-    if ((dbp = db_param_read(dir, CNID_DBD)) == NULL)
+    if ((dbp = db_param_read(dbpath, CNID_DBD)) == NULL)
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
@@ -381,12 +388,6 @@ int main(int argc, char *argv[])
     }
     LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
 
-    if (dbd_stamp(dbd) < 0) {
-        dbif_close(dbd);
-        exit(5);
-    }
-    LOG(log_maxdebug, logtype_cnid, "Finished checking database stamp");
-
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
         dbif_close(dbd);
         exit(3);
@@ -398,7 +399,7 @@ int main(int argc, char *argv[])
     if (dbif_close(dbd) < 0)
         err++;
 
-    if (dbif_env_remove(dir) < 0)
+    if (dbif_env_remove(dbpath) < 0)
         err++;
 
     free_lock(lockfd);

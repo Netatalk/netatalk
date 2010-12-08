@@ -22,7 +22,7 @@
 #include <atalk/cnid_dbd_private.h>
 #include "pack.h"
 
-/* in main.c */
+/* in main.c for `cnid_dbd` or cmd_dbd.c for `dbd` */
 extern struct volinfo volinfo;
 
 /* --------------- */

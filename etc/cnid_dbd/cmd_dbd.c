@@ -1,6 +1,4 @@
 /* 
-   $Id: cmd_dbd.c,v 1.26 2010-04-20 16:46:20 hat001 Exp $
-
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
    
    This program is free software; you can redistribute it and/or modify
@@ -84,6 +82,7 @@
 
 int nocniddb = 0;               /* Dont open CNID database, only scan filesystem */
 volatile sig_atomic_t alarmed;
+struct volinfo volinfo;
 
 static DBD *dbd;
 static int verbose;             /* Logging flag */
@@ -101,7 +100,7 @@ static struct db_param db_param = {
     -1,
     -1
 };
-static char dbpath[PATH_MAX];   /* Path to the dbd database */
+static char dbpath[MAXPATHLEN+1];   /* Path to the dbd database */
 
 /* 
    Provide some logging
@@ -281,7 +280,6 @@ int main(int argc, char **argv)
     int dump=0, scan=0, rebuild=0, prep_upgrade=0, rebuildindexes=0, dumpindexes=0, force=0;
     dbd_flags_t flags = 0;
     char *volpath;
-    struct volinfo volinfo;
     int cdir;
 
     if (geteuid() != 0) {
@@ -396,11 +394,11 @@ int main(int argc, char **argv)
     }
 
     /* Put "/.AppleDB" at end of volpath, get path from volinfo file */
-    if ( (strlen(volinfo.v_dbpath) + strlen("/.AppleDB")) > (PATH_MAX - 1) ) {
+    if ( (strlen(volinfo.v_dbpath) + strlen("/.AppleDB")) > MAXPATHLEN ) {
         dbd_log( LOGSTD, "Volume pathname too long");
         exit(EXIT_FAILURE);        
     }
-    strncpy(dbpath, volinfo.v_dbpath, PATH_MAX - 9 - 1);
+    strncpy(dbpath, volinfo.v_dbpath, MAXPATHLEN - strlen("/.AppleDB"));
     strcat(dbpath, "/.AppleDB");
 
     /* Check or create dbpath */
@@ -435,9 +433,13 @@ int main(int argc, char **argv)
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
-        snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", dbpath);
+        snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
+        if ((mkdir(dbpath, 0755)) != 0) {
+            dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
         dbd_log( LOGDEBUG, "Removed old database.");
     }
 
@@ -457,11 +459,6 @@ int main(int argc, char **argv)
             dbd_log( LOGDEBUG, "Finished recovery.");
 
         if (dbif_open(dbd, NULL, rebuildindexes) < 0) {
-            dbif_close(dbd);
-            goto exit_failure;
-        }
-
-        if (dbd_stamp(dbd) < 0) {
             dbif_close(dbd);
             goto exit_failure;
         }

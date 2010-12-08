@@ -18,12 +18,12 @@
 #define CNID_INO_LEN             8
  
 #define CNID_DEVINO_OFS          CNID_LEN
-#define CNID_DEVINO_LEN          (CNID_DEV_LEN +CNID_INO_LEN)
+#define CNID_DEVINO_LEN          (CNID_DEV_LEN + CNID_INO_LEN)
  
-#define CNID_TYPE_OFS            (CNID_DEVINO_OFS +CNID_DEVINO_LEN)
+#define CNID_TYPE_OFS            (CNID_DEVINO_OFS + CNID_DEVINO_LEN)
 #define CNID_TYPE_LEN            4
  
-#define CNID_DID_OFS             (CNID_TYPE_OFS +CNID_TYPE_LEN)
+#define CNID_DID_OFS             (CNID_TYPE_OFS + CNID_TYPE_LEN)
 #define CNID_DID_LEN             CNID_LEN
  
 #define CNID_NAME_OFS            (CNID_DID_OFS + CNID_DID_LEN)
