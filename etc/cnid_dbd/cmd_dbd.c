@@ -382,6 +382,19 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);        
     }
 
+    /* Enuser dbpath is there, create if necessary */
+    struct stat st;
+    if (stat(volinfo.v_dbpath, &st) != 0) {
+        if (errno != ENOENT) {
+            dbd_log( LOGSTD, "Can't stat dbpath \"%s\": %s", volinfo.v_dbpath, strerror(errno));
+            exit(EXIT_FAILURE);        
+        }
+        if ((mkdir(volinfo.v_dbpath, 0755)) != 0) {
+            dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
+            exit(EXIT_FAILURE);
+        }        
+    }
+
     /* Put "/.AppleDB" at end of volpath, get path from volinfo file */
     if ( (strlen(volinfo.v_dbpath) + strlen("/.AppleDB")) > (PATH_MAX - 1) ) {
         dbd_log( LOGSTD, "Volume pathname too long");
