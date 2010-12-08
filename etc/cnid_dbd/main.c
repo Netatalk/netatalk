@@ -274,6 +274,7 @@ static int get_lock(void)
 
     if (fcntl(lockfd, F_SETLK, &lock) < 0) {
         if (errno == EACCES || errno == EAGAIN) {
+            LOG(log_error, logtype_cnid, "get_lock: locked");
             exit(0);
         } else {
             LOG(log_error, logtype_cnid, "main: fcntl F_WRLCK lockfile: %s", strerror(errno));
