@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
     /* SIGINT and SIGTERM are always off, unless we are in pselect */
     block_sigs_onoff(1);
 
-    if ((dbp = db_param_read(dbpath, CNID_DBD)) == NULL)
+    if ((dbp = db_param_read(dbpath)) == NULL)
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 

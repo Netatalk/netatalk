@@ -14,6 +14,9 @@ typedef struct {
 } vol_opt_name_t;
 
 struct volinfo {
+    int                 retaincount;
+    int                 malloced;
+
     char                *v_name;
     char                *v_path;
     int                 v_flags;
@@ -32,7 +35,10 @@ struct volinfo {
     char                *v_dbd_port;
 };
 
+struct volinfo *allocvolinfo(char *path);
 extern int loadvolinfo(char *path, struct volinfo *vol);
+extern void retainvolinfo(struct volinfo *vol);
+extern int closevolinfo(struct volinfo *vol);
 extern int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_port);
 extern int vol_load_charsets(struct volinfo *vol);
 

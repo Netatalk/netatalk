@@ -91,7 +91,6 @@
 #include <atalk/paths.h>
 #include <atalk/volinfo.h>
 
-#include "db_param.h"
 #include "usockfd.h"
 
 #define DBHOME        ".AppleDB"
@@ -109,7 +108,7 @@ static volatile sig_atomic_t sigchild = 0;
 #define DEFAULTPORT  "4700"
 
 struct server {
-    char  *name;
+    struct volinfo *volinfo;
     pid_t pid;
     time_t tm;                    /* When respawned last */
     int count;                    /* Times respawned in the last TESTTIME secondes */
@@ -140,11 +139,11 @@ static void sigterm_handler(int sig)
     daemon_exit(0);
 }
 
-static struct server *test_usockfn(char *dir)
+static struct server *test_usockfn(struct volinfo *volinfo)
 {
     int i;
     for (i = 0; i < MAXVOLS; i++) {
-        if (srv[i].name && !strcmp(srv[i].name, dir)) {
+        if ((srv[i].volinfo) && (strcmp(srv[i].volinfo->v_path, volinfo->v_path) == 0)) {
             return &srv[i];
         }
     }
@@ -205,7 +204,7 @@ static int send_cred(int socket, int fd)
 }
 
 /* -------------------- */
-static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
+static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
 {
     pid_t pid;
     struct server *up;
@@ -214,10 +213,11 @@ static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
     time_t t;
     char buf1[8];
     char buf2[8];
+    char *volpath = volinfo->v_path;
 
     LOG(log_debug, logtype_cnid, "maybe_start_dbd: Volume: \"%s\"", volpath);
 
-    up = test_usockfn(volpath);
+    up = test_usockfn(volinfo);
     if (up && up->pid) {
         /* we already have a process, send our fd */
         if (send_cred(up->control_fd, rqstfd) < 0) {
@@ -233,11 +233,12 @@ static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
     if (!up) {
         /* find an empty slot */
         for (i = 0; i < MAXVOLS; i++) {
-            if ( !srv[i].name ) {
+            if (srv[i].volinfo == NULL) {
                 up = &srv[i];
+                up->volinfo = volinfo;
+                retainvolinfo(volinfo);
                 up->tm = t;
                 up->count = 0;
-                up->name = strdup(volpath);
                 break;
             }
         }
@@ -245,8 +246,7 @@ static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
             LOG(log_error, logtype_cnid, "no free slot for cnid_dbd child. Configured maximum: %d. Do you have so many volumes?", MAXVOLS);
             return -1;
         }
-    }
-    else {
+    } else {
         /* we have a slot but no process, check for respawn too fast */
         if ( (t < (up->tm + TESTTIME)) /* We're in the respawn time window */
              &&
@@ -306,7 +306,7 @@ static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
             /* there's a pb with the db inform child
              * it will run recover, delete the db whatever
              */
-            LOG(log_error, logtype_cnid, "try with -d %s", up->name);
+            LOG(log_error, logtype_cnid, "try with -d %s", up->volinfo->v_path);
             ret = execlp(dbdpn, dbdpn, "-d", volpath, buf1, buf2, logconfig, NULL);
         }
         else {
@@ -326,12 +326,12 @@ static int maybe_start_dbd(char *dbdpn, char *volpath, char *usockfn)
 }
 
 /* ------------------ */
-static int set_dbdir(char *dbdir, int len)
+static int set_dbdir(char *dbdir)
 {
+    int len;
     struct stat st;
 
-    if (!len)
-        return -1;
+    len = strlen(dbdir);
 
     if (stat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
@@ -467,7 +467,6 @@ int main(int argc, char *argv[])
     char  *dbdpn = _PATH_CNID_DBD;
     char  *host = DEFAULTHOST;
     char  *port = DEFAULTPORT;
-    struct db_param *dbp;
     int    i;
     int    cc;
     uid_t  uid = 0;
@@ -478,6 +477,7 @@ int main(int argc, char *argv[])
     char   *loglevel = NULL;
     char   *logfile  = NULL;
     sigset_t set;
+    struct volinfo *volinfo;
 
     set_processname("cnid_metad");
 
@@ -538,7 +538,7 @@ int main(int argc, char *argv[])
     }
 
     /* Check PID lockfile and become a daemon */
-    switch(server_lock("cnid_metad", _PATH_CNID_METAD_LOCK, 0)) {
+    switch(server_lock("cnid_metad", _PATH_CNID_METAD_LOCK, debug)) {
     case -1: /* error */
         daemon_exit(EXITERR_SYS);
     case 0: /* child */
@@ -632,22 +632,18 @@ int main(int argc, char *argv[])
         volpath[len] = '\0';
 
         /* Load .volinfo file */
-        struct volinfo volinfo;
-        if (loadvolinfo(volpath, &volinfo) == -1) {
-            LOG(log_error, logtype_cnid, "Cant load volinfo for \"%s\"", volpath);
+        if ((volinfo = allocvolinfo(volpath)) == NULL) {
+            LOG(log_severe, logtype_cnid, "allocvolinfo: %s", strerror(errno));
             goto loop_end;
         }
 
-        if (set_dbdir(volinfo.v_dbpath, strlen(volinfo.v_dbpath)) < 0) {
+        if (set_dbdir(volinfo->v_dbpath) < 0) {
             goto loop_end;
         }
 
-        if ((dbp = db_param_read(volinfo.v_dbpath, METAD)) == NULL) {
-            LOG(log_error, logtype_cnid, "Error reading config file for \"%s\"",
-                volinfo.v_dbpath);
-            goto loop_end;
-        }
-        maybe_start_dbd(dbdpn, volpath, dbp->usock_file);
+        maybe_start_dbd(dbdpn, volinfo);
+
+        (void)closevolinfo(volinfo);
 
     loop_end:
         close(rqstfd);
