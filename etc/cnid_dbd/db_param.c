@@ -102,7 +102,7 @@ static int parse_int(char *val)
    buffer overflow) nor elegant, we need to add support for whitespace in
    filenames as well. */
 
-struct db_param *db_param_read(char *dir, enum identity id)
+struct db_param *db_param_read(char *dir)
 {
     FILE *fp;
     static char key[MAXKEYLEN + 1];
@@ -149,39 +149,32 @@ struct db_param *db_param_read(char *dir, enum identity id)
                 LOG(log_info, logtype_cnid, "db_param: setting UNIX domain socket filename to %s", params.usock_file);
         }
 
-        /* Config for cnid_metad only */
-        if ( id == METAD ) {
-            /* Currently empty */
+        if (! strcmp(key, "fd_table_size")) {
+            params.fd_table_size = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting max number of concurrent afpd connections per volume (fd_table_size) to %d", params.fd_table_size);
+        } else if (! strcmp(key, "logfile_autoremove")) {
+            params.logfile_autoremove = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting logfile_autoremove to %d", params.logfile_autoremove);
+        } else if (! strcmp(key, "cachesize")) {
+            params.cachesize = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting cachesize to %d", params.cachesize);
+        } else if (! strcmp(key, "maxlocks")) {
+            params.maxlocks = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting maxlocks to %d", params.maxlocks);
+        } else if (! strcmp(key, "maxlockobjs")) {
+            params.maxlockobjs = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting maxlockobjs to %d", params.maxlockobjs);
+        } else if (! strcmp(key, "flush_frequency")) {
+            params.flush_frequency = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting flush_frequency to %d", params.flush_frequency);
+        } else if (! strcmp(key, "flush_interval")) {
+            params.flush_interval = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting flush_interval to %d", params.flush_interval);
+        } else if (! strcmp(key, "idle_timeout")) {
+            params.idle_timeout = parse_int(val);
+            LOG(log_info, logtype_cnid, "db_param: setting idle timeout to %d", params.idle_timeout);
         }
 
-        /* Config for dbd only */
-        else if (id == CNID_DBD ) {
-            if (! strcmp(key, "fd_table_size")) {
-                params.fd_table_size = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting max number of concurrent afpd connections per volume (fd_table_size) to %d", params.fd_table_size);
-            } else if (! strcmp(key, "logfile_autoremove")) {
-                params.logfile_autoremove = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting logfile_autoremove to %d", params.logfile_autoremove);
-            } else if (! strcmp(key, "cachesize")) {
-                params.cachesize = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting cachesize to %d", params.cachesize);
-            } else if (! strcmp(key, "maxlocks")) {
-                params.maxlocks = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting maxlocks to %d", params.maxlocks);
-            } else if (! strcmp(key, "maxlockobjs")) {
-                params.maxlockobjs = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting maxlockobjs to %d", params.maxlockobjs);
-            } else if (! strcmp(key, "flush_frequency")) {
-                params.flush_frequency = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting flush_frequency to %d", params.flush_frequency);
-            } else if (! strcmp(key, "flush_interval")) {
-                params.flush_interval = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting flush_interval to %d", params.flush_interval);
-            } else if (! strcmp(key, "idle_timeout")) {
-                params.idle_timeout = parse_int(val);
-                LOG(log_info, logtype_cnid, "db_param: setting idle timeout to %d", params.idle_timeout);
-            }
-        }
         if (parse_err)
             break;
     }

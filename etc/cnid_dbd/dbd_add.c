@@ -131,44 +131,6 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
     return 0;
 }
 
-/* --------------- 
-*/
-int dbd_stamp(DBD *dbd)
-{
-    DBT rootinfo_key, rootinfo_data;
-    cnid_t hint;
-    char buf[ROOTINFO_DATALEN];
-    char stamp[CNID_DEV_LEN];
-
-    memset(&rootinfo_key, 0, sizeof(rootinfo_key));
-    memset(&rootinfo_data, 0, sizeof(rootinfo_data));
-    rootinfo_key.data = ROOTINFO_KEY;
-    rootinfo_key.size = ROOTINFO_KEYLEN;
-
-    switch (dbif_get(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0)) {
-    case 0:
-        hint = htonl(CNID_START);
-        memcpy(buf, ROOTINFO_DATA, ROOTINFO_DATALEN);
-        rootinfo_data.data = buf;
-        rootinfo_data.size = ROOTINFO_DATALEN;
-        if (dbif_stamp(dbd, stamp, CNID_DEV_LEN) < 0) {
-            return -1;
-        }
-        memcpy((char *)rootinfo_data.data + CNID_TYPE_OFS, &hint, sizeof(hint));
-        memcpy((char *)rootinfo_data.data + CNID_DEV_OFS, stamp, sizeof(stamp));
-        if (dbif_put(dbd, DBIF_CNID, &rootinfo_key, &rootinfo_data, 0) < 0) {
-            return -1;
-        }
-        return 0;
-    
-    case 1: /* we already have one */
-        return 0;
-    default:
-        return -1;
-    }
-    return -1;
-}
-
 /* ------------------------ */
 /* We need a nolookup version for `dbd` */
 int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply, int nolookup)

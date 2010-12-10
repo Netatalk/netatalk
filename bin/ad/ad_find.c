@@ -33,6 +33,7 @@
 #include <atalk/bstradd.h>
 #include <atalk/directory.h>
 #include <atalk/util.h>
+#include <atalk/unicode.h>
 #include "ad.h"
 
 static volatile sig_atomic_t alarmed;
@@ -114,9 +115,26 @@ int ad_find(int argc, char **argv)
     if (openvol(srchvol, &vol) != 0)
         ERROR("Cant open volume \"%s\"", srchvol);
 
+    uint16_t flags = CONV_TOLOWER;
+    char namebuf[MAXPATHLEN + 1];
+    if (convert_charset(vol.volinfo.v_volcharset,
+                        vol.volinfo.v_volcharset,
+                        vol.volinfo.v_maccharset,
+                        argv[optind],
+                        strlen(argv[optind]),
+                        namebuf,
+                        MAXPATHLEN,
+                        &flags) == (size_t)-1) {
+        ERROR("conversion error");
+    }
+
     int count;
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
-    if ((count = cnid_find(vol.volume.v_cdb, argv[optind], strlen(argv[optind]), resbuf, sizeof(resbuf))) < 1) {
+    if ((count = cnid_find(vol.volume.v_cdb,
+                           namebuf,
+                           strlen(namebuf),
+                           resbuf,
+                           sizeof(resbuf))) < 1) {
         ret = 1;
     } else {
         ret = 0;

@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
@@ -147,4 +149,34 @@ int lchdir(const char *dir)
         return 1;
 
     return 0;
+}
+
+/*!
+ * Store n random bytes an buf
+ */
+void randombytes(void *buf, int n)
+{
+    char *p = (char *)buf;
+    int fd, i;
+    struct timeval tv;
+
+    if ((fd = open("/dev/urandom", O_RDONLY)) != -1) {
+        /* generate from /dev/urandom */
+        if (read(fd, buf, n) != n) {
+            close(fd);
+            fd = -1;
+        } else {
+            close(fd);
+            /* fd now != -1, so srandom wont be called below */
+        }
+    }
+
+    if (fd == -1) {
+        gettimeofday(&tv, NULL);
+        srandom((unsigned int)tv.tv_usec);
+        for (i=0 ; i < n ; i++)
+            p[i] = random() & 0xFF;
+    }
+
+    return;
 }

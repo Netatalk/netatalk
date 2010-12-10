@@ -1,3 +1,4 @@
+
 /*
  * $Id: dbd_getstamp.c,v 1.4 2009-05-06 11:54:24 franklahm Exp $
  *

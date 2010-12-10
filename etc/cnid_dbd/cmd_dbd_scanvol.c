@@ -1073,7 +1073,12 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
                     dbd_log(LOGSTD, "Orphaned CNID in database: %u", dbd_cnid);
                     if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
                         rqst.cnid = htonl(dbd_cnid);
-                        ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
+                        if ((ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID)) == -1) {
+                            dbd_log(LOGSTD, "Error deleting CNID %u", dbd_cnid);
+                            (void)dbif_txn_abort(dbd);
+                            goto cleanup;
+                        }
+                        
                         dbif_txn_close(dbd, ret);
                         deleted++;
                     }
@@ -1089,10 +1094,14 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
 
         if (dbd_cnid < rebuild_cnid) {
             /* CNID is orphaned -> delete */
-            dbd_log(LOGSTD, "Orphaned CNID in database: %u.", dbd_cnid);
+            dbd_log(LOGSTD, "One orphaned CNID in database: %u.", dbd_cnid);
             if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
                 rqst.cnid = htonl(dbd_cnid);
-                ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
+                if ((ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID)) == -1) {
+                    dbd_log(LOGSTD, "Error deleting CNID %u", dbd_cnid);
+                    (void)dbif_txn_abort(dbd);
+                    goto cleanup;
+                }
                 dbif_txn_close(dbd, ret);
                 deleted++;
             }
@@ -1108,7 +1117,7 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
             dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
             goto cleanup;
         }
-    }
+    } /* while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) */
 
 cleanup:
     dbif_idwalk(dbd, NULL, 1); /* Close cursor */

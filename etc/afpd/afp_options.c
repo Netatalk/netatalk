@@ -12,49 +12,33 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#if STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
 #include <ctype.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <atalk/logger.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
-
-#include <atalk/paths.h>
-#include <atalk/util.h>
-#include "globals.h"
-#include "status.h"
-#include "auth.h"
-#include "dircache.h"
-
-#include <atalk/compat.h>
 
 #ifdef ADMIN_GRP
 #include <grp.h>
 #include <sys/types.h>
 #endif /* ADMIN_GRP */
+
+#include <atalk/paths.h>
+#include <atalk/util.h>
+#include <atalk/compat.h>
+
+#include "globals.h"
+#include "status.h"
+#include "auth.h"
+#include "dircache.h"
 
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))

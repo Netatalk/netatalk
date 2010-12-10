@@ -10,11 +10,6 @@
 #include <sys/param.h>
 #include <sys/cdefs.h>
 
-enum identity {
-    METAD,
-    CNID_DBD
-};
-
 struct db_param {
     char *dir;
     int logfile_autoremove;
@@ -29,8 +24,7 @@ struct db_param {
     int max_vols;
 };
 
-extern struct db_param *      db_param_read  (char *, enum identity);
-
+extern struct db_param *db_param_read  (char *);
 
 #endif /* CNID_DBD_DB_PARAM_H */
 

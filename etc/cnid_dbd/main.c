@@ -32,6 +32,7 @@
 #include <netatalk/endian.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/logger.h>
+#include <atalk/volinfo.h>
 
 #include "db_param.h"
 #include "dbif.h"
@@ -46,8 +47,10 @@
  */
 #define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER)
 
-static DBD *dbd;
+/* Global */
+struct volinfo volinfo;
 
+static DBD *dbd;
 static int exit_sig = 0;
 
 static void sig_exit(int signo)
@@ -271,6 +274,7 @@ static int get_lock(void)
 
     if (fcntl(lockfd, F_SETLK, &lock) < 0) {
         if (errno == EACCES || errno == EAGAIN) {
+            LOG(log_error, logtype_cnid, "get_lock: locked");
             exit(0);
         } else {
             LOG(log_error, logtype_cnid, "main: fcntl F_WRLCK lockfile: %s", strerror(errno));
@@ -322,7 +326,7 @@ int main(int argc, char *argv[])
     struct db_param *dbp;
     int err = 0;
     int lockfd, ctrlfd, clntfd;
-    char *dir, *logconfig;
+    char *logconfig;
 
     set_processname("cnid_dbd");
 
@@ -332,26 +336,43 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    dir = argv[1];
     ctrlfd = atoi(argv[2]);
     clntfd = atoi(argv[3]);
     logconfig = strdup(argv[4]);
     setuplog(logconfig);
 
-    switch_to_user(dir);
+    /* Load .volinfo file */
+    if (loadvolinfo(argv[1], &volinfo) == -1) {
+        LOG(log_error, logtype_cnid, "Cant load volinfo for \"%s\"", argv[1]);
+        exit(EXIT_FAILURE);
+    }
+    /* Put "/.AppleDB" at end of volpath, get path from volinfo file */
+    char dbpath[MAXPATHLEN+1];
+    if ((strlen(volinfo.v_dbpath) + strlen("/.AppleDB")) > MAXPATHLEN ) {
+        LOG(log_error, logtype_cnid, "CNID db pathname too long: \"%s\"", volinfo.v_dbpath);
+        exit(EXIT_FAILURE);
+    }
+    strncpy(dbpath, volinfo.v_dbpath, MAXPATHLEN - strlen("/.AppleDB"));
+    strcat(dbpath, "/.AppleDB");
+
+    if (vol_load_charsets(&volinfo) == -1) {
+        LOG(log_error, logtype_cnid, "Error loading charsets!");
+        exit(EXIT_FAILURE);
+    }
+    LOG(log_debug, logtype_cnid, "db dir: \"%s\"", dbpath);
+
+    switch_to_user(dbpath);
 
     /* Before we do anything else, check if there is an instance of cnid_dbd
        running already and silently exit if yes. */
     lockfd = get_lock();
-
-    LOG(log_info, logtype_cnid, "Startup, DB dir %s", dir);
 
     set_signal();
 
     /* SIGINT and SIGTERM are always off, unless we are in pselect */
     block_sigs_onoff(1);
 
-    if ((dbp = db_param_read(dir, CNID_DBD)) == NULL)
+    if ((dbp = db_param_read(dbpath)) == NULL)
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
@@ -368,12 +389,6 @@ int main(int argc, char *argv[])
     }
     LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
 
-    if (dbd_stamp(dbd) < 0) {
-        dbif_close(dbd);
-        exit(5);
-    }
-    LOG(log_maxdebug, logtype_cnid, "Finished checking database stamp");
-
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
         dbif_close(dbd);
         exit(3);
@@ -385,7 +400,7 @@ int main(int argc, char *argv[])
     if (dbif_close(dbd) < 0)
         err++;
 
-    if (dbif_env_remove(dir) < 0)
+    if (dbif_env_remove(dbpath) < 0)
         err++;
 
     free_lock(lockfd);
