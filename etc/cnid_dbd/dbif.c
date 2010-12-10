@@ -796,8 +796,10 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
                                      key,
                                      flags);
     
-    if (ret == DB_NOTFOUND || ret == DB_SECONDARY_BAD)
+    if (ret == DB_NOTFOUND) {
+        LOG(log_info, logtype_cnid, "key not found");
         return 0;
+    }
     if (ret) {
         LOG(log_error, logtype_cnid, "error deleting key/value from %s: %s",
             dbd->db_table[dbi].name, db_strerror(ret));
