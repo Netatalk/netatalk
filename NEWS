@@ -3,7 +3,11 @@ Changes in 2.2alpha5
 
 * UPD: afpd: new option "searchdb" which enables fast catalog searches
        using the CNID db.
-* FIX: Case-insensitive fast search with the CNID db
+* UPD: Case-insensitive fast search with the CNID db
+* UPD: cnid_dbd: afpd now passes the volume path, not the db path when
+       connecting for a volume. cnid_dbd will read the
+       ".AppleDesktop/.volinfo" file of the volume in order to figure
+       out the CNID db path and the volume charset encoding.
 
 Changes in 2.2alpha4
 ====================
