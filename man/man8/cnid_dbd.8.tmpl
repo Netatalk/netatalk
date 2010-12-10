@@ -2,12 +2,12 @@
 .\"     Title: cnid_dbd
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 07 Dec 2010
+.\"      Date: 10 Dec 2010
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "CNID_DBD" "8" "07 Dec 2010" "Netatalk 2.2" "Netatalk 2.2"
+.TH "CNID_DBD" "8" "10 Dec 2010" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -22,7 +22,7 @@
 cnid_dbd \- implement access to CNID databases through a dedicated daemon process
 .SH "SYNOPSIS"
 .HP \w'\fBcnid_dbd\fR\fB\fR\fB\fR\fB\fR\ 'u
-\fBcnid_dbd\fR\fB\fR\fB\fR\fB\fR \fIdbdir\fR \fIctrlfd\fR \fIclntfd\fR \fIlogconfig_string\fR
+\fBcnid_dbd\fR\fB\fR\fB\fR\fB\fR \fIvolpath\fR \fIctrlfd\fR \fIclntfd\fR \fIlogconfig_string\fR
 .SH "DESCRIPTION"
 .PP
 \fBcnid_dbd\fR
@@ -41,7 +41,7 @@ backend\&.
 \fBcnid_dbd\fR
 is never started via the command line or system startup scripts but only by the
 \fBcnid_metad\fR
-daemon\&. There is at most one instance of
+daemon\&. There is one instance of
 \fBcnid_dbd\fR
 per netatalk volume\&.
 .PP
@@ -100,7 +100,7 @@ database subsystem will create files named log\&.xxxxxxxxxx in the database home
 \fBlogfile_autoremove\fR
 option is specified in the
 \fIdb_param\fR
-configuration file (see below)\&.
+configuration file (see below) with a value of 0 (default 1)\&.
 .PP
 Do not use
 \fBcnid_dbd\fR
@@ -175,7 +175,11 @@ exits\&. Default: 600\&. Set this to 0 to disable the timeout\&.
 .RE
 .SH "UPDATING"
 .PP
-In order to update between Netatalk releases using different BerkeleyDB library versions, follow this steps:
+Note that the first version to appear
+\fIafter\fR
+Netatalk 2\&.1 ie Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\'t upgrade a 2\&.0\&.x version because that one didn\'t prepare the database\&.
+.PP
+In order to update between older Netatalk releases using different BerkeleyDB library versions, follow this steps:
 .sp
 .RS 4
 .ie n \{\
@@ -234,10 +238,6 @@ Again using the new BerkeleyDB utilities run
 .\}
 Start the the new version of Netatalk
 .RE
-.PP
-Note that the first version to appear
-\fIafter\fR
-Netatalk 2\&.1 ie Netatalk 2\&.1\&.1, will support BerkeleyDB updates on the fly without manual intervention\&. In other words Netatalk 2\&.1 does contain code to prepare the BerkeleyDB database for upgrades and to upgrade it in case it has been prepared before\&. That means it can\'t upgrade a 2\&.0\&.x version because that one didn\'t prepare the database\&.
 .SH "SEE ALSO"
 .PP
 \fBcnid_metad\fR(8),
