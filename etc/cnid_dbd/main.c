@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
         LOG(log_error, logtype_cnid, "Error loading charsets!");
         exit(EXIT_FAILURE);
     }
-    LOG(log_note, logtype_cnid, "db dir: \"%s\"", dbpath);
+    LOG(log_debug, logtype_cnid, "db dir: \"%s\"", dbpath);
 
     switch_to_user(dbpath);
 
