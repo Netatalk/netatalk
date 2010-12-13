@@ -218,9 +218,6 @@ struct adouble {
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 #define ADVOL_NOADOUBLE  (1 << 4)
 
-extern uint32_t adv2_disk_eid[];
-#define DISK_EID(a) (adv2_disk_eid[a])
-
 /* lock flags */
 #define ADLOCK_CLR      (0)
 #define ADLOCK_RD       (1<<0)
@@ -365,6 +362,7 @@ extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
 #define ad_unlock ad_fcntl_unlock
 
 /* ad_open.c */
+extern uint32_t get_eid   (uint32_t eid);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);

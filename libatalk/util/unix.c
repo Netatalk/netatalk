@@ -58,6 +58,31 @@ const char *getcwdpath(void)
 }
 
 /*!
+ * Make argument path absoulte
+ *
+ * @returns pointer to path or pointer to error messages on error
+ */
+const char *abspath(const char *name)
+{
+    static char buf[MAXPATHLEN + 1];
+    char *p;
+    int n;
+
+    if (name[0] == '/')
+        return name;
+
+    if ((p = getcwd(buf, MAXPATHLEN)) == NULL)
+        return strerror(errno);
+
+    n = strlen(buf);
+    if (buf[n-1] != '/')
+        buf[n++] = '/';
+        
+    strlcpy(buf + n, name, MAXPATHLEN - n);
+    return buf;
+}
+
+/*!
  * Takes a buffer with a path, strips slashs, returns basename
  *
  * @param p (rw) path

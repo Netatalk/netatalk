@@ -37,6 +37,14 @@
 
 #include "ad_private.h"
 
+static const u_int32_t set_eid[] = {
+    0,1,2,3,4,5,6,7,8,
+    9,10,11,12,13,14,15,
+    AD_DEV, AD_INO, AD_SYN, AD_ID
+};
+
+#define EID_DISK(a) (set_eid[a])
+
 /*
  * Rebuild any header information that might have changed.
  */
@@ -66,7 +74,7 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
         if ( ad->ad_eid[ eid ].ade_off == 0 ) {
             continue;
         }
-        temp = htonl( DISK_EID(eid) );
+        temp = htonl( EID_DISK(eid) );
         memcpy(buf, &temp, sizeof( temp ));
         buf += sizeof( temp );
 

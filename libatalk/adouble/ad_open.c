@@ -184,10 +184,21 @@ static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
     {0, 0, 0}
 };
 
-uint32_t adv2_disk_eid[] = {
-    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
-    AD_DEV, AD_INO, AD_SYN, AD_ID
-};
+uint32_t get_eid(uint32_t eid)
+{
+    if (eid <= 15)
+        return eid;
+    if (eid == AD_DEV)
+        return ADEID_PRIVDEV;
+    if (eid == AD_INO)
+        return ADEID_PRIVINO;
+    if (eid == AD_SYN)
+        return ADEID_PRIVSYN;
+    if (eid == AD_ID)
+        return ADEID_PRIVID;
+
+    return 0;
+}
 
 /* ----------------------------------- */
 static int new_ad_header(const char *path, struct adouble *ad, int adflags)
@@ -260,7 +271,7 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {
         memcpy(&eid, buf, sizeof( eid ));
-        eid = DISK_EID(ntohl( eid ));
+        eid = get_eid(ntohl(eid));
         buf += sizeof( eid );
         memcpy(&off, buf, sizeof( off ));
         off = ntohl( off );
@@ -306,6 +317,8 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
 
     memcpy(&ad->ad_magic, buf, sizeof( ad->ad_magic ));
     memcpy(&ad->ad_version, buf + ADEDOFF_VERSION, sizeof( ad->ad_version ));
+    ad->ad_magic = ntohl( ad->ad_magic );
+    ad->ad_version = ntohl( ad->ad_version );
 
     if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION2)) {
         LOG(log_error, logtype_default, "ad_open: can't parse AppleDouble header.");
@@ -333,6 +346,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
     /* figure out all of the entry offsets and lengths. if we aren't
      * able to read a resource fork entry, bail. */
     nentries = len / AD_ENTRY_LEN;
+    LOG(log_error, logtype_default, "nentries: %d", nentries);
     parse_entries(ad, buf, nentries);
     if (!ad_getentryoff(ad, ADEID_RFORK)
         || (ad_getentryoff(ad, ADEID_RFORK) > sizeof(ad->ad_data))
@@ -354,6 +368,7 @@ static int ad_header_read(struct adouble *ad, struct stat *hst)
             return 1; /* fail silently */
         }
     }
+
     ad->ad_rlen = hst->st_size - ad_getentryoff(ad, ADEID_RFORK);
 
     return 0;
@@ -962,6 +977,88 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad->ad_rlen = 0;
 }
 
+static const char *adflags2logstr(int adflags)
+{
+    int first = 1;
+    static char buf[64];
+
+    buf[0] = 0;
+
+    if (adflags & ADFLAGS_DF) {
+        strlcat(buf, "DF", 64);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_RF) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "RF", 64);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_HF) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "HF", 64);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_NOHF) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "NOHF", 64);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_DIR) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "DIR", 64);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_RDONLY) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "RDONLY", 64);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_OPENFORKS) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "OF", 64);
+        first = 0;
+    }
+    return buf;
+}
+
+static const char *oflags2logstr(int oflags)
+{
+    int first = 1;
+    static char buf[64];
+
+    buf[0] = 0;
+
+    if (oflags & O_RDONLY) {
+        strlcat(buf, "O_RDONLY", 64);
+        first = 0;
+    }
+    if (oflags & O_RDWR) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "O_RDWR", 64);
+        first = 0;
+    }
+    if (oflags & O_CREAT) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "O_CREAT", 64);
+        first = 0;
+    }
+    if (oflags & O_EXCL) {
+        if (!first)
+            strlcat(buf, "|", 64);
+        strlcat(buf, "O_EXCL", 64);
+        first = 0;
+    }
+    return buf;
+}
+
 /*!
  * Open data-, metadata(header)- or ressource fork
  *
@@ -978,7 +1075,6 @@ void ad_init(struct adouble *ad, int flags, int options)
  *                ADFLAGS_HF:        open header (metadata) file \n
  *                ADFLAGS_NOHF:      it's not an error if header file couldn't be created \n
  *                ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags \n
- *                ADFLAGS_NOADOUBLE: dont create adouble files if not necessary \n
  *                ADFLAGS_RDONLY:    open read only \n
  *                ADFLAGS_OPENFORKS: check for open forks from other processes
  *
@@ -999,6 +1095,9 @@ void ad_init(struct adouble *ad, int flags, int options)
  */
 int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
 {
+    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s, %s, 0%04o)",
+        abspath(path), adflags2logstr(adflags), oflags2logstr(oflags), mode);
+
     if (ad->ad_inited != AD_INITED) {
         ad->ad_inited = AD_INITED;
         ad->ad_refcount = 1;

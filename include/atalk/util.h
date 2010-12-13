@@ -141,6 +141,7 @@ extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
  * unix.c
  *****************************************************************/
 
+extern const char *abspath(const char *name);
 extern const char *getcwdpath(void);
 extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);

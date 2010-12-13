@@ -45,6 +45,7 @@ char *strchr (), *strrchr ();
 #include <atalk/logger.h>
 #include <atalk/vfs.h>
 #include <atalk/uuid.h>
+#include <atalk/ea.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -151,12 +152,7 @@ typedef struct _special_folder {
 
 static const _special_folder special_folders[] = {
     {"Network Trash Folder",     1,  0777,  1},
-    {"Temporary Items",          1,  0777,  1},
     {".AppleDesktop",            1,  0777,  0},
-#if 0
-    {"TheFindByContentFolder",   0,     0,  1},
-    {"TheVolumeSettingsFolder",  0,     0,  1},
-#endif
     {NULL, 0, 0, 0}};
 
 /* Forward declarations */
