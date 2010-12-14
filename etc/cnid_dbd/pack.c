@@ -78,10 +78,9 @@ int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 /* --------------- */
 int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 {
-    char buffer[MAXPATHLEN +2];
+    static char buffer[MAXPATHLEN +2];
     uint16_t flags = CONV_TOLOWER;
     memset(skey, 0, sizeof(DBT));
-    skey->data = (char *)pdata->data + CNID_NAME_OFS;
 
     if (convert_charset(volinfo.v_volcharset,
                         volinfo.v_volcharset,
