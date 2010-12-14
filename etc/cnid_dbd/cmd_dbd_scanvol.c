@@ -44,11 +44,9 @@
 #define ADDIR_OK (addir_ok == 0)
 #define ADFILE_OK (adfile_ok == 0)
 
-/* These must be accessible for cmd_dbd_* funcs */
-struct volinfo        *myvolinfo;
-char                  cwdbuf[MAXPATHLEN+1];
 
-/* Some static vars */
+static struct volinfo *myvolinfo;
+static char           cwdbuf[MAXPATHLEN+1];
 static DBD            *dbd;
 static DBD            *dbd_rebuild;
 static dbd_flags_t    dbd_flags;

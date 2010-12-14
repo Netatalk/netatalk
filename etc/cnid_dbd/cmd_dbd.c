@@ -82,7 +82,7 @@
 
 int nocniddb = 0;               /* Dont open CNID database, only scan filesystem */
 volatile sig_atomic_t alarmed;
-struct volinfo volinfo;
+struct volinfo volinfo; /* needed by pack.c:idxname() */
 
 static DBD *dbd;
 static int verbose;             /* Logging flag */
