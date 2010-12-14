@@ -553,7 +553,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
         LOG(log_info, logtype_cnid, "Reindexing name index...");
 
     int version = CNID_VERSION;
-    if (dbd->db_envhome) {
+    if (dbd->db_envhome && !reindex) {
         if ((version = dbif_getversion(dbd)) == -1)
             return -1;
     }
