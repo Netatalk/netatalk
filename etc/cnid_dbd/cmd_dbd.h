@@ -25,8 +25,6 @@ typedef unsigned int dbd_flags_t;
 
 extern int nocniddb; /* Dont open CNID database, only scan filesystem */
 extern volatile sig_atomic_t alarmed;
-// extern struct volinfo *volinfo;
-extern char cwdbuf[MAXPATHLEN+1];
 
 extern void dbd_log(enum logtype lt, char *fmt, ...);
 extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
