@@ -90,15 +90,12 @@ extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
 extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
 extern int dbif_close(DBD *dbd);
 extern int dbif_env_remove(const char *path);
-extern int dbif_getversion(DBD *dbd);
-extern int dbif_setversion(DBD *dbd, int);
 
 extern int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
 extern int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
 extern int dbif_del(DBD *, const int, DBT *, u_int32_t);
 extern int dbif_count(DBD *, const int, u_int32_t *);
-extern int dbif_stamp(DBD *, void *, int);
 extern int dbif_search(DBD *dbd, DBT *key, char *resbuf);
 extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 extern int dbif_txn_begin(DBD *);

@@ -47,7 +47,7 @@
  */
 #define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER)
 
-/* Global */
+/* Global, needed by pack.c:idxname() */
 struct volinfo volinfo;
 
 static DBD *dbd;
