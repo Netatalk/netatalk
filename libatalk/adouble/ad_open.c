@@ -1136,16 +1136,13 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
  * @brief open metadata, possibly as root
  *
  * Return only metadata but try very hard ie at first try as user, then try as root.
+ * Caller must pass ADFLAGS_DIR for directories.
  *
  * @param name  name of file/dir
  * @param flags ADFLAGS_DIR: name is a directory \n
- *              ADFLAGS_CREATE: force creation of header file, but only as user, not as root\n
  *              ADFLAGS_OPENFORKS: test if name is open by another afpd process
  *
  * @param adp   pointer to struct adouble
- *
- * @note caller MUST pass ADFLAGS_DIR for directories. Whether ADFLAGS_CREATE really creates
- *       a adouble file depends on various other volume options, eg. ADVOL_CACHE
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
@@ -1155,12 +1152,6 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 
     dir = flags & ADFLAGS_DIR;
 
-    /* Check if we shall call ad_open with O_CREAT */
-    if ( (adp->ad_options & ADVOL_CACHE)
-         && ! (adp->ad_options & ADVOL_NOADOUBLE)
-         && (flags & ADFLAGS_CREATE) ) {
-        create = O_CREAT | O_RDWR;
-    }
     if ((ret = ad_open(name, ADFLAGS_HF | dir, create, 0666, adp)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {

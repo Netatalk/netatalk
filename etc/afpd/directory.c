@@ -1382,20 +1382,8 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_FINFO)))) {
 
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if ( !ad_metadata( upath, ADFLAGS_CREATE|ADFLAGS_DIR, &ad) ) {
+        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) )
             isad = 1;
-            if (ad.ad_md->adf_flags & O_CREAT) {
-                /* We just created it */
-                ad_setname(&ad, s_path->m_name);
-                ad_setid( &ad,
-                          s_path->st.st_dev,
-                          s_path->st.st_ino,
-                          dir->d_did,
-                          dir->d_pdid,
-                          vol->v_stamp);
-                ad_flush( &ad);
-            }
-        }
     }
 
     pdid = dir->d_pdid;

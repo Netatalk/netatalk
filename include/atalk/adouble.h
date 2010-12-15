@@ -210,7 +210,6 @@ struct adouble {
 #define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
 #define ADFLAGS_RDONLY    (1<<5)  /* don't try readwrite */
 #define ADFLAGS_OPENFORKS (1<<6)  /* check for open fork in ad_metadata function */
-#define ADFLAGS_CREATE    (1<<7)
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)
