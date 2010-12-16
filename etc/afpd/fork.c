@@ -10,23 +10,19 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-
 #include <string.h>
 #include <errno.h>
-
-#include <atalk/adouble.h>
-#include <atalk/logger.h>
-
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <inttypes.h>
 
 #include <netatalk/at.h>
-
 #include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/afp.h>
-
+#include <atalk/adouble.h>
+#include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 
@@ -252,15 +248,15 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     struct vol      *vol;
     struct dir      *dir;
     struct ofork    *ofork, *opened;
-    struct adouble      *adsame = NULL;
-    size_t      buflen;
-    int         ret, adflags, eid;
-    u_int32_t           did;
-    u_int16_t       vid, bitmap, access, ofrefnum;
-    char        fork, *path, *upath;
-    struct stat         *st;
-    u_int16_t           bshort;
-    struct path         *s_path;
+    struct adouble  *adsame = NULL;
+    size_t          buflen;
+    int             ret, adflags, eid;
+    uint32_t        did;
+    uint16_t        vid, bitmap, access, ofrefnum;
+    char            fork, *path, *upath;
+    struct stat     *st;
+    uint16_t        bshort;
+    struct path     *s_path;
 
     ibuf++;
     fork = *ibuf++;
@@ -317,8 +313,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         if (check_access(upath, access ) < 0) {
             return AFPERR_ACCESS;
         }
-    }
-    else {
+    } else {
         if (file_access(s_path, access ) < 0) {
             return AFPERR_ACCESS;
         }
@@ -338,10 +333,10 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if ( fork == OPENFORK_DATA ) {
         eid = ADEID_DFORK;
-        adflags = ADFLAGS_DF|ADFLAGS_HF;
+        adflags = ADFLAGS_DF | ADFLAGS_HF;
     } else {
         eid = ADEID_RFORK;
-        adflags = ADFLAGS_HF;
+        adflags = ADFLAGS_RF | ADFLAGS_HF;
     }
 
     path = s_path->m_name;
@@ -367,8 +362,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                         goto openfork_err;
                     }
                     adflags = ADFLAGS_DF;
-                }
-                else {
+                } else {
                     /* here's the deal. we only try to create the resource
                      * fork if the user wants to open it for write acess. */
                     if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
