@@ -185,7 +185,7 @@ int ad_close( struct adouble *ad, int adflags)
 
     if ((adflags & ADFLAGS_DF)
         && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
-        && --ad->ad_data_fork.adf_refcount == 0) {
+        && (--ad->ad_data_fork.adf_refcount == 0)) {
         if (ad->ad_data_fork.adf_syml != NULL) {
             free(ad->ad_data_fork.adf_syml);
             ad->ad_data_fork.adf_syml = 0;
@@ -195,20 +195,33 @@ int ad_close( struct adouble *ad, int adflags)
         }
         ad_data_fileno(ad) = -1;
         adf_lock_free(&ad->ad_data_fork);
+        ad->ad_adflags &= ~ADFLAGS_DF;
     }
 
-    if (!( adflags & ADFLAGS_HF )) {
-        return err;
-    }
-
-    /* meta/resource fork */
-
-    if ( ad_meta_fileno(ad) != -1 && !(--ad->ad_md->adf_refcount)) {
-        if ( close( ad_meta_fileno(ad) ) < 0 ) {
+    if ((adflags & ADFLAGS_HF)
+        && (ad_meta_fileno(ad) != -1)
+        && (--ad->ad_md->adf_refcount == 0)) {
+        if ( close( ad_meta_fileno(ad) ) < 0 )
             err = -1;
-        }
         ad_meta_fileno(ad) = -1;
         adf_lock_free(ad->ad_md);
+        ad->ad_adflags &= ~ADFLAGS_HF;
+    }
+
+    if ((adflags & ADFLAGS_RF)
+        && (--ad->ad_resource_fork.adf_refcount == 0)
+        && (ad->ad_resforkbuf)) {
+        free(ad->ad_resforkbuf);
+        ad->ad_resforkbuf = NULL;
+        ad->ad_adflags &= ~ADFLAGS_RF;
+    }
+
+    /* If both header and ressource are not open anymore, deallocate fullpath */
+    if (!(adflags & (ADFLAGS_HF | ADFLAGS_RF))) {
+        if (ad->ad_fullpath) {
+            bdestroy(ad->ad_fullpath);
+            ad->ad_fullpath = NULL;
+        }
     }
 
     return err;

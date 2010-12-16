@@ -43,6 +43,7 @@
 #include <sys/time.h>
 
 #include <netatalk/endian.h>
+#include <atalk/bstrlib.h>
 
 /* version info */
 #define AD_VERSION2     0x00020000
@@ -188,19 +189,18 @@ struct adouble {
     int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
     unsigned int        ad_inited;
     int                 ad_options;
-    int                 ad_fileordir;
     int                 ad_refcount; /* used in afpd/ofork.c */
+    void                *ad_resforkbuf;  /* buffer for AD_VERSION_EA ressource fork */
+    size_t              ad_resforkbufsize; /* size of ad_resforkbuf */
     off_t               ad_rlen;     /* ressource fork len with AFP 3.0
                                         the header parameter size is too small. */
     char                *ad_m_name;   /* mac name for open fork */
     int                 ad_m_namelen;
+    bstring             ad_fullpath; /* adouble EA need this */
     struct adouble_fops *ad_ops;
-    uint16_t            ad_open_forks;      /* open forks (by others) */
-#ifdef USE_MMAPPED_HEADERS
-    char                *ad_data;
-#else
+    uint16_t            ad_open_forks; /* open forks (by others) */
+
     char                ad_data[AD_DATASZ_MAX];
-#endif
 };
 
 #define ADFLAGS_DF        (1<<0)
@@ -361,7 +361,6 @@ extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
 #define ad_unlock ad_fcntl_unlock
 
 /* ad_open.c */
-extern uint32_t get_eid   (uint32_t eid);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);
