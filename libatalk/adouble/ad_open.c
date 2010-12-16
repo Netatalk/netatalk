@@ -713,10 +713,10 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
+    adf_lock_init(ad->ad_md);
 
     switch (ad->ad_flags) {
     case AD_VERSION2:
-        adf_lock_init(ad->ad_md);
         ret = ad_open_hf_v2(path, adflags, oflags, mode, ad);
         break;
     case AD_VERSION_EA:
@@ -751,6 +751,8 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
         ad->ad_resource_fork.adf_flags &= ~( O_TRUNC | O_CREAT ); /* not new anymore */
         free(ad->ad_resforkbuf);
         ad->ad_resforkbuf = NULL;
+    } else {
+        adf_lock_init(&ad->ad_resource_fork);
     }
 
     if ((ad->ad_rlen = sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, NULL, 0)) <= 0)
@@ -938,8 +940,8 @@ int ad_mkdir( const char *path, int mode)
 
 void ad_init(struct adouble *ad, int flags, int options)
 {
-    ad->ad_inited = 0;
-    ad->ad_flags = flags;
+    memset(ad, 0, sizeof(struct adouble));
+
     if (flags == AD_VERSION2) {
         ad->ad_ops = &ad_adouble;
         ad->ad_md = &ad->ad_resource_fork;
@@ -953,15 +955,11 @@ void ad_init(struct adouble *ad, int flags, int options)
         return;
     }
 
+    ad->ad_flags = flags;
     ad->ad_options = options;
-
     ad_data_fileno(ad) = -1;
     ad_reso_fileno(ad) = -1;
     ad_meta_fileno(ad) = -1;
-
-    /* following can be read even if there's no meda data. */
-    memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
-    ad->ad_rlen = 0;
 }
 
 static const char *adflags2logstr(int adflags)
