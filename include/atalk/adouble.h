@@ -161,8 +161,10 @@ struct ad_fd {
     char         *adf_syml;
     int          adf_flags;
     int          adf_excl;
+#if 0
     adf_lock_t   *adf_lock;
     int          adf_refcount, adf_lockcount, adf_lockmax;
+#endif
 };
 
 /* some header protection */
@@ -199,7 +201,6 @@ struct adouble {
     bstring             ad_fullpath; /* adouble EA need this */
     struct adouble_fops *ad_ops;
     uint16_t            ad_open_forks; /* open forks (by others) */
-
     char                ad_data[AD_DATASZ_MAX];
 };
 

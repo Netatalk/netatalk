@@ -66,9 +66,9 @@ static int XLATE_FCNTL_LOCK(int type)
 /* ----------------------- */
 static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen) 
 {
- return (!alen && a <= b) || 
-	(!blen && b <= a) || 
-	( (a + alen > b) && (b + blen > a) );
+    return (!alen && a <= b) || 
+        (!blen && b <= a) || 
+        ( (a + alen > b) && (b + blen > a) );
 }
 
 /* allocation for lock regions. we allocate aggressively and shrink
@@ -79,6 +79,7 @@ static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
 /* remove a lock and compact space if necessary */
 static void adf_freelock(struct ad_fd *ad, const int i)
 {
+#if 0
     adf_lock_t *lock = ad->adf_lock + i;
 
     if (--(*lock->refcount) < 1) {
@@ -111,6 +112,7 @@ static void adf_freelock(struct ad_fd *ad, const int i)
 		ad->adf_lockmax = ad->adf_lockcount + ARRAY_FREE_DELTA;
 	    }
     }
+#endif
 }
 
 
@@ -123,6 +125,7 @@ static void adf_freelock(struct ad_fd *ad, const int i)
  */
 static void adf_unlock(struct ad_fd *ad, const int fork)
 {
+#if 0
     adf_lock_t *lock = ad->adf_lock;
     int i;
 
@@ -137,13 +140,14 @@ static void adf_unlock(struct ad_fd *ad, const int fork)
 	 lock = ad->adf_lock;       
       }
     }
+#endif
 }
 
 /* relock any byte lock that overlaps off/len. unlock everything
  * else. */
-static void adf_relockrange(struct ad_fd *ad, int fd,
-				       const off_t off, const off_t len)
+static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
 {
+#if 0
     adf_lock_t *lock = ad->adf_lock;
     int i;
     
@@ -151,15 +155,17 @@ static void adf_relockrange(struct ad_fd *ad, int fd,
       if (OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
 	set_lock(fd, F_SETLK, &lock[i].lock);
     }
+#endif
 }
 
 
 /* find a byte lock that overlaps off/len for a particular open fork */
 static int adf_findlock(struct ad_fd *ad,
-				   const int fork, const int type,
-				   const off_t off,
-				   const off_t len)
+                        const int fork, const int type,
+                        const off_t off,
+                        const off_t len)
 {
+#if 0
   adf_lock_t *lock = ad->adf_lock;
   int i;
   
@@ -171,17 +177,18 @@ static int adf_findlock(struct ad_fd *ad,
       return i;
     }
   }
-
+#endif
   return -1;
 }
 
 
 /* search other fork lock lists */
 static int adf_findxlock(struct ad_fd *ad, 
-				     const int fork, const int type,
-				     const off_t off,
-				     const off_t len)
+                         const int fork, const int type,
+                         const off_t off,
+                         const off_t len)
 {
+#if 0
   adf_lock_t *lock = ad->adf_lock;
   int i;
   
@@ -192,6 +199,7 @@ static int adf_findxlock(struct ad_fd *ad,
 	OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
 	    return i;
   } 
+#endif
   return -1;
 }
 
@@ -262,8 +270,9 @@ int start = off;
 
 /* ------------------ */
 int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
-		  const off_t off, const off_t len, const int fork)
+                  const off_t off, const off_t len, const int fork)
 {
+#if 0
   struct flock lock;
   struct ad_fd *adf;
   adf_lock_t *adflock;
@@ -401,6 +410,8 @@ fcntl_lock_err:
   lock.l_type = F_UNLCK;
   if (!adf->adf_excl) set_lock(adf->adf_fd, F_SETLK, &lock);
   return -1;
+#endif
+  return 0;
 }
 
 /* -------------------------
@@ -413,6 +424,7 @@ fcntl_lock_err:
 */
 static int testlock(struct ad_fd *adf, off_t off, off_t len)
 {
+#if 0
   struct flock lock;
   adf_lock_t *plock;
   int i;
@@ -441,6 +453,8 @@ static int testlock(struct ad_fd *adf, off_t off, off_t len)
       return 0;
   }
   return 1;
+#endif
+  return 0;
 }
 
 /* --------------- */

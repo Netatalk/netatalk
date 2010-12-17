@@ -523,7 +523,6 @@ static int ad_open_df(const char *path, int adflags, int oflags, int mode, struc
             /* just created, set owner if admin (root) */
             ad_chown(path, &st_dir);
         }
-        adf_lock_init(&ad->ad_data_fork);
     } else {
         /* the file is already open... but */
         if ((oflags & ( O_RDWR | O_WRONLY))
@@ -541,7 +540,6 @@ static int ad_open_df(const char *path, int adflags, int oflags, int mode, struc
          * idem for ressource fork.
          */
     }
-    ad->ad_data_fork.adf_refcount++;
 
     return 0;
 }
@@ -694,26 +692,8 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
     LOG(log_maxdebug, logtype_default, "ad_open_hf(\"%s/%s\", adf: 0x%04x, of: 0x%04x)",
         getcwdpath(), path, adflags, oflags);
 
-    if (ad->ad_md->adf_refcount) {
-        /* the file is already open */
-        if ((oflags & ( O_RDWR | O_WRONLY))
-            && !(ad->ad_md->adf_flags & ( O_RDWR | O_WRONLY))) {
-            if ((adflags & ADFLAGS_HF) && ad->ad_data_fork.adf_refcount)
-                /* We just have openend the df, so we have to close it now */
-                ad_close(ad, ADFLAGS_DF);
-            errno = EACCES;
-            return -1;
-        }
-        ad_refresh(ad);
-        /* it's not new anymore */
-        ad->ad_md->adf_flags &= ~( O_TRUNC | O_CREAT );
-        ad->ad_md->adf_refcount++;
-        return 0;
-    }
-
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
-    adf_lock_init(ad->ad_md);
 
     switch (ad->ad_flags) {
     case AD_VERSION2:
@@ -726,8 +706,6 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
         ret = -1;
         break;
     }
-
-    ad->ad_md->adf_refcount = 1;
 
     return ret;
 }
@@ -743,20 +721,20 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
     if (ad->ad_flags != AD_VERSION_EA)
         return 0;
 
-    LOG(log_maxdebug, logtype_default, "ad_open_hf_ea(\"%s\", adf: 0x%04x, of: 0x%04x)",
+    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", adf: 0x%04x, of: 0x%04x)",
         abspath(path), adflags, oflags);
 
-    if (ad->ad_resource_fork.adf_refcount) {
-        /* already open */
-        ad->ad_resource_fork.adf_flags &= ~( O_TRUNC | O_CREAT ); /* not new anymore */
-        free(ad->ad_resforkbuf);
-        ad->ad_resforkbuf = NULL;
-    } else {
-        adf_lock_init(&ad->ad_resource_fork);
+    if ((ad->ad_rlen = sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, NULL, 0)) <= 0) {
+        switch (errno) {
+        case ENOATTR:
+            ad->ad_rlen = 0;
+            break;
+        default:
+            LOG(log_warning, logtype_default, "ad_open_rf(\"%s\"): %s",
+                abspath(path), strerror(errno));
+            return -1;
+        }
     }
-
-    if ((ad->ad_rlen = sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, NULL, 0)) <= 0)
-        return -1;
 
     /* Round up and allocate buffer */
     size_t roundup = ((ad->ad_rlen / RFORK_EA_ALLOCSIZE) + 1) * RFORK_EA_ALLOCSIZE;
@@ -769,9 +747,6 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
     if (sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_META, ad->ad_resforkbuf, ad->ad_rlen) == -1)
         return -1;
 
-    ad->ad_resource_fork.adf_refcount++;
-
-exit:
     if (ret != 0) {
         free(ad->ad_resforkbuf);
         ad->ad_resforkbuf = NULL;
@@ -960,6 +935,7 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad_data_fileno(ad) = -1;
     ad_reso_fileno(ad) = -1;
     ad_meta_fileno(ad) = -1;
+    ad->ad_inited = AD_INITED;
 }
 
 static const char *adflags2logstr(int adflags)
@@ -1019,7 +995,7 @@ static const char *oflags2logstr(int oflags)
 
     buf[0] = 0;
 
-    if ((oflags & O_RDONLY) == O_RDONLY) {
+    if (oflags == O_RDONLY) {
         strlcat(buf, "O_RDONLY", 64);
         first = 0;
     }
@@ -1085,23 +1061,17 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
     LOG(log_debug, logtype_default, "ad_open(\"%s\", %s, %s, 0%04o)",
         abspath(path), adflags2logstr(adflags), oflags2logstr(oflags), mode);
 
-    if (ad->ad_inited != AD_INITED) {
+    if (ad->ad_inited != AD_INITED)
+        AFP_PANIC("ad_open: not initialized");
+
+    if (ad->ad_fullpath == NULL) {
         if ((ad->ad_fullpath = bfromcstr(abspath(path))) == NULL) {
             ret = -1;
             goto exit;
         }
-        ad->ad_inited = AD_INITED;
-        ad->ad_refcount = 1;
-        ad->ad_open_forks = 0;
-        ad->ad_resource_fork.adf_refcount = 0;
-        ad->ad_data_fork.adf_refcount = 0;
-        ad->ad_data_fork.adf_syml = 0;
-    } else {
-        ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
-        /* XXX not true if we have a meta data fork ? */
-        if ((ad->ad_resource_fork.adf_refcount > ad->ad_data_fork.adf_refcount))
-            ad->ad_open_forks |= ATTRBIT_ROPEN;
     }
+
+    ad->ad_refcount++;
 
     if ((adflags & ADFLAGS_DF)) {
         if (ad_open_df(path, adflags, oflags, mode, ad) != 0) {
