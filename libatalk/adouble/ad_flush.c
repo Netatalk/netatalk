@@ -35,7 +35,7 @@
 #include <atalk/ea.h>
 #include <atalk/logger.h>
 
-#include "ad_private.h"
+#include "ad_lock.h"
 
 static const u_int32_t set_eid[] = {
     0,1,2,3,4,5,6,7,8,
@@ -178,17 +178,17 @@ int ad_flush(struct adouble *ad)
     return( 0 );
 }
 
-/* use refcounts so that we don't have to re-establish fcntl locks. */
-int ad_close( struct adouble *ad, int adflags)
+/*!
+ * Close a struct adouble freeing all resources
+ */
+int ad_close( struct adouble *ad, int adflags _U_)
 {
-    int         err = 0;
+    int err = 0;
 
-    if ((adflags & ADFLAGS_DF)
-        && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
-        && (--ad->ad_data_fork.adf_refcount == 0)) {
-        if (ad->ad_data_fork.adf_syml != NULL) {
+    if (ad_data_fileno(ad) != -1) {
+        if ((ad_data_fileno(ad) == -2) && (ad->ad_data_fork.adf_syml != NULL)) {
             free(ad->ad_data_fork.adf_syml);
-            ad->ad_data_fork.adf_syml = 0;
+            ad->ad_data_fork.adf_syml = NULL;
         } else {
             if ( close( ad_data_fileno(ad) ) < 0 )
                 err = -1;
@@ -198,9 +198,7 @@ int ad_close( struct adouble *ad, int adflags)
         ad->ad_adflags &= ~ADFLAGS_DF;
     }
 
-    if ((adflags & ADFLAGS_HF)
-        && (ad_meta_fileno(ad) != -1)
-        && (--ad->ad_md->adf_refcount == 0)) {
+    if (ad_meta_fileno(ad) != -1) {
         if ( close( ad_meta_fileno(ad) ) < 0 )
             err = -1;
         ad_meta_fileno(ad) = -1;
@@ -208,20 +206,15 @@ int ad_close( struct adouble *ad, int adflags)
         ad->ad_adflags &= ~ADFLAGS_HF;
     }
 
-    if ((adflags & ADFLAGS_RF)
-        && (--ad->ad_resource_fork.adf_refcount == 0)
-        && (ad->ad_resforkbuf)) {
+    if (ad->ad_resforkbuf) {
         free(ad->ad_resforkbuf);
         ad->ad_resforkbuf = NULL;
         ad->ad_adflags &= ~ADFLAGS_RF;
     }
 
-    /* If both header and ressource are not open anymore, deallocate fullpath */
-    if (!(adflags & (ADFLAGS_HF | ADFLAGS_RF))) {
-        if (ad->ad_fullpath) {
-            bdestroy(ad->ad_fullpath);
-            ad->ad_fullpath = NULL;
-        }
+    if (ad->ad_fullpath) {
+        bdestroy(ad->ad_fullpath);
+        ad->ad_fullpath = NULL;
     }
 
     return err;
