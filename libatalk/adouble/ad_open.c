@@ -49,7 +49,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 
-#include "ad_private.h"
+#include "ad_lock.h"
 
 #ifndef MAX
 #define MAX(a, b)  ((a) < (b) ? (b) : (a))

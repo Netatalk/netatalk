@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-#include "ad_private.h"
+#include "ad_lock.h"
 
 /* translate between ADLOCK styles and specific locking mechanisms */
 #define XLATE_FLOCK(type) ((type) == ADLOCK_RD ? LOCK_SH : \
