@@ -710,7 +710,6 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
     return ret;
 }
 
-#define RFORK_EA_ALLOCSIZE (128*1024) /* 128k */
 /*!
  * Open EA with resfork, only for AD_VERSION_EA, a nullop otherwise
  */
@@ -744,7 +743,7 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
     ad->ad_resforkbufsize = roundup;
 
     /* Read the EA into the buffer */
-    if (sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_META, ad->ad_resforkbuf, ad->ad_rlen) == -1)
+    if (sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1)
         return -1;
 
     if (ret != 0) {

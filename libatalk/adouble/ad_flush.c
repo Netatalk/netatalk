@@ -34,6 +34,8 @@
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
 #include <atalk/logger.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #include "ad_lock.h"
 
@@ -163,7 +165,7 @@ int ad_flush(struct adouble *ad)
             }
             break;
         case AD_VERSION_EA:
-            if (sys_fsetxattr(ad->ad_md->adf_fd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
+            if (sys_lsetxattr(cfrombstr(ad->ad_fullpath), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
                 LOG(log_error, logtype_afpd, "ad_flush: sys_fsetxattr error: %s",
                     strerror(errno));
                 return -1;

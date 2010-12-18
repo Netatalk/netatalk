@@ -140,6 +140,8 @@
 #define AD_DATASZ   AD_DATASZ_EA
 #endif
 
+#define RFORK_EA_ALLOCSIZE (128*1024) /* 128k */
+
 typedef u_int32_t cnid_t;
 
 struct ad_entry {

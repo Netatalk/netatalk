@@ -7,12 +7,15 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/adouble.h>
-
+#include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <errno.h>
 
+#include <atalk/adouble.h>
+#include <atalk/ea.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #ifndef MIN
 #define MIN(a,b)	((a)<(b)?(a):(b))
@@ -45,7 +48,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
 }
 
 /* end is always 0 */
-ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int end, const char *buf, const size_t buflen)
+ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const char *buf, size_t buflen)
 {
     struct stat		st;
     ssize_t		cc;
@@ -57,36 +60,49 @@ ssize_t ad_write(struct adouble *ad, const u_int32_t eid, off_t off, const int e
     }
     
     if ( eid == ADEID_DFORK ) {
-	if ( end ) {
-	    if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
-		return( -1 );
-	    }
-	    off = st.st_size - off;
-	}
-	cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
+        if ( end ) {
+            if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
+                return( -1 );
+            }
+            off = st.st_size - off;
+        }
+        cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
     } else if ( eid == ADEID_RFORK ) {
-        off_t    r_off;
+        if (ad->ad_flags != AD_VERSION_EA) {
+            off_t    r_off;
+            if ( end ) {
+                if ( fstat( ad_data_fileno(ad), &st ) < 0 )
+                    return( -1 );
+                off = st.st_size - off -ad_getentryoff(ad, eid);
+            }
+            r_off = ad_getentryoff(ad, eid) + off;
+            cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
 
-	if ( end ) {
-	    if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
-		return( -1 );
-	    }
-	    off = st.st_size - off -ad_getentryoff(ad, eid);
-	}
-	r_off = ad_getentryoff(ad, eid) + off;
-	cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
-
-	/* sync up our internal buffer  FIXME always false? */
-	if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
-	    memcpy(ad->ad_data + r_off, buf, MIN(sizeof(ad->ad_data) -r_off, cc));
+            /* sync up our internal buffer  FIXME always false? */
+            if (r_off < ad_getentryoff(ad, ADEID_RFORK))
+                memcpy(ad->ad_data + r_off, buf, MIN(sizeof(ad->ad_data) -r_off, cc));
+            if ( ad->ad_rlen < off + cc )
+                ad->ad_rlen = off + cc;
+        } else { /* AD_VERSION_EA */
+            if ((off + buflen) > ad->ad_resforkbufsize) {
+                free(ad->ad_resforkbuf);
+                size_t roundup = (((off + buflen) / RFORK_EA_ALLOCSIZE) + 1) * RFORK_EA_ALLOCSIZE;
+                if ((ad->ad_resforkbuf = malloc(roundup)) == NULL)
+                    return -1;
+                ad->ad_resforkbufsize = roundup;
+            }
+            memcpy(ad->ad_resforkbuf + off, buf, buflen);
+            if ((off + buflen) > ad->ad_rlen)
+                ad->ad_rlen = off + buflen;
+            
+            if (sys_lsetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
+                return -1;
+            cc = buflen;
         }
-        if ( ad->ad_rlen < off + cc ) {
-             ad->ad_rlen = off + cc;
-        }
-    }
-    else {
+    } else {
         return -1; /* we don't know how to write if it's not a ressource or data fork */
     }
+
     return( cc );
 }
 
@@ -151,10 +167,10 @@ char            c = 0;
 /* ------------------------ */
 int ad_rtruncate( struct adouble *ad, const off_t size)
 {
-    if ( sys_ftruncate( ad_reso_fileno(ad),
-	    size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
-	return -1;
-    }
+    if (ad->ad_flags != AD_VERSION_EA)
+        if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 )
+            return -1;
+
     ad->ad_rlen = size;    
 
     return 0;
@@ -162,8 +178,8 @@ int ad_rtruncate( struct adouble *ad, const off_t size)
 
 int ad_dtruncate(struct adouble *ad, const off_t size)
 {
-    if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
-      return -1;
-    }
+    if (sys_ftruncate(ad_data_fileno(ad), size) < 0)
+        return -1;
+
     return 0;
 }
