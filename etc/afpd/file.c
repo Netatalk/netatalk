@@ -640,7 +640,7 @@ int getfilparams(struct vol *vol,
         }
     }
     rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp);
-    if ( adp ) {
+    if ( adp == &ad ) {
         ad_close_metadata( adp);
     }
 
