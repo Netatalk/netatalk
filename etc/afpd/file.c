@@ -650,7 +650,7 @@ int getfilparams(struct vol *vol,
 /* ----------------------------- */
 int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    struct adouble	ad, *adp;
+    struct adouble	ad;
     struct vol		*vol;
     struct dir		*dir;
     struct ofork        *of = NULL;
@@ -666,9 +666,8 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     memcpy(&vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
 
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
+    if (NULL == ( vol = getvolbyvid( vid )) )
         return( AFPERR_PARAM );
-    }
 
     if (vol->v_flags & AFPVOL_RO)
         return AFPERR_VLOCK;
@@ -676,44 +675,35 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     memcpy(&did, ibuf, sizeof( did));
     ibuf += sizeof( did );
 
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
+    if (NULL == ( dir = dirlookup( vol, did )) )
         return afp_errno;
-    }
 
-    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
+    if (NULL == ( s_path = cname( vol, dir, &ibuf )) )
         return get_afp_errno(AFPERR_PARAM);
-    }
 
-    if ( *s_path->m_name == '\0' ) {
+    if ( *s_path->m_name == '\0' )
         return( AFPERR_BADTYPE );
-    }
 
     upath = s_path->u_name;
+    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
     
     /* if upath is deleted we already in trouble anyway */
     if ((of = of_findname(s_path))) {
-        adp = of->of_ad;
-    } else {
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        adp = &ad;
-    }
-    if ( creatf) {
-        /* on a hard create, fail if file exists and is open */
-        if (of)
+        if (creatf)
             return AFPERR_BUSY;
-        openf = O_RDWR|O_CREAT|O_TRUNC;
-    } else {
-    	/* on a soft create, if the file is open then ad_open won't fail
-    	   because open syscall is not called
-    	*/
-    	if (of) {
-    		return AFPERR_EXIST;
-    	}
-        openf = O_RDWR|O_CREAT|O_EXCL;
+        else
+            return AFPERR_EXIST;
     }
 
+    if ( creatf)
+        openf = O_RDWR|O_CREAT|O_TRUNC;
+    else
+    	/* on a soft create, if the file is open then ad_open won't fail
+    	   because open syscall is not called */
+        openf = O_RDWR|O_CREAT|O_EXCL;
+
     if ( ad_open( upath, ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF,
-                  openf, 0666, adp) < 0 ) {
+                  openf, 0666, &ad) < 0 ) {
         switch ( errno ) {
         case EROFS:
             return AFPERR_VLOCK;
@@ -730,24 +720,24 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
             return( AFPERR_PARAM );
         }
     }
-    if ( ad_meta_fileno( adp ) == -1 ) { /* Hard META / HF */
+    if ( ad_meta_fileno( &ad ) == -1 ) { /* Hard META / HF */
          /* on noadouble volumes, just creating the data fork is ok */
          if (vol_noadouble(vol)) {
-             ad_close( adp, ADFLAGS_DF );
+             ad_close( &ad, ADFLAGS_DF );
              goto createfile_done;
          }
          /* FIXME with hard create on an existing file, we already
           * corrupted the data file.
           */
          netatalk_unlink( upath );
-         ad_close( adp, ADFLAGS_DF );
+         ad_close( &ad, ADFLAGS_DF );
          return AFPERR_ACCESS;
     }
 
     path = s_path->m_name;
-    ad_setname(adp, path);
-    ad_flush( adp);
-    ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
+    ad_setname(&ad, path);
+    ad_flush(&ad);
+    ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:
     curdir->offcnt++;
@@ -1065,8 +1055,8 @@ setfilparam_done:
 
     if (isad) {
         ad_flush( adp);
-        ad_close_metadata( adp);
-
+        if (adp == &ad)
+            ad_close_metadata( adp);
     }
 
     if (change_parent_mdate && gettimeofday(&tv, NULL) == 0) {
@@ -1355,7 +1345,8 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     setvoltime(obj, d_vol );
 
 copy_exit:
-    ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
+    if (adp == &ad)
+        ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
     return( retvalue );
 }
 
@@ -1777,31 +1768,11 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
     cnid_t        did  = param->did;
     cnid_t	  aint;
     
-    if ( lstat(de->d_name, &path.st)<0 )
+    if ( lstat(de->d_name, &path.st) < 0 )
         return 0;
     
     /* update or add to cnid */
     aint = cnid_add(vol->v_cdb, &path.st, did, de->d_name, strlen(de->d_name), 0); /* ignore errors */
-
-#if AD_VERSION > AD_VERSION1
-    if (aint != CNID_INVALID && !S_ISDIR(path.st.st_mode)) {
-        struct adouble  ad, *adp;
-
-        path.st_errno = 0;
-        path.st_valid = 1;
-        path.u_name = de->d_name;
-            
-        adp = of_ad(vol, &path, &ad);
-            
-        if ( ad_open_metadata( de->d_name, 0, 0, adp ) < 0 ) {
-            return 0;
-        }
-        if (ad_setid(adp, path.st.st_dev, path.st.st_ino, aint, did, vol->v_stamp)) {
-            ad_flush(adp);
-        }
-        ad_close_metadata(adp);
-    }
-#endif /* AD_VERSION > AD_VERSION1 */
 
     return 0;
 }
