@@ -460,6 +460,8 @@ static int testlock(struct ad_fd *adf, off_t off, off_t len)
 /* --------------- */
 int ad_testlock(struct adouble *ad, int eid, const off_t off)
 {
+    return 0;
+#if 0
   struct ad_fd *adf;
   off_t      lock_offset;
 
@@ -480,6 +482,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
     lock_offset = hf2off(off);
   }
   return testlock(adf, lock_offset, 1);
+#endif
 }
 
 /* -------------------------
@@ -490,6 +493,8 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 */
 u_int16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
 {
+    return 0;
+#if 0
   u_int16_t ret = 0;
   struct ad_fd *adf;
   off_t off;
@@ -541,6 +546,7 @@ u_int16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
   }
 
   return ret;
+#endif
 }
 
 /* -------------------------
@@ -548,6 +554,8 @@ u_int16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
 int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype,
 	             const off_t off, const off_t len, const int fork)
 {
+    return 0;
+#if 0
   struct flock lock;
   struct ad_fd *adf;
   int err;
@@ -606,6 +614,7 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
     adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
 
   return err;
+#endif
 }
 
 /* -------------------------
@@ -614,6 +623,8 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
 */
 int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
 {
+    return 0;
+#if 0
   struct ad_fd *adf;
   struct flock lock;
   int    err;
@@ -634,11 +645,14 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
   if (!err)
       adf->adf_excl = 1;
   return err;
+#endif
 }
 
 /* --------------------- */
 void ad_fcntl_unlock(struct adouble *ad, const int fork)
 {
+    return;
+#if 0
   if (ad_data_fileno(ad) != -1) {
     adf_unlock(&ad->ad_data_fork, fork);
   }
@@ -652,5 +666,5 @@ void ad_fcntl_unlock(struct adouble *ad, const int fork)
   if (ad_meta_fileno(ad) != -1) {
     adf_unlock(&ad->ad_metadata_fork, fork);
   }
-
+#endif
 }
