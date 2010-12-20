@@ -25,6 +25,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/cnid.h>
+#include <atalk/bstradd.h>
 
 #include "fork.h"
 #include "file.h"
@@ -857,6 +858,11 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     offset   = get_off_t(&ibuf, is64);
     reqcount = get_off_t(&ibuf, is64);
 
+    LOG(log_debug, logtype_afpd,
+         "afp_read(\"%s\", off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)",
+         cfrombstr(ofork->of_ad->ad_fullpath), offset, reqcount,
+         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+
     if (is64) {
         nlmask = nlchar = 0;
     }
@@ -1030,6 +1036,11 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         return( AFPERR_PARAM );
     }
 
+    LOG(log_debug, logtype_afpd,
+        "afp_flushfork(\"%s\", fork: %s)",
+        cfrombstr(ofork->of_ad->ad_fullpath),
+        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+
     if ( flushfork( ofork ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_flushfork(%s): %s", of_name(ofork), strerror(errno) );
     }
@@ -1058,6 +1069,11 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         LOG(log_error, logtype_afpd, "afpd_syncfork: of_find(%d) could not locate fork", ofrefnum );
         return( AFPERR_PARAM );
     }
+
+    LOG(log_debug, logtype_afpd,
+        "afp_syncfork(\"%s\", fork: %s)",
+        cfrombstr(ofork->of_ad->ad_fullpath),
+        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if ( flushfork( ofork ) < 0 ) {
         LOG(log_error, logtype_afpd, "flushfork(%s): %s", of_name(ofork), strerror(errno) );
@@ -1122,6 +1138,12 @@ int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         LOG(log_error, logtype_afpd, "afp_closefork: of_find(%d) could not locate fork", ofrefnum );
         return( AFPERR_PARAM );
     }
+
+    LOG(log_debug, logtype_afpd,
+        "afp_closefork(\"%s\", fork: %s)",
+        cfrombstr(ofork->of_ad->ad_fullpath),
+        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+
     if ( of_closefork( ofork ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_closefork(%s): of_closefork: %s", of_name(ofork), strerror(errno) );
         return( AFPERR_PARAM );
@@ -1196,6 +1218,11 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         err = AFPERR_PARAM;
         goto afp_write_err;
     }
+
+    LOG(log_debug, logtype_afpd,
+        "afp_write(\"%s\", off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)",
+        cfrombstr(ofork->of_ad->ad_fullpath), offset, reqcount,
+        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
         err = AFPERR_ACCESS;
