@@ -80,7 +80,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct dir          *dir;
     struct path         *s_path;
     struct stat         *st;
-    struct adouble      ad, *adp = NULL;
+    struct adouble      ad;
     char                *uname, *FinderInfo;
     char                emptyFinderInfo[32] = { 0 };
 
@@ -139,7 +139,6 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             return( AFPERR_NOOBJ );
         }
 
-        adp = of_ad(vol, s_path, &ad);
         uname = s_path->u_name;
         /*
           We have to check the FinderInfo for the file, because if they aren't all 0
@@ -151,10 +150,10 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if (S_ISDIR(st->st_mode))
             adflags = ADFLAGS_DIR;
 
-        if ( ad_metadata( uname, adflags, adp) < 0 ) {
+        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        if (ad_metadata(uname, adflags, &ad) != 0 ) {
             switch (errno) {
             case ENOENT:
-                adp = NULL;
                 break;
             case EACCES:
                 LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",
@@ -164,15 +163,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s", uname, strerror(errno));
                 return AFPERR_MISC;
             }
-        }
-
-        if (adp) {
-            FinderInfo = ad_entry(adp, ADEID_FINDERI);
-
-#ifdef DEBUG
-            LOG(log_maxdebug, logtype_afpd, "afp_listextattr(%s): FinderInfo:", uname);
-            hexdump( FinderInfo, 32);
-#endif
+        } else {
+            FinderInfo = ad_entry(&ad, ADEID_FINDERI);
 
             if ((adflags & ADFLAGS_DIR)) {
                 /* set default view */
@@ -189,9 +181,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
 
             /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, adp->ad_rlen);
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, ad.ad_rlen);
 
-            if (adp->ad_rlen > 0) {
+            if (ad.ad_rlen > 0) {
                 LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
                 strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
                 attrbuflen += strlen(ea_resourcefork) + 1;
@@ -240,8 +232,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 exit:
     if (ret != AFP_OK)
         buf_valid = 0;
-    if (adp)
-        ad_close_metadata( adp);
+
+    ad_close_metadata(&ad);
 
     return ret;
 }
