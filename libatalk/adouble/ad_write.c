@@ -86,7 +86,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         } else { /* AD_VERSION_EA */
             if ((off + buflen) > ad->ad_resforkbufsize) {
                 size_t roundup = (((off + buflen) / RFORK_EA_ALLOCSIZE) + 1) * RFORK_EA_ALLOCSIZE;
-                if ((ad->ad_resforkbuf = realloc(roundup)) == NULL)
+                if ((ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, roundup)) == NULL)
                     return -1;
                 ad->ad_resforkbufsize = roundup;
             }
