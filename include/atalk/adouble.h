@@ -193,7 +193,6 @@ struct adouble {
     int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
     unsigned int        ad_inited;
     int                 ad_options;
-    int                 ad_refcount; /* used in afpd/ofork.c */
     void                *ad_resforkbuf;  /* buffer for AD_VERSION_EA ressource fork */
     size_t              ad_resforkbufsize; /* size of ad_resforkbuf */
     off_t               ad_rlen;     /* ressource fork len with AFP 3.0

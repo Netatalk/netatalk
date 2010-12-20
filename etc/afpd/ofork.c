@@ -225,10 +225,6 @@ of_alloc(struct vol *vol,
             return NULL;
         }
         strlcpy( ad->ad_m_name, path, ad->ad_m_namelen);
-    } else {
-        /* Increase the refcount on this struct adouble. This is
-           decremented again in oforc_dealloc. */
-        ad->ad_refcount++;
     }
 
     of->of_ad = ad;
@@ -400,16 +396,7 @@ void of_dealloc( struct ofork *of)
 
     of_unhash(of);
     oforks[ of->of_refnum % nforks ] = NULL;
-
-    /* decrease refcount */
-    of->of_ad->ad_refcount--;
-
-    if ( of->of_ad->ad_refcount <= 0) {
-        free( of->of_ad->ad_m_name );
-        free( of->of_ad);
-    } else {/* someone's still using it. just free this user's locks */
-        ad_unlock(of->of_ad, of->of_refnum);
-    }
+    ad_unlock(of->of_ad, of->of_refnum);
 
     free( of );
 }

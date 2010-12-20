@@ -1048,20 +1048,11 @@ static const char *oflags2logstr(int oflags)
  *                ADFLAGS_RDONLY:    open read only \n
  *                ADFLAGS_OPENFORKS: check for open forks from other processes
  *
- * @param oflags  flags passed through to open syscall: \n
- *                O_RDONLY: *** FIXME *** \n
- *                O_RDWR: *** FIXME *** \n
- *                O_CREAT: create fork \n
- *                O_EXCL: fail if exists with O_CREAT
- *
+ * @param oflags  flags passed through to open syscall
  * @param mode    passed to open with O_CREAT
  * @param ad      pointer to struct adouble
  *
- * @returns 0 on success
- *
- * @note It's not possible to open the header file O_RDONLY -- the read
- *       will fail and return an error. this refcounts things now.\n
- *       metadata(ressource)-fork only gets created with O_CREAT.
+ * @returns 0 on success, any other value indicates an error
  */
 int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
 {
@@ -1080,9 +1071,7 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
         }
     }
 
-    ad->ad_refcount++;
-
-    if ((adflags & ADFLAGS_DF)) {
+    if ((adflags & ADFLAGS_DF) && !(ad->ad_adflags & ADFLAGS_DF)) {
         if (ad_open_df(path, adflags, oflags, mode, ad) != 0) {
             ret = -1;
             goto exit;
@@ -1090,7 +1079,7 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
         ad->ad_adflags |= ADFLAGS_DF;
     }
 
-    if ((adflags & ADFLAGS_HF)) {
+    if ((adflags & ADFLAGS_HF) && !(ad->ad_adflags & ADFLAGS_HF)) {
         if (ad_open_hf(path, adflags, oflags, mode, ad) != 0) {
             ret = -1;
             goto exit;
@@ -1098,7 +1087,7 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
         ad->ad_adflags |= ADFLAGS_HF;
     }
 
-    if ((adflags & ADFLAGS_RF)) {
+    if ((adflags & ADFLAGS_RF) && !(ad->ad_adflags & ADFLAGS_RF)) {
         if (ad_open_rf(path, adflags, oflags, mode, ad) != 0) {
             ret = -1;
             goto exit;
