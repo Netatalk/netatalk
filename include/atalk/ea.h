@@ -76,6 +76,7 @@ enum {
 /* Names for our Extended Attributes adouble data */
 #define AD_EA_META "org.netatalk.Metadata"
 #define AD_EA_RESO "org.netatalk.ResourceFork"
+#define NOT_NETATALK_EA(a) (strcmp((a), AD_EA_META) != 0) && (strcmp((a), AD_EA_RESO) != 0)
 
 /****************************************************************************************
  * Wrappers for native EA functions taken from Samba

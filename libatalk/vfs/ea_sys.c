@@ -195,6 +195,8 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  *
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
+ * We hide the adouble:ea extended attributes here, but we currently
+ * allow reading, writing and deleteting them.
  */
 int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
@@ -233,26 +235,27 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
     ptr = buf;
     while (ret > 0)  {
         len = strlen(ptr);
+        if (NOT_NETATALK_EA(ptr)) {
+            /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
+            if ( 0 >= ( nlen = convert_string(vol->v_volcharset, CH_UTF8_MAC, ptr, len, attrnamebuf + attrbuflen, 256)) ) {
+                ret = AFPERR_MISC;
+                goto exit;
+            }
 
-        /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
-        if ( 0 >= ( nlen = convert_string(vol->v_volcharset, CH_UTF8_MAC, ptr, len, attrnamebuf + attrbuflen, 256)) ) {
-            ret = AFPERR_MISC;
-            goto exit;
+            LOG(log_debug7, logtype_afpd, "sys_list_extattr(%s): attribute: %s", uname, ptr);
+
+            attrbuflen += nlen + 1;
+            if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
+                /* Next EA name could overflow, so bail out with error.
+                   FIXME: evantually malloc/memcpy/realloc whatever.
+                   Is it worth it ? */
+                LOG(log_warning, logtype_afpd, "sys_list_extattr(%s): running out of buffer for EA names", uname);
+                ret = AFPERR_MISC;
+                goto exit;
+            }
         }
-
-        LOG(log_debug7, logtype_afpd, "sys_list_extattr(%s): attribute: %s", uname, ptr);
-
-        attrbuflen += nlen + 1;
-        if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
-            /* Next EA name could overflow, so bail out with error.
-               FIXME: evantually malloc/memcpy/realloc whatever.
-               Is it worth it ? */
-            LOG(log_warning, logtype_afpd, "sys_list_extattr(%s): running out of buffer for EA names", uname);
-            ret = AFPERR_MISC;
-            goto exit;
-        }
-        ret -= len +1;
-        ptr += len +1;
+        ret -= len + 1;
+        ptr += len + 1;
     }
 
     ret = AFP_OK;
