@@ -731,24 +731,34 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
         default:
             LOG(log_warning, logtype_default, "ad_open_rf(\"%s\"): %s",
                 abspath(path), strerror(errno));
-            return -1;
+            ret = -1;
+            goto exit;
         }
     }
 
     /* Round up and allocate buffer */
     size_t roundup = ((ad->ad_rlen / RFORK_EA_ALLOCSIZE) + 1) * RFORK_EA_ALLOCSIZE;
-    if ((ad->ad_resforkbuf = malloc(roundup)) == NULL)
-        return -1;
+    if ((ad->ad_resforkbuf = malloc(roundup)) == NULL) {
+        ret = -1;
+        goto exit;
+    }
 
     ad->ad_resforkbufsize = roundup;
 
     /* Read the EA into the buffer */
-    if (sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1)
-        return -1;
+    if (ad->ad_rlen > 0) {
+        if (sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1) {
+            ret = -1;
+            goto exit;
+        }       
+    }
 
+exit:
     if (ret != 0) {
         free(ad->ad_resforkbuf);
         ad->ad_resforkbuf = NULL;
+        ad->ad_rlen = 0;
+        ad->ad_resforkbufsize = 0;
     }
 
     return ret;
