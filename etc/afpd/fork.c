@@ -296,6 +296,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         return  AFPERR_BADTYPE;
     }
 
+    LOG(log_debug, logtype_afpd,
+        "afp_openfork(\"%s\", fork: %s)",
+        abspath(s_path->u_name),
+        (fork & OPENFORK_DATA) ? "d" : "r");
+
     /* stat() data fork st is set because it's not a dir */
     switch ( s_path->st_errno ) {
     case 0:
