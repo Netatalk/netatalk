@@ -1,5 +1,4 @@
 /*
-  $Id: extattrs.c,v 1.29 2010-01-05 12:06:33 franklahm Exp $
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -80,7 +79,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct dir          *dir;
     struct path         *s_path;
     struct stat         *st;
-    struct adouble      ad;
+    struct adouble      ad, *adp = NULL;
     char                *uname, *FinderInfo;
     char                emptyFinderInfo[32] = { 0 };
 
@@ -150,8 +149,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if (S_ISDIR(st->st_mode))
             adflags = ADFLAGS_DIR;
 
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if (ad_metadata(uname, adflags, &ad) != 0 ) {
+        adp = &ad;
+        ad_init(adp, vol->v_adouble, vol->v_ad_options);
+        if (ad_metadata(uname, adflags, adp) != 0 ) {
             switch (errno) {
             case ENOENT:
                 break;
@@ -164,7 +164,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 return AFPERR_MISC;
             }
         } else {
-            FinderInfo = ad_entry(&ad, ADEID_FINDERI);
+            FinderInfo = ad_entry(adp, ADEID_FINDERI);
 
             if ((adflags & ADFLAGS_DIR)) {
                 /* set default view */
@@ -181,9 +181,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
 
             /* Now check for Ressource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, ad.ad_rlen);
+            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Ressourcefork size: %llu", uname, adp->ad_rlen);
 
-            if (ad.ad_rlen > 0) {
+            if (adp->ad_rlen > 0) {
                 LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.RessourceFork.", uname);
                 strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
                 attrbuflen += strlen(ea_resourcefork) + 1;
@@ -206,7 +206,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         default:
             buf_valid = 1;
         }
-    }
+    } /* if ((maxreply == 0) || (buf_valid == 0)) */
 
     /* Start building reply packet */
     bitmap = htons(bitmap);
@@ -233,7 +233,8 @@ exit:
     if (ret != AFP_OK)
         buf_valid = 0;
 
-    ad_close_metadata(&ad);
+    if (adp)
+        ad_close_metadata(adp);
 
     return ret;
 }

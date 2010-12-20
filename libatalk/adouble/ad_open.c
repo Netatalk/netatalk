@@ -947,7 +947,7 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad->ad_inited = AD_INITED;
 }
 
-static const char *adflags2logstr(int adflags)
+const char *adflags2logstr(int adflags)
 {
     int first = 1;
     static char buf[64];
@@ -997,7 +997,7 @@ static const char *adflags2logstr(int adflags)
     return buf;
 }
 
-static const char *oflags2logstr(int oflags)
+const char *oflags2logstr(int oflags)
 {
     int first = 1;
     static char buf[64];

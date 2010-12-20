@@ -363,6 +363,8 @@ extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
 #define ad_unlock ad_fcntl_unlock
 
 /* ad_open.c */
+extern const char *oflags2logstr(int oflags);
+extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);

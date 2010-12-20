@@ -182,10 +182,16 @@ int ad_flush(struct adouble *ad)
 
 /*!
  * Close a struct adouble freeing all resources
+ *
+ * This close the whole thing, regardless of what you pass in adflags!
  */
-int ad_close( struct adouble *ad, int adflags _U_)
+int ad_close( struct adouble *ad, int adflags)
 {
     int err = 0;
+
+    LOG(log_debug, logtype_default, "ad_close(\"%s\", %s)",
+        cfrombstr(ad->ad_fullpath),
+        adflags2logstr(adflags));
 
     if (ad_data_fileno(ad) != -1) {
         if ((ad_data_fileno(ad) == -2) && (ad->ad_data_fork.adf_syml != NULL)) {

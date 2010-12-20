@@ -1,6 +1,4 @@
 /*
- * $Id: ofork.c,v 1.32 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
