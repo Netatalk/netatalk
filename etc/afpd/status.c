@@ -556,7 +556,7 @@ void set_signature(struct afp_options *options) {
     char *servername_conf;
     int header = 0;
     char buf[1024], *p;
-    FILE *fp, *randomp;
+    FILE *fp = NULL, *randomp;
     size_t len;
     char *server_tmp;
     
