@@ -1,6 +1,4 @@
 /*
- * $Id: desktop.c,v 1.50.2.1 2010-02-01 10:56:08 franklahm Exp $
- *
  * See COPYRIGHT.
  *
  * bug:
@@ -694,7 +692,10 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     } else
         adp = of->of_ad;
 
-    if (ad_open_metadata( upath , ( (isadir) ? ADFLAGS_DIR : 0), O_CREAT, adp) < 0 ) {
+    if (ad_open(upath,
+                ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0),
+                O_CREAT | O_RDWR,
+                adp) < 0 ) {
         return( AFPERR_ACCESS );
     }
 
@@ -711,7 +712,8 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         memcpy( ad_entry( adp, ADEID_COMMENT ), ibuf, clen );
         ad_flush( adp );
     }
-    ad_close_metadata( adp);
+    if (adp == &ad)
+        ad_close_metadata( adp);
     return( AFP_OK );
 }
 
