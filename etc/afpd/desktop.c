@@ -695,6 +695,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     if (ad_open(upath,
                 ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0),
                 O_CREAT | O_RDWR,
+                0666,
                 adp) < 0 ) {
         return( AFPERR_ACCESS );
     }
