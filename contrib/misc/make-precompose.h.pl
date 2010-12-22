@@ -12,8 +12,12 @@
 # table for binary search --------------------------------------------------
 
 open(UNICODEDATA, "<$ARGV[0]");
-open(PRECOMPOSETEMP, ">precompose.TEMP");
-open( DECOMPOSETEMP, ">decompose.TEMP");
+
+open(PRECOMPOSE_TEMP, ">precompose.TEMP");
+open( DECOMPOSE_TEMP, ">decompose.TEMP");
+
+open(PRECOMPOSE_SP_TEMP, ">precompose_sp.TEMP");
+open( DECOMPOSE_SP_TEMP, ">decompose_sp.TEMP");
 
 while (<UNICODEDATA>){
     chop;
@@ -41,11 +45,6 @@ while (<UNICODEDATA>){
 	$leftbracket  = "  { ";
 	$rightbracket =" },     ";
 
-	if (hex($code0) > 0xFFFF) {           # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
-	    $leftbracket  = "\/\*{ ";         # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
-	    $rightbracket =" },\*\/   ";      # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
-	}                                     # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
-	
 	# AFP 3.x Spec
 	if ( ((0x2000  <= hex($code0)) && (hex($code0) <=  0x2FFF))
 	  || ((0xFE30  <= hex($code0)) && (hex($code0) <=  0xFE4F))
@@ -54,9 +53,28 @@ while (<UNICODEDATA>){
 	    $rightbracket =" },\*\/   ";
 	}
 	
-	printf(PRECOMPOSETEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base), hex($comb), $rightbracket, $Name1);
+	if (hex($code0) > 0xFFFF) {                            # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
+	    
+	    $code0_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($code0) >> 10);
+	    $code0_sp_lo = 0xDC00 + (hex($code0) & 0x3FF);
 
-	printf( DECOMPOSETEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base), hex($comb), $rightbracket, $Name1);
+            $base_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($base) >> 10);
+            $base_sp_lo = 0xDC00 + (hex($base) & 0x3FF);
+
+            $comb_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($comb) >> 10);
+            $comb_sp_lo = 0xDC00 + (hex($comb) & 0x3FF);
+
+	    printf(PRECOMPOSE_SP_TEMP "%s0x%04X%04X, 0x%04X%04X, 0x%04X%04X%s\/\* %s \*\/\n",
+		   $leftbracket, $code0_sp_hi ,$code0_sp_lo, $base_sp_hi, $base_sp_lo, $comb_sp_hi, $comb_sp_lo, $rightbracket, $Name1);
+	    printf(DECOMPOSE_SP_TEMP "%s0x%04X%04X, 0x%04X%04X, 0x%04X%04X%s\/\* %s \*\/\n",
+                   $leftbracket, $code0_sp_hi ,$code0_sp_lo, $base_sp_hi, $base_sp_lo, $comb_sp_hi, $comb_sp_lo, $rightbracket, $Name1);
+
+	    $leftbracket  = "\/\*{ ";                          # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
+	    $rightbracket =" },\*\/   ";                       # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
+	}                                                      # DELETE THIS LINE  IF INTERNAL CODE IS UCS4
+	
+	printf(PRECOMPOSE_TEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base), hex($comb), $rightbracket, $Name1);
+	printf( DECOMPOSE_TEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base), hex($comb), $rightbracket, $Name1);
 	
     }
 }
@@ -65,6 +83,9 @@ while (<UNICODEDATA>){
 
 system("sort -k 3 precompose.TEMP \> precompose.SORT");
 system("sort -k 2  decompose.TEMP \>  decompose.SORT");
+
+system("sort -k 3 precompose_sp.TEMP \> precompose_sp.SORT");
+system("sort -k 2  decompose_sp.TEMP \>  decompose_sp.SORT");
 
 # print  -------------------------------------------------------------------
 
@@ -93,6 +114,30 @@ print ("  unsigned int comb\;\n");
 print ("\} decompositions\[\] \= \{\n");
 
 system("cat decompose.SORT");
+
+print ("\}\;\n");
+print ("\n");
+
+
+
+print ("static const struct \{\n");
+print ("  unsigned int replacement\;\n");
+print ("  unsigned int base\;\n");
+print ("  unsigned int comb\;\n");
+print ("\} precompositions_sp\[\] \= \{\n");
+
+system("cat precompose_sp.SORT");
+
+print ("\}\;\n");
+print ("\n");
+
+print ("static const struct \{\n");
+print ("  unsigned int replacement\;\n");
+print ("  unsigned int base\;\n");
+print ("  unsigned int comb\;\n");
+print ("\} decompositions_sp\[\] \= \{\n");
+
+system("cat decompose_sp.SORT");
 
 print ("\}\;\n");
 print ("\n");
