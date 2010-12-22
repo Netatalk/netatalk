@@ -71,13 +71,12 @@ struct charset_functions charset_utf8_mac =
 	NULL, NULL
 };
 
-/* ------------------- Convert from UTF-8 to UCS-2 -------------------*/
+/* ------------------- Convert from UTF-8 to UTF-16 -------------------*/
 static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 			 char **outbuf, size_t *outbytesleft)
 {
 	ucs2_t uc = 0;
-	ucs2_t hi, low;     /* surrogate pair */
-	unsigned int codepoint, surrogate;
+	unsigned int codepoint;
 	int len;
 
 	while (*inbytesleft >= 1 && *outbytesleft >= 2) {
@@ -115,10 +114,8 @@ static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 			}
 			codepoint = ((c[0] & 0x07) << 18) | GETUCVAL(c[1],12) |
 				GETUCVAL(c[2],6) |  GETUCVAL(c[3],0);
-			hi = (ucs2_t)( ((codepoint - 0x10000) >> 10) + 0xD800);
-			low = (ucs2_t)(0xDC00 + (codepoint & 0x03FF));
-			surrogate = (hi << 16) | low;
-			SIVAL(*outbuf,0,surrogate);
+			SSVAL(*outbuf,0,(((codepoint - 0x10000) >> 10) + 0xD800)); /* hi  */
+			SSVAL(*outbuf,2,(0xDC00 + (codepoint & 0x03FF)));          /* low */
 			len = 4;
 			(*inbuf)  += 4;
 			(*inbytesleft)  -= 4;
@@ -150,13 +147,13 @@ badseq:
 	return -1;
 }
 
-/* --------------------- Convert from UCS-2 to UTF-8 -----------*/
+/* --------------------- Convert from UTF-16 to UTF-8 -----------*/
 static size_t utf8_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 			 char **outbuf, size_t *outbytesleft)
 {
 	ucs2_t uc=0;
 	ucs2_t hi, low;
-	unsigned int surrogatepair, codepoint;
+	unsigned int codepoint;
 	int olen, ilen;
 
 	while (*inbytesleft >= 2 && *outbytesleft >= 1) {
@@ -205,9 +202,8 @@ static size_t utf8_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 				errno = EINVAL;
 				return -1;
 			}
-			surrogatepair = IVAL((*inbuf),0);
-			low = (ucs2_t)surrogatepair;
-			hi = (ucs2_t)(surrogatepair >> 16);
+			hi =  SVAL((*inbuf),0);
+			low = SVAL((*inbuf),2);
 			if ( 0xd800 <= hi && hi <= 0xdbff && 0xdc00 <= low && low <= 0xdfff) {
 				codepoint = ((hi - 0xd800) << 10) + (low - 0xdc00) + 0x10000;
 				c[3] = GETUTF8TRAILBYTE(codepoint, 0);
