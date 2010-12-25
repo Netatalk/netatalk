@@ -17,20 +17,6 @@
 #include "precompose.h"
 #include "byteorder.h"
 
-#define HANGUL_SBASE 0xAC00
-#define HANGUL_LBASE 0x1100
-#define HANGUL_VBASE 0x1161
-#define HANGUL_TBASE 0x11A7
-#define HANGUL_LCOUNT 19
-#define HANGUL_VCOUNT 21
-#define HANGUL_TCOUNT 28
-#define HANGUL_NCOUNT (HANGUL_VCOUNT * HANGUL_TCOUNT)   /* 588 */
-#define HANGUL_SCOUNT (HANGUL_LCOUNT * HANGUL_NCOUNT)   /* 11172 */
-
-#define MAXCOMBLEN 3
-#define MAXCOMBSPLEN 2
-#define COMBBUFLEN 4     /* max(MAXCOMBLEN, MAXCOMBSPLEN*2) */
-
 /*******************************************************************
  Convert a wide character to upper/lower case.
 ********************************************************************/
@@ -345,7 +331,7 @@ binary search for pre|decomposition
 static ucs2_t do_precomposition(unsigned int base, unsigned int comb) 
 {
 	int min = 0;
-	int max = sizeof(precompositions) / sizeof(precompositions[0]) - 1;
+	int max = PRECOMP_COUNT - 1;
 	int mid;
 	u_int32_t sought = (base << 16) | comb, that;
 
@@ -369,20 +355,20 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 static u_int32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp) 
 {
 	int min = 0;
-	int max = sizeof(precompositions_sp) / sizeof(precompositions_sp[0]) - 1;
+	int max = PRECOMP_SP_COUNT - 1;
 	int mid;
-	u_int64_t sought = ((u_int64_t)base_sp << 32) | (u_int64_t)comb_sp, that;
+	u_int64_t sought_sp = ((u_int64_t)base_sp << 32) | (u_int64_t)comb_sp, that_sp;
 
 	/* binary search */
 	while (max >= min) {
 		mid = (min + max) / 2;
-		that = ((u_int64_t)precompositions_sp[mid].base << 32) | ((u_int64_t)precompositions_sp[mid].comb);
-		if (that < sought) {
+		that_sp = ((u_int64_t)precompositions_sp[mid].base_sp << 32) | ((u_int64_t)precompositions_sp[mid].comb_sp);
+		if (that_sp < sought_sp) {
 			min = mid + 1;
-		} else if (that > sought) {
+		} else if (that_sp > sought_sp) {
 			max = mid - 1;
 		} else {
-			return precompositions_sp[mid].replacement;
+			return precompositions_sp[mid].replacement_sp;
 		}
 	}
 	/* no match */
@@ -393,7 +379,7 @@ static u_int32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp
 static u_int32_t do_decomposition(ucs2_t base) 
 {
 	int min = 0;
-	int max = sizeof(decompositions) / sizeof(decompositions[0]) - 1;
+	int max = DECOMP_COUNT - 1;
 	int mid;
 	u_int32_t sought = base;
 	u_int32_t result, that;
@@ -416,26 +402,26 @@ static u_int32_t do_decomposition(ucs2_t base)
 }
 
 /* -------------------------- */
-static u_int64_t do_decomposition_sp(unsigned int base) 
+static u_int64_t do_decomposition_sp(unsigned int base_sp) 
 {
 	int min = 0;
-	int max = sizeof(decompositions_sp) / sizeof(decompositions_sp[0]) - 1;
+	int max = DECOMP_SP_COUNT - 1;
 	int mid;
-	u_int32_t sought = base;
-	u_int32_t that;
-	u_int64_t result;
+	u_int32_t sought_sp = base_sp;
+	u_int32_t that_sp;
+	u_int64_t result_sp;
 
 	/* binary search */
 	while (max >= min) {
 		mid = (min + max) / 2;
-		that = decompositions_sp[mid].replacement;
-		if (that < sought) {
+		that_sp = decompositions_sp[mid].replacement_sp;
+		if (that_sp < sought_sp) {
 			min = mid + 1;
-		} else if (that > sought) {
+		} else if (that_sp > sought_sp) {
 			max = mid - 1;
 		} else {
-			result = ((u_int64_t)decompositions_sp[mid].base << 32) | ((u_int64_t)decompositions_sp[mid].comb);
-			return result;
+			result_sp = ((u_int64_t)decompositions_sp[mid].base_sp << 32) | ((u_int64_t)decompositions_sp[mid].comb_sp);
+			return result_sp;
 		}
 	}
 	/* no match */
@@ -448,12 +434,13 @@ pre|decomposition
    we can't use static, this stuff needs to be reentrant
    static char comp[MAXPATHLEN +1];
 
-   exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges
-   in decompositions[] from decomposition according to AFP 3.x spec
-
-   We don't implement Singleton and Canonical Ordering
+   We don't implement Singleton and Canonical Ordering.
+   We ignore CompositionExclusions.txt.
    because they cause the problem of the roundtrip
-   such as Dancing Icon
+   such as Dancing Icon.
+
+   exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges
+   in precompose.h from composition according to AFP 3.x spec
 ********************************************************************/
 
 size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
@@ -618,7 +605,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 					base_sp = result_sp >> 32;
 					comb[COMBBUFLEN-comblen] = (result_sp >> 16) & 0xFFFF;  /* hi */
 					comb[COMBBUFLEN-comblen+1] = result_sp & 0xFFFF;        /* lo */
-				} while (comblen < (MAXCOMBSPLEN<<1));
+				} while (comblen < MAXCOMBSPLEN);
 
 				if (*outlen < (comblen + 1) << 1) {
 					errno = E2BIG;
