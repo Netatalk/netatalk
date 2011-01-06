@@ -449,7 +449,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	ucs2_t base, comb;
 	u_int32_t base_sp, comb_sp;
 	ucs2_t *in, *out;
-	ucs2_t hangul_lindex, hangul_vindex;
+	ucs2_t lindex, vindex;
 	ucs2_t result;
 	u_int32_t result_sp;
 	size_t o_len = *outlen;
@@ -482,20 +482,20 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		
 		/* Unicode Standard Annex #15 A10.3 Hangul Composition */
 		/* Step 1 <L,V> */
-		else if ((HANGUL_VBASE <= comb) && (comb <= HANGUL_VBASE + HANGUL_VCOUNT)) {
-			if ((HANGUL_LBASE <= base) && (base < HANGUL_LBASE + HANGUL_LCOUNT)) {
+		else if ((VBASE <= comb) && (comb <= VBASE + VCOUNT)) {
+			if ((LBASE <= base) && (base < LBASE + LCOUNT)) {
 				result = 1;
-				hangul_lindex = base - HANGUL_LBASE;
-				hangul_vindex = comb - HANGUL_VBASE;
-				base = HANGUL_SBASE + (hangul_lindex * HANGUL_VCOUNT + hangul_vindex) * HANGUL_TCOUNT;
+				lindex = base - LBASE;
+				vindex = comb - VBASE;
+				base = SBASE + (lindex * VCOUNT + vindex) * TCOUNT;
 			}
 		}
 		
 		/* Step 2 <LV,T> */
-		else if ((HANGUL_TBASE < comb) && (comb < HANGUL_TBASE + HANGUL_TCOUNT)) {
-			if ((HANGUL_SBASE <= base) && (base < HANGUL_SBASE +HANGUL_SCOUNT) && (((base - HANGUL_SBASE) % HANGUL_TCOUNT) == 0)) {
+		else if ((TBASE < comb) && (comb < TBASE + TCOUNT)) {
+			if ((SBASE <= base) && (base < SBASE + SCOUNT) && (((base - SBASE) % TCOUNT) == 0)) {
 				result = 1;
-				base += comb - HANGUL_TBASE;
+				base += comb - TBASE;
 			}
 		}
 		
@@ -557,7 +557,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	size_t comblen;
 	ucs2_t base, comb[COMBBUFLEN];
 	u_int32_t base_sp;
-	ucs2_t hangul_sindex, tjamo;
+	ucs2_t sindex, tjamo;
 	ucs2_t *in, *out;
 	unsigned int result;
 	u_int64_t result_sp;
@@ -577,13 +577,13 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		if (base <= 0x007f) ;
 		
 		/* Unicode Standard Annex #15 A10.2 Hangul Decomposition */
-		else if ((HANGUL_SBASE <= base) && (base < HANGUL_SBASE + HANGUL_SCOUNT)) {
-			hangul_sindex = base - HANGUL_SBASE;
-			base = HANGUL_LBASE + hangul_sindex / HANGUL_NCOUNT;
-			comb[COMBBUFLEN-2] = HANGUL_VBASE + (hangul_sindex % HANGUL_NCOUNT) / HANGUL_TCOUNT;
+		else if ((SBASE <= base) && (base < SBASE + SCOUNT)) {
+			sindex = base - SBASE;
+			base = LBASE + sindex / NCOUNT;
+			comb[COMBBUFLEN-2] = VBASE + (sindex % NCOUNT) / TCOUNT;
 			
 			/* <L,V> */
-			if ((tjamo = HANGUL_TBASE + hangul_sindex % HANGUL_TCOUNT) == HANGUL_TBASE) {
+			if ((tjamo = TBASE + sindex % TCOUNT) == TBASE) {
 				comb[COMBBUFLEN-1] = comb[COMBBUFLEN-2];
 				comblen = 1;
 			}

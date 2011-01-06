@@ -5,15 +5,15 @@
 /* UnicodeData.txt is got from                                      */
 /* http://www.unicode.org/Public/UNIDATA/UnicodeData.txt            */
 
-#define HANGUL_SBASE 0xAC00
-#define HANGUL_LBASE 0x1100
-#define HANGUL_VBASE 0x1161
-#define HANGUL_TBASE 0x11A7
-#define HANGUL_LCOUNT 19
-#define HANGUL_VCOUNT 21
-#define HANGUL_TCOUNT 28
-#define HANGUL_NCOUNT 588     /* (HANGUL_VCOUNT * HANGUL_TCOUNT) */
-#define HANGUL_SCOUNT 11172   /* (HANGUL_LCOUNT * HANGUL_NCOUNT) */
+#define SBASE 0xAC00
+#define LBASE 0x1100
+#define VBASE 0x1161
+#define TBASE 0x11A7
+#define LCOUNT 19
+#define VCOUNT 21
+#define TCOUNT 28
+#define NCOUNT 588     /* (VCOUNT * TCOUNT) */
+#define SCOUNT 11172   /* (LCOUNT * NCOUNT) */
 
 #define PRECOMP_COUNT 955
 #define DECOMP_COUNT 955

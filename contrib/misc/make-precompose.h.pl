@@ -2,7 +2,7 @@
 #
 # usage: make-precompose.h.pl UnicodeData.txt > precompose.h
 #
-# (c) 2008-2010 by HAT <hat@fa2.so-net.ne.jp>
+# (c) 2008-2011 by HAT <hat@fa2.so-net.ne.jp>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -187,15 +187,15 @@ printf ("\/\* %s is got from                                      \*\/\n", $ARGV
 print ("\/\* http\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt            \*\/\n");
 print ("\n");
 
-print ("\#define HANGUL_SBASE 0xAC00\n");
-print ("\#define HANGUL_LBASE 0x1100\n");
-print ("\#define HANGUL_VBASE 0x1161\n");
-print ("\#define HANGUL_TBASE 0x11A7\n");
-print ("\#define HANGUL_LCOUNT 19\n");
-print ("\#define HANGUL_VCOUNT 21\n");
-print ("\#define HANGUL_TCOUNT 28\n");
-print ("\#define HANGUL_NCOUNT 588     \/\* (HANGUL_VCOUNT \* HANGUL_TCOUNT) \*\/\n");
-print ("\#define HANGUL_SCOUNT 11172   \/\* (HANGUL_LCOUNT \* HANGUL_NCOUNT) \*\/\n");
+print ("\#define SBASE 0xAC00\n");
+print ("\#define LBASE 0x1100\n");
+print ("\#define VBASE 0x1161\n");
+print ("\#define TBASE 0x11A7\n");
+print ("\#define LCOUNT 19\n");
+print ("\#define VCOUNT 21\n");
+print ("\#define TCOUNT 28\n");
+print ("\#define NCOUNT 588     \/\* (VCOUNT \* TCOUNT) \*\/\n");
+print ("\#define SCOUNT 11172   \/\* (LCOUNT \* NCOUNT) \*\/\n");
 print ("\n");
 
 printf ("\#define PRECOMP_COUNT %d\n", $comp_count);
