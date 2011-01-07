@@ -273,7 +273,7 @@ static int send_packet(CNID_private *db, struct cnid_dbd_rqst *rqst)
     vecs = 1;
 
     if (rqst->namelen) {
-        iov[1].iov_base = rqst->name;
+        iov[1].iov_base = (char *)rqst->name;
         iov[1].iov_len  = rqst->namelen;
         towrite += rqst->namelen;
         vecs++;
@@ -538,8 +538,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 
 /* ---------------------- */
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
-                    const cnid_t did, char *name, const size_t len,
-                    cnid_t hint)
+                    cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -603,7 +602,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* ---------------------- */
-cnid_t cnid_dbd_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
+cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -729,8 +728,8 @@ int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 }
 
 /* ---------------------- */
-cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                       char *name, const size_t len)
+cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
+                       const char *name, size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -791,7 +790,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t
 }
 
 /* ---------------------- */
-int cnid_dbd_find(struct _cnid_db *cdb, char *name, size_t namelen, void *buffer, size_t buflen)
+int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -846,8 +845,8 @@ int cnid_dbd_find(struct _cnid_db *cdb, char *name, size_t namelen, void *buffer
 }
 
 /* ---------------------- */
-int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                    const cnid_t did, char *name, const size_t len)
+int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+                    cnid_t did, const char *name, size_t len)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;
@@ -901,8 +900,7 @@ int cnid_dbd_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st
 
 /* ---------------------- */
 cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
-                            const cnid_t did, char *name, const size_t len,
-                            cnid_t hint)
+                            cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     CNID_private *db;
     struct cnid_dbd_rqst rqst;

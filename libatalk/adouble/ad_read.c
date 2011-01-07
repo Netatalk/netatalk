@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <sys/param.h>
+#include <errno.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>

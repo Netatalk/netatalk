@@ -41,6 +41,7 @@
 #include <sys/param.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
@@ -106,13 +107,13 @@ struct entry {
 static uid_t default_uid = -1;
 
 /* Forward declarations */
-static int ad_mkrf(char *path);
+static int ad_mkrf(const char *path);
 static int ad_header_read(struct adouble *ad, struct stat *hst);
-static int ad_header_upgrade(struct adouble *ad, char *name);
+static int ad_header_upgrade(struct adouble *ad, const char *name);
 
-static int ad_mkrf_ea(char *path);
+static int ad_mkrf_ea(const char *path);
 static int ad_header_read_ea(struct adouble *ad, struct stat *hst);
-static int ad_header_upgrade_ea(struct adouble *ad, char *name);
+static int ad_header_upgrade_ea(struct adouble *ad, const char *name);
 
 static struct adouble_fops ad_adouble = {
     &ad_path,
@@ -395,7 +396,7 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
     return 0;
 }
 
-static int ad_mkrf(char *path)
+static int ad_mkrf(const char *path)
 {
     char *slash;
     /*
@@ -413,7 +414,7 @@ static int ad_mkrf(char *path)
     return 0;
 }
 
-static int ad_mkrf_ea(char *path _U_)
+static int ad_mkrf_ea(const char *path _U_)
 {
     AFP_PANIC("ad_mkrf_ea: dont use");
     return 0;
@@ -463,12 +464,12 @@ static int ad_mode_st(const char *path, int *mode, struct stat *stbuf)
 }
 
 /* --------------------------- */
-static int ad_header_upgrade(struct adouble *ad _U_, char *name _U_)
+static int ad_header_upgrade(struct adouble *ad _U_, const char *name _U_)
 {
     return 0;
 }
 
-static int ad_header_upgrade_ea(struct adouble *ad _U_, char *name _U_)
+static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
 {
     AFP_PANIC("ad_header_upgrade_ea: dont use");
     return 0;
@@ -549,23 +550,15 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
     struct stat st_dir;
     struct stat st_meta;
     struct stat *pst = NULL;
-    char        *ad_p;
+    const char  *ad_p;
     int         hoflags, admode;
     int         st_invalid = -1;
 
     ad_p = ad->ad_ops->ad_path( path, adflags );
 
-    hoflags = oflags & ~(O_CREAT | O_EXCL);
-    if (!(adflags & ADFLAGS_RDONLY)) {
-        hoflags = (hoflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
-    }
-    ad->ad_md->adf_fd = open( ad_p, hoflags | O_NOFOLLOW, 0 );
-    if (ad->ad_md->adf_fd < 0 ) {
-        if ((errno == EACCES || errno == EROFS) && !(oflags & O_RDWR)) {
-            hoflags = oflags & ~(O_CREAT | O_EXCL);
-            ad->ad_md->adf_fd = open( ad_p, hoflags | O_NOFOLLOW, 0 );
-        }
-    }
+    hoflags = (oflags & ~(O_CREAT | O_EXCL)) | O_NOFOLLOW;
+
+    ad->ad_md->adf_fd = open(ad_p, hoflags, 0);
 
     if ( ad->ad_md->adf_fd < 0 ) {
         if (errno == ENOENT && (oflags & O_CREAT) ) {
@@ -573,8 +566,8 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
              * We're expecting to create a new adouble header file here
              * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
              */
-            LOG(log_debug, logtype_default, "ad_open(\"%s/%s\"): creating adouble file",
-                getcwdpath(), ad_p);
+            LOG(log_debug, logtype_default, "ad_open(\"%s\"): creating adouble file",
+                abspath(path));
             admode = mode;
             errno = 0;
             st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
@@ -594,7 +587,7 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
                 admode = ad_hf_mode(admode);
             }
             /* retry with O_CREAT */
-            ad->ad_md->adf_fd = open( ad_p, oflags,admode );
+            ad->ad_md->adf_fd = open(ad_p, oflags, admode);
             if ( ad->ad_md->adf_fd < 0 ) {
                 return -1;
             }
@@ -768,7 +761,7 @@ exit:
  * API functions
  ********************************************************************************* */
 
-char *ad_path_ea( const char *path, int adflags _U_)
+const char *ad_path_ea( const char *path, int adflags _U_)
 {
     return path;
 }
@@ -782,7 +775,7 @@ char *ad_path_ea( const char *path, int adflags _U_)
  *
  * FIXME: should do something for pathname > MAXPATHLEN
  */
-char *ad_path( const char *path, int adflags)
+const char *ad_path( const char *path, int adflags)
 {
     static char pathbuf[ MAXPATHLEN + 1];
     const char *slash;
@@ -982,12 +975,6 @@ const char *adflags2logstr(int adflags)
         strlcat(buf, "DIR", 64);
         first = 0;
     }
-    if (adflags & ADFLAGS_RDONLY) {
-        if (!first)
-            strlcat(buf, "|", 64);
-        strlcat(buf, "RDONLY", 64);
-        first = 0;
-    }
     if (adflags & ADFLAGS_OPENFORKS) {
         if (!first)
             strlcat(buf, "|", 64);
@@ -1038,28 +1025,34 @@ const char *oflags2logstr(int oflags)
  *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
  * @endcode
  *
- * @param path    Path to file or directory
+ * Open a files data fork, metadata fork or ressource fork.
+ * For each fork to be opened specify the open flags and mode in case you want to create it
+ * (O_CREAT in open flags). The order in which forks are opened is:
+ * 1. ADFLAGS_DF
+ * 2. ADFLAGS_HF
+ * 3. ADFLAGS_RF
+ * The variable arguments must be passed according to this order.
  *
- * @param adflags ADFLAGS_DF:        open data fork \n
- *                ADFLAGS_RF:        open ressource fork \n
- *                ADFLAGS_HF:        open header (metadata) file \n
- *                ADFLAGS_NOHF:      it's not an error if header file couldn't be created \n
- *                ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags \n
- *                ADFLAGS_RDONLY:    open read only \n
- *                ADFLAGS_OPENFORKS: check for open forks from other processes
- *
- * @param oflags  flags passed through to open syscall
- * @param mode    passed to open with O_CREAT
- * @param ad      pointer to struct adouble
+ * @param ad        (rw) pointer to struct adouble
+ * @param path      (r)  Path to file or directory
+ * @param adflags   (r)  ADFLAGS_DF:        open data fork \n
+ *                       ADFLAGS_RF:        open ressource fork \n
+ *                       ADFLAGS_HF:        open header (metadata) file \n
+ *                       ADFLAGS_NOHF:      it's not an error if header file couldn't be created \n
+ *                       ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags \n
+ *                       ADFLAGS_RDONLY:    dont upgrade mode from r to rw with adouble:v2 headerfile \n
+ *                       ADFLAGS_OPENFORKS: check for open forks from other processes
  *
  * @returns 0 on success, any other value indicates an error
  */
-int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble  *ad)
+static int vad_open(struct adouble *ad, const char *path, int adflags, va_list args)
 {
     int ret = 0;
+    int oflags;
+    int mode;
     
-    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s, %s, 0%04o)",
-        abspath(path), adflags2logstr(adflags), oflags2logstr(oflags), mode);
+    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s)",
+        abspath(path), adflags2logstr(adflags));
 
     if (ad->ad_inited != AD_INITED)
         AFP_PANIC("ad_open: not initialized");
@@ -1072,6 +1065,9 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
     }
 
     if ((adflags & ADFLAGS_DF) && !(ad->ad_adflags & ADFLAGS_DF)) {
+        oflags = va_arg(args, int);
+        if (oflags & O_CREAT)
+            mode = va_arg(args, int);
         if (ad_open_df(path, adflags, oflags, mode, ad) != 0) {
             ret = -1;
             goto exit;
@@ -1080,6 +1076,9 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
     }
 
     if ((adflags & ADFLAGS_HF) && !(ad->ad_adflags & ADFLAGS_HF)) {
+        oflags = va_arg(args, int);
+        if (oflags & O_CREAT)
+            mode = va_arg(args, int);
         if (ad_open_hf(path, adflags, oflags, mode, ad) != 0) {
             ret = -1;
             goto exit;
@@ -1088,6 +1087,9 @@ int ad_open(const char *path, int adflags, int oflags, int mode, struct adouble 
     }
 
     if ((adflags & ADFLAGS_RF) && !(ad->ad_adflags & ADFLAGS_RF)) {
+        oflags = va_arg(args, int);
+        if (oflags & O_CREAT)
+            mode = va_arg(args, int);
         if (ad_open_rf(path, adflags, oflags, mode, ad) != 0) {
             ret = -1;
             goto exit;
@@ -1109,11 +1111,21 @@ exit:
     return ret;
 }
 
+int ad_open(struct adouble *ad, const char *path, int adflags, ...)
+{
+    int ret;
+    va_list args;
+
+    va_start(args, adflags);
+    ret = vad_open(ad, path, adflags, args);
+    va_end(args);
+    return ret;
+}
+
 /*!
  * @brief open metadata, possibly as root
  *
  * Return only metadata but try very hard ie at first try as user, then try as root.
- * Caller must pass ADFLAGS_DIR for directories.
  *
  * @param name  name of file/dir
  * @param flags ADFLAGS_DIR: name is a directory \n
@@ -1125,11 +1137,10 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
     uid_t uid;
     int   ret, err, dir;
-    int   create = O_RDONLY;
 
     dir = flags & ADFLAGS_DIR;
 
-    if ((ret = ad_open(name, ADFLAGS_HF | dir, create, 0666, adp)) < 0 && errno == EACCES) {
+    if ((ret = ad_open(adp, name, ADFLAGS_HF | dir, O_RDONLY)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
@@ -1137,7 +1148,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
             return -1;
         }
         /* we are root open read only */
-        ret = ad_open(name, ADFLAGS_HF|ADFLAGS_RDONLY| dir, O_RDONLY, 0, adp);
+        ret = ad_open(adp, name, ADFLAGS_HF | dir, O_RDONLY);
         err = errno;
         if ( seteuid(uid) < 0) {
             LOG(log_error, logtype_default, "ad_metadata: can't seteuid back");
@@ -1202,15 +1213,14 @@ int ad_refresh(struct adouble *ad)
     return ad->ad_ops->ad_header_read(ad, NULL);
 }
 
-int ad_openat(int dirfd,  /* dir fd openat like */
+int ad_openat(struct adouble  *ad,
+              int dirfd,  /* dir fd openat like */
               const char *path,
-              int adflags,
-              int oflags,
-              int mode,
-              struct adouble  *ad)
+              int adflags, ...)
 {
     int ret = 0;
     int cwdfd = -1;
+    va_list args;
 
     if (dirfd != -1) {
         if ((cwdfd = open(".", O_RDONLY) == -1) || (fchdir(dirfd) != 0)) {
@@ -1219,15 +1229,18 @@ int ad_openat(int dirfd,  /* dir fd openat like */
         }
     }
 
-    if (ad_open(path, adflags, oflags, mode, ad) < 0) {
+    va_start(args, adflags);
+
+    if (vad_open(ad, path, adflags, args) < 0) {
         ret = -1;
         goto exit;
     }
 
+    va_end(args);
+
     if (dirfd != -1) {
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_afpd, "ad_openat: cant chdir back, exiting");
-            exit(EXITERR_SYS);
+            AFP_PANIC("ad_openat: cant chdir back");
         }
     }
 

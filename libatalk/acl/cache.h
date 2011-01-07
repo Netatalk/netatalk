@@ -38,7 +38,7 @@
  *   uuid: if found copies uuid into this buffer
  * returns 0 on success, !=0 if not found or on errors
  */
-extern int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid);
+extern int search_cachebyname( const char *name, uuidtype_t type, unsigned char *uuid);
 
 /* 
  *   inname: name

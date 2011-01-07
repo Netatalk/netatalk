@@ -175,11 +175,11 @@ struct ad_fd {
 struct adouble;
 
 struct adouble_fops {
-    char *(*ad_path)(const char *, int);
-    int  (*ad_mkrf)(char *);
+    const char *(*ad_path)(const char *, int);
+    int  (*ad_mkrf)(const char *);
     int  (*ad_rebuild_header)(struct adouble *);
     int  (*ad_header_read)(struct adouble *, struct stat *);
-    int  (*ad_header_upgrade)(struct adouble *, char *);
+    int  (*ad_header_upgrade)(struct adouble *, const char *);
 };
 
 struct adouble {
@@ -210,8 +210,7 @@ struct adouble {
 #define ADFLAGS_HF        (1<<2)
 #define ADFLAGS_DIR       (1<<3)
 #define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
-#define ADFLAGS_RDONLY    (1<<5)  /* don't try readwrite */
-#define ADFLAGS_OPENFORKS (1<<6)  /* check for open fork in ad_metadata function */
+#define ADFLAGS_OPENFORKS (1<<5)  /* check for open fork in ad_metadata function */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)
@@ -368,20 +367,22 @@ extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);
-extern char *ad_path      (const char *, int);
-extern char *ad_path_ea   (const char *, int);
+extern const char *ad_path      (const char *, int);
+extern const char *ad_path_ea   (const char *, int);
 extern int ad_mode        (const char *, int);
 extern int ad_mkdir       (const char *, int);
 extern void ad_init       (struct adouble *, int, int );
-extern int ad_open        (const char *, int, int, int, struct adouble *);
-extern int ad_openat      (int dirfd, const char *, int, int, int, struct adouble *);
+extern int ad_open        (struct adouble *ad, const char *path, int adflags, ...);
+extern int ad_openat      (struct adouble *, int dirfd, const char *path, int adflags, ...);
 extern int ad_refresh     (struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
 extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
 
+#if 0
 #define ad_open_metadata(name, flags, mode, adp)\
    ad_open(name, ADFLAGS_HF | (flags), O_RDWR |(mode), 0666, (adp))
+#endif
 
 #define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_HF)
 

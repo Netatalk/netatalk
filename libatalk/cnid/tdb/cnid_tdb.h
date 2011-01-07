@@ -53,17 +53,17 @@ extern struct _cnid_db *cnid_tdb_open (struct cnid_open_args *args);
 extern void cnid_tdb_close (struct _cnid_db *);
 
 /* cnid_add.c */
-extern cnid_t cnid_tdb_add (struct _cnid_db *, const struct stat *, const cnid_t,
-                                 char *, const size_t, cnid_t);
+extern cnid_t cnid_tdb_add (struct _cnid_db *, const struct stat *, cnid_t,
+                            const char *, size_t, cnid_t);
 
 /* cnid_get.c */
-extern cnid_t cnid_tdb_get (struct _cnid_db *, const cnid_t, char *, const size_t);
+extern cnid_t cnid_tdb_get (struct _cnid_db *, cnid_t, const char *, size_t);
 extern char *cnid_tdb_resolve (struct _cnid_db *, cnid_t *, void *, size_t);
-extern cnid_t cnid_tdb_lookup (struct _cnid_db *, const struct stat *, const cnid_t, char *, const size_t);
+extern cnid_t cnid_tdb_lookup (struct _cnid_db *, const struct stat *, cnid_t, const char *, size_t);
 
 /* cnid_update.c */
-extern int cnid_tdb_update (struct _cnid_db *, const cnid_t, const struct stat *,
-                                 const cnid_t, char *, size_t);
+extern int cnid_tdb_update (struct _cnid_db *, cnid_t, const struct stat *,
+                            cnid_t, const char *, size_t);
 
 /* cnid_delete.c */
 extern int cnid_tdb_delete (struct _cnid_db *, const cnid_t);

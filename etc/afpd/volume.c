@@ -1487,7 +1487,7 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
      * .Parent file here if it doesn't exist. */
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ( ad_open_metadata( vol->v_path, ADFLAGS_DIR, O_CREAT, &ad) < 0 ) {
+    if (ad_open(&ad, vol->v_path, ADFLAGS_HF | ADFLAGS_DIR, O_RDWR | O_CREAT, 0666) != 0 ) {
         isad = 0;
         vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
 
@@ -2497,8 +2497,7 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
         return AFPERR_BITMAP;
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ( ad_open( vol->v_path, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR,
-                  0666, &ad) < 0 ) {
+    if ( ad_open(&ad,  vol->v_path, ADFLAGS_HF|ADFLAGS_DIR, O_RDWR) < 0 ) {
         if (errno == EROFS)
             return AFPERR_VLOCK;
 
@@ -2593,8 +2592,8 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
     if ( !ret && folder->hide) {
         /* Hide it */
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if (ad_open_metadata( p, ADFLAGS_DIR, O_CREAT, &ad) < 0) {
-            free (p);
+        if (ad_open(&ad, p, ADFLAGS_DIR, O_RDWR | O_CREAT, 0666) != 0) {
+            free(p);
             free(q);
             return (-1);
         }

@@ -40,7 +40,7 @@ struct vol {
     char            *v_veto;
     int             v_adouble;    /* adouble format: v1, v2, sfm ... */
     int             v_ad_options; /* adouble option NODEV, NOCACHE, etc.. */
-    char            *(*ad_path)(const char *, int);
+    const char      *(*ad_path)(const char *, int);
     struct _cnid_db *v_cdb;
     char            v_stamp[ADEDLEN_PRIVSYN];
     VolSpace        v_limitsize; /* Size limit, if any, in MiB */

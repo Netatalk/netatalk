@@ -292,17 +292,16 @@ static const char *check_special_dirs(const char *name)
 */
 static int check_adfile(const char *fname, const struct stat *st)
 {
-    int ret, adflags;
+    int ret;
+    int adflags = ADFLAGS_HF;
     struct adouble ad;
-    char *adname;
+    const char *adname;
 
     if (dbd_flags & DBD_FLAGS_CLEANUP)
         return 0;
 
     if (S_ISREG(st->st_mode))
-        adflags = 0;
-    else
-        adflags = ADFLAGS_DIR;
+        adflags |= ADFLAGS_DIR;
 
     adname = myvolinfo->ad_path(fname, adflags);
 
@@ -322,7 +321,7 @@ static int check_adfile(const char *fname, const struct stat *st)
         /* Create ad file */
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
 
-        if ((ret = ad_open_metadata( fname, adflags, O_CREAT, &ad)) != 0) {
+        if ((ret = ad_open(&ad,  fname, adflags, O_CREAT | O_RDWR, 0666)) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                      cwdbuf, adname, strerror(errno));
 
@@ -341,7 +340,7 @@ static int check_adfile(const char *fname, const struct stat *st)
 #endif
     } else {
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-        if (ad_open_metadata( fname, adflags, O_RDONLY, &ad) != 0) {
+        if (ad_open(&ad, fname, adflags, O_RDONLY) != 0) {
             dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
             return -1;
         }
@@ -494,7 +493,7 @@ static int check_addir(int volroot)
         /* Create ad dir and set name */
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
 
-        if (ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad) != 0) {
+        if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR, O_CREAT | O_RDWR, 0777) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
@@ -677,7 +676,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     ad_cnid = 0;
     if ( (myvolinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-        if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+        if (ad_open(&ad, name, adflags, O_RDWR) != 0) {
             
             if (dbd_flags & DBD_FLAGS_CLEANUP)
                 return 0;
@@ -773,7 +772,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                     dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                             cwdbuf, name, ntohl(db_cnid));
                     ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-                    if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+                    if (ad_open(&ad, name, adflags, O_RDWR) != 0) {
                         dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                                 cwdbuf, name, strerror(errno));
                         return 0;
@@ -811,7 +810,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                 dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                         cwdbuf, name, ntohl(db_cnid));
                 ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-                if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+                if (ad_open(&ad, name, adflags, O_RDWR) != 0) {
                     dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                             cwdbuf, name, strerror(errno));
                     return 0;

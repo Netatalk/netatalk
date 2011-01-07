@@ -1,7 +1,3 @@
-/*
- * $Id: cnid_tdb_lookup.c,v 1.6 2009-11-21 11:12:49 didg Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -11,7 +7,7 @@
 #include "cnid_tdb.h"
 #include <atalk/logger.h>
 
-cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const size_t len)
+cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len)
 {
     char *buf;
     struct _cnid_tdb_private *db;

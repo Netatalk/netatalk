@@ -597,7 +597,7 @@ static int delete_ea_file(const struct ea * restrict ea, const char *eaname)
  */
 char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int macname)
 {
-    char *adname;
+    const char *adname;
     static char pathbuf[MAXPATHLEN + 1];
 
     /* get name of a adouble file from uname */
@@ -1394,7 +1394,7 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
             ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
-            if ((ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) != 0) {
+            if ((ad_open(&ad, dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666)) != 0) {
                 LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): ad_open error: '%s'", src, dst, dst);
                 ret = AFPERR_MISC;
                 goto exit;
@@ -1491,7 +1491,7 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
             ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
-            if ((ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) != 0) {
+            if ((ad_open(&ad, dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666)) != 0) {
                 LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): ad_open error: '%s'", src, dst, dst);
                 ret = AFPERR_MISC;
                 goto exit;

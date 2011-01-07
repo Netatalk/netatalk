@@ -254,7 +254,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
         return -1;
     }
 
-    nametmp = rqst->name;
+    nametmp = (char *)rqst->name;
     if ((b = readt(cur_fd, rqst, sizeof(struct cnid_dbd_rqst), 1, CNID_DBD_TIMEOUT))
         != sizeof(struct cnid_dbd_rqst)) {
         if (b)
@@ -264,7 +264,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
         return 0;
     }
     rqst->name = nametmp;
-    if (rqst->namelen && readt(cur_fd, rqst->name, rqst->namelen, 1, CNID_DBD_TIMEOUT)
+    if (rqst->namelen && readt(cur_fd, (char *)rqst->name, rqst->namelen, 1, CNID_DBD_TIMEOUT)
         != rqst->namelen) {
         LOG(log_error, logtype_cnid, "error reading message name: %s", strerror(errno));
         invalidate_fd(cur_fd);
@@ -272,7 +272,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
     }
     /* We set this to make life easier for logging. None of the other stuff
        needs zero terminated strings. */
-    rqst->name[rqst->namelen] = '\0';
+    ((char *)(rqst->name))[rqst->namelen] = '\0';
 
     LOG(log_maxdebug, logtype_cnid, "comm_rcv: got %u bytes", b + rqst->namelen);
 

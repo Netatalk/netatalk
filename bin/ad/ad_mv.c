@@ -377,7 +377,7 @@ static int do_move(const char *from, const char *to)
 
         struct adouble ad;
         ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-        if (ad_open_metadata(to, S_ISDIR(sb.st_mode) ? ADFLAGS_DIR : 0, O_RDWR, &ad) != 0) {
+        if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF) : ADFLAGS_HF, O_RDWR) != 0) {
             SLOG("Error opening adouble for: %s", to);
             return 1;
         }

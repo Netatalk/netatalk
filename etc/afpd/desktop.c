@@ -692,11 +692,10 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     } else
         adp = of->of_ad;
 
-    if (ad_open(upath,
+    if (ad_open(adp, upath,
                 ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0),
                 O_CREAT | O_RDWR,
-                0666,
-                adp) < 0 ) {
+                0666) < 0 ) {
         return( AFPERR_ACCESS );
     }
 
@@ -847,7 +846,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     } else
         adp = of->of_ad;
 
-    if ( ad_open_metadata( upath, (isadir) ? ADFLAGS_DIR : 0, 0, adp) < 0 ) {
+    if ( ad_open(adp, upath, ADFLAGS_HF | (isadir) ? ADFLAGS_DIR : 0, 0) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOITEM );

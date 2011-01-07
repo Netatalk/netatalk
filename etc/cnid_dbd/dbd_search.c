@@ -29,7 +29,7 @@ int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     rply->name = resbuf;
     rply->namelen = 0;
 
-    key.data = rqst->name;
+    key.data = (char *)rqst->name;
     key.size = rqst->namelen;
 
     if ((results = dbif_search(dbd, &key, resbuf)) < 0) {

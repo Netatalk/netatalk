@@ -354,7 +354,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     ret = AFPERR_NOOBJ;
     if (access & OPENACC_WR) {
         /* try opening in read-write mode */
-        if (ad_open(upath, adflags, O_RDWR, 0, ofork->of_ad) < 0) {
+        if (ad_open(ofork->of_ad, upath, adflags, O_RDWR, O_RDWR) < 0) {
             switch ( errno ) {
             case EROFS:
                 ret = AFPERR_VLOCK;
@@ -364,14 +364,14 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
             case ENOENT:
                 if (fork == OPENFORK_DATA) {
                     /* try to open only the data fork */
-                    if (ad_open(upath, ADFLAGS_DF, O_RDWR, 0, ofork->of_ad) < 0) {
+                    if (ad_open(ofork->of_ad, upath, ADFLAGS_DF, O_RDWR) < 0) {
                         goto openfork_err;
                     }
                     adflags = ADFLAGS_DF;
                 } else {
                     /* here's the deal. we only try to create the resource
                      * fork if the user wants to open it for write acess. */
-                    if (ad_open(upath, adflags, O_RDWR | O_CREAT, 0666, ofork->of_ad) < 0)
+                    if (ad_open(ofork->of_ad, upath, adflags, O_RDWR | O_CREAT, 0666, O_RDWR | O_CREAT, 0666) < 0)
                         goto openfork_err;
                     ofork->of_flags |= AFPFORK_OPEN;
                 }
@@ -399,7 +399,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     } else {
         /* try opening in read-only mode */
         ret = AFPERR_NOOBJ;
-        if (ad_open(upath, adflags, O_RDONLY, 0, ofork->of_ad) < 0) {
+        if (ad_open(ofork->of_ad, upath, adflags, O_RDONLY, O_RDONLY) < 0) {
             switch ( errno ) {
             case EROFS:
                 ret = AFPERR_VLOCK;
@@ -409,7 +409,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
             case ENOENT:
                 /* see if client asked for a read only data fork */
                 if (fork == OPENFORK_DATA) {
-                    if (ad_open(upath, ADFLAGS_DF, O_RDONLY, 0, ofork->of_ad) < 0) {
+                    if (ad_open(ofork->of_ad, upath, ADFLAGS_DF, O_RDONLY) < 0) {
                         goto openfork_err;
                     }
                     adflags = ADFLAGS_DF;

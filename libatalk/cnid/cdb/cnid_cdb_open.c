@@ -61,20 +61,6 @@
 
 static char *old_dbfiles[] = {"cnid.db", NULL};
 
-/* -----------------------
- * bandaid for LanTest performance pb. for now not used, cf. ifdef 0 below
-*/
-static int my_yield(void)
-{
-    struct timeval t;
-    int ret;
-
-    t.tv_sec = 0;
-    t.tv_usec = 1000;
-    ret = select(0, NULL, NULL, NULL, &t);
-    return 0;
-}
-
 /* --------------- */
 static int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 {
@@ -368,7 +354,6 @@ struct _cnid_db *cnid_cdb_open(struct cnid_open_args *args)
         }
     }
 
-    db_env_set_func_yield(my_yield);
     return cdb;
 
   fail_appinit:

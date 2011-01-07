@@ -1,6 +1,4 @@
 /*
- * $Id: cnid_tdb_add.c,v 1.4 2009-11-20 17:37:14 didg Exp $
- *
  * Copyright (c) 1999. Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -154,7 +152,7 @@ cleanup:
 
 /* ------------------------ */
 cnid_t cnid_tdb_add(struct _cnid_db *cdb, const struct stat *st,
-                     const cnid_t did, char *name, const size_t len, cnid_t hint)
+                    cnid_t did, const char *name, size_t len, cnid_t hint)
 {
     const struct stat *lstp;
     cnid_t id;

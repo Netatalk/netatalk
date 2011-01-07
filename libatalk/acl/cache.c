@@ -30,7 +30,7 @@
 typedef struct cacheduser {
     unsigned long uid;      /* for future use */
     uuidtype_t type;
-    uuidp_t uuid;
+    unsigned char *uuid;
     char *name;
     time_t creationtime;
     struct cacheduser *prev;
@@ -117,7 +117,7 @@ static unsigned char hashuuid(uuidp_t uuid) {
 int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t type, const unsigned long uid _U_) {
     int ret = 0;
     char *name = NULL;
-    uuidp_t uuid;
+    unsigned char *uuid;
     cacheduser_t *cacheduser = NULL;
     cacheduser_t *entry;
     unsigned char hash;
@@ -193,7 +193,7 @@ cleanup:
 /* 
  * Caller provides buffer uuid for result
  */
-int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
+int search_cachebyname( const char *name, uuidtype_t type, unsigned char *uuid) {
     int ret;
     unsigned char hash;
     cacheduser_t *entry;
@@ -307,7 +307,7 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
 int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const unsigned long uid _U_) {
     int ret = 0;
     char *name = NULL;
-    uuidp_t uuid;
+    unsigned char *uuid;
     cacheduser_t *cacheduser = NULL;
     cacheduser_t *entry;
     unsigned char hash;

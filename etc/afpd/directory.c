@@ -802,7 +802,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
 
     /* get_id needs adp for reading CNID from adouble file */
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ((ad_open_metadata(path->u_name, ADFLAGS_DIR, 0, &ad)) == 0) /* 1 */
+    if ((ad_open(&ad, path->u_name, ADFLAGS_HF | ADFLAGS_DIR)) == 0) /* 1 */
         adp = &ad;
 
     /* Get CNID */
@@ -1787,7 +1787,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
     }
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (ad_open_metadata( upath, ADFLAGS_DIR, O_CREAT, &ad) < 0) {
+    if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR, O_CREAT, 0777) != 0) {
         /*
          * Check to see what we're trying to set.  If it's anything
          * but ACCESS, UID, or GID, give an error.  If it's any of those
@@ -2140,7 +2140,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     }
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if (ad_open_metadata( ".", ADFLAGS_DIR, O_CREAT, &ad ) < 0)  {
+    if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR, O_CREAT, 0777) < 0)  {
         if (vol_noadouble(vol))
             goto createdir_done;
         return( AFPERR_ACCESS );
@@ -2206,7 +2206,7 @@ int renamedir(const struct vol *vol,
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (!ad_open_metadata( dst, ADFLAGS_DIR, 0, &ad)) {
+    if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_DIR) == 0) {
         ad_setname(&ad, newname);
         ad_flush( &ad);
         ad_close_metadata( &ad);

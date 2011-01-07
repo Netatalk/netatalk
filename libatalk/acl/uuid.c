@@ -43,7 +43,7 @@ char *uuidtype[] = {"NULL","USER", "GROUP", "LOCAL"};
  * convert ascii string that can include dashes to binary uuid.
  * caller must provide a buffer.
  */
-void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
+void uuid_string2bin( const char *uuidstring, unsigned char *uuid) {
     int nibble = 1;
     int i = 0;
     unsigned char c, val = 0;
@@ -77,7 +77,7 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
  * 
  * Returns pointer to static buffer.
  */
-const char *uuid_bin2string(unsigned char *uuid) {
+const char *uuid_bin2string(const unsigned char *uuid) {
     static char uuidstring[UUID_STRINGSIZE + 1];
 
     int i = 0;
@@ -113,7 +113,7 @@ static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
  *   uuid: pointer to uuid_t storage that the caller must provide
  * returns 0 on success !=0 on errror
  */  
-int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
+int getuuidfromname( const char *name, uuidtype_t type, unsigned char *uuid) {
     int ret = 0;
 #ifdef HAVE_LDAP
     char *uuid_string = NULL;
@@ -183,7 +183,7 @@ cleanup:
  *
  * Caller must free name appropiately.
  */
-int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
+int getnamefromuuid(uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
 
     ret = search_cachebyuuid( uuidp, name, type);

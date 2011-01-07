@@ -30,7 +30,7 @@ struct volinfo {
     int                 v_adouble;  /* default adouble format */
     int                 v_ad_options;
     int                 v_vfs_ea;
-    char                *(*ad_path)(const char *, int);
+    const char          *(*ad_path)(const char *, int);
     char                *v_dbd_host;
     char                *v_dbd_port;
 };

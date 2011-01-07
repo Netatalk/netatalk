@@ -702,8 +702,8 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     	   because open syscall is not called */
         openf = O_RDWR|O_CREAT|O_EXCL;
 
-    if ( ad_open( upath, ADFLAGS_DF|ADFLAGS_HF|ADFLAGS_NOHF,
-                  openf, 0666, &ad) < 0 ) {
+    if ( ad_open(&ad, upath, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF,
+                 openf, 0666, openf, 0666) < 0 ) {
         switch ( errno ) {
         case EROFS:
             return AFPERR_VLOCK;
@@ -962,7 +962,7 @@ int setfilparams(struct vol *vol,
 
     /* second try with adouble open 
     */
-    if ( ad_open_metadata( upath, 0, O_CREAT, adp) < 0) {
+    if ( ad_open(adp, upath, ADFLAGS_HF, O_RDWR | O_CREAT, 0666) < 0) {
         LOG(log_debug, logtype_afpd, "setfilparams: ad_open_metadata error");
         /*
          * For some things, we don't need an adouble header:
@@ -1141,7 +1141,7 @@ int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *n
 
     /* don't care if we can't open the newly renamed ressource fork
      */
-    if (!ad_open( dst, ADFLAGS_HF, O_RDWR, 0666, adp)) {
+    if (ad_open(adp, dst, ADFLAGS_HF, O_RDWR) == 0) {
         ad_setname(adp, newname);
         ad_flush( adp );
         ad_close( adp, ADFLAGS_HF );
@@ -1269,7 +1269,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
 
     adp = of_ad(s_vol, s_path, &ad);
 
-    if (ad_open(s_path->u_name , ADFLAGS_DF |ADFLAGS_HF | ADFLAGS_NOHF, O_RDONLY, 0, adp) < 0) {
+    if (ad_open(adp, s_path->u_name, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0) {
         return AFPERR_DENYCONF;
     }
     denyreadset = (getforkmode(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
@@ -1481,7 +1481,7 @@ int copyfile(const struct vol *s_vol,
         adflags |= ADFLAGS_HF;
     }
 
-    if (ad_openat(sfd, src, adflags | ADFLAGS_NOHF, O_RDONLY, 0, adp) < 0) {
+    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF, O_RDONLY) < 0) {
         ret_err = errno;
         goto done;
     }
@@ -1499,7 +1499,7 @@ int copyfile(const struct vol *s_vol,
     }
 
     ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
-    if (ad_open(dst , adflags, O_RDWR|O_CREAT|O_EXCL, st.st_mode, &add) < 0) {
+    if (ad_open(&add, dst, adflags, O_RDWR|O_CREAT|O_EXCL, st.st_mode, O_RDWR|O_CREAT|O_EXCL, st.st_mode) < 0) {
         ret_err = errno;
         ad_close( adp, adflags );
         if (EEXIST != ret_err) {
@@ -1625,7 +1625,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
  
     /* try to open both forks at once */
     adflags = ADFLAGS_DF;
-    if ( ad_openat(dirfd, file, adflags |ADFLAGS_HF|ADFLAGS_NOHF, O_RDONLY, 0, &ad ) < 0 ) {
+    if ( ad_openat(&ad, dirfd, file, adflags |ADFLAGS_HF|ADFLAGS_NOHF, O_RDONLY) < 0 ) {
         switch (errno) {
         case ENOENT:
             err = AFPERR_NOOBJ;
@@ -2035,7 +2035,7 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
         adp = (*of)->of_ad;
     }
     else {
-        ret = ad_open( path->u_name, ADFLAGS_HF, O_RDONLY, 0, adp);
+        ret = ad_open(adp, path->u_name, ADFLAGS_HF, O_RDONLY);
         /* META and HF */
         if ( !ret && ad_reso_fileno(adp) != -1 && !(adp->ad_resource_fork.adf_flags & ( O_RDWR | O_WRONLY))) {
             /* from AFP spec.

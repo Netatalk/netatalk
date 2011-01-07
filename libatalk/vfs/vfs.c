@@ -114,7 +114,7 @@ static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
 {
     struct stat st;
-    char        *ad_p;
+    const char *ad_p;
 
     ad_p = vol->ad_path(path, ADFLAGS_HF );
 
@@ -173,7 +173,7 @@ static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 /* ----------------- */
 static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    char *adouble = vol->ad_path(name, ADFLAGS_DIR );
+    const char *adouble = vol->ad_path(name, ADFLAGS_DIR );
     int  dropbox = vol->v_flags;
 
     if (dir_rx_set(mode)) {
@@ -214,8 +214,8 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 {
     int   dropbox = vol->v_flags;
     mode_t hf_mode = ad_hf_mode(mode);
-    char  *adouble = vol->ad_path(name, ADFLAGS_DIR );
-    char  *adouble_p = ad_dir(adouble);
+    const char  *adouble = vol->ad_path(name, ADFLAGS_DIR );
+    const char  *adouble_p = ad_dir(adouble);
 
     if (dir_rx_set(mode)) {
         if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
@@ -308,7 +308,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
              * use a diff one, it's not a pb,ie it's not the same file, yet.
              */
             ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
-            if (!ad_open(dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666, &ad)) {
+            if (ad_open(&ad, dst, ADFLAGS_HF, O_RDWR | O_CREAT, 0666) == 0) {
             	ad_close(&ad, ADFLAGS_HF);
     	        if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) ) 
                    err = 0;

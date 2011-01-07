@@ -53,21 +53,21 @@ struct _cnid_db {
     char *volpath;               /* Volume path this particular CNID db refers to. */
     void *_private;              /* back-end speficic data */
 
-    cnid_t (*cnid_add)         (struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                                char *name, const size_t, cnid_t hint);
+    cnid_t (*cnid_add)         (struct _cnid_db *cdb, const struct stat *st, cnid_t did,
+                                const char *name, size_t, cnid_t hint);
     int    (*cnid_delete)      (struct _cnid_db *cdb, cnid_t id);
-    cnid_t (*cnid_get)         (struct _cnid_db *cdb, const cnid_t did, char *name, const  size_t);
-    cnid_t (*cnid_lookup)      (struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                                char *name, const size_t);
+    cnid_t (*cnid_get)         (struct _cnid_db *cdb, cnid_t did, const char *name, size_t);
+    cnid_t (*cnid_lookup)      (struct _cnid_db *cdb, const struct stat *st, cnid_t did,
+                                const char *name, size_t);
     cnid_t (*cnid_nextid)      (struct _cnid_db *cdb);
     char * (*cnid_resolve)     (struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len);
-    int    (*cnid_update)      (struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                                const cnid_t did, char *name, const size_t len);
+    int    (*cnid_update)      (struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+                                cnid_t did, const char *name, size_t len);
     void   (*cnid_close)       (struct _cnid_db *cdb);
     int    (*cnid_getstamp)    (struct _cnid_db *cdb, void *buffer, const size_t len);
-    cnid_t (*cnid_rebuild_add) (struct _cnid_db *, const struct stat *, const cnid_t,
-                                char *, const size_t, cnid_t);
-    int    (*cnid_find)        (struct _cnid_db *cdb, char *name, size_t namelen,
+    cnid_t (*cnid_rebuild_add) (struct _cnid_db *, const struct stat *, cnid_t,
+                                const char *, size_t, cnid_t);
+    int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t namelen,
                                 void *buffer, size_t buflen);
 };
 typedef struct _cnid_db cnid_db;
