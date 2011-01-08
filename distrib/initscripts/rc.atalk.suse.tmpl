@@ -30,6 +30,25 @@ test -f /etc/rc.status && . /etc/rc.status
 return=$rc_done
 }
 
+ATALK_NAME=`hostname|sed 's/\..*$//'`
+ATALK_UNIX_CHARSET='LOCALE'
+ATALK_MAC_CHARSET='MAC_ROMAN'
+
+CNID_METAD_RUN=yes
+AFPD_RUN=yes
+AFPD_MAX_CLIENTS=20
+AFPD_UAMLIST="-U uams_dhx.so,uams_dhx2.so"
+AFPD_GUEST=nobody
+CNID_CONFIG="-l log_note"
+
+ATALKD_RUN=no
+PAPD_RUN=no
+TIMELORD_RUN=no
+#A2BOOT_RUN=no
+ATALK_ZONE=
+ATALK_BGROUND=no
+
+
 . :ETCDIR:/netatalk.conf
 
 # startup code for everything
@@ -39,8 +58,8 @@ atalk_startup() {
 	:SBINDIR:/atalkd
 
 	if [ -x :BINDIR:/nbprgstr ]; then	
-	    :BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:Workstation
-	    :BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
+	    :BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:Workstation
+	    :BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:netatalk
 
 	fi	
 
@@ -74,7 +93,7 @@ atalk_startup() {
 
 case "$1" in
     start)
-	if [ x"${ATALK_BGROUND}" = x"yes" ]; then 
+	if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then 
 	    echo "Starting netatalk in the background ... "
 	    atalk_startup >& /dev/null &
 	else

@@ -15,6 +15,24 @@
 ##	/usr/etc/modload -sym :ETCDIR:/netatalk.o;
 ##fi
 
+ATALK_NAME=`hostname|sed 's/\..*$//'`
+ATALK_UNIX_CHARSET='LOCALE'
+ATALK_MAC_CHARSET='MAC_ROMAN'
+
+CNID_METAD_RUN=yes
+AFPD_RUN=yes
+AFPD_MAX_CLIENTS=20
+AFPD_UAMLIST="-U uams_dhx.so,uams_dhx2.so"
+AFPD_GUEST=nobody
+CNID_CONFIG="-l log_note"
+
+ATALKD_RUN=no
+PAPD_RUN=no
+TIMELORD_RUN=no
+#A2BOOT_RUN=no
+ATALK_ZONE=
+#ATALK_BGROUND=no
+
 netatalk_conf=":ETCDIR:/netatalk.conf"
 
 [ -f ${netatalk_conf} ] && . ${netatalk_conf}
@@ -26,8 +44,8 @@ if [ -x :SBINDIR:/atalkd ]; then
 fi
 
 if [ -x :BINDIR:/nbprgstr ]; then
-	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:Workstation
-	:BINDIR:/nbprgstr -p 4 `hostname|sed 's/\..*$//'`:netatalk
+	:BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:Workstation
+	:BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:netatalk
 	echo -n ' nbprgstr'
 fi
 fi
@@ -37,12 +55,14 @@ if [ -x :SBINDIR:/papd -a X"${PAPD_RUN}" != X"no" ]; then
 fi
 
 if [ -x :SBINDIR:/cnid_metad -a X"${CNID_METAD_RUN}" != X"no" ]; then
-    :SBINDIR:/cnid_metad $CNID_CONFIG
-    echo -n ' cnid_metad'
+	:SBINDIR:/cnid_metad $CNID_CONFIG
+	echo -n ' cnid_metad'
 fi
 
 if [ -x :SBINDIR:/afpd -a X"${AFPD_RUN}" != X"no" ]; then
-	:SBINDIR:/afpd;		echo -n ' afpd'
+	:SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+	    -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
+	echo -n ' afpd'
 fi
 
 if [ -x :SBINDIR:/timelord -a X"${TIMELORD_RUN}" != X"no" ]; then
