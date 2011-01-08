@@ -1,5 +1,4 @@
 /*
-  $Id: cache.c,v 1.6 2010-04-23 11:37:05 franklahm Exp $
   Copyright (c) 2008,2009 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -124,7 +123,6 @@ int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t 
     char *name = NULL;
     uuidp_t uuid;
     cacheduser_t *cacheduser = NULL;
-    cacheduser_t *entry;
     unsigned char hash;
 
 #ifdef DEBUG
@@ -167,15 +165,14 @@ int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t 
     /* get hash */
     hash = hashstring((unsigned char *)name);
 
-    /* insert cache entry into cache array */
-    if (namecache[hash] == NULL) { /* this queue is empty */
+    /* insert cache entry into cache array at head of queue */
+    if (namecache[hash] == NULL) {
+        /* this queue is empty */
         namecache[hash] = cacheduser;
-    } else {            /* queue is not empty, search end of queue*/
-        entry = namecache[hash];
-        while( entry->next != NULL)
-            entry = entry->next;
-        cacheduser->prev = entry;
-        entry->next = cacheduser;
+    } else {
+        cacheduser->next = namecache[hash];
+        namecache[hash]->prev = cacheduser;
+        namecache[hash] = cacheduser;
     }
 
 cleanup:
@@ -210,7 +207,7 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
 
     hash = hashstring((unsigned char *)name);
 
-    if (! namecache[hash])
+    if (namecache[hash] == NULL)
         return -1;
 
     entry = namecache[hash];
@@ -222,9 +219,14 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
             if ((tim - entry->creationtime) > CACHESECONDS) {
                 LOG(log_debug, logtype_default, "search_cachebyname: expired: name:\'%s\' in queue {%d}", entry->name, hash);
                 /* remove item */
-                if (entry->prev) /* 2nd to last in queue */
+                if (entry->prev) {
+                    /* 2nd to last in queue */
                     entry->prev->next = entry->next;
-                else  { /* queue head */
+                    if (entry->next)
+                        /* not the last element */
+                        entry->next->prev = entry->prev;
+                } else  {
+                    /* queue head */
                     if ((namecache[hash] = entry->next) != NULL)
                         namecache[hash]->prev = NULL;
                 }
@@ -276,9 +278,14 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
             tim = time(NULL);
             if ((tim - entry->creationtime) > CACHESECONDS) {
                 LOG(log_debug, logtype_default, "search_cachebyuuid: expired: name:\'%s\' in queue {%d}", entry->name, hash);
-                if (entry->prev) /* 2nd to last in queue */
+                if (entry->prev) {
+                    /* 2nd to last in queue */
                     entry->prev->next = entry->next;
-                else { /* queue head  */
+                    if (entry->next)
+                        /* not the last element */
+                        entry->next->prev = entry->prev;
+                } else {
+                    /* queue head  */
                     if ((uuidcache[hash] = entry->next) != NULL)
                         uuidcache[hash]->prev = NULL;
                 }
@@ -357,15 +364,14 @@ int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const 
     /* get hash */
     hash = hashuuid(uuid);
 
-    /* insert cache entry into cache array */
-    if (uuidcache[hash] == NULL) { /* this queue is empty */
+    /* insert cache entry into cache array at head of queue */
+    if (uuidcache[hash] == NULL) {
+        /* this queue is empty */
         uuidcache[hash] = cacheduser;
-    } else {            /* queue is not empty, search end of queue*/
-        entry = uuidcache[hash];
-        while( entry->next != NULL)
-            entry = entry->next;
-        cacheduser->prev = entry;
-        entry->next = cacheduser;
+    } else {
+        cacheduser->next = uuidcache[hash];
+        uuidcache[hash]->prev = cacheduser;
+        uuidcache[hash] = cacheduser;
     }
 
 cleanup:

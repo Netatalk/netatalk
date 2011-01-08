@@ -1,3 +1,8 @@
+Changes in 2.1.6
+================
+
+* FIX: afpd: Fix for LDAP user cache corruption
+
 Changes in 2.1.5
 ================
 
