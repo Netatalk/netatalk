@@ -623,11 +623,18 @@ static void show_version_extended(void )
 static void show_paths( void )
 {
 	printf( "             afpd.conf:\t%s\n", _PATH_AFPDCONF );
-	printf( "    afp_signature.conf:\t%s\n", _PATH_AFPDSIGCONF );
 	printf( "   AppleVolumes.system:\t%s\n", _PATH_AFPDSYSVOL );
 	printf( "  AppleVolumes.default:\t%s\n", _PATH_AFPDDEFVOL );
+	printf( "    afp_signature.conf:\t%s\n", _PATH_AFPDSIGCONF );
+	printf( "      afp_voluuid.conf:\t%s\n", _PATH_AFPDUUIDCONF );
+#ifdef HAVE_LDAP
+	printf( "         afp_ldap.conf:\t%s\n", _PATH_ACL_LDAPCONF );
+#else
+	printf( "         afp_ldap.conf:\tnot supported\n");
+#endif
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );
-    printf( "  Server messages path:\t%s\n", SERVERTEXT);
+	printf( "  Server messages path:\t%s\n", SERVERTEXT);
+	printf( "              lockfile:\t%s\n", _PATH_AFPDLOCK);
 }
 
 /*

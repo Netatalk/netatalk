@@ -17,18 +17,9 @@
 #include "precompose.h"
 #include "byteorder.h"
 
-#define HANGUL_SBASE 0xAC00
-#define HANGUL_LBASE 0x1100
-#define HANGUL_VBASE 0x1161
-#define HANGUL_TBASE 0x11A7
-#define HANGUL_LCOUNT 19
-#define HANGUL_VCOUNT 21
-#define HANGUL_TCOUNT 28
-#define HANGUL_NCOUNT (HANGUL_VCOUNT * HANGUL_TCOUNT)   /* 588 */
-#define HANGUL_SCOUNT (HANGUL_LCOUNT * HANGUL_NCOUNT)   /* 11172 */
-
-#define MAXCOMBLEN 3
-
+/*******************************************************************
+ Convert a wide character to upper/lower case.
+********************************************************************/
 ucs2_t toupper_w(ucs2_t val)
 {
 	if ( val >= 0x0040 && val <= 0x007F)
@@ -333,11 +324,14 @@ ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
 }
 
 
-/* ------------------------ */
+/*******************************************************************
+binary search for pre|decomposition
+********************************************************************/
+
 static ucs2_t do_precomposition(unsigned int base, unsigned int comb) 
 {
 	int min = 0;
-	int max = sizeof(precompositions) / sizeof(precompositions[0]) - 1;
+	int max = PRECOMP_COUNT - 1;
 	int mid;
 	u_int32_t sought = (base << 16) | comb, that;
 
@@ -357,11 +351,35 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 	return 0;
 }
 
+/* ------------------------ */
+static u_int32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp) 
+{
+	int min = 0;
+	int max = PRECOMP_SP_COUNT - 1;
+	int mid;
+	u_int64_t sought_sp = ((u_int64_t)base_sp << 32) | (u_int64_t)comb_sp, that_sp;
+
+	/* binary search */
+	while (max >= min) {
+		mid = (min + max) / 2;
+		that_sp = ((u_int64_t)precompositions_sp[mid].base_sp << 32) | ((u_int64_t)precompositions_sp[mid].comb_sp);
+		if (that_sp < sought_sp) {
+			min = mid + 1;
+		} else if (that_sp > sought_sp) {
+			max = mid - 1;
+		} else {
+			return precompositions_sp[mid].replacement_sp;
+		}
+	}
+	/* no match */
+	return 0;
+}
+
 /* -------------------------- */
 static u_int32_t do_decomposition(ucs2_t base) 
 {
 	int min = 0;
-	int max = sizeof(decompositions) / sizeof(decompositions[0]) - 1;
+	int max = DECOMP_COUNT - 1;
 	int mid;
 	u_int32_t sought = base;
 	u_int32_t result, that;
@@ -383,36 +401,71 @@ static u_int32_t do_decomposition(ucs2_t base)
 	return 0;
 }
 
-/* we can't use static, this stuff needs to be reentrant */
-/* static char comp[MAXPATHLEN +1]; */
+/* -------------------------- */
+static u_int64_t do_decomposition_sp(unsigned int base_sp) 
+{
+	int min = 0;
+	int max = DECOMP_SP_COUNT - 1;
+	int mid;
+	u_int32_t sought_sp = base_sp;
+	u_int32_t that_sp;
+	u_int64_t result_sp;
+
+	/* binary search */
+	while (max >= min) {
+		mid = (min + max) / 2;
+		that_sp = decompositions_sp[mid].replacement_sp;
+		if (that_sp < sought_sp) {
+			min = mid + 1;
+		} else if (that_sp > sought_sp) {
+			max = mid - 1;
+		} else {
+			result_sp = ((u_int64_t)decompositions_sp[mid].base_sp << 32) | ((u_int64_t)decompositions_sp[mid].comb_sp);
+			return result_sp;
+		}
+	}
+	/* no match */
+	return 0;
+}
+
+/*******************************************************************
+pre|decomposition
+
+   we can't use static, this stuff needs to be reentrant
+   static char comp[MAXPATHLEN +1];
+
+   We don't implement Singleton and Canonical Ordering.
+   We ignore CompositionExclusions.txt.
+   because they cause the problem of the roundtrip
+   such as Dancing Icon.
+
+   exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges
+   in precompose.h from composition according to AFP 3.x spec
+********************************************************************/
 
 size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
 	size_t i;
 	ucs2_t base, comb;
+	u_int32_t base_sp, comb_sp;
 	ucs2_t *in, *out;
-	ucs2_t hangul_lindex, hangul_vindex;
+	ucs2_t lindex, vindex;
 	ucs2_t result;
+	u_int32_t result_sp;
 	size_t o_len = *outlen;
-
+	
 	if (!inplen || (inplen & 1) || inplen > o_len)
 		return (size_t)-1;
-	
-	/*   Actually,                                                 */
-	/*   Decomposition and Canonical Ordering are necessary here.  */
-	/*                                                             */
-	/*         Ex. in = CanonicalOrdering(decompose_w(name))       */
-	/*                                                             */
-	/*   A new mapping table is needed for CanonicalOrdering.      */
 	
 	i = 0;
 	in  = name;
 	out = comp;
-
+	
 	base = *in;
 	while (*outlen > 2) {
 		i += 2;
 		in++;
+
 		if (i == inplen) {
 			*out = base;
 			out++;
@@ -420,33 +473,68 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 			*outlen -= 2;
 			return o_len - *outlen;
 		}
+
 		comb = *in;
 		result = 0;
-		
+
 		/* Non-Combination Character */
 		if (comb < 0x300) ;
 		
 		/* Unicode Standard Annex #15 A10.3 Hangul Composition */
 		/* Step 1 <L,V> */
-		else if ((HANGUL_VBASE <= comb) && (comb <= HANGUL_VBASE + HANGUL_VCOUNT)) {
-			if ((HANGUL_LBASE <= base) && (base < HANGUL_LBASE + HANGUL_LCOUNT)) {
+		else if ((VBASE <= comb) && (comb <= VBASE + VCOUNT)) {
+			if ((LBASE <= base) && (base < LBASE + LCOUNT)) {
 				result = 1;
-				hangul_lindex = base - HANGUL_LBASE;
-				hangul_vindex = comb - HANGUL_VBASE;
-				base = HANGUL_SBASE + (hangul_lindex * HANGUL_VCOUNT + hangul_vindex) * HANGUL_TCOUNT;
+				lindex = base - LBASE;
+				vindex = comb - VBASE;
+				base = SBASE + (lindex * VCOUNT + vindex) * TCOUNT;
 			}
 		}
 		
 		/* Step 2 <LV,T> */
-		else if ((HANGUL_TBASE < comb) && (comb < HANGUL_TBASE + HANGUL_TCOUNT)) {
-			if ((HANGUL_SBASE <= base) && (base < HANGUL_SBASE +HANGUL_SCOUNT) && (((base - HANGUL_SBASE) % HANGUL_TCOUNT) == 0)) {
+		else if ((TBASE < comb) && (comb < TBASE + TCOUNT)) {
+			if ((SBASE <= base) && (base < SBASE + SCOUNT) && (((base - SBASE) % TCOUNT) == 0)) {
 				result = 1;
-				base += comb - HANGUL_TBASE;
+				base += comb - TBASE;
 			}
 		}
 		
-		/* Combining Sequence */
-		else if ((result = do_precomposition(base, comb))) {
+		/* Binary Search for Surrogate Pair */
+		else if ((0xD800 <= base) && (base < 0xDC00)) {
+			if ((0xDC00 <= comb) && (comb < 0xE000) && (i + 4 <= inplen)) {
+				base_sp = ((u_int32_t)base << 16) | (u_int32_t)comb;
+				do {
+					comb_sp = ((u_int32_t)in[1] << 16) | (u_int32_t)in[2];
+					if (result_sp = do_precomposition_sp(base_sp, comb_sp)) {
+						base_sp = result_sp;
+						i += 4;
+						in +=2;
+					}
+				} while ((i + 4 <= inplen) && result_sp) ;
+
+				*out = base_sp >> 16;
+				out++;
+				*outlen -= 2;
+
+				if (*outlen <= 2) {
+					errno = E2BIG;
+					return (size_t)-1;
+				}
+
+				*out = base_sp & 0xFFFF;
+				out++;
+				*outlen -= 2;
+
+				i += 2;
+				in++;
+				base = *in;
+
+				result = 1;
+			}
+		}
+
+		/* Binary Search for BMP */
+		else if (result = do_precomposition(base, comb)) {
 			base = result;
 		}
 		
@@ -457,25 +545,22 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 			base = comb;
 		}
 	}
-	
+
 	errno = E2BIG;
 	return (size_t)-1;
 }
 
 /* --------------- */
-
-/* Singleton Decomposition is unsupported.               */
-/* A new mapping table is needed for implementation.     */
-
 size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
 	size_t i;
 	size_t comblen;
-	ucs2_t base;
-	ucs2_t comb[MAXCOMBLEN];
-	ucs2_t hangul_sindex, tjamo;
+	ucs2_t base, comb[COMBBUFLEN];
+	u_int32_t base_sp;
+	ucs2_t sindex, tjamo;
 	ucs2_t *in, *out;
 	unsigned int result;
+	u_int64_t result_sp;
 	size_t o_len = *outlen;
 
 	if (!inplen || (inplen & 1))
@@ -492,34 +577,60 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		if (base <= 0x007f) ;
 		
 		/* Unicode Standard Annex #15 A10.2 Hangul Decomposition */
-		else if ((HANGUL_SBASE <= base) && (base < HANGUL_SBASE + HANGUL_SCOUNT)) {
-			hangul_sindex = base - HANGUL_SBASE;
-			base = HANGUL_LBASE + hangul_sindex / HANGUL_NCOUNT;
-			comb[MAXCOMBLEN-2] = HANGUL_VBASE + (hangul_sindex % HANGUL_NCOUNT) / HANGUL_TCOUNT;
+		else if ((SBASE <= base) && (base < SBASE + SCOUNT)) {
+			sindex = base - SBASE;
+			base = LBASE + sindex / NCOUNT;
+			comb[COMBBUFLEN-2] = VBASE + (sindex % NCOUNT) / TCOUNT;
 			
 			/* <L,V> */
-			if ((tjamo = HANGUL_TBASE + hangul_sindex % HANGUL_TCOUNT) == HANGUL_TBASE) {
-				comb[MAXCOMBLEN-1] = comb[MAXCOMBLEN-2];
+			if ((tjamo = TBASE + sindex % TCOUNT) == TBASE) {
+				comb[COMBBUFLEN-1] = comb[COMBBUFLEN-2];
 				comblen = 1;
 			}
 			
 			/* <L,V,T> */
 			else {
-				comb[MAXCOMBLEN-1] = tjamo;
+				comb[COMBBUFLEN-1] = tjamo;
 				comblen = 2;
 			}
 		}
 		
-		/* Combining Sequence */
-		/* exclude U2000-U2FFF and UFE30-UFE4F ranges in decompositions[]     */
-		/* from decomposition according to AFP 3.1 spec    */
+		/* Binary Search for Surrogate Pair */
+		else if ((0xD800 <= base) && (base < 0xDC00)) {
+			if (i + 2 < inplen) {
+				base_sp =  ((u_int32_t)base << 16) | (u_int32_t)in[1];
+				do {
+					if ( !(result_sp = do_decomposition_sp(base_sp))) break;
+					comblen += 2;
+					base_sp = result_sp >> 32;
+					comb[COMBBUFLEN-comblen] = (result_sp >> 16) & 0xFFFF;  /* hi */
+					comb[COMBBUFLEN-comblen+1] = result_sp & 0xFFFF;        /* lo */
+				} while (comblen < MAXCOMBSPLEN);
+
+				if (*outlen < (comblen + 1) << 1) {
+					errno = E2BIG;
+					return (size_t)-1;
+				}
+
+				*out = base_sp >> 16;   /* hi */
+				out++;
+				*outlen -= 2;
+				
+				base = base_sp & 0xFFFF; /* lo */
+				
+				i += 2;
+				in++;
+			}
+		}
+			
+		/* Binary Search for BMP */
 		else {
 			do {
-				if ((comblen >= MAXCOMBLEN) || !(result = do_decomposition(base))) break;
+				if ( !(result = do_decomposition(base))) break;
 				comblen++;
 				base = result  >> 16;
-				comb[MAXCOMBLEN-comblen] = result & 0xffff;
-			} while (0x007f < base) ;
+				comb[COMBBUFLEN-comblen] = result & 0xFFFF;
+			} while ((0x007f < base) && (comblen < MAXCOMBLEN));
 		}
 		
 		if (*outlen < (comblen + 1) << 1) {
@@ -532,7 +643,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		*outlen -= 2;
 		
 		while ( comblen > 0 ) {
-			*out = comb[MAXCOMBLEN-comblen];
+			*out = comb[COMBBUFLEN-comblen];
 			out++;
 			*outlen -= 2;
 			comblen--;
@@ -541,12 +652,14 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		i += 2;
 		in++;
 	}
-
-	/* Is Canonical Ordering necessary here? */
 	
 	*out = 0;
 	return o_len-*outlen;
 }
+
+/*******************************************************************
+length of UTF-8 character and string
+********************************************************************/
 
 size_t utf8_charlen ( char* utf8 )
 {
