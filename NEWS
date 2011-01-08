@@ -58,6 +58,11 @@ Changes in 2.2alpha1
        use non-blocking IO and select instead.
 * REM: afile/achfile/apple_cp/apple_mv/apple_rm: use ad
 
+Changes in 2.1.6
+================
+
+* FIX: afpd: Fix for LDAP user cache corruption
+
 Changes in 2.1.5
 ================
 
