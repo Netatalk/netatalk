@@ -2592,7 +2592,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
     if ( !ret && folder->hide) {
         /* Hide it */
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if (ad_open(&ad, p, ADFLAGS_DIR, O_RDWR | O_CREAT, 0666) != 0) {
+        if (ad_open(&ad, p, ADFLAGS_HF | ADFLAGS_DIR, O_RDWR | O_CREAT, 0666) != 0) {
             free(p);
             free(q);
             return (-1);
