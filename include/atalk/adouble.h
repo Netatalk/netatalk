@@ -171,6 +171,7 @@ struct ad_fd {
 
 /* some header protection */
 #define AD_INITED  0xad494e54  /* ad"INT" */
+#define AD_CLOSED  0xadc10ced
 
 struct adouble;
 

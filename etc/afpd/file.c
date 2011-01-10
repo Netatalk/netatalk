@@ -1481,7 +1481,7 @@ int copyfile(const struct vol *s_vol,
         adflags |= ADFLAGS_HF;
     }
 
-    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF, O_RDONLY) < 0) {
+    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0) {
         ret_err = errno;
         goto done;
     }
@@ -1625,7 +1625,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
  
     /* try to open both forks at once */
     adflags = ADFLAGS_DF;
-    if ( ad_openat(&ad, dirfd, file, adflags |ADFLAGS_HF|ADFLAGS_NOHF, O_RDONLY) < 0 ) {
+    if ( ad_openat(&ad, dirfd, file, adflags |ADFLAGS_HF|ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0 ) {
         switch (errno) {
         case ENOENT:
             err = AFPERR_NOOBJ;

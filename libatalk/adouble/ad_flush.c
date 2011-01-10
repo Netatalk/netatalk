@@ -189,6 +189,11 @@ int ad_close( struct adouble *ad, int adflags)
 {
     int err = 0;
 
+    if (ad->ad_inited == AD_CLOSED) {
+        LOG(log_warning, logtype_default, "ad_close: double close");
+        return 0;
+    }
+
     LOG(log_debug, logtype_default, "ad_close(\"%s\", %s)",
         cfrombstr(ad->ad_fullpath),
         adflags2logstr(adflags));
@@ -224,6 +229,8 @@ int ad_close( struct adouble *ad, int adflags)
         bdestroy(ad->ad_fullpath);
         ad->ad_fullpath = NULL;
     }
+
+    ad->ad_inited = AD_CLOSED;
 
     return err;
 }
