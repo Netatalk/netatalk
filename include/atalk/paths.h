@@ -17,17 +17,17 @@
 /* lock file path. this should be re-organized a bit. */
 #if ! defined (_PATH_LOCKDIR)
 #  if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
-#    define _PATH_LOCKDIR	/var/run/
+#    define _PATH_LOCKDIR	"/var/run/"
 #  elif defined (BSD4_4)
 #    ifdef MACOSX_SERVER
-#      define _PATH_LOCKDIR	/var/run/
+#      define _PATH_LOCKDIR	"/var/run/"
 #    else
-#      define _PATH_LOCKDIR	/var/spool/lock/
+#      define _PATH_LOCKDIR	"/var/spool/lock/"
 #    endif
 #  elif defined (linux)
-#    define _PATH_LOCKDIR	/var/lock/
+#    define _PATH_LOCKDIR	"/var/lock/"
 #  else
-#    define _PATH_LOCKDIR	/var/spool/locks/
+#    define _PATH_LOCKDIR	"/var/spool/locks/"
 #  endif
 #endif
 
@@ -52,9 +52,9 @@
 #define _PATH_ATALKDEBUG	"/tmp/atalkd.debug"
 #define _PATH_ATALKDTMP		"atalkd.tmp"
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
-#  define _PATH_ATALKDLOCK	ATALKPATHCAT("_PATH_LOCKDIR","atalkd.pid")
+#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd.pid")
 #else
-#  define _PATH_ATALKDLOCK	ATALKPATHCAT("_PATH_LOCKDIR","atalkd")
+#  define _PATH_ATALKDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"atalkd")
 #endif
 
 /*
@@ -62,9 +62,9 @@
  */
 #define _PATH_TMPPAGEORDER	"/tmp/psorderXXXXXX"
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
-#  define _PATH_PAPDLOCK	ATALKPATHCAT("_PATH_LOCKDIR","papd.pid")
+#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd.pid")
 #else
-#  define _PATH_PAPDLOCK	ATALKPATHCAT("_PATH_LOCKDIR","papd")
+#  define _PATH_PAPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"papd")
 #endif
 
 /*
@@ -72,18 +72,18 @@
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
-#  define _PATH_AFPDLOCK	ATALKPATHCAT("_PATH_LOCKDIR","afpd.pid")
+#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
 #else
-#  define _PATH_AFPDLOCK	ATALKPATHCAT("_PATH_LOCKDIR","afpd")
+#  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
 #endif
 
 /*
  * cnid_metad paths
  */
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT("_PATH_LOCKDIR","cnid_metad.pid")
+#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad.pid")
 #else
-#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT("_PATH_LOCKDIR","cnid_metad")
+#  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad")
 #endif
 
 #endif /* atalk/paths.h */
