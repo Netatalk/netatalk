@@ -1809,7 +1809,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
          * Check to see if a create was necessary. If it was, we'll want
          * to set our name, etc.
          */
-        if ( (ad_get_HF_flags( &ad ) & O_CREAT)) {
+        if ( (ad_get_MD_flags( &ad ) & O_CREAT)) {
             ad_setname(&ad, cfrombstr(curdir->d_m_name));
         }
     }

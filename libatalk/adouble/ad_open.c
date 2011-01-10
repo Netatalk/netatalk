@@ -475,14 +475,36 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
     return 0;
 }
 
+/*!
+ * Error handling for adouble header(=metadata) file open error
+ *
+ * We're called because opening ADFLAGS_HF caused an error.
+ * 1. In case ad_open is called with ADFLAGS_NOHF the error is suppressed.
+ * 2. If ad_open was called with ADFLAGS_DF we may have opened the datafork and thus
+ *    ought to close it before returning with an error condition.
+ */
+static int ad_error(struct adouble *ad, int adflags)
+{
+    int err = errno;
+    if ((adflags & ADFLAGS_NOHF)) { /* 1 */
+        /* FIXME double check : set header offset ?*/
+        return 0;
+    }
+    if ((adflags & ADFLAGS_DF)) { /* 2 */
+        ad_close( ad, ADFLAGS_DF );
+        err = errno;
+    }
+    return -1 ;
+}
+
 static int ad_open_df(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
     struct stat st_dir;
     int         hoflags, admode;
     int         st_invalid = -1;
 
-    LOG(log_maxdebug, logtype_default, "ad_open_df(\"%s/%s\", adf: 0x%04x, of: 0x%04x)",
-        getcwdpath(), path, adflags, oflags);
+    LOG(log_debug, logtype_default, "ad_open_df(\"%s\", %s, %04o)",
+        abspath(path), oflags2logstr(oflags), mode);
 
     if (ad_data_fileno(ad) == -1) {
         hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
@@ -577,7 +599,7 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
             admode = ad_hf_mode(admode);
             if ((errno == ENOENT)) {
                 if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
-                    return -1;
+                    return ad_error(ad, adflags);
                 }
                 admode = mode;
                 st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
@@ -589,7 +611,7 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
             /* retry with O_CREAT */
             ad->ad_md->adf_fd = open(ad_p, oflags, admode);
             if ( ad->ad_md->adf_fd < 0 ) {
-                return -1;
+                return ad_error(ad, adflags);
             }
             ad->ad_md->adf_flags = oflags;
             /* just created, set owner if admin owner (root) */
@@ -597,7 +619,7 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
                 ad_chown(ad_p, &st_dir);
             }
         } else {
-            return -1;
+            return ad_error(ad, adflags);
         }
     } else {
         ad->ad_md->adf_flags = hoflags;
@@ -609,6 +631,7 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
             pst = &st_meta;
         }
     }
+
     AD_SET(ad->ad_md->adf_off);
 
     if ((ad->ad_md->adf_flags & ( O_TRUNC | O_CREAT ))) {
@@ -636,23 +659,19 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
 static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
     ssize_t rforklen;
-    int ret;
 
-    LOG(log_maxdebug, logtype_default, "ad_open_hf_ea(\"%s\", adf: 0x%04x, of: 0x%04x)",
-        abspath(path), adflags, oflags);
-
+    /* we dont use this fd, but open it anyway, maybe we need it sometimes */
     if ((ad->ad_md->adf_fd = open(path, O_RDONLY | O_NOFOLLOW)) == -1)
-        return -1;
+        goto error;
 
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(ad, NULL) != 0) {
         if (!(oflags & O_CREAT))
-            return -1;
+            goto error;
 
         /* It doesnt exist, EPERM or another error */
         if (errno != ENOATTR && errno != ENOENT) {
             LOG(log_error, logtype_default, "ad_open_hf_ea: unexpected: %s", strerror(errno));
-            ret = -1;
             goto error;
         }
 
@@ -660,14 +679,15 @@ static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, st
         if (new_ad_header(path, ad, adflags) < 0) {
             LOG(log_error, logtype_default, "ad_open_hf_ea: can't create new header: %s",
                 abspath(path));
-            ret = -1;
             goto error;
         }
-
+        ad->ad_md->adf_flags |= O_CREAT; /* mark as just created */
         ad_flush(ad);
+        LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): created metadata EA",
+            cfrombstr(ad->ad_fullpath));
     }
 
-    ad->ad_md->adf_flags = O_RDWR; /* Pretend its rw, in fact for the EA API it is */
+    ad->ad_md->adf_flags |= oflags & (O_RDONLY|O_WRONLY|O_RDWR); /* store current flags */
 
     if ((rforklen = sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, NULL, 0)) > 0)
         ad->ad_rlen = rforklen;
@@ -675,15 +695,19 @@ static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, st
     return 0;
 
 error:
-    return ret;
+    if (ad->ad_md->adf_fd != -1) {
+        close(ad->ad_md->adf_fd);
+        ad->ad_md->adf_fd = -1;
+    }
+    return ad_error(ad, adflags);
 }
 
 static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
     int ret = 0;
 
-    LOG(log_maxdebug, logtype_default, "ad_open_hf(\"%s/%s\", adf: 0x%04x, of: 0x%04x)",
-        getcwdpath(), path, adflags, oflags);
+    LOG(log_debug, logtype_default, "ad_open_hf(\"%s\", %s, %04o)",
+        cfrombstr(ad->ad_fullpath), oflags2logstr(oflags), mode);
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
@@ -704,7 +728,10 @@ static int ad_open_hf(const char *path, int adflags, int oflags, int mode, struc
 }
 
 /*!
- * Open EA with resfork, only for AD_VERSION_EA, a nullop otherwise
+ * Open ressource fork
+ *
+ * Only for adouble:ea, a nullop otherwise because adouble:v2 has the ressource fork as part
+ * of the adouble file which is openend by ADFLAGS_HF.
  */
 static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struct adouble *ad)
 {
@@ -713,8 +740,8 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
     if (ad->ad_flags != AD_VERSION_EA)
         return 0;
 
-    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", adf: 0x%04x, of: 0x%04x)",
-        abspath(path), adflags, oflags);
+    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", %s, %04o)",
+        cfrombstr(ad->ad_fullpath), oflags2logstr(oflags), mode);
 
     if ((ad->ad_rlen = sys_lgetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, NULL, 0)) <= 0) {
         switch (errno) {
@@ -1028,10 +1055,13 @@ const char *oflags2logstr(int oflags)
  * Open a files data fork, metadata fork or ressource fork.
  * For each fork to be opened specify the open flags and mode in case you want to create it
  * (O_CREAT in open flags). The order in which forks are opened is:
- * 1. ADFLAGS_DF
- * 2. ADFLAGS_HF
- * 3. ADFLAGS_RF
- * The variable arguments must be passed according to this order.
+ * 1) ADFLAGS_DF, 2) ADFLAGS_HF, 3) ADFLAGS_RF.
+ * It is possible to call ad_open subsequently opening ADFLAGS_DF first and ADFLAGS_HF in
+ * another ad_open call. Already openend forks are uneffected in subsequent calls (3).
+ * The variable arguments must be passed according to this order. Then:
+ * 1. Ensure the adouble struct has been initialized.
+ * 2. Store the full path to the object the first time ad_open is called for it.
+ * 3. Check if the fork has already been opened.
  *
  * @param ad        (rw) pointer to struct adouble
  * @param path      (r)  Path to file or directory
@@ -1049,22 +1079,22 @@ static int vad_open(struct adouble *ad, const char *path, int adflags, va_list a
 {
     int ret = 0;
     int oflags;
-    int mode;
+    int mode = 0;
     
     LOG(log_debug, logtype_default, "ad_open(\"%s\", %s)",
         abspath(path), adflags2logstr(adflags));
 
-    if (ad->ad_inited != AD_INITED)
+    if (ad->ad_inited != AD_INITED) /* 1 */
         AFP_PANIC("ad_open: not initialized");
 
-    if (ad->ad_fullpath == NULL) {
+    if (ad->ad_fullpath == NULL) { /* 2 */
         if ((ad->ad_fullpath = bfromcstr(abspath(path))) == NULL) {
             ret = -1;
             goto exit;
         }
     }
 
-    if ((adflags & ADFLAGS_DF) && !(ad->ad_adflags & ADFLAGS_DF)) {
+    if ((adflags & ADFLAGS_DF) && !(ad->ad_adflags & ADFLAGS_DF)) { /* 3 */
         oflags = va_arg(args, int);
         if (oflags & O_CREAT)
             mode = va_arg(args, int);
@@ -1075,7 +1105,7 @@ static int vad_open(struct adouble *ad, const char *path, int adflags, va_list a
         ad->ad_adflags |= ADFLAGS_DF;
     }
 
-    if ((adflags & ADFLAGS_HF) && !(ad->ad_adflags & ADFLAGS_HF)) {
+    if ((adflags & ADFLAGS_HF) && !(ad->ad_adflags & ADFLAGS_HF)) { /* 3 */
         oflags = va_arg(args, int);
         if (oflags & O_CREAT)
             mode = va_arg(args, int);
@@ -1086,7 +1116,7 @@ static int vad_open(struct adouble *ad, const char *path, int adflags, va_list a
         ad->ad_adflags |= ADFLAGS_HF;
     }
 
-    if ((adflags & ADFLAGS_RF) && !(ad->ad_adflags & ADFLAGS_RF)) {
+    if ((adflags & ADFLAGS_RF) && !(ad->ad_adflags & ADFLAGS_RF)) { /* 3 */
         oflags = va_arg(args, int);
         if (oflags & O_CREAT)
             mode = va_arg(args, int);

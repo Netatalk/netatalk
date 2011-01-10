@@ -975,7 +975,7 @@ int setfilparams(struct vol *vol,
         }
         LOG(log_debug, logtype_afpd, "setfilparams: no adouble perms, but only FILPBIT_MDATE and/or FILPBIT_UNIXPR");
         isad = 0;
-    } else if ((ad_get_HF_flags( adp ) & O_CREAT) ) {
+    } else if ((ad_get_MD_flags( adp ) & O_CREAT) ) {
         ad_setname(adp, path->m_name);
     }
     

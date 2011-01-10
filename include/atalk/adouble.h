@@ -183,25 +183,29 @@ struct adouble_fops {
 };
 
 struct adouble {
-    u_int32_t           ad_magic;
-    u_int32_t           ad_version;
-    char                ad_filler[ 16 ];
-    struct ad_entry     ad_eid[ ADEID_MAX ];
-    struct ad_fd        ad_data_fork, ad_resource_fork, ad_metadata_fork;
-    struct ad_fd        *ad_md; /* either ad_resource or ad_metadata */
-    int                 ad_flags;    /* This really stores version info too (AD_VERSION*) */
-    int                 ad_adflags;  /* ad_open flags adflags like ADFLAGS_DIR */
+    u_int32_t           ad_magic;         /* Official adouble magic                   */
+    u_int32_t           ad_version;       /* Official adouble version number          */
+    char                ad_filler[16];
+    struct ad_entry     ad_eid[ADEID_MAX];
+    struct ad_fd        ad_data_fork;     /* the data fork                            */
+    struct ad_fd        ad_resource_fork; /* adouble:v2 -> the adouble file           *
+                                           * adouble:ea -> the rfork EA               */
+    struct ad_fd        ad_metadata_fork; /* adouble:v2 -> unused                     *
+                                           * adouble:ea -> the metadata EA            */
+    struct ad_fd        *ad_md;           /* either ad_resource or ad_metadata        */
+    int                 ad_flags;         /* Our adouble version info (AD_VERSION*)   */
+    int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
     unsigned int        ad_inited;
     int                 ad_options;
-    void                *ad_resforkbuf;  /* buffer for AD_VERSION_EA ressource fork */
-    size_t              ad_resforkbufsize; /* size of ad_resforkbuf */
-    off_t               ad_rlen;     /* ressource fork len with AFP 3.0
-                                        the header parameter size is too small. */
-    char                *ad_m_name;   /* mac name for open fork */
+    void                *ad_resforkbuf;    /* buffer for AD_VERSION_EA ressource fork */
+    size_t              ad_resforkbufsize; /* size of ad_resforkbuf                   */
+    off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
+                                            * the header parameter size is too small. */
+    char                *ad_m_name;        /* mac name for open fork                  */
     int                 ad_m_namelen;
-    bstring             ad_fullpath; /* adouble EA need this */
+    bstring             ad_fullpath;       /* fullpath of file, adouble:ea need this  */
     struct adouble_fops *ad_ops;
-    uint16_t            ad_open_forks; /* open forks (by others) */
+    uint16_t            ad_open_forks;     /* open forks (by others)                  */
     char                ad_data[AD_DATASZ_MAX];
 };
 
@@ -334,7 +338,7 @@ struct adouble {
 #define ad_getentryoff(ad,eid)     ((ad)->ad_eid[(eid)].ade_off)
 #define ad_entry(ad,eid)           ((caddr_t)(ad)->ad_data + (ad)->ad_eid[(eid)].ade_off)
 
-#define ad_get_HF_flags(ad) ((ad)->ad_resource_fork.adf_flags)
+#define ad_get_RF_flags(ad) ((ad)->ad_resource_fork.adf_flags)
 #define ad_get_MD_flags(ad) ((ad)->ad_md->adf_flags)
 
 /* ad_flush.c */

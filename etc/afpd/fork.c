@@ -297,9 +297,9 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     }
 
     LOG(log_debug, logtype_afpd,
-        "afp_openfork(\"%s\", fork: %s)",
+        "afp_openfork(\"%s\", %s)",
         abspath(s_path->u_name),
-        (fork & OPENFORK_DATA) ? "d" : "r");
+        (fork & OPENFORK_RSCS) ? "OPENFORK_RSCS" : "OPENFORK_DATA");
 
     /* stat() data fork st is set because it's not a dir */
     switch ( s_path->st_errno ) {
@@ -310,7 +310,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     case EACCES:
         return (access & OPENACC_WR) ? AFPERR_LOCK : AFPERR_ACCESS;
     default:
-        LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_open: %s", s_path->m_name, strerror(errno) );
+        LOG(log_error, logtype_afpd, "afp_openfork(%s): %s", s_path->m_name, strerror(errno));
         return AFPERR_PARAM;
     }
     /* FIXME should we check it first ? */
@@ -339,7 +339,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if ( fork == OPENFORK_DATA ) {
         eid = ADEID_DFORK;
-        adflags = ADFLAGS_DF | ADFLAGS_HF;
+        adflags = ADFLAGS_DF | ADFLAGS_HF ;
     } else {
         eid = ADEID_RFORK;
         adflags = ADFLAGS_RF | ADFLAGS_HF;
@@ -445,14 +445,13 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         }
     }
 
-    if ((adflags & ADFLAGS_HF) && (ad_get_HF_flags( ofork->of_ad) & O_CREAT)) {
+    if ((adflags & ADFLAGS_RF) && (ad_get_RF_flags( ofork->of_ad) & O_CREAT)) {
         if (ad_setname(ofork->of_ad, path)) {
             ad_flush( ofork->of_ad );
         }
     }
 
-    if (( ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof( u_int16_t ),
-                              &buflen )) != AFP_OK ) {
+    if ((ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof(int16_t), &buflen)) != AFP_OK) {
         ad_close( ofork->of_ad, adflags );
         goto openfork_err;
     }
