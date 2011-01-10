@@ -1293,7 +1293,6 @@ dnl --------------------- generate files
 AC_OUTPUT([Makefile
 	bin/Makefile
 	bin/ad/Makefile
-	bin/adv1tov2/Makefile
 	bin/aecho/Makefile
 	bin/afppasswd/Makefile
 	bin/cnid/Makefile
