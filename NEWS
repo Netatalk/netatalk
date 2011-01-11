@@ -2,6 +2,7 @@ Changes in 2.1.6
 ================
 
 * FIX: afpd: Fix for LDAP user cache corruption
+* FIX: gentoo: cannot set $CNID_CONFIG
 
 Changes in 2.1.5
 ================
