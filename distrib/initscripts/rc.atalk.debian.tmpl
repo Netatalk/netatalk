@@ -9,7 +9,6 @@
 #
 # netatalk      Netatalk 2.x initscript
 # Author:       Thomas Kaiser <Thomas.Kaiser@phg-online.de>
-# Version:      $Id: rc.atalk.debian.tmpl,v 1.6 2009-06-09 11:58:49 franklahm Exp $
 
 set -e
 
@@ -31,6 +30,10 @@ ATALK_BGROUND=no
 CNID_METAD_RUN=yes
 ATALK_MAC_CHARSET='MAC_ROMAN'
 ATALK_UNIX_CHARSET='LOCALE'
+
+# /etc/default/netatalk expects hostname in $HOSTNAME by default
+HOSTNAME=`/bin/hostname`
+# next netatalk 2.2 will not expect $HOSTNAME.
 
 # Read in netatalk configuration.
 if [ -f /etc/default/netatalk ]; then
