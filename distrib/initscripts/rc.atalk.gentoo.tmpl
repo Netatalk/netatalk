@@ -55,7 +55,8 @@ atalk_startup () {
 
 	if [ "${CNID_METAD_RUN}" = "yes" ] ; then
         ebegin "Starting cnid_metad"
-		start-stop-daemon --start --quiet --exec :SBINDIR:/cnid_metad $CNID_CONFIG
+		start-stop-daemon --start --quiet --exec :SBINDIR:/cnid_metad -- \
+			${CNID_CONFIG}
 		eend $?
 	fi
 
