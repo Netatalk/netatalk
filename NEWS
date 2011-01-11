@@ -2,7 +2,6 @@ Changes in 2.2beta1
 ====================
 
 * FIX: composition of Surrogate Pair
-* FIX: Ubuntu's servername was empty
 
 Changes in 2.2alpha5
 ====================
@@ -64,6 +63,7 @@ Changes in 2.1.6
 
 * FIX: afpd: Fix for LDAP user cache corruption
 * FIX: gentoo: cannot set $CNID_CONFIG
+* FIX: ubuntu: servername was empty
 
 Changes in 2.1.5
 ================

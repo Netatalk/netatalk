@@ -40,6 +40,9 @@ TIMELORD_RUN=no
 ATALK_ZONE=
 ATALK_BGROUND=no
 
+# old /etc/default/netatalk expected hostname in $HOSTNAME by default
+HOSTNAME=`/bin/hostname`
+
 # Read in netatalk configuration.
 if [ -f /etc/default/netatalk ]; then
     . /etc/default/netatalk
