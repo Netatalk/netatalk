@@ -43,10 +43,6 @@ ATALK_BGROUND=no
 # old /etc/default/netatalk expected hostname in $HOSTNAME by default
 HOSTNAME=`/bin/hostname`
 
-# /etc/default/netatalk expects hostname in $HOSTNAME by default
-HOSTNAME=`/bin/hostname`
-# next netatalk 2.2 will not expect $HOSTNAME.
-
 # Read in netatalk configuration.
 if [ -f /etc/default/netatalk ]; then
     . /etc/default/netatalk
