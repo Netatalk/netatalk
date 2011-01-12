@@ -345,7 +345,7 @@ struct adouble {
 
 /* Refcounting open forks using one struct adouble */
 #define ad_ref(ad)   (ad)->ad_refcount++
-#define ad_unref(ad) (ad)->ad_refcount--
+#define ad_unref(ad) --((ad)->ad_refcount)
 
 /* ad_flush.c */
 extern int ad_rebuild_adouble_header (struct adouble *);

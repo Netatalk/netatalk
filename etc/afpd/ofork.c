@@ -404,15 +404,10 @@ void of_dealloc( struct ofork *of)
 int of_closefork(struct ofork *ofork)
 {
     struct timeval      tv;
-    int         adflags, doflush = 0;
+    int         doflush = 0;
     int                 ret;
 
-    adflags = 0;
-    if ((ofork->of_flags & AFPFORK_DATA) && (ad_data_fileno( ofork->of_ad ) != -1)) {
-        adflags |= ADFLAGS_DF;
-    }
     if ( (ofork->of_flags & AFPFORK_OPEN) && ad_reso_fileno( ofork->of_ad ) != -1 ) {
-        adflags |= ADFLAGS_HF;
         /*
          * Only set the rfork's length if we're closing the rfork.
          */
@@ -428,10 +423,9 @@ int of_closefork(struct ofork *ofork)
         }
     }
     ret = 0;
-
     
     if (ad_unref(ofork->of_ad) == 0) {
-        if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+        if ( ad_close( ofork->of_ad, 0 ) < 0 ) {
             ret = -1;
         }
     }
