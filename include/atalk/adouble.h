@@ -196,8 +196,9 @@ struct adouble {
     struct ad_fd        *ad_md;           /* either ad_resource or ad_metadata        */
     int                 ad_flags;         /* Our adouble version info (AD_VERSION*)   */
     int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
-    unsigned int        ad_inited;
+    uint32_t            ad_inited;
     int                 ad_options;
+    int                 ad_refcount;       /* multiple forks may open one adouble     */
     void                *ad_resforkbuf;    /* buffer for AD_VERSION_EA ressource fork */
     size_t              ad_resforkbufsize; /* size of ad_resforkbuf                   */
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
@@ -215,7 +216,7 @@ struct adouble {
 #define ADFLAGS_HF        (1<<2)
 #define ADFLAGS_DIR       (1<<3)
 #define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
-#define ADFLAGS_OPENFORKS (1<<5)  /* check for open fork in ad_metadata function */
+#define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)
@@ -341,6 +342,10 @@ struct adouble {
 
 #define ad_get_RF_flags(ad) ((ad)->ad_resource_fork.adf_flags)
 #define ad_get_MD_flags(ad) ((ad)->ad_md->adf_flags)
+
+/* Refcounting open forks using one struct adouble */
+#define ad_ref(ad)   (ad)->ad_refcount++
+#define ad_unref(ad) (ad)->ad_refcount--
 
 /* ad_flush.c */
 extern int ad_rebuild_adouble_header (struct adouble *);

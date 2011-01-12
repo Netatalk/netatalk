@@ -618,7 +618,7 @@ int getfilparams(struct vol *vol,
 
     if (opened) {
         char *upath;
-        int  flags = (bitmap & (1 << FILPBIT_ATTR))?ADFLAGS_OPENFORKS:0;
+        int  flags = (bitmap & (1 << FILPBIT_ATTR)) ? ADFLAGS_CHECK_OF : 0;
 
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
@@ -640,9 +640,7 @@ int getfilparams(struct vol *vol,
         }
     }
     rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp);
-    if ( adp == &ad ) {
-        ad_close_metadata( adp);
-    }
+    ad_close_metadata( adp);
 
     return( rc );
 }
@@ -1055,8 +1053,7 @@ setfilparam_done:
 
     if (isad) {
         ad_flush( adp);
-        if (adp == &ad)
-            ad_close_metadata( adp);
+        ad_close_metadata( adp);
     }
 
     if (change_parent_mdate && gettimeofday(&tv, NULL) == 0) {
@@ -1345,8 +1342,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     setvoltime(obj, d_vol );
 
 copy_exit:
-    if (adp == &ad)
-        ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
+    ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
     return( retvalue );
 }
 
@@ -1614,7 +1610,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
          * moreover sometimes deletefile is called with a no existent file and 
          * ad_open would create a 0 byte resource fork
         */
-        if ( ad_metadataat(dirfd, file, ADFLAGS_OPENFORKS, &ad) == 0 ) {
+        if ( ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &ad) == 0 ) {
             if ((err = check_attrib(&ad))) {
                ad_close_metadata(&ad);
                return err;

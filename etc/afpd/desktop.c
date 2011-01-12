@@ -712,8 +712,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         memcpy( ad_entry( adp, ADEID_COMMENT ), ibuf, clen );
         ad_flush( adp );
     }
-    if (adp == &ad)
-        ad_close_metadata( adp);
+    ad_close_metadata( adp);
     return( AFP_OK );
 }
 

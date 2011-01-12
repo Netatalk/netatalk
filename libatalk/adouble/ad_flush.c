@@ -198,6 +198,12 @@ int ad_close( struct adouble *ad, int adflags)
         cfrombstr(ad->ad_fullpath),
         adflags2logstr(adflags));
 
+    if (ad->ad_refcount) {
+        LOG(log_debug, logtype_default, "ad_close(\"%s\"): adouble in use by fork, not closing",
+            cfrombstr(ad->ad_fullpath));
+        return 0;
+    }
+
     if (ad_data_fileno(ad) != -1) {
         if ((ad_data_fileno(ad) == -2) && (ad->ad_data_fork.adf_syml != NULL)) {
             free(ad->ad_data_fork.adf_syml);

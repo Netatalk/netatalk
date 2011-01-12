@@ -225,6 +225,7 @@ of_alloc(struct vol *vol,
         strlcpy( ad->ad_m_name, path, ad->ad_m_namelen);
     }
 
+    ad_ref(ad);
     of->of_ad = ad;
     of->of_vol = vol;
     of->of_did = dir->d_did;
@@ -427,8 +428,12 @@ int of_closefork(struct ofork *ofork)
         }
     }
     ret = 0;
-    if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
-        ret = -1;
+
+    
+    if (ad_unref(ofork->of_ad) == 0) {
+        if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+            ret = -1;
+        }
     }
 
     of_dealloc( ofork );

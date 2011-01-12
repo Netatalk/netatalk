@@ -1002,7 +1002,7 @@ const char *adflags2logstr(int adflags)
         strlcat(buf, "DIR", 64);
         first = 0;
     }
-    if (adflags & ADFLAGS_OPENFORKS) {
+    if (adflags & ADFLAGS_CHECK_OF) {
         if (!first)
             strlcat(buf, "|", 64);
         strlcat(buf, "OF", 64);
@@ -1053,6 +1053,7 @@ const char *oflags2logstr(int oflags)
  * @endcode
  *
  * Open a files data fork, metadata fork or ressource fork.
+ *
  * For each fork to be opened specify the open flags and mode in case you want to create it
  * (O_CREAT in open flags). The order in which forks are opened is:
  * 1) ADFLAGS_DF, 2) ADFLAGS_HF, 3) ADFLAGS_RF.
@@ -1063,6 +1064,12 @@ const char *oflags2logstr(int oflags)
  * 2. Store the full path to the object the first time ad_open is called for it.
  * 3. Check if the fork has already been opened.
  *
+ * ad_close accompanies ad_open and closes a struct adouble. In order to tigh together the
+ * semantics of struct adouble/ad_open/ad_close and versus forks, which use and keep a ref to
+ * the according struct adouble for the fork, we open forks refcount their struct adouble
+ * in struct adouble.ad_refcount. An ad_close is ignored when ad_refcount != 0, because
+ * ad_refcount != 0 means an open fork is using this very struct adouble.
+ *
  * @param ad        (rw) pointer to struct adouble
  * @param path      (r)  Path to file or directory
  * @param adflags   (r)  ADFLAGS_DF:        open data fork \n
@@ -1071,7 +1078,7 @@ const char *oflags2logstr(int oflags)
  *                       ADFLAGS_NOHF:      it's not an error if header file couldn't be created \n
  *                       ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags \n
  *                       ADFLAGS_RDONLY:    dont upgrade mode from r to rw with adouble:v2 headerfile \n
- *                       ADFLAGS_OPENFORKS: check for open forks from other processes
+ *                       ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
  *
  * @returns 0 on success, any other value indicates an error
  */
@@ -1159,7 +1166,7 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
  *
  * @param name  name of file/dir
  * @param flags ADFLAGS_DIR: name is a directory \n
- *              ADFLAGS_OPENFORKS: test if name is open by another afpd process
+ *              ADFLAGS_CHECK_OF: test if name is open by us or another afpd process
  *
  * @param adp   pointer to struct adouble
  */
@@ -1187,7 +1194,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
         errno = err;
     }
 
-    if (!ret && (ADFLAGS_OPENFORKS & flags)) {
+    if (!ret && (ADFLAGS_CHECK_OF & flags)) {
         /*
           we need to check if the file is open by another process.
           it's slow so we only do it if we have to:
