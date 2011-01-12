@@ -9,7 +9,6 @@
 #
 # netatalk      Netatalk 2.x initscript
 # Author:       Thomas Kaiser <Thomas.Kaiser@phg-online.de>
-# Version:      $Id: rc.atalk.debian.tmpl,v 1.6 2009-06-09 11:58:49 franklahm Exp $
 
 set -e
 
@@ -22,15 +21,26 @@ SCRIPTNAME=/etc/init.d/$NAME
 test -x :SBINDIR:/afpd || exit 0
 
 # Set defaults. Please change these options in /etc/default/netatalk
+ATALK_NAME=`/bin/hostname --short`
+ATALK_UNIX_CHARSET='LOCALE'
+ATALK_MAC_CHARSET='MAC_ROMAN'
+
+CNID_METAD_RUN=yes
+AFPD_RUN=yes
+AFPD_MAX_CLIENTS=50
 AFPD_UAMLIST="-U uams_dhx2.so"
 AFPD_GUEST=nobody
-AFPD_MAX_CLIENTS=50
+CNID_CONFIG="-l log_note"
+
+ATALKD_RUN=no
+PAPD_RUN=no
+TIMELORD_RUN=no
+#A2BOOT_RUN=no
 ATALK_ZONE=
-ATALK_NAME=`/bin/hostname --short`
 ATALK_BGROUND=no
-CNID_METAD_RUN=yes
-ATALK_MAC_CHARSET='MAC_ROMAN'
-ATALK_UNIX_CHARSET='LOCALE'
+
+# old /etc/default/netatalk expected hostname in $HOSTNAME by default
+HOSTNAME=`/bin/hostname`
 
 # Read in netatalk configuration.
 if [ -f /etc/default/netatalk ]; then
@@ -43,7 +53,7 @@ atalk_startup() {
 
 	# Try to load the AppleTalk kernel module if it was intended.
     if grep -q '^appletalk$' /etc/modules; then
-        /sbin/modprobe appletalk || echo "[could not load appletalk module]"
+		/sbin/modprobe appletalk || echo "[could not load appletalk module]"
     fi
 
 	# Start atalkd server.
@@ -83,7 +93,7 @@ atalk_startup() {
 
 case "$1" in
 	start)
-		if test "x$ATALK_BGROUND" = "xyes"; then
+		if [ "x$ATALK_BGROUND" = "xyes" -a "x$ATALKD_RUN" = "xyes" ]; then
 			echo "Starting Netatalk services in the background."
 			atalk_startup >/dev/null &
 		else

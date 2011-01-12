@@ -1,4 +1,4 @@
-Changes in 2.2alpha6? or 2.2beta1?
+Changes in 2.2beta1
 ====================
 
 * FIX: composition of Surrogate Pair
@@ -62,6 +62,9 @@ Changes in 2.1.6
 ================
 
 * FIX: afpd: Fix for LDAP user cache corruption
+* FIX: gentoo: cannot set $CNID_CONFIG
+* FIX: ubuntu: servername was empty
+* UPD: afpd: return version info with machine type in DSIGetStatus
 
 Changes in 2.1.5
 ================
