@@ -80,7 +80,7 @@ endif
 if USE_SUSE
 
 sysvdir	= /etc/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.suse
 	cp -f rc.atalk.suse $(sysv_SCRIPTS)
@@ -102,7 +102,7 @@ endif
 if USE_COBALT
 
 sysvdir	= /etc/rc.d/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.cobalt
 	cp -f rc.atalk.cobalt $(sysv_SCRIPTS)
@@ -123,7 +123,7 @@ endif
 if USE_TRU64
 
 sysvdir	= /etc/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.tru64
 	cp -f rc.atalk.tru64 $(sysv_SCRIPTS)
@@ -207,7 +207,7 @@ endif
 if USE_GENTOO
 
 sysvdir = /etc/init.d
-sysv_SCRIPTS = atalk
+sysv_SCRIPTS = netatalk
 
 $(sysv_SCRIPTS): rc.atalk.gentoo
 	cp -f rc.atalk.gentoo $(sysv_SCRIPTS)
