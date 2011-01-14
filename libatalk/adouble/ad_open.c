@@ -1066,7 +1066,7 @@ const char *oflags2logstr(int oflags)
  *
  * ad_close accompanies ad_open and closes a struct adouble. In order to tigh together the
  * semantics of struct adouble/ad_open/ad_close and versus forks, which use and keep a ref to
- * the according struct adouble for the fork, we open forks refcount their struct adouble
+ * the according struct adouble for the fork, open forks refcount their struct adouble
  * in struct adouble.ad_refcount. An ad_close is ignored when ad_refcount != 0, because
  * ad_refcount != 0 means an open fork is using this very struct adouble.
  *
