@@ -2,6 +2,8 @@ Changes in 2.2beta1
 ====================
 
 * FIX: composition of Surrogate Pair
+* UPD: gentoo,suse,cobalt,tru64: inistscript name is "netatalk", not "atalk"
+* UPD: gentoo: rc-update install don't hook in the Makefile
 
 Changes in 2.2alpha5
 ====================
