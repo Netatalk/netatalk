@@ -214,11 +214,11 @@ $(sysv_SCRIPTS): rc.atalk.gentoo
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
-	-rc-update add $(sysv_SCRIPTS) default
+#	-rc-update add $(sysv_SCRIPTS) default
 
 uninstall-startup:
-	-rc-update del $(sysv_SCRIPTS) default
-	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+#	-rc-update del $(sysv_SCRIPTS) default
+#	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
 
 endif
 
