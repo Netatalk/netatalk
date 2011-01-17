@@ -45,6 +45,14 @@
 #define AFP_ASSERT(b)
 #endif /* NDEBUG */
 
+#ifndef MIN
+#define MIN(a, b)  ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#define MAX(a, b)  ((a) > (b) ? (a) : (b))
+#endif
+
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
 
 #ifdef WITH_SENDFILE
@@ -68,19 +76,6 @@ extern pid_t server_lock  (char * /*program*/, char * /*file*/, int /*debug*/);
 extern void fault_setup	  (void (*fn)(void *));
 extern void netatalk_panic(const char *why);
 #define server_unlock(x)  (unlink(x))
-
-/* strlcpy and strlcat are used by pam modules */
-#ifndef UAM_MODULE_EXPORT
-#define UAM_MODULE_EXPORT 
-#endif
-
-#ifndef HAVE_STRLCPY
-UAM_MODULE_EXPORT size_t strlcpy (char *, const char *, size_t);
-#endif
- 
-#ifndef HAVE_STRLCAT
-UAM_MODULE_EXPORT size_t strlcat (char *, const char *, size_t);
-#endif
 
 #ifndef HAVE_DLFCN_H
 extern void *mod_open    (const char *);

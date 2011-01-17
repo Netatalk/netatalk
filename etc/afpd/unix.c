@@ -9,24 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-/* STDC check */
-#ifdef STDC_HEADERS
 #include <string.h>
-#else /* STDC_HEADERS */
-
-#ifndef HAVE_STRCHR
-#define strchr index
-#define strrchr index
-#endif /* HAVE_STRCHR */
-char *strchr (), *strrchr ();
-
-#ifndef HAVE_MEMCPY
-#define memcpy(d,s,n) bcopy ((s), (d), (n))
-#define memmove(d,s,n) bcopy ((s), (d), (n))
-#endif /* ! HAVE_MEMCPY */
-#endif /* STDC_HEADERS */
-
 #include <errno.h>
 #include <limits.h>
 #include <sys/param.h>

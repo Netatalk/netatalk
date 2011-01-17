@@ -139,13 +139,11 @@ static const char *charset_name(charset_t ch)
     if (!ret)
         ret = charset_names[ch];
 
-#if defined(HAVE_NL_LANGINFO) && defined(CODESET)
+#if defined(CODESET)
     if (ret && strcasecmp(ret, "LOCALE") == 0) {
         const char *ln = NULL;
 
-#ifdef HAVE_SETLOCALE
         setlocale(LC_ALL, "");
-#endif
         ln = nl_langinfo(CODESET);
         if (ln) {
             /* Check whether the charset name is supported

@@ -18,8 +18,6 @@ libutil_la_SOURCES = \
 	server_ipc.c	\
 	server_lock.c	\
 	socket.c        \
-	strcasestr.c    \
 	strdicasecmp.c	\
-	strlcpy.c	\
 	volinfo.c \
 	unix.c

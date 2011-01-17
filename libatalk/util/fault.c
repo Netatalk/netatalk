@@ -36,7 +36,7 @@
 #include <atalk/logger.h>
 
 #ifndef SIGNAL_CAST
-#define SIGNAL_CAST (RETSIGTYPE (*)(int))
+#define SIGNAL_CAST (void (*)(int))
 #endif
 #ifndef SAFE_FREE /* Oh no this is also defined in tdb.h */
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)

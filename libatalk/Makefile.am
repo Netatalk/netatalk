@@ -1,7 +1,7 @@
 
 # Makefile.am for libatalk/
 
-SUBDIRS = acl adouble bstring compat cnid dsi tdb util unicode vfs
+SUBDIRS = acl adouble bstring compat cnid dsi talloc tdb util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
