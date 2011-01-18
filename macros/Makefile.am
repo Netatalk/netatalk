@@ -13,7 +13,6 @@ EXTRA_DIST = \
 	perl-check.m4		\
 	ps-check.m4		\
 	quota-check.m4		\
-	snprintf-check.m4	\
 	srvloc.m4		\
 	ssl-check.m4		\
 	summary.m4		\
