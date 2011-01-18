@@ -35,6 +35,9 @@ AC_CHECK_HEADERS(netdb.h sgtty.h mount.h statfs.h dlfcn.h errno.h langinfo.h loc
 AC_CHECK_HEADERS(sys/param.h sys/fcntl.h sys/file.h sys/ioctl.h sys/time.h)
 AC_CHECK_HEADERS(sys/mnttab.h sys/statvfs.h sys/stat.h sys/vfs.h)
 AC_CHECK_HEADERS(sys/termios.h sys/types.h sys/errno.h sys/uio.h sys/filio.h)
+dnl Checks for header files, conformed to be required as of 2011
+AC_CHECK_HEADERS(sys/epoll.h)
+
 AC_CHECK_HEADER(sys/cdefs.h,,
 	AC_MSG_RESULT([enabling generic cdefs.h from tree])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
@@ -1349,6 +1352,7 @@ AC_OUTPUT([Makefile
 	libatalk/netddp/Makefile
 	libatalk/util/Makefile
 	libatalk/talloc/Makefile
+	libatalk/tevent/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
