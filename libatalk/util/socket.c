@@ -80,13 +80,11 @@ int setnonblock(int fd, int cmd)
  */
 ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout)
 {
-    size_t stored;
-    ssize_t len;
+    size_t stored = 0;
+    ssize_t len = 0;
     struct timeval now, end, tv;
     fd_set rfds;
     int ret;
-
-    stored = 0;
 
     if (setnonblocking) {
         if (setnonblock(socket, 1) != 0)
