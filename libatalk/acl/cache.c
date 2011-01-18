@@ -121,7 +121,7 @@ static unsigned char hashuuid(uuidp_t uuid) {
 int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t type, const unsigned long uid _U_) {
     int ret = 0;
     char *name = NULL;
-    uuidp_t uuid;
+    uuidp_t uuid = NULL;
     cacheduser_t *cacheduser = NULL;
     unsigned char hash;
 
@@ -319,7 +319,7 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
 int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const unsigned long uid _U_) {
     int ret = 0;
     char *name = NULL;
-    uuidp_t uuid;
+    uuidp_t uuid = NULL;
     cacheduser_t *cacheduser = NULL;
     cacheduser_t *entry;
     unsigned char hash;
