@@ -780,7 +780,7 @@ if test x"$this_os" = "xsolaris"; then
 
 	solaris_module=no
 	AC_MSG_CHECKING([if we can build Solaris kernel module])
-	if test -x /usr/ccs/bin/ld && test x$netatalk_cv_ddp_enabled = yes ; then
+	if test -x /usr/ccs/bin/ld && test x"$netatalk_cv_ddp_enabled" = x"yes" ; then
 		solaris_module=yes
 	fi
 	AC_MSG_RESULT([$solaris_module])

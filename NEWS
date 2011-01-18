@@ -2,6 +2,8 @@ Changes in 2.2beta1
 ====================
 
 * FIX: composition of Surrogate Pair
+* UPD: gentoo,suse,cobalt,tru64: inistscript name is "netatalk", not "atalk"
+* UPD: gentoo: rc-update install don't hook in the Makefile
 
 Changes in 2.2alpha5
 ====================
@@ -64,6 +66,7 @@ Changes in 2.1.6
 * FIX: afpd: Fix for LDAP user cache corruption
 * FIX: gentoo: cannot set $CNID_CONFIG
 * FIX: ubuntu: servername was empty
+* FIX: Solaris: configure script failed to enable DDP module
 * UPD: afpd: return version info with machine type in DSIGetStatus
 
 Changes in 2.1.5
