@@ -105,6 +105,10 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
 
     if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)
         return -1;
+    if (dbif_txn_commit(dbd) != 1) {
+        LOG(log_error, logtype_cnid, "dbif_init_rootinfo: cant commit txn");
+        return -1;
+    }
 
     return 0;
 }
@@ -147,7 +151,7 @@ static int dbif_getversion(DBD *dbd, uint32_t *version)
 /*!
  * Set CNID database version number
  *
- * Initializes rootinfo key as neccessary, as does dbif_getversion
+ * Initializes rootinfo key as neccessary
  * @returns -1 on error, 0 on success
  */
 static int dbif_setversion(DBD *dbd, uint32_t version)
