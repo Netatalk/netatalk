@@ -1,13 +1,6 @@
-/*
- * $Id: unix.h,v 1.23 2010-04-12 14:28:47 franklahm Exp $
- */
-
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 
-#ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif /* HAVE_SYS_CDEFS_H */
 #include <netatalk/endian.h>
 #include "config.h"
 #include "volume.h"

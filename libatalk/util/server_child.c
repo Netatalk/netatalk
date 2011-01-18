@@ -20,35 +20,13 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <signal.h>
-#include <atalk/logger.h>
-
-/* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
-#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
-#endif /* HAVE_SYS_WAIT_H */
 #include <sys/time.h>
 
-#ifndef WEXITSTATUS
-#define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
-#endif /* ! WEXITSTATUS */
-#ifndef WIFEXITED
-#define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
-#endif /* ! WIFEXITED */
-#ifndef WIFSTOPPED
-#define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
-#endif
-#ifndef WIFSIGNALED
-#define WIFSIGNALED(status) (!WIFSTOPPED(status) && !WIFEXITED(status)) 
-#endif
-#ifndef WTERMSIG
-#define WTERMSIG(status)      ((status) & 0x7f)
-#endif
-
+#include <atalk/logger.h>
 #include <atalk/server_child.h>
 
 /* hash/child functions: hash OR's pid */

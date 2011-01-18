@@ -1,6 +1,4 @@
 /*
- * $Id: file.h,v 1.26 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All Rights Reserved.
  *
@@ -28,7 +26,6 @@
 
 /*#include <sys/stat.h>*/ /* including it here causes some confusion */
 #include <sys/param.h>
-#include <sys/cdefs.h>
 #include <netatalk/endian.h>
 #include <atalk/adouble.h>
 

@@ -7,7 +7,6 @@
 #define AFPD_GLOBALS_H 1
 
 #include <sys/param.h>
-#include <sys/cdefs.h>
 
 #ifdef ADMIN_GRP
 #include <grp.h>

@@ -37,7 +37,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <sys/cdefs.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/time.h>

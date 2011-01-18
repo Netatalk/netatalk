@@ -10,9 +10,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <time.h>
 #include <ctype.h>
 #include <stdio.h>

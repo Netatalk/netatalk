@@ -18,9 +18,7 @@
 #include <time.h>
 
 #include <unistd.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 
 #include <netinet/in.h>
 

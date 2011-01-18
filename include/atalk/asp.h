@@ -25,7 +25,6 @@
 #define _ATALK_ASP_H 1
 
 #include <sys/types.h>
-#include <sys/cdefs.h>
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>

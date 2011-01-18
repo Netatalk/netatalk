@@ -1,7 +1,6 @@
 #ifndef _ATALK_UNICODE_H
 #define _ATALK_UNICODE_H 1
 
-#include <sys/cdefs.h>
 #include <netatalk/endian.h>
 #include <errno.h>
 #include <sys/param.h>

@@ -11,15 +11,8 @@
 #ifdef CNID_BACKEND_DBD
 
 #include <stdlib.h>
-#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
-#ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
-#endif /* HAVE_SYS_UIO_H */
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/socket.h>

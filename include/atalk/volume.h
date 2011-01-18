@@ -1,6 +1,4 @@
 /*
- * $Id: volume.h,v 1.16 2010/03/31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -8,7 +6,6 @@
 #ifndef ATALK_VOLUME_H
 #define ATALK_VOLUME_H 1
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <netatalk/endian.h>
 

@@ -1,11 +1,6 @@
-/*
- * $Id: filedir.h,v 1.11 2009-10-15 10:43:13 didg Exp $
- */
-
 #ifndef AFPD_FILEDIR_H
 #define AFPD_FILEDIR_H 1
 
-#include <sys/cdefs.h>
 #include <sys/stat.h>
 #include "globals.h"
 #include "volume.h"

@@ -8,7 +8,6 @@
 #ifndef _ATALK_CNID_DBD__H
 #define _ATALK_CNID_DBD__H 1
 
-#include <sys/cdefs.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>

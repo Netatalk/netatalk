@@ -14,9 +14,6 @@
 #include <grp.h>
 #include <utime.h>
 #include <errno.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>

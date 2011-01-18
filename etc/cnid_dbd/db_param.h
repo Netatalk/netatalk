@@ -8,7 +8,6 @@
 #define CNID_DBD_DB_PARAM_H 1
 
 #include <sys/param.h>
-#include <sys/cdefs.h>
 
 struct db_param {
     char *dir;

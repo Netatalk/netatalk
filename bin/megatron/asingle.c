@@ -10,16 +10,13 @@
 #include <sys/uio.h>
 #include <sys/time.h>
 #include <sys/param.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
+
 #include <atalk/adouble.h>
 #include <netatalk/endian.h>
 #include "asingle.h"

@@ -6,7 +6,6 @@
  * are checks for EINTR everywhere. 
  */
 
-#include <sys/cdefs.h>
 #include <signal.h>
 
 #include "config.h"

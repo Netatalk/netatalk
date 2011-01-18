@@ -6,7 +6,6 @@
 #ifndef _ATALK_DSI_H 
 #define _ATALK_DSI_H
 
-#include <sys/cdefs.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>

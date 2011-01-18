@@ -1,6 +1,4 @@
 /*
- * $Id: uams_passwd.c,v 1.31 2010-03-30 12:44:35 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu) 
  * All Rights Reserved.  See COPYRIGHT.
@@ -22,19 +20,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
 #endif /* ! HAVE_CRYPT_H */
 #include <pwd.h>
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
-#ifdef HAVE_TIME_H
 #include <time.h>
-#endif
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */

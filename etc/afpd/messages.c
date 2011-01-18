@@ -1,6 +1,4 @@
 /*
- * $Id: messages.c,v 1.23 2009-11-24 15:44:40 didg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -9,9 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>

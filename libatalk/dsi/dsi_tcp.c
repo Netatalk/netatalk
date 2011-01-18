@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_tcp.c,v 1.25 2009-12-08 22:34:37 didg Exp $
- *
  * Copyright (c) 1997, 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -17,9 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <errno.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
@@ -27,10 +23,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-
-#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#endif /* HAVE_STDINT_H */
 
 #include <sys/ioctl.h>
 #ifdef TRU64

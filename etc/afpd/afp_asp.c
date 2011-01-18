@@ -20,9 +20,7 @@
 #include <signal.h>
 #include <atalk/logger.h>
 #include <errno.h>
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif /* HAVE_SYS_TIME_H */
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */

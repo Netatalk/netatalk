@@ -1,6 +1,4 @@
 /*
- * $Id: auth.h,v 1.9 2009-10-15 10:43:13 didg Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -8,13 +6,7 @@
 #ifndef AFPD_AUTH_H
 #define AFPD_AUTH_H 1
 
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif /* HAVE_LIMITS_H */
-
-#ifdef HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif /* HAVE_SYS_CDEFS_H */
 
 #include "globals.h"
 
