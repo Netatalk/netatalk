@@ -24,8 +24,24 @@
 #ifndef _TSOCKET_H
 #define _TSOCKET_H
 
-#include <talloc.h>
-#include <tevent.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
+#include <atalk/talloc.h>
+#include <atalk/tevent.h>
+#include <atalk/util.h>
+
 
 struct tsocket_address;
 struct tdgram_context;

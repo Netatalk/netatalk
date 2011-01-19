@@ -21,9 +21,12 @@
    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "replace.h"
-#include "system/filesys.h"
-#include "tsocket.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#include <atalk/tsocket.h>
+
 #include "tsocket_internal.h"
 
 struct tdgram_sendto_queue_state {

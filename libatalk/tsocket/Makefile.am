@@ -10,5 +10,4 @@ libtsocket_la_SOURCES = \
 	tsocket_helpers.c
 
 noinst_HEADERS = \
-	tsocket.h \
 	tsocket_internal.h

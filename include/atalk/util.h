@@ -54,6 +54,7 @@
 
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
 #define ZERO_STRUCT(a) memset(&(a), 0, sizeof(a))
+#define ZERO_STRUCTP(a) memset((a), 0, sizeof(a))
 
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);

@@ -39,6 +39,7 @@ noinst_HEADERS = \
 	ftw.h \
 	talloc.h \
 	tevent.h \
+	tsocket.h \
 	aep.h \
 	asp.h \
 	atp.h \
