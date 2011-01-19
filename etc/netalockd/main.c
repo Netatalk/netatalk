@@ -17,9 +17,9 @@
 #include <errno.h>
 
 #include <atalk/logger.h>
-#include <atalk/adouble.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
+#include <atalk/tevent.h>
 
 static int reloadconfig;
 
@@ -92,15 +92,15 @@ static void set_signal(void)
 
 int main(int ac, char **av)
 {
-    sigset_t            sigs;
-    int                 ret;
-
-    /* Log SIGBUS/SIGSEGV SBT */
-    fault_setup(NULL);
+    struct tevent_context *event_ctx;
+    sigset_t sigs;
+    int ret;
 
     /* Default log setup: log to syslog */
+    set_processname("netalockd");
     setuplog("default log_note");
 
+    /* Check lockfile and daemonize */
     switch(server_lock("netalockd", _PATH_NETALOCKD_LOCK, 0)) {
     case -1: /* error */
         exit(EXITERR_SYS);
@@ -110,13 +110,22 @@ int main(int ac, char **av)
         exit(0);
     }
 
+    /* Setup signal stuff */
     set_signal();
+    /* Log SIGBUS/SIGSEGV SBT */
+    fault_setup(NULL);
 
-    while (1) {
-        if (reloadconfig) {
-            reloadconfig = 0;
-        }
+    if ((event_ctx = tevent_context_init(talloc_autofree_context())) == NULL) {
+        LOG(log_error, logtype_default, "Error initializing event lib");
+        exit(1);
     }
+
+    LOG(log_warning, logtype_default, "Running...");
+
+    /* wait for events - this is where we sit for most of our life */
+    tevent_loop_wait(event_ctx);
+
+    talloc_free(event_ctx);
 
     return 0;
 }

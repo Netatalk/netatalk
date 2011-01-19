@@ -24,6 +24,7 @@
 */
 
 #include <atalk/tevent.h>
+#include <atalk/util.h>
 
 #include "tevent_internal.h"
 #include "tevent_util.h"

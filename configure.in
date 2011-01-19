@@ -1335,6 +1335,7 @@ AC_OUTPUT([Makefile
 	libatalk/util/Makefile
 	libatalk/talloc/Makefile
 	libatalk/tevent/Makefile
+	libatalk/tsocket/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile

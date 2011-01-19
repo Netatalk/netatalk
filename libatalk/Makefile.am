@@ -1,7 +1,7 @@
 
 # Makefile.am for libatalk/
 
-SUBDIRS = acl adouble bstring compat cnid dsi talloc tdb tevent util unicode vfs
+SUBDIRS = acl adouble bstring compat cnid dsi talloc tdb tevent tsocket util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -14,7 +14,10 @@ libatalk_la_LIBADD  = \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
 	util/libutil.la		\
+	talloc/libtalloc.la \
 	tdb/libtdb.la       \
+	tevent/libtevent.la \
+	tsocket/libtsocket.la \
 	unicode/libunicode.la \
 	vfs/libvfs.la
 
@@ -25,7 +28,10 @@ libatalk_la_DEPENDENCIES = \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
 	util/libutil.la		\
+	talloc/libtalloc.la \
 	tdb/libtdb.la       \
+	tevent/libtevent.la \
+	tsocket/libtsocket.la \
 	unicode/libunicode.la \
 	vfs/libvfs.la
 
