@@ -190,9 +190,12 @@ u_int32_t ad_forcegetid (struct adouble *adp)
  */
 int ad_setname(struct adouble *ad, const char *path)
 {
+    int len;
+    if ((len = strlen(path)) > ADEDLEN_NAME)
+        len = ADEDLEN_NAME;
     if (path && ad_getentryoff(ad, ADEID_NAME)) {
-        ad_setentrylen( ad, ADEID_NAME, strlen( path ));
-        memcpy(ad_entry( ad, ADEID_NAME ), path, ad_getentrylen( ad, ADEID_NAME ));
+        ad_setentrylen( ad, ADEID_NAME, len);
+        memcpy(ad_entry( ad, ADEID_NAME ), path, len);
         return 1;
     }
     return 0;
