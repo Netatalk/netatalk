@@ -11,15 +11,7 @@ libtoolize --force --copy
 automake --include-deps --add-missing --foreign --copy || exit 1
 autoconf || exit 1
 
-# Original configure call was:
-#./configure --enable-maintainer-mode "$@"
-# However, according to:
-#  http://sources.redhat.com/autobook/autobook/autobook_43.html#SEC43
-# we need to have AM_MAINTAINER_MODE in configure.in in order to use
-# this feature.  It's not there at the moment, so I'm changing the
-# configure call.
-# And sometimes I don't want this to run.
-# [ -z "$NOEXECCONFIGURE" ] && ./configure "$@"
+cd libevent && ./autogen.sh
 
 # Let's not fall off the end...
 exit 0

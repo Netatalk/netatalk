@@ -27,3 +27,7 @@ autoscan.log
 *.diff.gz
 *~
 *.o
+.deps/
+libevent.pc
+libevent_openssl.pc
+libevent_pthreads.pc
