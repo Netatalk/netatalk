@@ -1442,6 +1442,12 @@ cname(struct vol *vol, struct dir *dir, char **cpath)
                     strcpy(path, temp);
                 }
             }
+
+            if (strlen(ret.m_name) > 255) {   /* Safeguard */
+                afp_errno = AFPERR_PARAM;
+                return( NULL );
+            }
+
             /* check for OS X mangled filename :( */
 
             t = demangle_osx(vol, path, dir->d_did, &fileid);
