@@ -20,20 +20,21 @@
 #include <atalk/paths.h>
 #include <atalk/util.h>
 #include <atalk/tevent.h>
+#include <atalk/tsocket.h>
 
-static int reloadconfig;
-
-static void sighandler(int sig)
+static void sighandler(struct tevent_context *ev,
+                       struct tevent_signal *se,
+                       int signal,
+                       int count,
+                       void *siginfo,
+                       void *private_data)
 {
-    switch( sig ) {
+    switch( signal ) {
 
     case SIGTERM :
-        LOG(log_note, logtype_default, "netalockd shutting down on SIGTERM");
+    case SIGINT:
+        LOG(log_error, logtype_default, "shutting down on signal");
         exit(0);
-        break;
-
-    case SIGHUP :
-        reloadconfig = 1;
         break;
 
     default :
@@ -43,24 +44,26 @@ static void sighandler(int sig)
 }
 
 
-static void set_signal(void)
+static void set_signal(struct tevent_context *event_ctx)
 {
+    /* catch SIGTERM, SIGINT */
+    if (tevent_add_signal(event_ctx, event_ctx, SIGTERM, 0, sighandler, NULL) == NULL) {
+        LOG(log_error, logtype_default, "failed to setup SIGTERM handler");
+        exit(EXIT_FAILURE);
+    }
+    if (tevent_add_signal(event_ctx, event_ctx, SIGINT, 0, sighandler, NULL) == NULL) {
+        LOG(log_error, logtype_default, "failed to setup SIGINT handler");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Log SIGBUS/SIGSEGV SBT */
+    fault_setup(NULL);
+
+    /* Ignore the rest */
     struct sigaction sv;
-
-    sv.sa_handler = sighandler;
-    sv.sa_flags = SA_RESTART;
-    sigemptyset(&sv.sa_mask);
-    if (sigaction(SIGTERM, &sv, NULL) < 0) {
-        LOG(log_error, logtype_default, "error in sigaction(SIGTERM): %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }        
-    if (sigaction(SIGINT, &sv, NULL) < 0) {
-        LOG(log_error, logtype_default, "error in sigaction(SIGINT): %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }        
-
     memset(&sv, 0, sizeof(struct sigaction));
     sv.sa_handler = SIG_IGN;
+    sv.sa_flags = SA_RESTART;
     sigemptyset(&sv.sa_mask);
 
     if (sigaction(SIGABRT, &sv, NULL) < 0) {
@@ -110,15 +113,29 @@ int main(int ac, char **av)
         exit(0);
     }
 
-    /* Setup signal stuff */
-    set_signal();
-    /* Log SIGBUS/SIGSEGV SBT */
-    fault_setup(NULL);
-
     if ((event_ctx = tevent_context_init(talloc_autofree_context())) == NULL) {
         LOG(log_error, logtype_default, "Error initializing event lib");
         exit(1);
     }
+
+    /* Setup signal stuff */
+    set_signal(event_ctx);
+
+    /* Setup listening socket */
+    struct tsocket_address *addr;
+    if (tsocket_address_inet_from_strings(event_ctx,
+                                          "ip",
+                                          "localhost",
+                                          4701,
+                                          &addr) != 0) {
+        LOG(log_error, logtype_default, "Error initializing socket");
+        exit(1);
+    }
+#if 0
+    ssize_t tsocket_address_bsd_sockaddr(const struct tsocket_address *addr,
+                                         struct sockaddr *sa,
+                                         size_t sa_socklen)
+#endif
 
     LOG(log_warning, logtype_default, "Running...");
 

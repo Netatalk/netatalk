@@ -29,6 +29,9 @@ AC_C_INLINE
 dnl Request SUSv3 standard interfaces plus anything else the platform may have
 CFLAGS="$CFLAGS -D_XOPEN_SOURCE=600 -D__EXTENSIONS__ -D_GNU_SOURCE"
 
+dnl Configure libevent
+AC_CONFIG_SUBDIRS([libevent])
+
 dnl Checks for header files, some checks are obsolete, unfortunately the code
 dnl uses the resulting macros, so the code has to cleaned up too before
 dnl we can remove the checks here.
@@ -528,8 +531,8 @@ dnl --------------------------------------------------------------------------
 dnl Note: $(top_srcdir)/include should be added before all other includes
 dnl       so that includes from that directory a preferred to includes from
 dnl       /usr/include or similar places.
-LIBS="$LIBS -L\$(top_srcdir)/libatalk"
-CFLAGS="-I\$(top_srcdir)/include $CFLAGS -I\$(top_srcdir)/sys"
+LIBS="$LIBS -L\$(top_srcdir)/libatalk -L\$(top_srcdir)/libevent"
+CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys -I\$(top_srcdir)/libevent/include $CFLAGS"
 
 AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
 
