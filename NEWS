@@ -5,6 +5,7 @@ Changes in 2.1.6
 * FIX: gentoo: cannot set $CNID_CONFIG
 * FIX: ubuntu: servername was empty
 * FIX: Solaris: configure script failed to enable DDP module
+* FIX: AppleDouble buffer overrun by extremely long filename
 * UPD: afpd: return version info with machine type in DSIGetStatus
 
 Changes in 2.1.5
