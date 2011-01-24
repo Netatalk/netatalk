@@ -221,3 +221,5 @@ FORCE:
 
 DISTCLEANFILES = *~ libevent.pc ./include/event2/event-config.h
 
+install:
+
