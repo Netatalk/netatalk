@@ -1335,13 +1335,14 @@ AC_OUTPUT([Makefile
 	libatalk/dsi/Makefile
 	libatalk/nbp/Makefile
 	libatalk/netddp/Makefile
-	libatalk/util/Makefile
+	libatalk/rpc/Makefile
 	libatalk/talloc/Makefile
 	libatalk/tevent/Makefile
 	libatalk/tsocket/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
+	libatalk/util/Makefile
 	libatalk/vfs/Makefile
 	macros/Makefile
 	man/Makefile

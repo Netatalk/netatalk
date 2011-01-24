@@ -1,0 +1,17 @@
+struct lock_req {
+       string req_filename = 1;
+       struct[lock] req_lock = 2;
+}
+
+struct lock_rep {
+       int result = 1;
+       int64 rangestart = 2;
+}
+
+struct lock {
+       int locktype = 1; /* LT_SHAREMODE or LT_BRL (brl means UNIX byterange lock) */
+       optional int sharemode = 2;
+       optional int brl_type = 3;
+       optional int64 brl_offset = 4;
+       optional int64 brl_length = 5;
+}

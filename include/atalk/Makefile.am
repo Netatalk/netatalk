@@ -49,3 +49,10 @@ noinst_HEADERS = \
 	dsi.h \
 	ldapconfig.h \
 	list.h
+
+BUILT_SOURCES = lockrpc.gen.h
+EXTRADIST = lockrpc.gen.h
+lockrpc.gen.h: $(top_srcdir)/libevent/event_rpcgen.py $(top_srcdir)/libatalk/rpc/lockrpc.rpc
+	cd $(top_srcdir)/libatalk/rpc/ \
+		&& $(top_srcdir)/libevent/event_rpcgen.py lockrpc.rpc \
+		&& mv lockrpc.gen.h $(top_srcdir)/include/atalk

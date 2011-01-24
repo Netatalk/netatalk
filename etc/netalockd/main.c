@@ -19,15 +19,21 @@
 #include <atalk/logger.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
-#include <atalk/tevent.h>
-#include <atalk/tsocket.h>
 
-static void sighandler(struct tevent_context *ev,
-                       struct tevent_signal *se,
-                       int signal,
-                       int count,
-                       void *siginfo,
-                       void *private_data)
+#include "event2/event.h"
+#include "event2/http.h"
+#include "event2/rpc.h"
+
+#include <atalk/lockrpc.gen.h>
+
+EVRPC_HEADER(lock_msg, lock_req, lock_rep)
+EVRPC_GENERATE(lock_msg, lock_req, lock_rep)
+
+struct event_base *eventbase;
+struct evrpc_base *rpcbase;
+struct evhttp *http;
+
+static void sighandler(int signal)
 {
     switch( signal ) {
 
@@ -44,17 +50,9 @@ static void sighandler(struct tevent_context *ev,
 }
 
 
-static void set_signal(struct tevent_context *event_ctx)
+static void set_signal(void)
 {
     /* catch SIGTERM, SIGINT */
-    if (tevent_add_signal(event_ctx, event_ctx, SIGTERM, 0, sighandler, NULL) == NULL) {
-        LOG(log_error, logtype_default, "failed to setup SIGTERM handler");
-        exit(EXIT_FAILURE);
-    }
-    if (tevent_add_signal(event_ctx, event_ctx, SIGINT, 0, sighandler, NULL) == NULL) {
-        LOG(log_error, logtype_default, "failed to setup SIGINT handler");
-        exit(EXIT_FAILURE);
-    }
 
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
@@ -93,10 +91,56 @@ static void set_signal(struct tevent_context *event_ctx)
 
 }
 
+static void lock_msg_cb(EVRPC_STRUCT(lock_msg)* rpc, void *arg _U_)
+{
+    int ret = 0;
+    char *filename;
+    struct lock_req *request = rpc->request;
+    struct lock_rep *reply = rpc->reply;
+
+    if (EVTAG_GET(request, req_filename, &filename) == -1) {
+        LOG(log_error, logtype_default, "lock_msg_cb: no filename");
+        exit(1);
+    }
+
+    LOG(log_warning, logtype_default, "lock_msg_cb(file: \"%s\")", filename);
+
+	/* we just want to fill in some non-sense */
+	EVTAG_ASSIGN(reply, result, 0);
+
+	/* no reply to the RPC */
+	EVRPC_REQUEST_DONE(rpc);
+}
+
+static int rpc_setup(const char *addr, uint16_t port)
+{
+    eventbase = event_base_new();
+    
+	if ((http = evhttp_new(eventbase)) == NULL) {
+        LOG(log_error, logtype_default, "rpc_setup: error in evhttp_new: %s", strerror(errno));
+        return -1;
+    }
+
+	if (evhttp_bind_socket(http, addr, port) != 0) {
+        LOG(log_error, logtype_default, "rpc_setup: error in evhttp_new: %s", strerror(errno));
+        return -1;
+    }
+
+    rpcbase = evrpc_init(http);
+
+    EVRPC_REGISTER(rpcbase, lock_msg, lock_req, lock_rep, lock_msg_cb, NULL);
+
+	return 0;
+}
+
+static void rpc_teardown(struct evrpc_base *rpcbase)
+{
+	EVRPC_UNREGISTER(rpcbase, lock_msg);
+	evrpc_free(rpcbase);
+}
+
 int main(int ac, char **av)
 {
-    struct tevent_context *event_ctx;
-    sigset_t sigs;
     int ret;
 
     /* Default log setup: log to syslog */
@@ -113,36 +157,23 @@ int main(int ac, char **av)
         exit(0);
     }
 
-    if ((event_ctx = tevent_context_init(talloc_autofree_context())) == NULL) {
-        LOG(log_error, logtype_default, "Error initializing event lib");
-        exit(1);
-    }
-
     /* Setup signal stuff */
-    set_signal(event_ctx);
+    set_signal();
 
-    /* Setup listening socket */
-    struct tsocket_address *addr;
-    if (tsocket_address_inet_from_strings(event_ctx,
-                                          "ip",
-                                          "localhost",
-                                          4701,
-                                          &addr) != 0) {
-        LOG(log_error, logtype_default, "Error initializing socket");
+    /* Start listening */
+    if (rpc_setup("127.0.0.1", 4701) != 0) {
+        LOG(log_error, logtype_default, "main: rpc setup error");
         exit(1);
     }
-#if 0
-    ssize_t tsocket_address_bsd_sockaddr(const struct tsocket_address *addr,
-                                         struct sockaddr *sa,
-                                         size_t sa_socklen)
-#endif
 
     LOG(log_warning, logtype_default, "Running...");
 
     /* wait for events - this is where we sit for most of our life */
-    tevent_loop_wait(event_ctx);
+    event_base_dispatch(eventbase);
 
-    talloc_free(event_ctx);
+exit:
+    rpc_teardown(rpcbase);
+    evhttp_free(http);
 
     return 0;
 }
