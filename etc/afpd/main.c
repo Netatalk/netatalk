@@ -11,17 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-
 #include <sys/param.h>
 #include <sys/uio.h>
-#include <atalk/logger.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-
 #include <errno.h>
 
+#include <atalk/logger.h>
 #include <atalk/adouble.h>
-
 #include <netatalk/at.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
@@ -32,6 +29,12 @@
 #include <atalk/util.h>
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
+#include <atalk/errchk.h>
+#include <atalk/locking.h>
+
+#include "event2/event.h"
+#include "event2/http.h"
+#include "event2/rpc.h"
 
 #include "globals.h"
 #include "afp_config.h"
@@ -52,6 +55,7 @@ static char **argv = NULL;
 unsigned char	nologin = 0;
 
 struct afp_options default_options;
+
 static AFPConfig *configs;
 static server_child *server_children;
 static fd_set save_rfds;
@@ -267,9 +271,11 @@ int main(int ac, char **av)
     }
     pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
 
-    /* Register CNID  */
+    /* Initialize */
     cnid_init();
-
+    if (rpc_init("127.0.0.1", 4701) != 0)
+        afp_exit(EXITERR_SYS);
+    
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
     if ((ipc = server_ipc_create())) {
         Ipc_fd = server_ipc_parent(ipc);

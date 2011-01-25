@@ -20,7 +20,8 @@ libatalk_la_LIBADD  = \
 	tsocket/libtsocket.la \
 	unicode/libunicode.la \
 	util/libutil.la		\
-	vfs/libvfs.la
+	vfs/libvfs.la		\
+	$(top_builddir)/libevent/libevent.la
 
 libatalk_la_DEPENDENCIES = \
 	acl/libacl.la \
@@ -35,7 +36,8 @@ libatalk_la_DEPENDENCIES = \
 	tsocket/libtsocket.la \
 	unicode/libunicode.la \
 	util/libutil.la		\
-	vfs/libvfs.la
+	vfs/libvfs.la		\
+	$(top_builddir)/libevent/libevent.la
 
 libatalk_la_LDFLAGS = -static
 

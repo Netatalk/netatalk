@@ -366,9 +366,16 @@ extern int ad_testlock      (struct adouble * /*adp*/, int /*eid*/, off_t /*off*
 extern u_int16_t ad_openforks (struct adouble * /*adp*/, u_int16_t);
 extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
 
+#if 0
 #define ad_lock ad_fcntl_lock
 #define ad_tmplock ad_fcntl_tmplock
 #define ad_unlock ad_fcntl_unlock
+#endif
+
+#define ad_lock rpc_lock
+#define ad_tmplock rpc_tmplock
+#define ad_unlock rpc_unlock
+
 
 /* ad_open.c */
 extern const char *oflags2logstr(int oflags);

@@ -7,6 +7,7 @@ atalkinclude_HEADERS = \
 	afp.h \
 	vfs.h \
 	cnid.h \
+	locking.h \
 	logger.h \
 	paths.h \
 	unicode.h \

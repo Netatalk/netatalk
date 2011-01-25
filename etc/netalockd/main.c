@@ -19,6 +19,7 @@
 #include <atalk/logger.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
+#include <atalk/compat.h>
 
 #include "event2/event.h"
 #include "event2/http.h"
@@ -112,10 +113,16 @@ static void lock_msg_cb(EVRPC_STRUCT(lock_msg)* rpc, void *arg _U_)
 	EVRPC_REQUEST_DONE(rpc);
 }
 
+static void ev_log_cb(int severity, const char *msg)
+{
+    LOG(log_warning, logtype_default, (char *)msg);
+}
+
 static int rpc_setup(const char *addr, uint16_t port)
 {
     eventbase = event_base_new();
-    
+    event_set_log_callback(ev_log_cb);
+
 	if ((http = evhttp_new(eventbase)) == NULL) {
         LOG(log_error, logtype_default, "rpc_setup: error in evhttp_new: %s", strerror(errno));
         return -1;
@@ -139,13 +146,12 @@ static void rpc_teardown(struct evrpc_base *rpcbase)
 	evrpc_free(rpcbase);
 }
 
-int main(int ac, char **av)
+int main(int argc, char **argv)
 {
     int ret;
 
     /* Default log setup: log to syslog */
     set_processname("netalockd");
-    setuplog("default log_note");
 
     /* Check lockfile and daemonize */
     switch(server_lock("netalockd", _PATH_NETALOCKD_LOCK, 0)) {
@@ -156,6 +162,32 @@ int main(int ac, char **av)
     default: /* server */
         exit(0);
     }
+
+    char c;
+    static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
+    char *loglevel, *logfile;
+    while ((c = getopt(argc, argv, "l:f:")) != -1 ) {
+        switch (c) {
+        case 'l':
+            loglevel = strdup(optarg);
+            break;
+        case 'f':
+            logfile = strdup(optarg);
+            break;
+        }
+    }
+
+    /* Setup logging */
+    if (loglevel) {
+        strlcpy(logconfig + 8, loglevel, 13);
+        free(loglevel);
+        strcat(logconfig, " ");
+    }
+    if (logfile) {
+        strlcat(logconfig, logfile, MAXPATHLEN);
+        free(logfile);
+    }
+    setuplog(logconfig);
 
     /* Setup signal stuff */
     set_signal();
