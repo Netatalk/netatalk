@@ -1,7 +1,8 @@
 
 # Makefile.am for libatalk/
 
-SUBDIRS = acl adouble bstring compat cnid dsi rpc talloc tdb tevent tsocket util unicode vfs
+# rpc should be first because it generates RPC headers included elsewhere
+SUBDIRS = rpc acl adouble bstring compat cnid dsi tdb util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -14,10 +15,7 @@ libatalk_la_LIBADD  = \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
 	rpc/librpc.la		\
-	talloc/libtalloc.la \
 	tdb/libtdb.la       \
-	tevent/libtevent.la \
-	tsocket/libtsocket.la \
 	unicode/libunicode.la \
 	util/libutil.la		\
 	vfs/libvfs.la		\
@@ -30,10 +28,7 @@ libatalk_la_DEPENDENCIES = \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
 	rpc/librpc.la		\
-	talloc/libtalloc.la \
 	tdb/libtdb.la       \
-	tevent/libtevent.la \
-	tsocket/libtsocket.la \
 	unicode/libunicode.la \
 	util/libutil.la		\
 	vfs/libvfs.la		\
