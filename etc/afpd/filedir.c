@@ -380,6 +380,7 @@ static int moveandrename(const struct vol *vol,
         u_int16_t bshort;
 
         ad_getattr(adp, &bshort);
+        
         ad_close_metadata( adp);
         if ((bshort & htons(ATTRBIT_NORENAME))) {
             rc = AFPERR_OLOCK;

@@ -13,12 +13,13 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
-#include <atalk/adouble.h>
 #include <atalk/lockrpc.gen.h>
 
 #include "event2/event.h"
 #include "event2/http.h"
 #include "event2/rpc.h"
+
+struct adouble;
 
 extern int rpc_init(const char *addr, unsigned short port);
 extern int rpc_lock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);

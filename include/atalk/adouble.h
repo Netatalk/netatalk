@@ -43,6 +43,7 @@
 
 #include <netatalk/endian.h>
 #include <atalk/bstrlib.h>
+#include <atalk/locking.h>
 
 /* version info */
 #define AD_VERSION2     0x00020000

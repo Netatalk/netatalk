@@ -17,6 +17,8 @@
 
 #include "event2/event.h"
 #include "event2/http.h"
+#include "event2/event_compat.h"
+#include "event2/http_compat.h"
 #include "event2/rpc.h"
 #include "event2/rpc_struct.h"
 
@@ -62,7 +64,8 @@ static void rpc_dummy(const char *name)
 
     EVRPC_MAKE_REQUEST(lock_msg, rpc_pool, lock_req, lock_rep, msg_rep_cb, NULL);
 
-    event_base_dispatch(ev_base);
+//    event_base_dispatch(ev_base);
+    event_dispatch();
 }
 
 int rpc_lock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len, int user)
@@ -89,13 +92,14 @@ int rpc_tmplock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len
 int rpc_init(const char *addr, unsigned short port)
 {
     EC_INIT;
-	struct evhttp_connection *evcon;
+    struct evhttp_connection *evcon;
 
-    EC_NULL_LOG(ev_base = event_base_new());
+//    EC_NULL_LOG(ev_base = event_base_new());
     event_set_log_callback(ev_log_cb);
-	EC_NULL_LOG(rpc_pool = evrpc_pool_new(ev_base));
-	EC_NULL_LOG(evcon = evhttp_connection_base_new(NULL, NULL, addr, port));
-
+//	EC_NULL_LOG(rpc_pool = evrpc_pool_new(ev_base));
+	EC_NULL_LOG(rpc_pool = evrpc_pool_new(NULL));
+//	EC_NULL_LOG(evcon = evhttp_connection_new(addr, port));
+	EC_NULL_LOG(evcon = evhttp_connection_new(addr, port));
 	evrpc_pool_add_connection(rpc_pool, evcon);
 
 EC_CLEANUP:

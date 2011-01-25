@@ -1121,8 +1121,7 @@ int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *n
         }
     }
 
-    /* don't care if we can't open the newly renamed ressource fork
-     */
+    /* don't care if we can't open the newly renamed ressource fork */
     if (ad_open(adp, dst, ADFLAGS_HF, O_RDWR) == 0) {
         ad_setname(adp, newname);
         ad_flush( adp );
