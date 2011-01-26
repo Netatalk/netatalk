@@ -1,1 +1,1 @@
-SUBDIRS = afpd
+SUBDIRS = netalockd afpd

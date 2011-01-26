@@ -149,32 +149,44 @@ static void rpc_teardown(struct evrpc_base *rpcbase)
 int main(int argc, char **argv)
 {
     int ret;
+    int debug = 0;
+    char *address = "127.0.0.1";
+    int port = 4701;
 
     /* Default log setup: log to syslog */
     set_processname("netalockd");
 
+    char c;
+    static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
+    char *loglevel = NULL, *logfile = NULL;
+    while ((c = getopt(argc, argv, "df:l:n:p:")) != -1 ) {
+        switch (c) {
+        case 'd':
+            debug = 1;
+            break;
+        case 'f':
+            logfile = strdup(optarg);
+            break;
+        case 'l':
+            loglevel = strdup(optarg);
+            break;
+        case 'n':
+            address = strdup(optarg);
+            break;
+        case 'p':
+            port = atoi(optarg);
+            break;
+        }
+    }
+
     /* Check lockfile and daemonize */
-    switch(server_lock("netalockd", _PATH_NETALOCKD_LOCK, 0)) {
+    switch(server_lock("netalockd", _PATH_NETALOCKD_LOCK, debug)) {
     case -1: /* error */
         exit(EXITERR_SYS);
     case 0: /* child */
         break;
     default: /* server */
         exit(0);
-    }
-
-    char c;
-    static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
-    char *loglevel, *logfile;
-    while ((c = getopt(argc, argv, "l:f:")) != -1 ) {
-        switch (c) {
-        case 'l':
-            loglevel = strdup(optarg);
-            break;
-        case 'f':
-            logfile = strdup(optarg);
-            break;
-        }
     }
 
     /* Setup logging */
@@ -193,7 +205,7 @@ int main(int argc, char **argv)
     set_signal();
 
     /* Start listening */
-    if (rpc_setup("127.0.0.1", 4701) != 0) {
+    if (rpc_setup(address, port) != 0) {
         LOG(log_error, logtype_default, "main: rpc setup error");
         exit(1);
     }

@@ -1360,6 +1360,7 @@ AC_OUTPUT([Makefile
 	sys/ultrix/Makefile
 	test/Makefile
 	test/afpd/Makefile
+	test/netalockd/Makefile
 	],
 	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
 )

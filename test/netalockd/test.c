@@ -32,8 +32,8 @@
 EVRPC_HEADER(lock_msg, lock_req, lock_rep)
 EVRPC_GENERATE(lock_msg, lock_req, lock_rep)
 
-static struct evrpc_pool *rpc_pool;
 static struct event_base *ev_base;
+static struct evrpc_pool *rpc_pool;
 
 static void ev_log_cb(int severity, const char *msg)
 {
@@ -52,12 +52,12 @@ done:
     event_base_loopexit(ev_base, NULL);
 }
 
-static void rpc_dummy(const char *name)
+static void do_one_rpc(const char *name)
 {
     struct lock *lock = NULL;
 	struct lock_req *lock_req = NULL;
 	struct lock_rep *lock_rep = NULL;
-    
+
     lock = lock_new();
     lock_req = lock_req_new();
     lock_rep = lock_rep_new();
@@ -70,28 +70,7 @@ static void rpc_dummy(const char *name)
     event_dispatch();
 }
 
-int rpc_lock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len, int user)
-{
-    rpc_dummy(cfrombstr(ad->ad_fullpath));
-    return 0;
-}
-
-void rpc_unlock(struct adouble *ad, int user)
-{
-    rpc_dummy(cfrombstr(ad->ad_fullpath));
-}
-
-int rpc_tmplock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len, int user)
-{
-    rpc_dummy(cfrombstr(ad->ad_fullpath));
-    return 0;
-}
-
-/**************************************************************************************
- * Public functions
- **************************************************************************************/
-
-int rpc_init(const char *addr, unsigned short port)
+static int my_rpc_init(const char *addr, unsigned short port)
 {
     EC_INIT;
     struct evhttp_connection *evcon;
@@ -104,4 +83,12 @@ int rpc_init(const char *addr, unsigned short port)
 
 EC_CLEANUP:
     EC_EXIT;
+}
+
+int main(int argc, char **argv)
+{
+    if (my_rpc_init("127.0.0.1", 4702) != 0)
+        return 1;
+    do_one_rpc("test");
+    return 0;
 }
