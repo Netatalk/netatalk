@@ -4,6 +4,7 @@ pkgconfdir = @PKGCONFDIR@
 
 TESTS = test.sh
 EXTRA_DIST = test.sh
+CLEANFILES = test.log
 check_PROGRAMS = test
 
 test_SOURCES = test.c
