@@ -108,8 +108,8 @@ static void lock_msg_cb(EVRPC_STRUCT(lock_msg)* rpc, void *arg _U_)
 
 	/* we just want to fill in some non-sense */
 	EVTAG_ASSIGN(reply, result, 0);
+	EVTAG_ASSIGN(reply, rangestart, 0);
 
-	/* no reply to the RPC */
 	EVRPC_REQUEST_DONE(rpc);
 }
 

@@ -395,8 +395,6 @@ void of_dealloc( struct ofork *of)
 
     of_unhash(of);
     oforks[ of->of_refnum % nforks ] = NULL;
-    ad_unlock(of->of_ad, of->of_refnum);
-
     free( of );
 }
 
@@ -423,6 +421,8 @@ int of_closefork(struct ofork *ofork)
         }
     }
     ret = 0;
+
+    ad_unlock(ofork->of_ad, ofork->of_refnum);
     
     if (ad_unref(ofork->of_ad) == 0) {
         if ( ad_close( ofork->of_ad, 0 ) < 0 ) {

@@ -13,8 +13,14 @@
 #include <string.h>
 #include <errno.h>
 
-#include "event2/event-config.h"
+#include <atalk/logger.h>
+#include <atalk/errchk.h>
+#include <atalk/locking.h>
+#include <atalk/adouble.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
+#include "event2/event-config.h"
 #include "event2/event.h"
 #include "event2/http.h"
 #include "event2/event_compat.h"
@@ -22,12 +28,10 @@
 #include "event2/rpc.h"
 #include "event2/rpc_struct.h"
 
-#include <atalk/logger.h>
-#include <atalk/errchk.h>
-#include <atalk/locking.h>
-#include <atalk/adouble.h>
-#include <atalk/bstrlib.h>
-#include <atalk/bstradd.h>
+#include <atalk/lockrpc.gen.h>
+
+#define NUM_RPCS 10000
+int count = NUM_RPCS;
 
 EVRPC_HEADER(lock_msg, lock_req, lock_rep)
 EVRPC_GENERATE(lock_msg, lock_req, lock_rep)
@@ -40,34 +44,56 @@ static void ev_log_cb(int severity, const char *msg)
     LOG(log_warning, logtype_default, (char *)msg);
 }
 
+static void do_one_rpc(const char *name);
+
 static void msg_rep_cb(struct evrpc_status *status,
                        struct lock_req *req,
                        struct lock_rep *rep,
                        void *arg)
 {
-	if (status->error != EVRPC_STATUS_ERR_NONE)
-		goto done;
+    char buf[32];
 
-done:
-    event_base_loopexit(ev_base, NULL);
+	if (status->error != EVRPC_STATUS_ERR_NONE) {
+        LOG(log_warning, logtype_default, "msg_rep_cb: RPC error: %i", status->error);
+        event_base_loopexit(ev_base, NULL);
+        goto exit;
+    }
+
+	if (--count == 0) {
+        LOG(log_warning, logtype_default, "msg_rep_cb: count: %i", count);
+        event_base_loopexit(ev_base, NULL);
+        goto exit;
+    }
+
+    LOG(log_warning, logtype_default, "msg_rep_cb: count: %i", count);
+
+    snprintf(buf, 32, "count: %i", count);
+    do_one_rpc(buf);
+
+exit:
+    return;
 }
 
 static void do_one_rpc(const char *name)
 {
-    struct lock *lock = NULL;
-	struct lock_req *lock_req = NULL;
-	struct lock_rep *lock_rep = NULL;
+    static struct lock *lock = NULL;
+	static struct lock_req *lock_req = NULL;
+	static struct lock_rep *lock_rep = NULL;
 
-    lock = lock_new();
-    lock_req = lock_req_new();
-    lock_rep = lock_rep_new();
+    if (lock == NULL) {
+        lock = lock_new();
+        lock_req = lock_req_new();
+        lock_rep = lock_rep_new();
+    } else {
+        lock_clear(lock);
+        lock_req_clear(lock_req);
+        lock_rep_clear(lock_rep);
+    }
 
     EVTAG_ASSIGN(lock_req, req_lock, lock);
     EVTAG_ASSIGN(lock_req, req_filename, name);
 
     EVRPC_MAKE_REQUEST(lock_msg, rpc_pool, lock_req, lock_rep, msg_rep_cb, NULL);
-
-    event_dispatch();
 }
 
 static int my_rpc_init(const char *addr, unsigned short port)
@@ -87,8 +113,11 @@ EC_CLEANUP:
 
 int main(int argc, char **argv)
 {
+    set_processname("test");
+    setuplog("default log_maxdebug test.log");
     if (my_rpc_init("127.0.0.1", 4702) != 0)
         return 1;
     do_one_rpc("test");
+    event_dispatch();
     return 0;
 }

@@ -191,6 +191,9 @@ int ad_close( struct adouble *ad, int adflags)
 {
     int err = 0;
 
+    if (ad == NULL)
+        return 0;
+
     LOG(log_debug, logtype_default, "ad_close(\"%s\", %s)",
         cfrombstr(ad->ad_fullpath),
         adflags2logstr(adflags));
