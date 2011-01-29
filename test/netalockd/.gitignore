@@ -3,3 +3,4 @@ Makefile.in
 .deps
 .libs
 test
+test.log
