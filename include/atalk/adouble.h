@@ -355,28 +355,13 @@ extern int ad_flush (struct adouble *);
 extern int ad_close (struct adouble *, int);
 
 /* ad_lock.c */
-extern int ad_fcntl_lock    (struct adouble *, const u_int32_t /*eid*/,
-                                 const int /*type*/, const off_t /*offset*/,
-                                 const off_t /*len*/, const int /*user*/);
-extern void ad_fcntl_unlock (struct adouble *, const int /*user*/);
-extern int ad_fcntl_tmplock (struct adouble *, const u_int32_t /*eid*/,
-                                 const int /*type*/, const off_t /*offset*/,
-                                 const off_t /*len*/, const int /*user*/);
-extern int ad_testlock      (struct adouble * /*adp*/, int /*eid*/, off_t /*off*/);
+extern int ad_testlock      (struct adouble *adp, int eid, off_t off);
+extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
+extern int ad_excl_lock     (struct adouble *adp, uint32_t eid);
 
-extern u_int16_t ad_openforks (struct adouble * /*adp*/, u_int16_t);
-extern int ad_excl_lock     (struct adouble * /*adp*/, const u_int32_t /*eid*/);
-
-#if 0
-#define ad_lock ad_fcntl_lock
-#define ad_tmplock ad_fcntl_tmplock
-#define ad_unlock ad_fcntl_unlock
-#endif
-
-#define ad_lock rpc_lock
-#define ad_tmplock rpc_tmplock
-#define ad_unlock rpc_unlock
-
+extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
+extern void ad_unlock(struct adouble *, int user);
+extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
 
 /* ad_open.c */
 extern const char *oflags2logstr(int oflags);

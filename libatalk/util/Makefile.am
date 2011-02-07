@@ -1,5 +1,7 @@
 # Makefile.am for libatalk/util/
 
+pkgconfdir = @PKGCONFDIR@
+
 noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
@@ -17,5 +19,7 @@ libutil_la_SOURCES = \
 	server_lock.c	\
 	socket.c        \
 	strdicasecmp.c	\
-	volinfo.c \
+	volinfo.c 	\
 	unix.c
+
+libutil_la_CFLAGS = -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\"

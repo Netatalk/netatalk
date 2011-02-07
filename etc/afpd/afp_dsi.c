@@ -30,6 +30,7 @@
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
+#include <atalk/locking.h>
 
 #include "globals.h"
 #include "switch.h"

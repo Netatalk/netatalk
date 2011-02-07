@@ -2,7 +2,7 @@
 # Makefile.am for libatalk/
 
 # rpc should be first because it generates RPC headers included elsewhere
-SUBDIRS = rpc acl adouble bstring compat cnid dsi tdb util unicode vfs
+SUBDIRS = rpc acl adouble bstring compat cnid dsi locking tdb util unicode vfs
 
 lib_LTLIBRARIES = libatalk.la
 
@@ -14,6 +14,7 @@ libatalk_la_LIBADD  = \
 	bstring/libbstring.la \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
+	locking/liblocking.la		\
 	rpc/librpc.la		\
 	tdb/libtdb.la       \
 	unicode/libunicode.la \
@@ -27,6 +28,7 @@ libatalk_la_DEPENDENCIES = \
 	bstring/libbstring.la \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
+	locking/liblocking.la		\
 	rpc/librpc.la		\
 	tdb/libtdb.la       \
 	unicode/libunicode.la \

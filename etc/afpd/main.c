@@ -273,8 +273,12 @@ int main(int ac, char **av)
 
     /* Initialize */
     cnid_init();
+    if (locktable_init() != 0)
+        afp_exit(EXITERR_SYS);
+#if 0
     if (rpc_init("127.0.0.1", 4701) != 0)
         afp_exit(EXITERR_SYS);
+#endif
     
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
     if ((ipc = server_ipc_create())) {

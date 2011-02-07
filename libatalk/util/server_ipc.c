@@ -1,10 +1,5 @@
 /*
- * $Id: server_ipc.c,v 1.4 2010-01-21 14:14:49 didg Exp $
- *
  * All rights reserved. See COPYRIGHT.
- *
- *
- * ipc between parent and children.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -12,12 +7,13 @@
 #endif 
 
 #include <sys/types.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <errno.h>
 
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
@@ -207,4 +203,3 @@ int server_ipc_write( u_int16_t command, int len, void *msg)
    LOG (log_debug, logtype_afpd, "ipc_write: command: %u, pid: %u, msglen: %u", command, pid, len); 
    return write(pipe_fd[1], block, len+IPC_HEADERLEN );
 }
-

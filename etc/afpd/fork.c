@@ -96,7 +96,6 @@ static int getforkparams(struct ofork *ofork, u_int16_t bitmap, char *buf, size_
     return getmetadata(vol, bitmap, &path, dir, buf, buflen, adp );
 }
 
-/* ---------------------------- */
 static off_t get_off_t(char **ibuf, int is64)
 {
     u_int32_t             temp;
@@ -118,7 +117,6 @@ static off_t get_off_t(char **ibuf, int is64)
     return ret;
 }
 
-/* ---------------------- */
 static int set_off_t(off_t offset, char *rbuf, int is64)
 {
     u_int32_t  temp;
@@ -139,8 +137,6 @@ static int set_off_t(off_t offset, char *rbuf, int is64)
     return ret;
 }
 
-/* ------------------------
- */
 static int is_neg(int is64, off_t val)
 {
     if (val < 0 || (sizeof(off_t) == 8 && !is64 && (val & 0x80000000U)))
@@ -155,22 +151,6 @@ static int sum_neg(int is64, off_t offset, off_t reqcount)
     return 0;
 }
 
-/* -------------------------
- */
-static int setforkmode(struct adouble *adp, int eid, int ofrefnum, int what)
-{
-    return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, what, 1, ofrefnum);
-}
-
-/* -------------------------
- */
-int getforkmode(struct adouble *adp, int eid, int what)
-{
-    return ad_testlock(adp, eid,  what);
-}
-
-/* -------------------------
- */
 static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
 {
     int ret;
@@ -180,13 +160,13 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
     int denywriteset;
 
     if (! (access & (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD))) {
-        return setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_NONE);
+        return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_NONE, 1, ofrefnum);
     }
 
     if ((access & (OPENACC_RD | OPENACC_DRD))) {
-        if ((readset = getforkmode(adp, eid, AD_FILELOCK_OPEN_RD)) <0)
+        if ((readset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_RD)) <0)
             return readset;
-        if ((denyreadset = getforkmode(adp, eid, AD_FILELOCK_DENY_RD)) <0)
+        if ((denyreadset = ad_testlock(adp, eid, AD_FILELOCK_DENY_RD)) <0)
             return denyreadset;
 
         if ((access & OPENACC_RD) && denyreadset) {
@@ -201,21 +181,21 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
          * true
          */
         if ((access & OPENACC_RD)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_RD);
+            ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_RD, 1, ofrefnum);
             if (ret)
                 return ret;
         }
         if ((access & OPENACC_DRD)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_RD);
+            ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_DENY_RD, 1, ofrefnum);
             if (ret)
                 return ret;
         }
     }
     /* ------------same for writing -------------- */
     if ((access & (OPENACC_WR | OPENACC_DWR))) {
-        if ((writeset = getforkmode(adp, eid, AD_FILELOCK_OPEN_WR)) <0)
+        if ((writeset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_WR)) <0)
             return writeset;
-        if ((denywriteset = getforkmode(adp, eid, AD_FILELOCK_DENY_WR)) <0)
+        if ((denywriteset = ad_testlock(adp, eid, AD_FILELOCK_DENY_WR)) <0)
             return denywriteset;
 
         if ((access & OPENACC_WR) && denywriteset) {
@@ -227,12 +207,12 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
             return -1;
         }
         if ((access & OPENACC_WR)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_OPEN_WR);
+            ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_WR, 1, ofrefnum);
             if (ret)
                 return ret;
         }
         if ((access & OPENACC_DWR)) {
-            ret = setforkmode(adp, eid, ofrefnum, AD_FILELOCK_DENY_WR);
+            ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_DENY_WR, 1, ofrefnum);
             if (ret)
                 return ret;
         }

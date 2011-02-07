@@ -1253,8 +1253,8 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     if (ad_open(adp, s_path->u_name, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0) {
         return AFPERR_DENYCONF;
     }
-    denyreadset = (getforkmode(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
-                  getforkmode(adp, ADEID_RFORK, AD_FILELOCK_DENY_RD) != 0 );
+    denyreadset = (ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
+                  ad_testlock(adp, ADEID_RFORK, AD_FILELOCK_DENY_RD) != 0 );
 
     if (denyreadset) {
         retvalue = AFPERR_DENYCONF;

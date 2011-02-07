@@ -35,6 +35,7 @@
 #include <atalk/logger.h>
 #include <atalk/volinfo.h>
 #include <atalk/volume.h>
+#include <atalk/compat.h>
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/

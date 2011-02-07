@@ -269,8 +269,8 @@ int start = off;
 }
 
 /* ------------------ */
-int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
-                  const off_t off, const off_t len, const int fork)
+static int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
+                         const off_t off, const off_t len, const int fork)
 {
 #if 0
   struct flock lock;
@@ -457,105 +457,12 @@ static int testlock(struct ad_fd *adf, off_t off, off_t len)
   return 0;
 }
 
-/* --------------- */
-int ad_testlock(struct adouble *ad, int eid, const off_t off)
-{
-    return 0;
-#if 0
-  struct ad_fd *adf;
-  off_t      lock_offset;
-
-  lock_offset = off;
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_data_fork;
-    if (ad_meta_fileno(ad) != -1) {
-      	adf = ad->ad_md;
-    	lock_offset = df2off(off);
-    }
-  } 
-  else { /* rfork */
-    if (ad_meta_fileno(ad) == -1) {
-        /* there's no resource fork. return no lock */
-        return 0;
-    }
-    adf = ad->ad_md;
-    lock_offset = hf2off(off);
-  }
-  return testlock(adf, lock_offset, 1);
-#endif
-}
-
-/* -------------------------
-   return if a file is open by another process.
-   Optimized for the common case:
-   - there's no locks held by another process (clients)
-   - or we already know the answer and don't need to test.
-*/
-u_int16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
-{
-    return 0;
-#if 0
-  u_int16_t ret = 0;
-  struct ad_fd *adf;
-  off_t off;
-
-  if (!(attrbits & (ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
-      off_t len;
-      /* XXX know the locks layout: 
-         AD_FILELOCK_OPEN_WR is first 
-         and use it for merging requests
-      */
-      if (ad_meta_fileno(ad) != -1) {
-          /* there's a resource fork test the four bytes for
-           * data RW/RD and fork RW/RD locks in one request
-          */
-      	  adf = ad->ad_md;
-      	  off = LOCK_DATA_WR;
-      	  len = 4;
-      }
-      else {
-          /* no resource fork, only data RD/RW may exist */
-          adf = &ad->ad_data_fork;
-          off = AD_FILELOCK_OPEN_WR;
-          len = 2;
-      }
-      if (!testlock(adf, off, len))
-          return ret;
-  }
-  /* either there's a lock or we already know one 
-     fork is open
-  */
-  if (!(attrbits & ATTRBIT_DOPEN)) {
-      if (ad_meta_fileno(ad) != -1) {
-      	  adf = ad->ad_md;
-      	  off = LOCK_DATA_WR;
-      }
-      else {
-          adf = &ad->ad_data_fork;
-          off = AD_FILELOCK_OPEN_WR;
-      }
-      ret = testlock(adf, off, 2) > 0? ATTRBIT_DOPEN : 0;
-  }
-
-  if (!(attrbits & ATTRBIT_ROPEN)) {
-      if (ad_meta_fileno(ad) != -1) {
-      	  adf = ad->ad_md;
-          off = LOCK_RSRC_WR;
-          ret |= testlock(adf, off, 2) > 0? ATTRBIT_ROPEN : 0;
-      }
-  }
-
-  return ret;
-#endif
-}
 
 /* -------------------------
 */
-int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype,
-	             const off_t off, const off_t len, const int fork)
+static int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype,
+                            const off_t off, const off_t len, const int fork)
 {
-    return 0;
-#if 0
   struct flock lock;
   struct ad_fd *adf;
   int err;
@@ -614,6 +521,119 @@ int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype
     adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
 
   return err;
+}
+
+/* --------------------- */
+static void ad_fcntl_unlock(struct adouble *ad, const int fork)
+{
+  if (ad_data_fileno(ad) != -1) {
+    adf_unlock(&ad->ad_data_fork, fork);
+  }
+  if (ad_reso_fileno(ad) != -1) {
+    adf_unlock(&ad->ad_resource_fork, fork);
+  }
+
+  if (ad->ad_flags != AD_VERSION_EA) {
+    return;
+  }
+  if (ad_meta_fileno(ad) != -1) {
+    adf_unlock(&ad->ad_metadata_fork, fork);
+  }
+}
+
+/******************************************************************************
+ * Public functions
+ ******************************************************************************/
+
+/* --------------- */
+int ad_testlock(struct adouble *ad, int eid, const off_t off)
+{
+    return 0;
+#if 0
+  struct ad_fd *adf;
+  off_t      lock_offset;
+
+  lock_offset = off;
+  if (eid == ADEID_DFORK) {
+    adf = &ad->ad_data_fork;
+    if (ad_meta_fileno(ad) != -1) {
+      	adf = ad->ad_md;
+    	lock_offset = df2off(off);
+    }
+  } 
+  else { /* rfork */
+    if (ad_meta_fileno(ad) == -1) {
+        /* there's no resource fork. return no lock */
+        return 0;
+    }
+    adf = ad->ad_md;
+    lock_offset = hf2off(off);
+  }
+  return testlock(adf, lock_offset, 1);
+#endif
+}
+
+/* -------------------------
+   return if a file is open by another process.
+   Optimized for the common case:
+   - there's no locks held by another process (clients)
+   - or we already know the answer and don't need to test.
+*/
+uint16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
+{
+    return 0;
+#if 0
+  u_int16_t ret = 0;
+  struct ad_fd *adf;
+  off_t off;
+
+  if (!(attrbits & (ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+      off_t len;
+      /* XXX know the locks layout: 
+         AD_FILELOCK_OPEN_WR is first 
+         and use it for merging requests
+      */
+      if (ad_meta_fileno(ad) != -1) {
+          /* there's a resource fork test the four bytes for
+           * data RW/RD and fork RW/RD locks in one request
+          */
+      	  adf = ad->ad_md;
+      	  off = LOCK_DATA_WR;
+      	  len = 4;
+      }
+      else {
+          /* no resource fork, only data RD/RW may exist */
+          adf = &ad->ad_data_fork;
+          off = AD_FILELOCK_OPEN_WR;
+          len = 2;
+      }
+      if (!testlock(adf, off, len))
+          return ret;
+  }
+  /* either there's a lock or we already know one 
+     fork is open
+  */
+  if (!(attrbits & ATTRBIT_DOPEN)) {
+      if (ad_meta_fileno(ad) != -1) {
+      	  adf = ad->ad_md;
+      	  off = LOCK_DATA_WR;
+      }
+      else {
+          adf = &ad->ad_data_fork;
+          off = AD_FILELOCK_OPEN_WR;
+      }
+      ret = testlock(adf, off, 2) > 0? ATTRBIT_DOPEN : 0;
+  }
+
+  if (!(attrbits & ATTRBIT_ROPEN)) {
+      if (ad_meta_fileno(ad) != -1) {
+      	  adf = ad->ad_md;
+          off = LOCK_RSRC_WR;
+          ret |= testlock(adf, off, 2) > 0? ATTRBIT_ROPEN : 0;
+      }
+  }
+
+  return ret;
 #endif
 }
 
@@ -648,23 +668,17 @@ int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
 #endif
 }
 
-/* --------------------- */
-void ad_fcntl_unlock(struct adouble *ad, const int fork)
+int ad_lock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len, int user)
+{
+    return 0;
+}
+
+void ad_unlock(struct adouble *ad, int user)
 {
     return;
-#if 0
-  if (ad_data_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_data_fork, fork);
-  }
-  if (ad_reso_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_resource_fork, fork);
-  }
+}
 
-  if (ad->ad_flags != AD_VERSION_EA) {
-    return;
-  }
-  if (ad_meta_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_metadata_fork, fork);
-  }
-#endif
+int ad_tmplock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len, int user)
+{
+    return 0;
 }

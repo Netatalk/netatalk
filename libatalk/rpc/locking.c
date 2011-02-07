@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Frank Lahm
+ * Copyright (c) 2011 Frank Lahm
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -12,6 +12,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <pthread.h>
+
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include "event2/event-config.h"
 
@@ -28,6 +33,7 @@
 #include <atalk/adouble.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/lockrpc.gen.h>
 
 EVRPC_HEADER(lock_msg, lock_req, lock_rep)
 EVRPC_GENERATE(lock_msg, lock_req, lock_rep)
@@ -52,7 +58,7 @@ done:
     event_base_loopexit(ev_base, NULL);
 }
 
-static void rpc_dummy(const char *name)
+static int rpc_dummy(const char *name)
 {
     struct lock *lock = NULL;
 	struct lock_req *lock_req = NULL;
@@ -94,6 +100,7 @@ int rpc_tmplock(struct adouble *ad, uint32_t eid, int type, off_t off, off_t len
 int rpc_init(const char *addr, unsigned short port)
 {
     EC_INIT;
+
     struct evhttp_connection *evcon;
 
     EC_NULL_LOG(ev_base = event_init());
