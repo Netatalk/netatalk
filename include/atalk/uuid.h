@@ -43,6 +43,7 @@ extern char *ldap_uid_attr;
 
 extern int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid);
 extern int getnamefromuuid( uuidp_t uuidp, char **name, uuidtype_t *type);
+extern void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id);
 extern int uuid_bin2string( uuidp_t uuidp, char **uuidstring);
 extern void uuid_string2bin( const char *uuidstring, uuidp_t uuid);
 

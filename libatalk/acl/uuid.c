@@ -35,6 +35,34 @@ char *uuidtype[] = {"NULL","USER", "GROUP"};
  * Public helper function
  ********************************************************/
 
+static unsigned char local_group_uuid[] = {0xab, 0xcd, 0xef,
+                                           0xab, 0xcd, 0xef,
+                                           0xab, 0xcd, 0xef, 
+                                           0xab, 0xcd, 0xef};
+
+static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
+                                          0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa};
+
+void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
+{
+    uint32_t tmp;
+
+    switch (type) {
+    case UUID_GROUP:
+        memcpy(buf, local_group_uuid, 12);
+        break;
+    case UUID_USER:
+    default:
+        memcpy(buf, local_user_uuid, 12);
+        break;
+    }
+
+    tmp = htonl(id);
+    memcpy(buf + 12, &tmp, 4);
+
+    return;
+}
+
 /* 
  * convert ascii string that can include dashes to binary uuid.
  * caller must provide a buffer.

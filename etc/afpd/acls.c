@@ -728,11 +728,14 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     /* Shall we return owner UUID ? */
     if (bitmap & kFileSec_UUID) {
         LOG(log_debug, logtype_afpd, "afp_getacl: client requested files owner user UUID");
-        if (NULL == (pw = getpwuid(s_path->st.st_uid)))
-            return AFPERR_MISC;
-        LOG(log_debug, logtype_afpd, "afp_getacl: got uid: %d, name: %s", s_path->st.st_uid, pw->pw_name);
-        if ((ret = getuuidfromname(pw->pw_name, UUID_USER, rbuf)) != 0)
-            return AFPERR_MISC;
+        if (NULL == (pw = getpwuid(s_path->st.st_uid))) {
+            LOG(log_debug, logtype_afpd, "afp_getacl: local uid: %u", s_path->st.st_uid);
+            localuuid_from_id(rbuf, UUID_USER, s_path->st.st_uid);
+        } else {
+            LOG(log_debug, logtype_afpd, "afp_getacl: got uid: %d, name: %s", s_path->st.st_uid, pw->pw_name);
+            if ((ret = getuuidfromname(pw->pw_name, UUID_USER, rbuf)) != 0)
+                return AFPERR_MISC;
+        }
         rbuf += UUID_BINSIZE;
         *rbuflen += UUID_BINSIZE;
     }
@@ -740,11 +743,14 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     /* Shall we return group UUID ? */
     if (bitmap & kFileSec_GRPUUID) {
         LOG(log_debug, logtype_afpd, "afp_getacl: client requested files owner group UUID");
-        if (NULL == (gr = getgrgid(s_path->st.st_gid)))
-            return AFPERR_MISC;
-        LOG(log_debug, logtype_afpd, "afp_getacl: got gid: %d, name: %s", s_path->st.st_gid, gr->gr_name);
-        if ((ret = getuuidfromname(gr->gr_name, UUID_GROUP, rbuf)) != 0)
-            return AFPERR_MISC;
+        if (NULL == (gr = getgrgid(s_path->st.st_gid))) {
+            LOG(log_debug, logtype_afpd, "afp_getacl: local gid: %u", s_path->st.st_gid);
+            localuuid_from_id(rbuf, UUID_GROUP, s_path->st.st_gid);
+        } else {
+            LOG(log_debug, logtype_afpd, "afp_getacl: got gid: %d, name: %s", s_path->st.st_gid, gr->gr_name);
+            if ((ret = getuuidfromname(gr->gr_name, UUID_GROUP, rbuf)) != 0)
+                return AFPERR_MISC;
+        }
         rbuf += UUID_BINSIZE;
         *rbuflen += UUID_BINSIZE;
     }

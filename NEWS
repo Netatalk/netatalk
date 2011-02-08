@@ -2,6 +2,8 @@ Changes in 2.1.6
 ================
 
 * FIX: afpd: Fix for LDAP user cache corruption
+* FIX: afpd: Fix for not shown ACLs for when filesyem uid or gid
+       couldn't be resolved because (eg deleted users/groups)
 * FIX: gentoo: cannot set $CNID_CONFIG
 * FIX: ubuntu: servername was empty
 * FIX: Solaris: configure script failed to enable DDP module
