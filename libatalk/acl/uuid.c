@@ -39,6 +39,34 @@ char *uuidtype[] = {"NULL","USER", "GROUP", "LOCAL"};
  * Public helper function
  ********************************************************/
 
+static unsigned char local_group_uuid[] = {0xab, 0xcd, 0xef,
+                                           0xab, 0xcd, 0xef,
+                                           0xab, 0xcd, 0xef, 
+                                           0xab, 0xcd, 0xef};
+
+static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
+                                          0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa};
+
+void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
+{
+    uint32_t tmp;
+
+    switch (type) {
+    case UUID_GROUP:
+        memcpy(buf, local_group_uuid, 12);
+        break;
+    case UUID_USER:
+    default:
+        memcpy(buf, local_user_uuid, 12);
+        break;
+    }
+
+    tmp = htonl(id);
+    memcpy(buf + 12, &tmp, 4);
+
+    return;
+}
+
 /* 
  * convert ascii string that can include dashes to binary uuid.
  * caller must provide a buffer.
@@ -99,14 +127,6 @@ const char *uuid_bin2string(unsigned char *uuid) {
  * Interface
  ********************************************************/
 
-static unsigned char local_group_uuid[] = {0xab, 0xcd, 0xef,
-                                           0xab, 0xcd, 0xef,
-                                           0xab, 0xcd, 0xef, 
-                                           0xab, 0xcd, 0xef};
-
-static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
-                                          0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa};
-
 /*
  *   name: give me his name
  *   type: and type (UUID_USER or UUID_GROUP)
@@ -138,27 +158,21 @@ int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
         if (ret != 0) {
             /* Build a local UUID */
             if (type == UUID_USER) {
-                memcpy(uuid, local_user_uuid, 12);
                 struct passwd *pwd;
                 if ((pwd = getpwnam(name)) == NULL) {
                     LOG(log_error, logtype_afpd, "getuuidfromname(\"%s\",t:%u): unknown user",
                         name, uuidtype[type]);
                     goto cleanup;
                 }
-                uint32_t id = pwd->pw_uid;
-                id = htonl(id);
-                memcpy(uuid + 12, &id, 4);
+                localuuid_from_id(uuid, UUID_USER, pwd->pw_uid);
             } else {
-                memcpy(uuid, &local_group_uuid, 12);
                 struct group *grp;
                 if ((grp = getgrnam(name)) == NULL) {
                     LOG(log_error, logtype_afpd, "getuuidfromname(\"%s\",t:%u): unknown user",
                         name, uuidtype[type]);
                     goto cleanup;
                 }
-                uint32_t id = grp->gr_gid;
-                id = htonl(id);
-                memcpy(uuid + 12, &id, 4);
+                localuuid_from_id(uuid, UUID_GROUP, grp->gr_gid);
             }
             LOG(log_debug, logtype_afpd, "getuuidfromname{local}: name: %s, type: %s -> UUID: %s",
                 name, uuidtype[type], uuid_bin2string(uuid));
