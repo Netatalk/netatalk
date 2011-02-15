@@ -546,7 +546,7 @@ int afp_getsession(
             token = obj->sinfo.sessiontoken;
         }
         break;
-    case 3: /* Jaguar */
+    case 3:
     case 4:
         if (ibuflen >= 8 ) {
             p = ibuf;
@@ -559,7 +559,7 @@ int afp_getsession(
             if (ibuflen < idlen || idlen > (90-10)) {
                 return AFPERR_PARAM;
             }
-            server_ipc_write(IPC_GETSESSION, idlen+8, p );
+            ipc_child_write(obj->ipc_fd, IPC_GETSESSION, idlen+8, p);
             tklen = obj->sinfo.sessiontoken_len;
             token = obj->sinfo.sessiontoken;
         }
@@ -589,10 +589,10 @@ int afp_getsession(
 }
 
 /* ---------------------- */
-int afp_disconnect(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
+    DSI                 *dsi = (DSI *)obj->handle;
     u_int16_t           type;
-
     u_int32_t           tklen;
     pid_t               token;
     int                 i;
@@ -633,11 +633,26 @@ int afp_disconnect(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         }
     }
 
-    /* killed old session, not easy */
-    server_ipc_write(IPC_KILLTOKEN, tklen, &token);
-    sleep(1);
+    LOG(log_note, logtype_afpd, "afp_disconnect: trying primary reconnect");
 
-    return AFPERR_SESSCLOS;   /* was AFP_OK */
+    /* check for old session, possibly transfering session from here to there */
+    if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) == -1)
+        goto exit;
+    /* write uint16_t DSI request ID */
+    if (writet(obj->ipc_fd, &dsi->header.dsi_requestID, 2, 0, 2) != 2) {
+        LOG(log_error, logtype_afpd, "afp_disconnect: couldn't send DSI request ID");
+        goto exit;
+    }
+    /* now send our connected AFP client socket */
+    if (send_fd(obj->ipc_fd, dsi->socket) != 0)
+        goto exit;
+    /* Now see what happens: either afpd master kills us because our session */
+    /* has been transfered to a old disconnected session, or we continue    */
+    sleep(2);
+
+exit:
+    LOG(log_error, logtype_afpd, "afp_disconnect: primary reconnect failed");
+    return AFPERR_MISC;
 }
 
 /* ---------------------- */

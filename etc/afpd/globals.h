@@ -107,7 +107,7 @@ typedef struct _AFPObj {
     void *uam_cookie; /* cookie for uams */
     struct session_info  sinfo;
     uid_t uid; 	/* client running user id */
-
+    int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
 #ifdef FORCE_UIDGID
     int                 force_uid;
     uidgidset		uidgid;

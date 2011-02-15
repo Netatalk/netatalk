@@ -69,51 +69,6 @@ static void invalidate_fd(int fd)
     return;
 }
 
-static int recv_cred(int fd)
-{
-    int ret;
-    struct msghdr msgh;
-    struct iovec iov[1];
-    struct cmsghdr *cmsgp = NULL;
-    char buf[CMSG_SPACE(sizeof(int))];
-    char dbuf[80];
-
-    memset(&msgh,0,sizeof(msgh));
-    memset(buf,0,sizeof(buf));
-
-    msgh.msg_name = NULL;
-    msgh.msg_namelen = 0;
-
-    msgh.msg_iov = iov;
-    msgh.msg_iovlen = 1;
-
-    iov[0].iov_base = dbuf;
-    iov[0].iov_len = sizeof(dbuf);
-
-    msgh.msg_control = buf;
-    msgh.msg_controllen = sizeof(buf);
-
-    do  {
-        ret = recvmsg(fd ,&msgh,0);
-    } while ( ret == -1 && errno == EINTR );
-
-    if ( ret == -1 ) {
-        return -1;
-    }
-
-    for ( cmsgp = CMSG_FIRSTHDR(&msgh); cmsgp != NULL; cmsgp = CMSG_NXTHDR(&msgh,cmsgp) ) {
-        if ( cmsgp->cmsg_level == SOL_SOCKET && cmsgp->cmsg_type == SCM_RIGHTS ) {
-            return *(int *) CMSG_DATA(cmsgp);
-        }
-    }
-
-    if ( ret == sizeof (int) )
-        errno = *(int *)dbuf; /* Rcvd errno */
-    else
-        errno = ENOENT;    /* Default errno */
-
-    return -1;
-}
 
 /*
  *  Check for client requests. We keep up to fd_table_size open descriptors in
@@ -163,7 +118,7 @@ static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
     if (FD_ISSET(control_fd, &readfds)) {
         int    l = 0;
 
-        fd = recv_cred(control_fd);
+        fd = recv_fd(control_fd, 0);
         if (fd < 0) {
             return -1;
         }

@@ -16,6 +16,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
+#include <poll.h>
 #include <netatalk/at.h>
 #include <atalk/unicode.h>
 
@@ -128,10 +129,34 @@ extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t l
 
 extern int setnonblock(int fd, int cmd);
 extern ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout);
+extern ssize_t writet(int socket, void *data, const size_t length, int setnonblocking, int timeout);
 extern const char *getip_string(const struct sockaddr *sa);
 extern unsigned int getip_port(const struct sockaddr *sa);
 extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
 extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
+
+/* Structures and functions dealing with dynamic pollfd arrays */
+enum fdtype {IPC_FD, LISTEN_FD};
+struct polldata {
+    enum fdtype fdtype; /* IPC fd or listening socket fd                 */
+    void *data;         /* pointer to AFPconfig for listening socket and *
+                         * pointer to afp_child_t for IPC fd             */
+};
+
+extern void fdset_add_fd(struct pollfd **fdsetp,
+                         struct polldata **polldatap,
+                         int *fdset_usedp,
+                         int *fdset_sizep,
+                         int fd,
+                         enum fdtype fdtype,
+                         void *data);
+extern void fdset_del_fd(struct pollfd **fdsetp,
+                         struct polldata **polldatap,
+                         int *fdset_usedp,
+                         int *fdset_sizep,
+                         int fd);
+extern int send_fd(int socket, int fd);
+extern int recv_fd(int fd, int nonblocking);
 
 /******************************************************************
  * unix.c

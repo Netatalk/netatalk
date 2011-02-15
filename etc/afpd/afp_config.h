@@ -19,7 +19,7 @@ typedef struct AFPConfig {
     unsigned char *optcount;
     char status[1400];
     const void *defoptions, *signature;
-    int (*server_start) (struct AFPConfig *, struct AFPConfig *,
+    afp_child_t *(*server_start) (struct AFPConfig *, struct AFPConfig *,
                              server_child *);
     void (*server_cleanup) (const struct AFPConfig *);
     struct AFPConfig *next;

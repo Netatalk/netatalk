@@ -37,41 +37,36 @@
 #include <atalk/dsi.h>
 #include <atalk/server_child.h>
 
-static server_child *children = NULL;
-
-void dsi_kill(int sig)
-{
-  if (children)
-    server_child_kill(children, CHILD_DSIFORK, sig);
-}
-
 /* hand off the command. return child connection to the main program */
-DSI *dsi_getsession(DSI *dsi, server_child *serv_children, 
-		    const int tickleval)
+afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval)
 {
   pid_t pid;
-  
-  /* do a couple things on first entry */
-  if (!dsi->inited) {
-    if (!(children = serv_children))
-      return NULL;
-    dsi->inited = 1;
+  unsigned int ipc_fds[2];  
+  afp_child_t *child;
+
+  if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
+      LOG(log_error, logtype_afpd, "dsi_getsess: %s", strerror(errno));
+      exit( EXITERR_CLNT );
   }
-  
-  switch (pid = dsi->proto_open(dsi)) {
+
+  if (setnonblock(ipc_fds[0], 1) != 0 || setnonblock(ipc_fds[1], 1) != 0) {
+      LOG(log_error, logtype_afpd, "dsi_getsess: setnonblock: %s", strerror(errno));
+      exit(EXITERR_CLNT);
+  }
+
+  switch (pid = dsi->proto_open(dsi)) { /* in libatalk/dsi/dsi_tcp.c */
   case -1:
     /* if we fail, just return. it might work later */
     LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
-    return dsi;
+    return NULL;
 
   case 0: /* child. mostly handled below. */
-    dsi->child = 1;
     break;
 
   default: /* parent */
     /* using SIGQUIT is hokey, but the child might not have
      * re-established its signal handler for SIGTERM yet. */
-    if (server_child_add(children, CHILD_DSIFORK, pid) < 0) {
+    if ((child = server_child_add(serv_children, CHILD_DSIFORK, pid, ipc_fds)) < 0) {
       LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
       dsi->header.dsi_flags = DSIFL_REPLY;
       dsi->header.dsi_code = DSIERR_SERVBUSY;
@@ -79,14 +74,13 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
       dsi->header.dsi_code = DSIERR_OK;
       kill(pid, SIGQUIT);
     }
-
     dsi->proto_close(dsi);
-    return dsi;
+    return child;
   }
   
   /* child: check number of open connections. this is one off the
    * actual count. */
-  if ((children->count >= children->nsessions) &&
+  if ((serv_children->count >= serv_children->nsessions) &&
       (dsi->header.dsi_command == DSIFUNC_OPEN)) {
     LOG(log_info, logtype_dsi, "dsi_getsess: too many connections");
     dsi->header.dsi_flags = DSIFL_REPLY;
@@ -97,8 +91,7 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
 
   /* get rid of some stuff */
   close(dsi->serversock);
-  server_child_free(children); 
-  children = NULL;
+  server_child_free(serv_children); 
 
   switch (dsi->header.dsi_command) {
   case DSIFUNC_STAT: /* send off status and return */
@@ -129,7 +122,10 @@ DSI *dsi_getsession(DSI *dsi, server_child *serv_children,
     dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
     signal(SIGPIPE, SIG_IGN); /* we catch these ourselves */
     dsi_opensession(dsi);
-    return dsi;
+    if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
+        exit(EXITERR_SYS);
+    child->ipc_fds[1] = ipc_fds[1];
+    return child;
     break;
 
   default: /* just close */

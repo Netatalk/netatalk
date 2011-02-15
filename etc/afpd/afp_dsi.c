@@ -42,10 +42,11 @@
 #include "uid.h"
 #endif /* FORCE_UIDGID */
 
-#define CHILD_DIE         (1 << 0)
-#define CHILD_RUNNING     (1 << 1)
-#define CHILD_SLEEPING    (1 << 2)
-#define CHILD_DATA        (1 << 3)
+#define CHILD_DIE          (1 << 0)
+#define CHILD_RUNNING      (1 << 1)
+#define CHILD_SLEEPING     (1 << 2)
+#define CHILD_DATA         (1 << 3)
+#define CHILD_DISCONNECTED (1 << 4)
 
 /* 
  * We generally pass this from afp_over_dsi to all afp_* funcs, so it should already be
@@ -67,6 +68,9 @@ static struct {
 static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->handle;
+
+    close(obj->ipc_fd);
+    obj->ipc_fd = -1;
 
     /* we may have been called from a signal handler caught when afpd was running
      * as uid 0, that's the wrong user for volume's prexec_close scripts if any,
@@ -119,6 +123,49 @@ static volatile int in_handler;
     else {
         exit(sig);
     }
+}
+
+static void afp_dsi_transfer_session(int sig _U_)
+{
+    uint16_t dsiID;
+    int socket;
+    DSI *dsi = (DSI *)child.obj->handle;
+
+    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: got SIGURG, trying to receive session fd");
+
+    if (readt(child.obj->ipc_fd, &dsiID, 2, 0, 2) != 2) {
+        LOG(log_error, logtype_afpd, "afp_dsi_transfer_session: couldn't receive DSI id, goodbye");
+        afp_dsi_close(child.obj);
+        exit(EXITERR_SYS);
+    }
+
+    if ((socket = recv_fd(child.obj->ipc_fd, 1)) == -1) {
+        LOG(log_error, logtype_afpd, "afp_dsi_transfer_session: couldn't receive session fd, goodbye");
+        afp_dsi_close(child.obj);
+        exit(EXITERR_SYS);
+    }
+
+    close(dsi->socket);
+    dsi->socket = socket;
+    dsi->header.dsi_requestID = dsiID;
+    dsi->header.dsi_len = 0;
+    dsi->header.dsi_code = AFP_OK;
+    dsi->header.dsi_command = DSIFUNC_CMD;
+    dsi->header.dsi_flags = DSIFL_REPLY;
+
+    if (!dsi_cmdreply(dsi, AFP_OK)) {
+        LOG(log_error, logtype_afpd, "dsi_cmdreply: %s", strerror(errno) );
+        afp_dsi_close(child.obj);
+        exit(EXITERR_CLNT);
+    }
+
+
+    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: succesfull primary reconnect");
+    /* 
+     * Now returning from this signal handler return to dsi_receive which should start
+     * reading/continuing from the connected socket that was passed via the parent from
+     * another session. The parent will terminate that session.
+     */
 }
 
 /* */
@@ -210,15 +257,20 @@ static void alarm_handler(int sig _U_)
     int err;
     DSI *dsi = (DSI *) child.obj->handle;
 
-    /* we have to restart the timer because some libraries 
-     * may use alarm() */
+    if (child.flags & CHILD_DISCONNECTED) {
+        LOG(log_note, logtype_afpd, "afp_alarm: no reconnect within 10 hours, goodbye");
+        afp_dsi_die(EXITERR_CLNT);
+    }
+
+    /* we have to restart the timer because some libraries may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
 
     /* we got some traffic from the client since the previous timer 
      * tick. */
     if ((child.flags & CHILD_DATA)) {
         child.flags &= ~CHILD_DATA;
-        return;
+        child.flags &= ~CHILD_DISCONNECTED;
+       return;
     }
 
     /* if we're in the midst of processing something,
@@ -232,10 +284,11 @@ static void alarm_handler(int sig _U_)
             err = dsi_tickle(child.obj->handle);
         if (err <= 0) 
             afp_dsi_die(EXITERR_CLNT);
-        
-    } else { /* didn't receive a tickle. close connection */
-        LOG(log_error, logtype_afpd, "afp_alarm: child timed out");
-        afp_dsi_die(EXITERR_CLNT);
+    } else { /* didn't receive a tickle, enter disconnected state */
+        LOG(log_error, logtype_afpd, "afp_alarm: child timed out, entering disconnected state");
+        struct itimerval t = {{0, 60 * 60 * 10}, {0, 0}}; /* 10 hours */
+        setitimer(ITIMER_REAL, &t, NULL);
+        child.flags |= CHILD_DISCONNECTED;
     }
 }
 
@@ -296,6 +349,22 @@ void afp_over_dsi(AFPObj *obj)
 #endif    
     action.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &action, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
+        afp_dsi_die(EXITERR_SYS);
+    }
+
+    /* install SIGURG */
+    action.sa_handler = afp_dsi_transfer_session;
+    sigemptyset( &action.sa_mask );
+    sigaddset(&action.sa_mask, SIGALRM);
+    sigaddset(&action.sa_mask, SIGTERM);
+    sigaddset(&action.sa_mask, SIGUSR1);
+    sigaddset(&action.sa_mask, SIGINT);
+#ifdef SERVERTEXT
+    sigaddset(&action.sa_mask, SIGUSR2);
+#endif    
+    action.sa_flags = SA_RESTART;
+    if ( sigaction( SIGURG, &action, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno) );
         afp_dsi_die(EXITERR_SYS);
     }

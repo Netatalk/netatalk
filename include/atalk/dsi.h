@@ -78,8 +78,8 @@ typedef struct DSI {
   size_t datalen, cmdlen;
   off_t  read_count, write_count;
   int asleep; /* client won't reply AFP 0x7a ? */
-  /* inited = initialized?, child = a child?, noreply = send reply? */
-  char child, inited, noreply;
+  /* noreply = send reply? */
+  char noreply;
   const char *program; 
   int socket, serversock;
 
@@ -157,7 +157,7 @@ extern DSI *dsi_init (const dsi_proto /*protocol*/,
 extern void dsi_setstatus (DSI *, char *, const size_t);
 
 /* in dsi_getsess.c */
-extern DSI *dsi_getsession (DSI *, server_child *, const int);
+extern afp_child_t *dsi_getsession (DSI *, server_child *, const int);
 extern void dsi_kill (int);
 
 
