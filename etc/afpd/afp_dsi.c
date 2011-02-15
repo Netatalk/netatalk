@@ -64,6 +64,18 @@ static struct {
     int tickle;
 } child;
 
+typedef struct {
+    uint16_t DSIreqID;
+    uint8_t  AFPcommand;
+    uint32_t result;
+} rc_elem_t;
+
+/*
+ * AFP replay cache:
+ * - fix sized array
+ * - indexed just by taking DSIreqID mod REPLAYCACHE_SIZE
+ */
+rc_elem_t replaycache[REPLAYCACHE_SIZE];
 
 static void afp_dsi_close(AFPObj *obj)
 {
@@ -322,6 +334,7 @@ static void pending_request(DSI *dsi)
 void afp_over_dsi(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->handle;
+    int rc_idx;
     u_int32_t err, cmd;
     u_int8_t function;
     struct sigaction action;
@@ -507,33 +520,50 @@ void afp_over_dsi(AFPObj *obj)
 
             function = (u_char) dsi->commands[0];
 
-            /* send off an afp command. in a couple cases, we take advantage
-             * of the fact that we're a stream-based protocol. */
-            if (afp_switch[function]) {
-                dsi->datalen = DSI_DATASIZ;
-                child.flags |= CHILD_RUNNING;
+            /* AFP replay cache */
+            rc_idx = REPLAYCACHE_SIZE % dsi->clientID;
+            LOG(log_debug, logtype_afpd, "DSI request ID: %u", dsi->clientID);
 
-                LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
+            if (replaycache[rc_idx].DSIreqID == dsi->clientID
+                && replaycache[rc_idx].AFPcommand == function) {
+                LOG(log_debug, logtype_afpd, "AFP Replay Cache match: id: %u / cmd: %s",
+                    dsi->clientID, AfpNum2name(function));
+                err = replaycache[rc_idx].result;
+            /* AFP replay cache end */
+            } else {
+                /* send off an afp command. in a couple cases, we take advantage
+                 * of the fact that we're a stream-based protocol. */
+                if (afp_switch[function]) {
+                    dsi->datalen = DSI_DATASIZ;
+                    child.flags |= CHILD_RUNNING;
 
-                err = (*afp_switch[function])(obj,
-                                              (char *)&dsi->commands, dsi->cmdlen,
-                                              (char *)&dsi->data, &dsi->datalen);
+                    LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
-                LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
-                    AfpNum2name(function), AfpErr2name(err));
+                    err = (*afp_switch[function])(obj,
+                                                  (char *)&dsi->commands, dsi->cmdlen,
+                                                  (char *)&dsi->data, &dsi->datalen);
 
-                dir_free_invalid_q();
+                    LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
+                        AfpNum2name(function), AfpErr2name(err));
+
+                    dir_free_invalid_q();
 
 #ifdef FORCE_UIDGID
-            	/* bring everything back to old euid, egid */
-                if (obj->force_uid)
-            	    restore_uidgid ( &obj->uidgid );
+                    /* bring everything back to old euid, egid */
+                    if (obj->force_uid)
+                        restore_uidgid ( &obj->uidgid );
 #endif /* FORCE_UIDGID */
-                child.flags &= ~CHILD_RUNNING;
-            } else {
-                LOG(log_error, logtype_afpd, "bad function %X", function);
-                dsi->datalen = 0;
-                err = AFPERR_NOOP;
+                    child.flags &= ~CHILD_RUNNING;
+
+                    /* Add result to the AFP replay cache */
+                    replaycache[rc_idx].DSIreqID = dsi->clientID;
+                    replaycache[rc_idx].AFPcommand = function;
+                    replaycache[rc_idx].result = err;
+                } else {
+                    LOG(log_error, logtype_afpd, "bad function %X", function);
+                    dsi->datalen = 0;
+                    err = AFPERR_NOOP;
+                }
             }
 
             /* single shot toggle that gets set by dsi_readinit. */

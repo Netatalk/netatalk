@@ -115,6 +115,7 @@ typedef struct DSI {
 /* DSI session options */
 #define DSIOPT_SERVQUANT 0x00   /* server request quantum */
 #define DSIOPT_ATTNQUANT 0x01   /* attention quantum */
+#define DSIOPT_REPLCSIZE 0x02   /* AFP replaycache size supported by the server (that's us) */
 
 /* DSI Commands */
 #define DSIFUNC_CLOSE   1       /* DSICloseSession */

@@ -1,7 +1,8 @@
 Changes in 2.2beta2
 ====================
 
-* NEW: primary reconnect
+* NEW: afpd: primary AFP reconnect
+* NEW: afpd: AFP replay cache
 
 Changes in 2.2beta1
 ====================
