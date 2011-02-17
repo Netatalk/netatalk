@@ -42,12 +42,6 @@
 #include "uid.h"
 #endif /* FORCE_UIDGID */
 
-#define CHILD_DIE          (1 << 0)
-#define CHILD_RUNNING      (1 << 1)
-#define CHILD_SLEEPING     (1 << 2)
-#define CHILD_DATA         (1 << 3)
-#define CHILD_DISCONNECTED (1 << 4)
-
 /* 
  * We generally pass this from afp_over_dsi to all afp_* funcs, so it should already be
  * available everywhere. Unfortunately some funcs (eg acltoownermode) need acces to it
@@ -143,7 +137,7 @@ static void afp_dsi_transfer_session(int sig _U_)
     int socket;
     DSI *dsi = (DSI *)child.obj->handle;
 
-    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: got SIGURG, trying to receive session fd");
+    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: got SIGURG, trying to receive session");
 
     if (readt(child.obj->ipc_fd, &dsiID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_afpd, "afp_dsi_transfer_session: couldn't receive DSI id, goodbye");
@@ -157,7 +151,8 @@ static void afp_dsi_transfer_session(int sig _U_)
         exit(EXITERR_SYS);
     }
 
-    close(dsi->socket);
+    if (dsi->socket != -1)
+        close(dsi->socket);
     dsi->socket = socket;
     dsi->header.dsi_requestID = dsiID;
     dsi->header.dsi_len = 0;
@@ -165,12 +160,15 @@ static void afp_dsi_transfer_session(int sig _U_)
     dsi->header.dsi_command = DSIFUNC_CMD;
     dsi->header.dsi_flags = DSIFL_REPLY;
 
+    /*
+     * The session transfer happens in the middle of FPDisconnect old session, thus we
+     * have to send the reply now.
+     */
     if (!dsi_cmdreply(dsi, AFP_OK)) {
         LOG(log_error, logtype_afpd, "dsi_cmdreply: %s", strerror(errno) );
         afp_dsi_close(child.obj);
         exit(EXITERR_CLNT);
     }
-
 
     LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: succesfull primary reconnect");
     /* 
@@ -183,7 +181,6 @@ static void afp_dsi_transfer_session(int sig _U_)
 /* */
 static void afp_dsi_sleep(void)
 {
-    child.flags |= CHILD_SLEEPING;
     dsi_sleep(child.obj->handle, 1);
 }
 
@@ -192,8 +189,8 @@ static void afp_dsi_timedown(int sig _U_)
 {
     struct sigaction	sv;
     struct itimerval	it;
-
-    child.flags |= CHILD_DIE;
+    DSI                 *dsi = (DSI *)child.obj->handle;
+    dsi->flags |= DSI_DIE;
     /* shutdown and don't reconnect. server going down in 5 minutes. */
     setmessage("The server is going down for maintenance.");
     if (dsi_attention(child.obj->handle, AFPATTN_SHUTDOWN | AFPATTN_NORECONNECT |
@@ -269,38 +266,46 @@ static void alarm_handler(int sig _U_)
     int err;
     DSI *dsi = (DSI *) child.obj->handle;
 
-    if (child.flags & CHILD_DISCONNECTED) {
-        LOG(log_note, logtype_afpd, "afp_alarm: no reconnect within 10 hours, goodbye");
-        afp_dsi_die(EXITERR_CLNT);
-    }
-
     /* we have to restart the timer because some libraries may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
 
-    /* we got some traffic from the client since the previous timer 
-     * tick. */
-    if ((child.flags & CHILD_DATA)) {
-        child.flags &= ~CHILD_DATA;
-        child.flags &= ~CHILD_DISCONNECTED;
+    /* we got some traffic from the client since the previous timer tick. */
+    if ((dsi->flags & DSI_DATA)) {
+        dsi->flags &= ~DSI_DATA;
+        dsi->flags &= ~DSI_DISCONNECTED;
        return;
     }
 
-    /* if we're in the midst of processing something,
-       don't die. */
-    if ((child.flags & CHILD_SLEEPING) && child.tickle++ < child.obj->options.sleep) {
+    child.tickle++;
+
+    if (dsi->flags & DSI_SLEEPING) {
+        if (child.tickle < child.obj->options.sleep) {
+            LOG(log_error, logtype_afpd, "afp_alarm: sleep time ended");
+            afp_dsi_die(EXITERR_CLNT);
+        }
         return;
     } 
-        
-    if ((child.flags & CHILD_RUNNING) || (child.tickle++ < child.obj->options.timeout)) {
-        if (!(err = pollvoltime(child.obj)))
-            err = dsi_tickle(child.obj->handle);
-        if (err <= 0) 
+
+    if (dsi->flags & DSI_DISCONNECTED) {
+        if (child.tickle > child.obj->options.disconnected) {
+             LOG(log_error, logtype_afpd, "afp_alarm: no reconnect within 10 minutes, goodbye");
             afp_dsi_die(EXITERR_CLNT);
-    } else { /* didn't receive a tickle, enter disconnected state */
+        }
+        return;
+    }
+
+    /* if we're in the midst of processing something, don't die. */        
+    if ( !(dsi->flags & DSI_RUNNING) && (child.tickle > child.obj->options.timeout)) {
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out, entering disconnected state");
-        struct itimerval t = {{0, 60 * 60 * 10}, {0, 0}}; /* 10 hours */
-        setitimer(ITIMER_REAL, &t, NULL);
-        child.flags |= CHILD_DISCONNECTED;
+        dsi->flags |= DSI_DISCONNECTED;
+        return;
+    }
+
+    if ((err = pollvoltime(child.obj)) == 0)
+        err = dsi_tickle(child.obj->handle);
+    if (err <= 0) {
+        LOG(log_error, logtype_afpd, "afp_alarm: connection problem, entering disconnected state");
+        dsi->flags |= DSI_DISCONNECTED;
     }
 }
 
@@ -450,7 +455,7 @@ void afp_over_dsi(AFPObj *obj)
 #ifdef SERVERTEXT
     sigaddset(&action.sa_mask, SIGUSR2);
 #endif    
-    action.sa_flags = SA_RESTART;
+    action.sa_flags = SA_RESTART; /* dont restart, otherwi */
     if ((sigaction(SIGALRM, &action, NULL) < 0) ||
             (setitimer(ITIMER_REAL, &dsi->timer, NULL) < 0)) {
         afp_dsi_die(EXITERR_SYS);
@@ -461,9 +466,17 @@ void afp_over_dsi(AFPObj *obj)
         afp_dsi_die(EXITERR_SYS);
 
     /* get stuck here until the end */
-    while ((cmd = dsi_receive(dsi))) {
+    while (1) {
+        cmd = dsi_receive(dsi);
+        if (cmd == 0) {
+            /* Some error on the client connection, enter disconnected state */
+            dsi->flags |= DSI_DISCONNECTED;
+            pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
+            continue; /* continue receiving until disconnect timer expires
+                       * or a primary reconnect succeeds  */
+        }
+
         child.tickle = 0;
-        child.flags &= ~CHILD_SLEEPING;
         dsi_sleep(dsi, 0); /* wake up */
 
         if (reload_request) {
@@ -494,13 +507,13 @@ void afp_over_dsi(AFPObj *obj)
 
         if (cmd == DSIFUNC_TICKLE) {
             /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
-            if ((child.flags & CHILD_DIE))
+            if ((dsi->flags & DSI_DIE))
                 dsi_tickle(dsi);
             pending_request(dsi);
             continue;
         } 
 
-        child.flags |= CHILD_DATA;
+        dsi->flags |= DSI_DATA;
         switch(cmd) {
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
@@ -535,7 +548,7 @@ void afp_over_dsi(AFPObj *obj)
                  * of the fact that we're a stream-based protocol. */
                 if (afp_switch[function]) {
                     dsi->datalen = DSI_DATASIZ;
-                    child.flags |= CHILD_RUNNING;
+                    dsi->flags |= DSI_RUNNING;
 
                     LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
@@ -553,7 +566,7 @@ void afp_over_dsi(AFPObj *obj)
                     if (obj->force_uid)
                         restore_uidgid ( &obj->uidgid );
 #endif /* FORCE_UIDGID */
-                    child.flags &= ~CHILD_RUNNING;
+                    dsi->flags &= ~DSI_RUNNING;
 
                     /* Add result to the AFP replay cache */
                     replaycache[rc_idx].DSIreqID = dsi->clientID;
@@ -582,7 +595,7 @@ void afp_over_dsi(AFPObj *obj)
             function = (u_char) dsi->commands[0];
             if ( afp_switch[ function ] != NULL ) {
                 dsi->datalen = DSI_DATASIZ;
-                child.flags |= CHILD_RUNNING;
+                dsi->flags |= DSI_RUNNING;
 
                 LOG(log_debug, logtype_afpd, "<== Start AFP command: %s", AfpNum2name(function));
 
@@ -593,7 +606,7 @@ void afp_over_dsi(AFPObj *obj)
                 LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                     AfpNum2name(function), AfpErr2name(err));
 
-                child.flags &= ~CHILD_RUNNING;
+                dsi->flags &= ~DSI_RUNNING;
 #ifdef FORCE_UIDGID
             	/* bring everything back to old euid, egid */
 		if (obj->force_uid)

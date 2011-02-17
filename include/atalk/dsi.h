@@ -64,9 +64,8 @@ typedef struct DSI {
   
   struct itimerval timer;
 
-  int	   in_write;	  /* in the middle of writing multiple packets, signal handlers
-			   * can't write to the socket 
-			  */
+  int	   in_write;	  /* in the middle of writing multiple packets,
+                             signal handlers can't write to the socket */
   int      msg_request;   /* pending message to the client */
   int      down_request;  /* pending SIGUSR1 down in 5 mn */
 
@@ -77,7 +76,8 @@ typedef struct DSI {
   size_t statuslen;
   size_t datalen, cmdlen;
   off_t  read_count, write_count;
-  int asleep; /* client won't reply AFP 0x7a ? */
+//  int asleep; /* client won't reply AFP 0x7a ? */
+    uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
   /* noreply = send reply? */
   char noreply;
   const char *program; 
@@ -148,6 +148,13 @@ typedef struct DSI {
 
 /* default port number */
 #define DSI_AFPOVERTCP_PORT 548
+
+/* DSI session State flags */
+#define DSI_DATA             (1 << 0) /* we have received a DSI command */
+#define DSI_RUNNING          (1 << 1) /* we have received a AFP command */
+#define DSI_SLEEPING         (1 << 2) /* we're sleeping after FPZzz */
+#define DSI_DISCONNECTED     (1 << 3) /* we're in diconnected state after a socket error */
+#define DSI_DIE              (1 << 4) /* SIGUSR1, going down in 5 minutes */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,

@@ -17,7 +17,7 @@
 void dsi_close(DSI *dsi)
 {
   /* server generated. need to set all the fields. */
-  if (!dsi->asleep) {
+  if (!(dsi->flags & DSI_SLEEPING)) {
       dsi->header.dsi_flags = DSIFL_REQUEST;
       dsi->header.dsi_command = DSIFUNC_CLOSE;
       dsi->header.dsi_requestID = htons(dsi_serverID(dsi));

@@ -57,6 +57,8 @@ struct afp_volume_name {
 
 struct afp_options {
     int connections, transports, tickleval, timeout, server_notif, flags, dircachesize;
+    int sleep;                  /* Maximum time allowed to sleep (in tickles) */
+    int disconnected;           /* Maximum time in disconnected state (in tickles) */
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
@@ -78,7 +80,6 @@ struct afp_options {
     charset_t maccharset, unixcharset; 
     mode_t umask;
     mode_t save_mask;
-    int    sleep;
 #ifdef ADMIN_GRP
     gid_t admingid;
 #endif /* ADMIN_GRP */

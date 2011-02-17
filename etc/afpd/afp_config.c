@@ -230,7 +230,6 @@ static afp_child_t *dsi_start(AFPConfig *config, AFPConfig *configs,
     /* we've forked. */
     if (parent_or_child == 1) {
         configfree(configs, config);
-        LOG(log_error, logtype_afpd, "dsi_start: IPC fd: %i", child->ipc_fds[1]);
         config->obj.ipc_fd = child->ipc_fds[1];
         close(child->ipc_fds[0]); /* Close parent IPC fd */
         free(child);
