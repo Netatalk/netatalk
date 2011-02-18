@@ -194,11 +194,7 @@ int wincheck(const struct vol *vol, const char *path);
 #define VOLPBIT_XBTOTAL 10
 #define VOLPBIT_BSIZE   11        /* block size */
 
-#ifdef AFP3x
 #define utf8_encoding() (afp_version >= 30)
-#else
-#define utf8_encoding() (0)
-#endif
 
 #define vol_noadouble(vol) (((vol)->v_flags & AFPVOL_NOADOUBLE) ? 1 : 0)
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)

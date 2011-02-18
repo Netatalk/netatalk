@@ -57,12 +57,10 @@ typedef struct DSI {
   dsi_proto protocol;
   struct dsi_block header;
   struct sockaddr_storage server, client;
-  
   struct itimerval timer;
-
-  int	   in_write;	  /* in the middle of writing multiple packets, signal handlers
-			   * can't write to the socket 
-			  */
+  int      tickle;        /* tickle count */
+  int	   in_write;	  /* in the middle of writing multiple packets,
+                             signal handlers can't write to the socket */
   int      msg_request;   /* pending message to the client */
   int      down_request;  /* pending SIGUSR1 down in 5 mn */
 
@@ -73,9 +71,7 @@ typedef struct DSI {
   size_t statuslen;
   size_t datalen, cmdlen;
   off_t  read_count, write_count;
-  int asleep; /* client won't reply AFP 0x7a ? */
-  /* inited = initialized?, child = a child?, noreply = send reply? */
-  char child, inited, noreply;
+  uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
   const char *program; 
   int socket, serversock;
 
@@ -111,6 +107,7 @@ typedef struct DSI {
 /* DSI session options */
 #define DSIOPT_SERVQUANT 0x00   /* server request quantum */
 #define DSIOPT_ATTNQUANT 0x01   /* attention quantum */
+#define DSIOPT_REPLCSIZE 0x02   /* AFP replaycache size supported by the server (that's us) */
 
 /* DSI Commands */
 #define DSIFUNC_CLOSE   1       /* DSICloseSession */
@@ -144,6 +141,14 @@ typedef struct DSI {
 /* default port number */
 #define DSI_AFPOVERTCP_PORT 548
 
+/* DSI session State flags */
+#define DSI_DATA             (1 << 0) /* we have received a DSI command */
+#define DSI_RUNNING          (1 << 1) /* we have received a AFP command */
+#define DSI_SLEEPING         (1 << 2) /* we're sleeping after FPZzz */
+#define DSI_DISCONNECTED     (1 << 3) /* we're in diconnected state after a socket error */
+#define DSI_DIE              (1 << 4) /* SIGUSR1, going down in 5 minutes */
+#define DSI_NOREPLY          (1 << 5) /* in dsi_write we generate our own replies */
+
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
 			  const char * /*program*/, 
@@ -153,7 +158,7 @@ extern DSI *dsi_init (const dsi_proto /*protocol*/,
 extern void dsi_setstatus (DSI *, char *, const size_t);
 
 /* in dsi_getsess.c */
-extern DSI *dsi_getsession (DSI *, server_child *, const int);
+extern afp_child_t *dsi_getsession (DSI *, server_child *, const int);
 extern void dsi_kill (int);
 
 

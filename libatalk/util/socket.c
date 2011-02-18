@@ -32,8 +32,10 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/ioctl.h>
 
 #include <atalk/logger.h>
+#include <atalk/util.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
 
@@ -98,6 +100,101 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
 
     while (stored < length) {
         len = read(socket, (char *) data + stored, length - stored);
+        if (len == -1) {
+            switch (errno) {
+            case EINTR:
+                continue;
+            case EAGAIN:
+                FD_ZERO(&rfds);
+                FD_SET(socket, &rfds);
+                tv.tv_usec = 0;
+                tv.tv_sec  = timeout;
+                        
+                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
+                    switch (ret) {
+                    case 0:
+                        LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                        goto exit;
+
+                    default: /* -1 */
+                        if (errno == EINTR) {
+                            (void)gettimeofday(&now, NULL);
+                            if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
+                                LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                                goto exit;
+                            }
+                            if (now.tv_usec > end.tv_usec) {
+                                tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
+                                tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
+                            } else {
+                                tv.tv_usec = end.tv_usec - now.tv_usec;
+                                tv.tv_sec  = end.tv_sec - now.tv_sec;
+                            }
+                            FD_ZERO(&rfds);
+                            FD_SET(socket, &rfds);
+                            continue;
+                        }
+                        LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
+                        stored = -1;
+                        goto exit;
+                    }
+                } /* while (select) */
+                continue;
+            } /* switch (errno) */
+            LOG(log_error, logtype_afpd, "read: %s", strerror(errno));
+            stored = -1;
+            goto exit;
+        } /* (len == -1) */
+        else if (len > 0)
+            stored += len;
+        else
+            break;
+    } /* while (stored < length) */
+
+exit:
+    if (setnonblocking) {
+        if (setnonblock(socket, 0) != 0)
+            return -1;
+    }
+
+    if (len == -1 && stored == 0)
+        /* last read or select got an error and we haven't got yet anything => return -1*/
+        return -1;
+    return stored;
+}
+
+/*!
+ * non-blocking drop-in replacement for read with timeout using select
+ *
+ * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
+ * @param data            (rw) buffer for the read data
+ * @param lenght          (r)  how many bytes to read
+ * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
+ *                             io mode for the socket
+ * @param timeout         (r)  number of seconds to try reading
+ *
+ * @returns number of bytes actually read or -1 on fatal error
+ */
+ssize_t writet(int socket, void *data, const size_t length, int setnonblocking, int timeout)
+{
+    size_t stored = 0;
+    ssize_t len = 0;
+    struct timeval now, end, tv;
+    fd_set rfds;
+    int ret;
+
+    if (setnonblocking) {
+        if (setnonblock(socket, 1) != 0)
+            return -1;
+    }
+
+    /* Calculate end time */
+    (void)gettimeofday(&now, NULL);
+    end = now;
+    end.tv_sec += timeout;
+
+    while (stored < length) {
+        len = write(socket, (char *) data + stored, length - stored);
         if (len == -1) {
             switch (errno) {
             case EINTR:
@@ -233,7 +330,7 @@ unsigned int getip_port(const struct sockaddr  *sa)
  * @param  ai        (rw) pointer to an struct sockaddr
  * @parma  mask      (r) number of maskbits
  */
-void apply_ip_mask(struct sockaddr *sa, uint32_t mask)
+void apply_ip_mask(struct sockaddr *sa, int mask)
 {
 
     switch (sa->sa_family) {
@@ -299,4 +396,235 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
     free(ip1);
 
     return ret;
+}
+
+#define POLL_FD_SET_STARTSIZE 512
+#define POLL_FD_SET_INCREASE  128
+/*!
+ * Add a fd to a dynamic pollfd array that is allocated and grown as needed
+ *
+ * This uses an additional array of struct polldata which stores type information
+ * (enum fdtype) and a pointer to anciliary user data.
+ *
+ * 1. Allocate the arrays with an intial size of [POLL_FD_SET_STARTSIZE] if
+ *    *fdsetp is NULL.
+ * 2. Grow array as needed
+ * 3. Fill in both array elements and increase count of used elements
+ * 
+ * @param fdsetp      (rw) pointer to callers pointer to the pollfd array
+ * @param polldatap   (rw) pointer to callers pointer to the polldata array
+ * @param fdset_usedp (rw) pointer to an int with the number of used elements
+ * @param fdset_sizep (rw) pointer to an int which stores the array sizes
+ * @param fd          (r)  file descriptor to add to the arrays
+ * @param fdtype      (r)  type of fd, currently IPC_FD or LISTEN_FD
+ * @param data        (rw) pointer to data the caller want to associate with an fd
+ */
+void fdset_add_fd(struct pollfd **fdsetp,
+                  struct polldata **polldatap,
+                  int *fdset_usedp,
+                  int *fdset_sizep,
+                  int fd,
+                  enum fdtype fdtype,
+                  void *data)
+{
+    struct pollfd *fdset = *fdsetp;
+    struct polldata *polldata = *polldatap;
+    int fdset_size = *fdset_sizep;
+
+    LOG(log_debug, logtype_default, "fdset_add_fd: adding fd %i in slot %i", fd, *fdset_usedp);
+
+    if (fdset == NULL) { /* 1 */
+        /* Initialize with space for 512 fds */
+        fdset = calloc(POLL_FD_SET_STARTSIZE, sizeof(struct pollfd));
+        if (! fdset)
+            exit(EXITERR_SYS);
+
+        polldata = calloc(POLL_FD_SET_STARTSIZE, sizeof(struct polldata));
+        if (! polldata)
+            exit(EXITERR_SYS);
+
+        fdset_size = 512;
+        *fdset_sizep = fdset_size;
+        *fdsetp = fdset;
+        *polldatap = polldata;
+    }
+
+    if (*fdset_usedp >= fdset_size) { /* 2 */
+        fdset = realloc(fdset, sizeof(struct pollfd) * (fdset_size + POLL_FD_SET_INCREASE));
+        if (fdset == NULL)
+            exit(EXITERR_SYS);
+
+        polldata = realloc(polldata, sizeof(struct polldata) * (fdset_size + POLL_FD_SET_INCREASE));
+        if (polldata == NULL)
+            exit(EXITERR_SYS);
+
+        fdset_size += POLL_FD_SET_INCREASE;
+        *fdset_sizep = fdset_size;
+        *fdsetp = fdset;
+        *polldatap = polldata;
+    }
+
+    /* 3 */
+    fdset[*fdset_usedp].fd = fd;
+    fdset[*fdset_usedp].events = POLLIN;
+    polldata[*fdset_usedp].fdtype = fdtype;
+    polldata[*fdset_usedp].data = data;
+    (*fdset_usedp)++;
+}
+
+/*!
+ * Remove a fd from our pollfd array
+ *
+ * 1. Search fd
+ * 2. If we remove the last array elemnt, just decrease count
+ * 3. If found move all following elements down by one
+ * 4. Decrease count of used elements in array
+ *
+ * This currently doesn't shrink the allocated storage of the array.
+ *
+ * @param fdsetp      (rw) pointer to callers pointer to the pollfd array
+ * @param polldatap   (rw) pointer to callers pointer to the polldata array
+ * @param fdset_usedp (rw) pointer to an int with the number of used elements
+ * @param fdset_sizep (rw) pointer to an int which stores the array sizes
+ * @param fd          (r)  file descriptor to remove from the arrays
+ */
+void fdset_del_fd(struct pollfd **fdsetp,
+                  struct polldata **polldatap,
+                  int *fdset_usedp,
+                  int *fdset_sizep _U_,
+                  int fd)
+{
+    struct pollfd *fdset = *fdsetp;
+    struct polldata *polldata = *polldatap;
+
+    for (int i = 0; i < *fdset_usedp; i++) {
+        if (fdset[i].fd == fd) { /* 1 */
+            if (i < (*fdset_usedp - 1)) { /* 2 */
+                memmove(&fdset[i], &fdset[i+1], (*fdset_usedp - 1) * sizeof(struct pollfd)); /* 3 */
+                memmove(&polldata[i], &polldata[i+1], (*fdset_usedp - 1) * sizeof(struct polldata)); /* 3 */
+            }
+            (*fdset_usedp)--;
+            break;
+        }
+    }
+}
+
+/*
+ * Receive a fd on a suitable socket
+ * @args fd          (r) PF_UNIX socket to receive on
+ * @args nonblocking (r) 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
+ * @returns fd on success, -1 on error
+ */
+int recv_fd(int fd, int nonblocking)
+{
+    int ret;
+    struct msghdr msgh;
+    struct iovec iov[1];
+    struct cmsghdr *cmsgp = NULL;
+    char buf[CMSG_SPACE(sizeof(int))];
+    char dbuf[80];
+    struct pollfd pollfds[1];
+
+    pollfds[0].fd = fd;
+    pollfds[0].events = POLLIN;
+
+    memset(&msgh,0,sizeof(msgh));
+    memset(buf,0,sizeof(buf));
+
+    msgh.msg_name = NULL;
+    msgh.msg_namelen = 0;
+
+    msgh.msg_iov = iov;
+    msgh.msg_iovlen = 1;
+
+    iov[0].iov_base = dbuf;
+    iov[0].iov_len = sizeof(dbuf);
+
+    msgh.msg_control = buf;
+    msgh.msg_controllen = sizeof(buf);
+
+    if (nonblocking) {
+        do {
+            ret = poll(pollfds, 1, 2000); /* poll 2 seconds, evtl. multipe times (EINTR) */
+        } while ( ret == -1 && errno == EINTR );
+        if (ret != 1)
+            return -1;
+        ret = recvmsg(fd, &msgh, 0);
+    } else {
+        do  {
+            ret = recvmsg(fd, &msgh, 0);
+        } while ( ret == -1 && errno == EINTR );
+    }
+
+    if ( ret == -1 ) {
+        return -1;
+    }
+
+    for ( cmsgp = CMSG_FIRSTHDR(&msgh); cmsgp != NULL; cmsgp = CMSG_NXTHDR(&msgh,cmsgp) ) {
+        if ( cmsgp->cmsg_level == SOL_SOCKET && cmsgp->cmsg_type == SCM_RIGHTS ) {
+            return *(int *) CMSG_DATA(cmsgp);
+        }
+    }
+
+    if ( ret == sizeof (int) )
+        errno = *(int *)dbuf; /* Rcvd errno */
+    else
+        errno = ENOENT;    /* Default errno */
+
+    return -1;
+}
+
+/*
+ * Send a fd across a suitable socket
+ */
+int send_fd(int socket, int fd)
+{
+    int ret;
+    struct msghdr msgh;
+    struct iovec iov[1];
+    struct cmsghdr *cmsgp = NULL;
+    char *buf;
+    size_t size;
+    int er=0;
+
+    size = CMSG_SPACE(sizeof fd);
+    buf = malloc(size);
+    if (!buf) {
+        LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
+        return -1;
+    }
+
+    memset(&msgh,0,sizeof (msgh));
+    memset(buf,0, size);
+
+    msgh.msg_name = NULL;
+    msgh.msg_namelen = 0;
+
+    msgh.msg_iov = iov;
+    msgh.msg_iovlen = 1;
+
+    iov[0].iov_base = &er;
+    iov[0].iov_len = sizeof(er);
+
+    msgh.msg_control = buf;
+    msgh.msg_controllen = size;
+
+    cmsgp = CMSG_FIRSTHDR(&msgh);
+    cmsgp->cmsg_level = SOL_SOCKET;
+    cmsgp->cmsg_type = SCM_RIGHTS;
+    cmsgp->cmsg_len = CMSG_LEN(sizeof(fd));
+
+    *((int *)CMSG_DATA(cmsgp)) = fd;
+    msgh.msg_controllen = cmsgp->cmsg_len;
+
+    do  {
+        ret = sendmsg(socket,&msgh, 0);
+    } while ( ret == -1 && errno == EINTR );
+    if (ret == -1) {
+        LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
+        free(buf);
+        return -1;
+    }
+    free(buf);
+    return 0;
 }

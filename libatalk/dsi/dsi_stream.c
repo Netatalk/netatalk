@@ -313,7 +313,9 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     else { /* eof or error */
       /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
       if (len || stored || dsi->read_count) {
-          LOG(log_error, logtype_dsi, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
+          if (! (dsi->flags & DSI_DISCONNECTED)
+)
+              LOG(log_error, logtype_dsi, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
       }
       break;
     }
@@ -357,7 +359,10 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
 */
 void dsi_sleep(DSI *dsi, const int state)
 {
-    dsi->asleep = state;
+    if (state)
+        dsi->flags |= DSI_SLEEPING;
+    else
+        dsi->flags &= ~DSI_SLEEPING;
 }
 
 /* ---------------------------------------

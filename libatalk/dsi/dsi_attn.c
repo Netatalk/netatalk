@@ -34,7 +34,7 @@ int dsi_attention(DSI *dsi, AFPUserBytes flags)
   u_int32_t len, nlen;
   u_int16_t id;
 
-  if (dsi->asleep)
+  if (dsi->flags & DSI_SLEEPING)
       return 1;
 
   if (dsi->in_write) {

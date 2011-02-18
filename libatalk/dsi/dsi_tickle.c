@@ -23,9 +23,8 @@ int dsi_tickle(DSI *dsi)
 {
   char block[DSI_BLOCKSIZ];
   u_int16_t id;
-  int ret;
   
-  if (dsi->asleep || dsi->in_write)
+  if ((dsi->flags & DSI_SLEEPING) || dsi->in_write)
       return 1;
 
   id = htons(dsi_serverID(dsi));
@@ -36,11 +35,6 @@ int dsi_tickle(DSI *dsi)
   memcpy(block + 2, &id, sizeof(id));
   /* code = len = reserved = 0 */
 
-  ret = dsi_stream_write(dsi, block, DSI_BLOCKSIZ, DSI_NOWAIT);
-  /* we don't really care if we can't send a tickle, it will fail
-   * elsewhere
-  */
-  ret = (ret == -1 || ret == DSI_BLOCKSIZ);
-  return ret;
+  return dsi_stream_write(dsi, block, DSI_BLOCKSIZ, DSI_NOWAIT);
 }
 

@@ -1,3 +1,9 @@
+Changes in 2.2beta2
+====================
+
+* NEW: afpd: AFP 3.3
+* UPD: afpd: AFP 3.x can't be disabled
+
 Changes in 2.2beta1
 ====================
 
@@ -64,9 +70,12 @@ Changes in 2.1.6
 ================
 
 * FIX: afpd: Fix for LDAP user cache corruption
+* FIX: afpd: Fix for not shown ACLs for when filesyem uid or gid
+       couldn't be resolved because (eg deleted users/groups)
 * FIX: gentoo: cannot set $CNID_CONFIG
 * FIX: ubuntu: servername was empty
 * FIX: Solaris: configure script failed to enable DDP module
+* FIX: AppleDouble buffer overrun by extremely long filename
 * UPD: afpd: return version info with machine type in DSIGetStatus
 
 Changes in 2.1.5

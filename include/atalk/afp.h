@@ -213,4 +213,7 @@ typedef enum {
 #define AFP_SETACL              74
 #define AFP_ACCESS              75
 
+/* more defines */
+#define REPLAYCACHE_SIZE 128
+
 #endif

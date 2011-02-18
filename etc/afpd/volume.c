@@ -205,7 +205,7 @@ static char *volxlate(AFPObj *obj,
     int afpmaster = 0;
     int xlatevolname = 0;
 
-    if (! ((DSI *)obj->handle)->child)
+    if (parent_or_child == 0)
         afpmaster = 1;
 
     if (path && !volname)
@@ -1248,7 +1248,7 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
             /* check allow/deny lists (if not afpd master loading volumes for Zeroconf reg.):
                allow -> either no list (-1), or in list (1)
                deny -> either no list (-1), or not in list (0) */
-            if (!((DSI *)obj->handle)->child
+            if (parent_or_child == 0
                 ||
                 (accessvol(options[VOLOPT_ALLOW].c_value, obj->username) &&
                  (accessvol(options[VOLOPT_DENY].c_value, obj->username) < 1) &&
@@ -1259,7 +1259,7 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
                  * 1) neither the rolist nor the rwlist exist -> rw
                  * 2) rolist exists -> ro if user is in it.
                  * 3) rwlist exists -> ro unless user is in it. */
-                if (((DSI *)obj->handle)->child
+                if (parent_or_child == 1
                     &&
                     ((options[VOLOPT_FLAGS].i_value & AFPVOL_RO) == 0)
                     &&
@@ -1713,7 +1713,7 @@ void load_volumes(AFPObj *obj)
         free_volumes();
     }
 
-    if (! ((DSI *)obj->handle)->child) {
+    if (parent_or_child == 0) {
         LOG(log_debug, logtype_afpd, "load_volumes: AFP MASTER");
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: user: %s", obj->username);

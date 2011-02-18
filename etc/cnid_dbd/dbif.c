@@ -104,6 +104,10 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
 
     if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) < 0)
         return -1;
+    if (dbif_txn_commit(dbd) != 1) {
+        LOG(log_error, logtype_cnid, "dbif_init_rootinfo: cant commit txn");
+        return -1;
+    }
 
     return 0;
 }
@@ -120,6 +124,9 @@ static int dbif_getversion(DBD *dbd, uint32_t *version)
     DBT key, data;
     int ret;
 
+    LOG(log_maxdebug, logtype_cnid, "dbif_getversion: reading version info");
+
+    *version = -1;
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     key.data = ROOTINFO_KEY;
@@ -133,9 +140,11 @@ static int dbif_getversion(DBD *dbd, uint32_t *version)
         ret = 1;
         break;
     case 0: /* not found */
+        LOG(log_debug, logtype_cnid, "dbif_getversion: no version info found");
         ret = 0;
         break;
     default:
+        LOG(log_error, logtype_cnid, "dbif_getversion: database error");
         ret = -1;
         break;
     }
@@ -146,7 +155,7 @@ static int dbif_getversion(DBD *dbd, uint32_t *version)
 /*!
  * Set CNID database version number
  *
- * Initializes rootinfo key as neccessary, as does dbif_getversion
+ * Initializes rootinfo key as neccessary
  * @returns -1 on error, 0 on success
  */
 static int dbif_setversion(DBD *dbd, uint32_t version)
@@ -184,16 +193,22 @@ static int dbif_setversion(DBD *dbd, uint32_t version)
 }
 
 /*!
- * Upgrade CNID database versions
+ * Upgrade CNID database versions, initialize rootinfo key as as necessary in dbif_setversion()
  *
  * For now this does nothing, as upgrading from ver. 0 to 1 is done in dbif_open
  */
+#define UNINTIALIZED_DB UINT32_MAX
 static int dbif_upgrade(DBD *dbd)
 {
-    uint32_t version;
+    uint32_t version = CNID_VERSION_UNINTIALIZED_DB;
 
     if (dbif_getversion(dbd, &version) == -1)
         return -1;
+    if (version == CNID_VERSION_UNINTIALIZED_DB) {
+        version = CNID_VERSION;
+        if (dbif_setversion(dbd, CNID_VERSION) != 0)
+            return -1;
+    }
 
     /* 
      * Do upgrade stuff ...
@@ -611,6 +626,10 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
     if (reindex)
         LOG(log_info, logtype_cnid, "Reindexing name index...");
 
+    /*
+     * Upgrading from version 0 to 1 requires adding the name index below which
+     * must be done by specifying the DB_CREATE flag
+     */
     uint32_t version = CNID_VERSION;
     if (dbd->db_envhome && !reindex) {
         if (dbif_getversion(dbd, &version) == -1)

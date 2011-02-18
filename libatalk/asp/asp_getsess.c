@@ -266,6 +266,7 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 			    &(atp_sockaddr(asp->asp_atp)->sat_addr))) == NULL) 
 	  return NULL;
 
+    int dummy[2];
 	switch ((pid = fork())) {
 	case 0 : /* child */
 	  server_reset_signal();
@@ -296,29 +297,26 @@ ASP asp_getsession(ASP asp, server_child *server_children,
 	  break;
 	  
 	default : /* parent process */
-	  /* we need atomic setting or pb with tickle_handler 
-	  */ 
-	  switch (server_child_add(children, CHILD_ASPFORK, pid)) {
-	  case 0: /* added child */
-	    if ((asp_ac_tmp = (struct asp_child *) 
-		 malloc(sizeof(struct asp_child)))) {
-	      asp_ac_tmp->ac_pid = pid;
-	      asp_ac_tmp->ac_state = ACSTATE_OK;
-	      asp_ac_tmp->ac_sat = sat;
-	      asp_ac_tmp->ac_sat.sat_port = asp->cmdbuf[1];
-	      
-	      asp->cmdbuf[0] = atp_sockaddr(atp)->sat_port;
-	      asp->cmdbuf[1] = sid;
-	      set_asp_ac(sid, asp_ac_tmp);
-	      asperr = ASPERR_OK;
-	      break;
-	    } /* fall through if malloc fails */
-	  case -1: /* bad error */
+	  /* we need atomic setting or pb with tickle_handler */ 
+      if (server_child_add(children, CHILD_ASPFORK, pid, dummy)) {
+	    if ((asp_ac_tmp = malloc(sizeof(struct asp_child))) == NULL) {
+            kill(pid, SIGQUIT); 
+            break;
+        }
+        asp_ac_tmp->ac_pid = pid;
+        asp_ac_tmp->ac_state = ACSTATE_OK;
+        asp_ac_tmp->ac_sat = sat;
+        asp_ac_tmp->ac_sat.sat_port = asp->cmdbuf[1];
+	    
+        asp->cmdbuf[0] = atp_sockaddr(atp)->sat_port;
+        asp->cmdbuf[1] = sid;
+        set_asp_ac(sid, asp_ac_tmp);
+        asperr = ASPERR_OK;
+        break;
+      } else {
 	    kill(pid, SIGQUIT); 
 	    break;
-	  default: /* non-fatal error */
-	    break;
-	  }
+      }
 	  atp_close(atp);
 	  break;
 	}

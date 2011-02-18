@@ -1,16 +1,12 @@
+#ifndef ATALK_SERVER_IPC_H
+#define ATALK_SERVER_IPC_H
 
 #include <atalk/server_child.h>
 
-#define IPC_KILLTOKEN   1
-#define IPC_GETSESSION  2
+#define IPC_DISCOLDSESSION   0
+#define IPC_GETSESSION       1
 
-void *server_ipc_create(void);
-int server_ipc_child(void *obj);
-int server_ipc_parent(void *obj);
-int server_ipc_read(server_child *children);
-int server_ipc_write(u_int16_t command, int len, void *token);
+int ipc_server_read(server_child *children, int fd);
+int ipc_child_write(int fd, uint16_t command, int len, void *token);
 
-
-
-
-
+#endif /* IPC_GETSESSION_LOGIN */

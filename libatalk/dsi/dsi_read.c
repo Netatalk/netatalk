@@ -29,7 +29,7 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
 		    const size_t size, const int err)
 {
 
-  dsi->noreply = 1; /* we will handle our own replies */
+  dsi->flags |= DSI_NOREPLY; /* we will handle our own replies */
   dsi->header.dsi_flags = DSIFL_REPLY;
   /*dsi->header.dsi_command = DSIFUNC_CMD;*/
   dsi->header.dsi_len = htonl(size);

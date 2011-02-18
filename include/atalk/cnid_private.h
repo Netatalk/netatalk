@@ -67,8 +67,9 @@
  * 0: up to Netatalk 2.1.x
  * 1: starting with 2.2, additional name index, used in cnid_find
  */
-#define CNID_VERSION_0 0
-#define CNID_VERSION_1 1
+#define CNID_VERSION_0               0
+#define CNID_VERSION_1               1
+#define CNID_VERSION_UNINTIALIZED_DB UINT32_MAX
 
 /* Current CNID version */
 #define CNID_VERSION CNID_VERSION_1

@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
         exit(1);
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
-    if (NULL == (dbd = dbif_init(".", "cnid2.db")))
+    if (NULL == (dbd = dbif_init(dbpath, "cnid2.db")))
         exit(2);
 
     if (dbif_env_open(dbd, dbp, DBOPTIONS) < 0)

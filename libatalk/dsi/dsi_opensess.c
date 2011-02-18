@@ -19,6 +19,7 @@
 void dsi_opensession(DSI *dsi)
 {
   u_int32_t i = 0; /* this serves double duty. it must be 4-bytes long */
+  int offs;
 
   /* parse options */
   while (i < dsi->cmdlen) {
@@ -39,7 +40,10 @@ void dsi_opensession(DSI *dsi)
   dsi->header.dsi_flags = DSIFL_REPLY;
   dsi->header.dsi_code = 0;
   /* dsi->header.dsi_command = DSIFUNC_OPEN;*/
-  dsi->cmdlen = 2 + sizeof(i); /* length of data. dsi_send uses it. */
+
+  dsi->cmdlen = 2 * (2 + sizeof(i)); /* length of data. dsi_send uses it. */
+
+  /* DSI Option Server Request Quantum */
   dsi->commands[0] = DSIOPT_SERVQUANT;
   dsi->commands[1] = sizeof(i);
   i = htonl(( dsi->server_quantum < DSI_SERVQUANT_MIN || 
@@ -47,5 +51,11 @@ void dsi_opensession(DSI *dsi)
 	    DSI_SERVQUANT_DEF : dsi->server_quantum);
   memcpy(dsi->commands + 2, &i, sizeof(i));
 
+  /* AFP replaycache size option */
+  offs = 2 + sizeof(i);
+  dsi->commands[offs] = DSIOPT_REPLCSIZE;
+  dsi->commands[offs+1] = sizeof(i);
+  i = htonl(REPLAYCACHE_SIZE);
+  memcpy(dsi->commands + offs + 2, &i, sizeof(i));
   dsi_send(dsi);
 }

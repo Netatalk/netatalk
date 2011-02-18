@@ -1,5 +1,7 @@
 /*
  * All rights reserved. See COPYRIGHT.
+ *
+ * IPC over socketpair between parent and children.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -11,48 +13,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+#include <sys/socket.h>
 #include <errno.h>
+#include <signal.h>
 
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 
 typedef struct ipc_header {
-	u_int16_t command;
-        pid_t	  child_pid;
-        uid_t     uid;
-        u_int32_t len;
-	char 	  *msg;
-} ipc_header;
+	uint16_t command;
+    pid_t	 child_pid;
+    uid_t    uid;
+    uint32_t len;
+	char 	 *msg;
+    int      afp_socket;
+    uint16_t DSI_requestID;
+} ipc_header_t;
 
-static int pipe_fd[2];
-   
-void *server_ipc_create(void)
-{
-    if (pipe(pipe_fd)) {
-        return NULL;
-    }
-    return &pipe_fd;
-}
+static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
+                               "IPC_GETSESSION"};
 
-/* ----------------- */
-int server_ipc_child(void *obj _U_)
-{
-    /* close input */
-    close(pipe_fd[0]);
-    return pipe_fd[1];
-}
-
-/* ----------------- */
-int server_ipc_parent(void *obj _U_)
-{
-    return pipe_fd[0];
-}
-
-/* ----------------- */
-static int ipc_kill_token (struct ipc_header *ipc, server_child *children)
+/*
+ * Pass afp_socket to old disconnected session if one has a matching token (token = pid)
+ * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
+ */
+static int ipc_kill_token(struct ipc_header *ipc, server_child *children)
 {
     pid_t pid;
 
@@ -62,22 +49,25 @@ static int ipc_kill_token (struct ipc_header *ipc, server_child *children)
     /* assume signals SA_RESTART set */
     memcpy (&pid, ipc->msg, sizeof(pid_t));
 
-    LOG(log_info, logtype_default, "child %d user %d disconnected", pid, ipc->uid);
-    server_child_kill_one(children, CHILD_DSIFORK, pid, ipc->uid);
-    return 0;
+    return server_child_transfer_session(children,
+                                         CHILD_DSIFORK,
+                                         pid,
+                                         ipc->uid,
+                                         ipc->afp_socket,
+                                         ipc->DSI_requestID);
 }
 
 /* ----------------- */
-static int ipc_get_session (struct ipc_header *ipc, server_child *children)
+static int ipc_get_session(struct ipc_header *ipc, server_child *children)
 {
     u_int32_t boottime;
     u_int32_t idlen;
     char     *clientid, *p;
 
+    
+    if (ipc->len < (sizeof(idlen) + sizeof(boottime)) )
+        return -1;
 
-    if (ipc->len < (sizeof(idlen) + sizeof(boottime)) ) {
-	return -1;
-    }
     p = ipc->msg;
     memcpy (&idlen, p, sizeof(idlen));
     idlen = ntohl (idlen);
@@ -86,17 +76,24 @@ static int ipc_get_session (struct ipc_header *ipc, server_child *children)
     memcpy (&boottime, p, sizeof(boottime));
     p += sizeof(boottime);
     
-    if (ipc->len < idlen + sizeof(idlen) + sizeof(boottime)) {
-	return -1;
-    }
-    if (NULL == (clientid = (char*) malloc(idlen)) ) {
-	return -1;
-    }
+    if (ipc->len < idlen + sizeof(idlen) + sizeof(boottime))
+        return -1;
+
+    if (NULL == (clientid = (char*) malloc(idlen)) )
+        return -1;
     memcpy (clientid, p, idlen);
   
-    server_child_kill_one_by_id (children, CHILD_DSIFORK, ipc->child_pid, ipc->uid, idlen, clientid, boottime);
-    /* FIXME byte to ascii if we want to log clientid */
-    LOG (log_debug, logtype_afpd, "ipc_get_session: len: %u, idlen %d, time %x", ipc->len, idlen, boottime); 
+    LOG (log_debug, logtype_afpd, "ipc_get_session(pid: %u, uid: %u, time %x)",
+         ipc->child_pid, ipc->uid, boottime); 
+
+    server_child_kill_one_by_id(children,
+                                CHILD_DSIFORK,
+                                ipc->child_pid,
+                                ipc->uid,
+                                idlen,
+                                clientid,
+                                boottime);
+
     return 0;
 }
 
@@ -110,16 +107,26 @@ static int ipc_get_session (struct ipc_header *ipc, server_child *children)
  * uid
  * 
 */
-int server_ipc_read(server_child *children)
+
+/*!
+ * Read a IPC message from a child
+ *
+ * @args children  (rw) pointer to our structure with all childs
+ * @args fd        (r)  IPC socket with child
+ *
+ * @returns number of bytes transfered, -1 on error, 0 on EOF
+ */
+int ipc_server_read(server_child *children, int fd)
 {
     int       ret = 0;
     struct ipc_header ipc;
     char      buf[IPC_MAXMSGSIZE], *p;
 
-    if ((ret = read(pipe_fd[0], buf, IPC_HEADERLEN)) != IPC_HEADERLEN) {
-	LOG (log_info, logtype_afpd, "Reading IPC header failed (%u of %u  bytes read)", ret, IPC_HEADERLEN);
-	return -1;
-    } 
+    if ((ret = read(fd, buf, IPC_HEADERLEN)) != IPC_HEADERLEN) {
+        LOG(log_error, logtype_afpd, "Reading IPC header failed (%i of %u bytes read): %s",
+            ret, IPC_HEADERLEN, strerror(errno));
+        return ret;
+    }
 
     p = buf;
 
@@ -135,40 +142,61 @@ int server_ipc_read(server_child *children)
     memcpy(&ipc.len, p, sizeof(ipc.len));
 
     /* This should never happen */
-    if (ipc.len > (IPC_MAXMSGSIZE - IPC_HEADERLEN))
-    {
-	LOG (log_info, logtype_afpd, "IPC message exceeds allowed size (%u)", ipc.len);
-   	return -1;
+    if (ipc.len > (IPC_MAXMSGSIZE - IPC_HEADERLEN)) {
+        LOG (log_info, logtype_afpd, "IPC message exceeds allowed size (%u)", ipc.len);
+        return -1;
     }
 
     memset (buf, 0, IPC_MAXMSGSIZE);
     if ( ipc.len != 0) {
-	    if ((ret = read(pipe_fd[0], buf, ipc.len)) != (int) ipc.len) {
-		LOG (log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read)", ret, ipc.len);
-		return -1;
+	    if ((ret = read(fd, buf, ipc.len)) != (int) ipc.len) {
+            LOG(log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read): %s",
+                ret, ipc.len, strerror(errno));
+            return ret;
     	}	 
     }
     ipc.msg = buf;
-    
-    LOG (log_debug, logtype_afpd, "ipc_read: command: %u, pid: %u, len: %u", ipc.command, ipc.child_pid, ipc.len); 
 
-    switch (ipc.command)
-    {
-	case IPC_KILLTOKEN:
-		return (ipc_kill_token(&ipc, children));
-		break;
+    LOG(log_debug, logtype_afpd, "ipc_server_read(%s): pid: %u",
+        ipc_cmd_str[ipc.command], ipc.child_pid); 
+
+    int afp_socket;
+
+    switch (ipc.command) {
+
+	case IPC_DISCOLDSESSION:
+        if (readt(fd, &ipc.DSI_requestID, 2, 0, 2) != 2) {
+            LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): couldnt read DSI id: %s",
+                 ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
+        }
+        if ((ipc.afp_socket = recv_fd(fd, 1)) == -1) {
+            LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): recv_fd: %s",
+                 ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
+            return -1;
+        }
+		if (ipc_kill_token(&ipc, children) == 1) {
+            /* Transfered session (ie afp_socket) to old disconnected child, now kill the new one */
+            LOG(log_note, logtype_afpd, "Reconnect: killing new session child[%u] after transfer",
+                ipc.child_pid);
+            kill(ipc.child_pid, SIGKILL);
+        }        
+        break;
+
 	case IPC_GETSESSION:
-		return (ipc_get_session(&ipc, children));
-		break;
+		if (ipc_get_session(&ipc, children) != 0)
+            return -1;
+        break;
+
 	default:
 		LOG (log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
 		return -1;
     }
 
+    return ret;
 }
 
 /* ----------------- */
-int server_ipc_write( u_int16_t command, int len, void *msg)
+int ipc_child_write(int fd, uint16_t command, int len, void *msg)
 {
    char block[IPC_MAXMSGSIZE], *p;
    pid_t pid;
@@ -200,6 +228,7 @@ int server_ipc_write( u_int16_t command, int len, void *msg)
 
    memcpy(p, msg, len);
 
-   LOG (log_debug, logtype_afpd, "ipc_write: command: %u, pid: %u, msglen: %u", command, pid, len); 
-   return write(pipe_fd[1], block, len+IPC_HEADERLEN );
+   LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
+
+   return write(fd, block, len+IPC_HEADERLEN );
 }

@@ -47,7 +47,6 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/ioctl.h>
 
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
@@ -151,59 +150,6 @@ static struct server *test_usockfn(struct volinfo *volinfo)
 }
 
 /* -------------------- */
-static int send_cred(int socket, int fd)
-{
-    int ret;
-    struct msghdr msgh;
-    struct iovec iov[1];
-    struct cmsghdr *cmsgp = NULL;
-    char *buf;
-    size_t size;
-    int er=0;
-
-    size = CMSG_SPACE(sizeof fd);
-    buf = malloc(size);
-    if (!buf) {
-        LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
-        return -1;
-    }
-
-    memset(&msgh,0,sizeof (msgh));
-    memset(buf,0, size);
-
-    msgh.msg_name = NULL;
-    msgh.msg_namelen = 0;
-
-    msgh.msg_iov = iov;
-    msgh.msg_iovlen = 1;
-
-    iov[0].iov_base = &er;
-    iov[0].iov_len = sizeof(er);
-
-    msgh.msg_control = buf;
-    msgh.msg_controllen = size;
-
-    cmsgp = CMSG_FIRSTHDR(&msgh);
-    cmsgp->cmsg_level = SOL_SOCKET;
-    cmsgp->cmsg_type = SCM_RIGHTS;
-    cmsgp->cmsg_len = CMSG_LEN(sizeof(fd));
-
-    *((int *)CMSG_DATA(cmsgp)) = fd;
-    msgh.msg_controllen = cmsgp->cmsg_len;
-
-    do  {
-        ret = sendmsg(socket,&msgh, 0);
-    } while ( ret == -1 && errno == EINTR );
-    if (ret == -1) {
-        LOG(log_error, logtype_cnid, "error in sendmsg: %s", strerror(errno));
-        free(buf);
-        return -1;
-    }
-    free(buf);
-    return 0;
-}
-
-/* -------------------- */
 static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
 {
     pid_t pid;
@@ -220,7 +166,7 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
     up = test_usockfn(volinfo);
     if (up && up->pid) {
         /* we already have a process, send our fd */
-        if (send_cred(up->control_fd, rqstfd) < 0) {
+        if (send_fd(up->control_fd, rqstfd) < 0) {
             /* FIXME */
             return -1;
         }
