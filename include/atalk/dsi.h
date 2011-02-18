@@ -61,9 +61,8 @@ typedef struct DSI {
   dsi_proto protocol;
   struct dsi_block header;
   struct sockaddr_storage server, client;
-  
   struct itimerval timer;
-
+  int      tickle;        /* tickle count */
   int	   in_write;	  /* in the middle of writing multiple packets,
                              signal handlers can't write to the socket */
   int      msg_request;   /* pending message to the client */
@@ -76,10 +75,7 @@ typedef struct DSI {
   size_t statuslen;
   size_t datalen, cmdlen;
   off_t  read_count, write_count;
-//  int asleep; /* client won't reply AFP 0x7a ? */
-    uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
-  /* noreply = send reply? */
-  char noreply;
+  uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
   const char *program; 
   int socket, serversock;
 
@@ -155,6 +151,7 @@ typedef struct DSI {
 #define DSI_SLEEPING         (1 << 2) /* we're sleeping after FPZzz */
 #define DSI_DISCONNECTED     (1 << 3) /* we're in diconnected state after a socket error */
 #define DSI_DIE              (1 << 4) /* SIGUSR1, going down in 5 minutes */
+#define DSI_NOREPLY          (1 << 5) /* in dsi_write we generate our own replies */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
