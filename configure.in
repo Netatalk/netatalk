@@ -249,39 +249,7 @@ AC_ARG_ENABLE(debugging,
 	]
 )
 
-
-afp3=no
-afp3set=no
-AC_MSG_CHECKING([whether AFP 3.x calls should be enabled])
-AC_ARG_ENABLE(afp3,
-	[  --disable-afp3          disable AFP 3.x calls],
-	[
-	    if test x"$enableval" != x"no"; then
-		afp3set=yes
-		afp3=yes
-		AC_MSG_RESULT([yes])
-	    else
-		AC_MSG_RESULT([no])
-	    fi
-	],[
-	    AC_MSG_RESULT([yes])
-	    afp3=yes
-	]
-)
-
-if test x"$afp3" = x"yes"; then
-        AC_SYS_LARGEFILE([
-		AC_DEFINE(AFP3x, 1, [Define to enable AFP 3.x support])
-	],[
-		if test x"$afp3set" = x"yes"; then
-			AC_MSG_ERROR([AFP 3.x support requires Large File Support.])
-		else
-			AC_MSG_WARN([AFP 3.x support requires Large File Support. AFP3.x support disabled])
-			afp3=no
-		fi
-	])
-fi
-
+AC_SYS_LARGEFILE([], AC_MSG_ERROR([AFP 3.x support requires Large File Support.]))
 AC_CHECK_ICONV
 
 dnl ----------- A NOTE ABOUT DROPKLUDGE

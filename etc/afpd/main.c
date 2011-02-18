@@ -229,7 +229,6 @@ int main(int ac, char **av)
     }
 
     memset(&sv, 0, sizeof(sv));    
-#ifdef AFP3x
     /* linux at least up to 2.4.22 send a SIGXFZ for vfat fs,
        even if the file is open with O_LARGEFILE ! */
 #ifdef SIGXFSZ
@@ -239,7 +238,6 @@ int main(int ac, char **av)
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         exit(EXITERR_SYS);
     }
-#endif
 #endif
     
     sv.sa_handler = child_handler;

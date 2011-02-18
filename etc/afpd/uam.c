@@ -56,11 +56,7 @@ char *strchr (), *strrchr ();
 #include "auth.h"
 #include "uam_auth.h"
 
-#ifdef AFP3x
 #define utf8_encoding() (afp_version >= 30)
-#else
-#define utf8_encoding() (0)
-#endif
 
 #ifdef TRU64
 #include <netdb.h>

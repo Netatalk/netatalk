@@ -481,13 +481,7 @@ static void show_version( void )
 
 	puts( "afpd has been compiled with support for these features:\n" );
 
-	printf( "        AFP3.x support:\t" );
-#ifdef AFP3x
-	puts( "Yes" );
-#else
-	puts( "No" );
-#endif
-
+	printf( "        AFP3.x support:\tYes\n" );
         printf( "        TCP/IP Support:\t" );
         puts( "Yes" );
 

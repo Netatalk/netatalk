@@ -1,8 +1,8 @@
 Changes in 2.2beta2
 ====================
 
-* NEW: afpd: primary AFP reconnect
-* NEW: afpd: AFP replay cache
+* NEW: afpd: AFP 3.3
+* UPD: afpd: AFP 3.x can't be disabled
 
 Changes in 2.2beta1
 ====================

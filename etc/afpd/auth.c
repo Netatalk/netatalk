@@ -79,11 +79,10 @@ static struct afp_versions  afp_versions[] = {
     { "AFPVersion 2.1", 21 },
 #endif /* ! NO_DDP */
     { "AFP2.2", 22 },
-#ifdef AFP3x
     { "AFPX03", 30 },
     { "AFP3.1", 31 },
-    { "AFP3.2", 32 }
-#endif /* AFP3x */
+    { "AFP3.2", 32 },
+    { "AFP3.3", 33 }
 };
 
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
