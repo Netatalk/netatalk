@@ -26,6 +26,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <atalk/logger.h>
+#include <setjmp.h>
 
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
@@ -64,8 +65,10 @@ typedef struct {
  * - fix sized array
  * - indexed just by taking DSIreqID mod REPLAYCACHE_SIZE
  */
-rc_elem_t replaycache[REPLAYCACHE_SIZE];
+static rc_elem_t replaycache[REPLAYCACHE_SIZE];
 
+static sigjmp_buf recon_jmp;
+static int oldsock = -1;
 static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->handle;
@@ -89,7 +92,7 @@ static void afp_dsi_close(AFPObj *obj)
     if (obj->logout)
         (*obj->logout)();
 
-    LOG(log_info, logtype_afpd, "AFP statistics: %.2f KB read, %.2f KB written",
+    LOG(log_note, logtype_afpd, "AFP statistics: %.2f KB read, %.2f KB written",
         dsi->read_count/1024.0, dsi->write_count/1024.0);
     log_dircache_stat();
 
@@ -102,7 +105,8 @@ static void afp_dsi_close(AFPObj *obj)
  */
 static void afp_dsi_die(int sig)
 {
-static volatile int in_handler;
+    DSI *dsi = (DSI *)AFPobj->handle;
+    static volatile int in_handler;
     
     if (in_handler) {
     	return;
@@ -112,6 +116,12 @@ static volatile int in_handler;
      * it will not return.
     */
     in_handler = 1;
+
+    if (dsi->flags & DSI_RECONINPROG) {
+        /* Primary reconnect succeeded, got SIGTERM from afpd parent */
+        dsi->flags &= ~DSI_RECONINPROG;
+        return; /* this returns to afp_disconnect */
+    }
 
     dsi_attention(AFPobj->handle, AFPATTN_SHUTDOWN);
     afp_dsi_close(AFPobj);
@@ -146,14 +156,14 @@ static void afp_dsi_transfer_session(int sig _U_)
         exit(EXITERR_SYS);
     }
 
-    if (dsi->socket != -1)
-        close(dsi->socket);
+    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: received socket fd: %i", socket);
+
     dsi->socket = socket;
+    dsi->flags |= DSI_RECONSOCKET;
+    dsi->flags &= ~DSI_DISCONNECTED;
+    dsi->datalen = 0;
     dsi->header.dsi_requestID = dsiID;
-    dsi->header.dsi_len = 0;
-    dsi->header.dsi_code = AFP_OK;
     dsi->header.dsi_command = DSIFUNC_CMD;
-    dsi->header.dsi_flags = DSIFL_REPLY;
 
     /*
      * The session transfer happens in the middle of FPDisconnect old session, thus we
@@ -171,6 +181,7 @@ static void afp_dsi_transfer_session(int sig _U_)
      * reading/continuing from the connected socket that was passed via the parent from
      * another session. The parent will terminate that session.
      */
+    siglongjmp(recon_jmp, 1);
 }
 
 /* */
@@ -434,7 +445,7 @@ void afp_over_dsi(AFPObj *obj)
     sigaddset(&action.sa_mask, SIGUSR1);
     sigaddset(&action.sa_mask, SIGINT);
     sigaddset(&action.sa_mask, SIGUSR2);
-    action.sa_flags = SA_RESTART; /* dont restart, otherwi */
+    action.sa_flags = SA_RESTART;
     if ((sigaction(SIGALRM, &action, NULL) < 0) ||
             (setitimer(ITIMER_REAL, &dsi->timer, NULL) < 0)) {
         afp_dsi_die(EXITERR_SYS);
@@ -446,13 +457,32 @@ void afp_over_dsi(AFPObj *obj)
 
     /* get stuck here until the end */
     while (1) {
+        if (sigsetjmp(recon_jmp, 1) != 0) {
+            LOG(log_note, logtype_afpd, "Resuming operation after succesfull primary reconnect");
+            dsi->flags &= ~(DSI_RUNNING | DSI_DATA);
+            dsi->eof = dsi->start = dsi->buffer;
+            dsi->in_write = 0;
+            continue;
+        }
         cmd = dsi_receive(dsi);
         if (cmd == 0) {
+            if (dsi->flags & DSI_RECONSOCKET) {
+                /* we just got a reconnect so we immediately try again to receive on the new fd */
+                dsi->flags &= ~DSI_RECONSOCKET;
+                continue;
+            }
             /* Some error on the client connection, enter disconnected state */
             dsi->flags |= DSI_DISCONNECTED;
             pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
+        } else {
+            if (oldsock != -1) {
+                /* Now, after successfully reading from the new socket after a reconnect       *
+                 * we can close the old socket without taking the risk of confusing the client */
+                close(oldsock);
+                oldsock = -1;
+            }
         }
 
         dsi->tickle = 0;

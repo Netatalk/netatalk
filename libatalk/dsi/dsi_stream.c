@@ -302,20 +302,20 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
   size_t stored;
   ssize_t len;
-  
+
   stored = 0;
   while (stored < length) {
     len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
-    if (len == -1 && errno == EINTR)
+    if (len == -1 && errno == EINTR) {
       continue;
-    else if (len > 0)
+    } else if (len > 0) {
       stored += len;
-    else { /* eof or error */
+    } else { /* eof or error */
       /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
       if (len || stored || dsi->read_count) {
-          if (! (dsi->flags & DSI_DISCONNECTED)
-)
-              LOG(log_error, logtype_dsi, "dsi_stream_read(%d): %s", len, (len < 0)?strerror(errno):"unexpected EOF");
+          if (! (dsi->flags & DSI_DISCONNECTED))
+              LOG(log_error, logtype_dsi, "dsi_stream_read(fd: %i): len:%d, %s",
+                  dsi->socket, len, (len < 0) ? strerror(errno) : "unexpected EOF");
       }
       break;
     }
