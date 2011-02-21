@@ -152,6 +152,8 @@ typedef struct DSI {
 #define DSI_DISCONNECTED     (1 << 3) /* we're in diconnected state after a socket error */
 #define DSI_DIE              (1 << 4) /* SIGUSR1, going down in 5 minutes */
 #define DSI_NOREPLY          (1 << 5) /* in dsi_write we generate our own replies */
+#define DSI_RECONSOCKET      (1 << 6) /* we have a new socket from primary reconnect */
+#define DSI_RECONINPROG      (1 << 7) /* used in the new session in reconnect */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,

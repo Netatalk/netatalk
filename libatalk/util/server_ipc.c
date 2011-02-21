@@ -180,7 +180,7 @@ int ipc_server_read(server_child *children, int fd)
             /* Transfered session (ie afp_socket) to old disconnected child, now kill the new one */
             LOG(log_note, logtype_afpd, "Reconnect: killing new session child[%u] after transfer",
                 ipc.child_pid);
-            kill(ipc.child_pid, SIGKILL);
+            kill(ipc.child_pid, SIGTERM);
         }        
         break;
 
