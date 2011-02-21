@@ -182,6 +182,7 @@ int ipc_server_read(server_child *children, int fd)
                 ipc.child_pid);
             kill(ipc.child_pid, SIGTERM);
         }        
+        close(ipc.afp_socket);
         break;
 
 	case IPC_GETSESSION:
