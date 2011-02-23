@@ -160,8 +160,8 @@ void afp_options_init(struct afp_options *options)
     options->passwdfile = _PATH_AFPDPWFILE;
     options->tickleval = 30;
     options->timeout = 4;       /* 4 tickles = 2 minutes */
-    options->sleep = 10* 120; /* 10 h in 30 seconds tick */
-    options->disconnected = 20; /* 20 * 30 s (default tickleval) = 10 minutes */
+    options->sleep = 10 * 60 * 2; /* 10 h in 30 seconds tick */
+    options->disconnected = 10 * 60 * 2; /* 10 h in 30 seconds tick */
     options->server_notif = 1;
     options->authprintdir = NULL;
     options->signatureopt = "auto";
