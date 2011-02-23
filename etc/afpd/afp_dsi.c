@@ -282,7 +282,7 @@ static void alarm_handler(int sig _U_)
     dsi->tickle++;
 
     if (dsi->flags & DSI_SLEEPING) {
-        if (dsi->tickle < AFPobj->options.sleep) {
+        if (dsi->tickle > AFPobj->options.sleep) {
             LOG(log_error, logtype_afpd, "afp_alarm: sleep time ended");
             afp_dsi_die(EXITERR_CLNT);
         }
