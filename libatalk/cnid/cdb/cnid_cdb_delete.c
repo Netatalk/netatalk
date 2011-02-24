@@ -12,6 +12,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifdef CNID_BACKEND_CDB
+#include <arpa/inet.h>
 #include "cnid_cdb_private.h"
 
 #define tid    NULL

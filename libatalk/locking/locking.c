@@ -19,8 +19,6 @@
 #include <atalk/cnid.h>
 #include <atalk/paths.h>
 
-#include "smb_share_modes.h"
-
 /***************************************************************************
  * structures and defines
  ***************************************************************************/
@@ -80,7 +78,7 @@ int locktable_init(const char *path)
 {
     EC_INIT;
 
-    EC_NULL_LOG(tdb = smb_share_mode_db_open(path));
+//    EC_NULL_LOG(tdb = smb_share_mode_db_open(path));
 
 EC_CLEANUP:
     EC_EXIT;

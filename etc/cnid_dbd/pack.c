@@ -8,7 +8,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 #include <string.h>
 #include <inttypes.h>

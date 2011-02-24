@@ -19,11 +19,9 @@
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#include <arpa/inet.h>
 
 #include <atalk/logger.h>
-
-#include <netatalk/endian.h>
-
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 

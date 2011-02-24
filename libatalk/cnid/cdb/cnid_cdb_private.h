@@ -5,8 +5,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <netatalk/endian.h>
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +14,8 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
+#include <arpa/inet.h>
+
 #include <db.h>
 
 #include <atalk/logger.h>

@@ -24,14 +24,10 @@ noinst_HEADERS = \
 	zip.h \
 	uuid.h \
 	queue.h \
-	rtmp.h \
 	server_child.h \
 	server_ipc.h \
 	tdb.h \
 	uam.h \
-	nbp.h \
-	netddp.h \
-	pap.h \
 	cnid_dbd_private.h \
 	cnid_private.h \
 	bstradd.h \
@@ -41,12 +37,8 @@ noinst_HEADERS = \
 	talloc.h \
 	tevent.h \
 	tsocket.h \
-	aep.h \
-	asp.h \
-	atp.h \
 	boolean.h \
 	compat.h \
-	ddp.h \
 	dsi.h \
 	ldapconfig.h \
 	list.h

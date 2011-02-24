@@ -9,8 +9,7 @@
 #include <sys/stat.h>
 #include <atalk/logger.h>
 #include <errno.h>
-
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 #include <atalk/unicode.h>
 #include "ucs2_casetable.h"

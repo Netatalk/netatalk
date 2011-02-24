@@ -11,8 +11,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/cnid.h>
 
 extern struct _cnid_module cnid_dbd_module;

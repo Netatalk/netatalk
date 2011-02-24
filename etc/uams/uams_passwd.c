@@ -30,11 +30,13 @@
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
+#include <arpa/inet.h>
 
 #include <atalk/afp.h>
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
+#include <atalk/compat.h>
 
 #define PASSWDLEN 8
 

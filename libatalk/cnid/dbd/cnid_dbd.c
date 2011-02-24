@@ -26,8 +26,8 @@
 #include <errno.h>
 #include <netdb.h>
 #include <time.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>

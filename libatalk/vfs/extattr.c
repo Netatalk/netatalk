@@ -59,6 +59,7 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/ea.h>
+#include <atalk/compat.h>
 
 /******** Solaris EA helper function prototypes ********/
 #ifdef HAVE_ATTROPEN

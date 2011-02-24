@@ -9,10 +9,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
-
 #include <sys/param.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/cnid.h>
 #include <atalk/cnid_private.h>
 #define STANDALONE 1

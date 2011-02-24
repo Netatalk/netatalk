@@ -37,17 +37,3 @@ libatalk_la_DEPENDENCIES = \
 	$(top_builddir)/libevent/libevent.la
 
 libatalk_la_LDFLAGS = -static
-
-if USE_APPLETALK
-SUBDIRS += asp atp nbp netddp
-libatalk_la_LIBADD += \
-	asp/libasp.la		\
-	atp/libatp.la		\
-	nbp/libnbp.la		\
-	netddp/libnetddp.la
-libatalk_la_DEPENDENCIES += \
-	asp/libasp.la		\
-	atp/libatp.la		\
-	nbp/libnbp.la		\
-	netddp/libnetddp.la
-endif

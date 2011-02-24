@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <netatalk/endian.h>
 #include <atalk/cnid.h>
 
 /* cnid_open.c */

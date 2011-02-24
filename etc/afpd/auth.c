@@ -14,7 +14,8 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
@@ -71,11 +72,6 @@ int ngroups;
  * These numbers are scattered throughout the code.
  */
 static struct afp_versions  afp_versions[] = {
-#ifndef NO_DDP
-    { "AFPVersion 1.1", 11 },
-    { "AFPVersion 2.0", 20 },
-    { "AFPVersion 2.1", 21 },
-#endif /* ! NO_DDP */
     { "AFP2.2", 22 },
     { "AFPX03", 30 },
     { "AFP3.1", 31 },
@@ -92,7 +88,7 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( char *data, const ASP asp, const DSI *dsi)
+void status_versions( char *data, const DSI *dsi)
 {
     char                *start = data;
     u_int16_t           status;
@@ -102,9 +98,6 @@ void status_versions( char *data, const ASP asp, const DSI *dsi)
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
 
     for ( i = 0; i < num; i++ ) {
-#ifndef NO_DDP
-        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
-#endif /* ! NO_DDP */
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         count++;
     }
@@ -112,9 +105,6 @@ void status_versions( char *data, const ASP asp, const DSI *dsi)
     *data++ = count;
 
     for ( i = 0; i < num; i++ ) {
-#ifndef NO_DDP
-        if ( !asp && (afp_versions[ i ].av_number <= 21)) continue;
-#endif /* ! NO_DDP */
         if ( !dsi && (afp_versions[ i ].av_number >= 22)) continue;
         len = strlen( afp_versions[ i ].av_name );
         *data++ = len;
@@ -265,45 +255,6 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 
     LOG(log_note, logtype_afpd, "%s Login by %s",
         afp_versions[afp_version_index].av_name, pwd->pw_name);
-
-#ifndef NO_DDP
-    if (obj->proto == AFPPROTO_ASP) {
-        ASP asp = obj->handle;
-        int addr_net = ntohs( asp->asp_sat.sat_addr.s_net );
-        int addr_node  = asp->asp_sat.sat_addr.s_node;
-
-        if (obj->options.authprintdir) {
-            if(addr_net && addr_node) { /* Do we have a valid Appletalk address? */
-                char nodename[256];
-                FILE *fp;
-                int mypid = getpid();
-                struct stat stat_buf;
-
-                sprintf(nodename, "%s/net%d.%dnode%d", obj->options.authprintdir,
-                        addr_net / 256, addr_net % 256, addr_node);
-                LOG(log_info, logtype_afpd, "registering %s (uid %d) on %u.%u as %s",
-                    pwd->pw_name, pwd->pw_uid, addr_net, addr_node, nodename);
-
-                if (stat(nodename, &stat_buf) == 0) { /* file exists */
-                    if (S_ISREG(stat_buf.st_mode)) { /* normal file */
-                        unlink(nodename);
-                        fp = fopen(nodename, "w");
-                        fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
-                        fclose(fp);
-                        chown( nodename, pwd->pw_uid, -1 );
-                    } else { /* somebody is messing with us */
-                        LOG(log_error, logtype_afpd, "print authfile %s is not a normal file, it will not be modified", nodename );
-                    }
-                } else { /* file 'nodename' does not exist */
-                    fp = fopen(nodename, "w");
-                    fprintf(fp, "%s:%d\n", pwd->pw_name, mypid);
-                    fclose(fp);
-                    chown( nodename, pwd->pw_uid, -1 );
-                }
-            } /* if (addr_net && addr_node ) */
-        } /* if (options->authprintdir) */
-    } /* if (obj->proto == AFPPROTO_ASP) */
-#endif
 
     if (initgroups( pwd->pw_name, pwd->pw_gid ) < 0) {
 #ifdef RUN_AS_USER

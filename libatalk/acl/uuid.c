@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
+#include <arpa/inet.h>
 
 #include <atalk/logger.h>
 #include <atalk/afp.h>

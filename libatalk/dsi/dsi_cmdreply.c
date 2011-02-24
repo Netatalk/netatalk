@@ -10,8 +10,9 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
+#include <arpa/inet.h>
+
 #include <atalk/dsi.h>
-#include <netatalk/endian.h>
 
 /* this assumes that the reply follows right after the command, saving
  * on a couple assignments. specifically, command, requestID, and

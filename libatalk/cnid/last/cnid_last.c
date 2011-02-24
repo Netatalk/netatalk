@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 /* ------------------------ */
 cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,

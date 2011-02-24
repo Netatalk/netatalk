@@ -26,7 +26,7 @@
 
 /*#include <sys/stat.h>*/ /* including it here causes some confusion */
 #include <sys/param.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 #include <atalk/adouble.h>
 
 #include "globals.h"

@@ -35,8 +35,7 @@
 #include <sys/param.h>
 #include <fcntl.h>
 #include <pwd.h>
-
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 #include <des.h>
 

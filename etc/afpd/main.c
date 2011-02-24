@@ -24,8 +24,6 @@
 #include <netatalk/at.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
-#include <atalk/atp.h>
-#include <atalk/asp.h>
 #include <atalk/afp.h>
 #include <atalk/paths.h>
 #include <atalk/util.h>
@@ -115,11 +113,6 @@ static void fd_reset_listening_sockets(void)
 /* ------------------ */
 static void afp_goaway(int sig)
 {
-
-#ifndef NO_DDP
-    asp_kill(sig);
-#endif /* ! NO_DDP */
-
     if (server_children)
         server_child_kill(server_children, CHILD_DSIFORK, sig);
 
@@ -320,7 +313,7 @@ int main(int ac, char **av)
 
     /* Initialize */
     cnid_init();
-    if (locktable_init() != 0)
+    if (locktable_init("XXX") != 0)
         exit(EXITERR_SYS);
 #if 0
     if (rpc_init("127.0.0.1", 4701) != 0)

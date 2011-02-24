@@ -42,11 +42,13 @@
 #if HAVE_LANGINFO_H
 #include <langinfo.h>
 #endif
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
+#include <atalk/compat.h>
+
 #include "byteorder.h"
 
 

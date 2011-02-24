@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>

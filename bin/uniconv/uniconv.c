@@ -35,10 +35,13 @@
 #include <sys/param.h>
 #include <pwd.h>
 #include <dirent.h>
+#include <arpa/inet.h>
+
 #include <atalk/afp.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/compat.h>
 
 #include "atalk/cnid.h"
 #ifndef MAXPATHLEN

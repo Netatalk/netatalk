@@ -512,7 +512,6 @@ if test x"$this_os" = "xmacosx"; then
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(HAVE_2ARG_DBTOB, 1, [Define if dbtob takes two arguments])
 	dnl AC_DEFINE(NO_DLFCN_H)
-	AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
 	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
 fi
@@ -1040,30 +1039,23 @@ AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
-AM_CONDITIONAL(USE_APPLETALK, test x$netatalk_cv_ddp_enabled = xyes)
 
 dnl --------------------- generate files
 
 AC_OUTPUT([Makefile
 	bin/Makefile
 	bin/ad/Makefile
-	bin/aecho/Makefile
 	bin/afppasswd/Makefile
 	bin/cnid/Makefile
 	bin/cnid/cnid2_create
-	bin/getzones/Makefile
 	bin/megatron/Makefile
     bin/misc/Makefile
-	bin/nbp/Makefile
-	bin/pap/Makefile
-	bin/psorder/Makefile
 	bin/uniconv/Makefile
 	config/Makefile
     config/pam/Makefile
 	contrib/Makefile
 	contrib/macusers/Makefile
 	contrib/macusers/macusers
-	contrib/printing/Makefile
 	contrib/shell_utils/Makefile
 	contrib/shell_utils/afpd-mtab.pl
     contrib/shell_utils/apple_dump
@@ -1076,20 +1068,15 @@ AC_OUTPUT([Makefile
 	doc/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
-	etc/atalkd/Makefile
 	etc/cnid_dbd/Makefile
 	etc/netalockd/Makefile
 	etc/uams/Makefile
 	etc/uams/uams_krb4/Makefile
-	etc/papd/Makefile
-	etc/psf/Makefile
 	include/Makefile
 	include/atalk/Makefile
 	libatalk/Makefile
 	libatalk/acl/Makefile
 	libatalk/adouble/Makefile
-	libatalk/asp/Makefile
-	libatalk/atp/Makefile
 	libatalk/bstring/Makefile
 	libatalk/cnid/Makefile
 	libatalk/cnid/cdb/Makefile
@@ -1099,8 +1086,6 @@ AC_OUTPUT([Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
 	libatalk/locking/Makefile
-	libatalk/nbp/Makefile
-	libatalk/netddp/Makefile
 	libatalk/rpc/Makefile
 	libatalk/talloc/Makefile
 	libatalk/tevent/Makefile
@@ -1113,17 +1098,8 @@ AC_OUTPUT([Makefile
 	macros/Makefile
 	man/Makefile
 	man/man1/Makefile
-	man/man3/Makefile
-	man/man4/Makefile
 	man/man5/Makefile
 	man/man8/Makefile
-	sys/Makefile
-	sys/netatalk/Makefile
-	sys/netbsd/Makefile
-	sys/netbsd/netatalk/Makefile
-	sys/solaris/Makefile
-	sys/sunos/Makefile
-	sys/ultrix/Makefile
 	test/Makefile
 	test/afpd/Makefile
 	test/netalockd/Makefile

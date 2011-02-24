@@ -20,7 +20,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <atalk/asp.h>
 #include <atalk/dsi.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
@@ -240,22 +239,12 @@ static char *volxlate(AFPObj *obj,
         } else if (is_var(p, "$c")) {
             if (afpmaster && xlatevolname)
                 return NULL;
-            if (obj->proto == AFPPROTO_ASP) {
-                ASP asp = obj->handle;
-
-                len = sprintf(dest, "%u.%u", ntohs(asp->asp_sat.sat_addr.s_net),
-                              asp->asp_sat.sat_addr.s_node);
-                dest += len;
-                destlen -= len;
-
-            } else if (obj->proto == AFPPROTO_DSI) {
-                DSI *dsi = obj->handle;
-                len = sprintf(dest, "%s:%u",
-                              getip_string((struct sockaddr *)&dsi->client),
-                              getip_port((struct sockaddr *)&dsi->client));
-                dest += len;
-                destlen -= len;
-            }
+            DSI *dsi = obj->handle;
+            len = sprintf(dest, "%s:%u",
+                          getip_string((struct sockaddr *)&dsi->client),
+                          getip_port((struct sockaddr *)&dsi->client));
+            dest += len;
+            destlen -= len;
         } else if (is_var(p, "$d")) {
             if (afpmaster && xlatevolname)
                 return NULL;
@@ -277,17 +266,8 @@ static char *volxlate(AFPObj *obj,
         } else if (is_var(p, "$i")) {
             if (afpmaster && xlatevolname)
                 return NULL;
-            if (obj->proto == AFPPROTO_ASP) {
-                ASP asp = obj->handle;
-
-                len = sprintf(dest, "%u", ntohs(asp->asp_sat.sat_addr.s_net));
-                dest += len;
-                destlen -= len;
-
-            } else if (obj->proto == AFPPROTO_DSI) {
-                DSI *dsi = obj->handle;
-                q = getip_string((struct sockaddr *)&dsi->client);
-            }
+            DSI *dsi = obj->handle;
+            q = getip_string((struct sockaddr *)&dsi->client);
         } else if (is_var(p, "$s")) {
             if (obj->Obj)
                 q = obj->Obj;

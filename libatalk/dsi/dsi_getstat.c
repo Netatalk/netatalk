@@ -11,9 +11,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include <atalk/dsi.h>
-#include <netatalk/endian.h>
 
 /* return the status and then delete the connection. most of the
  * fields are already set. */

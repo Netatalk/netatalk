@@ -22,6 +22,7 @@
 #include <atalk/logger.h>
 #include <atalk/unix.h>
 #include <atalk/acl.h>
+#include <atalk/compat.h>
 
 /* -----------------------------
    a dropbox is a folder where w is set but not r eg:

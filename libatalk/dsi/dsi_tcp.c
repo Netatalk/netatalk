@@ -51,7 +51,7 @@ int deny_severity = log_warning;
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
-#include <netatalk/endian.h>
+
 #include "dsi_private.h"
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))

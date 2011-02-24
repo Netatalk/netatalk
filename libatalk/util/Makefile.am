@@ -5,7 +5,6 @@ pkgconfdir = @PKGCONFDIR@
 noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
-	atalk_addr.c	\
 	bprint.c	\
 	fault.c		\
 	ftw.c		\

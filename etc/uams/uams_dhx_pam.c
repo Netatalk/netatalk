@@ -26,7 +26,7 @@
 #ifdef HAVE_PAM_PAM_APPL_H
 #include <pam/pam_appl.h>
 #endif
-
+#include <arpa/inet.h>
 
 #if defined(GNUTLS_DHX)
 #include <gnutls/openssl.h>

@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <arpa/inet.h>
 
 #include <atalk/logger.h>
 #include <atalk/adouble.h>

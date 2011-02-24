@@ -25,7 +25,6 @@
 #define _ATALK_AFP_H 1
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
 
 typedef u_int16_t AFPUserBytes;
 

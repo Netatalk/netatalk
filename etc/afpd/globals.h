@@ -53,7 +53,6 @@ struct afp_options {
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
-    struct at_addr ddpaddr;
     char *uampath, *fqdn;
     char *pidfile;
     char *sigconffile;
@@ -138,9 +137,6 @@ extern const char *AfpErr2name(int err);
 /* directory.c */
 extern struct dir rootParent;
 
-#ifndef NO_DDP
-extern void afp_over_asp (AFPObj *);
-#endif /* NO_DDP */
 extern void afp_over_dsi (AFPObj *);
 
 #endif /* globals.h */

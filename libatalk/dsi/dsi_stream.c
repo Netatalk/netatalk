@@ -35,7 +35,6 @@
 
 #include <atalk/logger.h>
 #include <atalk/dsi.h>
-#include <netatalk/endian.h>
 #include <atalk/util.h>
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))

@@ -40,6 +40,7 @@
 #include <atalk/vfs.h>
 #include <atalk/util.h>
 #include <atalk/unix.h>
+#include <atalk/compat.h>
 
 /*!
  * @brief get cwd in static buffer

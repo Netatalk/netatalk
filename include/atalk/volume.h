@@ -7,7 +7,6 @@
 #define ATALK_VOLUME_H 1
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
 
 #include <atalk/unicode.h>
 #include <atalk/cnid.h>

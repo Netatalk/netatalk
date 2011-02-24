@@ -1,7 +1,8 @@
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
+
 #include "config.h"
 #include "volume.h"
 

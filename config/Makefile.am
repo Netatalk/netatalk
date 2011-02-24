@@ -11,9 +11,7 @@ EXTRA_DIST = \
 	AppleVolumes.system \
 	afp_ldap.conf \
 	afpd.conf.tmpl \
-	atalkd.conf \
-	netatalk.conf \
-	papd.conf
+	netatalk.conf
 
 OVERWRITE_CONFIG = @OVERWRITE_CONFIG@
 
@@ -25,10 +23,6 @@ endif
 
 if HAVE_ACLS
 CONFFILES += afp_ldap.conf
-endif
-
-if USE_APPLETALK
-CONFFILES += atalkd.conf papd.conf
 endif
 
 pkgconfdir = @PKGCONFDIR@

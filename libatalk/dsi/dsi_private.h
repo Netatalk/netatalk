@@ -12,7 +12,7 @@
  */
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 extern int dsi_tcp_init (DSI *, const char * /*host*/, 
 			     const char * /*address*/,

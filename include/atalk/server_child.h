@@ -7,7 +7,7 @@
 #define _ATALK_SERVER_CHILD_H 1
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 /* useful stuff for child processes. most of this is hidden in 
  * server_child.c to ease changes in implementation */

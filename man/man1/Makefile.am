@@ -21,20 +21,6 @@ NONGENERATED_MANS	=	ad.1 \
 				dbd.1 \
 				netatalk-config.1
 
-ATALK_MANS = aecho.1 \
-				getzones.1 \
-				nbp.1 \
-				nbplkup.1 \
-				nbprgstr.1 \
-				nbpunrgstr.1 \
-				pap.1 \
-				papstatus.1 \
-				psorder.1
-
-if USE_APPLETALK
-NONGENERATED_MANS += $(ATALK_MANS)
-endif
-
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
 CLEANFILES = $(GENERATED_MANS)
 EXTRA_DIST = $(TEMPLATE_FILES) $(NONGENERATED_MANS) $(ATALK_MANS)

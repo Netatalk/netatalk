@@ -20,10 +20,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <arpa/inet.h>
 
 #include <atalk/ftw.h>
 #include <atalk/volinfo.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))

@@ -41,7 +41,6 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 
-#include <netatalk/endian.h>
 #include <atalk/bstrlib.h>
 #include <atalk/locking.h>
 

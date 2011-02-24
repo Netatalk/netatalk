@@ -3,6 +3,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <string.h>
+#include <arpa/inet.h>
 #include <atalk/adouble.h>
 
 #define FILEIOFF_ATTR 14

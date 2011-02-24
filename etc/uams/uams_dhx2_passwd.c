@@ -17,14 +17,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pwd.h>
-
-#ifdef NETBSD
-#define _XOPEN_SOURCE 500 /* for crypt() */
-#endif
-#ifdef FREEBSD
-#define _XOPEN_SOURCE /* for crypt() */
-#endif
-
+#include <arpa/inet.h>
 #include <unistd.h>
 
 #ifdef HAVE_CRYPT_H

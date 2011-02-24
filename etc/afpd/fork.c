@@ -18,8 +18,6 @@
 
 #include <netatalk/at.h>
 #include <atalk/dsi.h>
-#include <atalk/atp.h>
-#include <atalk/asp.h>
 #include <atalk/afp.h>
 #include <atalk/adouble.h>
 #include <atalk/logger.h>
@@ -1246,24 +1244,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
     /* this is yucky, but dsi can stream i/o and asp can't */
     switch (obj->proto) {
-#ifndef NO_DDP
-    case AFPPROTO_ASP:
-        if (asp_wrtcont(obj->handle, rbuf, rbuflen) < 0) {
-            *rbuflen = 0;
-            LOG(log_error, logtype_afpd, "afp_write: asp_wrtcont: %s", strerror(errno) );
-            return( AFPERR_PARAM );
-        }
-
-        if ((cc = write_file(ofork, eid, offset, rbuf, *rbuflen,
-                             xlate)) < 0) {
-            *rbuflen = 0;
-            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
-            return cc;
-        }
-        offset += cc;
-        break;
-#endif /* no afp/asp */
-
     case AFPPROTO_DSI:
     {
         DSI *dsi = obj->handle;

@@ -407,10 +407,6 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-port")))
         options->port = strdup(c);
-#ifndef NO_DDP
-    if ((c = getoption(buf, "-ddpaddr")))
-        atalk_aton(c, &options->ddpaddr);
-#endif
     if ((c = getoption(buf, "-signature")) && (opt = strdup(c)))
         options->signatureopt = opt;
 
@@ -486,13 +482,6 @@ static void show_version( void )
 	printf( "        AFP3.x support:\tYes\n" );
         printf( "        TCP/IP Support:\t" );
         puts( "Yes" );
-
-	printf( "DDP(AppleTalk) Support:\t" );
-#ifdef NO_DDP
-	puts( "No" );
-#else
-	puts( "Yes" );
-#endif
 
 	printf( "         CNID backends:\t" );
 #ifdef CNID_BACKEND_CDB

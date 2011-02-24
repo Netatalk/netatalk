@@ -20,7 +20,7 @@
 
 #ifndef _BYTEORDER_H
 #define _BYTEORDER_H
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 /*
    This file implements macros for machine independent short and 

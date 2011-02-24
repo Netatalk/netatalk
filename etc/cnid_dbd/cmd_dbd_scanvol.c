@@ -34,6 +34,7 @@
 #include <atalk/ea.h>
 #include <atalk/util.h>
 #include <atalk/acl.h>
+#include <atalk/compat.h>
 
 #include "cmd_dbd.h"
 #include "dbif.h"

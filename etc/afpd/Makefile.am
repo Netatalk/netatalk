@@ -6,7 +6,6 @@ sbin_PROGRAMS = afpd
 noinst_PROGRAMS = hash
 
 afpd_SOURCES = \
-	afp_asp.c \
 	afp_avahi.c \
 	afp_config.c \
 	afp_dsi.c \

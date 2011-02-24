@@ -25,6 +25,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <pwd.h>
+#include <arpa/inet.h>
 
 #ifdef SHADOWPW
 #include <shadow.h>

@@ -10,11 +10,11 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <signal.h>
+#include <arpa/inet.h>
 
 #include <netinet/in.h>
 #include <atalk/afp.h>
 #include <atalk/server_child.h>
-#include <netatalk/endian.h>
 
 /* What a DSI packet looks like:
  0                               32

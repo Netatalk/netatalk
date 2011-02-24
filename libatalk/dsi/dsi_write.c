@@ -21,7 +21,6 @@
 #include <string.h>
 
 #include <atalk/dsi.h>
-#include <netatalk/endian.h>
 
 #ifndef MIN
 #define MIN(a,b)     ((a) < (b) ? (a) : (b))

@@ -16,18 +16,19 @@
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
 #include <string.h>
-#include <atalk/logger.h>
-
 #ifdef HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
 #endif
 #ifdef HAVE_PAM_PAM_APPL_H
 #include <pam/pam_appl.h>
 #endif
+#include <arpa/inet.h>
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
+#include <atalk/logger.h>
+#include <atalk/compat.h>
 
 #define PASSWDLEN 8
 

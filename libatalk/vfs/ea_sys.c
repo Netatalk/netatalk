@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <arpa/inet.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>

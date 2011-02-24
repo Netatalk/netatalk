@@ -13,10 +13,10 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 
 #include <atalk/dsi.h>
 #include <atalk/afp.h>
-#include <netatalk/endian.h>
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

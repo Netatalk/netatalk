@@ -2,7 +2,6 @@
 #define AFPD_CONFIG_H 1
 
 #include <atalk/server_child.h>
-#include <atalk/atp.h>
 
 #include "globals.h"
 

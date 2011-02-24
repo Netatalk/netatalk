@@ -7,8 +7,8 @@
 #define AFPD_FORK_H 1
 
 #include <stdio.h>
+#include <arpa/inet.h>
 
-#include <netatalk/endian.h>
 #include <atalk/adouble.h>
 #include "volume.h"
 #include "directory.h"

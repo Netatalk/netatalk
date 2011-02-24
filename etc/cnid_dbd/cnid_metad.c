@@ -43,7 +43,7 @@
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#define _XPG4_2 1
+// #define _XPG4_2 1
 #include <sys/socket.h>
 #include <stdio.h>
 #include <time.h>
@@ -89,6 +89,7 @@
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/paths.h>
 #include <atalk/volinfo.h>
+#include <atalk/compat.h>
 
 #include "usockfd.h"
 

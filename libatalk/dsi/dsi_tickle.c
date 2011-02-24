@@ -15,7 +15,6 @@
 #include <signal.h>
 
 #include <atalk/dsi.h>
-#include <netatalk/endian.h>
 
 /* server generated tickles. as this is only called by the tickle handler,
  * we don't need to block signals. */

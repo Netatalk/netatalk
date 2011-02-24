@@ -25,7 +25,7 @@
 #define ATALK_DIRECTORY_H 1
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 #include <dirent.h>
 #include <stdint.h>
 

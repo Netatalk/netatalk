@@ -7,7 +7,7 @@
 #define AFPD_VOLUME_H 1
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 
 #include <atalk/volume.h>
 #include <atalk/cnid.h>

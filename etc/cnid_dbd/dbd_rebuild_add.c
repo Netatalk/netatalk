@@ -11,10 +11,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <atalk/logger.h>
-#include <netatalk/endian.h>
-#include <atalk/cnid_dbd_private.h>
+#include <arpa/inet.h>
 
+#include <atalk/logger.h>
+#include <atalk/cnid_dbd_private.h>
 
 #include "pack.h"
 #include "dbif.h"

@@ -25,8 +25,7 @@
 #define AFPD_DIRECTORY_H 1
 
 #include <sys/types.h>
-/*#include <sys/stat.h>*/ /* including it here causes some confusion */
-#include <netatalk/endian.h>
+#include <arpa/inet.h>
 #include <dirent.h>
 
 /* sys/types.h usually snarfs in major/minor macros. if they don't
