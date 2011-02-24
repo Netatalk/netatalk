@@ -725,12 +725,6 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 createfile_done:
     curdir->offcnt++;
 
-#ifdef DROPKLUDGE
-    if (vol->v_flags & AFPVOL_DROPBOX) {
-        retvalue = matchfile2dirperms(upath, vol, did);
-    }
-#endif /* DROPKLUDGE */
-
     setvoltime(obj, vol );
 
     return (retvalue);
@@ -1270,9 +1264,6 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
         goto copy_exit;
     }
 
-#ifdef FORCE_UIDGID
-    /* FIXME svid != dvid && dvid's user can't read svid */
-#endif
     if (NULL == ( d_vol = getvolbyvid( dvid )) ) {
         retvalue = AFPERR_PARAM;
         goto copy_exit;
@@ -1316,12 +1307,6 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
         goto copy_exit;
     }
     curdir->offcnt++;
-
-#ifdef DROPKLUDGE
-    if (vol->v_flags & AFPVOL_DROPBOX) {
-        retvalue=matchfile2dirperms(upath, vol, ddid); /* FIXME sdir or ddid */
-    }
-#endif /* DROPKLUDGE */
 
     setvoltime(obj, d_vol );
 

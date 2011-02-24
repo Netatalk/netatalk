@@ -13,6 +13,6 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
-extern int locktable_init(void);
+extern int locktable_init(const char *path);
 
 #endif  /* ATALK_LOCKING_H */

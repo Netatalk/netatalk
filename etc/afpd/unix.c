@@ -314,9 +314,6 @@ int setfilunixmode (const struct vol *vol, struct path* path, mode_t mode)
 /* --------------------- */
 int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 {
-
-    int dropbox = (vol->v_flags & AFPVOL_DROPBOX);
-
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
         fullpathname(name), mode, vol->v_dperm);
 
@@ -324,14 +321,14 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first then .AppleDouble in rf_setdirmode */
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
         	return -1;
     }
     if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
         return  -1 ;
     }
     if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
             return -1;
     }
     return 0;
@@ -344,14 +341,13 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     struct dirent	*dirp;
     DIR			*dir;
     mode_t              hf_mode;
-    int                 dropbox = (vol->v_flags & AFPVOL_DROPBOX);
     
     mode |= vol->v_dperm;
     hf_mode = ad_hf_mode(mode);
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first */
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
         	return -1;
     }
     
@@ -384,7 +380,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     }
 
     if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, dropbox, vol->v_umask) < 0 )
+    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
         	return -1;
     }
     return( 0 );

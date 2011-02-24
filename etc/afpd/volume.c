@@ -96,15 +96,7 @@ static void             free_extmap(void);
 #define VOLOPT_MACCHARSET    16
 #define VOLOPT_CNIDSCHEME    17
 #define VOLOPT_ADOUBLE       18  /* adouble version */
-
-#ifdef FORCE_UIDGID
-#warning UIDGID
-#include "uid.h"
-
-#define VOLOPT_FORCEUID      19  /* force uid for username x */
-#define VOLOPT_FORCEGID      20  /* force gid for group x */
-#endif /* FORCE_UIDGID */
-
+/* Usable slot: 19/20 */
 #define VOLOPT_UMASK         21
 #define VOLOPT_ALLOWED_HOSTS 22
 #define VOLOPT_DENIED_HOSTS  23
@@ -453,11 +445,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS | AFPVOL_INV_DOTS;
             else if (strcasecmp(p, "limitsize") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_LIMITSIZE;
-            /* support for either "dropbox" or "dropkludge" */
-            else if (strcasecmp(p, "dropbox") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
-            else if (strcasecmp(p, "dropkludge") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_DROPBOX;
             else if (strcasecmp(p, "nofileid") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
             else if (strcasecmp(p, "nostat") == 0)
@@ -513,16 +500,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
         options[VOLOPT_DFLTPERM].i_value = (int)strtol(val+1, NULL, 8);
     } else if (optionok(tmp, "password:", val)) {
         setoption(options, save, VOLOPT_PASSWORD, val);
-
-#ifdef FORCE_UIDGID
-
-        /* this code allows forced uid/gid per volume settings */
-    } else if (optionok(tmp, "forceuid:", val)) {
-        setoption(options, save, VOLOPT_FORCEUID, val);
-    } else if (optionok(tmp, "forcegid:", val)) {
-        setoption(options, save, VOLOPT_FORCEGID, val);
-
-#endif /* FORCE_UIDGID */
     } else if (optionok(tmp, "root_preexec:", val)) {
         setoption(options, save, VOLOPT_ROOTPREEXEC, val);
 
@@ -801,19 +778,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         if ((volume->v_flags & AFPVOL_EILSEQ))
             volume->v_utom_flags |= CONV__EILSEQ;
 
-#ifdef FORCE_UIDGID
-        if (options[VOLOPT_FORCEUID].c_value) {
-            volume->v_forceuid = strdup(options[VOLOPT_FORCEUID].c_value);
-        } else {
-            volume->v_forceuid = NULL; /* set as null so as to return 0 later on */
-        }
-
-        if (options[VOLOPT_FORCEGID].c_value) {
-            volume->v_forcegid = strdup(options[VOLOPT_FORCEGID].c_value);
-        } else {
-            volume->v_forcegid = NULL; /* set as null so as to return 0 later on */
-        }
-#endif
         if (!user) {
             if (options[VOLOPT_PREEXEC].c_value)
                 volume->v_preexec = volxlate(obj, NULL, MAXPATHLEN, options[VOLOPT_PREEXEC].c_value, pwd, path, name);
@@ -1312,10 +1276,6 @@ static void volume_free(struct vol *vol)
     free(vol->v_cnidscheme);
     free(vol->v_dbpath);
     free(vol->v_gvs);
-#ifdef FORCE_UIDGID
-    free(vol->v_forceuid);
-    free(vol->v_forcegid);
-#endif /* FORCE_UIDGID */
     if (vol->v_uuid)
         free(vol->v_uuid);
 }
@@ -1602,21 +1562,13 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
 #ifndef NO_LARGE_VOL_SUPPORT
         case VOLPBIT_XBFREE :
             xbfree = hton64( xbfree );
-#if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
-            bcopy(&xbfree, data, sizeof(xbfree));
-#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             memcpy(data, &xbfree, sizeof( xbfree ));
-#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             data += sizeof( xbfree );
             break;
 
         case VOLPBIT_XBTOTAL :
             xbtotal = hton64( xbtotal );
-#if defined(__GNUC__) && defined(HAVE_GCC_MEMCPY_BUG)
-            bcopy(&xbtotal, data, sizeof(xbtotal));
-#else /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             memcpy(data, &xbtotal, sizeof( xbtotal ));
-#endif /* __GNUC__ && HAVE_GCC_MEMCPY_BUG */
             data += sizeof( xbfree );
             break;
 #endif /* ! NO_LARGE_VOL_SUPPORT */
@@ -2058,9 +2010,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
     if (( volume->v_flags & AFPVOL_OPEN  ) ) {
         /* the volume is already open */
-#ifdef FORCE_UIDGID
-        set_uidgid ( volume );
-#endif
         return stat_vol(bitmap, volume, rbuf, rbuflen);
     }
 
@@ -2070,10 +2019,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             return AFPERR_MISC;
         }
     }
-
-#ifdef FORCE_UIDGID
-    set_uidgid ( volume );
-#endif
 
     if (volume->v_preexec) {
         if ((ret = afprun(0, volume->v_preexec, NULL)) && volume->v_preexec_close) {
@@ -2318,10 +2263,6 @@ struct vol *getvolbyvid(const u_int16_t vid )
     if ( vol == NULL || ( vol->v_flags & AFPVOL_OPEN ) == 0 ) {
         return( NULL );
     }
-
-#ifdef FORCE_UIDGID
-    set_uidgid ( vol );
-#endif /* FORCE_UIDGID */
 
     current_vol = vol;
 

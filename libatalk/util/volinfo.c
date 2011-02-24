@@ -50,7 +50,6 @@ static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_USEDOTS,    "USEDOTS"},     /* use real dots */
     {AFPVOL_LIMITSIZE,  "LIMITSIZE"},   /* limit size for older macs */
     {AFPVOL_MAPASCII,   "MAPASCII"},    /* map the ascii range as well */
-    {AFPVOL_DROPBOX,    "DROPBOX"},     /* dropkludge dropbox support */
     {AFPVOL_NOFILEID,   "NOFILEID"},    /* don't advertise createid resolveid and deleteid calls */
     {AFPVOL_NOSTAT,     "NOSTAT"},      /* advertise the volume even if we can't stat() it
                                          * maybe because it will be mounted later in preexec */

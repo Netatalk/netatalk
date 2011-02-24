@@ -223,13 +223,6 @@ addicon_err:
         if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize)
             return( AFPERR_PARAM );
 
-#ifdef DEBUG1
-        if (obj->options.flags & OPTION_DEBUG) {
-            printf("(write) len: %d\n", buflen);
-            bprint(rbuf, buflen);
-        }
-#endif
-
         /*
          * We're at the end of the file, add the headers, etc.  */
         if ( cc == 0 ) {

@@ -32,29 +32,6 @@ int stickydirmode(const char *name, const mode_t mode, const int dropbox, const 
 {
     int retval = 0;
 
-#ifdef DROPKLUDGE
-    /* Turn on the sticky bit if this is a drop box, also turn off the setgid bit */
-    if ((dropbox & AFPVOL_DROPBOX)) {
-        int uid;
-
-        if ( ( (mode & S_IWOTH) && !(mode & S_IROTH)) ||
-             ( (mode & S_IWGRP) && !(mode & S_IRGRP)) )
-        {
-            uid=geteuid();
-            if ( seteuid(0) < 0) {
-                LOG(log_error, logtype_afpd, "stickydirmode: unable to seteuid root: %s", strerror(errno));
-            }
-            if ( (retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~v_umask) )) < 0) {
-                LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
-            } else {
-                LOG(log_debug, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(retval) );
-            }
-            seteuid(uid);
-            return retval;
-        }
-    }
-#endif /* DROPKLUDGE */
-
     /*
      *  Ignore EPERM errors:  We may be dealing with a directory that is
      *  group writable, in which case chmod will fail.

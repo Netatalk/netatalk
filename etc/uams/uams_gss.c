@@ -93,7 +93,7 @@ static void log_status( char *s, OM_uint32 major_status,
 
 static void log_ctx_flags( OM_uint32 flags )
 {
-#ifdef DEBUG1
+#ifdef DEBUG
     if (flags & GSS_C_DELEG_FLAG)
         LOG(log_debug, logtype_uams, "uams_gss.c :context flag: GSS_C_DELEG_FLAG" );
     if (flags & GSS_C_MUTUAL_FLAG)

@@ -1,6 +1,6 @@
 dnl Check for optional Zeroconf support
 
-AC_DEFUN([NETATALK_ZEROCONF], [
+AC_DEFUN([AC_NETATALK_ZEROCONF], [
 	ZEROCONF_LIBS=""
 	ZEROCONF_CFLAGS=""
 	found_zeroconf=no
