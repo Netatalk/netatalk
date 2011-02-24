@@ -66,6 +66,7 @@ AC_CHECK_FUNC(renameat, AC_DEFINE([_ATFILE_SOURCE], 1, AT file source))
 AC_CHECK_FUNC(epoll_create, AC_DEFINE([HAVE_EPOLL], 1, Whether Linux epoll is available)) 
 AC_CHECK_FUNCS(backtrace_symbols dirfd getusershell pread pwrite pselect)
 AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen)
+AC_CHECK_FUNCS(mmap utime getpagesize) dnl needed by tbd
 
 dnl search for necessary libraries
 AC_SEARCH_LIBS(gethostbyname, nsl)
