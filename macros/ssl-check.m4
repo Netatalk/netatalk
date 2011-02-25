@@ -1,7 +1,7 @@
 dnl $Id: ssl-check.m4,v 1.14 2008-11-22 12:07:26 didg Exp $
 dnl Autoconf macro to check for SSL or OpenSSL
 
-AC_DEFUN([AC_CRYPT], [
+AC_DEFUN([AC_NETATALK_CRYPT], [
 
 	saveLIBS=$LIBS
 	LIBS=""
@@ -17,7 +17,7 @@ AC_DEFUN([AC_CRYPT], [
 ])
 
 
-AC_DEFUN([AC_PATH_SSL], [
+AC_DEFUN([AC_NETATALK_PATH_SSL], [
 	AC_ARG_WITH(ssl-dir, [  --with-ssl-dir=PATH     specify path to OpenSSL installation (must contain
                           lib and include dirs)],
 		[

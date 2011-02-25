@@ -8,7 +8,7 @@ dnl version of libgcrypt is at least 1.2.5 *and* the API number is 1.  Using
 dnl this features allows to prevent build against newer versions of libgcrypt
 dnl with a changed API.
 dnl
-AC_DEFUN([AM_PATH_LIBGCRYPT],
+AC_DEFUN([AC_NETATALK_PATH_LIBGCRYPT],
 [ AC_ARG_WITH(libgcrypt-dir,
             AC_HELP_STRING([--with-libgcrypt-dir=PATH],
                            [path where LIBGCRYPT is installed (optional). 
@@ -107,6 +107,11 @@ fi
   if test $ok = yes; then
     LIBGCRYPT_CFLAGS=`$LIBGCRYPT_CONFIG --cflags`
     LIBGCRYPT_LIBS=`$LIBGCRYPT_CONFIG --libs`
+    neta_cv_compile_dhx2=yes
+    neta_cv_have_libgcrypt=yes
+	AC_MSG_NOTICE([Enabling DHX2 UAM])
+	AC_DEFINE(HAVE_LIBGCRYPT, 1, [Define if the DHX2 modules should be built with libgcrypt])
+	AC_DEFINE(UAM_DHX2, 1, [Define if the DHX2 UAM modules should be compiled])
     ifelse([$2], , :, [$2])
   else
     LIBGCRYPT_CFLAGS=""

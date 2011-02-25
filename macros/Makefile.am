@@ -9,6 +9,7 @@ EXTRA_DIST = \
 	iconv.m4		\
 	largefile-check.m4	\
 	libgcrypt.m4		\
+	netatalk.m4			\
 	pam-check.m4		\
 	perl-check.m4		\
 	ps-check.m4		\

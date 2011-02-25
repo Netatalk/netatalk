@@ -96,27 +96,6 @@ uninstall-startup:
 endif
 
 #
-# checking for "cobalt" style sysv scripts:
-#
-
-if USE_COBALT
-
-sysvdir	= /etc/rc.d/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.cobalt
-	cp -f rc.atalk.cobalt $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-
-uninstall-hook:
-
-uninstall-startup: uninstall-am
-
-endif
-
-#
 # checking for "tru64" style sysv scripts:
 #
 
