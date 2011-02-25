@@ -719,8 +719,55 @@ fi
 AC_DEFINE_UNQUOTED(EA_MODULES,["$neta_cv_eas"],[Available Extended Attributes modules])
 ])
 
-AC_DEFUN([AC_NETATALK_], [
-])
+dnl Check for libsmbsharemodes from Samba for Samba/Netatalk access/deny/share modes interop
+dnl Defines "neta_cv_have_smbshmd" to "yes" or "no"
+dnl AC_SUBST's "SMB_SHAREMODES_CFLAGS" and "SMB_SHAREMODES_LDFLAGS"
+dnl AM_CONDITIONAL's "USE_SMB_SHAREMODES"
+AC_DEFUN([AC_NETATALK_SMB_SHAREMODES], [
+    neta_cv_have_smbshmd=no
+    AC_ARG_WITH(smbsharemodes-lib,
+                [  --with-smbsharemodes-lib=PATH        PATH to libsmbsharemodes lib from Samba],
+                [SMB_SHAREMODES_LDFLAGS="-L$withval -lsmbsharemodes"]
+    )
+    AC_ARG_WITH(smbsharemodes-include,
+                [  --with-smbsharemodes-include=PATH    PATH to libsmbsharemodes header from Samba],
+                [SMB_SHAREMODES_CFLAGS="-I$withval"]
+    )
+    AC_ARG_WITH(smbsharemodes,
+                [AS_HELP_STRING([--with-smbsharemodes],[Samba interop (default is yes)])],
+                [use_smbsharemodes=$withval],
+                [use_smbsharemodes=yes]
+    )
 
-AC_DEFUN([AC_NETATALK_], [
+    if test x"$use_smbsharemodes" = x"yes" ; then
+        AC_MSG_CHECKING([whether to enable Samba/Netatalk access/deny/share-modes interop])
+
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$SMB_SHAREMODES_CFLAGS $CFLAGS"
+        LDFLAGS="$SMB_SHAREMODES_LDFLAGS $LDFLAGS"
+
+        AC_LINK_IFELSE(
+            [#include <unistd.h>
+             #include <stdio.h>
+             #include <sys/time.h>
+             #include <time.h>
+             #include <stdint.h>
+             /* From messages.h */
+             struct server_id {
+                 pid_t pid;
+             };
+             #include "smb_share_modes.h"
+             int main(void) { (void)smb_share_mode_db_open(""); return 0;}],
+            [neta_cv_have_smbshmd=yes]
+        )
+
+        AC_MSG_RESULT($neta_cv_have_smbshmd)
+        AC_SUBST(SMB_SHAREMODES_CFLAGS, [$SMB_SHAREMODES_CFLAGS])
+        AC_SUBST(SMB_SHAREMODES_LDFLAGS, [$SMB_SHAREMODES_LDFLAGS])
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    fi
+
+    AM_CONDITIONAL(USE_SMB_SHAREMODES, test x"$neta_cv_have_smbshmd" = x"yes")
 ])

@@ -51,6 +51,7 @@ dnl	fi
 	AC_MSG_RESULT([         admin group support:     $netatalk_cv_admin_group])
 	AC_MSG_RESULT([         valid shell check:       $netatalk_cv_use_shellcheck])
 	AC_MSG_RESULT([         cracklib support:        $netatalk_cv_with_cracklib])
+	AC_MSG_RESULT([         Samba sharemode interop: $neta_cv_have_smbshmd])
 	if test x"$use_pam_so" = x"yes" -a x"$netatalk_cv_install_pam" = x"no"; then
 		AC_MSG_RESULT([])
 		AC_MSG_WARN([ PAM support was configured for your system, but the netatalk PAM configuration file])
