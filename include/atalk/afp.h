@@ -43,20 +43,19 @@ typedef u_int16_t AFPUserBytes;
 #define AFPTRANS_ALL          (AFPTRANS_DDP | AFPTRANS_TCP)
 
 /* server flags */
-#define AFPSRVRINFO_COPY	 (1<<0)  /* supports copyfile */
-#define AFPSRVRINFO_PASSWD	 (1<<1)	 /* supports change password */
+#define AFPSRVRINFO_COPY         (1<<0)  /* supports copyfile */
+#define AFPSRVRINFO_PASSWD       (1<<1)  /* supports change password */
 #define AFPSRVRINFO_NOSAVEPASSWD (1<<2)  /* don't allow save password */
 #define AFPSRVRINFO_SRVMSGS      (1<<3)  /* supports server messages */
 #define AFPSRVRINFO_SRVSIGNATURE (1<<4)  /* supports server signature */
 #define AFPSRVRINFO_TCPIP        (1<<5)  /* supports tcpip */
 #define AFPSRVRINFO_SRVNOTIFY    (1<<6)  /* supports server notifications */ 
-
 #define AFPSRVRINFO_SRVRECONNECT (1<<7)  /* supports server reconnect */ 
 #define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */ 
-
 #define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */ 
 #define AFPSRVRINFO_UUID         (1<<10) /* supports UUIDs */
-#define AFPSRVRINFO_FASTBOZO	 (1<<15) /* fast copying */
+#define AFPSRVRINFO_EXTSLEEP     (1<<11) /* supports extended sleep */
+#define AFPSRVRINFO_FASTBOZO     (1<<15) /* fast copying */
 
 #define AFP_OK		0
 #define AFPERR_DID1     -4000   /* not an afp error DID is 1*/
@@ -128,6 +127,11 @@ typedef enum {
   AFPMESG_LOGIN = 0,
   AFPMESG_SERVER = 1
 } afpmessage_t;
+
+/* extended sleep flag */
+#define AFPZZZ_EXT_SLEEP  1
+#define AFPZZZ_EXT_WAKEUP 2
+
 
 /* AFP functions */
 #define AFP_BYTELOCK	     1

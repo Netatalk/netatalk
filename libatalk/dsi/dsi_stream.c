@@ -357,16 +357,6 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
 
 /* ---------------------------------------
 */
-void dsi_sleep(DSI *dsi, const int state)
-{
-    if (state)
-        dsi->flags |= DSI_SLEEPING;
-    else
-        dsi->flags &= ~DSI_SLEEPING;
-}
-
-/* ---------------------------------------
-*/
 static void block_sig(DSI *dsi)
 {
   dsi->in_write++;

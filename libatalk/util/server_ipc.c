@@ -85,8 +85,8 @@ static int ipc_get_session(struct ipc_header *ipc, server_child *children)
         return -1;
     memcpy (clientid, p, idlen);
   
-    LOG (log_debug, logtype_afpd, "ipc_get_session(pid: %u, uid: %u, time %x)",
-         ipc->child_pid, ipc->uid, boottime); 
+    LOG(log_debug, logtype_afpd, "ipc_get_session(pid: %u, uid: %u, time: 0x%08x)",
+        ipc->child_pid, ipc->uid, boottime); 
 
     server_child_kill_one_by_id(children,
                                 CHILD_DSIFORK,

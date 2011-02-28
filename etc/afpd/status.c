@@ -46,32 +46,26 @@ static   size_t maxstatuslen = 0;
 static void status_flags(char *data, const int notif, const int ipok,
                          const unsigned char passwdbits, const int dirsrvcs _U_, int flags)
 {
-    u_int16_t           status;
+    uint16_t           status;
 
-    status = AFPSRVRINFO_COPY;
+    status = AFPSRVRINFO_COPY
+           | AFPSRVRINFO_SRVSIGNATURE
+           | AFPSRVRINFO_SRVMSGS
+           | AFPSRVRINFO_FASTBOZO
+           | AFPSRVRINFO_SRVRDIR
+           | AFPSRVRINFO_SRVUTF8
+           | AFPSRVRINFO_EXTSLEEP;
+
     if (passwdbits & PASSWD_SET) /* some uams may not allow this. */
         status |= AFPSRVRINFO_PASSWD;
     if (passwdbits & PASSWD_NOSAVE)
         status |= AFPSRVRINFO_NOSAVEPASSWD;
-    status |= AFPSRVRINFO_SRVSIGNATURE;
-    /* only advertise tcp/ip if we have a valid address */
-    if (ipok)
+    if (ipok) /* only advertise tcp/ip if we have a valid address */        
         status |= AFPSRVRINFO_TCPIP;
-    status |= AFPSRVRINFO_SRVMSGS;
-    /* Allow the user to decide if we should support server notifications.
-     * With this turned off, the clients will poll for directory changes every
-     * 10 seconds.  This might be too costly to network resources, so make
-     * this an optional thing.  Default will be to _not_ support server
-     * notifications. */
-    if (notif) {
+    if (notif) /* Default is yes */        
         status |= AFPSRVRINFO_SRVNOTIFY;
-    }
-    status |= AFPSRVRINFO_FASTBOZO;
-    status |= AFPSRVRINFO_SRVRDIR; /* AFP 3.1 specs says we need to specify this, but may set the count to 0 */
-    /* We don't set the UTF8 name flag here, we don't know whether we have enough space ... */
-
-    if (flags & OPTION_UUID)	/* 05122008 FIXME: can we set AFPSRVRINFO_UUID here ? see AFPSRVRINFO_SRVRDIR*/
-	status |= AFPSRVRINFO_UUID;
+    if (flags & OPTION_UUID)
+        status |= AFPSRVRINFO_UUID;
 
     status = htons(status);
     memcpy(data + AFPSTATUS_FLAGOFF, &status, sizeof(status));
@@ -397,13 +391,6 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     	data += len;
     	offset = htons(offset);
     	memcpy(begin + *nameoffset, &offset, sizeof(u_int16_t));
-        
-        /* Now set the flag ... */
-	memcpy(&status, begin + AFPSTATUS_FLAGOFF, sizeof(status));
-	status = ntohs(status);
-	status |= AFPSRVRINFO_SRVUTF8;
-	status = htons(status);
-	memcpy(begin + AFPSTATUS_FLAGOFF, &status, sizeof(status));
     }
 
     /* return length of buffer */
