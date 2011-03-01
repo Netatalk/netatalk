@@ -495,7 +495,7 @@ void afp_over_dsi(AFPObj *obj)
             }
         }
 
-        if (!(dsi->flags & DSI_EXTSLEEP)) {
+        if (!(dsi->flags & DSI_EXTSLEEP) && (dsi->flags & DSI_SLEEPING)) {
             LOG(log_debug, logtype_afpd, "afp_over_dsi: got data, ending normal sleep");
             dsi->flags &= ~DSI_SLEEPING;
             dsi->tickle = 0;
