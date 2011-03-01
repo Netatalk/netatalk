@@ -280,7 +280,17 @@ static void alarm_handler(int sig _U_)
     }
 
     dsi->tickle++;
-    LOG(log_note, logtype_afpd, "afp_alarm: tickle count: %i", dsi->tickle);
+    LOG(log_maxdebug, logtype_afpd, "alarm: tickles: %u, flags: %s|%s|%s|%s|%s|%s|%s|%s|%s",
+        dsi->tickle,
+        (dsi->flags & DSI_DATA) ?         "DSI_DATA" : "-",
+        (dsi->flags & DSI_RUNNING) ?      "DSI_RUNNING" : "-",
+        (dsi->flags & DSI_SLEEPING) ?     "DSI_SLEEPING" : "-",
+        (dsi->flags & DSI_EXTSLEEP) ?     "DSI_EXTSLEEP" : "-",
+        (dsi->flags & DSI_DISCONNECTED) ? "DSI_DISCONNECTED" : "-",
+        (dsi->flags & DSI_DIE) ?          "DSI_DIE" : "-",
+        (dsi->flags & DSI_NOREPLY) ?      "DSI_NOREPLY" : "-",
+        (dsi->flags & DSI_RECONSOCKET) ?  "DSI_RECONSOCKET" : "-",
+        (dsi->flags & DSI_RECONINPROG) ?  "DSI_RECONINPROG" : "-");
 
     if (dsi->flags & DSI_SLEEPING) {
         if (dsi->tickle > AFPobj->options.sleep) {
@@ -485,7 +495,8 @@ void afp_over_dsi(AFPObj *obj)
             }
         }
 
-        if (!dsi->flags & DSI_EXTSLEEP) {
+        if (!(dsi->flags & DSI_EXTSLEEP)) {
+            LOG(log_debug, logtype_afpd, "afp_over_dsi: got data, ending normal sleep");
             dsi->flags &= ~DSI_SLEEPING;
             dsi->tickle = 0;
         }

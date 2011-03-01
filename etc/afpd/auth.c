@@ -456,13 +456,19 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbu
 
     if (data & AFPZZZ_EXT_WAKEUP) {
         /* wakeup request from exetended sleep */
-        if (dsi->flags & DSI_EXTSLEEP)
+        if (dsi->flags & DSI_EXTSLEEP) {
+            LOG(log_debug, logtype_afpd, "afp_zzz: waking up from extended sleep");
             dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP);
+        }
     } else {
         /* sleep request */
         dsi->flags |= DSI_SLEEPING;
-        if (data & AFPZZZ_EXT_SLEEP)
+        if (data & AFPZZZ_EXT_SLEEP) {
+            LOG(log_debug, logtype_afpd, "afp_zzz: entering extended sleep");
             dsi->flags |= DSI_EXTSLEEP;
+        } else {
+            LOG(log_debug, logtype_afpd, "afp_zzz: entering normal sleep");
+        }
     }
     /*
      * According to AFP 3.3 spec we should not return anything,
