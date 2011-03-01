@@ -105,16 +105,6 @@ static void afp_dsi_close(AFPObj *obj)
 static void afp_dsi_die(int sig)
 {
     DSI *dsi = (DSI *)AFPobj->handle;
-    static volatile int in_handler;
-    
-    if (in_handler) {
-    	return;
-    }
-    /* it's not atomic but we don't care because it's an exit function
-     * ie if a signal is received here, between the test and the affectation,
-     * it will not return.
-    */
-    in_handler = 1;
 
     if (dsi->flags & DSI_RECONINPROG) {
         /* Primary reconnect succeeded, got SIGTERM from afpd parent */
