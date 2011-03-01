@@ -21,6 +21,15 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 600
+#endif
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__
+#endif
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -508,6 +517,11 @@ void fdset_del_fd(struct pollfd **fdsetp,
         }
     }
 }
+
+/* Length of the space taken up by a padded control message of length len */
+#ifndef CMSG_SPACE
+#define CMSG_SPACE(len) (__CMSG_ALIGN(sizeof(struct cmsghdr)) + __CMSG_ALIGN(len))
+#endif
 
 /*
  * Receive a fd on a suitable socket

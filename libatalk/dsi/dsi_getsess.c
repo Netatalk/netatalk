@@ -13,10 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 /* POSIX.1 sys/wait.h check */
 #include <sys/types.h>
