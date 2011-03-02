@@ -77,9 +77,7 @@
 #include <fcntl.h>
 #endif
 
-#ifdef USE_MMAPPED_HEADERS
 #include <sys/mman.h>
-#endif
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
