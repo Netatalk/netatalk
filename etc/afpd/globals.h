@@ -92,7 +92,6 @@ typedef struct _AFPObj {
     void (*logout)(void), (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);
-    void (*sleep)(void);
     /* to prevent confusion, only use these in afp_* calls */
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */

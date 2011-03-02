@@ -320,16 +320,21 @@ void server_child_kill_one_by_id(server_child *children, int forkid, pid_t pid,
             if ( child->pid != pid) {
                 if (child->idlen == idlen && memcmp(child->clientid, id, idlen) == 0) {
                     if ( child->time != boottime ) {
+                        /* Client rebooted */
                         if (uid == child->uid) {
                             kill_child(child);
-                            LOG(log_note, logtype_default, "Disconnected child[%u], client rebooted.", child->pid);
+                            LOG(log_warning, logtype_default,
+                                "Terminated disconnected child[%u], client rebooted.",
+                                child->pid);
                         } else {
-                            LOG(log_note, logtype_default, "Session with different pid[%u]", child->pid);
+                            LOG(log_warning, logtype_default,
+                                "Session with different pid[%u]", child->pid);
                         }
+                    } else {
+                        kill_child(child);
+                        LOG(log_note, logtype_default,
+                            "Terminated disconnected session[%u]", child->pid);
                     }
-                    if (child->killed)
-                        kill_child(child); /* this will send SIGKILL */
-                    LOG(log_note, logtype_default, "", child->pid, pid);
                 }
             } else {
                 /* update childs own slot */

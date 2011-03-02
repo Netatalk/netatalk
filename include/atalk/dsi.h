@@ -145,11 +145,12 @@ typedef struct DSI {
 #define DSI_DATA             (1 << 0) /* we have received a DSI command */
 #define DSI_RUNNING          (1 << 1) /* we have received a AFP command */
 #define DSI_SLEEPING         (1 << 2) /* we're sleeping after FPZzz */
-#define DSI_DISCONNECTED     (1 << 3) /* we're in diconnected state after a socket error */
-#define DSI_DIE              (1 << 4) /* SIGUSR1, going down in 5 minutes */
-#define DSI_NOREPLY          (1 << 5) /* in dsi_write we generate our own replies */
-#define DSI_RECONSOCKET      (1 << 6) /* we have a new socket from primary reconnect */
-#define DSI_RECONINPROG      (1 << 7) /* used in the new session in reconnect */
+#define DSI_EXTSLEEP         (1 << 3) /* we're sleeping after FPZzz */
+#define DSI_DISCONNECTED     (1 << 4) /* we're in diconnected state after a socket error */
+#define DSI_DIE              (1 << 5) /* SIGUSR1, going down in 5 minutes */
+#define DSI_NOREPLY          (1 << 6) /* in dsi_write we generate our own replies */
+#define DSI_RECONSOCKET      (1 << 7) /* we have a new socket from primary reconnect */
+#define DSI_RECONINPROG      (1 << 8) /* used in the new session in reconnect */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
@@ -171,7 +172,6 @@ extern int  dsi_cmdreply (DSI *, const int);
 extern int dsi_tickle (DSI *);
 extern void dsi_getstatus (DSI *);
 extern void dsi_close (DSI *);
-extern void dsi_sleep (DSI *, const int );
 
 #define DSI_NOWAIT 1
 /* low-level stream commands -- in dsi_stream.c */

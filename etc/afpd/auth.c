@@ -380,25 +380,54 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 }
 
 /* ---------------------- */
-int afp_zzz ( /* Function 122 */
-    AFPObj       *obj,
-    char         *ibuf _U_, size_t ibuflen _U_, 
-    char *rbuf, size_t *rbuflen)
+int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    u_int32_t   retdata;
+    uint32_t data;
+    DSI *dsi = (DSI *)AFPobj->handle;
 
     *rbuflen = 0;
 
-    retdata = obj->options.sleep /120;
-    if (!retdata) {
-        retdata = 1;
+    if (ibuflen < 4)
+        return AFPERR_MISC;
+    memcpy(&data, ibuf, 4); /* flag */
+    data = ntohl(data);
+
+    /*
+     * Possible sleeping states:
+     * 1) normal sleep: DSI_SLEEPING (up to 10.3)
+     * 2) extended sleep: DSI_SLEEPING | DSI_EXTSLEEP (starting with 10.4)
+     */
+
+    if (data & AFPZZZ_EXT_WAKEUP) {
+        /* wakeup request from exetended sleep */
+        if (dsi->flags & DSI_EXTSLEEP) {
+            LOG(log_debug, logtype_afpd, "afp_zzz: waking up from extended sleep");
+            dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP);
+        }
+    } else {
+        /* sleep request */
+        dsi->flags |= DSI_SLEEPING;
+        if (data & AFPZZZ_EXT_SLEEP) {
+            LOG(log_debug, logtype_afpd, "afp_zzz: entering extended sleep");
+            dsi->flags |= DSI_EXTSLEEP;
+        } else {
+            LOG(log_debug, logtype_afpd, "afp_zzz: entering normal sleep");
+        }
     }
-    *rbuflen = sizeof(retdata);
-    retdata = htonl(retdata);
-    memcpy(rbuf, &retdata, sizeof(retdata));
-    if (obj->sleep)
-        obj->sleep();
-    rbuf += sizeof(retdata);
+    /*
+     * According to AFP 3.3 spec we should not return anything,
+     * but eg 10.5.8 server still returns the numbers of hours
+     * the server is keeping the sessino (ie max sleeptime).
+     */
+    data = obj->options.sleep / 120; /* hours */
+    if (!data) {
+        data = 1;
+    }
+    *rbuflen = sizeof(data);
+    data = htonl(data);
+    memcpy(rbuf, &data, sizeof(data));
+    rbuf += sizeof(data);
+
     return AFP_OK;
 }
 

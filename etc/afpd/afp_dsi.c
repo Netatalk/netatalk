@@ -101,21 +101,16 @@ static void afp_dsi_close(AFPObj *obj)
 static void afp_dsi_die(int sig)
 {
     DSI *dsi = (DSI *)AFPobj->handle;
-    static volatile int in_handler;
-    
-    if (in_handler) {
-    	return;
-    }
-    /* it's not atomic but we don't care because it's an exit function
-     * ie if a signal is received here, between the test and the affectation,
-     * it will not return.
-    */
-    in_handler = 1;
 
     if (dsi->flags & DSI_RECONINPROG) {
         /* Primary reconnect succeeded, got SIGTERM from afpd parent */
         dsi->flags &= ~DSI_RECONINPROG;
         return; /* this returns to afp_disconnect */
+    }
+
+    if (dsi->flags & DSI_DISCONNECTED) {
+        LOG(log_note, logtype_afpd, "Disconnected session terminating");
+        exit(0);
     }
 
     dsi_attention(AFPobj->handle, AFPATTN_SHUTDOWN);
@@ -131,6 +126,7 @@ static void afp_dsi_die(int sig)
     }
 }
 
+/* SIGURG handler (primary reconnect) */
 static void afp_dsi_transfer_session(int sig _U_)
 {
     uint16_t dsiID;
@@ -154,9 +150,10 @@ static void afp_dsi_transfer_session(int sig _U_)
     LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: received socket fd: %i", socket);
 
     dsi->socket = socket;
-    dsi->flags |= DSI_RECONSOCKET;
-    dsi->flags &= ~DSI_DISCONNECTED;
+    dsi->flags = DSI_RECONSOCKET;
     dsi->datalen = 0;
+    dsi->eof = dsi->start = dsi->buffer;
+    dsi->in_write = 0;
     dsi->header.dsi_requestID = dsiID;
     dsi->header.dsi_command = DSIFUNC_CMD;
 
@@ -177,12 +174,6 @@ static void afp_dsi_transfer_session(int sig _U_)
      * another session. The parent will terminate that session.
      */
     siglongjmp(recon_jmp, 1);
-}
-
-/* */
-static void afp_dsi_sleep(void)
-{
-    dsi_sleep(AFPobj->handle, 1);
 }
 
 /* ------------------- */
@@ -271,14 +262,24 @@ static void alarm_handler(int sig _U_)
     /* we got some traffic from the client since the previous timer tick. */
     if ((dsi->flags & DSI_DATA)) {
         dsi->flags &= ~DSI_DATA;
-        dsi->flags &= ~DSI_DISCONNECTED;
-       return;
+        return;
     }
 
     dsi->tickle++;
+    LOG(log_maxdebug, logtype_afpd, "alarm: tickles: %u, flags: %s|%s|%s|%s|%s|%s|%s|%s|%s",
+        dsi->tickle,
+        (dsi->flags & DSI_DATA) ?         "DSI_DATA" : "-",
+        (dsi->flags & DSI_RUNNING) ?      "DSI_RUNNING" : "-",
+        (dsi->flags & DSI_SLEEPING) ?     "DSI_SLEEPING" : "-",
+        (dsi->flags & DSI_EXTSLEEP) ?     "DSI_EXTSLEEP" : "-",
+        (dsi->flags & DSI_DISCONNECTED) ? "DSI_DISCONNECTED" : "-",
+        (dsi->flags & DSI_DIE) ?          "DSI_DIE" : "-",
+        (dsi->flags & DSI_NOREPLY) ?      "DSI_NOREPLY" : "-",
+        (dsi->flags & DSI_RECONSOCKET) ?  "DSI_RECONSOCKET" : "-",
+        (dsi->flags & DSI_RECONINPROG) ?  "DSI_RECONINPROG" : "-");
 
     if (dsi->flags & DSI_SLEEPING) {
-        if (dsi->tickle < AFPobj->options.sleep) {
+        if (dsi->tickle > AFPobj->options.sleep) {
             LOG(log_error, logtype_afpd, "afp_alarm: sleep time ended");
             afp_dsi_die(EXITERR_CLNT);
         }
@@ -294,8 +295,9 @@ static void alarm_handler(int sig _U_)
     }
 
     /* if we're in the midst of processing something, don't die. */        
-    if ( !(dsi->flags & DSI_RUNNING) && (dsi->tickle > AFPobj->options.timeout)) {
+    if ( !(dsi->flags & DSI_RUNNING) && (dsi->tickle >= AFPobj->options.timeout)) {
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out, entering disconnected state");
+        dsi->proto_close(dsi);
         dsi->flags |= DSI_DISCONNECTED;
         return;
     }
@@ -347,7 +349,6 @@ void afp_over_dsi(AFPObj *obj)
     obj->exit = afp_dsi_die;
     obj->reply = (int (*)()) dsi_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
-    obj->sleep = afp_dsi_sleep;
     dsi->tickle = 0;
 
     memset(&action, 0, sizeof(action));
@@ -452,15 +453,15 @@ void afp_over_dsi(AFPObj *obj)
 
     /* get stuck here until the end */
     while (1) {
-        if (sigsetjmp(recon_jmp, 1) != 0) {
-            LOG(log_note, logtype_afpd, "Resuming operation after succesfull primary reconnect");
-            dsi->flags &= ~(DSI_RUNNING | DSI_DATA);
-            dsi->eof = dsi->start = dsi->buffer;
-            dsi->in_write = 0;
+        if (sigsetjmp(recon_jmp, 1) != 0)
+            /* returning from SIGALARM handler for a primary reconnect */
             continue;
-        }
+
+        /* Blocking read on the network socket */
         cmd = dsi_receive(dsi);
+
         if (cmd == 0) {
+            /* cmd == 0 is the error condition */
             if (dsi->flags & DSI_RECONSOCKET) {
                 /* we just got a reconnect so we immediately try again to receive on the new fd */
                 dsi->flags &= ~DSI_RECONSOCKET;
@@ -480,8 +481,11 @@ void afp_over_dsi(AFPObj *obj)
             }
         }
 
-        dsi->tickle = 0;
-        dsi_sleep(dsi, 0); /* wake up */
+        if (!(dsi->flags & DSI_EXTSLEEP) && (dsi->flags & DSI_SLEEPING)) {
+            LOG(log_debug, logtype_afpd, "afp_over_dsi: got data, ending normal sleep");
+            dsi->flags &= ~DSI_SLEEPING;
+            dsi->tickle = 0;
+        }
 
         if (reload_request) {
             reload_request = 0;

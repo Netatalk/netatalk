@@ -38,7 +38,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#ifdef USE_MMAPPED_HEADERS
 #include <sys/mman.h>
+#endif
+
 #include <sys/time.h>
 
 #include <atalk/bstrlib.h>
