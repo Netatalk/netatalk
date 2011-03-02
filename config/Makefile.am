@@ -49,9 +49,8 @@ uninstall-local:
 		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
 		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
 	done
-
 if USE_DEBIAN
-	rm -f $(DESTDIR)/etc/default/netatalk;
+	rm -f $(DESTDIR)/etc/default/netatalk
 endif
 
 install-config-files: $(CONFFILES) $(GENFILES)
@@ -64,15 +63,14 @@ install-config-files: $(CONFFILES) $(GENFILES)
 			echo "not overwriting $$f"; \
 		fi; \
 	done
-
 if USE_DEBIAN
 	$(mkinstalldirs) $(DESTDIR)/default
 	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f /etc/default/netatalk; then \
-		echo "$(INSTALL_DATA) netatalk.conf $(DESTDIR)/etc/default/netatalk"; \
-		$(INSTALL_DATA) netatalk.conf $(DESTDIR)/etc/default/netatalk; \
+		echo "$(INSTALL_DATA) $(srcdir)/netatalk.conf $(DESTDIR)/etc/default/netatalk"; \
+		$(INSTALL_DATA) $(srcdir)/netatalk.conf $(DESTDIR)/etc/default/netatalk; \
 	else \
 		echo "not overwriting /etc/default/netatalk"; \
-	fi;
+	fi
 endif
 
 install-webmin:
