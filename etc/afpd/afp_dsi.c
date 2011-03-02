@@ -67,7 +67,6 @@ typedef struct {
 static rc_elem_t replaycache[REPLAYCACHE_SIZE];
 
 static sigjmp_buf recon_jmp;
-static int oldsock = -1;
 static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->handle;
@@ -137,7 +136,7 @@ static void afp_dsi_transfer_session(int sig _U_)
     int socket;
     DSI *dsi = (DSI *)AFPobj->handle;
 
-    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: got SIGURG, trying to receive session");
+    LOG(log_debug, logtype_afpd, "afp_dsi_transfer_session: got SIGURG, trying to receive session");
 
     if (readt(AFPobj->ipc_fd, &dsiID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_afpd, "afp_dsi_transfer_session: couldn't receive DSI id, goodbye");
@@ -151,8 +150,9 @@ static void afp_dsi_transfer_session(int sig _U_)
         exit(EXITERR_SYS);
     }
 
-    LOG(log_note, logtype_afpd, "afp_dsi_transfer_session: received socket fd: %i", socket);
+    LOG(log_debug, logtype_afpd, "afp_dsi_transfer_session: received socket fd: %i", socket);
 
+    dsi->proto_close(dsi);
     dsi->socket = socket;
     dsi->flags = DSI_RECONSOCKET;
     dsi->datalen = 0;
@@ -476,13 +476,6 @@ void afp_over_dsi(AFPObj *obj)
             pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
-        } else {
-            if (oldsock != -1) {
-                /* Now, after successfully reading from the new socket after a reconnect       *
-                 * we can close the old socket without taking the risk of confusing the client */
-                close(oldsock);
-                oldsock = -1;
-            }
         }
 
         if (!(dsi->flags & DSI_EXTSLEEP) && (dsi->flags & DSI_SLEEPING)) {
