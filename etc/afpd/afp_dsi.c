@@ -539,12 +539,12 @@ void afp_over_dsi(AFPObj *obj)
             function = (u_char) dsi->commands[0];
 
             /* AFP replay cache */
-            rc_idx = REPLAYCACHE_SIZE % dsi->clientID;
+            rc_idx = dsi->clientID % REPLAYCACHE_SIZE;
             LOG(log_debug, logtype_afpd, "DSI request ID: %u", dsi->clientID);
 
             if (replaycache[rc_idx].DSIreqID == dsi->clientID
                 && replaycache[rc_idx].AFPcommand == function) {
-                LOG(log_debug, logtype_afpd, "AFP Replay Cache match: id: %u / cmd: %s",
+                LOG(log_note, logtype_afpd, "AFP Replay Cache match: id: %u / cmd: %s",
                     dsi->clientID, AfpNum2name(function));
                 err = replaycache[rc_idx].result;
             /* AFP replay cache end */
