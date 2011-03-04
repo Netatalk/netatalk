@@ -165,8 +165,8 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
     else {
         u_int16_t temp;
 
-        if (aint > 255)  /* FIXME safeguard, anyway if no ascii char it's game over*/
-           aint = 255;
+        if (aint > UTF8FILELEN_EARLY)  /* FIXME safeguard, anyway if no ascii char it's game over*/
+           aint = UTF8FILELEN_EARLY;
 
         utf8 = vol->v_kTextEncoding;
         memcpy(data, &utf8, sizeof(utf8));

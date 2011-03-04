@@ -2152,7 +2152,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
      * FIXME file size
      */
     if (utf8_encoding()) {
-        volume->max_filename = 255;
+        volume->max_filename = UTF8FILELEN_EARLY;
     }
     else {
         volume->max_filename = MACFILELEN;

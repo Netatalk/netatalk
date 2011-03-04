@@ -1,6 +1,4 @@
 /*
- * $Id: ofork.c,v 1.32 2010/03/12 15:16:49 franklahm Exp $
- *
  * Copyright (c) 1996 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -213,7 +211,7 @@ of_alloc(struct vol *vol,
            ad_open really does reinitialize the structure. */
         ad_init(ad, vol->v_adouble, vol->v_ad_options);
 
-        ad->ad_m_namelen = 255 +1;
+        ad->ad_m_namelen = UTF8FILELEN_EARLY +1;
         /* here's the deal: we allocate enough for the standard mac file length.
          * in the future, we'll reallocate in fairly large jumps in case
          * of long unicode names */

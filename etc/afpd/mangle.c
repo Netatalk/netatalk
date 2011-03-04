@@ -1,6 +1,4 @@
 /* 
- * $Id: mangle.c,v 1.19.4.2 2010-02-01 14:25:45 franklahm Exp $ 
- *
  * Copyright (c) 2002. Joe Marcus Clarke (marcus@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
  *
@@ -225,13 +223,22 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
     return private_demangle(vol, mfilename, did, fileid);
 }
 
+/* -------------------------------------------------------
+   FIXME !!!
 
-/* -----------------------
+   Early Mac OS X (10.0-10.4.?) had the limitation up to 255 Byte.
+   Current implementation is:
+      volcharset -> UTF16-MAC -> truncated 255 UTF8-MAC
+
+   Recent Mac OS X (10.4.?-) don't have this limitation.
+   Desirable implementation is:
+      volcharset -> truncated 510 UTF16-MAC -> UTF8-MAC
+
+   ------------------------
    with utf8 filename not always round trip
    filename   mac filename too long or first chars if unmatchable chars.
    uname      unix filename 
    id         file/folder ID or 0
-   
 */
 char *
 mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname, cnid_t id, int flags) {
@@ -243,7 +250,7 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname, c
     size_t maxlen;
     int k;
     
-    maxlen = (flags & 2)?255:MACFILELEN; /* was vol->max_filename */
+    maxlen = (flags & 2)?UTF8FILELEN_EARLY:MACFILELEN; /* was vol->max_filename */
     /* Do we really need to mangle this filename? */
     if (!(flags & 1) && filenamelen <= maxlen) {
 	return filename;
