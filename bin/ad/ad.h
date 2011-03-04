@@ -59,6 +59,7 @@ extern int ad_ls(int argc, char **argv);
 extern int ad_cp(int argc, char **argv);
 extern int ad_rm(int argc, char **argv);
 extern int ad_mv(int argc, char **argv);
+extern int ad_find(int argc, char **argv);
 
 /* ad_util.c */
 extern int openvol(const char *path, afpvol_t *vol);
