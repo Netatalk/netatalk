@@ -1104,7 +1104,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         /* 6*/
         for ( p = path; *data != 0 && len > 0; len-- ) {
             *p++ = *data++;
-            if (p > &path[ MAXPATHLEN]) {
+            if (p > &path[UTF8FILELEN_EARLY]) {   /* FIXME safeguard, limit of early Mac OS X */
                 afp_errno = AFPERR_PARAM;
                 return NULL;
             }

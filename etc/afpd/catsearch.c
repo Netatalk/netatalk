@@ -1014,8 +1014,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 		/* length */
 		memcpy(&namelen, spec1, sizeof(namelen));
 		namelen = ntohs (namelen);
-		if (namelen > 255)  /* Safeguard */
-			namelen = 255;
+		if (namelen > UTF8FILELEN_EARLY)  /* Safeguard */
+			namelen = UTF8FILELEN_EARLY;
 
 		memcpy (c1.utf8name, spec1+2, namelen);
 		c1.utf8name[namelen] = 0;

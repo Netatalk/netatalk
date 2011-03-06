@@ -24,7 +24,13 @@
 #include <atalk/unicode.h>
 #include <atalk/uam.h>
 
-#define MACFILELEN 31
+/* #define DOSFILELEN 12 */             /* Type1, DOS-compat*/
+#define MACFILELEN 31                   /* Type2, HFS-compat */
+#define UTF8FILELEN_EARLY 255           /* Type3, early Mac OS X 10.0-10.4.? */
+/* #define UTF8FILELEN_NAME_MAX 765 */  /* Type3, 10.4.?- , getconf NAME_MAX */
+/* #define UTF8FILELEN_SPEC 0xFFFF */   /* Type3, spec on document */
+/* #define HFSPLUSFILELEN 510 */        /* HFS+ spec, 510byte = 255codepoint */
+
 #define MAXUSERLEN 256
 
 #define OPTION_DEBUG         (1 << 0)
