@@ -45,6 +45,9 @@ char *strchr (), *strrchr ();
 #include <atalk/logger.h>
 #include <atalk/vfs.h>
 #include <atalk/uuid.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
+
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -1445,10 +1448,45 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
-        /* FIXME: Free could be limit minus (total minus used), */
-        /* which will confuse the client less ? */
-        *xbfree = min(*xbfree, (vol->v_limitsize * 1024 * 1024));
+        bstring cmdstr;
+        if ((cmdstr = bformat("du -sh \"%s\" 2> /dev/null | cut -f1", vol->v_path)) == NULL)
+            return AFPERR_MISC;
+
+        FILE *cmd = popen(cfrombstr(cmdstr), "r");
+        bdestroy(cmdstr);
+        if (cmd == NULL)
+            return AFPERR_MISC;
+
+        char buf[100];
+        fgets(buf, 100, cmd);
+
+        if (pclose(cmd) == -1)
+            return AFPERR_MISC;
+
+        size_t multi = 0;
+        if (buf[strlen(buf) - 2] == 'G' || buf[strlen(buf) - 2] == 'g')
+            /* GB */
+            multi = 1024 * 1024 * 1024;
+        else if (buf[strlen(buf) - 2] == 'M' || buf[strlen(buf) - 2] == 'm')
+            /* MB */
+            multi = 1024 * 1024;
+        else if (buf[strlen(buf) - 2] == 'K' || buf[strlen(buf) - 2] == 'k')
+            /* MB */
+            multi = 1024;
+
+        char *p;
+        if (p = strchr(buf, ','))
+            /* ignore fraction */
+            *p = 0;
+        else
+            /* remove G|M|K char */
+            buf[strlen(buf) - 2] = 0;
+        /* now buf contains only digits */
+        long long used = atoll(buf) * multi;
+        LOG(log_debug, logtype_afpd, "volparams: used on volume: %llu bytes", used);
+
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
+        *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
     }
 
     *bfree = min( *xbfree, maxsize);
