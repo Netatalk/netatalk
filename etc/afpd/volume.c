@@ -2750,12 +2750,12 @@ char *get_uuid(const AFPObj *obj, const char *volname)
 
     if (stat(obj->options.uuidconf, &tmpstat)) {                /* no file */
         if (( fd = creat(obj->options.uuidconf, 0644 )) < 0 ) {
-            LOG(log_error, logtype_atalkd, "ERROR: Cannot create %s (%s).",
+            LOG(log_error, logtype_afpd, "ERROR: Cannot create %s (%s).",
                 obj->options.uuidconf, strerror(errno));
             return NULL;
         }
         if (( fp = fdopen( fd, "w" )) == NULL ) {
-            LOG(log_error, logtype_atalkd, "ERROR: Cannot fdopen %s (%s).",
+            LOG(log_error, logtype_afpd, "ERROR: Cannot fdopen %s (%s).",
                 obj->options.uuidconf, strerror(errno));
             close(fd);
             return NULL;
