@@ -292,7 +292,7 @@ static void alarm_handler(int sig _U_)
 
     if (dsi->flags & DSI_DISCONNECTED) {
         if (dsi->tickle > AFPobj->options.disconnected) {
-             LOG(log_error, logtype_afpd, "afp_alarm: no reconnect within 10 minutes, goodbye");
+            LOG(log_error, logtype_afpd, "afp_alarm: no reconnect within 10 minutes, goodbye");
             afp_dsi_die(EXITERR_CLNT);
         }
         return;
@@ -307,9 +307,11 @@ static void alarm_handler(int sig _U_)
     }
 
     if ((err = pollvoltime(AFPobj)) == 0)
+        LOG(log_debug, logtype_afpd, "afp_alarm: sending DSI tickle");
         err = dsi_tickle(AFPobj->handle);
     if (err <= 0) {
         LOG(log_error, logtype_afpd, "afp_alarm: connection problem, entering disconnected state");
+        dsi->proto_close(dsi);
         dsi->flags |= DSI_DISCONNECTED;
     }
 }
@@ -510,20 +512,23 @@ void afp_over_dsi(AFPObj *obj)
             }
         }
 
-        if (cmd == DSIFUNC_TICKLE) {
-            /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
-            if ((dsi->flags & DSI_DIE))
-                dsi_tickle(dsi);
-            pending_request(dsi);
-            continue;
-        } 
 
         dsi->flags |= DSI_DATA;
+        dsi->tickle = 0;
+
         switch(cmd) {
+
         case DSIFUNC_CLOSE:
             afp_dsi_close(obj);
             LOG(log_note, logtype_afpd, "done");
             return;
+
+        case DSIFUNC_TICKLE:
+            dsi->flags &= ~DSI_DATA; /* thats no data in the sense we use it in alarm_handler */
+            LOG(log_debug, logtype_afpd, "DSI client tickle");
+            /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
+            if ((dsi->flags & DSI_DIE))
+                dsi_tickle(dsi);
             break;
 
         case DSIFUNC_CMD:

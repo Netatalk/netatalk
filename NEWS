@@ -1,8 +1,9 @@
-Changes in 2.2
-==============
+Changes in 2.2beta3
+===================
 
 * FIX: afpd: fix option volsizelimit to return a usefull value for the
        volume free space using `du -sh` with popen
+* FIX: afpd: fix idle connection disconnects
 
 Changes in 2.2beta2
 ====================
