@@ -665,12 +665,12 @@ server_signature_auto:
         }
     } else {                                                          /* conf file don't exist */
         if (( fd = creat(options->sigconffile, 0644 )) < 0 ) {
-            LOG(log_error, logtype_atalkd, "ERROR: Cannot create %s (%s). Using one-time signature.",
+            LOG(log_error, logtype_afpd, "ERROR: Cannot create %s (%s). Using one-time signature.",
                 options->sigconffile, strerror(errno));
             goto server_signature_random;
         }
         if (( fp = fdopen( fd, "w" )) == NULL ) {
-            LOG(log_error, logtype_atalkd, "ERROR: Cannot fdopen %s (%s). Using one-time signature.",
+            LOG(log_error, logtype_afpd, "ERROR: Cannot fdopen %s (%s). Using one-time signature.",
                 options->sigconffile, strerror(errno));
             close(fd);
             goto server_signature_random;
