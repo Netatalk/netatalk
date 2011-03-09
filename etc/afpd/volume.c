@@ -2786,5 +2786,5 @@ char *get_uuid(const AFPObj *obj, const char *volname)
     fprintf(fp, "\"%s\"\t%36s\n", volname, cp);
     fclose(fp);
     
-    return strdup(uuid);
+    return strdup(cp);
 }
