@@ -5,6 +5,8 @@ Changes in 2.2beta3
        volume free space using `du -sh` with popen
 * FIX: afpd: fix idle connection disconnects
 * FIX: afpd: don't disconnect sessions for clients if boottimes don't match
+* FIX: afpd: better handling of very long filenames that contain many
+       multibyte UTF-8 glyphs
 
 Changes in 2.2beta2
 ====================
