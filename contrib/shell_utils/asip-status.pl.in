@@ -7,38 +7,45 @@
 # author: James W. Abendschan  <jwa@jammed.com>
 # license: GPL - http://www.gnu.org/copyleft/gpl.html
 # url: http://www.jammed.com/~jwa/hacks/security/asip/
-# date: 7 May 1997 (v1.0)
+# Date: 7 May 1997 (v1.0) - original version
 # see also: 
 #   - http://developer.apple.com/techpubs/macos8/NetworkCommSvcs/AppleShare/
 #   - http://www2.opendoor.com/asip/   (excellent Mac sharing / security site)
 #
 # todo: log in as guest & get a list of shares
 #
-# $Id: asip-status.pl.in,v 1.2 2005-04-28 20:49:36 bfernhomberg Exp $
+
+#
+# This edition is a part of netatalk.
 #
 
 use strict;
 use IO::Socket;			# sucks because Timeout doesn't
 
 my ($arg);
+my ($hostport);
 my ($host);
+my ($port);
 
 while ($arg = shift @ARGV)
 {
 	$main::show_icon = 1 if ($arg eq "-i");
 	$main::debug = 1 if ($arg eq "-d");
 	$main::hexdump = 1 if ($arg eq "-x");
-	$host = $arg if ($arg !~ /^-/);
+	$hostport = $arg if ($arg !~ /^-/);
 }
 
-if ($host eq "")
+if ($hostport eq "")
 {
-	print "usage: $0 hostname [-i show icon] [-d debug] [-x hex dump]\n";
+	print "usage: $0 hostname[:port] [-i show icon] [-d debug] [-x hex dump]\n";
 	exit(-1);
 }
 
+($host, $port) = split(/\:/, $hostport);
+$port = "548" if ($port eq "");
+
 my ($packet) = build_packet();
-my ($code) = sendpacket($host, 548, $packet);
+my ($code) = sendpacket($host, $port, $packet);
 exit $code;
 
 
@@ -205,6 +212,7 @@ sub parse_FPGetSrvrInfo()
 
 	my ($icon_offset) = unpack("n", @packet[6] . @packet[7]);
 	print "Volume Icon & Mask offset: $icon_offset\n" if ($main::debug);
+	print "Volume Icon & Mask: exist\n" if ($icon_offset);
 
 	my ($flags) = unpack("n", @packet[8] . @packet[9]);
 	my (@flags) = parse_afp_flags($flags);
@@ -269,7 +277,7 @@ sub parse_FPGetSrvrInfo()
 		}
 	}
 
-	draw_icon($icon_offset, @packet) if ($main::show_icon);
+	draw_icon($icon_offset, @packet) if ($main::show_icon && $icon_offset);
 
 	return $allow_guest;
 }
