@@ -167,6 +167,8 @@ static void handle_special_folders (const struct vol *);
 static void deletevol(struct vol *vol);
 static void volume_free(struct vol *vol);
 static void check_ea_sys_support(struct vol *vol);
+static char *get_vol_uuid(const AFPObj *obj, const char *volname);
+static int readvolfile(AFPObj *obj, struct afp_volume_name *p1,char *p2, int user, struct passwd *pwent);
 
 static void volfree(struct vol_option *options, const struct vol_option *save)
 {
@@ -869,7 +871,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
     /* get/store uuid from file */
     if (volume->v_flags & AFPVOL_TM) {
-        char *uuid = get_uuid(obj, volume->v_localname);
+        char *uuid = get_vol_uuid(obj, volume->v_localname);
         if (!uuid) {
             LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
                 volume->v_localname);
@@ -1160,7 +1162,7 @@ static int volfile_changed(struct afp_volume_name *p)
  *      <extension> TYPE [CREATOR]
  *
  */
-int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
+static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
 {
     FILE        *fp;
     char        path[MAXPATHLEN + 1];
@@ -2698,7 +2700,7 @@ void unload_volumes_and_extmap(void)
  *
  * Returns pointer to allocated storage on success, NULL on error.
  */
-char *get_uuid(const AFPObj *obj, const char *volname)
+static char *get_vol_uuid(const AFPObj *obj, const char *volname)
 {
     char *volname_conf;
     char buf[1024], uuid[UUID_PRINTABLE_STRING_LENGTH], *p;

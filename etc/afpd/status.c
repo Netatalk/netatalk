@@ -35,6 +35,7 @@
 #include <atalk/asp.h>
 #include <atalk/nbp.h>
 #include <atalk/unicode.h>
+#include <atalk/util.h>
 
 #include "globals.h"  /* includes <netdb.h> */
 #include "status.h"
