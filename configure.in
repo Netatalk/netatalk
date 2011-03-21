@@ -73,7 +73,14 @@ AC_FUNC_WAIT3
 AC_CHECK_FUNCS(getcwd gethostname gettimeofday getusershell mkdir rmdir select socket strdup strcasestr strstr strtoul strchr memcpy)
 AC_CHECK_FUNCS(backtrace_symbols setlocale nl_langinfo strlcpy strlcat setlinebuf dirfd pselect access pread pwrite)
 AC_CHECK_FUNCS(waitpid getcwd strdup strndup strnlen strtoul strerror chown fchown chmod fchmod chroot link mknod mknod64)
-AC_CHECK_FUNC(renameat, AC_DEFINE([_ATFILE_SOURCE], 1, AT file source)) 
+#ac_neta_haveatfuncs=yes
+#AC_CHECK_FUNCS(openat renameat fstatat unlinkat, ,ac_neta_haveatfuncs=no)
+#if test x"$ac_neta_haveatfuncs" = x"yes" ; then
+#   AC_DEFINE([_ATFILE_SOURCE], 1, AT file source)
+#fi
+AC_DEFINE([_ATFILE_SOURCE], 1, AT file source)
+AC_CHECK_FUNCS(openat renameat fstatat unlinkat, ,AC_DEFINE([_ATFILE_SOURCE], 0, AT file source))
+
 AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 
 AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
