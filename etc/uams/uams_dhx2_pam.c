@@ -1,6 +1,4 @@
 /*
- * $Id: uams_dhx2_pam.c,v 1.12 2010-03-30 10:25:49 franklahm Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -72,13 +70,11 @@ static struct passwd *dhxpwd;
  * the Diffie-Hellman key exchange.
  * The bits value should be one of 768, 1024, 2048, 3072 or 4096.
  **/
-
-static int
-dh_params_generate (gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits) {
+static int dh_params_generate (unsigned int bits) {
 
     int result, times = 0, qbits;
-
-    gcry_mpi_t g = NULL, prime = NULL;
+    gcry_mpi_t gtmp = NULL;
+    gcry_mpi_t prime = NULL;
     gcry_mpi_t *factors = NULL;
     gcry_error_t err;
 
@@ -126,24 +122,17 @@ dh_params_generate (gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits) {
         goto error;
     }
 
-    gcry_prime_release_factors (factors);
-    factors = NULL;
+    gcry_prime_release_factors(factors);
 
-    if (ret_g)
-        *ret_g = g;
-    else
-        gcry_mpi_release (g);
-    if (ret_p)
-        *ret_p = prime;
-    else
-        gcry_mpi_release (prime);
+    g = gtmp;
+    p = prime;
 
     return 0;
 
 error:
-    gcry_prime_release_factors (factors);
-    gcry_mpi_release (g);
-    gcry_mpi_release (prime);
+    gcry_prime_release_factors(factors);
+    gcry_mpi_release(gtmp);
+    gcry_mpi_release(prime);
 
     return result;
 }
@@ -263,18 +252,10 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
 
     *rbuflen = 0;
 
-    p = gcry_mpi_new(0);
-    g = gcry_mpi_new(0);
+//    p = gcry_mpi_new(0);
+//    g = gcry_mpi_new(0);
     Ra = gcry_mpi_new(0);
     Ma = gcry_mpi_new(0);
-
-    /* Generate p and g for DH */
-    ret = dh_params_generate( &p, &g, PRIMEBITS);
-    if (ret != 0) {
-        LOG(log_info, logtype_uams, "DHX2: Couldn't generate p and g");
-        ret = AFPERR_MISC;
-        goto error;
-    }
 
     /* Generate our random number Ra. */
     Ra_binary = calloc(1, PRIMEBITS/8);
@@ -330,8 +311,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     ret = AFPERR_AUTHCONT;
 
 error:              /* We exit here anyway */
-    /* We will only need p and Ra later, but mustn't forget to release it ! */
-    gcry_mpi_release(g);
+    /* We will need Ra later, but mustn't forget to release it ! */
     gcry_mpi_release(Ma);
     return ret;
 }
@@ -423,7 +403,6 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 }
 
 /* -------------------------------- */
-
 static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     int ret;
@@ -555,7 +534,6 @@ exit:
     gcry_mpi_release(K);
     gcry_mpi_release(Mb);
     gcry_mpi_release(Ra);
-    gcry_mpi_release(p);
     gcry_mpi_release(clientNonce);
     return ret;
 }
@@ -904,6 +882,17 @@ static int uam_setup(const char *path)
         return -1;
     if (uam_register(UAM_SERVER_CHANGEPW, path, "DHX2", dhx2_changepw) < 0)
         return -1;
+
+    p = gcry_mpi_new(0);
+    g = gcry_mpi_new(0);
+
+    LOG(log_note, logtype_uams, "DHX2: generating mersenne primes");
+    /* Generate p and g for DH */
+    if (dh_params_generate(PRIMEBITS) != 0) {
+        LOG(log_error, logtype_uams, "DHX2: Couldn't generate p and g");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -911,6 +900,9 @@ static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "DHX2");
     uam_unregister(UAM_SERVER_CHANGEPW, "DHX2");
+
+    gcry_mpi_release(p);
+    gcry_mpi_release(g);
 }
 
 

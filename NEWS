@@ -1,3 +1,9 @@
+Changes in 2.2rc1
+=================
+
+* FIX: afpd: generate mersenne primes for DHX2 UAM once at startup,
+       not for every login
+
 Changes in 2.2beta3
 ===================
 
