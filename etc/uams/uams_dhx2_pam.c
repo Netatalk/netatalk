@@ -73,8 +73,6 @@ static struct passwd *dhxpwd;
 static int dh_params_generate (unsigned int bits) {
 
     int result, times = 0, qbits;
-    gcry_mpi_t gtmp = NULL;
-    gcry_mpi_t prime = NULL;
     gcry_mpi_t *factors = NULL;
     gcry_error_t err;
 
@@ -97,16 +95,16 @@ static int dh_params_generate (unsigned int bits) {
     /* find a prime number of size bits. */
     do {
         if (times) {
-            gcry_mpi_release (prime);
+            gcry_mpi_release(p);
             gcry_prime_release_factors (factors);
         }
-        err = gcry_prime_generate (&prime, bits, qbits, &factors, NULL, NULL,
-                                   GCRY_STRONG_RANDOM, GCRY_PRIME_FLAG_SPECIAL_FACTOR);
+        err = gcry_prime_generate(&p, bits, qbits, &factors, NULL, NULL,
+                                  GCRY_STRONG_RANDOM, GCRY_PRIME_FLAG_SPECIAL_FACTOR);
         if (err != 0) {
             result = AFPERR_MISC;
             goto error;
         }
-        err = gcry_prime_check (prime, 0);
+        err = gcry_prime_check(p, 0);
         times++;
     } while (err != 0 && times < 10);
 
@@ -116,7 +114,7 @@ static int dh_params_generate (unsigned int bits) {
     }
 
     /* generate the group generator. */
-    err = gcry_prime_group_generator (&g, prime, factors, NULL);
+    err = gcry_prime_group_generator(&g, p, factors, NULL);
     if (err != 0) {
         result = AFPERR_MISC;
         goto error;
@@ -124,15 +122,10 @@ static int dh_params_generate (unsigned int bits) {
 
     gcry_prime_release_factors(factors);
 
-    g = gtmp;
-    p = prime;
-
     return 0;
 
 error:
     gcry_prime_release_factors(factors);
-    gcry_mpi_release(gtmp);
-    gcry_mpi_release(prime);
 
     return result;
 }
@@ -247,13 +240,11 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
 {
     int ret;
     size_t nwritten;
-    gcry_mpi_t g, Ma;
+    gcry_mpi_t Ma;
     char *Ra_binary = NULL;
 
     *rbuflen = 0;
 
-//    p = gcry_mpi_new(0);
-//    g = gcry_mpi_new(0);
     Ra = gcry_mpi_new(0);
     Ma = gcry_mpi_new(0);
 
@@ -886,7 +877,7 @@ static int uam_setup(const char *path)
     p = gcry_mpi_new(0);
     g = gcry_mpi_new(0);
 
-    LOG(log_note, logtype_uams, "DHX2: generating mersenne primes");
+    LOG(log_debug, logtype_uams, "DHX2: generating mersenne primes");
     /* Generate p and g for DH */
     if (dh_params_generate(PRIMEBITS) != 0) {
         LOG(log_error, logtype_uams, "DHX2: Couldn't generate p and g");
@@ -920,4 +911,3 @@ UAM_MODULE_EXPORT struct uam_export uams_dhx2_pam = {
 };
 
 #endif /* USE_PAM && UAM_DHX2 */
-
