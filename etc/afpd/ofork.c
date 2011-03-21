@@ -272,7 +272,7 @@ int of_stat(struct path *path)
 }
 
 
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
 int of_fstatat(int dirfd, struct path *path)
 {
     int ret;
@@ -285,7 +285,7 @@ int of_fstatat(int dirfd, struct path *path)
 
    return ret;
 }
-#endif /* HAVE_RENAMEAT */
+#endif /* HAVE_ATFUNCS */
 
 /* -------------------------- 
    stat the current directory.
@@ -365,7 +365,7 @@ struct ofork *of_findname(struct path *path)
  * @param dirfd     (r) directory fd
  * @param path      (rw) pointer to struct path
  */
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
 struct ofork *of_findnameat(int dirfd, struct path *path)
 {
     struct ofork *of;

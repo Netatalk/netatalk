@@ -72,10 +72,10 @@ extern int          of_closefork (struct ofork *ofork);
 extern void         of_closevol  (const struct vol *vol);
 extern struct adouble *of_ad     (const struct vol *, struct path *, struct adouble *);
 
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
 extern struct ofork *of_findnameat(int dirfd, struct path *path);
 extern int of_fstatat(int dirfd, struct path *path);
-#endif  /* HAVE_RENAMEAT */
+#endif  /* HAVE_ATFUNCS */
 
 
 /* in fork.c */

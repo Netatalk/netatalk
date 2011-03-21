@@ -348,21 +348,21 @@ static int moveandrename(const struct vol *vol,
         if ((p = mtoupath(vol, oldname, sdir->d_did, utf8_encoding())) == NULL)
             return AFPERR_PARAM; /* can't convert */
 
-#ifndef HAVE_RENAMEAT
+#ifndef HAVE_ATFUNCS
         /* Need full path */
         id = cnid_get(vol->v_cdb, sdir->d_did, p, strlen(p));
         p = ctoupath( vol, sdir, oldname );
         if (!p)
             return AFPERR_PARAM; /* pathname too long */
-#endif /* HAVE_RENAMEAT */
+#endif /* HAVE_ATFUNCS */
 
         path.st_valid = 0;
         path.u_name = p;
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
         opened = of_findnameat(sdir_fd, &path);
 #else
         opened = of_findname(&path);
-#endif /* HAVE_RENAMEAT */
+#endif /* HAVE_ATFUNCS */
         if (opened) {
             /* reuse struct adouble so it won't break locks */
             adp = opened->of_ad;
@@ -712,7 +712,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) + 1);
     }
 
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
     if ((sdir_fd = open(".", O_RDONLY)) == -1)
         return AFPERR_MISC;
 #endif
@@ -777,7 +777,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
 
 exit:
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
     if (sdir_fd != -1)
         close(sdir_fd);
 #endif
