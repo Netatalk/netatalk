@@ -1,4 +1,4 @@
-Changes in 2.2rc1
+Changes in XXX
 =================
 
 * FIX: afpd: generate mersenne primes for DHX2 UAM once at startup,
