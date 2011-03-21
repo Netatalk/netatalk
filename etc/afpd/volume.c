@@ -1199,6 +1199,14 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
         p1->mtime = st.st_mtime;
     }
 
+    if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
+        LOG(log_error, logtype_afpd, "readvolfile: can't lock volume file \"%s\"", path);
+        if ( fclose( fp ) != 0 ) {
+            LOG(log_error, logtype_afpd, "readvolfile: fclose: %s", strerror(errno) );
+        }
+        return -1;
+    }
+
     memset(save_options, 0, sizeof(save_options));
 
     /* Enable some default options for all volumes */

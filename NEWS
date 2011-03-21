@@ -4,6 +4,7 @@ Changes in XXX
 * FIX: afpd: generate mersenne primes for DHX2 UAM once at startup,
        not for every login
 * FIX: Support for platforms that do not have the *at functions
+* UPD: afpd: put POSIX write lock on volume files while reading them
 
 Changes in 2.2beta3
 ===================
