@@ -94,19 +94,31 @@ static void register_stuff(void) {
 
             dsi = (DSI *)config->obj.handle;
             port = getip_port((struct sockaddr *)&dsi->server);
-            
-            if (convert_string(config->obj.options.unixcharset, CH_UTF8,
-                               config->obj.options.server ? config->obj.options.server : config->obj.options.hostname, -1,
-                               name, MAXINSTANCENAMELEN) <= 0) {
-                LOG ( log_error, logtype_afpd, "Could not set Zeroconf instance name");
+
+            if (convert_string(config->obj.options.unixcharset,
+                               CH_UTF8,
+                               config->obj.options.server ?
+                               config->obj.options.server :
+                               config->obj.options.hostname,
+                               -1,
+                               name,
+                               MAXINSTANCENAMELEN) <= 0) {
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
                 goto fail;
             }
+            if ((dsi->bonjourname = strdup(name)) == NULL) {
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
+                goto fail;
+
+            }
+            LOG(log_info, logtype_afpd, "Registering server '%s' with with Bonjour",
+                dsi->bonjourname);
 
             if (avahi_entry_group_add_service(ctx->group,
                                               AVAHI_IF_UNSPEC,
                                               AVAHI_PROTO_UNSPEC,
                                               0,
-                                              name,
+                                              dsi->bonjourname,
                                               AFP_DNS_SERVICE_TYPE,
                                               NULL,
                                               NULL,
@@ -121,7 +133,7 @@ static void register_stuff(void) {
                                                           AVAHI_IF_UNSPEC,
                                                           AVAHI_PROTO_UNSPEC,
                                                           0,
-                                                          name,
+                                                          dsi->bonjourname,
                                                           ADISK_SERVICE_TYPE,
                                                           NULL,
                                                           NULL,
