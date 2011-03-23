@@ -316,6 +316,8 @@ int getmetadata(struct vol *vol,
     struct stat         *st;
     struct maccess	ma;
 
+    LOG(log_debug, logtype_afpd, "getmetadata(\"%s\")", path->u_name);
+
     upath = path->u_name;
     st = &path->st;
     data = buf;
@@ -613,6 +615,8 @@ int getfilparams(struct vol *vol,
     int                 opened = 0;
     int rc;    
 
+    LOG(log_debug, logtype_afpd, "getfilparams(\"%s\")", path->u_name);
+
     opened = PARAM_NEED_ADP(bitmap);
     adp = NULL;
 
@@ -746,6 +750,17 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 
     path = s_path->m_name;
     ad_setname(adp, path);
+
+    struct stat st;
+    if (lstat(upath, &st) != 0) {
+        LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): stat: %s",
+            upath, strerror(errno));
+        ad_close( adp, ADFLAGS_DF|ADFLAGS_HF);
+        return AFPERR_MISC;
+    }
+
+    (void)get_id(vol, adp, &st, dir->d_did, upath, strlen(upath));
+
     ad_flush( adp);
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 

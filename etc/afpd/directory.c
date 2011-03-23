@@ -301,7 +301,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
 {
     static char temp[ MAXPATHLEN + 1];
     char *t;
-    cnid_t fileid;
+    cnid_t fileid = 0;
 
     if (afp_version >= 30) {
         if (toUTF8) {

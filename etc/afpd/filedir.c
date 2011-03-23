@@ -351,22 +351,24 @@ static int moveandrename(const struct vol *vol,
     if (!isdir) {
         if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did, utf8_encoding()))) == NULL)
             return AFPERR_PARAM; /* can't convert */
+        id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, strlen(oldunixname));
 
 #ifndef HAVE_ATFUNCS
         /* Need full path */
-        id = cnid_get(vol->v_cdb, sdir->d_did, p, strlen(p));
-        p = ctoupath( vol, sdir, oldname );
-        if (!p)
+        free(oldunixname);
+        if ((oldunixname = strdup(ctoupath(vol, sdir, oldname))) == NULL)
             return AFPERR_PARAM; /* pathname too long */
 #endif /* HAVE_ATFUNCS */
 
         path.st_valid = 0;
         path.u_name = oldunixname;
+
 #ifdef HAVE_ATFUNCS
         opened = of_findnameat(sdir_fd, &path);
 #else
         opened = of_findname(&path);
 #endif /* HAVE_ATFUNCS */
+
         if (opened) {
             /* reuse struct adouble so it won't break locks */
             adp = opened->of_ad;
@@ -377,8 +379,6 @@ static int moveandrename(const struct vol *vol,
             return AFPERR_PARAM;
         adflags = ADFLAGS_DIR;
     }
-
-    LOG(log_debug, logtype_afpd, "oldunixname: \"%s\"", oldunixname);
 
     /*
      * oldunixname now points to either
@@ -444,8 +444,6 @@ static int moveandrename(const struct vol *vol,
         rc = AFPERR_EXIST;
         goto exit;
     }
-
-    LOG(log_debug, logtype_afpd, "oldunixname: \"%s\"", oldunixname);
 
     if ( !isdir ) {
         path.st_valid = 1;
