@@ -1097,6 +1097,9 @@ int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *n
 {
     int		rc;
 
+    LOG(log_debug, logtype_afpd,
+        "renamefile: src[%d, \"%s\"] -> dst[\"%s\"]", sdir_fd, src, dst);
+
     if ( unix_rename( sdir_fd, src, -1, dst ) < 0 ) {
         switch ( errno ) {
         case ENOENT :
