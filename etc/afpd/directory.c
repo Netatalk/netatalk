@@ -1328,10 +1328,18 @@ int file_access(struct path *path, int mode)
     struct maccess ma;
 
     accessmode(path->u_name, &ma, curdir, &path->st);
-    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
+
+    LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
+        path->u_name, ma.ma_user);
+
+    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE)) {
+        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): write access denied", path->u_name);
         return -1;
-    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
+    }
+    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD)) {
+        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): read access denied", path->u_name);
         return -1;
+    }
     return 0;
 
 }
