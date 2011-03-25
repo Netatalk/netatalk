@@ -350,7 +350,7 @@ int getmetadata(struct vol *vol,
                     exit(EXITERR_SYS);
                 }
 
-                if ((dircache_add(cachedfile)) != 0) {
+                if ((dircache_add(vol, cachedfile)) != 0) {
                     LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
                     exit(EXITERR_SYS);
                 }

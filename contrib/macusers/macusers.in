@@ -88,7 +88,7 @@ while (<PS>) {
                                 next if ($_ !~ /port: $ASIP_PORT_NO/);
                                 while (<PFILES>) {
                                         next if ($_ !~ /peername/);
-                                        if ($_ =~ /AF_INET. (.*) port/) {
+                                        if ($_ =~ /AF_INET (.*) port/) {
                                             $ip = $1;
                                             if ($ip =~ /::ffff:(.*)/ ) {
                                                 $ip = $1;
