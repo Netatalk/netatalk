@@ -472,6 +472,13 @@ static int moveandrename(const struct vol *vol,
             (void)dir_remove(vol, cacheddir);
         }
 
+        /* Fixup adouble info */
+        if (!ad_metadata(oldunixname, adflags, adp)) {
+            ad_setid(adp, st->st_dev, st->st_ino, id, curdir->d_did, vol->v_stamp);
+            ad_flush(adp);
+            ad_close_metadata( adp);
+        }
+
         /* fix up the catalog entry */
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
     }
