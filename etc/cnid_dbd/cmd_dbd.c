@@ -90,7 +90,7 @@ static int exclusive;           /* Exclusive volume access */
 static struct db_param db_param = {
     NULL,                       /* Volume dirpath */
     1,                          /* bdb logfile autoremove */
-    64 * 1024,                  /* bdb cachesize (64 MB) */
+    256 * 1024,                  /* bdb cachesize (256 MB) */
     5000,                       /* maxlocks */
     5000,                       /* maxlockobjs */
     -1,                         /* not used ... */

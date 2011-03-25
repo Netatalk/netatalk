@@ -1132,7 +1132,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
     struct db_param db_param = { 0 };
 
     /* Set cachesize for in-memory rebuild db */
-    db_param.cachesize = 128 * 1024 * 1024; /* 128 MB */
+    db_param.cachesize = 256 * 1024 * 1024; /* 128 MB */
 
     /* Make it accessible for all funcs */
     dbd = dbd_ref;
