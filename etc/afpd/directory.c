@@ -573,7 +573,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
     
     /* Add it to the cache only if it's a dir */
-    if (dircache_add(ret) != 0) { /* 7 */
+    if (dircache_add(vol, ret) != 0) { /* 7 */
         err = 1;
         goto exit;
     }
@@ -837,7 +837,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
         goto exit;
     }
 
-    if ((dircache_add(cdir)) != 0) { /* 4 */
+    if ((dircache_add(vol, cdir)) != 0) { /* 4 */
         LOG(log_error, logtype_afpd, "dir_add: fatal dircache error: %s", cfrombstr(fullpath));
         exit(EXITERR_SYS);
     }
@@ -917,6 +917,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     return 0;
 }
 
+#if 0 /* unused */
 /*!
  * @brief Modify a struct dir, adjust cache
  *
@@ -988,13 +989,14 @@ int dir_modify(const struct vol *vol,
         dir->d_m_name_ucs2 = NULL;
 
     /* Re-add it to the cache */
-    if ((dircache_add(dir)) != 0) {
+    if ((dircache_add(vol, dir)) != 0) {
         dircache_dump();
         AFP_PANIC("dir_modify");
     }
 
     return ret;
 }
+#endif
 
 /*!
  * @brief Resolve a catalog node name path

@@ -365,7 +365,11 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
-struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir, char *name, int len, time_t ctime)
+struct dir *dircache_search_by_name(const struct vol *vol,
+                                    const struct dir *dir,
+                                    char *name,
+                                    int len,
+                                    time_t ctime)
 {
     struct dir *cdir = NULL;
     struct dir key;
@@ -421,18 +425,44 @@ struct dir *dircache_search_by_name(const struct vol *vol, const struct dir *dir
  *
  * @returns 0 on success, -1 on error which should result in an abort
  */
-int dircache_add(struct dir *dir)
+int dircache_add(const struct vol *vol,
+                 struct dir *dir)
 {
-   AFP_ASSERT(dir);
-   AFP_ASSERT(ntohl(dir->d_pdid) >= 2);
-   AFP_ASSERT(ntohl(dir->d_did) >= CNID_START);
-   AFP_ASSERT(dir->d_u_name);
-   AFP_ASSERT(dir->d_vid);
-   AFP_ASSERT(dircache->hash_nodecount <= dircache_maxsize);
+    struct dir *cdir = NULL;
+    struct dir key;
+    hnode_t *hn;
+
+    AFP_ASSERT(dir);
+    AFP_ASSERT(ntohl(dir->d_pdid) >= 2);
+    AFP_ASSERT(ntohl(dir->d_did) >= CNID_START);
+    AFP_ASSERT(dir->d_u_name);
+    AFP_ASSERT(dir->d_vid);
+    AFP_ASSERT(dircache->hash_nodecount <= dircache_maxsize);
 
     /* Check if cache is full */
     if (dircache->hash_nodecount == dircache_maxsize)
         dircache_evict();
+
+    /* 
+     * Make sure we don't add duplicates
+     */
+
+    /* Search primary cache by CNID */
+    key.d_vid = dir->d_vid;
+    key.d_did = dir->d_did;
+    if ((hn = hash_lookup(dircache, &key))) {
+        /* Found an entry with the same CNID, delete it */
+        dir_remove(vol, hnode_get(hn));
+        dircache_stat.expunged++;
+    }
+    key.d_vid = vol->v_vid;
+    key.d_pdid = dir->d_did;
+    key.d_u_name = dir->d_u_name;
+    if ((hn = hash_lookup(index_didname, &key))) {
+        /* Found an entry with the same DID/name, delete it */
+        dir_remove(vol, hnode_get(hn));
+        dircache_stat.expunged++;
+    }
 
     /* Add it to the main dircache */
     if (hash_alloc_insert(dircache, dir, dir) == 0) {
