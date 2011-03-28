@@ -1,6 +1,8 @@
 Changes in 2.2beta4
 ===================
 
+* NEW: afpd: new afpd.conf optinos "tcprcvbuf" and "tcpsndbuf" to customize
+       the corresponding TCP socket options.
 * FIX: afpd: generate mersenne primes for DHX2 UAM once at startup,
        not for every login
 * FIX: Support for platforms that do not have the *at functions

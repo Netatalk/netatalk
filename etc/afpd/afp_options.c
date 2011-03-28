@@ -186,6 +186,8 @@ void afp_options_init(struct afp_options *options)
     options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
     options->flags |= OPTION_ACL2MACCESS;
     options->flags |= OPTION_UUID;
+    options->tcp_sndbuf = 65535;
+    options->tcp_rcvbuf = 65535;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -463,6 +465,12 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     if ((c = getoption(buf, "-dircachesize")))
         options->dircachesize = atoi(c);
      
+    if ((c = getoption(buf, "-tcpsndbuf")))
+        options->tcp_sndbuf = atoi(c);
+
+    if ((c = getoption(buf, "-tcprcvbuf")))
+        options->tcp_rcvbuf = atoi(c);
+
     return 1;
 }
 

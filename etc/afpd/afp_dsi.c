@@ -457,6 +457,22 @@ void afp_over_dsi(AFPObj *obj)
     if (dircache_init(obj->options.dircachesize) != 0)
         afp_dsi_die(EXITERR_SYS);
 
+    /* set TCP snd/rcv buf */
+    if (setsockopt(dsi->socket,
+                   SOL_SOCKET,
+                   SO_RCVBUF,
+                   &obj->options.tcp_rcvbuf,
+                   sizeof(obj->options.tcp_rcvbuf)) != 0) {
+        LOG(log_error, logtype_dsi, "dsi_tcp_open: setsockopt(SO_RCVBUF): %s", strerror(errno));
+    }
+    if (setsockopt(dsi->socket,
+                   SOL_SOCKET,
+                   SO_SNDBUF,
+                   &obj->options.tcp_sndbuf,
+                   sizeof(obj->options.tcp_sndbuf)) != 0) {
+        LOG(log_error, logtype_dsi, "dsi_tcp_open: setsockopt(SO_SNDBUF): %s", strerror(errno));
+    }
+
     /* get stuck here until the end */
     while (1) {
         if (sigsetjmp(recon_jmp, 1) != 0)
