@@ -464,7 +464,7 @@ void afp_over_dsi(AFPObj *obj)
                        SO_RCVBUF,
                        &obj->options.tcp_rcvbuf,
                        sizeof(obj->options.tcp_rcvbuf)) != 0) {
-            LOG(log_error, logtype_dsi, "dsi_tcp_open: setsockopt(SO_RCVBUF): %s", strerror(errno));
+            LOG(log_error, logtype_dsi, "afp_over_dsi: setsockopt(SO_RCVBUF): %s", strerror(errno));
         }
     }
     if (obj->options.tcp_sndbuf) {
@@ -473,7 +473,7 @@ void afp_over_dsi(AFPObj *obj)
                        SO_SNDBUF,
                        &obj->options.tcp_sndbuf,
                        sizeof(obj->options.tcp_sndbuf)) != 0) {
-            LOG(log_error, logtype_dsi, "dsi_tcp_open: setsockopt(SO_SNDBUF): %s", strerror(errno));
+            LOG(log_error, logtype_dsi, "afp_over_dsi: setsockopt(SO_SNDBUF): %s", strerror(errno));
         }
     }
 
