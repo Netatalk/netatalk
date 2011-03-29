@@ -186,8 +186,8 @@ void afp_options_init(struct afp_options *options)
     options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
     options->flags |= OPTION_ACL2MACCESS;
     options->flags |= OPTION_UUID;
-    options->tcp_sndbuf = 65535;
-    options->tcp_rcvbuf = 65535;
+    options->tcp_sndbuf = 0;    /* 0 means don't change OS default */
+    options->tcp_rcvbuf = 0;    /* 0 means don't change OS default */
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
