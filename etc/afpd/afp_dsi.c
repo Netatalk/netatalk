@@ -539,13 +539,14 @@ void afp_over_dsi(AFPObj *obj)
         switch(cmd) {
 
         case DSIFUNC_CLOSE:
+            LOG(log_debug, logtype_afpd, "DSI: close session request");
             afp_dsi_close(obj);
             LOG(log_note, logtype_afpd, "done");
             return;
 
         case DSIFUNC_TICKLE:
             dsi->flags &= ~DSI_DATA; /* thats no data in the sense we use it in alarm_handler */
-            LOG(log_debug, logtype_afpd, "DSI client tickle");
+            LOG(log_debug, logtype_afpd, "DSI: client tickle");
             /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
             if ((dsi->flags & DSI_DIE))
                 dsi_tickle(dsi);
