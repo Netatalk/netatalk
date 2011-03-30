@@ -518,7 +518,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     if (flags & DIDNAME_INDEX) {
         if ((hn = hash_lookup(index_didname, dir)) == NULL) {
-            LOG(log_error, logtype_default, "dircache_remove(%u,\"%s\"): not in didname index", 
+            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in didname index", 
                 ntohl(dir->d_did), cfrombstr(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");
@@ -528,7 +528,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 
     if (flags & DIRCACHE) {
         if ((hn = hash_lookup(dircache, dir)) == NULL) {
-            LOG(log_error, logtype_default, "dircache_remove(%u,\"%s\"): not in dircache", 
+            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in dircache", 
                 ntohl(dir->d_did), cfrombstr(dir->d_u_name));
             dircache_dump();
             AFP_PANIC("dircache_remove");

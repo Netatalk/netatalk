@@ -728,7 +728,7 @@ static int catsearch_db(struct vol *vol,
                             buffer,
                             MAXPATHLEN,
                             &flags) == (size_t)-1) {
-            LOG(log_error, logtype_cnid, "catsearch_db: conversion error");
+            LOG(log_error, logtype_afpd, "catsearch_db: conversion error");
             result = AFPERR_MISC;
             goto catsearch_end;
         }

@@ -2032,7 +2032,7 @@ static void check_ea_sys_support(struct vol *vol)
     if (vol->v_vfs_ea == AFPVOL_EA_AUTO) {
 
         if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
-            LOG(log_info, logtype_logger, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
+            LOG(log_info, logtype_afpd, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
             vol->v_vfs_ea = AFPVOL_EA_NONE;
             return;
         }
@@ -2042,7 +2042,7 @@ static void check_ea_sys_support(struct vol *vol)
         process_uid = geteuid();
         if (process_uid)
             if (seteuid(0) == -1) {
-                LOG(log_error, logtype_logger, "check_ea_sys_support: can't seteuid(0): %s", strerror(errno));
+                LOG(log_error, logtype_afpd, "check_ea_sys_support: can't seteuid(0): %s", strerror(errno));
                 exit(EXITERR_SYS);
             }
 
@@ -2057,7 +2057,7 @@ static void check_ea_sys_support(struct vol *vol)
 
         if (process_uid) {
             if (seteuid(process_uid) == -1) {
-                LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+                LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
                 exit(EXITERR_SYS);
             }
         }
