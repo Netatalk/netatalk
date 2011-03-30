@@ -24,8 +24,8 @@ functions which need their own buffers: dsi_attention, dsi_tickle
 PERFORMANCE TWEAKING:
 sending complete packets or the header and a partial packet to the
 client should always be handled by proto_send. for dsi_tcp.c,
-proto_send will coalesce the header and data by using writev if
-USE_WRITEV is defined. in addition, appleshare sessions often involve
+proto_send will coalesce the header and data by using writev.
+in addition, appleshare sessions often involve
 the sending and receiving of many small packets. as a consequence, i
 use TCP_NODELAY to speed up the turnaround time.
 

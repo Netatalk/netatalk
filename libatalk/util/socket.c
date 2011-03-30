@@ -97,6 +97,8 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
     fd_set rfds;
     int ret;
 
+    FD_ZERO(&rfds);
+
     if (setnonblocking) {
         if (setnonblock(socket, 1) != 0)
             return -1;
@@ -114,7 +116,6 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
             case EINTR:
                 continue;
             case EAGAIN:
-                FD_ZERO(&rfds);
                 FD_SET(socket, &rfds);
                 tv.tv_usec = 0;
                 tv.tv_sec  = timeout;
@@ -123,6 +124,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                     switch (ret) {
                     case 0:
                         LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                        errno = EAGAIN;
                         goto exit;
 
                     default: /* -1 */
@@ -139,7 +141,6 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                                 tv.tv_usec = end.tv_usec - now.tv_usec;
                                 tv.tv_sec  = end.tv_sec - now.tv_sec;
                             }
-                            FD_ZERO(&rfds);
                             FD_SET(socket, &rfds);
                             continue;
                         }

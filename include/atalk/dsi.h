@@ -54,7 +54,8 @@ struct dsi_block {
 };
 
 #define DSI_CMDSIZ        8192 
-#define DSI_DATASIZ       8192
+#define DSI_DATASIZ       65536
+
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
