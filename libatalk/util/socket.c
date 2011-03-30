@@ -123,7 +123,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                 while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
                     switch (ret) {
                     case 0:
-                        LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                        LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
                         errno = EAGAIN;
                         goto exit;
 
