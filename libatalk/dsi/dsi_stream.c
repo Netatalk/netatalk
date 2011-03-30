@@ -98,6 +98,9 @@ static int dsi_peek(DSI *dsi)
                 /* we might have been interrupted by out timer, so restart select */
                 continue;
             /* give up */
+            LOG(log_error, logtype_dsi, "dsi_peek: unexpected select return: %d %s",
+                ret, ret < 0 ? strerror(errno) : "");
+            setnonblock(dsi->socket, 0);
             break;
         }
 
@@ -109,17 +112,24 @@ static int dsi_peek(DSI *dsi)
             if (len <= 0) {
                 /* ouch, our buffer is full ! fall back to blocking IO 
                  * could block and disconnect but it's better than a cpu hog */
+                LOG(log_error, logtype_dsi, "dsi_peek: read buffer is full");
+                setnonblock(dsi->socket, 0);
                 break;
             }
 
-            len = read(dsi->socket, dsi->eof, len);
-            if (len <= 0)
+            if ((len = read(dsi->socket, dsi->eof, len)) <= 0) {
+                LOG(log_error, logtype_dsi, "dsi_peek: read: %d %s",
+                    len, len < 0 ? strerror(errno) : "");
                 break;
+            }
+
             dsi->eof += len;
+            continue;
         }
 
         if (FD_ISSET(dsi->socket, &writefds))
             /* we can write again at last */
+            LOG(log_error, logtype_dsi, "dsi_peek: can write again");
             break;
     }
 
