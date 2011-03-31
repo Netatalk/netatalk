@@ -18,9 +18,9 @@
 
 static void dsi_init_buffer(DSI *dsi)
 {
-    dsi->maxsize = 6 * dsi->server_quantum;
+    dsi->maxsize = 64 * dsi->server_quantum;
     if (!dsi->maxsize)
-        dsi->maxsize = 6 * DSI_SERVQUANT_DEF;
+        dsi->maxsize = 64 * DSI_SERVQUANT_DEF;
     if ((dsi->buffer = malloc(dsi->maxsize)) == NULL) {
         LOG(log_error, logtype_dsi, "dsi_init_buffer: OOM");
         AFP_PANIC("OOM in dsi_init_buffer");

@@ -87,7 +87,7 @@ int setnonblock(int fd, int cmd)
  *                             io mode for the socket
  * @param timeout         (r)  number of seconds to try reading
  *
- * @returns number of bytes actually read or -1 on fatal error
+ * @returns number of bytes actually read or -1 on timeout or error
  */
 ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout)
 {

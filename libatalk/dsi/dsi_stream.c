@@ -81,6 +81,7 @@ static int dsi_peek(DSI *dsi)
         /* Check if there's sth to read, hopefully reading that will unblock the client */
         if (FD_ISSET(dsi->socket, &readfds)) {
             len = dsi->end - dsi->eof;
+            LOG(log_note, logtype_dsi, "dsi_peek: used read buffer space: %d bytes", dsi->eof - dsi->buffer);
 
             if (len <= 0) {
                 /* ouch, our buffer is full ! fall back to blocking IO 
@@ -140,6 +141,8 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
           continue;
 
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          LOG(log_debug, logtype_dsi, "dsi_stream_write: send: %s", strerror(errno));
+
           if (mode == DSI_NOWAIT && written == 0) {
               /* DSI_NOWAIT is used by attention give up in this case. */
               written = -1;
@@ -239,6 +242,9 @@ static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
 
         }
     }
+
+    LOG(log_maxdebug, logtype_dsi, "from_buf(dead: %u, unread:%u , space left: %u): returning %u",
+        dsi->start - dsi->buffer, dsi->eof - dsi->start, dsi->end - dsi->eof, nbe);
     return nbe;
 }
 
@@ -252,18 +258,22 @@ static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
  */
 static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
 {
-    ssize_t nbe;
+    ssize_t len;
 
-    LOG(log_maxdebug, logtype_dsi, "buf_read: %u bytes", count);
+    LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes)", count);
 
     if (!count)
         return 0;
 
-    nbe = from_buf(dsi, buf, count); /* 1. */
-    if (nbe)
-        return nbe;             /* 2. */
+    len = from_buf(dsi, buf, count); /* 1. */
+    if (len)
+        return len;             /* 2. */
   
-    return readt(dsi->socket, buf, count, 0, 1); /* 3. */
+    len = readt(dsi->socket, buf, count, 0, 1); /* 3. */
+
+    LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes): got: %d", count, len);
+
+    return len;
 }
 
 /*
@@ -275,30 +285,32 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
   size_t stored;
   ssize_t len;
 
-  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read: %u bytes", length);
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read(%u bytes)", length);
 
   stored = 0;
   while (stored < length) {
-    len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
-    if (len == -1 && (errno == EINTR || errno == EAGAIN)) {
-      LOG(log_debug, logtype_dsi, "dsi_stream_read: select read loop");
-      continue;
-    } else if (len > 0) {
-      stored += len;
-    } else { /* eof or error */
-      /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
-      if (len || stored || dsi->read_count) {
-          if (! (dsi->flags & DSI_DISCONNECTED)) {
-              LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",
-                  len, (len < 0) ? strerror(errno) : "unexpected EOF");
-              AFP_PANIC("FIXME");
+      len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
+      if (len == -1 && (errno == EINTR || errno == EAGAIN)) {
+          LOG(log_debug, logtype_dsi, "dsi_stream_read: select read loop");
+          continue;
+      } else if (len > 0) {
+          stored += len;
+      } else { /* eof or error */
+          /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
+          if (len || stored || dsi->read_count) {
+              if (! (dsi->flags & DSI_DISCONNECTED)) {
+                  LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",
+                      len, (len < 0) ? strerror(errno) : "unexpected EOF");
+                  AFP_PANIC("FIXME");
+              }
           }
+          break;
       }
-      break;
-    }
   }
 
   dsi->read_count += stored;
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read(%u bytes): got: %u", length, stored);
   return stored;
 }
 
@@ -385,35 +397,34 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   towrite = sizeof(block) + length;
   dsi->write_count += towrite;
   while (towrite > 0) {
-    if (((len = writev(dsi->socket, iov, 2)) == -1 && errno == EINTR) || 
-	!len)
-      continue;
+      if (((len = writev(dsi->socket, iov, 2)) == -1 && errno == EINTR) || (len == 0))
+          continue;
     
-    if ((size_t)len == towrite) /* wrote everything out */
-      break;
-    else if (len < 0) { /* error */
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-          if (!dsi_peek(dsi)) {
-              continue;
+      if ((size_t)len == towrite) /* wrote everything out */
+          break;
+      else if (len < 0) { /* error */
+          if (errno == EAGAIN || errno == EWOULDBLOCK) {
+              if (!dsi_peek(dsi)) {
+                  continue;
+              }
           }
+          LOG(log_error, logtype_dsi, "dsi_stream_send: %s", strerror(errno));
+          unblock_sig(dsi);
+          return 0;
       }
-      LOG(log_error, logtype_dsi, "dsi_stream_send: %s", strerror(errno));
-      unblock_sig(dsi);
-      return 0;
-    }
     
-    towrite -= len;
-    if (towrite > length) { /* skip part of header */
-      iov[0].iov_base = (char *) iov[0].iov_base + len;
-      iov[0].iov_len -= len;
-    } else { /* skip to data */
-      if (iov[0].iov_len) {
-	len -= iov[0].iov_len;
-	iov[0].iov_len = 0;
+      towrite -= len;
+      if (towrite > length) { /* skip part of header */
+          iov[0].iov_base = (char *) iov[0].iov_base + len;
+          iov[0].iov_len -= len;
+      } else { /* skip to data */
+          if (iov[0].iov_len) {
+              len -= iov[0].iov_len;
+              iov[0].iov_len = 0;
+          }
+          iov[1].iov_base = (char *) iov[1].iov_base + len;
+          iov[1].iov_len -= len;
       }
-      iov[1].iov_base = (char *) iov[1].iov_base + len;
-      iov[1].iov_len -= len;
-    }
   }
   
   unblock_sig(dsi);
