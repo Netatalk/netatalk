@@ -288,6 +288,8 @@ static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
 /*
  * Essentially a loop around buf_read() to ensure "length" bytes are read
  * from dsi->buffer and/or the socket.
+ *
+ * @returns length on success, some value smaller then length indicates an error
  */
 size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
@@ -310,8 +312,8 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
               if (! (dsi->flags & DSI_DISCONNECTED)) {
                   LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",
                       len, (len < 0) ? strerror(errno) : "unexpected EOF");
-                  AFP_PANIC("FIXME");
               }
+              return 0;
           }
           break;
       }
