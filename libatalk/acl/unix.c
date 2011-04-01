@@ -217,7 +217,7 @@ int nfsv4_chmod(char *name, mode_t mode)
 {
     int ret = -1;
     int noaces, nnaces;
-    ace_t *oacl = NULL, *nacl = NULL, *cacl;
+    ace_t *oacl = NULL, *nacl = NULL, *cacl = NULL;
 
     LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o)",
         getcwdpath(), name, mode);
