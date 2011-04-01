@@ -463,24 +463,28 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     int          utf8;
     int          err = 0;
 
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {start}", ntohl(did));
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u)", ntohl(did));
 
     /* check for did 0, 1 and 2 */
     if (did == 0 || vol == NULL) { /* 1 */
         afp_errno = AFPERR_PARAM;
-        return NULL;
+        ret = NULL;
+        goto exit;
     } else if (did == DIRDID_ROOT_PARENT) {
         rootParent.d_vid = vol->v_vid;
-        return (&rootParent);
+        ret = &rootParent;
+        goto exit;
     } else if (did == DIRDID_ROOT) {
-        return vol->v_root;
+        ret = vol->v_root;
+        goto exit;
     }
 
     /* Search the cache */
     if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2a */
         if (ret->d_fullpath == NULL) {                      /* 2b */
             afp_errno = AFPERR_BADTYPE;
-            return NULL;
+            ret = NULL;
+            goto exit;
         }
         if (lstat(cfrombstr(ret->d_fullpath), &st) != 0) {
             LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {lstat: %s}", ntohl(did), strerror(errno));
@@ -491,14 +495,18 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
                 LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {calling dir_remove()}", ntohl(did));
                 dir_remove(vol, ret);
                 afp_errno = AFPERR_NOOBJ;
-                return NULL;
+                ret = NULL;
+                goto exit;
             default:
-                return ret;
+                ret = ret;
+                goto exit;
             }
             /* DEADC0DE */
-            return NULL;
+            ret = NULL;
+            goto exit;            
         }
-        return ret;
+        ret = ret;
+        goto exit;
     }
 
     utf8 = utf8_encoding();
@@ -578,9 +586,6 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         goto exit;
     }
 
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {end: did:%u, path:'%s'}",
-        ntohl(did), ntohl(pdid), cfrombstr(ret->d_fullpath));
-
 exit:
     if (upath) free(upath);
     if (err) {
@@ -593,6 +598,10 @@ exit:
             ret = NULL;
         }
     }
+    if (ret)
+        LOG(log_debug, logtype_afpd, "dirlookup(did: %u): pdid: %u, \"%s\"",
+            ntohl(ret->d_did), ntohl(ret->d_pdid), cfrombstr(ret->d_fullpath));
+
     return ret;
 }
 
@@ -880,9 +889,9 @@ void dir_free_invalid_q(void)
  * @brief Remove a dir from a cache and queue it for freeing
  *
  * 1. Check if the dir is locked or has opened forks
- * 2. If it's a request to remove curdir, just chdir to volume root
- * 3. Remove it from the cache
- * 4. Queue it for removal
+ * 2. Remove it from the cache
+ * 3. Queue it for removal
+ * 4. If it's a request to remove curdir, use dirlookup to get a fresh dir for the did
  * 5. Mark it as invalid
  *
  * @param (r) pointer to struct vol
@@ -902,18 +911,22 @@ int dir_remove(const struct vol *vol, struct dir *dir)
         return 0;
     }
 
-    if (curdir == dir) {        /* 2 */
-        if (movecwd(vol, vol->v_root) < 0) {
-            LOG(log_error, logtype_afpd, "dir_remove: can't chdir to : %s", vol->v_root);
-        }
-    }
-
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
 
-    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 3 */
-    enqueue(invalid_dircache_entries, dir); /* 4 */
+    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
+    enqueue(invalid_dircache_entries, dir); /* 3 */
+
+    if (curdir == dir) {        /* 4 */
+        curdir = dirlookup(vol, dir->d_did);
+        if (movecwd(vol, curdir) < 0) {
+            LOG(log_error, logtype_afpd, "dir_remove: can't chdir to : %s",
+                cfrombstr(curdir->d_fullpath));
+        }
+    }
+
     dir->d_did = CNID_INVALID;              /* 5 */
+
     return 0;
 }
 
@@ -1255,7 +1268,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
 
-    LOG(log_maxdebug, logtype_afpd, "movecwd(curdir:'%s', cwd:'%s')",
+    LOG(log_maxdebug, logtype_afpd, "movecwd: from: curdir:\"%s\", cwd:\"%s\"",
         cfrombstr(curdir->d_fullpath), getcwdpath());
 
     if ( dir == curdir)
@@ -1265,11 +1278,11 @@ int movecwd(const struct vol *vol, struct dir *dir)
         return 0;
     }
 
-    LOG(log_debug, logtype_afpd, "movecwd(did:%u, '%s')",
+    LOG(log_debug, logtype_afpd, "movecwd(to: did: %u, \"%s\")",
         ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
 
     if ((ret = lchdir(cfrombstr(dir->d_fullpath))) != 0 ) {
-        LOG(log_debug, logtype_afpd, "movecwd('%s'): ret: %u, %s",
+        LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): ret: %u, %s",
             cfrombstr(dir->d_fullpath), ret, strerror(errno));
         if (ret == 1) {
             /* p is a symlink or getcwd failed */
@@ -2242,13 +2255,13 @@ int deletecurdir(struct vol *vol)
 {
     struct dirent *de;
     struct stat st;
-    struct dir  *fdir;
+    struct dir  *fdir, *pdir;
     DIR *dp;
     struct adouble  ad;
     u_int16_t       ashort;
     int err;
 
-    if ( dirlookup(vol, curdir->d_pdid) == NULL ) {
+    if ((pdir = dirlookup(vol, curdir->d_pdid)) == NULL) {
         return( AFPERR_ACCESS );
     }
 
@@ -2266,6 +2279,8 @@ int deletecurdir(struct vol *vol)
     }
     err = vol->vfs->vfs_deletecurdir(vol);
     if (err) {
+        LOG(log_error, logtype_afpd, "deletecurdir: error deleting .AppleDouble in \"%s\"",
+            curdir->d_fullpath);
         return err;
     }
 
@@ -2278,6 +2293,8 @@ int deletecurdir(struct vol *vol)
 
             /* bail if it's not a symlink */
             if ((lstat(de->d_name, &st) == 0) && !S_ISLNK(st.st_mode)) {
+                LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): not empty",
+                    curdir->d_fullpath);
                 closedir(dp);
                 return AFPERR_DIRNEMPT;
             }
@@ -2289,16 +2306,23 @@ int deletecurdir(struct vol *vol)
         }
     }
 
-    if ( movecwd(vol, dirlookup(vol, curdir->d_pdid)) < 0 ) {
+    if (movecwd(vol, pdir) < 0) {
         err = afp_errno;
         goto delete_done;
     }
+
+    LOG(log_debug, logtype_afpd, "deletecurdir: moved to \"%s\"",
+        cfrombstr(curdir->d_fullpath));
 
     err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
     if ( err ==  AFP_OK || err == AFPERR_NOOBJ) {
         cnid_delete(vol->v_cdb, fdir->d_did);
         dir_remove( vol, fdir );
+    } else {
+        LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
+            curdir->d_fullpath);
     }
+
 delete_done:
     if (dp) {
         /* inode is used as key for cnid.
