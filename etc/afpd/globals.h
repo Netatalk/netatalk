@@ -68,6 +68,7 @@ struct afp_options {
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
+    int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
     struct at_addr ddpaddr;
     char *uampath, *fqdn;

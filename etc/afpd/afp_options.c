@@ -188,6 +188,7 @@ void afp_options_init(struct afp_options *options)
     options->flags |= OPTION_UUID;
     options->tcp_sndbuf = 0;    /* 0 means don't change OS default */
     options->tcp_rcvbuf = 0;    /* 0 means don't change OS default */
+    options->dsireadbuf = 12;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -321,6 +322,12 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         if (options->sleep <= 4) {
             options->sleep = 4;
         }
+    }
+
+    if ((c = getoption(buf, "-dsireadbuf"))) {
+        options->dsireadbuf = atoi(c);
+        if (options->dsireadbuf < 6)
+            options->dsireadbuf = 6;
     }
 
     if ((c = getoption(buf, "-server_quantum")))

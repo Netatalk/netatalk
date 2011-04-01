@@ -41,14 +41,17 @@
 #define MSG_DONTWAIT 0x40
 #endif
 
-/* ---------------------- 
-   afpd is sleeping too much while trying to send something.
-   May be there's no reader or the reader is also sleeping in write,
-   look if there's some data for us to read, hopefully it will wake up
-   the reader so we can write again.
-*/
+/*
+ * afpd is sleeping too much while trying to send something.
+ * May be there's no reader or the reader is also sleeping in write,
+ * look if there's some data for us to read, hopefully it will wake up
+ * the reader so we can write again.
+ *
+ * @returns 0 when is possible to send again, -1 on error
+ */
 static int dsi_peek(DSI *dsi)
 {
+    static int warned = 0;
     fd_set readfds, writefds;
     int    len;
     int    maxfd;
@@ -56,14 +59,26 @@ static int dsi_peek(DSI *dsi)
 
     LOG(log_debug, logtype_dsi, "dsi_peek");
 
-    FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-    FD_SET( dsi->socket, &readfds);
-    FD_SET( dsi->socket, &writefds);
-    maxfd = dsi->socket +1;
+    maxfd = dsi->socket + 1;
 
     while (1) {
-        FD_SET( dsi->socket, &readfds);
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+
+        if (dsi->eof < dsi->end) {
+            /* space in read buffer */
+            FD_SET( dsi->socket, &readfds);
+        } else {
+            if (!warned) {
+                warned = 1;
+                LOG(log_note, logtype_dsi, "dsi_peek: readahead buffer is full, possibly increase -dsireadbuf option");
+                LOG(log_note, logtype_dsi, "dsi_peek: dsireadbuf: %d, DSI quantum: %d, effective buffer size: %d",
+                    dsi->dsireadbuf,
+                    dsi->server_quantum ? dsi->server_quantum : DSI_SERVQUANT_DEF,
+                    dsi->end - dsi->buffer);
+            }
+        }
+
         FD_SET( dsi->socket, &writefds);
 
         /* No timeout: if there's nothing to read nor nothing to write,
@@ -78,17 +93,15 @@ static int dsi_peek(DSI *dsi)
             return -1;
         }
 
+        if (FD_ISSET(dsi->socket, &writefds)) {
+            /* we can write again */
+            LOG(log_debug, logtype_dsi, "dsi_peek: can write again");
+            break;
+        }
+
         /* Check if there's sth to read, hopefully reading that will unblock the client */
         if (FD_ISSET(dsi->socket, &readfds)) {
-            len = dsi->end - dsi->eof;
-            LOG(log_note, logtype_dsi, "dsi_peek: used read buffer space: %d bytes", dsi->eof - dsi->buffer);
-
-            if (len <= 0) {
-                /* ouch, our buffer is full ! fall back to blocking IO 
-                 * could block and disconnect but it's better than a cpu hog */
-                LOG(log_warning, logtype_dsi, "dsi_peek: read buffer is full");
-                break;
-            }
+            len = dsi->end - dsi->eof; /* it's ensured above that there's space */
 
             if ((len = read(dsi->socket, dsi->eof, len)) <= 0) {
                 if (len == 0) {
@@ -103,12 +116,6 @@ static int dsi_peek(DSI *dsi)
             LOG(log_debug, logtype_dsi, "dsi_peek: read %d bytes", len);
 
             dsi->eof += len;
-        }
-
-        if (FD_ISSET(dsi->socket, &writefds)) {
-            /* we can write again */
-            LOG(log_debug, logtype_dsi, "dsi_peek: can write again");
-            break;
         }
     }
 
@@ -227,24 +234,26 @@ static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
 {
     size_t nbe = 0;
 
+    if (dsi->buffer == NULL)
+        /* afpd master has no DSI buffering */
+        return 0;
+
     LOG(log_maxdebug, logtype_dsi, "from_buf: %u bytes", count);
     
-    if (dsi->start) {        
-        nbe = dsi->eof - dsi->start;
+    nbe = dsi->eof - dsi->start;
 
-        if (nbe > 0) {
-           nbe = min((size_t)nbe, count);
-           memcpy(buf, dsi->start, nbe);
-           dsi->start += nbe;
+    if (nbe > 0) {
+        nbe = min((size_t)nbe, count);
+        memcpy(buf, dsi->start, nbe);
+        dsi->start += nbe;
 
-           if (dsi->eof == dsi->start) 
-               dsi->start = dsi->eof = dsi->buffer;
-
-        }
+        if (dsi->eof == dsi->start)
+            dsi->start = dsi->eof = dsi->buffer;
     }
 
-    LOG(log_maxdebug, logtype_dsi, "from_buf(dead: %u, unread:%u , space left: %u): returning %u",
+    LOG(log_debug, logtype_dsi, "from_buf(read: %u, unread:%u , space left: %u): returning %u",
         dsi->start - dsi->buffer, dsi->eof - dsi->start, dsi->end - dsi->eof, nbe);
+
     return nbe;
 }
 
@@ -316,7 +325,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 
 /*
  * Get "length" bytes from buffer and/or socket. In order to avoid frequent small reads
- * this tries to read larger chunks (65536 bytes) into a buffer.
+ * this tries to read larger chunks (8192 bytes) into a buffer.
  */
 static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t length)
 {
@@ -331,8 +340,8 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
       return len;               /* yes */
   }
 
-  /* fill the buffer with 65536 bytes or until buffer is full */
-  buflen = min(65536, dsi->end - dsi->eof);
+  /* fill the buffer with 8192 bytes or until buffer is full */
+  buflen = min(8192, dsi->end - dsi->eof);
   if (buflen > 0) {
       ssize_t ret;
       ret = read(dsi->socket, dsi->eof, buflen);

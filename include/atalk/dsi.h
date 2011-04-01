@@ -54,7 +54,7 @@ struct dsi_block {
 };
 
 #define DSI_CMDSIZ        8192 
-#define DSI_DATASIZ       65536
+#define DSI_DATASIZ       8192
 
 /* child and parent processes might interpret a couple of these
  * differently. */
@@ -96,13 +96,12 @@ typedef struct DSI {
   int zeroconf_registered;
 #endif
 
-  /* buffer for OSX deadlock */
+  /* DSI readahead buffer used for buffered reads in dsi_peek */
+  size_t dsireadbuf; /* size of the DSI readahead buffer used in dsi_peek() */
   char *buffer;
   char *start;
   char *eof;
   char *end;
-  int  maxsize;
-
 } DSI;
   
 /* DSI flags */

@@ -362,6 +362,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
         free(config);
         return NULL;
     }
+    dsi->dsireadbuf = options->dsireadbuf;
 
     if (options->flags & OPTION_PROXY) {
         LOG(log_note, logtype_afpd, "AFP/TCP proxy initialized for %s:%d (%s)",

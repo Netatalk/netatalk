@@ -18,16 +18,16 @@
 
 static void dsi_init_buffer(DSI *dsi)
 {
-    dsi->maxsize = 64 * dsi->server_quantum;
-    if (!dsi->maxsize)
-        dsi->maxsize = 64 * DSI_SERVQUANT_DEF;
-    if ((dsi->buffer = malloc(dsi->maxsize)) == NULL) {
+    size_t quantum = dsi->server_quantum ? dsi->server_quantum : DSI_SERVQUANT_DEF;
+
+    /* default is 12 * 300k = 3,6 MB (Apr 2011) */
+    if ((dsi->buffer = malloc(dsi->dsireadbuf * quantum)) == NULL) {
         LOG(log_error, logtype_dsi, "dsi_init_buffer: OOM");
         AFP_PANIC("OOM in dsi_init_buffer");
     }
     dsi->start = dsi->buffer;
     dsi->eof = dsi->buffer;
-    dsi->end = dsi->buffer + dsi->maxsize;
+    dsi->end = dsi->buffer + (dsi->dsireadbuf * quantum);
 }
 
 /* OpenSession. set up the connection */

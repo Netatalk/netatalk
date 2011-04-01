@@ -284,7 +284,7 @@ static void alarm_handler(int sig _U_)
 
     if (dsi->flags & DSI_SLEEPING) {
         if (dsi->tickle > AFPobj->options.sleep) {
-            LOG(log_error, logtype_afpd, "afp_alarm: sleep time ended");
+            LOG(log_note, logtype_afpd, "afp_alarm: sleep time ended");
             afp_dsi_die(EXITERR_CLNT);
         }
         return;
@@ -292,7 +292,7 @@ static void alarm_handler(int sig _U_)
 
     if (dsi->flags & DSI_DISCONNECTED) {
         if (dsi->tickle > AFPobj->options.disconnected) {
-            LOG(log_error, logtype_afpd, "afp_alarm: no reconnect within 10 minutes, goodbye");
+            LOG(log_error, logtype_afpd, "afp_alarm: reconnect timer expired, goodbye");
             afp_dsi_die(EXITERR_CLNT);
         }
         return;
