@@ -473,21 +473,19 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen
         }
     }
 
-    if (dsi->flags & DSI_SLEEPING) {
-        /*
-         * According to AFP 3.3 spec we should not return anything,
-         * but eg 10.5.8 server still returns the numbers of hours
-         * the server is keeping the sessino (ie max sleeptime).
-         */
-        data = obj->options.sleep / 120; /* hours */
-        if (!data) {
-            data = 1;
-        }
-        *rbuflen = sizeof(data);
-        data = htonl(data);
-        memcpy(rbuf, &data, sizeof(data));
-        rbuf += sizeof(data);
+    /*
+     * According to AFP 3.3 spec we should not return anything,
+     * but eg 10.5.8 server still returns the numbers of hours
+     * the server is keeping the sessino (ie max sleeptime).
+     */
+    data = obj->options.sleep / 120; /* hours */
+    if (!data) {
+        data = 1;
     }
+    *rbuflen = sizeof(data);
+    data = htonl(data);
+    memcpy(rbuf, &data, sizeof(data));
+    rbuf += sizeof(data);
 
     return AFP_OK;
 }
