@@ -2,12 +2,12 @@
 .\"     Title: asip-status.pl
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 22 Aug 2004
+.\"      Date: 10 Mar 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "ASIP\-STATUS\&.PL" "1" "22 Aug 2004" "Netatalk 2.2" "Netatalk 2.2"
+.TH "ASIP\-STATUS\&.PL" "1" "10 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,22 +21,37 @@
 .SH "NAME"
 asip-status.pl \- Queries AFP servers for their capabilities
 .SH "SYNOPSIS"
-.PP
-\fB:BINDIR:/asip\-status\&.pl\fR\fB\fR
-ADDRESS\fI:PORT\fR\&.\&.\&.
+.HP \w'\fBasip\-status\&.pl\fR\fB\fR\ 'u
+\fBasip\-status\&.pl\fR\fB\fR [\-d] [\-i] [\-x] HOSTNAME[:PORT]
 .SH "DESCRIPTION"
 .PP
 \fBasip\-status\&.pl\fR
-is a perl script that sends a FPGetSrvrInfo request to an AFP server at ADDRESS:PORT and displays the results, namely "Machine type", the server\'s name, supported AFP versions, UAMs and AFP flags, the "server signature" and the network addresses, the server provides AFP services on\&.
+is a perl script that sends a FPGetSrvrInfo request to an AFP server at HOSTNAME:PORT and displays the results, namely "Machine type", the server\'s name, supported AFP versions, UAMs and AFP flags, the "server signature" and the network addresses, the server provides AFP services on\&.
 .PP
 When you don\'t supply :PORT, then the default AFP port, 548, will be used\&.
+.SH "OPTIONS"
+.PP
+\fB\-d\fR
+.RS 4
+Enable debug output\&.
+.RE
+.PP
+\fB\-i\fR
+.RS 4
+Show icon if it exists\&.
+.RE
+.PP
+\fB\-x\fR
+.RS 4
+Enable hex dump output\&.
+.RE
 .SH "EXAMPLES"
 .PP
 .if n \{\
 .RS 4
 .\}
 .nf
-\fB:BINDIR:/asip\-status\&.pl\fR 192\&.168\&.21\&.2
+\fBasip\-status\&.pl\fR 192\&.168\&.21\&.2
 AFP reply from 192\&.168\&.21\&.2:548
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
@@ -61,8 +76,8 @@ Network address: 10\&.20 (ddp address)
 .RS 4
 .\}
 .nf
-\fB:BINDIR:/asip\-status\&.pl\fR 192\&.168\&.21\&.1:10548
-AFP reply from 192\&.168\&.21\&.1:10548
+\fBasip\-status\&.pl\fR myserver:10548
+AFP reply from myserver:10548
 Flags: 1  Cmd: 3  ID: 57005
 Reply: DSIGetStatus
 Request ID: 57005

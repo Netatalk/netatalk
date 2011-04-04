@@ -2,12 +2,12 @@
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 14 February 2011
+.\"      Date: 30 Mar 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "14 February 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD\&.CONF" "5" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -291,6 +291,28 @@ server as well, set
 \-server_quantum \fI[number]\fR
 .RS 4
 This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
+.RE
+.PP
+\-dsireadbuf \fI[number]\fR
+.RS 4
+Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
+\fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
+.RE
+.PP
+\-tcprcvbuf \fI[number]\fR
+.RS 4
+Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+.RE
+.PP
+\-tcpsndbuf \fI[number]\fR
+.RS 4
+Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+.RE
+.PP
+\-nozeroconf
+.RS 4
+Disable automatic Zeroconf
+service registration if support was compiled in\&.
 .RE
 .PP
 \-slp
@@ -602,4 +624,5 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 \fBafpd\fR(8),
 \fBafppasswd\fR(1),
 \fBAppleVolumes.default\fR(5),
-\fBafp_signature.conf\fR(5)
+\fBafp_signature.conf\fR(5),
+\fBcnid_metad\fR(8)
