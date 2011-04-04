@@ -436,12 +436,14 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 }
 
 /* ---------------------- */
-int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     uint32_t data;
     DSI *dsi = (DSI *)AFPobj->handle;
 
     *rbuflen = 0;
+    ibuf += 2;
+    ibuflen -= 2;
 
     if (ibuflen < 4)
         return AFPERR_MISC;
@@ -470,6 +472,7 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbu
             LOG(log_note, logtype_afpd, "afp_zzz: entering normal sleep");
         }
     }
+
     /*
      * According to AFP 3.3 spec we should not return anything,
      * but eg 10.5.8 server still returns the numbers of hours
