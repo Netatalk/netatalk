@@ -1,10 +1,15 @@
 Changes in 2.2beta4
 ===================
 
-* NEW: afpd: new afpd.conf optinos "tcprcvbuf" and "tcpsndbuf" to customize
+* NEW: afpd: new afpd.conf options "tcprcvbuf" and "tcpsndbuf" to customize
        the corresponding TCP socket options.
+* NEW: afpd: new afpd.conf option "nozeroconf" which disabled automatic
+       Zeroconf service registration.
 * FIX: afpd: generate mersenne primes for DHX2 UAM once at startup,
        not for every login
+* FIX: afpd: DSI streaming deadlock
+* FIX: afpd: extended sleep
+* FIX: afpd: directory cache
 * FIX: Support for platforms that do not have the *at functions
 * UPD: afpd: put POSIX write lock on volume files while reading them
 
