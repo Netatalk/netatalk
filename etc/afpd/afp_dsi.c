@@ -118,7 +118,7 @@ static void afp_dsi_die(int sig)
 
     dsi_attention(AFPobj->handle, AFPATTN_SHUTDOWN);
     afp_dsi_close(AFPobj);
-    if (sig) /* if no signal, assume dieing because logins are disabled &
+   if (sig) /* if no signal, assume dieing because logins are disabled &
                 don't log it (maintenance mode)*/
         LOG(log_info, logtype_afpd, "Connection terminated");
     if (sig == SIGTERM || sig == SIGALRM) {
@@ -495,6 +495,13 @@ void afp_over_dsi(AFPObj *obj)
             }
             /* Some error on the client connection, enter disconnected state */
             dsi->flags |= DSI_DISCONNECTED;
+
+            /* the client sometimes logs out (afp_logout) but doesn't close the DSI session */
+            if (dsi->flags & DSI_AFP_LOGGED_OUT) {
+                afp_dsi_close(obj);
+                exit(0);
+            }
+
             pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
@@ -542,7 +549,7 @@ void afp_over_dsi(AFPObj *obj)
             LOG(log_debug, logtype_afpd, "DSI: close session request");
             afp_dsi_close(obj);
             LOG(log_note, logtype_afpd, "done");
-            return;
+            exit(0);
 
         case DSIFUNC_TICKLE:
             dsi->flags &= ~DSI_DATA; /* thats no data in the sense we use it in alarm_handler */

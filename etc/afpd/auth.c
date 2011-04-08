@@ -937,8 +937,12 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen)
 {
+    DSI *dsi = (DSI *)(obj->handle);
+
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
+    of_close_all_forks();
     close_all_vol();
+    dsi->flags = DSI_AFP_LOGGED_OUT;
     *rbuflen = 0;
     return AFP_OK;
 }

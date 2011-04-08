@@ -485,3 +485,23 @@ void of_closevol(const struct vol *vol)
     return;
 }
 
+/* ----------------------
+   close all forks for a volume
+*/
+void of_close_all_forks(void)
+{
+    int refnum;
+
+    if (!oforks)
+        return;
+
+    for ( refnum = 0; refnum < nforks; refnum++ ) {
+        if (oforks[ refnum ] != NULL) {
+            if (of_closefork( oforks[ refnum ]) < 0 ) {
+                LOG(log_error, logtype_afpd, "of_close_all_forks: %s", strerror(errno) );
+            }
+        }
+    }
+    return;
+}
+

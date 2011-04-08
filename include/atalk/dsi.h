@@ -156,6 +156,7 @@ typedef struct DSI {
 #define DSI_NOREPLY          (1 << 6) /* in dsi_write we generate our own replies */
 #define DSI_RECONSOCKET      (1 << 7) /* we have a new socket from primary reconnect */
 #define DSI_RECONINPROG      (1 << 8) /* used in the new session in reconnect */
+#define DSI_AFP_LOGGED_OUT   (1 << 9) /* client called afp_logout, quit on next EOF from socket */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
