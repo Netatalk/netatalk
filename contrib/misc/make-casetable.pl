@@ -144,6 +144,9 @@ sub make_array{
         $block_enable[$block] = 0;
     }
 
+    $block_enable[1] = 1;           # ASCII block is forcibly included
+    $block_enable[2] = 1;           # in the array for Speed-Up.
+
     for ($block = 1024 ; $block <= 17409 ; $block++) {
         $block_enable_sp[$block] = 0;
     }
@@ -155,21 +158,21 @@ sub make_array{
     while (<UNICODEDATA>) {
         chop;
         (
-         $code0,
-         $Name1,
-         $General_Category2,
-         $Canonical_Combining_Class3,
-         $Bidi_Class4,
-         $Decomposition_Mapping5,
-         $Numeric_Value6,
-         $Numeric_Value7,
-         $Numeric_Value8,
-         $Bidi_Mirrored9,
-         $Unicode_1_Name10,
-         $ISO_Comment11,
-         $Simple_Uppercase_Mapping12,
-         $Simple_Lowercase_Mapping13,
-         $Simple_Titlecase_Mapping14
+            $code0,
+            $Name1,
+            $General_Category2,
+            $Canonical_Combining_Class3,
+            $Bidi_Class4,
+            $Decomposition_Mapping5,
+            $Numeric_Value6,
+            $Numeric_Value7,
+            $Numeric_Value8,
+            $Bidi_Mirrored9,
+            $Unicode_1_Name10,
+            $ISO_Comment11,
+            $Simple_Uppercase_Mapping12,
+            $Simple_Lowercase_Mapping13,
+            $Simple_Titlecase_Mapping14
         ) = split(/\;/);
 
         if ($_[0] eq "upper") {
@@ -236,15 +239,22 @@ sub make_array{
                        $table[$char][0],
                        $table[$char][1],
                        $table[$char][2]
-                    );
+                   );
             }
             printf(CHEADER "\}\;\n");
             printf(CHEADER "\n");
 
-            printf(CSOURCE "    if \( val \>\= 0x%04X \&\& val \<\= 0x%04X)\n",
-                   $char_start, $char_end);
-            printf(CSOURCE "        return %s\_table\_%d\[val-0x%04X\]\;\n",
-                   $_[0], $table_no, $char_start);
+            if ($char_start == 0x0000) {
+                printf(CSOURCE "    if \( val \<\= 0x%04X)\n",
+                       $char_end);
+                printf(CSOURCE "        return %s\_table\_%d\[val]\;\n",
+                       $_[0], $table_no);
+            } else {
+                printf(CSOURCE "    if \( val \>\= 0x%04X \&\& val \<\= 0x%04X)\n",
+                       $char_start, $char_end);
+                printf(CSOURCE "        return %s\_table\_%d\[val-0x%04X\]\;\n",
+                       $_[0], $table_no, $char_start);
+            }
             printf(CSOURCE "\n");
 
             $table_no++;
@@ -269,13 +279,13 @@ sub make_array{
 
         # rising edge detection
         if ((($block_enable_sp[$block - 1] == 0) || ((($block - 1) & 0xF) == 0))
-            && ($block_enable_sp[$block] == 1)) {
+                && ($block_enable_sp[$block] == 1)) {
             $block_start = $block;
         }
 
         # falling edge detection
         if (($block_enable_sp[$block] == 1) &&
-            ((($block - 1) & 0xF == 0xF) || ($block_enable_sp[$block + 1] == 0))) {
+                ((($block - 1) & 0xF == 0xF) || ($block_enable_sp[$block + 1] == 0))) {
             $block_end = $block;
 
             $char_start = ($block_start -1)* 64;
@@ -291,7 +301,7 @@ sub make_array{
                        $table_sp[$char][2],
                        $table_sp[$char][3],
                        $table_sp[$char][4]
-                    );
+                   );
             }
             printf(CHEADER "\}\;\n");
             printf(CHEADER "\n");

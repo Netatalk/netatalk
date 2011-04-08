@@ -17,8 +17,8 @@ http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 *******************************************************************/
 ucs2_t toupper_w(ucs2_t val)
 {
-    if ( val >= 0x0040 && val <= 0x02BF)
-        return upper_table_1[val-0x0040];
+    if ( val <= 0x02BF)
+        return upper_table_1[val];
 
     if ( val >= 0x0340 && val <= 0x05BF)
         return upper_table_2[val-0x0340];
@@ -66,8 +66,8 @@ u_int32_t toupper_sp(u_int32_t val)
 *******************************************************************/
 ucs2_t tolower_w(ucs2_t val)
 {
-    if ( val >= 0x0040 && val <= 0x007F)
-        return lower_table_1[val-0x0040];
+    if ( val <= 0x007F)
+        return lower_table_1[val];
 
     if ( val >= 0x00C0 && val <= 0x027F)
         return lower_table_2[val-0x00C0];
