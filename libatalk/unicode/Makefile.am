@@ -12,10 +12,11 @@ libunicode_la_SOURCES = \
 	util_unistr.c	\
 	iconv.c		\
 	charcnv.c	\
-	utf8.c
+	utf8.c		\
+	utf16_case.c
 
 libunicode_la_LIBADD = $(LIBUNICODE_DEPS)
 
-noinst_HEADERS = ucs2_casetable.h precompose.h byteorder.h
+noinst_HEADERS = utf16_casetable.h precompose.h byteorder.h
 
 LIBS=@ICONV_LIBS@
