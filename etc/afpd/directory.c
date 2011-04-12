@@ -28,6 +28,7 @@
 #include <atalk/unix.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/errchk.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -430,6 +431,84 @@ int get_afp_errno(const int param)
 }
 
 /*!
+ * Resolve struct dir for an absolute path
+ *
+ * Given a path like "/Volumes/volume/dir/subdir" in a volume "/Volumes/volume" return
+ * a pointer to struct dir of "subdir".
+ * 1. Remove volue path from absolute path
+ * 2. start path
+ * 3. loop through all elements of the remaining path from 1.
+ * 4. we only allow dirs
+ * 5. search dircache
+ * 6. if not found in the dircache query the CNID database for the DID
+ * 7. and use dirlookup to resolve the DID to a it's struct dir *
+ *
+ * @param vol   (r) volume the path is in, must be known
+ * @param path  (r) absoule path
+ *
+ * @returns pointer to struct dir or NULL on error
+ */
+struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
+{
+    EC_INIT;
+
+    struct dir *dir = NULL;
+    cnid_t cnid, did;
+    bstring rpath = NULL;
+    bstring statpath = NULL;
+    struct bstrList *l = NULL;
+    struct stat st;
+
+    cnid = htonl(2);
+    dir = vol->v_root;
+
+    EC_NULL(rpath = rel_path_in_vol(path, vol->v_path)); /* 1. */
+    EC_NULL(statpath = bfromcstr(vol->v_path));          /* 2. */
+
+    l = bsplit(rpath, '/');
+    for (int i = 0; i < l->qty ; i++) {                  /* 3. */
+        did = cnid;
+        EC_ZERO(bconcat(statpath, l->entry[i]));
+        EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
+                       "lstat(rpath: %s, elem: %s): %s: %s",
+                       cfrombstr(rpath), cfrombstr(l->entry[i]),
+                       cfrombstr(statpath), strerror(errno));
+
+        if (!(S_ISDIR(st.st_mode)))                      /* 4. */
+            EC_FAIL;
+
+        if ((dir = dircache_search_by_name(vol,          /* 5. */
+                                           dir,
+                                           cfrombstr(l->entry[i]),
+                                           blength(l->entry[i]),
+                                           st.st_ctime)) == NULL) {
+            if ((cnid = cnid_add(vol->v_cdb,             /* 6. */
+                                 &st,
+                                 did,
+                                 cfrombstr(l->entry[i]),
+                                 blength(l->entry[i]),
+                                 0)) == CNID_INVALID) {
+                EC_FAIL;
+            }
+
+            if ((dir = dirlookup(vol, cnid)) == NULL) /* 7. */
+                EC_FAIL;
+        }
+
+        EC_ZERO(bcatcstr(statpath, "/"));
+    }
+
+EC_CLEANUP:
+    bdestroy(rpath);
+    bstrListDestroy(l);
+    bdestroy(statpath);
+    if (ret != 0)
+        return NULL;
+
+    return dir;
+}
+
+/*!
  * @brief Resolve a DID
  *
  * Resolve a DID, allocate a struct dir for it
@@ -446,9 +525,6 @@ int get_afp_errno(const int param)
  * @param did   (r) DID to resolve
  *
  * @returns pointer to struct dir
- *
- * @note FIXME: OSX calls it with bogus id, ie file ID not folder ID,
- *       and we are really bad in this case.
  */
 struct dir *dirlookup(const struct vol *vol, cnid_t did)
 {
@@ -514,8 +590,12 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
     /* Get it from the database */
     cnid = did;
-    if ( (upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL 
-         || (upath = strdup(upath)) == NULL) { /* 3 */
+    if ((upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL) {
+        afp_errno = AFPERR_NOOBJ;
+        err = 1;
+        goto exit;
+    }
+    if ((upath = strdup(upath)) == NULL) { /* 3 */
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
@@ -527,6 +607,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
      * - DIRDID_ROOT is hit
      * - a cached entry is found
      */
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {recursion for did: %u}", ntohl(pdid));
     if ((pdir = dirlookup(vol, pdid)) == NULL) {
         err = 1;
         goto exit;
@@ -826,6 +907,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     /* Get macname from unixname */
     if (path->m_name == NULL) {
         if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding())) == NULL) {
+            LOG(log_error, logtype_afpd, "dir_add(\"%s\"): can't assign macname", path->u_name);
             err = 2;
             goto exit;
         }
@@ -904,12 +986,6 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
         return 0;
-
-    if (dir->d_flags & DIRF_CACHELOCK) { /* 1 */
-        LOG(log_warning, logtype_afpd, "dir_remove(did:%u,'%s'): dir is locked",
-            ntohl(dir->d_did), cfrombstr(dir->d_u_name));
-        return 0;
-    }
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
@@ -1271,8 +1347,6 @@ int movecwd(const struct vol *vol, struct dir *dir)
     LOG(log_maxdebug, logtype_afpd, "movecwd: from: curdir:\"%s\", cwd:\"%s\"",
         cfrombstr(curdir->d_fullpath), getcwdpath());
 
-    if ( dir == curdir)
-        return( 0 );
     if (dir->d_did == DIRDID_ROOT_PARENT) {
         curdir = &rootParent;
         return 0;

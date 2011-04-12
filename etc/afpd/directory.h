@@ -48,7 +48,6 @@
 
 #define DIRF_OFFCNT    (1<<4) /* offsprings count is valid */
 #define DIRF_CNID	   (1<<5) /* renumerate id */
-#define DIRF_CACHELOCK (1<<6) /* lock in cache, don't remove in dircache_eviction, for catsearch */
 
 #define AFPDIR_READ	(1<<0)
 
@@ -117,6 +116,8 @@ extern int         dir_modify(const struct vol *vol, struct dir *dir, cnid_t pdi
                               const char *new_mname, const char *new_uname, bstring pdir_fullpath);
 extern int         dir_remove(const struct vol *vol, struct dir *dir);
 extern struct dir  *dirlookup (const struct vol *, cnid_t);
+extern struct dir *dirlookup_bypath(const struct vol *vol, const char *path);
+
 extern int         movecwd (const struct vol *, struct dir *);
 extern struct path *cname (struct vol *, struct dir *, char **);
 

@@ -108,7 +108,8 @@ struct scrit {
  *
  */
 struct dsitem {
-	struct dir *dir; /* Structure describing this directory */
+//	struct dir *dir; /* Structure describing this directory */
+//  cnid_t did;      /* CNID of this directory           */
 	int pidx;        /* Parent's dsitem structure index. */
 	int checked;     /* Have we checked this directory ? */
 	int path_len;
@@ -141,8 +142,7 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 
 	/* Put new element. Allocate and copy lname and path. */
 	ds = dstack + dsidx++;
-	ds->dir = dir;
-    dir->d_flags |= DIRF_CACHELOCK;
+//	ds->did = dir->d_did;
 	ds->pidx = pidx;
 	ds->checked = 0;
 	if (pidx >= 0) {
@@ -175,7 +175,6 @@ static int reducestack(void)
 	while (dsidx > 0) {
 		if (dstack[dsidx-1].checked) {
 			dsidx--;
-            dstack[dsidx].dir->d_flags &= ~DIRF_CACHELOCK;
 			free(dstack[dsidx].path);
 		} else
 			return dsidx - 1;
@@ -189,7 +188,6 @@ static void clearstack(void)
 	save_cidx = -1;
 	while (dsidx > 0) {
 		dsidx--;
-        dstack[dsidx].dir->d_flags &= ~DIRF_CACHELOCK;
 		free(dstack[dsidx].path);
 	}
 } 
@@ -506,6 +504,7 @@ static int catsearch(struct vol *vol,
 {
     static u_int32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
     static DIR *dirpos; 		 /* UNIX structure describing currently opened directory. */
+    struct dir *curdir;          /* struct dir of current directory */
 	int cidx, r;
 	struct dirent *entry;
 	int result = AFP_OK;
@@ -576,8 +575,13 @@ static int catsearch(struct vol *vol,
 			} /* switch (errno) */
 			goto catsearch_end;
 		}
+
+        if ((curdir = dirlookup_bypath(vol, dstack[cidx].path)) == NULL) {
+            result = AFPERR_MISC;
+            goto catsearch_end;
+        }
 		
-		while ((entry=readdir(dirpos)) != NULL) {
+		while ((entry = readdir(dirpos)) != NULL) {
 			(*pos)++;
 
 			if (!check_dirent(vol, entry->d_name))
@@ -606,10 +610,17 @@ static int catsearch(struct vol *vol,
 				   ALL dirsearch_byname will fail.
 				*/
                 int unlen = strlen(path.u_name);
-                path.d_dir = dircache_search_by_name(vol, dstack[cidx].dir, path.u_name, unlen, path.st.st_ctime);
+                path.d_dir = dircache_search_by_name(vol,
+                                                     curdir,
+                                                     path.u_name,
+                                                     unlen,
+                                                     path.st.st_ctime);
             	if (path.d_dir == NULL) {
                 	/* path.m_name is set by adddir */
-            	    if (NULL == (path.d_dir = dir_add( vol, dstack[cidx].dir, &path, unlen) ) ) {
+            	    if ((path.d_dir = dir_add(vol,
+                                              curdir,
+                                              &path,
+                                              unlen)) == NULL) {
 						result = AFPERR_MISC;
 						goto catsearch_end;
 					}
@@ -620,11 +631,10 @@ static int catsearch(struct vol *vol,
 					result = AFPERR_MISC;
 					goto catsearch_end;
 				} 
+            } else {
+            	path.d_dir = curdir;
             }
-            else {
-            	/* yes it sucks for directory d_dir is the directory, for file it's the parent directory*/
-            	path.d_dir = dstack[cidx].dir;
-            }
+
 			ccr = crit_check(vol, &path);
 
 			/* bit 0 means that criteria has been met */

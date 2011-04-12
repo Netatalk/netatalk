@@ -7,6 +7,7 @@ AM_CFLAGS = -I$(top_srcdir)/sys
 libutil_la_SOURCES = \
 	atalk_addr.c	\
 	bprint.c	\
+	cnid.c		\
 	fault.c		\
 	getiface.c	\
 	locking.c   \
