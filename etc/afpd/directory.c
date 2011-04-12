@@ -973,7 +973,7 @@ void dir_free_invalid_q(void)
  * 1. Check if the dir is locked or has opened forks
  * 2. Remove it from the cache
  * 3. Queue it for removal
- * 4. If it's a request to remove curdir, use dirlookup to get a fresh dir for the did
+ * 4. If it's a request to remove curdir, mark curdir as invalid
  * 5. Mark it as invalid
  *
  * @param (r) pointer to struct vol
@@ -993,13 +993,8 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     enqueue(invalid_dircache_entries, dir); /* 3 */
 
-    if (curdir == dir) {        /* 4 */
-        curdir = dirlookup(vol, dir->d_did);
-        if (movecwd(vol, curdir) < 0) {
-            LOG(log_error, logtype_afpd, "dir_remove: can't chdir to : %s",
-                cfrombstr(curdir->d_fullpath));
-        }
-    }
+    if (curdir == dir)                      /* 4 */
+        curdir = NULL;
 
     dir->d_did = CNID_INVALID;              /* 5 */
 
@@ -1345,7 +1340,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     AFP_ASSERT(dir);
 
     LOG(log_maxdebug, logtype_afpd, "movecwd: from: curdir:\"%s\", cwd:\"%s\"",
-        cfrombstr(curdir->d_fullpath), getcwdpath());
+        curdir ? cfrombstr(curdir->d_fullpath) : "INVALID", getcwdpath());
 
     if (dir->d_did == DIRDID_ROOT_PARENT) {
         curdir = &rootParent;
