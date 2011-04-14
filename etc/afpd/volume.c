@@ -690,6 +690,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     /* check duplicate */
     for ( volume = Volumes; volume; volume = volume->v_next ) {
         if (( strcasecmp_w( volume->v_u8mname, u8mtmpname ) == 0 ) || ( strcasecmp_w( volume->v_macname, mactmpname ) == 0 )){
+            LOG (log_error, logtype_afpd, "ERROR: Volume name is duplicated. Check AppleVolumes files.");
             if (volume->v_deleted) {
                 volume->v_new = hide = 1;
             }
