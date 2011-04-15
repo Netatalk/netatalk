@@ -325,15 +325,20 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_set_ea(%s/%s): encountered symlink with kXAttrNoFollow",
-                uname, attruname);
+            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): encountered symlink with kXAttrNoFollow",
+                getcwdpath(), uname, attruname);
             return AFP_OK;
         case EEXIST:
-            LOG(log_debug, logtype_afpd, "sys_set_ea(%s/%s): EA already exists",
-                uname, attruname);
+            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): EA already exists",
+                getcwdpath(), uname, attruname);
             return AFPERR_EXIST;
         default:
-            LOG(log_error, logtype_afpd, "sys_set_ea(%s/%s): error: %s", uname, attruname, strerror(errno));
+            LOG(log_error, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s', size: %u, flags: %s|%s|%s): %s",
+                getcwdpath(), uname, attruname, attrsize, 
+                oflag & O_CREAT ? "XATTR_CREATE" : "-",
+                oflag & O_TRUNC ? "XATTR_REPLACE" : "-",
+                oflag & O_NOFOLLOW ? "O_NOFOLLOW" : "-",
+                strerror(errno));
             return AFPERR_MISC;
         }
     }
