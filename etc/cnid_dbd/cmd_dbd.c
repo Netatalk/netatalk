@@ -90,12 +90,13 @@ static struct db_param db_param = {
     NULL,                       /* Volume dirpath */
     1,                          /* bdb logfile autoremove */
     64 * 1024,                  /* bdb cachesize (64 MB) */
-    -1,                         /* not used ... */
-    -1,
-    "",
-    -1,
-    -1,
-    -1
+    0,                          /* flush_interval */
+    0,                          /* flush_frequency */
+    1000,                       /* txn_frequency */
+    0,                          /* usock_file */
+    -1,                         /* fd_table_size */
+    -1,                         /* idle_timeout */
+    -1                          /* max_vols */
 };
 static char dbpath[PATH_MAX];   /* Path to the dbd database */
 
@@ -467,9 +468,11 @@ int main(int argc, char **argv)
 
     /* Cleanup */
     dbd_log(LOGDEBUG, "Closing db");
-    if (! nocniddb && dbif_close(dbd) < 0) {
-        dbd_log( LOGSTD, "Error closing database");
-        goto exit_failure;
+    if (! nocniddb) {
+        if (dbif_close(dbd) < 0) {
+            dbd_log( LOGSTD, "Error closing database");
+            goto exit_failure;
+        }
     }
 
 exit_success:

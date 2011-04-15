@@ -274,6 +274,8 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
         return -1;
     }
 
+    dbd->db_param = *dbp;
+
     if ((dbif_openlog(dbd)) != 0)
         return -1;
 
@@ -789,9 +791,15 @@ int dbif_txn_abort(DBD *dbd)
 }
 
 /* 
-   ret = 1 -> commit txn
-   ret = 0 -> abort txn -> exit!
+   ret = 2 -> commit txn regardless of db_param.txn_frequency
+   ret = 1 -> commit txn if db_param.txn_frequency
+   ret = 0 -> abort txn db_param.txn_frequency -> exit!
    anything else -> exit!
+
+   db_param of the db environment might specify txn_frequency > 1 in which case
+   we only close a txn every txn_frequency time. the `dbd` command uses this for the
+   temp rebuild db, cnid_dbd keeps it at 0. For increasing cnid_dbd throughput this
+   should be tuned and testes as well.
 */
 void dbif_txn_close(DBD *dbd, int ret)
 {
@@ -800,7 +808,13 @@ void dbif_txn_close(DBD *dbd, int ret)
             LOG( log_error, logtype_cnid, "Fatal error aborting transaction. Exiting!");
             exit(EXIT_FAILURE);
         }
-    } else if (ret == 1) {
+    } else if (ret == 1 || ret == 2) {
+        static uint count;
+        if (ret != 2 && dbd->db_param.txn_frequency > 1) {
+            count++;
+            if ((count % dbd->db_param.txn_frequency) != 0)
+                return;
+        }
         ret = dbif_txn_commit(dbd);
         if (  ret < 0) {
             LOG( log_error, logtype_cnid, "Fatal error committing transaction. Exiting!");

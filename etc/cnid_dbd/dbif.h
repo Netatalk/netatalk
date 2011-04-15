@@ -75,6 +75,7 @@ typedef struct {
 
 typedef struct {
     DB_ENV   *db_env;
+    struct db_param db_param;
     DB_TXN   *db_txn;
     DBC      *db_cur;              /* for dbif_walk */
     char     *db_envhome;
