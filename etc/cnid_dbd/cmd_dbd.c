@@ -230,7 +230,7 @@ static void free_lock(int lockfd)
 
 static void usage (void)
 {
-    printf("Usage: dbd [-e|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
+    printf("Usage: dbd [-e|-t|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
@@ -267,6 +267,7 @@ static void usage (void)
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
+           "   -t show statistics while running\n"
            "   -v verbose\n\n"
            "WARNING:\n"
            "For -r -f restore of the CNID database from the adouble files, the CNID must of course\n"
@@ -289,7 +290,7 @@ int main(int argc, char **argv)
     /* Inhereting perms in ad_mkdir etc requires this */
     ad_setfuid(0);
 
-    while ((c = getopt(argc, argv, ":cdefinrsuvx")) != -1) {
+    while ((c = getopt(argc, argv, ":cdefinrstuvx")) != -1) {
         switch(c) {
         case 'c':
             flags |= DBD_FLAGS_CLEANUP;
@@ -309,6 +310,9 @@ int main(int argc, char **argv)
             break;
         case 'r':
             rebuild = 1;
+            break;
+        case 't':
+            flags |= DBD_FLAGS_STATS;
             break;
         case 'u':
             prep_upgrade = 1;
@@ -476,6 +480,7 @@ int main(int argc, char **argv)
     }
 
     /* Cleanup */
+    dbd_log(LOGDEBUG, "Closing db");
     if (! nocniddb && dbif_close(dbd) < 0) {
         dbd_log( LOGSTD, "Error closing database");
         goto exit_failure;

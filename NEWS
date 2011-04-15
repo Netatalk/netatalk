@@ -102,6 +102,7 @@ Changes in 2.1.6
 * FIX: Solaris: configure script failed to enable DDP module
 * FIX: AppleDouble buffer overrun by extremely long filename
 * UPD: afpd: return version info with machine type in DSIGetStatus
+* UPD: dbd: use on-disk temporary rebuild db instead of in-memory db
 
 Changes in 2.1.5
 ================

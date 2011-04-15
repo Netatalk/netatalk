@@ -922,6 +922,22 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
 
         /**************************************************************************
+           Statistics
+         **************************************************************************/
+        static unsigned long long statcount = 0;
+        static time_t t = 0;
+
+        if (t == 0)
+            t = time(NULL);
+
+        statcount++;
+        if ((statcount % 10000) == 0) {
+            if (dbd_flags & DBD_FLAGS_STATS)            
+                dbd_log(LOGSTD, "Scanned: %10llu, time: %10llu s",
+                        statcount, (unsigned long long)(time(NULL) - t));
+        }
+
+        /**************************************************************************
            Tests
         **************************************************************************/
 
@@ -944,7 +960,8 @@ static int dbd_readdir(int volroot, cnid_t did)
             /* Now add this object to our rebuild dbd */
             if (cnid) {
                 rqst.cnid = rply.cnid;
-                dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
+                ret = dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
+                dbif_txn_close(dbd_rebuild, ret);
                 if (rply.result != CNID_DBD_RES_OK) {
                     dbd_log( LOGDEBUG, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
                              cnid, cwdbuf, ep->d_name);
@@ -1030,7 +1047,7 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
 */
 static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
 {
-    int ret, deleted = 0;
+    int ret = 0, deleted = 0;
     cnid_t dbd_cnid = 0, rebuild_cnid = 0;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -1051,7 +1068,7 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
         if (alarmed)
             longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
 
-        if (deleted > 50) {
+        if (deleted > 1000) {
             deleted = 0;
             if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
                 dbd_log(LOGSTD, "Error checkpointing!");
@@ -1123,6 +1140,16 @@ cleanup:
     return;
 }
 
+static const char *get_tmpdb_path(void)
+{
+    pid_t pid = getpid();
+    static char path[MAXPATHLEN];
+    snprintf(path, MAXPATHLEN, "/tmp/tmpdb-dbd.%u", pid);
+    if (mkdir(path, 0755) != 0)
+        return NULL;
+    return path;
+}
+
 /*
   Main func called from cmd_dbd.c
 */
@@ -1130,6 +1157,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
 {
     int ret = 0;
     struct db_param db_param = { 0 };
+    const char *tmpdb_path = NULL;
 
     /* Set cachesize for in-memory rebuild db */
     db_param.cachesize = 256 * 1024 * 1024; /* 128 MB */
@@ -1147,24 +1175,44 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
         /* Get volume stamp */
         dbd_getstamp(dbd, &rqst, &rply);
         if (rply.result != CNID_DBD_RES_OK)
-            goto exit_cleanup;
+            goto exit;
         memcpy(stamp, rply.name, CNID_DEV_LEN);
 
         /* open/create rebuild dbd, copy rootinfo key */
-        if (NULL == (dbd_rebuild = dbif_init(NULL, NULL)))
-            return -1;
-        if (0 != (dbif_open(dbd_rebuild, &db_param, 0)))
-            return -1;
-        if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild)))
-            goto exit_cleanup;
+        tmpdb_path = get_tmpdb_path();
+        if (NULL == (dbd_rebuild = dbif_init(tmpdb_path, "cnid2.db"))) {
+            ret = -1;
+            goto exit;
+        }
+
+        if (dbif_env_open(dbd_rebuild,
+                          &db_param,
+                          DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN) < 0) {
+            dbd_log(LOGSTD, "error opening tmp database!");
+            goto exit;
+        }
+
+        if (0 != (dbif_open(dbd_rebuild, NULL, 0))) {
+            ret = -1;
+            goto exit;
+        }
+
+        if (0 != (dbif_copy_rootinfokey(dbd, dbd_rebuild))) {
+            ret = -1;
+            goto exit;
+        }
     }
 
-    if (setjmp(jmp) != 0)
-        goto exit_cleanup;      /* Got signal, jump from dbd_readdir */
+    if (setjmp(jmp) != 0) {
+        ret = 0;                /* Got signal, jump from dbd_readdir */
+        goto exit;              
+    }
 
     /* scanvol */
-    if ( (scanvol(vi, flags)) != 0)
-        return -1;
+    if ( (scanvol(volinfo, flags)) != 0) {
+        ret = -1;
+        goto exit;
+    }
 
     if (! nocniddb) {
         /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
@@ -1173,8 +1221,20 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
             delete_orphaned_cnids(dbd, dbd_rebuild, flags);
     }
 
-exit_cleanup:
-    if (! nocniddb)
+exit:
+    if (dbd_rebuild) {
+        dbd_log(LOGDEBUG, "Closing tmp db");
         dbif_close(dbd_rebuild);
+#if 0
+        if (tmpdb_path) {
+            char cmd[8 + MAXPATHLEN];
+            snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", tmpdb_path);
+            dbd_log( LOGDEBUG, "Removing temp database '%s'", tmpdb_path);
+            system(cmd);
+            snprintf(cmd, 8 + MAXPATHLEN, "rmdir %s", tmpdb_path);
+            system(cmd);
+        }        
+#endif
+    }
     return ret;
 }
