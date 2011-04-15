@@ -673,6 +673,17 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     cnid_t db_cnid, ad_cnid;
     struct adouble ad;
 
+    /* Force checkout every X items */
+    static int cnidcount = 0;
+    cnidcount++;
+    if (cnidcount > 10000) {
+        cnidcount = 0;
+        if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
+            dbd_log(LOGSTD, "Error checkpointing!");
+            return 0;
+        }
+    }
+
     /* Get CNID from ad-file if volume is using AFPVOL_CACHE */
     ad_cnid = 0;
     if ( (myvolinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
@@ -959,6 +970,7 @@ static int dbd_readdir(int volroot, cnid_t did)
 
             /* Now add this object to our rebuild dbd */
             if (cnid) {
+                static uint count = 0;
                 rqst.cnid = rply.cnid;
                 ret = dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
                 dbif_txn_close(dbd_rebuild, ret);
@@ -966,6 +978,14 @@ static int dbd_readdir(int volroot, cnid_t did)
                     dbd_log( LOGDEBUG, "Fatal error adding CNID: %u for '%s/%s' to in-memory rebuild-db",
                              cnid, cwdbuf, ep->d_name);
                     longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+                }
+                count++;
+                if (count == 10000) {
+                    if (dbif_txn_checkpoint(dbd_rebuild, 0, 0, 0) < 0) {
+                        dbd_log(LOGSTD, "Error checkpointing!");
+                        return -1;
+                    }
+                    count = 0;
                 }
             }
         }
@@ -1052,6 +1072,8 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 
+    dbd->db_param.txn_frequency = 0;
+
     /* jump over rootinfo key */
     if ( dbif_idwalk(dbd, &dbd_cnid, 0) != 1)
         return;
@@ -1124,12 +1146,13 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
         }
 
         if (dbd_cnid > rebuild_cnid) {
+            dbif_idwalk(dbd, NULL, 1); /* Close cursor */
+            dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
+            dbif_txn_close(dbd, 2);
+            dbif_txn_close(dbd_rebuild, 2);
             dbd_log(LOGSTD, "Ghost CNID: %u. This is fatal! Dumping rebuild db:\n", rebuild_cnid);
             dbif_dump(dbd_rebuild, 0);
             dbd_log(LOGSTD, "Send this dump and a `dbd -d ...` dump to the Netatalk Dev team!");
-            dbif_txn_close(dbd, ret);
-            dbif_idwalk(dbd, NULL, 1); /* Close cursor */
-            dbif_idwalk(dbd_rebuild, NULL, 1); /* Close cursor */
             goto cleanup;
         }
     } /* while ((dbif_idwalk(dbd, &dbd_cnid, 0)) == 1) */
@@ -1163,6 +1186,8 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
     db_param.cachesize = 128 * 1024; /* 128 MB */
     db_param.maxlocks = DEFAULT_MAXLOCKS;
     db_param.maxlockobjs = DEFAULT_MAXLOCKOBJS;
+    db_param.txn_frequency = 1000;          /* close txn every 1000 objects */
+    db_param.logfile_autoremove = 1;
 
     /* Make it accessible for all funcs */
     dbd = dbd_ref;
@@ -1207,7 +1232,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
 
     if (setjmp(jmp) != 0) {
         ret = 0;                /* Got signal, jump from dbd_readdir */
-        goto exit;              
+        goto exit_cleanup;              
     }
 
     /* scanvol */
@@ -1216,10 +1241,13 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
         goto exit;
     }
 
+exit_cleanup:
     if (! nocniddb) {
-        /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
-           other clients in between our pass 1 and 2 */
-        if (flags & DBD_FLAGS_EXCL)
+        dbif_txn_close(dbd, 2);
+        dbif_txn_close(dbd_rebuild, 2);
+        if ((flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE))
+            /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
+               other clients in between our pass 1 and 2 */
             delete_orphaned_cnids(dbd, dbd_rebuild, flags);
     }
 
@@ -1227,7 +1255,7 @@ exit:
     if (dbd_rebuild) {
         dbd_log(LOGDEBUG, "Closing tmp db");
         dbif_close(dbd_rebuild);
-#if 0
+
         if (tmpdb_path) {
             char cmd[8 + MAXPATHLEN];
             snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", tmpdb_path);
@@ -1236,7 +1264,6 @@ exit:
             snprintf(cmd, 8 + MAXPATHLEN, "rmdir %s", tmpdb_path);
             system(cmd);
         }        
-#endif
     }
     return ret;
 }

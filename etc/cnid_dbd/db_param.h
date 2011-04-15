@@ -28,6 +28,7 @@ struct db_param {
     int maxlockobjs;
     int flush_interval;
     int flush_frequency;
+    int txn_frequency;
     char usock_file[MAXPATHLEN + 1];    
     int fd_table_size;
     int idle_timeout;
