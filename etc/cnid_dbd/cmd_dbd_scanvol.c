@@ -1176,7 +1176,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
     const char *tmpdb_path = NULL;
 
     /* Set cachesize for in-memory rebuild db */
-    db_param.cachesize = 128 * 1024 * 1024; /* 128 MB */
+    db_param.cachesize = 64 * 1024;         /* 64 MB */
     db_param.txn_frequency = 1000;          /* close txn every 1000 objects */
     db_param.logfile_autoremove = 1;
 
