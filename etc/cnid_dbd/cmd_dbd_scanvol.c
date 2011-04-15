@@ -1209,7 +1209,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
     }
 
     /* scanvol */
-    if ( (scanvol(volinfo, flags)) != 0) {
+    if ( (scanvol(vi, flags)) != 0) {
         ret = -1;
         goto exit;
     }
