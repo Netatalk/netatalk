@@ -579,7 +579,8 @@ int main(int argc, char *argv[])
 
         /* Load .volinfo file */
         if ((volinfo = allocvolinfo(volpath)) == NULL) {
-            LOG(log_severe, logtype_cnid, "allocvolinfo: %s", strerror(errno));
+            LOG(log_severe, logtype_cnid, "allocvolinfo(\"%s\"): %s",
+                volpath, strerror(errno));
             goto loop_end;
         }
 
