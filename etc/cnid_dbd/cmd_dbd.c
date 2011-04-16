@@ -422,9 +422,14 @@ int main(int argc, char **argv)
         close(dbdirfd);
     }
 
+    /* 
+       Before we do anything else, check if there is an instance of cnid_dbd
+       running already and silently exit if yes.
+    */
+    lockfd = get_lock(dbpath);
+
     /* Prepare upgrade ? */
     if (prep_upgrade) {
-        lockfd = get_lock(dbpath);
         if (dbif_env_remove(dbpath))
             goto exit_failure;
         goto exit_success;
@@ -433,21 +438,13 @@ int main(int argc, char **argv)
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
-        snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
+        close(lockfd);
+        snprintf(cmd, 8 + MAXPATHLEN, "rm -f \"%s/*\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
-        if ((mkdir(dbpath, 0755)) != 0) {
-            dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
         dbd_log( LOGDEBUG, "Removed old database.");
+        lockfd = get_lock(dbpath);
     }
-
-    /* 
-       Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes.
-    */
-    lockfd = get_lock(dbpath);
 
     /* 
        Lets start with the BerkeleyDB stuff
