@@ -439,9 +439,13 @@ int main(int argc, char **argv)
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
         close(lockfd);
-        snprintf(cmd, 8 + MAXPATHLEN, "rm -f \"%s/*\"", dbpath);
+        snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
+        if ((mkdir(dbpath, 0755)) != 0) {
+            dbd_log( LOGSTD, "Can't create dbpath \"%s\": %s", dbpath, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
         dbd_log( LOGDEBUG, "Removed old database.");
         lockfd = get_lock(dbpath);
     }
