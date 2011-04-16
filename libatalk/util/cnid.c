@@ -119,7 +119,11 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
      *   volpath: /Volume/netatalk/
      * we want: "dir/bla"
      */
-    EC_ZERO(bdelete(fpath, 0, strlen(volpath)));
+    int len = strlen(volpath);
+    if (volpath[len-1] != '/')
+        /* in case volpath has no trailing slash */
+        len ++;
+    EC_ZERO(bdelete(fpath, 0, len));
 
 EC_CLEANUP:
     if (dname) free(dname);

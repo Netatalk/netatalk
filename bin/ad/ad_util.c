@@ -274,15 +274,16 @@ cnid_t cnid_for_path(const afpvol_t *vol,
     struct bstrList *l = NULL;
     struct stat st;
 
-    *did = htonl(1);
     cnid = htonl(2);
 
     EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
     EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
+    EC_ZERO(bcatcstr(statpath, "/"));
 
     l = bsplit(rpath, '/');
     for (int i = 0; i < l->qty ; i++) {
         *did = cnid;
+
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
                        "lstat(rpath: %s, elem: %s): %s: %s",
