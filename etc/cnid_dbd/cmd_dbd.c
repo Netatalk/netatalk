@@ -407,14 +407,9 @@ int main(int argc, char **argv)
         close(dbdirfd);
     }
 
-    /* 
-       Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes.
-    */
-    lockfd = get_lock(dbpath);
-
     /* Prepare upgrade ? */
     if (prep_upgrade) {
+        lockfd = get_lock(dbpath);
         if (dbif_prep_upgrade(dbpath))
             goto exit_failure;
         goto exit_success;
@@ -428,6 +423,12 @@ int main(int argc, char **argv)
         system(cmd);
         dbd_log( LOGDEBUG, "Removed old database.");
     }
+
+    /* 
+       Before we do anything else, check if there is an instance of cnid_dbd
+       running already and silently exit if yes.
+    */
+    lockfd = get_lock(dbpath);
 
     /* 
        Lets start with the BerkeleyDB stuff
