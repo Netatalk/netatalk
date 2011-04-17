@@ -1016,28 +1016,33 @@ int dbif_txn_abort(DBD *dbd)
    we only close a txn every txn_frequency time. the `dbd` command uses this for the
    temp rebuild db, cnid_dbd keeps it at 0. For increasing cnid_dbd throughput this
    should be tuned and testes as well.
+
+   @returns 0 on success (abort or commit), -1 on error
 */
-void dbif_txn_close(DBD *dbd, int ret)
+int dbif_txn_close(DBD *dbd, int ret)
 {
     if (ret == 0) {
         if (dbif_txn_abort(dbd) < 0) {
             LOG( log_error, logtype_cnid, "Fatal error aborting transaction. Exiting!");
-            exit(EXIT_FAILURE);
+            return -1;
         }
     } else if (ret == 1 || ret == 2) {
         static uint count;
         if (ret != 2 && dbd->db_param.txn_frequency > 1) {
             count++;
             if ((count % dbd->db_param.txn_frequency) != 0)
-                return;
+                return 0;
         }
         ret = dbif_txn_commit(dbd);
         if (  ret < 0) {
             LOG( log_error, logtype_cnid, "Fatal error committing transaction. Exiting!");
-            exit(EXIT_FAILURE);
+            return -1;
         }
-    } else
-       exit(EXIT_FAILURE);
+    } else {
+        return -1;
+    }
+
+    return 0;
 }
 
 int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min, u_int32_t flags)

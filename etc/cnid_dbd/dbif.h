@@ -102,7 +102,7 @@ extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 extern int dbif_txn_begin(DBD *);
 extern int dbif_txn_commit(DBD *);
 extern int dbif_txn_abort(DBD *);
-extern void dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
+extern int dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
 extern int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
 
 extern int dbif_dump(DBD *dbd, int dumpindexes);
