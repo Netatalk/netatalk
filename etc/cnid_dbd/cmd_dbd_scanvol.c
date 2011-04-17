@@ -1232,7 +1232,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
 
     if (setjmp(jmp) != 0) {
         ret = 0;                /* Got signal, jump from dbd_readdir */
-        goto exit_cleanup;              
+        goto exit;
     }
 
     /* scanvol */
@@ -1241,17 +1241,17 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
         goto exit;
     }
 
-exit_cleanup:
+exit:
     if (! nocniddb) {
         dbif_txn_close(dbd, 2);
-        dbif_txn_close(dbd_rebuild, 2);
-        if ((flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE))
+        if (dbd_rebuild)
+            dbif_txn_close(dbd_rebuild, 2);
+        if ((ret == 0) && dbd_rebuild && (flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE))
             /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
                other clients in between our pass 1 and 2 */
             delete_orphaned_cnids(dbd, dbd_rebuild, flags);
     }
 
-exit:
     if (dbd_rebuild) {
         dbd_log(LOGDEBUG, "Closing tmp db");
         dbif_close(dbd_rebuild);
