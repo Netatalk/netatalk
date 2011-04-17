@@ -387,6 +387,10 @@ static int copy(const char *path,
     if (alarmed)
         return -1;
 
+    /* This currently doesn't work with "." */
+    if (strcmp(path, ".") == 0) {
+        ERROR("\".\" not supported");
+    }
     const char *dir = strrchr(path, '/');
     if (dir == NULL)
         dir = path;
