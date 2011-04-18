@@ -1198,7 +1198,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
     db_param.cachesize = 64 * 1024;         /* 64 MB */
     db_param.maxlocks = DEFAULT_MAXLOCKS;
     db_param.maxlockobjs = DEFAULT_MAXLOCKOBJS;
-    db_param.txn_frequency = 1000;          /* close txn every 1000 objects */
+    db_param.txn_frequency = 0;          /* close txn every 1000 objects */
     db_param.logfile_autoremove = 1;
 
     /* Make it accessible for all funcs */
