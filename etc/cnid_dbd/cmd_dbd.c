@@ -95,7 +95,6 @@ static struct db_param db_param = {
     DEFAULT_MAXLOCKOBJS,        /* maxlockobjs */
     0,                          /* flush_interval */
     0,                          /* flush_frequency */
-    0,                       /* txn_frequency */
     0,                          /* usock_file */
     -1,                         /* fd_table_size */
     -1,                         /* idle_timeout */

@@ -1082,8 +1082,6 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
 
-    dbd->db_param.txn_frequency = 0;
-
     /* jump over rootinfo key */
     if ( dbif_idwalk(dbd, &dbd_cnid, 0) != 1)
         return;
@@ -1198,7 +1196,6 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
     db_param.cachesize = 64 * 1024;         /* 64 MB */
     db_param.maxlocks = DEFAULT_MAXLOCKS;
     db_param.maxlockobjs = DEFAULT_MAXLOCKOBJS;
-    db_param.txn_frequency = 0;          /* close txn every 1000 objects */
     db_param.logfile_autoremove = 1;
 
     /* Make it accessible for all funcs */
