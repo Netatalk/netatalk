@@ -104,7 +104,7 @@ static int tsock_getfd(const char *host, const char *port)
         }
 
         if (setnonblock(sock, 1) != 0) {
-            LOG(log_error, logtype_cnid, "getfd: setnonblock: %s", strerror(err));
+            LOG(log_error, logtype_cnid, "getfd: setnonblock: %s", strerror(errno));
             close(sock);
             sock = -1;
             return -1;
