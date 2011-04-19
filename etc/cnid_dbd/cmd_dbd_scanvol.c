@@ -971,7 +971,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             cnid = check_cnid(ep->d_name, did, &st, adfile_ok, adflags);
 
             /* Now add this object to our rebuild dbd */
-            if (cnid) {
+            if (cnid && dbd_rebuild) {
                 static uint count = 0;
                 rqst.cnid = rply.cnid;
                 ret = dbd_rebuild_add(dbd_rebuild, &rqst, &rply);
@@ -1019,7 +1019,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             close(cwd);
             *(strrchr(cwdbuf, '/')) = 0;
             if (ret < 0)
-                continue;
+                return -1;
         }
     }
 
@@ -1073,8 +1073,6 @@ static void delete_orphaned_cnids(DBD *dbd, DBD *dbd_rebuild, dbd_flags_t flags)
     cnid_t dbd_cnid = 0, rebuild_cnid = 0;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
-
-    dbd->db_param.txn_frequency = 0;
 
     /* jump over rootinfo key */
     if ( dbif_idwalk(dbd, &dbd_cnid, 0) != 1)
@@ -1177,7 +1175,6 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
 
     /* Set cachesize for in-memory rebuild db */
     db_param.cachesize = 64 * 1024;         /* 64 MB */
-    db_param.txn_frequency = 1000;          /* close txn every 1000 objects */
     db_param.logfile_autoremove = 1;
 
     /* Make it accessible for all funcs */
@@ -1189,7 +1186,8 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
         return -1;
     }
 
-    if (! nocniddb) {
+    /* temporary rebuild db, used with -re rebuild to delete unused CNIDs, not used with -f */
+    if (! nocniddb && !(flags & DBD_FLAGS_FORCE)) {
         /* Get volume stamp */
         dbd_getstamp(dbd, &rqst, &rply);
         if (rply.result != CNID_DBD_RES_OK)
@@ -1223,7 +1221,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
 
     if (setjmp(jmp) != 0) {
         ret = 0;                /* Got signal, jump from dbd_readdir */
-        goto exit_cleanup;              
+        goto exit;
     }
 
     /* scanvol */
@@ -1232,17 +1230,17 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
         goto exit;
     }
 
-exit_cleanup:
+exit:
     if (! nocniddb) {
-        dbif_txn_close(dbd, 2);
-        dbif_txn_close(dbd_rebuild, 2);
+        dbif_txn_close(dbd, 1);
+        if (dbd_rebuild)
+            dbif_txn_close(dbd_rebuild, 1);
         if ((flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE))
             /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
                other clients in between our pass 1 and 2 */
             delete_orphaned_cnids(dbd, dbd_rebuild, flags);
     }
 
-exit:
     if (dbd_rebuild) {
         dbd_log(LOGDEBUG, "Closing tmp db");
         dbif_close(dbd_rebuild);

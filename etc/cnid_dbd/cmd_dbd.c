@@ -92,7 +92,6 @@ static struct db_param db_param = {
     64 * 1024,                  /* bdb cachesize (64 MB) */
     0,                          /* flush_interval */
     0,                          /* flush_frequency */
-    1000,                       /* txn_frequency */
     0,                          /* usock_file */
     -1,                         /* fd_table_size */
     -1,                         /* idle_timeout */
