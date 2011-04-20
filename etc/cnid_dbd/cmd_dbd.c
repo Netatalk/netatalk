@@ -81,8 +81,9 @@
 #define DBOPTIONS (DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN)
 
 int nocniddb = 0;               /* Dont open CNID database, only scan filesystem */
-volatile sig_atomic_t alarmed;
 struct volinfo volinfo; /* needed by pack.c:idxname() */
+volatile sig_atomic_t alarmed;  /* flags for signals */
+int db_locked;                  /* have we got the fcntl lock on lockfile ? */
 
 static DBD *dbd;
 static int verbose;             /* Logging flag */
@@ -166,34 +167,59 @@ static void set_signal(void)
     }        
 }
 
-static int get_lock(const char *dbpath)
+
+/*!
+ * Get lock on db lock file
+ *
+ * @args cmd       (r) !=0: lock, 0: unlock
+ * @args dbpath    (r) path to lockfile, only used on first call,
+ *                     later the stored fd is used
+ * @returns            1 if lock was acquired, 0 if file is already locked, -1 on error
+ */
+int get_lock(int cmd, const char *dbpath)
 {
-    int lockfd;
+    static int lockfd = -1;
     char lockpath[PATH_MAX];
     struct flock lock;
     struct stat st;
 
-    if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
-        dbd_log( LOGSTD, ".AppleDB pathname too long");
-        exit(EXIT_FAILURE);
-    }
-    strncpy(lockpath, dbpath, PATH_MAX - 1);
-    strcat(lockpath, "/");
-    strcat(lockpath, LOCKFILENAME);
+    if (cmd == 0) {
+        if (lockfd == -1)
+            return -1;
 
-    if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
-        dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    if ((stat(dbpath, &st)) != 0) {
-        dbd_log( LOGSTD, "Error statting lockfile: %s", strerror(errno));
-        exit(EXIT_FAILURE);
+        lock.l_start  = 0;
+        lock.l_whence = SEEK_SET;
+        lock.l_len    = 0;
+        lock.l_type = F_UNLCK;
+        fcntl(lockfd, F_SETLK, &lock);
+        close(lockfd);
+        lockfd = -1;
+        return 0;
     }
 
-    if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
-        dbd_log( LOGSTD, "Error inheriting lockfile permissions: %s", strerror(errno));
-        exit(EXIT_FAILURE);
+    if (lockfd == -1) {
+        if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+            dbd_log( LOGSTD, ".AppleDB pathname too long");
+            return -1;
+        }
+        strncpy(lockpath, dbpath, PATH_MAX - 1);
+        strcat(lockpath, "/");
+        strcat(lockpath, LOCKFILENAME);
+
+        if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
+            dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
+            return -1;
+        }
+
+        if ((stat(dbpath, &st)) != 0) {
+            dbd_log( LOGSTD, "Error statting lockfile: %s", strerror(errno));
+            return -1;
+        }
+
+        if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
+            dbd_log( LOGSTD, "Error inheriting lockfile permissions: %s", strerror(errno));
+            return -1;
+        }
     }
     
     lock.l_start  = 0;
@@ -204,28 +230,19 @@ static int get_lock(const char *dbpath)
     if (fcntl(lockfd, F_SETLK, &lock) < 0) {
         if (errno == EACCES || errno == EAGAIN) {
             if (exclusive) {
-                dbd_log( LOGSTD, "Database is in use and exlusive was requested", strerror(errno));        
-                exit(EXIT_FAILURE);
+                dbd_log(LOGSTD, "Database is in use and exlusive was requested");
+                return -1;
             };
+            dbd_log(LOGDEBUG, "get_lock: couldn't lock");
+            return 0;
         } else {
             dbd_log( LOGSTD, "Error getting fcntl F_WRLCK on lockfile: %s", strerror(errno));
-            exit(EXIT_FAILURE);
+            return -1;
        }
     }
-    
-    return lockfd;
-}
 
-static void free_lock(int lockfd)
-{
-    struct flock lock;
-
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type = F_UNLCK;
-    fcntl(lockfd, F_SETLK, &lock);
-    close(lockfd);
+    dbd_log(LOGDEBUG, "get_lock: got lock");    
+    return 1;
 }
 
 static void usage (void)
@@ -421,11 +438,9 @@ int main(int argc, char **argv)
         close(dbdirfd);
     }
 
-    /* 
-       Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes.
-    */
-    lockfd = get_lock(dbpath);
+    /* Get db lock, which exits if exclusive was requested and it already is locked */
+    if ((db_locked = get_lock(1, dbpath)) == -1)
+        goto exit_failure;
 
     /* Prepare upgrade ? */
     if (prep_upgrade) {
@@ -437,7 +452,10 @@ int main(int argc, char **argv)
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
-        close(lockfd);
+
+        if ((db_locked = get_lock(0, NULL)) != 0)
+            goto exit_failure;
+
         snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
@@ -446,7 +464,8 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         dbd_log( LOGDEBUG, "Removed old database.");
-        lockfd = get_lock(dbpath);
+        if ((db_locked = get_lock(1, dbpath)) == -1)
+            goto exit_failure;
     }
 
     /* 
@@ -456,7 +475,9 @@ int main(int argc, char **argv)
         if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
             goto exit_failure;
         
-        if (dbif_env_open(dbd, &db_param, exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
+        if (dbif_env_open(dbd,
+                          &db_param,
+                          exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
             dbd_log( LOGSTD, "error opening database!");
             goto exit_failure;
         }
@@ -494,7 +515,7 @@ exit_success:
     ret = 0;
 
 exit_failure:
-    free_lock(lockfd);
+    get_lock(0, NULL);
     
     if ((fchdir(cdir)) < 0)
         dbd_log(LOGSTD, "fchdir: %s", strerror(errno));
