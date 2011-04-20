@@ -1192,7 +1192,7 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *volinfo, dbd_flags_t flags)
     }
 
     /* temporary rebuild db, used with -re rebuild to delete unused CNIDs, not used with -f */
-    if (! nocniddb && !(flags & DBD_FLAGS_FORCE)) {
+    if (! nocniddb && (flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE)) {
         /* Get volume stamp */
         dbd_getstamp(dbd, &rqst, &rply);
         if (rply.result != CNID_DBD_RES_OK)
