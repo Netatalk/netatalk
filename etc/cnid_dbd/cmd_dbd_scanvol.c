@@ -1212,15 +1212,16 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
         return -1;
     }
 
+    /* Get volume stamp */
+    dbd_getstamp(dbd, &rqst, &rply);
+    if (rply.result != CNID_DBD_RES_OK) {
+        ret = -1;
+        goto exit;
+    }
+    memcpy(stamp, rply.name, CNID_DEV_LEN);
+
     /* temporary rebuild db, used with -re rebuild to delete unused CNIDs, not used with -f */
     if (! nocniddb && (flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE)) {
-        /* Get volume stamp */
-        dbd_getstamp(dbd, &rqst, &rply);
-        if (rply.result != CNID_DBD_RES_OK)
-            goto exit;
-        memcpy(stamp, rply.name, CNID_DEV_LEN);
-
-        /* open/create rebuild dbd, copy rootinfo key */
         tmpdb_path = get_tmpdb_path();
         if (NULL == (dbd_rebuild = dbif_init(tmpdb_path, "cnid2.db"))) {
             ret = -1;
