@@ -1258,10 +1258,10 @@ int cmd_dbd_scanvol(DBD *dbd_ref, struct volinfo *vi, dbd_flags_t flags)
 
 exit:
     if (! nocniddb) {
-        if (dbif_txn_close(dbd, 2) != 0)
+        if (dbif_txn_close(dbd, ret == 0 ? 1 : 0) != 0)
             ret = -1;
         if (dbd_rebuild)
-            if (dbif_txn_close(dbd_rebuild, 2) != 0)
+            if (dbif_txn_close(dbd_rebuild, ret == 0 ? 1 : 0) != 0)
                 ret = -1;
         if ((ret == 0) && dbd_rebuild && (flags & DBD_FLAGS_EXCL) && !(flags & DBD_FLAGS_FORCE))
             /* We can only do this in exclusive mode, otherwise we might delete CNIDs added from
