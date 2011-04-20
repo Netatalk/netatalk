@@ -25,12 +25,14 @@ typedef unsigned int dbd_flags_t;
         (strcmp(a,c) b 0)
 
 extern int nocniddb; /* Dont open CNID database, only scan filesystem */
+extern int db_locked; /* have we got the fcntl lock on lockfd ? */
 extern volatile sig_atomic_t alarmed;
 extern struct volinfo *volinfo;
 extern char cwdbuf[MAXPATHLEN+1];
 
 extern void dbd_log(enum logtype lt, char *fmt, ...);
 extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
+extern int get_lock(int cmd, const char *dbpath);
 
 /*
   Functions for querying the database which couldn't be reused from the existing
