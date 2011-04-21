@@ -168,19 +168,34 @@ static void set_signal(void)
 /*!
  * Get lock on db lock file
  *
- * @args cmd       (r) !=0: lock, 0: unlock
+ * @args cmd       (r) lock command:
+ *                     LOCK_FREE:   close lockfd
+ *                     LOCK_UNLOCK: unlock lockm keep lockfd open
+ *                     LOCK_EXCL:   F_WRLCK on lockfd
+ *                     LOCK_SHRD:   F_RDLCK on lockfd
  * @args dbpath    (r) path to lockfile, only used on first call,
  *                     later the stored fd is used
- * @returns            1 if lock was acquired, 0 if file is already locked, -1 on error
+ * @returns            LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
+ *                     LOCK_EXCL/LOCK_SHRD return 1 if lock was acquired,
+ *                     0 if file is already locked, -1 on error
  */
-int get_lock(int cmd, const char *dbpath)
+int get_lock(lockcmd_t cmd, const char *dbpath)
 {
     static int lockfd = -1;
     char lockpath[PATH_MAX];
     struct flock lock;
     struct stat st;
 
-    if (cmd == 0) {
+
+    switch (cmd) {
+    case LOCK_FREE:
+        if (lockfd == -1)
+            return -1;
+        close(lockfd);
+        lockfd = -1;
+        return 0;
+
+    case LOCK_UNLOCK:
         if (lockfd == -1)
             return -1;
 
@@ -189,54 +204,57 @@ int get_lock(int cmd, const char *dbpath)
         lock.l_len    = 0;
         lock.l_type = F_UNLCK;
         fcntl(lockfd, F_SETLK, &lock);
-        close(lockfd);
-        lockfd = -1;
         return 0;
-    }
 
-    if (lockfd == -1) {
-        if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
-            dbd_log( LOGSTD, ".AppleDB pathname too long");
-            return -1;
-        }
-        strncpy(lockpath, dbpath, PATH_MAX - 1);
-        strcat(lockpath, "/");
-        strcat(lockpath, LOCKFILENAME);
-
-        if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
-            dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
-            return -1;
-        }
-
-        if ((stat(dbpath, &st)) != 0) {
-            dbd_log( LOGSTD, "Error statting lockfile: %s", strerror(errno));
-            return -1;
-        }
-
-        if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
-            dbd_log( LOGSTD, "Error inheriting lockfile permissions: %s", strerror(errno));
-            return -1;
-        }
-    }
-    
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type   = F_WRLCK;
-
-    if (fcntl(lockfd, F_SETLK, &lock) < 0) {
-        if (errno == EACCES || errno == EAGAIN) {
-            if (exclusive) {
-                dbd_log(LOGSTD, "Database is in use and exlusive was requested");
+    case LOCK_EXCL:
+    case LOCK_SHRD:
+        if (lockfd == -1) {
+            if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+                dbd_log( LOGSTD, ".AppleDB pathname too long");
                 return -1;
-            };
-            dbd_log(LOGDEBUG, "get_lock: couldn't lock");
-            return 0;
-        } else {
-            dbd_log( LOGSTD, "Error getting fcntl F_WRLCK on lockfile: %s", strerror(errno));
-            return -1;
-       }
-    }
+            }
+            strncpy(lockpath, dbpath, PATH_MAX - 1);
+            strcat(lockpath, "/");
+            strcat(lockpath, LOCKFILENAME);
+
+            if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
+                dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
+                return -1;
+            }
+
+            if ((stat(dbpath, &st)) != 0) {
+                dbd_log( LOGSTD, "Error statting lockfile: %s", strerror(errno));
+                return -1;
+            }
+
+            if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
+                dbd_log( LOGSTD, "Error inheriting lockfile permissions: %s",
+                         strerror(errno));
+                return -1;
+            }
+        }
+    
+        lock.l_start  = 0;
+        lock.l_whence = SEEK_SET;
+        lock.l_len    = 0;
+        if (cmd == LOCK_EXCL)
+            lock.l_type   = F_WRLCK;
+        else
+            lock.l_type   = F_RDLCK;
+
+        if (fcntl(lockfd, F_SETLK, &lock) < 0) {
+            if (errno == EACCES || errno == EAGAIN) {
+                dbd_log(LOGDEBUG, "get_lock: couldn't lock");
+                return 0;
+            } else {
+                dbd_log( LOGSTD, "Error getting fcntl F_WRLCK on lockfile: %s",
+                         strerror(errno));
+                return -1;
+            }
+        }
+    default:
+        return -1;
+    } /* switch(cmd) */
 
     dbd_log(LOGDEBUG, "get_lock: got lock");    
     return 1;
@@ -423,9 +441,19 @@ int main(int argc, char **argv)
         close(dbdirfd);
     }
 
-    /* Get db lock, which exits if exclusive was requested and it already is locked */
-    if ((db_locked = get_lock(1, dbpath)) == -1)
+    /* Get db lock */
+    if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
         goto exit_failure;
+    if (!db_locked) {
+        /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
+        if (exclusive) {
+            dbd_log(LOGSTD, "Database is in use and exlusive was requested");
+            goto exit_failure;
+        }
+        if ((db_locked = get_lock(LOCK_SHRD, dbpath)) != 1)
+            goto exit_failure;
+    }
+
 
     /* Prepare upgrade ? */
     if (prep_upgrade) {
@@ -437,13 +465,13 @@ int main(int argc, char **argv)
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
-        if ((db_locked = get_lock(0, NULL)) != 0)
+        if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
             goto exit_failure;
         snprintf(cmd, 8 + MAXPATHLEN, "rm -f %s/*", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
         dbd_log( LOGDEBUG, "Removed old database.");
-        if ((db_locked = get_lock(1, dbpath)) == -1)
+        if ((db_locked = get_lock(LOCK_EXCL, NULL)) == -1)
             goto exit_failure;
     }
 
