@@ -30,7 +30,6 @@ extern volatile sig_atomic_t alarmed;
 
 extern void dbd_log(enum logtype lt, char *fmt, ...);
 extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
-extern int get_lock(int cmd, const char *dbpath);
 
 /*
   Functions for querying the database which couldn't be reused from the existing

@@ -862,11 +862,6 @@ static int dbd_readdir(int volroot, cnid_t did)
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
 
-    /* keep trying to get the lock */
-    if (!db_locked)
-        if ((db_locked = get_lock(1, NULL)) == -1)
-            return -1;
-
     /* Check again for .AppleDouble folder, check_adfile also checks/creates it */
     if ((addir_ok = check_addir(volroot)) != 0)
         if ( ! (dbd_flags & DBD_FLAGS_SCAN))

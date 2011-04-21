@@ -39,8 +39,6 @@
 #include "dbd.h"
 #include "comm.h"
 
-#define LOCKFILENAME  "lock"
-
 /* 
    Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.
    It's a likey performance hit, but it might we worth it.
@@ -72,57 +70,6 @@ static void block_sigs_onoff(int block)
     else
         sigprocmask(SIG_UNBLOCK, &set, NULL);
     return;
-}
-
-/*!
- * Get lock on db lock file
- *
- * @args cmd       (r) !=0: lock, 0: unlock
- * @returns            1 if lock was acquired, 0 if file is already locked, -1 on error
- */
-static int get_lock(int cmd)
-{
-    static int lockfd = -1;
-    struct flock lock;
-
-    if (cmd == 0) {
-        if (lockfd == -1)
-            return -1;
-
-        lock.l_start  = 0;
-        lock.l_whence = SEEK_SET;
-        lock.l_len    = 0;
-        lock.l_type = F_UNLCK;
-        fcntl(lockfd, F_SETLK, &lock);
-        close(lockfd);
-        lockfd = -1;
-        return 0;
-    }
-
-    if (lockfd == -1) {
-        if ((lockfd = open(LOCKFILENAME, O_RDWR | O_CREAT, 0644)) < 0) {
-            LOG(log_error, logtype_cnid, "get_lock: error opening lockfile: %s", strerror(errno));
-            return -1;
-        }
-    }
-
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type   = F_WRLCK;
-
-    if (fcntl(lockfd, F_SETLK, &lock) < 0) {
-        if (errno == EACCES || errno == EAGAIN) {
-            LOG(log_debug, logtype_cnid, "get_lock: couldn't lock");
-            return 0;
-        } else {
-            LOG(log_error, logtype_cnid, "get_lock: fcntl F_WRLCK lockfile: %s", strerror(errno));
-            return -1;
-        }
-    }
-
-    LOG(log_debug, logtype_cnid, "get_lock: got lock");
-    return 1;
 }
 
 /*
@@ -171,20 +118,6 @@ static int loop(struct db_param *dbp)
         dbp->flush_interval, timebuf);
 
     while (1) {
-        /*
-         * If we haven't got the lock yet, get it now.
-         * Prevents a race with dbd:
-         *   1. no cnid_dbd running
-         *   2. dbd -r starts, gets the lock
-         *   3. cnid_dbd starts, doesn't get lock, doesn't run recovery, all is fine
-         *   4. dbd from (2) finishes, drops lock
-         *   5. anothet dbd but this time with -re is started which
-         *      - succeeds getting the lock
-         *      - runs recovery => this kills (3)
-         */
-        if (!db_locked)
-            if ((db_locked = get_lock(1)) == -1)
-                return -1;
         timeout = min(time_next_flush, time_last_rqst +dbp->idle_timeout);
         if (timeout > now)
             timeout -= now;
@@ -388,10 +321,17 @@ int main(int argc, char *argv[])
 
     switch_to_user(dbpath);
 
-    /* Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes. */
-    if ((db_locked = get_lock(1)) == -1) {
+    /* Get db lock */
+    if ((db_locked = get_lock(LOCK_EXCL, dir)) == -1) {
+        LOG(log_error, logtype_cnid, "main: fatal db lock error");
         exit(1);
+    }
+    if (db_locked != LOCK_EXCL) {
+        /* Couldn't get exclusive lock, try shared lock  */
+        if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD) {
+            LOG(log_error, logtype_cnid, "main: fatal db lock error");
+            exit(1);
+        }
     }
 
     set_signal();
@@ -409,7 +349,7 @@ int main(int argc, char *argv[])
     /* Only recover if we got the lock */
     if (dbif_env_open(dbd,
                       dbp,
-                      db_locked ? DBOPTIONS | DB_RECOVER : DBOPTIONS) < 0)
+                      (db_locked == LOCK_EXCL) ? DBOPTIONS | DB_RECOVER : DBOPTIONS) < 0)
         exit(2); /* FIXME: same exit code as failure for dbif_open() */
     LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
 
@@ -418,6 +358,19 @@ int main(int argc, char *argv[])
         exit(2);
     }
     LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
+
+    /* Downgrade db lock  */
+    if (db_locked == LOCK_EXCL) {
+        if (get_lock(LOCK_UNLOCK, NULL) != 0) {
+            dbif_close(dbd);
+            exit(2);
+        }
+        if (get_lock(LOCK_SHRD, NULL) != LOCK_SHRD) {
+            dbif_close(dbd);
+            exit(2);
+        }
+    }
+
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
         dbif_close(dbd);
@@ -432,8 +385,6 @@ int main(int argc, char *argv[])
 
     if (dbif_env_remove(dbpath) < 0)
         err++;
-
-    (void)get_lock(0);
 
     if (err)
         exit(4);
