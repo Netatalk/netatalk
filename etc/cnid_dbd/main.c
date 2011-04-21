@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
     switch_to_user(dbpath);
 
     /* Get db lock */
-    if ((db_locked = get_lock(LOCK_EXCL, dir)) == -1) {
+    if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1) {
         LOG(log_error, logtype_cnid, "main: fatal db lock error");
         exit(1);
     }
