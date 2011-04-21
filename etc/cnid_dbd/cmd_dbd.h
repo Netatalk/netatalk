@@ -9,7 +9,6 @@
 
 enum logtype {LOGSTD, LOGDEBUG};
 typedef unsigned int dbd_flags_t;
-typedef enum {LOCK_FREE, LOCK_UNLOCK, LOCK_EXCL, LOCK_SHRD} lockcmd_t;
 
 #define DBD_FLAGS_SCAN     (1 << 0)
 #define DBD_FLAGS_FORCE    (1 << 1)
@@ -33,7 +32,6 @@ extern char cwdbuf[MAXPATHLEN+1];
 
 extern void dbd_log(enum logtype lt, char *fmt, ...);
 extern int cmd_dbd_scanvol(DBD *dbd, struct volinfo *volinfo, dbd_flags_t flags);
-extern int get_lock(lockcmd_t cmd, const char *dbpath);
 
 /*
   Functions for querying the database which couldn't be reused from the existing
