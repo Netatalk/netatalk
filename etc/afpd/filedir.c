@@ -230,7 +230,7 @@ static int moveandrename(const struct vol *vol,
                          char *newname,
                          int isdir)
 {
-    char            *p;
+    char            *oldunixname = NULL;
     char            *upath;
     int             rc;
     struct stat     *st, nst;
@@ -242,48 +242,52 @@ static int moveandrename(const struct vol *vol,
     cnid_t          id;
     int             cwd_fd = -1;
 
+    LOG(log_debug, logtype_afpd,
+        "moveandrename: [\"%s\"/\"%s\"] -> \"%s\"",
+        cfrombstr(sdir->d_u_name), oldname, newname);
+
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
     adp = &ad;
     adflags = 0;
 
     if (!isdir) {
-        if ((p = mtoupath(vol, oldname, sdir->d_did, utf8_encoding())) == NULL)
+        if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did, utf8_encoding()))) == NULL)
             return AFPERR_PARAM; /* can't convert */
+        id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, strlen(oldunixname));
 
-#ifndef HAVE_RENAMEAT
+#ifndef HAVE_ATFUNCS
         /* Need full path */
-        id = cnid_get(vol->v_cdb, sdir->d_did, p, strlen(p));
-        p = ctoupath( vol, sdir, oldname );
-        if (!p)
+        free(oldunixname);
+        if ((oldunixname = strdup(ctoupath(vol, sdir, oldname))) == NULL)
             return AFPERR_PARAM; /* pathname too long */
-#endif /* HAVE_RENAMEAT */
+#endif /* HAVE_ATFUNCS */
 
         path.st_valid = 0;
-        path.u_name = p;
-#ifdef HAVE_RENAMEAT
+        path.u_name = oldunixname;
+
+#ifdef HAVE_ATFUNCS
         opened = of_findnameat(sdir_fd, &path);
 #else
         opened = of_findname(&path);
-#endif /* HAVE_RENAMEAT */
+#endif /* HAVE_ATFUNCS */
+
         if (opened) {
             /* reuse struct adouble so it won't break locks */
             adp = opened->of_ad;
         }
     } else {
         id = sdir->d_did; /* we already have the CNID */
-        p = ctoupath( vol, dirlookup(vol, sdir->d_pdid), oldname );
-        if (!p) {
+        if ((oldunixname = strdup(ctoupath( vol, dirlookup(vol, sdir->d_pdid), oldname))) == NULL)
             return AFPERR_PARAM;
-        }
         adflags = ADFLAGS_DIR;
     }
 
     /*
-     * p now points to either
+     * oldunixname now points to either
      *   a) full pathname of the source fs object (if renameat is not available)
      *   b) the oldname (renameat is available)
      * we are in the dest folder so we need to use 
-     *   a) p for ad_open
+     *   a) oldunixname for ad_open
      *   b) fchdir sdir_fd before eg ad_open or use *at functions where appropiate
      */
 
@@ -295,7 +299,7 @@ static int moveandrename(const struct vol *vol,
             goto exit;
         }
     }
-    if (!ad_metadata(p, adflags, adp)) {
+    if (!ad_metadata(oldunixname, adflags, adp)) {
         u_int16_t bshort;
 
         ad_getattr(adp, &bshort);
@@ -332,7 +336,7 @@ static int moveandrename(const struct vol *vol,
         }
 
         if (stat(upath, st) == 0 || caseenumerate(vol, &path, curdir) == 0) {
-            if (!stat(p, &nst) && !(nst.st_dev == st->st_dev && nst.st_ino == st->st_ino) ) {
+            if (!stat(oldunixname, &nst) && !(nst.st_dev == st->st_dev && nst.st_ino == st->st_ino) ) {
                 /* not the same file */
                 rc = AFPERR_EXIST;
                 goto exit;
@@ -350,12 +354,12 @@ static int moveandrename(const struct vol *vol,
         if (of_findname(&path)) {
             rc = AFPERR_EXIST; /* was AFPERR_BUSY; */
         } else {
-            rc = renamefile(vol, sdir_fd, p, upath, newname, adp );
+            rc = renamefile(vol, sdir_fd, oldunixname, upath, newname, adp );
             if (rc == AFP_OK)
                 of_rename(vol, opened, sdir, oldname, curdir, newname);
         }
     } else {
-        rc = renamedir(vol, sdir_fd, p, upath, sdir, curdir, newname);
+        rc = renamedir(vol, sdir_fd, oldunixname, upath, sdir, curdir, newname);
     }
     if ( rc == AFP_OK && id ) {
         /* renaming may have moved the file/dir across a filesystem */
@@ -371,6 +375,13 @@ static int moveandrename(const struct vol *vol,
             (void)dir_remove(vol, cacheddir);
         }
 
+        /* Fixup adouble info */
+        if (!ad_metadata(upath, adflags, adp)) {
+            ad_setid(adp, st->st_dev, st->st_ino, id, curdir->d_did, vol->v_stamp);
+            ad_flush(adp);
+            ad_close_metadata(adp);
+        }
+
         /* fix up the catalog entry */
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
     }
@@ -378,6 +389,8 @@ static int moveandrename(const struct vol *vol,
 exit:
     if (cwd_fd != -1)
         close(cwd_fd);
+    if (oldunixname)
+        free(oldunixname);
     return rc;
 }
 
@@ -612,7 +625,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) + 1);
     }
 
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
     if ((sdir_fd = open(".", O_RDONLY)) == -1)
         return AFPERR_MISC;
 #endif
@@ -667,7 +680,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
 
 exit:
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
     if (sdir_fd != -1)
         close(sdir_fd);
 #endif

@@ -128,9 +128,9 @@ static int solaris_acl_rights(const char *path,
             ||
             ((flags & ACE_OWNER) && (uuid == sb->st_uid))
             ||
-            ((flags & ACE_GROUP) && gmem(sb->st_gid))
+            ((flags & ACE_GROUP) && !(uuid == sb->st_uid) && gmem(sb->st_gid))
             ||
-            (flags & ACE_EVERYONE)
+            (flags & ACE_EVERYONE && !(uuid == sb->st_uid) && !gmem(sb->st_gid))
             ) {
             /* Found an applicable ACE */
             if (type == ACE_ACCESS_ALLOWED_ACE_TYPE)
@@ -438,14 +438,16 @@ static int posix_acl_rights(const char *path,
             gid = NULL;
             break;
         case ACL_GROUP_OBJ:
-            if (gmem(sb->st_gid)) {
+            if (!(sb->st_uid == uuid) && gmem(sb->st_gid)) {
                 LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
                 rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));            
             }
             break;
         case ACL_OTHER:
-            LOG(log_maxdebug, logtype_afpd, "ACL_OTHER");
-            rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+            if (!(sb->st_uid == uuid) && !gmem(sb->st_gid)) {
+                LOG(log_maxdebug, logtype_afpd, "ACL_OTHER");
+                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+            }
             break;
         default:
             continue;

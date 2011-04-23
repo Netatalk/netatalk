@@ -1,3 +1,7 @@
 # Makefile.am for bin/
 
-SUBDIRS = ad afppasswd cnid megatron uniconv misc
+SUBDIRS = afppasswd cnid megatron uniconv misc
+
+if HAVE_ATFUNCS
+SUBDIRS += ad
+endif

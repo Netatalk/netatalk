@@ -72,17 +72,19 @@
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/volinfo.h>
+#include <atalk/util.h>
+
 #include "cmd_dbd.h"
 #include "dbd.h"
 #include "dbif.h"
 #include "db_param.h"
 
-#define LOCKFILENAME  "lock"
 #define DBOPTIONS (DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN)
 
 int nocniddb = 0;               /* Dont open CNID database, only scan filesystem */
-volatile sig_atomic_t alarmed;
 struct volinfo volinfo; /* needed by pack.c:idxname() */
+volatile sig_atomic_t alarmed;  /* flags for signals */
+int db_locked;                  /* have we got the fcntl lock on lockfile ? */
 
 static DBD *dbd;
 static int verbose;             /* Logging flag */
@@ -91,14 +93,14 @@ static struct db_param db_param = {
     NULL,                       /* Volume dirpath */
     1,                          /* bdb logfile autoremove */
     64 * 1024,                  /* bdb cachesize (64 MB) */
-    5000,                       /* maxlocks */
-    5000,                       /* maxlockobjs */
-    -1,                         /* not used ... */
-    -1,
-    "",
-    -1,
-    -1,
-    -1
+    DEFAULT_MAXLOCKS,           /* maxlocks */
+    DEFAULT_MAXLOCKOBJS,        /* maxlockobjs */
+    0,                          /* flush_interval */
+    0,                          /* flush_frequency */
+    0,                          /* usock_file */
+    -1,                         /* fd_table_size */
+    -1,                         /* idle_timeout */
+    -1                          /* max_vols */
 };
 static char dbpath[MAXPATHLEN+1];   /* Path to the dbd database */
 
@@ -166,71 +168,9 @@ static void set_signal(void)
     }        
 }
 
-static int get_lock(const char *dbpath)
-{
-    int lockfd;
-    char lockpath[PATH_MAX];
-    struct flock lock;
-    struct stat st;
-
-    if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
-        dbd_log( LOGSTD, ".AppleDB pathname too long");
-        exit(EXIT_FAILURE);
-    }
-    strncpy(lockpath, dbpath, PATH_MAX - 1);
-    strcat(lockpath, "/");
-    strcat(lockpath, LOCKFILENAME);
-
-    if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
-        dbd_log( LOGSTD, "Error opening lockfile: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    if ((stat(dbpath, &st)) != 0) {
-        dbd_log( LOGSTD, "Error statting lockfile: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
-        dbd_log( LOGSTD, "Error inheriting lockfile permissions: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-    
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type   = F_WRLCK;
-
-    if (fcntl(lockfd, F_SETLK, &lock) < 0) {
-        if (errno == EACCES || errno == EAGAIN) {
-            if (exclusive) {
-                dbd_log( LOGSTD, "Database is in use and exlusive was requested", strerror(errno));        
-                exit(EXIT_FAILURE);
-            };
-        } else {
-            dbd_log( LOGSTD, "Error getting fcntl F_WRLCK on lockfile: %s", strerror(errno));
-            exit(EXIT_FAILURE);
-       }
-    }
-    
-    return lockfd;
-}
-
-static void free_lock(int lockfd)
-{
-    struct flock lock;
-
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type = F_UNLCK;
-    fcntl(lockfd, F_SETLK, &lock);
-    close(lockfd);
-}
-
 static void usage (void)
 {
-    printf("Usage: dbd [-e|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
+    printf("Usage: dbd [-e|-t|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
@@ -267,6 +207,7 @@ static void usage (void)
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
+           "   -t show statistics while running\n"
            "   -v verbose\n\n"
            "WARNING:\n"
            "For -r -f restore of the CNID database from the adouble files, the CNID must of course\n"
@@ -289,7 +230,7 @@ int main(int argc, char **argv)
     /* Inhereting perms in ad_mkdir etc requires this */
     ad_setfuid(0);
 
-    while ((c = getopt(argc, argv, ":cdefinrsuvx")) != -1) {
+    while ((c = getopt(argc, argv, ":cdefinrstuvx")) != -1) {
         switch(c) {
         case 'c':
             flags |= DBD_FLAGS_CLEANUP;
@@ -309,6 +250,9 @@ int main(int argc, char **argv)
             break;
         case 'r':
             rebuild = 1;
+            break;
+        case 't':
+            flags |= DBD_FLAGS_STATS;
             break;
         case 'u':
             prep_upgrade = 1;
@@ -417,11 +361,18 @@ int main(int argc, char **argv)
         close(dbdirfd);
     }
 
-    /* 
-       Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes.
-    */
-    lockfd = get_lock(dbpath);
+    /* Get db lock */
+    if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
+        goto exit_failure;
+    if (db_locked != LOCK_EXCL) {
+        /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
+        if (exclusive) {
+            dbd_log(LOGSTD, "Database is in use and exlusive was requested");
+            goto exit_failure;
+        }
+        if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD)
+            goto exit_failure;
+    }
 
     /* Prepare upgrade ? */
     if (prep_upgrade) {
@@ -433,6 +384,9 @@ int main(int argc, char **argv)
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
+        if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
+            goto exit_failure;
+
         snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
         system(cmd);
@@ -441,6 +395,8 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         dbd_log( LOGDEBUG, "Removed old database.");
+        if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
+            goto exit_failure;
     }
 
     /* 
@@ -450,18 +406,28 @@ int main(int argc, char **argv)
         if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
             goto exit_failure;
         
-        if (dbif_env_open(dbd, &db_param, exclusive ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
+        if (dbif_env_open(dbd,
+                          &db_param,
+                          (db_locked == LOCK_EXCL) ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
             dbd_log( LOGSTD, "error opening database!");
             goto exit_failure;
         }
 
-        if (exclusive)
+        if (db_locked == LOCK_EXCL)
             dbd_log( LOGDEBUG, "Finished recovery.");
 
         if (dbif_open(dbd, NULL, rebuildindexes) < 0) {
             dbif_close(dbd);
             goto exit_failure;
         }
+    }
+
+    /* Downgrade db lock if not running exclusive */
+    if (!exclusive && (db_locked == LOCK_EXCL)) {
+        if (get_lock(LOCK_UNLOCK, NULL) != 0)
+            goto exit_failure;
+        if (get_lock(LOCK_SHRD, NULL) != LOCK_SHRD)
+            goto exit_failure;
     }
 
     /* Now execute given command scan|rebuild|dump */
@@ -476,16 +442,19 @@ int main(int argc, char **argv)
     }
 
     /* Cleanup */
-    if (! nocniddb && dbif_close(dbd) < 0) {
-        dbd_log( LOGSTD, "Error closing database");
-        goto exit_failure;
+    dbd_log(LOGDEBUG, "Closing db");
+    if (! nocniddb) {
+        if (dbif_close(dbd) < 0) {
+            dbd_log( LOGSTD, "Error closing database");
+            goto exit_failure;
+        }
     }
 
 exit_success:
     ret = 0;
 
 exit_failure:
-    free_lock(lockfd);
+    get_lock(0, NULL);
     
     if ((fchdir(cdir)) < 0)
         dbd_log(LOGSTD, "fchdir: %s", strerror(errno));

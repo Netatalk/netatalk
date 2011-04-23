@@ -114,7 +114,7 @@ static void afp_dsi_die(int sig)
 
     dsi_attention(AFPobj->handle, AFPATTN_SHUTDOWN);
     afp_dsi_close(AFPobj);
-    if (sig) /* if no signal, assume dieing because logins are disabled &
+   if (sig) /* if no signal, assume dieing because logins are disabled &
                 don't log it (maintenance mode)*/
         LOG(log_info, logtype_afpd, "Connection terminated");
     if (sig == SIGTERM || sig == SIGALRM) {
@@ -280,7 +280,7 @@ static void alarm_handler(int sig _U_)
 
     if (dsi->flags & DSI_SLEEPING) {
         if (dsi->tickle > AFPobj->options.sleep) {
-            LOG(log_error, logtype_afpd, "afp_alarm: sleep time ended");
+            LOG(log_note, logtype_afpd, "afp_alarm: sleep time ended");
             afp_dsi_die(EXITERR_CLNT);
         }
         return;
@@ -288,7 +288,7 @@ static void alarm_handler(int sig _U_)
 
     if (dsi->flags & DSI_DISCONNECTED) {
         if (dsi->tickle > AFPobj->options.disconnected) {
-             LOG(log_error, logtype_afpd, "afp_alarm: no reconnect within 10 minutes, goodbye");
+            LOG(log_error, logtype_afpd, "afp_alarm: reconnect timer expired, goodbye");
             afp_dsi_die(EXITERR_CLNT);
         }
         return;
@@ -303,9 +303,11 @@ static void alarm_handler(int sig _U_)
     }
 
     if ((err = pollvoltime(AFPobj)) == 0)
+        LOG(log_debug, logtype_afpd, "afp_alarm: sending DSI tickle");
         err = dsi_tickle(AFPobj->handle);
     if (err <= 0) {
         LOG(log_error, logtype_afpd, "afp_alarm: connection problem, entering disconnected state");
+        dsi->proto_close(dsi);
         dsi->flags |= DSI_DISCONNECTED;
     }
 }
@@ -451,6 +453,26 @@ void afp_over_dsi(AFPObj *obj)
     if (dircache_init(obj->options.dircachesize) != 0)
         afp_dsi_die(EXITERR_SYS);
 
+    /* set TCP snd/rcv buf */
+    if (obj->options.tcp_rcvbuf) {
+        if (setsockopt(dsi->socket,
+                       SOL_SOCKET,
+                       SO_RCVBUF,
+                       &obj->options.tcp_rcvbuf,
+                       sizeof(obj->options.tcp_rcvbuf)) != 0) {
+            LOG(log_error, logtype_dsi, "afp_over_dsi: setsockopt(SO_RCVBUF): %s", strerror(errno));
+        }
+    }
+    if (obj->options.tcp_sndbuf) {
+        if (setsockopt(dsi->socket,
+                       SOL_SOCKET,
+                       SO_SNDBUF,
+                       &obj->options.tcp_sndbuf,
+                       sizeof(obj->options.tcp_sndbuf)) != 0) {
+            LOG(log_error, logtype_dsi, "afp_over_dsi: setsockopt(SO_SNDBUF): %s", strerror(errno));
+        }
+    }
+
     /* get stuck here until the end */
     while (1) {
         if (sigsetjmp(recon_jmp, 1) != 0)
@@ -469,6 +491,13 @@ void afp_over_dsi(AFPObj *obj)
             }
             /* Some error on the client connection, enter disconnected state */
             dsi->flags |= DSI_DISCONNECTED;
+
+            /* the client sometimes logs out (afp_logout) but doesn't close the DSI session */
+            if (dsi->flags & DSI_AFP_LOGGED_OUT) {
+                afp_dsi_close(obj);
+                exit(0);
+            }
+
             pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
@@ -506,20 +535,24 @@ void afp_over_dsi(AFPObj *obj)
             }
         }
 
-        if (cmd == DSIFUNC_TICKLE) {
+
+        dsi->flags |= DSI_DATA;
+        dsi->tickle = 0;
+
+        switch(cmd) {
+
+        case DSIFUNC_CLOSE:
+            LOG(log_debug, logtype_afpd, "DSI: close session request");
+            afp_dsi_close(obj);
+            LOG(log_note, logtype_afpd, "done");
+            exit(0);
+
+        case DSIFUNC_TICKLE:
+            dsi->flags &= ~DSI_DATA; /* thats no data in the sense we use it in alarm_handler */
+            LOG(log_debug, logtype_afpd, "DSI: client tickle");
             /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
             if ((dsi->flags & DSI_DIE))
                 dsi_tickle(dsi);
-            pending_request(dsi);
-            continue;
-        } 
-
-        dsi->flags |= DSI_DATA;
-        switch(cmd) {
-        case DSIFUNC_CLOSE:
-            afp_dsi_close(obj);
-            LOG(log_note, logtype_afpd, "done");
-            return;
             break;
 
         case DSIFUNC_CMD:
@@ -535,12 +568,12 @@ void afp_over_dsi(AFPObj *obj)
             function = (u_char) dsi->commands[0];
 
             /* AFP replay cache */
-            rc_idx = REPLAYCACHE_SIZE % dsi->clientID;
+            rc_idx = dsi->clientID % REPLAYCACHE_SIZE;
             LOG(log_debug, logtype_afpd, "DSI request ID: %u", dsi->clientID);
 
             if (replaycache[rc_idx].DSIreqID == dsi->clientID
                 && replaycache[rc_idx].AFPcommand == function) {
-                LOG(log_debug, logtype_afpd, "AFP Replay Cache match: id: %u / cmd: %s",
+                LOG(log_note, logtype_afpd, "AFP Replay Cache match: id: %u / cmd: %s",
                     dsi->clientID, AfpNum2name(function));
                 err = replaycache[rc_idx].result;
             /* AFP replay cache end */

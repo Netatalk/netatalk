@@ -12,55 +12,8 @@
 #include <arpa/inet.h>
 
 #include <atalk/unicode.h>
-#include "ucs2_casetable.h"
 #include "precompose.h"
 #include "byteorder.h"
-
-/*******************************************************************
- Convert a wide character to upper/lower case.
-********************************************************************/
-ucs2_t toupper_w(ucs2_t val)
-{
-	if ( val >= 0x0040 && val <= 0x007F)
-		return upcase_table_1[val-0x0040];
-	if ( val >= 0x00C0 && val <= 0x02BF)
-		return upcase_table_2[val-0x00C0];
-	if ( val >= 0x0380 && val <= 0x04FF)
-		return upcase_table_3[val-0x0380];
-	if ( val >= 0x0540 && val <= 0x05BF)
-		return upcase_table_4[val-0x0540];
-	if ( val >= 0x1E00 && val <= 0x1FFF)
-		return upcase_table_5[val-0x1E00];
-	if ( val >= 0x2140 && val <= 0x217F)
-		return upcase_table_6[val-0x2140];
-	if ( val >= 0x24C0 && val <= 0x24FF)
-		return upcase_table_7[val-0x24C0];
-	if ( val >= 0xFF40 && val <= 0xFF7F)
-		return upcase_table_8[val-0xFF40];
-
-	return (val);
-}
-
-
-ucs2_t tolower_w(ucs2_t val)
-{
-	if ( val >= 0x0040 && val <= 0x007F)
-		return lowcase_table_1[val-0x0040];
-	if ( val >= 0x00C0 && val <= 0x023F)
-		return lowcase_table_2[val-0x00C0];
-	if ( val >= 0x0380 && val <= 0x057F)
-		return lowcase_table_3[val-0x0380];
-	if ( val >= 0x1E00 && val <= 0x1FFF)
-		return lowcase_table_4[val-0x1E00];
-	if ( val >= 0x2140 && val <= 0x217F)
-		return lowcase_table_5[val-0x2140];
-	if ( val >= 0x2480 && val <= 0x24FF)
-		return lowcase_table_6[val-0x2480];
-	if ( val >= 0xFF00 && val <= 0xFF3F)
-		return lowcase_table_7[val-0xFF00];
-
-	return (val);
-}
 
 /*******************************************************************
  Convert a string to lower case.

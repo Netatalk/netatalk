@@ -331,9 +331,9 @@ void server_child_kill_one_by_id(server_child *children, int forkid, pid_t pid,
                                 "Session with different pid[%u]", child->pid);
                         }
                     } else {
-                        kill_child(child);
-                        LOG(log_note, logtype_default,
-                            "Terminated disconnected session[%u]", child->pid);
+                        /* One client with multiple sessions */
+                        LOG(log_debug, logtype_default,
+                            "Found another session[%u] for client[%u]", child->pid, pid);
                     }
                 }
             } else {
@@ -341,7 +341,7 @@ void server_child_kill_one_by_id(server_child *children, int forkid, pid_t pid,
                 child->time = boottime;
                 if (child->clientid)
                     free(child->clientid);
-                LOG(log_debug, logtype_default, "Setting client ID for %d", child->pid);
+                LOG(log_debug, logtype_default, "Setting client ID for %u", child->pid);
                 child->uid = uid;
                 child->valid = 1;
                 child->idlen = idlen;

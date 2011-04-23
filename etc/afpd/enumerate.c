@@ -155,7 +155,7 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
    macnamelength(1) + macname(31) + utf8(4) + utf8namelen(2) + utf8name(255) +
    oddpadding(1) */
 
-#define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + 255 + 1)
+#define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + UTF8FILELEN_EARLY + 1)
 
 /* ----------------------------- */
 static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, 
@@ -284,11 +284,12 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         sd.sd_last = sd.sd_buf;
         /* if dir was in the cache we don't have the inode */
         if (( !o_path->st_valid && lstat( ".", &o_path->st ) < 0 ) ||
-              (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
+            (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) 
         {
+            LOG(log_error, logtype_afpd, "enumerate: loop error: %s (%d)", strerror(errno), errno);
             switch (errno) {
             case EACCES:
-		return AFPERR_ACCESS;
+                return AFPERR_ACCESS;
             case ENOTDIR:
                 return AFPERR_BADTYPE;
             case ENOMEM:

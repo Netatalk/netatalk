@@ -25,16 +25,6 @@
 #define DB_PARAM_FN       "db_param"
 #define MAXKEYLEN         64
 
-#define DEFAULT_LOGFILE_AUTOREMOVE 1
-#define DEFAULT_CACHESIZE          (8 * 1024) /* KB, so 8 MB */
-#define DEFAULT_MAXLOCKS           5000
-#define DEFAULT_MAXLOCKOBJS        5000
-#define DEFAULT_FLUSH_FREQUENCY    1000
-#define DEFAULT_FLUSH_INTERVAL     1800
-#define DEFAULT_USOCK_FILE         "usock"
-#define DEFAULT_FD_TABLE_SIZE      512
-#define DEFAULT_IDLE_TIMEOUT       (10 * 60)
-
 static struct db_param params;
 static int parse_err;
 

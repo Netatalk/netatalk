@@ -1,5 +1,4 @@
 /*
-  $Id: subtests.c,v 1.1.2.1 2010-02-01 10:56:08 franklahm Exp $
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
 
   This program is free software; you can redistribute it and/or modify
@@ -51,7 +50,7 @@ int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
         dir = dir_new(dirname, dirname, vol, DIRDID_ROOT, htonl(start), bfromcstr(vol->v_path), 0);
         if (dir == NULL)
             return -1;
-        if (dircache_add(dir) != 0)
+        if (dircache_add(vol, dir) != 0)
             return -1;
     }
 

@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 07 Dec 2010
+.\"      Date: 30 Mar 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "07 Dec 2010" "Netatalk 2.2" "Netatalk 2.2"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -353,11 +353,9 @@ rwlist:\fI[users/groups]\fR
 Allows certain users and groups to have read/write access to a share\&. This follows the allow option format\&.
 .RE
 .PP
-veto:\fI[vetoed name]\fR
+veto:\fI[vetoed names]\fR
 .RS 4
-hide files and directories,where the path matches one of the \'/\' delimited vetoed names\&. Matches are partial, e\&.g\&. path is
-/abc/def/file
-and veto:/abc/ will hide the file\&.
+hide files and directories,where the path matches one of the \'/\' delimited vetoed names\&. The veto string must always be terminated with a \'/\', eg\&. "veto1/", "veto1/veto2/"\&.
 .RE
 .PP
 volcharset:\fI[charset]\fR
@@ -724,5 +722,4 @@ Provides compatibility with Apple II clients\&. (legacy)
 .PP
 \fBafpd.conf\fR(5),
 \fBafpd\fR(8),
-\fBafp_ldap.conf\fR(5),
-\fBafp_acls\fR(8)
+\fBcnid_metad\fR(8)

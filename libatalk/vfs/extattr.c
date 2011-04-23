@@ -825,7 +825,7 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
 	}
 
 	if (closedir(dirp) == -1) {
-		LOG(log_debug, logtype_default, "closedir dirp failed: %s\n",strerror(errno));
+		LOG(log_error, logtype_default, "closedir dirp: %s",strerror(errno));
 		return -1;
 	}
 	return len;
@@ -843,8 +843,9 @@ static int solaris_attropen(const char *path, const char *attrpath, int oflag, m
 {
 	int filedes = attropen(path, attrpath, oflag, mode);
 	if (filedes == -1) {
-		LOG(log_maxdebug, logtype_default, "attropen FAILED: path: %s, name: %s, errno: %s",
-            path, attrpath, strerror(errno));
+        if (errno != ENOENT)
+            LOG(log_error, logtype_default, "attropen(\"%s\", ea:'%s'): %s",
+                path, attrpath, strerror(errno));
         errno = ENOATTR;
 	}
 	return filedes;
@@ -854,8 +855,8 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
 {
 	int filedes = openat(fildes, path, oflag, mode);
 	if (filedes == -1) {
-		LOG(log_maxdebug, logtype_default, "openat FAILED: fd: %d, path: %s, errno: %s",
-            filedes, path, strerror(errno));
+		LOG(log_error, logtype_default, "openat(\"%s\"): %s",
+            path, strerror(errno));
 	}
 	return filedes;
 }
@@ -865,7 +866,8 @@ static int solaris_write_xattr(int attrfd, const char *value, size_t size)
 	if ((ftruncate(attrfd, 0) == 0) && (write(attrfd, value, size) == size)) {
 		return 0;
 	} else {
-		LOG(log_maxdebug, logtype_default, "solaris_write_xattr FAILED!");
+		LOG(log_error, logtype_default, "solaris_write_xattr: %s",
+            strerror(errno));
 		return -1;
 	}
 }

@@ -380,12 +380,14 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 }
 
 /* ---------------------- */
-int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     uint32_t data;
     DSI *dsi = (DSI *)AFPobj->handle;
 
     *rbuflen = 0;
+    ibuf += 2;
+    ibuflen -= 2;
 
     if (ibuflen < 4)
         return AFPERR_MISC;
@@ -401,19 +403,20 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbu
     if (data & AFPZZZ_EXT_WAKEUP) {
         /* wakeup request from exetended sleep */
         if (dsi->flags & DSI_EXTSLEEP) {
-            LOG(log_debug, logtype_afpd, "afp_zzz: waking up from extended sleep");
+            LOG(log_note, logtype_afpd, "afp_zzz: waking up from extended sleep");
             dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP);
         }
     } else {
         /* sleep request */
         dsi->flags |= DSI_SLEEPING;
         if (data & AFPZZZ_EXT_SLEEP) {
-            LOG(log_debug, logtype_afpd, "afp_zzz: entering extended sleep");
+            LOG(log_note, logtype_afpd, "afp_zzz: entering extended sleep");
             dsi->flags |= DSI_EXTSLEEP;
         } else {
-            LOG(log_debug, logtype_afpd, "afp_zzz: entering normal sleep");
+            LOG(log_note, logtype_afpd, "afp_zzz: entering normal sleep");
         }
     }
+
     /*
      * According to AFP 3.3 spec we should not return anything,
      * but eg 10.5.8 server still returns the numbers of hours
@@ -876,11 +879,15 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 }
 
 
-int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen  _U_)
+int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen)
 {
+    DSI *dsi = (DSI *)(obj->handle);
+
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
+    of_close_all_forks();
     close_all_vol();
-    obj->exit(0);
+    dsi->flags = DSI_AFP_LOGGED_OUT;
+    *rbuflen = 0;
     return AFP_OK;
 }
 

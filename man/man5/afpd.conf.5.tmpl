@@ -2,12 +2,12 @@
 .\"     Title: afpd.conf
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 1 November 2010
+.\"      Date: 30 Mar 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "AFPD\&.CONF" "5" "1 November 2010" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AFPD\&.CONF" "5" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -46,7 +46,7 @@ is used instead of a server name, the default server is specified\&. Server name
 .PP
 Each server has to be configured on a
 \fBsingle\fR
-line\&. Though newline escaping is supported\&.
+line\&. Though, using "\e" character, newline escaping is supported\&.
 .sp .5v
 .RE
 The possible options and their meanings are:
@@ -90,7 +90,7 @@ allows guest logins
 .PP
 uams_clrtxt\&.so
 .RS 4
-(uams_pam\&.so or uams_passwd\&.so) Allow logins with passwords transmitted in the clear\&.
+(uams_pam\&.so or uams_passwd\&.so) Allow logins with passwords transmitted in the clear\&. (legacy)
 .RE
 .PP
 uams_randum\&.so
@@ -98,7 +98,7 @@ uams_randum\&.so
 allows Random Number and Two\-Way Random Number Exchange for authentication (requires a separate file containing the passwords, either :ETCDIR:/afppasswd file or the one specified via
 \fB\-passwdfile\fR\&. See
 \fBafppasswd\fR(1)
-for details
+for details\&. (legacy)
 .RE
 .PP
 uams_dhx\&.so
@@ -256,24 +256,24 @@ listens to\&. The default is advertise the first IP address of the system, but t
 when used together with the
 \fB\-proxy\fR
 option\&.
-.PP \fBExample.\ \&IP/hostname example configuration\fR fluxxus \fB\-hostname\fR afp\&.apple\&.com \fB\-ipaddr\fR 127\&.0\&.0\&.1 \fB\-fqdn\fR www\&.microsoft\&.comResult:.TS
-allbox tab(:);
-l
-l
-l.
-T{
-(UTF8) Server name: fluxxus
-T}
-T{
-Listening and advertised network address:
-                    127\&.0\&.0\&.1
-T}
-T{
-Advertised network address:
-                    www\&.microsoft\&.com
-T}
-.TE
-.sp 1
+.PP
+\fBExample.\ \&afpd.conf onfiguration line\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+              fluxxus \-hostname afp\&.example\&.org \-ipaddr 192\&.168\&.0\&.1 \-fqdn www\&.example\&.com
+            
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+\fBResult\fR
+.sp
+(UTF8) Server name: fluxxus, Listening and advertised network address: 192\&.168\&.0\&.1, Advertised network address: www\&.example\&.com, hostname is not used\&.
 .RE
 .PP
 \-port \fI[port number]\fR
@@ -291,6 +291,28 @@ server as well, set
 \-server_quantum \fI[number]\fR
 .RS 4
 This specifies the DSI server quantum\&. The default value is 303840\&. The maximum value is 0xFFFFFFFFF, the minimum is 32000\&. If you specify a value that is out of range, the default value will be set\&. Do not change this value unless you\'re absolutely sure, what you\'re doing
+.RE
+.PP
+\-dsireadbuf \fI[number]\fR
+.RS 4
+Scale factor that determines the size of the DSI/TCP readahead buffer, default is 12\&. This is multiplies with the DSI server quantum (default ~300k) to give the size of the buffer\&. Increasing this value might increase throughput in fast local networks for volume to volume copies\&.
+\fINote\fR: This buffer is allocated per afpd child process, so specifying large values will eat up large amount of memory (buffer size * number of clients)\&.
+.RE
+.PP
+\-tcprcvbuf \fI[number]\fR
+.RS 4
+Try to set TCP receive buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+.RE
+.PP
+\-tcpsndbuf \fI[number]\fR
+.RS 4
+Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
+.RE
+.PP
+\-nozeroconf
+.RS 4
+Disable automatic Zeroconf
+service registration if support was compiled in\&.
 .RE
 .PP
 \-slp
@@ -371,7 +393,7 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 .PP
 \-[no]icon
 .RS 4
-[Dont\'t] Use the platform\-specific icon\&. Recent Mac OS don\'t display it any longer\&.
+[Don\'t] Use the platform\-specific icon\&. Recent Mac OS don\'t display it any longer\&.
 .RE
 .PP
 \-loginmesg \fI[message]\fR
@@ -427,7 +449,6 @@ Max length of UTF8\-MAC volume name for Mac OS X\&. Note that Hangul is especial
 .nf
 73:  limit of Mac OS X 10\&.1
 80:  limit for Mac OS X 10\&.4/10\&.5 (default)
-123: limit for Mac OS X 10\&.6
 255: limit of spec
 .fi
 .if n \{\
@@ -482,7 +503,7 @@ The config is case\-ignoring
 .RS 4
 .\}
 .nf
-\-setuplog "default log_info /var/log/afpd\&.log"
+\- \-setuplog "default log_info /var/log/afpd\&.log"
 .fi
 .if n \{\
 .RE
@@ -494,7 +515,7 @@ The config is case\-ignoring
 .RS 4
 .\}
 .nf
-\-setuplog "default log_maxdebug /var/log/afpd\&.log"
+\- \-setuplog "default log_maxdebug /var/log/afpd\&.log"
 .fi
 .if n \{\
 .RE
@@ -506,7 +527,7 @@ The config is case\-ignoring
 .RS 4
 .\}
 .nf
-\-setuplog "default log_info /var/log/afpd\&.log"
+\- \-setuplog "default log_info /var/log/afpd\&.log" \e
 \-setuplog "UAMSDaemon log_maxdebug /var/log/uams\&.log"
 .fi
 .if n \{\
@@ -526,7 +547,7 @@ specifying any string as filename is sufficient for the config parser to disting
 .RS 4
 .\}
 .nf
-\-unsetuplog "default \-"
+\- \-unsetuplog "default \-"
 .fi
 .if n \{\
 .RE
@@ -553,7 +574,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RS 4
 .\}
 .nf
-\- \-transall \-uamlist uams_dhx\&.so,uams_dhx2\&.so
+\- \-tcp \-noddp \-uamlist uams_dhx\&.so,uams_dhx2\&.so \-nosavepassword
 .fi
 .if n \{\
 .RE
@@ -565,7 +586,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RS 4
 .\}
 .nf
-\- \-transall \-maccodepage mac_cyrillic \-unixcodepage utf8
+\- \-maccodepage mac_cyrillic \-unixcodepage utf8
 .fi
 .if n \{\
 .RE
@@ -577,7 +598,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .RS 4
 .\}
 .nf
-\- \-transall \-uamlist uams_dhx\&.so,uams_dhx2\&.so,uams_guest\&.so,uams_gss\&.so \e 
+\- \-uamlist uams_dhx\&.so,uams_dhx2\&.so,uams_guest\&.so,uams_gss\&.so \e 
 \-k5service afpserver \-k5keytab /path/to/afpserver\&.keytab \e 
 \-k5realm YOUR\&.REALM \-fqdn your\&.fqdn\&.namel:548
 .fi
@@ -593,7 +614,7 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 .nf
 "Guest Server" \-uamlist uams_guest\&.so \-loginmesg "Welcome guest!"
 "User Server" \-uamlist uams_dhx2\&.so \-port 12000
-"special" \-notcp \-defaultvol <path> \-systemvol <path>
+"special" \-ddp \-notcp \-defaultvol <path> \-systemvol <path>
 .fi
 .if n \{\
 .RE
@@ -603,4 +624,5 @@ Specify the number of tickles to send before timing out a connection\&. The defa
 \fBafpd\fR(8),
 \fBafppasswd\fR(1),
 \fBAppleVolumes.default\fR(5),
-\fBafp_signature.conf\fR(5)
+\fBafp_signature.conf\fR(5),
+\fBcnid_metad\fR(8)

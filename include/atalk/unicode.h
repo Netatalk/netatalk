@@ -90,9 +90,13 @@ extern int atalk_iconv_close (atalk_iconv_t);
 extern struct charset_functions *find_charset_functions (const char *);
 extern int atalk_register_charset (struct charset_functions *);
 
+/* from utf16_case.c */
+extern ucs2_t    toupper_w  (ucs2_t);
+extern u_int32_t toupper_sp (u_int32_t);
+extern ucs2_t    tolower_w  (ucs2_t);
+extern u_int32_t tolower_sp (u_int32_t);
+
 /* from util_unistr.c */
-extern ucs2_t   toupper_w  (ucs2_t);
-extern ucs2_t   tolower_w  (ucs2_t);
 extern int      strupper_w (ucs2_t *);
 extern int      strlower_w (ucs2_t *);
 extern int      islower_w  (ucs2_t);

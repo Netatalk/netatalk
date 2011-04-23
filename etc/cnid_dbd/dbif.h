@@ -64,6 +64,13 @@
 #define DBIF_IDX_DIDNAME   2
 #define DBIF_IDX_NAME      3
 
+/* get_lock cmd and return value */
+#define LOCKFILENAME  "lock"
+#define LOCK_FREE          0
+#define LOCK_UNLOCK        1
+#define LOCK_EXCL          2
+#define LOCK_SHRD          3
+
 /* Structures */
 typedef struct {
     char     *name;
@@ -75,6 +82,7 @@ typedef struct {
 
 typedef struct {
     DB_ENV   *db_env;
+    struct db_param db_param;
     DB_TXN   *db_txn;
     DBC      *db_cur;              /* for dbif_walk */
     char     *db_envhome;
@@ -84,6 +92,8 @@ typedef struct {
 } DBD;
 
 /* Functions */
+extern int get_lock(int cmd, const char *dbpath);
+
 extern DBD *dbif_init(const char *envhome, const char *dbname);
 extern int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags);
 extern int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
@@ -100,7 +110,7 @@ extern int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 extern int dbif_txn_begin(DBD *);
 extern int dbif_txn_commit(DBD *);
 extern int dbif_txn_abort(DBD *);
-extern void dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
+extern int dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
 extern int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
 
 extern int dbif_dump(DBD *dbd, int dumpindexes);

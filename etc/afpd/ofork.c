@@ -195,7 +195,7 @@ of_alloc(struct vol *vol,
            ad_open really does reinitialize the structure. */
         ad_init(ad, vol->v_adouble, vol->v_ad_options);
 
-        ad->ad_m_namelen = 255 +1;
+        ad->ad_m_namelen = UTF8FILELEN_EARLY +1;
         /* here's the deal: we allocate enough for the standard mac file length.
          * in the future, we'll reallocate in fairly large jumps in case
          * of long unicode names */
@@ -253,7 +253,7 @@ int of_stat(struct path *path)
 }
 
 
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
 int of_fstatat(int dirfd, struct path *path)
 {
     int ret;
@@ -266,7 +266,7 @@ int of_fstatat(int dirfd, struct path *path)
 
    return ret;
 }
-#endif /* HAVE_RENAMEAT */
+#endif /* HAVE_ATFUNCS */
 
 /* -------------------------- 
    stat the current directory.
@@ -346,7 +346,7 @@ struct ofork *of_findname(struct path *path)
  * @param dirfd     (r) directory fd
  * @param path      (rw) pointer to struct path
  */
-#ifdef HAVE_RENAMEAT
+#ifdef HAVE_ATFUNCS
 struct ofork *of_findnameat(int dirfd, struct path *path)
 {
     struct ofork *of;
@@ -449,6 +449,26 @@ void of_closevol(const struct vol *vol)
         if (oforks[ refnum ] != NULL && oforks[refnum]->of_vol == vol) {
             if (of_closefork( oforks[ refnum ]) < 0 ) {
                 LOG(log_error, logtype_afpd, "of_closevol: %s", strerror(errno) );
+            }
+        }
+    }
+    return;
+}
+
+/* ----------------------
+   close all forks for a volume
+*/
+void of_close_all_forks(void)
+{
+    int refnum;
+
+    if (!oforks)
+        return;
+
+    for ( refnum = 0; refnum < nforks; refnum++ ) {
+        if (oforks[ refnum ] != NULL) {
+            if (of_closefork( oforks[ refnum ]) < 0 ) {
+                LOG(log_error, logtype_afpd, "of_close_all_forks: %s", strerror(errno) );
             }
         }
     }

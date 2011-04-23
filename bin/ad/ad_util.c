@@ -190,79 +190,6 @@ char *utompath(const struct volinfo *volinfo, const char *upath)
     return(m);
 }
 
-/*!
- * Build path relativ to volume root
- *
- * path might be:
- * (a) relative:
- *     "dir/subdir" with cwd: "/afp_volume/topdir"
- * (b) absolute:
- *     "/afp_volume/dir/subdir"
- *
- * @param path     (r) path relative to cwd() or absolute
- * @param volpath  (r) volume path that path is a subdir of (has been computed in volinfo funcs)
- *
- * @returns relative path in new bstring, caller must bdestroy it
- */
-static bstring rel_path_in_vol(const char *path, const char *volpath)
-{
-    EC_INIT;
-    int cwd = -1;
-    bstring fpath = NULL;
-    char *dname = NULL;
-    struct stat st;
-
-    if (path == NULL || volpath == NULL)
-        return NULL;
-
-    EC_NEG1_LOG(cwd = open(".", O_RDONLY));
-
-    EC_ZERO_LOGSTR(lstat(path, &st), "lstat(%s): %s", path, strerror(errno));
-    switch (S_IFMT & st.st_mode) {
-
-    case S_IFREG:
-    case S_IFLNK:
-        EC_NULL_LOG(dname = strdup(path));
-        EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname, strerror(errno));
-        free(dname);
-        dname = NULL;
-        EC_NULL(fpath = bfromcstr(getcwdpath()));
-        BSTRING_STRIP_SLASH(fpath);
-        EC_ZERO(bcatcstr(fpath, "/"));
-        EC_NULL_LOG(dname = strdup(path));
-        EC_ZERO(bcatcstr(fpath, basename(dname)));
-        break;
-
-    case S_IFDIR:
-        EC_ZERO_LOGSTR(chdir(path), "chdir(%s): %s", path, strerror(errno));
-        EC_NULL(fpath = bfromcstr(getcwdpath()));
-        break;
-
-    default:
-        SLOG("special: %s", path);
-        EC_FAIL;
-    }
-
-    BSTRING_STRIP_SLASH(fpath);
-
-    /*
-     * Now we have eg:
-     *   fpath:   /Volume/netatalk/dir/bla
-     *   volpath: /Volume/netatalk/
-     * we want: "dir/bla"
-     */
-    EC_ZERO(bdelete(fpath, 0, strlen(volpath)));
-
-EC_CLEANUP:
-    if (dname) free(dname);
-    if (cwd != -1) {
-        fchdir(cwd);
-        close(cwd);
-    }
-    if (ret != 0)
-        return NULL;
-    return fpath;
-}
 
 /*!
  * Convert dot encoding of basename _in place_
@@ -347,15 +274,16 @@ cnid_t cnid_for_path(const afpvol_t *vol,
     struct bstrList *l = NULL;
     struct stat st;
 
-    *did = htonl(1);
     cnid = htonl(2);
 
     EC_NULL(rpath = rel_path_in_vol(path, vol->volinfo.v_path));
     EC_NULL(statpath = bfromcstr(vol->volinfo.v_path));
+    EC_ZERO(bcatcstr(statpath, "/"));
 
     l = bsplit(rpath, '/');
     for (int i = 0; i < l->qty ; i++) {
         *did = cnid;
+
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
                        "lstat(rpath: %s, elem: %s): %s: %s",

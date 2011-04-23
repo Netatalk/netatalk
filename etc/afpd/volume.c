@@ -29,6 +29,8 @@
 #include <atalk/vfs.h>
 #include <atalk/uuid.h>
 #include <atalk/ea.h>
+#include <atalk/bstrlib.h>
+#include <atalk/bstradd.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -135,6 +137,8 @@ static void handle_special_folders (const struct vol *);
 static void deletevol(struct vol *vol);
 static void volume_free(struct vol *vol);
 static void check_ea_sys_support(struct vol *vol);
+static char *get_vol_uuid(const AFPObj *obj, const char *volname);
+static int readvolfile(AFPObj *obj, struct afp_volume_name *p1,char *p2, int user, struct passwd *pwent);
 
 static void volfree(struct vol_option *options, const struct vol_option *save)
 {
@@ -616,6 +620,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     /* check duplicate */
     for ( volume = Volumes; volume; volume = volume->v_next ) {
         if (( strcasecmp_w( volume->v_u8mname, u8mtmpname ) == 0 ) || ( strcasecmp_w( volume->v_macname, mactmpname ) == 0 )){
+            LOG (log_error, logtype_afpd, "ERROR: Volume name is duplicated. Check AppleVolumes files.");
             if (volume->v_deleted) {
                 volume->v_new = hide = 1;
             }
@@ -784,7 +789,7 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
 
     /* get/store uuid from file */
     if (volume->v_flags & AFPVOL_TM) {
-        char *uuid = get_uuid(obj, volume->v_localname);
+        char *uuid = get_vol_uuid(obj, volume->v_localname);
         if (!uuid) {
             LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
                 volume->v_localname);
@@ -1075,7 +1080,7 @@ static int volfile_changed(struct afp_volume_name *p)
  *      <extension> TYPE [CREATOR]
  *
  */
-int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
+static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, struct passwd *pwent)
 {
     FILE        *fp;
     char        path[MAXPATHLEN + 1];
@@ -1110,6 +1115,14 @@ int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int user, str
     fd = fileno(fp);
     if (fd != -1 && !fstat( fd, &st) ) {
         p1->mtime = st.st_mtime;
+    }
+
+    if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
+        LOG(log_error, logtype_afpd, "readvolfile: can't lock volume file \"%s\"", path);
+        if ( fclose( fp ) != 0 ) {
+            LOG(log_error, logtype_afpd, "readvolfile: fclose: %s", strerror(errno) );
+        }
+        return -1;
     }
 
     memset(save_options, 0, sizeof(save_options));
@@ -1359,10 +1372,45 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
-        /* FIXME: Free could be limit minus (total minus used), */
-        /* which will confuse the client less ? */
-        *xbfree = min(*xbfree, (vol->v_limitsize * 1024 * 1024));
+        bstring cmdstr;
+        if ((cmdstr = bformat("du -sh \"%s\" 2> /dev/null | cut -f1", vol->v_path)) == NULL)
+            return AFPERR_MISC;
+
+        FILE *cmd = popen(cfrombstr(cmdstr), "r");
+        bdestroy(cmdstr);
+        if (cmd == NULL)
+            return AFPERR_MISC;
+
+        char buf[100];
+        fgets(buf, 100, cmd);
+
+        if (pclose(cmd) == -1)
+            return AFPERR_MISC;
+
+        size_t multi = 0;
+        if (buf[strlen(buf) - 2] == 'G' || buf[strlen(buf) - 2] == 'g')
+            /* GB */
+            multi = 1024 * 1024 * 1024;
+        else if (buf[strlen(buf) - 2] == 'M' || buf[strlen(buf) - 2] == 'm')
+            /* MB */
+            multi = 1024 * 1024;
+        else if (buf[strlen(buf) - 2] == 'K' || buf[strlen(buf) - 2] == 'k')
+            /* MB */
+            multi = 1024;
+
+        char *p;
+        if (p = strchr(buf, ','))
+            /* ignore fraction */
+            *p = 0;
+        else
+            /* remove G|M|K char */
+            buf[strlen(buf) - 2] = 0;
+        /* now buf contains only digits */
+        long long used = atoll(buf) * multi;
+        LOG(log_debug, logtype_afpd, "volparams: used on volume: %llu bytes", used);
+
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
+        *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
     }
 
     *bfree = min( *xbfree, maxsize);
@@ -1890,7 +1938,7 @@ static void check_ea_sys_support(struct vol *vol)
     if (vol->v_vfs_ea == AFPVOL_EA_AUTO) {
 
         if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
-            LOG(log_info, logtype_logger, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
+            LOG(log_info, logtype_afpd, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
             vol->v_vfs_ea = AFPVOL_EA_NONE;
             return;
         }
@@ -1900,7 +1948,7 @@ static void check_ea_sys_support(struct vol *vol)
         process_uid = geteuid();
         if (process_uid)
             if (seteuid(0) == -1) {
-                LOG(log_error, logtype_logger, "check_ea_sys_support: can't seteuid(0): %s", strerror(errno));
+                LOG(log_error, logtype_afpd, "check_ea_sys_support: can't seteuid(0): %s", strerror(errno));
                 exit(EXITERR_SYS);
             }
 
@@ -1915,7 +1963,7 @@ static void check_ea_sys_support(struct vol *vol)
 
         if (process_uid) {
             if (seteuid(process_uid) == -1) {
-                LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+                LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
                 exit(EXITERR_SYS);
             }
         }
@@ -2051,7 +2099,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
      * FIXME file size
      */
     if (utf8_encoding()) {
-        volume->max_filename = 255;
+        volume->max_filename = UTF8FILELEN_EARLY;
     }
     else {
         volume->max_filename = MACFILELEN;
@@ -2554,7 +2602,7 @@ void unload_volumes_and_extmap(void)
  *
  * Returns pointer to allocated storage on success, NULL on error.
  */
-char *get_uuid(const AFPObj *obj, const char *volname)
+static char *get_vol_uuid(const AFPObj *obj, const char *volname)
 {
     char *volname_conf;
     char buf[1024], uuid[UUID_PRINTABLE_STRING_LENGTH], *p;
@@ -2606,12 +2654,12 @@ char *get_uuid(const AFPObj *obj, const char *volname)
 
     if (stat(obj->options.uuidconf, &tmpstat)) {                /* no file */
         if (( fd = creat(obj->options.uuidconf, 0644 )) < 0 ) {
-            LOG(log_error, logtype_atalkd, "ERROR: Cannot create %s (%s).",
+            LOG(log_error, logtype_afpd, "ERROR: Cannot create %s (%s).",
                 obj->options.uuidconf, strerror(errno));
             return NULL;
         }
         if (( fp = fdopen( fd, "w" )) == NULL ) {
-            LOG(log_error, logtype_atalkd, "ERROR: Cannot fdopen %s (%s).",
+            LOG(log_error, logtype_afpd, "ERROR: Cannot fdopen %s (%s).",
                 obj->options.uuidconf, strerror(errno));
             close(fd);
             return NULL;
@@ -2642,5 +2690,5 @@ char *get_uuid(const AFPObj *obj, const char *volname)
     fprintf(fp, "\"%s\"\t%36s\n", volname, cp);
     fclose(fp);
     
-    return strdup(uuid);
+    return strdup(cp);
 }

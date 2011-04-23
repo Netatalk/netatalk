@@ -15,7 +15,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
+
 #include <atalk/unicode.h>
+#include <atalk/bstrlib.h>
 
 /* exit error codes */
 #define EXITERR_CLNT 1  /* client related error */
@@ -161,3 +163,9 @@ extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
 #endif  /* _ATALK_UTIL_H */
+
+/******************************************************************
+ * cnid.c
+ *****************************************************************/
+
+extern bstring rel_path_in_vol(const char *path, const char *volpath);

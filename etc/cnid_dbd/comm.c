@@ -9,6 +9,16 @@
 #include "config.h"
 #endif
 
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 600
+#endif
+#ifndef __EXTENSIONS__
+# define __EXTENSIONS__
+#endif
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>
-#define _XPG4_2 1
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <assert.h>

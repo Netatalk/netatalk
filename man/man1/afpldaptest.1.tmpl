@@ -1,0 +1,58 @@
+'\" t
+.\"     Title: afpldaptest
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 30 Mar 2011
+.\"    Manual: Netatalk 2.2
+.\"    Source: Netatalk 2.2
+.\"  Language: English
+.\"
+.TH "AFPLDAPTEST" "1" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+afpldaptest \- Syntactically check an afp_ldap\&.conf
+.SH "SYNOPSIS"
+.HP \w'\fBafpldaptest\fR\fB\fR\fBafpldaptest\fR\fB\fR\ 'u
+\fBafpldaptest\fR\fB\fR {\-u\ \fIUSER\fR | \-g\ \fIGROUP\fR | \-i\ \fIUUID\fR}
+.br
+\fBafpldaptest\fR\fB\fR {\-h | \-? | \-:}
+.SH "DESCRIPTION"
+.PP
+\fBafpldaptest\fR
+is a simple command to syntactically check :ETCDIR:/afp_ldap\&.conf\&.
+.SH "OPTIONS"
+.PP
+\fB\-u\fR \fIUSER\fR
+.RS 4
+Show uuid for
+\fIUSER\fR\&.
+.RE
+.PP
+\fB\-g\fR \fIGROUP\fR
+.RS 4
+Show uuid for
+\fIGROUP\fR\&.
+.RE
+.PP
+\fB\-i\fR \fIUUID\fR
+.RS 4
+Show user, group or local\-uuid for
+\fIUUID\fR\&.
+.RE
+.PP
+\fB\-h, \-?, \-:\fR
+.RS 4
+Show the help and exit\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBafp_ldap.conf\fR(5)

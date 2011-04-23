@@ -51,6 +51,7 @@ struct dsi_block {
 
 #define DSI_CMDSIZ        8192 
 #define DSI_DATASIZ       8192
+
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
@@ -87,16 +88,16 @@ typedef struct DSI {
 #endif 
 
 #ifdef USE_ZEROCONF
+  char *bonjourname;      /* server name as UTF8 maxlen MAXINSTANCENAMELEN */
   int zeroconf_registered;
 #endif
 
-  /* buffer for OSX deadlock */
+  /* DSI readahead buffer used for buffered reads in dsi_peek */
+  size_t dsireadbuf; /* size of the DSI readahead buffer used in dsi_peek() */
   char *buffer;
   char *start;
   char *eof;
   char *end;
-  int  maxsize;
-
 } DSI;
   
 /* DSI flags */
@@ -151,6 +152,7 @@ typedef struct DSI {
 #define DSI_NOREPLY          (1 << 6) /* in dsi_write we generate our own replies */
 #define DSI_RECONSOCKET      (1 << 7) /* we have a new socket from primary reconnect */
 #define DSI_RECONINPROG      (1 << 8) /* used in the new session in reconnect */
+#define DSI_AFP_LOGGED_OUT   (1 << 9) /* client called afp_logout, quit on next EOF from socket */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,

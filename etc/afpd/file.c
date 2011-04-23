@@ -150,8 +150,8 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
     else {
         u_int16_t temp;
 
-        if (aint > 255)  /* FIXME safeguard, anyway if no ascii char it's game over*/
-           aint = 255;
+        if (aint > UTF8FILELEN_EARLY)  /* FIXME safeguard, anyway if no ascii char it's game over*/
+           aint = UTF8FILELEN_EARLY;
 
         utf8 = vol->v_kTextEncoding;
         memcpy(data, &utf8, sizeof(utf8));
@@ -301,6 +301,8 @@ int getmetadata(struct vol *vol,
     struct stat         *st;
     struct maccess	ma;
 
+    LOG(log_debug, logtype_afpd, "getmetadata(\"%s\")", path->u_name);
+
     upath = path->u_name;
     st = &path->st;
     data = buf;
@@ -333,7 +335,7 @@ int getmetadata(struct vol *vol,
                     exit(EXITERR_SYS);
                 }
 
-                if ((dircache_add(cachedfile)) != 0) {
+                if ((dircache_add(vol, cachedfile)) != 0) {
                     LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
                     exit(EXITERR_SYS);
                 }
@@ -598,6 +600,8 @@ int getfilparams(struct vol *vol,
     int                 opened = 0;
     int rc;    
 
+    LOG(log_debug, logtype_afpd, "getfilparams(\"%s\")", path->u_name);
+
     opened = PARAM_NEED_ADP(bitmap);
     adp = NULL;
 
@@ -719,6 +723,17 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 
     path = s_path->m_name;
     ad_setname(&ad, path);
+
+    struct stat st;
+    if (lstat(upath, &st) != 0) {
+        LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): stat: %s",
+            upath, strerror(errno));
+        ad_close( adp, ADFLAGS_DF|ADFLAGS_HF);
+        return AFPERR_MISC;
+    }
+
+    (void)get_id(vol, adp, &st, dir->d_did, upath, strlen(upath));
+
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
 
@@ -1062,6 +1077,9 @@ setfilparam_done:
 int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *newname, struct adouble *adp)
 {
     int		rc;
+
+    LOG(log_debug, logtype_afpd,
+        "renamefile: src[%d, \"%s\"] -> dst[\"%s\"]", sdir_fd, src, dst);
 
     if ( unix_rename( sdir_fd, src, -1, dst ) < 0 ) {
         switch ( errno ) {

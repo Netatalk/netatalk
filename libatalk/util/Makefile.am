@@ -6,8 +6,8 @@ noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
 	bprint.c	\
+	cnid.c		\
 	fault.c		\
-	ftw.c		\
 	getiface.c	\
 	locking.c   \
 	logger.c	\
@@ -22,3 +22,7 @@ libutil_la_SOURCES = \
 	unix.c
 
 libutil_la_CFLAGS = -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\"
+
+if HAVE_ATFUNCS
+libutil_la_SOURCES += ftw.c
+endif

@@ -1,3 +1,28 @@
+Changes in 2.2beta4
+===================
+
+* NEW: afpd: new afpd.conf options "tcprcvbuf" and "tcpsndbuf" to customize
+       the corresponding TCP socket options.
+* NEW: afpd: new afpd.conf option "nozeroconf" which disabled automatic
+       Zeroconf service registration.
+* FIX: afpd: generate mersenne primes for DHX2 UAM once at startup,
+       not for every login
+* FIX: afpd: DSI streaming deadlock
+* FIX: afpd: extended sleep
+* FIX: afpd: directory cache
+* FIX: Support for platforms that do not have the *at functions
+* UPD: afpd: put POSIX write lock on volume files while reading them
+
+Changes in 2.2beta3
+===================
+
+* FIX: afpd: fix option volsizelimit to return a usefull value for the
+       volume free space using `du -sh` with popen
+* FIX: afpd: fix idle connection disconnects
+* FIX: afpd: don't disconnect sessions for clients if boottimes don't match
+* FIX: afpd: better handling of very long filenames that contain many
+       multibyte UTF-8 glyphs
+
 Changes in 2.2beta2
 ====================
 
@@ -77,6 +102,7 @@ Changes in 2.1.6
 * FIX: Solaris: configure script failed to enable DDP module
 * FIX: AppleDouble buffer overrun by extremely long filename
 * UPD: afpd: return version info with machine type in DSIGetStatus
+* UPD: dbd: use on-disk temporary rebuild db instead of in-memory db
 
 Changes in 2.1.5
 ================

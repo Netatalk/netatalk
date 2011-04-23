@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_stream.c,v 1.20 2009-10-26 12:35:56 franklahm Exp $
- *
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  *
@@ -15,8 +13,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#define USE_WRITEV
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -28,10 +24,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-
-#ifdef USE_WRITEV
 #include <sys/uio.h>
-#endif
 
 #include <atalk/logger.h>
 #include <atalk/dsi.h>
@@ -47,47 +40,44 @@
 #define MSG_DONTWAIT 0x40
 #endif
 
-/* ------------------------- 
- * we don't use a circular buffer.
-*/
-static void dsi_init_buffer(DSI *dsi)
-{
-    if (!dsi->buffer) {
-        /* XXX config options */
-        dsi->maxsize = 6 * dsi->server_quantum;
-        if (!dsi->maxsize)
-            dsi->maxsize = 6 * DSI_SERVQUANT_DEF;
-        dsi->buffer = malloc(dsi->maxsize);
-        if (!dsi->buffer) {
-            return;
-        }
-        dsi->start = dsi->buffer;
-        dsi->eof = dsi->buffer;
-        dsi->end = dsi->buffer + dsi->maxsize;
-    }
-}
-
-/* ---------------------- 
-   afpd is sleeping too much while trying to send something.
-   May be there's no reader or the reader is also sleeping in write,
-   look if there's some data for us to read, hopefully it will wake up
-   the reader so we can write again.
-*/
+/*
+ * afpd is sleeping too much while trying to send something.
+ * May be there's no reader or the reader is also sleeping in write,
+ * look if there's some data for us to read, hopefully it will wake up
+ * the reader so we can write again.
+ *
+ * @returns 0 when is possible to send again, -1 on error
+ */
 static int dsi_peek(DSI *dsi)
 {
+    static int warned = 0;
     fd_set readfds, writefds;
     int    len;
     int    maxfd;
     int    ret;
 
-    FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-    FD_SET( dsi->socket, &readfds);
-    FD_SET( dsi->socket, &writefds);
-    maxfd = dsi->socket +1;
+    LOG(log_debug, logtype_dsi, "dsi_peek");
+
+    maxfd = dsi->socket + 1;
 
     while (1) {
-        FD_SET( dsi->socket, &readfds);
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+
+        if (dsi->eof < dsi->end) {
+            /* space in read buffer */
+            FD_SET( dsi->socket, &readfds);
+        } else {
+            if (!warned) {
+                warned = 1;
+                LOG(log_note, logtype_dsi, "dsi_peek: readahead buffer is full, possibly increase -dsireadbuf option");
+                LOG(log_note, logtype_dsi, "dsi_peek: dsireadbuf: %d, DSI quantum: %d, effective buffer size: %d",
+                    dsi->dsireadbuf,
+                    dsi->server_quantum ? dsi->server_quantum : DSI_SERVQUANT_DEF,
+                    dsi->end - dsi->buffer);
+            }
+        }
+
         FD_SET( dsi->socket, &writefds);
 
         /* No timeout: if there's nothing to read nor nothing to write,
@@ -97,29 +87,35 @@ static int dsi_peek(DSI *dsi)
                 /* we might have been interrupted by out timer, so restart select */
                 continue;
             /* give up */
+            LOG(log_error, logtype_dsi, "dsi_peek: unexpected select return: %d %s",
+                ret, ret < 0 ? strerror(errno) : "");
+            return -1;
+        }
+
+        if (FD_ISSET(dsi->socket, &writefds)) {
+            /* we can write again */
+            LOG(log_debug, logtype_dsi, "dsi_peek: can write again");
             break;
         }
 
         /* Check if there's sth to read, hopefully reading that will unblock the client */
         if (FD_ISSET(dsi->socket, &readfds)) {
-            dsi_init_buffer(dsi);
-            len = dsi->end - dsi->eof;
+            len = dsi->end - dsi->eof; /* it's ensured above that there's space */
 
-            if (len <= 0) {
-                /* ouch, our buffer is full ! fall back to blocking IO 
-                 * could block and disconnect but it's better than a cpu hog */
-                break;
+            if ((len = read(dsi->socket, dsi->eof, len)) <= 0) {
+                if (len == 0) {
+                    LOG(log_error, logtype_dsi, "dsi_peek: EOF");
+                    return -1;
+                }
+                LOG(log_error, logtype_dsi, "dsi_peek: read: %s", strerror(errno));
+                if (errno == EAGAIN)
+                    continue;
+                return -1;
             }
+            LOG(log_debug, logtype_dsi, "dsi_peek: read %d bytes", len);
 
-            len = read(dsi->socket, dsi->eof, len);
-            if (len <= 0)
-                break;
             dsi->eof += len;
         }
-
-        if (FD_ISSET(dsi->socket, &writefds))
-            /* we can write again at last */
-            break;
     }
 
     return 0;
@@ -140,12 +136,6 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 
   LOG(log_maxdebug, logtype_dsi, "dsi_stream_write: sending %u bytes", length);
 
-  /* non blocking mode */
-  if (setnonblock(dsi->socket, 1) < 0) {
-      LOG(log_error, logtype_dsi, "dsi_stream_write: setnonblock: %s", strerror(errno));
-      return -1;
-  }
-
   while (written < length) {
       len = send(dsi->socket, (u_int8_t *) data + written, length - written, flags);
       if (len >= 0) {
@@ -157,6 +147,8 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
           continue;
 
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          LOG(log_debug, logtype_dsi, "dsi_stream_write: send: %s", strerror(errno));
+
           if (mode == DSI_NOWAIT && written == 0) {
               /* DSI_NOWAIT is used by attention give up in this case. */
               written = -1;
@@ -180,11 +172,6 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
   dsi->write_count += written;
 
 exit:
-  if (setnonblock(dsi->socket, 0) < 0) {
-      LOG(log_error, logtype_dsi, "dsi_stream_write: setnonblock: %s", strerror(errno));
-      written = -1;
-  }
-
   dsi->in_write--;
   return written;
 }
@@ -198,14 +185,10 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
   size_t written;
   ssize_t len;
 
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: sending %u bytes", length);
+
   dsi->in_write++;
   written = 0;
-
-  /* non blocking mode */
-  if (setnonblock(dsi->socket, 1) < 0) {
-      LOG(log_error, logtype_dsi, "dsi_stream_read_file: setnonblock: %s", strerror(errno));
-      return -1;
-  }
 
   while (written < length) {
     len = sys_sendfile(dsi->socket, fromfd, &offset, length - written);
@@ -225,7 +208,7 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
           }
           continue;
       }
-      LOG(log_error, logtype_dsi, "dsi_stream_write: %s", strerror(errno));
+      LOG(log_error, logtype_dsi, "dsi_stream_read_file: %s", strerror(errno));
       break;
     }
     else if (!len) {
@@ -235,11 +218,6 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
     }
     else 
         written += len;
-  }
-
-  if (setnonblock(dsi->socket, 0) < 0) {
-      LOG(log_error, logtype_dsi, "dsi_stream_read_file: setnonblock: %s", strerror(errno));
-      return -1;
   }
 
   dsi->write_count += written;
@@ -254,20 +232,27 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
 static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
 {
     size_t nbe = 0;
+
+    if (dsi->buffer == NULL)
+        /* afpd master has no DSI buffering */
+        return 0;
+
+    LOG(log_maxdebug, logtype_dsi, "from_buf: %u bytes", count);
     
-    if (dsi->start) {        
-        nbe = dsi->eof - dsi->start;
+    nbe = dsi->eof - dsi->start;
 
-        if (nbe > 0) {
-           nbe = min((size_t)nbe, count);
-           memcpy(buf, dsi->start, nbe);
-           dsi->start += nbe;
+    if (nbe > 0) {
+        nbe = min((size_t)nbe, count);
+        memcpy(buf, dsi->start, nbe);
+        dsi->start += nbe;
 
-           if (dsi->eof == dsi->start) 
-               dsi->start = dsi->eof = dsi->buffer;
-
-        }
+        if (dsi->eof == dsi->start)
+            dsi->start = dsi->eof = dsi->buffer;
     }
+
+    LOG(log_debug, logtype_dsi, "from_buf(read: %u, unread:%u , space left: %u): returning %u",
+        dsi->start - dsi->buffer, dsi->eof - dsi->start, dsi->end - dsi->eof, nbe);
+
     return nbe;
 }
 
@@ -281,46 +266,61 @@ static size_t from_buf(DSI *dsi, u_int8_t *buf, size_t count)
  */
 static ssize_t buf_read(DSI *dsi, u_int8_t *buf, size_t count)
 {
-    ssize_t nbe;
-    
+    ssize_t len;
+
+    LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes)", count);
+
     if (!count)
         return 0;
 
-    nbe = from_buf(dsi, buf, count); /* 1. */
-    if (nbe)
-        return nbe;             /* 2. */
+    len = from_buf(dsi, buf, count); /* 1. */
+    if (len)
+        return len;             /* 2. */
   
-    return read(dsi->socket, buf, count); /* 3. */
+    len = readt(dsi->socket, buf, count, 0, 1); /* 3. */
+
+    LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes): got: %d", count, len);
+
+    return len;
 }
 
 /*
  * Essentially a loop around buf_read() to ensure "length" bytes are read
  * from dsi->buffer and/or the socket.
+ *
+ * @returns length on success, some value smaller then length indicates an error
  */
 size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
   size_t stored;
   ssize_t len;
 
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read(%u bytes)", length);
+
   stored = 0;
   while (stored < length) {
-    len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
-    if (len == -1 && errno == EINTR) {
-      continue;
-    } else if (len > 0) {
-      stored += len;
-    } else { /* eof or error */
-      /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
-      if (len || stored || dsi->read_count) {
-          if (! (dsi->flags & DSI_DISCONNECTED))
-              LOG(log_error, logtype_dsi, "dsi_stream_read(fd: %i): len:%d, %s",
-                  dsi->socket, len, (len < 0) ? strerror(errno) : "unexpected EOF");
+      len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
+      if (len == -1 && (errno == EINTR || errno == EAGAIN)) {
+          LOG(log_debug, logtype_dsi, "dsi_stream_read: select read loop");
+          continue;
+      } else if (len > 0) {
+          stored += len;
+      } else { /* eof or error */
+          /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
+          if (len || stored || dsi->read_count) {
+              if (! (dsi->flags & DSI_DISCONNECTED)) {
+                  LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",
+                      len, (len < 0) ? strerror(errno) : "unexpected EOF");
+              }
+              return 0;
+          }
+          break;
       }
-      break;
-    }
   }
 
   dsi->read_count += stored;
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_read(%u bytes): got: %u", length, stored);
   return stored;
 }
 
@@ -332,8 +332,9 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
 {
   size_t len;
   size_t buflen;
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_buffered_stream_read: %u bytes", length);
   
-  dsi_init_buffer(dsi);
   len = from_buf(dsi, data, length); /* read from buffer dsi->buffer */
   dsi->read_count += len;
   if (len == length) {          /* got enough bytes from there ? */
@@ -375,11 +376,12 @@ static void unblock_sig(DSI *dsi)
 int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {
   char block[DSI_BLOCKSIZ];
-#ifdef USE_WRITEV
   struct iovec iov[2];
   size_t towrite;
   ssize_t len;
-#endif /* USE_WRITEV */
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_send: %u bytes",
+      length ? length : sizeof(block));
 
   block[0] = dsi->header.dsi_flags;
   block[1] = dsi->header.dsi_command;
@@ -397,7 +399,6 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   
   /* block signals */
   block_sig(dsi);
-#ifdef USE_WRITEV
   iov[0].iov_base = block;
   iov[0].iov_len = sizeof(block);
   iov[1].iov_base = buf;
@@ -406,46 +407,36 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
   towrite = sizeof(block) + length;
   dsi->write_count += towrite;
   while (towrite > 0) {
-    if (((len = writev(dsi->socket, iov, 2)) == -1 && errno == EINTR) || 
-	!len)
-      continue;
+      if (((len = writev(dsi->socket, iov, 2)) == -1 && errno == EINTR) || (len == 0))
+          continue;
     
-    if ((size_t)len == towrite) /* wrote everything out */
-      break;
-    else if (len < 0) { /* error */
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-          if (!dsi_peek(dsi)) {
-              continue;
+      if ((size_t)len == towrite) /* wrote everything out */
+          break;
+      else if (len < 0) { /* error */
+          if (errno == EAGAIN || errno == EWOULDBLOCK) {
+              if (!dsi_peek(dsi)) {
+                  continue;
+              }
           }
+          LOG(log_error, logtype_dsi, "dsi_stream_send: %s", strerror(errno));
+          unblock_sig(dsi);
+          return 0;
       }
-      LOG(log_error, logtype_dsi, "dsi_stream_send: %s", strerror(errno));
-      unblock_sig(dsi);
-      return 0;
-    }
     
-    towrite -= len;
-    if (towrite > length) { /* skip part of header */
-      iov[0].iov_base = (char *) iov[0].iov_base + len;
-      iov[0].iov_len -= len;
-    } else { /* skip to data */
-      if (iov[0].iov_len) {
-	len -= iov[0].iov_len;
-	iov[0].iov_len = 0;
+      towrite -= len;
+      if (towrite > length) { /* skip part of header */
+          iov[0].iov_base = (char *) iov[0].iov_base + len;
+          iov[0].iov_len -= len;
+      } else { /* skip to data */
+          if (iov[0].iov_len) {
+              len -= iov[0].iov_len;
+              iov[0].iov_len = 0;
+          }
+          iov[1].iov_base = (char *) iov[1].iov_base + len;
+          iov[1].iov_len -= len;
       }
-      iov[1].iov_base = (char *) iov[1].iov_base + len;
-      iov[1].iov_len -= len;
-    }
   }
   
-#else /* USE_WRITEV */
-  /* write the header then data */
-  if ((dsi_stream_write(dsi, block, sizeof(block), 1) != sizeof(block)) ||
-            (dsi_stream_write(dsi, buf, length, 0) != length)) {
-      unblock_sig(dsi);
-      return 0;
-  }
-#endif /* USE_WRITEV */
-
   unblock_sig(dsi);
   return 1;
 }
@@ -459,6 +450,8 @@ int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
 		       size_t *rlength)
 {
   char block[DSI_BLOCKSIZ];
+
+  LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: %u bytes", ilength);
 
   /* read in the header */
   if (dsi_buffered_stream_read(dsi, (u_int8_t *)block, sizeof(block)) != sizeof(block)) 

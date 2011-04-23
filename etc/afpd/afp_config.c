@@ -210,6 +210,7 @@ static AFPConfig *DSIConfigInit(const struct afp_options *options,
         free(config);
         return NULL;
     }
+    dsi->dsireadbuf = options->dsireadbuf;
 
     if (options->flags & OPTION_PROXY) {
         LOG(log_note, logtype_afpd, "AFP/TCP proxy initialized for %s:%d (%s)",
@@ -425,8 +426,10 @@ AFPConfig *configinit(struct afp_options *cmdline)
         first = AFPConfigInit(cmdline, cmdline);
 
     /* Now register with zeroconf, we also need the volumes for that */
-    load_volumes(&first->obj);
-    zeroconf_register(first);
+    if (! (first->obj.options.flags & OPTION_NOZEROCONF)) {
+        load_volumes(&first->obj);
+        zeroconf_register(first);
+    }
 
     return first;
 }

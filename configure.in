@@ -70,10 +70,15 @@ if test x"$libltdl_cv_need_uscore" = xyes; then
 fi
 
 dnl Special hecks
+ac_neta_haveatfuncs=yes
+AC_CHECK_FUNCS(openat renameat fstatat unlinkat, , ac_neta_haveatfuncs=no)
+if test x"$ac_neta_haveatfuncs" = x"yes" ; then
+   AC_DEFINE([_ATFILE_SOURCE], 1, AT file source)
+   AC_DEFINE([HAVE_ATFUNCS], 1, whether at funcs are available)
+fi
 AC_CHECK_MEMBERS(struct tm.tm_gmtoff,,, [#include <time.h>])
 
 dnl these tests have been comfirmed to be needed in 2011
-AC_CHECK_FUNC(renameat, AC_DEFINE([_ATFILE_SOURCE], 1, AT file source)) 
 AC_CHECK_FUNC(epoll_create, AC_DEFINE([HAVE_EPOLL], 1, Whether Linux epoll is available)) 
 AC_CHECK_FUNCS(backtrace_symbols dirfd getusershell pread pwrite pselect)
 AC_CHECK_FUNCS(setlinebuf strlcat strlcpy strnlen)
@@ -326,6 +331,7 @@ AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
 AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
 AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
+AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 
 dnl --------------------- generate files
 

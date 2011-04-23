@@ -5,4 +5,4 @@ Makefile.in
 .deps
 .libs
 .gitignore
-charcnv.o iconv.o utf8.o util_unistr.o
+charcnv.o iconv.o utf16_case.o utf8.o util_unistr.o

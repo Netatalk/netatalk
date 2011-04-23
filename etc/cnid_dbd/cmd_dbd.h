@@ -14,6 +14,7 @@ typedef unsigned int dbd_flags_t;
 #define DBD_FLAGS_FORCE    (1 << 1)
 #define DBD_FLAGS_EXCL     (1 << 2)
 #define DBD_FLAGS_CLEANUP  (1 << 3) /* Dont create AD stuff, but cleanup orphaned */
+#define DBD_FLAGS_STATS    (1 << 4)
 
 #define ADv2_DIRNAME ".AppleDouble"
 
@@ -24,6 +25,7 @@ typedef unsigned int dbd_flags_t;
         (strcmp(a,c) b 0)
 
 extern int nocniddb; /* Dont open CNID database, only scan filesystem */
+extern int db_locked; /* have we got the fcntl lock on lockfd ? */
 extern volatile sig_atomic_t alarmed;
 
 extern void dbd_log(enum logtype lt, char *fmt, ...);

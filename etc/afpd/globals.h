@@ -23,7 +23,13 @@
 #include <atalk/unicode.h>
 #include <atalk/uam.h>
 
-#define MACFILELEN 31
+/* #define DOSFILELEN 12 */             /* Type1, DOS-compat*/
+#define MACFILELEN 31                   /* Type2, HFS-compat */
+#define UTF8FILELEN_EARLY 255           /* Type3, early Mac OS X 10.0-10.4.? */
+/* #define UTF8FILELEN_NAME_MAX 765 */  /* Type3, 10.4.?- , getconf NAME_MAX */
+/* #define UTF8FILELEN_SPEC 0xFFFF */   /* Type3, spec on document */
+/* #define HFSPLUSFILELEN 510 */        /* HFS+ spec, 510byte = 255codepoint */
+
 #define MAXUSERLEN 256
 
 #define OPTION_DEBUG         (1 << 0)
@@ -50,8 +56,10 @@ struct afp_options {
     int connections, transports, tickleval, timeout, server_notif, flags, dircachesize;
     int sleep;                  /* Maximum time allowed to sleep (in tickles) */
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
+    unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;
+    int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
     char *uampath, *fqdn;
     char *pidfile;

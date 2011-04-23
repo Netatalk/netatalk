@@ -321,6 +321,91 @@ exit:
     return ret;
 }
 
+/*!
+ * Get lock on db lock file
+ *
+ * @args cmd       (r) lock command:
+ *                     LOCK_FREE:   close lockfd
+ *                     LOCK_UNLOCK: unlock lockm keep lockfd open
+ *                     LOCK_EXCL:   F_WRLCK on lockfd
+ *                     LOCK_SHRD:   F_RDLCK on lockfd
+ * @args dbpath    (r) path to lockfile, only used on first call,
+ *                     later the stored fd is used
+ * @returns            LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
+ *                     LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
+ *                     success, 0 if the lock couldn't be acquired, -1 on other errors
+ */
+int get_lock(int cmd, const char *dbpath)
+{
+    static int lockfd = -1;
+    int ret;
+    char lockpath[PATH_MAX];
+    struct stat st;
+
+    switch (cmd) {
+    case LOCK_FREE:
+        if (lockfd == -1)
+            return -1;
+        close(lockfd);
+        lockfd = -1;
+        return 0;
+
+    case LOCK_UNLOCK:
+        if (lockfd == -1)
+            return -1;
+        return unlock(lockfd, 0, SEEK_SET, 0);
+
+    case LOCK_EXCL:
+    case LOCK_SHRD:
+        if (lockfd == -1) {
+            if ( (strlen(dbpath) + strlen(LOCKFILENAME+1)) > (PATH_MAX - 1) ) {
+                LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
+                return -1;
+            }
+            strncpy(lockpath, dbpath, PATH_MAX - 1);
+            strcat(lockpath, "/");
+            strcat(lockpath, LOCKFILENAME);
+
+            if ((lockfd = open(lockpath, O_RDWR | O_CREAT, 0644)) < 0) {
+                LOG(log_error, logtype_cnid, "Error opening lockfile: %s", strerror(errno));
+                return -1;
+            }
+
+            if ((stat(dbpath, &st)) != 0) {
+                LOG(log_error, logtype_cnid, "Error statting lockfile: %s", strerror(errno));
+                return -1;
+            }
+
+            if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
+                LOG(log_error, logtype_cnid, "Error inheriting lockfile permissions: %s",
+                         strerror(errno));
+                return -1;
+            }
+        }
+    
+        if (cmd == LOCK_EXCL)
+            ret = write_lock(lockfd, 0, SEEK_SET, 0);
+        else
+            ret = read_lock(lockfd, 0, SEEK_SET, 0);
+
+        if (ret != 0) {
+            if (cmd == LOCK_SHRD)
+                LOG(log_error, logtype_cnid, "Volume CNID db is locked, try again...");
+            return 0; 
+        }
+
+        LOG(log_debug, logtype_cnid, "get_lock: got %s lock",
+            cmd == LOCK_EXCL ? "LOCK_EXCL" : "LOCK_SHRD");    
+        return cmd;
+
+    default:
+        return -1;
+    } /* switch(cmd) */
+
+    /* deadc0de, never get here */
+    return -1;
+}
+
 /* --------------- */
 DBD *dbif_init(const char *envhome, const char *filename)
 {
@@ -385,6 +470,8 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
         dbd->db_env = NULL;
         return -1;
     }
+
+    dbd->db_param = *dbp;
 
     if ((dbif_openlog(dbd)) != 0)
         return -1;
@@ -1005,25 +1092,30 @@ int dbif_txn_abort(DBD *dbd)
 }
 
 /* 
-   ret = 1 -> commit txn
-   ret = 0 -> abort txn -> exit!
+   ret = 1 -> commit txn if db_param.txn_frequency
+   ret = 0 -> abort txn db_param.txn_frequency -> exit!
    anything else -> exit!
+
+   @returns 0 on success (abort or commit), -1 on error
 */
-void dbif_txn_close(DBD *dbd, int ret)
+int dbif_txn_close(DBD *dbd, int ret)
 {
     if (ret == 0) {
         if (dbif_txn_abort(dbd) < 0) {
             LOG( log_error, logtype_cnid, "Fatal error aborting transaction. Exiting!");
-            exit(EXIT_FAILURE);
+            return -1;
         }
     } else if (ret == 1) {
         ret = dbif_txn_commit(dbd);
         if (  ret < 0) {
             LOG( log_error, logtype_cnid, "Fatal error committing transaction. Exiting!");
-            exit(EXIT_FAILURE);
+            return -1;
         }
-    } else
-       exit(EXIT_FAILURE);
+    } else {
+        return -1;
+    }
+
+    return 0;
 }
 
 int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min, u_int32_t flags)

@@ -140,6 +140,7 @@ mode_t mode;
 }
 
 #ifdef accessmode
+
 #undef accessmode
 #endif
 /*

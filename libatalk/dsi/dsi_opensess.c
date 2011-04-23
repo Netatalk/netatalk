@@ -1,6 +1,4 @@
 /*
- * $Id: dsi_opensess.c,v 1.4 2005-09-07 15:27:29 didg Exp $
- *
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved. See COPYRIGHT.
  */
@@ -12,14 +10,37 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <stdlib.h>
 
 #include <atalk/dsi.h>
+#include <atalk/util.h>
+#include <atalk/logger.h>
+
+static void dsi_init_buffer(DSI *dsi)
+{
+    size_t quantum = dsi->server_quantum ? dsi->server_quantum : DSI_SERVQUANT_DEF;
+
+    /* default is 12 * 300k = 3,6 MB (Apr 2011) */
+    if ((dsi->buffer = malloc(dsi->dsireadbuf * quantum)) == NULL) {
+        LOG(log_error, logtype_dsi, "dsi_init_buffer: OOM");
+        AFP_PANIC("OOM in dsi_init_buffer");
+    }
+    dsi->start = dsi->buffer;
+    dsi->eof = dsi->buffer;
+    dsi->end = dsi->buffer + (dsi->dsireadbuf * quantum);
+}
 
 /* OpenSession. set up the connection */
 void dsi_opensession(DSI *dsi)
 {
   u_int32_t i = 0; /* this serves double duty. it must be 4-bytes long */
   int offs;
+
+  dsi_init_buffer(dsi);
+  if (setnonblock(dsi->socket, 1) < 0) {
+      LOG(log_error, logtype_dsi, "dsi_opensession: setnonblock: %s", strerror(errno));
+      AFP_PANIC("setnonblock error");
+  }
 
   /* parse options */
   while (i < dsi->cmdlen) {

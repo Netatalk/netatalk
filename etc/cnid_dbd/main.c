@@ -31,19 +31,18 @@
 #include "dbd.h"
 #include "comm.h"
 
-#define LOCKFILENAME  "lock"
-
 /* 
    Note: DB_INIT_LOCK is here so we can run the db_* utilities while netatalk is running.
    It's a likey performance hit, but it might we worth it.
  */
-#define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER)
+#define DBOPTIONS (DB_CREATE | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN)
 
 /* Global, needed by pack.c:idxname() */
 struct volinfo volinfo;
 
 static DBD *dbd;
 static int exit_sig = 0;
+static int db_locked;
 
 static void sig_exit(int signo)
 {
@@ -248,34 +247,6 @@ static void switch_to_user(char *dir)
     }
 }
 
-/* ------------------------ */
-static int get_lock(void)
-{
-    int lockfd;
-    struct flock lock;
-
-    if ((lockfd = open(LOCKFILENAME, O_RDWR | O_CREAT, 0644)) < 0) {
-        LOG(log_error, logtype_cnid, "main: error opening lockfile: %s", strerror(errno));
-        exit(1);
-    }
-
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type   = F_WRLCK;
-
-    if (fcntl(lockfd, F_SETLK, &lock) < 0) {
-        if (errno == EACCES || errno == EAGAIN) {
-            LOG(log_error, logtype_cnid, "get_lock: locked");
-            exit(0);
-        } else {
-            LOG(log_error, logtype_cnid, "main: fcntl F_WRLCK lockfile: %s", strerror(errno));
-            exit(1);
-        }
-    }
-
-    return lockfd;
-}
 
 /* ----------------------- */
 static void set_signal(void)
@@ -299,25 +270,12 @@ static void set_signal(void)
     }
 }
 
-/* ----------------------- */
-static void free_lock(int lockfd)
-{
-    struct flock lock;
-
-    lock.l_start  = 0;
-    lock.l_whence = SEEK_SET;
-    lock.l_len    = 0;
-    lock.l_type = F_UNLCK;
-    fcntl(lockfd, F_SETLK, &lock);
-    close(lockfd);
-}
-
 /* ------------------------ */
 int main(int argc, char *argv[])
 {
     struct db_param *dbp;
     int err = 0;
-    int lockfd, ctrlfd, clntfd;
+    int ctrlfd, clntfd;
     char *logconfig;
 
     set_processname("cnid_dbd");
@@ -355,9 +313,18 @@ int main(int argc, char *argv[])
 
     switch_to_user(dbpath);
 
-    /* Before we do anything else, check if there is an instance of cnid_dbd
-       running already and silently exit if yes. */
-    lockfd = get_lock();
+    /* Get db lock */
+    if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1) {
+        LOG(log_error, logtype_cnid, "main: fatal db lock error");
+        exit(1);
+    }
+    if (db_locked != LOCK_EXCL) {
+        /* Couldn't get exclusive lock, try shared lock  */
+        if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD) {
+            LOG(log_error, logtype_cnid, "main: fatal db lock error");
+            exit(1);
+        }
+    }
 
     set_signal();
 
@@ -371,7 +338,10 @@ int main(int argc, char *argv[])
     if (NULL == (dbd = dbif_init(dbpath, "cnid2.db")))
         exit(2);
 
-    if (dbif_env_open(dbd, dbp, DBOPTIONS) < 0)
+    /* Only recover if we got the lock */
+    if (dbif_env_open(dbd,
+                      dbp,
+                      (db_locked == LOCK_EXCL) ? DBOPTIONS | DB_RECOVER : DBOPTIONS) < 0)
         exit(2); /* FIXME: same exit code as failure for dbif_open() */
     LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
 
@@ -380,6 +350,19 @@ int main(int argc, char *argv[])
         exit(2);
     }
     LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
+
+    /* Downgrade db lock  */
+    if (db_locked == LOCK_EXCL) {
+        if (get_lock(LOCK_UNLOCK, NULL) != 0) {
+            dbif_close(dbd);
+            exit(2);
+        }
+        if (get_lock(LOCK_SHRD, NULL) != LOCK_SHRD) {
+            dbif_close(dbd);
+            exit(2);
+        }
+    }
+
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
         dbif_close(dbd);
@@ -394,8 +377,6 @@ int main(int argc, char *argv[])
 
     if (dbif_env_remove(dbpath) < 0)
         err++;
-
-    free_lock(lockfd);
 
     if (err)
         exit(4);
