@@ -104,7 +104,7 @@ printf (CSOURCE "%s is got from\n", $ARGV[0]);
 printf (CSOURCE "http\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt\n");
 printf (CSOURCE "\*\/\n");
 printf (CSOURCE "\n");
-printf (CSOURCE "\#include \<netatalk\/endian.h\>\n");
+printf (CSOURCE "\#include \<stdint.h\>\n");
 printf (CSOURCE "\#include \<atalk\/unicode.h\>\n");
 printf (CSOURCE "\#include \"%s\"\n", $ARGV[1]);
 printf (CSOURCE "\n");
@@ -231,7 +231,7 @@ sub make_array{
             $char_start = ($block_start -1)* 64;
             $char_end = ($block_end * 64) -1;
 
-            printf(CHEADER "static const u\_int16\_t %s\_table\_%d\[%d\] \= \{\n",
+            printf(CHEADER "static const uint16\_t %s\_table\_%d\[%d\] \= \{\n",
                    $_[0], $table_no, $char_end - $char_start +1);
 
             for ($char = $char_start ; $char <= $char_end ; $char++) {
@@ -270,7 +270,7 @@ sub make_array{
     printf(CSOURCE "\/*******************************************************************\n");
     printf(CSOURCE " Convert a surrogate pair to %s case.\n", $_[0]);
     printf(CSOURCE "*******************************************************************\/\n");
-    printf(CSOURCE "u\_int32\_t to%s\_sp\(u\_int32\_t val\)\n", $_[0]);
+    printf(CSOURCE "uint32\_t to%s\_sp\(uint32\_t val\)\n", $_[0]);
     printf(CSOURCE "{\n");
 
     $table_no = 1;
@@ -291,7 +291,7 @@ sub make_array{
             $char_start = ($block_start -1)* 64;
             $char_end = ($block_end * 64) -1;
 
-            printf(CHEADER "static const u\_int32\_t %s\_table\_sp\_%d\[%d\] \= \{\n",
+            printf(CHEADER "static const uint32\_t %s\_table\_sp\_%d\[%d\] \= \{\n",
                    $_[0], $table_no, $char_end - $char_start +1);
 
             for ($char = $char_start ; $char <= $char_end ; $char++) {

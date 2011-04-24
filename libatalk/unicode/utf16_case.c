@@ -8,7 +8,7 @@ UnicodeData.txt is got from
 http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 */
 
-#include <netatalk/endian.h>
+#include <stdint.h>
 #include <atalk/unicode.h>
 #include "utf16_casetable.h"
 
@@ -53,7 +53,7 @@ ucs2_t toupper_w(ucs2_t val)
 /*******************************************************************
  Convert a surrogate pair to upper case.
 *******************************************************************/
-u_int32_t toupper_sp(u_int32_t val)
+uint32_t toupper_sp(uint32_t val)
 {
     if ( val >= 0xD801DC00 && val <= 0xD801DC7F)
         return upper_table_sp_1[val-0xD801DC00];
@@ -105,7 +105,7 @@ ucs2_t tolower_w(ucs2_t val)
 /*******************************************************************
  Convert a surrogate pair to lower case.
 *******************************************************************/
-u_int32_t tolower_sp(u_int32_t val)
+uint32_t tolower_sp(uint32_t val)
 {
     if ( val >= 0xD801DC00 && val <= 0xD801DC3F)
         return lower_table_sp_1[val-0xD801DC00];
