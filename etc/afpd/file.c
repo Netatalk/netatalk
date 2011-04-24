@@ -728,11 +728,11 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     if (lstat(upath, &st) != 0) {
         LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): stat: %s",
             upath, strerror(errno));
-        ad_close( adp, ADFLAGS_DF|ADFLAGS_HF);
+        ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF);
         return AFPERR_MISC;
     }
 
-    (void)get_id(vol, adp, &st, dir->d_did, upath, strlen(upath));
+    (void)get_id(vol, &ad, &st, dir->d_did, upath, strlen(upath));
 
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
