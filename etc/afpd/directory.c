@@ -468,6 +468,7 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
     l = bsplit(rpath, '/');
     for (int i = 0; i < l->qty ; i++) {                  /* 3. */
         did = cnid;
+        EC_ZERO(bcatcstr(statpath, "/"));
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
                        "lstat(rpath: %s, elem: %s): %s: %s",
@@ -494,8 +495,6 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
             if ((dir = dirlookup(vol, cnid)) == NULL) /* 7. */
                 EC_FAIL;
         }
-
-        EC_ZERO(bcatcstr(statpath, "/"));
     }
 
 EC_CLEANUP:
