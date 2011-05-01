@@ -8,6 +8,7 @@ Changes in 2.2
 * FIX: afpd: crashes in the dircache
 * FIX: afpd: Correct afp logout vs dsi eof behaviour
 * FIX: afpd: new catsearch was broken
+* FIX: afpd: only use volume UUIDs in master afpd
 * FIX: dbd: Multiple fixes, reliable locking
 * FIX: ad file suite: fix an error that resulted in CNID database inconsistencies
 

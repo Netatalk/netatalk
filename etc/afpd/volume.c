@@ -886,8 +886,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         check_ea_sys_support(volume);
     initvol_vfs(volume);
 
-    /* get/store uuid from file */
-    if (volume->v_flags & AFPVOL_TM) {
+    /* get/store uuid from file in afpd master*/
+    if ((parent_or_child == 0) && (volume->v_flags & AFPVOL_TM)) {
         char *uuid = get_vol_uuid(obj, volume->v_localname);
         if (!uuid) {
             LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
