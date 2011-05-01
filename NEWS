@@ -4,6 +4,7 @@ Changes in 2.2
 * UPD: Support for Berkeley DB 5.1
 * UPD: case-conversion is based on Unicode 6.0.0
 * UPD: cnid_metad: allow up to 4096 volumes
+* UPD: afpd: only forward SIGTERM and SIGUSR1 from parent to childs
 * FIX: afpd: configuration reload with SIGHUP
 * FIX: afpd: crashes in the dircache
 * FIX: afpd: Correct afp logout vs dsi eof behaviour

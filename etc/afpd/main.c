@@ -114,14 +114,16 @@ static void afp_goaway(int sig)
     asp_kill(sig);
 #endif /* ! NO_DDP */
 
-    if (server_children)
-        server_child_kill(server_children, CHILD_DSIFORK, sig);
 
     switch( sig ) {
 
     case SIGTERM :
         LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
         AFPConfig *config;
+
+        if (server_children)
+            server_child_kill(server_children, CHILD_DSIFORK, sig);
+
         for (config = configs; config; config = config->next)
             if (config->server_cleanup)
                 config->server_cleanup(config);
@@ -133,6 +135,9 @@ static void afp_goaway(int sig)
         nologin++;
         auth_unload();
         LOG(log_info, logtype_afpd, "disallowing logins");        
+
+        if (server_children)
+            server_child_kill(server_children, CHILD_DSIFORK, sig);
         break;
 
     case SIGHUP :
