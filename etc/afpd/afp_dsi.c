@@ -516,14 +516,14 @@ void afp_over_dsi(AFPObj *obj)
         if (reload_request) {
             reload_request = 0;
             load_volumes(AFPobj);
-            dircache_dump();
-            log_dircache_stat();
         }
 
         /* The first SIGINT enables debugging, the next restores the config */
         if (debug_request) {
             static int debugging = 0;
             debug_request = 0;
+
+            dircache_dump();
 
             if (debugging) {
                 if (obj->options.logconfig)
