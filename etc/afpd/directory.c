@@ -512,7 +512,7 @@ EC_CLEANUP:
  * Resolve a DID, allocate a struct dir for it
  * 1. Check for special CNIDs 0 (invalid), 1 and 2.
  * 2a. Check if the DID is in the cache.
- * 2b. Check if it's really a dir (d_fullpath != NULL) because we cache files too.
+ * 2b. Check if it's really a dir  because we cache files too.
  * 3. If it's not in the cache resolve it via the database.
  * 4. Build complete server-side path to the dir.
  * 5. Check if it exists and is a directory.
@@ -555,7 +555,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
     /* Search the cache */
     if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2a */
-        if (ret->d_fullpath == NULL) {                      /* 2b */
+        if (ret->d_flags & DIRF_ISFILE) {                   /* 2b */
             afp_errno = AFPERR_BADTYPE;
             ret = NULL;
             goto exit;
@@ -622,7 +622,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     /* stat it and check if it's a dir */
     LOG(log_debug, logtype_afpd, "dirlookup: {stating %s}", cfrombstr(fullpath));
 
-    if (stat(cfrombstr(fullpath), &st) != 0) { /* 5a */
+    if (lstat(cfrombstr(fullpath), &st) != 0) { /* 5a */
         switch (errno) {
         case ENOENT:
             afp_errno = AFPERR_NOOBJ;
@@ -653,7 +653,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* Create struct dir */
-    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath, st.st_ctime)) == NULL) { /* 6 */
+    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath, &st)) == NULL) { /* 6 */
         LOG(log_error, logtype_afpd, "dirlookup(did: %u) {%s, %s}: %s", ntohl(did), mpath, upath, strerror(errno));
         err = 1;
         goto exit;
@@ -776,8 +776,8 @@ int caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
  * @param vol      (r) pointer to struct vol
  * @param pdid     (r) Parent CNID
  * @param did      (r) CNID
- * @param path     (r) Full unix path to dir or NULL for files
- * @param ctime    (r) st_ctime from stat
+ * @param path     (r) Full unix path to object
+ * @param st       (r) struct stat of object
  *
  * @returns pointer to new struct dir or NULL on error
  *
@@ -789,7 +789,7 @@ struct dir *dir_new(const char *m_name,
                     cnid_t pdid,
                     cnid_t did,
                     bstring path,
-                    time_t ctime)
+                    struct stat *st)
 {
     struct dir *dir;
 
@@ -823,7 +823,10 @@ struct dir *dir_new(const char *m_name,
     dir->d_pdid = pdid;
     dir->d_vid = vol->v_vid;
     dir->d_fullpath = path;
-    dir->ctime_dircache = ctime;
+    dir->dcache_ctime = st->st_ctime;
+    dir->dcache_ino = st->st_ino;
+    if (!S_ISDIR(st->st_mode))
+        dir->d_flags = DIRF_ISFILE;
     return dir;
 }
 
@@ -921,7 +924,13 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     /* Allocate and initialize struct dir */
-    if ((cdir = dir_new( path->m_name, path->u_name, vol, dir->d_did, id, fullpath, path->st.st_ctime)) == NULL) { /* 3 */
+    if ((cdir = dir_new(path->m_name,
+                        path->u_name,
+                        vol,
+                        dir->d_did,
+                        id,
+                        fullpath,
+                        &path->st)) == NULL) { /* 3 */
         err = 4;
         goto exit;
     }

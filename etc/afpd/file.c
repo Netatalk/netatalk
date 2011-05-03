@@ -326,6 +326,7 @@ int getmetadata(struct vol *vol,
          || (bitmap & ( (1 << FILPBIT_LNAME) ) && utf8_encoding()) /* FIXME should be m_name utf8 filename */
          || (bitmap & (1 << FILPBIT_FNUM))) {
         if (!path->id) {
+            bstring fullpath;
             struct dir *cachedfile;
             int len = strlen(upath);
             if ((cachedfile = dircache_search_by_name(vol, dir, upath, len)) != NULL)
@@ -341,18 +342,26 @@ int getmetadata(struct vol *vol,
                 if (path->m_name == NULL) {
                     if ((path->m_name = utompath(vol, upath, id, utf8_encoding())) == NULL) {
                         LOG(log_error, logtype_afpd, "getmetadata: utompath error");
-                        exit(EXITERR_SYS);
+                        return AFPERR_MISC;
                     }
                 }
                 
-                if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, NULL, st->st_ctime)) == NULL) {
+                /* Build fullpath */
+                if (((fullpath = bstrcpy(dir->d_fullpath)) == NULL)
+                    || (bconchar(fullpath, '/') != BSTR_OK)
+                    || (bcatcstr(fullpath, upath)) != BSTR_OK) {
+                    LOG(log_error, logtype_afpd, "getmetadata: fullpath: %s", strerror(errno));
+                    return AFPERR_MISC;
+                }
+
+                if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, fullpath, st)) == NULL) {
                     LOG(log_error, logtype_afpd, "getmetadata: error from dir_new");
-                    exit(EXITERR_SYS);
+                    return AFPERR_MISC;
                 }
 
                 if ((dircache_add(vol, cachedfile)) != 0) {
                     LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
-                    exit(EXITERR_SYS);
+                    return AFPERR_MISC;
                 }
             }
         } else {
