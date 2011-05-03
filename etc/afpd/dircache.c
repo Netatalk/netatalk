@@ -100,7 +100,7 @@
  * Debugging
  * =========
  *
- * Sending SIGHUP to a afpd child causes it to dump the dircache to a file "/tmp/dircache.PID".
+ * Sending SIGINT to a afpd child causes it to dump the dircache to a file "/tmp/dircache.PID".
  */
 
 /********************************************************
