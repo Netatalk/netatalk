@@ -265,7 +265,7 @@ copydir_done:
  */
 static int diroffcnt(struct dir *dir, struct stat *st)
 {
-    return st->st_ctime == dir->ctime;
+    return st->st_ctime == dir->d_ctime;
 }
 
 /* --------------------- */
@@ -1430,7 +1430,7 @@ int file_access(struct path *path, int mode)
 void setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count)
 {
     dir->offcnt = count;
-    dir->ctime = st->st_ctime;
+    dir->d_ctime = st->st_ctime;
     dir->d_flags &= ~DIRF_CNID;
 }
 
@@ -1440,7 +1440,7 @@ void setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count)
  */
 int dirreenumerate(struct dir *dir, struct stat *st)
 {
-    return st->st_ctime == dir->ctime && (dir->d_flags & DIRF_CNID);
+    return st->st_ctime == dir->d_ctime && (dir->d_flags & DIRF_CNID);
 }
 
 /* ------------------------------
