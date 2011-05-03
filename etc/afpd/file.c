@@ -765,7 +765,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:
-    curdir->offcnt++;
+    curdir->d_offcnt++;
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {
@@ -1362,7 +1362,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
         retvalue = err;
         goto copy_exit;
     }
-    curdir->offcnt++;
+    curdir->d_offcnt++;
 
 #ifdef DROPKLUDGE
     if (vol->v_flags & AFPVOL_DROPBOX) {
@@ -1846,7 +1846,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 
     if (dirreenumerate(dir, &st)) {
         /* we already did it once and the dir haven't been modified */
-    	return dir->offcnt;
+    	return dir->d_offcnt;
     }
     
     data.vol = vol;

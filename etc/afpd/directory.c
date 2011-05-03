@@ -1429,7 +1429,7 @@ int file_access(struct path *path, int mode)
 /* --------------------- */
 void setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count)
 {
-    dir->offcnt = count;
+    dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
     dir->d_flags &= ~DIRF_CNID;
 }
@@ -1579,11 +1579,11 @@ int getdirparams(const struct vol *vol,
             ashort = 0;
             /* this needs to handle current directory access rights */
             if (diroffcnt(dir, st)) {
-                ashort = (dir->offcnt > 0xffff)?0xffff:dir->offcnt;
+                ashort = (dir->d_offcnt > 0xffff)?0xffff:dir->d_offcnt;
             }
             else if ((ret = for_each_dirent(vol, upath, NULL,NULL)) >= 0) {
                 setdiroffcnt(dir, st,  ret);
-                ashort = (dir->offcnt > 0xffff)?0xffff:dir->offcnt;
+                ashort = (dir->d_offcnt > 0xffff)?0xffff:dir->d_offcnt;
             }
             ashort = htons( ashort );
             memcpy( data, &ashort, sizeof( ashort ));
@@ -2231,7 +2231,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return AFPERR_MISC;
     }
 
-    curdir->offcnt++;
+    curdir->d_offcnt++;
 
     if ((dir = dir_add(vol, curdir, s_path, strlen(s_path->u_name))) == NULL) {
         return AFPERR_MISC;

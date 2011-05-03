@@ -56,13 +56,15 @@ struct dir {
     ucs2_t      *d_m_name_ucs2;       /* mac name as UCS2 */
     qnode_t     *qidx_node;           /* pointer to position in queue index */
     time_t      d_ctime;                /* inode ctime, used and modified by reenumeration */
-    time_t      ctime_dircache;       /* inode ctime, used and modified by dircache */
+
     int         d_flags;              /* directory flags */
     cnid_t      d_pdid;               /* CNID of parent directory */
     cnid_t      d_did;                /* CNID of directory */
-    uint32_t    offcnt;               /* offspring count */
+    uint32_t    d_offcnt;             /* offspring count */
     uint16_t    d_vid;                /* only needed in the dircache, because
                                          we put all directories in one cache. */
+    /* Stuff used in the dircache */
+    time_t      ctime_dircache;       /* inode ctime, used and modified by dircache */
 };
 
 struct path {

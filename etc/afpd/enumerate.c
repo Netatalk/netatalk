@@ -359,7 +359,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
              */
             *sd.sd_last = 0;
             sd.sd_last += len + 1;
-            curdir->offcnt--;		/* a little lie */
+            curdir->d_offcnt--;		/* a little lie */
             continue;
         }
 

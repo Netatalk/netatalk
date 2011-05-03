@@ -626,7 +626,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         }
     }
     if ( rc == AFP_OK ) {
-        curdir->offcnt--;
+        curdir->d_offcnt--;
         setvoltime(obj, vol );
     }
 
@@ -767,8 +767,8 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
             rc = AFPERR_PARAM;
             goto exit;
         }
-        curdir->offcnt++;
-        sdir->offcnt--;
+        curdir->d_offcnt++;
+        sdir->d_offcnt--;
 #ifdef DROPKLUDGE
         if (vol->v_flags & AFPVOL_DROPBOX) {
             /* FIXME did is not always the source id */
