@@ -481,8 +481,7 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
         if ((dir = dircache_search_by_name(vol,          /* 5. */
                                            dir,
                                            cfrombstr(l->entry[i]),
-                                           blength(l->entry[i]),
-                                           st.st_ctime)) == NULL) {
+                                           blength(l->entry[i]))) == NULL) {
             if ((cnid = cnid_add(vol->v_cdb,             /* 6. */
                                  &st,
                                  did,
@@ -878,7 +877,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     AFP_ASSERT(path);
     AFP_ASSERT(len > 0);
 
-    if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name), path->st.st_ctime)) != NULL) {
+    if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name))) != NULL) {
         /* there's a stray entry in the dircache */
         LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
@@ -1280,7 +1279,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
             /* Search the cache */
             int unamelen = strlen(ret.u_name);
-            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen, ret.st.st_ctime); /* 14 */
+            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen); /* 14 */
             if (cdir == NULL) {
                 /* Not in cache, create one */
                 if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) { /* 15 */

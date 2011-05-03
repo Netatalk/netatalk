@@ -328,7 +328,7 @@ int getmetadata(struct vol *vol,
         if (!path->id) {
             struct dir *cachedfile;
             int len = strlen(upath);
-            if ((cachedfile = dircache_search_by_name(vol, dir, upath, len, st->st_ctime)) != NULL)
+            if ((cachedfile = dircache_search_by_name(vol, dir, upath, len)) != NULL)
                 id = cachedfile->d_did;
             else {
                 id = get_id(vol, adp, st, dir->d_did, upath, len);

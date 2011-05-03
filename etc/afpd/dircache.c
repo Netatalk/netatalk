@@ -358,18 +358,17 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
  * @param dir      (r) directory
  * @param name     (r) name (server side encoding)
  * @parma len      (r) strlen of name
- * @param ctime    (r) current st_ctime from stat
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
 struct dir *dircache_search_by_name(const struct vol *vol,
                                     const struct dir *dir,
                                     char *name,
-                                    int len,
-                                    time_t ctime)
+                                    int len)
 {
     struct dir *cdir = NULL;
     struct dir key;
+    struct stat st;
 
     hnode_t *hn;
     static_bstring uname = {-1, len, (unsigned char *)name};
@@ -394,7 +393,15 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     }
 
     if (cdir) {
-        if (cdir->ctime_dircache != ctime) {
+        if (lstat(cfrombstr(cdir->d_fullpath), &st) != 0) {
+            LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {missing:\"%s\"}",
+                ntohl(dir->d_did), name, cfrombstr(cdir->d_fullpath));
+            (void)dir_remove(vol, cdir);
+            dircache_stat.expunged++;
+            return NULL;
+        }
+
+        if (cdir->ctime_dircache != st.st_ctime) {
             LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {modified}",
                 ntohl(dir->d_did), name);
             (void)dir_remove(vol, cdir);
