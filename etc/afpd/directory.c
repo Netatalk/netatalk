@@ -537,7 +537,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     int          utf8;
     int          err = 0;
 
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u)", ntohl(did));
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): START", ntohl(did));
 
     /* check for did 0, 1 and 2 */
     if (did == 0 || vol == NULL) { /* 1 */
@@ -561,12 +561,13 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             goto exit;
         }
         if (lstat(cfrombstr(ret->d_fullpath), &st) != 0) {
-            LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {lstat: %s}", ntohl(did), strerror(errno));
+            LOG(log_debug, logtype_afpd, "dirlookup(did: %u, path: \"%s\"): lstat: %s",
+                ntohl(did), cfrombstr(ret->d_fullpath), strerror(errno));
             switch (errno) {
             case ENOENT:
             case ENOTDIR:
                 /* It's not there anymore, so remove it */
-                LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {calling dir_remove()}", ntohl(did));
+                LOG(log_debug, logtype_afpd, "dirlookup(did: %u): calling dir_remove", ntohl(did));
                 dir_remove(vol, ret);
                 afp_errno = AFPERR_NOOBJ;
                 ret = NULL;
@@ -588,6 +589,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
     /* Get it from the database */
     cnid = did;
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): querying CNID database", ntohl(did));
     if ((upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen)) == NULL) {
         afp_errno = AFPERR_NOOBJ;
         err = 1;
@@ -605,7 +607,8 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
      * - DIRDID_ROOT is hit
      * - a cached entry is found
      */
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {recursion for did: %u}", ntohl(pdid));
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): recursion for did: %u",
+        ntohl(did), ntohl(pdid));
     if ((pdir = dirlookup(vol, pdid)) == NULL) {
         err = 1;
         goto exit;
@@ -620,7 +623,8 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* stat it and check if it's a dir */
-    LOG(log_debug, logtype_afpd, "dirlookup: {stating %s}", cfrombstr(fullpath));
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): stating \"%s\"",
+        ntohl(did), cfrombstr(fullpath));
 
     if (lstat(cfrombstr(fullpath), &st) != 0) { /* 5a */
         switch (errno) {
@@ -678,7 +682,7 @@ exit:
         }
     }
     if (ret)
-        LOG(log_debug, logtype_afpd, "dirlookup(did: %u): pdid: %u, \"%s\"",
+        LOG(log_debug, logtype_afpd, "dirlookup(did: %u): RESULT: pdid: %u, path: \"%s\"",
             ntohl(ret->d_did), ntohl(ret->d_pdid), cfrombstr(ret->d_fullpath));
 
     return ret;
