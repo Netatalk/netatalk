@@ -330,7 +330,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
             dircache_stat.expunged++;
             return NULL;
         }
-        if (cdir->dcache_ctime != st.st_ctime) {
+        if ((cdir->dcache_ctime != st.st_ctime) || (cdir->dcache_ino != st.st_ino)) {
             LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {modified:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_u_name));
             (void)dir_remove(vol, cdir);
@@ -401,12 +401,8 @@ struct dir *dircache_search_by_name(const struct vol *vol,
             return NULL;
         }
 
-        /* Remove modified directories (precaution, probably not necessary) and file */
-        if (
-            (!(cdir->d_flags & DIRF_ISFILE) && (cdir->dcache_ctime != st.st_ctime))
-            ||
-            ((cdir->d_flags & DIRF_ISFILE) && (cdir->dcache_ino != st.st_ino))
-           ) {
+        /* Remove modified directories and files */
+        if ((cdir->dcache_ctime != st.st_ctime) || (cdir->dcache_ino != st.st_ino)) {
             LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {modified}",
                 ntohl(dir->d_did), name);
             (void)dir_remove(vol, cdir);
