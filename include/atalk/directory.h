@@ -46,22 +46,34 @@
 #define DIRDID_ROOT_PARENT    htonl(1)  /* parent directory of root */
 #define DIRDID_ROOT           htonl(2)  /* root directory */
 
+/* struct dir.d_flags */
+#define DIRF_FSMASK	   (3<<0)
+#define DIRF_NOFS	   (0<<0)
+#define DIRF_AFS	   (1<<0)
+#define DIRF_UFS	   (1<<1)
+#define DIRF_ISFILE    (1<<3) /* it's cached file, not a directory */
+#define DIRF_OFFCNT    (1<<4) /* offsprings count is valid */
+#define DIRF_CNID	   (1<<5) /* renumerate id */
+
 struct dir {
-    bstring     d_fullpath;          /* complete unix path to dir */
+    bstring     d_fullpath;          /* complete unix path to dir (or file) */
     bstring     d_m_name;            /* mac name */
     bstring     d_u_name;            /* unix name                                          */
                                      /* be careful here! if d_m_name == d_u_name, d_u_name */
                                      /* will just point to the same storage as d_m_name !! */
     ucs2_t      *d_m_name_ucs2;       /* mac name as UCS2 */
     qnode_t     *qidx_node;           /* pointer to position in queue index */
-    time_t      ctime;                /* inode ctime, used and modified by reenumeration */
-    time_t      ctime_dircache;       /* inode ctime, used and modified by dircache */
+    time_t      d_ctime;                /* inode ctime, used and modified by reenumeration */
+
     int         d_flags;              /* directory flags */
     cnid_t      d_pdid;               /* CNID of parent directory */
     cnid_t      d_did;                /* CNID of directory */
-    uint32_t    offcnt;               /* offspring count */
+    uint32_t    d_offcnt;             /* offspring count */
     uint16_t    d_vid;                /* only needed in the dircache, because
                                          we put all directories in one cache. */
+    /* Stuff used in the dircache */
+    time_t      dcache_ctime;         /* inode ctime, used and modified by dircache */
+    ino_t       dcache_ino;           /* inode number, used to detect changes in the dircache */
 };
 
 struct path {

@@ -52,8 +52,8 @@
  * a struct dir is initialized, the fullpath to the directory is stored there.
  *
  * In order to speed up the CNID query for files too, which eg happens when a directory is enumerated,
- * files are stored too in the dircache. In order to differentiate between files and dirs, we re-use
- * the element fullpath, which for files is always NULL.
+ * files are stored too in the dircache. In order to differentiate between files and dirs, we set
+ * the flag DIRF_ISFILE in struct dir.d_flags for files.
  *
  * The most frequent codepatch that leads to caching is directory enumeration (cf enumerate.c):
  * - if a element is a directory:
@@ -100,7 +100,7 @@
  * Debugging
  * =========
  *
- * Sending SIGHUP to a afpd child causes it to dump the dircache to a file "/tmp/dircache.PID".
+ * Sending SIGINT to a afpd child causes it to dump the dircache to a file "/tmp/dircache.PID".
  */
 
 /********************************************************
@@ -288,7 +288,7 @@ static void dircache_evict(void)
  * This func builds on the fact, that all our code only ever needs to and does search
  * the dircache by CNID expecting directories to be returned, but not files.
  * Thus
- * (1) if we find a file (d_fullpath == NULL) for a given CNID we
+ * (1) if we find a file for a given CNID we
  *     (1a) remove it from the cache
  *     (1b) return NULL indicating nothing found
  * (2) we can then use d_fullpath to stat the directory
@@ -315,7 +315,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
         cdir = hnode_get(hn);
 
     if (cdir) {
-        if (cdir->d_fullpath == NULL) { /* (1) */
+        if (cdir->d_flags & DIRF_ISFILE) { /* (1) */
             LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {not a directory:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_u_name));
             (void)dir_remove(vol, cdir); /* (1a) */
@@ -330,7 +330,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
             dircache_stat.expunged++;
             return NULL;
         }
-        if (cdir->ctime_dircache != st.st_ctime) {
+        if ((cdir->dcache_ctime != st.st_ctime) || (cdir->dcache_ino != st.st_ino)) {
             LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {modified:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_u_name));
             (void)dir_remove(vol, cdir);
@@ -358,18 +358,17 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
  * @param dir      (r) directory
  * @param name     (r) name (server side encoding)
  * @parma len      (r) strlen of name
- * @param ctime    (r) current st_ctime from stat
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
 struct dir *dircache_search_by_name(const struct vol *vol,
                                     const struct dir *dir,
                                     char *name,
-                                    int len,
-                                    time_t ctime)
+                                    int len)
 {
     struct dir *cdir = NULL;
     struct dir key;
+    struct stat st;
 
     hnode_t *hn;
     static_bstring uname = {-1, len, (unsigned char *)name};
@@ -394,7 +393,16 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     }
 
     if (cdir) {
-        if (cdir->ctime_dircache != ctime) {
+        if (lstat(cfrombstr(cdir->d_fullpath), &st) != 0) {
+            LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {missing:\"%s\"}",
+                ntohl(dir->d_did), name, cfrombstr(cdir->d_fullpath));
+            (void)dir_remove(vol, cdir);
+            dircache_stat.expunged++;
+            return NULL;
+        }
+
+        /* Remove modified directories and files */
+        if ((cdir->dcache_ctime != st.st_ctime) || (cdir->dcache_ino != st.st_ino)) {
             LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {modified}",
                 ntohl(dir->d_did), name);
             (void)dir_remove(vol, cdir);
@@ -643,8 +651,8 @@ void dircache_dump(void)
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
-                dir->d_fullpath ? "d" : "f",
-                cfrombstr(dir->d_u_name));
+                dir->d_flags & DIRF_ISFILE ? "f" : "d",
+                cfrombstr(dir->d_fullpath));
     }
 
     fprintf(dump, "\nSecondary DID/name index:\n");
@@ -659,8 +667,8 @@ void dircache_dump(void)
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
-                dir->d_fullpath ? "d" : "f",
-                cfrombstr(dir->d_u_name));
+                dir->d_flags & DIRF_ISFILE ? "f" : "d",
+                cfrombstr(dir->d_fullpath));
     }
 
     fprintf(dump, "\nLRU Queue:\n");
@@ -676,8 +684,8 @@ void dircache_dump(void)
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
-                dir->d_fullpath ? "d" : "f",
-                cfrombstr(dir->d_u_name));
+                dir->d_flags & DIRF_ISFILE ? "f" : "d",
+                cfrombstr(dir->d_fullpath));
         n = n->next;
     }
 

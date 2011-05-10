@@ -613,8 +613,7 @@ static int catsearch(struct vol *vol,
                 path.d_dir = dircache_search_by_name(vol,
                                                      curdir,
                                                      path.u_name,
-                                                     unlen,
-                                                     path.st.st_ctime);
+                                                     unlen);
             	if (path.d_dir == NULL) {
                 	/* path.m_name is set by adddir */
             	    if ((path.d_dir = dir_add(vol,

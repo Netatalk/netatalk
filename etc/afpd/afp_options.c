@@ -350,8 +350,11 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     while (NULL != (c = strstr(c, "-setuplog"))) {
         char *optstr;
         if ((optstr = getoption(c, "-setuplog"))) {
+            /* hokey2: options->logconfig must be converted to store an array of logstrings */
+            if (options->logconfig)
+                free(options->logconfig);
+            options->logconfig = strdup(optstr);
             setuplog(optstr);
-            options->logconfig = optstr; /* at least store the last (possibly only) one */
             c += sizeof("-setuplog");
         }
     }

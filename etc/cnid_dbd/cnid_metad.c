@@ -99,11 +99,12 @@
 static int srvfd;
 static int rqstfd;
 static volatile sig_atomic_t sigchild = 0;
+static uint maxvol;
 
 #define MAXSPAWN   3                   /* Max times respawned in.. */
 #define TESTTIME   42                  /* this much seconds apfd client tries to  *
                                         * to reconnect every 5 secondes, catch it */
-#define MAXVOLS    512
+#define MAXVOLS    4096
 #define DEFAULTHOST  "localhost"
 #define DEFAULTPORT  "4700"
 
@@ -142,7 +143,7 @@ static void sigterm_handler(int sig)
 static struct server *test_usockfn(struct volinfo *volinfo)
 {
     int i;
-    for (i = 0; i < MAXVOLS; i++) {
+    for (i = 0; i < maxvol; i++) {
         if ((srv[i].volinfo) && (strcmp(srv[i].volinfo->v_path, volinfo->v_path) == 0)) {
             return &srv[i];
         }
@@ -178,14 +179,16 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
 
     time(&t);
     if (!up) {
-        /* find an empty slot */
-        for (i = 0; i < MAXVOLS; i++) {
-            if (srv[i].volinfo == NULL) {
+        /* find an empty slot (i < maxvol) or the first free slot (i == maxvol)*/
+        for (i = 0; i <= maxvol; i++) {
+            if (srv[i].volinfo == NULL && i < MAXVOLS) {
                 up = &srv[i];
                 up->volinfo = volinfo;
                 retainvolinfo(volinfo);
                 up->tm = t;
                 up->count = 0;
+                if (i == maxvol)
+                    maxvol++;
                 break;
             }
         }
@@ -524,7 +527,7 @@ int main(int argc, char *argv[])
         rqstfd = usockfd_check(srvfd, &set);
         /* Collect zombie processes and log what happened to them */
         if (sigchild) while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-            for (i = 0; i < MAXVOLS; i++) {
+            for (i = 0; i < maxvol; i++) {
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
                     close(srv[i].control_fd);

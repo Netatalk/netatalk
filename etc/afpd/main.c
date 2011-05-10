@@ -107,20 +107,20 @@ static void fd_reset_listening_sockets(void)
             continue;
         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd);
     }
-    fd_set_listening_sockets();
 }
 
 /* ------------------ */
 static void afp_goaway(int sig)
 {
-    if (server_children)
-        server_child_kill(server_children, CHILD_DSIFORK, sig);
-
     switch( sig ) {
 
     case SIGTERM :
         LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
         AFPConfig *config;
+
+        if (server_children)
+            server_child_kill(server_children, CHILD_DSIFORK, sig);
+
         for (config = configs; config; config = config->next)
             if (config->server_cleanup)
                 config->server_cleanup(config);
@@ -132,6 +132,9 @@ static void afp_goaway(int sig)
         nologin++;
         auth_unload();
         LOG(log_info, logtype_afpd, "disallowing logins");        
+
+        if (server_children)
+            server_child_kill(server_children, CHILD_DSIFORK, sig);
         break;
 
     case SIGHUP :
@@ -341,6 +344,7 @@ int main(int ac, char **av)
         if (reloadconfig) {
             nologin++;
             auth_unload();
+            fd_reset_listening_sockets();
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
             for (config = configs; config; config = config->next)
@@ -354,10 +358,13 @@ int main(int ac, char **av)
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
                 exit(EXITERR_CONF);
             }
-            fd_reset_listening_sockets();
+
+            fd_set_listening_sockets();
+
             nologin = 0;
             reloadconfig = 0;
             errno = saveerrno;
+            continue;
         }
 
         if (ret == 0)

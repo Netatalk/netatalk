@@ -604,7 +604,14 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     if ( (flags & CONV_REQMANGLE) || (tmpvlen > AFPVOL_MACNAMELEN)) {
         if (tmpvlen + suffixlen > AFPVOL_MACNAMELEN) {
             flags = CONV_FORCE;
-            tmpvlen = convert_charset(obj->options.unixcharset, obj->options.maccharset, 0, name, vlen, tmpname, AFPVOL_MACNAMELEN - suffixlen, &flags);
+            tmpvlen = convert_charset(obj->options.unixcharset,
+                                      obj->options.maccharset,
+                                      0,
+                                      name,
+                                      vlen,
+                                      tmpname,
+                                      AFPVOL_MACNAMELEN - suffixlen,
+                                      &flags);
             tmpname[tmpvlen >= 0 ? tmpvlen : 0] = 0;
         }
         strcat(tmpname, suffix);
@@ -612,15 +619,24 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     }
 
     /* Secondly convert name from maccharset to UCS2 */
-    if ( 0 >= ( macvlen = convert_string(obj->options.maccharset, CH_UCS2, tmpname, tmpvlen, mactmpname, AFPVOL_U8MNAMELEN*2)) )
+    if ( 0 >= ( macvlen = convert_string(obj->options.maccharset,
+                                         CH_UCS2,
+                                         tmpname,
+                                         tmpvlen,
+                                         mactmpname,
+                                         AFPVOL_U8MNAMELEN*2)) )
         return -1;
 
     LOG(log_maxdebug, logtype_afpd, "createvol: Volume '%s' ->  Longname: '%s'", name, tmpname);
 
     /* check duplicate */
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-        if (( strcasecmp_w( volume->v_u8mname, u8mtmpname ) == 0 ) || ( strcasecmp_w( volume->v_macname, mactmpname ) == 0 )){
-            LOG (log_error, logtype_afpd, "ERROR: Volume name is duplicated. Check AppleVolumes files.");
+        if ((utf8_encoding() && (strcasecmp_w(volume->v_u8mname, u8mtmpname) == 0))
+             ||
+            (!utf8_encoding() && (strcasecmp_w(volume->v_macname, mactmpname) == 0))) {
+            LOG (log_error, logtype_afpd,
+                 "Duplicate volume name, check AppleVolumes files: previous: \"%s\", new: \"%s\"",
+                 volume->v_localname, name);
             if (volume->v_deleted) {
                 volume->v_new = hide = 1;
             }
@@ -787,8 +803,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         check_ea_sys_support(volume);
     initvol_vfs(volume);
 
-    /* get/store uuid from file */
-    if (volume->v_flags & AFPVOL_TM) {
+    /* get/store uuid from file in afpd master*/
+    if ((parent_or_child == 0) && (volume->v_flags & AFPVOL_TM)) {
         char *uuid = get_vol_uuid(obj, volume->v_localname);
         if (!uuid) {
             LOG(log_error, logtype_afpd, "Volume '%s': couldn't get UUID",
@@ -2129,7 +2145,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
                        DIRDID_ROOT_PARENT,
                        DIRDID_ROOT,
                        bfromcstr(volume->v_path),
-                       st.st_ctime)
+                       &st)
             ) == NULL) {
         free(vol_mname);
         LOG(log_error, logtype_afpd, "afp_openvol(%s): malloc: %s", volume->v_path, strerror(errno) );

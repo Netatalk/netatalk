@@ -359,7 +359,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
              */
             *sd.sd_last = 0;
             sd.sd_last += len + 1;
-            curdir->offcnt--;		/* a little lie */
+            curdir->d_offcnt--;		/* a little lie */
             continue;
         }
 
@@ -375,7 +375,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
             int len = strlen(s_path.u_name);
-            if ((dir = dircache_search_by_name(vol, curdir, s_path.u_name, len, s_path.st.st_ctime)) == NULL) {
+            if ((dir = dircache_search_by_name(vol, curdir, s_path.u_name, len)) == NULL) {
                 if ((dir = dir_add(vol, curdir, &s_path, len)) == NULL) {
                     LOG(log_error, logtype_afpd, "enumerate(vid:%u, did:%u, name:'%s'): error adding dir: '%s'",
                         ntohs(vid), ntohl(did), o_path->u_name, s_path.u_name);

@@ -39,16 +39,6 @@
 #include "globals.h"
 #include "volume.h"
 
-#define DIRF_FSMASK	(3<<0)
-#define DIRF_NOFS	(0<<0)
-#define DIRF_AFS	(1<<0)
-#define DIRF_UFS	(2<<0)
-
-#define DIRF_OFFCNT    (1<<4) /* offsprings count is valid */
-#define DIRF_CNID	   (1<<5) /* renumerate id */
-
-#define AFPDIR_READ	(1<<0)
-
 /* directory bits */
 #define DIRPBIT_ATTR	0
 #define DIRPBIT_PDID	1
@@ -107,7 +97,7 @@ typedef int (*dir_loop)(struct dirent *, char *, void *);
 
 extern void        dir_free_invalid_q(void);
 extern struct dir  *dir_new(const char *mname, const char *uname, const struct vol *,
-                            cnid_t pdid, cnid_t did, bstring fullpath, time_t ctime);
+                            cnid_t pdid, cnid_t did, bstring fullpath, struct stat *);
 extern void        dir_free (struct dir *);
 extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *, int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir, cnid_t pdid, cnid_t did,

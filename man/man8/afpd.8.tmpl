@@ -205,6 +205,17 @@ Signals that are sent to the main
 \fBafpd\fR
 process are propagated to the children, so all will be affected\&.
 .PP
+To shut down a user\'s
+\fBafpd\fR
+process it is recommended that
+\fBSIGKILL (\-9)\fR
+\fINOT\fR
+be used, except as a last resort, as this may leave the CNID database in an inconsistent state\&. The safe way to terminate an
+\fBafpd\fR
+is to send it a
+\fBSIGTERM (\-15)\fR
+signal and wait for it to die on its own\&.
+.PP
 SIGHUP
 .RS 4
 Sending a
@@ -223,7 +234,7 @@ enables
 logging for this process\&. The log is sent to fhe file
 /tmp/afpd\&.PID\&.XXXXXX\&. Sending another
 \fBSIGINT\fR
-will terminate the process\&.
+will revert to the original log settings\&.
 .RE
 .PP
 SIGUSR1
@@ -239,17 +250,6 @@ The
 \fBafpd\fR
 process will look in the message directory configured at build time for a file named message\&.pid\&. For each one found, a the contents will be sent as a message to the associated AFP client\&. The file is removed after the message is sent\&. This should only be sent to a child
 \fBafpd\fR\&.
-.sp
-To shut down a user\'s
-\fBafpd\fR
-process it is recommended that
-\fBSIGKILL (\-9)\fR
-\fINOT\fR
-be used, except as a last resort, as this may leave the CNID database in an inconsistent state\&. The safe way to terminate an
-\fBafpd\fR
-is to send it a
-\fBSIGTERM (\-15)\fR
-signal and wait for it to die on its own\&.
 .RE
 .SH "FILES"
 .PP
