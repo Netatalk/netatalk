@@ -1090,6 +1090,8 @@ if test x"$with_acl_support" = x"yes" ; then
 fi
 
 if test x"$with_acl_support" = x"yes" ; then
+   AC_CHECK_HEADERS([acl/libacl.h])
+   AC_CHECK_FUNCS(acl_get_perm_np acl_from_mode)
     AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
     AC_SUBST(ACL_LIBS)
 fi

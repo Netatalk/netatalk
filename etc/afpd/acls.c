@@ -28,6 +28,8 @@
 #endif
 #ifdef HAVE_POSIX_ACLS
 #include <sys/acl.h>
+#endif
+#ifdef HAVE_ACL_LIBACL_H
 #include <acl/libacl.h>
 #endif
 
@@ -342,12 +344,20 @@ static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
 
     EC_ZERO_LOG(acl_get_permset(e, &permset));
 
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_READ))
+#else
     if (acl_get_perm(permset, ACL_READ))
+#endif
         rights = DARWIN_ACE_READ_DATA
             | DARWIN_ACE_READ_EXTATTRIBUTES
             | DARWIN_ACE_READ_ATTRIBUTES
             | DARWIN_ACE_READ_SECURITY;
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_WRITE)) {
+#else
     if (acl_get_perm(permset, ACL_WRITE)) {
+#endif
         rights |= DARWIN_ACE_WRITE_DATA
             | DARWIN_ACE_APPEND_DATA
             | DARWIN_ACE_WRITE_EXTATTRIBUTES
@@ -355,7 +365,11 @@ static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
         if (is_dir)
             rights |= DARWIN_ACE_DELETE_CHILD;
     }
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_EXECUTE))
+#else
     if (acl_get_perm(permset, ACL_EXECUTE))
+#endif
         rights |= DARWIN_ACE_EXECUTE;
 
 EC_CLEANUP:
@@ -1043,8 +1057,11 @@ static int set_acl(const struct vol *vol,
     /* for files def_acl will be NULL */
 
     /* create access acl from mode */
+#ifdef HAVE_ACL_FROM_MODE
     EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
-
+#else
+#error "Missing acl_from_mode() replacement"
+#endif
     /* adds the clients aces */
     EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &def_acl, &acc_acl, ace_count), AFPERR_MISC);
 

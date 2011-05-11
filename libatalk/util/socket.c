@@ -21,14 +21,16 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifndef _XOPEN_SOURCE
-# define _XOPEN_SOURCE 600
-#endif
-#ifndef __EXTENSIONS__
-# define __EXTENSIONS__
-#endif
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE
+#if !defined(__FreeBSD__)
+# ifndef _XOPEN_SOURCE
+#  define _XOPEN_SOURCE 600
+# endif
+# ifndef __EXTENSIONS__
+#  define __EXTENSIONS__
+# endif
+# ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+# endif
 #endif
 #include <unistd.h>
 #include <fcntl.h>

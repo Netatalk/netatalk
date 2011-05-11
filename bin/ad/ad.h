@@ -15,7 +15,9 @@
 #ifndef AD_H
 #define AD_H
 
-#define _XOPEN_SOURCE 600
+#if !defined(__FreeBSD__)
+# define _XOPEN_SOURCE 600
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
