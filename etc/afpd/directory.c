@@ -1489,6 +1489,17 @@ int getdirparams(const struct vol *vol,
             isad = 1;
             if (ad.ad_md->adf_flags & O_CREAT) {
                 /* We just created it */
+                if (s_path->m_name == NULL) {
+                    if ((s_path->m_name = utompath(vol,
+                                                   upath,
+                                                   dir->d_did,
+                                                   utf8_encoding())) == NULL) {
+                        LOG(log_error, logtype_afpd,
+                            "getdirparams(\"%s\"): can't assign macname",
+                            cfrombstr(dir->d_fullpath));
+                        return AFPERR_MISC;
+                    }
+                }
                 ad_setname(&ad, s_path->m_name);
                 ad_setid( &ad,
                           s_path->st.st_dev,
