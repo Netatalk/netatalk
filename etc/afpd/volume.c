@@ -35,6 +35,7 @@ char *strchr (), *strrchr ();
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <inttypes.h>
 
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
@@ -47,7 +48,7 @@ char *strchr (), *strrchr ();
 #include <atalk/uuid.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
-
+#include <atalk/ftw.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -1431,12 +1432,57 @@ static void volume_unlink(struct vol *volume)
     }
 }
 
+static off_t getused_size; /* result of getused() */
+
+/*!
+  nftw callback for getused()
+ */
+static int getused_stat(const char *path,
+                        const struct stat *statp,
+                        int tflag,
+                        struct FTW *ftw)
+{
+    if (tflag == FTW_F) {
+        getused_size += statp->st_size;
+    }
+    return 0;
+}
+
+/*!
+ * Calculate used size of a volume with nftw
+ *
+ * 1) Check if the volume has been modified or the v_mtime has not
+ *    yet been set
+ * 2) Call nftw if yes
+ *
+ * @param vol     (r) volume to calculate
+ */
+static int getused(const struct vol *vol)
+{
+    static time_t vol_mtime = 0;
+    int ret = 0;
+
+    if (!vol->v_mtime || (vol_mtime < vol->v_mtime)) { /* 1 */
+        vol_mtime = vol->v_mtime;
+        getused_size = 0;
+        ret = nftw(vol->v_path, getused_stat, NULL, 20, FTW_PHYS); /* 2 */
+    } else {
+        LOG(log_note, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
+            getused_size);
+
+    }
+
+exit:
+    return ret;
+}
+
 static int getvolspace(struct vol *vol,
                        u_int32_t *bfree, u_int32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, u_int32_t *bsize)
 {
     int         spaceflag, rc;
     u_int32_t   maxsize;
+    VolSpace    used;
 #ifndef NO_QUOTA_SUPPORT
     VolSpace    qfree, qtotal;
 #endif
@@ -1475,47 +1521,13 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
-#if 0
-        bstring cmdstr;
-        if ((cmdstr = bformat("du -sh \"%s\" 2> /dev/null | cut -f1", vol->v_path)) == NULL)
+        if (getused(vol) != 0)
             return AFPERR_MISC;
-
-        FILE *cmd = popen(cfrombstr(cmdstr), "r");
-        bdestroy(cmdstr);
-        if (cmd == NULL)
-            return AFPERR_MISC;
-
-        char buf[100];
-        fgets(buf, 100, cmd);
-
-        if (pclose(cmd) == -1)
-            return AFPERR_MISC;
-
-        size_t multi = 0;
-        if (buf[strlen(buf) - 2] == 'G' || buf[strlen(buf) - 2] == 'g')
-            /* GB */
-            multi = 1024 * 1024 * 1024;
-        else if (buf[strlen(buf) - 2] == 'M' || buf[strlen(buf) - 2] == 'm')
-            /* MB */
-            multi = 1024 * 1024;
-        else if (buf[strlen(buf) - 2] == 'K' || buf[strlen(buf) - 2] == 'k')
-            /* MB */
-            multi = 1024;
-
-        char *p;
-        if (p = strchr(buf, ','))
-            /* ignore fraction */
-            *p = 0;
-        else
-            /* remove G|M|K char */
-            buf[strlen(buf) - 2] = 0;
-        /* now buf contains only digits */
-        long long used = atoll(buf) * multi;
-#endif
-        LOG(log_debug, logtype_afpd, "volparams: used on volume: %llu bytes", used);
+        LOG(log_note, logtype_afpd, "volparams: used on volume: %" PRIu64 " bytes",
+            getused_size);
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
-        *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
+        *xbfree = min(*xbfree, *xbtotal < getused_size ? 0 : *xbtotal - getused_size);
     }
 
     *bfree = min( *xbfree, maxsize);
