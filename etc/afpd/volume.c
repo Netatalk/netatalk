@@ -1442,18 +1442,25 @@ static int getused_stat(const char *path,
                         int tflag,
                         struct FTW *ftw)
 {
-    if (tflag == FTW_F) {
-        getused_size += statp->st_size;
+    off_t low, high;
+
+    if (tflag == FTW_F || tflag == FTW_D) {
+        getused_size += statp->st_blocks * 512;
     }
+
     return 0;
 }
 
 /*!
  * Calculate used size of a volume with nftw
  *
- * 1) Check if the volume has been modified or the v_mtime has not
- *    yet been set
- * 2) Call nftw if yes
+ * The result is cached, we're try to avoid frequently calling nftw()
+ *
+ * 1) Call nftw an refresh if:
+ * 1a) - we're called the first time 
+ * 1b) - volume modification date is not yet set and the last time we've been called is
+ *       longer then 30 sec ago
+ * 1c) - the last volume modification is less then 30 sec old
  *
  * @param vol     (r) volume to calculate
  */
@@ -1461,18 +1468,20 @@ static int getused(const struct vol *vol)
 {
     static time_t vol_mtime = 0;
     int ret = 0;
+    time_t now = time(NULL);
 
-    if (!vol->v_mtime || (vol_mtime < vol->v_mtime)) { /* 1 */
-        vol_mtime = vol->v_mtime;
+    if (!vol_mtime
+        || (!vol->v_mtime && ((vol_mtime + 30) < now))
+        || (vol->v_mtime && ((vol_mtime + 30) < vol->v_mtime))
+        ) {
+        vol_mtime = now;
         getused_size = 0;
         ret = nftw(vol->v_path, getused_stat, NULL, 20, FTW_PHYS); /* 2 */
     } else {
-        LOG(log_note, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
+        LOG(log_debug, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
             getused_size);
-
     }
 
-exit:
     return ret;
 }
 
@@ -1523,7 +1532,7 @@ getvolspace_done:
     if (vol->v_limitsize) {
         if (getused(vol) != 0)
             return AFPERR_MISC;
-        LOG(log_note, logtype_afpd, "volparams: used on volume: %" PRIu64 " bytes",
+        LOG(log_debug, logtype_afpd, "volparams: used on volume: %" PRIu64 " bytes",
             getused_size);
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
