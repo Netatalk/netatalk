@@ -1475,6 +1475,7 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
+#if 0
         bstring cmdstr;
         if ((cmdstr = bformat("du -sh \"%s\" 2> /dev/null | cut -f1", vol->v_path)) == NULL)
             return AFPERR_MISC;
@@ -1510,6 +1511,7 @@ getvolspace_done:
             buf[strlen(buf) - 2] = 0;
         /* now buf contains only digits */
         long long used = atoll(buf) * multi;
+#endif
         LOG(log_debug, logtype_afpd, "volparams: used on volume: %llu bytes", used);
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
@@ -2494,12 +2496,6 @@ int  pollvoltime(AFPObj *obj)
 void setvoltime(AFPObj *obj, struct vol *vol)
 {
     struct timeval  tv;
-
-    /* just looking at vol->v_mtime is broken seriously since updates
-     * from other users afpd processes never are seen.
-     * This is not the most elegant solution (a shared memory between
-     * the afpd processes would come closer)
-     * [RS] */
 
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path, strerror(errno) );
