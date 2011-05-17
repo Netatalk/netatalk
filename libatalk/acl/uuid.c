@@ -158,7 +158,7 @@ int getuuidfromname( const char *name, uuidtype_t type, uuidp_t uuid) {
 #ifdef HAVE_LDAP
         if ((ret = ldap_getuuidfromname( name, type, &uuid_string)) == 0) {
             uuid_string2bin( uuid_string, uuid);
-            LOG(log_debug, logtype_afpd, "getuuidfromname{local}: name: %s, type: %s -> UUID: %s",
+            LOG(log_debug, logtype_afpd, "getuuidfromname{LDAP}: name: %s, type: %s -> UUID: %s",
                 name, uuidtype[type & UUIDTYPESTR_MASK], uuid_bin2string(uuid));
         } else {
             LOG(log_debug, logtype_afpd, "getuuidfromname(\"%s\",t:%u): no result from ldap search",
