@@ -1451,6 +1451,7 @@ static int getused_stat(const char *path,
     return 0;
 }
 
+#define GETUSED_CACHETIME 5
 /*!
  * Calculate used size of a volume with nftw
  *
@@ -1471,12 +1472,14 @@ static int getused(const struct vol *vol)
     time_t now = time(NULL);
 
     if (!vol_mtime
-        || (!vol->v_mtime && ((vol_mtime + 30) < now))
-        || (vol->v_mtime && ((vol_mtime + 30) < vol->v_mtime))
+        || (!vol->v_mtime && ((vol_mtime + GETUSED_CACHETIME) < now))
+        || (vol->v_mtime && ((vol_mtime + GETUSED_CACHETIME) < vol->v_mtime))
         ) {
         vol_mtime = now;
         getused_size = 0;
         ret = nftw(vol->v_path, getused_stat, NULL, 20, FTW_PHYS); /* 2 */
+        LOG(log_debug, logtype_afpd, "volparams: from nftw: %" PRIu64 " bytes",
+            getused_size);
     } else {
         LOG(log_debug, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
             getused_size);
