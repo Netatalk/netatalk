@@ -7,6 +7,7 @@ Changes in 2.2
 * UPD: afpd: only forward SIGTERM and SIGUSR1 from parent to childs
 * UPD: afpd: use internal function instead of popening du -sh in order to
        calculate the used size of a volume for option "volsizelimit"
+* UPD: afpd: Add negative UUID caching, enhance local UUID handling
 * FIX: afpd: configuration reload with SIGHUP
 * FIX: afpd: crashes in the dircache
 * FIX: afpd: Correct afp logout vs dsi eof behaviour

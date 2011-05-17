@@ -31,6 +31,7 @@
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
+#include <atalk/uuid.h>
 
 #include "globals.h"
 #include "switch.h"
@@ -524,6 +525,7 @@ void afp_over_dsi(AFPObj *obj)
             debug_request = 0;
 
             dircache_dump();
+            uuidcache_dump();
 
             if (debugging) {
                 if (obj->options.logconfig)

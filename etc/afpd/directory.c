@@ -2511,9 +2511,6 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             rbuf += sizeof( id );
             *rbuflen = 2 * sizeof( id );
             break;
-        case UUID_LOCAL:
-            free(name);
-            return (AFPERR_NOITEM);
         default:
             return AFPERR_MISC;
         }

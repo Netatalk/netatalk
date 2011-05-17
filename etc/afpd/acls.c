@@ -638,10 +638,6 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         switch (uuidtype) {
-        case UUID_LOCAL:
-            free(name);
-            name = NULL;
-            continue;
         case UUID_USER:
             EC_NULL_LOG(pwd = getpwnam(name));
             tag = ACL_USER;
@@ -654,6 +650,8 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
             id = (uid_t)(grp->gr_gid);
             LOG(log_debug, logtype_afpd, "map_ace: name: %s, gid: %u", name, id);
             break;
+        default:
+            continue;
         }
         free(name);
         name = NULL;
@@ -1128,9 +1126,7 @@ static int check_acl_access(const struct vol *vol,
         LOG(log_warning, logtype_afpd, "check_access: afp_access not supported for groups");
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
-
-    case UUID_LOCAL:
-        LOG(log_warning, logtype_afpd, "check_access: local UUID");
+    default:
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     }

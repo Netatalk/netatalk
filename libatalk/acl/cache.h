@@ -32,24 +32,8 @@
  * Interface
  ********************************************************/
 
-/* 
- *   name: search for this name
- *   type: of type USER or GROUP
- *   uuid: if found copies uuid into this buffer
- * returns 0 on success, !=0 if not found or on errors
- */
-extern int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid);
-
-/* 
- *   inname: name
- *   inuuid: uuid
- *   type: USER or GROUP
- *   (uid: unused)
- * returns 0 on success, !=0 on memory errors
- */
+extern int search_cachebyname( const char *name, uuidtype_t *type, uuidp_t uuid);
 extern int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t type, const unsigned long uid);
-
-/* same as above but for the uuid cache */
 extern int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type);
 extern int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const unsigned long uid);
 

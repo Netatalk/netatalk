@@ -44,7 +44,7 @@ cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
  * helper function
  ********************************************************/
 
-static int dumpcache() {
+void uuidcache_dump(void) {
     int i;
     int ret = 0;
     cacheduser_t *entry;
@@ -59,8 +59,14 @@ static int dumpcache() {
                     continue;
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
-                LOG(log_debug9, logtype_default, "namecache{%d}: name:%s, uuid:%s, type: %s, cached: %s",
-                    i, entry->name, uuid_bin2string(entry->uuid), uuidtype[entry->type], timestr);
+                LOG(log_debug, logtype_default,
+                    "namecache{%d}: name:%s, uuid:%s, type%s: %s, cached: %s",
+                    i,
+                    entry->name,
+                    uuid_bin2string(entry->uuid),
+                    (entry->type & UUID_ENOENT) == UUID_ENOENT ? "[negative]" : "",
+                    uuidtype[entry->type & UUIDTYPESTR_MASK],
+                    timestr);
             } while ((entry = entry->next) != NULL);
         }
     }
@@ -74,13 +80,17 @@ static int dumpcache() {
                     continue;
                 if (strftime(timestr, 200, "%c", tmp) == 0)
                     continue;
-                LOG(log_debug9, logtype_default, "uuidcache{%d}: uuid:%s, name:%s, type: %s, cached: %s",
-                    i, uuid_bin2string(entry->uuid), entry->name, uuidtype[entry->type], timestr);
+                LOG(log_debug, logtype_default,
+                    "uuidcache{%d}: uuid:%s, name:%s, type%s: %s, cached: %s",
+                    i,
+                    uuid_bin2string(entry->uuid),
+                    entry->name,
+                    (entry->type & UUID_ENOENT) == UUID_ENOENT ? "[negative]" : "",
+                    uuidtype[entry->type & UUIDTYPESTR_MASK],
+                    timestr);
             } while ((entry = entry->next) != NULL);
         }
     }
-
-    return ret;
 }
 
 /* hash string it into unsigned char */
@@ -120,10 +130,6 @@ int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t 
     uuidp_t uuid = NULL;
     cacheduser_t *cacheduser = NULL;
     unsigned char hash;
-
-#ifdef DEBUG
-    dumpcache();
-#endif
 
     /* allocate mem and copy values */
     name = malloc(strlen(inname)+1);
@@ -181,25 +187,24 @@ cleanup:
             free(cacheduser);
     }
 
-#ifdef DEBUG
-    dumpcache();
-#endif
-
     return ret;
 }
 
-/* 
- * Caller provides buffer uuid for result
+/*!
+ * Search cache by name and uuid type
+ *
+ * @args name     (r)  name to search
+ * @args type     (rw) type (user or group) of name, returns found type here which might
+ *                     mark it as a negative entry
+ * @args uuid     (w)  found uuid is returned here
+ * @returns       0 on sucess, entry found
+ *                -1 no entry found
  */
-int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
+int search_cachebyname(const char *name, uuidtype_t *type, uuidp_t uuid) {
     int ret;
     unsigned char hash;
     cacheduser_t *entry;
     time_t tim;
-
-#ifdef DEBUG
-    dumpcache();
-#endif
 
     hash = hashstring((unsigned char *)name);
 
@@ -209,11 +214,11 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
     entry = namecache[hash];
     while (entry) {
         ret = strcmp(entry->name, name);
-        if (ret == 0 && type == entry->type) {
+        if (ret == 0 && *type == (entry->type & UUIDTYPESTR_MASK)) {
             /* found, now check if expired */
             tim = time(NULL);
             if ((tim - entry->creationtime) > CACHESECONDS) {
-                LOG(log_debug, logtype_default, "search_cachebyname: expired: name:\'%s\' in queue {%d}", entry->name, hash);
+                LOG(log_debug, logtype_default, "search_cachebyname: expired: name:\"%s\"", entry->name);
                 /* remove item */
                 if (entry->prev) {
                     /* 2nd to last in queue */
@@ -229,23 +234,16 @@ int search_cachebyname( const char *name, uuidtype_t type, uuidp_t uuid) {
                 free(entry->name);
                 free(entry->uuid);
                 free(entry);
-#ifdef DEBUG
-                dumpcache();
-#endif
                 return -1;
             } else {
                 memcpy(uuid, entry->uuid, UUID_BINSIZE);
-#ifdef DEBUG
-                dumpcache();
-#endif
+                *type = entry->type;
                 return 0;
             }
         }
         entry = entry->next;
     }
-#ifdef DEBUG
-    dumpcache();
-#endif
+
     return -1;
 }
 
@@ -257,10 +255,6 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
     unsigned char hash;
     cacheduser_t *entry;
     time_t tim;
-
-#ifdef DEBUG
-    dumpcache();
-#endif
 
     hash = hashuuid(uuidp);
 
@@ -288,26 +282,16 @@ int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type) {
                 free(entry->name);
                 free(entry->uuid);
                 free(entry);
-#ifdef DEBUG
-                dumpcache();
-#endif
                 return -1;
             } else {
                 *name = malloc(strlen(entry->name)+1);
                 strcpy(*name, entry->name);
                 *type = entry->type;
-#ifdef DEBUG
-                dumpcache();
-#endif
                 return 0;
             }
         }
         entry = entry->next;
     }
-
-#ifdef DEBUG
-    dumpcache();
-#endif
 
     return -1;
 }
@@ -319,10 +303,6 @@ int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const 
     cacheduser_t *cacheduser = NULL;
     cacheduser_t *entry;
     unsigned char hash;
-
-#ifdef DEBUG
-    dumpcache();
-#endif
 
     /* allocate mem and copy values */
     name = malloc(strlen(inname)+1);
@@ -379,10 +359,6 @@ cleanup:
         if (cacheduser)
             free(cacheduser);
     }
-
-#ifdef DEBUG
-    dumpcache();
-#endif
 
     return ret;
 }
