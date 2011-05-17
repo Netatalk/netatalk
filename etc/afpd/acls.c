@@ -270,11 +270,6 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
         /* uid/gid first */
         EC_ZERO(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         switch (uuidtype) {
-        case UUID_LOCAL:
-            free(name);
-            name = NULL;
-            darwin_aces++;
-            continue;
         case UUID_USER:
             EC_NULL_LOG(pwd = getpwnam(name));
             nfsv4_aces->a_who = pwd->pw_uid;
@@ -284,6 +279,9 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
             nfsv4_aces->a_who = (uid_t)(grp->gr_gid);
             nfsv4_ace_flags |= ACE_IDENTIFIER_GROUP;
             break;
+        default:
+            darwin_aces++;
+            continue;
         }
         free(name);
         name = NULL;
