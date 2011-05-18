@@ -72,6 +72,8 @@ struct dir {
     uint32_t    d_offcnt;             /* offspring count */
     uint16_t    d_vid;                /* only needed in the dircache, because
                                          we put all directories in one cache. */
+    uint32_t    d_rights_cache;       /* cached rights combinded from mode and possible ACL */
+
     /* Stuff used in the dircache */
     time_t      dcache_ctime;         /* inode ctime, used and modified by dircache */
     ino_t       dcache_ino;           /* inode number, used to detect changes in the dircache */

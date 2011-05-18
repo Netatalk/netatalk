@@ -1095,7 +1095,7 @@ EC_CLEANUP:
  * Note: this gets called frequently and is a good place for optimizations !
  *
  * @param vol              (r) volume
- * @param dir              (r) directory
+ * @param dir              (rw) directory
  * @param path             (r) path to filesystem object
  * @param uuid             (r) UUID of user
  * @param requested_rights (r) requested Darwin ACE
@@ -1103,7 +1103,7 @@ EC_CLEANUP:
  * @returns                    AFP result code
 */
 static int check_acl_access(const struct vol *vol,
-                            const struct dir *dir,
+                            struct dir *dir,
                             const char *path,
                             const uuidp_t uuid,
                             uint32_t requested_rights)
@@ -1133,50 +1133,55 @@ static int check_acl_access(const struct vol *vol,
         goto EC_CLEANUP;
     }
 
+    if ((strcmp(path, ".") == 0) && (dir->d_rights_cache != 0xffffffff)) {
+        /* its a dir and the cache value is valid */
+        allowed_rights = dir->d_rights_cache;
+        LOG(log_debug, logtype_afpd, "allowed rights from dircache: 0x%08x", allowed_rights);
+    } else {
 #ifdef HAVE_SOLARIS_ACLS
-    EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
+        EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+        EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
 #endif
+        /*
+         * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
+         * directory. As it seems the 10.6 AFP client is puzzled when this right is not
+         * allowed where a delete would succeed because the parent dir gives write perms.
+         * So we check the parent dir for write access and set the right accordingly.
+         * Currentyl acl2ownermode calls us with dir = NULL, because it doesn't make sense
+         * there to do this extra check -- afaict.
+         */
+        if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
+            int i;
+            uint32_t parent_rights = 0;
 
-    LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
+            if (dir->d_did == DIRDID_ROOT_PARENT) {
+                /* use volume path */
+                EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
+            } else {
+                /* build path for parent */
+                EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
+                EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
+                EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
+                EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
+                EC_ZERO_LOG_ERR(binsertch(parent, i, 1, 0), AFPERR_MISC);
+            }
 
-    /*
-     * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
-     * directory. As it seems the 10.6 AFP client is puzzled when this right is not
-     * allowed where a delete would succeed because the parent dir gives write perms.
-     * So we check the parent dir for write access and set the right accordingly.
-     * Currentyl acl2ownermode calls us with dir = NULL, because it doesn't make sense
-     * there to do this extra check -- afaict.
-     */
-    if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
-        int i;
-        uint32_t parent_rights = 0;
+            LOG(log_debug, logtype_afpd,"parent: %s", cfrombstr(parent));
+            EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
 
-        if (dir->d_did == DIRDID_ROOT_PARENT) {
-            /* use volume path */
-            EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
-        } else {
-            /* build path for parent */
-            EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
-            EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(binsertch(parent, i, 1, 0), AFPERR_MISC);
+#ifdef HAVE_SOLARIS_ACLS
+            EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
+#endif
+#ifdef HAVE_POSIX_ACLS
+            EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+#endif
+            if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
+                allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
         }
-
-        LOG(log_debug, logtype_afpd,"parent: %s", cfrombstr(parent));
-        EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
-
-#ifdef HAVE_SOLARIS_ACLS
-        EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
-#endif
-#ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
-#endif
-        if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
-            allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
+        LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
+        dir->d_rights_cache = allowed_rights;
     }
 
     if ((requested_rights & allowed_rights) != requested_rights) {

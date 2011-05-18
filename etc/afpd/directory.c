@@ -831,6 +831,7 @@ struct dir *dir_new(const char *m_name,
     dir->dcache_ino = st->st_ino;
     if (!S_ISDIR(st->st_mode))
         dir->d_flags = DIRF_ISFILE;
+    dir->d_rights_cache = 0xffffffff;
     return dir;
 }
 
