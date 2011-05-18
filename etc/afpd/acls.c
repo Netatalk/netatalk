@@ -280,8 +280,8 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
             nfsv4_ace_flags |= ACE_IDENTIFIER_GROUP;
             break;
         default:
-            darwin_aces++;
-            continue;
+            LOG(log_error, logtype_afpd, "map_aces_darwin_to_solaris: unkown uuidtype");
+            EC_FAIL;
         }
         free(name);
         name = NULL;
@@ -309,8 +309,12 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
                 nfsv4_ace_rights |= darwin_to_nfsv4_rights[i].to;
         }
 
-        LOG(log_debug9, logtype_afpd, "map_aces_darwin_to_solaris: ACE flags: Darwin:%08x -> NFSv4:%04x", darwin_ace_flags, nfsv4_ace_flags);
-        LOG(log_debug9, logtype_afpd, "map_aces_darwin_to_solaris: ACE rights: Darwin:%08x -> NFSv4:%08x", darwin_ace_rights, nfsv4_ace_rights);
+        LOG(log_debug9, logtype_afpd,
+            "map_aces_darwin_to_solaris: ACE flags: Darwin:%08x -> NFSv4:%04x",
+            darwin_ace_flags, nfsv4_ace_flags);
+        LOG(log_debug9, logtype_afpd,
+            "map_aces_darwin_to_solaris: ACE rights: Darwin:%08x -> NFSv4:%08x",
+            darwin_ace_rights, nfsv4_ace_rights);
 
         nfsv4_aces->a_flags = nfsv4_ace_flags;
         nfsv4_aces->a_access_mask = nfsv4_ace_rights;

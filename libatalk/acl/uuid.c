@@ -242,27 +242,30 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
         uid = ntohl(*(uint32_t *)(uuidp + 12));
         if ((pwd = getpwuid(uid)) == NULL) {
             /* not found, add negative entry to cache */
-            *type |= UUID_ENOENT;
-            *name = "UUID_ENOENT";
+            add_cachebyuuid(uuidp, "UUID_ENOENT", UUID_ENOENT, 0);
+            ret = -1;
+        } else {
+            *name = strdup(pwd->pw_name);
             add_cachebyuuid(uuidp, *name, *type, 0);
-            return -1;
+            ret = 0;
         }
-        *name = pwd->pw_name;
-        add_cachebyuuid(uuidp, *name, *type, 0);
-        return 0;
+        LOG(log_debug, logtype_afpd,
+            "getnamefromuuid{local}: UUID: %s -> name: %s, type:%s",
+            uuid_bin2string(uuidp), *name, uuidtype[(*type) & UUIDTYPESTR_MASK]);
+        return ret;
     } else if (memcmp(uuidp, local_group_uuid, 12) == 0) {
         *type = UUID_GROUP;
         gid = ntohl(*(uint32_t *)(uuidp + 12));
         if ((grp = getgrgid(gid)) == NULL) {
             /* not found, add negative entry to cache */
-            *type |= UUID_ENOENT;
-            *name = "UUID_ENOENT";
+            add_cachebyuuid(uuidp, "UUID_ENOENT", UUID_ENOENT, 0);
+            ret = -1;
+        } else {
+            *name = strdup(grp->gr_name);
             add_cachebyuuid(uuidp, *name, *type, 0);
-            return -1;
+            ret = 0;
         }
-        *name = grp->gr_name;
-        add_cachebyuuid(uuidp, *name, *type, 0);
-        return 0;
+        return ret;
     }
 
 #ifdef HAVE_LDAP
@@ -270,9 +273,7 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     if (ret != 0) {
         LOG(log_warning, logtype_afpd, "getnamefromuuid(%s): no result from ldap_getnamefromuuid",
             uuid_bin2string(uuidp));
-        *type |= UUID_ENOENT;
-        *name = "UUID_ENOENT";
-        add_cachebyuuid(uuidp, *name, *type, 0);
+        add_cachebyuuid(uuidp, "UUID_ENOENT", UUID_ENOENT, 0);
         return -1;
     }
 #endif
