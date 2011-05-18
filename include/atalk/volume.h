@@ -136,10 +136,7 @@ struct vol {
 #define AFPVOL_TM        (1 << 23)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 24)   /* Volume supports ACLS */
 #define AFPVOL_SEARCHDB  (1 << 25)   /* Use fast CNID db search instead of filesystem */
-/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
-#if 0
-#define AFPVOL_CDROM     (1 << XX)   /* Ejectable media eg CD -> in memory CNID db */
-#endif
+#define AFPVOL_NONETIDS  (1 << 26)   /* signal the client it shall do privelege mapping */
 
 /* Extended Attributes vfs indirection  */
 #define AFPVOL_EA_NONE           0   /* No EAs */
@@ -178,7 +175,7 @@ int wincheck(const struct vol *vol, const char *path);
 #define VOLPBIT_ATTR_BLANKACCESS  (1 << 4)
 #define VOLPBIT_ATTR_UNIXPRIV     (1 << 5)
 #define VOLPBIT_ATTR_UTF8         (1 << 6)
-#define VOLPBIT_ATTR_NONETUID     (1 << 7)
+#define VOLPBIT_ATTR_NONETIDS     (1 << 7)
 #define VOLPBIT_ATTR_EXT_ATTRS    (1 << 10)
 #define VOLPBIT_ATTR_ACLS         (1 << 11)
 #define VOLPBIT_ATTR_TM           (1 << 13)

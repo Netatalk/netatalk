@@ -512,11 +512,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_TM;
             else if (strcasecmp(p, "searchdb") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_SEARCHDB;
-/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
-#if 0
-            else if (strcasecmp(p, "cdrom") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_CDROM | AFPVOL_RO;
-#endif
+            else if (strcasecmp(p, "nonetids") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_NONETIDS;
             p = strtok(NULL, ",");
         }
 
@@ -1657,7 +1654,8 @@ static int getvolparams( u_int16_t bitmap, struct vol *vol, struct stat *st, cha
                         ashort |= VOLPBIT_ATTR_UNIXPRIV;
                     if (vol->v_flags & AFPVOL_TM)
                         ashort |= VOLPBIT_ATTR_TM;
-
+                    if (vol->v_flags & AFPVOL_NONETIDS)
+                        ashort |= VOLPBIT_ATTR_NONETIDS;
                     if (afp_version >= 32) {
                         if (vol->v_vfs_ea)
                             ashort |= VOLPBIT_ATTR_EXT_ATTRS;
