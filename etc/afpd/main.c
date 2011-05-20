@@ -109,17 +109,16 @@ static void fd_reset_listening_sockets(void)
 /* ------------------ */
 static void afp_goaway(int sig)
 {
+        AFPConfig *config;
 
 #ifndef NO_DDP
     asp_kill(sig);
 #endif /* ! NO_DDP */
 
-
     switch( sig ) {
 
     case SIGTERM :
         LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
-        AFPConfig *config;
 
         if (server_children)
             server_child_kill(server_children, CHILD_DSIFORK, sig);
@@ -127,6 +126,17 @@ static void afp_goaway(int sig)
         for (config = configs; config; config = config->next)
             if (config->server_cleanup)
                 config->server_cleanup(config);
+        server_unlock(default_options.pidfile);
+        exit(0);
+        break;
+
+    case SIGQUIT:
+        LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGQUIT, NOT disconnecting clients");
+
+        for (config = configs; config; config = config->next)
+            if (config->server_cleanup)
+                config->server_cleanup(config);
+
         server_unlock(default_options.pidfile);
         exit(0);
         break;
