@@ -310,6 +310,10 @@ static void alarm_handler(int sig _U_)
         LOG(log_debug, logtype_afpd, "afp_alarm: sending DSI tickle");
         err = dsi_tickle(AFPobj->handle);
     if (err <= 0) {
+        if (geteuid() == 0) {
+            LOG(log_note, logtype_afpd, "afp_alarm: unauthenticated user, connection problem");
+            afp_dsi_die(EXITERR_CLNT);
+        }
         LOG(log_error, logtype_afpd, "afp_alarm: connection problem, entering disconnected state");
         (void)dsi_disconnect(dsi);
     }
