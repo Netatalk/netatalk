@@ -130,7 +130,8 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                         goto exit;
 
                     default: /* -1 */
-                        if (errno == EINTR) {
+                        switch (errno) {
+                        case EINTR:
                             (void)gettimeofday(&now, NULL);
                             if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
                                 LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
@@ -145,10 +146,16 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                             }
                             FD_SET(socket, &rfds);
                             continue;
+                        case EBADF:
+                            /* possibly entered disconnected state, don't spam log here */
+                            LOG(log_debug, logtype_afpd, "select: %s", strerror(errno));
+                            stored = -1;
+                            goto exit;
+                        default:
+                            LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
+                            stored = -1;
+                            goto exit;
                         }
-                        LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
-                        stored = -1;
-                        goto exit;
                     }
                 } /* while (select) */
                 continue;
