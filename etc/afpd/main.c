@@ -281,7 +281,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGTERM);
     sigaddset(&sv.sa_mask, SIGUSR1);
-    
+    sigaddset(&sv.sa_mask, SIGQUIT);    
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
@@ -294,6 +294,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGTERM);
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGQUIT);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
@@ -305,6 +306,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGTERM);
     sigaddset(&sv.sa_mask, SIGUSR1);
     sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGQUIT);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
@@ -317,8 +319,21 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGUSR1);
     sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGQUIT);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
+        exit(EXITERR_SYS);
+    }
+
+    sigemptyset( &sv.sa_mask );
+    sigaddset(&sv.sa_mask, SIGALRM);
+    sigaddset(&sv.sa_mask, SIGHUP);
+    sigaddset(&sv.sa_mask, SIGUSR1);
+    sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGTERM);
+    sv.sa_flags = SA_RESTART;
+    if (sigaction(SIGQUIT, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         exit(EXITERR_SYS);
     }
