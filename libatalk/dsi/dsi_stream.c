@@ -122,6 +122,19 @@ static int dsi_peek(DSI *dsi)
     return 0;
 }
 
+/*!
+ * Communication error with the client, enter disconnected state
+ *
+ * 1. close the socket
+ * 2. set the DSI_DISCONNECTED flag
+ */
+int dsi_disconnect(DSI *dsi)
+{
+    dsi->proto_close(dsi);          /* 1 */
+    dsi->flags |= DSI_DISCONNECTED; /* 2 */
+    return 0;
+}
+
 /* ------------------------------
  * write raw data. return actual bytes read. checks against EINTR
  * aren't necessary if all of the signals have SA_RESTART
@@ -352,7 +365,10 @@ static size_t dsi_buffered_stream_read(DSI *dsi, u_int8_t *data, const size_t le
   }
 
   /* now get the remaining data */
-  len += dsi_stream_read(dsi, data + len, length - len);
+  if ((buflen = dsi_stream_read(dsi, data + len, length - len)) != length - len)
+      return 0;
+  len += buflen;
+
   return len;
 }
 
