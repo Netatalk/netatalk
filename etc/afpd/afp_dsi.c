@@ -302,7 +302,8 @@ static void alarm_handler(int sig _U_)
     /* if we're in the midst of processing something, don't die. */        
     if ( !(dsi->flags & DSI_RUNNING) && (dsi->tickle >= AFPobj->options.timeout)) {
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out, entering disconnected state");
-        (void)dsi_disconnect(dsi);
+        if (dsi_disconnect(dsi) != 0)
+            afp_dsi_die(EXITERR_CLNT);
         return;
     }
 
@@ -315,7 +316,8 @@ static void alarm_handler(int sig _U_)
             afp_dsi_die(EXITERR_CLNT);
         }
         LOG(log_error, logtype_afpd, "afp_alarm: connection problem, entering disconnected state");
-        (void)dsi_disconnect(dsi);
+        if (dsi_disconnect(dsi) != 0)
+            afp_dsi_die(EXITERR_CLNT);
     }
 }
 
@@ -497,7 +499,8 @@ void afp_over_dsi(AFPObj *obj)
                 continue;
             }
             /* Some error on the client connection, enter disconnected state */
-            (void)dsi_disconnect(dsi);
+            if (dsi_disconnect(dsi) != 0)
+                afp_dsi_die(EXITERR_CLNT);
 
             /* the client sometimes logs out (afp_logout) but doesn't close the DSI session */
             if (dsi->flags & DSI_AFP_LOGGED_OUT) {
@@ -629,7 +632,8 @@ void afp_over_dsi(AFPObj *obj)
 
             if (!dsi_cmdreply(dsi, err)) {
                 LOG(log_error, logtype_afpd, "dsi_cmdreply(%d): %s", dsi->socket, strerror(errno) );
-                (void)dsi_disconnect(dsi);
+                if (dsi_disconnect(dsi) != 0)
+                    afp_dsi_die(EXITERR_CLNT);
             }
             break;
 
@@ -662,7 +666,8 @@ void afp_over_dsi(AFPObj *obj)
 
             if (!dsi_wrtreply(dsi, err)) {
                 LOG(log_error, logtype_afpd, "dsi_wrtreply: %s", strerror(errno) );
-                (void)dsi_disconnect(dsi);
+                if (dsi_disconnect(dsi) != 0)
+                    afp_dsi_die(EXITERR_CLNT);
             }
             break;
 

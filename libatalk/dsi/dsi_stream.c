@@ -237,11 +237,15 @@ static void unblock_sig(DSI *dsi)
  *
  * 1. close the socket
  * 2. set the DSI_DISCONNECTED flag
+ *
+ * @return -1 if ppid is 1 which means afpd master died, otherwise 0
  */
 int dsi_disconnect(DSI *dsi)
 {
     dsi->proto_close(dsi);          /* 1 */
     dsi->flags |= DSI_DISCONNECTED; /* 2 */
+    if (getppid() == 1)
+        return -1;
     return 0;
 }
 
