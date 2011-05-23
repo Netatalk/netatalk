@@ -406,6 +406,26 @@ static void set_signal(void)
     sigprocmask(SIG_BLOCK, &set, NULL);
 }
 
+static int setlimits(void)
+{
+    struct rlimit rlim;
+
+    if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+        LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
+        exit(1);
+    }
+    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < 65535) {
+        rlim.rlim_cur = 65535;
+        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < 65535)
+            rlim.rlim_max = 65535;
+        if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+            LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
+            exit(1);
+        }
+    }
+    return 0;
+}
+
 /* ------------------ */
 int main(int argc, char *argv[])
 {
@@ -485,6 +505,8 @@ int main(int argc, char *argv[])
         LOG(log_error, logtype_cnid, "main: bad arguments");
         daemon_exit(1);
     }
+
+    (void)setlimits();
 
     /* Check PID lockfile and become a daemon */
     switch(server_lock("cnid_metad", _PATH_CNID_METAD_LOCK, debug)) {
