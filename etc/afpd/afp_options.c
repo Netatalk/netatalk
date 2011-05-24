@@ -39,6 +39,7 @@
 #include "status.h"
 #include "auth.h"
 #include "dircache.h"
+#include "fce_api.h"
 
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
@@ -477,6 +478,15 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-tcprcvbuf")))
         options->tcp_rcvbuf = atoi(c);
+
+	if ((c = getoption(buf, "-fcelistener"))) {
+		LOG(log_note, logtype_afpd, "Adding fce listener \"%s\"", c);
+		fce_add_udp_socket(c);
+	}
+	if ((c = getoption(buf, "-fcecoalesce"))) {
+		LOG(log_ote, logtype_afpd, "Fce coalesce: %s", c);
+		fce_set_coalesce(c);
+	}
 
     return 1;
 }

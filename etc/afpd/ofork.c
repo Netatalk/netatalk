@@ -26,6 +26,7 @@
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
+#include "fce_api.h"
 
 /* we need to have a hashed list of oforks (by dev inode). just hash
  * by first letter. */
@@ -439,6 +440,12 @@ int of_closefork(struct ofork *ofork)
             }
         }
     }
+
+    /* Somone has used write_fork, we assume file was changed, register it to file change event api */
+    if (ofork->of_flags & AFPFORK_MODIFIED) {
+        fce_register_file_modification(ofork);
+    }
+
     ret = 0;
     if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
         ret = -1;

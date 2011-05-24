@@ -47,6 +47,7 @@ char *strchr (), *strrchr ();
 #include "filedir.h"
 #include "globals.h"
 #include "unix.h"
+#include "fce_api.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
@@ -762,6 +763,9 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     (void)get_id(vol, adp, &st, dir->d_did, upath, strlen(upath));
 
     ad_flush( adp);
+
+    fce_register_new_file(s_path);
+
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:

@@ -1337,6 +1337,9 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     if ( ad_meta_fileno( ofork->of_ad ) != -1 ) /* META */
         ofork->of_flags |= AFPFORK_DIRTY;
 
+    /* we have modified any fork, remember until close_fork */
+    ofork->of_flags |= AFPFORK_MODIFIED;
+
     *rbuflen = set_off_t (offset, rbuf, is64);
     return( AFP_OK );
 
