@@ -48,6 +48,7 @@ char *strchr (), *strrchr ();
 #include "globals.h"
 #include "filedir.h"
 #include "unix.h"
+#include "fce_api.h"
 
 #ifdef DROPKLUDGE
 int matchfile2dirperms(
@@ -562,8 +563,15 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     	if (*s_path->m_name != '\0') {
     	    rc = AFPERR_ACCESS;
     	}
-    	else {
-            rc = deletecurdir( vol);
+    	else 
+		{
+
+			/* we have to cache this, the structs are lost in deletcurdir*/
+			/* but we need the positive returncode to send our event */
+			char dname[256];
+			strncpy(dname,  curdir->d_u_name, 255 );
+            if ((rc = deletecurdir(vol)) == AFP_OK)
+				fce_register_delete_dir(dname);
         }
     } else if (of_findname(s_path)) {
         rc = AFPERR_BUSY;
@@ -574,9 +582,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
          */
         if (s_path->st_valid && s_path->st_errno == ENOENT) {
             rc = AFPERR_NOOBJ;
-        }
-        else {
-            rc = deletefile(vol, -1, upath, 1);
+        } else {
+            if ((rc = deletefile(vol, -1, upath, 1)) === AFP_OK)
+				fce_register_delete_file( s_path );
         }
     }
     if ( rc == AFP_OK ) {

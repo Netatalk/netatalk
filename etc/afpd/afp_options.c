@@ -47,6 +47,7 @@ char *strchr (), *strrchr ();
 #include "globals.h"
 #include "status.h"
 #include "auth.h"
+#include "fce_api.h"
 
 #include <atalk/compat.h>
 
@@ -447,6 +448,16 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-ntseparator")) && (opt = strdup(c)))
        options->ntseparator = opt;
+
+	if ((c = getoption(buf, "-fcelistener"))) {
+		LOG(log_note, logtype_afpd, "Adding fce listener \"%s\"", c);
+		fce_add_udp_socket(c);
+	}
+	if ((c = getoption(buf, "-fcecoalesce"))) {
+		LOG(log_ote, logtype_afpd, "Fce coalesce: %s", c);
+		fce_set_coalesce(c);
+	}
+
 
     return 1;
 }
