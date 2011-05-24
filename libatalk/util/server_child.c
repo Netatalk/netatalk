@@ -282,9 +282,11 @@ int server_child_transfer_session(server_child *children,
         if (kill(pid, 0) == 0) {
             LOG(log_note, logtype_default, "Reconnect: terminating old session[%u]", pid);
             kill(pid, SIGTERM);
+            sleep(2);
             if (kill(pid, 0) == 0) {
                 LOG(log_error, logtype_default, "Reconnect: killing old session[%u]", pid);
                 kill(pid, SIGKILL);
+                sleep(2);
             }
         }
         return 0;
