@@ -36,6 +36,7 @@ char *strchr (), *strrchr ();
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
+#include <time.h>
 
 #include <atalk/asp.h>
 #include <atalk/dsi.h>
@@ -1214,12 +1215,22 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
         p1->mtime = st.st_mtime;
     }
 
-    if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
-        LOG(log_error, logtype_afpd, "readvolfile: can't lock volume file \"%s\"", path);
-        if ( fclose( fp ) != 0 ) {
-            LOG(log_error, logtype_afpd, "readvolfile: fclose: %s", strerror(errno) );
+    /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
+    int retries = 2;
+    while (1) {
+        if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
+            retries--;
+            if (!retries) {
+                LOG(log_error, logtype_afpd, "readvolfile: can't lock volume file \"%s\"", path);
+                if ( fclose( fp ) != 0 ) {
+                    LOG(log_error, logtype_afpd, "readvolfile: fclose: %s", strerror(errno) );
+                }
+                return -1;
+            }
+            sleep(1);
+            continue;
         }
-        return -1;
+        break;
     }
 
     memset(save_options, 0, sizeof(save_options));
