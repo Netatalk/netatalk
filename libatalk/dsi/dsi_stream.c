@@ -238,13 +238,15 @@ static void unblock_sig(DSI *dsi)
  * 1. close the socket
  * 2. set the DSI_DISCONNECTED flag
  *
- * @return -1 if ppid is 1 which means afpd master died, otherwise 0
+ * @returns  0 if successfully entered disconnected state
+ *          -1 if ppid is 1 which means afpd master died
+ *             or euid == 0 ie where still running as root (unauthenticated session)
  */
 int dsi_disconnect(DSI *dsi)
 {
     dsi->proto_close(dsi);          /* 1 */
     dsi->flags |= DSI_DISCONNECTED; /* 2 */
-    if (getppid() == 1)
+    if (getppid() == 1 || geteuid() == 0)
         return -1;
     return 0;
 }
