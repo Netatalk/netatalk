@@ -1,6 +1,4 @@
 /*
- * $Id: fce_api.c,v 0.01 2010-10-01 00:00:0 mw Exp $
- *
  * Copyright (c) 2010 Mark Williams
  *
  * File change event API for netatalk
@@ -406,17 +404,15 @@ int fce_register_new_file( struct path *path )
 int fce_register_file_modification( struct ofork *ofork )
 {
     char *u_name = NULL;
-    struct dir *dir;
     struct vol *vol;
     int ret = AFP_OK;
 
-    if (ofork == NULL || ofork->of_vol == NULL || ofork->of_dir == NULL)
+    if (ofork == NULL || ofork->of_vol == NULL)
         return AFPERR_PARAM;
 
     vol = ofork->of_vol;
-    dir = ofork->of_dir;
 
-    if (NULL == (u_name = mtoupath(vol, of_name(ofork), dir->d_did, utf8_encoding()))) 
+    if (NULL == (u_name = mtoupath(vol, of_name(ofork), ofork->of_did, utf8_encoding()))) 
     {
         return AFPERR_MISC;
     }
@@ -536,7 +532,7 @@ int main( int argc, char*argv[] )
         if (end_time && now >= end_time)
             break;
 
-        register_fce( path, event_code );
+        register_fce( path, 0, event_code );
         ev_cnt++;
 
         

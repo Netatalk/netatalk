@@ -484,7 +484,7 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		fce_add_udp_socket(c);
 	}
 	if ((c = getoption(buf, "-fcecoalesce"))) {
-		LOG(log_ote, logtype_afpd, "Fce coalesce: %s", c);
+		LOG(log_note, logtype_afpd, "Fce coalesce: %s", c);
 		fce_set_coalesce(c);
 	}
 
