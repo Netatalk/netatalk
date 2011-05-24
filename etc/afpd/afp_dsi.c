@@ -292,6 +292,10 @@ static void alarm_handler(int sig _U_)
     } 
 
     if (dsi->flags & DSI_DISCONNECTED) {
+        if (geteuid() == 0) {
+            LOG(log_note, logtype_afpd, "afp_alarm: unauthenticated user, connection problem");
+            afp_dsi_die(EXITERR_CLNT);
+        }
         if (dsi->tickle > AFPobj->options.disconnected) {
             LOG(log_error, logtype_afpd, "afp_alarm: reconnect timer expired, goodbye");
             afp_dsi_die(EXITERR_CLNT);
