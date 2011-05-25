@@ -63,7 +63,7 @@ static struct pollfd *fdset;
 static struct polldata *polldata;
 static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
-
+static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
 
 #ifdef TRU64
 void afp_get_cmdline( int *ac, char ***av)
@@ -94,6 +94,7 @@ static void fd_set_listening_sockets(void)
             continue;
         fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd, LISTEN_FD, config);
     }
+    fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd, DISASOCIATED_IPC_FD, NULL);
 }
  
 static void fd_reset_listening_sockets(void)
@@ -105,6 +106,7 @@ static void fd_reset_listening_sockets(void)
             continue;
         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd);
     }
+    fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd);
 }
 
 /* ------------------ */
@@ -367,6 +369,7 @@ int main(int ac, char **av)
     cnid_init();
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
+    disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
     fd_set_listening_sockets();
 
     /* set limits */

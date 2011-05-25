@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <errno.h>
 #include <signal.h>
 
@@ -23,6 +24,10 @@
 #include <atalk/server_ipc.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
+#include <atalk/errchk.h>
+
+#define IPC_HEADERLEN 14
+#define IPC_MAXMSGSIZE 90
 
 typedef struct ipc_header {
 	uint16_t command;
@@ -99,8 +104,38 @@ static int ipc_get_session(struct ipc_header *ipc, server_child *children)
     return 0;
 }
 
-#define IPC_HEADERLEN 14
-#define IPC_MAXMSGSIZE 90
+/***********************************************************************************
+ * Public functions
+ ***********************************************************************************/
+
+/*!
+ * Listen on UNIX domain socket "name" for IPD from old sesssion
+ *
+ * @args name    (r) file name to use for UNIX domain socket
+ * @returns      socket fd, -1 on error
+ */
+int ipc_server_uds(const char *name)
+{
+    EC_INIT;
+    struct sockaddr_un address;
+    socklen_t address_length;
+    int fd = -1;
+
+    EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
+    unlink(name);
+    address.sun_family = AF_UNIX;
+    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
+    EC_ZERO_LOG( bind(fd, (struct sockaddr *)&address, address_length) );
+    EC_ZERO_LOG( listen(fd, 1024) );
+
+EC_CLEANUP:
+    if (ret != 0) {
+
+        return -1;
+    }
+    LOG(log_note, logtype_afpd, "ipc_server_uds: fd: %d", fd);
+    return fd;
+}
 
 /* ----------------- 
  * Ipc format
@@ -108,7 +143,7 @@ static int ipc_get_session(struct ipc_header *ipc, server_child *children)
  * pid
  * uid
  * 
-*/
+ */
 
 /*!
  * Read a IPC message from a child
