@@ -122,6 +122,7 @@ int ipc_server_uds(const char *name)
     int fd = -1;
 
     EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
+    EC_ZERO_LOG( setnonblock(fd, 1) );
     unlink(name);
     address.sun_family = AF_UNIX;
     address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);

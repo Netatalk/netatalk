@@ -376,6 +376,8 @@ int main(int ac, char **av)
     (void)setlimits();
 
     afp_child_t *child;
+    int fd[2];  /* we only use one, but server_child_add expects [2] */
+    pid_t pid;
 
     /* wait for an appleshare connection. parent remains in the loop
      * while the children get handled by afp_over_{asp,dsi}.  this is
@@ -427,8 +429,9 @@ int main(int ac, char **av)
         }
 
         for (int i = 0; i < fdset_used; i++) {
-            if (fdset[i].revents & POLLIN) {
+            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP)) {
                 switch (polldata[i].fdtype) {
+
                 case LISTEN_FD:
                     config = (AFPConfig *)polldata[i].data;
                     /* config->server_start is afp_config.c:dsi_start() for DSI */
@@ -437,15 +440,46 @@ int main(int ac, char **av)
                         fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0], IPC_FD, child);
                     }
                     break;
+
                 case IPC_FD:
                     child = (afp_child_t *)polldata[i].data;
-                    LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
-                    if ((ret = ipc_server_read(server_children, child->ipc_fds[0])) == 0) {
-                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
-                        close(child->ipc_fds[0]);
-                        child->ipc_fds[0] = -1;
+                    if (fdset[i].revents & POLLIN) {
+                        LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
+                        if ((ret = ipc_server_read(server_children, child->ipc_fds[0])) == 0) {
+                            fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
+                            close(child->ipc_fds[0]);
+                            child->ipc_fds[0] = -1;
+                            if (child->disasociated)
+                                server_child_remove(server_children, CHILD_DSIFORK, child->pid);
+                        }
+                    } else {
+                        if (child->disasociated) {
+                            fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
+                            close(child->ipc_fds[0]);
+                            child->ipc_fds[0] = -1;
+                        }
                     }
                     break;
+
+                case DISASOCIATED_IPC_FD:
+                    LOG(log_note, logtype_afpd, "main: DISASOCIATED_IPC_FD request");
+                    if ((fd[0] = accept(disasociated_ipc_fd, NULL, NULL)) == -1) {
+                        LOG(log_error, logtype_afpd, "main: accept: %s", strerror(errno));
+                        break;
+                    }
+                    if (readt(fd[0], &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
+                        LOG(log_error, logtype_afpd, "main: readt: %s", strerror(errno));
+                        close(fd[0]);
+                    }
+                    if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, fd)) == NULL) {
+                        LOG(log_error, logtype_afpd, "main: server_child_add");
+                        close(fd[0]);
+                        break;
+                    }
+                    child->disasociated = 1;
+                    fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd[0], IPC_FD, child);
+                    break;
+
                 default:
                     LOG(log_debug, logtype_afpd, "main: IPC request for unknown type");
                     break;
