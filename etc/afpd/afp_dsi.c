@@ -32,6 +32,8 @@
 #include <atalk/compat.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
+#include <atalk/paths.h>
+#include <atalk/server_ipc.h>
 
 #include "globals.h"
 #include "switch.h"
@@ -359,12 +361,16 @@ void afp_over_dsi(AFPObj *obj)
     u_int32_t err, cmd;
     u_int8_t function;
     struct sigaction action;
+    struct pollfd pollfds[1];
 
     AFPobj = obj;
     obj->exit = afp_dsi_die;
     obj->reply = (int (*)()) dsi_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes)) dsi_attention;
     dsi->tickle = 0;
+
+    pollfds[0].fd = obj->ipc_fd;
+    pollfds[0].events = POLLOUT;
 
     memset(&action, 0, sizeof(action));
 
@@ -516,6 +522,23 @@ void afp_over_dsi(AFPObj *obj)
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
         }
+
+        static int saved_ipcfd = -1;
+        if (saved_ipcfd == -1)
+            saved_ipcfd = obj->ipc_fd;
+        if (poll(pollfds, 1, 0) == 1) {
+            if (pollfds[0].revents & (POLLHUP | POLLERR)) {
+                if (saved_ipcfd == obj->ipc_fd && getppid() == 1) {
+                    close(obj->ipc_fd);
+                    sleep(30);  /* give it enough time to start */
+                    if ((obj->ipc_fd = ipc_client_uds(_PATH_AFP_IPC)) == -1) {
+                        LOG(log_error, logtype_afpd, "afp_over_dsi: cant reconnect to master");
+                        afp_dsi_die(EXITERR_SYS);
+                    }
+                }
+            }
+        }
+
 
         if (!(dsi->flags & DSI_EXTSLEEP) && (dsi->flags & DSI_SLEEPING)) {
             LOG(log_debug, logtype_afpd, "afp_over_dsi: got data, ending normal sleep");
