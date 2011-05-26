@@ -36,7 +36,7 @@
 #include <atalk/ldapconfig.h>
 #endif
 
-#include "globals.h"
+#include <atalk/globals.h>
 #include "afp_config.h"
 #include "uam_auth.h"
 #include "status.h"

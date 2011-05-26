@@ -21,8 +21,8 @@
 #include <atalk/util.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"

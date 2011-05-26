@@ -31,8 +31,7 @@
 
 #include <atalk/afp.h>
 #include <atalk/uam.h>
-
-#include "globals.h"
+#include <atalk/globals.h>
 
 /* grab the FP functions */
 #include "auth.h" 

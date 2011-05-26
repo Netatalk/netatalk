@@ -29,6 +29,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/errchk.h>
+#include <atalk/globals.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -37,7 +38,6 @@
 #include "fork.h"
 #include "file.h"
 #include "filedir.h"
-#include "globals.h"
 #include "unix.h"
 #include "mangle.h"
 #include "hash.h"

@@ -37,6 +37,7 @@ char *strchr (), *strrchr ();
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/unix.h>
+#include <atalk/globals.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -45,7 +46,6 @@ char *strchr (), *strrchr ();
 #include "fork.h"
 #include "file.h"
 #include "filedir.h"
-#include "globals.h"
 #include "unix.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):

@@ -22,9 +22,9 @@
 #include <atalk/afp.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/globals.h>
 
 #include "volume.h"
-#include "globals.h"
 #include "directory.h"
 #include "file.h"
 #include "desktop.h"

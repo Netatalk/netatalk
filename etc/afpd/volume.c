@@ -50,12 +50,12 @@ char *strchr (), *strrchr ();
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/ftw.h>
+#include <atalk/globals.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
 #endif /* CNID_DB*/
 
-#include "globals.h"
 #include "directory.h"
 #include "file.h"
 #include "volume.h"

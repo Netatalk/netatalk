@@ -31,11 +31,12 @@
 #include <atalk/queue.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/globals.h>
 
 #include "dircache.h"
 #include "directory.h"
 #include "hash.h"
-#include "globals.h"
+
 
 /*
  * Directory Cache

@@ -34,8 +34,8 @@
 #include <atalk/util.h>
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "afp_config.h"
 #include "status.h"
 #include "fork.h"
@@ -120,26 +120,22 @@ static void afp_goaway(int sig)
 
     switch( sig ) {
 
-    case SIGTERM :
-        LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
-
+    case SIGTERM:
+    case SIGQUIT:
+        switch (sig) {
+        case SIGTERM:
+            LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
+            break;
+        case SIGQUIT:
+            LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGQUIT, NOT disconnecting clients");
+            break;
+        }
         if (server_children)
             server_child_kill(server_children, CHILD_DSIFORK, sig);
 
         for (config = configs; config; config = config->next)
             if (config->server_cleanup)
                 config->server_cleanup(config);
-        server_unlock(default_options.pidfile);
-        exit(0);
-        break;
-
-    case SIGQUIT:
-        LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGQUIT, NOT disconnecting clients");
-
-        for (config = configs; config; config = config->next)
-            if (config->server_cleanup)
-                config->server_cleanup(config);
-
         server_unlock(default_options.pidfile);
         exit(0);
         break;
@@ -443,20 +439,15 @@ int main(int ac, char **av)
 
                 case IPC_FD:
                     child = (afp_child_t *)polldata[i].data;
-                    if (fdset[i].revents & POLLIN) {
-                        LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
-                        if ((ret = ipc_server_read(server_children, child->ipc_fds[0])) == 0) {
-                            fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
-                            close(child->ipc_fds[0]);
-                            child->ipc_fds[0] = -1;
-                            if (child->disasociated)
-                                server_child_remove(server_children, CHILD_DSIFORK, child->pid);
-                        }
-                    } else {
+                    LOG(log_note, logtype_afpd, "main: IPC request from child[%u]", child->pid);
+
+                    if ((ret = ipc_server_read(server_children, child->ipc_fds[0])) == 0) {
+                        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
+                        close(child->ipc_fds[0]);
+                        child->ipc_fds[0] = -1;
                         if (child->disasociated) {
-                            fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
-                            close(child->ipc_fds[0]);
-                            child->ipc_fds[0] = -1;
+                            LOG(log_note, logtype_afpd, "main: removing reattached child[%u]", child->pid);
+                            server_child_remove(server_children, CHILD_DSIFORK, child->pid);
                         }
                     }
                     break;
@@ -471,6 +462,7 @@ int main(int ac, char **av)
                         LOG(log_error, logtype_afpd, "main: readt: %s", strerror(errno));
                         close(fd[0]);
                     }
+                    LOG(log_note, logtype_afpd, "main: welcome back child[%u]", pid);
                     if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, fd)) == NULL) {
                         LOG(log_error, logtype_afpd, "main: server_child_add");
                         close(fd[0]);

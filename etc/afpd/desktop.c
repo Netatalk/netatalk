@@ -31,10 +31,10 @@
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
+#include <atalk/globals.h>
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
-#include "globals.h"
 #include "desktop.h"
 #include "mangle.h"
 

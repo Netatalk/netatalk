@@ -40,6 +40,7 @@ char *strchr (), *strrchr ();
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/acl.h>
+#include <atalk/globals.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -47,7 +48,6 @@ char *strchr (), *strrchr ();
 #include "volume.h"
 #include "fork.h"
 #include "file.h"
-#include "globals.h"
 #include "filedir.h"
 #include "unix.h"
 

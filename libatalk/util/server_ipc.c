@@ -19,6 +19,7 @@
 #include <sys/un.h>
 #include <errno.h>
 #include <signal.h>
+#include <time.h>
 
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
@@ -26,6 +27,8 @@
 #include <atalk/util.h>
 #include <atalk/errchk.h>
 #include <atalk/paths.h>
+#include <atalk/globals.h>
+#include <atalk/dsi.h>
 
 #define IPC_HEADERLEN 14
 #define IPC_MAXMSGSIZE 90
@@ -161,11 +164,13 @@ int ipc_client_uds(const char *name)
     address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
 
     EC_ZERO_LOG( connect(fd, (struct sockaddr *)&address, address_length) ); /* 1 */
+    LOG(log_note, logtype_afpd, "ipc_client_uds: connected to master");
 
     if (writet(fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
         LOG(log_error, logtype_afpd, "ipc_client_uds: writet: %s", strerror(errno));
         EC_FAIL;
     }
+    LOG(log_note, logtype_afpd, "ipc_client_uds: sent pid");
 
 EC_CLEANUP:
     if (ret != 0) {
@@ -173,6 +178,30 @@ EC_CLEANUP:
     }
     LOG(log_note, logtype_afpd, "ipc_client_uds: fd: %d", fd);
     return fd;
+}
+
+int reconnect_ipc(AFPObj *obj)
+{
+    int retrycount = 0;
+
+    LOG(log_note, logtype_afpd, "reconnect_ipc: start");
+
+    close(obj->ipc_fd);
+    obj->ipc_fd = -1;
+
+    srandom(getpid());
+    sleep((random() % 10) + 5);  /* give it enough time to start */
+
+    while (retrycount++ < 10) {
+        if ((obj->ipc_fd = ipc_client_uds(_PATH_AFP_IPC)) == -1) {
+            LOG(log_error, logtype_afpd, "reconnect_ipc: cant reconnect to master");
+            sleep(1);
+            continue;
+        }
+        LOG(log_note, logtype_afpd, "reconnect_ipc: succesfull IPC reconnect");
+        return 0;
+    }
+    return -1;
 }
 
 /* ----------------- 
@@ -272,18 +301,14 @@ int ipc_server_read(server_child *children, int fd)
 }
 
 /* ----------------- */
-ssize_t ipc_child_write(int *fd, uint16_t command, int len, void *msg)
+int ipc_child_write(int fd, uint16_t command, int len, void *msg)
 {
-   static int fd_saved = -1;
    char block[IPC_MAXMSGSIZE], *p;
    pid_t pid;
    uid_t uid;
    ssize_t ret;
 
    p = block;
-
-   if (fd_saved == -1)
-       fd_saved = *fd;
 
    memset ( p, 0 , IPC_MAXMSGSIZE);
    if (len + IPC_HEADERLEN > IPC_MAXMSGSIZE)
@@ -312,16 +337,10 @@ ssize_t ipc_child_write(int *fd, uint16_t command, int len, void *msg)
 
    LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
 
-   if ((ret = writet(*fd, block, len+IPC_HEADERLEN, 0, 1)) == -1) {
-       if (*fd == fd_saved && getppid() == 1) {
-           /* still using original socketpair IPC fd, master was possibly restarted, try reestablish connection across uds */
-           if ((*fd = ipc_client_uds(_PATH_AFP_IPC)) == -1)
-               return -1;
-           /* now try again */
-           ret = writet(*fd, block, len+IPC_HEADERLEN, 0, 1);
-       }
+   if ((ret = writet(fd, block, len+IPC_HEADERLEN, 0, 1)) != -len+IPC_HEADERLEN) {
+       return -1;
    }
 
-   return ret;
+   return 0;
 }
 

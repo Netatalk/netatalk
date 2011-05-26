@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <atalk/afp.h>
 #include <atalk/server_child.h>
+#include <atalk/globals.h>
 #include <netatalk/endian.h>
 
 #ifdef __OpenBSD__
@@ -59,6 +60,7 @@ struct dsi_block {
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
+  AFPObj *AFPobj;
   dsi_proto protocol;
   struct dsi_block header;
   struct sockaddr_storage server, client;

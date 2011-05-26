@@ -13,8 +13,8 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "volume.h"
 #include "directory.h"
 

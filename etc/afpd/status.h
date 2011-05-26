@@ -4,7 +4,8 @@
 #include <sys/cdefs.h>
 #include <atalk/dsi.h>
 #include <atalk/asp.h>
-#include "globals.h"
+#include <atalk/globals.h>
+
 #include "afp_config.h"
 
 /* we use these to prevent whacky alignment problems */

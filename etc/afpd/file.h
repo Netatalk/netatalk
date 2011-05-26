@@ -31,8 +31,8 @@
 #include <sys/cdefs.h>
 #include <netatalk/endian.h>
 #include <atalk/adouble.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "volume.h"
 #include "directory.h"
 

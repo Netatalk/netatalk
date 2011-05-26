@@ -50,8 +50,8 @@ char *strchr (), *strrchr ();
 #include <atalk/dsi.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "afp_config.h"
 #include "auth.h"
 #include "uam_auth.h"

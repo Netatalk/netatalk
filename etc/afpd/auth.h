@@ -16,7 +16,7 @@
 #include <sys/cdefs.h>
 #endif /* HAVE_SYS_CDEFS_H */
 
-#include "globals.h"
+#include <atalk/globals.h>
 
 struct afp_versions {
     char	*av_name;

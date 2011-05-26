@@ -13,8 +13,8 @@
 #include <atalk/volume.h>
 #include <atalk/cnid.h>
 #include <atalk/unicode.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #if 0
 #include "hash.h"
 #endif

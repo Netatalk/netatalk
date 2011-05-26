@@ -39,8 +39,8 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include <atalk/logger.h>
 #include <atalk/server_ipc.h>
 #include <atalk/uuid.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "auth.h"
 #include "uam_auth.h"
 #include "switch.h"
@@ -597,10 +597,10 @@ int afp_getsession(
             if (!obj->sinfo.clientid) {
                 obj->sinfo.clientid = malloc(idlen + 8);
                 memcpy(obj->sinfo.clientid, p, idlen + 8);
+                obj->sinfo.clientid_len = idlen + 8;
             }
-            if (ipc_child_write(&obj->ipc_fd, IPC_GETSESSION, idlen+8, p) == -1) {
-                
-            }
+            if (ipc_child_write(obj->ipc_fd, IPC_GETSESSION, idlen+8, p) != 0)
+                return AFPERR_MISC;
             tklen = obj->sinfo.sessiontoken_len;
             token = obj->sinfo.sessiontoken;
         }
@@ -682,7 +682,7 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     setitimer(ITIMER_REAL, &none, NULL);
 
     /* check for old session, possibly transfering session from here to there */
-    if (ipc_child_write(&obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) == -1)
+    if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) != 0)
         goto exit;
     /* write uint16_t DSI request ID */
     if (writet(obj->ipc_fd, &dsi->header.dsi_requestID, 2, 0, 2) != 2) {

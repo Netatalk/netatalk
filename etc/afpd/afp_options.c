@@ -34,8 +34,8 @@
 #include <atalk/paths.h>
 #include <atalk/util.h>
 #include <atalk/compat.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "status.h"
 #include "auth.h"
 #include "dircache.h"

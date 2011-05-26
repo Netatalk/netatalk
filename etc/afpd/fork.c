@@ -26,13 +26,12 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/afp.h>
-
 #include <atalk/util.h>
 #include <atalk/cnid.h>
+#include <atalk/globals.h>
 
 #include "fork.h"
 #include "file.h"
-#include "globals.h"
 #include "directory.h"
 #include "desktop.h"
 #include "volume.h"

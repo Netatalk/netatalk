@@ -69,7 +69,7 @@ endif
 
 
 noinst_HEADERS = auth.h afp_config.h desktop.h directory.h file.h \
-	 filedir.h fork.h globals.h icon.h mangle.h misc.h status.h switch.h \
+	 filedir.h fork.h icon.h mangle.h misc.h status.h switch.h \
 	 uam_auth.h uid.h unix.h volume.h hash.h acls.h acl_mappings.h extattrs.h \
 	 dircache.h afp_zeroconf.h afp_avahi.h
 

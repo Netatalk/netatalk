@@ -6,7 +6,7 @@
 #define AFPD_MISC_H 1
 
 #include <sys/cdefs.h>
-#include "globals.h"
+#include <atalk/globals.h>
 
 /* FP functions */
 /* messages.c */

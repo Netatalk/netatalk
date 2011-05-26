@@ -29,7 +29,7 @@ char *strchr (), *strrchr ();
 #include <ctype.h>
 #include <pwd.h>
 
-#include "globals.h"
+#include <atalk/globals.h>
 
 static char	*l_curr;
 static char	*l_end;

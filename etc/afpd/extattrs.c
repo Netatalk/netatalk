@@ -28,8 +28,8 @@
 #include <atalk/afp.h>
 #include <atalk/logger.h>
 #include <atalk/ea.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "volume.h"
 #include "desktop.h"
 #include "directory.h"

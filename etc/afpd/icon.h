@@ -9,7 +9,7 @@
 #define AFPD_ICON_H 1
 
 #include <sys/cdefs.h>
-#include "globals.h"
+#include <atalk/globals.h>
 
 static const unsigned char apple_atalk_icon[] = { /* default appletalk icon */
     0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0x00,

@@ -11,7 +11,7 @@
 
 #include <atalk/server_child.h>
 #include <atalk/atp.h>
-#include "globals.h"
+#include <atalk/globals.h>
 
 typedef struct AFPConfig {
     AFPObj obj;

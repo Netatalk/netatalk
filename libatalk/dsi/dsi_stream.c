@@ -246,7 +246,7 @@ int dsi_disconnect(DSI *dsi)
 {
     dsi->proto_close(dsi);          /* 1 */
     dsi->flags |= DSI_DISCONNECTED; /* 2 */
-    if (getppid() == 1 || geteuid() == 0)
+    if (geteuid() == 0)
         return -1;
     return 0;
 }
@@ -383,7 +383,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
   while (stored < length) {
       len = buf_read(dsi, (u_int8_t *) data + stored, length - stored);
       if (len == -1 && (errno == EINTR || errno == EAGAIN)) {
-          LOG(log_debug, logtype_dsi, "dsi_stream_read: select read loop");
+          LOG(log_maxdebug, logtype_dsi, "dsi_stream_read: select read loop");
           continue;
       } else if (len > 0) {
           stored += len;
