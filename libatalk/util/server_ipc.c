@@ -337,7 +337,7 @@ int ipc_child_write(int fd, uint16_t command, int len, void *msg)
 
    LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
 
-   if ((ret = writet(fd, block, len+IPC_HEADERLEN, 0, 1)) != -len+IPC_HEADERLEN) {
+   if ((ret = writet(fd, block, len+IPC_HEADERLEN, 0, 1)) != len + IPC_HEADERLEN) {
        return -1;
    }
 
