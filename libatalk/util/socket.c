@@ -125,7 +125,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                 while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
                     switch (ret) {
                     case 0:
-                        LOG(log_maxdebug, logtype_afpd, "select timeout %d s", timeout);
+                        LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
                         errno = EAGAIN;
                         goto exit;
 
@@ -134,7 +134,7 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                         case EINTR:
                             (void)gettimeofday(&now, NULL);
                             if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
-                                LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
+                                LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
                                 goto exit;
                             }
                             if (now.tv_usec > end.tv_usec) {

@@ -197,7 +197,7 @@ int reconnect_ipc(AFPObj *obj)
             sleep(1);
             continue;
         }
-        LOG(log_note, logtype_afpd, "reconnect_ipc: succesfull IPC reconnect");
+        LOG(log_debug, logtype_afpd, "reconnect_ipc: succesfull IPC reconnect");
         return 0;
     }
     return -1;
