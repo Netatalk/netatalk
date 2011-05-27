@@ -439,7 +439,7 @@ int main(int ac, char **av)
 
                 case IPC_FD:
                     child = (afp_child_t *)polldata[i].data;
-                    LOG(log_note, logtype_afpd, "main: IPC request from child[%u]", child->pid);
+                    LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
 
                     if ((ret = ipc_server_read(server_children, child->ipc_fds[0])) == 0) {
                         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
