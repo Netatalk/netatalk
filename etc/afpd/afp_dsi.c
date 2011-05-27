@@ -493,15 +493,24 @@ void afp_over_dsi(AFPObj *obj)
                 dsi->flags &= ~DSI_RECONSOCKET;
                 continue;
             }
-            /* Some error on the client connection, enter disconnected state */
-            if (dsi_disconnect(dsi) != 0)
-                afp_dsi_die(EXITERR_CLNT);
 
             /* the client sometimes logs out (afp_logout) but doesn't close the DSI session */
             if (dsi->flags & DSI_AFP_LOGGED_OUT) {
+                LOG(log_note, logtype_afpd, "afp_over_dsi: client logged out, terminating DSI session");
                 afp_dsi_close(obj);
                 exit(0);
             }
+
+            /*  got ECONNRESET in read from client => exit*/
+            if (dsi->flags & DSI_GOT_ECONNRESET) {
+                LOG(log_note, logtype_afpd, "afp_over_dsi: client connection reset");
+                afp_dsi_close(obj);
+                exit(0);
+            }
+
+            /* Some error on the client connection, enter disconnected state */
+            if (dsi_disconnect(dsi) != 0)
+                afp_dsi_die(EXITERR_CLNT);
 
             pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
             continue; /* continue receiving until disconnect timer expires
