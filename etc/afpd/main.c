@@ -453,7 +453,7 @@ int main(int ac, char **av)
                     break;
 
                 case DISASOCIATED_IPC_FD:
-                    LOG(log_note, logtype_afpd, "main: DISASOCIATED_IPC_FD request");
+                    LOG(log_debug, logtype_afpd, "main: IPC reconnect request");
                     if ((fd[0] = accept(disasociated_ipc_fd, NULL, NULL)) == -1) {
                         LOG(log_error, logtype_afpd, "main: accept: %s", strerror(errno));
                         break;
@@ -462,7 +462,7 @@ int main(int ac, char **av)
                         LOG(log_error, logtype_afpd, "main: readt: %s", strerror(errno));
                         close(fd[0]);
                     }
-                    LOG(log_note, logtype_afpd, "main: welcome back child[%u]", pid);
+                    LOG(log_note, logtype_afpd, "main: IPC reconnect from [%u]", pid);
                     if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, fd)) == NULL) {
                         LOG(log_error, logtype_afpd, "main: server_child_add");
                         close(fd[0]);

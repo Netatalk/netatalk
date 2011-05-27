@@ -137,7 +137,7 @@ EC_CLEANUP:
     if (ret != 0) {
         return -1;
     }
-    LOG(log_note, logtype_afpd, "ipc_server_uds: fd: %d", fd);
+
     return fd;
 }
 
@@ -164,19 +164,18 @@ int ipc_client_uds(const char *name)
     address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
 
     EC_ZERO_LOG( connect(fd, (struct sockaddr *)&address, address_length) ); /* 1 */
-    LOG(log_note, logtype_afpd, "ipc_client_uds: connected to master");
+    LOG(log_debug, logtype_afpd, "ipc_client_uds: connected to master");
 
     if (writet(fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
         LOG(log_error, logtype_afpd, "ipc_client_uds: writet: %s", strerror(errno));
         EC_FAIL;
     }
-    LOG(log_note, logtype_afpd, "ipc_client_uds: sent pid");
 
 EC_CLEANUP:
     if (ret != 0) {
         return -1;
     }
-    LOG(log_note, logtype_afpd, "ipc_client_uds: fd: %d", fd);
+    LOG(log_debug, logtype_afpd, "ipc_client_uds: fd: %d", fd);
     return fd;
 }
 
@@ -184,7 +183,7 @@ int reconnect_ipc(AFPObj *obj)
 {
     int retrycount = 0;
 
-    LOG(log_note, logtype_afpd, "reconnect_ipc: start");
+    LOG(log_debug, logtype_afpd, "reconnect_ipc: start");
 
     close(obj->ipc_fd);
     obj->ipc_fd = -1;

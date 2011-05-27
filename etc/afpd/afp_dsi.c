@@ -137,21 +137,18 @@ static void ipc_reconnect_handler(int sig _U_)
 {
     DSI *dsi = (DSI *)AFPobj->handle;
 
-    LOG(log_note, logtype_afpd, "ipc_reconnect_handler: got SIGQUIT, trying IPC reconnect");
-
     if (reconnect_ipc(AFPobj) != 0) {
         LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC reconnect");
         afp_dsi_close(AFPobj);
         exit(EXITERR_SYS);        
     }
 
-    LOG(log_note, logtype_afpd, "ipc_reconnect_handler: resending client ID");
     if (ipc_child_write(AFPobj->ipc_fd, IPC_GETSESSION, AFPobj->sinfo.clientid_len, AFPobj->sinfo.clientid) != 0) {
         LOG(log_error, logtype_afpd, "ipc_reconnect_handler: failed IPC ID resend");
         afp_dsi_close(AFPobj);
         exit(EXITERR_SYS);        
     }
-    LOG(log_note, logtype_afpd, "ipc_reconnect_handler: done");
+    LOG(log_note, logtype_afpd, "ipc_reconnect_handler: IPC reconnect done");
 }
 
 /* SIGURG handler (primary reconnect) */
