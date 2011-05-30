@@ -23,6 +23,5 @@ int fce_set_coalesce( char *coalesce_opt ); // all|delete|create
 
 #define FCE_DEFAULT_PORT 12250
 
-
 #endif	/* _FCE_API_H */
 
