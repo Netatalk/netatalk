@@ -10,16 +10,46 @@
 #ifndef _FCE_API_H
 #define	_FCE_API_H
 
+/* fce_packet.mode */
+#define FCE_FILE_MODIFY     1
+#define FCE_FILE_DELETE     2
+#define FCE_DIR_DELETE      3
+#define FCE_FILE_CREATE     4
+#define FCE_DIR_CREATE      5
+#define FCE_TM_SIZE         6
+#define FCE_CONN_START     42
+#define FCE_CONN_BROKEN    99
+
+
+/* fce_packet.fce_magic */
+#define FCE_PACKET_MAGIC  "at_fcapi"
+
+/* This packet goes over the network, so we want to
+ *  be shure about datastructs and type sizes between platforms
+ */
+struct fce_packet
+{
+    char magic[8];
+    unsigned char version;
+    unsigned char mode;
+    uint16_t len;  /* network byte order */
+    uint32_t event_id; /* network byte order */
+    char data[MAXPATHLEN];
+};
+
 struct path;
 struct ofork;
+
 int fce_register_delete_file( struct path *path );
 int fce_register_delete_dir( char *name );
 int fce_register_new_dir( struct path *path );
 int fce_register_new_file( struct path *path );
 int fce_register_file_modification( struct ofork *ofork );
+int fce_register_tm_size(const char *vol, size_t used);
 
 int fce_add_udp_socket(const char *target );  // IP or IP:Port
 int fce_set_coalesce( char *coalesce_opt ); // all|delete|create
+int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre,tmsz (default is all) */
 
 #define FCE_DEFAULT_PORT 12250
 #define FCE_DEFAULT_PORT_STRING "12250"

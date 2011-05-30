@@ -65,8 +65,8 @@
 static struct udp_entry udp_socket_list[FCE_MAX_UDP_SOCKS];
 static int udp_sockets = 0;
 static int udp_initialized = FCE_FALSE;
-
-
+static unsigned long fce_ev_enabled = 0;
+static size_t tm_used;          /* used for passing to event handler */
 static const char *skip_files[] = 
 {
 	".DS_Store",
@@ -278,7 +278,7 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
  * Dispatcher for all incoming file change events
  *
  * */
-static int register_fce( char *u_name, int is_dir, int mode )
+static int register_fce(const char *u_name, int is_dir, int mode)
 {
     if (udp_sockets == 0)
         /* No listeners configured */
@@ -293,6 +293,12 @@ static int register_fce( char *u_name, int is_dir, int mode )
 	if (first_event)
 	{
 		fce_initialize_history();
+        fce_ev_enabled =
+            (1 << FCE_FILE_MODIFY) |
+            (1 << FCE_FILE_DELETE) |
+            (1 << FCE_DIR_DELETE) |
+            (1 << FCE_FILE_CREATE) |
+            (1 << FCE_DIR_CREATE);
 	}
 
 
@@ -307,19 +313,16 @@ static int register_fce( char *u_name, int is_dir, int mode )
 	char full_path_buffer[FCE_MAX_PATH_LEN + 1] = {""};
 	const char *cwd = getcwdpath();
 
-	if (!is_dir || mode == FCE_DIR_DELETE)
-	{
-		if (strlen( cwd ) + strlen( u_name) + 1 >= FCE_MAX_PATH_LEN)
-		{
+    if (mode & FCE_TM_SIZE) {
+        strncpy(full_path_buffer, u_name, FCE_MAX_PATH_LEN);
+    } else if (!is_dir || mode == FCE_DIR_DELETE) {
+		if (strlen( cwd ) + strlen( u_name) + 1 >= FCE_MAX_PATH_LEN) {
 			LOG(log_error, logtype_afpd, "FCE file name too long: %s/%s", cwd, u_name );
 			return AFPERR_PARAM;
 		}
 		sprintf( full_path_buffer, "%s/%s", cwd, u_name );
-	}
-	else
-	{
-		if (strlen( cwd ) >= FCE_MAX_PATH_LEN)
-		{
+	} else {
+		if (strlen( cwd ) >= FCE_MAX_PATH_LEN) {
 			LOG(log_error, logtype_afpd, "FCE directory name too long: %s", cwd);
 			return AFPERR_PARAM;
 		}
@@ -327,7 +330,7 @@ static int register_fce( char *u_name, int is_dir, int mode )
 	}
 
 	/* Can we ignore this event based on type or history? */
-	if (fce_handle_coalescation( full_path_buffer, is_dir, mode ))
+	if (!(mode & FCE_TM_SIZE) && fce_handle_coalescation( full_path_buffer, is_dir, mode ))
 	{
 		LOG(log_debug9, logtype_afpd, "Coalesced fc event <%d> for <%s>", mode, full_path_buffer );
 		return AFP_OK;
@@ -363,7 +366,6 @@ static int register_fce( char *u_name, int is_dir, int mode )
  * */
 #ifndef FCE_TEST_MAIN
 
-
 int fce_register_delete_file( struct path *path )
 {
     int ret = AFP_OK;
@@ -371,6 +373,8 @@ int fce_register_delete_file( struct path *path )
     if (path == NULL)
         return AFPERR_PARAM;
 
+    if (!(fce_ev_enabled & (1 << FCE_FILE_DELETE)))
+        return ret;
 	
     ret = register_fce( path->u_name, FALSE, FCE_FILE_DELETE );
 
@@ -383,6 +387,8 @@ int fce_register_delete_dir( char *name )
     if (name == NULL)
         return AFPERR_PARAM;
 
+    if (!(fce_ev_enabled & (1 << FCE_DIR_DELETE)))
+        return ret;
 	
     ret = register_fce( name, TRUE, FCE_DIR_DELETE);
 
@@ -395,6 +401,9 @@ int fce_register_new_dir( struct path *path )
 
     if (path == NULL)
         return AFPERR_PARAM;
+
+    if (!(fce_ev_enabled & (1 << FCE_DIR_CREATE)))
+        return ret;
 
     ret = register_fce( path->u_name, TRUE, FCE_DIR_CREATE );
 
@@ -409,11 +418,13 @@ int fce_register_new_file( struct path *path )
     if (path == NULL)
         return AFPERR_PARAM;
 
+    if (!(fce_ev_enabled & (1 << FCE_FILE_CREATE)))
+        return ret;
+
     ret = register_fce( path->u_name, FALSE, FCE_FILE_CREATE );
 
     return ret;
 }
-
 
 int fce_register_file_modification( struct ofork *ofork )
 {
@@ -423,6 +434,9 @@ int fce_register_file_modification( struct ofork *ofork )
 
     if (ofork == NULL || ofork->of_vol == NULL)
         return AFPERR_PARAM;
+
+    if (!(fce_ev_enabled & (1 << FCE_FILE_MODIFY)))
+        return ret;
 
     vol = ofork->of_vol;
 
@@ -434,6 +448,22 @@ int fce_register_file_modification( struct ofork *ofork )
     ret = register_fce( u_name, FALSE, FCE_FILE_MODIFY );
     
     return ret;    
+}
+
+int fce_register_tm_size(const char *vol, size_t used)
+{
+    int ret = AFP_OK;
+
+    if (vol == NULL)
+        return AFPERR_PARAM;
+
+    if (!(fce_ev_enabled & (1 << FCE_TM_SIZE)))
+        return ret;
+
+    tm_used = used;             /* oh what a hack */
+    ret = register_fce(vol, FALSE, FCE_TM_SIZE);
+
+    return ret;
 }
 #endif
 
@@ -457,7 +487,35 @@ int fce_add_udp_socket(const char *target)
 	return add_udp_socket(target_ip, port);
 }
 
+int fce_set_events(const char *events)
+{
+    char *e;
+    char *p;
+    
+    if (events == NULL)
+        return AFPERR_PARAM;
 
+    e = strdup(events);
+    fce_ev_enabled = 0;
+
+    for (p = strtok(e, ","); p; p = strtok(NULL, ",")) {
+        if (strcmp(e, "fmod") == 0) {
+            fce_ev_enabled |= FCE_FILE_MODIFY;
+        } else if (strcmp(e, "fdel") == 0) {
+            fce_ev_enabled |= FCE_FILE_DELETE;
+        } else if (strcmp(e, "ddel") == 0) {
+            fce_ev_enabled |= FCE_DIR_DELETE;
+        } else if (strcmp(e, "fcre") == 0) {
+            fce_ev_enabled |= FCE_FILE_CREATE;
+        } else if (strcmp(e, "dcre") == 0) {
+            fce_ev_enabled |= FCE_DIR_CREATE;
+        } else if (strcmp(e, "tmsz") == 0) {
+            fce_ev_enabled |= FCE_TM_SIZE;
+        }
+    }
+
+    free(e);
+}
 
 #ifdef FCE_TEST_MAIN
 

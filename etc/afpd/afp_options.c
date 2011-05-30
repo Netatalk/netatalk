@@ -487,6 +487,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		LOG(log_note, logtype_afpd, "Fce coalesce: %s", c);
 		fce_set_coalesce(c);
 	}
+	if ((c = getoption(buf, "-fceevents"))) {
+		LOG(log_note, logtype_afpd, "Fce events: %s", c);
+		fce_set_events(c);
+	}
 
     return 1;
 }
