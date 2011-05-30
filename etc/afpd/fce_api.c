@@ -46,6 +46,7 @@
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/unix.h>
+#include <atalk/fce_api.h>
 
 #include "fork.h"
 #include "file.h"
@@ -53,8 +54,6 @@
 #include "directory.h"
 #include "desktop.h"
 #include "volume.h"
-
-#include "fce_api.h"
 
 // ONLY USED IN THIS FILE
 #include "fce_api_internal.h"
@@ -458,64 +457,49 @@ void shortsleep( unsigned int us )
 }
 int main( int argc, char*argv[] )
 {
-    int port  = 11250;
-    char *host = NULL;
+    int c,ret;
+
+    char *port = FCE_DEFAULT_PORT_STRING;
+    char *host = "localhost";
     int delay_between_events = 1000;
     int event_code = FCE_FILE_MODIFY;
     char pathbuff[1024];
     int duration_in_seconds = 0; // TILL ETERNITY
-
+    char target[256];
     char *path = getcwd( pathbuff, sizeof(pathbuff) );
 
     // FULLSPEED TEST IS "-s 1001" -> delay is 0 -> send packets without pause
 
-    if (argc == 1)
-    {
-        fprintf( stdout, "%s: -p Port -h Listener1 [ -h Listener2 ...] -P path -s Delay_between_events_in_us -e event_code -d Duration \n", argv[0]);
-        exit( 1 );
-    }
-    int ret = AFP_OK;
-
-    for (int i = 1; i < argc; i++)
-    {
-        char *p = argv[i];
-        if (*p == '-' && p[1])
-        {
-            char *arg = argv[i + 1];
-            switch (p[1])
-            {
-                case 'p': if (arg) port = atoi( arg ), i++; break;
-                case 'P': if (arg) path =  arg, i++; break;
-                case 's': if (arg) delay_between_events = atoi( arg ), i++; break;
-                case 'e': if (arg) event_code = atoi( arg ), i++; break;
-                case 'd': if (arg) duration_in_seconds = atoi( arg ), i++; break;
-                case 'h':
-                {
-                    if (arg)
-                    {
-                        host = arg;
-						char target[256];
-						sprintf( target, "%s:%d", host, port );
-                        ret += fce_add_udp_socket( target );
-                        i++;
-                    }
-                    break;
-                }               
-            }
+    while ((c = getopt(argc, argv, "d:e:h:p:P:s:")) != -1) {
+        switch(c) {
+        case '?':
+            fprintf(stdout, "%s: [ -p Port -h Listener1 [ -h Listener2 ...] -P path -s Delay_between_events_in_us -e event_code -d Duration ]\n", argv[0]);
+            exit(1);
+            break;
+        case 'd':
+            duration_in_seconds = atoi(optarg);
+            break;
+        case 'e':
+            event_code = atoi(optarg);
+            break;
+        case 'h':
+            host = strdup(optarg);
+            break;
+        case 'p':
+            port = strdup(optarg);
+            break;
+        case 'P':
+            path = strdup(optarg);
+            break;
+        case 's':
+            delay_between_events = atoi(optarg);
+            break;
         }
     }
-	
 
-    if (host == NULL)
-	{
-		char target[256];
-		sprintf( target, "127.0.0.1:%d", port );
-		ret += fce_add_udp_socket( target );
-	}
-
-    if (ret)
-        return ret;
-
+    sprintf(target, "%s:%s", host, port);
+    if (fce_add_udp_socket(target) != 0)
+        return 1;
 
     int ev_cnt = 0;
     time_t start_time = time(NULL);

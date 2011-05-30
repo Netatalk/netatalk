@@ -29,6 +29,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/errchk.h>
+#include <atalk/fce_api.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -41,7 +42,6 @@
 #include "unix.h"
 #include "mangle.h"
 #include "hash.h"
-#include "fce_api.h"
 
 /*
  * FIXMEs, loose ends after the dircache rewrite:

@@ -37,6 +37,7 @@ char *strchr (), *strrchr ();
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/unix.h>
+#include <atalk/fce_api.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -47,7 +48,6 @@ char *strchr (), *strrchr ();
 #include "filedir.h"
 #include "globals.h"
 #include "unix.h"
-#include "fce_api.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes

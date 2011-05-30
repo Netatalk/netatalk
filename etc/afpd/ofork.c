@@ -21,12 +21,12 @@
 #include <atalk/util.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/fce_api.h>
 
 #include "globals.h"
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
-#include "fce_api.h"
 
 /* we need to have a hashed list of oforks (by dev inode). just hash
  * by first letter. */

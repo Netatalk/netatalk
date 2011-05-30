@@ -40,6 +40,7 @@ char *strchr (), *strrchr ();
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/acl.h>
+#include <atalk/fce_api.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -50,7 +51,6 @@ char *strchr (), *strrchr ();
 #include "globals.h"
 #include "filedir.h"
 #include "unix.h"
-#include "fce_api.h"
 
 #ifdef DROPKLUDGE
 int matchfile2dirperms(

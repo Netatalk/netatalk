@@ -48,6 +48,7 @@
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/unix.h>
+#include <atalk/fce_api.h>
 
 #include "fork.h"
 #include "file.h"
@@ -55,8 +56,6 @@
 #include "directory.h"
 #include "desktop.h"
 #include "volume.h"
-
-#include "fce_api.h"
 
 // ONLY USED IN THIS FILE
 #include "fce_api_internal.h"

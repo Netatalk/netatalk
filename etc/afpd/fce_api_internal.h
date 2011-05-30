@@ -8,6 +8,7 @@
 #ifndef _FCE_API_INTERNAL_H
 #define	_FCE_API_INTERNAL_H
 
+/* fce_packet.mode */
 #define FCE_FILE_MODIFY     1
 #define FCE_FILE_DELETE     2
 #define FCE_DIR_DELETE      3
@@ -16,17 +17,14 @@
 #define FCE_CONN_START     42
 #define FCE_CONN_BROKEN    99
 
+/* fce_packet.fce_magic */
+#define FCE_PACKET_MAGIC  "at_fcapi"
 
 #define FCE_MAX_PATH_LEN 1024
-
 #define FCE_MAX_UDP_SOCKS 5     /* Allow a maximum of udp listeners for file change events */
 #define FCE_MAX_IP_LEN 255      /* Man len of listener name */
 #define FCE_SOCKET_RETRY_DELAY_S 600 /* Pause this time in s after socket was broken */
 #define FCE_PACKET_VERSION  1
-
-
-#define FCE_PACKET_MAGIC  "at_fcapi" /* Must fit to size of fce_packet.fce_magic */
-
 #define FCE_HISTORY_LEN 10  /* This is used to coalesce events */
 #define MAX_COALESCE_TIME_MS 1000  /* Events oldeer than this are not coalesced */
 

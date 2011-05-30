@@ -34,12 +34,12 @@
 #include <atalk/paths.h>
 #include <atalk/util.h>
 #include <atalk/compat.h>
+#include <atalk/fce_api.h>
 
 #include "globals.h"
 #include "status.h"
 #include "auth.h"
 #include "dircache.h"
-#include "fce_api.h"
 
 #ifndef MIN
 #define MIN(a, b)  ((a) < (b) ? (a) : (b))
