@@ -270,6 +270,10 @@ static int add_udp_socket( char *target_ip, int target_port )
  * */
 static int register_fce( char *u_name, int is_dir, int mode )
 {
+    if (udp_sockets == 0)
+        /* No listeners configured */
+        return AFP_OK;
+
     if (u_name == NULL)
         return AFPERR_PARAM;
 
