@@ -81,48 +81,50 @@ static const char *skip_files[] =
  * */
 void fce_init_udp()
 {
+    int rv;
+    struct addrinfo hints, *servinfo, *p;
+
     if (udp_initialized == FCE_TRUE)
         return;
 
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
 
-    for (int i = 0; i < udp_sockets; i++)
-    {
+    for (int i = 0; i < udp_sockets; i++) {
         struct udp_entry *udp_entry = udp_socket_list + i;
 
         /* Close any pending sockets */
         if (udp_entry->sock != -1)
-        {
-            close( udp_entry->sock );
-        }
+            close(udp_entry->sock);
 
-        /* resolve IP to network address */
-        if (inet_aton( udp_entry->ip, &udp_entry->addr.sin_addr ) ==0 )
-        {
-            /* Hmm, failed try to resolve host */
-            struct hostent *hp = gethostbyname( udp_entry->ip );
-            if (hp == NULL)
-            {
-                LOG(log_error, logtype_afpd, "Cannot resolve host name for fce UDP connection: %s (errno %d)", udp_entry->ip, errno  );
-                continue;
-            }
-            memcpy( &udp_entry->addr.sin_addr, &hp->h_addr, sizeof(udp_entry->addr.sin_addr) );
-        }
-
-        /* Create UDP socket */
-        udp_entry->sock = socket( AF_INET, SOCK_DGRAM, 0 );
-        if (udp_entry->sock == -1)
-        {
-            LOG(log_error, logtype_afpd, "Cannot create socket for fce UDP connection: errno %d", errno  );
+        if ((rv = getaddrinfo(udp_entry->addr, udp_entry->port, &hints, &servinfo)) != 0) {
+            LOG(log_error, logtype_afpd, "fce_init_udp: getaddrinfo(%s:%s): %s",
+                udp_entry->addr, udp_entry->port, gai_strerror(rv));
             continue;
         }
 
-        /* Set socket address params */
-        udp_entry->addr.sin_family = AF_INET;
-        udp_entry->addr.sin_port = htons(udp_entry->port);
-    }
-    udp_initialized = FCE_TRUE;
+        /* loop through all the results and make a socket */
+        for (p = servinfo; p != NULL; p = p->ai_next) {
+            if ((udp_entry->sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+                LOG(log_error, logtype_afpd, "fce_init_udp: socket(%s:%s): %s",
+                    udp_entry->addr, udp_entry->port, strerror(errno));
+                continue;
+            }
+            break;
+        }
 
+        if (p == NULL) {
+            LOG(log_error, logtype_afpd, "fce_init_udp: no socket for %s:%s",
+                udp_entry->addr, udp_entry->port);
+        }
+        memcpy(&udp_entry->addrinfo, p, sizeof(struct addrinfo));
+        freeaddrinfo(servinfo);
+    }
+
+    udp_initialized = FCE_TRUE;
 }
+
 void fce_cleanup()
 {
     if (udp_initialized == FCE_FALSE )
@@ -218,13 +220,23 @@ static void send_fce_event( char *path, int mode )
             /* Okay, we have a running socket again, send server that we had a problem on our side*/
             data_len = build_fce_packet( &packet, "", FCE_CONN_BROKEN, 0 );
 
-            sendto( udp_entry->sock, data, data_len, 0, &udp_entry->addr, sizeof(udp_entry->addr) );
+            sendto(udp_entry->sock,
+                   data,
+                   data_len,
+                   0,
+                   udp_entry->addrinfo.ai_addr,
+                   udp_entry->addrinfo.ai_addrlen);
 
             /* Rebuild our original data packet */
             data_len = build_fce_packet( &packet, path, mode, event_id );
         }
 
-        sent_data =  sendto( udp_entry->sock, data, data_len, 0, &udp_entry->addr, sizeof(udp_entry->addr) );
+        sent_data = sendto(udp_entry->sock,
+                           data,
+                           data_len,
+                           0,
+                           udp_entry->addrinfo.ai_addr,
+                           udp_entry->addrinfo.ai_addrlen);
 
         /* Problems ? */
         if (sent_data != data_len)
@@ -240,21 +252,20 @@ static void send_fce_event( char *path, int mode )
     }
 }
 
-static int add_udp_socket( char *target_ip, int target_port )
+static int add_udp_socket(const char *target_ip, const char *target_port )
 {
-    if (target_port == 0)
-        target_port = FCE_DEFAULT_PORT;
+    if (target_port == NULL)
+        target_port = FCE_DEFAULT_PORT_STRING;
 
-    if (udp_sockets >= FCE_MAX_UDP_SOCKS)
-    {
+    if (udp_sockets >= FCE_MAX_UDP_SOCKS) {
         LOG(log_error, logtype_afpd, "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS );
         return AFPERR_PARAM;
     }
 
-    strncpy( udp_socket_list[udp_sockets].ip, target_ip, FCE_MAX_IP_LEN - 1);
-    udp_socket_list[udp_sockets].port = target_port;
+    udp_socket_list[udp_sockets].addr = strdup(target_ip);
+    udp_socket_list[udp_sockets].port = strdup(target_port);
     udp_socket_list[udp_sockets].sock = -1;
-    memset( &udp_socket_list[udp_sockets].addr, 0, sizeof(struct sockaddr_in) );
+    memset( &udp_socket_list[udp_sockets].addrinfo, 0, sizeof(struct sockaddr_in) );
     udp_socket_list[udp_sockets].next_try_on_error = 0;
 
     udp_sockets++;
@@ -431,19 +442,19 @@ int fce_register_file_modification( struct ofork *ofork )
  * Extern connect to afpd parameter, can be called multiple times for multiple listeners (up to MAX_UDP_SOCKS times)
  *
  * */
-int fce_add_udp_socket( char *target )
+int fce_add_udp_socket(const char *target)
 {
-	int port = FCE_DEFAULT_PORT;
+	const char *port = FCE_DEFAULT_PORT_STRING;
 	char target_ip[256] = {""};
 
-	strncpy( target_ip, target, sizeof(target_ip) -1);
+	strncpy(target_ip, target, sizeof(target_ip) -1);
+
 	char *port_delim = strchr( target_ip, ':' );
-	if (port_delim)
-	{
+	if (port_delim) {
 		*port_delim = 0;
-		port = atoi( port_delim + 1);
+		port = port_delim + 1;
 	}
-	return add_udp_socket( target_ip, port );
+	return add_udp_socket(target_ip, port);
 }
 
 

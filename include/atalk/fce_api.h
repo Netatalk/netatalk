@@ -18,7 +18,7 @@ int fce_register_new_dir( struct path *path );
 int fce_register_new_file( struct path *path );
 int fce_register_file_modification( struct ofork *ofork );
 
-int fce_add_udp_socket( char *target );  // IP or IP:Port
+int fce_add_udp_socket(const char *target );  // IP or IP:Port
 int fce_set_coalesce( char *coalesce_opt ); // all|delete|create
 
 #define FCE_DEFAULT_PORT 12250
