@@ -48,6 +48,15 @@
 
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
 
+#if BYTE_ORDER == BIG_ENDIAN
+#define hton64(x)       (x)
+#define ntoh64(x)       (x)
+#else /* BYTE_ORDER == BIG_ENDIAN */
+#define hton64(x)       ((u_int64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
+                         (u_int64_t) ((htonl(x) & 0xffffffffLL) << 32))
+#define ntoh64(x)       (hton64(x))
+#endif /* BYTE_ORDER == BIG_ENDIAN */
+
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);
 #endif

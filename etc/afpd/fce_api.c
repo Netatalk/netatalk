@@ -66,7 +66,7 @@ static struct udp_entry udp_socket_list[FCE_MAX_UDP_SOCKS];
 static int udp_sockets = 0;
 static int udp_initialized = FCE_FALSE;
 static unsigned long fce_ev_enabled = 0;
-static size_t tm_used;          /* used for passing to event handler */
+static uint64_t tm_used;          /* used for passing to event handler */
 static const char *skip_files[] = 
 {
 	".DS_Store",
@@ -148,31 +148,43 @@ void fce_cleanup()
 /*
  * Construct a UDP packet for our listeners and return packet size
  * */
-static unsigned short build_fce_packet( struct fce_packet *packet, char *path, int mode, uint32_t event_id )
+static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode, uint32_t event_id )
 {
-    unsigned short data_len = 0;
+    size_t pathlen;
+    ssize_t data_len = 0;
 
     strncpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
     packet->version = FCE_PACKET_VERSION;
     packet->mode = mode;
+    packet->event_id = htonl( event_id );
 
-    data_len = strlen( path );
+    pathlen = strlen(path) + 1; /* include string terminator */
 
     /* This should never happen, but before we bust this server, we send nonsense, fce listener has to cope */
-    if (data_len >= FCE_MAX_PATH_LEN)
-    {
-        data_len = FCE_MAX_PATH_LEN - 1;
-    }
+    if (pathlen >= MAXPATHLEN)
+        pathlen = MAXPATHLEN - 1;
 
     /* This is the payload len. Means: the stream has len bytes more until packet is finished */
     /* A server should read the first 16 byte, decode them and then fetch the rest */
-    packet->len = htons( data_len);
-    packet->event_id = htonl( event_id );
 
-    strncpy( packet->data, path, data_len );
+    switch (mode) {
+    case FCE_TM_SIZE:
+        packet->len = htons(pathlen) + sizeof(tm_used);
+        tm_used = hton64(tm_used);
+        memcpy(packet->data, &tm_used, sizeof(tm_used));
+
+        strncpy(packet->data + sizeof(tm_used), path, pathlen);
+        data_len = sizeof(struct fce_packet) + pathlen + sizeof(tm_used);
+        break;
+    default:
+        packet->len = htons(pathlen);
+        strncpy(packet->data, path, pathlen);
+        data_len = sizeof(struct fce_packet) + pathlen;
+        break;
+    }
 
     /* return the packet len */
-    return sizeof(struct fce_packet) - FCE_MAX_PATH_LEN + data_len;
+    return data_len;
 }
 
 /*
@@ -188,7 +200,7 @@ static void send_fce_event( char *path, int mode )
     time_t now = time(NULL);
 
     /* build our data packet */
-    int data_len = build_fce_packet( &packet, path, mode, ++event_id );
+    ssize_t data_len = build_fce_packet( &packet, path, mode, ++event_id );
 
 
     for (int i = 0; i < udp_sockets; i++)
@@ -204,10 +216,11 @@ static void send_fce_event( char *path, int mode )
                 continue;
 
             /* Reopen socket */
-            udp_entry->sock = socket( AF_INET, SOCK_DGRAM, 0 );
-
-            if (udp_entry->sock == -1)
-            {
+            udp_entry->sock = socket(udp_entry->addrinfo.ai_family,
+                                     udp_entry->addrinfo.ai_socktype,
+                                     udp_entry->addrinfo.ai_protocol);
+            
+            if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
                 LOG(log_error, logtype_afpd, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
 
@@ -310,19 +323,19 @@ static int register_fce(const char *u_name, int is_dir, int mode)
 	}
 
 
-	char full_path_buffer[FCE_MAX_PATH_LEN + 1] = {""};
+	char full_path_buffer[MAXPATHLEN + 1] = {""};
 	const char *cwd = getcwdpath();
 
     if (mode & FCE_TM_SIZE) {
-        strncpy(full_path_buffer, u_name, FCE_MAX_PATH_LEN);
+        strncpy(full_path_buffer, u_name, MAXPATHLEN);
     } else if (!is_dir || mode == FCE_DIR_DELETE) {
-		if (strlen( cwd ) + strlen( u_name) + 1 >= FCE_MAX_PATH_LEN) {
+		if (strlen( cwd ) + strlen( u_name) + 1 >= MAXPATHLEN) {
 			LOG(log_error, logtype_afpd, "FCE file name too long: %s/%s", cwd, u_name );
 			return AFPERR_PARAM;
 		}
 		sprintf( full_path_buffer, "%s/%s", cwd, u_name );
 	} else {
-		if (strlen( cwd ) >= FCE_MAX_PATH_LEN) {
+		if (strlen( cwd ) >= MAXPATHLEN) {
 			LOG(log_error, logtype_afpd, "FCE directory name too long: %s", cwd);
 			return AFPERR_PARAM;
 		}

@@ -8,7 +8,6 @@
 #ifndef _FCE_API_INTERNAL_H
 #define	_FCE_API_INTERNAL_H
 
-#define FCE_MAX_PATH_LEN 1024
 #define FCE_MAX_UDP_SOCKS 5     /* Allow a maximum of udp listeners for file change events */
 #define FCE_SOCKET_RETRY_DELAY_S 600 /* Pause this time in s after socket was broken */
 #define FCE_PACKET_VERSION  1

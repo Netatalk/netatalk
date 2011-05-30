@@ -199,14 +199,11 @@ int fce_handle_coalescation( char *path, int is_dir, int mode )
 	fce_history_list[oldest_entry_idx].tv = tv;
 	fce_history_list[oldest_entry_idx].mode = mode;
 	fce_history_list[oldest_entry_idx].is_dir = is_dir;
-	strncpy( fce_history_list[oldest_entry_idx].path, path, FCE_MAX_PATH_LEN );
+	strncpy( fce_history_list[oldest_entry_idx].path, path, MAXPATHLEN);
 
 	/* we have to handle this event */
 	return FALSE;
-
 }
-
-
 
 /*
  *

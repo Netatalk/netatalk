@@ -25,15 +25,16 @@
 #define FCE_PACKET_MAGIC  "at_fcapi"
 
 /* This packet goes over the network, so we want to
- *  be shure about datastructs and type sizes between platforms
+ * be shure about datastructs and type sizes between platforms.
+ * Format is network byte order.
  */
 struct fce_packet
 {
     char magic[8];
     unsigned char version;
     unsigned char mode;
-    uint16_t len;  /* network byte order */
     uint32_t event_id; /* network byte order */
+    uint16_t len;  /* network byte order */
     char data[MAXPATHLEN];
 };
 
