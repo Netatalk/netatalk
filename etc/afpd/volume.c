@@ -47,8 +47,6 @@ char *strchr (), *strrchr ();
 #include <atalk/uuid.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
-#include <atalk/fce_api.h>
-
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -1485,7 +1483,6 @@ getvolspace_done:
         /* now buf contains only digits */
         long long used = atoll(buf) * multi;
         LOG(log_debug, logtype_afpd, "volparams: used on volume: %llu bytes", used);
-        fce_register_tm_size(vol->v_path, used);
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
         *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);

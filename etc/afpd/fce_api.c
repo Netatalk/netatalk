@@ -234,7 +234,7 @@ static void send_fce_event( char *path, int mode )
     void *data = &packet;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
 
-    LOG(log_note, logtype_afpd, "send_fce_event: start");
+    LOG(log_debug, logtype_afpd, "send_fce_event: start");
 
     time_t now = time(NULL);
 
@@ -285,7 +285,6 @@ static void send_fce_event( char *path, int mode )
             pack_fce_packet(&packet, iobuf);
         }
 
-        LOG(log_note, logtype_afpd, "send_fce_event: sending...");
         sent_data = sendto(udp_entry->sock,
                            iobuf,
                            data_len,
@@ -500,8 +499,6 @@ int fce_register_file_modification( struct ofork *ofork )
 int fce_register_tm_size(const char *vol, size_t used)
 {
     int ret = AFP_OK;
-
-    LOG(log_note, logtype_afpd, "fce_register_tm_size");
 
     if (vol == NULL)
         return AFPERR_PARAM;
