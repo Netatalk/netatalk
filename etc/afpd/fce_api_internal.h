@@ -20,6 +20,7 @@ struct udp_entry
     char *addr;
     char *port;
     struct addrinfo addrinfo;
+    struct sockaddr_storage sockaddr;
     time_t next_try_on_error;      /* In case of error set next timestamp to retry */
 };
 

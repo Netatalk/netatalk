@@ -28,13 +28,14 @@
  * be shure about datastructs and type sizes between platforms.
  * Format is network byte order.
  */
+#define FCE_PACKET_HEADER_SIZE 8+1+1+4+2
 struct fce_packet
 {
     char magic[8];
     unsigned char version;
     unsigned char mode;
-    uint32_t event_id; /* network byte order */
-    uint16_t len;  /* network byte order */
+    uint32_t event_id;
+    uint16_t datalen;
     char data[MAXPATHLEN];
 };
 
@@ -50,7 +51,7 @@ int fce_register_tm_size(const char *vol, size_t used);
 
 int fce_add_udp_socket(const char *target );  // IP or IP:Port
 int fce_set_coalesce( char *coalesce_opt ); // all|delete|create
-int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre,tmsz (default is all) */
+int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre,tmsz (default is all except tmsz) */
 
 #define FCE_DEFAULT_PORT 12250
 #define FCE_DEFAULT_PORT_STRING "12250"

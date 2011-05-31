@@ -65,8 +65,16 @@
 static struct udp_entry udp_socket_list[FCE_MAX_UDP_SOCKS];
 static int udp_sockets = 0;
 static int udp_initialized = FCE_FALSE;
-static unsigned long fce_ev_enabled = 0;
+static unsigned long fce_ev_enabled =
+    (1 << FCE_FILE_MODIFY) |
+    (1 << FCE_FILE_DELETE) |
+    (1 << FCE_DIR_DELETE) |
+    (1 << FCE_FILE_CREATE) |
+    (1 << FCE_DIR_CREATE);
+
 static uint64_t tm_used;          /* used for passing to event handler */
+#define MAXIOBUF 1024
+static char iobuf[MAXIOBUF];
 static const char *skip_files[] = 
 {
 	".DS_Store",
@@ -118,7 +126,9 @@ void fce_init_udp()
             LOG(log_error, logtype_afpd, "fce_init_udp: no socket for %s:%s",
                 udp_entry->addr, udp_entry->port);
         }
+        udp_entry->addrinfo = *p;
         memcpy(&udp_entry->addrinfo, p, sizeof(struct addrinfo));
+        memcpy(&udp_entry->sockaddr, p->ai_addr, sizeof(struct sockaddr_storage));
         freeaddrinfo(servinfo);
     }
 
@@ -156,7 +166,7 @@ static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode
     strncpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
     packet->version = FCE_PACKET_VERSION;
     packet->mode = mode;
-    packet->event_id = htonl( event_id );
+    packet->event_id = event_id;
 
     pathlen = strlen(path) + 1; /* include string terminator */
 
@@ -166,25 +176,52 @@ static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode
 
     /* This is the payload len. Means: the stream has len bytes more until packet is finished */
     /* A server should read the first 16 byte, decode them and then fetch the rest */
+    data_len = FCE_PACKET_HEADER_SIZE + pathlen;
+    packet->datalen = pathlen;
 
     switch (mode) {
     case FCE_TM_SIZE:
-        packet->len = htons(pathlen) + sizeof(tm_used);
         tm_used = hton64(tm_used);
         memcpy(packet->data, &tm_used, sizeof(tm_used));
-
         strncpy(packet->data + sizeof(tm_used), path, pathlen);
-        data_len = sizeof(struct fce_packet) + pathlen + sizeof(tm_used);
+
+        packet->datalen += sizeof(tm_used);
+        data_len += sizeof(tm_used);
         break;
     default:
-        packet->len = htons(pathlen);
         strncpy(packet->data, path, pathlen);
-        data_len = sizeof(struct fce_packet) + pathlen;
         break;
     }
 
     /* return the packet len */
     return data_len;
+}
+
+static int pack_fce_packet(struct fce_packet *packet, unsigned char *buf)
+{
+    unsigned char *p = buf;
+
+    memcpy(p, &packet->magic[0], sizeof(packet->magic));
+    p += sizeof(packet->magic);
+
+    *p = packet->version;
+    p++;
+    
+    *p = packet->mode;
+    p++;
+    
+    uint32_t id = htonl(packet->event_id);
+    memcpy(p, &id, sizeof(id));
+    p += sizeof(packet->event_id);
+
+    uint16_t l = htons(packet->datalen);
+    memcpy(p, &l, sizeof(l));
+    p += sizeof(l);
+
+    memcpy(p, &packet->data[0], packet->datalen);
+    p += packet->datalen;
+
+    return 0;
 }
 
 /*
@@ -197,11 +234,13 @@ static void send_fce_event( char *path, int mode )
     void *data = &packet;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
 
+    LOG(log_note, logtype_afpd, "send_fce_event: start");
+
     time_t now = time(NULL);
 
     /* build our data packet */
     ssize_t data_len = build_fce_packet( &packet, path, mode, ++event_id );
-
+    pack_fce_packet(&packet, iobuf);
 
     for (int i = 0; i < udp_sockets; i++)
     {
@@ -232,31 +271,33 @@ static void send_fce_event( char *path, int mode )
 
             /* Okay, we have a running socket again, send server that we had a problem on our side*/
             data_len = build_fce_packet( &packet, "", FCE_CONN_BROKEN, 0 );
+            pack_fce_packet(&packet, iobuf);
 
             sendto(udp_entry->sock,
-                   data,
+                   iobuf,
                    data_len,
                    0,
-                   udp_entry->addrinfo.ai_addr,
+                   (struct sockaddr *)&udp_entry->sockaddr,
                    udp_entry->addrinfo.ai_addrlen);
 
             /* Rebuild our original data packet */
             data_len = build_fce_packet( &packet, path, mode, event_id );
+            pack_fce_packet(&packet, iobuf);
         }
 
+        LOG(log_note, logtype_afpd, "send_fce_event: sending...");
         sent_data = sendto(udp_entry->sock,
-                           data,
+                           iobuf,
                            data_len,
                            0,
-                           udp_entry->addrinfo.ai_addr,
+                           (struct sockaddr *)&udp_entry->sockaddr,
                            udp_entry->addrinfo.ai_addrlen);
 
         /* Problems ? */
-        if (sent_data != data_len)
-        {
+        if (sent_data != data_len) {
             /* Argh, socket broke, we close and retry later */
-            LOG(log_error, logtype_afpd, "Error while sending packet to %s for fce UDP connection: transfered: %d of %d errno %d",
-                    udp_entry->port, sent_data, data_len, errno  );
+            LOG(log_error, logtype_afpd, "send_fce_event: error sending packet to %s:%s, transfered %d of %d: %s",
+                udp_entry->addr, udp_entry->port, sent_data, data_len, strerror(errno));
 
             close( udp_entry->sock );
             udp_entry->sock = -1;
@@ -278,7 +319,8 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
     udp_socket_list[udp_sockets].addr = strdup(target_ip);
     udp_socket_list[udp_sockets].port = strdup(target_port);
     udp_socket_list[udp_sockets].sock = -1;
-    memset( &udp_socket_list[udp_sockets].addrinfo, 0, sizeof(struct sockaddr_in) );
+    memset(&udp_socket_list[udp_sockets].addrinfo, 0, sizeof(struct addrinfo));
+    memset(&udp_socket_list[udp_sockets].sockaddr, 0, sizeof(struct sockaddr_storage));
     udp_socket_list[udp_sockets].next_try_on_error = 0;
 
     udp_sockets++;
@@ -303,17 +345,9 @@ static int register_fce(const char *u_name, int is_dir, int mode)
     static int first_event = FCE_TRUE;
 
 	/* do some initialization on the fly the first time */
-	if (first_event)
-	{
+	if (first_event) {
 		fce_initialize_history();
-        fce_ev_enabled =
-            (1 << FCE_FILE_MODIFY) |
-            (1 << FCE_FILE_DELETE) |
-            (1 << FCE_DIR_DELETE) |
-            (1 << FCE_FILE_CREATE) |
-            (1 << FCE_DIR_CREATE);
 	}
-
 
 	/* handle files which should not cause events (.DS_Store atc. ) */
 	for (int i = 0; skip_files[i] != NULL; i++)
@@ -326,8 +360,8 @@ static int register_fce(const char *u_name, int is_dir, int mode)
 	char full_path_buffer[MAXPATHLEN + 1] = {""};
 	const char *cwd = getcwdpath();
 
-    if (mode & FCE_TM_SIZE) {
-        strncpy(full_path_buffer, u_name, MAXPATHLEN);
+    if (mode == FCE_TM_SIZE) {
+        strlcpy(full_path_buffer, u_name, MAXPATHLEN);
     } else if (!is_dir || mode == FCE_DIR_DELETE) {
 		if (strlen( cwd ) + strlen( u_name) + 1 >= MAXPATHLEN) {
 			LOG(log_error, logtype_afpd, "FCE file name too long: %s/%s", cwd, u_name );
@@ -467,6 +501,8 @@ int fce_register_tm_size(const char *vol, size_t used)
 {
     int ret = AFP_OK;
 
+    LOG(log_note, logtype_afpd, "fce_register_tm_size");
+
     if (vol == NULL)
         return AFPERR_PARAM;
 
@@ -509,21 +545,22 @@ int fce_set_events(const char *events)
         return AFPERR_PARAM;
 
     e = strdup(events);
+
     fce_ev_enabled = 0;
 
     for (p = strtok(e, ","); p; p = strtok(NULL, ",")) {
-        if (strcmp(e, "fmod") == 0) {
-            fce_ev_enabled |= FCE_FILE_MODIFY;
-        } else if (strcmp(e, "fdel") == 0) {
-            fce_ev_enabled |= FCE_FILE_DELETE;
-        } else if (strcmp(e, "ddel") == 0) {
-            fce_ev_enabled |= FCE_DIR_DELETE;
-        } else if (strcmp(e, "fcre") == 0) {
-            fce_ev_enabled |= FCE_FILE_CREATE;
-        } else if (strcmp(e, "dcre") == 0) {
-            fce_ev_enabled |= FCE_DIR_CREATE;
-        } else if (strcmp(e, "tmsz") == 0) {
-            fce_ev_enabled |= FCE_TM_SIZE;
+        if (strcmp(p, "fmod") == 0) {
+            fce_ev_enabled |= (1 << FCE_FILE_MODIFY);
+        } else if (strcmp(p, "fdel") == 0) {
+            fce_ev_enabled |= (1 << FCE_FILE_DELETE);
+        } else if (strcmp(p, "ddel") == 0) {
+            fce_ev_enabled |= (1 << FCE_DIR_DELETE);
+        } else if (strcmp(p, "fcre") == 0) {
+            fce_ev_enabled |= (1 << FCE_FILE_CREATE);
+        } else if (strcmp(p, "dcre") == 0) {
+            fce_ev_enabled |= (1 << FCE_DIR_CREATE);
+        } else if (strcmp(p, "tmsz") == 0) {
+            fce_ev_enabled |= (1 << FCE_TM_SIZE);
         }
     }
 

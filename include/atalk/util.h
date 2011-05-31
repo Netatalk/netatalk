@@ -52,8 +52,8 @@
 #define hton64(x)       (x)
 #define ntoh64(x)       (x)
 #else /* BYTE_ORDER == BIG_ENDIAN */
-#define hton64(x)       ((u_int64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
-                         (u_int64_t) ((htonl(x) & 0xffffffffLL) << 32))
+#define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
+                         (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
 #define ntoh64(x)       (hton64(x))
 #endif /* BYTE_ORDER == BIG_ENDIAN */
 
