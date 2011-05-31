@@ -38,6 +38,7 @@ char *strchr (), *strrchr ();
 #include <atalk/cnid.h>
 #include <atalk/unix.h>
 #include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -771,6 +772,9 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     (void)get_id(vol, adp, &st, dir->d_did, upath, strlen(upath));
 
     ad_flush( adp);
+
+    fce_register_new_file(s_path);
+
     ad_close( adp, ADFLAGS_DF|ADFLAGS_HF );
 
 createfile_done:

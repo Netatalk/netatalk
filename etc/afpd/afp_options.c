@@ -35,6 +35,7 @@
 #include <atalk/util.h>
 #include <atalk/compat.h>
 #include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
 #include "status.h"
 #include "auth.h"
@@ -480,6 +481,19 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-tcprcvbuf")))
         options->tcp_rcvbuf = atoi(c);
+
+	if ((c = getoption(buf, "-fcelistener"))) {
+		LOG(log_note, logtype_afpd, "Adding fce listener \"%s\"", c);
+		fce_add_udp_socket(c);
+	}
+	if ((c = getoption(buf, "-fcecoalesce"))) {
+		LOG(log_note, logtype_afpd, "Fce coalesce: %s", c);
+		fce_set_coalesce(c);
+	}
+	if ((c = getoption(buf, "-fceevents"))) {
+		LOG(log_note, logtype_afpd, "Fce events: %s", c);
+		fce_set_events(c);
+	}
 
     return 1;
 }

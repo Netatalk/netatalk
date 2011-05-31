@@ -22,6 +22,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
 #include "volume.h"
 #include "directory.h"
@@ -431,6 +432,12 @@ int of_closefork(struct ofork *ofork)
             }
         }
     }
+
+    /* Somone has used write_fork, we assume file was changed, register it to file change event api */
+    if (ofork->of_flags & AFPFORK_MODIFIED) {
+        fce_register_file_modification(ofork);
+    }
+
     ret = 0;
     if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
         ret = -1;
