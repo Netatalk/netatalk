@@ -15,10 +15,6 @@
 #include <atalk/unicode.h>
 #include <atalk/globals.h>
 
-#if 0
-#include "hash.h"
-#endif
-
 extern struct vol       *getvolbyvid (const u_int16_t);
 extern int              ustatfs_getvolspace (const struct vol *,
             VolSpace *, VolSpace *,
@@ -28,6 +24,7 @@ extern int              pollvoltime (AFPObj *);
 extern void             load_volumes (AFPObj *obj);
 extern const struct vol *getvolumes(void);
 extern void             unload_volumes_and_extmap(void);
+extern void             vol_fce_tm_event(void);
 
 /* FP functions */
 int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

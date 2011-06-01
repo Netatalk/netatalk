@@ -1339,6 +1339,9 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     /* we have modified any fork, remember until close_fork */
     ofork->of_flags |= AFPFORK_MODIFIED;
 
+    /* update write count */
+    ofork->of_vol->v_written += reqcount;
+
     *rbuflen = set_off_t (offset, rbuf, is64);
     return( AFP_OK );
 

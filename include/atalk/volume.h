@@ -65,7 +65,9 @@ struct vol {
     char            *v_gvs;
     void            *v_nfsclient;
     int             v_nfs;
-
+    uintmax_t       v_tm_used;  /* used bytes on a TM volume */
+    uintmax_t       v_written;  /* amount of data written in afp_write, reset every time a FCE_TM_SIZE event is sent */
+    
     /* only when opening/closing volumes or in error */
     int             v_casefold;
     char            *v_localname;   /* as defined in AppleVolumes.default */

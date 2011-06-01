@@ -25,15 +25,17 @@
 #endif /* HAVE_SYS_STAT_H */
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <atalk/logger.h>
 #include <setjmp.h>
+#include <time.h>
 
+#include <atalk/logger.h>
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
 #include <atalk/paths.h>
 #include <atalk/server_ipc.h>
+#include <atalk/fce_api.h>
 
 #include <atalk/globals.h>
 #include "switch.h"
@@ -685,6 +687,8 @@ void afp_over_dsi(AFPObj *obj)
             break;
         }
         pending_request(dsi);
+
+        vol_fce_tm_event();
     }
 
     /* error */

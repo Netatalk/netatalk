@@ -624,9 +624,13 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         if (s_path->st_valid && s_path->st_errno == ENOENT) {
             rc = AFPERR_NOOBJ;
         } else {
-            if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK)
+            if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
 				fce_register_delete_file( s_path );
-
+                if (vol->v_tm_used < s_path->st.st_size)
+                    vol->v_tm_used = 0;
+                else 
+                    vol->v_tm_used -= s_path->st.st_size;
+            }
             struct dir *cachedfile;
             if ((cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath)))) {
                 dircache_remove(vol, cachedfile, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);

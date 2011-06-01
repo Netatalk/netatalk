@@ -51,6 +51,7 @@ char *strchr (), *strrchr ();
 #include <atalk/bstradd.h>
 #include <atalk/ftw.h>
 #include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -1460,9 +1461,9 @@ static int getused_stat(const char *path,
  *       longer then 30 sec ago
  * 1c) - the last volume modification is less then 30 sec old
  *
- * @param vol     (r) volume to calculate
+ * @param vol     (rw) volume to calculate
  */
-static int getused(const struct vol *vol)
+static int getused(struct vol *vol)
 {
     static time_t vol_mtime = 0;
     int ret = 0;
@@ -1474,10 +1475,13 @@ static int getused(const struct vol *vol)
         ) {
         vol_mtime = now;
         getused_size = 0;
+        vol->v_written = 0;
         ret = nftw(vol->v_path, getused_stat, NULL, 20, FTW_PHYS); /* 2 */
         LOG(log_debug, logtype_afpd, "volparams: from nftw: %" PRIu64 " bytes",
             getused_size);
     } else {
+        getused_size += vol->v_written;
+        vol->v_written = 0;
         LOG(log_debug, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
             getused_size);
     }
@@ -1534,6 +1538,7 @@ getvolspace_done:
             return AFPERR_MISC;
         LOG(log_debug, logtype_afpd, "volparams: used on volume: %" PRIu64 " bytes",
             getused_size);
+        vol->v_tm_used = getused_size;
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
         *xbfree = min(*xbfree, *xbtotal < getused_size ? 0 : *xbtotal - getused_size);
@@ -1542,6 +1547,22 @@ getvolspace_done:
     *bfree = min( *xbfree, maxsize);
     *btotal = min( *xbtotal, maxsize);
     return( AFP_OK );
+}
+
+#define FCE_TM_DELTA 10  /* send notification every 10 seconds */
+void vol_fce_tm_event(void)
+{
+    static time_t last;
+    time_t now = time(NULL);
+    struct vol  *vol = Volumes;
+
+    if ((last + FCE_TM_DELTA) < now) {
+        last = now;
+        for ( ; vol; vol = vol->v_next ) {
+            if (vol->v_flags & AFPVOL_TM)
+                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_written);
+        }
+    }
 }
 
 /* -----------------------
