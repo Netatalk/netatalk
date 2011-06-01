@@ -785,8 +785,6 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
             rc = AFPERR_PARAM;
             goto exit;
         }
-        curdir->d_offcnt++;
-        sdir->d_offcnt--;
 #ifdef DROPKLUDGE
         if (vol->v_flags & AFPVOL_DROPBOX) {
             /* FIXME did is not always the source id */
