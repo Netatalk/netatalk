@@ -1487,7 +1487,7 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_FINFO)))) {
 
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) )
+        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
             isad = 1;
             if (ad.ad_md->adf_flags & O_CREAT) {
                 /* We just created it */
