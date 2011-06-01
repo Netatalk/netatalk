@@ -29,6 +29,8 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/errchk.h>
+#include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -37,7 +39,6 @@
 #include "fork.h"
 #include "file.h"
 #include "filedir.h"
-#include "globals.h"
 #include "unix.h"
 #include "mangle.h"
 #include "hash.h"
@@ -831,6 +832,7 @@ struct dir *dir_new(const char *m_name,
     dir->dcache_ino = st->st_ino;
     if (!S_ISDIR(st->st_mode))
         dir->d_flags = DIRF_ISFILE;
+    dir->d_rights_cache = 0xffffffff;
     return dir;
 }
 
@@ -1487,6 +1489,29 @@ int getdirparams(const struct vol *vol,
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) )
             isad = 1;
+            if (ad.ad_md->adf_flags & O_CREAT) {
+                /* We just created it */
+                if (s_path->m_name == NULL) {
+                    if ((s_path->m_name = utompath(vol,
+                                                   upath,
+                                                   dir->d_did,
+                                                   utf8_encoding())) == NULL) {
+                        LOG(log_error, logtype_afpd,
+                            "getdirparams(\"%s\"): can't assign macname",
+                            cfrombstr(dir->d_fullpath));
+                        return AFPERR_MISC;
+                    }
+                }
+                ad_setname(&ad, s_path->m_name);
+                ad_setid( &ad,
+                          s_path->st.st_dev,
+                          s_path->st.st_ino,
+                          dir->d_did,
+                          dir->d_pdid,
+                          vol->v_stamp);
+                ad_flush( &ad);
+            }
+        }
     }
 
     pdid = dir->d_pdid;
@@ -2251,6 +2276,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     ad_setname(&ad, s_path->m_name);
     ad_setid( &ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did, vol->v_stamp);
 
+    fce_register_new_dir(s_path);
+
     ad_flush( &ad);
     ad_close_metadata( &ad);
 
@@ -2488,9 +2515,6 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             rbuf += sizeof( id );
             *rbuflen = 2 * sizeof( id );
             break;
-        case UUID_LOCAL:
-            free(name);
-            return (AFPERR_NOITEM);
         default:
             return AFPERR_MISC;
         }

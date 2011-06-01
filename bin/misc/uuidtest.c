@@ -123,14 +123,14 @@ int main( int argc, char **argv)
             ret = getnamefromuuid( uuid, &name, &type);
             if (ret == 0) {
                 switch (type) {
-                case UUID_LOCAL:
-                    printf("local UUID: %s\n", optarg);
-                    break;
                 case UUID_USER:
                     printf("UUID: %s ==> User: %s\n", optarg, name);
                     break;
                 case UUID_GROUP:
                     printf("UUID: %s ==> Group: %s\n", optarg, name);
+                    break;
+                default:
+                    printf("???: %s\n", optarg);
                     break;
                 }
                 free(name);

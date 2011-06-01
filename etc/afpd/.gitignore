@@ -1,6 +1,7 @@
 Makefile
 Makefile.in
 afpd
+fce
 hash
 test_parse_mtab
 .deps

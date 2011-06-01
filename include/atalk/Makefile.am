@@ -41,7 +41,9 @@ noinst_HEADERS = \
 	compat.h \
 	dsi.h \
 	ldapconfig.h \
-	list.h
+	list.h \
+	globals.h \
+	fce_api.h
 
 BUILT_SOURCES = lockrpc.gen.h
 EXTRADIST = lockrpc.gen.h

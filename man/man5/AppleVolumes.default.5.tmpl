@@ -250,6 +250,11 @@ Use with
 \fBusedots\fR: make dot files invisible\&.
 .RE
 .PP
+nonetids
+.RS 4
+Try to force ACL unawareness on the client\&.
+.RE
+.PP
 limitsize
 .RS 4
 Limit disk size reporting to 2GB\&. This can be used for older Macintoshes using newer Appleshare clients\&.
@@ -277,7 +282,7 @@ a non\-zero return code from root_preexec closes the volume immediately, prevent
 .PP
 upriv
 .RS 4
-use AFP3 unix privileges\&. Become familiar with the new "unix privileges" AFP permissions concepts in MacOS X before using this option\&. See also:
+use AFP3 unix privileges\&. This should be set for OS X clients\&. Starting with Netatalk 2\&.1 it\'s part of the default config :DEFAULT: line\&. See also:
 \fBperm|fperm|dperm\fR\&.
 .RE
 .PP

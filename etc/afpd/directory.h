@@ -35,8 +35,8 @@
 #endif
 
 #include <atalk/directory.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "volume.h"
 
 /* directory bits */

@@ -21,18 +21,17 @@
 #include <atalk/util.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
-#include "globals.h"
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
 
-/* we need to have a hashed list of oforks (by dev inode). just hash
- * by first letter. */
+/* we need to have a hashed list of oforks (by dev inode) */
 #define OFORK_HASHSIZE  64
-static struct ofork     *ofork_table[OFORK_HASHSIZE];
-
-static struct ofork **oforks = NULL;
+static struct ofork *ofork_table[OFORK_HASHSIZE]; /* forks hashed by dev/inode */
+static struct ofork **oforks = NULL;              /* point to allocated table of open forks pointers */
 static int          nforks = 0;
 static u_short      lastrefnum = 0;
 
@@ -40,12 +39,6 @@ static u_short      lastrefnum = 0;
 /* OR some of each character for the hash*/
 static unsigned long hashfn(const struct file_key *key)
 {
-#if 0
-    unsigned long i = 0;
-    while (*name) {
-        i = ((i << 4) | (8*sizeof(i) - 4)) ^ *name++;
-    }
-#endif
     return key->inode & (OFORK_HASHSIZE - 1);
 }
 
@@ -404,6 +397,12 @@ int of_closefork(struct ofork *ofork)
             }
         }
     }
+
+    /* Somone has used write_fork, we assume file was changed, register it to file change event api */
+    if (ofork->of_flags & AFPFORK_MODIFIED) {
+        fce_register_file_modification(ofork);
+    }
+
     ret = 0;
 
     ad_unlock(ofork->of_ad, ofork->of_refnum);

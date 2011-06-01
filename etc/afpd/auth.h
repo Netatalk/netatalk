@@ -8,7 +8,7 @@
 
 #include <limits.h>
 
-#include "globals.h"
+#include <atalk/globals.h>
 
 struct afp_versions {
     char	*av_name;

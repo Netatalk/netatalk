@@ -15,7 +15,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <atalk/afp.h>
-#include "globals.h"
+#include <atalk/globals.h>
 
 const char *AfpNum2name(int num)
 {

@@ -16,7 +16,8 @@
 #include <atalk/dsi.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
-#include "globals.h"
+#include <atalk/globals.h>
+
 #include "misc.h"
 
 

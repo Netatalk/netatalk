@@ -26,8 +26,9 @@ typedef struct server_child_data {
   pid_t     pid; 		/* afpd worker process pid (from the worker afpd process )*/
   uid_t     uid;		/* user id of connected client (from the worker afpd process) */
   int       valid;		/* 1 if we have a clientid */
-  uint32_t  time;		/* client boot time (from the mac client) */
   int       killed;		/* 1 if we already tried to kill the client */
+  int       disasociated; /* 1 if this is not a child, but a child from a previous afpd master */
+  uint32_t  time;		/* client boot time (from the mac client) */
   uint32_t  idlen;		/* clientid len (from the Mac client) */
   char      *clientid;  /* clientid (from the Mac client) */
   int       ipc_fds[2]; /* socketpair for IPC bw */

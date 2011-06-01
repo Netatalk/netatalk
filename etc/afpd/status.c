@@ -33,8 +33,8 @@
 #include <atalk/dsi.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
+#include <atalk/globals.h>
 
-#include "globals.h"  /* includes <netdb.h> */
 #include "status.h"
 #include "afp_config.h"
 #include "icon.h"

@@ -55,6 +55,15 @@
 #define ZERO_STRUCT(a) memset(&(a), 0, sizeof(a))
 #define ZERO_STRUCTP(a) memset((a), 0, sizeof(a))
 
+#if BYTE_ORDER == BIG_ENDIAN
+#define hton64(x)       (x)
+#define ntoh64(x)       (x)
+#else /* BYTE_ORDER == BIG_ENDIAN */
+#define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
+                         (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
+#define ntoh64(x)       (hton64(x))
+#endif /* BYTE_ORDER == BIG_ENDIAN */
+
 #ifdef WITH_SENDFILE
 extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);
 #endif
@@ -131,7 +140,7 @@ extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
 extern int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2);
 
 /* Structures and functions dealing with dynamic pollfd arrays */
-enum fdtype {IPC_FD, LISTEN_FD};
+enum fdtype {IPC_FD, LISTEN_FD, DISASOCIATED_IPC_FD};
 struct polldata {
     enum fdtype fdtype; /* IPC fd or listening socket fd                 */
     void *data;         /* pointer to AFPconfig for listening socket and *

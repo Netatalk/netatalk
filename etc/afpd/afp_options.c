@@ -34,8 +34,9 @@
 #include <atalk/paths.h>
 #include <atalk/util.h>
 #include <atalk/compat.h>
+#include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
-#include "globals.h"
 #include "status.h"
 #include "auth.h"
 #include "dircache.h"
@@ -139,6 +140,8 @@ void afp_options_free(struct afp_options *opt,
 	free(opt->ntseparator);
     if (opt->logconfig && (opt->logconfig != save->logconfig))
 	free(opt->logconfig);
+	if (opt->mimicmodel && (opt->mimicmodel != save->mimicmodel))
+	free(opt->mimicmodel);
 }
 
 /* initialize options */
@@ -189,6 +192,7 @@ void afp_options_init(struct afp_options *options)
     options->tcp_sndbuf = 0;    /* 0 means don't change OS default */
     options->tcp_rcvbuf = 0;    /* 0 means don't change OS default */
     options->dsireadbuf = 12;
+	options->mimicmodel = NULL;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -478,6 +482,22 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-tcprcvbuf")))
         options->tcp_rcvbuf = atoi(c);
+
+	if ((c = getoption(buf, "-fcelistener"))) {
+		LOG(log_note, logtype_afpd, "Adding fce listener \"%s\"", c);
+		fce_add_udp_socket(c);
+	}
+	if ((c = getoption(buf, "-fcecoalesce"))) {
+		LOG(log_note, logtype_afpd, "Fce coalesce: %s", c);
+		fce_set_coalesce(c);
+	}
+	if ((c = getoption(buf, "-fceevents"))) {
+		LOG(log_note, logtype_afpd, "Fce events: %s", c);
+		fce_set_events(c);
+	}
+
+    if ((c = getoption(buf, "-mimicmodel")) && (opt = strdup(c)))
+       options->mimicmodel = opt;
 
     return 1;
 }

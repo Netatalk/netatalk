@@ -22,6 +22,8 @@
 #include <atalk/util.h>
 #include <atalk/cnid.h>
 #include <atalk/unix.h>
+#include <atalk/globals.h>
+#include <atalk/fce_api.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -30,7 +32,6 @@
 #include "fork.h"
 #include "file.h"
 #include "filedir.h"
-#include "globals.h"
 #include "unix.h"
 
 /* the format for the finderinfo fields (from IM: Toolbox Essentials):
@@ -745,6 +746,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF|ADFLAGS_HF );
+    fce_register_new_file(s_path);
 
 createfile_done:
     curdir->d_offcnt++;

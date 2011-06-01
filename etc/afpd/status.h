@@ -2,7 +2,8 @@
 #define AFPD_STATUS_H 1
 
 #include <atalk/dsi.h>
-#include "globals.h"
+#include <atalk/globals.h>
+
 #include "afp_config.h"
 
 /* we use these to prevent whacky alignment problems */

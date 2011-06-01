@@ -28,6 +28,8 @@
 #endif
 #ifdef HAVE_POSIX_ACLS
 #include <sys/acl.h>
+#endif
+#ifdef HAVE_ACL_LIBACL_H
 #include <acl/libacl.h>
 #endif
 
@@ -268,11 +270,6 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
         /* uid/gid first */
         EC_ZERO(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         switch (uuidtype) {
-        case UUID_LOCAL:
-            free(name);
-            name = NULL;
-            darwin_aces++;
-            continue;
         case UUID_USER:
             EC_NULL_LOG(pwd = getpwnam(name));
             nfsv4_aces->a_who = pwd->pw_uid;
@@ -282,6 +279,9 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
             nfsv4_aces->a_who = (uid_t)(grp->gr_gid);
             nfsv4_ace_flags |= ACE_IDENTIFIER_GROUP;
             break;
+        default:
+            LOG(log_error, logtype_afpd, "map_aces_darwin_to_solaris: unkown uuidtype");
+            EC_FAIL;
         }
         free(name);
         name = NULL;
@@ -309,8 +309,12 @@ static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
                 nfsv4_ace_rights |= darwin_to_nfsv4_rights[i].to;
         }
 
-        LOG(log_debug9, logtype_afpd, "map_aces_darwin_to_solaris: ACE flags: Darwin:%08x -> NFSv4:%04x", darwin_ace_flags, nfsv4_ace_flags);
-        LOG(log_debug9, logtype_afpd, "map_aces_darwin_to_solaris: ACE rights: Darwin:%08x -> NFSv4:%08x", darwin_ace_rights, nfsv4_ace_rights);
+        LOG(log_debug9, logtype_afpd,
+            "map_aces_darwin_to_solaris: ACE flags: Darwin:%08x -> NFSv4:%04x",
+            darwin_ace_flags, nfsv4_ace_flags);
+        LOG(log_debug9, logtype_afpd,
+            "map_aces_darwin_to_solaris: ACE rights: Darwin:%08x -> NFSv4:%08x",
+            darwin_ace_rights, nfsv4_ace_rights);
 
         nfsv4_aces->a_flags = nfsv4_ace_flags;
         nfsv4_aces->a_access_mask = nfsv4_ace_rights;
@@ -342,12 +346,20 @@ static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
 
     EC_ZERO_LOG(acl_get_permset(e, &permset));
 
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_READ))
+#else
     if (acl_get_perm(permset, ACL_READ))
+#endif
         rights = DARWIN_ACE_READ_DATA
             | DARWIN_ACE_READ_EXTATTRIBUTES
             | DARWIN_ACE_READ_ATTRIBUTES
             | DARWIN_ACE_READ_SECURITY;
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_WRITE)) {
+#else
     if (acl_get_perm(permset, ACL_WRITE)) {
+#endif
         rights |= DARWIN_ACE_WRITE_DATA
             | DARWIN_ACE_APPEND_DATA
             | DARWIN_ACE_WRITE_EXTATTRIBUTES
@@ -355,7 +367,11 @@ static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
         if (is_dir)
             rights |= DARWIN_ACE_DELETE_CHILD;
     }
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_EXECUTE))
+#else
     if (acl_get_perm(permset, ACL_EXECUTE))
+#endif
         rights |= DARWIN_ACE_EXECUTE;
 
 EC_CLEANUP:
@@ -624,10 +640,6 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
          /* uid/gid */
         EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
         switch (uuidtype) {
-        case UUID_LOCAL:
-            free(name);
-            name = NULL;
-            continue;
         case UUID_USER:
             EC_NULL_LOG(pwd = getpwnam(name));
             tag = ACL_USER;
@@ -640,6 +652,8 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
             id = (uid_t)(grp->gr_gid);
             LOG(log_debug, logtype_afpd, "map_ace: name: %s, gid: %u", name, id);
             break;
+        default:
+            continue;
         }
         free(name);
         name = NULL;
@@ -1043,8 +1057,11 @@ static int set_acl(const struct vol *vol,
     /* for files def_acl will be NULL */
 
     /* create access acl from mode */
+#ifdef HAVE_ACL_FROM_MODE
     EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
-
+#else
+#error "Missing acl_from_mode() replacement"
+#endif
     /* adds the clients aces */
     EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &def_acl, &acc_acl, ace_count), AFPERR_MISC);
 
@@ -1078,7 +1095,7 @@ EC_CLEANUP:
  * Note: this gets called frequently and is a good place for optimizations !
  *
  * @param vol              (r) volume
- * @param dir              (r) directory
+ * @param dir              (rw) directory
  * @param path             (r) path to filesystem object
  * @param uuid             (r) UUID of user
  * @param requested_rights (r) requested Darwin ACE
@@ -1086,7 +1103,7 @@ EC_CLEANUP:
  * @returns                    AFP result code
 */
 static int check_acl_access(const struct vol *vol,
-                            const struct dir *dir,
+                            struct dir *dir,
                             const char *path,
                             const uuidp_t uuid,
                             uint32_t requested_rights)
@@ -1111,57 +1128,60 @@ static int check_acl_access(const struct vol *vol,
         LOG(log_warning, logtype_afpd, "check_access: afp_access not supported for groups");
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
-
-    case UUID_LOCAL:
-        LOG(log_warning, logtype_afpd, "check_access: local UUID");
+    default:
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     }
 
+    if ((strcmp(path, ".") == 0) && (dir->d_rights_cache != 0xffffffff)) {
+        /* its a dir and the cache value is valid */
+        allowed_rights = dir->d_rights_cache;
+        LOG(log_debug, logtype_afpd, "allowed rights from dircache: 0x%08x", allowed_rights);
+    } else {
 #ifdef HAVE_SOLARIS_ACLS
-    EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
+        EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+        EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
 #endif
+        /*
+         * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
+         * directory. As it seems the 10.6 AFP client is puzzled when this right is not
+         * allowed where a delete would succeed because the parent dir gives write perms.
+         * So we check the parent dir for write access and set the right accordingly.
+         * Currentyl acl2ownermode calls us with dir = NULL, because it doesn't make sense
+         * there to do this extra check -- afaict.
+         */
+        if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
+            int i;
+            uint32_t parent_rights = 0;
 
-    LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
+            if (dir->d_did == DIRDID_ROOT_PARENT) {
+                /* use volume path */
+                EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
+            } else {
+                /* build path for parent */
+                EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
+                EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
+                EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
+                EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
+                EC_ZERO_LOG_ERR(binsertch(parent, i, 1, 0), AFPERR_MISC);
+            }
 
-    /*
-     * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
-     * directory. As it seems the 10.6 AFP client is puzzled when this right is not
-     * allowed where a delete would succeed because the parent dir gives write perms.
-     * So we check the parent dir for write access and set the right accordingly.
-     * Currentyl acl2ownermode calls us with dir = NULL, because it doesn't make sense
-     * there to do this extra check -- afaict.
-     */
-    if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
-        int i;
-        uint32_t parent_rights = 0;
+            LOG(log_debug, logtype_afpd,"parent: %s", cfrombstr(parent));
+            EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
 
-        if (dir->d_did == DIRDID_ROOT_PARENT) {
-            /* use volume path */
-            EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
-        } else {
-            /* build path for parent */
-            EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
-            EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(binsertch(parent, i, 1, 0), AFPERR_MISC);
+#ifdef HAVE_SOLARIS_ACLS
+            EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
+#endif
+#ifdef HAVE_POSIX_ACLS
+            EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+#endif
+            if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
+                allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
         }
-
-        LOG(log_debug, logtype_afpd,"parent: %s", cfrombstr(parent));
-        EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
-
-#ifdef HAVE_SOLARIS_ACLS
-        EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
-#endif
-#ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
-#endif
-        if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
-            allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
+        LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
+        dir->d_rights_cache = allowed_rights;
     }
 
     if ((requested_rights & allowed_rights) != requested_rights) {

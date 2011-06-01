@@ -28,8 +28,8 @@
 #include <sys/param.h>
 #include <arpa/inet.h>
 #include <atalk/adouble.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "volume.h"
 #include "directory.h"
 

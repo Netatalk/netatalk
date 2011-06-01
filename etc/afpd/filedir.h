@@ -2,7 +2,7 @@
 #define AFPD_FILEDIR_H 1
 
 #include <sys/stat.h>
-#include "globals.h"
+#include <atalk/globals.h>
 #include "volume.h"
 
 extern struct afp_options default_options;

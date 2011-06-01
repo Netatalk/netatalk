@@ -386,6 +386,25 @@ Maximum possible entries in the directory cache\&. The cache stores directories 
 Default size is 8192, maximum size is 131072\&. Given value is rounded up to nearest power of 2\&. Each entry takes about 100 bytes, which is not much, but remember that every afpd child process for every connected user has its cache\&.
 .RE
 .PP
+\-fcelistener \fIhost[:port]\fR
+.RS 4
+Enables sending FCE events to the specified
+\fIhost\fR, default
+\fIport\fR
+is 12250 if not specified\&. Specifying mutliple listeners is done by having this option once for each of them\&.
+.RE
+.PP
+\-fceevents \fIfmod,fdel,ddel,fcre,dcre,tmsz\fR
+.RS 4
+Speficies which FCE events are active, default is
+\fIfmod,fdel,ddel,fcre,dcre\fR\&.
+.RE
+.PP
+\-fcecoalesce \fIall|delete|create\fR
+.RS 4
+Coalesce FCE events\&.
+.RE
+.PP
 \-guestname \fI[name]\fR
 .RS 4
 Specifies the user that guests should use (default is "nobody")\&. The name should be quoted\&.
@@ -401,6 +420,11 @@ Specifies the user that guests should use (default is "nobody")\&. The name shou
 Sets a message to be displayed when clients logon to the server\&. The message should be in
 \fBunixcodepage\fR
 and should be quoted\&. Extended characters are allowed\&.
+.RE
+.PP
+\-mimicmodel \fImodel\fR
+.RS 4
+Specifies the icon model that appears on clients\&. Defaults to off\&. Examples: RackMac (same as Xserve), PowerBook, PowerMac, Macmini, iMac, MacBook, MacBookPro, MacBookAir, MacPro, AppleTV1,1, AirPort\&.
 .RE
 .PP
 \-nodebug

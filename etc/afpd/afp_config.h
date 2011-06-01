@@ -2,8 +2,7 @@
 #define AFPD_CONFIG_H 1
 
 #include <atalk/server_child.h>
-
-#include "globals.h"
+#include <atalk/globals.h>
 
 typedef struct AFPConfig {
     AFPObj obj;

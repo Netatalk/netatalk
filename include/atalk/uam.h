@@ -76,6 +76,8 @@ struct session_info {
   size_t  cryptedkey_len;
   void    *sessiontoken;        /* session token sent to the client on FPGetSessionToken*/
   size_t  sessiontoken_len;
+  void    *clientid;          /* whole buffer cotaining eg idlen, id and boottime */
+  size_t  clientid_len;
 };
 
 /* register and unregister uams with these functions */

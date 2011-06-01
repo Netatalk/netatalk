@@ -11,7 +11,7 @@
 #include <pwd.h>
 
 #include <atalk/uam.h>
-#include "globals.h"
+#include <atalk/globals.h>
 
 struct uam_mod {
     void *uam_module;

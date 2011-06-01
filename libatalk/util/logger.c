@@ -542,6 +542,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     if (type_configs[logtype].level >= log_debug)
         goto log; /* bypass flooding checks */
 
+    goto log;
     /* Prevent flooding: hash the message and check if we got the same one recently */
     int hash = hash_message(temp_buffer) + log_src_linenumber;
 

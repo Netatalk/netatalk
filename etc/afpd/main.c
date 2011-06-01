@@ -18,10 +18,10 @@
 #include <sys/poll.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
-#include <netatalk/at.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/afp.h>
@@ -31,12 +31,12 @@
 #include <atalk/server_ipc.h>
 #include <atalk/errchk.h>
 #include <atalk/locking.h>
+#include <atalk/globals.h>
 
 #include "event2/event.h"
 #include "event2/http.h"
 #include "event2/rpc.h"
 
-#include "globals.h"
 #include "afp_config.h"
 #include "status.h"
 #include "fork.h"
@@ -65,7 +65,7 @@ static struct pollfd *fdset;
 static struct polldata *polldata;
 static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
-
+static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
 
 #ifdef TRU64
 void afp_get_cmdline( int *ac, char ***av)
@@ -96,6 +96,7 @@ static void fd_set_listening_sockets(void)
             continue;
         fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd, LISTEN_FD, config);
     }
+    fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd, DISASOCIATED_IPC_FD, NULL);
 }
  
 static void fd_reset_listening_sockets(void)
@@ -107,17 +108,26 @@ static void fd_reset_listening_sockets(void)
             continue;
         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd);
     }
+    fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd);
 }
 
 /* ------------------ */
 static void afp_goaway(int sig)
 {
+    AFPConfig *config;
+
     switch( sig ) {
 
-    case SIGTERM :
-        LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
-        AFPConfig *config;
-
+    case SIGTERM:
+    case SIGQUIT:
+        switch (sig) {
+        case SIGTERM:
+            LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGTERM");
+            break;
+        case SIGQUIT:
+            LOG(log_note, logtype_afpd, "AFP Server shutting down on SIGQUIT, NOT disconnecting clients");
+            break;
+        }
         if (server_children)
             server_child_kill(server_children, CHILD_DSIFORK, sig);
 
@@ -178,6 +188,26 @@ static void child_handler(int sig _U_)
                 LOG(log_info, logtype_afpd, "child[%d]: died", pid);
         }
     }
+}
+
+static int setlimits(void)
+{
+    struct rlimit rlim;
+
+    if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+        LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
+        exit(1);
+    }
+    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < 65535) {
+        rlim.rlim_cur = 65535;
+        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < 65535)
+            rlim.rlim_max = 65535;
+        if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+            LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
+            exit(1);
+        }
+    }
+    return 0;
 }
 
 int main(int ac, char **av)
@@ -247,7 +277,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGTERM);
     sigaddset(&sv.sa_mask, SIGUSR1);
-    
+    sigaddset(&sv.sa_mask, SIGQUIT);    
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
@@ -260,6 +290,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGTERM);
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGQUIT);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
@@ -271,6 +302,7 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGTERM);
     sigaddset(&sv.sa_mask, SIGUSR1);
     sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGQUIT);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
@@ -283,8 +315,21 @@ int main(int ac, char **av)
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGUSR1);
     sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGQUIT);
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
+        LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
+        exit(EXITERR_SYS);
+    }
+
+    sigemptyset( &sv.sa_mask );
+    sigaddset(&sv.sa_mask, SIGALRM);
+    sigaddset(&sv.sa_mask, SIGHUP);
+    sigaddset(&sv.sa_mask, SIGUSR1);
+    sigaddset(&sv.sa_mask, SIGCHLD);
+    sigaddset(&sv.sa_mask, SIGTERM);
+    sv.sa_flags = SA_RESTART;
+    if (sigaction(SIGQUIT, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
         exit(EXITERR_SYS);
     }
@@ -324,9 +369,15 @@ int main(int ac, char **av)
 #endif
     
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
+    disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
     fd_set_listening_sockets();
 
+    /* set limits */
+    (void)setlimits();
+
     afp_child_t *child;
+    int fd[2];  /* we only use one, but server_child_add expects [2] */
+    pid_t pid;
 
     /* wait for an appleshare connection. parent remains in the loop
      * while the children get handled by afp_over_{asp,dsi}.  this is
@@ -378,8 +429,9 @@ int main(int ac, char **av)
         }
 
         for (int i = 0; i < fdset_used; i++) {
-            if (fdset[i].revents & POLLIN) {
+            if (fdset[i].revents & (POLLIN | POLLERR | POLLHUP)) {
                 switch (polldata[i].fdtype) {
+
                 case LISTEN_FD:
                     config = (AFPConfig *)polldata[i].data;
                     /* config->server_start is afp_config.c:dsi_start() for DSI */
@@ -388,15 +440,42 @@ int main(int ac, char **av)
                         fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0], IPC_FD, child);
                     }
                     break;
+
                 case IPC_FD:
                     child = (afp_child_t *)polldata[i].data;
                     LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]", child->pid);
+
                     if ((ret = ipc_server_read(server_children, child->ipc_fds[0])) == 0) {
                         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
                         close(child->ipc_fds[0]);
                         child->ipc_fds[0] = -1;
+                        if (child->disasociated) {
+                            LOG(log_note, logtype_afpd, "main: removing reattached child[%u]", child->pid);
+                            server_child_remove(server_children, CHILD_DSIFORK, child->pid);
+                        }
                     }
                     break;
+
+                case DISASOCIATED_IPC_FD:
+                    LOG(log_debug, logtype_afpd, "main: IPC reconnect request");
+                    if ((fd[0] = accept(disasociated_ipc_fd, NULL, NULL)) == -1) {
+                        LOG(log_error, logtype_afpd, "main: accept: %s", strerror(errno));
+                        break;
+                    }
+                    if (readt(fd[0], &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
+                        LOG(log_error, logtype_afpd, "main: readt: %s", strerror(errno));
+                        close(fd[0]);
+                    }
+                    LOG(log_note, logtype_afpd, "main: IPC reconnect from [%u]", pid);
+                    if ((child = server_child_add(server_children, CHILD_DSIFORK, pid, fd)) == NULL) {
+                        LOG(log_error, logtype_afpd, "main: server_child_add");
+                        close(fd[0]);
+                        break;
+                    }
+                    child->disasociated = 1;
+                    fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd[0], IPC_FD, child);
+                    break;
+
                 default:
                     LOG(log_debug, logtype_afpd, "main: IPC request for unknown type");
                     break;

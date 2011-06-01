@@ -594,13 +594,27 @@ if test x"$with_acl_support" = x"yes" ; then
 					acl_perm_t perm;
 					return acl_get_perm_np(permset_d, perm);
 				],
-				[samba_cv_HAVE_ACL_GET_PERM_NP=yes],
-				[samba_cv_HAVE_ACL_GET_PERM_NP=no])
+				[netatalk_cv_HAVE_ACL_GET_PERM_NP=yes],
+				[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
 				LIBS=$acl_LIBS
 			])
 			if test x"netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
 				AC_DEFINE(HAVE_ACL_GET_PERM_NP,1,[Whether acl_get_perm_np() is available])
 			fi
+
+
+                       AC_CACHE_CHECK([for acl_from_mode], netatalk_cv_HAVE_ACL_FROM_MODE,[
+                               acl_LIBS=$LIBS
+                               LIBS="$LIBS $ACL_LIBS"
+                AC_CHECK_FUNCS(acl_from_mode,
+                               [netatalk_cv_HAVE_ACL_FROM_MODE=yes],
+                               [netatalk_cv_HAVE_ACL_FROM_MODE=no])
+                               LIBS=$acl_LIBS
+                       ])
+                       if test x"netatalk_cv_HAVE_ACL_FROM_MODE" = x"yes"; then
+                               AC_DEFINE(HAVE_ACL_FROM_MODE,1,[Whether acl_from_mode() is available])
+                       fi
+
 		else
 			AC_MSG_NOTICE(ACL support is not avaliable)
 			AC_DEFINE(HAVE_NO_ACLS,1,[Whether no ACLs support is available])
@@ -610,6 +624,7 @@ if test x"$with_acl_support" = x"yes" ; then
 fi
 
 if test x"$with_acl_support" = x"yes" ; then
+   AC_CHECK_HEADERS([acl/libacl.h])
     AC_DEFINE(HAVE_ACLS,1,[Whether ACLs support is available])
     AC_SUBST(ACL_LIBS)
 fi

@@ -47,13 +47,13 @@
 #include <atalk/util.h>
 #include <atalk/bstradd.h>
 #include <atalk/unicode.h>
+#include <atalk/globals.h>
 
 #include "desktop.h"
 #include "directory.h"
 #include "dircache.h"
 #include "file.h"
 #include "volume.h"
-#include "globals.h"
 #include "filedir.h"
 #include "fork.h"
 
