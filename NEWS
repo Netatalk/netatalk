@@ -4,6 +4,7 @@ Changes in 2.2
 * NEW: afpd: new volume option "nonetids"
 * NEW: afpd: ACL access check caching
 * NEW: afpd: FCE event notifications
+* NEW: afpd: new option "-mimicmodel" for specifying Bonjour model registration
 * UPD: Support for Berkeley DB 5.1
 * UPD: case-conversion is based on Unicode 6.0.0
 * UPD: cnid_metad: allow up to 4096 volumes
