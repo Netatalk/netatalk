@@ -1,4 +1,5 @@
 * NEW: afpd: FCE event notifications
+* NEW: afpd: new option "-mimicmodel" for specifying Bonjour model registration
 
 Changes in 2.2beta4
 ===================

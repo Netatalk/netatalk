@@ -140,6 +140,8 @@ void afp_options_free(struct afp_options *opt,
 	free(opt->ntseparator);
     if (opt->logconfig && (opt->logconfig != save->logconfig))
 	free(opt->logconfig);
+	if (opt->mimicmodel && (opt->mimicmodel != save->mimicmodel))
+	free(opt->mimicmodel);
 }
 
 /* initialize options */
@@ -190,6 +192,7 @@ void afp_options_init(struct afp_options *options)
     options->tcp_sndbuf = 0;    /* 0 means don't change OS default */
     options->tcp_rcvbuf = 0;    /* 0 means don't change OS default */
     options->dsireadbuf = 12;
+	options->mimicmodel = NULL;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -491,6 +494,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		LOG(log_note, logtype_afpd, "Fce events: %s", c);
 		fce_set_events(c);
 	}
+
+    if ((c = getoption(buf, "-mimicmodel")) && (opt = strdup(c)))
+       options->mimicmodel = opt;
 
     return 1;
 }
