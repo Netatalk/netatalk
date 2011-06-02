@@ -9,7 +9,7 @@
 #define VOLINFOFILE ".volinfo"
 
 typedef struct {
-    const u_int32_t option;
+    const uint32_t option;
     const char      *name;
 } vol_opt_name_t;
 

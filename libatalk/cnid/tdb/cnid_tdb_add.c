@@ -38,12 +38,12 @@ static void make_devino_data(unsigned char *buf, dev_t dev, ino_t ino)
     buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;    
 }
 
-unsigned char *make_tdb_data(u_int32_t flags, const struct stat *st,const cnid_t did,
+unsigned char *make_tdb_data(uint32_t flags, const struct stat *st,const cnid_t did,
                      const char *name, const size_t len)
 {
     static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
     unsigned char *buf = start  +CNID_LEN;
-    u_int32_t i;
+    uint32_t i;
 
     if (len > MAXPATHLEN)
         return NULL;

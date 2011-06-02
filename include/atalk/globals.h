@@ -58,7 +58,7 @@ struct afp_options {
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
-    u_int32_t server_quantum;
+    uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
     char *uampath, *fqdn;

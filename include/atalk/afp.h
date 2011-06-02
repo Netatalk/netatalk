@@ -26,7 +26,7 @@
 
 #include <sys/types.h>
 
-typedef u_int16_t AFPUserBytes;
+typedef uint16_t AFPUserBytes;
 
 /* protocols */
 #define AFPPROTO_ASP           1

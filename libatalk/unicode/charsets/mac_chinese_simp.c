@@ -43,20 +43,20 @@ struct charset_functions charset_mac_chinese_simp = {
   NULL, NULL
 };
 
-static size_t mac_chinese_simp_char_push(u_int8_t* out, const ucs2_t* in, size_t* size)
+static size_t mac_chinese_simp_char_push(uint8_t* out, const ucs2_t* in, size_t* size)
 {
   ucs2_t wc = in[0];
 
   if (wc <= 0x7f) {
     *size = 1;
-    out[0] = (u_int8_t)wc;
+    out[0] = (uint8_t)wc;
     return 1;
   } else if ((wc & 0xf000) == 0xe000) {
     *size = 1;
     return 0;
   } else if (*size >= 2 && (in[1] & ~15) == 0xf870) {
     ucs2_t comp = cjk_compose(wc, in[1], mac_chinese_simp_compose,
-			      sizeof(mac_chinese_simp_compose) / sizeof(u_int32_t));
+			      sizeof(mac_chinese_simp_compose) / sizeof(uint32_t));
     if (comp) {
       wc = comp;
       *size = 2;
@@ -77,9 +77,9 @@ static size_t mac_chinese_simp_push(void *cd, char **inbuf, size_t *inbytesleft,
 			  cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
-static size_t mac_chinese_simp_char_pull(ucs2_t* out, const u_int8_t* in, size_t* size)
+static size_t mac_chinese_simp_char_pull(ucs2_t* out, const uint8_t* in, size_t* size)
 {
-  u_int16_t c = in[0];
+  uint16_t c = in[0];
 
   if (c <= 0x7f) {
     *size = 1;
@@ -87,7 +87,7 @@ static size_t mac_chinese_simp_char_pull(ucs2_t* out, const u_int8_t* in, size_t
     return 1;
   } else if (c >= 0xa1 && c <= 0xfc) {
     if (*size >= 2) {
-      u_int8_t c2 = in[1];
+      uint8_t c2 = in[1];
 
       if (c2 >= 0xa1 && c2 <= 0xfe) {
 	*size = 2;

@@ -143,7 +143,7 @@
 
 #define RFORK_EA_ALLOCSIZE (128*1024) /* 128k */
 
-typedef u_int32_t cnid_t;
+typedef uint32_t cnid_t;
 
 struct ad_entry {
     uint32_t   ade_off;
@@ -185,8 +185,8 @@ struct adouble_fops {
 };
 
 struct adouble {
-    u_int32_t           ad_magic;         /* Official adouble magic                   */
-    u_int32_t           ad_version;       /* Official adouble version number          */
+    uint32_t            ad_magic;         /* Official adouble magic                   */
+    uint32_t            ad_version;       /* Official adouble version number          */
     char                ad_filler[16];
     struct ad_entry     ad_eid[ADEID_MAX];
     struct ad_fd        ad_data_fork;     /* the data fork                            */
@@ -441,8 +441,8 @@ extern int       ad_setattr(const struct adouble *, uint16_t);
 extern int       ad_getattr(const struct adouble *, uint16_t *);
 extern int       ad_setname(struct adouble *, const char *);
 extern int       ad_setid(struct adouble *, dev_t dev, ino_t ino, uint32_t, uint32_t, const void *);
-extern u_int32_t ad_getid(struct adouble *, dev_t, ino_t, cnid_t, const void *);
-extern u_int32_t ad_forcegetid(struct adouble *adp);
+extern uint32_t  ad_getid(struct adouble *, dev_t, ino_t, cnid_t, const void *);
+extern uint32_t  ad_forcegetid(struct adouble *adp);
 
 #ifdef WITH_SENDFILE
 extern int ad_readfile_init(const struct adouble *ad, int eid, off_t *off, int end);

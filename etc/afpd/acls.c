@@ -836,7 +836,7 @@ static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
     EC_INIT;
     int mapped_aces = 0;
     int dirflag;
-    uint32_t *darwin_ace_count = (u_int32_t *)rbuf;
+    uint32_t *darwin_ace_count = (uint32_t *)rbuf;
 #ifdef HAVE_SOLARIS_ACLS
     int ace_count = 0;
     ace_t *aces = NULL;

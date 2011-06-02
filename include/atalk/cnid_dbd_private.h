@@ -56,7 +56,7 @@ struct cnid_dbd_rply {
 };
 
 typedef struct CNID_private {
-    u_int32_t magic;
+    uint32_t magic;
     char      db_dir[MAXPATHLEN + 1]; /* Database directory without /.AppleDB appended */
     char      *cnidserver;
     char      *cnidport;

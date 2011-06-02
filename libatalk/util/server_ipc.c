@@ -69,8 +69,8 @@ static int ipc_kill_token(struct ipc_header *ipc, server_child *children)
 /* ----------------- */
 static int ipc_get_session(struct ipc_header *ipc, server_child *children)
 {
-    u_int32_t boottime;
-    u_int32_t idlen;
+    uint32_t boottime;
+    uint32_t idlen;
     char     *clientid, *p;
 
     

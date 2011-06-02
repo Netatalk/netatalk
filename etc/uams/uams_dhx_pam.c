@@ -58,14 +58,14 @@
 /* the secret key */
 static CAST_KEY castkey;
 static struct passwd *dhxpwd;
-static u_int8_t randbuf[KEYSIZE];
+static uint8_t randbuf[KEYSIZE];
 
 /* diffie-hellman bits */
 static unsigned char msg2_iv[] = "CJalbert";
 static unsigned char msg3_iv[] = "LWallace";
-static const u_int8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
+static const uint8_t p[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
 			     0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B};
-static const u_int8_t g = 0x07;
+static const uint8_t g = 0x07;
 
 
 /* Static variables used to communicate between the conversation function
@@ -187,7 +187,7 @@ static struct pam_conv PAM_conversation = {
 static int dhx_setup(void *obj, char *ibuf, size_t ibuflen _U_, 
 		     char *rbuf, size_t *rbuflen)
 {
-    u_int16_t sessid;
+    uint16_t sessid;
     size_t i;
     BIGNUM *bn, *gbn, *pbn;
     DH *dh;
@@ -377,7 +377,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     char *username;
     int len;
     size_t ulen;
-    u_int16_t  temp16;
+    uint16_t  temp16;
 
     *rbuflen = 0;
 
@@ -413,7 +413,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 {
     const char *hostname;
     BIGNUM *bn1, *bn2, *bn3;
-    u_int16_t sessid;
+    uint16_t sessid;
     int err, PAM_error;
 
     *rbuflen = 0;
@@ -573,7 +573,7 @@ static int pam_changepw(void *obj, char *username,
     char *hostname;
     pam_handle_t *lpamh;
     uid_t uid;
-    u_int16_t sessid;
+    uint16_t sessid;
     int PAM_error;
 
     if (ibuflen < sizeof(sessid)) {

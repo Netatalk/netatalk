@@ -265,7 +265,7 @@ int start = off;
 }
 
 /* ------------------ */
-static int ad_fcntl_lock(struct adouble *ad, const u_int32_t eid, const int locktype,
+static int ad_fcntl_lock(struct adouble *ad, const uint32_t eid, const int locktype,
                          const off_t off, const off_t len, const int fork)
 {
 #if 0
@@ -456,7 +456,7 @@ static int testlock(struct ad_fd *adf, off_t off, off_t len)
 
 /* -------------------------
 */
-static int ad_fcntl_tmplock(struct adouble *ad, const u_int32_t eid, const int locktype,
+static int ad_fcntl_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
                             const off_t off, const off_t len, const int fork)
 {
   struct flock lock;
@@ -575,7 +575,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
    - there's no locks held by another process (clients)
    - or we already know the answer and don't need to test.
 */
-uint16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
+uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
 {
     return 0;
 #if 0
@@ -637,7 +637,7 @@ uint16_t ad_openforks(struct adouble *ad, u_int16_t attrbits)
    the fork is opened in Read Write, Deny Read, Deny Write mode
    lock the whole file once   
 */
-int ad_excl_lock(struct adouble *ad, const u_int32_t eid)
+int ad_excl_lock(struct adouble *ad, const uint32_t eid)
 {
     return 0;
 #if 0

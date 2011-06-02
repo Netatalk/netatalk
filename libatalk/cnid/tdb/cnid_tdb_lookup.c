@@ -15,9 +15,9 @@ cnid_t cnid_tdb_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, 
     int devino = 1, didname = 1;
     char dev[CNID_DEV_LEN];
     char ino[CNID_INO_LEN];  
-    u_int32_t type_devino  = (unsigned)-1;
-    u_int32_t type_didname = (unsigned)-1;
-    u_int32_t type;
+    uint32_t type_devino  = (unsigned)-1;
+    uint32_t type_didname = (unsigned)-1;
+    uint32_t type;
     int update = 0;
     cnid_t id_devino = 0, id_didname = 0,id = 0;
 

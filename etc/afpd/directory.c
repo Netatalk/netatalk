@@ -696,7 +696,7 @@ int caseenumerate(const struct vol *vol, struct path *path, struct dir *dir)
     DIR               *dp;
     struct dirent     *de;
     int               ret;
-    static u_int32_t  did = 0;
+    static uint32_t  did = 0;
     static char       cname[MAXPATHLEN];
     static char       lname[MAXPATHLEN];
     ucs2_t        u2_path[MAXPATHLEN];
@@ -1129,8 +1129,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     struct dir  *cdir;
     char        *data, *p;
     int         len;
-    u_int32_t   hint;
-    u_int16_t   len16;
+    uint32_t   hint;
+    uint16_t   len16;
     int         size = 0;
     int         toUTF8 = 0;
 
@@ -1442,7 +1442,7 @@ int file_access(struct path *path, int mode)
 }
 
 /* --------------------- */
-void setdiroffcnt(struct dir *dir, struct stat *st,  u_int32_t count)
+void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
 {
     dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
@@ -1464,7 +1464,7 @@ int dirreenumerate(struct dir *dir, struct stat *st)
 */
 
 int getdirparams(const struct vol *vol,
-                 u_int16_t bitmap, struct path *s_path,
+                 uint16_t bitmap, struct path *s_path,
                  struct dir *dir,
                  char *buf, size_t *buflen )
 {
@@ -1472,10 +1472,10 @@ int getdirparams(const struct vol *vol,
     struct adouble  ad;
     char        *data, *l_nameoff = NULL, *utf_nameoff = NULL;
     int         bit = 0, isad = 0;
-    u_int32_t           aint;
-    u_int16_t       ashort;
+    uint32_t           aint;
+    uint16_t       ashort;
     int                 ret;
-    u_int32_t           utf8 = 0;
+    uint32_t           utf8 = 0;
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
@@ -1585,13 +1585,13 @@ int getdirparams(const struct vol *vol,
             if (dir->d_m_name) /* root of parent can have a null name */
                 l_nameoff = data;
             else
-                memset(data, 0, sizeof(u_int16_t));
-            data += sizeof( u_int16_t );
+                memset(data, 0, sizeof(uint16_t));
+            data += sizeof( uint16_t );
             break;
 
         case DIRPBIT_SNAME :
-            memset(data, 0, sizeof(u_int16_t));
-            data += sizeof( u_int16_t );
+            memset(data, 0, sizeof(uint16_t));
+            data += sizeof( uint16_t );
             break;
 
         case DIRPBIT_DID :
@@ -1646,8 +1646,8 @@ int getdirparams(const struct vol *vol,
                 if (dir->d_m_name) /* root of parent can have a null name */
                     utf_nameoff = data;
                 else
-                    memset(data, 0, sizeof(u_int16_t));
-                data += sizeof( u_int16_t );
+                    memset(data, 0, sizeof(uint16_t));
+                data += sizeof( uint16_t );
                 aint = 0;
                 memcpy(data, &aint, sizeof( aint ));
                 data += sizeof( aint );
@@ -1730,8 +1730,8 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     struct vol  *vol;
     struct dir  *dir;
     struct path *path;
-    u_int16_t   vid, bitmap;
-    u_int32_t   did;
+    uint16_t   vid, bitmap;
+    uint32_t   did;
     int     rc;
 
     *rbuflen = 0;
@@ -1786,7 +1786,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
  *
  * assume path == '\0' eg. it's a directory in canonical form
  */
-int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *buf )
+int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *buf )
 {
     struct maccess  ma;
     struct adouble  ad;
@@ -1798,16 +1798,16 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
     int         bit, isad = 1;
     int                 cdate, bdate;
     int                 owner, group;
-    u_int16_t       ashort, bshort, oshort;
+    uint16_t       ashort, bshort, oshort;
     int                 err = AFP_OK;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
     int                 newdate = 0;
-    u_int16_t           bitmap = d_bitmap;
+    uint16_t           bitmap = d_bitmap;
     u_char              finder_buf[32];
-    u_int32_t       upriv;
+    uint32_t       upriv;
     mode_t              mpriv = 0;
-    u_int16_t           upriv_bit = 0;
+    uint16_t           upriv_bit = 0;
 
     bit = 0;
     upath = path->u_name;
@@ -1980,7 +1980,7 @@ int setdirparams(struct vol *vol, struct path *path, u_int16_t d_bitmap, char *b
         case DIRPBIT_FINFO :
             if (isad) {
                 /* Fixes #2802236 */
-                u_int16_t *fflags = (u_int16_t *)(finder_buf + FINDERINFO_FRFLAGOFF);
+                uint16_t *fflags = (uint16_t *)(finder_buf + FINDERINFO_FRFLAGOFF);
                 *fflags &= htons(~FINDERINFO_ISHARED);
                 /* #2802236 end */
                 if (  dir->d_did == DIRDID_ROOT ) {
@@ -2125,8 +2125,8 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     int                  dfd;
     struct vol           *vol;
     struct dir           *dir;
-    u_int32_t            did;
-    u_int16_t            vid;
+    uint32_t            did;
+    uint16_t            vid;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -2214,8 +2214,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     struct dir      *dir;
     char        *upath;
     struct path         *s_path;
-    u_int32_t       did;
-    u_int16_t       vid;
+    uint32_t       did;
+    uint16_t       vid;
     int                 err;
 
     *rbuflen = 0;
@@ -2282,8 +2282,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     ad_close_metadata( &ad);
 
 createdir_done:
-    memcpy( rbuf, &dir->d_did, sizeof( u_int32_t ));
-    *rbuflen = sizeof( u_int32_t );
+    memcpy( rbuf, &dir->d_did, sizeof( uint32_t ));
+    *rbuflen = sizeof( uint32_t );
     setvoltime(obj, vol );
     return( AFP_OK );
 }
@@ -2353,7 +2353,7 @@ int deletecurdir(struct vol *vol)
     struct dir  *fdir, *pdir;
     DIR *dp;
     struct adouble  ad;
-    u_int16_t       ashort;
+    uint16_t       ashort;
     int err;
 
     if ((pdir = dirlookup(vol, curdir->d_pdid)) == NULL) {
@@ -2434,7 +2434,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     struct passwd   *pw;
     struct group    *gr;
     char        *name;
-    u_int32_t           id;
+    uint32_t           id;
     int         len, sfunc;
     int         utf8 = 0;
 
@@ -2528,7 +2528,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         len = strlen( name );
 
     if (utf8) {
-        u_int16_t tp = htons(len);
+        uint16_t tp = htons(len);
         memcpy(rbuf, &tp, sizeof(tp));
         rbuf += sizeof(tp);
         *rbuflen += 2;
@@ -2551,8 +2551,8 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     struct passwd   *pw;
     struct group    *gr;
     int             len, sfunc;
-    u_int32_t       id;
-    u_int16_t       ulen;
+    uint32_t       id;
+    uint16_t       ulen;
 
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
@@ -2639,8 +2639,8 @@ int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
 #if 0
     struct vol   *vol;
     struct dir   *dir;
-    u_int16_t    vid;
-    u_int32_t    did;
+    uint16_t    vid;
+    uint32_t    did;
 #endif /* 0 */
 
     *rbuflen = 0;
@@ -2675,8 +2675,8 @@ int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf, si
     struct vol      *vol;
     struct dir      *parentdir;
     struct path     *path;
-    u_int32_t       did;
-    u_int16_t       vid;
+    uint32_t       did;
+    uint16_t       vid;
 
     *rbuflen = 0;
     ibuf += 2;

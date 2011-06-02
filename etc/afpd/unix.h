@@ -202,11 +202,11 @@ extern long quotactl (unsigned int, const char *, int, caddr_t);
 
 #endif /* linux */
 
-extern int getnfsquota (struct vol *, const int, const u_int32_t,
-                                struct dqblk *);
+extern int getnfsquota (struct vol *, const int, const uint32_t,
+                        struct dqblk *);
 
 extern int uquota_getvolspace (struct vol *, VolSpace *, VolSpace *,
-                                       const u_int32_t);
+                               const uint32_t);
 #endif /* NO_QUOTA_SUPPORT */
 
 extern struct afp_options default_options;

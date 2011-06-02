@@ -74,7 +74,7 @@ static int status_server(char *data, const char *server, const struct afp_option
     char                *start = data;
     char                *Obj, *Type, *Zone;
     char		buf[32];
-    u_int16_t           status;
+    uint16_t           status;
     size_t		len;
 
     /* make room for all offsets before server name */
@@ -119,7 +119,7 @@ static int status_server(char *data, const char *server, const struct afp_option
 static void status_machine(char *data)
 {
     char                *start = data;
-    u_int16_t           status;
+    uint16_t           status;
     int			len;
 #ifdef AFS
     const char		*machine = "afs";
@@ -142,11 +142,11 @@ static void status_machine(char *data)
 }
 
 /* server signature is a 16-byte quantity */
-static u_int16_t status_signature(char *data, int *servoffset,
+static uint16_t status_signature(char *data, int *servoffset,
                                   const struct afp_options *options)
 {
     char                 *status;
-    u_int16_t            offset, sigoff;
+    uint16_t            offset, sigoff;
 
     status = data;
 
@@ -173,7 +173,7 @@ static size_t status_netaddress(char *data, int *servoffset,
                              const struct afp_options *options)
 {
     char               *begin;
-    u_int16_t          offset;
+    uint16_t          offset;
     size_t             addresses_len = 0;
 
     begin = data;
@@ -281,7 +281,7 @@ static size_t status_directorynames(char *data, int *diroffset,
 				 const struct afp_options *options)
 {
     char *begin = data;
-    u_int16_t offset;
+    uint16_t offset;
     memcpy(&offset, data + *diroffset, sizeof(offset));
     offset = ntohs(offset);
     data += offset;
@@ -321,9 +321,9 @@ static size_t status_directorynames(char *data, int *diroffset,
     }
 
     /* Calculate and store offset for UTF8ServerName */
-    *diroffset += sizeof(u_int16_t);
+    *diroffset += sizeof(uint16_t);
     offset = htons(data - begin);
-    memcpy(begin + *diroffset, &offset, sizeof(u_int16_t));
+    memcpy(begin + *diroffset, &offset, sizeof(uint16_t));
 
     /* return length of buffer */
     return (data - begin);
@@ -334,10 +334,10 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 				 const struct afp_options *options)
 {
     char *Obj, *Type, *Zone;
-    u_int16_t namelen;
+    uint16_t namelen;
     size_t len;
     char *begin = data;
-    u_int16_t offset, status;
+    uint16_t offset, status;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
@@ -367,7 +367,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     	data += sizeof(namelen);
     	data += len;
     	offset = htons(offset);
-    	memcpy(begin + *nameoffset, &offset, sizeof(u_int16_t));
+    	memcpy(begin + *nameoffset, &offset, sizeof(uint16_t));
     }
 
     /* return length of buffer */
@@ -381,7 +381,7 @@ static void status_icon(char *data, const unsigned char *icondata,
 {
     char                *start = data;
     char                *sigdata = data + sigoffset;
-    u_int16_t		ret, status;
+    uint16_t		ret, status;
 
     memcpy(&status, start + AFPSTATUS_ICONOFF, sizeof(status));
     if ( icondata == NULL ) {

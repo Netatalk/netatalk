@@ -70,6 +70,6 @@ extern int cnid_tdb_delete (struct _cnid_db *, const cnid_t);
 extern cnid_t cnid_tdb_nextid (struct _cnid_db *);
 
 /* construct db_cnid data. NOTE: this is not re-entrant.  */
-extern unsigned char *make_tdb_data(u_int32_t flags, const struct stat *st, const cnid_t did, const char *name, const size_t len);
+extern unsigned char *make_tdb_data(uint32_t flags, const struct stat *st, const cnid_t did, const char *name, const size_t len);
 
 #endif /* include/atalk/cnid_tdb.h */

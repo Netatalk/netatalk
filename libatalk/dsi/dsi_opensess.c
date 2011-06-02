@@ -33,7 +33,7 @@ static void dsi_init_buffer(DSI *dsi)
 /* OpenSession. set up the connection */
 void dsi_opensession(DSI *dsi)
 {
-  u_int32_t i = 0; /* this serves double duty. it must be 4-bytes long */
+  uint32_t i = 0; /* this serves double duty. it must be 4-bytes long */
   int offs;
 
   dsi_init_buffer(dsi);

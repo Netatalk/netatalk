@@ -67,6 +67,7 @@
 #define __location__ __FILE__ ":" __LINESTR__
 #endif
 
+#include <atalk/util.h>
 #include "atalk/tdb.h"
 
 /* #define TDB_TRACE 1 */

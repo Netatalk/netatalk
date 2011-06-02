@@ -122,8 +122,8 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
 #define SVALS(buf,pos) ((int16)SVAL(buf,pos))
 #define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
-#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((u_int16_t)(val)))
-#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((u_int32_t)(val)))
+#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
+#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))
 #define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
 
@@ -135,8 +135,8 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
 #define SVALS(buf,pos) ((int16)SVAL(buf,pos))
 #define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
-#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((u_int16_t)(val)))
-#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((u_int32_t)(val)))
+#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
+#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))
 #define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
 
@@ -152,18 +152,18 @@ it also defines lots of intermediate macros, just ignore those :-)
 */
 
 /* get single value from an SMB buffer */
-#define SVAL(buf,pos) (*(const u_int16_t *)((const char *)(buf) + (pos)))
-#define SVAL_NC(buf,pos) (*(u_int16_t *)((char *)(buf) + (pos))) /* Non const version of above. */
-#define IVAL(buf,pos) (*(const u_int32_t *)((const char *)(buf) + (pos)))
-#define IVAL_NC(buf,pos) (*(u_int32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define SVAL(buf,pos) (*(const uint16_t *)((const char *)(buf) + (pos)))
+#define SVAL_NC(buf,pos) (*(uint16_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define IVAL(buf,pos) (*(const uint32_t *)((const char *)(buf) + (pos)))
+#define IVAL_NC(buf,pos) (*(uint32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define SVALS(buf,pos) (*(const int16_t *)((const char *)(buf) + (pos)))
 #define SVALS_NC(buf,pos) (*(int16 *)((char *)(buf) + (pos))) /* Non const version of above. */
 #define IVALS(buf,pos) (*(const int32_t *)((const char *)(buf) + (pos)))
 #define IVALS_NC(buf,pos) (*(int32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
 
 /* store single value in an SMB buffer */
-#define SSVAL(buf,pos,val) SVAL_NC(buf,pos)=((u_int16_t)(val))
-#define SIVAL(buf,pos,val) IVAL_NC(buf,pos)=((u_int32_t)(val))
+#define SSVAL(buf,pos,val) SVAL_NC(buf,pos)=((uint16_t)(val))
+#define SIVAL(buf,pos,val) IVAL_NC(buf,pos)=((uint32_t)(val))
 #define SSVALS(buf,pos,val) SVALS_NC(buf,pos)=((int16)(val))
 #define SIVALS(buf,pos,val) IVALS_NC(buf,pos)=((int32_t)(val))
 

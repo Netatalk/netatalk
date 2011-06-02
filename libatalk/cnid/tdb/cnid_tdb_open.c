@@ -129,7 +129,7 @@ struct _cnid_db *cnid_tdb_open(struct cnid_open_args *args)
 
     data = tdb_fetch(db->tdb_didname, key);
     if (!data.dptr) {
-        u_int32_t version = htonl(DBVERSION);
+        uint32_t version = htonl(DBVERSION);
 
         data.dptr = (char *)&version;
         data.dsize = sizeof(version);

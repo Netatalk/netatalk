@@ -285,7 +285,7 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 	int min = 0;
 	int max = PRECOMP_COUNT - 1;
 	int mid;
-	u_int32_t sought = (base << 16) | comb, that;
+	uint32_t sought = (base << 16) | comb, that;
 
 	/* binary search */
 	while (max >= min) {
@@ -304,17 +304,17 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 }
 
 /* ------------------------ */
-static u_int32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp) 
+static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp) 
 {
 	int min = 0;
 	int max = PRECOMP_SP_COUNT - 1;
 	int mid;
-	u_int64_t sought_sp = ((u_int64_t)base_sp << 32) | (u_int64_t)comb_sp, that_sp;
+	uint64_t sought_sp = ((uint64_t)base_sp << 32) | (uint64_t)comb_sp, that_sp;
 
 	/* binary search */
 	while (max >= min) {
 		mid = (min + max) / 2;
-		that_sp = ((u_int64_t)precompositions_sp[mid].base_sp << 32) | ((u_int64_t)precompositions_sp[mid].comb_sp);
+		that_sp = ((uint64_t)precompositions_sp[mid].base_sp << 32) | ((uint64_t)precompositions_sp[mid].comb_sp);
 		if (that_sp < sought_sp) {
 			min = mid + 1;
 		} else if (that_sp > sought_sp) {
@@ -328,13 +328,13 @@ static u_int32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp
 }
 
 /* -------------------------- */
-static u_int32_t do_decomposition(ucs2_t base) 
+static uint32_t do_decomposition(ucs2_t base) 
 {
 	int min = 0;
 	int max = DECOMP_COUNT - 1;
 	int mid;
-	u_int32_t sought = base;
-	u_int32_t result, that;
+	uint32_t sought = base;
+	uint32_t result, that;
 
 	/* binary search */
 	while (max >= min) {
@@ -354,14 +354,14 @@ static u_int32_t do_decomposition(ucs2_t base)
 }
 
 /* -------------------------- */
-static u_int64_t do_decomposition_sp(unsigned int base_sp) 
+static uint64_t do_decomposition_sp(unsigned int base_sp) 
 {
 	int min = 0;
 	int max = DECOMP_SP_COUNT - 1;
 	int mid;
-	u_int32_t sought_sp = base_sp;
-	u_int32_t that_sp;
-	u_int64_t result_sp;
+	uint32_t sought_sp = base_sp;
+	uint32_t that_sp;
+	uint64_t result_sp;
 
 	/* binary search */
 	while (max >= min) {
@@ -372,7 +372,7 @@ static u_int64_t do_decomposition_sp(unsigned int base_sp)
 		} else if (that_sp > sought_sp) {
 			max = mid - 1;
 		} else {
-			result_sp = ((u_int64_t)decompositions_sp[mid].base_sp << 32) | ((u_int64_t)decompositions_sp[mid].comb_sp);
+			result_sp = ((uint64_t)decompositions_sp[mid].base_sp << 32) | ((uint64_t)decompositions_sp[mid].comb_sp);
 			return result_sp;
 		}
 	}
@@ -399,11 +399,11 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
 	size_t i;
 	ucs2_t base, comb;
-	u_int32_t base_sp, comb_sp;
+	uint32_t base_sp, comb_sp;
 	ucs2_t *in, *out;
 	ucs2_t lindex, vindex;
 	ucs2_t result;
-	u_int32_t result_sp;
+	uint32_t result_sp;
 	size_t o_len = *outlen;
 	
 	if (!inplen || (inplen & 1) || inplen > o_len)
@@ -454,9 +454,9 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		/* Binary Search for Surrogate Pair */
 		else if ((0xD800 <= base) && (base < 0xDC00)) {
 			if ((0xDC00 <= comb) && (comb < 0xE000) && (i + 4 <= inplen)) {
-				base_sp = ((u_int32_t)base << 16) | (u_int32_t)comb;
+				base_sp = ((uint32_t)base << 16) | (uint32_t)comb;
 				do {
-					comb_sp = ((u_int32_t)in[1] << 16) | (u_int32_t)in[2];
+					comb_sp = ((uint32_t)in[1] << 16) | (uint32_t)in[2];
 					if (result_sp = do_precomposition_sp(base_sp, comb_sp)) {
 						base_sp = result_sp;
 						i += 4;
@@ -508,11 +508,11 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	size_t i;
 	size_t comblen;
 	ucs2_t base, comb[COMBBUFLEN];
-	u_int32_t base_sp;
+	uint32_t base_sp;
 	ucs2_t sindex, tjamo;
 	ucs2_t *in, *out;
 	unsigned int result;
-	u_int64_t result_sp;
+	uint64_t result_sp;
 	size_t o_len = *outlen;
 
 	if (!inplen || (inplen & 1))
@@ -550,7 +550,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		/* Binary Search for Surrogate Pair */
 		else if ((0xD800 <= base) && (base < 0xDC00)) {
 			if (i + 2 < inplen) {
-				base_sp =  ((u_int32_t)base << 16) | (u_int32_t)in[1];
+				base_sp =  ((uint32_t)base << 16) | (uint32_t)in[1];
 				do {
 					if ( !(result_sp = do_decomposition_sp(base_sp))) break;
 					comblen += 2;

@@ -179,7 +179,7 @@ static uint32_t get_eid(uint32_t eid)
 static int new_ad_header(const char *path, struct adouble *ad, int adflags)
 {
     const struct entry  *eid;
-    u_int16_t           ashort;
+    uint16_t            ashort;
     struct stat         st;
 
     ad->ad_magic = AD_MAGIC;
@@ -276,7 +276,7 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
 static int ad_header_read(struct adouble *ad, struct stat *hst)
 {
     char                *buf = ad->ad_data;
-    u_int16_t           nentries;
+    uint16_t            nentries;
     int                 len;
     ssize_t             header_len;
     struct stat         st;

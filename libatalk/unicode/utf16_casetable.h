@@ -8,7 +8,7 @@ UnicodeData.txt is got from
 http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 */
 
-static const u_int16_t upper_table_1[704] = {
+static const uint16_t upper_table_1[704] = {
   0x0000, /*U+0000*/ /**/
   0x0001, /*U+0001*/ /**/
   0x0002, /*U+0002*/ /**/
@@ -715,7 +715,7 @@ static const u_int16_t upper_table_1[704] = {
   0x02BF, /*U+02BF*/ /**/
 };
 
-static const u_int16_t upper_table_2[640] = {
+static const uint16_t upper_table_2[640] = {
   0x0340, /*U+0340*/ /**/
   0x0341, /*U+0341*/ /**/
   0x0342, /*U+0342*/ /**/
@@ -1358,7 +1358,7 @@ static const u_int16_t upper_table_2[640] = {
   0x05BF, /*U+05BF*/ /**/
 };
 
-static const u_int16_t upper_table_3[64] = {
+static const uint16_t upper_table_3[64] = {
   0x1D40, /*U+1D40*/ /**/
   0x1D41, /*U+1D41*/ /**/
   0x1D42, /*U+1D42*/ /**/
@@ -1425,7 +1425,7 @@ static const u_int16_t upper_table_3[64] = {
   0x1D7F, /*U+1D7F*/ /**/
 };
 
-static const u_int16_t upper_table_4[512] = {
+static const uint16_t upper_table_4[512] = {
   0x1E00, /*U+1E00*/ /**/
   0x1E00, /*U+1E01*/ /*LATIN SMALL LETTER A WITH RING BELOW*/
   0x1E02, /*U+1E02*/ /**/
@@ -1940,7 +1940,7 @@ static const u_int16_t upper_table_4[512] = {
   0x1FFF, /*U+1FFF*/ /**/
 };
 
-static const u_int16_t upper_table_5[128] = {
+static const uint16_t upper_table_5[128] = {
   0x2140, /*U+2140*/ /**/
   0x2141, /*U+2141*/ /**/
   0x2142, /*U+2142*/ /**/
@@ -2071,7 +2071,7 @@ static const u_int16_t upper_table_5[128] = {
   0x21BF, /*U+21BF*/ /**/
 };
 
-static const u_int16_t upper_table_6[64] = {
+static const uint16_t upper_table_6[64] = {
   0x24C0, /*U+24C0*/ /**/
   0x24C1, /*U+24C1*/ /**/
   0x24C2, /*U+24C2*/ /**/
@@ -2138,7 +2138,7 @@ static const u_int16_t upper_table_6[64] = {
   0x24FF, /*U+24FF*/ /**/
 };
 
-static const u_int16_t upper_table_7[320] = {
+static const uint16_t upper_table_7[320] = {
   0x2C00, /*U+2C00*/ /**/
   0x2C01, /*U+2C01*/ /**/
   0x2C02, /*U+2C02*/ /**/
@@ -2461,7 +2461,7 @@ static const u_int16_t upper_table_7[320] = {
   0x2D3F, /*U+2D3F*/ /**/
 };
 
-static const u_int16_t upper_table_8[128] = {
+static const uint16_t upper_table_8[128] = {
   0xA640, /*U+A640*/ /**/
   0xA640, /*U+A641*/ /*CYRILLIC SMALL LETTER ZEMLYA*/
   0xA642, /*U+A642*/ /**/
@@ -2592,7 +2592,7 @@ static const u_int16_t upper_table_8[128] = {
   0xA6BF, /*U+A6BF*/ /**/
 };
 
-static const u_int16_t upper_table_9[192] = {
+static const uint16_t upper_table_9[192] = {
   0xA700, /*U+A700*/ /**/
   0xA701, /*U+A701*/ /**/
   0xA702, /*U+A702*/ /**/
@@ -2787,7 +2787,7 @@ static const u_int16_t upper_table_9[192] = {
   0xA7BF, /*U+A7BF*/ /**/
 };
 
-static const u_int16_t upper_table_10[64] = {
+static const uint16_t upper_table_10[64] = {
   0xFF40, /*U+FF40*/ /**/
   0xFF21, /*U+FF41*/ /*FULLWIDTH LATIN SMALL LETTER A*/
   0xFF22, /*U+FF42*/ /*FULLWIDTH LATIN SMALL LETTER B*/
@@ -2854,7 +2854,7 @@ static const u_int16_t upper_table_10[64] = {
   0xFF7F, /*U+FF7F*/ /**/
 };
 
-static const u_int32_t upper_table_sp_1[128] = {
+static const uint32_t upper_table_sp_1[128] = {
   0xD801DC00, /*0xD801DC00*/ /*U+010400*/ /*U+010400*/ /**/
   0xD801DC01, /*0xD801DC01*/ /*U+010401*/ /*U+010401*/ /**/
   0xD801DC02, /*0xD801DC02*/ /*U+010402*/ /*U+010402*/ /**/
@@ -2985,7 +2985,7 @@ static const u_int32_t upper_table_sp_1[128] = {
   0xD801DC7F, /*0xD801DC7F*/ /*U+01047F*/ /*U+01047F*/ /**/
 };
 
-static const u_int16_t lower_table_1[128] = {
+static const uint16_t lower_table_1[128] = {
   0x0000, /*U+0000*/ /**/
   0x0001, /*U+0001*/ /**/
   0x0002, /*U+0002*/ /**/
@@ -3116,7 +3116,7 @@ static const u_int16_t lower_table_1[128] = {
   0x007F, /*U+007F*/ /**/
 };
 
-static const u_int16_t lower_table_2[448] = {
+static const uint16_t lower_table_2[448] = {
   0x00E0, /*U+00C0*/ /*LATIN CAPITAL LETTER A WITH GRAVE*/
   0x00E1, /*U+00C1*/ /*LATIN CAPITAL LETTER A WITH ACUTE*/
   0x00E2, /*U+00C2*/ /*LATIN CAPITAL LETTER A WITH CIRCUMFLEX*/
@@ -3567,7 +3567,7 @@ static const u_int16_t lower_table_2[448] = {
   0x027F, /*U+027F*/ /**/
 };
 
-static const u_int16_t lower_table_3[576] = {
+static const uint16_t lower_table_3[576] = {
   0x0340, /*U+0340*/ /**/
   0x0341, /*U+0341*/ /**/
   0x0342, /*U+0342*/ /**/
@@ -4146,7 +4146,7 @@ static const u_int16_t lower_table_3[576] = {
   0x057F, /*U+057F*/ /**/
 };
 
-static const u_int16_t lower_table_4[128] = {
+static const uint16_t lower_table_4[128] = {
   0x1080, /*U+1080*/ /**/
   0x1081, /*U+1081*/ /**/
   0x1082, /*U+1082*/ /**/
@@ -4277,7 +4277,7 @@ static const u_int16_t lower_table_4[128] = {
   0x10FF, /*U+10FF*/ /**/
 };
 
-static const u_int16_t lower_table_5[512] = {
+static const uint16_t lower_table_5[512] = {
   0x1E01, /*U+1E00*/ /*LATIN CAPITAL LETTER A WITH RING BELOW*/
   0x1E01, /*U+1E01*/ /**/
   0x1E03, /*U+1E02*/ /*LATIN CAPITAL LETTER B WITH DOT ABOVE*/
@@ -4792,7 +4792,7 @@ static const u_int16_t lower_table_5[512] = {
   0x1FFF, /*U+1FFF*/ /**/
 };
 
-static const u_int16_t lower_table_6[192] = {
+static const uint16_t lower_table_6[192] = {
   0x2100, /*U+2100*/ /**/
   0x2101, /*U+2101*/ /**/
   0x2102, /*U+2102*/ /**/
@@ -4987,7 +4987,7 @@ static const u_int16_t lower_table_6[192] = {
   0x21BF, /*U+21BF*/ /**/
 };
 
-static const u_int16_t lower_table_7[128] = {
+static const uint16_t lower_table_7[128] = {
   0x2480, /*U+2480*/ /**/
   0x2481, /*U+2481*/ /**/
   0x2482, /*U+2482*/ /**/
@@ -5118,7 +5118,7 @@ static const u_int16_t lower_table_7[128] = {
   0x24FF, /*U+24FF*/ /**/
 };
 
-static const u_int16_t lower_table_8[256] = {
+static const uint16_t lower_table_8[256] = {
   0x2C30, /*U+2C00*/ /*GLAGOLITIC CAPITAL LETTER AZU*/
   0x2C31, /*U+2C01*/ /*GLAGOLITIC CAPITAL LETTER BUKY*/
   0x2C32, /*U+2C02*/ /*GLAGOLITIC CAPITAL LETTER VEDE*/
@@ -5377,7 +5377,7 @@ static const u_int16_t lower_table_8[256] = {
   0x2CFF, /*U+2CFF*/ /**/
 };
 
-static const u_int16_t lower_table_9[128] = {
+static const uint16_t lower_table_9[128] = {
   0xA641, /*U+A640*/ /*CYRILLIC CAPITAL LETTER ZEMLYA*/
   0xA641, /*U+A641*/ /**/
   0xA643, /*U+A642*/ /*CYRILLIC CAPITAL LETTER DZELO*/
@@ -5508,7 +5508,7 @@ static const u_int16_t lower_table_9[128] = {
   0xA6BF, /*U+A6BF*/ /**/
 };
 
-static const u_int16_t lower_table_10[192] = {
+static const uint16_t lower_table_10[192] = {
   0xA700, /*U+A700*/ /**/
   0xA701, /*U+A701*/ /**/
   0xA702, /*U+A702*/ /**/
@@ -5703,7 +5703,7 @@ static const u_int16_t lower_table_10[192] = {
   0xA7BF, /*U+A7BF*/ /**/
 };
 
-static const u_int16_t lower_table_11[64] = {
+static const uint16_t lower_table_11[64] = {
   0xFF00, /*U+FF00*/ /**/
   0xFF01, /*U+FF01*/ /**/
   0xFF02, /*U+FF02*/ /**/
@@ -5770,7 +5770,7 @@ static const u_int16_t lower_table_11[64] = {
   0xFF3F, /*U+FF3F*/ /**/
 };
 
-static const u_int32_t lower_table_sp_1[64] = {
+static const uint32_t lower_table_sp_1[64] = {
   0xD801DC28, /*0xD801DC00*/ /*U+010428*/ /*U+010400*/ /*DESERET CAPITAL LETTER LONG I*/
   0xD801DC29, /*0xD801DC01*/ /*U+010429*/ /*U+010401*/ /*DESERET CAPITAL LETTER LONG E*/
   0xD801DC2A, /*0xD801DC02*/ /*U+01042A*/ /*U+010402*/ /*DESERET CAPITAL LETTER LONG A*/
