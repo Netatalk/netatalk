@@ -64,7 +64,7 @@ install-config-files: $(CONFFILES) $(GENFILES)
 		fi; \
 	done
 if USE_DEBIAN
-	$(mkinstalldirs) $(DESTDIR)/default
+	$(mkinstalldirs) $(DESTDIR)/etc/default
 	if test "x$(OVERWRITE_CONFIG)" = "xyes" -o ! -f /etc/default/netatalk; then \
 		echo "$(INSTALL_DATA) $(srcdir)/netatalk.conf $(DESTDIR)/etc/default/netatalk"; \
 		$(INSTALL_DATA) $(srcdir)/netatalk.conf $(DESTDIR)/etc/default/netatalk; \
