@@ -125,6 +125,7 @@ Changes in 2.1.6
 * FIX: AppleDouble buffer overrun by extremely long filename
 * UPD: afpd: return version info with machine type in DSIGetStatus
 * UPD: dbd: use on-disk temporary rebuild db instead of in-memory db
+* UPD: suse: initscript update
 
 Changes in 2.1.5
 ================
