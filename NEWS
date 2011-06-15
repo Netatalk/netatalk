@@ -1,5 +1,6 @@
 * NEW: afpd: FCE event notifications
 * NEW: afpd: new option "-mimicmodel" for specifying Bonjour model registration
+* FIX: suse: initscript return better status
 
 Changes in 2.2beta4
 ===================
