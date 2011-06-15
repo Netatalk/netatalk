@@ -199,11 +199,8 @@ static void usage (void)
            "      Options: -c Don't create .AppleDouble stuff, only cleanup orphaned.\n"
            "               -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
            "                  only available for volumes without 'nocnidcache' option. Implies -e.\n\n"
-           "   -u Prepare upgrade:\n"
-           "      Before installing an upgraded version of Netatalk that is linked against\n"
-           "      a newer BerkeleyDB lib, run `dbd -u ...` from the OLD Netatalk pior to\n"
-           "      upgrading on all volumes. This removes the BerkleyDB environment.\n"
-           "      On exit cnid_dbd does this automatically, so normally calling dbd -u should not be necessary.\n\n"
+           "   -u Upgrade:\n"
+           "      Opens the database which triggers any necessary upgrades, then closes and exits.\n\n"
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
@@ -374,13 +371,6 @@ int main(int argc, char **argv)
             goto exit_failure;
     }
 
-    /* Prepare upgrade ? */
-    if (prep_upgrade) {
-        if (dbif_env_remove(dbpath))
-            goto exit_failure;
-        goto exit_success;
-    }        
-
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
@@ -420,6 +410,12 @@ int main(int argc, char **argv)
             dbif_close(dbd);
             goto exit_failure;
         }
+
+        /* Prepare upgrade ? We're done */
+        if (prep_upgrade) {
+            (void)dbif_txn_close(dbd, 1);
+            goto cleanup;
+        }
     }
 
     /* Downgrade db lock if not running exclusive */
@@ -441,6 +437,7 @@ int main(int argc, char **argv)
         }
     }
 
+cleanup:
     /* Cleanup */
     dbd_log(LOGDEBUG, "Closing db");
     if (! nocniddb) {
