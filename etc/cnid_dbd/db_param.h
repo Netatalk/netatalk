@@ -12,8 +12,8 @@
 
 #define DEFAULT_LOGFILE_AUTOREMOVE 1
 #define DEFAULT_CACHESIZE          (8 * 1024) /* KB, so 8 MB */
-#define DEFAULT_MAXLOCKS           5000
-#define DEFAULT_MAXLOCKOBJS        5000
+#define DEFAULT_MAXLOCKS           20000
+#define DEFAULT_MAXLOCKOBJS        20000
 #define DEFAULT_FLUSH_FREQUENCY    1000
 #define DEFAULT_FLUSH_INTERVAL     1800
 #define DEFAULT_USOCK_FILE         "usock"
