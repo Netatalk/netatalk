@@ -251,9 +251,9 @@ option\&. Implies
 .PP
 \-u
 .RS 4
-Prepare upgrade:
+Upgrade:
 .sp
-Before installing an upgraded version of Netatalk that is linked against a newer BerkeleyDB lib, run `dbd \-u \&.\&.\&.` from the OLD Netatalk pior to upgrading on all volumes\&. This removes the BerkleyDB environment\&. On exit cnid_dbd does this automatically, so normally calling dbd \-u should not be necessary !
+Opens the database which triggers any necessary upgrades, then closes and exits\&.
 .RE
 .SH "OPTIONS"
 .PP
