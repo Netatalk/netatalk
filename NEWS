@@ -1,3 +1,9 @@
+Changes in 2.2.1
+================
+
+* FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
+* FIX: afpd: increase BerkeleyDB locks and lockobjs
+
 Changes in 2.2
 ==============
 
