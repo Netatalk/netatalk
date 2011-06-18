@@ -110,14 +110,16 @@ case "$1" in
 	;;
     stop)
 	echo -n "Shutting down netatalk"
-	killproc -TERM :SBINDIR:/papd
+	if test -x :SBINDIR:/papd ; then
+	    killproc -TERM :SBINDIR:/papd
+	fi
 	if test -x :SBINDIR:/timelord ; then
-	  killproc -TERM :SBINDIR:/timelord
+	    killproc -TERM :SBINDIR:/timelord
 	fi
-	killproc -TERM :SBINDIR:/atalkd
-	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ] ; then
-	    killproc -TERM :SBINDIR:/cnid_metad
+	if test -x :SBINDIR:/atalkd ; then
+	    killproc -TERM :SBINDIR:/atalkd
 	fi
+	killproc -TERM :SBINDIR:/cnid_metad
 	killproc -TERM :SBINDIR:/afpd
 
 	rc_status -v
@@ -129,18 +131,22 @@ case "$1" in
 	;;
     status)
 	echo "Checking for netatalk services"
-	checkproc :SBINDIR:/papd && echo -n "papd: OK	" || echo -n "papd: No process	"
-	checkproc :SBINDIR:/afpd && echo -n " afpd: OK	" || echo -n " afpd: No process	"
-	if test -x :SBINDIR:/timelord ; then
-	  checkproc :SBINDIR:/timelord && echo -n " timelord: OK	" || echo -n " timelord: No process	"
+	if [ x"${ATALKD_RUN}" = x"yes" -a -x :SBINDIR:/atalkd ] ; then
+	    checkproc :SBINDIR:/atalkd && echo -n "atalkd: OK	" || echo -n "atalkd: No process	"
 	fi
-	if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ] ; then
-	    checkproc :SBINDIR:/cnid_metad && echo -n " cnid_metad: OK	" || echo -n " cnid_metad: No process"
+	if [ x"${PAPD_RUN}" = x"yes" -a -x :SBINDIR:/papd ] ; then
+	    checkproc :SBINDIR:/papd && echo -n "papd: OK	" || echo -n "papd: No process	"
 	fi
-checkproc :SBINDIR:/atalkd && echo "atalkd: OK" || echo "atalkd: No process"
-	# assume that atalkd is the "main" process ...
-	checkproc :SBINDIR:/atalkd
-	rc_status
+	if [ x"${TIMELORD_RUN}" = x"yes" -a -x :SBINDIR:/timelord ] ; then
+	    checkproc :SBINDIR:/timelord && echo -n   " timelord: OK	" || echo -n " timelord: No process	"
+	fi
+	if [ x"${CNID_METAD_RUN}" = x"yes" ] ; then
+	    checkproc :SBINDIR:/cnid_metad && echo -n " cnid_metad: OK	" || echo -n " cnid_metad: No process	"
+	fi
+	checkproc :SBINDIR:/afpd && echo "afpd: OK" || echo "afpd: No process"
+	# assume that afpd is the "main" process ...
+	checkproc :SBINDIR:/afpd
+	rc_status -v
 	;;
     *)
 	echo "Usage: $0 {start|stop|restart|status}"
