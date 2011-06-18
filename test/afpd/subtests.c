@@ -28,11 +28,11 @@
 #include <atalk/directory.h>
 #include <atalk/queue.h>
 #include <atalk/bstrlib.h>
+#include <atalk/globals.h>
 
 #include "directory.h"
 #include "dircache.h"
 #include "hash.h"
-#include "globals.h"
 #include "afp_config.h"
 #include "volume.h"
 
