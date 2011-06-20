@@ -25,6 +25,8 @@ test_SOURCES =  test.c subtests.c afpfunc_helpers.c \
 				$(top_builddir)/etc/afpd/directory.c \
 				$(top_builddir)/etc/afpd/enumerate.c \
 				$(top_builddir)/etc/afpd/extattrs.c \
+				$(top_builddir)/etc/afpd/fce_api.c \
+				$(top_builddir)/etc/afpd/fce_util.c \
 				$(top_builddir)/etc/afpd/file.c \
 				$(top_builddir)/etc/afpd/filedir.c \
 				$(top_builddir)/etc/afpd/fork.c \

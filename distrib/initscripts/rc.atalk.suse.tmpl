@@ -7,28 +7,14 @@
 # 
 ### BEGIN INIT INFO
 # Provides:       netatalk
-# Required-Start: $network $named $remote_fs $syslog
-# Required-Stop:
+# Required-Start: $local_fs
+# Required-Stop: $local_fs
+# Should-Start:  $network $named $remote_fs $syslog slpd
+# Should-Stop:   $remote_fs $network $syslog
 # Default-Start:  3 5
 # Default-Stop:
-# Description:    AFP over TCP and legacy Appletalk daemons
+# Description:    AFP over TCP and legacy AppleTalk daemons
 ### END INIT INFO
-
-test -f /etc/rc.config && {
-. /etc/rc.config
-
-# Determine the base and follow a runlevel link name.
-base=${0##*/}
-link=${base#*[SK][0-9][0-9]}
-
-# Force execution if not called by a runlevel directory.
-test $link = $base && START_ATALK=yes
-test "$START_ATALK" = "yes" || exit 0
-
-test -f /etc/rc.status && . /etc/rc.status
-# The echo return value for success (defined in /etc/rc.config).
-return=$rc_done
-}
 
 ATALK_NAME=`hostname|sed 's/\..*$//'`
 ATALK_UNIX_CHARSET='LOCALE'
@@ -48,44 +34,59 @@ TIMELORD_RUN=no
 ATALK_ZONE=
 ATALK_BGROUND=no
 
-
+. /etc/rc.status
 . :ETCDIR:/netatalk.conf
 
 # startup code for everything
 atalk_startup() {
     if [ x"${ATALKD_RUN}" != x"no" ]; then 
-	echo -n "  Starting atalkd:"
-	:SBINDIR:/atalkd
+	echo -n "  Starting atalkd ... "
+	:SBINDIR:/atalkd ; my_ec=$?
 
-	if [ -x :BINDIR:/nbprgstr ]; then	
+	if [ -x :BINDIR:/nbprgstr -a "$my_ec" = "0" ]; then	
+	    echo -n ".. "
 	    :BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:Workstation
+	    echo -n ". "
 	    :BINDIR:/nbprgstr -p 4 ${ATALK_NAME}:netatalk
-
 	fi	
+	if [ "$my_ec" != "0" ] ; then false ; fi
+	rc_status -v
+	
+	rc_reset
 
 	if [ x"${PAPD_RUN}" = x"yes"  -a -x :SBINDIR:/papd ]; then
-	    echo -n "  Starting papd:"
+	    echo -n "  Starting papd"
 	    :SBINDIR:/papd
+	    rc_status -v
 	fi
+
+	rc_reset
 
 	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x :SBINDIR:/timelord ]; then
 	    echo -n "  Starting timelord"
 	    :SBINDIR:/timelord
+	    rc_status -v
 	fi
+
+	rc_reset
 
     fi
 
     if [ x"${CNID_METAD_RUN}" = x"yes" -a -x :SBINDIR:/cnid_metad ] ; then
-	    echo -n "  Starting cnid_metad:"
-        startproc :SBINDIR:/cnid_metad $CNID_CONFIG
+	    echo -n "  Starting cnid_metad "
+	    startproc :SBINDIR:/cnid_metad ${CNID_CONFIG}
+	    rc_status -v
     fi
 
     if [ x"${AFPD_RUN}" = x"yes" -a -x :SBINDIR:/afpd ] ; then
-	    echo -n "  Starting afpd:"
-	    echo ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+	    echo -n "  Starting afpd ("
+	    echo -n ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
                -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
+	    echo -n ")"
 	    startproc :SBINDIR:/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
-               -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
+	    	${AFPD_OPTIONS} \
+               -c ${AFPD_MAX_CLIENTS} -n "${ATALK_NAME}${ATALK_ZONE}"
+	    rc_status -v
     fi
 
 	touch /var/lock/subsys/atalk 
@@ -93,41 +94,59 @@ atalk_startup() {
 
 case "$1" in
     start)
+	if test ! -z "$UID" -a "$UID" != 0 ; then
+		echo "you have to be root to start netatalk daemons"
+		rc_failed
+	else
 	if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then 
-	    echo "Starting netatalk in the background ... "
+	    echo -n "Starting netatalk in the background ..."
 	    atalk_startup >& /dev/null &
+	    rc_status -v
 	else
 	    echo "Starting netatalk (this may take a while) ..."
 	    atalk_startup
 	fi
+	fi
 	;;
     stop)
-	echo -n "Shutting down netatalk:"
-	killproc -TERM :SBINDIR:/papd
-        if test -x :SBINDIR:/timelord ; then
-	  killproc -TERM :SBINDIR:/timelord
-        fi        
-	killproc -TERM :SBINDIR:/atalkd
+	echo -n "Shutting down netatalk"
+	if test -x :SBINDIR:/papd ; then
+	    killproc -TERM :SBINDIR:/papd
+	fi
+	if test -x :SBINDIR:/timelord ; then
+	    killproc -TERM :SBINDIR:/timelord
+	fi
+	if test -x :SBINDIR:/atalkd ; then
+	    killproc -TERM :SBINDIR:/atalkd
+	fi
+	killproc -TERM :SBINDIR:/cnid_metad
 	killproc -TERM :SBINDIR:/afpd
-	if test -x :SBINDIR:/cnid_metad ; then
-	  killproc -TERM :SBINDIR:/cnid_metad
-        fi
-	echo -e "$return"
+
+	rc_status -v
 	;;
-    restart|reload)
-	$0 stop && $0 start || return=$rc_failed
+    restart|reload|force-reload)
+	$0 stop
+	$0 start
+	rc_status
 	;;
     status)
-	echo -n "Checking for service atalk:"
-	checkproc :SBINDIR:/papd && echo -n "OK" || echo -n "No process"
-	checkproc :SBINDIR:/afpd && echo -n "OK" || echo "No process"
-        if test -x :SBINDIR:/timelord ; then
-	  checkproc :SBINDIR:/timelord || return=$rc_failed
-        fi
-        if test -x :SBINDIR:/cnid_metad ; then
-	  checkproc :SBINDIR:/cnid_metad || return=$rc_failed
-        fi
-        checkproc :SBINDIR:/atalkd && echo "OK" || echo "No process"	
+	echo "Checking for netatalk services"
+	if [ x"${ATALKD_RUN}" = x"yes" -a -x :SBINDIR:/atalkd ] ; then
+	    checkproc :SBINDIR:/atalkd && echo -n "atalkd: OK	" || echo -n "atalkd: No process	"
+	fi
+	if [ x"${PAPD_RUN}" = x"yes" -a -x :SBINDIR:/papd ] ; then
+	    checkproc :SBINDIR:/papd && echo -n "papd: OK	" || echo -n "papd: No process	"
+	fi
+	if [ x"${TIMELORD_RUN}" = x"yes" -a -x :SBINDIR:/timelord ] ; then
+	    checkproc :SBINDIR:/timelord && echo -n   " timelord: OK	" || echo -n " timelord: No process	"
+	fi
+	if [ x"${CNID_METAD_RUN}" = x"yes" ] ; then
+	    checkproc :SBINDIR:/cnid_metad && echo -n " cnid_metad: OK	" || echo -n " cnid_metad: No process	"
+	fi
+	checkproc :SBINDIR:/afpd && echo "afpd: OK" || echo "afpd: No process"
+	# assume that afpd is the "main" process ...
+	checkproc :SBINDIR:/afpd
+	rc_status -v
 	;;
     *)
 	echo "Usage: $0 {start|stop|restart|status}"
@@ -135,7 +154,4 @@ case "$1" in
 	;;
 esac
 
-# Inform the caller not only verbosely and set an exit status.
-test "$return" = "$rc_done" || exit 1
-exit 0
-
+rc_exit
