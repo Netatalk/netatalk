@@ -24,6 +24,7 @@
 #ifndef _ATALK_AFP_H
 #define _ATALK_AFP_H 1
 
+#include <stdint.h>
 #include <sys/types.h>
 
 typedef uint16_t AFPUserBytes;

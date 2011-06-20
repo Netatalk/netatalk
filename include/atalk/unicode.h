@@ -2,6 +2,7 @@
 #define _ATALK_UNICODE_H 1
 
 #include <errno.h>
+#include <stdint.h>
 #include <sys/param.h>
 
 #define ucs2_t uint16_t
