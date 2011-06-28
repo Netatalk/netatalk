@@ -4,6 +4,8 @@ Changes in 2.2.1
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: afpd: increase BerkeleyDB locks and lockobjs
 * FIX: suse: initscript return better status
+* FIX: Sourcecode distribution: add missing headers
+* FIX: Solaris 10: missing dirfd replacement function
 
 Changes in 2.2
 ==============
