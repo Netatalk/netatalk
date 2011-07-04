@@ -21,7 +21,8 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-
+#include <unistd.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -475,6 +476,7 @@ int closevolinfo(struct volinfo *volinfo)
  */
 int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_port)
 {
+    uid_t process_uid;
     char buf[16348];
     char item[MAXPATHLEN];
     int fd;
@@ -487,9 +489,23 @@ int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_po
     strlcat (item, "/.AppleDesktop/", sizeof(item));
     strlcat (item, VOLINFOFILE, sizeof(item));
 
-    if ((fd = open( item, O_RDWR | O_CREAT , 0666)) <0 ) {
-        LOG(log_debug, logtype_afpd,"Error opening %s: %s", item, strerror(errno));
+    process_uid = geteuid();
+    if (process_uid) {
+        if (seteuid(0) == -1) {
+            process_uid = 0;
+        }
+    }
+
+    if ((fd = open(item, O_RDWR | O_CREAT , 0666)) <0 ) {
+        LOG(log_error, logtype_afpd,"Error opening %s: %s", item, strerror(errno));
         return (-1);
+    }
+
+    if (process_uid) {
+        if (seteuid(process_uid) == -1) {
+            LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+            exit(EXITERR_SYS);
+        }
     }
 
     /* try to get a lock */
