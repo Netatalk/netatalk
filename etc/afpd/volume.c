@@ -2737,12 +2737,27 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
 static void handle_special_folders (const struct vol * vol)
 {
     const _special_folder *p = &special_folders[0];
+    uid_t process_uid;
+
+    process_uid = geteuid();
+    if (process_uid) {
+        if (seteuid(0) == -1) {
+            process_uid = 0;
+        }
+    }
 
     if ((vol->v_flags & AFPVOL_RO))
         return;
 
     for (; p->name != NULL; p++) {
         create_special_folder (vol, p);
+    }
+
+    if (process_uid) {
+        if (seteuid(process_uid) == -1) {
+            LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+            exit(EXITERR_SYS);
+        }
     }
 }
 
