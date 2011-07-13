@@ -31,4 +31,7 @@ uninstall-local:
 		echo rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
 		rm -f $(DESTDIR)$(pkgconfdir)/$$f; \
 	done
+else
+install-data-local:
+uninstall-local:
 endif
