@@ -13,6 +13,7 @@
 #define AFPSTATUS_UAMSOFF     4
 #define AFPSTATUS_ICONOFF     6
 #define AFPSTATUS_FLAGOFF     8
+
 /* AFPSTATUS_PRELEN is the number of bytes for status data prior to 
  * the ServerName field.
  *
@@ -20,6 +21,7 @@
  * UAMCount, VolumeIconAndMask, and the 16-bit "Fixed" status flags.
  */
 #define AFPSTATUS_PRELEN     10
+
 /* AFPSTATUS_POSTLEN is the number of bytes for offset records
  * after the ServerName field.
  *
@@ -28,6 +30,9 @@
  */
 #define AFPSTATUS_POSTLEN     8
 #define AFPSTATUS_LEN        (AFPSTATUS_PRELEN + AFPSTATUS_POSTLEN)
+
+/* AFPSTATUS_MACHLEN is the number of characters for the MachineType. */
+#define AFPSTATUS_MACHLEN     16
 
 
 #define PASSWD_NONE     0

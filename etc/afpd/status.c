@@ -135,13 +135,13 @@ static void status_machine(char *data)
 #else /* !AFS */
     const char		*machine = "Netatalk %s";
 #endif /* AFS */
-    char buf[64];
+    char buf[AFPSTATUS_MACHLEN+1];
 
     memcpy(&status, start + AFPSTATUS_MACHOFF, sizeof(status));
     data += ntohs( status );
 
     //    len = strlen( machine );
-    len = snprintf(buf, 64, machine, VERSION);
+    len = snprintf(buf, AFPSTATUS_MACHLEN+1, machine, VERSION);
     *data++ = len;
     memcpy( data, buf, len );
     data += len;
