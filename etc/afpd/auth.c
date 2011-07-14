@@ -250,23 +250,6 @@ static int set_auth_switch(int expired)
     return AFP_OK;
 }
 
-#define GROUPSTR_BUFSIZE 1024
-static const char *print_groups(int ngroups, gid_t *groups)
-{
-    static char groupsstr[GROUPSTR_BUFSIZE];
-    int i;
-    char *s = groupsstr;
-
-    if (ngroups == 0)
-        return "-";
-
-    for (i = 0; (i < ngroups) && (s < &groupsstr[GROUPSTR_BUFSIZE]); i++) {
-        s += snprintf(s, &groupsstr[GROUPSTR_BUFSIZE] - s, " %u", groups[i]);
-    }
-
-    return groupsstr;
-}
-
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expired)
 {
 #ifdef ADMIN_GRP
@@ -408,7 +391,28 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
 #endif /* TRU64 */
 
-    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(ngroups, groups));
+    if (ngroups > 0) {
+        #define GROUPSTR_BUFSIZE 1024
+        char groupsstr[GROUPSTR_BUFSIZE];
+        char *s = groupsstr;
+        int j = GROUPSTR_BUFSIZE;
+
+        int n = snprintf(groupsstr, GROUPSTR_BUFSIZE, "%u", groups[0]);
+        j -= n;
+        s += n;
+
+        for (int i = 1; i < ngroups; i++) {
+            n = snprintf(s, j, ", %u", groups[i]);
+            if (n == j) {
+                /* Buffer full */
+                LOG(log_debug, logtype_afpd, "login: group string buffer overflow");
+                break;
+            }
+            j -= n;
+            s += n;
+        }
+        LOG(log_debug, logtype_afpd, "login: %u supplementary groups: %s", ngroups, groupsstr);
+    }
 
     /* There's probably a better way to do this, but for now, we just play root */
 #ifdef ADMIN_GRP
