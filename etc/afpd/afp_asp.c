@@ -32,8 +32,8 @@
 #include <atalk/asp.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
+#include <atalk/globals.h>
 
-#include "globals.h"
 #include "switch.h"
 #include "auth.h"
 #include "fork.h"
