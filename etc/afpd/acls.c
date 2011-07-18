@@ -1115,7 +1115,8 @@ static int check_acl_access(const struct vol *vol,
     struct stat    st;
     bstring        parent = NULL;
 
-    LOG(log_maxdebug, logtype_afpd, "check_access: Request: 0x%08x", requested_rights);
+    LOG(log_maxdebug, logtype_afpd, "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
+        cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
 
     /* Get uid or gid from UUID */
     EC_ZERO_LOG_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
@@ -1125,7 +1126,7 @@ static int check_acl_access(const struct vol *vol,
     case UUID_USER:
         break;
     case UUID_GROUP:
-        LOG(log_warning, logtype_afpd, "check_access: afp_access not supported for groups");
+        LOG(log_warning, logtype_afpd, "check_acl_access: afp_access not supported for groups");
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     default:
@@ -1133,10 +1134,10 @@ static int check_acl_access(const struct vol *vol,
         goto EC_CLEANUP;
     }
 
-    if ((strcmp(path, ".") == 0) && (dir->d_rights_cache != 0xffffffff)) {
+    if ((strcmp(path, ".") == 0) && (curdir->d_rights_cache != 0xffffffff)) {
         /* its a dir and the cache value is valid */
-        allowed_rights = dir->d_rights_cache;
-        LOG(log_debug, logtype_afpd, "allowed rights from dircache: 0x%08x", allowed_rights);
+        allowed_rights = curdir->d_rights_cache;
+        LOG(log_debug, logtype_afpd, "check_access: allowed rights from dircache: 0x%08x", allowed_rights);
     } else {
 #ifdef HAVE_SOLARIS_ACLS
         EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
@@ -1156,12 +1157,12 @@ static int check_acl_access(const struct vol *vol,
             int i;
             uint32_t parent_rights = 0;
 
-            if (dir->d_did == DIRDID_ROOT_PARENT) {
+            if (curdir->d_did == DIRDID_ROOT_PARENT) {
                 /* use volume path */
                 EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
             } else {
                 /* build path for parent */
-                EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
+                EC_NULL_LOG_ERR(parent = bstrcpy(curdir->d_fullpath), AFPERR_MISC);
                 EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
                 EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
                 EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
@@ -1181,7 +1182,7 @@ static int check_acl_access(const struct vol *vol,
                 allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
         }
         LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
-        dir->d_rights_cache = allowed_rights;
+        curdir->d_rights_cache = allowed_rights;
     }
 
     if ((requested_rights & allowed_rights) != requested_rights) {
