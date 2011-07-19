@@ -1364,8 +1364,8 @@ int movecwd(const struct vol *vol, struct dir *dir)
         ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
 
     if ((ret = lchdir(cfrombstr(dir->d_fullpath))) != 0 ) {
-        LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): ret: %u, %s",
-            cfrombstr(dir->d_fullpath), ret, strerror(errno));
+        LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): %s",
+            cfrombstr(dir->d_fullpath), strerror(errno));
         if (ret == 1) {
             /* p is a symlink or getcwd failed */
             afp_errno = AFPERR_BADTYPE;
