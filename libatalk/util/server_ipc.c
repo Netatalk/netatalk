@@ -217,18 +217,18 @@ int reconnect_ipc(AFPObj *obj)
  * @args children  (rw) pointer to our structure with all childs
  * @args fd        (r)  IPC socket with child
  *
- * @returns number of bytes transfered, -1 on error, 0 on EOF
+ * @returns -1 on error, 0 on success
  */
 int ipc_server_read(server_child *children, int fd)
 {
-    int       ret = 0;
+    int       ret;
     struct ipc_header ipc;
     char      buf[IPC_MAXMSGSIZE], *p;
 
     if ((ret = read(fd, buf, IPC_HEADERLEN)) != IPC_HEADERLEN) {
         LOG(log_error, logtype_afpd, "Reading IPC header failed (%i of %u bytes read): %s",
             ret, IPC_HEADERLEN, strerror(errno));
-        return ret;
+        return -1;
     }
 
     p = buf;
@@ -255,7 +255,7 @@ int ipc_server_read(server_child *children, int fd)
 	    if ((ret = read(fd, buf, ipc.len)) != (int) ipc.len) {
             LOG(log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read): %s",
                 ret, ipc.len, strerror(errno));
-            return ret;
+            return -1;
     	}	 
     }
     ipc.msg = buf;
@@ -271,6 +271,7 @@ int ipc_server_read(server_child *children, int fd)
         if (readt(fd, &ipc.DSI_requestID, 2, 0, 2) != 2) {
             LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): couldnt read DSI id: %s",
                  ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
+            return -1;
         }
         if ((ipc.afp_socket = recv_fd(fd, 1)) == -1) {
             LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): recv_fd: %s",
@@ -296,7 +297,7 @@ int ipc_server_read(server_child *children, int fd)
 		return -1;
     }
 
-    return ret;
+    return 0;
 }
 
 /* ----------------- */
