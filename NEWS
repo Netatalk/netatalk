@@ -2,6 +2,10 @@ Changes in 2.2.1
 ================
 
 * FIX: afpd: increase BerkeleyDB locks and lockobjs
+* FIX: afpd: create special folder as root
+* FIX: afpd: fix compilation error if --enable-ddp is used
+* FIX: afpd: More robust IPC reconnect error handling
+* FIX: afpd: ACL access checking
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: suse: initscript return better status
