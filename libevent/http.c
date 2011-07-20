@@ -56,6 +56,9 @@
 #ifdef _EVENT_HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+#ifdef _EVENT_HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
 #ifdef _EVENT_HAVE_NETDB_H
 #include <netdb.h>
 #endif
@@ -97,6 +100,7 @@
 #include "util-internal.h"
 #include "http-internal.h"
 #include "mm-internal.h"
+#include "bufferevent-internal.h"
 
 #ifndef _EVENT_HAVE_GETNAMEINFO
 #define NI_MAXSERV 32
@@ -215,29 +219,30 @@ strsep(char **s, const char *del)
 }
 #endif
 
-static const char *
-html_replace(char ch, char *buf)
+static size_t
+html_replace(const char ch, const char **escaped)
 {
 	switch (ch) {
 	case '<':
-		return "&lt;";
+		*escaped = "&lt;";
+		return 4;
 	case '>':
-		return "&gt;";
+		*escaped = "&gt;";
+		return 4;
 	case '"':
-		return "&quot;";
+		*escaped = "&quot;";
+		return 6;
 	case '\'':
-		return "&#039;";
+		*escaped = "&#039;";
+		return 6;
 	case '&':
-		return "&amp;";
+		*escaped = "&amp;";
+		return 5;
 	default:
 		break;
 	}
 
-	/* Echo the character back */
-	buf[0] = ch;
-	buf[1] = '\0';
-
-	return buf;
+	return 1;
 }
 
 /*
@@ -251,21 +256,34 @@ char *
 evhttp_htmlescape(const char *html)
 {
 	size_t i;
-	size_t new_size = 0, old_size = strlen(html);
+	size_t new_size = 0, old_size = 0;
 	char *escaped_html, *p;
-	char scratch_space[2];
 
-	for (i = 0; i < old_size; ++i)
-		new_size += strlen(html_replace(html[i], scratch_space));
+	if (html == NULL)
+		return (NULL);
 
+	old_size = strlen(html);
+	for (i = 0; i < old_size; ++i) {
+		const char *replaced = NULL;
+		const size_t replace_size = html_replace(html[i], &replaced);
+		if (replace_size > EV_SIZE_MAX - new_size) {
+			event_warn("%s: html_replace overflow", __func__);
+			return (NULL);
+		}
+		new_size += replace_size;
+	}
+
+	if (new_size == EV_SIZE_MAX)
+		return (NULL);
 	p = escaped_html = mm_malloc(new_size + 1);
 	if (escaped_html == NULL) {
-		event_warn("%s: malloc(%ld)", __func__, (long)(new_size + 1));
+		event_warn("%s: malloc(%lu)", __func__,
+		           (unsigned long)(new_size + 1));
 		return (NULL);
 	}
 	for (i = 0; i < old_size; ++i) {
-		const char *replaced = html_replace(html[i], scratch_space);
-		size_t len = strlen(replaced);
+		const char *replaced = &html[i];
+		const size_t len = html_replace(html[i], &replaced);
 		memcpy(p, replaced, len);
 		p += len;
 	}
@@ -822,9 +840,23 @@ evhttp_connection_done(struct evhttp_connection *evcon)
 static enum message_read_status
 evhttp_handle_chunked_read(struct evhttp_request *req, struct evbuffer *buf)
 {
-	ev_ssize_t len;
+	if (req == NULL || buf == NULL) {
+	    return DATA_CORRUPTED;
+	}
 
-	while ((len = evbuffer_get_length(buf)) > 0) {
+	while (1) {
+		size_t buflen;
+
+		if ((buflen = evbuffer_get_length(buf)) == 0) {
+			break;
+		}
+
+		/* evbuffer_get_length returns size_t, but len variable is ssize_t,
+		 * check for overflow conditions */
+		if (buflen > EV_SSIZE_MAX) {
+			return DATA_CORRUPTED;
+		}
+
 		if (req->ntoread < 0) {
 			/* Read chunk size */
 			ev_int64_t ntoread;
@@ -847,11 +879,18 @@ evhttp_handle_chunked_read(struct evhttp_request *req, struct evbuffer *buf)
 				/* could not get chunk size */
 				return (DATA_CORRUPTED);
 			}
+
+			/* ntoread is signed int64, body_size is unsigned size_t, check for under/overflow conditions */
+			if ((ev_uint64_t)ntoread > EV_SIZE_MAX - req->body_size) {
+			    return DATA_CORRUPTED;
+			}
+
 			if (req->body_size + (size_t)ntoread > req->evcon->max_body_size) {
 				/* failed body length test */
 				event_debug(("Request body is too long"));
 				return (DATA_TOO_LONG);
 			}
+
 			req->body_size += (size_t)ntoread;
 			req->ntoread = ntoread;
 			if (req->ntoread == 0) {
@@ -861,12 +900,17 @@ evhttp_handle_chunked_read(struct evhttp_request *req, struct evbuffer *buf)
 			continue;
 		}
 
+		/* req->ntoread is signed int64, len is ssize_t, based on arch,
+		 * ssize_t could only be 32b, check for these conditions */
+		if (req->ntoread > EV_SSIZE_MAX) {
+			return DATA_CORRUPTED;
+		}
+
 		/* don't have enough to complete a chunk; wait for more */
-		if (len < req->ntoread)
+		if (req->ntoread > 0 && buflen < (ev_uint64_t)req->ntoread)
 			return (MORE_DATA_EXPECTED);
 
 		/* Completed chunk */
-		/* XXXX fixme: what if req->ntoread is > SIZE_T_MAX? */
 		evbuffer_remove_buffer(buf, req->input_buffer, (size_t)req->ntoread);
 		req->ntoread = -1;
 		if (req->chunk_cb != NULL) {
@@ -934,13 +978,19 @@ evhttp_read_body(struct evhttp_connection *evcon, struct evhttp_request *req)
 		}
 	} else if (req->ntoread < 0) {
 		/* Read until connection close. */
+		if ((size_t)(req->body_size + evbuffer_get_length(buf)) < req->body_size) {
+			evhttp_connection_fail(evcon, EVCON_HTTP_INVALID_HEADER);
+			return;
+		}
+
 		req->body_size += evbuffer_get_length(buf);
 		evbuffer_add_buffer(req->input_buffer, buf);
-	} else if (req->chunk_cb != NULL ||
-	    evbuffer_get_length(buf) >= (size_t)req->ntoread) {
+	} else if (req->chunk_cb != NULL || evbuffer_get_length(buf) >= (size_t)req->ntoread) {
+		/* XXX: the above get_length comparison has to be fixed for overflow conditions! */
 		/* We've postponed moving the data until now, but we're
 		 * about to use it. */
 		size_t n = evbuffer_get_length(buf);
+
 		if (n > (size_t) req->ntoread)
 			n = (size_t) req->ntoread;
 		req->ntoread -= n;
@@ -948,7 +998,10 @@ evhttp_read_body(struct evhttp_connection *evcon, struct evhttp_request *req)
 		evbuffer_remove_buffer(buf, req->input_buffer, n);
 	}
 
-	if (req->body_size > req->evcon->max_body_size) {
+	if (req->body_size > req->evcon->max_body_size ||
+	    (!req->chunked && req->ntoread >= 0 &&
+		(size_t)req->ntoread > req->evcon->max_body_size)) {
+		/* XXX: The above casted comparison must checked for overflow */
 		/* failed body length test */
 		event_debug(("Request body is too long"));
 		evhttp_connection_fail(evcon,
@@ -1015,9 +1068,24 @@ evhttp_read_cb(struct bufferevent *bufev, void *arg)
 	case EVCON_READING_TRAILER:
 		evhttp_read_trailer(evcon, req);
 		break;
+	case EVCON_IDLE:
+		{
+#ifdef USE_DEBUG
+			struct evbuffer *input;
+			size_t total_len;
+
+			input = bufferevent_get_input(evcon->bufev);
+			total_len = evbuffer_get_length(input);
+			event_debug(("%s: read %d bytes in EVCON_IDLE state,"
+                                    " resetting connection",
+					__func__, (int)total_len));
+#endif
+
+			evhttp_connection_reset(evcon);
+		}
+		break;
 	case EVCON_DISCONNECTED:
 	case EVCON_CONNECTING:
-	case EVCON_IDLE:
 	case EVCON_WRITING:
 	default:
 		event_errx(1, "%s: illegal connection state %d",
@@ -1110,7 +1178,7 @@ evhttp_connection_set_local_address(struct evhttp_connection *evcon,
 	if (evcon->bind_address)
 		mm_free(evcon->bind_address);
 	if ((evcon->bind_address = mm_strdup(address)) == NULL)
-		event_err(1, "%s: strdup", __func__);
+		event_warn("%s: strdup", __func__);
 }
 
 void
@@ -1151,7 +1219,18 @@ evhttp_connection_reset(struct evhttp_connection *evcon)
 {
 	struct evbuffer *tmp;
 
-	bufferevent_disable(evcon->bufev, EV_READ|EV_WRITE);
+	/* XXXX This is not actually an optimal fix.  Instead we ought to have
+	   an API for "stop connecting", or use bufferevent_setfd to turn off
+	   connecting.  But for Libevent 2.0, this seems like a minimal change
+	   least likely to disrupt the rest of the bufferevent and http code.
+
+	   Why is this here?  If the fd is set in the bufferevent, and the
+	   bufferevent is connecting, then you can't actually stop the
+	   bufferevent from trying to connect with bufferevent_disable().  The
+	   connect will never trigger, since we close the fd, but the timeout
+	   might.  That caused an assertion failure in evhttp_connection_fail.
+	*/
+	bufferevent_disable_hard(evcon->bufev, EV_READ|EV_WRITE);
 
 	if (evcon->fd != -1) {
 		/* inform interested parties about connection close */
@@ -1200,6 +1279,8 @@ evhttp_connection_retry(evutil_socket_t fd, short what, void *arg)
 static void
 evhttp_connection_cb_cleanup(struct evhttp_connection *evcon)
 {
+	struct evcon_requestq requests;
+
 	if (evcon->retry_max < 0 || evcon->retry_cnt < evcon->retry_max) {
 		evtimer_assign(&evcon->retry_ev, evcon->base, evhttp_connection_retry, evcon);
 		/* XXXX handle failure from evhttp_add_event */
@@ -1211,10 +1292,23 @@ evhttp_connection_cb_cleanup(struct evhttp_connection *evcon)
 	}
 	evhttp_connection_reset(evcon);
 
-	/* for now, we just signal all requests by executing their callbacks */
+	/*
+	 * User callback can do evhttp_make_request() on the same
+	 * evcon so new request will be added to evcon->requests.  To
+	 * avoid freeing it prematurely we iterate over the copy of
+	 * the queue.
+	 */
+	TAILQ_INIT(&requests);
 	while (TAILQ_FIRST(&evcon->requests) != NULL) {
 		struct evhttp_request *request = TAILQ_FIRST(&evcon->requests);
 		TAILQ_REMOVE(&evcon->requests, request, next);
+		TAILQ_INSERT_TAIL(&requests, request, next);
+	}
+
+	/* for now, we just signal all requests by executing their callbacks */
+	while (TAILQ_FIRST(&requests) != NULL) {
+		struct evhttp_request *request = TAILQ_FIRST(&requests);
+		TAILQ_REMOVE(&requests, request, next);
 		request->evcon = NULL;
 
 		/* we might want to set an error here */
@@ -1472,7 +1566,8 @@ evhttp_parse_request_line(struct evhttp_request *req, char *line)
 		return (-1);
 	}
 
-	if ((req->uri_elems = evhttp_uri_parse(req->uri)) == NULL) {
+	if ((req->uri_elems = evhttp_uri_parse_with_flags(req->uri,
+		    EVHTTP_URI_NONCONFORMANT)) == NULL) {
 		return -1;
 	}
 
@@ -1731,7 +1826,8 @@ evhttp_parse_headers(struct evhttp_request *req, struct evbuffer* buffer)
 	}
 
 	if (status == MORE_DATA_EXPECTED) {
-		if (req->headers_size + evbuffer_get_length(buffer) > req->evcon->max_headers_size)
+		if (req->evcon != NULL &&
+		req->headers_size + evbuffer_get_length(buffer) > req->evcon->max_headers_size)
 			return (DATA_TOO_LONG);
 	}
 
@@ -1846,11 +1942,12 @@ evhttp_get_body(struct evhttp_connection *evcon, struct evhttp_request *req)
 				   no, we should respond with an error. For
 				   now, just optimistically tell the client to
 				   send their message body. */
-				if (req->ntoread > 0 &&
-				    (size_t)req->ntoread > req->evcon->max_body_size) {
-					evhttp_send_error(req, HTTP_ENTITYTOOLARGE,
-							  NULL);
-					return;
+				if (req->ntoread > 0) {
+					/* ntoread is ev_int64_t, max_body_size is ev_uint64_t */ 
+					if ((req->evcon->max_body_size <= EV_INT64_MAX) && (ev_uint64_t)req->ntoread > req->evcon->max_body_size) {
+						evhttp_send_error(req, HTTP_ENTITYTOOLARGE, NULL);
+						return;
+					}
 				}
 				if (!evbuffer_get_length(bufferevent_get_input(evcon->bufev)))
 					evhttp_send_continue(evcon, req);
@@ -2145,11 +2242,20 @@ evhttp_make_request(struct evhttp_connection *evcon,
 	req->evcon = evcon;
 	EVUTIL_ASSERT(!(req->flags & EVHTTP_REQ_OWN_CONNECTION));
 
-	TAILQ_INSERT_TAIL(&evcon->requests, req, next);
+       TAILQ_INSERT_TAIL(&evcon->requests, req, next);
 
 	/* If the connection object is not connected; make it so */
-	if (!evhttp_connected(evcon))
-		return (evhttp_connection_connect(evcon));
+	if (!evhttp_connected(evcon)) {
+		int res = evhttp_connection_connect(evcon);
+	       /* evhttp_connection_fail(), which is called through
+		* evhttp_connection_connect(), assumes that req lies in
+		* evcon->requests.  Thus, enqueue the request in advance and r
+		* it in the error case. */
+	       if (res != 0)
+		       TAILQ_REMOVE(&evcon->requests, req, next);
+
+		return res;
+	}
 
 	/*
 	 * If it's connected already and we are the first in the queue,
@@ -2491,6 +2597,10 @@ evhttp_response_code(struct evhttp_request *req, int code, const char *reason)
 	if (reason == NULL)
 		reason = evhttp_response_phrase_internal(code);
 	req->response_code_line = mm_strdup(reason);
+	if (req->response_code_line == NULL) {
+		event_warn("%s: strdup", __func__);
+		/* XXX what else can we do? */
+	}
 }
 
 void
@@ -3280,6 +3390,11 @@ evhttp_set_cb(struct evhttp *http, const char *uri,
 	}
 
 	http_cb->what = mm_strdup(uri);
+	if (http_cb->what == NULL) {
+		event_warn("%s: strdup", __func__);
+		mm_free(http_cb);
+		return (-3);
+	}
 	http_cb->cb = cb;
 	http_cb->cbarg = cbarg;
 
@@ -3768,6 +3883,7 @@ bind_socket(const char *address, ev_uint16_t port, int reuse)
 }
 
 struct evhttp_uri {
+	unsigned flags;
 	char *scheme; /* scheme; e.g http, ftp etc */
 	char *userinfo; /* userinfo (typically username:pass), or NULL */
 	char *host; /* hostname, IP address, or NULL */
@@ -3786,7 +3902,13 @@ evhttp_uri_new(void)
 	return uri;
 }
 
-/* Return true of the string starting at s and ending immediately before eos
+void
+evhttp_uri_set_flags(struct evhttp_uri *uri, unsigned flags)
+{
+	uri->flags = flags;
+}
+
+/* Return true if the string starting at s and ending immediately before eos
  * is a valid URI scheme according to RFC3986
  */
 static int
@@ -3911,6 +4033,10 @@ parse_authority(struct evhttp_uri *uri, char *s, char *eos)
 	EVUTIL_ASSERT(eos);
 	if (eos == s) {
 		uri->host = mm_strdup("");
+		if (uri->host == NULL) {
+			event_warn("%s: strdup", __func__);
+			return -1;
+		}
 		return 0;
 	}
 
@@ -3922,6 +4048,10 @@ parse_authority(struct evhttp_uri *uri, char *s, char *eos)
 			return -1;
 		*cp++ = '\0';
 		uri->userinfo = mm_strdup(s);
+		if (uri->userinfo == NULL) {
+			event_warn("%s: strdup", __func__);
+			return -1;
+		}
 	} else {
 		cp = s;
 	}
@@ -3949,6 +4079,10 @@ parse_authority(struct evhttp_uri *uri, char *s, char *eos)
 			return -1;
 	}
 	uri->host = mm_malloc(eos-cp+1);
+	if (uri->host == NULL) {
+		event_warn("%s: malloc", __func__);
+		return -1;
+	}
 	memcpy(uri->host, cp, eos-cp);
 	uri->host[eos-cp] = '\0';
 	return 0;
@@ -3966,13 +4100,41 @@ end_of_authority(char *cp)
 	return cp;
 }
 
+enum uri_part {
+	PART_PATH,
+	PART_QUERY,
+	PART_FRAGMENT
+};
+
 /* Return the character after the longest prefix of 'cp' that matches...
  *   *pchar / "/" if allow_qchars is false, or
- *   *(pchar / "/" / "?") if allow_chars is true.
+ *   *(pchar / "/" / "?") if allow_qchars is true.
  */
 static char *
-end_of_path(char *cp, int allow_qchars)
+end_of_path(char *cp, enum uri_part part, unsigned flags)
 {
+	if (flags & EVHTTP_URI_NONCONFORMANT) {
+		/* If NONCONFORMANT:
+		 *   Path is everything up to a # or ? or nul.
+		 *   Query is everything up a # or nul
+		 *   Fragment is everything up to a nul.
+		 */
+		switch (part) {
+		case PART_PATH:
+			while (*cp && *cp != '#' && *cp != '?')
+				++cp;
+			break;
+		case PART_QUERY:
+			while (*cp && *cp != '#')
+				++cp;
+			break;
+		case PART_FRAGMENT:
+			cp += strlen(cp);
+			break;
+		};
+		return cp;
+	}
+
 	while (*cp) {
 		if (CHAR_IS_UNRESERVED(*cp) ||
 		    strchr(SUBDELIMS, *cp) ||
@@ -3981,7 +4143,7 @@ end_of_path(char *cp, int allow_qchars)
 		else if (*cp == '%' && EVUTIL_ISXDIGIT(cp[1]) &&
 		    EVUTIL_ISXDIGIT(cp[2]))
 			cp += 3;
-		else if (*cp == '?' && allow_qchars)
+		else if (*cp == '?' && part != PART_PATH)
 			++cp;
 		else
 			return cp;
@@ -4005,20 +4167,27 @@ path_matches_noscheme(const char *cp)
 struct evhttp_uri *
 evhttp_uri_parse(const char *source_uri)
 {
+	return evhttp_uri_parse_with_flags(source_uri, 0);
+}
+
+struct evhttp_uri *
+evhttp_uri_parse_with_flags(const char *source_uri, unsigned flags)
+{
 	char *readbuf = NULL, *readp = NULL, *token = NULL, *query = NULL;
 	char *path = NULL, *fragment = NULL;
 	int got_authority = 0;
 
 	struct evhttp_uri *uri = mm_calloc(1, sizeof(struct evhttp_uri));
 	if (uri == NULL) {
-		event_err(1, "%s: calloc", __func__);
+		event_warn("%s: calloc", __func__);
 		goto err;
 	}
 	uri->port = -1;
+	uri->flags = flags;
 
 	readbuf = mm_strdup(source_uri);
 	if (readbuf == NULL) {
-		event_err(1, "%s: strdup", __func__);
+		event_warn("%s: strdup", __func__);
 		goto err;
 	}
 
@@ -4031,7 +4200,6 @@ evhttp_uri_parse(const char *source_uri)
 	      URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
 
 	      relative-ref  = relative-part [ "?" query ] [ "#" fragment ]
-
 	 */
 
 	/* 1. scheme: */
@@ -4039,7 +4207,10 @@ evhttp_uri_parse(const char *source_uri)
 	if (token && scheme_ok(readp,token)) {
 		*token = '\0';
 		uri->scheme = mm_strdup(readp);
-
+		if (uri->scheme == NULL) {
+			event_warn("%s: strdup", __func__);
+			goto err;
+		}
 		readp = token+1; /* eat : */
 	}
 
@@ -4058,21 +4229,21 @@ evhttp_uri_parse(const char *source_uri)
 	/* 3. Query: path-abempty, path-absolute, path-rootless, or path-empty
 	 */
 	path = readp;
-	readp = end_of_path(path, 0);
+	readp = end_of_path(path, PART_PATH, flags);
 
 	/* Query */
 	if (*readp == '?') {
 		*readp = '\0';
 		++readp;
 		query = readp;
-		readp = end_of_path(readp, 1);
+		readp = end_of_path(readp, PART_QUERY, flags);
 	}
 	/* fragment */
 	if (*readp == '#') {
 		*readp = '\0';
 		++readp;
 		fragment = readp;
-		readp = end_of_path(readp, 1);
+		readp = end_of_path(readp, PART_FRAGMENT, flags);
 	}
 	if (*readp != '\0') {
 		goto err;
@@ -4096,11 +4267,25 @@ evhttp_uri_parse(const char *source_uri)
 
 	EVUTIL_ASSERT(path);
 	uri->path = mm_strdup(path);
+	if (uri->path == NULL) {
+		event_warn("%s: strdup", __func__);
+		goto err;
+	}
 
-	if (query)
+	if (query) {
 		uri->query = mm_strdup(query);
-	if (fragment)
+		if (uri->query == NULL) {
+			event_warn("%s: strdup", __func__);
+			goto err;
+		}
+	}
+	if (fragment) {
 		uri->fragment = mm_strdup(fragment);
+		if (uri->fragment == NULL) {
+			event_warn("%s: strdup", __func__);
+			goto err;
+		}
+	}
 
 	mm_free(readbuf);
 
@@ -4286,12 +4471,13 @@ evhttp_uri_set_port(struct evhttp_uri *uri, int port)
 	uri->port = port;
 	return 0;
 }
-#define end_of_cpath(cp,aq) ((const char*)(end_of_path(((char*)(cp)), (aq))))
+#define end_of_cpath(cp,p,f) \
+	((const char*)(end_of_path(((char*)(cp)), (p), (f))))
 
 int
 evhttp_uri_set_path(struct evhttp_uri *uri, const char *path)
 {
-	if (path && end_of_cpath(path, 0) != path+strlen(path))
+	if (path && end_of_cpath(path, PART_PATH, uri->flags) != path+strlen(path))
 		return -1;
 
 	_URI_SET_STR(path);
@@ -4300,7 +4486,7 @@ evhttp_uri_set_path(struct evhttp_uri *uri, const char *path)
 int
 evhttp_uri_set_query(struct evhttp_uri *uri, const char *query)
 {
-	if (query && end_of_cpath(query, 1) != query+strlen(query))
+	if (query && end_of_cpath(query, PART_QUERY, uri->flags) != query+strlen(query))
 		return -1;
 	_URI_SET_STR(query);
 	return 0;
@@ -4308,7 +4494,7 @@ evhttp_uri_set_query(struct evhttp_uri *uri, const char *query)
 int
 evhttp_uri_set_fragment(struct evhttp_uri *uri, const char *fragment)
 {
-	if (fragment && end_of_cpath(fragment, 1) != fragment+strlen(fragment))
+	if (fragment && end_of_cpath(fragment, PART_FRAGMENT, uri->flags) != fragment+strlen(fragment))
 		return -1;
 	_URI_SET_STR(fragment);
 	return 0;

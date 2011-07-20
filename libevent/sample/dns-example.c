@@ -7,6 +7,9 @@
 
 #include <event2/event-config.h>
 
+/* Compatibility for possible missing IPv6 declarations */
+#include "../ipv6-internal.h"
+
 #include <sys/types.h>
 
 #ifdef WIN32
@@ -69,7 +72,6 @@ static void
 gai_callback(int err, struct evutil_addrinfo *ai, void *arg)
 {
 	const char *name = arg;
-	struct evutil_addrinfo *ai_first = NULL;
 	int i;
 	if (err) {
 		printf("%s: %s\n", name, evutil_gai_strerror(err));
@@ -92,8 +94,6 @@ gai_callback(int err, struct evutil_addrinfo *ai, void *arg)
 			printf("[%d] %s: %s\n",i,name,buf);
 		}
 	}
-	if (ai_first)
-		evutil_freeaddrinfo(ai_first);
 }
 
 static void
@@ -117,6 +117,8 @@ evdns_server_callback(struct evdns_server_request *req, void *data)
 			printf(" -- replying for %s (PTR)\n", req->questions[i]->name);
 			r = evdns_server_request_add_ptr_reply(req, NULL, req->questions[i]->name,
 											"foo.bar.example.com", 10);
+			if (r<0)
+				printf("ugh, no luck");
 		} else {
 			printf(" -- skipping %s [%d %d]\n", req->questions[i]->name,
 				   req->questions[i]->type, req->questions[i]->dns_question_class);

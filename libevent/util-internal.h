@@ -38,6 +38,8 @@
 #endif
 #include "event2/util.h"
 
+#include "ipv6-internal.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,9 +54,13 @@ extern "C" {
 
 /* A good no-op to use in macro definitions. */
 #define _EVUTIL_NIL_STMT ((void)0)
-/* Suppresses the compiler's "unused variable" warnings for unused assert. */
+/* A no-op that tricks the compiler into thinking a condition is used while
+ * definitely not making any code for it.  Used to compile out asserts while
+ * avoiding "unused variable" warnings.  The "!" forces the compiler to
+ * do the sizeof() on an int, in case "condition" is a bitfield value.
+ */
 #define _EVUTIL_NIL_CONDITION(condition) do { \
-	(void)sizeof(condition); \
+	(void)sizeof(!(condition));  \
 } while(0)
 
 /* Internal use only: macros to match patterns of error codes in a
@@ -173,7 +179,7 @@ long _evutil_weakrand(void);
 
 /* Evaluates to the same boolean value as 'p', and hints to the compiler that
  * we expect this value to be false. */
-#ifdef __GNUC__
+#if defined(__GNUC__) && __GNUC__ >= 3         /* gcc 3.0 or later */
 #define EVUTIL_UNLIKELY(p) __builtin_expect(!!(p),0)
 #else
 #define EVUTIL_UNLIKELY(p) (p)
@@ -199,6 +205,21 @@ long _evutil_weakrand(void);
 		}							\
 	} while (0)
 #define EVUTIL_FAILURE_CHECK(cond) EVUTIL_UNLIKELY(cond)
+#endif
+
+#ifndef _EVENT_HAVE_STRUCT_SOCKADDR_STORAGE
+/* Replacement for sockaddr storage that we can use internally on platforms
+ * that lack it.  It is not space-efficient, but neither is sockaddr_storage.
+ */
+struct sockaddr_storage {
+	union {
+		struct sockaddr ss_sa;
+		struct sockaddr_in ss_sin;
+		struct sockaddr_in6 ss_sin6;
+		char ss_padding[128];
+	} ss_union;
+};
+#define ss_family ss_union.ss_sa.sa_family
 #endif
 
 /* Internal addrinfo error code.  This one is returned from only from

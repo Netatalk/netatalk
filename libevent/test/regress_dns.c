@@ -71,6 +71,8 @@
 #include "regress.h"
 #include "regress_testutils.h"
 
+#include "../util-internal.h"
+
 static int dns_ok = 0;
 static int dns_got_cancel = 0;
 static int dns_err = 0;
@@ -1624,10 +1626,9 @@ gaic_launch(struct event_base *base, struct evdns_base *dns_base)
 }
 
 static void
-test_getaddrinfo_async_cancel_stress(void *arg)
+test_getaddrinfo_async_cancel_stress(void *ptr)
 {
-	struct basic_test_data *data = arg;
-	struct event_base *base = data->base;
+	struct event_base *base;
 	struct evdns_base *dns_base = NULL;
 	struct evdns_server_port *server = NULL;
 	evutil_socket_t fd = -1;
@@ -1699,7 +1700,7 @@ struct testcase_t dns_testcases[] = {
 	{ "getaddrinfo_async", test_getaddrinfo_async,
 	  TT_FORK|TT_NEED_BASE, &basic_setup, (char*)"" },
 	{ "getaddrinfo_cancel_stress", test_getaddrinfo_async_cancel_stress,
-	  TT_FORK|TT_NEED_BASE, &basic_setup, (char*)"" },
+	  TT_FORK, NULL, NULL },
 
 	END_OF_TESTCASES
 };

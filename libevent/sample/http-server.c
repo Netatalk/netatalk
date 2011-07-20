@@ -19,6 +19,9 @@
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
+#ifndef S_ISDIR
+#define S_ISDIR(x) (((x) & S_IFMT) == S_IFDIR)
+#endif
 #else
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -36,7 +39,13 @@
 
 #ifdef _EVENT_HAVE_NETINET_IN_H
 #include <netinet/in.h>
+# ifdef _XOPEN_SOURCE_EXTENDED
+#  include <arpa/inet.h>
+# endif
 #endif
+
+/* Compatibility for possible missing IPv6 declarations */
+#include "../util-internal.h"
 
 #ifdef WIN32
 #define stat _stat
@@ -138,7 +147,7 @@ dump_request_cb(struct evhttp_request *req, void *arg)
 static void
 send_document_cb(struct evhttp_request *req, void *arg)
 {
-	struct evbuffer *evb;
+	struct evbuffer *evb = NULL;
 	const char *docroot = arg;
 	const char *uri = evhttp_request_get_uri(req);
 	struct evhttp_uri *decoded = NULL;
@@ -223,7 +232,6 @@ send_document_cb(struct evhttp_request *req, void *arg)
 		if (!(d = opendir(whole_path)))
 			goto err;
 #endif
-		close(fd);
 
 		evbuffer_add_printf(evb, "<html>\n <head>\n"
 		    "  <title>%s</title>\n"
@@ -280,18 +288,20 @@ send_document_cb(struct evhttp_request *req, void *arg)
 	}
 
 	evhttp_send_reply(req, 200, "OK", evb);
-	evbuffer_free(evb);
-	return;
+	goto done;
 err:
 	evhttp_send_error(req, 404, "Document was not found");
 	if (fd>=0)
 		close(fd);
+done:
 	if (decoded)
 		evhttp_uri_free(decoded);
 	if (decoded_path)
 		free(decoded_path);
 	if (whole_path)
 		free(whole_path);
+	if (evb)
+		evbuffer_free(evb);
 }
 
 static void

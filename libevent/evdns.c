@@ -794,6 +794,12 @@ reply_schedule_callback(struct request *const req, u32 ttl, u32 err, struct repl
 {
 	struct deferred_reply_callback *d = mm_calloc(1, sizeof(*d));
 
+	if (!d) {
+		event_warn("%s: Couldn't allocate space for deferred callback.",
+		    __func__);
+		return;
+	}
+
 	ASSERT_LOCKED(req->base);
 
 	d->request_type = req->request_type;
@@ -1144,6 +1150,9 @@ request_parse(u8 *packet, int length, struct evdns_server_port *port, struct soc
 	GET16(answers);
 	GET16(authority);
 	GET16(additional);
+	(void)answers;
+	(void)additional;
+	(void)authority;
 
 	if (flags & 0x8000) return -1; /* Must not be an answer. */
 	flags &= 0x0110; /* Only RD and CD get preserved. */
@@ -1993,7 +2002,7 @@ server_request_free(struct server_request *req)
 		EVDNS_LOCK(req->port);
 		lock=1;
 		if (req->port->pending_replies == req) {
-			if (req->next_pending)
+			if (req->next_pending && req->next_pending != req)
 				req->port->pending_replies = req->next_pending;
 			else
 				req->port->pending_replies = NULL;
@@ -2387,7 +2396,7 @@ _evdns_nameserver_add_impl(struct evdns_base *base, const struct sockaddr *addre
 
 	evtimer_assign(&ns->timeout_event, ns->base->event_base, nameserver_prod_callback, ns);
 
-	ns->socket = socket(PF_INET, SOCK_DGRAM, 0);
+	ns->socket = socket(address->sa_family, SOCK_DGRAM, 0);
 	if (ns->socket < 0) { err = 1; goto out1; }
 	evutil_make_socket_closeonexec(ns->socket);
 	evutil_make_socket_nonblocking(ns->socket);
@@ -2693,10 +2702,13 @@ evdns_cancel_request(struct evdns_base *base, struct evdns_request *handle)
 {
 	struct request *req;
 
+	if (!handle->current_req)
+		return;
+
 	if (!base) {
 		/* This redundancy is silly; can we fix it? (Not for 2.0) XXXX */
 		base = handle->base;
-		if (!base && handle->current_req)
+		if (!base)
 			base = handle->current_req->base;
 	}
 
@@ -3069,6 +3081,10 @@ search_request_new(struct evdns_base *base, struct evdns_request *handle,
 		}
 		EVUTIL_ASSERT(handle->search_origname == NULL);
 		handle->search_origname = mm_strdup(name);
+		if (handle->search_origname == NULL) {
+			/* XXX Should we dealloc req? If yes, how? */
+			return NULL;
+		}
 		handle->search_state = base->global_search_state;
 		handle->search_flags = flags;
 		base->global_search_state->refcount++;
@@ -4306,7 +4322,8 @@ evdns_getaddrinfo_gotresolve(int result, char type, int count,
 				evdns_cancel_request(NULL, other_req->r);
 			}
 			data->user_cb(EVUTIL_EAI_MEMORY, NULL, data->user_data);
-			evutil_freeaddrinfo(res);
+			if (res)
+				evutil_freeaddrinfo(res);
 
 			if (other_req->r == NULL)
 				free_getaddrinfo_request(data);

@@ -90,6 +90,7 @@ const struct eventop selectops = {
 };
 
 static int select_resize(struct selectop *sop, int fdsz);
+static void select_free_selectop(struct selectop *sop);
 
 static void *
 select_init(struct event_base *base)
@@ -99,7 +100,10 @@ select_init(struct event_base *base)
 	if (!(sop = mm_calloc(1, sizeof(struct selectop))))
 		return (NULL);
 
-	select_resize(sop, howmany(32 + 1, NFDBITS)*sizeof(fd_mask));
+	if (select_resize(sop, howmany(32 + 1, NFDBITS)*sizeof(fd_mask))) {
+		select_free_selectop(sop);
+		return (NULL);
+	}
 
 	evsig_init(base);
 
@@ -128,11 +132,14 @@ select_dispatch(struct event_base *base, struct timeval *tv)
 		size_t sz = sop->event_fdsz;
 		if (!(readset_out = mm_realloc(sop->event_readset_out, sz)))
 			return (-1);
+		sop->event_readset_out = readset_out;
 		if (!(writeset_out = mm_realloc(sop->event_writeset_out, sz))) {
-			mm_free(readset_out);
+			/* We don't free readset_out here, since it was
+			 * already successfully reallocated. The next time
+			 * we call select_dispatch, the realloc will be a
+			 * no-op. */
 			return (-1);
 		}
-		sop->event_readset_out = readset_out;
 		sop->event_writeset_out = writeset_out;
 		sop->resize_out_sets = 0;
 	}
@@ -165,9 +172,9 @@ select_dispatch(struct event_base *base, struct timeval *tv)
 	event_debug(("%s: select reports %d", __func__, res));
 
 	check_selectop(sop);
-	i = random() % (nfds+1);
-	for (j = 0; j <= nfds; ++j) {
-		if (++i >= nfds+1)
+	i = random() % nfds;
+	for (j = 0; j < nfds; ++j) {
+		if (++i >= nfds)
 			i = 0;
 		res = 0;
 		if (FD_ISSET(i, sop->event_readset_out))
@@ -185,7 +192,6 @@ select_dispatch(struct event_base *base, struct timeval *tv)
 	return (0);
 }
 
-
 static int
 select_resize(struct selectop *sop, int fdsz)
 {
@@ -198,8 +204,15 @@ select_resize(struct selectop *sop, int fdsz)
 	if ((readset_in = mm_realloc(sop->event_readset_in, fdsz)) == NULL)
 		goto error;
 	sop->event_readset_in = readset_in;
-	if ((writeset_in = mm_realloc(sop->event_writeset_in, fdsz)) == NULL)
+	if ((writeset_in = mm_realloc(sop->event_writeset_in, fdsz)) == NULL) {
+		/* Note that this will leave event_readset_in expanded.
+		 * That's okay; we wouldn't want to free it, since that would
+		 * change the semantics of select_resize from "expand the
+		 * readset_in and writeset_in, or return -1" to "expand the
+		 * *set_in members, or trash them and return -1."
+		 */
 		goto error;
+	}
 	sop->event_writeset_in = writeset_in;
 	sop->resize_out_sets = 1;
 
@@ -292,11 +305,8 @@ select_del(struct event_base *base, int fd, short old, short events, void *p)
 }
 
 static void
-select_dealloc(struct event_base *base)
+select_free_selectop(struct selectop *sop)
 {
-	struct selectop *sop = base->evbase;
-
-	evsig_dealloc(base);
 	if (sop->event_readset_in)
 		mm_free(sop->event_readset_in);
 	if (sop->event_writeset_in)
@@ -308,4 +318,12 @@ select_dealloc(struct event_base *base)
 
 	memset(sop, 0, sizeof(struct selectop));
 	mm_free(sop);
+}
+
+static void
+select_dealloc(struct event_base *base)
+{
+	evsig_dealloc(base);
+
+	select_free_selectop(base->evbase);
 }

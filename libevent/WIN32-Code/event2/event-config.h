@@ -192,6 +192,9 @@
 /* Define to 1 if `sin_len' is member of `struct sockaddr_in'. */
 /* #undef _EVENT_HAVE_STRUCT_SOCKADDR_IN_SIN_LEN */
 
+/* Define to 1 if the system has the type `struct sockaddr_storage'. */
+#define _EVENT_HAVE_STRUCT_SOCKADDR_STORAGE 1
+
 /* Define to 1 if you have the <sys/devpoll.h> header file. */
 /* #undef _EVENT_HAVE_SYS_DEVPOLL_H */
 
@@ -274,7 +277,7 @@
 /* #undef _EVENT_HAVE_WORKING_KQUEUE */
 
 /* Numeric representation of the version */
-#define _EVENT_NUMERIC_VERSION 0x02000a00
+#define _EVENT_NUMERIC_VERSION 0x02000c00
 
 /* Name of package */
 #define _EVENT_PACKAGE "libevent"
@@ -331,7 +334,7 @@
 #define _EVENT_TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define _EVENT_VERSION "2.0.10-stable"
+#define _EVENT_VERSION "2.0.12-stable"
 
 /* Define to appropriate substitue if compiler doesnt have __func__ */
 #define _EVENT___func__ __FUNCTION__

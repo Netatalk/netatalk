@@ -32,7 +32,7 @@ RELEASE = -release 2.0
 #
 # Once an RC is out, DO NOT MAKE ANY ABI-BREAKING CHANGES IN THAT SERIES
 # UNLESS YOU REALLY REALLY HAVE TO.
-VERSION_INFO = 5:1:0
+VERSION_INFO = 6:1:1
 
 # History:          RELEASE    VERSION_INFO
 #  2.0.1-alpha --     2.0        1:0:0
@@ -44,8 +44,9 @@ VERSION_INFO = 5:1:0
 #  2.0.7-rc    --     2.0        3:0:1
 #  2.0.8-rc    --     2.0        4:0:2
 #  2.0.9-rc    --     2.0        5:0:0 (ABI changed slightly)
-# Planned:
 #  2.0.10-stable--    2.0        5:1:0 (No ABI change)
+#  2.0.11-stable--    2.0        6:0:1 (ABI changed, backward-compatible)
+#  2.0.12-stable--    2.0        6:1:1 (No ABI change)
 #
 # For Libevent 2.1:
 #  2.1.1-alpha --     2.1        1:0:0
@@ -72,7 +73,7 @@ VERSION_INFO = 5:1:0
 dist_bin_SCRIPTS = event_rpcgen.py
 
 pkgconfigdir=$(libdir)/pkgconfig
-pkgconfig_DATA=libevent.pc
+LIBEVENT_PKGCONFIG=libevent.pc
 
 # These sources are conditionally added by configure.in or conditionally
 # included from other files.
@@ -89,21 +90,28 @@ EXTRA_DIST = \
 	Makefile.nmake test/Makefile.nmake \
 	$(PLATFORM_DEPENDENT_SRC)
 
-lib_LTLIBRARIES = libevent.la libevent_core.la libevent_extra.la
+LIBEVENT_LIBS_LA = libevent.la libevent_core.la libevent_extra.la
 if PTHREADS
-lib_LTLIBRARIES += libevent_pthreads.la
-pkgconfig_DATA += libevent_pthreads.pc
+LIBEVENT_LIBS_LA += libevent_pthreads.la
+LIBEVENT_PKGCONFIG += libevent_pthreads.pc
 endif
 if OPENSSL
-lib_LTLIBRARIES += libevent_openssl.la
-pkgconfig_DATA += libevent_openssl.pc
+LIBEVENT_LIBS_LA += libevent_openssl.la
+LIBEVENT_PKGCONFIG += libevent_openssl.pc
+endif
+
+if INSTALL_LIBEVENT
+lib_LTLIBRARIES = $(LIBEVENT_LIBS_LA)
+pkgconfig_DATA = $(LIBEVENT_PKGCONFIG)
+else
+noinst_LTLIBRARIES =  $(LIBEVENT_LIBS_LA)
 endif
 
 SUBDIRS = . include sample test
 
 if BUILD_WIN32
 
-SYS_LIBS = -lws2_32
+SYS_LIBS = -lws2_32 -lshell32 -ladvapi32
 SYS_SRC = win32select.c evthread_win32.c buffer_iocp.c event_iocp.c \
 	bufferevent_async.c
 SYS_INCLUDES = -IWIN32-Code
@@ -165,7 +173,7 @@ CORE_SRC = event.c evthread.c buffer.c \
 	evmap.c	log.c evutil.c evutil_rand.c strlcpy.c $(SYS_SRC)
 EXTRA_SRC = event_tagging.c http.c evdns.c evrpc.c
 
-if BUILD_WIN32
+if BUILD_WITH_NO_UNDEFINED
 NO_UNDEFINED = -no-undefined
 MAYBE_CORE = libevent_core.la
 else
@@ -173,7 +181,7 @@ NO_UNDEFINED =
 MAYBE_CORE =
 endif
 
-GENERIC_LDFLAGS = -static
+GENERIC_LDFLAGS = -version-info $(VERSION_INFO) $(RELEASE) $(NO_UNDEFINED)
 
 libevent_la_SOURCES = $(CORE_SRC) $(EXTRA_SRC)
 libevent_la_LIBADD = @LTLIBOBJS@ $(SYS_LIBS)
@@ -185,6 +193,7 @@ libevent_core_la_LDFLAGS = $(GENERIC_LDFLAGS)
 
 if PTHREADS
 libevent_pthreads_la_SOURCES = evthread_pthread.c
+libevent_pthreads_la_LIBADD = $(MAYBE_CORE)
 libevent_pthreads_la_LDFLAGS = $(GENERIC_LDFLAGS)
 endif
 
@@ -194,7 +203,7 @@ libevent_extra_la_LDFLAGS = $(GENERIC_LDFLAGS)
 
 if OPENSSL
 libevent_openssl_la_SOURCES = bufferevent_openssl.c
-libevent_openssl_la_LIBADD = $(MAYBE_CORE) -lcrypto -lssl
+libevent_openssl_la_LIBADD = $(MAYBE_CORE) $(OPENSSL_LIBS)
 libevent_openssl_la_LDFLAGS = $(GENERIC_LDFLAGS)
 endif
 
@@ -209,9 +218,15 @@ noinst_HEADERS = util-internal.h mm-internal.h ipv6-internal.h \
 	WIN32-Code/tree.h \
 	compat/sys/queue.h
 
-include_HEADERS = event.h evhttp.h evdns.h evrpc.h evutil.h
+EVENT1_HDRS = event.h evhttp.h evdns.h evrpc.h evutil.h
 
-INCLUDES = -I$(srcdir)/compat -I$(srcdir)/include -I./include $(SYS_INCLUDES)
+if INSTALL_LIBEVENT
+include_HEADERS = $(EVENT1_HDRS)
+else
+noinst_HEADERS += $(EVENT1_HDRS)
+endif
+
+AM_CPPFLAGS = -I$(srcdir)/compat -I$(srcdir)/include -I./include $(SYS_INCLUDES)
 
 verify: check
 
@@ -220,6 +235,4 @@ doxygen: FORCE
 FORCE:
 
 DISTCLEANFILES = *~ libevent.pc ./include/event2/event-config.h
-
-install:
 

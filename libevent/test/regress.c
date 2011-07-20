@@ -2204,7 +2204,7 @@ many_event_cb(evutil_socket_t fd, short event, void *arg)
 static void
 test_many_events(void *arg)
 {
-	/* Try 70 events that should all be aready at once.  This will
+	/* Try 70 events that should all be ready at once.  This will
 	 * exercise the "resize" code on most of the backends, and will make
 	 * sure that we can get past the 64-handle limit of some windows
 	 * functions. */
@@ -2212,14 +2212,25 @@ test_many_events(void *arg)
 
 	struct basic_test_data *data = arg;
 	struct event_base *base = data->base;
+	int one_at_a_time = data->setup_data != NULL;
 	evutil_socket_t sock[MANY];
 	struct event *ev[MANY];
 	int called[MANY];
 	int i;
+	int loopflags = EVLOOP_NONBLOCK, evflags=0;
+	const int is_evport = !strcmp(event_base_get_method(base),"evport");
+	if (one_at_a_time) {
+		loopflags |= EVLOOP_ONCE;
+		evflags = EV_PERSIST;
+	}
 
 	memset(sock, 0xff, sizeof(sock));
 	memset(ev, 0, sizeof(ev));
 	memset(called, 0, sizeof(called));
+	if (is_evport && one_at_a_time) {
+		TT_DECLARE("NOTE", ("evport can't pass this in 2.0; skipping\n"));
+		tt_skip();
+	}
 
 	for (i = 0; i < MANY; ++i) {
 		/* We need an event that will hit the backend, and that will
@@ -2228,15 +2239,20 @@ test_many_events(void *arg)
 		sock[i] = socket(AF_INET, SOCK_DGRAM, 0);
 		tt_assert(sock[i] >= 0);
 		called[i] = 0;
-		ev[i] = event_new(base, sock[i], EV_WRITE, many_event_cb,
-		    &called[i]);
+		ev[i] = event_new(base, sock[i], EV_WRITE|evflags,
+		    many_event_cb, &called[i]);
 		event_add(ev[i], NULL);
+		if (one_at_a_time)
+			event_base_loop(base, EVLOOP_NONBLOCK|EVLOOP_ONCE);
 	}
 
-	event_base_loop(base, EVLOOP_NONBLOCK);
+	event_base_loop(base, loopflags);
 
 	for (i = 0; i < MANY; ++i) {
-		tt_int_op(called[i], ==, 1);
+		if (one_at_a_time)
+			tt_int_op(called[i], ==, MANY - i + 1);
+		else
+			tt_int_op(called[i], ==, 1);
 	}
 
 end:
@@ -2303,7 +2319,8 @@ struct testcase_t main_testcases[] = {
 	{ "dup_fd", test_dup_fd, TT_ISOLATED, &basic_setup, NULL },
 #endif
 	{ "mm_functions", test_mm_functions, TT_FORK, NULL, NULL },
-	BASIC(many_events, TT_ISOLATED),
+	{ "many_events", test_many_events, TT_ISOLATED, &basic_setup, NULL },
+	{ "many_events_slow_add", test_many_events, TT_ISOLATED, &basic_setup, (void*)1 },
 
 	{ "struct_event_size", test_struct_event_size, 0, NULL, NULL },
 

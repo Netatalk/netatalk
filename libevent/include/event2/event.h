@@ -107,6 +107,10 @@ int event_reinit(struct event_base *base);
 /**
   Threadsafe event dispatching loop.
 
+  This loop will run the event base until either there are no more added
+  events, or until something calls event_base_loopbreak() or
+  evenet_base_loopexit().
+
   @param eb the event_base structure returned by event_init()
   @see event_init(), event_dispatch()
  */
@@ -322,14 +326,14 @@ void event_set_fatal_callback(event_fatal_cb cb);
 int event_base_set(struct event_base *, struct event *);
 
 /**
- event_loop() flags
+ event_base_loop() flags
  */
 /*@{*/
 /** Block until we have an active event, then exit once all active events
  * have had their callbacks run. */
 #define EVLOOP_ONCE	0x01
 /** Do not block: see which events are ready now, run the callbacks
- * highest-priority ones, then exit. */
+ * of the highest-priority ones, then exit. */
 #define EVLOOP_NONBLOCK	0x02
 /*@}*/
 
@@ -337,6 +341,11 @@ int event_base_set(struct event_base *, struct event *);
   Handle events (threadsafe version).
 
   This is a more flexible version of event_base_dispatch().
+
+  By default, this loop will run the event base until either there are no more
+  added events, or until something calls event_base_loopbreak() or
+  evenet_base_loopexit().  You can override this behavior with the 'flags'
+  argument.
 
   @param eb the event_base structure returned by event_init()
   @param flags any combination of EVLOOP_ONCE | EVLOOP_NONBLOCK
@@ -748,8 +757,9 @@ const struct timeval *event_base_init_common_timeout(struct event_base *base,
 
  Note that all memory returned from Libevent will be allocated by the
  replacement functions rather than by malloc() and realloc().  Thus, if you
- have replaced those functions, it may not be appropriate to free() memory
- that you get from Libevent.
+ have replaced those functions, it will not be appropriate to free() memory
+ that you get from Libevent.  Instead, you must use the free_fn replacement
+ that you provided.
 
  @param malloc_fn A replacement for malloc.
  @param realloc_fn A replacement for realloc
