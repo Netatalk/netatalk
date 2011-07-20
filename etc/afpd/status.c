@@ -135,10 +135,10 @@ static void status_machine(char *data)
     memcpy(&status, start + AFPSTATUS_MACHOFF, sizeof(status));
     data += ntohs( status );
 
-    if ((strlen(machine) + strlen(VERSION)) <= 16) {
+    if ((strlen(machine) + strlen(VERSION)) <= AFPSTATUS_MACHLEN) {
         len = snprintf(buf, AFPSTATUS_MACHLEN + 1, machine, VERSION);
     } else {
-        if (strlen(VERSION) > 16) {
+        if (strlen(VERSION) > AFPSTATUS_MACHLEN) {
             len = snprintf(buf, AFPSTATUS_MACHLEN + 1, VERSION);
         } else {
             (void)snprintf(buf, AFPSTATUS_MACHLEN + 1, machine, "");
