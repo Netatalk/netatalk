@@ -214,6 +214,8 @@ int reconnect_ipc(AFPObj *obj)
 /*!
  * Read a IPC message from a child
  *
+ * This is using an fd with non-blocking IO, so EAGAIN is not an error
+ *
  * @args children  (rw) pointer to our structure with all childs
  * @args fd        (r)  IPC socket with child
  *
@@ -226,9 +228,12 @@ int ipc_server_read(server_child *children, int fd)
     char      buf[IPC_MAXMSGSIZE], *p;
 
     if ((ret = read(fd, buf, IPC_HEADERLEN)) != IPC_HEADERLEN) {
-        if (ret != 0)
+        if (ret != 0) {
+            if (errno == EAGAIN)
+                return 0;
             LOG(log_error, logtype_afpd, "Reading IPC header failed (%i of %u bytes read): %s",
                 ret, IPC_HEADERLEN, strerror(errno));
+        }
         return -1;
     }
 
