@@ -517,7 +517,8 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi_disconnect(dsi) != 0)
                 afp_dsi_die(EXITERR_CLNT);
 
-            pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
+            while (dsi->flags & DSI_DISCONNECTED)
+                pause(); /* gets interrupted by SIGALARM or SIGURG tickle */
             continue; /* continue receiving until disconnect timer expires
                        * or a primary reconnect succeeds  */
         }
