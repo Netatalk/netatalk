@@ -327,7 +327,7 @@ static void alarm_handler(int sig _U_)
     }
 
     /* if we're in the midst of processing something, don't die. */        
-    if ( !(dsi->flags & DSI_RUNNING) && (dsi->tickle >= AFPobj->options.timeout)) {
+    if (dsi->tickle >= AFPobj->options.timeout) {
         LOG(log_error, logtype_afpd, "afp_alarm: child timed out, entering disconnected state");
         if (dsi_disconnect(dsi) != 0)
             afp_dsi_die(EXITERR_CLNT);
@@ -503,6 +503,12 @@ void afp_over_dsi(AFPObj *obj)
             /*  got ECONNRESET in read from client => exit*/
             if (dsi->flags & DSI_GOT_ECONNRESET) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: client connection reset");
+                afp_dsi_close(obj);
+                exit(0);
+            }
+
+            if (dsi->flags & DSI_RECONINPROG) {
+                LOG(log_note, logtype_afpd, "afp_over_dsi: failed reconnect");
                 afp_dsi_close(obj);
                 exit(0);
             }
