@@ -244,6 +244,7 @@ static void unblock_sig(DSI *dsi)
  */
 int dsi_disconnect(DSI *dsi)
 {
+    LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
     dsi->proto_close(dsi);          /* 1 */
     dsi->flags |= DSI_DISCONNECTED; /* 2 */
     if (geteuid() == 0)
