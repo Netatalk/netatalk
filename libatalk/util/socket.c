@@ -497,7 +497,7 @@ void fdset_add_fd(struct pollfd **fdsetp,
  * Remove a fd from our pollfd array
  *
  * 1. Search fd
- * 2a 
+ * 2a Matched last (or only) in the set ? null it and return
  * 2b If we remove the last array elemnt, just decrease count
  * 3. If found move all following elements down by one
  * 4. Decrease count of used elements in array
@@ -524,12 +524,16 @@ void fdset_del_fd(struct pollfd **fdsetp,
 
     for (int i = 0; i < *fdset_usedp; i++) {
         if (fdset[i].fd == fd) { /* 1 */
-            if (i == 0 && *fdset_usedp == 1) { /* 2a */
+            if ((i + 1) == *fdset_usedp) { /* 2a */
                 fdset[i].fd = -1;
                 memset(&polldata[i], 0, sizeof(struct polldata));
             } else if (i < (*fdset_usedp - 1)) { /* 2b */
-                memmove(&fdset[i], &fdset[i+1], (*fdset_usedp - 1) * sizeof(struct pollfd)); /* 3 */
-                memmove(&polldata[i], &polldata[i+1], (*fdset_usedp - 1) * sizeof(struct polldata)); /* 3 */
+                memmove(&fdset[i],
+                        &fdset[i+1],
+                        (*fdset_usedp - i - 1) * sizeof(struct pollfd)); /* 3 */
+                memmove(&polldata[i],
+                        &polldata[i+1],
+                        (*fdset_usedp - i - 1) * sizeof(struct polldata)); /* 3 */
             }
             (*fdset_usedp)--;
             break;
