@@ -133,7 +133,9 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                         switch (errno) {
                         case EINTR:
                             (void)gettimeofday(&now, NULL);
-                            if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
+                            if (now.tv_sec > end.tv_sec
+                                ||
+                                (now.tv_sec == end.tv_sec && now.tv_usec >= end.tv_usec)) {
                                 LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
                                 goto exit;
                             }
