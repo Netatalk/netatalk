@@ -500,12 +500,14 @@ void afp_over_dsi(AFPObj *obj)
                 exit(0);
             }
 
+#if 0
             /*  got ECONNRESET in read from client => exit*/
             if (dsi->flags & DSI_GOT_ECONNRESET) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: client connection reset");
                 afp_dsi_close(obj);
                 exit(0);
             }
+#endif
 
             if (dsi->flags & DSI_RECONINPROG) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: failed reconnect");
