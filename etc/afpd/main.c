@@ -95,10 +95,8 @@ static void fd_set_listening_sockets(void)
         fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd, LISTEN_FD, config);
     }
 
-    if (default_options.flags & OPTION_KEEPSESSIONS) {
-        LOG(log_note, logtype_afpd, "Activating continous service");
+    if (default_options.flags & OPTION_KEEPSESSIONS)
         fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd, DISASOCIATED_IPC_FD, NULL);
-    }
 }
  
 static void fd_reset_listening_sockets(void)
@@ -381,7 +379,12 @@ int main(int ac, char **av)
     cnid_init();
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
-    disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
+
+    if (default_options.flags & OPTION_KEEPSESSIONS) {
+        LOG(log_note, logtype_afpd, "Activating continous service");
+        disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
+    }
+
     fd_set_listening_sockets();
 
     /* set limits */
