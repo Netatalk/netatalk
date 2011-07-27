@@ -467,6 +467,9 @@ void fdset_add_fd(int maxconns,
         *fdset_sizep = fdset_size;
         *fdsetp = fdset;
         *polldatap = polldata;
+
+        LOG(log_debug, logtype_default, "fdset_add_fd: initialized with space for %i conncections", 
+            maxconns);
     }
 
     /* 2 */
