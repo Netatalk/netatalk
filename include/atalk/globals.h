@@ -43,6 +43,7 @@
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
+#define OPTION_KEEPSESSIONS  (1 << 10) /* preserve sessions across master afpd restart with SIGQUIT */
 
 #ifdef FORCE_UIDGID
 /* set up a structure for this */
@@ -127,18 +128,16 @@ typedef struct _AFPObj {
 /* typedef for AFP functions handlers */
 typedef int (*AFPCmd)(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
-/* afp_dsi.c */
-extern AFPObj *AFPobj;
-
-extern int		afp_version;
-extern int		afp_errno;
-extern unsigned char	nologin;
-extern struct dir	*curdir;
-extern char		getwdbuf[];
-
-/* FIXME CNID */
-extern const char *Cnid_srv;
-extern const char *Cnid_port;
+/* Global variables */
+extern AFPObj             *AFPobj;
+extern int                afp_version;
+extern int                afp_errno;
+extern unsigned char      nologin;
+extern struct dir         *curdir;
+extern char               getwdbuf[];
+extern struct afp_options default_options;
+extern const char         *Cnid_srv;
+extern const char         *Cnid_port;
 
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);

@@ -240,6 +240,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->flags |= OPTION_ANNOUNCESSH;
     if (strstr(buf, " -noacl2maccess"))
         options->flags &= ~OPTION_ACL2MACCESS;
+    if (strstr(buf, " -keepsessions")) {
+        default_options.flags |= OPTION_KEEPSESSIONS;
+        options->flags |= OPTION_KEEPSESSIONS;
+    }
 
     /* passwd bits */
     if (strstr(buf, " -nosavepassword"))
