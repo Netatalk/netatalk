@@ -154,7 +154,8 @@ struct polldata {
                          * pointer to afp_child_t for IPC fd             */
 };
 
-extern void fdset_add_fd(struct pollfd **fdsetp,
+extern void fdset_add_fd(int maxconns,
+                         struct pollfd **fdsetp,
                          struct polldata **polldatap,
                          int *fdset_usedp,
                          int *fdset_sizep,

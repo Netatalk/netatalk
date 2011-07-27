@@ -51,6 +51,9 @@ static int argc = 0;
 static char **argv = NULL;
 #endif /* TRU64 */
 
+#define AFP_LISTENERS 32
+#define FDSET_SAFETY  5
+
 unsigned char	nologin = 0;
 struct afp_options default_options;
 static AFPConfig *configs;
@@ -92,11 +95,25 @@ static void fd_set_listening_sockets(void)
     for (config = configs; config; config = config->next) {
         if (config->fd < 0) /* for proxies */
             continue;
-        fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd, LISTEN_FD, config);
+        fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+                     &fdset,
+                     &polldata,
+                     &fdset_used,
+                     &fdset_size,
+                     config->fd,
+                     LISTEN_FD,
+                     config);
     }
 
     if (default_options.flags & OPTION_KEEPSESSIONS)
-        fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd, DISASOCIATED_IPC_FD, NULL);
+        fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+                     &fdset,
+                     &polldata,
+                     &fdset_used,
+                     &fdset_size,
+                     disasociated_ipc_fd,
+                     DISASOCIATED_IPC_FD,
+                     NULL);
 }
  
 static void fd_reset_listening_sockets(void)
@@ -459,7 +476,14 @@ int main(int ac, char **av)
                     /* config->server_start is afp_config.c:dsi_start() for DSI */
                     if (child = config->server_start(config, configs, server_children)) {
                         /* Add IPC fd to select fd set */
-                        fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0], IPC_FD, child);
+                        fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+                                     &fdset,
+                                     &polldata,
+                                     &fdset_used,
+                                     &fdset_size,
+                                     child->ipc_fds[0],
+                                     IPC_FD,
+                                     child);
                     }
                     break;
 
@@ -496,7 +520,14 @@ int main(int ac, char **av)
                         break;
                     }
                     child->disasociated = 1;
-                    fdset_add_fd(&fdset, &polldata, &fdset_used, &fdset_size, fd[0], IPC_FD, child);
+                    fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+                                 &fdset,
+                                 &polldata,
+                                 &fdset_used,
+                                 &fdset_size,
+                                 fd[0],
+                                 IPC_FD,
+                                 child);
                     break;
 
                 default:

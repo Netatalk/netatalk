@@ -419,19 +419,16 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
     return ret;
 }
 
-#define POLL_FD_SET_STARTSIZE 512
-#define POLL_FD_SET_INCREASE  128
 /*!
  * Add a fd to a dynamic pollfd array that is allocated and grown as needed
  *
  * This uses an additional array of struct polldata which stores type information
  * (enum fdtype) and a pointer to anciliary user data.
  *
- * 1. Allocate the arrays with an intial size of [POLL_FD_SET_STARTSIZE] if
- *    *fdsetp is NULL.
- * 2. Grow array as needed
- * 3. Fill in both array elements and increase count of used elements
+ * 1. Allocate the arrays with the size of "maxconns" if *fdsetp is NULL.
+ * 2. Fill in both array elements and increase count of used elements
  * 
+ * @param maxconns    (r)  maximum number of connections, determines array size
  * @param fdsetp      (rw) pointer to callers pointer to the pollfd array
  * @param polldatap   (rw) pointer to callers pointer to the polldata array
  * @param fdset_usedp (rw) pointer to an int with the number of used elements
@@ -440,7 +437,8 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
  * @param fdtype      (r)  type of fd, currently IPC_FD or LISTEN_FD
  * @param data        (rw) pointer to data the caller want to associate with an fd
  */
-void fdset_add_fd(struct pollfd **fdsetp,
+void fdset_add_fd(int maxconns,
+                  struct pollfd **fdsetp,
                   struct polldata **polldatap,
                   int *fdset_usedp,
                   int *fdset_sizep,
@@ -455,37 +453,23 @@ void fdset_add_fd(struct pollfd **fdsetp,
     LOG(log_debug, logtype_default, "fdset_add_fd: adding fd %i in slot %i", fd, *fdset_usedp);
 
     if (fdset == NULL) { /* 1 */
-        /* Initialize with space for 512 fds */
-        fdset = calloc(POLL_FD_SET_STARTSIZE, sizeof(struct pollfd));
+        /* Initialize with space for all possibly active fds */
+        fdset = calloc(maxconns, sizeof(struct pollfd));
         if (! fdset)
             exit(EXITERR_SYS);
 
-        polldata = calloc(POLL_FD_SET_STARTSIZE, sizeof(struct polldata));
+        polldata = calloc(maxconns, sizeof(struct polldata));
         if (! polldata)
             exit(EXITERR_SYS);
 
-        fdset_size = 512;
+        fdset_size = maxconns;
+
         *fdset_sizep = fdset_size;
         *fdsetp = fdset;
         *polldatap = polldata;
     }
 
-    if (*fdset_usedp >= fdset_size) { /* 2 */
-        fdset = realloc(fdset, sizeof(struct pollfd) * (fdset_size + POLL_FD_SET_INCREASE));
-        if (fdset == NULL)
-            exit(EXITERR_SYS);
-
-        polldata = realloc(polldata, sizeof(struct polldata) * (fdset_size + POLL_FD_SET_INCREASE));
-        if (polldata == NULL)
-            exit(EXITERR_SYS);
-
-        fdset_size += POLL_FD_SET_INCREASE;
-        *fdset_sizep = fdset_size;
-        *fdsetp = fdset;
-        *polldatap = polldata;
-    }
-
-    /* 3 */
+    /* 2 */
     fdset[*fdset_usedp].fd = fd;
     fdset[*fdset_usedp].events = POLLIN;
     polldata[*fdset_usedp].fdtype = fdtype;
