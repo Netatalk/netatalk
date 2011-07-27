@@ -10,6 +10,8 @@ Changes in 2.2.1
 * FIX: afpd: ACL access checking
 * FIX: afpd: fix a possible race condition between SIGCHLD handler and
        new connection attempts
+* FIX: afpd: fix undefined behaviour when more then ~510 connetions where
+       established
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: suse: initscript return better status
