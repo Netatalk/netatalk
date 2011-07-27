@@ -188,8 +188,7 @@ int reconnect_ipc(AFPObj *obj)
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
-    srandom(getpid());
-    sleep((random() % 5) + 15);  /* give it enough time to start */
+    sleep((getpid() % 5) + 15);  /* give it enough time to start */
 
     while (retrycount++ < 10) {
         if ((obj->ipc_fd = ipc_client_uds(_PATH_AFP_IPC)) == -1) {
