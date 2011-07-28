@@ -1119,7 +1119,7 @@ static int check_acl_access(const struct vol *vol,
         cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
 
     /* Get uid or gid from UUID */
-    EC_ZERO_LOG_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
+    EC_ZERO_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
     EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
 
     switch (uuidtype) {

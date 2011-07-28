@@ -215,7 +215,7 @@ cleanup:
  * Caller must free name appropiately.
  */
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
-    int ret = 0;
+    int ret;
     uid_t uid;
     gid_t gid;
     struct passwd *pwd;
@@ -270,13 +270,16 @@ int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
 
 #ifdef HAVE_LDAP
     ret = ldap_getnamefromuuid(uuid_bin2string(uuidp), name, type);
+#else
+    ret = -1;
+#endif
+
     if (ret != 0) {
-        LOG(log_warning, logtype_afpd, "getnamefromuuid(%s): no result from ldap_getnamefromuuid",
+        LOG(log_debug, logtype_afpd, "getnamefromuuid(%s): not found",
             uuid_bin2string(uuidp));
         add_cachebyuuid(uuidp, "UUID_ENOENT", UUID_ENOENT, 0);
         return -1;
     }
-#endif
 
     add_cachebyuuid(uuidp, *name, *type, 0);
 
