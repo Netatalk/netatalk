@@ -505,6 +505,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_SEARCHDB;
             else if (strcasecmp(p, "nonetids") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NONETIDS;
+            else if (strcasecmp(p, "noacls") == 0)
+                options[VOLOPT_FLAGS].i_value &= ~AFPVOL_ACLS;
             p = strtok(NULL, ",");
         }
 
@@ -745,9 +747,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
 #ifdef HAVE_ACLS
-    if (check_vol_acl_support(volume))
-        volume->v_flags |= AFPVOL_ACLS
-;
+    if (!check_vol_acl_support(volume))
+        volume->v_flags &= ~AFPVOL_ACLS;
 #endif
 
     /* handle options */
@@ -1227,6 +1228,9 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
 
     /* Enable some default options for all volumes */
     save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+#ifdef HAVE_ACLS
+    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
+#endif
     save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
     LOG(log_maxdebug, logtype_afpd, "readvolfile: seeding default umask: %04o",
         obj->options.umask);

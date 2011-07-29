@@ -3,6 +3,12 @@ Changes in 2.2.1
 
 * NEW: afpd: disable continous service feature by default, new option
        -keepsessions to enable it
+* UPD: afpd: Enhance ACL support detection for volumes: enable them per volume if
+       1) ACL support compiled in, 2) the volume supports ACLs, 3) the new volume
+       option "noacls" is not set for the volume.
+       The previous behaviour was to enable ACL support for a volume if
+       1) it was compiled in and 2) the volume supported ACLs. There was no way
+       to disable ACLs for a volume.
 * FIX: afpd: increase BerkeleyDB locks and lockobjs
 * FIX: afpd: create special folder as root
 * FIX: afpd: fix compilation error if --enable-ddp is used
