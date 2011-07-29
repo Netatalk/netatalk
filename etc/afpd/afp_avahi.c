@@ -112,7 +112,7 @@ static void register_stuff(void) {
                 goto fail;
 
             }
-            LOG(log_info, logtype_afpd, "Registering server '%s' with with Bonjour",
+            LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour",
                 dsi->bonjourname);
 
             if (avahi_entry_group_add_service(ctx->group,
