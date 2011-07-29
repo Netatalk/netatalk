@@ -1509,15 +1509,17 @@ EC_CLEANUP:
  */
 int check_vol_acl_support(const struct vol *vol)
 {
-    int ret = 1;
+    int ret = 0;
 
 #ifdef HAVE_SOLARIS_ACLS
     ace_t *aces = NULL;
+    ret = 1;
     if (get_nfsv4_acl(vol->v_path, &aces) == -1)
         ret = 0;
 #endif
 #ifdef HAVE_POSIX_ACLS
     acl_t acl = NULL;
+    ret = 1;
     if ((acl = acl_get_file(vol->v_path, ACL_TYPE_ACCESS)) == NULL)
         ret = 0;
 #endif
