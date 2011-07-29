@@ -43,7 +43,7 @@ TEMPLATES = \
 	rc.atalk.debian.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) afpd atalkd cnid_metad papd timelord
-EXTRA_DIST = $(TEMPLATES) rc.atalk.cobalt
+EXTRA_DIST = $(TEMPLATES)
 
 # overwrite automake uninstall
 # not beautiful, but this way we can call the OS specific init script
@@ -92,27 +92,6 @@ install-data-hook:
 uninstall-startup:
 	-insserv -d $(sysv_SCRIPTS)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
-
-endif
-
-#
-# checking for "cobalt" style sysv scripts:
-#
-
-if USE_COBALT
-
-sysvdir	= /etc/rc.d/init.d
-sysv_SCRIPTS = netatalk
-
-$(sysv_SCRIPTS): rc.atalk.cobalt
-	cp -f rc.atalk.cobalt $(sysv_SCRIPTS)
-	chmod a+x $(sysv_SCRIPTS)
-
-install-data-hook:
-
-uninstall-hook:
-
-uninstall-startup: uninstall-am
 
 endif
 
