@@ -1035,6 +1035,63 @@ EC_CLEANUP:
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
+#ifndef HAVE_ACL_FROM_MODE
+static acl_t acl_from_mode(mode_t mode)
+{
+    acl_t acl;
+    acl_entry_t entry;
+    acl_permset_t permset;
+
+    if (!(acl = acl_init(3)))
+        return NULL;
+
+    if (acl_create_entry(&acl, &entry) != 0)
+        goto error;
+    acl_set_tag_type(entry, ACL_USER_OBJ);
+    acl_get_permset(entry, &permset);
+    acl_clear_perms(permset);
+    if (mode & S_IRUSR)
+        acl_add_perm(permset, ACL_READ);
+    if (mode & S_IWUSR)
+        acl_add_perm(permset, ACL_WRITE);
+    if (mode & S_IXUSR)
+        acl_add_perm(permset, ACL_EXECUTE);
+    acl_set_permset(entry, permset);
+
+    if (acl_create_entry(&acl, &entry) != 0)
+        goto error;
+    acl_set_tag_type(entry, ACL_GROUP_OBJ);
+    acl_get_permset(entry, &permset);
+    acl_clear_perms(permset);
+    if (mode & S_IRGRP)
+        acl_add_perm(permset, ACL_READ);
+    if (mode & S_IWGRP)
+        acl_add_perm(permset, ACL_WRITE);
+    if (mode & S_IXGRP)
+        acl_add_perm(permset, ACL_EXECUTE);
+    acl_set_permset(entry, permset);
+
+    if (acl_create_entry(&acl, &entry) != 0)
+        goto error;
+    acl_set_tag_type(entry, ACL_OTHER);
+    acl_get_permset(entry, &permset);
+    acl_clear_perms(permset);
+    if (mode & S_IROTH)
+        acl_add_perm(permset, ACL_READ);
+    if (mode & S_IWOTH)
+        acl_add_perm(permset, ACL_WRITE);
+    if (mode & S_IXOTH)
+        acl_add_perm(permset, ACL_EXECUTE);
+    acl_set_permset(entry, permset);
+
+    return acl;
+
+error:
+    acl_free(acl);
+    return NULL;
+}
+#endif
+
 static int set_acl(const struct vol *vol,
                    const char *name,
                    int inherit _U_,
@@ -1057,11 +1114,8 @@ static int set_acl(const struct vol *vol,
     /* for files def_acl will be NULL */
 
     /* create access acl from mode */
-#ifdef HAVE_ACL_FROM_MODE
     EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
-#else
-#error "Missing acl_from_mode() replacement"
-#endif
+
     /* adds the clients aces */
     EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &def_acl, &acc_acl, ace_count), AFPERR_MISC);
 
