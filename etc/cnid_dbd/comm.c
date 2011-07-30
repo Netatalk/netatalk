@@ -18,6 +18,10 @@
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
 #endif
+#ifndef __BSD_VISIBLE
+/* for u_short, u_char, etc. */
+# define __BSD_VISIBLE 1
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
