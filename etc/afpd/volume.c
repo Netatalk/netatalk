@@ -747,8 +747,10 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
 #ifdef HAVE_ACLS
-    if (!check_vol_acl_support(volume))
-        volume->v_flags &= ~AFPVOL_ACLS;
+    if (!check_vol_acl_support(volume)) {
+        LOG(log_debug, logtype_afpd, "creatvol(\"%s\"): disabling ACL support", volume->v_path);
+        options[VOLOPT_FLAGS].i_value &= ~AFPVOL_ACLS;
+    }
 #endif
 
     /* handle options */
