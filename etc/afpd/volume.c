@@ -2317,14 +2317,13 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
 
     ret  = stat_vol(bitmap, volume, rbuf, rbuflen);
-    if (ret == AFP_OK) {
 
-        if (!(volume->v_flags & AFPVOL_RO)) {
-            handle_special_folders( volume );
-            savevolinfo(volume,
-                        volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
-                        volume->v_cnidport   ? volume->v_cnidport   : Cnid_port);
-        }
+    if (ret == AFP_OK) {
+        handle_special_folders(volume);
+        savevolinfo(volume,
+                    volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
+                    volume->v_cnidport   ? volume->v_cnidport   : Cnid_port);
+
 
         /*
          * If you mount a volume twice, the second time the trash appears on
@@ -2751,9 +2750,6 @@ static void handle_special_folders (const struct vol * vol)
             process_uid = 0;
         }
     }
-
-    if ((vol->v_flags & AFPVOL_RO))
-        return;
 
     for (; p->name != NULL; p++) {
         create_special_folder (vol, p);
