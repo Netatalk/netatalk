@@ -594,6 +594,7 @@ int dircache_init(int reqsize)
     rootParent.d_fullpath = bfromcstr("ROOT_PARENT");
     rootParent.d_m_name = bfromcstr("ROOT_PARENT");
     rootParent.d_u_name = rootParent.d_m_name;
+    rootParent.d_rights_cache = 0xffffffff;
 
     return 0;
 }
