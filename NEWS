@@ -28,6 +28,7 @@ Changes in 2.2.1
 * FIX: suse: initscript return better status
 * FIX: Sourcecode distribution: add missing headers
 * FIX: Solaris 10: missing dirfd replacement function
+* FIX: case-conversion of surrogate pair
 
 Changes in 2.2
 ==============
