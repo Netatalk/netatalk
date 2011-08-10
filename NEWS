@@ -21,6 +21,8 @@ Changes in 2.2.1
 * FIX: afpd: fix a crash when searching for a UUID that is not a special
        local UUID and LDAP support is not compiled in
 * FIX: afpd: .volinfo file not created on first volume access if user in rolist
+* FIX: afpd: possible crash at startup when registering with Avahi when Avahi is
+       not running
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: suse: initscript return better status

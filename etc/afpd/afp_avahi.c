@@ -306,7 +306,7 @@ void av_zeroconf_setup(const AFPConfig *configs) {
                                          NULL,
                                          &error))) {
         LOG(log_error, logtype_afpd, "Failed to create client object: %s",
-            avahi_strerror(avahi_client_errno(ctx->client)));
+            avahi_strerror(error));
         goto fail;
     }
 
