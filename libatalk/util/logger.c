@@ -437,7 +437,7 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int 
 
     log_config.inited = 1;
 
-    LOG(log_note, logtype_logger, "Set syslog logging to level: %s",
+    LOG(log_info, logtype_logger, "Set syslog logging to level: %s",
         arr_loglevel_strings[loglevel]);
 }
 

@@ -700,11 +700,14 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
         *p = '\0';
     }
 
+#ifdef ultrix
     if (NULL == ( p = strrchr( av[ 0 ], '/' )) ) {
         p = av[ 0 ];
     } else {
         p++;
     }
+    openlog( p, LOG_PID ); /* ultrix only */
+#endif /* ultrix */
 
     while (EOF != ( c = getopt( ac, av, OPTIONS )) ) {
         switch ( c ) {
@@ -795,12 +798,6 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
         show_usage( p );
         exit( 2 );
     }
-
-#ifdef ultrix
-    openlog( p, LOG_PID ); /* ultrix only */
-#else
-    set_processname(p);
-#endif /* ultrix */
 
     return 1;
 }

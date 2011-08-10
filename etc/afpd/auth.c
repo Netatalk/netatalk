@@ -273,10 +273,6 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     int admin = 0;
 #endif /* ADMIN_GRP */
 
-#if 0
-    set_processname("afpd");
-#endif
-
     if ( pwd->pw_uid == 0 ) {   /* don't allow root login */
         LOG(log_error, logtype_afpd, "login: root login denied!" );
         return AFPERR_NOTAUTH;

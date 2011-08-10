@@ -262,6 +262,7 @@ int main(int ac, char **av)
     fault_setup(NULL);
 
     /* Default log setup: log to syslog */
+    set_processname("afpd");
     setuplog("default log_note");
 
     afp_options_init(&default_options);
