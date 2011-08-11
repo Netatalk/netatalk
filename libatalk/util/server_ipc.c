@@ -159,12 +159,13 @@ int ipc_client_uds(const char *name)
     pid_t pid = getpid();
 
     EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
-    EC_ZERO_LOG( setnonblock(fd, 1) );
     address.sun_family = AF_UNIX;
     address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
 
     EC_ZERO_LOG( connect(fd, (struct sockaddr *)&address, address_length) ); /* 1 */
     LOG(log_debug, logtype_afpd, "ipc_client_uds: connected to master");
+
+    EC_ZERO_LOG( setnonblock(fd, 1) );
 
     if (writet(fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
         LOG(log_error, logtype_afpd, "ipc_client_uds: writet: %s", strerror(errno));
