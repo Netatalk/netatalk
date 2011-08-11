@@ -326,9 +326,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     }
 
     if ((c = getoption(buf, "-sleep"))) {
-        options->sleep = atoi(c) *120;
+        options->disconnected = options->sleep = atoi(c) * 120;
         if (options->sleep <= 4) {
-            options->sleep = 4;
+            options->disconnected = options->sleep = 4;
         }
     }
 
