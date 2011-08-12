@@ -23,6 +23,9 @@ Changes in 2.2.1
 * FIX: afpd: .volinfo file not created on first volume access if user in rolist
 * FIX: afpd: possible crash at startup when registering with Avahi when Avahi is
        not running
+* FIX: afpd: return correct user/group type when mapping UUIDs to names
+* FIX: afpd: for directories add DARWIN_ACE_DELETE ACE if DARWIN_ACE_ADD_SUBDIRECTORY
+       is set
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: suse: initscript return better status

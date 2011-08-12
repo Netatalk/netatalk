@@ -1168,6 +1168,7 @@ static int check_acl_access(const struct vol *vol,
     uuidtype_t     uuidtype;
     struct stat    st;
     bstring        parent = NULL;
+    int            is_dir;
 
     LOG(log_maxdebug, logtype_afpd, "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
         cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
@@ -1188,7 +1189,9 @@ static int check_acl_access(const struct vol *vol,
         goto EC_CLEANUP;
     }
 
-    if ((strcmp(path, ".") == 0) && (curdir->d_rights_cache != 0xffffffff)) {
+    is_dir = !strcmp(path, ".");
+
+    if (is_dir && (curdir->d_rights_cache != 0xffffffff)) {
         /* its a dir and the cache value is valid */
         allowed_rights = curdir->d_rights_cache;
         LOG(log_debug, logtype_afpd, "check_access: allowed rights from dircache: 0x%08x", allowed_rights);
@@ -1230,13 +1233,22 @@ static int check_acl_access(const struct vol *vol,
             EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-            EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+            EC_ZERO_LOG(posix_acl_rights(path, &st, &parent_rights));
 #endif
             if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
                 allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
         }
+
+        if (is_dir) {
+            /* Without DARWIN_ACE_DELETE set OS X 10.6 refuses to rename subdirectories in a
+             * directory.
+             */
+            if (allowed_rights & DARWIN_ACE_ADD_SUBDIRECTORY)
+                allowed_rights |= DARWIN_ACE_DELETE;
+
+            dir->d_rights_cache = allowed_rights;
+        }
         LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
-        curdir->d_rights_cache = allowed_rights;
     }
 
     if ((requested_rights & allowed_rights) != requested_rights) {

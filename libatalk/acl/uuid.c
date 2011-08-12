@@ -33,7 +33,7 @@
 #include "aclldap.h"
 #include "cache.h"
 
-char *uuidtype[] = {"USER", "GROUP", "LOCAL"};
+char *uuidtype[] = {"", "USER", "GROUP", "LOCAL"};
 
 /********************************************************
  * Public helper function

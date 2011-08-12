@@ -2604,12 +2604,12 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 
         case 2 : /* unicode */
         case 4 :
-            LOG(log_debug, logtype_afpd, "afp_mapname: gettgrnam for name: %s",ibuf);
+            LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s",ibuf);
             if (NULL == ( gr = (struct group *)getgrnam( ibuf ))) {
                 return( AFPERR_NOITEM );
             }
             id = gr->gr_gid;
-            LOG(log_debug, logtype_afpd, "afp_mapname: gettgrnam for name: %s -> id: %d",ibuf, id);
+            LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s -> id: %d",ibuf, id);
             id = htonl(id);
             memcpy( rbuf, &id, sizeof( id ));
             *rbuflen = sizeof( id );

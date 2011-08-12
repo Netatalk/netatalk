@@ -21,8 +21,8 @@
 typedef unsigned char *uuidp_t;
 typedef unsigned char atalk_uuid_t[UUID_BINSIZE];
 
-typedef enum {UUID_USER   = 0,
-              UUID_GROUP  = 1,
+typedef enum {UUID_USER   = 1,
+              UUID_GROUP  = 2,
               UUID_ENOENT = 4} /* used as bit flag */
     uuidtype_t;
 #define UUIDTYPESTR_MASK 3
