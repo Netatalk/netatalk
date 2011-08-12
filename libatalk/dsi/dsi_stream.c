@@ -236,7 +236,7 @@ static void unblock_sig(DSI *dsi)
  * Communication error with the client, enter disconnected state
  *
  * 1. close the socket
- * 2. set the DSI_DISCONNECTED flag
+ * 2. set the DSI_DISCONNECTED flag, remove possible sleep flags
  *
  * @returns  0 if successfully entered disconnected state
  *          -1 if ppid is 1 which means afpd master died
@@ -246,7 +246,8 @@ int dsi_disconnect(DSI *dsi)
 {
     LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
     dsi->proto_close(dsi);          /* 1 */
-    dsi->flags |= DSI_DISCONNECTED; /* 2 */
+    dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP); /* 2 */
+    dsi->flags |= DSI_DISCONNECTED;
     if (geteuid() == 0)
         return -1;
     return 0;
