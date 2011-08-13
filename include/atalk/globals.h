@@ -66,6 +66,7 @@ struct afp_options {
     int connections, transports, tickleval, timeout, server_notif, flags, dircachesize;
     int sleep;                  /* Maximum time allowed to sleep (in tickles) */
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
+    int fce_fmodwait;           /* number of seconds FCE file mod events are put on hold */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen, loginmaxfail;
     u_int32_t server_quantum;

@@ -36,6 +36,11 @@ struct fce_history
 	struct timeval tv;
 };
 
+struct fce_close_event {
+    time_t time;
+	char path[MAXPATHLEN + 1];
+};
+
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)
 
 int fce_handle_coalescation( char *path, int is_dir, int mode );

@@ -697,7 +697,7 @@ void afp_over_dsi(AFPObj *obj)
         }
         pending_request(dsi);
 
-        vol_fce_tm_event();
+        fce_pending_events(obj);
     }
 
     /* error */
