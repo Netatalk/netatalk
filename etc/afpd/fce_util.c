@@ -1,6 +1,4 @@
 /*
- * $Id: fce_api.c,v 0.01 2010-10-01 00:00:0 mw Exp $
- *
  * Copyright (c) 2010 Mark Williams
  *
  * File change event API for netatalk
