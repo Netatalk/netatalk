@@ -82,7 +82,7 @@ extern int of_fstatat(int dirfd, struct path *path);
 
 /* in fork.c */
 extern int          flushfork    (struct ofork *);
-extern int          getforkmode  (struct adouble *, int , int );
+extern int          getforkmode  (struct adouble *, int , off_t );
 
 /* FP functions */
 int afp_openfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);

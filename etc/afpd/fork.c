@@ -159,14 +159,14 @@ static int sum_neg(int is64, off_t offset, off_t reqcount)
 
 /* -------------------------
 */
-static int setforkmode(struct adouble *adp, int eid, int ofrefnum, int what)
+static int setforkmode(struct adouble *adp, int eid, int ofrefnum, off_t what)
 {
     return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, what, 1, ofrefnum);
 }
 
 /* -------------------------
 */
-int getforkmode(struct adouble *adp, int eid, int what)
+int getforkmode(struct adouble *adp, int eid, off_t what)
 {
     return ad_testlock(adp, eid,  what);
 }

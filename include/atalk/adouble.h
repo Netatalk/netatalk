@@ -232,8 +232,8 @@ typedef u_int32_t cnid_t;
  */
 
 struct ad_entry {
-    u_int32_t   ade_off;
-    u_int32_t   ade_len;
+    off_t   ade_off;
+    ssize_t   ade_len;
 };
 
 typedef struct adf_lock_t {
@@ -335,7 +335,11 @@ struct adouble_fops {
 /* synchronization locks */
 #define AD_FILELOCK_BASE (0x80000000)
 #else
+#if _FILE_OFFSET_BITS == 64
+#define AD_FILELOCK_BASE (0x7FFFFFFFFFFFFFFFULL - 9)
+#else
 #define AD_FILELOCK_BASE (0x7FFFFFFF -9)
+#endif
 #endif
 
 /* FIXME:
