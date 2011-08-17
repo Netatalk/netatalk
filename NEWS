@@ -35,6 +35,7 @@ Changes in 2.2.1
 * FIX: Solaris 10: missing dirfd replacement function
 * FIX: case-conversion of surrogate pair
 * FIX: Compilation error on GNU/kFreeBSD, fixes Bug ID 3392794 and Debian #630349
+* FIX: Fix Debian Bug#637025
 
 Changes in 2.2
 ==============
