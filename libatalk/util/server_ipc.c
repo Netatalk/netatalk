@@ -129,7 +129,7 @@ int ipc_server_uds(const char *name)
     EC_ZERO_LOG( setnonblock(fd, 1) );
     unlink(name);
     address.sun_family = AF_UNIX;
-    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
+    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, "%s", name);
     EC_ZERO_LOG( bind(fd, (struct sockaddr *)&address, address_length) );
     EC_ZERO_LOG( listen(fd, 1024) );
 
@@ -160,7 +160,7 @@ int ipc_client_uds(const char *name)
 
     EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
     address.sun_family = AF_UNIX;
-    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
+    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, "%s", name);
 
     EC_ZERO_LOG( connect(fd, (struct sockaddr *)&address, address_length) ); /* 1 */
     LOG(log_debug, logtype_afpd, "ipc_client_uds: connected to master");
