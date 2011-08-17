@@ -548,6 +548,8 @@ dnl --------------------- GNU source
 case "$this_os" in
 	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
         ;;
+     *kfreebsd-gnu*) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+        ;;
 esac
 
 dnl --------------------- operating system specific flags (port from sys/*)
