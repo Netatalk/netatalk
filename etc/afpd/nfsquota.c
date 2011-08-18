@@ -18,7 +18,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifndef NO_QUOTA_SUPPORT
+#if !defined(NO_QUOTA_SUPPORT) && !defined(HAVE_LIBQUOTA)
 #include <stdio.h>
 /* STDC check */
 #if STDC_HEADERS
@@ -185,4 +185,4 @@ int getnfsquota(struct vol *vol, const int uid, const u_int32_t bsize,
     *hostpath = ':';
     return AFPERR_PARAM;
 }
-#endif /* ! NO_QUOTA_SUPPORT */
+#endif /* ! NO_QUOTA_SUPPORT && !HAVE_LIBQUOTA */

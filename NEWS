@@ -11,6 +11,7 @@ Changes in 2.2.1
        to disable ACLs for a volume.
 * UPD: afpd: add a configurable hold time option to FCE file modification event
        generation, default is 60 s, new option "fceholdfmod" to change it
+* UPD: afpd: add support for new NetBSD quota subsystem, Bug ID 3249879
 * FIX: afpd: increase BerkeleyDB locks and lockobjs
 * FIX: afpd: create special folder as root
 * FIX: afpd: fix compilation error if --enable-ddp is used

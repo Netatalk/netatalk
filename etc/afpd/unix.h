@@ -59,6 +59,7 @@ typedef int	mode_t;
 
 
 #ifndef NO_QUOTA_SUPPORT
+#if !defined(HAVE_LIBQUOTA)
 
 #if !(defined(__svr4__) || defined(HAVE_DQB_BTIMELIMIT))
 #define dqb_btimelimit  dqb_btime
@@ -211,6 +212,7 @@ extern long quotactl (unsigned int, const char *, int, caddr_t);
 extern int getnfsquota (struct vol *, const int, const u_int32_t,
                                 struct dqblk *);
 
+#endif /* ! HAVE_LIBQUOTA */
 extern int uquota_getvolspace (struct vol *, VolSpace *, VolSpace *,
                                        const u_int32_t);
 #endif /* NO_QUOTA_SUPPORT */
