@@ -28,6 +28,8 @@ Changes in 2.2.1
 * FIX: afpd: return correct user/group type when mapping UUIDs to names
 * FIX: afpd: for directories add DARWIN_ACE_DELETE ACE if DARWIN_ACE_ADD_SUBDIRECTORY
        is set
+* FIX: afpd: afpd crashed when it failed to register with Avahi because eg user
+       service registration is disabled in the Avahi config
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: suse: initscript return better status

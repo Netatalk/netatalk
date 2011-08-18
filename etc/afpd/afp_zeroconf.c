@@ -27,8 +27,7 @@ void zeroconf_register(const AFPConfig *configs)
 #if defined (HAVE_AVAHI)
   LOG(log_debug, logtype_afpd, "Attempting to register with mDNS using Avahi");
 
-	av_zeroconf_setup(configs);
-  av_zeroconf_run();
+	av_zeroconf_register(configs);
 #endif
 }
 
@@ -36,6 +35,6 @@ void zeroconf_deregister(void)
 {
 #if defined (HAVE_AVAHI)
   LOG(log_debug, logtype_afpd, "Attempting to de-register mDNS using Avahi");
-	av_zeroconf_shutdown();
+	av_zeroconf_unregister();
 #endif
 }
