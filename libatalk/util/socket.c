@@ -21,7 +21,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#if !defined(__FreeBSD__)
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
 # ifndef _XOPEN_SOURCE
 #  define _XOPEN_SOURCE 600
 # endif
