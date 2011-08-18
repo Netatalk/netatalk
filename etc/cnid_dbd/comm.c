@@ -9,6 +9,7 @@
 #include "config.h"
 #endif
 
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #ifndef _XOPEN_SOURCE
 # define _XOPEN_SOURCE 600
 #endif
@@ -18,9 +19,6 @@
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
 #endif
-#ifndef __BSD_VISIBLE
-/* for u_short, u_char, etc. */
-# define __BSD_VISIBLE 1
 #endif
 
 #include <stdio.h>
