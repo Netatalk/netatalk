@@ -242,11 +242,11 @@ struct passwd *uam_getname(void *private, char *name, const int len)
         if ((p = strchr(pwent->pw_gecos, ',')))
             *p = '\0';
 
-	if ((size_t)-1 == ( gecoslen = convert_string(obj->options.unixcharset, CH_UCS2, 
-				pwent->pw_gecos, -1, user, sizeof(username))) )
-		continue;
-	if ((size_t)-1 == ( pwnamelen = convert_string(obj->options.unixcharset, CH_UCS2, 
-				pwent->pw_name, -1, pwname, sizeof(username))) )
+	gecoslen = convert_string(obj->options.unixcharset, CH_UCS2, 
+				pwent->pw_gecos, -1, user, sizeof(username));
+	pwnamelen = convert_string(obj->options.unixcharset, CH_UCS2, 
+				pwent->pw_name, -1, pwname, sizeof(username));
+	if ((size_t)-1 == gecoslen && (size_t)-1 == pwnamelen)
 		continue;
 
 

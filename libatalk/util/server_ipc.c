@@ -127,7 +127,7 @@ int ipc_server_uds(const char *name)
     EC_ZERO_LOG( setnonblock(fd, 1) );
     unlink(name);
     address.sun_family = AF_UNIX;
-    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
+    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, "%s", name);
     EC_ZERO_LOG( bind(fd, (struct sockaddr *)&address, address_length) );
     EC_ZERO_LOG( listen(fd, 1024) );
 
@@ -157,12 +157,13 @@ int ipc_client_uds(const char *name)
     pid_t pid = getpid();
 
     EC_NEG1_LOG( fd = socket(PF_UNIX, SOCK_STREAM, 0) );
-    EC_ZERO_LOG( setnonblock(fd, 1) );
     address.sun_family = AF_UNIX;
-    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, name);
+    address_length = sizeof(address.sun_family) + sprintf(address.sun_path, "%s", name);
 
     EC_ZERO_LOG( connect(fd, (struct sockaddr *)&address, address_length) ); /* 1 */
     LOG(log_debug, logtype_afpd, "ipc_client_uds: connected to master");
+
+    EC_ZERO_LOG( setnonblock(fd, 1) );
 
     if (writet(fd, &pid, sizeof(pid_t), 0, 1) != sizeof(pid_t)) {
         LOG(log_error, logtype_afpd, "ipc_client_uds: writet: %s", strerror(errno));
@@ -186,8 +187,7 @@ int reconnect_ipc(AFPObj *obj)
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
-    srandom(getpid());
-    sleep((random() % 5) + 5);  /* give it enough time to start */
+    sleep((getpid() % 5) + 15);  /* give it enough time to start */
 
     while (retrycount++ < 10) {
         if ((obj->ipc_fd = ipc_client_uds(_PATH_AFP_IPC)) == -1) {
@@ -212,21 +212,27 @@ int reconnect_ipc(AFPObj *obj)
 /*!
  * Read a IPC message from a child
  *
+ * This is using an fd with non-blocking IO, so EAGAIN is not an error
+ *
  * @args children  (rw) pointer to our structure with all childs
  * @args fd        (r)  IPC socket with child
  *
- * @returns number of bytes transfered, -1 on error, 0 on EOF
+ * @returns -1 on error, 0 on success
  */
 int ipc_server_read(server_child *children, int fd)
 {
-    int       ret = 0;
+    int       ret;
     struct ipc_header ipc;
     char      buf[IPC_MAXMSGSIZE], *p;
 
     if ((ret = read(fd, buf, IPC_HEADERLEN)) != IPC_HEADERLEN) {
-        LOG(log_error, logtype_afpd, "Reading IPC header failed (%i of %u bytes read): %s",
-            ret, IPC_HEADERLEN, strerror(errno));
-        return ret;
+        if (ret != 0) {
+            if (errno == EAGAIN)
+                return 0;
+            LOG(log_error, logtype_afpd, "Reading IPC header failed (%i of %u bytes read): %s",
+                ret, IPC_HEADERLEN, strerror(errno));
+        }
+        return -1;
     }
 
     p = buf;
@@ -253,7 +259,7 @@ int ipc_server_read(server_child *children, int fd)
 	    if ((ret = read(fd, buf, ipc.len)) != (int) ipc.len) {
             LOG(log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read): %s",
                 ret, ipc.len, strerror(errno));
-            return ret;
+            return -1;
     	}	 
     }
     ipc.msg = buf;
@@ -269,6 +275,7 @@ int ipc_server_read(server_child *children, int fd)
         if (readt(fd, &ipc.DSI_requestID, 2, 0, 2) != 2) {
             LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): couldnt read DSI id: %s",
                  ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
+            return -1;
         }
         if ((ipc.afp_socket = recv_fd(fd, 1)) == -1) {
             LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): recv_fd: %s",
@@ -294,7 +301,7 @@ int ipc_server_read(server_child *children, int fd)
 		return -1;
     }
 
-    return ret;
+    return 0;
 }
 
 /* ----------------- */

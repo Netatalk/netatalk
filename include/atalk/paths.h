@@ -71,11 +71,11 @@
  * afpd paths
  */
 #define _PATH_AFPTKT		"/tmp/AFPtktXXXXXX"
+#define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"afpd_ipc")
 #if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
 #  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd.pid")
 #else
 #  define _PATH_AFPDLOCK	ATALKPATHCAT(_PATH_LOCKDIR,"afpd")
-#define _PATH_AFP_IPC       ATALKPATHCAT(_PATH_LOCKDIR,"afpd_ipc")
 #endif
 
 /*

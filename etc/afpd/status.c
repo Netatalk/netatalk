@@ -124,15 +124,27 @@ static void status_machine(char *data)
 #ifdef AFS
     const char		*machine = "afs";
 #else /* !AFS */
-    const char		*machine = "Netatalk %s";
+    const char		*machine = "Netatalk%s";
 #endif /* AFS */
-    char buf[64];
+    char buf[AFPSTATUS_MACHLEN+1];
 
     memcpy(&status, start + AFPSTATUS_MACHOFF, sizeof(status));
     data += ntohs( status );
 
-    //    len = strlen( machine );
-    len = snprintf(buf, 64, machine, VERSION);
+    if ((strlen(machine) + strlen(VERSION)) <= AFPSTATUS_MACHLEN) {
+        len = snprintf(buf, AFPSTATUS_MACHLEN + 1, machine, VERSION);
+    } else {
+        if (strlen(VERSION) > AFPSTATUS_MACHLEN) {
+            len = snprintf(buf, AFPSTATUS_MACHLEN + 1, VERSION);
+        } else {
+            (void)snprintf(buf, AFPSTATUS_MACHLEN + 1, machine, "");
+            (void)snprintf(buf + AFPSTATUS_MACHLEN - strlen(VERSION),
+                           strlen(VERSION) + 1,
+                           VERSION);
+            len = AFPSTATUS_MACHLEN;
+        }
+    }
+
     *data++ = len;
     memcpy( data, buf, len );
     data += len;

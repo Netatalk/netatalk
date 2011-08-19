@@ -288,6 +288,7 @@ if test x"$this_os" = "xmacosx"; then
 	dnl AC_DEFINE(NO_DLFCN_H)
 	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
 	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
+    AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 fi
 
 dnl ----- NetBSD specific -----
@@ -598,7 +599,7 @@ if test x"$with_acl_support" = x"yes" ; then
 				[netatalk_cv_HAVE_ACL_GET_PERM_NP=no])
 				LIBS=$acl_LIBS
 			])
-			if test x"netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
+			if test x"$netatalk_cv_HAVE_ACL_GET_PERM_NP" = x"yes"; then
 				AC_DEFINE(HAVE_ACL_GET_PERM_NP,1,[Whether acl_get_perm_np() is available])
 			fi
 

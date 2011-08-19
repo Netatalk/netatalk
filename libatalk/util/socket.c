@@ -21,7 +21,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#if !defined(__FreeBSD__)
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
 # ifndef _XOPEN_SOURCE
 #  define _XOPEN_SOURCE 600
 # endif
@@ -133,7 +133,9 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, i
                         switch (errno) {
                         case EINTR:
                             (void)gettimeofday(&now, NULL);
-                            if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
+                            if (now.tv_sec > end.tv_sec
+                                ||
+                                (now.tv_sec == end.tv_sec && now.tv_usec >= end.tv_usec)) {
                                 LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
                                 goto exit;
                             }
@@ -417,19 +419,16 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
     return ret;
 }
 
-#define POLL_FD_SET_STARTSIZE 512
-#define POLL_FD_SET_INCREASE  128
 /*!
  * Add a fd to a dynamic pollfd array that is allocated and grown as needed
  *
  * This uses an additional array of struct polldata which stores type information
  * (enum fdtype) and a pointer to anciliary user data.
  *
- * 1. Allocate the arrays with an intial size of [POLL_FD_SET_STARTSIZE] if
- *    *fdsetp is NULL.
- * 2. Grow array as needed
- * 3. Fill in both array elements and increase count of used elements
+ * 1. Allocate the arrays with the size of "maxconns" if *fdsetp is NULL.
+ * 2. Fill in both array elements and increase count of used elements
  * 
+ * @param maxconns    (r)  maximum number of connections, determines array size
  * @param fdsetp      (rw) pointer to callers pointer to the pollfd array
  * @param polldatap   (rw) pointer to callers pointer to the polldata array
  * @param fdset_usedp (rw) pointer to an int with the number of used elements
@@ -438,7 +437,8 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
  * @param fdtype      (r)  type of fd, currently IPC_FD or LISTEN_FD
  * @param data        (rw) pointer to data the caller want to associate with an fd
  */
-void fdset_add_fd(struct pollfd **fdsetp,
+void fdset_add_fd(int maxconns,
+                  struct pollfd **fdsetp,
                   struct polldata **polldatap,
                   int *fdset_usedp,
                   int *fdset_sizep,
@@ -453,37 +453,26 @@ void fdset_add_fd(struct pollfd **fdsetp,
     LOG(log_debug, logtype_default, "fdset_add_fd: adding fd %i in slot %i", fd, *fdset_usedp);
 
     if (fdset == NULL) { /* 1 */
-        /* Initialize with space for 512 fds */
-        fdset = calloc(POLL_FD_SET_STARTSIZE, sizeof(struct pollfd));
+        /* Initialize with space for all possibly active fds */
+        fdset = calloc(maxconns, sizeof(struct pollfd));
         if (! fdset)
             exit(EXITERR_SYS);
 
-        polldata = calloc(POLL_FD_SET_STARTSIZE, sizeof(struct polldata));
+        polldata = calloc(maxconns, sizeof(struct polldata));
         if (! polldata)
             exit(EXITERR_SYS);
 
-        fdset_size = 512;
+        fdset_size = maxconns;
+
         *fdset_sizep = fdset_size;
         *fdsetp = fdset;
         *polldatap = polldata;
+
+        LOG(log_debug, logtype_default, "fdset_add_fd: initialized with space for %i conncections", 
+            maxconns);
     }
 
-    if (*fdset_usedp >= fdset_size) { /* 2 */
-        fdset = realloc(fdset, sizeof(struct pollfd) * (fdset_size + POLL_FD_SET_INCREASE));
-        if (fdset == NULL)
-            exit(EXITERR_SYS);
-
-        polldata = realloc(polldata, sizeof(struct polldata) * (fdset_size + POLL_FD_SET_INCREASE));
-        if (polldata == NULL)
-            exit(EXITERR_SYS);
-
-        fdset_size += POLL_FD_SET_INCREASE;
-        *fdset_sizep = fdset_size;
-        *fdsetp = fdset;
-        *polldatap = polldata;
-    }
-
-    /* 3 */
+    /* 2 */
     fdset[*fdset_usedp].fd = fd;
     fdset[*fdset_usedp].events = POLLIN;
     polldata[*fdset_usedp].fdtype = fdtype;
@@ -495,7 +484,7 @@ void fdset_add_fd(struct pollfd **fdsetp,
  * Remove a fd from our pollfd array
  *
  * 1. Search fd
- * 2a 
+ * 2a Matched last (or only) in the set ? null it and return
  * 2b If we remove the last array elemnt, just decrease count
  * 3. If found move all following elements down by one
  * 4. Decrease count of used elements in array
@@ -522,12 +511,16 @@ void fdset_del_fd(struct pollfd **fdsetp,
 
     for (int i = 0; i < *fdset_usedp; i++) {
         if (fdset[i].fd == fd) { /* 1 */
-            if (i == 0 && *fdset_usedp == 1) { /* 2a */
+            if ((i + 1) == *fdset_usedp) { /* 2a */
                 fdset[i].fd = -1;
                 memset(&polldata[i], 0, sizeof(struct polldata));
             } else if (i < (*fdset_usedp - 1)) { /* 2b */
-                memmove(&fdset[i], &fdset[i+1], (*fdset_usedp - 1) * sizeof(struct pollfd)); /* 3 */
-                memmove(&polldata[i], &polldata[i+1], (*fdset_usedp - 1) * sizeof(struct polldata)); /* 3 */
+                memmove(&fdset[i],
+                        &fdset[i+1],
+                        (*fdset_usedp - i - 1) * sizeof(struct pollfd)); /* 3 */
+                memmove(&polldata[i],
+                        &polldata[i+1],
+                        (*fdset_usedp - i - 1) * sizeof(struct polldata)); /* 3 */
             }
             (*fdset_usedp)--;
             break;

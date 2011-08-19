@@ -80,6 +80,7 @@ static const char *skip_files[] =
 	".DS_Store",
 	NULL
 };
+static struct fce_close_event last_close_event;
 
 /*
  *
@@ -230,13 +231,22 @@ static int pack_fce_packet(struct fce_packet *packet, unsigned char *buf)
  * */
 static void send_fce_event( char *path, int mode )
 {    
+    static int first_event = FCE_TRUE;
+
     struct fce_packet packet;
     void *data = &packet;
     static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
+    time_t now = time(NULL);
 
     LOG(log_debug, logtype_afpd, "send_fce_event: start");
 
-    time_t now = time(NULL);
+    /* initialized ? */
+    if (first_event == FCE_TRUE) {
+        first_event = FCE_FALSE;
+        fce_init_udp();
+        /* Notify listeners the we start from the beginning */
+        send_fce_event( "", FCE_CONN_START );
+    }
 
     /* build our data packet */
     ssize_t data_len = build_fce_packet( &packet, path, mode, ++event_id );
@@ -327,6 +337,23 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
     return AFP_OK;
 }
 
+static void save_close_event(const char *path)
+{
+    time_t now = time(NULL);
+
+    /* Check if it's a close for the same event as the last one */
+    if (last_close_event.time   /* is there any saved event ? */
+        && (strcmp(path, last_close_event.path) != 0)) {
+        /* no, so send the saved event out now */
+        send_fce_event(last_close_event.path, FCE_FILE_MODIFY);
+    }
+
+    LOG(log_debug, logtype_afpd, "save_close_event: %s", path);
+
+    last_close_event.time = now;
+    strncpy(last_close_event.path, path, MAXPATHLEN);
+}
+
 /*
  *
  * Dispatcher for all incoming file change events
@@ -334,6 +361,8 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
  * */
 static int register_fce(const char *u_name, int is_dir, int mode)
 {
+    static int first_event = FCE_TRUE;
+
     if (udp_sockets == 0)
         /* No listeners configured */
         return AFP_OK;
@@ -341,11 +370,10 @@ static int register_fce(const char *u_name, int is_dir, int mode)
     if (u_name == NULL)
         return AFPERR_PARAM;
 
-    static int first_event = FCE_TRUE;
-
 	/* do some initialization on the fly the first time */
 	if (first_event) {
 		fce_initialize_history();
+        first_event = FCE_FALSE;
 	}
 
 	/* handle files which should not cause events (.DS_Store atc. ) */
@@ -384,26 +412,29 @@ static int register_fce(const char *u_name, int is_dir, int mode)
 
 	LOG(log_debug9, logtype_afpd, "Detected fc event <%d> for <%s>", mode, full_path_buffer );
 
-
-    /* we do initilization on the fly, no blocking calls in here 
-     * (except when using FQDN in broken DNS environment)
-     */
-    if (first_event == FCE_TRUE)
-    {
-        fce_init_udp();
-        
-        /* Notify listeners the we start from the beginning */
-        send_fce_event( "", FCE_CONN_START );
-        
-        first_event = FCE_FALSE;
+    if (mode & FCE_FILE_MODIFY) {
+        save_close_event(full_path_buffer);
+        return AFP_OK;
     }
 
-	/* Handle UDP transport */
     send_fce_event( full_path_buffer, mode );
 
     return AFP_OK;
 }
 
+static void check_saved_close_events(int fmodwait)
+{
+    time_t now = time(NULL);
+
+    /* check if configured holdclose time has passed */
+    if (last_close_event.time && ((last_close_event.time + fmodwait) < now)) {
+        LOG(log_debug, logtype_afpd, "check_saved_close_events: sending event: %s", last_close_event.path);
+        /* yes, send event */
+        send_fce_event(&last_close_event.path[0], FCE_FILE_MODIFY);
+        last_close_event.path[0] = 0;
+        last_close_event.time = 0;
+    }
+}
 
 /******************** External calls start here **************************/
 
@@ -411,6 +442,12 @@ static int register_fce(const char *u_name, int is_dir, int mode)
  * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
  * */
 #ifndef FCE_TEST_MAIN
+
+void fce_pending_events(AFPObj *obj)
+{
+    vol_fce_tm_event();
+    check_saved_close_events(obj->options.fce_fmodwait);
+}
 
 int fce_register_delete_file( struct path *path )
 {

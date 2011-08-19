@@ -437,7 +437,7 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int 
 
     log_config.inited = 1;
 
-    LOG(log_note, logtype_logger, "Set syslog logging to level: %s",
+    LOG(log_info, logtype_logger, "Set syslog logging to level: %s",
         arr_loglevel_strings[loglevel]);
 }
 
@@ -542,7 +542,6 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     if (type_configs[logtype].level >= log_debug)
         goto log; /* bypass flooding checks */
 
-    goto log;
     /* Prevent flooding: hash the message and check if we got the same one recently */
     int hash = hash_message(temp_buffer) + log_src_linenumber;
 

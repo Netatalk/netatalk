@@ -235,7 +235,7 @@ static void unblock_sig(DSI *dsi)
  * Communication error with the client, enter disconnected state
  *
  * 1. close the socket
- * 2. set the DSI_DISCONNECTED flag
+ * 2. set the DSI_DISCONNECTED flag, remove possible sleep flags
  *
  * @returns  0 if successfully entered disconnected state
  *          -1 if ppid is 1 which means afpd master died
@@ -243,8 +243,10 @@ static void unblock_sig(DSI *dsi)
  */
 int dsi_disconnect(DSI *dsi)
 {
+    LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
     dsi->proto_close(dsi);          /* 1 */
-    dsi->flags |= DSI_DISCONNECTED; /* 2 */
+    dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP); /* 2 */
+    dsi->flags |= DSI_DISCONNECTED;
     if (geteuid() == 0)
         return -1;
     return 0;
@@ -388,8 +390,10 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
           stored += len;
       } else { /* eof or error */
           /* don't log EOF error if it's just after connect (OSX 10.3 probe) */
+#if 0
           if (errno == ECONNRESET)
               dsi->flags |= DSI_GOT_ECONNRESET;
+#endif
           if (len || stored || dsi->read_count) {
               if (! (dsi->flags & DSI_DISCONNECTED)) {
                   LOG(log_error, logtype_dsi, "dsi_stream_read: len:%d, %s",

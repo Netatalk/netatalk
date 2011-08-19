@@ -19,10 +19,12 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <atalk/adouble.h>
+#include <atalk/logger.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include <string.h>
 
@@ -228,9 +230,9 @@ static int adf_findxlock(struct ad_fd *ad,
 	translate a data fork lock to an offset
 */
 
-static off_t df2off(int off)
+static off_t df2off(off_t off)
 {
-int start = off;
+    off_t start = off;
 	if (off == AD_FILELOCK_OPEN_WR)
 		start = LOCK_DATA_WR;
 	else if (off == AD_FILELOCK_OPEN_RD)
@@ -248,9 +250,9 @@ int start = off;
 	translate a resource fork lock to an offset
 */
 
-static off_t hf2off(int off)
+static off_t hf2off(off_t off)
 {
-int start = off;
+    off_t start = off;
 	if (off == AD_FILELOCK_OPEN_WR)
 		start = LOCK_RSRC_WR;
 	else if (off == AD_FILELOCK_OPEN_RD)

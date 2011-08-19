@@ -43,7 +43,7 @@ TEMPLATES = \
 	rc.atalk.debian.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) afpd atalkd cnid_metad papd timelord
-EXTRA_DIST = $(TEMPLATES) rc.atalk.cobalt
+EXTRA_DIST = $(TEMPLATES)
 
 # overwrite automake uninstall
 # not beautiful, but this way we can call the OS specific init script

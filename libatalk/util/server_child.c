@@ -129,8 +129,10 @@ afp_child_t *server_child_add(server_child *children, int forkid, pid_t pid, uin
 
     /* it's possible that the child could have already died before the
      * pthread_sigmask. we need to check for this. */
-    if (kill(pid, 0) < 0)
+    if (kill(pid, 0) < 0) {
+        LOG(log_error, logtype_default, "server_child_add: no such process pid [%d]", pid);
         goto exit;
+    }
 
     fork = (server_child_fork *) children->fork + forkid;
 

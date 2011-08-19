@@ -112,7 +112,7 @@ static void register_stuff(void) {
                 goto fail;
 
             }
-            LOG(log_info, logtype_afpd, "Registering server '%s' with with Bonjour",
+            LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour",
                 dsi->bonjourname);
 
             if (avahi_entry_group_add_service(ctx->group,
@@ -176,8 +176,8 @@ static void register_stuff(void) {
     return;
 
 fail:
-    avahi_client_free (ctx->client);
-    avahi_threaded_poll_quit(ctx->threaded_poll);
+    time(NULL);
+//    avahi_threaded_poll_quit(ctx->threaded_poll);
 }
 
 /* Called when publishing of service data completes */
@@ -198,14 +198,12 @@ static void publish_reply(AvahiEntryGroup *g,
         /* With multiple names there's no way to know which one collided */
         LOG(log_error, logtype_afpd, "publish_reply: AVAHI_ENTRY_GROUP_COLLISION",
             avahi_strerror(avahi_client_errno(ctx->client)));
-        avahi_client_free(avahi_entry_group_get_client(g));
         avahi_threaded_poll_quit(ctx->threaded_poll);
         break;
 		
     case AVAHI_ENTRY_GROUP_FAILURE:
         LOG(log_error, logtype_afpd, "Failed to register service: %s",
             avahi_strerror(avahi_client_errno(ctx->client)));
-        avahi_client_free(avahi_entry_group_get_client(g));
         avahi_threaded_poll_quit(ctx->threaded_poll);
         break;
 
@@ -253,14 +251,12 @@ static void client_callback(AvahiClient *client,
                 LOG(log_error, logtype_afpd, "Failed to contact server: %s",
                     avahi_strerror(error));
 
-                avahi_client_free (ctx->client);
                 avahi_threaded_poll_quit(ctx->threaded_poll);
             }
 
         } else {
             LOG(log_error, logtype_afpd, "Client failure: %s",
                 avahi_strerror(avahi_client_errno(client)));
-            avahi_client_free (ctx->client);
             avahi_threaded_poll_quit(ctx->threaded_poll);
         }
         break;
@@ -281,7 +277,7 @@ static void client_callback(AvahiClient *client,
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
-void av_zeroconf_setup(const AFPConfig *configs) {
+void av_zeroconf_register(const AFPConfig *configs) {
     int error;
 
     /* initialize the struct that holds our config settings. */
@@ -306,24 +302,10 @@ void av_zeroconf_setup(const AFPConfig *configs) {
                                          NULL,
                                          &error))) {
         LOG(log_error, logtype_afpd, "Failed to create client object: %s",
-            avahi_strerror(avahi_client_errno(ctx->client)));
+            avahi_strerror(error));
         goto fail;
     }
 
-    return;
-
-fail:
-    if (ctx)
-        av_zeroconf_unregister();
-
-    return;
-}
-
-/*
- * This function finally runs the loop impl.
- */
-int av_zeroconf_run(void) {
-    /* Finally, start the event loop thread */
     if (avahi_threaded_poll_start(ctx->threaded_poll) < 0) {
         LOG(log_error, logtype_afpd, "Failed to create thread: %s",
             avahi_strerror(avahi_client_errno(ctx->client)));
@@ -333,26 +315,12 @@ int av_zeroconf_run(void) {
     }
 
     ctx->thread_running = 1;
-    return 0;
+    return;
 
 fail:
-    if (ctx)
-        av_zeroconf_unregister();
+    av_zeroconf_unregister();
 
-    return -1;
-}
-
-/*
- * Tries to shutdown this loop impl.
- * Call this function from outside this thread.
- */
-void av_zeroconf_shutdown() {
-    /* Call this when the app shuts down */
-    avahi_threaded_poll_stop(ctx->threaded_poll);
-    avahi_client_free(ctx->client);
-    avahi_threaded_poll_free(ctx->threaded_poll);
-    free(ctx);
-    ctx = NULL;
+    return;
 }
 
 /*
@@ -360,27 +328,21 @@ void av_zeroconf_shutdown() {
  * Call this function from inside this thread.
  */
 int av_zeroconf_unregister() {
-    if (ctx->thread_running) {
-        /* First, block the event loop */
-        avahi_threaded_poll_lock(ctx->threaded_poll);
+    LOG(log_error, logtype_afpd, "av_zeroconf_unregister");
 
-        /* Than, do your stuff */
-        avahi_threaded_poll_quit(ctx->threaded_poll);
-
-        /* Finally, unblock the event loop */
-        avahi_threaded_poll_unlock(ctx->threaded_poll);
-        ctx->thread_running = 0;
+    if (ctx) {
+        LOG(log_error, logtype_afpd, "av_zeroconf_unregister: avahi_threaded_poll_stop");
+        if (ctx->threaded_poll)
+            avahi_threaded_poll_stop(ctx->threaded_poll);
+        LOG(log_error, logtype_afpd, "av_zeroconf_unregister: avahi_client_free");
+        if (ctx->client)
+            avahi_client_free(ctx->client);
+        LOG(log_error, logtype_afpd, "av_zeroconf_unregister: avahi_threaded_poll_free");
+        if (ctx->threaded_poll)
+            avahi_threaded_poll_free(ctx->threaded_poll);
+        free(ctx);
+        ctx = NULL;
     }
-
-    if (ctx->client)
-        avahi_client_free(ctx->client);
-
-    if (ctx->threaded_poll)
-        avahi_threaded_poll_free(ctx->threaded_poll);
-
-    free(ctx);
-    ctx = NULL;
-
     return 0;
 }
 

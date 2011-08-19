@@ -1035,6 +1035,63 @@ EC_CLEANUP:
 #endif /* HAVE_SOLARIS_ACLS */
 
 #ifdef HAVE_POSIX_ACLS
+#ifndef HAVE_ACL_FROM_MODE
+static acl_t acl_from_mode(mode_t mode)
+{
+    acl_t acl;
+    acl_entry_t entry;
+    acl_permset_t permset;
+
+    if (!(acl = acl_init(3)))
+        return NULL;
+
+    if (acl_create_entry(&acl, &entry) != 0)
+        goto error;
+    acl_set_tag_type(entry, ACL_USER_OBJ);
+    acl_get_permset(entry, &permset);
+    acl_clear_perms(permset);
+    if (mode & S_IRUSR)
+        acl_add_perm(permset, ACL_READ);
+    if (mode & S_IWUSR)
+        acl_add_perm(permset, ACL_WRITE);
+    if (mode & S_IXUSR)
+        acl_add_perm(permset, ACL_EXECUTE);
+    acl_set_permset(entry, permset);
+
+    if (acl_create_entry(&acl, &entry) != 0)
+        goto error;
+    acl_set_tag_type(entry, ACL_GROUP_OBJ);
+    acl_get_permset(entry, &permset);
+    acl_clear_perms(permset);
+    if (mode & S_IRGRP)
+        acl_add_perm(permset, ACL_READ);
+    if (mode & S_IWGRP)
+        acl_add_perm(permset, ACL_WRITE);
+    if (mode & S_IXGRP)
+        acl_add_perm(permset, ACL_EXECUTE);
+    acl_set_permset(entry, permset);
+
+    if (acl_create_entry(&acl, &entry) != 0)
+        goto error;
+    acl_set_tag_type(entry, ACL_OTHER);
+    acl_get_permset(entry, &permset);
+    acl_clear_perms(permset);
+    if (mode & S_IROTH)
+        acl_add_perm(permset, ACL_READ);
+    if (mode & S_IWOTH)
+        acl_add_perm(permset, ACL_WRITE);
+    if (mode & S_IXOTH)
+        acl_add_perm(permset, ACL_EXECUTE);
+    acl_set_permset(entry, permset);
+
+    return acl;
+
+error:
+    acl_free(acl);
+    return NULL;
+}
+#endif
+
 static int set_acl(const struct vol *vol,
                    const char *name,
                    int inherit _U_,
@@ -1057,11 +1114,8 @@ static int set_acl(const struct vol *vol,
     /* for files def_acl will be NULL */
 
     /* create access acl from mode */
-#ifdef HAVE_ACL_FROM_MODE
     EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
-#else
-#error "Missing acl_from_mode() replacement"
-#endif
+
     /* adds the clients aces */
     EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &def_acl, &acc_acl, ace_count), AFPERR_MISC);
 
@@ -1114,18 +1168,20 @@ static int check_acl_access(const struct vol *vol,
     uuidtype_t     uuidtype;
     struct stat    st;
     bstring        parent = NULL;
+    int            is_dir;
 
-    LOG(log_maxdebug, logtype_afpd, "check_access: Request: 0x%08x", requested_rights);
+    LOG(log_maxdebug, logtype_afpd, "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
+        cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
 
     /* Get uid or gid from UUID */
-    EC_ZERO_LOG_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
+    EC_ZERO_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
     EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
 
     switch (uuidtype) {
     case UUID_USER:
         break;
     case UUID_GROUP:
-        LOG(log_warning, logtype_afpd, "check_access: afp_access not supported for groups");
+        LOG(log_warning, logtype_afpd, "check_acl_access: afp_access not supported for groups");
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     default:
@@ -1133,10 +1189,12 @@ static int check_acl_access(const struct vol *vol,
         goto EC_CLEANUP;
     }
 
-    if ((strcmp(path, ".") == 0) && (dir->d_rights_cache != 0xffffffff)) {
+    is_dir = !strcmp(path, ".");
+
+    if (is_dir && (curdir->d_rights_cache != 0xffffffff)) {
         /* its a dir and the cache value is valid */
-        allowed_rights = dir->d_rights_cache;
-        LOG(log_debug, logtype_afpd, "allowed rights from dircache: 0x%08x", allowed_rights);
+        allowed_rights = curdir->d_rights_cache;
+        LOG(log_debug, logtype_afpd, "check_access: allowed rights from dircache: 0x%08x", allowed_rights);
     } else {
 #ifdef HAVE_SOLARIS_ACLS
         EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
@@ -1156,12 +1214,12 @@ static int check_acl_access(const struct vol *vol,
             int i;
             uint32_t parent_rights = 0;
 
-            if (dir->d_did == DIRDID_ROOT_PARENT) {
+            if (curdir->d_did == DIRDID_ROOT_PARENT) {
                 /* use volume path */
                 EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
             } else {
                 /* build path for parent */
-                EC_NULL_LOG_ERR(parent = bstrcpy(dir->d_fullpath), AFPERR_MISC);
+                EC_NULL_LOG_ERR(parent = bstrcpy(curdir->d_fullpath), AFPERR_MISC);
                 EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
                 EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
                 EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
@@ -1175,13 +1233,22 @@ static int check_acl_access(const struct vol *vol,
             EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-            EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+            EC_ZERO_LOG(posix_acl_rights(path, &st, &parent_rights));
 #endif
             if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
                 allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
         }
+
+        if (is_dir) {
+            /* Without DARWIN_ACE_DELETE set OS X 10.6 refuses to rename subdirectories in a
+             * directory.
+             */
+            if (allowed_rights & DARWIN_ACE_ADD_SUBDIRECTORY)
+                allowed_rights |= DARWIN_ACE_DELETE;
+
+            dir->d_rights_cache = allowed_rights;
+        }
         LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
-        dir->d_rights_cache = allowed_rights;
     }
 
     if ((requested_rights & allowed_rights) != requested_rights) {
@@ -1508,15 +1575,17 @@ EC_CLEANUP:
  */
 int check_vol_acl_support(const struct vol *vol)
 {
-    int ret = 1;
+    int ret = 0;
 
 #ifdef HAVE_SOLARIS_ACLS
     ace_t *aces = NULL;
+    ret = 1;
     if (get_nfsv4_acl(vol->v_path, &aces) == -1)
         ret = 0;
 #endif
 #ifdef HAVE_POSIX_ACLS
     acl_t acl = NULL;
+    ret = 1;
     if ((acl = acl_get_file(vol->v_path, ACL_TYPE_ACCESS)) == NULL)
         ret = 0;
 #endif

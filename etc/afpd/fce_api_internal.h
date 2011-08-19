@@ -14,6 +14,10 @@
 #define FCE_HISTORY_LEN 10  /* This is used to coalesce events */
 #define MAX_COALESCE_TIME_MS 1000  /* Events oldeer than this are not coalesced */
 
+#define FCE_COALESCE_CREATE (1 << 0)
+#define FCE_COALESCE_DELETE (1 << 1)
+#define FCE_COALESCE_ALL    (FCE_COALESCE_CREATE | FCE_COALESCE_DELETE)
+
 struct udp_entry
 {
     int sock;
@@ -30,6 +34,11 @@ struct fce_history
 	int is_dir;
 	char path[MAXPATHLEN + 1];
 	struct timeval tv;
+};
+
+struct fce_close_event {
+    time_t time;
+	char path[MAXPATHLEN + 1];
 };
 
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)

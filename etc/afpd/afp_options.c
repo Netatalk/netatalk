@@ -193,6 +193,7 @@ void afp_options_init(struct afp_options *options)
     options->tcp_rcvbuf = 0;    /* 0 means don't change OS default */
     options->dsireadbuf = 12;
 	options->mimicmodel = NULL;
+    options->fce_fmodwait = 60; /* put fmod events 60 seconds on hold */
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -240,6 +241,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
         options->flags |= OPTION_ANNOUNCESSH;
     if (strstr(buf, " -noacl2maccess"))
         options->flags &= ~OPTION_ACL2MACCESS;
+    if (strstr(buf, " -keepsessions")) {
+        default_options.flags |= OPTION_KEEPSESSIONS;
+        options->flags |= OPTION_KEEPSESSIONS;
+    }
 
     /* passwd bits */
     if (strstr(buf, " -nosavepassword"))
@@ -322,9 +327,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
     }
 
     if ((c = getoption(buf, "-sleep"))) {
-        options->sleep = atoi(c) *120;
+        options->disconnected = options->sleep = atoi(c) * 120;
         if (options->sleep <= 4) {
-            options->sleep = 4;
+            options->disconnected = options->sleep = 4;
         }
     }
 
@@ -495,6 +500,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 		LOG(log_note, logtype_afpd, "Fce events: %s", c);
 		fce_set_events(c);
 	}
+
+    if ((c = getoption(buf, "-fceholdfmod")))
+        options->fce_fmodwait = atoi(c);
 
     if ((c = getoption(buf, "-mimicmodel")) && (opt = strdup(c)))
        options->mimicmodel = opt;
@@ -673,11 +681,14 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
         *p = '\0';
     }
 
+#ifdef ultrix
     if (NULL == ( p = strrchr( av[ 0 ], '/' )) ) {
         p = av[ 0 ];
     } else {
         p++;
     }
+    openlog( p, LOG_PID ); /* ultrix only */
+#endif /* ultrix */
 
     while (EOF != ( c = getopt( ac, av, OPTIONS )) ) {
         switch ( c ) {
@@ -768,12 +779,6 @@ int afp_options_parse(int ac, char **av, struct afp_options *options)
         show_usage( p );
         exit( 2 );
     }
-
-#ifdef ultrix
-    openlog( p, LOG_PID ); /* ultrix only */
-#else
-    set_processname(p);
-#endif /* ultrix */
 
     return 1;
 }

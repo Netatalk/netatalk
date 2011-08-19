@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <atalk/compat.h>
 
 #ifndef HAVE_STRNLEN
@@ -11,5 +15,11 @@ size_t strnlen(const char *s, size_t max)
         }
     }
     return len;  
+
+#if !defined HAVE_DIRFD && defined SOLARIS
+#include <dirent.h>
+int dirfd(DIR *dir)
+{
+    return dir->dd_fd;
 }
 #endif

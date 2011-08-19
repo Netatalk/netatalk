@@ -40,6 +40,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <sys/un.h>
@@ -253,13 +254,12 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
         sprintf(buf2, "%i", rqstfd);
 
         if (up->count == MAXSPAWN) {
-            /* there's a pb with the db inform child
-             * it will run recover, delete the db whatever
-             */
-            LOG(log_error, logtype_cnid, "try with -d %s", up->volinfo->v_path);
+            /* there's a pb with the db inform child, it will delete the db */
+            LOG(log_warning, logtype_cnid,
+                "Multiple attempts to start CNID db daemon for \"%s\" failed, wiping the slate clean...",
+                up->volinfo->v_path);
             ret = execlp(dbdpn, dbdpn, "-d", volpath, buf1, buf2, logconfig, NULL);
-        }
-        else {
+        } else {
             ret = execlp(dbdpn, dbdpn, volpath, buf1, buf2, logconfig, NULL);
         }
         /* Yikes! We're still here, so exec failed... */

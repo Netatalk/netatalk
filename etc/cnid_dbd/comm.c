@@ -9,6 +9,7 @@
 #include "config.h"
 #endif
 
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #ifndef _XOPEN_SOURCE
 # define _XOPEN_SOURCE 600
 #endif
@@ -17,6 +18,7 @@
 #endif
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE
+#endif
 #endif
 
 #include <stdio.h>

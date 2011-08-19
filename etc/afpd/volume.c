@@ -446,6 +446,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_SEARCHDB;
             else if (strcasecmp(p, "nonetids") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NONETIDS;
+            else if (strcasecmp(p, "noacls") == 0)
+                options[VOLOPT_FLAGS].i_value &= ~AFPVOL_ACLS;
             p = strtok(NULL, ",");
         }
 
@@ -676,9 +678,10 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_vid = ++lastvid;
     volume->v_vid = htons(volume->v_vid);
 #ifdef HAVE_ACLS
-    if (check_vol_acl_support(volume))
-        volume->v_flags |= AFPVOL_ACLS
-;
+    if (!check_vol_acl_support(volume)) {
+        LOG(log_debug, logtype_afpd, "creatvol(\"%s\"): disabling ACL support", volume->v_path);
+        options[VOLOPT_FLAGS].i_value &= ~AFPVOL_ACLS;
+    }
 #endif
 
     /* handle options */
@@ -1145,6 +1148,9 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
 
     /* Enable some default options for all volumes */
     save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+#ifdef HAVE_ACLS
+    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
+#endif
     save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
     LOG(log_maxdebug, logtype_afpd, "readvolfile: seeding default umask: %04o",
         obj->options.umask);
@@ -2210,14 +2216,13 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
 
     ret  = stat_vol(bitmap, volume, rbuf, rbuflen);
-    if (ret == AFP_OK) {
 
-        if (!(volume->v_flags & AFPVOL_RO)) {
-            handle_special_folders( volume );
-            savevolinfo(volume,
-                        volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
-                        volume->v_cnidport   ? volume->v_cnidport   : Cnid_port);
-        }
+    if (ret == AFP_OK) {
+        handle_special_folders(volume);
+        savevolinfo(volume,
+                    volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
+                    volume->v_cnidport   ? volume->v_cnidport   : Cnid_port);
+
 
         /*
          * If you mount a volume twice, the second time the trash appears on
@@ -2631,12 +2636,24 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
 static void handle_special_folders (const struct vol * vol)
 {
     const _special_folder *p = &special_folders[0];
+    uid_t process_uid;
 
-    if ((vol->v_flags & AFPVOL_RO))
-        return;
+    process_uid = geteuid();
+    if (process_uid) {
+        if (seteuid(0) == -1) {
+            process_uid = 0;
+        }
+    }
 
     for (; p->name != NULL; p++) {
         create_special_folder (vol, p);
+    }
+
+    if (process_uid) {
+        if (seteuid(process_uid) == -1) {
+            LOG(log_error, logtype_logger, "can't seteuid back %s", strerror(errno));
+            exit(EXITERR_SYS);
+        }
     }
 }
 

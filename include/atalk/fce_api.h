@@ -10,6 +10,8 @@
 #ifndef _FCE_API_H
 #define	_FCE_API_H
 
+#include <atalk/globals.h>
+
 /* fce_packet.mode */
 #define FCE_FILE_MODIFY     1
 #define FCE_FILE_DELETE     2
@@ -41,6 +43,8 @@ struct fce_packet
 
 struct path;
 struct ofork;
+
+void fce_pending_events(AFPObj *obj);
 
 int fce_register_delete_file( struct path *path );
 int fce_register_delete_dir( char *name );

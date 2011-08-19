@@ -15,6 +15,8 @@ AC_DEFUN([AC_NETATALK_CHECK_QUOTA], [
 		netatalk_cv_quotasupport="no"
 		AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if quota support should not compiled])
 	])
+	AC_CHECK_LIB(quota, getfsquota, [QUOTA_LIBS="-lquota -lprop -lrpcsvc"
+	    AC_DEFINE(HAVE_LIBQUOTA, 1, [define if you have libquota])], [], [-lprop -lrpcsvc])
 	else
 		netatalk_cv_quotasupport="no"
 		AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if quota support should not compiled])

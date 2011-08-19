@@ -1,9 +1,45 @@
 Changes in 2.2.1
 ================
 
-* FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
+* NEW: afpd: disable continous service feature by default, new option
+       -keepsessions to enable it
+* UPD: afpd: Enhance ACL support detection for volumes: enable them per volume if
+       1) ACL support compiled in, 2) the volume supports ACLs, 3) the new volume
+       option "noacls" is not set for the volume.
+       The previous behaviour was to enable ACL support for a volume if
+       1) it was compiled in and 2) the volume supported ACLs. There was no way
+       to disable ACLs for a volume.
+* UPD: afpd: add a configurable hold time option to FCE file modification event
+       generation, default is 60 s, new option "fceholdfmod" to change it
+* UPD: afpd: add support for new NetBSD quota subsystem, Bug ID 3249879
 * FIX: afpd: increase BerkeleyDB locks and lockobjs
+* FIX: afpd: create special folder as root
+* FIX: afpd: fix compilation error if --enable-ddp is used
+* FIX: afpd: More robust IPC reconnect error handling
+* FIX: afpd: ACL access checking
+* FIX: afpd: fix a possible race condition between SIGCHLD handler and
+       new connection attempts
+* FIX: afpd: fix undefined behaviour when more then ~510 connetions where
+       established
+* FIX: afpd: fix a crash when searching for a UUID that is not a special
+       local UUID and LDAP support is not compiled in
+* FIX: afpd: .volinfo file not created on first volume access if user in rolist
+* FIX: afpd: possible crash at startup when registering with Avahi when Avahi is
+       not running
+* FIX: afpd: return correct user/group type when mapping UUIDs to names
+* FIX: afpd: for directories add DARWIN_ACE_DELETE ACE if DARWIN_ACE_ADD_SUBDIRECTORY
+       is set
+* FIX: afpd: afpd crashed when it failed to register with Avahi because eg user
+       service registration is disabled in the Avahi config
+* FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
+* FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: suse: initscript return better status
+* FIX: Sourcecode distribution: add missing headers
+* FIX: Solaris 10: missing dirfd replacement function
+* FIX: case-conversion of surrogate pair
+* FIX: Compilation error on GNU/kFreeBSD, fixes Bug ID 3392794 and Debian #630349
+* FIX: Fix Debian Bug#637025
+* FIX: Multiple *BSD compilation compatibility fixes, Bug ID 3380785
 
 Changes in 2.2
 ==============
