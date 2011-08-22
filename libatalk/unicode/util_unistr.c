@@ -553,8 +553,6 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	base = *in;
 	while (*outlen > 2) {
 		i += 2;
-		in++;
-
 		if (i == inplen) {
 			*out = base;
 			out++;
@@ -562,7 +560,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 			*outlen -= 2;
 			return o_len - *outlen;
 		}
-
+		in++;
 		comb = *in;
 		result = 0;
 
@@ -590,7 +588,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 		
 		/* Binary Search for Surrogate Pair */
 		else if ((0xD800 <= base) && (base < 0xDC00)) {
-			if ((0xDC00 <= comb) && (comb < 0xE000) && (i + 4 <= inplen)) {
+			if ((0xDC00 <= comb) && (comb < 0xE000) && (i + 6 <= inplen)) {
 				base_sp = ((u_int32_t)base << 16) | (u_int32_t)comb;
 				do {
 					comb_sp = ((u_int32_t)in[1] << 16) | (u_int32_t)in[2];
@@ -599,7 +597,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 						i += 4;
 						in +=2;
 					}
-				} while ((i + 4 <= inplen) && result_sp) ;
+				} while ((i + 6 <= inplen) && result_sp) ;
 
 				*out = base_sp >> 16;
 				out++;
@@ -615,6 +613,11 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 				*outlen -= 2;
 
 				i += 2;
+				if (i == inplen) {
+					out++;
+					*out = 0;
+					return o_len - *outlen;
+				}
 				in++;
 				base = *in;
 
