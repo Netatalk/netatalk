@@ -963,7 +963,7 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
                                      flags);
     
     if (ret == DB_NOTFOUND) {
-        LOG(log_info, logtype_cnid, "key not found");
+        LOG(log_debug, logtype_cnid, "key not found");
         return 0;
     }
     if (ret) {

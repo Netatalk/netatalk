@@ -33,6 +33,7 @@ Changes in 2.2.1
        service registration is disabled in the Avahi config
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
+* FIX: dbd: better detection of local (or SMB/NFS) modifications on AFP volumes
 * FIX: suse: initscript return better status
 * FIX: Sourcecode distribution: add missing headers
 * FIX: Solaris 10: missing dirfd replacement function
