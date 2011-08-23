@@ -518,6 +518,8 @@ int afp_options_parseline(char *buf, struct afp_options *options)
  */
 static void show_version( void )
 {
+	int num, i;
+
 	printf( "afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION );
 
 	puts( "This program is free software; you can redistribute it and/or modify it under" );
@@ -527,9 +529,12 @@ static void show_version( void )
 
 	puts( "afpd has been compiled with support for these features:\n" );
 
-	printf( "        AFP3.x support:\tYes\n" );
-        printf( "        TCP/IP Support:\t" );
-        puts( "Yes" );
+	num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
+	printf( "          AFP versions:\t" );
+	for ( i = 0; i < num; i++ ) {
+		printf( "%d.%d ", afp_versions[ i ].av_number/10, afp_versions[ i ].av_number%10);
+	}
+	puts( "" );
 
 	printf( "DDP(AppleTalk) Support:\t" );
 #ifdef NO_DDP

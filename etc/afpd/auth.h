@@ -1,6 +1,4 @@
 /*
- * $Id: auth.h,v 1.9 2009-10-15 10:43:13 didg Exp $
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -21,6 +19,19 @@
 struct afp_versions {
     char	*av_name;
     int		av_number;
+};
+
+static const struct afp_versions  afp_versions[] = {
+#ifndef NO_DDP
+    { "AFPVersion 1.1", 11 },
+    { "AFPVersion 2.0", 20 },
+    { "AFPVersion 2.1", 21 },
+#endif /* ! NO_DDP */
+    { "AFP2.2", 22 },
+    { "AFPX03", 30 },
+    { "AFP3.1", 31 },
+    { "AFP3.2", 32 },
+    { "AFP3.3", 33 }
 };
 
 /* for GetUserInfo */
