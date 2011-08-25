@@ -3,9 +3,12 @@ Changes in 2.2.1
 
 * NEW: afpd: disable continous service feature by default, new option
        -keepsessions to enable it
-* UPD: afpd: Enhance ACL support detection for volumes: enable them per volume if
-       1) ACL support compiled in, 2) the volume supports ACLs, 3) the new volume
-       option "noacls" is not set for the volume.
+* NEW: configure option "--enable-redhat-systemd" for Fedora15 and later.
+       "--enable-redhat" is renamed "--enable-redhat-sysv".
+* UPD: afpd: Enhance ACL support detection for volumes: enable them per volume
+       if
+       1) ACL support compiled in, 2) the volume supports ACLs, 3) the new
+       volume option "noacls" is not set for the volume.
        The previous behaviour was to enable ACL support for a volume if
        1) it was compiled in and 2) the volume supported ACLs. There was no way
        to disable ACLs for a volume.
@@ -24,13 +27,13 @@ Changes in 2.2.1
 * FIX: afpd: fix a crash when searching for a UUID that is not a special
        local UUID and LDAP support is not compiled in
 * FIX: afpd: .volinfo file not created on first volume access if user in rolist
-* FIX: afpd: possible crash at startup when registering with Avahi when Avahi is
-       not running
+* FIX: afpd: possible crash at startup when registering with Avahi
+       when Avahi is not running
 * FIX: afpd: return correct user/group type when mapping UUIDs to names
-* FIX: afpd: for directories add DARWIN_ACE_DELETE ACE if DARWIN_ACE_ADD_SUBDIRECTORY
-       is set
-* FIX: afpd: afpd crashed when it failed to register with Avahi because eg user
-       service registration is disabled in the Avahi config
+* FIX: afpd: for directories add DARWIN_ACE_DELETE ACE
+       if DARWIN_ACE_ADD_SUBDIRECTORY is set
+* FIX: afpd: afpd crashed when it failed to register with Avahi because eg
+       user service registration is disabled in the Avahi config
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: dbd: better detection of local (or SMB/NFS) modifications on AFP volumes
@@ -38,12 +41,13 @@ Changes in 2.2.1
 * FIX: Sourcecode distribution: add missing headers
 * FIX: Solaris 10: missing dirfd replacement function
 * FIX: case-conversion of surrogate pair
-* FIX: Compilation error on GNU/kFreeBSD, fixes Bug ID 3392794 and Debian #630349
+* FIX: Compilation error on GNU/kFreeBSD, fixes Bug ID 3392794 and
+       Debian #630349
 * FIX: Fix Debian Bug#637025
 * FIX: Multiple *BSD compilation compatibility fixes, Bug ID 3380785
 * FIX: precompose_w() failed if tail character is decomposed surrogate pair
 
-Changes in 2.2
+Changes in 2.2.0
 ==============
 
 * NEW: afpd: new volume option "nonetids"
@@ -63,7 +67,8 @@ Changes in 2.2
 * FIX: afpd: new catsearch was broken
 * FIX: afpd: only use volume UUIDs in master afpd
 * FIX: dbd: Multiple fixes, reliable locking
-* FIX: ad file suite: fix an error that resulted in CNID database inconsistencies
+* FIX: ad file suite: fix an error that resulted in CNID database
+       inconsistencies
 
 Changes in 2.2beta4
 ===================
