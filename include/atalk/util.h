@@ -178,10 +178,11 @@ extern const char *getcwdpath(void);
 extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
-#endif  /* _ATALK_UTIL_H */
 
 /******************************************************************
  * cnid.c
  *****************************************************************/
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
+
+#endif  /* _ATALK_UTIL_H */
