@@ -97,3 +97,37 @@ pid_t server_lock(char *program, char *pidfile, int debug)
   return 0;
 }
 
+/*!
+ * Check and write lockfile
+ */
+int check_lockfile(const char *program, const char *pidfile)
+{
+    char buf[10];
+    FILE *pf;
+    pid_t pid;
+    int mask;
+  
+    /* check for pid. this can get fooled by stale pid's. */
+    if ((pf = fopen(pidfile, "r"))) {
+        if (fgets(buf, sizeof(buf), pf) && !kill(pid = atol(buf), 0)) {
+            fprintf(stderr, "%s is already running (pid = %d), or the lock file is stale.\n",
+                    program, pid);      
+            fclose(pf);
+            return -1;
+        }
+        fclose(pf);
+    }
+
+    /* Write PID to pidfile */
+    mask = umask(022);
+    if ((pf = fopen(pidfile, "w")) == NULL) {
+        fprintf(stderr, "%s: can't open lock file, \"%s\"\n", program,
+                pidfile);
+        return -1;
+    }
+    umask(mask);
+    fprintf(pf, "%d\n", getpid());
+    fclose(pf);
+
+    return 0;
+}
