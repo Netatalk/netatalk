@@ -11,10 +11,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 		AC_MSG_RESULT([         none])
 	fi
 	AC_MSG_RESULT([    AFP:])
-	AC_MSG_RESULT([         AFP 3.x calls activated: $afp3])
-	if test "x$afp3" = "xyes"; then
-		AC_MSG_RESULT([         Large file support (>2GB) for AFP3: $wx_largefile])
-	fi
+	AC_MSG_RESULT([         Large file support (>2GB) for AFP3: $wx_largefile])
 	AC_MSG_RESULT([         Extended Attributes: $neta_cv_eas])
 	AC_MSG_RESULT([    CNID:])
 	AC_MSG_RESULT([         backends: $compiled_backends])
@@ -48,7 +45,10 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([         guest])
 	AC_MSG_RESULT([    Options:])
 	AC_MSG_RESULT([         DDP (AppleTalk) support: $netatalk_cv_ddp_enabled])
-	AC_MSG_RESULT([         CUPS support:            $netatalk_cv_use_cups])
+	if test "x$netatalk_cv_ddp_enabled" = "xyes"; then
+		AC_MSG_RESULT([         CUPS support:            $netatalk_cv_use_cups])
+		AC_MSG_RESULT([         Apple 2 boot support:    $compile_a2boot])
+	fi
 	AC_MSG_RESULT([         SLP support:             $netatalk_cv_srvloc])
 	AC_MSG_RESULT([         Zeroconf support:        $netatalk_cv_zeroconf])
 	AC_MSG_RESULT([         tcp wrapper support:     $netatalk_cv_tcpwrap])
@@ -61,7 +61,6 @@ dnl	fi
 	AC_MSG_RESULT([         cracklib support:        $netatalk_cv_with_cracklib])
 	AC_MSG_RESULT([         dropbox kludge:          $netatalk_cv_dropkludge])
 	AC_MSG_RESULT([         force volume uid/gid:    $netatalk_cv_force_uidgid])
-	AC_MSG_RESULT([         Apple 2 boot support:    $compile_a2boot])
 	AC_MSG_RESULT([         ACL support:             $with_acl_support])
 	AC_MSG_RESULT([         LDAP support:            $with_ldap])
 	if test x"$use_pam_so" = x"yes" -a x"$netatalk_cv_install_pam" = x"no"; then
