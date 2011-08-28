@@ -490,16 +490,16 @@ int main(int argc, char *argv[])
         }
     }
 
+    /* Check for PID lockfile */
+    if (check_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
+        return -1;
+
     if (!debug && daemonize(0, 0) != 0)
         exit(EXITERR_SYS);
 
-    /* Check PID lockfile and become a daemon */
-    switch(check_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK)) {
-    case 0:
-        break;
-    default:
-        exit(EXITERR_SYS);
-    }
+    /* Create PID lockfile */
+    if (create_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
+        return -1;
 
     if (loglevel) {
         strlcpy(logconfig + 8, loglevel, 13);

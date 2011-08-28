@@ -263,15 +263,14 @@ int main(int ac, char **av)
     if (!afp_options_parse(ac, av, &default_options))
         exit(EXITERR_CONF);
 
+    if (check_lockfile("afpd", default_options.pidfile) != 0)
+        exit(EXITERR_SYS);
+
     if (!(default_options.flags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
         exit(EXITERR_SYS);
 
-    switch(check_lockfile("afpd", default_options.pidfile)) {
-    case 0:
-        break;
-    default:
+    if (create_lockfile("afpd", default_options.pidfile) != 0)
         exit(EXITERR_SYS);
-    }
 
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);

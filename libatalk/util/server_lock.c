@@ -98,15 +98,14 @@ pid_t server_lock(char *program, char *pidfile, int debug)
 }
 
 /*!
- * Check and write lockfile
+ * Check lockfile
  */
 int check_lockfile(const char *program, const char *pidfile)
 {
     char buf[10];
     FILE *pf;
     pid_t pid;
-    int mask;
-  
+
     /* check for pid. this can get fooled by stale pid's. */
     if ((pf = fopen(pidfile, "r"))) {
         if (fgets(buf, sizeof(buf), pf) && !kill(pid = atol(buf), 0)) {
@@ -117,6 +116,21 @@ int check_lockfile(const char *program, const char *pidfile)
         }
         fclose(pf);
     }
+    return 0;
+}
+
+/*!
+ * Check and create lockfile
+ */
+int create_lockfile(const char *program, const char *pidfile)
+{
+    char buf[10];
+    FILE *pf;
+    pid_t pid;
+    int mask;
+  
+    if (check_lockfile(program, pidfile) != 0)
+        return -1;
 
     /* Write PID to pidfile */
     mask = umask(022);
