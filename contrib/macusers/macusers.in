@@ -2,12 +2,22 @@
 
 use strict;
 use Socket;
+use File::Basename;
 use vars qw($MAC_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
 
 # Written for linux; may have to be modified for your brand of Unix.
 # Support for FreeBSD added by Joe Clarke <marcus@marcuscom.com>.
 # Support Solaris added by Frank Lahm <franklahm@googlemail.com>.
 # Support has also been added for 16 character usernames.
+
+if ($ARGV[0] =~ /^(-v|-version|--version)$/ ) {
+        printf ("%s \(Netatalk @NETATALK_VERSION@\)\n", basename($0));
+        exit(1);
+} elsif ($ARGV[0] =~ /^(-h|-help|--help)$/ ) {
+        printf ("usage: %s \[-v|-version|--version|-h|-help|--help\]\n", basename($0));
+        printf ("Show users connecting via AFP\n");
+        exit(1);
+}
 
 $MAC_PROCESS = "afpd";
 if ($^O eq "freebsd" || $^O eq "openbsd") {

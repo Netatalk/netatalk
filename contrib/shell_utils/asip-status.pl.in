@@ -16,7 +16,7 @@
 #
 
 #
-# This edition is a part of netatalk.
+# This edition is a part of netatalk @NETATALK_VERSION@.
 #
 
 use strict;
@@ -32,12 +32,29 @@ while ($arg = shift @ARGV)
 	$main::show_icon = 1 if ($arg eq "-i");
 	$main::debug = 1 if ($arg eq "-d");
 	$main::hexdump = 1 if ($arg eq "-x");
+	$main::showver = 1 if ($arg eq "-v");
+	$main::showver = 1 if ($arg eq "-version");
+	$main::showver = 1 if ($arg eq "--version");
 	$hostport = $arg if ($arg !~ /^-/);
+}
+
+if ($main::showver ==1)
+{
+        print "$0\n";
+        print "Original edition: 7 May 1997 \(v1.0\) James W. Abendschan\n";
+        print "This edition is a part of Netatalk @NETATALK_VERSION@\n";
+        exit(-1);
 }
 
 if ($hostport eq "")
 {
-	print "usage: $0 hostname[:port] [-i show icon] [-d debug] [-x hex dump]\n";
+	print "usage: $0 [-d] [-i] [-x] hostname[:port]\n";
+	print "       $0 -v|-version|--version\n";
+	print "Queries AFP servers for their capabilities.\n";
+	print "  -d: Enable debug output.\n";
+	print "  -i: Show icon if it exists.\n";
+	print "  -x: Enable hex dump output.\n";
+	print "  -v,-version,--version: Show version.\n";
 	exit(-1);
 }
 

@@ -56,10 +56,11 @@ $finderinfo = 0;              #  0: unknown   1: file   2: directory
 while ($arg = shift @ARGV)
 {
     if  ($arg =~ /^(-h|-help|--help)$/ ) {
-        printf ("usage: %s [-a] FILE|DIR\n"     ,basename($0));
-        printf (" or:   %s -f FILE\n"           ,basename($0));
-        printf (" or:   %s -d FILE\n"           ,basename($0));
-        printf (" or:   %s -h|-help|--help\n"   ,basename($0));
+        printf ("usage: %s [-a] FILE|DIR\n"           ,basename($0));
+        printf (" or:   %s -f FILE\n"                 ,basename($0));
+        printf (" or:   %s -d FILE\n"                 ,basename($0));
+        printf (" or:   %s -h|-help|--help\n"         ,basename($0));
+        printf (" or:   %s -v|-version|--version\n"   ,basename($0));
         printf ("Dump AppleSingle/AppleDouble format file.\n");
         printf ("\n");
         printf ("  -a (default)     Dump a AppleSingle/AppleDouble file for FILE or DIR\n");
@@ -71,6 +72,7 @@ while ($arg = shift @ARGV)
         printf ("  -f               Dump FILE. Assume FinderInfo to be FileInfo.\n");
         printf ("  -d               Dump FILE. Assume FinderInfo to be DirInfo.\n");
         printf ("  -h,-help,--help  Display this help and exit\n");
+        printf ("  -v,-version,--version  Show version and exit\n");
         printf ("\n");
         printf ("There is no way to detect whether FinderInfo is FileInfo or DirInfo.\n");
         printf ("By default, %s examins whether file or directory,\n"   ,basename($0));
@@ -78,7 +80,10 @@ while ($arg = shift @ARGV)
         printf ("and so on.\n");
         printf ("If setting option -f or -d, %s assume FinderInfo and doesn't look for\n");
         printf ("another file.\n");
-        exit 0;
+        exit 1;
+    } elsif ($arg =~ /^(-v|-version|--version)$/ ) {
+        printf ("%s \(Netatalk @NETATALK_VERSION@\)\n", basename($0));
+        exit 1;
     } elsif ($arg eq "-a") {
         $finderinfo = 0;
     } elsif ($arg eq "-f") {
