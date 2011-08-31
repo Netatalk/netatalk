@@ -1,6 +1,4 @@
 /* 
- * $Id: afppasswd.c,v 1.19 2005-04-28 20:49:19 bfernhomberg Exp $
- *
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
  *
@@ -270,6 +268,7 @@ int main(int argc, char **argv)
   flags = ((uid = getuid()) == 0) ? OPT_ISROOT : 0;
 
   if (((flags & OPT_ISROOT) == 0) && (argc > 1)) {
+    fprintf(stderr, "afppasswd (Netatalk %s)\n", VERSION);
     fprintf(stderr, "Usage: afppasswd [-acfn] [-u minuid] [-p path] [username]\n");
     fprintf(stderr, "  -a        add a new user\n");
     fprintf(stderr, "  -c        create and initialize password file or specific user\n");

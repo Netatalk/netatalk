@@ -1,7 +1,3 @@
-/*
- * $Id: megatron.c,v 1.14 2010-01-27 21:27:53 didg Exp $
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -309,6 +305,14 @@ int main(int argc, char **argv)
 
     *newname = '\0';
     for ( c = 1 ; c < argc ; ++c ) {
+        if ( strcmp( argv [ c ], "--version" ) == 0 ) {
+	    printf("%s (Netatalk %s megatron)\n", argv[0], VERSION);
+	    return( -1 );
+	}
+        if ( strcmp( argv [ c ], "-v" ) == 0 ) {
+	    printf("%s (Netatalk %s megatron)\n", argv[0], VERSION);
+	    return( -1 );
+	}
         if ( strcmp( argv [ c ], "--header" ) == 0 ) {
 	    flags |= OPTION_HEADERONLY;
 	    continue;
@@ -337,4 +341,3 @@ int main(int argc, char **argv)
     }
     return( rv );
 }
-
