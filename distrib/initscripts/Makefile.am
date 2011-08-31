@@ -13,6 +13,7 @@ pkgconfdir = @PKGCONFDIR@
 	    -e s@:SBINDIR:@${sbindir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
 	    -e s@:PKGLIBEXECDIR:@${pkglibexecdir}@ \
+	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    <$< >$@
 
 GENERATED_FILES = \
@@ -98,12 +99,13 @@ $(service_DATA): service.atalk.redhat-systemd
 	cp -f service.atalk.redhat-systemd $(service_DATA)
 
 install-data-hook:
-	-systemctl enable $(sysv_SCRIPTS)
+	-systemctl daemon-reload
 
 uninstall-startup:
-	-systemctl disable $(sysv_SCRIPTS)
+	-systemctl disable $(service_DATA)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)	\
 		$(DESTDIR)$(servicedir)/$(service_DATA)
+	-systemctl daemon-reload
 
 endif
 

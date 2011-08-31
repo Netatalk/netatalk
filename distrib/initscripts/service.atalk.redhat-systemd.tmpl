@@ -1,4 +1,4 @@
-# netatalk service file for systemd
+# This file is part of netatalk :NETATALK_VERSION:.
 
 [Unit]
 Description=File and Printer sharing for Macintosh clients
@@ -6,7 +6,7 @@ After=syslog.target network.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c "exec :PKGLIBEXECDIR:/netatalk.sh"
+ExecStart=/bin/sh -c "exec :PKGLIBEXECDIR:/netatalk.sh"
 RemainAfterExit=yes
 
 [Install]
