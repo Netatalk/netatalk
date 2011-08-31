@@ -1302,20 +1302,19 @@ AC_OUTPUT([Makefile
 	bin/cnid/cnid2_create
 	bin/getzones/Makefile
 	bin/megatron/Makefile
-    bin/misc/Makefile
+	bin/misc/Makefile
 	bin/nbp/Makefile
 	bin/pap/Makefile
 	bin/psorder/Makefile
 	bin/uniconv/Makefile
 	config/Makefile
-    config/pam/Makefile
+	config/pam/Makefile
 	contrib/Makefile
 	contrib/macusers/Makefile
 	contrib/macusers/macusers
 	contrib/printing/Makefile
 	contrib/shell_utils/Makefile
-	contrib/shell_utils/afpd-mtab.pl
-    contrib/shell_utils/apple_dump
+	contrib/shell_utils/apple_dump
 	contrib/shell_utils/asip-status.pl
 	contrib/timelord/Makefile
 	contrib/a2boot/Makefile
