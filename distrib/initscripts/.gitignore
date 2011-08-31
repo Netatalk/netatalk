@@ -9,5 +9,7 @@ rc.atalk.sysv
 service.atalk.redhat-systemd
 netatalk
 atalk
+netatalk.service
+netatalk.sh
 .gitignore
 *.o
