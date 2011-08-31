@@ -1,8 +1,0 @@
-Makefile
-Makefile.in
-achfile
-afile
-.deps
-.libs
-.gitignore
-achfile.o afile.o common.o

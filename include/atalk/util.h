@@ -79,6 +79,8 @@ extern void bprint        (char *, int);
 extern int strdiacasecmp  (const char *, const char *);
 extern int strndiacasecmp (const char *, const char *, size_t);
 extern pid_t server_lock  (char * /*program*/, char * /*file*/, int /*debug*/);
+extern int check_lockfile (const char *program, const char *pidfile);
+extern int create_lockfile(const char *program, const char *pidfile);
 extern void fault_setup	  (void (*fn)(void *));
 extern void netatalk_panic(const char *why);
 #define server_unlock(x)  (unlink(x))
@@ -172,10 +174,12 @@ extern const char *getcwdpath(void);
 extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);
-#endif  /* _ATALK_UTIL_H */
+extern int daemonize(int nochdir, int noclose);
 
 /******************************************************************
  * cnid.c
  *****************************************************************/
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
+
+#endif  /* _ATALK_UTIL_H */

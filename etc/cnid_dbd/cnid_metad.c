@@ -491,6 +491,17 @@ int main(int argc, char *argv[])
         }
     }
 
+    /* Check for PID lockfile */
+    if (check_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
+        return -1;
+
+    if (!debug && daemonize(0, 0) != 0)
+        exit(EXITERR_SYS);
+
+    /* Create PID lockfile */
+    if (create_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
+        return -1;
+
     if (loglevel) {
         strlcpy(logconfig + 8, loglevel, 13);
         free(loglevel);
@@ -508,16 +519,6 @@ int main(int argc, char *argv[])
     }
 
     (void)setlimits();
-
-    /* Check PID lockfile and become a daemon */
-    switch(server_lock("cnid_metad", _PATH_CNID_METAD_LOCK, debug)) {
-    case -1: /* error */
-        daemon_exit(EXITERR_SYS);
-    case 0: /* child */
-        break;
-    default: /* server */
-        exit(0);
-    }
 
     if ((srvfd = tsockfd_create(host, port, 10)) < 0)
         daemon_exit(1);

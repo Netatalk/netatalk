@@ -145,13 +145,19 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional sysv initscript install
 AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
     AC_ARG_WITH(sysv-style,
-                [  --with-sysv-style       use OS specific sysv config [[redhat|suse|gentoo|netbsd|debian]]],
+                [  --with-sysv-style       use OS specific sysv config [[redhat-sysv|redhat-systemd|suse|gentoo|netbsd|debian]]],
                 sysv_style="$withval", sysv_style=none
     )
     case "$sysv_style" in 
     "redhat")
-	    AC_MSG_RESULT([enabling redhat-style sysv support])
+	    AC_MSG_ERROR([--enable-redhat is obsoleted. Use --enable-redhat-sysv or --enable-redhat-systemd.])
         ;;
+    "redhat-sysv")
+	    AC_MSG_RESULT([enabling redhat-style sysv (upstart) configuration])
+	    ;;
+    "redhat-systemd")
+	    AC_MSG_RESULT([enabling redhat-style systemd support])
+	    ;;
     "suse")
 	    AC_MSG_RESULT([enabling suse-style sysv support])
         ;;

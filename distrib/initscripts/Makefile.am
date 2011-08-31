@@ -12,11 +12,14 @@ pkgconfdir = @PKGCONFDIR@
 	sed -e s@:BINDIR:@${bindir}@ \
 	    -e s@:SBINDIR:@${sbindir}@ \
 	    -e s@:ETCDIR:@${pkgconfdir}@ \
+	    -e s@:PKGLIBEXECDIR:@${pkglibexecdir}@ \
+	    -e s@:NETATALK_VERSION:@${NETATALK_VERSION}@ \
 	    <$< >$@
 
 GENERATED_FILES = \
 	rc.afpd.netbsd		\
-	rc.atalk.redhat		\
+	rc.atalk.redhat-sysv	\
+	rc.atalk.redhat-systemd	\
 	rc.atalk.tru64		\
 	rc.atalk.bsd		\
 	rc.atalkd.netbsd	\
@@ -26,11 +29,13 @@ GENERATED_FILES = \
 	rc.timelord.netbsd	\
 	rc.atalk.sysv		\
 	rc.atalk.gentoo		\
-	rc.atalk.debian
+	rc.atalk.debian		\
+	service.atalk.redhat-systemd
 
 TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
-	rc.atalk.redhat.tmpl		\
+	rc.atalk.redhat-sysv.tmpl	\
+	rc.atalk.redhat-systemd.tmpl	\
 	rc.atalk.tru64.tmpl		\
 	rc.atalk.bsd.tmpl		\
 	rc.atalkd.netbsd.tmpl		\
@@ -40,9 +45,10 @@ TEMPLATES = \
 	rc.timelord.netbsd.tmpl		\
 	rc.atalk.sysv.tmpl		\
 	rc.atalk.gentoo.tmpl		\
-	rc.atalk.debian.tmpl
+	rc.atalk.debian.tmpl		\
+	service.atalk.redhat-systemd.tmpl
 
-CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) afpd atalkd cnid_metad papd timelord
+CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES)
 
 # overwrite automake uninstall
@@ -55,13 +61,13 @@ uninstall: uninstall-startup
 # checking for "redhat" style sysv scripts:
 #
 
-if USE_REDHAT
+if USE_REDHAT_SYSV
 
 sysvdir	= /etc/rc.d/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.redhat
-	cp -f rc.atalk.redhat $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.atalk.redhat-sysv
+	cp -f rc.atalk.redhat-sysv $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:
@@ -70,6 +76,36 @@ install-data-hook:
 uninstall-startup:
 	-chkconfig --del $(sysv_SCRIPTS)
 	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)
+
+endif
+
+#
+# checking for "redhat" style systemd scripts:
+#
+
+if USE_REDHAT_SYSTEMD
+
+sysvdir	= $(pkglibexecdir)
+sysv_SCRIPTS = netatalk.sh
+
+servicedir	= /lib/systemd/system
+service_DATA	= netatalk.service
+
+$(sysv_SCRIPTS): rc.atalk.redhat-systemd
+	cp -f rc.atalk.redhat-systemd $(sysv_SCRIPTS)
+	chmod a+x $(sysv_SCRIPTS)
+
+$(service_DATA): service.atalk.redhat-systemd
+	cp -f service.atalk.redhat-systemd $(service_DATA)
+
+install-data-hook:
+	-systemctl daemon-reload
+
+uninstall-startup:
+	-systemctl disable $(service_DATA)
+	rm -f $(DESTDIR)$(sysvdir)/$(sysv_SCRIPTS)	\
+		$(DESTDIR)$(servicedir)/$(service_DATA)
+	-systemctl daemon-reload
 
 endif
 

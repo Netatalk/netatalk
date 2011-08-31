@@ -256,6 +256,20 @@ int main(int ac, char **av)
     set_auth_parameters( ac, av );
 #endif /* TRU64 */
 
+    /* Parse argv args and initialize default options */
+    afp_options_init(&default_options);
+    if (!afp_options_parse(ac, av, &default_options))
+        exit(EXITERR_CONF);
+
+    if (check_lockfile("afpd", default_options.pidfile) != 0)
+        exit(EXITERR_SYS);
+
+    if (!(default_options.flags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
+        exit(EXITERR_SYS);
+
+    if (create_lockfile("afpd", default_options.pidfile) != 0)
+        exit(EXITERR_SYS);
+
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
@@ -263,23 +277,9 @@ int main(int ac, char **av)
     set_processname("afpd");
     setuplog("default log_note");
 
-    afp_options_init(&default_options);
-    if (!afp_options_parse(ac, av, &default_options))
-        exit(EXITERR_CONF);
-
-    /* Save the user's current umask for use with CNID (and maybe some 
-     * other things, too). */
+    /* Save the user's current umask */
     default_options.save_mask = umask( default_options.umask );
 
-    switch(server_lock("afpd", default_options.pidfile,
-                       default_options.flags & OPTION_DEBUG)) {
-    case -1: /* error */
-        exit(EXITERR_SYS);
-    case 0: /* child */
-        break;
-    default: /* server */
-        exit(0);
-    }
     atexit(afp_exit);
 
     /* install child handler for asp and dsi. we do this before afp_goaway

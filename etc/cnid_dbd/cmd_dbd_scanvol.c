@@ -706,7 +706,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             ad_flush(&ad);
         }
         else
-            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, did, stamp);
+            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, 0, stamp);
 
         if (ad_cnid == 0)
             dbd_log( LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);

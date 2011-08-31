@@ -42,6 +42,59 @@
 #include <atalk/unix.h>
 #include <atalk/compat.h>
 
+/* close all FDs >= a specified value */
+static void closeall(int fd)
+{
+    int fdlimit = sysconf(_SC_OPEN_MAX);
+
+    while (fd < fdlimit)
+        close(fd++);
+}
+
+/*!
+ * Daemonize
+ *
+ * Fork, exit parent, setsid(), optionally chdir("/"), optionally close all fds
+ *
+ * returns -1 on failure, but you can't do much except exit in that case
+ * since we may already have forked
+ */
+int daemonize(int nochdir, int noclose)
+{
+    switch (fork()) {
+    case 0:
+        break;
+    case -1:
+        return -1;
+    default:
+        _exit(0);
+    }
+
+    if (setsid() < 0)
+        return -1;
+
+    switch (fork()) {
+    case 0: 
+        break;
+    case -1:
+        return -1;
+    default:
+        _exit(0);
+    }
+
+    if (!nochdir)
+        chdir("/");
+
+    if (!noclose) {
+        closeall(0);
+        open("/dev/null",O_RDWR);
+        dup(0);
+        dup(0);
+    }
+
+    return 0;
+}
+
 /*!
  * @brief get cwd in static buffer
  *

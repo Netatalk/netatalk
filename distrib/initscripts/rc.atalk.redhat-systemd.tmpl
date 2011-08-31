@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# Netatalk :NETATALK_VERSION: startup script for systemd.
+
+ATALK_BIN=:BINDIR:
+ATALK_CONF_DIR=:ETCDIR:
+ATALK_SBIN=:SBINDIR:
+
+# default
+ATALK_NAME=`echo ${HOSTNAME}|cut -d. -f1`
+ATALK_UNIX_CHARSET='LOCALE'
+ATALK_MAC_CHARSET='MAC_ROMAN'
+
+CNID_METAD_RUN=yes
+AFPD_RUN=yes
+AFPD_MAX_CLIENTS=20
+AFPD_UAMLIST="-U uams_dhx.so,uams_dhx2.so"
+AFPD_GUEST=nobody
+CNID_CONFIG="-l log_note"
+
+ATALKD_RUN=no
+PAPD_RUN=no
+TIMELORD_RUN=no
+A2BOOT_RUN=no
+ATALK_ZONE=
+ATALK_BGROUND=no
+
+# read in netatalk configuration
+if [ -f ${ATALK_CONF_DIR}/netatalk.conf ]; then
+    . ${ATALK_CONF_DIR}/netatalk.conf
+fi
+
+netatalk_startup() {
+    if [ x"${ATALKD_RUN}" != x"no" -a -x ${ATALK_SBIN}/atalkd ]; then
+	${ATALK_SBIN}/atalkd
+	
+	if [ -x ${ATALK_BIN}/nbprgstr ]; then
+	    ${ATALK_BIN}/nbprgstr -p 4 ${ATALK_NAME}:Workstation${ATALK_ZONE}
+	    ${ATALK_BIN}/nbprgstr -p 4 ${ATALK_NAME}:netatalk${ATALK_ZONE}
+	fi	
+	
+	if [ x"${PAPD_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/papd ]; then
+	    ${ATALK_SBIN}/papd
+	fi
+	
+	# check for timelord in bin directory
+	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x ${ATALK_BIN}/timelord ]; then
+	    ${ATALK_BIN}/timelord
+	fi
+	
+	# check for timelord in sbin directory
+	if [ x"${TIMELORD_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/timelord ]; then
+	    ${ATALK_SBIN}/timelord
+	fi
+	
+	# check for a2boot in bin directory
+	if [ x"${A2BOOT_RUN}" = x"yes"  -a -x ${ATALK_BIN}/a2boot ]; then
+	    ${ATALK_BIN}/a2boot
+	fi
+	
+	# check for a2boot in sbin directory
+	if [ x"${A2BOOT_RUN}" = x"yes"  -a -x ${ATALK_SBIN}/a2boot ]; then
+	    ${ATALK_SBIN}/a2boot
+	fi
+    fi
+    
+    if [ x"${CNID_METAD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/cnid_metad ]; then
+	${ATALK_SBIN}/cnid_metad $CNID_CONFIG
+    fi
+    
+    if [ x"${AFPD_RUN}" = x"yes" -a -x ${ATALK_SBIN}/afpd ]; then
+	${ATALK_SBIN}/afpd ${AFPD_UAMLIST} -g ${AFPD_GUEST} \
+            -c ${AFPD_MAX_CLIENTS} -n ${ATALK_NAME}${ATALK_ZONE}
+    fi
+}
+
+if [ x"${ATALK_BGROUND}" = x"yes" -a x"${ATALKD_RUN}" != x"no" ]; then 
+    netatalk_startup >& /dev/null &
+else
+    netatalk_startup
+fi

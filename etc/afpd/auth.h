@@ -15,6 +15,19 @@ struct afp_versions {
     int		av_number;
 };
 
+static const struct afp_versions  afp_versions[] = {
+#ifndef NO_DDP
+    { "AFPVersion 1.1", 11 },
+    { "AFPVersion 2.0", 20 },
+    { "AFPVersion 2.1", 21 },
+#endif /* ! NO_DDP */
+    { "AFP2.2", 22 },
+    { "AFPX03", 30 },
+    { "AFP3.1", 31 },
+    { "AFP3.2", 32 },
+    { "AFP3.3", 33 }
+};
+
 /* for GetUserInfo */
 #define USERIBIT_USER  (1 << 0)
 #define USERIBIT_GROUP (1 << 1)
