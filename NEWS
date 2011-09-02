@@ -34,6 +34,8 @@ Changes in 2.2.1
        if DARWIN_ACE_ADD_SUBDIRECTORY is set
 * FIX: afpd: afpd crashed when it failed to register with Avahi because eg
        user service registration is disabled in the Avahi config
+* FIX: dbd: function checking and removing malformed ad:ea header files failed
+       to chdir back to the original working directory
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: dbd: better detection of local (or SMB/NFS) modifications on AFP volumes
