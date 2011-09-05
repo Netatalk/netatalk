@@ -541,6 +541,7 @@ dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 dnl --------------------- determine operating system from "target"
 case "$host_os" in
 	*aix*)				this_os=aix ;;
+	*kfreebsd*-gnu)			this_os=kfreebsd-gnu ;;
 	*freebsd*) 			this_os=freebsd ;;
 	*hpux11*)			this_os=hpux11 ;;
 	*irix*)				this_os=irix ;;
@@ -564,7 +565,7 @@ dnl --------------------- GNU source
 case "$this_os" in
 	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
         ;;
-     *kfreebsd-gnu*) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+     kfreebsd-gnu) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
         ;;
 esac
 
@@ -584,6 +585,15 @@ fi
 dnl ----- FreeBSD specific -----
 if test x"$this_os" = "xfreebsd"; then 
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
+	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
+	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
+	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
+    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
+fi
+
+dnl ----- GNU/kFreeBSD specific -----
+if test x"$this_os" = "xkfreebsd-gnu"; then 
+	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
 	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
