@@ -23,6 +23,9 @@
 
 #ifndef _ATALK_NBP_H
 #define _ATALK_NBP_H 1
+
+#ifndef NO_DDP
+
 #define NBP_UNRGSTR_4ARGS 1
 #define ATP_OPEN_2ARGS 1
 
@@ -93,4 +96,5 @@ extern int nbp_rgstr (struct sockaddr_at *,
 extern int nbp_unrgstr (const char *, const char *, const char *,
 			    const struct at_addr *);
 
+#endif  /* NO_DDP */
 #endif

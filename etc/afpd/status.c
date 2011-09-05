@@ -85,14 +85,16 @@ static int status_server(char *data, const char *server, const struct afp_option
 
     /* extract the obj part of the server */
     Obj = (char *) server;
+#ifndef NO_DDP
     nbp_name(server, &Obj, &Type, &Zone);
+#endif
     if ((size_t)-1 == (len = convert_string( 
-			options->unixcharset, options->maccharset, 
-			Obj, -1, buf, sizeof(buf))) ) {
-	len = MIN(strlen(Obj), 31);
+                           options->unixcharset, options->maccharset, 
+                           Obj, -1, buf, sizeof(buf))) ) {
+        len = MIN(strlen(Obj), 31);
     	*data++ = len;
     	memcpy( data, Obj, len );
-	LOG ( log_error, logtype_afpd, "Could not set servername, using fallback");
+        LOG ( log_error, logtype_afpd, "Could not set servername, using fallback");
     } else {
     	*data++ = len;
     	memcpy( data, buf, len );
@@ -185,8 +187,11 @@ static u_int16_t status_signature(char *data, int *servoffset,
 }
 
 static size_t status_netaddress(char *data, int *servoffset,
-                             const ASP asp, const DSI *dsi,
-                             const struct afp_options *options)
+#ifndef NO_DDP
+                                const ASP asp,
+#endif
+                                const DSI *dsi,
+                                const struct afp_options *options)
 {
     char               *begin;
     u_int16_t          offset;
@@ -209,7 +214,10 @@ static size_t status_netaddress(char *data, int *servoffset,
     /* number of addresses. this currently screws up if we have a dsi
        connection, but we don't have the ip address. to get around this,
        we turn off the status flag for tcp/ip. */
-    *data++ = ((options->fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) + (asp ? 1 : 0) +
+    *data++ = ((options->fqdn && dsi)? 1 : 0) + (dsi ? 1 : 0) +
+#ifndef NO_DDP
+        (asp ? 1 : 0) +
+#endif
               (((options->flags & OPTION_ANNOUNCESSH) && options->fqdn && dsi)? 1 : 0);
 
     /* ip address */
@@ -386,8 +394,9 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
     /* extract the obj part of the server */
     Obj = (char *) (options->server ? options->server : options->hostname);
+#ifndef NO_DDP
     nbp_name(options->server ? options->server : options->hostname, &Obj, &Type, &Zone);
-
+#endif
     if ((size_t) -1 == (len = convert_string (
 					options->unixcharset, CH_UTF8_MAC, 
 					Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
@@ -440,7 +449,9 @@ static void status_icon(char *data, const unsigned char *icondata,
 void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
                  const struct afp_options *options)
 {
+#ifndef NO_DDP
     ASP asp;
+#endif
     DSI *dsi;
     char *status = NULL;
     size_t statuslen;
@@ -449,12 +460,14 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     if (!(aspconfig || dsiconfig) || !options)
         return;
 
+#ifndef NO_DDP
     if (aspconfig) {
         status = aspconfig->status;
         maxstatuslen=sizeof(aspconfig->status);
         asp = aspconfig->obj.handle;
     } else
         asp = NULL;
+#endif
 	
     ipok = 0;
     if (dsiconfig) {
@@ -506,7 +519,11 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     c = status_server(status, options->server ? options->server :
                       options->hostname, options);
     status_machine(status);
-    status_versions(status, asp, dsi);
+    status_versions(status,
+#ifndef NO_DDP
+                    asp,
+#endif
+                    dsi);
     status_uams(status, options->uamlist);
     if (options->flags & OPTION_CUSTOMICON)
         status_icon(status, icon, sizeof(icon), c);
@@ -516,7 +533,11 @@ void status_init(AFPConfig *aspconfig, AFPConfig *dsiconfig,
     sigoff = status_signature(status, &c, options);
     /* c now contains the offset where the netaddress offset lives */
 
-    status_netaddress(status, &c, asp, dsi, options);
+    status_netaddress(status, &c,
+#ifndef NO_DDP
+                      asp,
+#endif
+                      dsi, options);
     /* c now contains the offset where the Directory Names Count offset lives */
 
     statuslen = status_directorynames(status, &c, dsi, options);

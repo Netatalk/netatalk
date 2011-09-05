@@ -265,6 +265,7 @@ static char *volxlate(AFPObj *obj,
         } else if (is_var(p, "$c")) {
             if (afpmaster && xlatevolname)
                 return NULL;
+#ifndef NO_DDP
             if (obj->proto == AFPPROTO_ASP) {
                 ASP asp = obj->handle;
 
@@ -273,7 +274,9 @@ static char *volxlate(AFPObj *obj,
                 dest += len;
                 destlen -= len;
 
-            } else if (obj->proto == AFPPROTO_DSI) {
+            }
+#endif
+            if (obj->proto == AFPPROTO_DSI) {
                 DSI *dsi = obj->handle;
                 len = sprintf(dest, "%s:%u",
                               getip_string((struct sockaddr *)&dsi->client),
@@ -302,14 +305,16 @@ static char *volxlate(AFPObj *obj,
         } else if (is_var(p, "$i")) {
             if (afpmaster && xlatevolname)
                 return NULL;
+#ifndef NO_DDP
             if (obj->proto == AFPPROTO_ASP) {
                 ASP asp = obj->handle;
-
                 len = sprintf(dest, "%u", ntohs(asp->asp_sat.sat_addr.s_net));
                 dest += len;
                 destlen -= len;
 
-            } else if (obj->proto == AFPPROTO_DSI) {
+            }
+#endif
+            if (obj->proto == AFPPROTO_DSI) {
                 DSI *dsi = obj->handle;
                 q = getip_string((struct sockaddr *)&dsi->client);
             }

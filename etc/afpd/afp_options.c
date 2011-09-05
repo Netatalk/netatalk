@@ -428,8 +428,10 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-port")))
         options->port = strdup(c);
+#ifndef NO_DDP
     if ((c = getoption(buf, "-ddpaddr")))
         atalk_aton(c, &options->ddpaddr);
+#endif
     if ((c = getoption(buf, "-signature")) && (opt = strdup(c)))
         options->signatureopt = opt;
 

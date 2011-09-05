@@ -24,6 +24,8 @@
 #ifndef _ATALK_RTMP_H
 #define _ATALK_RTMP_H 1
 
+#ifndef NO_DDP
+
 #include <netatalk/endian.h>
 
 #define RTMPROP_REQUEST	1
@@ -42,4 +44,5 @@ struct rtmprdhdr {
     u_int8_t    rrdh_id;
 };
 
+#endif  /* NO_DDP */
 #endif
