@@ -20,6 +20,7 @@ NONGENERATED_MANS	=	ad.1 \
 				dbd.1 \
 				hqx2bin.1 \
 				macbinary.1 \
+				macusers.1 \
 				megatron.1 \
 				netatalk-config.1 \
 				single2bin.1 \

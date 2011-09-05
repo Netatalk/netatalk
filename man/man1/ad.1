@@ -2,12 +2,12 @@
 .\"     Title: ad
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 30 Mar 2011
+.\"      Date: 02 Sep 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "AD" "1" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "AD" "1" "02 Sep 2011" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -23,6 +23,8 @@ ad \- Netatalk compatible UNIX file utility suite\&.
 .SH "SYNOPSIS"
 .HP \w'\fBad\fR\ 'u
 \fBad\fR {ls\ |\ cp\ |\ mv\ |\ rm} [\&.\&.\&.]
+.HP \w'\fBad\fR\ 'u
+\fBad\fR {\-v\ |\ \-\-version}
 .SH "DESCRIPTION"
 .PP
 \fBad\fR
@@ -49,8 +51,10 @@ Copy files and directories\&.
 Move files and directories\&.
 .HP \w'\fBad\ rm\fR\ 'u
 \fBad rm\fR [\-Rv] {file|directory}
+.HP \w'\fBad\ \-v|\-\-version\fR\ 'u
+\fBad \-v|\-\-version\fR
 .PP
-Remove files and directories\&.
+Show version\&.
 .SH "AD LS"
 .PP
 List files and directories\&. Options:
