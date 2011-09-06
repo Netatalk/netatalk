@@ -1322,6 +1322,7 @@ AC_OUTPUT([Makefile
 	contrib/Makefile
 	contrib/macusers/Makefile
 	contrib/macusers/macusers
+	contrib/misc/Makefile
 	contrib/printing/Makefile
 	contrib/shell_utils/Makefile
 	contrib/shell_utils/apple_dump

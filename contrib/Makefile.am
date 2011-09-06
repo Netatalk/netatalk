@@ -1,6 +1,6 @@
 # Makefile.am for contrib/
 
-SUBDIRS = macusers shell_utils
+SUBDIRS = macusers misc shell_utils
 
 if COMPILE_TIMELORD
 SUBDIRS += timelord
