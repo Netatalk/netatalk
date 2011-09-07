@@ -1,3 +1,7 @@
+Changes in 2.2.2
+================
+* FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble files
+
 Changes in 2.2.1
 ================
 

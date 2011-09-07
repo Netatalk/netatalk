@@ -53,8 +53,8 @@ int dbd_resolve(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply
     rply->namelen = data.size;
     rply->name = (char *)data.data;
 
-    LOG(log_debug, logtype_cnid, "dbd_resolve: Resolving CNID %u to did %u name %s",
-        ntohl(rqst->cnid), ntohl(rply->did), rply->name);
+    LOG(log_debug, logtype_cnid, "dbd_resolve(CNID: %u): did: %u, name: \"%s\"",
+        ntohl(rqst->cnid), ntohl(rply->did), rply->name + CNID_NAME_OFS);
 
     rply->result = CNID_DBD_RES_OK;
     return 1;

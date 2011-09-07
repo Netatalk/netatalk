@@ -48,6 +48,11 @@ int dbd_rebuild_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *
         return -1;
     }
 
+    LOG(log_debug, logtype_cnid,
+        "dbd_rebuild_add(CNID: %u, did: %u, name: \"%s\", dev/ino:0x%llx/0x%llx): success",
+        ntohl(rqst->cnid), ntohl(rqst->did), rqst->name,
+        (unsigned long long)rqst->dev, (unsigned long long)rqst->ino);
+
     key.data = ROOTINFO_KEY;
     key.size = ROOTINFO_KEYLEN;
 
