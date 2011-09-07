@@ -1173,10 +1173,10 @@ static int check_acl_access(const struct vol *vol,
     LOG(log_maxdebug, logtype_afpd, "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
         cfrombstr(dir->d_fullpath), path, getcwdpath(), requested_rights);
 
+    /* This check is not used anymore, as OS X Server seems to be ignoring too */
+#if 0
     /* Get uid or gid from UUID */
     EC_ZERO_ERR(getnamefromuuid(uuid, &username, &uuidtype), AFPERR_PARAM);
-    EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
-
     switch (uuidtype) {
     case UUID_USER:
         break;
@@ -1188,6 +1188,9 @@ static int check_acl_access(const struct vol *vol,
         EC_STATUS(AFPERR_MISC);
         goto EC_CLEANUP;
     }
+#endif
+
+    EC_ZERO_LOG_ERR(lstat(path, &st), AFPERR_PARAM);
 
     is_dir = !strcmp(path, ".");
 
