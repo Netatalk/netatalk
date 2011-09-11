@@ -68,6 +68,24 @@
 #                         if you don't want the proxy server to act as
 #                         a ddp server as well, set -uamlist to an empty
 #                         string.
+#     -dsireadbuf [number]
+#                         Scale factor that determines the size of the
+#                         DSI/TCP readahead buffer, default is 12. This is
+#                         multiplies with the DSI server quantum (default
+#                         ~300k) to give the size of the buffer. Increasing
+#                         this value might increase throughput in fast local
+#                         networks for volume to volume copies.  Note: This
+#                         buffer is allocated per afpd child process, so
+#                         specifying large values will eat up large amount of
+#                         memory (buffer size * number of clients).
+#     -tcprcvbuf [number]
+#                         Try to set TCP receive buffer using setsockpt().
+#                         Often OSes impose restrictions on the applications
+#                         ability to set this value.
+#     -tcpsndbuf [number]
+#                         Try to set TCP send buffer using setsockpt().
+#                         Often OSes impose restrictions on the applications
+#                         ability to set this value.
 #     -slp                Register this server with the Service Location
 #                         Protocol (if SLP support was compiled in).
 #     -nozeroconf         Don't register this server with the Multicats
@@ -240,6 +258,47 @@
 #                         then tries to authenticate with the result
 #                         through the availabel and active UAM authentication
 #                         modules.
+#     -dircachesize entries
+#                         Maximum possible entries in the directory cache.
+#                         The cache stores directories and files. It is used
+#                         to cache the full path to directories and CNIDs
+#                         which considerably speeds up directory enumeration.
+#                         Default size is 8192, maximum size is 131072. Given
+#                         value is rounded up to nearest power of 2. Each
+#                         entry takes about 100 bytes, which is not much, but
+#                         remember that every afpd child process for every
+#                         connected user has its cache.
+#     -fcelistener host[:port]
+#                         Enables sending FCE events to the specified host,
+#                         default port is 12250 if not specified. Specifying
+#                         mutliple listeners is done by having this option
+#                         once for each of them.
+#     -fceevents fmod,fdel,ddel,fcre,dcre,tmsz
+#                         Speficies which FCE events are active, default is
+#                         fmod,fdel,ddel,fcre,dcre.
+#     -fcecoalesce all|delete|create
+#                         Coalesce FCE events.
+#     -fceholdfmod seconds
+#                         This determines the time delay in seconds which is
+#                         always waited if another file modification for the
+#                         same file is done by a client before sending an FCE
+#                         file modification event (fmod). For example saving
+#                         a file in Photoshop would generate multiple events
+#                         by itself because the application is opening,
+#                         modifying and closing a file mutliple times for
+#                         every "save". Defautl: 60 seconds.
+#     -keepsessions       Enable "Continuous AFP Service". This means the
+#                         ability to stop the master afpd process with a
+#                         SIGQUIT signal, possibly install an afpd update and
+#                         start the afpd process. Existing AFP sessions afpd
+#                         processes will remain unaffected. Technically they
+#                         will be notified of the master afpd shutdown, sleep
+#                         15-20 seconds and then try to reconnect their IPC
+#                         channel to the master afpd process. If this
+#                         reconnect fails, the sessions are in an undefined
+#                         state. Therefor it's absolutely critical to restart
+#                         the master process in time!
+#     -noacl2maccess      Don't map filesystem ACLs to effective permissions.
 #
 #   Codepage Options:
 #     -unixcodepage <CODEPAGE>  Specifies the servers unix codepage,
