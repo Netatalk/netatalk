@@ -168,21 +168,6 @@ int netatalk_unlink(const char *name)
     return AFP_OK;
 }
 
-char *fullpathname(const char *name)
-{
-    static char wd[ MAXPATHLEN + 1];
-
-    if ( getcwd( wd , MAXPATHLEN) ) {
-        strlcat(wd, "/", MAXPATHLEN);
-        strlcat(wd, name, MAXPATHLEN);
-    }
-    else {
-        strlcpy(wd, name, MAXPATHLEN);
-    }
-    return wd;
-}
-
-
 /**************************************************************************
  * *at semnatics support functions (like openat, renameat standard funcs)
  **************************************************************************/

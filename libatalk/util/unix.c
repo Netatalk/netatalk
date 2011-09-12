@@ -111,6 +111,28 @@ const char *getcwdpath(void)
 }
 
 /*!
+ * @brief Request absolute path
+ *
+ * @returns Absolute filesystem path to object
+ */
+const char *fullpathname(const char *name)
+{
+    static char wd[MAXPATHLEN + 1];
+
+    if (name[0] == '/')
+        return name;
+
+    if (getcwd(wd , MAXPATHLEN)) {
+        strlcat(wd, "/", MAXPATHLEN);
+        strlcat(wd, name, MAXPATHLEN);
+    } else {
+        strlcpy(wd, name, MAXPATHLEN);
+    }
+
+    return wd;
+}
+
+/*!
  * Takes a buffer with a path, strips slashs, returns basename
  *
  * @param p (rw) path

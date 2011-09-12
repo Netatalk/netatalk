@@ -26,7 +26,6 @@
 /* vfs/unix.c */
 extern int netatalk_unlink(const char *name);
 extern int netatalk_unlinkat(int dirfd, const char *name);
-extern char *fullpathname(const char *);
 extern int statat(int dirfd, const char *path, struct stat *st);
 extern int lstatat(int dirfd, const char *path, struct stat *st);
 extern DIR *opendirat(int dirfd, const char *path);

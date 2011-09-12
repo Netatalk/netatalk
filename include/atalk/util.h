@@ -177,6 +177,7 @@ extern int recv_fd(int fd, int nonblocking);
  *****************************************************************/
 
 extern const char *getcwdpath(void);
+extern const char *fullpathname(const char *);
 extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);

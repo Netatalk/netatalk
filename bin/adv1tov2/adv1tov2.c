@@ -58,21 +58,6 @@ static void xlate(char *name, int flags) {
 }
 #endif
 
-/* ----------------------------- */
-char *fullpathname(const char *name)
-{
-    static char wd[ MAXPATHLEN + 1];
-
-    if ( getcwd( wd , MAXPATHLEN) ) {
-        strlcat(wd, "/", MAXPATHLEN);
-        strlcat(wd, name, MAXPATHLEN);
-    }
-    else {
-        strlcpy(wd, name, MAXPATHLEN);
-    }
-    return wd;
-}
-
 #define MAXDESCEND 0xFFFF
 /* recursively descend subdirectories. 
  * oh the stack space we use up! */
