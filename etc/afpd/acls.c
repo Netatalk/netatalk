@@ -406,7 +406,8 @@ static int posix_acl_rights(const char *path,
     acl_entry_t e;
     acl_tag_t tag;
 
-    EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
+    EC_NULL_LOGSTR(acl = acl_get_file(path, ACL_TYPE_ACCESS),
+                   "acl_get_file(\"%s\"): %s", fullpathname(path), strerror(errno));
 
     /* itereate through all ACEs to get the mask */
     while (!havemask && acl_get_entry(acl, entry_id, &e) == 1) {
