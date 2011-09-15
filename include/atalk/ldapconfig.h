@@ -1,4 +1,4 @@
-#ifdef HAVE_ACLS
+#ifdef HAVE_LDAP
 
 #ifndef LDAPCONFIG_H
 #define LDAPCONFIG_H
@@ -39,4 +39,4 @@ extern int ldap_config_valid;
 
 #endif /* LDAPCONFIG_H */
 
-#endif /* HAVE_ACLS */
+#endif /* HAVE_LDAP */
