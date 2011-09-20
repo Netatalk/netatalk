@@ -459,7 +459,7 @@ int fce_register_delete_file( struct path *path )
     if (!(fce_ev_enabled & (1 << FCE_FILE_DELETE)))
         return ret;
 	
-    ret = register_fce( path->u_name, FALSE, FCE_FILE_DELETE );
+    ret = register_fce( path->u_name, false, FCE_FILE_DELETE );
 
     return ret;
 }
@@ -473,7 +473,7 @@ int fce_register_delete_dir( char *name )
     if (!(fce_ev_enabled & (1 << FCE_DIR_DELETE)))
         return ret;
 	
-    ret = register_fce( name, TRUE, FCE_DIR_DELETE);
+    ret = register_fce( name, true, FCE_DIR_DELETE);
 
     return ret;
 }
@@ -488,7 +488,7 @@ int fce_register_new_dir( struct path *path )
     if (!(fce_ev_enabled & (1 << FCE_DIR_CREATE)))
         return ret;
 
-    ret = register_fce( path->u_name, TRUE, FCE_DIR_CREATE );
+    ret = register_fce( path->u_name, true, FCE_DIR_CREATE );
 
     return ret;
 }
@@ -504,7 +504,7 @@ int fce_register_new_file( struct path *path )
     if (!(fce_ev_enabled & (1 << FCE_FILE_CREATE)))
         return ret;
 
-    ret = register_fce( path->u_name, FALSE, FCE_FILE_CREATE );
+    ret = register_fce( path->u_name, false, FCE_FILE_CREATE );
 
     return ret;
 }
@@ -528,7 +528,7 @@ int fce_register_file_modification( struct ofork *ofork )
         return AFPERR_MISC;
     }
     
-    ret = register_fce( u_name, FALSE, FCE_FILE_MODIFY );
+    ret = register_fce( u_name, false, FCE_FILE_MODIFY );
     
     return ret;    
 }
@@ -544,7 +544,7 @@ int fce_register_tm_size(const char *vol, size_t used)
         return ret;
 
     tm_used = used;             /* oh what a hack */
-    ret = register_fce(vol, FALSE, FCE_TM_SIZE);
+    ret = register_fce(vol, false, FCE_TM_SIZE);
 
     return ret;
 }

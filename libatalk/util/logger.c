@@ -27,10 +27,9 @@ Netatalk 2001 (c)
 #include <time.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdbool.h>
 
-#include <atalk/boolean.h>
 #include <atalk/util.h>
-
 #include <atalk/logger.h>
 
 #define OPEN_LOGS_AS_UID 0

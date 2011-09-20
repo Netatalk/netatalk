@@ -8,6 +8,8 @@
 #ifndef _FCE_API_INTERNAL_H
 #define	_FCE_API_INTERNAL_H
 
+#include <stdbool.h>
+
 #define FCE_MAX_UDP_SOCKS 5     /* Allow a maximum of udp listeners for file change events */
 #define FCE_SOCKET_RETRY_DELAY_S 600 /* Pause this time in s after socket was broken */
 #define FCE_PACKET_VERSION  1
@@ -43,7 +45,7 @@ struct fce_close_event {
 
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)
 
-int fce_handle_coalescation( char *path, int is_dir, int mode );
+bool fce_handle_coalescation( char *path, int is_dir, int mode );
 void fce_initialize_history();
 
 
