@@ -30,7 +30,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
                 AC_MSG_RESULT([         DHX2    ($uams_using_options)])
         fi
 	if test "x$neta_cv_have_openssl" = "xyes"; then
-		AC_MSG_RESULT([         RANDNUM ($uams_using_options)])
+		AC_MSG_RESULT([         RANDNUM])
 	fi
 	if test x"$netatalk_cv_build_krb5_uam" = x"yes"; then
 		AC_MSG_RESULT([         Kerberos V])
@@ -41,7 +41,7 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	if test x"$compile_pgp" = x"yes"; then
 		AC_MSG_RESULT([         PGP])
 	fi
-	AC_MSG_RESULT([         passwd  ($uams_using_options)])
+	AC_MSG_RESULT([         clrtxt  ($uams_using_options)])
 	AC_MSG_RESULT([         guest])
 	AC_MSG_RESULT([    Options:])
 	AC_MSG_RESULT([         DDP (AppleTalk) support: $netatalk_cv_ddp_enabled])
