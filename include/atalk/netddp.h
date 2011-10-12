@@ -13,6 +13,8 @@
 #ifndef _ATALK_NETDDP_H
 #define _ATALK_NETDDP_H 1
 
+#ifndef NO_DDP
+
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/socket.h>
@@ -35,5 +37,6 @@ extern int netddp_recvfrom (int, void *, int, unsigned int,
 #define netddp_recvfrom  recvfrom
 #endif
 
+#endif  /* NO_DDP */
 #endif /* netddp.h */
 

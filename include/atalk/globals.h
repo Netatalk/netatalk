@@ -72,7 +72,9 @@ struct afp_options {
     u_int32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
+#ifndef NO_DDP
     struct at_addr ddpaddr;
+#endif
     char *uampath, *fqdn;
     char *pidfile;
     char *sigconffile;

@@ -1,6 +1,4 @@
 /*
- * $Id: at.h,v 1.6 2008-12-18 17:31:31 morgana Exp $
- *
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  *
  * All Rights Reserved.  See COPYRIGHT.
@@ -8,6 +6,12 @@
 
 #ifndef __AT_HEADER__
 #define __AT_HEADER__
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
+#ifndef NO_DDP
 
 #if defined(linux) /* pull in the linux header */
 #include <sys/socket.h>
@@ -130,5 +134,6 @@ extern struct protosw	atalksw[];
 #endif /* KERNEL */
 
 #endif /* linux */
+#endif /* NO_DDP */
 #endif /* __AT_HEADER__ */
 

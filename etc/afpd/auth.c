@@ -78,7 +78,11 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( char *data, const ASP asp, const DSI *dsi)
+void status_versions(char *data,
+#ifndef NO_DDP
+                     const ASP asp,
+#endif
+                     const DSI *dsi)
 {
     char                *start = data;
     u_int16_t           status;

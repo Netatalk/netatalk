@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#ifndef NO_DDP
+
 #include <sys/types.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
@@ -112,3 +114,5 @@ int atalk_aton(char *cp, struct at_addr *addr)
     }
     return (1);
 }
+
+#endif  /* NO_DDP */
