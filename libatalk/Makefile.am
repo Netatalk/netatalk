@@ -21,13 +21,9 @@ libatalk_la_LIBADD  = \
 libatalk_la_DEPENDENCIES = \
 	acl/libacl.la \
 	adouble/libadouble.la	\
-	asp/libasp.la		\
-	atp/libatp.la		\
 	bstring/libbstring.la \
 	compat/libcompat.la	\
 	dsi/libdsi.la		\
-	nbp/libnbp.la		\
-	netddp/libnetddp.la	\
 	util/libutil.la		\
 	tdb/libtdb.la       \
 	unicode/libunicode.la \
