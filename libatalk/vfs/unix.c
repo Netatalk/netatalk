@@ -44,7 +44,7 @@ int stickydirmode(const char *name, const mode_t mode, const int dropbox, const 
             if ( seteuid(0) < 0) {
                 LOG(log_error, logtype_afpd, "stickydirmode: unable to seteuid root: %s", strerror(errno));
             }
-            if ( (retval=chmod( name, ( (DIRBITS | mode | S_ISVTX) & ~v_umask) )) < 0) {
+            if ( (retval=chmod_acl( name, ( (DIRBITS | mode | S_ISVTX) & ~v_umask) )) < 0) {
                 LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
             } else {
                 LOG(log_debug, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(retval) );
@@ -59,7 +59,7 @@ int stickydirmode(const char *name, const mode_t mode, const int dropbox, const 
      *  Ignore EPERM errors:  We may be dealing with a directory that is
      *  group writable, in which case chmod will fail.
      */
-    if ( (chmod( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM &&
+    if ( (chmod_acl( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM &&
          !(errno == ENOENT && (dropbox & AFPVOL_NOADOUBLE)) )
     {
         LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
@@ -92,7 +92,7 @@ int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
     
     mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
 
-    if ( chmod( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
+    if ( chmod_acl( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
         return -1;
     }
     return 0;

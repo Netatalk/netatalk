@@ -101,7 +101,7 @@ int matchfile2dirperms(
                     upath, strerror(errno));
                 ret = AFPERR_ACCESS;
             }
-            else if ((!S_ISLNK(st->st_mode)) && (chmod(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0))
+            else if ((!S_ISLNK(st->st_mode)) && (chmod_acl(upath,(st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0))
             {
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms(%s): Error adding file read permissions: %s",
@@ -115,7 +115,7 @@ int matchfile2dirperms(
                     adpath, strerror(errno));
                 ret = AFPERR_ACCESS;
             }
-            else if (chmod(adpath, (st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
+            else if (chmod_acl(adpath, (st.st_mode&~default_options.umask)| S_IRGRP| S_IROTH) < 0)
             {
                 LOG(log_error, logtype_afpd,
                     "matchfile2dirperms(%s):  Error adding AD file read permissions: %s",

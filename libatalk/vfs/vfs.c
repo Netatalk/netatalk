@@ -599,12 +599,12 @@ static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_
     if ((dir_mode & (S_IRGRP | S_IWGRP )))
         dir_mode |= S_IXGRP;
     if ((dir_mode & (S_IROTH | S_IWOTH )))
-        dir_mode |= S_IXOTH;	
-    
+        dir_mode |= S_IXOTH;
+
 	/* change folder */
 	dir_mode |= DIRBITS;
     if (dir_rx_set(dir_mode)) {
-        if (chmod( name,  dir_mode ) < 0)
+        if (chmod_acl( name,  dir_mode ) < 0)
             return -1;
     }
     param.st = st;
@@ -613,7 +613,7 @@ static int ads_setfilmode(const char * name, mode_t mode, struct stat *st, mode_
         return -1;
 
     if (!dir_rx_set(dir_mode)) {
-        if (chmod( name,  dir_mode ) < 0)
+        if (chmod_acl( name,  dir_mode ) < 0)
             return -1;
     }
 

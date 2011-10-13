@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2008, 2009, 2010 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2011 Laura Mueller <laura-mueller@uni-duesseldorf.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -64,6 +65,10 @@
 
 #define MAP_MASK               31
 #define IS_DIR                 32
+
+/* bit flags for set_acl() and map_aces_darwin_to_posix() */
+#define HAS_DEFAULT_ACL 0x01
+#define HAS_EXT_DEFAULT_ACL 0x02
 
 /********************************************************
  * Solaris funcs
@@ -397,9 +402,10 @@ static int posix_acl_rights(const char *path,
                             uint32_t *result)
 {
     EC_INIT;
-    int havemask = 0;
     int entry_id = ACL_FIRST_ENTRY;
-    uint32_t rights = 0, maskrights = 0;
+    uint32_t rights = 0; /* rights which do not depend on ACL_MASK */
+    uint32_t acl_rights = 0; /* rights which are subject to limitations imposed by ACL_MASK */
+    uint32_t mask_rights = 0xffffffff;
     uid_t *uid = NULL;
     gid_t *gid = NULL;
     acl_t acl = NULL;
@@ -409,67 +415,67 @@ static int posix_acl_rights(const char *path,
     EC_NULL_LOGSTR(acl = acl_get_file(path, ACL_TYPE_ACCESS),
                    "acl_get_file(\"%s\"): %s", fullpathname(path), strerror(errno));
 
-    /* itereate through all ACEs to get the mask */
-    while (!havemask && acl_get_entry(acl, entry_id, &e) == 1) {
-        entry_id = ACL_NEXT_ENTRY;
-        EC_ZERO_LOG(acl_get_tag_type(e, &tag));
-        switch (tag) {
-        case ACL_MASK:
-            maskrights = posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
-            LOG(log_maxdebug, logtype_afpd, "maskrights: 0x%08x", maskrights);
-            havemask = 1;
-            break;
-        default:
-            continue;
-        }
-    }
-
-    /* itereate through all ACEs */
-    entry_id = ACL_FIRST_ENTRY;
+    /* Iterate through all ACEs. If we apply mask_rights later there is no need to iterate twice. */
     while (acl_get_entry(acl, entry_id, &e) == 1) {
         entry_id = ACL_NEXT_ENTRY;
         EC_ZERO_LOG(acl_get_tag_type(e, &tag));
+
         switch (tag) {
-        case ACL_USER:
-            EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
-            if (*uid == uuid) {
-                LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
-                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
-            }
-            acl_free(uid);
-            uid = NULL;
-            break;
-        case ACL_USER_OBJ:
-            if (sb->st_uid == uuid) {
-                LOG(log_maxdebug, logtype_afpd, "ACL_USER_OBJ: %u", sb->st_uid);
-                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
-            }
-            break;
-        case ACL_GROUP:
-            EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
-            if (gmem(*gid)) {
-                LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
-                rights |= (posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode)) & maskrights);
-            }
-            acl_free(gid);
-            gid = NULL;
-            break;
-        case ACL_GROUP_OBJ:
-            if (!(sb->st_uid == uuid) && gmem(sb->st_gid)) {
-                LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
-                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));            
-            }
-            break;
-        case ACL_OTHER:
-            if (!(sb->st_uid == uuid) && !gmem(sb->st_gid)) {
-                LOG(log_maxdebug, logtype_afpd, "ACL_OTHER");
-                rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
-            }
-            break;
-        default:
-            continue;
+            case ACL_USER_OBJ:
+                if (sb->st_uid == uuid) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_USER_OBJ: %u", sb->st_uid);
+                    rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+                }
+                break;
+
+            case ACL_USER:
+                EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
+
+                if (*uid == uuid) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
+                    acl_rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+                }
+                acl_free(uid);
+                uid = NULL;
+                break;
+
+            case ACL_GROUP_OBJ:
+                if (!(sb->st_uid == uuid) && gmem(sb->st_gid)) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
+                    acl_rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+                }
+                break;
+
+            case ACL_GROUP:
+                EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
+
+                if (gmem(*gid)) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
+                    acl_rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+                }
+                acl_free(gid);
+                gid = NULL;
+                break;
+
+            case ACL_MASK:
+                mask_rights = posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+                LOG(log_maxdebug, logtype_afpd, "maskrights: 0x%08x", mask_rights);
+                break;
+
+            case ACL_OTHER:
+                if (!(sb->st_uid == uuid) && !gmem(sb->st_gid)) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_OTHER");
+                    rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
+                }
+                break;
+
+            default:
+                continue;
         }
     } /* while */
+
+    /* apply the mask and collect the rights */
+    rights |= (acl_rights & mask_rights);
 
     *result |= rights;
 
@@ -477,6 +483,142 @@ EC_CLEANUP:
     if (acl) acl_free(acl);
     if (uid) acl_free(uid);
     if (gid) acl_free(gid);
+    EC_EXIT;
+}
+
+/*!
+ * Helper function for posix_acls_to_uaperms() to convert Posix ACL permissions
+ * into access rights needed to fill ua_permissions of a FPUnixPrivs structure.
+ *
+ * @param entry     (r) Posix ACL entry
+ *
+ * @returns         access rights
+ */
+static u_char acl_permset_to_uarights(acl_entry_t entry) {
+    acl_permset_t permset;
+    u_char rights = 0;
+
+    if (acl_get_permset(entry, &permset) == -1)
+        return rights;
+
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_READ))
+#else
+    if (acl_get_perm(permset, ACL_READ))
+#endif
+        rights |= AR_UREAD;
+
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_WRITE))
+#else
+    if (acl_get_perm(permset, ACL_WRITE))
+#endif
+        rights |= AR_UWRITE;
+
+#ifdef HAVE_ACL_GET_PERM_NP
+    if (acl_get_perm_np(permset, ACL_EXECUTE))
+#else
+    if (acl_get_perm(permset, ACL_EXECUTE))
+#endif
+        rights |= AR_USEARCH;
+
+    return rights;
+}
+
+/*!
+ * Update FPUnixPrivs for a file-system object on a volume supporting ACLs
+ *
+ * Checks permissions granted by ACLS for a user to one fs-object and
+ * updates user and group permissions in given struct maccess. As OS X
+ * doesn't conform to Posix 1003.1e Draft 17 it expects proper group
+ * permissions in st_mode of struct stat even if the fs-object has an
+ * ACL_MASK entry, st_mode gets modified to properly reflect group
+ * permissions.
+ *
+ * @param path           (r) path to filesystem object
+ * @param sb             (rw) struct stat of path
+ * @param maccess        (rw) struct maccess of path
+ *
+ * @returns                  0 or -1 on error
+ */
+static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct maccess *ma) {
+    EC_INIT;
+
+    int entry_id = ACL_FIRST_ENTRY;
+    acl_entry_t entry;
+    acl_tag_t tag;
+    acl_t acl = NULL;
+    uid_t *uid;
+    gid_t *gid;
+
+    u_char group_rights = 0x00;
+    u_char acl_rights = 0x00;
+    u_char mask = 0xff;
+
+    EC_NULL_LOG(acl = acl_get_file(path, ACL_TYPE_ACCESS));
+
+    /* iterate through all ACEs */
+    while (acl_get_entry(acl, entry_id, &entry) == 1) {
+        entry_id = ACL_NEXT_ENTRY;
+        EC_ZERO_LOG(acl_get_tag_type(entry, &tag));
+
+        switch (tag) {
+            case ACL_USER:
+                EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(entry));
+
+                if (*uid == uuid) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
+                    acl_rights |= acl_permset_to_uarights(entry);
+                }
+                acl_free(uid);
+                break;
+
+            case ACL_GROUP_OBJ:
+                group_rights = acl_permset_to_uarights(entry);
+                LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
+
+                if (gmem(sb->st_gid))
+                    acl_rights |= group_rights;
+                break;
+
+            case ACL_GROUP:
+                EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(entry));
+
+                if (gmem(*gid)) {
+                    LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
+                    acl_rights |= acl_permset_to_uarights(entry);
+                }
+                acl_free(gid);
+                break;
+
+            case ACL_MASK:
+                mask = acl_permset_to_uarights(entry);
+                LOG(log_maxdebug, logtype_afpd, "ACL_MASK: 0x%02x", mask);
+                break;
+
+            default:
+                break;
+        }
+    }
+    /* apply the mask and adjust user and group permissions */
+    ma->ma_user |= (acl_rights & mask);
+    ma->ma_group = (group_rights & mask);
+
+    /* update st_mode to properly reflect group permissions */
+    sb->st_mode &= ~S_IRWXG;
+
+    if (ma->ma_group & AR_USEARCH)
+        sb->st_mode |= S_IXGRP;
+
+    if (ma->ma_group & AR_UWRITE)
+        sb->st_mode |= S_IWGRP;
+
+    if (ma->ma_group & AR_UREAD)
+        sb->st_mode |= S_IRGRP;
+
+EC_CLEANUP:
+    if (acl) acl_free(acl);
+
     EC_EXIT;
 }
 
@@ -524,7 +666,7 @@ static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights, 
     if (darwin_ace_rights & DARWIN_ACE_READ_DATA)
         perm |= ACL_READ;
 
-    if (darwin_ace_rights & (DARWIN_ACE_WRITE_DATA | (DARWIN_ACE_DELETE_CHILD & is_dir)))
+    if (darwin_ace_rights & (DARWIN_ACE_WRITE_DATA | (is_dir ? DARWIN_ACE_DELETE_CHILD : 0)))
         perm |= ACL_WRITE;
 
     if (darwin_ace_rights & DARWIN_ACE_EXECUTE)
@@ -584,7 +726,7 @@ static int posix_acl_add_perm(acl_t *aclp, acl_tag_t type, uid_t id, acl_perm_t 
         EC_ZERO_LOG(acl_add_perm(permset, perm));
         EC_ZERO_LOG(acl_set_permset(e, permset));
     }
-    
+
 EC_CLEANUP:
     if (eid) acl_free(eid);
 
@@ -601,18 +743,23 @@ EC_CLEANUP:
  * - we throw away DARWIN_ACE_FLAGS_LIMIT_INHERIT (can't be mapped), thus the ACL will
  *   not be limited
  *
- * @param darwin_aces  (r)  pointer to darwin_aces buffer
- * @param def_aclp     (rw) directories: pointer to an initialized acl_t with the default acl
- *                          files: *def_aclp will be NULL
- * @param acc_aclp     (rw) pointer to an initialized acl_t with the access acl
- * @param ace_count    (r)  number of ACEs in darwin_aces buffer
+ * @param darwin_aces        (r)  pointer to darwin_aces buffer
+ * @param def_aclp           (rw) directories: pointer to an initialized acl_t with
+                                  the default acl files: *def_aclp will be NULL
+ * @param acc_aclp           (rw) pointer to an initialized acl_t with the access acl
+ * @param ace_count          (r)  number of ACEs in darwin_aces buffer
+ * @param default_acl_flags  (rw) flags to indicate if the object has a basic default
+ *                                acl or an extended default acl.
  *
- * @returns 0 on success storing the result in aclp, -1 on error.
+ * @returns 0 on success storing the result in aclp, -1 on error. default_acl_flags
+ * is set to HAS_DEFAULT_ACL|HAS_EXT_DEFAULT_ACL in case there is at least one
+ * extended default ace. Otherwise default_acl_flags is left unchanged.
  */
 static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
                                     acl_t *def_aclp,
                                     acl_t *acc_aclp,
-                                    int ace_count)
+                                    int ace_count,
+                                    uint32_t *default_acl_flags)
 {
     EC_INIT;
     char *name = NULL;
@@ -668,7 +815,7 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
             }
             /* add it as default ace */
             EC_ZERO_LOG(posix_acl_add_perm(def_aclp, tag, id, perm));
-
+            *default_acl_flags = (HAS_DEFAULT_ACL|HAS_EXT_DEFAULT_ACL);
 
             if (! (darwin_ace_flags & DARWIN_ACE_FLAGS_ONLY_INHERIT))
                 /* if it not a "inherit only" ace, it must be added as access aces too */
@@ -1100,44 +1247,77 @@ static int set_acl(const struct vol *vol,
                    uint32_t ace_count)
 {
     EC_INIT;
-    acl_t def_acl = NULL;
-    acl_t acc_acl = NULL;
+    struct stat st;
+    acl_t default_acl = NULL;
+    acl_t access_acl = NULL;
+    acl_entry_t entry;
+    acl_tag_t tag;
+    int entry_id = ACL_FIRST_ENTRY;
+    int has_def_acl = 0;
+    /* flags to indicate if the object has a minimal default acl and/or an extended
+     * default acl.
+     */
+    uint32_t default_acl_flags = 0;
 
     LOG(log_maxdebug, logtype_afpd, "set_acl: BEGIN");
 
-    struct stat st;
-    EC_ZERO_LOG_ERR(lstat(name, &st), AFPERR_NOOBJ);
+    EC_NULL_LOG_ERR(access_acl = acl_get_file(name, ACL_TYPE_ACCESS), AFPERR_MISC);
 
-    /* seed default ACL with access ACL */
-    if (S_ISDIR(st.st_mode))
-        EC_NULL_LOG_ERR(def_acl = acl_get_file(name, ACL_TYPE_ACCESS), AFPERR_MISC);
+    /* Iterate through acl and remove all extended acl entries. */
+    while (acl_get_entry(access_acl, entry_id, &entry) == 1) {
+        entry_id = ACL_NEXT_ENTRY;
+        EC_ZERO_LOG(acl_get_tag_type(entry, &tag));
 
-    /* for files def_acl will be NULL */
+        if ((tag == ACL_USER) || (tag == ACL_GROUP) || (tag == ACL_MASK)) {
+            EC_ZERO_LOG_ERR(acl_delete_entry(access_acl, entry), AFPERR_MISC);
+        }
+    } /* while */
 
-    /* create access acl from mode */
-    EC_NULL_LOG_ERR(acc_acl = acl_from_mode(st.st_mode), AFPERR_MISC);
+   /* In case we are acting on a directory prepare a default acl. For files default_acl will be NULL.
+    * If the directory already has a default acl it will be preserved.
+    */
+   EC_ZERO_LOG_ERR(lstat(name, &st), AFPERR_NOOBJ);
 
+   if (S_ISDIR(st.st_mode)) {
+       default_acl = acl_get_file(name, ACL_TYPE_DEFAULT);
+
+       if (default_acl) {
+           /* If default_acl is not empty then the dir has a default acl. */
+           if (acl_get_entry(default_acl, ACL_FIRST_ENTRY, &entry) == 1)
+               default_acl_flags = HAS_DEFAULT_ACL;
+
+           acl_free(default_acl);
+       }
+       default_acl = acl_dup(access_acl);
+    }
     /* adds the clients aces */
-    EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &def_acl, &acc_acl, ace_count), AFPERR_MISC);
+    EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &default_acl, &access_acl, ace_count, &default_acl_flags), AFPERR_MISC);
 
     /* calcuate ACL mask */
-    EC_ZERO_LOG_ERR(acl_calc_mask(&acc_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_calc_mask(&access_acl), AFPERR_MISC);
 
     /* is it ok? */
-    EC_ZERO_LOG_ERR(acl_valid(acc_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_valid(access_acl), AFPERR_MISC);
 
     /* set it */
-    EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acc_acl), AFPERR_MISC);
-    EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_ACCESS, 0, acc_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, access_acl), AFPERR_MISC);
+    EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_ACCESS, 0, access_acl), AFPERR_MISC);
 
-    if (def_acl) {
-        EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, def_acl), AFPERR_MISC);
-        EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_DEFAULT, 0, def_acl), AFPERR_MISC);
+    if (default_acl) {
+        /* If the dir has an extended default acl it's ACL_MASK must be updated.*/
+        if (default_acl_flags & HAS_EXT_DEFAULT_ACL)
+            EC_ZERO_LOG_ERR(acl_calc_mask(&default_acl), AFPERR_MISC);
+
+        if (default_acl_flags) {
+            EC_ZERO_LOG_ERR(acl_valid(default_acl), AFPERR_MISC);
+            EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, default_acl), AFPERR_MISC);
+            EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_DEFAULT, 0, default_acl), AFPERR_MISC);
+        }
     }
 
 EC_CLEANUP:
-    acl_free(acc_acl);
-    acl_free(def_acl);
+    if (access_acl) acl_free(access_acl);
+    if (default_acl) acl_free(default_acl);
 
     LOG(log_maxdebug, logtype_afpd, "set_acl: END");
     EC_EXIT;
@@ -1550,10 +1730,6 @@ int acltoownermode(char *path, struct stat *st, struct maccess *ma)
 
 #ifdef HAVE_SOLARIS_ACLS
     EC_ZERO_LOG(solaris_acl_rights(path, st, &rights));
-#endif
-#ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acl_rights(path, st, &rights));
-#endif
 
     LOG(log_maxdebug, logtype_afpd, "rights: 0x%08x", rights);
 
@@ -1563,8 +1739,13 @@ int acltoownermode(char *path, struct stat *st, struct maccess *ma)
         ma->ma_user |= AR_UWRITE;
     if (rights & (DARWIN_ACE_EXECUTE | DARWIN_ACE_SEARCH))
         ma->ma_user |= AR_USEARCH;
+#endif
 
-    LOG(log_maxdebug, logtype_afpd, "resulting user maccess: 0x%02x", ma->ma_user);
+#ifdef HAVE_POSIX_ACLS
+    EC_ZERO_LOG(posix_acls_to_uaperms(path, st, ma));
+#endif
+
+    LOG(log_maxdebug, logtype_afpd, "resulting user maccess: 0x%02x group maccess: 0x%02x", ma->ma_user, ma->ma_group);
 
 EC_CLEANUP:
     EC_EXIT;

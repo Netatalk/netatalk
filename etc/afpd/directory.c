@@ -1664,6 +1664,9 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_UNIXPR :
+            /* accessmode may change st_mode with ACLs */
+            accessmode( upath, &ma, dir, st);
+
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));
             data += sizeof( aint );
@@ -1675,8 +1678,6 @@ int getdirparams(const struct vol *vol,
             aint = htonl ( aint & ~S_ISGID );  /* Remove SGID, OSX doesn't like it ... */
             memcpy( data, &aint, sizeof( aint ));
             data += sizeof( aint );
-
-            accessmode( upath, &ma, dir , st);
 
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
