@@ -1555,7 +1555,8 @@ int copyfile(const struct vol *s_vol,
     if (ad_reso_fileno(adp) == -1 || 0 == (err = copy_fork(ADEID_RFORK, &add, adp))){
         /* copy the data fork */
         if ((err = copy_fork(ADEID_DFORK, &add, adp)) == 0) {
-            err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst);
+            if (ad_meta_fileno(adp) != -1)
+                err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst);
         }
     }
 

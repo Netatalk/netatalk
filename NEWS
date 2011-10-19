@@ -3,6 +3,8 @@ Changes in 2.2.2
 
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * FIX: afpd: ACL access checking
+* FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file
+       which lead to a possible Finder crash
 * FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble files
 * FIX: Fix compilation error when AppleTalk support is disabled
 
