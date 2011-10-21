@@ -1430,7 +1430,7 @@ static int check_acl_access(const struct vol *vol,
             if (allowed_rights & DARWIN_ACE_ADD_SUBDIRECTORY)
                 allowed_rights |= DARWIN_ACE_DELETE;
 
-            dir->d_rights_cache = allowed_rights;
+            curdir->d_rights_cache = allowed_rights;
         }
         LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
     }
