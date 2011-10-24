@@ -1,6 +1,11 @@
 Changes in 2.2.2
 ================
 
+* NEW: afpd: New option "adminauthuser". Specifying eg "-adminauthuser root"
+       whenever a normal user login fails, afpd tries to authenticate as
+       the specified adminauthuser. If this succeeds, a normal session is created
+       for the original connecting user. Said differently: if you know the
+       password of adminauthuser, you can authenticate as any other user.
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * FIX: afpd: ACL access checking
 * FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file

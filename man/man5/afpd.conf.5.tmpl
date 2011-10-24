@@ -131,6 +131,15 @@ These are required if the server supports the Kerberos 5 authentication UAM\&.
 .RS 4
 Use for eg\&. winbind authentication, prepends both strings before the username from login and then tries to authenticate with the result through the availabel and active UAM authentication modules\&.
 .RE
+.PP
+\-adminauthuser
+.RS 4
+Specifying eg
+\fB\-adminauthuser root\fR
+whenever a normal user login fails, afpd will try to authenticate as the specified
+\fBadminauthuser\fR\&. If this succeeds, a normal session is created for the original connecting user\&. Said differently: if you know the password of
+\fBadminauthuser\fR, you can authenticate as any other user\&.
+.RE
 .SH "CODEPAGE OPTIONS"
 .PP
 With OS X Apple introduced the AFP3 protocol\&. One of the big changes was, that AFP3 uses Unicode names encoded as Decomposed UTF\-8 (UTF8\-MAC)\&. Previous AFP/OS versions used codepages like MacRoman, MacCentralEurope, etc\&.

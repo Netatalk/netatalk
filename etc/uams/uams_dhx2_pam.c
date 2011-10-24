@@ -529,10 +529,49 @@ exit:
     return ret;
 }
 
-static int logincont2(void *obj, struct passwd **uam_pwd,
+/**
+ * Try to authenticate via PAM as root
+ **/
+static int loginasroot(const char *adminauthuser, int status)
+{
+    int PAM_error;
+    char *hostname = NULL;
+
+    if ((PAM_error = pam_end(pamh, status)) != PAM_SUCCESS)
+        goto exit;
+    pamh = NULL;
+
+    if ((PAM_error = pam_start("netatalk", adminauthuser, &PAM_conversation, &pamh)) != PAM_SUCCESS) {
+        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,PAM_error));
+        goto exit;
+    }
+
+    /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
+    pam_set_item(pamh, PAM_TTY, "afpd");
+    pam_set_item(pamh, PAM_RHOST, hostname);
+    if ((PAM_error = pam_authenticate(pamh, 0)) != PAM_SUCCESS)
+        goto exit;
+
+    LOG(log_warning, logtype_uams, "DHX2: Authenticated as \"%s\2", adminauthuser);
+
+    if ((PAM_error = pam_end(pamh, status)) != PAM_SUCCESS)
+        goto exit;
+    pamh = NULL;
+
+    if ((PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &pamh)) != PAM_SUCCESS) {
+        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,PAM_error));
+        goto exit;
+    }
+
+exit:
+    return PAM_error;
+}
+
+static int logincont2(void *obj_in, struct passwd **uam_pwd,
                       char *ibuf, size_t ibuflen,
                       char *rbuf _U_, size_t *rbuflen)
 {
+    AFPObj *obj = obj_in;
     int ret;
     int PAM_error;
     const char *hostname = NULL;
@@ -614,7 +653,9 @@ static int logincont2(void *obj, struct passwd **uam_pwd,
             ret = AFPERR_PWDEXPR;
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
             pam_strerror(pamh, PAM_error));
-        goto error_ctx;
+        if (obj->options.adminauthuser
+            && loginasroot(obj->options.adminauthuser, PAM_error) != PAM_SUCCESS)
+            goto error_ctx;
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
