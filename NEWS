@@ -7,6 +7,8 @@ Changes in 2.2.2
        for the original connecting user. Said differently: if you know the
        password of adminauthuser, you can authenticate as any other user.
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
+* UPD: afpd: Reset options every time a :DEFAULT: line is found in a
+       AppleVolumes file
 * FIX: afpd: ACL access checking
 * FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file
        which lead to a possible Finder crash

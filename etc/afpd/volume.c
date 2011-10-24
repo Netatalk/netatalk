@@ -1189,6 +1189,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
     int         i;
     struct passwd   *pw;
     struct vol_option   save_options[VOLOPT_NUM];
+    struct vol_option   default_options[VOLOPT_NUM];
     struct vol_option   options[VOLOPT_NUM];
     struct stat         st;
 
@@ -1231,17 +1232,18 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
         break;
     }
 
-    memset(save_options, 0, sizeof(save_options));
+    memset(default_options, 0, sizeof(default_options));
 
     /* Enable some default options for all volumes */
-    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+    default_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
 #ifdef HAVE_ACLS
-    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
+    default_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
 #endif
-    save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
+    default_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
     LOG(log_maxdebug, logtype_afpd, "readvolfile: seeding default umask: %04o",
         obj->options.umask);
-    save_options[VOLOPT_UMASK].i_value = obj->options.umask;
+    default_options[VOLOPT_UMASK].i_value = obj->options.umask;
+    memcpy(save_options, default_options, sizeof(options));
 
     LOG(log_debug, logtype_afpd, "readvolfile: \"%s\"", path);
 
@@ -1256,12 +1258,14 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
         case ':':
             /* change the default options for this file */
             if (strncmp(path, VOLOPT_DEFAULT, VOLOPT_DEFAULT_LEN) == 0) {
+                volfree(default_options, save_options);
+                memcpy(default_options, save_options, sizeof(options));
                 *tmp = '\0';
                 for (i = 0; i < VOLOPT_NUM; i++) {
                     if (parseline( sizeof( path ) - VOLOPT_DEFAULT_LEN - 1,
                                    path + VOLOPT_DEFAULT_LEN) < 0)
                         break;
-                    volset(save_options, NULL, tmp, sizeof(tmp) - 1,
+                    volset(default_options, NULL, tmp, sizeof(tmp) - 1,
                            path + VOLOPT_DEFAULT_LEN);
                 }
             }
@@ -1300,7 +1304,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
              * able to specify things in any order, but i don't want to
              * re-write everything. */
 
-            memcpy(options, save_options, sizeof(options));
+            memcpy(options, default_options, sizeof(options));
             *volname = '\0';
 
             /* read in up to VOLOP_NUM possible options */
@@ -1308,7 +1312,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
                 if (parseline( sizeof( tmp ) - 1, tmp ) < 0)
                     break;
 
-                volset(options, save_options, volname, sizeof(volname) - 1, tmp);
+                volset(options, default_options, volname, sizeof(volname) - 1, tmp);
             }
 
             /* check allow/deny lists (if not afpd master loading volumes for Zeroconf reg.):
@@ -1339,7 +1343,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
 
                 creatvol(obj, pwent, path, tmp, options, p2 != NULL);
             }
-            volfree(options, save_options);
+            volfree(options, default_options);
             break;
 
         case '.' :
