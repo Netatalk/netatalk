@@ -12,6 +12,7 @@ Changes in 2.2.2
 * FIX: afpd: ACL access checking
 * FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file
        which lead to a possible Finder crash
+* FIX: afpd: Read-only filesystems lead to afpd processes running as root
 * FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble files
 * FIX: Fix compilation error when AppleTalk support is disabled
 
