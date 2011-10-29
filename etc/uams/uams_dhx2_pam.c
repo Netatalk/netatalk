@@ -530,12 +530,11 @@ exit:
 }
 
 /**
- * Try to authenticate via PAM as root
+ * Try to authenticate via PAM as "adminauthuser"
  **/
-static int loginasroot(const char *adminauthuser, int status)
+static int loginasroot(const char *adminauthuser, char **hostname, int status)
 {
     int PAM_error;
-    char *hostname = NULL;
 
     if ((PAM_error = pam_end(pamh, status)) != PAM_SUCCESS)
         goto exit;
@@ -548,20 +547,11 @@ static int loginasroot(const char *adminauthuser, int status)
 
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
-    pam_set_item(pamh, PAM_RHOST, hostname);
+    pam_set_item(pamh, PAM_RHOST, *hostname);
     if ((PAM_error = pam_authenticate(pamh, 0)) != PAM_SUCCESS)
         goto exit;
 
-    LOG(log_warning, logtype_uams, "DHX2: Authenticated as \"%s\2", adminauthuser);
-
-    if ((PAM_error = pam_end(pamh, status)) != PAM_SUCCESS)
-        goto exit;
-    pamh = NULL;
-
-    if ((PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &pamh)) != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,PAM_error));
-        goto exit;
-    }
+    LOG(log_warning, logtype_uams, "DHX2: Authenticated as \"%s\"", adminauthuser);
 
 exit:
     return PAM_error;
@@ -653,8 +643,9 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
             ret = AFPERR_PWDEXPR;
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
             pam_strerror(pamh, PAM_error));
-        if (obj->options.adminauthuser
-            && loginasroot(obj->options.adminauthuser, PAM_error) != PAM_SUCCESS)
+        if (!obj->options.adminauthuser)
+            goto error_ctx;
+        if (loginasroot(obj->options.adminauthuser, &hostname, PAM_error) != PAM_SUCCESS)
             goto error_ctx;
     }
 
