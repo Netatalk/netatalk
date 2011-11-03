@@ -10,15 +10,9 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-/* crypt needs _XOPEN_SOURCE (500) at least on BSD, but that breaks Solaris compile */
-#ifdef NETBSD
-#define _XOPEN_SOURCE 500 /* for crypt() */
-#endif
-#ifdef FREEBSD
-#define _XOPEN_SOURCE /* for crypt() */
-#endif
+#include <atalk/standards.h>
 
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 /* STDC check */

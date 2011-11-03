@@ -1,5 +1,5 @@
 /* 
-   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+   Copyright (c) 2009,2011 Frank Lahm <franklahm@gmail.com>
    
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
 #ifndef AD_H
 #define AD_H
 
-#if !defined(__FreeBSD__)
-# define _XOPEN_SOURCE 600
-#endif
+#include <atalk/standards.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

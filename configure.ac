@@ -756,8 +756,10 @@ fi
 dnl ----- OpenBSD specific -----
 if test x"$this_os" = "xopenbsd"; then 
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
+    AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
+    AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 fi
 
 dnl ----- Solaris specific -----

@@ -34,32 +34,7 @@
 #include <config.h>
 #endif
 
-/* -------------------
- * need pread() and pwrite()
- */
-#ifdef HAVE_PREAD
-
-#ifndef HAVE_PWRITE
-#undef HAVE_PREAD
-#endif
-
-#endif
-
-#ifdef HAVE_PWRITE
-#ifndef HAVE_PREAD
-#undef HAVE_PWRITE
-#endif
-#endif
-
-/*
-  Still have to figure out which platforms really
-  need _XOPEN_SOURCE defined for pread.
-*/
-#if defined(HAVE_PREAD) && !defined(SOLARIS) && !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(TRU64)
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 500
-#endif
-#endif
+#include <atalk/standards.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

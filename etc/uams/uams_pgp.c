@@ -12,8 +12,8 @@
 
 #ifdef UAM_PGP
 
-/* for crypt() */
-#define _XOPEN_SOURCE
+#include <atalk/standards.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
