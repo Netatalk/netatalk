@@ -227,7 +227,7 @@ extern int setdeskowner     (const uid_t, const gid_t);
 extern int setdirowner      (const struct vol *, const char *, const uid_t, const gid_t);
 extern int setfilunixmode   (const struct vol *, struct path*, const mode_t);
 extern int setfilowner      (const struct vol *, const uid_t, const gid_t, struct path*);
-extern void accessmode      (char *, struct maccess *, struct dir *, struct stat *);
+extern void accessmode      (const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
 
 #ifdef AFS	
     #define accessmode afsmode

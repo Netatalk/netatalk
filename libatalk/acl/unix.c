@@ -56,17 +56,17 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
         return 0;
 
     if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))) {
-        LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): special", getcwdpath(), name);
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): special", getcwdpath(), name);
         return 0;
     }
 
     if ((ace_count = acl(name, ACE_GETACLCNT, 0, NULL)) == 0) {
-        LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): 0 ACEs", getcwdpath(), name);
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): 0 ACEs", getcwdpath(), name);
         return 0;
     }
 
     if (ace_count == -1) {
-        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
             getcwdpath(), name, ace_count, strerror(errno));
         return -1;
     }
@@ -205,10 +205,10 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
  * Change mode of file preserving existing explicit ACEs
  *
  * nfsv4_chmod
- * (1) reads objects ACL (acl1)
+ * (1) reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on eg UFS fs
  * (2) removes all trivial ACEs from the ACL by calling strip_trivial_aces(), possibly
  *     leaving 0 ACEs in the ACL if there were only trivial ACEs as mapped from the mode
- * (3) calls chmod() with mode
+ * (3) calls chmod() with mode, we're done if step (1) returned 0 for noaces
  * (4) reads the changed ACL (acl2) which
  *     a) might still contain explicit ACEs (up to onnv132)
  *     b) will have any explicit ACE removed (starting with onnv145/Openindiana)
@@ -225,8 +225,9 @@ int nfsv4_chmod(char *name, mode_t mode)
     LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o)",
         getcwdpath(), name, mode);
 
-    if ((noaces = get_nfsv4_acl(name, &oacl)) == -1) /* (1) */
-        goto exit;
+    if ((noaces = get_nfsv4_acl(name, &oacl)) < 1) /* (1) */
+        return chmod(name, mode);
+
     if ((noaces = strip_trivial_aces(&oacl, noaces)) == -1) /* (2) */
         goto exit;
 

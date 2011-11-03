@@ -1939,7 +1939,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
             if (!S_ISDIR(st.st_mode)) {
                 continue;       /* not a dir */
             }
-            accessmode(volume->v_path, &ma, NULL, &st);
+            accessmode(volume, volume->v_path, &ma, NULL, &st);
             if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
                 continue;   /* no r-x access */
             }

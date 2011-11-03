@@ -1715,14 +1715,13 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
  * This is the magic function that makes ACLs usable by calculating
  * the access granted by ACEs to the logged in user.
  */
-int acltoownermode(char *path, struct stat *st, struct maccess *ma)
+int acltoownermode(const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 {
     EC_INIT;
     uint32_t rights = 0;
 
     if ( ! (AFPobj->options.flags & OPTION_ACL2MACCESS)
-         || (current_vol == NULL)
-         || ! (current_vol->v_flags & AFPVOL_ACLS))
+         || ! (vol->v_flags & AFPVOL_ACLS))
          return 0;
 
     LOG(log_maxdebug, logtype_afpd, "acltoownermode(\"%s/%s\", 0x%02x)",

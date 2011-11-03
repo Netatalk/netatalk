@@ -169,7 +169,7 @@ mode_t mode;
  *
  * dir parameter is used by AFS
  */
-void accessmode(char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
+void accessmode(const struct vol *vol, char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
 {
     struct stat     sb;
 
@@ -181,7 +181,7 @@ void accessmode(char *path, struct maccess *ma, struct dir *dir _U_, struct stat
     }
     utommode( st, ma );
 #ifdef HAVE_ACLS
-    acltoownermode(path, st, ma);
+    acltoownermode(vol, path, st, ma);
 #endif
 }
 

@@ -1410,7 +1410,7 @@ int check_access(char *path, int mode)
     if (!p)
         return -1;
 
-    accessmode(p, &ma, curdir, NULL);
+    accessmode(current_vol, p, &ma, curdir, NULL);
     if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
         return -1;
     if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
@@ -1424,7 +1424,7 @@ int file_access(struct path *path, int mode)
 {
     struct maccess ma;
 
-    accessmode(path->u_name, &ma, curdir, &path->st);
+    accessmode(current_vol, path->u_name, &ma, curdir, &path->st);
 
     LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
         path->u_name, ma.ma_user);
@@ -1629,7 +1629,7 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_ACCESS :
-            accessmode( upath, &ma, dir , st);
+            accessmode(vol, upath, &ma, dir , st);
 
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
@@ -1665,7 +1665,7 @@ int getdirparams(const struct vol *vol,
 
         case DIRPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */
-            accessmode( upath, &ma, dir, st);
+            accessmode(vol, upath, &ma, dir, st);
 
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));
