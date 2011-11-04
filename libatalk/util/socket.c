@@ -35,6 +35,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 
 #include <atalk/logger.h>
 #include <atalk/util.h>

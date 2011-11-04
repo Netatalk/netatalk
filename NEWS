@@ -16,6 +16,7 @@ Changes in 2.2.2
 * FIX: afpd: Fix for filesystem without NFSv4 ACL support on Solaris
 * FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble files
 * FIX: Fix compilation error when AppleTalk support is disabled
+* FIX: Portability fixes
 
 Changes in 2.2.1
 ================
