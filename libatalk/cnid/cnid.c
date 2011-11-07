@@ -216,7 +216,10 @@ u_int32_t flags;
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, 
                 const char *name, const size_t len, cnid_t hint)
 {
-cnid_t ret;
+    cnid_t ret;
+
+    if (len == 0)
+        return CNID_INVALID;
 
     block_signal(cdb->flags);
     ret = valide(cdb->cnid_add(cdb, st, did, name, len, hint));

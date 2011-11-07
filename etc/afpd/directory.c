@@ -463,7 +463,15 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
     cnid = htonl(2);
     dir = vol->v_root;
 
+    LOG(log_debug, logtype_afpd, "dirlookup_bypath(\"%s\")", path);
+
+    if (strcmp(vol->v_path, path) == 0)
+        return dir;
+
     EC_NULL(rpath = rel_path_in_vol(path, vol->v_path)); /* 1. */
+
+    LOG(log_debug, logtype_afpd, "dirlookup_bypath: rpath: \"%s\"", cfrombstr(rpath));
+
     EC_NULL(statpath = bfromcstr(vol->v_path));          /* 2. */
 
     l = bsplit(rpath, '/');
@@ -471,6 +479,9 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
         did = cnid;
         EC_ZERO(bcatcstr(statpath, "/"));
         EC_ZERO(bconcat(statpath, l->entry[i]));
+
+        LOG(log_debug, logtype_afpd, "dirlookup_bypath: statpath: \"%s\"", cfrombstr(statpath));
+
         EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
                        "lstat(rpath: %s, elem: %s): %s: %s",
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
@@ -483,14 +494,14 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
                                            dir,
                                            cfrombstr(l->entry[i]),
                                            blength(l->entry[i]))) == NULL) {
+
             if ((cnid = cnid_add(vol->v_cdb,             /* 6. */
                                  &st,
                                  did,
                                  cfrombstr(l->entry[i]),
                                  blength(l->entry[i]),
-                                 0)) == CNID_INVALID) {
+                                 0)) == CNID_INVALID)
                 EC_FAIL;
-            }
 
             if ((dir = dirlookup(vol, cnid)) == NULL) /* 7. */
                 EC_FAIL;
@@ -503,6 +514,9 @@ EC_CLEANUP:
     bdestroy(statpath);
     if (ret != 0)
         return NULL;
+
+    LOG(log_debug, logtype_afpd, "dirlookup_bypath: result: \"%s\"",
+        cfrombstr(dir->d_fullpath));
 
     return dir;
 }
