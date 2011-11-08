@@ -550,6 +550,7 @@ static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct macce
     acl_t acl = NULL;
     uid_t *uid;
     gid_t *gid;
+    uid_t whoami = geteuid();
 
     u_char group_rights = 0x00;
     u_char acl_rights = 0x00;
@@ -566,7 +567,7 @@ static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct macce
             case ACL_USER:
                 EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(entry));
 
-                if (*uid == uuid) {
+                if (*uid == uuid && !(whoami == sb->st_uid)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
                     acl_rights |= acl_permset_to_uarights(entry);
                 }
@@ -577,14 +578,14 @@ static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct macce
                 group_rights = acl_permset_to_uarights(entry);
                 LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
 
-                if (gmem(sb->st_gid))
+                if (gmem(sb->st_gid) && !(whoami == sb->st_uid))
                     acl_rights |= group_rights;
                 break;
 
             case ACL_GROUP:
                 EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(entry));
 
-                if (gmem(*gid)) {
+                if (gmem(*gid) && !(whoami == sb->st_uid)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
                     acl_rights |= acl_permset_to_uarights(entry);
                 }
