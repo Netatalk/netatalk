@@ -15,6 +15,7 @@ Changes in 2.2.2
 * FIX: afpd: Read-only filesystems lead to afpd processes running as root
 * FIX: afpd: Fix for filesystem without NFSv4 ACL support on Solaris
 * FIX: afpd: Fix catsearch bug, NetAFP Bug ID #12
+* FIX: afpd: Fix dircache bug, NetAFP Bug ID #13
 * FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble files
 * FIX: Fix compilation error when AppleTalk support is disabled
 * FIX: Portability fixes

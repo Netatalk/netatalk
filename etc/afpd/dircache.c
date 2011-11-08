@@ -462,7 +462,7 @@ int dircache_add(const struct vol *vol,
         dircache_stat.expunged++;
     }
     key.d_vid = vol->v_vid;
-    key.d_pdid = dir->d_did;
+    key.d_pdid = dir->d_pdid;
     key.d_u_name = dir->d_u_name;
     if ((hn = hash_lookup(index_didname, &key))) {
         /* Found an entry with the same DID/name, delete it */

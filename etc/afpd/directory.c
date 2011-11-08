@@ -2430,7 +2430,7 @@ int deletecurdir(struct vol *vol)
         dir_remove( vol, fdir );
     } else {
         LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
-            curdir->d_fullpath);
+            cfrombstr(curdir->d_fullpath));
     }
 
 delete_done:
