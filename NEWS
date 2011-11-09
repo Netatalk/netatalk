@@ -9,6 +9,8 @@ Changes in 2.2.2
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * UPD: afpd: Reset options every time a :DEFAULT: line is found in a
        AppleVolumes file
+* UPD: afpd: Convert passwords from legacy encoding (wire format) to host
+       encoding
 * FIX: afpd: ACL access checking
 * FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file
        which lead to a possible Finder crash

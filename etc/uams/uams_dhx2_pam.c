@@ -532,7 +532,7 @@ exit:
 /**
  * Try to authenticate via PAM as "adminauthuser"
  **/
-static int loginasroot(const char *adminauthuser, char **hostname, int status)
+static int loginasroot(const char *adminauthuser, const char **hostname, int status)
 {
     int PAM_error;
 
@@ -562,12 +562,13 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
                       char *rbuf _U_, size_t *rbuflen)
 {
     AFPObj *obj = obj_in;
-    int ret;
+    int ret = AFPERR_MISC;
     int PAM_error;
     const char *hostname = NULL;
     gcry_mpi_t retServerNonce;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
+    char *utfpass = NULL;
 
     *rbuflen = 0;
 
@@ -623,30 +624,41 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
 
     /* ---- Start authentication with PAM --- */
 
+    /* The password is in legacy Mac encoding, convert it to host encoding */
+    if (convert_string_allocate(CH_MAC, CH_UNIX, ibuf, -1, &utfpass) == (size_t)-1) {
+        LOG(log_error, logtype_uams, "DHX2: conversion error");
+        goto error_ctx;
+    }
+    PAM_password = utfpass;
+
+#ifdef DEBUG
+    LOG(log_maxdebug, logtype_default, "DHX2: password: %s", PAM_password);
+#endif
+
     /* Set these things up for the conv function */
-    PAM_password = ibuf;
 
     ret = AFPERR_NOTAUTH;
     PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &pamh);
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
-            pam_strerror(pamh,PAM_error));
+        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,PAM_error));
         goto error_ctx;
     }
 
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, hostname);
+
     PAM_error = pam_authenticate(pamh, 0);
     if (PAM_error != PAM_SUCCESS) {
         if (PAM_error == PAM_MAXTRIES)
             ret = AFPERR_PWDEXPR;
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
+        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh, PAM_error));
+
         if (!obj->options.adminauthuser)
             goto error_ctx;
-        if (loginasroot(obj->options.adminauthuser, &hostname, PAM_error) != PAM_SUCCESS)
+        if (loginasroot(obj->options.adminauthuser, &hostname, PAM_error) != PAM_SUCCESS) {
             goto error_ctx;
+        }
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
@@ -659,8 +671,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         else if (PAM_error == PAM_AUTHTOKEN_REQD)
             ret = AFPERR_PWDCHNG;
 #endif
-        else
-            goto error_ctx;
+        goto error_ctx;
     }
 
 #ifndef PAM_CRED_ESTABLISH
@@ -681,15 +692,17 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     }
 
     memset(ibuf, 0, 256); /* zero out the password */
+    if (utfpass)
+        memset(utfpass, 0, strlen(utfpass));
     *uam_pwd = dhxpwd;
     LOG(log_info, logtype_uams, "DHX2: PAM Auth OK!");
-    if ( ret == AFPERR_PWDEXPR)
-        return ret;
+
     ret = AFP_OK;
 
 error_ctx:
     gcry_cipher_close(ctx);
 error_noctx:
+    if (utfpass) free(utfpass);
     free(K_MD5hash);
     K_MD5hash=NULL;
     gcry_mpi_release(serverNonce);
