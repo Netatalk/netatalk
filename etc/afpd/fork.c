@@ -844,7 +844,9 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     int			eid, xlate = 0;
     u_int16_t		ofrefnum;
     u_char		nlmask, nlchar;
-    
+
+    *rbuflen = 0;
+
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
     ibuf += sizeof( u_short );
@@ -900,12 +902,12 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         goto afp_read_err;
     }
 
-#define min(a,b)	((a)<(b)?(a):(b))
-    *rbuflen = min( reqcount, *rbuflen );
+#ifndef WITH_SENDFILE
+    *rbuflen = MIN(reqcount, *rbuflen);
     err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen, xlate);
     if (err < 0)
         goto afp_read_done;
-
+#endif
     /* dsi can stream requests. we can only do this if we're not checking
      * for an end-of-line character. oh well. */
     if ((obj->proto == AFPPROTO_DSI) && (*rbuflen < reqcount) && !nlmask) {

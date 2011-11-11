@@ -47,6 +47,12 @@
 #endif /* NDEBUG */
 
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
+#ifndef MAX
+#define MAX(a,b) ((a) > (b) ? a : b)
+#endif
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? a : b)
+#endif
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define hton64(x)       (x)

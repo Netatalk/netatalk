@@ -22,10 +22,7 @@
 #endif
 
 #include <atalk/dsi.h>
-
-#ifndef min
-#define min(a,b)   ((a) < (b) ? (a) : (b))
-#endif /* ! min */
+#include <atalk/util.h>
 
 /* streaming i/o for afp_read. this is all from the perspective of the
  * client. it basically does the reverse of dsi_write. on first entry,
@@ -45,7 +42,7 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
   dsi->in_write++;
   if (dsi_stream_send(dsi, buf, buflen)) {
     dsi->datasize = size - buflen;
-    return min(dsi->datasize, buflen);
+    return MIN(dsi->datasize, buflen);
   }
 
   return -1; /* error */
@@ -65,7 +62,7 @@ ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 
   if (len == buflen) {
     dsi->datasize -= len;
-    return min(dsi->datasize, buflen);
+    return MIN(dsi->datasize, buflen);
   }
 
   return -1;
