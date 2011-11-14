@@ -116,12 +116,17 @@ rm -rf conftest*
 
 case $host_cpu:$atalk_cv_cc_64bit_output in
 powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
-    AC_MSG_RESULT([yes])
     case $target_os in
     solaris2*)
+        AC_MSG_RESULT([yes])
         atalk_libname="lib/64"
         ;;
+    *bsd* | dragonfly*)
+        AC_MSG_RESULT([no])
+        atalk_libname="lib"
+        ;;
     *)
+        AC_MSG_RESULT([yes])
         atalk_libname="lib64"
         ;;
     esac
