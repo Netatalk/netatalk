@@ -1545,7 +1545,6 @@ int getdirparams(const struct vol *vol,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
-            ashort |= htons(ATTRBIT_SHARED);
             memcpy( data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
             break;

@@ -11,6 +11,7 @@ Changes in 2.2.2
        AppleVolumes file
 * UPD: afpd: Convert passwords from legacy encoding (wire format) to host
        encoding
+* UPD: afpd: Don't set ATTRBIT_SHARED flag for directories
 * FIX: afpd: ACL access checking
 * FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file
        which lead to a possible Finder crash
