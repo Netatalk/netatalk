@@ -283,6 +283,11 @@ void afp_over_asp(AFPObj *obj)
         afp_asp_die(EXITERR_SYS);
     }
 
+    if (dircache_init(obj->options.dircachesize) != 0) {
+        LOG(log_error, logtype_afpd, "afp_over_asp: dircache_init error");
+        afp_asp_die(EXITERR_SYS);
+    }
+
     LOG(log_info, logtype_afpd, "session from %u.%u:%u on %u.%u:%u",
         ntohs( asp->asp_sat.sat_addr.s_net ),
         asp->asp_sat.sat_addr.s_node, asp->asp_sat.sat_port,
