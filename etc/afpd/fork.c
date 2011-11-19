@@ -845,8 +845,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     u_int16_t		ofrefnum;
     u_char		nlmask, nlchar;
 
-    *rbuflen = 0;
-
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof( ofrefnum ));
     ibuf += sizeof( u_short );
@@ -902,8 +900,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         goto afp_read_err;
     }
 
-#ifndef WITH_SENDFILE
     *rbuflen = MIN(reqcount, *rbuflen);
+#ifndef WITH_SENDFILE
     err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen, xlate);
     if (err < 0)
         goto afp_read_done;
