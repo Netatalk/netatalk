@@ -900,8 +900,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         goto afp_read_err;
     }
 
+#ifdef WITH_SENDFILE
+    *rbuflen = 0;
+#else
     *rbuflen = MIN(reqcount, *rbuflen);
-#ifndef WITH_SENDFILE
     err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen, xlate);
     if (err < 0)
         goto afp_read_done;
