@@ -45,37 +45,7 @@
 #include <atalk/logger.h>
 #include "ad_private.h"
 
-#if defined(SENDFILE_FLAVOR_LINUX) && defined(LINUX_BROKEN_SENDFILE_API)
-
-extern int32_t sendfile (int fdout, int fdin, int32_t *offset, u_int32_t count);
-
-ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
-{
-u_int32_t small_total;
-int32_t small_offset;
-int32_t nwritten;
-
-    /*
-     * Fix for broken Linux 2.4 systems with no working sendfile64().
-     * If the offset+count > 2 GB then pretend we don't have the
-     * system call sendfile at all. The upper layer catches this
-     * and uses a normal read. JRA.
-     */
- 
-     if ((sizeof(off_t) >= 8) && (*offset + count > (off_t)0x7FFFFFFF)) {
-         errno = ENOSYS;
-         return -1;
-     }
-     small_offset = (int32_t)*offset;
-     small_total = (u_int32_t)count;
-     nwritten = sendfile(tofd, fromfd, &small_offset, small_total);
-     if (nwritten > = 0)
-         *offset += nwritten;
-     
-    return nwritten;
-}
-
-#elif defined(SENDFILE_FLAVOR_LINUX)
+#if defined(SENDFILE_FLAVOR_LINUX)
 #include <sys/sendfile.h>
 
 ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)

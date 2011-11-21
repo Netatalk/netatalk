@@ -592,7 +592,6 @@ if test x"$this_os" = "xfreebsd"; then
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
 fi
 
@@ -601,7 +600,6 @@ if test x"$this_os" = "xkfreebsd-gnu"; then
 	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
 fi
 
@@ -832,43 +830,8 @@ AC_ARG_ENABLE(sendfile,
 if test x"$netatalk_cv_search_sendfile" = x"yes"; then
    case "$host_os" in
    *linux*)
-       AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
-       AC_MSG_CHECKING([for sendfile() syscall])
-       AC_CACHE_CHECK([for sendfile support],
-           [netatalk_cv_HAVE_SENDFILE],
-           [AC_TRY_LINK(
-               [#include <sys/sendfile.h>],
-               [int tofd, fromfd;
-                   off_t offset;
-                   size_t total;
-                   ssize_t nwritten = sendfile(tofd, fromfd, &offset, total);],
-               [netatalk_cv_HAVE_SENDFILE=yes]
-            )]
-        )
-
-        # Try and cope with broken Linux sendfile....
-        AC_CACHE_CHECK([for broken Linux sendfile support],
-            [netatalk_cv_HAVE_BROKEN_LINUX_SENDFILE],
-            [AC_TRY_LINK(
-                [#if defined(_FILE_OFFSET_BITS) && (_FILE_OFFSET_BITS == 64)
-                    #undef _FILE_OFFSET_BITS
-                    #endif
-                    #include <sys/sendfile.h>],
-                [int tofd, fromfd;
-                    off_t offset;
-                    size_t total;
-                    ssize_t nwritten = sendfile(tofd, fromfd, &offset, total);],
-                [netatalk_cv_HAVE_SENDFILE=yes; netatalk_cv_HAVE_BROKEN_SENDFILE=yes]
-            )]
-        )
-        if test x"$netatalk_cv_HAVE_SENDFILE" = x"yes"; then
-            AC_MSG_RESULT(yes);
-        else
-            AC_MSG_RESULT(no);
-        fi
-        if test x"$netatalk_cv_HAVE_BROKEN_SENDFILE" = x"yes"; then
-            AC_DEFINE(LINUX_BROKEN_SENDFILE_API,1,[Whether Linux sendfile() is broken])
-        fi
+        AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
+        AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
         ;;
 
     *solaris*)
@@ -888,7 +851,6 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
     esac
 
     if test x"$netatalk_cv_HAVE_SENDFILE" = x"yes"; then
-        AC_DEFINE(HAVE_SENDFILE,1,[Whether sendfile() is available])
         AC_DEFINE(WITH_SENDFILE,1,[Whether sendfile() should be used])
     fi
 fi
