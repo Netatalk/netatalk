@@ -858,14 +858,16 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
                     off_t offset;
                     size_t total;
                     ssize_t nwritten = sendfile(tofd, fromfd, &offset, total);],
-                [netatalk_cv_HAVE_SENDFILE=yes;
-                    AC_DEFINE(LINUX_BROKEN_SENDFILE_API,1,[Whether Linux sendfile() is broken])]
+                [netatalk_cv_HAVE_SENDFILE=yes; netatalk_cv_HAVE_BROKEN_SENDFILE=yes]
             )]
         )
         if test x"$netatalk_cv_HAVE_SENDFILE" = x"yes"; then
             AC_MSG_RESULT(yes);
         else
             AC_MSG_RESULT(no);
+        fi
+        if test x"$netatalk_cv_HAVE_BROKEN_SENDFILE" = x"yes"; then
+            AC_DEFINE(LINUX_BROKEN_SENDFILE_API,1,[Whether Linux sendfile() is broken])
         fi
         ;;
 
