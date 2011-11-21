@@ -45,7 +45,7 @@
 #include <atalk/logger.h>
 #include "ad_private.h"
 
-#if defined(LINUX_BROKEN_SENDFILE_API)
+#if defined(SENDFILE_FLAVOR_LINUX) && defined(LINUX_BROKEN_SENDFILE_API)
 
 extern int32_t sendfile (int fdout, int fdin, int32_t *offset, u_int32_t count);
 
@@ -83,9 +83,15 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
     return sendfile(tofd, fromfd, offset, count);
 }
 
+#elif defined(SENDFILE_FLAVOR_SOLARIS)
+#include <sys/sendfile.h>
+
+ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
+{
+    return sendfile(tofd, fromfd, offset, count);
+}
+
 #elif defined(SENDFILE_FLAVOR_BSD )
-/* FIXME untested */
-#error sendfile semantic broken
 #include <sys/sendfile.h>
 ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 {
