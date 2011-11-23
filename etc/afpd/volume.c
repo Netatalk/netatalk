@@ -1516,8 +1516,12 @@ EC_CLEANUP:
  * 1) readdir(path of volume)
  * 2) for every element that matches regex "\(.*\)\.sparsebundle$" :
  * 3) parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
- * 4) stat "\1.sparsebundle/bands/"
- * 5) calculate used size as: (st_nlink - 1) * band-size
+ * 4) readdir "\1.sparsebundle/bands/" counting files
+ * 5) calculate used size as: (file_count - 1) * band-size
+ *
+ * The result is cached in volume->v_tm_cachetime for TM_USED_CACHETIME secounds.
+ * The cached value volume->v_tm_cachetime is updated by volume->v_written. The latter
+ * is increased by X every time the client writes X bytes into a file (in fork.c).
  *
  * @param vol     (rw) volume to calculate
  * @return             Estimated used size in bytes, -1 on error
