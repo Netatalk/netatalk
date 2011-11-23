@@ -67,7 +67,7 @@ struct vol {
     int             v_nfs;
     off_t           v_tm_used;  /* used bytes on a TM volume */
     time_t          v_tm_cachetime; /* time at which v_tm_used was calculated last */
-    off_t           v_written;  /* amount of data written in afp_write, reset every time a FCE_TM_SIZE event is sent */
+    off_t           v_appended; /* amount of data appended to files */
     
     /* only when opening/closing volumes or in error */
     int             v_casefold;

@@ -1183,7 +1183,7 @@ static ssize_t write_file(struct ofork *ofork, int eid,
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
     struct ofork	*ofork;
-    off_t           	offset, saveoff, reqcount;
+    off_t           offset, saveoff, reqcount, oldsize, newsize;
     int		        endflag, eid, xlate = 0, err = AFP_OK;
     u_int16_t		ofrefnum;
     ssize_t             cc;
@@ -1223,14 +1223,17 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         goto afp_write_err;
     }
 
+    oldsize = ad_size(ofork->of_ad, eid);
     if (endflag)
-        offset += ad_size(ofork->of_ad, eid);
+        offset += oldsize;
 
     /* handle bogus parameters */
     if (reqcount < 0 || offset < 0) {
         err = AFPERR_PARAM;
         goto afp_write_err;
     }
+
+    newsize = ((offset + reqcount) > oldsize) ? (offset + reqcount) : oldsize;
 
     /* offset can overflow on 64-bit capable filesystems.
      * report disk full if that's going to happen. */
@@ -1342,7 +1345,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     ofork->of_flags |= AFPFORK_MODIFIED;
 
     /* update write count */
-    ofork->of_vol->v_written += reqcount;
+    ofork->of_vol->v_appended += (newsize > oldsize) ? (newsize - oldsize) : 0;
+    LOG(log_error, logtype_afpd, "write_file: %jd", (intmax_t)((newsize > oldsize) ? (newsize - oldsize) : 0));
 
     *rbuflen = set_off_t (offset, rbuf, is64);
     return( AFP_OK );

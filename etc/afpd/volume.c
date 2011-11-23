@@ -1458,8 +1458,6 @@ static long long int get_tm_bandsize(const char *path)
     char buf[512];
     long long int bandsize = -1;
 
-    LOG(log_error, logtype_afpd, "get_tm_bandsize(\"%s\")", path);
-
     EC_NULL_LOGSTR(file = fopen(path, "r"),
                    "get_tm_bandsize(\"%s\"): %s",
                    path, strerror(errno));
@@ -1478,6 +1476,7 @@ static long long int get_tm_bandsize(const char *path)
 EC_CLEANUP:
     if (file)
         fclose(file);
+    LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
     return bandsize;
 }
 
@@ -1520,8 +1519,8 @@ EC_CLEANUP:
  * 5) calculate used size as: (file_count - 1) * band-size
  *
  * The result is cached in volume->v_tm_cachetime for TM_USED_CACHETIME secounds.
- * The cached value volume->v_tm_cachetime is updated by volume->v_written. The latter
- * is increased by X every time the client writes X bytes into a file (in fork.c).
+ * The cached value volume->v_tm_cachetime is updated by volume->v_appended. The latter
+ * is increased by X every time the client appends X bytes to a file (in fork.c).
  *
  * @param vol     (rw) volume to calculate
  * @return             Estimated used size in bytes, -1 on error
@@ -1545,9 +1544,9 @@ static VolSpace get_tm_used(struct vol *vol)
         && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
         if (vol->v_tm_used == -1)
             return -1;
-        vol->v_tm_used += vol->v_written;
-        vol->v_written = 0;
-        LOG(log_error, logtype_afpd, "getused(%s): used(cached): %jd", vol->v_path, (intmax_t)vol->v_tm_used);
+        vol->v_tm_used += vol->v_appended;
+        vol->v_appended = 0;
+        LOG(log_debug, logtype_afpd, "getused(%s): used(cached): %jd", vol->v_path, (intmax_t)vol->v_tm_used);
         return vol->v_tm_used;
     }
 
@@ -1558,24 +1557,19 @@ static VolSpace get_tm_used(struct vol *vol)
     while ((entry = readdir(dir)) != NULL) {
         if (((p = strstr(entry->d_name, "sparsebundle")) != NULL)
             && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
-            LOG(log_error, logtype_afpd, "getused(\"%s\"): %s", vol->v_path, entry->d_name);
 
             EC_NULL_LOG(infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name, "Info.plist"));
             
             if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1)
                 continue;
 
-            LOG(log_error, logtype_afpd, "getused: %s, bandsize: %lld", cfrombstr(infoplist), bandsize);
-
             EC_NULL_LOG(bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name, "bands"));
 
             if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1)
                 continue;
 
-            LOG(log_error, logtype_afpd, "getused: %s, links: %ld", cfrombstr(bandsdir), links);
-
             used += (links - 1) * bandsize;
-            LOG(log_error, logtype_afpd, "getused: %s, used: %jd", cfrombstr(bandsdir), (intmax_t)used);
+            LOG(log_debug, logtype_afpd, "getused: %s, used: %jd", cfrombstr(bandsdir), (intmax_t)used);
         }
     }
 
@@ -1589,7 +1583,7 @@ EC_CLEANUP:
         bdestroy(bandsdir);
     if (dir)
         closedir(dir);
-    LOG(log_error, logtype_afpd, "getused(%s), used: %jd", vol->v_path, (intmax_t)used);
+    LOG(log_debug, logtype_afpd, "getused(%s), used: %jd", vol->v_path, (intmax_t)used);
     return used;
 }
 
@@ -1622,8 +1616,6 @@ static int getvolspace(struct vol *vol,
     if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
         return( rc );
     }
-    LOG(log_error, logtype_afpd, "volparams: total: %jd, free: %jd",
-        (intmax_t)(*xbtotal), (intmax_t)(*xbfree));
 
 #define min(a,b)    ((a)<(b)?(a):(b))
 #ifndef NO_QUOTA_SUPPORT
@@ -1642,8 +1634,6 @@ getvolspace_done:
     if (vol->v_limitsize) {
         if ((used = get_tm_used(vol)) == -1)
             return AFPERR_MISC;
-        LOG(log_error, logtype_afpd, "volparams: total: %jd, used: %jd, free: %jd",
-            (intmax_t)(*xbtotal), (intmax_t)used, (intmax_t)(*xbfree));
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
         *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
@@ -1668,7 +1658,7 @@ void vol_fce_tm_event(void)
         last = now;
         for ( ; vol; vol = vol->v_next ) {
             if (vol->v_flags & AFPVOL_TM)
-                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_written);
+                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_appended);
         }
     }
 }
