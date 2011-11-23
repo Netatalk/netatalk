@@ -52,7 +52,7 @@ char *strchr (), *strrchr ();
  */
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, u_int32_t *bsize)
 {
-    VolSpace maxVolSpace = (~(VolSpace)0);
+    VolSpace maxVolSpace = INTMAX_MAX;
 
 #ifdef ultrix
     struct fs_data	sfs;
