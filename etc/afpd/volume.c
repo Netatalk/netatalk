@@ -52,6 +52,7 @@ char *strchr (), *strrchr ();
 #include <atalk/ftw.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/errchk.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -1444,64 +1445,146 @@ static void volume_unlink(struct vol *volume)
         }
     }
 }
-
-static off_t getused_size; /* result of getused() */
-
 /*!
-  nftw callback for getused()
+ * Read band-size info from Info.plist XML file of an TM sparsebundle
+ *
+ * @param path   (r) path to Info.plist file
+ * @return           band-size in bytes, -1 on error
  */
-static int getused_stat(const char *path,
-                        const struct stat *statp,
-                        int tflag,
-                        struct FTW *ftw)
+static long long int get_tm_bandsize(const char *path)
 {
-    off_t low, high;
+    EC_INIT;
+    FILE *file = NULL;
+    char buf[512];
+    long long int bandsize = -1;
 
-    if (tflag == FTW_F || tflag == FTW_D) {
-        getused_size += statp->st_blocks * 512;
+    EC_NULL_LOGSTR(file = fopen(path, "r"),
+                   "get_tm_bandsize(\"%s\"): %s",
+                   path, strerror(errno));
+
+    while (fgets(buf, sizeof(buf), file) != NULL) {
+        if (strstr(buf, "band-size") == NULL)
+            continue;
+
+        if (fscanf(file, " <integer>%lld</integer>", &bandsize) != 1) {
+            LOG(log_error, logtype_afpd, "get_tm_bandsize(\"%s\"): can't parse band-size", path);
+            EC_FAIL;
+        }
+        break;
     }
 
-    return 0;
+EC_CLEANUP:
+    if (file)
+        fclose(file);
+    LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
+    return bandsize;
 }
 
-#define GETUSED_CACHETIME 5
 /*!
- * Calculate used size of a volume with nftw
+ * Return number on entries in a directory
  *
- * The result is cached, we're try to avoid frequently calling nftw()
+ * @param path   (r) path to dir
+ * @return           number of entries, -1 on error
+ */
+static long long int get_tm_bands(const char *path)
+{
+    EC_INIT;
+    long long int count = 0;
+    DIR *dir = NULL;
+    const struct dirent *entry;
+
+    EC_NULL(dir = opendir(path));
+
+    while ((entry = readdir(dir)) != NULL)
+        count++;
+    count -= 2; /* All OSens I'm aware of return "." and "..", so just substract them, avoiding string comparison in loop */
+        
+EC_CLEANUP:
+    if (dir)
+        closedir(dir);
+    if (ret != 0)
+        return -1;
+    return count;
+}
+
+/*!
+ * Calculate used size of a TimeMachine volume
  *
- * 1) Call nftw an refresh if:
- * 1a) - we're called the first time 
- * 1b) - volume modification date is not yet set and the last time we've been called is
- *       longer then 30 sec ago
- * 1c) - the last volume modification is less then 30 sec old
+ * This assumes that the volume is used only for TimeMachine.
+ *
+ * 1) readdir(path of volume)
+ * 2) for every element that matches regex "\(.*\)\.sparsebundle$" :
+ * 3) parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
+ * 4) readdir "\1.sparsebundle/bands/" counting files
+ * 5) calculate used size as: (file_count - 1) * band-size
+ *
+ * The result is cached in volume->v_tm_cachetime for TM_USED_CACHETIME secounds.
+ * The cached value volume->v_tm_cachetime is updated by volume->v_appended. The latter
+ * is increased by X every time the client appends X bytes to a file (in fork.c).
  *
  * @param vol     (rw) volume to calculate
+ * @return             Estimated used size in bytes, -1 on error
  */
-static int getused(struct vol *vol)
+#define TM_USED_CACHETIME 60    /* cache for 60 seconds */
+static VolSpace get_tm_used(struct vol *vol)
 {
-    static time_t vol_mtime = 0;
-    int ret = 0;
+    EC_INIT;
+    long long int bandsize;
+    VolSpace used = 0;
+    bstring infoplist = NULL;
+    bstring bandsdir = NULL;
+    DIR *dir = NULL;
+    const struct dirent *entry;
+    const char *p;
+    struct stat st;
+    long int links;
     time_t now = time(NULL);
 
-    if (!vol_mtime
-        || (!vol->v_mtime && ((vol_mtime + GETUSED_CACHETIME) < now))
-        || (vol->v_mtime && ((vol_mtime + GETUSED_CACHETIME) < vol->v_mtime))
-        ) {
-        vol_mtime = now;
-        getused_size = 0;
-        vol->v_written = 0;
-        ret = nftw(vol->v_path, getused_stat, NULL, 20, FTW_PHYS); /* 2 */
-        LOG(log_debug, logtype_afpd, "volparams: from nftw: %" PRIu64 " bytes",
-            getused_size);
-    } else {
-        getused_size += vol->v_written;
-        vol->v_written = 0;
-        LOG(log_debug, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
-            getused_size);
+    if (vol->v_tm_cachetime
+        && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
+        if (vol->v_tm_used == -1)
+            return -1;
+        vol->v_tm_used += vol->v_appended;
+        vol->v_appended = 0;
+        LOG(log_debug, logtype_afpd, "getused(%s): used(cached): %jd", vol->v_path, (intmax_t)vol->v_tm_used);
+        return vol->v_tm_used;
     }
 
-    return ret;
+    vol->v_tm_cachetime = now;
+
+    EC_NULL(dir = opendir(vol->v_path));
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (((p = strstr(entry->d_name, "sparsebundle")) != NULL)
+            && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
+
+            EC_NULL_LOG(infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name, "Info.plist"));
+            
+            if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1)
+                continue;
+
+            EC_NULL_LOG(bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name, "bands"));
+
+            if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1)
+                continue;
+
+            used += (links - 1) * bandsize;
+            LOG(log_debug, logtype_afpd, "getused: %s, used: %jd", cfrombstr(bandsdir), (intmax_t)used);
+        }
+    }
+
+EC_CLEANUP:
+    if (ret != 0)
+        used = -1;
+    vol->v_tm_used = used;
+    if (infoplist)
+        bdestroy(infoplist);
+    if (bandsdir)
+        bdestroy(bandsdir);
+    if (dir)
+        closedir(dir);
+    LOG(log_debug, logtype_afpd, "getused(%s), used: %jd", vol->v_path, (intmax_t)used);
+    return used;
 }
 
 static int getvolspace(struct vol *vol,
@@ -1549,14 +1632,14 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
-        if (getused(vol) != 0)
+        if ((used = get_tm_used(vol)) == -1)
             return AFPERR_MISC;
-        LOG(log_debug, logtype_afpd, "volparams: used on volume: %" PRIu64 " bytes",
-            getused_size);
-        vol->v_tm_used = getused_size;
 
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
-        *xbfree = min(*xbfree, *xbtotal < getused_size ? 0 : *xbtotal - getused_size);
+        *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
+
+        LOG(log_error, logtype_afpd, "volparams: total: %jd, used: %jd, free: %jd",
+            (intmax_t)(*xbtotal), (intmax_t)used, (intmax_t)(*xbfree));
     }
 
     *bfree = min( *xbfree, maxsize);
@@ -1575,7 +1658,7 @@ void vol_fce_tm_event(void)
         last = now;
         for ( ; vol; vol = vol->v_next ) {
             if (vol->v_flags & AFPVOL_TM)
-                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_written);
+                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_appended);
         }
     }
 }
