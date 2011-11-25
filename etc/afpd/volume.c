@@ -1638,7 +1638,7 @@ getvolspace_done:
         *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
         *xbfree = min(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
 
-        LOG(log_error, logtype_afpd, "volparams: total: %jd, used: %jd, free: %jd",
+        LOG(log_debug, logtype_afpd, "volparams: total: %jd, used: %jd, free: %jd",
             (intmax_t)(*xbtotal), (intmax_t)used, (intmax_t)(*xbfree));
     }
 

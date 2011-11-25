@@ -1343,7 +1343,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
     /* update write count */
     ofork->of_vol->v_appended += (newsize > oldsize) ? (newsize - oldsize) : 0;
-    LOG(log_error, logtype_afpd, "write_file: %jd", (intmax_t)((newsize > oldsize) ? (newsize - oldsize) : 0));
 
     *rbuflen = set_off_t (offset, rbuf, is64);
     return( AFP_OK );
