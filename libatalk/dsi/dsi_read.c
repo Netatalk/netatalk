@@ -23,6 +23,7 @@
 
 #include <atalk/dsi.h>
 #include <atalk/util.h>
+#include <atalk/logger.h>
 
 /* streaming i/o for afp_read. this is all from the perspective of the
  * client. it basically does the reverse of dsi_write. on first entry,
@@ -30,40 +31,42 @@
  * buffer. it returns the amount of stuff still to be read
  * (constrained by the buffer size). */
 ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
-		    const size_t size, const int err)
+                     const size_t size, const int err)
 {
+    LOG(log_maxdebug, logtype_dsi, "dsi_readinit: sending %zd bytes from buffer, total size: %zd",
+        buflen, size);
 
-  dsi->flags |= DSI_NOREPLY; /* we will handle our own replies */
-  dsi->header.dsi_flags = DSIFL_REPLY;
-  /*dsi->header.dsi_command = DSIFUNC_CMD;*/
-  dsi->header.dsi_len = htonl(size);
-  dsi->header.dsi_code = htonl(err);
+    dsi->flags |= DSI_NOREPLY; /* we will handle our own replies */
+    dsi->header.dsi_flags = DSIFL_REPLY;
+    dsi->header.dsi_len = htonl(size);
+    dsi->header.dsi_code = htonl(err);
 
-  dsi->in_write++;
-  if (dsi_stream_send(dsi, buf, buflen)) {
-    dsi->datasize = size - buflen;
-    return MIN(dsi->datasize, buflen);
-  }
+    dsi->in_write++;
+    if (dsi_stream_send(dsi, buf, buflen)) {
+        dsi->datasize = size - buflen;
+        LOG(log_maxdebug, logtype_dsi, "dsi_readinit: remaining data for sendfile: %zd", dsi->datasize);
+        return MIN(dsi->datasize, buflen);
+    }
 
-  return -1; /* error */
+    return -1; /* error */
 }
 
 void dsi_readdone(DSI *dsi)
 {
-  dsi->in_write--;
+    dsi->in_write--;
 }
 
 /* send off the data */
 ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 {
-  size_t len;
-  
-  len  = dsi_stream_write(dsi, buf, buflen, 0);
+    size_t len;
 
-  if (len == buflen) {
-    dsi->datasize -= len;
-    return MIN(dsi->datasize, buflen);
-  }
+    len  = dsi_stream_write(dsi, buf, buflen, 0);
 
-  return -1;
+    if (len == buflen) {
+        dsi->datasize -= len;
+        return MIN(dsi->datasize, buflen);
+    }
+
+    return -1;
 }

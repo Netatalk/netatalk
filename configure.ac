@@ -839,7 +839,7 @@ if test x"$netatalk_cv_search_sendfile" = x"yes"; then
         AC_SEARCH_LIBS(sendfile, sendfile)
         AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
 dnl -- there's a bug somewhere, disable for now
-        netatalk_cv_HAVE_SENDFILE=no
+#        netatalk_cv_HAVE_SENDFILE=no
         ;;
 
     *freebsd*)

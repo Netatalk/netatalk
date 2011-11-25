@@ -893,6 +893,9 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         goto afp_read_err;
     }
 
+    LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd)",
+        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount);
+
     savereqcount = reqcount;
     saveoff = offset;
     if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, saveoff, savereqcount,ofork->of_refnum) < 0) {
@@ -901,9 +904,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     }
 
     *rbuflen = MIN(reqcount, *rbuflen);
+    LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): reading %jd bytes from file",
+        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
     err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen, xlate);
     if (err < 0)
         goto afp_read_done;
+    LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
+        of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
 
     /* dsi can stream requests. we can only do this if we're not checking
      * for an end-of-line character. oh well. */
@@ -936,6 +943,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
             int fd;
                         
             fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
+
             if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) {
                 if (errno == EINVAL || errno == ENOSYS)
                     goto afp_read_loop;
@@ -959,12 +967,6 @@ afp_read_loop:
                 goto afp_read_exit;
 
             offset += *rbuflen;
-#ifdef DEBUG1
-            if (obj->options.flags & OPTION_DEBUG) {
-                printf( "(read) reply: %d, %d\n", *rbuflen, dsi->clientID);
-                bprint(rbuf, *rbuflen);
-            }
-#endif
             /* dsi_read() also returns buffer size of next allocation */
             cc = dsi_read(dsi, rbuf, *rbuflen); /* send it off */
             if (cc < 0)

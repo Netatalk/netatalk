@@ -187,7 +187,7 @@ extern void dsi_close (DSI *);
 extern ssize_t dsi_stream_write (DSI *, void *, const size_t, const int mode);
 extern size_t dsi_stream_read (DSI *, void *, const size_t);
 extern int dsi_stream_send (DSI *, void *, size_t);
-extern int dsi_stream_receive (DSI *, void *, const size_t, size_t *);
+extern int dsi_stream_receive (DSI *);
 extern int dsi_disconnect(DSI *dsi);
 
 #ifdef WITH_SENDFILE
@@ -212,6 +212,5 @@ extern void dsi_readdone (DSI *);
     (x)->header.dsi_len = htonl((x)->cmdlen); \
     dsi_stream_send((x), (x)->commands, (x)->cmdlen); \
 } while (0)
-#define dsi_receive(x)    (dsi_stream_receive((x), (x)->commands, \
-					      DSI_CMDSIZ, &(x)->cmdlen))
+
 #endif /* atalk/dsi.h */
