@@ -342,6 +342,14 @@ ssize_t dsi_stream_read_file(DSI *dsi, int fromfd, off_t offset, const size_t le
           goto exit;
       }          
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
+#ifdef SOLARIS
+          if (pos > offset) {
+              /* we actually have sent sth., adjust counters and keep trying */
+              len = pos - offset;
+              written += len;
+              offset = pos;
+          }
+#endif
           if (dsi_peek(dsi)) {
               /* can't go back to blocking mode, exit, the next read
                  will return with an error and afpd will die.
