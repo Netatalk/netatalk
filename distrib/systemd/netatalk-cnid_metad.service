@@ -1,5 +1,5 @@
 # This is experimental service file.
-# See contrib/systemd/README
+# See distrib/systemd/README
 
 [Unit]
 Description=Netatalk CNID database daemon for afpd

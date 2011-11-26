@@ -7,7 +7,7 @@ Changes in 2.2.2
        created for the original connecting user. Said differently: if you
        know the password of adminauthuser, you can authenticate as any other
        user.
-* NEW: experimental systemd service files in contrib/systemd/
+* NEW: experimental systemd service files in distrib/systemd/
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * UPD: afpd: Reset options every time a :DEFAULT: line is found in a
        AppleVolumes file
