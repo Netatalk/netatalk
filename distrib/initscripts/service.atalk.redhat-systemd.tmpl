@@ -1,5 +1,9 @@
 # This file is part of netatalk :NETATALK_VERSION:.
 
+# The method of using shell-script "netatalk.sh" is not suitable.
+# The future service files are due to start daemons directly.
+# See netatalk-xxx/contrib/systemd/ directory in tarball.
+
 [Unit]
 Description=File and Printer sharing for Macintosh clients
 After=syslog.target network.target

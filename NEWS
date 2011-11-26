@@ -3,9 +3,11 @@ Changes in 2.2.2
 
 * NEW: afpd: New option "adminauthuser". Specifying eg "-adminauthuser root"
        whenever a normal user login fails, afpd tries to authenticate as
-       the specified adminauthuser. If this succeeds, a normal session is created
-       for the original connecting user. Said differently: if you know the
-       password of adminauthuser, you can authenticate as any other user.
+       the specified adminauthuser. If this succeeds, a normal session is
+       created for the original connecting user. Said differently: if you
+       know the password of adminauthuser, you can authenticate as any other
+       user.
+* NEW: experimental systemd service files in contrib/systemd/
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * UPD: afpd: Reset options every time a :DEFAULT: line is found in a
        AppleVolumes file
@@ -13,13 +15,14 @@ Changes in 2.2.2
        encoding
 * UPD: afpd: Don't set ATTRBIT_SHARED flag for directories
 * FIX: afpd: ACL access checking
-* FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble file
-       which lead to a possible Finder crash
+* FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble
+       file which lead to a possible Finder crash
 * FIX: afpd: Read-only filesystems lead to afpd processes running as root
 * FIX: afpd: Fix for filesystem without NFSv4 ACL support on Solaris
 * FIX: afpd: Fix catsearch bug, NetAFP Bug ID #12
 * FIX: afpd: Fix dircache bug, NetAFP Bug ID #13
-* FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble files
+* FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble
+       files
 * FIX: Fix compilation error when AppleTalk support is disabled
 * FIX: Portability fixes
 
