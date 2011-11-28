@@ -12,7 +12,7 @@ Changes in 2.2.2
 * UPD: afpd: Reset options every time a :DEFAULT: line is found in a
        AppleVolumes file
 * UPD: afpd: Convert passwords from legacy encoding (wire format) to host
-       encoding
+       encoding, NetAFP Bug ID #14
 * UPD: afpd: Don't set ATTRBIT_SHARED flag for directories
 * UPD: afpd: Use sendfile() on Solaris and FreeBSD for sending data
 * UPD: afpd: Faster volume used size calculation for "volsizelimit" option,
