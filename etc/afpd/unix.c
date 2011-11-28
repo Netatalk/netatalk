@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 /* STDC check */
 #ifdef STDC_HEADERS
@@ -52,14 +53,13 @@ char *strchr (), *strrchr ();
  */
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, u_int32_t *bsize)
 {
-    VolSpace maxVolSpace = INTMAX_MAX;
+    VolSpace maxVolSpace = UINT64_MAX;
 
 #ifdef ultrix
     struct fs_data	sfs;
 #else /*ultrix*/
     struct statfs	sfs;
 #endif /*ultrix*/
-
 
     if ( statfs( vol->v_path, &sfs ) < 0 ) {
         LOG(log_error, logtype_afpd, "ustatfs_getvolspace unable to stat %s", vol->v_path);

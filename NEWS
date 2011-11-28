@@ -14,6 +14,9 @@ Changes in 2.2.2
 * UPD: afpd: Convert passwords from legacy encoding (wire format) to host
        encoding
 * UPD: afpd: Don't set ATTRBIT_SHARED flag for directories
+* UPD: afpd: Use sendfile() on Solaris and FreeBSD for sending data
+* UPD: afpd: Faster volume used size calculation for "volsizelimit" option,
+       cf man AppleVolume.default for details
 * FIX: afpd: ACL access checking
 * FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble
        file which lead to a possible Finder crash

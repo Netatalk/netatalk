@@ -1,6 +1,4 @@
 /*
- * $Id: volume.h,v 1.16 2010/03/31 09:47:32 franklahm Exp $
- *
  * Copyright (c) 1990,1994 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -8,9 +6,10 @@
 #ifndef ATALK_VOLUME_H
 #define ATALK_VOLUME_H 1
 
+#include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <netatalk/endian.h>
+// #include <netatalk/endian.h>
 
 #include <atalk/unicode.h>
 #include <atalk/cnid.h>
@@ -20,7 +19,7 @@
 #define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
 #define AFPVOL_MACNAMELEN    27 /* AFP2 spec */
 
-typedef off_t VolSpace;
+typedef uint64_t VolSpace;
 
 struct vol {
     struct vol      *v_next;
@@ -65,9 +64,9 @@ struct vol {
     char            *v_gvs;
     void            *v_nfsclient;
     int             v_nfs;
-    off_t           v_tm_used;  /* used bytes on a TM volume */
+    VolSpace        v_tm_used;  /* used bytes on a TM volume */
     time_t          v_tm_cachetime; /* time at which v_tm_used was calculated last */
-    off_t           v_appended; /* amount of data appended to files */
+    VolSpace        v_appended; /* amount of data appended to files */
     
     /* only when opening/closing volumes or in error */
     int             v_casefold;
