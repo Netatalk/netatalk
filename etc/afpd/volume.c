@@ -1550,7 +1550,7 @@ static int get_tm_used(struct vol * restrict vol)
             EC_FAIL;
         vol->v_tm_used += vol->v_appended;
         vol->v_appended = 0;
-        LOG(log_error, logtype_afpd, "getused(\"%s\"): cached: %" PRIu64 " bytes",
+        LOG(log_debug, logtype_afpd, "getused(\"%s\"): cached: %" PRIu64 " bytes",
             vol->v_path, vol->v_tm_used);
         return 0;
     }
@@ -1589,7 +1589,7 @@ EC_CLEANUP:
     if (dir)
         closedir(dir);
 
-    LOG(log_error, logtype_afpd, "getused(\"%s\"): %" PRIu64 " bytes", vol->v_path, vol->v_tm_used);
+    LOG(log_debug, logtype_afpd, "getused(\"%s\"): %" PRIu64 " bytes", vol->v_path, vol->v_tm_used);
 
     EC_EXIT;
 }
@@ -1638,15 +1638,15 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
-        if ((used = get_tm_used(vol)) == -1)
+        if (get_tm_used(vol) != 0)
             return AFPERR_MISC;
 
         *xbtotal = MIN(*xbtotal, (vol->v_limitsize * 1024 * 1024));
-        *xbfree = MIN(*xbfree, *xbtotal < used ? 0 : *xbtotal - used);
+        *xbfree = MIN(*xbfree, *xbtotal < vol->v_tm_used ? 0 : *xbtotal - vol->v_tm_used);
 
-        LOG(log_error, logtype_afpd,
+        LOG(log_debug, logtype_afpd,
             "volparams: total: %" PRIu64 ", used: %" PRIu64 ", free: %" PRIu64 " bytes",
-            *xbtotal, used, *xbfree);
+            *xbtotal, vol->v_tm_used, *xbfree);
     }
 
     *bfree = MIN(*xbfree, maxsize);
