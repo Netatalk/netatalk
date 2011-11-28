@@ -37,7 +37,6 @@ noinst_HEADERS = \
 	talloc.h \
 	tevent.h \
 	tsocket.h \
-	boolean.h \
 	compat.h \
 	dsi.h \
 	ldapconfig.h \

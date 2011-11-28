@@ -761,7 +761,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             dbd_log(LOGSTD, "Updating AppleDouble file for '%s/%s' with CNID: %u from database",
                             cwdbuf, name, ntohl(db_cnid));
             ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-            if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+            if (ad_open(&ad, name, adflags | ADFLAGS_HF, O_RDWR, 0666, &ad) != 0) {
                 dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                         cwdbuf, name, strerror(errno));
                 return CNID_INVALID;

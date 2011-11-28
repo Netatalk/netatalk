@@ -506,7 +506,7 @@ static int ad_open_df(const char *path, int adflags, int oflags, int mode, struc
     int         st_invalid = -1;
 
     LOG(log_debug, logtype_default, "ad_open_df(\"%s\", %s, %04o)",
-        abspath(path), oflags2logstr(oflags), mode);
+        fullpathname(path), oflags2logstr(oflags), mode);
 
     if (ad_data_fileno(ad) == -1) {
         hoflags = (oflags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
@@ -591,7 +591,7 @@ static int ad_open_hf_v2(const char *path, int adflags, int oflags, int mode, st
              * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
              */
             LOG(log_debug, logtype_default, "ad_open(\"%s\"): creating adouble file",
-                abspath(path));
+                fullpathname(path));
             admode = mode;
             errno = 0;
             st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
@@ -680,7 +680,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int oflags, int mode, st
         /* Create one */
         if (new_ad_header(path, ad, adflags) < 0) {
             LOG(log_error, logtype_default, "ad_open_hf_ea: can't create new header: %s",
-                abspath(path));
+                fullpathname(path));
             goto error;
         }
         ad->ad_md->adf_flags |= O_CREAT; /* mark as just created */
@@ -752,7 +752,7 @@ static int ad_open_rf(const char *path, int adflags, int oflags, int mode, struc
             break;
         default:
             LOG(log_warning, logtype_default, "ad_open_rf(\"%s\"): %s",
-                abspath(path), strerror(errno));
+                fullpathname(path), strerror(errno));
             ret = -1;
             goto exit;
         }
@@ -1091,13 +1091,13 @@ static int vad_open(struct adouble *ad, const char *path, int adflags, va_list a
     int mode = 0;
     
     LOG(log_debug, logtype_default, "ad_open(\"%s\", %s)",
-        abspath(path), adflags2logstr(adflags));
+        fullpathname(path), adflags2logstr(adflags));
 
     if (ad->ad_inited != AD_INITED) /* 1 */
         AFP_PANIC("ad_open: not initialized");
 
     if (ad->ad_fullpath == NULL) { /* 2 */
-        if ((ad->ad_fullpath = bfromcstr(abspath(path))) == NULL) {
+        if ((ad->ad_fullpath = bfromcstr(fullpathname(path))) == NULL) {
             ret = -1;
             goto exit;
         }

@@ -175,7 +175,6 @@ extern int recv_fd(int fd, int nonblocking);
  * unix.c
  *****************************************************************/
 
-extern const char *abspath(const char *name);
 extern const char *getcwdpath(void);
 extern const char *fullpathname(const char *);
 extern char *stripped_slashes_basename(char *p);

@@ -505,33 +505,6 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 /* ----------------- */
 static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
 {
-    mode_t file_mode = ad_hf_mode(mode);
-    mode_t dir_mode = file_mode;
-    struct set_mode param;
-
-    if ((dir_mode & (S_IRUSR | S_IWUSR )))
-        dir_mode |= S_IXUSR;
-    if ((dir_mode & (S_IRGRP | S_IWGRP )))
-        dir_mode |= S_IXGRP;
-    if ((dir_mode & (S_IROTH | S_IWOTH )))
-        dir_mode |= S_IXOTH;
-
-	/* change folder */
-	dir_mode |= DIRBITS;
-    if (dir_rx_set(dir_mode)) {
-        if (chmod_acl( name,  dir_mode ) < 0)
-            return -1;
-    }
-    param.st = st;
-    param.mode = file_mode;
-    if (for_each_adouble("setfilmode_ads", name, ads_setfilmode_loop, &param, 0, v_umask) < 0)
-        return -1;
-
-    if (!dir_rx_set(dir_mode)) {
-        if (chmod_acl( name,  dir_mode ) < 0)
-            return -1;
-    }
-
     return 0;
 }
 

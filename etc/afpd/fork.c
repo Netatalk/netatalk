@@ -269,7 +269,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     LOG(log_debug, logtype_afpd,
         "afp_openfork(\"%s\", %s)",
-        abspath(s_path->u_name),
+        fullpathname(s_path->u_name),
         (fork & OPENFORK_RSCS) ? "OPENFORK_RSCS" : "OPENFORK_DATA");
 
     /* stat() data fork st is set because it's not a dir */
@@ -405,7 +405,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                 break;
             default:
                 LOG(log_error, logtype_afpd, "afp_openfork(\"%s\"): %s",
-                    abspath(s_path->m_name), strerror(errno) );
+                    fullpathname(s_path->m_name), strerror(errno) );
                 goto openfork_err;
                 break;
             }
@@ -879,14 +879,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         goto afp_read_err;
     }
 
-<<<<<<< HEAD
-#define min(a,b)    ((a)<(b)?(a):(b))
-    *rbuflen = min( reqcount, *rbuflen );
-=======
     *rbuflen = MIN(reqcount, *rbuflen);
     LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): reading %jd bytes from file",
         of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
->>>>>>> netafp/master
+
     err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen, xlate);
     if (err < 0)
         goto afp_read_done;
@@ -1178,17 +1174,10 @@ static ssize_t write_file(struct ofork *ofork, int eid,
  * in reqcount et al. */
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
-<<<<<<< HEAD
     struct ofork    *ofork;
-    off_t               offset, saveoff, reqcount;
+    off_t               offset, saveoff, reqcount, oldsize, newsize;
     int             endflag, eid, xlate = 0, err = AFP_OK;
     uint16_t       ofrefnum;
-=======
-    struct ofork	*ofork;
-    off_t           offset, saveoff, reqcount, oldsize, newsize;
-    int		        endflag, eid, xlate = 0, err = AFP_OK;
-    u_int16_t		ofrefnum;
->>>>>>> netafp/master
     ssize_t             cc;
 
     /* figure out parameters */
