@@ -1,6 +1,6 @@
 #include <stdio.h>
+#include <stdbool.h>
 
-#include <atalk/boolean.h>
 #include <atalk/logger.h>
 
 int main(int argc, char *argv[])

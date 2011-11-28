@@ -12,6 +12,8 @@
 
 #ifdef UAM_DHX2
 
+#include <atalk/standards.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

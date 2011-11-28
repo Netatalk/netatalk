@@ -129,7 +129,8 @@ int afp_getdiracl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
     #undef accessmode
 #endif
 
-void afsmode( path, ma, dir, st )
+void afsmode( vol, path, ma, dir, st )
+const struct volume *vol;
 char		*path;
 struct maccess	*ma;
 struct dir      *dir;
@@ -153,7 +154,7 @@ struct stat     *st;
         return;
     }
 
-    accessmode( path, ma, dir, st );
+    accessmode(vol, path, ma, dir, st );
 
     return;
 }

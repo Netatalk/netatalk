@@ -374,7 +374,7 @@ static void remove_eafiles(const char *name, struct ea *ea)
     if ((dp = opendir(".")) == NULL) {
         dbd_log(LOGSTD, "Couldn't open the directory '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
-        return;
+        goto exit;
     }
 
     while ((ep = readdir(dp))) {
@@ -388,9 +388,14 @@ static void remove_eafiles(const char *name, struct ea *ea)
         } /* if */
     } /* while */
 
+exit:
     if (dp)
         closedir(dp);
-
+    if ((chdir("..")) != 0) {
+        dbd_log(LOGSTD, "Couldn't chdir to '%s': %s", cwdbuf, strerror(errno));
+        /* we can't proceed */
+        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+    }    
 }
 
 /*
@@ -750,24 +755,22 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         /* Everything is fine */
         return db_cnid;
     } else if (ad_cnid && db_cnid && (ad_cnid != db_cnid)) {
-        /* Mismatch ? Delete both from db and re-add data from file */
+        /* Mismatch, overwrite ad file with value from db */
         dbd_log( LOGSTD, "CNID mismatch for '%s/%s', db: %u, ad-file: %u", cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-            rqst.cnid = db_cnid;
-            ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
-            if (dbif_txn_close(dbd, ret) != 0)
+            dbd_log(LOGSTD, "Updating AppleDouble file for '%s/%s' with CNID: %u from database",
+                            cwdbuf, name, ntohl(db_cnid));
+            ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+            if (ad_open_metadata( name, adflags, O_RDWR, &ad) != 0) {
+                dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
+                        cwdbuf, name, strerror(errno));
                 return CNID_INVALID;
-
-            rqst.cnid = ad_cnid;
-            ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
-            if (dbif_txn_close(dbd, ret) != 0)
-                return CNID_INVALID;
-
-            ret = dbd_rebuild_add(dbd, &rqst, &rply);
-            if (dbif_txn_close(dbd, ret) != 0)
-                return CNID_INVALID;
+            }
+            ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+            ad_flush(&ad);
+            ad_close_metadata(&ad);
         }
-        return ad_cnid;
+        return db_cnid;
     } else if (ad_cnid && (db_cnid == 0)) {
         /* in ad-file but not in db */
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
@@ -777,7 +780,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 
             rqst.cnid = ad_cnid;
             ret = dbd_resolve(dbd, &rqst, &rply);
-            if (ret == CNID_DBD_RES_OK) {
+            if (rply.result == CNID_DBD_RES_OK) {
                 /* Occupied! Choose another, update ad-file */
                 ret = dbd_add(dbd, &rqst, &rply, 1);
                 if (dbif_txn_close(dbd, ret) != 0)

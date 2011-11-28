@@ -379,9 +379,9 @@ int getmetadata(struct vol *vol,
             /* FIXME do we want a visual clue if the file is read only
              */
             struct maccess	ma;
-            accessmode( ".", &ma, dir , NULL);
+            accessmode(vol, ".", &ma, dir , NULL);
             if ((ma.ma_user & AR_UWRITE)) {
-            	accessmode( upath, &ma, dir , st);
+            	accessmode(vol, upath, &ma, dir , st);
             	if (!(ma.ma_user & AR_UWRITE)) {
                 	ashort |= htons(ATTRBIT_NOWRITE);
                 }
@@ -548,7 +548,7 @@ int getmetadata(struct vol *vol,
             break;
         case FILPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */
-            accessmode( upath, &ma, dir , st);
+            accessmode(vol, upath, &ma, dir , st);
 
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));
@@ -1509,7 +1509,8 @@ int copyfile(const struct vol *s_vol,
     if (ad_reso_fileno(adp) == -1 || 0 == (err = copy_fork(ADEID_RFORK, &add, adp))){
         /* copy the data fork */
         if ((err = copy_fork(ADEID_DFORK, &add, adp)) == 0) {
-            err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst);
+            if (ad_meta_fileno(adp) != -1)
+                err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst);
         }
     }
 

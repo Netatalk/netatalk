@@ -36,6 +36,12 @@
 static void usage_main(void)
 {
     printf("Usage: ad ls|cp|rm|mv|find [file|dir, ...]\n");
+    printf("       ad -v|--version\n");
+}
+
+static void show_version(void)
+{
+    printf("ad (Netatalk %s)\n", VERSION);
 }
 
 int main(int argc, char **argv)
@@ -57,6 +63,14 @@ int main(int argc, char **argv)
         return ad_mv(argc, argv);
     else if (STRCMP(argv[1], ==, "find"))
         return ad_find(argc, argv);
+    else if (STRCMP(argv[1], ==, "-v")) {
+        show_version();
+        return 1;
+    }
+    else if  (STRCMP(argv[1], ==, "--version")) {
+        show_version();
+        return 1;
+    }
     else {
         usage_main();
         return 1;

@@ -57,8 +57,7 @@
 
 #include <limits.h>
 #include <stdio.h>
-
-#include <atalk/boolean.h>
+#include <stdbool.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

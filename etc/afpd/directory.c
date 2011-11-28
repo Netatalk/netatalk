@@ -463,7 +463,15 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
     cnid = htonl(2);
     dir = vol->v_root;
 
+    LOG(log_debug, logtype_afpd, "dirlookup_bypath(\"%s\")", path);
+
+    if (strcmp(vol->v_path, path) == 0)
+        return dir;
+
     EC_NULL(rpath = rel_path_in_vol(path, vol->v_path)); /* 1. */
+
+    LOG(log_debug, logtype_afpd, "dirlookup_bypath: rpath: \"%s\"", cfrombstr(rpath));
+
     EC_NULL(statpath = bfromcstr(vol->v_path));          /* 2. */
 
     l = bsplit(rpath, '/');
@@ -471,6 +479,9 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
         did = cnid;
         EC_ZERO(bcatcstr(statpath, "/"));
         EC_ZERO(bconcat(statpath, l->entry[i]));
+
+        LOG(log_debug, logtype_afpd, "dirlookup_bypath: statpath: \"%s\"", cfrombstr(statpath));
+
         EC_ZERO_LOGSTR(lstat(cfrombstr(statpath), &st),
                        "lstat(rpath: %s, elem: %s): %s: %s",
                        cfrombstr(rpath), cfrombstr(l->entry[i]),
@@ -483,14 +494,14 @@ struct dir *dirlookup_bypath(const struct vol *vol, const char *path)
                                            dir,
                                            cfrombstr(l->entry[i]),
                                            blength(l->entry[i]))) == NULL) {
+
             if ((cnid = cnid_add(vol->v_cdb,             /* 6. */
                                  &st,
                                  did,
                                  cfrombstr(l->entry[i]),
                                  blength(l->entry[i]),
-                                 0)) == CNID_INVALID) {
+                                 0)) == CNID_INVALID)
                 EC_FAIL;
-            }
 
             if ((dir = dirlookup(vol, cnid)) == NULL) /* 7. */
                 EC_FAIL;
@@ -503,6 +514,9 @@ EC_CLEANUP:
     bdestroy(statpath);
     if (ret != 0)
         return NULL;
+
+    LOG(log_debug, logtype_afpd, "dirlookup_bypath: result: \"%s\"",
+        cfrombstr(dir->d_fullpath));
 
     return dir;
 }
@@ -1410,7 +1424,7 @@ int check_access(char *path, int mode)
     if (!p)
         return -1;
 
-    accessmode(p, &ma, curdir, NULL);
+    accessmode(current_vol, p, &ma, curdir, NULL);
     if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
         return -1;
     if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
@@ -1424,7 +1438,7 @@ int file_access(struct path *path, int mode)
 {
     struct maccess ma;
 
-    accessmode(path->u_name, &ma, curdir, &path->st);
+    accessmode(current_vol, path->u_name, &ma, curdir, &path->st);
 
     LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
         path->u_name, ma.ma_user);
@@ -1531,7 +1545,6 @@ int getdirparams(const struct vol *vol,
                 ashort = htons(ATTRBIT_INVISIBLE);
             } else
                 ashort = 0;
-            ashort |= htons(ATTRBIT_SHARED);
             memcpy( data, &ashort, sizeof( ashort ));
             data += sizeof( ashort );
             break;
@@ -1629,7 +1642,7 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_ACCESS :
-            accessmode( upath, &ma, dir , st);
+            accessmode(vol, upath, &ma, dir , st);
 
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
@@ -1664,6 +1677,9 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_UNIXPR :
+            /* accessmode may change st_mode with ACLs */
+            accessmode(vol, upath, &ma, dir, st);
+
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));
             data += sizeof( aint );
@@ -1675,8 +1691,6 @@ int getdirparams(const struct vol *vol,
             aint = htonl ( aint & ~S_ISGID );  /* Remove SGID, OSX doesn't like it ... */
             memcpy( data, &aint, sizeof( aint ));
             data += sizeof( aint );
-
-            accessmode( upath, &ma, dir , st);
 
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
@@ -2415,7 +2429,7 @@ int deletecurdir(struct vol *vol)
         dir_remove( vol, fdir );
     } else {
         LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
-            curdir->d_fullpath);
+            cfrombstr(curdir->d_fullpath));
     }
 
 delete_done:

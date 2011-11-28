@@ -54,6 +54,12 @@
 #define STRCMP(a,b,c) (strcmp(a,c) b 0)
 #define ZERO_STRUCT(a) memset(&(a), 0, sizeof(a))
 #define ZERO_STRUCTP(a) memset((a), 0, sizeof(a))
+#ifndef MAX
+#define MAX(a,b) ((a) > (b) ? a : b)
+#endif
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? a : b)
+#endif
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define hton64(x)       (x)
@@ -171,6 +177,7 @@ extern int recv_fd(int fd, int nonblocking);
 
 extern const char *abspath(const char *name);
 extern const char *getcwdpath(void);
+extern const char *fullpathname(const char *);
 extern char *stripped_slashes_basename(char *p);
 extern int lchdir(const char *dir);
 extern void randombytes(void *buf, int n);

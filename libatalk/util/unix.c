@@ -112,28 +112,25 @@ const char *getcwdpath(void)
 }
 
 /*!
- * Make argument path absoulte
+ * @brief Request absolute path
  *
- * @returns pointer to path or pointer to error messages on error
+ * @returns Absolute filesystem path to object
  */
-const char *abspath(const char *name)
+const char *fullpathname(const char *name)
 {
-    static char buf[MAXPATHLEN + 1];
-    char *p;
-    int n;
+    static char wd[MAXPATHLEN + 1];
 
     if (name[0] == '/')
         return name;
 
-    if ((p = getcwd(buf, MAXPATHLEN)) == NULL)
-        return strerror(errno);
+    if (getcwd(wd , MAXPATHLEN)) {
+        strlcat(wd, "/", MAXPATHLEN);
+        strlcat(wd, name, MAXPATHLEN);
+    } else {
+        strlcpy(wd, name, MAXPATHLEN);
+    }
 
-    n = strlen(buf);
-    if (buf[n-1] != '/')
-        buf[n++] = '/';
-        
-    strlcpy(buf + n, name, MAXPATHLEN - n);
-    return buf;
+    return wd;
 }
 
 /*!

@@ -479,7 +479,7 @@ void afp_over_dsi(AFPObj *obj)
             continue;
 
         /* Blocking read on the network socket */
-        cmd = dsi_receive(dsi);
+        cmd = dsi_stream_receive(dsi);
 
         if (cmd == 0) {
             /* cmd == 0 is the error condition */
@@ -588,7 +588,7 @@ void afp_over_dsi(AFPObj *obj)
 
             /* AFP replay cache */
             rc_idx = dsi->clientID % REPLAYCACHE_SIZE;
-            LOG(log_debug, logtype_afpd, "DSI request ID: %u", dsi->clientID);
+            LOG(log_debug, logtype_dsi, "DSI request ID: %u", dsi->clientID);
 
             if (replaycache[rc_idx].DSIreqID == dsi->clientID
                 && replaycache[rc_idx].AFPcommand == function) {
@@ -631,9 +631,7 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi->flags & DSI_NOREPLY) {
                 dsi->flags &= ~DSI_NOREPLY;
                 break;
-            }
-
-            if (!dsi_cmdreply(dsi, err)) {
+            } else if (!dsi_cmdreply(dsi, err)) {
                 LOG(log_error, logtype_afpd, "dsi_cmdreply(%d): %s", dsi->socket, strerror(errno) );
                 if (dsi_disconnect(dsi) != 0)
                     afp_dsi_die(EXITERR_CLNT);

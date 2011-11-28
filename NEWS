@@ -1,3 +1,34 @@
+Changes in 2.2.2
+================
+
+* NEW: afpd: New option "adminauthuser". Specifying eg "-adminauthuser root"
+       whenever a normal user login fails, afpd tries to authenticate as
+       the specified adminauthuser. If this succeeds, a normal session is
+       created for the original connecting user. Said differently: if you
+       know the password of adminauthuser, you can authenticate as any other
+       user.
+* NEW: experimental systemd service files in distrib/systemd/
+* UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
+* UPD: afpd: Reset options every time a :DEFAULT: line is found in a
+       AppleVolumes file
+* UPD: afpd: Convert passwords from legacy encoding (wire format) to host
+       encoding, NetAFP Bug ID #14
+* UPD: afpd: Don't set ATTRBIT_SHARED flag for directories
+* UPD: afpd: Use sendfile() on Solaris and FreeBSD for sending data
+* UPD: afpd: Faster volume used size calculation for "volsizelimit" option,
+       cf man AppleVolume.default for details
+* FIX: afpd: ACL access checking
+* FIX: afpd: Fix an error when duplicating files that lacked an AppleDouble
+       file which lead to a possible Finder crash
+* FIX: afpd: Read-only filesystems lead to afpd processes running as root
+* FIX: afpd: Fix for filesystem without NFSv4 ACL support on Solaris
+* FIX: afpd: Fix catsearch bug, NetAFP Bug ID #12
+* FIX: afpd: Fix dircache bug, NetAFP Bug ID #13
+* FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble
+       files
+* FIX: Fix compilation error when AppleTalk support is disabled
+* FIX: Portability fixes
+
 Changes in 2.2.1
 ================
 
@@ -34,6 +65,8 @@ Changes in 2.2.1
        if DARWIN_ACE_ADD_SUBDIRECTORY is set
 * FIX: afpd: afpd crashed when it failed to register with Avahi because eg
        user service registration is disabled in the Avahi config
+* FIX: dbd: function checking and removing malformed ad:ea header files failed
+       to chdir back to the original working directory
 * FIX: cnid_dbd: increase BerkeleyDB locks and lockobjs
 * FIX: cnid_dbd: implement -d option, deletes CNID db
 * FIX: dbd: better detection of local (or SMB/NFS) modifications on AFP volumes

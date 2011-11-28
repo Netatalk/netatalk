@@ -24,13 +24,11 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
-
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <time.h>
-
-
+#include <stdbool.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -96,7 +94,7 @@ void fce_initialize_history()
 	}
 }
 
-int fce_handle_coalescation( char *path, int is_dir, int mode )
+bool fce_handle_coalescation( char *path, int is_dir, int mode )
 {
 	/* These two are used to eval our next index in history */
 	/* the history is unsorted, speed should not be a problem, length is 10 */
@@ -105,11 +103,11 @@ int fce_handle_coalescation( char *path, int is_dir, int mode )
 	struct timeval tv;
 
 	if (coalesce == 0)
-		return FALSE;
+		return false;
 
 	/* After a file creation *ALWAYS* a file modification is produced */
 	if ((mode == FCE_FILE_CREATE) && (coalesce & FCE_COALESCE_CREATE))
-        return TRUE;
+        return true;
 
 	/* get timestamp */
 	gettimeofday(&tv, 0);
@@ -140,7 +138,7 @@ int fce_handle_coalescation( char *path, int is_dir, int mode )
 		if ((coalesce & FCE_COALESCE_CREATE) && (fh->mode == FCE_DIR_CREATE)) {
 			/* Parent dir ? */
 			if (!strncmp(fh->path, path, strlen(fh->path)))
-				return TRUE;
+				return true;
 		}
 
 		/* If we find a parent dir we should be DELETED we are done */
@@ -149,7 +147,7 @@ int fce_handle_coalescation( char *path, int is_dir, int mode )
             && (mode == FCE_FILE_DELETE || mode == FCE_DIR_DELETE)) {
 			/* Parent dir ? */
 			if (!strncmp(fh->path, path, strlen(fh->path)))
-				return TRUE;
+				return true;
 		}
 
 		/* Detect oldest entry for next new entry */
@@ -166,7 +164,7 @@ int fce_handle_coalescation( char *path, int is_dir, int mode )
 	strncpy( fce_history_list[oldest_entry_idx].path, path, MAXPATHLEN);
 
 	/* we have to handle this event */
-	return FALSE;
+	return false;
 }
 
 /*

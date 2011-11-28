@@ -516,13 +516,15 @@ static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
     unsigned int count = 0;
 
     if (ea->ea_count == 0) {
-        LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion");
+        LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion",
+            attruname);
         return -1;
     }
 
     while (count < ea->ea_count) {
         /* search matching EA */
-        if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
+        if ((*ea->ea_entries)[count].ea_name &&
+            strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
             free((*ea->ea_entries)[count].ea_name);
             (*ea->ea_entries)[count].ea_name = NULL;
 

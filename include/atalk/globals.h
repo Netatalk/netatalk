@@ -90,6 +90,7 @@ struct afp_options {
     char *logconfig;
 
     char *mimicmodel;
+    char *adminauthuser;
 };
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)

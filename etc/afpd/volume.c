@@ -36,6 +36,7 @@
 #include <atalk/ftw.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/errchk.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -1102,6 +1103,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
     int         i;
     struct passwd   *pw;
     struct vol_option   save_options[VOLOPT_NUM];
+    struct vol_option   default_options[VOLOPT_NUM];
     struct vol_option   options[VOLOPT_NUM];
     struct stat         st;
 
@@ -1144,17 +1146,18 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
         break;
     }
 
-    memset(save_options, 0, sizeof(save_options));
+    memset(default_options, 0, sizeof(default_options));
 
     /* Enable some default options for all volumes */
-    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
+    default_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
 #ifdef HAVE_ACLS
-    save_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
+    default_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
 #endif
-    save_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
+    default_options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AUTO;
     LOG(log_maxdebug, logtype_afpd, "readvolfile: seeding default umask: %04o",
         obj->options.umask);
-    save_options[VOLOPT_UMASK].i_value = obj->options.umask;
+    default_options[VOLOPT_UMASK].i_value = obj->options.umask;
+    memcpy(save_options, default_options, sizeof(options));
 
     LOG(log_debug, logtype_afpd, "readvolfile: \"%s\"", path);
 
@@ -1169,12 +1172,14 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
         case ':':
             /* change the default options for this file */
             if (strncmp(path, VOLOPT_DEFAULT, VOLOPT_DEFAULT_LEN) == 0) {
+                volfree(default_options, save_options);
+                memcpy(default_options, save_options, sizeof(options));
                 *tmp = '\0';
                 for (i = 0; i < VOLOPT_NUM; i++) {
                     if (parseline( sizeof( path ) - VOLOPT_DEFAULT_LEN - 1,
                                    path + VOLOPT_DEFAULT_LEN) < 0)
                         break;
-                    volset(save_options, NULL, tmp, sizeof(tmp) - 1,
+                    volset(default_options, NULL, tmp, sizeof(tmp) - 1,
                            path + VOLOPT_DEFAULT_LEN);
                 }
             }
@@ -1213,7 +1218,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
              * able to specify things in any order, but i don't want to
              * re-write everything. */
 
-            memcpy(options, save_options, sizeof(options));
+            memcpy(options, default_options, sizeof(options));
             *volname = '\0';
 
             /* read in up to VOLOP_NUM possible options */
@@ -1221,7 +1226,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
                 if (parseline( sizeof( tmp ) - 1, tmp ) < 0)
                     break;
 
-                volset(options, save_options, volname, sizeof(volname) - 1, tmp);
+                volset(options, default_options, volname, sizeof(volname) - 1, tmp);
             }
 
             /* check allow/deny lists (if not afpd master loading volumes for Zeroconf reg.):
@@ -1252,7 +1257,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
 
                 creatvol(obj, pwent, path, tmp, options, p2 != NULL);
             }
-            volfree(options, save_options);
+            volfree(options, default_options);
             break;
 
         case '.' :
@@ -1349,64 +1354,153 @@ static void volume_unlink(struct vol *volume)
         }
     }
 }
-
-static off_t getused_size; /* result of getused() */
-
 /*!
-  nftw callback for getused()
+ * Read band-size info from Info.plist XML file of an TM sparsebundle
+ *
+ * @param path   (r) path to Info.plist file
+ * @return           band-size in bytes, -1 on error
  */
-static int getused_stat(const char *path,
-                        const struct stat *statp,
-                        int tflag,
-                        struct FTW *ftw)
+static long long int get_tm_bandsize(const char *path)
 {
-    off_t low, high;
+    EC_INIT;
+    FILE *file = NULL;
+    char buf[512];
+    long long int bandsize = -1;
 
-    if (tflag == FTW_F || tflag == FTW_D) {
-        getused_size += statp->st_blocks * 512;
+    EC_NULL_LOGSTR( file = fopen(path, "r"),
+                    "get_tm_bandsize(\"%s\"): %s",
+                    path, strerror(errno) );
+
+    while (fgets(buf, sizeof(buf), file) != NULL) {
+        if (strstr(buf, "band-size") == NULL)
+            continue;
+
+        if (fscanf(file, " <integer>%lld</integer>", &bandsize) != 1) {
+            LOG(log_error, logtype_afpd, "get_tm_bandsize(\"%s\"): can't parse band-size", path);
+            EC_FAIL;
+        }
+        break;
     }
 
-    return 0;
+EC_CLEANUP:
+    if (file)
+        fclose(file);
+    LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
+    return bandsize;
 }
 
-#define GETUSED_CACHETIME 5
 /*!
- * Calculate used size of a volume with nftw
+ * Return number on entries in a directory
  *
- * The result is cached, we're try to avoid frequently calling nftw()
+ * @param path   (r) path to dir
+ * @return           number of entries, -1 on error
+ */
+static long long int get_tm_bands(const char *path)
+{
+    EC_INIT;
+    long long int count = 0;
+    DIR *dir = NULL;
+    const struct dirent *entry;
+
+    EC_NULL( dir = opendir(path) );
+
+    while ((entry = readdir(dir)) != NULL)
+        count++;
+    count -= 2; /* All OSens I'm aware of return "." and "..", so just substract them, avoiding string comparison in loop */
+        
+EC_CLEANUP:
+    if (dir)
+        closedir(dir);
+    if (ret != 0)
+        return -1;
+    return count;
+}
+
+/*!
+ * Calculate used size of a TimeMachine volume
  *
- * 1) Call nftw an refresh if:
- * 1a) - we're called the first time 
- * 1b) - volume modification date is not yet set and the last time we've been called is
- *       longer then 30 sec ago
- * 1c) - the last volume modification is less then 30 sec old
+ * This assumes that the volume is used only for TimeMachine.
+ *
+ * 1) readdir(path of volume)
+ * 2) for every element that matches regex "\(.*\)\.sparsebundle$" :
+ * 3) parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
+ * 4) readdir "\1.sparsebundle/bands/" counting files
+ * 5) calculate used size as: (file_count - 1) * band-size
+ *
+ * The result of the calculation is returned in "volume->v_tm_used".
+ * "volume->v_appended" gets reset to 0.
+ * "volume->v_tm_cachetime" is updated with the current time from time(NULL).
+ *
+ * "volume->v_tm_used" is cached for TM_USED_CACHETIME seconds and updated by
+ * "volume->v_appended". The latter is increased by X every time the client
+ * appends X bytes to a file (in fork.c).
  *
  * @param vol     (rw) volume to calculate
+ * @return             0 on success, -1 on error
  */
-static int getused(struct vol *vol)
+#define TM_USED_CACHETIME 60    /* cache for 60 seconds */
+static int get_tm_used(struct vol * restrict vol)
 {
-    static time_t vol_mtime = 0;
-    int ret = 0;
+    EC_INIT;
+    long long int bandsize;
+    VolSpace used = 0;
+    bstring infoplist = NULL;
+    bstring bandsdir = NULL;
+    DIR *dir = NULL;
+    const struct dirent *entry;
+    const char *p;
+    struct stat st;
+    long int links;
     time_t now = time(NULL);
 
-    if (!vol_mtime
-        || (!vol->v_mtime && ((vol_mtime + GETUSED_CACHETIME) < now))
-        || (vol->v_mtime && ((vol_mtime + GETUSED_CACHETIME) < vol->v_mtime))
-        ) {
-        vol_mtime = now;
-        getused_size = 0;
-        vol->v_written = 0;
-        ret = nftw(vol->v_path, getused_stat, NULL, 20, FTW_PHYS); /* 2 */
-        LOG(log_debug, logtype_afpd, "volparams: from nftw: %" PRIu64 " bytes",
-            getused_size);
-    } else {
-        getused_size += vol->v_written;
-        vol->v_written = 0;
-        LOG(log_debug, logtype_afpd, "volparams: cached used: %" PRIu64 " bytes",
-            getused_size);
+    if (vol->v_tm_cachetime
+        && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
+        if (vol->v_tm_used == -1)
+            EC_FAIL;
+        vol->v_tm_used += vol->v_appended;
+        vol->v_appended = 0;
+        LOG(log_debug, logtype_afpd, "getused(\"%s\"): cached: %" PRIu64 " bytes",
+            vol->v_path, vol->v_tm_used);
+        return 0;
     }
 
-    return ret;
+    vol->v_tm_cachetime = now;
+
+    EC_NULL( dir = opendir(vol->v_path) );
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (((p = strstr(entry->d_name, "sparsebundle")) != NULL)
+            && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
+
+            EC_NULL_LOG( infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name, "Info.plist") );
+            
+            if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1)
+                continue;
+
+            EC_NULL_LOG( bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name, "bands") );
+
+            if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1)
+                continue;
+
+            used += (links - 1) * bandsize;
+            LOG(log_debug, logtype_afpd, "getused(\"%s\"): bands: %" PRIu64 " bytes",
+                cfrombstr(bandsdir), used);
+        }
+    }
+
+    vol->v_tm_used = used;
+
+EC_CLEANUP:
+    if (infoplist)
+        bdestroy(infoplist);
+    if (bandsdir)
+        bdestroy(bandsdir);
+    if (dir)
+        closedir(dir);
+
+    LOG(log_debug, logtype_afpd, "getused(\"%s\"): %" PRIu64 " bytes", vol->v_path, vol->v_tm_used);
+
+    EC_EXIT;
 }
 
 static int getvolspace(struct vol *vol,
@@ -1439,13 +1533,12 @@ static int getvolspace(struct vol *vol,
         return( rc );
     }
 
-#define min(a,b)    ((a)<(b)?(a):(b))
 #ifndef NO_QUOTA_SUPPORT
     if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA ) {
         if ( uquota_getvolspace( vol, &qfree, &qtotal, *bsize ) == AFP_OK ) {
             vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_UQUOTA;
-            *xbfree = min(*xbfree, qfree);
-            *xbtotal = min( *xbtotal, qtotal);
+            *xbfree = MIN(*xbfree, qfree);
+            *xbtotal = MIN(*xbtotal, qtotal);
             goto getvolspace_done;
         }
     }
@@ -1454,18 +1547,19 @@ static int getvolspace(struct vol *vol,
 
 getvolspace_done:
     if (vol->v_limitsize) {
-        if (getused(vol) != 0)
+        if (get_tm_used(vol) != 0)
             return AFPERR_MISC;
-        LOG(log_debug, logtype_afpd, "volparams: used on volume: %" PRIu64 " bytes",
-            getused_size);
-        vol->v_tm_used = getused_size;
 
-        *xbtotal = min(*xbtotal, (vol->v_limitsize * 1024 * 1024));
-        *xbfree = min(*xbfree, *xbtotal < getused_size ? 0 : *xbtotal - getused_size);
+        *xbtotal = MIN(*xbtotal, (vol->v_limitsize * 1024 * 1024));
+        *xbfree = MIN(*xbfree, *xbtotal < vol->v_tm_used ? 0 : *xbtotal - vol->v_tm_used);
+
+        LOG(log_debug, logtype_afpd,
+            "volparams: total: %" PRIu64 ", used: %" PRIu64 ", free: %" PRIu64 " bytes",
+            *xbtotal, vol->v_tm_used, *xbfree);
     }
 
-    *bfree = min( *xbfree, maxsize);
-    *btotal = min( *xbtotal, maxsize);
+    *bfree = MIN(*xbfree, maxsize);
+    *btotal = MIN(*xbtotal, maxsize);
     return( AFP_OK );
 }
 
@@ -1480,7 +1574,7 @@ void vol_fce_tm_event(void)
         last = now;
         for ( ; vol; vol = vol->v_next ) {
             if (vol->v_flags & AFPVOL_TM)
-                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_written);
+                (void)fce_register_tm_size(vol->v_path, vol->v_tm_used + vol->v_appended);
         }
     }
 }
@@ -1836,7 +1930,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
             if (!S_ISDIR(st.st_mode)) {
                 continue;       /* not a dir */
             }
-            accessmode(volume->v_path, &ma, NULL, &st);
+            accessmode(volume, volume->v_path, &ma, NULL, &st);
             if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
                 continue;   /* no r-x access */
             }

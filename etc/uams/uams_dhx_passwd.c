@@ -8,12 +8,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef NETBSD
-#define _XOPEN_SOURCE 500 /* for crypt() */
-#endif
-#ifdef FREEBSD
-#define _XOPEN_SOURCE /* for crypt() */
-#endif
+#include <atalk/standards.h>
 
 #include <stdio.h>
 #include <stdlib.h>

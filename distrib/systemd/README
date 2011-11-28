@@ -1,0 +1,15 @@
+The service file of the current Netatalk is not appropriate because it use
+a shell-script "netatalk.sh".
+Two experimental files are for future netatalk.
+
+These files start daemons directly and do not read "netatalk.conf".
+Therefore, you need to edit files for setting options.
+
+ATALK_NAME:       set in afpd.conf instead
+AFPD_MAX_CLIENTS: set in netatalk-afpd.service by using -c
+AFPD_UAMLIST:     set in afpd.conf instead
+AFPD_GUEST:       set in afpd.conf instead
+CNID_CONFIG:      set in netatalk-cnid_metad.service by using -l and -f options
+
+There are no service files for atalkd, papd, timelord and a2boot
+because AppleTalk feature is due to be abolished in the future.

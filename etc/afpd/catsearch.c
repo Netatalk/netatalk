@@ -504,7 +504,7 @@ static int catsearch(struct vol *vol,
 {
     static uint32_t cur_pos;    /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
     static DIR *dirpos; 		 /* UNIX structure describing currently opened directory. */
-    struct dir *curdir;          /* struct dir of current directory */
+    struct dir *currentdir;      /* struct dir of current directory */
 	int cidx, r;
 	struct dirent *entry;
 	int result = AFP_OK;
@@ -550,6 +550,8 @@ static int catsearch(struct vol *vol,
     start_time = time(NULL);
 
 	while ((cidx = reducestack()) != -1) {
+        LOG(log_debug, logtype_afpd, "catsearch: dir: \"%s\"", dstack[cidx].path);
+
 		error = lchdir(dstack[cidx].path);
 
 		if (!error && dirpos == NULL)
@@ -576,16 +578,20 @@ static int catsearch(struct vol *vol,
 			goto catsearch_end;
 		}
 
-        if ((curdir = dirlookup_bypath(vol, dstack[cidx].path)) == NULL) {
+        if ((currentdir = dirlookup_bypath(vol, dstack[cidx].path)) == NULL) {
             result = AFPERR_MISC;
             goto catsearch_end;
         }
+        LOG(log_debug, logtype_afpd, "catsearch: current struct dir: \"%s\"", cfrombstr(currentdir->d_fullpath));
 		
 		while ((entry = readdir(dirpos)) != NULL) {
 			(*pos)++;
 
 			if (!check_dirent(vol, entry->d_name))
 			   continue;
+
+            LOG(log_debug, logtype_afpd, "catsearch(\"%s\"): dirent: \"%s\"",
+                cfrombstr(currentdir->d_fullpath), entry->d_name);
 
 			memset(&path, 0, sizeof(path));
 			path.u_name = entry->d_name;
@@ -611,13 +617,13 @@ static int catsearch(struct vol *vol,
 				*/
                 int unlen = strlen(path.u_name);
                 path.d_dir = dircache_search_by_name(vol,
-                                                     curdir,
+                                                     currentdir,
                                                      path.u_name,
                                                      unlen);
             	if (path.d_dir == NULL) {
                 	/* path.m_name is set by adddir */
             	    if ((path.d_dir = dir_add(vol,
-                                              curdir,
+                                              currentdir,
                                               &path,
                                               unlen)) == NULL) {
 						result = AFPERR_MISC;
@@ -631,7 +637,7 @@ static int catsearch(struct vol *vol,
 					goto catsearch_end;
 				} 
             } else {
-            	path.d_dir = curdir;
+            	path.d_dir = currentdir;
             }
 
 			ccr = crit_check(vol, &path);

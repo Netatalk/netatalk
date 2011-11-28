@@ -142,6 +142,8 @@ void afp_options_free(struct afp_options *opt,
 	free(opt->logconfig);
 	if (opt->mimicmodel && (opt->mimicmodel != save->mimicmodel))
 	free(opt->mimicmodel);
+	if (opt->adminauthuser && (opt->adminauthuser != save->adminauthuser))
+	free(opt->adminauthuser);
 }
 
 /* initialize options */
@@ -194,6 +196,7 @@ void afp_options_init(struct afp_options *options)
     options->dsireadbuf = 12;
 	options->mimicmodel = NULL;
     options->fce_fmodwait = 60; /* put fmod events 60 seconds on hold */
+    options->adminauthuser = NULL;
 }
 
 /* parse an afpd.conf line. i'm doing it this way because it's
@@ -506,6 +509,9 @@ int afp_options_parseline(char *buf, struct afp_options *options)
 
     if ((c = getoption(buf, "-mimicmodel")) && (opt = strdup(c)))
        options->mimicmodel = opt;
+
+    if ((c = getoption(buf, "-adminauthuser")) && (opt = strdup(c)))
+       options->adminauthuser = opt;
 
     return 1;
 }

@@ -90,7 +90,7 @@ exit:
 
 #ifdef HAVE_POSIX_ACLS
 /*!
- * Remove any ACL_USER, ACL_GROUP or ACL_TYPE_DEFAULT ACEs from an object
+ * Remove any ACL_USER, ACL_GROUP, ACL_MASK or ACL_TYPE_DEFAULT ACEs from an object
  *
  * @param name  (r) filesystem object name
  *
@@ -116,14 +116,15 @@ int remove_acl_vfs(const char *name)
         acl = NULL;
     }
 
-    /* Now get ACL and remove ACL_USER or ACL_GROUP entries, then re-set the ACL again */
+    /* Now get ACL and remove ACL_MASK, ACL_USER or ACL_GROUP entries, then re-set
+     * the ACL again. acl_calc_mask() must not be called because there is no need
+     * for an ACL_MASK entry in a basic ACL. */
     EC_NULL_LOG_ERR(acl = acl_get_file(name, ACL_TYPE_ACCESS), AFPERR_MISC);
     for ( ; acl_get_entry(acl, entry_id, &e) == 1; entry_id = ACL_NEXT_ENTRY) {
         EC_ZERO_LOG_ERR(acl_get_tag_type(e, &tag), AFPERR_MISC);
-        if (tag == ACL_USER || tag == ACL_GROUP)
+        if (tag == ACL_USER || tag == ACL_GROUP || tag == ACL_MASK)
             EC_ZERO_LOG_ERR(acl_delete_entry(acl, e), AFPERR_MISC);
     }
-    EC_ZERO_LOG_ERR(acl_calc_mask(&acl), AFPERR_MISC);
     EC_ZERO_LOG_ERR(acl_valid(acl), AFPERR_MISC);
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acl), AFPERR_MISC);
 

@@ -3,6 +3,7 @@ AC_DEFUN([AC_NETATALK_CHECK_ICONV],
 
 dnl	#################################################
 dnl	# check for libiconv support
+	saved_CPPFLAGS="$CPPFLAGS"
         savedcflags="$CFLAGS"
         savedldflags="$LDFLAGS"
 	ICONV_CFLAGS=""

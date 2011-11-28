@@ -155,42 +155,44 @@ void fce_cleanup()
     udp_initialized = FCE_FALSE;
 }
 
-
 /*
  * Construct a UDP packet for our listeners and return packet size
  * */
 static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode, uint32_t event_id )
 {
-    size_t pathlen;
+    size_t pathlen = 0;
     ssize_t data_len = 0;
+    uint64_t *t;
 
-    strncpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
+    /* Set content of packet */
+    memcpy(packet->magic, FCE_PACKET_MAGIC, sizeof(packet->magic) );
     packet->version = FCE_PACKET_VERSION;
     packet->mode = mode;
-    packet->event_id = event_id;
+   
+    packet->event_id = event_id; 
 
-    pathlen = strlen(path) + 1; /* include string terminator */
-
+    pathlen = strlen(path); /* exclude string terminator */
+    
     /* This should never happen, but before we bust this server, we send nonsense, fce listener has to cope */
     if (pathlen >= MAXPATHLEN)
         pathlen = MAXPATHLEN - 1;
 
-    /* This is the payload len. Means: the stream has len bytes more until packet is finished */
-    /* A server should read the first 16 byte, decode them and then fetch the rest */
-    data_len = FCE_PACKET_HEADER_SIZE + pathlen;
     packet->datalen = pathlen;
+
+    /* This is the payload len. Means: the packet has len bytes more until packet is finished */
+    data_len = FCE_PACKET_HEADER_SIZE + pathlen;
 
     switch (mode) {
     case FCE_TM_SIZE:
-        tm_used = hton64(tm_used);
-        memcpy(packet->data, &tm_used, sizeof(tm_used));
-        strncpy(packet->data + sizeof(tm_used), path, pathlen);
-
-        packet->datalen += sizeof(tm_used);
+        t = (uint64_t *)packet->data;
+        *t = hton64(tm_used);
+        memcpy(packet->data + sizeof(tm_used), path, pathlen);
+        
+        packet->datalen = pathlen + sizeof(tm_used);
         data_len += sizeof(tm_used);
         break;
     default:
-        strncpy(packet->data, path, pathlen);
+        memcpy(packet->data, path, pathlen);
         break;
     }
 
@@ -198,7 +200,10 @@ static ssize_t build_fce_packet( struct fce_packet *packet, char *path, int mode
     return data_len;
 }
 
-static int pack_fce_packet(struct fce_packet *packet, unsigned char *buf)
+/*
+ * Handle Endianess and write into buffer w/o padding
+ **/ 
+static void pack_fce_packet(struct fce_packet *packet, unsigned char *buf, int maxlen)
 {
     unsigned char *p = buf;
 
@@ -211,18 +216,17 @@ static int pack_fce_packet(struct fce_packet *packet, unsigned char *buf)
     *p = packet->mode;
     p++;
     
-    uint32_t id = htonl(packet->event_id);
-    memcpy(p, &id, sizeof(id));
+    uint32_t *id = (uint32_t*)p;
+    *id = htonl(packet->event_id);
     p += sizeof(packet->event_id);
 
-    uint16_t l = htons(packet->datalen);
-    memcpy(p, &l, sizeof(l));
-    p += sizeof(l);
+    uint16_t *l = ( uint16_t *)p;
+    *l = htons(packet->datalen);
+    p += sizeof(packet->datalen);
 
-    memcpy(p, &packet->data[0], packet->datalen);
-    p += packet->datalen;
-
-    return 0;
+    if (((p - buf) +  packet->datalen) < maxlen) {
+        memcpy(p, &packet->data[0], packet->datalen);
+    }
 }
 
 /*
@@ -250,7 +254,7 @@ static void send_fce_event( char *path, int mode )
 
     /* build our data packet */
     ssize_t data_len = build_fce_packet( &packet, path, mode, ++event_id );
-    pack_fce_packet(&packet, iobuf);
+    pack_fce_packet(&packet, iobuf, MAXIOBUF);
 
     for (int i = 0; i < udp_sockets; i++)
     {
@@ -281,7 +285,7 @@ static void send_fce_event( char *path, int mode )
 
             /* Okay, we have a running socket again, send server that we had a problem on our side*/
             data_len = build_fce_packet( &packet, "", FCE_CONN_BROKEN, 0 );
-            pack_fce_packet(&packet, iobuf);
+            pack_fce_packet(&packet, iobuf, MAXIOBUF);
 
             sendto(udp_entry->sock,
                    iobuf,
@@ -292,7 +296,7 @@ static void send_fce_event( char *path, int mode )
 
             /* Rebuild our original data packet */
             data_len = build_fce_packet( &packet, path, mode, event_id );
-            pack_fce_packet(&packet, iobuf);
+            pack_fce_packet(&packet, iobuf, MAXIOBUF);
         }
 
         sent_data = sendto(udp_entry->sock,
@@ -459,7 +463,7 @@ int fce_register_delete_file( struct path *path )
     if (!(fce_ev_enabled & (1 << FCE_FILE_DELETE)))
         return ret;
 	
-    ret = register_fce( path->u_name, FALSE, FCE_FILE_DELETE );
+    ret = register_fce( path->u_name, false, FCE_FILE_DELETE );
 
     return ret;
 }
@@ -473,7 +477,7 @@ int fce_register_delete_dir( char *name )
     if (!(fce_ev_enabled & (1 << FCE_DIR_DELETE)))
         return ret;
 	
-    ret = register_fce( name, TRUE, FCE_DIR_DELETE);
+    ret = register_fce( name, true, FCE_DIR_DELETE);
 
     return ret;
 }
@@ -488,7 +492,7 @@ int fce_register_new_dir( struct path *path )
     if (!(fce_ev_enabled & (1 << FCE_DIR_CREATE)))
         return ret;
 
-    ret = register_fce( path->u_name, TRUE, FCE_DIR_CREATE );
+    ret = register_fce( path->u_name, true, FCE_DIR_CREATE );
 
     return ret;
 }
@@ -504,7 +508,7 @@ int fce_register_new_file( struct path *path )
     if (!(fce_ev_enabled & (1 << FCE_FILE_CREATE)))
         return ret;
 
-    ret = register_fce( path->u_name, FALSE, FCE_FILE_CREATE );
+    ret = register_fce( path->u_name, false, FCE_FILE_CREATE );
 
     return ret;
 }
@@ -528,7 +532,7 @@ int fce_register_file_modification( struct ofork *ofork )
         return AFPERR_MISC;
     }
     
-    ret = register_fce( u_name, FALSE, FCE_FILE_MODIFY );
+    ret = register_fce( u_name, false, FCE_FILE_MODIFY );
     
     return ret;    
 }
@@ -544,7 +548,7 @@ int fce_register_tm_size(const char *vol, size_t used)
         return ret;
 
     tm_used = used;             /* oh what a hack */
-    ret = register_fce(vol, FALSE, FCE_TM_SIZE);
+    ret = register_fce(vol, false, FCE_TM_SIZE);
 
     return ret;
 }

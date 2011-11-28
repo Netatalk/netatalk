@@ -5,7 +5,6 @@ pkgconfdir = @PKGCONFDIR@
 GENERATED_FILES = lp2pap.sh
 TEMPLATE_FILES = lp2pap.sh.tmpl
 PERLSCRIPTS = \
-	afpd-mtab.pl \
 	asip-status.pl \
 	apple_dump
 
@@ -21,4 +20,4 @@ CLEANFILES = $(GENERATED_FILES)
 
 bin_SCRIPTS = $(PERLSCRIPTS) $(GENERATED_FILES)
 
-EXTRA_DIST = $(TEMPLATE_FILES)
+EXTRA_DIST = $(TEMPLATE_FILES) make-casetable.pl make-precompose.h.pl

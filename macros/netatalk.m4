@@ -199,6 +199,14 @@ case "$host_cpu" in
 	powerpc|ppc)				this_cpu=ppc ;;
 esac
 
+dnl --------------------- GNU source
+case "$this_os" in
+	linux)	AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+        ;;
+     kfreebsd-gnu) AC_DEFINE(_GNU_SOURCE, 1, [Whether to use GNU libc extensions])
+        ;;
+esac
+
 dnl --------------------- operating system specific flags (port from sys/*)
 
 dnl ----- FreeBSD specific -----
@@ -206,7 +214,14 @@ if test x"$this_os" = "xfreebsd"; then
 	AC_MSG_RESULT([ * FreeBSD specific configuration])
 	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
-	AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
+    AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
+fi
+
+dnl ----- GNU/kFreeBSD specific -----
+if test x"$this_os" = "xkfreebsd-gnu"; then 
+	AC_MSG_RESULT([ * GNU/kFreeBSD specific configuration])
+	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
+	AC_DEFINE(FREEBSD, 1, [Define if OS is FreeBSD])
     AC_DEFINE(OPEN_NOFOLLOW_ERRNO, EMLINK, errno returned by open with O_NOFOLLOW)
 fi
 
@@ -226,75 +241,7 @@ if test x"$this_os" = "xlinux"; then
 	dnl ----- see etc/afpd/quota.c
 	AC_DEFINE(HAVE_BROKEN_DBTOB, 1, [Define if dbtob is broken])
 
-	netatalk_cv_linux_sendfile=yes
-	AC_MSG_CHECKING([use sendfile syscall])
-        AC_ARG_ENABLE(sendfile,
-	    [  --disable-sendfile       disable linux sendfile syscall],[
-	    	if test x"$enableval" = x"no"; then
-	  		netatalk_cv_linux_sendfile=no
-			AC_MSG_RESULT([no])
-		else
-			AC_MSG_RESULT([yes])
-
-	    	fi
-	    ],[
-		AC_MSG_RESULT([yes])
-	]
-
-       )
-
-	if test x"$netatalk_cv_linux_sendfile" = "xyes"; then 
-	    AC_CACHE_CHECK([for linux sendfile support],netatalk_cv_HAVE_SENDFILE,[
-	    AC_TRY_LINK([#include <sys/sendfile.h>],
-[\
-int tofd, fromfd;
-off_t offset;
-size_t total;
-ssize_t nwritten = sendfile(tofd, fromfd, &offset, total);
-],
-netatalk_cv_HAVE_SENDFILE=yes,netatalk_cv_HAVE_SENDFILE=no)])
-
-# Try and cope with broken Linux sendfile....
-	    AC_CACHE_CHECK([for broken linux sendfile support],netatalk_cv_HAVE_BROKEN_LINUX_SENDFILE,[
-	    AC_TRY_LINK([\
-#if defined(_FILE_OFFSET_BITS) && (_FILE_OFFSET_BITS == 64)
-#undef _FILE_OFFSET_BITS
-#endif
-#include <sys/sendfile.h>],
-[\
-int tofd, fromfd;
-off_t offset;
-size_t total;
-ssize_t nwritten = sendfile(tofd, fromfd, &offset, total);
-],
-netatalk_cv_HAVE_BROKEN_LINUX_SENDFILE=yes,netatalk_cv_HAVE_BROKEN_LINUX_SENDFILE=no,netatalk_cv_HAVE_BROKEN_SENDFILE=cross)])
-
-	    if test x"$netatalk_cv_HAVE_SENDFILE" = x"yes"; then
-    		AC_DEFINE(HAVE_SENDFILE,1,[Whether sendfile() is available])
-		AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
-		AC_DEFINE(WITH_SENDFILE,1,[Whether sendfile() should be used])
-	    elif test x"$netatalk_cv_HAVE_BROKEN_LINUX_SENDFILE" = x"yes"; then
-		AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
-		AC_DEFINE(LINUX_BROKEN_SENDFILE_API,1,[Whether (linux) sendfile() is broken])
-		AC_DEFINE(WITH_SENDFILE,1,[Whether sendfile should be used])
-	    else
-	  	netatalk_cv_linux_sendfile=no
-		AC_MSG_RESULT(no);
-	    fi
-	fi
-
 	need_dash_r=no
-fi
-
-dnl ----- Mac OSX specific -----
-if test x"$this_os" = "xmacosx"; then 
-	AC_MSG_RESULT([ * Mac OSX specific configuration])
-	AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
-	AC_DEFINE(HAVE_2ARG_DBTOB, 1, [Define if dbtob takes two arguments])
-	dnl AC_DEFINE(NO_DLFCN_H)
-	AC_DEFINE(NO_QUOTA_SUPPORT, 1, [Define if Quota support should be disabled])
-	AC_DEFINE(MACOSX_SERVER, 1, [Define if compiling for MacOS X Server])
-    AC_DEFINE(NO_DDP, 1, [Define if DDP should be disabled])
 fi
 
 dnl ----- NetBSD specific -----
@@ -314,6 +261,7 @@ fi
 dnl ----- OpenBSD specific -----
 if test x"$this_os" = "xopenbsd"; then 
 	AC_MSG_RESULT([ * OpenBSD specific configuration])
+    AC_DEFINE(BSD4_4, 1, [BSD compatiblity macro])
 	dnl ----- OpenBSD does not have crypt.h, uses unistd.h -----
 	AC_DEFINE(UAM_DHX, 1, [Define if the DHX UAM modules should be compiled])
 fi
@@ -792,4 +740,74 @@ AC_DEFUN([AC_NETATALK_SMB_SHAREMODES], [
     fi
 
     AM_CONDITIONAL(USE_SMB_SHAREMODES, test x"$neta_cv_have_smbshmd" = x"yes")
+])
+
+dnl ------ Check for sendfile() --------
+AC_DEFUN([AC_NETATALK_SENDFILE], [
+netatalk_cv_search_sendfile=yes
+AC_ARG_ENABLE(sendfile,
+    [  --disable-sendfile       disable sendfile syscall],
+    [if test x"$enableval" = x"no"; then
+            netatalk_cv_search_sendfile=no
+        fi]
+)
+
+if test x"$netatalk_cv_search_sendfile" = x"yes"; then
+   case "$host_os" in
+   *linux*)
+        AC_DEFINE(SENDFILE_FLAVOR_LINUX,1,[Whether linux sendfile() API is available])
+        AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
+        ;;
+
+    *solaris*)
+        AC_DEFINE(SENDFILE_FLAVOR_SOLARIS, 1, [Solaris sendfile()])
+        AC_SEARCH_LIBS(sendfile, sendfile)
+        AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
+        ;;
+
+    *freebsd*)
+        AC_DEFINE(SENDFILE_FLAVOR_BSD, 1, [Define if the sendfile() function uses BSD semantics])
+        AC_CHECK_FUNC([sendfile], [netatalk_cv_HAVE_SENDFILE=yes])
+        ;;
+
+    *)
+        ;;
+
+    esac
+
+    if test x"$netatalk_cv_HAVE_SENDFILE" = x"yes"; then
+        AC_DEFINE(WITH_SENDFILE,1,[Whether sendfile() should be used])
+    fi
+fi
+])
+
+dnl --------------------- Check if realpath() takes NULL
+AC_DEFUN([AC_NETATALK_REALPATH], [
+AC_CACHE_CHECK([if the realpath function allows a NULL argument],
+    neta_cv_REALPATH_TAKES_NULL, [
+        AC_TRY_RUN([
+            #include <stdio.h>
+            #include <limits.h>
+            #include <signal.h>
+
+            void exit_on_core(int ignored) {
+                 exit(1);
+            }
+
+            main() {
+                char *newpath;
+                signal(SIGSEGV, exit_on_core);
+                newpath = realpath("/tmp", NULL);
+                exit((newpath != NULL) ? 0 : 1);
+            }],
+            neta_cv_REALPATH_TAKES_NULL=yes,
+            neta_cv_REALPATH_TAKES_NULL=no,
+            neta_cv_REALPATH_TAKES_NULL=cross
+        )
+    ]
+)
+
+if test x"$neta_cv_REALPATH_TAKES_NULL" = x"yes"; then
+    AC_DEFINE(REALPATH_TAKES_NULL,1,[Whether the realpath function allows NULL])
+fi
 ])

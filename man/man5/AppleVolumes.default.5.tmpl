@@ -2,12 +2,12 @@
 .\"     Title: AppleVolumes.default
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 30 Mar 2011
+.\"      Date: 13 Oct 2011
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "APPLEVOLUMES\&.DEFAU" "5" "30 Mar 2011" "Netatalk 2.2" "Netatalk 2.2"
+.TH "APPLEVOLUMES\&.DEFAU" "5" "13 Oct 2011" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -139,6 +139,8 @@ be treated normally any longer\&. Its only aim was to temporarely share eg\&. FA
 volsizelimit:\fIsize in MiB\fR
 .RS 4
 Useful for TimeMachine: limits the reported volume size, thus preventing TM from using the whole real disk space for backup\&. Example: "volsizelimit:1000" would limit the reported disk space to 1 GB\&.
+\fBIMPORTANT: \fR
+This is an approximated calculation taking into accout the contents of TM sparsebundle images\&. Therefor you MUST NOT use this volume to store other content when using this option, because it would NOT be accounted\&. The calculation works by reading the band size from the Info\&.plist XML file of the sparsebundle, reading the bands/ directory counting the number of band files, and then multiplying one with the other\&.
 .RE
 .PP
 allow:\fI[users/groups]\fR
@@ -520,7 +522,7 @@ With OS X Apple introduced the AFP3 protocol\&. One of the most important change
 needs a way to preserve extended macintosh characters, or characters illegal in unix filenames, when saving files on a unix filesystem\&. Earlier versions used the the so called CAP encoding\&. An extended character (>0x7F) would be converted to a :xx sequence, e\&.g\&. the Apple Logo (MacRoman: 0XF0) was saved as
 :f0\&. Some special characters will be converted as to :xx notation as well\&. \'/\' will be encoded to
 :2f, if
-\fB\-usedots\fR
+\fBusedots\fR
 is not specified, a leading dot \'\&.\' will be encoded as
 :2e\&.
 .PP

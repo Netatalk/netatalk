@@ -94,34 +94,7 @@ if test x"$ac_cv_search_pthread_sigmask" != x"none required" ; then
 fi
 AC_SUBST(PTHREAD_LIBS)
 
-dnl --------------------- Check if realpath() takes NULL
-AC_CACHE_CHECK([if the realpath function allows a NULL argument],
-    neta_cv_REALPATH_TAKES_NULL, [
-        AC_TRY_RUN([
-            #include <stdio.h>
-            #include <limits.h>
-            #include <signal.h>
-
-            void exit_on_core(int ignored) {
-                 exit(1);
-            }
-
-            main() {
-                char *newpath;
-                signal(SIGSEGV, exit_on_core);
-                newpath = realpath("/tmp", NULL);
-                exit((newpath != NULL) ? 0 : 1);
-            }],
-            neta_cv_REALPATH_TAKES_NULL=yes,
-            neta_cv_REALPATH_TAKES_NULL=no,
-            neta_cv_REALPATH_TAKES_NULL=cross
-        )
-    ]
-)
-
-if test x"$neta_cv_REALPATH_TAKES_NULL" = x"yes"; then
-    AC_DEFINE(REALPATH_TAKES_NULL,1,[Whether the realpath function allows NULL])
-fi
+AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
 
 AC_CACHE_SAVE
 
@@ -144,12 +117,17 @@ rm -rf conftest*
 
 case $host_cpu:$atalk_cv_cc_64bit_output in
 powerpc64:yes | s390x:yes | sparc*:yes | x86_64:yes | i386:yes)
-    AC_MSG_RESULT([yes])
     case $target_os in
     solaris2*)
+        AC_MSG_RESULT([yes])
         atalk_libname="lib/64"
         ;;
+    *bsd* | dragonfly*)
+        AC_MSG_RESULT([no])
+        atalk_libname="lib"
+        ;;
     *)
+        AC_MSG_RESULT([yes])
         atalk_libname="lib64"
         ;;
     esac
@@ -251,6 +229,12 @@ AC_NETATALK_EXTENDED_ATTRIBUTES
 dnl Check for libsmbsharemodes from Samba for Samba/Netatalk access/deny/share modes interop
 AC_NETATALK_SMB_SHAREMODES
 
+dnl Check if realpath() takes NULL
+AC_NETATALK_REALPATH
+
+dnl Check for sendfile()
+AC_NETATALK_SENDFILE
+
 dnl --------------------------------------------------------------------------
 dnl FHS stuff has to be done last because it overrides other defaults
 dnl --------------------------------------------------------------------------
@@ -300,8 +284,6 @@ dnl       /usr/include or similar places.
 LIBS="$LIBS -L\$(top_srcdir)/libatalk -L\$(top_srcdir)/libevent"
 CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys -I\$(top_srcdir)/libevent/include $CFLAGS"
 
-AC_DEFINE(OPEN_NOFOLLOW_ERRNO, ELOOP, errno returned by open with O_NOFOLLOW)
-
 
 dnl --------------------------------------------------------------------------
 dnl Last minute substitutions
@@ -348,19 +330,19 @@ AC_OUTPUT([Makefile
     bin/misc/Makefile
 	bin/uniconv/Makefile
 	config/Makefile
-    config/pam/Makefile
+	config/pam/Makefile
 	contrib/Makefile
 	contrib/macusers/Makefile
 	contrib/macusers/macusers
 	contrib/shell_utils/Makefile
-	contrib/shell_utils/afpd-mtab.pl
-    contrib/shell_utils/apple_dump
+	contrib/shell_utils/apple_dump
 	contrib/shell_utils/asip-status.pl
 	distrib/Makefile
 	distrib/config/Makefile
 	distrib/config/netatalk-config
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
+	distrib/systemd/Makefile
 	doc/Makefile
 	etc/Makefile
 	etc/afpd/Makefile

@@ -37,7 +37,7 @@ int stickydirmode(const char *name, const mode_t mode, const int dropbox, const 
      *  Ignore EPERM errors:  We may be dealing with a directory that is
      *  group writable, in which case chmod will fail.
      */
-    if ( (chmod( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM &&
+    if ( (chmod_acl( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM &&
          !(errno == ENOENT && (dropbox & AFPVOL_NOADOUBLE)) )
     {
         LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
@@ -70,7 +70,7 @@ int setfilmode(const char * name, mode_t mode, struct stat *st, mode_t v_umask)
     
     mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
 
-    if ( chmod( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
+    if ( chmod_acl( name,  mode & ~v_umask ) < 0 && errno != EPERM ) {
         return -1;
     }
     return 0;
@@ -146,21 +146,6 @@ int netatalk_unlink(const char *name)
     return AFP_OK;
 }
 
-char *fullpathname(const char *name)
-{
-    static char wd[ MAXPATHLEN + 1];
-
-    if ( getcwd( wd , MAXPATHLEN) ) {
-        strlcat(wd, "/", MAXPATHLEN);
-        strlcat(wd, name, MAXPATHLEN);
-    }
-    else {
-        strlcpy(wd, name, MAXPATHLEN);
-    }
-    return wd;
-}
-
-
 /**************************************************************************
  * *at semnatics support functions (like openat, renameat standard funcs)
  **************************************************************************/
@@ -185,13 +170,13 @@ int copy_file(int dirfd, const char *src, const char *dst, mode_t mode)
     sfd = open(src, O_RDONLY);
 #endif
     if (sfd < 0) {
-        LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
+        LOG(log_info, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, src, strerror(errno));
         return -1;
     }
 
     if ((dfd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, mode)) < 0) {
-        LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
+        LOG(log_info, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, dst, strerror(errno));
         ret = -1;
         goto exit;

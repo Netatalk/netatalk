@@ -33,6 +33,8 @@
 #include <config.h>
 #endif
 
+#include <atalk/standards.h>
+
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -25,6 +25,8 @@
 #ifndef _ATALK_ZIP_H
 #define _ATALK_ZIP_H 1
 
+#ifndef NO_DDP
+
 #include <netatalk/endian.h>
 
 struct ziphdr {
@@ -55,4 +57,5 @@ struct zipreplent {
 #define ZIPGNI_INVALID	0x80
 #define ZIPGNI_ONEZONE	0x20
 
+#endif  /* NO_DDP */
 #endif
