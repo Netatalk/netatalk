@@ -21,6 +21,7 @@
 
 #include <atalk/logger.h>
 #include <atalk/util.h>
+#include <atalk/errchk.h>
 
 #include "db_param.h"
 #include "dbif.h"
@@ -33,27 +34,28 @@
  */
 static int dbif_stamp(DBD *dbd, void *buffer, int size)
 {
+    EC_INIT;
     struct stat st;
-    int         rc,cwd;
+    int cwd = -1;
 
     if (size < 8)
-        return -1;
+        EC_FAIL;
 
     /* Remember cwd */
     if ((cwd = open(".", O_RDONLY)) < 0) {
         LOG(log_error, logtype_cnid, "error opening cwd: %s", strerror(errno));
-        return -1;
+        EC_FAIL;
     }
 
     /* chdir to db_envhome */
     if ((chdir(dbd->db_envhome)) != 0) {
         LOG(log_error, logtype_cnid, "error chdiring to db_env '%s': %s", dbd->db_envhome, strerror(errno));        
-        return -1;
+        EC_FAIL;
     }
 
-    if ((rc = stat(dbd->db_table[DBIF_CNID].name, &st)) < 0) {
+    if (stat(dbd->db_table[DBIF_CNID].name, &st) < 0) {
         LOG(log_error, logtype_cnid, "error stating database %s: %s", dbd->db_table[DBIF_CNID].name, db_strerror(errno));
-        return -1;
+        EC_FAIL;
     }
 
     LOG(log_maxdebug, logtype_cnid,"stamp: %s", asctime(localtime(&st.st_ctime)));
@@ -61,12 +63,15 @@ static int dbif_stamp(DBD *dbd, void *buffer, int size)
     memset(buffer, 0, size);
     memcpy(buffer, &st.st_ctime, sizeof(st.st_ctime));
 
-    if ((fchdir(cwd)) != 0) {
-        LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
-        return -1;
+EC_CLEANUP:
+    if (cwd != -1) {
+        if (fchdir(cwd) != 0) {
+            LOG(log_error, logtype_cnid, "error chdiring back: %s", strerror(errno));        
+            EC_STATUS(-1);
+        }
+        close(cwd);
     }
-
-    return 0;
+    EC_EXIT;
 }
 
 /*!

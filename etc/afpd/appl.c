@@ -250,6 +250,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     mpath = obj->newtmp;
     mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     if (!mp) {
+        close(tfd);
         return AFPERR_PARAM;
     }
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
@@ -263,6 +264,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     memcpy(p, appltag, sizeof( appltag ));
     cc = mpath + AFPOBJ_TMPSIZ - p;
     if ( write( tfd, p, cc ) != cc ) {
+        close(tfd);
         unlink( tempfile );
         return( AFPERR_PARAM );
     }

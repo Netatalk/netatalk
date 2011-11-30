@@ -871,6 +871,8 @@ int plumb(void)
 	}
 
 	LOG(log_info, logtype_atalkd, "plumbed %s%d", device, ppa );
+
+    close(fd);
     }
 
     return( 0 );

@@ -393,6 +393,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
            int setmode = (osx && *dirp->d_name == '.')?hf_mode:mode;
 
            if (setfilmode(dirp->d_name, setmode, &st, vol->v_umask) < 0) {
+               closedir( dir );
                 LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
                 return -1;
            }
