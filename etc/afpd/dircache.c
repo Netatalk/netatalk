@@ -693,5 +693,6 @@ void dircache_dump(void)
 
     fprintf(dump, "\n");
     fflush(dump);
+    fclose(dump);
     return;
 }

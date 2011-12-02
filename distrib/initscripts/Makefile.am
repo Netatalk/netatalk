@@ -19,34 +19,34 @@ pkgconfdir = @PKGCONFDIR@
 GENERATED_FILES = \
 	rc.afpd.netbsd		\
 	rc.atalk.redhat-sysv	\
-	rc.atalk.redhat-systemd	\
+	rc.atalk.systemd	\
 	rc.atalk.tru64		\
 	rc.atalk.bsd		\
 	rc.atalkd.netbsd	\
-	rc.atalk.suse		\
+	rc.atalk.suse-sysv	\
 	rc.cnid_metad.netbsd	\
 	rc.papd.netbsd		\
 	rc.timelord.netbsd	\
 	rc.atalk.sysv		\
 	rc.atalk.gentoo		\
 	rc.atalk.debian		\
-	service.atalk.redhat-systemd
+	service.atalk.systemd
 
 TEMPLATES = \
 	rc.afpd.netbsd.tmpl		\
 	rc.atalk.redhat-sysv.tmpl	\
-	rc.atalk.redhat-systemd.tmpl	\
+	rc.atalk.systemd.tmpl		\
 	rc.atalk.tru64.tmpl		\
 	rc.atalk.bsd.tmpl		\
 	rc.atalkd.netbsd.tmpl		\
-	rc.atalk.suse.tmpl		\
+	rc.atalk.suse-sysv.tmpl		\
 	rc.cnid_metad.netbsd.tmpl	\
 	rc.papd.netbsd.tmpl		\
 	rc.timelord.netbsd.tmpl		\
 	rc.atalk.sysv.tmpl		\
 	rc.atalk.gentoo.tmpl		\
 	rc.atalk.debian.tmpl		\
-	service.atalk.redhat-systemd.tmpl
+	service.atalk.systemd.tmpl
 
 CLEANFILES = $(GENERATED_FILES) $(sysv_SCRIPTS) $(service_DATA) afpd atalkd cnid_metad papd timelord
 EXTRA_DIST = $(TEMPLATES)
@@ -80,10 +80,10 @@ uninstall-startup:
 endif
 
 #
-# checking for "redhat" style systemd scripts:
+# checking for general systemd scripts:
 #
 
-if USE_REDHAT_SYSTEMD
+if USE_SYSTEMD
 
 sysvdir	= $(pkglibexecdir)
 sysv_SCRIPTS = netatalk.sh
@@ -91,12 +91,12 @@ sysv_SCRIPTS = netatalk.sh
 servicedir	= /lib/systemd/system
 service_DATA	= netatalk.service
 
-$(sysv_SCRIPTS): rc.atalk.redhat-systemd
-	cp -f rc.atalk.redhat-systemd $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.atalk.systemd
+	cp -f rc.atalk.systemd $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
-$(service_DATA): service.atalk.redhat-systemd
-	cp -f service.atalk.redhat-systemd $(service_DATA)
+$(service_DATA): service.atalk.systemd
+	cp -f service.atalk.systemd $(service_DATA)
 
 install-data-hook:
 	-systemctl daemon-reload
@@ -113,13 +113,13 @@ endif
 # checking for "SuSE" style sysv scripts:
 #
 
-if USE_SUSE
+if USE_SUSE_SYSV
 
 sysvdir	= /etc/init.d
 sysv_SCRIPTS = netatalk
 
-$(sysv_SCRIPTS): rc.atalk.suse
-	cp -f rc.atalk.suse $(sysv_SCRIPTS)
+$(sysv_SCRIPTS): rc.atalk.suse-sysv
+	cp -f rc.atalk.suse-sysv $(sysv_SCRIPTS)
 	chmod a+x $(sysv_SCRIPTS)
 
 install-data-hook:

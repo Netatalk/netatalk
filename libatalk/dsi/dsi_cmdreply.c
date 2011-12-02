@@ -20,8 +20,8 @@ int dsi_cmdreply(DSI *dsi, const int err)
 {
     int ret;
 
-    LOG(log_debug, logtype_dsi, "dsi_cmdreply(DSI ID: %u, len: %jd): START",
-        dsi->clientID, (intmax_t)dsi->datalen);
+    LOG(log_debug, logtype_dsi, "dsi_cmdreply(DSI ID: %u, len: %zd): START",
+        dsi->clientID, dsi->datalen);
 
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_len = htonl(dsi->datalen);
@@ -29,8 +29,8 @@ int dsi_cmdreply(DSI *dsi, const int err)
 
     ret = dsi_stream_send(dsi, dsi->data, dsi->datalen);
 
-    LOG(log_debug, logtype_dsi, "dsi_cmdreply(DSI ID: %u, len: %jd): END",
-        dsi->clientID, (intmax_t)dsi->datalen);
+    LOG(log_debug, logtype_dsi, "dsi_cmdreply(DSI ID: %u, len: %zd): END",
+        dsi->clientID, dsi->datalen);
 
     return ret;
 }

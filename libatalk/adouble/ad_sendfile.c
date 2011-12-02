@@ -57,24 +57,12 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 }
 
 #elif defined(SENDFILE_FLAVOR_BSD )
-#include <sys/sendfile.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h><
 ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 {
-size_t total=0;
-int    ret;
-
-    total = count;
-    while (total) {
-        ssize_t nwritten;
-        do {
-           ret = sendfile(fromfd, tofd, offset, count, NULL, &nwritten, 0);
-        while (ret == -1 && errno == EINTR);
-        if (ret == -1)
-            return -1;
-        total -= nwritten;
-        offset += nwritten;
-    }
-    return count;
+  return sendfile(fromfd, tofd, *offset, count, NULL, offset, 0);
 }
 
 #else

@@ -145,7 +145,7 @@ AC_ARG_ENABLE(shell-check,
 dnl Check for optional sysv initscript install
 AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
     AC_ARG_WITH(sysv-style,
-                [  --with-sysv-style       use OS specific sysv config [[redhat-sysv|redhat-systemd|suse|gentoo|netbsd|debian]]],
+                [  --with-sysv-style       use OS specific sysv config [[redhat-sysv|redhat-systemd|suse-sysv|suse-systemd|gentoo|netbsd|debian|systemd]]],
                 sysv_style="$withval", sysv_style=none
     )
     case "$sysv_style" in 
@@ -159,8 +159,14 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
 	    ;;
     "suse")
-	    AC_MSG_RESULT([enabling suse-style sysv support])
+	    AC_MSG_RESULT([--enable-suse is obsoleted. Use --enable-suse-sysv or --enable-suse-systemd])
         ;;
+    "suse-sysv")
+	    AC_MSG_RESULT([enabling suse-style sysv configuration])
+	    ;;
+    "suse-systemd")
+	    AC_MSG_RESULT([enabling suse-style systemd support (>=openSUSE12.1)])
+	    ;;
     "gentoo")
 	    AC_MSG_RESULT([enabling gentoo-style sysv support])
         ;;
@@ -169,6 +175,9 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
         ;;
     "debian")
 	    AC_MSG_RESULT([enabling debian-style sysv support])
+        ;;
+    "systemd")
+	    AC_MSG_RESULT([use general systemd configuration])
         ;;
     *)
 	    AC_MSG_RESULT([disabling sysv support])

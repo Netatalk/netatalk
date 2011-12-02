@@ -7,6 +7,10 @@ Changes in 2.2.2
        created for the original connecting user. Said differently: if you
        know the password of adminauthuser, you can authenticate as any other
        user.
+* NEW: configure option "--enable-suse-systemd" for openSUSE12.1 and later.
+       "--enable-redhat-systemd" and "--enable-suse-systemd" are same as
+       "--enable-systemd".
+       "--enable-suse" is renamed "--enable-suse-sysv".
 * NEW: experimental systemd service files in distrib/systemd/
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * UPD: afpd: Reset options every time a :DEFAULT: line is found in a
