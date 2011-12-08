@@ -127,16 +127,18 @@ uams_LTLIBRARIES =		\
 #
 
 install-exec-hook:
-	(cd $(DESTDIR)$(uamsdir)					&& \
+	(if [ -d $(DESTDIR)$(uamsdir) ] ; then \
+		cd $(DESTDIR)$(uamsdir)					&& \
 		rm -f $(uams_LINKS)  					&& \
 		$(LN_S) $(UAMS_CLRTXT_LINK) uams_clrtxt.so		&& \
-		$(dhx_exec_hook)					&& \
-		$(dhx2_exec_hook)					\
-	)
+		$(dhx_exec_hook)						&& \
+		$(dhx2_exec_hook) ; 					\
+	fi)
 
 
 
 uninstall-hook:
-	(cd $(DESTDIR)$(uamsdir)					&& \
-		rm -f $(uams_LINKS)			   		\
-	)
+	(if [ -d $(DESTDIR)$(uamsdir) ] ; then \
+		cd $(DESTDIR)$(uamsdir)			&& \
+		rm -f $(uams_LINKS)	;		   	\
+	fi)

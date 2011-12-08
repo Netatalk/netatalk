@@ -183,6 +183,17 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
 	    AC_MSG_RESULT([disabling sysv support])
         ;;
     esac
+    AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
+    AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
+    AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
+    AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
+    AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
+    AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
+    AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
+    AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
+    AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
+    AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = xnone)
+
 ])
 
 dnl OS specific configuration

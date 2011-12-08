@@ -1,7 +1,6 @@
 # Makefile.am for top level of netatalk package
 
-# libevent should be first
-SUBDIRS = libevent libatalk bin config etc man contrib distrib include doc macros test
+SUBDIRS = libatalk bin config etc man contrib distrib include doc macros test
 
 EXTRA_DIST = CONTRIBUTORS COPYRIGHT COPYING NEWS VERSION services.atalk
 

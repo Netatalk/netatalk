@@ -30,12 +30,7 @@
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
 #include <atalk/errchk.h>
-#include <atalk/locking.h>
 #include <atalk/globals.h>
-
-#include "event2/event.h"
-#include "event2/http.h"
-#include "event2/rpc.h"
 
 #include "afp_config.h"
 #include "status.h"
@@ -393,12 +388,6 @@ int main(int ac, char **av)
 
     /* Initialize */
     cnid_init();
-    if (locktable_init("XXX") != 0)
-        exit(EXITERR_SYS);
-#if 0
-    if (rpc_init("127.0.0.1", 4701) != 0)
-        exit(EXITERR_SYS);
-#endif
     
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
 

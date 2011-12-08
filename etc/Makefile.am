@@ -1,3 +1,3 @@
 # Makefile.am for etc/
 
-SUBDIRS = afpd cnid_dbd uams netalockd
+SUBDIRS = afpd cnid_dbd uams

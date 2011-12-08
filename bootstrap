@@ -11,7 +11,5 @@ libtoolize --force --copy
 automake --include-deps --add-missing --foreign --copy || exit 1
 autoconf || exit 1
 
-cd libevent && ./autogen.sh
-
 # Let's not fall off the end...
 exit 0

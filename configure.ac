@@ -40,9 +40,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-dnl Configure libevent
-AC_CONFIG_SUBDIRS([libevent])
-
 dnl Checks for header files, some checks are obsolete, unfortunately the code
 dnl uses the resulting macros, so the code has to cleaned up too before
 dnl we can remove the checks here.
@@ -281,8 +278,8 @@ dnl --------------------------------------------------------------------------
 dnl Note: $(top_srcdir)/include should be added before all other includes
 dnl       so that includes from that directory a preferred to includes from
 dnl       /usr/include or similar places.
-LIBS="$LIBS -L\$(top_srcdir)/libatalk -L\$(top_srcdir)/libevent"
-CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys -I\$(top_srcdir)/libevent/include $CFLAGS"
+LIBS="$LIBS -L\$(top_srcdir)/libatalk"
+CFLAGS="-I\$(top_srcdir)/include -I\$(top_srcdir)/sys $CFLAGS"
 
 
 dnl --------------------------------------------------------------------------
@@ -305,16 +302,6 @@ AM_CONDITIONAL(USE_PAM, test x$netatalk_cv_install_pam = xyes)
 AM_CONDITIONAL(BUILD_PAM, test x$compile_pam = xyes)
 AM_CONDITIONAL(USE_PGP, test x$compile_pgp = xyes)
 AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$neta_cv_have_openssl != xyes)
-AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
-AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
-AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
-AM_CONDITIONAL(USE_SHADOWPW, test x$shadowpw = xyes)
-AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
-AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
-AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
-AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
-AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
-AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 
@@ -347,7 +334,6 @@ AC_OUTPUT([Makefile
 	etc/Makefile
 	etc/afpd/Makefile
 	etc/cnid_dbd/Makefile
-	etc/netalockd/Makefile
 	etc/uams/Makefile
 	include/Makefile
 	include/atalk/Makefile
@@ -362,11 +348,6 @@ AC_OUTPUT([Makefile
 	libatalk/cnid/tdb/Makefile
 	libatalk/compat/Makefile
 	libatalk/dsi/Makefile
-	libatalk/locking/Makefile
-	libatalk/rpc/Makefile
-	libatalk/talloc/Makefile
-	libatalk/tevent/Makefile
-	libatalk/tsocket/Makefile
 	libatalk/tdb/Makefile
 	libatalk/unicode/Makefile
 	libatalk/unicode/charsets/Makefile
@@ -379,7 +360,6 @@ AC_OUTPUT([Makefile
 	man/man8/Makefile
 	test/Makefile
 	test/afpd/Makefile
-	test/netalockd/Makefile
 	],
 	[chmod a+x distrib/config/netatalk-config contrib/shell_utils/apple_*]
 )

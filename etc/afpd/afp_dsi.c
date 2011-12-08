@@ -32,7 +32,6 @@
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
-#include <atalk/locking.h>
 #include <atalk/uuid.h>
 #include <atalk/paths.h>
 #include <atalk/server_ipc.h>

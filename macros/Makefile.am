@@ -2,7 +2,6 @@ EXTRA_DIST = \
 	afs-check.m4		\
 	cnid-backend.m4		\
 	config-checks.m4	\
-	cups.m4			\
 	db3-check.m4		\
 	grep-check.m4		\
 	gssapi-check.m4		\

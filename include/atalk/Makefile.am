@@ -7,7 +7,6 @@ atalkinclude_HEADERS = \
 	afp.h \
 	vfs.h \
 	cnid.h \
-	locking.h \
 	logger.h \
 	paths.h \
 	unicode.h \
@@ -34,9 +33,6 @@ noinst_HEADERS = \
 	bstrlib.h \
 	errchk.h \
 	ftw.h \
-	talloc.h \
-	tevent.h \
-	tsocket.h \
 	compat.h \
 	dsi.h \
 	ldapconfig.h \
@@ -44,10 +40,3 @@ noinst_HEADERS = \
 	globals.h \
 	fce_api.h \
 	standards.h
-
-BUILT_SOURCES = lockrpc.gen.h
-EXTRADIST = lockrpc.gen.h
-lockrpc.gen.h: $(top_srcdir)/libevent/event_rpcgen.py $(top_srcdir)/libatalk/rpc/lockrpc.rpc
-	cd $(top_srcdir)/libatalk/rpc/ \
-		&& $(top_srcdir)/libevent/event_rpcgen.py lockrpc.rpc \
-		&& mv lockrpc.gen.h $(top_srcdir)/include/atalk

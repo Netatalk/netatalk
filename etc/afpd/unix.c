@@ -341,10 +341,8 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     struct stat		st;
     struct dirent	*dirp;
     DIR			*dir;
-    mode_t              hf_mode;
     
     mode |= vol->v_dperm;
-    hf_mode = ad_hf_mode(mode);
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first */
@@ -368,9 +366,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
         }
 
         if (!S_ISDIR(st.st_mode)) {
-           int setmode = (osx && *dirp->d_name == '.')?hf_mode:mode;
-
-           if (setfilmode(dirp->d_name, setmode, &st, vol->v_umask) < 0) {
+           if (setfilmode(dirp->d_name, mode, &st, vol->v_umask) < 0) {
                closedir( dir );
                 LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
                 return -1;
