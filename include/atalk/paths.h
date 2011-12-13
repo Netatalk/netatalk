@@ -87,13 +87,4 @@
 #  define _PATH_CNID_METAD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"cnid_metad")
 #endif
 
-/*
- * netalockd paths
- */
-#if defined (FHS_COMPATIBILITY) || defined (__NetBSD__)
-#  define _PATH_NETALOCKD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netalockd.pid")
-#else
-#  define _PATH_NETALOCKD_LOCK	ATALKPATHCAT(_PATH_LOCKDIR,"netalockd")
-#endif
-
 #endif /* atalk/paths.h */
