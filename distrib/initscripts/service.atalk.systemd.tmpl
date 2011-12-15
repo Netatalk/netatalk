@@ -6,7 +6,7 @@
 
 [Unit]
 Description=File and Printer sharing for Macintosh clients
-After=syslog.target network.target
+After=syslog.target network.target slpd.service avahi-daemon.service
 
 [Service]
 Type=oneshot
