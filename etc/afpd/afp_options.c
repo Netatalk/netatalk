@@ -651,15 +651,15 @@ static void show_version_extended(void )
 	puts( "No" );
 #endif
 
+	printf( "            EA support:\t" );
+	puts( EA_MODULES );
+
 	printf( "           ACL support:\t" );
 #ifdef HAVE_ACLS
 	puts( "Yes" );
 #else
 	puts( "No" );
 #endif
-
-	printf( "            EA support:\t" );
-	puts( EA_MODULES );
 
 	printf( "          LDAP support:\t" );
 #ifdef HAVE_LDAP
