@@ -913,7 +913,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
 
     /* get_id needs adp for reading CNID from adouble file */
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if ((ad_open(&ad, path->u_name, ADFLAGS_HF | ADFLAGS_DIR)) == 0) /* 1 */
+    if ((ad_open(&ad, path->u_name, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY)) == 0) /* 1 */
         adp = &ad;
 
     /* Get CNID */
@@ -923,7 +923,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     if (adp)
-        ad_close_metadata(adp);
+        ad_close(adp, ADFLAGS_HF);
 
     /* Get macname from unixname */
     if (path->m_name == NULL) {
@@ -966,7 +966,7 @@ exit:
             cfrombstr(dir->d_u_name), path->u_name, err);
 
         if (adp)
-            ad_close_metadata(adp);
+            ad_close(adp, ADFLAGS_HF);
         if (!cdir && fullpath)
             bdestroy(fullpath);
         if (cdir)
@@ -1503,7 +1503,7 @@ int getdirparams(const struct vol *vol,
         ad_init(&ad, vol->v_adouble, vol->v_ad_options);
         if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
             isad = 1;
-            if (ad.ad_md->adf_flags & O_CREAT) {
+            if (ad.ad_mdp->adf_flags & O_CREAT) {
                 /* We just created it */
                 if (s_path->m_name == NULL) {
                     if ((s_path->m_name = utompath(vol,
@@ -1700,7 +1700,7 @@ int getdirparams(const struct vol *vol,
 
         default :
             if ( isad ) {
-                ad_close_metadata( &ad );
+                ad_close(&ad, ADFLAGS_HF);
             }
             return( AFPERR_BITMAP );
         }
@@ -1718,7 +1718,7 @@ int getdirparams(const struct vol *vol,
         data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, utf8);
     }
     if ( isad ) {
-        ad_close_metadata( &ad );
+        ad_close(&ad, ADFLAGS_HF);
     }
     *buflen = data - buf;
     return( AFP_OK );
@@ -1929,7 +1929,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
     }
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR, O_CREAT, 0777) != 0) {
+    if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
         /*
          * Check to see what we're trying to set.  If it's anything
          * but ACCESS, UID, or GID, give an error.  If it's any of those
@@ -2113,8 +2113,8 @@ setdirparam_done:
                 ad_setid(&ad, st->st_dev, st->st_ino,  dir->d_did, dir->d_pdid, vol->v_stamp);
             }
         }
-        ad_flush( &ad);
-        ad_close_metadata( &ad);
+        ad_flush(&ad);
+        ad_close(&ad, ADFLAGS_HF);
     }
 
     if (change_parent_mdate && dir->d_did != DIRDID_ROOT
@@ -2282,7 +2282,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     }
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
-    if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR, O_CREAT, 0777) < 0)  {
+    if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) < 0)  {
         if (vol_noadouble(vol))
             goto createdir_done;
         return( AFPERR_ACCESS );
@@ -2292,8 +2292,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
 
     fce_register_new_dir(s_path);
 
-    ad_flush( &ad);
-    ad_close_metadata( &ad);
+    ad_flush(&ad);
+    ad_close(&ad, ADFLAGS_HF);
 
 createdir_done:
     memcpy( rbuf, &dir->d_did, sizeof( uint32_t ));
@@ -2350,10 +2350,10 @@ int renamedir(const struct vol *vol,
 
     ad_init(&ad, vol->v_adouble, vol->v_ad_options);
 
-    if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_DIR) == 0) {
+    if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) == 0) {
         ad_setname(&ad, newname);
-        ad_flush( &ad);
-        ad_close_metadata( &ad);
+        ad_flush(&ad);
+        ad_close(&ad, ADFLAGS_HF);
     }
 
     return( AFP_OK );
@@ -2381,7 +2381,7 @@ int deletecurdir(struct vol *vol)
     if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
 
         ad_getattr(&ad, &ashort);
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
         if ((ashort & htons(ATTRBIT_NODELETE))) {
             return  AFPERR_OLOCK;
         }

@@ -305,7 +305,7 @@ static int moveandrename(const struct vol *vol,
 
         ad_getattr(adp, &bshort);
         
-        ad_close_metadata( adp);
+        ad_close(adp, ADFLAGS_HF);
         if ((bshort & htons(ATTRBIT_NORENAME))) {
             rc = AFPERR_OLOCK;
             goto exit;
@@ -380,7 +380,7 @@ static int moveandrename(const struct vol *vol,
         if (!ad_metadata(upath, adflags, adp)) {
             ad_setid(adp, st->st_dev, st->st_ino, id, curdir->d_did, vol->v_stamp);
             ad_flush(adp);
-            ad_close_metadata(adp);
+            ad_close(adp, ADFLAGS_HF);
         }
 
         /* fix up the catalog entry */

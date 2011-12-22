@@ -234,7 +234,7 @@ exit:
         buf_valid = 0;
 
     if (adp)
-        ad_close_metadata(adp);
+        ad_close(adp, ADFLAGS_HF);
 
     return ret;
 }

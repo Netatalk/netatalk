@@ -639,7 +639,7 @@ int getfilparams(struct vol *vol,
         }
     }
     rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp);
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
 
     return( rc );
 }
@@ -692,15 +692,14 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
             return AFPERR_EXIST;
     }
 
-    if ( creatf)
-        openf = O_RDWR|O_CREAT|O_TRUNC;
+    if (creatf)
+        openf = ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_TRUNC;
     else
     	/* on a soft create, if the file is open then ad_open won't fail
     	   because open syscall is not called */
-        openf = O_RDWR|O_CREAT|O_EXCL;
+        openf = ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL;
 
-    if ( ad_open(&ad, upath, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF,
-                 openf, 0666, openf, 0666) < 0 ) {
+    if (ad_open(&ad, upath, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | openf, 0666) < 0) {
         switch ( errno ) {
         case EROFS:
             return AFPERR_VLOCK;
@@ -965,7 +964,7 @@ int setfilparams(struct vol *vol,
 
     /* second try with adouble open 
     */
-    if ( ad_open(adp, upath, ADFLAGS_HF, O_RDWR | O_CREAT, 0666) < 0) {
+    if (ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) < 0) {
         LOG(log_debug, logtype_afpd, "setfilparams: ad_open_metadata error");
         /*
          * For some things, we don't need an adouble header:
@@ -1057,8 +1056,8 @@ setfilparam_done:
     }
 
     if (isad) {
-        ad_flush( adp);
-        ad_close_metadata( adp);
+        ad_flush(adp);
+        ad_close(adp, ADFLAGS_HF);
     }
 
     if (change_parent_mdate && gettimeofday(&tv, NULL) == 0) {
@@ -1145,7 +1144,7 @@ int renamefile(const struct vol *vol, int sdir_fd, char *src, char *dst, char *n
     }
 
     /* don't care if we can't open the newly renamed ressource fork */
-    if (ad_open(adp, dst, ADFLAGS_HF, O_RDWR) == 0) {
+    if (ad_open(adp, dst, ADFLAGS_HF | ADFLAGS_RDWR) == 0) {
         ad_setname(adp, newname);
         ad_flush( adp );
         ad_close( adp, ADFLAGS_HF );
@@ -1273,7 +1272,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
 
     adp = of_ad(s_vol, s_path, &ad);
 
-    if (ad_open(adp, s_path->u_name, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0) {
+    if (ad_open(adp, s_path->u_name, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY) < 0) {
         return AFPERR_DENYCONF;
     }
     denyreadset = (ad_testlock(adp, ADEID_DFORK, AD_FILELOCK_DENY_RD) != 0 || 
@@ -1475,7 +1474,7 @@ int copyfile(const struct vol *s_vol,
         adflags |= ADFLAGS_HF;
     }
 
-    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0) {
+    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF | ADFLAGS_RDONLY) < 0) {
         ret_err = errno;
         goto done;
     }
@@ -1493,7 +1492,7 @@ int copyfile(const struct vol *s_vol,
     }
 
     ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
-    if (ad_open(&add, dst, adflags, O_RDWR|O_CREAT|O_EXCL, st.st_mode, O_RDWR|O_CREAT|O_EXCL, st.st_mode) < 0) {
+    if (ad_open(&add, dst, adflags | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL, st.st_mode) < 0) {
         ret_err = errno;
         ad_close( adp, adflags );
         if (EEXIST != ret_err) {
@@ -1611,7 +1610,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         */
         if ( ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &ad) == 0 ) {
             if ((err = check_attrib(&ad))) {
-               ad_close_metadata(&ad);
+                ad_close(&ad, ADFLAGS_HF);
                return err;
             }
             meta = 1;
@@ -1620,7 +1619,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
  
     /* try to open both forks at once */
     adflags = ADFLAGS_DF;
-    if ( ad_openat(&ad, dirfd, file, adflags |ADFLAGS_HF|ADFLAGS_NOHF, O_RDONLY, O_RDONLY) < 0 ) {
+    if (ad_openat(&ad, dirfd, file, adflags | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY) < 0 ) {
         switch (errno) {
         case ENOENT:
             err = AFPERR_NOOBJ;
@@ -1667,7 +1666,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
 
 end:
     if (meta)
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
 
     if (adp)
         ad_close( &ad, adflags );  /* ad_close removes locks if any */
@@ -2030,7 +2029,7 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
         adp = (*of)->of_ad;
     }
     else {
-        ret = ad_open(adp, path->u_name, ADFLAGS_HF, O_RDONLY);
+        ret = ad_open(adp, path->u_name, ADFLAGS_HF | ADFLAGS_RDONLY);
         /* META and HF */
         if ( !ret && ad_reso_fileno(adp) != -1 && !(adp->ad_resource_fork.adf_flags & ( O_RDWR | O_WRONLY))) {
             /* from AFP spec.

@@ -322,7 +322,7 @@ static int check_adfile(const char *fname, const struct stat *st)
         /* Create ad file */
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
 
-        if ((ret = ad_open(&ad,  fname, adflags, O_CREAT | O_RDWR, 0666)) != 0) {
+        if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666)) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                      cwdbuf, adname, strerror(errno));
 
@@ -332,7 +332,7 @@ static int check_adfile(const char *fname, const struct stat *st)
         /* Set name in ad-file */
         ad_setname(&ad, utompath((char *)fname));
         ad_flush(&ad);
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
 
         chown(adname, st->st_uid, st->st_gid);
         /* FIXME: should we inherit mode too here ? */
@@ -341,11 +341,11 @@ static int check_adfile(const char *fname, const struct stat *st)
 #endif
     } else {
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-        if (ad_open(&ad, fname, adflags, O_RDONLY) != 0) {
+        if (ad_open(&ad, fname, adflags | ADFLAGS_RDONLY) != 0) {
             dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
             return -1;
         }
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
     }
     return 0;
 }
@@ -499,7 +499,7 @@ static int check_addir(int volroot)
         /* Create ad dir and set name */
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
 
-        if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR, O_CREAT | O_RDWR, 0777) != 0) {
+        if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
             return -1;
         }
@@ -510,7 +510,7 @@ static int check_addir(int volroot)
         /* Update name in ad file */
         ad_setname(&ad, mname);
         ad_flush(&ad);
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
 
         /* Inherit owner/group from "." to ".AppleDouble" and ".Parent" */
         if ((lstat(".", &st)) != 0) {
@@ -695,7 +695,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     ad_cnid = 0;
     if ( (myvolinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
         ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-        if (ad_open(&ad, name, adflags, O_RDWR) != 0) {
+        if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
             
             if (dbd_flags & DBD_FLAGS_CLEANUP)
                 return CNID_INVALID;
@@ -718,7 +718,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         else
             dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
 
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
     }
 
     /* Get CNID from database */
@@ -761,14 +761,14 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
             dbd_log(LOGSTD, "Updating AppleDouble file for '%s/%s' with CNID: %u from database",
                             cwdbuf, name, ntohl(db_cnid));
             ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-            if (ad_open(&ad, name, adflags | ADFLAGS_HF, O_RDWR, 0666, &ad) != 0) {
+            if (ad_open(&ad, name, adflags | ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
                 dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                         cwdbuf, name, strerror(errno));
                 return CNID_INVALID;
             }
             ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
             ad_flush(&ad);
-            ad_close_metadata(&ad);
+            ad_close(&ad, ADFLAGS_HF);
         }
         return db_cnid;
     } else if (ad_cnid && (db_cnid == 0)) {
@@ -794,14 +794,14 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                     dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                             cwdbuf, name, ntohl(db_cnid));
                     ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-                    if (ad_open(&ad, name, adflags, O_RDWR) != 0) {
+                    if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
                         dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                                 cwdbuf, name, strerror(errno));
                         return CNID_INVALID;
                     }
                     ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
                     ad_flush(&ad);
-                    ad_close_metadata(&ad);
+                    ad_close(&ad, ADFLAGS_HF);
                 }
                 return db_cnid;
             }
@@ -834,14 +834,14 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                 dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                         cwdbuf, name, ntohl(db_cnid));
                 ad_init(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-                if (ad_open(&ad, name, adflags, O_RDWR) != 0) {
+                if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
                     dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                             cwdbuf, name, strerror(errno));
                     return CNID_INVALID;
                 }
                 ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
                 ad_flush(&ad);
-                ad_close_metadata(&ad);
+                ad_close(&ad, ADFLAGS_HF);
             }
         }
         return db_cnid;

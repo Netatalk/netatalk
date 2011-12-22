@@ -374,13 +374,13 @@ static int do_move(const char *from, const char *to)
 
         struct adouble ad;
         ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-        if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF) : ADFLAGS_HF, O_RDWR) != 0) {
+        if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF | ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
             SLOG("Error opening adouble for: %s", to);
             return 1;
         }
         ad_setid(&ad, sb.st_dev, sb.st_ino, cnid, newdid, dvolume.db_stamp);
         ad_flush(&ad);
-        ad_close_metadata(&ad);
+        ad_close(&ad, ADFLAGS_HF);
 
         if (vflg)
             printf("%s -> %s\n", from, to);

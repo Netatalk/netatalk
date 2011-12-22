@@ -834,9 +834,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     reqcount = get_off_t(&ibuf, is64);
 
     LOG(log_debug, logtype_afpd,
-         "afp_read(\"%s\", off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)",
-         cfrombstr(ofork->of_ad->ad_fullpath), offset, reqcount,
-         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+        "afp_read(off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)", offset, reqcount,
+        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if (is64) {
         nlmask = nlchar = 0;
@@ -1013,9 +1012,7 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         return( AFPERR_PARAM );
     }
 
-    LOG(log_debug, logtype_afpd,
-        "afp_flushfork(\"%s\", fork: %s)",
-        cfrombstr(ofork->of_ad->ad_fullpath),
+    LOG(log_debug, logtype_afpd, "afp_flushfork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if ( flushfork( ofork ) < 0 ) {
@@ -1047,9 +1044,7 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         return( AFPERR_PARAM );
     }
 
-    LOG(log_debug, logtype_afpd,
-        "afp_syncfork(\"%s\", fork: %s)",
-        cfrombstr(ofork->of_ad->ad_fullpath),
+    LOG(log_debug, logtype_afpd, "afp_syncfork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if ( flushfork( ofork ) < 0 ) {
@@ -1116,9 +1111,7 @@ int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         return( AFPERR_PARAM );
     }
 
-    LOG(log_debug, logtype_afpd,
-        "afp_closefork(\"%s\", fork: %s)",
-        cfrombstr(ofork->of_ad->ad_fullpath),
+    LOG(log_debug, logtype_afpd, "afp_closefork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if ( of_closefork( ofork ) < 0 ) {
@@ -1196,10 +1189,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         goto afp_write_err;
     }
 
-    LOG(log_debug, logtype_afpd,
-        "afp_write(\"%s\", off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)",
-        cfrombstr(ofork->of_ad->ad_fullpath), offset, reqcount,
-        (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
+    LOG(log_debug, logtype_afpd, "afp_write(off: %" PRIu64 ", size: %" PRIu64 ", fork: %s)",
+        offset, reqcount, (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
     if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
         err = AFPERR_ACCESS;

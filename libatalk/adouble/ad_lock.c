@@ -530,13 +530,6 @@ static void ad_fcntl_unlock(struct adouble *ad, const int fork)
   if (ad_reso_fileno(ad) != -1) {
     adf_unlock(&ad->ad_resource_fork, fork);
   }
-
-  if (ad->ad_flags != AD_VERSION_EA) {
-    return;
-  }
-  if (ad_meta_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_metadata_fork, fork);
-  }
 }
 
 /******************************************************************************

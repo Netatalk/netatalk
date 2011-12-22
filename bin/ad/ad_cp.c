@@ -544,7 +544,7 @@ static int copy(const char *path,
                 break;
             }
             ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_DIR, O_RDWR | O_CREAT, 0666) != 0) {
+            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
             ad_setid( &ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
@@ -554,7 +554,7 @@ static int copy(const char *path,
             ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
-            ad_close_metadata(&ad);
+            ad_close(&ad, ADFLAGS_HF);
 
             umask(omask);
         }
@@ -611,7 +611,7 @@ static int copy(const char *path,
                 break;
             }
             ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
-            if (ad_open(&ad, to.p_path, ADFLAGS_HF, O_RDWR | O_CREAT) != 0) {
+            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
             ad_setid( &ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
@@ -621,7 +621,7 @@ static int copy(const char *path,
             ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
-            ad_close_metadata(&ad);
+            ad_close(&ad, ADFLAGS_HF);
             umask(omask);
         }
         break;

@@ -148,7 +148,7 @@ int ad_flush(struct adouble *ad)
 {
     int len;
 
-    if (( ad->ad_md->adf_flags & O_RDWR )) {
+    if (( ad->ad_mdp->adf_flags & O_RDWR )) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
             if (ad->ad_rlen > 0xffffffff)
                 ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
@@ -159,14 +159,14 @@ int ad_flush(struct adouble *ad)
 
         switch (ad->ad_flags) {
         case AD_VERSION2:
-            if (adf_pwrite(ad->ad_md, ad->ad_data, len, 0) != len) {
+            if (adf_pwrite(ad->ad_mdp, ad->ad_data, len, 0) != len) {
                 if (errno == 0)
                     errno = EIO;
                 return( -1 );
             }
             break;
         case AD_VERSION_EA:
-            if (sys_lsetxattr(cfrombstr(ad->ad_fullpath), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
+            if (sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
                 LOG(log_error, logtype_afpd, "ad_flush: sys_fsetxattr error: %s",
                     strerror(errno));
                 return -1;
@@ -183,27 +183,15 @@ int ad_flush(struct adouble *ad)
 
 /*!
  * Close a struct adouble freeing all resources
- *
- * This close the whole thing, regardless of what you pass in adflags!
- * When open forks are using this struct adouble (ad_refcount>0) the close
- * request is ignored.
  */
-int ad_close( struct adouble *ad, int adflags)
+int ad_close(struct adouble *ad, int adflags)
 {
     int err = 0;
 
     if (ad == NULL)
         return 0;
 
-    LOG(log_debug, logtype_default, "ad_close(\"%s\", %s)",
-        cfrombstr(ad->ad_fullpath),
-        adflags2logstr(adflags));
-
-    if (ad->ad_refcount) {
-        LOG(log_debug, logtype_default, "ad_close(\"%s\"): adouble in use by fork, not closing",
-            cfrombstr(ad->ad_fullpath));
-        return 0;
-    }
+    LOG(log_debug, logtype_default, "ad_close(%s)", adflags2logstr(adflags));
 
     if (ad_data_fileno(ad) != -1) {
         if ((ad_data_fileno(ad) == -2) && (ad->ad_data_fork.adf_syml != NULL)) {
@@ -222,7 +210,7 @@ int ad_close( struct adouble *ad, int adflags)
         if ( close( ad_meta_fileno(ad) ) < 0 )
             err = -1;
         ad_meta_fileno(ad) = -1;
-        adf_lock_free(ad->ad_md);
+        adf_lock_free(ad->ad_mdp);
         ad->ad_adflags &= ~ADFLAGS_HF;
     }
 
@@ -230,11 +218,6 @@ int ad_close( struct adouble *ad, int adflags)
         free(ad->ad_resforkbuf);
         ad->ad_resforkbuf = NULL;
         ad->ad_adflags &= ~ADFLAGS_RF;
-    }
-
-    if (ad->ad_fullpath) {
-        bdestroy(ad->ad_fullpath);
-        ad->ad_fullpath = NULL;
     }
 
     return err;

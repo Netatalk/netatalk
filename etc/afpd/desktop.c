@@ -650,8 +650,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         adp = of->of_ad;
 
     if (ad_open(adp, upath,
-                ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0),
-                O_CREAT | O_RDWR,
+                ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0) | ADFLAGS_CREATE | ADFLAGS_RDWR,
                 0666) < 0 ) {
         return( AFPERR_ACCESS );
     }
@@ -669,7 +668,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
         memcpy( ad_entry( adp, ADEID_COMMENT ), ibuf, clen );
         ad_flush( adp );
     }
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
     return( AFP_OK );
 }
 
@@ -730,7 +729,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     }
 
     if (!ad_getentryoff(adp, ADEID_COMMENT)) {
-        ad_close_metadata( adp );
+        ad_close(adp, ADFLAGS_HF);
         return AFPERR_NOITEM;
     }
     /*
@@ -738,7 +737,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
      */
     if ( ad_getentrylen( adp, ADEID_COMMENT ) <= 0 ||
             ad_getentrylen( adp, ADEID_COMMENT ) > 199 ) {
-        ad_close_metadata( adp );
+        ad_close(adp, ADFLAGS_HF);
         return( AFPERR_NOITEM );
     }
 
@@ -746,7 +745,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     *rbuf++ = clen;
     memcpy( rbuf, ad_entry( adp, ADEID_COMMENT ), clen);
     *rbuflen = clen + 1;
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
 
     return( AFP_OK );
 }
@@ -802,7 +801,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     } else
         adp = of->of_ad;
 
-    if ( ad_open(adp, upath, ADFLAGS_HF | (isadir) ? ADFLAGS_DIR : 0, 0) < 0 ) {
+    if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | (isadir) ? ADFLAGS_DIR : 0) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOITEM );
@@ -817,7 +816,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
         ad_setentrylen( adp, ADEID_COMMENT, 0 );
         ad_flush( adp );
     }
-    ad_close_metadata( adp);
+    ad_close(adp, ADFLAGS_HF);
     return( AFP_OK );
 }
 

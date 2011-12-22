@@ -133,7 +133,7 @@ uint32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino ,
      */
     if (adp
         && (adp->ad_options & ADVOL_CACHE)
-        && (adp->ad_md->adf_flags & O_RDWR )
+        && (adp->ad_mdp->adf_flags & O_RDWR )
         && (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)) /* One check to ensure ALL values are there */
         ) {
         memcpy(&dev, ad_entry(adp, ADEID_PRIVDEV), sizeof(dev_t));

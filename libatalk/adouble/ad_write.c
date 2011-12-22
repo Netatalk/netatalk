@@ -94,7 +94,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
             if ((off + buflen) > ad->ad_rlen)
                 ad->ad_rlen = off + buflen;
             
-            if (sys_lsetxattr(cfrombstr(ad->ad_fullpath), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
+            if (sys_fsetxattr(ad_meta_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
                 return -1;
             cc = buflen;
         }

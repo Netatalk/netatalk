@@ -159,16 +159,11 @@ typedef struct adf_lock_t {
 
 struct ad_fd {
     int          adf_fd;        /* -1: invalid, -2: symlink */
-#ifndef HAVE_PREAD
-    off_t        adf_off;
-#endif
     char         *adf_syml;
     int          adf_flags;
     int          adf_excl;
-#if 0
     adf_lock_t   *adf_lock;
     int          adf_refcount, adf_lockcount, adf_lockmax;
-#endif
 };
 
 /* some header protection */
@@ -192,10 +187,11 @@ struct adouble {
     struct ad_entry     ad_eid[ADEID_MAX];
     struct ad_fd        ad_data_fork;     /* the data fork                            */
     struct ad_fd        ad_resource_fork; /* adouble:v2 -> the adouble file           *
-                                           * adouble:ea -> the rfork EA               */
-    struct ad_fd        ad_metadata_fork; /* adouble:v2 -> unused                     *
-                                           * adouble:ea -> the metadata EA            */
-    struct ad_fd        *ad_md;           /* either ad_resource or ad_metadata        */
+                                           * adouble:ea -> unused                     */
+    struct ad_fd        *ad_rfp;          /* adouble:v2 -> ad_resource_fork           *
+                                           * adouble:ea -> ad_data_fork               */
+    struct ad_fd        *ad_mdp;          /* adouble:v2 -> ad_resource_fork           *
+                                           * adouble:ea -> ad_data_fork               */
     int                 ad_flags;         /* Our adouble version info (AD_VERSION*)   */
     int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
     uint32_t            ad_inited;
@@ -207,7 +203,6 @@ struct adouble {
                                             * the header parameter size is too small. */
     char                *ad_m_name;        /* mac name for open fork                  */
     int                 ad_m_namelen;
-    bstring             ad_fullpath;       /* fullpath of file, adouble:ea need this  */
     struct adouble_fops *ad_ops;
     uint16_t            ad_open_forks;     /* open forks (by others)                  */
     char                ad_data[AD_DATASZ_MAX];
@@ -219,6 +214,12 @@ struct adouble {
 #define ADFLAGS_DIR       (1<<3)
 #define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
 #define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
+
+#define ADFLAGS_RDWR      (1<<7)  /* open read/write */
+#define ADFLAGS_RDONLY    (1<<7)  /* open read only */
+#define ADFLAGS_CREATE    (1<<8)  /* create file, open called with O_CREAT */
+#define ADFLAGS_EXCL      (1<<9)  /* exclusive open, open called with O_EXCL */
+#define ADFLAGS_TRUNC     (1<<10) /* truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)
@@ -235,33 +236,14 @@ struct adouble {
 #define ADLOCK_FILELOCK (1<<3)
 
 /* we use this so that we can use the same mechanism for both byte
- * locks and file synchronization locks. i do this by co-opting either
- * first bits on 32-bit machines or shifting above the last bit on
- * 64-bit machines. this only matters for the data fork. */
-#if defined(TRY_64BITOFF_T) && (~0UL > 0xFFFFFFFFU)
-/* synchronization locks */
-#define AD_FILELOCK_BASE (0x80000000)
-#else
+ * locks and file synchronization locks. */
 #if _FILE_OFFSET_BITS == 64
-#define AD_FILELOCK_BASE (0x7FFFFFFFFFFFFFFFULL - 9)
+#define AD_FILELOCK_BASE (UINT64_C(0x7FFFFFFFFFFFFFFF) - 9)
 #else
-#define AD_FILELOCK_BASE (0x7FFFFFFF -9)
-#endif
+#define AD_FILELOCK_BASE (UINT32_C(0x7FFFFFFF) - 9)
 #endif
 
-/* FIXME:
- * AD_FILELOCK_BASE case
- */
-#if _FILE_OFFSET_BITS == 64
-#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
-#else
-/* Tru64 is an always-64-bit OS; version 4.0 does not set _FILE_OFFSET_BITS */
-#if defined(TRU64)
-#define BYTELOCK_MAX (0x7FFFFFFFFFFFFFFFULL)
-#else
-#define BYTELOCK_MAX (0x7FFFFFFFU)
-#endif
-#endif
+#define BYTELOCK_MAX (AD_FILELOCK_BASE - 1)
 
 #define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
 #define AD_FILELOCK_OPEN_RD        (AD_FILELOCK_BASE + 1)
@@ -336,8 +318,8 @@ struct adouble {
 #define AD_AFPFILEI_BLANKACCESS (1 << 2) /* blank access permissions */
 
 #define ad_data_fileno(ad)  ((ad)->ad_data_fork.adf_fd)
-#define ad_reso_fileno(ad)  ((ad)->ad_resource_fork.adf_fd)
-#define ad_meta_fileno(ad)  ((ad)->ad_md->adf_fd)
+#define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
+#define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
 
 #define ad_getversion(ad)   ((ad)->ad_version)
 
@@ -346,8 +328,8 @@ struct adouble {
 #define ad_getentryoff(ad,eid)     ((ad)->ad_eid[(eid)].ade_off)
 #define ad_entry(ad,eid)           ((caddr_t)(ad)->ad_data + (ad)->ad_eid[(eid)].ade_off)
 
-#define ad_get_RF_flags(ad) ((ad)->ad_resource_fork.adf_flags)
-#define ad_get_MD_flags(ad) ((ad)->ad_md->adf_flags)
+#define ad_get_RF_flags(ad) ((ad)->ad_rfp->adf_flags)
+#define ad_get_MD_flags(ad) ((ad)->ad_mdp->adf_flags)
 
 /* Refcounting open forks using one struct adouble */
 #define ad_ref(ad)   (ad)->ad_refcount++
@@ -370,7 +352,6 @@ extern void ad_unlock(struct adouble *, int user);
 extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
 
 /* ad_open.c */
-extern const char *oflags2logstr(int oflags);
 extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );
@@ -386,13 +367,6 @@ extern int ad_refresh     (struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
 extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
-
-#if 0
-#define ad_open_metadata(name, flags, mode, adp)\
-   ad_open(name, ADFLAGS_HF | (flags), O_RDWR |(mode), 0666, (adp))
-#endif
-
-#define ad_close_metadata(adp) ad_close( (adp), ADFLAGS_HF)
 
 /* build a resource fork mode from the data fork mode:
  * remove X mode and extend header to RW if R or W (W if R for locking),
@@ -452,11 +426,5 @@ extern uint32_t  ad_forcegetid(struct adouble *adp);
 #ifdef WITH_SENDFILE
 extern int ad_readfile_init(const struct adouble *ad, int eid, off_t *off, int end);
 #endif
-
-#if 0
-#ifdef HAVE_SENDFILE_WRITE
-extern ssize_t ad_writefile(struct adouble *, int, int, off_t, int, size_t);
-#endif /* HAVE_SENDFILE_WRITE */
-#endif /* 0 */
 
 #endif /* _ATALK_ADOUBLE_H */

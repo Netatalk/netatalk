@@ -418,7 +418,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	result |= 1;
 crit_check_ret:
 	if (adp != NULL)
-		ad_close_metadata(adp);
+		ad_close(adp, ADFLAGS_HF);
 	return result;
 }  
 

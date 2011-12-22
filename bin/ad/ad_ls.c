@@ -381,7 +381,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     else
         printf(" !ADVOL_CACHE ");
 
-    ad_close_metadata(&ad);
+    ad_close(&ad, ADFLAGS_HF);
 }
 
 #define TYPE(b) ((st->st_mode & (S_IFMT)) == (b))
