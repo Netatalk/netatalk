@@ -200,9 +200,12 @@ of_alloc(struct vol *vol,
             return NULL;
         }
         strlcpy( ad->ad_m_name, path, ad->ad_m_namelen);
+    } else {
+        /* Increase the refcount on this struct adouble. This is
+           decremented again in oforc_dealloc. */
+        ad_ref(ad);
     }
 
-    ad_ref(ad);
     of->of_ad = ad;
     of->of_vol = vol;
     of->of_did = dir->d_did;
@@ -372,6 +375,17 @@ void of_dealloc( struct ofork *of)
 
     of_unhash(of);
     oforks[ of->of_refnum % nforks ] = NULL;
+
+    /* decrease refcount */
+    of->of_ad->ad_refcount--;
+
+    if ( of->of_ad->ad_refcount <= 0) {
+        free( of->of_ad->ad_m_name );
+        free( of->of_ad);
+    } else {/* someone's still using it. just free this user's locks */
+        ad_unlock(of->of_ad, of->of_refnum);
+    }
+
     free( of );
 }
 
@@ -379,10 +393,15 @@ void of_dealloc( struct ofork *of)
 int of_closefork(struct ofork *ofork)
 {
     struct timeval      tv;
-    int         doflush = 0;
+    int         adflags, doflush = 0;
     int                 ret;
 
+    adflags = 0;
+    if ((ofork->of_flags & AFPFORK_DATA) && (ad_data_fileno( ofork->of_ad ) != -1)) {
+        adflags |= ADFLAGS_DF;
+    }
     if ( (ofork->of_flags & AFPFORK_OPEN) && ad_reso_fileno( ofork->of_ad ) != -1 ) {
+        adflags |= ADFLAGS_HF;
         /*
          * Only set the rfork's length if we're closing the rfork.
          */
@@ -404,13 +423,8 @@ int of_closefork(struct ofork *ofork)
     }
 
     ret = 0;
-
-    ad_unlock(ofork->of_ad, ofork->of_refnum);
-    
-    if (ad_unref(ofork->of_ad) == 0) {
-        if ( ad_close( ofork->of_ad, 0 ) < 0 ) {
-            ret = -1;
-        }
+    if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+        ret = -1;
     }
 
     of_dealloc( ofork );
