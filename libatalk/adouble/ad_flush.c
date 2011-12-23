@@ -188,36 +188,28 @@ int ad_close(struct adouble *ad, int adflags)
 {
     int err = 0;
 
-    if (ad == NULL)
-        return 0;
-
     LOG(log_debug, logtype_default, "ad_close(%s)", adflags2logstr(adflags));
 
-    if (ad_data_fileno(ad) != -1) {
-        if ((ad_data_fileno(ad) == -2) && (ad->ad_data_fork.adf_syml != NULL)) {
+    if ((adflags & ADFLAGS_DF)
+        && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
+        && --ad->ad_data_fork.adf_refcount == 0) {
+        if (ad->ad_data_fork.adf_syml != NULL) {
             free(ad->ad_data_fork.adf_syml);
-            ad->ad_data_fork.adf_syml = NULL;
+            ad->ad_data_fork.adf_syml = 0;
         } else {
             if ( close( ad_data_fileno(ad) ) < 0 )
                 err = -1;
         }
         ad_data_fileno(ad) = -1;
         adf_lock_free(&ad->ad_data_fork);
-        ad->ad_adflags &= ~ADFLAGS_DF;
     }
 
-    if (ad_meta_fileno(ad) != -1) {
-        if ( close( ad_meta_fileno(ad) ) < 0 )
+    if ((adflags & ADFLAGS_HF)
+        && (ad_meta_fileno(ad) != -1 && !(--ad->ad_mdp->adf_refcount))) {
+        if (close( ad_meta_fileno(ad) ) < 0)
             err = -1;
         ad_meta_fileno(ad) = -1;
         adf_lock_free(ad->ad_mdp);
-        ad->ad_adflags &= ~ADFLAGS_HF;
-    }
-
-    if (ad->ad_resforkbuf) {
-        free(ad->ad_resforkbuf);
-        ad->ad_resforkbuf = NULL;
-        ad->ad_adflags &= ~ADFLAGS_RF;
     }
 
     return err;

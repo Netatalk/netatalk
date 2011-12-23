@@ -216,10 +216,10 @@ struct adouble {
 #define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
 
 #define ADFLAGS_RDWR      (1<<7)  /* open read/write */
-#define ADFLAGS_RDONLY    (1<<7)  /* open read only */
-#define ADFLAGS_CREATE    (1<<8)  /* create file, open called with O_CREAT */
-#define ADFLAGS_EXCL      (1<<9)  /* exclusive open, open called with O_EXCL */
-#define ADFLAGS_TRUNC     (1<<10) /* truncate, open called with O_TRUNC */
+#define ADFLAGS_RDONLY    (1<<8)  /* open read only */
+#define ADFLAGS_CREATE    (1<<9)  /* create file, open called with O_CREAT */
+#define ADFLAGS_EXCL      (1<<10)  /* exclusive open, open called with O_EXCL */
+#define ADFLAGS_TRUNC     (1<<11) /* truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)

@@ -152,47 +152,79 @@ static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
     {0, 0, 0}
 };
 
+#define ADFLAGS2LOGSTRBUFSIZ 128
 const char *adflags2logstr(int adflags)
 {
     int first = 1;
-    static char buf[64];
+    static char buf[ADFLAGS2LOGSTRBUFSIZ];
 
     buf[0] = 0;
 
     if (adflags & ADFLAGS_DF) {
-        strlcat(buf, "DF", 64);
+        strlcat(buf, "DF", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
     if (adflags & ADFLAGS_RF) {
         if (!first)
-            strlcat(buf, "|", 64);
-        strlcat(buf, "RF", 64);
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "RF", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
     if (adflags & ADFLAGS_HF) {
         if (!first)
-            strlcat(buf, "|", 64);
-        strlcat(buf, "HF", 64);
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "HF", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
     if (adflags & ADFLAGS_NOHF) {
         if (!first)
-            strlcat(buf, "|", 64);
-        strlcat(buf, "NOHF", 64);
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "NOHF", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
     if (adflags & ADFLAGS_DIR) {
         if (!first)
-            strlcat(buf, "|", 64);
-        strlcat(buf, "DIR", 64);
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "DIR", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
     if (adflags & ADFLAGS_CHECK_OF) {
         if (!first)
-            strlcat(buf, "|", 64);
-        strlcat(buf, "OF", 64);
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "OF", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
+    if (adflags & ADFLAGS_RDWR) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_RDWR", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_RDONLY) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_RDONLY", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_CREATE) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_CREAT", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_EXCL) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_EXCL", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_TRUNC) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_TRUNC", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+
     return buf;
 }
 
@@ -563,9 +595,8 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
     int         st_invalid = -1;
     ssize_t     lsz;
 
-    LOG(log_debug, logtype_default, "ad_open_df(\"%s\", %s, %04o)",
+    LOG(log_debug, logtype_default, "ad_open_df(\"%s\", %04o)",
         fullpathname(path), mode);
-
 
     if (ad_data_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -1038,6 +1069,7 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad->ad_refcount = 1;
     ad->ad_open_forks = 0;
     ad->ad_resource_fork.adf_refcount = 0;
+    ad->ad_resforkbuf = NULL;
     ad->ad_data_fork.adf_refcount = 0;
     ad->ad_data_fork.adf_syml=0;
     ad->ad_inited = 0;
@@ -1079,11 +1111,12 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     va_list args;
     mode_t mode = 0;
 
-    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s, %s)",
+    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s)",
         fullpathname(path), adflags2logstr(adflags));
 
     if (ad->ad_inited != AD_INITED) {
         ad->ad_adflags = adflags;
+        ad->ad_inited = AD_INITED;
     } else {
         ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
         if (ad->ad_resource_fork.adf_refcount > 0)
@@ -1095,19 +1128,16 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
         mode = va_arg(args, mode_t);
     va_end(args);
 
-    if ((adflags & ADFLAGS_DF) && !(ad->ad_adflags & ADFLAGS_DF)) { /* 3 */
+    if (adflags & ADFLAGS_DF) {
         EC_ZERO( ad_open_df(path, adflags, mode, ad) );
-        ad->ad_adflags |= ADFLAGS_DF;
     }
 
-    if ((adflags & ADFLAGS_HF) && !(ad->ad_adflags & ADFLAGS_HF)) { /* 3 */
+    if (adflags & ADFLAGS_HF) {
         EC_ZERO( ad_open_hf(path, adflags, mode, ad) );
-        ad->ad_adflags |= ADFLAGS_HF;
     }
 
-    if ((adflags & ADFLAGS_RF) && !(ad->ad_adflags & ADFLAGS_RF)) { /* 3 */
+    if (adflags & ADFLAGS_RF) {
         EC_ZERO( ad_open_rf(path, adflags, mode, ad) );
-        ad->ad_adflags |= ADFLAGS_RF;
     }
 
 EC_CLEANUP:
@@ -1132,8 +1162,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 
     oflags = (flags & ADFLAGS_DIR) | ADFLAGS_HF | ADFLAGS_RDONLY;
 
-//    if ((ret = ad_open(adp, name, oflags)) < 0 && errno == EACCES) {
-    if ((ret = ad_open(adp, name, oflags, 0)) < 0 && errno == EACCES) {
+    if ((ret = ad_open(adp, name, oflags)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
@@ -1141,8 +1170,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
             return -1;
         }
         /* we are root open read only */
-//        ret = ad_open(adp, name, oflags);
-        ret = ad_open(adp, name, oflags, 0);
+        ret = ad_open(adp, name, oflags);
         err = errno;
         if ( seteuid(uid) < 0) {
             LOG(log_error, logtype_default, "ad_metadata: can't seteuid back");
