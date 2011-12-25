@@ -214,12 +214,17 @@ struct adouble {
 #define ADFLAGS_DIR       (1<<3)
 #define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
 #define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
-
-#define ADFLAGS_RDWR      (1<<7)  /* open read/write */
-#define ADFLAGS_RDONLY    (1<<8)  /* open read only */
-#define ADFLAGS_CREATE    (1<<9)  /* create file, open called with O_CREAT */
-#define ADFLAGS_EXCL      (1<<10)  /* exclusive open, open called with O_EXCL */
-#define ADFLAGS_TRUNC     (1<<11) /* truncate, open called with O_TRUNC */
+#define ADFLAGS_SETSHRMD  (1<<7)  /* setting share mode must be done with excl fcnt lock,
+                                     which implies that the file must be openend rw.
+                                     If it can't be opened rw (eg EPERM or EROFS) it will
+                                     be opened ro and the fcntl locks will be shared, that
+                                     at least prevent other users who have rw access to the
+                                     file from placing excl locks. */
+#define ADFLAGS_RDWR      (1<<8)  /* open read/write */
+#define ADFLAGS_RDONLY    (1<<9)  /* open read only */
+#define ADFLAGS_CREATE    (1<<10)  /* create file, open called with O_CREAT */
+#define ADFLAGS_EXCL      (1<<11)  /* exclusive open, open called with O_EXCL */
+#define ADFLAGS_TRUNC     (1<<12) /* truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_CACHE      (1 << 1)

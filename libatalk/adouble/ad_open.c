@@ -575,7 +575,9 @@ static int ad2openflags(int adflags)
 
     if (adflags & ADFLAGS_RDWR)
         oflags |= O_RDWR;
-    if (adflags & ADFLAGS_RDONLY)
+    if ((adflags & ADFLAGS_RDONLY) && (adflags & ADFLAGS_SETSHRMD))
+        oflags |= O_RDWR;
+    else
         oflags |= O_RDONLY;
     if (adflags & ADFLAGS_CREATE)
         oflags |= O_CREAT;
@@ -624,16 +626,29 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
     ad->ad_data_fork.adf_fd = open(path, oflags, admode);
 
     if (ad->ad_data_fork.adf_fd == -1) {
-        if (errno != OPEN_NOFOLLOW_ERRNO)
+        switch (errno) {
+        case EPERM:
+        case EROFS:
+            if ((adflags & ADFLAGS_SETSHRMD) && (adflags & ADFLAGS_RDONLY)) {
+                oflags &= ~O_RDWR;
+                oflags |= O_RDONLY;
+                if ((ad->ad_data_fork.adf_fd = open(path, oflags, admode)) == -1)
+                    return -1;
+                break;
+            }
             return -1;
-
-        ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
-        if ((lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN)) <= 0) {
-            free(ad->ad_data_fork.adf_syml);
+        case OPEN_NOFOLLOW_ERRNO:
+            ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
+            if ((lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN)) <= 0) {
+                free(ad->ad_data_fork.adf_syml);
+                return -1;
+            }
+            ad->ad_data_fork.adf_syml[lsz] = 0;
+            ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
+            break;
+        default:
             return -1;
         }
-        ad->ad_data_fork.adf_syml[lsz] = 0;
-        ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
     }
 
     if (!st_invalid)
@@ -674,43 +689,58 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
     ad_p = ad->ad_ops->ad_path(path, adflags);
     oflags = O_NOFOLLOW | ad2openflags(adflags);
     nocreatflags = oflags & ~(O_CREAT | O_EXCL);
+
     ad->ad_mdp->adf_fd = open(ad_p, nocreatflags);
 
-    if ( ad->ad_mdp->adf_fd < 0 ) {
-        if (!(errno == ENOENT && (oflags & O_CREAT)))
-            return ad_error(ad, adflags);
-        /*
-         * We're expecting to create a new adouble header file here
-         * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
-         */
-        LOG(log_debug, logtype_default, "ad_open(\"%s\"): creating adouble file",
-            fullpathname(path));
-        admode = mode;
-        errno = 0;
-        st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
-        if ((ad->ad_options & ADVOL_UNIXPRIV))
-            admode = mode;
-        admode = ad_hf_mode(admode);
-        if (errno == ENOENT) {
-            if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
-                return ad_error(ad, adflags);
+    if (ad->ad_mdp->adf_fd < 0) {
+        switch (errno) {
+        case EPERM:
+        case EROFS:
+            if ((adflags & ADFLAGS_RDONLY) && (adflags & ADFLAGS_SETSHRMD)) {
+                nocreatflags &= ~O_RDWR;
+                nocreatflags |= O_RDONLY;
+                if ((ad->ad_mdp->adf_fd = open(ad_p, nocreatflags)) == -1)
+                    return -1;
+                break;
             }
+            return -1;
+        case ENOENT:
+            if (!(oflags & O_CREAT))
+                return ad_error(ad, adflags);
+            /*
+             * We're expecting to create a new adouble header file here
+             * if ((oflags & O_CREAT) ==> (oflags & O_RDWR)
+             */
+            LOG(log_debug, logtype_default, "ad_open(\"%s\"): creating adouble file",
+                fullpathname(path));
             admode = mode;
+            errno = 0;
             st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
             if ((ad->ad_options & ADVOL_UNIXPRIV))
                 admode = mode;
             admode = ad_hf_mode(admode);
+            if (errno == ENOENT) {
+                if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
+                    return ad_error(ad, adflags);
+                }
+                admode = mode;
+                st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
+                if ((ad->ad_options & ADVOL_UNIXPRIV))
+                    admode = mode;
+                admode = ad_hf_mode(admode);
+            }
+
+            /* retry with O_CREAT */
+            ad->ad_mdp->adf_fd = open(ad_p, oflags, admode);
+            if ( ad->ad_mdp->adf_fd < 0 )
+                return ad_error(ad, adflags);
+
+            ad->ad_mdp->adf_flags = oflags;
+            /* just created, set owner if admin owner (root) */
+            if (!st_invalid)
+                ad_chown(ad_p, &st_dir);
+            break;
         }
-
-        /* retry with O_CREAT */
-        ad->ad_mdp->adf_fd = open(ad_p, oflags, admode);
-        if ( ad->ad_mdp->adf_fd < 0 )
-            return ad_error(ad, adflags);
-
-        ad->ad_mdp->adf_flags = oflags;
-        /* just created, set owner if admin owner (root) */
-        if (!st_invalid)
-            ad_chown(ad_p, &st_dir);
     } else {
         ad->ad_mdp->adf_flags = nocreatflags;
         if (fstat(ad->ad_mdp->adf_fd, &st_meta) == 0 && st_meta.st_size == 0) {
@@ -1162,7 +1192,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 
     oflags = (flags & ADFLAGS_DIR) | ADFLAGS_HF | ADFLAGS_RDONLY;
 
-    if ((ret = ad_open(adp, name, oflags)) < 0 && errno == EACCES) {
+    if ((ret = ad_open(adp, name, oflags | ADFLAGS_SETSHRMD)) < 0 && errno == EACCES) {
         uid = geteuid();
         if (seteuid(0)) {
             LOG(log_error, logtype_default, "ad_metadata(%s): seteuid failed %s", name, strerror(errno));
