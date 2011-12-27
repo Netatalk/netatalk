@@ -286,6 +286,7 @@ dnl --------------------------------------------------------------------------
 dnl Last minute substitutions
 dnl --------------------------------------------------------------------------
 
+dnl ac_cv_target_os is now host_os, ac_cv_target_cpu is now host_cpu
 AC_SUBST(LIBS)
 AC_SUBST(CFLAGS)
 

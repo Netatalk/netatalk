@@ -12,6 +12,7 @@
 #ifdef HAVE_AVAHI
 
 #include <unistd.h>
+#include <time.h>
 
 #include <avahi-common/strlst.h>
 

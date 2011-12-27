@@ -20,8 +20,7 @@
 	solaris
 	linux libc5
 */
-#if defined(NEED_RQUOTA) || (defined(sun) && defined(__svr4__)) || \
-(defined(__GNU_LIBRARY__) && __GNU_LIBRARY__ < 6)
+#if defined(NEED_RQUOTA) || defined(SOLARIS) || (defined(__GNU_LIBRARY__) && __GNU_LIBRARY__ < 6)
 
 #ifndef u_int
 #define u_int unsigned

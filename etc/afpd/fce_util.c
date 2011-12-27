@@ -193,6 +193,8 @@ int fce_set_coalesce(char *opt)
     }
 
     free(e);
+
+    return AFP_OK;
 }
 
 

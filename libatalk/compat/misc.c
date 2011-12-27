@@ -8,6 +8,6 @@
 #include <dirent.h>
 int dirfd(DIR *dir)
 {
-    return dir->dd_fd;
+    return dir->d_fd;
 }
 #endif

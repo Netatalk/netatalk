@@ -603,6 +603,8 @@ int fce_set_events(const char *events)
     }
 
     free(e);
+
+    return AFP_OK;
 }
 
 #ifdef FCE_TEST_MAIN

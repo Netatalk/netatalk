@@ -293,6 +293,8 @@ if test x"$this_os" = "xsolaris"; then
 	AC_DEFINE(_ISOC9X_SOURCE, 1, [Compatibility macro])
 	AC_DEFINE(NO_STRUCT_TM_GMTOFF, 1, [Define if the gmtoff member of struct tm is not available])
 	AC_DEFINE(SOLARIS, 1, [Solaris compatibility macro])
+    AC_DEFINE(_XOPEN_SOURCE, 600, [Solaris compilation environment])
+    AC_DEFINE(__EXTENSIONS__,  1, [Solaris compilation environment])
 	CFLAGS="-I\$(top_srcdir)/sys/generic $CFLAGS"
 	need_dash_r=yes
 	sysv_style=solaris
