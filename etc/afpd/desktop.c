@@ -801,7 +801,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     } else
         adp = of->of_ad;
 
-    if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | (isadir) ? ADFLAGS_DIR : 0) < 0 ) {
+    if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ((isadir) ? ADFLAGS_DIR : 0)) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return( AFPERR_NOITEM );

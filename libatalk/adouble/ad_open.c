@@ -627,6 +627,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
 
     if (ad->ad_data_fork.adf_fd == -1) {
         switch (errno) {
+        case EACCES:
         case EPERM:
         case EROFS:
             if ((adflags & ADFLAGS_SETSHRMD) && (adflags & ADFLAGS_RDONLY)) {
@@ -694,6 +695,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
 
     if (ad->ad_mdp->adf_fd < 0) {
         switch (errno) {
+        case EACCES:
         case EPERM:
         case EROFS:
             if ((adflags & ADFLAGS_RDONLY) && (adflags & ADFLAGS_SETSHRMD)) {
