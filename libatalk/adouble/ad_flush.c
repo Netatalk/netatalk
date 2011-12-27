@@ -188,6 +188,9 @@ int ad_close(struct adouble *ad, int adflags)
 {
     int err = 0;
 
+    if (ad == NULL)
+        return err;
+
     LOG(log_debug, logtype_default, "ad_close(%s)", adflags2logstr(adflags));
 
     if ((adflags & ADFLAGS_DF)
