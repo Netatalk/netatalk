@@ -2029,7 +2029,7 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
         adp = (*of)->of_ad;
     }
     else {
-        ret = ad_open(adp, path->u_name, ADFLAGS_HF | ADFLAGS_RDONLY);
+        ret = ad_open(adp, path->u_name, ADFLAGS_HF | ADFLAGS_RDWR);
         /* META and HF */
         if ( !ret && ad_reso_fileno(adp) != -1 && !(adp->ad_resource_fork.adf_flags & ( O_RDWR | O_WRONLY))) {
             /* from AFP spec.
