@@ -693,7 +693,9 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
 
     ad->ad_mdp->adf_fd = open(ad_p, nocreatflags);
 
-    if (ad->ad_mdp->adf_fd < 0) {
+    if (ad->ad_mdp->adf_fd != -1) {
+        ad->ad_mdp->adf_flags = nocreatflags;
+    } else {
         switch (errno) {
         case EACCES:
         case EPERM:
@@ -703,6 +705,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
                 nocreatflags |= O_RDONLY;
                 if ((ad->ad_mdp->adf_fd = open(ad_p, nocreatflags)) == -1)
                     return -1;
+                ad->ad_mdp->adf_flags = nocreatflags;
                 break;
             }
             return -1;
@@ -742,15 +745,19 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             if (!st_invalid)
                 ad_chown(ad_p, &st_dir);
             break;
+        default:
+            return -1;
         }
-    } else {
-        ad->ad_mdp->adf_flags = nocreatflags;
-        if (fstat(ad->ad_mdp->adf_fd, &st_meta) == 0 && st_meta.st_size == 0) {
-            /* for 0 length files, treat them as new. */
-            ad->ad_mdp->adf_flags |= O_TRUNC;
-        } else {
-            /* we have valid data in st_meta stat structure, reused it in ad_header_read */
-            pst = &st_meta;
+    }
+
+    if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
+        /* check for 0 length files, treat them as new. */
+        if (fstat(ad->ad_mdp->adf_fd, &st_meta) == 0) {
+            if (st_meta.st_size == 0)
+                ad->ad_mdp->adf_flags |= O_TRUNC;
+            else
+                /* we have valid data in st_meta stat structure, reused it in ad_header_read */
+                pst = &st_meta;
         }
     }
 
