@@ -674,9 +674,9 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
 
     if (ad_meta_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
-        if (!(adflags & ADFLAGS_RDONLY) &&
+        if ((adflags & ADFLAGS_RDWR) &&
             /* and it was already denied: */
-            !(ad->ad_mdp->adf_flags & O_RDWR)) {
+            (ad->ad_mdp->adf_flags & O_RDONLY)) {
             errno = EACCES;
             return -1;
         }
@@ -793,20 +793,37 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     ssize_t rforklen;
     int oflags = O_NOFOLLOW;
 
-    oflags = ad2openflags(adflags) & ~(O_CREAT | O_TRUNC);
+    LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\", %04o)", path, mode);
 
-    if (ad_meta_fileno(ad) == -1) {
-        if ((ad_meta_fileno(ad) = open(path, oflags)) == -1)
+    oflags |= ad2openflags(adflags) & ~(O_CREAT | O_TRUNC);
+
+    if (ad_data_fileno(ad) != -1) {
+        /* the file is already open, but we want write access: */
+        if ((adflags & ADFLAGS_RDWR) &&
+            /* and it was already denied: */
+            (ad->ad_data_fork.adf_flags & O_RDONLY)) {
+            LOG(log_error, logtype_default, "ad_open_hf_ea(%s): rw request for ro file: %s",
+                fullpathname(path), strerror(errno));
+            errno = EACCES;
+            return -1;
+        }
+
+        /* it's not new anymore */
+        ad->ad_mdp->adf_flags &= ~( O_TRUNC | O_CREAT );
+    } else {
+        if ((ad_data_fileno(ad) = open(path, oflags)) == -1)
             goto error;
-        ad->ad_mdp->adf_flags = oflags;
-        ad->ad_mdp->adf_refcount = 1;
-        adf_lock_init(ad->ad_mdp);
+        ad->ad_data_fork.adf_flags = oflags;
+        adf_lock_init(&ad->ad_data_fork);
     }
 
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(ad, NULL) != 0) {
+        LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\", %04o): ad_header_read: %s", path, mode, strerror(errno));
+
         if (!(adflags & ADFLAGS_CREATE))
             goto error;
+        LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\", %04o): create metadata EA", path, mode);
 
         /* It doesnt exist, EPERM or another error */
         if (!(errno == ENOATTR || errno == ENOENT)) {
@@ -825,17 +842,17 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): created metadata EA", path);
     }
 
-    ad->ad_mdp->adf_refcount++;
+    ad->ad_data_fork.adf_refcount++;
 
-    if ((rforklen = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0)) > 0)
+    if ((rforklen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) > 0)
         ad->ad_rlen = rforklen;
 
     return 0;
 
 error:
-    if (ad_meta_fileno(ad) != -1) {
-        close(ad_meta_fileno(ad));
-        ad_meta_fileno(ad) = -1;
+    if (ad_data_fileno(ad) != -1) {
+        close(ad_data_fileno(ad));
+        ad_data_fileno(ad) = -1;
     }
     return ad_error(ad, adflags);
 }
@@ -880,7 +897,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", %04o)",
         path, mode);
 
-    if ((ad->ad_rlen = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
+    if ((ad->ad_rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
         switch (errno) {
         case ENOATTR:
             ad->ad_rlen = 0;
@@ -904,7 +921,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 
     /* Read the EA into the buffer */
     if (ad->ad_rlen > 0) {
-        if (sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1) {
+        if (sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1) {
             ret = -1;
             goto exit;
         }       
@@ -1089,8 +1106,8 @@ void ad_init(struct adouble *ad, int flags, int options)
         break;
     case AD_VERSION_EA:
         ad->ad_ops = &ad_adouble_ea;
-        ad->ad_rfp = &ad->ad_data_fork;
-        ad->ad_mdp = &ad->ad_data_fork;
+        ad->ad_rfp = &ad->ad_resource_fork;
+        ad->ad_mdp = &ad->ad_resource_fork;
         break;
     default:
         LOG(log_error, logtype_default, "ad_init: unknown AD version");
@@ -1268,10 +1285,22 @@ exit:
 int ad_refresh(struct adouble *ad)
 {
 
-    if (ad_meta_fileno(ad) == -1)
+    switch (ad->ad_flags) {
+    case AD_VERSION2:
+        if (ad_meta_fileno(ad) == -1)
+            return -1;
+        return ad->ad_ops->ad_header_read(ad, NULL);
+        break;
+    case AD_VERSION_EA:
+        if (ad_data_fileno(ad) == -1)
+            return -1;
+        return ad->ad_ops->ad_header_read(ad, NULL);
+        break;
+    default:
         return -1;
+        break;
+    }
 
-    return ad->ad_ops->ad_header_read(ad, NULL);
 }
 
 int ad_openat(struct adouble  *ad,
