@@ -250,7 +250,7 @@ ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
 /*******************************************************************
 wide strcasestr()
 ********************************************************************/
-/* */
+/* surrogate pair support */
 
 ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 {
@@ -261,9 +261,22 @@ ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 	slen = strlen_w(s);
 	inslen = strlen_w(ins);
 	r = (ucs2_t *)s;
-	while ((r = strcasechr_w(r, *ins))) {
-		if (strncasecmp_w(r, ins, inslen) == 0) return r;
-		r++;
+
+	if ((0xD800 <= *ins) && (*ins < 0xDC00)) {
+		if ((0xDC00 <= ins[1]) && (ins[1] < 0xE000)) {
+			u_int32_t ins_sp = (u_int32_t)*ins << 16 | (u_int32_t)ins[1];
+			while ((r = strcasechr_sp(r, ins_sp))) {
+				if (strncasecmp_w(r, ins, inslen) == 0) return r;
+				r++;
+			}
+		} else {
+			return NULL; /* illegal sequence */
+		}
+	} else {
+		while ((r = strcasechr_w(r, *ins))) {
+			if (strncasecmp_w(r, ins, inslen) == 0) return r;
+			r++;
+		}
 	}
 	return NULL;
 }
@@ -359,6 +372,8 @@ ucs2_t *strdup_w(const ucs2_t *src)
 /*******************************************************************
 copy a string with max len
 ********************************************************************/
+/* This function is not used. */
+/* NOTE: not check isolation of surrogate pair */
 
 ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 {
@@ -378,7 +393,9 @@ ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 /*******************************************************************
 append a string of len bytes and add a terminator
 ********************************************************************/
+/* These functions are not used. */
 
+/* NOTE: not check isolation of surrogate pair */
 ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 {
 	size_t start;
@@ -395,7 +412,7 @@ ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 	return dest;
 }
 
-
+/* no problem of surrogate pair */
 ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
 {
 	size_t start;

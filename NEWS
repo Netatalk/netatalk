@@ -32,6 +32,7 @@ Changes in 2.2.2
        files
 * FIX: Fix compilation error when AppleTalk support is disabled
 * FIX: Portability fixes
+* FIX: search of surrogate pair
 
 Changes in 2.2.1
 ================
