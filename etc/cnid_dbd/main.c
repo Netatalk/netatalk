@@ -288,8 +288,12 @@ int main(int argc, char *argv[])
 
     set_processname("cnid_dbd");
 
-    while (( ret = getopt( argc, argv, "d")) != -1 ) {
+    while (( ret = getopt( argc, argv, "vVd")) != -1 ) {
         switch (ret) {
+        case 'v':
+        case 'V':
+            printf("cnid_dbd (Netatalk %s)\n", VERSION);
+            return -1;
         case 'd':
             delete_bdb = 1;
             break;

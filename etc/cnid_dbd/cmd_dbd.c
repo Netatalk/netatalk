@@ -170,7 +170,8 @@ static void set_signal(void)
 
 static void usage (void)
 {
-    printf("Usage: dbd [-e|-t|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
+    printf("dbd (Netatalk %s)\n"
+           "Usage: dbd [-e|-t|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
@@ -186,7 +187,7 @@ static void usage (void)
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
            "      Options: -c Don't check .AppleDouble stuff, only ckeck orphaned.\n"
-           "               -n Don't open CNID database, skip CNID checks\n\n"
+           "               -n Don't open CNID database, skip CNID checks.\n\n"
            "   -r Rebuild volume:\n"
            "      1. Sync CNIDSs in database with volume\n"
            "      2. Make sure .AppleDouble dir exist, create if missing\n"
@@ -197,18 +198,21 @@ static void usage (void)
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
            "      Options: -c Don't create .AppleDouble stuff, only cleanup orphaned.\n"
-           "               -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
-           "                  only available for volumes without 'nocnidcache' option. Implies -e.\n\n"
+           "               -f wipe database and rebuild from IDs stored in AppleDouble\n"
+           "                  files, only available for volumes without 'nocnidcache'\n"
+           "                  option. Implies -e.\n\n"
            "   -u Upgrade:\n"
-           "      Opens the database which triggers any necessary upgrades, then closes and exits.\n\n"
+           "      Opens the database which triggers any necessary upgrades,\n"
+           "      then closes and exits.\n\n"
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
            "   -t show statistics while running\n"
            "   -v verbose\n\n"
            "WARNING:\n"
-           "For -r -f restore of the CNID database from the adouble files, the CNID must of course\n"
-           "be synched to them files first with a plain -r rebuild !\n"
+           "For -r -f restore of the CNID database from the adouble files,\n"
+           "the CNID must of course be synched to them files first with a plain -r rebuild!\n"
+           , VERSION
         );
 }
 
