@@ -180,8 +180,7 @@ wide & sp strcasechr()
 ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 {
 	while (*s != 0) {
-/*		LOG(log_debug, logtype_default, "Comparing %X to %X (%X - %X)", c, *s, toupper_w(c), toupper_w(*s));*/
-		if (toupper_w(c) == toupper_w(*s)) return (ucs2_t *)s;
+		if (tolower_w(c) == tolower_w(*s)) return (ucs2_t *)s;
 		s++;
 	}
 	if (c == *s) return (ucs2_t *)s;
@@ -193,7 +192,7 @@ ucs2_t *strcasechr_sp(const ucs2_t *s, u_int32_t c_sp)
 {
 	if (*s == 0) return NULL;
 	while (s[1] != 0) {
-		if (toupper_sp(c_sp) == toupper_sp((u_int32_t)*s << 16 | (u_int32_t)s[1])) return (ucs2_t *)s;
+		if (tolower_sp(c_sp) == tolower_sp((u_int32_t)*s << 16 | (u_int32_t)s[1])) return (ucs2_t *)s;
 		s++;
 	}
 
