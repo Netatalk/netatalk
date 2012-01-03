@@ -316,7 +316,7 @@ static int testlock(const struct ad_fd *adf, off_t off, off_t len)
 
 static uint16_t ad_openforks_v2(struct adouble *ad, uint16_t attrbits)
 {
-  u_int16_t ret = 0;
+  uint16_t ret = 0;
   struct ad_fd *adf;
   off_t off;
 
@@ -371,7 +371,7 @@ static uint16_t ad_openforks_v2(struct adouble *ad, uint16_t attrbits)
 
 static uint16_t ad_openforks_ea(struct adouble *ad, uint16_t attrbits)
 {
-    u_int16_t ret = 0;
+    uint16_t ret = 0;
     struct ad_fd *adf;
     off_t off;
     off_t len;

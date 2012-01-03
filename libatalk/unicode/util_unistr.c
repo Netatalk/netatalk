@@ -38,8 +38,8 @@ int strlower_w(ucs2_t *s)
 	while (*s) {
 		if ((0xD800 <= *s) && (*s < 0xDC00)) {
 			if ((0xDC00 <= s[1]) && (s[1] < 0xE000)) {
-				u_int32_t s_sp = (u_int32_t)*s << 16 | (u_int32_t)s[1];
-				u_int32_t v_sp = tolower_sp(s_sp);
+				uint32_t s_sp = (uint32_t)*s << 16 | (uint32_t)s[1];
+				uint32_t v_sp = tolower_sp(s_sp);
 				if (v_sp != s_sp) {
 					*s = v_sp >> 16;
 					s++;
@@ -72,8 +72,8 @@ int strupper_w(ucs2_t *s)
 	while (*s) {
 		if ((0xD800 <= *s) && (*s < 0xDC00)) {
 			if ((0xDC00 <= s[1]) && (s[1] < 0xE000)) {
-				u_int32_t s_sp = (u_int32_t)*s << 16 | (u_int32_t)s[1];
-				u_int32_t v_sp = toupper_sp(s_sp);
+				uint32_t s_sp = (uint32_t)*s << 16 | (uint32_t)s[1];
+				uint32_t v_sp = toupper_sp(s_sp);
 				if (v_sp != s_sp) {
 					*s = v_sp >> 16;
 					s++;
@@ -104,7 +104,7 @@ int islower_w(ucs2_t c)
 	return ( c == tolower_w(c));
 }
 
-int islower_sp(u_int32_t c_sp)
+int islower_sp(uint32_t c_sp)
 {
 	return ( c_sp == tolower_sp(c_sp));
 }
@@ -120,7 +120,7 @@ int isupper_w(ucs2_t c)
 	return ( c == toupper_w(c));
 }
 
-int isupper_sp(u_int32_t c_sp)
+int isupper_sp(uint32_t c_sp)
 {
 	return ( c_sp == toupper_sp(c_sp));
 }
@@ -188,11 +188,11 @@ ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 	return NULL;
 }
 
-ucs2_t *strcasechr_sp(const ucs2_t *s, u_int32_t c_sp)
+ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 {
 	if (*s == 0) return NULL;
 	while (s[1] != 0) {
-		if (toupper_sp(c_sp) == toupper_sp((u_int32_t)*s << 16 | (u_int32_t)s[1])) return (ucs2_t *)s;
+		if (toupper_sp(c_sp) == toupper_sp((uint32_t)*s << 16 | (uint32_t)s[1])) return (ucs2_t *)s;
 		s++;
 	}
 
@@ -279,7 +279,7 @@ int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
 
 	while (*a && *b) {
 		if ((0xD800 <= *a) && (*a < 0xDC00)) {
-			if (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) return ret;
+			if (ret = tolower_sp((uint32_t)*a << 16 | (uint32_t)a[1]) - tolower_sp((uint32_t)*b << 16 | (uint32_t)b[1])) return ret;
 			a++;
 			b++;
 			if (!(*a && *b)) return (tolower_w(*a) - tolower_w(*b)); /* avoid buffer over run */
@@ -305,7 +305,7 @@ int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 
 	while ((n < len) && *a && *b) {
 		if ((0xD800 <= *a) && (*a < 0xDC00)) {
-			if (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) return ret;
+			if (ret = tolower_sp((uint32_t)*a << 16 | (uint32_t)a[1]) - tolower_sp((uint32_t)*b << 16 | (uint32_t)b[1])) return ret;
 			a++;
 			b++;
 			n++;
