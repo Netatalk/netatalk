@@ -364,22 +364,22 @@ int main(int argc, char **argv)
 
     /* Get db lock */
     if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
-        goto exit_failure;
+        goto exit_noenv;
     if (db_locked != LOCK_EXCL) {
         /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
         if (exclusive) {
             dbd_log(LOGSTD, "Database is in use and exlusive was requested");
-            goto exit_failure;
+            goto exit_noenv;
         }
         if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD)
-            goto exit_failure;
+            goto exit_noenv;
     }
 
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
         if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
-            goto exit_failure;
+            goto exit_noenv;
 
         snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
@@ -390,7 +390,7 @@ int main(int argc, char **argv)
         }
         dbd_log( LOGDEBUG, "Removed old database.");
         if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
-            goto exit_failure;
+            goto exit_noenv;
     }
 
     /* 
@@ -398,13 +398,13 @@ int main(int argc, char **argv)
     */
     if ( ! nocniddb) {
         if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
-            goto exit_failure;
+            goto exit_noenv;
         
         if (dbif_env_open(dbd,
                           &db_param,
                           (db_locked == LOCK_EXCL) ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
             dbd_log( LOGSTD, "error opening database!");
-            goto exit_failure;
+            goto exit_noenv;
         }
 
         if (db_locked == LOCK_EXCL)
@@ -455,8 +455,13 @@ exit_success:
     ret = 0;
 
 exit_failure:
+    if (dbif_env_remove(dbpath) < 0) {
+        dbd_log( LOGSTD, "Error removing BerkeleyDB database environment");
+        ret++;
+    }
     get_lock(0, NULL);
-    
+
+exit_noenv:    
     if ((fchdir(cdir)) < 0)
         dbd_log(LOGSTD, "fchdir: %s", strerror(errno));
 
