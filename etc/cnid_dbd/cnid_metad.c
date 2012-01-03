@@ -451,8 +451,12 @@ int main(int argc, char *argv[])
 
     set_processname("cnid_metad");
 
-    while (( cc = getopt( argc, argv, "ds:p:h:u:g:l:f:")) != -1 ) {
+    while (( cc = getopt( argc, argv, "vVds:p:h:u:g:l:f:")) != -1 ) {
         switch (cc) {
+        case 'v':
+        case 'V':
+            printf("cnid_metad (Netatalk %s)\n", VERSION);
+            return -1;
         case 'd':
             debug = 1;
             break;
