@@ -682,7 +682,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         return( AFPERR_BADTYPE );
 
     upath = s_path->u_name;
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     
     /* if upath is deleted we already in trouble anyway */
     if ((of = of_findname(s_path))) {
@@ -1465,7 +1465,7 @@ int copyfile(const struct vol *s_vol,
         sfd, src, dst, newname);
 
     if (adp == NULL) {
-        ad_init(&ads, s_vol->v_adouble, s_vol->v_ad_options); 
+        ad_init(&ads, s_vol);
         adp = &ads;
     }
 
@@ -1491,7 +1491,7 @@ int copyfile(const struct vol *s_vol,
       st.st_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     }
 
-    ad_init(&add, d_vol->v_adouble, d_vol->v_ad_options);
+    ad_init(&add, d_vol);
     if (ad_open(&add, dst, adflags | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL, st.st_mode) < 0) {
         ret_err = errno;
         ad_close( adp, adflags );
@@ -1601,7 +1601,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
 
     LOG(log_debug, logtype_afpd, "deletefile('%s')", file);
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     if (checkAttrib) {
         /* was EACCESS error try to get only metadata */
         /* we never want to create a resource fork here, we are going to delete it 
@@ -2114,7 +2114,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         return AFPERR_PARAM ;
     }
     
-    ad_init(&ads, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ads, vol);
     if (!(adsp = find_adouble( path, &s_of, &ads))) {
         return afp_errno;
     }
@@ -2147,7 +2147,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         goto err_exchangefile;
     }
 
-    ad_init(&add, vol->v_adouble, vol->v_ad_options);
+    ad_init(&add, vol);
     if (!(addp = find_adouble( path, &d_of, &add))) {
         err = afp_errno;
         goto err_exchangefile;

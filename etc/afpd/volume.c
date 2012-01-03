@@ -1619,7 +1619,7 @@ static int getvolparams( uint16_t bitmap, struct vol *vol, struct stat *st, char
      * For MacOS8.x support we need to create the
      * .Parent file here if it doesn't exist. */
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     if (ad_open(&ad, vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0 ) {
         isad = 0;
         vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
@@ -2604,7 +2604,7 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     if (bitmap != (1 << VOLPBIT_BDATE))
         return AFPERR_BITMAP;
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     if ( ad_open(&ad,  vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) < 0 ) {
         if (errno == EROFS)
             return AFPERR_VLOCK;
@@ -2699,7 +2699,7 @@ static int create_special_folder (const struct vol *vol, const struct _special_f
 
     if ( !ret && folder->hide) {
         /* Hide it */
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(&ad, vol);
         if (ad_open(&ad, p, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
             free(p);
             free(q);

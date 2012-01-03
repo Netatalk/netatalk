@@ -50,6 +50,7 @@
 #include <atalk/bstradd.h>
 #include <atalk/compat.h>
 #include <atalk/errchk.h>
+#include <atalk/volume.h>
 
 #include "ad_lock.h"
 
@@ -1096,9 +1097,9 @@ int ad_mkdir( const char *path, int mode)
     return ret;
 }
 
-void ad_init(struct adouble *ad, int flags, int options)
+static void ad_init_func(struct adouble *ad)
 {
-    switch (flags) {
+    switch (ad->ad_flags) {
     case AD_VERSION2:
         ad->ad_ops = &ad_adouble;
         ad->ad_rfp = &ad->ad_resource_fork;
@@ -1110,13 +1111,9 @@ void ad_init(struct adouble *ad, int flags, int options)
         ad->ad_mdp = &ad->ad_resource_fork;
         break;
     default:
-        LOG(log_error, logtype_default, "ad_init: unknown AD version");
-        errno = EIO;
-        return;
+        AFP_PANIC("ad_init: unknown AD version");
     }
 
-    ad->ad_flags = flags;
-    ad->ad_options = options;
     ad_data_fileno(ad) = -1;
     ad_reso_fileno(ad) = -1;
     ad_meta_fileno(ad) = -1;
@@ -1127,8 +1124,24 @@ void ad_init(struct adouble *ad, int flags, int options)
     ad->ad_resource_fork.adf_refcount = 0;
     ad->ad_resforkbuf = NULL;
     ad->ad_data_fork.adf_refcount = 0;
-    ad->ad_data_fork.adf_syml=0;
+    ad->ad_data_fork.adf_syml = 0;
     ad->ad_inited = 0;
+    return;
+}
+
+void ad_init_old(struct adouble *ad, int flags, int options)
+{
+    ad->ad_flags = flags;
+    ad->ad_options = options;
+    ad_init_func(ad);
+}
+
+void ad_init(struct adouble *ad, const struct vol * restrict vol)
+{
+    ad->ad_flags = vol->v_adouble;
+    ad->ad_options = vol->v_ad_options;
+    ad->ad_maxeafssize = 3500;  /* FIXME: option from vol */
+    ad_init_func(ad);
 }
 
 /*!

@@ -147,8 +147,21 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
 int ad_flush(struct adouble *ad)
 {
     int len;
+    struct ad_fd *adf;
 
-    if (( ad->ad_mdp->adf_flags & O_RDWR )) {
+    switch (ad->ad_flags) {
+    case AD_VERSION2:
+        adf = ad->ad_mdp;
+        break;
+    case AD_VERSION_EA:
+        adf = &ad->ad_data_fork;
+        break;
+    default:
+        LOG(log_error, logtype_afpd, "ad_flush: unexpected adouble version");
+        return -1;
+    }
+
+    if ((adf->adf_flags & O_RDWR)) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
             if (ad->ad_rlen > 0xffffffff)
                 ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);

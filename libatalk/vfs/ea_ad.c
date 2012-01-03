@@ -1397,7 +1397,7 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
     if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
-            ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
+            ad_init(&ad, vol); 
             if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666)) != 0) {
                 LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): ad_open error: '%s'", src, dst, dst);
                 ret = AFPERR_MISC;
@@ -1494,7 +1494,7 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
     if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
-            ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
+            ad_init(&ad, vol);
             if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666)) != 0) {
                 LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): ad_open error: '%s'", src, dst, dst);
                 ret = AFPERR_MISC;

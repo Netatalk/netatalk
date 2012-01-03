@@ -912,7 +912,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     /* get_id needs adp for reading CNID from adouble file */
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     if ((ad_open(&ad, path->u_name, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY)) == 0) /* 1 */
         adp = &ad;
 
@@ -1500,7 +1500,7 @@ int getdirparams(const struct vol *vol,
                    (1 << DIRPBIT_BDATE) |
                    (1 << DIRPBIT_FINFO)))) {
 
-        ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(&ad, vol);
         if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
             isad = 1;
             if (ad.ad_mdp->adf_flags & O_CREAT) {
@@ -1927,7 +1927,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
         bitmap = bitmap>>1;
         bit++;
     }
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
 
     if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
         /*
@@ -2281,7 +2281,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return( AFPERR_PARAM );
     }
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) < 0)  {
         if (vol_noadouble(vol))
             goto createdir_done;
@@ -2348,7 +2348,7 @@ int renamedir(const struct vol *vol,
 
     vol->vfs->vfs_renamedir(vol, dirfd, src, dst);
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
 
     if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) == 0) {
         ad_setname(&ad, newname);
@@ -2376,7 +2376,7 @@ int deletecurdir(struct vol *vol)
 
     fdir = curdir;
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     /* we never want to create a resource fork here, we are going to delete it */
     if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
 

@@ -308,7 +308,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
              * create .AppleDouble if the file is already opened, so we
              * use a diff one, it's not a pb,ie it's not the same file, yet.
              */
-            ad_init(&ad, vol->v_adouble, vol->v_ad_options); 
+            ad_init(&ad, vol); 
             if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) == 0) {
             	ad_close(&ad, ADFLAGS_HF);
     	        if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) ) 

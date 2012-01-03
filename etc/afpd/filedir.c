@@ -247,7 +247,7 @@ static int moveandrename(const struct vol *vol,
         "moveandrename: [\"%s\"/\"%s\"] -> \"%s\"",
         cfrombstr(sdir->d_u_name), oldname, newname);
 
-    ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+    ad_init(&ad, vol);
     adp = &ad;
     adflags = 0;
 

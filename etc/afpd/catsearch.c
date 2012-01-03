@@ -210,7 +210,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
 	if (!isdir && (of = of_findname(path))) {
 		adp = of->of_ad;
 	} else {
-		ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+		ad_init(&ad, vol);
 		adp = &ad;
 	} 
 

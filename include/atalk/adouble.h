@@ -161,7 +161,6 @@ struct ad_fd {
     int          adf_fd;        /* -1: invalid, -2: symlink */
     char         *adf_syml;
     int          adf_flags;
-    int          adf_excl;
     adf_lock_t   *adf_lock;
     int          adf_refcount, adf_lockcount, adf_lockmax;
 };
@@ -199,6 +198,7 @@ struct adouble {
     int                 ad_refcount;       /* multiple forks may open one adouble     */
     void                *ad_resforkbuf;    /* buffer for AD_VERSION_EA ressource fork */
     size_t              ad_resforkbufsize; /* size of ad_resforkbuf                   */
+    size_t              ad_maxeafssize;    /* maximum EA size allowed from the fs     */
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
     char                *ad_m_name;        /* mac name for open fork                  */
@@ -250,11 +250,20 @@ struct adouble {
 
 #define BYTELOCK_MAX (AD_FILELOCK_BASE - 1)
 
+/* datafork and rsrcfork sharemode locks */
 #define AD_FILELOCK_OPEN_WR        (AD_FILELOCK_BASE + 0)
 #define AD_FILELOCK_OPEN_RD        (AD_FILELOCK_BASE + 1)
-#define AD_FILELOCK_DENY_WR        (AD_FILELOCK_BASE + 2)
-#define AD_FILELOCK_DENY_RD        (AD_FILELOCK_BASE + 3)
-#define AD_FILELOCK_OPEN_NONE      (AD_FILELOCK_BASE + 4)
+#define AD_FILELOCK_RSRC_OPEN_WR   (AD_FILELOCK_BASE + 2)
+#define AD_FILELOCK_RSRC_OPEN_RD   (AD_FILELOCK_BASE + 3)
+
+#define AD_FILELOCK_DENY_WR        (AD_FILELOCK_BASE + 4)
+#define AD_FILELOCK_DENY_RD        (AD_FILELOCK_BASE + 5)
+#define AD_FILELOCK_RSRC_DENY_WR   (AD_FILELOCK_BASE + 6)
+#define AD_FILELOCK_RSRC_DENY_RD   (AD_FILELOCK_BASE + 7)
+
+
+#define AD_FILELOCK_OPEN_NONE      (AD_FILELOCK_BASE + 8)
+#define AD_FILELOCK_RSRC_OPEN_NONE (AD_FILELOCK_BASE + 9)
 
 /* time stuff. we overload the bits a little.  */
 #define AD_DATE_CREATE         0
@@ -350,8 +359,6 @@ extern int ad_close (struct adouble *, int);
 /* ad_lock.c */
 extern int ad_testlock      (struct adouble *adp, int eid, off_t off);
 extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
-extern int ad_excl_lock     (struct adouble *adp, uint32_t eid);
-
 extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
 extern void ad_unlock(struct adouble *, int user);
 extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
@@ -365,7 +372,9 @@ extern const char *ad_path      (const char *, int);
 extern const char *ad_path_ea   (const char *, int);
 extern int ad_mode        (const char *, int);
 extern int ad_mkdir       (const char *, int);
-extern void ad_init       (struct adouble *, int, int );
+struct vol;
+extern void ad_init       (struct adouble *, const struct vol * restrict);
+extern void ad_init_old   (struct adouble *ad, int flags, int options);
 extern int ad_open        (struct adouble *ad, const char *path, int adflags, ...);
 extern int ad_openat      (struct adouble *, int dirfd, const char *path, int adflags, ...);
 extern int ad_refresh     (struct adouble *);

@@ -102,12 +102,15 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
                 }
             }
         } else { /* AD_VERSION_EA */
-            if ((off + buflen) > ad->ad_rlen) {
+            if (off > ad->ad_rlen) {
                 errno = ERANGE;
                 return -1;
             }
-            memcpy(buf, ad->ad_resforkbuf + off, buflen);
-            cc = buflen;
+            if (ad->ad_rlen == 0)
+                return 0;
+            if ((off + buflen) > ad->ad_rlen)
+                cc = ad->ad_rlen;
+            memcpy(buf, ad->ad_resforkbuf + off, cc);
         }
     }
 

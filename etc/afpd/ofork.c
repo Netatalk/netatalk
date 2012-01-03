@@ -186,7 +186,7 @@ of_alloc(struct vol *vol,
 
         /* initialize to zero. This is important to ensure that
            ad_open really does reinitialize the structure. */
-        ad_init(ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(ad, vol);
 
         ad->ad_m_namelen = UTF8FILELEN_EARLY +1;
         /* here's the deal: we allocate enough for the standard mac file length.
@@ -442,7 +442,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path, struct adouble *
     if ((of = of_findname(path))) {
         adp = of->of_ad;
     } else {
-        ad_init(ad, vol->v_adouble, vol->v_ad_options);
+        ad_init(ad, vol);
         adp = ad;
     }
     return adp;

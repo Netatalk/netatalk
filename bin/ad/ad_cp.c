@@ -543,7 +543,7 @@ static int copy(const char *path,
                 badcp = rval = 1;
                 break;
             }
-            ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
+            ad_init_old(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
             if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
@@ -610,7 +610,7 @@ static int copy(const char *path,
                 badcp = rval = 1;
                 break;
             }
-            ad_init(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
+            ad_init_old(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
             if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }

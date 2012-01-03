@@ -208,9 +208,7 @@ static int fork_setmode(struct adouble *adp, int eid, int access, int ofrefnum)
                 return ret;
         }
     }
-    if ( access == (OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD)) {
-        return ad_excl_lock(adp, eid);
-    }
+
     return 0;
 }
 
@@ -453,7 +451,9 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
      */
 
     /* don't try to lock non-existent rforks. */
-    if ((eid == ADEID_DFORK) || (ad_meta_fileno(ofork->of_ad) != -1)) { /* META */
+    if ((eid == ADEID_DFORK)
+        || (ad_meta_fileno(ofork->of_ad) != -1)
+        || (vol->v_adouble & AD_VERSION_EA)) { /* META */
 
         ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */

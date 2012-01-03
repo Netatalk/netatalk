@@ -150,7 +150,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             adflags = ADFLAGS_DIR;
 
         adp = &ad;
-        ad_init(adp, vol->v_adouble, vol->v_ad_options);
+        ad_init(adp, vol);
         if (ad_metadata(uname, adflags, adp) != 0 ) {
             switch (errno) {
             case ENOENT:

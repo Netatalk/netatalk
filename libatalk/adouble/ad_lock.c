@@ -2,11 +2,9 @@
  * Copyright (c) 1998,1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT for more information.
  *
- * Byte-range locks. This uses either whole-file flocks to fake byte
- * locks or fcntl-based actual byte locks. Because fcntl locks are
+ * Because fcntl locks are
  * process-oriented, we need to keep around a list of file descriptors
- * that refer to the same file. Currently, this doesn't serialize access 
- * to the locks. as a result, there's the potential for race conditions. 
+ * that refer to the same file.
  *
  * TODO: fix the race when reading/writing.
  *       keep a pool of both locks and reference counters around so that
@@ -29,11 +27,6 @@
 #include <string.h>
 
 #include "ad_lock.h"
-
-/* translate between ADLOCK styles and specific locking mechanisms */
-#define XLATE_FLOCK(type) ((type) == ADLOCK_RD ? LOCK_SH : \
-((type) == ADLOCK_WR ? LOCK_EX : \
- ((type) == ADLOCK_CLR ? LOCK_UN : -1)))
 
 /* ----------------------- */
 static int set_lock(int fd, int cmd,  struct flock *lock)
@@ -81,10 +74,8 @@ static void adf_freelock(struct ad_fd *ad, const int i)
 
     if (--(*lock->refcount) < 1) {
 	free(lock->refcount); 
-	if (!ad->adf_excl) {
-	    lock->lock.l_type = F_UNLCK;
-	    set_lock(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
-	}
+    lock->lock.l_type = F_UNLCK;
+    set_lock(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
     }
 
     ad->adf_lockcount--;
@@ -144,9 +135,9 @@ static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
     adf_lock_t *lock = ad->adf_lock;
     int i;
     
-    if (!ad->adf_excl) for (i = 0; i < ad->adf_lockcount; i++) {
-      if (OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
-	set_lock(fd, F_SETLK, &lock[i].lock);
+    for (i = 0; i < ad->adf_lockcount; i++) {
+        if (OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
+            set_lock(fd, F_SETLK, &lock[i].lock);
     }
 }
 
@@ -178,17 +169,20 @@ static int adf_findxlock(struct ad_fd *ad,
                          const off_t off,
                          const off_t len)
 {
-  adf_lock_t *lock = ad->adf_lock;
-  int i;
+    adf_lock_t *lock = ad->adf_lock;
+    int i;
   
-  for (i = 0; i < ad->adf_lockcount; i++) {
-    if ((((type & ADLOCK_RD) && (lock[i].lock.l_type == F_RDLCK)) ||
-	 ((type & ADLOCK_WR) && (lock[i].lock.l_type == F_WRLCK))) &&
-	(lock[i].user != fork) && 
-	OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
-	    return i;
-  } 
-  return -1;
+    for (i = 0; i < ad->adf_lockcount; i++) {
+        if ((((type & ADLOCK_RD) && (lock[i].lock.l_type == F_RDLCK))
+             ||
+             ((type & ADLOCK_WR) && (lock[i].lock.l_type == F_WRLCK)))
+            &&
+            (lock[i].user != fork)
+            && 
+            OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) 
+            return i;
+    } 
+    return -1;
 }
 
 /* okay, this needs to do the following:
@@ -256,304 +250,71 @@ static off_t hf2off(off_t off)
 	return start;
 }
 
-/* ------------------ */
-int ad_lock(struct adouble *ad, const uint32_t eid, const int locktype,
-            const off_t off, const off_t len, const int fork)
+/* -------------- 
+	translate a resource fork lock to an offset
+*/
+static off_t rf2off(off_t off)
 {
-  struct flock lock;
-  struct ad_fd *adf;
-  adf_lock_t *adflock;
-  int oldlock;
-  int i;
-  int type;  
-
-  lock.l_start = off;
-  type = locktype;
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_data_fork;
-    if ((type & ADLOCK_FILELOCK)) {
-        if (ad_meta_fileno(ad) != -1) { /* META */
-            adf = ad->ad_mdp;
-            lock.l_start = df2off(off);
-        }
-    }
-  } else { /* rfork */
-    if (ad_meta_fileno(ad) == -1 || ad_reso_fileno(ad) == -1) {
-        /* there's no meta data. return a lock error 
-         * otherwise if a second process is able to create it
-         * locks are a mess.
-         */
-        errno = EACCES;
-        return -1;
-    }
-    if (type & ADLOCK_FILELOCK) {
-      adf = ad->ad_mdp;			/* either resource or meta data (set in ad_open) */
-      lock.l_start = hf2off(off);
-    }
-    else {
-      /* we really want the resource fork it's a byte lock */
-      adf = &ad->ad_resource_fork;
-      lock.l_start += ad_getentryoff(ad, eid);
-    }
-  }
-  /* NOTE: we can't write lock a read-only file. on those, we just
-    * make sure that we have a read lock set. that way, we at least prevent
-    * someone else from really setting a deny read/write on the file. 
-    */
-  if (!(adf->adf_flags & O_RDWR) && (type & ADLOCK_WR)) {
-      type = (type & ~ADLOCK_WR) | ADLOCK_RD;
-  }
-  
-  lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
-  lock.l_whence = SEEK_SET;
-  lock.l_len = len;
-
-  /* byte_lock(len=-1) lock whole file */
-  if (len == BYTELOCK_MAX) {
-      lock.l_len -= lock.l_start; /* otherwise  EOVERFLOW error */
-  }
-
-  /* see if it's locked by another fork. 
-   * NOTE: this guarantees that any existing locks must be at most
-   * read locks. we use ADLOCK_WR/RD because F_RD/WRLCK aren't
-   * guaranteed to be ORable. */
-  if (adf_findxlock(adf, fork, ADLOCK_WR | 
-		    ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
-		    lock.l_start, lock.l_len) > -1) {
-    errno = EACCES;
-    return -1;
-  }
-  
-  /* look for any existing lock that we may have */
-  i = adf_findlock(adf, fork, ADLOCK_RD | ADLOCK_WR, lock.l_start, lock.l_len);
-  adflock = (i < 0) ? NULL : adf->adf_lock + i;
-
-  /* here's what we check for:
-     1) we're trying to re-lock a lock, but we didn't specify an update.
-     2) we're trying to free only part of a lock. 
-     3) we're trying to free a non-existent lock. */
-  if ( (!adflock && (lock.l_type == F_UNLCK))
-       ||
-       (adflock
-        && !(type & ADLOCK_UPGRADE)
-        && ((lock.l_type != F_UNLCK)
-            || (adflock->lock.l_start != lock.l_start)
-            || (adflock->lock.l_len != lock.l_len) ))
-      ) {
-      errno = EINVAL;
-      return -1;
-  }
-
-
-  /* now, update our list of locks */
-  /* clear the lock */
-  if (lock.l_type == F_UNLCK) { 
-    adf_freelock(adf, i);
-    return 0;
-  }
-
-  /* attempt to lock the file. */
-  if (!adf->adf_excl && set_lock(adf->adf_fd, F_SETLK, &lock) < 0) 
-    return -1;
-
-  /* we upgraded this lock. */
-  if (adflock && (type & ADLOCK_UPGRADE)) {
-    memcpy(&adflock->lock, &lock, sizeof(lock));
-    return 0;
-  } 
-
-  /* it wasn't an upgrade */
-  oldlock = -1;
-  if (lock.l_type == F_RDLCK) {
-    oldlock = adf_findxlock(adf, fork, ADLOCK_RD, lock.l_start, lock.l_len);
-  } 
-    
-  /* no more space. this will also happen if lockmax == lockcount == 0 */
-  if (adf->adf_lockmax == adf->adf_lockcount) { 
-    adf_lock_t *tmp = (adf_lock_t *) 
-	    realloc(adf->adf_lock, sizeof(adf_lock_t)*
-		    (adf->adf_lockmax + ARRAY_BLOCK_SIZE));
-    if (!tmp)
-      goto fcntl_lock_err;
-    adf->adf_lock = tmp;
-    adf->adf_lockmax += ARRAY_BLOCK_SIZE;
-  } 
-  adflock = adf->adf_lock + adf->adf_lockcount;
-
-  /* fill in fields */
-  memcpy(&adflock->lock, &lock, sizeof(lock));
-  adflock->user = fork;
-  if (oldlock > -1) {
-    adflock->refcount = (adf->adf_lock + oldlock)->refcount;
-  } else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
-    goto fcntl_lock_err;
-  }
-  
-  (*adflock->refcount)++;
-  adf->adf_lockcount++;
-  return 0;
-
-fcntl_lock_err:
-  lock.l_type = F_UNLCK;
-  if (!adf->adf_excl) set_lock(adf->adf_fd, F_SETLK, &lock);
-  return -1;
-  return 0;
+    off_t start = off;
+	if (off == AD_FILELOCK_OPEN_WR)
+		start = AD_FILELOCK_RSRC_OPEN_WR;
+	else if (off == AD_FILELOCK_OPEN_RD)
+		start = AD_FILELOCK_RSRC_OPEN_RD;
+    else if (off == AD_FILELOCK_DENY_RD)
+		start = AD_FILELOCK_RSRC_DENY_RD;
+	else if (off == AD_FILELOCK_DENY_WR)
+		start = AD_FILELOCK_RSRC_DENY_WR;
+	else if (off == AD_FILELOCK_OPEN_NONE)
+		start = AD_FILELOCK_RSRC_OPEN_NONE;
+	return start;
 }
 
-/* -------------------------
-   we are using lock as tristate variable
-   
-   we have a lock ==> 1
-   no             ==> 0
-   error          ==> -1
-      
-*/
-static int testlock(struct ad_fd *adf, off_t off, off_t len)
+/*!
+ * Test a lock
+ *
+ * (1) Test against our own locks array
+ * (2) Test fcntl lock, locks from other processes
+ *
+ * @param adf     (r) handle
+ * @param off     (r) offset
+ * @param len     (r) lenght
+ *
+ * @returns           1 if there's an existing lock, 0 if there's no lock,
+ *                    -1 in case any error occured
+ */
+static int testlock(const struct ad_fd *adf, off_t off, off_t len)
 {
-  struct flock lock;
-  adf_lock_t *plock;
-  int i;
+    struct flock lock;
+    adf_lock_t *plock;
+    int i;
 
-  lock.l_start = off;
+    lock.l_start = off;
 
-  plock = adf->adf_lock;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = len;
+    plock = adf->adf_lock;
+    lock.l_whence = SEEK_SET;
+    lock.l_len = len;
 
-  /* Do we have a lock? */
-  for (i = 0; i < adf->adf_lockcount; i++) {
-    if (OVERLAP(lock.l_start, 1, plock[i].lock.l_start, plock[i].lock.l_len)) 
-        return 1;   /* */
-  }
-  /* Does another process have a lock? 
-  */
-  lock.l_type = (adf->adf_flags & O_RDWR) ?F_WRLCK : F_RDLCK;
+    /* (1) Do we have a lock ? */
+    for (i = 0; i < adf->adf_lockcount; i++) {
+        if (OVERLAP(lock.l_start, 1, plock[i].lock.l_start, plock[i].lock.l_len)) 
+            return 1;
+    }
 
-  if (set_lock(adf->adf_fd, F_GETLK, &lock) < 0) {
-      /* is that kind of error possible ?*/
-      return (errno == EACCES || errno == EAGAIN)?1:-1;
-  }
+    /* (2) Does another process have a lock? */
+    lock.l_type = (adf->adf_flags & O_RDWR) ? F_WRLCK : F_RDLCK;
+
+    if (set_lock(adf->adf_fd, F_GETLK, &lock) < 0) {
+        /* is that kind of error possible ?*/
+        return (errno == EACCES || errno == EAGAIN) ? 1 : -1;
+    }
   
-  if (lock.l_type == F_UNLCK) {
-      return 0;
-  }
-  return 1;
-  return 0;
-}
-
-
-/* -------------------------
-*/
-int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
-               const off_t off, const off_t len, const int fork)
-{
-  struct flock lock;
-  struct ad_fd *adf;
-  int err;
-  int type;  
-
-  lock.l_start = off;
-  type = locktype;
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_data_fork;
-  } else {
-    /* FIXME META */
-    adf = &ad->ad_resource_fork;
-    if (adf->adf_fd == -1) {
-        /* there's no resource fork. return success */
+    if (lock.l_type == F_UNLCK) {
         return 0;
     }
-    /* if ADLOCK_FILELOCK we want a lock from offset 0
-     * it's used when deleting a file:
-     * in open we put read locks on meta datas
-     * in delete a write locks on the whole file
-     * so if the file is open by somebody else it fails
-    */
-    if (!(type & ADLOCK_FILELOCK))
-        lock.l_start += ad_getentryoff(ad, eid);
-  }
-
-  if (!(adf->adf_flags & O_RDWR) && (type & ADLOCK_WR)) {
-      type = (type & ~ADLOCK_WR) | ADLOCK_RD;
-  }
-  
-  lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
-  lock.l_whence = SEEK_SET;
-  lock.l_len = len;
-
-  /* see if it's locked by another fork. */
-  if (fork && adf_findxlock(adf, fork, ADLOCK_WR | 
-		    ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
-		    lock.l_start, lock.l_len) > -1) {
-    errno = EACCES;
-    return -1;
-  }
-
-  /* okay, we might have ranges byte-locked. we need to make sure that
-   * we restore the appropriate ranges once we're done. so, we check
-   * for overlap on an unlock and relock. 
-   * XXX: in the future, all the byte locks will be sorted and contiguous.
-   *      we just want to upgrade all the locks and then downgrade them
-   *      here. */
-  if (!adf->adf_excl) {
-       err = set_lock(adf->adf_fd, F_SETLK, &lock);
-  }
-  else {
-      err = 0;
-  }
-  if (!err && (lock.l_type == F_UNLCK))
-    adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
-
-  return err;
+    return 1;
 }
 
-/* --------------------- */
-void ad_unlock(struct adouble *ad, const int fork)
-{
-  if (ad_data_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_data_fork, fork);
-  }
-  if (ad_reso_fileno(ad) != -1) {
-    adf_unlock(&ad->ad_resource_fork, fork);
-  }
-}
-
-/******************************************************************************
- * Public functions
- ******************************************************************************/
-
-/* --------------- */
-int ad_testlock(struct adouble *ad, int eid, const off_t off)
-{
-  struct ad_fd *adf;
-  off_t      lock_offset;
-
-  lock_offset = off;
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_data_fork;
-    if (ad_meta_fileno(ad) != -1) {
-      	adf = ad->ad_mdp;
-    	lock_offset = df2off(off);
-    }
-  } 
-  else { /* rfork */
-    if (ad_meta_fileno(ad) == -1) {
-        /* there's no resource fork. return no lock */
-        return 0;
-    }
-    adf = ad->ad_mdp;
-    lock_offset = hf2off(off);
-  }
-  return testlock(adf, lock_offset, 1);
-}
-
-/* -------------------------
-   return if a file is open by another process.
-   Optimized for the common case:
-   - there's no locks held by another process (clients)
-   - or we already know the answer and don't need to test.
-*/
-uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
+static uint16_t ad_openforks_v2(struct adouble *ad, uint16_t attrbits)
 {
   u_int16_t ret = 0;
   struct ad_fd *adf;
@@ -608,30 +369,349 @@ uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
   return ret;
 }
 
-/* -------------------------
-   the fork is opened in Read Write, Deny Read, Deny Write mode
-   lock the whole file once   
-*/
-int ad_excl_lock(struct adouble *ad, const uint32_t eid)
+static uint16_t ad_openforks_ea(struct adouble *ad, uint16_t attrbits)
 {
-  struct ad_fd *adf;
-  struct flock lock;
-  int    err;
-  
-  lock.l_start = 0;
-  lock.l_type = F_WRLCK;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
+    u_int16_t ret = 0;
+    struct ad_fd *adf;
+    off_t off;
+    off_t len;
 
-  if (eid == ADEID_DFORK) {
-    adf = &ad->ad_data_fork;
-  } else {
-    adf = &ad->ad_resource_fork;
-    lock.l_start = ad_getentryoff(ad, eid);
+  if (!(attrbits & (ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+      /* Test all 4 locks at once */
+      off = AD_FILELOCK_OPEN_WR;
+      len = 4;
+      if (testlock(&ad->ad_data_fork, off, len) == 0)
+          return 0;
   }
+
+  /* either there's a lock or we already know one fork is open */
+
+  if (!(attrbits & ATTRBIT_DOPEN)) {
+      off = AD_FILELOCK_OPEN_WR;
+      ret = testlock(&ad->ad_data_fork, off, 2) > 0 ? ATTRBIT_DOPEN : 0;
+  }
+
+  if (!(attrbits & ATTRBIT_ROPEN)) {
+      off = AD_FILELOCK_RSRC_OPEN_WR;
+      ret |= testlock(&ad->ad_data_fork, off, 2) > 0? ATTRBIT_ROPEN : 0;
+  }
+
+  return ret;
+}
+
+static int ad_testlock_v2(struct adouble *ad, int eid, const off_t off)
+{
+    struct ad_fd *adf;
+    off_t      lock_offset;
+
+    lock_offset = off;
+    if (eid == ADEID_DFORK) {
+        adf = &ad->ad_data_fork;
+        if (ad_meta_fileno(ad) != -1) {
+            adf = ad->ad_mdp;
+            lock_offset = df2off(off);
+        }
+    } else { /* rfork */
+        if (ad_meta_fileno(ad) == -1) {
+            /* there's no resource fork. return no lock */
+            return 0;
+        }
+        adf = ad->ad_mdp;
+        lock_offset = hf2off(off);
+    }
+    return testlock(adf, lock_offset, 1);
+}
+
+static int ad_testlock_ea(struct adouble *ad, int eid, const off_t off)
+{
+    off_t      lock_offset;
+
+    if (eid == ADEID_DFORK) {
+        lock_offset = df2off(off);
+    } else { /* rfork */
+        lock_offset = rf2off(off);
+    }
+    return testlock(&ad->ad_data_fork, lock_offset, 1);
+}
+
+/******************************************************************************
+ * Public functions
+ ******************************************************************************/
+
+int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len, int fork)
+{
+    struct flock lock;
+    struct ad_fd *adf;
+    adf_lock_t *adflock;
+    int oldlock;
+    int i;
+    int type;  
+
+    if ((type & ADLOCK_FILELOCK) && (len != 1))
+        /* safety check */
+        return -1;
+
+    lock.l_start = off;
+    type = locktype;
+    if (eid == ADEID_DFORK) {
+        adf = &ad->ad_data_fork;
+        if ((type & ADLOCK_FILELOCK)) {
+            if (ad_meta_fileno(ad) != -1) { /* META */
+                adf = ad->ad_mdp;
+                lock.l_start = df2off(off);
+            }
+        }
+    } else { /* rfork */
+        switch (ad->ad_flags) {
+        case AD_VERSION2:
+            if (ad_meta_fileno(ad) == -1 || ad_reso_fileno(ad) == -1) {
+                /* there's no meta data. return a lock error 
+                 * otherwise if a second process is able to create it
+                 * locks are a mess. */
+                errno = EACCES;
+                return -1;
+            }
+            if (type & ADLOCK_FILELOCK) {
+                adf = ad->ad_mdp;			/* either resource or meta data (set in ad_open) */
+                lock.l_start = hf2off(off);
+            } else {
+                /* we really want the resource fork it's a byte lock */
+                adf = &ad->ad_resource_fork;
+                lock.l_start += ad_getentryoff(ad, eid);
+            }
+            break;
+
+        case AD_VERSION_EA:
+            if (type & ADLOCK_FILELOCK) {
+                lock.l_start = rf2off(off);
+            } else {
+                /* it's a byterange lock on the rsrcfork -> discard it */
+                return 0;
+            }
+            adf = &ad->ad_data_fork;
+            break;
+
+        default:
+            return -1;
+        }
+    }
+
+    /* NOTE: we can't write lock a read-only file. on those, we just
+     * make sure that we have a read lock set. that way, we at least prevent
+     * someone else from really setting a deny read/write on the file. 
+     */
+    if (!(adf->adf_flags & O_RDWR) && (type & ADLOCK_WR)) {
+        type = (type & ~ADLOCK_WR) | ADLOCK_RD;
+    }
   
-  err = set_lock(adf->adf_fd, F_SETLK, &lock);
-  if (!err)
-      adf->adf_excl = 1;
-  return err;
+    lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
+    lock.l_whence = SEEK_SET;
+    lock.l_len = len;
+
+    /* byte_lock(len=-1) lock whole file */
+    if (len == BYTELOCK_MAX) {
+        lock.l_len -= lock.l_start; /* otherwise  EOVERFLOW error */
+    }
+
+    /* see if it's locked by another fork. 
+     * NOTE: this guarantees that any existing locks must be at most
+     * read locks. we use ADLOCK_WR/RD because F_RD/WRLCK aren't
+     * guaranteed to be ORable. */
+    if (adf_findxlock(adf, fork, ADLOCK_WR | 
+                      ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
+                      lock.l_start, lock.l_len) > -1) {
+        errno = EACCES;
+        return -1;
+    }
+  
+    /* look for any existing lock that we may have */
+    i = adf_findlock(adf, fork, ADLOCK_RD | ADLOCK_WR, lock.l_start, lock.l_len);
+    adflock = (i < 0) ? NULL : adf->adf_lock + i;
+
+    /* here's what we check for:
+       1) we're trying to re-lock a lock, but we didn't specify an update.
+       2) we're trying to free only part of a lock. 
+       3) we're trying to free a non-existent lock. */
+    if ( (!adflock && (lock.l_type == F_UNLCK))
+         ||
+         (adflock
+          && !(type & ADLOCK_UPGRADE)
+          && ((lock.l_type != F_UNLCK)
+              || (adflock->lock.l_start != lock.l_start)
+              || (adflock->lock.l_len != lock.l_len) ))
+        ) {
+        errno = EINVAL;
+        return -1;
+    }
+
+
+    /* now, update our list of locks */
+    /* clear the lock */
+    if (lock.l_type == F_UNLCK) { 
+        adf_freelock(adf, i);
+        return 0;
+    }
+
+    /* attempt to lock the file. */
+    if (set_lock(adf->adf_fd, F_SETLK, &lock) < 0) 
+        return -1;
+
+    /* we upgraded this lock. */
+    if (adflock && (type & ADLOCK_UPGRADE)) {
+        memcpy(&adflock->lock, &lock, sizeof(lock));
+        return 0;
+    } 
+
+    /* it wasn't an upgrade */
+    oldlock = -1;
+    if (lock.l_type == F_RDLCK) {
+        oldlock = adf_findxlock(adf, fork, ADLOCK_RD, lock.l_start, lock.l_len);
+    } 
+    
+    /* no more space. this will also happen if lockmax == lockcount == 0 */
+    if (adf->adf_lockmax == adf->adf_lockcount) { 
+        adf_lock_t *tmp = (adf_lock_t *) 
+            realloc(adf->adf_lock, sizeof(adf_lock_t)*
+                    (adf->adf_lockmax + ARRAY_BLOCK_SIZE));
+        if (!tmp)
+            goto fcntl_lock_err;
+        adf->adf_lock = tmp;
+        adf->adf_lockmax += ARRAY_BLOCK_SIZE;
+    } 
+    adflock = adf->adf_lock + adf->adf_lockcount;
+
+    /* fill in fields */
+    memcpy(&adflock->lock, &lock, sizeof(lock));
+    adflock->user = fork;
+    if (oldlock > -1) {
+        adflock->refcount = (adf->adf_lock + oldlock)->refcount;
+    } else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
+        goto fcntl_lock_err;
+    }
+  
+    (*adflock->refcount)++;
+    adf->adf_lockcount++;
+    return 0;
+
+fcntl_lock_err:
+    lock.l_type = F_UNLCK;
+    set_lock(adf->adf_fd, F_SETLK, &lock);
+    return -1;
+}
+
+/* -------------------------
+*/
+int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
+               const off_t off, const off_t len, const int fork)
+{
+    struct flock lock;
+    struct ad_fd *adf;
+    int err;
+    int type;  
+
+    lock.l_start = off;
+    type = locktype;
+    if (eid == ADEID_DFORK) {
+        adf = &ad->ad_data_fork;
+    } else {
+        /* FIXME META */
+        adf = &ad->ad_resource_fork;
+        if (adf->adf_fd == -1) {
+            /* there's no resource fork. return success */
+            return 0;
+        }
+        /* if ADLOCK_FILELOCK we want a lock from offset 0
+         * it's used when deleting a file:
+         * in open we put read locks on meta datas
+         * in delete a write locks on the whole file
+         * so if the file is open by somebody else it fails
+         */
+        if (!(type & ADLOCK_FILELOCK))
+            lock.l_start += ad_getentryoff(ad, eid);
+    }
+
+    if (!(adf->adf_flags & O_RDWR) && (type & ADLOCK_WR)) {
+        type = (type & ~ADLOCK_WR) | ADLOCK_RD;
+    }
+  
+    lock.l_type = XLATE_FCNTL_LOCK(type & ADLOCK_MASK);
+    lock.l_whence = SEEK_SET;
+    lock.l_len = len;
+
+    /* see if it's locked by another fork. */
+    if (fork && adf_findxlock(adf, fork,
+                              ADLOCK_WR | ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
+                              lock.l_start, lock.l_len) > -1) {
+        errno = EACCES;
+        return -1;
+    }
+
+    /* okay, we might have ranges byte-locked. we need to make sure that
+     * we restore the appropriate ranges once we're done. so, we check
+     * for overlap on an unlock and relock. 
+     * XXX: in the future, all the byte locks will be sorted and contiguous.
+     *      we just want to upgrade all the locks and then downgrade them
+     *      here. */
+    err = set_lock(adf->adf_fd, F_SETLK, &lock);
+    if (!err && (lock.l_type == F_UNLCK))
+        adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
+
+    return err;
+}
+
+/* --------------------- */
+void ad_unlock(struct adouble *ad, const int fork)
+{
+    if (ad_data_fileno(ad) != -1) {
+        adf_unlock(&ad->ad_data_fork, fork);
+    }
+    if (ad_reso_fileno(ad) != -1) {
+        adf_unlock(&ad->ad_resource_fork, fork);
+    }
+}
+
+/*!
+ * Test for a share mode lock
+ *
+ * @param ad      (rw) handle
+ * @param eid     (r)  datafork or ressource fork
+ * @param off     (r)  sharemode lock to test
+ *
+ * @returns           1 if there's an existing lock, 0 if there's no lock,
+ *                    -1 in case any error occured
+ */
+int ad_testlock(struct adouble *ad, int eid, const off_t off)
+{
+    switch (ad->ad_flags) {
+    case AD_VERSION2:
+        return ad_testlock_v2(ad, eid, off);
+    case AD_VERSION_EA:
+        return ad_testlock_ea(ad, eid, off);
+    default:
+        return -1;
+    }
+}
+
+/*!
+ * Return if a file is open by another process.
+ *
+ * Optimized for the common case:
+ * - there's no locks held by another process (clients)
+ * - or we already know the answer and don't need to test (attrbits)
+ *
+ * @param ad          (rw) handle
+ * @param attrbits    (r)  forks opened by us
+ * @returns                bitflags ATTRBIT_DOPEN | ATTRBIT_ROPEN if
+ *                         other process has fork of file opened 
+ */
+uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
+{
+    switch (ad->ad_flags) {
+    case AD_VERSION2:
+        return ad_openforks_v2(ad, attrbits);
+    case AD_VERSION_EA:
+        return ad_openforks_ea(ad, attrbits);
+    default:
+        return -1;
+    }
 }

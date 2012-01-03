@@ -231,7 +231,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     if (vol->volinfo.v_path == NULL)
         return;
 
-    ad_init(&ad, vol->volinfo.v_adouble, vol->volinfo.v_ad_options);
+    ad_init_old(&ad, vol->volinfo.v_adouble, vol->volinfo.v_ad_options);
 
     if ( ad_metadata(path, adflags, &ad) < 0 )
         return;
