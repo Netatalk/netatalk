@@ -262,7 +262,7 @@ ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 
 	if ((0xD800 <= *ins) && (*ins < 0xDC00)) {
 		if ((0xDC00 <= ins[1]) && (ins[1] < 0xE000)) {
-			u_int32_t ins_sp = (u_int32_t)*ins << 16 | (u_int32_t)ins[1];
+			uint32_t ins_sp = (uint32_t)*ins << 16 | (uint32_t)ins[1];
 			while ((r = strcasechr_sp(r, ins_sp))) {
 				if (strncasecmp_w(r, ins, inslen) == 0) return r;
 				r++;
