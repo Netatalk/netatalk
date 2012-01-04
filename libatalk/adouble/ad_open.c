@@ -794,7 +794,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     ssize_t rforklen;
     int oflags = O_NOFOLLOW;
 
-    LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\", %04o)", path, mode);
+    LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\", %04o)", path, mode);
 
     oflags |= ad2openflags(adflags) & ~(O_CREAT | O_TRUNC);
 
@@ -820,11 +820,8 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(ad, NULL) != 0) {
-        LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\", %04o): ad_header_read: %s", path, mode, strerror(errno));
-
         if (!(adflags & ADFLAGS_CREATE))
             goto error;
-        LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\", %04o): create metadata EA", path, mode);
 
         /* It doesnt exist, EPERM or another error */
         if (!(errno == ENOATTR || errno == ENOENT)) {
