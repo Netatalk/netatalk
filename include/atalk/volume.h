@@ -7,7 +7,6 @@
 #define ATALK_VOLUME_H 1
 
 #include <stdint.h>
-#include <sys/cdefs.h>
 #include <sys/types.h>
 
 #include <atalk/unicode.h>

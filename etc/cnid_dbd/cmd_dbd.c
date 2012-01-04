@@ -170,7 +170,8 @@ static void set_signal(void)
 
 static void usage (void)
 {
-    printf("Usage: dbd [-e|-t|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
+    printf("dbd (Netatalk %s)\n"
+           "Usage: dbd [-e|-t|-v|-x] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
@@ -186,7 +187,7 @@ static void usage (void)
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
            "      Options: -c Don't check .AppleDouble stuff, only ckeck orphaned.\n"
-           "               -n Don't open CNID database, skip CNID checks\n\n"
+           "               -n Don't open CNID database, skip CNID checks.\n\n"
            "   -r Rebuild volume:\n"
            "      1. Sync CNIDSs in database with volume\n"
            "      2. Make sure .AppleDouble dir exist, create if missing\n"
@@ -197,18 +198,21 @@ static void usage (void)
            "      7. Check for orphaned CNIDs in database (requires -e)\n"
            "      8. Open and close adouble files\n"
            "      Options: -c Don't create .AppleDouble stuff, only cleanup orphaned.\n"
-           "               -f wipe database and rebuild from IDs stored in AppleDouble files,\n"
-           "                  only available for volumes without 'nocnidcache' option. Implies -e.\n\n"
+           "               -f wipe database and rebuild from IDs stored in AppleDouble\n"
+           "                  files, only available for volumes without 'nocnidcache'\n"
+           "                  option. Implies -e.\n\n"
            "   -u Upgrade:\n"
-           "      Opens the database which triggers any necessary upgrades, then closes and exits.\n\n"
+           "      Opens the database which triggers any necessary upgrades,\n"
+           "      then closes and exits.\n\n"
            "General options:\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
            "   -t show statistics while running\n"
            "   -v verbose\n\n"
            "WARNING:\n"
-           "For -r -f restore of the CNID database from the adouble files, the CNID must of course\n"
-           "be synched to them files first with a plain -r rebuild !\n"
+           "For -r -f restore of the CNID database from the adouble files,\n"
+           "the CNID must of course be synched to them files first with a plain -r rebuild!\n"
+           , VERSION
         );
 }
 
@@ -360,22 +364,22 @@ int main(int argc, char **argv)
 
     /* Get db lock */
     if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
-        goto exit_failure;
+        goto exit_noenv;
     if (db_locked != LOCK_EXCL) {
         /* Couldn't get exclusive lock, try shared lock if -e wasn't requested */
         if (exclusive) {
             dbd_log(LOGSTD, "Database is in use and exlusive was requested");
-            goto exit_failure;
+            goto exit_noenv;
         }
         if ((db_locked = get_lock(LOCK_SHRD, NULL)) != LOCK_SHRD)
-            goto exit_failure;
+            goto exit_noenv;
     }
 
     /* Check if -f is requested and wipe db if yes */
     if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
         char cmd[8 + MAXPATHLEN];
         if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
-            goto exit_failure;
+            goto exit_noenv;
 
         snprintf(cmd, 8 + MAXPATHLEN, "rm -rf \"%s\"", dbpath);
         dbd_log( LOGDEBUG, "Removing old database of volume: '%s'", volpath);
@@ -386,7 +390,7 @@ int main(int argc, char **argv)
         }
         dbd_log( LOGDEBUG, "Removed old database.");
         if ((db_locked = get_lock(LOCK_EXCL, dbpath)) == -1)
-            goto exit_failure;
+            goto exit_noenv;
     }
 
     /* 
@@ -394,13 +398,13 @@ int main(int argc, char **argv)
     */
     if ( ! nocniddb) {
         if ((dbd = dbif_init(dbpath, "cnid2.db")) == NULL)
-            goto exit_failure;
+            goto exit_noenv;
         
         if (dbif_env_open(dbd,
                           &db_param,
                           (db_locked == LOCK_EXCL) ? (DBOPTIONS | DB_RECOVER) : DBOPTIONS) < 0) {
             dbd_log( LOGSTD, "error opening database!");
-            goto exit_failure;
+            goto exit_noenv;
         }
 
         if (db_locked == LOCK_EXCL)
@@ -451,8 +455,13 @@ exit_success:
     ret = 0;
 
 exit_failure:
+    if (dbif_env_remove(dbpath) < 0) {
+        dbd_log( LOGSTD, "Error removing BerkeleyDB database environment");
+        ret++;
+    }
     get_lock(0, NULL);
-    
+
+exit_noenv:    
     if ((fchdir(cdir)) < 0)
         dbd_log(LOGSTD, "fchdir: %s", strerror(errno));
 

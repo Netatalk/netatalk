@@ -30,8 +30,12 @@ Changes in 2.2.2
 * FIX: afpd: Fix dircache bug, NetAFP Bug ID #13
 * FIX: dbd: Better checking for duplicated or bogus CNIDs from AppleDouble
        files
+* FIX: dbd: Remove BerkeleyDB database environment after running `dbd`. This
+       is crucial for the automatic BerkeleyDB database upgrade feature which
+       is built into cnid_dbd and dbd.
 * FIX: Fix compilation error when AppleTalk support is disabled
 * FIX: Portability fixes
+* FIX: search of surrogate pair
 
 Changes in 2.2.1
 ================

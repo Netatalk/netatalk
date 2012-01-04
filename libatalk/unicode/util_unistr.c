@@ -38,8 +38,8 @@ int strlower_w(ucs2_t *s)
 	while (*s) {
 		if ((0xD800 <= *s) && (*s < 0xDC00)) {
 			if ((0xDC00 <= s[1]) && (s[1] < 0xE000)) {
-				u_int32_t s_sp = (u_int32_t)*s << 16 | (u_int32_t)s[1];
-				u_int32_t v_sp = tolower_sp(s_sp);
+				uint32_t s_sp = (uint32_t)*s << 16 | (uint32_t)s[1];
+				uint32_t v_sp = tolower_sp(s_sp);
 				if (v_sp != s_sp) {
 					*s = v_sp >> 16;
 					s++;
@@ -72,8 +72,8 @@ int strupper_w(ucs2_t *s)
 	while (*s) {
 		if ((0xD800 <= *s) && (*s < 0xDC00)) {
 			if ((0xDC00 <= s[1]) && (s[1] < 0xE000)) {
-				u_int32_t s_sp = (u_int32_t)*s << 16 | (u_int32_t)s[1];
-				u_int32_t v_sp = toupper_sp(s_sp);
+				uint32_t s_sp = (uint32_t)*s << 16 | (uint32_t)s[1];
+				uint32_t v_sp = toupper_sp(s_sp);
 				if (v_sp != s_sp) {
 					*s = v_sp >> 16;
 					s++;
@@ -104,7 +104,7 @@ int islower_w(ucs2_t c)
 	return ( c == tolower_w(c));
 }
 
-int islower_sp(u_int32_t c_sp)
+int islower_sp(uint32_t c_sp)
 {
 	return ( c_sp == tolower_sp(c_sp));
 }
@@ -120,7 +120,7 @@ int isupper_w(ucs2_t c)
 	return ( c == toupper_w(c));
 }
 
-int isupper_sp(u_int32_t c_sp)
+int isupper_sp(uint32_t c_sp)
 {
 	return ( c_sp == toupper_sp(c_sp));
 }
@@ -179,8 +179,7 @@ wide & sp strcasechr()
 ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 {
 	while (*s != 0) {
-/*		LOG(log_debug, logtype_default, "Comparing %X to %X (%X - %X)", c, *s, toupper_w(c), toupper_w(*s));*/
-		if (toupper_w(c) == toupper_w(*s)) return (ucs2_t *)s;
+		if (tolower_w(c) == tolower_w(*s)) return (ucs2_t *)s;
 		s++;
 	}
 	if (c == *s) return (ucs2_t *)s;
@@ -188,11 +187,11 @@ ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 	return NULL;
 }
 
-ucs2_t *strcasechr_sp(const ucs2_t *s, u_int32_t c_sp)
+ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 {
 	if (*s == 0) return NULL;
 	while (s[1] != 0) {
-		if (toupper_sp(c_sp) == toupper_sp((u_int32_t)*s << 16 | (u_int32_t)s[1])) return (ucs2_t *)s;
+		if (tolower_sp(c_sp) == tolower_sp((uint32_t)*s << 16 | (uint32_t)s[1])) return (ucs2_t *)s;
 		s++;
 	}
 
@@ -249,7 +248,7 @@ ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
 /*******************************************************************
 wide strcasestr()
 ********************************************************************/
-/* */
+/* surrogate pair support */
 
 ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 {
@@ -260,9 +259,22 @@ ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 	slen = strlen_w(s);
 	inslen = strlen_w(ins);
 	r = (ucs2_t *)s;
-	while ((r = strcasechr_w(r, *ins))) {
-		if (strncasecmp_w(r, ins, inslen) == 0) return r;
-		r++;
+
+	if ((0xD800 <= *ins) && (*ins < 0xDC00)) {
+		if ((0xDC00 <= ins[1]) && (ins[1] < 0xE000)) {
+			uint32_t ins_sp = (uint32_t)*ins << 16 | (uint32_t)ins[1];
+			while ((r = strcasechr_sp(r, ins_sp))) {
+				if (strncasecmp_w(r, ins, inslen) == 0) return r;
+				r++;
+			}
+		} else {
+			return NULL; /* illegal sequence */
+		}
+	} else {
+		while ((r = strcasechr_w(r, *ins))) {
+			if (strncasecmp_w(r, ins, inslen) == 0) return r;
+			r++;
+		}
 	}
 	return NULL;
 }
@@ -279,7 +291,7 @@ int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
 
 	while (*a && *b) {
 		if ((0xD800 <= *a) && (*a < 0xDC00)) {
-			if (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) return ret;
+			if (ret = tolower_sp((uint32_t)*a << 16 | (uint32_t)a[1]) - tolower_sp((uint32_t)*b << 16 | (uint32_t)b[1])) return ret;
 			a++;
 			b++;
 			if (!(*a && *b)) return (tolower_w(*a) - tolower_w(*b)); /* avoid buffer over run */
@@ -305,7 +317,7 @@ int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 
 	while ((n < len) && *a && *b) {
 		if ((0xD800 <= *a) && (*a < 0xDC00)) {
-			if (ret = tolower_sp((u_int32_t)*a << 16 | (u_int32_t)a[1]) - tolower_sp((u_int32_t)*b << 16 | (u_int32_t)b[1])) return ret;
+			if (ret = tolower_sp((uint32_t)*a << 16 | (uint32_t)a[1]) - tolower_sp((uint32_t)*b << 16 | (uint32_t)b[1])) return ret;
 			a++;
 			b++;
 			n++;
@@ -358,6 +370,8 @@ ucs2_t *strdup_w(const ucs2_t *src)
 /*******************************************************************
 copy a string with max len
 ********************************************************************/
+/* This function is not used. */
+/* NOTE: not check isolation of surrogate pair */
 
 ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 {
@@ -377,7 +391,9 @@ ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 /*******************************************************************
 append a string of len bytes and add a terminator
 ********************************************************************/
+/* These functions are not used. */
 
+/* NOTE: not check isolation of surrogate pair */
 ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 {
 	size_t start;
@@ -394,7 +410,7 @@ ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 	return dest;
 }
 
-
+/* no problem of surrogate pair */
 ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
 {
 	size_t start;
