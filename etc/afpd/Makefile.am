@@ -47,7 +47,7 @@ afpd_LDADD =  \
 	$(top_builddir)/libatalk/libatalk.la \
 	@LIBGCRYPT_LIBS@ @QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@
 
-afpd_LDFLAGS = -export-dynamic -static
+afpd_LDFLAGS = -export-dynamic
 
 afpd_CFLAGS = \
 	-I$(top_srcdir)/include \
