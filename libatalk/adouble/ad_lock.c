@@ -427,7 +427,7 @@ static int ad_testlock_ea(struct adouble *ad, int eid, const off_t off)
     off_t      lock_offset;
 
     if (eid == ADEID_DFORK) {
-        lock_offset = df2off(off);
+        lock_offset = off;
     } else { /* rfork */
         lock_offset = rf2off(off);
     }

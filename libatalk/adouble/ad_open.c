@@ -888,12 +888,31 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
 static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *ad)
 {
     int ret = 0;
+    int oflags;
 
     if (ad->ad_flags != AD_VERSION_EA)
         return 0;
 
-    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", %04o)",
-        path, mode);
+    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", %04o)", path, mode);
+
+    oflags |= ad2openflags(adflags) & ~(O_CREAT | O_TRUNC);
+
+    if (ad_data_fileno(ad) != -1) {
+        /* the file is already open, but we want write access: */
+        if ((adflags & ADFLAGS_RDWR) &&
+            /* and it was already denied: */
+            (ad->ad_data_fork.adf_flags & O_RDONLY)) {
+            LOG(log_error, logtype_default, "ad_open_rf(%s): rw request for ro file: %s",
+                fullpathname(path), strerror(errno));
+            errno = EACCES;
+            return -1;
+        }
+    } else {
+        if ((ad_data_fileno(ad) = open(path, oflags)) == -1)
+            goto exit;
+        ad->ad_data_fork.adf_flags = oflags;
+        adf_lock_init(&ad->ad_data_fork);
+    }
 
     if ((ad->ad_rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
         switch (errno) {
@@ -925,9 +944,12 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         }       
     }
 
+    ad->ad_data_fork.adf_refcount++;
+
 exit:
     if (ret != 0) {
-        free(ad->ad_resforkbuf);
+        if (ad->ad_resforkbuf)
+            free(ad->ad_resforkbuf);
         ad->ad_resforkbuf = NULL;
         ad->ad_rlen = 0;
         ad->ad_resforkbufsize = 0;

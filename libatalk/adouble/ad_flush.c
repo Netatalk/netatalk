@@ -248,5 +248,28 @@ int ad_close(struct adouble *ad, int adflags)
         }
     }
 
+    if ((adflags & ADFLAGS_RF)) {
+        switch (ad->ad_flags) {
+        case AD_VERSION2:
+            /* Do nothing as ADFLAGS_RF == ADFLAGS_HF */
+            break;
+
+        case AD_VERSION_EA:
+            if ((ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */ 
+                && !(--ad->ad_data_fork.adf_refcount)) {
+                if (close( ad_data_fileno(ad) ) < 0)
+                    err = -1;
+                ad_data_fileno(ad) = -1;
+                adf_lock_free(&ad->ad_data_fork);
+            }
+            break;
+
+        default:
+            LOG(log_error, logtype_default, "ad_close: unknown AD version");
+            errno = EIO;
+            return -1;
+        }
+    }
+
     return err;
 }

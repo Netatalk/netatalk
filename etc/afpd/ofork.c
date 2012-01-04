@@ -393,27 +393,21 @@ void of_dealloc( struct ofork *of)
 int of_closefork(struct ofork *ofork)
 {
     struct timeval      tv;
-    int         adflags, doflush = 0;
+    int         adflags = 0;
     int                 ret;
 
     adflags = 0;
-    if ((ofork->of_flags & AFPFORK_DATA) && (ad_data_fileno( ofork->of_ad ) != -1)) {
+    if (ofork->of_flags & AFPFORK_DATA)
         adflags |= ADFLAGS_DF;
-    }
-    if ( (ofork->of_flags & AFPFORK_OPEN) && ad_reso_fileno( ofork->of_ad ) != -1 ) {
+    if (ofork->of_flags & AFPFORK_META)
         adflags |= ADFLAGS_HF;
-        /*
-         * Only set the rfork's length if we're closing the rfork.
-         */
-        if ((ofork->of_flags & AFPFORK_RSRC)) {
-            ad_refresh( ofork->of_ad );
-            if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
-                ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
-                doflush++;
-            }
-            if ( doflush ) {
-                ad_flush( ofork->of_ad );
-            }
+    if (ofork->of_flags & AFPFORK_RSRC) {
+        adflags |= ADFLAGS_RF;
+        /* Only set the rfork's length if we're closing the rfork. */
+        ad_refresh( ofork->of_ad );
+        if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
+            ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
+            ad_flush( ofork->of_ad );
         }
     }
 

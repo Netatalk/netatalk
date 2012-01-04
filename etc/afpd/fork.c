@@ -227,6 +227,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     struct stat     *st;
     uint16_t        bshort;
     struct path     *s_path;
+    struct stat xxx;
 
     ibuf++;
     fork = *ibuf++;
@@ -328,7 +329,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                 ret = AFPERR_VLOCK;
             case EACCES:
                 goto openfork_err;
-                break;
             case ENOENT:
                 if (fork == OPENFORK_DATA) {
                     /* try to open only the data fork */
@@ -343,28 +343,25 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                     if (ad_open(ofork->of_ad, upath,
                                 adflags | ADFLAGS_RDWR | ADFLAGS_SETSHRMD | ADFLAGS_CREATE, 0666) < 0)
                         goto openfork_err;
-                    ofork->of_flags |= AFPFORK_OPEN;
+                    ofork->of_flags |= AFPFORK_META;
                 }
                 break;
             case EMFILE :
             case ENFILE :
                 ret = AFPERR_NFILE;
                 goto openfork_err;
-                break;
             case EISDIR :
                 ret = AFPERR_BADTYPE;
                 goto openfork_err;
-                break;
             default:
                 LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_open: %s", s_path->m_name, strerror(errno) );
                 ret = AFPERR_PARAM;
                 goto openfork_err;
-                break;
             }
         }
         else {
             /* the ressource fork is open too */
-            ofork->of_flags |= AFPFORK_OPEN;
+            ofork->of_flags |= AFPFORK_META;
         }
     } else {
         /* try opening in read-only mode */
@@ -385,8 +382,8 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                     }
                     adflags = ADFLAGS_DF;
                 }
-                /* else we don't set AFPFORK_OPEN because there's no ressource fork file
-                 * We need to check AFPFORK_OPEN in afp_closefork(). eg fork open read-only
+                /* else we don't set AFPFORK_META because there's no ressource fork file
+                 * We need to check AFPFORK_META in afp_closefork(). eg fork open read-only
                  * then create in open read-write.
                  * FIXME , it doesn't play well with byte locking example:
                  * ressource fork open read only
@@ -398,21 +395,16 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
             case ENFILE :
                 ret = AFPERR_NFILE;
                 goto openfork_err;
-                break;
             case EISDIR :
                 ret = AFPERR_BADTYPE;
                 goto openfork_err;
-                break;
             default:
                 LOG(log_error, logtype_afpd, "afp_openfork(\"%s\"): %s",
                     fullpathname(s_path->m_name), strerror(errno) );
                 goto openfork_err;
-                break;
             }
-        }
-        else {
-            /* the ressource fork is open too */
-            ofork->of_flags |= AFPFORK_OPEN;
+        } else {
+            ofork->of_flags |= AFPFORK_META;
         }
     }
 
