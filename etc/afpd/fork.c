@@ -1353,15 +1353,14 @@ int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbu
         return( AFPERR_PARAM );
     }
 
-    if ( ad_meta_fileno( ofork->of_ad ) != -1 ) { /* META */
+    if (AD_META_OPEN(ofork->of_ad))) {
         if ( ad_refresh( ofork->of_ad ) < 0 ) {
             LOG(log_error, logtype_afpd, "getforkparams(%s): ad_refresh: %s", of_name(ofork), strerror(errno) );
             return( AFPERR_PARAM );
         }
     }
 
-    if (AFP_OK != ( ret = getforkparams( ofork, bitmap,
-                                         rbuf + sizeof( u_short ), &buflen ))) {
+    if (AFP_OK != (ret = getforkparams(ofork, bitmap, rbuf + sizeof( u_short ), &buflen ))) {
         return( ret );
     }
 

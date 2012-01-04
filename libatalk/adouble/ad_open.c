@@ -559,10 +559,10 @@ static int ad_error(struct adouble *ad, int adflags)
 {
     int err = errno;
     if ((adflags & ADFLAGS_NOHF)) { /* 1 */
-        /* FIXME double check : set header offset ?*/
+        ad->ad_adflags &= ~ADFLAGS_HF;
         return 0;
     }
-    if ((adflags & ADFLAGS_DF)) { /* 2 */
+    if ((adflags & ADFLAGS_DF) { /* 2 */
         ad_close( ad, ADFLAGS_DF );
         err = errno;
     }

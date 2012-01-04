@@ -191,7 +191,7 @@ struct adouble {
                                            * adouble:ea -> ad_data_fork               */
     struct ad_fd        *ad_mdp;          /* adouble:v2 -> ad_resource_fork           *
                                            * adouble:ea -> ad_data_fork               */
-    int                 ad_flags;         /* Our adouble version info (AD_VERSION*)   */
+    int                 ad_vers;          /* Our adouble version info (AD_VERSION*)   */
     int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
     uint32_t            ad_inited;
     int                 ad_options;
@@ -334,6 +334,10 @@ struct adouble {
 #define ad_data_fileno(ad)  ((ad)->ad_data_fork.adf_fd)
 #define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
 #define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
+
+#define AD_DATA_OPEN(ad) ((ad)->ad_adflags & ADFLAGS_DF)
+#define AD_META_OPEN(ad) ((ad)->ad_adflags & ADFLAGS_HF)
+#define AD_RSRC_OPEN(ad) ((ad)->ad_adflags & ADFLAGS_RF)
 
 #define ad_getversion(ad)   ((ad)->ad_version)
 
