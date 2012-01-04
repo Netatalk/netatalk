@@ -1147,7 +1147,8 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
 {
     ad->ad_vers = vol->v_adouble;
     ad->ad_options = vol->v_ad_options;
-    ad->ad_maxeafssize = 3500;  /* FIXME: option from vol */
+//    ad->ad_maxeafssize = 3500;  /* FIXME: option from vol */
+    ad->ad_maxeafssize = 0;     /* no limit */
     ad_init_func(ad);
 }
 

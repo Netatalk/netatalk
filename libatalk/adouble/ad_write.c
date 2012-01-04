@@ -24,7 +24,7 @@
 
 static int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
 {
-    if (ad->ad_maxeafssize >= size) {
+    if ((ad->ad_maxeafssize == 0) || (ad->ad_maxeafssize >= size)) {
         if (sys_fsetxattr(fd, eaname, value, size, 0) == -1)
             return -1;
         return 0;
