@@ -462,7 +462,7 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
             }
         }
     } else { /* rfork */
-        switch (ad->ad_flags) {
+        switch (ad->ad_vers) {
         case AD_VERSION2:
             if (ad_meta_fileno(ad) == -1 || ad_reso_fileno(ad) == -1) {
                 /* there's no meta data. return a lock error 
@@ -682,7 +682,7 @@ void ad_unlock(struct adouble *ad, const int fork)
  */
 int ad_testlock(struct adouble *ad, int eid, const off_t off)
 {
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         return ad_testlock_v2(ad, eid, off);
     case AD_VERSION_EA:
@@ -706,7 +706,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
  */
 uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
 {
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         return ad_openforks_v2(ad, attrbits);
     case AD_VERSION_EA:

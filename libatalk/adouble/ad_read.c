@@ -28,13 +28,12 @@
 #include <string.h>
 #include <sys/param.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <atalk/adouble.h>
 #include <atalk/ea.h>
-
-#ifndef MIN
-#define MIN(a,b)    ((a)<(b)?(a):(b))
-#endif /* ! MIN */
+#include <atalk/logger.h>
+#include <atalk/util.h>
 
 ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 {
@@ -63,6 +62,8 @@ ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
 ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, const size_t buflen)
 {
     ssize_t     cc;
+    ssize_t     rlen;
+    off_t r_off;
 
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
@@ -78,11 +79,12 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
             cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
         }
     } else {
-        if (ad->ad_flags != AD_VERSION_EA) {
-            off_t r_off;
-            if ( ad_reso_fileno( ad ) == -1 )
-                /* resource fork is not open ( cf etc/afp/fork.c) */
-                return 0;
+        if (! AD_RSRC_OPEN(ad))
+            /* resource fork is not open ( cf etc/afp/fork.c) */
+            return 0;
+
+        switch (ad->ad_vers) {
+        case AD_VERSION2:
             r_off = ad_getentryoff(ad, eid) + off;
             if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 )
                 return( -1 );
@@ -101,17 +103,49 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
                            MIN(sizeof( ad->ad_data ) - r_off, cc));
                 }
             }
-        } else { /* AD_VERSION_EA */
+            break;
+
+        case AD_VERSION_EA:
+            if ((rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
+                switch (errno) {
+                case ENOATTR:
+                case ENOENT:
+                    cc = ad->ad_rlen = 0;
+                    break;
+                default:
+                    LOG(log_error, logtype_default, "ad_read: %s", strerror(errno));
+                    return -1;
+                }
+            }
+            ad->ad_rlen = rlen;
+
             if (off > ad->ad_rlen) {
                 errno = ERANGE;
                 return -1;
             }
-            if (ad->ad_rlen == 0)
-                return 0;
+
+            if (ad->ad_resforkbuf == NULL) {
+                if ((ad->ad_resforkbuf = malloc(ad->ad_rlen)) == NULL) {
+                    ad->ad_rlen = 0;
+                    return -1;
+                }
+            } else {
+                if ((ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, ad->ad_rlen)) == NULL) {
+                    ad->ad_rlen = 0;
+                    return -1;
+                } 
+            }
+
+            if (sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1) {
+                ad->ad_rlen = 0;
+                return -1;
+            }       
+
             if ((off + buflen) > ad->ad_rlen)
                 cc = ad->ad_rlen;
             memcpy(buf, ad->ad_resforkbuf + off, cc);
-        }
+            break;
+        } /* switch (ad->ad_vers) */
     }
 
     return( cc );

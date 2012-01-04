@@ -855,8 +855,10 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
 {
 	int filedes = openat(fildes, path, oflag, mode);
 	if (filedes == -1) {
-		LOG(log_error, logtype_default, "openat(\"%s\"): %s",
-            path, strerror(errno));
+        if (errno != ENOENT)
+            LOG(log_error, logtype_default, "openat(\"%s\"): %s",
+                path, strerror(errno));
+        errno = ENOATTR;
 	}
 	return filedes;
 }

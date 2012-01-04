@@ -54,7 +54,7 @@ static int getforkparams(struct ofork *ofork, uint16_t bitmap, char *buf, size_t
         return( AFPERR_BITMAP );
     }
 
-    if ( ad_reso_fileno( ofork->of_ad ) == -1 ) { /* META ? */
+    if (! AD_META_OPEN(ofork->of_ad)) {
         adp = NULL;
     } else {
         adp = ofork->of_ad;
@@ -1353,7 +1353,7 @@ int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbu
         return( AFPERR_PARAM );
     }
 
-    if (AD_META_OPEN(ofork->of_ad))) {
+    if (AD_META_OPEN(ofork->of_ad)) {
         if ( ad_refresh( ofork->of_ad ) < 0 ) {
             LOG(log_error, logtype_afpd, "getforkparams(%s): ad_refresh: %s", of_name(ofork), strerror(errno) );
             return( AFPERR_PARAM );

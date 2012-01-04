@@ -93,7 +93,7 @@ int  ad_rebuild_adouble_header(struct adouble *ad)
     nent = htons( nent );
     memcpy(nentp, &nent, sizeof( nent ));
 
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         len = ad_getentryoff(ad, ADEID_RFORK);
         break;
@@ -149,7 +149,7 @@ int ad_flush(struct adouble *ad)
     int len;
     struct ad_fd *adf;
 
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         adf = ad->ad_mdp;
         break;
@@ -170,7 +170,7 @@ int ad_flush(struct adouble *ad)
         }
         len = ad->ad_ops->ad_rebuild_header(ad);
 
-        switch (ad->ad_flags) {
+        switch (ad->ad_vers) {
         case AD_VERSION2:
             if (adf_pwrite(ad->ad_mdp, ad->ad_data, len, 0) != len) {
                 if (errno == 0)
@@ -221,7 +221,7 @@ int ad_close(struct adouble *ad, int adflags)
     }
 
     if ((adflags & ADFLAGS_HF)) {
-        switch (ad->ad_flags) {
+        switch (ad->ad_vers) {
         case AD_VERSION2:
             if ((ad_meta_fileno(ad) != -1) && !(--ad->ad_mdp->adf_refcount)) {
                 if (close( ad_meta_fileno(ad) ) < 0)
@@ -249,7 +249,7 @@ int ad_close(struct adouble *ad, int adflags)
     }
 
     if ((adflags & ADFLAGS_RF)) {
-        switch (ad->ad_flags) {
+        switch (ad->ad_vers) {
         case AD_VERSION2:
             /* Do nothing as ADFLAGS_RF == ADFLAGS_HF */
             break;

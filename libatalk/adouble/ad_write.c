@@ -112,7 +112,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         }
         cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
     } else if ( eid == ADEID_RFORK ) {
-        switch (ad->ad_flags) {
+        switch (ad->ad_vers) {
         case AD_VERSION2:
 
             if ( end ) {
@@ -131,15 +131,19 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
             break;
 
         case AD_VERSION_EA:
-            if ((off + buflen) > ad->ad_resforkbufsize) {
-                roundup = (((off + buflen) / RFORK_EA_ALLOCSIZE) + 1) * RFORK_EA_ALLOCSIZE;
-                if ((ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, roundup)) == NULL)
+            if (ad->ad_resforkbuf == NULL) {
+                ad->ad_rlen = off + buflen;
+                if ((ad->ad_resforkbuf = malloc(ad->ad_rlen)) == NULL) {
+                    ad->ad_rlen = 0;
                     return -1;
-                ad->ad_resforkbufsize = roundup;
+                }
+            }
+            if ((off + buflen) > ad->ad_rlen) {                
+                if ((ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, off + buflen)) == NULL)
+                    return -1;
+                ad->ad_rlen = off + buflen;
             }
             memcpy(ad->ad_resforkbuf + off, buf, buflen);
-            if ((off + buflen) > ad->ad_rlen)
-                ad->ad_rlen = off + buflen;
             
             if (fsetrsrcea(ad, ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
                 return -1;
@@ -217,7 +221,7 @@ char            c = 0;
 /* ------------------------ */
 int ad_rtruncate( struct adouble *ad, const off_t size)
 {
-    if (ad->ad_flags != AD_VERSION_EA)
+    if (ad->ad_vers != AD_VERSION_EA)
         if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 )
             return -1;
 

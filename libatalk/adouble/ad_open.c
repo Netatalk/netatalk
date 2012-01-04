@@ -253,7 +253,7 @@ static int new_ad_header(const char *path, struct adouble *ad, int adflags)
     struct stat         st;
 
     ad->ad_magic = AD_MAGIC;
-    ad->ad_version = ad->ad_flags & 0x0f0000;
+    ad->ad_version = ad->ad_vers & 0x0f0000;
     if (!ad->ad_version) {
         ad->ad_version = AD_VERSION;
     }
@@ -261,9 +261,9 @@ static int new_ad_header(const char *path, struct adouble *ad, int adflags)
 
     memset(ad->ad_data, 0, sizeof(ad->ad_data));
 
-    if (ad->ad_flags == AD_VERSION2)
+    if (ad->ad_vers == AD_VERSION2)
         eid = entry_order2;
-    else if (ad->ad_flags == AD_VERSION_EA)
+    else if (ad->ad_vers == AD_VERSION_EA)
         eid = entry_order_ea;
     else {
         return -1;
@@ -465,6 +465,27 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
 
     /* Now parse entries */
     parse_entries(ad, buf + AD_HEADER_LEN, nentries);
+
+    return 0;
+}
+
+static int ad_rsrc_len_ea(struct adouble *ad)
+{
+    ssize_t rlen;
+
+    if ((rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
+        switch (errno) {
+        case ENOATTR:
+        case ENOENT:
+            ad->ad_rlen = 0;
+            break;
+        default:
+            LOG(log_error, logtype_default, "ad_refresh_rsrc_len_ea: %s", strerror(errno));
+            ad->ad_rlen = 0;
+            return -1;
+        }
+    }
+    ad->ad_rlen = rlen;
     return 0;
 }
 
@@ -522,7 +543,7 @@ static int ad_chown(const char *path, struct stat *stbuf)
 /* ----------------
    return access right and inode of path parent directory
 */
-static int ad_mode_st(const char *path, int *mode, struct stat *stbuf)
+static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
 {
     if (*mode == 0) {
         return -1;
@@ -558,11 +579,11 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
 static int ad_error(struct adouble *ad, int adflags)
 {
     int err = errno;
-    if ((adflags & ADFLAGS_NOHF)) { /* 1 */
+    if (adflags & ADFLAGS_NOHF) { /* 1 */
         ad->ad_adflags &= ~ADFLAGS_HF;
         return 0;
     }
-    if ((adflags & ADFLAGS_DF) { /* 2 */
+    if (adflags & ADFLAGS_DF) { /* 2 */
         ad_close( ad, ADFLAGS_DF );
         err = errno;
     }
@@ -864,7 +885,7 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
 
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         ret = ad_open_hf_v2(path, adflags, mode, ad);
         break;
@@ -879,6 +900,7 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
     return ret;
 }
 
+
 /*!
  * Open ressource fork
  *
@@ -889,8 +911,9 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 {
     int ret = 0;
     int oflags;
+    ssize_t rlen;
 
-    if (ad->ad_flags != AD_VERSION_EA)
+    if (ad->ad_vers != AD_VERSION_EA)
         return 0;
 
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", %04o)", path, mode);
@@ -914,47 +937,12 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         adf_lock_init(&ad->ad_data_fork);
     }
 
-    if ((ad->ad_rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
-        switch (errno) {
-        case ENOATTR:
-            ad->ad_rlen = 0;
-            break;
-        default:
-            LOG(log_warning, logtype_default, "ad_open_rf(\"%s\"): %s",
-                fullpathname(path), strerror(errno));
-            ret = -1;
-            goto exit;
-        }
-    }
-
-    /* Round up and allocate buffer */
-    size_t roundup = ((ad->ad_rlen / RFORK_EA_ALLOCSIZE) + 1) * RFORK_EA_ALLOCSIZE;
-    if ((ad->ad_resforkbuf = malloc(roundup)) == NULL) {
-        ret = -1;
+    if ((ret = ad_rsrc_len_ea(ad)) != 0)
         goto exit;
-    }
-
-    ad->ad_resforkbufsize = roundup;
-
-    /* Read the EA into the buffer */
-    if (ad->ad_rlen > 0) {
-        if (sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1) {
-            ret = -1;
-            goto exit;
-        }       
-    }
 
     ad->ad_data_fork.adf_refcount++;
 
 exit:
-    if (ret != 0) {
-        if (ad->ad_resforkbuf)
-            free(ad->ad_resforkbuf);
-        ad->ad_resforkbuf = NULL;
-        ad->ad_rlen = 0;
-        ad->ad_resforkbufsize = 0;
-    }
-
     return ret;
 }
 
@@ -1088,7 +1076,7 @@ int ad_stat(const char *path, struct stat *stbuf)
 /* ----------------
    return access right of path parent directory
 */
-int ad_mode( const char *path, int mode)
+int ad_mode( const char *path, mode_t mode)
 {
     struct stat     stbuf;
     ad_mode_st(path, &mode, &stbuf);
@@ -1098,7 +1086,7 @@ int ad_mode( const char *path, int mode)
 /*
  * Use mkdir() with mode bits taken from ad_mode().
  */
-int ad_mkdir( const char *path, int mode)
+int ad_mkdir( const char *path, mode_t mode)
 {
     int ret;
     int st_invalid;
@@ -1118,7 +1106,7 @@ int ad_mkdir( const char *path, int mode)
 
 static void ad_init_func(struct adouble *ad)
 {
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         ad->ad_ops = &ad_adouble;
         ad->ad_rfp = &ad->ad_resource_fork;
@@ -1150,14 +1138,14 @@ static void ad_init_func(struct adouble *ad)
 
 void ad_init_old(struct adouble *ad, int flags, int options)
 {
-    ad->ad_flags = flags;
+    ad->ad_vers = flags;
     ad->ad_options = options;
     ad_init_func(ad);
 }
 
 void ad_init(struct adouble *ad, const struct vol * restrict vol)
 {
-    ad->ad_flags = vol->v_adouble;
+    ad->ad_vers = vol->v_adouble;
     ad->ad_options = vol->v_ad_options;
     ad->ad_maxeafssize = 3500;  /* FIXME: option from vol */
     ad_init_func(ad);
@@ -1316,8 +1304,7 @@ exit:
 
 int ad_refresh(struct adouble *ad)
 {
-
-    switch (ad->ad_flags) {
+    switch (ad->ad_vers) {
     case AD_VERSION2:
         if (ad_meta_fileno(ad) == -1)
             return -1;
@@ -1325,6 +1312,8 @@ int ad_refresh(struct adouble *ad)
         break;
     case AD_VERSION_EA:
         if (ad_data_fileno(ad) == -1)
+            return -1;
+        if (ad_rsrc_len_ea(ad) != 0)
             return -1;
         return ad->ad_ops->ad_header_read(ad, NULL);
         break;

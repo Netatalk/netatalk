@@ -92,7 +92,7 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
  */
 int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint32_t id, const cnid_t did, const void *stamp)
 {
-    if ((adp->ad_flags == AD_VERSION2) && (adp->ad_options & ADVOL_CACHE)) {
+    if ((adp->ad_vers == AD_VERSION2) && (adp->ad_options & ADVOL_CACHE)) {
 
         /* ad_getid depends on this to detect presence of ALL entries */
         ad_setentrylen( adp, ADEID_PRIVID, sizeof(id));
