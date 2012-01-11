@@ -21,6 +21,7 @@
 #include <sys/time.h>
 
 #include <atalk/logger.h>
+#include <atalk/compat.h>
 #include "usockfd.h"
 
 #include <sys/select.h>
