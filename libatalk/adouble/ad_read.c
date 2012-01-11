@@ -106,46 +106,17 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
             break;
 
         case AD_VERSION_EA:
-            if ((rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
-                switch (errno) {
-                case ENOATTR:
-                case ENOENT:
-                    cc = ad->ad_rlen = 0;
-                    break;
-                default:
-                    LOG(log_error, logtype_default, "ad_read: %s", strerror(errno));
-                    return -1;
-                }
-            }
-            ad->ad_rlen = rlen;
-
+#ifndef HAVE_EAFD
             if (off > ad->ad_rlen) {
                 errno = ERANGE;
                 return -1;
             }
-
-            if (ad->ad_resforkbuf == NULL) {
-                if ((ad->ad_resforkbuf = malloc(ad->ad_rlen)) == NULL) {
-                    ad->ad_rlen = 0;
-                    return -1;
-                }
-            } else {
-                if ((ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, ad->ad_rlen)) == NULL) {
-                    ad->ad_rlen = 0;
-                    return -1;
-                } 
-            }
-
-            if (sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) == -1) {
-                ad->ad_rlen = 0;
-                return -1;
-            }       
-
             if ((off + buflen) > ad->ad_rlen)
-                cc = ad->ad_rlen;
+                cc = off + buflen - ad->ad_rlen;
             memcpy(buf, ad->ad_resforkbuf + off, cc);
+#endif
             break;
-        } /* switch (ad->ad_vers) */
+        }
     }
 
     return( cc );

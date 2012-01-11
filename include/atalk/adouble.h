@@ -359,6 +359,7 @@ extern int ad_rebuild_sfm_header (struct adouble *);
 extern int ad_copy_header (struct adouble *, struct adouble *);
 extern int ad_flush (struct adouble *);
 extern int ad_close (struct adouble *, int);
+extern int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags);
 
 /* ad_lock.c */
 extern int ad_testlock      (struct adouble *adp, int eid, off_t off);

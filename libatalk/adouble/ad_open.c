@@ -469,24 +469,35 @@ static int ad_header_read_ea(struct adouble *ad, struct stat *hst _U_)
     return 0;
 }
 
-static int ad_rsrc_len_ea(struct adouble *ad)
+static int ad_read_rf_ea(struct adouble *ad)
 {
+    EC_INIT;
     ssize_t rlen;
 
     if ((rlen = sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, NULL, 0)) <= 0) {
         switch (errno) {
         case ENOATTR:
         case ENOENT:
-            ad->ad_rlen = 0;
-            break;
+            return 0;
         default:
             LOG(log_error, logtype_default, "ad_refresh_rsrc_len_ea: %s", strerror(errno));
-            ad->ad_rlen = 0;
             return -1;
         }
     }
+
+    if (ad->ad_resforkbuf == NULL) {
+        EC_NULL_LOG( ad->ad_resforkbuf = malloc(rlen) );
+    } else {
+        if (rlen > ad->ad_rlen) {
+            EC_ZERO_LOG( ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, rlen) );
+        }
+    }
     ad->ad_rlen = rlen;
-    return 0;
+
+    EC_NEG1_LOG( sys_fgetxattr(ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen) );
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 
 static int ad_mkrf(const char *path)
@@ -909,7 +920,7 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
  */
 static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *ad)
 {
-    int ret = 0;
+    EC_INIT;
     int oflags;
     ssize_t rlen;
 
@@ -931,19 +942,22 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
             return -1;
         }
     } else {
-        if ((ad_data_fileno(ad) = open(path, oflags)) == -1)
-            goto exit;
+        EC_NEG1( (ad_data_fileno(ad) = open(path, oflags)) );
         ad->ad_data_fork.adf_flags = oflags;
         adf_lock_init(&ad->ad_data_fork);
+#ifndef HAVE_EAFD
+        EC_ZERO_LOG( ad_read_rf_ea(ad) );
+#endif
     }
-
-    if ((ret = ad_rsrc_len_ea(ad)) != 0)
-        goto exit;
 
     ad->ad_data_fork.adf_refcount++;
 
-exit:
-    return ret;
+EC_CLEANUP:
+    if (ret != 0) {
+        ad->ad_rlen = 0;
+        ad->ad_adflags &= ~ADFLAGS_RF;
+    }
+    EC_EXIT;
 }
 
 /***********************************************************************************
@@ -1133,6 +1147,8 @@ static void ad_init_func(struct adouble *ad)
     ad->ad_data_fork.adf_refcount = 0;
     ad->ad_data_fork.adf_syml = 0;
     ad->ad_inited = 0;
+//    ad->ad_maxeafssize = 3500;  /* FIXME: option from vol */
+    ad->ad_maxeafssize = 0;     /* no limit */
     return;
 }
 
@@ -1147,8 +1163,6 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
 {
     ad->ad_vers = vol->v_adouble;
     ad->ad_options = vol->v_ad_options;
-//    ad->ad_maxeafssize = 3500;  /* FIXME: option from vol */
-    ad->ad_maxeafssize = 0;     /* no limit */
     ad_init_func(ad);
 }
 
@@ -1314,8 +1328,10 @@ int ad_refresh(struct adouble *ad)
     case AD_VERSION_EA:
         if (ad_data_fileno(ad) == -1)
             return -1;
-        if (ad_rsrc_len_ea(ad) != 0)
+#ifndef HAVE_EAFD
+        if (ad_read_rf_ea(ad) != 0)
             return -1;
+#endif
         return ad->ad_ops->ad_header_read(ad, NULL);
         break;
     default:

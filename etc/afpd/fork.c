@@ -1137,6 +1137,9 @@ static ssize_t write_file(struct ofork *ofork, int eid,
         }
     }
 
+    LOG(log_debug, logtype_afpd, "write_file(off: %ju, size: %zu)",
+        (uintmax_t)offset, rbuflen);
+
     if (( cc = ad_write(ofork->of_ad, eid, offset, 0,
                         rbuf, rbuflen)) < 0 ) {
         switch ( errno ) {
@@ -1242,15 +1245,16 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     case AFPPROTO_DSI:
     {
         DSI *dsi = obj->handle;
-
         /* find out what we have already and write it out. */
         cc = dsi_writeinit(dsi, rbuf, *rbuflen);
+
         if (!cc || (cc = write_file(ofork, eid, offset, rbuf, cc, xlate)) < 0) {
             dsi_writeflush(dsi);
             *rbuflen = 0;
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
             return cc;
         }
+
         offset += cc;
 
 #if 0 /*def HAVE_SENDFILE_WRITE*/

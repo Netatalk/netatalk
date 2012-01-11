@@ -48,6 +48,46 @@ static const uint32_t set_eid[] = {
 
 #define EID_DISK(a) (set_eid[a])
 
+int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
+{
+    if ((ad->ad_maxeafssize == 0) || (ad->ad_maxeafssize >= size)) {
+        LOG(log_debug, logtype_default, "fsetrsrcea(\"%s\"): size: %zu", eaname, size);
+        if (sys_fsetxattr(fd, eaname, value, size, 0) == -1)
+            return -1;
+        return 0;
+    }
+
+    /* rsrcfork is larger then maximum EA support by fs so we have to split it */
+    int i;
+    int eas = (size / ad->ad_maxeafssize);
+    size_t remain = size - (eas * ad->ad_maxeafssize);
+    bstring eachunk;
+
+    LOG(log_debug, logtype_default, "fsetrsrcea(\"%s\"): size: %zu, maxea: %zu, eas: %d, remain: %zu",
+        eaname, size, ad->ad_maxeafssize, eas, remain);
+
+    for (i = 0; i < eas; i++) {
+        if ((eachunk = bformat("%s.%d", eaname, i + 1)) == NULL)
+            return -1;
+        if (sys_fsetxattr(fd, bdata(eachunk), value + (i * ad->ad_maxeafssize), ad->ad_maxeafssize, 0) == -1) {
+            LOG(log_error, logtype_default, "fsetrsrcea(\"%s\"): %s", bdata(eachunk), strerror(errno));
+            bdestroy(eachunk);
+            return -1;
+        }
+        bdestroy(eachunk);
+    }
+
+    if ((eachunk = bformat("%s.%d", eaname, i + 1)) == NULL)
+        return -1;
+    if (sys_fsetxattr(fd, bdata(eachunk), value + (i * ad->ad_maxeafssize), remain, 0) == -1) {
+        LOG(log_error, logtype_default, "fsetrsrcea(\"%s\"): %s", bdata(eachunk), strerror(errno));
+        return -1;
+    }
+    bdestroy(eachunk);
+
+    return 0;
+}
+
 /*
  * Rebuild any header information that might have changed.
  */
@@ -147,6 +187,9 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
 int ad_flush(struct adouble *ad)
 {
     int len;
+
+    LOG(log_debug, logtype_default, "ad_flush(%s)", adflags2logstr(ad->ad_adflags));
+
     struct ad_fd *adf;
 
     switch (ad->ad_vers) {
@@ -179,11 +222,19 @@ int ad_flush(struct adouble *ad)
             }
             break;
         case AD_VERSION_EA:
-            if (sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
-                LOG(log_error, logtype_afpd, "ad_flush: sys_fsetxattr error: %s",
-                    strerror(errno));
-                return -1;
+            if (AD_META_OPEN(ad)) {
+                if (sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
+                    LOG(log_error, logtype_afpd, "ad_flush: sys_fsetxattr error: %s",
+                        strerror(errno));
+                    return -1;
+                }
             }
+#ifndef HAVE_EAFD
+            if (AD_RSRC_OPEN(ad) && (ad->ad_rlen > 0)) {
+                if (fsetrsrcea(ad, ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
+                    return -1;
+            }
+#endif
             break;
         default:
             LOG(log_error, logtype_afpd, "ad_flush: unexpected adouble version");
@@ -192,6 +243,21 @@ int ad_flush(struct adouble *ad)
     }
 
     return( 0 );
+}
+
+static int ad_data_closefd(struct adouble *ad)
+{
+    int ret = 0;
+
+    if (ad_data_fileno(ad) == -2) {
+        free(ad->ad_data_fork.adf_syml);
+        ad->ad_data_fork.adf_syml = NULL;
+    } else {
+        if (close(ad_data_fileno(ad)) < 0)
+            ret = -1;
+    }
+    ad_data_fileno(ad) = -1;
+    return ret;
 }
 
 /*!
@@ -209,14 +275,8 @@ int ad_close(struct adouble *ad, int adflags)
     if ((adflags & ADFLAGS_DF)
         && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
         && --ad->ad_data_fork.adf_refcount == 0) {
-        if (ad->ad_data_fork.adf_syml != NULL) {
-            free(ad->ad_data_fork.adf_syml);
-            ad->ad_data_fork.adf_syml = 0;
-        } else {
-            if ( close( ad_data_fileno(ad) ) < 0 )
-                err = -1;
-        }
-        ad_data_fileno(ad) = -1;
+        if (ad_data_closefd(ad) < 0)
+            err = -1;
         adf_lock_free(&ad->ad_data_fork);
     }
 
@@ -234,9 +294,8 @@ int ad_close(struct adouble *ad, int adflags)
         case AD_VERSION_EA:
             if ((ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */ 
                 && !(--ad->ad_data_fork.adf_refcount)) {
-                if (close( ad_data_fileno(ad) ) < 0)
+                if (ad_data_closefd(ad) < 0)
                     err = -1;
-                ad_data_fileno(ad) = -1;
                 adf_lock_free(&ad->ad_data_fork);
             }
             break;
@@ -255,12 +314,21 @@ int ad_close(struct adouble *ad, int adflags)
             break;
 
         case AD_VERSION_EA:
+#ifndef HAVE_EAFD
+            LOG(log_debug, logtype_default, "ad_close: ad->ad_rlen: %zu", ad->ad_rlen);
+            if (ad->ad_rlen > 0)
+                if (fsetrsrcea(ad, ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
+                    err = -1;
+#endif
             if ((ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */ 
                 && !(--ad->ad_data_fork.adf_refcount)) {
-                if (close( ad_data_fileno(ad) ) < 0)
+                if (ad_data_closefd(ad) < 0)
                     err = -1;
-                ad_data_fileno(ad) = -1;
                 adf_lock_free(&ad->ad_data_fork);
+                if (ad->ad_resforkbuf)
+                    free(ad->ad_resforkbuf);
+                ad->ad_resforkbuf = NULL;
+                ad->ad_rlen = 0;
             }
             break;
 

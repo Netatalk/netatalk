@@ -17,51 +17,8 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/logger.h>
-
-#ifndef MIN
-#define MIN(a,b)	((a)<(b)?(a):(b))
-#endif /* ! MIN */
-
-static int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
-{
-    if ((ad->ad_maxeafssize == 0) || (ad->ad_maxeafssize >= size)) {
-        if (sys_fsetxattr(fd, eaname, value, size, 0) == -1)
-            return -1;
-        return 0;
-    }
-
-    /* rsrcfork is larger then maximum EA support by fs so we have to split it */
-    int i;
-    int eas = (size / ad->ad_maxeafssize);
-    size_t remain = size - (eas * ad->ad_maxeafssize);
-    bstring eachunk;
-
-    LOG(log_debug, logtype_default, "fsetrsrcea(\"%s\"): size: %zu, maxea: %zu, eas: %d, remain: %zu",
-        eaname, size, ad->ad_maxeafssize, eas, remain);
-
-    for (i = 0; i < eas; i++) {
-        if ((eachunk = bformat("%s.%d", eaname, i + 1)) == NULL)
-            return -1;
-        if (sys_fsetxattr(fd, bdata(eachunk), value + (i * ad->ad_maxeafssize), ad->ad_maxeafssize, 0) == -1) {
-            LOG(log_error, logtype_default, "fsetrsrcea(\"%s\"): %s", bdata(eachunk), strerror(errno));
-            bdestroy(eachunk);
-            return -1;
-        }
-        bdestroy(eachunk);
-    }
-
-    if ((eachunk = bformat("%s.%d", eaname, i + 1)) == NULL)
-        return -1;
-    if (sys_fsetxattr(fd, bdata(eachunk), value + (i * ad->ad_maxeafssize), remain, 0) == -1) {
-        LOG(log_error, logtype_default, "fsetrsrcea(\"%s\"): %s", bdata(eachunk), strerror(errno));
-        return -1;
-    }
-    bdestroy(eachunk);
-
-    return 0;
-}
-
-
+#include <atalk/util.h>
+#include <atalk/errchk.h>
 
 /* XXX: locking has to be checked before each stream of consecutive
  *      ad_writes to prevent a lock in the middle from causing problems. 
@@ -92,6 +49,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t off
 /* end is always 0 */
 ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const char *buf, size_t buflen)
 {
+    EC_INIT;
     struct stat		st;
     ssize_t		cc;
     size_t roundup;
@@ -102,6 +60,9 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         errno = EACCES;
         return -1;
     }
+
+    LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
+        (uintmax_t)off, buflen, ad->ad_rlen);
     
     if ( eid == ADEID_DFORK ) {
         if ( end ) {
@@ -131,23 +92,25 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
             break;
 
         case AD_VERSION_EA:
-            if (ad->ad_resforkbuf == NULL) {
+#ifndef HAVE_EAFD
+            LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
+                (uintmax_t)off, buflen, ad->ad_rlen);
+            if (ad->ad_rlen == 0) {
+                EC_NULL_LOG( ad->ad_resforkbuf = malloc(off + buflen) );
                 ad->ad_rlen = off + buflen;
-                if ((ad->ad_resforkbuf = malloc(ad->ad_rlen)) == NULL) {
-                    ad->ad_rlen = 0;
-                    return -1;
-                }
-            }
-            if ((off + buflen) > ad->ad_rlen) {                
-                if ((ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, off + buflen)) == NULL)
-                    return -1;
+            } else if ((off + buflen) > ad->ad_rlen) {                
+                EC_NULL_LOG( ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, off + buflen) );
                 ad->ad_rlen = off + buflen;
             }
+
             memcpy(ad->ad_resforkbuf + off, buf, buflen);
-            
-            if (fsetrsrcea(ad, ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
-                return -1;
+            if (ad->ad_rlen > 0)
+                if (fsetrsrcea(ad, ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
+                    ret = -1;
             cc = buflen;
+            LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
+                (uintmax_t)off, buflen, ad->ad_rlen);
+#endif
             break;
 
         default:
@@ -157,6 +120,9 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         return -1; /* we don't know how to write if it's not a ressource or data fork */
     }
 
+EC_CLEANUP:
+    if (ret != 0)
+        return ret;
     return( cc );
 }
 
