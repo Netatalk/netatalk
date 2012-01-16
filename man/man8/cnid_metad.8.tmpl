@@ -2,12 +2,12 @@
 .\"     Title: cnid_metad
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 23 Dec 2009
+.\"      Date: 01 Jan 2012
 .\"    Manual: Netatalk 2.2
 .\"    Source: Netatalk 2.2
 .\"  Language: English
 .\"
-.TH "CNID_METAD" "8" "23 Dec 2009" "Netatalk 2.2" "Netatalk 2.2"
+.TH "CNID_METAD" "8" "01 Jan 2012" "Netatalk 2.2" "Netatalk 2.2"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -21,8 +21,10 @@
 .SH "NAME"
 cnid_metad \- start cnid_dbd daemons on request
 .SH "SYNOPSIS"
-.HP \w'\fBcnid_metad\fR\fB\fR\ 'u
+.HP \w'\fBcnid_metad\fR\fB\fR\fBcnid_metad\fR\fB\fR\ 'u
 \fBcnid_metad\fR\fB\fR [\-l\ \fIloglevel\fR\ [\-f\ \fIfilename\fR]] [\-d] [\-h\ \fIhostname\fR] [\-p\ \fIport\fR] [\-u\ \fIuser\fR] [\-g\ \fIgroup\fR] [\-s\ \fIcnid_dbdpathname\fR]
+.br
+\fBcnid_metad\fR\fB\fR \-v | \-V 
 .SH "DESCRIPTION"
 .PP
 \fBcnid_metad\fR
@@ -144,6 +146,11 @@ as the pathname of the executeable of the
 \fBcnid_dbd\fR
 daemon\&. The default is
 \fI:SBINDIR:/cnid_dbd\&.\fR
+.RE
+.PP
+\fB\-v, \-V\fR
+.RS 4
+Show version and exit\&.
 .RE
 .SH "CAVEATS"
 .PP
