@@ -63,7 +63,7 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
 {
     ssize_t     cc;
     ssize_t     rlen;
-    off_t r_off;
+    off_t r_off = 0;
 
     /* We're either reading the data fork (and thus the data file)
      * or we're reading anything else (and thus the header file). */
@@ -85,38 +85,18 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
 
         switch (ad->ad_vers) {
         case AD_VERSION2:
-            r_off = ad_getentryoff(ad, eid) + off;
-            if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 )
-                return( -1 );
-            /*
-             * We've just read in bytes from the disk that we read earlier
-             * into ad_data. If we're going to write this buffer out later,
-             * we need to update ad_data.
-             * FIXME : always false?
-             */
-            if (r_off < ad_getentryoff(ad, ADEID_RFORK)) {
-                if ( ad->ad_resource_fork.adf_flags & O_RDWR ) {
-                    memcpy(buf, ad->ad_data + r_off,
-                           MIN(sizeof( ad->ad_data ) - r_off, cc));
-                } else {
-                    memcpy(ad->ad_data + r_off, buf,
-                           MIN(sizeof( ad->ad_data ) - r_off, cc));
-                }
-            }
-            break;
-
-        case AD_VERSION_EA:
 #ifndef HAVE_EAFD
-            if (off > ad->ad_rlen) {
-                errno = ERANGE;
-                return -1;
-            }
-            if ((off + buflen) > ad->ad_rlen)
-                cc = off + buflen - ad->ad_rlen;
-            memcpy(buf, ad->ad_resforkbuf + off, cc);
+        case AD_VERSION_EA:
 #endif
+            r_off = ad_getentryoff(ad, eid) + off;
+            break;
+        default:
+            r_off = 0;
             break;
         }
+
+        if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 )
+            return( -1 );
     }
 
     return( cc );

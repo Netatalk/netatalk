@@ -88,6 +88,31 @@ static const char *prefix(const char *uname)
 #endif
 }
 
+int sys_getxattrfd(const char *path, const char *uname, int oflag, ...)
+{
+#if defined HAVE_ATTROPEN
+    int eafd;
+    va_list args;
+    mode_t mode;
+
+    if (oflags & O_CREAT) {
+        va_start(args, oflag);
+        mode = va_arg(args, mode_t);
+        va_end(args);
+    }
+
+    if (oflags & O_CREAT)
+        eafd = attropen(path, uname, oflag, mode);
+    else
+        eafd = attropen(path, uname, oflag);
+
+    return eafd;
+#else
+    errno = ENOSYS;
+    return -1;
+#endif
+}
+
 ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t size)
 {
 	const char *name = prefix(uname);

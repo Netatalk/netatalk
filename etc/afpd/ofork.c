@@ -404,7 +404,7 @@ int of_closefork(struct ofork *ofork)
     if (ofork->of_flags & AFPFORK_RSRC) {
         adflags |= ADFLAGS_RF;
         /* Only set the rfork's length if we're closing the rfork. */
-        ad_refresh( ofork->of_ad );
+        ad_refresh(NULL, ofork->of_ad );
         if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
             ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX,tv.tv_sec);
             ad_flush( ofork->of_ad );

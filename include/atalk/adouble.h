@@ -49,6 +49,7 @@
 
 /* version info */
 #define AD_VERSION2     0x00020000
+#define AD_VERSION2_OSX 0x00020001
 #define AD_VERSION_EA   0x00020002
 
 /* default */
@@ -96,7 +97,7 @@
 #define ADEDLEN_VERSION     4
 #define ADEDLEN_FILLER      16
 #define ADEDLEN_NENTRIES    2
-#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + ADEDLEN_FILLER + ADEDLEN_NENTRIES)
+#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + ADEDLEN_FILLER + ADEDLEN_NENTRIES) /* 26 */
 #define AD_ENTRY_LEN        12  /* size of a single entry header */
 
 /* field widths */
@@ -117,7 +118,8 @@
 #define ADEDLEN_PRIVID          4
 
 #define ADEID_NUM_V2            13
-#define ADEID_NUM_EA            5
+#define ADEID_NUM_EA            6
+#define ADEID_NUM_OSX           2
 
 #define AD_DATASZ2 (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + \
                     ADEDLEN_FINDERI + ADEDLEN_DID + ADEDLEN_AFPFILEI + ADEDLEN_SHORTNAME + \
@@ -130,8 +132,14 @@
 #define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEDLEN_FINDERI + \
                       ADEDLEN_COMMENT + ADEDLEN_FILEDATESI + ADEDLEN_AFPFILEI + ADEDLEN_PRIVID)
 
-#if AD_DATASZ_EA != 342
+#if AD_DATASZ_EA != 354
 #error bad size for AD_DATASZ_EA
+#endif
+
+#define AD_DATASZ_OSX (AD_HEADER_LEN + (ADEID_NUM_OSX * AD_ENTRY_LEN) + ADEDLEN_FINDERI)
+
+#if AD_DATASZ_OSX != 82
+#error bad size for AD_DATASZ_OSX
 #endif
 
 #define AD_DATASZ_MAX   1024
@@ -142,7 +150,9 @@
 #define AD_DATASZ   AD_DATASZ_EA
 #endif
 
-#define RFORK_EA_ALLOCSIZE (128*1024) /* 128k */
+/* fallback for ad:ea on filesystems without fds for EAs, like old adouble:osx */
+#define ADEDOFF_FINDERI_OSX  (AD_HEADER_LEN + ADEID_NUM_OSX*AD_ENTRY_LEN)
+#define ADEDOFF_RFORK_OSX    (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI)
 
 typedef uint32_t cnid_t;
 
@@ -175,7 +185,7 @@ struct adouble_fops {
     const char *(*ad_path)(const char *, int);
     int  (*ad_mkrf)(const char *);
     int  (*ad_rebuild_header)(struct adouble *);
-    int  (*ad_header_read)(struct adouble *, struct stat *);
+    int  (*ad_header_read)(const char *, struct adouble *, struct stat *);
     int  (*ad_header_upgrade)(struct adouble *, const char *);
 };
 
@@ -184,21 +194,26 @@ struct adouble {
     uint32_t            ad_version;       /* Official adouble version number          */
     char                ad_filler[16];
     struct ad_entry     ad_eid[ADEID_MAX];
+
     struct ad_fd        ad_data_fork;     /* the data fork                            */
+
+    struct ad_fd        ad_metadata_fork; /* adouble:v2 -> unused                     *
+                                           * adouble:ea -> fd unused, only flags used */
+
     struct ad_fd        ad_resource_fork; /* adouble:v2 -> the adouble file           *
-                                           * adouble:ea -> unused                     */
+                                           * adouble:ea -> the EA fd                  */
+
     struct ad_fd        *ad_rfp;          /* adouble:v2 -> ad_resource_fork           *
-                                           * adouble:ea -> ad_data_fork               */
+                                           * adouble:ea -> ad_resource_fork           */
+
     struct ad_fd        *ad_mdp;          /* adouble:v2 -> ad_resource_fork           *
-                                           * adouble:ea -> ad_data_fork               */
+                                           * adouble:ea -> ad_metadata_fork           */
+
     int                 ad_vers;          /* Our adouble version info (AD_VERSION*)   */
     int                 ad_adflags;       /* ad_open flags adflags like ADFLAGS_DIR   */
     uint32_t            ad_inited;
     int                 ad_options;
     int                 ad_refcount;       /* multiple forks may open one adouble     */
-    void                *ad_resforkbuf;    /* buffer for AD_VERSION_EA ressource fork */
-    size_t              ad_resforkbufsize; /* size of ad_resforkbuf                   */
-    size_t              ad_maxeafssize;    /* maximum EA size allowed from the fs     */
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
     char                *ad_m_name;        /* mac name for open fork                  */
@@ -344,6 +359,7 @@ struct adouble {
 #define ad_getentrylen(ad,eid)     ((ad)->ad_eid[(eid)].ade_len)
 #define ad_setentrylen(ad,eid,len) ((ad)->ad_eid[(eid)].ade_len = (len))
 #define ad_getentryoff(ad,eid)     ((ad)->ad_eid[(eid)].ade_off)
+#define ad_setentryoff(ad,eid,off) ((ad)->ad_eid[(eid)].ade_off = (off))
 #define ad_entry(ad,eid)           ((caddr_t)(ad)->ad_data + (ad)->ad_eid[(eid)].ade_off)
 
 #define ad_get_RF_flags(ad) ((ad)->ad_rfp->adf_flags)
@@ -355,7 +371,6 @@ struct adouble {
 
 /* ad_flush.c */
 extern int ad_rebuild_adouble_header (struct adouble *);
-extern int ad_rebuild_sfm_header (struct adouble *);
 extern int ad_copy_header (struct adouble *, struct adouble *);
 extern int ad_flush (struct adouble *);
 extern int ad_close (struct adouble *, int);
@@ -382,7 +397,7 @@ extern void ad_init       (struct adouble *, const struct vol * restrict);
 extern void ad_init_old   (struct adouble *ad, int flags, int options);
 extern int ad_open        (struct adouble *ad, const char *path, int adflags, ...);
 extern int ad_openat      (struct adouble *, int dirfd, const char *path, int adflags, ...);
-extern int ad_refresh     (struct adouble *);
+extern int ad_refresh     (const char *path, struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
 extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);

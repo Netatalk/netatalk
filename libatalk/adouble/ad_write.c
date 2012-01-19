@@ -73,49 +73,22 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         }
         cc = adf_pwrite(&ad->ad_data_fork, buf, buflen, off);
     } else if ( eid == ADEID_RFORK ) {
-        switch (ad->ad_vers) {
-        case AD_VERSION2:
-
-            if ( end ) {
-                if ( fstat( ad_data_fileno(ad), &st ) < 0 )
-                    return( -1 );
-                off = st.st_size - off -ad_getentryoff(ad, eid);
-            }
-            r_off = ad_getentryoff(ad, eid) + off;
-            cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
-
-            /* sync up our internal buffer  FIXME always false? */
-            if (r_off < ad_getentryoff(ad, ADEID_RFORK))
-                memcpy(ad->ad_data + r_off, buf, MIN(sizeof(ad->ad_data) -r_off, cc));
-            if ( ad->ad_rlen < off + cc )
-                ad->ad_rlen = off + cc;
-            break;
-
-        case AD_VERSION_EA:
-#ifndef HAVE_EAFD
-            LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
-                (uintmax_t)off, buflen, ad->ad_rlen);
-            if (ad->ad_rlen == 0) {
-                EC_NULL_LOG( ad->ad_resforkbuf = malloc(off + buflen) );
-                ad->ad_rlen = off + buflen;
-            } else if ((off + buflen) > ad->ad_rlen) {                
-                EC_NULL_LOG( ad->ad_resforkbuf = realloc(ad->ad_resforkbuf, off + buflen) );
-                ad->ad_rlen = off + buflen;
-            }
-
-            memcpy(ad->ad_resforkbuf + off, buf, buflen);
-            if (ad->ad_rlen > 0)
-                if (fsetrsrcea(ad, ad_data_fileno(ad), AD_EA_RESO, ad->ad_resforkbuf, ad->ad_rlen, 0) == -1)
-                    ret = -1;
-            cc = buflen;
-            LOG(log_debug, logtype_default, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
-                (uintmax_t)off, buflen, ad->ad_rlen);
-#endif
-            break;
-
-        default:
-            return -1;
+        if (end) {
+            if (fstat( ad_reso_fileno(ad), &st ) < 0)
+                return(-1);
+            off = st.st_size - off - ad_getentryoff(ad, eid);
         }
+#ifdef HAVE_EAFD
+        if (ad->ad_vers == AD_VERSION_EA) {
+            r_off = 0;
+        } else
+#endif
+            r_off = ad_getentryoff(ad, eid) + off;
+
+        cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
+
+        if ( ad->ad_rlen < off + cc )
+            ad->ad_rlen = off + cc;
     } else {
         return -1; /* we don't know how to write if it's not a ressource or data fork */
     }

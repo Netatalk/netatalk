@@ -561,7 +561,7 @@ int afp_setforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf _U
         if (err < 0)
             goto afp_setfork_err;
     } else if (bitmap == (1<<FILPBIT_RFLEN) || bitmap == (1<<FILPBIT_EXTRFLEN)) {
-        ad_refresh( ofork->of_ad );
+        ad_refresh(NULL, ofork->of_ad );
 
         st_size = ad_size(ofork->of_ad, eid);
         err = -2;
@@ -1067,7 +1067,7 @@ int flushfork(struct ofork *ofork)
          (ofork->of_flags & AFPFORK_RSRC)) {
 
         /* read in the rfork length */
-        ad_refresh(ofork->of_ad);
+        ad_refresh(NULL, ofork->of_ad);
 
         /* set the date if we're dirty */
         if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
@@ -1358,7 +1358,7 @@ int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbu
     }
 
     if (AD_META_OPEN(ofork->of_ad)) {
-        if ( ad_refresh( ofork->of_ad ) < 0 ) {
+        if ( ad_refresh(NULL, ofork->of_ad ) < 0 ) {
             LOG(log_error, logtype_afpd, "getforkparams(%s): ad_refresh: %s", of_name(ofork), strerror(errno) );
             return( AFPERR_PARAM );
         }

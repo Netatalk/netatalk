@@ -94,6 +94,7 @@ int sys_setxattr (const char *path, const char *name, const void *value, size_t 
 int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
 int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
 int sys_copyxattr (const char *src, const char *dst);
+int sys_getxattrfd(const char *path, const char *uname, int oflag, ...);
 
 /****************************************************************************************
  * Stuff for our implementation of storing EAs in files in .AppleDouble dirs
