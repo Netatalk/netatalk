@@ -499,7 +499,17 @@ EC_CLEANUP:
  ************************************************************************/
 static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 {
-    return 1;
+    if (name[0] != '.')
+        return 1;
+    
+    if (!(vol->v_flags & AFPVOL_USEDOTS))
+        return 0;
+
+#ifndef HAVE_EAFD
+    if (name[1] == '_')
+        return 0;
+#endif
+    return netatalk_name(name) && strcasecmp(name,".Parent");
 }             
 
 /* ----------------- */

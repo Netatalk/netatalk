@@ -529,7 +529,8 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, struct stat *
     char     *buf = ad->ad_data;
 
     /* read the header */
-    if (ad_meta_fileno(ad) == -1 && ad->ad_adflags && ADFLAGS_RDWR) {
+    if ((ad_meta_fileno(ad) == -1)
+        && (ad->ad_adflags & ADFLAGS_RDWR)) {
         LOG(log_error, logtype_default, "ad_header_read_ea: need filedescriptor for rw access");
         return -1;
     }
@@ -922,7 +923,8 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     ssize_t rforklen;
     int oflags;
 
-    LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\", %04o)", path, mode);
+    LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\", %s, %04o)",
+        path, adflags2logstr(adflags), mode);
 
     oflags = O_NOFOLLOW | (ad2openflags(adflags) & ~(O_CREAT | O_TRUNC));
 

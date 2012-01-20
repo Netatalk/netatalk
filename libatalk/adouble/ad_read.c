@@ -83,16 +83,14 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
             /* resource fork is not open ( cf etc/afp/fork.c) */
             return 0;
 
-        switch (ad->ad_vers) {
-        case AD_VERSION2:
-#ifndef HAVE_EAFD
-        case AD_VERSION_EA:
-#endif
-            r_off = ad_getentryoff(ad, eid) + off;
-            break;
-        default:
+        if (ad->ad_vers == AD_VERSION_EA) {
+#ifdef HAVE_EAFD
             r_off = 0;
-            break;
+#else
+            r_off = ADEDOFF_RFORK_OSX;
+#endif
+        } else {
+            r_off = ad_getentryoff(ad, eid) + off;
         }
 
         if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 )

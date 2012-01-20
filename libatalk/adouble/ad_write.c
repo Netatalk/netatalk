@@ -78,13 +78,15 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
                 return(-1);
             off = st.st_size - off - ad_getentryoff(ad, eid);
         }
-#ifdef HAVE_EAFD
         if (ad->ad_vers == AD_VERSION_EA) {
+#ifdef HAVE_EAFD
             r_off = 0;
-        } else
+#else
+            r_off = ADEDOFF_RFORK_OSX;
 #endif
+        } else {
             r_off = ad_getentryoff(ad, eid) + off;
-
+        }
         cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
 
         if ( ad->ad_rlen < off + cc )
