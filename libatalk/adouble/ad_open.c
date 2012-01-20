@@ -944,7 +944,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     } else {
         if (adflags & ADFLAGS_RDWR) {
             /* Fo a RDONLY adouble we just use sys_lgetxattr instead if sys_fgetxattr */
-            LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): opening for base file for meta adouble EA", path);
+            if (adflags & ADFLAGS_DIR)
+                /* For directories we open the directory RDONYL so we can later fchdir()  */
+                oflags = (oflags & ~O_RDWR) | O_RDONLY;
+            LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): opening base file for meta adouble EA", path);
             if ((ad_meta_fileno(ad) = open(path, oflags)) == -1)
                 goto error;
             ad->ad_mdp->adf_flags = oflags;

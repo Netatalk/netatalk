@@ -38,6 +38,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/errchk.h>
+#include <atalk/util.h>
 
 #include "ad_lock.h"
 
@@ -59,6 +60,8 @@ int ad_rebuild_adouble_header(struct adouble *ad)
     uint16_t       nent;
     char        *buf, *nentp;
     int             len;
+
+    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header");
 
     buf = ad->ad_data;
 
@@ -206,7 +209,9 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
 
 static int ad_flush_hf(struct adouble *ad)
 {
+    EC_INIT;
     int len;
+    int cwd = -1;
 
     LOG(log_debug, logtype_default, "ad_flush_hf(%s)", adflags2logstr(ad->ad_adflags));
 
@@ -224,7 +229,8 @@ static int ad_flush_hf(struct adouble *ad)
         return -1;
     }
 
-    if ((adf->adf_flags & O_RDWR)) {
+    if ((adf->adf_flags & O_RDWR)
+        || ((ad->ad_adflags & ADFLAGS_DIR) && (ad->ad_adflags & ADFLAGS_RDWR))) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
             if (ad->ad_rlen > 0xffffffff)
                 ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
@@ -243,10 +249,11 @@ static int ad_flush_hf(struct adouble *ad)
             break;
         case AD_VERSION_EA:
             if (AD_META_OPEN(ad)) {
-                if (sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) != 0) {
-                    LOG(log_error, logtype_afpd, "ad_flush: sys_fsetxattr error: %s",
-                        strerror(errno));
-                    return -1;
+                if (ad->ad_adflags & ADFLAGS_DIR) {
+                    EC_NEG1_LOG( cwd = open(".", O_RDONLY) );
+                    EC_ZERO_LOG( sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
+                } else {
+                    EC_ZERO_LOG( sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
                 }
             }
             break;
@@ -256,7 +263,14 @@ static int ad_flush_hf(struct adouble *ad)
         }
     }
 
-    return( 0 );
+EC_CLEANUP:
+    if (cwd != -1) {
+        if (fchdir(cwd) != 0) {
+            AFP_PANIC("ad_flush: cant fchdir");
+        }
+        close(cwd);
+    }
+    EC_EXIT;
 }
 
 /* Flush resofork adouble file if any (currently adouble:ea and #ifndef HAVE_EAFD eg Linux) */

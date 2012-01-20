@@ -23,6 +23,9 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#define NETATALK_DIOSZ_STACK 65536
+#define NETATALK_DIOSZ_HEAP  (1024*1024)
+
 /* vfs/unix.c */
 extern int netatalk_unlink(const char *name);
 extern int netatalk_unlinkat(int dirfd, const char *name);
@@ -39,4 +42,6 @@ extern int dir_rx_set(mode_t mode);
 extern int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask);
 extern int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath);
 extern int copy_file(int sfd, const char *src, const char *dst, mode_t mode);
+extern int copy_file_fd(int sfd, int dfd);
+extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode);
 #endif  /* ATALK_UNIX_H */

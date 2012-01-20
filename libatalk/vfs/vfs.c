@@ -140,7 +140,7 @@ static int deletecurdir_adouble_loop(struct dirent *de, char *name, void *data _
     /* bail if the file exists in the current directory.
      * note: this will not fail with dangling symlinks */
     
-    if (stat(de->d_name, &st) == 0)
+    if (lstat(de->d_name, &st) == 0)
         return AFPERR_DIRNEMPT;
 
     if ((err = netatalk_unlink(name)))
@@ -515,6 +515,9 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 /* ----------------- */
 static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
 {
+#ifndef HAVE_EAFD
+    return chown(vol->ad_path(path, ADFLAGS_HF ), uid, gid);
+#endif
     return 0;
 }
 
@@ -524,95 +527,182 @@ static int RF_renamedir_ea(VFS_FUNC_ARGS_RENAMEDIR)
     return 0;
 }
 
+/* Returns 1 if the entry is NOT an ._ file */
+static int deletecurdir_ea_osx_chkifempty_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
+{
+    if (de->d_name[0] != '.' || de->d_name[0] == '_')
+        return 1;
+
+    return 0;
+}
+
+static int deletecurdir_ea_osx_loop(struct dirent *de, char *name, void *data _U_, int flag _U_, mode_t v_umask _U_)
+{
+    int ret;
+    
+    if ((ret = netatalk_unlink(name)) != 0)
+        return ret;
+
+    return 0;
+}
+
 /* ---------------- */
 static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
 {
+#ifndef HAVE_EAFD
+    int err;
+    /* delete stray ._AppleDouble files */
+
+    /* first check if there's really no other file besides files starting with ._ */
+    if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
+                                deletecurdir_ea_osx_chkifempty_loop,
+                                NULL, 0, 0)) != 0) {
+        if (err == 1)
+            return AFPERR_DIRNEMPT;
+        return AFPERR_MISC;
+    }
+
+    /* Now delete orphaned ._ files */
+    if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
+                                deletecurdir_ea_osx_loop,
+                                NULL, 0, 0)) != 0)
+        return err;
+
+#endif
     return 0;
 }
 
 /* ---------------- */
 static int RF_setdirunixmode_ea(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
+#ifndef HAVE_EAFD
+#endif
     return 0;
 }
 
 static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
 {
+#ifndef HAVE_EAFD
+    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_HF ), mode, st, vol->v_umask);
+#endif
     return 0;
 }
 
 /* ---------------- */
 static int RF_setdirmode_ea(VFS_FUNC_ARGS_SETDIRMODE)
 {
+#ifndef HAVE_EAFD
+#endif
     return 0;
 }
 
 /* ---------------- */
 static int RF_setdirowner_ea(VFS_FUNC_ARGS_SETDIROWNER)
 {
+#ifndef HAVE_EAFD
+#endif
 	return 0;
 }
 
 static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
 {
+#ifndef HAVE_EAFD
+	return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
+#endif
     return 0;
 }
 static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 {
-    return 0;
+    EC_INIT;
+
+    /* copy meta EA */
+    if (copy_ea(AD_EA_META, sfd, src, dst, 0666) != 0)
+        return AFPERR_MISC;
+
+    /* copy reso */
+#ifdef HAVE_EAFD
+    int sfile = -1, dfile = -1, sea = -1, dea = -1;
+
+    if ((sfile = openat(sfd, src, O_RDONLY)) == -1) {
+        ret = AFPERR_MISC;
+        goto copyresoerr;
+    }
+
+    if ((dfile = open(dts, O_WRONLY)) == -1) {
+        ret = AFPERR_MISC;
+        goto copyresoerr;
+    }
+
+    if ((sea = openat(sfile, AD_EA_RESO, O_RDONLY | O_XATTR)) == -1) {
+        ret = AFPERR_MISC;
+        goto copyresoerr;
+    }
+
+    if ((dea = openat(dfile, AD_EA_RESO, O_RDWR | O_CREAT | O_XATTR)) == -1) {
+        ret = AFPERR_MISC;
+        goto copyresoerr;
+    }
+
+    ret = copy_file_fd(sea, dea);
+
+copyresoerr:
+    if (sfile != -1) close(sfile);
+    if (dfile != -1) close(dfile);
+    if (sea != -1) close(sea);
+    if (dea != -1) close(dea);
+    if (ret != 0)
+        return ret;
+
+EC_CLEANUP:
+#else
+    bstring s = NULL, d = NULL;
+    char *dup1 = NULL;
+    char *dup2 = NULL;
+    char *dup3 = NULL;
+    char *dup4 = NULL;
+    const char *name = NULL;
+    const char *dir = NULL;
+
+    /* get basename */
+
+    /* build src path to ._ file*/
+    EC_NULL(dup1 = strdup(src));
+    EC_NULL(name = basename(strdup(dup1)));
+
+    EC_NULL(dup2 = strdup(src));
+    EC_NULL(dir = dirname(dup2));
+    EC_NULL(s = bfromcstr(dir));
+    EC_ZERO(bcatcstr(s, "/._"));
+    EC_ZERO(bcatcstr(s, name));
+
+    /* build dst path to ._file*/
+    EC_NULL(dup4 = strdup(dst));
+    EC_NULL(name = basename(strdup(dup4)));
+
+    EC_NULL(dup3 = strdup(dst));
+    EC_NULL(dir = dirname(dup3));
+    EC_NULL(d = bfromcstr(dir));
+    EC_ZERO(bcatcstr(d, "/._"));
+    EC_ZERO(bcatcstr(d, name));
+
+    EC_ZERO(copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666));
+
+EC_CLEANUP:
+    bdestroy(s);
+    bdestroy(d);
+    free(dup1);
+    free(dup2);
+    free(dup3);
+    free(dup4);
+#endif
+out:
+    EC_EXIT;
 }
 
 /* ---------------- */
 static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
 {
-    return 0;
-}
-
-#if 0
-/*************************************************************************
- * osx adouble format 
- ************************************************************************/
-static int validupath_osx(VFS_FUNC_ARGS_VALIDUPATH)
-{
-    return strncmp(name,"._", 2) && (
-      (vol->v_flags & AFPVOL_USEDOTS) ? netatalk_name(name): name[0] != '.');
-}             
-
-/* ---------------- */
-static int RF_renamedir_osx(VFS_FUNC_ARGS_RENAMEDIR)
-{
-    /* We simply move the corresponding ad file as well */
-    char   tempbuf[258]="._";
-    return unix_rename(dirfd, vol->ad_path(oldpath,0), -1, strcat(tempbuf,newpath));
-}
-
-/* ---------------- */
-static int RF_deletecurdir_osx(VFS_FUNC_ARGS_DELETECURDIR)
-{
-    return netatalk_unlink( vol->ad_path(".",0) );
-}
-
-/* ---------------- */
-static int RF_setdirunixmode_osx(VFS_FUNC_ARGS_SETDIRUNIXMODE)
-{
-    return adouble_setfilmode(vol->ad_path(name, ADFLAGS_DIR ), mode, st, vol->v_umask);
-}
-
-/* ---------------- */
-static int RF_setdirmode_osx(VFS_FUNC_ARGS_SETDIRMODE)
-{
-    return 0;
-}
-
-/* ---------------- */
-static int RF_setdirowner_osx(VFS_FUNC_ARGS_SETDIROWNER)
-{
-	return 0;
-}
-
-/* ---------------- */
-static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
-{
+#ifndef HAVE_EAFD
     char  adsrc[ MAXPATHLEN + 1];
     int   err = 0;
 
@@ -628,8 +718,9 @@ static int RF_renamefile_osx(VFS_FUNC_ARGS_RENAMEFILE)
         return -1;
     }
     return 0;
-}
 #endif
+    return 0;
+}
 
 /********************************************************************************************
  * VFS chaining
