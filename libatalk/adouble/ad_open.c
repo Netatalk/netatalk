@@ -287,7 +287,6 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         ad->ad_version = AD_VERSION;
     }
 
-
     memset(ad->ad_data, 0, sizeof(ad->ad_data));
 
     if (ad->ad_vers == AD_VERSION2)
@@ -319,7 +318,10 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
         }
 
         /* make things invisible */
-        if ((ad->ad_options & ADVOL_INVDOTS) && (*path == '.')) {
+        if ((ad->ad_options & ADVOL_INVDOTS)
+            && (*path == '.')
+            && !((adflags & ADFLAGS_DIR) && (path[1] == 0))
+            ) {
             ashort = htons(ATTRBIT_INVISIBLE);
             ad_setattr(ad, ashort);
             ashort = htons(FINDERINFO_INVISIBLE);
@@ -958,8 +960,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     if (ad->ad_ops->ad_header_read(path, ad, NULL) != 0) {
         LOG(log_error, logtype_default, "ad_open_hf_ea: no EA adouble");
 
-        if (!(adflags & ADFLAGS_CREATE))
+        if (!(adflags & ADFLAGS_CREATE)) {
+            errno = ENOENT;
             goto error;
+        }
 
         LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): creating metadata EA", path);
 
@@ -1539,6 +1543,7 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
     }
 
     if (dirfd != -1) {
+
         if (fchdir(cwdfd) != 0) {
             LOG(log_error, logtype_afpd, "ad_openat: cant chdir back, exiting");
             exit(EXITERR_SYS);
