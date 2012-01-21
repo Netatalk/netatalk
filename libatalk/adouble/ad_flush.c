@@ -252,7 +252,7 @@ static int ad_flush_hf(struct adouble *ad)
                 if (ad->ad_adflags & ADFLAGS_DIR) {
                     EC_NEG1_LOG( cwd = open(".", O_RDONLY) );
                     EC_NEG1_LOG( fchdir(ad_data_fileno(ad)) );
-                    EC_ZERO_LOG( sys_fsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
+                    EC_ZERO_LOG( sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
                     EC_NEG1_LOG( fchdir(cwd) );
                     cwd = -1;
                 } else {

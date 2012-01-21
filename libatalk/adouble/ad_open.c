@@ -107,7 +107,6 @@ static int ad_mkrf_ea(const char *path);
 static int ad_header_read_ea(const char *path, struct adouble *ad, struct stat *hst);
 static int ad_header_upgrade_ea(struct adouble *ad, const char *name);
 static int ad_reso_size(const char *path, int adflags, struct adouble *ad);
-static const char *ad_path_osx(const char *path, int adflags);
 static int ad_mkrf_osx(const char *path);
 
 
@@ -923,6 +922,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 {
     ssize_t rforklen;
     int oflags;
+    int opened = 0;
 
     LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\", %s, %04o)",
         path, adflags2logstr(adflags), mode);
@@ -951,6 +951,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
             LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): opening base file for meta adouble EA", path);
             if ((ad_meta_fileno(ad) = open(path, oflags)) == -1)
                 goto error;
+            opened = 1;
             ad->ad_mdp->adf_flags = oflags;
         }
         ad->ad_mdp->adf_refcount = 1;
@@ -989,12 +990,13 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     return 0;
 
 error:
-    if (ad_meta_fileno(ad) != -1) {
+    if (opened && ad_meta_fileno(ad) != -1) {
         close(ad_meta_fileno(ad));
         ad_meta_fileno(ad) = -1;
         ad->ad_mdp->adf_refcount = 0;
     }
-    return ad_error(ad, adflags);
+    (void)ad_reso_size(path, adflags, ad);
+    return -1;
 }
 
 static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *ad)
@@ -1141,7 +1143,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
     }
 #endif
 
-    EC_NEG1_LOG( ad_reso_size(path, adflags, ad));
+    (void)ad_reso_size(path, adflags, ad);
 
 EC_CLEANUP:
     if (ret != 0) {
@@ -1447,7 +1449,7 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
         adflags |= ADFLAGS_DF;
 
     if (ad->ad_inited != AD_INITED) {
-        ad->ad_adflags = adflags;
+        ad->ad_adflags = (adflags & ~(ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_RF));
         ad->ad_inited = AD_INITED;
     } else {
         ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
@@ -1480,7 +1482,10 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     }
 
 EC_CLEANUP:
-    return ret;
+    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s): result: %d",
+        fullpathname(path), adflags2logstr(ad->ad_adflags), ret);
+
+    EC_EXIT;
 }
 
 /*!

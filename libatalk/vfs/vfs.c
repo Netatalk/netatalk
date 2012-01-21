@@ -945,7 +945,11 @@ void initvol_vfs(struct vol *vol)
         vol->ad_path = ad_path;
     } else {
         vol->vfs_modules[0] = &netatalk_adouble_ea;
+#ifdef HAVE_EAFD
         vol->ad_path = ad_path_ea;
+#else
+        vol->ad_path = ad_path_osx;
+#endif
     }
 
     /* Extended Attributes */

@@ -1656,6 +1656,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
     }
 
     if (adp && ad_tmplock( &ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 0 ) < 0) {
+        LOG(log_error, logtype_afpd, "deletefile('%s'): ad_tmplock error: %s", file, strerror(errno));
         err = AFPERR_BUSY;
     } else if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file)) && !(err = netatalk_unlinkat(dirfd, file )) ) {
         cnid_t id;

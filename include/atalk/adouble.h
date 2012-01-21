@@ -390,6 +390,7 @@ extern uid_t ad_getfuid   (void );
 extern char *ad_dir       (const char *);
 extern const char *ad_path      (const char *, int);
 extern const char *ad_path_ea   (const char *, int);
+extern const char *ad_path_osx  (const char *path, int adflags);
 extern int ad_mode        (const char *, mode_t);
 extern int ad_mkdir       (const char *, mode_t);
 struct vol;
