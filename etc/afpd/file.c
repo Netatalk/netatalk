@@ -1619,7 +1619,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
  
     /* try to open both forks at once */
     adflags = ADFLAGS_DF;
-    if (ad_openat(&ad, dirfd, file, adflags | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY) < 0 ) {
+    if (ad_openat(&ad, dirfd, file, adflags | ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY) < 0 ) {
         switch (errno) {
         case ENOENT:
             err = AFPERR_NOOBJ;
@@ -1638,8 +1638,8 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         adp = &ad;
     }
 
-    if ( adp && ad_reso_fileno( adp ) != -1 ) { /* there's a resource fork */
-        adflags |= ADFLAGS_HF;
+    if ( adp && AD_RSRC_OPEN(adp) != -1 ) { /* there's a resource fork */
+        adflags |= ADFLAGS_RF;
         /* FIXME we have a pb here because we want to know if a file is open 
          * there's a 'priority inversion' if you can't open the ressource fork RW
          * you can delete it if it's open because you can't get a write lock.

@@ -1152,9 +1152,13 @@ EC_CLEANUP:
             ad_reso_fileno(ad) = -1;
             ad->ad_rfp->adf_refcount = 0;
         }
-        int err = errno;
-        (void)ad_close(ad, closeflags);
-        errno = err;
+        if (adflags & ADFLAGS_NORF) {
+            ret = 0;
+        } else {
+            int err = errno;
+            (void)ad_close(ad, closeflags);
+            errno = err;
+        }
         ad->ad_rlen = 0;
     }
 
@@ -1408,7 +1412,8 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
  *                         ADFLAGS_DF:        open data fork
  *                         ADFLAGS_RF:        open ressource fork
  *                         ADFLAGS_HF:        open header (metadata) file
- *                         ADFLAGS_NOHF:      it's not an error if header file couldn't be created
+ *                         ADFLAGS_NOHF:      it's not an error if header file couldn't be opened
+ *                         ADFLAGS_NORF:      it's not an error if reso fork couldn't be opened
  *                         ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags
  *
  *                       Access mode for the forks:
@@ -1444,6 +1449,12 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
         /* Checking for open forks requires sharemode lock support (ie RDWR instead of RDONLY) */
         adflags |= ADFLAGS_SETSHRMD;
 
+    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF)) {
+        adflags |= ADFLAGS_HF;
+        if (adflags & ADFLAGS_NORF)
+            adflags |= ADFLAGS_NOHF;
+    }
+    
     if ((ad->ad_vers == AD_VERSION_EA) && (adflags & ADFLAGS_SETSHRMD))
         /* adouble:ea sets sharemode locks on the datafork */
         adflags |= ADFLAGS_DF;

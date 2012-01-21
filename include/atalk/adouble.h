@@ -227,7 +227,8 @@ struct adouble {
 #define ADFLAGS_RF        (1<<1)
 #define ADFLAGS_HF        (1<<2)
 #define ADFLAGS_DIR       (1<<3)
-#define ADFLAGS_NOHF      (1<<4)  /* not an error if no ressource fork */
+#define ADFLAGS_NOHF      (1<<4)  /* not an error if no metadata fork */
+#define ADFLAGS_NORF      (1<<4)  /* not an error if no ressource fork */
 #define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
 #define ADFLAGS_SETSHRMD  (1<<7)  /* setting share mode must be done with excl fcnt lock,
                                      which implies that the file must be openend rw.
