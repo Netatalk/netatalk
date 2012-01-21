@@ -106,8 +106,7 @@ static int ad_header_upgrade(struct adouble *ad, const char *name);
 static int ad_mkrf_ea(const char *path);
 static int ad_header_read_ea(const char *path, struct adouble *ad, struct stat *hst);
 static int ad_header_upgrade_ea(struct adouble *ad, const char *name);
-
-
+static int ad_reso_size(const char *path, int adflags, struct adouble *ad);
 static const char *ad_path_osx(const char *path, int adflags);
 static int ad_mkrf_osx(const char *path);
 
@@ -981,8 +980,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): created metadata EA", path);
     }
 
-    /* TODO: ad_rlen calculation */
-    ad->ad_rlen = 0;
+    (void)ad_reso_size(path, adflags, ad);
 
     return 0;
 
@@ -1022,6 +1020,46 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
     return ret;
 }
 
+/*!
+ * Get resofork length for adouble:ea
+ */
+static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
+{
+    EC_INIT;
+    struct stat st;
+
+    LOG(log_debug, logtype_default, "ad_reso_size(\"%s\")", path);
+
+#ifdef HAVE_EAFD
+    int opened = 0;
+    int eafd = ad_reso_fileno(ad);
+    if (eafd == -1) {
+        EC_NEG1( eafd = sys_getxattrfd(path, O_RDONLY) );
+        opened = 1;
+    }
+    EC_NEG1( rlen = fstat(eafd, &st) );
+    ad->ad_rlen = st.st_size;
+#else
+    const char *rfpath;
+    EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags));
+    EC_ZERO( lstat(rfpath, &st));
+    if (st.st_size > ADEDOFF_RFORK_OSX)
+        ad->ad_rlen = st.st_size - ADEDOFF_RFORK_OSX;
+    else
+        ad->ad_rlen = 0;
+#endif
+
+    LOG(log_debug, logtype_default, "ad_reso_size(\"%s\"): size: %zd", path, ad->ad_rlen);
+
+EC_CLEANUP:
+#ifdef HAVE_EAFD
+    if (opened)
+        close(eafd);
+#endif
+    if (ret != 0)
+        ad->ad_rlen = 0;
+    EC_EXIT;
+}
 
 /*!
  * Open ressource fork
@@ -1057,6 +1095,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         }
         ad->ad_rfp->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_rfp->adf_refcount++;
+        EC_NEG1_LOG( ad_reso_size(path, adflags, ad));
         return 0;
     }
 #ifdef HAVE_EAFD
@@ -1087,7 +1126,6 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         /* This is a new adouble header file, create it */
         LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): created adouble rfork, initializing: \"%s\"",
             path, rfpath);
-//        EC_NEG1_LOG( new_ad_header(ad, rfpath, &st, adflags) );
         LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): created adouble rfork, flushing: \"%s\"",
             path, rfpath);
         ad_flush(ad);
@@ -1098,6 +1136,8 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         EC_NEG1_LOG( ad_header_read_osx(NULL, ad, &st) );
     }
 #endif
+
+    EC_NEG1_LOG( ad_reso_size(path, adflags, ad));
 
 EC_CLEANUP:
     if (ret != 0) {
