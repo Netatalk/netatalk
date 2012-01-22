@@ -443,9 +443,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
      */
 
     /* don't try to lock non-existent rforks. */
-    if ((eid == ADEID_DFORK)
-        || (ad_meta_fileno(ofork->of_ad) != -1)
-        || (vol->v_adouble & AD_VERSION_EA)) { /* META */
+    if ((eid == ADEID_DFORK) || (ad_reso_fileno(ofork->of_ad) != -1)) {
 
         ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
