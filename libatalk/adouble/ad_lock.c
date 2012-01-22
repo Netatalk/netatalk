@@ -455,7 +455,7 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     type = locktype;
     if (eid == ADEID_DFORK) {
         adf = &ad->ad_data_fork;
-        if ((type & ADLOCK_FILELOCK)) {
+        if ((ad->ad_vers == AD_VERSION2) && (type & ADLOCK_FILELOCK)) {
             if (ad_meta_fileno(ad) != -1) { /* META */
                 adf = ad->ad_mdp;
                 lock.l_start = df2off(off);
