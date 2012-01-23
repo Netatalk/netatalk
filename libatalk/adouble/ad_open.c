@@ -191,6 +191,12 @@ const char *adflags2logstr(int adflags)
         strlcat(buf, "RF", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
+    if (adflags & ADFLAGS_NORF) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "NORF", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
     if (adflags & ADFLAGS_HF) {
         if (!first)
             strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
@@ -213,6 +219,12 @@ const char *adflags2logstr(int adflags)
         if (!first)
             strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
         strlcat(buf, "OF", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (adflags & ADFLAGS_SETSHRMD) {
+        if (!first)
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "SHRMD", ADFLAGS2LOGSTRBUFSIZ);
         first = 0;
     }
     if (adflags & ADFLAGS_RDWR) {
@@ -528,18 +540,11 @@ static int ad_header_read_ea(const char *path, struct adouble *ad, struct stat *
     ssize_t  header_len;
     char     *buf = ad->ad_data;
 
-    /* read the header */
-    if ((ad_meta_fileno(ad) == -1)
-        && (ad->ad_adflags & ADFLAGS_RDWR)) {
-        LOG(log_error, logtype_default, "ad_header_read_ea: need filedescriptor for rw access");
-        return -1;
-    }
-
     if (ad_meta_fileno(ad) != -1)
         header_len = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA);
     else
         header_len = sys_lgetxattr(path, AD_EA_META, ad->ad_data, AD_DATASZ_EA);
-    if (header_len < 1) {
+     if (header_len < 1) {
         LOG(log_debug, logtype_default, "ad_header_read_ea: %s", strerror(errno));
         return -1;
     }
@@ -852,7 +857,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             if ((ad->ad_options & ADVOL_UNIXPRIV))
                 admode = mode;
             admode = ad_hf_mode(admode);
-            if ((errno == ENOENT) && (ad->ad_vers != AD_VERSION2_OSX)) {
+            if (errno == ENOENT) {
                 if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
                     return ad_error(ad, adflags);
                 }
@@ -916,15 +921,19 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
     return 0;
 }
 
-/* TODO: error handling */
 static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble *ad)
 {
+    EC_INIT;
     ssize_t rforklen;
     int oflags;
     int opened = 0;
 
-    LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\", %s, %04o)",
-        path, adflags2logstr(adflags), mode);
+    LOG(log_debug, logtype_default,
+        "ad_open_hf_ea(\"%s\", %s): BEGIN [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        fullpathname(path), adflags2logstr(adflags),
+        ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
+        ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
+        ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
     oflags = O_NOFOLLOW | (ad2openflags(adflags) & ~(O_CREAT | O_TRUNC));
 
@@ -936,19 +945,18 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
             LOG(log_error, logtype_default, "ad_open_hf_ea(%s): rw request for ro file: %s",
                 fullpathname(path), strerror(errno));
             errno = EACCES;
-            return -1;
+            EC_FAIL;
         }
         /* it's not new anymore */
         ad->ad_mdp->adf_flags &= ~( O_TRUNC | O_CREAT );
     } else {
-        if (adflags & ADFLAGS_RDWR) {
+        if (oflags & O_RDWR) {
             /* Fo a RDONLY adouble we just use sys_lgetxattr instead if sys_fgetxattr */
             if (adflags & ADFLAGS_DIR)
                 /* For directories we open the directory RDONYL so we can later fchdir()  */
                 oflags = (oflags & ~O_RDWR) | O_RDONLY;
             LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): opening base file for meta adouble EA", path);
-            if ((ad_meta_fileno(ad) = open(path, oflags)) == -1)
-                goto error;
+            EC_NEG1(ad_meta_fileno(ad) = open(path, oflags));
             opened = 1;
             ad->ad_mdp->adf_flags = oflags;
         }
@@ -960,7 +968,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
         if (!(adflags & ADFLAGS_CREATE)) {
             errno = ENOENT;
-            goto error;
+            EC_FAIL;
         }
 
         LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): creating metadata EA", path);
@@ -968,15 +976,11 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         /* It doesnt exist, EPERM or another error */
         if (!(errno == ENOATTR || errno == ENOENT)) {
             LOG(log_error, logtype_default, "ad_open_hf_ea: unexpected: %s", strerror(errno));
-            goto error;
+            EC_FAIL;
         }
 
         /* Create one */
-        if (new_ad_header(ad, path, NULL, adflags) < 0) {
-            LOG(log_error, logtype_default, "ad_open_hf_ea: can't create new header: %s",
-                fullpathname(path));
-            goto error;
-        }
+        EC_NEG1_LOG(new_ad_header(ad, path, NULL, adflags));
         ad->ad_mdp->adf_flags |= O_CREAT; /* mark as just created */
         ad_flush(ad);
         LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): created metadata EA", path);
@@ -985,23 +989,25 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     ad->ad_mdp->adf_refcount++;
     (void)ad_reso_size(path, adflags, ad);
 
-    return 0;
-
-error:
-    if (opened && ad_meta_fileno(ad) != -1) {
+EC_CLEANUP:
+    if (ret != 0 && opened && ad_meta_fileno(ad) != -1) {
         close(ad_meta_fileno(ad));
         ad_meta_fileno(ad) = -1;
         ad->ad_mdp->adf_refcount = 0;
     }
-    (void)ad_reso_size(path, adflags, ad);
-    return -1;
+    LOG(log_debug, logtype_default,
+        "ad_open_hf_ea(\"%s\", %s): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        fullpathname(path), adflags2logstr(adflags), ret,
+        ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
+        ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
+        ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
+        
+    EC_EXIT;
 }
 
 static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *ad)
 {
     int ret = 0;
-
-    LOG(log_debug, logtype_default, "ad_open_hf(\"%s\", %04o)", path, mode);
 
     memset(ad->ad_eid, 0, sizeof( ad->ad_eid ));
     ad->ad_rlen = 0;
@@ -1018,9 +1024,9 @@ static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *a
         break;
     }
 
-    if (ret != 0) {
-        return ad_error(ad, adflags);
-    }
+    if (ret != 0)
+        ret = ad_error(ad, adflags);
+
     return ret;
 }
 
@@ -1075,6 +1081,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 {
     EC_INIT;
     int oflags;
+    int opened = 0;
     int closeflags = adflags & (ADFLAGS_DF | ADFLAGS_HF);
     ssize_t rlen;
 #ifndef HAVE_EAFD
@@ -1085,22 +1092,22 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
     if (ad->ad_vers != AD_VERSION_EA)
         return 0;
 
-    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\", %04o)", path, mode);
+    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): BEGIN", fullpathname(path));
 
     oflags = O_NOFOLLOW | (ad2openflags(adflags) & ~O_CREAT);
 
     if (ad_reso_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
-        if ((adflags & ADFLAGS_RDWR)
+        if ((oflags & O_RDWR)
             /* and it was already denied: */
             && (ad->ad_rfp->adf_flags & O_RDONLY)) {
             errno = EACCES;
-            return -1;
+            EC_FAIL;
         }
         ad->ad_rfp->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_rfp->adf_refcount++;
         EC_NEG1_LOG( ad_reso_size(path, adflags, ad));
-        return 0;
+        goto EC_CLEANUP;
     }
 #ifdef HAVE_EAFD
     if ((ad_reso_fileno(ad) = sys_getxattrfd(path, oflags)) == -1) {
@@ -1120,7 +1127,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
             path, rfpath);
     }
 #endif
-
+    opened = 1;
     ad->ad_rfp->adf_refcount = 1;
     ad->ad_rfp->adf_flags = oflags;
 
@@ -1145,7 +1152,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 
 EC_CLEANUP:
     if (ret != 0) {
-        if (ad_reso_fileno(ad) != -1) {
+        if (opened && (ad_reso_fileno(ad) != -1)) {
             close(ad_reso_fileno(ad));
             ad_reso_fileno(ad) = -1;
             ad->ad_rfp->adf_refcount = 0;
@@ -1160,7 +1167,7 @@ EC_CLEANUP:
         ad->ad_rlen = 0;
     }
 
-    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): END", path);
+    LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): END: %d", fullpathname(path), ret);
 
     EC_EXIT;
 }
@@ -1440,11 +1447,8 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     va_list args;
     mode_t mode = 0;
 
-    LOG(log_debug, logtype_default, "ad_open(\"%s\", %s)",
-        fullpathname(path), adflags2logstr(adflags));
-
     LOG(log_debug, logtype_default,
-        "ad_open(\"%s\", %s) [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        "ad_open(\"%s\", %s): BEGIN [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         fullpathname(path), adflags2logstr(adflags),
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
@@ -1492,7 +1496,7 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
 
 EC_CLEANUP:
     LOG(log_debug, logtype_default,
-        "ad_open(\"%s\"): result: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        "ad_open(\"%s\"): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
         fullpathname(path), ret,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,

@@ -266,9 +266,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         return  AFPERR_BADTYPE;
     }
 
-    LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\", %s)",
-        fullpathname(s_path->u_name), (fork & OPENFORK_RSCS) ? "RSRC" : "DATA");
-
     /* stat() data fork st is set because it's not a dir */
     switch ( s_path->st_errno ) {
     case 0:
@@ -311,6 +308,8 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     } else {
         eid = ADEID_RFORK;
         adflags = ADFLAGS_RF | ADFLAGS_HF;
+        if (!(access & OPENACC_WR))
+            adflags |= ADFLAGS_NORF;
     }
 
     path = s_path->m_name;
@@ -318,6 +317,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                            adsame, st)) == NULL ) {
         return( AFPERR_NFILE );
     }
+
+    LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\", %s, %s)",
+        fullpathname(s_path->u_name),
+        (fork & OPENFORK_RSCS) ? "data" : "reso",
+        !(access & OPENACC_WR) ? "O_RDONLY" : "O_RDWR");
 
     ret = AFPERR_NOOBJ;
     if (access & OPENACC_WR) {
@@ -366,7 +370,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     } else {
         /* try opening in read-only mode */
         ret = AFPERR_NOOBJ;
-        /* we need w access for setting deny mode fcntl excl lock */
         if (ad_open(ofork->of_ad, upath, adflags | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD) < 0) {
             switch ( errno ) {
             case EROFS:
@@ -443,8 +446,9 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
      */
 
     /* don't try to lock non-existent rforks. */
-    if ((eid == ADEID_DFORK) || (ad_reso_fileno(ofork->of_ad) != -1)) {
-
+    if ((eid == ADEID_DFORK)
+        || (ad_reso_fileno(ofork->of_ad) != -1)
+        || (ofork->of_ad->ad_vers == AD_VERSION_EA)) {
         ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
         if (ret < 0) {

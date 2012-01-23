@@ -369,6 +369,7 @@ static uint16_t ad_openforks_v2(struct adouble *ad, uint16_t attrbits)
   return ret;
 }
 
+/* test for sharemode locks, adouble:ea stores them on the datafork */
 static uint16_t ad_openforks_ea(struct adouble *ad, uint16_t attrbits)
 {
     uint16_t ret = 0;
@@ -376,27 +377,30 @@ static uint16_t ad_openforks_ea(struct adouble *ad, uint16_t attrbits)
     off_t off;
     off_t len;
 
-  if (!(attrbits & (ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
-      /* Test all 4 locks at once */
-      off = AD_FILELOCK_OPEN_WR;
-      len = 4;
-      if (testlock(&ad->ad_data_fork, off, len) == 0)
-          return 0;
-  }
+    if (ad_data_fileno(ad) == -1)
+        return 0;
 
-  /* either there's a lock or we already know one fork is open */
+    if (!(attrbits & (ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+        /* Test all 4 locks at once */
+        off = AD_FILELOCK_OPEN_WR;
+        len = 4;
+        if (testlock(&ad->ad_data_fork, off, len) == 0)
+            return 0;
+    }
 
-  if (!(attrbits & ATTRBIT_DOPEN)) {
-      off = AD_FILELOCK_OPEN_WR;
-      ret = testlock(&ad->ad_data_fork, off, 2) > 0 ? ATTRBIT_DOPEN : 0;
-  }
+    /* either there's a lock or we already know one fork is open */
 
-  if (!(attrbits & ATTRBIT_ROPEN)) {
-      off = AD_FILELOCK_RSRC_OPEN_WR;
-      ret |= testlock(&ad->ad_data_fork, off, 2) > 0? ATTRBIT_ROPEN : 0;
-  }
+    if (!(attrbits & ATTRBIT_DOPEN)) {
+        off = AD_FILELOCK_OPEN_WR;
+        ret = testlock(&ad->ad_data_fork, off, 2) > 0 ? ATTRBIT_DOPEN : 0;
+    }
 
-  return ret;
+    if (!(attrbits & ATTRBIT_ROPEN)) {
+        off = AD_FILELOCK_RSRC_OPEN_WR;
+        ret |= testlock(&ad->ad_data_fork, off, 2) > 0? ATTRBIT_ROPEN : 0;
+    }
+
+    return ret;
 }
 
 static int ad_testlock_v2(struct adouble *ad, int eid, const off_t off)
