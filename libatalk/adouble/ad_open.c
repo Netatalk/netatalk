@@ -930,7 +930,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
     if (ad_meta_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
-        if ((adflags & ADFLAGS_RDWR) &&
+        if ((oflags & O_RDWR) &&
             /* and it was already denied: */
             (ad->ad_mdp->adf_flags & O_RDONLY)) {
             LOG(log_error, logtype_default, "ad_open_hf_ea(%s): rw request for ro file: %s",
@@ -1459,10 +1459,6 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
         if (adflags & ADFLAGS_NORF)
             adflags |= ADFLAGS_NOHF;
     }
-    
-    if ((ad->ad_vers == AD_VERSION_EA) && (adflags & ADFLAGS_SETSHRMD))
-        /* adouble:ea sets sharemode locks on the datafork */
-        adflags |= ADFLAGS_DF;
 
     if (ad->ad_inited != AD_INITED) {
         ad->ad_adflags = adflags;

@@ -358,10 +358,6 @@ int ad_close(struct adouble *ad, int adflags)
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
-    /* cf ad_open(): we opened the datafork too for sharemode locks */
-    if ((ad->ad_vers == AD_VERSION_EA) && (ad->ad_adflags & ADFLAGS_SETSHRMD))
-        adflags |= ADFLAGS_DF;
-
     if ((adflags & ADFLAGS_DF)
         && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
         && --ad->ad_data_fork.adf_refcount == 0) {
@@ -391,7 +387,7 @@ int ad_close(struct adouble *ad, int adflags)
 
     LOG(log_debug, logtype_default,
         "ad_close(%s): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
-        err, adflags2logstr(adflags),
+        adflags2logstr(adflags), err,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
