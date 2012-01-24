@@ -964,8 +964,6 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(path, ad, NULL) != 0) {
-        LOG(log_error, logtype_default, "ad_open_hf_ea: no EA adouble");
-
         if (!(adflags & ADFLAGS_CREATE)) {
             errno = ENOENT;
             EC_FAIL;
