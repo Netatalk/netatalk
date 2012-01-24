@@ -359,6 +359,9 @@ int ad_close(struct adouble *ad, int adflags)
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
+    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF))
+        adflags |= ADFLAGS_HF;
+
     if ((adflags & ADFLAGS_DF)
         && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == -2) /* -2 means symlink */
         && --ad->ad_data_fork.adf_refcount == 0) {
