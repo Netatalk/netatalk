@@ -613,9 +613,6 @@ int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
     int err;
     int type;  
 
-    if (ad->ad_vers == AD_VERSION_EA)
-        return 0;
-
     lock.l_start = off;
     type = locktype;
     if (eid == ADEID_DFORK) {
