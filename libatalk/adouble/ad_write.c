@@ -80,9 +80,9 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
         }
         if (ad->ad_vers == AD_VERSION_EA) {
 #ifdef HAVE_EAFD
-            r_off = 0;
+            r_off = off;
 #else
-            r_off = ADEDOFF_RFORK_OSX;
+            r_off = ADEDOFF_RFORK_OSX + off;
 #endif
         } else {
             r_off = ad_getentryoff(ad, eid) + off;
@@ -162,9 +162,8 @@ char            c = 0;
 /* ------------------------ */
 int ad_rtruncate( struct adouble *ad, const off_t size)
 {
-    if (ad->ad_vers != AD_VERSION_EA)
-        if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 )
-            return -1;
+    if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 )
+        return -1;
 
     ad->ad_rlen = size;    
 
