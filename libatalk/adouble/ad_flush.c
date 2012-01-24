@@ -254,6 +254,7 @@ static int ad_flush_hf(struct adouble *ad)
                     EC_NEG1_LOG( fchdir(ad_data_fileno(ad)) );
                     EC_ZERO_LOG( sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
                     EC_NEG1_LOG( fchdir(cwd) );
+                    EC_NEG1_LOG( close(cwd) );
                     cwd = -1;
                 } else {
                     EC_ZERO_LOG( sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
