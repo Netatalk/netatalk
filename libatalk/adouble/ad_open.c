@@ -1044,7 +1044,7 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
     int opened = 0;
     int eafd = ad_reso_fileno(ad);
     if (eafd == -1) {
-        EC_NEG1( eafd = sys_getxattrfd(path, O_RDONLY) );
+        EC_NEG1( eafd = sys_getxattrfd(path, AD_EA_RESO, O_RDONLY) );
         opened = 1;
     }
     EC_NEG1( rlen = fstat(eafd, &st) );
