@@ -548,12 +548,16 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
 
         case AD_VERSION_EA:
             if (type & ADLOCK_FILELOCK) {
+                adf = &ad->ad_data_fork;
                 lock.l_start = rf2off(off);
             } else {
-                /* it's a byterange lock on the rsrcfork -> discard it */
-                return 0;
+                adf = ad->ad_rfp;
+#if HAVE_EAFD
+                lock.l_start = off;
+#else
+                lock.l_start= ADEDOFF_RFORK_OSX + off;
+#endif
             }
-            adf = &ad->ad_data_fork;
             break;
 
         default:
