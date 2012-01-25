@@ -18,6 +18,8 @@
 
 #include <atalk/adouble.h>
 #include <atalk/logger.h>
+#include <atalk/compat.h>
+#include <atalk/errchk.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,13 +33,25 @@
 /* ----------------------- */
 static int set_lock(int fd, int cmd,  struct flock *lock)
 {
-  if (fd == -2) {
-      /* We assign fd = -2 for symlinks -> do nothing */
-      if (cmd == F_GETLK)
-	    lock->l_type = F_UNLCK;
-      return 0;
-  }
-  return fcntl(fd, cmd, lock);
+    EC_INIT;
+
+    LOG(log_debug, logtype_default, "set_lock(%s, %s, off: %jd, len: %jd): BEGIN",
+        cmd == F_SETLK ? "F_SETLK" : "F_GETLK",
+        lock->l_type == F_RDLCK ? "F_RDLCK" : lock->l_type == F_WRLCK ? "F_WRLCK" : "F_UNLCK",
+        (intmax_t)lock->l_start, (intmax_t)lock->l_len);
+
+    if (fd == -2) {
+        /* We assign fd = -2 for symlinks -> do nothing */
+        if (cmd == F_GETLK)
+            lock->l_type = F_UNLCK;
+        return 0;
+    }
+
+    EC_NEG1_LOGSTR( fcntl(fd, cmd, lock),
+                    "set_lock: %s", strerror(errno));
+
+EC_CLEANUP:
+    EC_EXIT;
 }
 
 /* ----------------------- */
@@ -438,6 +452,47 @@ static int ad_testlock_ea(struct adouble *ad, int eid, const off_t off)
     return testlock(&ad->ad_data_fork, lock_offset, 1);
 }
 
+#define LTYPE2STRBUFSIZ 128
+static const char *locktypetostr(int type)
+{
+    int first = 1;
+    static char buf[LTYPE2STRBUFSIZ];
+
+    buf[0] = 0;
+
+    if (type == 0) {
+        strlcat(buf, "CLR", LTYPE2STRBUFSIZ);
+        first = 0;
+        return buf;
+    }
+    if (type & ADLOCK_RD) {
+        if (!first)
+            strlcat(buf, "|", LTYPE2STRBUFSIZ);
+        strlcat(buf, "RD", LTYPE2STRBUFSIZ);
+        first = 0;
+    }
+    if (type & ADLOCK_WR) {
+        if (!first)
+            strlcat(buf, "|", LTYPE2STRBUFSIZ);
+        strlcat(buf, "WR", LTYPE2STRBUFSIZ);
+        first = 0;
+    }
+    if (type & ADLOCK_UPGRADE) {
+        if (!first)
+            strlcat(buf, "|", LTYPE2STRBUFSIZ);
+        strlcat(buf, "UPG", LTYPE2STRBUFSIZ);
+        first = 0;
+    }
+    if (type & ADLOCK_FILELOCK) {
+        if (!first)
+            strlcat(buf, "|", LTYPE2STRBUFSIZ);
+        strlcat(buf, "FILELOCK", LTYPE2STRBUFSIZ);
+        first = 0;
+    }
+
+    return buf;
+}
+
 /******************************************************************************
  * Public functions
  ******************************************************************************/
@@ -451,12 +506,18 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     int i;
     int type;  
 
-    if ((type & ADLOCK_FILELOCK) && (len != 1))
+    LOG(log_debug, logtype_default, "ad_lock(\"%s\", %s, %s, off: %jd, len: %jd): BEGIN",
+        ad->ad_m_name ? ad->ad_m_name : "???",
+        eid == ADEID_DFORK ? "data" : "reso",
+        locktypetostr(locktype), (intmax_t)off, (intmax_t)len);
+
+    if ((locktype & ADLOCK_FILELOCK) && (len != 1))
         /* safety check */
         return -1;
 
     lock.l_start = off;
     type = locktype;
+
     if (eid == ADEID_DFORK) {
         adf = &ad->ad_data_fork;
         if ((ad->ad_vers == AD_VERSION2) && (type & ADLOCK_FILELOCK)) {

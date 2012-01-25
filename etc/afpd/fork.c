@@ -642,7 +642,7 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     ibuf += sizeof(ofrefnum);
 
     if (NULL == ( ofork = of_find( ofrefnum )) ) {
-        LOG(log_error, logtype_afpd, "afp_bytelock: of_find(%d) could not locate fork", ofrefnum );
+        LOG(log_error, logtype_afpd, "byte_lock: of_find(%d) could not locate fork", ofrefnum );
         return( AFPERR_PARAM );
     }
 
@@ -656,7 +656,6 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     offset = get_off_t(&ibuf, is64);
     length = get_off_t(&ibuf, is64);
 
-    /* FIXME AD_FILELOCK test is surely wrong */
     if (length == -1)
         length = BYTELOCK_MAX;
     else if (!length || is_neg(is64, length)) {
