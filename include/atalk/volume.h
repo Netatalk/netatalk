@@ -191,8 +191,8 @@ int wincheck(const struct vol *vol, const char *path);
 
 #define utf8_encoding() (afp_version >= 30)
 
-#define vol_noadouble(vol) ((((vol)->v_flags & AFPVOL_NOADOUBLE) \
-                             || ((vol)->v_adouble & AD_VERSION_EA)) ? 1 : 0)
+// TODO: remove AFPVOL_NOADOUBLE
+#define vol_noadouble(vol) (((vol)->v_flags & AFPVOL_NOADOUBLE) ? 1 : 0)
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
 #define vol_unix_priv(vol) (afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)

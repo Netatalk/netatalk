@@ -506,7 +506,35 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     upath = s_path->u_name;
     if ( path_isadir( s_path) ) {
         if (*s_path->m_name != '\0' || curdir->d_did == DIRDID_ROOT) {
-            rc = AFPERR_ACCESS;
+            if (vol->v_adouble == AD_VERSION2) {
+                rc = AFPERR_ACCESS;
+            } else {
+                if (rmdir(upath) != 0) {
+                    switch (errno) {
+                    case ENOTEMPTY:
+                        rc = AFPERR_DIRNEMPT;
+                        break;
+                    case EACCES:
+                        rc = AFPERR_ACCESS;
+                        break;
+                    default:
+                        rc = AFPERR_MISC;
+                        break;
+                    }
+                } else {
+                    struct dir *deldir;
+                    cnid_t delcnid = CNID_INVALID;
+                    if ((deldir = dircache_search_by_name(vol, curdir, upath, strlen(upath)))) {
+                        delcnid = deldir->d_did;
+                        dir_remove(vol, deldir);
+                    }
+                    if (delcnid == CNID_INVALID)
+                        delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, strlen(upath));
+                    if (delcnid != CNID_INVALID)
+                        cnid_delete(vol->v_cdb, delcnid);
+                    fce_register_delete_dir(upath);
+                }
+            }
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
             /* but we need the positive returncode to send our event */
