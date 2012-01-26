@@ -1808,7 +1808,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
 
     char                *upath;
     struct dir          *dir;
-    int         bit, isad = 1;
+    int         bit, isad = 0;
     int                 cdate, bdate;
     int                 owner, group;
     uint16_t       ashort, bshort, oshort;
@@ -1822,7 +1822,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
     mode_t              mpriv = 0;
     bool                set_upriv = false, set_maccess = false;
 
-    LOG(log_debug, logtype_afpd, "setdirparams(%s)", path->u_name);
+    LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x)", path->u_name, bitmap);
 
     bit = 0;
     upath = path->u_name;
@@ -1911,36 +1911,17 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
         bitmap = bitmap>>1;
         bit++;
     }
-    ad_init(&ad, vol);
 
-    if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
-        /*
-         * Check to see what we're trying to set.  If it's anything
-         * but ACCESS, UID, or GID, give an error.  If it's any of those
-         * three, we don't need the ad to be open, so just continue.
-         *
-         * note: we also don't need to worry about mdate. also, be quiet
-         *       if we're using the noadouble option.
-         */
-
-        if (d_bitmap & ~((1<<DIRPBIT_ACCESS)
-                         | (1<<DIRPBIT_UNIXPR)
-                         | (1<<DIRPBIT_UID)
-                         | (1<<DIRPBIT_GID)
-                         | (1<<DIRPBIT_MDATE)
-                         | (1<<DIRPBIT_PDINFO))) {
+    if (d_bitmap & ((1<<DIRPBIT_ATTR) | (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_FINFO))) {
+        ad_init(&ad, vol);
+        if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
+            LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x): need adouble", path->u_name, d_bitmap);
             return AFPERR_ACCESS;
         }
-
-        isad = 0;
-    } else {
-        /*
-         * Check to see if a create was necessary. If it was, we'll want
-         * to set our name, etc.
-         */
-        if ( (ad_get_MD_flags( &ad ) & O_CREAT)) {
+        if ((ad_get_MD_flags(&ad) & O_CREAT)) {
             ad_setname(&ad, cfrombstr(curdir->d_m_name));
         }
+        isad = 1;
     }
 
     bit = 0;
@@ -2059,10 +2040,9 @@ setdirparam_done:
         utime(upath, &ut);
     }
 
-    if ( isad ) {
+    if (isad) {
         if (path->st_valid && !path->st_errno) {
             struct stat *st = &path->st;
-
             if (dir && dir->d_pdid) {
                 ad_setid(&ad, st->st_dev, st->st_ino,  dir->d_did, dir->d_pdid, vol->v_stamp);
             }
