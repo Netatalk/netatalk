@@ -1044,12 +1044,6 @@ static int dbd_readdir(int volroot, cnid_t did)
 
 static int scanvol(struct volinfo *vi, dbd_flags_t flags)
 {
-    /* Dont scanvol on no-appledouble vols */
-    if (vi->v_flags & AFPVOL_NOADOUBLE) {
-        dbd_log( LOGSTD, "Volume without AppleDouble support: skipping volume scanning.");
-        return 0;
-    }
-
     /* Make this stuff accessible from all funcs easily */
     myvolinfo = vi;
     dbd_flags = flags;

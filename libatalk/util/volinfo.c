@@ -44,7 +44,6 @@
 static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_A2VOL,      "PRODOS"},      /* prodos volume */
     {AFPVOL_CRLF,       "CRLF"},        /* cr/lf translation */
-    {AFPVOL_NOADOUBLE,  "NOADOUBLE"},   /* don't create .AppleDouble by default */
     {AFPVOL_RO,         "READONLY"},    /* read-only volume */
     {AFPVOL_MSWINDOWS,  "MSWINDOWS"},   /* deal with ms-windows yuckiness. this is going away. */
     {AFPVOL_NOHEX,      "NOHEX"},       /* don't do :hex translation */

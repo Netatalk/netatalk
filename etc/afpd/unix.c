@@ -325,7 +325,7 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
     	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
         	return -1;
     }
-    if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
+    if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0) {
         return  -1 ;
     }
     if (!dir_rx_set(mode)) {
@@ -375,7 +375,7 @@ int setdirmode(const struct vol *vol, const char *name, mode_t mode)
     }
     closedir( dir );
     
-    if (vol->vfs->vfs_setdirmode(vol, name, mode, NULL) < 0 && !vol_noadouble(vol)) {
+    if (vol->vfs->vfs_setdirmode(vol, name, mode, NULL) < 0) {
         return  -1 ;
     }
 

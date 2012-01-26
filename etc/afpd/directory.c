@@ -1923,10 +1923,12 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
          *       if we're using the noadouble option.
          */
 
-        if (!vol_noadouble(vol) && (d_bitmap &
-                                    ~((1<<DIRPBIT_ACCESS)|(1<<DIRPBIT_UNIXPR)|
-                                      (1<<DIRPBIT_UID)|(1<<DIRPBIT_GID)|
-                                      (1<<DIRPBIT_MDATE)|(1<<DIRPBIT_PDINFO)))) {
+        if (d_bitmap & ~((1<<DIRPBIT_ACCESS)
+                         | (1<<DIRPBIT_UNIXPR)
+                         | (1<<DIRPBIT_UID)
+                         | (1<<DIRPBIT_GID)
+                         | (1<<DIRPBIT_MDATE)
+                         | (1<<DIRPBIT_PDINFO))) {
             return AFPERR_ACCESS;
         }
 
@@ -2279,8 +2281,6 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
 
     ad_init(&ad, vol);
     if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) < 0)  {
-        if (vol_noadouble(vol))
-            goto createdir_done;
         return( AFPERR_ACCESS );
     }
     ad_setname(&ad, s_path->m_name);

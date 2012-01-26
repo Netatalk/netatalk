@@ -223,7 +223,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
             return -1;
     }
 
-    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, &hf_mode, vol_noadouble(vol), vol->v_umask))
+    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, &hf_mode, 0, vol->v_umask))
         return -1;
 
     if (!dir_rx_set(mode)) {
@@ -248,7 +248,6 @@ static int setdirowner_adouble_loop(struct dirent *de _U_, char *name, void *dat
 
 static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 {
-    int           noadouble = vol_noadouble(vol);
     char          *adouble_p;
     struct stat   st;
     struct perm   owner;
@@ -258,15 +257,13 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 
     adouble_p = ad_dir(vol->ad_path(name, ADFLAGS_DIR ));
 
-    if (for_each_adouble("setdirowner", adouble_p, setdirowner_adouble_loop, &owner, noadouble, vol->v_umask)) 
+    if (for_each_adouble("setdirowner", adouble_p, setdirowner_adouble_loop, &owner, 0, vol->v_umask)) 
         return -1;
 
     /*
      * We cheat: we know that chown doesn't do anything.
      */
     if ( stat( ".AppleDouble", &st ) < 0) {
-        if (errno == ENOENT && noadouble)
-            return 0;
         LOG(log_error, logtype_afpd, "setdirowner: stat %s: %s", fullpathname(".AppleDouble"), strerror(errno) );
         return -1;
     }

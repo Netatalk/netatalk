@@ -39,9 +39,7 @@ int stickydirmode(const char *name, const mode_t mode, const int dropbox, const 
      *  Ignore EPERM errors:  We may be dealing with a directory that is
      *  group writable, in which case chmod will fail.
      */
-    if ( (chmod_acl( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM &&
-         !(errno == ENOENT && (dropbox & AFPVOL_NOADOUBLE)) )
-    {
+    if ((chmod_acl( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM) {
         LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
         retval = -1;
     }

@@ -717,11 +717,6 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         }
     }
     if ( ad_meta_fileno( &ad ) == -1 ) { /* Hard META / HF */
-         /* on noadouble volumes, just creating the data fork is ok */
-         if (vol_noadouble(vol)) {
-             ad_close( &ad, ADFLAGS_DF );
-             goto createfile_done;
-         }
          /* FIXME with hard create on an existing file, we already
           * corrupted the data file.
           */
@@ -971,7 +966,7 @@ int setfilparams(struct vol *vol,
          * - change of modification date
          * - UNIX privs (Bug-ID #2863424)
          */
-        if (!vol_noadouble(vol) && (f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR))) {
+        if (f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR)) {
             LOG(log_debug, logtype_afpd, "setfilparams: need adouble access");
             return AFPERR_ACCESS;
         }

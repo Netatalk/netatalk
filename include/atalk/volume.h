@@ -106,7 +106,6 @@ struct vol {
 */
 #define AFPVOL_A2VOL     (1 << 5)   /* prodos volume */
 #define AFPVOL_CRLF      (1 << 6)   /* cr/lf translation */
-#define AFPVOL_NOADOUBLE (1 << 7)   /* don't create .AppleDouble by default */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
 #define AFPVOL_MSWINDOWS (1 << 9)   /* deal with ms-windows yuckiness.
                                        this is going away. */
@@ -191,8 +190,6 @@ int wincheck(const struct vol *vol, const char *path);
 
 #define utf8_encoding() (afp_version >= 30)
 
-// TODO: remove AFPVOL_NOADOUBLE
-#define vol_noadouble(vol) (((vol)->v_flags & AFPVOL_NOADOUBLE) ? 1 : 0)
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
 #define vol_unix_priv(vol) (afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)

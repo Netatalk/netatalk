@@ -411,8 +411,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_MSWINDOWS | AFPVOL_USEDOTS;
             } else if (strcasecmp(p, "crlf") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_CRLF;
-            else if (strcasecmp(p, "noadouble") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_NOADOUBLE;
             else if (strcasecmp(p, "ro") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
             else if (strcasecmp(p, "nohex") == 0)
@@ -702,8 +700,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
             volume->v_ad_options |= ADVOL_UNIXPRIV;
         if ((volume->v_flags & AFPVOL_INV_DOTS))
             volume->v_ad_options |= ADVOL_INVDOTS;
-        if ((volume->v_flags & AFPVOL_NOADOUBLE))
-            volume->v_ad_options |= ADVOL_NOADOUBLE;
 
         if (options[VOLOPT_PASSWORD].c_value)
             volume->v_password = strdup(options[VOLOPT_PASSWORD].c_value);
