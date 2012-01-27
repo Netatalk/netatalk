@@ -95,13 +95,13 @@ int sys_getxattrfd(const char *path, const char *uname, int oflag, ...)
     va_list args;
     mode_t mode;
 
-    if (oflags & O_CREAT) {
+    if (oflag & O_CREAT) {
         va_start(args, oflag);
         mode = va_arg(args, mode_t);
         va_end(args);
     }
 
-    if (oflags & O_CREAT)
+    if (oflag & O_CREAT)
         eafd = attropen(path, uname, oflag, mode);
     else
         eafd = attropen(path, uname, oflag);
