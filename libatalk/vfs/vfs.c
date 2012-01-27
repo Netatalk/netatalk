@@ -178,7 +178,7 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     int  dropbox = vol->v_flags;
 
     if (dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0 ) 
+        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0 ) 
             return -1;
     }
 
@@ -186,7 +186,7 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0 ) 
+        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0 ) 
             return  -1 ;
     }
     return 0;
@@ -219,7 +219,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
     const char  *adouble_p = ad_dir(adouble);
 
     if (dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
+        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0) 
             return -1;
     }
 
@@ -227,7 +227,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
         return -1;
 
     if (!dir_rx_set(mode)) {
-        if (stickydirmode(ad_dir(adouble), DIRBITS | mode, dropbox, vol->v_umask) < 0) 
+        if (chmod_acl(ad_dir(adouble), (DIRBITS | mode) & ~vol->v_umask) < 0) 
             return  -1 ;
     }
     return 0;

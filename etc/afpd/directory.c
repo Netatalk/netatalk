@@ -2070,8 +2070,11 @@ setdirparam_done:
                     goto setprivdone;
                 }
             }
-            if (setdirunixmode(vol, upath, mpriv) < 0)
+            if (setdirunixmode(vol, upath, mpriv) < 0) {
+                LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirunixmode: %s",
+                    fullpathname(upath), strerror(errno));
                 err = set_dir_errors(path, "setdirmode", errno);
+            }
         }
         if ((set_upriv == true) && vol_unix_priv(vol)) {
             if (dir->d_did == DIRDID_ROOT) {

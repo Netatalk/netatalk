@@ -26,27 +26,6 @@
 #include <atalk/errchk.h>
 #include <atalk/ea.h>
 
-/* -----------------------------
-   a dropbox is a folder where w is set but not r eg:
-   rwx-wx-wx or rwx-wx--
-   rwx----wx (is not asked by a Mac with OS >= 8.0 ?)
-*/
-int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask)
-{
-    int retval = 0;
-
-    /*
-     *  Ignore EPERM errors:  We may be dealing with a directory that is
-     *  group writable, in which case chmod will fail.
-     */
-    if ((chmod_acl( name, (DIRBITS | mode) & ~v_umask ) < 0) && errno != EPERM) {
-        LOG(log_error, logtype_afpd, "stickydirmode: chmod \"%s\": %s", fullpathname(name), strerror(errno) );
-        retval = -1;
-    }
-
-    return retval;
-}
-
 /* ------------------------- */
 int dir_rx_set(mode_t mode)
 {

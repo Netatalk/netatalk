@@ -284,7 +284,8 @@ int posix_chmod(const char *name, mode_t mode) {
     acl_t acl;
     u_char not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
 
-    LOG(log_maxdebug, logtype_afpd, "posix_chmod: %s mode: 0x%08x", name, mode);
+    LOG(log_maxdebug, logtype_afpd, "posix_chmod(\"%s\", mode: %04o) BEGIN",
+        fullpathname(name), mode);
 
     /* Call chmod() first because there might be some special bits to be set which
      * aren't related to access control.
@@ -374,7 +375,8 @@ cleanup:
         acl_free(acl);
     }
 done:
-    LOG(log_maxdebug, logtype_afpd, "posix_chmod: %d", ret);
+    LOG(log_maxdebug, logtype_afpd, "posix_chmod(\"%s\", mode: %04o): END: %d",
+        fullpathname(name), mode, ret);
     return ret;
 }
 

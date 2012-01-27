@@ -322,14 +322,14 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
 
     if (dir_rx_set(mode)) {
     	/* extending right? dir first then .AppleDouble in rf_setdirmode */
-    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
+    	if (chmod_acl(name, (DIRBITS | mode) & ~vol->v_umask) < 0 )
         	return -1;
     }
     if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0) {
         return  -1 ;
     }
     if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
+    	if (chmod_acl(name, (DIRBITS | mode) & ~vol->v_umask) < 0 )
             return -1;
     }
     return 0;
