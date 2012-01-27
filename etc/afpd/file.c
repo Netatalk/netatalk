@@ -677,7 +677,6 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) )
         return get_afp_errno(AFPERR_PARAM);
-
     if ( *s_path->m_name == '\0' )
         return( AFPERR_BADTYPE );
 
@@ -1500,7 +1499,7 @@ int copyfile(const struct vol *s_vol,
     }
 
     ad_init(&add, d_vol);
-    if (ad_open(&add, dst, adflags | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL, st.st_mode) < 0) {
+    if (ad_open(&add, dst, adflags | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL, st.st_mode | S_IRUSR | S_IWUSR) < 0) {
         ret_err = errno;
         ad_close( adp, adflags );
         if (EEXIST != ret_err) {
