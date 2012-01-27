@@ -493,6 +493,34 @@ static const char *locktypetostr(int type)
     return buf;
 }
 
+static const char *shmdstrfromoff(off_t off)
+{
+    switch (off) {
+    case AD_FILELOCK_OPEN_WR:
+        return "OPEN_WR_DATA";
+    case AD_FILELOCK_OPEN_RD:
+        return "OPEN_RD_DATA";
+    case AD_FILELOCK_RSRC_OPEN_WR:
+        return "OPEN_WR_RSRC";
+    case AD_FILELOCK_RSRC_OPEN_RD:
+        return "OPEN_RD_RSRC";
+    case AD_FILELOCK_DENY_WR:
+        return "DENY_WR_DATA";
+    case AD_FILELOCK_DENY_RD:
+        return "DENY_RD_DATA";
+    case AD_FILELOCK_RSRC_DENY_WR:
+        return "DENY_WR_RSRC";
+    case AD_FILELOCK_RSRC_DENY_RD:
+        return "DENY_RD_RSRC";
+    case AD_FILELOCK_OPEN_NONE:
+        return "OPEN_NONE_DATA";
+    case AD_FILELOCK_RSRC_OPEN_NONE:
+        return "OPEN_NONE_RSRC";
+    default:
+        return "-";
+    }
+}
+
 /******************************************************************************
  * Public functions
  ******************************************************************************/
@@ -506,10 +534,13 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     int i;
     int type;  
 
-    LOG(log_debug, logtype_default, "ad_lock(\"%s\", %s, %s, off: %jd, len: %jd): BEGIN",
+    LOG(log_debug, logtype_default, "ad_lock(\"%s\", %s, %s, off: %jd (%s), len: %jd): BEGIN",
         ad->ad_m_name ? ad->ad_m_name : "???",
         eid == ADEID_DFORK ? "data" : "reso",
-        locktypetostr(locktype), (intmax_t)off, (intmax_t)len);
+        locktypetostr(locktype),
+        (intmax_t)off,
+        shmdstrfromoff(off),
+        (intmax_t)len);
 
     if ((locktype & ADLOCK_FILELOCK) && (len != 1))
         /* safety check */
