@@ -118,8 +118,8 @@ static void adf_freelock(struct ad_fd *ad, const int i)
 
 
 /* this needs to deal with the following cases:
- * 1) fork is the only user of the lock 
- * 2) fork shares a read lock with another open fork
+ * 1) free all UNIX byterange lock from any fork
+ * 2) free all locks of the requested fork
  *
  * i converted to using arrays of locks. everytime a lock
  * gets removed, we shift all of the locks down.
@@ -130,15 +130,16 @@ static void adf_unlock(struct ad_fd *ad, const int fork)
     int i;
 
     for (i = 0; i < ad->adf_lockcount; i++) {
-      
-      if (lock[i].user == fork) {
-	/* we're really going to delete this lock. note: read locks
-           are the only ones that allow refcounts > 1 */
-	 adf_freelock(ad, i);
-	 i--; /* we shifted things down, so we need to backtrack */
-	 /* unlikely but realloc may have change adf_lock */
-	 lock = ad->adf_lock;       
-      }
+        if (lock[i].lock.l_start < AD_FILELOCK_BASE
+            || lock[i].user == fork) {
+            /* we're really going to delete this lock. note: read locks
+               are the only ones that allow refcounts > 1 */
+            adf_freelock(ad, i);
+            i--; 
+            /* we shifted things down, so we need to backtrack */
+            /* unlikely but realloc may have change adf_lock */
+            lock = ad->adf_lock;       
+        }
     }
 }
 
