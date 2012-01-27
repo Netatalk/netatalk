@@ -2070,7 +2070,7 @@ setdirparam_done:
                     goto setprivdone;
                 }
             }
-            if (setdirmode(vol, upath, mpriv) < 0)
+            if (setdirunixmode(vol, upath, mpriv) < 0)
                 err = set_dir_errors(path, "setdirmode", errno);
         }
         if ((set_upriv == true) && vol_unix_priv(vol)) {

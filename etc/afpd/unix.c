@@ -335,57 +335,6 @@ int setdirunixmode(const struct vol *vol, const char *name, mode_t mode)
     return 0;
 }
 
-/* --------------------- */
-int setdirmode(const struct vol *vol, const char *name, mode_t mode)
-{
-    struct stat		st;
-    struct dirent	*dirp;
-    DIR			*dir;
-    
-    mode |= vol->v_dperm;
-
-    if (dir_rx_set(mode)) {
-    	/* extending right? dir first */
-    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
-        	return -1;
-    }
-    
-    if (( dir = opendir( name )) == NULL ) {
-        LOG(log_error, logtype_afpd, "setdirmode: opendir: %s", fullpathname(name), strerror(errno) );
-        return( -1 );
-    }
-
-    for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        /* FIXME */
-        if (*dirp->d_name == '.') {
-            continue;
-        }
-        if ( lstat( dirp->d_name, &st ) < 0 ) {
-            LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s",dirp->d_name, strerror(errno) );
-            continue;
-        }
-
-        if (!S_ISDIR(st.st_mode)) {
-           if (setfilmode(dirp->d_name, mode, &st, vol->v_umask) < 0) {
-               closedir( dir );
-                LOG(log_error, logtype_afpd, "setdirmode: chmod %s: %s",dirp->d_name, strerror(errno) );
-                return -1;
-           }
-        }
-    }
-    closedir( dir );
-    
-    if (vol->vfs->vfs_setdirmode(vol, name, mode, NULL) < 0) {
-        return  -1 ;
-    }
-
-    if (!dir_rx_set(mode)) {
-    	if ( stickydirmode(name, DIRBITS | mode, 0, vol->v_umask) < 0 )
-        	return -1;
-    }
-    return( 0 );
-}
-
 /* ----------------------------- */
 int setdeskowner(const uid_t uid, const gid_t gid)
 {
