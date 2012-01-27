@@ -938,6 +938,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
 
     oflags = O_NOFOLLOW | (ad2openflags(adflags) & ~(O_CREAT | O_TRUNC));
 
+    if (ad_meta_fileno(ad) == -2)
+        /* symlink */
+        EC_EXIT;
+
     if (ad_meta_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
         if ((oflags & O_RDWR) &&
@@ -957,7 +961,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
                 /* For directories we open the directory RDONYL so we can later fchdir()  */
                 oflags = (oflags & ~O_RDWR) | O_RDONLY;
             LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): opening base file for meta adouble EA", path);
-            EC_NEG1(ad_meta_fileno(ad) = open(path, oflags));
+            EC_NEG1_LOG(ad_meta_fileno(ad) = open(path, oflags));
             opened = 1;
             ad->ad_mdp->adf_flags = oflags;
         }
@@ -966,6 +970,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
     /* Read the adouble header in and parse it.*/
     if (ad->ad_ops->ad_header_read(path, ad, NULL) != 0) {
         if (!(adflags & ADFLAGS_CREATE)) {
+            LOG(log_error, logtype_default, "ad_open_hf_ea(\"%s\"): can't read metadata EA", path);
             errno = ENOENT;
             EC_FAIL;
         }

@@ -821,9 +821,7 @@ int setfilparams(struct vol *vol,
     uint32_t		aint;
     uint32_t		upriv;
     uint16_t           upriv_bit = 0;
-    
-    struct utimbuf	ut;
-
+        struct utimbuf	ut;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
     int                 newdate = 0;
@@ -833,6 +831,7 @@ int setfilparams(struct vol *vol,
     uint16_t           bitmap = f_bitmap;
     uint32_t           cdate,bdate;
     u_char              finder_buf[32];
+    int symlinked = 0;
 
 #ifdef DEBUG
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
@@ -875,16 +874,15 @@ int setfilparams(struct vol *vol,
         case FILPBIT_FINFO :
             change_mdate = 1;
             memcpy(finder_buf, buf, 32 );
-            if (memcmp(buf,"slnkrhap",8)==0 && !S_ISLNK(path->st.st_mode)){
-            // SLFINFO
+            if (memcmp(buf, "slnkrhap", 8) == 0 && !S_ISLNK(path->st.st_mode)) {
                 int fp;
                 ssize_t len;
                 int erc=1;
                 char buf[PATH_MAX+1];
-                if ((fp=open(path->u_name,O_RDONLY))>=0){
-                    if ((len=read(fp,buf,PATH_MAX+1))){
-                        if (unlink(path->u_name)==0){
-                            buf[len]=0;
+                if ((fp = open(path->u_name, O_RDONLY)) >= 0) {
+                    if ((len = read(fp, buf, PATH_MAX+1))) {
+                        if (unlink(path->u_name) == 0) {
+                            buf[len] = 0;
                             erc = symlink(buf, path->u_name);
                             if (!erc)
                                 of_stat(path);
@@ -892,10 +890,11 @@ int setfilparams(struct vol *vol,
                     }
                     close(fp);
                 }
-                if (erc!=0){
+                if (erc != 0) {
                     err=AFPERR_BITMAP;
                     goto setfilparam_done;
                 }
+                symlinked = 1;
             }
             buf += 32;
             break;
@@ -966,7 +965,7 @@ int setfilparams(struct vol *vol,
          * - change of modification date
          * - UNIX privs (Bug-ID #2863424)
          */
-        if (f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR)) {
+        if (!symlinked && f_bitmap & ~(1<<FILPBIT_MDATE | 1<<FILPBIT_UNIXPR)) {
             LOG(log_debug, logtype_afpd, "setfilparams: need adouble access");
             return AFPERR_ACCESS;
         }

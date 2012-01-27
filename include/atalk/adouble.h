@@ -349,9 +349,10 @@ struct adouble {
 #define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
 #define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
 
-#define AD_DATA_OPEN(ad) ((ad)->ad_data_fork.adf_fd != -1)
-#define AD_META_OPEN(ad) ((ad)->ad_mdp->adf_fd != -1)
-#define AD_RSRC_OPEN(ad) ((ad)->ad_rfp->adf_fd != -1)
+/* -1 means not open, -2 is a symlink */
+#define AD_DATA_OPEN(ad) ((ad)->ad_data_fork.adf_fd >= 0)
+#define AD_META_OPEN(ad) ((ad)->ad_mdp->adf_fd >= 0)
+#define AD_RSRC_OPEN(ad) ((ad)->ad_rfp->adf_fd >= 0)
 
 #define ad_getversion(ad)   ((ad)->ad_version)
 
