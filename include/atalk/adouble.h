@@ -118,7 +118,7 @@
 #define ADEDLEN_PRIVID          4
 
 #define ADEID_NUM_V2            13
-#define ADEID_NUM_EA            6
+#define ADEID_NUM_EA            5
 #define ADEID_NUM_OSX           2
 
 #define AD_DATASZ2 (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + \
@@ -132,7 +132,7 @@
 #define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEDLEN_FINDERI + \
                       ADEDLEN_COMMENT + ADEDLEN_FILEDATESI + ADEDLEN_AFPFILEI + ADEDLEN_PRIVID)
 
-#if AD_DATASZ_EA != 354
+#if AD_DATASZ_EA != 342
 #error bad size for AD_DATASZ_EA
 #endif
 
