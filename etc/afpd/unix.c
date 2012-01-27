@@ -451,22 +451,13 @@ int setdeskowner(const uid_t uid, const gid_t gid)
 /* ----------------------------- */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path* path)
 {
-
-    if (!path->st_valid) {
-        of_stat(path);
-    }
-
-    if (path->st_errno) {
+    if (lchown(path->u_name, uid, gid) < 0 && errno != EPERM) {
+        LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
+            uid, gid, path->u_name, strerror(errno));
         return -1;
     }
 
-    if ( lchown( path->u_name, uid, gid ) < 0 && errno != EPERM ) {
-        LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
-            uid, gid, path->u_name, strerror(errno) );
-	return -1;
-    }
-
-    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid ) < 0 && errno != EPERM) {
+    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setfilowner: rf_chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno) );
         return -1;
@@ -482,91 +473,14 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct 
  * co-opting some bits. */
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 {
-    struct stat		st;
-    struct dirent	*dirp;
-    DIR			*dir;
-
-    if (( dir = opendir( name )) == NULL ) {
-        return( -1 );
-    }
-    for ( dirp = readdir( dir ); dirp != NULL; dirp = readdir( dir )) {
-        if ( *dirp->d_name == '.') {
-            continue;
-        }
-        if ( lstat( dirp->d_name, &st ) < 0 ) {
-            LOG(log_error, logtype_afpd, "setdirowner: stat %s: %s",
-                fullpathname(dirp->d_name), strerror(errno) );
-            continue;
-        }
-        if (( st.st_mode & S_IFMT ) == S_IFREG ) {
-            if ( lchown( dirp->d_name, uid, gid ) < 0 && errno != EPERM ) {
-                LOG(log_debug, logtype_afpd, "setdirowner: chown %s: %s",
-                    fullpathname(dirp->d_name), strerror(errno) );
-                /* return ( -1 ); Sometimes this is okay */
-            }
-        }
-    }
-    closedir( dir );
-
-    if (vol->vfs->vfs_setdirowner(vol, name, uid, gid) < 0) {
-        return -1;
-    }
-    
-    if ( lstat( ".", &st ) < 0 ) {
-        return( -1 );
-    }
-    if ( gid && gid != st.st_gid && lchown( ".", uid, gid ) < 0 && errno != EPERM ) {
+    if (lchown(name, uid, gid ) < 0 && errno != EPERM ) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
-            uid, gid, fullpathname("."), strerror(errno) );
+            uid, gid, fullpathname(name), strerror(errno) );
     }
+
+    if (vol->vfs->vfs_setdirowner(vol, name, uid, gid) < 0)
+        return -1;
 
     return( 0 );
 }
-
-#if 0
-/* recursive chown()ing of a directory */
-static int recursive_chown(const char *path, uid_t uid, gid_t gid) {
-    struct stat sbuf;
-    DIR *odir = NULL;
-    struct dirent *entry;
-    char *name;
-    int ret = 0;
-    char newpath[PATH_MAX+1];
-    newpath[PATH_MAX] = '\0';
-    
-    if (chown(path, uid, gid) < 0) {
-        LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s", path, uid, strerror(errno));
-	return -1;
-    }
-
-    if (lstat(path, &sbuf) < 0) {
-	LOG(log_error, logtype_afpd, "cannot chown() file [%s] (uid = %d): %s", path, uid, strerror(errno));
-	return -1;
-    }
-	
-    if (S_ISDIR(sbuf.st_mode)) {
-	odir = opendir(path);
-	if (odir == NULL) {
-	    LOG(log_error, logtype_afpd, "cannot opendir() [%s] (uid = %d): %s", path, uid, strerror(errno));
-	    goto recursive_chown_end;
-	}
-	while (NULL != (entry=readdir(odir)) ) {
-	    name = entry->d_name;
-	    if (name[0] == '.' && name[1] == '\0')
-		continue;
-	    if (name[0] == '.' && name[1] == '.' && name[2] == '\0')
-		continue;
-	    sprintf(newpath, "%s/%s", path, name);
-	    if (recursive_chown(newpath, uid, gid) < 0)
-		ret = -1;
-	} /* while */
-    } /* if */
-
-recursive_chown_end:
-    if (odir != NULL) {
-	closedir(odir);
-    }
-    return ret;
-}
-#endif
 

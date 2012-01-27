@@ -2085,13 +2085,17 @@ setdirparam_done:
             }
 
             if (setdirowner(vol, upath, -1, ntohl(group)) < 0) {
+                LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirowner: %s",
+                    fullpathname(upath), strerror(errno));
                 err = set_dir_errors(path, "setdirowner", errno);
                 goto setprivdone;
             }
 
-
-            if (setdirunixmode(vol, upath, upriv) < 0)
+            if (setdirunixmode(vol, upath, upriv) < 0) {
+                LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirunixmode: %s",
+                    fullpathname(upath), strerror(errno));
                 err = set_dir_errors(path, "setdirunixmode", errno);
+            }
         }
     }
 

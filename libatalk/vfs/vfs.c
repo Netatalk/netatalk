@@ -233,44 +233,11 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
     return 0;
 }
 
-/* ----------------- */
-static int setdirowner_adouble_loop(struct dirent *de _U_, char *name, void *data, int flag _U_, mode_t v_umask _U_)
-{
-    struct perm   *owner  = data;
-
-    if ( chown( name, owner->uid, owner->gid ) < 0 && errno != EPERM ) {
-         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
-                owner->uid, owner->gid, fullpathname(name), strerror(errno) );
-         /* return ( -1 ); Sometimes this is okay */
-    }
-    return 0;
-}
-
 static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 {
-    char          *adouble_p;
-    struct stat   st;
-    struct perm   owner;
-    
-    owner.uid = uid;
-    owner.gid = gid;
-
-    adouble_p = ad_dir(vol->ad_path(name, ADFLAGS_DIR ));
-
-    if (for_each_adouble("setdirowner", adouble_p, setdirowner_adouble_loop, &owner, 0, vol->v_umask)) 
-        return -1;
-
-    /*
-     * We cheat: we know that chown doesn't do anything.
-     */
-    if ( stat( ".AppleDouble", &st ) < 0) {
-        LOG(log_error, logtype_afpd, "setdirowner: stat %s: %s", fullpathname(".AppleDouble"), strerror(errno) );
-        return -1;
-    }
-    if ( gid && gid != st.st_gid && chown( ".AppleDouble", uid, gid ) < 0 && errno != EPERM ) {
+    if (lchown(".AppleDouble", uid, gid) < 0 && errno != EPERM ) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
-            uid, gid,fullpathname(".AppleDouble"), strerror(errno) );
-        /* return ( -1 ); Sometimes this is okay */
+            uid, gid,fullpathname(".AppleDouble"), strerror(errno));
     }
     return 0;
 }
