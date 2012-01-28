@@ -1600,16 +1600,14 @@ int ad_refresh(const char *path, struct adouble *ad)
             // TODO: read meta EA
         }
 
-#if 0
         if (AD_RSRC_OPEN(ad)) {
             if (ad_reso_fileno(ad) == -1)
                 return -1;
-            ssize_t len;
-            if ((len = fstat(ad_reso_fileno(ad))) == -1)
+            struct stat st;
+            if (fstat(ad_reso_fileno(ad), &st) == -1)
                 return -1;
-            ad->ad_rlen = len;
+            ad->ad_rlen = st.st_size;
         }
-#endif
 #else
         if (AD_META_OPEN(ad)) {
             if (ad_data_fileno(ad) == -1)
