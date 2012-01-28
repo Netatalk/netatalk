@@ -1051,7 +1051,7 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
         EC_NEG1( eafd = sys_getxattrfd(path, AD_EA_RESO, O_RDONLY) );
         opened = 1;
     }
-    EC_NEG1( rlen = fstat(eafd, &st) );
+    EC_NEG1( fstat(eafd, &st) );
     ad->ad_rlen = st.st_size;
 #else
     const char *rfpath;
@@ -1114,11 +1114,11 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         goto EC_CLEANUP;
     }
 #ifdef HAVE_EAFD
-    if ((ad_reso_fileno(ad) = sys_getxattrfd(path, oflags)) == -1) {
+    if ((ad_reso_fileno(ad) = sys_getxattrfd(path, AD_EA_RESO, oflags)) == -1) {
         if (!(adflags & ADFLAGS_CREATE))
             EC_FAIL;
         oflags |= O_CREAT;
-        EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(path, oflags, 0666) ); 
+        EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(path, AD_EA_RESO, oflags, 0666) ); 
     }
 #else
     EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags) );
@@ -1600,6 +1600,7 @@ int ad_refresh(const char *path, struct adouble *ad)
             // TODO: read meta EA
         }
 
+#if 0
         if (AD_RSRC_OPEN(ad)) {
             if (ad_reso_fileno(ad) == -1)
                 return -1;
@@ -1608,6 +1609,7 @@ int ad_refresh(const char *path, struct adouble *ad)
                 return -1;
             ad->ad_rlen = len;
         }
+#endif
 #else
         if (AD_META_OPEN(ad)) {
             if (ad_data_fileno(ad) == -1)
