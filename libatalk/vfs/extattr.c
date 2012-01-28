@@ -63,7 +63,7 @@
 
 /******** Solaris EA helper function prototypes ********/
 #ifdef HAVE_ATTROPEN
-#define SOLARIS_ATTRMODE S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP
+#define SOLARIS_ATTRMODE S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
 static int solaris_write_xattr(int attrfd, const char *value, size_t size);
 static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size);
 static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size);
