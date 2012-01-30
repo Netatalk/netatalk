@@ -30,15 +30,45 @@
 
 #include "ad_lock.h"
 
+static const char *shmdstrfromoff(off_t off)
+{
+    switch (off) {
+    case AD_FILELOCK_OPEN_WR:
+        return "OPEN_WR_DATA";
+    case AD_FILELOCK_OPEN_RD:
+        return "OPEN_RD_DATA";
+    case AD_FILELOCK_RSRC_OPEN_WR:
+        return "OPEN_WR_RSRC";
+    case AD_FILELOCK_RSRC_OPEN_RD:
+        return "OPEN_RD_RSRC";
+    case AD_FILELOCK_DENY_WR:
+        return "DENY_WR_DATA";
+    case AD_FILELOCK_DENY_RD:
+        return "DENY_RD_DATA";
+    case AD_FILELOCK_RSRC_DENY_WR:
+        return "DENY_WR_RSRC";
+    case AD_FILELOCK_RSRC_DENY_RD:
+        return "DENY_RD_RSRC";
+    case AD_FILELOCK_OPEN_NONE:
+        return "OPEN_NONE_DATA";
+    case AD_FILELOCK_RSRC_OPEN_NONE:
+        return "OPEN_NONE_RSRC";
+    default:
+        return "-";
+    }
+}
+
 /* ----------------------- */
 static int set_lock(int fd, int cmd,  struct flock *lock)
 {
     EC_INIT;
 
-    LOG(log_debug, logtype_default, "set_lock(%s, %s, off: %jd, len: %jd): BEGIN",
+    LOG(log_debug, logtype_default, "set_lock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
         cmd == F_SETLK ? "F_SETLK" : "F_GETLK",
         lock->l_type == F_RDLCK ? "F_RDLCK" : lock->l_type == F_WRLCK ? "F_WRLCK" : "F_UNLCK",
-        (intmax_t)lock->l_start, (intmax_t)lock->l_len);
+        (intmax_t)lock->l_start,
+        shmdstrfromoff(lock->l_start),
+        (intmax_t)lock->l_len);
 
     if (fd == -2) {
         /* We assign fd = -2 for symlinks -> do nothing */
@@ -135,8 +165,8 @@ static void adf_unlock(struct ad_fd *ad, const int fork)
             /* we're really going to delete this lock. note: read locks
                are the only ones that allow refcounts > 1 */
             adf_freelock(ad, i);
-            i--; 
             /* we shifted things down, so we need to backtrack */
+            i--; 
             /* unlikely but realloc may have change adf_lock */
             lock = ad->adf_lock;       
         }
@@ -494,34 +524,6 @@ static const char *locktypetostr(int type)
     return buf;
 }
 
-static const char *shmdstrfromoff(off_t off)
-{
-    switch (off) {
-    case AD_FILELOCK_OPEN_WR:
-        return "OPEN_WR_DATA";
-    case AD_FILELOCK_OPEN_RD:
-        return "OPEN_RD_DATA";
-    case AD_FILELOCK_RSRC_OPEN_WR:
-        return "OPEN_WR_RSRC";
-    case AD_FILELOCK_RSRC_OPEN_RD:
-        return "OPEN_RD_RSRC";
-    case AD_FILELOCK_DENY_WR:
-        return "DENY_WR_DATA";
-    case AD_FILELOCK_DENY_RD:
-        return "DENY_RD_DATA";
-    case AD_FILELOCK_RSRC_DENY_WR:
-        return "DENY_WR_RSRC";
-    case AD_FILELOCK_RSRC_DENY_RD:
-        return "DENY_RD_RSRC";
-    case AD_FILELOCK_OPEN_NONE:
-        return "OPEN_NONE_DATA";
-    case AD_FILELOCK_RSRC_OPEN_NONE:
-        return "OPEN_NONE_RSRC";
-    default:
-        return "-";
-    }
-}
-
 /******************************************************************************
  * Public functions
  ******************************************************************************/
@@ -534,6 +536,7 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     int oldlock;
     int i;
     int type;  
+    int ret = 0, fcntl_lock_err = 0;
 
     LOG(log_debug, logtype_default, "ad_lock(\"%s\", %s, %s, off: %jd (%s), len: %jd): BEGIN",
         ad->ad_m_name ? ad->ad_m_name : "???",
@@ -543,9 +546,11 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
         shmdstrfromoff(off),
         (intmax_t)len);
 
-    if ((locktype & ADLOCK_FILELOCK) && (len != 1))
+    if ((locktype & ADLOCK_FILELOCK) && (len != 1)) {
         /* safety check */
-        return -1;
+        ret = -1;
+        goto exit;
+    }
 
     lock.l_start = off;
     type = locktype;
@@ -566,7 +571,8 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
                  * otherwise if a second process is able to create it
                  * locks are a mess. */
                 errno = EACCES;
-                return -1;
+                ret= -1;
+                goto exit;
             }
             if (type & ADLOCK_FILELOCK) {
                 adf = ad->ad_mdp;			/* either resource or meta data (set in ad_open) */
@@ -593,7 +599,8 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
             break;
 
         default:
-            return -1;
+            ret = -1;
+            goto exit;
         }
     }
 
@@ -622,7 +629,8 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
                       ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
                       lock.l_start, lock.l_len) > -1) {
         errno = EACCES;
-        return -1;
+        ret = -1;
+        goto exit;
     }
   
     /* look for any existing lock that we may have */
@@ -642,7 +650,8 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
               || (adflock->lock.l_len != lock.l_len) ))
         ) {
         errno = EINVAL;
-        return -1;
+        ret = -1;
+        goto exit;
     }
 
 
@@ -650,17 +659,19 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     /* clear the lock */
     if (lock.l_type == F_UNLCK) { 
         adf_freelock(adf, i);
-        return 0;
+        goto exit;
     }
 
     /* attempt to lock the file. */
-    if (set_lock(adf->adf_fd, F_SETLK, &lock) < 0) 
-        return -1;
+    if (set_lock(adf->adf_fd, F_SETLK, &lock) < 0) {
+        ret = -1;
+        goto exit;
+    }
 
     /* we upgraded this lock. */
     if (adflock && (type & ADLOCK_UPGRADE)) {
         memcpy(&adflock->lock, &lock, sizeof(lock));
-        return 0;
+        goto exit;
     } 
 
     /* it wasn't an upgrade */
@@ -674,8 +685,10 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
         adf_lock_t *tmp = (adf_lock_t *) 
             realloc(adf->adf_lock, sizeof(adf_lock_t)*
                     (adf->adf_lockmax + ARRAY_BLOCK_SIZE));
-        if (!tmp)
-            goto fcntl_lock_err;
+        if (!tmp) {
+            ret = fcntl_lock_err = -1;
+            goto exit;
+        }
         adf->adf_lock = tmp;
         adf->adf_lockmax += ARRAY_BLOCK_SIZE;
     } 
@@ -687,28 +700,38 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     if (oldlock > -1) {
         adflock->refcount = (adf->adf_lock + oldlock)->refcount;
     } else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
-        goto fcntl_lock_err;
+        ret = fcntl_lock_err = 1;
+        goto exit;
     }
   
     (*adflock->refcount)++;
     adf->adf_lockcount++;
-    return 0;
 
-fcntl_lock_err:
-    lock.l_type = F_UNLCK;
-    set_lock(adf->adf_fd, F_SETLK, &lock);
-    return -1;
+exit:
+    if (ret != 0) {
+        if (fcntl_lock_err != 0) {
+            lock.l_type = F_UNLCK;
+            set_lock(adf->adf_fd, F_SETLK, &lock);
+        }
+    }
+    LOG(log_debug, logtype_default, "ad_lock: END: %d", ret);
+    return ret;
 }
 
-/* -------------------------
-*/
-int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
-               const off_t off, const off_t len, const int fork)
+int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len, int fork)
 {
     struct flock lock;
     struct ad_fd *adf;
     int err;
     int type;  
+
+    LOG(log_debug, logtype_default, "ad_tmplock(\"%s\", %s, %s, off: %jd (%s), len: %jd): BEGIN",
+        ad->ad_m_name ? ad->ad_m_name : "???",
+        eid == ADEID_DFORK ? "data" : "reso",
+        locktypetostr(locktype),
+        (intmax_t)off,
+        shmdstrfromoff(off),
+        (intmax_t)len);
 
     lock.l_start = off;
     type = locktype;
@@ -719,7 +742,8 @@ int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
         adf = &ad->ad_resource_fork;
         if (adf->adf_fd == -1) {
             /* there's no resource fork. return success */
-            return 0;
+            err = 0;
+            goto exit;
         }
         /* if ADLOCK_FILELOCK we want a lock from offset 0
          * it's used when deleting a file:
@@ -744,7 +768,8 @@ int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
                               ADLOCK_WR | ((type & ADLOCK_WR) ? ADLOCK_RD : 0), 
                               lock.l_start, lock.l_len) > -1) {
         errno = EACCES;
-        return -1;
+        err = -1;
+        goto exit;
     }
 
     /* okay, we might have ranges byte-locked. we need to make sure that
@@ -757,18 +782,24 @@ int ad_tmplock(struct adouble *ad, const uint32_t eid, const int locktype,
     if (!err && (lock.l_type == F_UNLCK))
         adf_relockrange(adf, adf->adf_fd, lock.l_start, len);
 
+exit:
+    LOG(log_debug, logtype_default, "ad_tmplock: END: %d", err);
     return err;
 }
 
 /* --------------------- */
 void ad_unlock(struct adouble *ad, const int fork)
 {
+    LOG(log_debug, logtype_default, "ad_unlock(\"%s\"): BEGIN", ad->ad_m_name ? ad->ad_m_name : "???");
+
     if (ad_data_fileno(ad) != -1) {
         adf_unlock(&ad->ad_data_fork, fork);
     }
     if (ad_reso_fileno(ad) != -1) {
         adf_unlock(&ad->ad_resource_fork, fork);
     }
+
+    LOG(log_debug, logtype_default, "ad_unlock(\"%s\"): END", ad->ad_m_name ? ad->ad_m_name : "???");
 }
 
 /*!
@@ -783,14 +814,28 @@ void ad_unlock(struct adouble *ad, const int fork)
  */
 int ad_testlock(struct adouble *ad, int eid, const off_t off)
 {
+    int ret = 0;
+
+    LOG(log_debug, logtype_default, "ad_testlock(\"%s\", %s, off: %jd (%s): BEGIN",
+        ad->ad_m_name ? ad->ad_m_name : "???",
+        eid == ADEID_DFORK ? "data" : "reso",
+        (intmax_t)off,
+        shmdstrfromoff(off));
+
     switch (ad->ad_vers) {
     case AD_VERSION2:
-        return ad_testlock_v2(ad, eid, off);
+        ret = ad_testlock_v2(ad, eid, off);
+        break;
     case AD_VERSION_EA:
-        return ad_testlock_ea(ad, eid, off);
+        ret = ad_testlock_ea(ad, eid, off);
+        break;
     default:
-        return -1;
+        ret = -1;
+        break;
     }
+
+    LOG(log_debug, logtype_default, "ad_testlock: END: %d", ret);
+    return ret;
 }
 
 /*!
