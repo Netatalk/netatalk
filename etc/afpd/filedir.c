@@ -473,12 +473,13 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 /* ------------------------------- */
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    struct vol      *vol;
-    struct dir      *dir;
-    struct path         *s_path;
+    struct vol  *vol;
+    struct dir  *dir;
+    struct path *s_path;
     char        *upath;
-    int         did, rc;
-    uint16_t       vid;
+    int         did;
+    int         rc = AFP_OK;
+    uint16_t    vid;
 
     *rbuflen = 0;
     ibuf += 2;
