@@ -1045,14 +1045,15 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
     LOG(log_debug, logtype_default, "ad_reso_size(\"%s\")", path);
 
 #ifdef HAVE_EAFD
-    int opened = 0;
-    int eafd = ad_reso_fileno(ad);
-    if (eafd == -1) {
-        EC_NEG1( eafd = sys_getxattrfd(path, AD_EA_RESO, O_RDONLY) );
-        opened = 1;
-    }
-    EC_NEG1( fstat(eafd, &st) );
-    ad->ad_rlen = st.st_size;
+    ssize_t easz;
+    int eafd;
+
+    if ((eafd = ad_reso_fileno(ad)) == -1)
+        if ((eafd = ad_data_fileno(ad)) == -1)
+            EC_FAIL;
+
+    EC_NEG1( easz = sys_fgetxattr(eafd, AD_EA_RESO, NULL, 0) );
+    ad->ad_rlen = easz;
 #else
     const char *rfpath;
     EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags));
@@ -1066,10 +1067,6 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
     LOG(log_debug, logtype_default, "ad_reso_size(\"%s\"): size: %zd", path, ad->ad_rlen);
 
 EC_CLEANUP:
-#ifdef HAVE_EAFD
-    if (opened)
-        close(eafd);
-#endif
     if (ret != 0)
         ad->ad_rlen = 0;
     EC_EXIT;
@@ -1114,11 +1111,16 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
         goto EC_CLEANUP;
     }
 #ifdef HAVE_EAFD
-    if ((ad_reso_fileno(ad) = sys_getxattrfd(path, AD_EA_RESO, oflags)) == -1) {
-        if (!(adflags & ADFLAGS_CREATE))
+    if (ad_meta_fileno(ad) == -1)
+        EC_FAIL;
+    if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
+        if (!(adflags & ADFLAGS_CREATE)) {
+            errno = ENOENT;
             EC_FAIL;
+        }
         oflags |= O_CREAT;
-        EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(path, AD_EA_RESO, oflags, 0666) ); 
+        EC_NEG1_LOG( ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad),
+                                                         AD_EA_RESO, oflags, 0666) ); 
     }
 #else
     EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags) );

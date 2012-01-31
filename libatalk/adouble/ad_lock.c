@@ -63,8 +63,8 @@ static int set_lock(int fd, int cmd,  struct flock *lock)
 {
     EC_INIT;
 
-    LOG(log_debug, logtype_default, "set_lock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
-        cmd == F_SETLK ? "F_SETLK" : "F_GETLK",
+    LOG(log_debug, logtype_default, "set_lock(fd: %d, %s, %s, off: %jd (%s), len: %jd): BEGIN",
+        fd, cmd == F_SETLK ? "F_SETLK" : "F_GETLK",
         lock->l_type == F_RDLCK ? "F_RDLCK" : lock->l_type == F_WRLCK ? "F_WRLCK" : "F_UNLCK",
         (intmax_t)lock->l_start,
         shmdstrfromoff(lock->l_start),
@@ -77,8 +77,7 @@ static int set_lock(int fd, int cmd,  struct flock *lock)
         return 0;
     }
 
-    EC_NEG1_LOGSTR( fcntl(fd, cmd, lock),
-                    "set_lock: %s", strerror(errno));
+    EC_NEG1_LOG( fcntl(fd, cmd, lock) );
 
 EC_CLEANUP:
     EC_EXIT;

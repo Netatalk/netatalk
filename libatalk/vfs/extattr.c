@@ -88,12 +88,12 @@ static const char *prefix(const char *uname)
 #endif
 }
 
-int sys_getxattrfd(const char *path, const char *uname, int oflag, ...)
+int sys_getxattrfd(int fd, const char *uname, int oflag, ...)
 {
 #if defined HAVE_ATTROPEN
     int eafd;
     va_list args;
-    mode_t mode;
+    mode_t mode = 0;
 
     if (oflag & O_CREAT) {
         va_start(args, oflag);
@@ -102,9 +102,9 @@ int sys_getxattrfd(const char *path, const char *uname, int oflag, ...)
     }
 
     if (oflag & O_CREAT)
-        eafd = attropen(path, uname, oflag, mode);
+        eafd = solaris_openat(fd, uname, oflag | O_XATTR, mode);
     else
-        eafd = attropen(path, uname, oflag);
+        eafd = solaris_openat(fd, uname, oflag | O_XATTR, mode);
 
     return eafd;
 #else
