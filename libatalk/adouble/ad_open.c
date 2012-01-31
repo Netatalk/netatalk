@@ -1046,14 +1046,17 @@ static int ad_reso_size(const char *path, int adflags, struct adouble *ad)
 
 #ifdef HAVE_EAFD
     ssize_t easz;
-    int eafd;
 
-    if ((eafd = ad_reso_fileno(ad)) == -1)
-        if ((eafd = ad_data_fileno(ad)) == -1)
-            EC_FAIL;
+    if (ad_reso_fileno(ad) != -1) {
+        EC_NEG1( fstat(ad_reso_fileno(ad), &st) );
+        ad->ad_rlen = st.st_size;
+    } else if (ad_meta_fileno(ad) != -1) {
+        EC_NEG1( easz = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_RESO, NULL, 0) );
+        ad->ad_rlen = easz;
+    } else {
+        EC_FAIL;
+    }
 
-    EC_NEG1( easz = sys_fgetxattr(eafd, AD_EA_RESO, NULL, 0) );
-    ad->ad_rlen = easz;
 #else
     const char *rfpath;
     EC_NULL_LOG( rfpath = ad->ad_ops->ad_path(path, adflags));
