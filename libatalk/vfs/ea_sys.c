@@ -163,7 +163,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             return AFPERR_MISC;
 
         default:
-            LOG(log_error, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname, strerror(errno));
             return AFPERR_MISC;
         }
     }
