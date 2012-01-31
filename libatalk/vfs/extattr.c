@@ -866,24 +866,38 @@ static int solaris_unlinkat(int attrdirfd, const char *name)
 
 static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode)
 {
-	int filedes = attropen(path, attrpath, oflag, mode);
-	if (filedes == -1) {
-        if (errno != ENOENT)
+	int filedes;
+
+	if ((filedes = attropen(path, attrpath, oflag, mode)) == -1) {
+        switch (errno) {
+        case ENOENT:
+        case EEXIST:
+            break;
+        default:
             LOG(log_error, logtype_default, "attropen(\"%s\", ea:'%s'): %s",
                 path, attrpath, strerror(errno));
-        errno = ENOATTR;
+            errno = ENOATTR;
+            break;
+        }
 	}
 	return filedes;
 }
 
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
 {
-	int filedes = openat(fildes, path, oflag, mode);
-	if (filedes == -1) {
-        if (errno != ENOENT)
+	int filedes;
+
+	if ((filedes = openat(fildes, path, oflag, mode)) == -1) {
+        switch (errno) {
+        case ENOENT:
+        case EEXIST:
+            break;
+        default:
             LOG(log_error, logtype_default, "openat(\"%s\"): %s",
                 path, strerror(errno));
-        errno = ENOATTR;
+            errno = ENOATTR;
+            break;
+        }
 	}
 	return filedes;
 }
