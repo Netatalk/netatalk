@@ -33,6 +33,7 @@
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/acl.h>
+#include <atalk/unix.h>
 
 #ifdef HAVE_SOLARIS_ACLS
 
@@ -234,8 +235,16 @@ int nfsv4_chmod(char *name, mode_t mode)
     if (chmod(name, mode) != 0) /* (3) */
         goto exit;
 
-    if ((nnaces = get_nfsv4_acl(name, &nacl)) == -1) /* (4) */
-        goto exit;
+    if ((nnaces = get_nfsv4_acl(name, &nacl)) == -1) {/* (4) */
+        if (errno != EACCES)
+            goto exit;
+        become_root();
+        nnaces = get_nfsv4_acl(name, &nacl);
+        unbecome_root();
+        if (nnaces == -1)
+            goto exit;
+    }
+
     if ((nnaces = strip_nontrivial_aces(&nacl, nnaces)) == -1) /* (5) */
         goto exit;
 
@@ -243,8 +252,17 @@ int nfsv4_chmod(char *name, mode_t mode)
         goto exit;
 
     if ((ret = acl(name, ACE_SETACL, noaces + nnaces, cacl)) != 0) {
-        LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
-        goto exit;
+        if (errno != EACCES) {
+            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+            goto exit;
+        }
+        become_root();
+        ret = acl(name, ACE_SETACL, noaces + nnaces, cacl);
+        unbecome_root();
+        if (ret != 0) {
+            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+            goto exit;
+        }
     }
 
 exit:
@@ -252,7 +270,7 @@ exit:
     if (nacl) free(nacl);
     if (cacl) free(cacl);
 
-    LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %u",
+    LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %d",
         getcwdpath(), name, mode, ret);
 
     return ret;

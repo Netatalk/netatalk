@@ -43,4 +43,8 @@ extern int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpat
 extern int copy_file(int sfd, const char *src, const char *dst, mode_t mode);
 extern int copy_file_fd(int sfd, int dfd);
 extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode);
+
+extern void become_root(void);
+extern void unbecome_root(void);
+
 #endif  /* ATALK_UNIX_H */
