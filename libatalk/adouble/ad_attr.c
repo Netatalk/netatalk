@@ -93,7 +93,9 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint
 
     LOG(log_maxdebug, logtype_afpd, "ad_setid(\"%s\"): CNID: %" PRIu32 "", adp->ad_m_name, ntohl(id));
     ad_setentrylen( adp, ADEID_PRIVID, sizeof(id));
-    tmp = htonl(id);
+    tmp = id;
+    if (adp->ad_vers == AD_VERSION_EA)
+        tmp = htonl(tmp);
     memcpy(ad_entry( adp, ADEID_PRIVID ), &tmp, sizeof(tmp));
 
     if (adp->ad_vers == AD_VERSION2) {
