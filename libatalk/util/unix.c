@@ -94,6 +94,22 @@ int daemonize(int nochdir, int noclose)
     return 0;
 }
 
+static uid_t saved_uid = -1;
+
+void become_root(void)
+{
+    saved_uid = geteuid();
+    if (seteuid(0) != 0)
+        AFP_PANIC("Can't seteuid(0)");
+}
+
+void unbecome_root(void)
+{
+    if (saved_uid == -1 || seteuid(saved_uid) < 0)
+        AFP_PANIC("Can't seteuid back");
+    saved_uid = -1;
+}
+
 /*!
  * @brief get cwd in static buffer
  *

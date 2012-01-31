@@ -39,4 +39,7 @@ extern int dir_rx_set(mode_t mode);
 extern int stickydirmode(const char *name, const mode_t mode, const int dropbox, const mode_t v_umask);
 extern int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath);
 extern int copy_file(int sfd, const char *src, const char *dst, mode_t mode);
+extern void become_root(void);
+extern void unbecome_root(void);
+
 #endif  /* ATALK_UNIX_H */
