@@ -358,7 +358,6 @@ struct adouble {
 
 #define ad_getentrylen(ad,eid)     ((ad)->ad_eid[(eid)].ade_len)
 #define ad_setentrylen(ad,eid,len) ((ad)->ad_eid[(eid)].ade_len = (len))
-#define ad_getentryoff(ad,eid)     ((ad)->ad_eid[(eid)].ade_off)
 #define ad_setentryoff(ad,eid,off) ((ad)->ad_eid[(eid)].ade_off = (off))
 #define ad_entry(ad,eid)           ((caddr_t)(ad)->ad_data + (ad)->ad_eid[(eid)].ade_off)
 
@@ -379,11 +378,12 @@ extern int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void
 /* ad_lock.c */
 extern int ad_testlock      (struct adouble *adp, int eid, off_t off);
 extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
-extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
-extern void ad_unlock(struct adouble *, int user);
-extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int user);
+extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int fork);
+extern void ad_unlock(struct adouble *, int fork, int unlckbrl);
+extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off, off_t len, int fork);
 
 /* ad_open.c */
+extern off_t ad_getentryoff(const struct adouble *ad, int eid);
 extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid     (const uid_t );
 extern uid_t ad_getfuid   (void );

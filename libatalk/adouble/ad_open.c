@@ -693,22 +693,28 @@ static int ad_error(struct adouble *ad, int adflags)
     if (adflags & ADFLAGS_NOHF) { /* 1 */
         return 0;
     }
-    if (adflags & ADFLAGS_DF) { /* 2 */
+    if (adflags & (ADFLAGS_DF | ADFLAGS_SETSHRMD | ADFLAGS_CHECK_OF)) { /* 2 */
         ad_close( ad, ADFLAGS_DF );
         err = errno;
     }
     return -1 ;
 }
 
-/* Map ADFLAGS to open() flags */
-static int ad2openflags(int adflags)
+/*!
+ * Map ADFLAGS to open() flags
+ *
+ * @param adfile   (r) the file you really want to open: ADFLAGS_DF or ADFLAGS_HF
+ * @param adflags  (r) flags from ad_open(..., adflags, ...)
+ * @returns            mapped flags suitable for calling open()
+ */
+static int ad2openflags(int adfile, int adflags)
 {
     int oflags = 0;
 
     if (adflags & ADFLAGS_RDWR)
         oflags |= O_RDWR;
     if (adflags & ADFLAGS_RDONLY) {
-        if (adflags & ADFLAGS_SETSHRMD)
+        if ((adfile & ADFLAGS_DF) && (adflags & ADFLAGS_SETSHRMD))
             oflags |= O_RDWR;
         else
             oflags |= O_RDONLY;
@@ -725,14 +731,19 @@ static int ad2openflags(int adflags)
 
 static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble *ad)
 {
+    EC_INIT;
     struct stat st_dir;
     int         oflags;
     mode_t      admode;
     int         st_invalid = -1;
     ssize_t     lsz;
 
-    LOG(log_debug, logtype_default, "ad_open_df(\"%s\", %04o)",
-        fullpathname(path), mode);
+    LOG(log_debug, logtype_default,
+        "ad_open_df(\"%s\", %s): BEGIN [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        fullpathname(path), adflags2logstr(adflags),
+        ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
+        ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
+        ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
     if (ad_data_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -745,10 +756,10 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
         /* it's not new anymore */
         ad->ad_data_fork.adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_data_fork.adf_refcount++;
-        return 0;
+        goto EC_CLEANUP;
     }
 
-    oflags = O_NOFOLLOW | ad2openflags(adflags);
+    oflags = O_NOFOLLOW | ad2openflags(ADFLAGS_DF, adflags);
 
     admode = mode;
     if ((adflags & ADFLAGS_CREATE)) {
@@ -767,8 +778,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
             if ((adflags & ADFLAGS_SETSHRMD) && (adflags & ADFLAGS_RDONLY)) {
                 oflags &= ~O_RDWR;
                 oflags |= O_RDONLY;
-                if ((ad->ad_data_fork.adf_fd = open(path, oflags, admode)) == -1)
-                    return -1;
+                EC_NEG1( ad->ad_data_fork.adf_fd = open(path, oflags, admode) );
                 break;
             }
             return -1;
@@ -776,13 +786,13 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
             ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
             if ((lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN)) <= 0) {
                 free(ad->ad_data_fork.adf_syml);
-                return -1;
+                EC_FAIL;
             }
             ad->ad_data_fork.adf_syml[lsz] = 0;
             ad->ad_data_fork.adf_fd = -2; /* -2 means its a symlink */
             break;
         default:
-            return -1;
+            EC_FAIL;
         }
     }
 
@@ -793,19 +803,33 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
     adf_lock_init(&ad->ad_data_fork);
     ad->ad_data_fork.adf_refcount++;
 
-    return 0;
+EC_CLEANUP:
+    LOG(log_debug, logtype_default,
+        "ad_open_df(\"%s\", %s): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        fullpathname(path), adflags2logstr(adflags), ret,
+        ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
+        ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
+        ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
+    EC_EXIT;
 }
 
-/* TODO: error handling */
 static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adouble *ad)
 {
+    EC_INIT;
     struct stat st_dir;
     struct stat st_meta;
     struct stat *pst = NULL;
     const char  *ad_p;
-    int         oflags, nocreatflags;
+    int         oflags, nocreatflags, opened = 0;
     mode_t      admode;
     int         st_invalid = -1;
+
+    LOG(log_debug, logtype_default,
+        "ad_open_hf_v2(\"%s\", %s): BEGIN [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        fullpathname(path), adflags2logstr(adflags),
+        ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
+        ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
+        ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
     if (ad_meta_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -813,22 +837,22 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             /* and it was already denied: */
             (ad->ad_mdp->adf_flags & O_RDONLY)) {
             errno = EACCES;
-            return -1;
+            EC_FAIL;
         }
         ad_refresh(path, ad);
         /* it's not new anymore */
         ad->ad_mdp->adf_flags &= ~( O_TRUNC | O_CREAT );
         ad->ad_mdp->adf_refcount++;
-        return 0;
+        goto EC_CLEANUP;
     }
 
     ad_p = ad->ad_ops->ad_path(path, adflags);
-    oflags = O_NOFOLLOW | ad2openflags(adflags);
+    oflags = O_NOFOLLOW | ad2openflags(ADFLAGS_HF, adflags);
     nocreatflags = oflags & ~(O_CREAT | O_EXCL);
 
-    ad->ad_mdp->adf_fd = open(ad_p, nocreatflags);
+    ad_meta_fileno(ad) = open(ad_p, nocreatflags);
 
-    if (ad->ad_mdp->adf_fd != -1) {
+    if (ad_meta_fileno(ad) != -1) {
         ad->ad_mdp->adf_flags = nocreatflags;
     } else {
         switch (errno) {
@@ -838,15 +862,14 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             if ((adflags & ADFLAGS_RDONLY) && (adflags & ADFLAGS_SETSHRMD)) {
                 nocreatflags &= ~O_RDWR;
                 nocreatflags |= O_RDONLY;
-                if ((ad->ad_mdp->adf_fd = open(ad_p, nocreatflags)) == -1)
-                    return -1;
+                EC_NEG1( ad_meta_fileno(ad) = open(ad_p, nocreatflags) );
                 ad->ad_mdp->adf_flags = nocreatflags;
                 break;
             }
-            return -1;
+            EC_FAIL;
         case ENOENT:
             if (!(oflags & O_CREAT))
-                return ad_error(ad, adflags);
+                EC_FAIL;
             /*
              * We're expecting to create a new adouble header file here
              */
@@ -859,9 +882,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
                 admode = mode;
             admode = ad_hf_mode(admode);
             if (errno == ENOENT) {
-                if (ad->ad_ops->ad_mkrf( ad_p) < 0) {
-                    return ad_error(ad, adflags);
-                }
+                EC_NEG1_LOG( ad->ad_ops->ad_mkrf(ad_p) );
                 admode = mode;
                 st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
                 if ((ad->ad_options & ADVOL_UNIXPRIV))
@@ -870,19 +891,19 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             }
 
             /* retry with O_CREAT */
-            ad->ad_mdp->adf_fd = open(ad_p, oflags, admode);
-            if ( ad->ad_mdp->adf_fd < 0 )
-                return ad_error(ad, adflags);
-
+            EC_NEG1_LOG( ad_meta_fileno(ad) = open(ad_p, oflags, admode) );
             ad->ad_mdp->adf_flags = oflags;
             /* just created, set owner if admin owner (root) */
             if (!st_invalid)
                 ad_chown(ad_p, &st_dir);
             break;
         default:
-            return -1;
+            EC_FAIL;
         }
     }
+
+    /* Now we've got a new opened fd, we need to check that in the error case */
+    opened = 1;
 
     if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
         /* check for 0 length files, treat them as new. */
@@ -900,26 +921,26 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
 
     if ((ad->ad_mdp->adf_flags & ( O_TRUNC | O_CREAT ))) {
         /* This is a new adouble header file, create it */
-        if (new_ad_header(ad, path, pst, adflags) < 0) {
-            int err = errno;
-            /* the file is already deleted, perm, whatever, so return an error */
-            ad_close(ad, adflags);
-            errno = err;
-            return -1;
-        }
+        EC_NEG1_LOG( new_ad_header(ad, path, pst, adflags) );
         ad_flush(ad);
     } else {
         /* Read the adouble header in and parse it.*/
-        if (ad->ad_ops->ad_header_read(path, ad, pst) < 0
-            || ad->ad_ops->ad_header_upgrade(ad, ad_p) < 0) {
-            int err = errno;
-            ad_close(ad, adflags);
-            errno = err;
-            return -1;
-        }
+        EC_NEG1_LOG( ad->ad_ops->ad_header_read(path, ad, pst) );
     }
 
-    return 0;
+EC_CLEANUP:
+    if (ret != 0 && opened && ad_meta_fileno(ad) != -1) {
+        close(ad_meta_fileno(ad));
+        ad_meta_fileno(ad) = -1;
+        ad->ad_mdp->adf_refcount = 0;
+    }
+    LOG(log_debug, logtype_default,
+        "ad_open_hf_v2(\"%s\", %s): END: %d [dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",
+        fullpathname(path), adflags2logstr(adflags), ret,
+        ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
+        ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
+        ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
+    EC_EXIT;
 }
 
 static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble *ad)
@@ -936,7 +957,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
-    oflags = O_NOFOLLOW | (ad2openflags(adflags) & ~(O_CREAT | O_TRUNC));
+    oflags = O_NOFOLLOW | (ad2openflags(ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC));
 
     if (ad_meta_fileno(ad) == -2)
         /* symlink */
@@ -1098,7 +1119,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): BEGIN", fullpathname(path));
 
-    oflags = O_NOFOLLOW | (ad2openflags(adflags) & ~O_CREAT);
+    oflags = O_NOFOLLOW | (ad2openflags(ADFLAGS_HF, adflags) & ~O_CREAT);
 
     if (ad_reso_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -1184,6 +1205,24 @@ EC_CLEANUP:
 /***********************************************************************************
  * API functions
  ********************************************************************************* */
+
+off_t ad_getentryoff(const struct adouble *ad, int eid)
+{
+    if (ad->ad_vers == AD_VERSION2)
+        return ad->ad_eid[ADEID_RFORK].ade_off;
+
+    if (eid == ADEID_DFORK) {
+        return 0;
+    } else if (eid == ADEID_RFORK) {
+#ifdef HAVE_EAFD
+        return 0;
+#else
+        return ADEDOFF_RFORK_OSX;
+#endif
+    } else {
+        return ad->ad_eid[eid].ade_off;
+    }
+}
 
 const char *ad_path_ea( const char *path, int adflags _U_)
 {
@@ -1466,6 +1505,11 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     if (adflags & ADFLAGS_CHECK_OF)
         /* Checking for open forks requires sharemode lock support (ie RDWR instead of RDONLY) */
         adflags |= ADFLAGS_SETSHRMD;
+
+    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_SETSHRMD)) {
+        /* sharemode locks are stored in the data fork, adouble:v2 needs this extra handling */
+        adflags |= ADFLAGS_DF;
+    }
 
     if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF)) {
         adflags |= ADFLAGS_HF;

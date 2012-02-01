@@ -359,6 +359,11 @@ int ad_close(struct adouble *ad, int adflags)
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
+    if ((ad->ad_vers == AD_VERSION2) && (adflags & (ADFLAGS_SETSHRMD | ADFLAGS_CHECK_OF))) {
+        /* sharemode locks are stored in the data fork, adouble:v2 needs this extra handling */
+        adflags |= ADFLAGS_DF;
+    }
+
     if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF))
         adflags |= ADFLAGS_HF;
 

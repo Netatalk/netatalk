@@ -418,7 +418,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     }
 
     if ((ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof(int16_t), &buflen)) != AFP_OK) {
-        ad_close( ofork->of_ad, adflags );
+        ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
         goto openfork_err;
     }
 
@@ -433,7 +433,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     if (ad_meta_fileno(ofork->of_ad) != -1) {   /* META */
         ad_getattr(ofork->of_ad, &bshort);
         if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
-            ad_close( ofork->of_ad, adflags );
+            ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
             of_dealloc( ofork );
             ofrefnum = 0;
             memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
@@ -452,8 +452,9 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         ret = fork_setmode(ofork->of_ad, eid, access, ofrefnum);
         /* can we access the fork? */
         if (ret < 0) {
+            ofork->of_flags |= AFPFORK_ERROR;
             ret = errno;
-            ad_close( ofork->of_ad, adflags );
+            ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
             of_dealloc( ofork );
             switch (ret) {
             case EAGAIN: /* return data anyway */

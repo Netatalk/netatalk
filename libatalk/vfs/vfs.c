@@ -295,8 +295,6 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
 static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
 /* const struct vol *vol, int sfd, const char *src, const char *dst */
 {
-    return 0;
-#if 0
     EC_INIT;
     bstring s = NULL, d = NULL;
     char *dup1 = NULL;
@@ -341,7 +339,10 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
         EC_ZERO(bcatcstr(d, name));
     }
 
-    EC_ZERO(copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666));
+    /* ignore errors */
+    if (copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666) != 0)
+        if (errno != ENOENT)
+            EC_FAIL;
 
 EC_CLEANUP:
     bdestroy(s);
@@ -352,7 +353,6 @@ EC_CLEANUP:
     if (dup4) free(dup4);
 
     EC_EXIT;
-#endif
 }
 
 #ifdef HAVE_SOLARIS_ACLS
@@ -580,6 +580,7 @@ static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
 }
 static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 {
+    /* the EA VFS module does this all for us */
     return 0;
 #if 0
     EC_INIT;

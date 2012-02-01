@@ -609,6 +609,7 @@ int getfilparams(struct vol *vol,
     struct adouble	ad, *adp;
     int                 opened = 0;
     int rc;    
+    int flags;
 
     LOG(log_debug, logtype_afpd, "getfilparams(\"%s\")", path->u_name);
 
@@ -617,7 +618,7 @@ int getfilparams(struct vol *vol,
 
     if (opened) {
         char *upath;
-        int  flags = (bitmap & (1 << FILPBIT_ATTR)) ? ADFLAGS_CHECK_OF : 0;
+        flags = (bitmap & (1 << FILPBIT_ATTR)) ? ADFLAGS_CHECK_OF : 0;
 
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
@@ -639,7 +640,7 @@ int getfilparams(struct vol *vol,
         }
     }
     rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp);
-    ad_close(adp, ADFLAGS_HF);
+    ad_close(adp, ADFLAGS_HF | flags);
 
     return( rc );
 }
@@ -1332,7 +1333,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     setvoltime(obj, d_vol );
 
 copy_exit:
-    ad_close( adp, ADFLAGS_DF |ADFLAGS_HF );
+    ad_close( adp, ADFLAGS_DF |ADFLAGS_HF | ADFLAGS_SETSHRMD);
     return( retvalue );
 }
 
@@ -1385,19 +1386,7 @@ static int copy_fork(int eid, struct adouble *add, struct adouble *ads)
         dfd = ad_reso_fileno(add);
     }        
 
-    if (add->ad_version == AD_VERSION2)
-        soff = doff = ad_getentryoff(ads, eid);
-    else {
-        if (eid == ADEID_DFORK)
-            soff = doff = ad_getentryoff(ads, eid);
-        else {
-#ifdef HAVE_EAFD
-            soff = doff = 0;
-#else
-            soff = doff = ADEDOFF_RFORK_OSX;
-#endif
-        }
-    }
+    soff = doff = ad_getentryoff(ads, eid);
 
     if ((off_t)-1 == lseek(sfd, soff, SEEK_SET))
     	return -1;
@@ -1478,9 +1467,6 @@ int copyfile(const struct vol *s_vol,
     }
 
     adflags = ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_NORF;
-    if (newname) {
-        adflags |= ADFLAGS_HF;
-    }
 
     if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF | ADFLAGS_RDONLY) < 0) {
         ret_err = errno;
@@ -1509,13 +1495,15 @@ int copyfile(const struct vol *s_vol,
         return AFPERR_EXIST;
     }
 
+#if 0
     if (AD_RSRC_OPEN(adp))
         err = copy_fork(ADEID_RFORK, &add, adp);
-    
+#endif
+
     if (err == 0)
         err = copy_fork(ADEID_DFORK, &add, adp);
 
-    if ((err == 0) && (ad_meta_fileno(adp) != -1))
+    if (err == 0)
         err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst);
 
     if (err < 0)
@@ -1614,7 +1602,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         */
         if ( ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &ad) == 0 ) {
             if ((err = check_attrib(&ad))) {
-                ad_close(&ad, ADFLAGS_HF);
+                ad_close(&ad, ADFLAGS_HF | ADFLAGS_CHECK_OF);
                return err;
             }
             meta = 1;
@@ -1671,7 +1659,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
 
 end:
     if (meta)
-        ad_close(&ad, ADFLAGS_HF);
+        ad_close(&ad, ADFLAGS_HF | ADFLAGS_CHECK_OF);
 
     if (adp)
         ad_close( &ad, adflags );  /* ad_close removes locks if any */

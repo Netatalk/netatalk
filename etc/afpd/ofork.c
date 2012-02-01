@@ -383,7 +383,7 @@ void of_dealloc( struct ofork *of)
         free( of->of_ad->ad_m_name );
         free( of->of_ad);
     } else {/* someone's still using it. just free this user's locks */
-        ad_unlock(of->of_ad, of->of_refnum);
+        ad_unlock(of->of_ad, of->of_refnum, of->of_flags & AFPFORK_ERROR ? 0 : 1);
     }
 
     free( of );
@@ -417,7 +417,7 @@ int of_closefork(struct ofork *ofork)
     }
 
     ret = 0;
-    if ( ad_close( ofork->of_ad, adflags ) < 0 ) {
+    if ( ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0 ) {
         ret = -1;
     }
 

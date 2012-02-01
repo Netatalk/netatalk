@@ -46,6 +46,7 @@ struct ofork {
 #define AFPFORK_ACCWR   (1<<5)
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
 #define AFPFORK_MODIFIED (1<<6) /* used in FCE for modified files */
+#define AFPFORK_ERROR   (1<<7)  /* used to indicate an error in opening the fork */
 
 #ifdef AFS
 extern struct ofork *writtenfork;
