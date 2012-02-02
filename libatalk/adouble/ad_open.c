@@ -753,11 +753,11 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
     if (adflags & ADFLAGS_RDWR)
         oflags |= O_RDWR;
     if (adflags & ADFLAGS_RDONLY) {
-        if (((adfile & ADFLAGS_DF) && (adflags & ADFLAGS_SETSHRMD))
+        if (((adfile == ADFLAGS_DF || adfile == ADFLAGS_RF) && (adflags & ADFLAGS_SETSHRMD))
             /* need rw access for locks */
-            || ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_HF)))
+            || ((adfile == ADFLAGS_HF) && (ad->ad_vers == AD_VERSION2)))
             /* need rw access for adouble file for the case:
-             1) openfork(data:O_RDONLY), 2) openfork(reso:O_RDWR) */
+             1) openfork(data+meta:O_RDONLY), 2) openfork(reso(=meta):O_RDWR) */
             oflags |= O_RDWR;
         else
             oflags |= O_RDONLY;
@@ -1164,7 +1164,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): BEGIN", fullpathname(path));
 
-    oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_HF, adflags) & ~O_CREAT);
+    oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_RF, adflags) & ~O_CREAT);
 
     if (ad_reso_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
