@@ -874,7 +874,7 @@ static int solaris_attropen(const char *path, const char *attrpath, int oflag, m
         case EEXIST:
             break;
         default:
-            LOG(log_error, logtype_default, "attropen(\"%s\", ea:'%s'): %s",
+            LOG(log_debug, logtype_default, "attropen(\"%s\", ea:'%s'): %s",
                 path, attrpath, strerror(errno));
             errno = ENOATTR;
             break;
@@ -893,7 +893,7 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
         case EEXIST:
             break;
         default:
-            LOG(log_error, logtype_default, "openat(\"%s\"): %s",
+            LOG(log_debug, logtype_default, "openat(\"%s\"): %s",
                 path, strerror(errno));
             errno = ENOATTR;
             break;

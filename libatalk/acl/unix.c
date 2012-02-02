@@ -48,7 +48,7 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     *retAces = NULL;
     /* Only call acl() for regular files and directories, otherwise just return 0 */
     if (lstat(name, &st) != 0) {
-        LOG(log_warning, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name, strerror(errno));
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name, strerror(errno));
         return -1;
     }
 

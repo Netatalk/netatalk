@@ -78,7 +78,7 @@ static int set_lock(int fd, int cmd,  struct flock *lock)
         return 0;
     }
 
-    EC_NEG1_LOG( fcntl(fd, cmd, lock) );
+    EC_NEG1( fcntl(fd, cmd, lock) );
 
 EC_CLEANUP:
     EC_EXIT;
