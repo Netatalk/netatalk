@@ -162,8 +162,10 @@ char            c = 0;
 /* ------------------------ */
 int ad_rtruncate( struct adouble *ad, const off_t size)
 {
-    if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 )
+    if (sys_ftruncate(ad_reso_fileno(ad), size + ad->ad_eid[ ADEID_RFORK ].ade_off ) < 0 ) {
+        LOG(log_error, logtype_default, "sys_ftruncate: %s", strerror(errno));
         return -1;
+    }
 
     ad->ad_rlen = size;    
 
@@ -172,8 +174,11 @@ int ad_rtruncate( struct adouble *ad, const off_t size)
 
 int ad_dtruncate(struct adouble *ad, const off_t size)
 {
-    if (sys_ftruncate(ad_data_fileno(ad), size) < 0)
+    if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
+        LOG(log_error, logtype_default, "sys_ftruncate(fd: %d): %s",
+            ad_data_fileno(ad), strerror(errno));
         return -1;
+    }
 
     return 0;
 }

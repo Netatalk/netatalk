@@ -1375,7 +1375,6 @@ static int copy_fork(int eid, struct adouble *add, struct adouble *ads)
     int     err = 0;
     char    filebuf[8192];
     int     sfd, dfd;
-    off_t   soff, doff;
 
     if (eid == ADEID_DFORK) {
         sfd = ad_data_fileno(ads);
@@ -1386,12 +1385,10 @@ static int copy_fork(int eid, struct adouble *add, struct adouble *ads)
         dfd = ad_reso_fileno(add);
     }        
 
-    soff = doff = ad_getentryoff(ads, eid);
-
-    if ((off_t)-1 == lseek(sfd, soff, SEEK_SET))
+    if ((off_t)-1 == lseek(sfd, ad_getentryoff(ads, eid), SEEK_SET))
     	return -1;
 
-    if ((off_t)-1 == lseek(dfd, doff, SEEK_SET))
+    if ((off_t)-1 == lseek(dfd, ad_getentryoff(add, eid), SEEK_SET))
     	return -1;
     	
 #if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
@@ -1468,7 +1465,7 @@ int copyfile(const struct vol *s_vol,
 
     adflags = ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_NORF;
 
-    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_NOHF | ADFLAGS_RDONLY) < 0) {
+    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
         ret_err = errno;
         goto done;
     }
@@ -1495,16 +1492,12 @@ int copyfile(const struct vol *s_vol,
         return AFPERR_EXIST;
     }
 
-#if 0
-    if (AD_RSRC_OPEN(adp))
-        err = copy_fork(ADEID_RFORK, &add, adp);
-#endif
+    if ((err = copy_fork(ADEID_DFORK, &add, adp)) != 0)
+        LOG(log_error, logtype_afpd, "copyfile('%s'): %s", src, strerror(errno));
 
     if (err == 0)
-        err = copy_fork(ADEID_DFORK, &add, adp);
-
-    if (err == 0)
-        err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst);
+        if ((err = d_vol->vfs->vfs_copyfile(d_vol, sfd, src, dst)) != 0)
+            LOG(log_error, logtype_afpd, "copyfile('%s'): %s", src, strerror(errno));
 
     if (err < 0)
        ret_err = errno;

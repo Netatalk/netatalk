@@ -262,6 +262,45 @@ const char *adflags2logstr(int adflags)
     return buf;
 }
 
+#define OPENFLAGS2LOGSTRBUFSIZ 128
+const char *openflags2logstr(int oflags)
+{
+    int first = 1;
+    static char buf[OPENFLAGS2LOGSTRBUFSIZ];
+
+    buf[0] = 0;
+
+    if ((oflags & O_RDONLY) || (oflags == O_RDONLY)) {
+        strlcat(buf, "O_RDONLY", OPENFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (oflags & O_RDWR) {
+        if (!first)
+            strlcat(buf, "|", OPENFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_RDWR", OPENFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (oflags & O_CREAT) {
+        if (!first)
+            strlcat(buf, "|", OPENFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_CREAT", OPENFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (oflags & O_TRUNC) {
+        if (!first)
+            strlcat(buf, "|", OPENFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_TRUNC", OPENFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    if (oflags & O_EXCL) {
+        if (!first)
+            strlcat(buf, "|", OPENFLAGS2LOGSTRBUFSIZ);
+        strlcat(buf, "O_EXCL", OPENFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+    return buf;
+}    
+
 static uint32_t get_eid(uint32_t eid)
 {
     if (eid <= 15)
@@ -707,14 +746,18 @@ static int ad_error(struct adouble *ad, int adflags)
  * @param adflags  (r) flags from ad_open(..., adflags, ...)
  * @returns            mapped flags suitable for calling open()
  */
-static int ad2openflags(int adfile, int adflags)
+static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
 {
     int oflags = 0;
 
     if (adflags & ADFLAGS_RDWR)
         oflags |= O_RDWR;
     if (adflags & ADFLAGS_RDONLY) {
-        if ((adfile & ADFLAGS_DF) && (adflags & ADFLAGS_SETSHRMD))
+        if (((adfile & ADFLAGS_DF) && (adflags & ADFLAGS_SETSHRMD))
+            /* need rw access for locks */
+            || ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_HF)))
+            /* need rw access for adouble file for the case:
+             1) openfork(data:O_RDONLY), 2) openfork(reso:O_RDWR) */
             oflags |= O_RDWR;
         else
             oflags |= O_RDONLY;
@@ -759,7 +802,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
         goto EC_CLEANUP;
     }
 
-    oflags = O_NOFOLLOW | ad2openflags(ADFLAGS_DF, adflags);
+    oflags = O_NOFOLLOW | ad2openflags(ad, ADFLAGS_DF, adflags);
 
     admode = mode;
     if ((adflags & ADFLAGS_CREATE)) {
@@ -847,7 +890,9 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
     }
 
     ad_p = ad->ad_ops->ad_path(path, adflags);
-    oflags = O_NOFOLLOW | ad2openflags(ADFLAGS_HF, adflags);
+    oflags = O_NOFOLLOW | ad2openflags(ad, ADFLAGS_HF, adflags);
+    LOG(log_debug, logtype_default,"ad_open_hf_v2(\"%s\"): open flags: %s",
+        fullpathname(path), openflags2logstr(oflags));
     nocreatflags = oflags & ~(O_CREAT | O_EXCL);
 
     ad_meta_fileno(ad) = open(ad_p, nocreatflags);
@@ -891,7 +936,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             }
 
             /* retry with O_CREAT */
-            EC_NEG1_LOG( ad_meta_fileno(ad) = open(ad_p, oflags, admode) );
+            EC_NEG1( ad_meta_fileno(ad) = open(ad_p, oflags, admode) );
             ad->ad_mdp->adf_flags = oflags;
             /* just created, set owner if admin owner (root) */
             if (!st_invalid)
@@ -957,7 +1002,7 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
-    oflags = O_NOFOLLOW | (ad2openflags(ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC));
+    oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_DF, adflags) & ~(O_CREAT | O_TRUNC));
 
     if (ad_meta_fileno(ad) == -2)
         /* symlink */
@@ -1119,7 +1164,7 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
 
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): BEGIN", fullpathname(path));
 
-    oflags = O_NOFOLLOW | (ad2openflags(ADFLAGS_HF, adflags) & ~O_CREAT);
+    oflags = O_NOFOLLOW | (ad2openflags(ad, ADFLAGS_HF, adflags) & ~O_CREAT);
 
     if (ad_reso_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */
@@ -1209,19 +1254,22 @@ EC_CLEANUP:
 off_t ad_getentryoff(const struct adouble *ad, int eid)
 {
     if (ad->ad_vers == AD_VERSION2)
-        return ad->ad_eid[ADEID_RFORK].ade_off;
+        return ad->ad_eid[eid].ade_off;
 
-    if (eid == ADEID_DFORK) {
+    switch (eid) {
+    case ADEID_DFORK:
         return 0;
-    } else if (eid == ADEID_RFORK) {
+    case ADEID_RFORK:
 #ifdef HAVE_EAFD
         return 0;
 #else
         return ADEDOFF_RFORK_OSX;
 #endif
-    } else {
+    default:
         return ad->ad_eid[eid].ade_off;
     }
+    /* deadc0de */
+    AFP_PANIC("What am I doing here?");
 }
 
 const char *ad_path_ea( const char *path, int adflags _U_)
@@ -1506,13 +1554,12 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
         /* Checking for open forks requires sharemode lock support (ie RDWR instead of RDONLY) */
         adflags |= ADFLAGS_SETSHRMD;
 
-    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_SETSHRMD)) {
-        /* sharemode locks are stored in the data fork, adouble:v2 needs this extra handling */
-        adflags |= ADFLAGS_DF;
-    }
-
-    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF)) {
-        adflags |= ADFLAGS_HF;
+    if (ad->ad_vers == AD_VERSION2) {
+        if (adflags & ADFLAGS_SETSHRMD)
+            /* sharemode locks are stored in the data fork, adouble:v2 needs this extra handling here */
+            adflags |= ADFLAGS_DF;
+        if (adflags & ADFLAGS_RF)
+            adflags |= ADFLAGS_HF;
         if (adflags & ADFLAGS_NORF)
             adflags |= ADFLAGS_NOHF;
     }
