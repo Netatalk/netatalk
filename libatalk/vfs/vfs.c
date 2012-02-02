@@ -616,7 +616,17 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
     EC_ZERO(bcatcstr(d, "/._"));
     EC_ZERO(bcatcstr(d, name));
 
-    EC_ZERO(copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666));
+    if (copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666) != 0) {
+        switch (errno) {
+        case ENOENT:
+            break;
+        default:
+            LOG(log_error, logtype_afpd, "[VFS] copyfile(\"%s\" -> \"%s\"): %s",
+                cfrombstr(s), cfrombstr(d), strerror(errno));
+            EC_FAIL;
+                    
+        }
+    }
 
 EC_CLEANUP:
     bdestroy(s);
