@@ -580,51 +580,12 @@ static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
 }
 static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 {
+#ifdef HAVE_EAFD
     /* the EA VFS module does this all for us */
     return 0;
-#if 0
+#endif
+
     EC_INIT;
-
-    /* copy meta EA */
-    if (copy_ea(AD_EA_META, sfd, src, dst, 0666) != 0)
-        return AFPERR_MISC;
-
-    /* copy reso */
-#ifdef HAVE_EAFD
-    int sfile = -1, dfile = -1, sea = -1, dea = -1;
-
-    if ((sfile = openat(sfd, src, O_RDONLY)) == -1) {
-        ret = AFPERR_MISC;
-        goto copyresoerr;
-    }
-
-    if ((dfile = open(dts, O_WRONLY)) == -1) {
-        ret = AFPERR_MISC;
-        goto copyresoerr;
-    }
-
-    if ((sea = openat(sfile, AD_EA_RESO, O_RDONLY | O_XATTR)) == -1) {
-        ret = AFPERR_MISC;
-        goto copyresoerr;
-    }
-
-    if ((dea = openat(dfile, AD_EA_RESO, O_RDWR | O_CREAT | O_XATTR)) == -1) {
-        ret = AFPERR_MISC;
-        goto copyresoerr;
-    }
-
-    ret = copy_file_fd(sea, dea);
-
-copyresoerr:
-    if (sfile != -1) close(sfile);
-    if (dfile != -1) close(dfile);
-    if (sea != -1) close(sea);
-    if (dea != -1) close(dea);
-    if (ret != 0)
-        return ret;
-
-EC_CLEANUP:
-#else
     bstring s = NULL, d = NULL;
     char *dup1 = NULL;
     char *dup2 = NULL;
@@ -664,10 +625,7 @@ EC_CLEANUP:
     free(dup2);
     free(dup3);
     free(dup4);
-#endif
-out:
     EC_EXIT;
-#endif
 }
 
 /* ---------------- */
