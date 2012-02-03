@@ -157,85 +157,6 @@ static char *mtoupath(char *mpath)
     return( upath );
 }
 
-#if 0
-/* 
-   Check if "name" is pointing to
-   a) an object inside the current volume (return 0)
-   b) an object outside the current volume (return 1)
-   Then stats the pointed to object and if it is a dir ors ADFLAGS_DIR to *adflags
-   Return -1 on any serious error.
- */
-static int check_symlink(const char *name, int *adflags)
-{
-    int cwd;
-    ssize_t len;
-    char pathbuf[MAXPATHLEN + 1];
-    char *sep;
-    struct stat st;
-
-    if ((len = readlink(name, pathbuf, MAXPATHLEN)) == -1) {
-        dbd_log(LOGSTD, "Error reading link info for '%s/%s': %s", 
-                cwdbuf, name, strerror(errno));
-        return -1;
-    }
-    pathbuf[len] = 0;
-
-    if ((stat(pathbuf, &st)) != 0) {
-        dbd_log(LOGSTD, "stat error '%s': %s", pathbuf, strerror(errno));
-    }
-
-    /* Remember cwd */
-    if ((cwd = open(".", O_RDONLY)) < 0) {
-        dbd_log(LOGSTD, "error opening cwd '%s': %s", cwdbuf, strerror(errno));
-        return -1;
-    }
-
-    if (S_ISDIR(st.st_mode)) {
-        *adflags |= ADFLAGS_DIR;
-    } else { /* file */
-        /* get basename from path */
-        if ((sep = strrchr(pathbuf, '/')) == NULL)
-            /* just a file at the same level */
-            return 0;
-        sep = 0; /* pathbuf now contains the directory*/
-    }
-
-    /* fchdir() to pathbuf so we can easily get its path with getcwd() */
-    if ((chdir(pathbuf)) != 0) {
-        dbd_log(LOGSTD, "Cant chdir to '%s': %s", pathbuf, strerror(errno));
-        return -1;
-    }
-
-    if ((getcwd(pathbuf, MAXPATHLEN)) == NULL) {
-        dbd_log(LOGSTD, "Cant get symlink'ed dir '%s/%s': %s", cwdbuf, pathbuf, strerror(errno));
-        if ((fchdir(cwd)) != 0)
-            /* We're foobared */
-            longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
-        return -1;
-    }
-
-    if ((fchdir(cwd)) != 0)
-        /* We're foobared */
-        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
-
-    /*
-      We now have the symlink target dir as absoulte path in pathbuf
-      and can compare it with the currents volume path
-    */
-    int i = 0;
-    while (myvolinfo->v_path[i]) {
-        if ((pathbuf[i] == 0) || (myvolinfo->v_path[i] != pathbuf[i])) {
-            dbd_log( LOGDEBUG, "extra-share symlink '%s/%s', following", cwdbuf, name);
-            return 1;
-        }
-        i++;
-    }
-
-    dbd_log( LOGDEBUG, "intra-share symlink '%s/%s', not following", cwdbuf, name);
-    return 0;
-}
-#endif
-
 /*
   Check for wrong encoding e.g. "." at the beginning is not CAP encoded (:2e) although volume is default !AFPVOL_USEDOTS.
   We do it by roundtripiping from volcharset to UTF8-MAC and back and then compare the result.
@@ -297,6 +218,9 @@ static int check_adfile(const char *fname, const struct stat *st)
     int adflags = ADFLAGS_HF;
     struct adouble ad;
     const char *adname;
+
+    if (volume.v_adouble == AD_VERSION_EA)
+        return 0;
 
     if (dbd_flags & DBD_FLAGS_CLEANUP)
         return 0;
@@ -465,6 +389,9 @@ static int check_addir(int volroot)
     if (dbd_flags & DBD_FLAGS_CLEANUP)
         return 0;
 
+    if (volume.v_adouble == AD_VERSION_EA)
+        return 0;
+
     /* Check for ad-dir */
     if ( (addir_ok = access(ADv2_DIRNAME, F_OK)) != 0) {
         if (errno != ENOENT) {
@@ -473,6 +400,9 @@ static int check_addir(int volroot)
         }
         dbd_log(LOGSTD, "Missing %s for '%s'", ADv2_DIRNAME, cwdbuf);
     }
+
+    if (volume.v_adouble == AD_VERSION_EA)
+        return 0;
 
     /* Check for ".Parent" */
     if ( (adpar_ok = access(myvolinfo->ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
@@ -595,6 +525,9 @@ static int read_addir(void)
     struct dirent *ep;
     struct stat st;
 
+    if (volume.v_adouble == AD_VERSION_EA)
+        return 0;
+
     if ((chdir(ADv2_DIRNAME)) != 0) {
         dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
@@ -611,6 +544,7 @@ static int read_addir(void)
         /* Check if its "." or ".." */
         if (DIR_DOT_OR_DOTDOT(ep->d_name))
             continue;
+
         /* Skip ".Parent" */
         if (STRCMP(ep->d_name, ==, ".Parent"))
             continue;
@@ -691,9 +625,9 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         }
     }
 
-    /* Get CNID from ad-file if volume is using AFPVOL_CACHE */
+    /* Get CNID from ad-file */
     ad_cnid = 0;
-    if ( (myvolinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
+    if (ADFILE_OK) {
         ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
         if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
             
@@ -788,9 +722,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                 db_cnid = rply.cnid;
                 dbd_log(LOGSTD, "New CNID for '%s/%s': %u", cwdbuf, name, ntohl(db_cnid));
 
-                if ((myvolinfo->v_flags & AFPVOL_CACHE)
-                    && ADFILE_OK
-                    && ( ! (dbd_flags & DBD_FLAGS_SCAN))) {
+                if (ADFILE_OK && ( ! (dbd_flags & DBD_FLAGS_SCAN))) {
                     dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                             cwdbuf, name, ntohl(db_cnid));
                     ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
@@ -828,8 +760,8 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     }
 
     if ((ad_cnid == 0) && db_cnid) {
-        /* in db but zeroID in ad-file, write it to ad-file if AFPVOL_CACHE */
-        if ((myvolinfo->v_flags & AFPVOL_CACHE) && ADFILE_OK) {
+        /* in db but zeroID in ad-file, write it to ad-file */
+        if (ADFILE_OK) {
             if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
                 dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                         cwdbuf, name, ntohl(db_cnid));
@@ -872,7 +804,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             return -1;
 
     /* Check AppleDouble files in AppleDouble folder, but only if it exists or could be created */
-    if (ADDIR_OK)
+    if (volume.v_adouble == AD_VERSION2 && ADDIR_OK)
         if ((read_addir()) != 0)
             if ( ! (dbd_flags & DBD_FLAGS_SCAN))
                 /* Fatal on rebuild run, continue if only scanning ! */
@@ -926,13 +858,6 @@ static int dbd_readdir(int volroot, cnid_t did)
             break;
         case S_IFLNK:
             dbd_log(LOGDEBUG, "Ignoring symlink %s/%s", cwdbuf, ep->d_name);
-#if 0
-            ret = check_symlink(ep->d_name, &adflags);
-            if (ret == 1)
-                break;
-            if (ret == -1)
-                dbd_log(LOGSTD, "Error checking symlink %s/%s", cwdbuf, ep->d_name);
-#endif
             continue;
         default:
             dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
@@ -1049,7 +974,7 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     dbd_flags = flags;
 
     /* Init a fake struct vol with just enough so we can call ea_open and friends */
-    volume.v_adouble = AD_VERSION2;
+    volume.v_adouble = vi->v_adouble;
     volume.v_vfs_ea = myvolinfo->v_vfs_ea;
     initvol_vfs(&volume);
 

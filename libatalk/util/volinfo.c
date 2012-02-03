@@ -57,7 +57,6 @@ static const vol_opt_name_t vol_opt_names[] = {
     {AFPVOL_NODEV,      "NODEV"},       /* always use 0 for device number in cnid calls */
     {AFPVOL_CASEINSEN,  "CASEINSENSITIVE"}, /* volume is case insensitive */
     {AFPVOL_EILSEQ,     "ILLEGALSEQ"},  /* encode illegal sequence */
-    {AFPVOL_CACHE,      "CACHEID"},     /* Use adouble v2 CNID caching, default don't use it */
     {AFPVOL_INV_DOTS,   "INVISIBLEDOTS"}, 
     {AFPVOL_ACLS,       "ACLS"},        /* Vol supports ACLs */
     {AFPVOL_TM,         "TM"},          /* Set "kSupportsTMLockSteal" is volume attributes */
@@ -393,8 +392,6 @@ int loadvolinfo (char *path, struct volinfo *vol)
     vol->v_ad_options = 0;
     if ((vol->v_flags & AFPVOL_NODEV))
         vol->v_ad_options |= ADVOL_NODEV;
-    if ((vol->v_flags & AFPVOL_CACHE))
-        vol->v_ad_options |= ADVOL_CACHE;
     if ((vol->v_flags & AFPVOL_UNIX_PRIV))
         vol->v_ad_options |= ADVOL_UNIXPRIV;
     if ((vol->v_flags & AFPVOL_INV_DOTS))

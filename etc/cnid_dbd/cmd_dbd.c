@@ -12,49 +12,6 @@
    GNU General Public License for more details.
 */
 
-/*
-  dbd specs and implementation progress
-  =====================================
-
-  St := Status
-
-  Force option
-  ------------
-  
-  St Spec
-  -- ----
-  OK If -f is requested, ensure -e is too.
-     Check if volumes is using AFPVOL_CACHE, then wipe db from disk. Rebuild from ad-files.
-
-  1st pass: Scan volume
-  --------------------
-
-  St Type Check
-  -- ---- -----
-  OK F/D  Make sure ad file exists
-  OK D    Make sure .AppleDouble dir exist, create if missing. Error creating
-          it is fatal as that shouldn't happen as root.
-  OK F/D  Delete orphaned ad-files, log dirs in ad-dir
-  OK F/D  Check name encoding by roundtripping, log on error
-  OK F/D  try: read CNID from ad file (if cnid caching is on)
-          try: fetch CNID from database
-          -> on mismatch: use CNID from file, update database (deleting both found CNIDs first)
-          -> if no CNID in ad file: write CNID from database to ad file
-          -> if no CNID in database: add CNID from ad file to database
-          -> on no CNID at all: create one and store in both places
-  OK F/D  Add found CNID, DID, filename, dev/inode, stamp to rebuild database
-  OK F/D  Check/update stamp (implicitly done while checking CNIDs)
-
-
-  2nd pass: Delete unused CNIDs
-  -----------------------------
-
-  St Spec
-  -- ----
-  OK Step through dbd (the one on disk) and rebuild-db from pass 1 and delete any CNID from
-     dbd not in rebuild db. This in only done in exclusive mode.
-*/
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -376,7 +333,7 @@ int main(int argc, char **argv)
     }
 
     /* Check if -f is requested and wipe db if yes */
-    if ((flags & DBD_FLAGS_FORCE) && rebuild && (volinfo.v_flags & AFPVOL_CACHE)) {
+    if ((flags & DBD_FLAGS_FORCE) && rebuild) {
         char cmd[8 + MAXPATHLEN];
         if ((db_locked = get_lock(LOCK_FREE, NULL)) != 0)
             goto exit_noenv;

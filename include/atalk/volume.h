@@ -124,8 +124,6 @@ struct vol {
 #define AFPVOL_CASEINSEN (1 << 19)  /* volume is case insensitive */
 #define AFPVOL_EILSEQ    (1 << 20)  /* encode illegal sequence 'asis' UCS2, ex "\217-", which is not
                                        a valid SHIFT-JIS char, is encoded  as U\217 -*/
-
-#define AFPVOL_CACHE     (1 << 21)   /* Use adouble v2 CNID caching. Default: yes */
 #define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
 #define AFPVOL_TM        (1 << 23)   /* Supports TimeMachine */
 #define AFPVOL_ACLS      (1 << 24)   /* Volume supports ACLS */

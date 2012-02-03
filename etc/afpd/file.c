@@ -249,8 +249,7 @@ restart:
                         vol->v_path);
                     vol->v_cdb = cnid_open(vol->v_path, vol->v_umask, "tdb", flags, NULL, NULL);
                     if (vol->v_cdb) {
-                        /* deactivate cnid caching/storing in AppleDouble files and set ro mode*/
-                        vol->v_flags &= ~AFPVOL_CACHE;
+                        /* set ro mode*/
                         vol->v_flags |= AFPVOL_RO;
 #ifdef SERVERTEXT
                         /* kill ourself with SIGUSR2 aka msg pending */

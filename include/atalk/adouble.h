@@ -118,7 +118,7 @@
 #define ADEDLEN_PRIVID          4
 
 #define ADEID_NUM_V2            13
-#define ADEID_NUM_EA            5
+#define ADEID_NUM_EA            8
 #define ADEID_NUM_OSX           2
 
 #define AD_DATASZ2 (AD_HEADER_LEN + ADEDLEN_NAME + ADEDLEN_COMMENT + ADEDLEN_FILEI + \
@@ -129,10 +129,11 @@
 #error bad size for AD_DATASZ2
 #endif
 
-#define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + ADEDLEN_FINDERI + \
-                      ADEDLEN_COMMENT + ADEDLEN_FILEDATESI + ADEDLEN_AFPFILEI + ADEDLEN_PRIVID)
+#define AD_DATASZ_EA (AD_HEADER_LEN + (ADEID_NUM_EA * AD_ENTRY_LEN) + \
+                      ADEDLEN_FINDERI + ADEDLEN_COMMENT + ADEDLEN_FILEDATESI + ADEDLEN_AFPFILEI + \
+                      ADEDLEN_PRIVDEV + ADEDLEN_PRIVINO + ADEDLEN_PRIVSYN + ADEDLEN_PRIVID)
 
-#if AD_DATASZ_EA != 342
+#if AD_DATASZ_EA != 402
 #error bad size for AD_DATASZ_EA
 #endif
 
@@ -243,7 +244,6 @@ struct adouble {
 #define ADFLAGS_TRUNC     (1<<12) /* truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
-#define ADVOL_CACHE      (1 << 1)
 #define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
 #define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
 

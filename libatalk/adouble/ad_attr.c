@@ -98,23 +98,22 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint
         tmp = htonl(tmp);
     memcpy(ad_entry( adp, ADEID_PRIVID ), &tmp, sizeof(tmp));
 
-    if (adp->ad_vers == AD_VERSION2) {
-        ad_setentrylen( adp, ADEID_PRIVDEV, sizeof(dev_t));
-        if ((adp->ad_options & ADVOL_NODEV)) {
-            memset(ad_entry( adp, ADEID_PRIVDEV ), 0, sizeof(dev_t));
-        } else {
-            memcpy(ad_entry( adp, ADEID_PRIVDEV ), &dev, sizeof(dev_t));
-        }
-
-        ad_setentrylen( adp, ADEID_PRIVINO, sizeof(ino_t));
-        memcpy(ad_entry( adp, ADEID_PRIVINO ), &ino, sizeof(ino_t));
-
-        ad_setentrylen( adp, ADEID_DID, sizeof(did));
-        memcpy(ad_entry( adp, ADEID_DID ), &did, sizeof(did));
-
-        ad_setentrylen( adp, ADEID_PRIVSYN, ADEDLEN_PRIVSYN);
-        memcpy(ad_entry( adp, ADEID_PRIVSYN ), stamp, ADEDLEN_PRIVSYN);
+    ad_setentrylen( adp, ADEID_PRIVDEV, sizeof(dev_t));
+    if ((adp->ad_options & ADVOL_NODEV)) {
+        memset(ad_entry( adp, ADEID_PRIVDEV ), 0, sizeof(dev_t));
+    } else {
+        memcpy(ad_entry( adp, ADEID_PRIVDEV ), &dev, sizeof(dev_t));
     }
+
+    ad_setentrylen( adp, ADEID_PRIVINO, sizeof(ino_t));
+    memcpy(ad_entry( adp, ADEID_PRIVINO ), &ino, sizeof(ino_t));
+
+    ad_setentrylen( adp, ADEID_DID, sizeof(did));
+    memcpy(ad_entry( adp, ADEID_DID ), &did, sizeof(did));
+
+    ad_setentrylen( adp, ADEID_PRIVSYN, ADEDLEN_PRIVSYN);
+    memcpy(ad_entry( adp, ADEID_PRIVSYN ), stamp, ADEDLEN_PRIVSYN);
+
     return 1;
 }
 
@@ -128,24 +127,22 @@ uint32_t ad_getid (struct adouble *adp, const dev_t st_dev, const ino_t st_ino ,
     char   temp[ADEDLEN_PRIVSYN];
 
     if (adp) {
-        if ((adp->ad_vers == AD_VERSION2)
-            && (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV))) {
+        if (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)) {
             memcpy(&dev, ad_entry(adp, ADEID_PRIVDEV), sizeof(dev_t));
             memcpy(&ino, ad_entry(adp, ADEID_PRIVINO), sizeof(ino_t));
             memcpy(temp, ad_entry(adp, ADEID_PRIVSYN), sizeof(temp));
             memcpy(&a_did, ad_entry(adp, ADEID_DID), sizeof(cnid_t));
 
-            if ( ((adp->ad_options & ADVOL_NODEV) || dev == st_dev)
-                 && ino == st_ino
-                 && (!did || a_did == did)
-                 && (memcmp(stamp, temp, sizeof(temp)) == 0) ) {
+            if (((adp->ad_options & ADVOL_NODEV) || (dev == st_dev))
+                && ino == st_ino
+                && (!did || a_did == did)
+                && (memcmp(stamp, temp, sizeof(temp)) == 0) ) {
                 memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
-                return aint;
+                if (adp->ad_vers == AD_VERSION2)
+                    return aint;
+                else
+                    return ntohl(aint);
             }
-        } else {
-            memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
-            LOG(log_maxdebug, logtype_afpd, "ad_getid(\"%s\"): CNID: %" PRIu32 "", adp->ad_m_name, ntohl(aint));
-            return ntohl(aint);
         }
     }
     return 0;
@@ -156,9 +153,12 @@ uint32_t ad_forcegetid (struct adouble *adp)
 {
     uint32_t aint = 0;
 
-    if (adp && (adp->ad_options & ADVOL_CACHE)) {
+    if (adp) {
         memcpy(&aint, ad_entry(adp, ADEID_PRIVID), sizeof(aint));
-        return aint;
+        if (adp->ad_vers == AD_VERSION2)
+            return aint;
+        else
+            return ntohl(aint);
     }
     return 0;
 }

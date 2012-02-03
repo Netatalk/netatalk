@@ -437,8 +437,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_CASEINSEN;
             else if (strcasecmp(p, "illegalseq") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_EILSEQ;
-            else if (strcasecmp(p, "nocnidcache") == 0)
-                options[VOLOPT_FLAGS].i_value &= ~AFPVOL_CACHE;
             else if (strcasecmp(p, "tm") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_TM;
             else if (strcasecmp(p, "searchdb") == 0)
@@ -694,8 +692,6 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
         volume->v_ad_options = 0;
         if ((volume->v_flags & AFPVOL_NODEV))
             volume->v_ad_options |= ADVOL_NODEV;
-        if ((volume->v_flags & AFPVOL_CACHE))
-            volume->v_ad_options |= ADVOL_CACHE;
         if ((volume->v_flags & AFPVOL_UNIX_PRIV))
             volume->v_ad_options |= ADVOL_UNIXPRIV;
         if ((volume->v_flags & AFPVOL_INV_DOTS))
@@ -1145,7 +1141,6 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, char *p2, int us
     memset(default_options, 0, sizeof(default_options));
 
     /* Enable some default options for all volumes */
-    default_options[VOLOPT_FLAGS].i_value |= AFPVOL_CACHE;
 #ifdef HAVE_ACLS
     default_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
 #endif
@@ -2073,7 +2068,6 @@ static int volume_openDB(struct vol *volume)
                        "Check server messages for details!");
             kill(getpid(), SIGUSR2);
             /* deactivate cnid caching/storing in AppleDouble files */
-            volume->v_flags &= ~AFPVOL_CACHE;
         }
 #endif
     }
