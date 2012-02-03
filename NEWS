@@ -2,6 +2,7 @@ Changes in ?.?.?
 ================
 
 * UPD: based on Unicode 6.1.0
+* UPD: experimental systemd service files: always run both afpd and cnid_metad
 
 Changes in 2.2.2
 ================

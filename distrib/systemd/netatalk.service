@@ -3,7 +3,8 @@
 
 [Unit]
 Description=Netatalk AFP fileserver for Macintosh clients
-After=syslog.target network.target slpd.service avahi-daemon.service netatalk-cnid_metad.service
+After=syslog.target network.target slpd.service avahi-daemon.service netatalk-cnid.service
+Requires=netatalk-cnid.service
 
 [Service]
 Type=forking
@@ -14,3 +15,4 @@ RestartSec=1
 
 [Install]
 WantedBy=multi-user.target
+Also=netatalk-cnid.service
