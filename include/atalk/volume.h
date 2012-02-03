@@ -104,16 +104,9 @@ struct vol {
   Flags that alter volume behaviour.
   Keep in sync with libatalk/util/volinfo.c
 */
-#define AFPVOL_A2VOL     (1 << 5)   /* prodos volume */
-#define AFPVOL_CRLF      (1 << 6)   /* cr/lf translation */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
-#define AFPVOL_MSWINDOWS (1 << 9)   /* deal with ms-windows yuckiness.
-                                       this is going away. */
 #define AFPVOL_NOHEX     (1 << 10)  /* don't do :hex translation */
 #define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */
-#define AFPVOL_LIMITSIZE (1 << 12)  /* limit size for older macs */
-#define AFPVOL_MAPASCII  (1 << 13)  /* map the ascii range as well */
-#define AFPVOL_NOFILEID  (1 << 15)  /* don't advertise createid resolveid and deleteid calls */
 #define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
                                      * maybe because it will be mounted later in preexec */
 #define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */
@@ -149,10 +142,6 @@ struct vol {
 #define AFPVOL_UMUPPER         (AFPVOL_MTOUUPPER | AFPVOL_UTOMUPPER)
 #define AFPVOL_UUPPERMLOWER    (AFPVOL_MTOUUPPER | AFPVOL_UTOMLOWER)
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
-
-#define MSWINDOWS_BADCHARS ":\t\\/<>*?|\""
-
-int wincheck(const struct vol *vol, const char *path);
 
 #define AFPVOLSIG_FLAT          0x0001 /* flat fs */
 #define AFPVOLSIG_FIX           0x0002 /* fixed ids */

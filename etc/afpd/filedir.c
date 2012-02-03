@@ -202,10 +202,6 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
 */
 int check_name(const struct vol *vol, char *name)
 {
-    /* check for illegal characters in the unix filename */
-    if (!wincheck(vol, name))
-        return AFPERR_PARAM;
-
     if ((vol->v_flags & AFPVOL_NOHEX) && strchr(name, '/'))
         return AFPERR_PARAM;
 

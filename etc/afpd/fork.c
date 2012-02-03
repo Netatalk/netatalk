@@ -850,7 +850,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if ( ofork->of_flags & AFPFORK_DATA) {
         eid = ADEID_DFORK;
-        xlate = (ofork->of_vol->v_flags & AFPVOL_CRLF) ? crlf(ofork) : 0;
+        xlate = 0;
     } else if (ofork->of_flags & AFPFORK_RSRC) {
         eid = ADEID_RFORK;
     } else { /* fork wasn't opened. this should never really happen. */
@@ -1202,7 +1202,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
     if ( ofork->of_flags & AFPFORK_DATA) {
         eid = ADEID_DFORK;
-        xlate = (ofork->of_vol->v_flags & AFPVOL_CRLF) ? crlf(ofork) : 0;
+        xlate = 1;
     } else if (ofork->of_flags & AFPFORK_RSRC) {
         eid = ADEID_RFORK;
     } else {

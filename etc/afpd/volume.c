@@ -405,13 +405,7 @@ static void volset(struct vol_option *options, struct vol_option *save,
             return;
 
         while (p) {
-            if (strcasecmp(p, "prodos") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_A2VOL;
-            else if (strcasecmp(p, "mswindows") == 0) {
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_MSWINDOWS | AFPVOL_USEDOTS;
-            } else if (strcasecmp(p, "crlf") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_CRLF;
-            else if (strcasecmp(p, "ro") == 0)
+            if (strcasecmp(p, "ro") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
             else if (strcasecmp(p, "nohex") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOHEX;
@@ -419,10 +413,6 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS;
             else if (strcasecmp(p, "invisibledots") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS | AFPVOL_INV_DOTS;
-            else if (strcasecmp(p, "limitsize") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_LIMITSIZE;
-            else if (strcasecmp(p, "nofileid") == 0)
-                options[VOLOPT_FLAGS].i_value |= AFPVOL_NOFILEID;
             else if (strcasecmp(p, "nostat") == 0)
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NOSTAT;
             else if (strcasecmp(p, "preexec_close") == 0)
@@ -1507,9 +1497,7 @@ static int getvolspace(struct vol *vol,
 
     spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
-    maxsize = (vol->v_flags & AFPVOL_A2VOL) ? 0x01fffe00 :
-        (((afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
-         ? 0x7fffffffL : 0xffffffffL);
+    maxsize = (afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
 
 #ifdef AFS
     if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_AFSGVS ) {
@@ -1668,10 +1656,8 @@ static int getvolparams( uint16_t bitmap, struct vol *vol, struct stat *st, char
             }
             /* prior 2.1 only VOLPBIT_ATTR_RO is defined */
             if (afp_version > 20) {
-                if (0 == (vol->v_flags & AFPVOL_NOFILEID) && vol->v_cdb != NULL &&
-                    (vol->v_cdb->flags & CNID_FLAG_PERSISTENT)) {
+                if (vol->v_cdb != NULL && (vol->v_cdb->flags & CNID_FLAG_PERSISTENT))
                     ashort |= VOLPBIT_ATTR_FILEID;
-                }
                 ashort |= VOLPBIT_ATTR_CATSEARCH;
 
                 if (afp_version >= 30) {
@@ -1942,13 +1928,6 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
         /* set password bit if there's a volume password */
         *data = (volume->v_password) ? AFPSRVR_PASSWD : 0;
 
-        /* Apple 2 clients running ProDOS-8 expect one volume to have
-           bit 0 of this byte set.  They will not recognize anything
-           on the server unless this is the case.  I have not
-           completely worked this out, but it's related to booting
-           from the server.  Support for that function is a ways
-           off.. <shirsch@ibm.net> */
-        *data |= (volume->v_flags & AFPVOL_A2VOL) ? AFPSRVR_CONFIGINFO : 0;
         *data++ |= 0; /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
         *data++ = len;
         memcpy(data, namebuf, len );
@@ -2608,33 +2587,6 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     ad_close(&ad, ADFLAGS_HF);
     return( AFP_OK );
 }
-
-/* ------------------------- */
-int wincheck(const struct vol *vol, const char *path)
-{
-    int len;
-
-    if (!(vol->v_flags & AFPVOL_MSWINDOWS))
-        return 1;
-
-    /* empty paths are not allowed */
-    if ((len = strlen(path)) == 0)
-        return 0;
-
-    /* leading or trailing whitespaces are not allowed, carriage returns
-     * and probably other whitespace is okay, tabs are not allowed
-     */
-    if ((path[0] == ' ') || (path[len-1] == ' '))
-        return 0;
-
-    /* certain characters are not allowed */
-    if (strpbrk(path, MSWINDOWS_BADCHARS))
-        return 0;
-
-    /* everything else is okay */
-    return 1;
-}
-
 
 /*
  * precreate a folder
