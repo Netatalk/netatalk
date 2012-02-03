@@ -276,6 +276,15 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    if (volinfo.v_adouble == AD_VERSION_EA)
+        dbd_log( LOGDEBUG, "adouble:ea volume");
+    else if (volinfo.v_adouble == AD_VERSION2)
+        dbd_log( LOGDEBUG, "adouble:v2 volume");
+    else {
+        dbd_log( LOGSTD, "unknown adouble volume");
+        exit(EXIT_FAILURE);
+    }
+
     /* Sanity checks to ensure we can touch this volume */
     if (volinfo.v_vfs_ea != AFPVOL_EA_AD && volinfo.v_vfs_ea != AFPVOL_EA_SYS) {
         dbd_log( LOGSTD, "Unknown Extended Attributes option: %u", volinfo.v_vfs_ea);

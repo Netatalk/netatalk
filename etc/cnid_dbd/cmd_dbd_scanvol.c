@@ -228,7 +228,7 @@ static int check_adfile(const char *fname, const struct stat *st)
     if (S_ISREG(st->st_mode))
         adflags |= ADFLAGS_DIR;
 
-    adname = myvolinfo->ad_path(fname, adflags);
+    adname = volume.ad_path(fname, adflags);
 
     if ((ret = access( adname, F_OK)) != 0) {
         if (errno != ENOENT) {
@@ -244,7 +244,7 @@ static int check_adfile(const char *fname, const struct stat *st)
             return -1;
 
         /* Create ad file */
-        ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+        ad_init(&ad, &volume);
 
         if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666)) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
@@ -264,7 +264,7 @@ static int check_adfile(const char *fname, const struct stat *st)
         chmod(adname, st->st_mode);
 #endif
     } else {
-        ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+        ad_init(&ad, &volume);
         if (ad_open(&ad, fname, adflags | ADFLAGS_RDONLY) != 0) {
             dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
             return -1;
@@ -401,14 +401,11 @@ static int check_addir(int volroot)
         dbd_log(LOGSTD, "Missing %s for '%s'", ADv2_DIRNAME, cwdbuf);
     }
 
-    if (volume.v_adouble == AD_VERSION_EA)
-        return 0;
-
     /* Check for ".Parent" */
-    if ( (adpar_ok = access(myvolinfo->ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
+    if ( (adpar_ok = access(volume.ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Access error on '%s/%s': %s",
-                    cwdbuf, myvolinfo->ad_path(".", ADFLAGS_DIR), strerror(errno));
+                    cwdbuf, volume.ad_path(".", ADFLAGS_DIR), strerror(errno));
             return -1;
         }
         dbd_log(LOGSTD, "Missing .AppleDouble/.Parent for '%s'", cwdbuf);
@@ -427,7 +424,7 @@ static int check_addir(int volroot)
         }
 
         /* Create ad dir and set name */
-        ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+        ad_init(&ad, &volume);
 
         if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
@@ -448,7 +445,7 @@ static int check_addir(int volroot)
             return -1;
         }
         chown(ADv2_DIRNAME, st.st_uid, st.st_gid);
-        chown(myvolinfo->ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid);
+        chown(volume.ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid);
     }
 
     return 0;
@@ -608,11 +605,13 @@ static int read_addir(void)
 
   @return Correct CNID of object or CNID_INVALID (ie 0) on error
 */
-static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok, int adflags)
+static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok)
 {
-    int ret;
+    int ret, adflags = ADFLAGS_HF;
     cnid_t db_cnid, ad_cnid;
     struct adouble ad;
+
+    adflags = ADFLAGS_HF | (S_ISDIR(st->st_mode) ? ADFLAGS_DIR : 0);
 
     /* Force checkout every X items */
     static int cnidcount = 0;
@@ -628,31 +627,33 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
     /* Get CNID from ad-file */
     ad_cnid = 0;
     if (ADFILE_OK) {
-        ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+        ad_init(&ad, &volume);
         if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
             
             if (dbd_flags & DBD_FLAGS_CLEANUP)
                 return CNID_INVALID;
 
-            dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
-            return CNID_INVALID;
+            if (volume.v_adouble != AD_VERSION_EA) {
+                dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
+                return CNID_INVALID;
+            }
+            dbd_log( LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
+        } else {
+
+            if (dbd_flags & DBD_FLAGS_FORCE) {
+                ad_cnid = ad_forcegetid(&ad);
+                /* This ensures the changed stamp is written */
+                ad_setid( &ad, st->st_dev, st->st_ino, ad_cnid, did, stamp);
+                ad_flush(&ad);
+            } else
+                ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, 0, stamp);
+
+            if (ad_cnid == 0)
+                dbd_log( LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);
+            else
+                dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
+            ad_close(&ad, ADFLAGS_HF);
         }
-
-        if (dbd_flags & DBD_FLAGS_FORCE) {
-            ad_cnid = ad_forcegetid(&ad);
-            /* This ensures the changed stamp is written */
-            ad_setid( &ad, st->st_dev, st->st_ino, ad_cnid, did, stamp);
-            ad_flush(&ad);
-        }
-        else
-            ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, 0, stamp);
-
-        if (ad_cnid == 0)
-            dbd_log( LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);
-        else
-            dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
-
-        ad_close(&ad, ADFLAGS_HF);
     }
 
     /* Get CNID from database */
@@ -694,7 +695,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
             dbd_log(LOGSTD, "Updating AppleDouble file for '%s/%s' with CNID: %u from database",
                             cwdbuf, name, ntohl(db_cnid));
-            ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+            ad_init(&ad, &volume);
             if (ad_open(&ad, name, adflags | ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
                 dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                         cwdbuf, name, strerror(errno));
@@ -725,7 +726,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                 if (ADFILE_OK && ( ! (dbd_flags & DBD_FLAGS_SCAN))) {
                     dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                             cwdbuf, name, ntohl(db_cnid));
-                    ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
+                    ad_init(&ad, &volume);
                     if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
                         dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                                 cwdbuf, name, strerror(errno));
@@ -761,20 +762,20 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 
     if ((ad_cnid == 0) && db_cnid) {
         /* in db but zeroID in ad-file, write it to ad-file */
-        if (ADFILE_OK) {
-            if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
-                dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
-                        cwdbuf, name, ntohl(db_cnid));
-                ad_init_old(&ad, myvolinfo->v_adouble, myvolinfo->v_ad_options);
-                if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
-                    dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
-                            cwdbuf, name, strerror(errno));
-                    return CNID_INVALID;
-                }
-                ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
-                ad_flush(&ad);
-                ad_close(&ad, ADFLAGS_HF);
+        if (ADFILE_OK
+            && (volume.v_adouble == AD_VERSION2) 
+            && ! (dbd_flags & DBD_FLAGS_SCAN)) {
+            dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
+                    cwdbuf, name, ntohl(db_cnid));
+            ad_init(&ad, &volume);
+            if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
+                dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
+                        cwdbuf, name, strerror(errno));
+                return CNID_INVALID;
             }
+            ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+            ad_flush(&ad);
+            ad_close(&ad, ADFLAGS_HF);
         }
         return db_cnid;
     }
@@ -790,7 +791,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 */
 static int dbd_readdir(int volroot, cnid_t did)
 {
-    int cwd, ret = 0, adflags, adfile_ok, addir_ok, encoding_ok;
+    int cwd, ret = 0, adfile_ok, addir_ok, encoding_ok;
     cnid_t cnid = 0;
     const char *name;
     DIR *dp;
@@ -851,10 +852,7 @@ static int dbd_readdir(int volroot, cnid_t did)
         
         switch (st.st_mode & S_IFMT) {
         case S_IFREG:
-            adflags = 0;
-            break;
         case S_IFDIR:
-            adflags = ADFLAGS_DIR;
             break;
         case S_IFLNK:
             dbd_log(LOGDEBUG, "Ignoring symlink %s/%s", cwdbuf, ep->d_name);
@@ -903,7 +901,7 @@ static int dbd_readdir(int volroot, cnid_t did)
 
         if ( ! nocniddb) {
             /* Check CNIDs */
-            cnid = check_cnid(ep->d_name, did, &st, adfile_ok, adflags);
+            cnid = check_cnid(ep->d_name, did, &st, adfile_ok);
 
             /* Now add this object to our rebuild dbd */
             if (cnid && dbd_rebuild) {
@@ -973,8 +971,10 @@ static int scanvol(struct volinfo *vi, dbd_flags_t flags)
     myvolinfo = vi;
     dbd_flags = flags;
 
-    /* Init a fake struct vol with just enough so we can call ea_open and friends */
+    /* Init a fake struct vol so that we can call ad_init(.., &volume) and initvol_vfs(&volume) */
     volume.v_adouble = vi->v_adouble;
+    volume.v_ad_options = vi->v_flags;
+    volume.ad_path = vi->ad_path;
     volume.v_vfs_ea = myvolinfo->v_vfs_ea;
     initvol_vfs(&volume);
 
