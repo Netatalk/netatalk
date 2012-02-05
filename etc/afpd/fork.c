@@ -715,30 +715,10 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t
 
 #undef UNLOCKBIT
 
-/* --------------------------- */
-static int crlf(struct ofork *of)
-{
-    struct extmap   *em;
-
-    if ( ad_meta_fileno( of->of_ad ) == -1 || !memcmp( ufinderi, ad_entry( of->of_ad, ADEID_FINDERI),8)) { /* META */
-        /* no resource fork or no finderinfo, use our files extension mapping */
-        if (!( em = getextmap( of_name(of) )) || memcmp( "TEXT", em->em_type, sizeof( em->em_type ))) {
-            return 0;
-        }
-        /* file type is TEXT */
-        return 1;
-
-    } else if ( !memcmp( "TEXT", ad_entry( of->of_ad, ADEID_FINDERI ), 4 )) {
-        return 1;
-    }
-    return 0;
-}
-
-
 static ssize_t read_file(struct ofork *ofork, int eid,
                          off_t offset, u_char nlmask,
                          u_char nlchar, char *rbuf,
-                         size_t *rbuflen, const int xlate)
+                         size_t *rbuflen)
 {
     ssize_t cc;
     int eof = 0;
@@ -769,20 +749,6 @@ static ssize_t read_file(struct ofork *ofork, int eid,
         }
     }
 
-    /*
-     * If this file is of type TEXT, then swap \012 to \015.
-     */
-    if (xlate) {
-        for ( p = rbuf, q = p + cc; p < q; p++ ) {
-            if ( *p == '\012' ) {
-                *p = '\015';
-            } else if ( *p == '\015' ) {
-                *p = '\012';
-            }
-
-        }
-    }
-
     *rbuflen = cc;
     if ( eof ) {
         return( AFPERR_EOF );
@@ -808,7 +774,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     struct ofork    *ofork;
     off_t       offset, saveoff, reqcount, savereqcount;
     ssize_t     cc, err;
-    int         eid, xlate = 0;
+    int         eid;
     uint16_t       ofrefnum;
     u_char      nlmask, nlchar;
 
@@ -850,7 +816,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if ( ofork->of_flags & AFPFORK_DATA) {
         eid = ADEID_DFORK;
-        xlate = 0;
     } else if (ofork->of_flags & AFPFORK_RSRC) {
         eid = ADEID_RFORK;
     } else { /* fork wasn't opened. this should never really happen. */
@@ -878,7 +843,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): reading %jd bytes from file",
         of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
 
-    err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen, xlate);
+    err = read_file(ofork, eid, offset, nlmask, nlchar, rbuf, rbuflen);
     if (err < 0)
         goto afp_read_done;
     LOG(log_debug, logtype_afpd, "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
@@ -911,30 +876,28 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         /* due to the nature of afp packets, we have to exit if we get
            an error. we can't do this with translation on. */
 #ifdef WITH_SENDFILE
-        if (!(xlate)) {
-            int fd;
+        int fd;
 
-            fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
+        fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
 
-            if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) {
-                if (errno == EINVAL || errno == ENOSYS)
-                    goto afp_read_loop;
-                else {
-                    LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s", of_name(ofork), strerror(errno));
-                    goto afp_read_exit;
-                }
+        if (dsi_stream_read_file(dsi, fd, offset, dsi->datasize) < 0) {
+            if (errno == EINVAL || errno == ENOSYS)
+                goto afp_read_loop;
+            else {
+                LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s", of_name(ofork), strerror(errno));
+                goto afp_read_exit;
             }
-
-            dsi_readdone(dsi);
-            goto afp_read_done;
         }
+
+        dsi_readdone(dsi);
+        goto afp_read_done;
 
     afp_read_loop:
 #endif
 
         /* fill up our buffer. */
         while (*rbuflen > 0) {
-            cc = read_file(ofork, eid, offset, nlmask, nlchar, rbuf,rbuflen, xlate);
+            cc = read_file(ofork, eid, offset, nlmask, nlchar, rbuf,rbuflen);
             if (cc < 0)
                 goto afp_read_exit;
 
@@ -1121,23 +1084,10 @@ int afp_closefork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 
 static ssize_t write_file(struct ofork *ofork, int eid,
                           off_t offset, char *rbuf,
-                          size_t rbuflen, const int xlate)
+                          size_t rbuflen)
 {
     char *p, *q;
     ssize_t cc;
-
-    /*
-     * If this file is of type TEXT, swap \015 to \012.
-     */
-    if (xlate) {
-        for ( p = rbuf, q = p + rbuflen; p < q; p++ ) {
-            if ( *p == '\015' ) {
-                *p = '\012';
-            } else if ( *p == '\012' ) {
-                *p = '\015';
-            }
-        }
-    }
 
     LOG(log_debug, logtype_afpd, "write_file(off: %ju, size: %zu)",
         (uintmax_t)offset, rbuflen);
@@ -1168,7 +1118,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 {
     struct ofork    *ofork;
     off_t               offset, saveoff, reqcount, oldsize, newsize;
-    int             endflag, eid, xlate = 0, err = AFP_OK;
+    int             endflag, eid, err = AFP_OK;
     uint16_t       ofrefnum;
     ssize_t             cc;
 
@@ -1202,7 +1152,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
     if ( ofork->of_flags & AFPFORK_DATA) {
         eid = ADEID_DFORK;
-        xlate = 1;
     } else if (ofork->of_flags & AFPFORK_RSRC) {
         eid = ADEID_RFORK;
     } else {
@@ -1250,7 +1199,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         /* find out what we have already and write it out. */
         cc = dsi_writeinit(dsi, rbuf, *rbuflen);
 
-        if (!cc || (cc = write_file(ofork, eid, offset, rbuf, cc, xlate)) < 0) {
+        if (!cc || (cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
             dsi_writeflush(dsi);
             *rbuflen = 0;
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
@@ -1260,7 +1209,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         offset += cc;
 
 #if 0 /*def HAVE_SENDFILE_WRITE*/
-        if (!(xlate || obj->options.flags & OPTION_DEBUG)) {
+        if (!(obj->options.flags & OPTION_DEBUG)) {
             if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket,
                                    offset, dsi->datasize)) < 0) {
                 switch (errno) {
@@ -1288,7 +1237,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         /* loop until everything gets written. currently
          * dsi_write handles the end case by itself. */
         while ((cc = dsi_write(dsi, rbuf, *rbuflen))) {
-            if ((cc = write_file(ofork, eid, offset, rbuf, cc, xlate)) < 0) {
+            if ((cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
                 dsi_writeflush(dsi);
                 *rbuflen = 0;
                 ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
