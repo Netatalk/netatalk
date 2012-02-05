@@ -1147,13 +1147,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*!
- * Open ressource fork
- *
- * Only for adouble:ea, a nullop otherwise because adouble:v2 has the ressource fork as part
- * of the adouble file which is openend by ADFLAGS_HF.
- */
-static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *ad)
+static int ad_open_rf_v2(const char *path, int adflags, int mode, struct adouble *ad)
+{
+    /*
+     * ad_open_hf_v2() does the work, but if it failed and adflags are ADFLAGS_NOHF | ADFLAGS_RF
+     * ad_open_hf_v2() didn't give an error, but we're supposed to return a reso fork fd
+     */
+    if (!AD_RSRC_OPEN(ad) && !(adflags & ADFLAGS_NORF))
+        return -1;
+    return 0;
+}
+
+static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble *ad)
 {
     EC_INIT;
     int oflags;
@@ -1164,9 +1169,6 @@ static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *a
     const char *rfpath;
     struct stat st;
 #endif
-
-    if (ad->ad_vers != AD_VERSION_EA)
-        return 0;
 
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): BEGIN", fullpathname(path));
 
@@ -1251,6 +1253,28 @@ EC_CLEANUP:
     LOG(log_debug, logtype_default, "ad_open_rf(\"%s\"): END: %d", fullpathname(path), ret);
 
     EC_EXIT;
+}
+
+/*!
+ * Open ressource fork
+ */
+static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *ad)
+{
+    int ret = 0;
+
+    switch (ad->ad_vers) {
+    case AD_VERSION2:
+        ret = ad_open_rf_v2(path, adflags, mode, ad);
+        break;
+    case AD_VERSION_EA:
+        ret = ad_open_rf_ea(path, adflags, mode, ad);
+        break;
+    default:
+        ret = -1;
+        break;
+    }
+
+    return ret;
 }
 
 /***********************************************************************************

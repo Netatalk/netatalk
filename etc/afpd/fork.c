@@ -304,10 +304,10 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     if ( fork == OPENFORK_DATA ) {
         eid = ADEID_DFORK;
-        adflags = ADFLAGS_DF | ADFLAGS_HF ;
+        adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF;
     } else {
         eid = ADEID_RFORK;
-        adflags = ADFLAGS_RF | ADFLAGS_HF;
+        adflags = ADFLAGS_RF | ADFLAGS_HF | ADFLAGS_NOHF;
         if (!(access & OPENACC_WR))
             adflags |= ADFLAGS_NORF;
     }
@@ -320,7 +320,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\", %s, %s)",
         fullpathname(s_path->u_name),
-        (fork & OPENFORK_RSCS) ? "data" : "reso",
+        (fork == OPENFORK_DATA) ? "data" : "reso",
         !(access & OPENACC_WR) ? "O_RDONLY" : "O_RDWR");
 
     ret = AFPERR_NOOBJ;
