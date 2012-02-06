@@ -1,8 +1,9 @@
-Changes in ?.?.?
+Changes in 2.2.3
 ================
 
 * UPD: based on Unicode 6.1.0
 * UPD: experimental systemd service files: always run both afpd and cnid_metad
+* UPD: afpd: Ensure our umask is not altered by eg pam_umask
 
 Changes in 2.2.2
 ================
