@@ -778,6 +778,25 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
     return oflags;
 }
 
+static int ad_conv_v22ea(const char *path, int adflags, const struct adouble *adea)
+{
+    EC_INIT;
+    struct adouble adv2;
+    const char *adp;
+
+    LOG(log_note, logtype_default,"ad_conv_v22ea(\"%s\"): BEGIN", fullpathname(path));
+
+    ad_init_old(&adv2, AD_VERSION2, adea->ad_options);
+    EC_NULL( adp = adv2.ad_ops->ad_path(path, adflags) );
+
+    LOG(log_note, logtype_default,"ad_conv_v22ea(\"%s\"): adouble:v2 path: \"%s\"",
+        fullpathname(path), fullpathname(adp));
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+
 static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble *ad)
 {
     EC_INIT;
@@ -1584,10 +1603,11 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
         /* Checking for open forks requires sharemode lock support (ie RDWR instead of RDONLY) */
         adflags |= ADFLAGS_SETSHRMD;
 
+    if (adflags & ADFLAGS_SETSHRMD)
+        /* sharemode locks are stored in the data fork */
+        adflags |= ADFLAGS_DF;
+
     if (ad->ad_vers == AD_VERSION2) {
-        if (adflags & ADFLAGS_SETSHRMD)
-            /* sharemode locks are stored in the data fork, adouble:v2 needs this extra handling here */
-            adflags |= ADFLAGS_DF;
         if (adflags & ADFLAGS_RF)
             adflags |= ADFLAGS_HF;
         if (adflags & ADFLAGS_NORF)
