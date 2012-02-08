@@ -365,6 +365,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
         sd.sd_last += len + 1;
         s_path.m_name = NULL;
+
+        /* Convert adouble:v2 to adouble:ea on the fly */
+        (void)ad_convert(s_path.u_name, &s_path.st, vol);
+
         /*
          * If a fil/dir is not a dir, it's a file. This is slightly
          * inaccurate, since that means /dev/null is a file, /dev/printer
@@ -440,6 +444,15 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     if ( actcnt == 0 ) {
         sd.sd_did = 0;		/* invalidate sd struct to force re-read */
+        /*
+         * in case were converting adouble stuff:
+         * after enumerating the whole dir we should have converted everything
+         * thus the .AppleDouble dir shouls be empty thus we can no try to
+         * delete it
+         */
+        if (vol->v_adouble == AD_VERSION_EA && ! (vol->v_flags & AFPVOL_NOV2TOEACONV))
+            (void)rmdir(".AppleDouble");
+
         return( AFPERR_NOOBJ );
     }
     sd.sd_sindex = sindex + actcnt;

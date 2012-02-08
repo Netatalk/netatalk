@@ -45,6 +45,7 @@
 #include <atalk/logger.h>
 #include <atalk/adouble.h>
 #include <atalk/util.h>
+#include <atalk/unix.h>
 #include <atalk/ea.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
@@ -104,11 +105,11 @@ static uid_t default_uid = -1;
 
 /* Forward declarations */
 static int ad_mkrf(const char *path);
-static int ad_header_read(const char *path, struct adouble *ad, struct stat *hst);
+static int ad_header_read(const char *path, struct adouble *ad, const struct stat *hst);
 static int ad_header_upgrade(struct adouble *ad, const char *name);
 
 static int ad_mkrf_ea(const char *path);
-static int ad_header_read_ea(const char *path, struct adouble *ad, struct stat *hst);
+static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst);
 static int ad_header_upgrade_ea(struct adouble *ad, const char *name);
 static int ad_reso_size(const char *path, int adflags, struct adouble *ad);
 static int ad_mkrf_osx(const char *path);
@@ -434,7 +435,7 @@ static void parse_entries(struct adouble *ad, char *buf, uint16_t nentries)
  * NOTE: we're assuming that the resource fork is kept at the end of
  *       the file. also, mmapping won't work for the hfs fs until it
  *       understands how to mmap header files. */
-static int ad_header_read(const char *path _U_, struct adouble *ad, struct stat *hst)
+static int ad_header_read(const char *path _U_, struct adouble *ad, const struct stat *hst)
 {
     char                *buf = ad->ad_data;
     uint16_t            nentries;
@@ -510,7 +511,7 @@ static int ad_header_read(const char *path _U_, struct adouble *ad, struct stat 
 }
 
 /* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
-static int ad_header_read_osx(const char *path _U_, struct adouble *ad, struct stat *hst)
+static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const struct stat *hst)
 {
     EC_INIT;
     struct adouble      adosx;
@@ -579,7 +580,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int ad_header_read_ea(const char *path, struct adouble *ad, struct stat *hst _U_)
+static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst _U_)
 {
     uint16_t nentries;
     int      len;
@@ -778,24 +779,68 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
     return oflags;
 }
 
-static int ad_conv_v22ea(const char *path, int adflags, const struct adouble *adea)
+static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struct vol *vol)
 {
     EC_INIT;
     struct adouble adv2;
-    const char *adp;
+    struct adouble adea;
+    const char *adpath;
+    int adflags;
 
-    LOG(log_note, logtype_default,"ad_conv_v22ea(\"%s\"): BEGIN", fullpathname(path));
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): BEGIN", fullpathname(path));
 
-    ad_init_old(&adv2, AD_VERSION2, adea->ad_options);
-    EC_NULL( adp = adv2.ad_ops->ad_path(path, adflags) );
+    ad_init(&adea, vol);
+    ad_init_old(&adv2, AD_VERSION2, adea.ad_options);
+    adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
 
-    LOG(log_note, logtype_default,"ad_conv_v22ea(\"%s\"): adouble:v2 path: \"%s\"",
-        fullpathname(path), fullpathname(adp));
+    /* Open and lock adouble:v2 file */
+    EC_ZERO( ad_open(&adv2, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR) );
+    EC_NEG1_LOG( ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) );
+    EC_NEG1_LOG( adv2.ad_ops->ad_header_read(path, &adv2, sp) );
+
+    /* Create a adouble:ea meta EA */
+    EC_ZERO_LOG( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE) );
+    EC_ZERO_LOG( ad_copy_header(&adea, &adv2) );
+    ad_flush(&adea);
 
 EC_CLEANUP:
+    EC_ZERO_LOG( ad_close(&adv2, ADFLAGS_HF | ADFLAGS_SETSHRMD) );
+    EC_ZERO_LOG( ad_close(&adea, ADFLAGS_HF | ADFLAGS_SETSHRMD) );
     EC_EXIT;
 }
 
+static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struct vol *vol)
+{
+    EC_INIT;
+    struct adouble adv2;
+    struct adouble adea;
+
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_rf(\"%s\"): BEGIN", fullpathname(path));
+
+    if (S_ISDIR(sp->st_mode))
+        return 0;
+
+    ad_init(&adea, vol);
+    ad_init_old(&adv2, AD_VERSION2, adea.ad_options);
+
+    /* Open and lock adouble:v2 file */
+    EC_ZERO( ad_open(&adv2, path, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR) );
+    if (adv2.ad_rlen > 0) {
+        EC_NEG1_LOG( ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) );
+
+        /* Create a adouble:ea resource fork */
+        EC_ZERO_LOG( ad_open(&adea, path, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) );
+
+        EC_ZERO_LOG( copy_fork(ADEID_RFORK, &adea, &adv2) );
+        adea.ad_rlen = adv2.ad_rlen;
+        ad_flush(&adea);
+    }
+
+EC_CLEANUP:
+    EC_ZERO_LOG( ad_close(&adv2, ADFLAGS_HF | ADFLAGS_RF) );
+    EC_ZERO_LOG( ad_close(&adea, ADFLAGS_HF | ADFLAGS_RF) );
+    EC_EXIT;
+}
 
 static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble *ad)
 {
@@ -1809,4 +1854,53 @@ EC_CLEANUP:
         close(cwdfd);
 
     return ret;
+}
+
+int ad_convert(const char *path, const struct stat *sp, const struct vol *vol)
+{
+    EC_INIT;
+    const char *adpath;
+    int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
+
+    if (!(vol->v_adouble == AD_VERSION_EA) || (vol->v_flags & AFPVOL_NOV2TOEACONV))
+        goto EC_CLEANUP;
+
+    EC_ZERO( ad_conv_v22ea_hf(path, sp, vol) );
+    EC_ZERO( ad_conv_v22ea_rf(path, sp, vol) );
+
+    EC_NULL( adpath = ad_path(path, adflags) );
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): deleting adouble:v2 file: \"%s\"",
+        path, fullpathname(adpath));
+
+    become_root();
+    EC_ZERO_LOG( unlink(adpath) );
+    unbecome_root();
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+/* build a resource fork mode from the data fork mode:
+ * remove X mode and extend header to RW if R or W (W if R for locking),
+ */
+mode_t ad_hf_mode(mode_t mode)
+{
+    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
+    /* fnctl lock need write access */
+    if ((mode & S_IRUSR))
+        mode |= S_IWUSR;
+    if ((mode & S_IRGRP))
+        mode |= S_IWGRP;
+    if ((mode & S_IROTH))
+        mode |= S_IWOTH;
+
+    /* if write mode set add read mode */
+    if ((mode & S_IWUSR))
+        mode |= S_IRUSR;
+    if ((mode & S_IWGRP))
+        mode |= S_IRGRP;
+    if ((mode & S_IWOTH))
+        mode |= S_IROTH;
+
+    return mode;
 }

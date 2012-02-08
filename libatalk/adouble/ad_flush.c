@@ -183,25 +183,24 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     uint32_t       len;
 
     for ( eid = 0; eid < ADEID_MAX; eid++ ) {
-        if ( ads->ad_eid[ eid ].ade_off == 0 ) {
+        if ( ads->ad_eid[ eid ].ade_off == 0 || add->ad_eid[ eid ].ade_off == 0 )
             continue;
-        }
-
-        if ( add->ad_eid[ eid ].ade_off == 0 ) {
-            continue;
-        }
 
         len = ads->ad_eid[ eid ].ade_len;
-        if (!len) {
+        if (!len || len != add->ad_eid[ eid ].ade_len)
             continue;
-        }
 
-        if (eid != ADEID_COMMENT && add->ad_eid[ eid ].ade_len != len ) {
+        switch (eid) {
+        case ADEID_COMMENT:
+        case ADEID_PRIVDEV:
+        case ADEID_PRIVINO:
+        case ADEID_PRIVSYN:
+        case ADEID_PRIVID:
             continue;
+        default:
+            ad_setentrylen( add, eid, len );
+            memcpy( ad_entry( add, eid ), ad_entry( ads, eid ), len );
         }
-
-        ad_setentrylen( add, eid, len );
-        memcpy( ad_entry( add, eid ), ad_entry( ads, eid ), len );
     }
     add->ad_rlen = ads->ad_rlen;
     return 0;

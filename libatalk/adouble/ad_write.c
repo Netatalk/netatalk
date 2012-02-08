@@ -182,3 +182,93 @@ int ad_dtruncate(struct adouble *ad, const off_t size)
 
     return 0;
 }
+
+/* ----------------------- */
+static int copy_all(const int dfd, const void *buf,
+                               size_t buflen)
+{
+    ssize_t cc;
+
+    while (buflen > 0) {
+        if ((cc = write(dfd, buf, buflen)) < 0) {
+            switch (errno) {
+            case EINTR:
+                continue;
+            default:
+                return -1;
+            }
+        }
+        buflen -= cc;
+    }
+
+    return 0;
+}
+
+/* -------------------------- 
+ * copy only the fork data stream
+*/
+int copy_fork(int eid, struct adouble *add, struct adouble *ads)
+{
+    ssize_t cc;
+    int     err = 0;
+    char    filebuf[8192];
+    int     sfd, dfd;
+
+    if (eid == ADEID_DFORK) {
+        sfd = ad_data_fileno(ads);
+        dfd = ad_data_fileno(add);
+    }
+    else {
+        sfd = ad_reso_fileno(ads);
+        dfd = ad_reso_fileno(add);
+    }        
+
+    if ((off_t)-1 == lseek(sfd, ad_getentryoff(ads, eid), SEEK_SET))
+    	return -1;
+
+    if ((off_t)-1 == lseek(dfd, ad_getentryoff(add, eid), SEEK_SET))
+    	return -1;
+    	
+#if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
+    /* doesn't work With 2.6 FIXME, only check for EBADFD ? */
+    off_t   offset = 0;
+    size_t  size;
+    struct stat         st;
+    #define BUF 128*1024*1024
+
+    if (fstat(sfd, &st) == 0) {
+        
+        while (1) {
+            if ( offset >= st.st_size) {
+               return 0;
+            }
+            size = (st.st_size -offset > BUF)?BUF:st.st_size -offset;
+            if ((cc = sys_sendfile(dfd, sfd, &offset, size)) < 0) {
+                switch (errno) {
+                case ENOSYS:
+                case EINVAL:  /* there's no guarantee that all fs support sendfile */
+                    goto no_sendfile;
+                default:
+                    return -1;
+                }
+            }
+        }
+    }
+    no_sendfile:
+    lseek(sfd, offset, SEEK_SET);
+#endif 
+
+    while (1) {
+        if ((cc = read(sfd, filebuf, sizeof(filebuf))) < 0) {
+            if (errno == EINTR)
+                continue;
+            err = -1;
+            break;
+        }
+
+        if (!cc || ((err = copy_all(dfd, filebuf, cc)) < 0)) {
+            break;
+        }
+    }
+    return err;
+}

@@ -435,6 +435,8 @@ static void volset(struct vol_option *options, struct vol_option *save,
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_NONETIDS;
             else if (strcasecmp(p, "noacls") == 0)
                 options[VOLOPT_FLAGS].i_value &= ~AFPVOL_ACLS;
+            else if (strcasecmp(p, "nov2toeaconv") == 0)
+                options[VOLOPT_FLAGS].i_value |= AFPVOL_NOV2TOEACONV;
             p = strtok(NULL, ",");
         }
 
@@ -1597,6 +1599,9 @@ static int getvolparams( uint16_t bitmap, struct vol *vol, struct stat *st, char
     /* courtesy of jallison@whistle.com:
      * For MacOS8.x support we need to create the
      * .Parent file here if it doesn't exist. */
+
+    /* Convert adouble:v2 to adouble:ea on the fly */
+    (void)ad_convert(vol->v_path, st, vol);
 
     ad_init(&ad, vol);
     if (ad_open(&ad, vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0 ) {

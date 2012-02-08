@@ -186,7 +186,7 @@ struct adouble_fops {
     const char *(*ad_path)(const char *, int);
     int  (*ad_mkrf)(const char *);
     int  (*ad_rebuild_header)(struct adouble *);
-    int  (*ad_header_read)(const char *, struct adouble *, struct stat *);
+    int  (*ad_header_read)(const char *, struct adouble *, const struct stat *);
     int  (*ad_header_upgrade)(struct adouble *, const char *);
 };
 
@@ -402,31 +402,8 @@ extern int ad_refresh     (const char *path, struct adouble *);
 extern int ad_stat        (const char *, struct stat *);
 extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
-
-/* build a resource fork mode from the data fork mode:
- * remove X mode and extend header to RW if R or W (W if R for locking),
- */
-static inline mode_t ad_hf_mode (mode_t mode)
-{
-    mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
-    /* fnctl lock need write access */
-    if ((mode & S_IRUSR))
-        mode |= S_IWUSR;
-    if ((mode & S_IRGRP))
-        mode |= S_IWGRP;
-    if ((mode & S_IROTH))
-        mode |= S_IWOTH;
-
-    /* if write mode set add read mode */
-    if ((mode & S_IWUSR))
-        mode |= S_IRUSR;
-    if ((mode & S_IWGRP))
-        mode |= S_IRGRP;
-    if ((mode & S_IWOTH))
-        mode |= S_IROTH;
-
-    return mode;
-}
+extern mode_t ad_hf_mode(mode_t mode);
+extern int ad_convert(const char *path, const struct stat *sp, const struct vol *vol);
 
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);
@@ -437,6 +414,7 @@ extern ssize_t adf_pread(struct ad_fd *, void *, size_t, off_t);
 extern ssize_t adf_pwrite(struct ad_fd *, const void *, size_t, off_t);
 extern int     ad_dtruncate(struct adouble *, off_t);
 extern int     ad_rtruncate(struct adouble *, off_t);
+extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads);
 
 /* ad_size.c */
 extern off_t ad_size (const struct adouble *, uint32_t );

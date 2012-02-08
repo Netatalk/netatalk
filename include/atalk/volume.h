@@ -95,15 +95,16 @@ struct vol {
 
 /* flags  for AFS and quota 0xxx0 */
 #define AFPVOL_GVSMASK  (7<<2)
-#define AFPVOL_NONE (0<<2)
+#define AFPVOL_NONE     (0<<2)
 #define AFPVOL_AFSGVS   (1<<2)
-#define AFPVOL_USTATFS  (2<<2)
-#define AFPVOL_UQUOTA   (4<<2)
+#define AFPVOL_USTATFS  (1<<3)
+#define AFPVOL_UQUOTA   (1<<4)
 
 /*
   Flags that alter volume behaviour.
   Keep in sync with libatalk/util/volinfo.c
 */
+#define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
 #define AFPVOL_NOHEX     (1 << 10)  /* don't do :hex translation */
 #define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */
