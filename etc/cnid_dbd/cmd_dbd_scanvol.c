@@ -638,6 +638,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
                 return CNID_INVALID;
             }
             dbd_log( LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
+            adfile_ok = 1;
         } else {
 
             if (dbd_flags & DBD_FLAGS_FORCE) {
@@ -762,9 +763,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
 
     if ((ad_cnid == 0) && db_cnid) {
         /* in db but zeroID in ad-file, write it to ad-file */
-        if (ADFILE_OK
-            && (volume.v_adouble == AD_VERSION2) 
-            && ! (dbd_flags & DBD_FLAGS_SCAN)) {
+        if (ADFILE_OK && ! (dbd_flags & DBD_FLAGS_SCAN)) {            
             dbd_log(LOGSTD, "Writing CNID data for '%s/%s' to AppleDouble file",
                     cwdbuf, name, ntohl(db_cnid));
             ad_init(&ad, &volume);
