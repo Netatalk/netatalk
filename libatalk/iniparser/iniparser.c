@@ -50,6 +50,8 @@ typedef enum _line_status_ {
 /*--------------------------------------------------------------------------*/
 static char * strlwc(char * s)
 {
+    return s;
+
     static char l[ASCIILINESZ+1];
     int i ;
 
