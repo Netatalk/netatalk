@@ -15,7 +15,7 @@
 */
 /*---------------------------- Includes ------------------------------------*/
 #include <ctype.h>
-#include "iniparser.h"
+#include <atalk/iniparser.h>
 
 /*---------------------------- Defines -------------------------------------*/
 #define ASCIILINESZ         (1024)

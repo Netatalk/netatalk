@@ -39,4 +39,5 @@ noinst_HEADERS = \
 	list.h \
 	globals.h \
 	fce_api.h \
-	standards.h
+	standards.h \
+	iniparser.h
