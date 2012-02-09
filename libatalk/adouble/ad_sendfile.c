@@ -67,7 +67,16 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 #include <sys/uio.h>
 ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 {
-  return sendfile(fromfd, tofd, *offset, count, NULL, offset, 0);
+    off_t len;
+    int ret;
+
+    ret = sendfile(fromfd, tofd, *offset, count, NULL, &len, 0);
+
+    *offset += len;
+
+    if (ret != 0)
+        return -1;
+    return len;
 }
 
 #else
