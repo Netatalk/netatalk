@@ -62,7 +62,8 @@ afpd_CFLAGS = \
 	-D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
 	-D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
-	-D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\"
+	-D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\" \
+	-D_PATH_CONFDIR=\"$(pkgconfdir)\"
 
 if HAVE_ACLS
 afpd_SOURCES += acls.c
