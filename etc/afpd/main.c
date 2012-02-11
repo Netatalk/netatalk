@@ -217,39 +217,34 @@ int main(int ac, char **av)
     struct sigaction	sv;
     sigset_t            sigs;
     int                 ret;
-    struct afp_options default_options = {0};
 
     /* Parse argv args and initialize default options */
-    afp_options_init(&default_options);
-    if (!afp_options_parse_cmdline(ac, av, &default_options))
+    AFPObj.argc = ac;
+    AFPObj.argv = av;
+    if (!afp_config_parse(&AFPObj))
         exit(EXITERR_CONF);
 
-    if (check_lockfile("afpd", default_options.pidfile) != 0)
+    if (check_lockfile("afpd", _PATH_AFPDLOCK) != 0)
         exit(EXITERR_SYS);
 
-    if (!(default_options.flags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
+    if (!(AFPObj.options.flags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
         exit(EXITERR_SYS);
 
-    if (create_lockfile("afpd", default_options.pidfile) != 0)
+    if (create_lockfile("afpd", _PATH_AFPDLOCK) != 0)
         exit(EXITERR_SYS);
 
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
-
-    /* Default log setup: log to syslog */
-    set_processname("afpd");
-    setuplog("default log_note");
+    atexit(afp_exit);
 
     /* Save the user's current umask */
-    default_options.save_mask = umask( default_options.umask );
-
-    atexit(afp_exit);
+    AFPObj.options.save_mask = umask(AFPObj.options.umask);
 
     /* install child handler for asp and dsi. we do this before afp_goaway
      * as afp_goaway references stuff from here. 
      * XXX: this should really be setup after the initial connections. */
-    if (!(server_children = server_child_alloc(default_options.connections,
-                            CHILD_NFORKS))) {
+    if (!(server_children = server_child_alloc(AFPObj.options.connections,
+                                               CHILD_NFORKS))) {
         LOG(log_error, logtype_afpd, "main: server_child alloc: %s", strerror(errno) );
         exit(EXITERR_SYS);
     }
@@ -304,7 +299,6 @@ int main(int ac, char **av)
         exit(EXITERR_SYS);
     }
 
-
     sigemptyset( &sv.sa_mask );
     sigaddset(&sv.sa_mask, SIGALRM);
     sigaddset(&sv.sa_mask, SIGHUP);
@@ -348,7 +342,7 @@ int main(int ac, char **av)
     sigaddset(&sigs, SIGCHLD);
 
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-    if (!(AFPObj = configinit(&default_options))) {
+    if (configinit(&AFPObj) != 0) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
         exit(EXITERR_CONF);
     }
@@ -399,12 +393,11 @@ int main(int ac, char **av)
             fd_reset_listening_sockets(&AFPObj);
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
-            dsi_cleanup(&AFPObj);
 
             /* configfree close atp socket used for DDP tickle, there's an issue
              * with atp tid. */
             configfree(&AFPObj);
-            if (!(AFPObj = configinit(&default_options))) {
+            if (configinit(&AFPObj) != 0) {
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
                 exit(EXITERR_CONF);
             }

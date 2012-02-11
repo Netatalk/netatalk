@@ -56,10 +56,7 @@ afpd_CFLAGS = \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
-	-D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
-	-D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	-D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\" \
 	-D_PATH_CONFDIR=\"$(pkgconfdir)\"
 
 if HAVE_ACLS

@@ -171,29 +171,16 @@ static AFPConfig *AFPConfigInit(struct afp_options *options,
 }
 
 /*!
- * Parse configfile and build AFPObj
+ * Get everything running
  */
-int configinit(AFPObj *AFPObj, const struct afp_options *defoptions)
+int configinit(AFPObj *AFPObj)
 {
-    int have_option = 0;
-
-    afp_options_duplicate(&AFPObj->options, defoptions);
-
-    if ((AFPObj->iniconfig = iniparser_load(AFPObj->options.configfile)) == NULL)
-        /* if config file doesn't exist, load defaults */
-        return AFPConfigInit(AFPObj);
-
-    if (afp_options_parse(AFPObj) != 0)
-        return -1;
-
     AFPConfigInit(AFPObj);
 
 #ifdef HAVE_LDAP
     /* Parse afp_ldap.conf */
     acl_ldap_readconfig(AFPObj->iniconfig);
 #endif /* HAVE_LDAP */
-
-    LOG(log_debug, logtype_afpd, "Finished parsing Config File");
 
     /* Now register with zeroconf, we also need the volumes for that */
     if (! (AFPObj->options.flags & OPTION_NOZEROCONF)) {

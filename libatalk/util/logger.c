@@ -39,18 +39,18 @@ Netatalk 2001 (c)
 #define MAXLOGSIZE 512
 
 #define LOGLEVEL_STRING_IDENTIFIERS { \
-  "LOG_NOTHING",                      \
-  "LOG_SEVERE",                       \
-  "LOG_ERROR",                        \
-  "LOG_WARN",                         \
-  "LOG_NOTE",                         \
-  "LOG_INFO",                         \
-  "LOG_DEBUG",                        \
-  "LOG_DEBUG6",                       \
-  "LOG_DEBUG7",                       \
-  "LOG_DEBUG8",                       \
-  "LOG_DEBUG9",                       \
-  "LOG_MAXDEBUG"}                        
+  "NOTHING",                      \
+  "SEVERE",                       \
+  "ERROR",                        \
+  "WARN",                         \
+  "NOTE",                         \
+  "INFO",                         \
+  "DEBUG",                        \
+  "DEBUG6",                       \
+  "DEBUG7",                       \
+  "DEBUG8",                       \
+  "DEBUG9",                       \
+  "MAXDEBUG"}                        
 
 /* these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \

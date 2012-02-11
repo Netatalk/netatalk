@@ -41,21 +41,7 @@
 #include "auth.h"
 #include "dircache.h"
 
-#define OPTIONS "dn:uc:g:P:ptS:L:F:U:hIvVm:"
 #define LENGTH 512
-
-/* initialize options */
-void afp_options_init(struct afp_options *options)
-{
-    memset(options, 0, sizeof(struct afp_options));
-
-    options->pidfile = _PATH_AFPDLOCK;
-    options->configfile = D_PATH_CONFDIR "afp.conf";
-    options->sigconffile = _PATH_AFPDSIGCONF;
-    options->uuidconf = _PATH_AFPDUUIDCONF;
-    options->server_notif = 1;
-    options->dsireadbuf = 12;
-}
 
 /* get rid of any allocated afp_option buffers. */
 void afp_options_free(struct afp_options *opt)
@@ -104,27 +90,8 @@ void afp_options_free(struct afp_options *opt)
         free(opt->unixcodepage);
 }
 
-void afp_options_duplicate(struct afp_options *options, const struct afp_options *soptions)
-{
-    memcpy(options, soptions, sizeof(struct afp_options));
-
-    options->pidfile = NULL;
-    options->uuidconf = NULL;
-
-    options->configfile = strdup(options->configfile);
-    options->guest = strdup(options->guest);
-    options->loginmesg = strdup(options->loginmesg);
-    options->maccodepage = strdup(options->maccodepage);
-    options->passwdfile = strdup(options->passwdfile);
-    options->sigconffile = strdup(options->sigconffile);
-    options->signatureopt = strdup(options->signatureopt);
-    options->uamlist = strdup(options->uamlist);
-    options->uampath = strdup(options->uampath);
-    options->unixcodepage = strdup(options->unixcodepage);
-}
-
-#define MAXVAL
-int afp_options_parse(AFPObj *AFPObj)
+#define MAXVAL 1024
+int afp_config_parse(AFPObj *AFPObj)
 {
     dictionary *config = AFPObj->iniconfig;
     struct afp_options *options = &AFPObj->options;
@@ -132,15 +99,38 @@ int afp_options_parse(AFPObj *AFPObj)
     const char *p, *tmp;
     char val[MAXVAL];
 
-    /* [Global] */
+    memset(options, 0, sizeof(struct afp_options));
+    options->configfile  = strdup(_PATH_CONFDIR "afp.conf");
+    options->sigconffile = strdup(_PATH_CONFDIR "afp_signature.conf");
+    options->uuidconf    = strdup(_PATH_CONFDIR "afp_voluuid.conf");
+    options->flags |= OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF;
 
-    options->logconfig      = iniparser_getstring(config, INISEC_GLOBAL, "loglevel",       "default:note");
-    options->logfile        = iniparser_getstring(config, INISEC_GLOBAL, "logfile",        NULL);
+    while (EOF != (p = getopt(AFPObj->argc, AFPObj->argv, "dF:"))) {
+        switch (p) {
+        case 'd':
+            options->flags |= OPTION_DEBUG;
+            break;
+        case 'F':
+            if (options->configfile)
+                free(options->configfile);
+            options->configfile = optarg;
+            break;
+        default :
+            break;
+        }
+    }
+
+    if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
+        return -1;
+    AFPObj->iniconfig = config;
+
+    /* [Global] */
+    options->logconfig = iniparser_getstring(config, INISEC_GLOBAL, "loglevel", "default:note");
+    options->logfile   = iniparser_getstring(config, INISEC_GLOBAL, "logfile",  NULL);
+    set_processname("afpd");
     setuplog(logconfig, logfile);
 
     /* [AFP] "options" options wo values */
-    options->flags |= OPTION_ACL2MACCESS | OPTION_UUID;
-
     p = iniparser_getstring(config, INISEC_AFP, "options", "");
     strcpy(val, " ");
     strlcat(val, p, MAXVAL);
@@ -159,6 +149,8 @@ int afp_options_parse(AFPObj *AFPObj)
         options->flags |= OPTION_KEEPSESSIONS;
     if (strstr(val, " keepsessions"))
         options->flags |= OPTION_CLOSEVOL;
+    if (strstr(val, " client_polling"))
+        options->flags &= ~OPTION_SERVERNOTIF;
     if (strstr(val, " nosavepassword"))
         options->passwdbits |= PASSWD_NOSAVE;
     if (strstr(val, " savepassword"))
@@ -167,8 +159,6 @@ int afp_options_parse(AFPObj *AFPObj)
         options->passwdbits &= ~PASSWD_SET;
     if (strstr(val, " setpassword"))
         options->passwdbits |= PASSWD_SET;
-    if (strstr(val, " client_polling"))
-        options->server_notif = 0;
 
     /* figure out options w values */
 
@@ -441,11 +431,8 @@ static void show_usage( char *name )
 	fprintf( stderr, "\t%s -h|-v|-V\n", name );
 }
 
-int afp_options_parse_cmdline(int ac, char **av, struct afp_options *options)
+int afp_options_parse_cmdline(int ac, char **av)
 {
-    extern char *optarg;
-    extern int optind;
-
     char *p;
     char *tmp;	/* Used for error checking the result of strtol */
     int c, err = 0;
@@ -459,14 +446,8 @@ int afp_options_parse_cmdline(int ac, char **av, struct afp_options *options)
         *p = '\0';
     options->hostname = strdup(buf);
 
-    while (EOF != ( c = getopt( ac, av, OPTIONS )) ) {
+    while (EOF != ( c = getopt( ac, av, "vVh" )) ) {
         switch ( c ) {
-        case 'd' :
-            options->flags |= OPTION_DEBUG;
-            break;
-        case 'F':
-            options->configfile = optarg;
-            break;
         case 'v':	/* version */
             show_version( ); puts( "" );
             show_paths( ); puts( "" );

@@ -34,6 +34,7 @@
 
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)
+#define OPTION_SERVERNOTIF   (1 << 2)
 #define OPTION_CUSTOMICON    (1 << 4)
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
@@ -61,10 +62,11 @@ struct afp_volume_name {
 };
 
 struct afp_options {
+    int argc;
+    char **argv;
     int connections;            /* Maximum number of possible AFP connections */
     int tickleval;
     int timeout;
-    int server_notif;
     int flags;
     int dircachesize;
     int sleep;                  /* Maximum time allowed to sleep (in tickles) */
@@ -79,7 +81,6 @@ struct afp_options {
     char *Cnid_srv, *Cnid_port;
     char *configfile;
     char *uampath, *fqdn;
-    char *pidfile;
     char *sigconffile;
     char *uuidconf;
     char *guest, *loginmesg, *keyfile, *passwdfile;
