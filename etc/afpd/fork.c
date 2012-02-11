@@ -852,7 +852,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     /* dsi can stream requests. we can only do this if we're not checking
      * for an end-of-line character. oh well. */
     if ((obj->proto == AFPPROTO_DSI) && (*rbuflen < reqcount) && !nlmask) {
-        DSI    *dsi = obj->handle;
+        DSI    *dsi = obj->dsi;
         off_t  size;
 
         /* reqcount isn't always truthful. we need to deal with that. */
@@ -1195,7 +1195,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     switch (obj->proto) {
     case AFPPROTO_DSI:
     {
-        DSI *dsi = obj->handle;
+        DSI *dsi = obj->dsi;
         /* find out what we have already and write it out. */
         cc = dsi_writeinit(dsi, rbuf, *rbuflen);
 
@@ -1265,8 +1265,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 
 afp_write_err:
     if (obj->proto == AFPPROTO_DSI) {
-        dsi_writeinit(obj->handle, rbuf, *rbuflen);
-        dsi_writeflush(obj->handle);
+        dsi_writeinit(obj->dsi, rbuf, *rbuflen);
+        dsi_writeflush(obj->dsi);
     }
     if (err != AFP_OK) {
         *rbuflen = 0;

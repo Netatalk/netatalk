@@ -17,11 +17,11 @@
 #include <netdb.h>  /* this isn't header-protected under ultrix */
 #endif /* HAVE_NETDB_H */
 
-#include <netatalk/at.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/unicode.h>
 #include <atalk/uam.h>
+#include <atalk/iniparser.h>
 
 /* #define DOSFILELEN 12 */             /* Type1, DOS-compat*/
 #define MACFILELEN 31                   /* Type2, HFS-compat */
@@ -33,16 +33,23 @@
 #define MAXUSERLEN 256
 
 #define OPTION_DEBUG         (1 << 0)
-#define OPTION_USERVOLFIRST  (1 << 1)
-#define OPTION_NOUSERVOL     (1 << 2)
-#define OPTION_PROXY         (1 << 3)
+#define OPTION_CLOSEVOL      (1 << 1)
 #define OPTION_CUSTOMICON    (1 << 4)
-#define OPTION_NOSLP         (1 << 5)
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
 #define OPTION_KEEPSESSIONS  (1 << 10) /* preserve sessions across master afpd restart with SIGQUIT */
+
+/**********************************************************************************************
+ * Ini config sections
+ **********************************************************************************************/
+
+#define INISEC_GLOBAL "General"
+#define INISEC_AFP    "AFP"
+
+struct DSI;
+#define AFPOBJ_TMPSIZ (MAXPATHLEN)
 
 /* a couple of these options could get stuck in unions to save
  * space. */
@@ -54,22 +61,27 @@ struct afp_volume_name {
 };
 
 struct afp_options {
-    int connections, transports, tickleval, timeout, server_notif, flags, dircachesize;
+    int connections;            /* Maximum number of possible AFP connections */
+    int tickleval;
+    int timeout;
+    int server_notif;
+    int flags;
+    int dircachesize;
     int sleep;                  /* Maximum time allowed to sleep (in tickles) */
     int disconnected;           /* Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /* number of seconds FCE file mod events are put on hold */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
-    unsigned char passwdbits, passwdminlen, loginmaxfail;
+    unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
-    char hostname[MAXHOSTNAMELEN + 1], *server, *ipaddr, *port, *configfile;
+    char *hostname;
+    char *ipaddr, *port;
+    char *Cnid_srv, *Cnid_port;
+    char *configfile;
     char *uampath, *fqdn;
     char *pidfile;
     char *sigconffile;
     char *uuidconf;
-    struct afp_volume_name defaultvol, systemvol, uservol;
-    int  closevol;
-
     char *guest, *loginmesg, *keyfile, *passwdfile;
     char *uamlist;
     char *authprintdir;
@@ -84,33 +96,33 @@ struct afp_options {
     gid_t admingid;
 #endif /* ADMIN_GRP */
     int    volnamelen;
-
     /* default value for winbind authentication */
     char *ntdomain, *ntseparator;
     char *logconfig;
-
+    char *logfile;
     char *mimicmodel;
     char *adminauthuser;
 };
 
-#define AFPOBJ_TMPSIZ (MAXPATHLEN)
-typedef struct _AFPObj {
-    int proto;
-    unsigned long servernum;
-    void *handle;               /* either (DSI *) or (ASP *) */
-    void *config; 
+typedef struct AFPObj {
+    int statuslen;
+    char status[1400];
+    const void *signature;
+    struct DSI *dsi;
     struct afp_options options;
-    char *Obj, *Type, *Zone;
+    const dictionary *iniconfig;
     char username[MAXUSERLEN];
-    void (*logout)(void), (*exit)(int);
-    int (*reply)(void *, int);
-    int (*attention)(void *, AFPUserBytes);
     /* to prevent confusion, only use these in afp_* calls */
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
     void *uam_cookie; /* cookie for uams */
     struct session_info  sinfo;
     uid_t uid; 	/* client running user id */
     int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
+    /* Functions */
+    void (*logout)(void);
+    void (*exit)(int);
+    int (*reply)(void *, int);
+    int (*attention)(void *, AFPUserBytes);
 } AFPObj;
 
 /* typedef for AFP functions handlers */
@@ -129,8 +141,8 @@ extern const char         *Cnid_port;
 
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
-extern int afp_options_parse (int, char **, struct afp_options *);
-extern int afp_options_parseline (char *, struct afp_options *);
+extern int  afp_options_parse_cmdline (int, char **, struct afp_options *);
+extern int  afp_options_parseline (char *, struct afp_options *);
 extern void afp_options_free (struct afp_options *,
                                       const struct afp_options *);
 extern void setmessage (const char *);

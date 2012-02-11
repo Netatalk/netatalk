@@ -237,7 +237,7 @@ static char *volxlate(AFPObj *obj,
         } else if (is_var(p, "$c")) {
             if (afpmaster && xlatevolname)
                 return NULL;
-            DSI *dsi = obj->handle;
+            DSI *dsi = obj->dsi;
             len = sprintf(dest, "%s:%u",
                           getip_string((struct sockaddr *)&dsi->client),
                           getip_port((struct sockaddr *)&dsi->client));
@@ -264,7 +264,7 @@ static char *volxlate(AFPObj *obj,
         } else if (is_var(p, "$i")) {
             if (afpmaster && xlatevolname)
                 return NULL;
-            DSI *dsi = obj->handle;
+            DSI *dsi = obj->dsi;
             q = getip_string((struct sockaddr *)&dsi->client);
         } else if (is_var(p, "$s")) {
             if (obj->Obj)
@@ -880,7 +880,7 @@ static int hostaccessvol(int type, const char *volname, const char *args, const 
 {
     int mask_int;
     char buf[MAXPATHLEN + 1], *p, *b;
-    DSI *dsi = obj->handle;
+    DSI *dsi = obj->dsi;
     struct sockaddr_storage client;
 
     if (!args)
@@ -2494,7 +2494,7 @@ int  pollvoltime(AFPObj *obj)
         if ( (vol->v_flags & AFPVOL_OPEN)  && vol->v_mtime + 30 < tv.tv_sec) {
             if ( !stat( vol->v_path, &st ) && vol->v_mtime != st.st_mtime ) {
                 vol->v_mtime = st.st_mtime;
-                if (!obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED))
+                if (!obj->attention(obj->dsi, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED))
                     return -1;
                 return 1;
             }
@@ -2525,7 +2525,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
          * AFP 3.2 and above clients seem to be ok without so many notification
          */
         if (afp_version < 32 && obj->options.server_notif) {
-            obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+            obj->attention(obj->dsi, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
         }
     }
 }

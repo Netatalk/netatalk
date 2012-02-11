@@ -205,8 +205,8 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 addicon_err:
     if ( cc < 0 ) {
         if (obj->proto == AFPPROTO_DSI) {
-            dsi_writeinit(obj->handle, rbuf, buflen);
-            dsi_writeflush(obj->handle);
+            dsi_writeinit(obj->dsi, rbuf, buflen);
+            dsi_writeflush(obj->dsi);
         }
         return cc;
     }
@@ -214,7 +214,7 @@ addicon_err:
     switch (obj->proto) {
     case AFPPROTO_DSI:
         {
-            DSI *dsi = obj->handle;
+            DSI *dsi = obj->dsi;
 
             iovcnt = dsi_writeinit(dsi, rbuf, buflen);
 
@@ -442,7 +442,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     rc = min( bsize, rsize );
 
     if ((obj->proto == AFPPROTO_DSI) && (buflen < rc)) {
-        DSI *dsi = obj->handle;
+        DSI *dsi = obj->dsi;
         struct stat st;
         off_t size;
 

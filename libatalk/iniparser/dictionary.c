@@ -19,7 +19,8 @@
 /*---------------------------------------------------------------------------
    								Includes
  ---------------------------------------------------------------------------*/
-#include "dictionary.h"
+#include <atalk/dictionary.h>
+#include <atalk/compat.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +39,20 @@
 /*---------------------------------------------------------------------------
   							Private functions
  ---------------------------------------------------------------------------*/
+
+#define MAXKEYSIZE 1024
+static char *makekey(const char *section, const char *entry)
+{
+    static char buf[MAXKEYSIZE];
+
+    strlcpy(buf, section, MAXKEYSIZE);
+    if (entry) {
+        strlcat(buf, ":", MAXKEYSIZE);
+        strlcat(buf, entry, MAXKEYSIZE);
+    }
+
+    return buf;
+}
 
 /* Doubles the allocated size associated to a pointer */
 /* 'size' is the current allocated size. */
@@ -178,19 +193,19 @@ void dictionary_del(dictionary * d)
   dictionary object, you should not try to free it or modify it.
  */
 /*--------------------------------------------------------------------------*/
-char * dictionary_get(dictionary * d, char * key, char * def)
+char * dictionary_get(dictionary * d, char *section, char * key, char * def)
 {
 	unsigned	hash ;
 	int			i ;
 
-	hash = dictionary_hash(key);
+	hash = dictionary_hash(makekey(section, key));
 	for (i=0 ; i<d->size ; i++) {
         if (d->key[i]==NULL)
             continue ;
         /* Compare hash */
 		if (hash==d->hash[i]) {
             /* Compare string, to avoid hash collisions */
-            if (!strcmp(key, d->key[i])) {
+            if (!strcmp(makekey(section, key), d->key[i])) {
 				return d->val[i] ;
 			}
 		}
@@ -224,7 +239,7 @@ char * dictionary_get(dictionary * d, char * key, char * def)
   This function returns non-zero in case of failure.
  */
 /*--------------------------------------------------------------------------*/
-int dictionary_set(dictionary * d, char * key, char * val)
+int dictionary_set(dictionary * d, char *section, char * key, char * val)
 {
 	int			i ;
 	unsigned	hash ;
@@ -232,14 +247,14 @@ int dictionary_set(dictionary * d, char * key, char * val)
 	if (d==NULL || key==NULL) return -1 ;
 	
 	/* Compute hash for this key */
-	hash = dictionary_hash(key) ;
+	hash = dictionary_hash(makekey(section, key));
 	/* Find if value is already in dictionary */
 	if (d->n>0) {
 		for (i=0 ; i<d->size ; i++) {
             if (d->key[i]==NULL)
                 continue ;
 			if (hash==d->hash[i]) { /* Same hash value */
-				if (!strcmp(key, d->key[i])) {	 /* Same key */
+				if (!strcmp(makekey(section, key), d->key[i])) {	 /* Same key */
 					/* Found a value: modify and return */
 					if (d->val[i]!=NULL)
 						free(d->val[i]);
@@ -274,7 +289,7 @@ int dictionary_set(dictionary * d, char * key, char * val)
         }
     }
 	/* Copy key */
-	d->key[i]  = xstrdup(key);
+	d->key[i]  = xstrdup(makekey(section, key));
     d->val[i]  = val ? xstrdup(val) : NULL ;
 	d->hash[i] = hash;
 	d->n ++ ;
@@ -292,7 +307,7 @@ int dictionary_set(dictionary * d, char * key, char * val)
   key cannot be found.
  */
 /*--------------------------------------------------------------------------*/
-void dictionary_unset(dictionary * d, char * key)
+void dictionary_unset(dictionary * d, char *section, char * key)
 {
 	unsigned	hash ;
 	int			i ;
@@ -301,14 +316,14 @@ void dictionary_unset(dictionary * d, char * key)
 		return;
 	}
 
-	hash = dictionary_hash(key);
+	hash = dictionary_hash(makekey(section, key));
 	for (i=0 ; i<d->size ; i++) {
         if (d->key[i]==NULL)
             continue ;
         /* Compare hash */
 		if (hash==d->hash[i]) {
             /* Compare string, to avoid hash collisions */
-            if (!strcmp(key, d->key[i])) {
+            if (!strcmp(makekey(section, key), d->key[i])) {
                 /* Found key */
                 break ;
 			}
@@ -359,47 +374,3 @@ void dictionary_dump(dictionary * d, FILE * out)
 	}
 	return ;
 }
-
-
-/* Test code */
-#ifdef TESTDIC
-#define NVALS 20000
-int main(int argc, char *argv[])
-{
-	dictionary	*	d ;
-	char	*	val ;
-	int			i ;
-	char		cval[90] ;
-
-	/* Allocate dictionary */
-	printf("allocating...\n");
-	d = dictionary_new(0);
-	
-	/* Set values in dictionary */
-	printf("setting %d values...\n", NVALS);
-	for (i=0 ; i<NVALS ; i++) {
-		sprintf(cval, "%04d", i);
-		dictionary_set(d, cval, "salut");
-	}
-	printf("getting %d values...\n", NVALS);
-	for (i=0 ; i<NVALS ; i++) {
-		sprintf(cval, "%04d", i);
-		val = dictionary_get(d, cval, DICT_INVALID_KEY);
-		if (val==DICT_INVALID_KEY) {
-			printf("cannot get value for key [%s]\n", cval);
-		}
-	}
-    printf("unsetting %d values...\n", NVALS);
-	for (i=0 ; i<NVALS ; i++) {
-		sprintf(cval, "%04d", i);
-		dictionary_unset(d, cval);
-	}
-    if (d->n != 0) {
-        printf("error deleting values\n");
-    }
-	printf("deallocating...\n");
-	dictionary_del(d);
-	return 0 ;
-}
-#endif
-/* vim: set ts=4 et sw=4 tw=75 */

@@ -38,22 +38,12 @@
 #include "uam_auth.h"
 #include "afp_zeroconf.h"
 
-#ifdef TRU64
-#include <sys/security.h>
-#include <prot.h>
-#include <sia.h>
-
-static int argc = 0;
-static char **argv = NULL;
-#endif /* TRU64 */
-
 #define AFP_LISTENERS 32
 #define FDSET_SAFETY  5
 
-unsigned char	nologin = 0;
-struct afp_options default_options;
+unsigned char nologin = 0;
 
-static AFPConfig *configs;
+static AFPObj AFPObj;
 static server_child *server_children;
 static sig_atomic_t reloadconfig = 0;
 static sig_atomic_t gotsigchld = 0;
@@ -64,14 +54,6 @@ static struct polldata *polldata;
 static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
 static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
-
-#ifdef TRU64
-void afp_get_cmdline( int *ac, char ***av)
-{
-    *ac = argc;
-    *av = argv;
-}
-#endif /* TRU64 */
 
 /* This is registered with atexit() */
 static void afp_exit(void)
@@ -85,25 +67,23 @@ static void afp_exit(void)
 /* ------------------
    initialize fd set we are waiting for.
 */
-static void fd_set_listening_sockets(void)
+static void fd_set_listening_sockets(const AFPObj *config)
 {
-    AFPConfig   *config;
+    const DSI *dsi;
 
-    for (config = configs; config; config = config->next) {
-        if (config->fd < 0) /* for proxies */
-            continue;
-        fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+    for (dsi = config->dsi; dsi; dsi = dsi->next) {
+        fdset_add_fd(config->options.connections + AFP_LISTENERS + FDSET_SAFETY,
                      &fdset,
                      &polldata,
                      &fdset_used,
                      &fdset_size,
-                     config->fd,
+                     dsi->serversock,
                      LISTEN_FD,
-                     config);
+                     dsi);
     }
 
-    if (default_options.flags & OPTION_KEEPSESSIONS)
-        fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+    if (config->options.flags & OPTION_KEEPSESSIONS)
+        fdset_add_fd(config->options.connections + AFP_LISTENERS + FDSET_SAFETY,
                      &fdset,
                      &polldata,
                      &fdset_used,
@@ -113,25 +93,21 @@ static void fd_set_listening_sockets(void)
                      NULL);
 }
  
-static void fd_reset_listening_sockets(void)
+static void fd_reset_listening_sockets(const AFPObj *config)
 {
-    AFPConfig   *config;
+    const DSI *dsi;
 
-    for (config = configs; config; config = config->next) {
-        if (config->fd < 0) /* for proxies */
-            continue;
-        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, config->fd);
+    for (dsi = config->dsi; dsi; dsi = dsi->next) {
+        fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, dsi->serversock);
     }
 
-    if (default_options.flags & OPTION_KEEPSESSIONS)
+    if (config->options.flags & OPTION_KEEPSESSIONS)
         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, disasociated_ipc_fd);
 }
 
 /* ------------------ */
 static void afp_goaway(int sig)
 {
-    AFPConfig *config;
-
     switch( sig ) {
 
     case SIGTERM:
@@ -152,10 +128,8 @@ static void afp_goaway(int sig)
         if (server_children)
             server_child_kill(server_children, CHILD_DSIFORK, sig);
 
-        for (config = configs; config; config = config->next)
-            if (config->server_cleanup)
-                config->server_cleanup(config);
-        server_unlock(default_options.pidfile);
+        dsi_cleanup(AFPObj);
+        server_unlock(AFPObj->options.pidfile);
         exit(0);
         break;
 
@@ -238,22 +212,16 @@ static int setlimits(void)
 
 int main(int ac, char **av)
 {
-    AFPConfig           *config;
     fd_set              rfds;
     void                *ipc;
     struct sigaction	sv;
     sigset_t            sigs;
     int                 ret;
-
-#ifdef TRU64
-    argc = ac;
-    argv = av;
-    set_auth_parameters( ac, av );
-#endif /* TRU64 */
+    struct afp_options default_options = {0};
 
     /* Parse argv args and initialize default options */
     afp_options_init(&default_options);
-    if (!afp_options_parse(ac, av, &default_options))
+    if (!afp_options_parse_cmdline(ac, av, &default_options))
         exit(EXITERR_CONF);
 
     if (check_lockfile("afpd", default_options.pidfile) != 0)
@@ -380,7 +348,7 @@ int main(int ac, char **av)
     sigaddset(&sigs, SIGCHLD);
 
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-    if (!(configs = configinit(&default_options))) {
+    if (!(AFPObj = configinit(&default_options))) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
         exit(EXITERR_CONF);
     }
@@ -391,12 +359,12 @@ int main(int ac, char **av)
     
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
 
-    if (default_options.flags & OPTION_KEEPSESSIONS) {
+    if (AFPObj.options.flags & OPTION_KEEPSESSIONS) {
         LOG(log_note, logtype_afpd, "Activating continous service");
         disasociated_ipc_fd = ipc_server_uds(_PATH_AFP_IPC);
     }
 
-    fd_set_listening_sockets();
+    fd_set_listening_sockets(&AFPObj);
 
     /* set limits */
     (void)setlimits();
@@ -428,22 +396,20 @@ int main(int ac, char **av)
         if (reloadconfig) {
             nologin++;
             auth_unload();
-            fd_reset_listening_sockets();
+            fd_reset_listening_sockets(&AFPObj);
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
-            for (config = configs; config; config = config->next)
-                if (config->server_cleanup)
-                    config->server_cleanup(config);
+            dsi_cleanup(&AFPObj);
 
             /* configfree close atp socket used for DDP tickle, there's an issue
              * with atp tid. */
-            configfree(configs, NULL);
-            if (!(configs = configinit(&default_options))) {
+            configfree(&AFPObj);
+            if (!(AFPObj = configinit(&default_options))) {
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
                 exit(EXITERR_CONF);
             }
 
-            fd_set_listening_sockets();
+            fd_set_listening_sockets(&AFPObj);
 
             nologin = 0;
             reloadconfig = 0;
@@ -466,11 +432,9 @@ int main(int ac, char **av)
                 switch (polldata[i].fdtype) {
 
                 case LISTEN_FD:
-                    config = (AFPConfig *)polldata[i].data;
-                    /* config->server_start is afp_config.c:dsi_start() for DSI */
-                    if (child = config->server_start(config, configs, server_children)) {
+                    if (child = dsi_start(AFPObj, (DSI *)polldata[i].data, server_children)) {
                         /* Add IPC fd to select fd set */
-                        fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+                        fdset_add_fd(AFPObj.options.connections + AFP_LISTENERS + FDSET_SAFETY,
                                      &fdset,
                                      &polldata,
                                      &fdset_used,
@@ -489,7 +453,7 @@ int main(int ac, char **av)
                         fdset_del_fd(&fdset, &polldata, &fdset_used, &fdset_size, child->ipc_fds[0]);
                         close(child->ipc_fds[0]);
                         child->ipc_fds[0] = -1;
-                        if ((default_options.flags & OPTION_KEEPSESSIONS) && child->disasociated) {
+                        if ((AFPObj.options.flags & OPTION_KEEPSESSIONS) && child->disasociated) {
                             LOG(log_note, logtype_afpd, "main: removing reattached child[%u]", child->pid);
                             server_child_remove(server_children, CHILD_DSIFORK, child->pid);
                         }
@@ -514,7 +478,7 @@ int main(int ac, char **av)
                         break;
                     }
                     child->disasociated = 1;
-                    fdset_add_fd(default_options.connections + AFP_LISTENERS + FDSET_SAFETY,
+                    fdset_add_fd(AFPObj.options.connections + AFP_LISTENERS + FDSET_SAFETY,
                                  &fdset,
                                  &polldata,
                                  &fdset_used,

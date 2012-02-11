@@ -55,13 +55,10 @@ afpd_CFLAGS = \
 	@SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
 	-DAPPLCNAME \
 	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
-	-D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
-	-D_PATH_AFPDSYSVOL=\"$(pkgconfdir)/AppleVolumes.system\" \
 	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
 	-D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\" \
 	-D_PATH_AFPDSIGCONF=\"$(pkgconfdir)/afp_signature.conf\" \
 	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\" \
-	-D_PATH_ACL_LDAPCONF=\"$(pkgconfdir)/afp_ldap.conf\" \
 	-D_PATH_AFPDUUIDCONF=\"$(pkgconfdir)/afp_voluuid.conf\" \
 	-D_PATH_CONFDIR=\"$(pkgconfdir)\"
 

@@ -311,7 +311,7 @@ int uam_random_string (AFPObj *obj, char *buf, int len)
 
         if (gettimeofday(&tv, &tz) < 0)
             return -1;
-        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->handle);
+        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->dsi);
         for (i = 0; i < len; i += sizeof(result)) {
             result = random();
             memcpy(buf + i, &result, sizeof(result));
@@ -364,11 +364,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
             *len = sizeof(obj->options.passwdminlen);
             break;
 
-        case UAM_PASSWD_MAXFAIL:
-            *((int *) option) = obj->options.loginmaxfail;
-            *len = sizeof(obj->options.loginmaxfail);
-            break;
-
         case UAM_PASSWD_EXPIRETIME: /* not implemented */
         default:
             return -1;
@@ -401,7 +396,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
         
     case UAM_OPTION_CLIENTNAME:
     {
-        struct DSI *dsi = obj->handle;
+        struct DSI *dsi = obj->dsi;
         const struct sockaddr *sa;
         static char hbuf[NI_MAXHOST];
         
@@ -466,15 +461,15 @@ int uam_afp_read(void *handle, char *buf, size_t *buflen,
     if (!obj)
         return AFPERR_PARAM;
 
-        len = dsi_writeinit(obj->handle, buf, *buflen);
+        len = dsi_writeinit(obj->dsi, buf, *buflen);
         if (!len || ((len = action(handle, buf, len)) < 0)) {
-            dsi_writeflush(obj->handle);
+            dsi_writeflush(obj->dsi);
             goto uam_afp_read_err;
         }
 
-        while ((len = (dsi_write(obj->handle, buf, *buflen)))) {
+        while ((len = (dsi_write(obj->dsi, buf, *buflen)))) {
             if ((len = action(handle, buf, len)) < 0) {
-                dsi_writeflush(obj->handle);
+                dsi_writeflush(obj->dsi);
                 goto uam_afp_read_err;
             }
         }

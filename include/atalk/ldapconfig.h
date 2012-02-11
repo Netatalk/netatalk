@@ -3,8 +3,10 @@
 #ifndef LDAPCONFIG_H
 #define LDAPCONFIG_H
 
+#include <atalk/iniparser.h>
+
 /* One function does the whole job */
-extern int acl_ldap_readconfig(char *name);
+extern int acl_ldap_readconfig(dictionary *iniconfig);
 
 /* These are the prefvalues */
 extern char *ldap_server;

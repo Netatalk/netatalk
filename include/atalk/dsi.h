@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-#ifndef _ATALK_DSI_H 
+#ifndef _ATALK_DSI_H
 #define _ATALK_DSI_H
 
 #include <sys/types.h>
@@ -18,90 +18,86 @@
 #include <atalk/globals.h>
 
 /* What a DSI packet looks like:
- 0                               32
- |-------------------------------|
- |flags  |command| requestID     |
- |-------------------------------|
- |error code/enclosed data offset|
- |-------------------------------|
- |total data length              |
- |-------------------------------|
- |reserved field                 |
- |-------------------------------|
+   0                               32
+   |-------------------------------|
+   |flags  |command| requestID     |
+   |-------------------------------|
+   |error code/enclosed data offset|
+   |-------------------------------|
+   |total data length              |
+   |-------------------------------|
+   |reserved field                 |
+   |-------------------------------|
 
- CONVENTION: anything with a dsi_ prefix is kept in network byte order.
+   CONVENTION: anything with a dsi_ prefix is kept in network byte order.
 */
 
-/* these need to be kept in sync w/ AFPTRANS_* in <atalk/afp.h>. 
+/* these need to be kept in sync w/ AFPTRANS_* in <atalk/afp.h>.
  * convention: AFPTRANS_* = (1 << DSI_*) */
 typedef enum {
-  DSI_MIN = 1,
-  DSI_TCPIP = 1,
-  DSI_MAX = 1
+    DSI_MIN = 1,
+    DSI_TCPIP = 1,
+    DSI_MAX = 1
 } dsi_proto;
 
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
-  uint8_t dsi_flags;       /* packet type: request or reply */
-  uint8_t dsi_command;     /* command */
-  uint16_t dsi_requestID;  /* request ID */
-  uint32_t dsi_code;       /* error code or data offset */
-  uint32_t dsi_len;        /* total data length */
-  uint32_t dsi_reserved;   /* reserved field */
+    uint8_t dsi_flags;       /* packet type: request or reply */
+    uint8_t dsi_command;     /* command */
+    uint16_t dsi_requestID;  /* request ID */
+    uint32_t dsi_code;       /* error code or data offset */
+    uint32_t dsi_len;        /* total data length */
+    uint32_t dsi_reserved;   /* reserved field */
 };
 
-#define DSI_CMDSIZ        8192 
+#define DSI_CMDSIZ        8192
 #define DSI_DATASIZ       8192
 
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
-  AFPObj *AFPobj;
-  dsi_proto protocol;
-  struct dsi_block header;
-  struct sockaddr_storage server, client;
-  struct itimerval timer;
-  int      tickle;        /* tickle count */
-  int	   in_write;	  /* in the middle of writing multiple packets,
-                             signal handlers can't write to the socket */
-  int      msg_request;   /* pending message to the client */
-  int      down_request;  /* pending SIGUSR1 down in 5 mn */
+    DSI      *next;             /* multiple listening addresses */
+    AFPObj   *AFPobj;
+    struct dsi_block        header;
+    struct sockaddr_storage server, client;
+    struct itimerval        timer;
+    int      tickle;            /* tickle count */
+    int      in_write;          /* in the middle of writing multiple packets,
+                                   signal handlers can't write to the socket */
+    int      msg_request;       /* pending message to the client */
+    int      down_request;      /* pending SIGUSR1 down in 5 mn */
 
-  uint32_t attn_quantum, datasize, server_quantum;
-  uint16_t serverID, clientID;
-  char      *status;
-  uint8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
-  size_t statuslen;
-  size_t datalen, cmdlen;
-  off_t  read_count, write_count;
-  uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
-  const char *program; 
-  int socket, serversock;
+    uint32_t attn_quantum, datasize, server_quantum;
+    uint16_t serverID, clientID;
+    char     *status;
+    uint8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
+    size_t   statuslen;
+    size_t   datalen, cmdlen;
+    off_t    read_count, write_count;
+    uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
+    const char *program;
+    int      socket;            /* AFP session socket */
+    int      serversock;        /* listening socket */
 
-  /* protocol specific open/close, send/receive
-   * send/receive fill in the header and use dsi->commands.
-   * write/read just write/read data */
-  pid_t  (*proto_open)(struct DSI *);
-  void   (*proto_close)(struct DSI *);
-
-  /* url registered with slpd */
-#ifdef USE_SRVLOC
-  char srvloc_url[512];
-#endif 
+    /* DSI readahead buffer used for buffered reads in dsi_peek */
+    size_t   dsireadbuf;        /* size of the DSI readahead buffer used in dsi_peek() */
+    char     *buffer;           /* buffer start */
+    char     *start;            /* current buffer head */
+    char     *eof;              /* end of currently used buffer */
+    char     *end;
 
 #ifdef USE_ZEROCONF
-  char *bonjourname;      /* server name as UTF8 maxlen MAXINSTANCENAMELEN */
-  int zeroconf_registered;
+    char *bonjourname;      /* server name as UTF8 maxlen MAXINSTANCENAMELEN */
+    int zeroconf_registered;
 #endif
 
-  /* DSI readahead buffer used for buffered reads in dsi_peek */
-  size_t dsireadbuf; /* size of the DSI readahead buffer used in dsi_peek() */
-  char *buffer;
-  char *start;
-  char *eof;
-  char *end;
+    /* protocol specific open/close, send/receive
+     * send/receive fill in the header and use dsi->commands.
+     * write/read just write/read data */
+    pid_t  (*proto_open)(struct DSI *);
+    void   (*proto_close)(struct DSI *);
 } DSI;
-  
+
 /* DSI flags */
 #define DSIFL_REQUEST    0x00
 #define DSIFL_REPLY      0x01
@@ -123,17 +119,17 @@ typedef struct DSI {
 #define DSIFUNC_MAX     8       /* largest command */
 
 /* DSI Error codes: most of these aren't used. */
-#define DSIERR_OK	0x0000
-#define DSIERR_BADVERS	0xfbd6
-#define DSIERR_BUFSMALL	0xfbd5
-#define DSIERR_NOSESS	0xfbd4
-#define DSIERR_NOSERV	0xfbd3
-#define DSIERR_PARM	0xfbd2
-#define DSIERR_SERVBUSY	0xfbd1
-#define DSIERR_SESSCLOS	0xfbd0
-#define DSIERR_SIZERR	0xfbcf
-#define DSIERR_TOOMANY	0xfbce
-#define DSIERR_NOACK	0xfbcd
+#define DSIERR_OK   0x0000
+#define DSIERR_BADVERS  0xfbd6
+#define DSIERR_BUFSMALL 0xfbd5
+#define DSIERR_NOSESS   0xfbd4
+#define DSIERR_NOSERV   0xfbd3
+#define DSIERR_PARM 0xfbd2
+#define DSIERR_SERVBUSY 0xfbd1
+#define DSIERR_SESSCLOS 0xfbd0
+#define DSIERR_SIZERR   0xfbcf
+#define DSIERR_TOOMANY  0xfbce
+#define DSIERR_NOACK    0xfbcd
 
 /* server and client quanta */
 #define DSI_DEFQUANT        2           /* default attention quantum size */
@@ -161,10 +157,10 @@ typedef struct DSI {
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (const dsi_proto /*protocol*/,
-			  const char * /*program*/, 
-			  const char * /*host*/, const char * /*address*/,
-			  const char * /*port*/, const int /*proxy*/,
-			  const uint32_t /* server quantum */);
+                      const char * /*program*/,
+                      const char * /*host*/, const char * /*address*/,
+                      const char * /*port*/, const int /*proxy*/,
+                      const uint32_t /* server quantum */);
 extern void dsi_setstatus (DSI *, char *, const size_t);
 
 /* in dsi_getsess.c */
@@ -200,15 +196,15 @@ extern void   dsi_writeflush (DSI *);
 
 /* client reads -- dsi_read.c */
 extern ssize_t dsi_readinit (DSI *, void *, const size_t, const size_t,
-				 const int);
+                             const int);
 extern ssize_t dsi_read (DSI *, void *, const size_t);
 extern void dsi_readdone (DSI *);
 
 /* some useful macros */
 #define dsi_serverID(x)   ((x)->serverID++)
-#define dsi_send(x)       do { \
-    (x)->header.dsi_len = htonl((x)->cmdlen); \
-    dsi_stream_send((x), (x)->commands, (x)->cmdlen); \
-} while (0)
+#define dsi_send(x)       do {                              \
+        (x)->header.dsi_len = htonl((x)->cmdlen);           \
+        dsi_stream_send((x), (x)->commands, (x)->cmdlen);   \
+    } while (0)
 
 #endif /* atalk/dsi.h */

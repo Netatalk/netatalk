@@ -428,7 +428,7 @@ void status_init(AFPConfig *dsiconfig,
     if (dsiconfig) {
         status = dsiconfig->status;
         maxstatuslen=sizeof(dsiconfig->status);
-        dsi = dsiconfig->obj.handle;
+        dsi = dsiconfig->obj.dsi;
         if (dsi->server.ss_family == AF_INET) { /* IPv4 */
             const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
             ipok = sa4->sin_addr.s_addr ? 1 : 0;

@@ -142,7 +142,7 @@ static int send_reply(const AFPObj *obj, const int err)
     if ((err == AFP_OK) || (err == AFPERR_AUTHCONT))
         return err;
 
-    obj->reply(obj->handle, err);
+    obj->reply(obj->dsi, err);
     obj->exit(0);
 
     return AFP_OK;
@@ -364,7 +364,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 {
     uint32_t data;
-    DSI *dsi = (DSI *)AFPobj->handle;
+    DSI *dsi = (DSI *)AFPobj->dsi;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -557,7 +557,7 @@ int afp_getsession(
 /* ---------------------- */
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
-    DSI                 *dsi = (DSI *)obj->handle;
+    DSI                 *dsi = (DSI *)obj->dsi;
     uint16_t           type;
     uint32_t           tklen;
     pid_t               token;
@@ -868,7 +868,7 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen)
 {
-    DSI *dsi = (DSI *)(obj->handle);
+    DSI *dsi = (DSI *)(obj->dsi);
 
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
     of_close_all_forks();

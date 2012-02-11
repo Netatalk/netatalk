@@ -33,15 +33,6 @@ typedef uint16_t AFPUserBytes;
 #define AFPPROTO_ASP           1
 #define AFPPROTO_DSI           2
 
-/* actual transports. the DSI ones (tcp right now) need to be
- * kept in sync w/ <atalk/dsi.h>. 
- * convention: AFPTRANS_* = (1 << DSI_*) 
- */
-#define AFPTRANS_NONE          0
-#define AFPTRANS_DDP          (1 << 0)
-#define AFPTRANS_TCP          (1 << 1)
-#define AFPTRANS_ALL          (AFPTRANS_DDP | AFPTRANS_TCP)
-
 /* server flags */
 #define AFPSRVRINFO_COPY         (1<<0)  /* supports copyfile */
 #define AFPSRVRINFO_PASSWD       (1<<1)  /* supports change password */
