@@ -2389,7 +2389,7 @@ int deletecurdir(struct vol *vol)
     err = vol->vfs->vfs_deletecurdir(vol);
     if (err) {
         LOG(log_error, logtype_afpd, "deletecurdir: error deleting .AppleDouble in \"%s\"",
-            curdir->d_fullpath);
+            cfrombstr(curdir->d_fullpath));
         return err;
     }
 
