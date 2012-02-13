@@ -51,6 +51,7 @@ int deny_severity = log_warning;
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>
+#include <atalk/errchk.h>
 
 #include "dsi_private.h"
 
@@ -268,14 +269,22 @@ iflist_done:
 #endif
 
 /* this needs to accept passed in addresses */
-int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
-                 const char *port, const int proxy)
+int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const char *inport)
 {
-    int                ret;
+    EC_INIT;
     int                flag;
+    char               *p, *address = NULL;
     struct addrinfo    hints, *servinfo, *p;
 
-    dsi->protocol = DSI_TCPIP;
+    /* Check whether address is of the from IP:PORT and split */
+    address = inaddress;
+    port = inport;
+    if (address && strchr(address, ':')) {
+        EC_NULL_LOG( address = strdup(inaddress) );
+        p = strchr(address, ':');
+        *p = 0;
+        port = p + 1;
+    }
 
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
@@ -296,9 +305,9 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         hints.ai_family = AF_UNSPEC;
 #endif
     }
-    if ((ret = getaddrinfo(address ? address : NULL, port ? port : "548", &hints, &servinfo)) != 0) {
+    if ((ret = getaddrinfo(address ? address : NULL, port, &hints, &servinfo)) != 0) {
         LOG(log_error, logtype_dsi, "dsi_tcp_init: getaddrinfo: %s\n", gai_strerror(ret));
-        return 0;
+        EC_FAIL;
     }
 
     /* create a socket */
@@ -352,7 +361,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         if (p == NULL)  {
             LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
             freeaddrinfo(servinfo);
-            return 0;
+            EC_FAIL;
         }
 
         /* Copy struct sockaddr to struct sockaddr_storage */
@@ -368,7 +377,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
 
     if (address) {
         /* address is a parameter, use it 'as is' */
-        return 1;
+        goto EC_CLEANUP;
     }
 
     /* Prepare hint for getaddrinfo */
@@ -376,7 +385,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ((ret = getaddrinfo(hostname, port ? port : "548", &hints, &servinfo)) != 0) {
+    if ((ret = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
         LOG(log_info, logtype_dsi, "dsi_tcp_init: getaddrinfo '%s': %s\n", hostname, gai_strerror(ret));
         goto interfaces;
     }
@@ -398,13 +407,17 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
         /* Store found address in dsi->server */
         memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
         freeaddrinfo(servinfo);
-        return 1;
+        goto EC_CLEANUP;
     }
     LOG(log_info, logtype_dsi, "dsi_tcp: hostname '%s' resolves to loopback address", hostname);
     freeaddrinfo(servinfo);
 
 interfaces:
     guess_interface(dsi, hostname, port ? port : "548");
-    return 1;
+
+EC_CLEANUP:
+    if (address)
+        free(address);
+    EC_EXIT;
 }
 

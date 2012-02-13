@@ -17,6 +17,7 @@
 
 #define UUID_BINSIZE 16
 #define UUID_STRINGSIZE 36
+#define UUID_PRINTABLE_STRING_LENGTH 37
 
 typedef const unsigned char *uuidp_t;
 typedef unsigned char atalk_uuid_t[UUID_BINSIZE];

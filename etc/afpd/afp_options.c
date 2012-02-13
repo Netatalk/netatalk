@@ -93,7 +93,7 @@ void afp_options_free(struct afp_options *opt)
 #define MAXVAL 1024
 int afp_config_parse(AFPObj *AFPObj)
 {
-    dictionary *config = AFPObj->iniconfig;
+    dictionary *config;
     struct afp_options *options = &AFPObj->options;
     int i;
     const char *p, *tmp;
@@ -113,7 +113,7 @@ int afp_config_parse(AFPObj *AFPObj)
         case 'F':
             if (options->configfile)
                 free(options->configfile);
-            options->configfile = optarg;
+            options->configfile = strdup(optarg);
             break;
         default :
             break;
@@ -162,14 +162,22 @@ int afp_config_parse(AFPObj *AFPObj)
 
     /* figure out options w values */
 
-    options->loginmesg      = iniparser_getstring(config, INISEC_AFP, "loginmesg",      "");
-    options->guest          = iniparser_getstring(config, INISEC_AFP, "guestname",      "nobody");
-    options->passwdfile     = iniparser_getstring(config, INISEC_AFP, "passwdfile",     _PATH_AFPDPWFILE);
-    options->uampath        = iniparser_getstring(config, INISEC_AFP, "uampath",        _PATH_AFPDUAMPATH);
-    options->uamlist        = iniparser_getstring(config, INISEC_AFP, "uamlist",        "uams_dhx.so,uams_dhx2.so");
-    options->port           = iniparser_getstring(config, INISEC_AFP, "port",           "548");
-    options->signatureopt   = iniparser_getstring(config, INISEC_AFP, "signature",      "auto");
-
+    options->loginmesg      = iniparser_getstrdup(config, INISEC_AFP, "loginmesg",      "");
+    options->guest          = iniparser_getstrdup(config, INISEC_AFP, "guestname",      "nobody");
+    options->passwdfile     = iniparser_getstrdup(config, INISEC_AFP, "passwdfile",     _PATH_AFPDPWFILE);
+    options->uampath        = iniparser_getstrdup(config, INISEC_AFP, "uampath",        _PATH_AFPDUAMPATH);
+    options->uamlist        = iniparser_getstrdup(config, INISEC_AFP, "uamlist",        "uams_dhx.so,uams_dhx2.so");
+    options->port           = iniparser_getstrdup(config, INISEC_AFP, "port",           "548");
+    options->signatureopt   = iniparser_getstrdup(config, INISEC_AFP, "signature",      "auto");
+    options->k5service      = iniparser_getstrdup(config, INISEC_AFP, "k5service",      NULL);
+    options->k5realm        = iniparser_getstrdup(config, INISEC_AFP, "k5realm",        NULL);
+    options->authprintdir   = iniparser_getstrdup(config, INISEC_AFP, "authprintdir",   NULL);
+    options->listen         = iniparser_getstrdup(config, INISEC_AFP, "listen",         NULL);
+    options->hostname       = iniparser_getstrdup(config, INISEC_AFP, "hostname",       NULL);
+    options->ntdomain       = iniparser_getstrdup(config, INISEC_AFP, "ntdomain",       NULL);
+    options->ntseparator    = iniparser_getstrdup(config, INISEC_AFP, "ntseparator",    NULL);
+    options->mimicmodel     = iniparser_getstrdup(config, INISEC_AFP, "mimicmodel",     NULL);
+    options->adminauthuser  = iniparser_getstrdup(config, INISEC_AFP, "adminauthuser",  NULL);
     options->connections    = iniparser_getint   (config, INISEC_AFP, "maxcon",         200);
     options->passwdminlen   = iniparser_getint   (config, INISEC_AFP, "passwdminlen",   0);
     options->tickleval      = iniparser_getint   (config, INISEC_AFP, "tickleval",      30);
@@ -184,15 +192,6 @@ int afp_config_parse(AFPObj *AFPObj)
     options->sleep          = iniparser_getint   (config, INISEC_AFP, "sleep",          10) * 60 * 2;
     options->disconnect     = iniparser_getint   (config, INISEC_AFP, "disconnect"      24) * 60 * 2;
 
-    options->k5service      = iniparser_getstringdup(config, INISEC_AFP, "k5service", NULL);
-    options->k5realm        = iniparser_getstringdup(config, INISEC_AFP, "k5realm", NULL);
-    options->authprintdir   = iniparser_getstringdup(config, INISEC_AFP, "authprintdir", NULL);
-    options->ipaddr         = iniparser_getstringdup(config, INISEC_AFP, "ipaddr", NULL);
-    options->hostname       = iniparser_getstringdup(config, INISEC_AFP, "hostname", NULL);
-    options->ntdomain       = iniparser_getstringdup(config, INISEC_AFP, "ntdomain", NULL);
-    options->ntseparator    = iniparser_getstringdup(config, INISEC_AFP, "ntseparator", NULL);
-    options->mimicmodel     = iniparser_getstringdup(config, INISEC_AFP, "mimicmodel", NULL);
-    options->adminauthuser  = iniparser_getstringdup(config, INISEC_AFP, "adminauthuser", NULL);
 
     if ((p = iniparser_getstring(config, INISEC_AFP, "k5keytab", NULL))) {
         EC_NULL_LOG( options->k5keytab = malloc(strlen(p) + 14) );
@@ -276,7 +275,7 @@ int afp_config_parse(AFPObj *AFPObj)
     if (options->volnamelen > 255)
 	    options->volnamelen = 255; /* AFP3 spec */
 
-    return 1;
+    return 0;
 }
 
 /*

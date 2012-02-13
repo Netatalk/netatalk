@@ -55,6 +55,8 @@ static int fdset_size;          /* current allocated size */
 static int fdset_used;          /* number of used elements */
 static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
 
+static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_children);
+
 /* This is registered with atexit() */
 static void afp_exit(void)
 {
@@ -128,7 +130,6 @@ static void afp_goaway(int sig)
         if (server_children)
             server_child_kill(server_children, CHILD_DSIFORK, sig);
 
-        dsi_cleanup(AFPObj);
         server_unlock(AFPObj->options.pidfile);
         exit(0);
         break;
@@ -221,7 +222,7 @@ int main(int ac, char **av)
     /* Parse argv args and initialize default options */
     AFPObj.argc = ac;
     AFPObj.argv = av;
-    if (!afp_config_parse(&AFPObj))
+    if (afp_config_parse(&AFPObj) != 0)
         exit(EXITERR_CONF);
 
     if (check_lockfile("afpd", _PATH_AFPDLOCK) != 0)
@@ -394,9 +395,7 @@ int main(int ac, char **av)
 
             LOG(log_info, logtype_afpd, "re-reading configuration file");
 
-            /* configfree close atp socket used for DDP tickle, there's an issue
-             * with atp tid. */
-            configfree(&AFPObj);
+            configfree(&AFPObj, NULL);
             if (configinit(&AFPObj) != 0) {
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
                 exit(EXITERR_CONF);
@@ -490,4 +489,28 @@ int main(int ac, char **av)
     } /* while (1) */
 
     return 0;
+}
+
+static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_children)
+{
+    afp_child_t *child = NULL;
+
+    if (!(child = dsi_getsession(dsi,
+                                 server_children,
+                                 obj->options.tickleval))) {
+        LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
+        return NULL;
+    }
+
+    /* we've forked. */
+    if (parent_or_child == 1) {
+        configfree(obj, dsi);
+        obj->ipc_fd = child->ipc_fds[1];
+        close(child->ipc_fds[0]); /* Close parent IPC fd */
+        free(child);
+        afp_over_dsi(obj); /* start a session */
+        exit (0);
+    }
+
+    return child;
 }

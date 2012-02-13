@@ -22,7 +22,7 @@ extern void             setvoltime (AFPObj *, struct vol *);
 extern int              pollvoltime (AFPObj *);
 extern void             load_volumes (AFPObj *obj);
 extern const struct vol *getvolumes(void);
-extern void             unload_volumes_and_extmap(void);
+extern void             unload_volumes(void);
 extern void             vol_fce_tm_event(void);
 
 /* FP functions */

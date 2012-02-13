@@ -75,7 +75,6 @@ typedef struct DSI {
     size_t   datalen, cmdlen;
     off_t    read_count, write_count;
     uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
-    const char *program;
     int      socket;            /* AFP session socket */
     int      serversock;        /* listening socket */
 

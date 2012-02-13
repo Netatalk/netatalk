@@ -264,7 +264,7 @@ char * iniparser_getstring(dictionary * d, char *section, char * key, char * def
   The returned char pointer a strdup'ed allocated string, so the caller must free it.
  */
 /*--------------------------------------------------------------------------*/
-char * iniparser_getstringdup(dictionary * d, char *section, char * key, char * def)
+char * iniparser_getstrdup(dictionary * d, char *section, char * key, char * def)
 {
     char * sval ;
 

@@ -15,32 +15,21 @@
 #include <atalk/dsi.h>
 #include "dsi_private.h"
 
-DSI *dsi_init(const dsi_proto protocol, const char *program, 
-	      const char *hostname, const char *address,
-	      const char *port, const int proxy, const uint32_t quantum)
+DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port)
 {
     DSI		*dsi;
 
-    if ((dsi = (DSI *) calloc(1, sizeof(DSI))) == NULL) {
-      return( NULL );
-    }
-    dsi->attn_quantum = DSI_DEFQUANT; /* default quantum size */
-    dsi->server_quantum = quantum; /* default server quantum */
-    dsi->program = program;
+    if ((dsi = (DSI *)calloc(1, sizeof(DSI))) == NULL)
+        return NULL;
 
-    switch (protocol) {
-      /* currently the only transport protocol that exists for dsi */
-    case DSI_TCPIP: 
-      if (!dsi_tcp_init(dsi, hostname, address, port, proxy)) {
-	free(dsi);
-	dsi = NULL;
-      }
-      break;
+    dsi->attn_quantum = DSI_DEFQUANT;
+    dsi->server_quantum = obj->options.server_quantum;
+    dsi->dsireadbuf = obj->options->dsireadbuf;
 
-    default: /* unknown protocol */
-      free(dsi);
-      dsi = NULL;
-      break;
+    /* currently the only transport protocol that exists for dsi */
+    if (dsi_tcp_init(dsi, hostname, address, port) != 0) {
+        free(dsi);
+        dsi = NULL;
     }
 
     return dsi;

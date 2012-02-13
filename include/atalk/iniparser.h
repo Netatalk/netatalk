@@ -39,7 +39,7 @@ char       *iniparser_getsecname(dictionary * d, int n);
 void       iniparser_dump_ini(dictionary * d, FILE * f);
 void       iniparser_dump(dictionary * d, FILE * f);
 char       *iniparser_getstring(dictionary * d, char *section, char * key, char * def);
-char       *iniparser_getstringdup(dictionary * d, char *section, char * key, char * def);
+char       *iniparser_getstrdup(dictionary * d, char *section, char * key, char * def);
 int        iniparser_getint(dictionary * d, char *section, char * key, int notfound);
 double     iniparser_getdouble(dictionary * d, char *section, char * key, double notfound);
 int        iniparser_getboolean(dictionary * d, char *section, char * key, int notfound);

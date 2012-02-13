@@ -48,6 +48,7 @@
 
 #define INISEC_GLOBAL "General"
 #define INISEC_AFP    "AFP"
+#define INISEC_CNID   "CNID"
 
 struct DSI;
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
@@ -62,8 +63,6 @@ struct afp_volume_name {
 };
 
 struct afp_options {
-    int argc;
-    char **argv;
     int connections;            /* Maximum number of possible AFP connections */
     int tickleval;
     int timeout;
@@ -77,7 +76,7 @@ struct afp_options {
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
     char *hostname;
-    char *ipaddr, *port;
+    char *listen, *port;
     char *Cnid_srv, *Cnid_port;
     char *configfile;
     char *uampath, *fqdn;
@@ -103,9 +102,12 @@ struct afp_options {
     char *logfile;
     char *mimicmodel;
     char *adminauthuser;
+    struct afp_volume_name volfile;
 };
 
 typedef struct AFPObj {
+    int argc;
+    char **argv;
     int statuslen;
     char status[1400];
     const void *signature;
@@ -142,10 +144,9 @@ extern const char         *Cnid_port;
 
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
-extern int  afp_options_parse_cmdline (int, char **, struct afp_options *);
-extern int  afp_options_parseline (char *, struct afp_options *);
-extern void afp_options_free (struct afp_options *,
-                                      const struct afp_options *);
+extern int  afp_options_parse_cmdline (int ac, char **av);
+extern int  afp_config_parse(AFPObj *AFPObj);
+extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);
 extern void readmessage (AFPObj *);
 

@@ -25,6 +25,7 @@
 #include <atalk/compat.h>
 #include <atalk/server_child.h>
 #include <atalk/globals.h>
+#include <atalk/errchk.h>
 
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
@@ -36,146 +37,75 @@
 #include "volume.h"
 #include "afp_zeroconf.h"
 
-/* get rid of unneeded configurations. i use reference counts to deal
- * w/ multiple configs sharing the same afp_options. oh, to dream of
- * garbage collection ... */
-void configfree(AFPConfig *configs, const AFPConfig *config)
+
+/*!
+ * Free and cleanup all linked DSI objects from config
+ *
+ * Preserve object pointed to by "dsi".
+ * "dsi" can be NULL in which case all DSI objects are freed
+ */
+void configfree(AFPObj *obj, DSI *dsi)
 {
-    AFPConfig *p, *q;
+    DSI *p, *q;
 
-    for (p = configs; p; p = q) {
+    afp_options_free(obj->options);
+
+    for (p = obj->dsi; p; p = q) {
         q = p->next;
-        if (p == config)
+        if (p == dsi)
             continue;
-
-        afp_options_free(&p->obj.options, p->defoptions);
-
-        switch (p->obj.proto) {
-        case AFPPROTO_DSI:
-            close(p->fd);
-            free(p->obj.dsi);
-            break;
-        }
+        close(p->socket);
+        free(p->dsi);
         free(p);
     }
-
+    if (dsi) {
+        dsi->next = NULL;
+        obj->dsi = dsi;
+    }
     /* the master loaded the volumes for zeroconf, get rid of that */
-    unload_volumes_and_extmap();
-}
-
-
-static void dsi_cleanup(const AFPConfig *config)
-{
-    return;
-}
-
-static afp_child_t *dsi_start(AFPConfig *config, AFPConfig *configs,
-                              server_child *server_children)
-{
-    DSI *dsi = config->obj.dsi;
-    afp_child_t *child = NULL;
-
-    if (!(child = dsi_getsession(dsi,
-                                 server_children,
-                                 config->obj.options.tickleval))) {
-        LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
-        return NULL;
-    }
-
-    /* we've forked. */
-    if (parent_or_child == 1) {
-        configfree(configs, config);
-        config->obj.ipc_fd = child->ipc_fds[1];
-        close(child->ipc_fds[0]); /* Close parent IPC fd */
-        free(child);
-        afp_over_dsi(&config->obj); /* start a session */
-        exit (0);
-    }
-
-    return child;
-}
-
-static AFPConfig *DSIConfigInit(const struct afp_options *options,
-                                unsigned char *refcount,
-                                const dsi_proto protocol)
-{
-    AFPConfig *config;
-    DSI *dsi;
-    char *p, *q;
-
-    if ((config = (AFPConfig *) calloc(1, sizeof(AFPConfig))) == NULL) {
-        LOG(log_error, logtype_afpd, "DSIConfigInit: malloc(config): %s", strerror(errno) );
-        return NULL;
-    }
-
-    LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, ip/port: %s/%s, ",
-        options->hostname,
-        options->ipaddr ? options->ipaddr : "default",
-        options->port ? options->port : "548");
-
-    if ((dsi = dsi_init(protocol, "afpd", options->hostname,
-                        options->ipaddr, options->port,
-                        0, options->server_quantum)) == NULL) {
-        LOG(log_error, logtype_afpd, "main: dsi_init: %s", strerror(errno) );
-        free(config);
-        return NULL;
-    }
-    dsi->dsireadbuf = options->dsireadbuf;
-
-    LOG(log_note, logtype_afpd, "AFP/TCP started, advertising %s:%d (%s)",
-        getip_string((struct sockaddr *)&dsi->server), getip_port((struct sockaddr *)&dsi->server), VERSION);
-
-    config->dsi = dsi;
-
-    memcpy(&config->obj.options, options, sizeof(struct afp_options));
-    /* get rid of any appletalk info. we use the fact that the DSI
-     * stuff is done after the ASP stuff. */
-    p = config->obj.options.server;
-    if (p && (q = strchr(p, ':')))
-        *q = '\0';
-
-    return config;
-}
-
-/* allocate server configurations. this should really store the last
- * entry in config->last or something like that. that would make
- * supporting multiple dsi transports easier. */
-static AFPConfig *AFPConfigInit(struct afp_options *options,
-                                const struct afp_options *defoptions)
-{
-    AFPConfig *next = NULL;
-    unsigned char *refcount;
-
-    if ((refcount = (unsigned char *)
-                    calloc(1, sizeof(unsigned char))) == NULL) {
-        LOG(log_error, logtype_afpd, "AFPConfigInit: calloc(refcount): %s", strerror(errno) );
-        return NULL;
-    }
-
-    /* set signature */
-    set_signature(options);
-
-    if ((next = DSIConfigInit(options, refcount, DSI_TCPIP)))
-        /* load in all the authentication modules. we can load the same
-           things multiple times if necessary. however, loading different
-           things with the same names will cause complaints. by not loading
-           in any uams with proxies, we prevent ddp connections from succeeding.
-        */
-        auth_load(options->uampath, options->uamlist);
-
-    /* this should be able to accept multiple dsi transports. i think
-     * the only thing that gets affected is the net addresses. */
-    status_init(next, options);
-
-    return next;
+    unload_volumes();
 }
 
 /*!
  * Get everything running
  */
-int configinit(AFPObj *AFPObj)
+int configinit(AFPObj *obj)
 {
-    AFPConfigInit(AFPObj);
+    EC_INIT;
+    DSI *dsi, **next = &obj->dsi;
+    char *p, *q = NULL;
+
+    LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, port: %s",
+        obj->options->hostname,
+        obj->options->listen ? obj->options->listen : "(default: hostname)",
+        obj->options->port);
+
+    /* obj->options->listen is of the from "IP[:port][,IP:[PORT], ...]" */
+    /* obj->options->port is the default port to listen (548) */
+
+    EC_NULL( q = p = strdup(obj->options->listen) );
+    EC_NULL( p = strtok(p, ',') );
+
+    while (p) {
+        if ((dsi = dsi_init(obj, obj->options->hostname, p, obj->options->port)) == NULL)
+            break;
+
+        *next = dsi;
+        next = &dsi->next;
+
+        LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
+            getip_string((struct sockaddr *)&dsi->server),
+            getip_port((struct sockaddr *)&dsi->server));
+
+        p = strtok(NULL, ',');
+    }
+
+    if (obj->dsi == NULL)
+        EC_FAIL;
+
+    auth_load(obj->options->uampath, obj->options->uamlist);
+    status_init(obj);
+    set_signature(obj->options);
 
 #ifdef HAVE_LDAP
     /* Parse afp_ldap.conf */
@@ -188,5 +118,8 @@ int configinit(AFPObj *AFPObj)
         zeroconf_register(AFPObj);
     }
 
-    return first;
+EC_CLEANUP:
+    if (q)
+        free(q);
+    EC_EXIT;
 }
