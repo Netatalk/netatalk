@@ -13,21 +13,9 @@ SUFFIXES = .tmpl .
 	    -e "s@:COMPILED_BACKENDS:@${compiled_backends}@g" \
 	    <$< >$@
 
-GENERATED_MANS = AppleVolumes.default.5 \
-	afpd.conf.5 \
-	netatalk.conf.5 \
-	afp_ldap.conf.5 \
-	afp_signature.conf.5 \
-	afp_voluuid.conf.5
-
-TEMPLATE_FILES = AppleVolumes.default.5.tmpl \
-	afpd.conf.5.tmpl \
-	netatalk.conf.5.tmpl \
-	afp_ldap.conf.5.tmpl \
-	afp_signature.conf.5.tmpl \
-	afp_voluuid.conf.5.tmpl
-
-NONGENERATED_MANS = AppleVolumes.5 AppleVolumes.system.5
+GENERATED_MANS = 
+TEMPLATE_FILES =
+NONGENERATED_MANS =
 
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
 
