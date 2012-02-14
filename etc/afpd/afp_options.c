@@ -427,22 +427,21 @@ static void show_paths( void )
 /*
  * Display usage information about afpd.
  */
-static void show_usage( char *name )
+static void show_usage(void)
 {
-	fprintf( stderr, "Usage:\t%s [-duptDTI] [-n nbpname]\n", name );
-	fprintf( stderr, "\t     [-c maxconnections] [-g guest] [-P pidfile] [-S port] [-L message]\n" );
-	fprintf( stderr, "\t     [-F configfile] [-U uams] [-m umask]\n" );
-	fprintf( stderr, "\t%s -h|-v|-V\n", name );
+	fprintf( stderr, "Usage:\tafpd [-d] [-F configfile]\n");
+	fprintf( stderr, "\tafpd -h|-v|-V\n");
 }
 
 void afp_options_parse_cmdline(int ac, char **av)
 {
-    char *p;
-    char *tmp;	/* Used for error checking the result of strtol */
     int c, err = 0;
 
-    while (EOF != ( c = getopt( ac, av, "vVh" )) ) {
+    while (EOF != ( c = getopt( ac, av, "dFvVh" )) ) {
         switch ( c ) {
+        case 'd':
+        case 'F':
+            break;
         case 'v':	/* version */
             show_version( ); puts( "" );
             show_paths( ); puts( "" );
@@ -454,7 +453,7 @@ void afp_options_parse_cmdline(int ac, char **av)
             exit( 0 );
             break;
         case 'h':	/* usage */
-            show_usage( p );
+            show_usage();
             exit( 0 );
             break;
         default :
@@ -462,7 +461,7 @@ void afp_options_parse_cmdline(int ac, char **av)
         }
     }
     if ( err || optind != ac ) {
-        show_usage( p );
+        show_usage();
         exit( 2 );
     }
 

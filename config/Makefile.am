@@ -28,7 +28,7 @@ pkgconfdir = @PKGCONFDIR@
 # install configuration files
 #
 
-install-data-local: install-config-files install-webmin
+install-data-local: install-config-files
 
 uninstall-local:
 	for f in $(CONFFILES) $(GENFILES); do \
