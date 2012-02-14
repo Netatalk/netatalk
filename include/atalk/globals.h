@@ -46,7 +46,7 @@
  * Ini config sections
  **********************************************************************************************/
 
-#define INISEC_GLOBAL "General"
+#define INISEC_GLOBAL "Global"
 #define INISEC_AFP    "AFP"
 #define INISEC_CNID   "CNID"
 
@@ -102,6 +102,8 @@ struct afp_options {
 };
 
 typedef struct AFPObj {
+    const char *cmdlineconfigfile;
+    int cmdlineflags;
     const void *signature;
     struct DSI *dsi;
     struct afp_options options;
@@ -136,7 +138,7 @@ extern const char         *Cnid_port;
 
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
-extern void afp_options_parse_cmdline(int ac, char **av);
+extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
 extern int  afp_config_parse(AFPObj *AFPObj);
 extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);

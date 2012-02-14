@@ -44,9 +44,6 @@
 
 #define LENGTH 512
 
-static const char *configfile;
-static int flags;
-
 /* get rid of any allocated afp_option buffers. */
 void afp_options_free(struct afp_options *opt)
 {
@@ -107,10 +104,10 @@ int afp_config_parse(AFPObj *AFPObj)
     char *q, *r;
     char val[MAXVAL];
 
-    options->configfile  = configfile ? strdup(configfile) : strdup(_PATH_CONFDIR "afp.conf");
+    options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_CONFDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_CONFDIR "afp_voluuid.conf");
-    options->flags       = OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF | flags;
+    options->flags       = OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF | AFPObj->cmdlineflags;
 
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
         return -1;
@@ -216,6 +213,8 @@ int afp_config_parse(AFPObj *AFPObj)
     options->Cnid_srv = strdup(q);
     if (r)
         options->Cnid_port = strdup(r + 1);
+    else
+        options->Cnid_port = strdup("4700");
     LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", options->Cnid_srv, options->Cnid_port);
     if (q)
         free(q);
@@ -241,6 +240,7 @@ int afp_config_parse(AFPObj *AFPObj)
     } else {
         if ((options->unixcharset = add_charset(p)) == (charset_t)-1) {
             options->unixcharset = CH_UNIX;
+            options->unixcodepage = strdup("LOCALE");
             LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
         } else {
             options->unixcodepage = strdup(p);
@@ -253,6 +253,7 @@ int afp_config_parse(AFPObj *AFPObj)
     } else {
         if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
             options->maccharset = CH_MAC;
+            options->maccodepage = strdup("MAC_ROMAN");
             LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
         } else {
             options->maccodepage = strdup(p);
@@ -433,17 +434,17 @@ static void show_usage(void)
 	fprintf( stderr, "\tafpd -h|-v|-V\n");
 }
 
-void afp_options_parse_cmdline(int ac, char **av)
+void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
 {
     int c, err = 0;
 
     while (EOF != ( c = getopt( ac, av, "dFvVh" )) ) {
         switch ( c ) {
         case 'd':
-            flags = OPTION_DEBUG;
+            obj->cmdlineflags |= OPTION_DEBUG;
             break;
         case 'F':
-            configfile = strdup(optarg);
+            obj->cmdlineconfigfile = strdup(optarg);
             break;
         case 'v':	/* version */
             show_version( ); puts( "" );

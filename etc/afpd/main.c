@@ -220,9 +220,7 @@ int main(int ac, char **av)
     int                 ret;
 
     /* Parse argv args and initialize default options */
-    afp_options_parse_cmdline(ac, av);
-    if (afp_config_parse(&obj) != 0)
-        exit(EXITERR_CONF);
+    afp_options_parse_cmdline(&obj, ac, av);
 
     if (check_lockfile("afpd", _PATH_AFPDLOCK) != 0)
         exit(EXITERR_SYS);
@@ -236,6 +234,9 @@ int main(int ac, char **av)
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
     atexit(afp_exit);
+
+    if (afp_config_parse(&obj) != 0)
+        exit(EXITERR_CONF);
 
     /* Save the user's current umask */
     obj.options.save_mask = umask(obj.options.umask);
