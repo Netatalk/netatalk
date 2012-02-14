@@ -53,8 +53,6 @@ int deny_severity = log_warning;
 #include <atalk/util.h>
 #include <atalk/errchk.h>
 
-#include "dsi_private.h"
-
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
 #ifndef DSI_TCPMAXPEND
@@ -273,17 +271,19 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
 {
     EC_INIT;
     int                flag;
-    char               *p, *address = NULL;
+    char               *a = NULL, *b;
+    const char         *address;
+    const char         *port;
     struct addrinfo    hints, *servinfo, *p;
 
     /* Check whether address is of the from IP:PORT and split */
     address = inaddress;
     port = inport;
     if (address && strchr(address, ':')) {
-        EC_NULL_LOG( address = strdup(inaddress) );
-        p = strchr(address, ':');
-        *p = 0;
-        port = p + 1;
+        EC_NULL_LOG( address = a = strdup(address) );
+        b = strchr(a, ':');
+        *b = 0;
+        port = b + 1;
     }
 
     /* Prepare hint for getaddrinfo */
@@ -310,64 +310,59 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
         EC_FAIL;
     }
 
-    /* create a socket */
-    if (proxy)
-        dsi->serversock = -1;
-    else {
-        /* loop through all the results and bind to the first we can */
-        for (p = servinfo; p != NULL; p = p->ai_next) {
-            if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-                LOG(log_info, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
-                continue;
-            }
+    /* loop through all the results and bind to the first we can */
+    for (p = servinfo; p != NULL; p = p->ai_next) {
+        if ((dsi->serversock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: socket: %s", strerror(errno));
+            continue;
+        }
 
-            /*
-             * Set some socket options:
-             * SO_REUSEADDR deals w/ quick close/opens
-             * TCP_NODELAY diables Nagle
-             */
+        /*
+         * Set some socket options:
+         * SO_REUSEADDR deals w/ quick close/opens
+         * TCP_NODELAY diables Nagle
+         */
 #ifdef SO_REUSEADDR
-            flag = 1;
-            setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+        flag = 1;
+        setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 #endif
 #if defined(FREEBSD) && defined(IPV6_BINDV6ONLY)
-            int on = 0;
-            setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
+        int on = 0;
+        setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on, sizeof (on));
 #endif
 
 #ifdef USE_TCP_NODELAY
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
-            flag = 1;
-            setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
+        flag = 1;
+        setsockopt(dsi->serversock, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
 #endif /* USE_TCP_NODELAY */
             
-            if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
-                close(dsi->serversock);
-                LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
-                continue;
-            }
+        if (bind(dsi->serversock, p->ai_addr, p->ai_addrlen) == -1) {
+            close(dsi->serversock);
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: bind: %s\n", strerror(errno));
+            continue;
+        }
 
-            if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
-                close(dsi->serversock);
-                LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
-                continue;
-            }
+        if (listen(dsi->serversock, DSI_TCPMAXPEND) < 0) {
+            close(dsi->serversock);
+            LOG(log_info, logtype_dsi, "dsi_tcp_init: listen: %s\n", strerror(errno));
+            continue;
+        }
             
-            break;
-        }
+        break;
+    }
 
-        if (p == NULL)  {
-            LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
-            freeaddrinfo(servinfo);
-            EC_FAIL;
-        }
-
-        /* Copy struct sockaddr to struct sockaddr_storage */
-        memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+    if (p == NULL)  {
+        LOG(log_error, logtype_dsi, "dsi_tcp_init: no suitable network config for TCP socket");
         freeaddrinfo(servinfo);
-    } /* if (proxy) */
+        EC_FAIL;
+    }
+
+    /* Copy struct sockaddr to struct sockaddr_storage */
+    memcpy(&dsi->server, p->ai_addr, p->ai_addrlen);
+    freeaddrinfo(servinfo);
 
     /* Point protocol specific functions to tcp versions */
     dsi->proto_open = dsi_tcp_open;
@@ -416,8 +411,8 @@ interfaces:
     guess_interface(dsi, hostname, port ? port : "548");
 
 EC_CLEANUP:
-    if (address)
-        free(address);
+    if (a)
+        free(a);
     EC_EXIT;
 }
 

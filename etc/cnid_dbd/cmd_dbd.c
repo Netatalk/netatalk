@@ -262,9 +262,9 @@ int main(int argc, char **argv)
 
     /* Setup logging. Should be portable among *NIXes */
     if (!verbose)
-        setuplog("default log_info /dev/tty");
+        setuplog("default:info", "/dev/tty");
     else
-        setuplog("default log_debug /dev/tty");
+        setuplog("default:debug", "/dev/tty");
 
     /* Load .volinfo file */
     if (loadvolinfo(volpath, &volinfo) == -1) {

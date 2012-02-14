@@ -90,16 +90,20 @@ UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
     DEFAULT_LOG_CONFIG /* logtype_uams */
 };
 
+static void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
+
 /* We use this in order to track the last n log messages in order to prevent flooding */
 #define LOG_FLOODING_MINCOUNT 5 /* this controls after how many consecutive messages must be detected
                                    before we start to hide them */
 #define LOG_FLOODING_MAXCOUNT 1000 /* this controls after how many consecutive messages we force a 
                                       "repeated x times" message */
 #define LOG_FLOODING_ARRAY_SIZE 3 /* this contols how many messages in flow we track */
+
 struct log_flood_entry {
     int count;
     unsigned int hash;
 };
+
 static struct log_flood_entry log_flood_array[LOG_FLOODING_ARRAY_SIZE];
 static int log_flood_entries;
 
@@ -639,7 +643,7 @@ void setuplog(const char *logstr, const char *logfile)
             ptr++;
         c = *ptr;
         *ptr = 0;
-        setuplog_internal(loglevel, logtype, filename);
+        setuplog_internal(loglevel, logtype, logfile);
         *ptr = c;
     }
 

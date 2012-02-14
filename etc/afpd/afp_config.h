@@ -3,8 +3,9 @@
 
 #include <atalk/server_child.h>
 #include <atalk/globals.h>
+#include <atalk/dsi.h>
 
-extern AFPConfig *configinit (struct afp_options *);
-extern void configfree (AFPConfig *, const AFPConfig *);
+extern int configinit (AFPObj *);
+extern void configfree (AFPObj *, DSI *);
 
 #endif

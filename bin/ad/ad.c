@@ -46,7 +46,7 @@ static void show_version(void)
 
 int main(int argc, char **argv)
 {
-    setuplog("default log_note /dev/tty");
+    setuplog("default:note", "/dev/tty");
 
     if (argc < 2) {
         usage_main();

@@ -50,8 +50,8 @@
 typedef struct _dictionary_ {
 	int				n ;		/** Number of entries in dictionary */
 	int				size ;	/** Storage size */
-	char 		**	val ;	/** List of string values */
-	char 		**  key ;	/** List of string keys */
+	char 	    **	val ;	/** List of string values */
+	char 	    **  key ;	/** List of string keys */
 	unsigned	 *	hash ;	/** List of hash values for keys */
 } dictionary ;
 
@@ -63,7 +63,7 @@ typedef struct _dictionary_ {
 unsigned   dictionary_hash  (char * key);
 dictionary *dictionary_new  (int size);
 void       dictionary_del   (dictionary * vd);
-char       *dictionary_get  (dictionary * d, char *section, char * key, char * def);
+const char *dictionary_get  (const dictionary * d, const char *section, const char * key, const char * def);
 int        dictionary_set   (dictionary * vd, char *section, char * key, char * val);
 void       dictionary_unset (dictionary * d, char *section, char * key);
 void       dictionary_dump  (dictionary * d, FILE * out);

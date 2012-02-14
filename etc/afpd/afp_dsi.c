@@ -541,15 +541,15 @@ void afp_over_dsi(AFPObj *obj)
 
             if (debugging) {
                 if (obj->options.logconfig)
-                    setuplog(obj->options.logconfig);
+                    setuplog(obj->options.logconfig, obj->options.logfile);
                 else
-                    setuplog("default log_note");
+                    setuplog("default:note", NULL);
                 debugging = 0;
             } else {
                 char logstr[50];
                 debugging = 1;
-                sprintf(logstr, "default log_maxdebug /tmp/afpd.%u.XXXXXX", getpid());
-                setuplog(logstr);
+                sprintf(logstr, "/tmp/afpd.%u.XXXXXX", getpid());
+                setuplog("default:maxdebug", logstr);
             }
         }
 

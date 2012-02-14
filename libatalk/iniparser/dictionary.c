@@ -193,7 +193,7 @@ void dictionary_del(dictionary * d)
   dictionary object, you should not try to free it or modify it.
  */
 /*--------------------------------------------------------------------------*/
-char * dictionary_get(dictionary * d, char *section, char * key, char * def)
+const char * dictionary_get(const dictionary * d, const char *section, const char * key, const char * def)
 {
 	unsigned	hash ;
 	int			i ;

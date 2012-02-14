@@ -313,8 +313,8 @@ int main(int argc, char *argv[])
 
     ctrlfd = atoi(argv[optind + 1]);
     clntfd = atoi(argv[optind + 2]);
-    logconfig = strdup(argv[optind + 3]);
-    setuplog(logconfig);
+
+    setuplog("default:note", NULL);
 
     if (vol_load_charsets(&volinfo) == -1) {
         LOG(log_error, logtype_cnid, "Error loading charsets!");

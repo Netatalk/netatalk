@@ -172,7 +172,7 @@ bool fce_handle_coalescation( char *path, int is_dir, int mode )
  * all|delete|create
  */
 
-int fce_set_coalesce(char *opt)
+int fce_set_coalesce(const char *opt)
 {
     char *e;
     char *p;

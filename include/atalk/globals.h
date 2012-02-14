@@ -53,12 +53,8 @@
 struct DSI;
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
 
-/* a couple of these options could get stuck in unions to save
- * space. */
 struct afp_volume_name {
     time_t     mtime;
-    char       *name;
-    char       *full_name;
     int        loaded;
 };
 
@@ -108,12 +104,10 @@ struct afp_options {
 typedef struct AFPObj {
     int argc;
     char **argv;
-    int statuslen;
-    char status[1400];
     const void *signature;
     struct DSI *dsi;
     struct afp_options options;
-    const dictionary *iniconfig;
+    dictionary *iniconfig;
     char username[MAXUSERLEN];
     /* to prevent confusion, only use these in afp_* calls */
     char oldtmp[AFPOBJ_TMPSIZ + 1], newtmp[AFPOBJ_TMPSIZ + 1];
@@ -144,7 +138,7 @@ extern const char         *Cnid_port;
 
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
-extern int  afp_options_parse_cmdline (int ac, char **av);
+extern void afp_options_parse_cmdline(int ac, char **av);
 extern int  afp_config_parse(AFPObj *AFPObj);
 extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);

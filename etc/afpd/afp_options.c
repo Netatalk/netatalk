@@ -36,6 +36,7 @@
 #include <atalk/compat.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/errchk.h>
 
 #include "status.h"
 #include "auth.h"
@@ -54,8 +55,8 @@ void afp_options_free(struct afp_options *opt)
         free(opt->fqdn);
     if (opt->guest)
         free(opt->guest);
-    if (opt->ipaddr)
-        free(opt->ipaddr);
+    if (opt->listen)
+        free(opt->listen);
     if (opt->k5realm)
         free(opt->k5realm);
     if (opt->k5keytab)
@@ -64,6 +65,8 @@ void afp_options_free(struct afp_options *opt)
         free(opt->k5service);
     if (opt->logconfig)
         free(opt->logconfig);
+    if (opt->logfile)
+        free(opt->logfile);
     if (opt->loginmesg)
         free(opt->loginmesg);
     if (opt->maccodepage)
@@ -78,8 +81,6 @@ void afp_options_free(struct afp_options *opt)
         free(opt->passwdfile);
     if (opt->port)
         free(opt->port);
-    if (opt->server)
-        free(opt->server);
     if (opt->signatureopt)
         free(opt->signatureopt);
     if (opt->uamlist)
@@ -93,10 +94,12 @@ void afp_options_free(struct afp_options *opt)
 #define MAXVAL 1024
 int afp_config_parse(AFPObj *AFPObj)
 {
+    EC_INIT;
     dictionary *config;
     struct afp_options *options = &AFPObj->options;
-    int i;
+    int i, c;
     const char *p, *tmp;
+    char *q, *r;
     char val[MAXVAL];
 
     memset(options, 0, sizeof(struct afp_options));
@@ -104,9 +107,16 @@ int afp_config_parse(AFPObj *AFPObj)
     options->sigconffile = strdup(_PATH_CONFDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_CONFDIR "afp_voluuid.conf");
     options->flags |= OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF;
+    if (gethostname(val, sizeof(val)) < 0 ) {
+        perror( "gethostname" );
+        return 0;
+    }
+    if (NULL != (q = strchr(val, '.')))
+        *q = '\0';
+    options->hostname = strdup(val);
 
-    while (EOF != (p = getopt(AFPObj->argc, AFPObj->argv, "dF:"))) {
-        switch (p) {
+    while ((c = getopt(AFPObj->argc, AFPObj->argv, "dF:")) != -1) {
+        switch (c) {
         case 'd':
             options->flags |= OPTION_DEBUG;
             break;
@@ -125,10 +135,10 @@ int afp_config_parse(AFPObj *AFPObj)
     AFPObj->iniconfig = config;
 
     /* [Global] */
-    options->logconfig = iniparser_getstring(config, INISEC_GLOBAL, "loglevel", "default:note");
-    options->logfile   = iniparser_getstring(config, INISEC_GLOBAL, "logfile",  NULL);
+    options->logconfig = iniparser_getstrdup(config, INISEC_GLOBAL, "loglevel", "default:note");
+    options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "logfile",  NULL);
     set_processname("afpd");
-    setuplog(logconfig, logfile);
+    setuplog(options->logconfig, options->logfile);
 
     /* [AFP] "options" options wo values */
     p = iniparser_getstring(config, INISEC_AFP, "options", "");
@@ -190,7 +200,7 @@ int afp_config_parse(AFPObj *AFPObj)
     options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_AFP, "tcprcvbuf",      0);
     options->fce_fmodwait   = iniparser_getint   (config, INISEC_AFP, "fceholdfmod",    60);
     options->sleep          = iniparser_getint   (config, INISEC_AFP, "sleep",          10) * 60 * 2;
-    options->disconnect     = iniparser_getint   (config, INISEC_AFP, "disconnect"      24) * 60 * 2;
+    options->disconnected   = iniparser_getint   (config, INISEC_AFP, "disconnect",     24) * 60 * 2;
 
 
     if ((p = iniparser_getstring(config, INISEC_AFP, "k5keytab", NULL))) {
@@ -207,29 +217,30 @@ int afp_config_parse(AFPObj *AFPObj)
     }
 #endif /* ADMIN_GRP */
 
-    p = iniparser_getstring(config, INISEC_AFP, "cnidserver", "localhost:4700");
-    tmp = strrchr(p, ':');
-    if (tmp)
-        *t = 0;
-    options->Cnid_srv = strdup(p);
-    if (tmp)
-        options->Cnid_port = strdup(tmp + 1);
+    q = iniparser_getstrdup(config, INISEC_AFP, "cnidserver", "localhost:4700");
+    r = strrchr(q, ':');
+    if (r)
+        *r = 0;
+    options->Cnid_srv = strdup(q);
+    if (r)
+        options->Cnid_port = strdup(r + 1);
     LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", options->Cnid_srv, options->Cnid_port);
+    if (q)
+        free(q);
 
-
-    if ((p = iniparser_getstring(config, INISEC_AFP, "fqdn", NULL))) {
+    if ((q = iniparser_getstrdup(config, INISEC_AFP, "fqdn", NULL))) {
         /* do a little checking for the domain name. */
-        tmp = strchr(c, ':');
-        if (tmp)
-            *tmp = '\0';
-        if (gethostbyname(p)) {
-            if (tmp)
-                *tmp = ':';
-            if ((opt = strdup(p)))
-                options->fqdn = opt;
+        r = strchr(q, ':');
+        if (r)
+            *r = '\0';
+        if (gethostbyname(q)) {
+            if (r)
+                *r = ':';
+            EC_NULL_LOG( options->fqdn = strdup(q) );
         } else {
             LOG(log_error, logtype_afpd, "error parsing -fqdn, gethostbyname failed for: %s", c);
         }
+        free(q);
     }
 
     p = iniparser_getstring(config, INISEC_AFP, "unixcodepage", "LOCALE");
@@ -245,7 +256,7 @@ int afp_config_parse(AFPObj *AFPObj)
         options->maccharset = CH_MAC;
         LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
     } else {
-        options->maccharset = strdup(p);
+        options->maccodepage = strdup(p);
     }
 
     if ((p = iniparser_getstring(config, INISEC_AFP, "fcelistener", NULL))) {
@@ -275,7 +286,8 @@ int afp_config_parse(AFPObj *AFPObj)
     if (options->volnamelen > 255)
 	    options->volnamelen = 255; /* AFP3 spec */
 
-    return 0;
+EC_CLEANUP:
+    EC_EXIT;
 }
 
 /*
@@ -404,16 +416,9 @@ static void show_version_extended(void )
  */
 static void show_paths( void )
 {
-	printf( "             afpd.conf:\t%s\n", _PATH_AFPDCONF );
-	printf( "   AppleVolumes.system:\t%s\n", _PATH_AFPDSYSVOL );
-	printf( "  AppleVolumes.default:\t%s\n", _PATH_AFPDDEFVOL );
-	printf( "    afp_signature.conf:\t%s\n", _PATH_AFPDSIGCONF );
-	printf( "      afp_voluuid.conf:\t%s\n", _PATH_AFPDUUIDCONF );
-#ifdef HAVE_LDAP
-	printf( "         afp_ldap.conf:\t%s\n", _PATH_ACL_LDAPCONF );
-#else
-	printf( "         afp_ldap.conf:\tnot supported\n");
-#endif
+	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+	printf( "    afp_signature.conf:\t%s\n", _PATH_CONFDIR "afp_signature.conf");
+	printf( "      afp_voluuid.conf:\t%s\n", _PATH_CONFDIR "afp_voluuid.conf");
 	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );
 	printf( "  Server messages path:\t%s\n", SERVERTEXT);
 	printf( "              lockfile:\t%s\n", _PATH_AFPDLOCK);
@@ -430,20 +435,11 @@ static void show_usage( char *name )
 	fprintf( stderr, "\t%s -h|-v|-V\n", name );
 }
 
-int afp_options_parse_cmdline(int ac, char **av)
+void afp_options_parse_cmdline(int ac, char **av)
 {
     char *p;
     char *tmp;	/* Used for error checking the result of strtol */
     int c, err = 0;
-    char buf[1024];
-
-    if (gethostname(buf, sizeof(buf)) < 0 ) {
-        perror( "gethostname" );
-        return 0;
-    }
-    if (NULL != (p = strchr(buf, '.')))
-        *p = '\0';
-    options->hostname = strdup(buf);
 
     while (EOF != ( c = getopt( ac, av, "vVh" )) ) {
         switch ( c ) {
@@ -470,5 +466,5 @@ int afp_options_parse_cmdline(int ac, char **av)
         exit( 2 );
     }
 
-    return 1;
+    return;
 }

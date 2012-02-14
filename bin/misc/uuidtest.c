@@ -41,12 +41,14 @@ static void usage()
 static void parse_ldapconf()
 {
     static int inited = 0;
+    dictionary *iniconfig;
 
     if (! inited) {
 #ifdef HAVE_LDAP
         /* Parse afp_ldap.conf */
         printf("Start parsing afp_ldap.conf\n");
-        acl_ldap_readconfig(_PATH_ACL_LDAPCONF);
+        iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
+        acl_ldap_readconfig(iniconfig);
         printf("Finished parsing afp_ldap.conf\n");
         if (ldap_config_valid) {
             if (ldap_auth_method == LDAP_AUTH_NONE)
@@ -83,14 +85,14 @@ int main( int argc, char **argv)
         case 'v':
             if (! verbose) {
                 verbose = 1;
-                setuplog("default log_maxdebug /dev/tty");
+                setuplog("default:maxdebug", "/dev/tty");
                 logsetup = 1;
             }
             break;
 
         case 'u':
             if (! logsetup)
-                setuplog("default log_info /dev/tty");
+                setuplog("default:info", "/dev/tty");
             parse_ldapconf();
             printf("Searching user: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_USER, uuid);
@@ -103,7 +105,7 @@ int main( int argc, char **argv)
 
         case 'g':
             if (! logsetup)
-                setuplog("default log_info /dev/tty");
+                setuplog("default:info", "/dev/tty");
             parse_ldapconf();
             printf("Searching group: %s\n", optarg);
             ret = getuuidfromname( optarg, UUID_GROUP, uuid);
@@ -116,7 +118,7 @@ int main( int argc, char **argv)
 
         case 'i':
             if (! logsetup)
-                setuplog("default log_info /dev/tty");
+                setuplog("default:info", "/dev/tty");
             parse_ldapconf();
             printf("Searching uuid: %s\n", optarg);
             uuid_string2bin(optarg, uuid);

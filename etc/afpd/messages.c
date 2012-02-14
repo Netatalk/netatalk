@@ -20,7 +20,6 @@
 
 #include "misc.h"
 
-
 #define MAXMESGSIZE 199
 
 /* this is only used by afpd children, so it's okay. */
@@ -44,7 +43,7 @@ void readmessage(AFPObj *obj)
     uid_t euid;
     uint32_t maxmsgsize;
 
-    maxmsgsize = (obj->proto == AFPPROTO_DSI)?MIN(MAX(((DSI*)obj->dsi)->attn_quantum, MAXMESGSIZE),MAXPATHLEN):MAXMESGSIZE;
+    maxmsgsize = MIN(MAX(obj->dsi->attn_quantum, MAXMESGSIZE), MAXPATHLEN);
 
     i=0;
     /* Construct file name SERVERTEXT/message.[pid] */
@@ -121,7 +120,7 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
 
     *rbuflen = 0;
 
-    msgsize = (obj->proto == AFPPROTO_DSI)?MAX(((DSI*)obj->dsi)->attn_quantum, MAXMESGSIZE):MAXMESGSIZE;
+    msgsize = MAX(obj->dsi->attn_quantum, MAXMESGSIZE);
 
     memcpy(&type, ibuf + 2, sizeof(type));
     memcpy(&bitmap, ibuf + 4, sizeof(bitmap));

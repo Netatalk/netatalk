@@ -655,9 +655,6 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
     if ( i == num )                 /* An inappropo version */
         return AFPERR_BADVERS ;
 
-    if (afp_version >= 30 && obj->proto != AFPPROTO_DSI)
-        return AFPERR_BADVERS ;
-
     /* FIXME Hack */
     if (afp_version >= 30 && sizeof(off_t) != 8) {
         LOG(log_error, logtype_afpd, "get_version: no LARGE_FILE support recompile!" );

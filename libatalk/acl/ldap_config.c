@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include <ldap.h>
 
+#include <atalk/globals.h>
 #include <atalk/ldapconfig.h>
 #include <atalk/logger.h>
 #include <atalk/iniparser.h>
@@ -37,9 +38,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
     i = 0;
     /* now see if its a correct pref */
     for (i = 0; ldap_prefs[i].name != NULL; i++) {
-        if ((val = iniparser_getstring(ldap_prefs[i].name)) != NULL) {
-            /* ok, found a valid pref */
-
+        if ((val = iniparser_getstring(iniconfig, INISEC_AFP, ldap_prefs[i].name, NULL))) {
             /* check if we have pre-defined values */
             if (ldap_prefs[i].intfromarray == 0) {
                 /* no, its just a string */
@@ -89,7 +88,6 @@ int acl_ldap_readconfig(dictionary *iniconfig)
         }
     } else
         LOG(log_info, logtype_afpd,"afp_ldap.conf: not used");
-    fclose(f);
     return 0;
 }
 #endif /* HAVE_LDAP */

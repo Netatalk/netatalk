@@ -56,8 +56,11 @@ struct dsi_block {
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
-    DSI      *next;             /* multiple listening addresses */
+    struct DSI *next;             /* multiple listening addresses */
     AFPObj   *AFPobj;
+    int      statuslen;
+    char     status[1400];
+    char     *signature;
     struct dsi_block        header;
     struct sockaddr_storage server, client;
     struct itimerval        timer;
@@ -69,9 +72,7 @@ typedef struct DSI {
 
     uint32_t attn_quantum, datasize, server_quantum;
     uint16_t serverID, clientID;
-    char     *status;
     uint8_t  commands[DSI_CMDSIZ], data[DSI_DATASIZ];
-    size_t   statuslen;
     size_t   datalen, cmdlen;
     off_t    read_count, write_count;
     uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
@@ -155,12 +156,9 @@ typedef struct DSI {
 #endif
 
 /* basic initialization: dsi_init.c */
-extern DSI *dsi_init (const dsi_proto /*protocol*/,
-                      const char * /*program*/,
-                      const char * /*host*/, const char * /*address*/,
-                      const char * /*port*/, const int /*proxy*/,
-                      const uint32_t /* server quantum */);
+extern DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port);
 extern void dsi_setstatus (DSI *, char *, const size_t);
+extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, const char *port);
 
 /* in dsi_getsess.c */
 extern afp_child_t *dsi_getsession (DSI *, server_child *, const int);

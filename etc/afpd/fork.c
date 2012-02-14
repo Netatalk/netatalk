@@ -851,7 +851,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, si
 
     /* dsi can stream requests. we can only do this if we're not checking
      * for an end-of-line character. oh well. */
-    if ((obj->proto == AFPPROTO_DSI) && (*rbuflen < reqcount) && !nlmask) {
+    if ((*rbuflen < reqcount) && !nlmask) {
         DSI    *dsi = obj->dsi;
         off_t  size;
 
@@ -1191,63 +1191,56 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
         goto afp_write_err;
     }
 
-    /* this is yucky, but dsi can stream i/o and asp can't */
-    switch (obj->proto) {
-    case AFPPROTO_DSI:
-    {
-        DSI *dsi = obj->dsi;
-        /* find out what we have already and write it out. */
-        cc = dsi_writeinit(dsi, rbuf, *rbuflen);
+    DSI *dsi = obj->dsi;
+    /* find out what we have already and write it out. */
+    cc = dsi_writeinit(dsi, rbuf, *rbuflen);
 
-        if (!cc || (cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
+    if (!cc || (cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
+        dsi_writeflush(dsi);
+        *rbuflen = 0;
+        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
+        return cc;
+    }
+
+    offset += cc;
+
+#if 0 /*def HAVE_SENDFILE_WRITE*/
+    if (!(obj->options.flags & OPTION_DEBUG)) {
+        if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket,
+                               offset, dsi->datasize)) < 0) {
+            switch (errno) {
+            case EDQUOT :
+            case EFBIG :
+            case ENOSPC :
+                cc = AFPERR_DFULL;
+                break;
+            default :
+                LOG(log_error, logtype_afpd, "afp_write: ad_writefile: %s", strerror(errno) );
+                goto afp_write_loop;
+            }
             dsi_writeflush(dsi);
             *rbuflen = 0;
-            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
+            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
+                       reqcount,  ofork->of_refnum);
             return cc;
         }
 
         offset += cc;
-
-#if 0 /*def HAVE_SENDFILE_WRITE*/
-        if (!(obj->options.flags & OPTION_DEBUG)) {
-            if ((cc = ad_writefile(ofork->of_ad, eid, dsi->socket,
-                                   offset, dsi->datasize)) < 0) {
-                switch (errno) {
-                case EDQUOT :
-                case EFBIG :
-                case ENOSPC :
-                    cc = AFPERR_DFULL;
-                    break;
-                default :
-                    LOG(log_error, logtype_afpd, "afp_write: ad_writefile: %s", strerror(errno) );
-                    goto afp_write_loop;
-                }
-                dsi_writeflush(dsi);
-                *rbuflen = 0;
-                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                           reqcount,  ofork->of_refnum);
-                return cc;
-            }
-
-            offset += cc;
-            goto afp_write_done;
-        }
+        goto afp_write_done;
+    }
 #endif /* 0, was HAVE_SENDFILE_WRITE */
 
-        /* loop until everything gets written. currently
-         * dsi_write handles the end case by itself. */
-        while ((cc = dsi_write(dsi, rbuf, *rbuflen))) {
-            if ((cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
-                dsi_writeflush(dsi);
-                *rbuflen = 0;
-                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
-                           reqcount,  ofork->of_refnum);
-                return cc;
-            }
-            offset += cc;
+    /* loop until everything gets written. currently
+     * dsi_write handles the end case by itself. */
+    while ((cc = dsi_write(dsi, rbuf, *rbuflen))) {
+        if ((cc = write_file(ofork, eid, offset, rbuf, cc)) < 0) {
+            dsi_writeflush(dsi);
+            *rbuflen = 0;
+            ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff,
+                       reqcount,  ofork->of_refnum);
+            return cc;
         }
-    }
-    break;
+        offset += cc;
     }
 
     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,  ofork->of_refnum);
@@ -1264,10 +1257,9 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
     return( AFP_OK );
 
 afp_write_err:
-    if (obj->proto == AFPPROTO_DSI) {
-        dsi_writeinit(obj->dsi, rbuf, *rbuflen);
-        dsi_writeflush(obj->dsi);
-    }
+    dsi_writeinit(obj->dsi, rbuf, *rbuflen);
+    dsi_writeflush(obj->dsi);
+
     if (err != AFP_OK) {
         *rbuflen = 0;
     }

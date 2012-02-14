@@ -152,7 +152,6 @@ static void volfree(struct vol_option *options, const struct vol_option *save)
  * $s   -> server name (hostname if it doesn't exist)
  * $u   -> username (guest is usually nobody)
  * $v   -> volume name or basename if null
- * $z   -> zone (may not exist)
  * $$   -> $
  *
  * This get's called from readvolfile with
@@ -253,12 +252,7 @@ static char *volxlate(AFPObj *obj,
             DSI *dsi = obj->dsi;
             q = getip_string((struct sockaddr *)&dsi->client);
         } else if (is_var(p, "$s")) {
-            if (obj->Obj)
-                q = obj->Obj;
-            else if (obj->options.server) {
-                q = obj->options.server;
-            } else
-                q = obj->options.hostname;
+            q = obj->options.hostname;
         } else if (obj->username && is_var(p, "$u")) {
             if (afpmaster && xlatevolname)
                 return NULL;
@@ -279,8 +273,6 @@ static char *volxlate(AFPObj *obj,
                 else if (*(q + 1) != '\0')
                     q++;
             }
-        } else if (is_var(p, "$z")) {
-            q = obj->Zone;
         } else if (is_var(p, "$$")) {
             q = "$";
         } else
@@ -309,7 +301,7 @@ static char *volxlate(AFPObj *obj,
 }
 
 /* -------------------- */
-static void setoption(struct vol_option *options, struct vol_option *save, int opt, const char *val)
+static void setoption(struct vol_option *options, const struct vol_option *save, int opt, const char *val)
 {
     if (options[opt].c_value && (!save || options[opt].c_value != save[opt].c_value))
         free(options[opt].c_value);
@@ -320,72 +312,72 @@ static void setoption(struct vol_option *options, struct vol_option *save, int o
 static void volset(const dictionary *conf, const char *vol, struct vol_option *options, const struct vol_option *save)
 {
     const char *val;
-    const char *p;
+    char *p, *q;
 
-    if (val = iniparser_getstring(conf, vol, "allow"))
+    if (val = iniparser_getstring(conf, vol, "allow", NULL))
         setoption(options, save, VOLOPT_ALLOW, val);
 
-    if (val = iniparser_getstring(conf, vol, "deny"))
+    if (val = iniparser_getstring(conf, vol, "deny", NULL))
         setoption(options, save, VOLOPT_DENY, val);
 
-    if (val = iniparser_getstring(conf, vol, "rwlist"))
+    if (val = iniparser_getstring(conf, vol, "rwlist", NULL))
         setoption(options, save, VOLOPT_RWLIST, val);
 
-    if (val = iniparser_getstring(conf, vol, "rolist"))
+    if (val = iniparser_getstring(conf, vol, "rolist", NULL))
         setoption(options, save, VOLOPT_ROLIST, val);
 
-    if (val = iniparser_getstring(conf, vol, "volcharset"))
+    if (val = iniparser_getstring(conf, vol, "volcharset", NULL))
         setoption(options, save, VOLOPT_ENCODING, val);
 
-    if (val = iniparser_getstring(conf, vol, "maccharset"))
+    if (val = iniparser_getstring(conf, vol, "maccharset", NULL))
         setoption(options, save, VOLOPT_MACCHARSET, val);
 
-    if (val = iniparser_getstring(conf, vol, "veto"))
+    if (val = iniparser_getstring(conf, vol, "veto", NULL))
         setoption(options, save, VOLOPT_VETO, val);
 
-    if (val = iniparser_getstring(conf, vol, "cnidscheme"))
+    if (val = iniparser_getstring(conf, vol, "cnidscheme", NULL))
         setoption(options, save, VOLOPT_CNIDSCHEME, val);
 
-    if (val = iniparser_getstring(conf, vol, "dbpath"))
+    if (val = iniparser_getstring(conf, vol, "dbpath", NULL))
         setoption(options, save, VOLOPT_DBPATH, val);
 
-    if (val = iniparser_getstring(conf, vol, "password"))
+    if (val = iniparser_getstring(conf, vol, "password", NULL))
         setoption(options, save, VOLOPT_PASSWORD, val);
 
-    if (val = iniparser_getstring(conf, vol, "root_preexec"))
+    if (val = iniparser_getstring(conf, vol, "root_preexec", NULL))
         setoption(options, save, VOLOPT_ROOTPREEXEC, val);
 
-    if (val = iniparser_getstring(conf, vol, "preexec"))
+    if (val = iniparser_getstring(conf, vol, "preexec", NULL))
         setoption(options, save, VOLOPT_PREEXEC, val);
 
-    if (val = iniparser_getstring(conf, vol, "root_postexec"))
+    if (val = iniparser_getstring(conf, vol, "root_postexec", NULL))
         setoption(options, save, VOLOPT_ROOTPOSTEXEC, val);
 
-    if (val = iniparser_getstring(conf, vol, "postexec"))
+    if (val = iniparser_getstring(conf, vol, "postexec", NULL))
         setoption(options, save, VOLOPT_POSTEXEC, val);
 
-    if (val = iniparser_getstring(conf, vol, "allowed_hosts"))
+    if (val = iniparser_getstring(conf, vol, "allowed_hosts", NULL))
         setoption(options, save, VOLOPT_ALLOWED_HOSTS, val);
 
-    if (val = iniparser_getstring(conf, vol, "denied_hosts"))
+    if (val = iniparser_getstring(conf, vol, "denied_hosts", NULL))
         setoption(options, save, VOLOPT_DENIED_HOSTS, val);
 
-    if (val = iniparser_getstring(conf, vol, "umask"))
+    if (val = iniparser_getstring(conf, vol, "umask", NULL))
         options[VOLOPT_UMASK].i_value = (int)strtol(val, NULL, 8);
 
-    if (val = iniparser_getstring(conf, vol, "dperm"))
+    if (val = iniparser_getstring(conf, vol, "dperm", NULL))
         options[VOLOPT_DPERM].i_value = (int)strtol(val, NULL, 8);
 
-    if (val = iniparser_getstring(conf, vol, "fperm"))
+    if (val = iniparser_getstring(conf, vol, "fperm", NULL))
         options[VOLOPT_FPERM].i_value = (int)strtol(val, NULL, 8);
 
-    if (val = iniparser_getstring(conf, vol, "perm"))
+    if (val = iniparser_getstring(conf, vol, "perm", NULL))
         options[VOLOPT_DFLTPERM].i_value = (int)strtol(val, NULL, 8);
 
-    if (val = iniparser_getstring(conf, vol, "volsizelimit"))
+    if (val = iniparser_getstring(conf, vol, "volsizelimit", NULL))
         options[VOLOPT_LIMITSIZE].i_value = (uint32_t)strtoul(val, NULL, 10);
 
-    if (val = iniparser_getstring(conf, vol, "casefold")) {
+    if (val = iniparser_getstring(conf, vol, "casefold", NULL)) {
         if (strcasecmp(val, "tolower") == 0)
             options[VOLOPT_CASEFOLD].i_value = AFPVOL_UMLOWER;
         else if (strcasecmp(val, "toupper") == 0)
@@ -396,14 +388,14 @@ static void volset(const dictionary *conf, const char *vol, struct vol_option *o
             options[VOLOPT_CASEFOLD].i_value = AFPVOL_ULOWERMUPPER;
     }
 
-    if (val = iniparser_getstring(conf, vol, "adouble")) {
+    if (val = iniparser_getstring(conf, vol, "adouble", NULL)) {
         if (strcasecmp(val, "v2") == 0)
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION2;
         else if (strcasecmp(val, "ea") == 0)
             options[VOLOPT_ADOUBLE].i_value = AD_VERSION_EA;
     }
 
-    if (val = iniparser_getstring(conf, vol, "ea")) {
+    if (val = iniparser_getstring(conf, vol, "ea", NULL)) {
         if (strcasecmp(val, "ad") == 0)
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_AD;
         else if (strcasecmp(val, "sys") == 0)
@@ -412,19 +404,19 @@ static void volset(const dictionary *conf, const char *vol, struct vol_option *o
             options[VOLOPT_EA_VFS].i_value = AFPVOL_EA_NONE;
     }
 
-    if (val = iniparser_getstrdup(conf, vol, "cnidserver")) {
-        if (p = strrchr(val, ':')) {
-            *p = 0;
-            setoption(options, save, VOLOPT_CNIDPORT, p + 1);
+    if (p = iniparser_getstrdup(conf, vol, "cnidserver", NULL)) {
+        if (q = strrchr(val, ':')) {
+            *q = 0;
+            setoption(options, save, VOLOPT_CNIDPORT, q + 1);
         }
-        setoption(options, save, VOLOPT_CNIDSERVER, val);
+        setoption(options, save, VOLOPT_CNIDSERVER, p);
         LOG(log_debug, logtype_afpd, "CNID Server for volume '%s': %s:%s",
-            volname, val, p ? p + 1 : Cnid_port);
-        free(val);
+            vol, p, q ? q + 1 : "4700");
+        free(p);
     }
 
-    if (val = iniparser_getstrdup(conf, vol, "options")) {
-        if (p = strtok(val, ",")) {
+    if (q = iniparser_getstrdup(conf, vol, "options", NULL)) {
+        if (p = strtok(q, ",")) {
             while (p) {
                 if (strcasecmp(p, "ro") == 0)
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
@@ -461,7 +453,7 @@ static void volset(const dictionary *conf, const char *vol, struct vol_option *o
                 p = strtok(NULL, ",");
             }
         }
-        free(val);
+        free(q);
     }
 }
 
@@ -850,9 +842,6 @@ static int hostaccessvol(int type, const char *volname, const char *args, const 
     if ((p = strtok_r(buf, ",", &b)) == NULL) /* nothing, return okay */
         return -1;
 
-    if (obj->proto != AFPPROTO_DSI)
-        return -1;
-
     while (p) {
         int ret;
         char *ipaddr, *mask_char;
@@ -906,18 +895,12 @@ static int hostaccessvol(int type, const char *volname, const char *args, const 
 
 /* ----------------------
  */
-static int volfile_changed(struct afp_volume_name *p)
+static int volfile_changed(struct afp_options *p)
 {
     struct stat      st;
-    char *name;
 
-    if (p->full_name)
-        name = p->full_name;
-    else
-        name = p->name;
-
-    if (!stat( name, &st) && st.st_mtime > p->mtime) {
-        p->mtime = st.st_mtime;
+    if (!stat(p->configfile, &st) && st.st_mtime > p->volfile.mtime) {
+        p->volfile.mtime = st.st_mtime;
         return 1;
     }
     return 0;
@@ -944,7 +927,8 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     char        path[MAXPATHLEN + 1];
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1];
-    char        *u, *p;
+    char        *u;
+    const char  *p;
     int         fd;
     int         i;
     struct passwd     *pw;
@@ -952,10 +936,8 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     struct vol_option default_options[VOLOPT_NUM];
     struct vol_option options[VOLOPT_NUM];
 
-    LOG(log_debug, logtype_afpd, "readvolfile(\"%s\"): BEGIN", p1->name);
+    LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
-    if (!p1->name)
-        return -1;
     p1->mtime = 0;
 
     memset(default_options, 0, sizeof(default_options));
@@ -974,7 +956,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     for (i = 0; i < secnum; secname = iniparser_getsecname(obj->iniconfig, i), i++) { 
         if (!vol_section(secname))
             continue;
-        if ((p = iniparser_getstring(obj->iniconfig, secname, "path")) == NULL)
+        if ((p = iniparser_getstrdup(obj->iniconfig, secname, "path", NULL)) == NULL)
             continue;
         strlcpy(path, p, MAXPATHLEN);
         strcpy(tmp, path);
@@ -1012,7 +994,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
                 options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
 
             /* do variable substitution for volname */
-            if (volxlate(obj, tmp, sizeof(tmp) - 1, secname, pwent, path, NULL) == NULL) {
+            if (volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL) == NULL) {
                 volfree(options, default_options);
                 continue;
             }
@@ -1583,6 +1565,7 @@ void load_volumes(AFPObj *obj)
     int fd = -1;
     struct passwd   *pwent;
     struct stat         st;
+    int retries = 0;
 
     if (parent_or_child == 0) {
         LOG(log_debug, logtype_afpd, "load_volumes: AFP MASTER");
@@ -1590,19 +1573,22 @@ void load_volumes(AFPObj *obj)
         LOG(log_debug, logtype_afpd, "load_volumes: user: %s", obj->username);
     }
 
-    if (Volumes && volfile_changed(&obj->options.volfile))
+    if (Volumes) {
+        if (!volfile_changed(&obj->options))
+            return;
         free_volumes();
+    }
 
     /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
-    int retries = 2;
-    fd = open(p1->name, O_RDWR);
-    if (fd != -1 && fstat(fd, &st) == 0)
-        p1->mtime = st.st_mtime; 
-    while (1) {
+
+    fd = open(obj->options.configfile, O_RDWR);
+
+    while (retries < 2) {
         if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
-            retries--;
+            retries++;
             if (!retries) {
-                LOG(log_error, logtype_afpd, "readvolfile: can't lock volume file \"%s\"", path);
+                LOG(log_error, logtype_afpd, "readvolfile: can't lock configfile \"%s\"",
+                    obj->options.configfile);
                 EC_FAIL;
             }
             sleep(1);
@@ -1612,7 +1598,7 @@ void load_volumes(AFPObj *obj)
     }
 
     iniparser_freedict(obj->iniconfig);
-    obj->iniconfig = iniparser_load(obj->configfile);
+    obj->iniconfig = iniparser_load(obj->options.configfile);
 
     if (obj->username)
         pwent = getpwnam(obj->username);
@@ -1635,7 +1621,7 @@ void load_volumes(AFPObj *obj)
 EC_CLEANUP:
     if (fd != -1)
         (void)close(fd);
-    EC_EXIT;
+    return;
 }
 
 /* ------------------------------- */
@@ -1742,7 +1728,7 @@ static int volume_codepage(AFPObj *obj, struct vol *volume)
 }
 
 /* ------------------------- */
-static int volume_openDB(struct vol *volume)
+static int volume_openDB(const AFPObj *obj, struct vol *volume)
 {
     int flags = 0;
 
@@ -1757,37 +1743,15 @@ static int volume_openDB(struct vol *volume)
     }
 
     LOG(log_info, logtype_afpd, "CNID server: %s:%s",
-        volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
-        volume->v_cnidport ? volume->v_cnidport : Cnid_port);
-
-#if 0
-/* Found this in branch dir-rewrite, maybe we want to use it sometimes */
-
-    /* Legacy pre 2.1 way of sharing eg CD-ROM */
-    if (strcmp(volume->v_cnidscheme, "last") == 0) {
-        /* "last" is gone. We support it by switching to in-memory "tdb" */
-        volume->v_cnidscheme = strdup("tdb");
-        flags |= CNID_FLAG_MEMORY;
-    }
-
-    /* New way of sharing CD-ROM */
-    if (volume->v_flags & AFPVOL_CDROM) {
-        flags |= CNID_FLAG_MEMORY;
-        if (strcmp(volume->v_cnidscheme, "tdb") != 0) {
-            free(volume->v_cnidscheme);
-            volume->v_cnidscheme = strdup("tdb");
-            LOG(log_info, logtype_afpd, "Volume %s is ejectable, switching to scheme %s.",
-                volume->v_path, volume->v_cnidscheme);
-        }
-    }
-#endif
+        volume->v_cnidserver ? volume->v_cnidserver : obj->options.Cnid_srv,
+        volume->v_cnidport ? volume->v_cnidport : obj->options.Cnid_port);
 
     volume->v_cdb = cnid_open(volume->v_path,
                               volume->v_umask,
                               volume->v_cnidscheme,
                               flags,
-                              volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
-                              volume->v_cnidport ? volume->v_cnidport : Cnid_port);
+                              volume->v_cnidserver ? volume->v_cnidserver : obj->options.Cnid_srv,
+                              volume->v_cnidport ? volume->v_cnidport : obj->options.Cnid_port);
 
     if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
         /* The first attempt failed and it wasn't yet an attempt to open in-memory */
@@ -2028,7 +1992,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     volume->v_root = dir;
     curdir = dir;
 
-    if (volume_openDB(volume) < 0) {
+    if (volume_openDB(obj, volume) < 0) {
         LOG(log_error, logtype_afpd, "Fatal error: cannot open CNID or invalid CNID backend for %s: %s",
             volume->v_path, volume->v_cnidscheme);
         ret = AFPERR_MISC;
@@ -2040,8 +2004,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if (ret == AFP_OK) {
         handle_special_folders(volume);
         savevolinfo(volume,
-                    volume->v_cnidserver ? volume->v_cnidserver : Cnid_srv,
-                    volume->v_cnidport   ? volume->v_cnidport   : Cnid_port);
+                    volume->v_cnidserver ? volume->v_cnidserver : obj->options.Cnid_srv,
+                    volume->v_cnidport   ? volume->v_cnidport   : obj->options.Cnid_port);
 
 
         /*
@@ -2184,39 +2148,6 @@ struct vol *getvolbyvid(const uint16_t vid )
     return( vol );
 }
 
-/* ------------------------ */
-static int ext_cmp_key(const void *key, const void *obj)
-{
-    const char          *p = key;
-    const struct extmap *em = obj;
-    return strdiacasecmp(p, em->em_ext);
-}
-struct extmap *getextmap(const char *path)
-{
-    char      *p;
-    struct extmap *em;
-
-    if (!Extmap_cnt || NULL == ( p = strrchr( path, '.' )) ) {
-        return( Defextmap );
-    }
-    p++;
-    if (!*p) {
-        return( Defextmap );
-    }
-    em = bsearch(p, Extmap, Extmap_cnt, sizeof(struct extmap), ext_cmp_key);
-    if (em) {
-        return( em );
-    } else {
-        return( Defextmap );
-    }
-}
-
-/* ------------------------- */
-struct extmap *getdefextmap(void)
-{
-    return( Defextmap );
-}
-
 /* --------------------------
    poll if a volume is changed by other processes.
    return
@@ -2236,7 +2167,7 @@ int  pollvoltime(AFPObj *obj)
     struct timeval   tv;
     struct stat      st;
 
-    if (!(afp_version > 21 && obj->options.server_notif))
+    if (!(afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF))
         return 0;
 
     if ( gettimeofday( &tv, NULL ) < 0 )
@@ -2276,7 +2207,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
         /* or finder doesn't update free space
          * AFP 3.2 and above clients seem to be ok without so many notification
          */
-        if (afp_version < 32 && obj->options.server_notif) {
+        if (afp_version < 32 && obj->options.flags & OPTION_SERVERNOTIF) {
             obj->attention(obj->dsi, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
         }
     }

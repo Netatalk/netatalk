@@ -364,7 +364,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
      */
 
     /* extract the obj part of the server */
-    Obj = (char *) (options->server ? options->server : options->hostname);
+    Obj = options->hostname;
     if ((size_t) -1 == (len = convert_string (
                             options->unixcharset, CH_UTF8_MAC, 
                             Obj, -1, data+sizeof(namelen), maxstatuslen-offset )) ) {
@@ -413,36 +413,27 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
  */
-void status_init(AFPConfig *dsiconfig,
-                 const struct afp_options *options)
+void status_init(AFPObj *obj, DSI *dsi)
 {
-    DSI *dsi;
-    char *status = NULL;
+    char *status = dsi->status;
     size_t statuslen;
-    int c, sigoff, ipok;
+    int c, sigoff, ipok = 0;
+    const struct afp_options *options = &obj->options;
 
-    if (!dsiconfig || !options)
-        return;
-	
-    ipok = 0;
-    if (dsiconfig) {
-        status = dsiconfig->status;
-        maxstatuslen=sizeof(dsiconfig->status);
-        dsi = dsiconfig->obj.dsi;
-        if (dsi->server.ss_family == AF_INET) { /* IPv4 */
-            const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
-            ipok = sa4->sin_addr.s_addr ? 1 : 0;
-        } else { /* IPv6 */
-            const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
-            for (int i=0; i<16; i++) {
-                if (sa6->sin6_addr.s6_addr[i]) {
-                    ipok = 1;
-                    break;
-                }
+    maxstatuslen = sizeof(dsi->status);
+
+    if (dsi->server.ss_family == AF_INET) { /* IPv4 */
+        const struct sockaddr_in *sa4 = (struct sockaddr_in *)&dsi->server;
+        ipok = sa4->sin_addr.s_addr ? 1 : 0;
+    } else { /* IPv6 */
+        const struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&dsi->server;
+        for (int i=0; i<16; i++) {
+            if (sa6->sin6_addr.s6_addr[i]) {
+                ipok = 1;
+                break;
             }
         }
-    } else
-        dsi = NULL;
+    }
 
     /*
      * These routines must be called in order -- earlier calls
@@ -465,14 +456,13 @@ void status_init(AFPConfig *dsiconfig,
      */
 
     status_flags(status,
-                 options->server_notif,
+                 options->flags & OPTION_SERVERNOTIF,
                  (options->fqdn || ipok),
                  options->passwdbits, 
                  (options->k5service && options->k5realm && options->fqdn),
                  options->flags);
     /* returns offset to signature offset */
-    c = status_server(status, options->server ? options->server :
-                      options->hostname, options);
+    c = status_server(status, options->hostname, options);
     status_machine(status);
     status_versions(status, dsi);
     status_uams(status, options->uamlist);
@@ -493,14 +483,12 @@ void status_init(AFPConfig *dsiconfig,
     if ( statuslen < maxstatuslen) 
         statuslen = status_utf8servername(status, &c, dsi, options);
 
-    if (dsiconfig) {
-        if ((options->flags & OPTION_CUSTOMICON) == 0) {
-            status_icon(status, apple_tcp_icon, sizeof(apple_tcp_icon), 0);
-        }
-        dsi_setstatus(dsi, status, statuslen);
-        dsiconfig->signature = status + sigoff;
-        dsiconfig->statuslen = statuslen;
+    if ((options->flags & OPTION_CUSTOMICON) == 0) {
+        status_icon(status, apple_tcp_icon, sizeof(apple_tcp_icon), 0);
     }
+
+    dsi->signature = status + sigoff;
+    dsi->statuslen = statuslen;
 }
 
 /* set_signature()                                                    */
@@ -522,7 +510,7 @@ void set_signature(struct afp_options *options) {
     size_t len;
     char *server_tmp;
     
-    server_tmp = (options->server ? options->server : options->hostname);
+    server_tmp = options->hostname;
     if (strcmp(options->signatureopt, "auto") == 0) {
         goto server_signature_auto;   /* default */
     } else if (strcmp(options->signatureopt, "host") == 0) {
@@ -682,9 +670,8 @@ server_signature_done:
 /* this is the same as asp/dsi_getstatus */
 int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
-    AFPConfig *config = obj->config;
+    memcpy(rbuf, obj->dsi->status, obj->dsi->statuslen);
+    *rbuflen = obj->dsi->statuslen;
 
-    memcpy(rbuf, config->status, config->statuslen);
-    *rbuflen = config->statuslen;
     return AFP_OK;
 }

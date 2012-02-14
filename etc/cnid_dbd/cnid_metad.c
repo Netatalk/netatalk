@@ -444,8 +444,6 @@ int main(int argc, char *argv[])
     int    err = 0;
     int    debug = 0;
     int    ret;
-    char   *loglevel = NULL;
-    char   *logfile  = NULL;
     sigset_t set;
     struct volinfo *volinfo;
 
@@ -483,12 +481,6 @@ int main(int argc, char *argv[])
         case 's':
             dbdpn = strdup(optarg);
             break;
-        case 'l':
-            loglevel = strdup(optarg);
-            break;
-        case 'f':
-            logfile = strdup(optarg);
-            break;
         default:
             err++;
             break;
@@ -506,16 +498,7 @@ int main(int argc, char *argv[])
     if (create_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
         return -1;
 
-    if (loglevel) {
-        strlcpy(logconfig + 8, loglevel, 13);
-        free(loglevel);
-        strcat(logconfig, " ");
-    }
-    if (logfile) {
-        strlcat(logconfig, logfile, MAXPATHLEN);
-        free(logfile);
-    }
-    setuplog(logconfig);
+    setuplog("default:note", NULL);
 
     if (err) {
         LOG(log_error, logtype_cnid, "main: bad arguments");

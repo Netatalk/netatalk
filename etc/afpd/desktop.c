@@ -204,42 +204,34 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
      */
 addicon_err:
     if ( cc < 0 ) {
-        if (obj->proto == AFPPROTO_DSI) {
-            dsi_writeinit(obj->dsi, rbuf, buflen);
-            dsi_writeflush(obj->dsi);
-        }
+        dsi_writeinit(obj->dsi, rbuf, buflen);
+        dsi_writeflush(obj->dsi);
         return cc;
     }
 
-    switch (obj->proto) {
-    case AFPPROTO_DSI:
-        {
-            DSI *dsi = obj->dsi;
+    DSI *dsi = obj->dsi;
 
-            iovcnt = dsi_writeinit(dsi, rbuf, buflen);
+    iovcnt = dsi_writeinit(dsi, rbuf, buflen);
 
-            /* add headers at end of file */
-            if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-                dsi_writeflush(dsi);
-                return AFPERR_PARAM;
-            }
+    /* add headers at end of file */
+    if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+        dsi_writeflush(dsi);
+        return AFPERR_PARAM;
+    }
 
-            if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-                dsi_writeflush(dsi);
-                return AFPERR_PARAM;
-            }
+    if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+        dsi_writeflush(dsi);
+        return AFPERR_PARAM;
+    }
 
-            while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
-                if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                    LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
-                    dsi_writeflush(dsi);
-                    return AFPERR_PARAM;
-                }
-            }
+    while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
+        if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+            LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol, fcreator), strerror(errno));
+            dsi_writeflush(dsi);
+            return AFPERR_PARAM;
         }
-        break;
     }
 
     close( si.sdt_fd );
@@ -441,7 +433,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 #define min(a,b)	((a)<(b)?(a):(b))
     rc = min( bsize, rsize );
 
-    if ((obj->proto == AFPPROTO_DSI) && (buflen < rc)) {
+    if (buflen < rc) {
         DSI *dsi = obj->dsi;
         struct stat st;
         off_t size;
