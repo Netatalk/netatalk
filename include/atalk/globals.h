@@ -102,8 +102,6 @@ struct afp_options {
 };
 
 typedef struct AFPObj {
-    int argc;
-    char **argv;
     const void *signature;
     struct DSI *dsi;
     struct afp_options options;

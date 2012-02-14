@@ -221,8 +221,6 @@ int main(int ac, char **av)
 
     /* Parse argv args and initialize default options */
     afp_options_parse_cmdline(ac, av);
-    obj.argc = ac;
-    obj.argv = av;
     if (afp_config_parse(&obj) != 0)
         exit(EXITERR_CONF);
 

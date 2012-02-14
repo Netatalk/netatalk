@@ -44,9 +44,14 @@
 
 #define LENGTH 512
 
+static const char *configfile;
+static int flags;
+
 /* get rid of any allocated afp_option buffers. */
 void afp_options_free(struct afp_options *opt)
 {
+	if (opt->hostname)
+        free(opt->hostname);
 	if (opt->adminauthuser)
         free(opt->adminauthuser);
 	if (opt->configfile)
@@ -102,33 +107,10 @@ int afp_config_parse(AFPObj *AFPObj)
     char *q, *r;
     char val[MAXVAL];
 
-    memset(options, 0, sizeof(struct afp_options));
-    options->configfile  = strdup(_PATH_CONFDIR "afp.conf");
+    options->configfile  = configfile ? strdup(configfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_CONFDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_CONFDIR "afp_voluuid.conf");
-    options->flags |= OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF;
-    if (gethostname(val, sizeof(val)) < 0 ) {
-        perror( "gethostname" );
-        return 0;
-    }
-    if (NULL != (q = strchr(val, '.')))
-        *q = '\0';
-    options->hostname = strdup(val);
-
-    while ((c = getopt(AFPObj->argc, AFPObj->argv, "dF:")) != -1) {
-        switch (c) {
-        case 'd':
-            options->flags |= OPTION_DEBUG;
-            break;
-        case 'F':
-            if (options->configfile)
-                free(options->configfile);
-            options->configfile = strdup(optarg);
-            break;
-        default :
-            break;
-        }
-    }
+    options->flags       = OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF | flags;
 
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
         return -1;
@@ -157,7 +139,7 @@ int afp_config_parse(AFPObj *AFPObj)
         options->flags &= ~OPTION_ACL2MACCESS;
     if (strstr(val, " keepsessions"))
         options->flags |= OPTION_KEEPSESSIONS;
-    if (strstr(val, " keepsessions"))
+    if (strstr(val, " closevol"))
         options->flags |= OPTION_CLOSEVOL;
     if (strstr(val, " client_polling"))
         options->flags &= ~OPTION_SERVERNOTIF;
@@ -183,7 +165,6 @@ int afp_config_parse(AFPObj *AFPObj)
     options->k5realm        = iniparser_getstrdup(config, INISEC_AFP, "k5realm",        NULL);
     options->authprintdir   = iniparser_getstrdup(config, INISEC_AFP, "authprintdir",   NULL);
     options->listen         = iniparser_getstrdup(config, INISEC_AFP, "listen",         NULL);
-    options->hostname       = iniparser_getstrdup(config, INISEC_AFP, "hostname",       NULL);
     options->ntdomain       = iniparser_getstrdup(config, INISEC_AFP, "ntdomain",       NULL);
     options->ntseparator    = iniparser_getstrdup(config, INISEC_AFP, "ntseparator",    NULL);
     options->mimicmodel     = iniparser_getstrdup(config, INISEC_AFP, "mimicmodel",     NULL);
@@ -202,6 +183,17 @@ int afp_config_parse(AFPObj *AFPObj)
     options->sleep          = iniparser_getint   (config, INISEC_AFP, "sleep",          10) * 60 * 2;
     options->disconnected   = iniparser_getint   (config, INISEC_AFP, "disconnect",     24) * 60 * 2;
 
+    if ((p = iniparser_getstring(config, INISEC_AFP, "hostname", NULL))) {
+        EC_NULL_LOG( options->hostname = strdup(p) );
+    } else {
+        if (gethostname(val, sizeof(val)) < 0 ) {
+            perror( "gethostname" );
+            EC_FAIL;
+        }
+        if ((q = strchr(val, '.')))
+            *q = '\0';
+        options->hostname = strdup(val);
+    }
 
     if ((p = iniparser_getstring(config, INISEC_AFP, "k5keytab", NULL))) {
         EC_NULL_LOG( options->k5keytab = malloc(strlen(p) + 14) );
@@ -243,20 +235,28 @@ int afp_config_parse(AFPObj *AFPObj)
         free(q);
     }
 
-    p = iniparser_getstring(config, INISEC_AFP, "unixcodepage", "LOCALE");
-    if ((options->unixcharset = add_charset(p)) == (charset_t)-1) {
+    if (!(p = iniparser_getstring(config, INISEC_AFP, "unixcodepage", NULL))) {
         options->unixcharset = CH_UNIX;
-        LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
+        options->unixcodepage = strdup("LOCALE");
     } else {
-        options->unixcodepage = strdup(p);
+        if ((options->unixcharset = add_charset(p)) == (charset_t)-1) {
+            options->unixcharset = CH_UNIX;
+            LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
+        } else {
+            options->unixcodepage = strdup(p);
+        }
     }
 	
-    p = iniparser_getstring(config, INISEC_AFP, "maccodepage", "MAC_ROMAN");
-    if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
+    if (!(p = iniparser_getstring(config, INISEC_AFP, "maccodepage", NULL))) {
         options->maccharset = CH_MAC;
-        LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
+        options->maccodepage = strdup("MAC_ROMAN");
     } else {
-        options->maccodepage = strdup(p);
+        if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
+            options->maccharset = CH_MAC;
+            LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
+        } else {
+            options->maccodepage = strdup(p);
+        }
     }
 
     if ((p = iniparser_getstring(config, INISEC_AFP, "fcelistener", NULL))) {
@@ -440,7 +440,10 @@ void afp_options_parse_cmdline(int ac, char **av)
     while (EOF != ( c = getopt( ac, av, "dFvVh" )) ) {
         switch ( c ) {
         case 'd':
+            flags = OPTION_DEBUG;
+            break;
         case 'F':
+            configfile = strdup(optarg);
             break;
         case 'v':	/* version */
             show_version( ); puts( "" );

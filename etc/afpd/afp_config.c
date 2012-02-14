@@ -72,7 +72,7 @@ int configinit(AFPObj *obj)
 {
     EC_INIT;
     DSI *dsi, **next = &obj->dsi;
-    char *p, *q = NULL;
+    char *p = NULL, *q = NULL;
 
     LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, port: %s",
         obj->options.hostname,
@@ -82,10 +82,12 @@ int configinit(AFPObj *obj)
     /* obj->options->listen is of the from "IP[:port][,IP:[PORT], ...]" */
     /* obj->options->port is the default port to listen (548) */
 
-    EC_NULL( q = p = strdup(obj->options.listen) );
-    EC_NULL( p = strtok(p, ",") );
+    if (obj->options.listen) {
+        EC_NULL( q = p = strdup(obj->options.listen) );
+        EC_NULL( p = strtok(p, ",") );
+    }
 
-    while (p) {
+    while (1) {
         if ((dsi = dsi_init(obj, obj->options.hostname, p, obj->options.port)) == NULL)
             break;
 
@@ -97,7 +99,11 @@ int configinit(AFPObj *obj)
             getip_string((struct sockaddr *)&dsi->server),
             getip_port((struct sockaddr *)&dsi->server));
 
-        p = strtok(NULL, ",");
+        if (p)
+            /* p is NULL if ! obj->options.listen */
+            p = strtok(NULL, ",");
+        if (!p)
+            break;
     }
 
     if (obj->dsi == NULL)

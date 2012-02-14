@@ -953,9 +953,11 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     int secnum = iniparser_getnsec(obj->iniconfig);    
     const char *secname;
 
-    for (i = 0; i < secnum; secname = iniparser_getsecname(obj->iniconfig, i), i++) { 
+    for (i = 0; i < secnum; i++) { 
+        secname = iniparser_getsecname(obj->iniconfig, i);
         if (!vol_section(secname))
             continue;
+
         if ((p = iniparser_getstrdup(obj->iniconfig, secname, "path", NULL)) == NULL)
             continue;
         strlcpy(path, p, MAXPATHLEN);

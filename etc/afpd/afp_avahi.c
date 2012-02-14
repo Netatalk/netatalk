@@ -92,7 +92,7 @@ static void register_stuff(void) {
         }
 
         /* AFP server */
-        for (dsi = obj->dsi; dsi; dsi = dsi->next) {
+        for (dsi = ctx->obj->dsi; dsi; dsi = dsi->next) {
             port = getip_port((struct sockaddr *)&dsi->server);
 
             if (convert_string(obj->options.unixcharset,

@@ -244,7 +244,7 @@ int dictionary_set(dictionary * d, char *section, char * key, char * val)
 	int			i ;
 	unsigned	hash ;
 
-	if (d==NULL || key==NULL) return -1 ;
+	if (d==NULL || section==NULL) return -1 ;
 	
 	/* Compute hash for this key */
 	hash = dictionary_hash(makekey(section, key));
