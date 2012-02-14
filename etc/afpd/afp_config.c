@@ -74,6 +74,9 @@ int configinit(AFPObj *obj)
     DSI *dsi, **next = &obj->dsi;
     char *p = NULL, *q = NULL;
 
+    auth_load(obj->options.uampath, obj->options.uamlist);
+    set_signature(&obj->options);
+
     LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, port: %s",
         obj->options.hostname,
         obj->options.listen ? obj->options.listen : "(default: hostname)",
@@ -108,9 +111,6 @@ int configinit(AFPObj *obj)
 
     if (obj->dsi == NULL)
         EC_FAIL;
-
-    auth_load(obj->options.uampath, obj->options.uamlist);
-    set_signature(&obj->options);
 
 #ifdef HAVE_LDAP
     /* Parse afp_ldap.conf */
