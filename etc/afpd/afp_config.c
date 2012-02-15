@@ -42,13 +42,11 @@
  * Free and cleanup all linked DSI objects from config
  *
  * Preserve object pointed to by "dsi".
- * "dsi" can be NULL in which case all DSI objects are freed
+ * "dsi" can be NULL in which case all DSI objects _and_ the options object are freed 
  */
 void configfree(AFPObj *obj, DSI *dsi)
 {
     DSI *p, *q;
-
-    afp_options_free(&obj->options);
 
     for (p = obj->dsi; p; p = q) {
         q = p->next;
@@ -60,7 +58,10 @@ void configfree(AFPObj *obj, DSI *dsi)
     if (dsi) {
         dsi->next = NULL;
         obj->dsi = dsi;
+    } else {
+        afp_options_free(&obj->options);
     }
+
     /* the master loaded the volumes for zeroconf, get rid of that */
     unload_volumes();
 }

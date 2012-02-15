@@ -908,11 +908,11 @@ static int volfile_changed(struct afp_options *p)
 
 static int vol_section(const char *sec)
 {
-    if (STRCMP(sec, ==, INISEC_GLOBAL) == 0)
+    if (STRCMP(sec, ==, INISEC_GLOBAL))
         return 0;
-    if (strcmp(sec, INISEC_AFP) == 0)
+    if (STRCMP(sec, ==, INISEC_AFP))
         return 0;
-    if (strcmp(sec, INISEC_CNID) == 0)
+    if (STRCMP(sec, ==, INISEC_CNID))
         return 0;
     return 1;
 }
@@ -951,6 +951,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     memcpy(save_options, default_options, sizeof(options));
 
     int secnum = iniparser_getnsec(obj->iniconfig);    
+    LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
     for (i = 0; i < secnum; i++) { 
@@ -958,11 +959,14 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
         if (!vol_section(secname))
             continue;
 
+        strlcpy(volname, secname, AFPVOL_U8MNAMELEN);
+        LOG(log_debug, logtype_afpd, "readvolfile: volume: %s", volname);
+
         if ((p = iniparser_getstrdup(obj->iniconfig, secname, "path", NULL)) == NULL)
             continue;
         strlcpy(path, p, MAXPATHLEN);
         strcpy(tmp, path);
-        strlcpy(volname, secname, AFPVOL_U8MNAMELEN);
+
 
         if (!pwent && obj->username)
             pwent = getpwnam(obj->username);
@@ -1599,7 +1603,9 @@ void load_volumes(AFPObj *obj)
         break;
     }
 
-    iniparser_freedict(obj->iniconfig);
+    if (obj->iniconfig)
+        iniparser_freedict(obj->iniconfig);
+    LOG(log_debug, logtype_afpd, "load_volumes: reloading: %s", obj->options.configfile);
     obj->iniconfig = iniparser_load(obj->options.configfile);
 
     if (obj->username)
