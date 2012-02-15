@@ -417,7 +417,7 @@ static void volset(const dictionary *conf, const char *vol, struct vol_option *o
     }
 
     if (q = iniparser_getstrdup(conf, vol, "options", NULL)) {
-        if (p = strtok(q, ",")) {
+        if (p = strtok(q, ", ")) {
             while (p) {
                 if (strcasecmp(p, "ro") == 0)
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;

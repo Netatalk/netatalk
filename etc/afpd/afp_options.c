@@ -120,35 +120,37 @@ int afp_config_parse(AFPObj *AFPObj)
     setuplog(options->logconfig, options->logfile);
 
     /* [AFP] "options" options wo values */
-    p = iniparser_getstring(config, INISEC_AFP, "options", "");
-    strcpy(val, " ");
-    strlcat(val, p, MAXVAL);
-
-    if (strstr(val, " nozeroconf"))
-        options->flags |= OPTION_NOZEROCONF;
-    if (strstr(val, " icon"))
-        options->flags |= OPTION_CUSTOMICON;
-    if (strstr(val, " noicon"))
-        options->flags &= ~OPTION_CUSTOMICON;
-    if (strstr(val, " advertise_ssh"))
-        options->flags |= OPTION_ANNOUNCESSH;
-    if (strstr(val, " noacl2maccess"))
-        options->flags &= ~OPTION_ACL2MACCESS;
-    if (strstr(val, " keepsessions"))
-        options->flags |= OPTION_KEEPSESSIONS;
-    if (strstr(val, " closevol"))
-        options->flags |= OPTION_CLOSEVOL;
-    if (strstr(val, " client_polling"))
-        options->flags &= ~OPTION_SERVERNOTIF;
-    if (strstr(val, " nosavepassword"))
-        options->passwdbits |= PASSWD_NOSAVE;
-    if (strstr(val, " savepassword"))
-        options->passwdbits &= ~PASSWD_NOSAVE;
-    if (strstr(val, " nosetpassword"))
-        options->passwdbits &= ~PASSWD_SET;
-    if (strstr(val, " setpassword"))
-        options->passwdbits |= PASSWD_SET;
-
+    if (p = iniparser_getstrdup(config, INISEC_AFP, "options", NULL)) {
+        if (p = strtok(q, ", ")) {
+            while (p) {
+                if (strcasecmp(p, "nozeroconf"))
+                    options->flags |= OPTION_NOZEROCONF;
+                if (strcasecmp(p, "icon"))
+                    options->flags |= OPTION_CUSTOMICON;
+                if (strcasecmp(p, "noicon"))
+                    options->flags &= ~OPTION_CUSTOMICON;
+                if (strcasecmp(p, "advertise_ssh"))
+                    options->flags |= OPTION_ANNOUNCESSH;
+                if (strcasecmp(p, "noacl2maccess"))
+                    options->flags &= ~OPTION_ACL2MACCESS;
+                if (strcasecmp(p, "keepsessions"))
+                    options->flags |= OPTION_KEEPSESSIONS;
+                if (strcasecmp(p, "closevol"))
+                    options->flags |= OPTION_CLOSEVOL;
+                if (strcasecmp(p, "client_polling"))
+                    options->flags &= ~OPTION_SERVERNOTIF;
+                if (strcasecmp(p, "nosavepassword"))
+                    options->passwdbits |= PASSWD_NOSAVE;
+                if (strcasecmp(p, "savepassword"))
+                    options->passwdbits &= ~PASSWD_NOSAVE;
+                if (strcasecmp(p, "nosetpassword"))
+                    options->passwdbits &= ~PASSWD_SET;
+                if (strcasecmp(p, "setpassword"))
+                    options->passwdbits |= PASSWD_SET;
+                p = strtok(NULL, ",");
+            }
+        }
+    }
     /* figure out options w values */
 
     options->loginmesg      = iniparser_getstrdup(config, INISEC_AFP, "loginmesg",      "");
