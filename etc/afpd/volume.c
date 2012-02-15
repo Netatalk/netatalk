@@ -422,18 +422,18 @@ static void volset(const dictionary *conf, const char *vol, struct vol_option *o
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_RO;
                 else if (strcasecmp(p, "nohex") == 0)
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_NOHEX;
-                else if (strcasecmp(p, "usedots") == 0)
-                    options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS;
+                else if (strcasecmp(p, "nousedots") == 0)
+                    options[VOLOPT_FLAGS].i_value &= ~AFPVOL_USEDOTS;
                 else if (strcasecmp(p, "invisibledots") == 0)
-                    options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS | AFPVOL_INV_DOTS;
+                    options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS;
                 else if (strcasecmp(p, "nostat") == 0)
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_NOSTAT;
                 else if (strcasecmp(p, "preexec_close") == 0)
                     options[VOLOPT_PREEXEC].i_value = 1;
                 else if (strcasecmp(p, "root_preexec_close") == 0)
                     options[VOLOPT_ROOTPREEXEC].i_value = 1;
-                else if (strcasecmp(p, "upriv") == 0)
-                    options[VOLOPT_FLAGS].i_value |= AFPVOL_UNIX_PRIV;
+                else if (strcasecmp(p, "noupriv") == 0)
+                    options[VOLOPT_FLAGS].i_value &= ~AFPVOL_UNIX_PRIV;
                 else if (strcasecmp(p, "nodev") == 0)
                     options[VOLOPT_FLAGS].i_value |= AFPVOL_NODEV;
                 else if (strcasecmp(p, "caseinsensitive") == 0)
@@ -943,6 +943,7 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     memset(default_options, 0, sizeof(default_options));
 
     /* Enable some default options for all volumes */
+    default_options[VOLOPT_FLAGS].i_value |= AFPVOL_USEDOTS | AFPVOL_UNIX_PRIV;
 #ifdef HAVE_ACLS
     default_options[VOLOPT_FLAGS].i_value |= AFPVOL_ACLS;
 #endif
