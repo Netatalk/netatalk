@@ -79,6 +79,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
     void                *ad_finder = NULL;
     int                 chk_ext = 0;
 
+    if (adp)
         ad_finder = ad_entry(adp, ADEID_FINDERI);
 
     if (ad_finder) {

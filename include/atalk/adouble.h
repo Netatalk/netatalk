@@ -53,7 +53,7 @@
 #define AD_VERSION_EA   0x00020002
 
 /* default */
-#define AD_VERSION      AD_VERSION2
+#define AD_VERSION      AD_VERSION_EA
 
 /*
  * AppleDouble entry IDs.

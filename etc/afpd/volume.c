@@ -38,6 +38,7 @@
 #include <atalk/fce_api.h>
 #include <atalk/errchk.h>
 #include <atalk/iniparser.h>
+#include <atalk/unix.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>
@@ -117,7 +118,7 @@ static const _special_folder special_folders[] = {
 static void handle_special_folders (const struct vol *);
 static void deletevol(struct vol *vol);
 static void volume_free(struct vol *vol);
-static void check_ea_sys_support(struct vol *vol);
+static void check_ea_support(struct vol *vol);
 static char *get_vol_uuid(const AFPObj *obj, const char *volname);
 
 static void volfree(struct vol_option *options, const struct vol_option *save)
@@ -305,7 +306,7 @@ static void setoption(struct vol_option *options, const struct vol_option *save,
 {
     if (options[opt].c_value && (!save || options[opt].c_value != save[opt].c_value))
         free(options[opt].c_value);
-    options[opt].c_value = strdup(val + 1);
+    options[opt].c_value = strdup(val);
 }
 
 /* Parse iniconfig and initalize volume options */
@@ -729,8 +730,8 @@ static int creatvol(AFPObj *obj, struct passwd *pwd,
     volume->v_fperm |= volume->v_perm;
 
     /* Check EA support on volume */
-    if (volume->v_vfs_ea == AFPVOL_EA_AUTO)
-        check_ea_sys_support(volume);
+    if (volume->v_vfs_ea == AFPVOL_EA_AUTO || volume->v_adouble == AD_VERSION_EA)
+        check_ea_support(volume);
     initvol_vfs(volume);
 
     /* get/store uuid from file in afpd master*/
@@ -937,8 +938,6 @@ static int readvolfile(AFPObj *obj, struct afp_volume_name *p1, struct passwd *p
     struct vol_option options[VOLOPT_NUM];
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
-
-    p1->mtime = 0;
 
     memset(default_options, 0, sizeof(default_options));
 
@@ -1588,7 +1587,7 @@ void load_volumes(AFPObj *obj)
 
     /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
 
-    fd = open(obj->options.configfile, O_RDWR);
+    fd = open(obj->options.configfile, O_RDONLY);
 
     while (retries < 2) {
         if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
@@ -1785,49 +1784,67 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
 }
 
 /*
-  Check if the underlying filesystem supports EAs for ea:sys volumes.
+  Check if the underlying filesystem supports EAs.
   If not, switch to ea:ad.
   As we can't check (requires write access) on ro-volumes, we switch ea:auto
   volumes that are options:ro to ea:none.
 */
-static void check_ea_sys_support(struct vol *vol)
+static int do_check_ea_support(const struct vol *vol)
 {
-    uid_t process_uid = 0;
+    int haseas;
     char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
     const char *eacontent = "yes";
 
-    if (vol->v_vfs_ea == AFPVOL_EA_AUTO) {
+    if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
+        LOG(log_note, logtype_afpd, "read-only volume '%s', can't test for EA support, assuming yes", vol->v_localname);
+        return 1;
+    }
 
+    mktemp(eaname);
+
+    become_root();
+
+    if ((sys_setxattr(vol->v_path, eaname, eacontent, 4, 0)) == 0) {
+        sys_removexattr(vol->v_path, eaname);
+        haseas = 1;
+    } else {
+        LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes",
+            vol->v_localname);
+        haseas = 0;
+    }
+
+    unbecome_root();
+
+    return haseas;
+}
+
+static void check_ea_support(struct vol *vol)
+{
+    int haseas;
+    char eaname[] = {"org.netatalk.supports-eas.XXXXXX"};
+    const char *eacontent = "yes";
+
+    haseas = do_check_ea_support(vol);
+
+    if (vol->v_vfs_ea == AFPVOL_EA_AUTO) {
         if ((vol->v_flags & AFPVOL_RO) == AFPVOL_RO) {
             LOG(log_info, logtype_afpd, "read-only volume '%s', can't test for EA support, disabling EAs", vol->v_localname);
             vol->v_vfs_ea = AFPVOL_EA_NONE;
             return;
         }
 
-        mktemp(eaname);
-
-        process_uid = geteuid();
-        if (process_uid)
-            if (seteuid(0) == -1) {
-                LOG(log_error, logtype_afpd, "check_ea_sys_support: can't seteuid(0): %s", strerror(errno));
-                exit(EXITERR_SYS);
-            }
-
-        if ((sys_setxattr(vol->v_path, eaname, eacontent, 4, 0)) == 0) {
-            sys_removexattr(vol->v_path, eaname);
+        if (haseas) {
             vol->v_vfs_ea = AFPVOL_EA_SYS;
         } else {
             LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes, using ea:ad instead",
                 vol->v_localname);
             vol->v_vfs_ea = AFPVOL_EA_AD;
         }
+    }
 
-        if (process_uid) {
-            if (seteuid(process_uid) == -1) {
-                LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
-                exit(EXITERR_SYS);
-            }
-        }
+    if (vol->v_adouble == AD_VERSION_EA) {
+        if (!haseas)
+            vol->v_adouble = AD_VERSION2;
     }
 }
 

@@ -627,24 +627,29 @@ void setuplog(const char *logstr, const char *logfile)
 
     save = ptr = strdup(logstr);
 
-    while (*ptr) {
-        while (*ptr && isspace(*ptr))
-            ptr++;
+    ptr = strtok(ptr, ",");
 
-        logtype = ptr;
-        ptr = strpbrk(ptr, ":");
-        if (!ptr)
-            break;
-        *ptr = 0;
+    while (ptr) {
+        while (*ptr) {
+            while (*ptr && isspace(*ptr))
+                ptr++;
 
-        ptr++;
-        loglevel = ptr;
-        while (*ptr && !isspace(*ptr))
+            logtype = ptr;
+            ptr = strpbrk(ptr, ":");
+            if (!ptr)
+                break;
+            *ptr = 0;
+
             ptr++;
-        c = *ptr;
-        *ptr = 0;
-        setuplog_internal(loglevel, logtype, logfile);
-        *ptr = c;
+            loglevel = ptr;
+            while (*ptr && !isspace(*ptr))
+                ptr++;
+            c = *ptr;
+            *ptr = 0;
+            setuplog_internal(loglevel, logtype, logfile);
+            *ptr = c;
+        }
+        ptr = strtok(NULL, ",");
     }
 
     free(save);
