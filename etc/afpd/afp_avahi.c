@@ -44,7 +44,6 @@ static void publish_reply(AvahiEntryGroup *g,
  */
 static void register_stuff(void) {
     uint port;
-    const AFPObj *obj;
     const struct vol *volume;
     DSI *dsi;
     char name[MAXINSTANCENAMELEN+1];
@@ -95,13 +94,15 @@ static void register_stuff(void) {
         for (dsi = ctx->obj->dsi; dsi; dsi = dsi->next) {
             port = getip_port((struct sockaddr *)&dsi->server);
 
-            if (convert_string(obj->options.unixcharset,
+            LOG(log_error, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
+
+            if (convert_string(ctx->obj->options.unixcharset,
                                CH_UTF8,
-                               obj->options.hostname,
+                               ctx->obj->options.hostname,
                                -1,
                                name,
                                MAXINSTANCENAMELEN) <= 0) {
-                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name");
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.hostname);
                 goto fail;
             }
             if ((dsi->bonjourname = strdup(name)) == NULL) {
@@ -142,8 +143,8 @@ static void register_stuff(void) {
                 goto fail;
             }	/* if */
 
-            if (obj->options.mimicmodel) {
-                strlist2 = avahi_string_list_add_printf(strlist2, "model=%s", obj->options.mimicmodel);
+            if (ctx->obj->options.mimicmodel) {
+                strlist2 = avahi_string_list_add_printf(strlist2, "model=%s", ctx->obj->options.mimicmodel);
                 if (avahi_entry_group_add_service_strlst(ctx->group,
                                                          AVAHI_IF_UNSPEC,
                                                          AVAHI_PROTO_UNSPEC,
