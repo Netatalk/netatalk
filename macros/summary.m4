@@ -41,7 +41,6 @@ AC_DEFUN([AC_NETATALK_CONFIG_SUMMARY], [
 	AC_MSG_RESULT([         clrtxt  ($uams_using_options)])
 	AC_MSG_RESULT([         guest])
 	AC_MSG_RESULT([    Options:])
-	AC_MSG_RESULT([         SLP support:             $netatalk_cv_srvloc])
 	AC_MSG_RESULT([         Zeroconf support:        $netatalk_cv_zeroconf])
 	AC_MSG_RESULT([         tcp wrapper support:     $netatalk_cv_tcpwrap])
 dnl	if test x"$netatalk_cv_linux_sendfile" != x; then
@@ -101,11 +100,6 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([    GSSAPI:])
 		AC_MSG_RESULT([        LIBS   = $GSSAPI_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $GSSAPI_CFLAGS])
-	fi
-	if test x"$netatalk_cv_srvloc" = x"yes"; then
-		AC_MSG_RESULT([    SRVLOC:])
-		AC_MSG_RESULT([        LIBS   = $SLP_LIBS])
-		AC_MSG_RESULT([        CFLAGS = $SLP_CFLAGS])
 	fi
 	if test x"$netatalk_cv_use_cups" = x"yes"; then
 		AC_MSG_RESULT([    CUPS:])

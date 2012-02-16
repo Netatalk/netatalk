@@ -48,7 +48,7 @@ test_SOURCES += $(top_builddir)/etc/afpd/acls.c
 endif
 
 test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
-	 @SLP_CFLAGS@ @ZEROCONF_CFLAGS@ \
+	 @ZEROCONF_CFLAGS@ \
 	 -DAPPLCNAME \
 	 -DSERVERTEXT=\"$(SERVERTEXT)/\" \
 	 -D_PATH_AFPDDEFVOL=\"$(pkgconfdir)/AppleVolumes.default\" \
@@ -62,6 +62,6 @@ test_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/etc/afpd \
 
 test_LDADD = $(top_builddir)/libatalk/cnid/libcnid.la \
 	$(top_builddir)/libatalk/libatalk.la \
-	@QUOTA_LIBS@ @SLP_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@
+	@QUOTA_LIBS@ @WRAP_LIBS@ @LIBADD_DL@ @ACL_LIBS@ @ZEROCONF_LIBS@ @PTHREAD_LIBS@
 
 test_LDFLAGS = -export-dynamic
