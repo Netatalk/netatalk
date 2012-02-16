@@ -98,7 +98,7 @@ static int dsi_tcp_open(DSI *dsi)
 #ifdef TCPWRAP
     {
         struct request_info req;
-        request_init(&req, RQ_DAEMON, dsi->program, RQ_FILE, dsi->socket, NULL);
+        request_init(&req, RQ_DAEMON, "afpd", RQ_FILE, dsi->socket, NULL);
         fromhost(&req);
         if (!hosts_access(&req)) {
             LOG(deny_severity, logtype_dsi, "refused connect from %s", eval_client(&req));
