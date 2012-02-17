@@ -45,23 +45,23 @@ static void parse_ldapconf()
 
     if (! inited) {
 #ifdef HAVE_LDAP
-        /* Parse afp_ldap.conf */
-        printf("Start parsing afp_ldap.conf\n");
+        /* Parse afp.conf */
+        printf("Start parsing afp.conf\n");
         iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
         acl_ldap_readconfig(iniconfig);
-        printf("Finished parsing afp_ldap.conf\n");
+        printf("Finished parsing afp.conf\n");
         if (ldap_config_valid) {
             if (ldap_auth_method == LDAP_AUTH_NONE)
-                printf("afp_ldap.conf is ok. Using anonymous bind.\n");
+                printf("afp.conf is ok. Using anonymous bind.\n");
             else if (ldap_auth_method == LDAP_AUTH_SIMPLE)
-                printf("afp_ldap.conf is ok. Using simple bind.\n");
+                printf("afp.conf is ok. Using simple bind.\n");
             else {
                 ldap_config_valid = 0;
-                printf("afp_ldap.conf wants SASL which is not yet supported.\n");
+                printf("afp.conf wants SASL which is not yet supported.\n");
                 exit(EXIT_FAILURE);
             }
         } else {
-            printf("afp_ldap.conf is not ok, not using LDAP. Only local UUID testing available.\n");
+            printf("afp.conf is not ok, not using LDAP. Only local UUID testing available.\n");
         }
 #else
         printf("Built without LDAP support, only local UUID testing available.\n");
