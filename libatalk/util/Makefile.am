@@ -19,7 +19,6 @@ libutil_la_SOURCES = \
 	server_lock.c	\
 	socket.c        \
 	strdicasecmp.c	\
-	volinfo.c 	\
 	unix.c
 
 libutil_la_CFLAGS = \

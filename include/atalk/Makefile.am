@@ -12,7 +12,6 @@ atalkinclude_HEADERS = \
 	paths.h \
 	unicode.h \
 	util.h \
-	volinfo.h \
 	ea.h \
 	acl.h \
 	unix.h \
