@@ -1,5 +1,4 @@
 /*
-   $Id: unix.h,v 1.3 2010-03-12 15:16:49 franklahm Exp $
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
 
    This program is free software; you can redistribute it and/or modify
@@ -46,5 +45,6 @@ extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mo
 
 extern void become_root(void);
 extern void unbecome_root(void);
+extern int gmem(gid_t gid, int ngroups, gid_t *groups);
 
 #endif  /* ATALK_UNIX_H */

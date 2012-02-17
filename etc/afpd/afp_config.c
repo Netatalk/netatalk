@@ -88,7 +88,7 @@ int configinit(AFPObj *obj)
 
     if (obj->options.listen) {
         EC_NULL( q = p = strdup(obj->options.listen) );
-        EC_NULL( p = strtok(p, ",") );
+        EC_NULL( p = strtok(p, ", ") );
     }
 
     while (1) {
@@ -105,7 +105,7 @@ int configinit(AFPObj *obj)
 
         if (p)
             /* p is NULL if ! obj->options.listen */
-            p = strtok(NULL, ",");
+            p = strtok(NULL, ", ");
         if (!p)
             break;
     }
@@ -123,6 +123,20 @@ int configinit(AFPObj *obj)
         load_volumes(obj);
         zeroconf_register(obj);
     }
+
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcelistener", NULL))) {
+		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", p);
+		fce_add_udp_socket(p);
+    }
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcecoalesce", NULL))) {
+		LOG(log_note, logtype_afpd, "Fce coalesce: %s", p);
+		fce_set_coalesce(p);
+    }
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fceevents", NULL))) {
+		LOG(log_note, logtype_afpd, "Fce events: %s", p);
+		fce_set_events(p);
+    }
+
 
 EC_CLEANUP:
     if (q)

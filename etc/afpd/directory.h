@@ -111,8 +111,7 @@ extern struct path *cname (struct vol *, struct dir *, char **);
 
 extern int         deletecurdir (struct vol *);
 extern mode_t      mtoumode (struct maccess *);
-extern void        utommode (struct stat *, struct maccess *);
-extern int         getdirparams (const struct vol *, uint16_t, struct path *,
+extern int         getdirparams (const AFPObj *obj, const struct vol *, uint16_t, struct path *,
                                  struct dir *, char *, size_t *);
 
 extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
@@ -122,8 +121,8 @@ extern int         path_error(struct path *, int error);
 extern void        setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
 extern int         for_each_dirent(const struct vol *, char *, dir_loop , void *);
-extern int         check_access(char *name , int mode);
-extern int         file_access(struct path *path, int mode);
+extern int         check_access(const AFPObj *obj, struct vol *, char *name , int mode);
+extern int         file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode);
 extern int         netatalk_unlink (const char *name);
 extern int         caseenumerate (const struct vol *, struct path *, struct dir *);
 

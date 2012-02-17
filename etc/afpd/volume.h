@@ -14,15 +14,11 @@
 #include <atalk/unicode.h>
 #include <atalk/globals.h>
 
-extern struct vol       *getvolbyvid (const uint16_t);
 extern int              ustatfs_getvolspace (const struct vol *,
-            VolSpace *, VolSpace *,
-            uint32_t *);
+                                             VolSpace *, VolSpace *,
+                                             uint32_t *);
 extern void             setvoltime (AFPObj *, struct vol *);
 extern int              pollvoltime (AFPObj *);
-extern void             load_volumes (AFPObj *obj);
-extern const struct vol *getvolumes(void);
-extern void             unload_volumes(void);
 extern void             vol_fce_tm_event(void);
 
 /* FP functions */
@@ -34,7 +30,5 @@ int afp_closevol     (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size
 
 /* netatalk functions */
 extern void     close_all_vol   (void);
-
-struct vol *current_vol;        /* last volume from getvolbyvid() */
 
 #endif

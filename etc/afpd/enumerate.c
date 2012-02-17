@@ -23,6 +23,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "desktop.h"
 #include "directory.h"
@@ -386,7 +387,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                     return AFPERR_MISC;
                 }
             }
-            if ((ret = getdirparams(vol, dbitmap, &s_path, dir, data + header , &esz)) != AFP_OK)
+            if ((ret = getdirparams(obj, vol, dbitmap, &s_path, dir, data + header , &esz)) != AFP_OK)
                 return( ret );
 
         } else {
@@ -394,8 +395,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
             /* files are added to the dircache in getfilparams() -> getmetadata() */
-            if (AFP_OK != ( ret = getfilparams(vol, fbitmap, &s_path, curdir, 
-                                     data + header , &esz )) ) {
+            if (AFP_OK != ( ret = getfilparams(obj, vol, fbitmap, &s_path, curdir, 
+                                               data + header , &esz )) ) {
                 return( ret );
             }
         }

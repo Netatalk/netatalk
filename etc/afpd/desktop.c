@@ -28,6 +28,8 @@
 #include <atalk/util.h>
 #include <atalk/logger.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
+
 #include "volume.h"
 #include "directory.h"
 #include "fork.h"
@@ -618,7 +620,7 @@ utompath_error:
 }
 
 /* ------------------------- */
-static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
+static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, char *ibuf)
 {
     struct ofork        *of;
     char                *name, *upath;
@@ -630,7 +632,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
     clen = min( clen, 199 );
 
     upath = path->u_name;
-    if (check_access(upath, OPENACC_WR ) < 0) {
+    if (check_access(obj, vol, upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
     
@@ -665,7 +667,7 @@ static int ad_addcomment(struct vol *vol, struct path *path, char *ibuf)
 }
 
 /* ----------------------------- */
-int afp_addcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -696,7 +698,7 @@ int afp_addcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
         ibuf++;
     }
 
-    return ad_addcomment(vol, path, ibuf);
+    return ad_addcomment(obj, vol, path, ibuf);
 }
 
 /* -------------------- */
@@ -774,7 +776,7 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
 }
 
 /* ----------------------- */
-static int ad_rmvcomment(struct vol *vol, struct path *path)
+static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 {
     struct adouble	ad, *adp;
     struct ofork        *of;
@@ -782,7 +784,7 @@ static int ad_rmvcomment(struct vol *vol, struct path *path)
     char		*upath;
 
     upath = path->u_name;
-    if (check_access(upath, OPENACC_WR ) < 0) {
+    if (check_access(obj, vol, upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
 
@@ -840,5 +842,5 @@ int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
 	return get_afp_errno(AFPERR_NOOBJ);
     }
     
-    return ad_rmvcomment(vol, s_path);
+    return ad_rmvcomment(obj, vol, s_path);
 }

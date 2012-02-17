@@ -627,7 +627,7 @@ void setuplog(const char *logstr, const char *logfile)
 
     save = ptr = strdup(logstr);
 
-    ptr = strtok(ptr, ",");
+    ptr = strtok(ptr, ", ");
 
     while (ptr) {
         while (*ptr) {
@@ -649,7 +649,7 @@ void setuplog(const char *logstr, const char *logfile)
             setuplog_internal(loglevel, logtype, logfile);
             *ptr = c;
         }
-        ptr = strtok(NULL, ",");
+        ptr = strtok(NULL, ", ");
     }
 
     free(save);

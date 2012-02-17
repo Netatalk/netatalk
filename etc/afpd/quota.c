@@ -615,7 +615,7 @@ static int getfsquota(struct vol *vol, const int uid, struct dqblk *dq)
 }
 
 
-static int getquota( struct vol *vol, struct dqblk *dq, const uint32_t bsize)
+static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq, const uint32_t bsize)
 {
     char *p;
 
@@ -693,8 +693,8 @@ static int getquota( struct vol *vol, struct dqblk *dq, const uint32_t bsize)
 	return getfsquota(vol, uuid, dq);
 	   
 #else /* TRU64 */
-    return vol->v_nfs ? getnfsquota(vol, uuid, bsize, dq) :
-           getfsquota(vol, uuid, dq);
+    return vol->v_nfs ? getnfsquota(vol, obj->uid, bsize, dq) :
+           getfsquota(vol, obj->uid, dq);
 #endif /* TRU64 */
 }
 
@@ -753,14 +753,14 @@ static int overquota( struct dqblk *dqblk)
 #define tobytes(a, b)  dbtob((VolSpace) (a))
 #endif
 
-int uquota_getvolspace( struct vol *vol, VolSpace *bfree, VolSpace *btotal, const uint32_t bsize)
+int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolSpace *btotal, const uint32_t bsize)
 {
 	uint64_t this_bsize;
 	struct dqblk dqblk;
 
 	this_bsize = bsize;
 			
-	if (getquota( vol, &dqblk, bsize) != 0 ) {
+	if (getquota(obj, vol, &dqblk, bsize) != 0 ) {
 		return( AFPERR_PARAM );
 	}
 

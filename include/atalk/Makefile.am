@@ -8,6 +8,7 @@ atalkinclude_HEADERS = \
 	vfs.h \
 	cnid.h \
 	logger.h \
+	netatalk_conf.h \
 	paths.h \
 	unicode.h \
 	util.h \

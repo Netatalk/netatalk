@@ -23,6 +23,7 @@
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "volume.h"
 #include "directory.h"
@@ -481,7 +482,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return( AFPERR_NOITEM );
     }
     buflen = *rbuflen - sizeof( bitmap ) - sizeof( appltag );
-    if ( getfilparams(vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
+    if ( getfilparams(obj, vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
                       sizeof( appltag ), &buflen ) != AFP_OK ) {
         *rbuflen = 0;
         return( AFPERR_BITMAP );

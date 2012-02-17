@@ -207,13 +207,12 @@ extern int getnfsquota (struct vol *, const int, const uint32_t,
                         struct dqblk *);
 
 #endif /* ! HAVE_LIBQUOTA */
-extern int uquota_getvolspace (struct vol *, VolSpace *, VolSpace *,
+extern int uquota_getvolspace (const AFPObj *obj, struct vol *, VolSpace *, VolSpace *,
                                const uint32_t);
 #endif /* NO_QUOTA_SUPPORT */
 
 extern struct afp_options default_options;
 
-extern int gmem            (const gid_t);
 extern int setdeskmode      (const mode_t);
 extern int setdirunixmode   (const struct vol *, const char *, mode_t);
 extern int setdirmode       (const struct vol *, const char *, mode_t);
@@ -221,7 +220,7 @@ extern int setdeskowner     (const uid_t, const gid_t);
 extern int setdirowner      (const struct vol *, const char *, const uid_t, const gid_t);
 extern int setfilunixmode   (const struct vol *, struct path*, const mode_t);
 extern int setfilowner      (const struct vol *, const uid_t, const gid_t, struct path*);
-extern void accessmode      (const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
+extern void accessmode      (const AFPObj *obj, const struct vol *, char *, struct maccess *, struct dir *, struct stat *);
 
 #ifdef AFS	
     #define accessmode afsmode

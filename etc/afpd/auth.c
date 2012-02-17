@@ -52,22 +52,6 @@ extern void afp_get_cmdline( int *ac, char ***av );
 
 int afp_version = 11;
 static int afp_version_index;
-
-uid_t   uuid;
-
-#if defined( sun ) && !defined( __svr4__ ) || defined( ultrix )
-
-int *groups;
-#define GROUPS_SIZE sizeof(int)
-
-#else /* sun __svr4__ ultrix */
-
-gid_t   *groups;
-#define GROUPS_SIZE sizeof(gid_t)
-#endif /* sun ultrix */
-
-int ngroups;
-
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
 static struct uam_obj uam_login = {"", "", 0, {{NULL, NULL, NULL, NULL }}, &uam_login,
                                    &uam_login};
@@ -270,17 +254,17 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 
     /* Basically if the user is in the admin group, we stay root */
 
-    if (( ngroups = getgroups( 0, NULL )) < 0 ) {
+    if ((obj->ngroups = getgroups( 0, NULL )) < 0 ) {
         LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
 
-    if ( NULL == (groups = calloc(ngroups, GROUPS_SIZE)) ) {
-        LOG(log_error, logtype_afpd, "login: %s calloc: %d", ngroups);
+    if ( NULL == (obj->groups = calloc(obj->ngroups, sizeof(gid_t))) ) {
+        LOG(log_error, logtype_afpd, "login: %s calloc: %d", obj->ngroups);
         return AFPERR_BADUAM;
     }
 
-    if (( ngroups = getgroups( ngroups, groups )) < 0 ) {
+    if (( obj->ngroups = getgroups(obj->ngroups, obj->groups )) < 0 ) {
         LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno) );
         return AFPERR_BADUAM;
     }
@@ -290,8 +274,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 
     if (obj->options.admingid != 0) {
         int i;
-        for (i = 0; i < ngroups; i++) {
-            if (groups[i] == obj->options.admingid) admin = 1;
+        for (i = 0; i < obj->ngroups; i++) {
+            if (obj->groups[i] == obj->options.admingid) admin = 1;
         }
     }
     if (admin) {
@@ -342,15 +326,15 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     }
 #endif /* TRU64 */
 
-    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(ngroups, groups));
+    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(obj->ngroups, obj->groups));
 
     /* There's probably a better way to do this, but for now, we just play root */
 #ifdef ADMIN_GRP
     if (admin)
-        uuid = 0;
+        obj->uid = 0;
     else
 #endif /* ADMIN_GRP */
-        uuid = pwd->pw_uid;
+        obj->uid = geteuid();
 
     set_auth_switch(expired);
     /* save our euid, we need it for preexec_close */

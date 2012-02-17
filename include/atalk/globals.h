@@ -32,6 +32,8 @@
 
 #define MAXUSERLEN 256
 
+#define DEFAULT_MAX_DIRCACHE_SIZE 8192
+
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)
 #define OPTION_SERVERNOTIF   (1 << 2)
@@ -41,6 +43,11 @@
 #define OPTION_ACL2MACCESS   (1 << 8)
 #define OPTION_NOZEROCONF    (1 << 9)
 #define OPTION_KEEPSESSIONS  (1 << 10) /* preserve sessions across master afpd restart with SIGQUIT */
+
+#define PASSWD_NONE     0
+#define PASSWD_SET     (1 << 0)
+#define PASSWD_NOSAVE  (1 << 1)
+#define PASSWD_ALL     (PASSWD_SET | PASSWD_NOSAVE)
 
 /**********************************************************************************************
  * Ini config sections
@@ -115,6 +122,10 @@ typedef struct AFPObj {
     struct session_info  sinfo;
     uid_t uid; 	/* client running user id */
     int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
+
+    gid_t *groups;
+    int ngroups;
+
     /* Functions */
     void (*logout)(void);
     void (*exit)(int);
@@ -139,7 +150,6 @@ extern const char         *Cnid_port;
 extern int  get_afp_errno   (const int param);
 extern void afp_options_init (struct afp_options *);
 extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
-extern int  afp_config_parse(AFPObj *AFPObj);
 extern void afp_options_free(struct afp_options *);
 extern void setmessage (const char *);
 extern void readmessage (AFPObj *);

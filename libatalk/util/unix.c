@@ -272,3 +272,15 @@ void randombytes(void *buf, int n)
 
     return;
 }
+
+int gmem(gid_t gid, int ngroups, gid_t *groups)
+{
+    int		i;
+
+    for ( i = 0; i < ngroups; i++ ) {
+        if ( groups[ i ] == gid ) {
+            return( 1 );
+        }
+    }
+    return( 0 );
+}

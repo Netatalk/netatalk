@@ -91,8 +91,11 @@ struct vol {
 #endif /*__svr4__*/
 };
 
-#define AFPVOL_OPEN (1<<0)
+/* load_volumes() flags */
+#define LV_ALL (1 << 0)
 
+/* volume flags */
+#define AFPVOL_OPEN (1<<0)
 /* flags  for AFS and quota 0xxx0 */
 #define AFPVOL_GVSMASK  (7<<2)
 #define AFPVOL_NONE     (0<<2)

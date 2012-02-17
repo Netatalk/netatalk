@@ -98,9 +98,9 @@ static int utombits(mode_t bits)
 /* --------------------------------
     cf AFP 3.0 page 63
 */
-void utommode(struct stat *stat, struct maccess *ma)
+static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess *ma)
 {
-mode_t mode;
+    mode_t mode;
 
     mode = stat->st_mode;
     ma->ma_world = utombits( mode );
@@ -114,10 +114,10 @@ mode_t mode;
     /* ma_user is a union of all permissions but we must follow
      * unix perm
     */
-    if ( (uuid == stat->st_uid) || (uuid == 0)) {
+    if ( (obj->uid == stat->st_uid) || (obj->uid == 0)) {
         ma->ma_user = ma->ma_owner | AR_UOWN;
     }
-    else if ( gmem( stat->st_gid )) {
+    else if (gmem(stat->st_gid, obj->ngroups, obj->groups)) {
         ma->ma_user = ma->ma_group;
     }
     else {
@@ -152,7 +152,7 @@ mode_t mode;
  *
  * dir parameter is used by AFS
  */
-void accessmode(const struct vol *vol, char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
+void accessmode(const AFPObj *obj, const struct vol *vol, char *path, struct maccess *ma, struct dir *dir _U_, struct stat *st)
 {
     struct stat     sb;
 
@@ -162,22 +162,10 @@ void accessmode(const struct vol *vol, char *path, struct maccess *ma, struct di
             return;
         st = &sb;
     }
-    utommode( st, ma );
+    utommode(obj, st, ma );
 #ifdef HAVE_ACLS
-    acltoownermode(vol, path, st, ma);
+    acltoownermode(obj, vol, path, st, ma);
 #endif
-}
-
-int gmem(const gid_t gid)
-{
-    int		i;
-
-    for ( i = 0; i < ngroups; i++ ) {
-        if ( groups[ i ] == gid ) {
-            return( 1 );
-        }
-    }
-    return( 0 );
 }
 
 static mode_t mtoubits(u_char bits)

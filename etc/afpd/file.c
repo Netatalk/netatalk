@@ -24,6 +24,7 @@
 #include <atalk/unix.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/netatalk_conf.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -274,10 +275,11 @@ exit:
 }
              
 /* -------------------------- */
-int getmetadata(struct vol *vol,
-                 uint16_t bitmap,
-                 struct path *path, struct dir *dir, 
-                 char *buf, size_t *buflen, struct adouble *adp)
+int getmetadata(const AFPObj *obj,
+                struct vol *vol,
+                uint16_t bitmap,
+                struct path *path, struct dir *dir, 
+                char *buf, size_t *buflen, struct adouble *adp)
 {
     char		*data, *l_nameoff = NULL, *upath;
     char                *utf_nameoff = NULL;
@@ -536,7 +538,7 @@ int getmetadata(struct vol *vol,
             break;
         case FILPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */
-            accessmode(vol, upath, &ma, dir , st);
+            accessmode(obj, vol, upath, &ma, dir , st);
 
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));
@@ -589,7 +591,8 @@ int getmetadata(struct vol *vol,
 }
                 
 /* ----------------------- */
-int getfilparams(struct vol *vol,
+int getfilparams(const AFPObj *obj,
+                 struct vol *vol,
                  uint16_t bitmap,
                  struct path *path, struct dir *dir, 
                  char *buf, size_t *buflen )
@@ -627,7 +630,7 @@ int getfilparams(struct vol *vol,
             }
         }
     }
-    rc = getmetadata(vol, bitmap, path, dir, buf, buflen, adp);
+    rc = getmetadata(obj, vol, bitmap, path, dir, buf, buflen, adp);
     ad_close(adp, ADFLAGS_HF | flags);
 
     return( rc );
@@ -784,7 +787,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         ibuf++;
     }
 
-    if (AFP_OK == ( rc = setfilparams(vol, s_path, bitmap, ibuf )) ) {
+    if (AFP_OK == ( rc = setfilparams(obj, vol, s_path, bitmap, ibuf )) ) {
         setvoltime(obj, vol );
     }
 
@@ -797,7 +800,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 */
 extern struct path Cur_Path;
 
-int setfilparams(struct vol *vol,
+int setfilparams(const AFPObj *obj, struct vol *vol,
                  struct path *path, uint16_t f_bitmap, char *buf )
 {
     struct adouble	ad, *adp;
@@ -828,7 +831,7 @@ int setfilparams(struct vol *vol,
     adp = of_ad(vol, path, &ad);
     upath = path->u_name;
 
-    if (!vol_unix_priv(vol) && check_access(upath, OPENACC_WR ) < 0) {
+    if (!vol_unix_priv(vol) && check_access(obj, vol, upath, OPENACC_WR ) < 0) {
         return AFPERR_ACCESS;
     }
 
@@ -1768,8 +1771,8 @@ retry:
         return AFPERR_NOID;
     }
     path.id = cnid;
-    if (AFP_OK != (err = getfilparams(vol, bitmap, &path , curdir, 
-                            rbuf + sizeof(bitmap), &buflen))) {
+    if (AFP_OK != (err = getfilparams(obj, vol, bitmap, &path , curdir, 
+                                      rbuf + sizeof(bitmap), &buflen))) {
         return err;
     }
     *rbuflen = buflen + sizeof(bitmap);
@@ -1862,7 +1865,7 @@ delete:
 }
 
 /* ------------------------------ */
-static struct adouble *find_adouble(struct path *path, struct ofork **of, struct adouble *adp)
+static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp)
 {
     int             ret;
 
@@ -1884,7 +1887,7 @@ static struct adouble *find_adouble(struct path *path, struct ofork **of, struct
     /* we use file_access both for legacy Mac perm and
      * for unix privilege, rename will take care of folder perms
     */
-    if (file_access(path, OPENACC_WR ) < 0) {
+    if (file_access(obj, vol, path, OPENACC_WR ) < 0) {
         afp_errno = AFPERR_ACCESS;
         return NULL;
     }
@@ -1980,7 +1983,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
     
     ad_init(&ads, vol);
-    if (!(adsp = find_adouble( path, &s_of, &ads))) {
+    if (!(adsp = find_adouble(obj, vol, path, &s_of, &ads))) {
         return afp_errno;
     }
 
@@ -2013,7 +2016,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     }
 
     ad_init(&add, vol);
-    if (!(addp = find_adouble( path, &d_of, &add))) {
+    if (!(addp = find_adouble(obj, vol, path, &d_of, &add))) {
         err = afp_errno;
         goto err_exchangefile;
     }

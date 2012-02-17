@@ -48,6 +48,7 @@
 #include <atalk/bstradd.h>
 #include <atalk/unicode.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "desktop.h"
 #include "directory.h"
@@ -423,7 +424,7 @@ crit_check_ret:
 }  
 
 /* ------------------------------ */
-static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
+static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char **buf, int ext)
 {
 
 	char 		*p = *buf;
@@ -446,11 +447,11 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
 	}
 	
 	if ( isdir ) {
-        ret = getdirparams(vol, c1.dbitmap, path, path->d_dir, p , &tbuf ); 
+        ret = getdirparams(obj, vol, c1.dbitmap, path, path->d_dir, p , &tbuf ); 
 	}
 	else {
 	    /* FIXME slow if we need the file ID, we already know it, done ? */
-		ret = getfilparams ( vol, c1.fbitmap, path, path->d_dir, p, &tbuf);
+		ret = getfilparams (obj, vol, c1.fbitmap, path, path->d_dir, p, &tbuf);
 	}
 
 	if ( ret != AFP_OK )
@@ -493,7 +494,8 @@ static int rslt_add ( struct vol *vol, struct path *path, char **buf, int ext)
  * @param ext       (r)  extended search flag
  */
 #define NUM_ROUNDS 200
-static int catsearch(struct vol *vol,
+static int catsearch(const AFPObj *obj,
+                     struct vol *vol,
                      struct dir *dir,  
                      int rmatches,
                      uint32_t *pos,
@@ -644,7 +646,7 @@ static int catsearch(struct vol *vol,
 
 			/* bit 0 means that criteria has been met */
 			if ((ccr & 1)) {
-				r = rslt_add ( vol, &path, &rrbuf, ext);
+				r = rslt_add (obj, vol, &path, &rrbuf, ext);
 				
 				if (r == 0) {
 					result = AFPERR_MISC;
@@ -706,7 +708,8 @@ catsearch_end: /* Exiting catsearch: error condition */
  * @param rsize     (w)  length of data written to output buffer
  * @param ext       (r)  extended search flag
  */
-static int catsearch_db(struct vol *vol,
+static int catsearch_db(const AFPObj *obj,
+                        struct vol *vol,
                         struct dir *dir,  
                         const char *uname,
                         int rmatches,
@@ -810,7 +813,7 @@ static int catsearch_db(struct vol *vol,
             LOG(log_debug, logtype_afpd,"catsearch_db: match: %s/%s",
                 getcwdpath(), path.u_name);
             /* bit 1 means that criteria has been met */
-            r = rslt_add(vol, &path, &rrbuf, ext);
+            r = rslt_add(obj, vol, &path, &rrbuf, ext);
             if (r == 0) {
                 result = AFPERR_MISC;
                 goto catsearch_end;
@@ -1050,10 +1053,10 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         && (strcmp(vol->v_cnidscheme, "dbd") == 0)
         && (vol->v_flags & AFPVOL_SEARCHDB))
         /* we've got a name and it's a dbd volume, so search CNID database */
-        ret = catsearch_db(vol, vol->v_root, uname, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
+        ret = catsearch_db(obj, vol, vol->v_root, uname, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
     else
         /* perform a slow filesystem tree search */
-        ret = catsearch(vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
+        ret = catsearch(obj, vol, vol->v_root, rmatches, &catpos[0], rbuf+24, &nrecs, &rsize, ext);
 
     memcpy(rbuf, catpos, sizeof(catpos));
     rbuf += sizeof(catpos);

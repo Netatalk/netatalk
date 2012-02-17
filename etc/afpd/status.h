@@ -33,12 +33,6 @@
 /* AFPSTATUS_MACHLEN is the number of characters for the MachineType. */
 #define AFPSTATUS_MACHLEN     16
 
-
-#define PASSWD_NONE     0
-#define PASSWD_SET     (1 << 0)
-#define PASSWD_NOSAVE  (1 << 1)
-#define PASSWD_ALL     (PASSWD_SET | PASSWD_NOSAVE)
-
 extern void status_versions (char * /*status*/, const DSI *);
 extern void status_uams (char * /*status*/, const char * /*authlist*/);
 extern void status_init (AFPObj *, DSI *dsi);

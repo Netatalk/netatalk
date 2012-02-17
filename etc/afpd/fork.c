@@ -24,6 +24,7 @@
 #include <atalk/cnid.h>
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "fork.h"
 #include "file.h"
@@ -35,7 +36,7 @@
 struct ofork *writtenfork;
 #endif
 
-static int getforkparams(struct ofork *ofork, uint16_t bitmap, char *buf, size_t *buflen)
+static int getforkparams(const AFPObj *obj, struct ofork *ofork, uint16_t bitmap, char *buf, size_t *buflen)
 {
     struct path         path;
     struct stat     *st;
@@ -84,7 +85,7 @@ static int getforkparams(struct ofork *ofork, uint16_t bitmap, char *buf, size_t
             }
         }
     }
-    return getmetadata(vol, bitmap, &path, dir, buf, buflen, adp );
+    return getmetadata(obj, vol, bitmap, &path, dir, buf, buflen, adp );
 }
 
 static off_t get_off_t(char **ibuf, int is64)
@@ -281,11 +282,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     /* FIXME should we check it first ? */
     upath = s_path->u_name;
     if (!vol_unix_priv(vol)) {
-        if (check_access(upath, access ) < 0) {
+        if (check_access(obj, vol, upath, access ) < 0) {
             return AFPERR_ACCESS;
         }
     } else {
-        if (file_access(s_path, access ) < 0) {
+        if (file_access(obj, vol, s_path, access ) < 0) {
             return AFPERR_ACCESS;
         }
     }
@@ -417,7 +418,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
         }
     }
 
-    if ((ret = getforkparams(ofork, bitmap, rbuf + 2 * sizeof(int16_t), &buflen)) != AFP_OK) {
+    if ((ret = getforkparams(obj, ofork, bitmap, rbuf + 2 * sizeof(int16_t), &buflen)) != AFP_OK) {
         ad_close( ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
         goto openfork_err;
     }
@@ -1281,7 +1282,7 @@ int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
 }
 
 /* ---------------------------- */
-int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct ofork    *ofork;
     int             ret;
@@ -1307,7 +1308,7 @@ int afp_getforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbu
         }
     }
 
-    if (AFP_OK != (ret = getforkparams(ofork, bitmap, rbuf + sizeof( u_short ), &buflen ))) {
+    if (AFP_OK != (ret = getforkparams(obj, ofork, bitmap, rbuf + sizeof( u_short ), &buflen ))) {
         return( ret );
     }
 

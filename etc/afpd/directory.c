@@ -32,6 +32,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/netatalk_conf.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -1413,11 +1414,8 @@ int movecwd(const struct vol *vol, struct dir *dir)
  * If we aren't the file's owner we can't change its perms when moving it and smb
  * nfs,... don't even try.
  */
-#define AFP_CHECK_ACCESS
-
-int check_access(char *path, int mode)
+int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 {
-#ifdef AFP_CHECK_ACCESS
     struct maccess ma;
     char *p;
 
@@ -1425,21 +1423,21 @@ int check_access(char *path, int mode)
     if (!p)
         return -1;
 
-    accessmode(current_vol, p, &ma, curdir, NULL);
+    accessmode(obj, vol, p, &ma, curdir, NULL);
     if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
         return -1;
     if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
         return -1;
-#endif
+
     return 0;
 }
 
 /* --------------------- */
-int file_access(struct path *path, int mode)
+int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 {
     struct maccess ma;
 
-    accessmode(current_vol, path->u_name, &ma, curdir, &path->st);
+    accessmode(obj, vol, path->u_name, &ma, curdir, &path->st);
 
     LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
         path->u_name, ma.ma_user);
@@ -1478,7 +1476,8 @@ int dirreenumerate(struct dir *dir, struct stat *st)
    (name, dir) with curdir:name == dir, from afp_enumerate
 */
 
-int getdirparams(const struct vol *vol,
+int getdirparams(const AFPObj *obj,
+                 const struct vol *vol,
                  uint16_t bitmap, struct path *s_path,
                  struct dir *dir,
                  char *buf, size_t *buflen )
@@ -1643,7 +1642,7 @@ int getdirparams(const struct vol *vol,
             break;
 
         case DIRPBIT_ACCESS :
-            accessmode(vol, upath, &ma, dir , st);
+            accessmode(obj, vol, upath, &ma, dir , st);
 
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
@@ -1679,7 +1678,7 @@ int getdirparams(const struct vol *vol,
 
         case DIRPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */
-            accessmode(vol, upath, &ma, dir, st);
+            accessmode(obj, vol, upath, &ma, dir, st);
 
             aint = htonl(st->st_uid);
             memcpy( data, &aint, sizeof( aint ));

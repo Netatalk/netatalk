@@ -45,6 +45,8 @@
 #include <atalk/acl.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
+#include <atalk/unix.h>
+#include <atalk/netatalk_conf.h>
 
 #include "directory.h"
 #include "desktop.h"
@@ -397,7 +399,9 @@ EC_CLEANUP:
  *
  * @returns                  0 or -1 on error
  */
-static int posix_acl_rights(const char *path,
+
+static int posix_acl_rights(const AFPObj *obj,
+                            const char *path,
                             const struct stat *sb,
                             uint32_t *result)
 {
@@ -422,7 +426,7 @@ static int posix_acl_rights(const char *path,
 
         switch (tag) {
             case ACL_USER_OBJ:
-                if (sb->st_uid == uuid) {
+                if (sb->st_uid == obj->uid) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_USER_OBJ: %u", sb->st_uid);
                     rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
                 }
@@ -431,7 +435,7 @@ static int posix_acl_rights(const char *path,
             case ACL_USER:
                 EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(e));
 
-                if (*uid == uuid) {
+                if (*uid == obj->uid) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
                     acl_rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
                 }
@@ -440,7 +444,7 @@ static int posix_acl_rights(const char *path,
                 break;
 
             case ACL_GROUP_OBJ:
-                if (!(sb->st_uid == uuid) && gmem(sb->st_gid)) {
+                if (!(sb->st_uid == obj->uid) && gmem(sb->st_gid, obj->ngroups, obj->groups)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
                     acl_rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
                 }
@@ -449,7 +453,7 @@ static int posix_acl_rights(const char *path,
             case ACL_GROUP:
                 EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(e));
 
-                if (gmem(*gid)) {
+                if (gmem(*gid, obj->ngroups, obj->groups)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
                     acl_rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
                 }
@@ -463,7 +467,7 @@ static int posix_acl_rights(const char *path,
                 break;
 
             case ACL_OTHER:
-                if (!(sb->st_uid == uuid) && !gmem(sb->st_gid)) {
+                if (!(sb->st_uid == obj->uid) && !gmem(sb->st_gid, obj->ngroups, obj->groups)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_OTHER");
                     rights |= posix_permset_to_darwin_rights(e, S_ISDIR(sb->st_mode));
                 }
@@ -541,7 +545,7 @@ static u_char acl_permset_to_uarights(acl_entry_t entry) {
  *
  * @returns                  0 or -1 on error
  */
-static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct maccess *ma) {
+static int posix_acls_to_uaperms(const AFPObj *obj, const char *path, struct stat *sb, struct maccess *ma) {
     EC_INIT;
 
     int entry_id = ACL_FIRST_ENTRY;
@@ -567,7 +571,7 @@ static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct macce
             case ACL_USER:
                 EC_NULL_LOG(uid = (uid_t *)acl_get_qualifier(entry));
 
-                if (*uid == uuid && !(whoami == sb->st_uid)) {
+                if (*uid == obj->uid && !(whoami == sb->st_uid)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_USER: %u", *uid);
                     acl_rights |= acl_permset_to_uarights(entry);
                 }
@@ -578,14 +582,14 @@ static int posix_acls_to_uaperms(const char *path, struct stat *sb, struct macce
                 group_rights = acl_permset_to_uarights(entry);
                 LOG(log_maxdebug, logtype_afpd, "ACL_GROUP_OBJ: %u", sb->st_gid);
 
-                if (gmem(sb->st_gid) && !(whoami == sb->st_uid))
+                if (gmem(sb->st_gid, obj->ngroups, obj->groups) && !(whoami == sb->st_uid))
                     acl_rights |= group_rights;
                 break;
 
             case ACL_GROUP:
                 EC_NULL_LOG(gid = (gid_t *)acl_get_qualifier(entry));
 
-                if (gmem(*gid) && !(whoami == sb->st_uid)) {
+                if (gmem(*gid, obj->ngroups, obj->groups) && !(whoami == sb->st_uid)) {
                     LOG(log_maxdebug, logtype_afpd, "ACL_GROUP: %u", *gid);
                     acl_rights |= acl_permset_to_uarights(entry);
                 }
@@ -1338,7 +1342,8 @@ EC_CLEANUP:
  *
  * @returns                    AFP result code
 */
-static int check_acl_access(const struct vol *vol,
+static int check_acl_access(const AFPObj *obj,
+                            const struct vol *vol,
                             struct dir *dir,
                             const char *path,
                             const uuidp_t uuid,
@@ -1385,7 +1390,7 @@ static int check_acl_access(const struct vol *vol,
         EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-        EC_ZERO_LOG(posix_acl_rights(path, &st, &allowed_rights));
+        EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &allowed_rights));
 #endif
         /*
          * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
@@ -1418,7 +1423,7 @@ static int check_acl_access(const struct vol *vol,
             EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-            EC_ZERO_LOG(posix_acl_rights(path, &st, &parent_rights));
+            EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &parent_rights));
 #endif
             if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD))
                 allowed_rights |= DARWIN_ACE_DELETE; /* man, that was a lot of work! */
@@ -1508,7 +1513,7 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         return AFPERR_NOOBJ;
     }
 
-    ret = check_acl_access(vol, dir, s_path->u_name, uuid, darwin_ace_rights);
+    ret = check_acl_access(obj, vol, dir, s_path->u_name, uuid, darwin_ace_rights);
 
     return ret;
 }
@@ -1716,12 +1721,12 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
  * This is the magic function that makes ACLs usable by calculating
  * the access granted by ACEs to the logged in user.
  */
-int acltoownermode(const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
+int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 {
     EC_INIT;
     uint32_t rights = 0;
 
-    if ( ! (AFPobj->options.flags & OPTION_ACL2MACCESS)
+    if ( ! (obj->options.flags & OPTION_ACL2MACCESS)
          || ! (vol->v_flags & AFPVOL_ACLS))
          return 0;
 
@@ -1742,47 +1747,11 @@ int acltoownermode(const struct vol *vol, char *path, struct stat *st, struct ma
 #endif
 
 #ifdef HAVE_POSIX_ACLS
-    EC_ZERO_LOG(posix_acls_to_uaperms(path, st, ma));
+    EC_ZERO_LOG(posix_acls_to_uaperms(obj, path, st, ma));
 #endif
 
     LOG(log_maxdebug, logtype_afpd, "resulting user maccess: 0x%02x group maccess: 0x%02x", ma->ma_user, ma->ma_group);
 
 EC_CLEANUP:
     EC_EXIT;
-}
-
-/*!
- * Check whether a volume supports ACLs
- *
- * @param vol  (r) volume
- *
- * @returns        0 if not, 1 if yes
- */
-int check_vol_acl_support(const struct vol *vol)
-{
-    int ret = 0;
-
-#ifdef HAVE_SOLARIS_ACLS
-    ace_t *aces = NULL;
-    ret = 1;
-    if (get_nfsv4_acl(vol->v_path, &aces) == -1)
-        ret = 0;
-#endif
-#ifdef HAVE_POSIX_ACLS
-    acl_t acl = NULL;
-    ret = 1;
-    if ((acl = acl_get_file(vol->v_path, ACL_TYPE_ACCESS)) == NULL)
-        ret = 0;
-#endif
-
-#ifdef HAVE_SOLARIS_ACLS
-    if (aces) free(aces);
-#endif
-#ifdef HAVE_POSIX_ACLS
-    if (acl) acl_free(acl);
-#endif /* HAVE_POSIX_ACLS */
-
-    LOG(log_debug, logtype_afpd, "Volume \"%s\" ACL support: %s",
-        vol->v_path, ret ? "yes" : "no");
-    return ret;
 }

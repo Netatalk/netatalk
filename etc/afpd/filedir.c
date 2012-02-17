@@ -25,6 +25,7 @@
 #include <atalk/acl.h>
 #include <atalk/globals.h>
 #include <atalk/fce_api.h>
+#include <atalk/netatalk_conf.h>
 
 #include "directory.h"
 #include "dircache.h"
@@ -103,7 +104,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
             if (!dir)
                 return AFPERR_NOOBJ;
 
-            ret = getdirparams(vol, dbitmap, s_path, dir,
+            ret = getdirparams(obj, vol, dbitmap, s_path, dir,
                                rbuf + 3 * sizeof( uint16_t ), &buflen );
             if (ret != AFP_OK )
                 return( ret );
@@ -111,7 +112,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
         /* this is a directory */
         *(rbuf + 2 * sizeof( uint16_t )) = (char) FILDIRBIT_ISDIR;
     } else {
-        if (fbitmap && AFP_OK != (ret = getfilparams(vol, fbitmap, s_path, curdir,
+        if (fbitmap && AFP_OK != (ret = getfilparams(obj, vol, fbitmap, s_path, curdir,
                                                      rbuf + 3 * sizeof( uint16_t ), &buflen )) ) {
             return( ret );
         }
@@ -188,7 +189,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     if (S_ISDIR(st->st_mode)) {
         rc = setdirparams(vol, path, bitmap, ibuf );
     } else {
-        rc = setfilparams(vol, path, bitmap, ibuf );
+        rc = setfilparams(obj, vol, path, bitmap, ibuf );
     }
     if ( rc == AFP_OK ) {
         setvoltime(obj, vol );

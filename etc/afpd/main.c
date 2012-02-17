@@ -31,6 +31,7 @@
 #include <atalk/server_ipc.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "afp_config.h"
 #include "status.h"
@@ -237,6 +238,9 @@ int main(int ac, char **av)
 
     if (afp_config_parse(&obj) != 0)
         exit(EXITERR_CONF);
+
+    set_processname("afpd");
+    setuplog(obj.options.logconfig, obj.options.logfile);
 
     /* Save the user's current umask */
     obj.options.save_mask = umask(obj.options.umask);

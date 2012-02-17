@@ -37,6 +37,7 @@
 #include <atalk/server_ipc.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "switch.h"
 #include "auth.h"
@@ -528,7 +529,7 @@ void afp_over_dsi(AFPObj *obj)
 
         if (reload_request) {
             reload_request = 0;
-            load_volumes(AFPobj);
+            load_volumes(AFPobj, of_closevol);
         }
 
         /* The first SIGINT enables debugging, the next restores the config */

@@ -6,6 +6,7 @@ noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
 	bprint.c	\
+	config.c	\
 	cnid.c		\
 	fault.c		\
 	getiface.c	\
@@ -21,7 +22,11 @@ libutil_la_SOURCES = \
 	volinfo.c 	\
 	unix.c
 
-libutil_la_CFLAGS = -D_PATH_AFPDCONF=\"$(pkgconfdir)/afpd.conf\"
+libutil_la_CFLAGS = \
+	-D_PATH_CONFDIR=\"$(pkgconfdir)/\" \
+	-DSERVERTEXT=\"$(SERVERTEXT)/\" \
+	-D_PATH_AFPDPWFILE=\"$(pkgconfdir)/afppasswd\" \
+	-D_PATH_AFPDUAMPATH=\"$(UAMS_PATH)/\"
 
 if HAVE_ATFUNCS
 libutil_la_SOURCES += ftw.c
