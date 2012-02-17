@@ -162,7 +162,6 @@ int afp_config_parse(AFPObj *AFPObj)
     options->signatureopt   = iniparser_getstrdup(config, INISEC_AFP, "signature",      "auto");
     options->k5service      = iniparser_getstrdup(config, INISEC_AFP, "k5service",      NULL);
     options->k5realm        = iniparser_getstrdup(config, INISEC_AFP, "k5realm",        NULL);
-    options->authprintdir   = iniparser_getstrdup(config, INISEC_AFP, "authprintdir",   NULL);
     options->listen         = iniparser_getstrdup(config, INISEC_AFP, "listen",         NULL);
     options->ntdomain       = iniparser_getstrdup(config, INISEC_AFP, "ntdomain",       NULL);
     options->ntseparator    = iniparser_getstrdup(config, INISEC_AFP, "ntseparator",    NULL);
