@@ -26,7 +26,6 @@
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/util.h>
-#include <atalk/volinfo.h>
 #include <atalk/logger.h>
 #include <atalk/vfs.h>
 #include <atalk/uuid.h>
@@ -57,20 +56,6 @@
 #define VOLPASSLEN  8
 
 extern int afprun(int root, char *cmd, int *outfd);
-
-typedef struct _special_folder {
-    const char *name;
-    int precreate;
-    mode_t mode;
-    int hide;
-} _special_folder;
-
-static const _special_folder special_folders[] = {
-    {".AppleDesktop",            1,  0777,  0},
-    {NULL, 0, 0, 0}};
-
-/* Forward declarations */
-static void handle_special_folders (const struct vol *);
 
 static void showvol(const ucs2_t *name)
 {
@@ -921,12 +906,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     ret  = stat_vol(obj, bitmap, volume, rbuf, rbuflen);
 
     if (ret == AFP_OK) {
-        handle_special_folders(volume);
-        savevolinfo(volume,
-                    volume->v_cnidserver ? volume->v_cnidserver : obj->options.Cnid_srv,
-                    volume->v_cnidport   ? volume->v_cnidport   : obj->options.Cnid_port);
-
-
         /*
          * If you mount a volume twice, the second time the trash appears on
          * the desk-top.  That's because the Mac remembers the DID for the
@@ -1122,98 +1101,4 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
     return( AFP_OK );
-}
-
-/*
- * precreate a folder
- * this is only intended for folders in the volume root
- * It will *not* work if the folder name contains extended characters
- */
-static int create_special_folder (const struct vol *vol, const struct _special_folder *folder)
-{
-    char        *p,*q,*r;
-    struct adouble  ad;
-    uint16_t   attr;
-    struct stat st;
-    int     ret;
-
-
-    p = (char *) malloc ( strlen(vol->v_path)+strlen(folder->name)+2);
-    if ( p == NULL) {
-        LOG(log_error, logtype_afpd,"malloc failed");
-        exit (EXITERR_SYS);
-    }
-
-    q=strdup(folder->name);
-    if ( q == NULL) {
-        LOG(log_error, logtype_afpd,"malloc failed");
-        exit (EXITERR_SYS);
-    }
-
-    strcpy(p, vol->v_path);
-    strcat(p, "/");
-
-    r=q;
-    while (*r) {
-        if ((vol->v_casefold & AFPVOL_MTOUUPPER))
-            *r=toupper(*r);
-        else if ((vol->v_casefold & AFPVOL_MTOULOWER))
-            *r=tolower(*r);
-        r++;
-    }
-    strcat(p, q);
-
-    if ( (ret = stat( p, &st )) < 0 ) {
-        if (folder->precreate) {
-            if (ad_mkdir(p, folder->mode)) {
-                LOG(log_debug, logtype_afpd,"Creating '%s' failed in %s: %s", p, vol->v_path, strerror(errno));
-                free(p);
-                free(q);
-                return -1;
-            }
-            ret = 0;
-        }
-    }
-
-    if ( !ret && folder->hide) {
-        /* Hide it */
-        ad_init(&ad, vol);
-        if (ad_open(&ad, p, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
-            free(p);
-            free(q);
-            return (-1);
-        }
-
-        ad_setname(&ad, folder->name);
-
-        ad_getattr(&ad, &attr);
-        attr |= htons( ntohs( attr ) | ATTRBIT_INVISIBLE );
-        ad_setattr(&ad, attr);
-
-        /* do the same with the finder info */
-        if (ad_entry(&ad, ADEID_FINDERI)) {
-            memcpy(&attr, ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, sizeof(attr));
-            attr   |= htons(FINDERINFO_INVISIBLE);
-            memcpy(ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF,&attr, sizeof(attr));
-        }
-
-        ad_flush(&ad);
-        ad_close(&ad, ADFLAGS_HF);
-    }
-    free(p);
-    free(q);
-    return 0;
-}
-
-static void handle_special_folders (const struct vol * vol)
-{
-    const _special_folder *p = &special_folders[0];
-
-    become_root();
-
-    for (; p->name != NULL; p++) {
-        create_special_folder (vol, p);
-    }
-
-    unbecome_root();
 }

@@ -29,6 +29,7 @@
 #include <atalk/logger.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/unix.h>
 
 #include "volume.h"
 #include "directory.h"
@@ -36,6 +37,110 @@
 #include "desktop.h"
 #include "mangle.h"
 
+typedef struct _special_folder {
+    const char *name;
+    int precreate;
+    mode_t mode;
+    int hide;
+} _special_folder;
+
+static const _special_folder special_folders[] = {
+    {".AppleDesktop",            1,  0777,  0},
+    {NULL, 0, 0, 0}};
+
+/*
+ * precreate a folder
+ * this is only intended for folders in the volume root
+ * It will *not* work if the folder name contains extended characters
+ */
+static int create_special_folder (const struct vol *vol, const struct _special_folder *folder)
+{
+    char        *p,*q,*r;
+    struct adouble  ad;
+    uint16_t   attr;
+    struct stat st;
+    int     ret;
+
+
+    p = (char *) malloc ( strlen(vol->v_path)+strlen(folder->name)+2);
+    if ( p == NULL) {
+        LOG(log_error, logtype_afpd,"malloc failed");
+        exit (EXITERR_SYS);
+    }
+
+    q=strdup(folder->name);
+    if ( q == NULL) {
+        LOG(log_error, logtype_afpd,"malloc failed");
+        exit (EXITERR_SYS);
+    }
+
+    strcpy(p, vol->v_path);
+    strcat(p, "/");
+
+    r=q;
+    while (*r) {
+        if ((vol->v_casefold & AFPVOL_MTOUUPPER))
+            *r=toupper(*r);
+        else if ((vol->v_casefold & AFPVOL_MTOULOWER))
+            *r=tolower(*r);
+        r++;
+    }
+    strcat(p, q);
+
+    if ( (ret = stat( p, &st )) < 0 ) {
+        if (folder->precreate) {
+            if (ad_mkdir(p, folder->mode)) {
+                LOG(log_debug, logtype_afpd,"Creating '%s' failed in %s: %s", p, vol->v_path, strerror(errno));
+                free(p);
+                free(q);
+                return -1;
+            }
+            ret = 0;
+        }
+    }
+
+    if ( !ret && folder->hide) {
+        /* Hide it */
+        ad_init(&ad, vol);
+        if (ad_open(&ad, p, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
+            free(p);
+            free(q);
+            return (-1);
+        }
+
+        ad_setname(&ad, folder->name);
+
+        ad_getattr(&ad, &attr);
+        attr |= htons( ntohs( attr ) | ATTRBIT_INVISIBLE );
+        ad_setattr(&ad, attr);
+
+        /* do the same with the finder info */
+        if (ad_entry(&ad, ADEID_FINDERI)) {
+            memcpy(&attr, ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF, sizeof(attr));
+            attr   |= htons(FINDERINFO_INVISIBLE);
+            memcpy(ad_entry(&ad, ADEID_FINDERI) + FINDERINFO_FRFLAGOFF,&attr, sizeof(attr));
+        }
+
+        ad_flush(&ad);
+        ad_close(&ad, ADFLAGS_HF);
+    }
+    free(p);
+    free(q);
+    return 0;
+}
+
+static void create_appledesktop_folder(const struct vol * vol)
+{
+    const _special_folder *p = &special_folders[0];
+
+    become_root();
+
+    for (; p->name != NULL; p++) {
+        create_special_folder (vol, p);
+    }
+
+    unbecome_root();
+}
 
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
@@ -49,6 +154,8 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size
         *rbuflen = 0;
         return( AFPERR_PARAM );
     }
+
+    create_appledesktop_folder(vol);
 
     memcpy( rbuf, &vid, sizeof(vid));
     *rbuflen = sizeof(vid);
