@@ -6,13 +6,13 @@ noinst_LTLIBRARIES = libutil.la
 
 libutil_la_SOURCES = \
 	bprint.c	\
-	config.c	\
 	cnid.c		\
 	fault.c		\
 	getiface.c	\
 	locking.c   \
 	logger.c	\
 	module.c	\
+	netatalk_conf.c \
 	queue.c     \
 	server_child.c	\
 	server_ipc.c	\
