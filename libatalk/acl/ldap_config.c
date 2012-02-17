@@ -70,7 +70,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
 
     while(ldap_prefs[i].pref != NULL) {
         if ( ldap_prefs[i].valid != 0) {
-            LOG(log_debug, logtype_afpd,"afp_ldap.conf: Missing option: \"%s\"", ldap_prefs[i].name);
+            LOG(log_debug, logtype_afpd,"LDAP: Missing option: \"%s\"", ldap_prefs[i].name);
             ldap_config_valid = 0;
             break;
         }
@@ -79,15 +79,15 @@ int acl_ldap_readconfig(dictionary *iniconfig)
 
     if (ldap_config_valid) {
         if (ldap_auth_method == LDAP_AUTH_NONE)
-            LOG(log_debug, logtype_afpd,"afp_ldap.conf: Using anonymous bind.");
+            LOG(log_debug, logtype_afpd,"LDAP: Using anonymous bind.");
         else if (ldap_auth_method == LDAP_AUTH_SIMPLE)
-            LOG(log_debug, logtype_afpd,"afp_ldap.conf: Using simple bind.");
+            LOG(log_debug, logtype_afpd,"LDAP: Using simple bind.");
         else {
             ldap_config_valid = 0;
-            LOG(log_error, logtype_afpd,"afp_ldap.conf: SASL not yet supported.");
+            LOG(log_error, logtype_afpd,"LDAP: SASL not yet supported.");
         }
     } else
-        LOG(log_info, logtype_afpd,"afp_ldap.conf: not used");
+        LOG(log_info, logtype_afpd,"LDAP: not used");
     return 0;
 }
 #endif /* HAVE_LDAP */

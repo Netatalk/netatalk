@@ -117,7 +117,7 @@ int configinit(AFPObj *obj)
         EC_FAIL;
 
 #ifdef HAVE_LDAP
-    /* Parse afp_ldap.conf */
+    /* Parse afp.conf */
     acl_ldap_readconfig(obj->iniconfig);
 #endif /* HAVE_LDAP */
 
