@@ -13,6 +13,7 @@
 #include <atalk/cnid.h>
 #include <atalk/hash.h>
 #include <atalk/vfs.h>
+#include <atalk/globals.h>
 
 #define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
 #define AFPVOL_MACNAMELEN    27 /* AFP2 spec */
@@ -21,6 +22,7 @@ typedef uint64_t VolSpace;
 
 struct vol {
     struct vol      *v_next;
+    AFPObj          *v_obj;
     uint16_t        v_vid;
     int             v_flags;
     char            *v_path;
@@ -179,10 +181,10 @@ struct vol {
 #define VOLPBIT_XBTOTAL 10
 #define VOLPBIT_BSIZE   11        /* block size */
 
-#define utf8_encoding() (afp_version >= 30)
+#define utf8_encoding(obj) ((obj)->afp_version >= 30)
 
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
-#define vol_unix_priv(vol) (afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
+#define vol_unix_priv(vol) ((vol)->v_obj->afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)
 
 

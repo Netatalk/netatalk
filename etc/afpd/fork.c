@@ -64,7 +64,7 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork, uint16_t bitmap
     vol = ofork->of_vol;
     dir = dirlookup(vol, ofork->of_did);
 
-    if (NULL == (path.u_name = mtoupath(vol, of_name(ofork), dir->d_did, utf8_encoding()))) {
+    if (NULL == (path.u_name = mtoupath(vol, of_name(ofork), dir->d_did, utf8_encoding(obj)))) {
         return( AFPERR_MISC );
     }
     path.m_name = of_name(ofork);
@@ -488,7 +488,7 @@ openfork_err:
     return ret;
 }
 
-int afp_setforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf _U_, size_t *rbuflen)
+int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork    *ofork;
     off_t       size;
@@ -536,7 +536,7 @@ int afp_setforkparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf _U
 
     is64 = 0;
     if ((bitmap & ( (1<<FILPBIT_EXTDFLEN) | (1<<FILPBIT_EXTRFLEN) ))) {
-        if (afp_version >= 30) {
+        if (obj->afp_version >= 30) {
             is64 = 4;
         }
         else

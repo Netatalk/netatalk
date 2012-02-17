@@ -23,9 +23,9 @@
 #include <arpa/inet.h>
 
 #include <atalk/ftw.h>
-#include <atalk/volinfo.h>
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
+#include <atalk/volume.h>
 
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
@@ -49,8 +49,7 @@ enum logtype {STD, DBG};
     } while (0)
 
 typedef struct {
-    struct volinfo volinfo;
-    struct vol     volume;
+    struct vol     *vol;
     char           db_stamp[ADEDLEN_PRIVSYN];
 } afpvol_t;
 
@@ -68,7 +67,7 @@ extern int openvol(const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_path(const afpvol_t *vol, const char *path, cnid_t *did);
 extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path, cnid_t *did);
-extern char *utompath(const struct volinfo *volinfo, const char *upath);
+extern char *utompath(const struct vol *, const char *);
 extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen);
 
 typedef struct {

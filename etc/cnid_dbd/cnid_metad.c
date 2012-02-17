@@ -89,8 +89,11 @@
 #include <atalk/logger.h>
 #include <atalk/cnid_dbd_private.h>
 #include <atalk/paths.h>
-#include <atalk/volinfo.h>
 #include <atalk/compat.h>
+#include <atalk/errchk.h>
+#include <atalk/bstrlib.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/volume.h>
 
 #include "usockfd.h"
 
@@ -110,7 +113,7 @@ static uint maxvol;
 #define DEFAULTPORT  "4700"
 
 struct server {
-    struct volinfo *volinfo;
+    struct vol *vol;
     pid_t pid;
     time_t tm;                    /* When respawned last */
     int count;                    /* Times respawned in the last TESTTIME secondes */
@@ -118,9 +121,6 @@ struct server {
 };
 
 static struct server srv[MAXVOLS];
-
-/* Default logging config: log to syslog with level log_note */
-static char logconfig[MAXPATHLEN + 21 + 1] = "default log_note";
 
 static void daemon_exit(int i)
 {
@@ -141,19 +141,23 @@ static void sigterm_handler(int sig)
     daemon_exit(0);
 }
 
-static struct server *test_usockfn(struct volinfo *volinfo)
+static struct server *test_usockfn(const struct vol *vol)
 {
     int i;
+
+    if (!(vol->v_flags & AFPVOL_OPEN))
+        return NULL;
+
     for (i = 0; i < maxvol; i++) {
-        if ((srv[i].volinfo) && (strcmp(srv[i].volinfo->v_path, volinfo->v_path) == 0)) {
+        if (vol->v_vid == srv[i].vol->v_vid)
             return &srv[i];
-        }
     }
+
     return NULL;
 }
 
 /* -------------------- */
-static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
+static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, struct vol *vol)
 {
     pid_t pid;
     struct server *up;
@@ -162,11 +166,11 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
     time_t t;
     char buf1[8];
     char buf2[8];
-    char *volpath = volinfo->v_path;
+    char *volpath = vol->v_path;
 
     LOG(log_debug, logtype_cnid, "maybe_start_dbd: Volume: \"%s\"", volpath);
 
-    up = test_usockfn(volinfo);
+    up = test_usockfn(vol);
     if (up && up->pid) {
         /* we already have a process, send our fd */
         if (send_fd(up->control_fd, rqstfd) < 0) {
@@ -182,10 +186,10 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
     if (!up) {
         /* find an empty slot (i < maxvol) or the first free slot (i == maxvol)*/
         for (i = 0; i <= maxvol; i++) {
-            if (srv[i].volinfo == NULL && i < MAXVOLS) {
+            if (srv[i].vol == NULL && i < MAXVOLS) {
                 up = &srv[i];
-                up->volinfo = volinfo;
-                retainvolinfo(volinfo);
+                up->vol = vol;
+                vol->v_flags |= AFPVOL_OPEN;
                 up->tm = t;
                 up->count = 0;
                 if (i == maxvol)
@@ -257,10 +261,10 @@ static int maybe_start_dbd(char *dbdpn, struct volinfo *volinfo)
             /* there's a pb with the db inform child, it will delete the db */
             LOG(log_warning, logtype_cnid,
                 "Multiple attempts to start CNID db daemon for \"%s\" failed, wiping the slate clean...",
-                up->volinfo->v_path);
-            ret = execlp(dbdpn, dbdpn, "-d", volpath, buf1, buf2, logconfig, NULL);
+                up->vol->v_path);
+            ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, "-d", NULL);
         } else {
-            ret = execlp(dbdpn, dbdpn, volpath, buf1, buf2, logconfig, NULL);
+            ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, NULL);
         }
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
@@ -445,45 +449,23 @@ int main(int argc, char *argv[])
     int    debug = 0;
     int    ret;
     sigset_t set;
-    struct volinfo *volinfo;
+    AFPObj obj = { 0 };
+    struct vol *vol;
 
-    set_processname("cnid_metad");
-
-    while (( cc = getopt( argc, argv, "vVds:p:h:u:g:l:f:")) != -1 ) {
+    while (( cc = getopt( argc, argv, "dF:v")) != -1 ) {
         switch (cc) {
-        case 'v':
-        case 'V':
-            printf("cnid_metad (Netatalk %s)\n", VERSION);
-            return -1;
         case 'd':
             debug = 1;
             break;
-        case 'h':
-            host = strdup(optarg);
+        case 'F':
+            obj.cmdlineconfigfile = strdup(optarg);
             break;
-        case 'u':
-            uid = user_to_uid (optarg);
-            if (!uid) {
-                LOG(log_error, logtype_cnid, "main: bad user %s", optarg);
-                err++;
-            }
-            break;
-        case 'g':
-            gid =group_to_gid (optarg);
-            if (!gid) {
-                LOG(log_error, logtype_cnid, "main: bad group %s", optarg);
-                err++;
-            }
-            break;
-        case 'p':
-            port = strdup(optarg);
-            break;
-        case 's':
-            dbdpn = strdup(optarg);
-            break;
+        case 'v':
+            printf("cnid_metad (Netatalk %s)\n", VERSION);
+            return -1;
         default:
-            err++;
-            break;
+            printf("cnid_metad [-dv] [-F alternate configfile ]\n");
+            return -1;
         }
     }
 
@@ -498,12 +480,14 @@ int main(int argc, char *argv[])
     if (create_lockfile("cnid_metad", _PATH_CNID_METAD_LOCK))
         return -1;
 
-    setuplog("default:note", NULL);
-
-    if (err) {
-        LOG(log_error, logtype_cnid, "main: bad arguments");
+    if (afp_config_parse(&obj) != 0)
         daemon_exit(1);
-    }
+
+    set_processname("cnid_metad");
+    setuplog(obj.options.logconfig, obj.options.logfile);
+
+    if (load_volumes(&obj, NULL) != 0)
+        daemon_exit(1);
 
     (void)setlimits();
 
@@ -541,15 +525,16 @@ int main(int argc, char *argv[])
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
                     close(srv[i].control_fd);
+                    srv[i].vol->v_flags &= ~AFPVOL_OPEN;
                     break;
                 }
             }
             if (WIFEXITED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with exit code %i",
+                LOG(log_info, logtype_cnid, "cnid_dbd[%i] exited with exit code %i",
                     pid, WEXITSTATUS(status));
             }
             else if (WIFSIGNALED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd pid %i exited with signal %i",
+                LOG(log_info, logtype_cnid, "cnid_dbd[%i] got signal %i",
                     pid, WTERMSIG(status));
             }
             sigchild = 0;
@@ -591,21 +576,17 @@ int main(int argc, char *argv[])
         }
         volpath[len] = '\0';
 
-        /* Load .volinfo file */
-        if ((volinfo = allocvolinfo(volpath)) == NULL) {
-            LOG(log_severe, logtype_cnid, "allocvolinfo(\"%s\"): %s",
-                volpath, strerror(errno));
+
+        if ((vol = getvolbypath(volpath)) == NULL) {
+            LOG(log_severe, logtype_cnid, "getvolbypath(\"%s\"): %s", volpath, strerror(errno));
             goto loop_end;
         }
 
-        if (set_dbdir(volinfo->v_dbpath) < 0) {
+        if (set_dbdir(vol->v_dbpath) < 0) {
             goto loop_end;
         }
 
-        maybe_start_dbd(dbdpn, volinfo);
-
-        (void)closevolinfo(volinfo);
-
+        maybe_start_dbd(&obj, dbdpn, vol);
     loop_end:
         close(rqstfd);
     }

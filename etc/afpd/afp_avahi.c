@@ -20,6 +20,7 @@
 #include <atalk/util.h>
 #include <atalk/dsi.h>
 #include <atalk/unicode.h>
+#include <atalk/netatalk_conf.h>
 
 #include "afp_avahi.h"
 #include "afp_config.h"

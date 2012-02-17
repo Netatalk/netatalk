@@ -26,6 +26,8 @@
 #include <atalk/server_child.h>
 #include <atalk/globals.h>
 #include <atalk/errchk.h>
+#include <atalk/netatalk_conf.h>
+#include <atalk/fce_api.h>
 
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
@@ -74,6 +76,7 @@ int configinit(AFPObj *obj)
     EC_INIT;
     DSI *dsi, **next = &obj->dsi;
     char *p = NULL, *q = NULL;
+    const char *r;
 
     auth_load(obj->options.uampath, obj->options.uamlist);
     set_signature(&obj->options);
@@ -120,21 +123,21 @@ int configinit(AFPObj *obj)
 
     /* Now register with zeroconf, we also need the volumes for that */
     if (! (obj->options.flags & OPTION_NOZEROCONF)) {
-        load_volumes(obj);
+        load_volumes(obj, NULL);
         zeroconf_register(obj);
     }
 
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcelistener", NULL))) {
-		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", p);
-		fce_add_udp_socket(p);
+    if ((r = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcelistener", NULL))) {
+		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
+		fce_add_udp_socket(r);
     }
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcecoalesce", NULL))) {
-		LOG(log_note, logtype_afpd, "Fce coalesce: %s", p);
-		fce_set_coalesce(p);
+    if ((r = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcecoalesce", NULL))) {
+		LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
+		fce_set_coalesce(r);
     }
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fceevents", NULL))) {
-		LOG(log_note, logtype_afpd, "Fce events: %s", p);
-		fce_set_events(p);
+    if ((r = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fceevents", NULL))) {
+		LOG(log_note, logtype_afpd, "Fce events: %s", r);
+		fce_set_events(r);
     }
 
 

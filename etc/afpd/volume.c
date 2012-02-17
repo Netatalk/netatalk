@@ -262,7 +262,7 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
 
     spaceflag = AFPVOL_GVSMASK & vol->v_flags;
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
-    maxsize = (afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
+    maxsize = (obj->afp_version < 22) ? 0x7fffffffL : 0xffffffffL;
 
 #ifdef AFS
     if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_AFSGVS ) {
@@ -423,12 +423,12 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
                 ashort |= VOLPBIT_ATTR_RO;
             }
             /* prior 2.1 only VOLPBIT_ATTR_RO is defined */
-            if (afp_version > 20) {
+            if (obj->afp_version > 20) {
                 if (vol->v_cdb != NULL && (vol->v_cdb->flags & CNID_FLAG_PERSISTENT))
                     ashort |= VOLPBIT_ATTR_FILEID;
                 ashort |= VOLPBIT_ATTR_CATSEARCH;
 
-                if (afp_version >= 30) {
+                if (obj->afp_version >= 30) {
                     ashort |= VOLPBIT_ATTR_UTF8;
                     if (vol->v_flags & AFPVOL_UNIX_PRIV)
                         ashort |= VOLPBIT_ATTR_UNIXPRIV;
@@ -436,7 +436,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
                         ashort |= VOLPBIT_ATTR_TM;
                     if (vol->v_flags & AFPVOL_NONETIDS)
                         ashort |= VOLPBIT_ATTR_NONETIDS;
-                    if (afp_version >= 32) {
+                    if (obj->afp_version >= 32) {
                         if (vol->v_vfs_ea)
                             ashort |= VOLPBIT_ATTR_EXT_ATTRS;
                         if (vol->v_flags & AFPVOL_ACLS)
@@ -610,7 +610,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
             continue;       /* config file changed but the volume was mounted */
         }
 
-        if (utf8_encoding()) {
+        if (utf8_encoding(obj)) {
             len = ucs2_to_charset_allocate(CH_UTF8_MAC, &namebuf, volume->v_u8mname);
         } else {
             len = ucs2_to_charset_allocate(obj->options.maccharset, &namebuf, volume->v_macname);
@@ -761,7 +761,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if ((volname_tmp = strchr(volname,'+')) != NULL)
         volname = volname_tmp+1;
 
-    if (utf8_encoding()) {
+    if (utf8_encoding(obj)) {
         namelen = convert_string(CH_UTF8_MAC, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
     } else {
         namelen = convert_string(obj->options.maccharset, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
@@ -854,7 +854,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     /* initialize volume variables
      * FIXME file size
      */
-    if (utf8_encoding()) {
+    if (utf8_encoding(obj)) {
         volume->max_filename = UTF8FILELEN_EARLY;
     }
     else {
@@ -864,7 +864,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     volume->v_flags |= AFPVOL_OPEN;
     volume->v_cdb = NULL;
 
-    if (utf8_encoding()) {
+    if (utf8_encoding(obj)) {
         len = convert_string_allocate(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, namelen, &vol_mname);
     } else {
         len = convert_string_allocate(CH_UCS2, obj->options.maccharset, volume->v_macname, namelen, &vol_mname);
@@ -994,7 +994,7 @@ int  pollvoltime(AFPObj *obj)
     struct timeval   tv;
     struct stat      st;
 
-    if (!(afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF))
+    if (!(obj->afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF))
         return 0;
 
     if ( gettimeofday( &tv, NULL ) < 0 )
@@ -1034,7 +1034,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
         /* or finder doesn't update free space
          * AFP 3.2 and above clients seem to be ok without so many notification
          */
-        if (afp_version < 32 && obj->options.flags & OPTION_SERVERNOTIF) {
+        if (obj->afp_version < 32 && obj->options.flags & OPTION_SERVERNOTIF) {
             obj->attention(obj->dsi, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
         }
     }

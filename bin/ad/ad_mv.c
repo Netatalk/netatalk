@@ -34,7 +34,6 @@
 #include <atalk/util.h>
 #include <atalk/unix.h>
 #include <atalk/volume.h>
-#include <atalk/volinfo.h>
 #include <atalk/bstrlib.h>
 #include <atalk/bstradd.h>
 #include <atalk/queue.h>
@@ -295,9 +294,9 @@ static int do_move(const char *from, const char *to)
      * 1) source AFP volume != dest AFP volume
      * 2) either source or dest isn't even an AFP volume
      */
-    if (!svolume.volinfo.v_path
-        || !dvolume.volinfo.v_path
-        || strcmp(svolume.volinfo.v_path, dvolume.volinfo.v_path) != 0)
+    if (!svolume.vol->v_path
+        || !dvolume.vol->v_path
+        || strcmp(svolume.vol->v_path, dvolume.vol->v_path) != 0)
         mustcopy = 1;
     
     cnid_t cnid = 0;
@@ -340,7 +339,7 @@ static int do_move(const char *from, const char *to)
         
         switch (sb.st_mode & S_IFMT) {
         case S_IFREG:
-            if (dvolume.volume.vfs->vfs_renamefile(&dvolume.volume, -1, from, to) != 0) {
+            if (dvolume.vol->vfs->vfs_renamefile(dvolume.vol, -1, from, to) != 0) {
                 SLOG("Error moving adouble file for %s", from);
                 return -1;
             }
@@ -366,14 +365,14 @@ static int do_move(const char *from, const char *to)
 
         char *p = strdup(to);
         char *name = basename(p);
-        if (cnid_update(dvolume.volume.v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
+        if (cnid_update(dvolume.vol->v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
             SLOG("Cant update CNID for: %s", to);
             return 1;
         }
         free(p);
 
         struct adouble ad;
-        ad_init_old(&ad, dvolume.volinfo.v_adouble, dvolume.volinfo.v_ad_options);
+        ad_init(&ad, dvolume.vol);
         if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF | ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
             SLOG("Error opening adouble for: %s", to);
             return 1;

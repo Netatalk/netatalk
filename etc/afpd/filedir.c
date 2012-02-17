@@ -249,7 +249,7 @@ static int moveandrename(const struct vol *vol,
     adflags = 0;
 
     if (!isdir) {
-        if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did, utf8_encoding()))) == NULL)
+        if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did, utf8_encoding(vol->v_obj)))) == NULL)
             return AFPERR_PARAM; /* can't convert */
         id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, strlen(oldunixname));
 
@@ -316,7 +316,7 @@ static int moveandrename(const struct vol *vol,
         }
     }
 
-    if (NULL == (upath = mtoupath(vol, newname, curdir->d_did, utf8_encoding()))){ 
+    if (NULL == (upath = mtoupath(vol, newname, curdir->d_did, utf8_encoding(vol->v_obj)))){ 
         rc = AFPERR_PARAM;
         goto exit;
     }
@@ -600,7 +600,7 @@ char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
 {
     if (vol == NULL || dir == NULL || name == NULL)
         return NULL;
-    return absupath(vol, dir, mtoupath(vol, name, dir->d_did, utf8_encoding()));
+    return absupath(vol, dir, mtoupath(vol, name, dir->d_did, utf8_encoding(vol->v_obj)));
 }
 
 /* ------------------------- */
@@ -696,7 +696,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     rc = moveandrename(vol, sdir, sdir_fd, oldname, newname, isdir);
 
     if ( rc == AFP_OK ) {
-        char *upath = mtoupath(vol, newname, pdid, utf8_encoding());
+        char *upath = mtoupath(vol, newname, pdid, utf8_encoding(obj));
 
         if (NULL == upath) {
             rc = AFPERR_PARAM;

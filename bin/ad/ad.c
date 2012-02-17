@@ -27,9 +27,9 @@
 #include <errno.h>
 
 #include <atalk/cnid.h>
-#include <atalk/volinfo.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
+#include <atalk/netatalk_conf.h>
 
 #include "ad.h"
 
@@ -46,12 +46,20 @@ static void show_version(void)
 
 int main(int argc, char **argv)
 {
+    AFPObj obj = { 0 };
+
     setuplog("default:note", "/dev/tty");
 
     if (argc < 2) {
         usage_main();
         return 1;
     }
+
+    if (afp_config_parse(&obj) != 0)
+        return 1;
+
+    if (load_volumes(&obj, NULL) != 0)
+        return 1;
 
     if (STRCMP(argv[1], ==, "ls"))
         return ad_ls(argc - 1, argv + 1);

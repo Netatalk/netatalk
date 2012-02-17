@@ -32,6 +32,7 @@
 #include <atalk/cnid.h>
 #include <atalk/bstrlib.h>
 #include <atalk/queue.h>
+#include <atalk/unicode.h>
 
 /* setgid directories */
 #ifndef DIRBITS

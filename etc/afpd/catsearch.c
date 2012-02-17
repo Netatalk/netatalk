@@ -281,7 +281,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 		 * An other option would be to call get_id in utompath but 
 		 * we need to pass parent dir
 		*/
-        if (!(path->m_name = utompath(vol, path->u_name, 0 , utf8_encoding()) )) {
+        if (!(path->m_name = utompath(vol, path->u_name, 0 , utf8_encoding(vol->v_obj)) )) {
         	/*retry with the right id */
        
         	cnid_t id;
@@ -294,7 +294,7 @@ static int crit_check(struct vol *vol, struct path *path) {
         	}
         	/* save the id for getfilparm */
         	path->id = id;
-        	if (!(path->m_name = utompath(vol, path->u_name, id , utf8_encoding()))) {
+        	if (!(path->m_name = utompath(vol, path->u_name, id , utf8_encoding(vol->v_obj)))) {
         		return 0;
         	}
         }
@@ -784,7 +784,7 @@ static int catsearch_db(const AFPObj *obj,
 
         memset(&path, 0, sizeof(path));
         path.u_name = name;
-        path.m_name = utompath(vol, name, cnid, utf8_encoding());
+        path.m_name = utompath(vol, name, cnid, utf8_encoding(vol->v_obj));
 
         if (of_stat(&path) != 0) {
             switch (errno) {
@@ -1037,7 +1037,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
 		memcpy (c1.utf8name, spec1+2, namelen);
 		c1.utf8name[namelen] = 0;
-        if ((uname = mtoupath(vol, c1.utf8name, 0, utf8_encoding())) == NULL)
+        if ((uname = mtoupath(vol, c1.utf8name, 0, utf8_encoding(obj))) == NULL)
             return AFPERR_PARAM;
 
  		/* convert charset */

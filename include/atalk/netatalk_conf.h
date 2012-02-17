@@ -26,6 +26,7 @@ extern int        load_volumes(AFPObj *obj, void (*delvol_fn)(const struct vol *
 extern void       unload_volumes(void);
 extern struct vol *getvolumes(void);
 extern struct vol *getvolbyvid(const uint16_t);
+extern struct vol *getvolbypath(const char *path);
 extern void       volume_free(struct vol *vol);
 extern void       volume_unlink(struct vol *volume);
 #endif

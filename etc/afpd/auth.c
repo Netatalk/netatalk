@@ -50,7 +50,6 @@ extern void afp_get_cmdline( int *ac, char ***av );
 #include "acls.h"
 #endif
 
-int afp_version = 11;
 static int afp_version_index;
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
 static struct uam_obj uam_login = {"", "", 0, {{NULL, NULL, NULL, NULL }}, &uam_login,
@@ -146,7 +145,7 @@ static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
     return( AFPERR_NOOP );
 }
 
-static int set_auth_switch(int expired)
+static int set_auth_switch(const AFPObj *obj, int expired)
 {
     int i;
 
@@ -167,7 +166,7 @@ static int set_auth_switch(int expired)
     }
     else {
         afp_switch = postauth_switch;
-        switch (afp_version) {
+        switch (obj->afp_version) {
 
         case 33:
         case 32:
@@ -336,7 +335,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
 #endif /* ADMIN_GRP */
         obj->uid = geteuid();
 
-    set_auth_switch(expired);
+    set_auth_switch(obj, expired);
     /* save our euid, we need it for preexec_close */
     obj->uid = geteuid();
     obj->logout = logout;
@@ -631,7 +630,7 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
     num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ]);
     for ( i = 0; i < num; i++ ) {
         if ( strncmp( ibuf, afp_versions[ i ].av_name , len ) == 0 ) {
-            afp_version = afp_versions[ i ].av_number;
+            obj->afp_version = afp_versions[ i ].av_number;
             afp_version_index = i;
             break;
         }
@@ -640,7 +639,7 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
         return AFPERR_BADVERS ;
 
     /* FIXME Hack */
-    if (afp_version >= 30 && sizeof(off_t) != 8) {
+    if (obj->afp_version >= 30 && sizeof(off_t) != 8) {
         LOG(log_error, logtype_afpd, "get_version: no LARGE_FILE support recompile!" );
         return AFPERR_BADVERS ;
     }
@@ -892,7 +891,7 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
     if ((len + 1) & 1) /* pad byte */
         ibuf++;
 
-    if ( afp_version < 30) {
+    if (obj->afp_version < 30) {
         len = (unsigned char) *ibuf++;
         if ( len > sizeof(username) - 1) {
             return AFPERR_PARAM;
@@ -929,7 +928,7 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
         (ret == AFPERR_AUTHCONT) ? "continued" :
         (ret ? "failed" : "succeeded"));
     if ( ret == AFP_OK )
-        set_auth_switch(0);
+        set_auth_switch(obj, 0);
 
     return ret;
 }

@@ -193,7 +193,7 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *osx
         }
         if (!osx) {
             /* convert back to mac name and check it's the same */
-            t = utompath(vol, u_name, file_id, utf8_encoding());
+            t = utompath(vol, u_name, file_id, utf8_encoding(vol->v_obj));
             if (!strcmp(t, mfilename)) {
                 return u_name;
             }

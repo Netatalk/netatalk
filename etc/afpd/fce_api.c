@@ -527,7 +527,7 @@ int fce_register_file_modification( struct ofork *ofork )
 
     vol = ofork->of_vol;
 
-    if (NULL == (u_name = mtoupath(vol, of_name(ofork), ofork->of_did, utf8_encoding()))) 
+    if (NULL == (u_name = mtoupath(vol, of_name(ofork), ofork->of_did, utf8_encoding(vol->v_obj)))) 
     {
         return AFPERR_MISC;
     }

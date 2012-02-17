@@ -30,12 +30,11 @@
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/globals.h>
+#include <atalk/volume.h>
 
 #include "afp_config.h"
 #include "auth.h"
 #include "uam_auth.h"
-
-#define utf8_encoding() (afp_version >= 30)
 
 #ifdef TRU64
 #include <netdb.h>
@@ -233,7 +232,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
     }
 #ifndef NO_REAL_USER_NAME
 
-    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding())?CH_UTF8_MAC:obj->options.maccharset,
+    if ( (size_t) -1 == (namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
 				CH_UCS2, name, -1, username, sizeof(username))))
 	return NULL;
 

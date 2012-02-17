@@ -28,6 +28,7 @@
 #include <atalk/logger.h>
 #include <atalk/ea.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 
 #include "volume.h"
 #include "desktop.h"

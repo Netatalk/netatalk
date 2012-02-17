@@ -307,7 +307,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
     char *t;
     cnid_t fileid = 0;
 
-    if (afp_version >= 30) {
+    if (vol->v_obj->afp_version >= 30) {
         if (toUTF8) {
             if (dir->d_did == DIRDID_ROOT_PARENT) {
                 /*
@@ -339,7 +339,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
             /* duplicate work but we can't reuse all convert_char we did in demangle_osx
              * flags weren't the same
              */
-            if ( (t = utompath(vol, ret->u_name, fileid, utf8_encoding())) ) {
+            if ( (t = utompath(vol, ret->u_name, fileid, utf8_encoding(vol->v_obj))) ) {
                 /* at last got our view of mac name */
                 strcpy(ret->m_name, t);
             }
@@ -348,7 +348,7 @@ static int cname_mtouname(const struct vol *vol, const struct dir *dir, struct p
 
     /* If we haven't got it by now, get it */
     if (ret->u_name == NULL) {
-        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did, utf8_encoding())) == NULL) {
+        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did, utf8_encoding(vol->v_obj))) == NULL) {
             afp_errno = AFPERR_PARAM;
             return -1;
         }
@@ -601,7 +601,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         goto exit;
     }
 
-    utf8 = utf8_encoding();
+    utf8 = utf8_encoding(vol->v_obj);
     maxpath = (utf8) ? MAXPATHLEN - 7 : 255;
 
     /* Get it from the database */
@@ -823,7 +823,7 @@ struct dir *dir_new(const char *m_name,
         return NULL;
     }
 
-    if (convert_string_allocate( (utf8_encoding()) ? CH_UTF8_MAC : vol->v_maccharset,
+    if (convert_string_allocate( (utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC : vol->v_maccharset,
                                  CH_UCS2,
                                  m_name,
                                  -1, (char **)&dir->d_m_name_ucs2) == (size_t)-1 ) {
@@ -929,7 +929,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
 
     /* Get macname from unixname */
     if (path->m_name == NULL) {
-        if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding())) == NULL) {
+        if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding(vol->v_obj))) == NULL) {
             LOG(log_error, logtype_afpd, "dir_add(\"%s\"): can't assign macname", path->u_name);
             err = 2;
             goto exit;
@@ -1161,13 +1161,13 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         data++;
         len = (unsigned char) *data++;
         size = 2;
-        if (afp_version >= 30) {
+        if (vol->v_obj->afp_version >= 30) {
             ret.m_type = 3;
             toUTF8 = 1;
         }
         break;
     case 3:
-        if (afp_version >= 30) {
+        if (vol->v_obj->afp_version >= 30) {
             data++;
             memcpy(&hint, data, sizeof(hint));
             hint = ntohl(hint);
@@ -1509,7 +1509,7 @@ int getdirparams(const AFPObj *obj,
                     if ((s_path->m_name = utompath(vol,
                                                    upath,
                                                    dir->d_did,
-                                                   utf8_encoding())) == NULL) {
+                                                   utf8_encoding(obj))) == NULL) {
                         LOG(log_error, logtype_afpd,
                             "getdirparams(\"%s\"): can't assign macname",
                             cfrombstr(dir->d_fullpath));
@@ -1654,7 +1654,7 @@ int getdirparams(const AFPObj *obj,
                Just pass back the same basic block for all
                directories. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
-            if (afp_version >= 30) { /* UTF8 name */
+            if (obj->afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
                 if (dir->d_m_name) /* root of parent can have a null name */
                     utf_nameoff = data;
@@ -1878,7 +1878,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
                ProDOS information block.  Skip over the data and
                report nothing amiss. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
-            if (afp_version < 30) {
+            if (vol->v_obj->afp_version < 30) {
                 buf += 6;
             }
             else {
@@ -2007,7 +2007,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
         case DIRPBIT_ACCESS :
             break;
         case DIRPBIT_PDINFO :
-            if (afp_version >= 30) {
+            if (vol->v_obj->afp_version >= 30) {
                 err = AFPERR_BITMAP;
                 goto setdirparam_done;
             }
@@ -2439,7 +2439,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     *rbuflen = 0;
 
     if (sfunc >= 3 && sfunc <= 6) {
-        if (afp_version < 30) {
+        if (obj->afp_version < 30) {
             return( AFPERR_PARAM );
         }
         utf8 = 1;
@@ -2479,7 +2479,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
 
     case 5 : /* UUID -> username */
     case 6 : /* UUID -> groupname */
-        if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
             return AFPERR_PARAM;
         LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
         uuidtype_t type;
@@ -2542,7 +2542,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     return( AFP_OK );
 }
 
-int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct passwd   *pw;
     struct group    *gr;
@@ -2553,11 +2553,11 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
     ibuf++;
     sfunc = (unsigned char) *ibuf++;
     *rbuflen = 0;
-    LOG(log_debug, logtype_afpd, "afp_mapname: sfunc: %d, afp_version: %d", sfunc, afp_version);
+    LOG(log_debug, logtype_afpd, "afp_mapname: sfunc: %d", sfunc);
     switch ( sfunc ) {
     case 1 :
     case 2 : /* unicode */
-        if (afp_version < 30) {
+        if (obj->afp_version < 30) {
             return( AFPERR_PARAM );
         }
         memcpy(&ulen, ibuf, sizeof(ulen));
@@ -2571,7 +2571,7 @@ int afp_mapname(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         break;
     case 5 : /* username -> UUID  */
     case 6 : /* groupname -> UUID */
-        if ((afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
             return AFPERR_PARAM;
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);

@@ -119,7 +119,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name, cnid_t
 
     if (!utf8) {
         /* want mac name */
-        if (utf8_encoding()) {
+        if (utf8_encoding(vol->v_obj)) {
             /* but name is an utf8 mac name */
             char *u, *m;
            
@@ -299,7 +299,7 @@ int getmetadata(const AFPObj *obj,
     data = buf;
 
     if ( ((bitmap & ( (1 << FILPBIT_FINFO)|(1 << FILPBIT_LNAME)|(1 <<FILPBIT_PDINFO) ) ) && !path->m_name)
-         || (bitmap & ( (1 << FILPBIT_LNAME) ) && utf8_encoding()) /* FIXME should be m_name utf8 filename */
+         || (bitmap & ( (1 << FILPBIT_LNAME) ) && utf8_encoding(obj)) /* FIXME should be m_name utf8 filename */
          || (bitmap & (1 << FILPBIT_FNUM))) {
         if (!path->id) {
             bstring fullpath;
@@ -316,7 +316,7 @@ int getmetadata(const AFPObj *obj,
 
                 /* Get macname from unixname first */
                 if (path->m_name == NULL) {
-                    if ((path->m_name = utompath(vol, upath, id, utf8_encoding())) == NULL) {
+                    if ((path->m_name = utompath(vol, upath, id, utf8_encoding(obj))) == NULL) {
                         LOG(log_error, logtype_afpd, "getmetadata: utompath error");
                         return AFPERR_MISC;
                     }
@@ -348,7 +348,7 @@ int getmetadata(const AFPObj *obj,
             return afp_errno;
 
         if (!path->m_name) {
-            path->m_name = utompath(vol, upath, id, utf8_encoding());
+            path->m_name = utompath(vol, upath, id, utf8_encoding(vol->v_obj));
         }
     }
     while ( bitmap != 0 ) {
@@ -467,7 +467,7 @@ int getmetadata(const AFPObj *obj,
                to "pXYZ" when we created it.  See IA, Ver 2.
                <shirsch@adelphia.net> */
         case FILPBIT_PDINFO :
-            if (afp_version >= 30) { /* UTF8 name */
+            if (obj->afp_version >= 30) { /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
                 utf_nameoff = data;
                 data += sizeof( uint16_t );
@@ -919,7 +919,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             }
             break;
         case FILPBIT_PDINFO :
-            if (afp_version < 30) { /* else it's UTF8 name */
+            if (obj->afp_version < 30) { /* else it's UTF8 name */
                 achar = *buf;
                 buf += 2;
                 /* Keep special case to support crlf translations */
@@ -1004,7 +1004,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             }
             break;
         case FILPBIT_PDINFO :
-            if (afp_version < 30) { /* else it's UTF8 name */
+            if (obj->afp_version < 30) { /* else it's UTF8 name */
                 memcpy(ad_entry( adp, ADEID_FINDERI ), fdType, 4 );
                 memcpy(ad_entry( adp, ADEID_FINDERI ) + 4, "pdos", 4 );
                 break;
@@ -1148,14 +1148,14 @@ size_t      plen = 0;
 uint16_t   len16;
 uint32_t   hint;
 
-    if ( type != 2 && !(afp_version >= 30 && type == 3) ) {
+    if ( type != 2 && !(vol->v_obj->afp_version >= 30 && type == 3) ) {
         return -1;
     }
     ibuf++;
     switch (type) {
     case 2:
         if (( plen = (unsigned char)*ibuf++ ) != 0 ) {
-            if (afp_version >= 30) {
+            if (vol->v_obj->afp_version >= 30) {
                 /* convert it to UTF8 
                 */
                 if ((plen = mtoUTF8(vol, ibuf, plen, newname, AFPOBJ_TMPSIZ)) == (size_t)-1)
@@ -1299,7 +1299,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     /* newname is always only a filename so curdir *is* its
      * parent folder
     */
-    if (NULL == (upath = mtoupath(d_vol, newname, curdir->d_did, utf8_encoding()))) {
+    if (NULL == (upath = mtoupath(d_vol, newname, curdir->d_did, utf8_encoding(d_vol->v_obj)))) {
         retvalue =AFPERR_PARAM;
         goto copy_exit;
     }
@@ -1676,7 +1676,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 
 /* ------------------------------
    resolve a file id */
-int afp_resolveid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
 {
     struct vol		*vol;
     struct dir		*dir;
@@ -1762,12 +1762,12 @@ retry:
     /* directories are bad */
     if (S_ISDIR(path.st.st_mode)) {
         /* OS9 and OSX don't return the same error code  */
-        return (afp_version >=30)?AFPERR_NOID:AFPERR_BADTYPE;
+        return (obj->afp_version >=30)?AFPERR_NOID:AFPERR_BADTYPE;
     }
 
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs( bitmap );
-    if (NULL == (path.m_name = utompath(vol, upath, cnid, utf8_encoding()))) {
+    if (NULL == (path.m_name = utompath(vol, upath, cnid, utf8_encoding(obj)))) {
         return AFPERR_NOID;
     }
     path.id = cnid;

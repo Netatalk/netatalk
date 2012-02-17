@@ -121,10 +121,9 @@ typedef struct AFPObj {
     struct session_info  sinfo;
     uid_t uid; 	/* client running user id */
     int ipc_fd; /* anonymous PF_UNIX socket for IPC with afpd parent */
-
     gid_t *groups;
     int ngroups;
-
+    int afp_version;
     /* Functions */
     void (*logout)(void);
     void (*exit)(int);

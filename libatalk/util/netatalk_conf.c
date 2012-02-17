@@ -42,6 +42,7 @@
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
 #include <atalk/uuid.h>
+#include <atalk/netatalk_conf.h>
 
 #define VOLOPT_ALLOW      0  /* user allow list */
 #define VOLOPT_DENY       1  /* user deny list */
@@ -717,9 +718,9 @@ static int creatvol(const AFPObj *obj, const struct passwd *pwd,
 
     /* check duplicate */
     for ( volume = Volumes; volume; volume = volume->v_next ) {
-        if ((utf8_encoding() && (strcasecmp_w(volume->v_u8mname, u8mtmpname) == 0))
+        if ((utf8_encoding(obj) && (strcasecmp_w(volume->v_u8mname, u8mtmpname) == 0))
              ||
-            (!utf8_encoding() && (strcasecmp_w(volume->v_macname, mactmpname) == 0))) {
+            (!utf8_encoding(obj) && (strcasecmp_w(volume->v_macname, mactmpname) == 0))) {
             LOG (log_error, logtype_afpd,
                  "Duplicate volume name, check AppleVolumes files: previous: \"%s\", new: \"%s\"",
                  volume->v_localname, name);
@@ -761,7 +762,7 @@ static int creatvol(const AFPObj *obj, const struct passwd *pwd,
         return -1;
     }
 
-    volume->v_name = utf8_encoding()?volume->v_u8mname:volume->v_macname;
+    volume->v_name = utf8_encoding(obj)?volume->v_u8mname:volume->v_macname;
     volume->v_hide = hide;
     strcpy( volume->v_path, path );
 
@@ -899,6 +900,7 @@ static int creatvol(const AFPObj *obj, const struct passwd *pwd,
 
     volume->v_next = Volumes;
     Volumes = volume;
+    volume->v_obj = obj;
     return 0;
 }
 
@@ -1236,7 +1238,9 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(const struct vol *))
     if (Volumes) {
         if (!volfile_changed(&obj->options))
             goto EC_CLEANUP;
-        free_volumes();
+        /* TODO: volume reloading */
+//        free_volumes();
+            goto EC_CLEANUP;
     }
 
     /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
@@ -1286,12 +1290,11 @@ void unload_volumes(void)
     free_volumes();
 }
 
-const struct vol *getvolumes(void)
+struct vol *getvolumes(void)
 {
     return Volumes;
 }
 
-/* ------------------------- */
 struct vol *getvolbyvid(const uint16_t vid )
 {
     struct vol  *vol;
@@ -1308,6 +1311,20 @@ struct vol *getvolbyvid(const uint16_t vid )
     return( vol );
 }
 
+struct vol *getvolbypath(const char *path)
+{
+    struct vol *vol = NULL;
+    struct vol *tmp;
+
+    for (tmp = Volumes; tmp; tmp = tmp->v_next) {
+        if (strncmp(path, tmp->v_path, strlen(tmp->v_path)) == 0) {
+            vol = tmp;
+            break;
+        }
+    }
+    return vol;
+}
+
 #define MAXVAL 1024
 /*!
  * Initialize an AFPObj and options from ini config file
@@ -1322,11 +1339,12 @@ int afp_config_parse(AFPObj *AFPObj)
     char *q, *r;
     char val[MAXVAL];
 
+    AFPObj->afp_version = 11;
     options->configfile  = AFPObj->cmdlineconfigfile ? strdup(AFPObj->cmdlineconfigfile) : strdup(_PATH_CONFDIR "afp.conf");
     options->sigconffile = strdup(_PATH_CONFDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_CONFDIR "afp_voluuid.conf");
     options->flags       = OPTION_ACL2MACCESS | OPTION_UUID | OPTION_SERVERNOTIF | AFPObj->cmdlineflags;
-
+    
     if ((config = iniparser_load(AFPObj->options.configfile)) == NULL)
         return -1;
     AFPObj->iniconfig = config;
