@@ -1489,7 +1489,7 @@ int afp_config_parse(AFPObj *AFPObj)
         if ((options->maccharset = add_charset(p)) == (charset_t)-1) {
             options->maccharset = CH_MAC;
             options->maccodepage = strdup("MAC_ROMAN");
-            LOG(log_warning, logtype_afpd, "Setting Unix codepage to '%s' failed", p);
+            LOG(log_warning, logtype_afpd, "Setting Mac codepage to '%s' failed", p);
         } else {
             options->maccodepage = strdup(p);
         }
