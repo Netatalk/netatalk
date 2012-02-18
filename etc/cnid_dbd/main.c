@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
     char *volpath = NULL;
     bstring dbpath;
 
-    while (( ret = getopt( argc, argv, "dF:l:p:t:v")) != -1 ) {
+    while (( ret = getopt( argc, argv, "dF:l:p:t:vV")) != -1 ) {
         switch (ret) {
         case 'd':
             delete_bdb = 1;
@@ -301,6 +301,7 @@ int main(int argc, char *argv[])
             ctrlfd = atoi(optarg);
             break;
         case 'v':
+        case 'V':
             printf("cnid_dbd (Netatalk %s)\n", VERSION);
             return -1;
         }

@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
     AFPObj obj = { 0 };
     struct vol *vol;
 
-    while (( cc = getopt( argc, argv, "dF:v")) != -1 ) {
+    while (( cc = getopt( argc, argv, "dF:vV")) != -1 ) {
         switch (cc) {
         case 'd':
             debug = 1;
@@ -461,10 +461,11 @@ int main(int argc, char *argv[])
             obj.cmdlineconfigfile = strdup(optarg);
             break;
         case 'v':
+        case 'V':
             printf("cnid_metad (Netatalk %s)\n", VERSION);
             return -1;
         default:
-            printf("cnid_metad [-dv] [-F alternate configfile ]\n");
+            printf("cnid_metad [-dvV] [-F alternate configfile ]\n");
             return -1;
         }
     }
