@@ -85,7 +85,7 @@ int tsockfd_create(char *host, char *port, int backlog)
     hints.ai_socktype = SOCK_STREAM;
 
     if ((ret = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_default, "tsockfd_create: getaddrinfo: %s\n", gai_strerror(ret));
+        LOG(log_error, logtype_cnid, "tsockfd_create: getaddrinfo: %s\n", gai_strerror(ret));
         return 0;
     }
 
@@ -93,7 +93,7 @@ int tsockfd_create(char *host, char *port, int backlog)
     /* loop through all the results and bind to the first we can */
     for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            LOG(log_info, logtype_default, "tsockfd_create: socket: %s", strerror(errno));
+            LOG(log_info, logtype_cnid, "tsockfd_create: socket: %s", strerror(errno));
             continue;
         }
 
@@ -117,13 +117,13 @@ int tsockfd_create(char *host, char *port, int backlog)
             
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            LOG(log_info, logtype_default, "tsockfd_create: bind: %s\n", strerror(errno));
+            LOG(log_info, logtype_cnid, "tsockfd_create: bind: %s\n", strerror(errno));
             continue;
         }
 
         if (listen(sockfd, backlog) < 0) {
             close(sockfd);
-            LOG(log_info, logtype_default, "tsockfd_create: listen: %s\n", strerror(errno));
+            LOG(log_info, logtype_cnid, "tsockfd_create: listen: %s\n", strerror(errno));
             continue;
         }
 
@@ -132,7 +132,7 @@ int tsockfd_create(char *host, char *port, int backlog)
     }
 
     if (p == NULL)  {
-        LOG(log_error, logtype_default, "tsockfd_create: no suitable network config %s:%s", host, port);
+        LOG(log_error, logtype_cnid, "tsockfd_create: no suitable network config %s:%s", host, port);
         freeaddrinfo(servinfo);
         return -1;
     }

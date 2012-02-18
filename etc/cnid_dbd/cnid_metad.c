@@ -439,8 +439,8 @@ int main(int argc, char *argv[])
     pid_t pid;
     int   status;
     char  *dbdpn = _PATH_CNID_DBD;
-    char  *host = DEFAULTHOST;
-    char  *port = DEFAULTPORT;
+    char  *host;
+    char  *port;
     int    i;
     int    cc;
     uid_t  uid = 0;
@@ -492,8 +492,15 @@ int main(int argc, char *argv[])
 
     (void)setlimits();
 
+    host = iniparser_getstrdup(obj.iniconfig, INISEC_AFP, "listen", "localhost:4700");
+    if (port = strrchr(host, ':'))
+        *port++ = 0;
+    else
+        port = DEFAULTPORT;
     if ((srvfd = tsockfd_create(host, port, 10)) < 0)
         daemon_exit(1);
+
+    LOG(log_note, logtype_afpd, "CNID Server listening on %s:%s", host, port);
 
     /* switch uid/gid */
     if (uid || gid) {
