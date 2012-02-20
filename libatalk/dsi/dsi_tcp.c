@@ -119,9 +119,6 @@ static int dsi_tcp_open(DSI *dsi)
         uint8_t block[DSI_BLOCKSIZ];
         size_t stored;
 
-        /* Immediateyl mark globally that we're a child now */
-        parent_or_child = 1;
-
         /* reset signals */
         server_reset_signal();
 

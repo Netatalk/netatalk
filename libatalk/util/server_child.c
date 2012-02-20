@@ -55,8 +55,6 @@ typedef struct server_child_fork {
     void (*cleanup)(const pid_t);
 } server_child_fork;
 
-int parent_or_child; /* 0: parent, 1: child */
-
 static inline void hash_child(struct server_child_data **htable,
                               struct server_child_data *child)
 {

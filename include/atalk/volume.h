@@ -78,8 +78,10 @@ struct vol {
     char            *v_dbpath;
     char            *v_cnidserver;
     char            *v_cnidport;
+#if 0
     int             v_hide;       /* new volume wait until old volume is closed */
     int             v_new;        /* volume deleted but there's a new one with the same name */
+#endif
     int             v_deleted;    /* volume open but deleted in new config file */
     char            *v_root_preexec;
     char            *v_preexec;

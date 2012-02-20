@@ -22,8 +22,8 @@
 
 extern int        afp_config_parse(AFPObj *obj);
 
-extern int        load_volumes(AFPObj *obj, void (*delvol_fn)(const struct vol *));
-extern void       unload_volumes(void);
+extern int        load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *));
+extern void       unload_volumes(AFPObj *obj);
 extern struct vol *getvolumes(void);
 extern struct vol *getvolbyvid(const uint16_t);
 extern struct vol *getvolbypath(const char *path);

@@ -114,9 +114,11 @@ afp_child_t *dsi_getsession(DSI *dsi, server_child *serv_children, int tickleval
     dsi_opensession(dsi);
     if ((child = calloc(1, sizeof(afp_child_t))) == NULL)
         exit(EXITERR_SYS);
+
+    child->ipc_fds[0] = -1;
     child->ipc_fds[1] = ipc_fds[1];
+    close(ipc_fds[0]);
     return child;
-    break;
 
   default: /* just close */
     LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);

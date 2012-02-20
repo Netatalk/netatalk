@@ -57,49 +57,6 @@
 
 extern int afprun(int root, char *cmd, int *outfd);
 
-static void showvol(const ucs2_t *name)
-{
-    struct vol  *volume = getvolumes();
-
-    for ( ; volume; volume = volume->v_next ) {
-        if (volume->v_hide && !strcasecmp_w( volume->v_name, name ) ) {
-            volume->v_hide = 0;
-            return;
-        }
-    }
-}
-
-static void closevol(struct vol *vol)
-{
-    if (!vol)
-        return;
-
-    vol->v_flags &= ~AFPVOL_OPEN;
-
-    of_closevol(vol);
-
-    dir_free( vol->v_root );
-    vol->v_root = NULL;
-    if (vol->v_cdb != NULL) {
-        cnid_close(vol->v_cdb);
-        vol->v_cdb = NULL;
-    }
-
-    if (vol->v_postexec) {
-        afprun(0, vol->v_postexec, NULL);
-    }
-    if (vol->v_root_postexec) {
-        afprun(1, vol->v_root_postexec, NULL);
-    }
-
-    if (vol->v_deleted) {
-        showvol(vol->v_name);
-        volume_free(vol);
-        volume_unlink(vol);
-        free(vol);
-    }
-}
-
 /*!
  * Read band-size info from Info.plist XML file of an TM sparsebundle
  *
@@ -586,7 +543,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     int         vcnt;
     size_t      len;
 
-    load_volumes(obj, of_closevol);
+    load_volumes(obj, closevol);
 
     data = rbuf + 5;
     for ( vcnt = 0, volume = getvolumes(); volume; volume = volume->v_next ) {
@@ -605,9 +562,6 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
             if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
                 continue;   /* no r-x access */
             }
-        }
-        if (volume->v_hide) {
-            continue;       /* config file changed but the volume was mounted */
         }
 
         if (utf8_encoding(obj)) {
@@ -775,7 +729,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if ((len + 1) & 1) /* pad to an even boundary */
         ibuf++;
 
-    load_volumes(obj, of_closevol);
+    load_volumes(obj, closevol);
 
     for ( volume = getvolumes(); volume; volume = volume->v_next ) {
         if ( strcasecmp_w( (ucs2_t*) volname, volume->v_name ) == 0 ) {
@@ -941,6 +895,34 @@ openvol_err:
     }
     *rbuflen = 0;
     return ret;
+}
+
+void closevol(struct vol *vol)
+{
+    if (!vol)
+        return;
+
+    vol->v_flags &= ~AFPVOL_OPEN;
+
+    of_closevol(vol);
+
+    dir_free( vol->v_root );
+    vol->v_root = NULL;
+    if (vol->v_cdb != NULL) {
+        cnid_close(vol->v_cdb);
+        vol->v_cdb = NULL;
+    }
+
+    if (vol->v_postexec) {
+        afprun(0, vol->v_postexec, NULL);
+    }
+    if (vol->v_root_postexec) {
+        afprun(1, vol->v_root_postexec, NULL);
+    }
+
+    volume_free(vol);
+    volume_unlink(vol);
+    free(vol);
 }
 
 /* ------------------------- */

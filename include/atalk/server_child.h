@@ -35,8 +35,6 @@ typedef struct server_child_data {
   struct server_child_data **prevp, *next;
 } afp_child_t;
 
-extern int parent_or_child;
-
 /* server_child.c */
 extern server_child *server_child_alloc (const int, const int);
 extern afp_child_t *server_child_add (server_child *, int, pid_t, uint ipc_fds[2]);

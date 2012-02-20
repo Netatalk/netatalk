@@ -50,6 +50,9 @@ void configfree(AFPObj *obj, DSI *dsi)
 {
     DSI *p, *q;
 
+    /* the master loaded the volumes for zeroconf, get rid of that */
+    unload_volumes(obj);
+
     for (p = obj->dsi; p; p = q) {
         q = p->next;
         if (p == dsi)
@@ -64,8 +67,6 @@ void configfree(AFPObj *obj, DSI *dsi)
         afp_options_free(&obj->options);
     }
 
-    /* the master loaded the volumes for zeroconf, get rid of that */
-    unload_volumes();
 }
 
 /*!

@@ -58,12 +58,10 @@ static int disasociated_ipc_fd; /* disasociated sessions uses this fd for IPC */
 
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_children);
 
-/* This is registered with atexit() */
-static void afp_exit(void)
+static void afp_exit(int ret)
 {
-    if (parent_or_child == 0)
-        /* Only do this in the parent */
-        server_unlock(_PATH_AFPDLOCK);
+    server_unlock(_PATH_AFPDLOCK);
+    exit(ret);
 }
 
 
@@ -234,10 +232,9 @@ int main(int ac, char **av)
 
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
-    atexit(afp_exit);
 
     if (afp_config_parse(&obj) != 0)
-        exit(EXITERR_CONF);
+        afp_exit(EXITERR_CONF);
 
     set_processname("afpd");
     setuplog(obj.options.logconfig, obj.options.logfile);
@@ -250,7 +247,7 @@ int main(int ac, char **av)
      * XXX: this should really be setup after the initial connections. */
     if (!(server_children = server_child_alloc(obj.options.connections, CHILD_NFORKS))) {
         LOG(log_error, logtype_afpd, "main: server_child alloc: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 
     memset(&sv, 0, sizeof(sv));    
@@ -261,7 +258,7 @@ int main(int ac, char **av)
     sigemptyset( &sv.sa_mask );
     if (sigaction(SIGXFSZ, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 #endif
     
@@ -276,7 +273,7 @@ int main(int ac, char **av)
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 
     sigemptyset( &sv.sa_mask );
@@ -288,7 +285,7 @@ int main(int ac, char **av)
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGUSR1, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 
     sigemptyset( &sv.sa_mask );
@@ -300,7 +297,7 @@ int main(int ac, char **av)
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGHUP, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 
     sigemptyset( &sv.sa_mask );
@@ -312,7 +309,7 @@ int main(int ac, char **av)
     sv.sa_flags = SA_RESTART;
     if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 
     sigemptyset( &sv.sa_mask );
@@ -324,7 +321,7 @@ int main(int ac, char **av)
     sv.sa_flags = SA_RESTART;
     if (sigaction(SIGQUIT, &sv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "main: sigaction: %s", strerror(errno) );
-        exit(EXITERR_SYS);
+        afp_exit(EXITERR_SYS);
     }
 
     /* afpd.conf: not in config file: lockfile, connections, configfile
@@ -348,7 +345,7 @@ int main(int ac, char **av)
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
     if (configinit(&obj) != 0) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
-        exit(EXITERR_CONF);
+        afp_exit(EXITERR_CONF);
     }
     pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
 
@@ -401,7 +398,7 @@ int main(int ac, char **av)
             configfree(&obj, NULL);
             if (configinit(&obj) != 0) {
                 LOG(log_error, logtype_afpd, "config re-read: no servers configured");
-                exit(EXITERR_CONF);
+                afp_exit(EXITERR_CONF);
             }
 
             fd_set_listening_sockets(&obj);
@@ -506,10 +503,9 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi, server_child *server_childr
     }
 
     /* we've forked. */
-    if (parent_or_child == 1) {
+    if (child->ipc_fds[0] == -1) {
         configfree(obj, dsi);
         obj->ipc_fd = child->ipc_fds[1];
-        close(child->ipc_fds[0]); /* Close parent IPC fd */
         free(child);
         afp_over_dsi(obj); /* start a session */
         exit (0);
