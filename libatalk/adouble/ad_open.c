@@ -779,6 +779,16 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
     return oflags;
 }
 
+static char emptyfilad[32] = {0,0,0,0,0,0,0,0,
+                              0,0,0,0,0,0,0,0,
+                              0,0,0,0,0,0,0,0,
+                              0,0,0,0,0,0,0,0};
+
+static char emptydirad[32] = {0,0,0,0,0,0,0,0,
+                              0,0,0,0,0,0,1,0,
+                              0,0,0,0,0,0,0,0,
+                              0,0,0,0,0,0,0,0};
+
 static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struct vol *vol)
 {
     EC_INIT;
@@ -786,6 +796,8 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
     struct adouble adea;
     const char *adpath;
     int adflags;
+    uint32_t ctime, mtime, afpinfo = 0;
+    char *emptyad;
 
     LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): BEGIN", fullpathname(path));
 
@@ -798,7 +810,35 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
     EC_NEG1_LOG( ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) );
     EC_NEG1_LOG( adv2.ad_ops->ad_header_read(path, &adv2, sp) );
 
+    /* Check if it's a non-empty header */
+    if (S_ISREG(sp->st_mode))
+        emptyad = &emptyfilad[0];
+    else
+        emptyad = &emptydirad[0];
+
+    if (ad_getentrylen(&adv2, ADEID_COMMENT) != 0)
+        goto copy;
+    if (ad_getentryoff(&adv2, ADEID_FINDERI)
+        && (ad_getentrylen(&adv2, ADEID_FINDERI) == ADEDLEN_FINDERI)
+        && (memcmp(ad_entry(&adv2, ADEID_FINDERI), emptyad, ADEDLEN_FINDERI) != 0))
+        goto copy;
+    if (ad_getentryoff(&adv2, ADEID_FILEDATESI)) {
+        EC_ZERO_LOG( ad_getdate(&adv2, AD_DATE_CREATE | AD_DATE_UNIX, &ctime) );
+        EC_ZERO_LOG( ad_getdate(&adv2, AD_DATE_MODIFY | AD_DATE_UNIX, &mtime) );
+        if ((ctime != mtime) || (mtime != sp->st_mtime))
+            goto copy;
+    }
+    if (ad_getentryoff(&adv2, ADEID_AFPFILEI)) {
+        if (memcmp(ad_entry(&adv2, ADEID_AFPFILEI), &afpinfo, ADEDLEN_AFPFILEI) != 0)
+            goto copy;
+    }
+
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): default adouble", fullpathname(path), ret);
+    goto EC_CLEANUP;
+
+copy:
     /* Create a adouble:ea meta EA */
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): copying adouble", fullpathname(path), ret);
     EC_ZERO_LOG( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE) );
     EC_ZERO_LOG( ad_copy_header(&adea, &adv2) );
     ad_flush(&adea);
