@@ -444,7 +444,7 @@ static int ad_header_read(const char *path _U_, struct adouble *ad, const struct
     struct stat         st;
 
     /* read the header */
-    if ((header_len = adf_pread( ad->ad_mdp, buf, AD_DATASZ, 0)) < 0) {
+    if ((header_len = adf_pread( ad->ad_mdp, buf, AD_DATASZ2, 0)) < 0) {
         return -1;
     }
     if (header_len < AD_HEADER_LEN) {
