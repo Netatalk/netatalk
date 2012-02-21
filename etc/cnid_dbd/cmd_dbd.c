@@ -129,48 +129,29 @@ static void set_signal(void)
 static void usage (void)
 {
     printf("dbd (Netatalk %s)\n"
-           "Usage: dbd [-etvxF] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
+           "Usage: dbd [-CeFtvx] -d [-i] | -s [-c|-n]| -r [-c|-f] | -u <path to netatalk volume>\n"
            "dbd can dump, scan, reindex and rebuild Netatalk dbd CNID databases.\n"
            "dbd must be run with appropiate permissions i.e. as root.\n\n"
            "Main commands are:\n"
            "   -d Dump CNID database\n"
            "      Option: -i dump indexes too\n\n"
            "   -s Scan volume:\n"
-           "      1. Compare CNIDs in database with volume\n"
-           "      2. Check if .AppleDouble dirs exist\n"
-           "      3. Check if  AppleDouble file exist\n"
-           "      4. Report orphaned AppleDouble files\n"
-           "      5. Check for directories inside AppleDouble directories\n"
-           "      6. Check name encoding by roundtripping, log on error\n"
-           "      7. Check for orphaned CNIDs in database (requires -e)\n"
-           "      8. Open and close adouble files\n"
            "      Options: -c Don't check .AppleDouble stuff, only ckeck orphaned.\n"
            "               -n Don't open CNID database, skip CNID checks.\n\n"
            "   -r Rebuild volume:\n"
-           "      1. Sync CNIDSs in database with volume\n"
-           "      2. Make sure .AppleDouble dir exist, create if missing\n"
-           "      3. Make sure AppleDouble file exists, create if missing\n"
-           "      4. Delete orphaned AppleDouble files\n"
-           "      5. Check for directories inside AppleDouble directories\n"
-           "      6. Check name encoding by roundtripping, log on error\n"
-           "      7. Check for orphaned CNIDs in database (requires -e)\n"
-           "      8. Open and close adouble files\n"
            "      Options: -c Don't create .AppleDouble stuff, only cleanup orphaned.\n"
            "               -f wipe database and rebuild from IDs stored in AppleDouble\n"
-           "                  files, only available for volumes without 'nocnidcache'\n"
-           "                  option. Implies -e.\n\n"
+           "                  metadata file or EA. Implies -e.\n\n"
            "   -u Upgrade:\n"
            "      Opens the database which triggers any necessary upgrades,\n"
            "      then closes and exits.\n\n"
            "General options:\n"
+           "   -C convert from adouble:v2 to adouble:ea (use with -r)\n"
            "   -F location of the afp.conf config file\n"
            "   -e only work on inactive volumes and lock them (exclusive)\n"
            "   -x rebuild indexes (just for completeness, mostly useless!)\n"
            "   -t show statistics while running\n"
            "   -v verbose\n\n"
-           "WARNING:\n"
-           "For -r -f restore of the CNID database from the adouble files,\n"
-           "the CNID must of course be synched to them files first with a plain -r rebuild!\n"
            , VERSION
         );
 }
@@ -192,10 +173,13 @@ int main(int argc, char **argv)
     /* Inhereting perms in ad_mkdir etc requires this */
     ad_setfuid(0);
 
-    while ((c = getopt(argc, argv, ":cdefFinrstuvx")) != -1) {
+    while ((c = getopt(argc, argv, ":cCdefFinrstuvx")) != -1) {
         switch(c) {
         case 'c':
             flags |= DBD_FLAGS_CLEANUP;
+            break;
+        case 'C':
+            flags |= DBD_FLAGS_V2TOEA;
             break;
         case 'd':
             dump = 1;
@@ -288,6 +272,12 @@ int main(int argc, char **argv)
         dbd_log( LOGSTD, "Couldn't find volume for '%s'", volpath);
         exit(EXIT_FAILURE);
     }
+
+    if (load_charset(vol) != 0) {
+        dbd_log( LOGSTD, "Couldn't load charsets for '%s'", volpath);
+        exit(EXIT_FAILURE);
+    }
+
     pack_setvol(vol);
 
     if (vol->v_adouble == AD_VERSION_EA)
@@ -296,6 +286,12 @@ int main(int argc, char **argv)
         dbd_log( LOGDEBUG, "adouble:v2 volume");
     else {
         dbd_log( LOGSTD, "unknown adouble volume");
+        exit(EXIT_FAILURE);
+    }
+
+    /* -C v2 to ea conversion only on adouble:ea volumes */
+    if ((flags & DBD_FLAGS_V2TOEA) && (vol->v_adouble!= AD_VERSION_EA)) {
+        dbd_log( LOGSTD, "Can't run adouble:v2 to adouble:ea conversion because not an adouble:ea volume");
         exit(EXIT_FAILURE);
     }
 

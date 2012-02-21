@@ -218,13 +218,25 @@ static int check_adfile(const char *fname, const struct stat *st)
     struct adouble ad;
     const char *adname;
 
-    if (myvol->v_adouble == AD_VERSION_EA)
+    if (myvol->v_adouble == AD_VERSION_EA) {
+        if (!(dbd_flags & DBD_FLAGS_V2TOEA))
+            return 0;
+        if (ad_convert(fname, st, myvol) != 0) {
+            switch (errno) {
+            case ENOENT:
+                break;
+            default:
+                dbd_log(LOGSTD, "Conversion error for \"%s/%s\": %s", cwdbuf, fname, strerror(errno));
+                break;
+            }
+        }
         return 0;
-
+    }
+    
     if (dbd_flags & DBD_FLAGS_CLEANUP)
         return 0;
 
-    if (S_ISREG(st->st_mode))
+    if (S_ISDIR(st->st_mode))
         adflags |= ADFLAGS_DIR;
 
     adname = myvol->ad_path(fname, adflags);
@@ -521,10 +533,10 @@ static int read_addir(void)
     struct dirent *ep;
     struct stat st;
 
-    if (myvol->v_adouble == AD_VERSION_EA)
-        return 0;
-
     if ((chdir(ADv2_DIRNAME)) != 0) {
+        if (myvol->v_adouble == AD_VERSION_EA) {
+            return 0;
+        }
         dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
         return -1;
@@ -803,7 +815,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             return -1;
 
     /* Check AppleDouble files in AppleDouble folder, but only if it exists or could be created */
-    if (myvol->v_adouble == AD_VERSION2 && ADDIR_OK)
+    if (ADDIR_OK)
         if ((read_addir()) != 0)
             if ( ! (dbd_flags & DBD_FLAGS_SCAN))
                 /* Fatal on rebuild run, continue if only scanning ! */
@@ -958,13 +970,25 @@ static int dbd_readdir(int volroot, cnid_t did)
     /*
       Use results of previous checks
     */
-
+    if ((myvol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
+        if (rmdir(ADv2_DIRNAME) != 0) {
+            switch (errno) {
+            case ENOENT:
+                break;
+            default:
+                dbd_log(LOGSTD, "Error removing adouble dir \"%s/%s\": %s", cwdbuf, ADv2_DIRNAME, strerror(errno));
+                break;
+            }
+        }
+    }
     closedir(dp);
     return ret;
 }
 
 static int scanvol(struct vol *vol, dbd_flags_t flags)
 {
+    struct stat st;
+
     /* Make this stuff accessible from all funcs easily */
     myvol = vol;
     dbd_flags = flags;
@@ -974,6 +998,20 @@ static int scanvol(struct vol *vol, dbd_flags_t flags)
 
     strcpy(cwdbuf, myvol->v_path);
     chdir(myvol->v_path);
+
+    if ((myvol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
+        if (lstat(".", &st) != 0)
+            return -1;
+        if (ad_convert(".", &st, vol) != 0) {
+            switch (errno) {
+            case ENOENT:
+                break;
+            default:
+                dbd_log(LOGSTD, "Conversion error for \"%s\": %s", myvol->v_path, strerror(errno));
+                break;
+            }
+        }
+    }
 
     /* Start recursion */
     if (dbd_readdir(1, htonl(2)) < 0)  /* 2 = volumeroot CNID */

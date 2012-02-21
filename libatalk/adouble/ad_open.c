@@ -806,6 +806,7 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
 EC_CLEANUP:
     EC_ZERO_LOG( ad_close(&adv2, ADFLAGS_HF | ADFLAGS_SETSHRMD) );
     EC_ZERO_LOG( ad_close(&adea, ADFLAGS_HF | ADFLAGS_SETSHRMD) );
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): END: %d", fullpathname(path), ret);
     EC_EXIT;
 }
 
@@ -839,6 +840,7 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
 EC_CLEANUP:
     EC_ZERO_LOG( ad_close(&adv2, ADFLAGS_HF | ADFLAGS_RF) );
     EC_ZERO_LOG( ad_close(&adea, ADFLAGS_HF | ADFLAGS_RF) );
+    LOG(log_debug, logtype_default,"ad_conv_v22ea_rf(\"%s\"): END: %d", fullpathname(path), ret);
     EC_EXIT;
 }
 
@@ -1862,6 +1864,8 @@ int ad_convert(const char *path, const struct stat *sp, const struct vol *vol)
     const char *adpath;
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
 
+    LOG(log_debug, logtype_default,"ad_convert(\"%s\"): BEGIN", fullpathname(path));
+
     if (!(vol->v_adouble == AD_VERSION_EA) || (vol->v_flags & AFPVOL_NOV2TOEACONV))
         goto EC_CLEANUP;
 
@@ -1877,6 +1881,7 @@ int ad_convert(const char *path, const struct stat *sp, const struct vol *vol)
     unbecome_root();
 
 EC_CLEANUP:
+    LOG(log_debug, logtype_default,"ad_convert(\"%s\"): END: %d", fullpathname(path), ret);
     EC_EXIT;
 }
 

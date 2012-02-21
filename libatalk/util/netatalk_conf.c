@@ -606,9 +606,13 @@ static int creatvol(AFPObj *obj,
 
     if (val = getoption(obj->iniconfig, name, "volcharset", preset))
         EC_NULL( volume->v_volcodepage = strdup(val) );
+    else
+        EC_NULL( volume->v_volcodepage = strdup("UTF8") );
 
     if (val = getoption(obj->iniconfig, name, "maccharset", preset))
         EC_NULL( volume->v_maccodepage = strdup(val) );
+    else
+        EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
     if (val = getoption(obj->iniconfig, name, "dbpath", preset))
         EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
@@ -1033,6 +1037,24 @@ void volume_free(struct vol *vol)
     free(vol->v_postexec);
 
     LOG(log_debug, logtype_afpd, "volume_free: END");
+}
+
+/*!
+ * Load charsets for a volume
+ */
+int load_charset(struct vol *vol)
+{
+    if ((vol->v_maccharset = add_charset(vol->v_maccodepage)) == (charset_t)-1) {
+        LOG(log_error, logtype_default, "Setting Mac codepage '%s' failed", vol->v_maccodepage);
+        return -1;
+    }
+
+    if ((vol->v_volcharset = add_charset(vol->v_volcodepage)) == (charset_t)-1) {
+        LOG(log_error, logtype_default, "Setting volume codepage '%s' failed", vol->v_volcodepage);
+        return -1;
+    }
+
+    return 0;
 }
 
 /*!

@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
 
     EC_ZERO( load_volumes(&obj, NULL) );
     EC_NULL( vol = getvolbypath(volpath) );
-
+    EC_ZERO( load_charset(vol) );
     pack_setvol(vol);
 
     EC_NULL( dbpath = bfromcstr(vol->v_dbpath) );
