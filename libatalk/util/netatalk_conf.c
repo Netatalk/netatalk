@@ -519,7 +519,7 @@ static const char *getoption(const dictionary *conf, const char *vol, const char
     const char *result = NULL;
 
     if (!(result = iniparser_getstring(conf, vol, opt, NULL)))
-        result = iniparser_getstring(conf, vol, def, NULL);
+        result = iniparser_getstring(conf, def, opt, NULL);
     
 EC_CLEANUP:
     return result;
@@ -551,7 +551,8 @@ static int creatvol(AFPObj *obj,
     const char  *val;
     char        *p, *q;
 
-    LOG(log_debug, logtype_afpd, "createvol: Volume '%s'", name);
+    LOG(log_debug, logtype_afpd, "createvol(volume: '%s', path: \"%s\", preset: '%s'): BEGIN",
+        name, path, preset ? preset : "-");
 
     if ( name == NULL || *name == '\0' ) {
         if ((name = strrchr( path, '/' )) == NULL) {
@@ -892,6 +893,7 @@ EC_CLEANUP:
             free(volume);
         }
     }
+    LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
     EC_EXIT;
 }
 
@@ -931,13 +933,8 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     char        path[MAXPATHLEN + 1];
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1];
-    char        preset[MAXPRESETLEN + 1];
-    char        *presettype;
-    const char  *p;
-    char        *default_preset = NULL;
-    int         fd;
-    int         i, havepreset;
-    struct passwd     *pw;
+    const char  *preset, *default_preset, *p;
+    int         i;
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
@@ -945,53 +942,35 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "preset", NULL))) {
+        default_preset = p;
+        LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
+    }
+
     for (i = 0; i < secnum; i++) { 
         secname = iniparser_getsecname(obj->iniconfig, i);
+
         if (!vol_section(secname))
             continue;
 
-        havepreset = 0;
-        if ((p = iniparser_getstring(obj->iniconfig, secname, "preset", NULL))) {
-            if (strcmp(p, "yes") == 0)
-                /* it's a preset, we needn't do anything more with it here */
-                continue;
-
-            /* check for "preset = XXX", "preset = XXX:once", "preset = XXX:sub" and "preset = none"*/
-            if (STRCMP(p, ==, "none")) {
-                default_preset = NULL;
-            } else {
-                /* in case no ":" is found or the part after ":" != "sub" we just copy the value to preset[]*/
-                strlcpy(preset, p, MAXPRESETLEN);
-
-                if ((presettype = strchr(preset, ':')))
-                    *presettype++ = 0;
-
-                if (presettype && STRCMP(presettype, ==, "sub")) {
-                    if (default_preset)
-                        free(default_preset);
-                    default_preset = strdup(preset);
-                }
-                havepreset = 1;
-            }
-        }
-
-        strlcpy(volname, secname, AFPVOL_U8MNAMELEN);
-        LOG(log_debug, logtype_afpd, "readvolfile: volume: %s", volname);
-
+        /* Get path */
         if ((p = iniparser_getstring(obj->iniconfig, secname, "path", NULL)) == NULL)
             continue;
-        strlcpy(path, p, MAXPATHLEN);
-        strcpy(tmp, path);
-
+        strlcpy(tmp, p, MAXPATHLEN);
         if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
             continue;
 
+        strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
+        LOG(log_debug, logtype_afpd, "readvolfile: volume: %s", volname);
+
         /* do variable substitution for volname */
-        if (volxlate(obj, tmp, sizeof(tmp) - 1, volname, pwent, path, NULL) == NULL) {
+        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL) {
             continue;
         }
 
-        creatvol(obj, pwent, path, tmp, havepreset ? preset : default_preset ? default_preset : NULL);
+        preset = iniparser_getstring(obj->iniconfig, secname, "preset", NULL);
+
+        creatvol(obj, pwent, path, volname, preset ? preset : default_preset ? default_preset : NULL);
     }
 
 EC_CLEANUP:
