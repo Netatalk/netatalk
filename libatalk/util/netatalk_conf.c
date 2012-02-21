@@ -1246,8 +1246,8 @@ int afp_config_parse(AFPObj *AFPObj)
     options->tcp_sndbuf     = iniparser_getint   (config, INISEC_AFP, "tcpsndbuf",      0);
     options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_AFP, "tcprcvbuf",      0);
     options->fce_fmodwait   = iniparser_getint   (config, INISEC_AFP, "fceholdfmod",    60);
-    options->sleep          = iniparser_getint   (config, INISEC_AFP, "sleep",          10) * 60 * 2;
-    options->disconnected   = iniparser_getint   (config, INISEC_AFP, "disconnect",     24) * 60 * 2;
+    options->sleep          = iniparser_getint   (config, INISEC_AFP, "sleep",          10);
+    options->disconnected   = iniparser_getint   (config, INISEC_AFP, "disconnect",     24);
 
     if ((p = iniparser_getstring(config, INISEC_AFP, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
@@ -1332,6 +1332,8 @@ int afp_config_parse(AFPObj *AFPObj)
     /* Check for sane values */
     if (options->tickleval <= 0)
         options->tickleval = 30;
+    options->disconnected *= 3600 / options->tickleval;
+    options->sleep *= 3600 / options->tickleval;
     if (options->timeout <= 0)
         options->timeout = 4;
     if (options->sleep <= 4)
