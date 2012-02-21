@@ -585,8 +585,13 @@ int main(int argc, char *argv[])
         volpath[len] = '\0';
 
 
+        if (load_volumes(&obj, NULL) != 0) {
+            LOG(log_severe, logtype_cnid, "main: error reloading config");
+            goto loop_end;
+        }
+
         if ((vol = getvolbypath(volpath)) == NULL) {
-            LOG(log_severe, logtype_cnid, "getvolbypath(\"%s\"): %s", volpath, strerror(errno));
+            LOG(log_severe, logtype_cnid, "main: no volume for path \"%s\"", volpath);
             goto loop_end;
         }
 
