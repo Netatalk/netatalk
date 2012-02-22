@@ -946,7 +946,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "preset", NULL))) {
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "preset", NULL))) {
         default_preset = p;
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
