@@ -919,10 +919,6 @@ void closevol(struct vol *vol)
     if (vol->v_root_postexec) {
         afprun(1, vol->v_root_postexec, NULL);
     }
-
-    volume_free(vol);
-    volume_unlink(vol);
-    free(vol);
 }
 
 /* ------------------------- */
