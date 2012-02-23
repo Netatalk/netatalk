@@ -528,7 +528,7 @@ static line_status iniparser_line(
 /*--------------------------------------------------------------------------*/
 dictionary * iniparser_load(const char * ininame)
 {
-    FILE * in ;
+    FILE *in, *include = NULL, *inifile;
 
     char line    [ASCIILINESZ+1] ;
     char section [ASCIILINESZ+1] ;
@@ -543,7 +543,7 @@ dictionary * iniparser_load(const char * ininame)
 
     dictionary * dict ;
 
-    if ((in=fopen(ininame, "r"))==NULL) {
+    if ((inifile=fopen(ininame, "r"))==NULL) {
         fprintf(stderr, "iniparser: cannot open %s\n", ininame);
         return NULL ;
     }
@@ -560,7 +560,17 @@ dictionary * iniparser_load(const char * ininame)
     memset(val,     0, ASCIILINESZ);
     last=0 ;
 
-    while (fgets(line+last, ASCIILINESZ-last, in)!=NULL) {
+    in = inifile;
+    while (1) {
+        if (fgets(line+last, ASCIILINESZ-last, in) == NULL) {
+            if (include) {
+                fclose(include);
+                include = NULL;
+                in = inifile;
+                continue;
+            }
+            break;
+        }
         lineno++ ;
         len = (int)strlen(line)-1;
         if (len==0)
@@ -590,27 +600,30 @@ dictionary * iniparser_load(const char * ininame)
             last=0 ;
         }
         switch (iniparser_line(line, section, key, val)) {
-            case LINE_EMPTY:
-            case LINE_COMMENT:
+        case LINE_EMPTY:
+        case LINE_COMMENT:
             break ;
-
-            case LINE_SECTION:
-                errs = dictionary_set(dict, section, NULL, NULL);
+        case LINE_SECTION:
+            errs = dictionary_set(dict, section, NULL, NULL);
             break ;
-
-            case LINE_VALUE:
+        case LINE_VALUE:
+            if (strcmp(key, "include") == 0) {
+                if ((include = fopen(val, "r")) == NULL) {
+                    fprintf(stderr, "iniparser: cannot open %s\n", val);
+                    continue;
+                }
+                in = include;
+                continue;
+            }
             errs = dictionary_set(dict, section, key, val) ;
             break ;
-
-            case LINE_ERROR:
+        case LINE_ERROR:
             fprintf(stderr, "iniparser: syntax error in %s (%d):\n",
-                    ininame,
-                    lineno);
+                    ininame, lineno);
             fprintf(stderr, "-> %s\n", line);
             errs++ ;
             break;
-
-            default:
+        default:
             break ;
         }
         memset(line, 0, ASCIILINESZ);
