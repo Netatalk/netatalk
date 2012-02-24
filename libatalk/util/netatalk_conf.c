@@ -946,7 +946,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "preset", NULL))) {
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "vol preset", NULL))) {
         default_preset = p;
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
@@ -972,7 +972,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             continue;
         }
 
-        preset = iniparser_getstring(obj->iniconfig, secname, "preset", NULL);
+        preset = iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
 
         creatvol(obj, pwent, path, volname, preset ? preset : default_preset ? default_preset : NULL);
     }
@@ -1248,11 +1248,11 @@ int afp_config_parse(AFPObj *AFPObj)
     options->passwdfile     = iniparser_getstrdup(config, INISEC_AFP, "passwdfile",     _PATH_AFPDPWFILE);
     options->uampath        = iniparser_getstrdup(config, INISEC_AFP, "uampath",        _PATH_AFPDUAMPATH);
     options->uamlist        = iniparser_getstrdup(config, INISEC_AFP, "uamlist",        "uams_dhx.so,uams_dhx2.so");
-    options->port           = iniparser_getstrdup(config, INISEC_AFP, "port",           "548");
+    options->port           = iniparser_getstrdup(config, INISEC_AFP, "afp port",       "548");
     options->signatureopt   = iniparser_getstrdup(config, INISEC_AFP, "signature",      "auto");
     options->k5service      = iniparser_getstrdup(config, INISEC_AFP, "k5service",      NULL);
     options->k5realm        = iniparser_getstrdup(config, INISEC_AFP, "k5realm",        NULL);
-    options->listen         = iniparser_getstrdup(config, INISEC_AFP, "listen",         NULL);
+    options->listen         = iniparser_getstrdup(config, INISEC_AFP, "afp listen",     NULL);
     options->ntdomain       = iniparser_getstrdup(config, INISEC_AFP, "ntdomain",       NULL);
     options->ntseparator    = iniparser_getstrdup(config, INISEC_AFP, "ntseparator",    NULL);
     options->mimicmodel     = iniparser_getstrdup(config, INISEC_AFP, "mimicmodel",     NULL);
