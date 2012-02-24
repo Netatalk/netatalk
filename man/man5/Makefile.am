@@ -14,7 +14,7 @@ SUFFIXES = .tmpl .
 	    <$< >$@
 
 GENERATED_MANS = afp_signature.conf.5 afp_voluuid.conf.5
-TEMPLATE_FILES = afp_signature.conf.5.tmpl afp_voluuid.conf.5.tmpl
+TEMPLATE_FILES = afp.conf.5.tmpl afp_signature.conf.5.tmpl afp_voluuid.conf.5.tmpl
 NONGENERATED_MANS =
 
 man_MANS = $(GENERATED_MANS) $(NONGENERATED_MANS)
