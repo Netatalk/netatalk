@@ -918,10 +918,6 @@ static int vol_section(const char *sec)
 {
     if (STRCMP(sec, ==, INISEC_GLOBAL))
         return 0;
-    if (STRCMP(sec, ==, INISEC_AFP))
-        return 0;
-    if (STRCMP(sec, ==, INISEC_CNID))
-        return 0;
     return 1;
 }
 
@@ -946,7 +942,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_AFP, "vol preset", NULL))) {
+    if ((p = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL))) {
         default_preset = p;
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
@@ -1210,7 +1206,7 @@ int afp_config_parse(AFPObj *AFPObj)
     options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "logfile",  NULL);
 
     /* [AFP] "options" options wo values */
-    if (p = iniparser_getstrdup(config, INISEC_AFP, "options", NULL)) {
+    if (p = iniparser_getstrdup(config, INISEC_GLOBAL, "options", NULL)) {
         if (p = strtok(q, ", ")) {
             while (p) {
                 if (strcasecmp(p, "nozeroconf"))
@@ -1243,35 +1239,35 @@ int afp_config_parse(AFPObj *AFPObj)
     }
     /* figure out options w values */
 
-    options->loginmesg      = iniparser_getstrdup(config, INISEC_AFP, "loginmesg",      "");
-    options->guest          = iniparser_getstrdup(config, INISEC_AFP, "guestname",      "nobody");
-    options->passwdfile     = iniparser_getstrdup(config, INISEC_AFP, "passwdfile",     _PATH_AFPDPWFILE);
-    options->uampath        = iniparser_getstrdup(config, INISEC_AFP, "uampath",        _PATH_AFPDUAMPATH);
-    options->uamlist        = iniparser_getstrdup(config, INISEC_AFP, "uamlist",        "uams_dhx.so,uams_dhx2.so");
-    options->port           = iniparser_getstrdup(config, INISEC_AFP, "afp port",       "548");
-    options->signatureopt   = iniparser_getstrdup(config, INISEC_AFP, "signature",      "auto");
-    options->k5service      = iniparser_getstrdup(config, INISEC_AFP, "k5service",      NULL);
-    options->k5realm        = iniparser_getstrdup(config, INISEC_AFP, "k5realm",        NULL);
-    options->listen         = iniparser_getstrdup(config, INISEC_AFP, "afp listen",     NULL);
-    options->ntdomain       = iniparser_getstrdup(config, INISEC_AFP, "ntdomain",       NULL);
-    options->ntseparator    = iniparser_getstrdup(config, INISEC_AFP, "ntseparator",    NULL);
-    options->mimicmodel     = iniparser_getstrdup(config, INISEC_AFP, "mimicmodel",     NULL);
-    options->adminauthuser  = iniparser_getstrdup(config, INISEC_AFP, "adminauthuser",  NULL);
-    options->connections    = iniparser_getint   (config, INISEC_AFP, "maxcon",         200);
-    options->passwdminlen   = iniparser_getint   (config, INISEC_AFP, "passwdminlen",   0);
-    options->tickleval      = iniparser_getint   (config, INISEC_AFP, "tickleval",      30);
-    options->timeout        = iniparser_getint   (config, INISEC_AFP, "timeout",        4);
-    options->dsireadbuf     = iniparser_getint   (config, INISEC_AFP, "dsireadbuf",     12);
-    options->server_quantum = iniparser_getint   (config, INISEC_AFP, "server_quantum", DSI_SERVQUANT_DEF);
-    options->volnamelen     = iniparser_getint   (config, INISEC_AFP, "volnamelen",     80);
-    options->dircachesize   = iniparser_getint   (config, INISEC_AFP, "dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
-    options->tcp_sndbuf     = iniparser_getint   (config, INISEC_AFP, "tcpsndbuf",      0);
-    options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_AFP, "tcprcvbuf",      0);
-    options->fce_fmodwait   = iniparser_getint   (config, INISEC_AFP, "fceholdfmod",    60);
-    options->sleep          = iniparser_getint   (config, INISEC_AFP, "sleep",          10);
-    options->disconnected   = iniparser_getint   (config, INISEC_AFP, "disconnect",     24);
+    options->loginmesg      = iniparser_getstrdup(config, INISEC_GLOBAL, "loginmesg",      "");
+    options->guest          = iniparser_getstrdup(config, INISEC_GLOBAL, "guestname",      "nobody");
+    options->passwdfile     = iniparser_getstrdup(config, INISEC_GLOBAL, "passwdfile",     _PATH_AFPDPWFILE);
+    options->uampath        = iniparser_getstrdup(config, INISEC_GLOBAL, "uampath",        _PATH_AFPDUAMPATH);
+    options->uamlist        = iniparser_getstrdup(config, INISEC_GLOBAL, "uamlist",        "uams_dhx.so,uams_dhx2.so");
+    options->port           = iniparser_getstrdup(config, INISEC_GLOBAL, "afp port",       "548");
+    options->signatureopt   = iniparser_getstrdup(config, INISEC_GLOBAL, "signature",      "auto");
+    options->k5service      = iniparser_getstrdup(config, INISEC_GLOBAL, "k5service",      NULL);
+    options->k5realm        = iniparser_getstrdup(config, INISEC_GLOBAL, "k5realm",        NULL);
+    options->listen         = iniparser_getstrdup(config, INISEC_GLOBAL, "afp listen",     NULL);
+    options->ntdomain       = iniparser_getstrdup(config, INISEC_GLOBAL, "ntdomain",       NULL);
+    options->ntseparator    = iniparser_getstrdup(config, INISEC_GLOBAL, "ntseparator",    NULL);
+    options->mimicmodel     = iniparser_getstrdup(config, INISEC_GLOBAL, "mimicmodel",     NULL);
+    options->adminauthuser  = iniparser_getstrdup(config, INISEC_GLOBAL, "adminauthuser",  NULL);
+    options->connections    = iniparser_getint   (config, INISEC_GLOBAL, "maxcon",         200);
+    options->passwdminlen   = iniparser_getint   (config, INISEC_GLOBAL, "passwdminlen",   0);
+    options->tickleval      = iniparser_getint   (config, INISEC_GLOBAL, "tickleval",      30);
+    options->timeout        = iniparser_getint   (config, INISEC_GLOBAL, "timeout",        4);
+    options->dsireadbuf     = iniparser_getint   (config, INISEC_GLOBAL, "dsireadbuf",     12);
+    options->server_quantum = iniparser_getint   (config, INISEC_GLOBAL, "server_quantum", DSI_SERVQUANT_DEF);
+    options->volnamelen     = iniparser_getint   (config, INISEC_GLOBAL, "volnamelen",     80);
+    options->dircachesize   = iniparser_getint   (config, INISEC_GLOBAL, "dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
+    options->tcp_sndbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcpsndbuf",      0);
+    options->tcp_rcvbuf     = iniparser_getint   (config, INISEC_GLOBAL, "tcprcvbuf",      0);
+    options->fce_fmodwait   = iniparser_getint   (config, INISEC_GLOBAL, "fceholdfmod",    60);
+    options->sleep          = iniparser_getint   (config, INISEC_GLOBAL, "sleep",          10);
+    options->disconnected   = iniparser_getint   (config, INISEC_GLOBAL, "disconnect",     24);
 
-    if ((p = iniparser_getstring(config, INISEC_AFP, "hostname", NULL))) {
+    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "hostname", NULL))) {
         EC_NULL_LOG( options->hostname = strdup(p) );
     } else {
         if (gethostname(val, sizeof(val)) < 0 ) {
@@ -1283,21 +1279,21 @@ int afp_config_parse(AFPObj *AFPObj)
         options->hostname = strdup(val);
     }
 
-    if ((p = iniparser_getstring(config, INISEC_AFP, "k5keytab", NULL))) {
+    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "k5keytab", NULL))) {
         EC_NULL_LOG( options->k5keytab = malloc(strlen(p) + 14) );
         snprintf(options->k5keytab, strlen(p) + 14, "KRB5_KTNAME=%s", p);
         putenv(options->k5keytab);
     }
 
 #ifdef ADMIN_GRP
-    if ((p = iniparser_getstring(config, INISEC_AFP, "admingroup",  NULL))) {
+    if ((p = iniparser_getstring(config, INISEC_GLOBAL, "admingroup",  NULL))) {
          struct group *gr = getgrnam(p);
          if (gr != NULL)
              options->admingid = gr->gr_gid;
     }
 #endif /* ADMIN_GRP */
 
-    q = iniparser_getstrdup(config, INISEC_AFP, "cnidserver", "localhost:4700");
+    q = iniparser_getstrdup(config, INISEC_GLOBAL, "cnidserver", "localhost:4700");
     r = strrchr(q, ':');
     if (r)
         *r = 0;
@@ -1310,7 +1306,7 @@ int afp_config_parse(AFPObj *AFPObj)
     if (q)
         free(q);
 
-    if ((q = iniparser_getstrdup(config, INISEC_AFP, "fqdn", NULL))) {
+    if ((q = iniparser_getstrdup(config, INISEC_GLOBAL, "fqdn", NULL))) {
         /* do a little checking for the domain name. */
         r = strchr(q, ':');
         if (r)
@@ -1325,7 +1321,7 @@ int afp_config_parse(AFPObj *AFPObj)
         free(q);
     }
 
-    if (!(p = iniparser_getstring(config, INISEC_AFP, "unixcodepage", NULL))) {
+    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "unixcodepage", NULL))) {
         options->unixcharset = CH_UNIX;
         options->unixcodepage = strdup("LOCALE");
     } else {
@@ -1338,7 +1334,7 @@ int afp_config_parse(AFPObj *AFPObj)
         }
     }
 	
-    if (!(p = iniparser_getstring(config, INISEC_AFP, "maccodepage", NULL))) {
+    if (!(p = iniparser_getstring(config, INISEC_GLOBAL, "maccodepage", NULL))) {
         options->maccharset = CH_MAC;
         options->maccodepage = strdup("MAC_ROMAN");
     } else {

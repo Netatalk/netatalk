@@ -33,12 +33,12 @@
 int acl_ldap_readconfig(dictionary *iniconfig)
 {
     int i, j;
-    char *val;
+    const char *val;
 
     i = 0;
     /* now see if its a correct pref */
     for (i = 0; ldap_prefs[i].name != NULL; i++) {
-        if ((val = iniparser_getstring(iniconfig, INISEC_AFP, ldap_prefs[i].name, NULL))) {
+        if ((val = iniparser_getstring(iniconfig, INISEC_GLOBAL, ldap_prefs[i].name, NULL))) {
             /* check if we have pre-defined values */
             if (ldap_prefs[i].intfromarray == 0) {
                 /* no, its just a string */
@@ -48,7 +48,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
                     *((int *)(ldap_prefs[i].pref)) = atoi(val);
                 else
                     /* store string as string */
-                    *((char **)(ldap_prefs[i].pref)) = val;
+                    *((const char **)(ldap_prefs[i].pref)) = val;
             } else {
                 /* ok, we have string to int mapping for this pref
                    eg. "none", "simple", "sasl" map to 0, 128, 129 */

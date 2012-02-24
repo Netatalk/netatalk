@@ -54,8 +54,6 @@
  **********************************************************************************************/
 
 #define INISEC_GLOBAL "Global"
-#define INISEC_AFP    "AFP"
-#define INISEC_CNID   "CNID"
 
 struct DSI;
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)

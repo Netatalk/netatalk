@@ -128,15 +128,15 @@ int configinit(AFPObj *obj)
         zeroconf_register(obj);
     }
 
-    if ((r = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcelistener", NULL))) {
+    if ((r = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fcelistener", NULL))) {
 		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
 		fce_add_udp_socket(r);
     }
-    if ((r = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fcecoalesce", NULL))) {
+    if ((r = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fcecoalesce", NULL))) {
 		LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
 		fce_set_coalesce(r);
     }
-    if ((r = iniparser_getstring(obj->iniconfig, INISEC_AFP, "fceevents", NULL))) {
+    if ((r = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "fceevents", NULL))) {
 		LOG(log_note, logtype_afpd, "Fce events: %s", r);
 		fce_set_events(r);
     }
