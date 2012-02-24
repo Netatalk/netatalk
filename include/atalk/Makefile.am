@@ -20,7 +20,6 @@ atalkinclude_HEADERS = \
 noinst_HEADERS = \
 	directory.h \
 	hash.h \
-	zip.h \
 	uuid.h \
 	queue.h \
 	server_child.h \
