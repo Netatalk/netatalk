@@ -85,13 +85,15 @@
  * returns the result as a Darwin allowed rights ACE.
  * This must honor trivial ACEs which are a mode_t mapping.
  *
+ * @param obj            (r) handle
  * @param path           (r) path to filesystem object
  * @param sb             (r) struct stat of path
  * @param result         (w) resulting Darwin allow ACE
  *
  * @returns                  0 or -1 on error
  */
-static int solaris_acl_rights(const char *path,
+static int solaris_acl_rights(const AFPObj *obj,
+                              const char *path,
                               const struct stat *sb,
                               uint32_t *result)
 {
@@ -131,15 +133,15 @@ static int solaris_acl_rights(const char *path,
            if its a trivial ACE_EVERYONE ACE
            THEN
            process ACE */
-        if (((who == uuid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)))
+        if (((who == obj->uid) && !(flags & (ACE_TRIVIAL|ACE_IDENTIFIER_GROUP)))
             ||
-            ((flags & ACE_IDENTIFIER_GROUP) && !(flags & ACE_GROUP) && gmem(who))
+            ((flags & ACE_IDENTIFIER_GROUP) && !(flags & ACE_GROUP) && gmem(who, obj->ngroups, obj->groups))
             ||
-            ((flags & ACE_OWNER) && (uuid == sb->st_uid))
+            ((flags & ACE_OWNER) && (obj->uid == sb->st_uid))
             ||
-            ((flags & ACE_GROUP) && !(uuid == sb->st_uid) && gmem(sb->st_gid))
+            ((flags & ACE_GROUP) && !(obj->uid == sb->st_uid) && gmem(sb->st_gid, obj->ngroups, obj->groups))
             ||
-            (flags & ACE_EVERYONE && !(uuid == sb->st_uid) && !gmem(sb->st_gid))
+            (flags & ACE_EVERYONE && !(obj->uid == sb->st_uid) && !gmem(sb->st_gid, obj->ngroups, obj->groups))
             ) {
             /* Found an applicable ACE */
             if (type == ACE_ACCESS_ALLOWED_ACE_TYPE)
@@ -1387,7 +1389,7 @@ static int check_acl_access(const AFPObj *obj,
         LOG(log_debug, logtype_afpd, "check_access: allowed rights from dircache: 0x%08x", allowed_rights);
     } else {
 #ifdef HAVE_SOLARIS_ACLS
-        EC_ZERO_LOG(solaris_acl_rights(path, &st, &allowed_rights));
+        EC_ZERO_LOG(solaris_acl_rights(obj, path, &st, &allowed_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
         EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &allowed_rights));
@@ -1420,7 +1422,7 @@ static int check_acl_access(const AFPObj *obj,
             EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
 
 #ifdef HAVE_SOLARIS_ACLS
-            EC_ZERO_LOG(solaris_acl_rights(cfrombstr(parent), &st, &parent_rights));
+            EC_ZERO_LOG(solaris_acl_rights(obj, cfrombstr(parent), &st, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
             EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &parent_rights));
@@ -1734,7 +1736,7 @@ int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct 
         getcwdpath(), path, ma->ma_user);
 
 #ifdef HAVE_SOLARIS_ACLS
-    EC_ZERO_LOG(solaris_acl_rights(path, st, &rights));
+    EC_ZERO_LOG(solaris_acl_rights(obj, path, st, &rights));
 
     LOG(log_maxdebug, logtype_afpd, "rights: 0x%08x", rights);
 
