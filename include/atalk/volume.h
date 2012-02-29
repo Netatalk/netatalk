@@ -70,7 +70,8 @@ struct vol {
     
     /* only when opening/closing volumes or in error */
     int             v_casefold;
-    char            *v_localname;   /* as defined in AppleVolumes.default */
+    char            *v_configname;   /* as defined in afpc.conf */
+    char            *v_localname;    /* as defined in afp.conf but with vars expanded */
     char            *v_volcodepage;
     char            *v_maccodepage;
     char            *v_password;
@@ -112,6 +113,7 @@ struct vol {
   Keep in sync with libatalk/util/volinfo.c
 */
 #define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
+#define AFPVOL_UNIX_CTXT (1 << 6)   /* volume created by getvolbypath ie UNIX access, not afpd AFP user session */
 #define AFPVOL_RO        (1 << 8)   /* read-only volume */
 #define AFPVOL_NOHEX     (1 << 10)  /* don't do :hex translation */
 #define AFPVOL_USEDOTS   (1 << 11)  /* use real dots */

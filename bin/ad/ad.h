@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <arpa/inet.h>
 
+#include <atalk/globals.h>
 #include <atalk/ftw.h>
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
@@ -56,14 +57,15 @@ typedef struct {
 extern int log_verbose;             /* Logging flag */
 extern void _log(enum logtype lt, char *fmt, ...);
 
-extern int ad_ls(int argc, char **argv);
-extern int ad_cp(int argc, char **argv);
-extern int ad_rm(int argc, char **argv);
-extern int ad_mv(int argc, char **argv);
-extern int ad_find(int argc, char **argv);
+extern int ad_ls(int argc, char **argv, AFPObj *obj);
+extern int ad_cp(int argc, char **argv, AFPObj *obj);
+
+extern int ad_rm(int argc, char **argv, AFPObj *obj);
+extern int ad_mv(int argc, char **argv, AFPObj *obj);
+extern int ad_find(int argc, char **argv, AFPObj *obj);
 
 /* ad_util.c */
-extern int openvol(const char *path, afpvol_t *vol);
+extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_path(const afpvol_t *vol, const char *path, cnid_t *did);
 extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path, cnid_t *did);

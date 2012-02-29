@@ -82,7 +82,7 @@ static void usage_find(void)
         );
 }
 
-int ad_find(int argc, char **argv)
+int ad_find(int argc, char **argv, AFPObj *obj)
 {
     int c, ret;
     afpvol_t vol;
@@ -111,7 +111,7 @@ int ad_find(int argc, char **argv)
     set_signal();
     cnid_init();
 
-    if (openvol(srchvol, &vol) != 0)
+    if (openvol(obj, srchvol, &vol) != 0)
         ERROR("Cant open volume \"%s\"", srchvol);
 
     uint16_t flags = CONV_TOLOWER;

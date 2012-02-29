@@ -64,7 +64,9 @@
 #include <atalk/logger.h>
 #include <atalk/errchk.h>
 #include <atalk/unicode.h>
+#include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+
 
 #include "ad.h"
 
@@ -96,21 +98,21 @@ void _log(enum logtype lt, char *fmt, ...)
  *
  * @returns 0 on success, exits on error
  */
-int openvol(const char *path, afpvol_t *vol)
+int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
 {
     int flags = 0;
 
     memset(vol, 0, sizeof(afpvol_t));
 
-    /* try to find a .AppleDesktop/.volinfo */
-    if ((vol->vol = getvolbypath(path)) == NULL)
+    if ((vol->vol = getvolbypath(obj, path)) == NULL)
         return -1;
 
     if (STRCMP(vol->vol->v_cnidscheme, != , "dbd"))
         ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->vol->v_path);
 
     /* Sanity checks to ensure we can touch this volume */
-    if (vol->vol->v_adouble != AD_VERSION2)
+    if (vol->vol->v_adouble != AD_VERSION2
+        && vol->vol->v_adouble != AD_VERSION_EA)
         ERROR("Unsupported adouble versions: %u", vol->vol->v_adouble);
 
     if (vol->vol->v_vfs_ea != AFPVOL_EA_SYS)

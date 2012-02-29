@@ -132,7 +132,7 @@ static void usage_rm(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_rm(int argc, char *argv[])
+int ad_rm(int argc, char *argv[], AFPObj *obj)
 {
     int ch;
 
@@ -165,7 +165,7 @@ int ad_rm(int argc, char *argv[])
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(argv[i], &volume);
+        openvol(obj, argv[i], &volume);
 
         if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) == -1) {
             if (alarmed) {

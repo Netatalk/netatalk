@@ -594,7 +594,7 @@ exit:
     return ret;
 }
 
-int ad_ls(int argc, char **argv)
+int ad_ls(int argc, char **argv, AFPObj *obj)
 {
     int c, firstarg;
     afpvol_t vol;
@@ -630,7 +630,7 @@ int ad_ls(int argc, char **argv)
     cnid_init();
 
     if ((argc - optind) == 0) {
-        openvol(".", &vol);
+        openvol(obj, ".", &vol);
         ad_ls_r(".", &vol);
         closevol(&vol);
     }
@@ -650,7 +650,7 @@ int ad_ls(int argc, char **argv)
             first = 1;
             recursion = 0;
 
-            openvol(argv[optind], &vol);
+            openvol(obj, argv[optind], &vol);
             ad_ls_r(argv[optind], &vol);
             closevol(&vol);
         next:
@@ -672,7 +672,7 @@ int ad_ls(int argc, char **argv)
             first = 1;
             recursion = 0;
 
-            openvol(argv[optind], &vol);
+            openvol(obj, argv[optind], &vol);
             ad_ls_r(argv[optind], &vol);
             closevol(&vol);
 

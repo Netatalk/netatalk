@@ -62,15 +62,15 @@ int main(int argc, char **argv)
         return 1;
 
     if (STRCMP(argv[1], ==, "ls"))
-        return ad_ls(argc - 1, argv + 1);
+        return ad_ls(argc - 1, argv + 1, &obj);
     else if (STRCMP(argv[1], ==, "cp"))
-        return ad_cp(argc - 1, argv + 1);
+        return ad_cp(argc - 1, argv + 1, &obj);
     else if (STRCMP(argv[1], ==, "rm"))
-        return ad_rm(argc - 1, argv + 1);
+        return ad_rm(argc - 1, argv + 1, &obj);
     else if (STRCMP(argv[1], ==, "mv"))
-        return ad_mv(argc, argv);
+        return ad_mv(argc, argv, &obj);
     else if (STRCMP(argv[1], ==, "find"))
-        return ad_find(argc, argv);
+        return ad_find(argc, argv, &obj);
     else if (STRCMP(argv[1], ==, "-v")) {
         show_version();
         return 1;

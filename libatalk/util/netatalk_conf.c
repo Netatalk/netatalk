@@ -52,6 +52,7 @@
  * Locals
  **************************************************************/
 
+static int have_uservol = 0; /* whether there's generic user home share in config ("~" or "~/path", but not "~user") */
 static struct vol *Volumes = NULL;
 static uint16_t    lastvid = 0;
 
@@ -320,8 +321,6 @@ static char *volxlate(const AFPObj *obj,
         /* now figure out what the variable is */
         q = NULL;
         if (IS_VAR(p, "$b")) {
-            if (!obj->uid && xlatevolname)
-                return NULL;
             if (path) {
                 if ((q = strrchr(path, '/')) == NULL)
                     q = path;
@@ -329,8 +328,6 @@ static char *volxlate(const AFPObj *obj,
                     q++;
             }
         } else if (IS_VAR(p, "$c")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             DSI *dsi = obj->dsi;
             len = sprintf(dest, "%s:%u",
                           getip_string((struct sockaddr *)&dsi->client),
@@ -338,41 +335,29 @@ static char *volxlate(const AFPObj *obj,
             dest += len;
             destlen -= len;
         } else if (IS_VAR(p, "$d")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             q = path;
         } else if (pwd && IS_VAR(p, "$f")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             if ((r = strchr(pwd->pw_gecos, ',')))
                 *r = '\0';
             q = pwd->pw_gecos;
         } else if (pwd && IS_VAR(p, "$g")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             struct group *grp = getgrgid(pwd->pw_gid);
             if (grp)
                 q = grp->gr_name;
         } else if (IS_VAR(p, "$h")) {
             q = obj->options.hostname;
         } else if (IS_VAR(p, "$i")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             DSI *dsi = obj->dsi;
             q = getip_string((struct sockaddr *)&dsi->client);
         } else if (IS_VAR(p, "$s")) {
             q = obj->options.hostname;
         } else if (obj->username && IS_VAR(p, "$u")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             char* sep = NULL;
             if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
                 q = sep+1;
             else
                 q = obj->username;
         } else if (IS_VAR(p, "$v")) {
-            if (!obj->uid  && xlatevolname)
-                return NULL;
             if (volname) {
                 q = volname;
             }
@@ -507,7 +492,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname, const char *arg
  * Get option string from config, use default value if not set
  *
  * @param conf    (r) config handle
- * @param vol     (r) volume name
+ * @param vol     (r) volume name (must be section name ie wo vars expanded)
  * @param opt     (r) option
  * @param def     (r) if "option" is not found in "name", try to find it in section "def"
  *
@@ -530,16 +515,18 @@ EC_CLEANUP:
  *
  * @param obj      (r) handle
  * @param pwd      (r) struct passwd of logged in user, may be NULL in master afpd
- * @param path     (r) volume path
+ * @param section  (r) volume name wo variables expanded (exactly as in iniconfig)
  * @param name     (r) volume name
+ * @param path     (r) volume path
  * @param preset   (r) default preset, may be NULL
- * @returns               0 on success, -1 on error
+ * @returns            vol on success, NULL on error
  */
-static int creatvol(AFPObj *obj,
-                    const struct passwd *pwd,
-                    const char *path,
-                    const char *name,
-                    const char *preset)
+static struct vol *creatvol(AFPObj *obj,
+                            const struct passwd *pwd,
+                            const char *section,
+                            const char *name,
+                            const char *path,
+                            const char *preset)
 {
     EC_INIT;
     struct vol  *volume = NULL;
@@ -566,9 +553,10 @@ static int creatvol(AFPObj *obj,
 
     /* Once volumes are loaded, we never change options again, we just delete em when they're removed from afp.conf */
     for (struct vol *vol = Volumes; vol; vol = vol->v_next) {
-        if (STRCMP(name, ==, vol->v_localname)) {
+        if (STRCMP(path, ==, vol->v_path)) {
             LOG(log_debug, logtype_afpd, "createvol('%s'): already loaded", name);
             vol->v_deleted = 0;
+            volume = vol;
             goto EC_CLEANUP;
         }
     }
@@ -579,75 +567,77 @@ static int creatvol(AFPObj *obj,
      * deny -> either no list (-1), or not in list (0)
      */
     if (pwd) {
-        if (accessvol(obj, getoption(obj->iniconfig, name, "deny", preset), pwd->pw_name) == 1)
+        if (accessvol(obj, getoption(obj->iniconfig, section, "deny", preset), pwd->pw_name) == 1)
             goto EC_CLEANUP;
-        if (accessvol(obj, getoption(obj->iniconfig, name, "allow", preset), pwd->pw_name) == 0)
+        if (accessvol(obj, getoption(obj->iniconfig, section, "allow", preset), pwd->pw_name) == 0)
             goto EC_CLEANUP;
-        if (hostaccessvol(obj, name, getoption(obj->iniconfig, name, "denied_hosts", preset)) == 1)
+        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "denied_hosts", preset)) == 1)
             goto EC_CLEANUP;
-        if (hostaccessvol(obj, name, getoption(obj->iniconfig, name, "allowed_hosts", preset)) == 0)
+        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "allowed_hosts", preset)) == 0)
             goto EC_CLEANUP;
     }
 
     EC_NULL( volume = calloc(1, sizeof(struct vol)) );
 
     volume->v_flags = AFPVOL_USEDOTS | AFPVOL_UNIX_PRIV;
+    EC_NULL( volume->v_configname = strdup(section));
+
 #ifdef HAVE_ACLS
     volume->v_flags |= AFPVOL_ACLS;
 #endif
     volume->v_vfs_ea = AFPVOL_EA_AUTO;
     volume->v_umask = obj->options.umask;
 
-    if (val = getoption(obj->iniconfig, name, "password", preset))
+    if (val = getoption(obj->iniconfig, section, "password", preset))
         EC_NULL( volume->v_password = strdup(val) );
 
-    if (val = getoption(obj->iniconfig, name, "veto", preset))
+    if (val = getoption(obj->iniconfig, section, "veto", preset))
         EC_NULL( volume->v_password = strdup(val) );
 
-    if (val = getoption(obj->iniconfig, name, "volcharset", preset))
+    if (val = getoption(obj->iniconfig, section, "volcharset", preset))
         EC_NULL( volume->v_volcodepage = strdup(val) );
     else
         EC_NULL( volume->v_volcodepage = strdup("UTF8") );
 
-    if (val = getoption(obj->iniconfig, name, "maccharset", preset))
+    if (val = getoption(obj->iniconfig, section, "maccharset", preset))
         EC_NULL( volume->v_maccodepage = strdup(val) );
     else
         EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
-    if (val = getoption(obj->iniconfig, name, "dbpath", preset))
+    if (val = getoption(obj->iniconfig, section, "dbpath", preset))
         EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, name, "cnidscheme", preset))
+    if (val = getoption(obj->iniconfig, section, "cnidscheme", preset))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
 
-    if (val = getoption(obj->iniconfig, name, "umask", preset))
+    if (val = getoption(obj->iniconfig, section, "umask", preset))
         volume->v_umask = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, name, "dperm", preset))
+    if (val = getoption(obj->iniconfig, section, "dperm", preset))
         volume->v_dperm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, name, "fperm", preset))
+    if (val = getoption(obj->iniconfig, section, "fperm", preset))
         volume->v_fperm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, name, "perm", preset))
+    if (val = getoption(obj->iniconfig, section, "perm", preset))
         volume->v_perm = (int)strtol(val, NULL, 8);
 
-    if (val = getoption(obj->iniconfig, name, "volsizelimit", preset))
+    if (val = getoption(obj->iniconfig, section, "volsizelimit", preset))
         volume->v_limitsize = (uint32_t)strtoul(val, NULL, 10);
 
-    if (val = getoption(obj->iniconfig, name, "preexec", preset))
+    if (val = getoption(obj->iniconfig, section, "preexec", preset))
         EC_NULL( volume->v_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, name, "postexec", preset))
+    if (val = getoption(obj->iniconfig, section, "postexec", preset))
         EC_NULL( volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, name, "root_preexec", preset))
+    if (val = getoption(obj->iniconfig, section, "root_preexec", preset))
         EC_NULL( volume->v_root_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, name, "root_postexec", preset))
+    if (val = getoption(obj->iniconfig, section, "root_postexec", preset))
         EC_NULL( volume->v_root_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if (val = getoption(obj->iniconfig, name, "adouble", preset)) {
+    if (val = getoption(obj->iniconfig, section, "adouble", preset)) {
         if (strcmp(val, "v2") == 0)
             volume->v_adouble = AD_VERSION2;
         else if (strcmp(val, "ea") == 0)
@@ -656,7 +646,7 @@ static int creatvol(AFPObj *obj,
         volume->v_adouble = AD_VERSION;
     }
 
-    if (val = getoption(obj->iniconfig, name, "cnidserver", preset)) {
+    if (val = getoption(obj->iniconfig, section, "cnidserver", preset)) {
         EC_NULL( p = strdup(val) );
         volume->v_cnidserver = p;
         if (q = strrchr(val, ':')) {
@@ -668,7 +658,7 @@ static int creatvol(AFPObj *obj,
 
     }
 
-    if (val = getoption(obj->iniconfig, name, "ea", preset)) {
+    if (val = getoption(obj->iniconfig, section, "ea", preset)) {
         if (strcasecmp(val, "ad") == 0)
             volume->v_vfs_ea = AFPVOL_EA_AD;
         else if (strcasecmp(val, "sys") == 0)
@@ -677,7 +667,7 @@ static int creatvol(AFPObj *obj,
             volume->v_vfs_ea = AFPVOL_EA_NONE;
     }
 
-    if (val = getoption(obj->iniconfig, name, "casefold", preset)) {
+    if (val = getoption(obj->iniconfig, section, "casefold", preset)) {
         if (strcasecmp(val, "tolower") == 0)
             volume->v_casefold = AFPVOL_UMLOWER;
         else if (strcasecmp(val, "toupper") == 0)
@@ -688,7 +678,7 @@ static int creatvol(AFPObj *obj,
             volume->v_casefold = AFPVOL_ULOWERMUPPER;
     }
 
-    if (val = getoption(obj->iniconfig, name, "options", preset)) {
+    if (val = getoption(obj->iniconfig, section, "options", preset)) {
         q = strdup(val);
         if (p = strtok(q, ", ")) {
             while (p) {
@@ -737,8 +727,8 @@ static int creatvol(AFPObj *obj,
      * 3) rwlist exists -> ro unless user is in it.
      */
     if (pwd) {
-        if (accessvol(obj, getoption(obj->iniconfig, name, "rolist", preset), pwd->pw_name) == 1
-            || accessvol(obj, getoption(obj->iniconfig, name, "rwlist", preset), pwd->pw_name) == 0)
+        if (accessvol(obj, getoption(obj->iniconfig, section, "rolist", preset), pwd->pw_name) == 1
+            || accessvol(obj, getoption(obj->iniconfig, section, "rwlist", preset), pwd->pw_name) == 0)
             volume->v_flags |= AFPVOL_RO;
     }
 
@@ -774,6 +764,7 @@ static int creatvol(AFPObj *obj,
     /* suffix for mangling use (lastvid + 1)   */
     /* because v_vid has not been decided yet. */
     suffixlen = sprintf(suffix, "#%X", lastvid + 1 );
+
 
     vlen = strlen( name );
 
@@ -891,14 +882,15 @@ static int creatvol(AFPObj *obj,
     volume->v_obj = obj;
 
 EC_CLEANUP:
+    LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
     if (ret != 0) {
         if (volume) {
             volume_free(volume);
             free(volume);
         }
+        return NULL;
     }
-    LOG(log_debug, logtype_afpd, "createvol: END: %d", ret);
-    EC_EXIT;
+    return volume;
 }
 
 /* ----------------------
@@ -934,7 +926,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        tmp[MAXPATHLEN + 1];
     const char  *preset, *default_preset, *p;
+    char        *q, *u;
     int         i;
+    struct passwd   *pw;
 
     LOG(log_debug, logtype_afpd, "readvolfile: BEGIN");
 
@@ -942,8 +936,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
-    if ((p = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL))) {
-        default_preset = p;
+    if ((default_preset = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL))) {
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
 
@@ -952,25 +945,44 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         if (!vol_section(secname))
             continue;
+        if (STRCMP(secname, ==, INISEC_HOMES)) {
+            have_uservol = 1;
+            if (obj->username[0] == 0)
+                /* not an AFP session, but cnid daemon, dbd or ad util */
+                continue;
+            if ((p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir", NULL)) == NULL)
+                continue;
+            strlcpy(tmp, p, MAXPATHLEN);
+            strlcat(tmp, "/", MAXPATHLEN);
+            strlcat(tmp, obj->username, MAXPATHLEN);
+            strlcat(tmp, "/", MAXPATHLEN);
+            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
+                strlcat(tmp, p, MAXPATHLEN);
+        } else {
+            /* Get path */
+            if ((p = iniparser_getstring(obj->iniconfig, secname, "path", NULL)) == NULL)
+                continue;
+            strlcpy(tmp, p, MAXPATHLEN);
+        }
 
-        /* Get path */
-        if ((p = iniparser_getstring(obj->iniconfig, secname, "path", NULL)) == NULL)
-            continue;
-        strlcpy(tmp, p, MAXPATHLEN);
         if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL)
             continue;
 
-        strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
-        LOG(log_debug, logtype_afpd, "readvolfile: volume: %s", volname);
-
-        /* do variable substitution for volname */
-        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL) {
-            continue;
+        /* do variable substitution for volume name */
+        if (STRCMP(secname, ==, INISEC_HOMES)) {
+            if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "name", "$u's home"))
+                strlcpy(tmp, p, MAXPATHLEN);
+            else
+                strlcpy(tmp, p, MAXPATHLEN);
+        } else {
+            strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
         }
+        if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL)
+            continue;
 
         preset = iniparser_getstring(obj->iniconfig, secname, "vol preset", NULL);
 
-        creatvol(obj, pwent, path, volname, preset ? preset : default_preset ? default_preset : NULL);
+        creatvol(obj, pwent, secname, volname, path, preset ? preset : default_preset ? default_preset : NULL);
     }
 
 EC_CLEANUP:
@@ -1075,8 +1087,12 @@ int load_volumes(AFPObj *obj, void (*delvol_fn)(struct vol *))
     if (Volumes) {
         if (!volfile_changed(&obj->options))
             goto EC_CLEANUP;
-        for (vol = Volumes; vol; vol = vol->v_next)
+        have_uservol = 0;
+        for (vol = Volumes; vol; vol = vol->v_next) {
+            if (vol->v_flags & AFPVOL_UNIX_CTXT)
+                continue;
             vol->v_deleted = 1;
+        }
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: no volumes yet");
         EC_ZERO_LOG( lstat(obj->options.configfile, &st) );
@@ -1163,13 +1179,109 @@ struct vol *getvolbyvid(const uint16_t vid )
     return( vol );
 }
 
-struct vol *getvolbypath(const char *path)
+struct vol *getvolbypath(AFPObj *obj, const char *path)
+{
+    EC_INIT;
+    struct vol *vol;
+    struct vol *tmp;
+    const struct passwd *pw;
+    char        volname[AFPVOL_U8MNAMELEN + 1];
+    char        volpath[MAXPATHLEN + 1];
+    char        tmpbuf[MAXPATHLEN + 1];
+    const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
+    char *user = NULL, *prw;
+
+    LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
+
+    for (tmp = Volumes; tmp; tmp = tmp->v_next) {
+        if (strncmp(path, tmp->v_path, strlen(tmp->v_path)) == 0) {
+            vol = tmp;
+            goto EC_CLEANUP;
+        }
+    }
+
+    /* might be a user home, check for that and create a volume if yes */
+    if (!have_uservol)
+        EC_FAIL;
+
+    int secnum = iniparser_getnsec(obj->iniconfig);
+
+    for (int i = 0; i < secnum; i++) { 
+        secname = iniparser_getsecname(obj->iniconfig, i);
+        if (STRCMP(secname, ==, INISEC_HOMES))
+            break;
+    }
+
+    if (STRCMP(secname, !=, INISEC_HOMES))
+        EC_FAIL;
+
+    EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir", NULL) );
+
+    LOG(log_debug, logtype_afpd, "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
+
+    if (strncmp(path, basedir, strlen(basedir)) != 0)
+        EC_FAIL;
+
+    strlcpy(tmpbuf, basedir, MAXPATHLEN);
+    strlcat(tmpbuf, "/", MAXPATHLEN);
+
+    p = path + strlen(basedir);
+    while (*p == '/')
+        p++;
+    EC_NULL_LOG( user = strdup(p) );
+
+    if (prw = strchr(user, '/'))
+        *prw++ = 0;
+    if (prw != 0)
+        subpath = prw;
+
+    strlcat(tmpbuf, user, MAXPATHLEN);
+    strlcat(tmpbuf, "/", MAXPATHLEN);
+
+    if (subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
+        if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
+            EC_FAIL;
+        }
+    }
+
+    strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
+    strlcat(tmpbuf, "/", MAXPATHLEN);
+
+    if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
+        return NULL;
+
+    EC_NULL( pw = getpwnam(user) );
+
+    LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\"): user: %s, homedir: %s => volpath: \"%s\"",
+        path, user, pw->pw_dir, volpath);
+
+    /* do variable substitution for volume name */
+    p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "name", "$u's home");
+    strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
+    EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, volpath, NULL) );
+
+    const char  *preset, *default_preset;
+    default_preset = iniparser_getstring(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL);
+    preset = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "vol preset", NULL);
+
+    vol = creatvol(obj, pw, INISEC_HOMES, volname, volpath, preset ? preset : default_preset ? default_preset : NULL);
+
+EC_CLEANUP:
+    endpwent();
+    if (user)
+        free(user);
+    if (ret != 0)
+        vol = NULL;
+    return vol;
+}
+
+struct vol *getvolbyname(const char *name)
 {
     struct vol *vol = NULL;
     struct vol *tmp;
 
     for (tmp = Volumes; tmp; tmp = tmp->v_next) {
-        if (strncmp(path, tmp->v_path, strlen(tmp->v_path)) == 0) {
+        if (strncmp(name, tmp->v_configname, strlen(tmp->v_configname)) == 0) {
             vol = tmp;
             break;
         }

@@ -211,7 +211,7 @@ static void usage_cp(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_cp(int argc, char *argv[])
+int ad_cp(int argc, char *argv[], AFPObj *obj)
 {
     struct stat to_stat, tmp_stat;
     int r, ch, have_trailing_slash;
@@ -351,11 +351,11 @@ int ad_cp(int argc, char *argv[])
 #endif
 
     /* Load .volinfo file for destination*/
-    openvol(to.p_path, &dvolume);
+    openvol(obj, to.p_path, &dvolume);
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(argv[i], &svolume);
+        openvol(obj, argv[i], &svolume);
 
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             if (alarmed) {

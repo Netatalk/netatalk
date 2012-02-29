@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
     setuplog(obj.options.logconfig, obj.options.logfile);
 
     EC_ZERO( load_volumes(&obj, NULL) );
-    EC_NULL( vol = getvolbypath(volpath) );
+    EC_NULL( vol = getvolbypath(&obj, volpath) );
     EC_ZERO( load_charset(vol) );
     pack_setvol(vol);
 

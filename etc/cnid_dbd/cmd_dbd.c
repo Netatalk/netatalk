@@ -268,7 +268,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    if ((vol = getvolbypath(volpath)) == NULL) {
+    if ((vol = getvolbypath(&obj, volpath)) == NULL) {
         dbd_log( LOGSTD, "Couldn't find volume for '%s'", volpath);
         exit(EXIT_FAILURE);
     }

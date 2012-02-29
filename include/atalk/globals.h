@@ -54,6 +54,7 @@
  **********************************************************************************************/
 
 #define INISEC_GLOBAL "Global"
+#define INISEC_HOMES  "Homes"
 
 struct DSI;
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)

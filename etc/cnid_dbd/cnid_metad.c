@@ -113,7 +113,7 @@ static uint maxvol;
 #define DEFAULTPORT  "4700"
 
 struct server {
-    struct vol *vol;
+    char *v_path;
     pid_t pid;
     time_t tm;                    /* When respawned last */
     int count;                    /* Times respawned in the last TESTTIME secondes */
@@ -141,15 +141,12 @@ static void sigterm_handler(int sig)
     daemon_exit(0);
 }
 
-static struct server *test_usockfn(const struct vol *vol)
+static struct server *test_usockfn(const char *path)
 {
     int i;
 
-    if (!(vol->v_flags & AFPVOL_OPEN))
-        return NULL;
-
     for (i = 0; i < maxvol; i++) {
-        if (vol->v_vid == srv[i].vol->v_vid)
+        if (srv[i].v_path && STRCMP(path, ==, srv[i].v_path))
             return &srv[i];
     }
 
@@ -157,7 +154,7 @@ static struct server *test_usockfn(const struct vol *vol)
 }
 
 /* -------------------- */
-static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, struct vol *vol)
+static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath)
 {
     pid_t pid;
     struct server *up;
@@ -166,13 +163,13 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, struct vol *vol)
     time_t t;
     char buf1[8];
     char buf2[8];
-    char *volpath = vol->v_path;
 
-    LOG(log_debug, logtype_cnid, "maybe_start_dbd: Volume: \"%s\"", volpath);
+    LOG(log_debug, logtype_cnid, "maybe_start_dbd(\"%s\"): BEGIN", volpath);
 
-    up = test_usockfn(vol);
+    up = test_usockfn(volpath);
     if (up && up->pid) {
         /* we already have a process, send our fd */
+        LOG(log_debug, logtype_cnid, "maybe_start_dbd: cnid_dbd[%d] already serving", up->pid);
         if (send_fd(up->control_fd, rqstfd) < 0) {
             /* FIXME */
             return -1;
@@ -180,16 +177,16 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, struct vol *vol)
         return 0;
     }
 
-    LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: no cnid_dbd for that volume yet");
+    LOG(log_debug, logtype_cnid, "maybe_start_dbd: no cnid_dbd serving yet");
 
     time(&t);
     if (!up) {
         /* find an empty slot (i < maxvol) or the first free slot (i == maxvol)*/
         for (i = 0; i <= maxvol; i++) {
-            if (srv[i].vol == NULL && i < MAXVOLS) {
+            if (srv[i].v_path == NULL && i < MAXVOLS) {
                 up = &srv[i];
-                up->vol = vol;
-                vol->v_flags |= AFPVOL_OPEN;
+                if ((up->v_path = strdup(volpath)) == NULL)
+                    return -1;
                 up->tm = t;
                 up->count = 0;
                 if (i == maxvol)
@@ -261,7 +258,7 @@ static int maybe_start_dbd(const AFPObj *obj, char *dbdpn, struct vol *vol)
             /* there's a pb with the db inform child, it will delete the db */
             LOG(log_warning, logtype_cnid,
                 "Multiple attempts to start CNID db daemon for \"%s\" failed, wiping the slate clean...",
-                up->vol->v_path);
+                up->v_path);
             ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, "-d", NULL);
         } else {
             ret = execlp(dbdpn, dbdpn, "-F", obj->options.configfile, "-p", volpath, "-t", buf1, "-l", buf2, NULL);
@@ -533,7 +530,8 @@ int main(int argc, char *argv[])
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
                     close(srv[i].control_fd);
-                    srv[i].vol->v_flags &= ~AFPVOL_OPEN;
+                    free(srv[i].v_path);
+                    srv[i].v_path = NULL;
                     break;
                 }
             }
@@ -590,7 +588,7 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        if ((vol = getvolbypath(volpath)) == NULL) {
+        if ((vol = getvolbypath(&obj, volpath)) == NULL) {
             LOG(log_severe, logtype_cnid, "main: no volume for path \"%s\"", volpath);
             goto loop_end;
         }
@@ -599,7 +597,7 @@ int main(int argc, char *argv[])
             goto loop_end;
         }
 
-        maybe_start_dbd(&obj, dbdpn, vol);
+        maybe_start_dbd(&obj, dbdpn, vol->v_path);
     loop_end:
         close(rqstfd);
     }

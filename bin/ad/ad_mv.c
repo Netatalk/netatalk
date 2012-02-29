@@ -139,7 +139,7 @@ static void usage_mv(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_mv(int argc, char *argv[])
+int ad_mv(int argc, char *argv[], AFPObj *obj)
 {
     size_t baselen, len;
     int rval;
@@ -184,7 +184,7 @@ int ad_mv(int argc, char *argv[])
 
     set_signal();
     cnid_init();
-    if (openvol(argv[argc - 1], &dvolume) != 0) {
+    if (openvol(obj, argv[argc - 1], &dvolume) != 0) {
         SLOG("Error opening CNID database for source \"%s\": ", argv[argc - 1]);
         return 1;
     }
@@ -196,7 +196,7 @@ int ad_mv(int argc, char *argv[])
     if (stat(argv[argc - 1], &sb) || !S_ISDIR(sb.st_mode)) {
         if (argc > 2)
             usage_mv();
-        if (openvol(argv[0], &svolume) != 0) {
+        if (openvol(obj, argv[0], &svolume) != 0) {
             SLOG("Error opening CNID database for destination \"%s\": ", argv[0]);
             return 1;
         }
@@ -234,7 +234,7 @@ int ad_mv(int argc, char *argv[])
             rval = 1;
         } else {
             memmove(endp, p, (size_t)len + 1);
-            openvol(*argv, &svolume);
+            openvol(obj, *argv, &svolume);
 
             if (do_move(*argv, path))
                 rval = 1;
