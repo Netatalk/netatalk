@@ -21,6 +21,7 @@
 #include <atalk/dsi.h>
 #include <atalk/unicode.h>
 
+#include "afp_zeroconf.h"
 #include "afp_avahi.h"
 #include "afp_config.h"
 #include "volume.h"
