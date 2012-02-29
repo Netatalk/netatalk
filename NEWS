@@ -4,6 +4,8 @@ Changes in 2.2.3
 * UPD: based on Unicode 6.1.0
 * UPD: experimental systemd service files: always run both afpd and cnid_metad
 * UPD: afpd: Ensure our umask is not altered by eg pam_umask
+* UPD: afpd: Use GSS_C_NO_NAME as server principal when Kerberos options -fqdn
+       and -krb5service are not set, from Jamie Gilbertson
 * FIX: afpd: sendfile() on FreeBSD was broken, courtesy of Denis Ahrens
 * FIX: afpd: Dont use searchdb when doing partial name search
 
