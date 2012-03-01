@@ -404,7 +404,7 @@ extern int ad_metadata    (const char *, int, struct adouble *);
 extern int ad_metadataat  (int, const char *, int, struct adouble *);
 extern mode_t ad_hf_mode(mode_t mode);
 extern int ad_convert(const char *path, const struct stat *sp, const struct vol *vol);
-
+extern int ad_valid_header_osx(const char *path);
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);
 extern ssize_t ad_read(struct adouble *, uint32_t, off_t, char *, size_t);

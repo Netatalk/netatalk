@@ -474,10 +474,10 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 
 #ifndef HAVE_EAFD
     if (name[1] == '_')
-        return 0;
+        return ad_valid_header_osx(name);
 #endif
-    return netatalk_name(name) && strcasecmp(name,".Parent");
-}             
+    return 1;
+}
 
 /* ----------------- */
 static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)

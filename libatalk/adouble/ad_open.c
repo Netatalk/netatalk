@@ -510,6 +510,39 @@ static int ad_header_read(const char *path _U_, struct adouble *ad, const struct
     return 0;
 }
 
+/* error here means it's not ad ._ adouble:osx file and thus we return 1 */
+int ad_valid_header_osx(const char *path)
+{
+    EC_INIT;
+    int fd;
+    struct adouble      adosx;
+    char                *buf = &adosx.ad_data[0];
+    ssize_t             header_len;
+
+    EC_NEG1( fd = open(path, O_RDONLY) );
+
+    /* read the header */
+    EC_NEG1( header_len = read(fd, buf, AD_DATASZ_OSX) );
+
+    if (header_len < AD_HEADER_LEN)
+        EC_FAIL;
+
+    memcpy(&adosx.ad_magic, buf, sizeof(adosx.ad_magic));
+    memcpy(&adosx.ad_version, buf + ADEDOFF_VERSION, sizeof(adosx.ad_version));
+    adosx.ad_magic = ntohl(adosx.ad_magic);
+    adosx.ad_version = ntohl(adosx.ad_version);
+
+    if ((adosx.ad_magic != AD_MAGIC) || (adosx.ad_version != AD_VERSION2)) {
+        LOG(log_error, logtype_afpd, "ad_valid_header_osx: not an adouble:ox file");
+        EC_FAIL;
+    }
+
+EC_CLEANUP:
+    if (ret != 0)
+        return 1;
+    return 0;
+}
+
 /* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
 static int ad_header_read_osx(const char *path _U_, struct adouble *ad, const struct stat *hst)
 {

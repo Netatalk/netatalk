@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <time.h>
+#include <regex.h>
 
 #include <atalk/afp.h>
 #include <atalk/util.h>
@@ -947,14 +948,10 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             continue;
         if (STRCMP(secname, ==, INISEC_HOMES)) {
             have_uservol = 1;
-            if (obj->username[0] == 0)
+            if (!obj->uid)
                 /* not an AFP session, but cnid daemon, dbd or ad util */
                 continue;
-            if ((p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir", NULL)) == NULL)
-                continue;
-            strlcpy(tmp, p, MAXPATHLEN);
-            strlcat(tmp, "/", MAXPATHLEN);
-            strlcat(tmp, obj->username, MAXPATHLEN);
+            strlcpy(tmp, pwent->pw_dir, MAXPATHLEN);
             strlcat(tmp, "/", MAXPATHLEN);
             if (p = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL))
                 strlcat(tmp, p, MAXPATHLEN);
@@ -1190,6 +1187,9 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
     char *user = NULL, *prw;
+    int regexerr = -1;
+    static regex_t reg;
+    regmatch_t match[1];
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
@@ -1202,7 +1202,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     /* might be a user home, check for that and create a volume if yes */
     if (!have_uservol)
-        EC_FAIL;
+        EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
     int secnum = iniparser_getnsec(obj->iniconfig);
 
@@ -1213,16 +1213,30 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     }
 
     if (STRCMP(secname, !=, INISEC_HOMES))
-        EC_FAIL;
+        EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
-    EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir", NULL) );
-
+    EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL) );
     LOG(log_debug, logtype_afpd, "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
 
-    if (strncmp(path, basedir, strlen(basedir)) != 0)
-        EC_FAIL;
+    if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
+        char errbuf[1024];
+        regerror(regexerr, &reg, errbuf, sizeof(errbuf));
+        printf("error: %s\n", errbuf);
+        EC_FAIL_LOG("getvolbypath(\"%s\"): bad basedir regex: %s", errbuf);
+    }
 
-    strlcpy(tmpbuf, basedir, MAXPATHLEN);
+    if (regexec(&reg, path, 1, match, 0) == REG_NOMATCH)
+        EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
+
+    if (match[0].rm_eo - match[0].rm_so > MAXPATHLEN)
+        EC_FAIL_LOG("getvolbypath(\"%s\"): path too long", path);
+
+    strncpy(tmpbuf, path + match[0].rm_so, match[0].rm_eo - match[0].rm_so);
+    tmpbuf[match[0].rm_eo - match[0].rm_so] = 0;
+
+    LOG(log_debug, logtype_afpd, "getvolbypath: basedir regex: '%s', basedir match: \"%s\"",
+        basedir, tmpbuf);
+
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     p = path + strlen(basedir);
