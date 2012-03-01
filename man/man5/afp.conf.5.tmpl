@@ -62,14 +62,14 @@ The values following the equals sign in parameters are all either a string (no q
 Each section in the configuration file (except for the [Global] section) describes a shared resource (known as a
 \(lqvolume\(rq)\&. The section name is the name of the volume and the parameters within the section define the volume attributes and options\&.
 .PP
-There is one special sections, [Global], which is described under
+There are two special sections, [Global] and [Homes], which are described under
 \fIspecial sections\fR\&. The following notes apply to ordinary section descriptions\&.
 .PP
 A volume consists of a directory to which access is being given plus a description of the access rights which are granted to the user of the service\&. For volumes the
 \fBpath\fR
 option must specify the directory to share\&.
 .PP
-Any section without
+Any volume section without
 \fBpath\fR
 option is considered a
 \fIvol preset\fR
@@ -100,7 +100,40 @@ baz:
 .SH "SPECIAL SECTIONS"
 .SS "The [Global] section"
 .PP
-Parameters in this section apply to the server as a whole\&. Parameters denoted by a (G) below are must be set in this section\&. Parameters denoted by a (V) belong to volume sections\&.
+Parameters in this section apply to the server as a whole\&. Parameters denoted by a (G) below are must be set in this section\&.
+.SS "The [Homes] section"
+.PP
+This section enable sharing of the UNIX server user home directories\&. Specifying an optional
+\fBpath\fR
+parameter means that not the whole user home will be shared but the subdirectory
+\fBpath\fR\&. It is neccessary to define the
+\fBbasedir regex\fR
+option\&. It should be a regex which matches the parent directory of the user homes\&. Parameters denoted by a (H) belong to volume sections\&. The optional parameter
+\fBname\fR
+can be used to change the AFP volume name which
+\fIusers\'s home\fR
+by default\&. See below under VARIABLE SUBSTITUTIONS\&.
+.PP
+The following example illustrates this\&. Given all user home directories are stored under
+/home:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+        [Homes]
+        path = afp\-data
+        basedir regex = /home
+      
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+For a user
+\fIjohn\fR
+this results in an AFP home volume with a path of
+/home/john/afp\-data\&.
 .SH "PARAMETERS"
 .PP
 Parameters define the specific attributes of sections\&.
@@ -111,8 +144,6 @@ Some parameters are specific to the [Global] section (e\&.g\&.,
 in parentheses indicates that a parameter is specific to the [Global] section\&. The letter
 \fIV\fR
 indicates that a parameter can be specified in a volume specific section\&.
-.PP
-Parameters are arranged here in alphabetical order \- this may not create best bedfellows, but at least you can find them! Where there are synonyms, the preferred synonym is described, others refer to the preferred synonym\&.
 .SH "VARIABLE SUBSTITUTIONS"
 .PP
 You can use variables in both volume path and volume name\&.
@@ -464,6 +495,18 @@ tcpsndbuf = \fInumber\fR \fB(G)\fR
 Try to set TCP send buffer using setsockpt()\&. Often OSes impose restrictions on the applications ability to set this value\&.
 .RE
 .SS "Miscellaneous Options"
+.PP
+basedir regex = \fIregex\fR \fB(H)\fR
+.RS 4
+Regular expression which matches the parent directory of the user homes\&. In the simple case this is just a path ie
+\fBbasedir regex = /home\fR
+.RE
+.PP
+name = \fIname\fR \fB(H)\fR
+.RS 4
+AFP user home volume name\&. The default is
+\fIusers\'s home\fR\&.
+.RE
 .PP
 vol preset = \fIname\fR \fB(G)/(V)\fR
 .RS 4
