@@ -514,10 +514,12 @@ static int ad_header_read(const char *path _U_, struct adouble *ad, const struct
 int ad_valid_header_osx(const char *path)
 {
     EC_INIT;
-    int fd;
+    int fd = -1;
     struct adouble      adosx;
     char                *buf = &adosx.ad_data[0];
     ssize_t             header_len;
+
+    LOG(log_debug, logtype_afpd, "ad_valid_header_osx(\"%s\"): BEGIN", fullpathname(path));
 
     EC_NEG1( fd = open(path, O_RDONLY) );
 
@@ -538,6 +540,9 @@ int ad_valid_header_osx(const char *path)
     }
 
 EC_CLEANUP:
+    LOG(log_debug, logtype_afpd, "ad_valid_header_osx(\"%s\"): END: %d", fullpathname(path), ret);
+    if (fd != -1)
+        close(fd);
     if (ret != 0)
         return 1;
     return 0;
