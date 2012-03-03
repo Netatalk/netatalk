@@ -1178,6 +1178,27 @@ struct vol *getvolbyvid(const uint16_t vid )
     return( vol );
 }
 
+/*!
+ * Search volume by path, creating user home vols as necessary
+ *
+ * Path may be absolute or relative. Ordinary volume structs are created when
+ * the ini config is initially parsed (load_volumes()), but user volumes are
+ * as load_volumes() only can create the user volume of the logged in user
+ * in an AFP session in afpd, but not when called from eg cnid_metad or dbd.
+ * Both cnid_metad and dbd thus need a way to lookup and create struct vols
+ * for user home by path. This is what this func does as well.
+ *
+ * (1) Search "normal" volume list 
+ * (2) Check if theres a [Homes] section, load_volumes() remembers this for us
+ * (3) If there is, match "path" with "basedir regex" to get the user home parent dir
+ * (4) The next path element then is the username
+ * (5) Built user home path by appending the basedir matched in (3) and appending the username
+ * (6) Append [Homes]->path subdirectory if defined
+ * (6) Create volume
+ *
+ * @param obj  (rw) handle
+ * @param path (r)  path, may be relative or absolute
+ */
 struct vol *getvolbypath(AFPObj *obj, const char *path)
 {
     EC_INIT;
@@ -1185,6 +1206,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     struct vol *tmp;
     const struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
+    char        abspath[MAXPATHLEN + 1];
     char        volpath[MAXPATHLEN + 1];
     char        tmpbuf[MAXPATHLEN + 1];
     const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
@@ -1195,15 +1217,23 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
-    for (tmp = Volumes; tmp; tmp = tmp->v_next) {
+    if (path[0] != '/') {
+        /* relative path, build absolute path */
+        EC_NULL_LOG( getcwd(abspath, MAXPATHLEN) );
+        strlcat(abspath, "/", MAXPATHLEN);
+        strlcat(abspath, path, MAXPATHLEN);
+        path = abspath;
+    }
+
+
+    for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
         if (strncmp(path, tmp->v_path, strlen(tmp->v_path)) == 0) {
             vol = tmp;
             goto EC_CLEANUP;
         }
     }
 
-    /* might be a user home, check for that and create a volume if yes */
-    if (!have_uservol)
+    if (!have_uservol) /* (2) */
         EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
     int secnum = iniparser_getnsec(obj->iniconfig);
@@ -1217,6 +1247,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (STRCMP(secname, !=, INISEC_HOMES))
         EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
+    /* (3) */
     EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL) );
     LOG(log_debug, logtype_afpd, "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
 
@@ -1241,6 +1272,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
+    /* (4) */
     p = path + strlen(basedir);
     while (*p == '/')
         p++;
@@ -1254,6 +1286,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, user, MAXPATHLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
+    /* (5) */
     if (subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
@@ -1263,6 +1296,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
+    /* (7) */
     if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
         return NULL;
 
