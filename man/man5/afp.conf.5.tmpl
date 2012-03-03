@@ -57,6 +57,10 @@ Any line ending in a
 is continued on the next line in the customary UNIX fashion\&.
 .PP
 The values following the equals sign in parameters are all either a string (no quotes needed) or a boolean, which may be given as yes/no, 1/0 or true/false\&. Case is not significant in boolean values, but is preserved in string values\&. Some items such as create masks are numeric\&.
+.PP
+The parameter
+\fBinclude = \fR\fB\fIpath\fR\fR
+allows you to include one config file inside another\&. The file is included literally, as though typed in place\&. Nested includes are not supported\&.
 .SH "SECTION DESCRIPTIONS"
 .PP
 Each section in the configuration file (except for the [Global] section) describes a shared resource (known as a
