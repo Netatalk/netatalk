@@ -173,18 +173,18 @@ static int do_check_ea_support(const struct vol *vol)
 
     mktemp(eaname);
 
-    become_root();
+//    become_root();
 
     if ((sys_setxattr(vol->v_path, eaname, eacontent, 4, 0)) == 0) {
         sys_removexattr(vol->v_path, eaname);
         haseas = 1;
     } else {
-        LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes",
+        LOG(log_warning, logtype_afpd, "volume \"%s\" does not support Extended Attributes or read-only volume root",
             vol->v_localname);
         haseas = 0;
     }
 
-    unbecome_root();
+//    unbecome_root();
 
     return haseas;
 }
@@ -610,6 +610,8 @@ static struct vol *creatvol(AFPObj *obj,
 
     if (val = getoption(obj->iniconfig, section, "cnidscheme", preset))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
+    else
+        volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
 
     if (val = getoption(obj->iniconfig, section, "umask", preset))
         volume->v_umask = (int)strtol(val, NULL, 8);
@@ -652,11 +654,14 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_cnidserver = p;
         if (q = strrchr(val, ':')) {
             *q++ = 0;
-            volume->v_cnidport = q;
+            volume->v_cnidport = strdup(q);
         } else {
-            volume->v_cnidport = "4700";
+            volume->v_cnidport = strdup("4700");
         }
 
+    } else {
+        volume->v_cnidserver = strdup(obj->options.Cnid_srv);
+        volume->v_cnidport = strdup(obj->options.Cnid_port);
     }
 
     if (val = getoption(obj->iniconfig, section, "ea", preset)) {
@@ -1034,10 +1039,7 @@ void volume_free(struct vol *vol)
     free(vol->v_gvs);
     free(vol->v_uuid);
     free(vol->v_cnidserver);
-#if 0
-    /* NO! Just points to v_cnidserver + x */
     free(vol->v_cnidport);
-#endif
     free(vol->v_root_preexec);
     free(vol->v_postexec);
 
@@ -1281,7 +1283,6 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     vol = creatvol(obj, pw, INISEC_HOMES, volname, volpath, preset ? preset : default_preset ? default_preset : NULL);
 
 EC_CLEANUP:
-    endpwent();
     if (user)
         free(user);
     if (ret != 0)

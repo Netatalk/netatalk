@@ -641,22 +641,14 @@ static int volume_openDB(const AFPObj *obj, struct vol *volume)
         flags |= CNID_FLAG_NODEV;
     }
 
-    if (volume->v_cnidscheme == NULL) {
-        volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
-        LOG(log_info, logtype_afpd, "Volume %s use CNID scheme %s.",
-            volume->v_path, volume->v_cnidscheme);
-    }
-
-    LOG(log_info, logtype_afpd, "CNID server: %s:%s",
-        volume->v_cnidserver ? volume->v_cnidserver : obj->options.Cnid_srv,
-        volume->v_cnidport ? volume->v_cnidport : obj->options.Cnid_port);
+    LOG(log_debug, logtype_afpd, "CNID server: %s:%s", volume->v_cnidserver, volume->v_cnidport);
 
     volume->v_cdb = cnid_open(volume->v_path,
                               volume->v_umask,
                               volume->v_cnidscheme,
                               flags,
-                              volume->v_cnidserver ? volume->v_cnidserver : obj->options.Cnid_srv,
-                              volume->v_cnidport ? volume->v_cnidport : obj->options.Cnid_port);
+                              volume->v_cnidserver,
+                              volume->v_cnidport);
 
     if ( ! volume->v_cdb && ! (flags & CNID_FLAG_MEMORY)) {
         /* The first attempt failed and it wasn't yet an attempt to open in-memory */
