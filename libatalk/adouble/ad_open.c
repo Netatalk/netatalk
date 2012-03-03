@@ -1206,7 +1206,8 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble
         LOG(log_debug, logtype_default, "ad_open_hf_ea(\"%s\"): created metadata EA", path);
     }
 
-    ad->ad_mdp->adf_refcount++;
+    if (ad_meta_fileno(ad) != -1)
+        ad->ad_mdp->adf_refcount++;
     (void)ad_reso_size(path, adflags, ad);
 
 EC_CLEANUP:
