@@ -35,8 +35,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <netatalk/at.h>
-
 #include <atalk/adouble.h>
 #include <atalk/vfs.h>
 #include <atalk/logger.h>

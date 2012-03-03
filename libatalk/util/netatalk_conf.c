@@ -504,7 +504,7 @@ static const char *getoption(const dictionary *conf, const char *vol, const char
     EC_INIT;
     const char *result = NULL;
 
-    if (!(result = iniparser_getstring(conf, vol, opt, NULL)))
+    if ((!(result = iniparser_getstring(conf, vol, opt, NULL))) && (def != NULL))
         result = iniparser_getstring(conf, def, opt, NULL);
     
 EC_CLEANUP:
