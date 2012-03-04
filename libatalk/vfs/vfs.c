@@ -89,16 +89,14 @@ for_each_adouble(const char *from, const char *name, rf_loop fn, void *data, int
     return ret;
 }
 
+static int netatalk_name(const char *name)
+{
+    return strcmp(name,".AppleDB") && strcmp(name,".AppleDesktop");        
+}
+
 /*******************************************************************************
  * classic adouble format 
  *******************************************************************************/
-
-static int netatalk_name(const char *name)
-{
-    return strcasecmp(name,".AppleDouble") &&
-        strcasecmp(name,".AppleDB") &&
-        strcasecmp(name,".AppleDesktop");
-}
 
 static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 {
@@ -108,7 +106,7 @@ static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
     if (!(vol->v_flags & AFPVOL_USEDOTS))
         return 0;
         
-    return netatalk_name(name) && strcasecmp(name,".Parent");
+    return netatalk_name(name) && strcmp(name,".AppleDouble") && strcasecmp(name,".Parent");
 }                                           
 
 /* ----------------- */
@@ -476,7 +474,7 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
     if (name[1] == '_')
         return ad_valid_header_osx(name);
 #endif
-    return 1;
+    return netatalk_name(name);
 }
 
 /* ----------------- */
