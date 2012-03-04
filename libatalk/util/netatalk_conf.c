@@ -593,7 +593,7 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL( volume->v_password = strdup(val) );
 
     if (val = getoption(obj->iniconfig, section, "veto", preset))
-        EC_NULL( volume->v_password = strdup(val) );
+        EC_NULL( volume->v_veto = strdup(val) );
 
     if (val = getoption(obj->iniconfig, section, "volcharset", preset))
         EC_NULL( volume->v_volcodepage = strdup(val) );
