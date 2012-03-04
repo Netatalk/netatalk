@@ -582,6 +582,7 @@ int main(int argc, char *argv[])
         }
         volpath[len] = '\0';
 
+        LOG(log_debug, logtype_cnid, "main: request for volume: %s", volpath);
 
         if (load_volumes(&obj, NULL) != 0) {
             LOG(log_severe, logtype_cnid, "main: error reloading config");
@@ -592,6 +593,8 @@ int main(int argc, char *argv[])
             LOG(log_severe, logtype_cnid, "main: no volume for path \"%s\"", volpath);
             goto loop_end;
         }
+
+        LOG(log_maxdebug, logtype_cnid, "main: dbpath: %s", vol->v_dbpath);
 
         if (set_dbdir(vol->v_dbpath) < 0) {
             goto loop_end;
