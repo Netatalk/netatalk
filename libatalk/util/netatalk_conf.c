@@ -1367,7 +1367,7 @@ int afp_config_parse(AFPObj *AFPObj)
     options->logfile   = iniparser_getstrdup(config, INISEC_GLOBAL, "logfile",  NULL);
 
     /* [AFP] "options" options wo values */
-    if (p = iniparser_getstrdup(config, INISEC_GLOBAL, "options", NULL)) {
+    if (q = iniparser_getstrdup(config, INISEC_GLOBAL, "options", NULL)) {
         if (p = strtok(q, ", ")) {
             while (p) {
                 if (strcasecmp(p, "nozeroconf"))
@@ -1397,6 +1397,7 @@ int afp_config_parse(AFPObj *AFPObj)
                 p = strtok(NULL, ", ");
             }
         }
+        free(q);
     }
     /* figure out options w values */
 
