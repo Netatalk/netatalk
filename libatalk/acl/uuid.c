@@ -28,6 +28,7 @@
 #include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/uuid.h>
+#include <atalk/ldapconfig.h>
 #include <atalk/util.h>
 
 #include "aclldap.h"
@@ -75,8 +76,8 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
     int nibble = 1;
     int i = 0;
     unsigned char c, val = 0;
-
-    while (*uuidstring) {
+    
+    while (*uuidstring && i < UUID_BINSIZE) {
         c = *uuidstring;
         if (c == '-') {
             uuidstring++;
@@ -102,21 +103,28 @@ void uuid_string2bin( const char *uuidstring, uuidp_t uuid) {
 
 /*!
  * Convert 16 byte binary uuid to neat ascii represantation including dashes.
- *
+ * Use defined or default ascii mask for dash placement
  * Returns pointer to static buffer.
  */
 const char *uuid_bin2string(unsigned char *uuid) {
-    static char uuidstring[UUID_STRINGSIZE + 1];
-
+    static char uuidstring[64];
+    const char *uuidmask;
     int i = 0;
     unsigned char c;
 
-    while (i < UUID_STRINGSIZE) {
+    if (ldap_uuid_string)
+        uuidmask = ldap_uuid_string;
+    else
+        uuidmask = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+
+    LOG(log_debug, logtype_afpd, "uuid_bin2string{uuid}: mask: %s", uuidmask);
+		
+    while (i < strlen(uuidmask)) {
         c = *uuid;
         uuid++;
         sprintf(uuidstring + i, "%02X", c);
         i += 2;
-        if (i==8 || i==13 || i==18 || i==23)
+        if (uuidmask[i] == '-')
             uuidstring[i++] = '-';
     }
     uuidstring[i] = 0;
