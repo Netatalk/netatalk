@@ -131,13 +131,15 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 {
 	struct dsitem *ds;
 	size_t         l, u;
+    struct dsitem *tmpds = NULL;
 
 	/* check if we have some space on stack... */
 	if (dsidx >= dssize) {
 		dssize += DS_BSIZE;
-		dstack = realloc(dstack, dssize * sizeof(struct dsitem));	
-		if (dstack == NULL)
+		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));	
+		if (tmpds == NULL)
 			return -1;
+        dstack = tmpds;
 	}
 
 	/* Put new element. Allocate and copy lname and path. */

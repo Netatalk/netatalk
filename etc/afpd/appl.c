@@ -335,6 +335,7 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     mpath = obj->newtmp;
     mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     if (!mp) {
+        close(tfd);
         return AFPERR_PARAM ;
     }
 
