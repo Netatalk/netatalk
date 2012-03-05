@@ -49,6 +49,7 @@ int  ldap_userscope;
 char *ldap_groupbase;
 int  ldap_groupscope;
 char *ldap_uuid_attr;
+char *ldap_uuid_string;
 char *ldap_name_attr;
 char *ldap_group_attr;
 char *ldap_uid_attr;
@@ -63,6 +64,7 @@ struct ldap_pref ldap_prefs[] = {
     {&ldap_groupbase,  "ldap_groupbase",   0, 0, -1},
     {&ldap_groupscope, "ldap_groupscope",  1 ,1, -1},
     {&ldap_uuid_attr,  "ldap_uuid_attr",   0, 0, -1},
+    {&ldap_uuid_string,"ldap_uuid_string", 0, 0,  0},
     {&ldap_name_attr,  "ldap_name_attr",   0, 0, -1},
     {&ldap_group_attr, "ldap_group_attr",  0, 0, -1},
     {&ldap_uid_attr,   "ldap_uid_attr",    0, 0,  0},
