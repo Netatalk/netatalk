@@ -521,6 +521,7 @@ int savevolinfo(const struct vol *vol, const char *Cnid_srv, const char *Cnid_po
     lock.l_type   = F_WRLCK;
 
     if (fcntl(fd, F_SETLK, &lock) < 0) {
+        close(fd);
         if (errno == EACCES || errno == EAGAIN) {
             /* ignore, other process already writing the file */
             return 0;

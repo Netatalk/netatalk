@@ -48,9 +48,9 @@ static int getpref(char *buf, char **R_pref, char **R_val)
         val++;
     if ((val = strtok(val, " \n")) == NULL)
         return -1;
-    if ((val = strdup(val)) == NULL)
-        return -1;
     if ((pref = strtok(p, " =")) == NULL)
+        return -1;
+    if ((val = strdup(val)) == NULL)
         return -1;
 
     *R_pref = pref;
