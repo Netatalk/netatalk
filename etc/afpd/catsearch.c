@@ -119,12 +119,20 @@ struct dsitem {
 
 #define DS_BSIZE 128
 static int save_cidx = -1; /* Saved index of currently scanned directory. */
-
 static struct dsitem *dstack = NULL; /* Directory stack data... */
 static int dssize = 0;  	     /* Directory stack (allocated) size... */
 static int dsidx = 0;   	     /* First free item index... */
-
 static struct scrit c1, c2;          /* search criteria */
+
+/* Clears directory stack. */
+static void clearstack(void) 
+{
+	save_cidx = -1;
+	while (dsidx > 0) {
+		dsidx--;
+		free(dstack[dsidx].path);
+	}
+}
 
 /* Puts new item onto directory stack. */
 static int addstack(char *uname, struct dir *dir, int pidx)
@@ -137,8 +145,11 @@ static int addstack(char *uname, struct dir *dir, int pidx)
 	if (dsidx >= dssize) {
 		dssize += DS_BSIZE;
 		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));	
-		if (tmpds == NULL)
+		if (tmpds == NULL) {
+            clearstack();
+            free(dstack);
 			return -1;
+        }
         dstack = tmpds;
 	}
 
@@ -182,16 +193,6 @@ static int reducestack(void)
 			return dsidx - 1;
 	} 
 	return -1;
-} 
-
-/* Clears directory stack. */
-static void clearstack(void) 
-{
-	save_cidx = -1;
-	while (dsidx > 0) {
-		dsidx--;
-		free(dstack[dsidx].path);
-	}
 } 
 
 /* Looks up for an opened adouble structure, opens resource fork of selected file. 
