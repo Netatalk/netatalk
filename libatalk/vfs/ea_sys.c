@@ -85,10 +85,11 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
             return AFP_OK;
 
         case ENOATTR:
+        case ENOENT:
             return AFPERR_MISC;
 
         default:
-            LOG(log_error, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_getextattr_size: error: %s", strerror(errno));
             return AFPERR_MISC;
         }
     }
@@ -224,11 +225,12 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
             goto exit;
 #ifdef HAVE_ATTROPEN            /* Solaris */
         case ENOATTR:
+        case ENOENT:
             ret = AFP_OK;
             goto exit;
 #endif
         default:
-            LOG(log_error, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
+            LOG(log_debug, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
             ret= AFPERR_MISC;
             goto exit;
     }
