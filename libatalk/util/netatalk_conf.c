@@ -1191,10 +1191,10 @@ struct vol *getvolbyvid(const uint16_t vid )
  * (1) Search "normal" volume list 
  * (2) Check if theres a [Homes] section, load_volumes() remembers this for us
  * (3) If there is, match "path" with "basedir regex" to get the user home parent dir
- * (4) The next path element then is the username
- * (5) Built user home path by appending the basedir matched in (3) and appending the username
+ * (4) Built user home path by appending the basedir matched in (3) and appending the username
+ * (5) The next path element then is the username
  * (6) Append [Homes]->path subdirectory if defined
- * (6) Create volume
+ * (7) Create volume
  *
  * @param obj  (rw) handle
  * @param path (r)  path, may be relative or absolute
@@ -1264,6 +1264,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if (match[0].rm_eo - match[0].rm_so > MAXPATHLEN)
         EC_FAIL_LOG("getvolbypath(\"%s\"): path too long", path);
 
+    /* (4) */
     strncpy(tmpbuf, path + match[0].rm_so, match[0].rm_eo - match[0].rm_so);
     tmpbuf[match[0].rm_eo - match[0].rm_so] = 0;
 
@@ -1272,11 +1273,12 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
 
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
-    /* (4) */
+    /* (5) */
     p = path + strlen(basedir);
     while (*p == '/')
         p++;
     EC_NULL_LOG( user = strdup(p) );
+    strlcpy(obj->username, user, MAXUSERLEN);
 
     if (prw = strchr(user, '/'))
         *prw++ = 0;
@@ -1286,15 +1288,15 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, user, MAXPATHLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
-    /* (5) */
+    /* (6) */
     if (subpathconfig = iniparser_getstring(obj->iniconfig, INISEC_HOMES, "path", NULL)) {
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
         }
+        strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
+        strlcat(tmpbuf, "/", MAXPATHLEN);
     }
 
-    strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
-    strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (7) */
     if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
