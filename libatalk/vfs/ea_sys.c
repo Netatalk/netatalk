@@ -81,8 +81,8 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): encountered symlink with kXAttrNoFollow", uname);
-            return AFP_OK;
+            LOG(log_debug, logtype_afpd, "sys_getextattr_size(%s): symlink with kXAttrNoFollow", uname);
+            return AFPERR_MISC;
 
         case ENOATTR:
         case ENOENT:
@@ -157,8 +157,8 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): encountered symlink with kXAttrNoFollow", uname);
-            return AFP_OK;
+            LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): symlink with kXAttrNoFollow", uname);
+            return AFPERR_MISC;
 
         case ENOATTR:
             return AFPERR_MISC;
@@ -220,18 +220,13 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 
     if (ret == -1) switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
-            /* its a symlink and client requested O_NOFOLLOW */
-            ret = AFPERR_BADTYPE;
-            goto exit;
-#ifdef HAVE_ATTROPEN            /* Solaris */
-        case ENOATTR:
-        case ENOENT:
+            /* its a symlink and client requested O_NOFOLLOW, we pretend 0 EAs */
+            LOG(log_debug, logtype_afpd, "sys_list_extattr(%s): symlink with kXAttrNoFollow", uname);
             ret = AFP_OK;
             goto exit;
-#endif
         default:
             LOG(log_debug, logtype_afpd, "sys_list_extattr(%s): error opening atttribute dir: %s", uname, strerror(errno));
-            ret= AFPERR_MISC;
+            ret = AFPERR_MISC;
             goto exit;
     }
     
@@ -311,8 +306,8 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): encountered symlink with kXAttrNoFollow",
-                getcwdpath(), uname, attruname);
+            LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s\", ea:'%s'): symlink with kXAttrNoFollow",
+                uname, attruname);
             return AFP_OK;
         case EEXIST:
             LOG(log_debug, logtype_afpd, "sys_set_ea(\"%s/%s\", ea:'%s'): EA already exists",
@@ -365,7 +360,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
         switch(errno) {
         case OPEN_NOFOLLOW_ERRNO:
             /* its a symlink and client requested O_NOFOLLOW  */
-            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): encountered symlink with kXAttrNoFollow", uname);
+            LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): symlink with kXAttrNoFollow", uname);
             return AFP_OK;
         case EACCES:
             LOG(log_debug, logtype_afpd, "sys_remove_ea(%s/%s): error: %s", uname, attruname, strerror(errno));

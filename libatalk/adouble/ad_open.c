@@ -1333,7 +1333,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble
         goto EC_CLEANUP;
     }
 #ifdef HAVE_EAFD
-    if (ad_meta_fileno(ad) == -1)
+    if (ad_meta_fileno(ad) < 0)
         EC_FAIL;
     if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO, oflags)) == -1) {
         if (!(adflags & ADFLAGS_CREATE)) {

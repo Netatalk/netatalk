@@ -60,6 +60,7 @@
 #include <atalk/logger.h>
 #include <atalk/ea.h>
 #include <atalk/compat.h>
+#include <atalk/errchk.h>
 
 /******** Solaris EA helper function prototypes ********/
 #ifdef HAVE_ATTROPEN
@@ -263,7 +264,7 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
 	return retval ? retval : valuelength;
 #elif defined(HAVE_ATTROPEN)
 	ssize_t ret = -1;
-	int attrfd = solaris_attropen(path, name, O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
+	int attrfd = solaris_attropen(path, name, O_RDONLY | O_NOFOLLOW, 0);
 	if (attrfd >= 0) {
 		ret = solaris_read_xattr(attrfd, value, size);
 		close(attrfd);
@@ -513,7 +514,7 @@ ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 	return irix_attr_list(path, 0, list, size, ATTR_DONTFOLLOW);
 #elif defined(HAVE_ATTROPEN)
 	ssize_t ret = -1;
-	int attrdirfd = solaris_attropen(path, ".", O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
+	int attrdirfd = solaris_attropen(path, ".", O_RDONLY | O_NOFOLLOW, 0);
 	if (attrdirfd >= 0) {
 		ret = solaris_list_xattr(attrdirfd, list, size);
 		close(attrdirfd);
@@ -581,7 +582,7 @@ int sys_lremovexattr (const char *path, const char *uname)
 	return attr_remove(path, attrname, flags);
 #elif defined(HAVE_ATTROPEN)
 	int ret = -1;
-	int attrdirfd = solaris_attropen(path, ".", O_RDONLY|AT_SYMLINK_NOFOLLOW, 0);
+	int attrdirfd = solaris_attropen(path, ".", O_RDONLY | O_NOFOLLOW, 0);
 	if (attrdirfd >= 0) {
 		ret = solaris_unlinkat(attrdirfd, name);
 		close(attrdirfd);
@@ -767,7 +768,7 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 	return attr_set(path, attrname, (const char *)value, size, myflags);
 #elif defined(HAVE_ATTROPEN)
 	int ret = -1;
-	int myflags = O_RDWR | AT_SYMLINK_NOFOLLOW;
+	int myflags = O_RDWR | O_NOFOLLOW;
 	int attrfd;
 	if (flags & XATTR_CREATE) myflags |= O_EXCL;
 	if (!(flags & XATTR_REPLACE)) myflags |= O_CREAT;
@@ -866,21 +867,43 @@ static int solaris_unlinkat(int attrdirfd, const char *name)
 
 static int solaris_attropen(const char *path, const char *attrpath, int oflag, mode_t mode)
 {
-	int filedes;
+    EC_INIT;
+	int filedes = -1, eafd = -1;
 
-	if ((filedes = attropen(path, attrpath, oflag, mode)) == -1) {
+    if ((filedes = open(path, O_RDONLY | (oflag & O_NOFOLLOW), mode)) == -1) {
         switch (errno) {
         case ENOENT:
         case EEXIST:
-            break;
+        case OPEN_NOFOLLOW_ERRNO:
+            EC_FAIL;
         default:
-            LOG(log_debug, logtype_default, "attropen(\"%s\", ea:'%s'): %s",
-                path, attrpath, strerror(errno));
+            LOG(log_debug, logtype_default, "open(\"%s\"): %s", fullpathname(path), strerror(errno));
             errno = ENOATTR;
-            break;
+            EC_FAIL;
         }
 	}
-	return filedes;
+
+	if ((eafd = openat(filedes, attrpath, oflag | O_XATTR, mode)) == -1) {
+        switch (errno) {
+        case ENOENT:
+        case EEXIST:
+            EC_FAIL;
+        default:
+            LOG(log_debug, logtype_default, "openat(\"%s\"): %s", fullpathname(path), strerror(errno));
+            errno = ENOATTR;
+            EC_FAIL;
+        }
+	}
+    
+EC_CLEANUP:
+    if (filedes != -1)
+        close(filedes);
+    if (ret != 0) {
+        if (eafd != -1)
+            close(eafd);
+        eafd = -1;
+    }
+    return eafd;
 }
 
 static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
