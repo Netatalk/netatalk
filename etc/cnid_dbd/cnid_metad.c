@@ -530,8 +530,6 @@ int main(int argc, char *argv[])
                 if (srv[i].pid == pid) {
                     srv[i].pid = 0;
                     close(srv[i].control_fd);
-                    free(srv[i].v_path);
-                    srv[i].v_path = NULL;
                     break;
                 }
             }
