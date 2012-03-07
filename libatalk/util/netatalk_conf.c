@@ -956,8 +956,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             continue;
         if (STRCMP(secname, ==, INISEC_HOMES)) {
             have_uservol = 1;
-            if (!obj->uid)
-                /* not an AFP session, but cnid daemon, dbd or ad util */
+            if (obj->username[0] == 0
+                || strcmp(obj->username, obj->options.guest) == 0)
+                /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
                 continue;
             strlcpy(tmp, pwent->pw_dir, MAXPATHLEN);
             strlcat(tmp, "/", MAXPATHLEN);
