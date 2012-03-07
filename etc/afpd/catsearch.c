@@ -120,25 +120,38 @@ struct dsitem {
 
 #define DS_BSIZE 128
 static int save_cidx = -1; /* Saved index of currently scanned directory. */
-
 static struct dsitem *dstack = NULL; /* Directory stack data... */
 static int dssize = 0;  	     /* Directory stack (allocated) size... */
 static int dsidx = 0;   	     /* First free item index... */
-
 static struct scrit c1, c2;          /* search criteria */
+
+/* Clears directory stack. */
+static void clearstack(void) 
+{
+	save_cidx = -1;
+	while (dsidx > 0) {
+		dsidx--;
+		free(dstack[dsidx].path);
+	}
+}
 
 /* Puts new item onto directory stack. */
 static int addstack(char *uname, struct dir *dir, int pidx)
 {
 	struct dsitem *ds;
 	size_t         l, u;
+    struct dsitem *tmpds = NULL;
 
 	/* check if we have some space on stack... */
 	if (dsidx >= dssize) {
 		dssize += DS_BSIZE;
-		dstack = realloc(dstack, dssize * sizeof(struct dsitem));	
-		if (dstack == NULL)
+		tmpds = realloc(dstack, dssize * sizeof(struct dsitem));	
+		if (tmpds == NULL) {
+            clearstack();
+            free(dstack);
 			return -1;
+        }
+        dstack = tmpds;
 	}
 
 	/* Put new element. Allocate and copy lname and path. */
@@ -181,16 +194,6 @@ static int reducestack(void)
 			return dsidx - 1;
 	} 
 	return -1;
-} 
-
-/* Clears directory stack. */
-static void clearstack(void) 
-{
-	save_cidx = -1;
-	while (dsidx > 0) {
-		dsidx--;
-		free(dstack[dsidx].path);
-	}
 } 
 
 /* Looks up for an opened adouble structure, opens resource fork of selected file. 
@@ -1050,6 +1053,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     /* Call search */
     *rbuflen = 24;
     if ((c1.rbitmap & (1 << FILPBIT_PDINFO))
+        && !(c1.rbitmap & (1<<CATPBIT_PARTIAL))
         && (strcmp(vol->v_cnidscheme, "dbd") == 0)
         && (vol->v_flags & AFPVOL_SEARCHDB))
         /* we've got a name and it's a dbd volume, so search CNID database */

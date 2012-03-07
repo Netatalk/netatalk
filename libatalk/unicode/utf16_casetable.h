@@ -623,7 +623,7 @@ static const uint16_t upper_table_1[704] = {
   0x0194, /*U+0263*/ /*LATIN SMALL LETTER GAMMA*/
   0x0264, /*U+0264*/ /**/
   0xA78D, /*U+0265*/ /*LATIN SMALL LETTER TURNED H*/
-  0x0266, /*U+0266*/ /**/
+  0xA7AA, /*U+0266*/ /*LATIN SMALL LETTER H WITH HOOK*/
   0x0267, /*U+0267*/ /**/
   0x0197, /*U+0268*/ /*LATIN SMALL LETTER I WITH STROKE*/
   0x0196, /*U+0269*/ /*LATIN SMALL LETTER IOTA*/
@@ -2382,7 +2382,7 @@ static const uint16_t upper_table_7[320] = {
   0x2CF0, /*U+2CF0*/ /**/
   0x2CF1, /*U+2CF1*/ /**/
   0x2CF2, /*U+2CF2*/ /**/
-  0x2CF3, /*U+2CF3*/ /**/
+  0x2CF2, /*U+2CF3*/ /*COPTIC SMALL LETTER BOHAIRIC KHEI*/
   0x2CF4, /*U+2CF4*/ /**/
   0x2CF5, /*U+2CF5*/ /**/
   0x2CF6, /*U+2CF6*/ /**/
@@ -2434,13 +2434,13 @@ static const uint16_t upper_table_7[320] = {
   0x10C4, /*U+2D24*/ /*GEORGIAN SMALL LETTER HAR*/
   0x10C5, /*U+2D25*/ /*GEORGIAN SMALL LETTER HOE*/
   0x2D26, /*U+2D26*/ /**/
-  0x2D27, /*U+2D27*/ /**/
+  0x10C7, /*U+2D27*/ /*GEORGIAN SMALL LETTER YN*/
   0x2D28, /*U+2D28*/ /**/
   0x2D29, /*U+2D29*/ /**/
   0x2D2A, /*U+2D2A*/ /**/
   0x2D2B, /*U+2D2B*/ /**/
   0x2D2C, /*U+2D2C*/ /**/
-  0x2D2D, /*U+2D2D*/ /**/
+  0x10CD, /*U+2D2D*/ /*GEORGIAN SMALL LETTER AEN*/
   0x2D2E, /*U+2D2E*/ /**/
   0x2D2F, /*U+2D2F*/ /**/
   0x2D30, /*U+2D30*/ /**/
@@ -2740,7 +2740,7 @@ static const uint16_t upper_table_9[192] = {
   0xA790, /*U+A790*/ /**/
   0xA790, /*U+A791*/ /*LATIN SMALL LETTER N WITH DESCENDER*/
   0xA792, /*U+A792*/ /**/
-  0xA793, /*U+A793*/ /**/
+  0xA792, /*U+A793*/ /*LATIN SMALL LETTER C WITH BAR*/
   0xA794, /*U+A794*/ /**/
   0xA795, /*U+A795*/ /**/
   0xA796, /*U+A796*/ /**/
@@ -4218,13 +4218,13 @@ static const uint16_t lower_table_4[128] = {
   0x2D24, /*U+10C4*/ /*GEORGIAN CAPITAL LETTER HAR*/
   0x2D25, /*U+10C5*/ /*GEORGIAN CAPITAL LETTER HOE*/
   0x10C6, /*U+10C6*/ /**/
-  0x10C7, /*U+10C7*/ /**/
+  0x2D27, /*U+10C7*/ /*GEORGIAN CAPITAL LETTER YN*/
   0x10C8, /*U+10C8*/ /**/
   0x10C9, /*U+10C9*/ /**/
   0x10CA, /*U+10CA*/ /**/
   0x10CB, /*U+10CB*/ /**/
   0x10CC, /*U+10CC*/ /**/
-  0x10CD, /*U+10CD*/ /**/
+  0x2D2D, /*U+10CD*/ /*GEORGIAN CAPITAL LETTER AEN*/
   0x10CE, /*U+10CE*/ /**/
   0x10CF, /*U+10CF*/ /**/
   0x10D0, /*U+10D0*/ /**/
@@ -5361,7 +5361,7 @@ static const uint16_t lower_table_8[256] = {
   0x2CEF, /*U+2CEF*/ /**/
   0x2CF0, /*U+2CF0*/ /**/
   0x2CF1, /*U+2CF1*/ /**/
-  0x2CF2, /*U+2CF2*/ /**/
+  0x2CF3, /*U+2CF2*/ /*COPTIC CAPITAL LETTER BOHAIRIC KHEI*/
   0x2CF3, /*U+2CF3*/ /**/
   0x2CF4, /*U+2CF4*/ /**/
   0x2CF5, /*U+2CF5*/ /**/
@@ -5655,7 +5655,7 @@ static const uint16_t lower_table_10[192] = {
   0xA78F, /*U+A78F*/ /**/
   0xA791, /*U+A790*/ /*LATIN CAPITAL LETTER N WITH DESCENDER*/
   0xA791, /*U+A791*/ /**/
-  0xA792, /*U+A792*/ /**/
+  0xA793, /*U+A792*/ /*LATIN CAPITAL LETTER C WITH BAR*/
   0xA793, /*U+A793*/ /**/
   0xA794, /*U+A794*/ /**/
   0xA795, /*U+A795*/ /**/
@@ -5679,7 +5679,7 @@ static const uint16_t lower_table_10[192] = {
   0xA7A7, /*U+A7A7*/ /**/
   0xA7A9, /*U+A7A8*/ /*LATIN CAPITAL LETTER S WITH OBLIQUE STROKE*/
   0xA7A9, /*U+A7A9*/ /**/
-  0xA7AA, /*U+A7AA*/ /**/
+  0x0266, /*U+A7AA*/ /*LATIN CAPITAL LETTER H WITH HOOK*/
   0xA7AB, /*U+A7AB*/ /**/
   0xA7AC, /*U+A7AC*/ /**/
   0xA7AD, /*U+A7AD*/ /**/

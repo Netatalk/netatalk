@@ -25,32 +25,48 @@ AC_DEFUN([AC_NETATALK_ZEROCONF], [
 			zeroconf_dir="$zeroconf"
 		fi
 
-    # mDNS support using Avahi
-    AC_CHECK_HEADER(
-        avahi-client/client.h,
-        AC_CHECK_LIB(
-           avahi-client,
-           avahi_client_new,
-           AC_DEFINE(USE_ZEROCONF, 1, [Use DNS-SD registration]))
-    )
+        # mDNS support using mDNSResponder
+        AC_CHECK_HEADER(
+            dns_sd.h,
+            AC_CHECK_LIB(
+                dns_sd,
+                DNSServiceRegister,
+                AC_DEFINE(USE_ZEROCONF, 1, [Use DNS-SD registration]))
+        )
 
-    case "$ac_cv_lib_avahi_client_avahi_client_new" in
-      yes)
-      PKG_CHECK_MODULES(AVAHI, [ avahi-client >= 0.6 ])
-      PKG_CHECK_MODULES(AVAHI_TPOLL, [ avahi-client >= 0.6.4 ],
-        [AC_DEFINE(HAVE_AVAHI_THREADED_POLL, 1, [Uses Avahis threaded poll implementation])],
-        [AC_MSG_WARN(This Avahi implementation is not supporting threaded poll objects. Maybe this is not what you want.)])
-      ZEROCONF_LIBS="$AVAHI_LIBS"
-      ZEROCONF_CFLAGS="$AVAHI_CFLAGS"
-      AC_DEFINE(HAVE_AVAHI, 1, [Use Avahi/DNS-SD registration])
-      found_zeroconf=yes
-      ;;
-    esac
+        if test "$ac_cv_lib_dns_sd_DNSServiceRegister" = yes; then
+            ZEROCONF_LIBS="-ldns_sd"
+            AC_DEFINE(HAVE_MDNS, 1, [Use mDNSRespnder/DNS-SD registration])
+            found_zeroconf=yes
+        fi
 
-		CPPFLAGS="$savedcppflags"
-		LDFLAGS="$savedldflags"
+        # mDNS support using Avahi
+        if test x"$found_zeroconf" != x"yes" ; then
+            AC_CHECK_HEADER(
+                avahi-client/client.h,
+                AC_CHECK_LIB(
+                    avahi-client,
+                    avahi_client_new,
+                    AC_DEFINE(USE_ZEROCONF, 1, [Use DNS-SD registration]))
+            )
+
+            case "$ac_cv_lib_avahi_client_avahi_client_new" in
+            yes)
+                PKG_CHECK_MODULES(AVAHI, [ avahi-client >= 0.6 ])
+                PKG_CHECK_MODULES(AVAHI_TPOLL, [ avahi-client >= 0.6.4 ],
+                    [AC_DEFINE(HAVE_AVAHI_THREADED_POLL, 1, [Uses Avahis threaded poll implementation])],
+                    [AC_MSG_WARN(This Avahi implementation is not supporting threaded poll objects. Maybe this is not what you want.)])
+                ZEROCONF_LIBS="$AVAHI_LIBS"
+                ZEROCONF_CFLAGS="$AVAHI_CFLAGS"
+                AC_DEFINE(HAVE_AVAHI, 1, [Use Avahi/DNS-SD registration])
+                found_zeroconf=yes
+                ;;
+            esac
+	    	CPPFLAGS="$savedcppflags"
+		    LDFLAGS="$savedldflags"
+    	fi
 	fi
-	
+
 	netatalk_cv_zeroconf=no
 	AC_MSG_CHECKING([whether to enable Zerconf support])
 	if test "x$found_zeroconf" = "xyes"; then

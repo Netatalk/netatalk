@@ -340,6 +340,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     obj->uid = geteuid();
     obj->logout = logout;
 
+    /* pam_umask or similar might have changed our umask */
+    (void)umask(obj->options.umask);
+
     return( AFP_OK );
 }
 

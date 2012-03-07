@@ -106,4 +106,9 @@ AC_DEFUN([AC_NETATALK_LIBS_SUMMARY], [
 		AC_MSG_RESULT([        LIBS   = $CUPS_LIBS])
 		AC_MSG_RESULT([        CFLAGS = $CUPS_CFLAGS])
 	fi
+	if test x"$netatalk_cv_zeroconf" = x"yes"; then
+		AC_MSG_RESULT([    ZEROCONF:])
+		AC_MSG_RESULT([        LIBS   = $ZEROCONF_LIBS])
+		AC_MSG_RESULT([        CFLAGS = $ZEROCONF_CFLAGS])
+	fi
 ])

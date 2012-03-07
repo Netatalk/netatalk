@@ -16,6 +16,7 @@ extern char *ldap_auth_pw;
 extern char *ldap_userbase;
 extern char *ldap_groupbase;
 extern char *ldap_uuid_attr;
+extern char *ldap_uuid_string;
 extern char *ldap_name_attr;
 extern char *ldap_group_attr;
 extern char *ldap_uid_attr;

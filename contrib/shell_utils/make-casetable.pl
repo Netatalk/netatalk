@@ -231,7 +231,7 @@ sub make_array{
             $char_start = ($block_start -1)* 64;
             $char_end = ($block_end * 64) -1;
 
-            printf(CHEADER "static const u\_int16\_t %s\_table\_%d\[%d\] \= \{\n",
+            printf(CHEADER "static const uint16\_t %s\_table\_%d\[%d\] \= \{\n",
                    $_[0], $table_no, $char_end - $char_start +1);
 
             for ($char = $char_start ; $char <= $char_end ; $char++) {
@@ -291,7 +291,7 @@ sub make_array{
             $char_start = ($block_start -1)* 64;
             $char_end = ($block_end * 64) -1;
 
-            printf(CHEADER "static const u\_int32\_t %s\_table\_sp\_%d\[%d\] \= \{\n",
+            printf(CHEADER "static const uint32\_t %s\_table\_sp\_%d\[%d\] \= \{\n",
                    $_[0], $table_no, $char_end - $char_start +1);
 
             for ($char = $char_start ; $char <= $char_end ; $char++) {

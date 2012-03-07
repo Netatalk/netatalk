@@ -155,8 +155,10 @@ static void show_version_extended(void )
 	show_version( );
 
 	printf( "      Zeroconf support:\t" );
-#ifdef USE_ZEROCONF
-	puts( "Yes" );
+#if defined (HAVE_MDNS)
+	puts( "mDNSResponder" );
+#elif defined (HAVE_AVAHI)
+	puts( "Avahi" );
 #else
 	puts( "No" );
 #endif

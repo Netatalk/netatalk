@@ -22,6 +22,7 @@
 #include <atalk/unicode.h>
 #include <atalk/netatalk_conf.h>
 
+#include "afp_zeroconf.h"
 #include "afp_avahi.h"
 #include "afp_config.h"
 #include "volume.h"
