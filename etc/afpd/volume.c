@@ -940,6 +940,7 @@ int afp_closevol(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     (void)chdir("/");
+    curdir = NULL;
     closevol(vol);
 
     return( AFP_OK );
