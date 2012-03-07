@@ -1955,9 +1955,9 @@ int ad_convert(const char *path, const struct stat *sp, const struct vol *vol)
     LOG(log_debug, logtype_default,"ad_conv_v22ea_hf(\"%s\"): deleting adouble:v2 file: \"%s\"",
         path, fullpathname(adpath));
 
-//    become_root();
+    become_root();
     EC_ZERO_LOG( unlink(adpath) );
-//    unbecome_root();
+    unbecome_root();
 
 EC_CLEANUP:
     LOG(log_debug, logtype_default,"ad_convert(\"%s\"): END: %d", fullpathname(path), ret);

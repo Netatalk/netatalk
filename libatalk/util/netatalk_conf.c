@@ -176,7 +176,7 @@ static int do_check_ea_support(const struct vol *vol)
 
     mktemp(eaname);
 
-//    become_root();
+    become_root();
 
     if ((sys_setxattr(vol->v_path, eaname, eacontent, 4, 0)) == 0) {
         sys_removexattr(vol->v_path, eaname);
@@ -187,7 +187,7 @@ static int do_check_ea_support(const struct vol *vol)
         haseas = 0;
     }
 
-//    unbecome_root();
+    unbecome_root();
 
     return haseas;
 }
