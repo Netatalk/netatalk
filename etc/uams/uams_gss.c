@@ -112,6 +112,8 @@ static void log_ctx_flags( OM_uint32 flags )
 static void log_principal(gss_name_t server_name)
 {
 #if 0
+    if (server_name == GSS_C_NO_NAME)
+        return;
     /* FIXME: must call gss_canonicalize_name before gss_export_name */
     OM_uint32 major_status = 0, minor_status = 0;
     gss_buffer_desc exported_name;
@@ -434,7 +436,8 @@ static int do_gss_auth(void *obj, char *ibuf, int ticket_len,
     gss_release_cred( &status, &server_creds );
 
 cleanup_vars:
-    gss_release_name( &status, &server_name );
+    if (server_name != GSS_C_NO_NAME)
+        gss_release_name( &status, &server_name );
 
     return ret;
 }
