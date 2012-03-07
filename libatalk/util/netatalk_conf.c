@@ -46,6 +46,9 @@
 #include <atalk/netatalk_conf.h>
 
 #define VOLPASSLEN  8
+#ifndef UUID_PRINTABLE_STRING_LENGTH
+#define UUID_PRINTABLE_STRING_LENGTH 37
+#endif
 
 #define IS_VAR(a, b) (strncmp((a), (b), 2) == 0)
 
@@ -437,7 +440,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname, const char *arg
     struct sockaddr_storage client;
     const DSI *dsi = obj->dsi;
 
-    if (!args)
+    if (!args || !dsi)
         return -1;
 
     strlcpy(buf, args, sizeof(buf));
@@ -1278,13 +1281,13 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     while (*p == '/')
         p++;
     EC_NULL_LOG( user = strdup(p) );
-    strlcpy(obj->username, user, MAXUSERLEN);
 
     if (prw = strchr(user, '/'))
         *prw++ = 0;
     if (prw != 0)
         subpath = prw;
 
+    strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, user, MAXPATHLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
