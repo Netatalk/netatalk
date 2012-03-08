@@ -209,5 +209,12 @@ Ini Parser
 ==========
 
 The ini parser is taken from <http://ndevilla.free.fr/iniparser/>.
-It has been modified to be case-sensitive and a "include" directive
-has been added.
+It has been slightly modified:
+- case-sensitive
+- "include" directive added
+- iniparser_getstrdup() to complemnt iniparser_getstring(), it return allocated strings
+  which the caller must free as necessary
+- the API has been modifed such that all iniparser_get* funcs take a section and a parameter
+  as sepereta args instead of one string of the form "section:parameter" in the original
+  library
+
