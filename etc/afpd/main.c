@@ -224,7 +224,7 @@ int main(int ac, char **av)
     if (check_lockfile("afpd", _PATH_AFPDLOCK) != 0)
         exit(EXITERR_SYS);
 
-    if (!(obj.options.flags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
+    if (!(obj.cmdlineflags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
         exit(EXITERR_SYS);
 
     if (create_lockfile("afpd", _PATH_AFPDLOCK) != 0)
