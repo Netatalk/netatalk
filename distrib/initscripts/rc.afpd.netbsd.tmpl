@@ -4,10 +4,7 @@
 # REQUIRE: cnid_metad
 # KEYWORD: shutdown
 #
-# Apple Filing Protocol daemon. (netatalk :NETATALK_VERSION:)
-# If you use AppleTalk, Make sure not to start atalkd in the background:
-# its data structures must have time to stablize before running the
-# other processes.
+# AFP fileserver for Macintosh clients (netatalk :NETATALK_VERSION:)
 #
 
 . /etc/rc.subr
@@ -18,8 +15,7 @@ command=":SBINDIR:/afpd"
 etcdir=":ETCDIR:"
 pidfile="/var/run/${name}.pid"
 command_args="-P ${pidfile}"
-required_files="$etcdir/afpd.conf $etcdir/AppleVolumes.default $etcdir/AppleVolumes.system"
+required_files="$etcdir/afp.conf
 
 load_rc_config $name
 run_rc_command "$1"
-

@@ -1,17 +1,17 @@
 # This file is part of netatalk :NETATALK_VERSION:.
 
-# The method of using shell-script "netatalk.sh" is not suitable.
-# The future service files are due to start daemons directly.
-# See netatalk-xxx/distrib/systemd/ directory in tarball.
-
 [Unit]
-Description=File and Printer sharing for Macintosh clients
-After=syslog.target network.target slpd.service avahi-daemon.service
+Description=Netatalk AFP fileserver for Macintosh clients
+After=syslog.target network.target avahi-daemon.service netatalk-cnid.service
+Requires=netatalk-cnid.service
 
 [Service]
-Type=oneshot
-ExecStart=/bin/sh -c "exec :PKGLIBEXECDIR:/netatalk.sh"
-RemainAfterExit=yes
+Type=forking
+GuessMainPID=no
+ExecStart=:SBINDIR:/afpd
+Restart=always
+RestartSec=1
 
 [Install]
 WantedBy=multi-user.target
+Also=netatalk-cnid.service

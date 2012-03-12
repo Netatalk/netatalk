@@ -1,4 +1,4 @@
-dnl configure.in for netatalk
+dnl configure.ac for netatalk
 
 AC_INIT(etc/afpd/main.c)
 
@@ -235,6 +235,91 @@ AC_NETATALK_REALPATH
 dnl Check for sendfile()
 AC_NETATALK_SENDFILE
 
+AC_ARG_ENABLE(redhat,
+	[  --enable-redhat         obsoleted ],[
+	echo "ERROR: --enable-redhat is obsoleted. Use --enable-redhat-sysv or --enable-redhat-systemd."
+	exit 1
+	]
+)
+
+AC_ARG_ENABLE(redhat-sysv,
+	[  --enable-redhat-sysv    use redhat-style sysv (upstart) configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=redhat-sysv
+	fi
+	AC_MSG_RESULT([enabling redhat-style sysv support])
+	]
+)
+
+AC_ARG_ENABLE(redhat-systemd,
+	[  --enable-redhat-systemd use redhat-style systemd (>=Fedora15) configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=redhat-systemd
+	fi
+	AC_MSG_RESULT([enabling redhat-style systemd support])
+	]
+)
+
+AC_ARG_ENABLE(suse,
+	[  --enable-suse           obsoleted ],[
+	echo "ERROR: --enable-suse is obsoleted. Use --enable-suse-sysv or --enable-suse-systemd."
+	exit 1
+	]
+)
+
+AC_ARG_ENABLE(suse-sysv,
+	[  --enable-suse-sysv      use suse-style sysv configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=suse-sysv
+	fi
+	AC_MSG_RESULT([enabling suse-style sysv support])
+	]
+)
+
+AC_ARG_ENABLE(suse-systemd,
+	[  --enable-suse-systemd   use suse-style systemd (>=openSUSE12.1) configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=suse-systemd
+	fi
+	AC_MSG_RESULT([enabling suse-style systemd support])
+	]
+)
+
+AC_ARG_ENABLE(gentoo,
+	[  --enable-gentoo         use gentoo-style sysv configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=gentoo
+	fi
+	AC_MSG_RESULT([enabling gentoo-style sysv support])
+	]
+)
+
+AC_ARG_ENABLE(netbsd,
+	[  --enable-netbsd         use NetBSD-style rc.d configuration ],
+	if test "x$enableval" = "xyes"; then
+		sysv_style=netbsd
+	fi
+	AC_MSG_RESULT([enabling NetBSD-style rc.d support])
+)
+
+AC_ARG_ENABLE(debian,
+	[  --enable-debian         use debian-style sysv configuration ],[
+	if test "$enableval" = "yes"; then
+		sysv_style=debian
+	fi
+	AC_MSG_RESULT([enabling debian-style sysv support])
+	]
+)
+
+AC_ARG_ENABLE(systemd,
+	[  --enable-systemd        use general systemd configuration],[
+	if test "$enableval" = "yes"; then
+		sysv_style=systemd
+	fi
+	AC_MSG_RESULT([enabling general systemd support])
+	]
+)
+
 dnl --------------------------------------------------------------------------
 dnl FHS stuff has to be done last because it overrides other defaults
 dnl --------------------------------------------------------------------------
@@ -301,6 +386,17 @@ AM_CONDITIONAL(DEFAULT_HOOK, test x$neta_cv_have_libgcrypt != xyes && test x$net
 AM_CONDITIONAL(USE_BDB, test x$bdb_required = xyes)
 AM_CONDITIONAL(HAVE_ATFUNCS, test x"$ac_neta_haveatfuncs" = x"yes")
 
+AM_CONDITIONAL(USE_NETBSD, test x$sysv_style = xnetbsd)
+AM_CONDITIONAL(USE_REDHAT_SYSV, test x$sysv_style = xredhat-sysv)
+AM_CONDITIONAL(USE_SUSE_SYSV, test x$sysv_style = xsuse-sysv)
+AM_CONDITIONAL(USE_TRU64, test x$sysv_style = xtru64)
+AM_CONDITIONAL(USE_SOLARIS, test x$sysv_style = xsolaris)
+AM_CONDITIONAL(USE_GENTOO, test x$sysv_style = xgentoo)
+AM_CONDITIONAL(USE_DEBIAN, test x$sysv_style = xdebian)
+AM_CONDITIONAL(USE_SYSTEMD, test x$sysv_style = xsystemd || test x$sysv_style = xredhat-systemd || test x$sysv_style = xsuse-systemd)
+AM_CONDITIONAL(USE_UNDEF, test x$sysv_style = x)
+
+
 dnl --------------------- generate files
 
 AC_OUTPUT([Makefile
@@ -310,7 +406,7 @@ AC_OUTPUT([Makefile
 	bin/cnid/Makefile
 	bin/cnid/cnid2_create
 	bin/megatron/Makefile
-    bin/misc/Makefile
+	bin/misc/Makefile
 	bin/uniconv/Makefile
 	config/Makefile
 	config/pam/Makefile
@@ -325,7 +421,6 @@ AC_OUTPUT([Makefile
 	distrib/config/netatalk-config
 	distrib/initscripts/Makefile
 	distrib/m4/Makefile
-	distrib/systemd/Makefile
 	doc/Makefile
 	etc/Makefile
 	etc/afpd/Makefile
