@@ -85,9 +85,9 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
 
         if (ad->ad_vers == AD_VERSION_EA) {
 #ifdef HAVE_EAFD
-            r_off = 0;
+            r_off = off;
 #else
-            r_off = ADEDOFF_RFORK_OSX;
+            r_off = off + ADEDOFF_RFORK_OSX;
 #endif
         } else {
             r_off = ad_getentryoff(ad, eid) + off;
