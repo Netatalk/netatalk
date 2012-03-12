@@ -608,8 +608,8 @@ static struct vol *creatvol(AFPObj *obj,
     else
         EC_NULL( volume->v_maccodepage = strdup(obj->options.maccodepage) );
 
-    if (val = getoption(obj->iniconfig, section, "dbpath", preset))
-        EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
+    val = getoption(obj->iniconfig, section, "dbpath", preset);
+    EC_NULL( volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN, val ? val : path, pwd, path, name) );
 
     if (val = getoption(obj->iniconfig, section, "cnidscheme", preset))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
