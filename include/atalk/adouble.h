@@ -369,7 +369,8 @@ struct adouble {
 #define ad_unref(ad) --((ad)->ad_refcount)
 
 /* ad_flush.c */
-extern int ad_rebuild_adouble_header (struct adouble *);
+extern int ad_rebuild_adouble_header_v2(struct adouble *);
+extern int ad_rebuild_adouble_header_ea(struct adouble *);
 extern int ad_copy_header (struct adouble *, struct adouble *);
 extern int ad_flush (struct adouble *);
 extern int ad_close (struct adouble *, int);

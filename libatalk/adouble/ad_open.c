@@ -118,7 +118,7 @@ static int ad_mkrf_osx(const char *path);
 static struct adouble_fops ad_adouble = {
     &ad_path,
     &ad_mkrf,
-    &ad_rebuild_adouble_header,
+    &ad_rebuild_adouble_header_v2,
     &ad_header_read,
     &ad_header_upgrade,
 };
@@ -131,17 +131,9 @@ static struct adouble_fops ad_adouble_ea = {
     &ad_path_osx,
     &ad_mkrf_osx,
 #endif
-    &ad_rebuild_adouble_header,
+    &ad_rebuild_adouble_header_ea,
     &ad_header_read_ea,
     &ad_header_upgrade_ea,
-};
-
-static struct adouble_fops ad_osx = {
-    &ad_path_osx,
-    &ad_mkrf_osx,
-    &ad_rebuild_adouble_header,
-    &ad_header_read,
-    &ad_header_upgrade,
 };
 
 static const struct entry entry_order2[ADEID_NUM_V2 + 1] = {

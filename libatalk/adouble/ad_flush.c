@@ -53,7 +53,7 @@ static const uint32_t set_eid[] = {
 /*
  * Prepare ad->ad_data buffer from struct adouble for writing on disk
  */
-int ad_rebuild_adouble_header(struct adouble *ad)
+int ad_rebuild_adouble_header_v2(struct adouble *ad)
 {
     uint32_t       eid;
     uint32_t       temp;
@@ -61,7 +61,7 @@ int ad_rebuild_adouble_header(struct adouble *ad)
     char        *buf, *nentp;
     int             len;
 
-    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header");
+    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header_v2");
 
     buf = ad->ad_data;
 
@@ -78,9 +78,8 @@ int ad_rebuild_adouble_header(struct adouble *ad)
     nentp = buf;
     buf += sizeof( nent );
     for ( eid = 0, nent = 0; eid < ADEID_MAX; eid++ ) {
-        if ( ad->ad_eid[ eid ].ade_off == 0 ) {
+        if (ad->ad_eid[ eid ].ade_off == 0)
             continue;
-        }
         temp = htonl( EID_DISK(eid) );
         memcpy(buf, &temp, sizeof( temp ));
         buf += sizeof( temp );
@@ -97,20 +96,53 @@ int ad_rebuild_adouble_header(struct adouble *ad)
     nent = htons( nent );
     memcpy(nentp, &nent, sizeof( nent ));
 
-    switch (ad->ad_vers) {
-    case AD_VERSION2:
-        len = ad_getentryoff(ad, ADEID_RFORK);
-        break;
-    case AD_VERSION_EA:
-        len = AD_DATASZ_EA;
-        break;
-    default:
-        LOG(log_error, logtype_afpd, "Unexpected adouble version");
-        len = 0;
-        break;
-    }
+    return ad_getentryoff(ad, ADEID_RFORK);
+}
 
-    return len;
+int ad_rebuild_adouble_header_ea(struct adouble *ad)
+{
+    uint32_t       eid;
+    uint32_t       temp;
+    uint16_t       nent;
+    char        *buf, *nentp;
+    int             len;
+
+    LOG(log_debug, logtype_default, "ad_rebuild_adouble_header_ea");
+
+    buf = ad->ad_data;
+
+    temp = htonl( ad->ad_magic );
+    memcpy(buf, &temp, sizeof( temp ));
+    buf += sizeof( temp );
+
+    temp = htonl( ad->ad_version );
+    memcpy(buf, &temp, sizeof( temp ));
+    buf += sizeof( temp );
+
+    buf += sizeof( ad->ad_filler );
+
+    nentp = buf;
+    buf += sizeof( nent );
+    for ( eid = 0, nent = 0; eid < ADEID_MAX; eid++ ) {
+        if ((ad->ad_eid[ eid ].ade_off == 0) || (eid == ADEID_RFORK))
+            continue;
+        temp = htonl( EID_DISK(eid) );
+        memcpy(buf, &temp, sizeof( temp ));
+        buf += sizeof( temp );
+
+        temp = htonl( ad->ad_eid[ eid ].ade_off );
+        memcpy(buf, &temp, sizeof( temp ));
+        buf += sizeof( temp );
+
+        temp = htonl( ad->ad_eid[ eid ].ade_len );
+        memcpy(buf, &temp, sizeof( temp ));
+        buf += sizeof( temp );
+        nent++;
+    }
+    nent = htons( nent );
+    memcpy(nentp, &nent, sizeof( nent ));
+
+    return AD_DATASZ_EA;
 }
 
 /*!
