@@ -362,8 +362,7 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len
     int type;  
     int ret = 0, fcntl_lock_err = 0;
 
-    LOG(log_debug, logtype_default, "ad_lock(\"%s\", %s, %s, off: %jd (%s), len: %jd): BEGIN",
-        ad->ad_m_name ? ad->ad_m_name : "???",
+    LOG(log_debug, logtype_default, "ad_lock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
         eid == ADEID_DFORK ? "data" : "reso",
         locktypetostr(locktype),
         (intmax_t)off,
@@ -509,8 +508,7 @@ int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t 
     int err;
     int type;  
 
-    LOG(log_debug, logtype_default, "ad_tmplock(\"%s\", %s, %s, off: %jd (%s), len: %jd): BEGIN",
-        ad->ad_m_name ? ad->ad_m_name : "???",
+    LOG(log_debug, logtype_default, "ad_tmplock(%s, %s, off: %jd (%s), len: %jd): BEGIN",
         eid == ADEID_DFORK ? "data" : "reso",
         locktypetostr(locktype),
         (intmax_t)off,
@@ -574,8 +572,7 @@ exit:
 /* --------------------- */
 void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
 {
-    LOG(log_debug, logtype_default, "ad_unlock(\"%s\", unlckbrl: %d): BEGIN",
-        ad->ad_m_name ? ad->ad_m_name : "???", unlckbrl);
+    LOG(log_debug, logtype_default, "ad_unlock(unlckbrl: %d): BEGIN", unlckbrl);
 
     if (ad_data_fileno(ad) != -1) {
         adf_unlock(ad, &ad->ad_data_fork, fork, unlckbrl);
@@ -584,7 +581,7 @@ void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
         adf_unlock(ad, &ad->ad_resource_fork, fork, unlckbrl);
     }
 
-    LOG(log_debug, logtype_default, "ad_unlock(\"%s\"): END", ad->ad_m_name ? ad->ad_m_name : "???");
+    LOG(log_debug, logtype_default, "ad_unlock: END");
 }
 
 /*!
@@ -602,8 +599,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
     int ret = 0;
     off_t lock_offset;
 
-    LOG(log_debug, logtype_default, "ad_testlock(\"%s\", %s, off: %jd (%s): BEGIN",
-        ad->ad_m_name ? ad->ad_m_name : "???",
+    LOG(log_debug, logtype_default, "ad_testlock(%s, off: %jd (%s): BEGIN",
         eid == ADEID_DFORK ? "data" : "reso",
         (intmax_t)off,
         shmdstrfromoff(off));

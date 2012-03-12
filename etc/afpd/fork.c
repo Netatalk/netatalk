@@ -64,10 +64,10 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork, uint16_t bitmap
     vol = ofork->of_vol;
     dir = dirlookup(vol, ofork->of_did);
 
-    if (NULL == (path.u_name = mtoupath(vol, of_name(ofork), dir->d_did, utf8_encoding(obj)))) {
+    if (NULL == (path.m_name = utompath(vol, of_name(ofork), dir->d_did, utf8_encoding(obj)))) {
         return( AFPERR_MISC );
     }
-    path.m_name = of_name(ofork);
+    path.u_name = of_name(ofork);
     path.id = 0;
     st = &path.st;
     if ( bitmap & ( (1<<FILPBIT_DFLEN) | (1<<FILPBIT_EXTDFLEN) |
@@ -573,7 +573,15 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_, s
             ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, size, st_size -size, ofork->of_refnum) < 0) {
             goto afp_setfork_err;
         }
-        err = ad_rtruncate(ofork->of_ad, size);
+        if (ofork->of_ad->ad_vers == AD_VERSION_EA) {
+#if HAVE_EAFD
+            err = sys_lremovexattr(of_name(ofork), AD_EA_RESO);
+#else
+            err = unlink(ofork->of_vol->ad_path(of_name(ofork), 0));
+#endif
+        } else {
+            err = ad_rtruncate(ofork->of_ad, size);
+        }
         if (st_size > size)
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size -size, ofork->of_refnum);
         if (err < 0)

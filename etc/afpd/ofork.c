@@ -98,7 +98,9 @@ int of_rename(const struct vol *vol,
             && s_of->key.dev == of->key.dev
             && s_of->key.inode == of->key.inode ) {
             if (!done) {
-                strlcpy( of_name(of), newpath, of->of_ad->ad_m_namelen);
+                free(of_name(of));
+                if ((of_name(of) = strdup(newpath)) == NULL)
+                    return AFPERR_MISC;
                 done = 1;
             }
             if (newdir != olddir)
@@ -187,19 +189,13 @@ of_alloc(struct vol *vol,
         /* initialize to zero. This is important to ensure that
            ad_open really does reinitialize the structure. */
         ad_init(ad, vol);
-
-        ad->ad_m_namelen = UTF8FILELEN_EARLY +1;
-        /* here's the deal: we allocate enough for the standard mac file length.
-         * in the future, we'll reallocate in fairly large jumps in case
-         * of long unicode names */
-        if (( ad->ad_m_name =(char *)malloc( ad->ad_m_namelen )) == NULL ) {
+        if ((ad->ad_name = strdup(path)) == NULL) {
             LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno) );
             free(ad);
             free(of);
             oforks[ of_refnum ] = NULL;
             return NULL;
         }
-        strlcpy( ad->ad_m_name, path, ad->ad_m_namelen);
     } else {
         /* Increase the refcount on this struct adouble. This is
            decremented again in oforc_dealloc. */
@@ -380,7 +376,7 @@ void of_dealloc( struct ofork *of)
     of->of_ad->ad_refcount--;
 
     if ( of->of_ad->ad_refcount <= 0) {
-        free( of->of_ad->ad_m_name );
+        free( of->of_ad->ad_name );
         free( of->of_ad);
     } else {/* someone's still using it. just free this user's locks */
         ad_unlock(of->of_ad, of->of_refnum, of->of_flags & AFPFORK_ERROR ? 0 : 1);

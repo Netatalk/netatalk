@@ -26,7 +26,6 @@ struct ofork {
     uint16_t            of_refnum;
     int                 of_flags;
     struct ofork        **prevp, *next;
-//    struct ofork        *of_d_prev, *of_d_next;
 };
 
 #define OPENFORK_DATA   (0)
@@ -52,7 +51,7 @@ struct ofork {
 extern struct ofork *writtenfork;
 #endif
 
-#define of_name(a) (a)->of_ad->ad_m_name
+#define of_name(a) (a)->of_ad->ad_name
 /* in ofork.c */
 extern struct ofork *of_alloc    (struct vol *, struct dir *,
                                                       char *, uint16_t *, const int,

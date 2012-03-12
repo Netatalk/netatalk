@@ -513,24 +513,15 @@ int fce_register_new_file( struct path *path )
 
 int fce_register_file_modification( struct ofork *ofork )
 {
-    char *u_name = NULL;
-    struct vol *vol;
     int ret = AFP_OK;
 
-    if (ofork == NULL || ofork->of_vol == NULL)
+    if (ofork == NULL)
         return AFPERR_PARAM;
 
     if (!(fce_ev_enabled & (1 << FCE_FILE_MODIFY)))
         return ret;
 
-    vol = ofork->of_vol;
-
-    if (NULL == (u_name = mtoupath(vol, of_name(ofork), ofork->of_did, utf8_encoding(vol->v_obj)))) 
-    {
-        return AFPERR_MISC;
-    }
-    
-    ret = register_fce( u_name, false, FCE_FILE_MODIFY );
+    ret = register_fce(of_name(ofork), false, FCE_FILE_MODIFY );
     
     return ret;    
 }

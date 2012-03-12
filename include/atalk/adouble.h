@@ -217,8 +217,7 @@ struct adouble {
     int                 ad_refcount;       /* multiple forks may open one adouble     */
     off_t               ad_rlen;           /* ressource fork len with AFP 3.0         *
                                             * the header parameter size is too small. */
-    char                *ad_m_name;        /* mac name for open fork                  */
-    int                 ad_m_namelen;
+    char                *ad_name;          /* name in server encoding (usually UTF8)  */
     struct adouble_fops *ad_ops;
     uint16_t            ad_open_forks;     /* open forks (by others)                  */
     char                ad_data[AD_DATASZ_MAX];
