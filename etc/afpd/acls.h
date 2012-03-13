@@ -109,7 +109,7 @@ int afp_access (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rb
 int afp_getacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
 
-/* Parse afp_ldap.conf */
+/* Parse afp.conf */
 extern int acl_ldap_readconfig(char *name);
 
 /* Misc funcs */

@@ -324,7 +324,7 @@ int main(int ac, char **av)
         afp_exit(EXITERR_SYS);
     }
 
-    /* afpd.conf: not in config file: lockfile, connections, configfile
+    /* afp.conf:  not in config file: lockfile, configfile
      *            preference: command-line provides defaults.
      *                        config file over-writes defaults.
      *

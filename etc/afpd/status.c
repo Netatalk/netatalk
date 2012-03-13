@@ -497,7 +497,7 @@ void status_init(AFPObj *obj, DSI *dsi)
 /* If not found in conf file, genarate and append in conf file.       */
 /* If conf file don't exist, create and genarate.                     */
 /* If cannot open conf file, use one-time signature.                  */
-/* If -signature user:xxxxx, use it.                                  */
+/* If signature = user:xxxxx, use it.                                  */
 
 void set_signature(struct afp_options *options) {
     char *usersign;
@@ -637,7 +637,7 @@ server_signature_random:
         fprintf(fp, "# ServerSignature is unique identifier used to prevent logging on to\n");
         fprintf(fp, "# the same server twice.\n");
         fprintf(fp, "# \n");
-        fprintf(fp, "# If setting \"-signature user:xxxxx\" in afpd.conf, this file is not used.\n\n");
+        fprintf(fp, "# If setting \"signature = user:xxxxx\" in afp.conf, this file is not used.\n\n");
     }
     
     if (fp) {
