@@ -160,6 +160,9 @@ AC_NETATALK_PGP_UAM
 dnl Check for building Kerberos V UAM module
 AC_NETATALK_KRB5_UAM
 
+dnl Check for Kerberos 5 support
+AC_NETATALK_KERBEROS
+
 dnl Check for overwrite the config files or not
 AC_NETATALK_OVERWRITE_CONFIG
 

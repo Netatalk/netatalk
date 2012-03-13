@@ -489,6 +489,41 @@ fi
 AM_CONDITIONAL(USE_GSSAPI, test x"$netatalk_cv_build_krb5_uam" = x"yes")
 ])
 
+AC_DEFUN([AC_NETATALK_KERBEROS], [
+AC_MSG_CHECKING([for Kerberos 5 (necessary for GetSrvrInfo:DirectoryNames support)])
+AC_ARG_WITH([kerberos],
+    [AS_HELP_STRING([--with-kerberos], [Kerberos 5 support (default=auto)])],
+    [],
+    [with_kerberos=auto])
+AC_MSG_RESULT($with_kerberos)
+
+if test x"$with_kerberos" != x"no"; then
+   have_krb5_header="no"
+   AC_CHECK_HEADERS([krb5/krb5.h krb5.h], [have_krb5_header="yes"; break])
+   if test x"$have_krb5_header" = x"no" && test x"$with_kerberos" != x"auto"; then
+      AC_MSG_FAILURE([--with-kerberos was given, but no headers found])
+   fi
+
+   AC_PATH_PROG([KRB5_CONFIG], [krb5-config])
+   AC_MSG_CHECKING([for krb5-config])
+   if test -x "$KRB5_CONFIG"; then
+      AC_MSG_RESULT([$KRB5_CONFIG])
+      CFLAGS="$CFLAGS `$KRB5_CONFIG --cflags krb5`"
+      LIBS="`$KRB5_CONFIG --libs krb5` $LIBS"
+      with_kerberos="yes"
+   else
+      AC_MSG_RESULT([not found])
+      if test x"$with_kerberos" != x"auto"; then
+         AC_MSG_FAILURE([--with-kerberos was given, but krb5-config could not be found])
+      fi
+   fi
+fi
+
+if test x"$with_kerberos" = x"yes"; then
+   AC_DEFINE([HAVE_KERBEROS], [1], [Define if Kerberos 5 is available])
+fi
+])
+
 dnl Check for overwrite the config files or not
 AC_DEFUN([AC_NETATALK_OVERWRITE_CONFIG], [
 AC_MSG_CHECKING([whether configuration files should be overwritten])
