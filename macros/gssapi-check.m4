@@ -39,17 +39,22 @@ AC_DEFUN([NETATALK_GSSAPI_CHECK],
 	  AC_PATH_PROG(KRB5_CONFIG, krb5-config)
 	  AC_MSG_CHECKING(for working krb5-config)
 	  if test -x "$KRB5_CONFIG"; then
-	    save_CFLAGS=$CFLAGS
-	    CFLAGS="";export CFLAGS
-	    save_LDFLAGS=$LDFLAGS
-	    LDFLAGS="";export LDFLAGS
-	    GSSAPI_LIBS="`$KRB5_CONFIG --libs gssapi`"
-	    GSSAPI_CFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
-	    GSSAPI_CPPFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
-	    CFLAGS=$save_CFLAGS;export CFLAGS
-	    LDFLAGS=$save_LDFLAGS;export LDFLAGS
-	    FOUND_GSSAPI=yes
-	    AC_MSG_RESULT(yes)
+	    TEMP="`$KRB5_CONFIG --libs gssapi`"
+        if test $? -eq 0 ; then
+	        save_CFLAGS=$CFLAGS
+	        CFLAGS="";export CFLAGS
+	        save_LDFLAGS=$LDFLAGS
+	        LDFLAGS="";export LDFLAGS
+	        GSSAPI_CFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
+	        GSSAPI_CPPFLAGS="`$KRB5_CONFIG --cflags | sed s/@INCLUDE_des@//`"
+            GSSAPI_LIBS="$TEMP"
+	        CFLAGS=$save_CFLAGS;export CFLAGS
+	        LDFLAGS=$save_LDFLAGS;export LDFLAGS
+	        FOUND_GSSAPI=yes
+	        AC_MSG_RESULT(yes)
+        else
+	        AC_MSG_RESULT(no. Fallback to previous krb5 detection strategy)
+        fi
 	  else
 	    AC_MSG_RESULT(no. Fallback to previous krb5 detection strategy)
 	  fi
