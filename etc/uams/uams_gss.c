@@ -419,15 +419,10 @@ static int gss_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return gss_login(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-int uam_setup(const char *path)
+static int uam_setup(const char *path)
 {
-    if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Client Krb v2",
-                     gss_login, gss_logincont, gss_logout, gss_login_ext) < 0)
-        if (uam_register(UAM_SERVER_LOGIN, path, "Client Krb v2",
-                         gss_login, gss_logincont, gss_logout) < 0)
-            return -1;
-
-    return 0;
+    return uam_register(UAM_SERVER_LOGIN_EXT, path, "Client Krb v2",
+                        gss_login, gss_logincont, gss_logout, gss_login_ext);
 }
 
 static void uam_cleanup(void)
