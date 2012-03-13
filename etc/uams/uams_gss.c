@@ -26,38 +26,11 @@
 #include <atalk/compat.h>
 
 /* Kerberos includes */
-
-#if HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
-
-#if HAVE_GSSAPI_GSSAPI_H
+#ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
-#endif
-
-#if HAVE_GSSAPI_GSSAPI_GENERIC_H
-#include <gssapi/gssapi_generic.h>
-#endif
-
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-
-#if HAVE_COM_ERR_H
-#include <com_err.h>
-#endif
-
-/* We work around something I don't entirely understand... */
-/* BF: This is a Heimdal/MIT compatibility fix */
-#ifndef HAVE_GSS_C_NT_HOSTBASED_SERVICE
-#define GSS_C_NT_HOSTBASED_SERVICE gss_nt_service_name
-#endif
-
-#ifdef MIN
-#undef MIN
-#endif
-
-#define MIN(a, b) ((a > b) ? b : a)
+#else
+#include <gssapi.h>
+#endif // HAVE_GSSAPI_GSSAPI_H
 
 static void log_status( char *s, OM_uint32 major_status,
                         OM_uint32 minor_status )
@@ -107,102 +80,6 @@ static void log_ctx_flags( OM_uint32 flags )
     if (flags & GSS_C_INTEG_FLAG)
         LOG(log_debug, logtype_uams, "uams_gss.c :context flag: GSS_C_INTEG_FLAG" );
 #endif
-}
-
-static void log_principal(gss_name_t server_name)
-{
-#if 0
-    if (server_name == GSS_C_NO_NAME)
-        return;
-    /* FIXME: must call gss_canonicalize_name before gss_export_name */
-    OM_uint32 major_status = 0, minor_status = 0;
-    gss_buffer_desc exported_name;
-
-    /* Only for debugging purposes, check the gssapi internal representation */
-    major_status = gss_export_name(&minor_status, server_name, &exported_name);
-    LOG(log_debug, logtype_uams, "log_principal: exported server name is %s", (char*) exported_name.value);
-    gss_release_buffer( &minor_status, &exported_name );
-#endif
-}
-
-/* get the principal from afpd and import it into server_name */
-static int get_afpd_principal(void *obj, gss_name_t *server_name)
-{
-    OM_uint32 major_status = 0, minor_status = 0;
-    char *fqdn, *service, *principal, *p;
-    size_t fqdnlen=0, servicelen=0;
-    size_t principal_length;
-    gss_buffer_desc s_princ_buffer;
-
-    /* get information from afpd */
-    if (uam_afpserver_option(obj, UAM_OPTION_FQDN, (void*) &fqdn, &fqdnlen) < 0)
-        return 1;
-    LOG(log_debug, logtype_uams, "get_afpd_principal: fqdn: %s", fqdn);
-
-    if (uam_afpserver_option(obj, UAM_OPTION_KRB5SERVICE, (void *)&service, &servicelen) < 0)
-        return 1;
-    LOG(log_debug, logtype_uams, "get_afpd_principal: service: %s", service);
-
-    /* if we don't have all the info, log that and return GSS_C_NO_NAME */
-    if (!service || !servicelen || !fqdn || !fqdnlen) {
-        LOG(log_note, logtype_uams,
-            "get_afpd_principal: could not retrieve information from afpd, using default service principal(s)");
-
-	       *server_name = GSS_C_NO_NAME;
-        return 0;
-    }
-
-    /* allocate memory to hold the temporary principal string */
-    principal_length = servicelen + 1 + fqdnlen + 1;
-    if ( NULL == (principal = (char*) malloc( principal_length)) ) {
-        LOG(log_error, logtype_uams,
-            "get_afpd_principal: out of memory allocating %u bytes",
-            principal_length);
-        return 1;
-    }
-
-    /*
-     * Build the principal string.
-     * Format: 'service@fqdn'
-     */
-    strlcpy( principal, service, principal_length);
-    strlcat( principal, "@", principal_length);
-
-    /*
-     * The fqdn we get from afpd may contain a port.
-     * We need to strip the port from fqdn for principal.
-     */
-    if ((p = strchr(fqdn, ':')))
-        *p = '\0';
-
-    strlcat( principal, fqdn, principal_length);
-    if (p)
-        *p = ':';
-    /*
-     * Import our principal into the gssapi internal representation
-     * stored in server_name.
-     */
-    s_princ_buffer.value = principal;
-    s_princ_buffer.length = strlen( principal ) + 1;
-
-    LOG(log_debug, logtype_uams, "get_afpd_principal: importing principal `%s'", principal);
-    major_status = gss_import_name( &minor_status,
-                                    &s_princ_buffer,
-                                    GSS_C_NT_HOSTBASED_SERVICE,
-                                    server_name );
-
-    /*
-     * Get rid of malloc'ed memmory.
-     * Don't release the s_princ_buffer, we free principal instead.
-     */
-    free(principal);
-
-    if (major_status != GSS_S_COMPLETE) {
-        /* Importing our service principal failed, bail out. */
-        log_status( "import_principal", major_status, minor_status );
-        return 1;
-    }
-    return 0;
 }
 
 
@@ -276,7 +153,7 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
     sesskey_buff.value = sinfo->sessionkey;
     sesskey_buff.length = sinfo->sessionkey_len;
 
-    /* gss_wrap the session key with the default machanism.
+    /* gss_wrap the session key with the default mechanism.
        Require both confidentiality and integrity services */
     gss_wrap (&status, context, 1, GSS_C_QOP_DEFAULT, &sesskey_buff, NULL, &wrap_buff);
 
@@ -305,41 +182,7 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 }
 
 /*-------------*/
-static int acquire_credentials (gss_name_t *server_name, gss_cred_id_t *server_creds)
-{
-    OM_uint32 major_status = 0, minor_status = 0;
-    char *envp;
-
-    if ((envp = getenv("KRB5_KTNAME")))
-        LOG(log_debug, logtype_uams,
-            "acquire credentials: acquiring credentials (uid = %d, keytab = %s)",
-            (int)geteuid(), envp);
-    else
-        LOG(log_debug, logtype_uams,
-            "acquire credentials: acquiring credentials (uid = %d) - $KRB5_KTNAME not found in env",
-            (int)geteuid());
-        
-    /*
-     * Acquire credentials usable for accepting context negotiations.
-     * Credentials are for server_name, have an indefinite lifetime,
-     * have no specific mechanisms, are to be used for accepting context
-     * negotiations and are to be placed in server_creds.
-     * We don't care about the mechanisms or about the time for which they are valid.
-     */
-    major_status = gss_acquire_cred( &minor_status, *server_name,
-                                     GSS_C_INDEFINITE, GSS_C_NO_OID_SET, GSS_C_ACCEPT,
-                                     server_creds, NULL, NULL );
-
-    if (major_status != GSS_S_COMPLETE) {
-        log_status( "acquire_cred", major_status, minor_status );
-        return 1;
-    }
-
-    return 0;
-}
-
-/*-------------*/
-static int accept_sec_context (gss_ctx_id_t *context, gss_cred_id_t server_creds,
+static int accept_sec_context (gss_ctx_id_t *context,
                                gss_buffer_desc *ticket_buffer, gss_name_t *client_name,
                                gss_buffer_desc *authenticator_buff)
 {
@@ -353,12 +196,12 @@ static int accept_sec_context (gss_ctx_id_t *context, gss_cred_id_t server_creds
         ticket_buffer->length);
 
     /*
-     * Try to accept the secondary context using the tocken in ticket_buffer.
-     * We don't care about the mechanisms used, nor for the time.
+     * Try to accept the secondary context using the token in ticket_buffer.
+     * We don't care about the principals or mechanisms used, nor for the time.
      * We don't act as a proxy either.
      */
     major_status = gss_accept_sec_context( &minor_status, context,
-                                           server_creds, ticket_buffer, GSS_C_NO_CHANNEL_BINDINGS,
+                                           GSS_C_NO_CREDENTIAL, ticket_buffer, GSS_C_NO_CHANNEL_BINDINGS,
                                            client_name, NULL, authenticator_buff,
                                            &ret_flags, NULL, NULL );
 
@@ -377,21 +220,10 @@ static int do_gss_auth(void *obj, char *ibuf, int ticket_len,
                        struct session_info *sinfo )
 {
     OM_uint32 status = 0;
-    gss_name_t server_name, client_name;
-    gss_cred_id_t server_creds;
+    gss_name_t client_name;
     gss_ctx_id_t context_handle = GSS_C_NO_CONTEXT;
     gss_buffer_desc ticket_buffer, authenticator_buff;
     int ret = 0;
-
-    /* import our principal name from afpd */
-    if (get_afpd_principal(obj, &server_name) != 0) {
-        return 1;
-    }
-    log_principal(server_name);
-
-    /* Now we have to acquire our credentials */
-    if ((ret = acquire_credentials (&server_name, &server_creds)))
-        goto cleanup_vars;
 
     /*
      * Try to accept the secondary context, using the ticket/token the
@@ -401,48 +233,49 @@ static int do_gss_auth(void *obj, char *ibuf, int ticket_len,
     ticket_buffer.length = ticket_len;
     ticket_buffer.value = ibuf;
 
-    ret = accept_sec_context (&context_handle, server_creds, &ticket_buffer,
-                              &client_name, &authenticator_buff);
+    if ((ret = accept_sec_context(&context_handle, &ticket_buffer, 
+                                  &client_name, &authenticator_buff)))
+        return ret;
 
-    if (!ret) {
-        /* We succesfully acquired the secondary context, now get the
-           username for afpd and gss_wrap the sessionkey */
-        if ( 0 == (ret = get_client_username(username, ulen, &client_name)) ) {
-            ret = wrap_sessionkey(context_handle, sinfo);
-        }
+    /* We succesfully acquired the secondary context, now get the
+       username for afpd and gss_wrap the sessionkey */
+    if ((ret = get_client_username(username, ulen, &client_name)))
+        goto cleanup_client_name;
 
-        if (!ret) {
-            /* FIXME: Is copying the authenticator really necessary?
-               Where is this documented? */
-            uint16_t auth_len = htons( authenticator_buff.length );
+    if ((ret = wrap_sessionkey(context_handle, sinfo)))
+        goto cleanup_client_name;
 
-            /* copy the authenticator length into the reply buffer */
-            memcpy( rbuf, &auth_len, sizeof(auth_len) );
-            *rbuflen += sizeof(auth_len);
-            rbuf += sizeof(auth_len);
+    /* Authenticated, construct the reply using:
+     * authenticator length (u_int16_t)
+     * authenticator
+     */
+    /* copy the authenticator length into the reply buffer */
+    u_int16_t auth_len = htons( authenticator_buff.length );
+    memcpy( rbuf, &auth_len, sizeof(auth_len) );
+    *rbuflen += sizeof(auth_len);
+    rbuf += sizeof(auth_len);
 
-            /* copy the authenticator value into the reply buffer */
-            memcpy( rbuf, authenticator_buff.value, authenticator_buff.length );
-            *rbuflen += authenticator_buff.length;
-        }
+    /* copy the authenticator value into the reply buffer */
+    memcpy( rbuf, authenticator_buff.value, authenticator_buff.length );
+    *rbuflen += authenticator_buff.length;
 
-        /* Clean up after ourselves */
-        gss_release_name( &status, &client_name );
-        if ( authenticator_buff.value)
-            gss_release_buffer( &status, &authenticator_buff );
+cleanup_client_name:
+    gss_release_name( &status, &client_name );
 
-        gss_delete_sec_context( &status, &context_handle, NULL );
-    }
-    gss_release_cred( &status, &server_creds );
-
-cleanup_vars:
-    if (server_name != GSS_C_NO_NAME)
-        gss_release_name( &status, &server_name );
+cleanup_context:
+    gss_release_buffer( &status, &authenticator_buff );
+    gss_delete_sec_context( &status, &context_handle, NULL );
 
     return ret;
 }
 
 /* -------------------------- */
+
+/*
+ * For the gss uam, this function only needs to return a two-byte
+ * login-session id. None of the data provided by the client up to this
+ * point is trustworthy as we'll have a signed ticket to parse in logincont.
+ */
 static int gss_login(void *obj, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
                      char *rbuf, size_t *rbuflen)
@@ -527,7 +360,7 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
 
     /* We skip past the 'username' parameter because all that matters is the ticket */
     p = ibuf;
-    while( *ibuf && ibuflen ) { ibuf++, ibuflen--; }
+    while ( *ibuf && ibuflen ) { ibuf++, ibuflen--; }
     if (ibuflen < 4) {
         LOG(log_info, logtype_uams, "uams_gss.c :LoginCont: user is %s, no ticket", p);
         return AFPERR_PARAM;
@@ -552,53 +385,38 @@ static int gss_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     /* now try to authenticate */
-    if (!do_gss_auth(obj, ibuf, ticket_len, rbuf, &rblen, username, userlen, sinfo)) {
-        /* We use the username we got back from the gssapi client_name.
-           Should we compare this to the username the client sent in the clear?
-           We know the character encoding of the cleartext username (UTF8), what
-           encoding is the gssapi name in? */
-        if((pwd = uam_getname( obj, username, userlen )) == NULL) {
-            LOG(log_info, logtype_uams, "uam_getname() failed for %s", username);
-            return AFPERR_NOTAUTH;
-        }
-        if (uam_checkuser(pwd) < 0) {
-            LOG(log_info, logtype_uams, "%s not a valid user", username);
-            return AFPERR_NOTAUTH;
-        }
-        *rbuflen = rblen;
-        *uam_pwd = pwd;
-        return AFP_OK;
-    } else {
+    if (do_gss_auth(obj, ibuf, ticket_len, rbuf, &rblen, username, userlen, sinfo)) {
         LOG(log_info, logtype_uams, "do_gss_auth failed" );
         *rbuflen = 0;
         return AFPERR_MISC;
     }
-}
 
-/*
- * For the krb5 uam, this function only needs to return a two-byte
- * login-session id. None of the data provided by the client up to this
- * point is trustworthy as we'll have a signed ticket to parse in logincont.
- */
-static int gss_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
-                         char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
-    uint16_t  temp16;
-
-    *rbuflen = 0;
-
-    /* The reply contains a two-byte ID value - note
-     * that Apple's implementation seems to always return 1 as well
-     */
-    temp16 = htons( 1 );
-    memcpy(rbuf, &temp16, sizeof(temp16));
-    *rbuflen += sizeof(temp16);
-    return AFPERR_AUTHCONT;
+    /* We use the username we got back from the gssapi client_name.
+       Should we compare this to the username the client sent in the clear?
+       We know the character encoding of the cleartext username (UTF8), what
+       encoding is the gssapi name in? */
+    if ((pwd = uam_getname( obj, username, userlen )) == NULL) {
+        LOG(log_info, logtype_uams, "uam_getname() failed for %s", username);
+        return AFPERR_NOTAUTH;
+    }
+    if (uam_checkuser(pwd) < 0) {
+        LOG(log_info, logtype_uams, "%s not a valid user", username);
+        return AFPERR_NOTAUTH;
+    }
+    *rbuflen = rblen;
+    *uam_pwd = pwd;
+    return AFP_OK;
 }
 
 /* logout */
 static void gss_logout() {
+}
+
+static int gss_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
+                         char *ibuf, size_t ibuflen,
+                         char *rbuf, size_t *rbuflen)
+{
+    return gss_login(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 int uam_setup(const char *path)
