@@ -25,6 +25,7 @@
 #include <atalk/bstradd.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/ea.h>
 
 #include "fork.h"
 #include "file.h"
