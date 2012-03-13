@@ -10,6 +10,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -241,11 +242,11 @@ static int do_gss_auth(void *obj, char *ibuf, int ticket_len,
         goto cleanup_client_name;
 
     /* Authenticated, construct the reply using:
-     * authenticator length (u_int16_t)
+     * authenticator length (uint16_t)
      * authenticator
      */
     /* copy the authenticator length into the reply buffer */
-    u_int16_t auth_len = htons( authenticator_buff.length );
+    uint16_t auth_len = htons( authenticator_buff.length );
     memcpy( rbuf, &auth_len, sizeof(auth_len) );
     *rbuflen += sizeof(auth_len);
     rbuf += sizeof(auth_len);
