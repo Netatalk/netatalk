@@ -2,14 +2,12 @@ Makefile
 Makefile.in
 rc.atalk.bsd
 rc.atalk.redhat-sysv
-rc.atalk.systemd
 rc.atalk.suse-sysv
 rc.atalk.tru64
 rc.atalk.sysv
 service.atalk.systemd
 service.atalk-cnid.systemd
 netatalk
-atalk
 netatalk.service
 netatalk-cnid.service 
 .gitignore

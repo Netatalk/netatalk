@@ -150,7 +150,7 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
     )
     case "$sysv_style" in 
     "redhat")
-	    AC_MSG_ERROR([--enable-redhat is obsoleted. Use --enable-redhat-sysv or --enable-redhat-systemd.])
+	    AC_MSG_ERROR([--with-sysv-style=redhat is obsoleted. Use redhat-sysv or redhat-systemd.])
         ;;
     "redhat-sysv")
 	    AC_MSG_RESULT([enabling redhat-style sysv (upstart) configuration])
@@ -159,7 +159,7 @@ AC_DEFUN([AC_NETATALK_SYSV_STYLE], [
 	    AC_MSG_RESULT([enabling redhat-style systemd support])
 	    ;;
     "suse")
-	    AC_MSG_RESULT([--enable-suse is obsoleted. Use --enable-suse-sysv or --enable-suse-systemd])
+	    AC_MSG_ERROR([--with-sysv-style=suse is obsoleted. Use suse-sysv or suse-systemd])
         ;;
     "suse-sysv")
 	    AC_MSG_RESULT([enabling suse-style sysv configuration])

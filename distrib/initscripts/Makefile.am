@@ -92,7 +92,8 @@ install-data-hook:
 
 uninstall-startup:
 	-systemctl disable $(service_DATA)
-	rm -f $(DESTDIR)$(servicedir)/$(service_DATA)
+	rm -f $(DESTDIR)$(servicedir)/netatalk.service
+	rm -f $(DESTDIR)$(servicedir)/netatalk-cnid.service
 	-systemctl daemon-reload
 
 endif
